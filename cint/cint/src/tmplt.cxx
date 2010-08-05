@@ -2069,7 +2069,8 @@ static bool G__isLibrary( int index )
    return (G__srcfile[index].slindex != -1) || (G__srcfile[index].ispermanentsl == 2);
 }
    
-static int G__getIndex( int index, int tagnum ,std::vector<std::string> &headers )
+static int G__findSrcFile( int index, int tagnum, std::vector<std::string> &headers, std::vector<std::string> &fwdDecls,
+                        std::vector<std::string> &unknown)
 {
    //Function iterates through G__srcfile to find the name of *.h file where we have
    //class definition, then adds it to data container 'headers'.
@@ -2086,6 +2087,7 @@ static int G__getIndex( int index, int tagnum ,std::vector<std::string> &headers
       if( tagnum >= 0 && G__struct.comment[tagnum].p.com && strstr(G__struct.comment[tagnum].p.com, "//[INCLUDE:") )
       {
          // check whether G__struct.comment.p.com is set and starts with "//[INCLUDE:"
+         std::vector<std::string>* collectionToAddTo = &headers;
          char *pDel = G__struct.comment[tagnum].p.com;
          while( *pDel != 0 && *pDel != ':' ) pDel++;
          if( *pDel != 0 )pDel++;
@@ -2094,12 +2096,20 @@ static int G__getIndex( int index, int tagnum ,std::vector<std::string> &headers
          // and go on.
          while( *pDel != 0 )
          {
-            if( *pDel != ';' ) tmpHeader += *pDel;
-            else
-            {
-               it = std::find( headers.begin(), headers.end(), tmpHeader );
-               if( it == headers.end() ) headers.push_back( tmpHeader );
+            if (*pDel == ';') {
+               it = std::find(collectionToAddTo->begin(), collectionToAddTo->end(), tmpHeader );
+               if( it == collectionToAddTo->end() ) collectionToAddTo->push_back( tmpHeader );
                tmpHeader = "";
+            } else if (*pDel == '[') {
+               if (!strncmp(pDel, "[FWDDECL:", 9)) {
+                  collectionToAddTo = &fwdDecls;
+                  pDel += 8;
+               } else if (!strncmp(pDel, "[UNKNOWN:", 9)) {
+                  collectionToAddTo = &unknown;
+                  pDel += 8;
+               }
+            } else {
+               tmpHeader += *pDel;
             }
             pDel++;
          }
@@ -2174,13 +2184,15 @@ static int G__generate_template_dict(const char* tagname,G__Definedtemplateclass
 
   std::string className(tagname);
   std::vector<std::string> headers;
+  std::vector<std::string> fwdDecls;
+  std::vector<std::string> unknown;
   std::vector<std::string>::iterator it;
 
   if (fileNum >= 0) {
      if (G__srcfile[fileNum].filename[0] == '{')
         // ignore "{CINTEX dictionary translator}"
         return -4;
-     fileNum = G__getIndex(fileNum,-1, headers);
+     fileNum = G__findSrcFile(fileNum,-1, headers, fwdDecls, unknown);
      if( fileNum < 0 ) return fileNum;
   } else if (iSTLType != sSTLTypes.end()) {
      headers.push_back(iSTLType->second);
@@ -2198,10 +2210,14 @@ static int G__generate_template_dict(const char* tagname,G__Definedtemplateclass
       if (G__srcfile[index].filename[0] == '{')
          // ignore "{CINTEX dictionary translator}"
          return -4;
-      index = G__getIndex(index, gValue.tagnum, headers);
-      if( index < 0 ) return index;
-      //it = find( headers.begin(), headers.end(),G__srcfile[ index ].filename  );
-      //if( (it == headers.end()) && (G__srcfile[index].slindex == -1 ) ) headers.push_back( G__srcfile[index].filename );
+      index = G__findSrcFile(index, gValue.tagnum, headers, fwdDecls, unknown);
+      if (index < 0) {
+         if (gValue.type == 'U') {
+            fwdDecls.push_back(G__fulltagname(gValue.tagnum, 1));
+         } else {
+            unknown.push_back(call_para->string);
+         }
+      }
     }
     call_para = call_para->next;
   }
@@ -2209,7 +2225,7 @@ static int G__generate_template_dict(const char* tagname,G__Definedtemplateclass
   Cint::G__pGenerateDictionary pGD = Cint::G__GetGenerateDictionary();
   int storeDefTagum = G__def_tagnum;
   G__def_tagnum = -1;
-  int rtn = pGD( className, headers );
+  int rtn = pGD(className, headers, fwdDecls, unknown);
   G__def_tagnum = storeDefTagum;
   if( rtn != 0 ) return (-rtn)-2;
   int tagnum = G__defined_tagname( className.c_str(), 3 );
@@ -2220,6 +2236,19 @@ static int G__generate_template_dict(const char* tagname,G__Definedtemplateclass
         for( it = headers.begin(); it!= headers.end(); it++ ) {
            headersToInclude += *it + ";";
         }
+        if (!fwdDecls.empty()) {
+           headersToInclude += "[FWDDECL:";
+           for( it = fwdDecls.begin(); it!= fwdDecls.end(); it++ ) {
+              headersToInclude += *it + ";";
+           }
+        }
+        if (!unknown.empty()) {
+           headersToInclude += "[UNKNOWN:";
+           for( it = unknown.begin(); it!= unknown.end(); it++ ) {
+              headersToInclude += *it + ";";
+           }
+        }
+        
         G__struct.comment[tagnum].p.com = new char[headersToInclude.length() + 1];
         strcpy(G__struct.comment[tagnum].p.com, headersToInclude.c_str());
      }

@@ -77,7 +77,9 @@ extern "C" void *TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, v
 }
 
 int TCint_GenerateDictionary(const std::vector<std::string> &classes,
-                             const std::vector<std::string> &headers )
+                             const std::vector<std::string> &headers,
+                             const std::vector<std::string> &fwdDecls,
+                             const std::vector<std::string> &unknown)
 {
    //This function automatically creates the "LinkDef.h" file for templated
    //classes then executes CompileMacro on it.
@@ -142,8 +144,18 @@ int TCint_GenerateDictionary(const std::vector<std::string> &classes,
       std::vector<std::string>::const_iterator it;
       std::string fileContent ("");
 
-      for( it = headers.begin(); it != headers.end(); ++it )
+      for (it = headers.begin(); it != headers.end(); ++it)
          fileContent += "#include \"" + *it + "\"\n";
+
+      for (it = unknown.begin(); it != unknown.end(); ++it) {
+         TClass* cl = TClass::GetClass(it->c_str());
+         if (cl && cl->GetDeclFileName()) {
+            fileContent += TString("#include \"") + cl->GetDeclFileName() + "\"\n";
+         }
+      }
+
+      for (it = fwdDecls.begin(); it != fwdDecls.end(); ++it)
+         fileContent += "class " + *it + ";\n";
 
       fileContent += "#ifdef __CINT__ \n";
       fileContent += "#pragma link C++ nestedclasses;\n";
@@ -220,7 +232,9 @@ int TCint_GenerateDictionary(const std::vector<std::string> &classes,
 }
 
 int TCint_GenerateDictionary(const std::string &className,
-                             const std::vector<std::string> &headers )
+                             const std::vector<std::string> &headers,
+                             const std::vector<std::string> &fwdDecls,
+                             const std::vector<std::string> &unknown)
 {
    //This function automatically creates the "LinkDef.h" file for templated
    //classes then executes CompileMacro on it.
@@ -229,7 +243,7 @@ int TCint_GenerateDictionary(const std::string &className,
    
    std::vector<std::string> classes;
    classes.push_back(className);
-   return TCint_GenerateDictionary(classes, headers);
+   return TCint_GenerateDictionary(classes, headers, fwdDecls, unknown);
 }
 
 // It is a "fantom" method to synchronize user keyboard input
@@ -1127,7 +1141,7 @@ Int_t TCint::GenerateDictionary(const char *classes, const char *includes /* = 0
    }
    
    // Generate the temporary dictionary file
-   return TCint_GenerateDictionary(listClasses,listIncludes);
+   return TCint_GenerateDictionary(listClasses,listIncludes, std::vector<std::string>(), std::vector<std::string>());
 }
 
 

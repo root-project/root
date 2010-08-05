@@ -171,7 +171,7 @@ void G__delete_interpreted_object(void* p);
 /*********************************************************************
 * Generate dictionary.
 *********************************************************************/
-typedef int (*G__pGenerateDictionary)(const std::string &className,const std::vector<std::string> &headers);
+   typedef int (*G__pGenerateDictionary)(const std::string &className,const std::vector<std::string> &headers, const std::vector<std::string> &fwdDecls, const std::vector<std::string> &unknown);
 
 #ifndef __CINT__
 G__EXPORT
