@@ -711,7 +711,7 @@ inline static Long_t GetObjectOffset( TClass* klass, TClass* clActual, void* add
 // root/meta base class offset fails in the case of virtual inheritance
    Long_t offset = 0;
 
-   if ( klass != clActual ) {
+   if ( clActual && klass != clActual ) {
       G__ClassInfo* ciKlass  = (G__ClassInfo*)klass->GetClassInfo();
       G__ClassInfo* ciActual = (G__ClassInfo*)clActual->GetClassInfo();
       if ( ciKlass && ciActual ) {
