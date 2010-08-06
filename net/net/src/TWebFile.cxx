@@ -45,12 +45,10 @@ TUrl TWebFile::fgProxy;
 class TWebSocket {
 private:
    TWebFile *fWebFile;           // associated web file
-   Bool_t    fCloseOnDeletion;   // close socket in dtor
 public:
    TWebSocket(TWebFile *f);
    ~TWebSocket();
    void ReOpen();
-   void CloseOnDeletion() { fCloseOnDeletion = kTRUE; }
 };
 
 //______________________________________________________________________________
@@ -59,7 +57,6 @@ TWebSocket::TWebSocket(TWebFile *f)
    // Open web file socket.
 
    fWebFile = f;
-   fCloseOnDeletion = kFALSE;
    if (!f->fSocket)
       ReOpen();
 }
@@ -69,7 +66,7 @@ TWebSocket::~TWebSocket()
 {
    // Close socket in case not HTTP/1.1 protocol or when explicitly requested.
 
-   if (!fWebFile->fHTTP11 || fCloseOnDeletion) {
+   if (!fWebFile->fHTTP11) {
       delete fWebFile->fSocket;
       fWebFile->fSocket = 0;
    }
@@ -713,12 +710,6 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
          sscanf(res.Data(), "Content-Range: bytes %lld-%lld/%lld", &first, &last, &tot);
 #endif
          if (fSize == -1) fSize = tot;
-      } else if (res.BeginsWith("Connection: close")) {
-         ws.CloseOnDeletion();
-         if (fBasicUrlOrg != "" && !redirect) {
-            // if we have to close temp redirection, set back to original url
-            SetMsgReadBuffer10();
-         }
       } else if (res.BeginsWith("Location:") && redirect) {
          TString redir = res(10, 1000);
          if (redirect == 2)   // temp redirect
@@ -731,6 +722,10 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
    if (n == -1 && fHTTP11) {
       if (gDebug > 0)
          Info("GetFromWeb10", "HTTP/1.1 socket closed, reopen");
+      if (fBasicUrlOrg != "") {
+         // if we have to close temp redirection, set back to original url
+         SetMsgReadBuffer10();
+      }
       ws.ReOpen();
       return GetFromWeb10(buf, len, msg);
    }
@@ -896,7 +891,10 @@ Int_t TWebFile::GetHead()
       TString res = line;
       if (res.BeginsWith("HTTP/1.")) {
          if (res.BeginsWith("HTTP/1.1")) {
-            if (!fHTTP11) fMsgGetHead = "";
+            if (!fHTTP11) {
+               fMsgGetHead = "";
+               fMsgReadBuffer10 = "";
+            }
             fHTTP11 = kTRUE;
          }
          TString scode = res(9, 3);
