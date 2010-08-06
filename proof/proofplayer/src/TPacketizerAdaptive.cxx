@@ -377,7 +377,11 @@ TPacketizerAdaptive::TSlaveStat::TSlaveStat(TSlave *slave)
    fDSubSet->SetOwner();
    fSlave = slave;
    fStatus = new TProofProgressStatus();
-   fWrkFQDN = TUrl(slave->GetName()).GetHostFQDN();
+   // The slave name is a special one in PROOF-Lite: avoid blocking on the DNS
+   // for non existing names
+   fWrkFQDN = slave->GetName();
+   if (strcmp(slave->ClassName(), "TSlaveLite"))
+      fWrkFQDN = TUrl(fWrkFQDN).GetHostFQDN();
 }
 
 //______________________________________________________________________________
