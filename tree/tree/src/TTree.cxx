@@ -134,9 +134,9 @@
 //     TBranch *branch = tree->Branch( branchname, STLcollection, buffsize, splitlevel);
 //         STLcollection is the address of a pointer to std::vector, std::list,
 //         std::deque, std::set or std::multiset containing pointers to objects.
-//         If the splitlevel is a value bigger than 100 then the collection
-//         will be written in split mode. Ie. if it contains objects of any
-//         types deriving from TTrack this function will sort the objects
+//         If the splitlevel is a value bigger than 100 (TTree::kSplitCollectionOfPointers)
+//         then the collection will be written in split mode. Ie. if it contains objects of 
+//         any types deriving from TTrack this function will sort the objects
 //         basing on their type and store them in separate branches in split
 //         mode.
 //
@@ -1842,7 +1842,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
       // the collection contains pointers we can split it
       //-------------------------------------------------------------------------
       TBranch *branch;
-      if( splitlevel > 100 && collProxy->HasPointers() )
+      if( splitlevel > kSplitCollectionOfPointers && collProxy->HasPointers() )
          branch = new TBranchSTL( this, name, collProxy, bufsize, splitlevel );
       else
          branch = new TBranchElement(this, name, collProxy, bufsize, splitlevel);
@@ -1878,7 +1878,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
       // The streamer info is not rebuilt unoptimized.
       // No dummy top-level branch is created.
       // No splitting is attempted.
-      TBranchElement* branch = new TBranchElement(this, name, (TClonesArray*) objptr, bufsize, splitlevel%100);
+      TBranchElement* branch = new TBranchElement(this, name, (TClonesArray*) objptr, bufsize, splitlevel%kSplitCollectionOfPointers);
       fBranches.Add(branch);
       if (isptrptr) {
          branch->SetAddress(addr);
@@ -1950,7 +1950,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    // Do splitting, if requested.
    //
 
-   if (splitlevel%100 > 0) {
+   if (splitlevel%kSplitCollectionOfPointers > 0) {
       // Loop on all public data members of the class and its base classes and create branches for each one.
       TObjArray* blist = branch->GetListOfBranches();
       TIter next(sinfo->GetElements());
@@ -2014,7 +2014,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
             bname.Form("%s", element->GetFullName());
          }
 
-         if( splitlevel > 100 && element->GetClass() &&
+         if( splitlevel > kSplitCollectionOfPointers && element->GetClass() &&
              element->GetClass()->GetCollectionProxy() &&
              element->GetClass()->GetCollectionProxy()->HasPointers() )
          {
@@ -3751,11 +3751,11 @@ Int_t TTree::Fill()
              (fAutoFlush>0 && fEntries%TMath::Max((Long64_t)1,fAutoFlush) == 0) ||
              (fAutoSave >0 && fEntries%TMath::Max((Long64_t)1,fAutoSave)  == 0) ) {
 
-      	    //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
-      	    OptimizeBaskets(fTotBytes,1,"");
-            if (gDebug > 0) printf("OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+            //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
+            OptimizeBaskets(fTotBytes,1,"");
+            if (gDebug > 0) Info("OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
             fFlushedBytes = fZipBytes;
-      	    fAutoFlush    = fEntries;  // Use test on entries rather than bytes
+            fAutoFlush    = fEntries;  // Use test on entries rather than bytes
                                        // subsequently in run
             if (fAutoSave < 0) {
       	       // Set fAutoSave to the largest integer multiple of
@@ -3766,17 +3766,17 @@ Int_t TTree::Fill()
       	       fAutoSave = fEntries*(fAutoSave/fEntries);
       	    }
       	    if (fAutoSave!=0 && fEntries >= fAutoSave) AutoSave();    // FlushBaskets not called in AutoSave
-      	    if (gDebug > 0) printf("TTree::Fill:  First AutoFlush.  fAutoFlush = %lld, fAutoSave = %lld\n", fAutoFlush, fAutoSave);
+      	    if (gDebug > 0) Info("TTree::Fill:  First AutoFlush.  fAutoFlush = %lld, fAutoSave = %lld\n", fAutoFlush, fAutoSave);
          }
       } else if (fEntries > 1 && fEntries%fAutoFlush == 0) {
          if (fAutoSave != 0 && fEntries%fAutoSave == 0) {
        	    //We are at an AutoSave point. AutoSave flushes baskets and saves the Tree header
       	    AutoSave("flushbaskets");
-      	    if (gDebug > 0) printf("AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
+      	    if (gDebug > 0) Info("AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
          } else {
       	    //We only FlushBaskets
             FlushBaskets();
-      	    if (gDebug > 0) printf("FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+      	    if (gDebug > 0) Info("FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
          }
          fFlushedBytes = fZipBytes;
       }

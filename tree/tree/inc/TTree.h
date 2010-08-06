@@ -207,6 +207,11 @@ public:
       kCircular    = BIT(12)
    };
 
+   // Split level modifier 
+   enum {
+      kSplitCollectionOfPointers = 100
+   };
+   
    TTree();
    TTree(const char* name, const char* title, Int_t splitlevel = 99);
    virtual ~TTree();
@@ -218,6 +223,7 @@ public:
    virtual TFriendElement *AddFriend(TTree* tree, const char* alias = "", Bool_t warn = kFALSE);
    virtual void            AddTotBytes(Int_t tot) { fTotBytes += tot; }
    virtual void            AddZipBytes(Int_t zip) { fZipBytes += zip; }
+   virtual void            AutoFlush();
    virtual Long64_t        AutoSave(Option_t* option = "");
    virtual Int_t           Branch(TCollection* list, Int_t bufsize = 32000, Int_t splitlevel = 99, const char* name = "");
    virtual Int_t           Branch(TList* list, Int_t bufsize = 32000, Int_t splitlevel = 99);

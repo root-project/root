@@ -249,8 +249,8 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
    //---------------------------------------------------------------------------
    // Handling the splitting of the STL collections of pointers
    //---------------------------------------------------------------------------
-   Int_t splitSTLP = splitlevel - (splitlevel%100);
-   splitlevel %= 100;
+   Int_t splitSTLP = splitlevel - (splitlevel%TTree::kSplitCollectionOfPointers);
+   splitlevel %= TTree::kSplitCollectionOfPointers;
 
    fCompress = -1;
    if (fTree->GetDirectory()) {
@@ -677,7 +677,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
    SetAutoDelete(kFALSE);
 
    // create sub branches if requested by splitlevel
-   if (splitlevel%100 > 0) {
+   if (splitlevel%TTree::kSplitCollectionOfPointers > 0) {
       fType = 3;
       // ===> Create a leafcount
       TLeaf* leaf = new TLeafElement(this, name, fID, fStreamerType);
@@ -812,8 +812,8 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TVirt
    SetAutoDelete(kFALSE);
 
    // create sub branches if requested by splitlevel
-   if ( (splitlevel%100 > 0 && fBranchClass.GetClass() && fBranchClass.GetClass()->CanSplit()) ||
-        (cont->HasPointers() && splitlevel > 100 && cont->GetValueClass() && cont->GetValueClass()->CanSplit() ) )
+   if ( (splitlevel%TTree::kSplitCollectionOfPointers > 0 && fBranchClass.GetClass() && fBranchClass.GetClass()->CanSplit()) ||
+        (cont->HasPointers() && splitlevel > TTree::kSplitCollectionOfPointers && cont->GetValueClass() && cont->GetValueClass()->CanSplit() ) )
    {
       fType = 4;
       // ===> Create a leafcount
@@ -1373,7 +1373,7 @@ void TBranchElement::FillLeaves(TBuffer& b)
             Error("FillLeaves", "Cannot get streamer info for branch '%s'", GetName());
             return;
          }
-         if( fSplitLevel >= 100 )
+         if( fSplitLevel >= TTree::kSplitCollectionOfPointers )
             si->WriteBufferSTLPtrs(b, GetCollectionProxy(), n, fID, fOffset );
          else
             si->WriteBufferSTL(b, GetCollectionProxy(), n, fID, fOffset );
@@ -2064,7 +2064,7 @@ Double_t TBranchElement::GetValue(Int_t j, Int_t len, Bool_t subarr) const
       return GetInfo()->GetValueClones(clones, prID, j/len, j%len, fOffset);
    } else if (fType == 41) {
       TVirtualCollectionProxy::TPushPop helper(((TBranchElement*) this)->GetCollectionProxy(), object);
-      if( fSplitLevel < 100 )
+      if( fSplitLevel < TTree::kSplitCollectionOfPointers )
       {
          if (subarr)
             return GetInfo()->GetValueSTL(((TBranchElement*) this)->GetCollectionProxy(), prID, j, len, fOffset);
@@ -2250,7 +2250,7 @@ void TBranchElement::InitializeOffsets()
       //------------------------------------------------------------------------
       TString stlParentName;
       Bool_t stlParentNameUpdated = kFALSE;
-      if( fType == 4 && fSplitLevel > 100 )
+      if( fType == 4 && fSplitLevel > TTree::kSplitCollectionOfPointers )
       {
          TBranch *br = GetMother()->GetSubBranch( this );
          stlParentName = br->GetName();
@@ -3173,7 +3173,7 @@ void TBranchElement::ReadLeaves(TBuffer& b)
       //------------------------------------------------------------------------
       // We have split this stuff, so we need to create the the pointers
       //-----------------------------------------------------------------------
-      if( proxy->HasPointers() && fSplitLevel > 100 )
+      if( proxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers )
       {
          TClass *elClass = proxy->GetValueClass();
 
@@ -3202,7 +3202,7 @@ void TBranchElement::ReadLeaves(TBuffer& b)
       TStreamerInfo *info = GetInfo();
       TVirtualCollectionProxy *proxy = GetCollectionProxy();
       TVirtualCollectionProxy::TPushPop helper(proxy, fObject);
-      if( fSplitLevel >= 100 ) {
+      if( fSplitLevel >= TTree::kSplitCollectionOfPointers ) {
          info->ReadBufferSTLPtrs(b, proxy, fNdata, fID, fOffset);
          for(UInt_t ii=0; ii < fIDs.size(); ++ii) {
             info->ReadBufferSTLPtrs(b, proxy, fNdata, fIDs[ii], fOffset);
@@ -4047,7 +4047,7 @@ void TBranchElement::SetupAddresses()
    //--------------------------------------------------------------------------
    // Check if we are splited STL collection of pointers
    //--------------------------------------------------------------------------
-   if( fType == 41 && fSplitLevel >= 100 )
+   if( fType == 41 && fSplitLevel >= TTree::kSplitCollectionOfPointers )
    {
       TBranchElement *parent = (TBranchElement *)GetMother()->GetSubBranch( this );
 
@@ -4247,8 +4247,8 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
    //----------------------------------------------------------------------------
    // Handling the case of STL collections of pointers
    //----------------------------------------------------------------------------
-   Int_t splitSTLP = splitlevel - (splitlevel%100);
-   splitlevel %= 100;
+   Int_t splitSTLP = splitlevel - (splitlevel%TTree::kSplitCollectionOfPointers);
+   splitlevel %= TTree::kSplitCollectionOfPointers;
 
 
    TString branchname;
