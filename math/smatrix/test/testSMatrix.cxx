@@ -81,7 +81,7 @@ int test1() {
   
 #ifdef TEST_STATIC_CHECK
   // create a vector of size 2 from 3 arguments
-  SVector<float, 2> v(1,2,3);
+  SVector<float, 2> vbad(1,2,3);
 #endif
   
   // test STL interface

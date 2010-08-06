@@ -291,7 +291,7 @@ template<>
          assignment : only symmetric to symmetric allowed
        */
       template <class R>
-      inline MatRepSym<T, D>& operator=(const R& rhs) {
+      inline MatRepSym<T, D>& operator=(const R&) {
          STATIC_CHECK(0==1,
                       Cannot_assign_general_to_symmetric_matrix_representation);
          return *this;
@@ -305,7 +305,7 @@ template<>
          self addition : only symmetric to symmetric allowed
        */
       template <class R>
-      inline MatRepSym<T, D>& operator+=(const R& rhs) {
+      inline MatRepSym<T, D>& operator+=(const R&) {
          STATIC_CHECK(0==1,
                       Cannot_add_general_to_symmetric_matrix_representation);
          return *this;
@@ -319,7 +319,7 @@ template<>
          self subtraction : only symmetric to symmetric allowed
        */
       template <class R>
-      inline MatRepSym<T, D>& operator-=(const R& rhs) {
+      inline MatRepSym<T, D>& operator-=(const R&) {
          STATIC_CHECK(0==1,
                       Cannot_substract_general_to_symmetric_matrix_representation);
          return *this;

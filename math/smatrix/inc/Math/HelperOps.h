@@ -123,8 +123,8 @@ namespace Math {
    template <class T, unsigned int D1, unsigned int D2, class A>
    struct Assign<T, D1, D2, A, MatRepSym<T,D1>, MatRepStd<T,D1,D2> > 
    {
-      static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >& lhs,  
-                           const Expr<A,T,D1,D2,MatRepStd<T,D1,D2> >& rhs) 
+      static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >&,  
+                           const Expr<A,T,D1,D2,MatRepStd<T,D1,D2> >&) 
       {
          STATIC_CHECK(0==1, Cannot_assign_general_to_symmetric_matrix);
       }
@@ -253,8 +253,8 @@ namespace Math {
    template <class T, unsigned int D1, unsigned int D2, class A>
    struct PlusEquals<T, D1, D2, A, MatRepSym<T,D1>, MatRepStd<T,D1,D2> > 
    {
-      static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >& lhs,  
-                           const Expr<A,T,D1,D2,MatRepStd<T,D1,D2> >& rhs) 
+      static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >&,  
+                           const Expr<A,T,D1,D2,MatRepStd<T,D1,D2> >&) 
       {        
          STATIC_CHECK(0==1, Cannot_plusEqual_general_to_symmetric_matrix);
       }
@@ -337,8 +337,8 @@ namespace Math {
    template <class T, unsigned int D1, unsigned int D2, class A>
    struct MinusEquals<T, D1, D2, A, MatRepSym<T,D1>, MatRepStd<T,D1,D2> > 
    {
-      static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >& lhs,  
-                           const Expr<A,T,D1,D2,MatRepStd<T,D1,D2> >& rhs) 
+      static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >&,  
+                           const Expr<A,T,D1,D2,MatRepStd<T,D1,D2> >&) 
       {        
          STATIC_CHECK(0==1, Cannot_minusEqual_general_to_symmetric_matrix);
       }

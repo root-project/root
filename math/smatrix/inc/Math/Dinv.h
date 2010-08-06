@@ -168,7 +168,7 @@ class Inverter<0> {
 public:
   ///
   template <class MatrixRep>
-  inline static bool Dinv(MatrixRep& rhs) { return true; }
+  inline static bool Dinv(MatrixRep&) { return true; }
 };
     
 
