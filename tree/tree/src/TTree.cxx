@@ -3753,7 +3753,7 @@ Int_t TTree::Fill()
 
             //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
             OptimizeBaskets(fTotBytes,1,"");
-            if (gDebug > 0) Info("OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+            if (gDebug > 0) Info("TTree::Fill","OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
             fFlushedBytes = fZipBytes;
             fAutoFlush    = fEntries;  // Use test on entries rather than bytes
                                        // subsequently in run
@@ -3766,17 +3766,17 @@ Int_t TTree::Fill()
       	       fAutoSave = fEntries*(fAutoSave/fEntries);
       	    }
       	    if (fAutoSave!=0 && fEntries >= fAutoSave) AutoSave();    // FlushBaskets not called in AutoSave
-      	    if (gDebug > 0) Info("TTree::Fill:  First AutoFlush.  fAutoFlush = %lld, fAutoSave = %lld\n", fAutoFlush, fAutoSave);
+      	    if (gDebug > 0) Info("TTree::Fill","First AutoFlush.  fAutoFlush = %lld, fAutoSave = %lld\n", fAutoFlush, fAutoSave);
          }
       } else if (fEntries > 1 && fEntries%fAutoFlush == 0) {
          if (fAutoSave != 0 && fEntries%fAutoSave == 0) {
        	    //We are at an AutoSave point. AutoSave flushes baskets and saves the Tree header
       	    AutoSave("flushbaskets");
-      	    if (gDebug > 0) Info("AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
+      	    if (gDebug > 0) Info("TTree::Fill","AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
          } else {
       	    //We only FlushBaskets
             FlushBaskets();
-      	    if (gDebug > 0) Info("FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+      	    if (gDebug > 0) Info("TTree::Fill","FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
          }
          fFlushedBytes = fZipBytes;
       }
