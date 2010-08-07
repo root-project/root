@@ -106,6 +106,12 @@ public:
 };
 
 
+// Preventing warnings with -Weffc++ in GCC since it is a false positive for the TObjArrayIter destructor.
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TObjArrayIter                                                        //
@@ -144,6 +150,9 @@ public:
    ClassDef(TObjArrayIter,0)  //Object array iterator
 };
 
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
+#pragma GCC diagnostic pop
+#endif
 
 //---- inlines -----------------------------------------------------------------
 

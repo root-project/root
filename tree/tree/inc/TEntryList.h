@@ -96,8 +96,15 @@ class TEntryList: public TNamed
    virtual void        SetReapplyCut(Bool_t apply = kFALSE) {fReapply = apply;}; // *TOGGLE*
    virtual void        Subtract(const TEntryList *elist);
 
-
+// Preventing warnings with -Weffc++ in GCC since the overloading of the || operator was a design choice.
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
+#endif
    friend TEntryList operator||(TEntryList& elist1, TEntryList& elist2);
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
+#pragma GCC diagnostic pop
+#endif
 
    ClassDef(TEntryList, 1);  //A list of entries in a TTree
 };

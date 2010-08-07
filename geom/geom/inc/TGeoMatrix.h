@@ -62,7 +62,15 @@ public :
    virtual ~TGeoMatrix();
 
    TGeoMatrix& operator=(const TGeoMatrix &matrix);
+// Preventing warnings with -Weffc++ in GCC since the behaviour of operator * was chosen so by design.
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
+#endif
    TGeoMatrix& operator*(const TGeoMatrix &right) const;
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
+#pragma GCC diagnostic pop
+#endif
    Bool_t      operator ==(const TGeoMatrix &other) const;
    
    Bool_t               IsIdentity()    const {return !TestBit(kGeoGenTrans);}

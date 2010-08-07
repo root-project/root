@@ -239,8 +239,16 @@ template <class Element> TMatrixTSym<Element>  operator-  (const TMatrixTSym<Ele
 template <class Element> TMatrixTSym<Element>  operator-  (      Element               val    ,const TMatrixTSym<Element>  &source2);
 template <class Element> TMatrixTSym<Element>  operator*  (const TMatrixTSym<Element> &source,       Element                val    );
 template <class Element> TMatrixTSym<Element>  operator*  (      Element               val,    const TMatrixTSym<Element>  &source );
+// Preventing warnings with -Weffc++ in GCC since overloading the || and && operators was a design choice.
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
+#endif
 template <class Element> TMatrixTSym<Element>  operator&& (const TMatrixTSym<Element> &source1,const TMatrixTSym<Element>  &source2);
 template <class Element> TMatrixTSym<Element>  operator|| (const TMatrixTSym<Element> &source1,const TMatrixTSym<Element>  &source2);
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
+#pragma GCC diagnostic pop
+#endif
 template <class Element> TMatrixTSym<Element>  operator>  (const TMatrixTSym<Element> &source1,const TMatrixTSym<Element>  &source2);
 template <class Element> TMatrixTSym<Element>  operator>= (const TMatrixTSym<Element> &source1,const TMatrixTSym<Element>  &source2);
 template <class Element> TMatrixTSym<Element>  operator<= (const TMatrixTSym<Element> &source1,const TMatrixTSym<Element>  &source2);
