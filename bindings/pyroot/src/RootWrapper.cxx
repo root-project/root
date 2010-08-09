@@ -761,8 +761,10 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
 // upgrade to real class for object returns
    if ( ! isRef ) {
       TClass* clActual = klass->GetActualClass( address );
-      address = (void*)((Long_t)address - GetObjectOffset( klass, clActual, address ) );
-      klass = clActual;
+      if ( clActual ) {
+         address = (void*)((Long_t)address - GetObjectOffset( klass, clActual, address ) );
+         klass = clActual;
+      }
    }
 
 // actual binding
