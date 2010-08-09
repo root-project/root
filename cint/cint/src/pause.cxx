@@ -1426,6 +1426,7 @@ readagain:
                if ('/' == com[i+1]) {
                   com[i] = 0;
                   com[i+1] = 0;
+                  --i;
                }
             }
             break;
