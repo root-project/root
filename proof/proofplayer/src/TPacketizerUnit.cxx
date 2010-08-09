@@ -186,10 +186,14 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
    PDB(kPacketizer,1)
       Info("TPacketizerUnit", "size of the calibration packets: %lld", fCalibNum);
 
-   if (TProof::GetParameter(input, "PROOF_PacketizerTimeLimit", fTimeLimit) != 0 || fTimeLimit <= 0)
-      fTimeLimit = 1;
+   fMaxPacketTime = 1.;
+   Double_t timeLimit = -1;
+   if (TProof::GetParameter(input, "PROOF_PacketizerTimeLimit", timeLimit) == 0) {
+      fMaxPacketTime = timeLimit;
+      Warning("TPacketizerUnit", "PROOF_PacketizerTimeLimit is deprecated: use PROOF_MaxPacketTime instead");
+   }
    PDB(kPacketizer,1)
-      Info("TPacketizerUnit", "time limit is %lf", fTimeLimit);
+      Info("TPacketizerUnit", "time limit is %lf", fMaxPacketTime);
    fProcessing = 0;
    fAssigned = 0;
 
@@ -214,6 +218,11 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
       if (fNumPerWorker == 0) fNumPerWorker = 1;
       if (fCalibNum >= fNumPerWorker) fCalibNum = 1;
    }
+
+   // Save the config parameters in the dedicated list so that they will be saved
+   // in the outputlist and therefore in the relevant TQueryResult
+   fConfigParams->Add(new TParameter<Long64_t>("PROOF_PacketizerFixedNum", fNumPerWorker));
+   fConfigParams->Add(new TParameter<Long64_t>("PROOF_PacketizerCalibNum", fCalibNum));
 
    fStopwatch->Start();
    PDB(kPacketizer,1) Info("TPacketizerUnit", "return");
@@ -401,7 +410,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
          while ((tmpSlave = (TSlave *)iter->Next())) {
             tmpStat = (TSlaveStat *)fSlaveStats->GetValue(tmpSlave);
             // If the slave doesn't response for a long time, its service rate will be considered as 0
-            if ((cTime - tmpStat->fTimeInstant) > 4*fTimeLimit)
+            if ((cTime - tmpStat->fTimeInstant) > 4*fMaxPacketTime)
                tmpStat->fSpeed = 0;
             PDB(kPacketizer,2)
                Info("GetNextPacket",
@@ -427,7 +436,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
                                  sl->GetOrdinal(), sumSpeed, sumBusy);
          // firstly the slave will try to get all of the remaining entries
          if (slstat->fSpeed > 0 &&
-            (fTotalEntries - fAssigned)/(slstat->fSpeed) < fTimeLimit) {
+            (fTotalEntries - fAssigned)/(slstat->fSpeed) < fMaxPacketTime) {
             num = (fTotalEntries - fAssigned);
          } else {
             if (slstat->fSpeed > 0) {
@@ -436,7 +445,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
                // if optTime is greater than the official time limit, then the slave gets a number
                // of entries that still fit into the time limit, otherwise it uses the optTime as
                // a time limit
-               num = (optTime > fTimeLimit) ? Nint(fTimeLimit*(slstat->fSpeed))
+               num = (optTime > fMaxPacketTime) ? Nint(fMaxPacketTime*(slstat->fSpeed))
                                           : Nint(optTime*(slstat->fSpeed));
             PDB(kPacketizer,2)
                Info("GetNextPacket", "opTime %lf num %lld speed %lf", optTime, num, slstat->fSpeed);
@@ -448,8 +457,8 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
       } else {
          // Fixed number of cycles per worker
          num = fNumPerWorker - slstat->fLastProcessed;
-         if (num > 1 && slstat->fSpeed > 0 && num / slstat->fSpeed > fTimeLimit) {
-            num = (Long64_t) (slstat->fSpeed * fTimeLimit);
+         if (num > 1 && slstat->fSpeed > 0 && num / slstat->fSpeed > fMaxPacketTime) {
+            num = (Long64_t) (slstat->fSpeed * fMaxPacketTime);
          }
       }
    }

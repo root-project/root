@@ -50,7 +50,6 @@ private:
    TStopwatch *fStopwatch;       // For measuring the start time of each packet
    Long64_t    fProcessing;      // Event being processed
    Long64_t    fAssigned;        // Entries processed or being processed.
-   Double_t    fTimeLimit;       // Packet time limit
    Long64_t    fCalibNum;        // Size of the calibrating packet
    Long64_t    fNumPerWorker;    // Number of cycles per worker, if this option
                                  // is chosen

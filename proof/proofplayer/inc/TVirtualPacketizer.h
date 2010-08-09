@@ -49,11 +49,13 @@
 
 class TDSet;
 class TDSetElement;
-class TSlave;
+class TList;
+class TMap;
 class TMessage;
+class TNtuple;
 class TNtupleD;
 class TProofProgressInfo;
-class TMap;
+class TSlave;
 
 
 class TVirtualPacketizer : public TObject {
@@ -67,6 +69,11 @@ protected:
       kEstCurrent = 1,
       kEstAverage = 2
    };
+
+   // General configuration parameters
+   Double_t  fMinPacketTime; // minimum packet time
+   Double_t  fMaxPacketTime; // maximum packet time
+   TList    *fConfigParams;  // List of configuration parameters
 
    TMap     *fSlaveStats;   // slave status, keyed by correspondig TSlave
 
@@ -85,6 +92,15 @@ protected:
    TNtupleD *fCircProg;     // Keeps circular info for "instantenous"
                             // rate calculations
    Long_t    fCircN;        // Circularity
+
+   TNtuple  *fProgressPerf; // {Active workers, evt rate, MBs read} as a function of processing time
+   Float_t   fProcTimeLast; // Time of the last measurement
+   Int_t     fActWrksLast;  // Active workers at fProcTimeLast
+   Float_t   fEvtRateLast;  // Evt rate at fProcTimeLast
+   Float_t   fMBsReadLast;  // MBs read at fProcTimeLast
+   Float_t   fEffSessLast;  // Number of effective sessions at fProcTimeLast
+   Bool_t    fAWLastFill;   // Whether to fill the last measurement
+   Float_t   fReportPeriod; // Time between reports if nothing changes (estimated proc time / 100)
 
    EUseEstOpt fUseEstOpt;   // Control usage of estimated values for the progress info
 
@@ -122,6 +138,10 @@ public:
    Double_t      GetCumProcTime() const { return fProgressStatus->GetProcTime(); }
    Float_t       GetInitTime() const { return fInitTime; }
    Float_t       GetProcTime() const { return fProcTime; }
+   TNtuple      *GetProgressPerf(Bool_t steal = kFALSE) { if (steal) { TNtuple *n = fProgressPerf; fProgressPerf = 0; return n;
+                                                                } else { return fProgressPerf;} }
+   TList        *GetConfigParams(Bool_t steal = kFALSE) { if (steal) { TList *l = fConfigParams; fConfigParams = 0; return l;
+                                                                } else { return fConfigParams;} }
    virtual void  MarkBad(TSlave * /*s*/, TProofProgressStatus * /*status*/, TList ** /*missingFiles*/) { return; }
    virtual Int_t AddProcessed(TSlave * /*sl*/, TProofProgressStatus * /*st*/,
                     Double_t /*lat*/, TList ** /*missingFiles*/) { return 0; }

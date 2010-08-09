@@ -1906,6 +1906,18 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
       MergeOutputFiles();
 
       fOutput->SetOwner();
+
+      // Add the active-wrks-vs-proctime info from the packetizer
+      if (fPacketizer) {
+         fOutput->Add((TObject *) fPacketizer->GetProgressPerf(kTRUE));
+         TList *parms = fPacketizer->GetConfigParams();
+         if (parms) {
+            TIter nxo(parms);
+            TObject *o = 0;
+            while ((o = nxo())) fOutput->Add(o);
+         }
+      }
+
       SafeDelete(fSelector);
    } else {
       if (fExitStatus != kAborted) {
@@ -3032,12 +3044,12 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
    TDSetElement *e = fPacketizer->GetNextPacket( slave, r );
 
    if (e == 0) {
-      PDB(kPacketizer,2) Info("GetNextPacket","Done");
+      PDB(kPacketizer,2) Info("GetNextPacket","%s: done!", slave->GetOrdinal());
    } else if (e == (TDSetElement*) -1) {
-      PDB(kPacketizer,2) Info("GetNextPacket","Waiting");
+      PDB(kPacketizer,2) Info("GetNextPacket","%s: waiting ...", slave->GetOrdinal());
    } else {
       PDB(kPacketizer,2)
-         Info("GetNextPacket","To slave-%s (%s): '%s' '%s' '%s' %lld %lld",
+         Info("GetNextPacket","%s (%s): '%s' '%s' '%s' %lld %lld",
               slave->GetOrdinal(), slave->GetName(), e->GetFileName(),
               e->GetDirectory(), e->GetObjName(), e->GetFirst(), e->GetNum());
    }

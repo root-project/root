@@ -53,7 +53,6 @@
 #include "TSlave.h"
 #include "TSocket.h"
 #include "TSortedList.h"
-#include "TTimer.h"
 #include "TUrl.h"
 #include "TClass.h"
 #include "TRandom.h"
@@ -161,8 +160,10 @@ private:
    Long64_t       fProcessed;       // number of events processed on this node
    Long64_t       fEvents;          // number of entries in files on this node
 
+   Int_t          fStrategy;        // 0 means the classic and 1 (default) - the adaptive strategy
+
 public:
-   TFileNode(const char *name);
+   TFileNode(const char *name, Int_t strategy);
    ~TFileNode() { delete fFiles; delete fActFiles; }
 
    void        IncMySlaveCnt() { fMySlaveCnt++; }
@@ -280,7 +281,7 @@ public:
 
       // how many more events it has than obj
 
-      if (TPacketizerAdaptive::fgStrategy == 1) {
+      if (fStrategy == 1) {
          // The default adaptive strategy.
          Int_t myVal = GetRunSlaveCnt();
          Int_t otherVal = obj->GetRunSlaveCnt();
@@ -322,10 +323,10 @@ public:
 };
 
 
-TPacketizerAdaptive::TFileNode::TFileNode(const char *name)
+TPacketizerAdaptive::TFileNode::TFileNode(const char *name, Int_t strategy)
    : fNodeName(name), fFiles(new TList), fUnAllocFileNext(0),
      fActFiles(new TList), fActFileNext(0), fMySlaveCnt(0),
-     fExtSlaveCnt(0), fRunSlaveCnt(0), fProcessed(0), fEvents(0)
+     fExtSlaveCnt(0), fRunSlaveCnt(0), fProcessed(0), fEvents(0), fStrategy(strategy)
 {
    // Constructor
 
@@ -438,12 +439,6 @@ TProofProgressStatus *TPacketizerAdaptive::TSlaveStat::AddProcessed(TProofProgre
 
 ClassImp(TPacketizerAdaptive)
 
-Long_t   TPacketizerAdaptive::fgMaxSlaveCnt = -1;
-Int_t    TPacketizerAdaptive::fgPacketAsAFraction = 4;
-Double_t TPacketizerAdaptive::fgMinPacketTime = 3;
-Double_t TPacketizerAdaptive::fgMaxPacketTime = 20;
-Int_t    TPacketizerAdaptive::fgStrategy = 1;
-
 //______________________________________________________________________________
 TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
                                          Long64_t first, Long64_t num,
@@ -463,6 +458,10 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    fMaxPerfIdx = 1;
    fCachePacketSync = kTRUE;
    fMaxEntriesRatio = 2.;
+
+   fMaxSlaveCnt = -1;
+   fPacketAsAFraction = 4;
+   fStrategy = 1;
 
    if (!fProgressStatus) {
       Error("TPacketizerAdaptive", "No progress status");
@@ -492,7 +491,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
       strategy = gEnv->GetValue("Packetizer.Strategy", 1);
    }
    if (strategy == 0) {
-      fgStrategy = 0;
+      fStrategy = 0;
       Info("TPacketizerAdaptive", "using the basic strategy of TPacketizer");
    } else if (strategy != 1) {
       Warning("TPacketizerAdaptive", "unsupported strategy index (%d): ignore", strategy);
@@ -521,9 +520,9 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    if (!maxSlaveCnt)
       maxSlaveCnt = gEnv->GetValue("Packetizer.MaxWorkersPerNode", 0);
    if (maxSlaveCnt > 0) {
-      fgMaxSlaveCnt = maxSlaveCnt;
+      fMaxSlaveCnt = maxSlaveCnt;
       Info("TPacketizerAdaptive", "Setting max number of workers per node to %ld",
-           fgMaxSlaveCnt);
+           fMaxSlaveCnt);
    }
 
    // if forceLocal parameter is set to 1 then eliminate the cross-worker
@@ -550,25 +549,22 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    Int_t packetAsAFraction = 0;
    if (TProof::GetParameter(input, "PROOF_PacketAsAFraction", packetAsAFraction) == 0) {
       if (packetAsAFraction > 0) {
-         fgPacketAsAFraction = packetAsAFraction;
+         fPacketAsAFraction = packetAsAFraction;
          Info("TPacketizerAdaptive",
               "using alternate fraction of query time as a packet size: %d",
               packetAsAFraction);
       } else
          Info("TPacketizerAdaptive", "packetAsAFraction parameter must be higher than 0");
    }
-   Double_t minPacketTime = 0;
-   if (TProof::GetParameter(input, "PROOF_MinPacketTime", minPacketTime) == 0) {
-      Info("TPacketizerAdaptive", "setting minimum time for a packet to %f",
-           minPacketTime);
-      fgMinPacketTime = (Int_t) minPacketTime;
-   }
-   Double_t maxPacketTime = 0;
-   if (TProof::GetParameter(input, "PROOF_MaxPacketTime", maxPacketTime) == 0) {
-      Info("TPacketizerAdaptive", "setting maximum packet time for a packet to %f",
-           maxPacketTime);
-      fgMaxPacketTime = (Int_t) maxPacketTime;
-   }
+
+   // Save the config parameters in the dedicated list so that they will be saved
+   // in the outputlist and therefore in the relevant TQueryResult
+   fConfigParams->Add(new TParameter<Int_t>("PROOF_PacketizerCachePacketSync", (Int_t)fCachePacketSync));
+   fConfigParams->Add(new TParameter<Double_t>("PROOF_PacketizerMaxEntriesRatio", fMaxEntriesRatio));
+   fConfigParams->Add(new TParameter<Int_t>("PROOF_PacketizerStrategy", fStrategy));
+   fConfigParams->Add(new TParameter<Int_t>("PROOF_MaxWorkersPerNode", (Int_t)fMaxSlaveCnt));
+   fConfigParams->Add(new TParameter<Int_t>("PROOF_ForceLocal", (Int_t)fForceLocal));
+   fConfigParams->Add(new TParameter<Int_t>("PROOF_PacketAsAFraction", fPacketAsAFraction));
 
    Double_t baseLocalPreference = 1.2;
    TProof::GetParameter(input, "PROOF_BaseLocalPreference", baseLocalPreference);
@@ -641,7 +637,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
       TFileNode *node = (TFileNode *) fFileNodes->FindObject(nodeStr);
 
       if (node == 0) {
-         node = new TFileNode(nodeStr);
+         node = new TFileNode(nodeStr, fStrategy);
          fFileNodes->Add(node);
          PDB(kPacketizer,2)
             Info("TPacketizerAdaptive", "creating new node '%s' or the element", nodeStr.Data());
@@ -791,8 +787,8 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
       TFileNode *node = (TFileNode*) fFileNodes->FindObject(nodeStr);
 
 
-      if ( node == 0 ) {
-         node = new TFileNode( nodeStr );
+      if (node == 0) {
+         node = new TFileNode(nodeStr, fStrategy);
          fFileNodes->Add( node );
          PDB(kPacketizer, 2)
             Info("TPacketizerAdaptive", "creating new node '%s' for element", nodeStr.Data());
@@ -922,10 +918,10 @@ TPacketizerAdaptive::TFileStat *TPacketizerAdaptive::GetNextUnAlloc(TFileNode *n
             }
          }
 
-         if (node != 0 && fgMaxSlaveCnt > 0 && node->GetExtSlaveCnt() >= fgMaxSlaveCnt) {
+         if (node != 0 && fMaxSlaveCnt > 0 && node->GetExtSlaveCnt() >= fMaxSlaveCnt) {
             // Unlike in TPacketizer we look at the number of ext slaves only.
             PDB(kPacketizer,1)
-               Info("GetNextUnAlloc", "reached Workers-per-Node Limit (%ld)", fgMaxSlaveCnt);
+               Info("GetNextUnAlloc", "reached Workers-per-Node Limit (%ld)", fMaxSlaveCnt);
             node = 0;
          }
       }
@@ -961,10 +957,10 @@ TPacketizerAdaptive::TFileNode *TPacketizerAdaptive::NextNode()
    }
 
    TFileNode *fn = (TFileNode*) fUnAllocated->First();
-   if (fn != 0 && fgMaxSlaveCnt > 0 && fn->GetExtSlaveCnt() >= fgMaxSlaveCnt) {
+   if (fn != 0 && fMaxSlaveCnt > 0 && fn->GetExtSlaveCnt() >= fMaxSlaveCnt) {
       // unlike in TPacketizer we look at the number of ext slaves only.
       PDB(kPacketizer,1)
-         Info("NextNode", "reached Workers-per-Node Limit (%ld)", fgMaxSlaveCnt);
+         Info("NextNode", "reached Workers-per-Node Limit (%ld)", fMaxSlaveCnt);
       fn = 0;
    }
 
@@ -1009,9 +1005,9 @@ TPacketizerAdaptive::TFileNode *TPacketizerAdaptive::NextActiveNode()
 
    TFileNode *fn = (TFileNode*) fActive->First();
    // look at only ext slaves
-   if (fn != 0 && fgMaxSlaveCnt > 0 && fn->GetExtSlaveCnt() >= fgMaxSlaveCnt) {
+   if (fn != 0 && fMaxSlaveCnt > 0 && fn->GetExtSlaveCnt() >= fMaxSlaveCnt) {
       PDB(kPacketizer,1)
-         Info("NextActiveNode","reached Workers-per-Node limit (%ld)", fgMaxSlaveCnt);
+         Info("NextActiveNode","reached Workers-per-Node limit (%ld)", fMaxSlaveCnt);
       fn = 0;
    }
 
@@ -1386,15 +1382,15 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves,
 //______________________________________________________________________________
 Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr, Long64_t cachesz, Int_t learnent)
 {
-   // The result depends on the fgStrategy
+   // The result depends on the fStrategy
 
    Long64_t num;
-   if (fgStrategy == 0) {
+   if (fStrategy == 0) {
       // TPacketizer's heuristic for starting packet size
       // Constant packet size;
       Int_t nslaves = fSlaveStats->GetSize();
       if (nslaves > 0) {
-         num = fTotalEntries / (fgPacketAsAFraction * nslaves);
+         num = fTotalEntries / (fPacketAsAFraction * nslaves);
       } else {
          num = 1;
       }
@@ -1410,7 +1406,7 @@ Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr, Long64_t cach
 
          // Global average rate
          Float_t avgProcRate = (GetEntriesProcessed()/(GetCumProcTime() / fSlaveStats->GetSize()));
-         Float_t packetTime = ((fTotalEntries - GetEntriesProcessed())/avgProcRate)/fgPacketAsAFraction;
+         Float_t packetTime = ((fTotalEntries - GetEntriesProcessed())/avgProcRate)/fPacketAsAFraction;
 
          // Bytes-to-Event conversion
          Float_t bevt = GetBytesRead() / GetEntriesProcessed();
@@ -1445,8 +1441,8 @@ Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr, Long64_t cach
          }
 
          // Apply min-max again, if required
-         if (fgMaxPacketTime > 0. && packetTime > fgMaxPacketTime) packetTime = fgMaxPacketTime;
-         if (fgMinPacketTime > 0. && packetTime < fgMinPacketTime) packetTime = fgMinPacketTime;
+         if (fMaxPacketTime > 0. && packetTime > fMaxPacketTime) packetTime = fMaxPacketTime;
+         if (fMinPacketTime > 0. && packetTime < fMinPacketTime) packetTime = fMinPacketTime;
 
          // Translate the packet length in number of entries
          num = (Long64_t)(rate * packetTime);
@@ -1624,7 +1620,8 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
       if (fProgressStatus->GetEntries() >= fTotalEntries) {
          if (fProgressStatus->GetEntries() > fTotalEntries)
             Error("GetNextPacket", "Processed too many entries! (%lld, %lld)", fProgressStatus->GetEntries(), fTotalEntries);
-         HandleTimer(0);   // Send last timer message
+         // Send last timer message and stop the timer
+         HandleTimer(0);
          SafeDelete(fProgress);
       }
    } else {
@@ -1676,10 +1673,10 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
             nonLocalNodePossible = 0;
          else
             nonLocalNodePossible = firstNonLocalNode?
-               (fgMaxSlaveCnt > 0 && firstNonLocalNode->GetExtSlaveCnt() < fgMaxSlaveCnt):0;
+               (fMaxSlaveCnt > 0 && firstNonLocalNode->GetExtSlaveCnt() < fMaxSlaveCnt):0;
          openLocal = !nonLocalNodePossible;
          Float_t slaveRate = slstat->GetAvgRate();
-         if ( nonLocalNodePossible && fgStrategy == 1) {
+         if ( nonLocalNodePossible && fStrategy == 1) {
             // openLocal is set to kFALSE
             if ( slstat->GetFileNode()->GetRunSlaveCnt() >
                  slstat->GetFileNode()->GetMySlaveCnt() - 1 )
@@ -1712,7 +1709,7 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
                   openLocal = kTRUE;
             }
          }
-         if (openLocal || fgStrategy == 0) {
+         if (openLocal || fStrategy == 0) {
             // Try its own node
             file = slstat->GetFileNode()->GetNextUnAlloc();
             if (!file)

@@ -43,6 +43,7 @@
 #include "TMap.h"
 #include "TMessage.h"
 #include "TObjString.h"
+#include "TParameter.h"
 
 #include "TProof.h"
 #include "TProofDebug.h"
@@ -54,6 +55,7 @@
 #include "TUrl.h"
 #include "TMath.h"
 #include "TMonitor.h"
+#include "TNtuple.h"
 #include "TNtupleD.h"
 #include "TPerfStats.h"
 
@@ -63,6 +65,29 @@ ClassImp(TVirtualPacketizer)
 TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
 {
    // Constructor.
+
+   // General configuration parameters
+   fMinPacketTime = 3;
+   Double_t minPacketTime = 0;
+   if (TProof::GetParameter(input, "PROOF_MinPacketTime", minPacketTime) == 0) {
+      Info("TPacketizerAdaptive", "setting minimum time for a packet to %f",
+           minPacketTime);
+      fMinPacketTime = (Int_t) minPacketTime;
+   }
+   fMaxPacketTime = 20;
+   Double_t maxPacketTime = 0;
+   if (TProof::GetParameter(input, "PROOF_MaxPacketTime", maxPacketTime) == 0) {
+      Info("TPacketizerAdaptive", "setting maximum packet time for a packet to %f",
+           maxPacketTime);
+      fMaxPacketTime = (Int_t) maxPacketTime;
+   }
+
+   // Create the list to save them in the query result (each derived packetizer is
+   // responsible to update this coherently)
+   fConfigParams = new TList;
+   fConfigParams->SetName("PROOF_PacketizerConfigParams");
+   fConfigParams->Add(new TParameter<Double_t>("PROOF_MinPacketTime", fMinPacketTime));
+   fConfigParams->Add(new TParameter<Double_t>("PROOF_MaxPacketTime", fMaxPacketTime));
 
    fProgressStatus = st;
    if (!fProgressStatus) {
@@ -96,6 +121,8 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
    TProof::GetParameter(input, "PROOF_StartProgressTimer", startProgress);
 
    // Init progress timer, if requested
+   // The timer is destroyed (and therefore stopped) by the relevant TPacketizer implementation
+   // in GetNextPacket when end of work is detected.
    fProgress = 0;
    if (startProgress == "yes") {
       Long_t period = 500;
@@ -104,6 +131,20 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
       fProgress->SetObject(this);
       fProgress->Start(period, kFALSE);
    }
+
+   // Init ntple to store active workers vs processing time
+   TString saveProgressPerf("no");
+   TProof::GetParameter(input, "PROOF_SaveProgressPerf", saveProgressPerf);
+   fProgressPerf = 0;
+   if (fProgress && saveProgressPerf == "yes")
+      fProgressPerf = new TNtuple("PROOF_ProgressPerfNtuple",
+                                  "{Active workers, evt rate, MB read} vs processing time", "tm:aw:er:mb:ns");
+   fProcTimeLast = -1.;
+   fActWrksLast = -1;
+   fEvtRateLast = -1.;
+   fMBsReadLast = -1.;
+   fAWLastFill = kFALSE;
+   fReportPeriod = -1.;
 
    // Whether to send estimated values for the progress info
    TString estopt;
@@ -124,9 +165,13 @@ TVirtualPacketizer::~TVirtualPacketizer()
 {
    // Destructor.
 
+   Info("~TVirtualPacketize", "destroying ...");
+
    SafeDelete(fCircProg);
    SafeDelete(fProgress);
    SafeDelete(fFailedPackets);
+   SafeDelete(fConfigParams);
+   SafeDelete(fProgressPerf);
    fProgressStatus = 0; // belongs to the player
 }
 
@@ -294,10 +339,48 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
       // Message to be sent over
       TMessage m(kPROOF_PROGRESS);
       if (gProofServ->GetProtocol() > 25) {
+         Int_t actw = GetActiveWorkers();
+         Int_t acts = gProofServ->GetActSessions();
+         Float_t effs = gProofServ->GetEffSessions();
+         if (fProgressPerf && estent > 0) {
+            // Estimated query time
+            if (fProcTime > 0.) {
+               fReportPeriod = (Float_t) fTotalEntries / (Double_t) estent * fProcTime / 100.;
+               if (fReportPeriod > 0. && fReportPeriod < 5.) fReportPeriod = 5.;
+            }
+           
+            if (fProgressPerf->GetEntries() <= 0) {
+               // Fill the first entry
+               fProgressPerf->Fill(fProcTime, (Float_t)actw, -1., -1., -1.);
+            } else {
+               // Fill only if changed since last entry filled
+               Float_t *far = fProgressPerf->GetArgs();
+               fProgressPerf->GetEntry(fProgressPerf->GetEntries()-1);
+               Bool_t doReport = (fReportPeriod > 0. &&
+                                 (fProcTime - far[0]) >= fReportPeriod) ? kTRUE : kFALSE;
+               Float_t mbsread = estmb / 1024. / 1024.;
+               if (TMath::Abs((Float_t)actw - far[1]) > 0.1) {
+                  if (fAWLastFill)
+                     fProgressPerf->Fill(fProcTimeLast, (Float_t)fActWrksLast,
+                                         fEvtRateLast, fMBsReadLast, fEffSessLast);
+                  fProgressPerf->Fill(fProcTime, (Float_t)actw, evtrti, mbsread, effs);
+                  fAWLastFill = kFALSE;
+               } else if (doReport) {
+                  fProgressPerf->Fill(fProcTime, (Float_t)actw, evtrti, mbsread, effs);
+                  fAWLastFill = kFALSE;
+               } else {
+                  fAWLastFill = kTRUE;
+               }
+               fProcTimeLast = fProcTime;
+               fActWrksLast = actw;
+               fEvtRateLast = evtrti;
+               fMBsReadLast = mbsread;
+               fEffSessLast = effs;
+            }
+         }
          // Fill the message now
          TProofProgressInfo pi(fTotalEntries, estent, estmb, fInitTime,
-                               fProcTime, evtrti, mbrti, GetActiveWorkers(),
-                               gProofServ->GetActSessions(), gProofServ->GetEffSessions());
+                               fProcTime, evtrti, mbrti, actw, acts, effs);
          m << &pi;
       } else if (gProofServ->GetProtocol() > 11) {
          // Fill the message now

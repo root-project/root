@@ -40,7 +40,6 @@
 
 
 class TMessage;
-class TTimer;
 class TTree;
 class TMap;
 class TNtupleD;
@@ -72,6 +71,16 @@ private:
                                           // to open their local files (1 means indifferent)
    Bool_t         fForceLocal;            // if 1 - eliminate the remote processing
 
+   Long_t         fMaxSlaveCnt;        // maximum number of workers per filenode (Long_t to avoid
+                                       // warnings from backward compatibility support)
+   Int_t          fPacketAsAFraction;  // used to calculate the packet size
+                                       // fPacketSize = fTotalEntries / (fPacketAsAFraction * nslaves)
+                                       // fPacketAsAFraction can be interpreted as follows:
+                                       // assuming all slaves have equal processing rate, packet size
+                                       // is (#events processed by 1 slave) / fPacketSizeAsAFraction.
+                                       // It can be set with PROOF_PacketAsAFraction in input list.
+   Int_t          fStrategy;           // 0 means the classic and 1 (default) - the adaptive strategy
+
    TPacketizerAdaptive();
    TPacketizerAdaptive(const TPacketizerAdaptive&);    // no implementation, will generate
    void           InitStats();                         // initialise the stats
@@ -93,18 +102,6 @@ private:
    void           SplitPerHost(TList *elements, TList **listOfMissingFiles);
 
 public:
-   static Long_t   fgMaxSlaveCnt;  // maximum number of workers per filenode (Long_t to avoid
-                                   // warnings from backward compatibility support)
-   static Int_t    fgPacketAsAFraction; // used to calculate the packet size
-                                  // fPacketSize = fTotalEntries / (fPacketAsAFraction * nslaves)
-                                  // fPacketAsAFraction can be interpreted as follows:
-                                  // assuming all slaves have equal processing rate, packet size
-                                  // is (#events processed by 1 slave) / fPacketSizeAsAFraction.
-                                  // It can be set with PROOF_PacketAsAFraction in input list.
-   static Double_t fgMinPacketTime; // minimum packet time
-   static Double_t fgMaxPacketTime; // maximum packet time
-   static Int_t    fgStrategy;    // 0 means the classic and 1 (default) - the adaptive strategy
-
    TPacketizerAdaptive(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
                        TList *input, TProofProgressStatus *st);
    virtual ~TPacketizerAdaptive();
