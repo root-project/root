@@ -3059,7 +3059,7 @@ int G__tryindexopr(G__value* result7, G__value* para, int paran, int ig25)
 #ifdef G__ASM
          if (G__asm_noverflow) {
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: SETSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __LINE__, __LINE__);
+            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: SETSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
 #endif
             G__asm_inst[G__asm_cp] = G__SETSTROS;
             G__inc_cp_asm(1, 0);
