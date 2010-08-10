@@ -34,6 +34,7 @@ TProofQueryResult::TProofQueryResult(Int_t sn, const char *opt, TList *inlist,
 {
    // Main constructor.
 
+   fNumWrks = -1;
    fStartLog = -1;
 
    // Add data sets and event lists to the input list
@@ -44,11 +45,14 @@ TProofQueryResult::TProofQueryResult(Int_t sn, const char *opt, TList *inlist,
 }
 
 //______________________________________________________________________________
-void TProofQueryResult::SetRunning(Int_t startlog, const char *par)
+void TProofQueryResult::SetRunning(Int_t startlog, const char *par, Int_t nwrks)
 {
    // Call when running starts.
 
+   Info("SetRunning", "nwrks: %d", nwrks);
+
    fStatus = kRunning;
+   fNumWrks = nwrks;
    fStart.Set();
    fEnd.Set(fStart.Convert()-1);
    fParList = (par && (strlen(par) > 0)) ? par : "-";

@@ -39,7 +39,7 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
                fEntries(entries), fFirst(first),
                fBytes(0), fParList("-"), fOutputList(0),
                fFinalized(kFALSE), fArchived(kFALSE), fResultFile("-"),
-               fInitTime(0.), fProcTime(0.)
+               fInitTime(0.), fProcTime(0.), fNumWrks(-1)
 {
    // Main constructor.
 
@@ -140,6 +140,7 @@ TQueryResult *TQueryResult::CloneInfo()
    qr->fArchived = fArchived;
    qr->fInitTime = fInitTime;
    qr->fProcTime = fProcTime;
+   qr->fNumWrks = fNumWrks;
 
    qr->fSelecHdr = 0;
    if (GetSelecHdr()) {
@@ -365,6 +366,8 @@ void TQueryResult::Print(Option_t *opt) const
    Float_t size = ((Float_t)fBytes) / TMath::Power(2.,20.);
    Printf("+++        processed: %lld events (size: %.3f MBs)", fEntries, size);
    Printf("+++        rate:      %.1f evts/sec", rate);
+
+   Printf("+++        # workers: %d ", fNumWrks);
 
    // Package information
    if (fParList.Length() > 1)

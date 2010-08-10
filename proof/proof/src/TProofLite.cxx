@@ -929,7 +929,7 @@ void TProofLite::SetQueryRunning(TProofQueryResult *pq)
    }
 
    // Set in running state
-   pq->SetRunning(startlog, parlist);
+   pq->SetRunning(startlog, parlist, GetParallel());
 
    // Bytes and CPU at start (we will calculate the differential at end)
    pq->SetProcessInfo(pq->GetEntries(), GetCpuTime(), GetBytesRead());

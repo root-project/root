@@ -79,6 +79,7 @@ protected:
    TString         fResultFile;   //URL of the file where results have been archived
    Float_t         fInitTime;     //Initialization time (seconds) (millisec precision)
    Float_t         fProcTime;     //Processing time (seconds) (millisec precision)
+   Int_t           fNumWrks;      //Number of workers at start
 
    TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
                 Long64_t entries, Long64_t first,
@@ -103,7 +104,7 @@ public:
                     fLogFile(0), fSelecHdr(0), fSelecImp(0),
                     fLibList("-"), fOutputList(0),
                     fFinalized(kFALSE), fArchived(kFALSE),
-                    fInitTime(0.), fProcTime(0.) { }
+                    fInitTime(0.), fProcTime(0.), fNumWrks(-1) { }
    virtual ~TQueryResult();
 
    void           Browse(TBrowser *b = 0);
@@ -128,6 +129,7 @@ public:
    const char    *GetResultFile() const { return fResultFile; }
    Float_t        GetInitTime() const { return fInitTime; }
    Float_t        GetProcTime() const { return fProcTime; }
+   Int_t          GetNumWrks() const { return fNumWrks; }
 
    Bool_t         IsArchived() const { return fArchived; }
    virtual Bool_t IsDone() const { return (fStatus > kRunning); }
@@ -138,7 +140,7 @@ public:
 
    void Print(Option_t *opt = "") const;
 
-   ClassDef(TQueryResult,3)  //Class describing a query
+   ClassDef(TQueryResult,4)  //Class describing a query
 };
 
 inline Bool_t operator!=(const TQueryResult &qr1,  const TQueryResult &qr2)

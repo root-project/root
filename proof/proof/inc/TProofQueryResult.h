@@ -45,7 +45,7 @@ private:
 
    void  SetFinalized() { TQueryResult::SetFinalized(); }
    void  SetResultFile(const char *rf) { fResultFile = rf; }
-   void  SetRunning(Int_t startlog, const char *par);
+   void  SetRunning(Int_t startlog, const char *par, Int_t nwrks);
 
 public:
    TProofQueryResult() : TQueryResult(), fStartLog(-1) { }
