@@ -107,14 +107,14 @@ public:
    virtual bool ProvidesError() const { return true; } 
 
    /// return errors at the minimum 
-   virtual const double * Errors() const { return  &fErrors.front(); }
+   virtual const double * Errors() const { return  (fErrors.empty()) ? 0 : &fErrors.front(); }
 
    /** return covariance matrices elements 
        if the variable is fixed the matrix is zero
        The ordering of the variables is the same as in errors
    */ 
    virtual double CovMatrix(unsigned int i, unsigned int j) const { 
-      return fCovar[i + fDim* j]; 
+      return (fCovar.empty()) ? 0 : fCovar[i + fDim* j]; 
    }
 
    /// return covariance matrix status

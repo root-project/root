@@ -144,12 +144,12 @@ public:
    /// parameter errors (return st::vector) 
    const std::vector<double> & Errors() const { return fErrors; }
    /// parameter errors (return const pointer)
-   const double * GetErrors() const { return &fErrors.front(); }
+   const double * GetErrors() const { return (fErrors.empty()) ? 0 : &fErrors.front(); }
 
    /// parameter values (return std::vector)
    const std::vector<double> & Parameters() const { return fParams; }
    /// parameter values (return const pointer)
-   const double * GetParams() const { return &fParams.front();}
+   const double * GetParams() const { return &fParams.front(); }
 
    /// parameter value by index
    double Value(unsigned int i) const { return fParams[i]; }
