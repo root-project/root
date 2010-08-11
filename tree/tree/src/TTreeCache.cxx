@@ -407,10 +407,8 @@ void TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
          }
          if (subbranch) {
             name.Form("%s.%s",t->GetName(),subbranch);
-         } else {
-            name = bname;
+            AddBranch(name, subbranches);
          }
-         AddBranch(name, subbranches);
       }
    }
    if (!nb && !foundInFriend) {
