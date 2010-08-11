@@ -68,7 +68,9 @@ public:
        @param size maximum number of sub-intervals
     */
    explicit 
-   IntegratorMultiDim(IntegrationMultiDim::Type type = IntegrationMultiDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) { 
+   IntegratorMultiDim(IntegrationMultiDim::Type type = IntegrationMultiDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) :
+      fIntegrator(0), fFunc(0)
+   { 
        fIntegrator = CreateIntegrator(type, absTol, relTol, ncall); 
    }
    
@@ -81,7 +83,9 @@ public:
        @param ncall  number of function calls (apply only to MC integratioon methods)
     */
    explicit
-   IntegratorMultiDim(const IMultiGenFunction &f, IntegrationMultiDim::Type type = IntegrationMultiDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) { 
+   IntegratorMultiDim(const IMultiGenFunction &f, IntegrationMultiDim::Type type = IntegrationMultiDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) :
+      fIntegrator(0), fFunc(0)
+   { 
       fIntegrator = CreateIntegrator(type, absTol, relTol, ncall); 
       SetFunction(f);            
    }
@@ -112,7 +116,7 @@ public:
    // disable copy constructur and assignment operator 
 
 private:
-   IntegratorMultiDim(const IntegratorMultiDim &) {}
+   IntegratorMultiDim(const IntegratorMultiDim &) : fIntegrator(0), fFunc(0) {}
    IntegratorMultiDim & operator=(const IntegratorMultiDim &) { return *this; }
 
 public:

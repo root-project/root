@@ -100,9 +100,11 @@ public:
        lower rules are indicated for singular functions while higher for smooth functions to get better accuracies
     */
     explicit
-    IntegratorOneDim(IntegrationOneDim::Type type = IntegrationOneDim::kADAPTIVESINGULAR, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, unsigned int rule = 3) { 
-       fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule); 
-    }
+    IntegratorOneDim(IntegrationOneDim::Type type = IntegrationOneDim::kADAPTIVESINGULAR, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, unsigned int rule = 3) :
+       fIntegrator(0), fFunc(0)
+   { 
+      fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule); 
+   }
     
    /** 
        Constructor of one dimensional Integrator passing a function interface
@@ -115,7 +117,9 @@ public:
        @param rule Gauss-Kronrod integration rule (only for GSL ADAPTIVE type)  
     */
    explicit 
-   IntegratorOneDim(const IGenFunction &f, IntegrationOneDim::Type type = IntegrationOneDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, int rule = 3) { 
+   IntegratorOneDim(const IGenFunction &f, IntegrationOneDim::Type type = IntegrationOneDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, int rule = 3) :
+      fIntegrator(0), fFunc(0)
+   { 
       fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule); 
       SetFunction(f,true);
    }
@@ -133,7 +137,9 @@ public:
 
    template<class Function>
    explicit
-   IntegratorOneDim(Function & f, IntegrationOneDim::Type type = IntegrationOneDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, int rule = 3) { 
+   IntegratorOneDim(Function & f, IntegrationOneDim::Type type = IntegrationOneDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, int rule = 3) : 
+      fIntegrator(0), fFunc(0)
+   { 
       fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule); 
       SetFunction(f);
    }
@@ -146,7 +152,7 @@ public:
    // disable copy constructur and assignment operator 
 
 private:
-   IntegratorOneDim(const IntegratorOneDim &) {}
+   IntegratorOneDim(const IntegratorOneDim &) : fIntegrator(0), fFunc(0) {}
    IntegratorOneDim & operator=(const IntegratorOneDim &) { return *this; }
 
 public:
@@ -399,7 +405,7 @@ public:
    /**
       set the desired absolute Error
    */
-   void SetAbsTolerance(double absTolerance) { if (fIntegrator) fIntegrator->SetRelTolerance(absTolerance); }
+   void SetAbsTolerance(double absTolerance) { if (fIntegrator) fIntegrator->SetAbsTolerance(absTolerance); }
 
    /**
       return a pointer to integrator object 
