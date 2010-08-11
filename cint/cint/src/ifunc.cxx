@@ -4019,8 +4019,8 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
             break;
          case 'n': /* long long */
             if (G__PARAREFERENCE == formal_reftype) {
-               param->type = formal_type;
                if (param->type != formal_type) param->ref = 0;
+               param->type = formal_type;
                switch (param_type) {
                   case 'd':
                   case 'f':
@@ -4048,8 +4048,8 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
             break;
          case 'm': /* unsigned long long */
             if (G__PARAREFERENCE == formal_reftype) {
-               param->type = formal_type;
                if (param->type != formal_type) param->ref = 0;
+               param->type = formal_type;
                switch (param_type) {
                   case 'd':
                   case 'f':
@@ -4077,8 +4077,8 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
             break;
          case 'q': /* long double */
             if (G__PARAREFERENCE == formal_reftype) {
-               param->type = formal_type;
                if (param->type != formal_type) param->ref = 0;
+               param->type = formal_type;
                switch (param_type) {
                   case 'd':
                   case 'f':
