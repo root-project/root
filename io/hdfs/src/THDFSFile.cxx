@@ -149,8 +149,8 @@ THDFSFile::~THDFSFile()
 
    TRACE("destroy")
 
-   if (0 != fPath)
-      free(fPath);
+   if (fPath)
+      delete [] fPath;
 
    // We assume that the file is closed in SysClose
    // Explicitly release reference to HDFS filesystem object.
@@ -218,7 +218,7 @@ Int_t THDFSFile::SysOpen(const char * pathname, Int_t flags, UInt_t)
    TUrl url(pathname);
    const char * file = url.GetFile();
    size_t path_size = strlen(file);
-   fPath = (char *)malloc(path_size*sizeof(char));
+   fPath = new char[path_size+1];
    if (fPath == 0) {
       SysError("THDFSFile", "Unable to allocate memory for path.");
    }
