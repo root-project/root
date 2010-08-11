@@ -1121,7 +1121,7 @@ Int_t TH1::BufferEmpty(Int_t action)
       if (action == 0) return 0;
       nbentries  = -nbentries;
       fBuffer=0;
-      Reset();
+      Reset("ICE"); //do not reset the list of functions
       fBuffer = buffer;
    }
    if (TestBit(kCanRebin) || (fXaxis.GetXmax() <= fXaxis.GetXmin())) {
