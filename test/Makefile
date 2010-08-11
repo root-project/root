@@ -25,9 +25,9 @@ EVENTMTO        = EventMT.$(ObjSuf) EventMTDict.$(ObjSuf)
 EVENTMTS        = EventMT.$(SrcSuf) EventMTDict.$(SrcSuf)
 EVENTMTSO       = libEventMT.$(DllSuf)
 ifeq ($(PLATFORM),win32)
-EVENTLIB      = libEventMT.lib
+EVENTMTLIB      = libEventMT.lib
 else
-EVENTLIB      = $(shell pwd)/$(EVENTMTSO)
+EVENTMTLIB      = $(shell pwd)/$(EVENTMTSO)
 endif
 
 MAINEVENTO    = MainEvent.$(ObjSuf)
@@ -244,7 +244,7 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(EVENTMTO) $(HWORLDO) $(HSIMPLEO) $(MIN
                 $(STRESSENTRYLISTO) $(STRESSROOFITO) $(STRESSPROOFO) \
                 $(STRESSMATHMOREO) $(STRESSITERO) $(STRESSHISTO) $(STRESSGUIO)
 
-PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
+PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
                 $(STRESSSHAPES) $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) \
