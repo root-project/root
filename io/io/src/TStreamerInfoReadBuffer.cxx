@@ -1155,20 +1155,31 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                            vers, b.GetParent() ? b.GetParent()->GetName() : "memory/socket", oldClass->GetName(), newClass->GetName() );
                      continue;
                   }
+                  TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+                  TClass *valueClass = oldClass->GetCollectionProxy()->GetValueClass();
                   UInt_t startDummy, countDummy;
                   Version_t vClVersion = 0; // For vers less than 8, we have to use the current version.
                   if( vers >= 8 ) {
-                     vClVersion = b.ReadVersion( &startDummy, &countDummy, cle->GetCollectionProxy()->GetValueClass() );
+                     vClVersion = b.ReadVersion( &startDummy, &countDummy, valueClass );
+                  }
+
+                  if (valueClass == 0) {
+                     // MemberWise streaming applies to only collection of classes, and hence
+                     // valueClass can only be null if we are reading without the original library
+                     // and the collection is always empty,
+                     // So let's skip the rest (which requires the StreamerInfo of the valueClass ... which we do not have)
+
+                     b.SetBufferOffset(start+count+sizeof(UInt_t));
+                     continue;
                   }
 
                   TVirtualCollectionProxy *newProxy = (newClass ? newClass->GetCollectionProxy() : 0);
-                  TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
                   TStreamerInfo *subinfo = 0;
 
                   if( newProxy ) {
                      subinfo = (TStreamerInfo*)newProxy->GetValueClass()->GetConversionStreamerInfo( oldProxy->GetValueClass(), vClVersion );
                   } else {
-                     subinfo = (TStreamerInfo*)oldProxy->GetValueClass()->GetStreamerInfo( vClVersion );
+                     subinfo = (TStreamerInfo*)valueClass->GetStreamerInfo( vClVersion );
                      newProxy = oldProxy;
                   }
                   if (subinfo->IsOptimized()) {
