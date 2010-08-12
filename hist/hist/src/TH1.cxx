@@ -883,6 +883,12 @@ void TH1::Add(const TH1 *h1, Double_t c1)
 // otherwise with negative c1 (histogram subtraction) one risks to get negative variances
    Bool_t resetStats = (c1 < 0);
    if (!resetStats) {
+      // need to initialize to zero s1 and s2 since 
+      // GetStats fills only used elements depending on dimension and type
+      for (Int_t i=0;i<kNstat;i++) {
+         s1[i] = 0; 
+         s2[i] = 0; 
+      }      
       GetStats(s1);
       h1->GetStats(s2);
       for (Int_t i=0;i<kNstat;i++) {
@@ -997,6 +1003,12 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 // otherwise with negative c1 (histogram subtraction) one risks to get negative variances
    Bool_t resetStats = (c1*c2 < 0);
    if (!resetStats) {
+      // need to initialize to zero s1 and s2 since 
+      // GetStats fills only used elements depending on dimension and type
+      for (Int_t i=0;i<kNstat;i++) {
+         s1[i] = 0; 
+         s2[i] = 0; 
+      }      
       h1->GetStats(s1);
       h2->GetStats(s2);
       for (Int_t i=0;i<kNstat;i++) {
