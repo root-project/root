@@ -19,7 +19,6 @@
 
 #include "TProfileHelper.h"
 
-const Int_t kNstat = 11;
 Bool_t TProfile2D::fgApproximate = kFALSE;
 
 ClassImp(TProfile2D)

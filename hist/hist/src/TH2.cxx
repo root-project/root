@@ -928,7 +928,7 @@ Double_t TH2::GetCovariance(Int_t axis1, Int_t axis2) const
       Error("GetCovariance","Wrong parameters");
       return 0;
    }
-   Double_t stats[7];
+   Double_t stats[kNstat];
    GetStats(stats);
    Double_t sumw   = stats[0];
    //Double_t sumw2  = stats[1];
@@ -1626,8 +1626,7 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    }
 
    // save original statistics
-   const Int_t kNstat2D = 7;
-   Double_t stat[kNstat2D];
+   Double_t stat[kNstat];
    GetStats(stat);
    bool resetStat = false;
 

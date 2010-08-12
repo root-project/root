@@ -958,7 +958,7 @@ Double_t TH3::GetCovariance(Int_t axis1, Int_t axis2) const
       Error("GetCovariance","Wrong parameters");
       return 0;
    }
-   Double_t stats[11];
+   Double_t stats[kNstat];
    GetStats(stats);
    Double_t sumw   = stats[0];
    Double_t sumw2  = stats[1];
@@ -2249,6 +2249,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, TAxis* projX, TAxis
    if (!resetStats) {
       Double_t stats[kNstat];
       Double_t oldst[kNstat]; // old statistics
+      for (Int_t i = 0; i < kNstat; ++i) { oldst[i] = 0; }
       GetStats(oldst); 
       std::copy(oldst,oldst+kNstat,stats);
       // not that projX refer to Y axis and projX refer to the X axis of projected histogram
