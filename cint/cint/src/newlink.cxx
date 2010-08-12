@@ -9004,7 +9004,7 @@ void G__cpplink_memvar(FILE *fp)
                   //
                   int pvoidflag = 0; // if true, pass G__PVOID as the addr to force G__malloc to allocate storage.
                   if (
-                     // Is enumerator or unaddressable bool.
+                     // Type is unaddressable bool or is an enum.
 #ifdef G__UNADDRESSABLEBOOL
                      (var->type[j] == 'g') || // is bool, or
 #endif // G__UNADDRESSABLEBOOL
@@ -9012,7 +9012,7 @@ void G__cpplink_memvar(FILE *fp)
                         var->constvar[j] && // is const, and // TODO: Do we need this check?
                         islower(var->type[j]) && // not a pointer, and // TODO: Do we need this check?
                         (var->p_tagtable[j] != -1) && // class tag is valid, and
-                        (G__struct.type[var->p_tagtable[j]] == 'e') // data member of an enum
+                        (G__struct.type[var->p_tagtable[j]] == 'e') // type is an enum type.
                      )
                   ) {
                      // Pass G__PVOID as the address to force G__malloc to allocate storage.
@@ -9168,18 +9168,14 @@ void G__cpplink_memvar(FILE *fp)
                         (G__globalcomp != G__CLINK) // not generating a C dictionary
                      ) {
                         // Static const integral type.
-                        fprintf(
-                             fp
-                           , "G__FastAllocString(%d).Format(\""
-                           , G__LONGLINE
-                        );
-                        fprintf(fp, "%s", var->varnamebuf[j]);
-                        if (var->access[j] != G__PUBLIC) {
-                              // Not public, so cannot access the value, force it to zero.
-                              fprintf(fp , "=0\").data()");
-                        }
-                        else {
-                           // Public, use the value directly.
+                        if (var->access[j] == G__PUBLIC) {
+                           // Public, let the compiler provide the value.
+                           fprintf(
+                                fp
+                              , "G__FastAllocString(%d).Format(\""
+                              , G__LONGLINE
+                           );
+                           fprintf(fp, "%s", var->varnamebuf[j]);
 #ifdef G_WIN32
                            if (
                               (var->type[j] == 'g') || // bool
@@ -9231,28 +9227,57 @@ void G__cpplink_memvar(FILE *fp)
 #endif // G_WIN32
                            // --
                         }
+                        else {
+                           // Not public, so compiler cannot access the value,
+                           // get it from the interpreter.
+                           fprintf(fp, "\"%s", var->varnamebuf[j]);
+                           switch (var->type[j]) {
+                              case 'g': // bool
+                                 // --
+#ifdef G__BOOL4BYTE
+                                 fprintf(fp, "=%lldLL\"", (long long) *(int*)var->p[j]);
+#else // G__BOOL4BYTE
+                                 fprintf(fp, "=%lldULL\"", (unsigned long long) *(unsigned char*)var->p[j]);
+#endif // G__BOOL4BYTE
+                                 break;
+                              case 'c': // char
+                                 fprintf(fp, "=%lldLL\"", (long long) *(char*)var->p[j]);
+                                 break;
+                              case 'b': // unsigned char
+                                 fprintf(fp , "=%lluULL\"", (unsigned long long) *(unsigned char*)var->p[j]);
+                                 break;
+                              case 's': // short
+                                 fprintf(fp, "=%lldLL\"", (long long) *(short*)var->p[j]);
+                                 break;
+                              case 'r': // unsigned short
+                                 fprintf(fp, "=%lluULL\"", (unsigned long long) *(unsigned short*)var->p[j]);
+                                 break;
+                              case 'i': // int
+                                 fprintf(fp, "=%lldLL\"", (long long) *(int*)var->p[j]);
+                                 break;
+                              case 'h': // unsigned int
+                                 fprintf(fp , "=%lluULL\"", (unsigned long long) *(unsigned int*)var->p[j]);
+                                 break;
+                              case 'l': // long
+                                 fprintf(fp, "=%lldLL\"", (long long) *(long*)var->p[j]);
+                                 break;
+                              case 'k': // unsigned long
+                                 fprintf(fp , "=%lluULL\"", (unsigned long long) *(unsigned long*)var->p[j]);
+                                 break;
+                              case 'n': // long long
+                                 fprintf(fp, "=%lldLL\"", *(long long*)var->p[j]);
+                                 break;
+                              case 'm': // unsigned long long
+                                 fprintf(fp , "=%lluULL\"", *(unsigned long long*)var->p[j]);
+                                 break;
+                           }
+                        }
                      }
                      else {
-                        // Enumerator.
+                        // Enum type.
                         // FIXME: CAUTION: This implementation cause error on enum in nested class.
                         // FIXME: This is wrong for G__UNADDRESSABLEBOOL && (var->type[j] == 'g').
-                        fprintf(fp, "\"%s", var->varnamebuf[j]);
-                        G__value initializer_value;
-                        G__FastAllocString qualified_id(G__MAXNAME*6);
-                        qualified_id.Format("%s::%s", G__fulltagname(i, 1), var->varnamebuf[j]);
-                        {
-                           int store_var_type = G__var_type;
-                           G__var_type = 'p';
-                           initializer_value = G__getitem(qualified_id);
-                           G__var_type = store_var_type;
-                        }
-                        G__FastAllocString init_value_str(G__MAXNAME*6);
-                        G__string(initializer_value, init_value_str);
-                        {
-                           G__FastAllocString initializer_expression(G__MAXNAME*6);
-                           G__quotedstring(init_value_str, initializer_expression);
-                           fprintf(fp, "=%s\"", initializer_expression());
-                        }
+                        fprintf(fp, "\"%s=%d\"", var->varnamebuf[j], *(int*)var->p[j]);
                      }
                   }
                   //
