@@ -139,7 +139,7 @@ The Y-axis is drawn on the right side of the plot.
 <p>
 
 Several drawing options can be combined. In the following example the graph
-is drawn as a smooth curve (optiob "C") and with markers (option "P"). The
+is drawn as a smooth curve (option "C") and with markers (option "P"). The
 option "A" request the definition of the axis.
 
 End_Html
