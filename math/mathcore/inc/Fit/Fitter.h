@@ -264,7 +264,7 @@ public:
       In this case a new instance of ROOT::Math::Minimizer will be re-created and can be 
       obtained calling again GetMinimizer()
     */
-   ROOT::Math::Minimizer * GetMinimizer() { return fMinimizer.get(); } 
+   ROOT::Math::Minimizer * GetMinimizer() const { return fMinimizer.get(); } 
 
    /**
       return pointer to last used objective function 
@@ -275,7 +275,7 @@ public:
       In this case a new instance of the function pointer will be re-created and can be 
       obtained calling again GetFCN()  
     */
-   ROOT::Math::IMultiGenFunction * GetFCN() { return fObjFunction.get(); } 
+   ROOT::Math::IMultiGenFunction * GetFCN() const { return fObjFunction.get(); } 
 
 
 protected: 

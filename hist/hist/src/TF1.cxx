@@ -2531,39 +2531,43 @@ Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_
 }
 
 //______________________________________________________________________________
-Double_t TF1::IntegralError(Double_t a, Double_t b, Double_t epsilon)
+Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t * params, const Double_t * covmat, Double_t epsilon )
 {
    // Return Error on Integral of a parameteric function between a and b 
-   // due to the parameters uncertainties.
-   // It is assumed the parameters are estimated from a fit and the covariance
-   // matrix resulting from the fit is used in estimating this error.
-   //
-   // IMPORTANT NOTE: The calculation is valid assuming the parameters 
-   // are resulting from the latest fit. If in the meantime a fit is done 
+   // due to the parameter uncertainties.
+   // A pointer to a vector of parameter values and to the elements of the covariance matrix (covmat) can be optionally passed.
+   // By default (i.e. when a zero pointer is passed) the current stored parameter values are used to estimate the integral error 
+   // together with the covariance matrix from the last fit (retrieved from the global fitter instance) 
+   // IMPORTANT NOTE: When no covariance matrix is passed and in the meantime a fit is done 
    // using another function, the routine will signal an error and return zero.
+   // 
+   // To get the matrix and values from an old fit do for example:  
+   // TFitResultPtr r = histo->Fit(func, "S");
+   // ..... after performing other fits on the same function do 
+   // func->IntegralError(x1,x2,r->GetParams(), r->GetCovarianceMatrix()->GetMatrixArray() );
 
    Double_t x1[1]; 
    Double_t x2[1]; 
    x1[0] = a, x2[0] = b;
-   return ROOT::TF1Helper::IntegralError(this,1,x1,x2,epsilon);
+   return ROOT::TF1Helper::IntegralError(this,1,x1,x2,params,covmat,epsilon);
 }
 
 //______________________________________________________________________________
-Double_t TF1::IntegralError(Int_t n, const Double_t * a, const Double_t * b, Double_t epsilon)
+Double_t TF1::IntegralError(Int_t n, const Double_t * a, const Double_t * b, const Double_t * params, const  Double_t * covmat, Double_t epsilon )
 {
    // Return Error on Integral of a parameteric function with dimension larger tan one 
    // between a[] and b[]  due to the parameters uncertainties.
-   // It is assumed the parameters are estimated from a fit and the covariance
-   // matrix resulting from the fit is used in estimating this error.
    // For a TF1 with dimension larger than 1 (for example a TF2 or TF3) 
    // TF1::IntegralMultiple is used for the integral calculation
    //
-   //
-   // IMPORTANT NOTE: The calculation is valid assuming the parameters 
-   // are resulting from the latest fit. If in the meantime a fit is done 
+   // A pointer to a vector of parameter values and to the elements of the covariance matrix (covmat) can be optionally passed.
+   // By default (i.e. when a zero pointer is passed) the current stored parameter values are used to estimate the integral error 
+   // together with the covariance matrix from the last fit (retrieved from the global fitter instance) 
+   // IMPORTANT NOTE: When no covariance matrix is passed and in the meantime a fit is done 
    // using another function, the routine will signal an error and return zero.
+   //
 
-   return ROOT::TF1Helper::IntegralError(this,n,a,b,epsilon);
+   return ROOT::TF1Helper::IntegralError(this,n,a,b,params,covmat,epsilon);
 }
 
 #ifdef INTHEFUTURE

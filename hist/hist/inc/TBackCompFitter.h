@@ -27,6 +27,7 @@
 #endif
 
 
+
 #include <vector>
 
 /**
@@ -34,6 +35,7 @@
 */
 
 class TGraph; 
+class TFitResult; 
 
 namespace ROOT { 
    namespace Fit { 
@@ -106,14 +108,17 @@ public:
    // get reference to Fit Result object (NOTE: it will be invalid when class is deleted) 
    const ROOT::Fit::FitResult & GetFitResult() const { return fFitter->Result(); }
 
+   // get a copy of the Fit result returning directly a new  TFitResult 
+   TFitResult * GetTFitResult() const; 
+
    // get reference to Fit Data object (NOTE: it will be invalid when class is deleted) 
    const ROOT::Fit::FitData & GetFitData() const { return *fFitData; }
 
    // return pointer to last used minimizer
-   ROOT::Math::Minimizer * GetMinimizer(); 
+   ROOT::Math::Minimizer * GetMinimizer() const; 
 
    // return pointer to last used objective function
-   ROOT::Math::IMultiGenFunction * GetObjFunction(); 
+   ROOT::Math::IMultiGenFunction * GetObjFunction() const; 
    
    // scan likelihood value of  parameter and fill the given graph. 
    bool  Scan(unsigned int ipar, TGraph * gr, double xmin = 0, double xmax = 0);
