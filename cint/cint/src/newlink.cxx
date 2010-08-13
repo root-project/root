@@ -9004,13 +9004,20 @@ void G__cpplink_memvar(FILE *fp)
                   //
                   int pvoidflag = 0; // if true, pass G__PVOID as the addr to force G__malloc to allocate storage.
                   if (
-                     // Type is unaddressable bool or is an enum.
-#ifdef G__UNADDRESSABLEBOOL
-                     (var->type[j] == 'g') || // is bool, or
-#endif // G__UNADDRESSABLEBOOL
+                     // Is a special data member for representing
+                     // an enumerator value (has static const enum
+                     // type, with type code 'i').
+                     // FIXME: Collides with a data member of static const enumeration type!
+                     (var->statictype[j] == G__LOCALSTATIC) && // static member, and
+                     var->constvar[j] && // is const, and
+                     (var->type[j] == 'i') && // not a pointer, type int, and
+                     (var->reftype[j] == G__PARANORMAL) && // not a ref, and
                      (
-                        var->constvar[j] && // is const, and // TODO: Do we need this check?
-                        islower(var->type[j]) && // not a pointer, and // TODO: Do we need this check?
+                        // no elements, no dimensions, not an array
+                        !var->varlabel[j][1] /* number of elements */ &&
+                        !var->paran[j]
+                     ) && // and,
+                     (
                         (var->p_tagtable[j] != -1) && // class tag is valid, and
                         (G__struct.type[var->p_tagtable[j]] == 'e') // type is an enum type.
                      )
@@ -9018,7 +9025,7 @@ void G__cpplink_memvar(FILE *fp)
                      // Pass G__PVOID as the address to force G__malloc to allocate storage.
                      pvoidflag = 1;
                   }
-                  else if (
+                  if (
                      // Is static const integral type.
                      (var->statictype[j] == G__LOCALSTATIC) && // static member, and
                      var->constvar[j] && // is const, and
@@ -9031,6 +9038,7 @@ void G__cpplink_memvar(FILE *fp)
                         !var->paran[j]
                      ) && // and,
                      ( // of integral type
+                        (var->type[j] == 'g') || // bool
                         (var->type[j] == 'c') || // char
                         (var->type[j] == 'b') || // unsigned char
                         (var->type[j] == 's') || // short
@@ -9040,7 +9048,7 @@ void G__cpplink_memvar(FILE *fp)
                         (var->type[j] == 'l') || // long
                         (var->type[j] == 'k') || // unsigned long
                         (var->type[j] == 'n') || // long long
-                        (var->type[j] == 'm') // unsigned long long
+                        (var->type[j] == 'm')    // unsigned long long
                      )
                   ) {
                      // Pass G__PVOID as the address to force G__malloc to allocate storage.
@@ -9055,43 +9063,44 @@ void G__cpplink_memvar(FILE *fp)
                   //  the address of the member for a static data
                   //  member, or a namespace member.
                   //
-                  if ((var->access[j] == G__PUBLIC) && !var->bitfield[j]) {
-                     // Public member and not a bitfield.
-                     if (!G__struct.name[i][0]) {
-                        // Unnamed class or namespace.
-                        // We pass a null pointer, which means
-                        // no data allocation (unfortunate, but
-                        // we have no way to take the address).
-                        fprintf(fp, "(void*)0,");
-                     }
-                     else if ( // Static member or namespace member.
-                        (var->statictype[j] == G__LOCALSTATIC) || // static member, or
-                        (G__struct.type[i] == 'n') // namespace member.
-                     ) { // Static member or namespace member.
-                        if (pvoidflag) {
-                           // Special case, is unaddressable bool, or enumerator.
-                           // Pass G__PVOID to force G__malloc to allocate storage.
-                           fprintf(fp, "(void*)G__PVOID,");
+                  if (pvoidflag) {
+                     // Special case, special enumerator data member or
+                     // static const integral data member.
+                     // Pass G__PVOID to force G__malloc to allocate storage.
+                     fprintf(fp, "(void*)G__PVOID,");
+                  }
+                  else {
+                     if ((var->access[j] == G__PUBLIC) && !var->bitfield[j]) {
+                        // Public member and not a bitfield.
+                        if (!G__struct.name[i][0]) {
+                           // Unnamed class or namespace.
+                           // We pass a null pointer, which means
+                           // no data allocation (unfortunate, but
+                           // we have no way to take the address).
+                           fprintf(fp, "(void*)0,");
                         }
-                        else {
+                        else if ( // Static member or namespace member.
+                           (var->statictype[j] == G__LOCALSTATIC) || // static member, or
+                           (G__struct.type[i] == 'n') // namespace member.
+                        ) { // Static member or namespace member.
                            // Pass the addr of the member.
                            fprintf(fp, "(void*)(&%s::%s),", G__fulltagname(i, 1), var->varnamebuf[j]);
                         }
+                        else {
+                           // Pass the offset of the member in the class.
+                           fprintf(fp, "(void*)((long)(&p->%s)-(long)(p)),", var->varnamebuf[j]);
+                        }
+                     }
+                     else if ((var->access[j] == G__PROTECTED) && G__struct.protectedaccess[i]) {
+                        // Protected member, and enabled by pragma link.
+                        // FIXME: Need code for enum, bool, and static const.
+                        fprintf(fp, "(void*)((%s_PR*)p)->G__OS_%s(),", G__get_link_tagname(i), var->varnamebuf[j]);
                      }
                      else {
-                        // Pass the offset of the member in the class.
-                        fprintf(fp, "(void*)((long)(&p->%s)-(long)(p)),", var->varnamebuf[j]);
+                        // Private or protected member, we pass a null pointer, unfortunate,
+                        // but we have no way to take the address of these.
+                        fprintf(fp, "(void*)0,");
                      }
-                  }
-                  else if ((var->access[j] == G__PROTECTED) && G__struct.protectedaccess[i]) {
-                     // Protected member, and enabled by pragma link.
-                     // FIXME: Need code for enum, bool, and static const.
-                     fprintf(fp, "(void*)((%s_PR*)p)->G__OS_%s(),", G__get_link_tagname(i), var->varnamebuf[j]);
-                  }
-                  else {
-                     // Private or protected member, we pass a null pointer, unfortunate,
-                     // but we have no way to take the address of these.
-                     fprintf(fp, "(void*)0,");
                   }
                   //
                   //  Type code, referenceness, and constness.
@@ -9126,7 +9135,7 @@ void G__cpplink_memvar(FILE *fp)
                   //  Name and array dimensions (quoted) as the
                   //  left hand side of an assignment expression.
                   //
-                  if (!pvoidflag) {
+                  if (!pvoidflag || (G__globalcomp == G__CLINK)) {
                      // No special initializer needed.
                      fprintf(fp, "\"%s", var->varnamebuf[j]);
                      if (var->varlabel[j][1] /* num of elements */ == INT_MAX /* unspecified length array */) {
@@ -9141,143 +9150,111 @@ void G__cpplink_memvar(FILE *fp)
                      fprintf(fp, "=\"");
                   }
                   else {
-                     if (
-                        (var->statictype[j] == G__LOCALSTATIC) && // static member, and
-                        var->constvar[j] && // is const, and
-                        (var->p_tagtable[j] == -1) && // is fundamental type, and
-                        islower(var->type[j]) && // not a pointer, and
-                        (var->reftype[j] == G__PARANORMAL) && // not a ref, and
-                        (
-                           // no elements, no dimensions, not an array
-                           !var->varlabel[j][1] /* number of elements */ &&
-                           !var->paran[j]
-                        ) && // and,
-                        ( // of integral type
+                     // Special enumerator, or static const integral type.
+                     if (var->access[j] == G__PUBLIC) {
+                        // Public, let the compiler provide the value.
+                        fprintf(
+                             fp
+                           , "G__FastAllocString(%d).Format(\""
+                           , G__LONGLINE
+                        );
+                        fprintf(fp, "%s=", var->varnamebuf[j]);
+#ifdef G_WIN32
+                        if (
                            (var->type[j] == 'g') || // bool
                            (var->type[j] == 'c') || // char
-                           (var->type[j] == 'b') || // unsigned char
                            (var->type[j] == 's') || // short
-                           (var->type[j] == 'r') || // unsigned short
                            (var->type[j] == 'i') || // int
-                           (var->type[j] == 'h') || // unsigned int
                            (var->type[j] == 'l') || // long
-                           (var->type[j] == 'k') || // unsigned long
-                           (var->type[j] == 'n') || // long long
-                           (var->type[j] == 'm') // unsigned long long
-                        ) && // and,
-                        (G__globalcomp != G__CLINK) // not generating a C dictionary
-                     ) {
-                        // Static const integral type.
-                        if (var->access[j] == G__PUBLIC) {
-                           // Public, let the compiler provide the value.
+                           (var->type[j] == 'n')    // long long
+                        ) {
                            fprintf(
                                 fp
-                              , "G__FastAllocString(%d).Format(\""
-                              , G__LONGLINE
+                              , "%%I64dLL\",(G__int64)%s::%s).data()"
+                              , G__fulltagname(i, 1)
+                              , var->varnamebuf[j]
                            );
-                           fprintf(fp, "%s", var->varnamebuf[j]);
-#ifdef G_WIN32
-                           if (
-                              (var->type[j] == 'g') || // bool
-                              (var->type[j] == 'c') || // char
-                              (var->type[j] == 's') || // short
-                              (var->type[j] == 'i') || // int
-                              (var->type[j] == 'l') || // long
-                              (var->type[j] == 'n')    // long long
-                           ) {
-                              fprintf(
-                                   fp
-                                 , "=%%I64dLL\",(G__int64)%s::%s).data()"
-                                 , G__fulltagname(i, 1)
-                                 , var->varnamebuf[j]
-                              );
-                           }
-                           else {
-                              fprintf(
-                                   fp
-                                 , "=%%I64uULL\",(G__uint64)%s::%s).data()"
-                                 , G__fulltagname(i, 1)
-                                 , var->varnamebuf[j]
-                              );
-                           }
-#else // G_WIN32
-                           if (
-                              (var->type[j] == 'g') || // bool
-                              (var->type[j] == 'c') || // char
-                              (var->type[j] == 's') || // short
-                              (var->type[j] == 'i') || // int
-                              (var->type[j] == 'l') || // long
-                              (var->type[j] == 'n')    // long long
-                           ) {
-                              fprintf(
-                                   fp
-                                 , "=%%lldLL\",(long long)%s::%s).data()"
-                                 , G__fulltagname(i, 1)
-                                 , var->varnamebuf[j]
-                              );
-                           }
-                           else {
-                              fprintf(
-                                   fp
-                                 , "=%%lluULL\",(unsigned long long)%s::%s).data()"
-                                 , G__fulltagname(i, 1)
-                                 , var->varnamebuf[j]
-                              );
-                           }
-#endif // G_WIN32
-                           // --
                         }
                         else {
-                           // Not public, so compiler cannot access the value,
-                           // get it from the interpreter.
-                           fprintf(fp, "\"%s", var->varnamebuf[j]);
-                           switch (var->type[j]) {
-                              case 'g': // bool
-                                 // --
-#ifdef G__BOOL4BYTE
-                                 fprintf(fp, "=%lldLL\"", (long long) *(int*)var->p[j]);
-#else // G__BOOL4BYTE
-                                 fprintf(fp, "=%lldULL\"", (unsigned long long) *(unsigned char*)var->p[j]);
-#endif // G__BOOL4BYTE
-                                 break;
-                              case 'c': // char
-                                 fprintf(fp, "=%lldLL\"", (long long) *(char*)var->p[j]);
-                                 break;
-                              case 'b': // unsigned char
-                                 fprintf(fp , "=%lluULL\"", (unsigned long long) *(unsigned char*)var->p[j]);
-                                 break;
-                              case 's': // short
-                                 fprintf(fp, "=%lldLL\"", (long long) *(short*)var->p[j]);
-                                 break;
-                              case 'r': // unsigned short
-                                 fprintf(fp, "=%lluULL\"", (unsigned long long) *(unsigned short*)var->p[j]);
-                                 break;
-                              case 'i': // int
-                                 fprintf(fp, "=%lldLL\"", (long long) *(int*)var->p[j]);
-                                 break;
-                              case 'h': // unsigned int
-                                 fprintf(fp , "=%lluULL\"", (unsigned long long) *(unsigned int*)var->p[j]);
-                                 break;
-                              case 'l': // long
-                                 fprintf(fp, "=%lldLL\"", (long long) *(long*)var->p[j]);
-                                 break;
-                              case 'k': // unsigned long
-                                 fprintf(fp , "=%lluULL\"", (unsigned long long) *(unsigned long*)var->p[j]);
-                                 break;
-                              case 'n': // long long
-                                 fprintf(fp, "=%lldLL\"", *(long long*)var->p[j]);
-                                 break;
-                              case 'm': // unsigned long long
-                                 fprintf(fp , "=%lluULL\"", *(unsigned long long*)var->p[j]);
-                                 break;
-                           }
+                           fprintf(
+                                fp
+                              , "%%I64uULL\",(G__uint64)%s::%s).data()"
+                              , G__fulltagname(i, 1)
+                              , var->varnamebuf[j]
+                           );
                         }
+#else // G_WIN32
+                        if (
+                           (var->type[j] == 'g') || // bool
+                           (var->type[j] == 'c') || // char
+                           (var->type[j] == 's') || // short
+                           (var->type[j] == 'i') || // int
+                           (var->type[j] == 'l') || // long
+                           (var->type[j] == 'n')    // long long
+                        ) {
+                           fprintf(
+                                fp
+                              , "%%lldLL\",(long long)%s::%s).data()"
+                              , G__fulltagname(i, 1)
+                              , var->varnamebuf[j]
+                           );
+                        }
+                        else {
+                           fprintf(
+                                fp
+                              , "%%lluULL\",(unsigned long long)%s::%s).data()"
+                              , G__fulltagname(i, 1)
+                              , var->varnamebuf[j]
+                           );
+                        }
+#endif // G_WIN32
+                        // --
                      }
                      else {
-                        // Enum type.
-                        // FIXME: CAUTION: This implementation cause error on enum in nested class.
-                        // FIXME: This is wrong for G__UNADDRESSABLEBOOL && (var->type[j] == 'g').
-                        fprintf(fp, "\"%s=%d\"", var->varnamebuf[j], *(int*)var->p[j]);
+                        // Not public, so compiler cannot access the value,
+                        // get it from the interpreter.
+                        fprintf(fp, "\"%s=", var->varnamebuf[j]);
+                        switch (var->type[j]) {
+                           case 'g': // bool
+                              // --
+#ifdef G__BOOL4BYTE
+                              fprintf(fp, "%lldLL", (long long) *(int*)var->p[j]);
+#else // G__BOOL4BYTE
+                              fprintf(fp, "%lldULL", (unsigned long long) *(unsigned char*)var->p[j]);
+#endif // G__BOOL4BYTE
+                              break;
+                           case 'c': // char
+                              fprintf(fp, "%lldLL", (long long) *(char*)var->p[j]);
+                              break;
+                           case 'b': // unsigned char
+                              fprintf(fp , "%lluULL", (unsigned long long) *(unsigned char*)var->p[j]);
+                              break;
+                           case 's': // short
+                              fprintf(fp, "%lldLL", (long long) *(short*)var->p[j]);
+                              break;
+                           case 'r': // unsigned short
+                              fprintf(fp, "%lluULL", (unsigned long long) *(unsigned short*)var->p[j]);
+                              break;
+                           case 'i': // int
+                              fprintf(fp, "%lldLL", (long long) *(int*)var->p[j]);
+                              break;
+                           case 'h': // unsigned int
+                              fprintf(fp , "%lluULL", (unsigned long long) *(unsigned int*)var->p[j]);
+                              break;
+                           case 'l': // long
+                              fprintf(fp, "%lldLL", (long long) *(long*)var->p[j]);
+                              break;
+                           case 'k': // unsigned long
+                              fprintf(fp , "%lluULL", (unsigned long long) *(unsigned long*)var->p[j]);
+                              break;
+                           case 'n': // long long
+                              fprintf(fp, "%lldLL", *(long long*)var->p[j]);
+                              break;
+                           case 'm': // unsigned long long
+                              fprintf(fp , "%lluULL", *(unsigned long long*)var->p[j]);
+                              break;
+                        }
+                        fprintf(fp, "\"");
                      }
                   }
                   //

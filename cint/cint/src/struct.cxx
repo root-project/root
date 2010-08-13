@@ -1069,6 +1069,7 @@ void G__define_struct(char type)
             enumval.isconst = 0;
 #endif // G__OLDIMPLEMENTATION1259
             G__constvar = G__CONSTVAR;
+            G__access = store_access;
             G__enumdef = 1;
             do {
                int store_decl = 0;
@@ -1078,8 +1079,11 @@ void G__define_struct(char type)
                   char store_var_typeX = G__var_type;
                   int store_tagnumX = G__tagnum;
                   int store_def_tagnumX = G__def_tagnum;
+                  int store_tagdefiningX = G__tagdefining;
                   G__var_type = 'p';
-                  G__tagnum = G__def_tagnum = -1;
+                  G__tagnum = -1;
+                  G__def_tagnum = store_tagnum;
+                  G__tagdefining = store_tagnum;
                   G__FastAllocString val(G__ONELINE);
                   c = G__fgetstream(val, 0, ",}");
                   int store_prerun = G__prerun;
@@ -1089,6 +1093,7 @@ void G__define_struct(char type)
                   G__var_type = store_var_typeX;
                   G__tagnum = store_tagnumX;
                   G__def_tagnum = store_def_tagnumX;
+                  G__tagdefining = store_tagdefiningX;
                }
                else {
                   enumval.obj.i++;

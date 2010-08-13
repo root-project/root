@@ -3516,7 +3516,7 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
    //  Determine class member access control.
    //
    var->access[var->allvar] = G__PUBLIC;
-   if (G__def_struct_member) {
+   if (G__def_struct_member || G__enumdef) {
       var->access[var->allvar] = G__access;
    }
 #ifndef G__NEWINHERIT
@@ -7496,7 +7496,7 @@ struct G__var_array* G__searchvariable(char* varname, int varhash, G__var_array*
          isbase = 1;
          basen = 0;
          baseclass = G__struct.baseclass[scope_tagnum];
-         if (G__exec_memberfunc || isdecl || G__isfriend(G__tagnum)) {
+         if (G__exec_memberfunc || isdecl || G__enumdef || G__isfriend(G__tagnum)) {
             accesslimit = G__PUBLIC_PROTECTED_PRIVATE;
             memfunc_or_friend = 1;
          }
