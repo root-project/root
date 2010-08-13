@@ -77,6 +77,17 @@ TGeoMCGeometry::~TGeoMCGeometry()
 
 
 //_____________________________________________________________________________
+TGeoManager* TGeoMCGeometry::GetTGeoManager() const
+{
+// Return TGeoManager global pointer.
+// Create a new TGeoManager object if it does not yet exist.
+
+  if ( ! gGeoManager ) new TGeoManager("TGeo", "Root geometry manager");
+
+  return gGeoManager;
+}  
+
+//_____________________________________________________________________________
 Double_t* TGeoMCGeometry::CreateDoubleArray(Float_t* array, Int_t size) const
 {
 // Converts Float_t* array to Double_t*,
@@ -170,7 +181,7 @@ void TGeoMCGeometry::Material(Int_t& kmat, const char* name, Double_t a, Double_
   //  nbuf               number of user words
   //
 
-   gGeoManager->Material(name, a, z, dens, kmat, radl, absl);
+   GetTGeoManager()->Material(name, a, z, dens, kmat, radl, absl);
 }
 
 //_____________________________________________________________________________
@@ -232,7 +243,7 @@ void TGeoMCGeometry::Mixture(Int_t& kmat, const char* name, Double_t* a, Double_
          wmat[i] *= a[i]/amol;
       }
    }
-   gGeoManager->Mixture(name, a, z, dens, nlmat, wmat, kmat);
+   GetTGeoManager()->Mixture(name, a, z, dens, nlmat, wmat, kmat);
 }
 
 //_____________________________________________________________________________
@@ -290,7 +301,7 @@ void TGeoMCGeometry::Medium(Int_t& kmed, const char* name, Int_t nmat, Int_t isv
   //  performed with g3helix; ifield = 3 if tracking performed with g3helx3.
   //
 
-   gGeoManager->Medium(name,kmed,nmat, isvol, ifield, fieldm, tmaxfd, stemax,deemax, epsil, stmin);
+   GetTGeoManager()->Medium(name,kmed,nmat, isvol, ifield, fieldm, tmaxfd, stemax,deemax, epsil, stmin);
 }
 
 //_____________________________________________________________________________
@@ -309,8 +320,8 @@ void TGeoMCGeometry::Matrix(Int_t& krot, Double_t thex, Double_t phix, Double_t 
   //  it defines the rotation matrix number irot.
   //
 
-   krot = gGeoManager->GetListOfMatrices()->GetEntriesFast();
-   gGeoManager->Matrix(krot, thex, phix, they, phiy, thez, phiz);
+   krot = GetTGeoManager()->GetListOfMatrices()->GetEntriesFast();
+   GetTGeoManager()->Matrix(krot, thex, phix, they, phiy, thez, phiz);
 }
 
 //_____________________________________________________________________________
@@ -352,7 +363,7 @@ Int_t TGeoMCGeometry::Gsvolu(const char *name, const char *shape, Int_t nmed,
    char vshape[5];
    Vname(shape,vshape);
 
-   TGeoVolume* vol = gGeoManager->Volume(vname, vshape, nmed, upar, npar);
+   TGeoVolume* vol = GetTGeoManager()->Volume(vname, vshape, nmed, upar, npar);
    return vol->GetNumber();
 }
 
@@ -376,7 +387,7 @@ void  TGeoMCGeometry::Gsdvn(const char *name, const char *mother, Int_t ndiv,
    char vmother[80];
    Vname(mother,vmother);
 
-   gGeoManager->Division(vname, vmother, iaxis, ndiv, 0, 0, 0, "n");
+   GetTGeoManager()->Division(vname, vmother, iaxis, ndiv, 0, 0, 0, "n");
 }
 
 //_____________________________________________________________________________
@@ -395,7 +406,7 @@ void  TGeoMCGeometry::Gsdvn2(const char *name, const char *mother, Int_t ndiv,
    char vmother[80];
    Vname(mother,vmother);
 
-   gGeoManager->Division(vname, vmother, iaxis, ndiv, c0i, 0, numed, "nx");
+   GetTGeoManager()->Division(vname, vmother, iaxis, ndiv, c0i, 0, numed, "nx");
 }
 //_____________________________________________________________________________
 void  TGeoMCGeometry::Gsdvt(const char *name, const char *mother, Double_t step,
@@ -417,7 +428,7 @@ void  TGeoMCGeometry::Gsdvt(const char *name, const char *mother, Double_t step,
    char vmother[80];
    Vname(mother,vmother);
 
-   gGeoManager->Division(vname, vmother, iaxis, 0, 0, step, numed, "s");
+   GetTGeoManager()->Division(vname, vmother, iaxis, 0, 0, step, numed, "s");
 }
 
 //_____________________________________________________________________________
@@ -440,7 +451,7 @@ void  TGeoMCGeometry::Gsdvt2(const char *name, const char *mother, Double_t step
    char vmother[80];
    Vname(mother,vmother);
 
-   gGeoManager->Division(vname, vmother, iaxis, 0, c0, step, numed, "sx");
+   GetTGeoManager()->Division(vname, vmother, iaxis, 0, c0, step, numed, "sx");
 }
 
 //_____________________________________________________________________________
@@ -493,7 +504,7 @@ void  TGeoMCGeometry::Gspos(const char *name, Int_t nr, const char *mother, Doub
    Vname(mother,vmother);
 
    Double_t *upar=0;
-   gGeoManager->Node(vname, nr, vmother, x, y, z, irot, isOnly, upar);
+   GetTGeoManager()->Node(vname, nr, vmother, x, y, z, irot, isOnly, upar);
 }
 
 //_____________________________________________________________________________
@@ -530,7 +541,7 @@ void  TGeoMCGeometry::Gsposp(const char *name, Int_t nr, const char *mother,
    char vmother[80];
    Vname(mother,vmother);
 
-   gGeoManager->Node(vname,nr,vmother, x,y,z,irot,isOnly,upar,np);
+   GetTGeoManager()->Node(vname,nr,vmother, x,y,z,irot,isOnly,upar,np);
 }
 
 //_____________________________________________________________________________
@@ -540,7 +551,7 @@ Int_t TGeoMCGeometry::VolId(const char *name) const
   // Return the unique numeric identifier for volume name
   //
 
-   Int_t uid = gGeoManager->GetUID(name);
+   Int_t uid = GetTGeoManager()->GetUID(name);
    if (uid<0) {
       printf("VolId: Volume %s not found\n",name);
       return 0;
@@ -555,7 +566,7 @@ Int_t TGeoMCGeometry::MediumId(const char *name) const
   // Return the unique numeric identifier for medium name
   //
 
-   TGeoMedium* medium = gGeoManager->GetMedium(name);
+   TGeoMedium* medium = GetTGeoManager()->GetMedium(name);
    if (medium) return medium->GetId();
 
    printf("MediumId: Medium %s not found\n",name);
@@ -569,7 +580,7 @@ const char* TGeoMCGeometry::VolName(Int_t id) const
   // Return the volume name given the volume identifier
   //
 
-   TGeoVolume *volume = gGeoManager->GetVolume(id);
+   TGeoVolume *volume = GetTGeoManager()->GetVolume(id);
    if (!volume) {
       Error("VolName","volume with id=%d does not exist",id);
       return "NULL";
@@ -584,7 +595,7 @@ Int_t TGeoMCGeometry::NofVolumes() const
   // Return total number of volumes in the geometry
   //
 
-   return gGeoManager->GetListOfUVolumes()->GetEntriesFast()-1;
+   return GetTGeoManager()->GetListOfUVolumes()->GetEntriesFast()-1;
 }
 
 //_____________________________________________________________________________
@@ -594,7 +605,7 @@ Int_t TGeoMCGeometry::NofVolDaughters(const char* volName) const
 // According to A. Morsch' G3toRoot class (by A. Morsch)
 // ---
 
-   TGeoVolume* volume = gGeoManager->GetVolume(volName);
+   TGeoVolume* volume = GetTGeoManager()->GetVolume(volName);
 
    if (!volume) {
       Error("NofVolDaughters", "Volume %s not found.", volName);
@@ -612,7 +623,7 @@ const char*  TGeoMCGeometry::VolDaughterName(const char* volName, Int_t i) const
 // ---
 
    // Get volume
-   TGeoVolume* volume = gGeoManager->GetVolume(volName);
+   TGeoVolume* volume = GetTGeoManager()->GetVolume(volName);
    if (!volume) {
       Error("VolDaughterName", "Volume %s not found.", volName);
       return "";
@@ -637,7 +648,7 @@ Int_t TGeoMCGeometry::VolDaughterCopyNo(const char* volName, Int_t i) const
 
 
    // Get volume
-   TGeoVolume* volume = gGeoManager->GetVolume(volName);
+   TGeoVolume* volume = GetTGeoManager()->GetVolume(volName);
    if (!volume) {
       Error("VolDaughterName", "Volume %s not found.", volName);
       return 0;
@@ -660,7 +671,7 @@ Int_t TGeoMCGeometry::VolId2Mate(Int_t id) const
   // Return material number for a given volume id
   //
 
-   TGeoVolume *volume = gGeoManager->GetVolume(id);
+   TGeoVolume *volume = GetTGeoManager()->GetVolume(id);
    if (!volume) {
       Error("VolId2Mate","volume with id=%d does not exist",id);
       return 0;
@@ -693,13 +704,13 @@ Bool_t TGeoMCGeometry::GetTransformation(const TString &volumePath,TGeoHMatrix &
     //   mat was made.
 
    // We have to preserve the modeler state
-   gGeoManager->PushPath();
-   if (!gGeoManager->cd(volumePath.Data())) {
-      gGeoManager->PopPath();
+   GetTGeoManager()->PushPath();
+   if (!GetTGeoManager()->cd(volumePath.Data())) {
+      GetTGeoManager()->PopPath();
       return kFALSE;
    }
-   mat = *gGeoManager->GetCurrentMatrix();
-   gGeoManager->PopPath();
+   mat = *GetTGeoManager()->GetCurrentMatrix();
+   GetTGeoManager()->PopPath();
    return kTRUE;
 }
 //______________________________________________________________________
@@ -718,13 +729,13 @@ Bool_t TGeoMCGeometry::GetShape(const TString &volumePath,TString &shapeType,
     //   A logical indicating whether there was an error in getting this
     //   information
    Int_t npar;
-   gGeoManager->PushPath();
-   if (!gGeoManager->cd(volumePath.Data())) {
-      gGeoManager->PopPath();
+   GetTGeoManager()->PushPath();
+   if (!GetTGeoManager()->cd(volumePath.Data())) {
+      GetTGeoManager()->PopPath();
       return kFALSE;
    }
-   TGeoVolume * vol = gGeoManager->GetCurrentVolume();
-   gGeoManager->PopPath();
+   TGeoVolume * vol = GetTGeoManager()->GetCurrentVolume();
+   GetTGeoManager()->PopPath();
    if (!vol) return kFALSE;
    TGeoShape *shape = vol->GetShape();
    TClass *class_type = shape->IsA();
@@ -984,7 +995,7 @@ Bool_t TGeoMCGeometry::GetMaterial(const TString &volumeName,
     //   TArrayD   &par        A TArrayD of user defined parameters.
     // Return:
     //   kTRUE if no errors
-   TGeoVolume *vol = gGeoManager->GetVolume(volumeName.Data());
+   TGeoVolume *vol = GetTGeoManager()->GetVolume(volumeName.Data());
    if (!vol) return kFALSE;
    TGeoMedium *med = vol->GetMedium();
    if (!med) return kFALSE;
@@ -1029,7 +1040,7 @@ Bool_t TGeoMCGeometry::GetMedium(const TString &volumeName,TString &name,
     //                        parameters of the specified medium.
     // Return:
     //   kTRUE if there where no errors
-   TGeoVolume *vol = gGeoManager->GetVolume(volumeName.Data());
+   TGeoVolume *vol = GetTGeoManager()->GetVolume(volumeName.Data());
    if (!vol) return kFALSE;
    TGeoMedium *med = vol->GetMedium();
    if (!med) return kFALSE;

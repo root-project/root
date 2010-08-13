@@ -22,6 +22,7 @@
 
 #include "TVirtualMCGeometry.h"
 
+class TGeoManager;
 class TGeoHMatrix;
 class TArrayD;
 class TString;
@@ -133,6 +134,8 @@ public:
 private:
    TGeoMCGeometry(const TGeoMCGeometry& /*rhs*/);
    TGeoMCGeometry& operator=(const TGeoMCGeometry& /*rhs*/);
+   
+   TGeoManager* GetTGeoManager() const;
 
    Double_t* CreateDoubleArray(Float_t* array, Int_t size) const;
    void     Vname(const char *name, char *vname) const;
