@@ -1891,7 +1891,7 @@ TH1D *TH3::DoProject1D(const char* name, const char* title, TAxis* projX,
          h1->Reset();   
       }      
       else {  
-         Error("DoProject1D","Histogram with name %s alread exists and it is not compatible",name);
+         Error("DoProject1D","Histogram with name %s already exists and it is not compatible",name);
          return 0; 
       }
    }
@@ -2097,7 +2097,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, TAxis* projX, TAxis
          h2->Reset();   
       }      
       else {  
-         Error("DoProject2D","Histogram with name %s alread exists and it is not compatible",name);
+         Error("DoProject2D","Histogram with name %s already exists and it is not compatible",name);
          return 0; 
       }
    }
@@ -2566,7 +2566,7 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, TAxis*
          p2->Dump();
          projY->Dump(); projX->Dump(); 
          std::cout << ny << "  " << iymin << " , " << iymax << " nx " << nx << "  " << ixmin << " , " << ixmax << std::endl;
-         Error("DoProjectProfile2D","Profile2D with name %s alread exists and it is not compatible",name);
+         Error("DoProjectProfile2D","Profile2D with name %s already exists and it is not compatible",name);
          return 0; 
       }
    }
