@@ -1335,11 +1335,6 @@ static int G__initary(G__FastAllocString& new_name)
       }
    }
    G__ASSERT(linear_index == num_of_elements);
-   // FIXME: This is bizzare!
-   if (!G__asm_noverflow && G__no_exec_compile) {
-      // FIXME: Why?
-      G__no_exec = 1;
-   }
    // Read and discard up to the next ',' or ';'.
    // FIXME: We should only allow spaces here!
    int c = G__fignorestream(",;");
