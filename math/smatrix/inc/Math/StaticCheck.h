@@ -40,6 +40,26 @@ namespace ROOT
 {
 
   namespace Math { 
+
+#ifndef USE_OLD_SC
+
+
+     template<bool> struct CompileTimeChecker 
+     {
+        CompileTimeChecker(void *) {}
+     };
+     template<> struct CompileTimeChecker<false> {};
+
+  }   // end namespace Math 
+}  // end namespace ROOT
+
+#define STATIC_CHECK(expr, msg) \
+   { class ERROR_##msg {}; \
+   ERROR_##msg e; \
+   (void) (ROOT::Math::CompileTimeChecker<(expr) != 0> (&e)); }
+
+
+#else 
 ////////////////////////////////////////////////////////////////////////////////
 // Helper structure for the STATIC_CHECK macro
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,6 +89,8 @@ namespace ROOT
 //     definition
 // June 20, 2001: ported by Nick Thurn to gcc 2.95.3. Kudos, Nick!!!
 ////////////////////////////////////////////////////////////////////////////////
+
+#endif
 
 #endif 
 
