@@ -59,7 +59,7 @@ ClassImp(TGFontTypeComboBox)
 //______________________________________________________________________________
 TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
                                  UInt_t options, ULong_t back) :
-   TGCompositeFrame (p, w, h, options, back)
+   TGCompositeFrame (p, w, h, options, back), fListBox(0), fSelected(0)
 {
    // Create a combo box popup frame.
 
@@ -83,8 +83,15 @@ Bool_t TGComboBoxPopup::HandleButton(Event_t *event)
 {
    // Handle mouse button event in combo box popup.
 
-   if (event->fType == kButtonPress && event->fCode == kButton1)
+   if (event->fType == kButtonPress && event->fCode == kButton1) {
+      if ((fListBox != 0) && (fSelected != 0) && 
+          fListBox->GetSelectedEntry() != fSelected) {
+         // in the case the combo box popup is closed by clicking outside the 
+         // list box, then select the previously selected entry
+         fListBox->Select(fSelected->EntryId());
+      }
       EndPopup();
+   }
    return kTRUE;
 }
 
@@ -115,11 +122,18 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    if (y < 0) y = 0;
    if (y + fHeight > rh) y = rh - fHeight;
 
+   // remember the current selected entry
+   if (fListBox == 0) {
+      // the listbox should be the first in the list
+      TGFrameElement *el = (TGFrameElement *)fList->First();
+      fListBox = dynamic_cast<TGListBox *>(el->fFrame);
+   }
+   fSelected = fListBox ? fListBox->GetSelectedEntry() : 0;
+
    MoveResize(x, y, w, h);
    MapSubwindows();
    Layout();
    MapRaised();
-
 
    gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
                               kPointerMotionMask, kNone,
@@ -222,6 +236,7 @@ void TGComboBox::Init()
 
    fComboFrame->AddFrame(fListBox, fLhdd = new TGLayoutHints(kLHintsExpandX |
                                                              kLHintsExpandY));
+   fComboFrame->SetListBox(fListBox);
    fComboFrame->MapSubwindows();
    fComboFrame->Resize(fComboFrame->GetDefaultSize());
 

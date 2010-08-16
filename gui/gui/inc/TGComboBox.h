@@ -41,6 +41,9 @@ class TGScrollBarElement;
 class TGTextEntry;
 
 class TGComboBoxPopup : public TGCompositeFrame {
+protected:
+   TGListBox *fListBox;
+   TGLBEntry *fSelected;
 
 public:
    TGComboBoxPopup(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
@@ -49,6 +52,7 @@ public:
 
    virtual Bool_t HandleButton(Event_t *);
 
+   void SetListBox(TGListBox *lb) { fListBox = lb; }
    void PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void EndPopup();
 
