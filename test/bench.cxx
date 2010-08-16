@@ -114,11 +114,12 @@ int main(int argc, char **argv)
    bool writereferences = false;   
    bool memberwise = false;
    
+   TVirtualStreamerInfo::SetStreamMemberWise(kFALSE);
    // by default stream objects objectwise
    // if program option "-m" is specified, stream memberwise
    for(int a=1; a<argc; ++a) {
       if (strstr(argv[a],"-m")) {
-         TVirtualStreamerInfo::SetStreamMemberWise();
+         TVirtualStreamerInfo::SetStreamMemberWise(kTRUE);
          printf("bench option -m specified. Streaming objects memberwise\n");
          memberwise = true;
       } else if (strstr(argv[a],"-r")) {
