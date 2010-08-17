@@ -127,7 +127,7 @@ public:
    virtual Long64_t  GetBasketSeek(Int_t basket) const;
    virtual Int_t     GetBasketSize() const {return fBasketSize;}
    virtual TList    *GetBrowsables();
-   virtual const char* GetClassName() const { return ""; }
+   virtual const char* GetClassName() const;
    virtual Int_t     GetCompressionLevel() const {return fCompress;}
    TDirectory       *GetDirectory() const {return fDirectory;}
    virtual Int_t     GetEntry(Long64_t entry=0, Int_t getall = 0);

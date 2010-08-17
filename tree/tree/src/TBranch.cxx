@@ -1131,6 +1131,16 @@ TList* TBranch::GetBrowsables() {
 }
 
 //______________________________________________________________________________
+const char * TBranch::GetClassName() const 
+{
+  // Return the name of the user class whose content is stored in this branch,
+  // if any.  If this branch was created using the 'leaflist' technique, this
+  // function returns an empty string.
+
+  return "";
+}
+
+//______________________________________________________________________________
 const char* TBranch::GetIconName() const
 {
    // Return icon name depending on type of branch.

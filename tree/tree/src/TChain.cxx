@@ -1013,9 +1013,10 @@ TObjArray* TChain::GetListOfBranches()
 {
    // -- Return a pointer to the list of branches of the current tree.
    //
-   // Warning: May set current tree!
+   // Warning: If there is no current TTree yet, this routine will open the
+   //     first in the chain.
    //
-   // Returns 1 on success and 0 on failure.
+   // Returns 0 on failure.
 
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is uptodate
