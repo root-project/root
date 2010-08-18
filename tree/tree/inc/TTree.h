@@ -147,6 +147,7 @@ protected:
    virtual void     KeepCircular();
    virtual TBranch *BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
+   virtual TBranch *BranchImpRef(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImpRef(const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual Int_t    CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType datatype, Bool_t ptr);
    virtual TBranch *BronchExec(const char* name, const char* classname, void* addobj, Bool_t isptrptr, Int_t bufsize, Int_t splitlevel);
@@ -228,9 +229,24 @@ public:
    virtual Int_t           Branch(TList* list, Int_t bufsize = 32000, Int_t splitlevel = 99);
    virtual Int_t           Branch(const char* folder, Int_t bufsize = 32000, Int_t splitlevel = 99);
    virtual TBranch        *Branch(const char* name, void* address, const char* leaflist, Int_t bufsize = 32000);
+           TBranch        *Branch(const char* name, char* address, const char* leaflist, Int_t bufsize = 32000) 
+   {
+      // Overload to avoid confusion between this signature and the template instance.
+      return Branch(name,(void*)address,leaflist,bufsize);
+   }
+   TBranch        *Branch(const char* name, int address, const char* leaflist, Int_t bufsize = 32000) 
+   {
+      // Overload to avoid confusion between this signature and the template instance.
+      return Branch(name,(void*)address,leaflist,bufsize);
+   }
 #if !defined(__CINT__)
    virtual TBranch        *Branch(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 99);
 #endif
+   template <class T> TBranch *Branch(const char* name, const char* classname, T* obj, Int_t bufsize = 32000, Int_t splitlevel = 99)
+   {
+      // See BranchImpRed for details. Here we __ignore
+      return BranchImpRef(name, classname, TBuffer::GetClass(typeid(T)), obj, bufsize, splitlevel);
+   }
    template <class T> TBranch *Branch(const char* name, const char* classname, T** addobj, Int_t bufsize = 32000, Int_t splitlevel = 99)
    {
       // See BranchImp for details

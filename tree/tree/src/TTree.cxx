@@ -1033,8 +1033,8 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
    // See TTree::Branch() for other details.
    //
 
+   TClass* claim = TClass::GetClass(classname);
    if (!ptrClass) {
-      TClass* claim = TClass::GetClass(classname);
       if (claim && claim->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(claim->GetCollectionProxy())) {
          Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
                "Please generate the dictionary for this class (%s)",
@@ -1043,7 +1043,6 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
       }
       return Branch(branchname, classname, (void*) addobj, bufsize, splitlevel);
    }
-   TClass* claim = TClass::GetClass(classname);
    TClass* actualClass = 0;
    void** addr = (void**) addobj;
    if (addr) {
@@ -1112,11 +1111,72 @@ TBranch* TTree::BranchImp(const char* branchname, TClass* ptrClass, void* addobj
 }
 
 //______________________________________________________________________________
+TBranch* TTree::BranchImpRef(const char* branchname, const char *classname, TClass* ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel)
+{
+   // Same as TTree::Branch but automatic detection of the class name.
+   // See TTree::Branch for other details.
+   
+   TClass* claim = TClass::GetClass(classname);
+   if (!ptrClass) {
+      if (claim && claim->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(claim->GetCollectionProxy())) {
+         Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
+               "Please generate the dictionary for this class (%s)",
+               claim->GetName(), branchname, claim->GetName());
+         return 0;
+      } else if (claim == 0) {
+         Error("Branch", "The pointer specified for %s is not of a class known to ROOT and %s is not a known class", branchname, classname);         
+         return 0;
+      }
+      ptrClass = claim;
+   }
+   TClass* actualClass = 0;
+   if (!addobj) {
+      Error("Branch", "Reference interface requires a valid object (for branch: %s)!", branchname);
+      return 0;
+   }
+   actualClass = ptrClass->GetActualClass(addobj);
+   if (ptrClass && claim) {
+      if (!(claim->InheritsFrom(ptrClass) || ptrClass->InheritsFrom(claim))) {
+         // Note we currently do not warn in case of splicing or over-expectation).
+         if (claim->IsLoaded() && ptrClass->IsLoaded() && strcmp( claim->GetTypeInfo()->name(), ptrClass->GetTypeInfo()->name() ) == 0) {
+            // The type is the same according to the C++ type_info, we must be in the case of
+            // a template of Double32_t.  This is actually a correct case.
+         } else {
+            Error("Branch", "The class requested (%s) for \"%s\" is different from the type of the object passed (%s)",
+                  claim->GetName(), branchname, ptrClass->GetName());
+         }
+      } else if (actualClass && (claim != actualClass) && !actualClass->InheritsFrom(claim)) {
+         if (claim->IsLoaded() && actualClass->IsLoaded() && strcmp( claim->GetTypeInfo()->name(), actualClass->GetTypeInfo()->name() ) == 0) {
+            // The type is the same according to the C++ type_info, we must be in the case of
+            // a template of Double32_t.  This is actually a correct case.
+         } else {
+            Error("Branch", "The actual class (%s) of the object provided for the definition of the branch \"%s\" does not inherit from %s",
+                  actualClass->GetName(), branchname, claim->GetName());
+         }
+      }
+   }
+   if (!actualClass) {
+      Warning("Branch", "The actual TClass corresponding to the object provided for the definition of the branch \"%s\" is missing.\n\tThe object will be truncated down to its %s part", branchname, ptrClass->GetName());
+      actualClass = ptrClass;
+   } else if ((ptrClass != actualClass) && !actualClass->InheritsFrom(ptrClass)) {
+      Error("Branch", "The actual class (%s) of the object provided for the definition of the branch \"%s\" does not inherit from %s", actualClass->GetName(), branchname, ptrClass->GetName());
+      return 0;
+   }
+   if (actualClass && actualClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(actualClass->GetCollectionProxy())) {
+      Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
+            "Please generate the dictionary for this class (%s)",
+            actualClass->GetName(), branchname, actualClass->GetName());
+      return 0;
+   }
+   return BronchExec(branchname, actualClass->GetName(), (void*) addobj, kFALSE, bufsize, splitlevel);
+}
+
+//______________________________________________________________________________
 TBranch* TTree::BranchImpRef(const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel)
 {
    // Same as TTree::Branch but automatic detection of the class name.
    // See TTree::Branch for other details.
-
+   
    if (!ptrClass) {
       if (datatype == kOther_t || datatype == kNoType_t) {
          Error("Branch", "The pointer specified for %s is not of a class or type known to ROOT", branchname);
@@ -5434,7 +5494,7 @@ void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option)
          if (pass == 0) continue;
          //Reset the compression level in case the compression factor is small
          Double_t comp = 1;
-         if (branch->GetZipBytes() > 0) comp = Double_t(oldBsize)/Double_t(branch->GetZipBytes());
+         if (branch->GetZipBytes() > 0) comp = totBytes/Double_t(branch->GetZipBytes());
          if (comp > 1 && comp < minComp) {
             if (pDebug) printf("Disabling compression for branch : %s\n",branch->GetName());
             branch->SetCompressionLevel(0);

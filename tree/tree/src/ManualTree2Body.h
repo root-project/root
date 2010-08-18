@@ -56,7 +56,17 @@ static int G__ManualTree2_126_0_187(G__value* result7, G__CONST char* funcname, 
    TClass *ptrClass = TClass::GetClass( gInterpreter->ClassInfo_Name( ti ) );
    const char* classname = (const char*)G__int(libp->para[1]);
    TClass *claim = TClass::GetClass(classname);
-   void **addr = (void**)G__int(libp->para[2]);
+   void *ptr;
+   void **addr;
+   bool isptrptr;
+   if (libp->para[2].type == 'U' && libp->para[2].obj.reftype.reftype == 0) {
+      ptr = (void*)G__int(libp->para[2]);
+      addr = &ptr;
+      isptrptr = false;
+   } else {
+      addr = (void**)G__int(libp->para[2]);
+      isptrptr = true;
+   }
    
    const char *branchname = (const char*)G__int(libp->para[0]);
    Bool_t error = kFALSE;
@@ -92,25 +102,48 @@ static int G__ManualTree2_126_0_187(G__value* result7, G__CONST char* funcname, 
    
       //if (ptrClass) classname = ptrClass->GetName();
       TTree *t = (TTree*)(G__getstructoffset());
-      switch(libp->paran) {
-      case 5:
-         G__letint(result7,85,(long)t->Branch(branchname,
-                                              classname,
-                                              (void*)G__int(libp->para[2]),
-                                              (Int_t)G__int(libp->para[3]),
-                                              (Int_t)G__int(libp->para[4])));
-         break;
-      case 4:
-         G__letint(result7,85,(long)t->Branch(branchname,
-                                              classname,
-                                              (void*)G__int(libp->para[2]),
-                                              (Int_t)G__int(libp->para[3])));
-         break;
-      case 3:
-         G__letint(result7,85,(long)t->Branch(branchname,
-                                              classname,
-                                              (void*)G__int(libp->para[2])));
-         break;
+      if (isptrptr) {
+         switch(libp->paran) {
+            case 5:
+               G__letint(result7,85,(long)t->Branch(branchname,
+                                                    classname,
+                                                    (void*)G__int(libp->para[2]),
+                                                    (Int_t)G__int(libp->para[3]),
+                                                    (Int_t)G__int(libp->para[4])));
+               break;
+            case 4:
+               G__letint(result7,85,(long)t->Branch(branchname,
+                                                    classname,
+                                                    (void*)G__int(libp->para[2]),
+                                                    (Int_t)G__int(libp->para[3])));
+               break;
+            case 3:
+               G__letint(result7,85,(long)t->Branch(branchname,
+                                                    classname,
+                                                    (void*)G__int(libp->para[2])));
+               break;
+         }
+      } else {
+         switch(libp->paran) {
+            case 5:
+               G__letint(result7,85,(long)TTreeBranchImpRef(((TTree*) G__getstructoffset()),branchname,ptrClass,kNoType_t,
+                                                            (void*)G__int(libp->para[2]),
+                                                            (Int_t)G__int(libp->para[3]),
+                                                            (Int_t)G__int(libp->para[4])));
+               break;
+            case 4:
+               G__letint(result7,85,(long)TTreeBranchImpRef(((TTree*) G__getstructoffset()),branchname,ptrClass,kNoType_t,
+                                                            (void*)G__int(libp->para[2]),
+                                                            (Int_t)G__int(libp->para[3]),
+                                                            (Int_t)99));
+               break;
+            case 3:
+               G__letint(result7,85,(long)TTreeBranchImpRef(((TTree*) G__getstructoffset()),branchname,ptrClass,kNoType_t,
+                                                            (void*)G__int(libp->para[2]),
+                                                            (Int_t)32000,
+                                                            (Int_t)99));
+               break;
+         }         
       }
    }
    gInterpreter->ClassInfo_Delete( ti );
