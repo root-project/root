@@ -353,6 +353,7 @@ static void PrintUsage(char *pname)
    fprintf(stderr, "  -n : do not execute logon and logoff macros as specified in .rootrc\n");
    fprintf(stderr, "  -q : exit after processing command line macro files\n");
    fprintf(stderr, "  -l : do not show splash screen\n");
+   fprintf(stderr, "  -x : exit on exception\n");
    fprintf(stderr, " dir : if dir is a valid directory cd to it before executing\n");
    fprintf(stderr, "\n");
    fprintf(stderr, "  -?      : print usage\n");

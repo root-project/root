@@ -50,24 +50,30 @@ public:
       kProcessRemotely = BIT(15),   // TRUE if this line has to be processed remotely
       kDefaultApplication = BIT(16) // TRUE if created via CreateApplication()
    };
+   enum EExitOnException {
+      kDontExit,
+      kExit,
+      kAbort
+   };
 
 private:
-   Int_t              fArgc;           //Number of com   mand line arguments
-   char             **fArgv;           //Command line arguments
-   TApplicationImp   *fAppImp;         //!Window system specific application implementation
-   Bool_t             fIsRunning;      //True when in event loop (Run() has been called)
-   Bool_t             fReturnFromRun;  //When true return from Run()
-   Bool_t             fNoLog;          //Do not process logon and logoff macros
-   Bool_t             fNoLogo;         //Do not show splash screen and welcome message
-   Bool_t             fQuit;           //Exit after having processed input files
-   TObjArray         *fFiles;          //Array of input files (TObjString's) specified via argv
-   TString            fWorkDir;        //Working directory specified via argv
-   TString            fIdleCommand;    //Command to execute while application is idle
-   TTimer            *fIdleTimer;      //Idle timer
-   TSignalHandler    *fSigHandler;     //Interrupt handler
+   Int_t              fArgc;            //Number of com   mand line arguments
+   char             **fArgv;            //Command line arguments
+   TApplicationImp   *fAppImp;          //!Window system specific application implementation
+   Bool_t             fIsRunning;       //True when in event loop (Run() has been called)
+   Bool_t             fReturnFromRun;   //When true return from Run()
+   Bool_t             fNoLog;           //Do not process logon and logoff macros
+   Bool_t             fNoLogo;          //Do not show splash screen and welcome message
+   Bool_t             fQuit;            //Exit after having processed input files
+   TObjArray         *fFiles;           //Array of input files (TObjString's) specified via argv
+   TString            fWorkDir;         //Working directory specified via argv
+   TString            fIdleCommand;     //Command to execute while application is idle
+   TTimer            *fIdleTimer;       //Idle timer
+   TSignalHandler    *fSigHandler;      //Interrupt handler
+   EExitOnException   fExitOnException; //Exit on exception option
 
-   static Bool_t      fgGraphNeeded;   // True if graphics libs need to be initialized
-   static Bool_t      fgGraphInit;     // True if graphics libs initialized
+   static Bool_t      fgGraphNeeded;    // True if graphics libs need to be initialized
+   static Bool_t      fgGraphInit;      // True if graphics libs initialized
 
    TApplication(const TApplication&);             // not implemented
    TApplication& operator=(const TApplication&);  // not implemented
@@ -113,6 +119,7 @@ public:
    const char     *GetIdleCommand() const { return fIdleCommand; }
    virtual void    StartIdleing();
    virtual void    StopIdleing();
+   EExitOnException ExitOnException(EExitOnException opt = kExit);
 
    virtual const char *ApplicationName() const { return fAppImp->ApplicationName(); }
    virtual void    Show()    { fAppImp->Show(); }

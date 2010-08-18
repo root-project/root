@@ -65,8 +65,6 @@ static const char *gRootDevelopers[] = {
    "Olivier Couet",
    "Gerardo Ganis",
    "Andrei Gheata",
-   "David Gonzalez",
-   "Jan Iwaszkiewicz",
    "Lorenzo Moneta",
    "Axel Naumann",
    "Paul Russo",

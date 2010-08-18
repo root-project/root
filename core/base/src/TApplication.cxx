@@ -74,18 +74,19 @@ TApplication::TApplication()
 {
    // Default ctor. Can be used by classes deriving from TApplication.
 
-   fArgc          = 0;
-   fArgv          = 0;
-   fAppImp        = 0;
-   fAppRemote     = 0;
-   fIsRunning     = kFALSE;
-   fReturnFromRun = kFALSE;
-   fNoLog         = kFALSE;
-   fNoLogo        = kFALSE;
-   fQuit          = kFALSE;
-   fFiles         = 0;
-   fIdleTimer     = 0;
-   fSigHandler    = 0;
+   fArgc            = 0;
+   fArgv            = 0;
+   fAppImp          = 0;
+   fAppRemote       = 0;
+   fIsRunning       = kFALSE;
+   fReturnFromRun   = kFALSE;
+   fNoLog           = kFALSE;
+   fNoLogo          = kFALSE;
+   fQuit            = kFALSE;
+   fFiles           = 0;
+   fIdleTimer       = 0;
+   fSigHandler      = 0;
+   fExitOnException = kDontExit;
    ResetBit(kProcessRemotely);
 }
 
@@ -149,10 +150,11 @@ TApplication::TApplication(const char *appClassName,
    for (int i = 0; i < fArgc; i++)
       fArgv[i] = StrDup(argv[i]);
 
-   fNoLog         = kFALSE;
-   fNoLogo        = kFALSE;
-   fQuit          = kFALSE;
-   fAppImp        = 0;
+   fNoLog           = kFALSE;
+   fNoLogo          = kFALSE;
+   fQuit            = kFALSE;
+   fExitOnException = kDontExit;
+   fAppImp          = 0;
 
    if (numOptions >= 0)
       GetOptions(argc, argv);
@@ -362,6 +364,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          fprintf(stderr, "  -n : do not execute logon and logoff macros as specified in .rootrc\n");
          fprintf(stderr, "  -q : exit after processing command line macro files\n");
          fprintf(stderr, "  -l : do not show splash screen\n");
+         fprintf(stderr, "  -x : exit on exception\n");
          fprintf(stderr, " dir : if dir is a valid directory cd to it before executing\n");
          fprintf(stderr, "\n");
          fprintf(stderr, "  -?      : print usage\n");
@@ -385,6 +388,9 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
       } else if (!strcmp(argv[i], "-l")) {
          // used by front-end program to not display splash screen
          fNoLogo = kTRUE;
+         argv[i] = null;
+      } else if (!strcmp(argv[i], "-x")) {
+         fExitOnException = kExit;
          argv[i] = null;
       } else if (!strcmp(argv[i], "-splash")) {
          // used when started by front-end program to signal that
@@ -492,9 +498,28 @@ void TApplication::HandleException(Int_t sig)
          gInterpreter->RewindDictionary();
          gInterpreter->ClearFileBusy();
       }
-      Throw(sig);
+      if (fExitOnException == kExit)
+         gSystem->Exit(sig);
+      else if (fExitOnException == kAbort)
+         gSystem->Abort();
+      else
+         Throw(sig);
    }
    gSystem->Exit(sig);
+}
+
+//______________________________________________________________________________
+TApplication::EExitOnException TApplication::ExitOnException(TApplication::EExitOnException opt)
+{
+   // Set the exit on exception option. Setting this option determines what
+   // happens in HandleException() in case an exception (kSigBus,
+   // kSigSegmentationViolation, kSigIllegalInstruction or kSigFloatingException)
+   // is trapped. Choices are: kDontExit (default), kExit or kAbort.
+   // Returns the previous value.
+
+   EExitOnException old = fExitOnException;
+   fExitOnException = opt;
+   return old;
 }
 
 //______________________________________________________________________________
