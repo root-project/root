@@ -14,9 +14,16 @@ while in the documentation is was indicated in nanoseconds.
 Particles with a width greater than 1e-10 have now the stable flag set to 1.
 
 <h4>TVirtualMC</h4>
-New functions added in the interface for activation of collecting TGeo tracks:
+New functions added in the interface: 
+<ul> 
+<li>For activation of collecting TGeo tracks:
 <pre>virtual void SetCollectTracks(Bool_t collectTracks);
 virtual Bool_t IsCollectTracks() const;
 </pre>
+<li>For accessing the normal vector of the crossing volume surface
+on the geometry boundary:
+<pre>virtual Bool_t CurrentBoundaryNormal(Double_t &x, Double_t &y, Double_t &z) const;
+</pre>
+</ul>
 
 

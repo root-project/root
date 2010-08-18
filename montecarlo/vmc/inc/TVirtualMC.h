@@ -652,6 +652,10 @@ public:
 
    // Return the path in geometry tree for the current volume
    virtual const char* CurrentVolPath() = 0;
+   
+   // If track is on a geometry boundary, fill the normal vector of the crossing volume
+   // surface and return true, return false otherwise
+   virtual Bool_t CurrentBoundaryNormal(Double_t &x, Double_t &y, Double_t &z) const;
 
    // Return the parameters of the current material during transport
    virtual Int_t    CurrentMaterial(Float_t &a, Float_t &z,
@@ -912,6 +916,14 @@ private:
 };
 
 // new functions
+
+inline Bool_t TVirtualMC::CurrentBoundaryNormal(Double_t& /*x*/, Double_t& /*y*/, Double_t& /*z*/) const {
+   // If track is on a geometry boundary, fill the normal vector of the crossing volume
+   // surface and return true, return false otherwise
+   Warning("CurrentBoundaryNormal", "New function - not yet implemented.");
+   return kFALSE;
+}
+
 
 inline void TVirtualMC::SetCollectTracks(Bool_t /*collectTracks*/) {   
    // Activate collecting tracks 
