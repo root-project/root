@@ -41,6 +41,15 @@ to the original value of the AutoSave interval.</li>
 <li>Add support for 'array' formula in TTree::Query.</li>
 <li>Set the initial value of fCacheSize to zero to indicate clearly that the TreeCache is disabled.</li>
 <li>In TChain::SetEntryList use only the treename to lookup the (sub)entryList (instead subdir/treename).</li>
+<li>Add support for the branch creation syntax:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   TString rootString;
+   t->Branch("rootString","TString",&amp;rootString, 1600, 0);</pre>
+which is 'natural' as it uses the legacy syntax (branch_name,class_name, user_data)
+but did not work because 'rootString' is an object rather than a pointer to an
+object. (However the simplier form:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   t->Branch("rootString",&amp;rootString, 1600, 0);</pre>
+works/worked fine).
+</li>
 <li>And many other bug fixes, security fixes, thread safety and performance improvements ; see the svn log for details.</li>
 </ul>
 <h4>TTree Scan and Draw</h4>
