@@ -14,6 +14,14 @@ The existing operators long and unsigned long on 32-bit machines return
 an error in case the stored time is larger then 32-bit and truncation
 occurs (like was always the case till now, but silently).
 </li>
+<li>New method ExitOnException() which allows to set the behaviour of
+TApplication in case of an exception (sigsegv, sigbus, sigill, sigfpe).
+The default is to trap the signal and continue with the event loop,
+using this method one can specify to exit with the signal number to the
+shell, or to abort() which in addition generates a core dump.
+</li>
+<li>New command line argument -x which forces ROOT to exit on an exception.
+</li>
 </ul>
 <h4>Build</h4>
 <ul>
