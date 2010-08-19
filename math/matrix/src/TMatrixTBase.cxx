@@ -828,7 +828,7 @@ void TMatrixTBase<Element>::Print(Option_t *option) const
    char topbar[100];
    sprintf(topbar,format,123.456789);
    Int_t nch = strlen(topbar)+1;
-   if (nch > 19) nch = 19;
+   if (nch > 18) nch = 18;
    char ftopbar[20];
    for (Int_t i = 0; i < nch; i++) ftopbar[i] = ' ';
    Int_t nk = 1 + Int_t(TMath::Log10(fNcols));
