@@ -558,6 +558,7 @@ Int_t TAxis3D::GetNdivisions( Option_t *axis) const
    // Get number of divisions.
 
    Int_t ax = AxisChoice(axis);
+   if (ax < 0) return 0;
    return fAxis[ax].GetNdivisions();
 }
 
@@ -568,6 +569,7 @@ Color_t TAxis3D::GetAxisColor( Option_t *axis) const
    // Get axis color.
 
    Int_t ax = AxisChoice(axis);
+   if (ax < 0) return 0;
    return fAxis[ax].GetAxisColor();
 }
 
@@ -578,6 +580,7 @@ Color_t TAxis3D::GetLabelColor( Option_t *axis) const
    // Get label color.
 
    Int_t ax = AxisChoice(axis);
+   if (ax < 0) return 0;
    return fAxis[ax].GetLabelColor();
 }
 
@@ -588,6 +591,7 @@ Style_t TAxis3D::GetLabelFont( Option_t *axis) const
    // Get label font.
 
    Int_t ax = AxisChoice(axis);
+   if (ax < 0) return 0;
    return fAxis[ax].GetLabelFont();
 }
 
@@ -598,6 +602,7 @@ Float_t TAxis3D::GetLabelOffset( Option_t *axis) const
    // Get label offset.
 
    Int_t ax = AxisChoice(axis);
+   if (ax < 0) return 0;
    return fAxis[ax].GetLabelOffset();
 }
 
@@ -608,6 +613,7 @@ Float_t TAxis3D::GetLabelSize( Option_t *axis) const
    // Get label size.
 
    Int_t ax = AxisChoice(axis);
+   if (ax < 0) return 0;
    return fAxis[ax].GetLabelSize();
 }
 
@@ -618,6 +624,7 @@ Float_t TAxis3D::GetTickLength( Option_t *axis) const
    // Get tick mark length.
 
    Int_t ax = AxisChoice(axis);
+   if (ax < 0) return 0;
    return fAxis[ax].GetTickLength();
 }
 
@@ -628,8 +635,8 @@ Float_t TAxis3D::GetTitleOffset( Option_t *axis) const
    // Get title offset.
 
    Int_t ax = AxisChoice(axis);
-   fAxis[ax].GetTitleOffset();
-   return 0;
+   if (ax < 0) return 0;
+   return fAxis[ax].GetTitleOffset();
 }
 
 
@@ -665,6 +672,7 @@ void TAxis3D::SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis)
    // Set axis range.
 
    Int_t ax = AxisChoice(axis);
+   if (ax < 0) return;
    TAxis *theAxis = &fAxis[ax];
    Int_t bin1 = theAxis->FindBin(xmin);
    Int_t bin2 = theAxis->FindBin(xmax);
