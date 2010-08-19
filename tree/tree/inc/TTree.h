@@ -234,10 +234,15 @@ public:
       // Overload to avoid confusion between this signature and the template instance.
       return Branch(name,(void*)address,leaflist,bufsize);
    }
-   TBranch        *Branch(const char* name, int address, const char* leaflist, Int_t bufsize = 32000) 
+   TBranch        *Branch(const char* name, long address, const char* leaflist, Int_t bufsize = 32000) 
    {
       // Overload to avoid confusion between this signature and the template instance.
       return Branch(name,(void*)address,leaflist,bufsize);
+   }
+   TBranch        *Branch(const char* name, int address, const char* leaflist, Int_t bufsize = 32000) 
+   {
+      // Overload to avoid confusion between this signature and the template instance.
+      return Branch(name,(void*)(long)address,leaflist,bufsize);
    }
 #if !defined(__CINT__)
    virtual TBranch        *Branch(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 99);
