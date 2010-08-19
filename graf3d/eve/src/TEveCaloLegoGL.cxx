@@ -51,6 +51,9 @@ TEveCaloLegoGL::TEveCaloLegoGL() :
    fZAxis(0),
    fM(0),
    fDLCacheOK(kFALSE),
+   fMaxVal(0),
+   fValToPixel(0),
+   fCurrentPixelsPerBin(0),
    fCells3D(kTRUE),
    fBinStep(-1)
 {

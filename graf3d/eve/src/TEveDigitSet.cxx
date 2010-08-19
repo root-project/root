@@ -69,6 +69,7 @@ TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
    fOwnIds         (kFALSE),
    fPlex           (),
    fLastDigit      (0),
+   fLastIdx        (-1),
 
    fColor          (kWhite),
    fFrame          (0),

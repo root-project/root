@@ -808,7 +808,6 @@ void TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
    Int_t nPhi = fPhiAxis->GetNbins();
    Int_t nSlices = GetNSlices();
 
-   TH2F* hist = GetHist(0);
    Int_t bin  = 0;
 
    Bool_t accept;
@@ -833,7 +832,7 @@ void TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
             {
                for (Int_t s = 0; s < nSlices; ++s)
                {
-                  hist = GetHist(s);
+                  TH2F *hist = GetHist(s);
                   bin = hist->GetBin(ieta, iphi);
                   if (hist->GetBinContent(bin) > fSliceInfos[s].fThreshold)
                      out.push_back(TEveCaloData::CellId_t(bin, s));

@@ -102,7 +102,8 @@ ClassImp(TEveBoxProjected);
 
 //______________________________________________________________________________
 TEveBoxProjected::TEveBoxProjected(const char* n, const char* t) :
-   TEveShape(n, t)
+   TEveShape(n, t),
+   fBreakIdx(0)
 {
    // Constructor.
 }

@@ -51,6 +51,7 @@ TEveCaloLegoOverlay::TEveCaloLegoOverlay() :
    fShowScales(kTRUE),
    fScaleColor(-1), fScaleTransparency(0),
    fScaleCoordX(0.85), fScaleCoordY(0.65),
+   fScaleW(0), fScaleH(0),
    fCellX(-1), fCellY(-1),
 
    fFrameColor(-1), fFrameLineTransp(70), fFrameBgTransp(90),
