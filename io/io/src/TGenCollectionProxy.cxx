@@ -518,6 +518,7 @@ TGenCollectionProxy::TGenCollectionProxy(const TGenCollectionProxy& copy)
    fValue          = copy.fValue ? new Value(*copy.fValue) : 0;
    fVal            = copy.fVal   ? new Value(*copy.fVal)   : 0;
    fKey            = copy.fKey   ? new Value(*copy.fKey)   : 0;
+   fOnFileClass    = copy.fOnFileClass;
 }
 
 //______________________________________________________________________________
