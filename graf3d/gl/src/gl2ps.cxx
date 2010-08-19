@@ -1300,7 +1300,8 @@ static GLint gl2psTestSplitPrimitive(GL2PSprimitive *prim, GL2PSplane plane)
 static GLint gl2psSplitPrimitive(GL2PSprimitive *prim, GL2PSplane plane, 
                                  GL2PSprimitive **front, GL2PSprimitive **back)
 {
-  GLshort i, j, in = 0, out = 0, in0[5], in1[5], out0[5], out1[5];
+  GLshort i, j, in = 0, out = 0;
+  GLshort in0[5] = {0}, in1[5] = {0}, out0[5] = {0}, out1[5] = {0};
   GLint type;
   GLfloat d[5]; 
 

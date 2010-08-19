@@ -1427,7 +1427,7 @@ UInt_t TGLScene::SizeOfScene() const
    // Warning: NOT CORRECT at present - doesn't correctly calculate size.
    // of logical shapes with dynamic internal contents.
 
-   UInt_t size = sizeof(this);
+   UInt_t size = sizeof(*this);
 
    printf("Size: Scene Only %u\n", size);
 

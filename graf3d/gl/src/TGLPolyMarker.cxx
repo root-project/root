@@ -69,6 +69,7 @@ void TGLPolyMarker::DirectDraw(TGLRnrCtx & rnrCtx) const
    switch (fStyle) {
    case 27:
       stacks = 2, slices = 4;
+      // intentionaly no break
    case 4:case 8:case 20:case 24:
       for (UInt_t i = 0; i < size; i += 3) {
          glPushMatrix();
@@ -79,6 +80,7 @@ void TGLPolyMarker::DirectDraw(TGLRnrCtx & rnrCtx) const
       break;
    case 22:case 26:
       topRadius = 0.;
+      // intentionaly no break
    case 21:case 25:
       for (UInt_t i = 0; i < size; i += 3) {
          glPushMatrix();
@@ -101,8 +103,10 @@ void TGLPolyMarker::DirectDraw(TGLRnrCtx & rnrCtx) const
       break;
    case 7:
       pixelSize += 1;
+      // intentionaly no break
    case 6:
       pixelSize += 1;
+      // intentionaly no break
    case 1: case 9: case 10: case 11: default:
       TGLUtil::PointSize(pixelSize);
       glBegin(GL_POINTS);

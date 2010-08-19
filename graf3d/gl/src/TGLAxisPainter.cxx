@@ -46,8 +46,8 @@ TGLAxisPainter::TGLAxisPainter():
    fFontMode(TGLFont::kTexture),
    fDir(1, 0, 0),
    fTMNDim(1),
-   fLabelPixelFontSize(14),
-   fTitlePixelFontSize(14),
+   fLabelPixelFontSize(14), fLabel3DFontSize(1.0),
+   fTitlePixelFontSize(14), fTitle3DFontSize(1.0),
 
    fLabelAlignH(TGLFont::kCenterH),
    fLabelAlignV(TGLFont::kCenterV),

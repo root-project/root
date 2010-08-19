@@ -308,7 +308,7 @@ void TGLViewerEditor::DoCameraCenterExt()
    // Set external camera center.
 
    TGLCamera& cam = fViewer->CurrentCamera();
-   cam.SetExternalCenter(fCameraCenterExt->GetState());
+   cam.SetExternalCenter(fCameraCenterExt->IsDown());
 
    fCameraCenterX->SetState(fCameraCenterExt->IsDown());
    fCameraCenterY->SetState(fCameraCenterExt->IsDown());
