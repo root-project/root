@@ -1251,6 +1251,7 @@ void TFile::Map()
       frombuf(buffer, &nbytes);
       if (!nbytes) {
          Printf("Address = %lld\tNbytes = %d\t=====E R R O R=======", idcur, nbytes);
+         date = 0; time = 0;
          break;
       }
       if (nbytes < 0) {
