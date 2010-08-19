@@ -291,7 +291,7 @@ int main(int argc, char **argv)
    if (argc > 2) {
       file_out=argv[2];
    } else {
-      file_out= new char[2000];
+      file_out= new char[strlen(file_in)+strlen(".root")+1];
       strcpy(file_out,file_in);
       char *dot = strrchr(file_out,'.');
       if (dot) strcpy(dot+1,"root");
