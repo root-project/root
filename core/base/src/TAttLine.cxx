@@ -118,7 +118,7 @@ TAttLine::TAttLine()
 {
    // AttLine default constructor.
 
-   if (!gStyle) return;
+   if (!gStyle) {fLineColor=1; fLineWidth=1; fLineStyle=1; return;}
    fLineColor = gStyle->GetLineColor();
    fLineWidth = gStyle->GetLineWidth();
    fLineStyle = gStyle->GetLineStyle();

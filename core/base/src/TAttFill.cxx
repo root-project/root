@@ -158,7 +158,7 @@ TAttFill::TAttFill()
    // AttFill default constructor.
    // Default fill attributes are taking from the current style
 
-   if (!gStyle) return;
+   if (!gStyle) {fFillColor=1; fFillStyle=0; return;}
    fFillColor = gStyle->GetFillColor();
    fFillStyle = gStyle->GetFillStyle();
 }
