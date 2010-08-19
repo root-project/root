@@ -614,7 +614,7 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
    TString boundary, boundaryEnd;
    Long64_t first = -1, last = -1, tot;
 
-   while ((n = GetLine(fSocket, line, 1024)) >= 0) {
+   while ((n = GetLine(fSocket, line, 8192)) >= 0) {
       if (n == 0) {
          if (ret < 0)
             return ret;
@@ -868,7 +868,7 @@ Int_t TWebFile::GetHead()
    char line[1024];
    Int_t n, ret = 0, redirect = 0;
 
-   while ((n = GetLine(s, line, 1024)) >= 0) {
+   while ((n = GetLine(s, line, 8192)) >= 0) {
       if (n == 0) {
          if (gDebug > 0)
             Info("GetHead", "got all headers");
