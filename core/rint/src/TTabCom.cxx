@@ -189,6 +189,7 @@ TTabCom::TTabCom()
    fpFiles = 0;
    fpSysIncFiles = 0;
    fVarIsPointer = kFALSE;
+   fLastIter = 0;
 
    InitPatterns();
 

@@ -443,6 +443,8 @@ TDataMember::TDataMember(const TDataMember& dm) :
   fTypeName(dm.fTypeName),
   fFullTypeName(dm.fFullTypeName),
   fTrueTypeName(dm.fTrueTypeName),
+  fValueGetter(0),
+  fValueSetter(0),
   fOptions(dm.fOptions ? (TList*)dm.fOptions->Clone() : 0)
 { 
    //copy constructor

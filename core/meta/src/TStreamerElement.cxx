@@ -750,7 +750,7 @@ Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
 ClassImp(TStreamerBasicPointer)
 
 //______________________________________________________________________________
-TStreamerBasicPointer::TStreamerBasicPointer() : fCounter(0)
+TStreamerBasicPointer::TStreamerBasicPointer() : fCountVersion(0),fCountName(),fCountClass(),fCounter(0)
 {
    // Default ctor.
    fCounter = 0;
@@ -856,11 +856,10 @@ void TStreamerBasicPointer::Streamer(TBuffer &R__b)
 ClassImp(TStreamerLoop)
 
 //______________________________________________________________________________
-TStreamerLoop::TStreamerLoop() : fCounter(0)
+TStreamerLoop::TStreamerLoop() : fCountVersion(0),fCountName(),fCountClass(),fCounter(0)
 {
    // Default ctor.
 
-   fCounter = 0;
 }
 
 //______________________________________________________________________________
@@ -960,7 +959,7 @@ void TStreamerLoop::Streamer(TBuffer &R__b)
 ClassImp(TStreamerBasicType)
 
 //______________________________________________________________________________
-TStreamerBasicType::TStreamerBasicType()
+TStreamerBasicType::TStreamerBasicType() : fCounter(0)
 {
    // Default ctor.
 
@@ -968,7 +967,7 @@ TStreamerBasicType::TStreamerBasicType()
 
 //______________________________________________________________________________
 TStreamerBasicType::TStreamerBasicType(const char *name, const char *title, Int_t offset, Int_t dtype, const char *typeName)
-        : TStreamerElement(name,title,offset,dtype,typeName)
+        : TStreamerElement(name,title,offset,dtype,typeName),fCounter(0)
 {
    // Create a TStreamerBasicType object.
 
@@ -1509,7 +1508,7 @@ void TStreamerString::Streamer(TBuffer &R__b)
 ClassImp(TStreamerSTL)
 
 //______________________________________________________________________________
-TStreamerSTL::TStreamerSTL()
+TStreamerSTL::TStreamerSTL() : fSTLtype(0),fCtype(0)
 {
    // Default ctor.
 

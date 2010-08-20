@@ -45,7 +45,12 @@ TSchemaRule::~TSchemaRule()
 }
 
 //------------------------------------------------------------------------------
-TSchemaRule::TSchemaRule( const TSchemaRule& rhs ): TObject( rhs )
+TSchemaRule::TSchemaRule( const TSchemaRule& rhs ): TObject( rhs ),
+                            fVersionVect( 0 ), fChecksumVect( 0 ),
+                            fTargetVect( 0 ), fSourceVect( 0 ),
+                            fIncludeVect( 0 ), fEmbed( kTRUE ), 
+                            fReadFuncPtr( 0 ), fReadRawFuncPtr( 0 ),
+                            fRuleType( kNone )
 {
    // Copy Constructor.
    *this = rhs;

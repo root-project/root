@@ -115,7 +115,7 @@ TFolder::TFolder(const char *name, const char *title) : TNamed(name,title)
 }
 
 //______________________________________________________________________________
-TFolder::TFolder(const TFolder &folder) : TNamed(folder)
+TFolder::TFolder(const TFolder &folder) : TNamed(folder),fFolders(0),fIsOwner(kFALSE)
 {
    // Copy constructor.
 

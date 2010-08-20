@@ -328,7 +328,7 @@ public:
    
 protected:
    TFormLeafInfoMultiVarDim(TClass* classptr, Long_t offset,
-                            TStreamerElement* element) : TFormLeafInfo(classptr,offset,element),fPrimaryIndex(-1),fSecondaryIndex(-1) {}
+                            TStreamerElement* element) : TFormLeafInfo(classptr,offset,element),fNsize(0),fSizes(),fCounter2(0),fSumOfSizes(0),fDim(0),fVirtDim(0),fPrimaryIndex(-1),fSecondaryIndex(-1) {}
 
 public:
    TFormLeafInfoMultiVarDim(TClass* classptr, Long_t offset,

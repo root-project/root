@@ -544,6 +544,7 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
    fValOffset       = 0;
    fValDiff         = 0;
    fPointers        = false;
+   fOnFileClass     = 0;
    Env_t e;
    if ( iter_size > sizeof(e.fIterator) ) {
       Fatal("TGenCollectionProxy",
@@ -558,7 +559,7 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
 //______________________________________________________________________________
 TGenCollectionProxy::TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info, TClass *cl)
    : TVirtualCollectionProxy(cl),
-     fTypeinfo(info.fInfo)
+     fTypeinfo(info.fInfo), fOnFileClass(0)
 {
    // Build a proxy for a collection whose type is described by 'collectionClass'.
    fEnv            = 0;

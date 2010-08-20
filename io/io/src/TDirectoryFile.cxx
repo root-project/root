@@ -66,6 +66,9 @@ TDirectoryFile::TDirectoryFile() : TDirectory()
 //______________________________________________________________________________
 TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *classname, TDirectory* initMotherDir)
            : TDirectory()
+   , fModified(kFALSE), fWritable(kFALSE), fNbytesKeys(0), fNbytesName(0)
+   , fBufferSize(0), fSeekDir(0), fSeekParent(0), fSeekKeys(0)
+   , fFile(0), fKeys(0)
 {
 //*-*-*-*-*-*-*-*-*-*-*-* Create a new DirectoryFile *-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                     ==========================
@@ -141,6 +144,9 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
 
 //______________________________________________________________________________
 TDirectoryFile::TDirectoryFile(const TDirectoryFile & directory) : TDirectory(directory)
+   , fModified(kFALSE), fWritable(kFALSE), fNbytesKeys(0), fNbytesName(0)
+   , fBufferSize(0), fSeekDir(0), fSeekParent(0), fSeekKeys(0)
+   , fFile(0), fKeys(0)
 {
    // Copy constructor.
    ((TDirectoryFile&)directory).Copy(*this);

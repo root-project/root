@@ -212,14 +212,35 @@ Int_t gDebug;
 ClassImp(TROOT)
 
 //______________________________________________________________________________
-TROOT::TROOT() : TDirectory()
+TROOT::TROOT() : TDirectory(),
+     fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
+     fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0), fSvnRevision(0),
+     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE), fEditHistograms(kTRUE),
+     fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
+     fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
+     fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
+     fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
+     fTasks(0),fColors(0),fGeometries(0),fBrowsers(0),fSpecials(0),fCleanups(0),
+     fMessageHandlers(0),fStreamerInfo(0),fClassGenerators(0),fSecContexts(0),
+     fProofs(0),fClipboard(0),fDataSets(0),fUUIDs(0),fRootFolder(0),fBrowsables(0),
+     fPluginManager(0)
 {
    // Default ctor.
 }
 
 //______________________________________________________________________________
 TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
-           : TDirectory()
+   : TDirectory(), fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
+     fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0), fSvnRevision(0),
+     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE), fEditHistograms(kTRUE),
+     fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
+     fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
+     fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
+     fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
+     fTasks(0),fColors(0),fGeometries(0),fBrowsers(0),fSpecials(0),fCleanups(0),
+     fMessageHandlers(0),fStreamerInfo(0),fClassGenerators(0),fSecContexts(0),
+     fProofs(0),fClipboard(0),fDataSets(0),fUUIDs(0),fRootFolder(0),fBrowsables(0),
+     fPluginManager(0)
 {
    // Initialize the ROOT system. The creation of the TROOT object initializes
    // the ROOT system. It must be the first ROOT related action that is

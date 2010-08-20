@@ -53,7 +53,12 @@ TObjArray * TFormulaPrimitive::fgListOfFunction = 0;
 
 
 //______________________________________________________________________________
-TFormulaPrimitive::TFormulaPrimitive() : TNamed()
+TFormulaPrimitive::TFormulaPrimitive() : TNamed(),
+                                         fFuncG(0),
+                                         fFunc0(0),fFunc10(0),fFunc110(0),fFunc1110(0),
+                                         fTFuncG(0),
+                                         fTFunc0(0),fTFunc10(0),fTFunc110(0),fTFunc1110(0),
+                                         fType(0),fNArguments(0),fNParameters(0),fIsStatic(kFALSE)
 {
    // Default constructor.
 
@@ -66,7 +71,12 @@ TFormulaPrimitive::TFormulaPrimitive() : TNamed()
 
 //______________________________________________________________________________
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
-                                     GenFunc0 fpointer) : TNamed(name,formula)
+                                     GenFunc0 fpointer) : TNamed(name,formula),
+                                                          fFuncG(0),
+                                                          fFunc0(0),fFunc10(0),fFunc110(0),fFunc1110(0),
+                                                          fTFuncG(0),
+                                                          fTFunc0(0),fTFunc10(0),fTFunc110(0),fTFunc1110(0),
+                                                          fType(0),fNArguments(0),fNParameters(0),fIsStatic(kFALSE)
 {
    // Constructor.
 
@@ -80,7 +90,12 @@ TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
 
 //______________________________________________________________________________
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula, 
-                                     GenFunc10 fpointer) : TNamed(name,formula)
+                                     GenFunc10 fpointer) : TNamed(name,formula),
+                                                           fFuncG(0),
+                                                           fFunc0(0),fFunc10(0),fFunc110(0),fFunc1110(0),
+                                                           fTFuncG(0),
+                                                           fTFunc0(0),fTFunc10(0),fTFunc110(0),fTFunc1110(0),
+                                                           fType(0),fNArguments(0),fNParameters(0),fIsStatic(kFALSE)
 {
    // Constructor.
 
@@ -94,7 +109,12 @@ TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
 
 //______________________________________________________________________________
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
-                                     GenFunc110 fpointer) : TNamed(name,formula)
+                                     GenFunc110 fpointer) : TNamed(name,formula),
+                                                            fFuncG(0),
+                                                            fFunc0(0),fFunc10(0),fFunc110(0),fFunc1110(0),
+                                                            fTFuncG(0),
+                                                            fTFunc0(0),fTFunc10(0),fTFunc110(0),fTFunc1110(0),
+                                                            fType(0),fNArguments(0),fNParameters(0),fIsStatic(kFALSE)
 {
    // Constructor.
 
@@ -108,7 +128,12 @@ TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
 
 //______________________________________________________________________________
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula, 
-                                     GenFunc1110 fpointer) : TNamed(name,formula)
+                                     GenFunc1110 fpointer) : TNamed(name,formula),
+                                                             fFuncG(0),
+                                                             fFunc0(0),fFunc10(0),fFunc110(0),fFunc1110(0),
+                                                             fTFuncG(0),
+                                                             fTFunc0(0),fTFunc10(0),fTFunc110(0),fTFunc1110(0),
+                                                             fType(0),fNArguments(0),fNParameters(0),fIsStatic(kFALSE)
 {
    // Constructor.
 
@@ -122,7 +147,12 @@ TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
 
 //______________________________________________________________________________
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula, 
-                                     GenFuncG fpointer,Int_t npar) : TNamed(name,formula)
+                                     GenFuncG fpointer,Int_t npar) : TNamed(name,formula),
+                                                                     fFuncG(0),
+                                                                     fFunc0(0),fFunc10(0),fFunc110(0),fFunc1110(0),
+                                                                     fTFuncG(0),
+                                                                     fTFunc0(0),fTFunc10(0),fTFunc110(0),fTFunc1110(0),
+                                                                     fType(0),fNArguments(0),fNParameters(0),fIsStatic(kFALSE)
 {
    // Constructor.
 
@@ -136,7 +166,12 @@ TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
 
 //______________________________________________________________________________
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
-                                     TFuncG fpointer) : TNamed(name,formula)
+                                     TFuncG fpointer) : TNamed(name,formula),
+                                                        fFuncG(0),
+                                                        fFunc0(0),fFunc10(0),fFunc110(0),fFunc1110(0),
+                                                        fTFuncG(0),
+                                                        fTFunc0(0),fTFunc10(0),fTFunc110(0),fTFunc1110(0),
+                                                        fType(0),fNArguments(0),fNParameters(0),fIsStatic(kFALSE)
 {
    // Constructor.
 
@@ -150,7 +185,12 @@ TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
 
 //______________________________________________________________________________
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
-                                     TFunc0 fpointer) : TNamed(name,formula)
+                                     TFunc0 fpointer) : TNamed(name,formula),
+                                                        fFuncG(0),
+                                                        fFunc0(0),fFunc10(0),fFunc110(0),fFunc1110(0),
+                                                        fTFuncG(0),
+                                                        fTFunc0(0),fTFunc10(0),fTFunc110(0),fTFunc1110(0),
+                                                        fType(0),fNArguments(0),fNParameters(0),fIsStatic(kFALSE)
 {
    // Constructor.
 
@@ -164,7 +204,12 @@ TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
 
 //______________________________________________________________________________
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
-                                     TFunc10 fpointer) : TNamed(name,formula)
+                                     TFunc10 fpointer) : TNamed(name,formula),
+                                                         fFuncG(0),
+                                                         fFunc0(0),fFunc10(0),fFunc110(0),fFunc1110(0),
+                                                         fTFuncG(0),
+                                                         fTFunc0(0),fTFunc10(0),fTFunc110(0),fTFunc1110(0),
+                                                         fType(0),fNArguments(0),fNParameters(0),fIsStatic(kFALSE)
 {
    // Constructor.
 
@@ -178,7 +223,12 @@ TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
 
 //______________________________________________________________________________
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
-                                     TFunc110 fpointer) : TNamed(name,formula)
+                                     TFunc110 fpointer) : TNamed(name,formula),
+                                                          fFuncG(0),
+                                                          fFunc0(0),fFunc10(0),fFunc110(0),fFunc1110(0),
+                                                          fTFuncG(0),
+                                                          fTFunc0(0),fTFunc10(0),fTFunc110(0),fTFunc1110(0),
+                                                          fType(0),fNArguments(0),fNParameters(0),fIsStatic(kFALSE)
 {
    // Constructor.
 
@@ -192,7 +242,12 @@ TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
 
 //______________________________________________________________________________
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
-                                     TFunc1110 fpointer) :TNamed(name,formula)
+                                     TFunc1110 fpointer) :TNamed(name,formula),
+                                                          fFuncG(0),
+                                                          fFunc0(0),fFunc10(0),fFunc110(0),fFunc1110(0),
+                                                          fTFuncG(0),
+                                                          fTFunc0(0),fTFunc10(0),fTFunc110(0),fTFunc1110(0),
+                                                          fType(0),fNArguments(0),fNParameters(0),fIsStatic(kFALSE)
 {
    // Constructor.
 

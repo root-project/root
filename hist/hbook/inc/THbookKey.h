@@ -32,7 +32,7 @@ protected:
    Int_t          fID;          //hbook identifier
 
 public:
-   THbookKey() {;}
+   THbookKey() : fDirectory(0),fID(0) {;}
    THbookKey(Int_t id, THbookFile *file);
    virtual ~THbookKey();
    virtual void      Browse(TBrowser *b);

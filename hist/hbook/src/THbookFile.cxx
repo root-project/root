@@ -241,14 +241,14 @@ R__EXTERN TTree *gTree;
 ClassImp(THbookFile)
 
 //______________________________________________________________________________
-THbookFile::THbookFile() : TNamed()
+THbookFile::THbookFile() : TNamed(),fLun(0),fLrecl(0)
 {
    //the constructor
    fList = new TList();
    fKeys = new TList();
 }
 
-//1_____________________________________________________________________________
+//_____________________________________________________________________________
 THbookFile::THbookFile(const char *fname, Int_t lrecl)
            :TNamed(fname,"")
 {
