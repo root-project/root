@@ -168,7 +168,7 @@ Int_t TPythia8::ImportParticles(TClonesArray *particles, Option_t *option)
          if (fPythia->event[i].isFinal()) {
             new(clonesParticles[nparts]) TParticle(
                 fPythia->event[i].id(),
-                fPythia->event[i].isFinal(),
+                fPythia->event[i].status(),
                 fPythia->event[i].mother1() - 1,
                 fPythia->event[i].mother2() - 1,
                 fPythia->event[i].daughter1() - 1, 
@@ -189,7 +189,7 @@ Int_t TPythia8::ImportParticles(TClonesArray *particles, Option_t *option)
 	  if (fPythia->event[i].id() == 90) continue;
 	    new(clonesParticles[nparts]) TParticle(
 		fPythia->event[i].id(),
-		fPythia->event[i].isFinal(),
+		fPythia->event[i].status(),
 		fPythia->event[i].mother1() - 1,
 		fPythia->event[i].mother2() - 1,
 		fPythia->event[i].daughter1() - 1,
