@@ -318,6 +318,7 @@ inline void TTable::Draw(Option_t *opt)
            fPtrs (iter.fPtrs),
            fCurrentRowIndex(iter.fCurrentRowIndex),
            fCurrentColIndex(iter.fCurrentColIndex),
+           fRowSize(iter.fRowSize),
            fCurrentRowPtr(iter.fCurrentRowPtr),
            fCurrentColPtr(iter.fCurrentColPtr)
     {}
@@ -326,6 +327,7 @@ inline void TTable::Draw(Option_t *opt)
         fPtrs            = iter.fPtrs;
         fCurrentRowIndex = iter.fCurrentRowIndex;
         fCurrentColIndex = iter.fCurrentColIndex;
+        fRowSize         = iter.fRowSize;
         fCurrentRowPtr   = iter.fCurrentRowPtr;
         fCurrentColPtr   = iter.fCurrentColPtr;
     }

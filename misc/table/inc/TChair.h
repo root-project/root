@@ -24,21 +24,20 @@
 
 class TChair : public TDataSet {
 
-
 protected:
-      
+
    TTable  *fTable;     // the "TTable" object this object is pthe proxy for
    ULong_t  fLastIndx;  // index pof the last used  table row;
    void    *fLastRow;   // pointer to the last used table row; fLastRow = table[fLastIndx]
-
+   
          TTable *GetThisTable()       {return fTable; }
    const TTable *GetThisTable() const {return fTable; }
    static void  *GetOffset(const void *base,ULong_t offset) { return (void  *)((Char_t *)base + offset);}
-   TChair(){ fTable = 0; }
+   TChair() : fTable(0), fLastIndx(0), fLastRow(0) { ; }
 
 public:
 
-   TChair(TTable *table){ fTable = table; }
+   TChair(TTable *table) : fTable(table),fLastIndx(0),fLastRow(0) { ; }
    TChair(const TChair &org) : TDataSet(org) {assert(0);}
 //   TChair     &operator=(const TChair &rhs){ assert(0); return rhs;}
    virtual    ~TChair(){;}

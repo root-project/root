@@ -3641,6 +3641,8 @@ TOperOffset::TOperOffset()
    fOffset1=0;
    fOffset2=0;
    fOffset3=0;
+   fOldAction=0;
+   fToJump=0;
 }
 
 //______________________________________________________________________________

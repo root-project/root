@@ -37,7 +37,9 @@ TMySQLStatement::TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout) :
    fNumBuffers(0),
    fBind(0),
    fBuffer(0),
-   fWorkingMode(0)
+   fWorkingMode(0),
+   fIterationCount(-1),
+   fNeedParBind(kFALSE)
 {
    // Normal constructor.
    // Checks if statement contains parameters tags.

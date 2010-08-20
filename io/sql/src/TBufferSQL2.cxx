@@ -63,7 +63,18 @@ TBufferSQL2::TBufferSQL2() :
    TBufferFile(),
    fSQL(0),
    fStructure(0),
+   fStk(0),
    fObjMap(0),
+   fReadBuffer(),
+   fErrorFlag(0),
+   fExpectedChain(kFALSE),
+   fCompressLevel(0),
+   fReadVersionBuffer(-1),
+   fObjIdCounter(1),
+   fIgnoreVerification(kFALSE),
+   fObjectsInfos(0),
+   fFirstObjId(0),
+   fLastObjId(0),
    fPoolsMap(0)
 {
    // Default constructor, should not be used
@@ -76,6 +87,7 @@ TBufferSQL2::TBufferSQL2(TBuffer::EMode mode) :
    fStructure(0),
    fStk(0),
    fObjMap(0),
+   fReadBuffer(),
    fErrorFlag(0),
    fExpectedChain(kFALSE),
    fCompressLevel(0),
@@ -83,6 +95,8 @@ TBufferSQL2::TBufferSQL2(TBuffer::EMode mode) :
    fObjIdCounter(1),
    fIgnoreVerification(kFALSE),
    fObjectsInfos(0),
+   fFirstObjId(0),
+   fLastObjId(0),
    fPoolsMap(0)
 {
    // Creates buffer object to serailize/deserialize data to/from sql.
@@ -100,12 +114,16 @@ TBufferSQL2::TBufferSQL2(TBuffer::EMode mode, TSQLFile* file) :
    fStructure(0),
    fStk(0),
    fObjMap(0),
+   fReadBuffer(),
    fErrorFlag(0),
    fExpectedChain(kFALSE),
    fCompressLevel(0),
    fReadVersionBuffer(-1),
    fObjIdCounter(1),
+   fIgnoreVerification(kFALSE),
    fObjectsInfos(0),
+   fFirstObjId(0),
+   fLastObjId(0),
    fPoolsMap(0)
 {
    // Creates buffer object to serailize/deserialize data to/from sql.
