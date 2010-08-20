@@ -25,6 +25,7 @@ TGeoMedium::TGeoMedium()
 {
 // Default constructor
    fId      = 0;
+   for (Int_t i=0; i<20; i++) fParams[i] = 0.;
    fMaterial= 0;
 }
 
@@ -35,6 +36,7 @@ TGeoMedium::TGeoMedium(const char *name, Int_t numed, const TGeoMaterial *mat, D
 // constructor
    fName = fName.Strip();
    fId    = numed;
+   for (Int_t i=0; i<20; i++) fParams[i] = 0.;
    fMaterial = (TGeoMaterial*)mat;
    for (Int_t i=0;i<10;i++) {
       if (params) fParams[i] = params[i];
@@ -51,6 +53,7 @@ TGeoMedium::TGeoMedium(const char *name, Int_t numed, Int_t imat, Int_t isvol, I
 // constructor
    fName = fName.Strip();
    fId    = numed;
+   for (Int_t i=0; i<20; i++) fParams[i] = 0.;
    TIter next (gGeoManager->GetListOfMaterials());
    TGeoMaterial *mat;
    while ((mat = (TGeoMaterial*)next())) {
@@ -70,7 +73,6 @@ TGeoMedium::TGeoMedium(const char *name, Int_t numed, Int_t imat, Int_t isvol, I
    fParams[5] = deemax;
    fParams[6] = epsil;
    fParams[7] = stmin;
-   for (Int_t i=8;i<20;i++) fParams[i] = 0;
    gGeoManager->GetListOfMedia()->Add(this);
 }
 
