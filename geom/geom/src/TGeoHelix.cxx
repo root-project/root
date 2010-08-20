@@ -54,6 +54,9 @@ TGeoHelix::TGeoHelix()
    fS    = 0.;
    fStep = 0.;
    fPhi  = 0.;
+   fPointInit[0] = fPointInit[1] = fPointInit[2] = 0.;
+   fDirInit[0] = fDirInit[1] = fDirInit[2] = 0.;
+   fB[0] = fB[1] = fB[2] = 0.;
    fQ    = 0;
    fMatrix = 0;
    TObject::SetBit(kHelixNeedUpdate, kTRUE);   
@@ -70,6 +73,10 @@ TGeoHelix::TGeoHelix(Double_t curvature, Double_t hstep, Int_t charge)
    SetCharge(charge);
    fStep = 0.;
    fPhi  = 0.;
+   fPointInit[0] = fPointInit[1] = fPointInit[2] = 0.;
+   fDirInit[0] = fDirInit[1] = fDirInit[2] = 0.;
+   fB[0] = fB[1] = fB[2] = 0.;
+   fQ    = 0;
    fMatrix    = new TGeoHMatrix();
    TObject::SetBit(kHelixNeedUpdate, kTRUE);   
    TObject::SetBit(kHelixStraigth, kFALSE);
