@@ -1907,7 +1907,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
             if (gDebug > 2)
                ErrorInfo("RpdCheckAuthAllow: found method %d (have?:%d)",
                          tmet, gHaveMeth[tmet]);
-            if (tmet >= 0 && tmet <= kMAXSEC) {
+            if (tmet >= 0 && tmet < kMAXSEC) {
                if (gHaveMeth[tmet] == 1) {
                   int ii;
                   for (ii = 0; ii < nmet; ii++) {
@@ -6633,4 +6633,3 @@ int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpw
 }
 
 } // namespace ROOT
-
