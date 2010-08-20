@@ -1151,8 +1151,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 
                XMLDocPointer_t filedoc1 = gdml2->ParseFile(fCurrentFile);
                if (filedoc1==0) {
-                  std::cout << "Error: Bad filename given :" << fCurrentFile << std::endl;
-                  delete gdml2;  
+                  Fatal("VolProcess", "Bad filename given %s", fCurrentFile);
                } 
                // take access to main node   
                XMLNodePointer_t mainnode2 = gdml2->DocGetRootElement(filedoc1);
