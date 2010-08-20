@@ -60,25 +60,31 @@ ClassImp(TGeoPcon)
 
 //_____________________________________________________________________________
 TGeoPcon::TGeoPcon()
-         :TGeoBBox(0, 0, 0)
+         :TGeoBBox(0, 0, 0),
+          fNz(0),
+          fPhi1(0.),
+          fDphi(0.),
+          fRmin(NULL),
+          fRmax(NULL),
+          fZ(NULL)
 {
 // dummy ctor
    SetShapeBit(TGeoShape::kGeoPcon);
-   fRmin = 0;
-   fRmax = 0;
-   fZ    = 0;
 }   
 
 //_____________________________________________________________________________
 TGeoPcon::TGeoPcon(Double_t phi, Double_t dphi, Int_t nz)
-         :TGeoBBox(0, 0, 0)
+         :TGeoBBox(0, 0, 0),
+          fNz(nz),
+          fPhi1(phi),
+          fDphi(dphi),
+          fRmin(NULL),
+          fRmax(NULL),
+          fZ(NULL)
 {
 // Default constructor
    SetShapeBit(TGeoShape::kGeoPcon);
-   fPhi1 = phi;
    if (fPhi1<0) fPhi1+=360.;
-   fDphi = dphi;
-   fNz   = nz;
    fRmin = new Double_t [nz];
    fRmax = new Double_t [nz];
    fZ    = new Double_t [nz];
@@ -89,14 +95,17 @@ TGeoPcon::TGeoPcon(Double_t phi, Double_t dphi, Int_t nz)
 
 //_____________________________________________________________________________
 TGeoPcon::TGeoPcon(const char *name, Double_t phi, Double_t dphi, Int_t nz)
-         :TGeoBBox(name, 0, 0, 0)
+         :TGeoBBox(name, 0, 0, 0),
+          fNz(nz),
+          fPhi1(phi),
+          fDphi(dphi),
+          fRmin(NULL),
+          fRmax(NULL),
+          fZ(NULL)         
 {
 // Default constructor
    SetShapeBit(TGeoShape::kGeoPcon);
-   fPhi1 = phi;
    if (fPhi1<0) fPhi1+=360.;
-   fDphi = dphi;
-   fNz   = nz;
    fRmin = new Double_t [nz];
    fRmax = new Double_t [nz];
    fZ    = new Double_t [nz];
@@ -108,9 +117,12 @@ TGeoPcon::TGeoPcon(const char *name, Double_t phi, Double_t dphi, Int_t nz)
 //_____________________________________________________________________________
 TGeoPcon::TGeoPcon(Double_t *param)
          :TGeoBBox(0, 0, 0),
-         fRmin(0),
-         fRmax(0),
-         fZ(0)
+          fNz(0),
+          fPhi1(0.),
+          fDphi(0.),
+          fRmin(0),
+          fRmax(0),
+          fZ(0)
 {
 // Default constructor in GEANT3 style
 // param[0] = phi1
