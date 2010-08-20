@@ -223,11 +223,10 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
          UInt_t count = proxy->Size();
          parent->SetMembersCount(parent->GetMembersCount() + count);
 
-         if(!proxy->HasPointers() || proxy->GetType()) { // only objects or pointers to basic type
+         if (!proxy->HasPointers() || proxy->GetType() != kNoType_t) { // only objects or pointers to basic type
             parent->SetTotalSize(parent->GetTotalSize() + count * proxy->Sizeof());
             parent->SetAllMembersCount(parent->GetAllMembersCount() + count);
          } else {
-            
             TClass* clProxy = proxy->GetValueClass();
             TString name;
             TString typeName;
