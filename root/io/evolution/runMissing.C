@@ -21,4 +21,6 @@
    if (h4->GetMean()!=0) {
       fprintf(stdout,"Problem generating: %s (it should have been full of zeros ... actually this might indicate progress ::) )\n",h4->GetTitle());
    }
+   delete f1;
+   delete f2;
 }

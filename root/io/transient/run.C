@@ -14,7 +14,7 @@ tft->Branch("TBigDSWriteEvent","TBigDSWriteEvent",&myevent,5000000,1);
 
 // Error in <TClass::New>: cannot create object of class TIter
 
-TBuffer b(TBuffer::kWrite);
+TBufferFile b(TBuffer::kWrite);
 b.WriteObjectAny(myevent,TBigDSWriteEvent::Class());
 
 }

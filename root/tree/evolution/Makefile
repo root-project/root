@@ -83,7 +83,7 @@ ReadList.log:  $(ROOTCORELIBS) MyClassList_cxx.$(DllSuf) ReadList.C clonesfile.r
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l ReadList.C > ReadList.log 2>&1
 
 ReadNolib.log:  $(ROOTCORELIBS) ReadNolib.C clonesfile.root vectorfile.root listfile.root
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l ReadNolib.C 2>&1 | grep -v 'Warning in <TClass::TClass>: no dictionary for class' > ReadNolib.log 
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l ReadNolib.C 2>&1 | grep -v 'Warning in <TClass::TClass>: no dictionary for class' > ReadNolib.log || handleError.sh --result=$$? --log=ReadNoLib.lob
 
 containerEvolution.log: $(ROOTCORELIBS) MyClassClones_cxx.$(DllSuf) MyClassVector_cxx.$(DllSuf) MyClassList_cxx.$(DllSuf)
 
