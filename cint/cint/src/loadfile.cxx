@@ -461,8 +461,12 @@ int G__getcintsysdir()
 #  ifdef CINTINCDIR
       sprintf(G__cintsysdir, "%s", CINTINCDIR);
 #  else
-      if(G__UseCINTSYSDIR) strcpy(G__cintsysdir,env);
-      else                 sprintf(G__cintsysdir, "%s/cint", env);
+       if(G__UseCINTSYSDIR) {
+          strncpy(G__cintsysdir,env, G__MAXFILENAME-1);
+       } else {
+          strncpy(G__cintsysdir,env, G__MAXFILENAME-1-strlen("/cint"));
+          strcat(G__cintsysdir,"/cint");
+       }
 #  endif
 # endif /* ROOTBUILD */
 #endif /* G__VMS */
@@ -2892,9 +2896,9 @@ char* G__tmpnam(char *name)
 
   char *tmp;
   if('\0'==tmpdir[0]) {
-    if((tmp=getenv("CINTTMPDIR"))) strcpy(tmpdir,tmp);
-    else if((tmp=getenv("TEMP"))) strcpy(tmpdir,tmp);
-    else if((tmp=getenv("TMP"))) strcpy(tmpdir,tmp);
+    if((tmp=getenv("CINTTMPDIR"))) strncpy(tmpdir,tmp,G__MAXFILENAME-1);
+    else if((tmp=getenv("TEMP"))) strncpy(tmpdir,tmp,G__MAXFILENAME-1);
+    else if((tmp=getenv("TMP"))) strncpy(tmpdir,tmp,G__MAXFILENAME-1);
     else strcpy(tmpdir,"/tmp");
   }
 
