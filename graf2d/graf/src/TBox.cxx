@@ -42,6 +42,11 @@ TBox::TBox(): TObject(), TAttLine(), TAttFill()
    // Box default constructor.
 
    fTip = 0;
+   fX1       = 0.;
+   fY1       = 0.;
+   fX2       = 0.;
+   fY2       = 0.;
+   fResizing = kTRUE;
 }
 
 
