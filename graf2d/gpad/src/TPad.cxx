@@ -3321,6 +3321,8 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
    Int_t nc = 2*nn+1;
    Double_t *x = new Double_t[nc];
    Double_t *y = new Double_t[nc];
+   memset(x,0,8*nc);
+   memset(y,0,8*nc);
 
    n = ClipPolygon(nn, xx, yy, nc, x, y,xmin,ymin,xmax,ymax);
    if (!n) {
