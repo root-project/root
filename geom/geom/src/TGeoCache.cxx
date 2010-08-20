@@ -56,6 +56,7 @@ TGeoNodeCache::TGeoNodeCache()
    fMPB         = 0;
    fNodeBranch  = 0;
    fNodeIdArray = 0;
+   for (Int_t i=0; i<100; i++) fIdBranch[i] = 0;
 }
 
 //_____________________________________________________________________________
@@ -84,6 +85,7 @@ TGeoNodeCache::TGeoNodeCache(TGeoNode *top, Bool_t nodeid, Int_t capacity)
    fNodeBranch  = new TGeoNode *[fGeoCacheMaxLevels];
    fNodeBranch[0] = top;
    fNodeIdArray = 0;
+   for (Int_t i=0; i<100; i++) fIdBranch[i] = 0;
    if (nodeid) BuildIdArray();
    CdTop();
 }
