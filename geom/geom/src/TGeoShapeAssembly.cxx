@@ -34,6 +34,8 @@ ClassImp(TGeoShapeAssembly)
 TGeoShapeAssembly::TGeoShapeAssembly()
 {
 // Default constructor
+   fCurrent = 0;
+   fNext = 0;
    fVolume  = 0;
 }   
 
@@ -43,6 +45,8 @@ TGeoShapeAssembly::TGeoShapeAssembly(TGeoVolumeAssembly *vol)
 {
 // Constructor specifying hyperboloid parameters.
    fVolume  = vol;
+   fCurrent = 0;
+   fNext = 0;
 }
 
 
