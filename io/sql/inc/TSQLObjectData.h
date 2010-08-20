@@ -105,7 +105,6 @@ protected:
    TSQLResult*       fBlobData;       //!
    TSQLStatement*    fBlobStmt;      //!
    Int_t             fLocatedColumn;  //!
-   Int_t             fLocatedBlob;    //!
    TSQLRow*          fClassRow;       //!
    TSQLRow*          fBlobRow;        //!
    const char*       fLocatedField;   //!
