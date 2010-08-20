@@ -733,7 +733,7 @@ G__value G__execfuncmacro(const char* item, int* done)
    found = 0;
    struct G__Callfuncmacro* callfuncmacro = &deffuncmacro->callfuncmacro;
    while (callfuncmacro->next) {
-      if (
+      if (G__ifile.fp && (
          // --
 #ifdef G__NONSCALARFPOS
          G__ifile.line_number == callfuncmacro->line && G__ifile.filenum == callfuncmacro->call_filenum
@@ -745,7 +745,7 @@ G__value G__execfuncmacro(const char* item, int* done)
          call_pos == callfuncmacro->call_pos && G__ifile.filenum == callfuncmacro->call_filenum
 #endif // G__NONSCALARFPOSxxx
          // --
-      ) {
+      ) ) {
          found = 1;
          break;
       }
@@ -859,7 +859,7 @@ int G__execfuncmacro_noexec(const char* macroname)
    struct G__Callfuncmacro* callfuncmacro = &deffuncmacro->callfuncmacro;
    while (callfuncmacro->next) {
       // --
-      if (
+      if (G__ifile.fp && (
          // --
 #if defined(G__NONSCALARFPOS)
          G__ifile.line_number == callfuncmacro->line && G__ifile.filenum == callfuncmacro->call_filenum
@@ -871,7 +871,7 @@ int G__execfuncmacro_noexec(const char* macroname)
          call_pos == callfuncmacro->call_pos && G__ifile.filenum == callfuncmacro->call_filenum
 #endif // G__NONSCALARFPOSxxx
          // --
-      ) {
+      ) ) {
          // --
          found = 1;
          break;

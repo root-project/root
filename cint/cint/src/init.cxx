@@ -686,6 +686,8 @@ int G__main(int argc, char** argv)
 #ifndef G__TESTMAIN
    optind = 1;
 #endif
+   // Keep track of the +STUB -STUB argument
+   bool startedSTUB = false;
    /*************************************************************
     * Get command options
     *************************************************************/
@@ -1254,10 +1256,16 @@ int G__main(int argc, char** argv)
       }
       else if (strcmp(sourcefile, "+STUB") == 0) {
          G__store_dictposition(&stubbegin);
+         startedSTUB = true;
          continue;
       }
       else if (strcmp(sourcefile, "-STUB") == 0) {
-         G__set_stubflags(&stubbegin);
+         if (startedSTUB) {
+            G__set_stubflags(&stubbegin);
+            startedSTUB = false;
+         } else {
+            G__more(G__sout, "Warning: -STUB needs to be after a +STUB\n");
+         }
          continue;
       }
 

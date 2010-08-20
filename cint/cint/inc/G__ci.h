@@ -1248,17 +1248,20 @@ extern "C" { /* extern C 3 */
 *
 **************************************************************************/
 struct G__input_file {
-  FILE *fp;
-  int line_number;
-  short filenum;
-  char name[G__MAXFILENAME];
+   FILE *fp;
+   int line_number;
+   short filenum;
+   char name[G__MAXFILENAME];
 #ifndef G__OLDIMPLEMENTATION1649
-  char *str;
-  unsigned long pos;
-  int vindex;
+   char *str;
+   unsigned long pos;
+   int vindex;
+#endif
+#ifdef __cplusplus
+   G__input_file() : fp(0),line_number(-1),filenum(-1),str(0),pos(-1),vindex(0) { ; }
 #endif
 };
-
+   
 /**************************************************************************
 * make hash value
 *

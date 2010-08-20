@@ -2886,9 +2886,10 @@ int G__parenthesisovld(G__value* result3, char* funcname, G__param* libp, int fl
       return(0);
 
    if (0 == funcname[0]) {
+      known = 1;
       result = *result3;
    }
-   else
+   else {
 
       if (flag == G__CALLMEMFUNC) {
          G__incsetup_memvar(G__tagnum);
@@ -2898,7 +2899,8 @@ int G__parenthesisovld(G__value* result3, char* funcname, G__param* libp, int fl
       else {
          result = G__getvariable(funcname, &known, &G__global, G__p_local);
       }
-
+   }
+   
    /* resolve A::staticmethod(1)(2,3) */
 
    if (

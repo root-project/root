@@ -42,34 +42,35 @@ extern const string G__endmark;
  * G__fstream
  ***********************************************************************/
 class G__fstream {
-  FILE  *m_fp;
-  fpos_t m_pos;
-  int    m_linenum;
-  int    m_c;
- public:
-  void Init(G__input_file& ifile);
-  void Init(const char *) { }
-  int fgetc() { return(G__fgetc()); } // legacy
-  void putback(int goback= -1) { fseek(G__ifile.fp,goback,SEEK_CUR); }
-  void setpos(fpos_t& pos) { m_pos=pos; rewindpos(); }
-  void storepos(int c=0);
-  int rewindpos() ;
-  unsigned long getpos() { return((unsigned long)0 /* m_pos */ ); } //not used
-  void setspos(unsigned long pos) {
+   FILE  *m_fp;
+   fpos_t m_pos;
+   int    m_linenum;
+   int    m_c;
+public:
+   G__fstream() : m_fp(0),m_linenum(-1),m_c(-1) { ; }
+   void Init(G__input_file& ifile);
+   void Init(const char *) { }
+   int fgetc() { return(G__fgetc()); } // legacy
+   void putback(int goback= -1) { fseek(G__ifile.fp,goback,SEEK_CUR); }
+   void setpos(fpos_t& pos) { m_pos=pos; rewindpos(); }
+   void storepos(int c=0);
+   int rewindpos() ;
+   unsigned long getpos() { return((unsigned long)0 /* m_pos */ ); } //not used
+   void setspos(unsigned long pos) {
 #if defined(__linux)
-  #if (__GNUC__==2 && __GNUC_MINOR__<96)
-     #if defined(_G_IO_IO_FILE_VERSION) && _G_IO_IO_FILE_VERSION == 0x20001
-        m_pos.__pos = pos;    // this is for Debian
-     #else
-        m_pos = pos; // this is for RedHat 6
-     #endif
+ #if (__GNUC__==2 && __GNUC_MINOR__<96)
+  #if defined(_G_IO_IO_FILE_VERSION) && _G_IO_IO_FILE_VERSION == 0x20001
+      m_pos.__pos = pos;    // this is for Debian
   #else
-     m_pos.__pos = pos; // this is for rest linux distribution
+      m_pos = pos; // this is for RedHat 6
   #endif
+ #else
+      m_pos.__pos = pos; // this is for rest linux distribution
+ #endif
 #else
-  m_pos = pos;
+      m_pos = pos;
 #endif
-  }
+   }
 };
 
 /***********************************************************************

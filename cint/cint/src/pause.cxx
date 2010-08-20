@@ -716,6 +716,7 @@ int G__reloadfile(char *filename, bool keep)
       return(-1);
    }
 
+   storefname[0] = 0;
    for (i = 0;i < G__nfile;i++) {
       if (!flag &&
             G__matchfilename(i, filename)
@@ -762,7 +763,7 @@ int G__reloadfile(char *filename, bool keep)
       return(G__loadfile(filename));
    }
 
-   if (G__UNLOADFILE_SUCCESS != G__unloadfile(storefname[0])) {
+   if (storefname[0] || G__UNLOADFILE_SUCCESS != G__unloadfile(storefname[0])) {
       return(1);
    }
 

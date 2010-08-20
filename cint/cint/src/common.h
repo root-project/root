@@ -920,25 +920,28 @@ struct G__bytecodefunc {
  **************************************************************************/
 
 struct G__funcentry {
-  /* file position and pointer for restoring start point */
-  fpos_t pos; /* Set if interpreted func body defined, unknown otherwise */
-  void *p;  /* FILE* for source file or  int (*)() for compiled function
-             * (void*)NULL if no function body */
-  int  line_number; /* -1 if no function body or compiled function */
-  short filenum;    /* -1 if compiled function, otherwise interpreted func */
-
+   /* file position and pointer for restoring start point */
+   fpos_t pos; /* Set if interpreted func body defined, unknown otherwise */
+   void *p;  /* FILE* for source file or  int (*)() for compiled function
+              * (void*)NULL if no function body */
+   int  line_number; /* -1 if no function body or compiled function */
+   short filenum;    /* -1 if compiled function, otherwise interpreted func */
+   
    // Object Pointer Adjustement to call the stub function (entry) 
    long ptradjust;
-
+   
 #ifdef G__ASM_FUNC
-  int size; /* size (number of lines) of function */
+   int size; /* size (number of lines) of function */
 #endif
 #ifdef G__TRUEP2F
-  void *tp2f;
+   void *tp2f;
 #endif
 #ifdef G__ASM_WHOLEFUNC
-  struct G__bytecodefunc *bytecode;
-  int bytecodestatus;
+   struct G__bytecodefunc *bytecode;
+   int bytecodestatus;
+#endif
+#ifdef __cplusplus
+   G__funcentry() : p(0),line_number(-1),filenum(-1),ptradjust(0),size(0),tp2f(0),bytecode(0),bytecodestatus(0) { ; }
 #endif
 };
 
@@ -1050,7 +1053,7 @@ struct G__ifunc_table {
 };
 struct G__ifunc_table_internal {
 #ifdef __cplusplus
-   G__ifunc_table_internal() : inited(true) {};
+   G__ifunc_table_internal() : inited(true),allifunc(0),next(0),page(0),page_base(0),tagnum(-1) {};
 #endif
    
   /* true if the constructor was run */
