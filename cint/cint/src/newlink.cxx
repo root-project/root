@@ -5050,8 +5050,9 @@ void G__cppif_dummyobj(FILE *fp, struct G__ifunc_table_internal *ifunc, int i,in
     //  return;
 
     // We cannot create an object which belongs to an abstract class.
-    if ((ifunc->tagnum!=-1 && G__struct.isabstract[ifunc->tagnum])
-      return;
+    if (ifunc->tagnum!=-1 && G__struct.isabstract[ifunc->tagnum]) {
+       return;
+    } 
 
     // We can't create a dummy object if its destructor is private...
     // we tried by creating the object in the heap instead of the heap (with new)
