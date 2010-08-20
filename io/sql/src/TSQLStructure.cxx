@@ -1226,7 +1226,6 @@ public:
    Int_t fRawId;
    TString fValueMask;
    const char* fValueQuote;
-   TSQLStatement* fStmt;
    Bool_t fUseStmt;
    Int_t fMaxStrSize;
 };
