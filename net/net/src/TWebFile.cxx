@@ -609,7 +609,7 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
       return -1;
    }
 
-   char line[1024];
+   char line[8192];
    Int_t n, ret = 0, nranges = 0, ltot = 0, redirect = 0;
    TString boundary, boundaryEnd;
    Long64_t first = -1, last = -1, tot;
@@ -865,7 +865,7 @@ Int_t TWebFile::GetHead()
       return -1;
    }
 
-   char line[1024];
+   char line[8192];
    Int_t n, ret = 0, redirect = 0;
 
    while ((n = GetLine(s, line, 8192)) >= 0) {
