@@ -52,16 +52,18 @@ public:
 protected:
    static TObjArray * fgListOfFunction;                   //!list of global primitive formulas 
    static Int_t       BuildBasicFormulas();               //build list of basic formulas
-   GenFuncG   fFuncG; //                                  //!pointer to the TFormula generic function
-   GenFunc0   fFunc0; //                                  //!pointer to the function
-   GenFunc10   fFunc10; //                                //!pointer to the function
-   GenFunc110  fFunc110; //                               //!pointer to the function
-   GenFunc1110 fFunc1110; //                              //!pointer to the function
-   TFuncG     fTFuncG;                                    //!pointer to the TFormula generic function
-   TFunc0     fTFunc0;//                                  //! pointer to member function
-   TFunc10    fTFunc10;//                                 //! pointer to member function
-   TFunc110   fTFunc110;//                                //! pointer to member function
-   TFunc1110  fTFunc1110;//                               //! pointer to member function
+   union {
+      GenFuncG    fFuncG;                                 //!pointer to the TFormula generic function
+      GenFunc0    fFunc0;                                 //!pointer to the function
+      GenFunc10   fFunc10;                                //!pointer to the function
+      GenFunc110  fFunc110;                               //!pointer to the function
+      GenFunc1110 fFunc1110;                              //!pointer to the function
+      TFuncG      fTFuncG;                                //!pointer to the TFormula generic function
+      TFunc0      fTFunc0;                                //! pointer to member function
+      TFunc10     fTFunc10;                               //! pointer to member function
+      TFunc110    fTFunc110;                              //! pointer to member function
+      TFunc1110   fTFunc1110;                             //! pointer to member function
+   };
    Int_t      fType;                                      //type of the function  
    Int_t      fNArguments;                                //number of arguments
    Int_t      fNParameters;                               //number of parameters
