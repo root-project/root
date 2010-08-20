@@ -44,6 +44,14 @@ TConvertClonesArrayToProxy::TConvertClonesArrayToProxy(
 }
 
 //________________________________________________________________________
+TConvertClonesArrayToProxy::~TConvertClonesArrayToProxy()
+{
+   // Destructor.
+
+   delete fProxy;
+}
+
+//________________________________________________________________________
 void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t size)
 {
    // Read a TClonesArray from the TBuffer b and load it into a (stl) collection

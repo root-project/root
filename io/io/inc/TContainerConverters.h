@@ -33,6 +33,7 @@ class TConvertClonesArrayToProxy : public TMemberStreamer {
    TVirtualCollectionProxy *fProxy;
 public:
    TConvertClonesArrayToProxy(TVirtualCollectionProxy *proxy, Bool_t isPointer, Bool_t isPrealloc);
+   ~TConvertClonesArrayToProxy();
    void operator()(TBuffer &b, void *pmember, Int_t size=0);
 };
 
