@@ -80,6 +80,13 @@ TGeoVoxelFinder::TGeoVoxelFinder()
    fNcandidates  = 0;
    fCurrentVoxel = 0;
    fBits1    = 0;
+   for (Int_t i=0; i<3; i++) {
+      fPriority[i] = 0;
+      fSlices[i] = 0;
+      fInc[i] = 0;
+      fInvdir[i] = 0.;
+      fLimits[i] = 0.;
+   }   
    SetInvalid(kFALSE);
 }
 //_____________________________________________________________________________
@@ -125,6 +132,13 @@ TGeoVoxelFinder::TGeoVoxelFinder(TGeoVolume *vol)
    fNcandidates  = 0;
    fCurrentVoxel = 0;
    fBits1    = 0;
+   for (Int_t i=0; i<3; i++) {
+      fPriority[i] = 0;
+      fSlices[i] = 0;
+      fInc[i] = 0;
+      fInvdir[i] = 0.;
+      fLimits[i] = 0.;
+   }   
    SetNeedRebuild();
 }
 
