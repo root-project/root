@@ -1488,6 +1488,9 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb(TGeoVolume *vol, Int_t nrows)
 {
 // Default constructor
    fNrows = nrows;
+   fAxisOnRows  = 0;            
+   fNdivisions  = 0;             
+   fStart       = 0;                 
 // compute everything else
 }
 //_____________________________________________________________________________
