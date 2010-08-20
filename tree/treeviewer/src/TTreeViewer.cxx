@@ -1356,7 +1356,7 @@ void TTreeViewer::ExecuteDraw()
          if (alias[0].BeginsWith("~")) alias[0].Remove(0, 1);
       }
    }
-   if (!dimension) {
+   if (!dimension && !fScanMode) {
       Warning("ExecuteDraw", "Nothing to draw on X,Y,Z.");
       return;
    }
