@@ -805,13 +805,13 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
       // shoot direct ray
       nelem1=nelem2=0;
 //      printf("DIRECT %i\n", i);
-      ShootRay(&start[0], dir[0], dir[1], dir[2], array1, nelem1, dim1);
+      array1 = ShootRay(&start[0], dir[0], dir[1], dir[2], array1, nelem1, dim1);
       if (!nelem1) continue;
 //      for (j=0; j<nelem1; j++) printf("%i : %f %f %f\n", j, array1[3*j], array1[3*j+1], array1[3*j+2]);
       memcpy(&end[0], &array1[3*(nelem1-1)], 3*sizeof(Double_t));
       // shoot ray backwards
 //      printf("BACK %i\n", i);
-      ShootRay(&end[0], -dir[0], -dir[1], -dir[2], array2, nelem2, dim2, &start[0]);
+      array2 = ShootRay(&end[0], -dir[0], -dir[1], -dir[2], array2, nelem2, dim2, &start[0]);
       if (!nelem2) {
          printf("#### NOTHING BACK ###########################\n");
          for (j=0; j<nelem1; j++) {
@@ -1984,7 +1984,7 @@ TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
 }
 
 //______________________________________________________________________________
-void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double_t dirz, Double_t *array, Int_t &nelem, Int_t &dim, Double_t *endpoint) const
+Double_t *TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double_t dirz, Double_t *array, Int_t &nelem, Int_t &dim, Double_t *endpoint) const
 {
 // Shoot one ray from start point with direction (dirx,diry,dirz). Fills input array
 // with points just after boundary crossings.
@@ -1993,7 +1993,7 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
    Int_t istep = 0;
    if (!dim) {
       printf("empty input array\n");
-      return;
+      return array;
    }   
 //   fGeoManager->CdTop();
    const Double_t *point = fGeoManager->GetCurrentPoint();
@@ -2010,7 +2010,7 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
    fGeoManager->FindNextBoundary();
    step = fGeoManager->GetStep();
 //   printf("---next : at step=%f\n", step);
-   if (step>1E10) return;
+   if (step>1E10) return array;
    endnode = fGeoManager->Step();
    is_entering = fGeoManager->IsEntering();
    while (step<1E10) {
@@ -2018,7 +2018,7 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
          forward = dirx*(endpoint[0]-point[0])+diry*(endpoint[1]-point[1])+dirz*(endpoint[2]-point[2]);
          if (forward<1E-3) {
 //            printf("exit : Passed start point. nelem=%i\n", nelem); 
-            return;
+            return array;
          }
       }
       if (is_entering) {
@@ -2035,7 +2035,7 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
       } else {
          if (endnode==0 && step>1E10) {
 //            printf("exit : NULL endnode. nelem=%i\n", nelem); 
-            return;
+            return array;
          }    
          if (!fGeoManager->IsEntering()) {
 //            if (startnode) printf("stepping %f from (%f, %f, %f) inside %s...\n", step,point[0], point[1], point[2], startnode->GetName());
@@ -2047,7 +2047,7 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
             if (istep>1E3) {
 //               Error("ShootRay", "more than 1000 steps. Step was %f", step);
                nelem = 0;
-               return;
+               return array;
             }   
             fGeoManager->SetStep(1E-5);
             endnode = fGeoManager->Step();
@@ -2071,6 +2071,7 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
       endnode = fGeoManager->Step();
       is_entering = fGeoManager->IsEntering();
    }
+   return array;
 //   printf("exit : INFINITE step. nelem=%i\n", nelem);
 }
 
