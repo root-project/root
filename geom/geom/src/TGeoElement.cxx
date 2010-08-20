@@ -795,6 +795,7 @@ TGeoElementTable::TGeoElementTable()
 // default constructor
    fNelements = 0;
    fNelementsRN = 0;
+   fNisotopes = 0;
    fList      = 0;
    fListRN    = 0;
    fIsotopes = 0;
@@ -806,6 +807,7 @@ TGeoElementTable::TGeoElementTable(Int_t /*nelements*/)
 // constructor
    fNelements = 0;
    fNelementsRN = 0;
+   fNisotopes = 0;
    fList = new TObjArray(128);
    fListRN    = 0;
    fIsotopes = 0;
@@ -818,6 +820,7 @@ TGeoElementTable::TGeoElementTable(const TGeoElementTable& get) :
   TObject(get),
   fNelements(get.fNelements),
   fNelementsRN(get.fNelementsRN),
+  fNisotopes(get.fNisotopes),
   fList(get.fList),
   fListRN(get.fListRN),
   fIsotopes(0)
@@ -833,6 +836,7 @@ TGeoElementTable& TGeoElementTable::operator=(const TGeoElementTable& get)
       TObject::operator=(get);
       fNelements=get.fNelements;
       fNelementsRN=get.fNelementsRN;
+      fNisotopes=get.fNisotopes;
       fList=get.fList;
       fListRN=get.fListRN;
       fIsotopes = 0;
