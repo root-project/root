@@ -143,7 +143,7 @@ TAttMarker::TAttMarker()
    //
    // Default text attributes are taking from the current style.
 
-   if (!gStyle) return;
+   if (!gStyle) {fMarkerColor=1; fMarkerStyle=1; fMarkerSize=1; return;}
    fMarkerColor = gStyle->GetMarkerColor();
    fMarkerStyle = gStyle->GetMarkerStyle();
    fMarkerSize  = gStyle->GetMarkerSize();
