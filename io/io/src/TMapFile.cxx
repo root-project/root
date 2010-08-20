@@ -167,8 +167,25 @@ TMapFile::TMapFile()
    // Default ctor. Does not much except setting some basic values.
 
    fFd          = -1;
+   fVersion     = 0;
+   fName        = 0;
+   fTitle       = 0;
+   fOption      = 0;
    fMmallocDesc = 0;
+   fBaseAddr    = 0;
+   fSize        = 0;
    fFirst       = 0;
+   fLast        = 0;
+   fOffset      = 0;
+   fDirectory   = 0;
+   fBrowseList  = 0;
+   fWritable    = kFALSE;
+   fSemaphore   = -1;
+   fhSemaphore  = -1;
+   fGetting     = 0;
+   fWritten     = 0;
+   fSumBuffer   = 0;
+   fSum2Buffer  = 0;
 }
 
 //______________________________________________________________________________
@@ -185,6 +202,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
 #ifndef WIN32
    fFd          = -1;
    fSemaphore   = -1;
+   fhSemaphore  = -1;
 #else
    fFd          = (Int_t) INVALID_HANDLE_VALUE;
    fSemaphore   = (Int_t) INVALID_HANDLE_VALUE;
@@ -482,6 +500,8 @@ TMapFile::TMapFile(const TMapFile &f, Long_t offset) : TObject(f)
    fSum2Buffer  = f.fSum2Buffer;
 #ifdef WIN32
    CreateSemaphore(fSemaphore);
+#else
+   fhSemaphore = f.fhSemaphore;
 #endif
 }
 

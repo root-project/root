@@ -44,7 +44,7 @@ ClassImp(TXMLParser);
 
 //______________________________________________________________________________
 TXMLParser::TXMLParser()
-  : fContext(0), fValidate(kTRUE), fReplaceEntities(kFALSE), fParseCode(0)
+   : fContext(0), fValidate(kTRUE), fReplaceEntities(kFALSE), fStopError(kFALSE), fParseCode(0)
 {
    // Initializes parser variables.
 

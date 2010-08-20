@@ -178,6 +178,7 @@ namespace ROOT { namespace Cintex {
       fClassInfo = 0;
       fIsa_func = 0;
       fDictionary_func = 0;
+      fVersion = 0;
    }
 
    ROOTClassEnhancerInfo::~ROOTClassEnhancerInfo() {

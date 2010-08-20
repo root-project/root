@@ -295,7 +295,8 @@ TSQLFile::TSQLFile() :
    fOtherTypes(0),
    fUserName(),
    fLogFile(0),
-   fIdsTableExists(kFALSE)
+   fIdsTableExists(kFALSE),
+   fStmtCounter(0)
 {
    // default TSQLFile constructor
    SetBit(kBinaryFile, kFALSE);
@@ -319,7 +320,8 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
    fOtherTypes(mysql_OtherTypes),
    fUserName(user),
    fLogFile(0),
-   fIdsTableExists(kFALSE)
+   fIdsTableExists(kFALSE),
+   fStmtCounter(0)
 {
    // Connects to SQL server with provided arguments.
    // If the constructor fails in any way IsZombie() will

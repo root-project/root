@@ -120,7 +120,7 @@ protected:
    const Element               *fPtr;     //  pointer to the a[row,0]
 
 public:
-   TMatrixTRow_const() { fMatrix = 0; fInc = 0; fPtr = 0; }
+   TMatrixTRow_const() { fMatrix = 0; fRowInd = 0; fInc = 0; fPtr = 0; }
    TMatrixTRow_const(const TMatrixT   <Element> &matrix,Int_t row);
    TMatrixTRow_const(const TMatrixTSym<Element> &matrix,Int_t row);
   TMatrixTRow_const(const TMatrixTRow_const<Element>& trc):
@@ -215,7 +215,7 @@ protected:
    const Element               *fPtr;     //  pointer to the a[0,col] column
 
 public:
-   TMatrixTColumn_const() { fMatrix = 0; fInc = 0; fPtr = 0; }
+   TMatrixTColumn_const() { fMatrix = 0; fColInd = 0; fInc = 0; fPtr = 0; }
    TMatrixTColumn_const(const TMatrixT   <Element> &matrix,Int_t col);
    TMatrixTColumn_const(const TMatrixTSym<Element> &matrix,Int_t col);
    TMatrixTColumn_const(const TMatrixTColumn_const<Element>& trc):

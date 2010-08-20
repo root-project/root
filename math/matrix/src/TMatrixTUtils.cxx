@@ -1331,6 +1331,10 @@ TMatrixTSparseRow_const<Element>::TMatrixTSparseRow_const(const TMatrixTSparse<E
    fRowInd = row-matrix.GetRowLwb();
    if (fRowInd >= matrix.GetNrows() || fRowInd < 0) {
       Error("TMatrixTSparseRow_const(const TMatrixTSparse &,Int_t)","row index out of bounds");
+      fMatrix  = 0;
+      fNindex  = 0;
+      fColPtr  = 0;
+      fDataPtr = 0;
       return;
    }
 

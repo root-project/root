@@ -261,10 +261,11 @@ TFormula::TFormula(const TFormula &formula) : TNamed()
    fNstring= 0;
    fNames  = 0;
    fNval   = 0;
-   fPredefined    = 0;
-   fOperOffset    = 0;
-   fExprOptimized = 0;
-   fOperOptimized = 0;
+   fNOperOptimized = 0;
+   fPredefined     = 0;
+   fOperOffset     = 0;
+   fExprOptimized  = 0;
+   fOperOptimized  = 0;
 
    ((TFormula&)formula).TFormula::Copy(*this);
 }

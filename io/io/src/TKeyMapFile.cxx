@@ -28,7 +28,7 @@
 ClassImp(TKeyMapFile)
 
 //______________________________________________________________________________
-TKeyMapFile::TKeyMapFile() : TNamed()
+TKeyMapFile::TKeyMapFile() : TNamed(), fMapFile(0)
 {
    // Default constructor.
 }

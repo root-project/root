@@ -52,6 +52,9 @@ TDataSetIter::TDataSetIter(TDataSet *link, Bool_t dir)
    fMaxDepth      = fDepth         =1;
    fDataSet= fgNullDataSet ;
    fNext = link ? new TIter(link->GetCollection() ,dir):0;
+   for(UInt_t i = 0; i < sizeof(fNextSet) / sizeof(TIter*); ++i) {
+      fNextSet[i] = (TIter*)0;
+   }
 }
 
 //______________________________________________________________________________

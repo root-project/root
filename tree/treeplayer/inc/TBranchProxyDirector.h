@@ -40,12 +40,13 @@ namespace ROOT {
       std::list<TBranchProxy*> fDirected;
       std::list<TFriendProxy*> fFriends;
 
+      TBranchProxyDirector(const TBranchProxyDirector &) : fTree(0), fEntry(-1) {;}
+      TBranchProxyDirector& operator=(const TBranchProxyDirector&) {return *this;}
+
    public:
 
       TBranchProxyDirector(TTree* tree, Long64_t i);
       TBranchProxyDirector(TTree* tree, Int_t i);     // cint has (had?) a problem casting int to long long
-      TBranchProxyDirector(const TBranchProxyDirector &) {;}
-      TBranchProxyDirector& operator=(const TBranchProxyDirector&) {return *this;}
 
       void     Attach(TBranchProxy* p);
       void     Attach(TFriendProxy* f);

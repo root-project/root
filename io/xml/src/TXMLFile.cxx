@@ -102,6 +102,7 @@ TXMLFile::TXMLFile() :
    // default TXMLFile constructor
    
    SetBit(kBinaryFile, kFALSE);
+   fIOVersion  = TXMLFile::Class_Version();
 }
 
 

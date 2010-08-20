@@ -42,6 +42,9 @@ TDataType::TDataType(TypedefInfo_t *info) : TDictionary()
       fSize = gCint->TypedefInfo_Size(fInfo);
    } else {
       SetTitle("Builtin basic type");
+      fProperty = 0;
+      fSize = 0;
+      fType = kNoType_t;
    }
 }
 

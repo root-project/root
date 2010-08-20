@@ -132,7 +132,7 @@ TFileIter::TFileIter(TFile *file) : fFileBackUp(0),fDirectoryBackUp(0), fNestedI
 }
 
 //__________________________________________________________________________
-TFileIter::TFileIter(TDirectory *directory) :  fFileBackUp(0),fDirectoryBackUp(0), fNestedIterator(0)
+TFileIter::TFileIter(TDirectory *directory) :  fFileBackUp(0),fDirectoryBackUp(0),fNestedIterator(0)
          , fRootFile(directory)
          , fEventName("event"), fRunNumber(UInt_t(-1)),fEventNumber(UInt_t(-1))
          , fCursorPosition(-1),  fOwnTFile(kFALSE)
@@ -142,7 +142,10 @@ TFileIter::TFileIter(TDirectory *directory) :  fFileBackUp(0),fDirectoryBackUp(0
 }
 //__________________________________________________________________________
 TFileIter::TFileIter(const char *name, Option_t *option, const char *ftitle
-                     , Int_t compress, Int_t /*netopt*/) :fNestedIterator(0),fRootFile (0)
+                     , Int_t compress, Int_t /*netopt*/) : fFileBackUp(0),fDirectoryBackUp(0),fNestedIterator(0)
+                                                         ,fRootFile(0)
+                                                         ,fEventName("event"), fRunNumber(UInt_t(-1)) ,fEventNumber(UInt_t(-1))
+                                                         ,fCursorPosition(-1), fOwnTFile(kFALSE)
 {
    // Open ROOT TFile by the name provided;
    // This TFile is to be deleted by the TFileIter alone
