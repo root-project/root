@@ -1211,7 +1211,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
 #endif
 #endif
 #ifdef G__VIRTUALBASE
-               if (G__CPPLINK != G__struct.iscpplink[G__tagnum]) G__basedestructor();
+               if (G__tagnum !=-1 && G__CPPLINK != G__struct.iscpplink[G__tagnum]) G__basedestructor();
 #else
                G__basedestructor();
 #endif
@@ -1231,7 +1231,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                      int store2_exec_memberfunc = G__exec_memberfunc;
                      G__exec_memberfunc = 1;
 #ifdef G__VIRTUALBASE
-                     if (G__CPPLINK != G__struct.iscpplink[G__tagnum])
+                     if (G__tagnum !=-1 && G__CPPLINK != G__struct.iscpplink[G__tagnum])
                         G__baseconstructor(0 , (struct G__baseparam *)NULL);
 #else
                      G__baseconstructor(0 , (struct G__baseparam *)NULL);
@@ -2489,7 +2489,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
 #endif
 #endif
 #ifdef G__VIRTUALBASE
-               if (G__CPPLINK != G__struct.iscpplink[G__tagnum]) G__basedestructor();
+               if (G__tagnum !=-1 && G__CPPLINK != G__struct.iscpplink[G__tagnum]) G__basedestructor();
 #else
                G__basedestructor();
 #endif
@@ -2509,7 +2509,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                      int store2_exec_memberfunc = G__exec_memberfunc;
                      G__exec_memberfunc = 1;
 #ifdef G__VIRTUALBASE
-                     if (G__CPPLINK != G__struct.iscpplink[G__tagnum])
+                     if (G__tagnum !=-1 && G__CPPLINK != G__struct.iscpplink[G__tagnum])
                         G__baseconstructor(0 , (struct G__baseparam *)NULL);
 #else
                      G__baseconstructor(0 , (struct G__baseparam *)NULL);
