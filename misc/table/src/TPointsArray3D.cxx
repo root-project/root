@@ -158,7 +158,8 @@ TPointsArray3D::~TPointsArray3D()
 
 
 //______________________________________________________________________________
-TPointsArray3D::TPointsArray3D(const TPointsArray3D &point) : TPoints3DABC(point)
+TPointsArray3D::TPointsArray3D(const TPointsArray3D &point) : TPoints3DABC(point),
+                                                              fN(point.fN),fP(0),fGLList(point.fGLList),fLastPoint(point.fLastPoint)
 {
    //to be documented
    ((TPointsArray3D&)point).Copy(*this);

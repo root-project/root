@@ -48,9 +48,22 @@ protected:
    Double_t      fAnglFactor[3];     // Latitude, Longitude, Psi
    Float_t       fScale;             // The scale factor to control the border of the clip box
 
+   void Init(TVirtualPad *pad) {
+      fParent = pad;
+      for(UInt_t i=0; i<3; ++i) {
+         fViewBoxMin[i] = 0;
+         fViewBoxMax[i] = 0;
+         fTranslate[i] = 0;
+         fExtraTranslate[i] = 0;
+         fAngles[i] = 0;
+         fExtraAngles[i] = 0;
+         fAnglFactor[i] = 0;
+      }
+      fScale = 1;
+   }
 public:
-   TTablePadView3D() { fParent = 0;}  //default ctor
-   TTablePadView3D(TVirtualPad *pad) { SetPad(pad); }
+   TTablePadView3D() { Init(0); }  //default ctor
+   TTablePadView3D(TVirtualPad *pad) { Init(pad); }
    virtual ~TTablePadView3D();
    virtual void ExecuteEvent(Int_t event, Int_t px, Int_t py);
    TVirtualPad *GetPad() const { return fParent; }

@@ -41,6 +41,7 @@ TTablePoints::TTablePoints()
    fKey         =  0;
    fFirstRow    = -1;
    fSize        =  0;
+   fRows        =  0;
 }
 
 //____________________________________________________________________________
@@ -51,6 +52,7 @@ TTablePoints::TTablePoints(TTableSorter *sorter,const void *key,Option_t *opt)
    fKey         =  0;
    fFirstRow    = -1;
    fSize        =  0;
+   fRows        =  0;
    if (sorter) {
       fTableSorter = sorter;
       fKey         = key;
@@ -68,6 +70,7 @@ TTablePoints::TTablePoints(TTableSorter *sorter, Int_t keyIndex,Option_t *opt)
    fKey         =  0;
    fFirstRow    = -1;
    fSize        =  0;
+   fRows        =  0;
    if (sorter) {
       fTableSorter = sorter;
       fKey         = sorter->GetKeyAddress(keyIndex);
