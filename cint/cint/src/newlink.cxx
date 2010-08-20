@@ -5001,7 +5001,7 @@ void G__cpp_methodcall(FILE *fp, struct G__ifunc_table_internal *ifunc, int i,in
         G__hash(G__fulltagname(i,0),hash,idx);
       }
 
-      if(G__struct.type[i]!='n'){  // This is only for classes (we can't have an object of a namespace)
+      if(i != -1 && G__struct.type[i]!='n'){  // This is only for classes (we can't have an object of a namespace)
         fprintf(fp,"  ptr_%d->", i);
         fprintf(fp,"%s::%s(",G__fulltagname(i,0),ifunc->funcname[j]);
       } 
@@ -5050,7 +5050,7 @@ void G__cppif_dummyobj(FILE *fp, struct G__ifunc_table_internal *ifunc, int i,in
     //  return;
 
     // We cannot create an object which belongs to an abstract class.
-    if (G__struct.isabstract[ifunc->tagnum])
+    if ((ifunc->tagnum!=-1 && G__struct.isabstract[ifunc->tagnum])
       return;
 
     // We can't create a dummy object if its destructor is private...
@@ -8527,7 +8527,8 @@ void G__cpplink_tagtable(FILE *fp, FILE *hfp)
                       ,buf(),mappedtagname(),mappedtagname());
           }
           else if('$'==G__struct.name[i][0]&&
-          isupper(G__newtype.type[G__defined_typename(G__struct.name[i]+1)])) {
+                  G__defined_typename(G__struct.name[i]+1)&&
+                  isupper(G__newtype.type[G__defined_typename(G__struct.name[i]+1)])) {
             fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum_fwd(&%s),sizeof(%s),%d,%d,%s,NULL,NULL);\n"
                     ,G__mark_linked_tagnum(i)
                     ,G__type2string('u',i,-1,0,0)
@@ -8932,7 +8933,7 @@ void G__cpplink_memvar(FILE *fp)
          //
          if (G__struct.name[i][0] == '$') {
             int typenum = G__defined_typename(G__struct.name[i] + 1);
-            if (isupper(G__newtype.type[typenum])) {
+            if (typenum!=-1 && isupper(G__newtype.type[typenum])) {
                continue;
             }
          }
@@ -10666,9 +10667,12 @@ int G__tagtable_setup(int tagnum,int size,int cpplink,int isabstract,const char 
   if(
      1==G__struct.memfunc[tagnum]->allifunc
      || 'n'==G__struct.type[tagnum]
+#if G__MAXIFUNC > 1
      || (
          -1!=G__struct.memfunc[tagnum]->pentry[1]->size
-         && 2>=G__struct.memfunc[tagnum]->allifunc)){
+         && 2>=G__struct.memfunc[tagnum]->allifunc)
+#endif
+     ){
      char found = 0;
      found = G__incsetup_exist(G__struct.incsetup_memfunc[tagnum], setup_memfunc);
      if (setup_memfunc&&!found)

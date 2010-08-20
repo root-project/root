@@ -688,21 +688,32 @@ void G__getcomment(char *buf,G__comment_info *pcomment,int tagnum)
        pcomment->filenum>=0) {
       pos = pcomment->p.pos;
       filenum = pcomment->filenum;
-      if(filenum==G__MAXFILE) fp = G__mfp;
-      else                    fp = G__srcfile[filenum].fp;
-      if((FILE*)NULL==fp) {
-        /* Open the right file even in case where we use the preprocessor */
-        if ( 
-            filenum<G__MAXFILE &&
-            G__srcfile[filenum].prepname ) {
-          fp = fopen(G__srcfile[filenum].prepname,"r");
-        } else {
-          fp = fopen(G__srcfile[filenum].filename,"r");
-        }
-        flag=0;
+      if(filenum==G__MAXFILE) {
+         fp = G__mfp;
+         if ((FILE*)NULL==fp) {
+            G__genericerror("Error: Unable to open temporary file");
+            return;
+         }
+         else {
+            fgetpos(fp,&store_pos);
+         }
       }
       else {
-        fgetpos(fp,&store_pos);
+         fp = G__srcfile[filenum].fp;
+         if((FILE*)NULL==fp) {
+            /* Open the right file even in case where we use the preprocessor */
+            if (
+                filenum<G__MAXFILE &&
+                G__srcfile[filenum].prepname ) {
+               fp = fopen(G__srcfile[filenum].prepname,"r");
+            } else {
+               fp = fopen(G__srcfile[filenum].filename,"r");
+            }
+            flag=0;
+         }
+         else {
+            fgetpos(fp,&store_pos);
+         }
       }
       fsetpos(fp,&pos);
       // dummy check; buffer length management needs new function signature.
@@ -752,21 +763,32 @@ void G__getcommenttypedef(char *buf,G__comment_info *pcomment,int typenum)
     if(G__NOLINK==G__newtype.iscpplink[typenum] && pcomment->filenum>=0) {
       pos = pcomment->p.pos;
       filenum = pcomment->filenum;
-      if(filenum==G__MAXFILE) fp = G__mfp;
-      else                    fp = G__srcfile[filenum].fp;
-      if((FILE*)NULL==fp) {
-        /* Open the right file even in case where we use the preprocessor */
-        if ( 
-            filenum<G__MAXFILE &&
-            G__srcfile[filenum].prepname ) {
-          fp = fopen(G__srcfile[filenum].prepname,"r");
-        } else {
-          fp = fopen(G__srcfile[filenum].filename,"r");
-        }
-        flag=0;
+      if(filenum==G__MAXFILE) {
+         fp = G__mfp;
+         if ((FILE*)NULL==fp) {
+            G__genericerror("Error: Unable to open temporary file");
+            return;
+         }
+         else {
+            fgetpos(fp,&store_pos);
+         }
       }
       else {
-        fgetpos(fp,&store_pos);
+         fp = G__srcfile[filenum].fp;
+         if((FILE*)NULL==fp) {
+            /* Open the right file even in case where we use the preprocessor */
+            if ( 
+                filenum<G__MAXFILE &&
+                G__srcfile[filenum].prepname ) {
+               fp = fopen(G__srcfile[filenum].prepname,"r");
+            } else {
+               fp = fopen(G__srcfile[filenum].filename,"r");
+            }
+            flag=0;
+         }
+         else {
+            fgetpos(fp,&store_pos);
+         }
       }
       fsetpos(fp,&pos);
       // dummy check; buffer length management needs new function signature.
@@ -1568,8 +1590,8 @@ void G__loadlonglong(int* ptag, int* ptype, int which)
    if (which == G__LONGDOUBLE || flag) {
       ldtag = G__defined_tagname("G__longdouble", 2);
       ldtype = G__search_typename("long double", 'u', G__tagnum, G__PARANORMAL);
-      G__struct.defaulttypenum[ldtag] = ldtype;
-      G__newtype.tagnum[ldtype] = ldtag;
+      if (ldtag != -1) G__struct.defaulttypenum[ldtag] = ldtype;
+      if (ldtype != -1) G__newtype.tagnum[ldtype] = ldtag;
    }
    switch (which) {
       case G__LONGLONG:

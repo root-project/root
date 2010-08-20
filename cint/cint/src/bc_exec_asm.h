@@ -489,7 +489,7 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             {
                G__ifile.line_number = G__asm_inst[pc+1] & G__CL_LINEMASK;
                G__ifile.filenum = (short)(G__asm_inst[pc+1] / G__CL_FILESHIFT);
-               if ((G__srcfile[G__ifile.filenum].maxline > G__ifile.line_number &&
+               if ((G__ifile.filenum >= 0 && G__srcfile[G__ifile.filenum].maxline > G__ifile.line_number &&
                      G__TESTBREAK&G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number]) ||
                      G__step) {
                   if (G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number]&G__CONTUNTIL)

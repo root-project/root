@@ -2515,7 +2515,7 @@ G__value G__classassign(long pdest, int tagnum, G__value result)
       memcpy((void*) pdest, (void*) G__int(result), (size_t) G__struct.size[tagnum]);
       return result;
    }
-   if (result.type == 'u') {
+   if (result.type == 'u' && result.tagnum != -1) {
       // --
       if (result.obj.i < 0) {
          ttt.Format("(%s)(%ld)", G__struct.name[result.tagnum], result.obj.i);
