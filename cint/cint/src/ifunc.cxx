@@ -1912,7 +1912,9 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                      tagnum = G__search_tagname(buf, 'c');
                      fprintf(G__fpundeftype, "class %s; /* %s %d */\n", buf(), G__ifile.name, G__ifile.line_number);
                      fprintf(G__fpundeftype, "#pragma link off class %s;\n\n", buf());
-                     G__struct.globalcomp[tagnum] = G__NOLINK;
+                     if (tagnum > -1) { // it could be -1 if we get too many classes.
+                        G__struct.globalcomp[tagnum] = G__NOLINK;
+                     }
                      type = 'u';
                   }
                   else {
@@ -2408,6 +2410,8 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
                   match = 1;
                   break;
                case 'u':
+                  // Since the param_type is 'u' we are guaranted that 
+                  // param_tagnum is greater or equal to zero
                   if ('e' == G__struct.type[param_tagnum]) {
                      if (param->ref) param->obj.i = *(long*)(param->ref);
                      match = 1;

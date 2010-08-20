@@ -3979,7 +3979,7 @@ static void G__parse_friend()
             friendtagnum = G__search_tagname(classname, tagtype);
          }
          // friend class ...;
-         if (envtagnum != -1) {
+         if (envtagnum != -1 && friendtagnum != -1) {
             struct G__friendtag* friendtag = G__struct.friendtag[friendtagnum];
             if (friendtag) {
                while (friendtag->next) {
@@ -4482,7 +4482,9 @@ static int G__defined_type(G__FastAllocString& type_name, int len)
             // Output the info to the given file.
             fprintf(G__fpundeftype, "class %s; /* %s %d */\n", type_name(), G__ifile.name, G__ifile.line_number);
             fprintf(G__fpundeftype, "#pragma link off class %s;\n\n", type_name());
-            G__struct.globalcomp[G__tagnum] = G__NOLINK;
+            if (G__tagnum > -1) { // it could be -1 if we get too many classes.
+               G__struct.globalcomp[G__tagnum] = G__NOLINK;
+            }
          }
          else {
             // -- Was not a known type, return.

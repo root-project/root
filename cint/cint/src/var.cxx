@@ -6939,7 +6939,9 @@ struct G__var_array* G__getvarentry(const char* varname, int varhash, int* pi, G
             baseclass = G__struct.baseclass[G__tagnum];
          }
 #else // G__OLDIMPLEMENTATION589_YET
-         baseclass = G__struct.baseclass[G__tagnum];
+         if (G__tagnum > -1) {
+            baseclass = G__struct.baseclass[G__tagnum];
+         }
 #endif // G__OLDIMPLEMENTATION589_YET
          if (G__exec_memberfunc || G__isfriend(G__tagnum)) {
             accesslimit = G__PUBLIC_PROTECTED_PRIVATE;
@@ -7495,7 +7497,9 @@ struct G__var_array* G__searchvariable(char* varname, int varhash, G__var_array*
          *pstore_struct_offset = *pG__struct_offset;
          isbase = 1;
          basen = 0;
-         baseclass = G__struct.baseclass[scope_tagnum];
+         if (scope_tagnum > -1) {
+            baseclass = G__struct.baseclass[scope_tagnum];
+         }
          if (G__exec_memberfunc || isdecl || G__enumdef || G__isfriend(G__tagnum)) {
             accesslimit = G__PUBLIC_PROTECTED_PRIVATE;
             memfunc_or_friend = 1;

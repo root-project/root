@@ -1433,6 +1433,10 @@ void G__set_class_autoloading_table(char* classname, char* libname)
    G__enable_autoloading = 0;
    int store_var_type = G__var_type;
    tagnum = G__search_tagname(classname, G__CLASS_AUTOLOAD);
+   if (tagnum == -1) {
+      // We ran out of space in G__struct.
+      return;
+   }
    G__var_type = store_var_type;
    if (libname == (void*)-1) {
       if (G__struct.type[tagnum] != 'a') {

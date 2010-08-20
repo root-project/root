@@ -613,9 +613,11 @@ G__value G__letvalue(G__value *p,G__value result)
     char store_var_type = G__var_type;
     int size = G__Lsizeof(G__newtype.name[p->typenum]);
     G__var_type = store_var_type;
-    if('C'==result.type && (int)strlen((char*)result.obj.i)<(int)size)
-      size = strlen((char*)result.obj.i)+1;
-    memcpy((void*)p->obj.i,(void*)result.obj.i,size);
+    if (size > -1) {
+       if('C'==result.type && (int)strlen((char*)result.obj.i)<size)
+          size = strlen((char*)result.obj.i)+1;
+       memcpy((void*)p->obj.i,(void*)result.obj.i,size);
+    }
     return(result);
   }
   if(isupper(p->type)) {

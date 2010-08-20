@@ -2901,7 +2901,10 @@ char* G__tmpnam(char *name)
   if (name==0) name = tempname;
   strcpy(name, tmpdir);
   strcat(name,"/XXXXXX");
-  close(mkstemp(name));/*mkstemp not only generate file name but also opens the file*/
+  int temp_fileno = mkstemp(name);/*mkstemp not only generate file name but also opens the file*/
+  if (temp_fileno >= 0) {
+     close(temp_fileno);
+  }
   remove(name); /* mkstemp creates this file anyway. Delete it. questionable */
   if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
   G__tmpfiles.Add(name);
