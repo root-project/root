@@ -64,12 +64,18 @@ fi
 
 ### ROOT libraries ###
 
-newlib="-lNew"
-rootglibs="-lGui"
-rootlibs="-lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree \
+if test "$platform" = "ios"; then
+   newlib=
+   rootglibs=
+   rootlibs="-lRoota"
+else
+   newlib="-lNew"
+   rootglibs="-lGui"
+   rootlibs="-lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree \
 -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread"
-if test "$dicttype" = "reflex" || test "$dicttype" = "gccxml"; then
-    rootlibs="$rootlibs -lReflex"
+   if test "$dicttype" = "reflex" || test "$dicttype" = "gccxml"; then
+       rootlibs="$rootlibs -lReflex"
+   fi
 fi
 
 if test "$platform" = "win32"; then
@@ -373,6 +379,11 @@ macosxxlc)
       auxcflags=
       auxlibs="-lm -ldl"
    fi
+   ;;
+ios*)
+   auxcflags="-m32"
+   auxldflags="-m32"
+   auxlibs="-lm -ldl"
    ;;
 hiux)
    # Hitachi HIUX

@@ -26,6 +26,7 @@ altcc=
 altcxx=
 altf77=
 altld=
+host=
 
 deprecated_options="         \
    enable_mathcore           \
@@ -389,6 +390,10 @@ check_library() {
     libdirl=$1   ; shift
     libdirs="$*"
 
+    if test ! "x$iossdk" = "x" ; then
+        libdirs="$iossdk/usr/lib"
+    fi
+
     # Write a message
     checking_msg $lib
 
@@ -583,6 +588,10 @@ check_header()  {
     hdrs=$1     ; shift
     hdrdir=$1   ; shift
     hdrdirs="$*"
+
+    if test ! "x$iossdk" = "x" ; then
+        hdrdirs="$iossdk/usr/include"
+    fi
 
     # Write a message
     checking_msg $hdrs
@@ -858,18 +867,23 @@ check_comp() {
     fi
 
     comptype="$1"
+    nocomp=""
 
     if test "x$comptype" = "xLD" ; then
-       message "Checking for linker (LD)"
+       message "Checking for ${compmsgextra}linker (LD)"
     else
-       message "Checking for $comptype compiler"
+       message "Checking for ${compmsgextra}$comptype compiler"
     fi
 
     found_comp=0
     case $comptype in
     C)
         if test "x$altcc" = "x" ; then
-            altcc=`grep '^CC ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
+            if `make -f config/Makefile.$arch CONFIGURE=yes showcc > /dev/null 2>&1` ; then
+                altcc=`make -f config/Makefile.$arch CONFIGURE=yes showcc`
+            else
+                altcc=`grep '^CC ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
+            fi
         fi
         altcc1=`echo "$altcc" | awk '{print $1}'`
         if `$cwhich $altcc1 > /dev/null 2>&1` ; then
@@ -881,7 +895,11 @@ check_comp() {
         ;;
     C++)
         if test "x$altcxx" = "x" ; then
-            altcxx=`grep '^CXX ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
+            if `make -f config/Makefile.$arch CONFIGURE=yes showcxx > /dev/null 2>&1` ; then
+                altcxx=`make -f config/Makefile.$arch CONFIGURE=yes showcxx`
+            else
+                altcxx=`grep '^CXX ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
+            fi
         fi
         altcxx1=`echo "$altcxx" | awk '{print $1}'`
         if `$cwhich $altcxx1 > /dev/null 2>&1` ; then
@@ -893,16 +911,20 @@ check_comp() {
         ;;
     LD)
         if test "x$altld" = "x" ; then
-            altld=`grep '^LD ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
-            if test "x$arch" = "xwin32" ; then
-                altldorg="link"
-                altldtmp="$altld"
-                altld="$altldorg"
-            fi
-            if test "x$arch" = "xwin32gcc" ; then
-                altldorg="g++"
-                altldtmp="$altld"
-                altld="$altldorg"
+            if `make -f config/Makefile.$arch CONFIGURE=yes showld > /dev/null 2>&1` ; then
+                altld=`make -f config/Makefile.$arch CONFIGURE=yes showld`
+            else
+                altld=`grep '^LD ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
+                if test "x$arch" = "xwin32" ; then
+                    altldorg="link"
+                    altldtmp="$altld"
+                    altld="$altldorg"
+                fi
+                if test "x$arch" = "xwin32gcc" ; then
+                    altldorg="g++"
+                    altldtmp="$altld"
+                    altld="$altldorg"
+                fi
             fi
         fi
         altld1=`echo "$altld" | awk '{print $1}'`
@@ -919,11 +941,15 @@ check_comp() {
         ;;
     F77)
         if test "x$altf77" = "x" ; then
-            altf77=`grep '^F77 ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
-            if test "x$arch" = "xwin32" ; then
-                altf77org="fl32"
-                altf77tmp="$altf77"
-                altf77="$altf77org"
+            if `make -f config/Makefile.$arch CONFIGURE=yes showf77 > /dev/null 2>&1` ; then
+                altf77=`make -f config/Makefile.$arch CONFIGURE=yes showf77`
+            else
+                altf77=`grep '^F77 ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
+                if test "x$arch" = "xwin32" ; then
+                    altf77org="fl32"
+                    altf77tmp="$altf77"
+                    altf77="$altf77org"
+                fi
             fi
         fi
         altf771=`echo "$altf77" | awk '{print $1}'`
@@ -1336,6 +1362,13 @@ with compiler options, prefix with --with-, overrides default value
   clang              use clang compiler instead of gcc (mutual exclusive with
                      the cc, cxx and ld options)
 
+cross compiling options, currently only used when building for ios and iossim
+
+  --host[=hostarch]  host architecture to be used in case of cross compiling
+  --with-hostcc      alternative host C compiler in case of cross compiling
+  --with-hostcxx     alternative host C++ compiler in case of cross compiling
+  --with-hostld      alternative host Linker in case of cross compiling
+
 Supported Architectures:
 
 EOF
@@ -1417,6 +1450,14 @@ hpuxia64acc)
 solaris64CC5)
    logmsg "Will check Solaris 64bit libraries"
    checksolaris64="yes" ;;
+ios*)
+   logmsg "Will check iOS SDK libraries"
+   iossdk=`make -f config/Makefile.$arch CONFIGURE=yes showsdk`
+   enable_cintex="no"
+   enable_reflex="no"
+   enable_genvector="no"
+   enable_tmva="no"
+   ;;
 win32)
    logmsg "Will use by default builtin versions of libraries on Win32"
    enable_builtin_freetype="yes"
@@ -1493,6 +1534,11 @@ if test $# -gt 0 ; then
       --fail-on-missing)       fail_on_missing="yes" ;;
       --minimal)               ;;
       --gminimal)              ;;
+      --host)                  savearch=$arch
+                               guess_architecture
+                               host=$arch
+                               arch=$savearch        ;;
+      --host=*)                host=$optarg          ;;
       --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
       --with-afs-incdir=*)     afsincdir=$optarg     ; enable_afs="yes"     ;;
       --with-afs-libdir=*)     afslibdir=$optarg     ; enable_afs="yes"     ;;
@@ -1593,6 +1639,9 @@ if test $# -gt 0 ; then
       --with-f77=*)            altf77=$optarg        ;;
       --with-ld=*)             altld=$optarg         ;;
       --with-clang) altcc=clang; altcxx=clang++; altld=clang++ ;;
+      --with-hostcc=*)         hostcc=$optarg        ;;
+      --with-hostcxx=*)        hostcxx=$optarg       ;;
+      --with-hostld=*)         hostld=$optarg        ;;
       ################################################################
       #
       # Enable/disable to turn on/off third party software linkage and
@@ -1737,6 +1786,15 @@ fi
 #
 if test "x$platform" = "xios"; then
     enable_x11="no"
+    if test "x$host" = "x"; then
+        savearch=$arch
+        guess_architecture
+        host=$arch
+        arch=$savearch
+    fi
+else
+    # cross compiling only supported for ios for the time being
+    host=
 fi
 
 ######################################################################
@@ -1820,6 +1878,52 @@ check_comp F77
 if test $found_comp -eq 0 ; then
    # missing F77 is not fatal
    altf77=
+fi
+
+######################################################################
+#
+### echo %%% Check host environment in case of cross compiling
+#
+#
+if test ! "x$host" = "x"; then
+    if ! test -f config/Makefile.$host; then
+        echo 'Invalid host platform' $host
+        exit 1
+    fi
+
+    compmsgextra="host "
+    archbak=$arch
+    arch=$host
+
+    altccbak=$altcc
+    altcc=$hostcc
+    check_comp C
+    if test ${found_comp} -eq 0; then
+        echo "Cannot find host CC $hostcc"
+        exit 1
+    fi
+    altcc=$altccbak
+
+    altcxxbak=$altcxx
+    altcxx=$hostcxx
+    check_comp C++
+    if test ${found_comp} -eq 0; then
+        echo "Cannot find host CXX $hostcc"
+        exit 1
+    fi
+    altcxx=$altcxxbak
+
+    altldbak=$altld
+    altld=$hostld
+    check_comp LD
+    if test ${found_comp} -eq 0; then
+        echo 'Cannot find host linker (LD)' $hostcc
+        exit 1
+    fi
+    altld=$altldbak
+
+    compmsgextra=""
+    arch=$archbak
 fi
 
 ######################################################################
@@ -2044,7 +2148,7 @@ if test "x$enable_builtin_freetype" = "x" || \
    test "x$enable_builtin_freetype" = "xno" ; then
 
    checking_msg "freetype-config"
-   if `$cwhich freetype-config > /dev/null 2>&1` ; then
+   if `$cwhich freetype-config > /dev/null 2>&1` && test "x$host" = "x" ; then
       $cwhich freetype-config
 
       message "Checking for libfreetype version >= 9.3.0"
@@ -2078,7 +2182,7 @@ if test "x$enable_builtin_pcre" = "x" || \
    test "x$enable_builtin_pcre" = "xno" ; then
 
    checking_msg "pcre-config"
-   if `$cwhich pcre-config > /dev/null 2>&1` ; then
+   if `$cwhich pcre-config > /dev/null 2>&1` && test "x$host" = "x" ; then
       $cwhich pcre-config
 
       message "Checking for libpcre version >= 3.9"
@@ -2107,9 +2211,9 @@ result "$enable_builtin_pcre"
 ### echo %%% Use included ZLib or use systems
 #
 if test "x$enable_builtin_zlib" = "xno" ; then
-    check_header "zlib.h" "/usr/include"  $ZLIB $ZLIB/include \
+    check_header "zlib.h" ""  $ZLIB $ZLIB/include \
         /usr/local/include /usr/include/zlib /usr/local/include/zlib \
-        /opt/zlib/include
+        /opt/zlib/include /usr/include
     if test "x$found_dir" = "x" ; then
         enable_builtin_zlib=yes
     else
@@ -2117,10 +2221,10 @@ if test "x$enable_builtin_zlib" = "xno" ; then
         zlibincdir=$found_dir
     fi
 
-    check_library "libz" "$enable_shared" "" "/usr/lib" \
+    check_library "libz" "$enable_shared" "" \
         $ZLIB $ZLIB/lib /usr/local/zlib/lib /usr/local/lib \
-            /usr/lib/zlib /usr/local/lib/zlib /usr/zlib/lib /usr/lib \
-            /usr/zlib /usr/local/zlilb /opt/zlib /opt/zlib/lib
+        /usr/lib/zlib /usr/local/lib/zlib /usr/zlib/lib /usr/lib \
+        /usr/zlib /usr/local/zlib /opt/zlib /opt/zlib/lib
     if test "x$found_lib" = "x" ; then
         zliblib=""
         zliblibdir=""
@@ -2347,9 +2451,9 @@ if test ! "x$enable_mysql" = "xno"; then
     # Check for MySQL include and library
     checking_msg "mysql_config"
     mysql_config=`$cwhich mysql_config 2> /dev/null`
-    if test ! "x$mysql_config" = "x" && test -x "$mysql_config" && \
-       test "x$mysqlincdir" = "x"    && test "x$mysqllibdir" = "x" && \
-       test ! "x$platform" = "xwin32" ; then
+    if test ! "x$mysql_config" = "x"  && test -x "$mysql_config" && \
+       test "x$mysqlincdir" = "x"     && test "x$mysqllibdir" = "x" && \
+       test ! "x$platform" = "xwin32" && test "x$host" = "x" ; then
        echo $mysql_config
        # we found mysql_config - now check the version number
        message "Checking for libmysqlclient version >= 3.23.*"
@@ -2770,7 +2874,7 @@ if test ! "x$enable_rfio" = "xno" ; then
         case $platform in
            linux)      shiftlib="$shiftlib -lnsl"
                 for i in "" -ladns ; do
-                    check_link "$shiftlib $i" $shiftlibdir rfio_fchmod
+                    check_link "$shiftlib $i" "$shiftlibdir" rfio_fchmod
                     if test $link_result -eq 1 ; then
                         shiftlib="$shiftlib $i" ;
                         break ;
@@ -2852,7 +2956,7 @@ if test ! "x$enable_castor" = "xno" ; then
         case $platform in
            linux)      castorlib="$castorlib -lnsl"
                 for i in "" -ladns ; do
-                    check_link "$shiftlib $i" $shiftlibdir rfio_fchmod
+                    check_link "$shiftlib $i" "$shiftlibdir" rfio_fchmod
                     if test $link_result -eq 1 ; then
                         castorlib="$castorlib $i" ;
                         break ;
@@ -3234,22 +3338,25 @@ if test ! "x$enable_hdfs" = "xno" ; then
     hdfsinc=$found_hdr
     hdfsincdir=$found_dir
 
+    if test "x$platform" = "xmacosx" && test -z $JAVA_HOME; then
+       JAVA_HOME=`/usr/libexec/java_home`
+    fi
+
     keepincdir=$jniincdir
     check_header "jni.h" "$jniincdir" $JAVA_HOME/include \
         /usr/java/default/include /usr/include /usr/local/include
     jniinc=$found_hdr
     jniincdir=$found_dir
 
-    check_library "libhdfs" "$enable_shared" \
-        "$hdfslibdir" \
+    check_library "libhdfs" "$enable_shared" "$hdfslibdir" \
         $HDFS $HDFS/lib $HDFS/build/libhdfs $HADOOP_HOME $HADOOP_HOME/build/libhdfs \
         /usr/lib /usr/local/lib
     hdfslib=$found_lib
     hdfslibdir=$found_dir
 
-    check_library "libjvm" "$enable_shared" \
-        "$jvmlibdir" \
+    check_library "libjvm" "$enable_shared" "$jvmlibdir" \
         $JAVA_HOME/jre/lib/amd64/server $JAVA_HOME/jre/lib/i386/server \
+        $JAVA_HOME/../Libraries \
         /usr/java/default/jre/lib/amd64/server \
         /usr/java/default/jre/lib/i386/server /usr/lib /usr/local/lib
     jvmlib=$found_lib
@@ -3260,12 +3367,12 @@ if test ! "x$enable_hdfs" = "xno" ; then
     else
         case $platform in
             linux)
-                check_link $hdfslib $hdfslibdir hdfsConnect
+                check_link $hdfslib "$hdfslibdir" hdfsConnect
                 if test $link_result -eq 0 ; then
                     enable_hdfs="no"
                 fi
 
-                check_link $jvmlib $jvmlibdir JNI_CreateJavaVM
+                check_link $jvmlib "$jvmlibdir" JNI_CreateJavaVM
                 if test $link_result -eq 0 ; then
                     enable_hdfs="no"
                 fi
@@ -3288,8 +3395,8 @@ check_explicit "$enable_hdfs" "$enable_hdfs_explicit" \
 # Check for libdns_sd
 #
 if test ! "x$enable_bonjour" = "xno" ; then
-    # Bonjour is built-in on MacOS X (i.e. available in libSystem)
-    if test ! "x$platform" = "xmacosx"; then
+    # Bonjour is built-in on MacOS X / iOS (i.e. available in libSystem)
+    if test ! "x$platform" = "xmacosx" && test ! "x$platform" = "xios" ; then
         check_header "dns_sd.h" "$dnssdincdir" $DNSSD $DNSSD/include \
         /opt/dnssd/include /usr/include /usr/local/include
         dnssdincdir=$found_dir
@@ -3481,11 +3588,12 @@ if test ! "x$enable_ldap" = "xno"; then
     ldapinc=$found_hdr
     ldapincdir=$found_dir
 
+    ldaplibdir1="$ldaplibdir"
     ldaplib=""
     ldaplibdir=""
 
     for i in libldap liblber ; do
-        check_library $i "$enable_shared" "" $ldaplibdir \
+        check_library $i "$enable_shared" "$ldaplibdir1" \
             $LDAP $LDAP/lib /usr/local/ldap/lib /usr/local/lib \
             /usr/lib/ldap /usr/local/lib/ldap /usr/ldap/lib /usr/lib \
             /usr/ldap /usr/local/ldap /opt/ldap /opt/ldap/lib
@@ -3629,7 +3737,7 @@ if test ! "x$enable_xml" = "xno" ; then
     checking_msg "xml2-config"
     xml2_config=`$cwhich xml2-config 2> /dev/null`
     if test ! "x$xml2_config" = "x" && test -x "$xml2_config" && \
-       test ! "x$platform" = "xwin32" ; then
+       test ! "x$platform" = "xwin32" && test "x$host" = "x"; then
        $cwhich xml2-config
        # we found xml2-config - now check the version number
        message "Checking for libxml2 version >= 2.4.x"
@@ -3648,8 +3756,8 @@ if test ! "x$enable_xml" = "xno" ; then
        result "not found"
        # fall back in case xml2-config is not found
        keepincdir=$xmlincdir
-       check_header "libxml/tree.h" "$xmlincdir" $XMLDIR $XMLDIR/include \
-           /opt/libxml2/include /usr/local/include/libxml2 /usr/include/libxml2
+       check_header "libxml2/libxml/tree.h" "$xmlincdir" $XMLDIR $XMLDIR/include \
+           /opt/include /usr/local/include
        xmlincdir=$found_dir
 
        keeplibdir=$xmllibdir
@@ -4908,9 +5016,9 @@ if test ! "x$enable_mathmore" = "xno"; then
     #
     # if gslincdir not specified look for gsl-config
     #
-    # gsl-config check does not work on Solaris so lets skip it
-    if test "x$platform" = "xsolaris"; then
-        if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x"); then
+    # gsl-config check does not work on Solaris, or when x-compiling, so lets skip it
+    if test "x$platform" = "xsolaris" || test ! "x$host" = "x"; then
+        if test "x$gslincdir" = "x" || test "x$gsllibs" = "x"; then
             gslskip="skip"
             enable_mathmore="no"
         fi
@@ -5674,6 +5782,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@alloclibdir@|$alloclibdir|"          \
     -e "s|@alloclib@|$alloclib|"                \
     -e "s|@architecture@|$arch|"                \
+    -e "s|@host@|$host|"                        \
     -e "s|@asextralib@|$asextralib|"            \
     -e "s|@asextralibdir@|$asextralibdir|"      \
     -e "s|@asjpegincdir@|$asjpegincdir|"        \
@@ -6373,17 +6482,6 @@ fi
 
 ######################################################################
 #
-# Warning about recommended build options
-#
-echo ""
-if test "x$enable_opengl" = "xno" ; then
-    result "To build the ROOT OpenGL add-on library see README/INSTALL."
-    echo ""
-    echo ""
-fi
-
-######################################################################
-#
 ### echo %%% Final instructions
 #
 # List the possible Makefiles
@@ -6392,6 +6490,7 @@ if test "x$nohowto" = "xyes" ; then
     exit 0
 fi
 
+result ""
 result "To build ROOT type:"
 result ""
 result "   $gnumake"

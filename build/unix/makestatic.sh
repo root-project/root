@@ -87,9 +87,9 @@ if [ $linkstat -ne 0 ]; then
 fi
 
 echo "Making $PROOFAEXE..."
-echo $LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o  $dummyo $gobjs $ROOTALIB \
+echo $LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o $dummyo $gobjs $ROOTALIB \
    $XLIBS $SYSLIBS $EXTRALIBS
-$LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o  $dummyo $gobjs $ROOTALIB \
+$LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o $dummyo $gobjs $ROOTALIB \
    $XLIBS $SYSLIBS $EXTRALIBS
 
 linkstat=$?
