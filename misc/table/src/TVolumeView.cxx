@@ -880,7 +880,7 @@ void TVolumeView::SavePrimitive(ostream &out, Option_t * /*= ""*/)
      ,"}"
    };
 //------------------- end of sceleton ---------------------
-   Int_t sceletonSize = sizeof(sceleton)/4;
+   Int_t sceletonSize = sizeof(sceleton)/sizeof(const Char_t*);
    TVolumePosition *thisPosition = GetPosition();
    TVolume *thisFullNode = GetNode();
    TString thisNodePath = thisFullNode ? thisFullNode->Path() : TString("");
