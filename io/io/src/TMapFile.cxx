@@ -181,7 +181,7 @@ TMapFile::TMapFile()
    fBrowseList  = 0;
    fWritable    = kFALSE;
    fSemaphore   = -1;
-   fhSemaphore  = -1;
+   fhSemaphore  = 0;
    fGetting     = 0;
    fWritten     = 0;
    fSumBuffer   = 0;
@@ -202,7 +202,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
 #ifndef WIN32
    fFd          = -1;
    fSemaphore   = -1;
-   fhSemaphore  = -1;
+   fhSemaphore  = 0;
 #else
    fFd          = (Int_t) INVALID_HANDLE_VALUE;
    fSemaphore   = (Int_t) INVALID_HANDLE_VALUE;

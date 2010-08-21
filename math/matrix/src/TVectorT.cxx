@@ -506,7 +506,7 @@ TVectorT<Element> &TVectorT<Element>::Sqrt()
       if (*ep >= 0)
          *ep = TMath::Sqrt(*ep);
       else
-         Error("Sqrt()","v(%ld) = %g < 0",Long_t(ep-this->GetMatrixArray()),*ep);
+         Error("Sqrt()","v(%ld) = %g < 0",Long_t(ep-this->GetMatrixArray()),(float)*ep);
       ep++;
    }
 
@@ -528,7 +528,7 @@ TVectorT<Element> &TVectorT<Element>::Invert()
       if (*ep != 0.0)
          *ep = 1./ *ep;
       else
-         Error("Invert()","v(%ld) = %g",Long_t(ep-this->GetMatrixArray()),*ep);
+         Error("Invert()","v(%ld) = %g",Long_t(ep-this->GetMatrixArray()),(float)*ep);
       ep++;
    }
 

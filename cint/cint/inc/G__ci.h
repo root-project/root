@@ -1258,7 +1258,7 @@ struct G__input_file {
    int vindex;
 #endif
 #ifdef __cplusplus
-   G__input_file() : fp(0),line_number(-1),filenum(-1),str(0),pos(-1),vindex(0) { ; }
+   G__input_file() : fp(0),line_number(-1),filenum(-1),str(0),pos(0),vindex(0) { ; }
 #endif
 };
    
