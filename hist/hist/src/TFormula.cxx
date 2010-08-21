@@ -2632,12 +2632,10 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   Int_t i,j,pos,pos2; // ,inter,inter2,int1,int2;
-//    Float_t aresult;
+   Int_t i,j;
    Double_t tab[kMAXFOUND];
-   char *tab2[gMAXSTRINGFOUND];
+   const char *stringStack[gMAXSTRINGFOUND];
    Double_t param_calc[kMAXFOUND];
-//    Double_t dexp,intermede,intermede1,intermede2;
    char *string_calc[gMAXSTRINGFOUND];
    Int_t precalculated = 0;
    Int_t precalculated_str = 0;
@@ -2648,8 +2646,8 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
    } else {
       params = fParams;
    }
-   pos  = 0;
-   pos2 = 0;
+   UInt_t pos    = 0;
+   UInt_t strpos = 0;
 
    for (i=0; i<fNoper; ++i) {
 
@@ -2661,7 +2659,7 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
          case kParameter  : { pos++; tab[pos-1] = params[ oper & kTFOperMask ]; continue; }
          case kConstant   : { pos++; tab[pos-1] = fConst[ oper & kTFOperMask ]; continue; }
          case kVariable   : { pos++; tab[pos-1] = x[ oper & kTFOperMask ]; continue; }
-         case kStringConst: { pos2++;tab2[pos2-1] = (char*)fExpr[i].Data(); pos++; tab[pos-1] = 0; continue; }
+         case kStringConst: { strpos++; stringStack[strpos-1] = (char*)fExpr[i].Data(); pos++; tab[pos-1] = 0; continue; }
 
          case kAdd        : pos--; tab[pos-1] += tab[pos]; continue;
          case kSubstract  : pos--; tab[pos-1] -= tab[pos]; continue;
@@ -2705,8 +2703,8 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
          case ksq   : tab[pos-1] = tab[pos-1]*tab[pos-1]; continue;
          case ksqrt : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); continue;
 
-         case kstrstr : pos2 -= 2; pos-=2; pos++;
-                        if (strstr(tab2[pos2],tab2[pos2+1])) tab[pos-1]=1;
+         case kstrstr : strpos -= 2; pos-=2; pos++;
+                        if (strstr(stringStack[strpos],stringStack[strpos+1])) tab[pos-1]=1;
                         else tab[pos-1]=0; continue;
 
          case kmin : pos--; tab[pos-1] = TMath::Min(tab[pos-1],tab[pos]); continue;
@@ -2752,11 +2750,11 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
                         else tab[pos-1]=0; continue;
          case kNot : if (tab[pos-1]!=0) tab[pos-1] = 0; else tab[pos-1] = 1; continue;
 
-         case kStringEqual : pos2 -= 2; pos -=2 ; pos++;
-                        if (!strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
+         case kStringEqual : strpos -= 2; pos -=2 ; pos++;
+                        if (!strcmp(stringStack[strpos+1],stringStack[strpos])) tab[pos-1]=1;
                         else tab[pos-1]=0; continue;
-         case kStringNotEqual: pos2 -= 2; pos -= 2; pos++;
-                        if (strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
+         case kStringNotEqual: strpos -= 2; pos -= 2; pos++;
+                        if (strcmp(stringStack[strpos+1],stringStack[strpos])) tab[pos-1]=1;
                         else tab[pos-1]=0; continue;
 
          case kBitAnd : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) & ((Int_t) tab[pos]); continue;
@@ -2895,7 +2893,7 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
                precalculated_str=1;
                for (j=0;j<fNstring;j++) string_calc[j]=DefinedString(j);
             }
-            pos2++; tab2[pos2-1] = string_calc[param];
+            strpos++; stringStack[strpos-1] = string_calc[param];
             pos++; tab[pos-1] = 0;
             continue;
          }
@@ -4113,12 +4111,10 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    const Double_t  *pdata[3] = {x,(uparams!=0)?uparams:fParams, fConst};
    //
-   Int_t i,j,pos,pos2; // ,inter,inter2,int1,int2;
-   //    Float_t aresult;
+   Int_t i,j;
    Double_t tab[kMAXFOUND];
-   char *tab2[gMAXSTRINGFOUND];
+   const char *stringStack[gMAXSTRINGFOUND];
    Double_t param_calc[kMAXFOUND];
-   //    Double_t dexp,intermede,intermede1,intermede2;
    char *string_calc[gMAXSTRINGFOUND];
    Int_t precalculated = 0;
    Int_t precalculated_str = 0;
@@ -4135,8 +4131,8 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
    //if (params) {
    // for (j=0;j<fNpar;j++) fParams[j] = params[j];
    //}
-   pos  = 0;
-   pos2 = 0;
+   UInt_t pos    = 0;
+   UInt_t strpos = 0;
    //   for (i=0; i<fNoper; ++i) {
    for (i=0; i<fNOperOptimized; ++i) {
       //
@@ -4191,11 +4187,11 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
             continue;}
 
 
-         case kStringConst: { pos2++;tab2[pos2-1] = (char*)fExprOptimized[i].Data(); pos++; tab[pos-1] = 0; continue; }
+         case kStringConst: { strpos++; stringStack[strpos-1] = (char*)fExprOptimized[i].Data(); pos++; tab[pos-1] = 0; continue; }
          case kfmod : pos--; tab[pos-1] = fmod(tab[pos-1],tab[pos]); continue;
 
-         case kstrstr : pos2 -= 2; pos-=2; pos++;
-            if (strstr(tab2[pos2],tab2[pos2+1])) tab[pos-1]=1;
+         case kstrstr : strpos -= 2; pos-=2; pos++;
+            if (strstr(stringStack[strpos],stringStack[strpos+1])) tab[pos-1]=1;
             else tab[pos-1]=0; continue;
          case kpi   : pos++; tab[pos-1] = TMath::ACos(-1); continue;
 
@@ -4211,11 +4207,11 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
                         else tab[pos-1]=0; continue;
          case kNot : if (tab[pos-1]!=0) tab[pos-1] = 0; else tab[pos-1] = 1; continue;
 
-         case kStringEqual : pos2 -= 2; pos -=2 ; pos++;
-            if (!strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
+         case kStringEqual : strpos -= 2; pos -=2 ; pos++;
+            if (!strcmp(stringStack[strpos+1],stringStack[strpos])) tab[pos-1]=1;
             else tab[pos-1]=0; continue;
-         case kStringNotEqual: pos2 -= 2; pos -= 2; pos++;
-            if (strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
+         case kStringNotEqual: strpos -= 2; pos -= 2; pos++;
+            if (strcmp(stringStack[strpos+1],stringStack[strpos])) tab[pos-1]=1;
             else tab[pos-1]=0; continue;
 
          case kBitAnd : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) & ((Int_t) tab[pos]); continue;
@@ -4351,7 +4347,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
                precalculated_str=1;
                for (j=0;j<fNstring;j++) string_calc[j]=DefinedString(j);
             }
-            pos2++; tab2[pos2-1] = string_calc[param];
+            strpos++; stringStack[strpos-1] = string_calc[param];
             pos++; tab[pos-1] = 0;
             continue;
             }
