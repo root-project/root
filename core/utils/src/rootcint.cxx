@@ -635,7 +635,10 @@ string R__tmpnam()
    strcpy(filename, tmpdir.c_str());
    strcat(filename, prefix);
    strcat(filename, radix);
-   close(mkstemp(filename));/*mkstemp not only generate file name but also opens the file*/
+   int temp_fileno = mkstemp(filename);/*mkstemp not only generate file name but also opens the file*/
+   if (temp_fileno >= 0) {
+      close(temp_fileno);
+   }
    remove(filename);
    tmpnamList.push_back(R__tmpnamElement(filename));
    return filename;
@@ -4311,7 +4314,7 @@ int main(int argc, char **argv)
       return 1;
    }
 
-   char dictname[512];
+   char dictname[1024];
    int i, j, ic, ifl, force;
    int icc = 0;
    int use_preprocessor = 0;
@@ -4457,7 +4460,13 @@ int main(int argc, char **argv)
       ic++;
 
       // remove possible pathname to get the dictionary name
-      strcpy(dictname, argv[ifl]);
+      if (strlen(argv[ifl]) > (sizeof(dictname)-1)) {
+         Error(0, "rootcint: dictionary name too long (more than %d characters): %s\n",
+               sizeof(dictname)-1,argv[ifl]);
+         CleanupOnExit(1);
+         return 1;
+      }
+      strncpy(dictname, argv[ifl], sizeof(dictname)-1);
       char *p = 0;
       // find the right part of then name.
       for (p = dictname + strlen(dictname)-1;p!=dictname;--p) {
