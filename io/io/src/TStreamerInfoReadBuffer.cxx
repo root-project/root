@@ -1318,8 +1318,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                }
             }
             if (pstreamer == 0) {
-               if (1 || gDebug > 0) {
-                  printf("ERROR, Streamer is null\n");
+               Error("ReadBuffer","Streamer for %s is null\n",aElement->GetName());
+               if (gDebug > 0) {
                   aElement->ls(); continue;
                }
             } else {

@@ -275,15 +275,16 @@ Int_t TStreamerElement::GetExecID() const
    //check if an Exec is specified in the comment field
    char *action = (char*)strstr(GetTitle(),"EXEC:");
    if (!action) return 0;
-   char caction[512];
+   char *caction = new char[strlen(action)];
    strcpy(caction,action+5);
    char *blank = (char*)strchr(caction,' ');
    if (blank) *blank = 0;
    //we have found the Exec name in the comment
    //we register this Exec to the list of Execs.
    Int_t index = TRef::AddExec(caction);
+   delete [] caction;
    //we save the Exec index as the uniqueid of this STreamerElement
-   ((TStreamerElement*)this)->SetUniqueID(index+1);
+   const_cast<TStreamerElement*>(this)->SetUniqueID(index+1);
    return index+1;
 }
 
