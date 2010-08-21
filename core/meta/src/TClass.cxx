@@ -295,6 +295,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
          elname.Remove( pos );
       }
       TStreamerElement *element = (TStreamerElement*)info->GetElements()->FindObject(elname.Data());
+      if (!element) return;
       memberFullTypeName = element->GetTypeName();
       
       memberTypeName = memberFullTypeName;
@@ -2972,7 +2973,7 @@ void TClass::GetMenuItems(TList *list)
    TIter next(GetListOfMethods(), kIterBackward);
    while ((method = (TMethod*)next())) {
       m = (TMethod*)list->FindObject(method->GetName());
-      if (method->IsMenuItem()) {
+      if (method->IsMenuItem() != kMenuNoMenu) {
          if (!m)
             list->AddFirst(method);
       } else {

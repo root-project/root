@@ -766,13 +766,13 @@ void TClassTree::ScanClasses(Int_t iclass)
    TList *lf = cl->GetListOfMethods();
    if (lf) {
       TIter nextm(lf);
-      char name[1000];
+      TString name;
       while ((method = (TMethod*) nextm())) {
          // check return type
-         strcpy(name,method->GetReturnTypeName());
-         star = strstr(name,"*");
+         name = method->GetReturnTypeName();
+         star = strstr((char*)name.Data(),"*");
          if (star) *star = 0;
-         cref = strstr(name,"&");
+         cref = strstr((char*)name.Data(),"&");
          if (cref) *cref = 0;
          ic = FindClass(name);
          if (ic < 0 || ic == iclass) continue;
@@ -784,10 +784,10 @@ void TClassTree::ScanClasses(Int_t iclass)
          // ================================
          TIter nexta(method->GetListOfMethodArgs());
          while ((methodarg = (TMethodArg*) nexta())) {
-            strcpy(name,methodarg->GetTypeName());
-            star = strstr(name,"*");
+            name = methodarg->GetTypeName();
+            star = strstr((char*)name.Data(),"*");
             if (star) *star = 0;
-            cref = strstr(name,"&");
+            cref = strstr((char*)name.Data(),"&");
             if (cref) *cref = 0;
             ic = FindClass(name);
             if (ic < 0 || ic == iclass) continue;

@@ -89,10 +89,8 @@ int TBaseClass::IsSTLContainer()
    // Return which type (if any) of STL container the data member is.
 
    if (!fInfo) return kNone;
-   const char *s = gCint->BaseClassInfo_TmpltName(fInfo);
-   if (!s) return kNone;
-   char type[4096];
-   strcpy(type, s);
+   const char *type = gCint->BaseClassInfo_TmpltName(fInfo);
+   if (!type) return kNone;
 
    if (!strcmp(type, "vector"))   return kVector;
    if (!strcmp(type, "list"))     return kList;
