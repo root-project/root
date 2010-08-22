@@ -10,7 +10,7 @@
 //______________________________________________________________________________
 void csgdemo ()
 {
-  gSystem->Load("libGeom");
+   gSystem->Load("libGeom");
 
    TCanvas *c = new TCanvas("composite shape", "A * B - C");
    c->Iconify();
@@ -49,9 +49,12 @@ void csgdemo ()
    vol->SetLineColor(kMagenta);
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
-   gGeoManager->SetNsegments(80);
    top->Draw();
 
+   gGeoManager->SetNsegments(40);
+   TEveGeoNode::SetCSGExportNSeg(40);
+
+   TGLFaceSet::SetEnforceTriangles(kTRUE);
    TEveManager::Create();
 
    TGeoNode* node = gGeoManager->GetTopNode();
@@ -64,5 +67,5 @@ void csgdemo ()
    gEve->Redraw3D(kTRUE);
 
    en->ExpandIntoListTreesRecursively();
-   en->Save("csg.root", "CSG Demo");
+   en->SaveExtract("csg.root", "CSG Demo", kFALSE);
 }

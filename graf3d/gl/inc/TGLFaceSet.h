@@ -30,18 +30,23 @@ private:
    std::vector<Int_t>    fPolyDesc;
    UInt_t                fNbPols;
 
+   static Bool_t fgEnforceTriangles;
+
 public:
    TGLFaceSet(const TBuffer3D & buffer);
 
    virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    void SetFromMesh(const RootCsg::TBaseMesh *m);
+   void EnforceTriangles();
 
    std::vector<Double_t>& GetVertices() { return fVertices; }
    std::vector<Double_t>& GetNormals()  { return fNormals;  }
    std::vector<Int_t>&    GetPolyDesc() { return fPolyDesc; }
    UInt_t                 GetNbPols()   { return fNbPols;   }
 
+   static Bool_t GetEnforceTriangles();
+   static void   SetEnforceTriangles(Bool_t e);
 
 private:
    void GLDrawPolys()const;

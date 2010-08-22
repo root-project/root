@@ -22,6 +22,27 @@
 #include "TClass.h"
 #include "TError.h"
 
+#include <stdexcept>
+
+// Clone from TGLUtil -- typedefs needed for portable tesselator function typedef.
+
+#ifndef CALLBACK
+#define CALLBACK
+#endif
+
+extern "C"
+{
+#if defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5450 && !defined(__INTEL_COMPILER)
+    typedef GLvoid (*tessfuncptr_t)(...);
+#elif defined(__mips) || defined(__linux__) || defined(__FreeBSD__) || defined( __OpenBSD__ ) || defined(__sun) || defined (__CYGWIN__) || defined (__APPLE__)
+    typedef GLvoid (*tessfuncptr_t)();
+#elif defined (WIN32)
+    typedef GLvoid (CALLBACK *tessfuncptr_t)();
+#else
+    #error "Error - need to define type tessfuncptr_t for this platform/compiler"
+#endif
+}
+
 //______________________________________________________________________________
 //
 // Implementss a native ROOT-GL representation of an arbitrary set of
@@ -29,14 +50,18 @@
 
 ClassImp(TGLFaceSet);
 
+Bool_t TGLFaceSet::fgEnforceTriangles = kFALSE;
+
 //______________________________________________________________________________
 TGLFaceSet::TGLFaceSet(const TBuffer3D & buffer) :
    TGLLogicalShape(buffer),
    fVertices(buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts()),
-   fNormals(3 * buffer.NbPols())
+   fNormals(0)
 {
    // constructor
    fNbPols = buffer.NbPols();
+
+   if (fNbPols == 0) return;
 
    Int_t *segs = buffer.fSegs;
    Int_t *pols = buffer.fPols;
@@ -95,8 +120,11 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buffer) :
       j += segmentCol + 2;
    }
    }
-   CalculateNormals();
-
+   //if (fgEnforceTriangles) {
+   //   EnforceTriangles();
+   //} else {
+      CalculateNormals();
+      //}
 }
 
 //______________________________________________________________________________
@@ -130,6 +158,153 @@ void TGLFaceSet::SetFromMesh(const RootCsg::TBaseMesh *mesh)
 
       for(i = 0; i < polySize; ++i) fPolyDesc.push_back(mesh->GetVertexIndex(polyIndex, i));
    }
+
+   if (fgEnforceTriangles) {
+      EnforceTriangles();
+   } else {
+      CalculateNormals();
+   }
+}
+
+//______________________________________________________________________________
+void TGLFaceSet::EnforceTriangles()
+{
+   // Use GLU tesselator to replace all polygons with N > 3 with triangles.
+   // After this call polygon descriptions are changed.
+   // New vertices are not expected -- exception is thrown if this is
+   // requested by the triangulator. Support for addin of new vertices can be
+   // provided.
+   // Normals are automatically recalculated at the end.
+
+   class TriangleCollector
+   {
+   protected:
+      Int_t              fNTriangles;
+      Int_t              fNVertices;
+      Int_t              fV0, fV1;
+      GLenum             fType;
+      std::vector<Int_t> fPolyDesc;
+
+      void add_triangle(Int_t v0, Int_t v1, Int_t v2)
+      {
+         fPolyDesc.push_back(3);
+         fPolyDesc.push_back(v0);
+         fPolyDesc.push_back(v1);
+         fPolyDesc.push_back(v2);
+         ++fNTriangles;
+      }
+
+      void process_vertex(Int_t vi)
+      {
+         ++fNVertices;
+
+         if (fV0 == -1) {
+            fV0 = vi;
+            return;
+         }
+         if (fV1 == -1) {
+            fV1 = vi;
+            return;
+         }
+
+         switch (fType)
+         {
+            case GL_TRIANGLES:
+            {
+               add_triangle(fV0, fV1, vi);
+               fV0 = fV1 = -1;
+               break;
+            }
+            case GL_TRIANGLE_STRIP:
+            {
+               if (fNVertices % 2 == 0)
+                  add_triangle(fV1, fV0, vi);
+               else
+                  add_triangle(fV0, fV1, vi);
+               fV0 = fV1;
+               fV1 = vi;
+               break;
+            }
+            case GL_TRIANGLE_FAN:
+            {
+               add_triangle(fV0, fV1, vi);
+               fV1 = vi;
+               break;
+            }
+            default:
+            {
+               throw std::runtime_error("TGLFaceSet::EnforceTriangles unexpected type in tess_vertex callback.");
+            }
+         }
+      }
+
+   public:
+      TriangleCollector(GLUtesselator* ts) :
+         fNTriangles(0), fV0(-1), fV1(-1), fType(GL_NONE)
+      {
+         gluTessCallback(ts, (GLenum)GLU_TESS_BEGIN_DATA,   (tessfuncptr_t) tess_begin);
+         gluTessCallback(ts, (GLenum)GLU_TESS_VERTEX_DATA,  (tessfuncptr_t) tess_vertex);
+         gluTessCallback(ts, (GLenum)GLU_TESS_COMBINE_DATA, (tessfuncptr_t) tess_combine);
+         gluTessCallback(ts, (GLenum)GLU_TESS_END_DATA,     (tessfuncptr_t) tess_end);
+      }
+
+      Int_t               GetNTrianlges() { return fNTriangles; }
+      std::vector<Int_t>& RefPolyDesc()   { return fPolyDesc; }
+
+      static void tess_begin(GLenum type, TriangleCollector* tc)
+      {
+         tc->fNVertices = 0;
+         tc->fV0 = tc->fV1 = -1;
+         tc->fType = type;
+      }
+
+      static void tess_vertex(Int_t* vi, TriangleCollector* tc)
+      {
+         tc->process_vertex(*vi);
+      }
+
+      static void tess_combine(GLdouble /*coords*/[3], void */*vertex_data*/[4], 
+                               GLfloat /*weight*/[4], void **/*outData*/, 
+                               TriangleCollector* /*tc*/)
+      {
+         throw std::runtime_error("TGLFaceSet::EnforceTriangles tesselator requested vertex combining -- not supported yet.");
+      }
+
+      static void tess_end(TriangleCollector* tc)
+      {
+         tc->fType = GL_NONE;
+      }
+   };
+
+   GLUtesselator *tess = gluNewTess();
+   if (!tess) throw std::bad_alloc();
+
+   TriangleCollector tc(tess);
+
+   // Loop ...
+   const Double_t *pnts = &fVertices[0];
+   const Int_t    *pols = &fPolyDesc[0];
+
+   for (UInt_t i = 0, j = 0; i < fNbPols; ++i)
+   {
+      Int_t npoints = pols[j++];
+
+      gluTessBeginPolygon(tess, &tc);
+      gluTessBeginContour(tess);
+
+      for (Int_t k = 0; k < npoints; ++k, ++j)
+      {
+         gluTessVertex(tess, (Double_t*) pnts + pols[j] * 3, (GLvoid*) &pols[j]);
+      }
+
+      gluTessEndContour(tess);
+      gluTessEndPolygon(tess);
+   }
+
+   gluDeleteTess(tess);
+
+   fPolyDesc.swap(tc.RefPolyDesc());
+   fNbPols = tc.GetNTrianlges();
 
    CalculateNormals();
 }
@@ -220,6 +395,7 @@ void TGLFaceSet::CalculateNormals()
 {
    // CalculateNormals
 
+   fNormals.resize(3 *fNbPols);
    if (fNbPols == 0) return;
    Double_t *pnts = &fVertices[0];
    for (UInt_t i = 0, j = 0; i < fNbPols; ++i) {
@@ -246,4 +422,24 @@ void TGLFaceSet::CalculateNormals()
          }
       }
    }
+}
+
+//______________________________________________________________________________
+Bool_t TGLFaceSet::GetEnforceTriangles()
+{
+   // Get current state of static flag EnforceTriangles.
+
+   return fgEnforceTriangles;
+}
+
+//______________________________________________________________________________
+void TGLFaceSet::SetEnforceTriangles(Bool_t e)
+{
+   // Set state of static flag EnforceTriangles.
+   // When this is set, all tesselations will be automatically converted into
+   // triangle-only meshes.
+   // This is needed to export TGeo shapes and CSG meshes to external
+   // triangle-mesh libraries that can not handle arbitrary polygons.
+
+   fgEnforceTriangles = e;
 }
