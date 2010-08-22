@@ -218,7 +218,7 @@ TObjArray* TPythia8::ImportParticles(Option_t* /* option */)
    for (Int_t i = 1; i <= numpart; i++) {
       new(a[i]) TParticle(
          fPythia->event[i].id(),
-         fPythia->event[i].isFinal(),
+         fPythia->event[i].status(),
          fPythia->event[i].mother1()  - 1,
          fPythia->event[i].mother2()  - 1,
          fPythia->event[i].daughter1() - 1,
