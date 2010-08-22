@@ -263,8 +263,8 @@ void TGLFaceSet::EnforceTriangles()
          tc->process_vertex(*vi);
       }
 
-      static void tess_combine(GLdouble /*coords*/[3], void */*vertex_data*/[4], 
-                               GLfloat /*weight*/[4], void **/*outData*/, 
+      static void tess_combine(GLdouble /*coords*/[3], void* /*vertex_data*/[4], 
+                               GLfloat  /*weight*/[4], void** /*outData*/, 
                                TriangleCollector* /*tc*/)
       {
          throw std::runtime_error("TGLFaceSet::EnforceTriangles tesselator requested vertex combining -- not supported yet.");
