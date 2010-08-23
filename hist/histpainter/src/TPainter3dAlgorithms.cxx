@@ -292,7 +292,7 @@ void TPainter3dAlgorithms::DefineGridLevels(Int_t ndivz)
    // Define the grid levels drawn in the background of surface and lego plots.
    // The grid levels are aligned on the  Z axis' main tick marks.
 
-   Int_t i, nbins;
+   Int_t i, nbins=0;
    Double_t binLow, binHigh, binWidth;
 
    TView *view = gPad->GetView();
