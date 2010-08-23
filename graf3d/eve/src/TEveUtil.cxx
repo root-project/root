@@ -15,6 +15,7 @@
 
 #include "TError.h"
 #include "TGeoManager.h"
+#include "TGeoMatrix.h"
 #include "TClass.h"
 #include "TMath.h"
 
@@ -507,10 +508,18 @@ TEveGeoManagerHolder::TEveGeoManagerHolder(TGeoManager* new_gmgr, Int_t n_seg) :
    // NSegments is set to this value.
 
    gGeoManager = new_gmgr;
-   if (gGeoManager && n_seg > 2)
+   if (gGeoManager)
    {
-      fNSegments = gGeoManager->GetNsegments();
-      gGeoManager->SetNsegments(n_seg);
+      gGeoIdentity = (TGeoIdentity*) gGeoManager->GetListOfMatrices()->At(0);
+      if (n_seg > 2)
+      {
+         fNSegments = gGeoManager->GetNsegments();
+         gGeoManager->SetNsegments(n_seg);
+      }
+   }
+   else
+   {
+      gGeoIdentity = 0;
    }
 }
 
@@ -524,6 +533,14 @@ TEveGeoManagerHolder::~TEveGeoManagerHolder()
       gGeoManager->SetNsegments(fNSegments);
    }
    gGeoManager = fManager;
+   if (gGeoManager)
+   {
+      gGeoIdentity = (TGeoIdentity*) gGeoManager->GetListOfMatrices()->At(0);
+   }
+   else
+   {
+      gGeoIdentity = 0;
+   }
 }
 
 

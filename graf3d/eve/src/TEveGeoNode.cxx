@@ -351,26 +351,24 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode*         geon,
          TGLScenePad scene_pad(&pad);
          pad.SetViewer3D(&scene_pad);
 
-         TEveGeoManagerHolder gmgr(tvolume->GetGeoManager());
-         gGeoManager->SetPaintVolume(tvolume);
-         Int_t nseg = gGeoManager->GetNsegments();
-         gGeoManager->SetNsegments(fgCSGExportNSeg);
+         {
+            TEveGeoManagerHolder gmgr(tvolume->GetGeoManager(), fgCSGExportNSeg);
+            gGeoManager->SetPaintVolume(tvolume);
 
-         Bool_t had_null_transform = kFALSE;
-         if (tshape->GetTransform() == 0) {
-            had_null_transform = kTRUE;
-            tshape->SetTransform(gGeoIdentity);
+            Bool_t had_null_transform = kFALSE;
+            if (tshape->GetTransform() == 0) {
+               had_null_transform = kTRUE;
+               tshape->SetTransform(gGeoIdentity);
+            }
+
+            scene_pad.BeginScene();
+            dynamic_cast<TGeoCompositeShape*>(tshape)->PaintComposite();
+            scene_pad.EndScene();
+
+            if (had_null_transform) {
+               tshape->SetTransform(0);
+            }
          }
-
-         scene_pad.BeginScene();
-         dynamic_cast<TGeoCompositeShape*>(tshape)->PaintComposite();
-         scene_pad.EndScene();
-
-         if (had_null_transform) {
-            tshape->SetTransform(0);
-         }
-
-         gGeoManager->SetNsegments(nseg);
 
          pad.SetViewer3D(0);
 
@@ -524,9 +522,10 @@ void TEveGeoTopNode::Paint(Option_t* option)
    // option given in data-members.
    // Uses TGeoPainter internally.
 
-   if (fRnrSelf) {
-      gGeoManager = fManager;
-      TVirtualPad* pad = gPad;
+   if (fRnrSelf)
+   {
+      TEveGeoManagerHolder geo_holder(fManager);
+      TVirtualPad *pad = gPad;
       gPad = 0;
       TGeoVolume* top_volume = fManager->GetTopVolume();
       fManager->SetVisOption(fVisOption);
