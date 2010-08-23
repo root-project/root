@@ -4332,7 +4332,7 @@ void TMinuit::mnimpr()
    /* Local variables */
    Double_t amax, ycalf, ystar, ystst;
    Double_t pb, ep, wg, xi, sigsav, reg, sig2;
-   Int_t npfn, ndex, loop=0, i, j, ifail, iseed;
+   Int_t npfn, ndex, loop=0, i, j, ifail, iseed=0;
    Int_t jhold, nloop, nparx, nparp1, jh, jl, iswtr;
 
    if (fNpar <= 0) return;
@@ -6852,7 +6852,7 @@ void TMinuit::mnseek()
    /* Local variables */
    Double_t dxdi, rnum, ftry, rnum1, rnum2, alpha;
    Double_t flast, bar;
-   Int_t ipar, iext, j, ifail, iseed, nparx, istep, ib, mxfail, mxstep;
+   Int_t ipar, iext, j, ifail, iseed=0, nparx, istep, ib, mxfail, mxstep;
 
    mxfail = Int_t(fWord7[0]);
    if (mxfail <= 0) mxfail = fNpar*20 + 100;
