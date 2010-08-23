@@ -266,6 +266,7 @@ Int_t TH3::Fill(Double_t x, Double_t y, Double_t z)
    binx = fXaxis.FindBin(x);
    biny = fYaxis.FindBin(y);
    binz = fZaxis.FindBin(z);
+   if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
    AddBinContent(bin);
    if (fSumw2.fN) ++fSumw2.fArray[bin];
@@ -312,6 +313,7 @@ Int_t TH3::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
    binx = fXaxis.FindBin(x);
    biny = fYaxis.FindBin(y);
    binz = fZaxis.FindBin(z);
+   if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
@@ -352,6 +354,7 @@ Int_t TH3::Fill(const char *namex, const char *namey, const char *namez, Double_
    binx = fXaxis.FindBin(namex);
    biny = fYaxis.FindBin(namey);
    binz = fZaxis.FindBin(namez);
+   if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
@@ -390,6 +393,7 @@ Int_t TH3::Fill(const char *namex, Double_t y, const char *namez, Double_t w)
    binx = fXaxis.FindBin(namex);
    biny = fYaxis.FindBin(y);
    binz = fZaxis.FindBin(namez);
+   if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
@@ -429,6 +433,7 @@ Int_t TH3::Fill(const char *namex, const char *namey, Double_t z, Double_t w)
    binx = fXaxis.FindBin(namex);
    biny = fYaxis.FindBin(namey);
    binz = fZaxis.FindBin(z);
+   if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
@@ -468,6 +473,7 @@ Int_t TH3::Fill(Double_t x, const char *namey, const char *namez, Double_t w)
    binx = fXaxis.FindBin(x);
    biny = fYaxis.FindBin(namey);
    binz = fZaxis.FindBin(namez);
+   if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
@@ -507,6 +513,7 @@ Int_t TH3::Fill(Double_t x, const char *namey, Double_t z, Double_t w)
    binx = fXaxis.FindBin(x);
    biny = fYaxis.FindBin(namey);
    binz = fZaxis.FindBin(z);
+   if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
@@ -547,6 +554,7 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
    binx = fXaxis.FindBin(x);
    biny = fYaxis.FindBin(y);
    binz = fZaxis.FindBin(namez);
+   if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
@@ -1595,6 +1603,7 @@ Long64_t TH3::Merge(TCollection *list)
                            return -1;
                         }
                   }
+                  if (ibin <0) continue;
                   AddBinContent(ibin,cu);
                   if (fSumw2.fN) {
                      Double_t error1 = h->GetBinError(bin);
@@ -2500,6 +2509,7 @@ void TH3::DoFillProfileProjection(TProfile2D * p2, const TAxis & a1, const TAxis
    Double_t v = a2.GetBinCenter(bin2);
    Double_t w = a3.GetBinCenter(bin3);
    Int_t outBin = p2->FindBin(u, v);
+   if (outBin <0) return;
    Double_t tmp = 0;
    if ( useWeights ) tmp = binSumw2.fArray[outBin];            
    p2->Fill( u , v, w, cont);
@@ -2646,7 +2656,7 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, TAxis*
 
          // profile output bin
          Int_t poutBin = p2->FindBin(projY->GetBinCenter(iybin), projX->GetBinCenter(ixbin));
-
+         if (poutBin <0) continue;
          // loop on the bins to be integrated (outbin should be called inbin)
          for (outbin = outmin; outbin <= outmax; outbin++){
 

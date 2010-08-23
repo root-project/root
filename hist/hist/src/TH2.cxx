@@ -267,6 +267,7 @@ Int_t TH2::Fill(Double_t x,Double_t y)
    fEntries++;
    binx = fXaxis.FindBin(x);
    biny = fYaxis.FindBin(y);
+   if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
    AddBinContent(bin);
    if (fSumw2.fN) ++fSumw2.fArray[bin];
@@ -309,6 +310,7 @@ Int_t TH2::Fill(Double_t x, Double_t y, Double_t w)
    fEntries++;
    binx = fXaxis.FindBin(x);
    biny = fYaxis.FindBin(y);
+   if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
@@ -348,6 +350,7 @@ Int_t TH2::Fill(const char *namex, const char *namey, Double_t w)
    fEntries++;
    binx = fXaxis.FindBin(namex);
    biny = fYaxis.FindBin(namey);
+   if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
@@ -385,6 +388,7 @@ Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
    fEntries++;
    binx = fXaxis.FindBin(namex);
    biny = fYaxis.FindBin(y);
+   if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
@@ -423,6 +427,7 @@ Int_t TH2::Fill(Double_t x, const char *namey, Double_t w)
    fEntries++;
    binx = fXaxis.FindBin(x);
    biny = fYaxis.FindBin(namey);
+   if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
@@ -469,6 +474,7 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
    for (i=0;i<ntimes;i+=stride) {
       binx = fXaxis.FindBin(x[i]);
       biny = fYaxis.FindBin(y[i]);
+      if (binx <0 || biny <0) continue;
       bin  = biny*(fXaxis.GetNbins()+2) + binx;
       if (w) ww = w[i];
       AddBinContent(bin,ww);
@@ -1516,6 +1522,7 @@ Long64_t TH2::Merge(TCollection *list)
                         return -1;
                      }
                }
+               if (ibin < 0) continue;
                AddBinContent(ibin,cu);
                if (fSumw2.fN) {
                   Double_t error1 = h->GetBinError(bin);
@@ -1963,6 +1970,7 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
       // find corresponding bin number in h1 for outbin (binOut)
       Double_t xOut = outAxis.GetBinCenter(outbin);
       Int_t binOut = h1->GetXaxis()->FindBin( xOut );
+      if (binOut <0) continue;
 
       for (Int_t inbin = firstbin ; inbin <= lastbin ; ++inbin) {
          Int_t binx, biny;

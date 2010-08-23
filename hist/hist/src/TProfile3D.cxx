@@ -633,6 +633,7 @@ Int_t TProfile3D::Fill(Double_t x, Double_t y, Double_t z, Double_t t)
    binx =fXaxis.FindBin(x);
    biny =fYaxis.FindBin(y);
    binz =fZaxis.FindBin(z);
+   if (binx <0 || biny <0 || binz<0) return -1;
    bin  = GetBin(binx,biny,binz);
    AddBinContent(bin, t);
    fSumw2.fArray[bin] += (Double_t)t*t;
@@ -683,6 +684,7 @@ Int_t TProfile3D::Fill(Double_t x, Double_t y, Double_t z, Double_t t, Double_t 
    binx =fXaxis.FindBin(x);
    biny =fYaxis.FindBin(y);
    binz =fZaxis.FindBin(z);
+   if (binx <0 || biny <0 || binz<0) return -1;
    bin  = GetBin(binx,biny,binz);
    AddBinContent(bin, u*t);
    fSumw2.fArray[bin] += u*t*t;

@@ -632,6 +632,7 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z)
    fEntries++;
    binx =fXaxis.FindBin(x);
    biny =fYaxis.FindBin(y);
+   if (binx <0 || biny <0) return -1;
    bin = GetBin(binx, biny); 
    fArray[bin] += z; 
    fSumw2.fArray[bin] += z*z;
@@ -669,6 +670,7 @@ Int_t TProfile2D::Fill(Double_t x, const char *namey, Double_t z)
    fEntries++;
    binx =fXaxis.FindBin(x);
    biny =fYaxis.FindBin(namey);
+   if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
    AddBinContent(bin, z);
    fSumw2.fArray[bin] += (Double_t)z*z;
@@ -705,6 +707,7 @@ Int_t TProfile2D::Fill(const char *namex, const char *namey, Double_t z)
    fEntries++;
    binx =fXaxis.FindBin(namex);
    biny =fYaxis.FindBin(namey);
+   if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
    AddBinContent(bin, z);
    fSumw2.fArray[bin] += (Double_t)z*z;
@@ -740,6 +743,7 @@ Int_t TProfile2D::Fill(const char *namex, Double_t y, Double_t z)
    fEntries++;
    binx =fXaxis.FindBin(namex);
    biny =fYaxis.FindBin(y);
+   if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
    AddBinContent(bin, z);
    fSumw2.fArray[bin] += (Double_t)z*z;
@@ -780,6 +784,7 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
    fEntries++;
    binx =fXaxis.FindBin(x);
    biny =fYaxis.FindBin(y);
+   if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
    AddBinContent(bin, u*z);
    fSumw2.fArray[bin] += u*z*z;

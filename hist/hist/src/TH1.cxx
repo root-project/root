@@ -2768,6 +2768,7 @@ Int_t TH1::Fill(Double_t x)
    Int_t bin;
    fEntries++;
    bin =fXaxis.FindBin(x);
+   if (bin <0) return -1;
    AddBinContent(bin);
    if (fSumw2.fN) ++fSumw2.fArray[bin];
    if (bin == 0 || bin > fXaxis.GetNbins()) {
@@ -2800,6 +2801,7 @@ Int_t TH1::Fill(Double_t x, Double_t w)
    Int_t bin;
    fEntries++;
    bin =fXaxis.FindBin(x);
+   if (bin <0) return -1;
    AddBinContent(bin, w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    if (bin == 0 || bin > fXaxis.GetNbins()) {
@@ -2829,6 +2831,7 @@ Int_t TH1::Fill(const char *namex, Double_t w)
    Int_t bin;
    fEntries++;
    bin =fXaxis.FindBin(namex);
+   if (bin <0) return -1;
    AddBinContent(bin, w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    if (bin == 0 || bin > fXaxis.GetNbins()) return -1;
@@ -2875,6 +2878,7 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
    ntimes *= stride;
    for (i=0;i<ntimes;i+=stride) {
       bin =fXaxis.FindBin(x[i]);
+      if (bin <0) continue;
       if (w) ww = w[i];
       AddBinContent(bin, ww);
       if (fSumw2.fN) fSumw2.fArray[bin] += ww*ww;
