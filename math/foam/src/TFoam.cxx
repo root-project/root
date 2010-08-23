@@ -523,7 +523,7 @@ void TFoam::Explore(TFoamCell *cell)
 // Note that links to parents and initial volume = 1/2 parent has to be
 // already defined prior to calling this routine.
 
-   Double_t wt, dx, xBest, yBest;
+   Double_t wt, dx, xBest=0, yBest=0;
    Double_t intOld, driOld;
 
    Long_t iev;
