@@ -595,26 +595,32 @@ TFile *THbookFile::Convert2root(const char *rootname, Int_t /*lrecl*/,
    TString opt = option;
    opt.ToLower();
 
-   char cmd[512];
-   char rfile[512];
    Int_t nch = strlen(rootname);
+   char *rfile;
    if (nch) {
+      rfile = new char[nch+1];
       strcpy(rfile,rootname);
    } else {
+      nch = strlen(GetName());
+      rfile = new char[nch+1];
       strcpy(rfile,GetName());
       char *dot = strrchr(rfile,'.');
       if (dot) strcpy(dot+1,"root");
       else     strcat(rfile,".root");
    }
 
+   nch = 2*nch+50;
+   char *cmd = new char[nch+1];
    sprintf(cmd,"h2root %s %s",GetName(),rfile);
    if (opt.Contains("c")) strcat (cmd," 0");
    if (opt.Contains("l")) strcat (cmd," 0");
 
    gSystem->Exec(cmd);
-
+   
+   delete [] cmd;
    if (opt.Contains("no")) return 0;
    TFile *f = new TFile(rfile);
+   delete [] rfile;
    if (f->IsZombie()) {delete f; f = 0;}
    return f;
 }
