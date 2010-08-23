@@ -281,7 +281,11 @@ TObject *TFolder::FindObject(const char *name) const
          return gROOT->GetRootFolder()->FindObject(name+1);
       }
    }
-   char cname[1024];
+   Int_t nch = strlen(name);
+   char *cname;
+   char csname[128];
+   if (nch <128) cname = csname;
+   else          cname = new char[nch+1];
    strcpy(cname,name);
    TObject *obj;
    char *slash = strchr(cname,'/');
@@ -293,6 +297,7 @@ TObject *TFolder::FindObject(const char *name) const
    } else {
       return fFolders->FindObject(name);
    }
+   if (nch >= 128) delete [] cname;
 }
 
 
