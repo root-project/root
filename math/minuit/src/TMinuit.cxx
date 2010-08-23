@@ -7008,7 +7008,7 @@ void TMinuit::mnset()
    /* Local variables */
    Double_t val;
    Int_t iset, iprm, i, jseed, kname, iseed, iunit, id, ii, kk;
-   Int_t ikseed, idbopt, igrain, iswsav, isw2;
+   Int_t ikseed, idbopt, igrain=0, iswsav, isw2;
    TString  cfname, cmode, ckind,  cwarn, copt, ctemp, ctemp2;
    Bool_t lname=kFALSE;
 
