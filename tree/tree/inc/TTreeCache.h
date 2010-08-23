@@ -61,14 +61,15 @@ public:
    virtual ~TTreeCache();
    virtual void        AddBranch(TBranch *b, Bool_t subbranches = kFALSE);
    virtual void        AddBranch(const char *branch, Bool_t subbranches = kFALSE);
-   Double_t            GetEfficiency();
-   Double_t            GetEfficiencyRel();
+   Double_t            GetEfficiency() const;
+   Double_t            GetEfficiencyRel() const;
    static Int_t        GetLearnEntries();
 
    virtual Bool_t      FillBuffer();
    TTree              *GetOwner() const;
    TTree              *GetTree() const;
    virtual Bool_t      IsLearning() const {return fIsLearning;}
+   virtual void        Print(Option_t *option="") const;
    virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
    virtual void        ResetCache();
    virtual void        SetEntryRange(Long64_t emin,   Long64_t emax);

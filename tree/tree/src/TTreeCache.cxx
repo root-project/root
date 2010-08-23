@@ -513,7 +513,7 @@ Bool_t TTreeCache::FillBuffer()
 }
 
 //_____________________________________________________________________________
-Double_t TTreeCache::GetEfficiency()
+Double_t TTreeCache::GetEfficiency() const
 {
    // Give the total efficiency of the cache... defined as the ratio
    // of blocks found in the cache vs. the number of blocks prefetched
@@ -529,7 +529,7 @@ Double_t TTreeCache::GetEfficiency()
 }
 
 //_____________________________________________________________________________
-Double_t TTreeCache::GetEfficiencyRel()
+Double_t TTreeCache::GetEfficiencyRel() const
 {
    // This will indicate a sort of relative efficiency... a ratio of the
    // reads found in the cache to the number of reads so far
@@ -563,6 +563,34 @@ TTree *TTreeCache::GetTree() const
    //return Tree in the cache
    if (fNbranches <= 0) return 0;
    return ((TBranch*)(fBranches->UncheckedAt(0)))->GetTree();
+}
+
+//_____________________________________________________________________________
+void TTreeCache::Print(Option_t *option) const
+{
+   // Print cache statistics, like
+   //   ******TreeCache statistics for file: cms2.root ******
+   //   Number of branches in the cache ...: 1093
+   //   Cache Efficiency ..................: 0.997372
+   //   Cache Efficiency Rel...............: 1.000000
+   //   Learn entries......................: 100
+   //   Reading............................: 72761843 bytes in 7 transactions
+   //   Readahead..........................: 256000 bytes with overhead = 0 bytes
+   //   Average transaction................: 10394.549000 Kbytes
+   //   Number of blocks in current cache..: 210, total size: 6280352
+   //
+   // if option = "a" the list of blocks in the cache is printed
+   // see also class TTreePerfStats
+   
+   TString opt = option;
+   opt.ToLower();
+   printf("******TreeCache statistics for file: %s ******\n",fFile->GetName());
+   if (fNbranches <= 0) return;
+   printf("Number of branches in the cache ...: %d\n",fNbranches);
+   printf("Cache Efficiency ..................: %f\n",GetEfficiency());
+   printf("Cache Efficiency Rel...............: %f\n",GetEfficiencyRel());
+   printf("Learn entries......................: %d\n",TTreeCache::GetLearnEntries());
+   TFileCacheRead::Print(option);
 }
 
 //_____________________________________________________________________________
