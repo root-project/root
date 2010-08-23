@@ -1231,7 +1231,7 @@ void TFile::Map()
 
    Short_t  keylen,cycle;
    UInt_t   datime;
-   Int_t    nbytes,date,time,objlen,nwheader;
+   Int_t    nbytes,date=0,time=0,objlen,nwheader;
    Long64_t seekkey,seekpdir;
    char    *buffer;
    char     nwhc;
