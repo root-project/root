@@ -809,9 +809,9 @@ void TClassTree::ScanClasses(Int_t iclass)
    const char *source = gSystem->BaseName( gSystem->UnixPathName(cl->GetImplFileName()));
    char *sourceName = gSystem->Which( fSourceDir.Data(), source , kReadPermission );
    if (!sourceName) return;
-   char cname[1000];
+   Int_t ncn = strlen(fCnames[iclass]->Data())+2;
+   char *cname = new char[ncn+1];
    sprintf(cname,"%s::",fCnames[iclass]->Data());
-   Int_t ncn = strlen(cname);
        // open source file
    ifstream sourceFile;
    sourceFile.open( sourceName, ios::in );
@@ -862,6 +862,7 @@ void TClassTree::ScanClasses(Int_t iclass)
          }
       }
    }
+   delete [] cname;
    sourceFile.close();
 }
 
