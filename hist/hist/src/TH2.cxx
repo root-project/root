@@ -2009,7 +2009,7 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
       TVirtualPad *padsav = gPad;
       TVirtualPad *pad = gROOT->GetSelectedPad();
       if (pad) pad->cd();
-      char optin[100];
+      char *optin = new char[opt.Length()+2];
       strcpy(optin,opt.Data());
       char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
       char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
@@ -2019,6 +2019,7 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
          h1->Paint(optin);
       }
       if (padsav) padsav->cd();
+      delete [] optin;
    }
    return h1;
 }
