@@ -1180,13 +1180,17 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
       } else {
          // If the last object, notify the GUI that the result arrived
          QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
-         // Keep in memory only light infor about a query
+         // Keep in memory only light info about a query
          if (!(pq->IsDraw())) {
             if (fQMgr->Queries()) {
                // Remove from the fQueries list
                fQMgr->Queries()->Remove(pq);
             }
          }
+         // To get the prompt back
+         TString msg;
+         msg.Form("Lite-0: all output objects have been merged                                                         ");
+         fprintf(stderr, "%s\n", msg.Data());
       }
 
    }
