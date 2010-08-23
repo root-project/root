@@ -337,7 +337,7 @@ void runProof(const char *what = "simple",
    // Determine locality of this session
    Bool_t isProofLocal = kFALSE;
    TUrl uu(url);
-   if (!strcmp(uu.GetHost(), "localhost") ||
+   if (!strcmp(uu.GetHost(), "localhost") || proof->IsLite() ||
        !strcmp(uu.GetHostFQDN(), TUrl(gSystem->HostName()).GetHostFQDN())) {
       isProofLocal = kTRUE;
    }
