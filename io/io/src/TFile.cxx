@@ -1231,7 +1231,7 @@ void TFile::Map()
 
    Short_t  keylen,cycle;
    UInt_t   datime;
-   Int_t    nbytes,date=0,time=0,objlen,nwheader;
+   Int_t    nbytes,date,time,objlen,nwheader;
    Long64_t seekkey,seekpdir;
    char    *buffer;
    char     nwhc;
@@ -1284,15 +1284,12 @@ void TFile::Map()
       TDatime::GetDateTime(datime, date, time);
       if (objlen != nbytes-keylen) {
          Float_t cx = Float_t(objlen+keylen)/Float_t(nbytes);
-         //Printf("%d/%06d  At:%-8d  N=%-8d  %-14s CX = %5.2f",date,time,idcur,nbytes,classname,cx);
          Printf("%d/%06d  At:%lld  N=%-8d  %-14s CX = %5.2f",date,time,idcur,nbytes,classname,cx);
       } else {
-         //Printf("%d/%06d  At:%-8d  N=%-8d  %-14s",date,time,idcur,nbytes,classname);
          Printf("%d/%06d  At:%lld  N=%-8d  %-14s",date,time,idcur,nbytes,classname);
       }
       idcur += nbytes;
    }
-   //Printf("%d/%06d  At:%-8d  N=%-8d  %-14s",date,time,idcur,1,"END");
    Printf("%d/%06d  At:%lld  N=%-8d  %-14s",date,time,idcur,1,"END");
 }
 
