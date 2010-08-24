@@ -90,7 +90,7 @@ namespace Math {
       template <class R> 
       inline bool operator==(const R& rhs) const {
          bool rc = true;
-         for(unsigned int i=0; i<D1*D1; ++i) {
+         for(unsigned int i=0; i<kSize; ++i) {
             rc = rc && (fArray[i] == rhs[i]);
          }
          return rc;
