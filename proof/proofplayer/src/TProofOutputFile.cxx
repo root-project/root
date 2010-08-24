@@ -169,7 +169,35 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
       // Save the raw directory
       fRawDir = dirPath;
       // Make sure the the path exists
-      if (gSystem->AccessPathName(dirPath)) gSystem->mkdir(dirPath, kTRUE);
+      // Locate the portion of path already existing and get its mode: we make sure that this
+      // mode applies to all new subpaths created
+      TString existsPath(dirPath);
+      TList subPaths;
+      while (existsPath != "/" && existsPath != "." && gSystem->AccessPathName(existsPath)) {
+         subPaths.AddFirst(new TObjString(gSystem->BaseName(existsPath)));
+         existsPath = gSystem->DirName(existsPath);
+      }
+      subPaths.SetOwner(kTRUE);
+      FileStat_t st;
+      if (gSystem->GetPathInfo(existsPath, st) == 0) {
+         TString xpath = existsPath;
+         TIter nxp(&subPaths);
+         TObjString *os = 0;
+         while ((os = (TObjString *) nxp())) {
+            xpath += TString::Format("/%s", os->GetName());
+            if (gSystem->mkdir(xpath, kTRUE) == 0) {
+               if (gSystem->Chmod(xpath, (UInt_t) st.fMode) != 0)
+                  Warning("Init", "problems setting mode on '%s'", xpath.Data());
+            } else {
+               Error("Init", "problems creating path '%s'", xpath.Data());
+            }
+         }
+      } else {
+         Warning("Init", "could not get info for path '%s': will only try to create"
+                         " the full path w/o trying to set the mode", existsPath.Data());
+         if (gSystem->mkdir(existsPath, kTRUE) != 0)
+            Error("Init", "problems creating path '%s'", existsPath.Data());
+      }
       // Remove prefix, if any
       TString pfx  = gEnv->GetValue("Path.Localroot","");
       if (!pfx.IsNull()) dirPath.Remove(0, pfx.Length());
@@ -178,7 +206,7 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
          fDir = gSystem->Getenv("LOCALDATASERVER");
          if (!fDir.EndsWith("/")) fDir += "/";
       }
-      fDir += Form("%s", dirPath.Data());
+      fDir += dirPath;
    } else {
       // Allow for place holders in fFileName (e.g. root://a.ser.ver//data/dir/<group>/<user>/file)
       TProofServ::ResolveKeywords(fFileName, 0);
