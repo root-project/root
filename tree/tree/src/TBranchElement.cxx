@@ -3201,7 +3201,7 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
       
       //--------------------------------------------------------------------
       // The allocation is done in this strange way because ReadLeaves
-      // is being called many times by TFormula!!!
+      // is being called many times by TTreeFormula!!!
       //--------------------------------------------------------------------
       Int_t i = 0;
       if( !fNdata || *(void**)proxy->At( 0 ) != 0 )

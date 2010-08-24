@@ -1989,7 +1989,6 @@ Bool_t TBranch::SetMakeClass(Bool_t /* decomposeObj */)
    return kFALSE;
 }
 
-
 //______________________________________________________________________________
 void TBranch::SetObject(void * /* obj */)
 {
