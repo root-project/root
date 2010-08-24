@@ -5718,6 +5718,7 @@ void G__cppif_func(FILE *fp, FILE *hfp)
     for(j=0;j<ifunc->allifunc;j++) {
       if(G__NOLINK>ifunc->globalcomp[j] &&
          G__PUBLIC==ifunc->access[j] &&
+         0==ifunc->staticalloc[j] &&
          ifunc->hash[j]) {
 
         // 24/05/07
