@@ -2887,7 +2887,7 @@ void TBranchElement::PrintValue(Int_t lenmax) const
 }
 
 //______________________________________________________________________________
-void  TBranchElement::ReadLeavesImpl(TBuffer& b)
+void  TBranchElement::ReadLeavesImpl(TBuffer&)
 {
    // -- Unconfiguration Read Leave function.
    
