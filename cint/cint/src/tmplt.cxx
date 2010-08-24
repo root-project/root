@@ -2157,7 +2157,7 @@ static int G__generate_template_dict(const char* tagname,G__Definedtemplateclass
       int index = gValue.tagnum;
       index = G__struct.filenum[index];
       if( index < 0 ) return -3;
-      if (G__srcfile[index].filename[0] == '{')
+      if (G__srcfile[index].filename && G__srcfile[index].filename[0] == '{')
          // ignore "{CINTEX dictionary translator}"
          return -4;
       index = G__getIndex(index, gValue.tagnum, headers);
