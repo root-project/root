@@ -372,7 +372,7 @@ void TDecompSVD::Diag_1(TMatrixD &v,TVectorD &sDiag,TVectorD &oDiag,Int_t k)
    TMatrixDColumn vc_k = TMatrixDColumn(v,k);
    for (Int_t i = k-1; i >= 0; i--) {
       TMatrixDColumn vc_i = TMatrixDColumn(v,i);
-      Double_t h=0,cs,sn;
+      Double_t h,cs,sn;
       if (i == k-1)
          DefAplGivens(sDiag[i],oDiag[i+1],cs,sn);
       else
@@ -392,7 +392,7 @@ void TDecompSVD::Diag_2(TVectorD &sDiag,TVectorD &oDiag,Int_t k,Int_t l)
 // Step 2 in the matrix diagonalization
 
    for (Int_t i = l; i <= k; i++) {
-      Double_t h=0,cs,sn;
+      Double_t h,cs,sn;
       if (i == l)
          DefAplGivens(sDiag(i),oDiag(i),cs,sn);
       else
