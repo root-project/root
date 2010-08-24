@@ -1909,7 +1909,8 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
 
       // Add the active-wrks-vs-proctime info from the packetizer
       if (fPacketizer) {
-         fOutput->Add((TObject *) fPacketizer->GetProgressPerf(kTRUE));
+         TObject *pperf = (TObject *) fPacketizer->GetProgressPerf(kTRUE);
+         if (pperf) fOutput->Add(pperf);
          TList *parms = fPacketizer->GetConfigParams();
          if (parms) {
             TIter nxo(parms);
