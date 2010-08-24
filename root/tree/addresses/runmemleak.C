@@ -153,7 +153,7 @@ void runmemleak(bool showdetails = false)
   br->SetAddress(&data);
   br->SetAutoDelete(kTRUE);
 
-  Info("memleak","branch has %d entries",br->GetEntries());
+  Info("memleak","branch has %lld entries",br->GetEntries());
 
   
   br->GetEntry(0);
