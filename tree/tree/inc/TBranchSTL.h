@@ -38,12 +38,13 @@ class TBranchSTL: public TBranch {
       virtual Int_t          GetEntry( Long64_t entry = 0, Int_t getall = 0 );
       virtual TStreamerInfo *GetInfo() const;
       virtual void           Print(Option_t*) const;
-      virtual void           ReadLeaves( TBuffer& b );
       virtual void           SetAddress( void* addr );
 
       ClassDef( TBranchSTL, 1 ) //Branch handling STL collection of pointers
 
    private:
+
+   void ReadLeavesImpl( TBuffer& b );
 
 #ifndef __CINT__
       struct ElementBranchHelper_t

@@ -6780,6 +6780,21 @@ void TTree::SetFileNumber(Int_t number)
 }
 
 //______________________________________________________________________________
+void TTree::SetMakeClass(Int_t make) 
+{
+   // Set all the branches in this TTree to be in decomposed object mode
+   // (also known as MakeClass mode).
+   
+   fMakeClass = make;
+
+   Int_t nb = fBranches.GetEntriesFast();
+   for (Int_t i = 0; i < nb; ++i)  {
+      TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
+      branch->SetMakeClass(make);
+   }   
+}
+
+//______________________________________________________________________________
 void TTree::SetMaxTreeSize(Long64_t maxsize)
 {
    // Set the maximum size of a Tree file (static function).

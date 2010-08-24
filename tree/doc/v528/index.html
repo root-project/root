@@ -3,6 +3,11 @@
 <a name="tree"></a> 
 <h3>Tree</h3>
 <ul>
+<li>Introduce TBranch::Set/GetMakeClass to independently set each branch in MakeClass mode 
+and to have a good place to switch the ReadLeaves function appropriately (to and from
+the MakeClass mode (also known as the decomposed object mode)).   This can also be
+used to reset the mode of some branch with a MakeClass/MakeSelector file.
+</li>
 <li>In TTree and TChain LoadTree fReadEntry is now set to -1 in case of failure to find the proper row.</li>
 <li>In TTree::CloneTree, TChain::Merge and TTree::CopyEntries introduces more flexibility
 in the handling of the case where a TTreeIndex is 'missing' in one or more of the 
@@ -23,7 +28,6 @@ we now attempt by default to build the missing indices.
 </li>
 <li>Warning: The TTreeCache is no longer enabled by default in a TChain to align the behavior with a TTree.  You need to call
 TTree::SetCacheSize to enable the TTreeCache.</li> 
-<li>Update MakeProxy so that the resulting skeleton is useable with Proof.</li>
 <li>Correct and clarify the relationship between AutoFlush and AutoSave:
    <ul>
    <li>Both the AutoFlush and AutoSave interval can be specified in
@@ -37,6 +41,12 @@ the AutoSave interval is adjusted to the largest integer
 multiple of the AutoFlush interval that is less than or equal
 to the original value of the AutoSave interval.</li>
    </ul>
+</li>
+<li>Update MakeProxy so that the resulting skeleton is useable with Proof.</li>
+<li>Replace the ReadLeaves virtual function by a fReadLeaves pointer to member function,
+this allows the customization of the ReadLeaves function at run-time depending on the
+underlying user class layout in TBranchElement.  This removes many if statements whose
+'answer' is known at initialization time.
 </li>
 <li>Add support for 'array' formula in TTree::Query.</li>
 <li>Set the initial value of fCacheSize to zero to indicate clearly that the TreeCache is disabled.</li>

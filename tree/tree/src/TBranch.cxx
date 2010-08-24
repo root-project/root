@@ -98,6 +98,7 @@ TBranch::TBranch()
 , fEntryBuffer(0)
 , fBrowsables(0)
 , fSkipZip(kFALSE)
+, fReadLeaves(&TBranch::ReadLeavesImpl)
 {
    // Default constructor.  Used for I/O by default.
 
@@ -138,6 +139,7 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
 , fEntryBuffer(0)
 , fBrowsables(0)
 , fSkipZip(kFALSE)
+, fReadLeaves(&TBranch::ReadLeavesImpl)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*Create a Branch*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                =====================
@@ -230,6 +232,7 @@ TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* l
 , fEntryBuffer(0)
 , fBrowsables(0)
 , fSkipZip(kFALSE)
+, fReadLeaves(&TBranch::ReadLeavesImpl)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*Create a Branch*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                =====================
@@ -1133,11 +1136,11 @@ TList* TBranch::GetBrowsables() {
 //______________________________________________________________________________
 const char * TBranch::GetClassName() const 
 {
-  // Return the name of the user class whose content is stored in this branch,
-  // if any.  If this branch was created using the 'leaflist' technique, this
-  // function returns an empty string.
+   // Return the name of the user class whose content is stored in this branch,
+   // if any.  If this branch was created using the 'leaflist' technique, this
+   // function returns an empty string.
 
-  return "";
+   return "";
 }
 
 //______________________________________________________________________________
@@ -1232,7 +1235,7 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    }
    // Remember which entry we are reading.
    fReadEntry = entry;
-   ReadLeaves(*buf);
+   (this->*fReadLeaves)(*buf);
    nbytes = buf->Length() - bufbegin;
    return nbytes;
 }
@@ -1390,6 +1393,17 @@ Int_t TBranch::GetRow(Int_t)
    return 1;
 }
 
+//______________________________________________________________________________
+Bool_t TBranch::GetMakeClass() const
+{
+   // Return whether this branch is in a mode where the object are decomposed
+   // or not (Also known as MakeClass mode).
+   
+   // Regular TBranch and TBrancObject can not be in makeClass mode
+
+   return kFALSE;
+}
+   
 //______________________________________________________________________________
 TBranch* TBranch::GetMother() const
 {
@@ -1655,7 +1669,7 @@ void TBranch::ReadBasket(TBuffer&)
 }
 
 //______________________________________________________________________________
-void TBranch::ReadLeaves(TBuffer& b)
+void TBranch::ReadLeavesImpl(TBuffer& b)
 {
    // Loop on all leaves of this branch to read Basket buffer.
 
@@ -1962,6 +1976,19 @@ void TBranch::SetFile(const char* fname)
       branch->SetFile(fname);
    }
 }
+
+//______________________________________________________________________________
+Bool_t TBranch::SetMakeClass(Bool_t /* decomposeObj */)
+{
+   // Set the branch in a mode where the object are decomposed
+   // (Also known as MakeClass mode).
+   // Return whether the setting was possible (it is not possible for
+   // TBranch and TBranchObject).
+   
+   // Regular TBranch and TBrancObject can not be in makeClass mode
+   return kFALSE;
+}
+
 
 //______________________________________________________________________________
 void TBranch::SetObject(void * /* obj */)

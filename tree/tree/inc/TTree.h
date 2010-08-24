@@ -441,7 +441,7 @@ public:
    virtual void            SetFileNumber(Int_t number = 0);
    virtual void            SetEventList(TEventList* list);
    virtual void            SetEntryList(TEntryList* list, Option_t *opt="");
-   virtual void            SetMakeClass(Int_t make) { fMakeClass = make; }
+   virtual void            SetMakeClass(Int_t make);
    virtual void            SetMaxEntryLoop(Long64_t maxev = 1000000000) { fMaxEntryLoop = maxev; } // *MENU*
    static  void            SetMaxTreeSize(Long64_t maxsize = 1900000000);
    virtual void            SetMaxVirtualSize(Long64_t size = 0) { fMaxVirtualSize = size; } // *MENU*

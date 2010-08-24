@@ -90,6 +90,10 @@ protected:
 
    Bool_t      fSkipZip;         //! After being read, the buffer will not be unziped.
 
+   typedef void (TBranch::*ReadLeaves_t)(TBuffer &b); 
+   ReadLeaves_t fReadLeaves;     //! Pointer to the ReadLeaves implementation to use. 
+   void     ReadLeavesImpl(TBuffer &b);
+
    void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
    void     Init(const char *name, const char *leaflist, Int_t compress);
 
@@ -156,6 +160,7 @@ public:
            Long64_t  GetEntries()     const {return fEntries;}
            TTree    *GetTree()        const {return fTree;}
    virtual Int_t     GetRow(Int_t row);
+   virtual Bool_t    GetMakeClass() const;
    TBranch          *GetMother() const;
    TBranch          *GetSubBranch(const TBranch *br) const;
    Bool_t            IsAutoDelete() const;
@@ -164,7 +169,6 @@ public:
    virtual Int_t     LoadBaskets();
    virtual void      Print(Option_t *option="") const;
    virtual void      ReadBasket(TBuffer &b);
-   virtual void      ReadLeaves(TBuffer &b);
    virtual void      Refresh(TBranch *b);
    virtual void      Reset(Option_t *option="");
    virtual void      ResetAddress();
@@ -180,6 +184,7 @@ public:
    virtual void      SetFirstEntry( Long64_t entry );
    virtual void      SetFile(TFile *file=0);
    virtual void      SetFile(const char *filename);
+   virtual Bool_t    SetMakeClass(Bool_t decomposeObj = kTRUE);
    virtual void      SetOffset(Int_t offset=0) {fOffset=offset;}
    virtual void      SetTree(TTree *tree) { fTree = tree;}
    virtual void      UpdateAddress() {;}

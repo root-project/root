@@ -48,7 +48,9 @@ protected:
       kDeleteObject = BIT(16),  //  We are the owner of fObject.
       kCache        = BIT(18),  //  Need to pushd/pop fOnfileObject.
       kOwnOnfileObj = BIT(19),  //  We are the owner of fOnfileObject.
-      kAddressSet   = BIT(20)   //  The addressing set have been called for this branch
+      kAddressSet   = BIT(20),  //  The addressing set have been called for this branch
+      kMakeClass    = BIT(21),  //  This branch has been switched to using the MakeClass Mode
+      kDecomposedObj= BIT(21)   //  More explicit alias for kMakeClass.
    };
 
 // Data Members
@@ -85,6 +87,8 @@ private:
    TBranchElement(const TBranchElement&);            // not implemented
    TBranchElement& operator=(const TBranchElement&); // not implemented
 
+   static void SwitchContainer(TObjArray *); 
+
 // Implementation use only functions.
 protected:
    void                     BuildTitle(const char* name);
@@ -102,6 +106,19 @@ protected:
    void Init(TTree *tree, TBranch *parent, const char* name, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t btype = 0);
    void Init(TTree *tree, TBranch *parent, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
    void Init(TTree *tree, TBranch *parent, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
+
+   void ReadLeavesImpl(TBuffer& b);
+   void ReadLeavesMakeClass(TBuffer& b);
+   void ReadLeavesCollection(TBuffer& b);
+   void ReadLeavesCollectionSplitPtrMember(TBuffer& b);
+   void ReadLeavesCollectionMember(TBuffer& b);
+   void ReadLeavesClones(TBuffer& b);
+   void ReadLeavesClonesMember(TBuffer& b);
+   void ReadLeavesCustomStreamer(TBuffer& b);
+   void ReadLeavesMember(TBuffer& b);
+   void ReadLeavesMemberBranchCount(TBuffer& b);
+   void ReadLeavesMemberCounter(TBuffer& b);
+   void SetReadLeavesPtr();
 
 // Public Interface.
 public:
@@ -132,6 +149,7 @@ public:
            const char      *GetIconName() const;
            Int_t            GetID() const { return fID; }
            TStreamerInfo   *GetInfo() const;
+           Bool_t           GetMakeClass() const;
            char            *GetObject() const;
    virtual const char      *GetParentName() const { return fParentName.Data(); }
    virtual Int_t            GetMaximum() const;
@@ -149,11 +167,11 @@ public:
    virtual Bool_t           Notify() { if (fAddress) { ResetAddress(); } return 1; }
    virtual void             Print(Option_t* option = "") const;
            void             PrintValue(Int_t i) const;
-   virtual void             ReadLeaves(TBuffer& b);
    virtual void             Reset(Option_t* option = "");
    virtual void             ResetAddress();
    virtual void             ResetDeleteObject();
    virtual void             SetAddress(void* addobj);
+   virtual Bool_t           SetMakeClass(Bool_t decomposeObj = kTRUE);
    virtual void             SetObject(void *objadd);
    virtual void             SetBasketSize(Int_t buffsize);
    virtual void             SetBranchFolder() { SetBit(kBranchFolder); }

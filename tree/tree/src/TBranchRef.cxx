@@ -46,6 +46,7 @@ TBranchRef::TBranchRef(): TBranch()
    // Default constructor.
 
    fRefTable   = 0;
+   fReadLeaves = (ReadLeaves_t)&TBranchRef::ReadLeavesImpl;
 }
 
 
@@ -77,7 +78,7 @@ TBranchRef::TBranchRef(TTree *tree)
    fMother     = this;
    fDirectory  = fTree->GetDirectory();
    fFileName   = "";
-
+   fReadLeaves = (ReadLeaves_t)&TBranchRef::ReadLeavesImpl;
 }
 
 
@@ -166,7 +167,7 @@ void TBranchRef::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TBranchRef::ReadLeaves(TBuffer &b)
+void TBranchRef::ReadLeavesImpl(TBuffer &b)
 {
    // This function called by TBranch::GetEntry overloads TBranch::ReadLeaves.
 

@@ -35,6 +35,8 @@ class TBranchRef : public TBranch {
 protected:
    TRefTable       *fRefTable;        // pointer to the TRefTable
 
+   void    ReadLeavesImpl(TBuffer &b);
+
 public:
    TBranchRef();
    TBranchRef(TTree *tree);
@@ -45,7 +47,6 @@ public:
    TRefTable      *GetRefTable() const {return fRefTable;}
    virtual Bool_t  Notify();
    virtual void    Print(Option_t *option="") const;
-   virtual void    ReadLeaves(TBuffer &b);
    virtual void    Reset(Option_t *option="");
    virtual Int_t   SetParent(const TObject* obj, const Int_t branchID);
    virtual void    SetReadEntry(Long64_t entry) {fReadEntry = entry;}

@@ -40,6 +40,7 @@ TBranchSTL::TBranchSTL():
    fIndArrayCl = TClass::GetClass( "TIndArray" );
    fBranchVector.reserve( 25 );
    fNleaves = 0;
+   fReadLeaves = (ReadLeaves_t)&TBranchSTL::ReadLeavesImpl;
 }
 
 //------------------------------------------------------------------------------
@@ -66,6 +67,7 @@ TBranchSTL::TBranchSTL( TTree *tree, const char *name,
    fIndArrayCl = TClass::GetClass( "TIndArray" );
    fBranchVector.reserve( 25 );
    fNleaves = 0;
+   fReadLeaves = (ReadLeaves_t)&TBranchSTL::ReadLeavesImpl;
 
    //---------------------------------------------------------------------------
    // Allocate and initialize the basket control arrays
@@ -105,6 +107,7 @@ TBranchSTL::TBranchSTL( TBranch* parent, const char* name,
    fDirectory = fTree->GetDirectory();
    fFileName = "";
    fNleaves = 0;
+   fReadLeaves = (ReadLeaves_t)&TBranchSTL::ReadLeavesImpl;
 
    SetName( name );
    fIndArrayCl = TClass::GetClass( "TIndArray" );
@@ -600,7 +603,7 @@ void TBranchSTL::Print(const char *option) const
 }
 
 //------------------------------------------------------------------------------
-void TBranchSTL::ReadLeaves( TBuffer& b )
+void TBranchSTL::ReadLeavesImpl( TBuffer& b )
 {
    //TO BE DOCUMENTED
 
