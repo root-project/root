@@ -29,6 +29,6 @@ namespace RooCintUtils {
   Bool_t isTypeDef(const char* trueName, const char* aliasName) ;
   std::string trueName(const char* typeDefName) ;
   
-};
+}
 
 #endif
