@@ -72,7 +72,7 @@ fi
 
 if [ "x$WRAPPER" != "x" ]; then
    NOW=`date +%H:%M:%S`
-   echo "$NOW: $1: executing $WRAPPER $ROOTSYS/bin/proofserv.exe $@" >> $LOGFILE
+   echo "$NOW: $1: executing $WRAPPER @bindir@/proofserv.exe $@" >> $LOGFILE
 fi
 
 exec $WRAPPER @bindir@/proofserv.exe "$@"
