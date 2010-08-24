@@ -48,7 +48,7 @@ class TMrbSubevent_Caen:public TObject {
  public:
    TMrbSubevent_Caen() {cout << "ctor  TMrbSubevent_Caen" << this << endl;}
    virtual ~TMrbSubevent_Caen() {}
-   void Clear(Option_t *opt="") {fHitBuffer.Clear();};
+   void Clear(Option_t * /* opt */ ="") {fHitBuffer.Clear();};
    TUsrHitBuffer * GetHitBuffer() {return &fHitBuffer;};
  protected:
 
