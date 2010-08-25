@@ -1999,7 +1999,7 @@ void TFumili::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *
 
    npar = f1->GetNpar();
    SetParNumber(npar);
-   if(flag == 9) return;
+   if(flag == 9) {delete [] df; return;}
    if (flag == 2) for (j=0;j<npar;j++) dersum[j] = gin[j] = 0;
    f1->InitArgs(x,u);
    f = 0;

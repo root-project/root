@@ -1316,10 +1316,12 @@ pm-&gt;SetMarkerSize(1);   </span></p>
    }
    rozmer = j;
    if (rozmer == 0){
+      delete [] working_space;
       Error ("FitAwmi","All parameters are fixed");   
       return;
    }
    if (rozmer >= fXmax - fXmin + 1){
+      delete [] working_space;
       Error ("FitAwmi","Number of fitted parameters is larger than # of fitted points");   
       return;    
    }

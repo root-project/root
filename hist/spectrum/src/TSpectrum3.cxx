@@ -1320,8 +1320,10 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
          }
       }
    }
-   if(maxch == 0)
+   if(maxch == 0) {
+      delete [] working_space;
       return 0;
+   }
       
    nom = 0;
    working_space[xmin][ymin][zmin] = 1;
@@ -2532,6 +2534,7 @@ decon_in-&gt;Draw(&quot;&quot;);  </span></p>
             source[(i + positx) % ssizex][(j + posity) % ssizey][(k + positz) % ssizez] = area * working_space[i][j][k + 3 * ssizez];
       }
    }
+   delete [] working_space;
    return 0;
 }
 
@@ -4545,8 +4548,10 @@ Int_t TSpectrum3::SearchFast(const float ***source, float ***dest, Int_t ssizex,
             }
          }
       }
-      if(maxch == 0)
+      if(maxch == 0) {
+         delete [] working_space;
          return 0;
+      }
          
       nom = 0;
       working_space[xmin][ymin][zmin] = 1;

@@ -1255,8 +1255,10 @@ source[i][j]);   </p>
          plocha += source[i][j];
       }
    }
-   if(maxch == 0)
+   if(maxch == 0) {
+      delete [] working_space;
       return 0;
+   }
 
    nom = 0;
    working_space[xmin][ymin] = 1;
@@ -2005,8 +2007,10 @@ deconvolution&quot;,10,10,1000,700);</p>
          }
       }
    }
-   if (lhx == -1 || lhy == -1)
+   if (lhx == -1 || lhy == -1) {
+      delete [] working_space;
       return ("Zero response data");
+   }
    
 //calculate ht*y and write into p 
    for (i2 = 0; i2 < ssizey; i2++) {
@@ -3026,8 +3030,10 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
             plocha += working_space[i][j + 2 * ssizey_ext];
          }
       }
-      if(maxch == 0)
+      if(maxch == 0) {
+         delete [] working_space;
          return 0;
+      }
 
       nom=0;
       working_space[xmin][ymin] = 1;

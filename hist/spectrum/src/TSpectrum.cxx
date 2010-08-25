@@ -1588,8 +1588,10 @@ const char* TSpectrum::SmoothMarkov(float *source, int ssize, int averWindow)
 
       area += source[i];
    }
-   if(maxch == 0)
+   if(maxch == 0) {
+      delete [] working_space;
       return 0 ;
+   }
 
    nom = 1;
    working_space[xmin] = 1;
@@ -1986,8 +1988,10 @@ const char *TSpectrum::Deconvolution(float *source, const float *response,
          posit = i;
       }
    }
-   if (lh_gold == -1)
+   if (lh_gold == -1) {
+      delete [] working_space;
       return "ZERO RESPONSE VECTOR";
+   }
 
 //read source vector
    for (i = 0; i < ssize; i++)
@@ -2271,8 +2275,10 @@ const char *TSpectrum::DeconvolutionRL(float *source, const float *response,
          posit = i;
       }
    }
-   if (lh_gold == -1)
+   if (lh_gold == -1) {
+      delete [] working_space;
       return "ZERO RESPONSE VECTOR";
+   }
 
 //read source vector
    for (i = 0; i < ssize; i++)
@@ -2490,8 +2496,10 @@ const char *TSpectrum::Unfolding(float *source,
             working_space[j * ssizex + i] /= area;
       }
    }
-   if (lhx == -1)
+   if (lhx == -1) {
+      delete [] working_space;
       return ("ZERO COLUMN IN RESPONSE MATRIX");
+   }
 
 /*read source vector*/
    for (i = 0; i < ssizex; i++)
