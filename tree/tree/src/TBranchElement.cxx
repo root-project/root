@@ -81,7 +81,7 @@ void TBranchElement::SwitchContainer(TObjArray* branches) {
          case 41: br->SetType(31); break;
       };
       br->SetReadLeavesPtr();
-      // FIXME: This is a tail recursion.
+      // Note: This is a tail recursion.
       SwitchContainer(br->GetListOfBranches());
    }
 }
@@ -163,7 +163,6 @@ TBranchElement::TBranchElement(TTree *tree, const char* bname, TStreamerInfo* si
 , fNdata(1)
 , fBranchCount(0)
 , fBranchCount2(0)
-// FIXME: What if the streamer info is optimized here?
 , fInfo(sinfo)
 , fObject(0)
 , fOnfileObject(0)
@@ -200,7 +199,6 @@ TBranchElement::TBranchElement(TBranch *parent, const char* bname, TStreamerInfo
 , fNdata(1)
 , fBranchCount(0)
 , fBranchCount2(0)
-// FIXME: What if the streamer info is optimized here?
 , fInfo(sinfo)
 , fObject(0)
 , fOnfileObject(0)
@@ -389,7 +387,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             fSplitLevel = 0;
          } else if (element->IsA() == TStreamerBase::Class()) {
             // -- We are a base class element.
-            // FIXME: This does not include an STL container class which is
+            // Note: This does not include an STL container class which is
             //        being used as a base class because the streamer element
             //        in that case is not the base streamer element it is the
             //        STL streamer element.
@@ -408,7 +406,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
                // internal dots, elide the branch name, and keep the branch
                // heirarchy rooted at the ultimate parent, this keeps the base
                // class part of the branch name from propagating downwards.
-               // FIXME: We are eliding the base class here, creating a break in the branch heirarchy.
+               // FIXME: We are eliding the base class here, creating a break in the branch hierarchy.
                // Note: We can use parent class (cltop) != branch class (elemClass) to detection elision.
                Unroll("", fBranchClass.GetClass(), clOfElement, pointer, basketsize, splitlevel+splitSTLP, 0);
                return;
@@ -428,16 +426,16 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             //
             Unroll(name, clOfElement, clOfElement, pointer, basketsize, splitlevel+splitSTLP, 0);
             if (strchr(bname, '.')) {
-               // FIXME: How can this happen?
-               // FIXME: Answer: This is the case when using the new branch
+               // Note: How can this happen?
+               // Answer: This is the case when using the new branch
                //        naming convention where the top-level branch ends in dot.
-               // FIXME: Well actually not entirely, we could also be a sub-branch
+               // Note: Well actually not entirely, we could also be a sub-branch
                //        of a split class, even when the top-level branch does not
                //        end in a dot.
-               // FIXME: Or the top-level branch could have been created by the
+               // Note: Or the top-level branch could have been created by the
                //        branch constructor which takes a folder as input, in which
                //        case the top-level branch name will have internal dots
-               //        representing the folder heirarchy.
+               //        representing the folder hierarchy.
                return;
             }
             if (nbranches == fBranches.GetEntriesFast()) {
@@ -594,7 +592,6 @@ TBranchElement::TBranchElement(TTree *tree, const char* bname, TClonesArray* clo
 , fClassName("TClonesArray")
 , fTargetClassName( fClassName )
 , fParentName()
-// FIXME: Bad, the streamer info will be optimized here.
 , fInfo((TStreamerInfo*)TClonesArray::Class()->GetStreamerInfo())
 , fCurrentClass()
 , fParentClass()
@@ -614,7 +611,6 @@ TBranchElement::TBranchElement(TBranch *parent, const char* bname, TClonesArray*
 , fClassName("TClonesArray")
 , fTargetClassName( fClassName )
 , fParentName()
-// FIXME: Bad, the streamer info will be optimized here.
 , fInfo((TStreamerInfo*)TClonesArray::Class()->GetStreamerInfo())
 , fCurrentClass()
 , fParentClass()
@@ -686,6 +682,11 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
 
    // create sub branches if requested by splitlevel
    if (splitlevel%TTree::kSplitCollectionOfPointers > 0) {
+      TClass* clonesClass = clones->GetClass();
+      if (!clonesClass) {
+         Error("Init","Missing class object of the TClonesArray %s\n",clones->GetName()); 
+         return;
+      }
       fType = 3;
       // ===> Create a leafcount
       TLeaf* leaf = new TLeafElement(this, name, fID, fStreamerType);
@@ -693,11 +694,6 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
       fLeaves.Add(leaf);
       fTree->GetListOfLeaves()->Add(leaf);
       // ===> create sub branches for each data member of a TClonesArray
-      TClass* clonesClass = clones->GetClass();
-      if (!clonesClass) {
-         // FIXME: Need an error message here.
-         return;
-      }
       fClonesName = clonesClass->GetName();
       std::string branchname = name + std::string("_");
       SetTitle(branchname.c_str());
@@ -1030,7 +1026,6 @@ void TBranchElement::BuildTitle(const char* name)
          Error("BuildTitle", "This cannot happen, fType of parent is not 3 or 4!");
       }
       bre->fCollProxy = GetCollectionProxy();
-      // FIXME: This will fail if our sub-branches are not containers.
       bre->BuildTitle(name);
       const char* fin = strrchr(bre->GetTitle(), '.');
       if (fin == 0) {
@@ -1239,9 +1234,10 @@ void TBranchElement::FillLeaves(TBuffer& b)
    } else if (fType == 3) {
       // -- TClonesArray top-level branch.  Write out number of entries, sub-branch writes the entries themselves.
       if (fTree->GetMakeClass()) {
-         // FIXME: What if GetClonesName() is the zero pointer or an empty string?
+         // Note: What if GetClonesName() is the zero pointer or an empty string?
+         // Note: What if cl is a zero pointer here?
+         // Answer: then fType would not have been set to 3, see TBranchElement::Init
          TClass* cl = TClass::GetClass(GetClonesName());
-         // FIXME: What if cl is a zero pointer here?
          TVirtualStreamerInfo* si = cl->GetStreamerInfo();
          if (!si) {
             Error("FillLeaves", "Cannot get streamer info for branch '%s' class '%s'", GetName(), cl->GetName());
@@ -1251,35 +1247,25 @@ void TBranchElement::FillLeaves(TBuffer& b)
          Int_t* nptr = (Int_t*) fAddress;
          b << *nptr;
       } else {
-         if (!fObject) {
-            // FIXME: This cannot happen, see test at begin of function.
-            b << 0;
-         } else {
-            TClonesArray* clones = (TClonesArray*) fObject;
-            Int_t n = clones->GetEntriesFast();
-            if (n > fMaximum) {
-               fMaximum = n;
-            }
-            b << n;
-         }
-      }
-   } else if (fType == 4) {
-      // -- STL container top-level branch.  Write out number of entries, sub-branch writes the entries themselves.
-      if (!fObject) {
-         // FIXME: This cannot happen, see test at begin of function.
-         b << 0;
-      } else {
-         Int_t n = 0;
-         {
-            // We are in a block so the helper pops as soon as possible.
-            TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(), fObject);
-            n = GetCollectionProxy()->Size();
-         }
+         TClonesArray* clones = (TClonesArray*) fObject;
+         Int_t n = clones->GetEntriesFast();
          if (n > fMaximum) {
             fMaximum = n;
          }
          b << n;
       }
+   } else if (fType == 4) {
+      // -- STL container top-level branch.  Write out number of entries, sub-branch writes the entries themselves.
+      Int_t n = 0;
+      {
+         // We are in a block so the helper pops as soon as possible.
+         TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(), fObject);
+         n = GetCollectionProxy()->Size();
+      }
+      if (n > fMaximum) {
+         fMaximum = n;
+      }
+      b << n;
    } else if (fType == 31) {
       // -- TClonesArray sub-branch.  Write out the entries in the TClonesArray.
       if (fTree->GetMakeClass()) {
@@ -1356,42 +1342,32 @@ void TBranchElement::FillLeaves(TBuffer& b)
             case TVirtualStreamerInfo::kBool     /* 18 */: { b.WriteFastArray((Bool_t*)    fAddress, n); break; }
          }
       } else {
-         if (!fObject) {
-            // FIXME: This cannot happen, see test at begin of function.
-            return;
-         } else {
-            TClonesArray* clones = (TClonesArray*) fObject;
-            Int_t n = clones->GetEntriesFast();
-            TStreamerInfo* si = (TStreamerInfo*)GetInfo();
-            if (!si) {
-               Error("FillLeaves", "Cannot get streamer info for branch '%s'", GetName());
-               return;
-            }
-            si->WriteBufferClones(b, clones, n, fID, fOffset);
-         }
-      }
-   } else if (fType == 41) {
-      // -- STL container sub-branch.  Write out the entries in the STL container.
-      if (!fObject) {
-         // FIXME: This cannot happen, see test at begin of function.
-         return;
-      } else {
-         // FIXME: This wont work if a pointer to vector is split!
-         // FIXME: What if GetCollectionProxy() returns a zero pointer here?
-         Int_t n = 0;
-         TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(), fObject);
-         n = GetCollectionProxy()->Size();
-         // Note: We cannot pop the proxy here because we need it for the i/o.
+         TClonesArray* clones = (TClonesArray*) fObject;
+         Int_t n = clones->GetEntriesFast();
          TStreamerInfo* si = (TStreamerInfo*)GetInfo();
          if (!si) {
             Error("FillLeaves", "Cannot get streamer info for branch '%s'", GetName());
             return;
          }
-         if( fSplitLevel >= TTree::kSplitCollectionOfPointers )
-            si->WriteBufferSTLPtrs(b, GetCollectionProxy(), n, fID, fOffset );
-         else
-            si->WriteBufferSTL(b, GetCollectionProxy(), n, fID, fOffset );
+         si->WriteBufferClones(b, clones, n, fID, fOffset);
       }
+   } else if (fType == 41) {
+      // -- STL container sub-branch.  Write out the entries in the STL container.
+
+      // FIXME: This wont work if a pointer to vector is split!
+      Int_t n = 0;
+      TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(), fObject);
+      n = GetCollectionProxy()->Size();
+      // Note: We cannot pop the proxy here because we need it for the i/o.
+      TStreamerInfo* si = (TStreamerInfo*)GetInfo();
+      if (!si) {
+         Error("FillLeaves", "Cannot get streamer info for branch '%s'", GetName());
+         return;
+      }
+      if( fSplitLevel >= TTree::kSplitCollectionOfPointers )
+         si->WriteBufferSTLPtrs(b, GetCollectionProxy(), n, fID, fOffset );
+      else
+         si->WriteBufferSTL(b, GetCollectionProxy(), n, fID, fOffset );
    }
 }
 
@@ -2287,13 +2263,12 @@ void TBranchElement::InitializeOffsets()
       // Loop over our sub-branches and compute their offsets.
       for (Int_t subBranchIdx = 0; subBranchIdx < nbranches; ++subBranchIdx) {
          fBranchOffset[subBranchIdx] = 0;
-         TBranch* aSubBranch = (TBranch*) fBranches[subBranchIdx];
-         // FIXME: Switch to a dynamic cast here.
-         if (!aSubBranch->InheritsFrom(TBranchElement::Class())) {
+         TBranchElement* subBranch = dynamic_cast<TBranchElement*> (fBranches[subBranchIdx]);
+         if (subBranch == 0) {
             // -- Skip sub-branches that are not TBranchElements.
             continue;
          }
-         TBranchElement* subBranch = (TBranchElement*) aSubBranch;
+            
          TVirtualStreamerInfo* sinfo = subBranch->GetInfo();
          if (!sinfo) {
             Warning("InitializeOffsets", "No streamer info for branch: %s subbranch: %s", GetName(), subBranch->GetName());
@@ -2322,12 +2297,12 @@ void TBranchElement::InitializeOffsets()
          {
             Int_t streamerType = subBranchElement->GetType();
             if (streamerType > TStreamerInfo::kObject
-                && aSubBranch->GetListOfBranches()->GetEntries()==0
+                && subBranch->GetListOfBranches()->GetEntries()==0
                 && CanSelfReference(subBranchElement->GetClass()))
             {
-               aSubBranch->SetBit(kBranchAny);
+               subBranch->SetBit(kBranchAny);
             } else {
-               aSubBranch->ResetBit(kBranchAny);
+               subBranch->ResetBit(kBranchAny);
             }
          }
 
@@ -2382,8 +2357,6 @@ void TBranchElement::InitializeOffsets()
          // or a TClonesArray master branch (3), or an STL container
          // master branch (4).
          //
-
-         // FIXME: fprintf(stderr, "mother: %-*s  branch: %s  fType: %d  fID: %d class: %s subBranch: %-16s  subBranch->fType: %d  subBranch->fSTLtype: %d  isBase: %d\n", motherName.Length(), motherName.Data(), GetName(), fType, fID, branchClass->GetName(), subBranch->GetName(), subBranch->fType, subBranch->fSTLtype, (subBranch->fType == 1) || (subBranchElement->IsA() == TStreamerBase::Class()) || ((subBranch->fType ==4) && subBranchElement->IsBase()));
 
          //
          // We need to extract from our name the name
@@ -3171,7 +3144,6 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
    // TODO: Exception safety a la TPushPop
    TVirtualCollectionProxy* proxy = GetCollectionProxy();
    TVirtualCollectionProxy::TPushPop helper(proxy, fObject);
-   // FIXME: What to do if this fails (which it will if fNdata is unreasonable)?
    void* alternate = proxy->Allocate(fNdata, true);
    Int_t nbranches = fBranches.GetEntriesFast();
    switch (fSTLtype) {
@@ -3544,13 +3516,6 @@ void TBranchElement::Reset(Option_t* option)
    // Entries, max and min are reset.
    //
 
-   // FIXME: Why do we do this?
-   //if (fBranchClass.GetClass()) {
-   //   // FIXME: Must protect against optimization here!
-   //   // FIXME: This should probably turn into a forced version of GetInfo().
-   //   fInfo = fBranchClass.GetClass()->GetStreamerInfo(fClassVersion);
-   //   // FIXME: fInit = ???
-   //}
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nbranches; ++i) {
       TBranch* branch = (TBranch*) fBranches[i];
@@ -3724,7 +3689,6 @@ void TBranchElement::SetAddress(void* addr)
    //
    //  Don't bother if we are disabled.
    //
-   //  FIXME:  What if we are enabled later?
 
    if (TestBit(kDoNotProcess)) {
       return;
@@ -3982,7 +3946,7 @@ void TBranchElement::SetAddress(void* addr)
                Error("SetAddress", "TClonesArray with fStreamerType: %d", fStreamerType);
             } else if (fStreamerType == -1) {
                // -- We are a top-level branch.
-               // FIXME: Consider making a zero address not allocate.
+               // Idea: Consider making a zero address not allocate.
                SetBit(kDeleteObject);
                fObject = (char*) new TClonesArray(GetClonesName());
                fAddress = (char*) &fObject;
@@ -4548,8 +4512,8 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
 
    if ((ndata == 1) && cl->GetCollectionProxy() && !strcmp(((TStreamerElement*) elems[0])->GetName(), "This")) {
       // -- Class cl is an STL collection, refuse to split it.
-      // FIXME: Why?  We certainly could by switching to the value class.
-      // FIXME: Partial Answer: Only the branch element constructor can split STL containers.
+      // Question: Why?  We certainly could by switching to the value class.
+      // Partial Answer: Only the branch element constructor can split STL containers.
       return 1;
    }
 
@@ -4558,7 +4522,7 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
       TStreamerElement* elem = (TStreamerElement*) elems[elemID];
       Int_t offset = elem->GetOffset();
       // FIXME: An STL container as a base class gets TStreamerSTL as its class, so this test is not enough.
-      // FIXME: See InitializeOffsets() for the proper test.
+      // See InitializeOffsets() for the proper test.
       if (elem->IsA() == TStreamerBase::Class()) {
          // -- This is a base class of cl.
          TClass* clOfBase = TClass::GetClass(elem->GetName());
@@ -4674,7 +4638,8 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
          }
          else if ((elem->IsA() == TStreamerSTL::Class()) && !elem->IsaPointer()) {
             // -- We have an STL container.
-            // FIXME: What if splitlevel == 0 here?
+            // Question: What if splitlevel == 0 here?
+            // Answer: then we should not be here.
             Int_t subSplitlevel = splitlevel - 1;
             if ((btype == 31) || (btype == 41) || elem->CannotSplit()) {
                // -- We split the sub-branches of a TClonesArray or an STL container only once.
@@ -4686,7 +4651,8 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
          } else if (((btype != 31) && (btype != 41)) && ptr && ((elem->GetClassPointer() == TClonesArray::Class()) || ((elem->IsA() == TStreamerSTL::Class()) && !elem->CannotSplit()))) {
             // -- We have a TClonesArray.
             // FIXME: We could get a ptr to a TClonesArray here by mistake.
-            // FIXME: What if splitlevel == 0 here?
+            // Question: What if splitlevel == 0 here?
+            // Answer: then we should not be here.
             // Note: ptr may be null in case of a TClonesArray inside another
             //       TClonesArray or STL container, see the else clause.
             TBranchElement* branch = new TBranchElement(this, branchname, sinfo, elemID, ptr + offset, basketsize, splitlevel-1+splitSTLP, btype);
@@ -4709,7 +4675,7 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
 void TBranchElement::ValidateAddress() const
 {
    // -- Check to see if the user changed the object pointer without telling us.
-
+   
    if (fID < 0) {
       // -- We are a top-level branch.
       if (!fTree->GetMakeClass() && fAddress && (*((char**) fAddress) != fObject)) {
@@ -4717,9 +4683,9 @@ void TBranchElement::ValidateAddress() const
          // Assume the user changed the pointer on us.
          // Note: The cast is here because we want to be able to
          //       be called from the constant get functions.
-
-
-	 // FIXME: Disable the check/warning TTree until we add a missing interface.
+         
+         
+         // FIXME: Disable the check/warning TTree until we add a missing interface.
          if (TestBit(kDeleteObject)) {
             // This should never happen!
             Error("ValidateAddress", "We owned an object whose address changed!  our ptr: %p  new ptr: %p", fObject, *((char**) fAddress));
