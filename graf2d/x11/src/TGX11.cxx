@@ -3192,7 +3192,7 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
    // current window. Otherwise creates pixmap from gif file
 
    FILE  *fd;
-   Seek_t filesize;
+   Seek_t filesize = 0;
    unsigned char *gifArr, *pixArr, red[256], green[256], blue[256], *j1, *j2, icol;
    int   i, j, k, width, height, ncolor, irep, offset;
    float rr, gg, bb;
@@ -3205,7 +3205,13 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
    }
 
    fseek(fd, 0L, 2);
-   filesize = Seek_t(ftell(fd));
+   long ft = ftell(fd);
+   if (ft <=0) {
+      Error("ReadGIF", "unable to open GIF file");
+      return pic;
+   } else {
+      filesize = Seek_t(ft);
+   }
    fseek(fd, 0L, 0);
 
    if (!(gifArr = (unsigned char *) calloc(filesize+256,1))) {
