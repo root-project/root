@@ -1712,6 +1712,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                cutscriptHeader = possible;
                fListOfHeaders.Add(new TNamed("cutscript",Form("#include \"%s\"\n",
                                                               cutscriptHeader.Data())));
+               delete [] name;
                break;
             }
          }

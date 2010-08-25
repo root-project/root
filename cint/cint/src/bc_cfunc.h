@@ -148,8 +148,12 @@ class G__functionscope : public G__blockscope {
       store_asm_dt(-1),
       store_func_now(-1),
       store_func_page(-1)
-      
-   { m_preader=0; }
+   { 
+      m_preader=0; 
+      for(unsigned int i = 0; i < G__MAXSTACK; ++i) {
+         asm_stack_g[i] = G__null;
+      }
+   }
   ~G__functionscope();
 
   int compile_normalfunction(struct G__ifunc_table_internal *ifunc,int iexist);

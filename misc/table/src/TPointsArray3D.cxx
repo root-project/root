@@ -63,6 +63,7 @@ TPointsArray3D::TPointsArray3D()
 //*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine default constructor*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ================================
 
+   fN = 0;
    fP = 0;
    fLastPoint = -1;
    fGLList = 0;

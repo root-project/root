@@ -446,7 +446,7 @@ static int G__transfuncmacro(const char* item, G__Deffuncmacro* deffuncmacro, G_
    /* set file pointer and position */
    callfuncmacro->call_fp = G__ifile.fp;
    callfuncmacro->call_filenum = G__ifile.filenum;
-   callfuncmacro->call_pos = call_pos;
+   if (G__ifile.fp) callfuncmacro->call_pos = call_pos;
    callfuncmacro->line = G__ifile.line_number;
    /* allocate and initialize next list */
    callfuncmacro->next = (struct G__Callfuncmacro*) malloc(sizeof(struct G__Callfuncmacro));

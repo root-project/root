@@ -87,15 +87,19 @@ TTableSorter::TTableSorter() : fsimpleArray(0),fParentTable(0)
 {
    // default ctor for RootCint dictionary
    fLastFound    = -1;
+   fFirstRow     =  0;
    fSortIndex    =  0;
    fSearchMethod =  0;
    fNumberOfRows =  0;
-   fColType = TTable::kNAN;
+   fColType      = TTable::kNAN;
    fsimpleArray    = 0;
    fParentRowSize  = 0;
    fFirstParentRow = 0;
    fCompareMethod  = 0;
    fIndexArray     = 0;
+   fColDimensions  = 0;
+   fColOffset      = 0;
+   fColSize        = 0;
 }
 
 //_____________________________________________________________________________

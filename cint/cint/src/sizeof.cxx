@@ -1577,15 +1577,14 @@ void G__loadlonglong(int* ptag, int* ptype, int which)
    if (which == G__LONGLONG || flag) {
       lltag = G__defined_tagname("G__longlong", 2);
       lltype = G__search_typename("long long", 'u', G__tagnum, G__PARANORMAL);
-      G__struct.defaulttypenum[lltag] = lltype;
-      G__newtype.tagnum[lltype] = lltag;
+      if (lltag != -1) G__struct.defaulttypenum[lltag] = lltype;
+      if (lltype != -1) G__newtype.tagnum[lltype] = lltag;
    }
    if (which == G__ULONGLONG || flag) {
       ulltag = G__defined_tagname("G__ulonglong", 2);
-      ulltype
-      = G__search_typename("unsigned long long", 'u', G__tagnum, G__PARANORMAL);
-      G__struct.defaulttypenum[ulltag] = ulltype;
-      G__newtype.tagnum[ulltype] = ulltag;
+      ulltype = G__search_typename("unsigned long long", 'u', G__tagnum, G__PARANORMAL);
+      if (ulltag != -1) G__struct.defaulttypenum[ulltag] = ulltype;
+      if (ulltype != -1) G__newtype.tagnum[ulltype] = ulltag;
    }
    if (which == G__LONGDOUBLE || flag) {
       ldtag = G__defined_tagname("G__longdouble", 2);

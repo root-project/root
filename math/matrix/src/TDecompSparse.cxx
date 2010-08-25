@@ -53,6 +53,8 @@ TDecompSparse::TDecompSparse(Int_t nRows,Int_t nr_nonZeros,Int_t verbose)
    fIw     .Set((Int_t)(1.3 * (2*fNnonZeros+3*fNrows+1)+1));
    fIw1    .Set(2*(fNrows+1));
 
+   memset(fInfo,0,21*sizeof(Int_t));
+
    // These parameters can only be set after sparsity/pivoting pattern is known
    fNsteps = 0;
    fMaxfrt = 0;

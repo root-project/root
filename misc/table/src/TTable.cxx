@@ -2416,7 +2416,7 @@ TTable::EColumnType  TTable::GetColumnType(const Char_t *columnName) const {retu
 
 //  pointer iterator
 //________________________________________________________________________________________________________________
-TTable::piterator::piterator(const TTable *t,EColumnType type): fCurrentRowIndex(0),fCurrentColIndex(0),fCurrentRowPtr(0),fCurrentColPtr(0)
+TTable::piterator::piterator(const TTable *t,EColumnType type): fCurrentRowIndex(0),fCurrentColIndex(0),fRowSize(0),fCurrentRowPtr(0),fCurrentColPtr(0)
 {
    //to be documented
    Int_t sz = 0;

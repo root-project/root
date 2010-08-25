@@ -1053,7 +1053,33 @@ struct G__ifunc_table {
 };
 struct G__ifunc_table_internal {
 #ifdef __cplusplus
-   G__ifunc_table_internal() : inited(true),allifunc(0),next(0),page(0),page_base(0),tagnum(-1) {};
+   G__ifunc_table_internal() : inited(true),allifunc(0),next(0),page(0),page_base(0),tagnum(-1) {
+      for(unsigned i = 0; i < G__MAXIFUNC; ++i) {
+         funcname[i]       = 0;
+         hash[i]           = 0;
+         funcptr[i]        = 0;
+         mangled_name[i]   = 0;
+         pentry[i]         = 0;
+         type[i]           = 0;
+         p_tagtable[i]     = 0;
+         p_typetable[i]    = 0;
+         reftype[i]        = 0;
+         para_nu[i]        = 0;
+         isconst[i]        = 0;
+         isexplicit[i]     = 0;
+         iscpp[i]          = 0;
+         ansi[i]           = 0;
+         access[i]         = 0;
+         staticalloc[i]    = 0;
+         isvirtual[i]      = 0;
+         ispurevirtual[i]  = 0;
+         friendtag[i]      = 0;
+         globalcomp[i]     = 0;
+         userparam[i]      = 0;
+         vtblindex[i]      = 0;
+         vtblbasetagnum[i] = 0;
+      }
+   };
 #endif
    
   /* true if the constructor was run */

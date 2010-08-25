@@ -545,6 +545,7 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
    fValDiff         = 0;
    fPointers        = false;
    fOnFileClass     = 0;
+   fSTL_type        = TClassEdit::kNotSTL;
    Env_t e;
    if ( iter_size > sizeof(e.fIterator) ) {
       Fatal("TGenCollectionProxy",
@@ -585,6 +586,7 @@ TGenCollectionProxy::TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info,
    fKey             = 0;
    fVal             = 0;
    fPointers        = false;
+   fSTL_type        = TClassEdit::kNotSTL;
 
    Env_t e;
    if ( info.fIterSize > sizeof(e.fIterator) ) {

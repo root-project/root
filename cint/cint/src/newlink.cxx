@@ -8529,7 +8529,7 @@ void G__cpplink_tagtable(FILE *fp, FILE *hfp)
                       ,buf(),mappedtagname(),mappedtagname());
           }
           else if('$'==G__struct.name[i][0]&&
-                  G__defined_typename(G__struct.name[i]+1)&&
+                  G__defined_typename(G__struct.name[i]+1)>0&&
                   isupper(G__newtype.type[G__defined_typename(G__struct.name[i]+1)])) {
             fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum_fwd(&%s),sizeof(%s),%d,%d,%s,NULL,NULL);\n"
                     ,G__mark_linked_tagnum(i)
