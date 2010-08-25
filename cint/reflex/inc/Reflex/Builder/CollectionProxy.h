@@ -170,10 +170,11 @@ template <class T> struct CollType
 
 
    static void*
-   construct(void* what, size_t size) {
-      PValue_t m = PValue_t(what);
+   construct(void* env) {
+      PEnv_t e = PEnv_t(env);
+      PValue_t m = PValue_t(e->fStart);
 
-      for (size_t i = 0; i < size; ++i, ++m) {
+      for (size_t i = 0; i < e->fSize; ++i, ++m) {
          ::new (m) Value_t();
       }
       return 0;
@@ -194,10 +195,11 @@ template <class T> struct CollType
 
 
    static void*
-   destruct(void* what, size_t size) {
-      PValue_t m = PValue_t(what);
+   destruct(void* env) {
+      PEnv_t e = PEnv_t(env);
+      PValue_t m = PValue_t(e->fStart);
 
-      for (size_t i = 0; i < size; ++i, ++m) {
+      for (size_t i = 0; i < e->fSize; ++i, ++m) {
          m->~Value_t();
       }
       return 0;
@@ -232,12 +234,14 @@ template <class T> struct Pushback: public CollType<T> {
       return e->fStart = address(*c->begin());
    }
 
-   static void*
-      feed(void*from,void *to,size_t size) {
-      PValue_t m = PValue_t(from);
-      PCont_t c  = PCont_t(to);
 
-      for (size_t i = 0; i < size; ++i, ++m) {
+   static void*
+   feed(void* env) {
+      PEnv_t e = PEnv_t(env);
+      PCont_t c = PCont_t(e->fObject);
+      PValue_t m = PValue_t(e->fStart);
+
+      for (size_t i = 0; i < e->fSize; ++i, ++m) {
          c->push_back(*m);
       }
       return 0;
@@ -269,13 +273,13 @@ template <class T> struct Insert: public CollType<T> {
    typedef Env_t* PEnv_t;
    typedef Cont_t* PCont_t;
    typedef Value_t* PValue_t;
-
    static void*
-      feed(void*from,void*to,size_t size) {
-      PValue_t m = PValue_t(from);
-      PCont_t c  = PCont_t(to);
+   feed(void* env) {
+      PEnv_t e = PEnv_t(env);
+      PCont_t c = PCont_t(e->fObject);
+      PValue_t m = PValue_t(e->fStart);
 
-      for (size_t i = 0; i < size; ++i, ++m) {
+      for (size_t i = 0; i < e->fSize; ++i, ++m) {
          c->insert(*m);
       }
       return 0;
@@ -313,13 +317,13 @@ template <class T> struct MapInsert: public CollType<T> {
    typedef Env_t* PEnv_t;
    typedef Cont_t* PCont_t;
    typedef Value_t* PValue_t;
-
    static void*
-      feed(void*from,void *to,size_t size) {
-      PValue_t m = PValue_t(from);
-      PCont_t  c = PCont_t(to);
+   feed(void* env) {
+      PEnv_t e = PEnv_t(env);
+      PCont_t c = PCont_t(e->fObject);
+      PValue_t m = PValue_t(e->fStart);
 
-      for (size_t i = 0; i < size; ++i, ++m) {
+      for (size_t i = 0; i < e->fSize; ++i, ++m) {
          c->insert(*m);
       }
       return 0;
@@ -370,9 +374,9 @@ struct RFLX_API CollFuncTable  {
    void*  (*clear_func)(void*);
    void*  (*first_func)(void*);
    void*  (*next_func)(void*);
-   void*  (*construct_func)(void*,size_t);
-   void*  (*destruct_func)(void*,size_t);
-   void*  (*feed_func)(void*,void*,size_t);
+   void*  (*construct_func)(void*);
+   void*  (*destruct_func)(void*);
+   void*  (*feed_func)(void*);
    void*  (*collect_func)(void*);
    void*  (*create_env)();
 };
@@ -412,12 +416,6 @@ struct CFTNullGenerator {
    static void*
    Void_func0() { return 0; }
 
-   static void*
-   Void_func2(void*,size_t) { return 0; }
-
-   static void*
-   Void_func3(void*,void*,size_t) { return 0; }
-
    static CollFuncTable*
    Generate() {
       CollFuncTable* p = new CollFuncTable();
@@ -430,9 +428,9 @@ struct CFTNullGenerator {
       p->clear_func = Void_func;
       p->resize_func = Void_func;
       p->collect_func = Void_func;
-      p->construct_func = Void_func2;
-      p->destruct_func = Void_func2;
-      p->feed_func = Void_func3;
+      p->construct_func = Void_func;
+      p->destruct_func = Void_func;
+      p->feed_func = Void_func;
       p->create_env = Void_func0;
       return p;
    } // Generate
@@ -653,7 +651,7 @@ template <typename Bitset_t> struct CollType<StdBitSetHelper<Bitset_t> > : publi
 
 
    static void*
-   construct(void*,size_t) {
+   construct(void*) {
       // Nothing to construct.
       return 0;
    }
@@ -673,7 +671,7 @@ template <typename Bitset_t> struct CollType<StdBitSetHelper<Bitset_t> > : publi
 
 
    static void*
-   destruct(void*,size_t) {
+   destruct(void*) {
       // Nothing to destruct.
       return 0;
    }
@@ -706,17 +704,6 @@ struct Pushback<StdBitSetHelper<Bitset_t> > : public CollType<StdBitSetHelper<Bi
       PValue_t m = PValue_t(e->fStart);    // Here start is actually a 'buffer' outside the container.
 
       for (size_t i = 0; i < e->fSize; ++i, ++m) {
-         c->set(i, *m);
-      }
-      return 0;
-   }
-
-   static void*
-      feed(void* from, void* to, size_t size) {
-      PValue_t m = PValue_t(from);
-      PCont_t c  = PCont_t(to);
-
-      for (size_t i = 0; i < size; ++i, ++m) {
          c->set(i, *m);
       }
       return 0;
