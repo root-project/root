@@ -1129,6 +1129,7 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
      // }
    //}
    delete [] xvars;
+   delete [] var;
 }
 
 //____________________________________________________________________
