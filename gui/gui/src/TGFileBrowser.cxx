@@ -200,6 +200,9 @@ void TGFileBrowser::CreateBrowser()
    fRootDir     = 0;
    fDir         = 0;
    fFile        = 0;
+   fNKeys       = 0;
+   fCnt         = 0;
+
    TString gv = gEnv->GetValue("Browser.GroupView", "1000");
    Int_t igv = atoi(gv.Data());
    if (igv > 10)
@@ -612,6 +615,7 @@ void TGFileBrowser::Update()
    TGListTreeItem *item = fCurrentDir;
    TObject *selected = 0;
    if (!item) item = fRootDir;
+   if (!item) return;
    //fListTree->DeleteChildren(item);
    TGListTreeItem *curr = fListTree->GetSelected(); // GetCurrent() ??
    if (curr) {
@@ -786,6 +790,7 @@ void TGFileBrowser::ApplyFilter(Int_t id)
    TGListTreeItem *item = fCurrentDir;
    if (!item)
       item = fRootDir;
+   if (!item) return;
    fListTree->DeleteChildren(item);
    DoubleClicked(item, 1);
    //fListTree->AdjustPosition(item);
