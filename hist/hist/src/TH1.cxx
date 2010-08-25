@@ -2932,6 +2932,7 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
 
 //   - Normalize integral to 1
    if (integral[nbinsx] == 0 ) {
+      delete [] integral;
       Error("FillRandom", "Integral = zero"); return;
    }
    for (bin=1;bin<=nbinsx;bin++)  integral[bin] /= integral[nbinsx];

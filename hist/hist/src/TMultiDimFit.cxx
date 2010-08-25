@@ -2352,8 +2352,10 @@ void TMultiDimFit::Fit(Option_t *option)
    if (fNCoefficients * 50 > fTestSampleSize)
       Warning("Fit", "test sample is very small");
 
-   if (!opt.Contains("m"))
+   if (!opt.Contains("m")) {
+      delete [] x;
       return;
+   }
 
    fFitter = TVirtualFitter::Fitter(0,fNCoefficients);
    fFitter->SetFCN(mdfHelper);

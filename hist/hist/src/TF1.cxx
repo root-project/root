@@ -1999,6 +1999,7 @@ Double_t TF1::GetRandom()
          Warning("GetRandom","function:%s has %d negative values: abs assumed",GetName(),intNegative);
       }
       if (fIntegral[fNpx] == 0) {
+         delete [] xx;
          Error("GetRandom","Integral of function is zero");
          return 0;
       }

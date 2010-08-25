@@ -1289,6 +1289,12 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       }
    }
    // Clean up
+   if (hX)
+      delete [] hX;
+   if (hD)
+      delete [] hD;
+   if (hP)
+      delete [] hP;
    if (d)
       delete [] d;
    if (p)
