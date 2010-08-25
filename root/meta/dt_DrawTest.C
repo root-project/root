@@ -20,7 +20,7 @@ void DrawSkippable(TTree* tree, const char* what, const char* where, Bool_t draw
     gSkipped.Add(new TNamed(where,where));
   }
   
-};
+}
 
 void DrawSkippable(TTree* tree, const char* what, const char* cond,
                    const char* where, Bool_t draw) {
@@ -33,7 +33,7 @@ void DrawSkippable(TTree* tree, const char* what, const char* cond,
    } else {
      gSkipped.Add(new TNamed(where,where));
    }
-};
+}
 
 // Rootmarks for fcdflnx1 is 153.4
 void DrawMarks() {
