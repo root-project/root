@@ -228,6 +228,9 @@ XrdSutBucket *XrdCryptosslX509ExportChain(XrdCryptoX509Chain *chain,
             BIO_free(bmem);
             return bck;
          }
+      } else {
+         DEBUG("Encountered self-signed CA in chain; breaking.  Subject: " << c->Subject());
+         break;
       }
    }
 

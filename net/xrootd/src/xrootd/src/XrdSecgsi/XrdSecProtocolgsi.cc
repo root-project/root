@@ -1628,7 +1628,6 @@ int XrdSecProtocolgsi::Authenticate(XrdSecCredentials *cred,
                   if (name.find(',') != STR_NPOS) name.erase(name.find(','));
                   PRINT("WARNING: grid map lookup ok, but the requested user is not"
                         " authorized ("<<user<<"). Instead, mapped as " << name << ".");
-                  break;
                }
             } else {
                // No username requested: we default to the first found (to be Globus compliant)
