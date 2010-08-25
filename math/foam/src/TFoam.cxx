@@ -1366,7 +1366,7 @@ void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
    // Priting predefined division points
    cout<<" SetXdivPRD, idim= "<<iDim<<"  len= "<<len<<"   "<<endl;
    for(i=0; i<len; i++) {
-      cout<< (*fXdivPRD[iDim])[i] <<"  ";
+      if (iDim < fDim) cout<< (*fXdivPRD[iDim])[i] <<"  ";
    }
    cout<<endl;
    for(i=0; i<len; i++)  cout<< xDiv[i] <<"   ";
