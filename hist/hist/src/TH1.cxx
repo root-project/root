@@ -6325,7 +6325,7 @@ Double_t TH1::GetMean(Int_t axis) const
    for (Int_t i=4;i<kNstat;i++) stats[i] = 0;
    GetStats(stats);
    if (stats[0] == 0) return 0;
-   if (axis<10){
+   if (axis<4){
       Int_t ax[3] = {2,4,7};
       return stats[ax[axis-1]]/stats[0];
    } else {

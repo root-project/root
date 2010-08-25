@@ -45,7 +45,6 @@ public:
    typedef  ROOT::Math::IParamGradFunction  BaseGradFunc; 
    typedef  ROOT::Math::IParamGradFunction::BaseFunc BaseFunc; 
  
-   WrappedTF1() {}
 
    /** 
       constructor from a TF1 function pointer. 
