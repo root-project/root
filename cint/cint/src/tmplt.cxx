@@ -824,6 +824,7 @@ int G__createtemplateclass(const char *new_name,G__Templatearg *targ
         if(isforwarddecl) {
           /* Ignore an incomplete declaration after a complete one */
           G__fignorestream(";");
+          if (spec_arg) G__freetemplatearg(spec_arg);
           return(0);
         }
         if(spec_arg) {
@@ -1441,6 +1442,7 @@ void G__declare_template()
         if (isforwarddecl && isfrienddecl) {
            // We do not need to autoload friend declaration.
            if (isfrienddecl) G__set_class_autoloading(autoload_old);
+           G__freetemplatearg(targ);
            return;
         }
         fsetpos(G__ifile.fp,&pos);

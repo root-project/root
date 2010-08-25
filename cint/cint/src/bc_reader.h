@@ -47,7 +47,7 @@ class G__fstream {
    int    m_linenum;
    int    m_c;
 public:
-   G__fstream() : m_fp(0),m_linenum(-1),m_c(-1) { ; }
+   G__fstream() : m_fp(0),m_linenum(-1),m_c(-1) { memset(&m_pos,0,sizeof(m_pos)); }
    void Init(G__input_file& ifile);
    void Init(const char *) { }
    int fgetc() { return(G__fgetc()); } // legacy

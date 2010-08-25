@@ -410,6 +410,7 @@ int G__load(char *commandfile)
          G__othermain = 1;
          G__main(argn, arg);
          if (G__return > G__RETURN_EXIT1) {
+            fclose(cfp);
             return 0;
          }
          G__return = G__RETURN_NON;
