@@ -1757,7 +1757,6 @@ void TGeoVoxelFinder::SortAll(Option_t *)
    Int_t nd = fVolume->GetNdaughters();
    Int_t nperslice  = 1+(nd-1)/(8*sizeof(UChar_t)); /*Nbytes per slice*/
    Int_t nmaxslices = 2*nd+1; // max number of slices on each axis
-   Double_t *boundaries = new Double_t[6*nd]; // list of different boundaries
    Double_t xmin, xmax, ymin, ymax, zmin, zmax;
    TGeoBBox *box = (TGeoBBox*)fVolume->GetShape(); // bounding box for volume
    // compute range on X, Y, Z according to volume bounding box
@@ -1773,6 +1772,7 @@ void TGeoVoxelFinder::SortAll(Option_t *)
    }   
    Int_t id;
    // compute boundaries coordinates on X,Y,Z
+   Double_t *boundaries = new Double_t[6*nd]; // list of different boundaries
    for (id=0; id<nd; id++) {
       // x boundaries
       boundaries[2*id] = fBoxes[6*id+3]-fBoxes[6*id];
@@ -1814,6 +1814,7 @@ void TGeoVoxelFinder::SortAll(Option_t *)
    // now find priority
    if (ib < 2) {
       Error("SortAll", "Cannot voxelize %s :less than 2 boundaries on X", fVolume->GetName());
+      delete [] boundaries;
       delete [] index;
       delete [] ind;
       delete [] temp;
@@ -1931,6 +1932,7 @@ void TGeoVoxelFinder::SortAll(Option_t *)
    // now find priority on Y
    if (ib < 2) {
       Error("SortAll", "Cannot voxelize %s :less than 2 boundaries on Y", fVolume->GetName());
+      delete [] boundaries;
       delete [] index;
       delete [] ind;
       delete [] temp;
@@ -2050,6 +2052,7 @@ void TGeoVoxelFinder::SortAll(Option_t *)
    // now find priority on Z
    if (ib < 2) {
       Error("SortAll", "Cannot voxelize %s :less than 2 boundaries on Z", fVolume->GetName());
+      delete [] boundaries;
       delete [] index;
       delete [] ind;
       delete [] temp;
