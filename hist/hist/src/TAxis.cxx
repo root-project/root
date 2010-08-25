@@ -960,7 +960,7 @@ void TAxis::SetTimeOffset(Double_t toffset, Option_t *option)
    timeoff = (time_t)((Long_t)(toffset));
    utctis = gmtime(&timeoff);
 
-   strftime(tmp,256,"%Y-%m-%d %H:%M:%S",utctis);
+   strftime(tmp,20,"%Y-%m-%d %H:%M:%S",utctis);
    fTimeFormat.Append(tmp);
 
    // append the decimal part of the time offset
