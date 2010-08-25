@@ -428,15 +428,22 @@ The results above can be obtained by running the tutorial TestSPlot.C
 
 
 //____________________________________________________________________
-TSPlot::TSPlot()
+TSPlot::TSPlot() : 
+ fTree(0),
+ fTreename(0),
+ fVarexp(0),
+ fSelection(0)
 {
    // default constructor (used by I/O only)
    fNumbersOfEvents=0;
-   fTree = 0;
 }
 
 //____________________________________________________________________
-TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree)
+TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree) : 
+ fTreename(0),
+ fVarexp(0),
+ fSelection(0)
+
 {
    //normal TSPlot constructor
    // nx :  number of control variables

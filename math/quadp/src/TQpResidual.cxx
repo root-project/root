@@ -72,6 +72,8 @@ TQpResidual::TQpResidual()
    fNxlo = 0.0;
    fMcup = 0.0;
    fMclo = 0.0;
+   fResidualNorm = 0.0;
+   fDualityGap = 0.0;
 }
 
 
@@ -115,6 +117,9 @@ TQpResidual::TQpResidual(Int_t nx,Int_t my,Int_t mz,TVectorD &ixlo,TVectorD &ixu
       fRw.ResizeTo(fNx);
       fRphi.ResizeTo(fNx);
    }
+
+   fResidualNorm = 0.0;
+   fDualityGap = 0.0;
 }
 
 
@@ -403,6 +408,10 @@ TQpResidual &TQpResidual::operator=(const TQpResidual &source)
       fRphi   .ResizeTo(source.fRphi);    fRphi    = source.fRphi;
       fRlambda.ResizeTo(source.fRlambda); fRlambda = source.fRlambda;
       fRpi    .ResizeTo(source.fRpi);     fRpi     = source.fRpi;
+
+      // LM: copy also these data members
+      fResidualNorm = source.fResidualNorm;
+      fDualityGap = source.fDualityGap;
    }
    return *this;
 }

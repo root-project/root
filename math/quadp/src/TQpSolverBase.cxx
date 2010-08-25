@@ -81,6 +81,8 @@ TQpSolverBase::TQpSolverBase()
    fRnorm_history   = new Double_t[fMaxit];
    fPhi_history     = new Double_t[fMaxit];
    fPhi_min_history = new Double_t[fMaxit];
+
+   fIter = 0;
 }
 
 

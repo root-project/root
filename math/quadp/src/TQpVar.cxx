@@ -64,6 +64,7 @@ TQpVar::TQpVar()
    fNxlo = 0;
    fMcup = 0;
    fMclo = 0;
+   fNComplementaryVariables = 0;   
 }
 
 
@@ -800,6 +801,9 @@ TQpVar &TQpVar::operator=(const TQpVar &source)
 
       fU     .ResizeTo(source.fU);      fU      = source.fU;
       fPi    .ResizeTo(source.fPi);     fPi     = source.fPi;
+
+      // LM: copy also this data member
+      fNComplementaryVariables = source.fNComplementaryVariables;
    }
    return *this;
 }

@@ -65,7 +65,7 @@ public:
    /**
       Default Constructor of  a GSLDerivator class based on GSL numerical differentiation algorithms
    */
-   GSLDerivator() {}
+   GSLDerivator() : fStatus(0), fResult(0), fError(0)   {}
 
    /// destructor (no operations)
    virtual ~GSLDerivator() {}

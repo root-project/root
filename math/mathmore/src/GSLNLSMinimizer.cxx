@@ -118,7 +118,10 @@ private:
 
 GSLNLSMinimizer::GSLNLSMinimizer( int /* ROOT::Math::EGSLNLSMinimizerType type */ ) : 
    fDim(0), 
-   fObjFunc(0)
+   fNFree(0),
+   fSize(0),
+   fObjFunc(0), 
+   fMinVal(0)
 {
    // Constructor implementation : create GSLMultiFit wrapper object
    fGSLMultiFit = new GSLMultiFit( /*type */ ); 
