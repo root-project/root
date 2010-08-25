@@ -6650,7 +6650,7 @@ Bool_t TASImage::SetJpegDpi(const char *name, UInt_t set)
    // set - dpi resolution.
    // Returns kFALSE in case of error.
 
-   static char buf[20];
+   static char buf[32];
    FILE *fp = fopen(name, "rb+");
 
    if (!fp) {
