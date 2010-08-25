@@ -596,7 +596,7 @@ TFile *THbookFile::Convert2root(const char *rootname, Int_t /*lrecl*/,
    opt.ToLower();
 
    Int_t nch = strlen(rootname);
-   char *rfile;
+   char *rfile=0;
    if (nch) {
       rfile = new char[nch+1];
       strcpy(rfile,rootname);
@@ -618,7 +618,7 @@ TFile *THbookFile::Convert2root(const char *rootname, Int_t /*lrecl*/,
    gSystem->Exec(cmd);
    
    delete [] cmd;
-   if (opt.Contains("no")) return 0;
+   if (opt.Contains("no")) {delete [] rfile; return 0;}
    TFile *f = new TFile(rfile);
    delete [] rfile;
    if (f->IsZombie()) {delete f; f = 0;}
