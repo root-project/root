@@ -141,6 +141,9 @@ ClassImp(TFumiliMinimizer)
 
 TFumiliMinimizer::TFumiliMinimizer(int  ) : 
    fDim(0),
+   fNFree(0),
+   fMinVal(0),
+   fEdm(-1),
    fFumili(0)
 {
    // Constructor for TFumiliMinimier class 
