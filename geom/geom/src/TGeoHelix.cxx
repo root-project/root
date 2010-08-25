@@ -56,6 +56,8 @@ TGeoHelix::TGeoHelix()
    fPhi  = 0.;
    fPointInit[0] = fPointInit[1] = fPointInit[2] = 0.;
    fDirInit[0] = fDirInit[1] = fDirInit[2] = 0.;
+   fPoint[0] = fPoint[1] = fPoint[2] = 0.;
+   fDir[0] = fDir[1] = fDir[2] = 0.;
    fB[0] = fB[1] = fB[2] = 0.;
    fQ    = 0;
    fMatrix = 0;
@@ -75,6 +77,8 @@ TGeoHelix::TGeoHelix(Double_t curvature, Double_t hstep, Int_t charge)
    fPhi  = 0.;
    fPointInit[0] = fPointInit[1] = fPointInit[2] = 0.;
    fDirInit[0] = fDirInit[1] = fDirInit[2] = 0.;
+   fPoint[0] = fPoint[1] = fPoint[2] = 0.;
+   fDir[0] = fDir[1] = fDir[2] = 0.;
    fB[0] = fB[1] = fB[2] = 0.;
    fQ    = 0;
    fMatrix    = new TGeoHMatrix();
