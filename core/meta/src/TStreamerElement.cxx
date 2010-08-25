@@ -275,7 +275,7 @@ Int_t TStreamerElement::GetExecID() const
    //check if an Exec is specified in the comment field
    char *action = (char*)strstr(GetTitle(),"EXEC:");
    if (!action) return 0;
-   char *caction = new char[strlen(action)];
+   char *caction = new char[strlen(action)+1];
    strcpy(caction,action+5);
    char *blank = (char*)strchr(caction,' ');
    if (blank) *blank = 0;
