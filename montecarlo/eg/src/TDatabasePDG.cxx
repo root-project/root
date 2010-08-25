@@ -770,6 +770,6 @@ Int_t TDatabasePDG::WritePDGTable(const char *filename)
          fprintf(file,"\n");
       }
    }
-
+   fclose(file);
    return nparts;
 }
