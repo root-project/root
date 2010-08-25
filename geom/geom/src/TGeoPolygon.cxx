@@ -290,6 +290,7 @@ void TGeoPolygon::OutscribedConvex()
       iseg = ivnew;
    }    
    if (!fNconvex) {
+      delete [] indcov;
       Fatal("OutscribedConvex","cannot build outscribed convex");
       return;
    }
