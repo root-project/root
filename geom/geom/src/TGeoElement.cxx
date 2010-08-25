@@ -1050,6 +1050,7 @@ void TGeoElementTable::ImportElementsRN()
       for (i=0; i<ndecays; i++) {
          if (!fgets(&line[0],140,fp)) {
             Error("ImportElementsRN", "Error parsing RadioNuclides.txt file");
+            fclose(fp);
             return;
          }   
          TGeoDecayChannel *dc = TGeoDecayChannel::ReadDecay(line);
@@ -1060,6 +1061,7 @@ void TGeoElementTable::ImportElementsRN()
    }
    TObject::SetBit(kETRNElements,kTRUE);
    CheckTable();
+   fclose(fp);
 }
 
 //______________________________________________________________________________
