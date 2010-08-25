@@ -342,56 +342,14 @@ const char* TGDMLParse::NameShort(const char* name)
    //each other, when it finds this, it calls another function to strip
    //the hex address.   It does this recursively until the end of the 
    //string is reached, returning a string without any hex addresses.
-
-   int len = strlen(name);
-   int offset = 0;
-   const char* newname = name;
-   
-   while(offset != len){
-      if((name[offset] == '0') && (name[offset+1] == 'x')){
-         newname = NameShortB(newname);
-      }
-      offset = offset + 1;
-   }
-   
-   return newname;
+   static TString stripped;
+   stripped = name;
+   Int_t index = -1;
+   while ((index = stripped.Index("0x")) >= 0) {
+      stripped = stripped(0,index)+stripped(index+10, stripped.Length());
+   }   
+   return stripped.Data();   
 }
-
-//_____________________________________________________________
-const char* TGDMLParse::NameShortB(const char* name)
-{ 
-   //this function is passed a string, and removes the first hex address
-   //it finds.   This function is called recursively by NameShort to
-   //fully strip a string of all hex addresses within it.
-
-   char* shortname = NULL;
-   const char* retname = NULL;   
-   int char_offset = 0; /* 8 hex + 0x */
-   int len = strlen(name);
-
-   while (shortname == NULL && char_offset != len){
-      if((name[char_offset] == '0') && (name[(char_offset+1)] == 'x')){
-         
-         shortname = new char[len];
-         memcpy(shortname,name,char_offset);
-         shortname[char_offset]='\0';
-         
-         const char *temp = &name[(char_offset + 10)];
-         shortname = strcat(shortname, temp);
-         retname = shortname;
-      } else {
-         retname = name;
-      }               
-      char_offset = char_offset + 1;
-   }
-   
-   if(shortname == NULL){
-      retname = name;
-   }
-   
-   return retname;   
-}
-
 
 //________________________________________________________
 XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
@@ -2814,6 +2772,10 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine* gdml, XMLNodePointer_t node, 
    }
    
    fsolmap[name] = polyg;
+   for(i = 0; i < numplanes; i++){
+      delete [] table[i];
+   }
+   delete [] table;
    
    return node;
 

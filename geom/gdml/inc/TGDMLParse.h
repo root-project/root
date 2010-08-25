@@ -137,7 +137,6 @@ private:
    const char*       GetScale(const char* unit);
    double            Evaluate(const char* evalline);
    const char*       NameShort(const char* name);
-   const char*       NameShortB(const char* name);
     
    //'define' section
    XMLNodePointer_t  ConProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
