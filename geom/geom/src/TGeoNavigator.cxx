@@ -80,6 +80,14 @@ TGeoNavigator::TGeoNavigator()
                 
 {
 // dummy constructor
+   for (Int_t i=0; i<3; i++) {
+      fNormal[i] = 0.;
+      fCldir[i] = 0.;
+      fCldirChecked[i] = 0.;
+      fPoint[i] = 0.;
+      fDirection[i] = 0.;
+      fLastPoint[i] = 0.;
+   }
 }
 
 //_____________________________________________________________________________
