@@ -1446,6 +1446,7 @@ void TStyle::SaveSource(const char *filename, Option_t *option)
    ofstream out;
    out.open(ff.Data(), ios::out);
    if (!out.good()) {
+      delete [] sname;
       Error("SaveSource", "cannot open file: %s", ff.Data());
       return;
    }
