@@ -185,6 +185,8 @@ void THLimitsFinder::Optimize(Double_t A1,  Double_t A2,  Int_t nold ,Double_t &
    Int_t optionTime;
    if(strchr(option,'t')) optionTime = 1;  else optionTime = 0;
 
+   nbins = nold;
+
    Double_t al = TMath::Min(A1,A2);
    Double_t ah = TMath::Max(A1,A2);
    if (al == ah) ah = al+1;
