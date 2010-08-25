@@ -867,7 +867,11 @@ TGeoMaterial *TGeoMixture::DecayMaterial(Double_t time, Double_t precision)
       weight[i] /= amed;
       if (weight[i]<precision) continue;
       el = (TGeoElementRN *)pop->At(i);
-      if (ncomp1==1) return new TGeoMaterial(Form("%s-evol",GetName()), el, rho);
+      if (ncomp1==1) {
+         delete [] weight;
+         delete pop;
+         return new TGeoMaterial(Form("%s-evol",GetName()), el, rho);
+      }   
       mix->AddElement(el, weight[i]);
    }
    delete [] weight;
