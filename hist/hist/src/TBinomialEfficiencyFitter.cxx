@@ -101,6 +101,7 @@ TBinomialEfficiencyFitter::TBinomialEfficiencyFitter() {
    fFitDone     = kFALSE;
    fAverage     = kFALSE;
    fRange       = kFALSE;
+   fEpsilon     = kDefaultEpsilon;
 }
 
 //______________________________________________________________________________
@@ -113,7 +114,8 @@ TBinomialEfficiencyFitter::TBinomialEfficiencyFitter(const TH1 *numerator, const
    // Both histograms need to be "consistent". This is not checked here, but in
    // TBinomialEfficiencyFitter::Fit().
 
-   fEpsilon = kDefaultEpsilon;
+   fEpsilon  = kDefaultEpsilon;
+   fFunction = 0;
    Set(numerator,denominator);
 }
 

@@ -144,7 +144,13 @@ ClassImp(TFractionFitter)
 
 //______________________________________________________________________________
 TFractionFitter::TFractionFitter() :
-  fFitDone(kFALSE),fData(0), fPlot(0)  {
+   fFitDone(kFALSE),
+   fLowLimitX(0), fHighLimitX(0),
+   fLowLimitY(0), fHighLimitY(0),
+   fLowLimitZ(0), fHighLimitZ(0),
+   fData(0), fIntegralData(0),
+   fPlot(0) 
+{
    // TFractionFitter default constructor.
 
    fractionFitter = 0;
