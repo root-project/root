@@ -52,6 +52,6 @@ void makeclass()
   t->ResetBranchAddresses();
 }
 
-void templateName() { plot_my_i(); makeclass(); };
+void templateName() { plot_my_i(); makeclass(); }
 
 #endif
