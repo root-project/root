@@ -3110,14 +3110,14 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
    // Case of a collection (fType == 4).
    
    ValidateAddress();
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
-   
    if (fObject == 0)
    {
       // We have nowhere to copy the data (probably because the data member was
       // 'dropped' from the current schema) so let's no copy it in a random place.
       return;
    }
+   
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
    
    // STL container master branch (has only the number of elements).
    Int_t n;
@@ -3195,15 +3195,15 @@ void TBranchElement::ReadLeavesCollectionSplitPtrMember(TBuffer& b)
    // -- Read leaves into i/o buffers for this branch.
    // Case of a data member within a collection (fType == 41).
    
-   ValidateAddress();
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
-   
+   ValidateAddress();   
    if (fObject == 0)
    {
       // We have nowhere to copy the data (probably because the data member was
       // 'dropped' from the current schema) so let's no copy it in a random place.
       return;
    }
+
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
 
    // STL container sub-branch (contains the elements).
    fNdata = fBranchCount->GetNdata();
@@ -3227,14 +3227,14 @@ void TBranchElement::ReadLeavesCollectionMember(TBuffer& b)
    // Case of a data member within a collection (fType == 41).
    
    ValidateAddress();
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
-   
    if (fObject == 0)
    {
       // We have nowhere to copy the data (probably because the data member was
       // 'dropped' from the current schema) so let's no copy it in a random place.
       return;
    }
+
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
 
    // STL container sub-branch (contains the elements).
    fNdata = fBranchCount->GetNdata();
@@ -3260,8 +3260,6 @@ void TBranchElement::ReadLeavesClones(TBuffer& b)
    // Case of a TClonesArray (fType == 3).
    
    ValidateAddress();
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
-
    if (fObject == 0)
    {
       // We have nowhere to copy the data (probably because the data member was
@@ -3269,6 +3267,8 @@ void TBranchElement::ReadLeavesClones(TBuffer& b)
       return;
    }
 
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
+   
    // TClonesArray master branch (has only the number of elements).
    Int_t n;
    b >> n;
@@ -3300,7 +3300,6 @@ void TBranchElement::ReadLeavesClonesMember(TBuffer& b)
    // Case of a data member within a TClonesArray (fType == 31).
    
    ValidateAddress();
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
    
    if (fObject == 0)
    {
@@ -3308,6 +3307,8 @@ void TBranchElement::ReadLeavesClonesMember(TBuffer& b)
       // 'dropped' from the current schema) so let's no copy it in a random place.
       return;
    }
+
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
 
    // TClonesArray sub-branch (contains the elements).
    fNdata = fBranchCount->GetNdata();
@@ -3336,13 +3337,14 @@ void TBranchElement::ReadLeavesMember(TBuffer& b)
    R__ASSERT(fStreamerType != TVirtualStreamerInfo::kCounter);
    
    ValidateAddress();
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
    if (fObject == 0)
    {
       // We have nowhere to copy the data (probably because the data member was
       // 'dropped' from the current schema) so let's no copy it in a random place.
       return;
    }
+
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
    // If not a TClonesArray or STL container master branch
    // or sub-branch and branch inherits from tobject,
    // then register with the buffer so that pointers are
@@ -3374,13 +3376,14 @@ void TBranchElement::ReadLeavesMemberBranchCount(TBuffer& b)
    R__ASSERT(fStreamerType != TVirtualStreamerInfo::kCounter);
 
    ValidateAddress();
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
    if (fObject == 0)
    {
       // We have nowhere to copy the data (probably because the data member was
       // 'dropped' from the current schema) so let's no copy it in a random place.
       return;
    }
+
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
    // If not a TClonesArray or STL container master branch
    // or sub-branch and branch inherits from tobject,
    // then register with the buffer so that pointers are
@@ -3409,16 +3412,16 @@ void TBranchElement::ReadLeavesMemberCounter(TBuffer& b)
    // For split-class branch, base class branch, data member branch, or top-level branch.
    // which do not have a branch count and are a counter.
    
-   R__ASSERT(fBranchCount==0);
-
    ValidateAddress();
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
    if (fObject == 0)
    {
       // We have nowhere to copy the data (probably because the data member was
       // 'dropped' from the current schema) so let's no copy it in a random place.
       return;
    }
+
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
+
    // If not a TClonesArray or STL container master branch
    // or sub-branch and branch inherits from tobject,
    // then register with the buffer so that pointers are
@@ -3447,7 +3450,6 @@ void TBranchElement::ReadLeavesCustomStreamer(TBuffer& b)
    // Non TObject, Non collection classes with a custom streamer.
    
    ValidateAddress();
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
    if (fObject == 0)
    {
       // We have nowhere to copy the data (probably because the data member was
@@ -3455,6 +3457,7 @@ void TBranchElement::ReadLeavesCustomStreamer(TBuffer& b)
       return;
    }
 
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
    fBranchClass->Streamer(fObject,b);
 }
    
