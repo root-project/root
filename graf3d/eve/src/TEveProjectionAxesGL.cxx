@@ -176,7 +176,7 @@ void TEveProjectionAxesGL::SplitIntervalByPos(Float_t p1, Float_t p2, Int_t ax) 
    // Limits.
    Int_t n1a = TMath::FloorNint(fM->GetNdivisions() / 100);
    Int_t n2a = fM->GetNdivisions() - n1a * 100;
-   Int_t bn1, bn2;
+   Int_t bn1=0, bn2;
    Double_t bw1, bw2; // bin with first second order
    Double_t bl1, bh1, bl2, bh2; // bin low, high first second order
    THLimitsFinder::Optimize(p1, p2, n1a, bl1, bh1, bn1, bw1);
