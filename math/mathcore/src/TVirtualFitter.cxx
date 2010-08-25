@@ -33,16 +33,23 @@ ClassImp(TVirtualFitter)
 
 
 //______________________________________________________________________________
-TVirtualFitter::TVirtualFitter()
+TVirtualFitter::TVirtualFitter() : 
+   fXfirst(0), 
+   fXlast(0), 
+   fYfirst(0), 
+   fYlast(0), 
+   fZfirst(0), 
+   fZlast(0), 
+   fNpoints(0),
+   fPointSize(0),
+   fCacheSize(0),
+   fCache(0),
+   fObjectFit(0),
+   fUserFunc(0),
+   fMethodCall(0),
+   fFCN(0)
 {
    // Default constructor.
-
-   fMethodCall = 0;
-   fFCN        = 0;
-   fNpoints    = 0;
-   fPointSize  = 0;
-   fCacheSize  = 0;
-   fCache      = 0;
 }
 
 //______________________________________________________________________________
