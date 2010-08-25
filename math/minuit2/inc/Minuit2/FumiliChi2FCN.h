@@ -12,6 +12,7 @@
 
 #include "FumiliFCNBase.h"
 #include <vector>
+#include "Minuit2/ParametricFunction.h"
 
 namespace ROOT {
 

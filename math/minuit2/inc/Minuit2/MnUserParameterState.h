@@ -33,7 +33,9 @@ class MnUserParameterState {
 public:
 
    /// default constructor (invalid state)
-   MnUserParameterState() : fValid(false), fCovarianceValid(false), fParameters(MnUserParameters()), fCovariance(MnUserCovariance()), fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance()) {} 
+   MnUserParameterState() : fValid(false), fCovarianceValid(false), fGCCValid(false), fFVal(0), fEDM(0), fNFcn(0), 
+                            fParameters(MnUserParameters()), fCovariance(MnUserCovariance()), 
+                            fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance()) {} 
 
    /// construct from user parameters (before minimization)
    MnUserParameterState(const std::vector<double>&, const std::vector<double>&);

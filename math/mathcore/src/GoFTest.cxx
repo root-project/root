@@ -30,7 +30,7 @@ namespace ROOT {
 namespace Math {
   
    GoFTest::GoFTest(const Double_t* sample1, UInt_t sample1Size, const Double_t* sample2, UInt_t sample2Size)
-      : fCDF(0), fSamples(std::vector<std::vector<Double_t> >(2)), fTestSampleFromH0(kFALSE) {
+      : fCDF(0), fDist(kUndefined), fSamples(std::vector<std::vector<Double_t> >(2)), fTestSampleFromH0(kFALSE) {
       Bool_t badSampleArg = sample1 == 0 || sample1Size == 0;
       if (badSampleArg) { 
          std::string msg = "'sample1";

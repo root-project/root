@@ -14,6 +14,7 @@
 #include <vector>
 #include <cmath>
 #include <float.h>
+#include "Minuit2/ParametricFunction.h"
 
 namespace ROOT {
 

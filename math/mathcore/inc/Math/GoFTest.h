@@ -32,7 +32,8 @@ class GoFTest {
 public:
 
    enum EDistribution {  // H0 distributions for using only with 2-samples tests
-      kUserDefined = -1, // Internal use only for the class's template constructor
+      kUndefined = -2,  // value set when is not relevant  
+      kUserDefined,     // Internal use only for the class's template constructor
       kGaussian,         // Default value
       kLogNormal,
       kExponential

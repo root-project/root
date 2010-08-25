@@ -11,7 +11,7 @@
 #define ROOT_Minuit2_FumiliFCNBase
 
 #include "Minuit2/FCNBase.h"
-#include "Minuit2/ParametricFunction.h"
+#include <cassert>
 
 namespace ROOT {
 
@@ -152,12 +152,6 @@ protected :
 
 
 
-private:
-
-   // A pointer to the model function which describes the data
-   const ParametricFunction *fModelFunction;
-
-   // define these data members protected because can be modified by the derived classes 
 
 private: 
 

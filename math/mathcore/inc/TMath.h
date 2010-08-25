@@ -866,6 +866,8 @@ template <typename T> Double_t TMath::Median(Long64_t n, const T *a,  const Doub
    // When n is odd or n > 1000, the median is kth element k = (n + 1) / 2.
    // when n is even and n < 1000the median is a mean of the elements k = n/2 and k = n/2 + 1.
    //
+   // If the weights are supplied (w not 0) all weights must be >= 0
+   // 
    // If work is supplied, it is used to store the sorting index and assumed to be
    // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
    // or on the heap for n >= kWorkMax .
@@ -893,6 +895,7 @@ template <typename T> Double_t TMath::Median(Long64_t n, const T *a,  const Doub
       for (Int_t j = 0; j < n; j++) {
          if (w[j] < 0) {
             ::Error("TMath::Median","w[%d] = %.4e < 0 ?!",j,w[j]);
+            if (isAllocated)  delete [] ind;
             return 0;
          }
          sumTot2 += w[j];

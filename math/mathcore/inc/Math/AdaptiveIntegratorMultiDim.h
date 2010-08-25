@@ -66,7 +66,9 @@ public:
    /**
       evaluate the integral with the previously given function between xmin[] and xmax[]  
    */
-   double Integral(const double* xmin, const double * xmax);
+   double Integral(const double* xmin, const double * xmax) { 
+      return DoIntegral(xmin,xmax, false); 
+   }
 
 
    /// evaluate the integral passing a new function
@@ -96,6 +98,10 @@ public:
    /// set absolute tolerance
    void SetAbsTolerance(double absTol);
 
+protected: 
+
+   // internal function to compute the integral (if absVal is true compute abs value of function integral
+   double DoIntegral(const double* xmin, const double * xmax, bool absVal = false);
 
  private:
 

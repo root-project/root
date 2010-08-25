@@ -42,7 +42,6 @@ public:
       BaseFunc(),
       fDim(rhs.fDim),
       fPtr(rhs.fPtr),
-      //fPtr2(0),
       fMethodCall(rhs.fMethodCall),
       fMethodCall2(0)
    {}
@@ -51,7 +50,6 @@ public:
       ImplFunc(),
       fDim(rhs.fDim),
       fPtr(rhs.fPtr),
-      //fPtr2(rhs.fPtr2),
       fMethodCall(rhs.fMethodCall),
       fMethodCall2(rhs.fMethodCall2)
    {}
@@ -59,7 +57,6 @@ public:
       BaseFunc(),
       fDim(1),
       fPtr(rhs.fPtr),
-      //fPtr2(0),
       fMethodCall(rhs.fMethodCall),
       fMethodCall2(0)
    {}
@@ -68,7 +65,6 @@ public:
       ImplFunc(),
       fDim(1),
       fPtr(rhs.fPtr),
-      //fPtr2(rhs.fPtr2),
       fMethodCall(rhs.fMethodCall),
       fMethodCall2(rhs.fMethodCall2)
    {}
@@ -87,7 +83,6 @@ private:
    unsigned int fDim;
 
    void * fPtr; // pointer to callable object
-   //void * fPtr2; // pointer to callable object
 
    // function required by interface
    inline double DoEval (double x) const;
@@ -99,7 +94,6 @@ private:
    mutable TMethodCall *fMethodCall; // pointer to method call
    mutable TMethodCall *fMethodCall2; // pointer to second method call (for deriv)
 
-   mutable Long_t fArgs[2]; // for the address
 };
 
 //implementation of Functor methods
@@ -319,10 +313,10 @@ inline double FunctorCintHandler<PF>::DoDerivative (double x) const {
 template<class PF>
 inline double FunctorCintHandler<PF>::DoEval (const double *x) const {
    // for multi-dim functions
-   //fArgs[0] = (Long_t)&x;
    fMethodCall->ResetParam();
-   fArgs[0] = (Long_t)x;
-   fMethodCall->SetParamPtrs(fArgs);
+   Long_t args[1]; // for the address of x
+   args[0] = (Long_t)x;
+   fMethodCall->SetParamPtrs(args);
    double result = 0;
    // distinguish the case of free functions (fPtr ==0)
    if (fPtr)
@@ -337,10 +331,7 @@ template<class PF>
 inline double FunctorCintHandler<PF>::DoDerivative (const double *x, unsigned int ipar) const {
    // derivative for multi-dim functions
    //fMethodCall2->ResetParam();
-//    fArgs[0] = (Long_t)x;
-//    fArgs[1] = (Long_t)&ipar;
    char * params = Form(" 0x%lx ,  %d", (ULong_t)x, ipar);
-   //fMethodCall2->SetParamPtrs(fArgs);
 
    double result = 0;
    // distinguish the case of free functions

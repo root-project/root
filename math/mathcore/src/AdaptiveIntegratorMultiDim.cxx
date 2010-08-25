@@ -17,7 +17,8 @@ AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim(double absTol, double rel
    fAbsTol(absTol),
    fRelTol(relTol),
    fSize(size), 
-   fResult(0), fError(0), 
+   fResult(0), 
+   fError(0), fRelError(0),
    fNEval(0),
    fStatus(-1),
    fFun(0)
@@ -30,7 +31,8 @@ AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim( const IMultiGenFunction 
    fAbsTol(absTol),
    fRelTol(relTol),
    fSize(size),
-   fResult(0), fError(0), 
+   fResult(0), 
+   fError(0), fRelError(0),
    fNEval(0),
    fStatus(-1),
    fFun(&f)
@@ -56,7 +58,7 @@ void AdaptiveIntegratorMultiDim::SetRelTolerance(double relTol){ this->fRelTol =
 void AdaptiveIntegratorMultiDim::SetAbsTolerance(double absTol){ this->fAbsTol = absTol; }
 
 
-double AdaptiveIntegratorMultiDim::Integral(const double* xmin, const double * xmax)
+   double AdaptiveIntegratorMultiDim::DoIntegral(const double* xmin, const double * xmax, bool absValue)
 {
    // References:
    //
@@ -79,7 +81,6 @@ double AdaptiveIntegratorMultiDim::Integral(const double* xmin, const double * x
    unsigned int nfnevl; //nr of function evaluations
    double relerr; //an estimation of the relative accuracy of the result
 
-   bool fgAbsValue=0;//for now; maybe later new class member as in TF1..
 
    double ctr[15], wth[15], wthl[15], z[15];
 
@@ -179,18 +180,18 @@ L20:
    //loop over coordinates
    for (j=0; j<n; j++) {
       z[j]    = ctr[j] - xl2*wth[j];
-      if (fgAbsValue) f2 = std::abs((*fFun)(z));
-      else            f2 = (*fFun)(z);
+      if (absValue) f2 = std::abs((*fFun)(z));
+      else          f2 = (*fFun)(z);
       z[j]    = ctr[j] + xl2*wth[j];
-      if (fgAbsValue) f2 += std::abs((*fFun)(z));
-      else            f2 += (*fFun)(z);
+      if (absValue) f2 += std::abs((*fFun)(z));
+      else          f2 += (*fFun)(z);
       wthl[j] = xl4*wth[j];
       z[j]    = ctr[j] - wthl[j]; 
-      if (fgAbsValue) f3 = std::abs((*fFun)(z));
-      else            f3 = (*fFun)(z);
+      if (absValue) f3 = std::abs((*fFun)(z));
+      else          f3 = (*fFun)(z);
       z[j]    = ctr[j] + wthl[j];
-      if (fgAbsValue) f3 += std::abs((*fFun)(z));
-      else            f3 += (*fFun)(z);
+      if (absValue) f3 += std::abs((*fFun)(z));
+      else          f3 += (*fFun)(z);
       sum2   += f2;//sum func eval with different weights separately
       sum3   += f3;//for a given region
       dif     = std::abs(7*f2-f3-12*sum1);
@@ -212,7 +213,7 @@ L20:
             for (m=0;m<2;m++) {
                wthl[k] = -wthl[k];
                z[k]    = ctr[k] + wthl[k];
-               if (fgAbsValue) sum4 += std::abs((*fFun)(z));
+               if (absValue) sum4 += std::abs((*fFun)(z));
                else            sum4 += (*fFun)(z);
             }
          }
@@ -228,8 +229,8 @@ L20:
       z[j] = ctr[j] + wthl[j];
    }
 L90: //sum over end nodes ~gray codes
-   if (fgAbsValue) sum5 += std::abs((*fFun)(z));
-   else            sum5 += (*fFun)(z);
+   if (absValue) sum5 += std::abs((*fFun)(z));
+   else          sum5 += (*fFun)(z);
    for (j=0;j<n;j++) {
       wthl[j] = -wthl[j];
       z[j] = ctr[j] + wthl[j];
