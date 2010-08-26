@@ -445,7 +445,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                  "vee","Leftrightarrow","Leftarrow","Uparrow","Rightarrow",
                  "Downarrow","diamond","LT","void1","copyright","void3","sum",
                  "arctop","lbar","arcbottom","topbar","void8", "bottombar","arcbar",
-                 "ltbar","AA","aa","void06","GT","int" };
+                 "ltbar","AA","aa","void06","GT","int","forall","exists" };
 
    const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","tilde","slash"};
 
@@ -765,7 +765,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          }
          UInt_t lastsize = 0;
          if (!opFound)
-         for(k=0;k<80;k++) {
+         for(k=0;k<82;k++) {
             if ((opSpec==-1 || strlen(tab2[k])>lastsize) && UInt_t(length)>i+strlen(tab2[k])) {
                if (strncmp(&text[i+1],tab2[k],strlen(tab2[k]))==0) {
                   lastsize = strlen(tab2[k]);
@@ -1104,6 +1104,10 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          newSpec.fFont = GetTextFont();
          if (opSpec == 75) letter = '\305'; // AA Angstroem
          if (opSpec == 76) letter = '\345'; // aa Angstroem
+      }
+      if(opSpec == 80 || opSpec == 81) {
+         if (opSpec == 80) letter = '\042'; // #forall
+         if (opSpec == 81) letter = '\044'; // #exists
       }
       Double_t props, propi;
       props = 1.8 ; // scale factor for #sum(66)

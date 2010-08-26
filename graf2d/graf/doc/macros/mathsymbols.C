@@ -76,6 +76,7 @@
    y -= step ; Tl.DrawLatex(x1, y, "#Uparrow")        ; Tl.DrawText(x2, y, "#Uparrow");
    y -= step ; Tl.DrawLatex(x1, y-0.01, "#sum")       ; Tl.DrawText(x2, y, "#sum");
    y -= step ; Tl.DrawLatex(x1, y, "#perp")           ; Tl.DrawText(x2, y, "#perp");
+   y -= step ; Tl.DrawLatex(x1, y, "#forall")         ; Tl.DrawText(x2, y, "#forall");  
 
    // Draw Fourth Column
    y = 0.96; step = 0.0465; x1 = 0.77; x2 = x1+0.04;
@@ -99,6 +100,7 @@
    y -= step ; Tl.DrawLatex(x1, y, "#Rightarrow")     ; Tl.DrawText(x2, y, "#Rightarrow");
    y -= step ; Tl.DrawLatex(x1, y-0.015, "#int")      ; Tl.DrawText(x2, y, "#int");
    y -= step ; Tl.DrawLatex(x1, y, "#odot")           ; Tl.DrawText(x2, y, "#odot");
+   y -= step ; Tl.DrawLatex(x1, y, "#exists")         ; Tl.DrawText(x2, y, "#exists");  
 
    return Ms;
 }
