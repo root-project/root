@@ -594,6 +594,7 @@ void TSPlot::MakeSPlot(Option_t *option)
       }
       if (!opt.Contains("Q"))
          printf("\n");
+      delete [] covmat;
       covmat = minuit->GetCovarianceMatrix();
       SPlots(covmat, iplot);
 

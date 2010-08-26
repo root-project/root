@@ -1547,10 +1547,10 @@ void TMultiLayerPerceptron::LoadWeights(Option_t * filename)
    // Loads the weights from a text file conforming to the format
    // defined by DumpWeights.
    TString filen = filename;
-   char *buff = new char[100];
    Double_t w;
    if (filen == "")
       return;
+   char *buff = new char[100];
    ifstream input(filen.Data());
    // input normalzation
    input.getline(buff, 100);
@@ -1564,6 +1564,7 @@ void TMultiLayerPerceptron::LoadWeights(Option_t * filename)
    input.getline(buff, 100);
    // output normalization
    input.getline(buff, 100);
+   delete it;
    it = (TObjArrayIter *) fLastLayer.MakeIterator();
    while ((neuron = (TNeuron *) it->Next())) {
       input >> n1 >> n2;
@@ -1572,6 +1573,7 @@ void TMultiLayerPerceptron::LoadWeights(Option_t * filename)
    input.getline(buff, 100);
    // neuron weights
    input.getline(buff, 100);
+   delete it;
    it = (TObjArrayIter *) fNetwork.MakeIterator();
    while ((neuron = (TNeuron *) it->Next())) {
       input >> w;
@@ -1680,6 +1682,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
              << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[0] << ";"
              << endl;
       sourcefile << "   switch(index) {" << endl;
+      delete it;
       it = (TObjArrayIter *) fLastLayer.MakeIterator();
       idx = 0;
       while ((neuron = (TNeuron *) it->Next()))
@@ -1692,6 +1695,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       headerfile << "private:" << endl;
       for (i = 0; i < fFirstLayer.GetEntriesFast(); i++)
          headerfile << "   double input" << i << ";" << endl;
+      delete it;
       it = (TObjArrayIter *) fNetwork.MakeIterator();
       idx = 0;
       while ((neuron = (TNeuron *) it->Next())) {
@@ -1822,6 +1826,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
 
       // Network
       sourcefile << "C --- First and Hidden layers" << endl;
+      delete it;
       it = (TObjArrayIter *) fNetwork.MakeIterator();
       idx = 0;
       while ((neuron = (TNeuron *) it->Next())) {
@@ -1936,6 +1941,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
          pythonfile << "\t\tif index==" << idx++
                     << ": return self.neuron" << neuron << "();" << endl;
       pythonfile << "\t\treturn 0." << endl;
+      delete it;
       it = (TObjArrayIter *) fNetwork.MakeIterator();
       idx = 0;
       while ((neuron = (TNeuron *) it->Next())) {
