@@ -37,7 +37,7 @@ int test1(const char *mode = "") {
       dictname = "./libDataModelV1_dictrflx";
       gSystem->Load("libCintex");
       gROOT->ProcessLine("ROOT::Cintex::Cintex::Enable();");
-      prefix = "rflx_";
+      prefix = "reflex_";
    }
    else {
       gROOT->ProcessLine("#include <vector>");

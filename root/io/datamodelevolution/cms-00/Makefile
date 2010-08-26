@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *.root *_cint.cpp *_rflx.cpp *_ci
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += test1 test2 rtest1 rtest2 
+TEST_TARGETS += test1 test2 read_test1 reflex_test1 reflex_test2 
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -59,12 +59,14 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-.PHONY: test1 test2 test3 test4
+.PHONY: test1 test2 test3 test4 reflex_test1
 
 test1.root: test1.clog
-rflx_test1.root: rtest1.clog
+reflex_test1.root: reflex_test1.clog
 
 test1_cxx.$(DllSuf): DataModelV1.h
+
+read_test1_cxx.$(DllSuf): DataModelV1.h
 
 test1.clog: test1_cxx.$(DllSuf) libDataModelV1_dictcint.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l test1.cxx+ > test1.clog 2>&1
@@ -72,8 +74,17 @@ test1.clog: test1_cxx.$(DllSuf) libDataModelV1_dictcint.$(DllSuf)
 test1: test1.clog
 	$(TestDiff)
 
-rtest1.clog: test1_cxx.$(DllSuf) libDataModelV1_dictrflx.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l test1.cxx+\(\"r\"\) > rtest1.clog 2>&1
+read_test1.clog: read_test1_cxx.$(DllSuf) libDataModelV1_dictcint.$(DllSuf) test1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l read_test1.cxx+ > read_test1.clog 2>&1
+
+test1.comp.log: read_test1.clog
+	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 0) > test1.comp.log
+
+read_test1: test1.comp.log
+	$(TestDiff)
+
+reflex_test1.clog: test1_cxx.$(DllSuf) libDataModelV1_dictrflx.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test1.cxx+\(\"r\"\) > reflex_test1.clog 2>&1
 
 test2_cxx.$(DllSuf): DataModelV2.h
 
@@ -86,11 +97,11 @@ test2.comp.log: test2.clog
 test2: test2.comp.log
 	$(TestDiff)
 
-rtest2.clog: test2_cxx.$(DllSuf) libDataModelV2_dictrflx.$(DllSuf) rtest1
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l test2.cxx+\(\"r\"\) > rtest2.clog 2>&1
+reflex_test2.clog: test2_cxx.$(DllSuf) libDataModelV2_dictrflx.$(DllSuf) reflex_test1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test2.cxx+\(\"r\"\) > reflex_test2.clog 2>&1
 
-rtest2.comp.log: rtest2.clog
-	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 1 -d rflx_ ) > rtest2.comp.log
+reflex_test2.comp.log: reflex_test2.clog
+	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 1 -d reflex_ ) > reflex_test2.comp.log
 
 test3.clog: test3_cxx.$(DllSuf) test2  libDataModelV3_dictcint.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l test3.cxx+ > test3.clog 2>&1
@@ -101,34 +112,34 @@ test3.comp.log: test3.clog
 test3: test3.comp.log
 	$(TestDiff)
 
-rtest3.clog: test3_cxx.$(DllSuf) rtest2 libDataModelV3_dictrflx.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l test3.cxx+\(\"r\"\) > rtest3.clog 2>&1
+reflex_test3.clog: test3_cxx.$(DllSuf) reflex_test2 libDataModelV3_dictrflx.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test3.cxx+\(\"r\"\) > reflex_test3.clog 2>&1
 
-rtest3.comp.log: rtest3.clog
-	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 2 -d rflx_ ) > rtest3.comp.log
+reflex_test3.comp.log: reflex_test3.clog
+	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 2 -d reflex_ ) > reflex_test3.comp.log
 
 ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
 
-rtest1: rtest1.clog
+reflex_test1: reflex_test1.clog
 	$(TestDiff)
 
-rtest2: rtest2.comp.log
+reflex_test2: reflex_test2.comp.log
 	$(TestDiff)
 
-rtest3: rtest3.clog
+reflex_test3: reflex_test3.clog
 	$(TestDiff)
 
 else
 
-rtest1:
+reflex_test1:
 ifeq ($(HAVEGCCXML),"nocintex")
 	$(CMDECHO) echo "Your ROOT build does not include cintex: skipping test $@"
 else
 	$(CMDECHO) echo "GCCXML not in \$$PATH: skipping test $@"
 endif
 
-rtest2: rtest1
+reflex_test2: reflex_test1
 
-rtest3: rtest2
+reflex_test3: reflex_test2
 
 endif

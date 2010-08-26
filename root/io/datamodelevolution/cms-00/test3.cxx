@@ -40,7 +40,7 @@ int test3(const char *mode = "")
    {
       dictname = "./libDataModelV2_dictrflx";
       gROOT->ProcessLine("ROOT :: Cintex :: Cintex :: Enable();");
-      out.fPrefix = "rflx_";
+      out.fPrefix = "reflex_";
    }
    else {
       gROOT->ProcessLine("#include <vector>");

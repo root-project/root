@@ -25,20 +25,20 @@ void do_del( A* obj )
    delete obj;
 }
 
-int test2(const char *mode = "")
+int read_test1(const char *mode = "")
 {
    using namespace std;
 
-   Dumper out("", "cms-00", "rv1");
+   Dumper out("", "cms-00", "rv0");
 
    //---------------------------------------------------------------------------
    // Load the dictionary
    //---------------------------------------------------------------------------
-   const char* dictname = "./libDataModelV2_dictcint";
+   const char* dictname = "./libDataModelV1_dictcint";
 
    if( mode && mode[0] == 'r' )
    {
-      dictname = "./libDataModelV2_dictrflx";
+      dictname = "./libDataModelV1_dictrflx";
       gSystem->Load("libCintex");
       gROOT->ProcessLine("ROOT :: Cintex :: Cintex :: Enable();");
       out.fPrefix = "reflex_";
@@ -57,27 +57,27 @@ int test2(const char *mode = "")
    //---------------------------------------------------------------------------
    // Open the control files
    //---------------------------------------------------------------------------
-   ofstream o03   ( TString::Format("../logs/cms-00/%stest03_rv1.log",out.fPrefix.Data()) );
-   ofstream o03ns ( TString::Format("../logs/cms-00/%stest03_rv1NS.log",out.fPrefix.Data()) );
-   ofstream o04   ( TString::Format("../logs/cms-00/%stest04_rv1.log",out.fPrefix.Data()) );
-   ofstream o04ns ( TString::Format("../logs/cms-00/%stest04_rv1NS.log",out.fPrefix.Data()) );
-   ofstream o05   ( TString::Format("../logs/cms-00/%stest05_rv1.log",out.fPrefix.Data()) );
-   ofstream o06   ( TString::Format("../logs/cms-00/%stest06_rv1.log",out.fPrefix.Data()) );
-   ofstream o06ns ( TString::Format("../logs/cms-00/%stest06_rv1S.log",out.fPrefix.Data()) );
-   ofstream o07   ( TString::Format("../logs/cms-00/%stest07_rv1S.log",out.fPrefix.Data()) );
-   ofstream o07ns ( TString::Format("../logs/cms-00/%stest07_rv1NS.log",out.fPrefix.Data()) );
-   ofstream o08   ( TString::Format("../logs/cms-00/%stest08_rv1S.log",out.fPrefix.Data()) );
-   ofstream o08ns ( TString::Format("../logs/cms-00/%stest08_rv1NS.log",out.fPrefix.Data()) );
-   ofstream o09   ( TString::Format("../logs/cms-00/%stest09_rv1S.log",out.fPrefix.Data()) );
-   ofstream o09ns ( TString::Format("../logs/cms-00/%stest09_rv1NS.log",out.fPrefix.Data()) );
-   ofstream o10   ( TString::Format("../logs/cms-00/%stest10_rv1S.log",out.fPrefix.Data()) );
-   ofstream o10ns ( TString::Format("../logs/cms-00/%stest10_rv1NS.log",out.fPrefix.Data()) );
-   ofstream o11   ( TString::Format("../logs/cms-00/%stest11_rv1S.log",out.fPrefix.Data()) );
-   ofstream o11ns ( TString::Format("../logs/cms-00/%stest11_rv1NS.log",out.fPrefix.Data()) );
-   ofstream o12   ( TString::Format("../logs/cms-00/%stest12_rv1S.log",out.fPrefix.Data()) );
-   ofstream o12ns ( TString::Format("../logs/cms-00/%stest12_rv1NS.log",out.fPrefix.Data()) );
-   ofstream o13   ( TString::Format("../logs/cms-00/%stest13_rv1S.log",out.fPrefix.Data()) );
-   ofstream o13ns ( TString::Format("../logs/cms-00/%stest13_rv1NS.log",out.fPrefix.Data()) );
+   ofstream o03   ( TString::Format("../logs/cms-00/%stest03_rv0.log",out.fPrefix.Data()) );
+   ofstream o03ns ( TString::Format("../logs/cms-00/%stest03_rv0NS.log",out.fPrefix.Data()) );
+   ofstream o04   ( TString::Format("../logs/cms-00/%stest04_rv0.log",out.fPrefix.Data()) );
+   ofstream o04ns ( TString::Format("../logs/cms-00/%stest04_rv0NS.log",out.fPrefix.Data()) );
+   ofstream o05   ( TString::Format("../logs/cms-00/%stest05_rv0.log",out.fPrefix.Data()) );
+   ofstream o06   ( TString::Format("../logs/cms-00/%stest06_rv0.log",out.fPrefix.Data()) );
+   ofstream o06ns ( TString::Format("../logs/cms-00/%stest06_rv0S.log",out.fPrefix.Data()) );
+   ofstream o07   ( TString::Format("../logs/cms-00/%stest07_rv0S.log",out.fPrefix.Data()) );
+   ofstream o07ns ( TString::Format("../logs/cms-00/%stest07_rv0NS.log",out.fPrefix.Data()) );
+   ofstream o08   ( TString::Format("../logs/cms-00/%stest08_rv0S.log",out.fPrefix.Data()) );
+   ofstream o08ns ( TString::Format("../logs/cms-00/%stest08_rv0NS.log",out.fPrefix.Data()) );
+   ofstream o09   ( TString::Format("../logs/cms-00/%stest09_rv0S.log",out.fPrefix.Data()) );
+   ofstream o09ns ( TString::Format("../logs/cms-00/%stest09_rv0NS.log",out.fPrefix.Data()) );
+   ofstream o10   ( TString::Format("../logs/cms-00/%stest10_rv0S.log",out.fPrefix.Data()) );
+   ofstream o10ns ( TString::Format("../logs/cms-00/%stest10_rv0NS.log",out.fPrefix.Data()) );
+   ofstream o11   ( TString::Format("../logs/cms-00/%stest11_rv0S.log",out.fPrefix.Data()) );
+   ofstream o11ns ( TString::Format("../logs/cms-00/%stest11_rv0NS.log",out.fPrefix.Data()) );
+   ofstream o12   ( TString::Format("../logs/cms-00/%stest12_rv0S.log",out.fPrefix.Data()) );
+   ofstream o12ns ( TString::Format("../logs/cms-00/%stest12_rv0NS.log",out.fPrefix.Data()) );
+   ofstream o13   ( TString::Format("../logs/cms-00/%stest13_rv0S.log",out.fPrefix.Data()) );
+   ofstream o13ns ( TString::Format("../logs/cms-00/%stest13_rv0NS.log",out.fPrefix.Data()) );
 
    //---------------------------------------------------------------------------
    // Generate the objects
