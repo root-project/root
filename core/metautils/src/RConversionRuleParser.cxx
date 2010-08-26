@@ -455,7 +455,7 @@ namespace ROOT
             // List the data members with non-empty type declarations
             //-----------------------------------------------------------------
             for( it = source.begin(); it != source.end(); ++it ) {
-               fprintf(stderr, "Seeing %s %s %s\n", it->first.fType.c_str(), it->second.c_str(), it->first.fDimensions.c_str());
+               // fprintf(stderr, "Seeing %s %s %s\n", it->first.fType.c_str(), it->second.c_str(), it->first.fDimensions.c_str());
                if( it->first.fType.size() ) {
                   if ( it->first.fDimensions.size() ) {
                      output << "         typedef " << it->first.fType;
