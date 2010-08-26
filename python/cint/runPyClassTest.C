@@ -1,8 +1,10 @@
+#include "TError.h"
+
 void runPyClassTest() {
 // The higher warning ignore level is to suppress warnings about
 // classes already being in the class table (on Mac).
    int eil = gErrorIgnoreLevel;
-   gErrorIgnoreLevel = 3000;
+   gErrorIgnoreLevel = kError;
    TPython::LoadMacro( "MyPyClass.py" );
 
    MyPyClass m;

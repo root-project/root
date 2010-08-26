@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_overloadtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 04/15/05
-# Last: 05/03/10
+# Last: 08/26/10
 
 """Overload unit tests for PyROOT package."""
 
@@ -44,7 +44,7 @@ class Overloads1ClassArrayTestCase( unittest.TestCase ):
 
       import ROOT
       oldval = ROOT.gErrorIgnoreLevel
-      ROOT.gErrorIgnoreLevel = 3000
+      ROOT.gErrorIgnoreLevel = ROOT.kError
       self.assertEqual( MyOverloads().call( AA() ), "AA" )
       self.assertEqual( MyOverloads().call( BB() ), "DD" ) # <- BB has an unknown + void*
       self.assertEqual( MyOverloads().call( CC() ), "CC" )
@@ -56,7 +56,7 @@ class Overloads1ClassArrayTestCase( unittest.TestCase ):
 
       import ROOT
       oldval = ROOT.gErrorIgnoreLevel
-      ROOT.gErrorIgnoreLevel = 3000
+      ROOT.gErrorIgnoreLevel = ROOT.kError
       self.assertEqual( MyOverloads2().call( BB() ), "BBptr" )
       self.assertEqual( MyOverloads2().call( DD(), 1 ), "DDptr" )
       ROOT.gErrorIgnoreLevel = oldval
