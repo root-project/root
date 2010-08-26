@@ -2605,7 +2605,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
             if(element->GetArrayLength() <= 1) {
                fprintf(sfp,"   modrhs.%s = 0;\n",ename);
             } else {
-               fprintf(sfp,"   modrhs.memset(%s,0,%d);\n",ename,element->GetSize());
+               fprintf(sfp,"   memset(modrhs.%s,0,%d);\n",ename,element->GetSize());
             }
          } else {
             const char *ename = element->GetName();
