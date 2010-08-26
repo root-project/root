@@ -2468,7 +2468,7 @@ void TMultiDimFit::MakeCandidates()
          }
 
          // Next power in variable i
-         iv[i]++;
+         if (i < fNVariables) iv[i]++;
 
          for (j = 0; j < i; j++)
             iv[j] = 1;
