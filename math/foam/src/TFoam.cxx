@@ -179,7 +179,7 @@ TFoam::TFoam()
    fMCvect   = 0;
    fRvec     = 0;
    fPseRan   = 0;  // generator of pseudorandom numbers
-
+   fMethodCall=0;  // ROOT's pointer to global distribution function
 }
 //_________________________________________________________________________________________________
 TFoam::TFoam(const Char_t* Name)
@@ -223,6 +223,9 @@ TFoam::TFoam(const Char_t* Name)
    fPseRan   = 0;                // Initialize private copy of random number generator
    fMCMonit  = 0;                // MC efficiency monitoring
    fRho = 0;                     // pointer to abstract class providing function to integrate
+   fMCvect   = 0;
+   fRvec     = 0;
+   fPseRan   = 0;                // generator of pseudorandom numbers
    fMethodCall=0;                // ROOT's pointer to global distribution function
 }
 
@@ -238,19 +241,19 @@ TFoam::~TFoam()
       delete [] fCells;
    }
    if (fCellsAct) delete fCellsAct ; // WVE FIX LEAK
-   delete [] fRvec;    //double[]
-   delete [] fAlpha;   //double[]
-   delete [] fMCvect;  //double[]
-   delete [] fPrimAcu; //double[]
-   delete [] fMaskDiv; //int[]
-   delete [] fInhiDiv; //int[]
+   if (fRvec)    delete [] fRvec;    //double[]
+   if (fAlpha)   delete [] fAlpha;   //double[]
+   if (fMCvect)  delete [] fMCvect;  //double[]
+   if (fPrimAcu) delete [] fPrimAcu; //double[]
+   if (fMaskDiv) delete [] fMaskDiv; //int[]
+   if (fInhiDiv) delete [] fInhiDiv; //int[]
  
    if( fXdivPRD!= 0) {
       for(i=0; i<fDim; i++) delete fXdivPRD[i]; // TFoamVect*[]
       delete [] fXdivPRD;
    }
-   delete fMCMonit;
-   delete fHistWt;
+   if (fMCMonit) delete fMCMonit;
+   if (fHistWt)  delete fHistWt;
 
    // delete histogram arrays
    if (fHistEdg) { 
