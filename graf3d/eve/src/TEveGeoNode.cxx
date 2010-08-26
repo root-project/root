@@ -528,15 +528,29 @@ void TEveGeoTopNode::Paint(Option_t* option)
       TVirtualPad *pad = gPad;
       gPad = 0;
       TGeoVolume* top_volume = fManager->GetTopVolume();
-      fManager->SetVisOption(fVisOption);
       if (fVisLevel > 0)
          fManager->SetVisLevel(fVisLevel);
       else
          fManager->SetMaxVisNodes(fMaxVisNodes);
-      fManager->SetTopVolume(fNode->GetVolume());
-      gPad = pad;
       TVirtualGeoPainter* vgp = fManager->GetGeomPainter();
+      fManager->SetTopVolume(fNode->GetVolume());
+      switch (fVisOption)
+      {
+         case 0:
+            fNode->GetVolume()->SetVisContainers(kTRUE);
+            fManager->SetTopVisible(kTRUE);
+            break;
+         case 1:
+            fNode->GetVolume()->SetVisLeaves(kTRUE);
+            fManager->SetTopVisible(kFALSE);
+            break;
+         case 2:
+            fNode->GetVolume()->SetVisOnly(kTRUE);
+            break;
+      }
+      gPad = pad;
       if(vgp != 0) {
+         vgp->SetVisOption(fVisOption);
          TGeoHMatrix geomat;
          if (HasMainTrans()) RefMainTrans().SetGeoHMatrix(geomat);
          vgp->PaintNode(fNode, option, &geomat);
