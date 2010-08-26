@@ -6243,7 +6243,8 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                   if (name == "master") {
                      PDB(kSubmerger, 2) Info("HandleSubmerger",
                                              "kSendOutput: worker was asked for sending output to master");
-                     SendResults(fSocket, fPlayer->GetOutputList());
+                     if (SendResults(fSocket, fPlayer->GetOutputList()) != 0)
+                        Warning("HandleSubmerger", "problems sending output list");
                      // Signal the master that we are idle
                      fSocket->Send(kPROOF_SETIDLE);
                      SetIdle(kTRUE);
