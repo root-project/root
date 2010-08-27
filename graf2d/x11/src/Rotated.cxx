@@ -1425,7 +1425,10 @@ XPoint *XRotTextExtents(Display *, XFontStruct *font, float angle, int x, int y,
    if(!xp_in) return 0;
 
    xp_out=(XPoint *)malloc((unsigned)(5*sizeof(XPoint)));
-   if(!xp_out) return 0;
+   if(!xp_out) {
+      free(xp_in);
+      return 0;
+   }
 
    /* bounding box when horizontal, relative to bitmap centre */
    xp_in[0].x=(short int)(-(float)cols_in*gRotStyle.fMagnify/2-gRotStyle.fBbxPadl);
