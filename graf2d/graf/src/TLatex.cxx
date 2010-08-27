@@ -327,13 +327,14 @@ TLatex::TLatex(Double_t x, Double_t y, const char *text)
 
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
-   fLimitFactorSize = 3;
    fError       = 0;
    fShow        = kFALSE;
-   fPos=fTabMax = 0;
+   fPos         = 0;
+   fTabMax      = 0;
    fOriginSize  = 0.04;
    fTabSize     = 0;
    fItalic      = kFALSE;
+   fLimitFactorSize = 3;
    SetLineWidth(2);
 }
 
@@ -350,6 +351,14 @@ TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
 {
    // Copy constructor.
 
+   fFactorSize  = 1.5;
+   fFactorPos   = 0.6;
+   fShow        = kFALSE;
+   fPos         = 0;
+   fTabMax      = 0;
+   fOriginSize  = 0.04;
+   fItalic      = kFALSE;
+   fLimitFactorSize = 3;
    ((TLatex&)text).Copy(*this);
 }
 
