@@ -42,6 +42,15 @@ TGraph2DPainter::TGraph2DPainter()
 {
    // TGraph2DPainter default constructor
 
+   fX        = 0;
+   fY        = 0;
+   fZ        = 0;
+   fXN       = 0;
+   fYN       = 0;
+   fPTried   = 0;
+   fNTried   = 0;
+   fMTried   = 0;
+   fGraph2D  = 0;
    fDelaunay = 0;
 }
 
