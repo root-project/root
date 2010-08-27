@@ -36,7 +36,6 @@
 # include "FTGLBitmapFont.h"
 #endif
 
-#include <memory>
 
 //______________________________________________________________________________
 // TGLFont
@@ -392,36 +391,39 @@ void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mod
    FontMap_i it = fFontMap.find(TGLFont(size, fileID, mode));
    if (it == fFontMap.end())
    {
-      TString ttpath;
+      TString ttpath, file;
 # ifdef TTFFONTDIR
       ttpath = gEnv->GetValue("Root.TTGLFontPath", TTFFONTDIR );
 # else
       ttpath = gEnv->GetValue("Root.TTGLFontPath", "$(ROOTSYS)/fonts");
 # endif
-      TObjString         *name ((TObjString*) fgFontFileArray[fileID]);
-      std::auto_ptr<char> file (gSystem->Which(ttpath.Data(), Form("%s.ttf", name->GetString().Data())));
+      {
+         char *fp = gSystem->Which(ttpath, ((TObjString*)fgFontFileArray[fileID])->String() + ".ttf");
+         file = fp;
+         delete [] fp;
+      }
 
       FTFont* ftfont = 0;
       switch (mode)
       {
          case TGLFont::kBitmap:
-            ftfont = new FTGLBitmapFont(file.get());
+            ftfont = new FTGLBitmapFont(file);
             break;
          case TGLFont::kPixmap:
-            ftfont = new FTGLPixmapFont(file.get());
+            ftfont = new FTGLPixmapFont(file);
             break;
          case TGLFont::kOutline:
-            ftfont = new FTGLOutlineFont(file.get());
+            ftfont = new FTGLOutlineFont(file);
             break;
          case TGLFont::kPolygon:
-            ftfont = new FTGLPolygonFont(file.get());
+            ftfont = new FTGLPolygonFont(file);
             break;
          case TGLFont::kExtrude:
-            ftfont = new FTGLExtrdFont(file.get());
+            ftfont = new FTGLExtrdFont(file);
             ftfont->Depth(0.2*size);
             break;
          case TGLFont::kTexture:
-            ftfont = new FTGLTextureFont(file.get());
+            ftfont = new FTGLTextureFont(file);
             break;
          default:
             Error("TGLFontManager::GetFont", "invalid FTGL type");
