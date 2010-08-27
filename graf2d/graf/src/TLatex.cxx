@@ -587,12 +587,12 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             break;
       }
       if (length>i+1) {
-         Char_t buf[2];
+         Char_t buf[3];
          strncpy(buf,&text[i],2);
          if (strncmp(buf,"^{",2)==0) {
             if (opPower==-1 && nBrackets==0 && nCroch==0) opPower=i;
             if (i>3) {
-               Char_t buf1[4];
+               Char_t buf1[5];
                strncpy(buf1,&text[i-4],4);
                if (strncmp(buf1,"#int",4)==0) {
                   abovePlace = 1;
@@ -607,7 +607,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          if (strncmp(buf,"_{",2)==0) {
             if (opUnder==-1 && nBrackets==0 && nCroch==0) opUnder=i;
             if (i>3) {
-               Char_t buf2[4];
+               Char_t buf2[5];
                strncpy(buf2,&text[i-4],4);
                if (strncmp(buf2,"#int",4)==0) {
                   abovePlace = 1;
@@ -626,7 +626,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       if (text[i]=='\\' || (text[i]=='#' && !opFound && nBrackets==0 && nCroch==0)) {
 
          if (length>i+10 ) {
-            Char_t buf[10];
+            Char_t buf[11];
             strncpy(buf,&text[i+1],10);
             if (strncmp(buf,"splitline{",10)==0) {
                opSplitLine=i; opFound = kTRUE;
@@ -635,7 +635,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             }
          }
          if (length>i+8 ) {
-            Char_t buf[8];
+            Char_t buf[9];
             strncpy(buf,&text[i+1],8);
             if (!opParallel && strncmp(buf,"parallel",8)==0) {
                opParallel=1; opFound = kTRUE;
@@ -644,7 +644,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             }
          }
          if (length>i+6) {
-            Char_t buf[6];
+            Char_t buf[7];
             strncpy(buf,&text[i+1],6);
             if (strncmp(buf,"lower[",6)==0 || strncmp(buf,"lower{",6)==0) {
                opLower=i; opFound = kTRUE;
@@ -663,7 +663,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             }
          }
          if (length>i+5 ) {
-            Char_t buf[5];
+            Char_t buf[6];
             strncpy(buf,&text[i+1],5);
             if (strncmp(buf,"frac{",5)==0) {
                opFrac=i; opFound = kTRUE;
@@ -687,7 +687,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             }
          }
          if (length>i+4 ) {
-            Char_t buf[4];
+            Char_t buf[5];
             strncpy(buf,&text[i+1],4);
             if (!opOdot && strncmp(buf,"odot",4)==0) {
                opOdot=1; opFound = kTRUE;
