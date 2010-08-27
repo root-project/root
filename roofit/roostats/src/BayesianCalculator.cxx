@@ -33,6 +33,7 @@
 #include "Math/IntegratorMultiDim.h"
 #include "Math/Integrator.h"
 #include "Math/RootFinder.h"
+#include "Math/BrentMinimizer1D.h"
 #include "RooFunctor.h"
 #include "RooFunctor1DBinding.h"
 #include "RooTFnBinding.h"
@@ -417,8 +418,26 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
 
    delete constrainedParams;
 
+   // need do find minimum of log-likelihood in the range to shift function 
+   // to avoid numerical errors when we compute the likelihood (overflows in the exponent)
+   // N.B.: this works for only 1 parameter of interest otherwise Minuit should be used for finding the minimum
+   RooFunctor * nllFunc = fLogLike->functor(fPOI);
+   ROOT::Math::Functor1D wnllFunc(*nllFunc);
+   RooRealVar* poi = dynamic_cast<RooRealVar*>( fPOI.first() ); 
+   assert(poi);
+
+   ROOT::Math::BrentMinimizer1D minim; 
+   minim.SetFunction(wnllFunc,poi->getMin(),poi->getMax() );
+   bool ret  = minim.Minimize(100,1.E-3,1.E-3);
+   double offset = 0; 
+   if (ret) offset = minim.FValMinimum();
+
+   delete nllFunc;
+
    TString likeName = TString("likelihood_") + TString(fProductPdf->GetName());   
-   fLikelihood = new RooFormulaVar(likeName,"exp(-@0)",RooArgList(*fLogLike));
+   TString formula; 
+   formula.Form("exp(-@0+%f)",offset);
+   fLikelihood = new RooFormulaVar(likeName,formula,RooArgList(*fLogLike));
 
    // if no nuisance p[arameter we can just return the likelihood funtion
    if (fNuisanceParameters.getSize() == 0) return fLikelihood; 
@@ -431,8 +450,6 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    // use integration method if there are nuisance parameters 
    else  { 
 
-      RooRealVar* poi = dynamic_cast<RooRealVar*>( fPOI.first() ); 
-      assert(poi);
 
       RooArgList nuisParams(fNuisanceParameters); 
       fPosteriorFunction = new PosteriorFunction(*fLogLike, *poi, nuisParams, fIntegrationType ); 
