@@ -81,13 +81,17 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(): TObject(), TAttLine(1,1,1), TAttFi
    // Lego default constructor
 
    Int_t i;
-   fIfrast       = 0;
-   fMesh         = 1;
-   fRaster       = 0;
-   fColorTop     = 1;
-   fColorBottom  = 1;
-   fNlevel       = 0;
-   fSystem       = kCARTESIAN;
+   fIfrast          = 0;
+   fMesh            = 1;
+   fRaster          = 0;
+   fColorTop        = 1;
+   fColorBottom     = 1;
+   fNlevel          = 0;
+   fSystem          = kCARTESIAN;
+   fDrawFace        = 0;
+   fLegoFunction    = 0;
+   fSurfaceFunction = 0;
+
 
    TList *stack = 0;
    if (gCurrentHist) stack = gCurrentHist->GetPainter()->GetStack();
