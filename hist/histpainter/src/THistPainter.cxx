@@ -6634,7 +6634,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    // Pavetext with statistics
    Bool_t done = kFALSE;
    if (!dostat && !fit) {
-      if (stats) { delete stats; fFunctions->Remove(stats); }
+      if (stats) { fFunctions->Remove(stats); delete stats;}
       return;
    }
    Double_t  statw  = gStyle->GetStatW();
