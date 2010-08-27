@@ -153,12 +153,13 @@ namespace RooStats {
       mutable TF1 * fApproxPosterior;    // TF1 representing the scanned posterior function
       mutable Double_t  fLower;    // computer lower interval bound
       mutable Double_t  fUpper;    // upper interval bound
+      mutable Double_t  fNLLMin;   // minimum value of Nll 
       double fSize;  // size used for getting the interval
       double fLeftSideFraction;    // fraction of probability content on left side of interval
       double fBrfPrecision;     // root finder precision
       int fNScanBins;            // number of bins to scan, if = -1 no scan is done (default)
       mutable Bool_t    fValidInterval; 
-
+     
 
 
       TString fIntegrationType; 

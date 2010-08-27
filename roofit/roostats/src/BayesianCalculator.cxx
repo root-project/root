@@ -88,10 +88,10 @@ ROOT::Math::IntegrationMultiDim::Type GetMultiDimIntegrationType(const char * ty
 
 
 struct  LikelihoodFunction { 
-   LikelihoodFunction(RooFunctor & f) : fFunc(f) {}
+   LikelihoodFunction(RooFunctor & f, double offset = 0) : fFunc(f), fOffset(offset) {}
 
    double operator() (const double *x ) const { 
-      double nll = fFunc(x);
+      double nll = fFunc(x) + fOffset;
       double likelihood =  std::exp(-nll);
 //       ooccoutD((TObject*)0,NumIntegration)  
 //          << "x[0] = " << x[0] << " x[1] = " << x[1] << "  nll = " << nll << " likelihood = " << likelihood << std::endl;
@@ -104,7 +104,8 @@ struct  LikelihoodFunction {
       return (*this)(&tmp); 
    }
 
-   RooFunctor & fFunc; 
+   RooFunctor & fFunc;     // functor representing the nll function 
+   double fOffset;         //  offset used to bring the nll in a reasanble range for computing the exponent whch can be computed 
 };
 
 class PosteriorCdfFunction : public ROOT::Math::IGenFunction { 
@@ -193,7 +194,7 @@ private:
    double fNorm; 
    double fOffset;
    double fMaxX;  // maxumum value of x 
-   bool fHasNorm; // flag to control irst call to the function 
+   bool fHasNorm; // flag to control first call to the function 
    bool fUseOldValues;  // use old cdf values
    mutable std::map<double,double> fNormCdfValues; 
 };
@@ -203,9 +204,9 @@ class PosteriorFunction : public ROOT::Math::IGenFunction {
 public: 
 
 
-   PosteriorFunction(RooAbsReal & nll, RooRealVar & poi, RooArgList & nuisParams, const char * integType = 0, double norm = 1.0) :
+   PosteriorFunction(RooAbsReal & nll, RooRealVar & poi, RooArgList & nuisParams, const char * integType = 0, double norm = 1.0, double nllOffset = 0) :
       fFunctor(nll, nuisParams, RooArgList() ),
-      fLikelihood(fFunctor), 
+      fLikelihood(fFunctor, nllOffset), 
       fPoi(&poi),
       fXmin(nuisParams.getSize() ),
       fXmax(nuisParams.getSize() ), 
@@ -221,7 +222,7 @@ public:
          fIntegratorOneDim = std::auto_ptr<ROOT::Math::Integrator>(new ROOT::Math::Integrator() );
          fIntegratorOneDim->SetFunction(fLikelihood);
       }
-      else { // multiDim case          
+      else if (fXmin.size() > 1) { // multiDim case          
          fIntegratorMultiDim = 
             std::auto_ptr<ROOT::Math::IntegratorMultiDim>(new ROOT::Math::IntegratorMultiDim(GetMultiDimIntegrationType(integType) ) );
          fIntegratorMultiDim->SetFunction(fLikelihood, fXmin.size());
@@ -245,9 +246,12 @@ private:
          f = fIntegratorOneDim->Integral(fXmin[0],fXmax[0]); 
          error = fIntegratorOneDim->Error();
       }
-      else {
+      else if (fXmin.size() > 1) { // multi-dim case
          f = fIntegratorMultiDim->Integral(&fXmin[0],&fXmax[0]); 
          error = fIntegratorMultiDim->Error();
+      } else { 
+         // no integration to be done
+         f = fLikelihood(&x);
       }
 
       if (f != 0 && error/f > 0.2 ) 
@@ -278,7 +282,8 @@ BayesianCalculator::BayesianCalculator() :
   fPriorPOI(0),
   fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0), 
   fPosteriorFunction(0), fApproxPosterior(0),
-  fLower(0), fUpper(0), 
+  fLower(0), fUpper(0),
+  fNLLMin(0),
   fSize(0.05), fLeftSideFraction(0.5), 
   fBrfPrecision(0.00005), 
   fNScanBins(-1),
@@ -301,6 +306,7 @@ BayesianCalculator::BayesianCalculator( /* const char* name,  const char* title,
   fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0),
   fPosteriorFunction(0), fApproxPosterior(0),
   fLower(0), fUpper(0), 
+  fNLLMin(0),
   fSize(0.05), fLeftSideFraction(0.5), 
   fBrfPrecision(0.00005), 
   fNScanBins(-1),
@@ -318,6 +324,7 @@ BayesianCalculator::BayesianCalculator( RooAbsData& data,
    fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0),
    fPosteriorFunction(0), fApproxPosterior(0),
    fLower(0), fUpper(0), 
+   fNLLMin(0),
    fSize(0.05), fLeftSideFraction(0.5), 
    fBrfPrecision(0.00005), 
    fNScanBins(-1),
@@ -351,6 +358,7 @@ void BayesianCalculator::ClearAll() const {
    fIntegratedLikelihood = 0; 
    fLower = 0;
    fUpper = 0;
+   fNLLMin = 0; 
    fValidInterval = false;
 }
 
@@ -429,30 +437,31 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    ROOT::Math::BrentMinimizer1D minim; 
    minim.SetFunction(wnllFunc,poi->getMin(),poi->getMax() );
    bool ret  = minim.Minimize(100,1.E-3,1.E-3);
-   double offset = 0; 
-   if (ret) offset = minim.FValMinimum();
+   fNLLMin = 0; 
+   if (ret) fNLLMin = minim.FValMinimum();
 
    delete nllFunc;
 
-   TString likeName = TString("likelihood_") + TString(fProductPdf->GetName());   
-   TString formula; 
-   formula.Form("exp(-@0+%f)",offset);
-   fLikelihood = new RooFormulaVar(likeName,formula,RooArgList(*fLogLike));
+   if ( fNuisanceParameters.getSize() == 0 ||  fIntegrationType.Contains("ROOFIT") ) { 
+      // cas of no nuiance parameters 
+      TString likeName = TString("likelihood_") + TString(fProductPdf->GetName());   
+      TString formula; 
+      formula.Form("exp(-@0+%f)",fNLLMin);
+      fLikelihood = new RooFormulaVar(likeName,formula,RooArgList(*fLogLike));
+      
+      // if no nuisance parameter we can just return the likelihood funtion
+      if (fNuisanceParameters.getSize() == 0) return fLikelihood; 
 
-   // if no nuisance p[arameter we can just return the likelihood funtion
-   if (fNuisanceParameters.getSize() == 0) return fLikelihood; 
-
-   // case of use RooFit 
-   if (fIntegrationType.Contains("ROOFIT") ) { 
+      // case of using RooFit for the integration
       fIntegratedLikelihood = fLikelihood->createIntegral(fNuisanceParameters);
    }
 
-   // use integration method if there are nuisance parameters 
    else  { 
 
+      // use ROOT integration method if there are nuisance parameters 
 
       RooArgList nuisParams(fNuisanceParameters); 
-      fPosteriorFunction = new PosteriorFunction(*fLogLike, *poi, nuisParams, fIntegrationType ); 
+      fPosteriorFunction = new PosteriorFunction(*fLogLike, *poi, nuisParams, fIntegrationType, 1.,fNLLMin ); 
       
       TString name = "posteriorfunction_from_"; 
       name += fLogLike->GetName();  
@@ -650,12 +659,13 @@ void BayesianCalculator::ComputeIntervalFromCdf(double lowerCutOff, double upper
    bindParams.add(fPOI);
    bindParams.add(fNuisanceParameters);
    
+   // this code could be put inside the PosteriorCdfFunction
          
    RooFunctor functor_nll(*fLogLike, bindParams, RooArgList());
          
    
-   // compute the intergal of the exp(-nll) function
-   LikelihoodFunction fll(functor_nll);
+   // compute the integral of the exp(-nll) function
+   LikelihoodFunction fll(functor_nll, fNLLMin);
       
    ROOT::Math::IntegratorMultiDim ig(GetMultiDimIntegrationType(fIntegrationType)); 
    ig.SetFunction(fll,bindParams.getSize()); 
