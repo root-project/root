@@ -2589,6 +2589,10 @@ THistPainter::THistPainter()
    fGraph2DPainter = 0;
    fShowProjection = 0;
    fShowOption = "";
+   for (int i=0; i<kMaxCuts; i++) {
+      fCuts[i] = 0;
+      fCutsOpt[i] = 0;
+   }
 
    gStringEntries   = gEnv->GetValue("Hist.Stats.Entries",   "Entries");
    gStringMean      = gEnv->GetValue("Hist.Stats.Mean",      "Mean");
