@@ -6658,7 +6658,10 @@ Bool_t TASImage::SetJpegDpi(const char *name, UInt_t set)
       return kFALSE;
    }
 
-   if (!fread(buf, 1, 20, fp)) return kFALSE;
+   if (!fread(buf, 1, 20, fp)) {
+      fclose(fp);
+      return kFALSE;
+   }
 
    char dpi1 = (set & 0xffff) >> 8;
    char dpi2 = set & 0xff;
