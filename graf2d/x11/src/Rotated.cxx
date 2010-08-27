@@ -837,7 +837,10 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
 
    /* find width of longest section */
    str1=my_strdup(text);
-   if(str1==0) return 0;
+   if(str1==0) {
+      free(item);
+      return 0;
+   }
 
    str3=my_strtok(str1, str2);
 
@@ -890,11 +893,17 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
    /* text background will be drawn using XFillPolygon */
    item->fCornersX=
        (float *)malloc((unsigned)(4*item->fNl*sizeof(float)));
-   if(!item->fCornersX) return 0;
+   if(!item->fCornersX) {
+      free(item);
+      return 0;
+   }
 
    item->fCornersY=
        (float *)malloc((unsigned)(4*item->fNl*sizeof(float)));
-   if(!item->fCornersY) return 0;
+   if(!item->fCornersY) {
+      free(item);
+      return 0;
+   }
 
    /* draw text horizontally */
 
@@ -902,7 +911,10 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
    yp=font->ascent;
 
    str1=my_strdup(text);
-   if(str1==0) return 0;
+   if(str1==0) {
+      free(item);
+      return 0;
+   }
 
    str3=my_strtok(str1, str2);
 
@@ -948,7 +960,10 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
 
    /* create image to hold horizontal text */
    imageIn=MakeXImage(dpy, item->fColsIn, item->fRowsIn);
-   if(imageIn==0) return 0;
+   if(imageIn==0) {
+      free(item);
+      return 0;
+   }
 
    /* extract horizontal text */
    XGetSubImage(dpy, canvas, 0, 0, item->fColsIn, item->fRowsIn,
@@ -978,7 +993,10 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
 
    /* create image to hold rotated text */
    item->fXimage=MakeXImage(dpy, item->fColsOut, item->fRowsOut);
-   if(item->fXimage==0) return 0;
+   if(item->fXimage==0) {
+      free(item);
+      return 0;
+   }
 
    byte_w_in=(item->fColsIn-1)/8+1;
    byte_w_out=(item->fColsOut-1)/8+1;
@@ -1213,43 +1231,43 @@ static XImage *XRotMagnifyImage(Display *dpy, XImage *ximage)
    float z1, z2, z3, z4;
    int byte_width_in, byte_width_out;
    float mag_inv;
-   
+
    /* size of input image */
    cols_in=ximage->width;
    rows_in=ximage->height;
-   
+
    /* size of final image */
    cols_out=int((float)cols_in*gRotStyle.fMagnify);
    rows_out=int((float)rows_in*gRotStyle.fMagnify);
-   
+
    /* this will hold final image */
    imageOut=MakeXImage(dpy, cols_out, rows_out);
    if(imageOut==0)
       return 0;
-   
+
    /* width in bytes of input, output images */
    byte_width_in=(cols_in-1)/8+1;
    byte_width_out=(cols_out-1)/8+1;
-   
+
    /* for speed */
    mag_inv=1./gRotStyle.fMagnify;
-   
+
    y=0.;
-   
+
    /* loop over magnified image */
    for(j2=0; j2<rows_out; j2++) {
       x=0;
       j=int(y);
-      
+
       for(i2=0; i2<cols_out; i2++) {
          i=int(x);
-         
+
          /* bilinear interpolation - where are we on bitmap ? */
          /* right edge */
          if(i==cols_in-1 && j!=rows_in-1) {
             t=0;
             u=y-(float)j;
-            
+
             z1=(ximage->data[j*byte_width_in+i/8] & 128>>(i%8))>0;
             z2=z1;
             z3=(ximage->data[(j+1)*byte_width_in+i/8] & 128>>(i%8))>0;
@@ -1259,7 +1277,7 @@ static XImage *XRotMagnifyImage(Display *dpy, XImage *ximage)
          else if(i!=cols_in-1 && j==rows_in-1) {
             t=x-(float)i;
             u=0;
-            
+
             z1=(ximage->data[j*byte_width_in+i/8] & 128>>(i%8))>0;
             z2=(ximage->data[j*byte_width_in+(i+1)/8] & 128>>((i+1)%8))>0;
             z3=z2;
@@ -1269,7 +1287,7 @@ static XImage *XRotMagnifyImage(Display *dpy, XImage *ximage)
          else if(i==cols_in-1 && j==rows_in-1) {
             u=0;
             t=0;
-            
+
             z1=(ximage->data[j*byte_width_in+i/8] & 128>>(i%8))>0;
             z2=z1;
             z3=z1;
@@ -1279,26 +1297,26 @@ static XImage *XRotMagnifyImage(Display *dpy, XImage *ximage)
          else {
             t=x-(float)i;
             u=y-(float)j;
-            
+
             z1=(ximage->data[j*byte_width_in+i/8] & 128>>(i%8))>0;
             z2=(ximage->data[j*byte_width_in+(i+1)/8] & 128>>((i+1)%8))>0;
             z3=(ximage->data[(j+1)*byte_width_in+(i+1)/8] &
                 128>>((i+1)%8))>0;
             z4=(ximage->data[(j+1)*byte_width_in+i/8] & 128>>(i%8))>0;
          }
-         
+
          /* if interpolated value is greater than 0.5, set bit */
          if(((1-t)*(1-u)*z1 + t*(1-u)*z2 + t*u*z3 + (1-t)*u*z4)>0.5)
             imageOut->data[j2*byte_width_out+i2/8]|=128>>i2%8;
-         
+
          x+=mag_inv;
       }
       y+=mag_inv;
    }
-   
+
    /* destroy original */
    XDestroyImage(ximage);
-   
+
    /* return big image */
    return imageOut;
 }
@@ -1347,9 +1365,9 @@ XPoint *XRotTextExtents(Display *, XFontStruct *font, float angle, int x, int y,
 
    str3=my_strtok(str1, str2);
 
-   if(str3==0) { 
+   if(str3==0) {
       XTextExtents(font, str1, strlen(str1), &dir, &asc, &desc,
-                   &overall);       
+                   &overall);
    } else {
       XTextExtents(font, str3, strlen(str3), &dir, &asc, &desc,
                    &overall);
@@ -1364,26 +1382,26 @@ XPoint *XRotTextExtents(Display *, XFontStruct *font, float angle, int x, int y,
       if(str3!=0) {
          XTextExtents(font, str3, strlen(str3), &dir, &asc, &desc,
                       &overall);
-          
+
          if(overall.rbearing>max_width)
             max_width=overall.rbearing;
       }
    }
    while(str3!=0);
-    
+
    free(str1);
-    
+
    /* overall font height */
    height=font->ascent+font->descent;
-    
+
    /* dimensions horizontal text will have */
    cols_in=max_width;
    rows_in=nl*height;
-    
+
    /* pre-calculate sin and cos */
    sin_angle=TMath::Sin(angle);
    cos_angle=TMath::Cos(angle);
-    
+
    /* y position */
    if(align==TLEFT || align==TCENTRE || align==TRIGHT)
       hot_y=(float)rows_in/2*gRotStyle.fMagnify;
@@ -1393,7 +1411,7 @@ XPoint *XRotTextExtents(Display *, XFontStruct *font, float angle, int x, int y,
       hot_y=-(float)rows_in/2*gRotStyle.fMagnify;
    else
       hot_y=-((float)rows_in/2-(float)font->descent)*gRotStyle.fMagnify;
-    
+
    /* x position */
    if(align==TLEFT || align==MLEFT || align==BLEFT || align==NONE)
       hot_x=-(float)max_width/2*gRotStyle.fMagnify;
@@ -1401,14 +1419,14 @@ XPoint *XRotTextExtents(Display *, XFontStruct *font, float angle, int x, int y,
       hot_x=0;
    else
       hot_x=(float)max_width/2*gRotStyle.fMagnify;
-    
+
    /* reserve space for XPoints */
    xp_in=(XPoint *)malloc((unsigned)(5*sizeof(XPoint)));
    if(!xp_in) return 0;
-    
+
    xp_out=(XPoint *)malloc((unsigned)(5*sizeof(XPoint)));
    if(!xp_out) return 0;
-    
+
    /* bounding box when horizontal, relative to bitmap centre */
    xp_in[0].x=(short int)(-(float)cols_in*gRotStyle.fMagnify/2-gRotStyle.fBbxPadl);
    xp_in[0].y=(short int)( (float)rows_in*gRotStyle.fMagnify/2+gRotStyle.fBbxPadl);
@@ -1420,7 +1438,7 @@ XPoint *XRotTextExtents(Display *, XFontStruct *font, float angle, int x, int y,
    xp_in[3].y=(short int)(-(float)rows_in*gRotStyle.fMagnify/2-gRotStyle.fBbxPadl);
    xp_in[4].x=xp_in[0].x;
    xp_in[4].y=xp_in[0].y;
-    
+
    /* rotate and translate bounding box */
    for(i=0; i<5; i++) {
       xp_out[i].x=(short int)((float)x + ( ((float)xp_in[i].x-hot_x)*cos_angle +
@@ -1428,8 +1446,8 @@ XPoint *XRotTextExtents(Display *, XFontStruct *font, float angle, int x, int y,
       xp_out[i].y=(short int)((float)y + (-((float)xp_in[i].x-hot_x)*sin_angle +
                                           ((float)xp_in[i].y+hot_y)*cos_angle));
    }
-    
+
    free((char *)xp_in);
-    
+
    return xp_out;
 }
