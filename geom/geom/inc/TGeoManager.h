@@ -116,6 +116,7 @@ private :
    THashList            *fHashVolumes;      //! hash list of volumes providing fast search
    THashList            *fHashGVolumes;     //! hash list of group volumes providing fast search
    THashList            *fHashPNE;          //-> hash list of phisical node entries
+   mutable TObjArray    *fArrayPNE;         //! array of phisical node entries
    Int_t                 fSizePNEId;        // size of the array of unique ID's for PN entries
    Int_t                 fNPNEId;           // number of PN entries having a unique ID
    Int_t                *fKeyPNEId;         //[fSizePNEId] array of uid values for PN entries
@@ -124,6 +125,7 @@ private :
 
    Bool_t                IsLoopingVolumes() const     {return fLoopVolumes;}
    void                  Init();
+   Bool_t                InitArrayPNE() const;
    Bool_t                InsertPNEId(Int_t uid, Int_t ientry);
    void                  SetLoopVolumes(Bool_t flag=kTRUE) {fLoopVolumes=flag;}
    void                  UpdateElements();

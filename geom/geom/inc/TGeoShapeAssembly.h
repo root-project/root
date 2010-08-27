@@ -32,6 +32,7 @@ protected :
    Int_t                 fCurrent;  //! node number for current node
    Int_t                 fNext;     //! node number for next crossed node
    TGeoVolumeAssembly   *fVolume;   // assembly volume
+   Bool_t                fBBoxOK;   // has bounding box been calculated
 
 // methods
 public:
@@ -55,14 +56,16 @@ public:
    virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const {return 0;}
    virtual void          InspectShape() const;
+   virtual Bool_t        IsAssembly() const {return kTRUE;}
    virtual Bool_t        IsCylType() const {return kFALSE;}
+   void                  NeedsBBoxRecompute() {fBBoxOK = kFALSE;}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(ostream &out, Option_t *option = "");
    virtual void          SetPoints(Double_t *points) const;
    virtual void          SetPoints(Float_t *points) const;
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
 
-   ClassDef(TGeoShapeAssembly, 1)         // assembly shape
+   ClassDef(TGeoShapeAssembly, 2)         // assembly shape
 };
 
 #endif

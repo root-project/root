@@ -2313,6 +2313,14 @@ void TGeoVoxelFinder::PrintVoxelLimits(Double_t *point) const
 void TGeoVoxelFinder::Voxelize(Option_t * /*option*/)
 {
 // Voxelize attached volume according to option
+   // If the volume is an assembly, make sure the bbox is computed.
+   if (fVolume->IsAssembly()) fVolume->GetShape()->ComputeBBox();
+   Int_t nd = fVolume->GetNdaughters();
+   TGeoVolume *vd;
+   for (Int_t i=0; i<nd; i++) {
+      vd = fVolume->GetNode(i)->GetVolume();
+      if (vd->IsAssembly()) vd->GetShape()->ComputeBBox();
+   }   
    BuildVoxelLimits();
    SortAll();
    SetNeedRebuild(kFALSE);

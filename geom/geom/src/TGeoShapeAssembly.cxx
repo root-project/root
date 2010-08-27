@@ -37,6 +37,7 @@ TGeoShapeAssembly::TGeoShapeAssembly()
    fCurrent = 0;
    fNext = 0;
    fVolume  = 0;
+   fBBoxOK = kFALSE;
 }   
 
 
@@ -47,6 +48,7 @@ TGeoShapeAssembly::TGeoShapeAssembly(TGeoVolumeAssembly *vol)
    fVolume  = vol;
    fCurrent = 0;
    fNext = 0;
+   fBBoxOK = kFALSE;
 }
 
 
@@ -61,11 +63,13 @@ void TGeoShapeAssembly::ComputeBBox()
 {
 // Compute bounding box of the assembly
    if (!fVolume) {
-      Error("ComputeBBox", "Assebmly shape %s without volume", GetName());
+      Fatal("ComputeBBox", "Assembly shape %s without volume", GetName());
       return;
    } 
+   // Make sure bbox is computed only once or recomputed only if invalidated (by alignment)
+   if (fBBoxOK) return;
    Int_t nd = fVolume->GetNdaughters();
-   if (!nd) return;
+   if (!nd) {fBBoxOK = kTRUE; return;}
    TGeoNode *node;
    TGeoBBox *box;
    Double_t xmin, xmax, ymin, ymax, zmin, zmax;
@@ -75,6 +79,7 @@ void TGeoShapeAssembly::ComputeBBox()
    Double_t pt[3];
    for (Int_t i=0; i<nd; i++) {
       node = fVolume->GetNode(i);
+      // Make sure that all assembly daughters have computed their bboxes
       if (node->GetVolume()->IsAssembly()) node->GetVolume()->GetShape()->ComputeBBox();
       box = (TGeoBBox*)node->GetVolume()->GetShape();
       box->SetBoxPoints(vert);
@@ -93,13 +98,15 @@ void TGeoShapeAssembly::ComputeBBox()
    fDY = 0.5*(ymax-ymin);
    fOrigin[1] = 0.5*(ymin+ymax);
    fDZ = 0.5*(zmax-zmin);
-   fOrigin[2] = 0.5*(zmin+zmax);         
+   fOrigin[2] = 0.5*(zmin+zmax);   
+   fBBoxOK = kTRUE;      
 }   
 
 //_____________________________________________________________________________   
 void TGeoShapeAssembly::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. Should not be called.
+   if (!fBBoxOK) ((TGeoShapeAssembly*)this)->ComputeBBox();
    Int_t inext = fVolume->GetNextNodeIndex();
    if (inext<0) {
       DistFromOutside(point,dir,3);
@@ -121,6 +128,7 @@ void TGeoShapeAssembly::ComputeNormal(Double_t *point, Double_t *dir, Double_t *
 Bool_t TGeoShapeAssembly::Contains(Double_t *point) const
 {
 // Test if point is inside the assembly
+   if (!fBBoxOK) ((TGeoShapeAssembly*)this)->ComputeBBox();
    if (!TGeoBBox::Contains(point)) return kFALSE;
    TGeoVoxelFinder *voxels = fVolume->GetVoxels();
    TGeoNode *node;
@@ -179,6 +187,7 @@ Double_t TGeoShapeAssembly::DistFromOutside(Double_t *point, Double_t *dir, Int_
 {
 // compute distance from outside point to surface of the hyperboloid.
 //   fVolume->SetNextNodeIndex(-1);
+   if (!fBBoxOK) ((TGeoShapeAssembly*)this)->ComputeBBox();
    if (iact<3 && safe) {
       *safe = Safety(point, kFALSE);
       if (iact==0) return TGeoShape::Big();
@@ -276,6 +285,7 @@ void TGeoShapeAssembly::InspectShape() const
    printf("*** Shape %s: TGeoShapeAssembly ***\n", GetName());
    printf("    Volume assembly %s with %i nodes\n", fVolume->GetName(), fVolume->GetNdaughters());   
    printf(" Bounding box:\n");
+   if (!fBBoxOK) ((TGeoShapeAssembly*)this)->ComputeBBox();
    TGeoBBox::InspectShape();
 }
 
@@ -293,6 +303,7 @@ Double_t TGeoShapeAssembly::Safety(Double_t *point, Bool_t in) const
 // to option. The matching point on the shape is stored in spoint.
    Double_t safety = TGeoShape::Big();
    Double_t pt[3], loc[3];
+   if (!fBBoxOK) ((TGeoShapeAssembly*)this)->ComputeBBox();
    if (in) {
       Int_t index = fVolume->GetCurrentNodeIndex();
       TGeoVolume *vol = fVolume;
