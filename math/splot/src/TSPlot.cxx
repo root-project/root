@@ -557,7 +557,6 @@ void TSPlot::MakeSPlot(Option_t *option)
 
    TVirtualFitter *minuit = TVirtualFitter::Fitter(0, 2);
    fPdfTot.ResizeTo(fNevents, fNSpecies);
-   Double_t *covmat = new Double_t[fNSpecies*fNSpecies];
 
    //now let's do it, excluding different yvars
    //for iplot = -1 none is excluded
@@ -594,8 +593,7 @@ void TSPlot::MakeSPlot(Option_t *option)
       }
       if (!opt.Contains("Q"))
          printf("\n");
-      delete [] covmat;
-      covmat = minuit->GetCovarianceMatrix();
+      Double_t *covmat = minuit->GetCovarianceMatrix();
       SPlots(covmat, iplot);
 
       if (opt.Contains("W")){
