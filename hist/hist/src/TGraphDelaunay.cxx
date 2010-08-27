@@ -51,24 +51,32 @@ TGraphDelaunay::TGraphDelaunay()
 {
    // TGraphDelaunay default constructor
 
-   fGraph2D    = 0;
-   fX          = 0;
-   fY          = 0;
-   fZ          = 0;
-   fNpoints    = 0;
-   fTriedSize  = 0;
-   fZout       = 0.;
-   fNdt        = 0;
-   fNhull      = 0;
-   fHullPoints = 0;
-   fXN         = 0;
-   fYN         = 0;
-   fOrder      = 0;
-   fDist       = 0;
-   fPTried     = 0;
-   fNTried     = 0;
-   fMTried     = 0;
-   fInit       = kFALSE;
+   fGraph2D      = 0;
+   fX            = 0;
+   fY            = 0;
+   fZ            = 0;
+   fNpoints      = 0;
+   fTriedSize    = 0;
+   fZout         = 0.;
+   fNdt          = 0;
+   fNhull        = 0;
+   fHullPoints   = 0;
+   fXN           = 0;
+   fYN           = 0;
+   fOrder        = 0;
+   fDist         = 0;
+   fPTried       = 0;
+   fNTried       = 0;
+   fMTried       = 0;
+   fInit         = kFALSE;
+   fXNmin        = 0.;
+   fXNmax        = 0.;
+   fYNmin        = 0.;
+   fYNmax        = 0.;
+   fXoffset      = 0.;
+   fYoffset      = 0.;
+   fXScaleFactor = 0.;
+   fYScaleFactor = 0.;
 
    SetMaxIter();
 }
@@ -78,26 +86,34 @@ TGraphDelaunay::TGraphDelaunay()
 TGraphDelaunay::TGraphDelaunay(TGraph2D *g)
             : TNamed("TGraphDelaunay","TGraphDelaunay")
 {
-   // TGraphDelaunay default constructor
+   // TGraphDelaunay normal constructor
 
-   fGraph2D    = g;
-   fX          = fGraph2D->GetX();
-   fY          = fGraph2D->GetY();
-   fZ          = fGraph2D->GetZ();
-   fNpoints    = fGraph2D->GetN();
-   fTriedSize  = 0;
-   fZout       = 0.;
-   fNdt        = 0;
-   fNhull      = 0;
-   fHullPoints = 0;
-   fXN         = 0;
-   fYN         = 0;
-   fOrder      = 0;
-   fDist       = 0;
-   fPTried     = 0;
-   fNTried     = 0;
-   fMTried     = 0;
-   fInit       = kFALSE;
+   fGraph2D      = g;
+   fX            = fGraph2D->GetX();
+   fY            = fGraph2D->GetY();
+   fZ            = fGraph2D->GetZ();
+   fNpoints      = fGraph2D->GetN();
+   fTriedSize    = 0;
+   fZout         = 0.;
+   fNdt          = 0;
+   fNhull        = 0;
+   fHullPoints   = 0;
+   fXN           = 0;
+   fYN           = 0;
+   fOrder        = 0;
+   fDist         = 0;
+   fPTried       = 0;
+   fNTried       = 0;
+   fMTried       = 0;
+   fInit         = kFALSE;
+   fXNmin        = 0.;
+   fXNmax        = 0.;
+   fYNmin        = 0.;
+   fYNmax        = 0.;
+   fXoffset      = 0.;
+   fYoffset      = 0.;
+   fXScaleFactor = 0.;
+   fYScaleFactor = 0.;
 
    SetMaxIter();
 }
