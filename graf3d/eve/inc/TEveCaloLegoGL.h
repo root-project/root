@@ -41,6 +41,7 @@ private:
          fId       = id;
          fSumVal   = sumVal;
          fMaxSlice = maxSlice;
+         fX0 = fX1 = fY0 = fY1 = 0;
       }
 
       void SetGeom(Float_t x0, Float_t x1, Float_t y0, Float_t y1)

@@ -166,6 +166,9 @@ TEveTriangleSet* TEveTriangleSet::ReadTrivialFile(const char* file)
    Int_t nv, nt;
    if (fscanf(f, "%d %d", &nv, &nt) != 2)
       throw kEH + "Reading nv, nt failed.";
+   if (nv < 0 || nt < 0)
+      throw kEH + "Negative number of vertices / triangles specified.";
+
 
    TEveTriangleSet* ts = new TEveTriangleSet(nv, nt);
 

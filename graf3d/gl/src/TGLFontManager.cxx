@@ -36,6 +36,8 @@
 # include "FTGLBitmapFont.h"
 #endif
 
+#include <memory>
+
 //______________________________________________________________________________
 // TGLFont
 //
@@ -396,30 +398,30 @@ void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mod
 # else
       ttpath = gEnv->GetValue("Root.TTGLFontPath", "$(ROOTSYS)/fonts");
 # endif
-      TObjString* name = (TObjString*)fgFontFileArray[fileID];
-      TString file = gSystem->Which(ttpath.Data(), Form("%s.ttf", name->GetString().Data()));
+      TObjString         *name ((TObjString*) fgFontFileArray[fileID]);
+      std::auto_ptr<char> file (gSystem->Which(ttpath.Data(), Form("%s.ttf", name->GetString().Data())));
 
       FTFont* ftfont = 0;
       switch (mode)
       {
          case TGLFont::kBitmap:
-            ftfont = new FTGLBitmapFont(file);
+            ftfont = new FTGLBitmapFont(file.get());
             break;
          case TGLFont::kPixmap:
-            ftfont = new FTGLPixmapFont(file);
+            ftfont = new FTGLPixmapFont(file.get());
             break;
          case TGLFont::kOutline:
-            ftfont = new FTGLOutlineFont(file);
+            ftfont = new FTGLOutlineFont(file.get());
             break;
          case TGLFont::kPolygon:
-            ftfont = new FTGLPolygonFont(file);
+            ftfont = new FTGLPolygonFont(file.get());
             break;
          case TGLFont::kExtrude:
-            ftfont = new FTGLExtrdFont(file);
+            ftfont = new FTGLExtrdFont(file.get());
             ftfont->Depth(0.2*size);
             break;
          case TGLFont::kTexture:
-            ftfont = new FTGLTextureFont(file);
+            ftfont = new FTGLTextureFont(file.get());
             break;
          default:
             Error("TGLFontManager::GetFont", "invalid FTGL type");
