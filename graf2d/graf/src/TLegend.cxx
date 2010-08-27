@@ -751,6 +751,7 @@ void TLegend::PaintPrimitives()
    }
 
    SetTextSize(save_textsize);
+   delete [] columnWidths;
 }
 
 
