@@ -480,7 +480,7 @@ int XrdClient::Read(void *buf, long long offset, int len) {
        long l = aralen;
 
        while (l > 0) {
-          long ll = xrdmin(1048576, l);
+          long ll = xrdmin(4*1024*1024, l);
           Read_Async(o, ll, true);
           l -= ll;
           o += ll;

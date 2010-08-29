@@ -1172,14 +1172,14 @@ It can be changed with <tt>TH1::SetContour()</tt> or
 <tt>TStyle::SetNumberContours()</tt>. The higher this number is, the smoother
 is the color change between cells.
 
-<p>The color palette in TStyle can be modified via <tt>gStyle->SePalette()</tt>.
+<p>The color palette in TStyle can be modified via <tt>gStyle->SetPalette()</tt>.
 
 <p>All the none empty bins are painted. Empty bins are not painted unless
 some bins have a negative content because in that case the null bins
 might be not empty.
 
 <p>Combined with the option <tt>"COL"</tt>, the option <tt>"Z"</tt> allows to
-display the color palette defined by <tt>gStyle->SePalette()</tt>.
+display the color palette defined by <tt>gStyle->SetPalette()</tt>.
 
 <p>In the following example, the histogram has only positive bins; the empty
 bins (containing 0) <u>are not drawn</u>.
@@ -1344,7 +1344,7 @@ The following example shows a 2D histogram plotted with the option
 <tt>"CONTZ"</tt>. The option <tt>"CONT"</tt> draws a contour plot using surface
 colors to distinguish contours.  Combined with the option <tt>"CONT"</tt> (or
 <tt>"CONT0"</tt>), the option <tt>"Z"</tt> allows to display the color palette
-defined by <tt>gStyle->SePalette()</tt>.
+defined by <tt>gStyle->SetPalette()</tt>.
 
 End_Html
 Begin_Macro(source)
@@ -1368,7 +1368,7 @@ The following example shows a 2D histogram plotted with the option
 <tt>"CONT1Z"</tt>. The option <tt>"CONT1"</tt> draws a contour plot using the
 line colors to distinguish contours. Combined with the option <tt>"CONT1"</tt>,
 the option <tt>"Z"</tt> allows to display the color palette defined by
-<tt>gStyle->SePalette()</tt>.
+<tt>gStyle->SetPalette()</tt>.
 
 End_Html
 Begin_Macro(source)
@@ -1434,7 +1434,7 @@ The following example shows a 2D histogram plotted with the option
 <tt>"CONT4"</tt>. The option <tt>"CONT4"</tt> draws a contour plot using surface
 colors to distinguish contours (<tt>"SURF"</tt> option at theta = 0). Combined
 with the option <tt>"CONT"</tt> (or <tt>"CONT0"</tt>), the option <tt>"Z"</tt>
-allows to display the color palette defined by <tt>gStyle->SePalette()</tt>.
+allows to display the color palette defined by <tt>gStyle->SetPalette()</tt>.
 
 End_Html
 Begin_Macro(source)
@@ -1602,7 +1602,7 @@ The following example shows a 2D histogram plotted with the option
 <tt>"LEGO2"</tt>. The option <tt>"LEGO2"</tt> draws a lego plot using colors to
 show the cell contents.  Combined with the option <tt>"LEGO2"</tt>, the option
 <tt>"Z"</tt> allows to display the color palette defined by
-<tt>gStyle->SePalette()</tt>.
+<tt>gStyle->SetPalette()</tt>.
 
 End_Html
 Begin_Macro(source)
@@ -1695,7 +1695,7 @@ The following example shows a 2D histogram plotted with the option
 <tt>"SURF1"</tt>. The option <tt>"SURF1"</tt> draws a surface plot using the
 hidden surface removal technique.  Combined with the option <tt>"SURF1"</tt>,
 the option <tt>"Z"</tt> allows to display the color palette defined by
-<tt>gStyle->SePalette()</tt>.
+<tt>gStyle->SetPalette()</tt>.
 
 End_Html
 Begin_Macro(source)
@@ -1718,7 +1718,7 @@ The following example shows a 2D histogram plotted with the option
 <tt>"SURF2"</tt>. The option <tt>"SURF2"</tt> draws a surface plot using colors
 to show the cell contents. Combined with the option <tt>"SURF2"</tt>, the option
 <tt>"Z"</tt> allows to display the color palette defined by
-<tt>gStyle->SePalette()</tt>.
+<tt>gStyle->SetPalette()</tt>.
 
 End_Html
 Begin_Macro(source)
@@ -1741,7 +1741,7 @@ The following example shows a 2D histogram plotted with the option
 <tt>"SURF3"</tt>. The option <tt>"SURF3"</tt> draws a surface plot using the
 hidden line removal technique with, in addition, a filled contour view drawn on the
 top.  Combined with the option <tt>"SURF3"</tt>, the option <tt>"Z"</tt> allows
-to display the color palette defined by <tt>gStyle->SePalette()</tt>.
+to display the color palette defined by <tt>gStyle->SetPalette()</tt>.
 
 End_Html
 Begin_Macro(source)
@@ -1784,7 +1784,7 @@ Begin_Html
 
 The following example shows a 2D histogram plotted with the option
 <tt>"SURF5 CYL"</tt>.  Combined with the option <tt>"SURF5"</tt>, the option
-<tt>"Z"</tt> allows to display the color palette defined by <tt>gStyle->SePalette()</tt>.
+<tt>"Z"</tt> allows to display the color palette defined by <tt>gStyle->SetPalette()</tt>.
 
 End_Html
 Begin_Macro(source)
@@ -1808,7 +1808,7 @@ The following example shows a 2D histogram plotted with the option
 <tt>"SURF7"</tt>. The option <tt>"SURF7"</tt> draws a surface plot using the
 hidden surfaces removal technique with, in addition, a line contour view drawn on the
 top.  Combined with the option <tt>"SURF7"</tt>, the option <tt>"Z"</tt> allows
-to display the color palette defined by <tt>gStyle->SePalette()</tt>.
+to display the color palette defined by <tt>gStyle->SetPalette()</tt>.
 
 End_Html
 Begin_Macro(source)

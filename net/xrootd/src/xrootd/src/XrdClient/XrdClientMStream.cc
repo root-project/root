@@ -284,7 +284,7 @@ void XrdClientMStream::GetGoodSplitParameters(XrdClientConn *cliconn,
 					      int &spltsize, int &reqsperstream,
 					      kXR_int32 len) {
   spltsize = DFLT_MULTISTREAMSPLITSIZE;
-  reqsperstream = 2;
+  reqsperstream = 4;
 
 
   // Let's try to distribute the load into maximum sized chunks

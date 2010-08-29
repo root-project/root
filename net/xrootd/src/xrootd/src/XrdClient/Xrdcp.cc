@@ -86,8 +86,8 @@ struct XrdCpInfo {
    XrdClientAbsMonIntf          *mon;
 } cpnfo;
 
-#define XRDCP_BLOCKSIZE          (4*1024*1024)
-#define XRDCP_XRDRASIZE          (20*XRDCP_BLOCKSIZE)
+#define XRDCP_BLOCKSIZE          (8*1024*1024)
+#define XRDCP_XRDRASIZE          (30*XRDCP_BLOCKSIZE)
 #define XRDCP_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.100 $ - Xrootd version: "XrdVSTRING
 
 ///////////////////////////////////////////////////////////////////////
@@ -1235,7 +1235,7 @@ int main(int argc, char**argv) {
    EnvPutString( NAME_CONNECTDOMAINDENY_RE, "" );
 
    EnvPutInt( NAME_READAHEADSIZE, XRDCP_XRDRASIZE);
-   EnvPutInt( NAME_READCACHESIZE, 3*XRDCP_XRDRASIZE );
+   EnvPutInt( NAME_READCACHESIZE, 2*XRDCP_XRDRASIZE );
    EnvPutInt( NAME_READCACHEBLKREMPOLICY, XrdClientReadCache::kRmBlk_LeastOffs );
    EnvPutInt( NAME_PURGEWRITTENBLOCKS, 1 );
 
