@@ -372,7 +372,7 @@ Bool_t TSchemaMatch::HasRuleWithSource( const TString& name, Bool_t needingAlloc
             if (targets && (targets->GetEntries() > 1 || targets->GetEntries()==0) ) {
                return kTRUE;
             }
-            if ( name != targets->UncheckedAt(0)->GetName() ) {
+            if (targets && name != targets->UncheckedAt(0)->GetName() ) {
                return kTRUE;
             }
             // If the rule has the same source and target and does not
@@ -407,7 +407,7 @@ Bool_t TSchemaMatch::HasRuleWithTarget( const TString& name, Bool_t willset ) co
             if (sources && (sources->GetEntries() > 1 || sources->GetEntries()==0) ) {
                return kTRUE;
             }
-            if ( name != sources->UncheckedAt(0)->GetName() ) {
+            if (sources && name != sources->UncheckedAt(0)->GetName() ) {
                return kTRUE;
             }            
             // If the rule has the same source and target and does not
