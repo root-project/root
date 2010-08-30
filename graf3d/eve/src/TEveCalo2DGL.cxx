@@ -115,7 +115,7 @@ void TEveCalo2DGL::DrawRPhi(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
 
    UInt_t nPhi = data->GetPhiBins()->GetNbins();
 
-   for(UInt_t phiBin = 0; phiBin < nPhi; ++phiBin)
+   for(UInt_t phiBin = 1; phiBin <= nPhi; ++phiBin)
    {
       if (cellLists[phiBin] )
       {

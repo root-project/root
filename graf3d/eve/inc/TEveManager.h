@@ -19,6 +19,7 @@
 #include "TVirtualPad.h"
 
 class TMap;
+class TExMap;
 class TMacro;
 class TFolder;
 class TCanvas;
@@ -111,7 +112,7 @@ private:
 
 protected:
    // Fine grained scene updates.
-   TEveElement::Set_t        fStampedElements;
+   TExMap                   *fStampedElements;
 
    // Selection / hihglight elements
    TEveSelection            *fSelection;
@@ -182,7 +183,7 @@ public:
    void ScenesChanged(TEveElement::List_t& scenes);
 
    // Fine grained updates via stamping.
-   void ElementStamped(TEveElement* element) { fStampedElements.insert(element); }
+   void ElementStamped(TEveElement* element);
 
    // These are more like TEveManager stuff.
    TGListTree*     GetListTree() const;

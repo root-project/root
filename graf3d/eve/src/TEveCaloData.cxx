@@ -531,13 +531,16 @@ void TEveCaloDataVec::GetCellList(Float_t eta, Float_t etaD,
          minQ = cg.fPhiMin;
          maxQ = cg.fPhiMax;
 
-         if (maxQ < phiMin)
+         if (fWrapTwoPi)
          {
-            minQ += TwoPi(); maxQ += TwoPi();
-         }
-         else if (minQ > phiMax)
-         {
-            minQ -= TwoPi(); maxQ -= TwoPi();
+            if (maxQ < phiMin)
+            {
+               minQ += TwoPi(); maxQ += TwoPi();
+            }
+            else if (minQ > phiMax)
+            {
+               minQ -= TwoPi(); maxQ -= TwoPi();
+            }
          }
 
          if (maxQ >= phiMin && minQ <= phiMax)

@@ -29,8 +29,8 @@ private:
    void    RenderGridEndCap() const;
    void    RenderGridBarrel() const;
    void    RenderGrid(TGLRnrCtx & rnrCtx) const;
-   Float_t RenderBarrelCell(const TEveCaloData::CellGeom_t &cell, Float_t towerH, Float_t offset) const;
-   Float_t RenderEndCapCell(const TEveCaloData::CellGeom_t &cell, Float_t towerH, Float_t offset) const;
+   void    RenderBarrelCell(const TEveCaloData::CellGeom_t &cell, Float_t towerH, Float_t& offset) const;
+   void    RenderEndCapCell(const TEveCaloData::CellGeom_t &cell, Float_t towerH, Float_t& offset) const;
 
    void    DrawSelectedCells(TEveCaloData::vCellId_t cells) const;
 

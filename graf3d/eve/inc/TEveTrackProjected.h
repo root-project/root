@@ -42,7 +42,9 @@ public:
    virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
 
    virtual void UpdateProjection();
+   virtual TEveElement* GetProjectedAsElement() { return this; }
    virtual void MakeTrack(Bool_t recurse=kTRUE);
+
 
    void         PrintLineSegments();
 
@@ -72,6 +74,7 @@ public:
 
    virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
    virtual void UpdateProjection()  {}
+   virtual TEveElement* GetProjectedAsElement() { return this; }
 
    virtual void SetDepth(Float_t d);
    virtual void SetDepth(Float_t d, TEveElement* el);

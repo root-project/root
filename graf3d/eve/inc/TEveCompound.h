@@ -71,6 +71,7 @@ public:
    virtual void SetMainColor(Color_t color);
 
    virtual void UpdateProjection()      {}
+   virtual TEveElement* GetProjectedAsElement() { return this; }
 
    ClassDef(TEveCompoundProjected, 0); // Projected TEveCompund container.
 };

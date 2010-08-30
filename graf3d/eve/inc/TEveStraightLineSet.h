@@ -138,6 +138,7 @@ public:
 
    virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
    virtual void UpdateProjection();
+   virtual TEveElement* GetProjectedAsElement() { return this; }
 
    ClassDef(TEveStraightLineSetProjected, 1); // Projected copy of a TEveStraightLineSet.
 };

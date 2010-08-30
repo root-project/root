@@ -30,6 +30,7 @@
 #include "TROOT.h"
 #include "TFile.h"
 #include "TMap.h"
+#include "TExMap.h"
 #include "TMacro.h"
 #include "TFolder.h"
 #include "TBrowser.h"
@@ -80,7 +81,7 @@ TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window, Option_t* opt) :
    fTimerActive    (kFALSE),
    fRedrawTimer    (),
 
-   fStampedElements(),
+   fStampedElements(0),
    fSelection      (0),
    fHighlight      (0),
 
@@ -111,6 +112,8 @@ TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window, Option_t* opt) :
    fGeometries      = new TMap; fGeometries->SetOwnerKeyValue();
    fGeometryAliases = new TMap; fGeometryAliases->SetOwnerKeyValue();
    fVizDB           = new TMap; fVizDB->SetOwnerKeyValue();
+
+   fStampedElements = new TExMap;
 
    fSelection = new TEveSelection("Global Selection");
    fSelection->IncDenyDestroy();
@@ -221,6 +224,7 @@ TEveManager::~TEveManager()
    fSelection->DecDenyDestroy();
 
    delete fMacroFolder;
+   delete fStampedElements;
    delete fGeometryAliases;
    delete fGeometries;
    delete fVizDB;
@@ -396,11 +400,14 @@ void TEveManager::DoRedraw3D()
    // Process element visibility changes, mark relevant scenes as changed.
    {
       TEveElement::List_t scenes;
-      for (TEveElement::Set_i i = fStampedElements.begin(); i != fStampedElements.end(); ++i)
+      Long64_t   key, value;
+      TExMapIter stamped_elements(fStampedElements);
+      while (stamped_elements.Next(key, value))
       {
-         if ((*i)->GetChangeBits() & TEveElement::kCBVisibility)
+         TEveElement *el = reinterpret_cast<TEveElement*>(key);
+         if (el->GetChangeBits() & TEveElement::kCBVisibility)
          {
-            (*i)->CollectSceneParents(scenes);
+            el->CollectSceneParents(scenes);
          }
       }
       ScenesChanged(scenes);
@@ -412,15 +419,20 @@ void TEveManager::DoRedraw3D()
 
    // Process changed elements again, update GUI (just editor so far,
    // but more can come).
-   for (TEveElement::Set_i i = fStampedElements.begin(); i != fStampedElements.end(); ++i)
    {
-      if (GetEditor()->GetModel() == (*i)->GetEditorObject(eh))
-         EditElement(*i);
-      TEveGedEditor::ElementChanged(*i);
+      Long64_t   key, value;
+      TExMapIter stamped_elements(fStampedElements);
+      while (stamped_elements.Next(key, value))
+      {
+         TEveElement *el = reinterpret_cast<TEveElement*>(key);
+         if (GetEditor()->GetModel() == el->GetEditorObject(eh))
+            EditElement(el);
+         TEveGedEditor::ElementChanged(el);
 
-      (*i)->ClearStamps();
+         el->ClearStamps();
+      }
    }
-   fStampedElements.clear();
+   fStampedElements->Delete();
    GetListTree()->ClearViewPort(); // Fix this when several list-trees can be added.
 
    fResetCameras = kFALSE;
@@ -469,6 +481,18 @@ void TEveManager::ScenesChanged(TEveElement::List_t& scenes)
 
    for (TEveElement::List_i s=scenes.begin(); s!=scenes.end(); ++s)
       ((TEveScene*)*s)->Changed();
+}
+
+//______________________________________________________________________________
+void TEveManager::ElementStamped(TEveElement* element)
+{
+   // Mark element as changed -- it will be processed on next redraw.
+
+   UInt_t slot;
+   if (fStampedElements->GetValue((ULong_t) element, (Long_t) element, slot) == 0)
+   {
+      fStampedElements->AddAt(slot, (ULong_t) element, (Long_t) element, 1);
+   }
 }
 
 
@@ -577,9 +601,8 @@ void TEveManager::PreDeleteElement(TEveElement* element)
    if (fScenes)
       fScenes->DestroyElementRenderers(element);
 
-   TEveElement::Set_i sei = fStampedElements.find(element);
-   if (sei != fStampedElements.end())
-      fStampedElements.erase(sei);
+   if (fStampedElements->GetValue((ULong_t) element, (Long_t) element) != 0)
+      fStampedElements->Remove((ULong_t) element, (Long_t) element);
 
    if (element->fImpliedSelected > 0)
       fSelection->RemoveImpliedSelected(element);

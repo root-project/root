@@ -81,6 +81,7 @@ protected:
    TEveElement     *fVizModel;             //! Element used as model from VizDB.
    TString          fVizTag;               //  Tag used to query VizDB for model element.
 
+   Int_t            fNumChildren;          //!
    Int_t            fParentIgnoreCnt;      //! Counter for parents that are ignored in ref-counting.
    Int_t            fTopItemCnt;           //! Counter for top-level list-tree items that prevent automatic destruction.
    Int_t            fDenyDestroy;          //! Deny-destroy count.
@@ -162,8 +163,8 @@ public:
    List_i  EndChildren()         { return  fChildren.end();   }
    List_ci BeginChildren() const { return  fChildren.begin(); }
    List_ci EndChildren()   const { return  fChildren.end();   }
-   Int_t   NumChildren()   const { return  fChildren.size();  }
-   Bool_t  HasChildren()   const { return !fChildren.empty(); }
+   Int_t   NumChildren()   const { return  fNumChildren;      }
+   Bool_t  HasChildren()   const { return  fNumChildren != 0; }
 
    Bool_t       HasChild(TEveElement* el);
    TEveElement* FindChild(const TString& name, const TClass* cls=0);
@@ -374,8 +375,8 @@ public:
    };
 
 protected:
-   UChar_t      fChangeBits;
-   Bool_t       fDestructing;
+   UChar_t      fChangeBits;  //!
+   Bool_t       fDestructing; //!
 
 public:
    void StampColorSelection() { AddStamp(kCBColorSelection); }
@@ -459,6 +460,9 @@ public:
    TEveElementList(const TEveElementList& e);
    virtual ~TEveElementList() {}
 
+   virtual TObject* GetObject(const TEveException& /*eh*/="TEveElementList::GetObject ") const
+   { const TObject* obj = this; return const_cast<TObject*>(obj); }
+
    virtual TEveElementList* CloneElement() const;
 
    virtual const char* GetElementName()  const { return GetName();  }
@@ -500,6 +504,7 @@ public:
    virtual ~TEveElementListProjected() {}
 
    virtual void UpdateProjection();
+   virtual TEveElement* GetProjectedAsElement() { return this; }
 
    ClassDef(TEveElementListProjected, 0); // Projected TEveElementList.
 };

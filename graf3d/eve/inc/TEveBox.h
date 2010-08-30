@@ -80,6 +80,8 @@ public:
    virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
    virtual void UpdateProjection();
 
+   virtual TEveElement* GetProjectedAsElement() { return this; }
+
    ClassDef(TEveBoxProjected, 0); // 3D box with arbitrary vertices.
 };
 

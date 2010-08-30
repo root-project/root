@@ -42,6 +42,9 @@ public:
    TEveGeoShape(const char* name="TEveGeoShape", const char* title=0);
    virtual ~TEveGeoShape();
 
+   virtual TObject* GetObject(const TEveException& /*eh*/="TEveElementList::GetObject ") const
+   { const TObject* obj = this; return const_cast<TObject*>(obj); }
+
    Color_t     GetColor()      const { return fColor; }
    Int_t       GetNSegments()  const { return fNSegments; }
    void        SetNSegments(Int_t s) { fNSegments = s; }
@@ -88,9 +91,10 @@ public:
 
    virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
    virtual void UpdateProjection();
+   virtual TEveElement* GetProjectedAsElement() { return this; }
 
    virtual void ComputeBBox();
-   virtual void Paint(Option_t* option = "");
+   virtual void Paint(Option_t* option = ""); 
 
    ClassDef(TEveGeoShapeProjected, 0);
 };

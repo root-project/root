@@ -122,10 +122,12 @@ void TEveGeoNode::ExpandIntoListTree(TGListTree* ltree,
    // Checks if child-nodes have been imported ... imports them if not.
    // Then calls TEveElement::ExpandIntoListTree.
 
-   if (fChildren.empty() && fNode->GetVolume()->GetNdaughters() > 0) {
+   if ( ! HasChildren() && fNode->GetVolume()->GetNdaughters() > 0)
+   {
       TIter next(fNode->GetVolume()->GetNodes());
       TGeoNode* dnode;
-      while ((dnode = (TGeoNode*) next()) != 0) {
+      while ((dnode = (TGeoNode*) next()) != 0)
+      {
          TEveGeoNode* node_re = new TEveGeoNode(dnode);
          AddElement(node_re);
       }

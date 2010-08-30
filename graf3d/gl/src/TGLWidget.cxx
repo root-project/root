@@ -427,11 +427,15 @@ Window_t TGLWidget::CreateWindow(const TGWindow* parent, const TGLFormat &format
    fill_format(glxfmt, format);
 
    Display *dpy = reinterpret_cast<Display *>(gVirtualX->GetDisplay());
+   if (!dpy) {
+      ::Error("TGLWidget::CreateWindow", "Display is not set!");
+      throw std::runtime_error("Display is not set!");
+   }
    XVisualInfo *visInfo = glXChooseVisual(dpy, DefaultScreen(dpy), &glxfmt[0]);
 
    if (!visInfo) {
-      ::Error("TGLWidget::CreateWindow", "No good visual found!");
-      throw std::runtime_error("No good visual found!");
+      ::Error("TGLWidget::CreateWindow", "No good OpenGL visual found!");
+      throw std::runtime_error("No good OpenGL visual found!");
    }
 
    Window_t winID = parent->GetId();

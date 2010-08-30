@@ -352,24 +352,31 @@ void TEveTrackPropagator::Update(const TEveVector4& v, const TEveVector& p,
          using namespace TMath;
 
          Float_t a = fgkB2C * fMagFieldObj->GetMaxFieldMag() * Abs(fH.fCharge);
-         fH.fR = p.Mag() / a;
+	 if (a > kAMin)
+	 {
+            fH.fR = p.Mag() / a;
 
-         // get phi step, compare fDelta with MaxAng
-         fH.fPhiStep = fH.fMaxAng * DegToRad();
-         if (fH.fR > fH.fDelta )
-         {
-            Float_t ang  = 2.0 * ACos(1.0f - fH.fDelta/fH.fR);
-            if (ang < fH.fPhiStep)
-               fH.fPhiStep = ang;
-         }
+            // get phi step, compare fDelta with MaxAng
+            fH.fPhiStep = fH.fMaxAng * DegToRad();
+            if (fH.fR > fH.fDelta )
+            {
+               Float_t ang  = 2.0 * ACos(1.0f - fH.fDelta/fH.fR);
+               if (ang < fH.fPhiStep)
+                  fH.fPhiStep = ang;
+            }
 
-         // check against maximum step-size
-         fH.fRKStep = fH.fR * fH.fPhiStep * Sqrt(1 + fH.fLam*fH.fLam);
-         if (fH.fRKStep > fH.fMaxStep || enforce_max_step)
-         {
-            fH.fPhiStep *= fH.fMaxStep / fH.fRKStep;
-            fH.fRKStep   = fH.fMaxStep;
-         }
+            // check against maximum step-size
+            fH.fRKStep = fH.fR * fH.fPhiStep * Sqrt(1 + fH.fLam*fH.fLam);
+            if (fH.fRKStep > fH.fMaxStep || enforce_max_step)
+            {
+               fH.fPhiStep *= fH.fMaxStep / fH.fRKStep;
+               fH.fRKStep   = fH.fMaxStep;
+            }
+	 }
+	 else
+	 {
+            fH.fRKStep = fH.fMaxStep; 
+	 }
       }
    }
 }

@@ -76,6 +76,7 @@ public:
 
    virtual void    SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
    virtual void    UpdateProjection();
+   virtual TEveElement* GetProjectedAsElement() { return this; }
 
    void            ProjectBuffer3D();
 

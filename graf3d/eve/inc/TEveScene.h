@@ -17,6 +17,7 @@
 class TEvePad;
 class TGLScenePad;
 
+class TExMap;
 
 /******************************************************************************/
 // TEveScene
@@ -93,7 +94,7 @@ public:
 
    void DestroyElementRenderers(TEveElement* element);
 
-   void ProcessSceneChanges(Bool_t dropLogicals, Set_t& stampSet);
+   void ProcessSceneChanges(Bool_t dropLogicals, TExMap* stampMap);
 
    ClassDef(TEveSceneList, 0); // List of Scenes providing common operations on TEveScene collections.
 };

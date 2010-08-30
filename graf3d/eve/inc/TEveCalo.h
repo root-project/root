@@ -157,6 +157,7 @@ protected:
    Bool_t    fRnrEndCapFrame;
    Bool_t    fRnrBarrelFrame;
 
+   Float_t   fFrameWidth;
    Color_t   fFrameColor;
    Char_t    fFrameTransparency;
 
@@ -167,8 +168,15 @@ public:
    virtual ~TEveCalo3D() {}
    virtual void ComputeBBox();
 
+   void    SetFrameWidth(Float_t w) { fFrameWidth = w; }
+   Float_t GetFrameWidth() const    { return fFrameWidth; }
+
    void SetRnrFrame(Bool_t e, Bool_t b)         { fRnrEndCapFrame = e; fRnrBarrelFrame = b; }
    void GetRnrFrame(Bool_t &e, Bool_t &b) const { e = fRnrEndCapFrame; b = fRnrBarrelFrame; }
+   void SetRnrEndCapFrame(Bool_t r) { fRnrEndCapFrame = r; }
+   void SetRnrBarrelFrame(Bool_t r) { fRnrBarrelFrame = r; }
+   Bool_t GetRnrEndCapFrame() const { return fRnrEndCapFrame; }
+   Bool_t GetRnrBarrelFrame() const { return fRnrBarrelFrame; }
 
    void   SetFrameTransparency(Char_t x) { fFrameTransparency = x; }
    Char_t GetFrameTransparency() const { return fFrameTransparency; }

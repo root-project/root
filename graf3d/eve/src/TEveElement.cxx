@@ -72,6 +72,7 @@ TEveElement::TEveElement() :
    fCompound            (0),
    fVizModel            (0),
    fVizTag              (),
+   fNumChildren         (0),
    fParentIgnoreCnt     (0),
    fTopItemCnt          (0),
    fDenyDestroy         (0),
@@ -106,6 +107,7 @@ TEveElement::TEveElement(Color_t& main_color) :
    fCompound            (0),
    fVizModel            (0),
    fVizTag              (),
+   fNumChildren         (0),
    fParentIgnoreCnt     (0),
    fTopItemCnt          (0),
    fDenyDestroy         (0),
@@ -140,6 +142,7 @@ TEveElement::TEveElement(const TEveElement& e) :
    fCompound            (0),
    fVizModel            (0),
    fVizTag              (e.fVizTag),
+   fNumChildren         (0),
    fParentIgnoreCnt     (0),
    fTopItemCnt          (0),
    fDenyDestroy         (0),
@@ -195,6 +198,7 @@ TEveElement::~TEveElement()
    {
       (*p)->RemoveElementLocal(this);
       (*p)->fChildren.remove(this);
+      --((*p)->fNumChildren);
    }
    fParents.clear();
 
@@ -1347,7 +1351,7 @@ void TEveElement::AddElement(TEveElement* el)
                       GetElementName(), el->GetElementName()));
 
    el->AddParent(this);
-   fChildren.push_back(el);
+   fChildren.push_back(el); ++fNumChildren;
    el->AddIntoListTrees(this);
    ElementChanged();
 }
@@ -1360,7 +1364,7 @@ void TEveElement::RemoveElement(TEveElement* el)
    el->RemoveFromListTrees(this);
    RemoveElementLocal(el);
    el->RemoveParent(this);
-   fChildren.remove(el);
+   fChildren.remove(el); --fNumChildren;
    ElementChanged();
 }
 
@@ -1394,7 +1398,7 @@ void TEveElement::RemoveElementsInternal()
    {
       (*i)->RemoveParent(this);
    }
-   fChildren.clear();
+   fChildren.clear(); fNumChildren = 0;
 }
 
 //______________________________________________________________________________
@@ -1404,7 +1408,7 @@ void TEveElement::RemoveElements()
    // be done more efficiently then looping over them and removing
    // them one by one.
 
-   if ( ! fChildren.empty())
+   if (HasChildren())
    {
       RemoveElementsInternal();
       ElementChanged();
@@ -1443,7 +1447,7 @@ void TEveElement::ProjectChild(TEveElement* el, Bool_t same_depth)
          Float_t cd = pmgr->GetCurrentDepth();
          if (same_depth) pmgr->SetCurrentDepth((*i)->GetDepth());
 
-         pmgr->SubImportElements(el, dynamic_cast<TEveElement*>(*i));
+         pmgr->SubImportElements(el, (*i)->GetProjectedAsElement());
 
          if (same_depth) pmgr->SetCurrentDepth(cd);
       }
@@ -1473,7 +1477,7 @@ void TEveElement::ProjectAllChildren(Bool_t same_depth)
          Float_t cd = pmgr->GetCurrentDepth();
          if (same_depth) pmgr->SetCurrentDepth((*i)->GetDepth());
 
-         pmgr->SubImportChildren(this, dynamic_cast<TEveElement*>(*i));
+         pmgr->SubImportChildren(this, (*i)->GetProjectedAsElement());
 
          if (same_depth) pmgr->SetCurrentDepth(cd);
       }
@@ -1581,7 +1585,7 @@ TEveElement* TEveElement::FirstChild() const
 {
    // Returns the first child element or 0 if the list is empty.
 
-   return fChildren.empty() ? 0 : fChildren.front();
+   return HasChildren() ? fChildren.front() : 0;
 }
 
 //______________________________________________________________________________
@@ -1589,7 +1593,7 @@ TEveElement* TEveElement::LastChild () const
 {
    // Returns the last child element or 0 if the list is empty.
 
-   return fChildren.empty() ? 0 : fChildren.back();
+   return HasChildren() ? fChildren.back() : 0;
 }
 
 
@@ -1670,7 +1674,8 @@ void TEveElement::DestroyElements()
 
    static const TEveException eh("TEveElement::DestroyElements ");
 
-   while ( ! fChildren.empty()) {
+   while (HasChildren())
+   {
       TEveElement* c = fChildren.front();
       if (c->fDenyDestroy <= 0)
       {
@@ -2077,7 +2082,7 @@ TObject* TEveElementObjectPtr::GetObject(const TEveException& eh) const
    // Virtual from TEveElement.
 
    if (fObject == 0)
-      throw(eh + "fObject not set.");
+      throw eh + "fObject not set.";
    return fObject;
 }
 

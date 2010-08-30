@@ -95,6 +95,7 @@ public:
 
    virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
    virtual void UpdateProjection();
+   virtual TEveElement* GetProjectedAsElement() { return this; }
 
    ClassDef(TEveLineProjected, 0); // Projected replica of a TEveLine.
 };
