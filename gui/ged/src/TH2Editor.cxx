@@ -1832,6 +1832,10 @@ void TH2Editor::DoCancel()
                      fBinHist->GetYaxis()->GetXmin(),
                      fBinHist->GetYaxis()->GetXmax());
       fHist->Add(fBinHist);
+      fHist->GetXaxis()->SetRange(fBinHist->GetXaxis()->GetFirst(),
+                                  fBinHist->GetXaxis()->GetLast());
+      fHist->GetYaxis()->SetRange(fBinHist->GetYaxis()->GetFirst(),
+                                  fBinHist->GetYaxis()->GetLast());
 
       delete fBinHist;
       fBinHist = 0;

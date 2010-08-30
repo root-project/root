@@ -2146,6 +2146,8 @@ void TH1Editor::DoCancel()
                      fBinHist->GetXaxis()->GetXmin(),
                      fBinHist->GetXaxis()->GetXmax());
       fHist->Add(fBinHist);
+      fHist->GetXaxis()->SetRange(fBinHist->GetXaxis()->GetFirst(),
+                                  fBinHist->GetXaxis()->GetLast());
       delete fBinHist;
       fBinHist = 0;
       fCancel->SetState(kButtonDisabled);
