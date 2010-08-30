@@ -91,10 +91,10 @@ struct  LikelihoodFunction {
    LikelihoodFunction(RooFunctor & f, double offset = 0) : fFunc(f), fOffset(offset) {}
 
    double operator() (const double *x ) const { 
-      double nll = fFunc(x) + fOffset;
+      double nll = fFunc(x) - fOffset;
       double likelihood =  std::exp(-nll);
 //       ooccoutD((TObject*)0,NumIntegration)  
-//          << "x[0] = " << x[0] << " x[1] = " << x[1] << "  nll = " << nll << " likelihood = " << likelihood << std::endl;
+      // std::cout     << "x[0] = " << x[0] << " x[1] = " << x[1] << "  nll = " << nll << "offset " << fOffset << " likelihood = " << likelihood << std::endl;
       return likelihood; 
    }
 
@@ -424,7 +424,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    // stop error messages.
    fLogLike->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
 
-   delete constrainedParams;
+
 
    // need do find minimum of log-likelihood in the range to shift function 
    // to avoid numerical errors when we compute the likelihood (overflows in the exponent)
@@ -441,6 +441,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    if (ret) fNLLMin = minim.FValMinimum();
 
    delete nllFunc;
+   delete constrainedParams;
 
    if ( fNuisanceParameters.getSize() == 0 ||  fIntegrationType.Contains("ROOFIT") ) { 
       // cas of no nuiance parameters 
