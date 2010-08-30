@@ -46,6 +46,8 @@
 
 #include "TRFIOFile.h"
 #include "TROOT.h"
+#include "TTimeStamp.h"
+#include "TVirtualPerfStats.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -221,6 +223,9 @@ Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
       return kTRUE;
    }
 
+   Double_t start = 0;
+   if (gPerfStats) start = TTimeStamp();
+
    // we maintain a static iove64 buffer to avoid malloc/free with every call
    if (!iov) {
       if (nbuf > iovsize)
@@ -247,7 +252,6 @@ Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
          }
       }
    }
-
 
    for (n = 0; n < nbuf; n++) {
       if (gDebug>1)
@@ -286,6 +290,9 @@ Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    fgBytesRead += k;
    fgReadCalls++;
 #endif
+
+   if (gPerfStats)
+      gPerfStats->FileReadEvent(this, k, start);
 
    return kFALSE;
 }
