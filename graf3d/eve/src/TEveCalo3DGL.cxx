@@ -276,6 +276,7 @@ void TEveCalo3DGL::RenderGrid(TGLRnrCtx & rnrCtx) const
 
    TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
 
+   printf("Setting line width to %f\n", fM->GetFrameWidth());
    TGLUtil::LineWidth(fM->GetFrameWidth());
    glBegin(GL_LINES);
 

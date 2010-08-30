@@ -271,6 +271,7 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
    Float_t *sliceValsLow = new Float_t[nSlices];
    Bool_t   isBarrel;
    Float_t  towerH;
+   Float_t transEta = fM->GetTransitionEta();
 
    UInt_t nEta = data->GetEtaBins()->GetNbins();
    for (UInt_t etaBin = 1; etaBin <= nEta; ++etaBin)
@@ -295,7 +296,13 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
             else
                sliceValsLow[it->fSlice] += cellData.Value(fM->fPlotEt);
          }
-         isBarrel = TMath::Abs(cellData.EtaMax()) < fM->GetTransitionEta();
+
+         isBarrel = true;
+         if ((cellData.EtaMax() > 0 && cellData.EtaMax() > transEta) ||
+             (cellData.EtaMin() < 0 && cellData.EtaMin() < -transEta))
+         {
+            isBarrel = false;
+         }
 
          // draw
          if (rnrCtx.SecSelection()) glLoadName(etaBin); // name-stack eta bin

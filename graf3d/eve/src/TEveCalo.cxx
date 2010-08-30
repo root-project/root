@@ -411,6 +411,7 @@ TEveCalo3D::TEveCalo3D(TEveCaloData* d, const char* n, const char* t):
 
    fRnrEndCapFrame    (kTRUE),
    fRnrBarrelFrame    (kTRUE),
+   fFrameWidth        (0.5),
    fFrameColor        (kGray+1),
    fFrameTransparency (80)
 {
