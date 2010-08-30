@@ -6305,7 +6305,6 @@ void TMinuit::mnpout(Int_t iuext1, TString &chnam, Double_t &val, Double_t &err,
    } else {
 //*-*-                   external parameter number specified
       iext = iuext;
-      if (iext == 0) goto L100;
       if (iext > fNu) goto L100;
       iint  = fNiofex[iext-1];
       iuint = iint;
