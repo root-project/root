@@ -18,6 +18,7 @@ TFile *cernbuild(Int_t get=0) {
 
    //The input file cern.dat is a copy of the CERN staff data base
    //from 1988
+   TString filename = "cernstaff.root";
    TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
    dir.ReplaceAll("cernbuild.C","");
    dir.ReplaceAll("/./","/");
@@ -70,7 +71,11 @@ TFile *cernbuild(Int_t get=0) {
    tree->Write();
 
    fclose(fp);
-   if (get) return hfile;
    delete hfile;
+   if (get) {
+      //we come here when the script is executed outside $ROOTSYS/tutorials/tree
+      hfile = TFile::Open(filename);
+      return hfile;
+   }
    return 0;
 }
