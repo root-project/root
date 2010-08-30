@@ -3051,7 +3051,7 @@ int G__templatesubstitute(G__FastAllocString& symbol,G__Charlist *callpara
 
   while(defpara) {
     if(strcmp(defpara->string,symbol)==0) {
-      if(callpara->string) {
+      if(callpara && callpara->string) {
         symbol = callpara->string;
       }
       else if(defpara->default_parameter) {

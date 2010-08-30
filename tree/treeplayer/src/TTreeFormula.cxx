@@ -5402,7 +5402,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
                   fManager->fUsedSizes[virt_dim] = index;
                }
 
-            } else if (hasBranchCount2 && k==info->GetVarDim()) {
+            } else if (hasBranchCount2 && info && k==info->GetVarDim()) {
                // NOTE: We assume the indexing of variable sizes on the first index!
                if (fIndexes[i][0]>=0) {
                   index = info->GetSize(fIndexes[i][0]);

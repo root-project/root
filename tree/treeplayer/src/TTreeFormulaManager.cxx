@@ -192,7 +192,7 @@ Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
       }
    } else {
       overall = 0; // Since we work with additions in this section
-      if (fUsedSizes[0]>fCumulUsedVarDims->GetSize()) fCumulUsedVarDims->Set(fUsedSizes[0]);
+      if (fCumulUsedVarDims && fUsedSizes[0]>fCumulUsedVarDims->GetSize()) fCumulUsedVarDims->Set(fUsedSizes[0]);
       for(Int_t i = 0; i < fUsedSizes[0]; i++) {
          Int_t local_overall = 1;
          for (k = kMAXFORMDIM; (k > 0) ; k--) {

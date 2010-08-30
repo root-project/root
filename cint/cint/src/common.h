@@ -941,7 +941,8 @@ struct G__funcentry {
    int bytecodestatus;
 #endif
 #ifdef __cplusplus
-   G__funcentry() : p(0),line_number(-1),filenum(-1),ptradjust(0),size(0),tp2f(0),bytecode(0),bytecodestatus(0) { ; }
+   G__funcentry() : p(0),line_number(-1),filenum(-1),ptradjust(0),size(0),tp2f(0),bytecode(0),bytecodestatus(0) { 
+      memset(&pos,0,sizeof(pos)); }
 #endif
 };
 

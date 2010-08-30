@@ -232,11 +232,11 @@ void TTableSorter::BuildSorter(TString &colName, Int_t firstRow, Int_t numberRow
    SetName(n);
 
    Char_t *name = (Char_t *) colName.Data();
-   if (!(name || strlen(colName.Data()))) { MakeZombie(); return; }
+   if (!(name || strlen(colName.Data()))) { MakeZombie(); delete [] name; return; }
    name = StrDup(colName.Data());
 
    // check bounds:
-   if (firstRow > fParentTable->GetNRows()) { MakeZombie(); return; }
+   if (firstRow > fParentTable->GetNRows()) { MakeZombie(); delete [] name; return; }
    fFirstRow = firstRow;
 
    fNumberOfRows = fParentTable->GetNRows()- fFirstRow;
@@ -245,7 +245,7 @@ void TTableSorter::BuildSorter(TString &colName, Int_t firstRow, Int_t numberRow
    fFirstParentRow= (const char *)fParentTable->GetArray();
 
    // Allocate index array
-   if (fNumberOfRows <=0 ) { MakeZombie(); return; }
+   if (fNumberOfRows <=0 ) { MakeZombie(); delete [] name; return; }
    fSortIndex = new void*[fNumberOfRows];
 
    // define dimensions if any;

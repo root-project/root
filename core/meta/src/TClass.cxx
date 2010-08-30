@@ -5107,7 +5107,7 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
          arr = it->second;
       }
 
-      if( version > -1 && version < arr->GetSize() && arr->At( version ) )
+      if( arr && version > -1 && version < arr->GetSize() && arr->At( version ) )
          return (TVirtualStreamerInfo*) arr->At( version );
    }
 
@@ -5197,7 +5197,9 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
       if( it != fConversionStreamerInfo->end() ) {
          arr = it->second;
       }
-      info = FindStreamerInfo( arr, checksum );
+      if (arr) {
+         info = FindStreamerInfo( arr, checksum );
+      }
    }
 
    if( info )

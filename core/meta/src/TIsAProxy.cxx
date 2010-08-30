@@ -114,6 +114,7 @@ TClass* TIsAProxy::operator()(const void *obj)
    if ( !fInit )  {
       fInit = kTRUE;
       if ( !fClass && fType ) fClass = TClass::GetClass(*fType);
+      if ( !fClass) return 0;
       fClass->Property();
       if ( fClass->GetClassInfo() )  {
          fVirtual = (gCint->ClassInfo_ClassProperty(fClass->GetClassInfo())&G__CLS_HASVIRTUAL) == G__CLS_HASVIRTUAL;
