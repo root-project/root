@@ -409,6 +409,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
                // FIXME: We are eliding the base class here, creating a break in the branch hierarchy.
                // Note: We can use parent class (cltop) != branch class (elemClass) to detection elision.
                Unroll("", fBranchClass.GetClass(), clOfElement, pointer, basketsize, splitlevel+splitSTLP, 0);
+               SetReadLeavesPtr();
                return;
             }
             // If the branch's name is not the same as the base class name,
@@ -436,6 +437,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
                //        branch constructor which takes a folder as input, in which
                //        case the top-level branch name will have internal dots
                //        representing the folder hierarchy.
+               SetReadLeavesPtr();
                return;
             }
             if (nbranches == fBranches.GetEntriesFast()) {

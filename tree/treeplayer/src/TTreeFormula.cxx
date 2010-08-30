@@ -441,7 +441,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMult
 
 //______________________________________________________________________________
 Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
-                                       TFormLeafInfo *maininfo,
+                                       TFormLeafInfo * /* maininfo */,
                                        Bool_t useCollectionObject) {
    // This method is used internally to decode the dimensions of the variables
 
@@ -474,6 +474,9 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
       TClass *cl = leafinfo->fClass;
       Int_t offset;
       TStreamerElement* counter = ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(array->GetCountName(),offset);
+#if 1
+      leafinfo->fCounter = new TFormLeafInfo(cl,offset,counter);
+#else /* Code is not ready yet see revision 14078 */
       if (maininfo==0 || maininfo==leafinfo || 1) {
          leafinfo->fCounter = new TFormLeafInfo(cl,offset,counter);
       } else {
@@ -483,7 +486,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
          delete currentinfo->fNext;
          currentinfo->fNext = new TFormLeafInfo(cl,offset,counter);
       }
-
+#endif
    } else if (!useCollectionObject && elem->GetClassPointer() == TClonesArray::Class() ) {
 
       ndim = 1;
@@ -1306,7 +1309,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                   clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leaf,0);
                }
                TClass * inside_cl = clones->GetClass();
-               if (1 || inside_cl) cl = inside_cl;
+               cl = inside_cl;
 
             }
             else if (!useCollectionObject && cl && cl->GetCollectionProxy() ) {
@@ -1565,6 +1568,10 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                   return -1;
                }
                TClass * inside_cl = clones->GetClass();
+#if 1
+               cl = inside_cl; 
+#else
+/* Maybe we should make those test lead to warning messages */
                if (1 || inside_cl) cl = inside_cl;
                // if inside_cl is nul ... we have a problem of inconsistency :(
                if (0 && strlen(work)==0) {
@@ -1572,6 +1579,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                   // so let get the number of objects
                   //strcpy(work,"fLast");
                }
+#endif
             } else if (!prevUseCollectionObject && cl && cl->GetCollectionProxy() ) {
 
                // We are NEVER interested in the Collection object but only
