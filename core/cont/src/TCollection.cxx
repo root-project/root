@@ -139,17 +139,11 @@ Int_t TCollection::Compare(const TObject *obj) const
 void TCollection::Draw(Option_t *option)
 {
    // Draw all objects in this collection.
-   // wildcarding supported, eg option="xxx*" draws only objects
-   // with names xxx*
 
-   TRegexp re(option,kTRUE);
    TIter next(this);
    TObject *object;
-   Int_t nch = (option ? strlen(option) : 0);
 
    while ((object = next())) {
-      TString s = object->GetName();
-      if (nch && strcmp(option,object->GetName()) && s.Index(re) == kNPOS) continue;
       object->Draw(option);
    }
 }
