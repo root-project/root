@@ -118,7 +118,13 @@ class RooCFunction2Ref : public TObject {
     if (result && strlen(result)) {
       return result ;
     }
-    return Form("(%p)",_ptr) ;
+    // This union is to avoid a warning message:
+    union { 
+       void *_ptr;
+       func_t _funcptr;
+    } temp;
+    temp._funcptr = _ptr;
+    return Form("(%p)",temp._ptr) ;
   }
 
   const char* argName(Int_t iarg) {
@@ -142,8 +148,8 @@ class RooCFunction2Ref : public TObject {
     return 0 ;
   }
 
-
-  VO (*_ptr)(VI1,VI2) ; //! Pointer to embedded function
+  typedef VO (*func_t)(VI1,VI2);
+  func_t _ptr; //! Pointer to embedded function
 
   static RooCFunction2Map<VO,VI1,VI2>* _fmap ; // Pointer to mapping service object
 
