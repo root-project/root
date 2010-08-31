@@ -110,6 +110,7 @@ char	*notdotdot[ MAXDIRS ];
 char	*objprefix = "";
 char	*objsuffix = OBJSUFFIX;
 char	*startat = "# DO NOT DELETE";
+char  *isysroot = "";
 int	width = 78;
 boolean	append = FALSE;
 boolean	printed = FALSE;
@@ -293,6 +294,13 @@ int main_orig(argc, argv)
 		case 'Y':
 			defincdir = argv[0]+2;
 			break;
+      case 'i':
+         if (!strcmp(argv[0]+2, "sysroot")) {
+            argv++;
+            argc--;
+            isysroot = argv[0];
+         }
+         break;
 		/* do not use if endmarker processing */
 		case 'a':
 			if (endmarker) break;
