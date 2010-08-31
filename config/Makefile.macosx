@@ -113,8 +113,8 @@ ifeq ($(F77),)
 F77           = gfortran
 endif
 F77FLAGS      = -m32 -std=legacy
-F77LIBS      := $(shell $(F77) -m32 -print-file-name=libgfortran.dylib)
-F77LIBS      += $(shell $(F77) -m32 -print-file-name=libgfortranbegin.a)
+F77LIBS      := $(shell $(F77) -m32 -print-file-name=libgfortran.dylib | grep /)
+F77LIBS      += $(shell $(F77) -m32 -print-file-name=libgfortranbegin.a | grep /)
 endif
 
 ifneq ($(findstring g77, $(F77)),)
