@@ -7644,7 +7644,8 @@ void THistPainter::PaintTable(Option_t *option)
 
    //if palette option not specified, delete a possible existing palette
    if (!Hoption.Zscale) {
-      delete fFunctions->FindObject("palette");
+      TObject *palette = fFunctions->FindObject("palette");
+      if (palette) delete palette;
    }
 
    if (fH->GetEntries() != 0 && Hoption.Axis<=0) {
