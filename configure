@@ -2463,7 +2463,7 @@ if test ! "x$enable_mysql" = "xno"; then
           enable_mysql="no"
           mysqllibdir=""
        else
-          if test "x$arch" = "xlinux" && mysql_config --libs | grep 'lib64' > /dev/null 2>& 1; then
+          if test "x$arch" = "xlinux" && mysql_config --libs | grep 'lib64/mysql' > /dev/null 2>& 1; then
              result "no (lib64 version found)"
              enable_mysql="no"
              mysqllibdir=""
