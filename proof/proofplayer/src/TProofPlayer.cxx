@@ -845,6 +845,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    gAbort = kFALSE;
    Long64_t entry;
    fProgressStatus->Reset();
+   Bool_t warn80 = kTRUE;
 
    // Get the frequency for logging memory consumption information
    TParameter<Long64_t> *par = (TParameter<Long64_t>*)fInput->FindObject("PROOF_MemLogFreq");
@@ -913,18 +914,23 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                      if (pi.fMemVirtual > 0.95 * memlim) {
                         wmsg.Form("using more than 95%% of allowed memory (%ld kB) - STOP processing", pi.fMemVirtual);
                         Error("Process", "%s", wmsg.Data());
-                        wmsg.Insert(0, "ERROR: ");
-                        if (gProofServ) gProofServ->SendAsynMessage(wmsg.Data());
+                        if (gProofServ) {
+                           wmsg.Insert(0, TString::Format("ERROR:%s ", gProofServ->GetOrdinal()));
+                           gProofServ->SendAsynMessage(wmsg.Data());
+                        }
                         fExitStatus = kStopped;
                         SetProcessing(kFALSE);
                         break;
-                     } else if (pi.fMemVirtual > 0.80 * memlim) {
+                     } else if (pi.fMemVirtual > 0.80 * memlim && warn80) {
                         // Refine monitoring
                         memlogfreq = 1;
                         wmsg.Form("using more than 80%% of allowed memory (%ld kB)", pi.fMemVirtual);
                         Warning("Process", "%s", wmsg.Data());
-                        wmsg.Insert(0, "WARNING: ");
-                        if (gProofServ) gProofServ->SendAsynMessage(wmsg.Data());
+                        if (gProofServ) {
+                           wmsg.Insert(0, TString::Format("WARNING:%s ", gProofServ->GetOrdinal()));
+                           gProofServ->SendAsynMessage(wmsg.Data());
+                        }
+                        warn80 = kFALSE;
                      }
                   }
                }
