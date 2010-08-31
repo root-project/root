@@ -1944,7 +1944,8 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
 
       case G__BIT_ISENUM:
          if (!R__t)  return 0;
-         (*dictSrcOut) << "            R__b << (Int_t&)" << R__t << ";" << std::endl;
+         (*dictSrcOut) << "            void *ptr_" << R__t << " = &" << R__t << ";\n";
+         (*dictSrcOut) << "            R__b >> *reinterpret_cast<Int_t*>(ptr_" << R__t << ");" << std::endl;
          break;
 
       case R__BIT_HASSTREAMER:
@@ -2794,6 +2795,8 @@ void WriteNamespaceInit(G__ClassInfo &cl)
 
                  << "         return &instance;" << std::endl
                  << "      }" << std::endl
+                 << "      // Insure that the inline function is _not_ optimized away by the compiler\n"
+                 << "      ::ROOT::TGenericClassInfo *(*_R__UNIQUE_(InitFunctionKeeper))() = &GenerateInitInstance;  " << std::endl
                  << "      // Static variable to force the class initialization" << std::endl
       // must be one long line otherwise R__UseDummy does not work
                  << "      static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstance();"
@@ -3140,9 +3143,10 @@ void WriteStreamer(G__ClassInfo &cl)
                      }
                   }
                } else if ((m.Type())->Property() & G__BIT_ISENUM) {
-                  if (i == 0)
-                     (*dictSrcOut) << "      R__b >> (Int_t&)" << m.Name() << ";" << std::endl;
-                  else
+                  if (i == 0) {
+                     (*dictSrcOut) << "      void *ptr_" << m.Name() << " = &" << m.Name() << ";\n";
+                     (*dictSrcOut) << "      R__b >> *reinterpret_cast<Int_t*>(ptr_" << m.Name() << ");" << std::endl;
+                  } else
                      (*dictSrcOut) << "      R__b << (Int_t)" << m.Name() << ";" << std::endl;
                } else {
                   if (isFloat16) {
