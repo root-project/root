@@ -130,5 +130,9 @@ endif
 $(BASEDO4): OPT = $(NOOPT)
 $(BASEDO4): CXXFLAGS += -I.
 
+# Optimize dictionary with stl containers.
+$(BASEDO2): NOOPT = $(OPT)
+$(BASEDO3): NOOPT = $(OPT)
+
 # reconfigure might change enable/dicable cint7:
 $(BASEDIRS)/TROOT.o: config/Makefile.config

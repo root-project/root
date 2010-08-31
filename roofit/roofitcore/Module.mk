@@ -152,3 +152,8 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		   $(ROOFITCOREDS) $(ROOFITCOREDH)
 
 distclean::     distclean-$(MODNAME)
+
+# Optimize dictionary with stl containers.
+$(ROOFITCOREDO1): NOOPT = $(OPT)
+$(ROOFITCOREDO2): NOOPT = $(OPT)
+$(ROOFITCOREDO3): NOOPT = $(OPT)

@@ -103,3 +103,6 @@ $(GLDIRS)/TGLText.o: CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLA
 
 $(GLDIRS)/TGLFontManager.o: $(FREETYPEDEP)
 $(GLDIRS)/TGLFontManager.o: CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
+
+# Optimize dictionary with stl containers.
+$(GLDO): NOOPT = $(OPT)

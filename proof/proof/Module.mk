@@ -65,3 +65,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(PROOFDEP) $(PROOFDS) $(PROOFDH) $(PROOFLIB) $(PROOFMAP)
 
 distclean::     distclean-$(MODNAME)
+
+# Optimize dictionary with stl containers.
+$(PROOFDO): NOOPT = $(OPT)

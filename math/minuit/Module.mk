@@ -65,3 +65,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MINUITDEP) $(MINUITDS) $(MINUITDH) $(MINUITLIB) $(MINUITMAP)
 
 distclean::     distclean-$(MODNAME)
+
+# Optimize dictionary with stl containers.
+$(MINUITDO): NOOPT = $(OPT)

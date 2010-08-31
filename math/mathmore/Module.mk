@@ -109,3 +109,6 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 $(MATHMOREO): CXXFLAGS += $(GSLFLAGS) -DGSL_VERSION_NUM=$(GSLVERSION) -DUSE_ROOT_ERROR
 $(MATHMOREDO): CXXFLAGS += $(GSLFLAGS) -DGSL_VERSION_NUM=$(GSLVERSION) -DUSE_ROOT_ERROR
+
+# Optimize dictionary with stl containers.
+$(MATHMOREDO): NOOPT = $(OPT)

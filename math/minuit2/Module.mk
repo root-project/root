@@ -128,3 +128,6 @@ $(MINUIT2DO): CXX=mpic++
 $(MINUIT2LIB): LD=mpic++
 endif
 endif
+
+# Optimize dictionary with stl containers.
+$(MINUIT2DO): NOOPT = $(OPT)

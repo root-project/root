@@ -130,3 +130,7 @@ test-$(MODNAME): all-$(MODNAME)
 
 ##### extra rules ######
 
+# Optimize dictionary with stl containers.
+$(GENVECTORDO): NOOPT = $(OPT)
+$(GENVECTORDO32): NOOPT = $(OPT)
+

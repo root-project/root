@@ -69,3 +69,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(METADEP) $(METADS) $(METADH) $(METACDS) $(METACDH)
 
 distclean::     distclean-$(MODNAME)
+
+# Optimize dictionary with stl containers.
+$(METADO): NOOPT = $(OPT)
+

@@ -80,3 +80,7 @@ ifeq ($(ICC_MAJOR),10)
 $(TREEPLAYERDIRS)/TTreeFormula.o: OPT = $(NOOPT)
 endif
 endif
+
+# Optimize dictionary with stl containers.
+$(TREEPLAYERDO): NOOPT = $(OPT)
+

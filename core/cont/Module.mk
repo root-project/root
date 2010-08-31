@@ -51,3 +51,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(CONTDEP) $(CONTDS) $(CONTDH)
 
 distclean::     distclean-$(MODNAME)
+
+# Optimize dictionary with stl containers.
+$(CONTDO): NOOPT = $(OPT)

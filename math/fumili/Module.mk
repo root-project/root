@@ -65,3 +65,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(FUMILIDEP) $(FUMILIDS) $(FUMILIDH) $(FUMILILIB) $(FUMILIMAP)
 
 distclean::     distclean-$(MODNAME)
+
+# Optimize dictionary with stl containers.
+$(FUMILIDO): NOOPT = $(OPT)

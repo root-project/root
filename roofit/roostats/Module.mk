@@ -75,3 +75,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -rf include/RooStats
 
 distclean::     distclean-$(MODNAME)
+
+# Optimize dictionary with stl containers.
+$(ROOSTATSDO): NOOPT = $(OPT)

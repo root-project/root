@@ -76,3 +76,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(HISTDEP) $(HISTDS) $(HISTDH) $(HISTLIB) $(HISTMAP)
 
 distclean::     distclean-$(MODNAME)
+
+# Optimize dictionary with stl containers.
+$(HISTDO): NOOPT = $(OPT)
+

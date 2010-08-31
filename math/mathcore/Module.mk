@@ -151,5 +151,9 @@ test-$(MODNAME): all-$(MODNAME)
 $(MATHCOREO): CXXFLAGS += -DUSE_ROOT_ERROR
 $(MATHCOREDO): CXXFLAGS += -DUSE_ROOT_ERROR 
 # add optimization to G__Math compilation
+# Optimize dictionary with stl containers.
 $(MATHCOREDO1) : NOOPT = $(OPT)
+$(MATHCOREDO2) : NOOPT = $(OPT)
+$(MATHCOREDO3) : NOOPT = $(OPT)
+
 

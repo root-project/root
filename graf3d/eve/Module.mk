@@ -107,3 +107,8 @@ $(MODNAME)-echo-h1:
 
 $(MODNAME)-echo-h2:
 	@echo $(EVEH2)
+
+# Optimize dictionary with stl containers.
+$(EVEDO1): NOOPT = $(OPT)
+$(EVEDO2): NOOPT = $(OPT)
+
