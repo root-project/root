@@ -514,6 +514,30 @@ INCLUDEFILES :=
 .PRECIOUS: include/%.h
 
 # special rules (need to be defined before generic ones)
+cint/cint/lib/dll_stl/G__%.o: cint/cint/lib/dll_stl/G__%.cxx
+	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
+	   $(CXXFLAGS) $(DICTFLAGS) -D__cplusplus -I$(CINTDIR)/lib/prec_stl \
+	   -I$(CINTDIR)/stl -I$(CINTDIR)/inc -- $<
+	$(CXX) $(NOOPT) $(CXXFLAGS) $(DICTFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
+
+cint/cint/lib/dll_stl/G__c_%.o: cint/cint/lib/dll_stl/G__c_%.c
+	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
+	   $(CFLAGS) $(DICTFLAGS) -I$(CINTDIR)/lib/prec_stl \
+	   -I$(CINTDIR)/stl -I$(CINTDIR)/inc -- $<
+	$(CC) $(NOOPT) $(CFLAGS) $(DICTFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
+
+cint/cint/lib/G__%.o: cint/cint/lib/G__%.cxx
+	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
+	   $(CXXFLAGS) $(DICTFLAGS) -D__cplusplus -I$(CINTDIR)/lib/prec_stl \
+	   -I$(CINTDIR)/stl -I$(CINTDIR)/inc -- $<
+	$(CXX) $(NOOPT) $(CXXFLAGS) $(DICTFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
+
+cint/cint/lib/G__c_%.o: cint/cint/lib/G__c_%.c
+	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
+	   $(CFLAGS) $(DICTFLAGS) -I$(CINTDIR)/lib/prec_stl \
+	   -I$(CINTDIR)/stl -I$(CINTDIR)/inc -- $<
+	$(CC) $(NOOPT) $(CFLAGS) $(DICTFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
+
 G__%.o: G__%.cxx
 	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
 	   $(CXXFLAGS) $(DICTFLAGS) -D__cplusplus -I$(CINTDIR)/lib/prec_stl \
