@@ -845,12 +845,12 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    gAbort = kFALSE;
    Long64_t entry;
    fProgressStatus->Reset();
-   Bool_t warn80 = kTRUE;
 
    // Get the frequency for logging memory consumption information
    TParameter<Long64_t> *par = (TParameter<Long64_t>*)fInput->FindObject("PROOF_MemLogFreq");
    volatile Long64_t memlogfreq = (par) ? par->GetVal() : 100;
    volatile Long_t memlim = (gProofServ) ? gProofServ->GetVirtMemHWM() : -1;
+   volatile Bool_t warn80 = kTRUE;
 
    TRY {
 
