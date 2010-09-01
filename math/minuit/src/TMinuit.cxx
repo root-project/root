@@ -808,9 +808,10 @@ Int_t TMinuit::FixParameter( Int_t parNo)
 // fix a parameter
 
    Int_t err;
-   Double_t tmp = parNo+1; //set internal Minuit numbering
+   Double_t tmp[1];
+   tmp[0] = parNo+1; //set internal Minuit numbering
 
-   mnexcm( "FIX", &tmp,  1,  err );
+   mnexcm( "FIX", tmp,  1,  err );
 
    return err;
 }
@@ -858,9 +859,10 @@ Int_t TMinuit::Migrad()
 {
 // invokes the MIGRAD minimizer
    Int_t err;
-   Double_t tmp = 0;
+   Double_t tmp[1];
+   tmp[0] = 0;
 
-   mnexcm( "MIGRAD", &tmp, 0, err );
+   mnexcm( "MIGRAD", tmp, 0, err );
 
    return err;
 }
@@ -871,9 +873,10 @@ Int_t TMinuit::Release( Int_t parNo)
 // release a parameter
 
    Int_t err;
-   Double_t tmp = parNo+1; //set internal Minuit numbering
+   Double_t tmp[1];
+   tmp[0] = parNo+1; //set internal Minuit numbering
 
-   mnexcm( "RELEASE", &tmp, 1, err );
+   mnexcm( "RELEASE", tmp, 1, err );
 
    return err;
 }
@@ -946,11 +949,12 @@ Int_t TMinuit::SetPrintLevel( Int_t printLevel )
    //            =  0  normal
    //            =  1  verbose
    Int_t    err;
-   Double_t tmp = printLevel;
+   Double_t tmp[1];
+   tmp[0] = printLevel;
 
-   mnexcm( "SET PRINT", &tmp, 1, err );
+   mnexcm( "SET PRINT", tmp, 1, err );
 
-   if (printLevel <=-1) mnexcm("SET NOWarnings",&tmp,0,err);
+   if (printLevel <=-1) mnexcm("SET NOWarnings",tmp,0,err);
 
    return err;
 }
