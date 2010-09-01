@@ -327,7 +327,7 @@ void TAxis3D::PaintAxis(TGaxis *axis, Float_t ang)
    Double_t r[24]       /* was [3][8] */;
    Int_t ndiv, i;
    Double_t x1[3], x2[3], y1[3], y2[3], z1[3], z2[3], av[24]  /*  was [3][8] */;
-   char chopax[8];
+   char chopax[10];
    Int_t ix1, ix2, iy1, iy2, iz1, iz2;
    Double_t rad;
 

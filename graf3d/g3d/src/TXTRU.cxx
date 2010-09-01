@@ -255,7 +255,7 @@ void TXTRU::DefineSection(Int_t iz, Float_t z, Float_t scale, Float_t x0, Float_
    // setting a new section makes things unverified
    fZOrdering  = kUncheckedZ;
 
-   if (!fZ || !fScale || iz >= fNzAlloc) {
+   if (iz >= fNzAlloc) {
       // re-allocate the z positions/scales
       Int_t   newNalloc = iz + 1;
       Float_t *newZ = new Float_t [newNalloc];
@@ -310,7 +310,7 @@ void TXTRU::DefineVertex(Int_t ipt, Float_t x, Float_t y) {
    // setting a new vertex makes things unverified
    fPolygonShape  = kUncheckedXY;
 
-   if (!fXvtx || !fYvtx || ipt >= fNxyAlloc) {
+   if (ipt >= fNxyAlloc) {
       // re-allocate the outline points
       Int_t   newNalloc = ipt + 1;
       Float_t *newX = new Float_t [newNalloc];

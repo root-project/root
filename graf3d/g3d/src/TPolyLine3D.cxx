@@ -455,7 +455,7 @@ Int_t TPolyLine3D::Merge(TCollection *li)
    }
 
    //extend this polyline to hold npoints
-   pl->SetPoint(npoints-1,0,0,0);
+   SetPoint(npoints-1,0,0,0);
 
    //merge all polylines
    next.Reset();
