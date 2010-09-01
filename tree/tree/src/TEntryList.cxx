@@ -74,6 +74,26 @@ Begin_Html
      TEntryList *elist = (TEntryList*)gDirectory->Get("elist");
 </pre>
 
+                                <h4> Example of Loop en TEntryList with a TChain</h4>
+<pre>
+void loopChain() {
+   TFile *fe = TFile::Open("myelist.root");
+   TEntryList *myelist=(TEntryList*)fe->Get("myelist");
+   TChain *ch = new TChain("ntuple");
+   ch->Add("hsimple.root");
+   ch->Add("hsimple2.root");
+   Long64_t listEntries=myelist->GetN();
+   Long64_t chainEntries = ch->GetEntries();
+   Int_t treenum=0;
+   ch->SetEntryList(myelist);
+   for (Long64_t el =0;el<listEntries;el++) {
+      Long64_t treeEntry = myelist->GetEntryAndTree(el,treenum);
+      Long64_t chainEntry = treeEntry+ch->GetTreeOffset()[treenum];
+      printf("el=%lld, treeEntry=%lld, chainEntry=%lld, treenum=%d\n",el,treeEntry,chainEntry,treenum);
+   }
+}
+</pre>
+
                                 <h4> TSelectors</h4>
 
   To fill an TEntryList from a TSelector correctly, one must add the TEntryList object
