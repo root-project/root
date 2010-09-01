@@ -100,7 +100,7 @@ namespace TMVA {
 
       // private utility routines
       void Send();
-      void InitMaps();
+      static void InitMaps();
       void WriteMsg( EMsgType type, const std::string& line ) const;
 
       const TObject*                  fObjSource;      // the source TObject (used for name)

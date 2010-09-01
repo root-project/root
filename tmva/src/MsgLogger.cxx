@@ -54,7 +54,6 @@ TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
      fMinType   ( minType )
 {
    // constructor
-   InitMaps();
 }
 
 //_______________________________________________________________________
@@ -65,7 +64,6 @@ TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType )
      fMinType   ( minType )
 {
    // constructor
-   InitMaps();
 }
 
 //_______________________________________________________________________
@@ -76,7 +74,6 @@ TMVA::MsgLogger::MsgLogger( EMsgType minType )
      fMinType   ( minType )
 {
    // constructor
-   InitMaps();
 }
 
 //_______________________________________________________________________
@@ -86,7 +83,6 @@ TMVA::MsgLogger::MsgLogger( const MsgLogger& parent )
      TObject()
 {
    // copy constructor
-   InitMaps();
    *this = parent;
 }
 
@@ -178,6 +174,7 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
 
    if (type < fMinType || (fgInhibitOutput && type!=kFATAL)) return; // no output
 
+   InitMaps();
    std::map<EMsgType, std::string>::const_iterator stype;
    if ((stype = fgTypeMap.find( type )) == fgTypeMap.end()) return;
    if (!gConfig().IsSilent() || type==kFATAL) {
