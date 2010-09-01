@@ -307,7 +307,7 @@ void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
       // We use operator() rather than Add() because
       // if the address has already been registered, we want to
       // update it's uniqueID (this can easily happen when the
-      // referenced obejct have been stored in a TClonesArray.
+      // referenced object have been stored in a TClonesArray.
       (*fgObjPIDs)(hash, (Long_t)obj) = GetUniqueID();
    }
 }
