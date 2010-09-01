@@ -10,16 +10,17 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
 #include <fstream>
 #include "TString.h"
+#include "TROOT.h"
+#include "RooGlobalFunc.h"
 #include "RooWorkspace.h"
 #include "RooRealVar.h"
 #include "RooAbsPdf.h"
 #include "RooDataSet.h"
 #include "RooPlot.h"
-#endif
+#include "RooStats/HLFactory.h"
+
 
 
 // use this order for safety on library loading
@@ -53,7 +54,7 @@ hlf.AddChannel("model1","sb_model1","flat1");
 hlf.AddChannel("model2","sb_model2","flat2");
 RooAbsPdf* pdf=hlf.GetTotSigBkgPdf();
 RooCategory* thecat = hlf.GetTotCategory();
-RooRealVar* x= hlf.GetWs()->arg("x");
+RooRealVar* x= static_cast<RooRealVar*>(hlf.GetWs()->arg("x"));
 
 RooDataSet* data = pdf->generate(RooArgSet(*x,*thecat),Extended());
 

@@ -10,16 +10,19 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
+
+
 #include <fstream>
 #include "TString.h"
+#include "TFile.h"
+#include "TROOT.h"
+#include "RooGlobalFunc.h"
 #include "RooWorkspace.h"
 #include "RooRealVar.h"
 #include "RooAbsPdf.h"
 #include "RooDataSet.h"
 #include "RooPlot.h"
-#endif
+#include "RooStats/HLFactory.h"
 
 
 // use this order for safety on library loading
@@ -76,7 +79,7 @@ HLFactory hlf("HLFactoryComplexExample",
               "rs603_card_WsMaker.rs",
               false);
 
-RooRealVar* x = hlf.GetWs()->arg("x");
+RooRealVar* x = static_cast<RooRealVar*>(hlf.GetWs()->arg("x"));
 RooAbsPdf* pdf1 = hlf.GetWs()->pdf("sb_model1");
 RooAbsPdf* pdf2 = hlf.GetWs()->pdf("sb_model2");
 
@@ -101,20 +104,20 @@ cout << "-------------------------------------------------------------------\n"
      << "-------------------------------------------------------------------\n";
 
 
-HLFactory hlf("HLFactoryElaborateExample",
-              "rs603_card.rs",
-              false);
+HLFactory hlf_2("HLFactoryElaborateExample",
+                "rs603_card.rs",
+                false);
 
-RooRealVar* x = hlf.GetWs()->var("x");
-RooAbsPdf* pdf1 = hlf.GetWs()->pdf("sb_model1");
-RooAbsPdf* pdf2 = hlf.GetWs()->pdf("sb_model2");
+x = hlf_2.GetWs()->var("x");
+pdf1 = hlf_2.GetWs()->pdf("sb_model1");
+pdf2 = hlf_2.GetWs()->pdf("sb_model2");
 
-hlf.AddChannel("model1","sb_model1","flat1","data1");
-hlf.AddChannel("model2","sb_model2","flat2","data2");
+hlf_2.AddChannel("model1","sb_model1","flat1","data1");
+hlf_2.AddChannel("model2","sb_model2","flat2","data2");
 
-RooDataSet* data = hlf.GetTotDataSet();
-RooAbsPdf* pdf = hlf.GetTotSigBkgPdf();
-RooCategory* thecat = hlf.GetTotCategory();
+RooDataSet* data = hlf_2.GetTotDataSet();
+RooAbsPdf* pdf = hlf_2.GetTotSigBkgPdf();
+RooCategory* thecat = hlf_2.GetTotCategory();
 
 // --- Perform extended ML fit of composite PDF to toy data ---
 pdf->fitTo(*data) ;

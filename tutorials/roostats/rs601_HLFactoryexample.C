@@ -10,16 +10,16 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "RooGlobalFunc.h"
 #include <fstream>
 #include "TString.h"
+#include "TROOT.h"
+#include "RooGlobalFunc.h"
 #include "RooWorkspace.h"
 #include "RooRealVar.h"
 #include "RooAbsPdf.h"
 #include "RooDataSet.h"
 #include "RooPlot.h"
-#endif
+#include "RooStats/HLFactory.h"
 
 
 // use this order for safety on library loading
@@ -48,11 +48,11 @@ void rs601_HLFactoryexample() {
 
     RooWorkspace* w = hlf.GetWs();
 
-    RooRealVar* mes = w->arg("mes");
-    RooAbsPdf* sum = w->pdf("sum");
-    RooAbsPdf* argus = w->pdf("argus");
-    RooRealVar* mean = w->arg("mean");
-    RooRealVar* argpar = w->arg("argpar");
+    RooRealVar* mes = dynamic_cast<RooRealVar*>(w->arg("mes"));
+    RooAbsPdf* sum = dynamic_cast<RooAbsPdf*>(w->pdf("sum"));
+    RooAbsPdf* argus = dynamic_cast<RooAbsPdf*>(w->pdf("argus"));
+//    RooRealVar* mean = dynamic_cast<RooRealVar*>(w->arg("mean"));
+//    RooRealVar* argpar = dynamic_cast<RooRealVar*>(w->arg("argpar"));
 
     // --- Generate a toyMC sample from composite PDF ---
     RooDataSet *data = sum->generate(*mes,2000) ;
