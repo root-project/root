@@ -5638,11 +5638,15 @@ Int_t THistPainter::PaintInit()
    Double_t xm = ymin;
    if (maximum) ymax = fH->GetMaximumStored();
    if (minimum) xm   = fH->GetMinimumStored();
-   if (Hoption.Logy && xm <= 0) {
-      Error(where, "log scale requested with zero or negative argument (%f)", xm);
+   if (Hoption.Logy && xm < 0) {
+      Error(where, "log scale requested with a negative argument (%f)", xm);
       return 0;
+   } else if (Hoption.Logy && xm>=0 && ymax==0) { // empty histogram in log scale
+      ymin = 0.01;
+      ymax = 10.;
+   } else {
+      ymin = xm;
    }
-   else ymin = xm;
 
    if (ymin >= ymax && !Hoption.Plus) {
       if (Hoption.Logy) {
