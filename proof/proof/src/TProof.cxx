@@ -7425,6 +7425,7 @@ Int_t TProof::UploadPackageOnClient(const char *parpack, EUploadPackageOpt opt, 
 #ifndef WIN32
       char ctmp[4096];
       ssize_t sz = readlink(par.Data(), ctmp, 4096);
+      if (sz >= 4096) sz = 4095;
       if (sz > 0) {
          ctmp[sz] = '\0';
          par = ctmp;
