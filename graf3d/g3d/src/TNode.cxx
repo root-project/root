@@ -408,9 +408,9 @@ char *TNode::GetObjectInfo(Int_t, Int_t) const
 
    const char *snull = "";
    if (!gPad) return (char*)snull;
-   static char info[256];
-   snprintf(info,256,"%s/%s, shape=%s/%s",GetName(),GetTitle(),fShape->GetName(),fShape->ClassName());
-   return info;
+   static TString info;
+   info.Form("%s/%s, shape=%s/%s",GetName(),GetTitle(),fShape->GetName(),fShape->ClassName());
+   return const_cast<char*>(info.Data());
 }
 
 
