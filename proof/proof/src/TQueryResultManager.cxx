@@ -683,15 +683,15 @@ void TQueryResultManager::SaveQuery(TProofQueryResult *pq, Int_t mxq)
                if (farc && fcom)
                   break;
             }
-            if (farc) {
+            if (!farc && !fcom) {
+               break;
+            } else if (farc) {
                RemoveQuery(farc, kTRUE);
                fKeptQueries--;
             } else if (fcom) {
                RemoveQuery(fcom);
                fKeptQueries--;
             }
-            if (!farc && !fcom)
-               break;
          }
       }
       if (fKeptQueries < mxq) {
