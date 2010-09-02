@@ -143,6 +143,7 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
    fActWrksLast = -1;
    fEvtRateLast = -1.;
    fMBsReadLast = -1.;
+   fEffSessLast = -1.;
    fAWLastFill = kFALSE;
    fReportPeriod = -1.;
 
