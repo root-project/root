@@ -431,6 +431,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
                }
             }
          }
+         SafeDelete(iter);
          PDB(kPacketizer,2)
             Info("GetNextPacket", "worker-%s: sum speed: %lf, sum busy: %f",
                                  sl->GetOrdinal(), sumSpeed, sumBusy);

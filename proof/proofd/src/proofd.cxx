@@ -524,6 +524,7 @@ void ProofdExec()
       } else if (lab < 0) {
          ErrorInfo("ProofdExec: problems receiving auth buffer");
       }
+      if (authbuff) delete[] authbuff;
    }
 
    if(RpdGetClientProtocol() >= 16) {

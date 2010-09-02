@@ -415,10 +415,14 @@ Int_t TDataSetManagerFile::NotifyUpdate(const char *group, const char *user,
       mac.SaveSource(fListFile.Data());
       if (!(newMd5 = TMD5::FileChecksum(fListFile.Data()))) {
          Error("NotifyUpdate", "problems calculating new checksum of %s", fListFile.Data());
+         SafeDelete(oldMd5);
          return -1;
       }
       if (*newMd5 == *oldMd5)
          Warning("NotifyUpdate", "checksum for %s did not change!", fListFile.Data());
+      // Cleanup
+      SafeDelete(oldMd5);
+      SafeDelete(newMd5);
    }
    // Done
    return 0;
@@ -1176,6 +1180,7 @@ Int_t TDataSetManagerFile::CheckLocalCache(const char *group, const char *user,
    }
    // Get the file, if needed
    if (need_update) {
+      SafeDelete(locmd5);
       if (!TFile::Cp(path, locpath, kFALSE)) {
          Error("CheckLocalCache", "cannot get remote file '%s' - ignoring", path.Data());
          return -1;
@@ -1463,11 +1468,13 @@ Int_t TDataSetManagerFile::ChecksumDataSet(const char *path,
    // Save it to a file
    if (TMD5::WriteChecksum(md5path, md5sum) != 0) {
       Error("ChecksumDataSet", "problems saving checksum to '%s'", md5path);
+      SafeDelete(md5sum);
       return -1;
    }
    // Fill output
    checksum = md5sum->AsString();
    // Done
+   SafeDelete(md5sum);
    return 0;
 }
 

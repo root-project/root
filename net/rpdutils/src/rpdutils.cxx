@@ -1590,8 +1590,10 @@ int RpdReUseAuth(const char *sstr, int kind)
 
    // kClear
    if (kind == kROOTD_USER) {
-      if (!(gReUseAllow & gAUTH_CLR_MSK))
+      if (!(gReUseAllow & gAUTH_CLR_MSK)) {
+         if (user) delete[] user;
          return 0;              // re-authentication required by administrator
+      }
       gSec = 0;
       // Decode subject string
       sscanf(sstr, "%d %d %d %d %s", &gRemPid, &offset, &opt, &lenU, user);
@@ -1610,8 +1612,10 @@ int RpdReUseAuth(const char *sstr, int kind)
    }
    // kSRP
    if (kind == kROOTD_SRPUSER) {
-      if (!(gReUseAllow & gAUTH_SRP_MSK))
+      if (!(gReUseAllow & gAUTH_SRP_MSK)) {
+         if (user) delete[] user;
          return 0;              // re-authentication required by administrator
+      }
       gSec = 1;
       // Decode subject string
       sscanf(sstr, "%d %d %d %d %s", &gRemPid, &offset, &opt, &lenU, user);
@@ -1630,8 +1634,10 @@ int RpdReUseAuth(const char *sstr, int kind)
    }
    // kKrb5
    if (kind == kROOTD_KRB5) {
-      if (!(gReUseAllow & gAUTH_KRB_MSK))
+      if (!(gReUseAllow & gAUTH_KRB_MSK)) {
+         if (user) delete[] user;
          return 0;              // re-authentication required by administrator
+      }
       gSec = 2;
       // Decode subject string
       sscanf(sstr, "%d %d %d %d %s", &gRemPid, &offset, &opt, &lenU, user);
@@ -1650,8 +1656,10 @@ int RpdReUseAuth(const char *sstr, int kind)
    }
    // kGlobus
    if (kind == kROOTD_GLOBUS) {
-      if (!(gReUseAllow & gAUTH_GLB_MSK))
+      if (!(gReUseAllow & gAUTH_GLB_MSK)) {
+         if (user) delete[] user;
          return 0;              //  re-authentication required by administrator
+      }
       gSec = 3;
       // Decode subject string
       int lenS;
@@ -1669,8 +1677,10 @@ int RpdReUseAuth(const char *sstr, int kind)
    }
    // kSSH
    if (kind == kROOTD_SSH) {
-      if (!(gReUseAllow & gAUTH_SSH_MSK))
+      if (!(gReUseAllow & gAUTH_SSH_MSK)) {
+         if (user) delete[] user;
          return 0;              //  re-authentication required by administrator
+      }
       gSec = 4;
       // Decode subject string
       char *pipe = new char[strlen(sstr)];
@@ -2458,6 +2468,7 @@ int RpdSshAuth(const char *sstr)
                       authFile,GetErrno());
             NetSend(kErrFileOpen, kROOTD_ERR);
             if (authFile) delete[] authFile;
+            if (user) delete[] user;
             return auth;
          }
       }
@@ -2475,6 +2486,7 @@ int RpdSshAuth(const char *sstr)
                       st0.st_uid, st0.st_gid);
             NetSend(kErrNoChangePermission, kROOTD_ERR);
             if (authFile) delete[] authFile;
+            if (user) delete[] user;
             return auth;
          }
       }
@@ -2559,8 +2571,8 @@ int RpdSshAuth(const char *sstr)
             if (GetErrno() != ENOENT)
                ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
                          authFile,GetErrno());
-         if (authFile)
-            delete[] authFile;
+         if (authFile) delete[] authFile;
+         if (user) delete[] user;
          // Set to Auth failed
          auth = 0;
          return auth;
@@ -2571,8 +2583,8 @@ int RpdSshAuth(const char *sstr)
             if (GetErrno() != ENOENT)
                ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
                          authFile,GetErrno());
-         if (authFile)
-            delete[] authFile;
+         if (authFile) delete[] authFile;
+         if (user) delete[] user;
          // Set to Auth failed
          auth = 0;
          return auth;
@@ -2591,8 +2603,8 @@ int RpdSshAuth(const char *sstr)
                if (GetErrno() != ENOENT)
                   ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
                             authFile,GetErrno());
-            if (authFile)
-               delete[] authFile;
+            if (authFile) delete[] authFile;
+            if (user) delete[] user;
             // Set to Auth failed
             auth = 0;
             return auth;
@@ -2622,6 +2634,7 @@ int RpdSshAuth(const char *sstr)
                }
             }
          }
+         fclose(floc);
 
          // If the file is still empty or scrappy return
          if (auth == 0) {
@@ -2638,8 +2651,8 @@ int RpdSshAuth(const char *sstr)
                if (GetErrno() != ENOENT)
                   ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
                             authFile,GetErrno());
-            if (authFile)
-               delete[] authFile;
+            if (authFile) delete[] authFile;
+            if (user) delete[] user;
             return auth;
          }
       } else {
@@ -2649,8 +2662,8 @@ int RpdSshAuth(const char *sstr)
             if (GetErrno() != ENOENT)
                ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
                          authFile,GetErrno());
-         if (authFile)
-            delete[] authFile;
+         if (authFile) delete[] authFile;
+         if (user) delete[] user;
          // Set to Auth failed
          auth = 0;
          return auth;
@@ -4971,12 +4984,8 @@ int RpdGetRSAKeys(const char *pubkey, int Opt)
             char *usr = 0;
             if (pw)
                usr = pw->pw_name;
-            else
-               usr = strdup("????");
             ErrorInfo("RpdGetRSAKeys: access to key file %s denied"
-                      " to user: %s", pubkey, usr);
-            if (!strcmp(usr,"????"))
-               delete[] usr;
+                      " to user: %s", pubkey, (usr ? usr : (char *)"????"));
          } else
             ErrorInfo("RpdGetRSAKeys: cannot open key file"
                       " %s (errno: %d)", pubkey, GetErrno());
@@ -5587,6 +5596,7 @@ int RpdRecvClientRSAKey()
             ResetErrno();
          close (ielog);
       }
+      delete [] elogfile;
       return 2;
    }
 

@@ -396,6 +396,7 @@ Int_t TProofLite::GetNumberOfWorkers(const char *url)
       fgWrksMax = sysenv.GetValue("ProofLite.MaxWorkers", -1);
       // Notify once the user if its will is changed
       notify = kTRUE;
+      if (s) delete[] s;
    }
    if (fgWrksMax == 0) {
       ::Error("TProofLite::GetNumberOfWorkers",
