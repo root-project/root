@@ -723,7 +723,7 @@ TDSet::TDSet(const char *name,
    if (name && strlen(name) > 0) {
       // In the old constructor signature it was the 'type'
       if (!type) {
-         if ((c = TClass::GetClass(name)))
+         if (TClass::GetClass(name))
             fType = name;
          else
             // Default type is 'TTree'
@@ -733,12 +733,12 @@ TDSet::TDSet(const char *name,
          fName = name;
          // Check type
          if (strlen(type) > 0)
-            if ((c = TClass::GetClass(type)))
+            if (TClass::GetClass(type))
                fType = type;
       }
    } else if (type && strlen(type) > 0) {
       // Check the type
-      if ((c = TClass::GetClass(type)))
+      if (TClass::GetClass(type))
          fType = type;
    }
    // The correct class type
@@ -1117,9 +1117,6 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
    }
    TString msg;
 
-   // Element to be added
-   TDSetElement *el = 0;
-
    // Check if a remap of the server coordinates is requested
    const char *file = fi->GetFirstUrl()->GetUrl();
    Bool_t setLookedUp = kTRUE;
@@ -1130,7 +1127,7 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
       setLookedUp = kFALSE;
    }
    // Check if it already exists in the TDSet
-   if ((el = (TDSetElement *) fElements->FindObject(file))) {
+   if (fElements->FindObject(file)) {
       msg.Form("duplication detected: %40s is already in dataset - ignored", file);
       Warning("Add", "%s", msg.Data());
       if (gProofServ) {
@@ -1183,7 +1180,7 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
    }
    const char *dataset = 0;
    if (strcmp(fi->GetTitle(), "TFileInfo")) dataset = fi->GetTitle();
-   el = new TDSetElement(file, objname, dir, first, -1, 0, dataset);
+   TDSetElement *el = new TDSetElement(file, objname, dir, first, -1, 0, dataset);
    el->SetEntries(num);
 
    // Set looked-up bit

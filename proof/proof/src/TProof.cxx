@@ -9691,14 +9691,6 @@ Bool_t TProof::RegisterDataSet(const char *dataSetName,
       return kFALSE;
    }
 
-   TSocket *master;
-   if (fActiveSlaves->GetSize())
-      master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
-   else {
-      Error("RegisterDataSet", "No connection to the master!");
-      return kFALSE;
-   }
-
    TMessage mess(kPROOF_DATASETS);
    mess << Int_t(kRegisterDataSet);
    mess << TString(dataSetName);
@@ -9767,14 +9759,6 @@ TMap *TProof::GetDataSets(const char *uri, const char* optStr)
       return 0;
    }
 
-   TSocket *master = 0;
-   if (fActiveSlaves->GetSize())
-      master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
-   else {
-      Error("GetDataSets", "no connection to the master!");
-      return 0;
-   }
-
    TMessage mess(kPROOF_DATASETS);
    mess << Int_t(kGetDataSets);
    mess << TString(uri?uri:"");
@@ -9807,15 +9791,6 @@ void TProof::ShowDataSets(const char *uri, const char* optStr)
    if (fProtocol < 15) {
       Info("ShowDataSets",
            "functionality not available: the server does not have dataset support");
-      return;
-   }
-
-   TSocket *master = 0;
-   if (fActiveSlaves->GetSize())
-      master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
-   else {
-      Error("ShowDataSets",
-            "no connection to the master!");
       return;
    }
 
@@ -9914,15 +9889,7 @@ TFileCollection *TProof::GetDataSet(const char *uri, const char *optStr)
       Info("GetDataSet", "specifying a dataset name is mandatory");
       return 0;
    }
-
-   TSocket *master = 0;
-
-   if (fActiveSlaves->GetSize())
-      master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
-   else {
-      Error("GetDataSet", "no connection to the master!");
-      return 0;
-   }
+   
    TMessage nameMess(kPROOF_DATASETS);
    nameMess << Int_t(kGetDataSet);
    nameMess << TString(uri);
@@ -9966,13 +9933,6 @@ Int_t TProof::RemoveDataSet(const char *uri, const char* optStr)
    // Remove the specified dataset from the PROOF cluster.
    // Files are not deleted.
 
-   TSocket *master;
-   if (fActiveSlaves->GetSize())
-      master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
-   else {
-      Error("RemoveDataSet", "no connection to the master!");
-      return kError;
-   }
    TMessage nameMess(kPROOF_DATASETS);
    nameMess << Int_t(kRemoveDataSet);
    nameMess << TString(uri?uri:"");
@@ -10009,13 +9969,6 @@ Int_t TProof::VerifyDataSet(const char *uri, const char* optStr)
    }
 
    Int_t nMissingFiles = 0;
-   TSocket *master;
-   if (fActiveSlaves->GetSize())
-      master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
-   else {
-      Error("VerifyDataSet", "no connection to the master!");
-      return kError;
-   }
    TMessage nameMess(kPROOF_DATASETS);
    nameMess << Int_t(kVerifyDataSet);
    nameMess << TString(uri ? uri : "");
@@ -10040,14 +9993,6 @@ TMap *TProof::GetDataSetQuota(const char* optStr)
    if (IsLite()) {
       Info("UploadDataSet", "Lite-session: functionality not implemented");
       return (TMap *)0;
-   }
-
-   TSocket *master = 0;
-   if (fActiveSlaves->GetSize())
-      master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
-   else {
-      Error("GetDataSetQuota", "no connection to the master!");
-      return 0;
    }
 
    TMessage mess(kPROOF_DATASETS);
@@ -10086,14 +10031,6 @@ void TProof::ShowDataSetQuota(Option_t* opt)
 
    if (IsLite()) {
       Info("UploadDataSet", "Lite-session: functionality not implemented");
-      return;
-   }
-
-   TSocket *master = 0;
-   if (fActiveSlaves->GetSize())
-      master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
-   else {
-      Error("ShowDataSetQuota", "no connection to the master!");
       return;
    }
 

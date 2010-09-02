@@ -3414,10 +3414,9 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
       if (elist) input->Add(elist);
       pq->SetInputList(input, kTRUE);
 
-      // Re-attach to the new list
+      // Clear the list
       input->Clear("nodelete");
       SafeDelete(input);
-      input = pq->GetInputList();
 
       // Save input data, if any
       TString emsg;

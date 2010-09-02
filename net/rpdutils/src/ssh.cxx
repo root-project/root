@@ -215,7 +215,8 @@ int SshToolNotifyFailure(const char *Pipe)
    int sd;
    struct sockaddr_un servAddr;
    servAddr.sun_family = AF_UNIX;
-   strcpy(servAddr.sun_path, Pipe);
+   memcpy((void *) servAddr.sun_path, (void *) Pipe, 108);
+   servAddr.sun_path[107] = '\0';
    if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
       ErrorInfo("SshToolNotifyFailure: cannot open socket: exiting ");
       return 1;

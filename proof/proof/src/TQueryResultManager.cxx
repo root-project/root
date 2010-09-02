@@ -17,6 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <errno.h>
 #ifdef WIN32
 #   include <io.h>
 #endif
@@ -78,7 +79,11 @@ void TQueryResultManager::AddLogFile(TProofQueryResult *pq)
    fflush(fLogFile);
 
    // Save current position
-   off_t lnow = lseek(fileno(fLogFile), (off_t) 0, SEEK_CUR);
+   off_t lnow = 0;
+   if ((lnow = lseek(fileno(fLogFile), (off_t) 0, SEEK_CUR)) < 0) {
+      Error("AddLogFile", "problems lseeking current position on log file (errno: %d)", errno);
+      return;
+   }
 
    // The range we are interested in
    Int_t start = pq->fStartLog;
@@ -95,7 +100,7 @@ void TQueryResultManager::AddLogFile(TProofQueryResult *pq)
    }
 
    // Restore initial position if partial send
-   lseek(fileno(fLogFile), lnow, SEEK_SET);
+   if (lnow >= 0) lseek(fileno(fLogFile), lnow, SEEK_SET);
 }
 //______________________________________________________________________________
 Int_t TQueryResultManager::CleanupQueriesDir()
