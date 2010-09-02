@@ -2231,7 +2231,7 @@ int RpdSshAuth(const char *sstr)
                 gOpenHost.c_str(),sstr);
 
    // Decode subject string
-   char *user = new char[strlen(sstr)];
+   char *user = new char[strlen(sstr)+1];
    char pipeId[10];
    int lenU, ofs, opt;
    char rproto[20];
