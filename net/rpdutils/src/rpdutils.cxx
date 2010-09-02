@@ -1585,7 +1585,7 @@ int RpdReUseAuth(const char *sstr, int kind)
    if (gDebug > 2)
       ErrorInfo("RpdReUseAuth: analyzing: %s, %d", sstr, kind);
 
-   char *user = new char[strlen(sstr)];
+   char *user = new char[strlen(sstr)+1];
    char *token = 0;
 
    // kClear
