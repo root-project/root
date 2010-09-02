@@ -1452,8 +1452,12 @@ Int_t TProofLite::CopyMacroToCache(const char *macro, Int_t headerRequired,
             TMD5 *md5hcache = TMD5::FileChecksum(cachedhname);
             if (md5h && md5hcache && (*md5h != *md5hcache))
                useCacheBinaries = kFALSE;
+            SafeDelete(md5h);
+            SafeDelete(md5hcache);
          }
       }
+      SafeDelete(md5);
+      SafeDelete(md5cache);
    }
 
    // Create version file name template
