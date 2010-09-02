@@ -646,9 +646,8 @@ void TGeometry::UpdateMatrix(TNode *node)
    // this function must be called before invoking Local2Master
 
    TNode *nodes[kMAXLEVELS];
-   Int_t i;
-   for (i=0;i<kVectorSize;i++) fTranslation[0][i] = 0;
-   for (i=0;i<kMatrixSize;i++) fRotMatrix[0][i] = 0;
+   for (Int_t i=0;i<kVectorSize;i++) fTranslation[0][i] = 0;
+   for (Int_t i=0;i<kMatrixSize;i++) fRotMatrix[0][i] = 0;
    fRotMatrix[0][0] = 1;   fRotMatrix[0][4] = 1;   fRotMatrix[0][8] = 1;
 
    fGeomLevel  = 0;
@@ -661,8 +660,8 @@ void TGeometry::UpdateMatrix(TNode *node)
    fGeomLevel--;
    Int_t saveGeomLevel = fGeomLevel;
    //Update matrices in the hierarchy
-   for (fGeomLevel=1;i<=saveGeomLevel;fGeomLevel++) {
-      node = nodes[i-1];
+   for (fGeomLevel=1;fGeomLevel<=saveGeomLevel;fGeomLevel++) {
+      node = nodes[fGeomLevel-1];
       UpdateTempMatrix(node->GetX(),node->GetY(),node->GetZ(),node->GetMatrix());
    }
 }
