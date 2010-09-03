@@ -52,6 +52,12 @@ TGraph2DPainter::TGraph2DPainter()
    fMTried   = 0;
    fGraph2D  = 0;
    fDelaunay = 0;
+   fXmin     = 0.;
+   fXmax     = 0.;
+   fYmin     = 0.;
+   fYmax     = 0.;
+   fZmin     = 0.;
+   fZmax     = 0.;
 }
 
 
@@ -76,6 +82,12 @@ TGraph2DPainter::TGraph2DPainter(TGraphDelaunay *gd)
    fPTried   = 0;
    fNTried   = 0;
    fMTried   = 0;
+   fXmin     = 0.;
+   fXmax     = 0.;
+   fYmin     = 0.;
+   fYmax     = 0.;
+   fZmin     = 0.;
+   fZmax     = 0.;
 }
 
 
