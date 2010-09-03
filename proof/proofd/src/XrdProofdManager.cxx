@@ -1049,7 +1049,6 @@ int XrdProofdManager::DoDirective(XrdProofdDirective *d,
    } else if (d->fName == "datasetsrc") {
       return DoDirectiveDataSetSrc(val, cfg, rcf);
    } else if (d->fName == "xrd.protocol") {
-      val = cfg->GetWord();
       return DoDirectivePort(val, cfg, rcf);
    }
    TRACE(XERR, "unknown directive: "<<d->fName);
