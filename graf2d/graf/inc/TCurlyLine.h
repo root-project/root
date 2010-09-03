@@ -34,7 +34,7 @@ protected:
    Int_t    fNsteps;         // used internally (controls precision)
    Bool_t   fIsCurly;        // true: Gluon, false: Gamma
 
-   static Double_t fgDefaultWaveLength;   //default wavelength 
+   static Double_t fgDefaultWaveLength;   //default wavelength
    static Double_t fgDefaultAmplitude;    //default amplitude
    static Bool_t   fgDefaultIsCurly;      //default curly type
 
@@ -43,9 +43,9 @@ public:
    enum {
       kTooShort = BIT(11)
    };
-   TCurlyLine(){;}
+   TCurlyLine();
    TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
-              Double_t wl = .02, 
+              Double_t wl = .02,
               Double_t amp = .01);
    virtual ~TCurlyLine(){;}
    virtual void Build();
@@ -66,11 +66,11 @@ public:
    virtual void SetEndPoint  (Double_t x2, Double_t y2);
    virtual void SavePrimitive(ostream &out, Option_t * = "");
 
-   static void     SetDefaultWaveLength(Double_t WaveLength); 
-   static void     SetDefaultAmplitude (Double_t Amplitude );    
-   static void     SetDefaultIsCurly   (Bool_t   IsCurly   );      
-   static Double_t GetDefaultWaveLength();  
-   static Double_t GetDefaultAmplitude (); 
+   static void     SetDefaultWaveLength(Double_t WaveLength);
+   static void     SetDefaultAmplitude (Double_t Amplitude );
+   static void     SetDefaultIsCurly   (Bool_t   IsCurly   );
+   static Double_t GetDefaultWaveLength();
+   static Double_t GetDefaultAmplitude ();
    static Bool_t   GetDefaultIsCurly   ();
 
    ClassDef(TCurlyLine,2) // A curly polyline

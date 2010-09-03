@@ -32,10 +32,26 @@
 #include "TMath.h"
 
 Double_t TCurlyLine::fgDefaultWaveLength = 0.02;
-Double_t TCurlyLine::fgDefaultAmplitude  = 0.01; 
-Bool_t   TCurlyLine::fgDefaultIsCurly    = kTRUE;   
+Double_t TCurlyLine::fgDefaultAmplitude  = 0.01;
+Bool_t   TCurlyLine::fgDefaultIsCurly    = kTRUE;
 
 ClassImp(TCurlyLine)
+
+
+//______________________________________________________________________________
+TCurlyLine::TCurlyLine()
+{
+   // Default constructor.
+
+   fX1         = 0.;
+   fY1         = 0.;
+   fX2         = 0.;
+   fY2         = 0.;
+   fWaveLength = 0.;
+   fAmplitude  = 0.;
+   fIsCurly    = fgDefaultIsCurly;
+   fNsteps     = 0;
+}
 
 
 //______________________________________________________________________________
@@ -128,10 +144,10 @@ void TCurlyLine::Build()
       x0    += dx;
    }
    xv[fNsteps-1] = lengthPix; yv[fNsteps-1] = 0;
-   
+
    if (InheritsFrom("TCurlyArc")) return;  // called by TCurlyArc
 
-   // rotate object and transform back to user coordinates 
+   // rotate object and transform back to user coordinates
    Double_t angle = TMath::ATan2(py2-py1, px2-px1);
    if(angle < 0) angle += 2*TMath::Pi();
 
@@ -400,6 +416,6 @@ Double_t TCurlyLine::GetDefaultAmplitude()
 Bool_t TCurlyLine::GetDefaultIsCurly()
 {
    // Get default "IsCurly".
-   
+
    return fgDefaultIsCurly;
 }
