@@ -181,6 +181,9 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
          nnode->SetVolume(vd);
          nnode->SetMotherVolume(vm);
          // Decouple old node from mother volume and connect new one
+         if (vm->TestBit(TGeoVolume::kVolumeImportNodes)) {
+            gGeoManager->GetListOfGShapes()->Add(nnode);
+         }   
          vm->GetNodes()->RemoveAt(id[i]);
          vm->GetNodes()->AddAt(nnode,id[i]);
          fNodes->RemoveAt(i+1);
