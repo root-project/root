@@ -405,8 +405,8 @@ Bool_t TXNetSystem::ConsistentWith(const char *path, void *dirptr)
    // by 'path' or 'dirptr'.
 
    if (gDebug > 1)
-      Info("ConsistenWith",
-           "Calling TNetSystem::ConsistenWith for path: %s, dir: %p", path, dirptr);
+      Info("ConsistentWith",
+           "calling for path: %s, dir: %p", path, dirptr);
 
    return TNetSystem::ConsistentWith(path,dirptr);    // for a rootd
 }
