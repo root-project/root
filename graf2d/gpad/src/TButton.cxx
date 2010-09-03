@@ -119,6 +119,7 @@ TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1
    fLogx    = kFALSE;
    fLogy    = kFALSE;
    SetEditable(kFALSE);
+   fFocused = 0;
 }
 
 
