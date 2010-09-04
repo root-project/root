@@ -824,7 +824,6 @@ G__value G__exec_text(const char* unnamedmacro)
    G__FastAllocString sname_sb(G__MAXFILENAME);
 #endif
    char* tname = tname_sb;
-   char* sname = sname_sb;
    int nest = 0, single_quote = 0, double_quote = 0;
    int ccomment = 0, cppcomment = 0;
    G__value buf;
@@ -925,7 +924,7 @@ G__value G__exec_text(const char* unnamedmacro)
    }
    else {
       sname_sb = tname;
-      sname = sname_sb;
+      const char *sname = sname_sb;
       G__storerewindposition();
       buf = G__exec_tempfile(sname);
       G__security_recover(G__serr);

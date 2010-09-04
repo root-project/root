@@ -1484,7 +1484,7 @@ int G__display_files(FILE *fout)
 *  print source file
 *
 ********************************************************************/
-int G__pr(FILE *fout,G__input_file view)
+int G__pr(FILE *fout,const G__input_file &view)
 {
   int center,thisline,filenum;
   G__FastAllocString G__oneline(G__LONGLINE*2);

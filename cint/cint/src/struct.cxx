@@ -284,13 +284,6 @@ int G__using_namespace()
       long store_struct_offset = 0;
       struct G__var_array* var = G__searchvariable(buf, hash, G__p_local, &G__global, &struct_offset, &store_struct_offset, &ig15, 1);
       if (var) {
-         char* pc = strrchr(buf, ':');
-         if (!pc) {
-            pc = buf;
-         }
-         else {
-            ++pc;
-         }
          G__FastAllocString varname(buf);
          // Allocate a variable array entry which shares value storage with the found variable.
          int store_globalvarpointer = G__globalvarpointer;

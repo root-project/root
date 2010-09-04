@@ -292,20 +292,9 @@ int G__include_file()
 * G__getmakeinfo()
 *
 ******************************************************************/
+#ifdef G__HAVE_CONFIG
 const char *G__getmakeinfo(const char *item)
 {
-  G__FastAllocString makeinfo(G__MAXFILENAME);
-  FILE *fp;
-  G__FastAllocString line(G__LARGEBUF);
-  G__FastAllocString argbuf(G__LARGEBUF);
-  char *arg[G__MAXARG];
-  int argn;
-  char *p;
-  static G__FastAllocString buf(G__ONELINE);
-
-  buf[0]='\0';
-
-#ifdef G__HAVE_CONFIG
   if (!strcmp(item,"CPP")) return G__CFG_CXX;
   else if (!strcmp(item,"CC")) return G__CFG_CC;
   else if (!strcmp(item,"DLLPOST")) return G__CFG_SOEXT;
@@ -322,9 +311,25 @@ const char *G__getmakeinfo(const char *item)
               item);
      return "";
   }
+}
 #elif defined(G__NOMAKEINFO)
+const char *G__getmakeinfo(const char *)
+{
   return("");
-#endif
+}
+#else
+const char *G__getmakeinfo(const char *item)
+{
+  G__FastAllocString makeinfo(G__MAXFILENAME);
+  FILE *fp;
+  G__FastAllocString line(G__LARGEBUF);
+  G__FastAllocString argbuf(G__LARGEBUF);
+  char *arg[G__MAXARG];
+  int argn;
+  char *p;
+  static G__FastAllocString buf(G__ONELINE);
+
+  buf[0]='\0';
 
   /****************************************************************
   * Environment variable overrides MAKEINFO file if exists.
@@ -377,6 +382,7 @@ const char *G__getmakeinfo(const char *item)
   fclose(fp);
   return(buf);
 }
+#endif
 
 /******************************************************************
 * G__getmakeinfo1()

@@ -5873,7 +5873,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
       if ((G__debug || G__break || G__step
             || (strcmp(G__breakfile, G__ifile.name) == 0) || (strcmp(G__breakfile, "") == 0)
           ) && ((G__prerun != 0) || (G__no_exec == 0))) {
-         if (G__ifile.name && G__ifile.name[0])
+         if (/* G__ifile.name is an array so never null && */ G__ifile.name[0])
             G__fprinterr(G__serr, "\n# %s", G__ifile.name);
          if (-1 != p_ifunc->tagnum) {
             G__fprinterr(G__serr, "\n%-5d%s::%s(" , G__ifile.line_number

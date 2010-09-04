@@ -96,7 +96,9 @@ int G__display_template(FILE *fout,const char *name);
 int G__display_macro(FILE *fout,const char *name);
 int G__display_string(FILE *fout);
 int G__display_files(FILE *fout);
-int G__pr(FILE *fout,struct G__input_file view);
+#ifdef __cplusplus
+int G__pr(FILE *fout,const struct G__input_file &view);
+#endif
 int G__dump_tracecoverage(FILE *fout);
 int G__objectmonitor(FILE *fout,long pobject,int tagnum,const char *addspace);
 int G__varmonitor(FILE *fout,struct G__var_array *var,const char *index,const char *addspace,long offset);
@@ -489,7 +491,7 @@ int G__createtemplatefunc(char *funcname,struct G__Templatearg *targ,int line_nu
 void G__define_type(void);
 const char *G__access2string(int caccess);
 const char *G__tagtype2string(int tagtype);
-char *G__fulltypename(int typenum);
+const char *G__fulltypename(int typenum);
 int G__val2pointer(G__value *result7);
 char *G__getbase(unsigned int expression,int base,int digit,char *result1);
 int G__getdigit(unsigned int number);

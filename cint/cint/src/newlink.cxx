@@ -489,16 +489,18 @@ static void G__fileerror(char *fname)
 /**************************************************************************
 * G__fulltypename
 **************************************************************************/
-char* G__fulltypename(int typenum)
+const char* G__fulltypename(int typenum)
 {
-  static char buf[G__LONGLINE];
-  buf[0] = 0;
-  if(-1==typenum) return (buf);
+  if(-1==typenum) { 
+     static const char *nullstr = "";
+     return nullstr;
+  }
   if(-1==G__newtype.parent_tagnum[typenum]) return(G__newtype.name[typenum]);
   else {
-    strcpy(buf,G__fulltagname(G__newtype.parent_tagnum[typenum],0));
-    strcat(buf,"::");
-    strcat(buf,G__newtype.name[typenum]);
+    static G__FastAllocString buf(G__ONELINE);
+    buf = G__fulltagname(G__newtype.parent_tagnum[typenum],0);
+    buf += "::";
+    buf += G__newtype.name[typenum];
     return(buf);
   }
 }
@@ -12473,7 +12475,7 @@ void G__specify_link(int link_stub)
         ifunc = ifunc->next;
       }
     }
-    if(!done && (p=strchr(buf,'<'))) {
+    if(!done && strchr(buf,'<')!=0) {
       struct G__param fpara;
       struct G__funclist *funclist=(struct G__funclist*)NULL;
       int tmp=0;

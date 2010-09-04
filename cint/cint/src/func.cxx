@@ -2191,7 +2191,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
          }
          else {
             if ('@' == fpara.parameter[1][0]) {
-               fpara.para[1] = fpara.para[1];
+               ; // NO-OP: fpara.para[1] = fpara.para[1];
             }
             else {
                fpara.para[1] = G__getexpr(fpara.parameter[1]);

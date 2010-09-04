@@ -1166,7 +1166,7 @@ void TDirectoryFile::ReadAll(Option_t* opt)
       while ((key = (TKey *) next())) {
          TObject *thing = GetList()->FindObject(key->GetName());
          if (thing) { delete thing; }
-         thing = key->ReadObj();
+         key->ReadObj();
       }
 }
 
