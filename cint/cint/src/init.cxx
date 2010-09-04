@@ -1017,8 +1017,15 @@ int G__main(int argc, char** argv)
             G__debugtrace = G__istrace = G__debug = 1;
             G__setdebugcond();
             break;
-         case 'G': /* trace dump */
-            G__serr = fopen(optarg, "w");
+         case 'G': { /* trace dump */
+            FILE *newerr =  fopen(optarg, "w");
+            if (newerr==0) {
+               G__fprinterr(G__serr, " -G : unable to open file %s.\n",optarg);
+            } else {
+               G__serr = newerr;
+            }
+            break;
+         }
          case 't': /* trace of input file */
             /* sprintf(monitorfile,"%s",optarg); */
             G__fprinterr(G__serr, " -t : trace execution\n");
