@@ -500,11 +500,11 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
                              sizeof(G__ifile.name) - 1);
                      G__bc_setlinenum(G__ifile.line_number);
                   }
-                  if (1 || G__istrace) {
+                  //if (1 || G__istrace) {
                      G__istrace |= 0x80;
                      G__pr(G__serr, G__ifile);
                      G__istrace &= 0x3f;
-                  }
+                  //}
                   G__pause();
                   G__ifile = store_ifile;
                }

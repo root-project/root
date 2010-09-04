@@ -1140,6 +1140,7 @@ int G__blockscope::compile_throw(string& token,int c) {
     break;
   case '(':
     m_preader->putback();
+    // Now that we put it back, let's process it
   case ' ':
   default:
     c = m_preader->fgetstream(token,";");

@@ -1031,6 +1031,7 @@ G__value G__calc_internal(const char* exprwithspace)
          case ',':
          case '<':
             ipunct = iout + 1;
+            // Mark as a punctuation as continue as usual
          default :
             exprnospace[iout++] = exprwithspace[iin++] ;
             break;

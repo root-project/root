@@ -2943,7 +2943,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
             char *line = new char[sz];
             line[0] = 0;
 
-            char c;
+            int c;
             Int_t current = 0;
             Int_t nested = 0;
             Bool_t hasversion = false;

@@ -5052,7 +5052,7 @@ void G__cppif_dummyobj(FILE *fp, struct G__ifunc_table_internal *ifunc, int i,in
     //  return;
 
     // We cannot create an object which belongs to an abstract class.
-    if (ifunc->tagnum!=-1 && G__struct.isabstract[ifunc->tagnum]) {
+    if (ifunc->tagnum==-1 || G__struct.isabstract[ifunc->tagnum]) {
        return;
     } 
 
@@ -8015,6 +8015,7 @@ int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, G__Fa
       switch (G__struct.type[tagnum]) {
         case 'a':
            G__class_autoloading(&tagnum);
+           // After attempting the autoloading, processing as a class.
 	case 'c':
 	case 's':
 	case 'u':

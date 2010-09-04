@@ -1250,7 +1250,9 @@ int G__display_eachtemplatefunc(FILE *fout, G__Definetemplatefunc *deftmpfunc)
     if(G__more(fout,msg)) return(1);
     switch(def_para->type) {
     case G__TMPLT_POINTERARG3: fprintf(fout,"*"); G__more_col(1);
+    // Fallthrough
     case G__TMPLT_POINTERARG2: fprintf(fout,"*"); G__more_col(1);
+    // Fallthrough
     case G__TMPLT_POINTERARG1: fprintf(fout,"*"); G__more_col(1);
     }
     def_para=def_para->next;

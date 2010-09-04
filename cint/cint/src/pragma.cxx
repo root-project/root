@@ -538,11 +538,13 @@ int G__security_handle(G__UINT32 category)
       G__genericerror("Can not reference through pointer");
       G__security_error |= G__RECOVERABLE;
     }
+#if 0
+    // G__SECURE_ARRAY is not used
     if(category&G__SECURE_ARRAY) {
       G__genericerror("Can not instantiate array");
       G__security_error |= G__DANGEROUS;
     }
-
+#endif
     if(category&G__SECURE_FILE_POINTER) {
       G__genericerror("Can not use FILE pointer");
       G__security_error |= G__DANGEROUS;

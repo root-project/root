@@ -377,7 +377,7 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
                   temp.Format("(struct %s)%ld" , G__fulltagname(buf.tagnum, 1), buf.obj.i);
                break;
             case 'c':
-               if (-1 != buf.tagnum &&
+               if (
                      (strcmp(G__struct.name[buf.tagnum], "G__longlong") == 0 ||
                       strcmp(G__struct.name[buf.tagnum], "G__ulonglong") == 0 ||
                       strcmp(G__struct.name[buf.tagnum], "G__longdouble") == 0)) {

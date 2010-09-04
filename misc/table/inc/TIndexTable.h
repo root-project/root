@@ -45,7 +45,7 @@ public:
       void     operator--(int) { if (fCurrentRow) fCurrentRow--;}
       iterator &operator+(Int_t idx) { if (fCurrentRow) fCurrentRow+=idx; return *this;}
       iterator &operator-(Int_t idx) { if (fCurrentRow) fCurrentRow-=idx; return *this;}
-      Int_t operator-(const iterator &it) const { return (fCurrentRow-it.fCurrentRow)/sizeof(int); }
+      Int_t operator-(const iterator &it) const { return fCurrentRow-it.fCurrentRow; }
       void *operator *(){ return (void *)(fTable?((char *)fTable->GetArray())+(*fCurrentRow)*(fTable->GetRowSize()):0);}
       operator int()  { return *fCurrentRow;}
       Bool_t operator==(const iterator &t) const { return (fCurrentRow == t.fCurrentRow); }

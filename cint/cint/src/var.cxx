@@ -1674,6 +1674,8 @@ G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal
                   G__changeconsterror(varname, "enforced macro");
                }
             }
+            G__letautomatic(var, ig15, G__struct_offset, linear_index, result);
+            break;
          default:
             // case 'X' automatic variable
             G__letautomatic(var, ig15, G__struct_offset, linear_index, result);

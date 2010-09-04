@@ -162,6 +162,8 @@ static int G__make_uniqueP2Ftypedef(char* type_name)
             switch (*from) {
                case ',':
                   isstart = 1;
+                  *(to - 1) = *from;
+                  break;
                case ')':
                case '*':
                case '&':

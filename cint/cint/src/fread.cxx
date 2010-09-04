@@ -312,6 +312,7 @@ backtoreadtemplate:
 
          case ',':
             pp = string + i + 1;
+            break;
 
          default:
             spaceflag = 1;
@@ -648,16 +649,15 @@ int G__fgetstream_template(G__FastAllocString& string, size_t offset, const char
             }
             break;
          case '<':
-            if ((single_quote == 0) && (double_quote == 0)) {
 #ifdef G__OLDIMPLEMENTATION1721_YET
+            if ((single_quote == 0) && (double_quote == 0)) {
                string.Set(i, 0);
                if (G__defined_templateclass(pp)) ++nest;
-#endif
                pp = string + i + 1;
             }
-#ifdef G__OLDIMPLEMENTATION1721_YET
             break;
 #endif
+            // Fall through when G__OLDIMPLEMENTATION1721_YET is not defined.
          case '{':
          case '(':
          case '[':
@@ -764,6 +764,7 @@ int G__fgetstream_template(G__FastAllocString& string, size_t offset, const char
          case ',':
             if (i > 2 && ' ' == string[i-1] && isalnum(string[i-2])) --i;
             pp = string + i + 1;
+            break;
 
 #ifdef G__MULTIBYTE
          default:
@@ -842,9 +843,6 @@ int G__getstream_template(const char* source, int* isrc,G__FastAllocString&  str
             if (double_quote == 0) single_quote ^= 1;
             break;
          case '<':
-            if ((single_quote == 0) && (double_quote == 0)) {
-               pp = string + i + 1;
-            }
          case '{':
          case '(':
          case '[':
@@ -912,6 +910,7 @@ int G__getstream_template(const char* source, int* isrc,G__FastAllocString&  str
          case ',':
             if (i > 2 && ' ' == string[i-1] && isalnum(string[i-2])) --i;
             pp = string + i + 1;
+            break;
 
 #ifdef G__MULTIBYTE
          default:

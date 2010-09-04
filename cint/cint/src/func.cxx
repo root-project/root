@@ -1298,6 +1298,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                   G__exec_memberfunc = store_exec_memberfunc;
                   G__memberfunc_tagnum = store_memberfunc_tagnum;
                   G__memberfunc_struct_offset = store_memberfunc_struct_offset;
+                  // We did not find the function as a regular member, let's try as a constructor.
                case G__CALLCONSTRUCTOR:
                   if (G__NOLINK > G__globalcomp) break;
                   if (!G__no_exec_compile || G__asm_noverflow) {
@@ -2547,6 +2548,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                      *known3 = 1;
                      return(G__null);
                   }
+                  // We did not find the function as a regular member, let's try as a constructor.
                case G__CALLCONSTRUCTOR:
                   /******************************************************************
                    * Search template function

@@ -72,7 +72,7 @@
 #define G__SECURE_STANDARDLIB            0x00400000 /* g__cfunc.c */
 
 /* not used */
-#define G__SECURE_ARRAY                  0x00000000 /* allocvariable var.c*/
+// #define G__SECURE_ARRAY                  0x00000000 /* allocvariable var.c*/
 
 /* Preference, invoke command line input at error */
 #define G__SECURE_NO_CHANGE              0x10000000 /* pragma.c */

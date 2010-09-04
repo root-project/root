@@ -1957,10 +1957,12 @@ int G__gettemplatearglist(const char *paralist,G__Charlist *charlist_in
         if(string[0] && '*'==string[strlen(string)-1])
           string[strlen(string)-1]='\0';
         else G__genericerror("Error: this template requests pointer arg 3");
+        // Fallthrough to handle the 2nd and then 1st argument.
       case G__TMPLT_POINTERARG2:
         if(string[0] && '*'==string[strlen(string)-1])
           string[strlen(string)-1]='\0';
         else G__genericerror("Error: this template requests pointer arg 2");
+        // Fallthrough to handle the 1st argument.
       case G__TMPLT_POINTERARG1:
         if(string[0] && '*'==string[strlen(string)-1])
           string[strlen(string)-1]='\0';
