@@ -66,6 +66,8 @@ TText::TText(const TText &text) : TNamed(text), TAttText(text)
 {
    // Copy constructor.
 
+   fX = 0.;
+   fY = 0.;
    ((TText&)text).Copy(*this);
 }
 
@@ -149,7 +151,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //  This member function must be implemented to realize the action
    //  corresponding to the mouse click on the object in the window
 
-   static Int_t px1, py1, pxold, pyold, Size, hauteur, largeur;
+   static Int_t px1, py1, pxold, pyold, Size, height, width;
    static Bool_t resize,turn;
    Int_t dx, dy;
    const char *text = GetTitle();
@@ -161,7 +163,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Short_t halign = fTextAlign/10;
    Short_t valign = fTextAlign - 10*halign;
    Double_t co, si, dtheta, norm;
-   static Bool_t droite;
+   static Bool_t right;
    static Double_t theta;
    Int_t ax, ay, bx, by, cx, cy;
    ax = ay = 0;
@@ -196,31 +198,31 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                       ((cBoxX[3]-cBoxX[0])*co-(cBoxY[3]-cBoxY[0])*si));
       switch (part) {
       case 0:
-	 if (halign == 3) {
-            turn   = kTRUE;
-	    droite = kTRUE;
+         if (halign == 3) {
+            turn  = kTRUE;
+            right = kTRUE;
             gPad->SetCursor(kRotate);
          } else {
-            resize  = kTRUE;
-            hauteur = valign;
-            largeur = halign;
+            resize = kTRUE;
+            height = valign;
+            width  = halign;
             gPad->SetCursor(kArrowVer);
-	 }
+         }
          break;
       case 1:
          gPad->SetCursor(kMove);
          break;
       case 2:
-	 if (halign == 3) {
-            resize  = kTRUE;
-            hauteur = valign;
-            largeur = halign;
+         if (halign == 3) {
+            resize = kTRUE;
+            height = valign;
+            width  = halign;
             gPad->SetCursor(kArrowVer);
          } else {
-            turn   = kTRUE;
-	    droite = kFALSE;
+            turn  = kTRUE;
+            right = kFALSE;
             gPad->SetCursor(kRotate);
-	 }
+         }
       }
       break;
 
@@ -234,35 +236,35 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             if (dtheta<0) theta = -theta;
             theta = theta/TMath::ACos(-1)*180;
             if (theta<0) theta += 360;
-            if (droite) {theta = theta+180; if (theta>=360) theta -= 360;}
+            if (right) {theta = theta+180; if (theta>=360) theta -= 360;}
          }
       }
       else if (resize) {
 
          co = TMath::Cos(fTextAngle*0.017453293);
          si = TMath::Sin(fTextAngle*0.017453293);
-         if (largeur == 1) {
+         if (width == 1) {
             switch (valign) {
                case 1 : ax = px1; ay = py1; break;
                case 2 : ax = px1+Int_t(si*h/2); ay = py1+Int_t(co*h/2); break;
                case 3 : ax = px1+Int_t(si*h*3/2); ay = py1+Int_t(co*h*3/2); break;
             }
          }
-         if (largeur == 2) {
+         if (width == 2) {
             switch (valign) {
                case 1 : ax = px1-Int_t(co*w/2); ay = py1+Int_t(si*w/2); break;
                case 2 : ax = px1-Int_t(co*w/2+si*h/2); ay = py1+Int_t(si*w/2+co*h/2); break;
                case 3 : ax = px1-Int_t(co*w/2+si*h*3/2); ay = py1+Int_t(si*w/2+co*h*3/2); break;
             }
          }
-         if (largeur == 3) {
+         if (width == 3) {
             switch (valign) {
                case 1 : ax = px1-Int_t(co*w); ay = py1+Int_t(si*w); break;
                case 2 : ax = px1-Int_t(co*w+si*h/2); ay = py1+Int_t(si*w+co*h/2); break;
                case 3 : ax = px1-Int_t(co*w+si*h*3/2); ay = py1+Int_t(si*w+co*h*3/2); break;
             }
          }
-         if (hauteur == 3) {bx = ax-Int_t(si*h); by = ay-Int_t(co*h);}
+         if (height == 3) {bx = ax-Int_t(si*h); by = ay-Int_t(co*h);}
          else {bx = ax; by = ay;}
          cx = bx+Int_t(co*w); cy = by-Int_t(si*w);
          lambda = Double_t(((px-bx)*(cx-bx)+(py-by)*(cy-by)))/Double_t(((cx-bx)*(cx-bx)+(cy-by)*(cy-by)));
