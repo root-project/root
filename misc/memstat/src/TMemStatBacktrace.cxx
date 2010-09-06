@@ -24,7 +24,7 @@
 // ROOT
 #include "TString.h"
 
-#if defined(R__GNU) && (defined(R__LINUX) || defined(R__HURD) || (defined(__APPLE__) && defined(MAC_OS_X_VERSION_10_5))) && !defined(__alpha__)
+#if defined(R__GNU) && (defined(R__LINUX) || defined(R__HURD) || (defined(__APPLE__) && defined(MAC_OS_X_VERSION_10_5)))
 #define SUPPORTS_MEMSTAT
 #endif
 

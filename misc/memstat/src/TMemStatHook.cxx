@@ -33,7 +33,7 @@ static zoneFreeHookFunc_t m_pf;
 #include <malloc.h>
 #endif
 
-#if defined(R__GNU) && (defined(R__LINUX) || defined(__APPLE__)) && !defined(__alpha__)
+#if defined(R__GNU) && (defined(R__LINUX) || defined(__APPLE__))
 #define SUPPORTS_MEMSTAT
 #endif
 

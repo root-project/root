@@ -115,6 +115,7 @@ $(XROOTDMAKE): $(XROOTDCFGD)
 		linuxx8664gcc:*) xopt="--ccflavour=gccx8664 --use-xrd-strlcpy";; \
 		linuxx8664icc:*) xopt="--ccflavour=iccx8664 --use-xrd-strlcpy";; \
 		linuxppc64gcc:*) xopt="--ccflavour=gccppc64 --use-xrd-strlcpy";; \
+                linuxalphagcc:*) xopt="--ccflavour=gcc --use-xrd-strlcpy";; \
 		linux*:*)        xarch="i386_linux"; xopt="--ccflavour=gcc --use-xrd-strlcpy";; \
 		macosx64:*)      xopt="--ccflavour=macos64";; \
 		macosxicc:*)     xopt="--ccflavour=icc";; \
