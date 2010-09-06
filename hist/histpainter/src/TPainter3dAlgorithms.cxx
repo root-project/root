@@ -132,6 +132,9 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    fSystem       = system;
    if (system == kCARTESIAN || system == kPOLAR) psi =  0;
    else                                          psi = 90;
+   fDrawFace        = 0;
+   fLegoFunction    = 0;
+   fSurfaceFunction = 0;
 
    TList *stack = gCurrentHist->GetPainter()->GetStack();
    fNStack = 0;
