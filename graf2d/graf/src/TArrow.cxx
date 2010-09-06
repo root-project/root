@@ -15,9 +15,9 @@
 #include "TArrow.h"
 #include "TVirtualPad.h"
 
-Float_t TArrow::fgDefaultAngle      = 60;    
+Float_t TArrow::fgDefaultAngle      = 60;
 Float_t TArrow::fgDefaultArrowSize  = 0.05;
-TString TArrow::fgDefaultOption     = ">";   
+TString TArrow::fgDefaultOption     = ">";
 
 ClassImp(TArrow)
 
@@ -58,7 +58,7 @@ TArrow::TArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    // Opening angle between the two sides of the arrow is fAngle (60 degrees)
    //
    //  option = ">"      -------->
-   //  option = "|->"    |-------> 
+   //  option = "|->"    |------->
    //  option = "<"      <--------
    //  option = "<-|"    <-------|
    //  option = "->-"    ---->----
@@ -70,7 +70,7 @@ TArrow::TArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    //  Note:
    //  - If FillColor == 0 draw open triangle else  draw full triangle with fillcolor
    //    default is filled with LineColor
-   //  - "Begin" and "end" bars can be combined with any other options. 
+   //  - "Begin" and "end" bars can be combined with any other options.
 
    fAngle       = fgDefaultAngle;
    fArrowSize   = arrowsize;
@@ -89,6 +89,8 @@ TArrow::TArrow(const TArrow &arrow) : TLine(arrow), TAttFill(arrow)
 {
    // Copy constructor.
 
+   fAngle     = fgDefaultAngle;
+   fArrowSize = 0.;
    ((TArrow&)arrow).Copy(*this);
 }
 
@@ -125,7 +127,7 @@ void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    //
    // if arrowsize is <= 0, arrowsize will be the current arrow size
    // if option="", option will be the current arrow option
-   
+
    Float_t size = arrowsize;
    if (size <= 0) size = fArrowSize;
    if (size <= 0) size = 0.05;
@@ -266,7 +268,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       x1h = xm - cosT*rSize/2;
       y1h = ym - sinT*rSize/2;
    }
-   
+
    // Define the arrow's head coordinates
    if (opt.Contains(">")) {
       x2ar[0] = x2h - rSize*cosT - sinT*dSize;
@@ -358,11 +360,11 @@ void TArrow::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 
    SaveFillAttributes(out,"arrow",0,1);
    SaveLineAttributes(out,"arrow",1,1,1);
-   
+
    if (fAngle !=60) {
       out << "   arrow->SetAngle(" << GetAngle() << ");" << endl;
    }
-    
+
    out<<"   arrow->Draw();"<<endl;
 }
 
@@ -373,7 +375,7 @@ void TArrow::SetDefaultAngle(Float_t Angle)
    // Set default angle.
 
    fgDefaultAngle = Angle;
-}  
+}
 
 
 //______________________________________________________________________________
@@ -382,16 +384,16 @@ void TArrow::SetDefaultArrowSize (Float_t ArrowSize)
    // Set default arrow sive.
 
    fgDefaultArrowSize = ArrowSize;
-}    
+}
 
 
 //______________________________________________________________________________
 void TArrow::SetDefaultOption(Option_t *Option)
 {
    // Set default option.
-   
+
    fgDefaultOption = Option;
-}    
+}
 
 
 //______________________________________________________________________________
@@ -400,7 +402,7 @@ Float_t TArrow::GetDefaultAngle()
    // Get default angle.
 
    return fgDefaultAngle;
-}  
+}
 
 
 //______________________________________________________________________________
@@ -409,7 +411,7 @@ Float_t TArrow::GetDefaultArrowSize()
    // Get default arrow size.
 
    return fgDefaultArrowSize;
-}  
+}
 
 
 //______________________________________________________________________________
@@ -418,4 +420,4 @@ Option_t *TArrow::GetDefaultOption()
    // Get default option.
 
    return fgDefaultOption.Data();
-}  
+}
