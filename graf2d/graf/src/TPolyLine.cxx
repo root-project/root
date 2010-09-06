@@ -151,6 +151,8 @@ TPolyLine::TPolyLine(const TPolyLine &polyline) : TObject(polyline), TAttLine(po
 {
    // PolyLine copy constructor.
 
+   fN = 0;
+   fLastPoint = -1;
    ((TPolyLine&)polyline).Copy(*this);
 }
 
