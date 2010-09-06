@@ -807,8 +807,12 @@ void TApplicationServer::SendLogFile(Int_t status, Int_t start, Int_t end)
    Bool_t adhoc = kFALSE;
 
    if (fLogFileDes > -1) {
-      ltot = lseek(fileno(stdout),   (off_t) 0, SEEK_END);
+      ltot = lseek(fileno(stdout), (off_t) 0, SEEK_END);
       lnow = lseek(fLogFileDes, (off_t) 0, SEEK_CUR);
+      if (lnow == -1) {
+         SysError("SendLogFile", "lseek failed");
+         lnow = 0;
+      }
 
       if (start > -1) {
          lseek(fLogFileDes, (off_t) start, SEEK_SET);

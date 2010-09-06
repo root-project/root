@@ -255,7 +255,8 @@ void TApplication::InitializeGraphics()
       } else {
          TPluginHandler *h;
          if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf")))
-            h->LoadPlugin();
+            if (h->LoadPlugin() == -1)
+               Info("InitializeGraphics", "no TTF support");
       }
    }
 #endif

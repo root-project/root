@@ -183,7 +183,7 @@ Int_t TKSocket::BlockRead(char *&buf, EEncoding &type)
       memcpy(buf, out.data, out.length);
       buf[out.length] = 0;
       free(out.data);
-      delete enc.data;
+      delete [] enc.data;
       rc = out.length;
    }
 

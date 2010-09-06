@@ -445,7 +445,8 @@ static const char *HomeDirectory(const char *name)
    if (name) {
       pw = getpwnam(name);
       if (pw) {
-         strncpy(path, pw->pw_dir, kMAXPATHLEN);
+         strncpy(path, pw->pw_dir, kMAXPATHLEN-1);
+         path[sizeof(path)-1] = '\0';
          return path;
       }
    } else {
@@ -453,7 +454,8 @@ static const char *HomeDirectory(const char *name)
          return mydir;
       pw = getpwuid(getuid());
       if (pw) {
-         strncpy(mydir, pw->pw_dir, kMAXPATHLEN);
+         strncpy(mydir, pw->pw_dir, kMAXPATHLEN-1);
+         mydir[sizeof(mydir)-1] = '\0';
          return mydir;
       }
    }
@@ -1137,7 +1139,8 @@ void RootdOpen(const char *msg)
 #else
          gFd = SysOpen(gFile, O_RDWR | O_CREAT | O_BINARY | trunc, S_IREAD | S_IWRITE);
 #endif
-         close(gFd);
+         if (gFd != -1)
+            close(gFd);
          gFd = -1;
       }
 #ifndef WIN32
