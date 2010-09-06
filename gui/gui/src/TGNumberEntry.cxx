@@ -242,7 +242,7 @@ static Long_t IntStr(const char *text)
    for (UInt_t i = 0; i < strlen(text); i++) {
       if (text[i] == '-') {
          sign = -1;
-      } else if ((isdigit(text[i])) && (l < 100000000)) {
+      } else if ((isdigit(text[i])) && (l < kMaxULong)) {
          l = 10 * l + (text[i] - '0');
       }
    }
@@ -370,7 +370,7 @@ static Double_t StrToReal(const char *text, RealInfo_t & ri)
    if (frac != 0) {
       for (UInt_t i = 0; i < strlen(frac); i++) {
          if (isdigit(frac[i])) {
-            if (ri.fFracNum < 100000000) {
+            if (ri.fFracNum < kMaxULong) {
                ri.fFracNum = 10 * ri.fFracNum + (frac[i] - '0');
                ri.fFracDigits++;
                ri.fFracBase *= 10;
@@ -505,7 +505,7 @@ static void GetNumbers(const char *s, Int_t & Sign,
    }
    while ((*s != 0) && ((strchr(Delimiters, *s) == 0) || (maxd2 == 0))) {
       if (isdigit(*s) && (d < maxd1)) {
-         if (n1 < 100000000) {
+         if (n1 < kMaxULong) {
             n1 = 10 * n1 + (*s - '0');
          }
          d++;
