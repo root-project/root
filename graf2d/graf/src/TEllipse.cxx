@@ -27,7 +27,7 @@ ClassImp(TEllipse)
 /* Begin_Html
 <center><h2>TEllipse : to draw ellipses</h2></center>
 The ellipse can be truncated and rotated.
-It is defined by its center <tt>(x1,y1)</tt> and two radius 
+It is defined by its center <tt>(x1,y1)</tt> and two radius
 <tt>r1</tt> and <tt>r2</tt>.
 A minimum and maximum angle may be specified <tt>(phimin, phimax)</tt>.
 The ellipse may be rotated with an angle <tt>theta</tt>. All these
@@ -91,6 +91,14 @@ TEllipse::~TEllipse()
 TEllipse::TEllipse(const TEllipse &ellipse) : TObject(ellipse), TAttLine(ellipse), TAttFill(ellipse)
 {
    // Copy constructor.
+
+   fX1 = 0;
+   fY1 = 0;
+   fR1 = 1;
+   fR2 = 1;
+   fPhimin = 0;
+   fPhimax = 360;
+   fTheta  = 0;
 
    ((TEllipse&)ellipse).Copy(*this);
 }
