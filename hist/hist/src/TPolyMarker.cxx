@@ -32,7 +32,7 @@ ClassImp(TPolyMarker)
 TPolyMarker::TPolyMarker(): TObject()
 {
    // Default constructor.
-   
+
    fN = 0;
    fX = fY = 0;
    fLastPoint = -1;
@@ -119,7 +119,7 @@ TPolyMarker& TPolyMarker::operator=(const TPolyMarker& pm)
       fX=pm.fX;
       fY=pm.fY;
       fOption=pm.fOption;
-   } 
+   }
    return *this;
 }
 
@@ -139,6 +139,8 @@ TPolyMarker::TPolyMarker(const TPolyMarker &polymarker) : TObject(polymarker), T
 {
    // Copy constructor.
 
+   fN = 0;
+   fLastPoint = -1;
    ((TPolyMarker&)polymarker).Copy(*this);
 }
 
@@ -204,7 +206,7 @@ void TPolyMarker::Draw(Option_t *option)
 void TPolyMarker::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *)
 {
    // Draw polymarker.
-   
+
    TPolyMarker *newpolymarker = new TPolyMarker(n,x,y);
    TAttMarker::Copy(*newpolymarker);
    newpolymarker->fOption = fOption;
@@ -354,7 +356,7 @@ void TPolyMarker::SetPoint(Int_t n, Double_t x, Double_t y)
    // Set point number n.
    // if n is greater than the current size, the arrays are automatically
    // extended
-   
+
    if (n < 0) return;
    if (!fX || !fY || n >= fN) {
       // re-allocate the object
@@ -402,7 +404,7 @@ void TPolyMarker::SetPolyMarker(Int_t n)
 void TPolyMarker::SetPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option)
 {
    // If n <= 0 the current arrays of points are deleted.
-   
+
    if (n <= 0) {
       fN = 0;
       fLastPoint = -1;
@@ -429,7 +431,7 @@ void TPolyMarker::SetPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *optio
 void TPolyMarker::SetPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
    // If n <= 0 the current arrays of points are deleted.
-   
+
    if (n <= 0) {
       fN = 0;
       fLastPoint = -1;
