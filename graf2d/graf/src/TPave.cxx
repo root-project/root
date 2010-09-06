@@ -45,6 +45,10 @@ TPave::TPave(): TBox()
    fName         = "";
    fInit         = 1;
    fCornerRadius = 0;
+   fX1NDC        = 0;
+   fY1NDC        = 0;
+   fX2NDC        = 0;
+   fY2NDC        = 0;
    SetFillColor(gStyle->GetFillColor());
    SetFillStyle(gStyle->GetFillStyle());
    SetLineColor(gStyle->GetLineColor());
