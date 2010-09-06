@@ -5573,7 +5573,7 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kFileLoadConfig:
                      {
                         TGFileInfo fi;
-                        fi.fFilename = (char *)gSystem->BaseName(fConfigFile);
+                        fi.fFilename = strdup((char *)gSystem->BaseName(fConfigFile));
                         fi.fIniDir = strdup((char *)gSystem->HomeDirectory());
                         fi.fFileTypes = conftypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
@@ -5588,7 +5588,7 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kFileSaveConfig:
                      {
                         TGFileInfo fi;
-                        fi.fFilename = (char *)gSystem->BaseName(fConfigFile);
+                        fi.fFilename = strdup((char *)gSystem->BaseName(fConfigFile));
                         fi.fIniDir = strdup((char *)gSystem->HomeDirectory());
                         fi.fFileTypes = conftypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDSave, &fi);
