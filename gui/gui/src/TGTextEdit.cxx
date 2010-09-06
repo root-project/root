@@ -484,9 +484,8 @@ void TGTextEdit::Print(Option_t *) const
          while (buf2[i] != '\0') {
             if (buf2[i] == '\t') {
                ULong_t j = i+1;
-               while (buf2[j] == 16 && buf2[j] != '\0') {
+               while (buf2[j] == 16)
                   j++;
-               }
                strcpy(buf2+i+1, buf2+j);
             }
             i++;

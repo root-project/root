@@ -609,7 +609,7 @@ Bool_t TGText::Save(const char *fn)
       while (buffer[i] != '\0') {
          if (buffer[i] == '\t') {
             ULong_t j = i+1;
-            while (buffer[j] == 16 && buffer[j] != '\0')
+            while (buffer[j] == 16)
                j++;
             strcpy(buffer+i+1, buffer+j);
          }
