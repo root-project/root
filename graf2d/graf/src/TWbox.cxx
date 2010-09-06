@@ -75,6 +75,8 @@ TWbox::TWbox(const TWbox &wbox) : TBox(wbox)
 {
    // wbox copy constructor.
 
+   fBorderSize  = 0;
+   fBorderMode  = 0;
    ((TWbox&)wbox).Copy(*this);
 }
 
