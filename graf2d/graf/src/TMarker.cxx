@@ -70,6 +70,8 @@ TMarker::TMarker(const TMarker &marker) : TObject(marker), TAttMarker(marker)
 {
    // Marker copy constructor.
 
+   fX = 0;
+   fY = 0;
    ((TMarker&)marker).Copy(*this);
 }
 
