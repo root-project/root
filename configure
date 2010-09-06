@@ -1491,6 +1491,12 @@ if test "x$platform" = "xmacosx" ; then
    finkdir=`$cwhich fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    logmsg "$finkdir"
 
+   if test -d /opt/local; then
+      logmsg "Checking MacPorts directory"
+      finkdir=/opt/local
+      logmsg "$finkdir"
+   fi
+
    if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 5 ]; then
       macosx105=yes
    fi
