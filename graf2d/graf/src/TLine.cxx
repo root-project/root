@@ -60,6 +60,7 @@ TLine::TLine(const TLine &line) : TObject(line), TAttLine(line)
 {
    // Line copy constructor.
 
+   fX1=0; fY1=0; fX2=0; fY2=0;
    ((TLine&)line).Copy(*this);
 }
 
