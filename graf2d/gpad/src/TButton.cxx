@@ -97,6 +97,7 @@ TButton::TButton(): TPad()
    fLogx    = kFALSE;
    fLogy    = kFALSE;
    SetEditable(kFALSE);
+   fFocused = 0;
 }
 
 
