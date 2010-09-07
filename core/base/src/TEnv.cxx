@@ -564,7 +564,7 @@ void TEnv::PrintEnv(EEnvLevel level) const
 
    TIter next(fTable);
    TEnvRec *er;
-   static const char *lc[] = { "Global", "User", "Local", "Changed" };
+   static const char *lc[] = { "Global", "User", "Local", "Changed", "All" };
 
    while ((er = (TEnvRec*) next()))
       if (er->fLevel == level || level == kEnvAll)
