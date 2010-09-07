@@ -1376,7 +1376,7 @@ void TXNetFile::SynchronizeCacheSize()
          newbsz = GetBufferSize() / 2 * 3;
          newbsz = TMath::Max(newbsz, size);
       } else {
-         newbsz;
+         newbsz = size;
       }
 
    }
