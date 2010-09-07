@@ -25,7 +25,67 @@
    fun:_ZN8TStorage11ObjectAllocEm
    fun:_ZN7TObjectnwEm
    fun:_ZNK4ROOT20TQObjectInitBehavior11CreateClassEPKcsRKSt9type_info*
-   fun:_ZN4ROOT17TGenericClassInfo8GetClassEv
+}
+
+{
+   TClass::fClassInfo
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN5TCint12SetClassInfoEP6TClassb
+   fun:_ZN6TClass4InitEPKcs*
+}
+
+{
+   TClass members
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN6TClass4InitEPKcs*
+}
+
+{
+   TClass::fStreamerInfo's storage
+   Memcheck:Leak
+   fun:_Znam
+   fun:_ZN8TStorage5AllocEm
+   fun:_ZN9TObjArray4InitEii
+   fun:_ZN9TObjArrayC1Eii
+   fun:_ZN6TClass4InitEPKcs*
+}
+
+{
+   TClass's list of base classes (TDataMember elements)
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
+   fun:_ZN5TList7AddLastEP7TObject
+   fun:_ZN5TList3AddEP7TObject
+   fun:_ZN5TCint23CreateListOfBaseClassesEP6TClass
+}
+
+{
+   TClass's list of base classes (G__DataMemberInfo elements)
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN5TCint23CreateListOfBaseClassesEP6TClass
+}
+
+{
+   TClass's list of base classes (TList container)
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN5TCint23CreateListOfBaseClassesEP6TClass
+}
+
+{
+   Unloaded TClass and its fClassInfo
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN5TCint12SetClassInfoEP6TClassb
+   fun:_ZN6TClass11SetUnloadedEv
 }
 
 {
@@ -78,6 +138,28 @@
    Memcheck:Leak
    fun:_Znam
    fun:_ZN11TUnixSystem6SetenvEPKcS1_
+}
+
+{
+   getpwuid() does a __nss_database_lookup which leaks
+   Memcheck:Leak
+   fun:malloc
+   fun:nss_parse_service_list
+   fun:__nss_database_lookup
+   obj:*
+   obj:*
+   fun:getpwuid_r@@GLIBC_*
+}
+
+{
+   getgrgid() does a __nss_database_lookup which leaks
+   Memcheck:Leak
+   fun:malloc
+   fun:nss_parse_service_list
+   fun:__nss_database_lookup
+   obj:*
+   obj:*
+   fun:getgrgid_r@@GLIBC_*
 }
 
 ######### X11 errors triggered by ROOT
