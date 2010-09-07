@@ -583,8 +583,8 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                                          kFDOpen, &fi);
                         dir = fi.fIniDir;
                         if (fi.fFilename) {
-                           Selected(StrDup(Form("file://%s",
-                              gSystem->UnixPathName(fi.fFilename))));
+                           Selected(Form("file://%s",
+                              gSystem->UnixPathName(fi.fFilename)));
                         }
                      }
                      break;
