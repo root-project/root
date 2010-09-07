@@ -77,7 +77,7 @@ namespace FUNCS {
       C() {}
       ~C() {}
       C(const C&) {}
-      C& operator=(C) {}
+      C& operator=(C) { return *this; }
       operator ClassAAA() { return ClassAAA(); }
       operator MYINT() { return 0; }
       operator OP::OPS() { return OP::OPS(); }
