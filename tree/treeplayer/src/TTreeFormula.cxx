@@ -2864,7 +2864,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
       if (dims[0]) {
          char *current = &( dims[0] );
          Int_t dim = 0;
-         char varindex[kMaxLen];
+         TString varindex;
          Int_t index;
          Int_t scanindex ;
          while (current) {
@@ -2877,20 +2877,18 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                   fIndexes[code][dim] = index;
                } else {
                   fIndexes[code][dim] = -2; // Index is calculated via a variable.
-                  strcpy(varindex,current);
-                  char *end = varindex;
+                  varindex = current;
+                  char *end = (char*)(varindex.Data());
                   for(char bracket_level = 0;*end!=0;end++) {
                      if (*end=='[') bracket_level++;
                      if (bracket_level==0 && *end==']') break;
                      if (*end==']') bracket_level--;
                   }
-                  if (end != 0) {
-                     *end = '\0';
-                     fVarIndexes[code][dim] = new TTreeFormula("index_var",
-                                                               varindex,
-                                                                  fTree);
-                     current += strlen(varindex)+1; // move to the end of the index array
-                  }
+                  *end = '\0';
+                  fVarIndexes[code][dim] = new TTreeFormula("index_var",
+                                                            varindex,
+                                                            fTree);
+                  current += strlen(varindex)+1; // move to the end of the index array
                }
             }
             dim ++;

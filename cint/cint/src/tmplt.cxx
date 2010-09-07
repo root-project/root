@@ -3572,7 +3572,7 @@ int G__templatefunc(G__value *result,const char *funcname,G__param *libp
         int tmp=0;
         char *p = pexplicitarg-1;
         pexplicitarg = (char*)malloc(strlen(funcname)+1);
-        strcpy(pexplicitarg,funcname);
+        if (pexplicitarg) strcpy(pexplicitarg,funcname);
         *p = '<';
         G__hash(funcname,hash,tmp);
       }

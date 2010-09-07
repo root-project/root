@@ -2498,7 +2498,7 @@ int G__call_cppfunc(G__value *result7,G__param *libp,G__ifunc_table_internal *if
       G__asm_inst[G__asm_cp+3] = libp->paran;
       G__asm_inst[G__asm_cp+4] = (long) cppfunc;
       G__asm_inst[G__asm_cp+5] = 0;
-      if (ifunc && ifunc->pentry[ifn]) {
+      if (ifunc->pentry[ifn]) {
          G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
       }
       G__asm_inst[G__asm_cp+6] = (long) ifunc;
@@ -2784,39 +2784,41 @@ void G__gen_cpplink()
     int lenstl;
     char *sysstl;
     G__getcintsysdir();
-    sysstl=(char*)malloc(strlen(G__cintsysdir)+20);
-    sprintf(sysstl,"%s%s%s%sstl%s",G__cintsysdir,G__psep,G__CFG_COREVERSION,G__psep,G__psep);
-    lenstl=strlen(sysstl);
-    for(filen=0;filen<G__nfile;filen++) {
-      fname = G__srcfile[filen].filename;
-      if(strncmp(fname,sysstl,lenstl)==0) fname += lenstl;
-      if(strcmp(fname,"vector")==0 || strcmp(fname,"list")==0 ||
-         strcmp(fname,"deque")==0 || strcmp(fname,"map")==0 ||
-         strcmp(fname,"multimap")==0 || strcmp(fname,"set")==0 ||
-         strcmp(fname,"multiset")==0 || strcmp(fname,"stack")==0 ||
-         strcmp(fname,"queue")==0 || strcmp(fname,"climits")==0 ||
-         strcmp(fname,"valarray")==0) {
-        algoflag |= 1;
-      }
-      if(strcmp(fname,"vector.h")==0 || strcmp(fname,"list.h")==0 ||
-         strcmp(fname,"deque.h")==0 || strcmp(fname,"map.h")==0 ||
-         strcmp(fname,"multimap.h")==0 || strcmp(fname,"set.h")==0 ||
-         strcmp(fname,"multiset.h")==0 || strcmp(fname,"stack.h")==0 ||
-         strcmp(fname,"queue.h")==0) {
-        algoflag |= 2;
-      }
+    sysstl = (char*)malloc(strlen(G__cintsysdir)+20);
+    if (sysstl) {
+       sprintf(sysstl,"%s%s%s%sstl%s",G__cintsysdir,G__psep,G__CFG_COREVERSION,G__psep,G__psep);
+       lenstl=strlen(sysstl);
+       for(filen=0;filen<G__nfile;filen++) {
+          fname = G__srcfile[filen].filename;
+          if(strncmp(fname,sysstl,lenstl)==0) fname += lenstl;
+          if(strcmp(fname,"vector")==0 || strcmp(fname,"list")==0 ||
+             strcmp(fname,"deque")==0 || strcmp(fname,"map")==0 ||
+             strcmp(fname,"multimap")==0 || strcmp(fname,"set")==0 ||
+             strcmp(fname,"multiset")==0 || strcmp(fname,"stack")==0 ||
+             strcmp(fname,"queue")==0 || strcmp(fname,"climits")==0 ||
+             strcmp(fname,"valarray")==0) {
+             algoflag |= 1;
+          }
+          if(strcmp(fname,"vector.h")==0 || strcmp(fname,"list.h")==0 ||
+             strcmp(fname,"deque.h")==0 || strcmp(fname,"map.h")==0 ||
+             strcmp(fname,"multimap.h")==0 || strcmp(fname,"set.h")==0 ||
+             strcmp(fname,"multiset.h")==0 || strcmp(fname,"stack.h")==0 ||
+             strcmp(fname,"queue.h")==0) {
+             algoflag |= 2;
+          }
+       }
+       if(algoflag&1) {
+          fprintf(hfp,"#include <algorithm>\n");
+          if(G__ignore_stdnamespace) {
+             /* fprintf(hfp,"#ifndef __hpux\n"); */
+             fprintf(hfp,"namespace std { }\n");
+             fprintf(hfp,"using namespace std;\n");
+             /* fprintf(hfp,"#endif\n"); */
+          }
+       }
+       else if(algoflag&2) fprintf(hfp,"#include <algorithm.h>\n");
+       free((void*)sysstl);
     }
-    if(algoflag&1) {
-      fprintf(hfp,"#include <algorithm>\n");
-      if(G__ignore_stdnamespace) {
-        /* fprintf(hfp,"#ifndef __hpux\n"); */
-        fprintf(hfp,"namespace std { }\n");
-        fprintf(hfp,"using namespace std;\n");
-        /* fprintf(hfp,"#endif\n"); */
-      }
-    }
-    else if(algoflag&2) fprintf(hfp,"#include <algorithm.h>\n");
-    if(sysstl) free((void*)sysstl);
   }
 
 #if !defined(G__ROOT) || defined(G__OLDIMPLEMENTATION1817)

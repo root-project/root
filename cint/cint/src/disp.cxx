@@ -1380,7 +1380,7 @@ int G__display_macro(FILE *fout,const char *name)
   struct G__var_array *var = &G__global;
   int ig15;
   G__FastAllocString msg(G__LONGLINE);
-  while(name[i]&&isspace(name[i])) i++;
+  while(name&&name[i]&&isspace(name[i])) i++;
 
   while(var) {
     for(ig15=0;ig15<var->allvar;ig15++) {

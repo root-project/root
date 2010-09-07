@@ -1197,9 +1197,9 @@ Int_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *sele
 // If no entries were selected, the function returns -1;
 //   (i.e. fitResult is null if the fit is OK)
 
-   Int_t nch = strlen(option) + 10;
+   Int_t nch = option ? strlen(option) + 10 : 10;
    char *opt = new char[nch];
-   if (option) sprintf(opt,"%s",option);
+   if (option) strncpy(opt,option,nch-1);
    else        strcpy(opt,"goff");
 
    Long64_t nsel = DrawSelect(varexp,selection,opt,nentries,firstentry);
