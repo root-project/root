@@ -1944,8 +1944,8 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
 
       case G__BIT_ISENUM:
          if (!R__t)  return 0;
-         (*dictSrcOut) << "            void *ptr_" << R__t << " = &" << R__t << ";\n";
-         (*dictSrcOut) << "            R__b >> *reinterpret_cast<Int_t*>(ptr_" << R__t << ");" << std::endl;
+         (*dictSrcOut) << "            {  void *ptr_enum = (void*)&" << R__t << ";\n";
+         (*dictSrcOut) << "               R__b >> *reinterpret_cast<Int_t*>(ptr_enum); }" << std::endl;
          break;
 
       case R__BIT_HASSTREAMER:
@@ -3144,7 +3144,7 @@ void WriteStreamer(G__ClassInfo &cl)
                   }
                } else if ((m.Type())->Property() & G__BIT_ISENUM) {
                   if (i == 0) {
-                     (*dictSrcOut) << "      void *ptr_" << m.Name() << " = &" << m.Name() << ";\n";
+                     (*dictSrcOut) << "      void *ptr_" << m.Name() << " = (void*)&" << m.Name() << ";\n";
                      (*dictSrcOut) << "      R__b >> *reinterpret_cast<Int_t*>(ptr_" << m.Name() << ");" << std::endl;
                   } else
                      (*dictSrcOut) << "      R__b << (Int_t)" << m.Name() << ";" << std::endl;
