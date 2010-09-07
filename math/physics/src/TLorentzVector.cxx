@@ -347,3 +347,13 @@ void TLorentzVector::Streamer(TBuffer &R__b)
       R__b.WriteClassBuffer(TLorentzVector::Class(),this);
    }
 }
+
+
+//______________________________________________________________________________
+void TLorentzVector::Print(Option_t *) const
+{
+  // Print the TLorentz vector components as (x,y,z,t) and (P,eta,phi,E) representations
+  Printf("(x,y,z,t)=(%f,%f,%f,%f) (P,eta,phi,E)=(%f,%f,%f,%f)",
+	 fP.x(),fP.y(),fP.z(),fE,
+	 P(),Eta(),Phi(),fE);
+}
