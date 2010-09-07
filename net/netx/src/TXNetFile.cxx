@@ -1371,8 +1371,13 @@ void TXNetFile::SynchronizeCacheSize()
                              bytesusefulness) ) {
 
       // To allow for some space for outstanding data
-      newbsz = GetCacheRead()->GetBufferSize() / 2 * 3;
-      newbsz = TMath::Max(newbsz, size);
+      TFileCacheRead *cacheRead = GetCacheRead();
+      if (cacheRead) {
+         newbsz = GetBufferSize() / 2 * 3;
+         newbsz = TMath::Max(newbsz, size);
+      } else {
+         newbsz;
+      }
 
    }
 
