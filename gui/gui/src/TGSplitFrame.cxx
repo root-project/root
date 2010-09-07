@@ -704,7 +704,7 @@ void TGSplitFrame::UnSplit(const char *which)
    // Close (unmap and remove from the list of frames) the frame contained in
    // this split frame.
 
-   TGCompositeFrame *keepframe = 0, *delframe = 0;
+   TGCompositeFrame *keepframe = 0;
    TGSplitFrame *kframe = 0, *dframe = 0;
    if (!strcmp(which, "first")) {
       dframe = GetFirst();
@@ -717,7 +717,6 @@ void TGSplitFrame::UnSplit(const char *which)
    if (!kframe || !dframe)
       return;
    keepframe = (TGCompositeFrame *)kframe->GetFrame();
-   delframe = (TGCompositeFrame *)dframe->GetFrame();
    if (keepframe) {
       keepframe->UnmapWindow();
       keepframe->ReparentWindow(gClient->GetDefaultRoot());
