@@ -2022,7 +2022,8 @@ class genDictionary(object) :
       a = args[i]
       #arg = self.genArgument(a, 0);
       arg = self.genTypeName(a['type'],colon=True)
-      if arg.find('[') != -1:
+      # Create typedefs to let us handle arrays, but skip arrays that are template parameters.
+      if arg.find('[') != -1 and arg.count('<', 0, arg.find('[')) <= arg.count('>', 0, arg.find('[')):
         if arg[-1] == '*' :
           argnoptr = arg[:-1]
           argptr = '*'
@@ -2032,6 +2033,8 @@ class genDictionary(object) :
         else :
           argnoptr = arg
           argptr = ''
+        if len(argnoptr) > 1 and argnoptr[-1] == '&':
+          argnoptr = argnoptr[:-1]
         td += pad*' ' + 'typedef %s RflxDict_arg_td%d%s;\n' % (argnoptr[:argnoptr.index('[')], i, argnoptr[argnoptr.index('['):])
         arg = 'RflxDict_arg_td%d' % i
         arg += argptr;
