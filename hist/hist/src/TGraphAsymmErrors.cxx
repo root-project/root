@@ -253,7 +253,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *h)
 
 //______________________________________________________________________________
 TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *pass, const TH1 *total, Option_t *option)
-       : TGraph()
+       : TGraph( (pass) ? pass->GetNbinsX() : 0)
 {
    // Creates a TGraphAsymmErrors by dividing two input TH1 histograms:
    // pass/total. (see TGraphAsymmErrors::BayesDivide)
