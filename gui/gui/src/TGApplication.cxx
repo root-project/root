@@ -97,7 +97,8 @@ TGApplication::TGApplication(const char *appClassName,
       if (ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
          TPluginHandler *h;
          if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf")))
-            h->LoadPlugin();
+            if (h->LoadPlugin() == -1)
+               Info("TGApplication", "no TTF support");
       }
 
       delete [] ttfont;
