@@ -36,9 +36,6 @@ class TPosixThreadCleanUp;
 
 class TPosixThread : public TThreadImp {
 
-private:
-   TPosixThreadCleanUp *fCleanUp;
-
 public:
    TPosixThread() { }
    ~TPosixThread() { }

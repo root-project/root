@@ -292,9 +292,11 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
    fSecContext     = 0;
    fRemoteProtocol = 0;
    fService        = (char *)kSOCKD;
+   fServType       = kSOCKD;
    fBytesSent      = 0;
    fBytesRecv      = 0;
    fCompress       = 0;
+   fTcpWindowSize = -1;
    fUUIDs          = 0;
    fLastUsageMtx   = 0;
 

@@ -85,7 +85,7 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
 
    // If this is a local path, try announcing a UNIX socket service
    ResetBit(TSocket::kIsUnix);
-   if (service && (!gSystem->AccessPathName(service) || 
+   if (service && (!gSystem->AccessPathName(service) ||
 #ifndef WIN32
       service[0] == '/')) {
 #else
@@ -341,9 +341,11 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
       confdir = TString(gSystem->Getenv("ROOTSYS"));
    } else {
       // Try to guess it from 'root.exe' path
-      confdir = TString(gSystem->Which(gSystem->Getenv("PATH"),
-                        "root.exe", kExecutePermission));
+      char *rootexe = gSystem->Which(gSystem->Getenv("PATH"),
+                                     "root.exe", kExecutePermission);
+      confdir = rootexe;
       confdir.Resize(confdir.Last('/'));
+      delete [] rootexe;
    }
 #else
    confdir = TString(ROOTPREFIX);

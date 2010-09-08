@@ -38,7 +38,8 @@ ClassImp(TVirtualX)
 
 //______________________________________________________________________________
 TVirtualX::TVirtualX(const char *name, const char *title) : TNamed(name, title),
-      TAttLine(1,1,1),TAttFill(1,1),TAttText(11,0,1,62,0.01), TAttMarker(1,1,1)
+      TAttLine(1,1,1),TAttFill(1,1),TAttText(11,0,1,62,0.01), TAttMarker(1,1,1),
+      fDrawMode()
 {
    // Ctor of ABC
 }

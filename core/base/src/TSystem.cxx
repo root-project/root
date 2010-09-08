@@ -118,6 +118,11 @@ TSystem::TSystem(const char *name, const char *title) : TNamed(name, title), fAc
    fInsideNotify        = kFALSE;
    fBeepDuration        = 0;
    fBeepFreq            = 0;
+   fReadmask            = 0;
+   fWritemask           = 0;
+   fReadready           = 0;
+   fWriteready          = 0;
+   fSignals             = 0;
 
    gLibraryVersion = new Int_t [gLibraryVersionMax];
    memset(gLibraryVersion, 0, gLibraryVersionMax*sizeof(Int_t));
@@ -1633,6 +1638,7 @@ void TSystem::ShowOutput(RedirectHandle_t *h)
 
    // Do not display twice the same thing
    h->fReadOffSet = ltot;
+   fclose(f);
 }
 
 //---- Dynamic Loading ---------------------------------------------------------
@@ -1823,7 +1829,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       gLibraryVersionIdx++;
       if (gLibraryVersionIdx == gLibraryVersionMax) {
          gLibraryVersionMax *= 2;
-         TStorage::ReAllocInt(gLibraryVersion, gLibraryVersionMax, gLibraryVersionIdx);
+         gLibraryVersion = TStorage::ReAllocInt(gLibraryVersion, gLibraryVersionMax, gLibraryVersionIdx);
       }
       ret = gInterpreter->Load(path, system);
       if (ret < 0) ret = -1;

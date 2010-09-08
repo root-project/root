@@ -31,9 +31,6 @@ class TWin32ThreadCleanUp;
 
 class TWin32Thread : public TThreadImp {
 
-private:
-   TWin32ThreadCleanUp *fCleanUp;
-
 public:
    TWin32Thread() { }
    ~TWin32Thread() { }

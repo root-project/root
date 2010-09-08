@@ -40,6 +40,9 @@ ClassImp(TRemoteObject);
 TRemoteObject::TRemoteObject()
 {
    // Create a remote object.
+
+   fIsFolder = kFALSE;
+   fRemoteAddress = 0;
 }
 
 //______________________________________________________________________________
