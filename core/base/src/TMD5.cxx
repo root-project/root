@@ -445,6 +445,7 @@ TMD5 *TMD5::ReadChecksum(const char *file)
 
    if (!fgets(buf, 33, fid)) {
       SysError("TMD5::ReadChecksum", "error reading checksum from %s", file);
+      fclose(fid);
       return 0;
    }
 

@@ -1247,8 +1247,8 @@ Long_t TApplicationServer::ProcessLine(const char *line, Bool_t, Int_t *)
                ReceiveFile(name, bin ? kTRUE : kFALSE, size);
             }
          }
-
       }
+      delete [] imp;
    }
 
    // Process the line now

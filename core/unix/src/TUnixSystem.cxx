@@ -1424,8 +1424,10 @@ int TUnixSystem::CopyFile(const char *f, const char *t, Bool_t overwrite)
       return -1;
 
    FILE *to   = fopen(t, "w");
-   if (!to)
+   if (!to) {
+      fclose(from);
       return -1;
+   }
 
    const int bufsize = 1024;
    char buf[bufsize];

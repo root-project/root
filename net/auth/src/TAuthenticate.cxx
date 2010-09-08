@@ -1113,7 +1113,9 @@ Bool_t TAuthenticate::GetUserPasswd(TString &user, TString &passwd,
 
    // If user also not set via  ~/.rootnetrc or ~/.netrc ask user.
    if (user == "") {
-      user = PromptUser(fRemote);
+      char *p = PromptUser(fRemote);
+      user = p;
+      delete [] p;
       if (user == "") {
          Error("GetUserPasswd", "user name not set");
          return 1;
@@ -2186,12 +2188,16 @@ const char *TAuthenticate::GetSshUser(TString user) const
 
    if (user == "") {
       if (fgPromptUser) {
-         usr = PromptUser(fRemote);
+         char *p = PromptUser(fRemote);
+         usr = p;
+         delete [] p;
       } else {
-
          usr = fgDefaultUser;
-         if (usr == "")
-            usr = PromptUser(fRemote);
+         if (usr == "") {
+            char *p = PromptUser(fRemote);
+            usr = p;
+            delete [] p;
+         }
       }
    } else {
       usr = user;
@@ -2765,7 +2771,9 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
    badpass1:
       if (passwd == "") {
          TString xp(Form("%s@%s password: ", user.Data(),fRemote.Data()));
-         passwd = PromptPasswd(xp);
+         char *p = PromptPasswd(xp);
+         passwd = p;
+         delete [] p;
          if (passwd == "")
             Error("ClearAuth", "password not set");
       }
@@ -2926,6 +2934,7 @@ THostAuth *TAuthenticate::HasHostAuth(const char *host, const char *user,
 
       if (hostFQDN == ai->GetHost() &&
           !strcmp(user, ai->GetUser()) && srvtyp == ai->GetServer()) {
+         SafeDelete(next);
          return ai;
       }
    }
@@ -2997,6 +3006,7 @@ void TAuthenticate::FileExpand(const char *fexp, FILE *ftmp)
             char *ffull = new char[flen];
             sprintf(ffull, "%s/%s", gSystem->HomeDirectory(), fileinc + 1);
             strcpy(fileinc, ffull);
+            delete [] ffull;
          }
          // Check if file exist and can be read ... ignore if not ...
          if (!gSystem->AccessPathName(fileinc, kReadPermission)) {

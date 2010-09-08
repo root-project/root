@@ -758,6 +758,7 @@ redirect(line, makefile)
 	   chmod(makefile, st.st_mode);
 #else
 	   fchmod(fileno(fdout), st.st_mode);
+	   fclose(fdin);
 #endif /* USGISH */
 	} else {
 	   printf(" "); /* we need this to update the time stamp! */
