@@ -82,10 +82,8 @@ private:
    TDSetElement  *fElement;      // location of the file and its range
    Long64_t       fNextEntry;    // cursor in the range, -1 when done // needs changing
 
-   static TSortedList fgFilesToProcess; // Global list of files (TFileStat) to be processed
-
 public:
-   TFileStat(TFileNode *node, TDSetElement *elem);
+   TFileStat(TFileNode *node, TDSetElement *elem, TList *file);
 
    Bool_t         IsDone() const {return fIsDone;}
    Bool_t         IsSortable() const { return kTRUE; }
@@ -122,22 +120,13 @@ public:
       Printf("TFileStat: %s %lld", fElement ? fElement->GetName() : "---",
                                    fElement ? fElement->GetNum() : -1);
    }
-
-   static TSortedList *GetFilesToProcess();
 };
-TSortedList TPacketizerAdaptive::TFileStat::fgFilesToProcess;
 
-TPacketizerAdaptive::TFileStat::TFileStat(TFileNode *node, TDSetElement *elem)
+TPacketizerAdaptive::TFileStat::TFileStat(TFileNode *node, TDSetElement *elem, TList *files)
    : fIsDone(kFALSE), fNode(node), fElement(elem), fNextEntry(elem->GetFirst())
 {
    // Constructor: add to the global list
-   fgFilesToProcess.Add(this);
-}
-
-TSortedList *TPacketizerAdaptive::TFileStat::GetFilesToProcess()
-{
-   // Access the global list of files to be processed
-   return &fgFilesToProcess;
+   if (files) files->Add(this);
 }
 
 //------------------------------------------------------------------------------
@@ -162,8 +151,10 @@ private:
 
    Int_t          fStrategy;        // 0 means the classic and 1 (default) - the adaptive strategy
 
+   TSortedList   *fFilesToProcess;  // Global list of files (TFileStat) to be processed (owned by TPacketizer)
+
 public:
-   TFileNode(const char *name, Int_t strategy);
+   TFileNode(const char *name, Int_t strategy, TSortedList *files);
    ~TFileNode() { delete fFiles; delete fActFiles; }
 
    void        IncMySlaveCnt() { fMySlaveCnt++; }
@@ -228,7 +219,7 @@ public:
 
    void Add(TDSetElement *elem)
    {
-      TFileStat *f = new TFileStat(this, elem);
+      TFileStat *f = new TFileStat(this, elem, fFilesToProcess);
       fFiles->Add(f);
       if (fUnAllocFileNext == 0) fUnAllocFileNext = fFiles->First();
    }
@@ -264,7 +255,7 @@ public:
    {
       if (fActFileNext == file) fActFileNext = fActFiles->After(file);
       fActFiles->Remove(file);
-      TFileStat::GetFilesToProcess()->Remove(file);
+      if (fFilesToProcess) fFilesToProcess->Remove(file);
       if (fActFileNext == 0) fActFileNext = fActFiles->First();
    }
 
@@ -323,10 +314,11 @@ public:
 };
 
 
-TPacketizerAdaptive::TFileNode::TFileNode(const char *name, Int_t strategy)
+TPacketizerAdaptive::TFileNode::TFileNode(const char *name, Int_t strategy, TSortedList *files)
    : fNodeName(name), fFiles(new TList), fUnAllocFileNext(0),
      fActFiles(new TList), fActFileNext(0), fMySlaveCnt(0),
-     fExtSlaveCnt(0), fRunSlaveCnt(0), fProcessed(0), fEvents(0), fStrategy(strategy)
+     fExtSlaveCnt(0), fRunSlaveCnt(0), fProcessed(0), fEvents(0),
+     fStrategy(strategy), fFilesToProcess(files)
 {
    // Constructor
 
@@ -462,6 +454,8 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    fMaxSlaveCnt = -1;
    fPacketAsAFraction = 4;
    fStrategy = 1;
+   fFilesToProcess = new TSortedList;
+   fFilesToProcess->SetOwner(kFALSE);
 
    if (!fProgressStatus) {
       Error("TPacketizerAdaptive", "No progress status");
@@ -637,7 +631,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
       TFileNode *node = (TFileNode *) fFileNodes->FindObject(nodeStr);
 
       if (node == 0) {
-         node = new TFileNode(nodeStr, fStrategy);
+         node = new TFileNode(nodeStr, fStrategy, fFilesToProcess);
          fFileNodes->Add(node);
          PDB(kPacketizer,2)
             Info("TPacketizerAdaptive", "creating new node '%s' or the element", nodeStr.Data());
@@ -788,7 +782,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
 
 
       if (node == 0) {
-         node = new TFileNode(nodeStr, fStrategy);
+         node = new TFileNode(nodeStr, fStrategy, fFilesToProcess);
          fFileNodes->Add( node );
          PDB(kPacketizer, 2)
             Info("TPacketizerAdaptive", "creating new node '%s' for element", nodeStr.Data());
@@ -834,6 +828,7 @@ TPacketizerAdaptive::~TPacketizerAdaptive()
    SafeDelete(fUnAllocated);
    SafeDelete(fActive);
    SafeDelete(fFileNodes);
+   SafeDelete(fFilesToProcess);
 }
 
 //______________________________________________________________________________
@@ -1417,18 +1412,18 @@ Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr, Long64_t cach
          // to not exploit optimally all potentially active workers.
          Bool_t cpsync = fCachePacketSync;
          if (fMaxEntriesRatio > 0. && cpsync) {
-            if (TFileStat::GetFilesToProcess() && TFileStat::GetFilesToProcess()->GetSize() <= fSlaveStats->GetSize()) {
+            if (fFilesToProcess && fFilesToProcess->GetSize() <= fSlaveStats->GetSize()) {
                Long64_t remEntries = fTotalEntries - GetEntriesProcessed();
                Long64_t maxEntries = -1;
-               if (TFileStat::GetFilesToProcess()->Last()) {
-                  TDSetElement *elem = (TDSetElement *) ((TFileStat *) TFileStat::GetFilesToProcess()->Last())->GetElement();
+               if (fFilesToProcess->Last()) {
+                  TDSetElement *elem = (TDSetElement *) ((TPacketizerAdaptive::TFileStat *) fFilesToProcess->Last())->GetElement();
                   if (elem) maxEntries = elem->GetNum();
                }
                if (maxEntries > remEntries / fSlaveStats->GetSize() * fMaxEntriesRatio) {
                   PDB(kPacketizer,3) {
                      Info("CalculatePacketSize", "%s: switching off synchronization of packet and cache sizes:", slstat->GetOrdinal());
                      Info("CalculatePacketSize", "%s: few files (%d) remaining of very different sizes (max/avg = %.2f > %.2f)",
-                                                 slstat->GetOrdinal(), TFileStat::GetFilesToProcess()->GetSize(),
+                                                 slstat->GetOrdinal(), fFilesToProcess->GetSize(),
                                                 (Double_t)maxEntries / remEntries * fSlaveStats->GetSize(), fMaxEntriesRatio);
                   }
                   cpsync = kFALSE;
@@ -1672,8 +1667,9 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
          if (fForceLocal)
             nonLocalNodePossible = 0;
          else
-            nonLocalNodePossible = firstNonLocalNode?
-               (fMaxSlaveCnt > 0 && firstNonLocalNode->GetExtSlaveCnt() < fMaxSlaveCnt):0;
+            nonLocalNodePossible = firstNonLocalNode ?
+                    (fMaxSlaveCnt < 0 || (fMaxSlaveCnt > 0 && firstNonLocalNode->GetExtSlaveCnt() < fMaxSlaveCnt))
+                                                     : 0;
          openLocal = !nonLocalNodePossible;
          Float_t slaveRate = slstat->GetAvgRate();
          if ( nonLocalNodePossible && fStrategy == 1) {
@@ -1733,7 +1729,7 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
 
       if ( file == 0 ) return 0;
 
-      PDB(kPacketizer,3) TFileStat::GetFilesToProcess()->Print();
+      PDB(kPacketizer,3) if (fFilesToProcess) fFilesToProcess->Print();
 
       slstat->fCurFile = file;
       // if remote and unallocated file

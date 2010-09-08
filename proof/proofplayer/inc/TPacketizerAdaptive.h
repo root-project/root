@@ -45,7 +45,7 @@ class TMap;
 class TNtupleD;
 class TProofStats;
 class TRandom;
-
+class TSortedList;
 
 class TPacketizerAdaptive : public TVirtualPacketizer {
 
@@ -60,6 +60,8 @@ private:
    TList         *fActive;       // nodes with unfinished files
    Int_t          fMaxPerfIdx;   // maximum of our slaves' performance index
    TList         *fPartitions;   // list of partitions on nodes
+
+   TSortedList   *fFilesToProcess; // Global list of files (TFileStat) to be processed
 
    Bool_t         fCachePacketSync; // control synchronization of cache and packet sizes
    Double_t       fMaxEntriesRatio; // max file entries to avg allowed ratio for cache-to-packet sync
