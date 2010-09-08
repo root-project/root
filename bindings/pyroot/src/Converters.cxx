@@ -161,10 +161,15 @@ Bool_t PyROOT::TLongRefConverter::SetArg(
       return kFALSE;
    }
 
+#if PY_VERSION_HEX < 0x03000000
    para.fl = (Long_t)&((PyIntObject*)pyobject)->ob_ival;
    if ( func )
       func->SetArgRef( (Long_t&)((PyIntObject*)pyobject)->ob_ival );
    return kTRUE;
+#else
+   para.fl = 0; func = 0;
+   return kFALSE; // there no longer is a PyIntObject in p3
+#endif
 }
 
 PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( LongRef )
@@ -193,6 +198,7 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
       return kFALSE;
    }
 
+#if PY_VERSION_HEX < 0x03000000
    para.fl = (Long_t)&((PyIntObject*)pyobject)->ob_ival;
    if ( func ) {
       G__value v;
@@ -202,6 +208,10 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
    }
 
    return kTRUE;
+#else
+   para.fl = 0; func = 0;
+   return kFALSE; // there no longer is a PyIntObject in p3
+#endif
 }
 
 PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( IntRef )

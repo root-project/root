@@ -37,6 +37,24 @@
 #include "Python.h"
 #include "Rtypes.h"
 
+// 3.0
+#if PY_VERSION_HEX > 0x03000000
+//#define Py_UNICODE char
+#define PyString_Check PyUnicode_Check
+#define PyString_AS_STRING _PyUnicode_AsString
+#define PyString_AsString _PyUnicode_AsString
+#define PyString_GET_SIZE PyUnicode_GET_SIZE
+#define PyString_FromFormat PyUnicode_FromFormat
+#define PyString_FromString PyUnicode_FromString
+
+#define PyIntObject PyLongObject
+#define PyInt_Check PyLong_Check
+#define PyInt_AsLong PyLong_AsLong
+#define PyInt_AS_LONG PyInt_AS_LONG
+#define PyInt_CheckExact PyLong_CheckExact
+#define PyInt_FromLong PyLong_FromLong
+#endif  // 3.0
+
 // backwards compatibility, pre python 2.5
 #if PY_VERSION_HEX < 0x02050000
 typedef int Py_ssize_t;

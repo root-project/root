@@ -49,7 +49,8 @@ namespace PyROOT {
 
       TClass* ObjectIsA() const
       {
-         return ((PyRootClass*)ob_type)->fClass.GetClass(); // may return null
+      // the following may return null
+         return ((PyRootClass*)((PyObject*)this)->ob_type)->fClass.GetClass();
       }
 
       void HoldOn() { fFlags |= kIsOwner; }

@@ -134,7 +134,7 @@ void TPySelector::SetupPySelf()
    }
 
 // steal reference to new self, since the deletion will come from the C++ side
-   Py_DECREF( fPySelf );
+   Py_XDECREF( fPySelf );
    fPySelf = self;
 
 // inject ourselves into the base of self; destroy old identity if need be (which happens
