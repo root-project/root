@@ -169,7 +169,7 @@ TSQLRow *TOracleResult::Next()
 
    // if select query,
    try {
-      if (fResult->next()) {
+      if (fResult->next() != oracle::occi::ResultSet::END_OF_FETCH) {
          fRowCount++;
          return new TOracleRow(fResult, fFieldInfo);
       } else
