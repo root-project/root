@@ -737,7 +737,7 @@ private:
 
 public:
    virtual        ~TRecorderInactive() {}
-   TRecorderInactive(){}
+   TRecorderInactive() : fCollect(0) {}
 
    virtual void   ListCmd(const char *filename);
    virtual void   ListGui(const char *filename);
