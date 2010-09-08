@@ -1917,7 +1917,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
       if (fPacketizer) {
          TObject *pperf = (TObject *) fPacketizer->GetProgressPerf(kTRUE);
          if (pperf) fOutput->Add(pperf);
-         TList *parms = fPacketizer->GetConfigParams();
+         TList *parms = fPacketizer->GetConfigParams(kTRUE);
          if (parms) {
             TIter nxo(parms);
             TObject *o = 0;
