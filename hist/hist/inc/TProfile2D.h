@@ -58,6 +58,16 @@ private:
    Double_t *GetB2() {return (fBinSumw2.fN ? &fBinSumw2.fArray[0] : 0 ); }
    Double_t *GetW()  {return &fArray[0];}
    Double_t *GetW2() {return &fSumw2.fArray[0];}
+   void  SetBins(Int_t, Double_t, Double_t)
+      { MayNotUse("SetBins(Int_t, Double_t, Double_t"); }
+   void  SetBins(Int_t, const Double_t*)
+      { MayNotUse("SetBins(Int_t, const Double_t*"); }
+   void  SetBins(Int_t, const Double_t*, Int_t, const Double_t*)
+      { MayNotUse("SetBins(Int_t, const Double_t*, Int_t, const Double_t*"); }
+   void SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t)
+      { MayNotUse("SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t"); }
+   void SetBins(Int_t, const Double_t *, Int_t, const Double_t *, Int_t, const Double_t *)
+      { MayNotUse("SetBins(Int_t, const Double_t*, Int_t, const Double_t*, Int_t, const Double_t*"); }
 
 public:
    TProfile2D();
@@ -124,15 +134,7 @@ public:
    virtual void      SavePrimitive(ostream &out, Option_t *option = "");
    virtual void      Scale(Double_t c1=1, Option_t *option="");
    virtual void      SetBinEntries(Int_t bin, Double_t w);
-   void              SetBins(Int_t, Double_t, Double_t)
-                      { MayNotUse("SetBins(Int_t, Double_t, Double_t"); }
-   void              SetBins(Int_t, const Double_t*)
-                      { MayNotUse("SetBins(Int_t, const Double_t*"); }
    virtual void      SetBins(Int_t nbinsx, Double_t xmin, Double_t xmax, Int_t nbinsy, Double_t ymin, Double_t ymax);
-   void              SetBins(Int_t, const Double_t*, Int_t, const Double_t*)
-                      { MayNotUse("SetBins(Int_t, const Double_t*, Int_t, const Double_t*"); }
-   void              SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t)
-                      { MayNotUse("SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t"); }
    virtual void      SetBuffer(Int_t buffersize, Option_t *option="");
    virtual void      SetErrorOption(Option_t *option=""); // *MENU*
    virtual void      Sumw2();

@@ -58,17 +58,18 @@ static Bool_t   fgApproximate;    //bin error approximation option
 private:
    Int_t Fill(Double_t) { MayNotUse("Fill(Double_t)"); return -1;}
    void FillN(Int_t, const Double_t *, const Double_t *, Int_t) { MayNotUse("FillN(Int_t, Double_t*, Double_t*, Int_t)"); }
+   Double_t *GetB()  {return &fBinEntries.fArray[0];}
+   Double_t *GetB2() {return (fBinSumw2.fN ? &fBinSumw2.fArray[0] : 0 ); }
+   Double_t *GetW()  {return &fArray[0];}
+   Double_t *GetW2() {return &fSumw2.fArray[0];}
    void SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t)
       { MayNotUse("SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t"); }
    void SetBins(Int_t, const Double_t*, Int_t, const Double_t*)
       { MayNotUse("SetBins(Int_t, const Double_t*, Int_t, const Double_t*"); }
    void SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t)
       { MayNotUse("SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t"); }
-
-   Double_t *GetB()  {return &fBinEntries.fArray[0];}
-   Double_t *GetB2() {return (fBinSumw2.fN ? &fBinSumw2.fArray[0] : 0 ); }
-   Double_t *GetW()  {return &fArray[0];}
-   Double_t *GetW2() {return &fSumw2.fArray[0];}
+   void SetBins(Int_t, const Double_t *, Int_t, const Double_t *, Int_t, const Double_t *)
+      { MayNotUse("SetBins(Int_t, const Double_t*, Int_t, const Double_t*, Int_t, const Double_t*"); }
 
 public:
    TProfile();

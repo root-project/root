@@ -3041,7 +3041,8 @@ Int_t TH1::FindBin(Double_t x, Double_t y, Double_t z)
 //   ===============================================
 //
 //      2-D and 3-D histograms are represented with a one dimensional
-//      structure.
+//      structure. This function tries to rebin the axis if the given point
+//      belongs to an under-/overflow bin.
 //      This has the advantage that all existing functions, such as
 //        GetBinContent, GetBinError, GetBinFunction work for all dimensions.
 //     See also TH1::GetBin, TAxis::FindBin and TAxis::FindFixBin
@@ -3067,6 +3068,39 @@ Int_t TH1::FindBin(Double_t x, Double_t y, Double_t z)
    return -1;
 }
 
+//______________________________________________________________________________
+Int_t TH1::FindFixBin(Double_t x, Double_t y, Double_t z)
+{
+//   Return Global bin number corresponding to x,y,z
+//   ===============================================
+//
+//      2-D and 3-D histograms are represented with a one dimensional
+//      structure. This function DOES not try to rebin the axis if the given
+//      point belongs to an under-/overflow bin.
+//      This has the advantage that all existing functions, such as
+//        GetBinContent, GetBinError, GetBinFunction work for all dimensions.
+//     See also TH1::GetBin, TAxis::FindBin and TAxis::FindFixBin
+//   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   if (GetDimension() < 2) {
+      return fXaxis.FindFixBin(x);
+   }
+   if (GetDimension() < 3) {
+      Int_t nx   = fXaxis.GetNbins()+2;
+      Int_t binx = fXaxis.FindFixBin(x);
+      Int_t biny = fYaxis.FindFixBin(y);
+      return  binx + nx*biny;
+   }
+   if (GetDimension() < 4) {
+      Int_t nx   = fXaxis.GetNbins()+2;
+      Int_t ny   = fYaxis.GetNbins()+2;
+      Int_t binx = fXaxis.FindFixBin(x);
+      Int_t biny = fYaxis.FindFixBin(y);
+      Int_t binz = fZaxis.FindFixBin(z);
+      return  binx + nx*(biny +ny*binz);
+   }
+   return -1;
+}
 
 //______________________________________________________________________________
 Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis) const
@@ -7385,6 +7419,36 @@ void TH1::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymi
    fXaxis.Set(nx,xmin,xmax);
    fYaxis.Set(ny,ymin,ymax);
    fZaxis.Set(nz,zmin,zmax);
+   fNcells = (nx+2)*(ny+2)*(nz+2);
+   SetBinsLength(fNcells);
+   if (fSumw2.fN) {
+      fSumw2.Set(fNcells);
+   }
+}
+
+//______________________________________________________________________________
+void TH1::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBins, Int_t nz, const Double_t *zBins)
+{
+   //   -*-*-*-*-*-*-*Redefine  x, y and z axis parameters with variable bin sizes *-*-*-*-*-*-*-*-*
+   //                 ============================================================
+   // The X, Y and Z axis parameters are modified.
+   // The bins content array is resized
+   // if errors (Sumw2) the errors array is resized
+   // The previous bin contents are lost
+   // To change only the axis limits, see TAxis::SetRange
+   // xBins is supposed to be of length nx+1, yBins is supposed to be of length ny+1,
+   // zBins is supposed to be of length nz+1
+
+   if (GetDimension() != 3) {
+      Error("SetBins","Operation only valid for 3-D histograms");
+      return;
+   }
+   fXaxis.SetRange(0,0);
+   fYaxis.SetRange(0,0);
+   fZaxis.SetRange(0,0);
+   fXaxis.Set(nx,xBins);
+   fYaxis.Set(ny,yBins);
+   fYaxis.Set(nz,zBins);
    fNcells = (nx+2)*(ny+2)*(nz+2);
    SetBinsLength(fNcells);
    if (fSumw2.fN) {

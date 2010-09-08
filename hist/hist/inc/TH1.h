@@ -189,6 +189,7 @@ public:
    virtual void     FillRandom(const char *fname, Int_t ntimes=5000);
    virtual void     FillRandom(TH1 *h, Int_t ntimes=5000);
    virtual Int_t    FindBin(Double_t x, Double_t y=0, Double_t z=0);
+   virtual Int_t    FindFixBin(Double_t x, Double_t y=0, Double_t z=0);
    virtual Int_t    FindFirstBinAbove(Double_t threshold=0, Int_t axis=1) const;
    virtual Int_t    FindLastBinAbove (Double_t threshold=0, Int_t axis=1) const;
    virtual TObject *FindObject(const char *name) const;
@@ -319,6 +320,8 @@ public:
    virtual void     SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBins);
    virtual void     SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax,
                             Int_t nz, Double_t zmin, Double_t zmax);
+   virtual void     SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t * yBins, Int_t nz,
+			    const Double_t *zBins);
    virtual void     SetBinsLength(Int_t = -1) { } //redefined in derived classes
    virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
    virtual void     SetCellContent(Int_t binx, Int_t biny, Double_t content);
