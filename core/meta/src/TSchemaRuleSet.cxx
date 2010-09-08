@@ -69,7 +69,7 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
    //---------------------------------------------------------------------------
    // Cannot verify the consistency if the TClass object is not present
    //---------------------------------------------------------------------------
-   if( checkConsistency && !fClass )
+   if( (checkConsistency != kNoCheck) && !fClass )
       return kFALSE;
 
    if( !rule->IsValid() )
@@ -78,7 +78,7 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
    //---------------------------------------------------------------------------
    // If we don't check the consistency then we should just add the object
    //---------------------------------------------------------------------------
-   if( !checkConsistency ) {
+   if( checkConsistency == kNoCheck ) {
       if( rule->GetEmbed() )
          fPersistentRules->Add( rule );
       else
