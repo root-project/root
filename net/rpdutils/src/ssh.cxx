@@ -261,12 +261,18 @@ int SshToolGetAuth(int UnixFd, const char *User)
 #endif
    int newUnixFd =
        accept(UnixFd, (struct sockaddr *) &sunAddr, &sunAddrLen);
+   if (newUnixFd < 0) {
+      ErrorInfo
+         ("SshToolGetAuth: problems while accepting new connection (errno: %d)", (int) errno);
+      return auth;
+   }
 
    int lenr[1], nr, len = 0;
    if ((nr = NetRecvRaw(newUnixFd, lenr, sizeof(lenr))) < 0) {
       ErrorInfo
          ("SshToolGetAuth: incorrect recv from ssh2rpd: bytes:%d, buffer:%d",
            nr, lenr[0]);
+      return auth;
    }
 
    // Transform in human readable form

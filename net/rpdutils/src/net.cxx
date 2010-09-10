@@ -393,6 +393,7 @@ again:
       }
       Error(gErrSys,kErrFatal, "NetOpen: accept error (errno: %d) ... socket %d",
                     GetErrno(),gTcpSrvSock);
+      return 0;
    }
 
    struct hostent *hp;
@@ -496,6 +497,7 @@ int NetInit(EService servtype, int port1, int port2, int tcpwindowsize)
    if ((gTcpSrvSock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
       fprintf(stderr,     "NetInit: can't create socket\n");
       Error(gErrSys,kErrFatal, "NetInit: can't create socket");
+      return gTcpSrvSock;
    }
 
    int val = 1;

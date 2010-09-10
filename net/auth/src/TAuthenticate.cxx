@@ -2098,10 +2098,12 @@ Int_t TAuthenticate::SshAuth(TString &user)
    if (reuse == 1 && sshproto == 0) {
 
       // Save type of key
-      if (kind != kROOTD_RSAKEY  || retval < 1 || retval > 2)
-         Warning("SshAuth",
-                 "problems recvn RSA key flag: got message %d, flag: %d",
-                 kind, retval);
+      if (kind != kROOTD_RSAKEY  || retval < 1 || retval > 2) {
+         Error("SshAuth",
+               "problems recvn RSA key flag: got message %d, flag: %d",
+               kind, retval);
+         return 0;
+      }
 
       fRSAKey = retval - 1;
 

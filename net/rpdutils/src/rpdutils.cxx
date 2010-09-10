@@ -719,7 +719,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
       // Open backup file
       std::string bak = std::string(gRpdAuthTab).append(".bak");
       int ibak = open(bak.c_str(), O_RDWR | O_CREAT, 0600);
-      if (itab == -1) {
+      if (ibak == -1) {
          ErrorInfo("RpdUpdateAuthTab: opt=%d: error opening/creating %s"
                    " (errno: %d)", opt, bak.c_str(), GetErrno());
          goto goingout;
@@ -4521,8 +4521,8 @@ int RpdUser(const char *sstr)
       // Decode subject string
       int nw = sscanf(sstr, "%d %d %d %d %s %d %s",
                       &gRemPid, &ofs, &opt, &ulen, user, &rulen, ruser);
-      ulen = (ulen > kMAXUSERLEN) ? kMAXUSERLEN-1 : ulen;
-      rulen = (rulen > kMAXUSERLEN) ? kMAXUSERLEN-1 : rulen;
+      ulen = (ulen >= kMAXUSERLEN) ? kMAXUSERLEN-1 : ulen;
+      rulen = (rulen >= kMAXUSERLEN) ? kMAXUSERLEN-1 : rulen;
       user[ulen] = '\0';
       if (nw > 5)
          ruser[rulen] = '\0';
@@ -6331,7 +6331,7 @@ int RpdNoAuth(int servtype)
       if (gDebug > 2)
          ErrorInfo("RpdNoAuth: remote user: %s, target user: %s",ruser,user);
 
-      SPrintf(gUser, kMAXUSERLEN, "%s", user);
+      SPrintf(gUser, 63, "%s", user);
    }
 
    auth = 4;
