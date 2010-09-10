@@ -43,7 +43,7 @@ if ($?MANPATH) then
 # Nothing to do
 else
    # Grab the default man path before setting the path to avoid duplicates 
-   if `which manpath > /dev/null` then
+   if ( -X manpath ) then
       set default_manpath = `manpath`
    else
       set default_manpath = `man -w`
