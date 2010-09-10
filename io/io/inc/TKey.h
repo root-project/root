@@ -61,6 +61,8 @@ protected:
    virtual Int_t    Read(const char *name) { return TObject::Read(name); }
    virtual void     Create(Int_t nbytes, TFile* f = 0);
            void     Build(TDirectory* motherDir, const char* classname, Long64_t filepos);
+   virtual void     Reset(); // Currently only for the use of TBasket.
+   virtual Int_t    WriteFileKeepBuffer(TFile *f = 0);
 
 
  public:

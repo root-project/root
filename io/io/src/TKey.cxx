@@ -474,6 +474,8 @@ void TKey::DeleteBuffer()
       delete fBufferRef;
       fBufferRef = 0;
    } else {
+      // We only need to delete fBuffer if fBufferRef is zero because
+      // if fBufferRef exists, we delegate ownership of fBuffer to fBufferRef.
       if (fBuffer) {
          delete [] fBuffer;
       }
@@ -1170,6 +1172,26 @@ void TKey::SetParent(const TObject *parent)
 }
 
 //______________________________________________________________________________
+void TKey::Reset()
+{
+   // Reset the key as it had not been 'filled' yet.
+   
+   fPidOffset  = 0;
+   fNbytes     = 0;
+   fBuffer     = 0;
+   fObjlen     = 0;
+   fCycle      = 0;
+   fSeekPdir   = 0;
+   fSeekKey    = 0;
+   fLeft       = 0;
+   fDatime     = (UInt_t)0;
+
+   // fBufferRef and fKeylen intentionally not reset/changed
+   
+   keyAbsNumber++; SetUniqueID(keyAbsNumber);   
+}
+
+//______________________________________________________________________________
 Int_t TKey::Sizeof() const
 {
    // Return the size in bytes of the key header structure.
@@ -1311,6 +1333,41 @@ Int_t TKey::WriteFile(Int_t cycle, TFile* f)
    }
 
    DeleteBuffer();
+   return result==kTRUE ? -1 : nsize;
+}
+
+//______________________________________________________________________________
+Int_t TKey::WriteFileKeepBuffer(TFile *f)
+{
+   // Write the encoded object supported by this key.
+   // The function returns the number of bytes committed to the file.
+   // If a write error occurs, the number of bytes returned is -1.
+   
+   if (!f) f = GetFile();
+   if (!f) return -1;
+   
+   Int_t nsize  = fNbytes;
+   char *buffer = fBuffer;
+   
+   if (fLeft > 0) nsize += sizeof(Int_t);
+   f->Seek(fSeekKey);
+#if 0
+   for (Int_t i=0;i<nsize;i+=kMAXFILEBUFFER) {
+      Int_t nb = kMAXFILEBUFFER;
+      if (i+nb > nsize) nb = nsize - i;
+      f->WriteBuffer(buffer,nb);
+      buffer += nb;
+   }
+#else
+   Bool_t result = f->WriteBuffer(buffer,nsize);
+#endif
+   //f->Flush(); Flushing takes too much time.
+   //            Let user flush the file when he wants.
+   if (gDebug) {
+      cout <<"   TKey Writing "<<nsize<< " bytes at address "<<fSeekKey
+      <<" for ID= " <<GetName()<<" Title= "<<GetTitle()<<endl;
+   }
+   
    return result==kTRUE ? -1 : nsize;
 }
 
