@@ -132,6 +132,7 @@ public:
    virtual Bool_t      HasSeveralSubSpaces() const { return kFALSE; }
    virtual Bool_t      AcceptSegment(TEveVector&, TEveVector&, Float_t /*tolerance*/) const { return kTRUE; }
    virtual Int_t       SubSpaceId(const TEveVector&) const { return 0; }
+   virtual Bool_t      IsOnSubSpaceBoundrary(const TEveVector&) const { return kFALSE; }
    virtual void        BisectBreakPoint(TEveVector& vL, TEveVector& vR, Float_t eps_sqr=1e-10f);
    virtual void        SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
 
@@ -173,6 +174,7 @@ public:
    virtual Bool_t      HasSeveralSubSpaces() const { return kTRUE; }
    virtual Bool_t      AcceptSegment(TEveVector& v1, TEveVector& v2, Float_t tolerance) const;
    virtual Int_t       SubSpaceId(const TEveVector& v) const;
+   virtual Bool_t      IsOnSubSpaceBoundrary(const TEveVector& v) const;
    virtual void        SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
 
    ClassDef(TEveRhoZProjection, 0); // Rho/Z non-linear projection.

@@ -7,6 +7,8 @@
 
 const char* histFile = "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
 
+void add_jet(TEveElement*, const char*, Float_t, Float_t, Float_t, Float_t);
+
 void calorimeters()
 {
    gSystem->IgnoreSignal(kSigSegmentationViolation, true);
@@ -119,9 +121,12 @@ TEveCalo3D* MakeCalo3D(TEveCaloData* data, TEveWindowSlot* slot)
    s->SetElementName("Scene - 3D");
 
    TEveCalo3D* calo3d = new TEveCalo3D(data);
-   calo3d->SetBarrelRadius(129);
-   calo3d->SetEndCapPos(300);
+   calo3d->SetBarrelRadius(129.00);
+   calo3d->SetEndCapPos(268.36);
    s->AddElement(calo3d);
+
+   add_jet(calo3d, "JetCone Lojz",  1.4,  1.0, 0.4, 0.2);
+   add_jet(calo3d, "JetCone Mici", -2.0, -2.1, 0.2, 0.4);
 
    return calo3d;
 }
@@ -163,4 +168,18 @@ void MakeViewerScene(TEveWindowSlot* slot, TEveViewer*& v, TEveScene*& s)
    gEve->GetViewers()->AddElement(v);
    s = gEve->SpawnNewScene("Scene");
    v->AddScene(s);
+}
+
+//______________________________________________________________________________
+void add_jet(TEveElement* parent, const char* name,
+             Float_t eta, Float_t phi,
+             Float_t deta, Float_t dphi)
+{
+   TEveJetCone* jet = new TEveJetCone(name, name);
+   jet->SetMainTransparency(60);
+   jet->SetLineColor(kRed);
+   jet->SetCylinder(129 - 10, 268.36 - 10);
+   jet->AddEllipticCone(eta, phi, deta, dphi);
+   jet->SetPickable(kTRUE);
+   parent->AddElement(jet);
 }

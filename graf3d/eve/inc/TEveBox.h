@@ -82,7 +82,7 @@ public:
 
    virtual TEveElement* GetProjectedAsElement() { return this; }
 
-   ClassDef(TEveBoxProjected, 0); // 3D box with arbitrary vertices.
+   ClassDef(TEveBoxProjected, 0); // Projection of TEveBox.
 };
 
 #endif

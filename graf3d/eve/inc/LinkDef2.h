@@ -134,6 +134,8 @@
 #pragma link C++ class TEveJetCone+;
 #pragma link C++ class TEveJetConeEditor+;
 #pragma link C++ class TEveJetConeGL+;
+#pragma link C++ class TEveJetConeProjected+;
+#pragma link C++ class TEveJetConeProjectedGL+;
 
 // TEvePlots
 #pragma link C++ class TEvePlot3D+;

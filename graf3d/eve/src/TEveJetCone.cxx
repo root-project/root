@@ -11,8 +11,14 @@
 
 #include "TEveJetCone.h"
 #include "TEveTrans.h"
+#include "TEveProjectionManager.h"
 
 #include "TMath.h"
+
+
+//==============================================================================
+// TEveJetCone
+//==============================================================================
 
 //______________________________________________________________________________
 //
@@ -20,37 +26,40 @@
 // cone radius is given.
 //
 // If Apex is not set, default is (0.,0.,0.)
-// In case of cylinder was set, cone is cut at the cylinder edges
-// example :
+// In case of cylinder was set, cone is cut at the cylinder edges.
+//
+// Example :
 //
 //  Float_t coneEta    = r.Uniform(-0.9, 0.9);
 //  Float_t conePhi    = r.Uniform(0.0, TwoPi() );
 //  Float_t coneRadius = 0.4;
 //
 //  TEveJetCone* jetCone = new TEveJetCone("JetCone");
-//  jetCone->SetCylinder( 250., 250. );
-//  if ( (jetCone->AddCone( coneEta, conePhi, coneRadius   ) ) != -1)
-//    gEve->AddElement( jetCone );
+//  jetCone->SetCylinder(250, 250);
+//  if (jetCone->AddCone(coneEta, conePhi, coneRadius) != -1)
+//    gEve->AddElement(jetCone);
 //
+//
+// Implementation notes
+//
+// TEveVector fLimits encodes the following information:
+//   fY, fZ:  barrel radius and endcap z-position;
+//            if both are 0, fX encodes the spherical radius
+//   fX    :  scaling for length of the cone
 
 ClassImp(TEveJetCone);
 
 //______________________________________________________________________________
 TEveJetCone::TEveJetCone(const Text_t* n, const Text_t* t) :
-   TEveElementList(n, t, kTRUE),
-   TAttBBox(),
-   fApex( TEveVector(0.,0.,0.) ),
-   fBasePoints(),
-   fCylinderBorder( TEveVector(-1.,0.,-1.) ),
-   fThetaC(0.)
+   TEveShape(n, t),
+   fApex(),
+   fLimits(), fThetaC(10),
+   fEta(0), fPhi(0), fDEta(0), fDPhi(0), fNDiv(72)
 {
    // Constructor.
 
    fColor = kGreen;
 }
-
-
-/******************************************************************************/
 
 //______________________________________________________________________________
 void TEveJetCone::ComputeBBox()
@@ -59,145 +68,186 @@ void TEveJetCone::ComputeBBox()
 
    BBoxInit();
    BBoxCheckPoint(fApex);
-   for (vTEveVector_ci i = fBasePoints.begin(); i != fBasePoints.end(); ++i)
-   {
-      BBoxCheckPoint(*i);
-   }
+   BBoxCheckPoint(CalcBaseVec(0));
+   BBoxCheckPoint(CalcBaseVec(TMath::PiOver2()));
+   BBoxCheckPoint(CalcBaseVec(TMath::Pi()));
+   BBoxCheckPoint(CalcBaseVec(TMath::Pi() + TMath::PiOver2()));
 }
 
 //______________________________________________________________________________
-void TEveJetCone::Paint(Option_t*)
+TClass* TEveJetCone::ProjectedClass(const TEveProjection*) const
 {
-   // Paint object.
-   // This is for direct rendering (using TEveJetConeGL class).
+   // Virtual from TEveProjectable, returns TEveJetConeProjected class.
 
-   PaintStandard(this);
+   return TEveJetConeProjected::Class();
 }
 
+
 //______________________________________________________________________________
-Int_t TEveJetCone::AddCone(Float_t eta, Float_t phi, Float_t coneRadius, Float_t height )
+Int_t TEveJetCone::AddCone(Float_t eta, Float_t phi, Float_t cone_r, Float_t length)
 {
-   // Add jet cone
+   // Add jet cone.
    // parameters are :
    // * (eta,phi)    : of the center/leading particle
-   // * coneRadius   : in eta-phi space
-   // * height       : height of the cone
-   //                  * if cylinder is set and length is adapted to cylinder.
-   //                    - if height is given, it will be used as scalar factor
-   //                  * if cylinder is not set, height is used as height of the cone
-   // Return 0 on sucess
+   // * cone_r       : cone radius in eta-phi space
+   // * length       : length of the cone
+   //   * if cylinder is set and length is adapted to cylinder.
+   //     - if length is given, it will be used as scalar factor
+   //   * if cylinder is not set, length is used as length of the cone
+   // Return 0 on sucess.
 
-   if ( fCylinderBorder.fZ == -1. && fCylinderBorder.fX == -1. && height == -1 )
-      return -1;
-
-   TEveVector coneAxis;
-   FillTEveVectorFromEtaPhi( coneAxis, eta, phi );
-
-   Float_t angleRad = 0.;
-   for ( Float_t angle = 0.; angle < 360. ; angle+=5. , angleRad=angle*TMath::Pi()/180 ) {
-
-      // -- Get Contour point
-      TEveVector contourPoint;
-      FillTEveVectorFromEtaPhi( contourPoint,
-                                eta + coneRadius * TMath::Cos(angleRad),
-                                phi + coneRadius * TMath::Sin(angleRad) );
-
-      // -- Set length of the contourPoint
-      if ( fCylinderBorder.fZ != -1. && fCylinderBorder.fX != -1. ) {
-         if ( contourPoint.Theta() < fThetaC )
-            contourPoint *= fCylinderBorder.fZ / TMath::Cos( contourPoint.Theta() ) ;
-         else if ( contourPoint.Theta() > ( TMath::Pi() - fThetaC ) )
-            contourPoint *= fCylinderBorder.fZ / TMath::Cos( contourPoint.Theta() - TMath::Pi() ) ;
-         else
-            contourPoint *= fCylinderBorder.fX / TMath::Sin( contourPoint.Theta() ) ;
-
-         if ( height != -1 ) contourPoint *= height;
-      }
-      else {
-         contourPoint *= height / GetArcCosConeOpeningAngle( coneAxis, contourPoint );
-      }
-
-      // -- Add contourPoint
-      fBasePoints.push_back( contourPoint );
-   }
-
-   return 0;
+   return AddEllipticCone(eta, phi, cone_r, cone_r, length);
 }
 
 //______________________________________________________________________________
-Int_t TEveJetCone::AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t height)
+Int_t TEveJetCone::AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t length)
 {
-   // Add jet cone
+   // Add jet cone.
    // parameters are :
    // * (eta,phi)    : of the center/leading particle
    // * (reta, rphi) : radius of cone in eta-phi space
-   // * height       : height of the cone
-   //                  * if cylinder is set and length is adapted to cylinder.
-   //                    - if height is given, it will be used as scalar factor
-   //                  * if cylinder is not set, height is used as height of the cone
-   // Return 0 on sucess
+   // * length       : length of the cone
+   //   * if cylinder is set and length is adapted to cylinder.
+   //     - if length is given, it will be used as scalar factor
+   //   * if cylinder is not set, length is used as length of the cone
+   // Returns 0 on sucess.
 
-   if ( fCylinderBorder.fZ == -1. && fCylinderBorder.fX == -1. && height == -1 )
+   using namespace TMath;
+
+   if (length != 0) fLimits.fX = length;
+
+   if (fLimits.IsZero())
       return -1;
 
-   TEveVector coneAxis;
-   FillTEveVectorFromEtaPhi( coneAxis, eta, phi );
-
-   Float_t angleRad = 0.;
-   for ( Float_t angle = 0.; angle < 360. ; angle+=5. , angleRad=angle*TMath::Pi()/180 ) {
-
-      // -- Get Contour point
-      TEveVector contourPoint;
-      FillTEveVectorFromEtaPhi( contourPoint,
-                                eta + reta * TMath::Cos(angleRad),
-                                phi + rphi * TMath::Sin(angleRad) );
-
-      // -- Set length of the contourPoint
-      if ( fCylinderBorder.fZ != -1. && fCylinderBorder.fX != -1. ) {
-         if ( contourPoint.Theta() < fThetaC )
-            contourPoint *= fCylinderBorder.fZ / TMath::Cos( contourPoint.Theta() ) ;
-         else if ( contourPoint.Theta() > ( TMath::Pi() - fThetaC ) )
-            contourPoint *= fCylinderBorder.fZ / TMath::Cos( contourPoint.Theta() - TMath::Pi() ) ;
-         else
-            contourPoint *= fCylinderBorder.fX / TMath::Sin( contourPoint.Theta() ) ;
-
-         if ( height != -1 ) contourPoint *= height;
-      }
-      else {
-         contourPoint *= height / GetArcCosConeOpeningAngle( coneAxis, contourPoint );
-      }
-
-      // -- Add contourPoint
-      fBasePoints.push_back( contourPoint );
-   }
+   fEta = eta; fPhi = phi; fDEta = reta; fDPhi = rphi;
 
    return 0;
 }
 
 //______________________________________________________________________________
-void TEveJetCone::FillTEveVectorFromEtaPhi( TEveVector &vec, const Float_t& eta, const Float_t& phi )
+TEveVector TEveJetCone::CalcEtaPhiVec(Float_t eta, Float_t phi) const
 {
-   // Fill TEveVector with eta and phi, with magnitude 1.
+   // Fill TEveVector with eta and phi, magnitude 1.
 
-   vec.Set( TMath::Cos(phi) / TMath::CosH(eta),
-            TMath::Sin(phi) / TMath::CosH(eta),
-            TMath::TanH(eta) );
-   return;
+   using namespace TMath;
+
+   return TEveVector(Cos(phi) / CosH(eta), Sin(phi) / CosH(eta), TanH(eta));
 }
 
 //______________________________________________________________________________
-Float_t TEveJetCone::GetArcCosConeOpeningAngle( const TEveVector& axis, const TEveVector& contour )
+TEveVector TEveJetCone::CalcBaseVec(Float_t eta, Float_t phi) const
 {
-   // Return the arccos of the opening angle between two eve vectors
+   // Returns point on the base of the cone with given eta and phi.
 
-   Float_t arcCos = 0.;
+   using namespace TMath;
 
-   Float_t tot2 = axis.Mag2() * contour.Mag2();
-   if( tot2 > 0. ) {
-      arcCos = axis.Dot( contour )/ TMath::Sqrt( tot2 );
-      if (arcCos >  1.0) arcCos =  1.0;
-      if (arcCos < -1.0) arcCos = -1.0;
+   TEveVector vec = CalcEtaPhiVec(eta, phi);
+
+   // -- Set length of the contourPoint
+   if (fLimits.fY != 0 && fLimits.fZ != 0)
+   {
+      Float_t theta = vec.Theta();
+      if (theta < fThetaC)
+         vec *= fLimits.fZ / Cos(theta);
+      else if (theta > Pi() - fThetaC)
+         vec *= fLimits.fZ / Cos(theta - Pi());
+      else
+         vec *= fLimits.fY / Sin(theta);
+
+      if (fLimits.fX != 0) vec *= fLimits.fX;
+   }
+   else 
+   {
+      vec *= fLimits.fX;
    }
 
-   return arcCos;
+   return vec;
+}
+
+//______________________________________________________________________________
+TEveVector TEveJetCone::CalcBaseVec(Float_t alpha) const
+{
+   // Returns point on the base of the cone with internal angle alpha:
+   // alpha = 0 -> max eta,  alpha = pi/2 -> max phi, ...
+
+   using namespace TMath;
+
+   return CalcBaseVec(fEta + fDEta * Cos(alpha), fPhi + fDPhi * Sin(alpha));
+}
+
+//______________________________________________________________________________
+Bool_t TEveJetCone::IsInTransitionRegion() const
+{
+   // Returns true if the cone is in barrel / endcap transition region.
+
+   using namespace TMath;
+
+   Float_t tm = CalcBaseVec(0).Theta();
+   Float_t tM = CalcBaseVec(Pi()).Theta();
+
+   return (tM > fThetaC        && tm < fThetaC) ||
+          (tM > Pi() - fThetaC && tm < Pi() - fThetaC);
+}
+
+//==============================================================================
+// TEveJetConeProjected
+//==============================================================================
+
+//______________________________________________________________________________
+//
+// Projection of TEveJetCone.
+
+//______________________________________________________________________________
+TEveJetConeProjected::TEveJetConeProjected(const char* n, const char* t) :
+   TEveShape(n, t)
+{
+   // Constructor.
+}
+
+//______________________________________________________________________________
+TEveJetConeProjected::~TEveJetConeProjected()
+{
+   // Destructor.
+}
+
+//______________________________________________________________________________
+void TEveJetConeProjected::ComputeBBox()
+{
+   // Compute bounding-box, virtual from TAttBBox.
+
+   BBoxInit();
+
+   TEveJetCone    *cone = dynamic_cast<TEveJetCone*>(fProjectable);
+//______________________________________________________________________________
+   TEveProjection *proj = GetManager()->GetProjection();
+   TEveVector v;
+   v = cone->fApex;                                       proj->ProjectVector(v, fDepth); BBoxCheckPoint(v);
+   v = cone->CalcBaseVec(0);                              proj->ProjectVector(v, fDepth); BBoxCheckPoint(v);
+   v = cone->CalcBaseVec(TMath::PiOver2());               proj->ProjectVector(v, fDepth); BBoxCheckPoint(v);
+   v = cone->CalcBaseVec(TMath::Pi());                    proj->ProjectVector(v, fDepth); BBoxCheckPoint(v);
+   v = cone->CalcBaseVec(TMath::Pi() + TMath::PiOver2()); proj->ProjectVector(v, fDepth); BBoxCheckPoint(v);
+}
+
+//______________________________________________________________________________
+void TEveJetConeProjected::SetDepthLocal(Float_t d)
+{
+   // This is virtual method from base-class TEveProjected.
+
+   SetDepthCommon(d, this, fBBox);
+}
+
+//______________________________________________________________________________
+void TEveJetConeProjected::SetProjection(TEveProjectionManager* mng, TEveProjectable* model)
+{
+   // This is virtual method from base-class TEveProjected.
+
+   TEveProjected::SetProjection(mng, model);
+   CopyVizParams(dynamic_cast<TEveElement*>(model));
+}
+
+//______________________________________________________________________________
+void TEveJetConeProjected::UpdateProjection()
+{
+   // Re-project the jet-cone.
+
 }

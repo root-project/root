@@ -85,6 +85,8 @@ public:
    TEveVectorT  Orthogonal() const;
    void         OrthoNormBase(TEveVectorT& a, TEveVectorT& b) const;
 
+   Bool_t       IsZero() const { return fX == 0 && fY == 0 && fZ == 0; }
+
    ClassDefNV(TEveVectorT, 2); // A three-vector template without TObject inheritance and virtual functions.
 };
 

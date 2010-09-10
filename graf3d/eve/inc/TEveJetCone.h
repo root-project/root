@@ -12,51 +12,89 @@
 #ifndef ROOT_TEveJetCone
 #define ROOT_TEveJetCone
 
-#include "TEveElement.h"
+#include "TEveShape.h"
 #include "TEveVector.h"
-#include "TAttBBox.h"
 
-class TEveJetCone : public TEveElementList,
-                    public TAttBBox
+
+//------------------------------------------------------------------------------
+// TEveJetCone
+//------------------------------------------------------------------------------
+
+class TEveJetCone : public TEveShape
 {
+   friend class TEveJetConeProjected;
    friend class TEveJetConeGL;
+   friend class TEveJetConeProjectedGL;
 
 private:
    TEveJetCone(const TEveJetCone&);            // Not implemented
    TEveJetCone& operator=(const TEveJetCone&); // Not implemented
 
-   void    FillTEveVectorFromEtaPhi( TEveVector &vec, const Float_t& eta, const Float_t& phi );
-   Float_t GetArcCosConeOpeningAngle( const TEveVector& axis, const TEveVector& contour );
-
 protected:
-   typedef std::vector<TEveVector>        vTEveVector_t;
-   typedef vTEveVector_t::iterator        vTEveVector_i;
-   typedef vTEveVector_t::const_iterator  vTEveVector_ci;
+   TEveVector      fApex;        // Apex of the cone.
+   TEveVector      fAxis;        // Axis of the cone.
+   TEveVector      fLimits;      // Border of Barrel/Cylinder to cut the cone.
+   Float_t         fThetaC;      // Transition theta
+   Float_t         fEta,  fPhi;
+   Float_t         fDEta, fDPhi;
+   Int_t           fNDiv;
 
-   TEveVector      fApex;             // Apex of the cone, initialized to ( 0., 0., 0. )
-   vTEveVector_t   fBasePoints;       // List of contour points
-   TEveVector      fCylinderBorder;   // Border of Barrel/Cylinder to cut the cone
-   Float_t         fThetaC;           // Angle between axis and  the edge of top-side of cylinder
+   TEveVector CalcEtaPhiVec(Float_t eta, Float_t phi) const;
+   TEveVector CalcBaseVec  (Float_t eta, Float_t phi) const;
+   TEveVector CalcBaseVec  (Float_t alpha) const;
+   Bool_t     IsInTransitionRegion() const;
 
 public:
    TEveJetCone(const Text_t* n="TEveJetCone", const Text_t* t="");
    virtual ~TEveJetCone() {}
 
-   void SetApex(const TEveVector& a)                      { fApex = a; }  // Sets apex of cone
-   void SetCylinder( const Float_t& r, const Float_t& z ) {
-      fCylinderBorder.Set( r, 0.f, z ); fThetaC = fCylinderBorder.Theta(); } // Set border cylinder
+   virtual void    ComputeBBox();
+   virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
-   Int_t AddCone(Float_t eta, Float_t phi, Float_t coneRadius, Float_t height=-1);
-   Int_t AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t height=-1);
+   void  SetApex(const TEveVector& a)      { fApex = a; }
+   void  SetCylinder(Float_t r, Float_t z) { fLimits.Set(0, r, z); fThetaC = fLimits.Theta(); }
+   void  SetRadius  (Float_t r)            { fLimits.Set(r, 0, 0); fThetaC = 10; }
 
-   virtual Bool_t  CanEditMainTransparency() const { return kTRUE; }
+   Int_t GetNDiv() const  { return fNDiv; }
+   void  SetNDiv(Int_t n) { fNDiv = TMath::Max(3, n); }
+
+   Int_t AddCone(Float_t eta, Float_t phi, Float_t cone_r, Float_t length=0);
+   Int_t AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t length=0);
+
+   ClassDef(TEveJetCone, 0); // Short description.
+};
+
+
+//------------------------------------------------------------------------------
+// TEveJetConeProjected
+//------------------------------------------------------------------------------
+
+class TEveJetConeProjected : public TEveShape,
+                             public TEveProjected
+{
+   friend class TEveJetConeProjectedGL;
+
+private:
+   TEveJetConeProjected(const TEveJetConeProjected&);            // Not implemented
+   TEveJetConeProjected& operator=(const TEveJetConeProjected&); // Not implemented
+
+protected:
+   virtual void SetDepthLocal(Float_t d);
+
+public:
+   TEveJetConeProjected(const char* n="TEveJetConeProjected", const char* t="");
+   virtual ~TEveJetConeProjected();
 
    // For TAttBBox:
    virtual void ComputeBBox();
-   // If painting is needed:
-   virtual void Paint(Option_t* option="");
 
-   ClassDef(TEveJetCone, 0); // Short description.
+   // Projected:
+   virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
+   virtual void UpdateProjection();
+
+   virtual TEveElement* GetProjectedAsElement() { return this; }
+
+   ClassDef(TEveJetConeProjected, 0); // Projection of TEveJetCone.
 };
 
 #endif
