@@ -53,7 +53,7 @@
 #include <typeinfo>
 #include <algorithm>
 
-const Int_t kMaxLen     = 512;
+const Int_t kMaxLen     = 1024;
 R__EXTERN TTree *gTree;
 
 
@@ -4897,13 +4897,13 @@ void TTreeFormula::UpdateFormulaLeaves()
    // A safer alternative would be to recompile the whole thing .... However
    // currently compile HAS TO be called from the constructor!
 
-   char names[512];
+   TString names(kMaxLen);
    Int_t nleaves = fLeafNames.GetEntriesFast();
    ResetBit( kMissingLeaf );
    for (Int_t i=0;i<nleaves;i++) {
       if (!fTree) break;
       if (!fLeafNames[i]) continue;
-      sprintf(names,"%s/%s",fLeafNames[i]->GetTitle(),fLeafNames[i]->GetName());
+      names.Form("%s/%s",fLeafNames[i]->GetTitle(),fLeafNames[i]->GetName());
       TLeaf *leaf = fTree->GetLeaf(names);
       fLeaves[i] = leaf;
       if (fBranches[i] && leaf) fBranches[i]=leaf->GetBranch();
