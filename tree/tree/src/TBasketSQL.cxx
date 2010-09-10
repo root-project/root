@@ -150,6 +150,15 @@ Int_t TBasketSQL::ReadBasketBuffers(Long64_t , Int_t, TFile *)
 }
 
 //_________________________________________________________________________
+void TBasketSQL::Reset()
+{	 
+   // See TBasket::Reset
+
+   TBasket::Reset();
+}
+
+
+//_________________________________________________________________________
 void TBasketSQL::Update(Int_t, Int_t) 
 {
    // See TBasket::Update.

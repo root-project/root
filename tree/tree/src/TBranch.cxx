@@ -616,7 +616,7 @@ void TBranch::DeleteBaskets(Option_t* option)
          if (branch) branch->DeleteBaskets("all");
       }
    }
-   DropBaskets(0);
+   DropBaskets("all");
    Reset();
 }
 
@@ -664,7 +664,7 @@ void TBranch::DropBaskets(Option_t* options)
    } else {
       //fast case
       if (nbaskets > 0) {
-         Int_t i = nbaskets - 1;
+         Int_t i = fBaskets.GetLast();
          basket = (TBasket*)fBaskets.UncheckedAt(i);
          if (basket && fBasketBytes[i]!=0) {
             basket->DropBuffers();
@@ -1073,10 +1073,10 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
 
    // create/decode basket parameters from buffer
    TFile *file = GetFile(0);
-   basket = new TBasket(file);
+   basket = GetFreshBasket();
+
    // fSkipZip is old stuff still maintained for CDF
    if (fSkipZip) basket->SetBit(TBufferFile::kNotDecompressed);
-   basket->SetBranch(this);
    if (fBasketBytes[basketnumber] == 0) {
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);
    }
@@ -1333,6 +1333,45 @@ TFile* TBranch::GetFile(Int_t mode)
 }
 
 //______________________________________________________________________________
+TBasket* TBranch::GetFreshBasket()
+{
+   // Return a fresh basket by either resusing an existing basket that needs
+   // to be drop (according to TTree::MemoryFull) or create a new one.
+   
+   TBasket *basket = 0;  
+   if (GetTree()->MemoryFull(0)) {
+      if (fNBaskets==1) {
+         // Steal the existing basket
+         Int_t oldindex = fBaskets.GetLast();
+         basket = (TBasket*)fBaskets.UncheckedAt(oldindex);
+         if (!basket) {
+            fBaskets.SetLast(-2); // For recalculation of Last.
+            oldindex = fBaskets.GetLast();
+            basket = (TBasket*)fBaskets.UncheckedAt(oldindex);
+         }
+         if (basket && fBasketBytes[oldindex]!=0) {
+            fBaskets.AddAt(0,oldindex);
+            fBaskets.SetLast(-1);
+            fNBaskets = 0;
+         } else {
+            basket = fTree->CreateBasket(this);
+         }            
+      } else if (fNBaskets == 0) {
+         // There is nothing to drop!
+         basket = fTree->CreateBasket(this);
+      } else {
+         // Memory is full and there is more than one basket,
+         // Let DropBaskets do it job.
+         DropBaskets();
+         basket = fTree->CreateBasket(this);
+      }
+   } else {
+      basket = fTree->CreateBasket(this);
+   }   
+   return basket;
+}
+
+//______________________________________________________________________________
 TLeaf* TBranch::GetLeaf(const char* name) const
 {
    //*-*-*-*-*-*Return pointer to the 1st Leaf named name in thisBranch-*-*-*-*-*
@@ -1468,8 +1507,21 @@ Long64_t TBranch::GetTotalSize(Option_t * /*option*/) const
 {
    // Return total number of bytes in the branch (including current buffer)
 
+   TObjArray &baskets( const_cast<TObjArray&>(fBaskets) );
+   TBasket *writebasket = 0;
+   if (fNBaskets == 1) {
+      writebasket = (TBasket*)fBaskets.UncheckedAt(fWriteBasket);
+      if (writebasket && writebasket->GetNevBuf()==0) {
+         baskets[fWriteBasket] = 0;
+      } else {
+         writebasket = 0;
+      }
+   }
    TBufferFile b(TBuffer::kWrite,10000);
    TBranch::Class()->WriteBuffer(b,(TBranch*)this);
+   if (writebasket) {
+      baskets[fWriteBasket] = writebasket;         
+   }
    Long64_t totbytes = 0;
    if (fZipBytes > 0) totbytes = fTotBytes;
    return totbytes + b.Length();
@@ -1566,8 +1618,7 @@ Int_t TBranch::LoadBaskets()
    for (Int_t i=0;i<nbaskets;i++) {
       basket = (TBasket*)fBaskets.UncheckedAt(i);
       if (basket) continue;
-      basket = new TBasket(file);
-      basket->SetBranch(this);
+      basket = GetFreshBasket();
       if (fBasketBytes[i] == 0) {
          fBasketBytes[i] = basket->ReadBasketBytes(fBasketSeek[i],file);
       }
@@ -1840,6 +1891,10 @@ void TBranch::SetBasketSize(Int_t buffsize)
 
    if (buffsize < 100+fEntryOffsetLen) buffsize = 100+fEntryOffsetLen;
    fBasketSize = buffsize;
+   TBasket *basket = (TBasket*)fBaskets[fWriteBasket];
+   if (basket) {
+      basket->AdjustSize(fBasketSize);
+   }
 }
 
 //______________________________________________________________________________
@@ -2177,7 +2232,19 @@ void TBranch::Streamer(TBuffer& b)
       Int_t maxBaskets = fMaxBaskets;
       fMaxBaskets = fWriteBasket+1;
       if (fMaxBaskets < 10) fMaxBaskets=10;
+      TBasket *writebasket = 0;
+      if (fNBaskets == 1) {
+         writebasket = (TBasket*)fBaskets.UncheckedAt(fWriteBasket);
+         if (writebasket && writebasket->GetNevBuf()==0) {
+            fBaskets[fWriteBasket] = 0;
+         } else {
+            writebasket = 0;
+         }
+      }
       b.WriteClassBuffer(TBranch::Class(),this);
+      if (writebasket) {
+         fBaskets[fWriteBasket] = writebasket;         
+      }
       fMaxBaskets = maxBaskets;
    }
 }
@@ -2191,13 +2258,14 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
    Int_t nout  = basket->WriteBuffer();    //  Write buffer
    fBasketBytes[where]  = basket->GetNbytes();
    fBasketSeek[where]   = basket->GetSeekKey();
-   Int_t addbytes = basket->GetObjlen() + basket->GetKeylen() ;
+   Int_t addbytes = basket->GetObjlen() + basket->GetKeylen();
+   TBasket *reusebasket = 0;
    if (nout>0) {
-      // The Basket was written so we can now safely drop it.
-      basket->DropBuffers();
-      delete basket;
-      --fNBaskets;
+      // The Basket was written so we can now safely reuse it.
       fBaskets[where] = 0;
+
+      reusebasket = basket;
+      reusebasket->Reset();
    }
    fZipBytes += nout;
    fTotBytes += addbytes;
@@ -2209,7 +2277,7 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
       if (fWriteBasket >= fMaxBaskets) {
          ExpandBasketArrays();
       }
-      fBaskets.AddAtAndExpand(0,fWriteBasket);
+      fBaskets.AddAtAndExpand(reusebasket,fWriteBasket);
       fBasketEntry[fWriteBasket] = fEntryNumber;
    }
 
@@ -2217,7 +2285,7 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
 }
 
 //------------------------------------------------------------------------------
-void TBranch :: SetFirstEntry( Long64_t entry )
+void TBranch::SetFirstEntry(Long64_t entry)
 {
    //set the first entry number (case of TBranchSTL)
    fFirstEntry = entry;

@@ -50,6 +50,8 @@ protected:
    Int_t      *fDisplacement;    //![fNevBuf] Displacement of entries in fBuffer(TKey)
    Int_t      *fEntryOffset;     //[fNevBuf] Offset of entries in fBuffer(TKey)
    TBranch    *fBranch;          //Pointer to the basket support branch
+   Int_t       fCompressedSize;  //!Size of the allocated memroy in fCompressedBuffer
+   char       *fCompressedBuffer;//!Temporary place holder for the compressed buffer if needed.
    
 public:
    
@@ -73,6 +75,7 @@ public:
    virtual void    PrepareBasket(Long64_t /* entry */) {};
            Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
            Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
+   virtual void    Reset();
 
            Int_t   LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
    Long64_t        CopyTo(TFile *to);

@@ -97,6 +97,7 @@ protected:
    void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
    void     Init(const char *name, const char *leaflist, Int_t compress);
 
+   TBasket *GetFreshBasket();
    Int_t    WriteBasket(TBasket* basket, Int_t where);
    
    TString  GetRealFileName() const;

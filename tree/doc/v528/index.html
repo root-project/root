@@ -8,6 +8,13 @@ and to have a good place to switch the ReadLeaves function appropriately (to and
 the MakeClass mode (also known as the decomposed object mode)).   This can also be
 used to reset the mode of some branch with a MakeClass/MakeSelector file.
 </li>
+<li>Dramatically reduce the amount of memory allocation induces by the management of the TBasket and TBuffer
+for each branch.  Instead of creating one TBasket object and one TBuffer object and its associated memory buffer
+for each onfile basket of each branch, we now create only one TBasket and one TBuffer object for the lifetime of
+each branch.  The memory buffer associated with the TBuffer object is also created once and rarely reallocated;
+it is reallocated only when the buffer size is reset (for example by the AutoFlush mechanism) and when the user
+object do not fit in the currently allocated memory (but we do not shrink it after that.  The same minization 
+is applied to the scratch area used to read the compressed version of a basket from the file.</li>
 <li>In TTree and TChain LoadTree fReadEntry is now set to -1 in case of failure to find the proper row.</li>
 <li>In TTree::CloneTree, TChain::Merge and TTree::CopyEntries introduces more flexibility
 in the handling of the case where a TTreeIndex is 'missing' in one or more of the 
