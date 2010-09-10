@@ -1214,7 +1214,7 @@ ClassImp(THtml)
 THtml::THtml():
    fCounterFormat("%12s %5s %s"),
    fProductName("(UNKNOWN PRODUCT)"),
-   fThreadedClassIter(0), fMakeClassMutex(0),
+   fThreadedClassIter(0), fThreadedClassCount(0), fMakeClassMutex(0),
    fGClient(0), fPathDef(0), fModuleDef(0), fFileDef(0),
    fLocalFiles(0), fBatch(kFALSE)
 {

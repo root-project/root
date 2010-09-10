@@ -44,7 +44,8 @@ protected:
    virtual void AddParameter(const TString& /*name*/, const char* /*value*/ = 0) {}
 
    TDocDirective() {}
-   TDocDirective(const char* name): TNamed(name, ""), fDocParser(0), fCounter(-1) {};
+   TDocDirective(const char* name):
+      TNamed(name, ""), fDocParser(0), fHtml(0), fDocOutput(0), fCounter(-1) {};
    virtual ~TDocDirective() {}
 
    const char* GetName() const { return TNamed::GetName(); }
