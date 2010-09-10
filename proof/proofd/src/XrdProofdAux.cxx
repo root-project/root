@@ -534,7 +534,7 @@ int XrdProofdAux::ChangeMod(const char *path, unsigned int mode)
    // Return 0 in case of success, -1 in case of error
    XPDLOC(AUX, "Aux::ChangeMod")
 
-   TRACE(DBG, path);
+   TRACE(HDBG, "path: "<<path);
 
    if (!path || strlen(path) <= 0)
       return -1;
@@ -580,7 +580,7 @@ int XrdProofdAux::ChangeMod(const char *path, unsigned int mode)
          struct stat xst;
          if (stat(fn.c_str(),&xst) == 0) {
             {  // Get the privileges, if needed
-               XPDPRT("getting {"<<xst.st_uid<<", "<< xst.st_gid<<"}");
+               TRACE(HDBG,"getting {"<<xst.st_uid<<", "<< xst.st_gid<<"} identity");
                XrdSysPrivGuard pGuard(xst.st_uid, xst.st_gid);
                if (XpdBadPGuard(pGuard, xst.st_uid)) {
                   TRACE(XERR, "could not get privileges to change ownership");
