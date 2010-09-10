@@ -116,12 +116,14 @@ tok_init(const char* ifs) {
    tok->fArgV = (char**) tok_malloc(sizeof(char*) * tok->fAMax);
 
    if (tok->fArgV == NULL) {
+      tok_free((ptr_t) tok);
       return NULL;
    }
    tok->fArgV[0] = NULL;
    tok->fWSpace = (char*) tok_malloc(WINCR);
 
    if (tok->fWSpace == NULL) {
+      tok_free((ptr_t) tok);
       return NULL;
    }
    tok->fWMax = tok->fWSpace + WINCR;
@@ -394,6 +396,8 @@ tok_line(Tokenizer_t* tok, const char* line, int* argc, char*** argv) {
             tok->fWStart = tok->fWStart + offs;
             tok->fWMax = s + size;
             tok->fWSpace = s;
+         } else {
+            tok_free((ptr_t) s);
          }
       }
 

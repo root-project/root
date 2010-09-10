@@ -679,6 +679,7 @@ _history_expand_command(const char* command, size_t cmdlen, char** result) {
                   from = strdup(search);
                } else {
                   from = NULL;
+                  free(line);
                   return -1;
                }
             }
@@ -755,6 +756,7 @@ _history_expand_command(const char* command, size_t cmdlen, char** result) {
 
    /* check boundaries ... */
    if (start > max || end > max || start > end) {
+      free(arr);
       return -1;
    }
 

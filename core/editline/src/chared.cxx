@@ -555,11 +555,16 @@ ch_enlargebufs(EditLine_t* el, size_t addlen) {
     * Reallocate line buffer.
     */
    newbuffer = (char*) el_realloc(el->fLine.fBuffer, newsz);
-   newcolorbuf = (ElColor_t*) el_realloc(el->fLine.fBufColor, newsz * sizeof(ElColor_t));
-
-   if (!newbuffer || !newcolorbuf) {
+   if (!newbuffer) {
       return 0;
    }
+
+   newcolorbuf = (ElColor_t*) el_realloc(el->fLine.fBufColor, newsz * sizeof(ElColor_t));
+   if (!newcolorbuf) {
+      el_free((ptr_t) newbuffer);
+      return 0;
+   }
+
 
    /* zero the newly added memory, leave old data in */
    (void) memset(&newbuffer[sz], 0, newsz - sz);

@@ -507,6 +507,7 @@ term_alloc_display(EditLine_t* el) {                      // LOUISE COLOUR : dup
       b[i] = (char*) el_malloc((size_t) (sizeof(char) * (c->fH + 1)));
 
       if (b[i] == NULL) {
+         el_free((ptr_t) b);
          return -1;
       }
    }
@@ -524,6 +525,7 @@ term_alloc_display(EditLine_t* el) {                      // LOUISE COLOUR : dup
       col[i] = (ElColor_t*) el_malloc((size_t) (sizeof(ElColor_t) * (c->fH + 1)));
 
       if (col[i] == NULL) {
+         el_free((ptr_t) col);
          return -1;
       }
    }
