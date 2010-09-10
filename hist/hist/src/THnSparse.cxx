@@ -558,9 +558,6 @@ void THnSparse::AddBinContent(Long64_t bin, Double_t v)
 THnSparseArrayChunk* THnSparse::AddChunk()
 {
    //Create a new chunk of bin content
-   THnSparseArrayChunk* first = 0;
-   if (fBinContent.GetEntriesFast() > 0)
-      first = GetChunk(0);
    THnSparseArrayChunk* chunk =
       new THnSparseArrayChunk(GetCompactCoord()->GetBufferSize(),
                               GetCalculateErrors(), GenerateArray());
@@ -1859,6 +1856,7 @@ THnSparse* THnSparse::Rebin(const Int_t* group) const
                   edges[i] = newaxis->GetXbins()->At(group[d] * i);
                else edges[i] = newaxis->GetXmax();
             newaxis->Set(newbins, edges);
+            delete [] edges;
          } else {
             newaxis->Set(newbins, newaxis->GetXmin(), newaxis->GetXmax());
          }
