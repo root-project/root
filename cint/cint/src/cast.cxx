@@ -430,7 +430,7 @@ G__value G__castvalue_bc(char* casttype, G__value result3, int bc)
             type = 'h';
             break;
          }
-         if (strcmp(casttype, "longlong") == 0) {
+         if (strcmp(casttype, "long long") == 0) {
             type = 'n';
             break;
          }
@@ -442,7 +442,7 @@ G__value G__castvalue_bc(char* casttype, G__value result3, int bc)
          }
          break;
       case 10:
-         if (strcmp(casttype, "longdouble") == 0) {
+         if (strcmp(casttype, "long double") == 0) {
             type = 'q';
             break;
          }
@@ -456,7 +456,7 @@ G__value G__castvalue_bc(char* casttype, G__value result3, int bc)
          }
          break;
       case 11:
-         if (strcmp(casttype, "unsignedint") == 0) {
+         if (strcmp(casttype, "unsigned int") == 0) {
             type = 'h';
             break;
          }
@@ -470,25 +470,25 @@ G__value G__castvalue_bc(char* casttype, G__value result3, int bc)
             type = 'b';
             break;
          }
-         if (strcmp(casttype, "unsignedlong") == 0) {
+         if (strcmp(casttype, "unsigned long") == 0) {
             type = 'k';
             break;
          }
          break;
       case 13:
-         if (strcmp(casttype, "unsignedshort") == 0) {
+         if (strcmp(casttype, "unsigned short") == 0) {
             type = 'r';
             break;
          }
          break;
       case 14:
-         if (strcmp(casttype, "signedlonglong") == 0) {
+         if (strcmp(casttype, "signedlong long") == 0) {
             type = 'n';
             break;
          }
          break;
       case 16:
-         if (strcmp(casttype, "unsignedlonglong") == 0) {
+         if (strcmp(casttype, "unsigned long long") == 0) {
             type = 'm';
             break;
          }

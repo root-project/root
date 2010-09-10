@@ -49,19 +49,19 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
             if (G__in_pause)
                temp.Format("(unsigned short)%u", G__convertT<unsigned short>(&buf));
             else
-               temp.Format("(unsignedshort)%u", G__convertT<unsigned short>(&buf));
+               temp.Format("(unsigned short)%u", G__convertT<unsigned short>(&buf));
             break;
          case 'h':
             if (G__in_pause)
                temp.Format("(unsigned int)%u", G__convertT<unsigned int>(&buf));
             else
-               temp.Format("(unsignedint)%u", G__convertT<unsigned int>(&buf));
+               temp.Format("(unsigned int)%u", G__convertT<unsigned int>(&buf));
             break;
          case 'k':
             if (G__in_pause)
                temp.Format("(unsigned long)%lu", G__convertT<unsigned long>(&buf));
             else
-               temp.Format("(unsignedlong)%lu", G__convertT<unsigned long>(&buf));
+               temp.Format("(unsigned long)%lu", G__convertT<unsigned long>(&buf));
             break;
          default:
             if (islower(buf.type)) {
@@ -217,13 +217,13 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
          if (G__in_pause)
             temp.Format("(unsigned short)%u", G__convertT<unsigned short>(&buf));
          else
-            temp.Format("(unsignedshort)%u", G__convertT<unsigned short>(&buf));
+            temp.Format("(unsigned short)%u", G__convertT<unsigned short>(&buf));
          break;
       case 'R':
          if (G__in_pause)
             temp.Format("(unsigned short*)0x%lx", buf.obj.i);
          else
-            temp.Format("(unsignedshort*)0x%lx", buf.obj.i);
+            temp.Format("(unsigned short*)0x%lx", buf.obj.i);
          break;
       case 's':
          if (buf.obj.i < 0)
@@ -238,13 +238,13 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
          if (G__in_pause)
             temp.Format("(unsigned int)%u", G__convertT<unsigned int>(&buf));
          else
-            temp.Format("(unsignedint)%u", G__convertT<unsigned int>(&buf));
+            temp.Format("(unsigned int)%u", G__convertT<unsigned int>(&buf));
          break;
       case 'H':
          if (G__in_pause)
             temp.Format("(unsigned int*)0x%lx", buf.obj.i);
          else
-            temp.Format("(unsignedint*)0x%lx", buf.obj.i);
+            temp.Format("(unsigned int*)0x%lx", buf.obj.i);
          break;
       case 'i':
          if (buf.tagnum != -1) {
@@ -315,13 +315,13 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
          if (G__in_pause)
             temp.Format("(unsigned long)%lu", G__convertT<unsigned long>(&buf));
          else
-            temp.Format("(unsignedlong)%lu", G__convertT<unsigned long>(&buf));
+            temp.Format("(unsigned long)%lu", G__convertT<unsigned long>(&buf));
          break;
       case 'K':
          if (G__in_pause)
             temp.Format("(unsigned long*)0x%lx", buf.obj.i);
          else
-            temp.Format("(unsignedlong*)0x%lx", buf.obj.i);
+            temp.Format("(unsigned long*)0x%lx", buf.obj.i);
          break;
       case 'l':
          if (buf.obj.i < 0)
@@ -1771,7 +1771,7 @@ G__value G__string2type_body(const char* typenamin, int noerror)
             result.type = 'h';
             break;
          }
-         if (strcmp(typenam, "longlong") == 0) {
+         if (strcmp(typenam, "long long") == 0) {
             result.type = 'n';
             break;
          }
@@ -1787,13 +1787,13 @@ G__value G__string2type_body(const char* typenamin, int noerror)
          }
          break;
       case 10:
-         if (strcmp(typenam, "longdouble") == 0) {
+         if (strcmp(typenam, "long double") == 0) {
             result.type = 'q';
             break;
          }
          break;
       case 11:
-         if (strcmp(typenam, "unsignedint") == 0) {
+         if (strcmp(typenam, "unsigned int") == 0) {
             result.type = 'h';
             break;
          }
@@ -1807,7 +1807,7 @@ G__value G__string2type_body(const char* typenamin, int noerror)
             result.type = 'b';
             break;
          }
-         if (strcmp(typenam, "unsignedlong") == 0) {
+         if (strcmp(typenam, "unsigned long") == 0) {
             result.type = 'k';
             break;
          }
@@ -1817,7 +1817,7 @@ G__value G__string2type_body(const char* typenamin, int noerror)
          }
          break;
       case 13:
-         if (strcmp(typenam, "unsignedshort") == 0) {
+         if (strcmp(typenam, "unsigned short") == 0) {
             result.type = 'r';
             break;
          }
@@ -1837,7 +1837,7 @@ G__value G__string2type_body(const char* typenamin, int noerror)
          }
          break;
       case 16:
-         if (strcmp(typenam, "unsignedlonglong") == 0) {
+         if (strcmp(typenam, "unsigned long long") == 0) {
             result.type = 'm';
             break;
          }

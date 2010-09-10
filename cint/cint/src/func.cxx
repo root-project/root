@@ -445,7 +445,7 @@ int G__explicit_fundamental_typeconv(char *funcname, int hash, G__param *libp, G
             flag = 1;
             break;
          }
-         if (strcmp(funcname, "longlong") == 0) {
+         if (strcmp(funcname, "long long") == 0) {
             presult3->type = 'n';
             presult3->obj.ll = G__Longlong(libp->para[0]);
             if (presult3->ref) *(G__int64*)presult3->ref = presult3->obj.ll;
@@ -460,7 +460,7 @@ int G__explicit_fundamental_typeconv(char *funcname, int hash, G__param *libp, G
             flag = 1;
             break;
          }
-         if (strcmp(funcname, "longlong*") == 0) {
+         if (strcmp(funcname, "long long*") == 0) {
             presult3->type = 'N';
             presult3->obj.i = G__int(libp->para[0]);
             if (presult3->ref) *(long*)presult3->ref = (long)presult3->obj.i;
@@ -475,7 +475,7 @@ int G__explicit_fundamental_typeconv(char *funcname, int hash, G__param *libp, G
          }
          break;
       case 10:
-         if (strcmp(funcname, "longdouble") == 0) {
+         if (strcmp(funcname, "long double") == 0) {
             presult3->type = 'n';
             presult3->obj.ld = G__Longdouble(libp->para[0]);
             if (presult3->ref) *(long double*)presult3->ref = presult3->obj.ld;
@@ -483,7 +483,7 @@ int G__explicit_fundamental_typeconv(char *funcname, int hash, G__param *libp, G
          }
          break;
       case 11:
-         if (strcmp(funcname, "unsignedint") == 0) {
+         if (strcmp(funcname, "unsigned int") == 0) {
             presult3->type = 'h';
             presult3->obj.i = G__int(libp->para[0]);
             if (presult3->ref) *(unsigned int*)presult3->ref = (unsigned int)presult3->obj.i;
@@ -498,7 +498,7 @@ int G__explicit_fundamental_typeconv(char *funcname, int hash, G__param *libp, G
             flag = 1;
             break;
          }
-         else if (strcmp(funcname, "unsignedlong") == 0) {
+         else if (strcmp(funcname, "unsigned long") == 0) {
             presult3->type = 'k';
             presult3->obj.i = G__int(libp->para[0]);
             if (presult3->ref) *(unsigned long*)presult3->ref = (unsigned long)presult3->obj.i;
@@ -512,7 +512,7 @@ int G__explicit_fundamental_typeconv(char *funcname, int hash, G__param *libp, G
          }
          break;
       case 13:
-         if (strcmp(funcname, "unsignedshort") == 0) {
+         if (strcmp(funcname, "unsigned short") == 0) {
             presult3->type = 'r';
             presult3->obj.i = G__int(libp->para[0]);
             if (presult3->ref) *(unsigned short*)presult3->ref = (unsigned short)presult3->obj.i;
@@ -568,7 +568,7 @@ int G__explicit_fundamental_typeconv(char *funcname, int hash, G__param *libp, G
          }
          break;
       case 16:
-         if (strcmp(funcname, "unsignedlonglong") == 0) {
+         if (strcmp(funcname, "unsigned long long") == 0) {
             presult3->type = 'm';
             presult3->obj.ull = G__ULonglong(libp->para[0]);
             if (presult3->ref) *(G__uint64*)presult3->ref = presult3->obj.ull;
@@ -576,7 +576,7 @@ int G__explicit_fundamental_typeconv(char *funcname, int hash, G__param *libp, G
          }
          break;
       case 17:
-         if (strcmp(funcname, "unsignedlonglong*") == 0) {
+         if (strcmp(funcname, "unsigned long long*") == 0) {
             presult3->type = 'M';
             presult3->obj.i = G__int(libp->para[0]);
             if (presult3->ref) *(long*)presult3->ref = (long)presult3->obj.i;

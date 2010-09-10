@@ -29,7 +29,7 @@ extern "C" {
 
 int G__rootCcomment=0;
 
-void G__loadlonglong(int* ptag, int* ptype, int which);
+void G__load_longlong(int* ptag, int* ptype, int which);
 
 /******************************************************************
 * int G__sizeof(G__value *object)
@@ -232,17 +232,17 @@ int G__Lsizeof(const char *type_name)
   }
 
   if((strcmp(type_name,"int")==0)||
-     (strcmp(type_name,"unsignedint")==0))
+     (strcmp(type_name,"unsigned int")==0))
     return(sizeof(int));
   if((strcmp(type_name,"long")==0)||
-     (strcmp(type_name,"longint")==0)||
-     (strcmp(type_name,"unsignedlong")==0)||
-     (strcmp(type_name,"unsignedlongint")==0))
+     (strcmp(type_name,"long int")==0)||
+     (strcmp(type_name,"unsigned long")==0)||
+     (strcmp(type_name,"unsigned long int")==0))
     return(sizeof(long));
   if((strcmp(type_name,"short")==0)||
      (strcmp(type_name,"shortint")==0)||
-     (strcmp(type_name,"unsignedshort")==0)||
-     (strcmp(type_name,"unsignedshortint")==0))
+     (strcmp(type_name,"unsigned short")==0)||
+     (strcmp(type_name,"unsigned shortint")==0))
     return(sizeof(short));
   if((strcmp(type_name,"char")==0)||
      (strcmp(type_name,"unsignedchar")==0))
@@ -253,16 +253,16 @@ int G__Lsizeof(const char *type_name)
   if((strcmp(type_name,"double")==0)
      )
     return(sizeof(double));
-  if(strcmp(type_name,"longdouble")==0) {
+  if(strcmp(type_name,"long double")==0) {
      return(sizeof(long double));
   }
-  if(strcmp(type_name,"longlong")==0
-     || strcmp(type_name,"longlongint")==0
+  if(strcmp(type_name,"long long")==0
+     || strcmp(type_name,"long long int")==0
      ) {
      return(sizeof(G__int64));
   }
-  if(strcmp(type_name,"unsignedlonglong")==0
-     || strcmp(type_name,"unsignedlonglongint")==0
+  if(strcmp(type_name,"unsigned long long")==0
+     || strcmp(type_name,"unsigned long long int")==0
      ) {
      return(sizeof(G__uint64));
   }
@@ -533,25 +533,25 @@ long *G__typeid(const char *typenamein)
         type = 'i';
         size = G__INTALLOC;
       }
-      if(strcmp(type_name,"unsignedint")==0) {
+      if(strcmp(type_name,"unsigned int")==0) {
         type = 'h';
         size = G__INTALLOC;
       }
       if((strcmp(type_name,"long")==0)||
-         (strcmp(type_name,"longint")==0)) {
+         (strcmp(type_name,"long int")==0)) {
         type='l';
         size = G__LONGALLOC;
       }
-      if((strcmp(type_name,"unsignedlong")==0)||
-         (strcmp(type_name,"unsignedlongint")==0)) {
+      if((strcmp(type_name,"unsigned long")==0)||
+         (strcmp(type_name,"unsigned long int")==0)) {
         type = 'k';
         size = G__LONGALLOC;
       }
-      if((strcmp(type_name,"longlong")==0)) {
+      if((strcmp(type_name,"long long")==0)) {
         type='n';
         size = G__LONGLONGALLOC;
       }
-      if((strcmp(type_name,"unsignedlonglong")==0)) {
+      if((strcmp(type_name,"unsigned long long")==0)) {
         type='m';
         size = G__LONGLONGALLOC;
       }
@@ -560,8 +560,8 @@ long *G__typeid(const char *typenamein)
         type = 's';
         size = G__SHORTALLOC;
       }
-      if((strcmp(type_name,"unsignedshort")==0)||
-         (strcmp(type_name,"unsignedshortint")==0)) {
+      if((strcmp(type_name,"unsigned short")==0)||
+         (strcmp(type_name,"unsigned shortint")==0)) {
         type = 'r';
         size = G__SHORTALLOC;
       }
@@ -583,7 +583,7 @@ long *G__typeid(const char *typenamein)
         type = 'd';
         size = G__DOUBLEALLOC;
       }
-      if((strcmp(type_name,"longdouble")==0)
+      if((strcmp(type_name,"long double")==0)
          ) {
         type = 'q';
         size = G__LONGDOUBLEALLOC;

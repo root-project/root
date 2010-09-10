@@ -8223,13 +8223,13 @@ void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, int k)
                      fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mulong(libp->para[%d])", k, G__type2string(type, tagnum, typenum, 0, 0), k, k);
                      break;
                   case 'n':
-                     fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mlonglong(libp->para[%d])", k, G__type2string(type, tagnum, typenum, 0, 0), k, k);
+                     fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mlong long(libp->para[%d])", k, G__type2string(type, tagnum, typenum, 0, 0), k, k);
                      break;
                   case 'm':
                      fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mulonglong(libp->para[%d])", k, G__type2string(type, tagnum, typenum, 0, 0), k, k);
                      break;
                   case 'q':
-                     fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mlongdouble(libp->para[%d])", k, G__type2string(type, tagnum, typenum, 0, 0), k, k);
+                     fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mlong double(libp->para[%d])", k, G__type2string(type, tagnum, typenum, 0, 0), k, k);
                      break;
                   case 'g':
 #ifdef G__BOOL4BYTE

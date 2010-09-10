@@ -4000,7 +4000,7 @@ char *Compress(const char *str)
 
    while (*p) {
       // keep space for A<const B>!
-      if (*p != ' ' || (p-str>6 && !strncmp(p-5,"const",5)))
+      if (*p != ' ' || (p - str > 0 && isalnum(*(p-1))))
          *s++ = *p;
       p++;
    }

@@ -91,13 +91,13 @@ static int G__handle_as_typedef(char* oldtype, char* newtype)
    else if (strcmp(oldtype, "double") == 0) {
       type = 'd' + ispointer; /* bug fix */
    }
-   else if (strcmp(oldtype, "longlong") == 0) {
+   else if (strcmp(oldtype, "long long") == 0) {
       type = 'n' + ispointer;
    }
-   else if (strcmp(oldtype, "unsignedlonglong") == 0) {
+   else if (strcmp(oldtype, "unsigned long long") == 0) {
       type = 'm' + ispointer;
    }
-   else if (strcmp(oldtype, "longdouble") == 0) {
+   else if (strcmp(oldtype, "long double") == 0) {
       type = 'q' + ispointer;
    }
    else if (strcmp(ptype, "short") == 0) {
@@ -633,17 +633,17 @@ void G__define()
          !strcmp(initvalue, "short") ||
          !strcmp(initvalue, "char") ||
          !strcmp(initvalue, "long") ||
-         !strcmp(initvalue, "unsignedint") ||
-         !strcmp(initvalue, "unsignedshort") ||
+         !strcmp(initvalue, "unsigned int") ||
+         !strcmp(initvalue, "unsigned short") ||
          !strcmp(initvalue, "unsignedchar") ||
-         !strcmp(initvalue, "unsignedlong") ||
+         !strcmp(initvalue, "unsigned long") ||
          !strcmp(initvalue, "signedint") ||
          !strcmp(initvalue, "signedshort") ||
          !strcmp(initvalue, "signedchar") ||
          !strcmp(initvalue, "signedlong") ||
          !strcmp(initvalue, "double") ||
          !strcmp(initvalue, "float") ||
-         !strcmp(initvalue, "longdouble") ||
+         !strcmp(initvalue, "long double") ||
          (G__defined_typename(initvalue) != -1) ||
          (G__defined_tagname(initvalue, 2) != -1) ||
          G__defined_templateclass(initvalue)

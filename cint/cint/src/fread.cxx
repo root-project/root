@@ -105,6 +105,16 @@ static int G__isstoragekeyword(const char* buf)
 }
 
 //______________________________________________________________________________
+static bool G__IsIdentifier(int c, bool start = false) {
+   // Check for character that is valid for an identifier.
+   // If start is true, digits are not allowed
+   if (start) {
+      return isalpha(c) || c == '_';
+   }
+   return isalnum(c) || c == '_';
+}
+
+//______________________________________________________________________________
 int G__fgetname_template(G__FastAllocString& string, size_t offset, const char *endmark)
 {
    //  char *string       : string until the endmark appears
@@ -365,6 +375,212 @@ backtoreadtemplate:
 }
 
 //______________________________________________________________________________
+static char* G__get_previous_name(G__FastAllocString& string, size_t start, size_t offset) {
+   while (start >= offset) {
+      char c = string[start];
+      if (c == ':' && start > offset && string[start - 1] == ':') {
+         --start;
+      } else if (!G__IsIdentifier(c)) {
+         return string + start + 1;
+      }
+      --start;
+   }
+   return string + start;
+}
+
+//______________________________________________________________________________
+static int G__fgetstream_newtemplate_internal(G__FastAllocString& string,
+                                                    size_t offset,
+                                                    const char *endmark,
+                                                    bool parseTemplate)
+{
+   // Work horse for G__fgetstream_newtemplate() and G__fgetstream_new().
+   // See G__fgetstream_newtemplate() for emaning of parameters.
+   size_t i = offset, l;
+   int c;
+   int nest = 0;
+   bool single_quote = false;
+   bool double_quote = false;
+   bool breakflag = false;
+   bool ignoreflag = false;
+   bool commentflag = false;
+   int start_line = G__ifile.line_number;
+
+   do {
+      ignoreflag = false;
+      c = G__fgetc() ;
+
+      if ((nest <= 0) && (single_quote == 0) && (double_quote == 0)) {
+         l = 0;
+         int prev;
+         while ((prev = endmark[l++]) != '\0') {
+            if (c == prev) {
+               breakflag = true;
+               ignoreflag = true;
+            }
+         }
+      }
+
+      bool next_single_quote = single_quote;
+      bool next_double_quote = double_quote;
+
+      switch (c) {
+         case ' ':
+         case '\f':
+         case '\n':
+         case '\r':
+         case '\t':
+            commentflag = false;
+            if (!single_quote && !double_quote) {
+               c = ' ';
+            }
+            break;
+         case ',':
+            /* may be following line is needed. 1999/5/31 */
+            /* if(i>2 && ' '==string[i-1] && isalnum(string[i-2])) --i; */
+            break;
+
+         case '<':
+            if (parseTemplate && !single_quote && !double_quote) {
+               string.Set(i, 0);
+               char* prevIdentifier = i ? G__get_previous_name(string, i - 1, offset) : 0;
+               if (prevIdentifier && G__defined_templateclass(prevIdentifier)){
+                  ++nest;
+               }
+            }
+            break;
+
+         case '{':
+         case '(':
+         case '[':
+            if (!single_quote && !double_quote) {
+               ++nest;
+            }
+            break;
+         case '>':
+            if (parseTemplate && !single_quote && !double_quote) {
+               if (0 == nest || (i && '-' == string[i - 1])) {
+                  break;
+               } else if (nest && i && '>' == string[i - 1]) {
+                  string.Set(i++, ' ');
+               }
+               --nest;
+            }
+            break;
+         case '}':
+         case ')':
+         case ']':
+            if (!single_quote && !double_quote) {
+               /* may be following line is needed. 1999/5/31 */
+               /* if(i>2 && ' '==string[i-1] && isalnum(string[i-2])) --i; */
+               --nest;
+            }
+            break;
+         case '"':
+            if (!single_quote) {
+               next_double_quote = !double_quote;
+            }
+            break;
+         case '\'':
+            if (!double_quote) {
+               next_single_quote ^= 1;
+            }
+            break;
+
+         case '\\':
+            if (!ignoreflag) {
+               string.Set(i++, c);
+               c = G__fgetc() ;
+            }
+            break;
+
+         case '/':
+            if (!double_quote && !single_quote && i > offset && string[i-1] == '/' &&
+                  commentflag) {
+               --i;
+               G__fignoreline();
+               ignoreflag = true;
+            }
+            else {
+               commentflag = true;
+            }
+            break;
+
+         case '*':
+            /* comment */
+            if (!double_quote && !single_quote) {
+               if (i > offset && string[i-1] == '/' && commentflag) {
+                  G__skip_comment();
+                  --i;
+                  ignoreflag = true;
+               }
+            }
+            break;
+
+         case '#':
+            if (!single_quote && !double_quote && (i == offset || string[i-1] != '$')) {
+               G__pp_command();
+               ignoreflag = true;
+#ifdef G__TEMPLATECLASS
+               c = ' ';
+#endif
+            }
+            break;
+
+         case EOF:
+            G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
+            G__unexpectedEOF("G__fgetstream_newtemplate():2");
+            string.Set(i, 0);
+            return(c);
+
+         case '=':
+            break;
+
+#ifdef G__MULTIBYTE
+         default:
+            if (G__IsDBCSLeadByte(c) && !ignoreflag) {
+               string.Set(i++, c);
+               c = G__fgetc() ;
+               G__CheckDBCS2ndByte(c);
+            }
+            break;
+#endif
+      }
+
+      if (!ignoreflag) {
+         // i > 0, not i > offset: we care even about previous call's content of string
+         if (i > 0 && !single_quote && !double_quote && string[i - 1] == ' ') {
+            // We want to append c, but the trailing char is a space.
+            if (c == ' ') --i; // replace ' ' by ' '
+            else if (i == 1) {
+               // string is " " - remove leading space.
+               --i;
+            } else {
+               char prev = string[i - 2];
+               // We only keep spaces between "identifiers" like "new const long long"
+               // and between '> >'
+               if ((G__IsIdentifier(prev) && G__IsIdentifier(c)) || (prev == '>' && c == '>')) {
+               } else {
+                  // replace previous ' '
+                  --i;
+               }
+            }
+         }
+         string.Set(i++, c);
+      }
+
+      single_quote = next_single_quote;
+      double_quote = next_double_quote;
+   }
+   while (!breakflag) ;
+
+   if (i > 0 && string[i - 1] == ' ') --i;
+   string.Set(i, 0);
+
+   return(c);
+}
+
+//______________________________________________________________________________
 int G__fgetstream_newtemplate(G__FastAllocString& string, size_t offset, const char *endmark)
 {
    //  char *string       : string until the endmark appears
@@ -390,189 +606,8 @@ int G__fgetstream_newtemplate(G__FastAllocString& string, size_t offset, const c
    //      'abc=new xxx;'
    //      'func(new xxx);'
    // 
-   size_t i = offset, l;
-   int c, prev;
-   int nest = 0, single_quote = 0, double_quote = 0, flag = 0, ignoreflag;
-   int commentflag = 0;
-   char *pp = string + offset;
-   size_t inew = offset;
-   int start_line = G__ifile.line_number;
 
-   do {
-      ignoreflag = 0;
-      c = G__fgetc() ;
-
-      if ((nest <= 0) && (single_quote == 0) && (double_quote == 0)) {
-         l = 0;
-         while ((prev = endmark[l++]) != '\0') {
-            if (c == prev) {
-               flag = 1;
-               ignoreflag = 1;
-            }
-         }
-      }
-
-      switch (c) {
-         case ' ':
-         case '\f':
-         case '\n':
-         case '\r':
-         case '\t':
-            string.Set(i, 0);
-            if (G__isstoragekeyword(pp)) {
-               pp = string + i + 1;
-               commentflag = 0;
-               c = ' ';
-               break;
-            }
-            commentflag = 0;
-            if ((single_quote == 0) && (double_quote == 0)) {
-               c = ' ';
-               switch (i - inew) {
-                  case 3:
-                     if (strncmp(string + inew, "new", 3) != 0)
-                        ignoreflag = 1;
-                     break;
-                  // FIXME: Add the case for "const" from G__fgetstream_new() here!
-                  default:
-                     inew = i;
-                     ignoreflag = 1;
-                     break;
-               }
-            }
-            break;
-         case ',':
-            /* may be following line is needed. 1999/5/31 */
-            /* if(i>2 && ' '==string[i-1] && isalnum(string[i-2])) --i; */
-            pp = string + i + 1;
-         case '=':
-            if ((single_quote == 0) && (double_quote == 0)) {
-               inew = i + 1;
-            }
-            break;
-         case '<':
-            if ((single_quote == 0) && (double_quote == 0)) {
-               string.Set(i, 0);
-               if (G__defined_templateclass(pp)) ++nest;
-               inew = i + 1;
-               pp = string + i + 1;
-            }
-            break;
-         case '{':
-         case '(':
-         case '[':
-            if ((single_quote == 0) && (double_quote == 0)) {
-               ++nest;
-               inew = i + 1;
-#ifdef G__OLDIMPLEMENTATION1520_YET_BUG
-               pp = string + i + 1; /* This creates a side effect with stl/demo/testall */
-#endif
-            }
-            break;
-         case '>':
-            if (0 == nest || (i && '-' == string[i-1])) break;
-            else if (nest && i && '>' == string[i-1]
-                     && 0 == double_quote && 0 == single_quote
-                     )
-               string.Set(i++, ' ');
-         case '}':
-         case ')':
-         case ']':
-            if ((single_quote == 0) && (double_quote == 0)) {
-               /* may be following line is needed. 1999/5/31 */
-               /* if(i>2 && ' '==string[i-1] && isalnum(string[i-2])) --i; */
-               nest--;
-               inew = i + 1;
-            }
-            break;
-         case '"':
-            if (single_quote == 0) {
-               double_quote ^= 1;
-            }
-            break;
-         case '\'':
-            if (double_quote == 0) {
-               single_quote ^= 1;
-            }
-            break;
-
-         case '\\':
-            if (ignoreflag == 0) {
-               string.Set(i++, c);
-               c = G__fgetc() ;
-            }
-            break;
-
-         case '/':
-            if (0 == double_quote && 0 == single_quote && i > offset && string[i-1] == '/' &&
-                  commentflag) {
-               i--;
-               G__fignoreline();
-               ignoreflag = 1;
-            }
-            else {
-               commentflag = 1;
-            }
-            break;
-
-         case '&':
-            if (i > offset && ' ' == string[i-1] && nest && single_quote == 0 && double_quote == 0)
-               --i;
-            break;
-
-         case '*':
-            /* comment */
-            if (0 == double_quote && 0 == single_quote) {
-               if (i > offset && string[i-1] == '/' && commentflag) {
-                  G__skip_comment();
-                  --i;
-                  ignoreflag = 1;
-               }
-               else if (i > 2 && isspace(string[i-1]) &&
-                        (isalnum(string[i-2]) || '_' == string[i-2])
-                       ) {
-                  --i;
-               }
-            }
-            break;
-
-         case '#':
-            if (single_quote == 0 && double_quote == 0 && (i == offset || string[i-1] != '$')) {
-               G__pp_command();
-               ignoreflag = 1;
-#ifdef G__TEMPLATECLASS
-               c = ' ';
-#endif
-            }
-            break;
-
-         case EOF:
-            G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
-            G__unexpectedEOF("G__fgetstream_newtemplate():2");
-            string.Set(i, 0);
-            return(c);
-
-#ifdef G__MULTIBYTE
-         default:
-            if (G__IsDBCSLeadByte(c) && !ignoreflag) {
-               string.Set(i++, c);
-               c = G__fgetc() ;
-               G__CheckDBCS2ndByte(c);
-            }
-            break;
-#endif
-      }
-
-      if (ignoreflag == 0) {
-         string.Set(i++, c);
-      }
-
-   }
-   while (flag == 0) ;
-
-   string.Set(i, 0);
-
-   return(c);
+   return G__fgetstream_newtemplate_internal(string, offset, endmark, true);
 }
 
 //______________________________________________________________________________
@@ -672,7 +707,7 @@ int G__fgetstream_template(G__FastAllocString& string, size_t offset, const char
          case ')':
          case ']':
             if ((single_quote == 0) && (double_quote == 0)) {
-               if (i > 2 && ' ' == string[i-1] && isalnum(string[i-2])) --i;
+               if (i > 2 && ' ' == string[i-1] && G__IsIdentifier(string[i-2])) --i;
                nest--;
                if (nest < 0) {
                   flag = 1;
@@ -726,8 +761,8 @@ int G__fgetstream_template(G__FastAllocString& string, size_t offset, const char
                }
                else
                   if (i > 2 &&
-                        isspace(string[i-1]) &&
-                        (isalnum(string[i-2]) || '_' == string[i-2])
+                      isspace(string[i-1]) &&
+                      G__IsIdentifier(string[i-2])
                      ) {
                      --i;
                   }
@@ -762,7 +797,7 @@ int G__fgetstream_template(G__FastAllocString& string, size_t offset, const char
 
 
          case ',':
-            if (i > 2 && ' ' == string[i-1] && isalnum(string[i-2])) --i;
+            if (i > 2 && ' ' == string[i-1] && G__IsIdentifier(string[i-2])) --i;
             pp = string + i + 1;
             break;
 
@@ -857,7 +892,7 @@ int G__getstream_template(const char* source, int* isrc,G__FastAllocString&  str
          case ')':
          case ']':
             if ((single_quote == 0) && (double_quote == 0)) {
-               if (i > 2 && ' ' == string[i-1] && isalnum(string[i-2])) --i;
+               if (i > 2 && ' ' == string[i-1] && G__IsIdentifier(string[i-2])) --i;
                nest--;
                if (nest < 0) {
                   flag = 1;
@@ -908,7 +943,7 @@ int G__getstream_template(const char* source, int* isrc,G__FastAllocString&  str
 
 
          case ',':
-            if (i > 2 && ' ' == string[i-1] && isalnum(string[i-2])) --i;
+            if (i > 2 && ' ' == string[i-1] && G__IsIdentifier(string[i-2])) --i;
             pp = string + i + 1;
             break;
 
@@ -1954,154 +1989,8 @@ int G__fgetstream_new(G__FastAllocString& string, size_t offset, const char *end
    //      'func(new xxx);'
    //      'func(const int xxx);'
    // 
-   size_t i = offset;
-   short l = 0;
-   int c = 0;
-   int prev = 0;
-   int nest = 0;
-   int single_quote = 0;
-   int double_quote = 0;
-   int flag = 0;
-   int ignoreflag = 0;
-   int commentflag = 0;
-   size_t inew = offset;
-   int start_line = G__ifile.line_number;
-   do {
-      ignoreflag = 0;
-      c = G__fgetc() ;
-      if ((nest <= 0) && !single_quote && !double_quote) {
-         l = 0;
-         while ((prev = endmark[l++]) != '\0') {
-            if (c == prev) {
-               flag = 1;
-               ignoreflag = 1;
-            }
-         }
-      }
-      switch (c) {
-         case '\f':
-         case '\n':
-         case '\r':
-         case '\t':
-         case ' ':
-            commentflag = 0;
-            if (!single_quote && !double_quote) {
-               c = ' ';
-               switch (i - inew) {
-                  case 3:
-                     // keep the space after new
-                     if (strncmp(string + inew, "new", 3)) {
-                        ignoreflag = 1;
-                     }
-                     break;
-                  // --
-#ifndef G__PHLIPPE33
-                  case 5:
-                     // keep the space after const
-                     if (strncmp(string + inew, "const", 5)) {
-                        ignoreflag = 1;
-                     }
-                     break;
-#endif // G__PHLIPPE33
-                  // --
-                  default:
-                     inew = i;
-                     ignoreflag = 1;
-                     break;
-               }
-            }
-            break;
-         case ',':
-         case '=':
-            if (!single_quote && !double_quote) {
-               inew = i + 1;
-            }
-            break;
-         case '{':
-         case '(':
-         case '[':
-            if (!single_quote && !double_quote) {
-               ++nest;
-               inew = i + 1;
-            }
-            break;
-         case '}':
-         case ')':
-         case ']':
-            if (!single_quote && !double_quote) {
-               --nest;
-               inew = i + 1;
-            }
-            break;
-         case '"':
-            if (!single_quote) {
-               double_quote ^= 1;
-            }
-            break;
-         case '\'':
-            if (!double_quote) {
-               single_quote ^= 1;
-            }
-            break;
-         case '\\':
-            if (!ignoreflag) {
-               string.Set(i++, c);
-               c = G__fgetc();
-            }
-            break;
-         case '/':
-            if (!double_quote && !single_quote && (i > offset) && (string[i-1] == '/') && commentflag) {
-               --i;
-               G__fignoreline();
-               ignoreflag = 1;
-            }
-            else {
-               commentflag = 1;
-            }
-            break;
-         case '*':
-            // comment
-            if (!double_quote && !single_quote && (i > offset) && (string[i-1] == '/') && commentflag) {
-               G__skip_comment();
-               --i;
-               ignoreflag = 1;
-            }
-            break;
-         case '#':
-            if (!single_quote && !double_quote && (!i || (string[i-1] != '$'))) {
-               G__pp_command();
-               ignoreflag = 1;
-#ifdef G__TEMPLATECLASS
-               c = ' ';
-#endif // G__TEMPLATECLASS
-               // --
-            }
-            break;
-         case EOF:
-            G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
-            G__unexpectedEOF("G__fgetstream_new():2");
-            string.Set(i, 0);
-            return c;
-         // --
-#ifdef G__MULTIBYTE
-         default:
-            if (G__IsDBCSLeadByte(c) && !ignoreflag) {
-               string.Set(i++, c);
-               c = G__fgetc() ;
-               G__CheckDBCS2ndByte(c);
-            }
-            break;
-#endif // G__MULTIBYTE
-         // --
-      }
-      if (!ignoreflag) {
-         string.Set(i++, c);
-         G__CHECK(G__SECURE_BUFFER_SIZE, i >= G__LONGLINE, return EOF);
-      }
-   }
-   while (!flag);
-   string.Set(i, 0);
-   return c;
+
+   return G__fgetstream_newtemplate_internal(string, offset, endmark, false);
 }
 
 //______________________________________________________________________________

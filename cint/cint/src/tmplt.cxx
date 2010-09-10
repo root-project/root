@@ -409,7 +409,7 @@ struct G__Templatearg *G__read_formal_templatearg()
     else {
       if(strcmp(type,"int")==0) p->type = G__TMPLT_INTARG;
       else if(strcmp(type,"size_t")==0) p->type = G__TMPLT_SIZEARG;
-      else if(strcmp(type,"unsignedint")==0) p->type = G__TMPLT_UINTARG;
+      else if(strcmp(type,"unsigned int")==0) p->type = G__TMPLT_UINTARG;
       else if(strcmp(type,"unsigned")==0) {
         fpos_t pos;
         int linenum;
@@ -440,11 +440,11 @@ struct G__Templatearg *G__read_formal_templatearg()
         }
       }
       else if(strcmp(type,"char")==0) p->type = G__TMPLT_CHARARG;
-      else if(strcmp(type,"unsignedchar")==0) p->type = G__TMPLT_UCHARARG;
+      else if(strcmp(type,"unsigned char")==0) p->type = G__TMPLT_UCHARARG;
       else if(strcmp(type,"short")==0) p->type = G__TMPLT_SHORTARG;
-      else if(strcmp(type,"unsignedshort")==0) p->type = G__TMPLT_USHORTARG;
+      else if(strcmp(type,"unsigned short")==0) p->type = G__TMPLT_USHORTARG;
       else if(strcmp(type,"long")==0) p->type = G__TMPLT_LONGARG;
-      else if(strcmp(type,"unsignedlong")==0) p->type = G__TMPLT_ULONGARG;
+      else if(strcmp(type,"unsigned long")==0) p->type = G__TMPLT_ULONGARG;
       else if(strcmp(type,"float")==0) p->type = G__TMPLT_FLOATARG;
       else if(strcmp(type,"double")==0) p->type = G__TMPLT_DOUBLEARG;
       else if(strcmp(type,">")==0) {
@@ -1708,26 +1708,28 @@ static void G__templatemaptypename(char *string)
 #ifdef G__OLDIMPLEMENTATION609_YET
   int typenum;
 #endif
+
+#if 0
   if(strncmp(string,"const",5)==0 && string[5]!=' ') {
     if(
        strcmp(string+5,"int")==0||
-       strcmp(string+5,"unsignedint")==0||
+       strcmp(string+5,"unsigned int")==0||
        strcmp(string+5,"char")==0||
-       strcmp(string+5,"unsignedchar")==0||
+       strcmp(string+5,"unsigned char")==0||
        strcmp(string+5,"short")==0||
-       strcmp(string+5,"unsignedshort")==0||
+       strcmp(string+5,"unsigned short")==0||
        strcmp(string+5,"long")==0||
-       strcmp(string+5,"unsignedlong")==0||
+       strcmp(string+5,"unsigned long")==0||
        strcmp(string+5,"double")==0||
        strcmp(string+5,"float")==0||
        strcmp(string+5,"int*")==0||
-       strcmp(string+5,"unsignedint*")==0||
+       strcmp(string+5,"unsigned int*")==0||
        strcmp(string+5,"char*")==0||
-       strcmp(string+5,"unsignedchar*")==0||
+       strcmp(string+5,"unsigned char*")==0||
        strcmp(string+5,"short*")==0||
-       strcmp(string+5,"unsignedshort*")==0||
+       strcmp(string+5,"unsigned short*")==0||
        strcmp(string+5,"long*")==0||
-       strcmp(string+5,"unsignedlong*")==0||
+       strcmp(string+5,"unsigned long*")==0||
        strcmp(string+5,"double*")==0||
        strcmp(string+5,"float*")==0
        || G__istypename(string+5)
@@ -1741,33 +1743,23 @@ static void G__templatemaptypename(char *string)
       string += 6;
     }
   }
+#endif
+
   while(strncmp(string,"const ",6)==0) string+=6;
-  if(strcmp(string,"shortint")==0) strcpy(string,"short");
-  else if(strcmp(string,"shortint*")==0) strcpy(string,"short*");
-  else if(strcmp(string,"longint")==0) strcpy(string,"long");
-  else if(strcmp(string,"longint*")==0) strcpy(string,"long*");
-  else if(strcmp(string,"longlong")==0) strcpy(string,"long long");
-  else if(strcmp(string,"longlong*")==0) strcpy(string,"long long*");
-  else if(strcmp(string,"unsignedchar")==0) strcpy(string,"unsigned char");
-  else if(strcmp(string,"unsignedchar*")==0) strcpy(string,"unsigned char*");
+  if(strcmp(string,"short int")==0) strcpy(string,"short");
+  else if(strcmp(string,"short int*")==0) strcpy(string,"short*");
+  else if(strcmp(string,"long int")==0) strcpy(string,"long");
+  else if(strcmp(string,"long int*")==0) strcpy(string,"long*");
   else if(strcmp(string,"unsigned")==0) strcpy(string,"unsigned int");
-  else if(strcmp(string,"unsignedint")==0) strcpy(string,"unsigned int");
-  else if(strcmp(string,"unsignedint*")==0) strcpy(string,"unsigned int*");
-  else if(strcmp(string,"unsignedlong")==0||
-          strcmp(string,"unsignedlongint")==0)
+  else if(strcmp(string,"unsigned int")==0) strcpy(string,"unsigned int");
+  else if(strcmp(string,"unsigned int*")==0) strcpy(string,"unsigned int*");
+  else if(strcmp(string,"unsigned long int")==0)
     strcpy(string,"unsigned long");
-  else if(strcmp(string,"unsignedlong*")==0||
-          strcmp(string,"unsignedlongint*")==0)
+  else if(strcmp(string,"unsigned long int*")==0)
     strcpy(string,"unsigned long*");
-  else if(strcmp(string,"unsignedlonglong")==0)
-    strcpy(string,"unsigned long long ");
-  else if(strcmp(string,"unsignedlonglong*")==0)
-    strcpy(string,"unsigned long long*");
-  else if(strcmp(string,"unsignedshort")==0||
-          strcmp(string,"unsignedshortint")==0)
+  else if(strcmp(string,"unsigned short int")==0)
     strcpy(string,"unsigned short");
-  else if(strcmp(string,"unsignedshort*")==0||
-          strcmp(string,"unsignedshortint*")==0)
+  else if(strcmp(string,"unsigned short int*")==0)
     strcpy(string,"unsigned short*");
   else if (strcmp(string,"Float16_t")==0||
            strcmp(string,"Float16_t*")==0) 
@@ -1775,7 +1767,8 @@ static void G__templatemaptypename(char *string)
        /* nothing to do, we want to keep those as is */
 
     }
-  else if (strcmp(string,"Double32_t")==0||
+  else
+    if (strcmp(string,"Double32_t")==0||
            strcmp(string,"Double32_t*")==0) 
     { 
        /* nothing to do, we want to keep those as is */
