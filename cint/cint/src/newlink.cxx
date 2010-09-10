@@ -8258,7 +8258,7 @@ void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, int k)
                    *  reference and pointer to pointer can not happen at once */
                   fprintf(
                        fp
-                     , "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : *(%s*) (&G__Mlong(libp->para[%d]))"
+                     , "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : *(%s*) (void*) (&G__Mlong(libp->para[%d]))"
                      , k
                      , G__type2string(type, tagnum, typenum, 0, isconst & G__CONSTVAR)
                      , k
@@ -8272,7 +8272,7 @@ void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, int k)
                else {
                   fprintf(
                        fp
-                     , "libp->para[%d].ref ? *(%s) libp->para[%d].ref : *(%s) (&G__Mlong(libp->para[%d]))"
+                     , "libp->para[%d].ref ? *(%s) libp->para[%d].ref : *(%s) (void*) (&G__Mlong(libp->para[%d]))"
                      , k
                      , G__type2string(type, tagnum, typenum, 2, isconst&G__CONSTVAR)
                      , k
@@ -8289,12 +8289,12 @@ void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, int k)
          case G__PARAREFP2P2P:
             reftype = G__PLVL(reftype);
             if ((typenum != -1) && isupper(G__newtype.type[typenum])) {
-               fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : *(%s*) (&G__Mlong(libp->para[%d]))"
+               fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : *(%s*) (void*) (&G__Mlong(libp->para[%d]))"
                        , k, G__type2string(type, tagnum, typenum, reftype, isconst)
                        , k, G__type2string(type, tagnum, typenum, reftype, isconst) , k);
             }
             else {
-               fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : *(%s*) (&G__Mlong(libp->para[%d]))"
+               fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : *(%s*) (void*) (&G__Mlong(libp->para[%d]))"
                        , k, G__type2string(type, tagnum, typenum, reftype, isconst)
                        , k, G__type2string(type, tagnum, typenum, reftype, isconst), k);
             }
