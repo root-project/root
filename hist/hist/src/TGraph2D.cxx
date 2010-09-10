@@ -309,11 +309,14 @@ TGraph2D::TGraph2D(TH2 *h2)
    // Graph2D constructor with a TH2 (h2) as input.
    // Only the h2's bins within the X and Y axis ranges are used.
    // Empty bins, recognized when both content and errors are zero, are excluded.
+   Build(h2->GetNbinsX()*h2->GetNbinsY());
 
-   Build(10);
-
-   SetName(h2->GetName());
+   TString gname = "Graph2D_from_" + TString(h2->GetName() );
+   SetName(gname);
+   // need to call later because sets title in ref histogram
    SetTitle(h2->GetTitle());
+
+
 
    TAxis *xaxis = h2->GetXaxis();
    TAxis *yaxis = h2->GetYaxis();

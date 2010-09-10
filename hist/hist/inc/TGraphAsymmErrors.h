@@ -33,15 +33,6 @@ protected:
    Double_t    *fEYlow;        //[fNpoints] array of Y low errors
    Double_t    *fEYhigh;       //[fNpoints] array of Y high errors
 
-   Double_t        Beta_ab(double a, double b, int k, int N) const;
-   Double_t        Ibetai(double a, double b, double x) const;
-   Double_t        Betai(double a, double b, double x) const;
-   Double_t        Brent(double ax, double bx, double cx, double tol, double *xmin) const;
-   virtual void    Efficiency(int k, int N, double conflevel,
-                              double& mode, double& low, double& high) const;
-   Double_t        Interval(double low) const;
-   Double_t        SearchLower(double high, int k, int N, double c) const;
-   Double_t        SearchUpper(double low, int k, int N, double c) const;
    virtual void    SwapPoints(Int_t pos1, Int_t pos2);
 
    virtual Double_t** Allocate(Int_t size);
@@ -63,11 +54,12 @@ public:
    TGraphAsymmErrors(const TGraphAsymmErrors &gr);
    TGraphAsymmErrors& operator=(const TGraphAsymmErrors &gr);
    TGraphAsymmErrors(const TH1 *h);
-   TGraphAsymmErrors(const TH1 *pass, const TH1 *total, Option_t *option="");
+   TGraphAsymmErrors(const TH1* pass, const TH1* total, Option_t *option="");
    virtual ~TGraphAsymmErrors();
 
    virtual void    Apply(TF1 *f);
-   virtual void    BayesDivide(const TH1 *pass, const TH1 *total, Option_t *option="");
+   virtual void    BayesDivide(const TH1* pass, const TH1* total, Option_t *opt="");
+   virtual void    Divide(const TH1* pass, const TH1* total, Option_t *opt="cp");
    virtual void    ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
    Double_t        GetErrorX(Int_t bin)   const;
    Double_t        GetErrorY(Int_t bin)   const;

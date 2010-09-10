@@ -3069,7 +3069,7 @@ Int_t TH1::FindBin(Double_t x, Double_t y, Double_t z)
 }
 
 //______________________________________________________________________________
-Int_t TH1::FindFixBin(Double_t x, Double_t y, Double_t z)
+Int_t TH1::FindFixBin(Double_t x, Double_t y, Double_t z) const
 {
 //   Return Global bin number corresponding to x,y,z
 //   ===============================================
