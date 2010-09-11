@@ -3,7 +3,7 @@ Processing runmemleak.C+...
 Executing TMyData::~TMyData()
 ******************************************************************************
 *Tree    :MonoData  : branch=mono class=TMyData                              *
-*Entries :        2 : Total =         9415923 bytes  File  Size =     128056 *
+*Entries :        2 : Total =         9414965 bytes  File  Size =     128056 *
 *        :          : Tree compression factor =  76.06                       *
 ******************************************************************************
 *Branch  :mono                                                               *
@@ -78,15 +78,15 @@ Executing TMyData::~TMyData()
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   17 :fNrho     :                                                        *
-*Entries :        2 : Total  Size=     148294 bytes  File Size  =       1892 *
+*Entries :        2 : Total  Size=     148130 bytes  File Size  =       1892 *
 *Baskets :        2 : Basket Size=      32000 bytes  Compression=  78.03     *
 *............................................................................*
 *Br   18 :fNrhoInv  :                                                        *
-*Entries :        2 : Total  Size=     148318 bytes  File Size  =       3546 *
+*Entries :        2 : Total  Size=     148148 bytes  File Size  =       3546 *
 *Baskets :        2 : Basket Size=      32000 bytes  Compression=  41.64     *
 *............................................................................*
 *Br   19 :fPnts     :                                                        *
-*Entries :        2 : Total  Size=      33266 bytes  File Size  =        652 *
+*Entries :        2 : Total  Size=      33102 bytes  File Size  =        652 *
 *Baskets :        2 : Basket Size=      32000 bytes  Compression=  50.02     *
 *............................................................................*
 *Br   20 :fCalcVarRed :                                                      *
@@ -94,7 +94,7 @@ Executing TMyData::~TMyData()
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   21 :fSmoothMonoM :                                                     *
-*Entries :        2 : Total  Size=    9060536 bytes  File Size  =     117332 *
+*Entries :        2 : Total  Size=    9060358 bytes  File Size  =     117332 *
 *Baskets :        2 : Basket Size=      32000 bytes  Compression=  77.22     *
 *............................................................................*
 Info in <memleak>: branch has 2 entries
