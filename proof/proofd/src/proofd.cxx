@@ -520,7 +520,6 @@ void ProofdExec()
          char *rootproofauthsetup = new char[20+strlen(authbuff)];
          sprintf(rootproofauthsetup, "ROOTPROOFAUTHSETUP=%s", authbuff);
          putenv(rootproofauthsetup);
-         delete[] authbuff;
       } else if (lab < 0) {
          ErrorInfo("ProofdExec: problems receiving auth buffer");
       }
