@@ -115,11 +115,14 @@ TPacketizerFile::TPacketizerFile(TList *workers, Long64_t, TList *input,
    fSlaveStats = new TMap;
    fSlaveStats->SetOwner(kFALSE);
 
+   TList nodes;
+   nodes.SetOwner(kTRUE);
    TSlave *wrk;
    TIter si(workers);
    while ((wrk = (TSlave *) si.Next())) {
       fSlaveStats->Add(wrk, new TSlaveStat(wrk, input));
       Info("TPacketizerFile","worker: %s", wrk->GetName());
+      if (!nodes.FindObject(wrk->GetName())) nodes.Add(new TObjString(wrk->GetName()));
    }
 
    // The list of iterators
@@ -135,7 +138,7 @@ TPacketizerFile::TPacketizerFile(TList *workers, Long64_t, TList *input,
    while ((key = nxl()) != 0) {
       TList *wrklist = (TList *) fFiles->GetValue(key);
       if (wrklist) {
-         if (fSlaveStats->FindObject(key->GetName())) {
+         if (nodes.FindObject(key->GetName())) {
             fTotalEntries += wrklist->GetSize();
             fIters->Add(new TIterObj(key->GetName(), new TIter(wrklist)));
          } else {
