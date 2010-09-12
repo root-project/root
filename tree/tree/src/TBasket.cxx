@@ -79,9 +79,9 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
    fBufferSize  = branch->GetBasketSize();
    fNevBufSize  = branch->GetEntryOffsetLen();
    fNevBuf      = 0;
-   fEntryOffset = 0;  //Must be set to 0 before calling Sizeof
-   fDisplacement= 0;  //Must be set to 0 before calling Sizeof
-   fBuffer      = 0;  //Must be set to 0 before calling Sizeof
+   fEntryOffset = 0;
+   fDisplacement= 0;
+   fBuffer      = 0;
    fBufferRef   = new TBufferFile(TBuffer::kWrite, fBufferSize);
    fVersion    += 1000;
    if (branch->GetDirectory()) {
@@ -89,7 +89,7 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
       fBufferRef->SetParent(file);
    }
    fHeaderOnly  = kTRUE;
-   fLast        = 0; // RDK: Must initialize before calling Streamer()
+   fLast        = 0; // Must initialize before calling Streamer()
    
    Streamer(*fBufferRef);
    fKeylen      = fBufferRef->Length();
@@ -492,34 +492,32 @@ void TBasket::Reset()
    
    TKey::Reset();
 
-   // Keep as is: fBufferSize  = branch->GetBasketSize();
    Int_t newNevBufSize = fBranch->GetEntryOffsetLen();
    if (newNevBufSize==0) {
       delete [] fEntryOffset;
-      fNevBufSize = newNevBufSize;      
+      fEntryOffset = 0;
    } else if (newNevBufSize > fNevBufSize) {
       delete [] fEntryOffset;
-      fNevBufSize = newNevBufSize;
-      fEntryOffset = new Int_t[fNevBufSize];
+      fEntryOffset = new Int_t[newNevBufSize];
    } else {
-      fNevBufSize = newNevBufSize;
       if (!fEntryOffset) {
-         fEntryOffset = new Int_t[fNevBufSize];
+         fEntryOffset = new Int_t[newNevBufSize];
       }         
    }
+   fNevBufSize = newNevBufSize;
 
    fNevBuf      = 0;
    Int_t *storeEntryOffset = fEntryOffset;
-   fEntryOffset = 0;  //Must be set to 0 before calling Sizeof
+   fEntryOffset = 0; 
    Int_t *storeDisplacement = fDisplacement;
-   fDisplacement= 0;  //Must be set to 0 before calling Sizeof
-   fBuffer      = 0;  //Must be set to 0 before calling Sizeof
+   fDisplacement= 0; 
+   fBuffer      = 0;
 
    fBufferRef->Reset();
    fBufferRef->SetWriteMode();
 
    fHeaderOnly  = kTRUE;
-   fLast        = 0; // RDK: Must initialize before calling Streamer()
+   fLast        = 0;  //Must initialize before calling Streamer()
    
    Streamer(*fBufferRef);
 

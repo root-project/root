@@ -66,7 +66,7 @@ TBasketSQL::TBasketSQL(const char *name, const char *title, TBranch *branch,
       fBufferRef = new TBufferSQL(TBuffer::kWrite, fBufferSize, vc, fInsertQuery, fRowPtr);
    }
    fHeaderOnly  = kTRUE;
-   fLast        = 0; // RDK: Must initialize before calling Streamer()
+   fLast        = 0; // Must initialize before calling Streamer()
    //Streamer(*fBufferRef);
    fBuffer      = 0;
    fBranch      = branch;
