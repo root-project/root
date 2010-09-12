@@ -217,9 +217,10 @@ public:
       Printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
    }
 
-   void Add(TDSetElement *elem)
+   void Add(TDSetElement *elem, Bool_t tolist)
    {
-      TFileStat *f = new TFileStat(this, elem, fFilesToProcess);
+      TList *files = tolist ? (TList *)fFilesToProcess : (TList *)0;
+      TFileStat *f = new TFileStat(this, elem, files);
       fFiles->Add(f);
       if (fUnAllocFileNext == 0) fUnAllocFileNext = fFiles->First();
    }
@@ -640,7 +641,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
             Info("TPacketizerAdaptive", "adding element to existing node '%s'", nodeStr.Data());
       }
 
-      node->Add(e);
+      node->Add(e, kFALSE);
    }
 
    fSlaveStats = new TMap;
@@ -793,7 +794,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
 
       ++files;
       fTotalEntries += eNum;
-      node->Add(e);
+      node->Add(e, kTRUE);
       node->IncEvents(eNum);
       PDB(kPacketizer,2) e->Print("a");
    }
@@ -2000,7 +2001,7 @@ Int_t TPacketizerAdaptive::ReassignPacket(TDSetElement *e,
    if (node) {
       // the packet 'e' was processing data from this node.
       node->DecreaseProcessed(e->GetNum());
-      node->Add( e );
+      node->Add(e, kFALSE); // The file should be already in fFilesToProcess ...
       if (!fUnAllocated->FindObject(node))
          fUnAllocated->Add(node);
       return 0;
