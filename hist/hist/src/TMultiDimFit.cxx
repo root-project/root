@@ -1776,47 +1776,61 @@ TMultiDimFit* TMultiDimFit::fgInstance = 0;
 TMultiDimFit::TMultiDimFit()
 {
    // Empty CTOR. Do not use
-   fMeanQuantity            = 0;
-   fMaxQuantity             = 0;
-   fMinQuantity             = 0;
-   fSumSqQuantity           = 0;
-   fSumSqAvgQuantity        = 0;
-   fPowerLimit              = 1;
+   fMeanQuantity           = 0;
+   fMaxQuantity            = 0;
+   fMinQuantity            = 0;
+   fSumSqQuantity          = 0;
+   fSumSqAvgQuantity       = 0;
+   
+   fNVariables             = 0;
+   fSampleSize             = 0;
+   fTestSampleSize         = 0;
 
-   fMaxAngle                = 0;
-   fMinAngle                = 1;
+   fMinAngle               = 1;
+   fMaxAngle               = 0;
+   fMaxTerms               = 0;
+   fMinRelativeError       = 0;
+   fMaxPowers              = 0;
+   fPowerLimit             = 0;
+   
+   fMaxFunctions           = 0;
+   fFunctionCodes          = 0;
+   fMaxStudy               = 0;
+   fMaxFuncNV              = 0;
+   
+   fMaxPowersFinal         = 0;
+   fPowers                 = 0;
+   fPowerIndex             = 0;
+   
+   fMaxResidual            = 0;
+   fMinResidual            = 0;
+   fMaxResidualRow         = 0;
+   fMinResidualRow         = 0;
+   fSumSqResidual          = 0; 
+   
+   fNCoefficients          = 0;    
+   fRMS                    = 0;
+   fChi2                   = 0;
+   fParameterisationCode   = 0;
+   
+   fError                  = 0;
+   fTestError              = 0;
+   fPrecision              = 0;
+   fTestPrecision          = 0;
+   fCorrelationCoeff       = 0;
+   fTestCorrelationCoeff   = 0;
+   
+   fHistograms             = 0;
+   fHistogramMask          = 0;
+   fBinVarX                = 100;
+   fBinVarY                = 100;
 
-   fNVariables              = 0;
-   fMaxVariables            = 0;
-   fMinVariables            = 0;
-   fSampleSize              = 0;
-
-   fMaxAngle                = 0;
-   fMinAngle                = 0;
-
-   fPolyType                = kMonomials;
-   fShowCorrelation         = kFALSE;
-
-   fIsUserFunction          = kFALSE;
-
-   fPowers                  = 0;
-   fMaxPowers               = 0;
-   fMaxPowersFinal          = 0;
-
-   fBinVarX                 = 100;
-   fBinVarY                 = 100;
-   fHistograms              = 0;
-   fHistogramMask           = 0;
-   fPowerIndex              = 0;
-   fFunctionCodes           = 0;
-
-   //fQuantity(0);
-   //fVariables(0);
-   //fMaxVariables(0);
-   //fMinVariables(0);
-   //fMeanVariables(0);
-
-   fFitter                  = 0;
+   fFitter                 = 0;
+   fPolyType               = kMonomials;
+   fShowCorrelation        = kFALSE;
+   fIsUserFunction         = kFALSE;
+   fIsVerbose              = kFALSE;
+   
 }
 
 
@@ -1853,47 +1867,60 @@ TMultiDimFit::TMultiDimFit(Int_t dimension,
    fMinQuantity            = 0;
    fSumSqQuantity          = 0;
    fSumSqAvgQuantity       = 0;
-   fPowerLimit             = 1;
-
-   fMaxAngle               = 0;
-   fMinAngle               = 1;
-
+   
    fNVariables             = dimension;
-   fMaxVariables           = 0;
-   fMinVariables           = 0;
    fSampleSize             = 0;
    fTestSampleSize         = 0;
+
+   fMinAngle               = 1;
+   fMaxAngle               = 0;
+   fMaxTerms               = 0;
    fMinRelativeError       = 0.01;
+   fMaxPowers              = new Int_t[dimension];
+   fPowerLimit             = 1;
+   
+   fMaxFunctions           = 0;
+   fFunctionCodes          = 0;
+   fMaxStudy               = 0;
+   fMaxFuncNV              = 0;
+   
+   fMaxPowersFinal         = new Int_t[dimension];
+   fPowers                 = 0;
+   fPowerIndex             = 0;
+   
+   fMaxResidual            = 0;
+   fMinResidual            = 0;
+   fMaxResidualRow         = 0;
+   fMinResidualRow         = 0;
+   fSumSqResidual          = 0; 
+   
+   fNCoefficients          = 0;    
+   fRMS                    = 0;
+   fChi2                   = 0;
+   fParameterisationCode   = 0;
+   
    fError                  = 0;
    fTestError              = 0;
    fPrecision              = 0;
    fTestPrecision          = 0;
-   fParameterisationCode   = 0;
+   fCorrelationCoeff       = 0;
+   fTestCorrelationCoeff   = 0;
+   
+   fHistograms             = 0;
+   fHistogramMask          = 0;
+   fBinVarX                = 100;
+   fBinVarY                = 100;
 
+   fFitter                 = 0;
    fPolyType               = type;
    fShowCorrelation        = kFALSE;
+   fIsUserFunction         = kFALSE;
    fIsVerbose              = kFALSE;
-
    TString opt             = option;
    opt.ToLower();
 
    if (opt.Contains("k")) fShowCorrelation = kTRUE;
    if (opt.Contains("v")) fIsVerbose       = kTRUE;
-
-   fIsUserFunction         = kFALSE;
-
-   fBinVarX                = 100;
-   fBinVarY                = 100;
-   fHistograms             = 0;
-   fHistogramMask          = 0;
-
-   fPowerIndex             = 0;
-   fFunctionCodes          = 0;
-
-   fPowers                 = 0;
-   fMaxPowers              = new Int_t[dimension];
-   fMaxPowersFinal         = new Int_t[dimension];
-   fFitter                 = 0;
 }
 
 
