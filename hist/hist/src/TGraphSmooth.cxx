@@ -43,8 +43,12 @@ TGraphSmooth::TGraphSmooth(): TNamed()
 //*-*-*-*-*-*-*-*-*Default GraphSmooth constructor *-*-*-*-*-*-*-*-*-*-*
 //                 ===============================
 
+   fNin  = 0;
+   fNout = 0;
    fGin  = 0;
    fGout = 0;
+   fMinX = 0;
+   fMaxX = 0;
 }
 
 //______________________________________________________________________
@@ -53,8 +57,12 @@ TGraphSmooth::TGraphSmooth(const char *name): TNamed(name,"")
 //*-*-*-*-*-*-*-*-*GraphSmooth constructor *-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //                 =======================
 
+   fNin  = 0;
+   fNout = 0;
    fGin  = 0;
    fGout = 0;
+   fMinX = 0;
+   fMaxX = 0;
 }
 
 //______________________________________________________________________
