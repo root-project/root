@@ -1479,10 +1479,14 @@ Double_t TFormLeafInfoCollection::ReadValue(char *where, Int_t instance)
 
    if (fNext==0) return 0;
    UInt_t len,index,sub_instance;
-   len = fNext->GetArrayLength();
+   len = (fNext->fElement==0)? 0 : fNext->GetArrayLength(); 
+   Int_t primary = fNext->GetPrimaryIndex();
    if (len) {
       index = instance / len;
       sub_instance = instance % len;
+   } else if (primary>=0) {
+      index = primary;
+      sub_instance = instance;
    } else {
       index = instance;
       sub_instance = 0;
