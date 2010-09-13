@@ -2011,8 +2011,9 @@ TList *TProof::GetListOfSlaveInfos()
 
    while ((slave = (TSlave *) next()) != 0) {
       if (slave->GetSlaveType() == TSlave::kSlave) {
+         const char *name = IsLite() ? gSystem->HostName() : slave->GetName();
          TSlaveInfo *slaveinfo = new TSlaveInfo(slave->GetOrdinal(),
-                                                slave->GetName(),
+                                                name,
                                                 slave->GetPerfIdx());
          fSlaveInfo->Add(slaveinfo);
 
@@ -2872,7 +2873,6 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
             PDB(kGlobal,2)
                Info("HandleInputMessage","kPROOF_OUTPUTOBJECT: enter");
             Int_t type = 0;
-
             const char *prefix = gProofServ ? gProofServ->GetPrefix() : "Lite-0";
             if (!TestBit(TProof::kIsClient) && !fMergersSet && !fFinalizationRunning) {
                Info("HandleInputMessage", "finalization on %s started ...", prefix);
@@ -3343,6 +3343,8 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                   TSlaveInfo* slinfo =
                      dynamic_cast<TSlaveInfo*>(tmpinfo->At(i));
                   if (slinfo) {
+                     // If PROOF-Lite
+                     if (IsLite()) slinfo->fHostName = gSystem->HostName();
                      // Check if we have already a instance for this worker
                      TIter nxw(fSlaveInfo);
                      TSlaveInfo *ourwi = 0;
