@@ -45,6 +45,7 @@ TH1K::TH1K(): TH1(), TArrayF()
    fNIn   = 0;
    fReady = 0;
    fKOrd  = 3;
+   fKCur  = 0;
 }
 
 
@@ -56,9 +57,10 @@ TH1K::TH1K(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    // (see TH1K::TH1 for explanation of parameters)
 
    fDimension = 1;
-   fNIn = 0;
+   fNIn   = 0;
    fReady = 0;
-   fKOrd = k;
+   fKOrd  = k;
+   fKCur  = 0;
 }
 
 
