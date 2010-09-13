@@ -50,6 +50,7 @@ TMemStatMng::TMemStatMng():
    fN(0),
    fBtID(0),
    fBTCount(0),
+   fBTIDCount(0),
    fSysInfo(NULL)
 {
    // Default constructor
