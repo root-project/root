@@ -105,12 +105,9 @@ static int G__isstoragekeyword(const char* buf)
 }
 
 //______________________________________________________________________________
-static bool G__IsIdentifier(int c, bool start = false) {
+static bool G__IsIdentifier(int c) {
    // Check for character that is valid for an identifier.
    // If start is true, digits are not allowed
-   if (start) {
-      return isalpha(c) || c == '_';
-   }
    return isalnum(c) || c == '_';
 }
 

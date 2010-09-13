@@ -1134,6 +1134,18 @@ G__value G__getexpr(const char* expression)
    //
    for (ig1 = 0; ig1 < length; ++ig1) {
       c = expression[ig1];
+      if (!single_quote && !double_quote) {
+         if (lenbuf > 1 && ebuf[lenbuf - 1] == ' ') {
+            // we had a space - do we keep it?
+            char beforeSpaceChar = ebuf[lenbuf - 2];
+            if (((isalnum(c) || c == '_') && (isalnum(beforeSpaceChar) || beforeSpaceChar == '_'))
+                || (c == '>' && beforeSpaceChar == '>')) {}
+            else {
+               // not two identifiers / template "> >" - replace the space
+               ebuf[--lenbuf] = 0;
+            }
+         }
+      }
       switch (c) {
 
             /***************************************************
@@ -1190,8 +1202,14 @@ G__value G__getexpr(const char* expression)
                if (lenbuf - inew == 3 && strncmp(expression + inew, "new", 3) == 0) { /* ON994 */
                   return(G__new_operator(expression + ig1 + 1));
                }
-               /* else ignore c, shoud not happen, but not sure */
-               inew = ig1 + 1;
+               if (lenbuf && ebuf[lenbuf - 1] != ' ') {
+                  // keep space for now; if statement checking for beforeSpaceChar will
+                  // later determine whether it's worth keeping this space.
+                  ebuf[lenbuf++] = c;
+               } else {
+                  // collapse multiple spaces into one
+                  inew = ig1 + 1;
+               }
             }
             else ebuf[lenbuf++] = c;
             break;

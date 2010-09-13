@@ -14,13 +14,13 @@
 #include <stdio.h>
 
 // work around ::operator new(size) 
-void* operatornew(size_t s) {
+void* operator new(size_t s) {
   return new char[s];
 }
 //void* operatornew(unsigned long s) {return malloc(s);}
 
 // work around ::operator delete(buffer) 
-void operatordelete(void* p) {
+void operator delete(void* p) {
   if(p) delete p; 
 }
 
