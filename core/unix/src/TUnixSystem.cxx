@@ -3721,7 +3721,7 @@ const char *TUnixSystem::UnixHomedirectory(const char *name)
 {
    // Returns the user's home directory.
 
-   static char path[kMAXPATHLEN], mydir[kMAXPATHLEN];
+   static char path[kMAXPATHLEN], mydir[kMAXPATHLEN] = { '\0' };
    struct passwd *pw;
 
    if (name) {
