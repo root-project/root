@@ -307,41 +307,36 @@ ifneq ($(PLATFORM),win32)
 RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
 NEWLIBS      := -lNew
-ROOTLIBS     := -lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad \
-                -lTree -lMatrix -lMathCore -lThread
 BOOTLIBS     := -lCore -lCint -lMathCore
 ifneq ($(ROOTDICTTYPE),cint)
-ROOTLIBS     += -lCintex -lReflex
 BOOTLIBS     += -lCintex -lReflex
 endif
+ROOTLIBS     := $(BOOTLIBS) -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad \
+                -lTree -lMatrix -lThread
 RINTLIBS     := -lRint
 else
 CINTLIBS     := $(LPATH)/libCint.lib
 NEWLIBS      := $(LPATH)/libNew.lib
-ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
-                $(LPATH)/libRIO.lib $(LPATH)/libNet.lib \
-                $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
-                $(LPATH)/libGraf3d.lib $(LPATH)/libGpad.lib \
-                $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib \
-                $(LPATH)/libMathcore.lib $(LPATH)/libThread.lib
 BOOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libMathcore.lib
 ifneq ($(ROOTDICTTYPE),cint)
-ROOTLIBS     += $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
 BOOTLIBS     += $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
 endif
+ROOTLIBS     := $(BOOTLIBS) $(LPATH)/libRIO.lib $(LPATH)/libNet.lib \
+                $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
+                $(LPATH)/libGraf3d.lib $(LPATH)/libGpad.lib \
+                $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib \
+                $(LPATH)/libThread.lib
 RINTLIBS     := $(LPATH)/libRint.lib
 endif
 
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
-ROOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB) $(IOLIB) $(NETLIB) $(HISTLIB) \
-                $(GRAFLIB) $(G3DLIB) $(GPADLIB) $(TREELIB) $(MATRIXLIB) \
-                $(MATHCORELIB)
 BOOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB) $(MATHCORELIB)
 ifneq ($(ROOTDICTTYPE),cint)
-ROOTLIBSDEP  += $(CINTEXLIB) $(REFLEXLIB)
 BOOTLIBSDEP  += $(CINTEXLIB) $(REFLEXLIB)
 endif
+ROOTLIBSDEP   = $(BOOTLIBSDEP) $(IOLIB) $(NETLIB) $(HISTLIB) \
+                $(GRAFLIB) $(G3DLIB) $(GPADLIB) $(TREELIB) $(MATRIXLIB)
 
 # Force linking of not referenced libraries
 ifeq ($(FORCELINK),yes)
