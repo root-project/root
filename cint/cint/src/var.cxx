@@ -7562,7 +7562,12 @@ struct G__var_array* G__searchvariable(char* varname, int varhash, G__var_array*
                      var = G__struct.memvar[baseclass->herit[basen]->basetagnum];
 #ifdef G__VIRTUALBASE
                      if (baseclass->herit[basen]->property&G__ISVIRTUALBASE) {
-                        *pG__struct_offset = *pstore_struct_offset + G__getvirtualbaseoffset(*pstore_struct_offset, scope_tagnum, baseclass, basen);
+                        if (G__store_struct_offset!=0) {
+                           *pG__struct_offset = *pstore_struct_offset + G__getvirtualbaseoffset(*pstore_struct_offset, scope_tagnum, baseclass, basen);
+                        } else {
+                           // We don't have a real object, we can't calculate the real offset.
+                           // So do nothing ...
+                        }
                      }
                      else {
                         *pG__struct_offset = *pstore_struct_offset + baseclass->herit[basen]->baseoffset;
