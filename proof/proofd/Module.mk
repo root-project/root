@@ -110,17 +110,20 @@ XPDLIB       := $(LPATH)/libXrdProofd.$(SOEXT)
 XPCONNO      := $(MODDIRS)/XrdProofConn.o $(MODDIRS)/XrdProofPhyConn.o \
                 $(MODDIRS)/XProofProtUtils.o
 
+# Extra definitions
+# CXXFLAGS += $(BONJOURCPPFLAGS)
 # Extra include paths and libs
 XPROOFDEXELIBS :=
-XPROOFDEXESYSLIBS :=
+XPROOFDEXESYSLIBS := $(DNSSDLIB)
 XPROOFDEXE     :=
 ifeq ($(BUILDXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
-XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdSys \
-                  -lXrdClient -lXrdSut
+XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdNetUtil -lXrdSys \
+                  -lXrdClient -lXrdSut $(DNSSDLIB)
 XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
-                  $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdOuc.a \
+                  $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdNetUtil.a \
+                  $(XROOTDDIRL)/libXrdOuc.a \
                   $(XROOTDDIRL)/libXrdSys.a $(XROOTDDIRL)/libXrdSut.a
 ifeq ($(PLATFORM),solaris)
 XPROOFDEXESYSLIBS := -lsendfile
@@ -181,6 +184,7 @@ ifneq ($(ICC_GE_9),)
 # remove when xrootd has moved from strstream.h -> sstream.
 $(XPDO): CXXFLAGS += -Wno-deprecated $(XPDINCEXTRA) $(EXTRA_XRDFLAGS)
 else
+CXXFLAGS += $(BONJOURCPPFLAGS)
 ifneq ($(GCC_MAJOR),)
 ifneq ($(GCC_MAJOR),2)
 # remove when xrootd has moved from strstream.h -> sstream.
