@@ -40,6 +40,16 @@ ClassImp(TSpectrum2Transform)
 TSpectrum2Transform::TSpectrum2Transform() 
 {
    //default constructor
+   fSizeX = 0, fSizeY = 0;
+   fTransformType = kTransformCos;
+   fDegree = 0;
+   fDirection = kTransformForward;
+   fXmin = 0;
+   fXmax = 0;
+   fYmin = 0;
+   fYmax = 0;
+   fFilterCoeff=0;
+   fEnhanceCoeff=0.5;
 }
 
 //____________________________________________________________________________    

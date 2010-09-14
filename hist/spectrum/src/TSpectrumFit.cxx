@@ -38,17 +38,55 @@ ClassImp(TSpectrumFit)
 TSpectrumFit::TSpectrumFit() :TNamed("SpectrumFit", "Miroslav Morhac peak fitter") 
 {
    //default constructor
-   fNPeaks = 0;   
-   fPositionInit  = 0;
-   fPositionCalc  = 0;   
-   fPositionErr   = 0;   
-   fFixPosition   = 0;   
-   fAmpInit   = 0;   
-   fAmpCalc   = 0;   
-   fAmpErr    = 0;   
-   fFixAmp    = 0;     
-   fArea      = 0;   
-   fAreaErr   = 0;      
+
+   fNPeaks = 0;
+   fNumberIterations = 1;
+   fXmin = 0;
+   fXmax = 100; 
+   fStatisticType = kFitOptimChiCounts;
+   fAlphaOptim = kFitAlphaHalving;     
+   fPower = kFitPower2;                
+   fFitTaylor = kFitTaylorOrderFirst;  
+   fAlpha =1; 
+   fChi = 0;                    
+   fPositionInit   = 0;
+   fPositionCalc   = 0;
+   fPositionErr   = 0;
+   fFixPosition   = 0;
+   fAmpInit   = 0;
+   fAmpCalc   = 0;
+   fAmpErr    = 0;
+   fFixAmp    = 0;
+   fArea      = 0;
+   fAreaErr   = 0;
+   fSigmaInit = 2;
+   fSigmaCalc = 1;
+   fSigmaErr  = 0;
+   fTInit = 0; 
+   fTCalc = 0;
+   fTErr = 0; 
+   fBInit = 1; 
+   fBCalc = 0;
+   fBErr = 0; 
+   fSInit = 0; 
+   fSCalc = 0;
+   fSErr = 0; 
+   fA0Init = 0; 
+   fA0Calc = 0;
+   fA0Err = 0;
+   fA1Init = 0;
+   fA1Calc = 0;
+   fA1Err = 0;
+   fA2Init = 0;
+   fA2Calc = 0;
+   fA2Err = 0;
+   fFixSigma = false;
+   fFixT = true;
+   fFixB = true;
+   fFixS = true;
+   fFixA0 = true;
+   fFixA1 = true;
+   fFixA2 = true;
 }
 
 //______________________________________________________________________________
@@ -109,7 +147,16 @@ T, S and slope B).</p>
       Error ("TSpectrumFit","Invalid number of peaks, must be > than 0");
       return;
    }
-   fNPeaks = numberPeaks;   
+   fNPeaks = numberPeaks;  
+   fNumberIterations = 1;
+   fXmin = 0;
+   fXmax = 100; 
+   fStatisticType = kFitOptimChiCounts;
+   fAlphaOptim = kFitAlphaHalving;     
+   fPower = kFitPower2;                
+   fFitTaylor = kFitTaylorOrderFirst;  
+   fAlpha =1; 
+   fChi = 0;                    
    fPositionInit   = new Double_t[numberPeaks];
    fPositionCalc   = new Double_t[numberPeaks];   
    fPositionErr   = new Double_t[numberPeaks];   
@@ -120,23 +167,33 @@ T, S and slope B).</p>
    fFixAmp    = new Bool_t[numberPeaks];     
    fArea      = new Double_t[numberPeaks];   
    fAreaErr   = new Double_t[numberPeaks];      
-   fXmin=0,fXmax=100,fSigmaInit = 2,fFixSigma = false;
-   fAlpha =1;                     
-   fStatisticType = kFitOptimChiCounts;
-   fAlphaOptim = kFitAlphaHalving;     
-   fPower = kFitPower2;                
-   fFitTaylor = kFitTaylorOrderFirst;  
-   fTInit = 0;  
-   fFixT = true;
-   fBInit = 1;  
-   fFixB = true;
-   fSInit = 0;  
-   fFixS = true;
+   fSigmaInit = 2;
+   fSigmaCalc = 1;
+   fSigmaErr  = 0;
+   fTInit = 0; 
+   fTCalc = 0;
+   fTErr = 0; 
+   fBInit = 1; 
+   fBCalc = 0;
+   fBErr = 0; 
+   fSInit = 0; 
+   fSCalc = 0;
+   fSErr = 0; 
    fA0Init = 0; 
-   fFixA0 = true;
+   fA0Calc = 0;
+   fA0Err = 0;
    fA1Init = 0;
-   fFixA1 = true;
+   fA1Calc = 0;
+   fA1Err = 0;
    fA2Init = 0;
+   fA2Calc = 0;
+   fA2Err = 0;
+   fFixSigma = false;
+   fFixT = true;
+   fFixB = true;
+   fFixS = true;
+   fFixA0 = true;
+   fFixA1 = true;
    fFixA2 = true;
 }
     
