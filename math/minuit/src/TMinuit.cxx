@@ -448,6 +448,8 @@ TMinuit::TMinuit(Int_t maxpar): TNamed("MINUIT","The Minimization package")
 //
 //  maxpar is the maximum number of parameters used with this TMinuit object.
 
+   fFCN = 0;
+   
    BuildArrays(maxpar);
 
    fStatus       = 0;
