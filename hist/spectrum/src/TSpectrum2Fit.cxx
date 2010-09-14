@@ -361,27 +361,15 @@ Double_t TSpectrum2Fit::Ourpowl(Double_t a, Int_t pw)
 {                               
    //power function
    Double_t c;
+   Double_t a2 = a*a;
    c = 1;
-   if (pw > 0)
-      c = c * a * a;
-   
-   else if (pw > 2)
-      c = c * a * a;
-   
-   else if (pw > 4)
-      c = c * a * a;
-   
-   else if (pw > 6)
-      c = c * a * a;
-   
-   else if (pw > 8)
-      c = c * a * a;
-   
-   else if (pw > 10)
-      c = c * a * a;
-   
-   else if (pw > 12)
-      c = c * a * a;
+   if (pw >  0) c *= a2;
+   if (pw >  2) c *= a2;
+   if (pw >  4) c *= a2;
+   if (pw >  6) c *= a2;
+   if (pw >  8) c *= a2;
+   if (pw > 10) c *= a2;
+   if (pw > 12) c *= a2;
    return (c);
 }
 void TSpectrum2Fit::StiefelInversion(Double_t **a, Int_t size)
