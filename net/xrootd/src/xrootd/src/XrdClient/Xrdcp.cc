@@ -88,7 +88,7 @@ struct XrdCpInfo {
 
 #define XRDCP_BLOCKSIZE          (8*1024*1024)
 #define XRDCP_XRDRASIZE          (30*XRDCP_BLOCKSIZE)
-#define XRDCP_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.100 $ - Xrootd version: "XrdVSTRING
+#define XRDCP_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.103 $ - Xrootd version: "XrdVSTRING
 
 ///////////////////////////////////////////////////////////////////////
 // Coming from parameters on the cmd line
@@ -344,17 +344,24 @@ void *ReaderThread_xrd_xtreme(void *parm)
          if ( nr >= 0 ) {
             lastread = lr;
             noutstanding--;
-            cpnfo.queue.PutBuffer(buf, blknfo->offs, nr);
 
             // If this block was stolen by somebody else then this client has to be penalized
             // If this client stole the blk to some other client, then this client has to be rewarded
             int reward = thrnfo->xtrdhandler->MarkBlkAsRead(lr);
+            if (reward >= 0) 
+               // Enqueue the block only if it was not already read
+               cpnfo.queue.PutBuffer(buf, blknfo->offs, nr);
+
             if (reward > 0) {
                thrnfo->maxoutstanding++;
                thrnfo->maxoutstanding = xrdmin(20, thrnfo->maxoutstanding);
                thrnfo->cli->SetCacheParameters(XRDCP_BLOCKSIZE*4*thrnfo->maxoutstanding*2, 0, XrdClientReadCache::kRmBlk_FIFO);
             }
-            if (reward < 0) thrnfo->maxoutstanding--;
+            if (reward < 0) {
+               thrnfo->maxoutstanding--;
+               free(buf);
+            }
+
             if (thrnfo->maxoutstanding <= 0) {
                sleep(1);
                thrnfo->maxoutstanding = 1;
@@ -688,7 +695,11 @@ int doCp_xrd2xrd(XrdClient **xrddest, const char *src, const char *dst) {
       cout << endl;
    }
 
-   if (cpnfo.len != bytesread) retvalue = 13;
+   if (cpnfo.len != bytesread) {
+      cerr << endl << endl << 
+         "File length mismatch. Read:" << bytesread << " Length:" << cpnfo.len << endl;
+      retvalue = 13;
+   }
 
 #ifdef HAVE_XRDCRYPTO
    if (md5) MD_5->Final();
@@ -872,7 +883,7 @@ int doCp_xrd2loc(const char *src, const char *dst) {
          nfo->cli = xtremeclients[iii];
          nfo->clientidx = xrdxtrdfile->GimmeANewClientIdx();
          nfo->startfromblk = iii*xrdxtrdfile->GetNBlks() / xtremeclients.GetSize();
-         nfo->maxoutstanding = xrdmin( 3, xrdxtrdfile->GetNBlks() / xtremeclients.GetSize() );
+         nfo->maxoutstanding = xrdmax(xrdmin( 3, xrdxtrdfile->GetNBlks() / xtremeclients.GetSize() ), 1);
 
          XrdSysThread::Run(&myTID, ReaderThread_xrd_xtreme, (void *)nfo);
       }

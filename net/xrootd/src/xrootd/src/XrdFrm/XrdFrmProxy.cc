@@ -13,13 +13,19 @@
 const char *XrdFrmProxyCVSID = "$Id$";
 
 #include "errno.h"
+#include <fcntl.h>
 #include "stdio.h"
 #include "unistd.h"
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include "XrdFrm/XrdFrmReqAgent.hh"
 #include "XrdFrm/XrdFrmProxy.hh"
 #include "XrdFrm/XrdFrmTrace.hh"
 #include "XrdFrm/XrdFrmUtils.hh"
+#include "XrdOuc/XrdOucEnv.hh"
+#include "XrdOuc/XrdOucStream.hh"
+#include "XrdOuc/XrdOucUtils.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysLogger.hh"
 #include "XrdSys/XrdSysPlatform.hh"
@@ -60,9 +66,9 @@ XrdFrmProxy::XrdFrmProxy(XrdSysLogger *lP, const char *iName, int Debug)
 
 // Develop our internal name
 //
-   if (iName) insName = (strcmp(iName, "anon") ? iName : 0);
-       insName = 0;
-   sprintf(buff, "%s.%d", (iName ? iName : "anon"),static_cast<int>(getpid()));
+   QPath = 0;
+   insName = XrdOucUtils::InstName(iName,0);
+   sprintf(buff,"%s.%d",XrdOucUtils::InstName(iName),static_cast<int>(getpid()));
    intName = strdup(buff);
 }
 
@@ -92,7 +98,7 @@ int XrdFrmProxy::Add(char Opc, const char *Lfn, const char *Opq,
    n = strlen(Lfn);
    if (Opq && *Opq)
       {if (n + strlen(Opq) + 2 > sizeof(myReq.LFN)) return -ENAMETOOLONG;
-       strcpy(myReq.LFN, Lfn); strcpy(myReq.LFN+n+1, Opq), myReq.Opaque = n;
+       strcpy(myReq.LFN, Lfn); strcpy(myReq.LFN+n+1, Opq), myReq.Opaque = n+1;
       } else if (n < int(sizeof(myReq.LFN))) strcpy(myReq.LFN, Lfn);
                 else return -ENAMETOOLONG;
 
@@ -179,17 +185,48 @@ do{if (!State.Active)
 }
 
 /******************************************************************************/
+  
+int XrdFrmProxy::List(int qType, int qPrty, XrdFrmRequest::Item *Items, int Num)
+{
+   int i, n, Cnt = 0;
+
+// List each queue
+//
+   while(qType & opAll)
+        {for (i = 0; i < oqNum; i++) if (oqMap[i].oType & qType) break;
+         if (i >= oqNum) return Cnt;
+         qType &= ~oqMap[i].oType; n = oqMap[i].qType;
+         if (!Agent[n]) continue;
+         if (qPrty < 0) Cnt += Agent[n]->List(Items, Num);
+            else Cnt += Agent[n]->List(Items, Num, qPrty);
+        }
+
+// All done
+//
+   return Cnt;
+}
+
+/******************************************************************************/
 /*                                  I n i t                                   */
 /******************************************************************************/
 
-int XrdFrmProxy::Init(int opX, const char *aPath, int aMode)
+int XrdFrmProxy::Init(int opX, const char *aPath, int aMode, const char *qPath)
 {
-   char *myAPath;
+   const char *configFN = getenv("XRDCONFIGFN"), *iName = 0;
    int i;
 
-// Create the admin directory if it does not exists
+// If there is a config file then we need to see if a specific qpath is there.
+// Otherwise, we will use the adminpath as the queue path. Note that we qualify
+// the queue path with the instance name unless there is no config file.
 //
-   if (!(myAPath = XrdFrmUtils::makePath(insName, aPath, aMode))) return 0;
+        if (qPath) QPath = strdup(qPath);
+   else if (!configFN) iName = insName;
+   else if (Init2(configFN)) return 0;
+
+// Create the queue path directory if it does not exists
+//
+   if (!(QPath = XrdFrmUtils::makePath(iName, (QPath ? QPath : aPath), aMode)))
+      return 0;
 
 // Now create and start an agent for each wanted service
 //
@@ -197,10 +234,73 @@ int XrdFrmProxy::Init(int opX, const char *aPath, int aMode)
        if (opX & oqMap[i].oType)
           {Agent[oqMap[i].qType]
                 = new XrdFrmReqAgent(oqMap[i].qName, oqMap[i].qType);
-           if (!Agent[oqMap[i].qType]->Start(myAPath, aMode)) return 0;
+           if (!Agent[oqMap[i].qType]->Start(QPath, aMode)) return 0;
           }
 
 // All done
 //
    return 1;
+}
+
+/******************************************************************************/
+/* Private:                        I n i t 2                                  */
+/******************************************************************************/
+
+int XrdFrmProxy::Init2(const char *ConfigFN)
+{
+  char *var;
+  int  cfgFD, retc, NoGo = 0;
+  XrdOucEnv myEnv;
+  XrdOucStream cfgFile(&Say, getenv("XRDINSTANCE"), &myEnv, "=====> ");
+
+// Try to open the configuration file.
+//
+   if ( (cfgFD = open(ConfigFN, O_RDONLY, 0)) < 0)
+      {Say.Emsg("Config", errno, "open config file", ConfigFN);
+       return 1;
+      }
+   cfgFile.Attach(cfgFD);
+
+// Now start reading records until eof looking for our directive
+//
+   while((var = cfgFile.GetMyFirstWord()))
+        {if (!strcmp(var, "frm.xfr.qcheck") &&  qChk(cfgFile))
+            {cfgFile.Echo(); NoGo = 1;}
+        }
+
+// Now check if any errors occured during file i/o
+//
+   if ((retc = cfgFile.LastError()))
+      NoGo = Say.Emsg("Config", retc, "read config file", ConfigFN);
+   cfgFile.Close();
+
+// All done
+//
+   return NoGo;
+}
+
+/******************************************************************************/
+/* Private:                         q C h k                                   */
+/******************************************************************************/
+  
+int XrdFrmProxy::qChk(XrdOucStream &cfgFile)
+{
+    char *val;
+
+// Get the next token, we must have one here
+//
+   if (!(val = cfgFile.GetWord()))
+      {Say.Emsg("Config", "qcheck time not specified"); return 1;}
+
+// If not a path, then it must be a time
+//
+   if (*val != '/' && !(val = cfgFile.GetWord())) return 0;
+
+// The next token has to be an absolute path if it is present at all
+//
+   if (*val != '/')
+      {Say.Emsg("Config", "qcheck path not absolute"); return 1;}
+   if (QPath) free(QPath);
+   QPath = strdup(val);
+   return 0;
 }

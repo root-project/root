@@ -22,9 +22,9 @@ const char *XrdFrmAdminUnlinkCVSID = "$Id$";
 #include "XrdFrm/XrdFrmConfig.hh"
 #include "XrdFrm/XrdFrmTrace.hh"
 #include "XrdFrm/XrdFrmUtils.hh"
+#include "XrdNet/XrdNetCmsNotify.hh"
 #include "XrdOss/XrdOss.hh"
 #include "XrdOss/XrdOssPath.hh"
-#include "XrdOuc/XrdOucCmsNotify.hh"
 #include "XrdOuc/XrdOucNSWalk.hh"
 
 using namespace XrdFrm;
@@ -215,7 +215,7 @@ int XrdFrmAdmin::UnlinkDir(XrdOucNSWalk::NSEnt *&nP, XrdOucNSWalk::NSEnt *&dP)
   
 int XrdFrmAdmin::UnlinkFile(const char *lclPath)
 {
-   static const int ulOpts = XRDOSS_Online | XRDOSS_isPFN;
+   static const int ulOpts = XRDOSS_Online | XRDOSS_isMIG | XRDOSS_isPFN;
    int rc;
 
 // Remove this file as needed

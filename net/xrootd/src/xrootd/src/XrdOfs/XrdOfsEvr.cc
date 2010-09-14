@@ -22,6 +22,7 @@ const char *XrdOfsEvrCVSID = "$Id$";
 #include "XrdOfs/XrdOfsTrace.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysTimer.hh"
+#include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucTrace.hh"
 #include "XrdNet/XrdNetOpts.hh"
 #include "XrdNet/XrdNetSocket.hh"
@@ -131,12 +132,11 @@ int XrdOfsEvr::Init(XrdSysError *eobj, XrdCmsClient *trgp)
       {eobj->Emsg("Events", "XRDADMINPATH not defined");
        return 0;
       }
-   strcpy(pbuff, "XRDOFSEVENTS=");
-   path = pbuff+strlen(pbuff);
+   path = pbuff;
    strcpy(path, p); n = strlen(p);
    if (path[n-1] != '/') {path[n] = '/'; n++;}
    strcpy(&path[n], "ofsEvents");
-   putenv(strdup(pbuff));    // XrdOucEnv::Export("XRDOFSEVENTS")
+   XrdOucEnv::Export("XRDOFSEVENTS", pbuff);
 
 // Now create a socket to a path
 //

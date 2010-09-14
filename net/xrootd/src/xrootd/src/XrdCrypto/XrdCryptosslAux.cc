@@ -221,6 +221,10 @@ XrdSutBucket *XrdCryptosslX509ExportChain(XrdCryptoX509Chain *chain,
    }
    // Now write all other certificates (except selfsigned CAs ...)
    while ((c = chain->SearchBySubject(c->Issuer()))) {
+      if (c->type == XrdCryptoX509::kCA) {
+         DEBUG("Encountered CA in chain; breaking.  Subject: " << c->Subject());
+         break;
+      }
       if (strcmp(c->IssuerHash(), c->SubjectHash())) {
          // Write to bucket
          if (!PEM_write_bio_X509(bmem, (X509 *)c->Opaque())) {

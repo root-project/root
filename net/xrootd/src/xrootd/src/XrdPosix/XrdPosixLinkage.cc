@@ -149,11 +149,11 @@ XrdPosixLinkage Xunix;
       Retv_Rename      Xrd_U_Rename(Args_Rename)
                          {return (Retv_Rename)Xunix.Load_Error("rename");}
       Retv_Rewinddir   Xrd_U_Rewinddir(Args_Rewinddir) 
-                         {       Xunix.Load_Error("rewinddir"); _exit(255);}
+                         {       Xunix.Load_Error("rewinddir"); abort();}
       Retv_Rmdir       Xrd_U_Rmdir(Args_Rmdir) 
                          {return (Retv_Rmdir)Xunix.Load_Error("rmdir");}
       Retv_Seekdir     Xrd_U_Seekdir(Args_Seekdir) 
-                         {       Xunix.Load_Error("seekdir"); _exit(255);}
+                         {       Xunix.Load_Error("seekdir"); abort();}
       Retv_Stat        Xrd_U_Stat(Args_Stat) 
                          {return (Retv_Stat)Xunix.Load_Error("stat");}
       Retv_Stat64      Xrd_U_Stat64(Args_Stat64)

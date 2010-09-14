@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.29 2009/09/01 09:52:35 furano Exp $
+#              $Id: GNUmakefile,v 1.31 2010/07/30 03:19:08 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -6,11 +6,12 @@
   
 include ../GNUmake.env
 
-MORELIBS = -L$(LIBDIR) -lXrdOuc -lXrdNet -lXrdSys
+MORELIBS = -L$(LIBDIR) -lXrdNet -lXrdOuc -lXrdNetUtil -lXrdSys
 
-BINLIBS  = -L$(LIBDIR) -lXrdSec -lXrdOuc -lXrdNet 
+BINLIBS  = -L$(LIBDIR) -lXrdSec -lXrdNet -lXrdOuc -lXrdNetUtil -lXrdSys
 
-LIBDEPS = $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdNet.a
+LIBDEPS = $(LIBDIR)/libXrdNet.a $(LIBDIR)/libXrdNetUtil.a \
+          $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -72,16 +73,8 @@ anything: $(TARGETS)
 $(LIBARCH): $(OBJSLIB)
 	@echo Creating archive $(LIBARCH) 
 	$(ECHO)rm -f $(LIBARCH)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-	          if [ "x$(SUNCACHE)" != "x" ]; then \
-	             $(CC) -xar -o $(LIBARCH) $(OBJDIR)$(SUNCACHE)/*/*.o; \
-		  else \
-	             $(CC) -xar -o $(LIBARCH) $(OBJSLIB); \
-		  fi; \
-	       else \
-	          ar -rc $(LIBARCH) $(OBJSLIB); \
-	          ranlib $(LIBARCH); \
-               fi
+	$(ECHO)ar -rc $(LIBARCH) $(OBJSLIB)
+	$(ECHO)ranlib $(LIBARCH)
 
 $(LIBRARY): $(OBJSLIB) $(LIBDEPS)
 	@echo Creating shared library $(LIBRARY) 

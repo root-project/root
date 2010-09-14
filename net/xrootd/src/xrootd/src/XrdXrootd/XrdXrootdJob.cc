@@ -551,6 +551,11 @@ int XrdXrootdJob::Schedule(const char         *jkey,
    const char *msg = "Job resources currently not available.";
    int jobNum, rc, isSync = Opts & JOB_Sync;
 
+// Make sure we have a target
+//
+   if (!jkey || !(*jkey))
+      return resp->Send(kXR_ArgMissing, "Job target not specified.");
+
 // First find if this is a duplicate or create a new one
 //
    myMutex.Lock();

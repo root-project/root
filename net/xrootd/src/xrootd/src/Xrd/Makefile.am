@@ -4,14 +4,19 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.7 2008/05/26 13:36:50 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id: Makefile.am,v 1.8 2010/08/05 15:27:07 feichtinger Exp $
+## Checked in by $Author: feichtinger $
 #######################################################################
 
-## Note: XrdObject.hh XrdObject.icc seem not to be used anywhere
-EXTRA_DIST = XrdObject.hh XrdObject.icc
+AM_CPPFLAGS = -I$(top_srcdir)/src
 
+#############################################################################
+## extra directory definitions for install area
 xrootdxrdincdir = $(includedir)/xrootd/Xrd
+
+#############################################################################
+## deliverables (to be built / installed)
+lib_LTLIBRARIES = libXrd.la
 
 xrootdxrdinc_HEADERS = \
     XrdBuffer.hh  XrdLinkMatch.hh  XrdProtocol.hh \
@@ -23,21 +28,27 @@ xrootdxrdinc_HEADERS = \
     XrdObject.icc XrdPollDev.icc XrdPollPoll.icc \
     XrdPollE.hh   XrdPollE.icc
 
-lib_LTLIBRARIES = libXrd.la
 
-INCLUDES = -I$(top_srcdir)/src
+#############################################################################
+## Build rules
 
 libXrd_la_SOURCES = \
         XrdBuffer.cc XrdBuffer.hh     \
         XrdConfig.cc XrdConfig.hh     \
         XrdInet.cc XrdInet.hh       \
         XrdInfo.cc XrdInfo.hh       \
-	XrdLinkMatch.cc XrdLinkMatch.hh \
         XrdLink.cc XrdLink.hh       \
+	XrdLinkMatch.cc XrdLinkMatch.hh \
         XrdMain.cc        \
-        XrdPoll.cc XrdPollDev.hh XrdPollPoll.hh XrdPoll.hh XrdPollPoll.icc XrdPollDev.icc   \
-        XrdProtocol.cc XrdProtocol.hh   \
+        XrdPoll.cc XrdPollDev.hh XrdPollPoll.hh XrdPoll.hh \
+              XrdPollPoll.icc XrdPollDev.icc   \
         XrdProtLoad.cc XrdProtLoad.hh \
+        XrdProtocol.cc XrdProtocol.hh   \
         XrdScheduler.cc XrdScheduler.hh XrdJob.hh  \
         XrdStats.cc XrdStats.hh \
                     XrdTrace.hh
+
+
+## Extra sources that should go into the tarball
+##       Note: XrdObject.hh XrdObject.icc seem not to be used anywhere
+EXTRA_DIST = XrdObject.hh XrdObject.icc

@@ -44,8 +44,6 @@ const char *XrdCmsFinderCVSID = "$Id$";
 #include "XrdCms/XrdCmsRRData.hh"
 #include "XrdCms/XrdCmsTrace.hh"
 
-#include "XrdOdc/XrdOdcFinder.hh"
-
 #include "XrdOss/XrdOss.hh"
 
 #include "XrdOuc/XrdOucEnv.hh"
@@ -173,11 +171,6 @@ int XrdCmsFinderRMT::Forward(XrdOucErrInfo &Resp, const char *cmd,
    char             Work[xNum*12];
    struct iovec     xmsg[xNum];
 
-// Switch to protocol 1 if so configured
-//
-   if (XrdCmsClientMan::v1Mode)
-      return XrdCmsClientMan::oldFinder->Forward(Resp, cmd, arg1, arg2);
-
 // Encode the request as a redirector command
 //
    if ((is2way = (*cmd == '+'))) cmd++;
@@ -279,11 +272,6 @@ int XrdCmsFinderRMT::Locate(XrdOucErrInfo &Resp, const char *path, int flags,
    char           Work[xNum*12];
    struct iovec   xmsg[xNum];
 
-// Switch to protocol 1 if so configured
-//
-   if (XrdCmsClientMan::v1Mode)
-      return XrdCmsClientMan::oldFinder->Locate(Resp, path, flags, Env);
-
 // Fill out the RR data structure
 //
    Data.Ident   = (char *)(XrdCmsClientMan::doDebug ? Resp.getErrUser() : "");
@@ -352,11 +340,6 @@ int XrdCmsFinderRMT::Prepare(XrdOucErrInfo &Resp, XrdSfsPrep &pargs)
    char               Prty[1032], *NoteNum = 0, *colocp = 0;
    char               Work[xNum*12];
    struct iovec       xmsg[xNum];
-
-// Switch to protocol 1 if so configured
-//
-   if (XrdCmsClientMan::v1Mode)
-      return XrdCmsClientMan::oldFinder->Prepare(Resp, pargs);
 
 // Prefill the RR data structure and iovec
 //
@@ -653,13 +636,6 @@ int XrdCmsFinderRMT::Space(XrdOucErrInfo &Resp, const char *path)
    int            iovcnt;
    char           Work[xNum*12];
    struct iovec   xmsg[xNum];
-
-// If really using protocol 1, it does not support statfs. So, return defaults
-//
-   if (XrdCmsClientMan::v1Mode)
-      {Resp.setErrInfo(ENOTSUP, "The v1 protocol does not support statfs.");
-       return -ENOTSUP;
-      }
 
 // Fill out the RR data structure
 //
@@ -959,7 +935,7 @@ int XrdCmsFinderTRG::Process(XrdCmsRRData &Data)
 
 // Parse the arguments
 //
-   if (!Parser.Parse(int(Data.Request.rrCode), myArgs, myArgt, &Data))
+   if (!myArgs || !Parser.Parse(int(Data.Request.rrCode),myArgs,myArgt,&Data))
       {Say.Emsg("Finder", "Local cmsd sent a badly formed",Act,"request");
        return 1;
       }

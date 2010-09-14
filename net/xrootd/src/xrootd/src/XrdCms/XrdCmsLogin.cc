@@ -99,14 +99,10 @@ int XrdCmsLogin::Login(XrdLink *Link, CmsLoginData &Data, int timeout)
 //
    if (sendData(Link, Data)) return kYR_EINVAL;
 
-// Get the response. If we get an immediate close, then we must try protocol
-// version 1 as the login message was likely rejected. We can switch
-// to the old protocol but only if this is a redirector login.
+// Get the response.
 //
    if (Link->RecvAll((char *)&LIHdr, sizeof(LIHdr), timeout) < 0)
-      {if (Data.Mode & CmsLoginData::kYR_director) return kYR_ENETUNREACH;
-          else return Emsg(Link, "login rejected");
-      }
+      return Emsg(Link, "login rejected");
 
 // Receive and decode the response. We apparently have protocol version 2.
 //

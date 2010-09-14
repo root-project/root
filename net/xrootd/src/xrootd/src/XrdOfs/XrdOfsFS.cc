@@ -8,6 +8,12 @@
 //           $Id$
 
 const char *XrdOfsFSCVSID = "$Id$";
+
+#include "XrdOfs/XrdOfs.hh"
+#include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysPthread.hh"
+
+#include "XrdVersion.hh"
   
 // If you are replacing the standard definition of the file system interface,
 // with a derived class to perform additional or enhanced functions, you MUST
@@ -19,7 +25,30 @@ const char *XrdOfsFSCVSID = "$Id$";
 // If additional configuration is needed, over-ride the Config() method. At the
 // the end of your config, return the result of the XrdOfs::Config().
 
-#include "XrdOfs/XrdOfs.hh"
-#include "XrdSys/XrdSysPthread.hh"
-
 XrdOfs XrdOfsFS;
+  
+/******************************************************************************/
+/*                         G e t F i l e S y s t e m                          */
+/******************************************************************************/
+  
+XrdSfsFileSystem *XrdSfsGetFileSystem(XrdSfsFileSystem *native_fs, 
+                                      XrdSysLogger     *lp,
+                                      const char       *configfn)
+{
+   extern XrdSysError OfsEroute;
+
+// Do the herald thing
+//
+   OfsEroute.SetPrefix("ofs_");
+   OfsEroute.logger(lp);
+   OfsEroute.Say("Copr.  2010 Stanford University, Ofs Version " XrdVSTRING);
+
+// Initialize the subsystems
+//
+   XrdOfsFS.ConfigFN = (configfn && *configfn ? strdup(configfn) : 0);
+   if ( XrdOfsFS.Configure(OfsEroute) ) return 0;
+
+// All done, we can return the callout vector to these routines.
+//
+   return &XrdOfsFS;
+}

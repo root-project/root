@@ -805,7 +805,8 @@ do{if ((rc = Link->RecvAll((char *)&Data->Request, ReqSize, maxWait)) < 0)
    if (!(Data->Routing & XrdCmsRouting::noArgs))
       {if (Data->Request.modifier & kYR_raw)
           {Data->Path = Data->Buff; Data->PathLen = Data->Dlen;}
-          else if (!ProtArgs.Parse(int(Data->Request.rrCode),myArgs,myArgt,Data))
+          else if (!myArgs
+               || !ProtArgs.Parse(int(Data->Request.rrCode),myArgs,myArgt,Data))
                   {Reply_Error(*Data, kYR_EINVAL, "badly formed request");
                    continue;
                   }

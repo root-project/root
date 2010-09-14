@@ -87,16 +87,16 @@ char *XrdFrmUtils::makePath(const char *iName, const char *Path, int Mode)
 //
    bPath = XrdOucUtils::genPath(Path, iName, "frm");
 
-// Create the admin directory if it does not exists
+// Create the admin directory if it does not exists and a mode supplied
 //
-   if ((rc = XrdOucUtils::makePath(bPath, Mode)))
+   if (Mode > 0 && (rc = XrdOucUtils::makePath(bPath, Mode)))
       {Say.Emsg("makePath", rc, "create directory", bPath);
        return 0;
       }
 
-// Return the actual adminpath we are to use
+// Return the actual adminpath we are to use (this has been strduped).
 //
-   return strdup(bPath);
+   return bPath;
 }
 
 /******************************************************************************/
@@ -105,7 +105,7 @@ char *XrdFrmUtils::makePath(const char *iName, const char *Path, int Mode)
   
 char *XrdFrmUtils::makeQDir(const char *Path, int Mode)
 {
-   char qPath[1024], qLink[2048];
+   char qPath[1032], qLink[2048];
    int n, lksz, rc;
 
 // Generate an frm-specific queue path
@@ -126,7 +126,7 @@ char *XrdFrmUtils::makeQDir(const char *Path, int Mode)
 
 // Create the queue directory if it does not exists
 //
-   if ((rc = XrdOucUtils::makePath(qPath, Mode)))
+   if (Mode > 0 && (rc = XrdOucUtils::makePath(qPath, Mode)))
       {Say.Emsg("makeQDir", rc, "create directory", qPath);
        return 0;
       }
@@ -179,6 +179,36 @@ int XrdFrmUtils::MapR2Q(char Opc, int *Flags)
           default:  break;
          }
    return XrdFrmRequest::nilQ;
+}
+  
+/******************************************************************************/
+/*                                M a p V 2 I                                 */
+/******************************************************************************/
+  
+int XrdFrmUtils::MapV2I(const char *vName, XrdFrmRequest::Item &ICode)
+{
+   static struct ITypes {const char *IName; XrdFrmRequest::Item ICode;}
+                 ITList[] = {{"lfn",    XrdFrmRequest::getLFN},
+                             {"lfncgi", XrdFrmRequest::getLFNCGI},
+                             {"mode",   XrdFrmRequest::getMODE},
+                             {"obj",    XrdFrmRequest::getOBJ},
+                             {"objcgi", XrdFrmRequest::getOBJCGI},
+                             {"op",     XrdFrmRequest::getOP},
+                             {"prty",   XrdFrmRequest::getPRTY},
+                             {"qwt",    XrdFrmRequest::getQWT},
+                             {"rid",    XrdFrmRequest::getRID},
+                             {"tod",    XrdFrmRequest::getTOD},
+                             {"note",   XrdFrmRequest::getNOTE},
+                             {"tid",    XrdFrmRequest::getUSER}};
+   static const int ITNum = sizeof(ITList)/sizeof(struct ITypes);
+   int i;
+
+// Simply map the variable name to the item code
+//
+   for (i = 0; i < ITNum; i++)
+       if (!strcmp(vName, ITList[i].IName))
+          {ICode = ITList[i].ICode; return 1;}
+   return 0;
 }
   
 /******************************************************************************/

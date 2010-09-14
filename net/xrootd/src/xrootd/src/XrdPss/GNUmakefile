@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.5 2008/09/07 04:38:55 abh Exp $
+#              $Id: GNUmakefile,v 1.6 2010/07/29 01:24:31 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -26,10 +26,11 @@ OBJECTT  = \
 
 OBJECTU  = $(LIBDIR)/libXrdClient.a
 
-MORELIBS = -L$(LIBDIR) $(LIBM) -lXrdNet -lXrdOuc -lXrdSys
+MORELIBS = -L$(LIBDIR) -lXrdNet -lXrdOuc -lXrdNetUtil -lXrdSys
 
 LIBDEP   = $(LIBDIR)/libXrdClient.a \
            $(LIBDIR)/libXrdNet.a \
+           $(LIBDIR)/libXrdNetUtil.a \
            $(LIBDIR)/libXrdOuc.a \
            $(LIBDIR)/libXrdSys.a
 

@@ -20,6 +20,7 @@ const char *XrdFrmConfigCVSID = "$Id$";
 #include <fcntl.h>
 #include <sys/param.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 
 #include "Xrd/XrdInfo.hh"
@@ -27,11 +28,11 @@ const char *XrdFrmConfigCVSID = "$Id$";
 #include "XrdFrm/XrdFrmMonitor.hh"
 #include "XrdFrm/XrdFrmTrace.hh"
 #include "XrdFrm/XrdFrmUtils.hh"
+#include "XrdNet/XrdNetCmsNotify.hh"
 #include "XrdNet/XrdNetDNS.hh"
 #include "XrdOss/XrdOss.hh"
 #include "XrdOss/XrdOssSpace.hh"
 #include "XrdOuc/XrdOuca2x.hh"
-#include "XrdOuc/XrdOucCmsNotify.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucExport.hh"
 #include "XrdOuc/XrdOucMsubs.hh"
@@ -98,7 +99,7 @@ void *XrdFrmConfigMum(void *parg)
 
 // Check if we should add a newline character
 //
-   if (theSE->Buff[bp-(theSE->Buff)-1] != '\n') *bp++ = '\n';
+   if (theSE->Buff[bp-(theSE->Buff)-1L] != '\n') *bp++ = '\n';
    theSE->BLen = bp-(theSE->Buff);
 
 // All done
@@ -136,6 +137,8 @@ XrdFrmConfig::XrdFrmConfig(SubSys ss, const char *vopts, const char *uinfo)
    uInfo    = uinfo;
    ssID     = ss;
    AdminPath= 0;
+   APath    = 0;
+   QPath    = 0;
    AdminMode= 0740;
    xfrMax   = 2;
    FailHold = 3*60*60;
@@ -175,7 +178,7 @@ XrdFrmConfig::XrdFrmConfig(SubSys ss, const char *vopts, const char *uinfo)
 
 // Establish our instance name
 //
-   myInst = ((sP = getenv("XRDNAME")) && *sP ? sP : 0);
+   myInst = XrdOucUtils::InstName(-1);
 
 // Establish default config file
 //
@@ -212,7 +215,7 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
 {
    extern XrdOss *XrdOssGetSS(XrdSysLogger *, const char *, const char *);
    XrdFrmConfigSE theSE;
-   int n, retc, isMum = 0, myXfrMax = -1, NoGo = 0;
+   int n, retc, isMum = 0, myXfrMax = -1, NoGo = 0, optBG = 0;
    const char *temp;
    char c, buff[1024], *logfn = 0;
    long long logkeep = 0;
@@ -233,6 +236,8 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
       while ((c = getopt(argc,argv,vOpts)) && ((unsigned char)c != 0xff))
      { switch(c)
        {
+       case 'b': optBG = 1;
+                 break;
        case 'c': if (ConfigFN) free(ConfigFN);
                  ConfigFN = strdup(optarg);
                  break;
@@ -286,6 +291,10 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
               }
           } else if (!(logfn=XrdOucUtils::subLogfn(Say,myInst,logfn))) _exit(16);
 
+   // If undercover desired and we are not an agent, do so
+   //
+       if (optBG && !isAgent) XrdOucUtils::Undercover(Say, !logfn);
+
    // Bind the log file if we have one
    //
        if (logfn)
@@ -304,12 +313,13 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
 // Set the Environmental variables to hold some config information
 // XRDINSTANCE=<pgm> <instance name>@<host name>
 //
-   sprintf(buff,"XRDINSTANCE=%s %s@%s",myProg,(myInst ? myInst:"anon"),myName);
+   sprintf(buff,"XRDINSTANCE=%s %s@%s",myProg,
+                 XrdOucUtils::InstName(myInst), myName);
    putenv(strdup(buff)); // XRDINSTANCE
    myInstance = strdup(index(buff,'=')+1);
    XrdOucEnv::Export("XRDHOST", myName);
    XrdOucEnv::Export("XRDPROG", myProg);
-   if (myInst) XrdOucEnv::Export("XRDNAME", myInst);
+   XrdOucEnv::Export("XRDNAME", XrdOucUtils::InstName(myInst));
 
 // We need to divert the output if we are in admin mode with no logfile
 //
@@ -510,7 +520,7 @@ XrdOucMsubs *XrdFrmConfig::ConfigCmd(const char *cname, char *cdata)
       {Say.Emsg("Config", errno, "set up", cdata);
        return 0;
       }
-   *cP = ' ';
+   if (cP) *cP = ' ';
 
    msubs = new XrdOucMsubs(&Say);
    if (msubs->Parse(cname, cdata)) return msubs;
@@ -544,7 +554,7 @@ int XrdFrmConfig::ConfigMP(const char *pType)
         if (*psVal == '/')
            {pOpts = XrdOssRPList->Find(psVal);
             if (pOpts & xOpt) mypList = InsertPL(mypList, psVal, psLen,
-                                                (pOpts & XRDEXP_NOTRW ? 0 : 1));
+                                                (pOpts & XRDEXP_MAKELF ? 1:0));
                else {Say.Say("Config", psVal, "not marked", pType); NoGo = 1;}
            } else {
             VPInfo *vP = VPList;
@@ -566,7 +576,7 @@ int XrdFrmConfig::ConfigMP(const char *pType)
       {XrdOucPList *fP = XrdOssRPList->First();
        short sval[2];
        while(fP)
-            {sval[0] = (fP->Flag() & XRDEXP_NOTRW ? 0 : 1);
+            {sval[0] = (fP->Flag() & XRDEXP_MAKELF ? 1 : 0);
              sval[1] = fP->Plen();
              if (fP->Flag() & xOpt)
                  mypList = new XrdOucTList(fP->Path(), sval, mypList);
@@ -774,7 +784,12 @@ int XrdFrmConfig::ConfigPaths()
 // unqualified admin path that we determined above.
 //
    if (haveCMS)
-      cmsPath = new XrdOucCmsNotify(&Say,xPath,insName,XrdOucCmsNotify::isServ);
+      cmsPath = new XrdNetCmsNotify(&Say,xPath,insName,XrdNetCmsNotify::isServ);
+
+// If there is no QPath then make it the unqualified admin path
+//
+   APath = strdup(xPath);
+   if (!QPath) QPath = APath;
 
 // Create the admin directory if it does not exists
 //
@@ -798,13 +813,14 @@ int XrdFrmConfig::ConfigPaths()
 void XrdFrmConfig::ConfigPF(const char *pFN)
 {
    static const int Mode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
-   char buff[80], data[24];
+   const char *ppP = (PidPath ? PidPath : "/tmp");
+   char buff[1032], data[24];
    int pfFD, n;
 
 // Construct pidfile name
 //
-   if (myInst) sprintf(buff, "/tmp/%s/%s.pid", myInst, pFN);
-      else sprintf(buff, "/tmp/%s.pid", pFN);
+   if (myInst) sprintf(buff, "%s/%s/%s.pid", ppP, myInst, pFN);
+      else sprintf(buff, "%s/%s.pid", ppP, pFN);
 
 // Open the pidfile creating it if necessary
 //
@@ -866,12 +882,14 @@ int XrdFrmConfig::ConfigXeq(char *var, int mbok)
 // Process common items to all subsystems
 //
    if (!strcmp(var, "all.adminpath" )) return xapath();
+   if (!strcmp(var, "all.pidpath"   )) return Grab(var, &PidPath, 0);
    if (!strcmp(var, "all.manager"   )) {haveCMS = 1; return 0;}
 
 // Process directives specific to each subsystem
 //
    if (ssID == ssAdmin)
       {
+       if (!strcmp(var, "frm.xfr.qcheck")) return xqchk();
        if (!strcmp(var, "ofs.osslib"    )) return Grab(var, &ossLib,    0);
        if (!strcmp(var, "oss.cache"     )) return xspace(0,0);
        if (!strcmp(var, "oss.localroot" )) return Grab(var, &LocalRoot, 0);
@@ -884,6 +902,7 @@ int XrdFrmConfig::ConfigXeq(char *var, int mbok)
 
    if (ssID == ssXfr)
       {
+       if (!strcmp(var, "qcheck"        )) return xqchk();
        if (isAgent) return 0;           // Server-oriented directives
 
        if (!strcmp(var, "ofs.osslib"    )) return Grab(var, &ossLib,    0);
@@ -896,7 +915,6 @@ int XrdFrmConfig::ConfigXeq(char *var, int mbok)
 
        if (!strcmp(var, "copycmd"       )) return xcopy();
        if (!strcmp(var, "copymax"       )) return xcmax();
-       if (!strcmp(var, "qcheck"        )) return xitm("qchk time", WaitQChk);
        if (!strcmp(var, "oss.space"     )) return xspace();
 
        if (!strncmp(var, "migr.", 5))   // xfr.migr
@@ -1054,7 +1072,7 @@ int XrdFrmConfig::Grab(const char *var, char **Dest, int nosubs)
 XrdOucTList *XrdFrmConfig::InsertPL(XrdOucTList *pL, const char *Path,
                                     int Plen, int isRW)
 {
-   short sval[2] = {isRW, Plen};
+   short sval[4] = {isRW, Plen};
    XrdOucTList *pP = 0, *tP = pL;
 
 // Find insertion point
@@ -1162,6 +1180,7 @@ int XrdFrmConfig::xapath()
    Options:  [in] [out] [stats] [timeout <sec>] [url] cmd [args]
 
              in        use command for incomming copies.
+             noalloc   do not pre-allocate space for incomming copies.
              out       use command for outgoing copies.
              stats     print transfer statistics in the log.
              timeout   how long the cmd can run before it is killed.
@@ -1170,12 +1189,13 @@ int XrdFrmConfig::xapath()
    Output: 0 upon success or !0 upon failure.
 */
 int XrdFrmConfig::xcopy()
-{  int cmdIO[2] = {0,0}, TLim = 0, Stats = 0, cmdMDP = 0, cmdUrl = 0;
+{  int cmdIO[2] = {0,0}, TLim=0, Stats=0, hasMDP=0, cmdUrl=0, noAlo=0;
    char *val, *theCmd = 0;
    struct copyopts {const char *opname; int *oploc;} cpopts[] =
          {
           {"in",     &cmdIO[0]},
           {"out",    &cmdIO[1]},
+          {"noalloc",&noAlo},
           {"stats",  &Stats},
           {"timeout",&TLim},
           {"url",    &cmdUrl}
@@ -1206,7 +1226,7 @@ int XrdFrmConfig::xcopy()
 // Find if $MDP is present here
 //
    if (!cmdIO[0] && !cmdIO[1]) cmdIO[0] = cmdIO[1] = 1;
-   if (cmdIO[1]) cmdMDP = (strstr(theCmd, "$MDP") != 0);
+   if (cmdIO[1]) hasMDP = (strstr(theCmd, "$MDP") != 0);
 
 // Initialzie the appropriate command structures
 //
@@ -1215,8 +1235,10 @@ int XrdFrmConfig::xcopy()
    do {if (cmdIO[i])
           {if (xfrCmd[n].theCmd) free(xfrCmd[n].theCmd);
            xfrCmd[n].theCmd = strdup(theCmd);
-           xfrCmd[n].Stats  = Stats;
-           xfrCmd[n].hasMDP = cmdMDP;
+           if (Stats)  xfrCmd[n].Opts  |= cmdStats;
+           if (hasMDP) xfrCmd[n].Opts  |= cmdMDP;
+           if (noAlo)  xfrCmd[n].Opts  &=~cmdAlloc;
+              else     xfrCmd[n].Opts  |= cmdAlloc;
            xfrCmd[n].TLimit = TLim;
           }
        n--;
@@ -1297,9 +1319,7 @@ int XrdFrmConfig::xdpol()
 
    Purpose:  To parse the directive: xxxxtime <sec>
 
-             <sec>     number of seconds file must be unused before migration
-                       if idletime directive or seconds between queue checks
-                       of qchktime directive.
+             <sec>     number of seconds applicable to the directive.
 
    Output: 0 upon success or !0 upon failure.
 */
@@ -1682,6 +1702,46 @@ int XrdFrmConfig::xpolprog()
 }
 
 /******************************************************************************/
+/* Private:                        x q c h k                                  */
+/******************************************************************************/
+
+/* Function: xqchk
+
+   Purpose:  To parse the directive: qcheck <sec> <path>
+
+             <sec>     number of seconds between forced queue checks. This is
+                       optional is <path> is specified.
+             <path>    the absolute location of the queue directory.
+
+   Output: 0 upon success or !0 upon failure.
+*/
+int XrdFrmConfig::xqchk()
+{   int itime;
+    char *val;
+
+// Get the next token, we must have one here
+//
+   if (!(val = cFile->GetWord()))
+      {Say.Emsg("Config", "qcheck time not specified"); return 1;}
+
+// If not a path, then it must be a time
+//
+   if (*val != '/')
+      {if (XrdOuca2x::a2tm(Say, "qcheck time", val, &itime)) return 1;
+       WaitQChk = itime;
+       if (!(val = cFile->GetWord())) return 0;
+      }
+
+// The next token has to be an absolute path if it is present at all
+//
+   if (*val != '/')
+      {Say.Emsg("Config", "qcheck path not absolute"); return 1;}
+   if (QPath) free(QPath);
+   QPath = strdup(val);
+   return 0;
+}
+
+/******************************************************************************/
 /*                                x s p a c e                                 */
 /******************************************************************************/
 
@@ -1814,13 +1874,14 @@ int XrdFrmConfig::xxfr()
          };
 
     if (!val)
-       {if (haveparm)
-           { return 0;
-           }
+      {if (haveparm)
+	  { return 0;
+	  }
         else
-           {Say.Emsg("Config", "xfr parameter not specified");
+	  {Say.Emsg("Config", "xfr parameter not specified");
             return 1;
-           }
-       }
+	  }
+      }
+
     return 0;
 }

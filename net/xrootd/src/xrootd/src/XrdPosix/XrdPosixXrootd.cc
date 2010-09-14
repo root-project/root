@@ -107,6 +107,8 @@ public:
 
 XrdClient *XClient;
 
+int        Active() {return doClose;}
+
 void       isOpen() {doClose = 1;}
 
 long long  Offset() {return currOffset;}
@@ -1307,7 +1309,6 @@ int XrdPosixXrootd::Truncate(const char *path, off_t Size)
       XrdClientUrlInfo url(str);
       if (admin.Admin.Truncate(url.File.c_str(), Size)) return 0;
       return admin.Fault();
-      errno = ENOTSUP; return -1;
      }
   return admin.Result();
 }
@@ -1559,7 +1560,8 @@ XrdPosixFile *XrdPosixXrootd::findFP(int fd, int glk)
 // Obtain the file object, if any
 //
    myMutex.Lock();
-   if (!(fp = myFiles[fd])) {myMutex.UnLock(); errno = EBADF; return fp;}
+   if (!(fp = myFiles[fd]) || !(fp->Active()))
+      {myMutex.UnLock(); errno = EBADF; return (XrdPosixFile *)0;}
 
 // Lock the object and unlock the global lock unless it is to be held
 //

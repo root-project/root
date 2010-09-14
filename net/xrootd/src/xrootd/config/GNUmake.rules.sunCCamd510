@@ -1,4 +1,4 @@
-#              $Id: GNUmake.rules.sunCCamd510,v 1.2 2009/12/11 01:57:01 abh Exp $
+#              $Id: GNUmake.rules.sunCCamd510,v 1.3 2010/07/29 01:23:11 abh Exp $
 
 #------------------------------------------------------------------------------#
 #              R u l e s   f o r   g e n e r i c   s u n C C                   #
@@ -18,6 +18,5 @@ TYPESHLIB  = so
 
 TYPELIBS   = -R/usr/lib/amd64 -L/usr/lib/amd64 -L/lib/amd64 \
              -lposix4 -lsocket -lnsl $(PTHREAD) -ldl
-TYPELIBMT  = -lmtmalloc
+TYPELIBMT  = -lumem
 TYPELIBSF  = -lsendfile
-TYPELIBSM  = -lsunmath

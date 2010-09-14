@@ -98,7 +98,7 @@ void XrdFrmXfrAgent::Add(XrdOucStream   &Request, char *Tok,
 // Add all paths in the request
 //
    do {strlcpy(myReq.LFN, tp, sizeof(myReq.LFN));
-       if ((op = index(tp, '?'))) myReq.Opaque = op-tp;
+       if ((op = index(tp, '?'))) {myReq.Opaque = op-tp+1; *op = '\0';}
           else myReq.Opaque = 0;
        myReq.LFO = 0;
        if (myReq.LFN[0] != '/' && !(myReq.LFO = XrdFrmUtils::chkURL(myReq.LFN)))
@@ -159,31 +159,13 @@ void XrdFrmXfrAgent::Del(XrdOucStream  &Request, char *Tok,
   
 void XrdFrmXfrAgent::List(XrdOucStream &Request, char *Tok)
 {
-   static struct ITypes {const char *IName; XrdFrmRequest::Item ICode;}
-                 ITList[] = {{"lfn",    XrdFrmRequest::getLFN},
-                             {"lfncgi", XrdFrmRequest::getLFNCGI},
-                             {"mode",   XrdFrmRequest::getMODE},
-                             {"obj",    XrdFrmRequest::getOBJ},
-                             {"objcgi", XrdFrmRequest::getOBJCGI},
-                             {"op",     XrdFrmRequest::getOP},
-                             {"prty",   XrdFrmRequest::getPRTY},
-                             {"qwt",    XrdFrmRequest::getQWT},
-                             {"rid",    XrdFrmRequest::getRID},
-                             {"tod",    XrdFrmRequest::getTOD},
-                             {"note",   XrdFrmRequest::getNOTE},
-                             {"tid",    XrdFrmRequest::getUSER}};
-   static const int ITNum = sizeof(ITList)/sizeof(struct ITypes);
-
-   XrdFrmRequest::Item Items[ITNum];
+   XrdFrmRequest::Item Items[XrdFrmRequest::getLast];
    XrdFrmReqAgent *agentP;
-   int n = 0, i;
+   int n = 0;
    char *tp;
 
-   while((tp = Request.GetToken()) && n <= ITNum)
-        {for (i = 0; i < ITNum; i++)
-             if (!strcmp(tp, ITList[i].IName))
-                {Items[n++] = ITList[i].ICode; break;}
-        }
+   while((tp = Request.GetToken()) && n < XrdFrmRequest::getLast)
+        {if (XrdFrmUtils::MapV2I(tp, Items[n])) n++;}
 
 // List entries queued for specific servers
 //
@@ -246,10 +228,10 @@ int XrdFrmXfrAgent::Start()
 
 // Prepare our agents
 //
-   if (!StgAgent.Start(Config.AdminPath, Config.AdminMode)
-   ||  !MigAgent.Start(Config.AdminPath, Config.AdminMode)
-   ||  !GetAgent.Start(Config.AdminPath, Config.AdminMode)
-   ||  !PutAgent.Start(Config.AdminPath, Config.AdminMode)) return 2;
+   if (!StgAgent.Start(Config.QPath, Config.AdminMode)
+   ||  !MigAgent.Start(Config.QPath, Config.AdminMode)
+   ||  !GetAgent.Start(Config.QPath, Config.AdminMode)
+   ||  !PutAgent.Start(Config.QPath, Config.AdminMode)) return 2;
 
 // Attach stdin to the Request stream
 //

@@ -5,7 +5,7 @@
 ## Initial version: 17.3.2009
 ##
 ## Version info: $Id$
-## Checked in by $Author: abh $
+## Checked in by $Author: feichtinger $
 #######################################################################
 
 #Note: xrdadler32 unfortunately has a dependency on the XrdPosix library
@@ -41,7 +41,8 @@ mpxstats_SOURCES = XrdMpxStats.cc
 mpxstats_LDADD = \
                        ../XrdNet/libXrdNet.la   \
                        ../XrdOuc/libXrdOuc.la     \
-                       ../XrdSys/libXrdSys.la
+                       ../XrdSys/libXrdSys.la \
+                       ../XrdNet/libXrdNetUtil.la
 
 mpxstats_LDFLAGS = -static -export-dynamic
 

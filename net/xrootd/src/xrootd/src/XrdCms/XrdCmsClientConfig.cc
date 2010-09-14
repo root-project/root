@@ -27,6 +27,7 @@ const char *XrdCmsClientConfigCVSID = "$Id$";
 
 #include "XrdCms/XrdCmsClientConfig.hh"
 #include "XrdCms/XrdCmsClientMsg.hh"
+#include "XrdCms/XrdCmsSecurity.hh"
 #include "XrdCms/XrdCmsTrace.hh"
 
 #include "XrdSys/XrdSysHeaders.hh"
@@ -72,17 +73,17 @@ int XrdCmsClientConfig::Configure(char *cfn, configWhat What, configHow How)
 
   Output:   0 upon success or !0 otherwise.
 */
+   EPNAME("Configure");
+   static const char *mySid = 0;
    XrdOucTList *tpe, *tpl;
    int i, NoGo = 0;
    const char *eText = 0;
-   char buff[256], *slash, *temp, *bP;
+   char buff[256], *slash, *temp, *bP, sfx;
 
-// Preset tracing options
+// Preset some values
 //
-   if (getenv("XRDDEBUG")) Trace.What = TRACE_ALL;
    myHost = getenv("XRDHOST");
-   myName = getenv("XRDNAME");
-   if (!myName || !*myName) myName = "anon";
+   myName = XrdOucUtils::InstName(1);
    CMSPath= strdup("/tmp/");
    isMeta = How & configMeta;
    isMan  = What& configMan;
@@ -96,16 +97,32 @@ int XrdCmsClientConfig::Configure(char *cfn, configWhat What, configHow How)
        if (eText) {Say.Emsg("Config", eText, "not specified."); NoGo=1;}
       }
 
+// Reset tracing options
+//
+   if (getenv("XRDDEBUG")) Trace.What = TRACE_ALL;
+
 // Set proper local socket path
 //
-   temp=XrdOucUtils::genPath(CMSPath,(strcmp("anon",myName)?myName:0), ".olb");
+   temp=XrdOucUtils::genPath(CMSPath, XrdOucUtils::InstName(-1), ".olb");
    free(CMSPath); CMSPath = temp;
    XrdOucEnv::Export("XRDCMSPATH", temp);
    XrdOucEnv::Export("XRDOLBPATH", temp); //Compatability
 
-// Export the manager list
+// Generate the system ID for this configuration.
 //
    tpl = (How & configProxy ? PanList : ManList);
+   if (!mySid)
+      {     if (What & configServer) sfx = 's';
+       else if (What & configSuper)  sfx = 'u';
+       else                          sfx = 'm';
+       if (!(mySid = XrdCmsSecurity::setSystemID(tpl, myName, myHost, sfx)))
+          {Say.Emsg("xrootd","Unable to generate system ID; too many managers.");
+           NoGo = 1;
+          } else {DEBUG("Global System Identification: " <<mySid);}
+      }
+
+// Export the manager list
+//
    if (tpl)
       {i = 0; tpe = tpl;
        while(tpe) {i += strlen(tpe->text) + 9; tpe = tpe->next;}
@@ -391,7 +408,8 @@ int XrdCmsClientConfig::xmang(XrdOucStream &Config)
           }
 
     i = strlen(mval);
-    if (mval[i-1] != '+') i = 0;
+    if (mval[i-1] != '+')
+       {i = 0; val = mval; mval = XrdNetDNS::getHostName(mval); free(val);}
         else {bval = strdup(mval); mval[i-1] = '\0';
               if (!(i = XrdNetDNS::getHostAddr(mval, InetAddr, 8)))
                  {Say.Emsg("Config","Manager host", mval, "not found");

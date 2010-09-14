@@ -4,32 +4,51 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.3 2007/11/16 01:07:38 abh Exp $
-## Checked in by $Author: abh $
+## Version info: $Id: Makefile.am,v 1.4 2010/08/05 15:25:40 feichtinger Exp $
+## Checked in by $Author: feichtinger $
 #######################################################################
 
-lib_LTLIBRARIES = libXrdNet.la
+AM_CPPFLAGS = -I$(top_srcdir)/src
+
+#############################################################################
+## extra installation directory definitions
 
 xrootdnetincdir = $(includedir)/xrootd/XrdNet
+
+#############################################################################
+## deliverables (to be built / installed)
+
+lib_LTLIBRARIES = libXrdNet.la libXrdNetUtil.la 
+
 
 xrootdnetinc_HEADERS = XrdNet.hh XrdNetOpts.hh XrdNetPeer.hh \
                        XrdNetBuffer.hh XrdNetConnect.hh XrdNetDNS.hh \
 		       XrdNetLink.hh XrdNetSecurity.hh XrdNetSocket.hh \
-		       XrdNetWork.hh
+		       XrdNetWork.hh XrdNetCmsNotify.hh
 
-INCLUDES = -I$(top_srcdir)/src
+#############################################################################
+# Build rules
 
 libXrdNet_la_SOURCES = \
         XrdNet.cc XrdNet.hh XrdNetOpts.hh XrdNetPeer.hh         \
         XrdNetBuffer.cc XrdNetBuffer.hh     \
+        XrdNetCmsNotify.cc XrdNetCmsNotify.hh \
         XrdNetConnect.cc XrdNetConnect.hh    \
-        XrdNetDNS.cc XrdNetDNS.hh        \
         XrdNetLink.cc XrdNetLink.hh       \
         XrdNetMsg.cc XrdNetMsg.hh        \
         XrdNetSecurity.cc XrdNetSecurity.hh   \
         XrdNetSocket.cc XrdNetSocket.hh     \
         XrdNetWork.cc XrdNetWork.hh
+
 libXrdNet_la_LIBADD = $(LIBSOCKET) $(LIBNSL)
+
+
+libXrdNetUtil_la_SOURCES = \
+        XrdNetDNS.cc XrdNetDNS.hh
+
+libXrdNetUtil_la_LIBADD = $(LIBSOCKET) $(LIBNSL)
+
+
 #REFAC libXrdNet_la_CXXFLAGS = -prefer-pic
 #REFAC libXrdNet_la_LDFLAGS = -static
 

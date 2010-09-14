@@ -8,14 +8,12 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//          $Id: XrdOucHash.icc,v 1.11 2009/10/14 18:03:47 abh Exp $
+//          $Id: XrdOucHash.icc,v 1.12 2010/07/03 03:26:24 abh Exp $
 
-//const char *XrdOucHashCVSID = "$Id: XrdOucHash.icc,v 1.11 2009/10/14 18:03:47 abh Exp $";
+//const char *XrdOucHashCVSID = "$Id: XrdOucHash.icc,v 1.12 2010/07/03 03:26:24 abh Exp $";
 
 #include <errno.h>
 #include <string.h>
-
-#include "XrdOuc/XrdOucHash.hh"
 
 /******************************************************************************/
 /*                E x t e r n a l   H a s h   F u n c t i o n                 */

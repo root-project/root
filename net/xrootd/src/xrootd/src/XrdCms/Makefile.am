@@ -63,7 +63,6 @@ libXrdCms_la_SOURCES = \
 libXrdCms_la_LIBADD = libXrdCmsConv.la \
 	             ../XrdNet/libXrdNet.la \
 		     ../XrdOuc/libXrdOuc.la \
-		     ../XrdOdc/libXrdOdc.la \
 		     ../XrdSys/libXrdSys.la 
 
 cmsd_SOURCES = \

@@ -38,7 +38,9 @@ const char *XrdCmsSecurityCVSID = "$Id$";
 #include "XrdCms/XrdCmsTalk.hh"
 #include "XrdCms/XrdCmsTrace.hh"
 
+#include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucErrInfo.hh"
+#include "XrdOuc/XrdOucTList.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysPthread.hh"
 
@@ -282,4 +284,56 @@ do {
 //
    if (AuthProt) AuthProt->Delete();
    return (eText == 0);
+}
+
+/******************************************************************************/
+/*                           s e t S y s t e m I D                            */
+/******************************************************************************/
+  
+char *XrdCmsSecurity::setSystemID(XrdOucTList *tp, const char *iName,
+                                  const char  *iHost,    char  iType)
+{
+   XrdOucTList *tpF;
+   char sidbuff[8192], *sidend = sidbuff+sizeof(sidbuff)-32, *sp, *cP;
+   char *fMan, *fp, *xp;
+   int n;
+
+// The system ID starts with the semi-unique name of this node
+//
+   if (!iName || !*iName) iName = "anon";
+   if (!iHost || !*iHost) iHost = "localhost";
+   strcpy(sidbuff, iName); strcat(sidbuff, "-");
+   sp = sidbuff + strlen(sidbuff);
+   *sp++ = iType; *sp++ = ' '; cP = sp;
+
+// Develop a unique cluster name for this cluster
+//
+   if (!tp) sp += sprintf(sp, "%s@%s", iName, iHost);
+      else {tpF = tp;
+            fMan = tp->text + strlen(tp->text) - 1;
+            while((tp = tp->next))
+                 {fp = fMan; xp = tp->text + strlen(tp->text) - 1;
+                  do {if (*fp != *xp) break;
+                      xp--;
+                     } while(fp-- != tpF->text);
+                  if ((n = xp - tp->text + 1) > 0)
+                     {sp += sprintf(sp, "%d", tp->val);
+                      if (sp+n >= sidend) return (char *)0;
+                      strncpy(sp, tp->text, n); sp += n;
+                     }
+                 }
+            sp += sprintf(sp, "%d", tpF->val);
+            n = strlen(tpF->text);
+            if (sp+n >= sidend) return (char *)0;
+            strcpy(sp, tpF->text); sp += n;
+           }
+
+// Set envar to hold the cluster name
+//
+   *sp = '\0';
+   XrdOucEnv::Export("XRDCMSCLUSTERID", cP);
+
+// Return the system ID
+//
+   return  strdup(sidbuff);
 }

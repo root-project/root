@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.35 2010/05/26 01:26:14 abh Exp $
+#              $Id: GNUmakefile,v 1.38 2010/07/29 01:25:52 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -6,7 +6,8 @@
   
 include ../GNUmake.env
 
-BINLIBS = -L$(LIBDIR) -lXrdAcc -lXrdCms -lXrdOdc -lXrd -lXrdNet -lXrdOuc -lXrdSys $(TYPELIBSF)
+BINLIBS = -L$(LIBDIR) -lXrdCms -lXrd -lXrdNet -lXrdOuc -lXrdNetUtil -lXrdSys \
+            $(TYPELIBSF)
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -52,15 +53,15 @@ OBJFS   = \
           $(OBJDIR)/XrdOfsFS.o  \
           $(LIBDIR)/libXrdOfs.a \
           $(LIBDIR)/libXrdOss.a \
-          $(LIBDIR)/libXrdFrm.a
+          $(LIBDIR)/libXrdFrm.a \
+          $(LIBDIR)/libXrdAcc.a
 
 OBJDEPS = \
           $(LIBDIR)/libXrd.a \
           $(LIBDIR)/libXrdNet.a \
+          $(LIBDIR)/libXrdNetUtil.a \
           $(LIBDIR)/libXrdOuc.a \
-          $(LIBDIR)/libXrdAcc.a \
           $(LIBDIR)/libXrdCms.a \
-          $(LIBDIR)/libXrdOdc.a \
           $(OBJFS)
 
 TARGETS  = $(BINDIR)/xrootd
@@ -238,7 +239,7 @@ $(OBJDIR)/XrdXrootdXeq.o: XrdXrootdFile.hh      XrdXrootdFileLock.hh  \
                           XrdXrootdPio.hh       XrdXrootdStat.icc \
                           XrdBuffer.hh          XrdLink.hh            \
                           XrdSfsInterface.hh    XrdSecInterface.hh \
-                          XrdSecEntity.hh \
+                          XrdSecEntity.hh       XrdSysTimer.hh \
                           XrdSysError.hh        XrdOucTrace.hh  \
                           XrdSysPlatform.hh     XrdOucTList.hh \
                           XrdOucReqID.hh        XrdOucStream.hh \

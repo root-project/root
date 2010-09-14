@@ -50,7 +50,7 @@ const char *XrdOssAioCVSID = "$Id$";
 /******************************************************************************/
   
 extern XrdOucTrace OssTrace;
-#define tident aiop->TIdent
+//define tident aiop->TIdent
 
 extern XrdSysError OssEroute;
 
@@ -391,8 +391,8 @@ void *XrdOssAioWait(void *mySigarg)
        while ((rc = aio_error(&aiop->sfsAio)) == EINPROGRESS) {}
        retval = (ssize_t)aio_return(&aiop->sfsAio);
 
-       TRACE(Debug, sigType <<" completed; rc=" <<rc <<" result=" <<retval
-                    <<" aiocb=" <<std::hex <<aiop <<std::dec);
+       DEBUG(sigType <<" completed for " <<aiop->TIdent <<"; rc=" <<rc 
+             <<" result=" <<retval <<" aiocb=" <<std::hex <<aiop <<std::dec);
 
        if (retval < 0) aiop->Result = -rc;
           else         aiop->Result = retval;

@@ -240,7 +240,7 @@ int XrdCmsConfig::Configure1(int argc, char **argv, char *cfn)
 
 // Establish my instance name
 //
-   sprintf(buff, "%s@%s", (myInsName ? myInsName : "anon"), myName);
+   sprintf(buff, "%s@%s", XrdOucUtils::InstName(myInsName), myName);
    myInstance = strdup(buff);
 
 // Print herald
@@ -337,7 +337,7 @@ int XrdCmsConfig::Configure2()
 
 // Establish the path to be used for admin functions
 //
-   p = XrdOucUtils::genPath(AdminPath,(strcmp("anon",myInsName)?myInsName:0),".olb");
+   p = XrdOucUtils::genPath(AdminPath,XrdOucUtils::InstName(myInsName,0),".olb");
    free(AdminPath);
    AdminPath = p;
 
@@ -738,7 +738,7 @@ int XrdCmsConfig::ConfigProc(int getrole)
   char *var;
   int  cfgFD, retc, NoGo = 0;
   XrdOucEnv myEnv;
-  XrdOucStream CFile(&Say, myInstance, &myEnv, "=====> ");
+  XrdOucStream CFile(&Say, getenv("XRDINSTANCE"), &myEnv, "=====> ");
 
 // Try to open the configuration file.
 //
@@ -840,14 +840,13 @@ int XrdCmsConfig::MergeP()
 //
    while(plp)
         {Opts = plp->Flag();
-         npinfo.rwvec = (Opts & (XRDEXP_GLBLRO | XRDEXP_NOTRW) ? 0 : 1);
-         npinfo.ssvec = (Opts & XRDEXP_STAGE ? 1 : 0);
-         if (PathList.Find(plp->Path(), opinfo))
-            Say.Emsg("Config","Ignoring unexpected duplicate path",plp->Path());
-            else if (!(Opts & XRDEXP_LOCAL))
-                    {PathList.Insert(plp->Path(), &npinfo);
-                     if (npinfo.ssvec) DiskSS = 1;
-                    }
+         if (!(Opts & XRDEXP_LOCAL))
+            {npinfo.rwvec = (Opts & (XRDEXP_GLBLRO | XRDEXP_NOTRW) ? 0 : 1);
+             npinfo.ssvec = (Opts & XRDEXP_STAGE ? 1 : 0);
+             if (!PathList.Add(plp->Path(), &npinfo))
+                Say.Emsg("Config","Ignoring duplicate export path",plp->Path());
+                else if (npinfo.ssvec) DiskSS = 1;
+            }
           plp = plp->Next();
          }
 
@@ -890,12 +889,11 @@ int XrdCmsConfig::MergeP()
   
 int XrdCmsConfig::PidFile()
 {
-    static const char *envPIDFN = "XRDCMSPIDFN=";
     int rc, xfd;
     const char *clID;
     char buff[1024];
     char pidFN[1200], *ppath=XrdOucUtils::genPath(pidPath,
-                              (strcmp("anon",myInsName)?myInsName:0));
+                             XrdOucUtils::InstName(myInsName,0));
     const char *xop = 0;
 
     if ((rc = XrdOucUtils::makePath(ppath, XrdOucUtils::pathMode)))
@@ -931,10 +929,9 @@ int XrdCmsConfig::PidFile()
             }
 
      if (xop) Say.Emsg("Config", errno, xop, pidFN);
-        else {char *benv = (char *) malloc(strlen(envPIDFN) + strlen(pidFN) + 2);
-              sprintf(benv,"%s=%s", envPIDFN, pidFN); putenv(benv);
-             }
+        else XrdOucEnv::Export("XRDCMSPIDFN", pidFN);
 
+     free(ppath);
      return xop != 0;
 }
 
@@ -1052,50 +1049,17 @@ int XrdCmsConfig::setupServer()
   
 char *XrdCmsConfig::setupSid()
 {
-   static const char *envCNAME = "XRDCMSCLUSTERID";
-   XrdOucTList *tpF, *tp = (NanList ? NanList : ManList);
-   const char *insName = (myInsName ? myInsName : "anon");
-   char sidbuff[8192], *sidend = sidbuff+sizeof(sidbuff)-32, *sp, *cP;
-   char *fMan, *fp, *xp, sfx; 
-   int n;
+   XrdOucTList *tp = (NanList ? NanList : ManList);
+   char sfx;
 
-// The system ID starts with the semi-unique name of this node
+// Determine what type of role we are playing
 //
    if (isManager && isServer) sfx = 'u';
       else sfx = (isManager ? 'm' : 's');
-   sp = sidbuff + sprintf(sidbuff, "%s-%c ", insName, sfx); cP = sp;
 
-// Develop a unique cluster name for this cluster
+// Generate the system ID and set the cluster ID
 //
-   if (!tp) {strcpy(sp, myInstance); sp += strlen(myInstance);}
-      else {tpF = tp;
-            fMan = tp->text + strlen(tp->text) - 1;
-            while((tp = tp->next))
-                 {fp = fMan; xp = tp->text + strlen(tp->text) - 1;
-                  do {if (*fp != *xp) break;
-                      xp--;
-                     } while(fp-- != tpF->text);
-                  if ((n = xp - tp->text + 1) > 0)
-                     {sp += sprintf(sp, "%d", tp->val);
-                      if (sp+n >= sidend) return (char *)0;
-                      strncpy(sp, tp->text, n); sp += n;
-                     }
-                 }
-            sp += sprintf(sp, "%d", tpF->val);
-            n = strlen(tpF->text);
-            if (sp+n >= sidend) return (char *)0;
-            strcpy(sp, tpF->text); sp += n;
-           }
-
-// Set envar to hold the cluster name
-//
-   *sp = '\0';
-   char *benv = (char *) malloc(strlen(envCNAME) + strlen(cP) + 2);
-   sprintf(benv,"%s=%s", envCNAME, cP); putenv(benv);
-
-// Return the system ID
-//
-   return  strdup(sidbuff);
+   return XrdCmsSecurity::setSystemID(tp, myInsName, myName, sfx);
 }
 
 /******************************************************************************/

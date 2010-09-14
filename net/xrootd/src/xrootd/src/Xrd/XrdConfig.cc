@@ -45,12 +45,12 @@ const char *XrdConfigCVSID = "$Id$";
 
 #include "XrdOuc/XrdOuca2x.hh"
 #include "XrdOuc/XrdOucEnv.hh"
+#include "XrdOuc/XrdOucStream.hh"
+#include "XrdOuc/XrdOucUtils.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysLogger.hh"
-#include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysTimer.hh"
-#include "XrdOuc/XrdOucUtils.hh"
 
 #ifdef __linux__
 #include <netinet/tcp.h>
@@ -226,7 +226,7 @@ int XrdConfig::Configure(int argc, char **argv)
 //
    opterr = 0;
    if (argc > 1 && '-' == *argv[1]) 
-      while ((c = getopt(argc,argv,"bc:dhk:l:n:p:P:R:")) 
+      while ((c = getopt(argc,argv,"bc:dhHk:l:n:p:P:R:"))
              && ((unsigned char)c != 0xff))
      { switch(c)
        {
@@ -240,6 +240,9 @@ int XrdConfig::Configure(int argc, char **argv)
                  putenv((char *)"XRDDEBUG=1"); // XrdOucEnv::Export()
                  break;
        case 'h': Usage(0);
+                 break;
+       case 'H': Usage(-1);
+                 break;
        case 'k': n = strlen(optarg)-1;
                  retc = (isalpha(optarg[n])
                         ? XrdOuca2x::a2sz(XrdLog,"keep size", optarg,&logkeep)
@@ -287,11 +290,7 @@ int XrdConfig::Configure(int argc, char **argv)
 
 // Resolve background/foreground issues
 //
-   if (optbg)
-      {if (!logfn) XrdLog.Emsg("Config", "Warning! No log file specified; "
-                               "-b will disable all logging!");
-       UnderCover();
-      }
+   if (optbg) XrdOucUtils::Undercover(XrdLog, !logfn);
 
 // Bind the log file if we have one
 //
@@ -333,7 +332,7 @@ int XrdConfig::Configure(int argc, char **argv)
    XrdNetDNS::getHostAddr(myName, &myIPAddr);
    ProtInfo.myName = myName;
    ProtInfo.myAddr = &myIPAddr;
-   ProtInfo.myInst = (myInsName && *myInsName ? myInsName : "anon");
+   ProtInfo.myInst = XrdOucUtils::InstName(myInsName);
    ProtInfo.myProg = myProg;
 
 // Set the Environmental variable to hold the instance name
@@ -342,11 +341,11 @@ int XrdConfig::Configure(int argc, char **argv)
 //
    sprintf(buff,"%s%s %s@%s", xrdInst, myProg, ProtInfo.myInst, myName);
    myInstance = strdup(buff);
-   putenv(myInstance);
+   putenv(myInstance);   // XrdOucEnv::Export("XRDINSTANCE",...)
    myInstance += strlen(xrdInst);
-                   XrdOucEnv::Export("XRDHOST", myName);
-   if (myInsName)  XrdOucEnv::Export("XRDNAME", myInsName);
-                   XrdOucEnv::Export("XRDPROG", myProg);
+   XrdOucEnv::Export("XRDHOST", myName);
+   XrdOucEnv::Export("XRDNAME", ProtInfo.myInst);
+   XrdOucEnv::Export("XRDPROG", myProg);
 
 // Put out the herald
 //
@@ -440,7 +439,7 @@ int XrdConfig::ConfigXeq(char *var, XrdOucStream &Config, XrdSysError *eDest)
   
 int XrdConfig::ASocket(const char *path, const char *fname, mode_t mode)
 {
-   char xpath[1024], sokpath[108];
+   char xpath[MAXPATHLEN+8], sokpath[108];
    int  plen = strlen(path), flen = strlen(fname);
    int rc;
 
@@ -740,62 +739,18 @@ int XrdConfig::Setup(char *dfltp)
 }
 
 /******************************************************************************/
-/*                            U n d e r C o v e r                             */
-/******************************************************************************/
-  
-void XrdConfig::UnderCover()
-{
-   static const int maxFiles = 256;
-   pid_t mypid;
-   int myfd;
-
-// Fork so that we are not tied to a shell
-//
-   if ((mypid = fork()) < 0)
-      {XrdLog.Emsg("Config", errno, "fork process 1 for backgrounding");
-       return;
-      }
-      else if (mypid) _exit(0);
-
-// Become the process group leader
-//
-   if (setsid() < 0)
-      {XrdLog.Emsg("Config", errno, "doing setsid() for backgrounding");
-       return;
-      }
-
-// Fork to that we are cannot get a controlling terminal
-//
-   if ((mypid = fork()) < 0)
-      {XrdLog.Emsg("Config", errno, "fork process 2 for backgrounding");
-       return;
-      }
-      else if (mypid) _exit(0);
-
-// Switch stdin, stdout, and stderr to /dev/null (we can't use /dev/console
-// unless we are root which is unlikely).
-//
-   if ((myfd = open("/dev/null", O_RDWR)) < 0)
-      {XrdLog.Emsg("Config", errno, "open /dev/null for backgrounding");
-       return;
-      }
-   dup2(myfd, 0); dup2(myfd, 1); dup2(myfd, 2);
-
-// Close any open file descriptors left open by the parent process
-//
-  for (myfd = 3; myfd < maxFiles; myfd++) close(myfd);
-}
-
-/******************************************************************************/
 /*                                 U s a g e                                  */
 /******************************************************************************/
   
 void XrdConfig::Usage(int rc)
 {
+  extern const char *XrdLicense;
 
+  if (rc < 0) cerr <<XrdLicense;
+     else
      cerr <<"\nUsage: " <<myProg <<" [-b] [-c <cfn>] [-d] [-k {n|sz}] [-l <fn>] "
-            "[-n name] [-p <port>] [-P <prot>] [<prot_options>]" <<endl;
-     _exit(rc);
+            "[-L] [-n name] [-p <port>] [-P <prot>] [<prot_options>]" <<endl;
+     _exit(rc > 0 ? rc : 0);
 }
 
 /******************************************************************************/

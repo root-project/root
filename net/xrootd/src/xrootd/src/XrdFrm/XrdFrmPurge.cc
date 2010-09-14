@@ -19,9 +19,9 @@ const char *XrdFrmPurgeCVSID = "$Id$";
 #include <sys/param.h>
 #include <sys/types.h>
 
+#include "XrdNet/XrdNetCmsNotify.hh"
 #include "XrdOss/XrdOss.hh"
 #include "XrdOss/XrdOssPath.hh"
-#include "XrdOuc/XrdOucCmsNotify.hh"
 #include "XrdOuc/XrdOucNSWalk.hh"
 #include "XrdOuc/XrdOucTList.hh"
 #include "XrdOuc/XrdOucProg.hh"
@@ -683,7 +683,7 @@ void XrdFrmPurge::Scan()
    XrdFrmFiles   *fP;
    const char *Extra;
    char buff[128];
-   int isRW, ec = 0, Bad = 0, aFiles = 0, bFiles = 0;
+   int needLF, ec = 0, Bad = 0, aFiles = 0, bFiles = 0;
 
 // Purge that bad file table evey 24 hours to keep complaints down
 //
@@ -705,10 +705,10 @@ void XrdFrmPurge::Scan()
 // Process each directory
 //
    do {fP = new XrdFrmFiles(vP->Name, Opts, vP->Dir, cbP);
-       isRW = vP->Val;
+       needLF = vP->Val;
        while((sP = fP->Get(ec,1)))
             {aFiles++;
-             if (Screen(sP, isRW)) Add(sP);
+             if (Screen(sP, needLF)) Add(sP);
                 else {delete sP; bFiles++;}
             }
        if (ec) Bad = 1;
@@ -742,7 +742,7 @@ void XrdFrmPurge::Scan()
 /* Private:                       S c r e e n                                 */
 /******************************************************************************/
 
-int XrdFrmPurge::Screen(XrdFrmFileset *sP, int isRW)
+int XrdFrmPurge::Screen(XrdFrmFileset *sP, int needLF)
 {
    const char *What = 0, *badFN = 0;
    char dPath[MAXPATHLEN+1];
@@ -763,7 +763,7 @@ int XrdFrmPurge::Screen(XrdFrmFileset *sP, int isRW)
        else {What = "Orhpaned files in"; badFN = dPath;
              sP->dirPath(dPath, sizeof(dPath));
             }
-      } else if (isRW && !(sP->lockFile()))
+      } else if (needLF && !(sP->lockFile()))
                 {What = "No lock file for"; badFN = sP->basePath();}
                 else return 1;
 

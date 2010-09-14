@@ -19,6 +19,7 @@
 #include "XrdSec/XrdSecInterface.hh"
 
 class XrdLink;
+class XrdOucTList;
 
 class XrdCmsSecurity
 {
@@ -32,6 +33,9 @@ static const char     *getToken(int &size, const char *hostname);
 
 static int             Identify(XrdLink *Link, XrdCms::CmsRRHdr &inHdr,
                                 char *authBuff, int abLen);
+
+static char           *setSystemID(XrdOucTList *tp, const char *iName,
+                                   const char  *iHost,    char  iType);
 
       XrdCmsSecurity() {}
      ~XrdCmsSecurity() {}

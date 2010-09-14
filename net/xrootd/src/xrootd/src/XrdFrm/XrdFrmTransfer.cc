@@ -20,8 +20,10 @@ const char *XrdFrmTransferCVSID = "$Id$";
 #include <utime.h>
 #include <sys/param.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 
+#include "XrdFrm/XrdFrmCID.hh"
 #include "XrdFrm/XrdFrmConfig.hh"
 #include "XrdFrm/XrdFrmMonitor.hh"
 #include "XrdFrm/XrdFrmReqFile.hh"
@@ -30,9 +32,9 @@ const char *XrdFrmTransferCVSID = "$Id$";
 #include "XrdFrm/XrdFrmTransfer.hh"
 #include "XrdFrm/XrdFrmXfrJob.hh"
 #include "XrdFrm/XrdFrmXfrQueue.hh"
+#include "XrdNet/XrdNetCmsNotify.hh"
 #include "XrdOss/XrdOss.hh"
 #include "XrdOss/XrdOssLock.hh"
-#include "XrdOuc/XrdOucCmsNotify.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucMsubs.hh"
 #include "XrdOuc/XrdOucProg.hh"
@@ -53,10 +55,11 @@ XrdOucProg  *theCmd;
 XrdOucMsubs *theVec;
 char        *theSrc;
 char        *theDst;
+char        *theINS;
 char         theMDP[8];
 
             XrdFrmTranArg(XrdOucEnv *Env)
-                         : theEnv(Env), theSrc(0), theDst(0)
+                         : theEnv(Env), theSrc(0), theDst(0), theINS(0)
                            {theMDP[0] = '0'; theMDP[1] = 0;}
            ~XrdFrmTranArg() {}
 };
@@ -127,7 +130,7 @@ const char *XrdFrmTransfer::Fetch()
 
    XrdOucEnv myEnv(xfrP->reqData.Opaque?xfrP->reqData.LFN+xfrP->reqData.Opaque:0);
    XrdFrmTranArg cmdArg(&myEnv);
-   struct stat pfnStat, lkfStat;
+   struct stat pfnStat;
    time_t xfrET;
    const char *eTxt;
    char lfnpath[MAXPATHLEN+8], *Lfn, Rfn[MAXPATHLEN+256], *theSrc;
@@ -164,32 +167,38 @@ const char *XrdFrmTransfer::Fetch()
        return 0;
       }
 
-// Construct the file name to which to we originally tranfer the data
+// Construct the file name to which to we originally transfer the data. This is
+// the lfn if we do not pre-allocate files and "lfn.anew" otherwise.
 //
    Lfn = (xfrP->reqData.LFN)+xfrP->reqData.LFO;
    lfnEnd = strlen(Lfn);
    strlcpy(lfnpath, Lfn, sizeof(lfnpath)-8);
-   strcpy(&lfnpath[lfnEnd], ".anew");
-   strcpy(&xfrP->PFN[xfrP->pfnEnd], ".anew");
+   if (Config.xfrCmd[iXfr].Opts & Config.cmdAlloc)
+      {strcpy(&lfnpath[lfnEnd], ".anew");
+       strcpy(&xfrP->PFN[xfrP->pfnEnd], ".anew");
+      }
 
 // Setup the command
 //
-   cmdArg.theCmd    = xfrCmd[iXfr];
-   cmdArg.theVec    = Config.xfrCmd[iXfr].theVec;
-   cmdArg.theSrc    = theSrc;
-   cmdArg.theDst    = xfrP->PFN;
+   cmdArg.theCmd = xfrCmd[iXfr];
+   cmdArg.theVec = Config.xfrCmd[iXfr].theVec;
+   cmdArg.theSrc = theSrc;
+   cmdArg.theDst = xfrP->PFN;
+   cmdArg.theINS = xfrP->reqData.iName;
    if (!SetupCmd(&cmdArg)) return "incoming transfer setup failed";
 
-// We now need a placeholder in the filesystem for this transfer. We remove any
-// existing "anew" file because we will over-write it. The create process will
-// create a lock file if need be. However, we can ignore it as we are the only
-// ones actually using it.
+// If the copycmd needs a placeholder in the filesystem for this transfer, we
+// must create one. We first remove any existing "anew" file because we will
+// over-write it. The create process will create a lock file if need be. 
+// However, we can ignore it as we are the only ones actually using it.
 //
-   Config.ossFS->Unlink(lfnpath);
-   rc = Config.ossFS->Create(xfrP->reqData.User, lfnpath, fMode, myEnv, crOpts);
-   if (rc)
-      {Say.Emsg("Fetch", rc, "create placeholder for", lfnpath);
-       return "create failed";
+   if (Config.xfrCmd[iXfr].Opts & Config.cmdAlloc)
+      {Config.ossFS->Unlink(lfnpath);
+       rc = Config.ossFS->Create(xfrP->reqData.User,lfnpath,fMode,myEnv,crOpts);
+       if (rc)
+          {Say.Emsg("Fetch", rc, "create placeholder for", lfnpath);
+           return "create failed";
+          }
       }
 
 // Now run the command to get the file and make sure the file is there
@@ -201,15 +210,8 @@ const char *XrdFrmTransfer::Fetch()
       {if ((rc = stat(xfrP->PFN, &pfnStat)))
           Say.Emsg("Fetch", lfnpath, "fetched but not found!");
           else {fSize  = pfnStat.st_size;
-                strcpy(&xfrP->PFN[xfrP->pfnEnd+5], ".lock");
-                if (!stat(xfrP->PFN, &lkfStat))
-                   {struct utimbuf tbuff;
-                    tbuff.actime = tbuff.modtime = pfnStat.st_mtime+3;
-                    if ((rc = utime(xfrP->PFN, &tbuff)))
-                       Say.Emsg("Fetch", rc, "set utime on", xfrP->PFN);
-                   }
-                if (!rc && (rc=Config.ossFS->Rename(lfnpath,xfrP->reqData.LFN)))
-                   Say.Emsg("Fetch", rc, "rename", lfnpath);
+                if (Config.xfrCmd[iXfr].Opts & Config.cmdAlloc)
+                   Fetch(lfnpath, rc, pfnStat.st_mtime+3);
                }
       }
 
@@ -226,12 +228,14 @@ const char *XrdFrmTransfer::Fetch()
 
 // We completed successfully, see if we need to do statistics
 //
-   if (Config.xfrCmd[iXfr].Stats || Config.monStage || Trace.What & TRACE_Debug)
+   if ((Config.xfrCmd[iXfr].Opts & Config.cmdStats) || Config.monStage
+   ||  (Trace.What & TRACE_Debug))
       {time_t eNow = time(0);
        int inqT, xfrT;
        inqT = static_cast<int>(xfrET - time_t(xfrP->reqData.addTOD));
        if ((xfrT = static_cast<int>(eNow - xfrET)) <= 0) xfrT = 1;
-       if (Config.xfrCmd[iXfr].Stats || Trace.What & TRACE_Debug)
+       if ((Config.xfrCmd[iXfr].Opts & Config.cmdStats) 
+       ||  (Trace.What & TRACE_Debug))
           {char sbuff[80];
            sprintf(sbuff, "Got: %lld qt: %d xt: %d up: ",fSize,inqT,xfrT);
            lfnpath[lfnEnd] = '\0';
@@ -248,6 +252,32 @@ const char *XrdFrmTransfer::Fetch()
 // All done
 //
    return 0;
+}
+
+/******************************************************************************/
+  
+const char *XrdFrmTransfer::Fetch(char *lfnpath, int &rc, time_t lktime)
+{
+   struct stat lkfStat;
+
+// Check for a lock file and if we have one, reset it's time
+//
+   strcpy(&xfrP->PFN[xfrP->pfnEnd+5], ".lock");
+   if (!stat(xfrP->PFN, &lkfStat))
+      {struct utimbuf tbuff;
+       tbuff.actime = tbuff.modtime = lktime;
+       if ((rc = utime(xfrP->PFN, &tbuff)))
+          Say.Emsg("Fetch", rc, "set utime on", xfrP->PFN);
+      }
+
+// Now rename the lfn to be what it needs to be in the end
+//
+   if (!rc && (rc=Config.ossFS->Rename(lfnpath,xfrP->reqData.LFN)))
+      Say.Emsg("Fetch", rc, "rename", lfnpath);
+
+// Done
+//
+   return (rc ? "Failed" : 0);
 }
 
 /******************************************************************************/
@@ -305,6 +335,10 @@ int XrdFrmTransfer::Init()
    pthread_t tid;
    int retc, n;
 
+// Initialize the cluster identification object first
+//
+   CID.Init(Config.QPath);
+
 // Initialize the transfer queue first
 //
    if (!XrdFrmXfrQueue::Init()) return 0;
@@ -338,6 +372,13 @@ int XrdFrmTransfer::SetupCmd(XrdFrmTranArg *argP)
                    argP->theSrc, xfrP->reqData.Prty,
                    xfrP->reqData.Options & XrdFrmRequest::makeRW?O_RDWR:O_RDONLY,
                    argP->theMDP, xfrP->reqData.ID, xfrP->PFN, argP->theDst);
+
+// We must establish the cluster and instance name if we have one
+//
+   if (argP->theINS && argP->theEnv)
+      {CID.Get(argP->theINS, CMS_CID, argP->theEnv);
+       argP->theEnv->Put(XRD_INS, argP->theINS);
+      }
 
 // Substitute in the parameters
 //
@@ -525,7 +566,8 @@ const char *XrdFrmTransfer::Throw()
    cmdArg.theVec = Config.xfrCmd[iXfr].theVec;
    cmdArg.theDst = theDest;
    cmdArg.theSrc = xfrP->PFN;
-   if (Config.xfrCmd[iXfr].hasMDP)
+   cmdArg.theINS = xfrP->reqData.iName;
+   if (Config.xfrCmd[iXfr].Opts & Config.cmdMDP)
       mDP = TrackDC(lfnpath+xfrP->reqData.LFO, cmdArg.theMDP, Rfn);
    if (!SetupCmd(&cmdArg)) return "outgoing transfer setup failed";
 
@@ -576,7 +618,8 @@ const char *XrdFrmTransfer::Throw()
 
 // Do statistics if so wanted
 //
-   if (Config.xfrCmd[iXfr].Stats || (Trace.What & TRACE_Debug))
+   if ((Config.xfrCmd[iXfr].Opts & Config.cmdStats) 
+   ||  (Trace.What & TRACE_Debug))
       {int inqT, xfrT;
        long long Fsize = endStat.st_size;
        char sbuff[80];

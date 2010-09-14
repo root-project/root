@@ -168,30 +168,6 @@ XrdOfsFile::XrdOfsFile(const char *user) : XrdSfsFile(user)
    viaDel  = 0;
    tident = (user ? user : "");
 }
-  
-/******************************************************************************/
-/*                         G e t F i l e S y s t e m                          */
-/******************************************************************************/
-  
-XrdSfsFileSystem *XrdSfsGetFileSystem(XrdSfsFileSystem *native_fs, 
-                                      XrdSysLogger     *lp,
-                                      const char       *configfn)
-{
-// Do the herald thing
-//
-   OfsEroute.SetPrefix("ofs_");
-   OfsEroute.logger(lp);
-   OfsEroute.Say("Copr.  2008 Stanford University, Ofs Version " XrdVSTRING);
-
-// Initialize the subsystems
-//
-   XrdOfsFS.ConfigFN = (configfn && *configfn ? strdup(configfn) : 0);
-   if ( XrdOfsFS.Configure(OfsEroute) ) return 0;
-
-// All done, we can return the callout vector to these routines.
-//
-   return &XrdOfsFS;
-}
 
 /******************************************************************************/
 /*                                                                            */
@@ -1856,7 +1832,7 @@ int XrdOfs::Emsg(const char    *pfx,    // Message prefix value
                  const char    *op,     // Operation being performed
                  const char    *target) // The target (e.g., fname)
 {
-   char *etext, buffer[XrdOucEI::Max_Error_Len], unkbuff[64];
+   char *etext, buffer[MAXPATHLEN+80], unkbuff[64];
 
 // If the error is EBUSY then we just need to stall the client. This is
 // a hack in order to provide for proxy support

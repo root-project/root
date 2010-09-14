@@ -17,12 +17,14 @@ const char *XrdFrmXfrMainCVSID = "$Id$";
 
 /* This is the "main" part of the frm_migrd command. Syntax is:
 */
-static const char *XrdFrmOpts  = ":c:dfhk:l:n:Tv";
+static const char *XrdFrmOpts  = ":bc:dfhk:l:n:Tv";
 static const char *XrdFrmUsage =
 
-  " [-c <cfgfn>] [-d] [-f] [-k {num | sz{k|m|g}] [-l <lfile>] [-n name] [-T] [-v]\n";
+  " [-b] [-c <cfgfn>] [-d] [-f] [-k {num | sz{k|m|g}] [-l <lfile>] [-n name] [-T] [-v]\n";
 /*
 Where:
+
+   -b     Run as a true daemon in the bacground (only for xfrd).
 
    -c     The configuration file. The default is '/opt/xrootd/etc/xrootd.cf'
 

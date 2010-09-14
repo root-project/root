@@ -23,6 +23,7 @@
 
 #include "XrdFrm/XrdFrmAdmin.hh"
 #include "XrdFrm/XrdFrmConfig.hh"
+#include "XrdFrm/XrdFrmProxy.hh"
 #include "XrdFrm/XrdFrmTrace.hh"
 #include "XrdFrm/XrdFrmUtils.hh"
 #include "XrdOss/XrdOss.hh"
@@ -264,7 +265,8 @@ const char *XrdFrmAdmin::QueryHelp = "\n"
            "query pfn lspec [lspec [...]]\n"
            "query rfn lspec [lspec [...]]\n"
            "query space [[-r[ecursive]] lspec [...]]\n"
-           "query usage [name]\n\n"
+           "query usage [name]\n"
+           "query xfrq  [name] [vars]\n\n"
 
            "lspec: lfn | ldir[*]";
 
@@ -279,7 +281,8 @@ int XrdFrmAdmin::Query()
                  CmdTab[] = {{"pfn",    &XrdFrmAdmin::QueryPfn},
                              {"rfn",    &XrdFrmAdmin::QueryRfn},
                              {"space",  &XrdFrmAdmin::QuerySpace},
-                             {"usage",  &XrdFrmAdmin::QueryUsage}
+                             {"usage",  &XrdFrmAdmin::QueryUsage},
+                             {"xfrq",   &XrdFrmAdmin::QueryXfrQ}
                             };
    static int CmdNum = sizeof(CmdTab)/sizeof(struct CmdInfo);
 
@@ -445,6 +448,51 @@ int XrdFrmAdmin::xeqArgs(char *Cmd)
 /*                       P r i v a t e   M e t h o d s                        */
 /******************************************************************************/
 /******************************************************************************/
+/*                           C o n f i g P r o x y                            */
+/******************************************************************************/
+  
+void XrdFrmAdmin::ConfigProxy()
+{
+   static struct {const char *qFN; int qID;} qVec[] =
+                 {{"getfQ.0", XrdFrmProxy::opGet},
+                  {"migrQ.0", XrdFrmProxy::opMig},
+                  {"pstgQ.0", XrdFrmProxy::opStg},
+                  {"putfQ.0", XrdFrmProxy::opPut},
+                  {0, 0}};
+   struct stat Stat;
+   char qBuff[1032], *qBase;
+   int i, qTypes = 0;
+
+// If we've been here before, return
+//
+   if (frmProxy || frmProxz) return;
+
+// Construct the directory where the queue files reside
+//
+   strcpy(qBuff, Config.QPath); strcat(qBuff, "frm/");
+   qBase = XrdFrmUtils::makeQDir(qBuff, -1);
+   strcpy(qBuff, qBase); free(qBase); qBase = qBuff+strlen(qBuff);
+
+// Since routines will create queue files we want to only look at queue files
+// that actually exist. While may be none.
+//
+   for (i = 0; qVec[i].qFN; i++)
+       {strcpy(qBase, qVec[i].qFN);
+        if (!stat(qBuff, &Stat)) qTypes |= qVec[i].qID;
+       }
+
+// Check if we actually found any queues create them, otherwise complain.
+//
+   if (qTypes)
+      {frmProxy = new XrdFrmProxy(Say.logger(),Config.myInst,Trace.What != 0);
+       frmProxz = frmProxy->Init(qTypes, Config.APath, -1, Config.QPath);
+      } else {
+       *qBase = 0; frmProxz = 1;
+       Emsg("No transfer queues found in ", qBuff);
+      }
+}
+  
+/******************************************************************************/
 /*                                  E m s g                                   */
 /******************************************************************************/
   
@@ -600,21 +648,29 @@ int XrdFrmAdmin::ParseOwner(const char *What, char *Uname)
 
 // Process username
 //
-   if (Uname && *Uname >= 0 && *Uname <= 9)
-      {if (XrdOuca2x::a2i(Say,"uid",Uname, &Unum)) return 0; Opt.Uid = Unum;}
-      else {if (!(pwP = getpwnam(Uname)))
-               {Emsg("Invalid user name - ", Uname); return 0;}
-            Opt.Uid = pwP->pw_uid; Opt.Gid = pwP->pw_gid;
-           }
+   if (Uname)
+      {if (*Uname >= 0 && *Uname <= 9)
+          {if (XrdOuca2x::a2i(Say,"uid",Uname, &Unum)) return 0;
+           Opt.Uid = Unum;
+          }
+          else {if (!(pwP = getpwnam(Uname)))
+                   {Emsg("Invalid user name - ", Uname); return 0;}
+                Opt.Uid = pwP->pw_uid; Opt.Gid = pwP->pw_gid;
+               }
+      }
 
 // Process groupname
 //
-   if (Gname && *Gname >= 0 && *Gname <= 9)
-      {if (XrdOuca2x::a2i(Say, "gid", Gname, &Gnum)) return 0; Opt.Gid = Gnum;}
-      else {if (!(grP = getgrnam(Gname)))
-               {Emsg("Invalid group name - ", Gname); return 0;}
-            Opt.Gid = grP->gr_gid;
-           }
+   if (Gname)
+      {if (*Gname >= 0 && *Gname <= 9)
+          {if (XrdOuca2x::a2i(Say, "gid", Gname, &Gnum))  return 0;
+           Opt.Gid = Gnum;
+          }
+          else {if (!(grP = getgrnam(Gname)))
+                   {Emsg("Invalid group name - ", Gname); return 0;}
+                Opt.Gid = grP->gr_gid;
+               }
+      }
 
 // All done
 //

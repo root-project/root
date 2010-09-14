@@ -1,0 +1,26 @@
+
+   Zeroconf interface
+   ==================
+
+   Ramon Medrano Llamas (m3drano@gmail.com)
+
+   The file XrdOucBonjour.hh defines a generic interface to zeroconf services to register
+   a service and to subscribe for updates about services of interest.
+
+   Currently two implementations are available: XrdOucAppleBonjour, based on the 'bonjour'
+   service availble on MacOs, and XrdOucAvahiBonjour based on the Avahi layer available on
+   Linux and other Unix OSes. The configuration script 'configure.classic' automatically
+   detects which of the implementations has to be used.
+
+   This interface is used by XrdProofdProtocol to discover worker nodes; the actual code 
+   is in the class XrdProofdNetMgr, which therefore represents and example of application
+   (NB: starting from ROOT 5.27/06).
+
+   The interface is not build by default. It needs to be explicitely requested with
+   '--enable-bonjour' . Note that, currently only the 'classic' build ('configure.classic')
+   allows to configure and enable this service. The 'autoconf' integration will follow soon.
+
+   Please, redirect all comments/questions/bug-reports to the author (m3drano@gmail.com).
+
+   (Sept 13, 2010)
+

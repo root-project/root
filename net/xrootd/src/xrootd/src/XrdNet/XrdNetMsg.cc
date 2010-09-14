@@ -64,7 +64,7 @@ int XrdNetMsg::Send(const char *Buff, int Blen, const char *dest, int tmo)
               {eDest->Emsg("Msg", dest, "is unreachable");    return -1;}
               else doFree = 1;
 
-   if (tmo >= 0 && !OK2Send(tmo, dest)) return 1;
+   if (tmo >= 0 && !OK2Send(tmo, dest)) {if (doFree) free(dP); return 1;}
 
    do {retc = sendto(FD, (Sokdata_t)Buff, Blen, 0, dP, dL);}
        while (retc < 0 && errno == EINTR);

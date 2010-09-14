@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.7 2008/09/07 04:40:22 abh Exp $
+#              $Id: GNUmakefile,v 1.10 2010/07/30 03:19:19 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -39,8 +39,6 @@ TARGETS = $(LIBRARY)
 #                           S e a r c h   P a t h s                            #
 #------------------------------------------------------------------------------#
 
-vpath XrdOuc% ../XrdOuc
-
 #------------------------------------------------------------------------------#
 #                          I n i t i a l   R u l e s                           #
 #------------------------------------------------------------------------------#
@@ -57,17 +55,8 @@ anything: $(TARGETS)
 $(TARGETS): $(OBJECTS)
 	@echo Creating archive $(LIBRARY) 
 	$(ECHO)rm -f $(LIBRARY)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-	          if [ "x$(SUNCACHE)" != "x" ]; then \
-	             $(CC) -xar -o $(LIBRARY) $(OBJDIR)$(SUNCACHE)/*/*.o; \
-		  else \
-	             $(CC) -xar -o $(LIBRARY) $(OBJECTS); \
-		  fi; \
-	       else \
-	          ar -rc $(LIBRARY) $(OBJECTS); \
-	          ranlib $(LIBRARY); \
-               fi
-
+	$(ECHO)ar -rc $(LIBRARY) $(OBJECTS)
+	$(ECHO)ranlib $(LIBRARY)
 
 $(OBJDIR)/XrdSysDir.o: XrdSysDir.cc  XrdSysDir.hh
 	@echo Compiling XrdSysDir.cc
@@ -79,7 +68,7 @@ $(OBJDIR)/XrdSysError.o: XrdSysError.cc XrdSysError.hh XrdSysLogger.hh \
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdSysError.cc -o $(OBJDIR)/XrdSysError.o
 
 $(OBJDIR)/XrdSysLogger.o: XrdSysLogger.cc XrdSysLogger.hh \
-                          XrdSysTimer.hh  XrdSysPthread.hh
+                          XrdSysTimer.hh  XrdSysPlatform.hh XrdSysPthread.hh
 	@echo Compiling XrdSysLogger.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdSysLogger.cc -o $(OBJDIR)/XrdSysLogger.o
 

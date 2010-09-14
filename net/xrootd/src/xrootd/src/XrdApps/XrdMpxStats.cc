@@ -71,8 +71,8 @@ const char *Var() {return vBuff;}
 
 private:
 
-static const int   vMax = 16;
-             char *vEnd, *vFence, *vStack[vMax], vBuff[1024];
+static const int   vMax = 15;
+             char *vEnd, *vFence, *vStack[vMax+1], vBuff[1024];
              int   vNum;
 };
 

@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.11 2008/09/07 04:39:28 abh Exp $
+#              $Id: GNUmakefile,v 1.12 2010/07/30 03:19:14 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -43,12 +43,6 @@ anything: $(TARGETS)
 #------------------------------------------------------------------------------#
 
 $(TARGETS): $(OBJECTS)
-#	@echo Creating archive $(LIBRARY) 
-#	@rm -f $(LIBRARY)
-#	@ar -rc $(LIBRARY) $(OBJECTS)
-#	@if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-#	@ar -rc $(LIBRARY) $(OBJDIR)$(SUNCACHE)/*.o; \
-#fi
 
 $(OBJDIR)/XrdSfsNative.o:  XrdSfsInterface.hh XrdSfsNative.hh  XrdSecInterface.hh \
                            XrdSysError.hh     XrdOucErrInfo.hh XrdSysLogger.hh \

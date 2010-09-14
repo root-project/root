@@ -56,6 +56,8 @@ XrdOucMsubs::XrdOucMsubs(XrdSysError *errp)
        vName[vMDP]  = "$MDP";
        vName[vSRC]  = "$SRC";
        vName[vDST]  = "$DST";
+       vName[vCID]  = "$CID";
+       vName[vINS]  = "$INS";
       }
     mText = 0; 
     mData[0] = 0; mDlen[0] = 0;
@@ -226,6 +228,12 @@ char *XrdOucMsubs::getVal(XrdOucMsubsInfo &Info, int vNum)
 
       case vCGI:  if (!(op = Info.Env->Env(n))) op = (char *)"";
                   return op;
+
+      case vCID:  if ((op = Info.Env->Get(CMS_CID))) return op;
+                  break;
+
+      case vINS:  if ((op = Info.Env->Get(XRD_INS))) return op;
+                  break;
 
       default:    return (char *)"$";
      }

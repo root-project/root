@@ -290,7 +290,7 @@ XrdSecProtocol *XrdSecServer::getProtocol(const char              *host,
 // If null credentials supplied, default to host protocol otherwise make sure
 // credentials data is actually supplied.
 //
-   if (!cred) {myCreds.buffer = (char *)"host"; myCreds.size = 4;}
+   if (!cred) {myCreds.buffer=(char *)"host"; myCreds.size = 4; cred=&myCreds;}
       else if (cred->size < 1 || !(cred->buffer))
               {einfo->setErrInfo(EACCES,
                          (char *)"No authentication credentials supplied.");

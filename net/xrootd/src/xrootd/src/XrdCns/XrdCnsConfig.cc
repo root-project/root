@@ -302,6 +302,7 @@ int XrdCnsConfig::Configure()
    XrdNetSocket   *EventSock;
    pthread_t tid;
    int n, retc, NoGo = 0;
+   const char *iP;
    char buff[2048], *dP, *tP, *eVar;
 
 // Put out the herald
@@ -310,7 +311,7 @@ int XrdCnsConfig::Configure()
 
 // Set current working directory for core files
 //
-   if ((tP = getenv("XRDNAME")) && *tP) {strcpy(buff,"./"); strcat(buff, tP);}
+   if ((iP = XrdOucUtils::InstName(-1))) {strcpy(buff,"./"); strcat(buff, iP);}
       else strcpy(buff, ".");
    strcat(buff, "/cns/");
    if (!XrdOucUtils::makePath(buff,0770) && chdir(buff)) {}
@@ -384,6 +385,8 @@ int XrdCnsConfig::Configure()
           {eVar = strdup(eVar); mToks.Attach(eVar); mToks.GetLine();
            while((dP = mToks.GetToken()))
                 {if ((tP = index(dP, ':'))) *tP = '\0';
+                 sprintf(buff, "%s:%d", tP, Port);
+                 if (*tP) *tP = ':';
                  Dest = new XrdOucTList(dP, Port, Dest);
                  TRACE(DEBUG, "CNS dest=" <<dP <<':' <<Port);
                 }

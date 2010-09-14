@@ -49,10 +49,7 @@ int                         Refresh(int isMig=0, int doLock=1);
 
 void                        UnLock();
 
-                     XrdFrmFileset(XrdFrmFileset *sP=0, XrdOucTList *diP=0)
-                                  : Next(sP), dInfo(diP),
-                                    dlkFD(-1), flkFD(-1)
-                                   {memset(File, 0, sizeof(File));}
+                     XrdFrmFileset(XrdFrmFileset *sP=0, XrdOucTList *diP=0);
                     ~XrdFrmFileset();
 
 // The following are public to ease management of this object

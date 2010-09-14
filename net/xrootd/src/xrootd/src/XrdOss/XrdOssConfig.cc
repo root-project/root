@@ -51,6 +51,7 @@ const char *XrdOssConfigCVSID = "$Id$";
 #include "XrdOuc/XrdOucName2Name.hh"
 #include "XrdOuc/XrdOucProg.hh"
 #include "XrdOuc/XrdOucStream.hh"
+#include "XrdOuc/XrdOucUtils.hh"
 #include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlugin.hh"
 #include "XrdSys/XrdSysPthread.hh"
@@ -701,7 +702,7 @@ int XrdOssSys::ConfigStage(XrdSysError &Eroute)
 //
    if (NoGo) return 1;
    if (!RSSCmd && !StageCmd && !stgp) return 0;
-   Eroute.Say("++++++ Mass Storage System interface initialization started.");
+   Eroute.Say("++++++ Remote Storage System interface initialization started.");
 
 // Allocate a pr0gram object for the gateway command
 //
@@ -714,9 +715,9 @@ int XrdOssSys::ConfigStage(XrdSysError &Eroute)
 //
    if (!NoGo && (StageCmd || stgp))
       {const int AMode = S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH; // 775
-       if (StageCmd && !*StageCmd) NoGo = ConfigStageC(Eroute);
-          else {StageFrm = new XrdFrmProxy(Eroute.logger(), getenv("XRDNAME"),
-                                           OssTrace.What & TRACE_Debug);
+       if (StageCmd && *StageCmd) NoGo = ConfigStageC(Eroute);
+          else {StageFrm = new XrdFrmProxy(Eroute.logger(),
+                           XrdOucUtils::InstName(),OssTrace.What & TRACE_Debug);
                 NoGo = !StageFrm->Init(XrdFrmProxy::opStg,
                                        getenv("XRDADMINPATH"), AMode);
                 StageRealTime = 0; StageAsync = 1;
@@ -735,7 +736,7 @@ int XrdOssSys::ConfigStage(XrdSysError &Eroute)
 // All done
 //
    tp = (NoGo ? (char *)"failed." : (char *)"completed.");
-   Eroute.Say("------ Mass Storage System interface initialization ", tp);
+   Eroute.Say("------ Remote Storage System interface initialization ", tp);
    return NoGo;
 }
   
@@ -942,8 +943,8 @@ int XrdOssSys::ConfigXeq(char *var, XrdOucStream &Config, XrdSysError &Eroute)
 
    // The following differentiates between a deprecated and a preferred command
    //
-   if (!strcmp("msscmd", var)) {isMSSC = 1; Duplicate(val, RSSCmd);}
-   if (!strcmp("rsscmd", var)) {isMSSC = 0; Duplicate(val, RSSCmd);}
+   if (!strcmp("msscmd", var)) {isMSSC = 1; Duplicate(val, RSSCmd); return 0;}
+   if (!strcmp("rsscmd", var)) {isMSSC = 0; Duplicate(val, RSSCmd); return 0;}
 
    // No match found, complain.
    //

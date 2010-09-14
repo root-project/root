@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.14 2009/01/08 00:51:11 abh Exp $
+#              $Id: GNUmakefile,v 1.17 2010/07/30 03:18:52 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -13,6 +13,7 @@ include ../GNUmake.env
 SOURCES = \
         XrdNet.cc            \
         XrdNetBuffer.cc      \
+        XrdNetCmsNotify.cc   \
         XrdNetConnect.cc     \
         XrdNetDNS.cc         \
         XrdNetLink.cc        \
@@ -21,20 +22,26 @@ SOURCES = \
         XrdNetSocket.cc      \
         XrdNetWork.cc
   
-OBJECTS = \
+OBJECT1 = \
         $(OBJDIR)/XrdNet.o             \
         $(OBJDIR)/XrdNetBuffer.o       \
+        $(OBJDIR)/XrdNetCmsNotify.o    \
         $(OBJDIR)/XrdNetConnect.o      \
-        $(OBJDIR)/XrdNetDNS.o          \
         $(OBJDIR)/XrdNetLink.o         \
         $(OBJDIR)/XrdNetMsg.o          \
         $(OBJDIR)/XrdNetSecurity.o     \
         $(OBJDIR)/XrdNetSocket.o       \
         $(OBJDIR)/XrdNetWork.o
+  
+OBJECT2 = \
+        $(OBJDIR)/XrdNetDNS.o
 
-LIBRARY = $(LIBDIR)/libXrdNet.a
+OBJECTS = $(OBJECT1) $(OBJECT2)
 
-TARGETS = $(LIBRARY)
+LIBNET1 = $(LIBDIR)/libXrdNet.a
+LIBNET2 = $(LIBDIR)/libXrdNetUtil.a
+
+TARGETS = $(LIBNET1) $(LIBNET2)
 
 #------------------------------------------------------------------------------#
 #                           S e a r c h   P a t h s                            #
@@ -57,19 +64,17 @@ anything: $(TARGETS)
 #                           D e p e n d e n c i e s                            #
 #------------------------------------------------------------------------------#
 
-$(TARGETS): $(OBJECTS)
-	@echo Creating archive $(LIBRARY) 
-	$(ECHO)rm -f $(LIBRARY)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-	          if [ "x$(SUNCACHE)" != "x" ]; then \
-	             $(CC) -xar -o $(LIBRARY) $(OBJDIR)$(SUNCACHE)/*/*.o; \
-		  else \
-	             $(CC) -xar -o $(LIBRARY) $(OBJECTS); \
-		  fi; \
-	       else \
-	          ar -rc $(LIBRARY) $(OBJECTS); \
-	          ranlib $(LIBRARY); \
-               fi
+$(LIBNET1): $(OBJECT1)
+	@echo Creating archive $(LIBNET1)
+	$(ECHO)rm -f $(LIBNET1)
+	$(ECHO)ar -rc $(LIBNET1) $(OBJECT1)
+	$(ECHO)ranlib $(LIBNET1)
+
+$(LIBNET2): $(OBJECT2)
+	@echo Creating archive $(LIBNET2)
+	$(ECHO)rm -f $(LIBNET2)
+	$(ECHO)ar -rc $(LIBNET2) $(OBJECT2)
+	$(ECHO)ranlib $(LIBNET2)
 
 $(OBJDIR)/XrdNet.o: XrdNet.cc       XrdNet.hh         XrdNetBuffer.hh \
                     XrdNetDNS.hh    XrdNetOpts.hh     XrdNetSecurity.hh \
@@ -81,6 +86,14 @@ $(OBJDIR)/XrdNetBuffer.o: XrdNetBuffer.cc XrdNetBuffer.hh \
                           XrdOucChain.hh  XrdSysPlatform.hh  XrdSysPthread.hh
 	@echo Compiling XrdNetBuffer.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdNetBuffer.cc -o $(OBJDIR)/XrdNetBuffer.o
+
+$(OBJDIR)/XrdNetCmsNotify.o: XrdNetCmsNotify.cc  XrdNetCmsNotify.hh \
+                             XrdNetMsg.hh \
+                             XrdOucUtils.hh \
+                             XrdSysError.hh      XrdSysPthread.hh \
+                             XrdSysTimer.hh
+	@echo Compiling XrdNetCmsNotify.cc 
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdNetCmsNotify.o XrdNetCmsNotify.cc
 
 $(OBJDIR)/XrdNetConnect.o: XrdNetConnect.cc XrdNetConnect.hh XrdSysPlatform.hh
 	@echo Compiling XrdNetConnect.cc

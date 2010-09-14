@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.30 2010/05/26 01:25:50 abh Exp $
+#              $Id: GNUmakefile,v 1.33 2010/09/13 12:40:47 ganis Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -13,7 +13,6 @@ include ../GNUmake.env
 SOURCES = \
         XrdOuca2x.cc         \
         XrdOucArgs.cc        \
-        XrdOucCmsNotify.cc   \
         XrdOucCRC.cc         \
         XrdOucEnv.cc         \
         XrdSysError.cc       \
@@ -33,11 +32,13 @@ SOURCES = \
         XrdOucTokenizer.cc   \
         XrdOucTrace.cc       \
         XrdOucUtils.cc
+ifneq ($(BUILDBJR),)
+SOURCES += XrdOucBonjour.cc XrdOucFactoryBonjour.cc
+endif
 
 OBJECTS = \
         $(OBJDIR)/XrdOuca2x.o          \
         $(OBJDIR)/XrdOucArgs.o         \
-        $(OBJDIR)/XrdOucCmsNotify.o    \
         $(OBJDIR)/XrdOucCRC.o          \
         $(OBJDIR)/XrdOucEnv.o          \
         $(OBJDIR)/XrdSysError.o        \
@@ -56,7 +57,12 @@ OBJECTS = \
         $(OBJDIR)/XrdOucSxeq.o         \
         $(OBJDIR)/XrdOucTokenizer.o    \
         $(OBJDIR)/XrdOucTrace.o        \
-        $(OBJDIR)/XrdOucUtils.o
+        $(OBJDIR)/XrdOucUtils.o        \
+        $(OBJDIR)/XrdOucCRC.o
+ifneq ($(BUILDBJR),)
+OBJECTS +=  $(OBJDIR)/XrdOucBonjour.o  $(OBJDIR)/XrdOucFactoryBonjour.o
+endif
+
 
 LIBRARY = $(LIBDIR)/libXrdOuc.a
 
@@ -69,6 +75,7 @@ TARGETS = $(LIBRARY)
 vpath XrdNet% ../XrdNet
 vpath XrdOuc% ../XrdOuc
 vpath XrdSys% ../XrdSys
+vpath Xrd% ../Xrd
 
 #------------------------------------------------------------------------------#
 #                          I n i t i a l   R u l e s                           #
@@ -86,16 +93,8 @@ anything: $(TARGETS)
 $(TARGETS): $(OBJECTS)
 	@echo Creating archive $(LIBRARY) 
 	$(ECHO)rm -f $(LIBRARY)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-	          if [ "x$(SUNCACHE)" != "x" ]; then \
-	             $(CC) -xar -o $(LIBRARY) $(OBJDIR)$(SUNCACHE)/*/*.o; \
-		  else \
-	             $(CC) -xar -o $(LIBRARY) $(OBJECTS); \
-		  fi; \
-	       else \
-	          ar -rc $(LIBRARY) $(OBJECTS); \
-	          ranlib $(LIBRARY); \
-               fi
+	$(ECHO)ar -rc $(LIBRARY) $(OBJECTS)
+	$(ECHO)ranlib $(LIBRARY)
 
 $(OBJDIR)/XrdOuca2x.o: XrdOuca2x.cc XrdOuca2x.hh XrdSysError.hh
 	@echo Compiling XrdOuca2x.cc
@@ -105,14 +104,6 @@ $(OBJDIR)/XrdOucArgs.o: XrdOucArgs.cc  XrdOucArgs.hh XrdOucTokenizer.hh \
                         XrdSysError.hh
 	@echo Compiling XrdOucArgs.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucArgs.cc -o $(OBJDIR)/XrdOucArgs.o
-
-$(OBJDIR)/XrdOucCmsNotify.o: XrdOucCmsNotify.cc  XrdOucCmsNotify.hh \
-                             XrdNetMsg.hh \
-                             XrdOucUtils.hh \
-                             XrdSysError.hh      XrdSysPthread.hh \
-                             XrdSysTimer.hh
-	@echo Compiling XrdOucCmsNotify.cc 
-	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOucCmsNotify.o XrdOucCmsNotify.cc
 
 $(OBJDIR)/XrdOucCRC.o: XrdOucCRC.cc XrdOucCRC.hh
 	@echo Compiling XrdOucCRC.cc
@@ -193,3 +184,17 @@ $(OBJDIR)/XrdOucUtils.o: XrdOucUtils.cc XrdOucUtils.hh \
                       XrdSysError.hh XrdOucStream.hh XrdNetDNS.hh
 	@echo Compiling XrdOucUtils.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucUtils.cc -o $(OBJDIR)/XrdOucUtils.o
+
+$(OBJDIR)/XrdOucBonjour.o: XrdOucBonjour.cc XrdOucBonjour.hh XrdSysError.hh \
+                           XrdSysHeaders.hh XrdOucString.hh XrdSysPthread.hh \
+                           XrdOucFactoryBonjour.hh \
+                           XrdProtLoad.hh
+	@echo Compiling XrdOucBonjour.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(CFHASLIBDNSSD) $(CFHASLIBAVAHI) $(INCLUDE) XrdOucBonjour.cc -o $(OBJDIR)/XrdOucBonjour.o
+
+$(OBJDIR)/XrdOucFactoryBonjour.o: XrdOucBonjour.hh XrdSysError.hh \
+                                XrdSysHeaders.hh XrdOucString.hh XrdSysPthread.hh \
+                                XrdOucFactoryBonjour.hh XrdConfig.hh \
+                                XrdInet.hh XrdProtLoad.hh
+	@echo Compiling XrdOucFactoryBonjour.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(CFHASLIBDNSSD) $(INCLUDE) XrdOucFactoryBonjour.cc -o $(OBJDIR)/XrdOucFactoryBonjour.o

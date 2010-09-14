@@ -15,6 +15,7 @@
 #include "XrdFrm/XrdFrmRequest.hh"
 
 class XrdFrmReqAgent;
+class XrdOucStream;
 class XrdSysLogger;
   
 class XrdFrmProxy
@@ -47,12 +48,17 @@ class Queues
 
 int   List(Queues &State, char *Buff, int Bsz);
 
-int   Init(int opX, const char *aPath, int aMode);
+int   List(int qType, int qPrty, XrdFrmRequest::Item *Items, int Num);
+
+int   Init(int opX, const char *aPath, int aMode, const char *qPath=0);
 
       XrdFrmProxy(XrdSysLogger *lP, const char *iName, int Debug=0);
      ~XrdFrmProxy() {}
 
 private:
+
+int Init2(const char *cfgFN);
+int qChk(XrdOucStream &cFile);
 
 struct o2qMap {const char *qName; int qType; int oType;};
 
@@ -62,5 +68,6 @@ static int      oqNum;
 XrdFrmReqAgent *Agent[XrdFrmRequest::numQ];
 const char     *insName;
 char           *intName;
+char           *QPath;
 };
 #endif

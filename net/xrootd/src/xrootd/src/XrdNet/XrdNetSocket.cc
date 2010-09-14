@@ -446,7 +446,7 @@ char *XrdNetSocket::socketPath(XrdSysError *Say, char *fnbuff,
 {
    const int srchOK = S_IXUSR | S_IXGRP;
    const int sfMask = (S_IFIFO | S_IFSOCK);
-   int rc, i, fnlen = (fnbuff ? strlen(fnbuff) : 0);
+   int rc, i, fnlen = strlen(fnbuff);
    mode_t myMode = (mode & (S_IRWXU | S_IRWXG)) | srchOK;
    struct stat buf;
    char *sp = 0;
@@ -477,7 +477,7 @@ char *XrdNetSocket::socketPath(XrdSysError *Say, char *fnbuff,
 //
    if (sp) *sp = '/';
       else {if (path[i-1] != '/') fnbuff[i++] = '/';
-            strcpy(fnbuff+i, fn);
+            if (fn) strcpy(fnbuff+i, fn);
            }
 
 // Check is we have already created it and whether we can access

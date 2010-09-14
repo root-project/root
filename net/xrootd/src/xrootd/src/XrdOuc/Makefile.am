@@ -4,13 +4,19 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.16 2010/05/26 01:25:50 abh Exp $
-## Checked in by $Author: abh $
+## Version info: $Id: Makefile.am,v 1.17 2010/08/05 15:27:26 feichtinger Exp $
+## Checked in by $Author: feichtinger $
 #######################################################################
 
-EXTRA_DIST = XrdOucRash.hh XrdOucRash.icc
+AM_CPPFLAGS = -I$(top_srcdir)/src
+
+#############################################################################
+## extra installation directory definitions
 
 xrootdoucincdir = $(includedir)/xrootd/XrdOuc
+
+#############################################################################
+## deliverables (to be built / installed)
 
 xrootdoucinc_HEADERS = \
     XrdOuca2x.hh    XrdOucChain.hh      XrdOucDLlist.hh \
@@ -22,20 +28,23 @@ xrootdoucinc_HEADERS = \
     XrdOucTable.hh  XrdOucTList.hh      XrdOucTokenizer.hh \
     XrdOucTrace.hh  XrdOucUtils.hh      XrdOucProg.hh \
     XrdOucPup.hh    XrdOucCRC.hh        XrdOucArgs.hh \
-    XrdOucNSWalk.hh XrdOucSxeq.hh       XrdOucCmsNotify.hh
+    XrdOucNSWalk.hh XrdOucSxeq.hh
 
 lib_LTLIBRARIES = libXrdOuc.la
 
-INCLUDES = -I$(top_srcdir)/src
+
+#############################################################################
+# Build rules
 
 libXrdOuc_la_SOURCES = \
         XrdOuca2x.cc XrdOuca2x.hh        \
         XrdOucArgs.cc XrdOucArgs.hh        \
-        XrdOucCmsNotify.cc XrdOucCmsNotify.hh        \
+        XrdOucCRC.cc XrdOucCRC.hh \
         XrdOucEnv.cc XrdOucEnv.hh XrdOucHash.hh       \
-        XrdOucName2Name.cc XrdOucName2Name.hh \
+	XrdOucExport.cc XrdOucExport.hh \
         XrdOucHashVal.cc     \
         XrdOucMsubs.cc XrdOucMsubs.hh \
+        XrdOucName2Name.cc XrdOucName2Name.hh \
         XrdOucNList.cc XrdOucNList.hh      \
         XrdOucNSWalk.cc XrdOucNSWalk.hh      \
         XrdOucProg.cc XrdOucProg.hh \
@@ -46,12 +55,20 @@ libXrdOuc_la_SOURCES = \
         XrdOucSxeq.cc XrdOucSxeq.hh \
         XrdOucTokenizer.cc XrdOucTokenizer.hh  \
         XrdOucTrace.cc XrdOucTrace.hh      \
-        XrdOucUtils.cc XrdOucUtils.hh      \
-	XrdOucExport.cc XrdOucExport.hh \
-        XrdOucCRC.cc XrdOucCRC.hh \
-        XrdOucHash.icc
+        XrdOucUtils.cc XrdOucUtils.hh   
 
-libXrdOuc_la_LIBADD = $(LIBPTHREAD) $(SEM_LIBRT) $(LIBNSL)
-#REFAC libXrdOuc_la_CXXFLAGS = -prefer-pic
-#REFAC libXrdOuc_la_LDFLAGS = -static
+#        XrdOucCRC.cc XrdOucCRC.hh \
+#        XrdOucHash.icc
 
+
+libXrdOuc_la_LIBADD = $(LIBPTHREAD) $(SEM_LIBRT) $(LIBNSL) ../XrdSys/libXrdSysErrLog.la
+
+# sources not named in rules that still need to get rolled into the distribution tarball
+EXTRA_DIST = XrdOucRash.hh XrdOucRash.icc
+
+
+# TODO: (DEREK) why are these compiled in the classic GNUmakefile instead of making a lib?
+#        XrdSys/XrdSysError.cc XrdSys/XrdSysError.hh \
+#        XrdSys/XrdSysLogger.cc 
+# TODO: again as in classic? REFAC libXrdOuc_la_CXXFLAGS = -prefer-pic
+# TODO: again as in classic? REFAC libXrdOuc_la_LDFLAGS = -static

@@ -962,7 +962,7 @@ int XrdSfsNative::Emsg(const char    *pfx,    // Message prefix value
                        const char    *op,     // Operation being performed
                        const char    *target) // The target (e.g., fname)
 {
-    char *etext, buffer[XrdOucEI::Max_Error_Len], unkbuff[64];
+    char *etext, buffer[MAXPATHLEN+80], unkbuff[64];
 
 // Get the reason for the error
 //

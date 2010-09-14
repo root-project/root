@@ -168,7 +168,7 @@ inline int           L1sz() {return Rec.Hdr.lfn1Len;}
 
 inline int           L2sz() {return Rec.Hdr.lfn2Len;}
 
-       const char    Type() {return Rec.Data.Type;}
+       char          Type() {return Rec.Data.Type;}
 
                      XrdCnsLogRec(const char rType=0) : Next(0)
                                     {memset(&Rec, 0, sizeof(Rec.Hdr));

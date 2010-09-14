@@ -81,7 +81,7 @@ int XrdFrmXfrDaemon::Init()
 
 // Make sure we are the only daemon running
 //
-   sprintf(buff, "%sfrm_xfrd.lock", Config.AdminPath);
+   sprintf(buff, "%s/frm_xfrd.lock", Config.QPath);
    if (!XrdFrmUtils::Unique(buff, Config.myProg)) return 0;
 
 // Initiliaze the transfer processor (it need to be active now)
@@ -104,10 +104,10 @@ int XrdFrmXfrDaemon::Init()
 
 // Start the external interfaces
 //
-   if (!StgBoss.Start(Config.AdminPath, Config.AdminMode)
-   ||  !MigBoss.Start(Config.AdminPath, Config.AdminMode)
-   ||  !GetBoss.Start(Config.AdminPath, Config.AdminMode)
-   ||  !PutBoss.Start(Config.AdminPath, Config.AdminMode)) return 0;
+   if (!StgBoss.Start(Config.QPath, Config.AdminMode)
+   ||  !MigBoss.Start(Config.QPath, Config.AdminMode)
+   ||  !GetBoss.Start(Config.QPath, Config.AdminMode)
+   ||  !PutBoss.Start(Config.QPath, Config.AdminMode)) return 0;
 
 // All done
 //
@@ -139,7 +139,7 @@ void XrdFrmXfrDaemon::Pong()
       {XrdNetSocket *udpSock;
        pthread_t tid;
        int retc;
-       if ((udpSock = XrdNetSocket::Create(&Say, Config.AdminPath,
+       if ((udpSock = XrdNetSocket::Create(&Say, Config.QPath,
                    "xfrd.udp", Config.AdminMode, XRDNET_UDPSOCKET)))
           {udpFD = udpSock->Detach(); delete udpSock;
            if ((retc = XrdSysThread::Run(&tid, XrdFrmXfrDaemonPong, (void *)0,

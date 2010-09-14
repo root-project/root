@@ -27,6 +27,7 @@ const char *XrdFrmReqAgentCVSID = "$Id$";
 #include "XrdNet/XrdNetMsg.hh"
 #include "XrdOuc/XrdOucUtils.hh"
 #include "XrdSys/XrdSysHeaders.hh"
+#include "XrdSys/XrdSysPlatform.hh"
 
 using namespace XrdFrm;
 
@@ -66,7 +67,11 @@ void XrdFrmReqAgent::Add(XrdFrmRequest &Request)
    if (Request.Prty > XrdFrmRequest::maxPrty)
       Request.Prty = XrdFrmRequest::maxPrty;
       else if (Request.Prty < 0)Request.Prty = 0;
+
+// Add time and instance name
+//
    Request.addTOD = time(0);
+   if (myName) strlcpy(Request.iName, myName, sizeof(Request.iName));
 
 // Now add it to the queue
 //
@@ -94,18 +99,41 @@ void XrdFrmReqAgent::Del(XrdFrmRequest &Request)
 /* Public:                          L i s t                                   */
 /******************************************************************************/
   
-void XrdFrmReqAgent::List(XrdFrmRequest::Item *Items, int Num)
+int XrdFrmReqAgent::List(XrdFrmRequest::Item *Items, int Num)
 {
-   char myLfn[4096];
-   int i, Offs;
+   char myLfn[8192];
+   int i, Offs, n = 0;
 
 // List entries in each priority queue
 //
    for (i = 0; i <= XrdFrmRequest::maxPrty; i++)
        {Offs = 0;
         while(rQueue[i]->List(myLfn, sizeof(myLfn), Offs, Items, Num))
-             cout <<myLfn <<endl;
+             {cout <<myLfn <<endl; n++;}
        }
+// All done
+//
+   return n;
+}
+
+/******************************************************************************/
+  
+int XrdFrmReqAgent::List(XrdFrmRequest::Item *Items, int Num, int Prty)
+{
+   char myLfn[8192];
+   int Offs, n = 0;
+
+// List entries in each priority queue
+//
+   if (Prty <= XrdFrmRequest::maxPrty)
+       {Offs = 0;
+        while(rQueue[Prty]->List(myLfn, sizeof(myLfn), Offs, Items, Num))
+             {cout <<myLfn <<endl; n++;}
+       }
+
+// All done
+//
+   return n;
 }
   
 /******************************************************************************/
@@ -143,6 +171,8 @@ void XrdFrmReqAgent::Ping(const char *Msg)
   
 int XrdFrmReqAgent::Start(char *aPath, int aMode)
 {
+   XrdFrmRequest Request;
+   const char *myClid;
    char buff[2048], *qPath;
    int i;
 
@@ -153,9 +183,28 @@ int XrdFrmReqAgent::Start(char *aPath, int aMode)
        c2sFN = strdup(buff);
       }
 
+// Get the instance name
+//
+   myName = XrdOucUtils::InstName(1);
+
 // Generate the queue directory path
 //
    if (!(qPath = XrdFrmUtils::makeQDir(aPath, aMode))) return 0;
+
+// Initialize the registration entry and register ourselves
+//
+   if ((myClid = getenv("XRDCMSCLUSTERID")))
+      {int Uid = static_cast<int>(geteuid());
+       int Gid = static_cast<int>(getegid());
+       memset(&Request, 0, sizeof(Request));
+       strlcpy(Request.LFN, myClid, sizeof(Request.LFN));
+       sprintf(Request.User,"%d %d", Uid, Gid);
+       sprintf(Request.ID, "%d", static_cast<int>(getpid()));
+       strlcpy(Request.iName, myName, sizeof(Request.iName));
+       Request.addTOD = time(0);
+       Request.Options = XrdFrmRequest::Register;
+       Request.OPc = '@';
+      }
 
 // Initialize the request queues if all went well
 //
@@ -163,9 +212,11 @@ int XrdFrmReqAgent::Start(char *aPath, int aMode)
        {sprintf(buff, "%s%sQ.%d", qPath, Persona, i);
         rQueue[i] = new XrdFrmReqFile(buff, 1);
         if (!rQueue[i]->Init()) return 0;
+        if (myClid) rQueue[i]->Add(&Request);
        }
 
 // All done
 //
+   if (myClid) Ping();
    return 1;
 }

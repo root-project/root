@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.22 2008/09/07 04:30:28 abh Exp $
+#              $Id: GNUmakefile,v 1.24 2010/07/30 03:18:31 abh Exp $
 
 #-----------------------------------------------------------------------------#
 #                            E n v i r o n m e n t                            #
@@ -6,9 +6,9 @@
  
 include ../GNUmake.env
 
-BINLIBS = -L$(LIBDIR) -lXrdAcc -lXrdOuc -lXrdNet -lXrdSys
+BINLIBS = -L$(LIBDIR) -lXrdAcc -lXrdOuc -lXrdNetUtil -lXrdSys
 
-LIBDEPS = $(LIBDIR)/libXrdAcc.a $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdNet.a
+LIBDEPS = $(LIBDIR)/libXrdAcc.a $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdNetUtil.a
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -66,16 +66,8 @@ anything: $(TARGETS)
 $(LIBRARY): $(OBJECTA)
 	@echo Creating archive $(LIBRARY)
 	$(ECHO)rm -f $(LIBRARY)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-		  if [ "x$(SUNCACHE)" != "x" ]; then \
-		     $(CC) -xar -o $(LIBRARY) $(OBJDIR)$(SUNCACHE)/*/*.o; \
-		  else \
-		     $(CC) -xar -o $(LIBRARY) $(OBJECTA); \
-		  fi; \
-	       else \
-	          ar -rc $(LIBRARY) $(OBJECTA); \
-	          ranlib $(LIBRARY); \
-	       fi
+	$(ECHO)ar -rc $(LIBRARY) $(OBJECTA)
+	$(ECHO)ranlib $(LIBRARY)
 
 $(TESTBIN): $(OBJECTB) $(LIBDEPS)
 	@echo Creating executable $(TESTBIN) 

@@ -21,11 +21,13 @@
 #include <sys/types.h>
 #include <asm/param.h>
 #include <byteswap.h>
+#define MAXNAMELEN NAME_MAX
 #endif
 #ifdef __macos__
 #include <AvailabilityMacros.h>
 #include <sys/types.h>
 #define fdatasync(x) fsync(x)
+#define MAXNAMELEN NAME_MAX
 #ifndef dirent64
 #  define dirent64 dirent
 #endif
@@ -229,6 +231,12 @@ extern "C"
 #define net_errno errno
 #endif
 
+#ifdef WIN32
+#define MAXNAMELEN 256
+#define MAXPATHLEN 1024
+#else
+#include <sys/param.h>
+#endif
 // The following gets arround a relative new gcc compiler bug
 //
 #define XRDABS(x) (x < 0 ? -x : x)

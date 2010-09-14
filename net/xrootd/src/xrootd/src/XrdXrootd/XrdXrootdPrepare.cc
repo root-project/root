@@ -18,6 +18,7 @@ const char *XrdXrootdPrepareCVSID = "$Id$";
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
@@ -192,7 +193,7 @@ void XrdXrootdPrepare::Log(XrdXrootdPrepArgs &pargs)
 void XrdXrootdPrepare::Logdel(char *reqid)
 {
    int rc;
-   char path[1024], buff[1024];
+   char path[MAXPATHLEN+256], buff[MAXPATHLEN+1];
 
 // If logging not enabled, return
 //
@@ -205,7 +206,7 @@ void XrdXrootdPrepare::Logdel(char *reqid)
 
 // Read the symlink contents for this request
 //
-   if ((rc = readlink((const char *)path, buff, sizeof(buff))) < 0)
+   if ((rc = readlink((const char *)path, buff, sizeof(buff)-1)) < 0)
       {if (errno != ENOENT) eDest->Emsg("Logdel",errno,"read symlink",path);
        return;
       }
@@ -228,7 +229,7 @@ void XrdXrootdPrepare::Logdel(char *reqid)
 int XrdXrootdPrepare::Open(const char *reqid, int &fsz)
 {
    int fd;
-   char path[1024];
+   char path[MAXPATHLEN+264];
    struct stat buf;
 
 // If logging is not supported, indicate so

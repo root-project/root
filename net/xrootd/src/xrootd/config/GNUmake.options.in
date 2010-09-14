@@ -1,4 +1,4 @@
-#              $Id: GNUmake.options.in,v 1.9 2009/07/21 12:07:52 furano Exp $
+#              $Id: GNUmake.options.in,v 1.10 2010/07/29 01:23:10 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                          I n i t i a l   R u l e s                           #
@@ -19,7 +19,6 @@ LD="$(TYPELD)" \
 LDOP="$(@buildopt@)" \
 LDSO="$(TYPELDSO)" \
 LIBS=" @ldsyslibs@ $(TYPELIBS)" \
-LIBM="$(TYPELIBSM)" \
 TYPE="$(TYPE)"
 
 perlmodule:
@@ -37,7 +36,6 @@ LD="$(TYPELD)" \
 LDOP="$(@buildopt@)" \
 LDSO="$(TYPELDSO)" \
 LIBS=" @ldsyslibs@ $(TYPELIBS)" \
-LIBM="$(TYPELIBSM)" \
 TYPE="$(TYPE)"
 
 clean:

@@ -17,6 +17,46 @@ const char *XrdCmsPListCVSID = "$Id$";
 #include "XrdCms/XrdCmsPList.hh"
 
 /******************************************************************************/
+/*                                   A d d                                    */
+/******************************************************************************/
+  
+/******************************************************************************/
+/*                                I n s e r t                                 */
+/******************************************************************************/
+  
+int XrdCmsPList_Anchor::Add(const char *pname, XrdCmsPInfo *pinfo)
+{
+   int plen = strlen(pname);
+   XrdCmsPList *p, *pp;
+
+// Set up the search
+//
+   Lock();
+   p = next;
+   pp = 0;
+
+// Find the proper insertion point. Paths are sorted in decreasin length order.
+//
+   while(p && p->pathlen >= plen)
+        {if (p->pathlen == plen && !strcmp(p->pathname,pname))
+            {UnLock(); return 0;}
+         pp = p; 
+          p = p->next;
+        }
+
+// Insert a new element
+//
+   p = new XrdCmsPList(pname, pinfo);
+   if (pp) { p->next = pp->next; pp->next = p;}
+      else { p->next =     next;     next = p;}
+
+// All done
+//
+   UnLock();
+   return 1;
+}
+
+/******************************************************************************/
 /*                                  F i n d                                   */
 /******************************************************************************/
   
@@ -63,7 +103,8 @@ SMask_t XrdCmsPList_Anchor::Insert(const char *pname, XrdCmsPInfo *pinfo)
    rc = 1;
    while(p && p->pathlen >= plen)
         {if (p->pathlen == plen && !(rc = strcmp(p->pathname,pname))) break;
-            else if (!strncmp(p->pathname,pname,plen))
+            else if (!strncmp(p->pathname,pname,plen)
+                 &&  !(p->pathmask.rovec & pinfo->rovec))
                     {p->pathmask.And(~(pinfo->rovec)); p->pathmask.Or(pinfo);}
          pp = p; 
           p = p->next;

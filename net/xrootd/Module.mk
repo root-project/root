@@ -156,6 +156,9 @@ $(XROOTDMAKE): $(XROOTDCFGD)
 		if [ "x$(BUILDXRDGSI)" = "x" ] ; then \
 		   xopt="$$xopt --disable-gsi"; \
 		fi; \
+		if [ ! "x$(BUILDBONJOUR)" = "x" ] ; then \
+		   xopt="$$xopt --enable-bonjour"; \
+		fi; \
 		if [ ! "x$(SSLLIBDIR)" = "x" ] ; then \
 		   xlib=`echo $(SSLLIBDIR) | cut -c3-`; \
 		   xopt="$$xopt --with-ssl-libdir=$$xlib"; \

@@ -58,8 +58,8 @@ char XrdCnsXref::Add(const char *kval, char idx)
 // If a character was specified, try to use it.
 //
         if (idx) i = c2i(idx);
-   else if ((oldx = xTable.Find(xKey))) return *oldx;
-   else if ((i = availI()) < 0)         return 0;
+   else if ((oldx = xTable.Find(xKey))) {free(xKey); return *oldx;}
+   else if ((i = availI()) < 0)         {free(xKey); return 0;}
 
 // Try to add the new entry
 //

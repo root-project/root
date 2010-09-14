@@ -13,6 +13,7 @@
 //          $Id$
 
 #include "XrdFrm/XrdFrmRequest.hh"
+#include "XrdSys/XrdSysPthread.hh"
 
 class XrdFrmReqFile
 {
@@ -69,5 +70,16 @@ struct recEnt {recEnt       *Next;
                recEnt(XrdFrmRequest &reqref) {Next = 0; reqData = reqref;}
               };
 int    ReWrite(recEnt *rP);
+
+class rqMonitor
+{
+public:
+      rqMonitor(int isAgent) : doUL(isAgent)
+                  {if (isAgent) rqMutex.Lock();}
+     ~rqMonitor() {if (doUL)    rqMutex.UnLock();}
+private:
+static XrdSysMutex rqMutex;
+int                doUL;
+};
 };
 #endif

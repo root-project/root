@@ -81,6 +81,8 @@ public:
 inline void         Lock() {mutex.Lock();}
 inline void       UnLock() {mutex.UnLock();}
 
+       int          Add(const char *pname, XrdCmsPInfo *pinfo);
+
 inline void         Empty(XrdCmsPList *newlist=0)
                     {Lock();
                      XrdCmsPList *p = next;

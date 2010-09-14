@@ -23,7 +23,8 @@ void Add(XrdFrmRequest &Request);
 
 void Del(XrdFrmRequest &Request);
 
-void List(XrdFrmRequest::Item *Items, int Num);
+int  List(XrdFrmRequest::Item *Items, int Num);
+int  List(XrdFrmRequest::Item *Items, int Num, int Prty);
 
 int  NextLFN(char *Buff, int Bsz, int Prty, int &Offs);
 
@@ -41,6 +42,7 @@ static char     *c2sFN;
 XrdFrmReqFile   *rQueue[XrdFrmRequest::maxPQE];
 const char      *Persona;
 const char      *pingMsg;
+const char      *myName;
 int              theQ;
 };
 #endif

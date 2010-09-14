@@ -16,6 +16,7 @@ const char *XrdPosixCVSID = "$Id$";
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -129,7 +130,8 @@ void XrdPosixXrootPath::CWD(const char *path)
    if (cwdPath) free(cwdPath);
    cwdPlen = strlen(path);
    if (*(path+cwdPlen-1) == '/') cwdPath = strdup(path);
-      else {char buff[2048];
+      else if (cwdPlen <= MAXPATHLEN)
+           {char buff[MAXPATHLEN+8];
             strcpy(buff, path); 
             *(buff+cwdPlen  ) = '/';
             *(buff+cwdPlen+1) = '\0';

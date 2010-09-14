@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.2 2008/09/07 04:30:34 abh Exp $
+#              $Id: GNUmakefile,v 1.3 2010/07/30 03:18:34 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -63,16 +63,9 @@ anything: $(TARGETS)
 $(TARGETS): $(OBJECTS) $(OBJFS) $(LIBDEP)
 	@echo Creating archive $(LIBARCH)
 	$(ECHO)rm -f $(LIBARCH)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-		  if [ "x$(SUNCACHE)" != "x" ]; then \
-		     $(CC) -xar -o $(LIBARCH) $(OBJDIR)$(SUNCACHE)/*/*.o; \
-		  else \
-		     $(CC) -xar -o $(LIBARCH) $(OBJECTS); \
-		  fi; \
-	       else \
-	          ar -rc $(LIBARCH) $(OBJECTS); \
-	          ranlib $(LIBARCH); \
-	       fi
+	$(ECHO)ar -rc $(LIBARCH) $(OBJECTS)
+	$(ECHO)ranlib $(LIBARCH)
+
 	@echo Creating shared library $(LIBRARY) 
 	$(ECHO)$(CC) $(CFLAGS) $(OBJECTS) $(OBJFS) $(LDSO) $(MORELIBS) $(LIBS)  -o $(LIBRARY)
 

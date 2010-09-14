@@ -18,5 +18,5 @@
 
 #define XrdFORMATB 0x00000200
 
-#define XrdBANNER "Copr.  2007 Stanford University, xrd version " XrdVSTRING
+#define XrdBANNER "Copr.  2010 Stanford University, xrd version " XrdVSTRING
 #endif

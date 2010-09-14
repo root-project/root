@@ -37,6 +37,7 @@ void Wakeup(int PushIt=1);
     ~XrdFrmReqBoss() {}
 
 private:
+void Register(XrdFrmRequest &Req, int qNum);
 
 XrdSysSemaphore  rqReady;
 XrdFrmReqFile   *rQueue[XrdFrmRequest::maxPQE];

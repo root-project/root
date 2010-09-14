@@ -45,9 +45,9 @@ const char *XrdPssConfigCVSID = "$Id$";
 /*                               G l o b a l s                                */
 /******************************************************************************/
 
-char        *XrdPssSys::ConfigFN;       // -> Pointer to the config file name
-char        *XrdPssSys::myHost;
-char        *XrdPssSys::myName;
+const char  *XrdPssSys::ConfigFN;       // -> Pointer to the config file name
+const char  *XrdPssSys::myHost;
+const char  *XrdPssSys::myName;
 XrdOucTList *XrdPssSys::PanList = 0;
 char        *XrdPssSys::hdrData;
 char         XrdPssSys::hdrLen;
@@ -83,8 +83,7 @@ int XrdPssSys::Configure(const char *cfn)
 //
    if (getenv("XRDDEBUG")) XrdPosixXrootd::setDebug(1);
    myHost = getenv("XRDHOST");
-   myName = getenv("XRDNAME");
-   if (!myName || !*myName) myName = (char *)"anon";
+   myName = XrdOucUtils::InstName(1);
 
 // Set the default read cache size value and parallel streams
 //

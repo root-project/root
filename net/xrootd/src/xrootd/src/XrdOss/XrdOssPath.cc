@@ -83,7 +83,9 @@ const char *XrdOssPath::Extract(char *path, char *lbuf, int &lbsz)
 //
         if (!path) lnklen = lbsz;
    else if (!lstat(path, &Stat) && S_ISLNK(Stat.st_mode))
-           lnklen = readlink(path, lbuf, lbsz);
+           {if ((lnklen = readlink(path, lbuf, lbsz-1)) < 0) *lbuf = 0;
+               else *(lbuf+lnklen) = 0;
+           }
    else {lnklen = strlen(path);
          if (lnklen >= lbsz) lnklen = lbsz-1;
          strncpy(lbuf, path, lnklen); *(lbuf+lnklen) = '\0';

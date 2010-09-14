@@ -26,15 +26,12 @@
 
 class XrdLink;
 class XrdNetBuffer;
-class XrdOdcFinder;
 
 class XrdCmsClientMan
 {
 public:
 
 static char          doDebug;
-static char          v1Mode;
-static XrdOdcFinder *oldFinder;
 
 int                  delayResp(XrdOucErrInfo &Resp);
 

@@ -114,7 +114,7 @@ int main(int argc, char **argv)
 // If colocating, make sure we have the anchor file
 //
    if (Opts & kXR_coloc && theBuff == buff)
-      {if (!(sp = fgets(buff+1, MaxPathLen, Stream))) inFile = 0;
+      {if (!Stream || !(sp = fgets(buff+1, MaxPathLen, Stream))) inFile = 0;
           else {slen = strlen(sp); theBsz -= (slen+1); theBuff += slen+1;}
       } else theBuff++;
 

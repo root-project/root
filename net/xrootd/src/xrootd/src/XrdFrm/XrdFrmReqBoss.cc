@@ -21,6 +21,7 @@ const char *XrdFrmReqBossCVSID = "$Id$";
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "XrdFrm/XrdFrmCID.hh"
 #include "XrdFrm/XrdFrmReqBoss.hh"
 #include "XrdFrm/XrdFrmTrace.hh"
 #include "XrdFrm/XrdFrmUtils.hh"
@@ -95,14 +96,39 @@ do{Wakeup(0);
       for (i = XrdFrmRequest::maxPrty; i >= 0; i--)
           {numPull = i+1;
            while(numPull && (rc = rQueue[i]->Get(&myReq)))
-                {numPull -= XrdFrmXfrQueue::Add(&myReq, rQueue[i], theQ);
-                 numXfr++;
-                 DEBUG(Persona <<" from Q " << i <<' ' <<numPull <<" left");
-                 if (rc < 0) break;
+                {if (myReq.Options & XrdFrmRequest::Register) Register(myReq,i);
+                    else {numPull -= XrdFrmXfrQueue::Add(&myReq,rQueue[i],theQ);
+                          numXfr++;
+                          DEBUG(Persona <<" from Q " << i <<' ' <<numPull <<" left");
+                          if (rc < 0) break;
+                         }
                 }
           }
      } while(numXfr);
   } while(1);
+}
+
+/******************************************************************************/
+/* Private:                     R e g i s t e r                               */
+/******************************************************************************/
+
+void XrdFrmReqBoss::Register(XrdFrmRequest &Req, int qNum)
+{
+   EPNAME("Register");
+   char *eP;
+   int Pid;
+
+// Ignore this request if there is no cluster id or the process if is invalid
+//
+   if (!(*Req.LFN)) return;
+   Pid = strtol(Req.ID, &eP, 10);
+   if (*eP || Pid == 0) return;
+
+// Register this cluster
+//
+   if (CID.Add(Req.iName, Req.LFN, static_cast<time_t>(Req.addTOD), Pid))
+      {DEBUG("Instance=" <<Req.iName <<" cluster=" <<Req.LFN <<" pid=" <<Pid);}
+      else rQueue[qNum]->Del(&Req);
 }
 
 /******************************************************************************/

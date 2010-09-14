@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.27 2008/05/12 23:34:31 becla Exp $
+#              $Id: GNUmakefile,v 1.28 2010/07/30 03:18:49 abh Exp $
 
 #-----------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                       #
@@ -118,132 +118,69 @@ anything: $(TARGETS)
 $(LIBRARY_COMMON): $(OBJECTS_LIB_COMMON)
 	@echo Creating archive $(LIBRARY_COMMON) 
 	$(ECHO)rm -f $(LIBRARY_COMMON)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-		$(CC) -xar -o $(LIBRARY_COMMON) $(OBJECTS_LIB_COMMON); \
-	else \
-		ar -rc $(LIBRARY_COMMON) $(OBJECTS_LIB_COMMON); \
-		ranlib $(LIBRARY_COMMON); \
-	fi
+	$(ECHO)ar -rc $(LIBRARY_COMMON) $(OBJECTS_LIB_COMMON)
+	$(ECHO)ranlib $(LIBRARY_COMMON)
 
 $(LIBRARY_CTR):	$(OBJECTS_LIB_CTR)
 	@echo Creating archive $(LIBRARY_CTR) 
 	$(ECHO)rm -f $(LIBRARY_CTR)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-		$(CC) -xar -o $(LIBRARY_CTR) $(OBJECTS_LIB_CTR); \
-	else \
-		ar -rc $(LIBRARY_CTR) $(OBJECTS_LIB_CTR); \
-		ranlib $(LIBRARY_CTR); \
-	fi
+	$(ECHO)ar -rc $(LIBRARY_CTR) $(OBJECTS_LIB_CTR)
+	$(ECHO)ranlib $(LIBRARY_CTR)
 
 $(LIBRARY_DEC):	$(OBJECTS_LIB_DEC)
 	@echo Creating archive $(LIBRARY_DEC) 
 	$(ECHO)rm -f $(LIBRARY_DEC)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-		$(CC) -xar -o $(LIBRARY_DEC) $(OBJECTS_LIB_DEC); \
-	else \
-		ar -rc $(LIBRARY_DEC) $(OBJECTS_LIB_DEC); \
-		ranlib $(LIBRARY_DEC); \
-	fi
+	$(ECHO)ar -rc $(LIBRARY_DEC) $(OBJECTS_LIB_DEC)
+	$(ECHO)ranlib $(LIBRARY_DEC)
 
 $(LIBRARY_SND): $(OBJECTS_LIB_SND)
 	@echo Creating archive $(LIBRARY_SND) 
 	$(ECHO)rm -f $(LIBRARY_SND)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-		$(CC) -xar -o $(LIBRARY_SND) $(OBJECTS_LIB_SND); \
-	else \
-		ar -rc $(LIBRARY_SND) $(OBJECTS_LIB_SND); \
-		ranlib $(LIBRARY_SND); \
-	fi
-$(COLLECTOR):	$(OBJECTS_BIN_CTR) $(LIBRARY_CTR) \
-	$(LIBRARY_DEC) $(LIBRARY_OUC) $(LIBRARY_COMMON) 
-	@echo Creating executable $(@F)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-		if [ "x$(SUNCACHE)" != "x" ]; then \
-			$(CC) -xar -o lib_temp.a $(OBJDIR)$(SUNCACHE)/*/*.o; \
-			$(CC) $(CFLAGS) $(LDOP) lib_temp.a $(LIBS) -o $@ $^ -L$(LIBDIR) -lXrdSys; \
-			rm lib_temp.a; \
-		fi; \
-	else \
-		$(CC) $(CFLAGS) $(LDOP) $(LIBS) -o $@ $^ -L$(LIBDIR) -lXrdSys; \
-	fi
-$(DECODER):	$(OBJECTS_BIN_DEC) $(LIBRARY_DEC) $(LIBRARY_OUC) \
-	$(LIBRARY_COMMON) 
-	@echo Creating executable $(@F)
-	$(ECHO)$(CC) $(CFLAGS) $(LDOP) $(LIBS) -o $@ $^
-
-$(SENDER):	$(OBJECTS_BIN_SND) $(LIBRARY_SND) $(LIBRARY_OUC) $(LIBRARY_COMMON) 
-	@echo Creating executable $(@F)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-		if [ "x$(SUNCACHE)" != "x" ]; then \
-			$(CC) -xar -o lib_temp.a $(OBJDIR)$(SUNCACHE)/*/*.o; \
-			$(CC) $(CFLAGS) $(LDOP) lib_temp.a $(LIBS) -lresolv -o $@ $^; \
-			rm lib_temp.a; \
-		fi; \
-	else \
-		$(CC) $(CFLAGS) $(LDOP) $(LIBS) -lresolv -o $@ $^; \
-	fi
-
-$(FSENDER):	$(OBJECTS_BIN_FSD) $(LIBRARY_SND) $(LIBRARY_OUC) $(LIBRARY_COMMON) 
-	@echo Creating executable $(@F)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-		if [ "x$(SUNCACHE)" != "x" ]; then \
-			$(CC) -xar -o lib_temp.a $(OBJDIR)$(SUNCACHE)/*/*.o; \
-			$(CC) $(CFLAGS) $(LDOP) lib_temp.a $(LIBS) -lresolv -o $@ $^; \
-			rm lib_temp.a; \
-		fi; \
-	else \
-		$(CC) $(CFLAGS) $(LDOP) $(LIBS) -lresolv -o $@ $^; \
-	fi
+	$(ECHO)ar -rc $(LIBRARY_SND) $(OBJECTS_LIB_SND)
+	$(ECHO)ranlib $(LIBRARY_SND)
 
 $(ADMIN):	$(OBJECTS_BIN_ADM) $(LIBRARY_SND) $(LIBRARY_OUC) $(LIBRARY_COMMON) 
 	@echo Creating executable $(@F)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-		if [ "x$(SUNCACHE)" != "x" ]; then \
-			$(CC) -xar -o lib_temp.a $(OBJDIR)$(SUNCACHE)/*/*.o; \
-			$(CC) $(CFLAGS) $(LDOP) lib_temp.a $(LIBS) -lresolv -o $@ $^; \
-			rm lib_temp.a; \
-		fi; \
-	else \
-		$(CC) $(CFLAGS) $(LDOP) $(LIBS) -lresolv -o $@ $^; \
-	fi
+	$(ECHO)$(CC) $(CFLAGS) $(LDOP) $(LIBS) -lresolv -o $@ $^ -L$(LIBDIR) -lXrdSys
 
-$(COUT2FILE):	$(OBJECTS_BIN_C2F) $(LIBRARY_DEC) $(LIBRARY_OUC) $(LIBRARY_COMMON) 
+$(COLLECTOR):	$(OBJECTS_BIN_CTR) $(LIBRARY_CTR) \
+	$(LIBRARY_DEC) $(LIBRARY_OUC) $(LIBRARY_COMMON) 
 	@echo Creating executable $(@F)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-		if [ "x$(SUNCACHE)" != "x" ]; then \
-			$(CC) -xar -o lib_temp.a $(OBJDIR)$(SUNCACHE)/*/*.o; \
-			$(CC) $(CFLAGS) $(LDOP) lib_temp.a $(LIBS) -lresolv -o $@ $^; \
-			rm lib_temp.a; \
-		fi; \
-	else \
-		$(CC) $(CFLAGS) $(LDOP) $(LIBS) -lresolv -o $@ $^; \
-	fi
-
-$(DUMPPACKETS):	$(OBJECTS_BIN_DMP) $(LIBRARY_DEC) $(LIBRARY_COMMON) 
-	@echo Creating executable $(@F)
-	$(ECHO)$(CC) $(CFLAGS) $(LDOP) $(LIBS) -o $@ $^
-
-$(DEBUGPACKET):	$(OBJECTS_BIN_DBP) $(LIBRARY_DEC) $(LIBRARY_OUC) $(LIBRARY_COMMON) 
-	@echo Creating executable $(@F)
-	$(ECHO)$(CC) $(CFLAGS) $(LDOP) $(LIBS) -o $@ $^
+	$(ECHO)$(CC) $(CFLAGS) $(LDOP) $(LIBS) -o $@ $^ -L$(LIBDIR) -lXrdSys
 
 $(CONVTIME):	$(OBJECTS_BIN_CTM) $(LIBRARY_COMMON) 
 	@echo Creating executable $(@F)
 	$(ECHO)$(CC) $(CFLAGS) $(LDOP) $(LIBS) -o $@ $^
 
+$(COUT2FILE):	$(OBJECTS_BIN_C2F) $(LIBRARY_DEC) $(LIBRARY_OUC) $(LIBRARY_COMMON) 
+	@echo Creating executable $(@F)
+	$(ECHO)$(CC) $(CFLAGS) $(LDOP) $(LIBS) -lresolv -o $@ $^
+
+$(DEBUGPACKET):	$(OBJECTS_BIN_DBP) $(LIBRARY_DEC) $(LIBRARY_OUC) $(LIBRARY_COMMON) 
+	@echo Creating executable $(@F)
+	$(ECHO)$(CC) $(CFLAGS) $(LDOP) $(LIBS) -o $@ $^
+
+$(DECODER):	$(OBJECTS_BIN_DEC) $(LIBRARY_DEC) $(LIBRARY_OUC) \
+	$(LIBRARY_COMMON) 
+	@echo Creating executable $(@F)
+	$(ECHO)$(CC) $(CFLAGS) $(LDOP) $(LIBS) -o $@ $^
+
+$(DUMPPACKETS):	$(OBJECTS_BIN_DMP) $(LIBRARY_DEC) $(LIBRARY_COMMON) 
+	@echo Creating executable $(@F)
+	$(ECHO)$(CC) $(CFLAGS) $(LDOP) $(LIBS) -o $@ $^
+
+$(FSENDER):	$(OBJECTS_BIN_FSD) $(LIBRARY_SND) $(LIBRARY_OUC) $(LIBRARY_COMMON) 
+	@echo Creating executable $(@F)
+	$(ECHO)$(CC) $(CFLAGS) $(LDOP) $(LIBS) -lresolv -o $@ $^
+
+$(SENDER):	$(OBJECTS_BIN_SND) $(LIBRARY_SND) $(LIBRARY_OUC) $(LIBRARY_COMMON) 
+	@echo Creating executable $(@F)
+	$(ECHO)$(CC) $(CFLAGS) $(LDOP) $(LIBS) -lresolv -o $@ $^ -L$(LIBDIR) -lXrdSys
+
 $(TESTPARSER):	$(OBJECTS_BIN_TPR) $(LIBRARY_COMMON)
 	@echo Creating executable $(@F)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-		if [ "x$(SUNCACHE)" != "x" ]; then \
-			$(CC) -xar -o lib_temp.a $(OBJDIR)$(SUNCACHE)/*/*.o; \
-			$(CC) $(CFLAGS) $(LDOP) lib_temp.a $(LIBS) -lresolv -o $@ $^; \
-			rm lib_temp.a; \
-		fi; \
-	else \
-		$(CC) $(CFLAGS) $(LDOP) $(LIBS) -lresolv -o $@ $^; \
-	fi
+	$(ECHO)$(CC) $(CFLAGS) $(LDOP) $(LIBS) -lresolv -o $@ $^
 
 $(OBJDIR)/%.o : %.cc
 	@echo Compiling $(<F)
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) $< -o $@
-

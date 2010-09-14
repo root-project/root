@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.4 2010/03/29 06:37:39 ganis Exp $
+#              $Id: GNUmakefile,v 1.6 2010/07/30 03:19:11 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -6,10 +6,14 @@
   
 include ../GNUmake.env
 
-MORELIBS = -L$(LIBDIR) -lXrdSec $(LIBDIR)/libsslGridSite.a \
-           $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a $(LIBDIR)/libXrdNet.a  $(LIBSSL) $(LIBXML)
+MORELIBS = -L$(LIBDIR) -lXrdSec        $(LIBDIR)/libsslGridSite.a \
+             $(LIBDIR)/libXrdNet.a     $(LIBDIR)/libXrdOuc.a \
+             $(LIBDIR)/libXrdNetUtil.a $(LIBDIR)/libXrdSys.a \
+             $(LIBSSL) $(LIBXML)
 
-LIBDEPS = $(LIBDIR)/libsslGridSite.a $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a $(LIBDIR)/libXrdNet.a
+LIBDEPS = $(LIBDIR)/libsslGridSite.a  $(LIBDIR)/libXrdNet.a \
+          $(LIBDIR)/libXrdNetUtil.a   $(LIBDIR)/libXrdOuc.a \
+          $(LIBDIR)/libXrdSys.a
 
 NCXXFLAGS = $(INCSSL) $(SSLEXTRACFLAGS) -DOPENSSL_NO_KRB5 $(subst deprecated,deprecated-declarations,$(CFLAGS)) 
 NCFLAGS = $(INCXML) $(INCSSL) $(SSLEXTRACFLAGS) -DOPENSSL_NO_KRB5 -U_FORTIFY_SOURCE $(subst deprecated,deprecated-declarations,$(CFLAGS)) 
@@ -82,16 +86,8 @@ $(LIBRARY): $(OBJECTS) $(LIBDEPS)
 $(LIBGRST): $(OBJGRST)
 	@echo Creating archive $(LIBGRST)
 	$(ECHO)rm -f $(LIBGRST)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-	          if [ "x$(SUNCACHE)" != "x" ]; then \
-		     $(CC) -xar -o $(LIBGRST) $(OBJDIR)$(SUNCACHE)/*/*.o; \
-		  else \
-		     $(CC) -xar -o $(LIBGRST) $(OBJGRST); \
-		  fi; \
-	       else \
-		  ar -rc $(LIBGRST) $(OBJGRST); \
-		  ranlib $(LIBGRST); \
-	       fi
+	$(ECHO)ar -rc $(LIBGRST) $(OBJGRST)
+	$(ECHO)ranlib $(LIBGRST)
 
 $(SECSSLTEST): $(OBJECTA) $(LIBDEPS)
 	@echo Creating executable $(SECSSLTEST)

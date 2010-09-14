@@ -24,6 +24,7 @@ ONLYX=0
 #
 . `dirname $0`/StartXRD.cf
 
+
 #******************************************************************************#
 #*                           S u b r o u t i n e s                            *#
 #******************************************************************************#
@@ -51,7 +52,6 @@ isOK () {
         fi
         xPID $thePGM
         if [ $? -ne 0 ]; then
-           REASON="already running as pid $?."
            return 0
         fi
         return 1
@@ -59,12 +59,15 @@ isOK () {
 
 xPID () {
         pidPGM=$1
-        set -- `ps -e -o pid -o comm | grep $1 | awk '{print $1}'`
+        set -- ''
+        set -- `ps -e -o pid -o args | grep $pidPGM | awk '$0 !~ /grep/ {print $1}'`
 
-        if [ "$1" -eq "$pidPGM" ]; then
+        if [ -z "$1" ]; then
            return 0
+        else
+            REASON="already running as pid $1."
         fi
-        return $1
+        return 1
        }
 
 Xeq () {

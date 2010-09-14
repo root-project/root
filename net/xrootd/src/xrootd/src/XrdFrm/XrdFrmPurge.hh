@@ -55,7 +55,7 @@ static int           LowOnSpace();
        int           PurgeFile();
 static void          Remfix(const char *Ftype, const char *Fname);
 static void          Scan();
-static int           Screen(XrdFrmFileset *sP, int isRW);
+static int           Screen(XrdFrmFileset *sP, int needLF);
 static void          Stats(int Final);
        void          Track(XrdFrmFileset *sP);
 const  char         *XPolOK(XrdFrmFileset *sP);

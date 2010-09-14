@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.7 2009/11/10 21:44:09 abh Exp $
+#              $Id: GNUmakefile,v 1.8 2010/07/29 01:24:16 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -48,13 +48,14 @@ OBJECTS = $(OBJCNSD) $(OBJCOM) $(OBJSSI)
 
 LIBDEP   = \
         $(LIBDIR)/libXrdNet.a \
+        $(LIBDIR)/libXrdNetUtil.a \
         $(LIBDIR)/libXrdOss.a \
         $(LIBDIR)/libXrdOuc.a \
         $(LIBDIR)/libXrdSys.a \
         $(LIBDIR)/libXrdClient.a
 
 
-MORELIBS = -L$(LIBDIR) $(LIBM) -lXrdNet -lXrdOss -lXrdOuc -lXrdSys
+MORELIBS = -L$(LIBDIR) -lXrdNet -lXrdOss -lXrdOuc -lXrdNetUtil -lXrdSys
 
 TARGCNSD = $(BINDIR)/XrdCnsd
 

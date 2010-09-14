@@ -1,7 +1,7 @@
 #! /bin/sh
 ################################################################################
 #
-#          $Id: configure.classic,v 1.106 2010/04/14 20:59:58 abh Exp $
+#          $Id: configure.classic,v 1.109 2010/09/13 13:26:49 ganis Exp $
 #                                                                              #
 #                     c o n f i g u r e . c l a s s i c                        #
 #                       (previously called configure)                          #
@@ -48,7 +48,6 @@ strlcpy="noidea"
 clientonly="no"
 seconly="no"
 usearchdirs="yes"
-suncache="/SunWS_cache"
 type=`uname -s`
 compile_log=config.log
 rm -f $compile.log
@@ -63,6 +62,7 @@ fi
 
 options="                 \
    enable_afs             \
+   enable_bonjour         \
    enable_echo            \
    enable_gsi             \
    enable_secssl          \
@@ -87,6 +87,8 @@ options="                 \
 for c in $options ; do eval $c="yes" ; done
 
 enable_afs=no
+enable_bonjour=no
+enable_avahi=no
 enable_echo=no
 enable_mon=yes
 enable_perlint=no
@@ -684,6 +686,7 @@ To build in debug mode use option '--build=debug' .
 
 enable/disable options, prefix with either --enable- or --disable-
    afs             AFS support, requires AFS libs and objects
+   bonjour         Zeroconf support, requires mDNSResponder or Avahi libraries
    echo            Enable/disable echoing of commands during building
    gsi             GSI authentication support, requires OpenSSL
    secssl          SSL authentication support, requires OpenSSL
@@ -708,6 +711,9 @@ with options, prefix with --with-, enables corresponding support
    afs-incdir      AFS support, location of afs/stds.h, afs/kautils.h
    afs-libdir      AFS support, location of libafsauthent.a, libafsrpc.a
    afs-shared      AFS support, controls usage of shared linkage AFS libraries {yes/no}
+   bonjour         Bonjour support, location of Bonjour distribution
+   bonjour-incdir  Bonjour support, location of headers of mDNS or Avahi
+   bonjour-libdir  Bonjour support, location of libraries of mDNS or Avahi
    java            Path to the Java SDK to be used for the java interface
    krb4            KerberosIV support, location of Kerberos distribution
    krb4-incdir     KerberosIV support, location of kerberosIV/krb.h
@@ -868,6 +874,9 @@ if test $# -gt 0 ; then
       --with-afs-incdir=*)     afsincdir=$optarg     ; enable_afs="yes"    ;;
       --with-afs-libdir=*)     afslibdir=$optarg     ; enable_afs="yes"    ;;
       --with-afs-shared=*)     afsshared=$optarg     ; enable_afs="yes"     ;;
+      --with-bonjour=*)        bonjourdir=$optarg        ; enable_bonjour="yes"     ;;
+      --with-bonjour-incdir=*) bonjourincdir=$optarg     ; enable_bonjour="yes"    ;;
+      --with-bonjour-libdir=*) bonjourlibdir=$optarg     ; enable_bonjour="yes"    ;;
       --with-java=*)           javadir=$optarg       ; enable_javaint="yes" ;;
       --with-krb4=*)           krb4dir=$optarg       ; enable_krb4="yes"    ;;
       --with-krb4-incdir=*)    krb4incdir=$optarg    ; enable_krb4="yes"    ;;
@@ -976,10 +985,7 @@ if test "x$platform" = "xsolaris"; then
          esac
       done
       if test ! "x$ccver" = "x"; then
-	ccsub=`echo $ccver | sed -e 's/5.//'`
-      fi
-      if test $ccsub -gt 4; then
-         suncache=""
+         ccsub=`echo $ccver | sed -e 's/5.//'`
       fi
       if test "x$nccflv" = "xsunCCamd"; then
          if test $ccsub -lt 10; then
@@ -2301,6 +2307,207 @@ fi
 
 ######################################################################
 #
+### echo %%% Check for Bonjour and Avahi libraries
+#
+
+case $platform in
+    linux|macosx) 
+        ;;
+    *)
+      if test "x$enable_bonjour" = "xyes" ; then
+        echo "Sorry, the Bonjour/Avahi interface currently supported only for Linux/MacOsX - disabling ... (platform: $platform)"
+      fi
+      enable_bonjour=no
+        ;;
+esac
+
+haslibdnssd=""
+
+if test "x$enable_bonjour" = "xyes" ; then
+
+    if test "x$incpfx" = "x" ; then
+       what2look4="/usr/include"
+    else
+       what2look4="$incpfx"
+    fi
+
+    check_header "dns_sd.h" "$bonjourincdir" "$what2look4"
+    if test "x$found_hdr" = "x" ; then
+       enable_bonjour="no"
+    else
+       haslibdnssd="-DHAVE_DNSSD"
+       libdnssd="-ldns_sd"
+    fi
+
+    if test "x$enable_bonjour" = "xyes" ; then
+
+       bjrlibdir="$bonjourlibdir"
+       if test "x$syslibs" = "x" ; then
+          what2look4="/usr/lib /usr/local/lib /opt/lib $finkdir/lib"
+       else
+          what2look4="$syslibs"
+          bjrlibdir=""
+       fi
+
+       # Mac OS X has Bonjour embedded in libSystem.
+       if test "x$platform" = "xmacosx"; then
+          libdnssd=""
+       else
+          check_library "libdns_sd" "$enable_shared" $bjrlibdir $what2look4
+          if test "x$found_lib" = "x" ; then
+             haslibdnssd=""
+             libdnssd=""
+             enable_bonjour="no"
+          else
+             libdnssd="$found_dir $found_lib"
+          fi
+       fi
+	  
+   fi
+fi
+
+haslibavahi=""
+
+# On Mac OS X Avahi will never be available, so skip in that case. Otherwise,
+# check if Avahi is present (default option for OSes other than Mac OS X).
+if test "x$enable_bonjour" = "xyes" && test "x$platform" != "xmacosx" ; then
+    message "Checking for avahi_common/*.h"
+
+    if test "x$incpfx" = "x" ; then
+       if test "x$bonjourincdir" = "x" ; then
+          what2look4="/usr/include"
+       else
+          what2look4="$bonjourincdir"
+       fi
+    else
+       what2look4="$incpfx"
+    fi
+
+    if test -d "$what2look4/avahi-common" ; then
+         echo "yes"
+         haslibavahi="-DHAVE_AVAHI"
+         libavahi="-lavahi-common"         
+    else
+         echo "no"
+         haslibavahi=""
+    fi
+
+    if test "x$haslibavahi" != "x"; then
+       message "Checking for avahi_client/*.h"
+
+       if test -d "$what2look4/avahi-client" ; then
+          echo "yes"
+          # If the other library is not found, avoid adding this one also.
+          if ! test "x$haslibavahi" = "x" ; then
+             haslibavahi="-DHAVE_AVAHI"
+             libavahi="$libavahi -lavahi-client"
+          fi
+       else
+          echo "no"
+          haslibavahi=""
+          libavahi=""
+       fi
+    fi
+
+    if test "x$haslibavahi" != "x"; then
+       message "Checking for avahi_core/*.h"
+
+       if test -d "$what2look4/avahi-core" ; then
+          echo "yes"
+          # If the other library is not found, avoid adding this one also.
+          if ! test "x$haslibavahi" = "x" ; then
+             haslibavahi="-DHAVE_AVAHI"
+             libavahi="$libavahi -lavahi-core"
+          fi
+       else
+          echo "no"
+          haslibavahi=""
+          libavahi=""
+       fi
+    fi
+
+    bjrlibdir=
+    if test "x$haslibavahi" != "x"; then
+       bjrlibdir="$bonjourlibdir"
+       if test "x$syslibs" = "x" ; then
+          what2look4="/usr/lib /usr/local/lib /opt/lib $finkdir/lib"
+       else
+          what2look4="$syslibs"
+          bjrlibdir=""
+       fi
+    fi
+
+    if test "x$haslibavahi" != "x"; then
+        check_library "libavahi-client" "$enable_shared" $bjrlibdir $what2look4
+        if test "x$found_lib" = "x" ; then
+            haslibavahi=""
+            libavahi=""
+        else
+            libavahi="$found_dir $found_lib"
+        fi
+    fi
+
+    if test "x$haslibavahi" != "x"; then
+        check_library "libavahi-common" "$enable_shared" $bjrlibdir $what2look4
+        if test "x$found_lib" = "x" ; then
+            haslibavahi=""
+            libavahi=""
+        else
+            libavahi="$libavahi $found_dir $found_lib"
+        fi
+    fi
+
+    if test "x$haslibavahi" != "x"; then
+        check_library "libavahi-core" "$enable_shared" $bjrlibdir $what2look4
+        if test "x$found_lib" = "x" ; then
+            haslibavahi=""
+            libavahi=""
+        else
+            libavahi="$libavahi $found_dir $found_lib"
+        fi
+    fi
+fi
+
+# Check the compatibility with Bonjour. If we found the Avahi library, then use
+# it. If not, check if we had the Bonjour library. If not, and Bonjour was
+# enabled, issue an error.
+
+# Cleanup.
+rm -fr "src/XrdOuc/XrdOucFactoryBonjour.cc" "src/XrdOuc/XrdOucFactoryBonjour.hh"
+
+# Check.
+if test "x$enable_bonjour" = "xyes" && test "x$haslibavahi" != "x" ; then
+   # Having Avahi implies having also the dns_sd compatibility layer.
+   echo "Creating XrdOucFactoryBonjour symlinks to XrdOucAppleBonjour ..."
+   cd src/XrdOuc
+   ln -s "XrdOucAvahiBonjour.cc" "XrdOucFactoryBonjour.cc"
+   ln -s "XrdOucAvahiBonjour.hh" "XrdOucFactoryBonjour.hh"
+   cd ../..
+else
+   if test "x$enable_bonjour" = "xyes" && test "x$haslibdnssd" != "x" ; then
+      # If we don't have Avahi, it means that everything will be on Bonjour.
+      echo "Creating XrdOucFactoryBonjour symlinks to XrdOucAppleBonjour ..."
+      cd src/XrdOuc
+      ln -s "XrdOucAppleBonjour.cc" "XrdOucFactoryBonjour.cc"
+      ln -s "XrdOucAppleBonjour.hh" "XrdOucFactoryBonjour.hh"
+      cd ../../
+   else
+      if test "x$enable_bonjour" = "xyes" ; then
+         # Reaching this poing means that we want Bonjour, but not libraries were
+         # installed.
+         echo "Bonjour libraries not found."
+         enable_bonjour="no"
+         exit 1
+      fi
+   fi
+fi
+buildbjr=
+if test "x$enable_bonjour" = "xyes" ; then
+   buildbjr="yes"
+fi
+
+######################################################################
+#
 ### echo %%% Support for GSI authentication
 #
 #
@@ -2815,7 +3022,6 @@ sed -e "s|@arch@|$arch|"                   \
     -e "s|@xrdsec@|$xrdsec|" \
     -e "s|@dbgsfx@|$dbgsfx|g"   \
     -e "s|@dbgmsg@|$dbgmsg|g"   \
-    -e "s|@suncache@|$suncache|" \
     -e "s|@inst_prefix@|$inst_prefix|" \
     -e "s|@inst_libdir@|$inst_libdir|" \
     -e "s|@inst_etcdir@|$inst_etcdir|" \
@@ -2863,6 +3069,11 @@ sed -e "s|@arch@|$arch|"                 \
     -e "s|@hasepoll@|$hasepoll|" \
     -e "s|@haslibz@|$haslibz|" \
     -e "s|@libz@|$libz|" \
+    -e "s|@buildbjr@|$buildbjr|" \
+    -e "s|@haslibdnssd@|$haslibdnssd|" \
+    -e "s|@libdnssd@|$libdnssd|" \
+    -e "s|@haslibavahi@|$haslibavahi|" \
+    -e "s|@libavahi@|$libavahi|" \
     -e "s|@libtcmalloc|$libtcmalloc@|" \
     -e "s|@hassendfile@|$hassendfile|" \
     -e "s|@hassigwti@|$hassigwti|" \
@@ -2875,7 +3086,6 @@ sed -e "s|@arch@|$arch|"                 \
     -e "s|@hasreadline@|$hasreadline|" \
     -e "s|@libreadline@|$libreadline|" \
     -e "s|@tracedbg@|$tracedbg|" \
-    -e "s|@suncache@|$suncache|" \
     -e "s|@perlbin@|$perlbin|" \
     -e "s|@javacbin@|$javacbin|" \
     -e "s|@javadir@|$javadir|" \

@@ -79,7 +79,7 @@ int XrdFrmAdmin::Reloc(char *srcLfn, char *Space)
        if ((srcLsz = readlink(srcPfn, srcLnk, sizeof(srcLnk)-1) < 0))
           {Emsg(errno, "read link ", srcLfn); return 0;}
        srcLnk[srcLsz] = '\0';
-      }
+      } else *srcLnk = 0;
    XrdOssPath::getCname(srcPfn, srcSpace);
 
 // Check this operation really makes sense

@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.3 2008/11/11 16:12:56 fabrizio Exp $
+#              $Id: GNUmakefile,v 1.4 2010/07/29 01:24:52 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -6,10 +6,10 @@
   
 include ../GNUmake.env
 
-MORELIBS = -L$(LIBDIR) -lXrdCryptoLite -lXrdOuc -lXrdNet -lXrdSys
+MORELIBS = -L$(LIBDIR) -lXrdCryptoLite -lXrdOuc -lXrdNetUtil -lXrdSys
 
 LIBDEPS = $(LIBDIR)/libXrdCryptoLite.a $(LIBDIR)/libXrdOuc.a \
-          $(LIBDIR)/libXrdSys.a
+          $(LIBDIR)/libXrdNetUtil.a    $(LIBDIR)/libXrdSys.a
 
 FSSL = $(SSLEXTRACFLAGS)
 

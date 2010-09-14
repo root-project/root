@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.35 2010/05/26 01:24:08 abh Exp $
+#              $Id: GNUmakefile,v 1.39 2010/08/30 23:54:29 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -40,7 +40,6 @@ TARGETS  = $(LIBARCH)
 #------------------------------------------------------------------------------#
 
 vpath XrdNet% ../XrdNet
-vpath XrdOdc% ../XrdOdc
 vpath XrdOfs% ../XrdOfs
 vpath XrdOss% ../XrdOss
 vpath XrdOuc% ../XrdOuc
@@ -66,16 +65,8 @@ anything: $(TARGETS)
 $(TARGETS): $(OBJECTS) $(OBJFS)
 	@echo Creating archive $(LIBARCH)
 	$(ECHO)rm -f $(LIBARCH)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-		  if [ "x$(SUNCACHE)" != "x" ]; then \
-		     $(CC) -xar -o $(LIBARCH) $(OBJDIR)$(SUNCACHE)/*/*.o; \
-		  else \
-		     $(CC) -xar -o $(LIBARCH) $(OBJECTS); \
-		  fi; \
-	       else \
-	          ar -rc $(LIBARCH) $(OBJECTS); \
-	          ranlib $(LIBARCH); \
-	       fi
+	$(ECHO)ar -rc $(LIBARCH) $(OBJECTS)
+	$(ECHO)ranlib $(LIBARCH)
 
 $(OBJDIR)/XrdOfs.o:  XrdOfs.cc             XrdOfs.hh \
                      XrdOfsHandle.hh       XrdOfsEvs.hh     XrdOfsStats.hh \
@@ -92,7 +83,9 @@ $(OBJDIR)/XrdOfs.o:  XrdOfs.cc             XrdOfs.hh \
 	@echo Compiling XrdOfs.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOfs.o XrdOfs.cc
 
-$(OBJDIR)/XrdOfsFS.o:  XrdOfsFS.cc             XrdOfs.hh
+$(OBJDIR)/XrdOfsFS.o:  XrdOfsFS.cc             XrdOfs.hh \
+                       XrdSysError.hh          XrdSysPthread.hh \
+                    ../XrdVersion.hh
 	@echo Compiling XrdOfsFS.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOfsFS.o XrdOfsFS.cc
 
@@ -103,14 +96,14 @@ $(OBJDIR)/XrdOfsConfig.o:  XrdOfsConfig.cc \
                            XrdOucTrace.hh    XrdOucUtils.hh   XrdNetDNS.hh   \
                            XrdSysHeaders.hh \
                            XrdOucEnv.hh      XrdAccAuthorize.hh \
-                           XrdCmsClient.hh   XrdCmsFinder.hh  XrdOdcFinder.hh
+                           XrdCmsClient.hh   XrdCmsFinder.hh
 	@echo Compiling XrdOfsConfig.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOfsConfig.o XrdOfsConfig.cc
 
 $(OBJDIR)/XrdOfsEvr.o:  XrdOfsEvr.cc      XrdOfsEvr.hh \
                         XrdOfsStats.hh    XrdOfsTrace.hh   XrdOucTrace.hh \
                         XrdOucErrInfo.hh  XrdOucHash.hh    XrdOucHash.icc \
-                        XrdSysPthread.hh  XrdOucStream.hh \
+                        XrdSysPthread.hh  XrdOucStream.hh  XrdOucEnv.hh \
                         XrdSysTimer.hh    XrdCmsClient.hh \
                         XrdNetOpts.hh     XrdNetSocket.hh
 	@echo Compiling XrdOfsEvr.cc

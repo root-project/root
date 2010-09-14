@@ -22,7 +22,9 @@ const char *XrdOssSpaceCVSID = "$Id$";
 #include "XrdOss/XrdOssCache.hh"
 #include "XrdOss/XrdOssSpace.hh"
 #include "XrdOuc/XrdOuca2x.hh"
+#include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucStream.hh"
+#include "XrdOuc/XrdOucUtils.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 
@@ -182,7 +184,8 @@ int XrdOssSpace::Init(const char *aPath, const char *qPath, int isSOL)
 {
    static const mode_t theMode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
    struct stat buf;
-   char *iP, *aP, buff[1048];
+   const char *iP;
+   char *aP, buff[1048];
    int i, opts, updt = 0;
 
 // Indicate whether we are solitary or not
@@ -194,8 +197,7 @@ int XrdOssSpace::Init(const char *aPath, const char *qPath, int isSOL)
    if (qPath)
       {qFname = strdup(qPath);
        if (!Quotas()) return 0;
-       sprintf(buff, "XRDOSSQUOTAFILE=%s", qFname);
-       putenv(strdup(buff));
+       XrdOucEnv::Export("XRDOSSQUOTAFILE", qFname);
       }
 
 // Construct the file path for the usage file
@@ -204,14 +206,13 @@ int XrdOssSpace::Init(const char *aPath, const char *qPath, int isSOL)
    strcpy(buff, aPath);
    aP = buff + strlen(aPath);
    if (*(aP-1) != '/') *aP++ = '/';
-   if ((iP = getenv("XRDNAME")) && *iP && strcmp(iP, "anon"))
+   if ((iP = XrdOucUtils::InstName(-1)))
       {strcpy(aP, iP); aP += strlen(iP); *aP++ = '/'; *aP = '\0';
        mkdir(buff, S_IRWXU | S_IRWXG);
       }
    strcpy(aP, ".Usage");
    uFname = strdup(buff);
-   sprintf(buff, "XRDOSSUSAGEFILE=%s", uFname);
-   putenv(strdup(buff));
+   XrdOucEnv::Export("XRDOSSUSAGEFILE", uFname);
 
 // First check if the file really exists, if not, create it
 //

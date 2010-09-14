@@ -370,7 +370,7 @@ void XrdXrootdProtocol::PidFile()
 {
     int rc, xfd;
     char buff[32], pidFN[1200];
-    char *ppath=XrdOucUtils::genPath(pidPath,getenv("XRDNAME"));
+    char *ppath=XrdOucUtils::genPath(pidPath,XrdOucUtils::InstName(-1));
     const char *xop = 0;
 
     if ((rc = XrdOucUtils::makePath(ppath,XrdOucUtils::pathMode)))
@@ -385,6 +385,7 @@ void XrdXrootdProtocol::PidFile()
                     }
             }
 
+    free(ppath);
     if (xop) eDest.Emsg("Config", errno, xop, pidFN);
 }
 
@@ -540,7 +541,7 @@ int XrdXrootdProtocol::xcksum(XrdOucStream &Config)
 
 // Verify we have an algoritm
 //
-   if (*palg == '/')
+   if (!palg || *palg == '/')
       {eDest.Emsg("Config", "chksum algorithm not specified"); return 1;}
    if (JobCKT) free(JobCKT);
    JobCKT = strdup(palg);

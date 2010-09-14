@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*                                                                            */
-/*                    X r d O u c C m s N o t i f y . c c                     */
+/*                    X r d N e t C m s N o t i f y . c c                     */
 /*                                                                            */
 /* (c) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*                            All Rights Reserved                             */
@@ -14,27 +14,27 @@
 #include <string.h>
 #include <sys/param.h>
 
+#include "XrdNet/XrdNetCmsNotify.hh"
 #include "XrdNet/XrdNetMsg.hh"
-#include "XrdOuc/XrdOucCmsNotify.hh"
 #include "XrdOuc/XrdOucUtils.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdSys/XrdSysTimer.hh"
 
-const char *XrdOucCmsNotifyCVSID = "$Id$";
+const char *XrdNetCmsNotifyCVSID = "$Id$";
 
 /******************************************************************************/
 /*                           C o n s t r u c t o r                            */
 /******************************************************************************/
   
-XrdOucCmsNotify::XrdOucCmsNotify(XrdSysError *erp, const char *aPath, 
+XrdNetCmsNotify::XrdNetCmsNotify(XrdSysError *erp, const char *aPath, 
                                  const char *iName, int Opts)
 {
    char buff[1024], *p;
 
 // Make sure we are not getting anon as an instance name
 //
-   if (iName && !strcmp("anon", iName)) iName = 0;
+   if (iName) iName = XrdOucUtils::InstName(iName,0);
 
 // Construct the path for notification
 //
@@ -56,7 +56,7 @@ XrdOucCmsNotify::XrdOucCmsNotify(XrdSysError *erp, const char *aPath,
 /*                            D e s t r u c t o r                             */
 /******************************************************************************/
   
-XrdOucCmsNotify::~XrdOucCmsNotify()
+XrdNetCmsNotify::~XrdNetCmsNotify()
 {
    if (destPath) free(destPath);
    if (xMsg) delete xMsg;
@@ -66,7 +66,7 @@ XrdOucCmsNotify::~XrdOucCmsNotify()
 /*                                  G o n e                                   */
 /******************************************************************************/
   
-int XrdOucCmsNotify::Gone(const char *Path, int isPfn)
+int XrdNetCmsNotify::Gone(const char *Path, int isPfn)
 {
    static const int   Cln = 6;
           const char *Cmd = (isPfn ? "gone  " : "rmdid ");
@@ -88,7 +88,7 @@ int XrdOucCmsNotify::Gone(const char *Path, int isPfn)
 /*                                  H a v e                                   */
 /******************************************************************************/
   
-int XrdOucCmsNotify::Have(const char *Path, int isPfn)
+int XrdNetCmsNotify::Have(const char *Path, int isPfn)
 {
    static const int   Cln = 6;
           const char *Cmd = (isPfn ? "have  " : "newfn ");
@@ -110,7 +110,7 @@ int XrdOucCmsNotify::Have(const char *Path, int isPfn)
 /*                                  S e n d                                   */
 /******************************************************************************/
   
-int XrdOucCmsNotify::Send(const char *theMsg, int theLen)
+int XrdNetCmsNotify::Send(const char *theMsg, int theLen)
 {
    static XrdSysMutex myMutex;
    int rc;

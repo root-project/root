@@ -138,6 +138,7 @@ char getchksum(const char *rooturl, char *chksum)
     XrdOucString url(rooturl);
     char *sum = 0, *ptb, *pte;
     long sumlen; 
+    int  pte_ptb;
 
     XrdClientAdmin *adm = new XrdClientAdmin(url.c_str());
     if (adm->Connect()) 
@@ -152,11 +153,12 @@ char getchksum(const char *rooturl, char *chksum)
             pte = strchr(ptb, ' ');
             if (pte == NULL) pte = &sum[sumlen];
         }
-        strncpy(chksum, ptb, pte - ptb);
-        chksum[pte - ptb] = '\0';
+        pte_ptb = pte - ptb;
+        strncpy(chksum, ptb, pte_ptb);
+        chksum[pte_ptb] = '\0';
         free(sum);
         delete adm;
-        return pte - ptb;  /* 0 means sever doesn't implement a checksum */
+        return pte_ptb;  /* 0 means sever doesn't implement a checksum */
     }
     else
         return -1;

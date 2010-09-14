@@ -22,9 +22,11 @@
 /*      P r e d e f i n e d   E n v i r o n m e n t   V a r i a b l e s       */
 /******************************************************************************/
 
+#define CMS_CID             "cms&cid"
 #define SEC_USER            "sec&user"
 #define SEC_HOST            "sec&host"
 #define SEC_POLICY          "sec&policy"
+#define XRD_INS             "xrd&ins"
   
 /******************************************************************************/
 /*                           X r d O u c M s u b s                            */
@@ -88,9 +90,9 @@ char *getVal(XrdOucMsubsInfo &Info, int vNum);
 enum vNum {vLFN =  1, vPFN =  2, vRFN =  3, vLFN2 =  4, vPFN2 =  5, vRFN2 =  6,
            vFM  =  7, vOFL =  8, vUSR =  9, vHST  = 10, vTID  = 11,
            vNFY = 12, vOPT = 13, vPTY = 14, vRID  = 15, vCGI  = 16,
-           vMDP = 17, vSRC = 18, vDST = 19};
+           vMDP = 17, vSRC = 18, vDST = 19, vCID  = 20, vINS  = 21};
 
-static const int   vMax = 20;
+static const int   vMax = 22;
 static const char *vName[vMax];
 
 XrdSysError *eDest;

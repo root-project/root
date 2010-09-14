@@ -36,7 +36,6 @@ int   ConfigProc(void);
 int   getUG(char *parm, uid_t &theUid, gid_t &theGid);
 int   setFDL();
 int   Setup(char *dfltp);
-void  UnderCover(void);
 void  Usage(int rc);
 int   xallow(XrdSysError *edest, XrdOucStream &Config);
 int   xapath(XrdSysError *edest, XrdOucStream &Config);

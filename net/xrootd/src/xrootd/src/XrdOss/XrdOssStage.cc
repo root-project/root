@@ -264,11 +264,10 @@ int XrdOssSys::Stage_RT(const char *Tid, const char *fn, XrdOucEnv &env,
 
 // Calculate the user priority
 //
-   if (OptFlags & XrdOss_USRPRTY)
-      {if ((val = env.Get(OSS_USRPRTY))
-       && (XrdOuca2x::a2i(OssEroute,"user prty",val,&rc,0)
-           || rc > OSS_MAX_PRTY)) return -XRDOSS_E8010;
-          else prty |= rc;
+   if (OptFlags & XrdOss_USRPRTY && (val = env.Get(OSS_USRPRTY)))
+      {if (XrdOuca2x::a2i(OssEroute,"user prty",val,&rc,0)
+       || rc > OSS_MAX_PRTY) return -XRDOSS_E8010;
+       prty |= rc;
       }
 
 // Queue the request at the right position and signal an xfr thread

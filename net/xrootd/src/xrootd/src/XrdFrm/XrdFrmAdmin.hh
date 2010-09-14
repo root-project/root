@@ -18,6 +18,7 @@
 #include "XrdOuc/XrdOucNSWalk.hh"
 
 class  XrdFrmFileset;
+class  XrdFrmProxy;
 class  XrdOucArgs;
 class  XrdOucTList;
 
@@ -55,7 +56,7 @@ void setArgs(char *argv);
 
 int  xeqArgs(char *Cmd);
 
-     XrdFrmAdmin() : finalRC(0) {}
+     XrdFrmAdmin() : frmProxy(0), frmProxz(0), finalRC(0) {}
     ~XrdFrmAdmin() {}
 
 private:
@@ -82,6 +83,8 @@ int  isXA(XrdOucNSWalk::NSEnt *nP);
 int  FindFail(XrdOucArgs &Spec);
 int  FindNolk(XrdOucArgs &Spec);
 int  FindUnmi(XrdOucArgs &Spec);
+
+void ConfigProxy();
 
 void Emsg(const char *tx1, const char *tx2=0, const char *tx3=0,
                            const char *tx4=0, const char *tx5=0);
@@ -111,6 +114,7 @@ int  QueryRfn(XrdOucArgs &Spec);
 int  QuerySpace(XrdOucArgs &Spec);
 int  QuerySpace(const char *Pfn, char *Lnk=0, int Lsz=0);
 int  QueryUsage(XrdOucArgs &Spec);
+int  QueryXfrQ(XrdOucArgs &Spec);
 
 int  Reloc(char *srcLfn, char *Space);
 int  RelocCP(const char *srcpfn, const char *trgpfn, off_t srcSz);
@@ -132,6 +136,11 @@ static const char *PinHelp;
 static const char *QueryHelp;
 static const char *RelocHelp;
 static const char *RemoveHelp;
+
+// Frm agent/proxy control
+//
+XrdFrmProxy *frmProxy;
+int          frmProxz;
 
 // Command control
 //

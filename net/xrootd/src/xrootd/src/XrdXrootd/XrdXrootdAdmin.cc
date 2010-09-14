@@ -96,7 +96,7 @@ int XrdXrootdAdmin::Init(XrdSysError *erp, XrdNetSocket *asock)
 void XrdXrootdAdmin::Login(int socknum)
 {
    const char *epname = "Admin";
-   char *request, *tp;
+   char *tp;
 
 // Attach the socket FD to a stream
 //
@@ -105,7 +105,7 @@ void XrdXrootdAdmin::Login(int socknum)
 
 // Get the first request
 //
-   if (!(request = Stream.GetLine()))
+   if (!Stream.GetLine())
       {eDest->Emsg(epname, "No admin login specified");
        return;
       }

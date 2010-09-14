@@ -110,9 +110,9 @@ int       Unlink(const char *, int Opts=0);
 
 static int P2URL(char *pbuff,int pblen,const char *path,XrdOucEnv *env=0);
 
-static char        *ConfigFN;       // -> Pointer to the config file name
-static char        *myHost;
-static char        *myName;
+static const char  *ConfigFN;       // -> Pointer to the config file name
+static const char  *myHost;
+static const char  *myName;
 static XrdOucTList *PanList;
 static char        *hdrData;
 static char         hdrLen;

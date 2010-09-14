@@ -68,7 +68,7 @@ void *XrdSysPlugin::getPlugin(const char *pname, int errok)
 //
    if (!(ep = dlsym(libHandle, pname)) && !errok)
       {char buff[1024];
-       printf(buff, "Unable to find %s in", pname);
+       sprintf(buff, "Unable to find %s in", pname);
        eDest->Emsg("getPlugin", buff, libPath, dlerror());
        return 0;
       }

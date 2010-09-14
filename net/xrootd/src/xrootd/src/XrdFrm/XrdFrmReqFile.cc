@@ -22,13 +22,19 @@ const char *XrdFrmReqFileCVSID = "$Id$";
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "XrdFrm/XrdFrmConfig.hh"
+#include "XrdFrm/XrdFrmCID.hh"
 #include "XrdFrm/XrdFrmReqFile.hh"
 #include "XrdFrm/XrdFrmTrace.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 
 using namespace XrdFrm;
+
+/******************************************************************************/
+/*                      S t a t i c   V a r i a b l e s                       */
+/******************************************************************************/
+  
+XrdSysMutex XrdFrmReqFile::rqMonitor::rqMutex;
 
 /******************************************************************************/
 /*                           C o n s t r u c t o r                            */
@@ -52,21 +58,13 @@ XrdFrmReqFile::XrdFrmReqFile(const char *fn, int aVal)
   
 void XrdFrmReqFile::Add(XrdFrmRequest *rP)
 {
+   rqMonitor rqMon(isAgent);
    XrdFrmRequest tmpReq;
-   char *qP;
    int fP;
 
 // Lock the file
 //
    if (!FileLock()) {FailAdd(rP->LFN, 0); return;}
-
-// Process the Opaque information
-//
-   if (!(qP = index(rP->LFN, '?'))) rP->Opaque = 0;
-      else {*qP = '\0';
-            if (*(qP+1)) rP->Opaque = qP-(rP->LFN)+1;
-               else rP->Opaque = 0;
-           }
 
 // Obtain a free slot
 //
@@ -80,20 +78,25 @@ void XrdFrmReqFile::Add(XrdFrmRequest *rP)
        fP = buf.st_size;
       }
 
-// Chain in the request
+// Chain in the request (registration requests go fifo)
 //
-   if (HdrData.First && HdrData.Last)
-      {if (!reqRead((void *)&tmpReq, HdrData.Last))
-          {FailAdd(rP->LFN, 1); return;}
-       tmpReq.Next = fP;
-       if (!reqWrite((void *)&tmpReq, HdrData.Last, 0))
-          {FailAdd(rP->LFN, 1); return;}
-      } else HdrData.First = fP;
-    HdrData.Last = fP;
+   if (rP->Options & XrdFrmRequest::Register)
+      {if (HdrData.First) rP->Next = HdrData.First;
+          else {HdrData.First = HdrData.Last = fP; rP->Next = 0;}
+      } else {
+       if (HdrData.First && HdrData.Last)
+          {if (!reqRead((void *)&tmpReq, HdrData.Last))
+              {FailAdd(rP->LFN, 1); return;}
+           tmpReq.Next = fP;
+           if (!reqWrite((void *)&tmpReq, HdrData.Last, 0))
+              {FailAdd(rP->LFN, 1); return;}
+          } else HdrData.First = fP;
+       HdrData.Last = fP; rP->Next = 0;
+      }
 
 // Write out the file
 //
-   rP->This = fP; rP->Next = 0;
+   rP->This = fP;
    if (!reqWrite(rP, fP)) FailAdd(rP->LFN, 0);
    FileLock(lkNone);
 }
@@ -104,6 +107,7 @@ void XrdFrmReqFile::Add(XrdFrmRequest *rP)
 
 void XrdFrmReqFile::Can(XrdFrmRequest *rP)
 {
+   rqMonitor rqMon(isAgent);
    XrdFrmRequest tmpReq;
    int Offs, numCan = 0, numBad = 0;
    struct stat buf;
@@ -144,6 +148,7 @@ void XrdFrmReqFile::Can(XrdFrmRequest *rP)
 
 void XrdFrmReqFile::Del(XrdFrmRequest *rP)
 {
+   rqMonitor rqMon(isAgent);
    XrdFrmRequest tmpReq;
 
 // Lock the file
@@ -198,7 +203,7 @@ int XrdFrmReqFile::Init()
    static const int Mode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
    XrdFrmRequest tmpReq;
    struct stat buf;
-   recEnt *First = 0, *rP, *pP, *tP;
+   recEnt *RegList = 0, *First = 0, *rP, *pP, *tP;
    int    Offs, rc, numreq = 0;
 
 // Open the lock file first in r/w mode
@@ -245,20 +250,36 @@ int XrdFrmReqFile::Init()
         if (*tmpReq.LFN == '\0' || !tmpReq.addTOD
         ||  tmpReq.Opaque >= int(sizeof(tmpReq.LFN))) continue;
         pP = 0; rP = First; tP = new recEnt(tmpReq); numreq++;
-        while(rP && rP->reqData.addTOD < tmpReq.addTOD) {pP=rP; rP=rP->Next;}
-        if (pP) pP->Next = tP;
-           else First    = tP;
-        tP->Next = rP;
+        if (tmpReq.Options & XrdFrmRequest::Register)
+           {tP->Next = RegList; RegList = tP;
+           } else {
+            while(rP && rP->reqData.addTOD < tmpReq.addTOD) {pP=rP;rP=rP->Next;}
+            if (pP) pP->Next = tP;
+               else First    = tP;
+            tP->Next = rP;
+           }
        }
+
+// Plase registration requests in the front
+//
+   while((rP = RegList))
+        {RegList = rP->Next;
+         rP->Next = First;
+         First = rP;
+        }
 
 // Now write out the file
 //
    DEBUG(numreq <<" request(s) recovered from " <<reqFN);
    rc = ReWrite(First);
 
-// Delete all the entries in memory
+// Delete all the entries in memory while referencing known instance names
 //
-   while((tP = First)) {First = tP->Next; delete tP;}
+   while((tP = First)) 
+        {First = tP->Next;
+         CID.Ref(tP->reqData.iName);
+         delete tP;
+        }
 
 // All done
 //
@@ -273,6 +294,7 @@ int XrdFrmReqFile::Init()
 char  *XrdFrmReqFile::List(char *Buff, int bsz, int &Offs,
                            XrdFrmRequest::Item *ITList, int ITNum)
 {
+   rqMonitor rqMon(isAgent);
    XrdFrmRequest tmpReq;
    int rc;
 
@@ -291,7 +313,8 @@ char  *XrdFrmReqFile::List(char *Buff, int bsz, int &Offs,
       if (rc == ReqSize)
          {Offs += ReqSize;
           if (*tmpReq.LFN == '\0' || !tmpReq.addTOD
-          ||  tmpReq.Opaque >= int(sizeof(tmpReq.LFN))) continue;
+          ||  tmpReq.Opaque >= int(sizeof(tmpReq.LFN))
+          ||  tmpReq.Options & XrdFrmRequest::Register) continue;
           FileLock(lkNone);
           if (!ITNum || !ITList) strlcpy(Buff, tmpReq.LFN, bsz);
              else ListL(tmpReq, Buff, bsz, ITList, ITNum);

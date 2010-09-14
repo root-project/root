@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile.in,v 1.38 2010/05/26 01:20:51 abh Exp $
+#              $Id: GNUmakefile.in,v 1.40 2010/07/30 03:18:25 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -15,8 +15,8 @@ XRDCOMMON  = XrdSys XrdOuc XrdNet XrdSec
 
 XRDSEC  = @xrdsec@
 
-SERVER  = XrdSfs XrdAcc XrdOdc Xrd \
-          XrdOlb XrdOss XrdBwm XrdFrm XrdCms XrdOfs XrdRootd XrdXrootd
+SERVER  = XrdSfs XrdAcc Xrd \
+          XrdOss XrdBwm XrdFrm XrdCms XrdOfs XrdRootd XrdXrootd
 
 XRDCLIENT = XrdClient
 
@@ -35,8 +35,6 @@ TYPE    = @type@
 
 RM      = @rmpath@
 LN      = @lnpath@
-
-SUNCACHE= @suncache@
 
 #
 # Envvars influencing what 'make install' does
@@ -150,19 +148,9 @@ XrdFrm: FORCE
 	@cd src/XrdFrm;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
-XrdOdc: FORCE
-	@echo $(XMSG) odc $(XDBG) component...
-	$(ECHO)cd src/XrdOdc;\
-	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
-
 XrdOfs: FORCE
 	@echo $(XMSG) ofs $(XDBG) component...
 	$(ECHO)cd src/XrdOfs;\
-	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
-
-XrdOlb: FORCE
-	@echo $(XMSG) olb $(XDBG) component...
-	$(ECHO)cd src/XrdOlb;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 XrdOss: FORCE

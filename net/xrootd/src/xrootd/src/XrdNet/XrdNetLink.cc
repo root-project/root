@@ -249,8 +249,8 @@ int XrdNetLink::Send(const char *Buff, int Blen, int tmo)
 
    if (!Blen && !(Blen = strlen(Buff))) return 0;
    if ('\n' != Buff[Blen-1])
-      {const struct iovec iodata[2] = {{IOV_INIT((char * const)Buff, Blen)},
-                                         {IOV_INIT((char *)"\n", 1)}};
+      {const struct iovec iodata[2] = {{IOV_INIT((char *)Buff, Blen)},
+                                       {IOV_INIT((char *)"\n", 1)}};
        return Send(iodata, 2, tmo);
       }
 
@@ -299,8 +299,8 @@ int XrdNetLink::Send(const char *dest, const char *Buff, int Blen, int tmo)
 
    if (!Blen && !(Blen = strlen(Buff))) return 0;
    if ('\n' != Buff[Blen-1])
-      {const struct iovec iodata[2] = {{IOV_INIT((char * const)Buff, Blen)}, 
-                                         {IOV_INIT((char *)"\n", 1)}};
+      {const struct iovec iodata[2] = {{IOV_INIT((char *)Buff, Blen)},
+                                       {IOV_INIT((char *)"\n", 1)}};
        return Send(dest, iodata, 2, tmo);
       }
 

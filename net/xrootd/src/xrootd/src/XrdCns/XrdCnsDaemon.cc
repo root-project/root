@@ -102,7 +102,7 @@ void XrdCnsDaemon::getEvents(XrdOucStream &Events, const char *Who)
               } }
 
          if (Miss) {MLog.Emsg("doEvents", Miss, "missing in event", eP);
-                    evP->Recycle();
+                    if (evP) evP->Recycle();
                     Miss = 0;
                     continue;
                    }

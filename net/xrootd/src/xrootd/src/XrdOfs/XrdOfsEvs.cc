@@ -429,10 +429,10 @@ const char *XrdOfsEvs::eName(int eNum)
 {
   static const char *eventName[] = {"Chmod",  "closer", "closew", "create",
                                     "fwrite", "mkdir",  "mv",     "openr",
-                                    "opnw",   "rm",     "rmdir"};
+                                    "opnw",   "rm",     "rmdir",  "trunc"};
 
   eNum = (eNum & Mask);
-  return (eNum < 0 || eNum > nCount ? "?" : eventName[eNum]);
+  return (eNum < 0 || eNum >= nCount ? "?" : eventName[eNum]);
 }
 
 /******************************************************************************/

@@ -141,6 +141,7 @@ XrdCmsNode::~XrdCmsNode()
 //
    if (Ident) free(Ident);
    if (myNID) free(myNID);
+   if (myName)free(myName);
 }
 
 /******************************************************************************/
@@ -1248,6 +1249,7 @@ const char *XrdCmsNode::do_Stats(XrdCmsRRData &Arg)
        Arg.Request.datalen = htons(szLen);
        Arg.Request.rrCode  = kYR_data;
        Link->Send(ioV, 2);
+       StatsData.UnLock();
        return 0;
       }
 

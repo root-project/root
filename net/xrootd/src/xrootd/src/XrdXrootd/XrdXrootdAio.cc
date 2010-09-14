@@ -539,7 +539,7 @@ void XrdXrootdAioReq::endRead()
 //
    if (aioError
    || (myIOLen > 0 && aiop->Result == aiop->buffp->bsize && (aioError=Read())))
-      {sendError(aiop->TIdent);
+      {sendError((char *)aiop->TIdent);
        Recycle(1, aiop);
        return;
       }

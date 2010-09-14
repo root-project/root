@@ -199,7 +199,8 @@ void  XrdCmsMeter::Init()
    calcSpace();
    if ((noSpace = (dsk_maxf < MinFree)) && !Config.asSolo())
       CmsState.Update(XrdCmsState::Space, 0);
-   XrdSysThread::Run(&monFStid,XrdCmsMeterRunFS,(void *)this,0,"FS meter");
+   if ((rc = XrdSysThread::Run(&monFStid, XrdCmsMeterRunFS, (void *)this, 0,
+      "FS meter"))) Say.Emsg("Meter", rc, "start filesystem meter.");
 
 // Document what we have
 //
@@ -223,6 +224,7 @@ void  XrdCmsMeter::Init()
 int XrdCmsMeter::Monitor(char *pgm, int itv)
 {
    char *mp, pp;
+   int rc;
 
 // Isolate the program name
 //
@@ -241,7 +243,8 @@ int XrdCmsMeter::Monitor(char *pgm, int itv)
 // Monitor() is a one-time call (otherwise unpredictable results may occur).
 //
    *mp = pp; monint = itv;
-   XrdSysThread::Run(&montid, XrdCmsMeterRun, (void *)this, 0, "Perf meter");
+   if ((rc = XrdSysThread::Run(&montid, XrdCmsMeterRun, (void *)this, 0,
+      "Perf meter"))) Say.Emsg("Meter", rc, "start performance meter.");
    Running = 1;
    return 0;
 }
@@ -436,14 +439,14 @@ void XrdCmsMeter::calcSpace()
 /*                                 S c a l e                                  */
 /******************************************************************************/
   
-// Note: Input quantity is always in kilobytes!
+// Note: Input quantity is always in megabytes!
 
-const char XrdCmsMeter::Scale(long long inval, long &outval)
+char XrdCmsMeter::Scale(long long inval, long &outval)
 {
     const char sfx[] = {'M', 'G', 'T', 'P'};
     unsigned int i;
 
-    for (i = 0; i < sizeof(sfx) && inval > 1024; i++) inval = inval/1024;
+    for (i = 0; i < sizeof(sfx)-1 && inval > 1024; i++) inval = inval/1024;
 
     outval = static_cast<long>(inval);
     return sfx[i];

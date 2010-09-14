@@ -4,24 +4,24 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.33 2009/11/19 03:25:11 abh Exp $
-## Checked in by $Author: abh $
+## Version info: $Id: Makefile.am,v 1.35 2010/08/06 15:12:35 feichtinger Exp $
+## Checked in by $Author: feichtinger $
 #######################################################################
 
 
 AM_CPPFLAGS = -I$(top_srcdir)/src $(READLINE_INCDIR) $(JAVA_INCDIR) 
 
 #############################################################################
-## extra directory definitions
+## extra directory definitions for install area
 javaclassdir = $(JAVA_CLASSPATH)
 xrootdclientincdir = $(includedir)/xrootd/XrdClient
 
 
 #############################################################################
-## deliverables
+## deliverables (to be built / installed)
 bin_PROGRAMS = xrdcp TestXrdClient TestXrdClient_read xrd xprep xrdstagetool
 
-## old automake does not know += operator, so we have to do this
+## old automake versions do not know += operator for adding to a variable, so we have to do this
 ## very awkwardly using the EXTRA_ definition
 if ENABLE_JAVAINT
   BUILDJAVA = libXrdClientAdminJNI.la
@@ -32,7 +32,7 @@ if ENABLE_PERLINT
 endif
 lib_LTLIBRARIES = libXrdClient.la $(BUILDPERL) $(BUILDJAVA)
 
-xrootdclientinc_HEADERS = XrdClient.hh XrdClientAdmin.hh \
+xrootdclientinc_HEADERS = XrdClient.hh XrdClientAdmin.hh XrdClientCallback.hh \
                XrdClientVector.hh XrdClientConnMgr.hh \
                XrdClientAbs.hh XrdClientUnsolMsg.hh XrdClientMessage.hh \
                XrdClientProtocol.hh XrdClientSock.hh XrdClientUrlInfo.hh \
@@ -82,7 +82,8 @@ libXrdClient_la_LIBADD = $(LIBSUNMATH) \
               ../XrdSut/libXrdSut.la \
               ../XrdNet/libXrdNet.la \
               ../XrdOuc/libXrdOuc.la \
-              ../XrdSys/libXrdSys.la
+              ../XrdSys/libXrdSys.la \
+              ../XrdNet/libXrdNetUtil.la
 
 clientlibs =  libXrdClient.la \
               -ldl $(LIBZ)
@@ -151,6 +152,7 @@ if REBUILD_SWIGFILE
 $(SWIG_TARGETS): XrdClientAdmin_c.hh
 	echo Creating swig perl interface
 	$(SWIG) -perl -o $@ $(srcdir)/XrdClientAdmin_c.hh
+CLEANFILES = $(SWIG_TARGETS)
 else
 XrdClientAdmin_c_wrap.cc: XrdClientAdmin_c_wrap.c
 	cp $(srcdir)/XrdClientAdmin_c_wrap.c XrdClientAdmin_c_wrap.cc

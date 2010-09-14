@@ -21,7 +21,10 @@
 #include "XrdFrm/XrdFrmAdmin.hh"
 #include "XrdFrm/XrdFrmConfig.hh"
 #include "XrdFrm/XrdFrmFiles.hh"
+#include "XrdFrm/XrdFrmProxy.hh"
+#include "XrdFrm/XrdFrmRequest.hh"
 #include "XrdFrm/XrdFrmTrace.hh"
+#include "XrdFrm/XrdFrmUtils.hh"
 #include "XrdOss/XrdOssPath.hh"
 #include "XrdOss/XrdOssSpace.hh"
 #include "XrdOuc/XrdOucArgs.hh"
@@ -195,5 +198,68 @@ int XrdFrmAdmin::QueryUsage(XrdOucArgs &Spec)
           Msg(buff);
          }
       } while((vP = vP->Next));
+   return 0;
+}
+  
+/******************************************************************************/
+/*                             Q u e r y X f r Q                              */
+/******************************************************************************/
+  
+int XrdFrmAdmin::QueryXfrQ(XrdOucArgs &Spec)
+{
+   static struct {const char *qName; char qType;} qN2T[] =
+                 {{"all",    XrdFrmProxy::opAll},
+                  {"get",    XrdFrmProxy::opGet},
+                  {"migr",   XrdFrmProxy::opMig},
+                  {"put",    XrdFrmProxy::opPut},
+                  {"migrate",XrdFrmProxy::opMig},
+                  {"stage",  XrdFrmProxy::opStg},
+                  {0, 0}};
+
+   XrdFrmRequest::Item Items[XrdFrmRequest::getLast];
+   XrdFrmProxy::Queues xfrQ(0);
+   char *qName;
+   int i, qPrty, QList = 0;
+
+// Check for proxy initialization
+//
+   if (!frmProxy && !frmProxz) ConfigProxy();
+
+// Get the first q-type
+//
+   while((qName = Spec.getarg()))
+        {i = 0;
+         while(qN2T[i].qName && strcmp(qN2T[i].qName, qName)) i++;
+         if (qN2T[i].qName) QList |= qN2T[i].qType;
+            else break;
+        }
+
+// Set queue if none specified
+//
+   if (!QList) QList = XrdFrmProxy::opAll;
+
+// Check if priority
+//
+   if (qName && strlen(qName) == 1 && *qName >= '0' && *qName <= '9')
+      {qPrty = *qName - '0';
+       if (qPrty > XrdFrmRequest::maxPrty)
+          {Emsg("Invalid xfrq priority - ", qName); return 1;}
+       qName = Spec.getarg();
+      } else qPrty = -1;
+
+// Process variable is we have an unmatched name
+//
+   i = 0;
+   if (qName)
+      {do {if (XrdFrmUtils::MapV2I(qName, Items[i])) i++;
+              else {Emsg("Invalid xfrq variable - ", qName); return 1;}
+          } while((qName = Spec.getarg()) && i < XrdFrmRequest::getLast);
+       if (qName) {Emsg("Too many xfrq variables starting at ",qName);return 1;}
+      } else Items[i++] = XrdFrmRequest::getLFN;
+
+// Produce the listing
+//
+   if (!frmProxy) {Emsg("Unable to list the xfrq."); return 1;}
+   if (!frmProxy->List(QList, qPrty, Items, i)) Msg("No entries found.");
    return 0;
 }

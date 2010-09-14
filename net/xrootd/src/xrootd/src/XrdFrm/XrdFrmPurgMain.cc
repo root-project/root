@@ -14,13 +14,15 @@ const char *XrdFrmPurgMainCVSID = "$Id$";
 
 /* This is the "main" part of the frm_purge command. Syntax is:
 */
-static const char *XrdFrmOpts  = ":c:dfhk:l:n:O:Tv";
+static const char *XrdFrmOpts  = ":bc:dfhk:l:n:O:Tv";
 static const char *XrdFrmUsage =
 
-  " [-c <cfgfile>] [-d] [-f] [-k {num | sz{k|m|g}] [-l <lfile>] [-n name]"
+  " [-b] [-c <cfgfile>] [-d] [-f] [-k {num | sz{k|m|g}] [-l <lfile>] [-n name]"
   " [-O free[,hold]] [-T] [-v] [<spaces>] [<paths>]\n";
 /*
 Where:
+
+   -b     Run as a true daemon process in the background.
 
    -c     The configuration file. The default is '/opt/xrootd/etc/xrootd.cf'
 

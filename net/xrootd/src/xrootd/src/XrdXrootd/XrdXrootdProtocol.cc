@@ -357,6 +357,7 @@ int XrdXrootdProtocol::Process2()
           case kXR_sync:     return do_Sync();
           case kXR_close:    return do_Close();
           case kXR_truncate: if (!Request.header.dlen) return do_Truncate();
+                             break;
           case kXR_query:    if (!Request.header.dlen) return do_Qfh();
           default:           break;
          }

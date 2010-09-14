@@ -4,18 +4,26 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.8 2010/01/12 15:04:06 ganis Exp $
-## Checked in by $Author: ganis $
+## Version info: $Id: Makefile.am,v 1.9 2010/08/05 15:25:29 feichtinger Exp $
+## Checked in by $Author: feichtinger $
 #######################################################################
+
+AM_CPPFLAGS = -I$(top_srcdir)/src
+
+#############################################################################
+## extra installation directory definitions
 xrootdsecincdir = $(includedir)/xrootd/XrdSec
 
+#############################################################################
+## deliverables (to be built / installed)
 xrootdsecinc_HEADERS = XrdSecInterface.hh XrdSecEntity.hh XrdSecTLayer.hh
 
 lib_LTLIBRARIES = libXrdSec.la
 
 bin_PROGRAMS = testclient testserver
 
-INCLUDES = -I$(top_srcdir)/src
+#############################################################################
+# Build rules
 
 libXrdSec_la_SOURCES = \
         XrdSecClient.cc XrdSecInterface.hh XrdSecEntity.hh      \
@@ -41,7 +49,8 @@ testclient_LDADD =   libXrdSec.la \
                      -ldl \
                      ../XrdOuc/libXrdOuc.la \
                      ../XrdNet/libXrdNet.la \
-                     ../XrdSys/libXrdSys.la
+                     ../XrdSys/libXrdSys.la \
+                     ../XrdNet/libXrdNetUtil.la
 
 testserver_SOURCES = XrdSectestServer.cc
 testserver_LDFLAGS = -static
@@ -49,4 +58,5 @@ testserver_LDADD = libXrdSec.la \
                    -ldl \
                    ../XrdOuc/libXrdOuc.la \
                    ../XrdNet/libXrdNet.la \
-                   ../XrdSys/libXrdSys.la
+                   ../XrdSys/libXrdSys.la \
+                   ../XrdNet/libXrdNetUtil.la

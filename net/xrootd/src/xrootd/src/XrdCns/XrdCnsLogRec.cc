@@ -59,7 +59,7 @@ XrdCnsLogRec *XrdCnsLogRec::Alloc()
 //
    rP->Next = 0;
    memset(&rP->Rec.Hdr, 0, sizeof(struct Ctl));
-   memset(rP->Rec.Data.Mode, ' ', FixDLen);
+   memset(&rP->Rec.Data, ' ', FixDLen);
    rP->Rec.Data.Mode[2]  = '0';
    rP->Rec.Data.SorT[11] = '0';
    rP->Rec.Data.Type = '?';

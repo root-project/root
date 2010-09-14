@@ -33,6 +33,16 @@ using namespace XrdFrm;
 /*                   C l a s s   X r d F r m F i l e s e t                    */
 /******************************************************************************/
 /******************************************************************************/
+/*                           C o n s t r u c t o r                            */
+/******************************************************************************/
+  
+XrdFrmFileset::XrdFrmFileset(XrdFrmFileset *sP, XrdOucTList *diP)
+              : Next(sP), dInfo(diP), dlkFD(-1), flkFD(-1)
+{  memset(File, 0, sizeof(File));
+   if (diP) diP->ival[dRef]++;
+}
+
+/******************************************************************************/
 /*                            D e s t r u c t o r                             */
 /******************************************************************************/
   
@@ -50,10 +60,7 @@ XrdFrmFileset::~XrdFrmFileset()
 
 // If there is a shared directory buffer, decrease reference count, delete if 0
 //
-   if (dInfo)
-      {dInfo->ival[dRef]--;
-       if (!dInfo) delete dInfo;
-      }
+   if (dInfo && ((dInfo->ival[dRef] -= 1) <= 0)) delete dInfo;
 }
 
 /******************************************************************************/

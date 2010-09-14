@@ -1,8 +1,8 @@
-#ifndef __OUCCMSNOTIFY_HH
-#define __OUCCMSNOTIFY_HH
+#ifndef __NETCMSNOTIFY_HH
+#define __NETCMSNOTIFY_HH
 /******************************************************************************/
 /*                                                                            */
-/*                    X r d O u c C m s N o t i f y . h h                     */
+/*                    X r d N e t C m s N o t i f y . h h                     */
 /*                                                                            */
 /* (c) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*                            All Rights Reserved                             */
@@ -16,7 +16,7 @@
 class XrdNetMsg;
 class XrdSysError;
 
-class XrdOucCmsNotify
+class XrdNetCmsNotify
 {
 public:
 
@@ -27,9 +27,9 @@ int  Have(const char *Path, int isPfn=1);
 static const int isServ = 0x0001;
 static const int noPace = 0x0002;
 
-             XrdOucCmsNotify(XrdSysError *erp, const char *aPath,
+             XrdNetCmsNotify(XrdSysError *erp, const char *aPath,
                              const char *iName, int Opts=0);
-            ~XrdOucCmsNotify();
+            ~XrdNetCmsNotify();
 
 private:
 int  Send(const char *Buff, int Blen);

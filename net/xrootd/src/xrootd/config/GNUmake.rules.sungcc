@@ -1,4 +1,4 @@
-#              $Id: GNUmake.rules.sungcc,v 1.5 2009/07/15 01:54:03 abh Exp $
+#              $Id: GNUmake.rules.sungcc,v 1.6 2010/07/29 01:23:11 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                 R u l e s   f o r   g e n e r i c   g c c                    #
@@ -18,4 +18,3 @@ TYPESHLIB  = so
 
 TYPELIBS   =  -lnsl -lsocket $(PTHREAD) -lrt -ldl -lc
 TYPELIBSF  = -lsendfile
-TYPELIBSM  = -lsunmath

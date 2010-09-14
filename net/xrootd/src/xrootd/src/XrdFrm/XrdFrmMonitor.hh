@@ -48,11 +48,12 @@ static void              fillHeader(XrdXrootdMonHeader *hdr,
                                     const char id, int size);
 static int               Send(int mmode, void *buff, int size);
 
-static int                monFD;
 static char              *Dest1;
 static int                monMode1;
+static int                monFD1;
 static struct sockaddr    InetAddr1;
 static char              *Dest2;
+static int                monFD2;
 static int                monMode2;
 static struct sockaddr    InetAddr2;
 static kXR_int32          startTime;

@@ -312,10 +312,6 @@ int XrdCmsParser::Decode(const char *Man, CmsRRHdr &hdr, char *data, int dlen,
                       <<msg <<"' due to " << Mgr <<' ' <<Path);
    }
 
-// Debug
-//
-    if (msglen >= int(XrdOucEI::Max_Error_Len)) {DEBUG("Truncated: " <<msg);}
-
 // Insert the information into the error object
 //
    eInfo->setErrInfo(msgval, msg);

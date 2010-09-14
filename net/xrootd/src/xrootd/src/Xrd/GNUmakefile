@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.30 2009/06/23 19:13:50 abh Exp $
+#              $Id: GNUmakefile,v 1.32 2010/07/30 03:18:29 abh Exp $
 
 #-----------------------------------------------------------------------------#
 #                            E n v i r o n m e n t                            #
@@ -67,16 +67,8 @@ anything: $(TARGETS)
 $(TARGETS): $(OBJECTS)
 	@echo Creating archive $(LIBRARY) 
 	$(ECHO)rm -f $(LIBRARY)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-	          if [ "x$(SUNCACHE)" != "x" ]; then \
-	             $(CC) -xar -o $(LIBRARY) $(OBJDIR)$(SUNCACHE)/*/*.o; \
-		  else \
-	             $(CC) -xar -o $(LIBRARY) $(OBJECTS); \
-		  fi; \
-	       else \
-	          ar -rc $(LIBRARY) $(OBJECTS); \
-	          ranlib $(LIBRARY); \
-               fi
+	$(ECHO)ar -rc $(LIBRARY) $(OBJECTS)
+	$(ECHO)ranlib $(LIBRARY)
 
 $(OBJDIR)/XrdBuffer.o:    XrdBuffer.cc   XrdBuffer.hh     XrdTrace.hh \
                           XrdSysError.hh XrdSysPthread.hh XrdOucTrace.hh \
@@ -103,7 +95,7 @@ $(OBJDIR)/XrdInet.o:    XrdInet.hh         XrdInet.cc   \
 	@echo Compiling XrdInet.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdInet.o XrdInet.cc
 
-$(OBJDIR)/XrdInfo.o: XrdInfo.hh
+$(OBJDIR)/XrdInfo.o: XrdInfo.hh XrdInfo.cc ../XrdVersion.hh ../../LICENSE
 	@echo Compiling XrdInfo.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdInfo.o XrdInfo.cc
 

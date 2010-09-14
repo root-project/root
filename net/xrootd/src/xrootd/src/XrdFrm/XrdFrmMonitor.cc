@@ -33,11 +33,12 @@ using namespace XrdFrm;
 /*                     S t a t i c   A l l o c a t i o n                      */
 /******************************************************************************/
   
-int                XrdFrmMonitor::monFD;
 char              *XrdFrmMonitor::Dest1      = 0;
+int                XrdFrmMonitor::monFD1     = -1;
 int                XrdFrmMonitor::monMode1   = 0;
 struct sockaddr    XrdFrmMonitor::InetAddr1;
 char              *XrdFrmMonitor::Dest2      = 0;
+int                XrdFrmMonitor::monFD2     = -1;
 int                XrdFrmMonitor::monMode2   = 0;
 struct sockaddr    XrdFrmMonitor::InetAddr2;
 kXR_int32          XrdFrmMonitor::startTime  = 0;
@@ -50,15 +51,18 @@ char               XrdFrmMonitor::monSTAGE   = 0;
 
 void XrdFrmMonitor::Defaults(char *dest1, int mode1, char *dest2, int mode2)
 {
-   int mmode;
 
-// Make sure if we have a dest1 we have mode
+// Make sure if we have a proper destinations and modes
+//
+   if (dest1 && !mode1) {free(dest1); dest1 = 0; mode1 = 0;}
+   if (dest2 && !mode2) {free(dest2); dest2 = 0; mode2 = 0;}
+
+// Propogate the destinations
 //
    if (!dest1)
       {mode1 = (dest1 = dest2) ? mode2 : 0;
        dest2 = 0; mode2 = 0;
-      } else if (!dest2) mode2 = 0;
-
+      }
 
 // Set the default destinations (caller supplied strdup'd strings)
 //
@@ -69,12 +73,11 @@ void XrdFrmMonitor::Defaults(char *dest1, int mode1, char *dest2, int mode2)
 
 // Set overall monitor mode
 //
-   mmode     = mode1 | mode2;
-   monSTAGE  = (mmode & XROOTD_MON_STAGE? 1 : 0);
+   monSTAGE  = ((mode1 | mode2) & XROOTD_MON_STAGE ? 1 : 0);
 
 // Do final check
 //
-   if (Dest1 == 0 && Dest2 == 0) isEnabled = 0;
+   isEnabled = (Dest1 == 0 && Dest2 == 0 ? 0 : 1);
 }
 
 /******************************************************************************/
@@ -91,11 +94,6 @@ int XrdFrmMonitor::Init()
 //
    if (!isEnabled) return 1;
 
-// Allocate a socket for the primary destination
-//
-   if (!myNetwork.Relay(monDest, Dest1, XRDNET_SENDONLY)) return 0;
-   monFD = monDest.fd;
-
 // Get the address of the primary destination
 //
    if (!XrdNetDNS::Host2Dest(Dest1, InetAddr1, &etext))
@@ -103,11 +101,20 @@ int XrdFrmMonitor::Init()
        return 0;
       }
 
-// Get the address of the alternate destination, if we happen to have one
+// Allocate a socket for the primary destination
 //
-   if (Dest2 && !XrdNetDNS::Host2Dest(Dest2, InetAddr2, &etext))
-      {Say.Emsg("Monitor", "setup monitor collector;", etext);
-       return 0;
+   if (!myNetwork.Relay(monDest, Dest1, XRDNET_SENDONLY)) return 0;
+   monFD1 = monDest.fd;
+
+// Do the same for the secondary destination
+//
+   if (Dest2)
+      {if (!XrdNetDNS::Host2Dest(Dest2, InetAddr2, &etext))
+          {Say.Emsg("Monitor", "setup monitor collector;", etext);
+           return 0;
+          }
+       if (!myNetwork.Relay(monDest, Dest2, XRDNET_SENDONLY)) return 0;
+       monFD2 = monDest.fd;
       }
 
 // All done
@@ -200,14 +207,14 @@ int XrdFrmMonitor::Send(int monMode, void *buff, int blen)
     int rc1, rc2;
 
     sendMutex.Lock();
-    if (monMode & monMode1) 
-       {rc1  = (int)sendto(monFD, buff, blen, 0,
+    if (monMode & monMode1 && monFD1 >= 0)
+       {rc1  = (int)sendto(monFD1, buff, blen, 0,
                         (const struct sockaddr *)&InetAddr1, sizeof(sockaddr));
         DEBUG(blen <<" bytes sent to " <<Dest1 <<" rc=" <<(rc1 ? errno : 0));
        }
        else rc1 = 0;
-    if (monMode & monMode2) 
-       {rc2 = (int)sendto(monFD, buff, blen, 0,
+    if (monMode & monMode2 && monFD2 >= 0)
+       {rc2 = (int)sendto(monFD2, buff, blen, 0,
                         (const struct sockaddr *)&InetAddr2, sizeof(sockaddr));
         DEBUG(blen <<" bytes sent to " <<Dest2 <<" rc=" <<(rc2 ? errno : 0));
        }

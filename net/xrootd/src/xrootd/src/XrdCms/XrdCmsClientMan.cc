@@ -21,8 +21,6 @@ const char *XrdCmsClientManCVSID = "$Id$";
 #include "XrdCms/XrdCmsLogin.hh"
 #include "XrdCms/XrdCmsTrace.hh"
 
-#include "XrdOdc/XrdOdcFinder.hh"
-
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysTimer.hh"
 
@@ -40,10 +38,6 @@ extern        XrdInet *XrdXrootdNetwork;
 XrdNetBufferQ XrdCmsClientMan::BuffQ(2048,64);
 
 char          XrdCmsClientMan::doDebug   = 0;
-
-char          XrdCmsClientMan::v1Mode    = 0;
-
-XrdOdcFinder *XrdCmsClientMan::oldFinder = 0;
 
 char         *XrdCmsClientMan::ConfigFN  = 0;
 
@@ -211,8 +205,7 @@ void *XrdCmsClientMan::Start()
 
 // First step is to connect to the manager
 //
-   while(Hookup())
-      {
+   do {Hookup();
        // Now simply start receiving messages on the stream. When we get a
        // respwait reply then we must be assured that the object representing
        // the request is added to the queue before the actual reply arrives.
@@ -238,20 +231,10 @@ void *XrdCmsClientMan::Start()
        //
        Say.Emsg("ClientMan", "Disconnected from", Host);
        XrdSysTimer::Snooze(dally);
-      };
+      } while(1);
 
-// If we can't hookup then we must have detected protocol version 1 manager.
-// We can switch to protocol version 1 if we haven't done so already.
+// We should never get here
 //
-   manMutex.Lock();
-   if (!v1Mode)
-      {Say.Emsg("ClientMan", "Reconfiguring for olbd communications.");
-       oldFinder = (XrdOdcFinder *)new XrdOdcFinderRMT(Say.logger(), 0);
-       if (!oldFinder->Configure(ConfigFN))
-          {Say.Emsg("ClientMan", Host, "disabled; olbd configuration failed!");
-           delete oldFinder; oldFinder = 0;
-          } else v1Mode = 1;
-      }
    return (void *)0;
 }
 
@@ -306,18 +289,14 @@ int  XrdCmsClientMan::whatsUp(const char *user, const char *path)
 int XrdCmsClientMan::Hookup()
 {
    EPNAME("Hookup");
-   static int oldVersion = 0, newVersion = 0;
-
    CmsLoginData Data;
    XrdLink *lp;
    char buff[256];
-   int rc, oldWait, tries = 12, opts = 0, reject = 2;
+   int rc, oldWait, tries = 12, opts = 0;
 
 // Turn off our debugging and version flags
 //
    manMutex.Lock();
-   oldVersion &= ~manMask;
-   newVersion &= ~manMask;
    doDebug    &= ~manMask;
    manMutex.UnLock();
 
@@ -332,29 +311,14 @@ int XrdCmsClientMan::Hookup()
        memset(&Data, 0, sizeof(Data));
        Data.Mode = CmsLoginData::kYR_director;
        Data.HoldTime = static_cast<int>(getpid());
-       if (!(rc = XrdCmsLogin::Login(lp, Data)))
-          {manMutex.Lock();
-           if ((Data.Version < 2 && newVersion)
-           ||  (Data.Version > 1 && oldVersion))
-              {manMutex.UnLock();
-               sprintf(buff, "using different protocol(v %d)", Data.Version);
-               Say.Emsg("ClientMan", Host, buff, "than other managers!");
-               Say.Emsg("ClientMan", "Mixed protocols unsupported; will try",
-                                     Host, "again in 3 minutes.");
-               lp->Close();
-               XrdSysTimer::Snooze(3*60);
-               continue;
-              } else break;
-          }
+       if (!(rc = XrdCmsLogin::Login(lp, Data))) break;
        lp->Close();
-       if (rc == kYR_ENETUNREACH && !--reject) return 0;
        XrdSysTimer::Snooze(dally);
       } while(1);
 
 // Establish global state
 //
-   if (Data.Version > 1) newVersion |= manMask;
-      else               oldVersion |= manMask;
+   manMutex.Lock();
    doDebug |= (Data.Mode & CmsLoginData::kYR_debug ? manMask : 0);
    manMutex.UnLock();
 

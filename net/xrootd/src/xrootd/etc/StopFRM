@@ -86,7 +86,7 @@ Stop() {
         frmpgm=$2
         frmfnx=$3
         set -- ''
-        set -- `ps -e -o pid -o comm | grep $frmpgm | awk '{print $1}'`
+        set -- `ps -e -o pid -o args | grep $frmpgm | awk '$0 !~ /grep/ {print $1}'`
 
         if [ -z "$1" ]; then
            Emsg "Unable to find $XRDUSER $frmwho daemon."

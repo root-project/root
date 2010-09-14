@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.21 2010/05/26 01:22:55 abh Exp $
+#              $Id: GNUmakefile,v 1.25 2010/07/30 03:18:41 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -6,10 +6,12 @@
   
 include ../GNUmake.env
 
-BINLIBS = -L$(LIBDIR) -lXrdOss -lXrdFrm -lXrdOuc -lXrdNet -lXrdOuc -lXrd -lXrdSys $(TYPELIBSF)
+BINLIBS = -L$(LIBDIR) -lXrdOss -lXrdFrm -lXrdNet -lXrdOuc -lXrdNetUtil \
+                      -lXrd -lXrdSys $(TYPELIBSF)
 
-LIBDEPS = $(LIBDIR)/libXrdOss.a $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdNet.a \
-          $(LIBDIR)/libXrdFrm.a $(LIBDIR)/libXrdSys.a $(LIBDIR)/libXrd.a
+LIBDEPS =  $(LIBDIR)/libXrdFrm.a     $(LIBDIR)/libXrdNet.a \
+           $(LIBDIR)/libXrdNetUtil.a $(LIBDIR)/libXrdOss.a \
+           $(LIBDIR)/libXrdOuc.a     $(LIBDIR)/libXrdSys.a $(LIBDIR)/libXrd.a
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -111,7 +113,6 @@ vpath YProtocol% ../XProtocol
 vpath XrdCms%    ../XrdCms
 vpath XrdFrm%    ../XrdFrm
 vpath XrdNet%    ../XrdNet
-vpath XrdOdc%    ../XrdOdc
 vpath XrdOss%    ../XrdOss
 vpath XrdOuc%    ../XrdOuc
 vpath XrdSec%    ../XrdSec
@@ -143,11 +144,6 @@ $(LIBRARY): $(OBJCLNT) $(OBJBOTH)
 	$(ECHO)rm -f $(LIBRARY)
 	$(ECHO)ar -rc $(LIBRARY) $(OBJCLNT) $(OBJBOTH)
 	$(ECHO)ranlib $(LIBRARY)
-	$(ECHO)if [ "x$(SUNCACHE)" != "x" ]; then \
-	   if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-	      ar -rc $(LIBRARY) $(OBJDIR)$(SUNCACHE)/*/*.o; \
-	   fi;\
-	fi
 
 $(OBJDIR)/XrdCmsAdmin.o:     XrdCmsAdmin.cc      XrdCmsAdmin.hh \
                              XrdCmsState.hh      XrdCmsConfig.hh \
@@ -171,7 +167,8 @@ $(OBJDIR)/XrdCmsCache.o:     XrdCmsCache.cc      XrdCmsCache.hh \
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCmsCache.o XrdCmsCache.cc
 
 $(OBJDIR)/XrdCmsClientConfig.o: XrdCmsClientConfig.cc   XrdCmsClientConfig.hh \
-                                XrdCmsClientMsg.hh      XrdCmsTrace.hh \
+                                XrdCmsClientMsg.hh      XrdCmsSecurity.hh \
+                                XrdCmsTrace.hh \
                                 XrdNetDNS.hh            XrdSysHeaders.hh \
                                 XrdOuca2x.hh            XrdOucEnv.hh \
                                 XrdOucStream.hh         XrdOucTList.hh \
@@ -191,7 +188,7 @@ $(OBJDIR)/XrdCmsClientMsg.o: XrdCmsClientMsg.cc    XrdCmsClientMsg.hh \
 $(OBJDIR)/XrdCmsClientMan.o: XrdCmsClientMan.cc   XrdCmsClientMan.hh \
                              XrdCmsClientMsg.hh   XrdCmsLogin.hh \
                              XrdCmsResp.hh        XrdCmsTrace.hh \
-                             XrdNetBuffer.hh      XrdOdcFinder.hh \
+                             XrdNetBuffer.hh \
                              XrdOucErrInfo.hh \
                              XrdSysError.hh       XrdSysPthread.hh \
                              XrdSysTimer.hh \
@@ -247,7 +244,7 @@ $(OBJDIR)/XrdCmsFinder.o:    XrdCmsFinder.cc     XrdCmsFinder.hh \
                              XrdCmsParser.hh     XrdCmsResp.hh \
                              XrdCmsRRData.hh     XrdCmsTrace.hh \
                              XrdNetDNS.hh        XrdNetOpts.hh \
-                             XrdNetSocket.hh     XrdOdcFinder.hh \
+                             XrdNetSocket.hh \
                              XrdOucEnv.hh        XrdOucErrInfo.hh \
                              XrdOucReqID.hh  \
                              XrdOucStream.hh     XrdOucUtils.hh \
@@ -450,7 +447,8 @@ $(OBJDIR)/XrdCmsRouting.o:   XrdCmsRouting.cc    XrdCmsRouting.hh \
 
 $(OBJDIR)/XrdCmsSecurity.o:  XrdCmsSecurity.cc   XrdCmsSecurity.hh \
                              XrdCmsTalk.hh       XrdCmsTrace.hh \
-                             XrdOucErrInfo.hh \
+                             XrdOucEnv.hh        XrdOucErrInfo.hh \
+                             XrdOucTList.hh \
                              XrdSecInterface.hh \
                              XrdSysError.hh      XrdSysPthread.hh \
                              XrdLink.hh \

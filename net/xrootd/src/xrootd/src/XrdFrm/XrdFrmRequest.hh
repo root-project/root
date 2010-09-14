@@ -20,7 +20,8 @@ char      LFN[3072];    // Logical File Name ('\0' optional opaque)
 char      User[256];    // User trace identifier
 char      ID[40];       // Request ID
 char      Notify[512];  // Notification path
-char      Reserved[120];
+char      Reserved[88];
+char      iName[32];    // Instance name
 char      csValue[64];  // Checksum value (dependent on csType).
 long long addTOD;       // Time added to queue
 int       This;         // Offset to this request
@@ -40,6 +41,7 @@ static const int msgSucc  = 0x00000002;
 static const int makeRW   = 0x00000004;
 static const int Migrate  = 0x00000010;
 static const int Purge    = 0x00000020;
+static const int Register = 0x00000040;
 
 // Checksum types (not all of which are supported)
 //
@@ -59,7 +61,7 @@ static const int maxPQE   = 3;
 // The following define what can be listed from the queue
 //
 enum Item {getOBJ = 0, getLFN, getOBJCGI, getLFNCGI, getMODE, getNOTE, getOP,
-           getPRTY,    getQWT, getRID,    getTOD,    getUSER};
+           getPRTY,    getQWT, getRID,    getTOD,    getUSER, getLast};
 
 // These define possible queues along with the "nil" queue
 //

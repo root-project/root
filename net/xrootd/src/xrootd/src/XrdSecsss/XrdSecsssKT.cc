@@ -58,6 +58,7 @@ XrdSecsssKT::XrdSecsssKT(XrdOucErrInfo *eInfo, const char *kPath,
                          xMode oMode, int refrInt)
 {
    static const char *eText = "Unable to start keytab refresh thread";
+   const char *devRand = "/dev/urandom";
    struct stat sbuf;
    pthread_t pid;
    int retc;
@@ -70,9 +71,10 @@ XrdSecsssKT::XrdSecsssKT(XrdOucErrInfo *eInfo, const char *kPath,
 
 // Prepare /dev/random if we have it
 //
+   if (stat(devRand, &sbuf)) devRand = "/dev/random";
    if ((randFD = open("/dev/random", O_RDONLY)) < 0
    && oMode != isClient && errno != ENOENT)
-      eMsg("sssKT", errno, "Unable to open /dev/random");
+      eMsg("sssKT",errno,"Unable to generate random key"," opening ",devRand);
 
 // First get the stat information for the file
 //

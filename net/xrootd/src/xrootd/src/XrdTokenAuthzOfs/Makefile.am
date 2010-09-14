@@ -6,8 +6,8 @@
 ##         Derek Feichtinger <derek.feichtinger@cern.ch>
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.7 2007/06/07 10:45:07 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id: Makefile.am,v 1.8 2010/07/28 02:07:14 abh Exp $
+## Checked in by $Author: abh $
 #######################################################################
 
 lib_LTLIBRARIES = libXrdTokenAuthzOfs.la
@@ -50,7 +50,6 @@ libXrdTokenAuthzOfs_la_LIBTOOLFLAGS = --tag=disable-static
 
 libXrdTokenAuthzOfs_la_LIBADD = $(top_builddir)/src/XrdAcc/libXrdAcc.la \
                          $(top_builddir)/src/XrdOss/libXrdOss.la \
-                         $(top_builddir)/src/XrdOdc/libXrdOdc.la \
                          $(top_builddir)/src//XrdNet/libXrdNet.la \
                          $(top_builddir)/src//XrdOuc/libXrdOuc.la \
                          $(top_builddir)/src/XrdXr/libXrdXr.la \

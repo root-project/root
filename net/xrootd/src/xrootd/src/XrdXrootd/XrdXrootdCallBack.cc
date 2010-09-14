@@ -156,9 +156,9 @@ void XrdXrootdCBJob::DoStatx(XrdOucErrInfo *einfo)
 
 // Convert to proper indicator
 //
-        if (flags |= kXR_offline) cflags[0] = (char)kXR_offline;
-   else if (flags |= kXR_isDir)   cflags[0] = (char)kXR_isDir;
-   else                           cflags[0] = (char)kXR_file;
+        if (flags & kXR_offline) cflags[0] = (char)kXR_offline;
+   else if (flags & kXR_isDir)   cflags[0] = (char)kXR_isDir;
+   else                          cflags[0] = (char)kXR_file;
 
 // Set the new response
 //

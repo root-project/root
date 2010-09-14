@@ -19,6 +19,10 @@ const char *XrdOucUtilsCVSID = "$Id$";
 #ifdef WIN32
 #include <direct.h>
 #include "XrdSys/XrdWin32.hh"
+#else
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #endif
 #include "XrdNet/XrdNetDNS.hh"
 #include "XrdSys/XrdSysError.hh"
@@ -211,6 +215,32 @@ int XrdOucUtils::genPath(char *buff, int blen, const char *path, const char *psf
 }
 
 /******************************************************************************/
+/*                              I n s t N a m e                               */
+/******************************************************************************/
+  
+const char *XrdOucUtils::InstName(int TranOpt)
+{
+   const char *iName = getenv("XRDNAME");
+
+// If tran is zero, return what we have
+//
+   if (!TranOpt) return iName;
+
+// If trans is positive then make sure iName has a value. Otherwise, make sure
+// iName has no value if it's actually "anon".
+//
+   if (TranOpt > 0) {if (!iName || !*iName) iName = "anon";}
+      else if (iName && !strcmp(iName, "anon")) iName = 0;
+   return iName;
+}
+/******************************************************************************/
+  
+const char *XrdOucUtils::InstName(const char *name, int Fillit)
+{ return (Fillit ? name && *name                        ? name : "anon"
+                 : name && strcmp(name,"anon") && *name ? name :     0);
+}
+  
+/******************************************************************************/
 /*                                 i s 1 o f                                  */
 /******************************************************************************/
   
@@ -297,3 +327,61 @@ char *XrdOucUtils::subLogfn(XrdSysError &eDest, const char *inst, char *logfn)
    free(logfn);
    return strdup(buff);
 }
+
+/******************************************************************************/
+/*                            U n d e r c o v e r                             */
+/******************************************************************************/
+#ifdef WIN32
+void XrdOucUtils::Undercover(XrdSysError &, int)
+{
+}
+#else
+void XrdOucUtils::Undercover(XrdSysError &eDest, int noLog)
+{
+   static const int maxFiles = 256;
+   pid_t mypid;
+   int myfd;
+
+// Issue warning if there is no logfile attached
+//
+   if (noLog) eDest.Emsg("Config", "Warning! No log file specified; "
+                                   "backgrounding disables all logging!");
+
+// Fork so that we are not tied to a shell
+//
+   if ((mypid = fork()) < 0)
+      {eDest.Emsg("Config", errno, "fork process 1 for backgrounding");
+       return;
+      }
+      else if (mypid) _exit(0);
+
+// Become the process group leader
+//
+   if (setsid() < 0)
+      {eDest.Emsg("Config", errno, "doing setsid() for backgrounding");
+       return;
+      }
+
+// Fork to that we are cannot get a controlling terminal
+//
+   if ((mypid = fork()) < 0)
+      {eDest.Emsg("Config", errno, "fork process 2 for backgrounding");
+       return;
+      }
+      else if (mypid) _exit(0);
+
+// Switch stdin, stdout, and stderr to /dev/null (we can't use /dev/console
+// unless we are root which is unlikely).
+//
+   if ((myfd = open("/dev/null", O_RDWR)) < 0)
+      {eDest.Emsg("Config", errno, "open /dev/null for backgrounding");
+       return;
+      }
+   dup2(myfd, 0); dup2(myfd, 1); dup2(myfd, 2);
+
+// Close any open file descriptors left open by the parent process
+//
+  for (myfd = 3; myfd < maxFiles; myfd++) close(myfd);
+}
+#endif
+

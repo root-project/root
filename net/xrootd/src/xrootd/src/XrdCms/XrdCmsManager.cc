@@ -62,7 +62,7 @@ XrdCmsNode *XrdCmsManager::Add(XrdLink *lp, int Lvl)
 
 // Check if we have too many here
 //
-   if (i > MTMax)
+   if (i >= MTMax)
       {MTMutex.UnLock();
        Say.Emsg("Manager", "Login to", lp->Name(), "failed; too many managers");
        return 0;

@@ -1,4 +1,4 @@
-# $Id: GNUmakefile,v 1.11 2008/10/12 02:00:04 abh Exp $
+# $Id: GNUmakefile,v 1.12 2010/07/30 03:18:43 abh Exp $
 #-----------------------------------------------------------------------------#
 #                            E n v i r o n m e n t                            #
 #-----------------------------------------------------------------------------#
@@ -128,30 +128,14 @@ anything: $(TARGETS)
 $(LIBARCH): $(OBJECTS)
 	@echo Creating archive $(LIBARCH) 
 	$(ECHO)rm -f $(LIBARCH)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-	          if [ "x$(SUNCACHE)" != "x" ]; then \
-	             $(CC) -xar -o $(LIBARCH) $(OBJDIR)$(SUNCACHE)/*/*.o; \
-		  else \
-	             $(CC) -xar -o $(LIBARCH) $(OBJECTS); \
-		  fi; \
-	       else \
-	          ar -rc $(LIBARCH) $(OBJECTS); \
-	          ranlib $(LIBARCH); \
-               fi
+	$(ECHO)ar -rc $(LIBARCH) $(OBJECTS)
+	$(ECHO)ranlib $(LIBARCH)
 
 $(LIBARCL): $(OBJECTL)
 	@echo Creating archive $(LIBARCL) 
 	$(ECHO)rm -f $(LIBARCL)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-	          if [ "x$(SUNCACHE)" != "x" ]; then \
-	             $(CC) -xar -o $(LIBARCL) $(OBJDIR)$(SUNCACHE)/*/*.o; \
-		  else \
-	             $(CC) -xar -o $(LIBARCL) $(OBJECTL); \
-		  fi; \
-	       else \
-	          ar -rc $(LIBARCL) $(OBJECTL); \
-	          ranlib $(LIBARCL); \
-               fi
+	$(ECHO)ar -rc $(LIBARCL) $(OBJECTL)
+	$(ECHO)ranlib $(LIBARCL)
 
 $(LIBRARY): $(OBJECTS) $(LIBUTIL)
 	@echo Creating shared library $(LIBRARY) 

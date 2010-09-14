@@ -1,35 +1,34 @@
-# $Id: GNUmakefile,v 1.13 2009/07/29 16:27:35 ganis Exp $
+# $Id: GNUmakefile,v 1.14 2010/07/29 01:24:40 abh Exp $
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
 #------------------------------------------------------------------------------#
 include ../GNUmake.env
 
+LIBBASE = $(LIBDIR)/libXrdCrypto.a  $(LIBDIR)/libXrdSut.a \
+          $(LIBDIR)/libXrdNet.a     $(LIBDIR)/libXrdOuc.a \
+          $(LIBDIR)/libXrdNetUtil.a $(LIBDIR)/libXrdSys.a
+
 ifneq ($(TYPE),Darwin)
 
-LIBUTIL = $(LIBDIR)/libXrdCrypto.a $(LIBDIR)/libXrdSut.a $(LIBDIR)/libXrdOuc.a \
-          $(LIBDIR)/libXrdSys.a $(LIBDIR)/libXrdNet.a
-
 ifneq ($(LIBSSL),)
-LIBDEPS = $(LIBDIR)/libXrdCryptossl.$(TYPESHLIB) $(LIBUTIL)
+LIBDEPS = $(LIBDIR)/libXrdCryptossl.$(TYPESHLIB) $(LIBBASE)
 
-BINLIBS = -L$(LIBDIR) -lXrdCryptossl $(LIBUTIL)
+BINLIBS = -L$(LIBDIR) -lXrdCryptossl $(LIBBASE)
 
-LIBLIBS = -L$(LIBDIR) -lXrdCryptossl $(LIBUTIL)
+LIBLIBS = -L$(LIBDIR) -lXrdCryptossl $(LIBBASE)
 else
-LIBDEPS = $(LIBUTIL)
+LIBDEPS = $(LIBBASE)
 
-BINLIBS = $(LIBUTIL)
+BINLIBS = $(LIBBASE)
 
-LIBLIBS = $(LIBUTIL)
+LIBLIBS = $(LIBBASE)
 endif
 
 else
 
 ifneq ($(LIBSSL),)
 
-LIBUTIL = $(LIBDIR)/libXrdCryptossl.a $(LIBDIR)/libXrdCrypto.a \
-          $(LIBDIR)/libXrdSut.a $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a \
-          $(LIBDIR)/libXrdNet.a
+LIBUTIL = $(LIBDIR)/libXrdCryptossl.a $(LIBBASE)
 
 BINLIBS = $(LIBSSL) $(LIBUTIL)
 
@@ -37,17 +36,13 @@ LIBLIBS = $(LIBSSL) $(LIBUTIL)
 
 else
 
-LIBUTIL = $(LIBDIR)/libXrdCrypto.a \
-          $(LIBDIR)/libXrdSut.a $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a \
-          $(LIBDIR)/libXrdNet.a
+BINLIBS = $(LIBBASE)
 
-BINLIBS = $(LIBUTIL)
-
-LIBLIBS = $(LIBUTIL)
+LIBLIBS = $(LIBBASE)
 
 endif
 
-LIBDEPS = $(LIBUTIL)
+LIBDEPS = $(LIBBASE)
 
 endif
 

@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.13 2009/05/19 21:24:55 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id: Makefile.am,v 1.14 2010/08/06 15:12:23 feichtinger Exp $
+## Checked in by $Author: feichtinger $
 #######################################################################
 
 # TODO: solve libXrdPosixPreload build problem. The classic build "solves" the
@@ -24,7 +24,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src
 # N.B.: XrdPosixXrootd.hh includes XrdSysPthread.hh!
 xrootdposixincdir = $(includedir)/xrootd/XrdPosix
 xrootdposixinc_HEADERS = XrdPosixXrootd.hh XrdPosixOsDep.hh XrdPosixLinkage.hh \
-                        XrdPosix.hh XrdPosixExtern.hh
+                        XrdPosix.hh XrdPosixExtern.hh XrdPosixCallBack.hh
 
 #############################################################################
 ## deliverables

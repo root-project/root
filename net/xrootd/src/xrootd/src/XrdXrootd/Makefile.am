@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.10 2010/05/26 01:26:14 abh Exp $
-## Checked in by $Author: abh $
+## Version info: $Id: Makefile.am,v 1.12 2010/08/05 15:24:30 feichtinger Exp $
+## Checked in by $Author: feichtinger $
 #######################################################################
 
 #       Note: since libXrdOfs needs to resolve symbols from xrootd's binary
@@ -43,8 +43,8 @@ xrootd_LDADD = -ldl \
                   ../XrdOss/libXrdOss.la \
                   ../XrdFrm/libXrdFrm.la \
                   ../XrdCms/libXrdCms.la \
-                  ../XrdOdc/libXrdOdc.la \
                   ../XrdNet/libXrdNet.la \
+                  ../XrdNet/libXrdNetUtil.la \
                   ../XrdOuc/libXrdOuc.la \
                   ../XrdSys/libXrdSys.la 
 

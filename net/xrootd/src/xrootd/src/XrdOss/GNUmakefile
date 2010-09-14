@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.36 2010/05/26 01:25:22 abh Exp $
+#              $Id: GNUmakefile,v 1.39 2010/08/17 01:38:42 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -77,16 +77,8 @@ anything: $(TARGETS)
 $(TARGETS): $(OBJECTS)
 	@echo Creating archive $(LIBRARY)
 	$(ECHO)rm -f $(LIBRARY)
-	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
-		  if [ "x$(SUNCACHE)" != "x" ]; then \
-		     $(CC) -xar -o $(LIBRARY) $(OBJDIR)$(SUNCACHE)/*/*.o; \
-		  else \
-		     $(CC) -xar -o $(LIBRARY) $(OBJECTS); \
-		  fi; \
-	       else \
-	          ar -rc $(LIBRARY) $(OBJECTS); \
-	          ranlib $(LIBRARY); \
-	       fi
+	$(ECHO)ar -rc $(LIBRARY) $(OBJECTS)
+	$(ECHO)ranlib $(LIBRARY)
 
 $(OBJDIR)/XrdOssAio.o: XrdOssAio.cc    XrdOssTrace.hh  XrdOssApi.hh \
                        XrdSysError.hh  XrdSysPthread.hh XrdSysPlatform.hh \
@@ -115,7 +107,7 @@ $(OBJDIR)/XrdOssCache.o: XrdOssCache.hh  XrdOssOpaque.hh\
 $(OBJDIR)/XrdOssConfig.o: XrdOssApi.hh  XrdOssConfig.hh XrdOssError.hh \
                           XrdOssLock.hh XrdOssTrace.hh XrdSysError.hh \
                           XrdOssMio.hh  XrdOssOpaque.hh XrdOssSpace.hh \
-                          XrdOucEnv.hh  XrdFrmProxy.hh \
+                          XrdOucEnv.hh  XrdOucUtils.hh  XrdFrmProxy.hh \
                           XrdOucProg.hh XrdOssConfig.cc XrdOuca2x.hh  \
                           XrdOucMsubs.hh XrdOucName2Name.hh XrdSysPlugin.hh \
                           XrdSysHeaders.hh \
@@ -183,7 +175,8 @@ $(OBJDIR)/XrdOssRename.o: XrdOssApi.hh  XrdOssError.hh XrdOssLock.hh \
 
 $(OBJDIR)/XrdOssSpace.o: XrdOssSpace.hh XrdOssSpace.cc \
                          XrdOssCache.hh \
-                         XrdOuca2x.hh   XrdOucStream.hh \
+                         XrdOuca2x.hh     XrdOucEnv.hh   XrdOucStream.hh \
+                         XrdOucUtils.hh \
                          XrdSysHeaders.hh XrdSysError.hh XrdSysPlatform.hh
 	@echo Compiling XrdOssSpace.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOssSpace.o XrdOssSpace.cc

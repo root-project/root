@@ -43,7 +43,7 @@ struct aiocb sfsAio;
 
 ssize_t      Result; // If >= 0 valid result; else is -errno
 
-char        *TIdent; // Trace information (optional)
+const char  *TIdent; // Trace information (optional)
 
 // Method to handle completed reads
 //

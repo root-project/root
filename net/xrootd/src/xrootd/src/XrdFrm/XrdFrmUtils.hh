@@ -34,6 +34,8 @@ static       int   MapM2O(const char *Nop, const char *Pop);
 
 static       int   MapR2Q(char Opc, int *Flags=0);
 
+static       int   MapV2I(const char *Opc, XrdFrmRequest::Item &ICode);
+
 static       int   Unique(const char *lkfn, const char *myProg);
 
 static       int   Utime(const char *Path, time_t tVal);

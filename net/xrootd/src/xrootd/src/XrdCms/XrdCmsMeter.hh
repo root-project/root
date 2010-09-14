@@ -57,7 +57,7 @@ void  setVirtUpdt() {cfsMutex.Lock(); VirtUpdt = 1; cfsMutex.UnLock();}
 
 private:
       void calcSpace();
-const char Scale(long long inval, long &outval);
+      char Scale(long long inval, long &outval);
       void SpaceMsg(int why);
       void UpdtSpace();
 

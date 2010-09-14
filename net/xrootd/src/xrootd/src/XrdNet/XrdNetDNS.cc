@@ -607,7 +607,7 @@ int XrdNetDNS::isMatch(const char *HostName, char *HostPat)
 
     while(i--)
          {mval = getHostName(InetAddr[i]);
-          retc = !strcmp(mval,HostName) || !strcmp(mval,HostPat);
+          retc = !strcmp(mval,HostName);
           free(mval);
           if (retc) return 1;
          }

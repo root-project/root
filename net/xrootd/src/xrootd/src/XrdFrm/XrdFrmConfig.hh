@@ -17,8 +17,8 @@
 
 #include "XrdOss/XrdOssSpace.hh"
 
+class XrdNetCmsNotify;
 class XrdOss;
-class XrdOucCmsNotify;
 class XrdOucMsubs;
 class XrdOucName2Name;
 class XrdOucProg;
@@ -39,6 +39,9 @@ const char         *myFrmid;
 const char         *myFrmID;
 const char         *lockFN;
 char               *AdminPath;
+char               *APath;
+char               *QPath;
+char               *PidPath;
 char               *myInstance;
 char               *StopPurge;
 char               *MSSCmd;
@@ -49,15 +52,18 @@ struct Cmd
        char        *theCmd;
        XrdOucMsubs *theVec;
        int          TLimit;
-       short        hasMDP;
-       short        Stats;
+       int          Opts;
       }             xfrCmd[4];
+static const int    cmdAlloc = 0x0001;
+static const int    cmdMDP   = 0x0002;
+static const int    cmdStats = 0x0004;
+
 int                 xfrIN;
 int                 xfrOUT;
 
 XrdOucName2Name    *the_N2N;   // -> File mapper object
 XrdOss             *ossFS;
-XrdOucCmsNotify    *cmsPath;
+XrdNetCmsNotify    *cmsPath;
 uid_t               myUid;
 gid_t               myGid;
 long long           cmdFree;
@@ -161,6 +167,7 @@ int          xnml();
 int          xmon();
 int          xpol();
 int          xpolprog();
+int          xqchk();
 int          xspace(int isPrg=0, int isXA=1);
 void         xspaceBuild(char *grp, char *fn, int isxa);
 int          xxfr();
