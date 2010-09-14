@@ -34,6 +34,20 @@ TPrimary::TPrimary()
 //
 
    //do nothing
+   fPart         = 0;
+   fFirstMother  = 0;
+   fSecondMother = 0;
+   fGeneration   = 0;
+   fPx           = 0;
+   fPy           = 0;
+   fPz           = 0;
+   fEtot         = 0;
+   fVx           = 0;
+   fVy           = 0;
+   fVz           = 0;
+   fTime         = 0;
+   fTimeEnd      = 0;
+   fType         = "";
 
 }
 
