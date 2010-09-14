@@ -6,7 +6,7 @@
 #include "Math/ProbFuncMathCore.h"
 #include "Math/SpecFuncMathCore.h"
 
-
+#include <limits>
 
 
 namespace ROOT {
@@ -107,6 +107,14 @@ namespace Math {
    
   
    double fdistribution_cdf_c(double x, double n, double m, double x0) {
+      // f distribution  is defined only for both n and m > 0
+      if (n < 0 || m < 0)  
+         return std::numeric_limits<double>::quiet_NaN(); 
+
+      double z = m/(m + n*(x-x0));
+      // fox z->1 and large a and b IB looses precision use complement function 
+      if (z > 0.9 && n > 1 && m > 1) return 1.-  fdistribution_cdf(x,n,m,x0);
+
       // for the complement use the fact that IB(x,a,b) = 1. - IB(1-x,b,a)     
       return ROOT::Math::inc_beta(m/(m + n*(x-x0)), .5*m, .5*n);
   
@@ -114,8 +122,15 @@ namespace Math {
 
 
    double fdistribution_cdf(double x, double n, double m, double x0) {
+      // f distribution  is defined only for both n and m > 0
+      if (n < 0 || m < 0)  
+         return std::numeric_limits<double>::quiet_NaN(); 
 
-      return ROOT::Math::inc_beta(n*(x-x0)/(m + n*(x-x0)), .5*n, .5*m);
+      double z = n*(x-x0)/(m + n*(x-x0));
+      // fox z->1 and large a and b IB looses precision use complement function
+      if (z > 0.9 && n > 1 && m > 1) return 1. - fdistribution_cdf_c(x,n,m,x0);
+
+      return ROOT::Math::inc_beta(z, .5*n, .5*m);
    }
 
 

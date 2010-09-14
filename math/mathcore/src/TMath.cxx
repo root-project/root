@@ -2242,14 +2242,8 @@ Double_t TMath::FDist(Double_t F, Double_t N, Double_t M)
    // where each chi-square is first divided by it's number of degrees
    // of freedom.
    // Implementation by Anna Kreshuk.
-
-   if ((F<0)||(N<1)||(M<1)){
-      return 0;
-   } else {
-      Double_t denom = TMath::Gamma(N/2)*TMath::Gamma(M/2)*TMath::Power(M+N*F, (N+M)/2);
-      Double_t div = TMath::Gamma((N+M)/2)*TMath::Power(N, N/2)*TMath::Power(M, M/2)*TMath::Power(F, 0.5*N-1);
-      return div/denom;
-   }
+   
+   return ::ROOT::Math::fdistribution_pdf(F,N,M);
 }
 
 //______________________________________________________________________________
@@ -2267,7 +2261,7 @@ Double_t TMath::FDistI(Double_t F, Double_t N, Double_t M)
    // "1 has variance greater than 2".
    // Implementation by Anna Kreshuk.
 
-   Double_t fi = 1 - BetaIncomplete((M/(M+N*F)), M*0.5, N*0.5);
+   Double_t fi = ::ROOT::Math::fdistribution_cdf(F,N,M);
    return fi;
 }
 

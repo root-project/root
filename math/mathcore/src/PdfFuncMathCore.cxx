@@ -12,6 +12,7 @@
 
 #include "Math/Math.h"
 #include "Math/SpecFuncMathCore.h"
+#include <limits>
 
 
 namespace ROOT {
@@ -81,16 +82,16 @@ namespace Math {
    
    
    double fdistribution_pdf(double x, double n, double m, double x0) {
-      
-      if ((x-x0) < 0) {
+
+      // function is defined only for both n and m > 0
+      if (n < 0 || m < 0)  
+         return std::numeric_limits<double>::quiet_NaN(); 
+      if ((x-x0) < 0) 
          return 0.0;
-      } else {
          
-         return std::exp((n/2) * std::log(n) + (m/2) * std::log(m) + ROOT::Math::lgamma((n+m)/2) - ROOT::Math::lgamma(n/2) - ROOT::Math::lgamma(m/2))
-         * std::pow((x-x0), n/2-1) * std::pow (m + n*(x-x0), -(n+m)/2);
+      return std::exp((n/2) * std::log(n) + (m/2) * std::log(m) + ROOT::Math::lgamma((n+m)/2) - ROOT::Math::lgamma(n/2) - ROOT::Math::lgamma(m/2) 
+                         + (n/2 -1) * std::log(x-x0) - ((n+m)/2) * std::log(m +  n*(x-x0)) );
          
-      }
-      
    }
    
    
