@@ -116,6 +116,7 @@ namespace {
    class TCollectDataMembers: public TMemberInspector {
    public:
       TCollectDataMembers(const TOutputListSelectorDataMap& owner): fOwner(owner) { }
+      ~TCollectDataMembers();
       void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
       TExMap& GetMemberPointers() { return fMap; }
    private:
@@ -141,10 +142,41 @@ void TCollectDataMembers::Inspect(TClass *cl, const char* /*parent*/, const char
    char **ppointer = (char**)(pointer);
    char **p3pointer = (char**)(*ppointer);
    if (p3pointer) {
-      // don't add member pointing to NULL
-      fMap.Add((Long64_t)(ptrdiff_t)p3pointer, (Long64_t)(ptrdiff_t)dm);
+      // The data member points to something.
+      // Handle multiple pointers to the same output list object:
+      TObject* prev = (TObject*) fMap.GetValue((Long64_t)(ptrdiff_t)p3pointer);
+      if (prev) {
+         // We have a previous entry - is it a data member or already a TList (of data members)?
+         if (prev->InheritsFrom(TDataMember::Class())) {
+            fMap.Remove((Long64_t)(ptrdiff_t)p3pointer);
+            TList* dmList = new TList;
+            dmList->Add(prev);
+            dmList->Add(dm);
+            fMap.Add((Long64_t)(ptrdiff_t)p3pointer, (Long64_t)(ptrdiff_t)dmList);
+         } else {
+            TList* prevList = (TList*) prev;
+            prevList->Add(dm);
+         }
+      } else {
+         fMap.Add((Long64_t)(ptrdiff_t)p3pointer, (Long64_t)(ptrdiff_t)dm);
+      }
       if (name[0] == '*') ++name;
       PDB(kOutput,1) fOwner.Info("Init()", "considering data member `%s'", name);
+   }
+}
+
+TCollectDataMembers::~TCollectDataMembers() {
+   // Destructor
+
+   // Clean up collection of TDataMembers in fMap
+   TExMapIter iMembers(&fMap);
+   Long64_t key;
+   Long64_t value;
+   while (iMembers.Next(key, value)) {
+      TObject* obj = (TObject*) value;
+      if (obj->InheritsFrom(TList::Class())) {
+         delete obj;
+      }
    }
 }
 
@@ -212,13 +244,26 @@ Bool_t TOutputListSelectorDataMap::Init(TSelector* sel)
    // same value. Store that mapping (or a miss).
    TIter iOutput(outList);
    TObject* output;
+   TList oneDM;
    while ((output = iOutput())) {
-      TDataMember* dm = (TDataMember*) (ptrdiff_t)cdm.GetMemberPointers().GetValue((Long64_t)(ptrdiff_t)output);
-      if (dm) {
+      TObject* obj = (TObject*) (ptrdiff_t)cdm.GetMemberPointers().GetValue((Long64_t)(ptrdiff_t)output);
+      if (!obj) continue;
+
+      TList* addAllDM = 0;
+      if (obj->InheritsFrom(TDataMember::Class())) {
+         oneDM.Add(obj);
+         addAllDM = &oneDM;
+      } else {
+         addAllDM = (TList*) obj;
+      }
+      TIter iDM(addAllDM);
+      TDataMember* dm = 0;
+      while ((dm = (TDataMember*) iDM())) {
          fMap->Add(new TNamed(dm->GetName(), output->GetName()));
          PDB(kOutput,1) Info("Init()","Data member `%s' corresponds to output `%s'",
                               dm->GetName(), output->GetName());
       }
+      oneDM.Clear();
    }
 
    return kTRUE;
