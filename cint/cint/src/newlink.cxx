@@ -10359,13 +10359,14 @@ static void G__printtruep2f(FILE *fp, G__ifunc_table_internal *ifunc, int j)
       break;
     case G__CLINK:
     default:
-      fprintf(fp,"#ifndef %s\n",ifunc->funcname[j]);
-      fprintf(fp,", (void*) %s, %d);\n",ifunc->funcname[j]
-              ,ifunc->isvirtual[j]+ifunc->ispurevirtual[j]*2);
-      fprintf(fp,"#else\n");
-      fprintf(fp,", (void*) NULL, %d);\n"
-              ,ifunc->isvirtual[j]+ifunc->ispurevirtual[j]*2);
-      fprintf(fp,"#endif\n");
+       fprintf(fp, ", funcptr._read, %d);\n",ifunc->isvirtual[j]+ifunc->ispurevirtual[j]*2);
+      // fprintf(fp,"#ifndef %s\n",ifunc->funcname[j]);
+      // fprintf(fp,", (void*) %s, %d);\n",ifunc->funcname[j]
+      //         ,ifunc->isvirtual[j]+ifunc->ispurevirtual[j]*2);
+      // fprintf(fp,"#else\n");
+      // fprintf(fp,", (void*) NULL, %d);\n"
+      //         ,ifunc->isvirtual[j]+ifunc->ispurevirtual[j]*2);
+      // fprintf(fp,"#endif\n");
       break;
     }
   }
@@ -10401,9 +10402,12 @@ void G__cpplink_func(FILE *fp)
 #endif
 
   ifunc = &G__ifunc;
-
+  
+  if (G__globalcomp == G__CLINK) {
+     fprintf(fp," funcptr_and_voidptr funcptr;\n");
+  }
   fprintf(fp,"   G__lastifuncposition();\n\n");
-
+  
   while((struct G__ifunc_table_internal*)NULL!=ifunc) {
     for(j=0;j<ifunc->allifunc;j++) {
       if(fnc++>maxfnc) {
@@ -10414,6 +10418,9 @@ void G__cpplink_func(FILE *fp)
 #else
         fprintf(fp,"static void G__cpp_setup_func%d() {\n",divn++);
 #endif
+        if (G__globalcomp == G__CLINK) {
+           fprintf(fp," funcptr_and_voidptr funcptr;\n");
+        }
       }
       if(G__NOLINK>ifunc->globalcomp[j] &&  /* with -c-1 option */
          G__PUBLIC==ifunc->access[j] && /* public, this is always true */
@@ -10431,6 +10438,13 @@ void G__cpplink_func(FILE *fp)
 #ifdef G__P2FDECL  /* used to be G__TRUEP2F */
         G__declaretruep2f(fp,ifunc,j);
 #endif
+        if (G__globalcomp == G__CLINK) {
+           fprintf(fp,"#ifndef %s\n",ifunc->funcname[j]); 
+           fprintf(fp,"   funcptr._write = (void (*)())%s;\n",ifunc->funcname[j]);
+           fprintf(fp,"#else\n");
+           fprintf(fp,"   funcptr._write = 0;\n");
+           fprintf(fp,"#endif\n");
+        }
 
         if(G__dicttype==kCompleteDictionary)
           fprintf(fp, "   G__memfunc_setup(");

@@ -288,9 +288,9 @@ G__DECL_API(187, long*, G__Longref, (G__value *buf))
 G__DECL_API(188, unsigned char*, G__UCharref, (G__value *buf))
 #ifdef G__BOOL4BYTE
 G__DECL_API(189, int*, G__Boolref, (G__value *buf))
-#else // G__BOOL4BYTE
+#else /* G__BOOL4BYTE */
 G__DECL_API(189, unsigned char*, G__Boolref, (G__value *buf))
-#endif // G__BOOL4BYTE
+#endif /* G__BOOL4BYTE */
 G__DECL_API(190, unsigned short*, G__UShortref, (G__value *buf))
 G__DECL_API(191, unsigned int*, G__UIntref, (G__value *buf))
 G__DECL_API(192, unsigned long*, G__ULongref, (G__value *buf))

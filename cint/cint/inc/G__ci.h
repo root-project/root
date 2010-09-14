@@ -1132,7 +1132,7 @@ struct G__va_list_para;
 **************************************************************************/
 struct G__ifunc_table;
 struct G__var_array;
-struct G__dictposition; // decl in Api.h because of Cint7's having C++ content
+struct G__dictposition; /* decl in Api.h because of Cint7's having C++ content */
 
 /**************************************************************************
 * comment information
@@ -1701,8 +1701,9 @@ G__signaltype G__signal G__P((int sgnl,void (*f)(int)));
 
 /***********************************************************************/
 #if defined(__cplusplus) && !defined(__CINT__)
-// Helper class to avoid compiler warning about casting function pointer
-// to void pointer.
+/* Helper class to avoid compiler warning about casting function pointer
+** to void pointer.
+*/
 class G__func2void {
    typedef void (*funcptr_t)();
 
@@ -1726,6 +1727,11 @@ public:
       return _tmp._read;
    }
 };
+#elif !__CINT__
+typedef union {
+   void *_read;
+   void (*_write)();   
+} funcptr_and_voidptr;
 #endif /* __cplusplus  && ! __CINT__*/
 
 #endif /* __MAKECINT__ */
