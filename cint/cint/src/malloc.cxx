@@ -46,7 +46,11 @@ void* G__shmmalloc(int size)
    int alignsize;
 
    if (size <= sizeof(double)) alignsize = size;
-   else                     alignsize = sizeof(double);
+#if defined(G__64BIT)
+   else                        alignsize = sizeof(double);
+#else
+   else                        alignsize = sizeof(long);
+#endif
    if ((*poffset) % alignsize) *poffset += sizeof(alignsize) - (*poffset) % alignsize;
 
    result = (void*)((long)G__shmbuffer + (*poffset));
@@ -226,9 +230,15 @@ long G__malloc(int n, int bsize, const char* item)
             }
             long allocmem = 0;
             // Get padding size.
+#if defined(G__64BIT)
             if (bsize > ((int) G__DOUBLEALLOC)) {
                allocmem = G__DOUBLEALLOC;
             }
+#else
+            if (bsize > ((int) G__LONGALLOC)) {
+               allocmem = sizeof(int);
+            }
+#endif
             else {
                allocmem = bsize;
             }
