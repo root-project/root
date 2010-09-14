@@ -258,6 +258,8 @@ TMultiLayerPerceptron::TMultiLayerPerceptron()
    fData = 0;
    fCurrentTree = -1;
    fCurrentTreeWeight = 1;
+   fStructure = "";
+   fWeight = "1";
    fTraining = 0;
    fTrainingOwner = false;
    fTest = 0;
@@ -320,15 +322,17 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    fOutType =  TNeuron::kLinear;
    fextF = extF;
    fextD = extD;
+   fEventWeight = 0;
+   fManager = 0;
    if (data) {
       BuildNetwork();
       AttachData();
    }
    fLearningMethod = TMultiLayerPerceptron::kBFGS;
    fEta = .1;
-   fEtaDecay = 1;
-   fDelta = 0;
    fEpsilon = 0;
+   fDelta = 0;
+   fEtaDecay = 1;
    fTau = 3;
    fLastAlpha = 0;
    fReset = 50;
@@ -367,6 +371,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    fStructure = layout;
    fData = data;
    fCurrentTree = -1;
+   fCurrentTreeWeight = 1;
    fTraining = training;
    fTrainingOwner = false;
    fTest = test;
@@ -376,6 +381,8 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    fOutType =  TNeuron::kLinear;
    fextF = extF;
    fextD = extD;
+   fEventWeight = 0;
+   fManager = 0;
    if (data) {
       BuildNetwork();
       AttachData();
@@ -435,6 +442,8 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    fOutType =  TNeuron::kLinear;
    fextF = extF;
    fextD = extD;
+   fEventWeight = 0;
+   fManager = 0;
    if (data) {
       BuildNetwork();
       data->Draw(Form(">>fTrainingList_%lu",(ULong_t)this),training,"goff");
@@ -488,6 +497,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    fStructure = layout;
    fData = data;
    fCurrentTree = -1;
+   fCurrentTreeWeight = 1;
    fTraining = new TEventList(Form("fTrainingList_%lu",(ULong_t)this));
    fTrainingOwner = true;
    fTest = new TEventList(Form("fTestList_%lu",(ULong_t)this));
@@ -499,6 +509,8 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    fOutType =  TNeuron::kLinear;
    fextF = extF;
    fextD = extD;
+   fEventWeight = 0;
+   fManager = 0;
    if (data) {
       BuildNetwork();
       data->Draw(Form(">>fTrainingList_%lu",(ULong_t)this),training,"goff");
