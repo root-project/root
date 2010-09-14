@@ -624,7 +624,7 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
       || !streamerInfo->GetElements() 
       || !streamerInfo->GetElements()->GetSize())  return 0;
 
-   if (!branch && parent) branch=parent->GetBranch();
+   if (parent) branch=parent->GetBranch();
 
    // we simply add all of our and the bases' members into one big list
    TList myStreamerElementsToCheck;
