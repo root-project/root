@@ -207,6 +207,7 @@ TEventIterUnit::TEventIterUnit()
    fNum = 0;
    fCurrent = 0;
    fStop = kFALSE;
+   fOldBytesRead = 0; // Measures the bytes written
 }
 
 //______________________________________________________________________________
@@ -220,6 +221,7 @@ TEventIterUnit::TEventIterUnit(TDSet* dset, TSelector *sel, Long64_t num)
    fNum = num;
    fCurrent = 0;
    fStop = kFALSE;
+   fOldBytesRead = 0; // Measures the bytes written
 }
 
 //______________________________________________________________________________
@@ -233,6 +235,14 @@ Long64_t TEventIterUnit::GetNextEvent()
    if (fElem) fElem->ResetBit(TDSetElement::kNewPacket);
 
    while (fElem == 0 || fCurrent == 0) {
+
+      if (gPerfStats) {
+         Long64_t totBytesWritten = TFile::GetFileBytesWritten();
+         Long64_t bytesWritten = totBytesWritten - fOldBytesRead;
+         PDB(kLoop, 2) Info("GetNextEvent", "bytes written: %lld", bytesWritten);
+         gPerfStats->SetBytesRead(bytesWritten);
+         fOldBytesRead = totBytesWritten;
+      }
 
       SafeDelete(fElem);
       if (!(fElem = fDSet->Next()))
