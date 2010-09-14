@@ -41,4 +41,6 @@
   <li>Implement new prompt interface <tt>.preproc</tt> to toggle the external preprocessing of scripts. This does not work for any file #including e.g. TObject, as it disables ROOT's ignore-include mechanism for include files (see TROOT::IgnoreInclude()).</li>
 
   <li>Teach CINT's preprocessor to handle <tt>#TOKEN</tt> (i.e. string conversion of CPP tokens).</li>
+
+  <li>Fix parsing of spacing (<tt>long long</tt> stays <tt>long long</tt>, no more <tt>Unknown type TH1Ghist</tt> instead of <tt>Unknown type TH1G</tt>.)</li>
 </ul>
