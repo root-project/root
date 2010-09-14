@@ -609,11 +609,14 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
 // of class "cl" (and its base classes' members).
 
    // branch has to be unsplit, i.e. without sub-branches
-   if (branch==0 || 
-       (const_cast<TBranch*>(branch)->GetListOfBranches() 
-        && const_cast<TBranch*>(branch)->GetListOfBranches()->GetEntries()!=0
-        && parent==0)) // !(parent && parent->IsA()==TMethodBrowsable::Class()))
+   if (parent==0 
+       && (branch==0 ||
+           (const_cast<TBranch*>(branch)->GetListOfBranches() 
+            && const_cast<TBranch*>(branch)->GetListOfBranches()->GetEntries()!=0)
+           )
+       ) {
       return 0;
+   }
    // we only expand our own parents
    //if (parent && parent->IsA()!=TNonSplitBrowsable::Class()) return 0;
 
@@ -624,7 +627,7 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
       || !streamerInfo->GetElements() 
       || !streamerInfo->GetElements()->GetSize())  return 0;
 
-   if (parent) branch=parent->GetBranch();
+   if (!branch && parent) branch=parent->GetBranch();
 
    // we simply add all of our and the bases' members into one big list
    TList myStreamerElementsToCheck;
