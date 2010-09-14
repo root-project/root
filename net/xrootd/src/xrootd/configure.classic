@@ -2311,7 +2311,15 @@ fi
 #
 
 case $platform in
-    linux|macosx) 
+    linux) 
+        if test "x$nccflv" = "xicc" ; then
+           if test "x$enable_bonjour" = "xyes" ; then
+              echo "Sorry, the Bonjour/Avahi interface currently supported for Linux-ICC - disabling ... (platform: $platform)"
+           fi
+           enable_bonjour=no
+        fi
+        ;;
+    macosx) 
         ;;
     *)
       if test "x$enable_bonjour" = "xyes" ; then
@@ -2389,6 +2397,7 @@ if test "x$enable_bonjour" = "xyes" && test "x$platform" != "xmacosx" ; then
          libavahi="-lavahi-common"         
     else
          echo "no"
+         enable_bonjour="no"
          haslibavahi=""
     fi
 
@@ -2406,6 +2415,7 @@ if test "x$enable_bonjour" = "xyes" && test "x$platform" != "xmacosx" ; then
           echo "no"
           haslibavahi=""
           libavahi=""
+          enable_bonjour="no"
        fi
     fi
 
@@ -2423,6 +2433,7 @@ if test "x$enable_bonjour" = "xyes" && test "x$platform" != "xmacosx" ; then
           echo "no"
           haslibavahi=""
           libavahi=""
+          enable_bonjour="no"
        fi
     fi
 
@@ -2442,6 +2453,7 @@ if test "x$enable_bonjour" = "xyes" && test "x$platform" != "xmacosx" ; then
         if test "x$found_lib" = "x" ; then
             haslibavahi=""
             libavahi=""
+            enable_bonjour="no"
         else
             libavahi="$found_dir $found_lib"
         fi
@@ -2452,6 +2464,7 @@ if test "x$enable_bonjour" = "xyes" && test "x$platform" != "xmacosx" ; then
         if test "x$found_lib" = "x" ; then
             haslibavahi=""
             libavahi=""
+            enable_bonjour="no"
         else
             libavahi="$libavahi $found_dir $found_lib"
         fi
@@ -2462,6 +2475,7 @@ if test "x$enable_bonjour" = "xyes" && test "x$platform" != "xmacosx" ; then
         if test "x$found_lib" = "x" ; then
             haslibavahi=""
             libavahi=""
+            enable_bonjour="no"
         else
             libavahi="$libavahi $found_dir $found_lib"
         fi
