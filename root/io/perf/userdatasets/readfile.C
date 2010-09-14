@@ -6,6 +6,8 @@
 #include "TVirtualStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TROOT.h"
+#include "TStopwatch.h"
+#include "TEnv.h"
 
 void fixLHCb()
 {
@@ -35,7 +37,7 @@ TFile *openFileAndLib(const char *i_filename, bool loadlibrary, bool genreflex)
    }
    
    if (genreflex) {
-      gSystem->Load("libCintex");
+      gSystem->Load("libCintex"); 
       gROOT->ProcessLine("ROOT::Cintex::Cintex::Enable()");
       libdir.Prepend("gen");
    }
@@ -49,13 +51,12 @@ TFile *openFileAndLib(const char *i_filename, bool loadlibrary, bool genreflex)
    }
                     
    // open the local if any
-   TFile *file;
    TString filename(i_filename);
    if (gSystem->AccessPathName(filename,kReadPermission) && filename.Index(":") == kNPOS) {
       // otherwise open the http file
       filename.Prepend("http://root.cern.ch/files/");
    }
-   file = TFile::Open( filename );
+   TFile *file = TFile::Open( filename );
    
    if (!file) return 0;
    
@@ -95,19 +96,21 @@ TTree *getTree(TFile *file, const char *treename) {
    return 0;
 }
 
-
-void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesize=-1);
+void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesize=-1, Long64_t i_nentries = -1, Float_t percententries = 1.00, Float_t percentbranches = 1.00);
 
 void readfile(const char *filename = "lhcb2.root", Int_t cachesize=-1) {
    readfile(filename,0,cachesize);
 }
 
-void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesize /* =-1 */) 
+void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesize /* =-1 */,
+              Long64_t i_nentries /* = -1 */, Float_t percententries /* = 1.00 */, Float_t percentbranches /* = 1.00 */) 
 {
    // The support options are:
    //   nolib : do not load any library.
    //   genreflex : use a reflex dictionary.
    //   tree=somename : use a non standard name for the dictionary, this _must_ be the last options.
+   
+   TStopwatch sw;
    
    TString opt(options);
    bool genreflex = opt.Contains("genreflex");
@@ -118,48 +121,63 @@ void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesi
       treename = &(opt[pos]);
    }
    
-   //gSystem->Load("lhcbdir/lhcbdir");  //shared lib generated with TFile::MakeProject
    TFile *file = openFileAndLib(filename,loadlibrary,genreflex);
 
    if (file==0) return;
    
    TTree *T = getTree(file,treename);
 
-   TFile::SetReadaheadSize(0);
+   TFile::SetReadaheadSize(0);  // (256*1024);
    Long64_t nentries = T->GetEntries();
-   nentries   = 200;
+   if (i_nentries == -1) {
+     nentries = 200;
+   } else if (i_nentries != -2) {
+     nentries = i_nentries;
+   } 
    int efirst = 0;
    int elast  = efirst+nentries;
+   if (cachesize == -2) {
+      gEnv->SetValue("TFile.AsyncReading", 0);
+      cachesize = -1;
+   }
    T->SetCacheSize(cachesize);
    if (cachesize != 0) {
       T->SetCacheEntryRange(efirst,elast);
-      T->AddBranchToCache("*");
+      if (percentbranches < 1.00) {
+         int nb = T->GetListOfBranches()->GetEntries();
+         int incr = nb * percentbranches;
+         for(int b=0;b < nb; b += incr) T->AddBranchToCache(((TBranch*)T->GetListOfBranches()->At(b)),kTRUE);
+      } else {
+         T->AddBranchToCache("*");
+      }
       T->StopCacheLearningPhase();
    }
-   
+  
    TTreePerfStats *ps= new TTreePerfStats("ioperf",T);
    
    TRandom r;
    for (Long64_t i=efirst;i<elast;i++) {
       if (i%10 == 0) printf("i = %lld\n",i);
-      //if (r.Rndm() > 0.01) continue; to check: 12,14,15
-      TBranch * br = ((TBranch*)T->GetListOfBranches()->At(16));
-      br = (TBranch*)br->GetListOfBranches()->At(2);
-//      for(int b= 44;b< 47;++b) { 
-//         TBranch *readbr = ((TBranch*)br->GetListOfBranches()->At(b));
-//         fprintf(stdout,"%d %s %d : ",b, readbr->GetName(),readbr->TestBit(kDoNotProcess)); 
-//         fprintf(stdout,"%d\n",readbr->GetEntry(i)); 
-//      }
-      //for(int b= 17;b< 18;++b) ((TBranch*)T->GetListOfBranches()->At(b))->GetEntry(i);
-      T->GetEntry(i);
+      if (r.Rndm() > percententries) continue; 
+      T->LoadTree(i);
+      if (percentbranches < 1.00) {
+         int nb = T->GetListOfBranches()->GetEntries();
+         int incr = nb * percentbranches;
+         for(int b=0;b<nb; b += incr) ((TBranch*)T->GetListOfBranches()->At(b))->GetEntry(i);   
+         int count = 0;
+         int maxcount = 100 + 100 ;
+         for(int x = 0; x < maxcount; ++x ) { /* waste cpu */ count = sin(cos(count)); }
+      } else {
+         T->GetEntry(i);
+      }
    }
    TString psfilename(filename);
    TString pssuffix("_ioperf.root");
    if (options && options[0]) { pssuffix.Prepend(options); pssuffix.Prepend("_"); } 
    psfilename.ReplaceAll(".root", pssuffix );
-   ps->SaveAs(psfilename);
+   //ps->SaveAs(psfilename);
    //ps->Draw();
-   ps->Print();
+   if (ps) ps->Print();
    T->PrintCacheStats();
-   //printf("Real Time = %7.3f s, CPUtime = %7.3f s\n",sw.RealTime(),sw.CpuTime());
+   printf("Real Time = %7.3f s, CPUtime = %7.3f s\n",sw.RealTime(),sw.CpuTime());
 }
