@@ -7,20 +7,20 @@
 #include "TStreamerElement.h"
 #include "TROOT.h"
 
-void fixLHCb(TList *infolist = 0)
+void fixLHCb()
 {
    TClass::AddRule("KeyedContainer<LHCb::HepMCEvent,Containers::KeyedObjectManager<Containers::hashmap> >     m_sequential   attributes=Owner");
    TClass::AddRule("KeyedContainer<LHCb::GenCollision,Containers::KeyedObjectManager<Containers::hashmap> >    m_sequential   attributes=Owner"); 
    TClass::AddRule("ObjectVector<LHCb::MCRichDigitSummary>    m_vector   attributes=Owner");
 }
 
-void fixCMS(TList *infolist = 0)
+void fixCMS()
 {
    TClass::AddRule("edm::OwnVector<reco::BaseTagInfo,edm::ClonePolicy<reco::BaseTagInfo> >    data_   attributes=Owner");
    TClass::AddRule("edm::OwnVector<pat::UserData,edm::ClonePolicy<pat::UserData> >            data_   attributes=Owner");
 }
 
-void fixATLAS(TList *infolist = 0)
+void fixATLAS()
 {
    TClass::AddRule("MuonSpShowerContainer_p1 m_showers attributes=Owner");
 }
@@ -35,7 +35,7 @@ TFile *openFileAndLib(const char *i_filename, bool loadlibrary, bool genreflex)
    }
    
    if (genreflex) {
-      gSystem->Load("libCintex");file://localhost/Users/pcanal/root_working/roottest/root/io/perf/userdatasets/readfile.C
+      gSystem->Load("libCintex");
       gROOT->ProcessLine("ROOT::Cintex::Cintex::Enable()");
       libdir.Prepend("gen");
    }
