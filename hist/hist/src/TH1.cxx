@@ -4958,8 +4958,8 @@ Long64_t TH1::Merge(TCollection *li)
          nx = h->GetXaxis()->GetNbins();
          for (binx = 0; binx <= nx + 1; binx++) {
             cu = h->GetBinContent(binx);
-            if (!allHaveLabels || !binx || binx==nx+1) {
-               if ((!same) && (binx == 0 || binx == nx + 1)) {
+            if (!allHaveLabels || binx==0 || binx== nx+1) {
+               if ((!same)    && (binx==0 || binx== nx+1)) {
                   if (cu != 0) {
                      Error("Merge", "Cannot merge histograms - the histograms have"
                         " different limits and undeflows/overflows are present."
