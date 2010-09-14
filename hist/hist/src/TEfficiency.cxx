@@ -669,7 +669,7 @@ TEfficiency::TEfficiency(const TH1& passed,const TH1& total):
    fBeta_beta(kDefBetaBeta),
    fConfLevel(kDefConfLevel),
    fDirectory(0),
-   fFunctions(0),
+   fFunctions(new TList()),
    fPaintGraph(0),
    fPaintHisto(0),
    fWeight(kDefWeight)
@@ -976,7 +976,7 @@ TEfficiency::TEfficiency(const TEfficiency& rEff):
    fBeta_beta(rEff.fBeta_beta),
    fConfLevel(rEff.fConfLevel),
    fDirectory(0),
-   fFunctions(0),
+   fFunctions(new TList()),
    fPaintGraph(0),
    fPaintHisto(0),
    fWeight(rEff.fWeight)
@@ -1147,6 +1147,8 @@ void TEfficiency::Build(const char* name,const char* title)
    //set normalisation factors to 0, otherwise the += may not work properly
    fPassedHistogram->SetNormFactor(0);
    fTotalHistogram->SetNormFactor(0);
+
+   fFunctions = new TList();
 }
 
 //______________________________________________________________________________
@@ -1726,9 +1728,6 @@ Int_t TEfficiency::Fit(TF1* f1,Option_t* opt)
    //create copy which is appended to the list
    TF1* pFunc = new TF1(*f1);
    
-   if(!fFunctions)
-      fFunctions = new TList();
-
    if(bDeleteOld) {
       TIter next(fFunctions);
       TObject* obj = 0;
