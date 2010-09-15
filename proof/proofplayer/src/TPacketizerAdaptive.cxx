@@ -901,13 +901,17 @@ TPacketizerAdaptive::TFileStat *TPacketizerAdaptive::GetNextUnAlloc(TFileNode *n
 
                // Check, whether node's hostname is matching with current fileNode (fn)
                if (!strcmp(nodeHostName, uu.GetHost())) {
-                  PDB(kPacketizer, 2)
-                     Info("GetNextUnAlloc", "found! (host: %s)", uu.GetHost());
                   node = fn;
 
                   // Fetch next unallocated file from this node
-                  if ((file = node->GetNextUnAlloc()) == 0) RemoveUnAllocNode(node);
-                  break;
+                  if ((file = node->GetNextUnAlloc()) == 0) {
+                     RemoveUnAllocNode(node);
+                     node = 0;
+                  } else {
+                     PDB(kPacketizer, 2)
+                        Info("GetNextUnAlloc", "found! (host: %s)", uu.GetHost());
+                     break;
+                  }
                }
             } else {
                Warning("GetNextUnAlloc", "unallocate entry %d is empty!", i);
