@@ -27,7 +27,7 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
 
 
   RooWorkspace* w = new RooWorkspace("w",true);
-  w->factory("SUM::pdf(s[0,15]*Uniform(x[0,1]),b[1,0,2]*Uniform(x))");
+  w->factory("SUM::pdf(s[0.001,15]*Uniform(x[0,1]),b[1,0,2]*Uniform(x))");
   w->factory("Gaussian::prior_b(b,1,1)");
   w->factory("PROD::model(pdf,prior_b)");
   RooAbsPdf* model = w->pdf("model");  // pdf*priorNuisance
@@ -37,7 +37,7 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
 
   RooAbsRealLValue* POI = w->var("s");
   RooAbsPdf* priorPOI  = (RooAbsPdf *) w->factory("Uniform::priorPOI(s)");  
-  RooAbsPdf* priorPOI2 = (RooAbsPdf *) w->factory("GenericPdf::priorPOI2('1/s',s)");
+  RooAbsPdf* priorPOI2 = (RooAbsPdf *) w->factory("GenericPdf::priorPOI2('1/sqrt(@0)',s)");
 
   w->factory("n[3]"); // observed number of events
   // create a data set with n observed events
@@ -65,10 +65,10 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
   c1->Divide(1,2); 
   c1->cd(1);
   plot->Draw();
+  c1->Update();
 
-  // don;t run with background events - will take too long
-  std::cout << "\nBayesian Result using a 1/s prior (no background) " << std::endl;
-  BayesianCalculator bcalc2(data,*model,RooArgSet(*POI),*priorPOI2);
+  std::cout << "\nBayesian Result using a 1/sqrt(s) prior  " << std::endl;
+  BayesianCalculator bcalc2(data,*model,RooArgSet(*POI),*priorPOI2,nuisPar);
   bcalc2.SetTestSize(size);
   SimpleInterval* interval2 = bcalc2.GetInterval();
   cl = bcalc2.ConfidenceLevel();
@@ -79,6 +79,7 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
   RooPlot * plot2 = bcalc2.GetPosteriorPlot();
   c1->cd(2);
   plot2->Draw();
+  gPad->SetLogy();
   c1->Update();
   
   // observe one event while expecting one background event -> the 95% CL upper limit on s is 4.10
