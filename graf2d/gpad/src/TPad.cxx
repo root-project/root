@@ -4157,11 +4157,12 @@ void TPad::Print(const char *filenam, Option_t *option)
    //  To generate a Postscript file containing more than one picture, see
    //  class TPostScript.
    //
-   //   Writing several canvases to the same Postscript file:
-   //   ----------------------------------------------------
-   // if the Postscript file name finishes with "(", the file is not closed
-   // if the Postscript file name finishes with ")" and the file has been opened
-   //    with "(", the file is closed. Example:
+   //   Writing several canvases to the same Postscript or PDF file:
+   //   ------------------------------------------------------------
+   // if the Postscript or PDF file name finishes with "(", the file is not closed
+   // if the Postscript or PDF file name finishes with ")" and the file has been opened
+   // with "(", the file is closed. Example:
+   //
    // {
    //    TCanvas c1("c1");
    //    h1.Draw();
@@ -4172,6 +4173,8 @@ void TPad::Print(const char *filenam, Option_t *option)
    //    c1.Print("c1.ps)"); canvas is added to "c1.ps" and ps file is closed
    // }
    //
+   //  In the previous example replacing "ps" by "pdf" will create a multi-pages PDF file.
+   //
    //  Note that the following sequence writes the canvas to "c1.ps" and closes the ps file.:
    //    TCanvas c1("c1");
    //    h1.Draw();
@@ -4179,7 +4182,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    //
    //  The TCanvas::Print("file.ps(") mechanism is very useful, but it can be
    //  a little inconvenient to have the action of opening/closing a file
-   //  being atomic with printing a page.  Particularly if pages are being
+   //  being atomic with printing a page. Particularly if pages are being
    //  generated in some loop one needs to detect the special cases of first
    //  and last page and then munge the argument to Print() accordingly.
    //
@@ -4193,6 +4196,8 @@ void TPad::Print(const char *filenam, Option_t *option)
    //      c1.Print("file.ps");  // actually print canvas to file
    //    }// end loop
    //    c1.Print("file.ps]");   // No actual print, just close.
+   //
+   // As before, the same macro is valid for PDF files.
    //
    // It is possible to print a pad into an animated GIF file by specifying the
    // file name as "myfile.gif+" or "myfile.gif+NN", where NN*10ms is delay
