@@ -3122,9 +3122,6 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
    Long64_t r = Process(set, selector, option, nentries, firstentry);
    fProof->RemoveFeedback(objname);
 
-   // Remove the feedback canvas
-   FeedBackCanvas(TString::Format("%s_canvas", objname.Data()), kFALSE);
-
    fInput->Remove(varexpobj);
    fInput->Remove(selectionobj);
    if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
