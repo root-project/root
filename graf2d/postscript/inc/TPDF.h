@@ -44,6 +44,7 @@ protected:
    Int_t    fObjPosSize;      //Real size of fObjPos
    Int_t    fNbObj;           //Number of objects
    Int_t    fNbPage;          //Number of pages
+   Bool_t   fPageNotEmpty;    //True if the current page is not empty
    Bool_t   fCompress;        //True when fBuffer must be compressed
    Bool_t   fRange;           //True when a range has been defined
 

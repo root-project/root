@@ -107,6 +107,7 @@ TPDF::TPDF() : TVirtualPS()
 
    fStream          = 0;
    fCompress        = kFALSE;
+   fPageNotEmpty    = kFALSE;
    gVirtualPS       = this;
    fRed             = 0.;
    fGreen           = 0.;
@@ -139,6 +140,7 @@ TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 
    fStream          = 0;
    fCompress        = kFALSE;
+   fPageNotEmpty    = kFALSE;
    fRed             = 0.;
    fGreen           = 0.;
    fBlue            = 0.;
@@ -1099,6 +1101,8 @@ void TPDF::NewPage()
 {
    // Start a new PDF page.
 
+   if(!fPageNotEmpty)return;
+
    // Compute pad conversion coefficients
    if (gPad) {
       Double_t ww   = gPad->GetWw();
@@ -1430,6 +1434,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PatternEncode();
 
    NewPage();
+   fPageNotEmpty = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -1840,6 +1845,7 @@ void TPDF::PrintStr(const char *str)
 
    Int_t len = strlen(str);
    if (len == 0) return;
+   fPageNotEmpty = kTRUE;
 
    if (fCompress) {
       if (fLenBuffer+len >= fSizBuffer) {
@@ -1860,6 +1866,7 @@ void TPDF::PrintFast(Int_t len, const char *str)
 {
    // Fast version of Print
 
+   fPageNotEmpty = kTRUE;
    if (fCompress) {
       if (fLenBuffer+len >= fSizBuffer) {
          fBuffer  = TStorage::ReAllocChar(fBuffer, 2*fSizBuffer, fSizBuffer);
