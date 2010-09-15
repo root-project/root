@@ -129,10 +129,10 @@ Bool_t TFileStager::IsStaged(const char *f)
    Bool_t rc = kTRUE;
    if (!ff || ff->IsZombie()) {
       rc = kFALSE;
-      if (ff) {
-         ff->Close();
-         delete ff;
-      }
+   }
+   if (ff) {
+      ff->Close();
+      delete ff;
    }
    // Done
    return rc;
