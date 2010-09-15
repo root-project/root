@@ -357,26 +357,4 @@ RooCFunction2PdfBinding<VO,VI1,VI2>::RooCFunction2PdfBinding(const RooCFunction2
   // Copy constructor
 }
 
-
-template <>        void RooCFunction2Ref<Double_t,Double_t,Double_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <>    void RooCFunction2Binding<Double_t,Double_t,Double_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <> void RooCFunction2PdfBinding<Double_t,Double_t,Double_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-
-template <>        void RooCFunction2Ref<Double_t,Int_t,Double_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <>    void RooCFunction2Binding<Double_t,Int_t,Double_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <> void RooCFunction2PdfBinding<Double_t,Int_t,Double_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-
-template <>        void RooCFunction2Ref<Double_t,UInt_t,Double_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <>    void RooCFunction2Binding<Double_t,UInt_t,Double_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <> void RooCFunction2PdfBinding<Double_t,UInt_t,Double_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-
-template <>        void RooCFunction2Ref<Double_t,Double_t,Int_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <>    void RooCFunction2Binding<Double_t,Double_t,Int_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <> void RooCFunction2PdfBinding<Double_t,Double_t,Int_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-
-template <>        void RooCFunction2Ref<Double_t,Int_t,Int_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <>    void RooCFunction2Binding<Double_t,Int_t,Int_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <> void RooCFunction2PdfBinding<Double_t,Int_t,Int_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-
-
 #endif

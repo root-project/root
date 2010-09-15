@@ -347,15 +347,4 @@ RooCFunction1PdfBinding<VO,VI>::RooCFunction1PdfBinding(const RooCFunction1PdfBi
   // Copy constructor
 } 
 
-
-
-template <>        void RooCFunction1Ref<Double_t,Double_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <>    void RooCFunction1Binding<Double_t,Double_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <> void RooCFunction1PdfBinding<Double_t,Double_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <>        void RooCFunction1Ref<Double_t,Int_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <>    void RooCFunction1Binding<Double_t,Int_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <> void RooCFunction1PdfBinding<Double_t,Int_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-
-
- 
 #endif
