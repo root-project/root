@@ -166,8 +166,6 @@ TVirtualPacketizer::~TVirtualPacketizer()
 {
    // Destructor.
 
-   Info("~TVirtualPacketize", "destroying ...");
-
    SafeDelete(fCircProg);
    SafeDelete(fProgress);
    SafeDelete(fFailedPackets);
