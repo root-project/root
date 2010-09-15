@@ -204,6 +204,23 @@ TRFIOFile::~TRFIOFile()
 }
 
 //______________________________________________________________________________
+Bool_t TRFIOFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
+{
+   // Read specified byte range from remote file via Chirp daemon.
+   // Returns kTRUE in case of error.
+   
+   SetOffset(pos);
+   Int_t st;
+   if ((st = ReadBufferViaCache(buf, len))) {
+      if (st == 2)
+         return kTRUE;
+      return kFALSE;
+   }
+   
+   return TFile::ReadBuffer(buf, pos, len);
+}
+
+//______________________________________________________________________________
 Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 {
    // Read a list of buffers given in pos[] and len[] and return it

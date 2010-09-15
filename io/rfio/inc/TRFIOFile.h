@@ -68,6 +68,7 @@ private:
    Long64_t SysSeek(Int_t fd, Long64_t offset, Int_t whence);
    Int_t    SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
    Int_t    SysSync(Int_t) { /* no fsync for RFIO */ return 0; }
+   Bool_t   ReadBuffer(char *buf, Long64_t pos, Int_t len);
    Bool_t   ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
 
 public:
