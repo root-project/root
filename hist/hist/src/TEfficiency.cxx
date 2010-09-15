@@ -426,16 +426,16 @@ ClassImp(TEfficiency)
 //    The following pictures illustrate the actual coverage probability for the
 //    different values of the true efficiency and the total number of events when a
 //    confidence level of 95% is desired.
-//    <p><img src="normal95.gif" alt="normal approximation" width="600" height="400" /></p>
-//    <p><img src="wilson95.gif" alt="wilson" width="600" height="400" /></p>
-//    <p><img src="ac95.gif" alt="agresti coull" width="600" height="400" /></p>
-//    <p><img src="cp95.gif" alt="clopper pearson" width="600" height="400" /></p>
-//    <p><img src="uni95.gif" alt="uniform prior" width="600" height="400" /></p>
-//    <p><img src="jeffrey95.gif" alt="jeffrey prior" width="600" height="400" /></p>
+//    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/normal95.gif" alt="normal approximation" width="600" height="400" /></p>
+//    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/wilson95.gif" alt="wilson" width="600" height="400" /></p>
+//    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/ac95.gif" alt="agresti coull" width="600" height="400" /></p>
+//    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/cp95.gif" alt="clopper pearson" width="600" height="400" /></p>
+//    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/uni95.gif" alt="uniform prior" width="600" height="400" /></p>
+//    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/jeffrey95.gif" alt="jeffrey prior" width="600" height="400" /></p>
 //
 //    The average (over all possible true efficiencies) coverage probability for
 //    different number of total events is shown in the next picture.
-//    <p><img src="av_cov.png" alt="average coverage" width="600" height="400" /></p>
+//    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/av_cov.png" alt="average coverage" width="600" height="400" /></p>
 //    <h3><a name="cm">V. Merging and combining TEfficiency objects</a></h3>
 //    In many applications the efficiency should be calculated for an inhomogenous
 //    sample in the sense that it contains events with different weights. In order
