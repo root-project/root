@@ -2,6 +2,8 @@
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
+#pragma link C++ class RooCacheManager<vector<double> >+ ;
+#pragma link C++ class RooCacheManager<RooAbsCacheElement>+ ;
 #pragma link C++ class RooRandomizeParamMCSModule+ ;
 #pragma link C++ class RooRangeBinning+ ;
 #pragma link C++ class RooRealAnalytic+ ;
@@ -52,8 +54,6 @@
 #pragma link C++ class RooCachedPdf+ ;
 #pragma link C++ class RooFFTConvPdf+ ;
 #pragma link C++ class RooDataHistSliceIter+ ;
-#pragma link C++ class RooCacheManager<vector<double> >+ ;
-#pragma link C++ class RooCacheManager<RooAbsCacheElement>+ ;
 #pragma link C++ class RooObjCacheManager+ ;
 #pragma link C++ class RooAbsCache+ ;
 #pragma link C++ class RooAbsCacheElement+ ;

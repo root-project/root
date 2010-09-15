@@ -99,11 +99,6 @@ protected:
 } ;
 
 
-// needed to avoid 'specialization after instantiation' problem in gcc 
-template <> void RooCacheManager<RooAbsCacheElement>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-template <> void RooCacheManager<std::vector<Double_t> >::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
-
-
 template<class T>
 RooCacheManager<T>::RooCacheManager(Int_t maxSize) : RooAbsCache(0)
 {
