@@ -5410,6 +5410,13 @@ void TPad::Streamer(TBuffer &b)
 
          b.ReadClassBuffer(TPad::Class(), this, v, R__s, R__c);
 
+         //Set the kCanDelete bit in all objects in the pad such that when the pad 
+         //is deleted all objects in the pad are deleted too.
+         TIter next(fPrimitives);
+         while ((obj = next())) {
+            obj->SetBit(kCanDelete);
+         }
+
          fModified = kTRUE;
          fPadPointer = 0;
          gReadLevel--;
