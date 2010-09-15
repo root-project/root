@@ -25,6 +25,11 @@
 #include "TClassRef.h"
 #include "TDataType.h"
 
+// Macro indicating the version of the Collection Proxy interface followed
+// by this ROOT build (See also Reflex/Builder/CollectionProxy.h).
+
+#define ROOT_COLLECTIONPROXY_VERSION 2
+
 class TClass;
 
 class TVirtualCollectionProxy {

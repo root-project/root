@@ -14,6 +14,12 @@
 
 #include <cstddef>
 
+// Macro indicating the version of the Collection Proxy interface followed
+// by this Reflex build, this must match the version number of 
+// ROOT_COLLECTIONPROXY_VERSION in ROOT's TVirtutalCollectionProxy.h
+
+#define REFLEX_COLLECTIONPROXY_VERSION 2
+
 // Forward declarations
 namespace std {
 template <class T, class A> class deque;
