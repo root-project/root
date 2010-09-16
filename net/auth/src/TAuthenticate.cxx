@@ -4954,7 +4954,7 @@ static Int_t RecvHostAuth(TSocket *s, Option_t *opt)
 
    while (strcmp(buf, "END")) {
       // Clean buffer
-      Int_t nc = (nr < kMAXSECBUF)? nr : kMAXSECBUF ;
+      Int_t nc = (nr >= kMAXSECBUF) ? kMAXSECBUF - 1 : nr ;
       buf[nc] = '\0';
 
       // Create THostAuth
