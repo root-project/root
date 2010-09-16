@@ -740,6 +740,8 @@ void TGFileBrowser::AddKey(TGListTreeItem *itm, TObject *obj, const char *name)
    static TGListTreeItem *item = itm;
    const TGPicture *pic;
 
+   if (itm == 0) return;
+
    if ((fCnt == 0) || (olditem != itm)) {
       olditem = item = itm;
    }
