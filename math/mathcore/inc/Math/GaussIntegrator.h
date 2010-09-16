@@ -35,6 +35,25 @@ namespace Math {
  */
 
 class GaussIntegrator: public VirtualIntegratorOneDim {
+
+/**
+   Auxiliar inner class for mapping infinite and semi-infinite integrals
+*/            
+   struct IntegrandTransform : public IGenFunction {
+      enum ESemiInfinitySign {kMinus = -1, kPlus = +1};
+      IntegrandTransform(const IGenFunction* integrand);
+      IntegrandTransform(const double boundary, ESemiInfinitySign sign, const IGenFunction* integrand);
+      double operator()(double x) const;
+      double DoEval(double x) const;
+      IGenFunction* Clone() const;
+   private:
+      ESemiInfinitySign fSign;
+      const IGenFunction* fIntegrand;
+      double fBoundary;
+      bool fInfiniteInterval;
+      double DoEval(double x, double boundary, int sign) const;
+   };
+   
 public:
    /** Destructor */
    ~GaussIntegrator();
@@ -70,96 +89,136 @@ public:
 
    // Implementing VirtualIntegratorOneDim Interface
 
-   /** Return Integral of function between a and b.
-       
-       Based on original CERNLIB routine DGAUSS by Sigfried Kolbig
-       converted to C++ by Rene Brun
-     
-      This function computes, to an attempted specified accuracy, the value
-      of the integral.
-     Begin_Latex
-        I = #int^{B}_{A} f(x)dx
-     End_Latex
+   /** Returns Integral of function between a and b. 
+      This function computes, to an attempted specified accuracy, the value of the integral:
+   Begin_Latex
+      I = #int^{B}_{A} f(x)dx
+   End_Latex
       Usage:
         In any arithmetic expression, this function has the approximate value
         of the integral I.
         - A, B: End-points of integration interval. Note that B may be less
-                than A.
-        - params: Array of function parameters. If 0, use current parameters.
-        - epsilon: Accuracy parameter (see Accuracy).
-     
-     Method:
-        For any interval [a,b] we define g8(a,b) and g16(a,b) to be the 8-point
-        and 16-point Gaussian quadrature approximations to
-     Begin_Latex
-        I = #int^{b}_{a} f(x)dx
-     End_Latex
-        and define
-     Begin_Latex
-        r(a,b) = #frac{#||{g_{16}(a,b)-g_{8}(a,b)}}{1+#||{g_{16}(a,b)}}
-     End_Latex
-        Then,
-     Begin_Latex
-        G = #sum_{i=1}^{k}g_{16}(x_{i-1},x_{i})
-     End_Latex
-        where, starting with x0 = A and finishing with xk = B,
-        the subdivision points xi(i=1,2,...) are given by
-     Begin_Latex
-        x_{i} = x_{i-1} + #lambda(B-x_{i-1})
-     End_Latex
-        Begin_Latex #lambdaEnd_Latex is equal to the first member of the
-        sequence 1,1/2,1/4,... for which r(xi-1, xi) < EPS.
-        If, at any stage in the process of subdivision, the ratio
-     Begin_Latex
-        q = #||{#frac{x_{i}-x_{i-1}}{B-A}}
-     End_Latex
-        is so small that 1+0.005q is indistinguishable from 1 to
-        machine accuracy, an error exit occurs with the function value
-        set equal to zero.
-     
-      Accuracy:
-        Unless there is severe cancellation of positive and negative values of
-        f(x) over the interval [A,B], the relative error may be considered as
-        specifying a bound on the <I>relative</I> error of I in the case
-        |I|&gt;1, and a bound on the absolute error in the case |I|&lt;1. More
-        precisely, if k is the number of sub-intervals contributing to the
-        approximation (see Method), and if
-     Begin_Latex
-        I_{abs} = #int^{B}_{A} #||{f(x)}dx
-     End_Latex
-        then the relation
-     Begin_Latex
-        #frac{#||{G-I}}{I_{abs}+k} < EPS
-     End_Latex
-        will nearly always be true, provided the routine terminates without
-        printing an error message. For functions f having no singularities in
-        the closed interval [A,B] the accuracy will usually be much higher than
-        this.
-     
-      Error handling:
-        The requested accuracy cannot be obtained (see Method).
-        The function value is set equal to zero.
-     
-      Note 1:
-        Values of the function f(x) at the interval end-points A and B are not
-        required. The subprogram may therefore be used when these values are
-        undefined.
+        than A.
+       
+      Surrogates integration computation to DoIntegral(a, b [, ...]).
    */
    double Integral (double a, double b);
+   
+   /** Returns Integral of function on an infinite interval. 
+      This function computes, to an attempted specified accuracy, the value of the integral:
+   Begin_Latex
+      I = #int^{#infinity}_{-#infinity} f(x)dx
+   End_Latex
+      Usage:
+        In any arithmetic expression, this function has the approximate value
+        of the integral I.
+    
+      The integral is mapped onto [0,1] using a transformation then integral computation is surrogated to DoIntegral.
+   */
+   double Integral ();
+   
+   /** Returns Integral of function on an upper semi-infinite interval. 
+      This function computes, to an attempted specified accuracy, the value of the integral:
+   Begin_Latex
+      I = #int^{#infinity}_{A} f(x)dx
+   End_Latex
+      Usage:
+        In any arithmetic expression, this function has the approximate value
+        of the integral I.
+        - A: lower end-point of integration interval.
+   
+      The integral is mapped onto [0,1] using a transformation then integral computation is surrogated to DoIntegral.
+   */
+   double IntegralUp (double a);
+   
+   /** Returns Integral of function on a lower semi-infinite interval. 
+       This function computes, to an attempted specified accuracy, the value of the integral:
+   Begin_Latex
+      I = #int^{B}_{#infinity} f(x)dx
+   End_Latex
+      Usage:
+         In any arithmetic expression, this function has the approximate value
+         of the integral I.
+         - B: upper end-point of integration interval.
+
+      The integral is mapped onto [0,1] using a transformation then integral computation is surrogated to DoIntegral.
+   */
+   double IntegralLow (double b);
+   
+   /** Integration surrogate method. Returns the integral in interval [a,b].
+
+     Based on original CERNLIB routine DGAUSS by Sigfried Kolbig 
+     converted to C++ by Rene Brun
+     
+     This function computes, to an attempted specified accuracy, the value
+     of the integral.
+    
+    Method:
+       For any interval [a,b] we define g8(a,b) and g16(a,b) to be the 8-point
+       and 16-point Gaussian quadrature approximations to
+   Begin_Latex
+      I = #int^{b}_{a} f(x)dx
+   End_Latex
+      and define
+   Begin_Latex
+      r(a,b) = #frac{#||{g_{16}(a,b)-g_{8}(a,b)}}{1+#||{g_{16}(a,b)}}
+   End_Latex
+      Then,
+   Begin_Latex
+      G = #sum_{i=1}^{k}g_{16}(x_{i-1},x_{i})
+   End_Latex
+      where, starting with x0 = A and finishing with xk = B,
+      the subdivision points xi(i=1,2,...) are given by
+   Begin_Latex
+      x_{i} = x_{i-1} + #lambda(B-x_{i-1})
+   End_Latex
+   Begin_Latex 
+      #lambda
+   End_Latex
+      is equal to the first member of the
+      sequence 1,1/2,1/4,... for which r(xi-1, xi) < EPS.
+      If, at any stage in the process of subdivision, the ratio
+  Begin_Latex
+      q = #||{#frac{x_{i}-x_{i-1}}{B-A}}
+  End_Latex
+      is so small that 1+0.005q is indistinguishable from 1 to
+      machine accuracy, an error exit occurs with the function value
+      set equal to zero.
+
+   Accuracy:
+      Unless there is severe cancellation of positive and negative values of
+      f(x) over the interval [A,B], the relative error may be considered as
+      specifying a bound on the <I>relative</I> error of I in the case
+      |I|&gt;1, and a bound on the absolute error in the case |I|&lt;1. More
+      precisely, if k is the number of sub-intervals contributing to the
+      approximation (see Method), and if
+      Begin_Latex
+      I_{abs} = #int^{B}_{A} #||{f(x)}dx
+      End_Latex
+      then the relation
+   Begin_Latex
+    #frac{#||{G-I}}{I_{abs}+k} < EPS
+   End_Latex
+      will nearly always be true, provided the routine terminates without
+      printing an error message. For functions f having no singularities in
+      the closed interval [A,B] the accuracy will usually be much higher than
+      this.
+
+    Error handling:
+      The requested accuracy cannot be obtained (see Method).
+      The function value is set equal to zero.
+
+    Note 1:
+      Values of the function f(x) at the interval end-points A and B are not
+      required. The subprogram may therefore be used when these values are
+      undefined
+   */
+   double DoIntegral (double a, double b, const IGenFunction* mapping);
 
    /** Set integration function (flag control if function must be copied inside).
        \@param f Function to be used in the calculations.
    */
    void SetFunction (const IGenFunction &);
-
-   /** This method is not implemented. */
-   double Integral ();
-
-   /** This method is not implemented. */
-   double IntegralUp (double a);
-
-   /**This method is not implemented. */
-   double IntegralLow (double b);
 
    /** This method is not implemented. */
    double Integral (const std::vector< double > &pts);

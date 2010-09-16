@@ -13,6 +13,32 @@
 
 namespace ROOT {
 namespace Math {
+      
+GaussIntegrator::IntegrandTransform::IntegrandTransform(const IGenFunction* integrand)
+   : fSign(kPlus), fIntegrand(integrand), fBoundary(0.), fInfiniteInterval(true) {
+}
+
+GaussIntegrator::IntegrandTransform::IntegrandTransform(const double boundary, ESemiInfinitySign sign, const IGenFunction* integrand) 
+   : fSign(sign), fIntegrand(integrand), fBoundary(boundary), fInfiniteInterval(false)  {
+}
+
+double GaussIntegrator::IntegrandTransform::DoEval(double x) const {
+   double result = DoEval(x, fBoundary, fSign);
+   return (result += (fInfiniteInterval ? DoEval(x, 0., -1) : 0.));
+}
+
+double GaussIntegrator::IntegrandTransform::DoEval(double x, double boundary, int sign) const {
+   double mappedX = 1. / x - 1.;
+   return (*fIntegrand)(boundary + sign * mappedX) * std::pow(mappedX + 1., 2);;
+}
+
+double GaussIntegrator::IntegrandTransform::operator()(double x) const {
+   return DoEval(x);
+}
+
+IGenFunction* GaussIntegrator::IntegrandTransform::Clone() const {
+   return (fInfiniteInterval ? new IntegrandTransform(fIntegrand) : new IntegrandTransform(fBoundary, fSign, fIntegrand));
+}
 
 bool GaussIntegrator::fgAbsValue = false;
 
@@ -34,7 +60,26 @@ GaussIntegrator::~GaussIntegrator()
 void GaussIntegrator::AbsValue(bool flag)
 {   fgAbsValue = flag;  }
 
-double GaussIntegrator::Integral(double a, double b)
+double GaussIntegrator::Integral(double a, double b) {
+   return DoIntegral(a, b, fFunction);
+}
+
+double GaussIntegrator::Integral () {
+   IntegrandTransform it(this->fFunction);
+   return DoIntegral(0., 1., it.Clone());
+}
+
+double GaussIntegrator::IntegralUp (double a) {
+   IntegrandTransform it(a, GaussIntegrator::IntegrandTransform::kPlus, this->fFunction);
+   return DoIntegral(0., 1., it.Clone());
+}
+
+double GaussIntegrator::IntegralLow (double b) {
+   IntegrandTransform it(b, GaussIntegrator::IntegrandTransform::kMinus, this->fFunction);
+   return DoIntegral(0., 1., it.Clone());
+}
+
+double GaussIntegrator::DoIntegral(double a, double b, const IGenFunction* function)
 {
    //  Return Integral of function between a and b.
 
@@ -80,10 +125,10 @@ CASE2:
    for (i=0;i<4;i++) {
       u     = c2*x[i];
       xx[0] = c1+u;
-      f1    = (*fFunction)(xx);
+      f1    = (*function)(xx);
       if (fgAbsValue) f1 = std::abs(f1);
       xx[0] = c1-u;
-      f2    = (*fFunction) (xx);
+      f2    = (*function) (xx);
       if (fgAbsValue) f2 = std::abs(f2);
       s8   += w[i]*(f1 + f2);
    }
@@ -91,10 +136,10 @@ CASE2:
    for (i=4;i<12;i++) {
       u     = c2*x[i];
       xx[0] = c1+u;
-      f1    = (*fFunction) (xx);
+      f1    = (*function) (xx);
       if (fgAbsValue) f1 = std::abs(f1);
       xx[0] = c1-u;
-      f2    = (*fFunction) (xx);
+      f2    = (*function) (xx);
       if (fgAbsValue) f2 = std::abs(f2);
       s16  += w[i]*(f1 + f2);
    }
@@ -144,16 +189,6 @@ void GaussIntegrator::SetFunction (const IGenFunction & function)
    // reset fUsedOne flag
    fUsedOnce = false; 
 }
-
-
-double GaussIntegrator::Integral ()
-{   return 0.0;  }
-
-double GaussIntegrator::IntegralUp (double /*a*/)
-{   return 0.0;  }
-
-double GaussIntegrator::IntegralLow (double /*b*/)
-{   return 0.0;  }
 
 double GaussIntegrator::Integral (const std::vector< double > &/*pts*/)
 {   return 0.0;  }
