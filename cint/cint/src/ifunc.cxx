@@ -3154,19 +3154,11 @@ struct G__ifunc_table_internal* G__overload_match G__P((const char* funcname, st
 void G__rate_parameter_match(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, G__funclist* funclist, int recursive)
 {
    // -- FIXME: Describe this function!
-#ifdef G__DEBUG
-   int i = 0xa3a3a3a3;
-#else // G__DEBUG
    int i;
-#endif // G__DEBUG
    char param_type, formal_type;
    int param_tagnum, formal_tagnum;
    int param_reftype, formal_reftype;
-#ifdef G__DEBUG
-   int param_isconst = 0xa3a3a3a3, formal_isconst = 0xa5a5a5a5;
-#else // G__DEBUG
    int param_isconst = 0, formal_isconst = 0;
-#endif // G__DEBUG
    funclist->rate = 0;
    for (i = 0;i < libp->paran;i++) {
       param_type = libp->para[i].type;
@@ -3543,7 +3535,9 @@ void G__rate_parameter_match(G__param* libp, G__ifunc_table_internal* p_ifunc, i
          break;
       }
       else {
-         if (param_isconst != formal_isconst) funclist->p_rate[i] += G__CVCONVMATCH;
+         if (param_isconst != formal_isconst) {
+            funclist->p_rate[i] += G__CVCONVMATCH;
+         }
          /*
          if('u'==param_type && (0!=param_isconst&& 0==formal_isconst)) {
            funclist->p_rate[i]=G__NOMATCH;

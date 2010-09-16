@@ -56,7 +56,7 @@ G__value G__new_operator(const char* expression)
    int store_tagnum;
    int store_typenum;
    int var_type = 0;
-   G__value result;
+   G__value result = G__null;
    int reftype = G__PARANORMAL;
    int typelen;
    int ispointer = 0;

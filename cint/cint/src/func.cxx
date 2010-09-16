@@ -1877,18 +1877,6 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
    int store_cp_asm = 0;
    int memfuncenvflag = 0;
 
-
-#ifdef G__DEBUG //
-   {
-      int jdbg;
-      int sizedbg = sizeof(struct G__param);
-      char *pcdbg = (char*)(&fpara);
-      for (jdbg = 0;jdbg < (int)sizedbg;jdbg++) {
-         *(pcdbg + jdbg) = (char)0xa3;
-      }
-   }
-#endif
-
    store_exec_memberfunc = G__exec_memberfunc;
    store_memberfunc_tagnum = G__memberfunc_tagnum;
    store_memberfunc_struct_offset = G__memberfunc_struct_offset;
