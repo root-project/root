@@ -27,7 +27,7 @@
 //default values
 const Double_t kDefBetaAlpha = 1;
 const Double_t kDefBetaBeta = 1;
-const Double_t kDefConfLevel = 0.95;
+const Double_t kDefConfLevel = 0.682689492137; // 1 sigma
 const Int_t kDefStatOpt = TEfficiency::kFCP;
 const Double_t kDefWeight = 1;
 
@@ -331,7 +331,7 @@ ClassImp(TEfficiency)
 // 
 //    //copy current TEfficiency object and set new confidence level
 //    TEfficiency* pCopy = new TEfficiency(*pEff);
-//    pCopy->SetConfidenceLevel(0.683);
+//    pCopy->SetConfidenceLevel(0.90);
 // 
 //    //set style attributes
 //    pCopy->SetFillStyle(3005);
@@ -700,10 +700,9 @@ TEfficiency::TEfficiency(const TH1& passed,const TH1& total):
        fPassedHistogram = (TH1*)passed.Clone();
        TH1::AddDirectory(bStatus);
 
-       char buffer[100];
-       strcpy(buffer,total.GetName());
-       strcat(buffer,"_clone");
-       SetName(buffer);
+       TString newName = total.GetName();
+       newName += TString("_clone");
+       SetName(newName);
    }
    else {
       Error("TEfficiency(const TH1&,const TH1&)","histograms are not consistent -> results are useless");
@@ -1001,13 +1000,12 @@ TEfficiency::TEfficiency(const TEfficiency& rEff):
    fPassedHistogram = (TH1*)((rEff.fPassedHistogram)->Clone());
    TH1::AddDirectory(bStatus);
 
-   char buffer[100];
-   strcpy(buffer,rEff.GetName());
-   strcat(buffer,"_copy");
-   SetName(buffer);
-   strcpy(buffer,"[copy] ");
-   strcat(buffer,rEff.GetTitle());
-   SetTitle(buffer);
+   TString name = rEff.GetName();
+   name += "_copy";
+   SetName(name);
+   TString title = "[copy] ";
+   title += rEff.GetTitle();
+   SetTitle(title);
    
    SetStatisticOption(rEff.GetStatisticOption());
 
@@ -1592,14 +1590,14 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
 		 vPassed.at(j)->GetBinContent(i)+vAlpha.at(j),vTotal.at(j)->GetBinContent(i)-
 		 vPassed.at(j)->GetBinContent(i)+vBeta.at(j));
 	 formula.Append(sub);
-	 delete sub;
+	 delete [] sub;
 	 sub = 0;
       }
       //divide by total weight
       sub = new char[20];
       sprintf(sub,")/%lf",totalweight);
       formula.Append(sub);
-      delete sub;
+      delete [] sub;
       sub = 0;
       
       pdf = new TF1("pdf",formula.Data(),0,1);
@@ -2159,6 +2157,7 @@ void TEfficiency::SetBetaBeta(Double_t beta)
 void TEfficiency::SetConfidenceLevel(Double_t level)
 {
    //sets the confidence level (0 < level < 1)
+   // The default value is 1-sigma :~ 0.683
 
    if((level > 0) && (level < 1))
       fConfLevel = level;
@@ -2199,14 +2198,10 @@ void TEfficiency::SetName(const char* name)
    TNamed::SetName(name);
    
    //setting the names (appending the correct ending)
-   char* namebuf = new char[strlen(name)+8];
-   strcpy(namebuf,name);
-   strcat(namebuf,"_total");
-   fTotalHistogram->SetName(namebuf);
-   strcpy(namebuf,name);
-   strcat(namebuf,"_passed");
-   fPassedHistogram->SetName(namebuf);
-   delete namebuf;
+   TString name_total = name + TString("_total");
+   TString name_passed = name + TString("_passed");
+   fTotalHistogram->SetName(name_total);
+   fPassedHistogram->SetName(name_passed);
 }
 
 //______________________________________________________________________________
@@ -2363,33 +2358,19 @@ void TEfficiency::SetTitle(const char* title)
    TNamed::SetTitle(title);
    
    //setting the titles (looking for the first semicolon and insert the tokens there)
-   char* titlebuf = new char[strlen(title)+10];
-   strcpy(titlebuf,title);
-   char* semicolon = strchr(titlebuf,';');
-   if(semicolon != 0)
-   {
-      char* axistitles = new char[strlen(titlebuf)];
-      strcpy(axistitles,semicolon);
-      
-      strcpy(semicolon," (total)\0");
-      strcat(titlebuf,axistitles);
-      fTotalHistogram->SetTitle(titlebuf);
-      strcpy(semicolon," (passed)\0");
-      strcat(titlebuf,axistitles);
-      fPassedHistogram->SetTitle(titlebuf);
-
-      delete [] axistitles;
+   TString title_passed = title; 
+   TString title_total = title; 
+   Ssiz_t pos = title_passed.First(";");
+   if (pos != kNPOS) { 
+      title_passed.Insert(pos," (passed)");
+      title_total.Insert(pos," (total)");
    }
-   else
-   {
-      strcat(titlebuf," (total)");
-      fTotalHistogram->SetTitle(titlebuf);
-      strcpy(titlebuf,title);
-      strcat(titlebuf," (passed)");
-      fPassedHistogram->SetTitle(titlebuf);
+   else { 
+      title_passed.Append(" (passed)");
+      title_total.Append(" (total)");
    }
-
-   delete [] titlebuf;
+   fPassedHistogram->SetTitle(title_passed);
+   fTotalHistogram->SetTitle(title_total);
 }
 
 //______________________________________________________________________________
