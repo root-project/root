@@ -2102,19 +2102,6 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
       return kTRUE;
    }
 
-   // Supported extensions for the implementation file
-   const char *cext[3] = { ".C", ".cxx", ".cc" };
-   Int_t e = 0;
-   for ( ; e < 3; e++)
-      if (strstr(selector_file, cext[e]))
-         break;
-   if (e >= 3) {
-      Info("SendSelector",
-           "Invalid extension: %s (supportd extensions: .C, .cxx, .cc", selector_file);
-      return kFALSE;
-   }
-   Int_t l = strlen(cext[e]);
-
    // Extract the fine name first
    TString selec = selector_file;
    TString aclicMode;
@@ -2141,11 +2128,12 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
 
    // Header file
    TString header = selec;
-   header.Replace(header.Length()-l, l,".h");
+   header.Remove(header.Last('.'));
+   header += ".h";
    if (gSystem->AccessPathName(header, kReadPermission)) {
       TString h = header;
-      header = selec;
-      header.Replace(header.Length()-l, l,".hh");
+      header.Remove(header.Last('.'));
+      header += ".hh";
       if (gSystem->AccessPathName(header, kReadPermission)) {
          Info("SendSelector",
               "header file not found: tried: %s %s", h.Data(), header.Data());
