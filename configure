@@ -1325,7 +1325,7 @@ with options, prefix with --with-, enables corresponding support
   pythia8-libdir     PYHTIA8 support, location of libpythia8.so
   python-incdir      Python support, location of Python.h
   python-libdir      Python support, location of libpython
-  qt-incdir          Qt support, location of qt.h
+  qt-incdir          Qt support, location of Qt/qglobal.h
   qt-libdir          Qt support, location of libqt-mt or libqt
   ruby-incdir        Ruby support, location of ruby.h
   ruby-libdir        Ruby support, location of libruby
