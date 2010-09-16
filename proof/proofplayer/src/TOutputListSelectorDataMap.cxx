@@ -144,7 +144,7 @@ void TCollectDataMembers::Inspect(TClass *cl, const char* /*parent*/, const char
    if (p3pointer) {
       // The data member points to something.
       // Handle multiple pointers to the same output list object:
-      TObject* prev = (TObject*) fMap.GetValue((Long64_t)(ptrdiff_t)p3pointer);
+      TObject* prev = (TObject*) (ptrdiff_t)fMap.GetValue((Long64_t)(ptrdiff_t)p3pointer);
       if (prev) {
          // We have a previous entry - is it a data member or already a TList (of data members)?
          if (prev->InheritsFrom(TDataMember::Class())) {
@@ -173,7 +173,7 @@ TCollectDataMembers::~TCollectDataMembers() {
    Long64_t key;
    Long64_t value;
    while (iMembers.Next(key, value)) {
-      TObject* obj = (TObject*) value;
+      TObject* obj = (TObject*) (ptrdiff_t) value;
       if (obj->InheritsFrom(TList::Class())) {
          delete obj;
       }
