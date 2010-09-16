@@ -84,6 +84,7 @@
 #include "TGToolTip.h"
 #include "TMath.h"
 #include "Riostream.h"
+#include "snprintf.h"
 #include <ctype.h>
 
 
@@ -252,7 +253,7 @@ static Long_t IntStr(const char *text)
 //______________________________________________________________________________
 static char *StrInt(char *text, Long_t i, Int_t digits)
 {
-   sprintf(text, "%li", TMath::Abs(i));
+   snprintf(text, 250, "%li", TMath::Abs(i));
    TString s = text;
    while (digits > s.Length()) {
       s = "0" + s;
@@ -260,7 +261,7 @@ static char *StrInt(char *text, Long_t i, Int_t digits)
    if (i < 0) {
       s = "-" + s;
    }
-   strcpy(text, (const char *) s);
+   strncpy(text, (const char *) s, 250);
    return text;
 }
 
@@ -279,7 +280,7 @@ static char *RealToStr(char *text, const RealInfo_t & ri)
    if (text == 0) {
       return 0;
    }
-   strcpy(p, "");
+   strncpy(p, "", 255);
    if (ri.fSign < 0) {
       strcpy(p, "-");
       p++;
@@ -287,13 +288,13 @@ static char *RealToStr(char *text, const RealInfo_t & ri)
    StrInt(p, TMath::Abs(ri.fIntNum), 0);
    p += strlen(p);
    if ((ri.fStyle == kRSFrac) || (ri.fStyle == kRSFracExpo)) {
-      strcpy(p, ".");
+      strncpy(p, ".", 255-strlen(p));
       p++;
       StrInt(p, TMath::Abs(ri.fFracNum), ri.fFracDigits);
       p += strlen(p);
    }
    if ((ri.fStyle == kRSExpo) || (ri.fStyle == kRSFracExpo)) {
-      strcpy(p, "e");
+      strncpy(p, "e", 255-strlen(p));
       p++;
       StrInt(p, ri.fExpoNum, 0);
       p += strlen(p);
@@ -461,7 +462,7 @@ static char *MIntToStr(char *text, Long_t l, Int_t digits)
    if (l < 0) {
       s = "-" + s;
    }
-   strcpy(text, (const char *) s);
+   strncpy(text, (const char *) s, 255);
    return text;
 }
 
@@ -480,7 +481,7 @@ static char *DIntToStr(char *text, Long_t l, Bool_t Sec, char Del)
    if (l < 0) {
       s = "-" + s;
    }
-   strcpy(text, (const char *) s);
+   strncpy(text, (const char *) s, 255);
    return text;
 }
 
@@ -681,7 +682,7 @@ static char *TranslateToStr(char *text, Long_t l,
              StringInt(TMath::Abs(l) % 100, 0) + "/" +
              StringInt((TMath::Abs(l) / 100) % 100, 0) + "/" +
              StringInt(TMath::Abs(l) / 10000, 0);
-         return strcpy(text, (const char *) date);
+         return strncpy(text, (const char *) date, 255);
       }
    case TGNumberFormat::kNESMDayYear:
       {
@@ -689,7 +690,7 @@ static char *TranslateToStr(char *text, Long_t l,
              StringInt((TMath::Abs(l) / 100) % 100, 0) + "/" +
              StringInt(TMath::Abs(l) % 100, 0) + "/" +
              StringInt(TMath::Abs(l) / 10000, 0);
-         return strcpy(text, (const char *) date);
+         return strncpy(text, (const char *) date, 255);
       }
    case TGNumberFormat::kNESHex:
       return IntToHexStr(text, (ULong_t) l);
@@ -958,7 +959,7 @@ static void IncreaseReal(RealInfo_t & ri, Double_t mag, Bool_t logstep,
           (limits == TGNumberFormat::kNELLimitMinMax)) {
          if (x < min) {
             char text[256];
-            sprintf(text, "%g", min);
+            snprintf(text, 255, "%g", min);
             StrToReal(text, ri);
          }
       }
@@ -967,7 +968,7 @@ static void IncreaseReal(RealInfo_t & ri, Double_t mag, Bool_t logstep,
           (limits == TGNumberFormat::kNELLimitMinMax)) {
          if (x > max) {
             char text[256];
-            sprintf(text, "%g", max);
+            snprintf(text, 255, "%g", max);
             StrToReal(text, ri);
          }
       }
@@ -1108,7 +1109,7 @@ void TGNumberEntryField::SetNumber(Double_t val)
    case kNESReal:
       {
          char text[256];
-         sprintf(text, "%g", val);
+         snprintf(text, 255, "%g", val);
          SetText(text);
          break;
       }
@@ -2163,7 +2164,7 @@ void TGNumberEntry::SavePrimitive(ostream &out, Option_t * /*= ""*/)
              << ",(TGNumberFormat::EStyle) " << GetNumStyle();
          break;
       case kNESHex:
-      {  char hex[150];
+      {  char hex[256];
          ULong_t l = GetHexNumber();
          IntToHexStr(hex, l);
          out << "0x" << hex << "U," << digits << "," << WidgetId()
@@ -2274,7 +2275,7 @@ void TGNumberEntryField::SavePrimitive(ostream &out, Option_t * /*= ""*/)
              << ",(TGNumberFormat::EStyle) " << GetNumStyle();
          break;
       case kNESHex:
-      {  char hex[150];
+      {  char hex[256];
          ULong_t l = GetHexNumber();
          IntToHexStr(hex, l);
          out << "0x" << hex << "U"
