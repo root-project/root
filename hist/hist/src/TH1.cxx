@@ -3724,6 +3724,7 @@ Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &fitOption)
    //   -*-*-*-*-*-*-*Decode string choptin and fill fitOption structure*-*-*-*-*-*
    //                 ================================================
 
+   if (choptin == 0) return 1;
    Int_t nch = strlen(choptin);
    if (!nch) return 1;
 

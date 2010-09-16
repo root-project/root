@@ -417,7 +417,7 @@ int G__pounderror()
       if (p) *p = '\0';
       G__fprinterr(G__serr, "#error %s\n", buf());
    } else {
-      G__fprinterr(G__serr, "#error <can not read original file %s>\n", G__ifile.name ? G__ifile.name : "temporary file");
+      G__fprinterr(G__serr, "#error <can not read original file %s>\n", G__ifile.name[0] ? G__ifile.name : "temporary file");
    }
    G__CHECK(G__SECURE_EXIT_AT_ERROR, 1, G__return = G__RETURN_EXIT1);
 #ifdef G__SECURITY

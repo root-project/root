@@ -137,18 +137,20 @@ namespace ROOT {
             if (!IsInitialized()) {
                if (!Setup()) {
                   Error("Read","%s",Form("Unable to initialize %s\n",fBranchName.Data()));
-                  return false;
+                  return kFALSE;
                }
             }
-            if (fParent) fParent->Read();
-            else {
+            Bool_t result = kTRUE;
+            if (fParent) {
+               result = fParent->Read();
+            } else {
                if (fBranchCount) {
-                  fBranchCount->GetEntry(fDirector->GetReadEntry());
+                  result &= (-1 != fBranchCount->GetEntry(fDirector->GetReadEntry()));
                }
-               fBranch->GetEntry(fDirector->GetReadEntry());
+               result &= (-1 != fBranch->GetEntry(fDirector->GetReadEntry()));
             }
             fRead = fDirector->GetReadEntry();
-            return kTRUE;
+            return result;
          } else {
             return IsInitialized();
          }

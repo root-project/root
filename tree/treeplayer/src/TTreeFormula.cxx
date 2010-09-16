@@ -1767,13 +1767,13 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                         // Unsupported case.
                         Error("DefinedVariable",
                               "%s is a datamember of %s BUT is not yet of a supported type (%d)",
-                              right,cl->GetName(),type);
+                              right,cl ? cl->GetName() : "unknown class",type);
                         return -2;
                      default:
                         // Unknown and Unsupported case.
                         Error("DefinedVariable",
                               "%s is a datamember of %s BUT is not of a unknown type (%d)",
-                              right,cl->GetName(),type);
+                              right,cl ? cl->GetName() : "unknown class",type);
                         return -2;
                   }
 
@@ -1966,7 +1966,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
          while (last->fNext) { last = last->fNext; }
          
       }
-      if (last->GetClass() != objClass) {
+      if (last && last->GetClass() != objClass) {
          TClass *mother_cl;
          if (leaf->IsA()==TLeafObject::Class()) {
             // in this case mother_cl is not really used
@@ -3246,6 +3246,9 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char
             // cl = clones->GetClass();
             delete clonesinfo;
          }
+      } else {
+         Error("BranchHasMethod","A TClonesArray was stored in a branch type no yet support (i.e. neither TBranchObject nor TBranchElement): %s",branch->IsA()->GetName());
+         return kFALSE;
       }
       cl = clones->GetClass();
    } else if (cl && cl->GetCollectionProxy()) {
@@ -3270,7 +3273,6 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char
       }
    }
 
-   cl = 0;
    return kFALSE;
 }
 
@@ -4140,7 +4142,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             // a TTree Variable Alias (i.e. a sub-TTreeFormula)
             case kAlias: {
                int aliasN = i;
-               TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
+               TTreeFormula *subform = static_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
                R__ASSERT(subform);
 
                Double_t param = subform->EvalInstance(instance);
@@ -4151,7 +4153,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             // a TTree Variable Alias String (i.e. a sub-TTreeFormula)
             case kAliasString: {
                int aliasN = i;
-               TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
+               TTreeFormula *subform = static_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
                R__ASSERT(subform);
 
                pos2++;
@@ -4160,8 +4162,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             }
             case kMinIf: {
                int alternateN = i;
-               TTreeFormula *primary = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
-               TTreeFormula *condition = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN+1));
+               TTreeFormula *primary = static_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
+               TTreeFormula *condition = static_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN+1));
                Double_t param = FindMin(primary,condition);
                ++i; // skip the place holder for the condition
                tab[pos] = param; pos++;
@@ -4169,8 +4171,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             }
             case kMaxIf: {
                int alternateN = i;
-               TTreeFormula *primary = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
-               TTreeFormula *condition = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN+1));
+               TTreeFormula *primary = static_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
+               TTreeFormula *condition = static_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN+1));
                Double_t param = FindMax(primary,condition);
                ++i; // skip the place holder for the condition
                tab[pos] = param; pos++;
@@ -4180,7 +4182,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             // a TTree Variable Alternate (i.e. a sub-TTreeFormula)
             case kAlternate: {
                int alternateN = i;
-               TTreeFormula *primary = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
+               TTreeFormula *primary = static_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
 
                // First check whether we are in range for the primary formula
                if (instance < primary->GetNdata()) {
@@ -4200,7 +4202,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             }
             case kAlternateString: {
                int alternateN = i;
-               TTreeFormula *primary = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
+               TTreeFormula *primary = static_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
 
                // First check whether we are in range for the primary formula
                if (instance < primary->GetNdata()) {
@@ -4449,7 +4451,7 @@ Bool_t TTreeFormula::IsInteger(Bool_t fast) const
    }
    
    if (fNoper==2 && GetAction(0)==kAlternate) {
-      TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
+      TTreeFormula *subform = static_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
       R__ASSERT(subform);
       return subform->IsInteger(kFALSE);
    }
@@ -4461,7 +4463,7 @@ Bool_t TTreeFormula::IsInteger(Bool_t fast) const
    if (fNoper > 1) return kFALSE;
 
    if (GetAction(0)==kAlias) {
-      TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
+      TTreeFormula *subform = static_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
       R__ASSERT(subform);
       return subform->IsInteger(kFALSE);
    }
@@ -4801,7 +4803,7 @@ void TTreeFormula::ResetLoading()
       n = fNoper;
    }
    for(Int_t k=0; k <= n; ++k) {
-      TTreeFormula *f = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
+      TTreeFormula *f = static_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
       if (f) {
          f->ResetLoading();
       }
@@ -4817,11 +4819,11 @@ void TTreeFormula::SetAxis(TAxis *axis)
    if (TestBit(kIsCharacter)) {
       fAxis = axis;
       if (fNoper==1 && GetAction(0)==kAliasString){
-         TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
+         TTreeFormula *subform = static_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
          R__ASSERT(subform);
          subform->SetAxis(axis);
       } else if (fNoper==2 && GetAction(0)==kAlternateString){
-         TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
+         TTreeFormula *subform = static_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
          R__ASSERT(subform);
          subform->SetAxis(axis);
       }
@@ -4936,7 +4938,7 @@ void TTreeFormula::UpdateFormulaLeaves()
          case kMinIf:
          case kMaxIf:
          {
-            TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
+            TTreeFormula *subform = static_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
             R__ASSERT(subform);
             subform->UpdateFormulaLeaves();
             break;
@@ -4950,7 +4952,7 @@ void TTreeFormula::UpdateFormulaLeaves()
                case kMin:
                case kMax:
                {
-                  TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
+                  TTreeFormula *subform = static_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
                   R__ASSERT(subform);
                   subform->UpdateFormulaLeaves();
                   break;
@@ -5020,7 +5022,7 @@ void TTreeFormula::ResetDimensions() {
          continue;
       }
       if (action==kAlias || action==kAliasString) {
-         TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(i));
+         TTreeFormula *subform = static_cast<TTreeFormula*>(fAliases.UncheckedAt(i));
          R__ASSERT(subform);
          switch(subform->GetMultiplicity()) {
             case 0: break;

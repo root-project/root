@@ -888,7 +888,9 @@ int G__execfuncmacro_noexec(const char* macroname)
    //  Push onto the macro stack.
    //
    struct G__funcmacro_stackelt* stackelt = (struct G__funcmacro_stackelt*) malloc(sizeof(struct G__funcmacro_stackelt));
-   stackelt->pos = call_pos;
+   if (G__ifile.fp) {
+      stackelt->pos = call_pos;
+   }
    stackelt->file = store_ifile;
    stackelt->next = G__funcmacro_stack;
    G__funcmacro_stack = stackelt;

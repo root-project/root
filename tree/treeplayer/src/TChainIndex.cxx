@@ -89,12 +89,18 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
          DeleteIndices();
          MakeZombie();
          Error("TChainIndex", "Error creating a tree index on a tree in the chain");
+         return;
       }
 
-      R__ASSERT(dynamic_cast<TTreeIndex*>(index));
+      TTreeIndex *ti_index = dynamic_cast<TTreeIndex*>(index);
+      if (ti_index == 0) {
+         Error("TChainIndex", "The underlying TTree must have a TTreeIndex but has a %s.",
+               index->IsA()->GetName());
+         return;
+      }
 
-      entry.fMinIndexValue = dynamic_cast<TTreeIndex*>(index)->GetIndexValues()[0];
-      entry.fMaxIndexValue = dynamic_cast<TTreeIndex*>(index)->GetIndexValues()[index->GetN() - 1];
+      entry.fMinIndexValue = ti_index->GetIndexValues()[0];
+      entry.fMaxIndexValue = ti_index->GetIndexValues()[index->GetN() - 1];
       fEntries.push_back(entry);
    }
 
@@ -115,12 +121,16 @@ void TChainIndex::Append(const TVirtualIndex *index, Bool_t delaySort )
    // add an index to this chain
    // if delaySort is kFALSE (default) check if the indices of different trees are in order.
    if (index) {
-      R__ASSERT(dynamic_cast<const TTreeIndex*>(index));
-
+      const TTreeIndex *ti_index = dynamic_cast<const TTreeIndex*>(index);
+      if (ti_index == 0) {
+         Error("Append", "The given index is not a TTreeIndex but a %s",
+               index->IsA()->GetName());
+      }
+      
       TChainIndexEntry entry;
       entry.fTreeIndex = 0;
-      entry.fMinIndexValue = dynamic_cast<const TTreeIndex*>(index)->GetIndexValues()[0];
-      entry.fMaxIndexValue = dynamic_cast<const TTreeIndex*>(index)->GetIndexValues()[index->GetN() - 1];
+      entry.fMinIndexValue = ti_index->GetIndexValues()[0];
+      entry.fMaxIndexValue = ti_index->GetIndexValues()[index->GetN() - 1];
       fEntries.push_back(entry);
    }
    
@@ -130,7 +140,7 @@ void TChainIndex::Append(const TVirtualIndex *index, Bool_t delaySort )
          if (fEntries[i].fMaxIndexValue > fEntries[i+1].fMinIndexValue) {
             DeleteIndices();
             MakeZombie();
-            Error("TChainIndex", "The indices in files of this chain aren't sorted.");
+            Error("Append", "The indices in files of this chain aren't sorted.");
          }
       }
    }
@@ -182,11 +192,12 @@ std::pair<TVirtualIndex*, Int_t> TChainIndex::GetSubTreeIndex(Int_t major, Int_t
    }
 
    Int_t treeNo = fEntries.size() - 1;
-   for (unsigned int i = 0; i < fEntries.size() - 1; i++)
+   for (unsigned int i = 0; i < fEntries.size() - 1; i++) {
       if (indexValue < fEntries[i+1].fMinIndexValue) {
          treeNo = i;
          break;
       }
+   }
    TChain* chain = dynamic_cast<TChain*> (fTree);
    R__ASSERT(chain);
    chain->LoadTree(chain->GetTreeOffset()[treeNo]);

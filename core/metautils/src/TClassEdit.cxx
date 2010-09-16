@@ -694,7 +694,7 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
    //    vector<MyObjTypedef> return vector<MyObj>
    //
 
-   if ( tname==0 || tname[0]==0) return tname;
+   if ( tname==0 || tname[0]==0 ) return "";
 
    if ( strchr(tname,'<')==0 && (tname[strlen(tname)-1]!='*') ) {
 
@@ -916,7 +916,7 @@ string TClassEdit::InsertStd(const char *tname)
    };
    static set<string> sSetSTLtypes;
 
-   if ( tname==0 || tname[0]==0) return tname;
+   if (tname==0 || tname[0]==0) return "";
 
    if (sSetSTLtypes.empty()) {
       // set up static set

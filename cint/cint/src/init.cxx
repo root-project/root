@@ -1422,6 +1422,9 @@ int G__main(int argc, char** argv)
    }
 #ifdef G__ROOT
    else if (G__globalcomp == R__CPPLINK) {
+      if (linkfilename == 0) {
+         linkfilename = "";
+      }
 #ifdef G__NOSTUBS
       // Try to differentiate the different kinds of tmp dicts.
       // (although we used the all here so it's a bit silly)

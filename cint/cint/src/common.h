@@ -1070,6 +1070,7 @@ struct G__ifunc_table_internal {
          isexplicit[i]     = 0;
          iscpp[i]          = 0;
          ansi[i]           = 0;
+         busy[i]           = 0;
          access[i]         = 0;
          staticalloc[i]    = 0;
          isvirtual[i]      = 0;

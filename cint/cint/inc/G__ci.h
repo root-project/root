@@ -1139,11 +1139,14 @@ struct G__dictposition; /* decl in Api.h because of Cint7's having C++ content *
 *
 **************************************************************************/
 struct G__comment_info {
-  union {
-    char  *com;
-    fpos_t pos;
-  } p;
-  int   filenum;
+   union {
+      char  *com;
+      fpos_t pos;
+   } p;
+   int   filenum;
+#ifdef __cplusplus
+   G__comment_info() : filenum(0) { p.com = 0; };
+#endif
 };
 
 /**************************************************************************

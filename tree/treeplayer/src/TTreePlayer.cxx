@@ -2538,7 +2538,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
    }
 //*-*- if varexp is empty, take first 8 columns by default
    int allvar = 0;
-   if (!strcmp(varexp, "*")) { ncols = nleaves; allvar = 1; }
+   if (varexp && !strcmp(varexp, "*")) { ncols = nleaves; allvar = 1; }
    if (nch == 0 || allvar) {
       for (i=0;i<ncols;i++) {
          cnames.push_back( ((TLeaf*)leaves->At(i))->GetName() );
@@ -3043,7 +3043,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    }
 //*-*- if varexp is empty, take first 8 columns by default
    int allvar = 0;
-   if (!strcmp(varexp, "*")) { ncols = nleaves; allvar = 1; }
+   if (varexp && !strcmp(varexp, "*")) { ncols = nleaves; allvar = 1; }
    if (nch == 0 || allvar) {
       UInt_t ncs = ncols;
       ncols = 0;
@@ -3304,7 +3304,7 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
 
    // if varexp is empty, take first 8 columns by default
    int allvar = 0;
-   if (!strcmp(varexp, "*")) { ncols = nleaves; allvar = 1; }
+   if (varexp && !strcmp(varexp, "*")) { ncols = nleaves; allvar = 1; }
    if (nch == 0 || allvar) {
       for (i=0;i<ncols;i++) {
          cnames.push_back( ((TLeaf*)leaves->At(i))->GetName() );

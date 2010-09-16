@@ -144,13 +144,13 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl)
 
    int stltype = TClassEdit::STLKind(splitName[0].c_str());
 
-   G__TypeInfo firstType( splitName[1].c_str());
+   G__TypeInfo firstType(splitName[1].c_str());
    G__TypeInfo secondType;
    const char *tclFirst=0,*tclSecond=0;
    string firstFullName, secondFullName;
 
    if (ElementStreamer(firstType,0,0)) {
-      tclFirst="R__tcl1";
+      tclFirst = "R__tcl1";
       const char *name = firstType.Fullname();
       if (name) {
          // the value return by ti.Fullname is a static buffer

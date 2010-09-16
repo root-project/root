@@ -115,7 +115,7 @@ TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
       } else {
         fEnv = Environment::createEnvironment();
       }
-      fConn = fEnv->createConnection(uid, pw, conn_str);
+      fConn = fEnv->createConnection(uid, pw, conn_str ? conn_str : "");
 
       fType = "Oracle";
       fHost = url.GetHost();

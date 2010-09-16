@@ -331,13 +331,12 @@ void TFileDrawMap::DumpObject()
    if (!centry) return;
    Int_t entry = 0;
    sscanf(centry+6,"%d",&entry);
-   char info[512];
-   strcpy(info,GetName());
-   char *colon = (char*)strstr(info,"::");
+   TString info(GetName());
+   char *colon = (char*)strstr((char*)info.Data(),"::");
    if (!colon) return;
    colon--;
    *colon = 0;
-   TTree *tree = (TTree*)fFile->Get(info);
+   TTree *tree; fFile->GetObject(info.Data(),tree);
    if (tree) tree->Show(entry);
 }
 

@@ -189,9 +189,14 @@ void TTreeIndex::Append(const TVirtualIndex *add, Bool_t delaySort )
    if (add && add->GetN()) {
       // Create new buffer (if needed)
 
+      const TTreeIndex *ti_add = dynamic_cast<const TTreeIndex*>(add);
+      if (ti_add == 0) {
+         Error("Append","Can only Append a TTreeIndex to a TTreeIndex but got a %s",
+               add->IsA()->GetName());
+      }
+
       Long64_t oldn = fN;
       fN += add->GetN();
-      
 
       Long64_t *oldIndex = fIndex;
       Long64_t *oldValues = fIndexValues;
@@ -207,8 +212,8 @@ void TTreeIndex::Append(const TVirtualIndex *add, Bool_t delaySort )
       memcpy(fIndex,oldIndex, size);
       memcpy(fIndexValues,oldValues, size);
 
-      Long64_t *addIndex = dynamic_cast<const TTreeIndex*>(add)->GetIndex();
-      Long64_t *addValues = dynamic_cast<const TTreeIndex*>(add)->GetIndexValues();
+      Long64_t *addIndex = ti_add->GetIndex();
+      Long64_t *addValues = ti_add->GetIndexValues();
 
       memcpy(fIndex + oldn, addIndex, add_size);
       memcpy(fIndexValues + oldn, addValues, add_size);

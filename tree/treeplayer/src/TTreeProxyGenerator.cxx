@@ -696,7 +696,8 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
          TString branchEndname;
          {
             TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
-            if (leaf && !isclones && !(branch->GetType() == 3)) branchEndname = leaf->GetName();
+            if (leaf && isclones == TBranchProxyClassDescriptor::kOut
+                && !(branch->GetType() == 3)) branchEndname = leaf->GetName();
             else branchEndname = branch->GetName();
             Int_t pos;
             pos = branchEndname.Index(".");
@@ -922,7 +923,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
 
                      } else {
 
-                        if (isclones) {
+                        if (isclones != TBranchProxyClassDescriptor::kOut) {
                            // We have to guess the version number!
                            cl = TClass::GetClass(cname);
                            objInfo = GetStreamerInfo(branch,branch->GetListOfBranches(),cl);
@@ -945,7 +946,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                      if (pos != -1) {
                         branchname.Remove(pos);
                      }
-                     if (isclones) {
+                     if (isclones != TBranchProxyClassDescriptor::kOut) {
                         // We have to guess the version number!
                         cl = TClass::GetClass(cname);
                         objInfo = GetStreamerInfo(branch, branches, cl);
@@ -1240,7 +1241,8 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
             if (cl) {
                if (NeedToEmulate(cl,0) || branchname[strlen(branchname)-1] == '.' || branch->GetSplitLevel()) {
                   TBranchElement *be = dynamic_cast<TBranchElement*>(branch);
-                  TVirtualStreamerInfo *beinfo = (be && !isclones) ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
+                  TVirtualStreamerInfo *beinfo = (be && isclones == TBranchProxyClassDescriptor::kOut) 
+                     ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
                   desc = new TBranchProxyClassDescriptor(cl->GetName(), beinfo, branchname,
                      isclones, branch->GetSplitLevel(),containerName);
                } else {

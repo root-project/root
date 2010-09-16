@@ -526,7 +526,10 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
                TClass* vClass = proxy ? proxy->GetValueClass() : 0;
 
-               if (!b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming) && thisVar->GetStreamMemberWise() && cl->CanSplit()
+               if (!b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming) 
+                   && proxy && vClass
+                   && thisVar->GetStreamMemberWise() 
+                   && cl->CanSplit()
                    && !(strspn(aElement->GetTitle(),"||") == 2)
                    && !(gInterpreter->ClassInfo_RootFlag(vClass->GetClassInfo()) & 1) ) {
                   // Let's save the collection member-wise.

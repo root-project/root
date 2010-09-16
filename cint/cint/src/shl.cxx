@@ -1702,21 +1702,17 @@ char *G__search_next_member(const char *text,int state)
           case 0:
           case 2:
           case 3:
-            if(1 || G__PUBLIC==var->access[list_index-1]) {
-              result = (char *)malloc((strlen(completionbuf)+strlen(name)+1));
-              sprintf(result,"%s%s",completionbuf,name);
-              return(result);
-            }
-            break;
+             result = (char *)malloc((strlen(completionbuf)+strlen(name)+1));
+             sprintf(result,"%s%s",completionbuf,name);
+             return(result);
+             break;
           case 1:
-            if(1 || G__PUBLIC==ifunc->access[list_index-1]) {
-              result = (char *)malloc((strlen(completionbuf)+strlen(name)+2));
-              sprintf(result,"%s%s(",completionbuf,name);
-              return(result);
-            }
-            break;
+             result = (char *)malloc((strlen(completionbuf)+strlen(name)+2));
+             sprintf(result,"%s%s(",completionbuf,name);
+             return(result);
+             break;
           default:
-            return((char *)NULL);
+             return((char *)NULL);
           }
         }
       }
