@@ -2442,7 +2442,7 @@ void TTreeViewer::MapBranch(TBranch *branch, const char *prefix, TGListTreeItem 
    }
    // list branch in list view if necessary
    if (listIt) {
-      TGString *textEntry;
+      TGString *textEntry = 0;
       const TGPicture *pic, *spic;
       TTVLVEntry *entry;
       // make list view items in the right frame
@@ -2451,9 +2451,9 @@ void TTreeViewer::MapBranch(TBranch *branch, const char *prefix, TGListTreeItem 
          fMappedTree = 0;
          fStopMapping = kTRUE;
       }
-      textEntry = new TGString(EmptyBrackets(name.Data()));
       if ((branch->GetListOfBranches()->GetEntries()) ||
           (branch->GetNleaves())) {
+         textEntry = new TGString(EmptyBrackets(name.Data()));
          if (branch->GetListOfBranches()->GetEntries()) {
             if (branch->InheritsFrom("TBranchObject")) {
                pic = gClient->GetPicture("branch-ob_t.xpm");
