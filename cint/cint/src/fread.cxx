@@ -373,12 +373,13 @@ backtoreadtemplate:
 
 //______________________________________________________________________________
 static char* G__get_previous_name(G__FastAllocString& string, size_t start, size_t offset) {
-   while (start >= offset) {
-      char c = string[start];
-      if (c == ':' && start > offset && string[start - 1] == ':') {
+   ++start;
+   while (start > offset) {
+      char c = string[start - 1];
+      if (c == ':' && start - 1 > offset && string[start - 1] == ':') {
          --start;
       } else if (!G__IsIdentifier(c)) {
-         return string + start + 1;
+         return string + start;
       }
       --start;
    }
@@ -441,7 +442,8 @@ static int G__fgetstream_newtemplate_internal(G__FastAllocString& string,
             if (parseTemplate && !single_quote && !double_quote) {
                string.Set(i, 0);
                char* prevIdentifier = i ? G__get_previous_name(string, i - 1, offset) : 0;
-               if (prevIdentifier && G__defined_templateclass(prevIdentifier)){
+               if (prevIdentifier && prevIdentifier[0]
+                   && G__defined_templateclass(prevIdentifier)){
                   ++nest;
                }
             }
