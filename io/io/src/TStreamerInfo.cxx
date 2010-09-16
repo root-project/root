@@ -3783,8 +3783,15 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
 void TStreamerInfo::TagFile(TFile *file)
 {
    // Mark the classindex of the current file as using this TStreamerInfo
+   // This function is deprecated and its functionality is now done by
+   // the overloads of TBuffer::TagStreamerInfo.
 
    if (file) {
+      static Bool_t onlyonce = kFALSE;
+      if (!onlyonce) {
+         Warning("TagFile","This function is deprecated, use TBuffer::TagStreamerInfo instead");
+         onlyonce = kTRUE;
+      }
       TArrayC *cindex = file->GetClassIndex();
       Int_t nindex = cindex->GetSize();
       if (fNumber < 0 || fNumber >= nindex) {

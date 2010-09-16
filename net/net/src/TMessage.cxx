@@ -157,11 +157,9 @@ void TMessage::Forward()
 }
 
 //______________________________________________________________________________
-void TMessage::IncrementLevel(TVirtualStreamerInfo *info)
+void TMessage::TagStreamerInfo(TVirtualStreamerInfo *info)
 {
-   // Increment level.
-
-   TBufferFile::IncrementLevel(info);
+   // Remember that the StreamerInfo is being used in writing.
 
    if (fgEvolution || fEvolution) {
       if (!fInfos) fInfos = new TList();

@@ -34,6 +34,7 @@
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TSchemaRuleSet.h"
+#include "TArrayC.h"
 
 #if (defined(__linux) || defined(__APPLE__)) && defined(__i386__) && \
      defined(__GNUC__)
@@ -140,6 +141,28 @@ Int_t TBufferFile::GetVersionOwner() const
    TFile *file = (TFile*)GetParent();
    if (file) return file->GetVersion();
    else return 0;
+}
+
+//______________________________________________________________________________
+void TBufferFile::TagStreamerInfo(TVirtualStreamerInfo* info)
+{
+   // Mark the classindex of the current file as using this TStreamerInfo
+
+   TFile *file = (TFile*)GetParent();
+   if (file) {
+      TArrayC *cindex = file->GetClassIndex();
+      Int_t nindex = cindex->GetSize();
+      Int_t number = info->GetNumber();
+      if (number < 0 || number >= nindex) {
+         Error("TagStreamerInfo","StreamerInfo: %s number: %d out of range[0,%d] in file: %s",
+               info->GetName(),number,nindex,file->GetName());
+         return;
+      }
+      if (cindex->fArray[number] == 0) {
+         cindex->fArray[0]       = 1;
+         cindex->fArray[number] = 1;
+      }
+   }
 }
 
 //______________________________________________________________________________

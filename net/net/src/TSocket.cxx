@@ -865,22 +865,34 @@ Bool_t TSocket::RecvStreamerInfos(TMessage *mess)
       TList *list = (TList*)mess->ReadObject(TList::Class());
       TIter next(list);
       TStreamerInfo *info;
-      while ((info = (TStreamerInfo*)next())) {
-         Int_t oldc = info->GetClassVersion();
-         TClass *cl = TClass::GetClass(info->GetName(),kTRUE);
-         if (!cl) {
+      TObjLink *lnk = list->FirstLink();
+      // First call BuildCheck for regular class
+      while (lnk) {
+         info = (TStreamerInfo*)lnk->GetObject();
+         TObject *element = info->GetElements()->UncheckedAt(0);
+         Bool_t isstl = element && strcmp("This",element->GetName())==0;
+         if (!isstl) {
             info->BuildCheck();
-            continue;
+            if (gDebug > 0)
+               Info("RecvStreamerInfos", "importing TStreamerInfo: %s, version = %d",
+                    info->GetName(), info->GetClassVersion());
          }
-         cl->GetStreamerInfo();
-         if (cl->GetStreamerInfos()->At(oldc)) {
-            continue;
-         }
-         info->BuildCheck();
-         if (gDebug > 0)
-            Info("RecvStreamerInfos", "importing TStreamerInfo: %s, version = %d",
-                 info->GetName(), info->GetClassVersion());
+         lnk = lnk->Next();
       }
+      // Then call BuildCheck for stl class
+      lnk = list->FirstLink();
+      while (lnk) {
+         info = (TStreamerInfo*)lnk->GetObject();
+         TObject *element = info->GetElements()->UncheckedAt(0);
+         Bool_t isstl = element && strcmp("This",element->GetName())==0;
+         if (isstl) {
+            info->BuildCheck();
+            if (gDebug > 0)
+               Info("RecvStreamerInfos", "importing TStreamerInfo: %s, version = %d",
+                    info->GetName(), info->GetClassVersion());
+         }
+         lnk = lnk->Next();
+     } 
       delete list;
       delete mess;
 

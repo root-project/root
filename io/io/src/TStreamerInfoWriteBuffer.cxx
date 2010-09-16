@@ -137,7 +137,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
    b.IncrementLevel(thisVar);
 
    //mark this class as being used in the current file
-   thisVar->TagFile((TFile *)b.GetParent());
+   b.TagStreamerInfo(thisVar);
 
    //============
 

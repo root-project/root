@@ -115,6 +115,7 @@ public:
    virtual void      *ReadObjectAny(const TClass* cast);
    virtual void       SkipObjectAny();
 
+   virtual void       TagStreamerInfo(TVirtualStreamerInfo* info);
    virtual void       IncrementLevel(TVirtualStreamerInfo* info);
    virtual void       SetStreamerElementNumber(Int_t) {}
    virtual void       DecrementLevel(TVirtualStreamerInfo*);
