@@ -90,7 +90,9 @@ TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
    fVarId = 0;  // do we need this??
    fInputIdx = 0;
    fRadioIdx = 0;
+   fSelBegin.fI = 0;
    fSelBegin.fP = 0;
+   fSelEnd.fI = 0;
    fSelEnd.fP = 0;
    fPSelStartBlock = 0;
    fPSelEndBlock = 0;
@@ -98,6 +100,7 @@ TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
    fInsOffTime = DEF_HTML_INSERT_OFF_TIME;
    fInsStatus = 0;
    fInsTimer = 0;
+   fIns.fI = 0;
    fIns.fP = 0;
    fPInsBlock = 0;
    fInsIndex = 0;
@@ -153,7 +156,15 @@ TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
 
    fColorUsed = 0;
 
-   for (i = 0; i < N_CACHE_GC; ++i) fAGcCache[i].fIndex = 0;
+   for (i = 0; i < N_CACHE_GC; ++i) {
+      fAGcCache[i].fIndex = 0;
+      fAGcCache[i].fColor = 0;
+      fAGcCache[i].fFont  = 0;
+      fAGcCache[i].fGc    = 0;
+   }
+   fLastGC = 0;
+   fSelEndIndex =0;
+   fSelStartIndex = 0;
    fGcNextToFree = 0;
    fImageList = 0;
    fZBaseHref = 0;

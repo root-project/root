@@ -308,13 +308,13 @@ public:
 
 class TGHtmlSpaceElement : public TGHtmlElement {
 public:
-   TGHtmlSpaceElement() : TGHtmlElement(Html_Space) {}
-
    Html_16_t fW;                  // Width of a single space in current font
    Html_u8_t fAscent;             // height above the baseline
    Html_u8_t fDescent;            // depth below the baseline
-};
 
+public:
+   TGHtmlSpaceElement() : TGHtmlElement(Html_Space), fW(0), fAscent(0), fDescent(0) {}
+};
 
 // Most markup uses this class. Some markup extends this class with
 // additional information, but most use it as is, at the very least.
