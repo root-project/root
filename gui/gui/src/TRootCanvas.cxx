@@ -1366,10 +1366,7 @@ void TRootCanvas::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
                                  selected->GetName());
       if (title && strlen(title))
          tipInfo += TString::Format("\n%s", selected->GetTitle());
-      if (event == kKeyPress)
-         tipInfo += TString::Format("\n%c", (char) px);
-      else
-         tipInfo += TString::Format("\n%d, %d", px, py);
+      tipInfo += TString::Format("\n%d, %d", px, py);
       if (!objInfo.IsNull())
          tipInfo += TString::Format("\n%s", objInfo.Data());
    }
