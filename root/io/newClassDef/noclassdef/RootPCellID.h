@@ -71,8 +71,8 @@ template <class T> class helper {};
 
 class RootPCvirt : public RootPCellID {
 public:
-   RootPCvirt() : RootPCellID("none",0),virt(0) {}
-   RootPCvirt(int v) :  RootPCellID("virt",v),virt(44) {}
+   RootPCvirt() : RootPCellID("none",0), virt(0), vv(42.), status(kInit) { }
+   RootPCvirt(int v) : RootPCellID("virt",v), virt(44), vv(43.), status(kInit) {}
    int virt;
    vector<int> list; 
    vector<RootPCfix*> list2; 
