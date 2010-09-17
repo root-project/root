@@ -203,6 +203,7 @@ void TH1::SetAxisRange(Axis_t xmin, Axis_t xmax, Option_t *axis)
    if (ax == 1) theAxis = GetXaxis();
    if (ax == 2) theAxis = GetYaxis();
    if (ax == 3) theAxis = GetZaxis();
+   if (!theAxis) return;
    if (ax > fDimension) {
       SetMinimum(xmin);
       SetMaximum(xmax);
