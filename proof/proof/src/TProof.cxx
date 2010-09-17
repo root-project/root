@@ -4771,8 +4771,8 @@ void TProof::RecvLogFile(TSocket *s, Int_t size)
 
    while (filesize < size) {
       left = Int_t(size - filesize);
-      if (left > kMAXBUF)
-         left = kMAXBUF;
+      if (left >= kMAXBUF)
+         left = kMAXBUF-1;
       rec = s->RecvRaw(&buf, left);
       filesize = (rec > 0) ? (filesize + rec) : filesize;
       if (!fLogToWindowOnly) {
