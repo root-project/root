@@ -1,3 +1,13 @@
 <lcgdict>
-<class name="WithClassVersion" ClassVersion="42"/>
+<class name="WithClassVersion" ClassVersion="42" />
+
+<class name="MyTemp<std::vector<std::string> >" />
+
+<class pattern="std::vector<With*>" />
+
+<exclusion>
+   <class pattern="std::vector<std::string>::*" />
+   <class pattern="std::vector<With*>::*" />
+</exclusion>
+
 </lcgdict>

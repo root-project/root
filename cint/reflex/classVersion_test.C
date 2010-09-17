@@ -11,4 +11,8 @@ void classVersion_test() {
    Cintex::Enable();
    TClass* cl = TClass::GetClass("WithClassVersion");
    RflxEqual(cl->GetClassVersion(), 42);
+
+   cl = TClass::GetClass("MyTemp<std::vector<std::string> >");
+   // fprintf(stdout,"cl=%p\n",cl);
+
 }
