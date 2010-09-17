@@ -1070,7 +1070,7 @@ void TBranchElement::BuildTitle(const char* name)
          }
          TStreamerBasicPointer *el = (TStreamerBasicPointer*)bre->GetInfo()->GetElements()->FindObject(name2.Data()+bn+1);
          name2.Remove(bn+1);
-         name2 += el->GetCountName();
+         if (el) name2 += el->GetCountName();
          TBranchElement *bc2 = (TBranchElement*)fBranches.FindObject(name2);
          bre->SetBranchCount2(bc2);
       }
