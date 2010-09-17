@@ -3323,10 +3323,10 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
             }
          }
       }
-      if(maxch == 0)
+      if(maxch == 0) {
          delete [] working_space;
          return 0;
-         
+      }   
       nom = 0;
       working_space[xmin][ymin][zmin] = 1;
       for(i = xmin;i < xmax; i++){
