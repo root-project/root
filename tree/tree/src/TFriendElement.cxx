@@ -99,6 +99,7 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
    if (strchr(treename,'=')) {
       char *temp = Compress(treename);
       char *equal = strchr(temp,'=');
+      if (!equal) return;;
       *equal=0;
       fTreeName = equal+1;
       SetName(temp);
