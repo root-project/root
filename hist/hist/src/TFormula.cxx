@@ -2418,24 +2418,24 @@ void TFormula::Copy(TObject &obj) const
    ((TFormula&)obj).fNames  = 0;
    if (fExpr && fNoper) {
       ((TFormula&)obj).fExpr = new TString[fNoper];
+      for (i=0;i<fNoper;i++)  ((TFormula&)obj).fExpr[i]   = fExpr[i];
    }
    if (fOper && fNoper) {
      ((TFormula&)obj).fOper = new Int_t[fNoper];
+      for (i=0;i<fNoper;i++)  ((TFormula&)obj).fOper[i]   = fOper[i];
    }
    if (fConst && fNconst) {
       ((TFormula&)obj).fConst = new Double_t[fNconst];
+      for (i=0;i<fNconst;i++) ((TFormula&)obj).fConst[i]  = fConst[i];
    }
    if (fParams && fNpar) {
       ((TFormula&)obj).fParams = new Double_t[fNpar];
+      for (i=0;i<fNpar;i++)   ((TFormula&)obj).fParams[i] = fParams[i];
    }
    if (fNames && fNpar) {
       ((TFormula&)obj).fNames = new TString[fNpar];
+      for (i=0;i<fNpar;i++)   ((TFormula&)obj).fNames[i]  = fNames[i];
    }
-   for (i=0;i<fNoper;i++)  ((TFormula&)obj).fExpr[i]   = fExpr[i];
-   for (i=0;i<fNoper;i++)  ((TFormula&)obj).fOper[i]   = fOper[i];
-   for (i=0;i<fNconst;i++) ((TFormula&)obj).fConst[i]  = fConst[i];
-   for (i=0;i<fNpar;i++)   ((TFormula&)obj).fParams[i] = fParams[i];
-   for (i=0;i<fNpar;i++)   ((TFormula&)obj).fNames[i]  = fNames[i];
 
    TIter next(&fFunctions);
    TObject *fobj;
@@ -2449,18 +2449,20 @@ void TFormula::Copy(TObject &obj) const
    if (fNoper) {
       if(fExprOptimized) {
          ((TFormula&)obj).fExprOptimized   = new TString[fNoper];
+         for (i=0;i<fNoper;i++)  ((TFormula&)obj).fExprOptimized[i]   = fExprOptimized[i];
       }
       if (fOperOptimized) {
          ((TFormula&)obj).fOperOptimized   = new Int_t[fNoper];
+         for (i=0;i<fNoper;i++)  ((TFormula&)obj).fOperOptimized[i]   = fOperOptimized[i];
       }
       if (fPredefined) {
          ((TFormula&)obj).fPredefined      = new TFormulaPrimitive*[fNoper];
+         for (i=0;i<fNoper;i++) {((TFormula&)obj).fPredefined[i] = fPredefined[i];}
       }
-      ((TFormula&)obj).fOperOffset         = new TOperOffset[fNoper];
-      for (i=0;i<fNoper;i++)  ((TFormula&)obj).fExprOptimized[i]   = fExprOptimized[i];
-      for (i=0;i<fNoper;i++)  ((TFormula&)obj).fOperOptimized[i]   = fOperOptimized[i];
-      for (i=0;i<fNoper;i++) {((TFormula&)obj).fPredefined[i] = fPredefined[i];}
-      for (i=0;i<fNoper;i++) {((TFormula&)obj).fOperOffset[i] = fOperOffset[i];}
+      if (fOperOffset) {
+         ((TFormula&)obj).fOperOffset         = new TOperOffset[fNoper];
+         for (i=0;i<fNoper;i++) {((TFormula&)obj).fOperOffset[i] = fOperOffset[i];}
+      }
    }
    ((TFormula&)obj).fNOperOptimized = fNOperOptimized;
    ((TFormula&)obj).fOptimal = fOptimal;
