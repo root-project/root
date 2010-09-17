@@ -826,10 +826,11 @@ oncemore:
 Int_t TSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
 {
    // Receive a raw buffer of specified length bytes. Using option kPeek
-   // one can peek at incoming data. Returns -1 in case of error. In case
-   // of opt == kOob: -2 means EWOULDBLOCK and -3 EINVAL. In case of non-blocking
-   // mode (kNoBlock) -4 means EWOULDBLOCK. Returns -5 if pipe broken or
-   // reset by peer (EPIPE || ECONNRESET).
+   // one can peek at incoming data. Returns number of received bytes.
+   // Returns -1 in case of error. In case of opt == kOob: -2 means
+   // EWOULDBLOCK and -3 EINVAL. In case of non-blocking mode (kNoBlock)
+   // -4 means EWOULDBLOCK. Returns -5 if pipe broken or reset by
+   // peer (EPIPE || ECONNRESET).
 
    TSystem::ResetErrno();
 
@@ -892,7 +893,7 @@ Bool_t TSocket::RecvStreamerInfos(TMessage *mess)
                     info->GetName(), info->GetClassVersion());
          }
          lnk = lnk->Next();
-     } 
+     }
       delete list;
       delete mess;
 
