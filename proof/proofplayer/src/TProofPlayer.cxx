@@ -743,6 +743,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
       if (!(fSelector = TSelector::GetSelector(selector_file))) {
          Error("Process", "cannot load: %s", selector_file );
+         gProofServ->GetCacheLock()->Unlock();
          return -1;
       }
 
@@ -819,6 +820,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    } CATCH(excode) {
       SetProcessing(kFALSE);
       Error("Process","exception %d caught", excode);
+      gProofServ->GetCacheLock()->Unlock();
       return -1;
    } ENDTRY;
 
