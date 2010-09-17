@@ -9,7 +9,6 @@
  **********************************************************************/
 
 #include "Math/GaussIntegrator.h"
-#include "IntegrandTransform.h"
 #include <cmath>
 
 namespace ROOT {

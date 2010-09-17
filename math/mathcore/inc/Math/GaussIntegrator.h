@@ -222,6 +222,27 @@ protected:
 
 };
 
+/**
+   Auxillary inner class for mapping infinite and semi-infinite integrals
+*/            
+class IntegrandTransform : public IGenFunction {
+public:
+   enum ESemiInfinitySign {kMinus = -1, kPlus = +1};
+   IntegrandTransform(const IGenFunction* integrand);
+   IntegrandTransform(const double boundary, ESemiInfinitySign sign, const IGenFunction* integrand);
+   double operator()(double x) const;
+   double DoEval(double x) const;
+   IGenFunction* Clone() const;
+private:
+   ESemiInfinitySign fSign;
+   const IGenFunction* fIntegrand;
+   double fBoundary;
+   bool fInfiniteInterval;
+   double DoEval(double x, double boundary, int sign) const;
+};
+   
+
+
 } // end namespace Math
    
 } // end namespace ROOT
