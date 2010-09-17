@@ -52,10 +52,10 @@ namespace Math {
          return new PDFIntegral(fPDF);
       }
    };
-   template<>
+
    void GoFTest::SetDistribution(const IGenFunction& f, GoFTest::EUserDistribution userDist) {
       SetDistributionFunction(f, userDist); 
-   };
+   }
    
    void GoFTest::SetDistributionType(EDistribution dist) {
       if (!(kGaussian <= dist && dist <= kExponential)) {

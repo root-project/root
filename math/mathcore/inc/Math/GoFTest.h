@@ -58,8 +58,7 @@ public:
    }
 
    /* Template specialization */
-   template<>
-   void GoFTest::SetDistribution(const IGenFunction& f, GoFTest::EUserDistribution userDist);
+   void SetDistribution(const IGenFunction& f, GoFTest::EUserDistribution userDist);
    
 
    /* Constructor for using only with 2-samples tests */
