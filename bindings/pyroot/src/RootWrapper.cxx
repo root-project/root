@@ -707,27 +707,33 @@ PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, Bool_t isR
 }
 
 //____________________________________________________________________________
-inline static Long_t GetObjectOffset( TClass* klass, TClass* clActual, void* address ) {
+inline static Long_t GetObjectOffset( TClass* clCurrent, TClass* clDesired, void* address, bool downcast = true ) {
 // root/meta base class offset fails in the case of virtual inheritance
    Long_t offset = 0;
 
-   if ( clActual && klass != clActual ) {
-      G__ClassInfo* ciKlass  = (G__ClassInfo*)klass->GetClassInfo();
-      G__ClassInfo* ciActual = (G__ClassInfo*)clActual->GetClassInfo();
-      if ( ciKlass && ciActual ) {
+   if ( clDesired && clCurrent != clDesired ) {
+      TClass* clBase    = downcast ? clCurrent : clDesired;
+      TClass* clDerived = downcast ? clDesired : clCurrent;
+
+      G__ClassInfo* ciBase    = (G__ClassInfo*)clBase->GetClassInfo();
+      G__ClassInfo* ciDerived = (G__ClassInfo*)clDerived->GetClassInfo();
+      if ( ciBase && ciDerived ) {
 #ifdef WIN32
       // Windows cannot cast-to-derived for virtual inheritance
       // with CINT's (or Reflex's) interfaces.
-         long baseprop = ciActual->IsBase( *ciKlass );
+         long baseprop = ciDerived->IsBase( *ciBase );
          if ( !baseprop || (baseprop & G__BIT_ISVIRTUALBASE) ) 
-            offset = clActual->GetBaseClassOffset( klass );
+            offset = clDerived->GetBaseClassOffset( clBase );
          else
 #endif
-            offset = G__isanybase( ciKlass->Tagnum(), ciActual->Tagnum(), (Long_t)address );
+            offset = G__isanybase( ciBase->Tagnum(), ciDerived->Tagnum(), (Long_t)address );
       } else {
-         offset = clActual->GetBaseClassOffset( klass ); 
+         offset = clDerived->GetBaseClassOffset( clBase ); 
       }
    }
+
+   if ( offset < 0 ) // error return of G__isanybase()
+      return 0;
 
    return offset;
 }
@@ -750,7 +756,7 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
 // memory regulator
    TObject* object = 0;
    if ( ! isRef && klass->IsTObject() ) {
-      object = (TObject*)((Long_t)address - GetObjectOffset( klass, TObject::Class(), address ) );
+      object = (TObject*)((Long_t)address - GetObjectOffset( klass, TObject::Class(), address, false ) );
 
    // use the old reference if the object already exists
       PyObject* oldPyObject = TMemoryRegulator::RetrieveObject( object );
