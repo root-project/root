@@ -435,6 +435,10 @@ TSPlot::TSPlot() :
  fSelection(0)
 {
    // default constructor (used by I/O only)
+   fNx = 0;
+   fNy=0;
+   fNevents = 0;
+   fNSpecies=0;
    fNumbersOfEvents=0;
 }
 
