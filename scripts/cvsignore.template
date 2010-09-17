@@ -1,4 +1,7 @@
-*.log
+*.elog
+*.clog
+*.celog
+*.eclog
 *.so
 *.dll
 *.def
