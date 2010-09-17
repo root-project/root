@@ -53,9 +53,14 @@ public:
    /* Sets the user input distribution. To use with the template construtor to change the distribution parameter*/
    template<class Dist>
    void SetDistribution(Dist& dist, EUserDistribution userDist = kPDF) {
-      ROOT::Math::WrappedFunction<Dist&> wcdf(dist); 
+      WrappedFunction<Dist&> wcdf(dist); 
       SetDistributionFunction(wcdf, userDist);
    }
+
+   /* Template specialization */
+   template<>
+   void GoFTest::SetDistribution(const IGenFunction& f, GoFTest::EUserDistribution userDist);
+   
 
    /* Constructor for using only with 2-samples tests */
    GoFTest(const Double_t* sample1, UInt_t sample1Size, const Double_t* sample2, UInt_t sample2Size);
@@ -157,10 +162,7 @@ private:
    void SetParameters(); // Sets the estimated mean and standard-deviation from the samples 
 }; // end GoFTest class
 
-/* Template specialization */
-template<>
-void GoFTest::SetDistribution(IGenFunction& f, GoFTest::EUserDistribution userDist);
-      
+
 } // ROOT namespace
 } // Math namespace
 #endif

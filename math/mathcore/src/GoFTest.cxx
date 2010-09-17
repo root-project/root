@@ -52,9 +52,8 @@ namespace Math {
          return new PDFIntegral(fPDF);
       }
    };
-   
    template<>
-   void GoFTest::SetDistribution(IGenFunction& f, GoFTest::EUserDistribution userDist) {
+   void GoFTest::SetDistribution(const IGenFunction& f, GoFTest::EUserDistribution userDist) {
       SetDistributionFunction(f, userDist); 
    };
    
