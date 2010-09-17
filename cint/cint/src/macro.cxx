@@ -693,7 +693,8 @@ G__value G__execfuncmacro(const char* item, int* done)
    //
    G__FastAllocString funcmacro(item);
    char* p = strchr(funcmacro, '(');
-   *p = '\0';
+   if (p) *p = '\0';
+
    //
    //  Hash the name.
    //
