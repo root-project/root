@@ -2405,7 +2405,7 @@ void WriteClassInit(G__ClassInfo &cl)
    bool bset = TClassEdit::IsSTLBitset(classname.c_str());
 
    (*dictSrcOut) << "namespace ROOT {" << std::endl
-                 << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp, char *R__parent);"
+                 << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp);"
                  << std::endl;
 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt())
@@ -3590,8 +3590,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
    } else {
       (*dictSrcOut) << "      TClass *R__cl  = ::ROOT::GenerateInitInstanceLocal((const " << csymbol.c_str() << "*)0x0)->GetClass();" << std::endl;
    }
-   (*dictSrcOut) << "      Int_t R__ncp = strlen(R__parent);" << std::endl
-                 << "      if (R__ncp || R__cl || R__insp.IsA()) { }" << std::endl;
+   (*dictSrcOut) << "      if (R__cl || R__insp.IsA()) { }" << std::endl;
 
    // Inspect data members
    G__DataMemberInfo m(cl);
@@ -3625,10 +3624,10 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                   sprintf(cdim, "[%d]", m.MaxIndex(dim));
                   strcat(cvar, cdim);
                }
-               (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << cvar << "\", &"
+               (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", &"
                              << prefix << m.Name() << ");" << std::endl;
             } else if (m.Property() & G__BIT_ISPOINTER) {
-               (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"*" << m.Name() << "\", &"
+               (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"*" << m.Name() << "\", &"
                              << prefix << m.Name() << ");" << std::endl;
             } else if (m.Property() & G__BIT_ISARRAY) {
                strcpy(cvar, m.Name());
@@ -3644,15 +3643,15 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                   strcat(cvar, cdim);
                }
                if (vardim) {
-                  (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << cvar << "\", &"
+                  (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", &"
                                 << prefix << m.Name() << ");" << std::endl;
                } else {
-                  (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << cvar << "\", "
+                  (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", "
                                 << prefix << m.Name() << ");" << std::endl;
                }
 
             } else {
-               (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << m.Name() << "\", &"
+               (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << m.Name() << "\", &"
                              << prefix << m.Name() << ");" << std::endl;
             }
          } else {
@@ -3666,13 +3665,13 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                   sprintf(cdim, "[%d]", m.MaxIndex(dim));
                   strcat(cvar, cdim);
                }
-               (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << cvar << "\", &"
+               (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", &"
                              << prefix << m.Name() << ");" << std::endl;
                if (clflag && IsStreamable(m) && GetFun(fun))
                   (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << cvar << "\",R__"
                                 << clName << "_" << m.Name() << ");" << std::endl;
             } else if (m.Property() & G__BIT_ISPOINTER) {
-               (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"*" << m.Name() << "\", &" << prefix << m.Name() << ");" << std::endl;
+               (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"*" << m.Name() << "\", &" << prefix << m.Name() << ");" << std::endl;
                if (clflag && IsStreamable(m) && GetFun(fun))
                   (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"*" << m.Name() << "\",R__"
                                 << clName << "_" << m.Name() << ");" << std::endl;
@@ -3682,7 +3681,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                   sprintf(cdim, "[%d]", m.MaxIndex(dim));
                   strcat(cvar, cdim);
                }
-               (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << cvar << "\", "
+               (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", "
                              << prefix << m.Name() << ");" << std::endl;
                if (clflag && IsStreamable(m) && GetFun(fun))
                   (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << cvar << "\",R__"
@@ -3692,18 +3691,17 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 
             } else {
                if ((m.Type())->HasMethod("ShowMembers")) {
-                  (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << m.Name() << "\", &"
+                  (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << m.Name() << "\", &"
                                 << prefix << m.Name() << ");" << std::endl;
-                  (*dictSrcOut) << "      " << GetNonConstMemberName(m,prefix)
-                                << ".ShowMembers(R__insp, strcat(R__parent,\""
-                                << m.Name() << ".\")); R__parent[R__ncp] = 0;"  << std::endl;
+                  (*dictSrcOut) << "      R__insp.InspectMember(" << GetNonConstMemberName(m,prefix)
+                                << ", \"" << m.Name() << ".\");"  << std::endl;
                   if (clflag && IsStreamable(m) && GetFun(fun))
                      //fprintf(fp, "      R__cl->SetMemberStreamer(strcat(R__parent,\"%s\"),R__%s_%s); R__parent[R__ncp] = 0;\n", m.Name(), clName, m.Name());
                      (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << m.Name() << "\",R__"
                                    << clName << "_" << m.Name() << ");" << std::endl;
                } else {
                   // NOTE: something to be added here!
-                  (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << m.Name()
+                  (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << m.Name()
                                 << "\", (void*)&" << prefix << m.Name() << ");" << std::endl;
                   /* if (can call ShowStreamer) */
 
@@ -3719,11 +3717,10 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                      //TClassEdit::ShortType(m.Type()->Name(),TClassEdit::kRemoveDefaultAlloc) );
                      string typeName( GetLong64_Name( m.Type()->Name() ) );
 
-                     (*dictSrcOut) << "      ::ROOT::GenericShowMembers(\"" << typeName << "\", (void*)&"
-                                   << prefix << m.Name() << ", R__insp, strcat(R__parent,\""
-                                   << m.Name() << ".\")," << (!strncmp(m.Title(), "!", 1)?"true":"false")
-                                   <<  ");" << std::endl
-                                   << "      R__parent[R__ncp] = 0;" << std::endl;
+                     (*dictSrcOut) << "      R__insp.InspectMember(\"" << typeName << "\", (void*)&"
+                                   << prefix << m.Name() << ", \""<< m.Name() << ".\", "
+                                   << (!strncmp(m.Title(), "!", 1)?"true":"false")
+                                   <<  ");" << std::endl;
                   }
                   if (clflag && IsStreamable(m) && GetFun(fun))
                      (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << m.Name() << "\",R__"
@@ -3742,15 +3739,15 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
       base++;
       if (b.HasMethod("ShowMembers")) {
          if (outside) {
-            (*dictSrcOut) << "      sobj->" << b.Fullname() << "::ShowMembers(R__insp, R__parent);" << std::endl;
+            (*dictSrcOut) << "      sobj->" << b.Fullname() << "::ShowMembers(R__insp);" << std::endl;
          } else {
             if (strstr(b.Fullname(),"::")) {
                // there is a namespace involved, trigger MS VC bug workaround
                (*dictSrcOut) << "      //This works around a msvc bug and should be harmless on other platforms" << std::endl
                              << "      typedef " << b.Fullname() << " baseClass" << base << ";" << std::endl
-                             << "      baseClass" << base << "::ShowMembers(R__insp, R__parent);" << std::endl;
+                             << "      baseClass" << base << "::ShowMembers(R__insp);" << std::endl;
             } else {
-               (*dictSrcOut) << "      " << b.Fullname() << "::ShowMembers(R__insp, R__parent);" << std::endl;
+               (*dictSrcOut) << "      " << b.Fullname() << "::ShowMembers(R__insp);" << std::endl;
             }
          }
       } else {
@@ -3766,11 +3763,11 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
          //string baseclassWithDefaultStlName( TClassEdit::ShortType(baseclass.c_str(),
          //                                                          TClassEdit::kRemoveDefaultAlloc) );
          if (outside) {
-            (*dictSrcOut) << "      ::ROOT::GenericShowMembers(\"" << baseclass.c_str() << "\", ( ::" << baseclass.c_str()
-                          << " * )( (::" << cl.Fullname() << "*) obj ), R__insp, R__parent, false);" << std::endl;
+            (*dictSrcOut) << "      R__insp.GenericShowMembers(\"" << baseclass.c_str() << "\", ( ::" << baseclass.c_str()
+                          << " * )( (::" << cl.Fullname() << "*) obj ), false);" << std::endl;
          } else {
-            (*dictSrcOut) << "      ::ROOT::GenericShowMembers(\"" << baseclass.c_str() << "\", ( ::" << baseclass.c_str()
-                          << " *) (this ), R__insp, R__parent, false);" << std::endl;
+            (*dictSrcOut) << "      R__insp.GenericShowMembers(\"" << baseclass.c_str() << "\", ( ::" << baseclass.c_str()
+                          << " *) (this ), false);" << std::endl;
          }
       }
    }
@@ -3789,7 +3786,7 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
    if (outside || cl.IsTmplt()) {
       (*dictSrcOut) << "namespace ROOT {" << std::endl
 
-                    << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp, char *R__parent)"
+                    << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp)"
                     << std::endl << "   {" << std::endl;
       WriteBodyShowMembers(cl, outside || cl.IsTmplt());
       (*dictSrcOut) << "   }" << std::endl << std::endl;
@@ -3811,7 +3808,7 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
          enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(cl);
       }
       if (add_template_keyword) (*dictSrcOut) << "template <> ";
-      (*dictSrcOut) << "void " << clsname << "::ShowMembers(TMemberInspector &R__insp, char *R__parent)"
+      (*dictSrcOut) << "void " << clsname << "::ShowMembers(TMemberInspector &R__insp)"
                     << std::endl << "{" << std::endl;
       if (!cl.IsTmplt()) {
          WriteBodyShowMembers(cl, outside);
@@ -3819,7 +3816,7 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
          string clnameNoDefArg = GetLong64_Name( RStl::DropDefaultArg( cl.Fullname() ) );
          string mappednameNoDefArg = G__map_cpp_name((char*)clnameNoDefArg.c_str());
 
-         (*dictSrcOut) <<  "   ::ROOT::" << mappednameNoDefArg.c_str() << "_ShowMembers(this, R__insp, R__parent);" << std::endl;
+         (*dictSrcOut) <<  "   ::ROOT::" << mappednameNoDefArg.c_str() << "_ShowMembers(this, R__insp);" << std::endl;
       }
       (*dictSrcOut) << "}" << std::endl << std::endl;
 

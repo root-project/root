@@ -214,7 +214,7 @@ public:
    void               BuildRealData(void *pointer=0, Bool_t isTransient = kFALSE);
    void               BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl);
    void               CalculateStreamerOffset() const;
-   Bool_t             CallShowMembers(void* obj, TMemberInspector &insp, char *parent,
+   Bool_t             CallShowMembers(void* obj, TMemberInspector &insp,
                                       Int_t isATObject = -1) const;
    Bool_t             CanSplit() const;
    Bool_t             CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
@@ -286,7 +286,7 @@ public:
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;
    Bool_t             InheritsFrom(const TClass *cl) const;
-   void               InterpretedShowMembers(void* obj, TMemberInspector &insp, char *parent);
+   void               InterpretedShowMembers(void* obj, TMemberInspector &insp);
    Bool_t             IsFolder() const { return kTRUE; }
    Bool_t             IsLoaded() const;
    Bool_t             IsForeign() const;

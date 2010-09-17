@@ -322,10 +322,8 @@ void TObject::Dump() const
    else
       Printf("==> Dumping object at: 0x%016lx, name=%s, class=%s\n",(Long_t)this,GetName(),ClassName());
 
-   char parent[256];
-   parent[0] = 0;
    TDumpMembers dm;
-   ((TObject*)this)->ShowMembers(dm, parent);
+   ((TObject*)this)->ShowMembers(dm);
 }
 
 //______________________________________________________________________________

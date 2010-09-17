@@ -1,6 +1,7 @@
 #include "TEmulatedCollectionProxy.h"
 #include "TROOT.h"
 #include "TSelectorCint.h"
+#include "TClassEdit.h"
 
 TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel)
 {

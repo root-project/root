@@ -16,36 +16,16 @@
 #error RtypesImp.h should only be included by ROOT dictionaries.
 #endif
 
-#include "TInterpreter.h"
-#include "TClassEdit.h"
+#include "TMemberInspector.h"
+#include "TError.h"
 
 namespace ROOT {
    inline void GenericShowMembers(const char *topClassName,
                                   void *obj, TMemberInspector &R__insp,
-                                  char *R__parent,
                                   bool transientMember)
    {
-      // This could be faster if we implemented this either as a templated
-      // function or by rootcint-generated code using the typeid (i.e. the
-      // difference is a lookup in a TList instead of in a map).
-
-      // To avoid a spurrious error message in case the data member is
-      // transient and does not have a dictionary we check first.
-      if (transientMember) {
-         if (!TClassEdit::IsSTLCont(topClassName)) {
-            ClassInfo_t *b = gInterpreter->ClassInfo_Factory(topClassName);
-            Bool_t isloaded = gInterpreter->ClassInfo_IsLoaded(b);
-            gInterpreter->ClassInfo_Delete(b);
-            if (!isloaded) return;
-         }
-      }
-
-      TClass *top = TClass::GetClass(topClassName);
-      if (top) {
-         top->CallShowMembers(obj, R__insp, R__parent);
-      } else {
-         // This might be worth an error message
-      }
+      Warning("ROOT::GenericShowMembers", "Please regenerate your dictionaries!");
+      R__insp.GenericShowMembers(topClassName, obj, transientMember);
    }
 
   class TOperatorNewHelper { };

@@ -221,8 +221,6 @@ Bool_t TOutputListSelectorDataMap::Init(TSelector* sel)
    fMap = new THashTable;
    fMap->SetOwner();
 
-   char parent[1024];
-   parent[0] = 0;
    TCollectDataMembers cdm(*this);
    TClass* cl = sel->IsA();
    if (cl->InheritsFrom(TSelectorCint::Class())) {
@@ -232,7 +230,7 @@ Bool_t TOutputListSelectorDataMap::Init(TSelector* sel)
       cl = selCINT->GetInterpretedClass();
       sel = selCINT->GetInterpretedSelector();
    }
-   if (!cl->CallShowMembers(sel, cdm, parent)) {
+   if (!cl->CallShowMembers(sel, cdm)) {
       // failed to map
       PDB(kOutput,1) Warning("Init","Failed to determine mapping!");
       return kFALSE;
@@ -277,8 +275,6 @@ Bool_t TOutputListSelectorDataMap::SetDataMembers(TSelector* sel) const
    if (!output || output->IsEmpty()) return kTRUE;
 
    // Set fSelector's data members
-   char parent[1024];
-   parent[0] = 0;
    TSetSelDataMembers ssdm(*this, fMap, output);
    TClass* cl = sel->IsA();
    if (cl->InheritsFrom(TSelectorCint::Class())) {
@@ -288,7 +284,7 @@ Bool_t TOutputListSelectorDataMap::SetDataMembers(TSelector* sel) const
       cl = selCINT->GetInterpretedClass();
       sel = selCINT->GetInterpretedSelector();
    }
-   Bool_t res = cl->CallShowMembers(sel, ssdm, parent);
+   Bool_t res = cl->CallShowMembers(sel, ssdm);
    PDB(kOutput,1) Info("SetDataMembers()","%s, set %d data members.",
                        (res ? "success" : "failure"), ssdm.GetNumSet());
    return res;

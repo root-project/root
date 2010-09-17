@@ -91,7 +91,7 @@ namespace ROOT { namespace Cintex {
       static void Stub_StreamerNVirtual(void*, void*, const std::vector<void*>&, void*);
       static void Stub_Dictionary(void* ret, void*, const std::vector<void*>&, void*);
       static void Stub_ShowMembers(void*, void*, const std::vector<void*>&, void*);
-      static void Stub_ShowMembers(TClass*, const ROOT::Reflex::Type&, void*, TMemberInspector&, char*);
+      static void Stub_ShowMembers(TClass*, const ROOT::Reflex::Type&, void*, TMemberInspector&);
       static void Stub_Dictionary( void* ctx );
       static TClass* Default_CreateClass(Type typ, ROOT::TGenericClassInfo* info);
    };
@@ -234,8 +234,7 @@ namespace ROOT { namespace Cintex {
             AddFunction("IsA", signature, Stub_IsA, ctxt, 0);
             //--- adding void Data_ShowMembers(void *, TMemberInspector&, char*)
             signature = FunctionTypeBuilder( void_t,
-                                             ReferenceBuilder(TypeBuilder("TMemberInspector")),
-                                             PointerBuilder(char_t));
+                                             ReferenceBuilder(TypeBuilder("TMemberInspector")));
             
             AddFunction("ShowMembers", signature, Stub_ShowMembers, ctxt,
                         /*should be VIRTUAL but avoid vtable creation:*/
@@ -512,18 +511,16 @@ namespace ROOT { namespace Cintex {
       Type typ = context(ctx).TypeGet();
       TClass* tcl = context(ctx).Tclass();
       TMemberInspector& insp = *(TMemberInspector*)args[0];
-      char* par = (char*)args[1];
-      if( tcl ) Stub_ShowMembers( tcl, typ, obj, insp, par);
+      if( tcl ) Stub_ShowMembers( tcl, typ, obj, insp);
    }
 
-   void ROOTClassEnhancerInfo::Stub_ShowMembers(TClass* tcl, const Type& cl, void* obj, TMemberInspector& insp, char* par) {
+   void ROOTClassEnhancerInfo::Stub_ShowMembers(TClass* tcl, const Type& cl, void* obj, TMemberInspector& insp) {
       if ( tcl->GetShowMembersWrapper() )    {
-         tcl->GetShowMembersWrapper()(obj, insp, par);
+         tcl->GetShowMembersWrapper()(obj, insp);
          return;
       }
 
       // Create show members.
-      int ncp = ::strlen(par);
       // Loop over data members
       if ( IsSTL(cl.Name(SCOPED)) || cl.IsArray() ) return;
       for ( size_t m = 0; m < cl.DataMemberSize(INHERITEDMEMBERS_NO); m++) {
@@ -540,18 +537,15 @@ namespace ROOT { namespace Cintex {
             }
             char*  add = (char*)obj + mem.Offset();
             if ( Cintex::Debug() > 2 )  {
-               cout << "Cintex: Showmembers: ("<< tcl->GetName() << ") " << par << nam.c_str()
+               cout << "Cintex: Showmembers: ("<< tcl->GetName() << ") " << nam.c_str()
                     << " = " << (void*)add << " Offset:" << mem.Offset() << endl;
             }
-            insp.Inspect(tcl, par, nam.c_str(), add);
+            insp.Inspect(tcl, insp.GetParent(), nam.c_str(), add);
             if ( !typ.IsFundamental() && !typ.IsPointer() ) {
                string tnam  = mem.Properties().HasProperty("iotype") ? CintName(mem.Properties().PropertyAsString("iotype")) : CintName(typ);
                TClass* tmcl = ROOT::GetROOT()->GetClass(tnam.c_str(), kTRUE, mem.IsTransient());
                if ( tmcl ) {
-                  ::strcat(par,nam.c_str());
-                  ::strcat(par,".");
-                  tmcl->CallShowMembers(add, insp, par);
-                  par[ncp] = 0;
+                  insp.InspectMember(tmcl, add, (nam + ".").c_str());
                }
             }
          }
@@ -562,7 +556,7 @@ namespace ROOT { namespace Cintex {
          string bname = CintName(BaseNth.ToType());
          char* ptr = (char*)obj + BaseNth.Offset(obj);
          TClass* bcl = ROOT::GetROOT()->GetClass(bname.c_str());
-         if( bcl ) Stub_ShowMembers( bcl, BaseNth.ToType(), ptr, insp, par);
+         if( bcl ) Stub_ShowMembers( bcl, BaseNth.ToType(), ptr, insp);
       }
    }
 }}

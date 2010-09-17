@@ -1713,11 +1713,9 @@ namespace {
 }
 
 //______________________________________________________________________________
-void TStreamerInfo::CallShowMembers(void* obj, TMemberInspector &insp, char *parent) const
+void TStreamerInfo::CallShowMembers(void* obj, TMemberInspector &insp) const
 {
    // Emulated a call ShowMembers() on the obj of this class type, passing insp and parent.
-
-   const Int_t ncp = strlen(parent);
 
    TIter next(fElements);
    TStreamerElement* element = (TStreamerElement*) next();
@@ -1737,9 +1735,9 @@ void TStreamerInfo::CallShowMembers(void* obj, TMemberInspector &insp, char *par
          // Nothing to do this round.
       } else if (element->IsaPointer()) {
          elementName.Form("*%s",element->GetFullName());
-         insp.Inspect(fClass, parent, elementName.Data(), eaddr);
+         insp.Inspect(fClass, insp.GetParent(), elementName.Data(), eaddr);
       } else {
-         insp.Inspect(fClass, parent, element->GetFullName(), eaddr);         
+         insp.Inspect(fClass, insp.GetParent(), element->GetFullName(), eaddr);         
          Int_t etype = element->GetType();
          switch(etype) {
             case kObject:
@@ -1751,11 +1749,8 @@ void TStreamerInfo::CallShowMembers(void* obj, TMemberInspector &insp, char *par
             {
                TClass *ecl = element->GetClassPointer();
                if (ecl && (fClass!=ecl /* This happens 'artificially for stl container see the use of "This" */)) { 
-                  strcat(parent,element->GetName());
-                  strcat(parent,".");
-                  ecl->CallShowMembers(eaddr, insp, parent);
+                  insp.InspectMember(ecl, eaddr, TString(element->GetName()) + ".");
                }
-               parent[ncp] = 0;
                break;
             }
          } // switch(etype)
@@ -1776,7 +1771,7 @@ void TStreamerInfo::CallShowMembers(void* obj, TMemberInspector &insp, char *par
 
          TClass *ecl = element->GetClassPointer();
          if (ecl) {
-            ecl->CallShowMembers(eaddr, insp, parent);
+            ecl->CallShowMembers(eaddr, insp);
          }
       } // If is a abse
    } // Loop over elements

@@ -2673,10 +2673,9 @@ def ClassDefImplementation(selclasses, self) :
 
       returnValue += template + 'int ' + specclname + '::ImplFileLine() {return 1;}\n'
 
-      returnValue += template + 'void '+ specclname  +'::ShowMembers(TMemberInspector &R__insp, char *R__parent) {\n'
+      returnValue += template + 'void '+ specclname  +'::ShowMembers(TMemberInspector &R__insp) {\n'
       returnValue += '   TClass *R__cl = ' + clname  + '::IsA();\n'
-      returnValue += '   Int_t R__ncp = strlen(R__parent);\n'
-      returnValue += '   if (R__ncp || R__cl || R__insp.IsA()) { }\n'
+      returnValue += '   if (R__cl || R__insp.IsA()) { }\n'
 
       for ml in membersList:
         if ml[1].isdigit() :
@@ -2699,7 +2698,7 @@ def ClassDefImplementation(selclasses, self) :
             #  "add explicit cast to (void*) in call to Inspect() only for object data"
             #  "members not having a ShowMembers() method. Needed on ALPHA to be able to"
             #  "compile G__Thread.cxx."
-            returnValue += '   R__insp.Inspect(R__cl, R__parent, "' + varname1 + '", &' + varname + ');\n'
+            returnValue += '   R__insp.Inspect(R__cl, R__insp.GetParent(), "' + varname1 + '", &' + varname + ');\n'
             # if struct: recurse!
             if te in ('Class','Struct') :
               memtypeid = mattrs['type']
@@ -2710,14 +2709,13 @@ def ClassDefImplementation(selclasses, self) :
                 if len( filter( lambda b: b[0] == self.TObject_id, allmembases ) ) :
                   memDerivesFromTObject = 1
               if memDerivesFromTObject :
-                returnValue +=  '   %s.ShowMembers(R__insp, strcat(R__parent,"%s.")); R__parent[R__ncp] = 0;\n' % (varname, varname)
+                returnValue +=  '   R__insp.InspectMember(%s, "%s.");\n' % (varname, varname)
               else :
                 # TODO: the "false" parameter signals that it's a non-transient (i.e. a persistent) member.
                 # We have the knowledge to properly pass true or false, and we should do that at some point...
-                returnValue +=  '   ::ROOT::GenericShowMembers("%s", (void*)&%s, R__insp, strcat(R__parent,"%s."), %s);\n' \
+                returnValue +=  '   R__insp.InspectMember("%s", (void*)&%s, "%s.", %s);\n' \
                                % (self.genTypeName(memtypeid), varname, varname, "false")
                 # tt['attrs']['fullname']
-                returnValue +=  '   R__parent[R__ncp] = 0;\n'
 
       if 'bases' in attrs :
         for b in attrs['bases'].split() :
@@ -2735,9 +2733,9 @@ def ClassDefImplementation(selclasses, self) :
                 break
           # basename = self.xref[baseid]['attrs']['fullname']
           if baseHasShowMembers :
-            returnValue +=  '   %s::ShowMembers(R__insp,R__parent);\n' % basename
+            returnValue +=  '   %s::ShowMembers(R__insp);\n' % basename
           else :
-            returnValue +=  '   ::ROOT::GenericShowMembers("%s", ( ::%s *)(this), R__insp, R__parent, false);\n' % (basename, basename)
+            returnValue +=  '   R__insp.GenericShowMembers("%s", ( ::%s *)(this), false);\n' % (basename, basename)
 
       returnValue += '}\n'
 

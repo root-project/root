@@ -1430,10 +1430,8 @@ Int_t TClass::AutoBrowse(TObject *obj, TBrowser *b)
 
    if (!obj) return 0;
 
-   char cbuf[1000]; *cbuf=0;
-
    TAutoInspector insp(b);
-   obj->ShowMembers(insp,cbuf);
+   obj->ShowMembers(insp);
    return insp.fCount;
 }
 
@@ -1461,10 +1459,8 @@ Int_t TClass::Browse(void *obj, TBrowser *b) const
       // do something useful.
 
    } else {
-      char cbuf[1000]; *cbuf=0;
-
       TAutoInspector insp(b);
-      CallShowMembers(obj,insp,cbuf,0);
+      CallShowMembers(obj,insp,0);
       return insp.fCount;
    }
 
@@ -1543,8 +1539,6 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
    // The following statement will recursively call
    // all the subclasses of this class.
    if (realDataObject) {
-      char parent[256];
-      parent[0] = 0;
       fRealData = new TList;
 
       TBuildRealData brd(realDataObject, this);
@@ -1556,7 +1550,7 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
       if (isTransient) {
          brd.SetBit(TRealData::kTransient);
       }
-      if ( ! CallShowMembers(realDataObject, brd, parent) ) {
+      if ( ! CallShowMembers(realDataObject, brd) ) {
          if ( brd.TestBit(TRealData::kTransient) ) {
             // This is a transient data member, so it is probably fine to not have 
             // access to its content.  However let's no mark it as definitively setup,
@@ -1677,7 +1671,7 @@ void TClass::CalculateStreamerOffset() const
 
 
 //______________________________________________________________________________
-Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp, char *parent,
+Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp,
                                Int_t isATObject) const
 {
    // Call ShowMembers() on the obj of this class type, passing insp and parent.
@@ -1687,7 +1681,7 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp, char *parent,
    if (fShowMembers) {
       // This should always works since 'pointer' should be pointing
       // to an object of the actual type of this TClass object.
-      fShowMembers(obj, insp, parent);
+      fShowMembers(obj, insp);
       return kTRUE;
    } else {
 
@@ -1704,7 +1698,7 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp, char *parent,
             CalculateStreamerOffset();
          }
          TObject* realTObject = (TObject*)((size_t)obj + fOffsetStreamer);
-         realTObject->ShowMembers(insp, parent);
+         realTObject->ShowMembers(insp);
          return kTRUE;
       } else if (fClassInfo) {
          
@@ -1722,7 +1716,7 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp, char *parent,
             Long_t offset = 0;
             
             R__LOCKGUARD2(gCINTMutex);
-            gCint->CallFunc_SetFuncProto(ism,fClassInfo,"ShowMembers", "TMemberInspector&,char*", &offset);
+            gCint->CallFunc_SetFuncProto(ism,fClassInfo,"ShowMembers", "TMemberInspector&", &offset);
             if (fInterStreamer && offset != fOffsetStreamer) {
                Error("CallShowMembers", "Logic Error: offset for Streamer() and ShowMembers() differ!");
                fInterShowMembers = 0;
@@ -1744,14 +1738,12 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp, char *parent,
             R__LOCKGUARD2(gCINTMutex);
             gCint->CallFunc_ResetArg(fInterShowMembers);
             gCint->CallFunc_SetArg(fInterShowMembers,(long) &insp);
-            gCint->CallFunc_SetArg(fInterShowMembers,(long) parent);
             void* address = (void*) (((long) obj) + fOffsetStreamer);
             gCint->CallFunc_Exec((CallFunc_t*)fInterShowMembers,address);
             return kTRUE;
          }
       } else if (TVirtualStreamerInfo* sinfo = GetStreamerInfo()) {
-         
-         sinfo->CallShowMembers(obj,insp,parent);
+         sinfo->CallShowMembers(obj,insp);
          return kTRUE;
       } // isATObject
    } // fShowMembers is set
@@ -1760,7 +1752,7 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp, char *parent,
 }
 
 //______________________________________________________________________________
-void TClass::InterpretedShowMembers(void* obj, TMemberInspector &insp, char *parent)
+void TClass::InterpretedShowMembers(void* obj, TMemberInspector &insp)
 {
    // Do a ShowMembers() traversal of all members and base classes' members
    // using the reflection information from the interpreter. Works also for
@@ -1769,7 +1761,6 @@ void TClass::InterpretedShowMembers(void* obj, TMemberInspector &insp, char *par
    if (!fClassInfo) return;
 
    DataMemberInfo_t* dmi = gCint->DataMemberInfo_Factory(fClassInfo);
-   Int_t ncp = strlen(parent);
 
    TString name("*");
    while (gCint->DataMemberInfo_Next(dmi)) {
@@ -1799,7 +1790,7 @@ void TClass::InterpretedShowMembers(void* obj, TMemberInspector &insp, char *par
          ++inspname;
       }
       void* maddr = ((char*)obj) + gCint->DataMemberInfo_Offset(dmi);
-      insp.Inspect(this, parent, inspname, maddr);
+      insp.Inspect(this, insp.GetParent(), inspname, maddr);
 
       // If struct member: recurse.
       if (!isPointer && !(prop & G__BIT_ISFUNDAMENTAL)) {
@@ -1807,7 +1798,7 @@ void TClass::InterpretedShowMembers(void* obj, TMemberInspector &insp, char *par
                                                    TClassEdit::kDropTrailStar) );
          TClass* clm = TClass::GetClass(clmName.c_str());
          if (clm) {
-            clm->CallShowMembers(maddr, insp, strcat(parent, name + ".")); parent[ncp] = 0;
+            insp.InspectMember(clm, maddr, name);
          }
       }
    } // while next data member
@@ -1820,7 +1811,7 @@ void TClass::InterpretedShowMembers(void* obj, TMemberInspector &insp, char *par
       TClass* bcl = TClass::GetClass(bclname);
       void* baddr = ((char*)obj) + gCint->BaseClassInfo_Offset(bci);
       if (bcl) {
-         bcl->CallShowMembers(baddr, insp, parent);
+         bcl->CallShowMembers(baddr, insp);
       } else {
          Warning("InterpretedShowMembers()", "Unknown class %s", bclname);
       }
@@ -2024,10 +2015,8 @@ void TClass::Dump(void *obj) const
    //   fFillStyle               1001        fill area style
 
    Printf("==>Dumping object at:%lx, class=%s\n",(Long_t)obj,GetName());
-   char parent[256];
-   parent[0] = 0;
    TDumpMembers dm;
-   if (!CallShowMembers(obj, dm, parent)) {
+   if (!CallShowMembers(obj, dm)) {
       Info("Dump", "No ShowMembers function, dumping disabled");
    }
 }

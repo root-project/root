@@ -12,7 +12,6 @@
 #ifndef ROOT_TMemberInspector
 #define ROOT_TMemberInspector
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TMemberInspector                                                     //
@@ -24,19 +23,42 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TObject.h"
+#include "Rtypes.h"
 
-
+class TObject;
 class TClass;
 
-
 class TMemberInspector {
+private:
+   class TParentBuf;
+   TParentBuf* fParent; // current inspection "path"
 
 public:
-   TMemberInspector() { }
-   virtual ~TMemberInspector() { }
+   TMemberInspector();
+   virtual ~TMemberInspector();
 
    virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr) = 0;
+
+   const char* GetParent() const;
+   Ssiz_t GetParentLen() const;
+   void AddToParent(const char* name);
+   void RemoveFromParent(Ssiz_t startingAt);
+
+   template <class T>
+   void InspectMember(T& obj, const char* name) {
+      Ssiz_t len = GetParentLen();
+      AddToParent(name);
+      obj.ShowMembers(*this);
+      RemoveFromParent(len);
+   }
+
+   void InspectMember(TObject& obj, const char* name);
+   void InspectMember(const char* topclassname, void* pobj, const char* name,
+                      Bool_t transient);
+   void InspectMember(TClass* cl, void* pobj, const char* name);
+   
+   void GenericShowMembers(const char *topClassName, void *obj,
+                           Bool_t transientMember);
 
    ClassDef(TMemberInspector,0)  //ABC for inspecting class data members
 };
