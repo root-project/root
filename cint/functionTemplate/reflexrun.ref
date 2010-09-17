@@ -1,7 +1,7 @@
 
 Processing reflexrun.C...
 IsA()
-ShowMembers(TMemberInspector&, char*)
+ShowMembers(TMemberInspector&)
 __getNewDelFunctions()
 get() const
 get<double>() const
