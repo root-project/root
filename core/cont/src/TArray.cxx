@@ -66,6 +66,7 @@ TArray *TArray::ReadArray(TBuffer &b, const TClass *clReq)
          ::Error("TArray::ReadArray", "could not create object of class %s",
                  clRef->GetName());
          // Exception
+         return 0;
       }
 
       a->Streamer(b);
