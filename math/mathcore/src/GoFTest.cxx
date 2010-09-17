@@ -35,7 +35,7 @@ namespace Math {
 
       virtual ~PDFIntegral() { if (fPDF) delete fPDF; }
 
-      PDFIntegral(const IGenFunction& pdf) : fPDF(pdf.Clone()) {
+      PDFIntegral(const IGenFunction* pdf) : fPDF(pdf) {
       }
       
       Double_t operator() (Double_t x) const {
@@ -49,18 +49,18 @@ namespace Math {
       }
       
       IGenFunction* Clone() const {
-         return new PDFIntegral(*fPDF);
+         return new PDFIntegral(fPDF);
       }
    };
    
    template<>
-   void GoFTest::SetDistribution(const IGenFunction& f, Bool_t isPDF) {
-      SetProbabilityFunction(f, isPDF); 
-   }
+   void GoFTest::SetDistribution(IGenFunction& f, GoFTest::EUserDistribution userDist) {
+      SetDistributionFunction(f, userDist); 
+   };
    
-   void GoFTest::SetDistribution(EDistribution dist) {
+   void GoFTest::SetDistributionType(EDistribution dist) {
       if (!(kGaussian <= dist && dist <= kExponential)) {
-         std::cerr << "Invalid user input's distribution type for non templated 1-sample test!" << std::endl;
+         std::cerr << "Cannot set distribution type! Distribution type option must be ennabled." << std::endl;
          return;
       }
       fDist = dist;
@@ -165,28 +165,24 @@ namespace Math {
          LogSample();
       case kGaussian :
          cdf = new ROOT::Math::WrappedMemFunction<GoFTest, Double_t (GoFTest::*)(Double_t) const>(*this, &GoFTest::GaussianCDF);
-         fCDF = std::auto_ptr<IGenFunction>(cdf);
          break;
       case kExponential:
          cdf = new ROOT::Math::WrappedMemFunction<GoFTest, Double_t (GoFTest::*)(Double_t) const>(*this, &GoFTest::ExponentialCDF);
-         fCDF = std::auto_ptr<IGenFunction>(cdf);
          break;
       case kUserDefined:
-         fCDF = std::auto_ptr<IGenFunction>(cdf);
-         fDist = kUndefined;
-         break;
       case kUndefined:
       default:
          break;   
       }
+      fCDF = std::auto_ptr<IGenFunction>(cdf);
    }
    
-   void GoFTest::SetProbabilityFunction(const IGenFunction& f, Bool_t isPDF) {
+   void GoFTest::SetDistributionFunction(const IGenFunction& f, Bool_t isPDF) {
       if (fDist != kUserDefined) {
-         std::cerr << "Cannot set user defined distribution function with non templated 1-sample test!" << std::endl;
+         std::cerr << "Cannot set distribution function! User defined distribution option must be ennabled." << std::endl;
          return;
       }
-      fCDF = std::auto_ptr<IGenFunction>(isPDF ? new PDFIntegral(f) : f.Clone());
+      fCDF = std::auto_ptr<IGenFunction>(isPDF ? new PDFIntegral(f.Clone()) : f.Clone());
    }
 
    void GoFTest::Instantiate(const Double_t* sample, UInt_t sampleSize) {
@@ -202,12 +198,6 @@ namespace Math {
       fSamples = std::vector<std::vector<Double_t> >(1);
       fTestSampleFromH0 = kTRUE;
       SetSamples(std::vector<const Double_t*>(1, sample), std::vector<UInt_t>(1, sampleSize));
-   }
-
-   Double_t GoFTest::LogNormalCDF(Double_t x) const {    
-//       x -= fMean;
-//       x /= fSigma;  
-      return ROOT::Math::lognormal_cdf(x, fMean, fSigma);   
    }
    
    Double_t GoFTest::GaussianCDF(Double_t x) const {
@@ -335,9 +325,9 @@ namespace Math {
    } else {
       pvalue = std::exp(-1. * std::exp(1.0776 - (2.30695 - (0.43424 - (.082433 - (0.008056 - 0.0003146 * A2) * A2) * A2) * A2) * A2));
    }   
-   if (pvalue < 0 || pvalue > 1 || pvalue != pvalue) {
-      std::cerr << "Cannot compute p-value: data sample seems not to be from a true distribution. Check input parameters." << std::endl;
-      pvalue  = -1;
+   if (pvalue != pvalue) {
+      std::cerr << "Cannot compute p-value: degenerate distribution. Check input distribution parameter soundness." << std::endl;
+      return -1;
    }
    return 1. - pvalue;
 }
@@ -378,10 +368,6 @@ namespace Math {
    }
    A2 *= (N - 1) / (TMath::Power(N, 2)); // A2_akN in (1)
    Double_t pvalue = PValueAD2Samples(A2, N); // standartized A2
-   if (pvalue < 0 || pvalue > 1 || pvalue != pvalue) {
-      std::cerr << "Cannot compute the p-value or the test statistic: data samples seem not to be from a true distribution. Check input parameters." << std::endl;
-      pvalue  = -1;
-   }
    return (strncmp(option, "p", 1) == 0 || strncmp(option, "t", 1) != 0) ? pvalue : A2;
 }
 
@@ -393,7 +379,7 @@ namespace Math {
       return -1;
    } 
    if (fDist == kUndefined) {
-      std::cerr << "Distribution type is undefined! Please set it with SetDistribution(GoFTest::EDistribution)." << std::endl;
+      std::cerr << "Distribution type is undefined! Please use SetDistribution(GoFTest::EDistribution)." << std::endl;
       return -1;
    }
    Double_t A2 = 0.0;
@@ -432,7 +418,7 @@ namespace Math {
       return -1;
    }
    if (fDist == kUndefined) {
-      std::cerr << "Distribution type is undefined! Please set it with SetDistribution(GoFTest::EDistribution)." << std::endl;
+      std::cerr << "Distribution type is undefined! Please use SetDistribution(GoFTest::EDistribution)." << std::endl;
       return -1;
    }
    Double_t Fo = 0.0, Dn = 0.0;

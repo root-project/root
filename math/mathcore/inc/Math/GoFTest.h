@@ -52,9 +52,9 @@ public:
    
    /* Sets the user input distribution. To use with the template construtor to change the distribution parameter*/
    template<class Dist>
-   void SetDistribution(const Dist& dist, Bool_t isPDF = kTRUE) {
+   void SetDistribution(Dist& dist, EUserDistribution userDist = kPDF) {
       ROOT::Math::WrappedFunction<Dist&> wcdf(dist); 
-      SetProbabilityFunction(wcdf, isPDF);
+      SetDistributionFunction(wcdf, userDist);
    }
 
    /* Constructor for using only with 2-samples tests */
@@ -71,7 +71,7 @@ public:
    }
    
    /* Sets the distribution type for the non templated 1-sample test */
-   void SetDistribution(EDistribution dist);
+   void SetDistributionType(EDistribution dist);
    
    virtual ~GoFTest();
 
@@ -133,7 +133,7 @@ private:
    Bool_t fTestSampleFromH0;
    
    void SetCDF();
-   void SetProbabilityFunction(const IGenFunction& cdf, Bool_t isPDF);
+   void SetDistributionFunction(const IGenFunction& cdf, Bool_t isPDF);
   
    void Instantiate(const Double_t* sample, UInt_t sampleSize);
     
@@ -157,6 +157,10 @@ private:
    void SetParameters(); // Sets the estimated mean and standard-deviation from the samples 
 }; // end GoFTest class
 
+/* Template specialization */
+template<>
+void GoFTest::SetDistribution(IGenFunction& f, GoFTest::EUserDistribution userDist);
+      
 } // ROOT namespace
 } // Math namespace
 #endif
