@@ -20,7 +20,6 @@
 #include "Fit/BinData.h"
 #endif
 
-using namespace std;
 
 namespace ROOT { 
 
@@ -32,7 +31,7 @@ namespace ROOT {
       class SparseData : public FitData  { 
       public:
          //Constructor with a vector
-         SparseData(vector<double>& min, vector<double>& max);
+         SparseData(std::vector<double>& min, std::vector<double>& max);
          
          //Constructor with a dimension and two arrays
          SparseData(const unsigned int dim, double min[], double max[]);
