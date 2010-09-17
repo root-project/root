@@ -15,17 +15,13 @@
 namespace ROOT {
 namespace Math {
 
-GaussLegendreIntegrator::GaussLegendreIntegrator(int num, double eps)
+GaussLegendreIntegrator::GaussLegendreIntegrator(int num, double eps) : 
+   GaussIntegrator(eps)
 {
    // Basic contructor
-
-   fEpsilon = eps;
    fNum = num;
    fX = 0;
    fW = 0;
-   fLastResult = fLastError = 0;
-   fUsedOnce = false;
-   fFunction = 0;
 
    CalcGaussLegendreSamplingPoints();
 }
@@ -56,7 +52,7 @@ void GaussLegendreIntegrator::GetWeightVectors(double *x, double *w)
 }
 
 
-double GaussLegendreIntegrator::Integral(double a, double b)
+double GaussLegendreIntegrator::DoIntegral(double a, double b, const IGenFunction* function)
 {
    // Gauss-Legendre integral, see CalcGaussLegendreSamplingPoints.
 
@@ -74,7 +70,7 @@ double GaussLegendreIntegrator::Integral(double a, double b)
    for (int i=0; i<fNum; i++)
    {
       xx[0] = a0 + b0*fX[i];
-      result += fW[i] * (*fFunction)(xx);
+      result += fW[i] * (*function)(xx);
    }
 
    fLastResult = result*b0;
@@ -85,55 +81,14 @@ double GaussLegendreIntegrator::Integral(double a, double b)
 void GaussLegendreIntegrator::SetRelTolerance (double eps)
 {
    // Set the desired relative Error.
-
    fEpsilon = eps;
    CalcGaussLegendreSamplingPoints();
 }
 
 void GaussLegendreIntegrator::SetAbsTolerance (double)
-{ MATH_ERROR_MSG("ROOT::Math::GausIntegratorOneDim", "There is no Absolute Tolerance!"); }
-
-double GaussLegendreIntegrator::Result () const
-{
-   // Returns the result of the last integral calculation.
-
-   if (!fUsedOnce)
-      MATH_ERROR_MSG("ROOT::Math::GausIntegratorOneDim", "You must calculate the result at least once!");
-
-   return fLastResult;
-}
-
-double GaussLegendreIntegrator::Error() const
-{ return fLastError; }
-
-int GaussLegendreIntegrator::Status() const
-{
-   return (fUsedOnce) ? 0 :  -1;
-}
-
-void GaussLegendreIntegrator::SetFunction (const IGenFunction & function)
-{
-   //  Set integration function.
-
-   fFunction = &function;
-   fUsedOnce = false; 
-}
+{   MATH_WARN_MSG("ROOT::Math::GaussLefendreIntegrator", "There is no Absolute Tolerance!");  }
 
 
-double GaussLegendreIntegrator::Integral ()
-{ return 0.0; }
-
-double GaussLegendreIntegrator::IntegralUp (double /*a*/)
-{ return 0.0; }
-
-double GaussLegendreIntegrator::IntegralLow (double /*b*/)
-{ return 0.0; }
-
-double GaussLegendreIntegrator::Integral (const std::vector< double > &/*pts*/)
-{ return 0.0; }
-
-double GaussLegendreIntegrator::IntegralCauchy (double /*a*/, double /*b*/, double /*c*/)
-{ return 0.0; }
 
 void GaussLegendreIntegrator::CalcGaussLegendreSamplingPoints()
 {
@@ -194,6 +149,7 @@ void GaussLegendreIntegrator::CalcGaussLegendreSamplingPoints()
    }
 }
 
-} // end namespace Math
-   
+
+
+} // end namespace Math  
 } // end namespace ROOT

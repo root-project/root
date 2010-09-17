@@ -16,8 +16,14 @@
 #ifndef ROOT_Math_GaussIntegrator
 #define ROOT_Math_GaussIntegrator
 
-#include <Math/IFunction.h>
-#include <Math/VirtualIntegrator.h>
+#ifndef ROOT_Math_IFunction
+#include "Math/IFunction.h"
+#endif
+
+#ifndef ROOT_Math_VirtualIntegrator
+#include "Math/VirtualIntegrator.h"
+#endif
+
 
 namespace ROOT {
 namespace Math {
@@ -36,30 +42,14 @@ namespace Math {
 
 class GaussIntegrator: public VirtualIntegratorOneDim {
 
-/**
-   Auxiliar inner class for mapping infinite and semi-infinite integrals
-*/            
-   struct IntegrandTransform : public IGenFunction {
-      enum ESemiInfinitySign {kMinus = -1, kPlus = +1};
-      IntegrandTransform(const IGenFunction* integrand);
-      IntegrandTransform(const double boundary, ESemiInfinitySign sign, const IGenFunction* integrand);
-      double operator()(double x) const;
-      double DoEval(double x) const;
-      IGenFunction* Clone() const;
-   private:
-      ESemiInfinitySign fSign;
-      const IGenFunction* fIntegrand;
-      double fBoundary;
-      bool fInfiniteInterval;
-      double DoEval(double x, double boundary, int sign) const;
-   };
    
 public:
+
    /** Destructor */
-   ~GaussIntegrator();
+   virtual ~GaussIntegrator();
 
    /** Default Constructor. */
-   GaussIntegrator();
+   GaussIntegrator(double relTol = 1.E-12);
    
 
    /** Static function: set the fgAbsValue flag.
@@ -73,10 +63,10 @@ public:
    // Implementing VirtualIntegrator Interface
 
    /** Set the desired relative Error. */
-   void SetRelTolerance (double);
+   virtual void SetRelTolerance (double);
 
    /** This method is not implemented. */
-   void SetAbsTolerance (double);
+   virtual void SetAbsTolerance (double);
 
    /** Returns the result of the last Integral calculation. */
    double Result () const;
@@ -89,64 +79,8 @@ public:
 
    // Implementing VirtualIntegratorOneDim Interface
 
-   /** Returns Integral of function between a and b. 
-      This function computes, to an attempted specified accuracy, the value of the integral:
-   Begin_Latex
-      I = #int^{B}_{A} f(x)dx
-   End_Latex
-      Usage:
-        In any arithmetic expression, this function has the approximate value
-        of the integral I.
-        - A, B: End-points of integration interval. Note that B may be less
-        than A.
-       
-      Surrogates integration computation to DoIntegral(a, b [, ...]).
-   */
-   double Integral (double a, double b);
-   
-   /** Returns Integral of function on an infinite interval. 
-      This function computes, to an attempted specified accuracy, the value of the integral:
-   Begin_Latex
-      I = #int^{#infinity}_{-#infinity} f(x)dx
-   End_Latex
-      Usage:
-        In any arithmetic expression, this function has the approximate value
-        of the integral I.
-    
-      The integral is mapped onto [0,1] using a transformation then integral computation is surrogated to DoIntegral.
-   */
-   double Integral ();
-   
-   /** Returns Integral of function on an upper semi-infinite interval. 
-      This function computes, to an attempted specified accuracy, the value of the integral:
-   Begin_Latex
-      I = #int^{#infinity}_{A} f(x)dx
-   End_Latex
-      Usage:
-        In any arithmetic expression, this function has the approximate value
-        of the integral I.
-        - A: lower end-point of integration interval.
-   
-      The integral is mapped onto [0,1] using a transformation then integral computation is surrogated to DoIntegral.
-   */
-   double IntegralUp (double a);
-   
-   /** Returns Integral of function on a lower semi-infinite interval. 
-       This function computes, to an attempted specified accuracy, the value of the integral:
-   Begin_Latex
-      I = #int^{B}_{#infinity} f(x)dx
-   End_Latex
-      Usage:
-         In any arithmetic expression, this function has the approximate value
-         of the integral I.
-         - B: upper end-point of integration interval.
-
-      The integral is mapped onto [0,1] using a transformation then integral computation is surrogated to DoIntegral.
-   */
-   double IntegralLow (double b);
-   
-   /** Integration surrogate method. Returns the integral in interval [a,b].
-
+   /** 
+     Returns Integral of function between a and b. 
      Based on original CERNLIB routine DGAUSS by Sigfried Kolbig 
      converted to C++ by Rene Brun
      
@@ -213,7 +147,49 @@ public:
       required. The subprogram may therefore be used when these values are
       undefined
    */
-   double DoIntegral (double a, double b, const IGenFunction* mapping);
+   double Integral (double a, double b);
+   
+   /** Returns Integral of function on an infinite interval. 
+      This function computes, to an attempted specified accuracy, the value of the integral:
+   Begin_Latex
+      I = #int^{#infinity}_{-#infinity} f(x)dx
+   End_Latex
+      Usage:
+        In any arithmetic expression, this function has the approximate value
+        of the integral I.
+    
+      The integral is mapped onto [0,1] using a transformation then integral computation is surrogated to DoIntegral.
+   */
+   double Integral ();
+   
+   /** Returns Integral of function on an upper semi-infinite interval. 
+      This function computes, to an attempted specified accuracy, the value of the integral:
+   Begin_Latex
+      I = #int^{#infinity}_{A} f(x)dx
+   End_Latex
+      Usage:
+        In any arithmetic expression, this function has the approximate value
+        of the integral I.
+        - A: lower end-point of integration interval.
+   
+      The integral is mapped onto [0,1] using a transformation then integral computation is surrogated to DoIntegral.
+   */
+   double IntegralUp (double a);
+   
+   /** Returns Integral of function on a lower semi-infinite interval. 
+       This function computes, to an attempted specified accuracy, the value of the integral:
+   Begin_Latex
+      I = #int^{B}_{#infinity} f(x)dx
+   End_Latex
+      Usage:
+         In any arithmetic expression, this function has the approximate value
+         of the integral I.
+         - B: upper end-point of integration interval.
+
+      The integral is mapped onto [0,1] using a transformation then integral computation is surrogated to DoIntegral.
+   */
+   double IntegralLow (double b);
+   
 
    /** Set integration function (flag control if function must be copied inside).
        \@param f Function to be used in the calculations.
@@ -226,7 +202,17 @@ public:
    /** This method is not implemented. */
    double IntegralCauchy (double a, double b, double c);
 
+private:
+
+   /**
+      Integration surrugate method. Return integral of passed function in  interval [a,b]
+      Derived class (like GaussLegendreIntegrator)  can re-implement this method to modify to use 
+      an improved algorithm 
+   */
+   virtual double DoIntegral (double a, double b, const IGenFunction* func);
+
 protected:
+
    static bool fgAbsValue;          // AbsValue used for the calculation of the integral
    double fEpsilon;                 // Relative error.
    bool fUsedOnce;                  // Bool value to check if the function was at least called once.
