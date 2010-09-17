@@ -33,10 +33,11 @@
 class THDFSFile : public TFile {
 
 private:
-   void     *fHdfsFH;   // HDFS file handle
-   void     *fFS;       // HDFS user handle
-   Long64_t  fSize;     // file size
-   char     *fPath;     // HDFS path name
+   void     *fHdfsFH;    // HDFS file handle
+   void     *fFS;        // HDFS user handle
+   Long64_t  fSize;      // file size
+   Long64_t  fSysOffset; // Seek offset in file
+   char     *fPath;      // HDFS path name
 
    Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);
    Int_t    SysClose(Int_t fd);
@@ -61,11 +62,11 @@ public:
 class THDFSSystem : public TSystem {
 
 private:
-   void* fFH;           // HDFS filesystem handle.
-   void* fDirp;         // Pointer to the array of file information.
-   TUrl* fUrlp;         // Pointer to the array of directory content URLs.
-   int   fDirEntries;   // The number of entries in the fDirp array.
-   int   fDirCtr;       // The current position in the fDirp array.
+   void  *fFH;           // HDFS filesystem handle.
+   void  *fDirp;         // Pointer to the array of file information.
+   TUrl  *fUrlp;         // Pointer to the array of directory content URLs.
+   Int_t  fDirEntries;   // The number of entries in the fDirp array.
+   Int_t  fDirCtr;       // The current position in the fDirp array.
 
 public:
     THDFSSystem();

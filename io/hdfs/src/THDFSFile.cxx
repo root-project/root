@@ -71,10 +71,11 @@ THDFSFile::THDFSFile(const char *path, Option_t *option,
 {
    // Usual Constructor.  See the TFile constructor for details.
 
-   fHdfsFH = 0;
-   fFS = 0;
-   fSize = -1;
-   fPath = 0;
+   fHdfsFH    = 0;
+   fFS        = 0;
+   fSize      = -1;
+   fPath      = 0;
+   fSysOffset = 0;
 
    fOption = option;
    fOption.ToUpper();
@@ -166,8 +167,8 @@ Int_t THDFSFile::SysRead(Int_t, void *buf, Int_t len)
    // See documentation for TFile::SysRead().
 
    TRACE("READ")
-   tSize num_read = hdfsPread(fFS, (hdfsFile)fHdfsFH, fOffset, buf, len);
-   fOffset += len;
+   tSize num_read = hdfsPread(fFS, (hdfsFile)fHdfsFH, fSysOffset, buf, len);
+   fSysOffset += len;
    if (num_read < 0) {
       gSystem->SetErrorStr(strerror(errno));
    }
@@ -182,9 +183,9 @@ Long64_t THDFSFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
 
    TRACE("SEEK")
    if (whence == SEEK_SET)
-      fOffset = offset;
+      fSysOffset = offset;
    else if (whence == SEEK_CUR)
-      fOffset += offset;
+      fSysOffset += offset;
    else if (whence == SEEK_END) {
       if (offset > 0) {
          SysError("THDFSFile", "Unable to seek past end of file");
@@ -200,12 +201,12 @@ Long64_t THDFSFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
             return -1;
          }
       }
-      fOffset = fSize;
+      fSysOffset = fSize;
    } else {
       SysError("THDFSFile", "Unknown whence!");
       return -1;
    }
-   return fOffset;
+   return fSysOffset;
 }
 
 //______________________________________________________________________________

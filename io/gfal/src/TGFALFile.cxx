@@ -217,7 +217,6 @@ Int_t TGFALFile::SysRead(Int_t fd, void *buf, Int_t len)
 {
    // Interface to system read. All arguments like in POSIX read.
 
-   fOffset += len;
    Int_t ret = ::gfal_read(fd, buf, len);
 
    return ret;
@@ -228,7 +227,6 @@ Int_t TGFALFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 {
    // Interface to system write. All arguments like in POSIX write.
 
-   fOffset += len;
    Int_t ret = ::gfal_write(fd, buf, len);
 
    return ret;
@@ -241,12 +239,7 @@ Long64_t TGFALFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
    // except that the offset and return value are Long_t to be able to
    // handle 64 bit file systems.
 
-   if (whence == SEEK_SET && offset == fOffset) return offset;
-
    Long64_t ret = ::gfal_lseek64(fd, offset, whence);
-
-   if (ret >= 0)
-      fOffset = ret;
 
    return ret;
 }
@@ -296,14 +289,14 @@ Bool_t TGFALFile::ReadBuffer(char *buf, Int_t len)
 {
    // Read specified byte range from remote file via GFAL.
    // Returns kTRUE in case of error.
-   
+
    Int_t st;
    if ((st = ReadBufferViaCache(buf, len))) {
       if (st == 2)
          return kTRUE;
       return kFALSE;
    }
-   
+
    return TFile::ReadBuffer(buf, len);
 }
 
@@ -312,7 +305,7 @@ Bool_t TGFALFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
    // Read specified byte range from remote file via GFAL.
    // Returns kTRUE in case of error.
-   
+
    SetOffset(pos);
    Int_t st;
    if ((st = ReadBufferViaCache(buf, len))) {
@@ -320,7 +313,7 @@ Bool_t TGFALFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
          return kTRUE;
       return kFALSE;
    }
-   
+
    return TFile::ReadBuffer(buf, pos, len);
 }
 

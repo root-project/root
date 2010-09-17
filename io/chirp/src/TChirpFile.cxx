@@ -124,14 +124,14 @@ Bool_t TChirpFile::ReadBuffer(char *buf, Int_t len)
 {
    // Read specified byte range from remote file via Chirp daemon.
    // Returns kTRUE in case of error.
-   
+
    Int_t st;
    if ((st = ReadBufferViaCache(buf, len))) {
       if (st == 2)
          return kTRUE;
       return kFALSE;
    }
-   
+
    return TFile::ReadBuffer(buf, len);
 }
 
@@ -140,7 +140,7 @@ Bool_t TChirpFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
    // Read specified byte range from remote file via Chirp daemon.
    // Returns kTRUE in case of error.
-   
+
    SetOffset(pos);
    Int_t st;
    if ((st = ReadBufferViaCache(buf, len))) {
@@ -148,7 +148,7 @@ Bool_t TChirpFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
          return kTRUE;
       return kFALSE;
    }
-   
+
    return TFile::ReadBuffer(buf, pos, len);
 }
 
@@ -242,8 +242,6 @@ Int_t TChirpFile::SysClose(Int_t fd)
 //______________________________________________________________________________
 Int_t TChirpFile::SysRead(Int_t fd, void *buf, Int_t len)
 {
-   fOffset += len;
-
    Int_t rc = chirp_client_read(chirp_client, fd, buf, len);
 
    if (rc < 0) {
@@ -256,8 +254,6 @@ Int_t TChirpFile::SysRead(Int_t fd, void *buf, Int_t len)
 //______________________________________________________________________________
 Int_t TChirpFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 {
-   fOffset += len;
-
    Int_t rc = chirp_client_write(chirp_client, fd, (char *)buf, len);
 
    if (rc < 0) {
@@ -270,15 +266,10 @@ Int_t TChirpFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 //______________________________________________________________________________
 Long64_t TChirpFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 {
-   if (whence == SEEK_SET && offset == fOffset) return offset;
-
    Long64_t rc = chirp_client_lseek(chirp_client, fd, offset, whence);
 
-   if (rc < 0) {
+   if (rc < 0)
       gSystem->SetErrorStr(strerror(errno));
-   } else {
-      fOffset = rc;
-   }
 
    return rc;
 }
@@ -303,7 +294,7 @@ Int_t TChirpFile::SysStat(Int_t fd, Long_t *id, Long64_t *size,
 
    *id = ::Hash(fRealName);
 
-   Long64_t offset = fOffset;
+   Long64_t offset = SysSeek(fd, 0, SEEK_CUR);
    *size = SysSeek(fd, 0, SEEK_END);
    SysSeek(fd, offset, SEEK_SET);
 

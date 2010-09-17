@@ -281,7 +281,6 @@ Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
       k += iov[n].iov_len;
    }
 
-   fOffset    += k;
    fBytesRead += k;
 #ifdef WIN32
    SetFileBytesRead(GetFileBytesRead() + k);
@@ -323,7 +322,6 @@ Int_t TRFIOFile::SysRead(Int_t fd, void *buf, Int_t len)
 {
    // Interface to system read. All arguments like in POSIX read.
 
-   fOffset += len;
    Int_t ret = ::rfio_read(fd, (char *)buf, len);
    if (ret < 0)
       gSystem->SetErrorStr(::rfio_serror());
@@ -335,7 +333,6 @@ Int_t TRFIOFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 {
    // Interface to system write. All arguments like in POSIX write.
 
-   fOffset += len;
    Int_t ret = ::rfio_write(fd, (char *)buf, len);
    if (ret < 0)
       gSystem->SetErrorStr(::rfio_serror());
@@ -349,14 +346,10 @@ Long64_t TRFIOFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
    // except that the offset and return value are Long_t to be able to
    // handle 64 bit file systems.
 
-   if (whence == SEEK_SET && offset == fOffset) return offset;
-
    Long64_t ret = ::rfio_lseek64(fd, offset, whence);
 
    if (ret < 0)
       gSystem->SetErrorStr(::rfio_serror());
-   else
-      fOffset = ret;
 
    return ret;
 }
