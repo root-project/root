@@ -1613,7 +1613,7 @@ if test $# -gt 0 ; then
       --with-pythia8-libdir=*) pythia8libdir=$optarg ; enable_pythia8="yes" ;;
       --with-python-incdir=*)  pythonincdir=$optarg  ; enable_python="yes"  ;;
       --with-python-libdir=*)  pythonlibdir=$optarg  ; enable_python="yes"  ;;
-      --with-qt-incdir=*)      qtincdir=$optarg      ; enable_qt="yes"; enable_qtgsi="yes" ;;
+      --with-qt-incdir=*)      qtincdir=$optarg      ; mocdir=$optarg/../bin; enable_qt="yes"; enable_qtgsi="yes" ;;
       --with-qt-libdir=*)      qtlibdir=$optarg      ; enable_qt="yes"; enable_qtgsi="yes" ;;
       --with-ruby-incdir=*)    rubyincdir=$optarg    ; enable_ruby="yes"    ;;
       --with-ruby-libdir=*)    rubylibdir=$optarg    ; enable_ruby="yes"    ;;
@@ -3115,25 +3115,25 @@ if test ! "x$enable_gviz" = "xno"; then
     # Check for graphviz include and library
     check_header "gvc.h" "$gvizincdir" $GVIZ $GVIZ/include \
                   /usr/local/include/graphviz /usr/include/graphviz \
-                  /opt/local/include/graphviz
+                  $finkdir/include/graphviz
     gvizinc=$found_hdr
     gvizincdir=$found_dir
 
     # At this time, libgvplugin_core.a should always be prefered over .so,
     # to avoid forcing users to install graphviz.
     check_library "libgvc gvc" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
-                  $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
+                  $GVIZ/.libs /usr/local/lib /usr/lib $finkdir/lib
     gvizlib1=$found_lib
     gvizlib1raw=$found_raw_lib
     gvizlibir=$found_dir
     check_library "libgraph graph" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
-                  $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
+                  $GVIZ/.libs /usr/local/lib /usr/lib $finkdir/lib
     gvizlib2=$found_lib
     check_library "libcdt cdt" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
-                  $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
+                  $GVIZ/.libs /usr/local/lib /usr/lib $finkdir/lib
     gvizlib3=$found_lib
     check_library "libpathplan pathplan" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
-                  $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
+                  $GVIZ/.libs /usr/local/lib /usr/lib $finkdir/lib
     gvizlib4=$found_lib
 
     # the plugin libraries are in the directory "$gvizlibdir"/graphviz
@@ -3146,7 +3146,7 @@ if test ! "x$enable_gviz" = "xno"; then
     fi
     check_library "libgvplugin_dot_layout gvplugin_dot_layout" "no" "$gvizlibpdir" $GVIZ $GVIZ/lib \
                   $GVIZ/.libs /usr/local/lib/graphviz /usr/lib/graphviz \
-                  /opt/local/lib/graphviz
+                  $finkdir/lib/graphviz
     gvizlibp1=$found_lib
     gvizlibpir=$found_dir
 
@@ -3505,21 +3505,21 @@ if test ! "x$enable_asimage" = "xno" ; then
     # for a system library, then see if we have various headers needed.
     if test "x$enable_builtin_afterimage" = "xyes" ; then
        check_header "jpeglib.h" "" $ASIMAGE $ASIMAGE/include \
-          /usr/local/include /usr/include /opt/include
+          /usr/local/include /usr/include /opt/include $finkdir/include
        asjpegincdir=$found_dir
        check_header "png.h" "" $ASIMAGE $ASIMAGE/include $ASPNG/include \
           /usr/local/include /usr/include /usr/local/include/libpng \
-          /opt/include
+          /opt/include $finkdir/include
        aspngincdir=$found_dir
        if test ! "x$enable_astiff" = "xno" ; then
            check_header "tiffio.h" "" $ASIMAGE $ASIMAGE/include \
-               /usr/local/include /usr/include /opt/include
+               /usr/local/include /usr/include /opt/include $finkdir/include
            astiffincdir=$found_dir
        else
            astiffincdir="--with-tiff=no"
        fi
        check_header "gif_lib.h" "" $ASIMAGE $ASIMAGE/include \
-          /usr/local/include /usr/include /opt/include
+          /usr/local/include /usr/include /opt/include $finkdir/include
        asgifincdir=$found_dir
 
        asextralib=""
@@ -3537,7 +3537,8 @@ if test ! "x$enable_asimage" = "xno" ; then
        fi
        for k in $aslibs ; do
            check_library $k "$enable_shared" "" \
-             $ASIMAGE $ASIMAGE/lib $ASPNG/lib /usr/local/lib /usr/lib /opt/lib
+             $ASIMAGE $ASIMAGE/lib $ASPNG/lib /usr/local/lib /usr/lib /opt/lib \
+			 $finkdir/lib
            if test "x$k" = "xlibz" ; then
                found_libz=$found_lib
                found_dirz=$found_dir
@@ -3763,7 +3764,7 @@ if test ! "x$enable_xml" = "xno" ; then
        # fall back in case xml2-config is not found
        keepincdir=$xmlincdir
        check_header "libxml2/libxml/tree.h" "$xmlincdir" $XMLDIR $XMLDIR/include \
-           /opt/include /usr/local/include
+           /opt/include $finkdir/include /usr/local/include
        xmlincdir=$found_dir
 
        keeplibdir=$xmllibdir
