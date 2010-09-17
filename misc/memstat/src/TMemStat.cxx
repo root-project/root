@@ -57,8 +57,23 @@ TMemStat::TMemStat(Option_t* option): fIsActive(kFALSE)
 //______________________________________________________________________________
 TMemStat::~TMemStat()
 {
+   //destructor
    if (fIsActive) {
       TMemStatMng::GetInstance()->Disable();
       TMemStatMng::GetInstance()->Close();
    }
+}
+
+//______________________________________________________________________________
+void TMemStat::Disable()
+{
+   //Disable memory statistics
+   TMemStatMng::GetInstance()->Disable();
+}
+
+//______________________________________________________________________________
+void TMemStat::Enable()
+{
+   //Enable memory statistics
+   TMemStatMng::GetInstance()->Enable();
 }

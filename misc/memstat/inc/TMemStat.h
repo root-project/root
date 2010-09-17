@@ -18,6 +18,8 @@ private:
 public:
    TMemStat(Option_t* option = "read");
    virtual ~TMemStat();
+   virtual void Disable();
+   virtual void Enable();
 
    ClassDef(TMemStat, 0) // a user interface class of MemStat
 };
