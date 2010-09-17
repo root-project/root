@@ -177,7 +177,7 @@ Int_t TEntryListBlock::Contains(Int_t entry)
    }
    if (!fIndices && fPassing)
       return 0;
-   if (fType==0){
+   if (fType==0 && fIndices){
       //bits
       Int_t i = entry>>4;
       Int_t j = entry & 15;
@@ -186,7 +186,7 @@ Int_t TEntryListBlock::Contains(Int_t entry)
    }
    //list
    if (entry < fCurrent) fCurrent = 0;
-   if (fPassing){
+   if (fPassing && fIndices){
       for (Int_t i = fCurrent; i<fNPassed; i++){
          if (fIndices[i]==entry){
             fCurrent = i;

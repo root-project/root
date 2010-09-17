@@ -692,6 +692,7 @@ Long64_t TEntryList::GetEntry(Int_t index)
               break;
          }
          fCurrent = templist;
+         if (!fCurrent) return -1;
          Long64_t localentry = index - (ntotal - fCurrent->GetN());
          fLastIndexQueried = index;
          fLastIndexReturned = fCurrent->GetEntry(localentry);
@@ -735,6 +736,7 @@ TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename,
    //is not found, the filename is expanded to the absolute path, and compared again. 
    //To avoid it, use option "ne"
 
+   if (!treename || !filename) return 0;
    if (gDebug > 1)
       Info("GetEntryList","tree: %s, file: %s",
                           (treename ? treename : "-"), (filename ? filename : "-"));
