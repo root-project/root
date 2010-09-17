@@ -692,8 +692,8 @@ void TMultiLayerPerceptron::SetReset(Int_t reset)
 void TMultiLayerPerceptron::GetEntry(Int_t entry) const
 {
    // Load an entry into the network
-   if (fData)
-      fData->GetEntry(entry);
+   if (!fData) return;
+   fData->GetEntry(entry);
    if (fData->GetTreeNumber() != fCurrentTree) {
       ((TMultiLayerPerceptron*)this)->fCurrentTree = fData->GetTreeNumber();
       fManager->Notify();
