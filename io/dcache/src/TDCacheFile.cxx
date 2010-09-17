@@ -493,6 +493,7 @@ Long64_t TDCacheFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
    if (rc < 0) {
       if (dc_errno != 0)
          gSystem->SetErrorStr(dc_strerror(dc_errno));
+   }
 
    return rc;
 }
