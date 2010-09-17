@@ -259,6 +259,7 @@ void TStructNodeEditor::SetModel(TObject* obj)
    // Pick up the used node attributes.
 
    fNode = dynamic_cast<TStructNode *>(obj);
+   if (!fNode) return;
 
    // Add max level
    fMaxLevelsNumberEntry->SetIntNumber(fNode->GetMaxLevel());
