@@ -655,8 +655,8 @@ void DoFillData ( BinData  & dv,  const TGraph * gr,  BinData::ErrorType type, T
 void FillData(SparseData & dv, const TH1 * h1, TF1 * /*func*/) 
 {
    const int dim = h1->GetDimension();
-   vector<double> min(dim);
-   vector<double> max(dim);
+   std::vector<double> min(dim);
+   std::vector<double> max(dim);
    
    const TArray *array(dynamic_cast<const TArray*>(h1));
    assert(array && "THIS SHOULD NOT HAPPEN!");
@@ -700,9 +700,9 @@ void FillData(SparseData & dv, const TH1 * h1, TF1 * /*func*/)
 void FillData(SparseData & dv, const THnSparse * h1, TF1 * /*func*/) 
 {
    const int dim = h1->GetNdimensions();
-   vector<double> min(dim);
-   vector<double> max(dim);
-   vector<Int_t>  coord(dim);
+   std::vector<double> min(dim);
+   std::vector<double> max(dim);
+   std::vector<Int_t>  coord(dim);
 
    ULong64_t nEntries = h1->GetNbins();
    for ( ULong64_t i = 0; i < nEntries; i++ )
@@ -744,8 +744,8 @@ void FillData(BinData & dv, const THnSparse * s1, TF1 * func)
 {
    // Fill the Range of the THnSparse
    unsigned int const ndim = s1->GetNdimensions();
-   vector<double> xmin(ndim);
-   vector<double> xmax(ndim);
+   std::vector<double> xmin(ndim);
+   std::vector<double> xmax(ndim);
    for ( unsigned int i = 0; i < ndim; ++i ) {
       TAxis* axis = s1->GetAxis(i);
       xmin[i] = axis->GetXmin();
