@@ -2478,6 +2478,7 @@ void TMultiLayerPerceptron::Draw(Option_t * /*option*/)
             TLine* synapse = new TLine(xStep*(layer+1),yStep_this*(neuron1+1),xStep*(layer+2),yStep_next*(neuron2+1));
             synapse->Draw();
             theSynapse = (TSynapse *) it->Next();
+            if (!theSynapse) continue;
             synapse->SetLineWidth(Int_t((theSynapse->GetWeight()/maxWeight)*10.));
             synapse->SetLineStyle(1);
             if(((TMath::Abs(theSynapse->GetWeight())/maxWeight)*10.)<0.5) synapse->SetLineStyle(2);
