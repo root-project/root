@@ -559,7 +559,6 @@ void TMultiGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t x
    Int_t npp;
    while ((g = (TGraph*) next())) {
       px=g->GetX();
-      py=g->GetY();
       npp=g->GetN();
       for (bin=0; bin<npp; bin++){
          xk=px[bin];
