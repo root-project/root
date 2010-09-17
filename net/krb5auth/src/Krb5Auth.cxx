@@ -363,7 +363,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       // Create Options string
       int opt = reuse * kAUTH_REUSE_MSK +
                 auth->GetRSAKeyType() * kAUTH_RSATY_MSK;
-      TString options(Form("%d %ld %s", opt, normUser.Length(), normUser.Data()));
+      TString options(Form("%d %d %s", opt, normUser.Length(), normUser.Data()));
 
       // Now we are ready to send a request to the rootd/proofd daemons
       // to check if we have already a valid security context and
