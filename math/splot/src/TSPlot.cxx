@@ -1017,7 +1017,7 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
 
 //*-*- Compile selection expression if there is one
    TTreeFormula *select = 0;
-   if (strlen(selection)) {
+   if (selection && strlen(selection)) {
       select = new TTreeFormula("Selection",selection,fTree);
       if (!select) return;
       if (!select->GetNdim()) { delete select; return; }
