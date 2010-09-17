@@ -2696,7 +2696,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
       case kPROOF_STOP:
          // Stop collection from this worker
          Info("HandleInputMessage", "received kPROOF_STOP from %s: disabling any further collection this worker",
-                                    (sl ? sl->GetOrdinal() : "undef"));
+              sl->GetOrdinal());
          rc = 1;
          break;
 
@@ -5075,8 +5075,8 @@ void TProof::RecvLogFile(TSocket *s, Int_t size)
 
    while (filesize < size) {
       left = Int_t(size - filesize);
-      if (left > kMAXBUF)
-         left = kMAXBUF;
+      if (left >= kMAXBUF)
+         left = kMAXBUF-1;
       rec = s->RecvRaw(&buf, left);
       filesize = (rec > 0) ? (filesize + rec) : filesize;
       if (!fLogToWindowOnly) {
@@ -9891,7 +9891,7 @@ TFileCollection *TProof::GetDataSet(const char *uri, const char *optStr)
       Info("GetDataSet", "specifying a dataset name is mandatory");
       return 0;
    }
-   
+
    TMessage nameMess(kPROOF_DATASETS);
    nameMess << Int_t(kGetDataSet);
    nameMess << TString(uri);
