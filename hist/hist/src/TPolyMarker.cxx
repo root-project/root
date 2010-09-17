@@ -255,7 +255,7 @@ Int_t TPolyMarker::Merge(TCollection *li)
    }
 
    //extend this polymarker to hold npoints
-   pm->SetPoint(npoints-1,0,0);
+   if (pm) pm->SetPoint(npoints-1,0,0);
 
    //merge all polymarkers
    next.Reset();
