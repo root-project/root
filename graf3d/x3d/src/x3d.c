@@ -1282,7 +1282,8 @@ static int CheckEvent(Display *display, XEvent *event, char *arg)
 
    if(event == NULL){
       fprintf(stderr, "WARNING: Null event in CheckEvent()!!\n");
-      }
+      return 0;
+   }
 
    if((event->type == MotionNotify) || (event->type == KeyPress) ||
       (event->type == ConfigureNotify) || (event->type == Expose) ||
