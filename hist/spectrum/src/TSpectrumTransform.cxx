@@ -2381,6 +2381,7 @@ L&quot;);</span></p>
       }
       break;
    }
+   if (!working_space) return;
    for (i = 0, old_area = 0; i < fSize; i++) {
       old_area += working_space[i];
    }
