@@ -736,11 +736,11 @@ TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename,
    //is not found, the filename is expanded to the absolute path, and compared again. 
    //To avoid it, use option "ne"
 
-   if (!treename || !filename) return 0;
    if (gDebug > 1)
       Info("GetEntryList","tree: %s, file: %s",
                           (treename ? treename : "-"), (filename ? filename : "-"));
 
+   if (!treename || !filename) return 0;
    TString option = opt;
    option.ToUpper();
    Bool_t nexp = option.Contains("NE");
