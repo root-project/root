@@ -85,7 +85,7 @@ public:
 
                void      *ReAllocate(Int_t newsize) { return GetThisTable()->ReAllocate(newsize); }
                void      *ReAllocate()              { return GetThisTable()->ReAllocate(); }
-   virtual     void       SavePrimitive(ostream &out, Option_t *option) {GetThisTable()->SavePrimitive(out,option = "");}
+   virtual     void       SavePrimitive(ostream &out, Option_t *option="") {GetThisTable()->SavePrimitive(out,option);}
 
    virtual     void       Set(Int_t n)                                   {GetThisTable()->Set(n);}
    virtual     void       Set(Int_t n, Char_t *array)                    {GetThisTable()->Set(n,array);}
