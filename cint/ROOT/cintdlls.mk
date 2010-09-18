@@ -126,6 +126,9 @@ ifeq ($(subst $(MACOSX_MINOR),,456789),456789)
 # MACOSX_MINOR < 4
   CINTDLLSOEXTCMD += ;mv $(@:.dll=.so) $@
 else
+  # On macosx one should change the install_name as well.
+  # FIXME: not tested on 10.4, should be the same also there?
+  CINTDLLSOEXTCMD += ;install_name_tool -id `otool -D $@ | tail -1 | sed -e's|:$$||;s|[.]so$$|.dll|'` $@
   CINTDLLSOEXTCMD += ;rm -f $(@:.dll=.so)
 endif
 endif # macosx
