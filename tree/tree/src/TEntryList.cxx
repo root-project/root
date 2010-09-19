@@ -902,6 +902,7 @@ Long64_t TEntryList::Next()
 
          //find the list with the next non-zero entry
          while (result<0 && fCurrent!=((TEntryList*)fLists->Last())){
+            if (!fCurrent) return 0;
             fCurrent->fLastIndexQueried = -1;
             fCurrent->fLastIndexReturned = 0;
             fCurrent = (TEntryList*)fLists->After(fCurrent);
