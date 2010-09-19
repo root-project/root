@@ -2562,11 +2562,13 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
    }
    rozmer = j;
    if (rozmer == 0){
-      Error ("FitAwmi","All parameters are fixed");   
+      Error ("FitAwmi","All parameters are fixed");
+      delete [] working_space;
       return;    
    }
    if (rozmer >= fXmax - fXmin + 1){
       Error ("FitAwmi","Number of fitted parameters is larger than # of fitted points");   
+      delete [] working_space;
       return;    
    }
    Double_t **working_matrix = new Double_t *[rozmer];
