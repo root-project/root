@@ -3725,34 +3725,29 @@ Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &fitOption)
    //                 ================================================
 
    if (choptin == 0) return 1;
-   Int_t nch = strlen(choptin);
-   if (!nch) return 1;
-
-   char chopt[32];
-   strcpy(chopt,choptin);
-
-   for (Int_t i=0;i<nch;i++) chopt[i] = toupper(choptin[i]);
-
-   if (strstr(chopt,"Q"))  fitOption.Quiet   = 1;
-   if (strstr(chopt,"V")) {fitOption.Verbose = 1; fitOption.Quiet = 0;}
-   if (strstr(chopt,"X"))  fitOption.Chi2    = 1;
-   if (strstr(chopt,"L"))  fitOption.Like    = 1;
-   if (strstr(chopt,"LL")) fitOption.Like    = 2;
-   if (strstr(chopt,"W"))  fitOption.W1      = 1;
-   if (strstr(chopt,"WW")) fitOption.W1      = 2; //all bins have weight=1, even empty bins
-   if (strstr(chopt,"E"))  fitOption.Errors  = 1;
-   if (strstr(chopt,"M"))  fitOption.More    = 1;
-   if (strstr(chopt,"R"))  fitOption.Range   = 1;
-   if (strstr(chopt,"G"))  fitOption.Gradient= 1;
-   if (strstr(chopt,"N"))  fitOption.Nostore = 1;
-   if (strstr(chopt,"0"))  fitOption.Nograph = 1;
-   if (strstr(chopt,"+"))  fitOption.Plus    = 1;
-   if (strstr(chopt,"I"))  fitOption.Integral= 1;
-   if (strstr(chopt,"B"))  fitOption.Bound   = 1;
-   if (strstr(chopt,"U")) {fitOption.User    = 1; fitOption.Like = 0;}
-   if (strstr(chopt,"F"))  fitOption.Minuit = 1;
-   if (strstr(chopt,"C"))  fitOption.Nochisq = 1;
-   if (strstr(chopt,"S"))  fitOption.StoreResult = 1;
+   if (strlen(choptin) == 0) return 1;
+   TString opt = choptin;
+   opt.ToUpper();
+   if (opt.Contains("Q"))  fitOption.Quiet   = 1;
+   if (opt.Contains("V")) {fitOption.Verbose = 1; fitOption.Quiet = 0;}
+   if (opt.Contains("X"))  fitOption.Chi2    = 1;
+   if (opt.Contains("L"))  fitOption.Like    = 1;
+   if (opt.Contains("LL")) fitOption.Like    = 2;
+   if (opt.Contains("W"))  fitOption.W1      = 1;
+   if (opt.Contains("WW")) fitOption.W1      = 2; //all bins have weight=1, even empty bins
+   if (opt.Contains("E"))  fitOption.Errors  = 1;
+   if (opt.Contains("M"))  fitOption.More    = 1;
+   if (opt.Contains("R"))  fitOption.Range   = 1;
+   if (opt.Contains("G"))  fitOption.Gradient= 1;
+   if (opt.Contains("N"))  fitOption.Nostore = 1;
+   if (opt.Contains("0"))  fitOption.Nograph = 1;
+   if (opt.Contains("+"))  fitOption.Plus    = 1;
+   if (opt.Contains("I"))  fitOption.Integral= 1;
+   if (opt.Contains("B"))  fitOption.Bound   = 1;
+   if (opt.Contains("U")) {fitOption.User    = 1; fitOption.Like = 0;}
+   if (opt.Contains("F"))  fitOption.Minuit = 1;
+   if (opt.Contains("C"))  fitOption.Nochisq = 1;
+   if (opt.Contains("S"))  fitOption.StoreResult = 1;
    return 1;
 }
 
