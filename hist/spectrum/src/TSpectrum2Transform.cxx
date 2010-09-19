@@ -2260,7 +2260,7 @@ trans-&gt;Draw(&quot;SURF&quot;);      </span></p>
       }
    }
    for (i = 0; i < fSizeX; i++) {
-      delete[]working_matrix[i];
+      if (working_matrix) delete[]working_matrix[i];
    }
    delete[]working_matrix;
    delete[]working_vector;
@@ -2988,7 +2988,7 @@ style='font-size:10.0pt'>  trans-&gt;Draw(&quot;SURF&quot;);     </span></p>
    for (i = 0; i < fSizeX; i++) {
       for (j = 0; j < fSizeY; j++) {
          if (i >= fXmin && i <= fXmax && j >= fYmin && j <= fYmax)
-            working_matrix[i][j] *= fEnhanceCoeff;
+            if (working_matrix) working_matrix[i][j] *= fEnhanceCoeff;
       }
    }
    if (fTransformType == kTransformFourier || fTransformType == kTransformFourierWalsh
