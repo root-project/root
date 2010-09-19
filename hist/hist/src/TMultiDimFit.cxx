@@ -2412,6 +2412,7 @@ void TMultiDimFit::Fit(Option_t *option)
       fCoefficients(i)    = val;
       fCoefficientsRMS(i) = err;
    }
+   delete [] x;
 }
 
 //____________________________________________________________________
