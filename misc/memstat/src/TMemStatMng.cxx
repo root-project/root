@@ -41,6 +41,7 @@ TMemStatMng::TMemStatMng():
    fPreviousMallocHook(TMemStatHook::GetMallocHook()),
    fPreviousFreeHook(TMemStatHook::GetFreeHook()),
 #endif
+   fDumpFile(NULL),
    fDumpTree(NULL),
    fUseGNUBuiltinBacktrace(kFALSE),
    fBeginTime(0),
@@ -49,6 +50,8 @@ TMemStatMng::TMemStatMng():
    fNBytes(0),
    fN(0),
    fBtID(0),
+   fFAddrsList(0),
+   fHbtids(0),
    fBTCount(0),
    fBTIDCount(0),
    fSysInfo(NULL)
