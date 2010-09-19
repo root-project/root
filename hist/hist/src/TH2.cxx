@@ -2336,7 +2336,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
       TVirtualPad *padsav = gPad;
       TVirtualPad *pad = gROOT->GetSelectedPad();
       if (pad) pad->cd();
-      char optin[100];
+      char *optin = new char[opt.Length()+1];
       strcpy(optin,opt.Data());
       char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
       char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
@@ -2345,6 +2345,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
       } else {
          h1->Paint(optin);
       }
+      delete [] optin;
       if (padsav) padsav->cd();
    }
 
