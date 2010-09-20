@@ -219,7 +219,7 @@ void TSelectorDraw::Begin(TTree *tree)
       }
 
       if (i) {
-         strlcpy(varexp,varexp0,i); varexp[i]=0;
+         strlcpy(varexp,varexp0,i+1); varexp[i]=0; 
 
          Int_t mustdelete=0;
          SetBit(kCustomHistogram);
