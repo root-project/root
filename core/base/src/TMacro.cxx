@@ -74,7 +74,7 @@ TMacro::TMacro(const char *name, const char *title): TNamed(name,title)
    if (!name) return;
    Int_t nch = strlen(name);
    char *s = new char[nch+1];
-   strncpy(s,name,nch+1);
+   strlcpy(s,name,nch+1);
    char *slash = (char*)strrchr(s,'/');
    if (!slash) slash = s;
    else ++slash;
@@ -204,22 +204,22 @@ TMD5 *TMacro::Checksum()
       Int_t len = line.Length();
       char *p = (char *) line.Data();
       if (left > len) {
-         strncpy((char *)&buf[pos], p, len);
+         strlcpy((char *)&buf[pos], p, len);
          pos += len;
          left -= len;
       } else if (left == len) {
-         strncpy((char *)&buf[pos], p, len);
+         strlcpy((char *)&buf[pos], p, len);
          md5->Update(buf, bufSize);
          pos = 0;
          left = bufSize;
       } else {
-         strncpy((char *)&buf[pos], p, left);
+         strlcpy((char *)&buf[pos], p, left);
          md5->Update(buf, bufSize);
          len -= left;
          p += left;
          pos = 0;
          left = bufSize;
-         strncpy((char *)&buf[pos], p, len);
+         strlcpy((char *)&buf[pos], p, len);
          pos += len;
          left -= len;
       }

@@ -3109,7 +3109,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"SPEC");
    if (l) {
       Hoption.Scat = 0;
-      strncpy(l,"    ",4);
+      strlcpy(l,"    ",4);
       Int_t bs=0;
       l = strstr(chopt,"BF(");
       if (l) {
@@ -3128,17 +3128,17 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"GL");
    if (l) {
-      strncpy(l,"  ",2);
+      strlcpy(l,"  ",2);
    }
    l = strstr(chopt,"X+");
    if (l) {
       Hoption.AxisPos = 10;
-      strncpy(l,"  ",2);
+      strlcpy(l,"  ",2);
    }
    l = strstr(chopt,"Y+");
    if (l) {
       Hoption.AxisPos += 1;
-      strncpy(l,"  ",2);
+      strlcpy(l,"  ",2);
    }
    if((Hoption.AxisPos == 10 || Hoption.AxisPos == 1) && (nch == 2)) Hoption.Hist = 1;
    if(Hoption.AxisPos == 11 && nch == 4) Hoption.Hist = 1;
@@ -3147,36 +3147,36 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (l) {
       if (nch == 5) Hoption.Hist = 1;
       Hoption.Same = 2;
-      strncpy(l,"     ",5);
+      strlcpy(l,"     ",5);
    }
    l = strstr(chopt,"SAME");
    if (l) {
       if (nch == 4) Hoption.Hist = 1;
       Hoption.Same = 1;
-      strncpy(l,"    ",4);
+      strlcpy(l,"    ",4);
    }
 
    l = strstr(chopt,"PIE");
    if (l) {
       Hoption.Pie = 1;
-      strncpy(l,"   ",3);
+      strlcpy(l,"   ",3);
    }
 
    l = strstr(chopt,"LEGO");
    if (l) {
       Hoption.Scat = 0;
-      Hoption.Lego = 1; strncpy(l,"    ",4);
+      Hoption.Lego = 1; strlcpy(l,"    ",4);
       if (l[4] == '1') { Hoption.Lego = 11; l[4] = ' '; }
       if (l[4] == '2') { Hoption.Lego = 12; l[4] = ' '; }
-      l = strstr(chopt,"FB"); if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
-      l = strstr(chopt,"BB"); if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
-      l = strstr(chopt,"0");  if (l) { Hoption.Zero = 1;  strncpy(l," ",1); }
+      l = strstr(chopt,"FB"); if (l) { Hoption.FrontBox = 0; strlcpy(l,"  ",2); }
+      l = strstr(chopt,"BB"); if (l) { Hoption.BackBox = 0;  strlcpy(l,"  ",2); }
+      l = strstr(chopt,"0");  if (l) { Hoption.Zero = 1;  strlcpy(l," ",1); }
    }
 
    l = strstr(chopt,"SURF");
    if (l) {
       Hoption.Scat = 0;
-      Hoption.Surf = 1; strncpy(l,"    ",4);
+      Hoption.Surf = 1; strlcpy(l,"    ",4);
       if (l[4] == '1') { Hoption.Surf = 11; l[4] = ' '; }
       if (l[4] == '2') { Hoption.Surf = 12; l[4] = ' '; }
       if (l[4] == '3') { Hoption.Surf = 13; l[4] = ' '; }
@@ -3184,28 +3184,28 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l[4] == '5') { Hoption.Surf = 15; l[4] = ' '; }
       if (l[4] == '6') { Hoption.Surf = 16; l[4] = ' '; }
       if (l[4] == '7') { Hoption.Surf = 17; l[4] = ' '; }
-      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
-      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
+      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strlcpy(l,"  ",2); }
+      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strlcpy(l,"  ",2); }
    }
 
    l = strstr(chopt,"TF3");
    if (l) {
-      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
-      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
+      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strlcpy(l,"  ",2); }
+      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strlcpy(l,"  ",2); }
    }
 
    l = strstr(chopt,"ISO");
    if (l) {
-      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
-      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
+      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strlcpy(l,"  ",2); }
+      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strlcpy(l,"  ",2); }
    }
 
-   l = strstr(chopt,"LIST");    if (l) { Hoption.List = 1;  strncpy(l,"    ",4);}
+   l = strstr(chopt,"LIST");    if (l) { Hoption.List = 1;  strlcpy(l,"    ",4);}
 
    l = strstr(chopt,"CONT");
    if (l) {
       Hoption.Scat = 0;
-      Hoption.Contour = 1; strncpy(l,"    ",4);
+      Hoption.Contour = 1; strlcpy(l,"    ",4);
       if (l[4] == '1') { Hoption.Contour = 11; l[4] = ' '; }
       if (l[4] == '2') { Hoption.Contour = 12; l[4] = ' '; }
       if (l[4] == '3') { Hoption.Contour = 13; l[4] = ' '; }
@@ -3215,7 +3215,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"HBAR");
    if (l) {
       Hoption.Hist = 0;
-      Hoption.Bar = 20; strncpy(l,"    ",4);
+      Hoption.Bar = 20; strlcpy(l,"    ",4);
       if (l[4] == '1') { Hoption.Bar = 21; l[4] = ' '; }
       if (l[4] == '2') { Hoption.Bar = 22; l[4] = ' '; }
       if (l[4] == '3') { Hoption.Bar = 23; l[4] = ' '; }
@@ -3224,30 +3224,30 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"BAR");
    if (l) {
       Hoption.Hist = 0;
-      Hoption.Bar = 10; strncpy(l,"   ",3);
+      Hoption.Bar = 10; strlcpy(l,"   ",3);
       if (l[3] == '1') { Hoption.Bar = 11; l[3] = ' '; }
       if (l[3] == '2') { Hoption.Bar = 12; l[3] = ' '; }
       if (l[3] == '3') { Hoption.Bar = 13; l[3] = ' '; }
       if (l[3] == '4') { Hoption.Bar = 14; l[3] = ' '; }
    }
-   l = strstr(chopt,"+-");   if (l) { Hoption.Plus = 2; strncpy(l,"  ",2); }
-   l = strstr(chopt,"-+");   if (l) { Hoption.Plus = 2; strncpy(l,"  ",2); }
+   l = strstr(chopt,"+-");   if (l) { Hoption.Plus = 2; strlcpy(l,"  ",2); }
+   l = strstr(chopt,"-+");   if (l) { Hoption.Plus = 2; strlcpy(l,"  ",2); }
 
-   l = strstr(chopt,"ARR" ); if (l) { Hoption.Arrow  = 1; strncpy(l,"   ", 3); Hoption.Scat = 0; }
+   l = strstr(chopt,"ARR" ); if (l) { Hoption.Arrow  = 1; strlcpy(l,"   ", 3); Hoption.Scat = 0; }
    l = strstr(chopt,"BOX" );
    if (l) {
       Hoption.Scat = 0;
-      Hoption.Box  = 1; strncpy(l,"   ", 3);
+      Hoption.Box  = 1; strlcpy(l,"   ", 3);
       if (l[3] == '1') { Hoption.Box = 11; l[3] = ' '; }
    }
-   l = strstr(chopt,"COLZ"); if (l) { Hoption.Color  = 2; strncpy(l,"    ",4); Hoption.Scat = 0; Hoption.Zscale = 1;}
-   l = strstr(chopt,"COL" ); if (l) { Hoption.Color  = 1; strncpy(l,"   ", 3); Hoption.Scat = 0; }
-   l = strstr(chopt,"CHAR"); if (l) { Hoption.Char   = 1; strncpy(l,"    ",4); Hoption.Scat = 0; }
-   l = strstr(chopt,"FUNC"); if (l) { Hoption.Func   = 2; strncpy(l,"    ",4); Hoption.Hist = 0; }
-   l = strstr(chopt,"HIST"); if (l) { Hoption.Hist   = 2; strncpy(l,"    ",4); Hoption.Func = 0; Hoption.Error = 0;}
-   l = strstr(chopt,"AXIS"); if (l) { Hoption.Axis   = 1; strncpy(l,"    ",4); }
-   l = strstr(chopt,"AXIG"); if (l) { Hoption.Axis   = 2; strncpy(l,"    ",4); }
-   l = strstr(chopt,"SCAT"); if (l) { Hoption.Scat   = 1; strncpy(l,"    ",4); }
+   l = strstr(chopt,"COLZ"); if (l) { Hoption.Color  = 2; strlcpy(l,"    ",4); Hoption.Scat = 0; Hoption.Zscale = 1;}
+   l = strstr(chopt,"COL" ); if (l) { Hoption.Color  = 1; strlcpy(l,"   ", 3); Hoption.Scat = 0; }
+   l = strstr(chopt,"CHAR"); if (l) { Hoption.Char   = 1; strlcpy(l,"    ",4); Hoption.Scat = 0; }
+   l = strstr(chopt,"FUNC"); if (l) { Hoption.Func   = 2; strlcpy(l,"    ",4); Hoption.Hist = 0; }
+   l = strstr(chopt,"HIST"); if (l) { Hoption.Hist   = 2; strlcpy(l,"    ",4); Hoption.Func = 0; Hoption.Error = 0;}
+   l = strstr(chopt,"AXIS"); if (l) { Hoption.Axis   = 1; strlcpy(l,"    ",4); }
+   l = strstr(chopt,"AXIG"); if (l) { Hoption.Axis   = 2; strlcpy(l,"    ",4); }
+   l = strstr(chopt,"SCAT"); if (l) { Hoption.Scat   = 1; strlcpy(l,"    ",4); }
    l = strstr(chopt,"TEXT");
    if (l) {
       Int_t angle;
@@ -3258,38 +3258,38 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       } else {
          Hoption.Text = 1;
       }
-      strncpy(l,"    ", 4);
+      strlcpy(l,"    ", 4);
       Hoption.Scat = 0;
    }
-   l = strstr(chopt,"POL");  if (l) { Hoption.System = kPOLAR;       strncpy(l,"   ",3); }
-   l = strstr(chopt,"CYL");  if (l) { Hoption.System = kCYLINDRICAL; strncpy(l,"   ",3); }
-   l = strstr(chopt,"SPH");  if (l) { Hoption.System = kSPHERICAL;   strncpy(l,"   ",3); }
-   l = strstr(chopt,"PSR");  if (l) { Hoption.System = kRAPIDITY;    strncpy(l,"   ",3); }
+   l = strstr(chopt,"POL");  if (l) { Hoption.System = kPOLAR;       strlcpy(l,"   ",3); }
+   l = strstr(chopt,"CYL");  if (l) { Hoption.System = kCYLINDRICAL; strlcpy(l,"   ",3); }
+   l = strstr(chopt,"SPH");  if (l) { Hoption.System = kSPHERICAL;   strlcpy(l,"   ",3); }
+   l = strstr(chopt,"PSR");  if (l) { Hoption.System = kRAPIDITY;    strlcpy(l,"   ",3); }
 
    l = strstr(chopt,"TRI");
    if (l) {
       Hoption.Scat = 0;
       Hoption.Color  = 0;
-      Hoption.Tri = 1; strncpy(l,"   ",3);
-      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
-      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
+      Hoption.Tri = 1; strlcpy(l,"   ",3);
+      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strlcpy(l,"  ",2); }
+      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strlcpy(l,"  ",2); }
    }
 
    l = strstr(chopt,"AITOFF");
    if (l) {
-      Hoption.Proj = 1; strncpy(l,"     ",6);       //Aitoff projection
+      Hoption.Proj = 1; strlcpy(l,"     ",6);       //Aitoff projection
    }
    l = strstr(chopt,"MERCATOR");
    if (l) {
-      Hoption.Proj = 2; strncpy(l,"       ",8);     //Mercator projection
+      Hoption.Proj = 2; strlcpy(l,"       ",8);     //Mercator projection
    }
    l = strstr(chopt,"SINUSOIDAL");
    if (l) {
-      Hoption.Proj = 3; strncpy(l,"         ",10);  //Sinusoidal projection
+      Hoption.Proj = 3; strlcpy(l,"         ",10);  //Sinusoidal projection
    }
    l = strstr(chopt,"PARABOLIC");
    if (l) {
-      Hoption.Proj = 4; strncpy(l,"        ",9);    //Parabolic projection
+      Hoption.Proj = 4; strlcpy(l,"        ",9);    //Parabolic projection
    }
    if (Hoption.Proj > 0) {
       Hoption.Scat = 0;

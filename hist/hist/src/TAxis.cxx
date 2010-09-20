@@ -708,7 +708,7 @@ void TAxis::SetDefaults()
    fLast    = 0;
    fBits2   = 0;
    char name[2];
-   strncpy(name,GetName(),1);
+   strlcpy(name,GetName(),1);
    name[1] = 0;
    TAttAxis::ResetAttAxis(name);
    fTimeDisplay = 0;

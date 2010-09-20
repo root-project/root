@@ -679,7 +679,7 @@ void THStack::Paint(Option_t *option)
       TAxis *xaxis = h->GetXaxis();
       TAxis *yaxis = h->GetYaxis();
       if (h->GetDimension() > 1) {
-         if (strlen(option) == 0) strncpy(loption,"lego1",31);
+         if (strlen(option) == 0) strlcpy(loption,"lego1",31);
          const TArrayD *xbins = xaxis->GetXbins();
          const TArrayD *ybins = yaxis->GetXbins();
          if (xbins->fN != 0 && ybins->fN != 0) {
@@ -709,7 +709,7 @@ void THStack::Paint(Option_t *option)
    }
 
    if (nostack) {*nostack = 0; strcat(nostack,nostack+7);}
-   //if (nostack) {strncpy(nostack,"       ",7);}
+   //if (nostack) {strlcpy(nostack,"       ",7);}
    else fHistogram->GetPainter()->SetStack(fHists);
 
    if (!fHistogram->TestBit(TH1::kIsZoomed)) {
@@ -746,7 +746,7 @@ void THStack::Paint(Option_t *option)
    if (strstr(loption,"lego")) return;
 
    char noption[32];
-   strncpy(noption,loption,31); noption[31]=0;
+   strlcpy(noption,loption,31); noption[31]=0;
    Int_t nhists = fHists->GetSize();
    if (nostack) {
       lnk = (TObjOptLink*)fHists->FirstLink();
