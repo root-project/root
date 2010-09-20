@@ -360,23 +360,26 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
    
    //os << "            FitResult                   \n\n";
    os << "Minimizer is " << fMinimType << std::endl;
-   const unsigned int nw = 25; 
+   const unsigned int nw = 25; // spacing for text  
+   const unsigned int nn = 12; // spacing for numbers 
+   os << std::left; // set left alignment
    if (fVal != fChi2 || fChi2 < 0) 
-      os << std::setw(nw) << std::left << "LogLikelihood" << " =\t" << fVal << std::endl;
-   if (fChi2 >= 0) os << std::setw(nw) << std::left <<  "Chi2"  << " =\t" << fChi2<< std::endl;
-   os << std::setw(nw) << std::left << "NDf"    << " =\t" << fNdf << std::endl; 
+      os << std::left << std::setw(nw) << "LogLikelihood" << " = " << std::right << std::setw(nn) << fVal << std::endl;
+   if (fChi2 >= 0) 
+      os << std::left << std::setw(nw) <<  "Chi2"         << " = " << std::right << std::setw(nn) << fChi2 << std::endl;
+   os << std::left << std::setw(nw) << "NDf"              << " = " << std::right << std::setw(nn) << fNdf << std::endl; 
    if (fMinimType.find("Linear") == std::string::npos) {  // no need to print this for linear fits
-      os << std::setw(nw) << std::left << "Edm"    << " =\t" << fEdm << std::endl; 
-      os << std::setw(nw) << std::left << "NCalls" << " =\t" << fNCalls << std::endl; 
+      os << std::left << std::setw(nw) << "Edm"    << " = " << std::right << std::setw(nn) << fEdm << std::endl; 
+      os << std::left << std::setw(nw) << "NCalls" << " = " << std::right << std::setw(nn) << fNCalls << std::endl; 
    }
    for (unsigned int i = 0; i < npar; ++i) { 
-      os << std::setw(nw) << std::left << GetParameterName(i); 
-      os << " =\t" << std::setw(12) << fParams[i]; 
+      os << std::left << std::setw(nw) << GetParameterName(i); 
+      os << " = " << std::right << std::setw(nn) << fParams[i]; 
       if (IsParameterFixed(i) ) 
-         os << " \t(fixed)";
+         os << std::setw(9) << " "  << std::setw(nn) << " " << " \t (fixed)";
       else {
          if (fErrors.size() != 0)
-            os << " \t+/-\t" << std::setw(12) << fErrors[i]; 
+            os << "   +/-   " << std::left << std::setw(nn) << fErrors[i] << std::right; 
          if (IsParameterBound(i) ) 
             os << " \t (limited)"; 
       }
@@ -391,50 +394,52 @@ void FitResult::PrintCovMatrix(std::ostream &os) const {
    if (!fValid) return;
    if (fCovMatrix.size() == 0) return; 
 //   os << "****************************************\n";
-   os << "\n            Covariance Matrix            \n\n";
+   os << "\nCovariance Matrix:\n\n";
    unsigned int npar = fParams.size(); 
    const int kPrec = 5; 
-   const int kWidth = 10; 
+   const int kWidth = 8; 
    const int parw = 12; 
    const int matw = kWidth+4;
    os << std::setw(parw) << " " << "\t"; 
    for (unsigned int i = 0; i < npar; ++i) {
       if (!IsParameterFixed(i) ) { 
-         os << std::setw(matw)  << GetParameterName(i) ;
+         os << std::right  << std::setw(matw)  << GetParameterName(i) ;
       }
    }
    os << std::endl;   
    for (unsigned int i = 0; i < npar; ++i) {
       if (!IsParameterFixed(i) ) { 
-         os << std::setw(parw) << std::left << GetParameterName(i) << "\t";
+         os << std::left << std::setw(parw) << GetParameterName(i) << "\t";
          for (unsigned int j = 0; j < npar; ++j) {
             if (!IsParameterFixed(j) ) { 
-               os.precision(kPrec); os.width(kWidth);  os << std::setw(matw) << CovMatrix(i,j); 
+               os.precision(kPrec); os.width(kWidth);  os << std::right << std::setw(matw) << CovMatrix(i,j); 
             }
          }
          os << std::endl;
       }
    }
 //   os << "****************************************\n";
-   os << "\n            Correlation Matrix         \n\n";
+   os << "\nCorrelation Matrix:\n\n";
    os << std::setw(parw) << " " << "\t"; 
    for (unsigned int i = 0; i < npar; ++i) {
       if (!IsParameterFixed(i) ) { 
-         os << std::setw(matw)  << GetParameterName(i) ;
+         os << std::right << std::setw(matw)  << GetParameterName(i) ;
       }
    }
    os << std::endl;   
    for (unsigned int i = 0; i < npar; ++i) {
       if (!IsParameterFixed(i) ) { 
-         os << std::setw(parw) << std::left << GetParameterName(i) << "\t";
+         os << std::left << std::setw(parw) << std::left << GetParameterName(i) << "\t";
          for (unsigned int j = 0; j < npar; ++j) {
             if (!IsParameterFixed(j) ) {
-               os.precision(kPrec); os.width(kWidth);  os << std::setw(matw) << Correlation(i,j); 
+               os.precision(kPrec); os.width(kWidth);  os << std::right << std::setw(matw) << Correlation(i,j); 
             }
          }
          os << std::endl;
       }
    }
+   // restore right alignment 
+   os << std::right; 
 }
 
 void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, unsigned int stride2, const double * x, double * ci, double cl ) const {     

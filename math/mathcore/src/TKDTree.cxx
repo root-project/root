@@ -1128,6 +1128,10 @@ void TKDTree<Index, Value>::MakeBoundariesExact()
          fBoundaries[inode*fNDimm + idim+1]=max[idim/2];
       }
    }
+
+   delete [] min; 
+   delete [] max; 
+
    Index left, right;
    for (Index inode=fNNodes-1; inode>=0; inode--){
       //take the min and max of left and right
