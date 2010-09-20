@@ -36,6 +36,7 @@
 TUnuran::TUnuran(TRandom * r, unsigned int debugLevel) : 
    fGen(0),
    fUdistr(0),
+   fUrng(0),
    fRng(r) 
 {
    // constructor implementation with a ROOT random generator
@@ -57,6 +58,7 @@ TUnuran::~TUnuran()
 {
    // Destructor implementation
    if (fGen != 0) unur_free(fGen); 
+   if (fUrng != 0) unur_urng_free(fUrng);
   // we can delete now the distribution object
    if (fUdistr != 0) unur_distr_free(fUdistr);
 }
@@ -83,7 +85,7 @@ bool  TUnuran::Init(const std::string & dist, const std::string & method)
       Error("Init","Cannot create generator object"); 
       return false; 
    } 
-   SetRandomGenerator();
+   if (! SetRandomGenerator() ) return false; 
 
    return true; 
 }
@@ -155,18 +157,17 @@ bool  TUnuran::SetRandomGenerator()
 {
    // set an external random generator
    if (fRng == 0) return false; 
-   UNUR_URNG * rng = unur_urng_new(&UnuranRng<TRandom>::Rndm, fRng );
-   if (rng == 0) return false; 
-   unsigned int ret = 0; 
-   ret |= unur_urng_set_delete(rng, &UnuranRng<TRandom>::Delete); 
-   ret |= unur_urng_set_seed(rng, &UnuranRng<TRandom>::Seed);
-
-   // change generator
    if (fGen == 0) return false; 
 
-   unur_chg_urng( fGen, rng); 
-   return (ret ==0) ? true : false; 
-   
+   fUrng = unur_urng_new(&UnuranRng<TRandom>::Rndm, fRng );
+   if (fUrng == 0) return false; 
+   unsigned int ret = 0; 
+   ret |= unur_urng_set_delete(fUrng, &UnuranRng<TRandom>::Delete); 
+   ret |= unur_urng_set_seed(fUrng, &UnuranRng<TRandom>::Seed);
+   if (ret != 0) return false; 
+
+   unur_chg_urng( fGen, fUrng); 
+   return true;    
 }
 
 bool  TUnuran::SetContDistribution(const TUnuranContDist & dist )

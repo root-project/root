@@ -67,6 +67,10 @@ typedef struct unur_gen UNUR_GEN;
 struct unur_distr; 
 typedef struct unur_distr UNUR_DISTR; 
 
+struct unur_urng;
+typedef struct unur_urng  UNUR_URNG;
+
+
 class TRandom; 
 class TH1; 
 
@@ -254,8 +258,9 @@ protected:
 
    UNUR_GEN * fGen;                      //pointer to the UnuRan C generator struct
    UNUR_DISTR * fUdistr;                 //pointer to the UnuRan C distribution struct
+   UNUR_URNG  * fUrng;                   // pointer to Unuran C random generator struct 
    std::auto_ptr<TUnuranBaseDist>         fDist;       // pointer for distribution wrapper
-   TRandom * fRng;                       //pointer to random number generator
+   TRandom * fRng;                       //pointer to ROOT random number generator
    std::string fMethod;                  //string representing the method
 
 }; 
