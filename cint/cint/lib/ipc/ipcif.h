@@ -81,7 +81,7 @@ struct msgbuf; /* does not exist in RH7.0 */
 #define IPC_INFO        3
 #endif
 
-//typedef int key_t;
+/* typedef int key_t; */
 
 key_t ftok(char *pathname, char proj);
 
@@ -159,7 +159,7 @@ union semun {
   unsigned short *array;
 };
 #elif defined(G__HPUX)
-// ???
+/* nothing ? */
 #else
 union semun {
   int val;
@@ -169,9 +169,9 @@ union semun {
 #endif
 
 struct sembuf {
-  ushort sem_num; // semaphore number
-  short sem_op;   // semaphore operation
-  short sem_flg;  // operation flags
+  ushort sem_num; /* semaphore number */
+  short sem_op;   /* semaphore operation */
+  short sem_flg;  /* operation flags */
 };
 
 int semget(key_t key, int nsems,int semflg);

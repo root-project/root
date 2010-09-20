@@ -52,7 +52,7 @@ int feof(FILE *fp);
 int ferror(FILE *fp);
 int fflush(FILE *fp);
 int fgetc(FILE *fp);
-//int fgetpos(FILE *fp,fpos_t *position);
+/* int fgetpos(FILE *fp,fpos_t *position); */
 char *fgets(char *string,int n,FILE *fp);
 double floor(double z);
 double fmod(double number,double divisor);
@@ -64,7 +64,7 @@ void free(void *ptr);
 FILE *freopen(const char *file,const char *mode,FILE *fp);
 double frexp(double real,int *exp1);
 int fseek(FILE *fp,long offset,int whence);
-//int fsetpos(FILE *fp,fpos_t *position);
+/* int fsetpos(FILE *fp,fpos_t *position); */
 long ftell(FILE *fp);
 size_t fwrite(void *buffer,size_t size,size_t n,FILE *fp);
 int getc(FILE *fp);
@@ -151,14 +151,16 @@ int toupper(int c);
 int ungetc(int character,FILE *fp);
 size_t wcstombs(char *multibyte,wchar_t *widechar,size_t number);
 int wctomb(char *string,wchar_t widecharacter);
-//int fprintf(FILE *fp,const char *format,arglist,...);
-//int printf(const char *format,arglist,...);
-//int sprintf(char *string,const char *format,arglist,...);
-//int fscanf(FILE *fp,const char *format,arglist,...);
-//int scanf(const char *format,arglist,...);
-//int sscanf(char *string,const char *format,arglist,...);
+/* 
+ * int fprintf(FILE *fp,const char *format,arglist,...);
+ * int printf(const char *format,arglist,...);
+ * int sprintf(char *string,const char *format,arglist,...);
+ * int fscanf(FILE *fp,const char *format,arglist,...);
+ * int scanf(const char *format,arglist,...);
+ * int sscanf(char *string,const char *format,arglist,...);
+ */
 void exit(int status);
-//int atexit(void(*function)(void));
+/* int atexit(void(*function)(void)); */
 
 #endif
 
