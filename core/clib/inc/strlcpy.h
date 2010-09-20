@@ -17,7 +17,7 @@
 
 #ifndef WIN32
 #   include <unistd.h>
-#else
+#elif !defined(__CINT__)
 #   include <sys/types.h>
 #endif
 
