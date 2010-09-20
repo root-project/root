@@ -13,9 +13,10 @@
 #define CINT_HAS_STRLCPY
 #endif
 
+#include <string.h>
+
 #ifdef CINT_HAS_STRLCPY
 
-#include <string.h>
 #define G__strlcpy strlcpy
 #define G__strlcat strlcat
 
