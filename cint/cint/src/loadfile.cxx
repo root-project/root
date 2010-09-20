@@ -2902,14 +2902,14 @@ char* G__tmpnam(char *name)
 
   char *tmp;
   if('\0'==tmpdir[0]) {
-    if((tmp=getenv("CINTTMPDIR"))) G__strlcpy(tmpdir,tmp,G__MAXFILENAME-1);
-    else if((tmp=getenv("TEMP"))) G__strlcpy(tmpdir,tmp,G__MAXFILENAME-1);
-    else if((tmp=getenv("TMP"))) G__strlcpy(tmpdir,tmp,G__MAXFILENAME-1);
-    else G__strlcpy(tmpdir,"/tmp",G__MAXFILENAME-1);
+    if((tmp=getenv("CINTTMPDIR"))) G__strlcpy(tmpdir,tmp,G__MAXFILENAME);
+    else if((tmp=getenv("TEMP"))) G__strlcpy(tmpdir,tmp,G__MAXFILENAME);
+    else if((tmp=getenv("TMP"))) G__strlcpy(tmpdir,tmp,G__MAXFILENAME);
+    else G__strlcpy(tmpdir,"/tmp",G__MAXFILENAME);
   }
 
   if (name==0) name = tempname;
-  G__strlcpy(name, tmpdir,G__MAXFILENAME-1);
+  G__strlcpy(name, tmpdir,G__MAXFILENAME);
   strncat(name,"/XXXXXX",G__MAXFILENAME-1-strlen(name));
   int temp_fileno = mkstemp(name);/*mkstemp not only generate file name but also opens the file*/
   if (temp_fileno >= 0) {
