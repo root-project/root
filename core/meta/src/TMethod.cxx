@@ -186,7 +186,7 @@ TDataMember *TMethod::FindDataMember()
          if (ptr1) {
             Int_t nch = strlen(ptr1);
             tok = new char[nch+1];
-            strncpy(tok,ptr1,nch);
+            strncpy(tok,ptr1,nch+1);
             tokens[token_cnt] = tok;            //store this token.
             token_cnt++;
          }

@@ -74,7 +74,7 @@ TMacro::TMacro(const char *name, const char *title): TNamed(name,title)
    if (!name) return;
    Int_t nch = strlen(name);
    char *s = new char[nch+1];
-   strncpy(s,name,nch);
+   strncpy(s,name,nch+1);
    char *slash = (char*)strrchr(s,'/');
    if (!slash) slash = s;
    else ++slash;
