@@ -1639,7 +1639,7 @@ TH1D *TH3::ProjectionX(const char *name, Int_t iymin, Int_t iymax, Int_t izmin, 
    //
    //   if option "e" is specified, the errors are computed.
    //   if option "d" is specified, the projection is drawn in the current pad.
-   //   if option "o" original axis range of the taget axes will be
+   //   if option "o" original axis range of the target axes will be
    //   kept, but only bins inside the selected range will be filled.
    //
    //   NOTE that if a TH1D named "name" exists in the current directory or pad and having   
@@ -1717,7 +1717,7 @@ TH1D *TH3::ProjectionY(const char *name, Int_t ixmin, Int_t ixmax, Int_t izmin, 
    //
    //   if option "e" is specified, the errors are computed.
    //   if option "d" is specified, the projection is drawn in the current pad.
-   //   if option "o" original axis range of the taget axes will be
+   //   if option "o" original axis range of the target axes will be
    //   kept, but only bins inside the selected range will be filled.
    //
    //   NOTE that if a TH1D named "name" exists in the current directory or pad and having   
@@ -1796,7 +1796,7 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
    //
    //   if option "e" is specified, the errors are computed.
    //   if option "d" is specified, the projection is drawn in the current pad.
-   //   if option "o" original axis range of the taget axes will be
+   //   if option "o" original axis range of the target axes will be
    //   kept, but only bins inside the selected range will be filled.
    //
    //   NOTE that if a TH1D named "name" exists in the current directory or pad and having   
@@ -2714,7 +2714,7 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    // option = "zy" return the z versus y projection into a TProfile2D histogram
    // NB: the notation "a vs b" means "a" vertical and "b" horizontal
    //
-   // option = "o" original axis range of the taget axes will be
+   // option = "o" original axis range of the target axes will be
    //   kept, but only bins inside the selected range will be filled.
    //
    // The projection is made for the selected bins only.
