@@ -1727,7 +1727,7 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
                   cout << cdate << "/" << ctime;
                } else if ((*member).fType == kChar && dim == 1) {
                   char charbuffer[11];
-                  strncpy(charbuffer,pointer,TMath::Min(10,arrayLength));
+                  strlcpy(charbuffer,pointer,TMath::Min(10,arrayLength));
                   charbuffer[10] = 0;
                   cout << "\"" << charbuffer;
                   if (arrayLength > 10)

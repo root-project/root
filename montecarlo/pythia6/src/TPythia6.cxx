@@ -425,11 +425,11 @@ void TPythia6::Initialize(const char *frame, const char *beam, const char *targe
    //              for frame=="USER" - dummy - see documentation.
 
    char  cframe[4];
-   strncpy(cframe,frame,4);
+   strlcpy(cframe,frame,4);
    char  cbeam[8];
-   strncpy(cbeam,beam,8);
+   strlcpy(cbeam,beam,8);
    char  ctarget[8];
-   strncpy(ctarget,target,8);
+   strlcpy(ctarget,target,8);
 
    if ( (!strncmp(frame, "CMS"  ,3)) &&
         (!strncmp(frame, "FIXT" ,4)) &&

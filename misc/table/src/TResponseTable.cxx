@@ -82,7 +82,7 @@ void TResponseTable::AddElement(const char *path,EColumnType type)
    tableDescriptor_st row;
 
    memset(&row,0,sizeof(row));
-   strncpy(row.fColumnName,path,sizeof(row.fColumnName)-1);
+   strlcpy(row.fColumnName,path,sizeof(row.fColumnName)-1);
    if (nRow) row.fOffset = dsc[nRow-1].fOffset + dsc[nRow-1].fSize;
 
    row.fType = type;

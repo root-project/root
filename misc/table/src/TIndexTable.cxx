@@ -95,7 +95,7 @@ TTableDescriptor *TIndexTable::CreateDescriptor()
          tableDescriptor_st row;
 
          memset(&row,0,sizeof(row));
-         strncpy(row.fColumnName,"index",sizeof(row.fColumnName));
+         strlcpy(row.fColumnName,"index",sizeof(row.fColumnName));
 
          row.fType = kInt;
          row.fTypeSize = sizeof(Int_t);

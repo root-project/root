@@ -225,7 +225,7 @@ public:
          maxsize = strlen(buf);
       } else {
          if (maxsize>fInpStrLen) maxsize = fInpStrLen;
-         strncpy(buf, fInpStr, maxsize);
+         strlcpy(buf, fInpStr, maxsize);
          fInpStr+=maxsize;
          fInpStrLen-=maxsize;
       }
@@ -1193,7 +1193,7 @@ char* TXMLEngine::Makestr(const char* str)
    int len = strlen(str);
    if (len==0) return 0;
    char* res = new char[len+1];
-   strncpy(res, str, len+1);
+   strlcpy(res, str, len+1);
    return res;
 }
 
@@ -1204,7 +1204,7 @@ char* TXMLEngine::Makenstr(const char* str, int len)
 
    if ((str==0) || (len==0)) return 0;
    char* res = new char[len+1];
-   strncpy(res, str, len);
+   strlcpy(res, str, len);
    *(res+len) = 0;
    return res;
 }
@@ -1458,7 +1458,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
          node->fName.Resize(commentlen);
          char* nameptr = (char*)node->fName.Data();
          node->fType = kXML_COMMENT;
-         strncpy(nameptr, inp->fCurrent, commentlen);
+         strlcpy(nameptr, inp->fCurrent, commentlen);
          nameptr += commentlen;
          *nameptr = 0;
       }
@@ -1536,7 +1536,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
    char* nameptr = (char*)node->fName.Data();
    node->fType = nodetype;
 
-   strncpy(nameptr, inp->fCurrent, len);
+   strlcpy(nameptr, inp->fCurrent, len);
    nameptr+=len;
    *nameptr = 0;
    
@@ -1594,7 +1594,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
 
          attr->fName.Resize(attrnamelen);
          char* attrname = (char*)attr->fName.Data();
-         strncpy(attrname, inp->fCurrent, attrnamelen);
+         strlcpy(attrname, inp->fCurrent, attrnamelen);
          attrname[attrnamelen] = '\0';
          attr->fValue.Resize(attrvaluelen);
          UnpackSpecialCharacters((char*)attr->fValue.Data(), attrvalue, attrvaluelen);

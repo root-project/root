@@ -370,7 +370,7 @@ TLinearFitter::TLinearFitter(const TLinearFitter& tlf) :
    }
    if (tlf.fFormula) { 
       fFormula = new char[fFormulaSize+1]; 
-      strncpy(fFormula,tlf.fFormula,fFormulaSize+1);
+      strlcpy(fFormula,tlf.fFormula,fFormulaSize+1);
    }
 
 }
@@ -418,7 +418,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fFormula = 0; 
       if (tlf.fFormula) { 
          fFormula = new char[fFormulaSize+1]; 
-         strncpy(fFormula,tlf.fFormula,fFormulaSize+1);
+         strlcpy(fFormula,tlf.fFormula,fFormulaSize+1);
       }
 
       if (fFixedParams)   delete [] fFixedParams;
@@ -443,7 +443,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fNdim=tlf.fNdim;
       fNfixed=tlf.fNfixed;
       fSpecial=tlf.fSpecial;
-      strncpy(fFormula,tlf.fFormula,fFormulaSize+1);
+      strlcpy(fFormula,tlf.fFormula,fFormulaSize+1);
       fIsSet=tlf.fIsSet;
       fStoreData=tlf.fStoreData;
       fChisquare=tlf.fChisquare;
@@ -1470,7 +1470,7 @@ void TLinearFitter::SetFormula(const char *formula)
       fInputFunction = 0;
    fFormulaSize = strlen(formula);
    fFormula = new char[fFormulaSize+1];
-   strncpy(fFormula, formula,fFormulaSize+1);
+   strlcpy(fFormula, formula,fFormulaSize+1);
    fSpecial = 0;
    //in case of a hyperplane:
    char *fstring;

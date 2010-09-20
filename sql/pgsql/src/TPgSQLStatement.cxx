@@ -581,7 +581,7 @@ Bool_t TPgSQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
       delete [] fBind[npar];
       fBind[npar] = new char[maxsize];
    }
-   strncpy(fBind[npar],value,maxsize);
+   strlcpy(fBind[npar],value,maxsize);
    return kTRUE;
 }
 
