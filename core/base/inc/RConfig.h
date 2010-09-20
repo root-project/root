@@ -349,6 +349,7 @@
 #      define R__B64
 #   endif
 #   define R__THROWNEWDELETE /* new/delete throw exceptions */
+#   define HAS_STRLCPY
 #endif
 
 #if defined(__OpenBSD__)
@@ -364,6 +365,7 @@
 #      define R__B64
 #   endif
 #   define R__THROWNEWDELETE /* new/delete throw exceptions */
+#   define HAS_STRLCPY
 #endif
 
 #if defined(__APPLE__)       /* MacOS X support, initially following FreeBSD */
@@ -385,6 +387,7 @@
 #      define R__BYTESWAP
 #      define R__B64      /* enable when 64 bit machine */
 #   endif
+#   define HAS_STRLCPY
 #endif
 
 #ifdef _HIUX_SOURCE

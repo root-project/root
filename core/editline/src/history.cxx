@@ -344,8 +344,8 @@ history_def_add(ptr_t p, HistEvent_t* ev, const char* str) {
       he_seterrev(ev, _HE_MALLOC_FAILED);
       return -1;
    }
-   (void) el_strlcpy(s, h->fCursor->fEv.fStr, len);
-   (void) el_strlcat(s, str, len);
+   (void) strlcpy(s, h->fCursor->fEv.fStr, len);
+   (void) strlcat(s, str, len);
    /* LINTED const cast */
    h_free((ptr_t) h->fCursor->fEv.fStr);
    h->fCursor->fEv.fStr = s;
