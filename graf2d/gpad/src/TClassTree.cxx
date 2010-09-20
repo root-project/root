@@ -481,7 +481,7 @@ void TClassTree::Paint(Option_t *)
    char *classes  = new char[nch+1];
    gNsons   = new Int_t[fNclasses];
    gNtsons  = new Int_t[fNclasses];
-   strcpy(classes,GetClasses());
+   strncpy(classes,GetClasses(),nch);
    Int_t i,j;
    char *derived;
    char *ptr = strtok(classes,":");
@@ -913,7 +913,7 @@ void TClassTree::ShowClassesUsedBy(const char *classes)
    Int_t i,j;
    Int_t nch = strlen(classes);
    char *ptr = new char[nch+1];
-   strcpy(ptr,classes);
+   strncpy(ptr,classes,nch);
    if (ptr[0] == '*') {
       i = FindClass(&ptr[1]);
       if (i >= 0) {
@@ -945,7 +945,7 @@ void TClassTree::ShowClassesUsing(const char *classes)
    Int_t i,j;
    Int_t nch = strlen(classes);
    char *ptr = new char[nch+1];
-   strcpy(ptr,classes);
+   strncpy(ptr,classes,nch);
    if (ptr[0] == '*') {
       i = FindClass(&ptr[1]);
       if (i >= 0) {
