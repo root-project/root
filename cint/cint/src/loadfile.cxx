@@ -34,6 +34,7 @@
 #include "common.h"
 #include "Api.h"
 #include "FastAllocString.h"
+#include "snprintf.h"
 
 #ifndef G__TESTMAIN
 #include <sys/stat.h>
