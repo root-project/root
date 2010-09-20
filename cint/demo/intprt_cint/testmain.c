@@ -68,7 +68,6 @@
 /* #include "src/v6_memtest.cxx" */
 #include "src/v6_new.cxx"
 #include "src/v6_newlink.cxx"
-#include "src/v6_oldlink.cxx"
 #include "src/v6_opr.cxx"
 #include "src/v6_parse.cxx"
 #include "src/v6_pause.cxx"
