@@ -443,7 +443,7 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    //Search for a a slash between the .root and the end
    Int_t nch = strlen(name) + strlen(treename);
    char *filename = new char[nch+1];
-   strcpy(filename,name);
+   strncpy(filename,name,nch);
    if (dot) {
       char *pos = filename + (dot-name) + 5;
       while (*pos) {
