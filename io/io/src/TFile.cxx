@@ -1319,27 +1319,27 @@ Bool_t TFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
    // Compared to ReadBuffer(char*, Int_t), this routine does _not_
    // change the cursor on the physical file representation (fD)
    // if the data is in this TFile's cache.
-   
+
    if (IsOpen()) {
-      
+
       SetOffset(pos);
-      
+
       Int_t st;
       if ((st = ReadBufferViaCache(buf, len))) {
          if (st == 2)
             return kTRUE;
          return kFALSE;
       }
-      
+
       Seek(pos);
-      
+
       ssize_t siz;
       Double_t start = 0;
       if (gPerfStats != 0) start = TTimeStamp();
-      
+
       while ((siz = SysRead(fD, buf, len)) < 0 && GetErrno() == EINTR)
          ResetErrno();
-      
+
       if (siz < 0) {
          SysError("ReadBuffer", "error reading from file %s", GetName());
          return kTRUE;
@@ -1353,7 +1353,7 @@ Bool_t TFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
       fgBytesRead += siz;
       fReadCalls++;
       fgReadCalls++;
-      
+
       if (gMonitoringWriter)
          gMonitoringWriter->SendFileReadProgress(this);
       if (gPerfStats != 0) {
@@ -1815,7 +1815,7 @@ Int_t TFile::ReOpen(Option_t *mode)
 void TFile::SetOffset(Long64_t offset, ERelativeTo pos)
 {
    // Set position from where to start reading.
-   
+
    switch (pos) {
       case kBeg:
          fOffset = offset + fArchiveOffset;
@@ -2882,7 +2882,7 @@ void TFile::WriteStreamerInfo()
 }
 
 //______________________________________________________________________________
-TFile *TFile::OpenFromCache(const char *name, Option_t *option, const char *ftitle,
+TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
                    Int_t compress, Int_t netopt)
 {
    // Static member function allowing to open a file for reading through the file
@@ -2892,13 +2892,11 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *option, const char *ftit
 
    TFile *f = 0;
 
-   const char *defaultreadoption = "READ";
    if (fgCacheFileDir == "") {
       ::Warning("TFile::OpenFromCache",
                 "you want to read through a cache, but you have no valid cache "
                 "directory set - reading remotely");
       ::Info("TFile::OpenFromCache", "set cache directory using TFile::SetCacheFileDir()");
-      option = defaultreadoption;
    } else {
       TUrl fileurl(name);
       TUrl tagurl;
@@ -2909,7 +2907,6 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *option, const char *ftit
             ::Warning("TFile::OpenFromCache",
                       "you want to read through a cache, but you are reading "
                       "local files - CACHEREAD disabled");
-         option = defaultreadoption;
       } else {
          // this is a remote file and worthwhile to be put into the local cache
          // now create cachepath to put it
@@ -2923,7 +2920,6 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *option, const char *ftit
             ::Warning("TFile::OpenFromCache","you want to read through a cache, but I "
                       "cannot create the directory %s - CACHEREAD disabled",
                       cachefilepathbasedir.Data());
-            option = defaultreadoption;
          } else {
             // check if this should be a zip file
             if (strlen(fileurl.GetAnchor())) {
@@ -3010,7 +3006,7 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *option, const char *ftit
 
                   cachefile->Seek(0);
                   remotfile->Seek(0);
-                  
+
                   if ((!cachefile->ReadBuffer(cacheblock,256)) &&
                       (!remotfile->ReadBuffer(remotblock,256))) {
                      if (memcmp(cacheblock, remotblock, 256)) {
@@ -3038,7 +3034,6 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *option, const char *ftit
                ::Warning("TFile::OpenFromCache", "you want to read through a cache, but I "
                          "cannot make a cache copy of %s - CACHEREAD disabled",
                          cachefilepathbasedir.Data());
-               option = defaultreadoption;
                fgCacheFileForce = forcedcache;
                if (fgOpenTimeout != 0)
                   return 0;
