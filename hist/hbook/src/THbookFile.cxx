@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <snprintf.h>
 
 #include "TROOT.h"
 #include "THbookFile.h"
@@ -282,7 +283,7 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
       return;
    }
    char topdir[20];
-   sprintf(topdir,"lun%d",fLun);
+   snprintf(topdir,19,"lun%d",fLun);
 
    Int_t ier;
 #ifndef WIN32
@@ -292,7 +293,7 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
 #endif
    fLrecl = lrecl;
    SetTitle(topdir);
-   sprintf(topdir,"//lun%d",fLun);
+   snprintf(topdir,19,"//lun%d",fLun);
    fCurDir = topdir;
 
    if (ier) printf (" Error on hropen was %d \n", ier);
@@ -599,11 +600,11 @@ TFile *THbookFile::Convert2root(const char *rootname, Int_t /*lrecl*/,
    char *rfile=0;
    if (nch) {
       rfile = new char[nch+1];
-      strcpy(rfile,rootname);
+      strncpy(rfile,rootname,nch);
    } else {
       nch = strlen(GetName());
       rfile = new char[nch+1];
-      strcpy(rfile,GetName());
+      strncpy(rfile,GetName(),nch);
       char *dot = strrchr(rfile,'.');
       if (dot) strcpy(dot+1,"root");
       else     strcat(rfile,".root");
@@ -611,7 +612,7 @@ TFile *THbookFile::Convert2root(const char *rootname, Int_t /*lrecl*/,
 
    nch = 2*nch+50;
    char *cmd = new char[nch+1];
-   sprintf(cmd,"h2root %s %s",GetName(),rfile);
+   snprintf(cmd,nch,"h2root %s %s",GetName(),rfile);
    if (opt.Contains("c")) strcat (cmd," 0");
    if (opt.Contains("l")) strcat (cmd," 0");
 
@@ -638,8 +639,8 @@ TObject *THbookFile::ConvertCWN(Int_t id)
    char *chtag_out;
    float rmin[1000], rmax[1000];
 
-   if (id > 0) sprintf(idname,"h%d",id);
-   else        sprintf(idname,"h_%d",-id);
+   if (id > 0) snprintf(idname,127,"h%d",id);
+   else        snprintf(idname,127,"h_%d",-id);
    hnoent(id,nentries);
    //printf(" Converting CWN with ID= %d, nentries = %d\n",id,nentries);
    nvar=0;
@@ -670,7 +671,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
    char name[32];
    char block[32];
    char oldblock[32];
-   strcpy(oldblock,"OLDBLOCK");
+   strncpy(oldblock,"OLDBLOCK",31);
    Int_t oldischar = -1;
    for (i=80;i>0;i--) {if (chtitl[i] == ' ') chtitl[i] = 0; }
    THbookTree *tree = new THbookTree(idname,id);
@@ -735,7 +736,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 
       if (ischar != oldischar || strcmp(oldblock,block) != 0) {
          varNumber = 0;
-         strcpy(oldblock,block);
+         strncpy(oldblock,block,31);
          oldischar = ischar;
          Long_t add= (Long_t)&bigbuf[bufpos];
          Int_t lblock   = strlen(block);
@@ -791,8 +792,8 @@ TObject *THbookFile::ConvertRWN(Int_t id)
    char *chtag_out;
    float rmin[1000], rmax[1000];
 
-   if (id > 0) sprintf(idname,"h%d",id);
-   else        sprintf(idname,"h_%d",-id);
+   if (id > 0) snprintf(idname,127,"h%d",id);
+   else        snprintf(idname,127,"h_%d",-id);
    hnoent(id,nentries);
    //printf(" Converting RWN with ID= %d, nentries = %d\n",id,nentries);
    nvar=0;
@@ -864,8 +865,8 @@ TObject *THbookFile::ConvertProfile(Int_t id)
 //      if option S jbyt(iq(lw),1,2) = 1
 //      if option I jbyt(iq(lw),1,2) = 2
 
-   if (id > 0) sprintf(idname,"h%d",id);
-   else        sprintf(idname,"h_%d",-id);
+   if (id > 0) snprintf(idname,127,"h%d",id);
+   else        snprintf(idname,127,"h_%d",-id);
    hnoent(id,nentries);
    Int_t lw = lq[lcont];
    Int_t ln = lq[lw];
@@ -905,8 +906,8 @@ TObject *THbookFile::Convert1D(Int_t id)
 {
 // Convert an Hbook 1-d histogram into a Root TH1F
 
-   if (id > 0) sprintf(idname,"h%d",id);
-   else        sprintf(idname,"h_%d",-id);
+   if (id > 0) snprintf(idname,127,"h%d",id);
+   else        snprintf(idname,127,"h_%d",-id);
    hnoent(id,nentries);
 #ifndef WIN32
    hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
@@ -957,8 +958,8 @@ TObject *THbookFile::Convert2D(Int_t id)
 {
 // Convert an Hbook 2-d histogram into a Root TH2F
 
-   if (id > 0) sprintf(idname,"h%d",id);
-   else        sprintf(idname,"h_%d",-id);
+   if (id > 0) snprintf(idname,127,"h%d",id);
+   else        snprintf(idname,127,"h_%d",-id);
    hnoent(id,nentries);
 #ifndef WIN32
    hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
