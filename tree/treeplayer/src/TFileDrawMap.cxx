@@ -161,7 +161,7 @@ void  TFileDrawMap::AnimateTree(const char *branches)
 //  AnimateTree("x,y,u");
 
    char info[512];
-   strcpy(info,GetName());
+   strncpy(info,GetName(),511);
    char *cbasket = strstr(info,", basket=");
    if (!cbasket) return;
    *cbasket = 0;
@@ -171,8 +171,8 @@ void  TFileDrawMap::AnimateTree(const char *branches)
    cbranch += 9;
    TTree *tree = (TTree*)fFile->Get(info);
    if (!tree) return;
-   if (strlen(branches) > 0) strcpy(info,branches);
-   else                      strcpy(info,cbranch);
+   if (strlen(branches) > 0) strncpy(info,branches,511);
+   else                      strncpy(info,cbranch,511);
    printf("Animating tree, branches=%s\n",info);
 
    // create list of branches
@@ -298,7 +298,7 @@ void TFileDrawMap::DrawObject()
 
    // case of a TTree
    char info[512];
-   strcpy(info,GetName());
+   strncpy(info,GetName(),511);
    char *cbasket = (char*)strstr(info,", basket=");
    if (cbasket) {
       *cbasket = 0;
@@ -355,7 +355,7 @@ TObject *TFileDrawMap::GetObject()
 
    if (strstr(GetName(),"entry=")) return 0;
    char info[512];
-   strcpy(info,GetName());
+   strncpy(info,GetName(),511);
    char *colon = strstr(info,"::");
    if (!colon) return 0;
    colon--;
