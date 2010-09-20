@@ -1310,7 +1310,7 @@ void TGListTree::Search(Bool_t /*close*/)
    if (ret) {
       item = FindItemByPathname(srch->fBuffer);
       if (!item) {
-         snprintf(msg, 256, "Couldn't find \"%s\"", srch->fBuffer);
+         snprintf(msg, 255, "Couldn't find \"%s\"", srch->fBuffer);
          gVirtualX->Bell(20);
          new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "Container", msg,
                       kMBIconExclamation, kMBOk, 0);
@@ -2360,12 +2360,12 @@ void TGListTree::GetPathnameFromItem(TGListTreeItem *item, char *path, Int_t dep
 
    *path = '\0';
    while (item) {
-      snprintf(tmppath, 1024, "/%s%s", item->GetText(), path);
-      strncpy(path, tmppath, 1024);
+      snprintf(tmppath, 1023, "/%s%s", item->GetText(), path);
+      strncpy(path, tmppath, 1023);
       item = item->fParent;
       if (--depth == 0 && item) {
-         snprintf(tmppath, 1024, "...%s", path);
-         strncpy(path, tmppath, 1024);
+         snprintf(tmppath, 1023, "...%s", path);
+         strncpy(path, tmppath, 1023);
          return;
       }
    }

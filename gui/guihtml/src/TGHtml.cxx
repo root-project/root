@@ -1483,7 +1483,7 @@ TGFont *TGHtml::GetFont(int iFont)
       if (iFamily < 4) size += 2;
 #endif
 
-      snprintf(name, 200, familyStr, size);
+      snprintf(name, 199, familyStr, size);
 
       // Get the named font
       fAFont[iFont] = fClient->GetFont(name);
