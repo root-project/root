@@ -370,7 +370,7 @@ TLinearFitter::TLinearFitter(const TLinearFitter& tlf) :
    }
    if (tlf.fFormula) { 
       fFormula = new char[fFormulaSize+1]; 
-      strcpy(fFormula,tlf.fFormula);
+      strncpy(fFormula,tlf.fFormula,fFormulaSize);
    }
 
 }
@@ -418,7 +418,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fFormula = 0; 
       if (tlf.fFormula) { 
          fFormula = new char[fFormulaSize+1]; 
-         strcpy(fFormula,tlf.fFormula);
+         strncpy(fFormula,tlf.fFormula,fFormulaSize);
       }
 
       if (fFixedParams)   delete [] fFixedParams;
@@ -443,7 +443,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fNdim=tlf.fNdim;
       fNfixed=tlf.fNfixed;
       fSpecial=tlf.fSpecial;
-      strcpy(fFormula,tlf.fFormula);
+      strncpy(fFormula,tlf.fFormula,fFormulaSize);
       fIsSet=tlf.fIsSet;
       fStoreData=tlf.fStoreData;
       fChisquare=tlf.fChisquare;
@@ -1294,6 +1294,7 @@ void TLinearFitter::GetParameters(TVectorD &vpar)
 Int_t TLinearFitter::GetParameter(Int_t ipar,char* name,Double_t& value,Double_t& /*verr*/,Double_t& /*vlow*/, Double_t& /*vhigh*/) const
 {
 //Returns the value and the name of the parameter #ipar
+//NB: In the calling function he argument name must be set large enough
 
    if (ipar<0 || ipar>fNfunctions) {
       Error("GetParError", "illegal value of parameter");
@@ -1469,7 +1470,7 @@ void TLinearFitter::SetFormula(const char *formula)
       fInputFunction = 0;
    fFormulaSize = strlen(formula);
    fFormula = new char[fFormulaSize+1];
-   strcpy(fFormula, formula);
+   strncpy(fFormula, formula,fFormulaSize);
    fSpecial = 0;
    //in case of a hyperplane:
    char *fstring;
