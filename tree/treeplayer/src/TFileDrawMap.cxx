@@ -160,27 +160,27 @@ void  TFileDrawMap::AnimateTree(const char *branches)
 // Example:
 //  AnimateTree("x,y,u");
 
-   char info[512];
-   strncpy(info,GetName(),511);
-   char *cbasket = strstr(info,", basket=");
-   if (!cbasket) return;
-   *cbasket = 0;
-   char *cbranch = strstr(info,", branch=");
-   if (!cbranch) return;
-   *cbranch = 0;
-   cbranch += 9;
-   TTree *tree = (TTree*)fFile->Get(info);
+   TString ourbranches( GetName() );
+   Ssiz_t pos = ourbranches.Index(", basket=");
+   if (pos == kNPOS) return;
+   ourbranches.Remove(pos);
+   pos = ourbranches.Index(", branch=");
+   if (pos == kNPOS) return;
+   ourbranches[pos] = 0;
+
+   TTree *tree = (TTree*)fFile->Get(ourbranches.Data());
    if (!tree) return;
-   if (strlen(branches) > 0) strncpy(info,branches,511);
-   else                      strncpy(info,cbranch,511);
-   printf("Animating tree, branches=%s\n",info);
+   TString info;
+   if (strlen(branches) > 0) info = branches;
+   else                      info = ourbranches.Data()+pos+9;
+   printf("Animating tree, branches=%s\n",info.Data());
 
    // create list of branches
    Int_t nzip = 0;
    TBranch *branch;
    TObjArray list;
    char *comma;
-   while((comma = strrchr(info,','))) {
+   while((comma = strrchr((char*)info.Data(),','))) {
       *comma = 0;
       comma++;
       while (*comma == ' ') comma++;
@@ -191,7 +191,7 @@ void  TFileDrawMap::AnimateTree(const char *branches)
          list.Add(branch);
       }
    }
-   comma = info;
+   comma = (char*)info.Data();
    while (*comma == ' ') comma++;
    branch = tree->GetBranch(comma);
    if (branch) {
@@ -297,8 +297,8 @@ void TFileDrawMap::DrawObject()
    }
 
    // case of a TTree
-   char info[512];
-   strncpy(info,GetName(),511);
+   char *info = new char[fName.Length()+1];
+   strcpy(info,fName.Data());
    char *cbasket = (char*)strstr(info,", basket=");
    if (cbasket) {
       *cbasket = 0;
@@ -354,8 +354,8 @@ TObject *TFileDrawMap::GetObject()
 // Retrieve object at the mouse position in memory
 
    if (strstr(GetName(),"entry=")) return 0;
-   char info[512];
-   strncpy(info,GetName(),511);
+   char *info = new char[fName.Length()+1];
+   strcpy(info,fName.Data());
    char *colon = strstr(info,"::");
    if (!colon) return 0;
    colon--;
@@ -370,13 +370,13 @@ char *TFileDrawMap::GetObjectInfo(Int_t px, Int_t py) const
 //   Displays the keys info in the file corresponding to cursor position px,py
 //   in the canvas status bar info panel
 
-   static char info[512];
+   static TString info;
    GetObjectInfoDir(fFile, px, py, info);
-   return info;
+   return (char*)info.Data();
 }
 
 //______________________________________________________________________________
-Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, char *info) const
+Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString &info) const
 {
 //   Redefines TObject::GetObjectInfo.
 //   Displays the keys info in the directory
@@ -426,9 +426,9 @@ Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, char 
                   Int_t entry = branch->GetBasketEntry()[i];
                   if (!offsets) entry += (pbyte-bseek)/len;
                   if (curdir == (TDirectory*)fFile) {
-                     sprintf(info,"%s%s, branch=%s, basket=%d, entry=%d",curdir->GetPath(),key->GetName(),branch->GetName(),i,entry);
+                     info.Form("%s%s, branch=%s, basket=%d, entry=%d",curdir->GetPath(),key->GetName(),branch->GetName(),i,entry);
                   } else {
-                     sprintf(info,"%s/%s, branch=%s, basket=%d, entry=%d",curdir->GetPath(),key->GetName(),branch->GetName(),i,entry);
+                     info.Form("%s/%s, branch=%s, basket=%d, entry=%d",curdir->GetPath(),key->GetName(),branch->GetName(),i,entry);
                   }
                   return kTRUE;
                }
@@ -439,9 +439,9 @@ Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, char 
       bseek = key->GetSeekKey();
       if (pbyte >= bseek && pbyte < bseek+nbytes) {
          if (curdir == (TDirectory*)fFile) {
-            sprintf(info,"%s%s ::%s, nbytes=%d",curdir->GetPath(),key->GetName(),key->GetClassName(),nbytes);
+            info.Form("%s%s ::%s, nbytes=%d",curdir->GetPath(),key->GetName(),key->GetClassName(),nbytes);
          } else {
-            sprintf(info,"%s/%s ::%s, nbytes=%d",curdir->GetPath(),key->GetName(),key->GetClassName(),nbytes);
+            info.Form("%s/%s ::%s, nbytes=%d",curdir->GetPath(),key->GetName(),key->GetClassName(),nbytes);
          }
          dirsav->cd();
          return kTRUE;
@@ -449,25 +449,25 @@ Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, char 
    }
    // Are we in the Keys list
    if (pbyte >= dir->GetSeekKeys() && pbyte < dir->GetSeekKeys()+dir->GetNbytesKeys()) {
-      sprintf(info,"%sKeys List, nbytes=%d",dir->GetPath(),dir->GetNbytesKeys());
+      info.Form("%sKeys List, nbytes=%d",dir->GetPath(),dir->GetNbytesKeys());
       dirsav->cd();
       return kTRUE;
    }
    if (dir == (TDirectory*)fFile) {
       // Are we in the TStreamerInfo
       if (pbyte >= fFile->GetSeekInfo() && pbyte < fFile->GetSeekInfo()+fFile->GetNbytesInfo()) {
-         sprintf(info,"%sStreamerInfo List, nbytes=%d",dir->GetPath(),fFile->GetNbytesInfo());
+         info.Form("%sStreamerInfo List, nbytes=%d",dir->GetPath(),fFile->GetNbytesInfo());
          dirsav->cd();
          return kTRUE;
       }
       // Are we in the Free Segments
       if (pbyte >= fFile->GetSeekFree() && pbyte < fFile->GetSeekFree()+fFile->GetNbytesFree()) {
-         sprintf(info,"%sFree List, nbytes=%d",dir->GetPath(),fFile->GetNbytesFree());
+         info.Form("%sFree List, nbytes=%d",dir->GetPath(),fFile->GetNbytesFree());
          dirsav->cd();
          return kTRUE;
       }
    }
-   sprintf(info,"(byte=%lld)",pbyte);
+   info.Form("(byte=%lld)",pbyte);
    dirsav->cd();
    return kFALSE;
 }

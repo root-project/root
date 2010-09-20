@@ -1276,8 +1276,7 @@ void TFile::Map()
          frombuf(buffer, &sdir);  seekpdir = (Long64_t)sdir;
       }
       frombuf(buffer, &nwhc);
-      int i;
-      for (i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
+      for (int i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
       classname[(int)nwhc] = '\0'; //cast to avoid warning with gcc3.4
       if (idcur == fSeekFree) strcpy(classname,"FreeSegments");
       if (idcur == fSeekInfo) strcpy(classname,"StreamerInfo");
@@ -2227,7 +2226,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    TString opt = option;
    opt.ToLower();
    void *dir = gSystem->OpenDirectory(dirname);
-   char *path = new char[4000];
+   TString path;
 
    if (opt.Contains("update")) {
       // check that directory exist, if not create it
@@ -2246,7 +2245,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          if (afile == 0) break;
          if (strcmp(afile,".") == 0) continue;
          if (strcmp(afile,"..") == 0) continue;
-         snprintf(path,4000,"%s/%s",dirname,afile);
+         path.Form("%s/%s",dirname,afile);
          gSystem->Unlink(path);
       }
 
@@ -2255,7 +2254,6 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       // if directory already exist, print error message and return
       if (dir) {
          Error("MakeProject","cannot create directory %s, already existing",dirname);
-         delete [] path;
          return;
       }
       gSystem->mkdir(dirname);
@@ -2267,7 +2265,6 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    TList *filelist = (TList*)GetStreamerInfoCache()->Clone();
    if (filelist == 0) {
       Error("MakeProject","file %s has no StreamerInfo", GetName());
-      delete [] path;
       return;
    }
 
@@ -2397,10 +2394,10 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       ngener += info->GenerateHeaderFile(dirname,&subClasses,&extrainfos);
       subClasses.Clear("nodelete");
    }
-   snprintf(path,4000,"%s/%sProjectHeaders.h",dirname,dirname);
+   path.Form("%s/%sProjectHeaders.h",dirname,dirname);
    FILE *allfp = fopen(path,"a");
    if (!allfp) {
-      Error("MakeProject","Cannot open output file:%s\n",path);
+      Error("MakeProject","Cannot open output file:%s\n",path.Data());
    } else {
       fprintf(allfp,"#include \"%sProjectInstances.h\"\n", dirname);
       fclose(allfp);
@@ -2412,16 +2409,15 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    if (!opt.Contains("+")) {
       list->Delete();
       delete list;
-      delete [] path;
       return;
    }
 
    // create the MAKEP file by looping on all *.h files
    // delete MAKEP if it already exists
 #ifdef WIN32
-   snprintf(path,4000,"%s/makep.cmd",dirname);
+   path.Form("%s/makep.cmd",dirname);
 #else
-   snprintf(path,4000,"%s/MAKEP",dirname);
+   path.Form("%s/MAKEP",dirname);
 #endif
 #ifdef R__WINGCC
    FILE *fpMAKE = fopen(path,"wb");
@@ -2429,36 +2425,34 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    FILE *fpMAKE = fopen(path,"w");
 #endif
    if (!fpMAKE) {
-      Error("MakeProject", "cannot open file %s", path);
+      Error("MakeProject", "cannot open file %s", path.Data());
       list->Delete();
       delete list;
-      delete [] path;
       return;
    }
 
    // Add rootcint/genreflex statement generating ProjectDict.cxx
    FILE *ifp = 0;
-   snprintf(path,4000,"%s/%sProjectInstances.h",dirname,dirname);
+   path.Form("%s/%sProjectInstances.h",dirname,dirname);
 #ifdef R__WINGCC
    ifp = fopen(path,"wb");
 #else
    ifp = fopen(path,"w");
 #endif
    if (!ifp) {
-      Error("MakeProject", "cannot open path file %s", path);
+      Error("MakeProject", "cannot open path file %s", path.Data());
       list->Delete();
       delete list;
-      delete [] path;
       fclose(fpMAKE);
       return;
    }
 
    if (genreflex) {
       fprintf(fpMAKE,"genreflex %sProjectHeaders.h -o %sProjectDict.cxx --comments --iocomments %s ",dirname,dirname,gSystem->GetIncludePath());
-      snprintf(path,4000,"%s/%sSelection.xml",dirname,dirname);
+      path.Form("%s/%sSelection.xml",dirname,dirname);
    } else {
       fprintf(fpMAKE,"rootcint -f %sProjectDict.cxx -c %s ",dirname,gSystem->GetIncludePath());
-      snprintf(path,4000,"%s/%sLinkDef.h",dirname,dirname);
+      path.Form("%s/%sLinkDef.h",dirname,dirname);
    }
    // Create the LinkDef.h or xml selection file by looping on all *.h files
    // replace any existing file.
@@ -2468,10 +2462,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    FILE *fp = fopen(path,"w");
 #endif
    if (!fp) {
-      Error("MakeProject", "cannot open path file %s", path);
+      Error("MakeProject", "cannot open path file %s", path.Data());
       list->Delete();
       delete list;
-      delete [] path;
       fclose(fpMAKE);
       fclose(ifp);
       return;
@@ -2647,7 +2640,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 
    if (!opt.Contains("nocompilation")) {
       // now execute the generated script compiling and generating the shared lib
-      strncpy(path,gSystem->WorkingDirectory(),4000);
+      path = gSystem->WorkingDirectory();
       gSystem->ChangeDirectory(dirname);
 #ifndef WIN32
       gSystem->Exec("chmod +x MAKEP");
@@ -2658,20 +2651,19 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       int res = !gSystem->Exec("MAKEP");
 #endif
       gSystem->ChangeDirectory(path);
-      snprintf(path,4000,"%s/%s.%s",dirname,dirname,gSystem->GetSoExt());
-      if (res) printf("Shared lib %s has been generated\n",path);
+      path.Form("%s/%s.%s",dirname,dirname,gSystem->GetSoExt());
+      if (res) printf("Shared lib %s has been generated\n",path.Data());
 
       //dynamically link the generated shared lib
       if (opt.Contains("++")) {
          res = !gSystem->Load(path);
-         if (res) printf("Shared lib %s has been dynamically linked\n",path);
+         if (res) printf("Shared lib %s has been dynamically linked\n",path.Data());
       }
    }
 
    extrainfos.Clear("nodelete");
    delete filelist;
    delete list;
-   delete [] path;
 }
 
 //______________________________________________________________________________

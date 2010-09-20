@@ -1073,6 +1073,9 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
 
    // create/decode basket parameters from buffer
    TFile *file = GetFile(0);
+   if (file == 0) {
+      return 0;
+   }
    basket = GetFreshBasket();
 
    // fSkipZip is old stuff still maintained for CDF

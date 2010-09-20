@@ -2307,8 +2307,8 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
 
    // Generate data members.
    char *line = new char[kMaxLen];
-   char name[128];
-   char cdim[8];
+   TString name(128);
+   char cdim[20];
    Int_t ltype = 10;
    Int_t ldata = 10;
    Int_t lt;
@@ -2322,13 +2322,13 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       if (element->IsBase()) continue;
       const char *ename = element->GetName();
 
-      sprintf(name,"%s",ename);
+      name = ename;
       for (Int_t i=0;i < element->GetArrayDim();i++) {
-         sprintf(cdim,"[%d]",element->GetMaxIndex(i));
-         strcat(name,cdim);
+         snprintf(cdim,19,"[%d]",element->GetMaxIndex(i));
+         name += cdim;
       }
-      strcat(name,";");
-      ld = strlen(name);
+      name += ";";
+      ld = name.Length();
 
       TString enamebasic = element->GetTypeNameBasic();
       if (element->IsA() == TStreamerSTL::Class()) {
@@ -2584,8 +2584,8 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *ext
       ninc += TMakeProject::GenerateIncludeForTemplate(fp, clname, inclist, kFALSE, extrainfos);
    }
 
-   char name[1024];
-   char cdim[8];
+   TString name(1024);
+   char cdim[20];
    Int_t ltype = 10;
    Int_t ldata = 10;
    Int_t lt;
@@ -2598,12 +2598,12 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *ext
       const char *ename = element->GetName();
       const char *colon2 = strstr(ename,"::");
       if (colon2) ename = colon2+2;
-      sprintf(name,"%s",ename);
+      name = ename;
       for (Int_t i=0;i < element->GetArrayDim();i++) {
-         sprintf(cdim,"[%d]",element->GetMaxIndex(i));
-         strcat(name,cdim);
+         snprintf(cdim,19,"[%d]",element->GetMaxIndex(i));
+         name += cdim;
       }
-      ld = strlen(name);
+      ld = name.Length();
       lt = strlen(element->GetTypeName());
       if (ltype < lt) ltype = lt;
       if (ldata < ld) ldata = ld;
@@ -2775,7 +2775,7 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, TMemberStreamer *&stre
 
    TIter nextr(fClass->GetListOfRealData());
    char dmbracket[256];
-   sprintf(dmbracket,"%s[",dm->GetName());
+   snprintf(dmbracket,255,"%s[",dm->GetName());
    Int_t offset = kMissing;
    if (fClass->GetDeclFileLine() < 0) offset = dm->GetOffset();
    TRealData *rdm;

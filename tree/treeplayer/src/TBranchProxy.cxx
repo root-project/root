@@ -159,10 +159,14 @@ Bool_t ROOT::TBranchProxy::Setup()
       }
 
       fElement = (TStreamerElement*)pcl->GetStreamerInfo()->GetElements()->FindObject(fDataMember);
+      if (fElement == 0) {
+         Error("Setup","Data member %s seems no longer be in class %s",fDataMember.Data(),pcl->GetName());
+         return false;
+      }
+      
       fIsaPointer = fElement->IsaPointer();
       fClass = fElement->GetClassPointer();
 
-      R__ASSERT(fElement);
 
       fIsClone = (fClass==TClonesArray::Class());
 

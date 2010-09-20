@@ -411,9 +411,7 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
          if (strcmp(gtypename,etypename)==0) {
             Int_t *value = (Int_t*)(global->GetAddress());
             Long_t l     = (Long_t)(*value);
-            char enumItem[128];
-            strcpy(enumItem,global->GetName());
-            TOptionListItem *it = new TOptionListItem(this,l,0,0,enumItem,enumItem);
+            TOptionListItem *it = new TOptionListItem(this,l,0,0,global->GetName(),global->GetName());
             fOptions->Add(it);
          }
       }
@@ -562,8 +560,8 @@ Long_t TDataMember::GetOffset() const
    //Note that the offset cannot be computed in case of an abstract class
    //for which the list of real data has not yet been computed via
    //a real daughter class.
-   char dmbracket[256];
-   sprintf(dmbracket,"%s[",GetName());
+   TString dmbracket;
+   dmbracket.Form("%s[",GetName());
    fClass->BuildRealData();
    TIter next(fClass->GetListOfRealData());
    TRealData *rdm;
@@ -585,7 +583,7 @@ Long_t TDataMember::GetOffset() const
             break;
          }
       }
-      if (strstr(rdm->GetName(),dmbracket)) {
+      if (strstr(rdm->GetName(),dmbracket.Data())) {
          offset = rdm->GetThisOffset();
          break;
       }
@@ -712,14 +710,14 @@ TMethodCall *TDataMember::GetterMethod(TClass *cl)
 
          const char *dataname = GetName();
 
-         char gettername[128];
-         sprintf(gettername, "Get%s", dataname+1);
+         TString gettername;
+         gettername.Form( "Get%s", dataname+1);
          if (GetClass()->GetMethod(gettername, ""))
             return fValueGetter = new TMethodCall(cl, gettername, "");
-         sprintf(gettername, "Is%s", dataname+1);
+         gettername.Form( "Is%s", dataname+1);
          if (GetClass()->GetMethod(gettername, ""))
             return fValueGetter = new TMethodCall(cl, gettername, "");
-         sprintf(gettername, "Has%s", dataname+1);
+         gettername.Form( "Has%s", dataname+1);
          if (GetClass()->GetMethod(gettername, ""))
             return fValueGetter = new TMethodCall(cl, gettername, "");
       }
@@ -756,9 +754,9 @@ TMethodCall *TDataMember::SetterMethod(TClass *cl)
 
          const char *dataname = GetName();
 
-         char settername[64];
-         sprintf(settername, "Set%s", dataname+1);
-         if (strstr(settername, "Is")) sprintf(settername, "Set%s", dataname+3);
+         TString settername;
+         settername.Form( "Set%s", dataname+1);
+         if (strstr(settername, "Is")) settername.Form( "Set%s", dataname+3);
          if (GetClass()->GetMethod(settername, "1"))
             fValueSetter = new TMethodCall(cl, settername, "1");
          if (!fValueSetter)

@@ -2347,7 +2347,6 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
    // Let's determine what we need!
    TClass* expectedClass = 0;
    EDataType expectedType = kOther_t;
-   TStreamerInfo* sinfo = 0;
    if (branch->InheritsFrom(TBranchObject::Class())) {
       TLeafObject* lobj = (TLeafObject*) branch->GetListOfLeaves()->At(0);
       expectedClass = lobj->GetClass();
@@ -2355,10 +2354,8 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       TBranchElement* branchEl = (TBranchElement*) branch;
 
       Int_t type = branchEl->GetStreamerType();
-      sinfo = branchEl->GetInfo();
       if ((type == -1) || (branchEl->GetID() == -1)) {
            expectedClass = TClass::GetClass( branchEl->GetClassName() );
-//         expectedClass =  branchEl->GetInfo()->GetClass();
       } else {
          // Case of an object data member.  Here we allow for the
          // variable name to be ommitted.  Eg, for Event.root with split

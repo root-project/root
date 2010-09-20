@@ -563,8 +563,9 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
 
    Int_t     idecay, decay_type, flavor, ndau, stable;
 
-   while ( (c[0]=getc(file)) != EOF) {
-
+   Int_t input;
+   while ( (input=getc(file)) != EOF) {
+      c[0] = input;
       if (c[0] != '#') {
          ungetc(c[0],file);
          // read channel number

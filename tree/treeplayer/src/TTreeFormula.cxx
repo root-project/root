@@ -823,8 +823,8 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
          alias = fTree->GetFriendAlias(leaf->GetBranch()->GetTree());
       }
    }
-   if (alias) sprintf(scratch,"%s.%s",alias,leaf->GetName());
-   else if (leaf) strcpy(scratch,leaf->GetName());
+   if (alias) snprintf(scratch,kMaxLen-1,"%s.%s",alias,leaf->GetName());
+   else if (leaf) strncpy(scratch,leaf->GetName(),kMaxLen-1);
 
    TTree *tleaf = realtree;
    if (leaf) {
@@ -2271,9 +2271,9 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             // return -1;
             //}
             // We need to recover the info not used.
-            strcpy(right,work);
-            strcat(right,"(");
-            strcat(right,params);
+            strncpy(right,work,kMaxLen-1);
+            strncat(right,"(",kMaxLen-1-strlen(right));
+            strncat(right,params,kMaxLen-1-strlen(right));
             final = kTRUE;
 
             // we reset work
@@ -2303,10 +2303,10 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             foundAtSign = kFALSE;
          }
 
-         if (left[0]==0) strcpy(left,work);
+         if (left[0]==0) strncpy(left,work,kMaxLen);
          if (!leaf && !branch) {
             // So far, we have not found a matching leaf or branch.
-            strcpy(first,work);
+            strncpy(first,work,kMaxLen);
 
             std::string treename(first);
             if (treename.size() && treename[treename.size()-1]=='.') {
@@ -2424,10 +2424,10 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
                   branch = leaf->GetBranch();
                   if (leaf->IsOnTerminalBranch()) {
                      final = kTRUE;
-                     strcpy(right,first);
+                     strncpy(right,first,kMaxLen);
                      //We need to put the delimiter back!
-                     if (foundAtSign) strcat(right,"@");
-                     if (cname[i]=='.') strcat(right,".");
+                     if (foundAtSign) strncat(right,"@",kMaxLen-1-strlen(right));
+                     if (cname[i]=='.') strncat(right,".",kMaxLen-1-strlen(right));
 
                      // We reset work
                      current = &(work[0]);
@@ -2505,8 +2505,8 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             }
             if (tmp_leaf) {
                // Something was found.
-               if (second[0]) strcat(second,".");
-               strcat(second,work);
+               if (second[0]) strncat(second,".",kMaxLen-1-strlen(second));
+               strncat(second,work,kMaxLen-1-strlen(second));
                leaf = tmp_leaf;
                useLeafCollectionObject = foundAtSign;
                foundAtSign = kFALSE;
@@ -2535,7 +2535,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
 
    // Copy the left over for later use.
    if (strlen(work)) {
-      strcat(right,work);
+      strncat(right,work,kMaxLen-1-strlen(right));
    }
 
    if (i<nchname) {
@@ -2543,9 +2543,9 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
          // In some cases we remove a little to fast the period, we add
          // it back if we need.  It is assumed that 'right' and the rest of
          // the name was cut by a delimiter, so this should be safe.
-         strcat(right,".");
+         strncat(right,".",kMaxLen-1-strlen(right));
       }
-      strcat(right,&cname[i]);
+      strncat(right,&cname[i],kMaxLen-1-strlen(right));
    }
 
    if (!final && branch) {
@@ -2557,7 +2557,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
    }
 
    if (leaf && leaf->InheritsFrom(TLeafObject::Class()) ) {
-      if (strlen(right)==0) strcpy(right,work);
+      if (strlen(right)==0) strncpy(right,work,kMaxLen-1);
    }
 
    if (leaf==0 && left[0]!=0) {
@@ -2738,7 +2738,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 
    // Find the top level leaf and deal with dimensions
 
-   char    cname[kMaxLen];  strcpy(cname,name.Data());
+   char    cname[kMaxLen];  strncpy(cname,name.Data(),kMaxLen-1);
    char     dims[kMaxLen];   dims[0] = '\0';
 
    Bool_t final = kFALSE;
@@ -4666,7 +4666,7 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
          value[i] = '*';
       value[kMAXLENGTH-1] = 0;
    } else if (mode == -1) {
-      sprintf(value, "%s", GetTitle());
+      snprintf(value, kMAXLENGTH-1, "%s", GetTitle());
    } else if (mode == 0) {
       if ( (fNstring && fNval==0 && fNoper==1) ||
            (TestBit(kIsCharacter)) )

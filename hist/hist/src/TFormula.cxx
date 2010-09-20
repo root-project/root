@@ -3129,8 +3129,8 @@ TString TFormula::GetExpFormula(Option_t *option) const
          char pb[10];
          char pbv[100];
          for (j=0;j<fNpar;j++) {
-            sprintf(pb,"[%d]",j);
-            sprintf(pbv,"%g",fParams[j]);
+            snprintf(pb,10,"[%d]",j);
+            snprintf(pbv,100,"%g",fParams[j]);
             ret.ReplaceAll(pb,pbv);
          }
          ret.ReplaceAll("--","+");
@@ -4409,21 +4409,22 @@ Int_t TFormula::PreCompile()
    if (str.Length()<3) return 1;
    if (str[str.Length()-1]!='+'&&str[str.Length()-2]!='+') return 1;
    str[str.Length()-2]=0;
-   char funName[1000],fileName[1000];
-   sprintf(funName,"preformula_%s",fName.Data());
+   TString funName("preformula_");
+   funName += fName;
    if (TFormulaPrimitive::FindFormula(funName)) return 0;
-   sprintf(fileName,"/tmp/%s.C",funName);
+   TString fileName;
+   fileName.Form("/tmp/%s.C",funName.Data());
 
    FILE *hf;
-   hf = fopen(fileName,"w");
+   hf = fopen(fileName.Data(),"w");
    if (hf == 0) {
-      Error("PreCompile","Unable to open the file %s for writing.",fileName);
+      Error("PreCompile","Unable to open the file %s for writing.",fileName.Data());
       return 1;
    }
    fprintf(hf,   "/////////////////////////////////////////////////////////////////////////\n");
    fprintf(hf,   "//   This code has been automatically generated \n");
    //
-   fprintf(hf,   "Double_t %s(Double_t *x, Double_t *p){",funName);
+   fprintf(hf,   "Double_t %s(Double_t *x, Double_t *p){",funName.Data());
    fprintf(hf,   "return (%s);\n}",str.Data());
 
    //   fprintf("TFormulaPrimitive::AddFormula(new TFormulaPrimitive(\"%s::%s\",\"%s::%s\",(TFormulaPrimitive::GenFunc0)%s::%s));\n",

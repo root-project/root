@@ -1614,6 +1614,14 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       }
       if (strlen(leaf->GetTypeName()) == 0) {leafStatus[l] = 1; continue;}
       if (leafcount) {
+         //len = leafcount->GetMaximum();
+         //strncpy(blen,leafcount->GetName(),1023);
+         //bname = &blen[0];
+         //while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+         //lenb = strlen(blen);
+         //Int_t kmax = 0;
+         //if (blen[lenb-1] == '_') {blen[lenb-1] = 0; kmax = 1;}
+         //else                     sprintf(blen,"%d",len);
 
          const char *stars = " ";
          if (bre && bre->GetBranchCount2()) {
@@ -1876,8 +1884,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       if ( branch->GetNleaves() > 1) {
          // More than one leaf for the branch we need to distinguish them
          strncpy(branchname,branch->GetName(),1023);
-         strcat(branchname,".");
-         strcat(branchname,leaf->GetTitle());
+         strncat(branchname,".",1023-strlen(branchname));
+         strncat(branchname,leaf->GetTitle(),1023-strlen(branchname));
          if (leafcount) {
             // remove any dimension in title
             char *dim =  (char*)strstr(branchname,"["); if (dim) dim[0] = 0;
@@ -2225,8 +2233,8 @@ Int_t TTreePlayer::MakeCode(const char *filename)
       if ( branch->GetNleaves() > 1) {
          // More than one leaf for the branch we need to distinguish them
          strncpy(branchname,branch->GetName(),1023);
-         strcat(branchname,".");
-         strcat(branchname,leaf->GetTitle());
+         strncat(branchname,".",1023-strlen(branchname));
+         strncat(branchname,leaf->GetTitle(),1023-strlen(branchname));
          if (leafcount) {
             // remove any dimension in title
             char *dim =  (char*)strstr(branchname,"[");
@@ -2294,8 +2302,8 @@ Int_t TTreePlayer::MakeCode(const char *filename)
       if ( branch->GetNleaves() > 1) {
          // More than one leaf for the branch we need to distinguish them
          strncpy(branchname,branch->GetName(),1023);
-         strcat(branchname,".");
-         strcat(branchname,leaf->GetTitle());
+         strncat(branchname,".",1023-strlen(branchname));
+         strncat(branchname,leaf->GetTitle(),1023-strlen(branchname));
          if (leafcount) {
             // remove any dimension in title
             char *dim =  (char*)strstr(branchname,"[");

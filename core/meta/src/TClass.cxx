@@ -325,7 +325,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
    Int_t i;
    for (i = 0;i < kline; i++) line[i] = ' ';
    line[kline-1] = 0;
-   sprintf(line,"%s%s ",pname,mname);
+   snprintf(line,kline,"%s%s ",pname,mname);
    i = strlen(line); line[i] = ' ';
 
    // Encode data value or pointer value
@@ -335,9 +335,9 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
    if (isapointer) {
       char **p3pointer = (char**)(*ppointer);
       if (!p3pointer)
-         sprintf(&line[kvalue],"->0");
+         snprintf(&line[kvalue],kline-kvalue,"->0");
       else if (!isbasic)
-         sprintf(&line[kvalue],"->%lx ", (Long_t)p3pointer);
+         snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)p3pointer);
       else if (membertype) {
          if (!strcmp(membertype->GetTypeName(), "char")) {
             i = strlen(*ppointer);
@@ -356,7 +356,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
                line[kvalue] = 0;
             }
          } else {
-            strcpy(&line[kvalue], membertype->AsString(p3pointer));
+            strncpy(&line[kvalue], membertype->AsString(p3pointer), TMath::Min(kline-1-kvalue,(int)strlen(membertype->AsString(p3pointer))));
          }
       } else if (!strcmp(memberFullTypeName, "char*") ||
                  !strcmp(memberFullTypeName, "const char*")) {
@@ -376,20 +376,20 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
             line[kvalue] = 0;
          }
       } else {
-         sprintf(&line[kvalue],"->%lx ", (Long_t)p3pointer);
+         snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)p3pointer);
       }
    } else if (membertype)
       if (isdate) {
          cdatime = (UInt_t*)pointer;
          TDatime::GetDateTime(cdatime[0],cdate,ctime);
-         sprintf(&line[kvalue],"%d/%d",cdate,ctime);
+         snprintf(&line[kvalue],kline-kvalue,"%d/%d",cdate,ctime);
       } else if (isbits) {
-         sprintf(&line[kvalue],"0x%08x", *(UInt_t*)pointer);
+         snprintf(&line[kvalue],kline-kvalue,"0x%08x", *(UInt_t*)pointer);
       } else {
-         strcpy(&line[kvalue], membertype->AsString(pointer));
+         strncpy(&line[kvalue], membertype->AsString(pointer), TMath::Min(kline-1-kvalue,(int)strlen(membertype->AsString(pointer))));
       }
    else
-      sprintf(&line[kvalue],"->%lx ", (Long_t)pointer);
+      snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)pointer);
 
    // Encode data member title
    if (isdate == kFALSE && strcmp(memberFullTypeName, "char*") && strcmp(memberFullTypeName, "const char*")) {
@@ -457,17 +457,16 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
       isTransient = kTRUE;
    }
 
-   char rname[512];
-   strcpy(rname, pname);
+   TString rname( pname );
    // Take into account cases like TPaveStats->TPaveText->TPave->TBox.
    // Check that member is in a derived class or an object in the class.
    if (cl != fRealDataClass) {
       if (!fRealDataClass->InheritsFrom(cl)) {
-         char* dot = strchr(rname, '.');
-         if (!dot) {
+         Ssiz_t dot = rname.Index('.');
+         if (dot == kNPOS) {
             return;
          }
-         *dot = 0;
+         rname[dot] = '\0';
          if (!fRealDataClass->GetDataMember(rname)) {
             //could be a data member in a base class like in this example
             // class Event : public Data {
@@ -487,10 +486,10 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
                return;
             }
          }
-         *dot = '.';
+         rname[dot] = '.';
       }
    }
-   strcat(rname, mname);
+   rname += mname;
    Long_t offset = Long_t(((Long_t) add) - ((Long_t) fRealDataObject));
 
    if (dm->IsaPointer()) {
@@ -648,7 +647,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
          bwname = name;
          int l = strcspn(bwname.Data(),"[ ");
          if (l<bwname.Length() && bwname[l]=='[') {
-            char cbuf[12]; sprintf(cbuf,"[%02d]",i);
+            char cbuf[12]; snprintf(cbuf,12,"[%02d]",i);
             ts.Replace(0,999,bwname,l);
             ts += cbuf;
             bwname = (const char*)ts;
@@ -685,7 +684,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
                   p = actualCl->DynamicCast(valueCl,p,0);
                }
                fCount++;
-               sprintf(buf,fmt,ii);
+               snprintf(buf,20,fmt,ii);
                ts = bwname;
                ts += buf;
                fBrowser->Add( p, actualCl, ts );
