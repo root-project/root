@@ -282,7 +282,7 @@ static char *RealToStr(char *text, const RealInfo_t & ri)
    }
    strncpy(p, "", 255);
    if (ri.fSign < 0) {
-      strcpy(p, "-");
+      strncpy(p, "-", 255);
       p++;
    }
    StrInt(p, TMath::Abs(ri.fIntNum), 0);
