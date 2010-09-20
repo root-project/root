@@ -22,6 +22,7 @@
 #include "TObjString.h"
 #include "TError.h"
 #include "TFormulaPrimitive.h"
+#include "snprintf.h"
 
 #ifdef WIN32
 #pragma optimize("",off)

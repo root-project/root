@@ -53,6 +53,8 @@
 #include <typeinfo>
 #include <algorithm>
 
+#include <snprintf.h>
+
 const Int_t kMaxLen     = 1024;
 R__EXTERN TTree *gTree;
 

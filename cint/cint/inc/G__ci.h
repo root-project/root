@@ -1616,6 +1616,11 @@ G__EXPORT void G__SET_CINT_API_POINTERS_FUNCNAME (void *a[G__NUMBER_OF_API_FUNCT
 
 #endif /* __CINT__ */
 
+#if defined(G__WIN32) 
+#ifndef snprintf
+#define snprintf _snprintf
+#endif
+#endif
 
 #if defined(G__WIN32) && (!defined(G__SYMANTEC)) && defined(G__CINTBODY)
 /* ON562 , this used to be test for G__SPECIALSTDIO */
