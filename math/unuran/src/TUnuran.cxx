@@ -359,6 +359,7 @@ bool TUnuran::SetMethodAndInit() {
    UNUR_PAR * par = _unur_str2par(fUdistr, fMethod.c_str(), &mlist);
    if (par == 0) {
       Error("SetMethod","missing distribution information or syntax error");
+      if (mlist != 0)  _unur_slist_free(mlist);
       return false;
    }
 
