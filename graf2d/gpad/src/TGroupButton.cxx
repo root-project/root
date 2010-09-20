@@ -102,7 +102,7 @@ void TGroupButton::ExecuteAction()
 
    TVirtualPad *pad;
    char line[128];
-   strcpy(line,GetMethod());
+   strncpy(line,GetMethod(),127);
    char *method = line;
    if(!strlen(line)) return;
    char *params = strchr(method,'(');
