@@ -10,7 +10,7 @@
 #define CINT_strlcpy
 
 #if defined(__FreeBSD__) ||  defined(__OpenBSD__) || defined(__APPLE__)
-#defined CINT_HAS_STRLCPY
+#define CINT_HAS_STRLCPY
 #endif
 
 #ifdef CINT_HAS_STRLCPY
