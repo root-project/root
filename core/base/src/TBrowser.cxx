@@ -82,9 +82,9 @@ private:
 ClassImp(TBrowser)
 
 //______________________________________________________________________________
-TBrowser::TBrowser(const char *name, const char *title, TBrowserImp *extimp, 
+TBrowser::TBrowser(const char *name, const char *title, TBrowserImp *extimp,
                    Option_t *opt)
-   : TNamed(name, title), fLastSelectedObject(0), fImp(extimp), fTimer(0), 
+   : TNamed(name, title), fLastSelectedObject(0), fImp(extimp), fTimer(0),
      fContextMenu(0), fNeedRefresh(kFALSE)
 {
    // Create a new browser with a name, title. Width and height are by
@@ -95,7 +95,7 @@ TBrowser::TBrowser(const char *name, const char *title, TBrowserImp *extimp,
    // make sure that the Gpad and GUI libs are loaded
    TApplication::NeedGraphicsLibs();
    gApplication->InitializeGraphics();
-   if (TClass::IsCallingNew()) {
+   if (TClass::IsCallingNew() != TClass::kRealNew) {
       fImp = 0;
    } else {
       Float_t cx = gStyle->GetScreenFactor();
@@ -107,7 +107,7 @@ TBrowser::TBrowser(const char *name, const char *title, TBrowserImp *extimp,
 }
 
 //______________________________________________________________________________
-TBrowser::TBrowser(const char *name, const char *title, UInt_t width, 
+TBrowser::TBrowser(const char *name, const char *title, UInt_t width,
                    UInt_t height, TBrowserImp *extimp, Option_t *opt)
    : TNamed(name, title), fLastSelectedObject(0), fImp(extimp), fTimer(0), fContextMenu(0),
      fNeedRefresh(kFALSE)
@@ -443,4 +443,3 @@ void TBrowserObject::Browse(TBrowser* b)
 
    fClass->Browse(fObj, b);
 }
-
