@@ -329,9 +329,8 @@ a.linkeddoc {
 }
 #indx li {
    list-style: none;
-   padding: 0px 0px 0px 0em;
+   padding: 0;
    border: none;
-   padding-left: 17em;
 }
 #indx li.idxl0 {
    background-color: #EEF4F9;
@@ -339,8 +338,9 @@ a.linkeddoc {
 #indx span.typename {
    display: inline-block;
    font-weight: bold;
-   margin-left: -17em;
+   margin-left: 0em;
    padding-right: 2em;
+   min-width: 10em;
 }
 
 #indxShortX, #indxModules {
