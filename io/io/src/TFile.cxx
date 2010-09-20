@@ -113,6 +113,7 @@
 #include <set>
 #include "TSchemaRule.h"
 #include "TSchemaRuleSet.h"
+#include "snprintf.h"
 
 TFile *gFile;                 //Pointer to current file
 
@@ -1552,7 +1553,7 @@ TProcessID  *TFile::ReadProcessID(UShort_t pidf)
    //check if fProcessIDs[uid] is set in file
    //if not set, read the process uid from file
    char pidname[32];
-   sprintf(pidname,"ProcessID%d",pidf);
+   snprintf(pidname,32,"ProcessID%d",pidf);
    pid = (TProcessID *)Get(pidname);
    if (gDebug > 0) {
       printf("ReadProcessID, name=%s, file=%s, pid=%lx\n",pidname,GetName(),(Long_t)pid);
@@ -2245,7 +2246,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          if (afile == 0) break;
          if (strcmp(afile,".") == 0) continue;
          if (strcmp(afile,"..") == 0) continue;
-         sprintf(path,"%s/%s",dirname,afile);
+         snprintf(path,4000,"%s/%s",dirname,afile);
          gSystem->Unlink(path);
       }
 
@@ -2396,7 +2397,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       ngener += info->GenerateHeaderFile(dirname,&subClasses,&extrainfos);
       subClasses.Clear("nodelete");
    }
-   sprintf(path,"%s/%sProjectHeaders.h",dirname,dirname);
+   snprintf(path,4000,"%s/%sProjectHeaders.h",dirname,dirname);
    FILE *allfp = fopen(path,"a");
    if (!allfp) {
       Error("MakeProject","Cannot open output file:%s\n",path);
@@ -2418,9 +2419,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    // create the MAKEP file by looping on all *.h files
    // delete MAKEP if it already exists
 #ifdef WIN32
-   sprintf(path,"%s/makep.cmd",dirname);
+   snprintf(path,4000,"%s/makep.cmd",dirname);
 #else
-   sprintf(path,"%s/MAKEP",dirname);
+   snprintf(path,4000,"%s/MAKEP",dirname);
 #endif
 #ifdef R__WINGCC
    FILE *fpMAKE = fopen(path,"wb");
@@ -2437,7 +2438,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 
    // Add rootcint/genreflex statement generating ProjectDict.cxx
    FILE *ifp = 0;
-   sprintf(path,"%s/%sProjectInstances.h",dirname,dirname);
+   snprintf(path,4000,"%s/%sProjectInstances.h",dirname,dirname);
 #ifdef R__WINGCC
    ifp = fopen(path,"wb");
 #else
@@ -2454,10 +2455,10 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 
    if (genreflex) {
       fprintf(fpMAKE,"genreflex %sProjectHeaders.h -o %sProjectDict.cxx --comments --iocomments %s ",dirname,dirname,gSystem->GetIncludePath());
-      sprintf(path,"%s/%sSelection.xml",dirname,dirname);
+      snprintf(path,4000,"%s/%sSelection.xml",dirname,dirname);
    } else {
       fprintf(fpMAKE,"rootcint -f %sProjectDict.cxx -c %s ",dirname,gSystem->GetIncludePath());
-      sprintf(path,"%s/%sLinkDef.h",dirname,dirname);
+      snprintf(path,4000,"%s/%sLinkDef.h",dirname,dirname);
    }
    // Create the LinkDef.h or xml selection file by looping on all *.h files
    // replace any existing file.
@@ -2646,7 +2647,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 
    if (!opt.Contains("nocompilation")) {
       // now execute the generated script compiling and generating the shared lib
-      strcpy(path,gSystem->WorkingDirectory());
+      strncpy(path,gSystem->WorkingDirectory(),4000);
       gSystem->ChangeDirectory(dirname);
 #ifndef WIN32
       gSystem->Exec("chmod +x MAKEP");
@@ -2657,7 +2658,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       int res = !gSystem->Exec("MAKEP");
 #endif
       gSystem->ChangeDirectory(path);
-      sprintf(path,"%s/%s.%s",dirname,dirname,gSystem->GetSoExt());
+      snprintf(path,4000,"%s/%s.%s",dirname,dirname,gSystem->GetSoExt());
       if (res) printf("Shared lib %s has been generated\n",path);
 
       //dynamically link the generated shared lib
@@ -2791,7 +2792,7 @@ UShort_t TFile::WriteProcessID(TProcessID *pidd)
    pids->AddAtAndExpand(pid,npids);
    pid->IncrementCount();
    char name[32];
-   sprintf(name,"ProcessID%d",npids);
+   snprintf(name,32,"ProcessID%d",npids);
    this->WriteTObject(pid,name);
    this->IncrementProcessIDs();
    if (gDebug > 0) {
