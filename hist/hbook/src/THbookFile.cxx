@@ -600,11 +600,11 @@ TFile *THbookFile::Convert2root(const char *rootname, Int_t /*lrecl*/,
    char *rfile=0;
    if (nch) {
       rfile = new char[nch+1];
-      strncpy(rfile,rootname,nch);
+      strncpy(rfile,rootname,nch+1);
    } else {
       nch = strlen(GetName());
       rfile = new char[nch+1];
-      strncpy(rfile,GetName(),nch);
+      strncpy(rfile,GetName(),nch+1);
       char *dot = strrchr(rfile,'.');
       if (dot) strcpy(dot+1,"root");
       else     strcat(rfile,".root");
