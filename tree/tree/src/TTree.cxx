@@ -359,6 +359,7 @@
 #include <sstream>
 #include <string>
 #include <stdio.h>
+#include "snprintf.h"
 
 Int_t    TTree::fgBranchStyle = 1;  // Use new TBranch style with TBranchElement.
 Long64_t TTree::fgMaxTreeSize = 100000000000LL;
@@ -1342,7 +1343,7 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
    char* curname = new char[1000];
    char occur[20];
    while ((obj = next())) {
-      sprintf(curname, "%s/%s", foldername, obj->GetName());
+      snprintf(curname,1000, "%s/%s", foldername, obj->GetName());
       if (obj->IsA() == TFolder::Class()) {
          Branch(curname, bufsize, splitlevel - 1);
       } else {
@@ -1357,7 +1358,7 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
          }
          Int_t noccur = folder->Occurence(obj);
          if (noccur > 0) {
-            sprintf(occur, "_%d", noccur);
+            snprintf(occur,20, "_%d", noccur);
             strcat(curname, occur);
          }
          TBranchElement* br = (TBranchElement*) Bronch(curname, obj->ClassName(), add, bufsize, splitlevel - 1);
@@ -2244,28 +2245,29 @@ TFile* TTree::ChangeFile(TFile* file)
    while (nus < 10) {
       uscore[nus] = '_';
       fname[0] = 0;
-      strcpy(fname, file->GetName());
+      strncpy(fname, file->GetName(),2000);
+      
       if (fFileNumber > 1) {
          char* cunder = strrchr(fname, '_');
          if (cunder) {
-            sprintf(cunder, "%s%d", uscore, fFileNumber);
+            snprintf(cunder,2000-Int_t(cunder-fname), "%s%d", uscore, fFileNumber);
             const char* cdot = strrchr(file->GetName(), '.');
             if (cdot) {
                strcat(fname, cdot);
             }
          } else {
             char fcount[10];
-            sprintf(fcount, "%s%d", uscore, fFileNumber);
+            snprintf(fcount,10, "%s%d", uscore, fFileNumber);
             strcat(fname, fcount);
          }
       } else {
          char* cdot = strrchr(fname, '.');
          if (cdot) {
-            sprintf(cdot, "%s%d", uscore, fFileNumber);
+            snprintf(cdot,2000-Int_t(fname-cdot), "%s%d", uscore, fFileNumber);
             strcat(fname, strrchr(file->GetName(), '.'));
          } else {
             char fcount[10];
-            sprintf(fcount, "%s%d", uscore, fFileNumber);
+            snprintf(fcount,10, "%s%d", uscore, fFileNumber);
             strcat(fname, fcount);
          }
       }
@@ -5848,7 +5850,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
          in.ignore(8192,'\n');
          nch = strlen(bd);
       } else {
-         strcpy(bd,branchDescriptor);
+         strncpy(bd,branchDescriptor,100000);
       }
 
       //parse the branch descriptor and create a branch for each element
@@ -5859,7 +5861,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
       while (bdcur) {
          char *colon = strchr(bdcur,':');
          if (colon) *colon = 0;
-         strcpy(bdname,bdcur);
+         strncpy(bdname,bdcur,4000);
          char *slash = strchr(bdname,'/');
          if (slash) {
             *slash = 0;
@@ -6732,7 +6734,7 @@ void TTree::SetEventList(TEventList *evlist)
 
    fEventList = evlist;
    char enlistname[100];
-   sprintf(enlistname, "%s_%s", evlist->GetName(), "entrylist");
+   snprintf(enlistname,100, "%s_%s", evlist->GetName(), "entrylist");
    fEntryList = new TEntryList(enlistname, evlist->GetTitle());
    fEntryList->SetDirectory(0); // We own this.
    Int_t nsel = evlist->GetN();
