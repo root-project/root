@@ -2240,14 +2240,14 @@ void TUnixSystem::StackTrace()
                if (name.Contains(".so") || name.Contains(".sl")) noShare = kFALSE;
                if (noShare) offset = addr;
                if (noPath)  name = "`which " + name + "`";
-               sprintf(buffer, "%s -e %s 0x%016lx", addr2line, name.Data(), offset);
+               snprintf(buffer, sizeof(buffer), "%s -e %s 0x%016lx", addr2line, name.Data(), offset);
                Bool_t nodebug = kTRUE;
                if (FILE *pf = ::popen(buffer, "r")) {
                   char buf[2048];
                   if (fgets(buf, 2048, pf)) {
                      buf[strlen(buf)-1] = 0;  // remove trailing \n
                      if (strncmp(buf, "??", 2)) {
-                        sprintf(buffer, format2, addr, symname, buf, libname);
+                        snprintf(buffer, sizeof(buffer), format2, addr, symname, buf, libname);
                         nodebug = kFALSE;
                      }
                   }
