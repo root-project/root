@@ -786,12 +786,12 @@ void TMultiGraph::Paint(Option_t *option)
             lastx  = fHistogram->GetXaxis()->GetLast();
             if (nch) {
                xtitle = new char[nch+1];
-               strlcpy(xtitle,fHistogram->GetXaxis()->GetTitle(),nch+1);
+               strlcpy(xtitle,fHistogram->GetXaxis()->GetTitle(),nch);
             }
             nch = strlen(fHistogram->GetYaxis()->GetTitle());
             if (nch) {
                ytitle = new char[nch+1];
-               strlcpy(ytitle,fHistogram->GetYaxis()->GetTitle(),nch+1);
+               strlcpy(ytitle,fHistogram->GetYaxis()->GetTitle(),nch);
             }
             delete fHistogram;
             fHistogram = 0;
