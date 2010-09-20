@@ -160,6 +160,7 @@ TFractionFitter::TFractionFitter() :
    fNpfits        = 0;
    fNDF           = 0;
    fChisquare     = 0;
+   fNpar          = 0;
 }
 
 //______________________________________________________________________________
@@ -784,7 +785,7 @@ void TFractionFitFCN(Int_t& npar, Double_t* gin, Double_t& f, Double_t* par, Int
 
    TFractionFitter* fitter = dynamic_cast<TFractionFitter*>(fractionFitter->GetObjectFit());
    if (!fitter) {
-      fitter->Error("TFractionFitFCN","Invalid fit object encountered!");
+      Error("TFractionFitFCN","Invalid fit object encountered!");
       return;
    }
    fitter->ComputeFCN(npar, gin, f, par, flag);
