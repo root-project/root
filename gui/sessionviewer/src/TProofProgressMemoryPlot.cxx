@@ -548,7 +548,7 @@ TGraph *TProofProgressMemoryPlot::DoWorkerPlot(TProofLogElem *ple)
    //find the step
    TObjString *prevline = (TObjString*)lines->Before(curline);
    Long64_t prevevent_value = 0;
-   if (ParseLine(prevline->String(), vmem, rmem, prevevent_value) != 0) {
+   if (prevline && ParseLine(prevline->String(), vmem, rmem, prevevent_value) != 0) {
       Error("DoWorkerPlot", "error parsing line: '%s'", prevline->String().Data());
       return 0;
    }
