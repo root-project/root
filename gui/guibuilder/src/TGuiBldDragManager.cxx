@@ -328,11 +328,11 @@ void TGuiBldMenuDialog::Build()
             TClass *cl = TClass::GetClass(type);
             if (strncmp(type, "enum", 4) && (cl && !(cl->Property() & kIsEnum)))
                Warning("Dialog", "data type is not basic type, assuming (int)");
-            strcpy(basictype, "int");
+            strncpy(basictype, "int", 30);
          }
 
          if (strchr(argname, '*')) {
-            strcat(basictype, "*");
+            strncat(basictype, "*", 30-strlen(basictype));
             type = charstar;
          }
 
@@ -350,7 +350,7 @@ void TGuiBldMenuDialog::Build()
                        !strncmp(basictype, "double", 6)) {
                Double_t ddefval;
                m->GetterMethod()->Execute(fObject, "", ddefval);
-               sprintf(val, "%g", ddefval);
+               snprintf(val, 255, "%g", ddefval);
             } else if (!strncmp(basictype, "char", 4) ||
                        !strncmp(basictype, "bool", 4) ||
                        !strncmp(basictype, "int", 3)  ||
@@ -358,7 +358,7 @@ void TGuiBldMenuDialog::Build()
                        !strncmp(basictype, "short", 5)) {
                Long_t ldefval;
                m->GetterMethod()->Execute(fObject, "", ldefval);
-               sprintf(val, "%li", ldefval);
+               snprintf(val, 255, "%li", ldefval);
             }
 
             // Find out whether we have options ...
