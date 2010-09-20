@@ -133,7 +133,7 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
    fPainter = 0;
    fUseGL = gStyle->GetCanvasPreferGL();
 
-   if (!build || TClass::IsCallingNew()) {
+   if (!build || TClass::IsCallingNew() != TClass::kRealNew) {
       Constructor();
    } else {
       const char *defcanvas = gROOT->GetDefCanvasName();

@@ -332,7 +332,7 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
 //*-*-*-*-*-*-*-*-*-*-*Minuit normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
 
-   if (TMinuit::Class()->IsCallingNew()) {
+   if (TMinuit::Class()->IsCallingNew() != TClass::kRealNew) {
       //preset all pointers to null
       fCpnam     = 0;
       fU         = 0;
@@ -449,7 +449,7 @@ TMinuit::TMinuit(Int_t maxpar): TNamed("MINUIT","The Minimization package")
 //  maxpar is the maximum number of parameters used with this TMinuit object.
 
    fFCN = 0;
-   
+
    BuildArrays(maxpar);
 
    fStatus       = 0;
@@ -589,8 +589,8 @@ Int_t TMinuit::Command(const char *command)
 //     Equivalent to MNEXCM except that the command is given as a
 //     character string.
 // See TMinuit::mnhelp for the full list of available commands
-// See also http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html for 
-//  a complete documentation of all the available commands 
+// See also http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html for
+//  a complete documentation of all the available commands
 //
 // Returns the status of the execution:
 //   = 0: command executed normally
@@ -2663,9 +2663,9 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
 //*-*             11: EXIT or STOP command
 //*-*             12: RETURN command
 //*-*
-//*-*     see also http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html for the possible list 
-//*-*     of all Minuit commands 
-//*-*     
+//*-*     see also http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html for the possible list
+//*-*     of all Minuit commands
+//*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    /* Initialized data */
