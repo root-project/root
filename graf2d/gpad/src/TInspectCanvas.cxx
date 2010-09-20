@@ -308,9 +308,9 @@ void TInspectCanvas::InspectObject(TObject *obj)
             if (isdate) {
                cdatime = (UInt_t*)pointer;
                TDatime::GetDateTime(cdatime[0],cdate,ctime);
-               snprintf(&line[kvalue],1023,"%d/%d",cdate,ctime);
+               snprintf(&line[kvalue],1023-kvalue,"%d/%d",cdate,ctime);
             } else if (isbits) {
-               snprintf(&line[kvalue],1023,"0x%08x", *(UInt_t*)pointer);
+               snprintf(&line[kvalue],1023-kvalue,"0x%08x", *(UInt_t*)pointer);
             } else {
                strncpy(&line[kvalue], membertype->AsString(pointer),128); line[kline-1]=0;
             }
