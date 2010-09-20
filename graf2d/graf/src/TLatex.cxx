@@ -506,8 +506,8 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
    // removing leading and trailing blanks
    length -= nBlancFin+nBlancDeb; // length of string without blanks
    Char_t* text = new Char_t[length+1];
-   strncpy(text,t+nBlancDeb,length);
-   text[length] = 0;
+   strlcpy(text,t+nBlancDeb,length+1);
+   //text[length] = 0;
 
    // compute size of subscripts and superscripts
    Double_t indiceSize = spec.fSize/fFactorSize;
@@ -597,12 +597,12 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       }
       if (length>i+1) {
          Char_t buf[3];
-         strncpy(buf,&text[i],2);
+         strlcpy(buf,&text[i],3);
          if (strncmp(buf,"^{",2)==0) {
             if (opPower==-1 && nBrackets==0 && nCroch==0) opPower=i;
             if (i>3) {
                Char_t buf1[5];
-               strncpy(buf1,&text[i-4],4);
+               strlcpy(buf1,&text[i-4],5);
                if (strncmp(buf1,"#int",4)==0) {
                   abovePlace = 1;
                   if (i>4 && opCloseCurly==-2) opCloseCurly=i-5;
@@ -617,7 +617,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             if (opUnder==-1 && nBrackets==0 && nCroch==0) opUnder=i;
             if (i>3) {
                Char_t buf2[5];
-               strncpy(buf2,&text[i-4],4);
+               strlcpy(buf2,&text[i-4],5);
                if (strncmp(buf2,"#int",4)==0) {
                   abovePlace = 1;
                   if (i>4 && opCloseCurly==-2) opCloseCurly=i-5;
@@ -636,7 +636,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
 
          if (length>i+10 ) {
             Char_t buf[11];
-            strncpy(buf,&text[i+1],10);
+            strlcpy(buf,&text[i+1],11);
             if (strncmp(buf,"splitline{",10)==0) {
                opSplitLine=i; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
@@ -645,7 +645,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          }
          if (length>i+8 ) {
             Char_t buf[9];
-            strncpy(buf,&text[i+1],8);
+            strlcpy(buf,&text[i+1],9);
             if (!opParallel && strncmp(buf,"parallel",8)==0) {
                opParallel=1; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
@@ -654,7 +654,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          }
          if (length>i+6) {
             Char_t buf[7];
-            strncpy(buf,&text[i+1],6);
+            strlcpy(buf,&text[i+1],7);
             if (strncmp(buf,"lower[",6)==0 || strncmp(buf,"lower{",6)==0) {
                opLower=i; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
@@ -673,7 +673,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          }
          if (length>i+5 ) {
             Char_t buf[6];
-            strncpy(buf,&text[i+1],5);
+            strlcpy(buf,&text[i+1],6);
             if (strncmp(buf,"frac{",5)==0) {
                opFrac=i; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
@@ -697,7 +697,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          }
          if (length>i+4 ) {
             Char_t buf[5];
-            strncpy(buf,&text[i+1],4);
+            strlcpy(buf,&text[i+1],5);
             if (!opOdot && strncmp(buf,"odot",4)==0) {
                opOdot=1; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
@@ -716,8 +716,8 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          }
          if (length>i+3) {
             Char_t buf[4];
-            strncpy(buf,&text[i+1],3);
-            buf[3] = 0;
+            strlcpy(buf,&text[i+1],4);
+            //buf[3] = 0;
             if (strncmp(buf,"[]{",3)==0) {
                opSquareBracket=1; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
@@ -1470,8 +1470,8 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       }
       TextSpec_t newSpec = spec;
       Char_t *nb = new Char_t[opSquareCurly-opColor-6];
-      strncpy(nb,text+opColor+7,opSquareCurly-opColor-7);
-      nb[opSquareCurly-opColor-7] = 0;
+      strlcpy(nb,text+opColor+7,opSquareCurly-opColor-6);
+      //nb[opSquareCurly-opColor-7] = 0;
       if (sscanf(nb,"%d",&newSpec.fColor) < 1) {
          delete[] nb;
          // color number is invalid
@@ -1493,8 +1493,8 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       }
       TextSpec_t newSpec = spec;
       Char_t *nb = new Char_t[opSquareCurly-opFont-5];
-      strncpy(nb,text+opFont+6,opSquareCurly-opFont-6);
-      nb[opSquareCurly-opFont-6] = 0;
+      strlcpy(nb,text+opFont+6,opSquareCurly-opFont-5);
+      //nb[opSquareCurly-opFont-6] = 0;
       if (sscanf(nb,"%d",&newSpec.fFont) < 1) {
          delete[] nb;
          // font number is invalid
@@ -1515,8 +1515,8 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          return TLatexFormSize(0,0,0);
       }
       Char_t *dxc = new Char_t[opSquareCurly-opKern-5];
-      strncpy(dxc,text+opKern+6,opSquareCurly-opKern-6);
-      dxc[opSquareCurly-opKern-6] = 0;
+      strlcpy(dxc,text+opKern+6,opSquareCurly-opKern-5);
+      //dxc[opSquareCurly-opKern-6] = 0;
       Float_t dx = 0;
       if (sscanf(dxc,"%f",&dx) < 1) {
          delete[] dxc;
@@ -1543,8 +1543,8 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          return TLatexFormSize(0,0,0);
       }
       Char_t *dyc = new Char_t[opSquareCurly-opLower-6];
-      strncpy(dyc,text+opLower+7,opSquareCurly-opLower-7);
-      dyc[opSquareCurly-opLower-7] = 0;
+      strlcpy(dyc,text+opLower+7,opSquareCurly-opLower-6);
+      //dyc[opSquareCurly-opLower-7] = 0;
       Float_t dy = 0;
       if (sscanf(dyc,"%f",&dy) < 1) {
          delete[] dyc;
@@ -1572,8 +1572,8 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       }
       TextSpec_t newSpec = spec;
       Char_t *nb = new Char_t[opSquareCurly-opScale-6];
-      strncpy(nb,text+opScale+7,opSquareCurly-opScale-7);
-      nb[opSquareCurly-opScale-7] = 0;
+      strlcpy(nb,text+opScale+7,opSquareCurly-opScale-6);
+      //nb[opSquareCurly-opScale-7] = 0;
       if (sscanf(nb,"%lf",&newSpec.fSize) < 1) {
          delete[] nb;
          // scale factor is invalid
@@ -1935,7 +1935,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    // and all occurences of "kRight" keyword by "}".
    i = 0 ;
    while (i < length) {
-      strncpy(buf,&text[i],TMath::Min(7,length-i));
+      strlcpy(buf,&text[i],TMath::Min(7,length-i)+1);
       opFound = kFALSE ;
       for (k = 0 ; k < nLeft1 ; k++) {
          if (strncmp(buf,kLeft1[k],lLeft1)==0) {
@@ -1978,7 +1978,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
             case '"' : quote1 = !quote1 ; break ;
             case '\'': quote2 = !quote2 ; break ;
          }
-         strncpy(buf,&text[i],TMath::Min(11,length-i));
+         strlcpy(buf,&text[i],TMath::Min(11,length-i)+1);
          opFound = kFALSE ;
 
          for(k=0;k<nkWord1;k++) {
