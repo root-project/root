@@ -62,7 +62,7 @@ PyObject* PyROOT::TConstructorHolder< T, M >::GetDocString()
 {
 // GetMethod() may return an empty function if this is just a special case place holder
    std::string clName = this->GetClass().Name();
-   return PyString_FromFormat( "%s::%s%s",
+   return PyROOT_PyUnicode_FromFormat( "%s::%s%s",
       clName.c_str(), clName.c_str(), this->GetMethod() ? this->GetSignatureString().c_str() : "()" );
 }
 
@@ -184,7 +184,7 @@ PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
          }
 
          snprintf( temp, G__ONELINE, fmt.c_str(),
-            klass->GetName(), klass->GetName(), PyString_AS_STRING( str ) );
+            klass->GetName(), klass->GetName(), PyROOT_PyUnicode_AsString( str ) );
          Py_DECREF( str );
 
       // execute contructor

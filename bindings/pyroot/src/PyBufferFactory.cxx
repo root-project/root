@@ -8,6 +8,15 @@
 // Standard
 #include <map>
 
+#if PY_VERSION_HEX >= 0x03000000
+// TODO: this is all very, very wrong
+#define PyBuffer_Type PyBytes_Type
+static PyObject* PyBuffer_FromReadWriteMemory( void*, int ) {
+   PyErr_SetString( PyExc_TypeError, "PyBuffer not supported in old-style p3" );
+   return 0;
+}
+#endif
+
 
 //- data ---------------------------------------------------------------------
 namespace {
@@ -22,7 +31,7 @@ namespace {
 
 // size callback label
    char* sizeCallback = const_cast< char* >( "_size" );
-   PyObject* sizeCallbackString_ = PyString_FromString( sizeCallback );
+   PyObject* sizeCallbackString_ = PyROOT_PyUnicode_FromString( sizeCallback );
 
 // callable cache
    std::map< PyObject*, PyObject* > gSizeCallbacks;
@@ -77,7 +86,10 @@ namespace {
 #else
       char* buf = 0;     // interface change in 2.5, no other way to handle it
 #endif
+#if PY_VERSION_HEX < 0x03000000
+// TODO: currently will always fail for p3
       (*(PyBuffer_Type.tp_as_buffer->bf_getcharbuffer))( self, 0, &buf );
+#endif
 
       if ( ! buf )
          PyErr_SetString( PyExc_IndexError, "attempt to index a null-buffer" );
@@ -90,7 +102,7 @@ namespace {
    PyObject* name##_buffer_str( PyObject* self )                             \
    {                                                                         \
       Py_ssize_t l = buffer_length( self );                                  \
-      return PyString_FromFormat( "<"#type" buffer, size "PY_SSIZE_T_FORMAT">", l );\
+      return PyROOT_PyUnicode_FromFormat( "<"#type" buffer, size "PY_SSIZE_T_FORMAT">", l );\
    }                                                                         \
                                                                              \
    PyObject* name##_buffer_item( PyObject* self, Py_ssize_t idx ) {          \
@@ -150,21 +162,21 @@ namespace {
    {
    // return a typecode in the style of module array
       if ( PyObject_TypeCheck( pyobject, &PyShortBuffer_Type ) )
-         return PyString_FromString( (char*)"h" );
+         return PyBytes_FromString( (char*)"h" );
       else if ( PyObject_TypeCheck( pyobject, &PyUShortBuffer_Type ) )
-         return PyString_FromString( (char*)"H" );
+         return PyBytes_FromString( (char*)"H" );
       else if ( PyObject_TypeCheck( pyobject, &PyIntBuffer_Type ) )
-         return PyString_FromString( (char*)"i" );
+         return PyBytes_FromString( (char*)"i" );
       else if ( PyObject_TypeCheck( pyobject, &PyUIntBuffer_Type ) )
-         return PyString_FromString( (char*)"I" );
+         return PyBytes_FromString( (char*)"I" );
       else if ( PyObject_TypeCheck( pyobject, &PyLongBuffer_Type ) )
-         return PyString_FromString( (char*)"l" );
+         return PyBytes_FromString( (char*)"l" );
       else if ( PyObject_TypeCheck( pyobject, &PyULongBuffer_Type ) )
-         return PyString_FromString( (char*)"L" );
+         return PyBytes_FromString( (char*)"L" );
       else if ( PyObject_TypeCheck( pyobject, &PyFloatBuffer_Type ) )
-         return PyString_FromString( (char*)"f" );
+         return PyBytes_FromString( (char*)"f" );
       else if ( PyObject_TypeCheck( pyobject, &PyDoubleBuffer_Type ) )
-         return PyString_FromString( (char*)"d" );
+         return PyBytes_FromString( (char*)"d" );
 
       PyErr_SetString( PyExc_TypeError, "received unknown buffer object" );
       return 0;
@@ -198,6 +210,7 @@ PyROOT::TPyBufferFactory* PyROOT::TPyBufferFactory::Instance()
 #define PYROOT_INSTALL_PYBUFFER_METHODS( name, type )                           \
    Py##name##Buffer_Type.tp_name            = (char*)"ROOT.Py"#name"Buffer";    \
    Py##name##Buffer_Type.tp_base            = &PyBuffer_Type;                   \
+   Py##name##Buffer_Type.tp_as_buffer       = PyBuffer_Type.tp_as_buffer;       \
    Py##name##Buffer_SeqMethods.sq_item      = (ssizeargfunc)name##_buffer_item; \
    Py##name##Buffer_SeqMethods.sq_ass_item  = (ssizeobjargproc)name##_buffer_ass_item;\
    Py##name##Buffer_SeqMethods.sq_length    = (lenfunc)buffer_length;           \

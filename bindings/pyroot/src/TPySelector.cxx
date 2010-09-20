@@ -101,7 +101,7 @@ void TPySelector::SetupPySelf()
       Py_INCREF( value );
 
       if ( PyType_Check( value ) && PyObject_IsSubclass( value, tpysel ) ) {
-         if ( PyObject_Compare(	value, tpysel ) ) {    // i.e., if not equal
+         if ( PyObject_RichCompareBool( value, tpysel, Py_NE ) ) {   // i.e., if not equal
             pyclass = value;
             break;
          }
@@ -366,7 +366,7 @@ void TPySelector::Abort( const char* why, EAbort what )
 
    // abort is delayed (done at end of loop, message is current)
       PyObject* pystr = PyObject_Str( pyvalue );
-      Abort( PyString_AS_STRING( pystr ), what );
+      Abort( PyROOT_PyUnicode_AsString( pystr ), what );
       Py_DECREF( pystr );
 
       PyErr_Restore( pytype, pyvalue, pytrace );

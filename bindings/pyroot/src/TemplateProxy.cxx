@@ -95,7 +95,7 @@ namespace {
    // if the method lookup fails, try to locate the "generic" version of the template
       PyErr_Clear();
       pymeth = PyObject_GetAttrString( pytmpl->fSelf, const_cast< char* >(
-         (std::string( "__generic_" ) + PyString_AS_STRING( pytmpl->fPyName )).c_str()) );
+         (std::string( "__generic_" ) + PyBytes_AS_STRING( pytmpl->fPyName )).c_str()) );
 
       if ( pymeth )
          return PyObject_Call( pymeth, args, kwds );   // non-templated, executed as-is
@@ -128,8 +128,7 @@ namespace {
 
 //= PyROOT template proxy type ===============================================
 PyTypeObject TemplateProxy_Type = {
-   PyObject_HEAD_INIT( &PyType_Type )
-   0,                         // ob_size
+   PyVarObject_HEAD_INIT( &PyType_Type, 0 )
    (char*)"ROOT.TemplateProxy", // tp_name
    sizeof(TemplateProxy),     // tp_basicsize
    0,                         // tp_itemsize
@@ -174,10 +173,10 @@ PyTypeObject TemplateProxy_Type = {
    0,                         // tp_cache
    0,                         // tp_subclasses
    0                          // tp_weaklist
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 3
+#if PY_VERSION_HEX >= 0x02030000
    , 0                        // tp_del
 #endif
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 6
+#if PY_VERSION_HEX >= 0x02060000
    , 0                        // tp_version_tag
 #endif
 };

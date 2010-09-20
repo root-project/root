@@ -101,7 +101,7 @@ Bool_t PyROOT::TPyROOTApplication::CreatePyROOTApplication( Bool_t bLoadLibs )
       int argc = argl ? PyList_Size( argl ) : 1;
       char** argv = new char*[ argc ];
       for ( int i = 1; i < argc; ++i ) {
-         char* argi = PyString_AS_STRING( PyList_GET_ITEM( argl, i ) );
+         char* argi = PyROOT_PyUnicode_AsString( PyList_GET_ITEM( argl, i ) );
          if ( strcmp( argi, "-" ) == 0 || strcmp( argi, "--" ) == 0 ) {
          // stop collecting options, the remaining are for the python script
             argc = i;    // includes program name
@@ -109,7 +109,12 @@ Bool_t PyROOT::TPyROOTApplication::CreatePyROOTApplication( Bool_t bLoadLibs )
          }
          argv[ i ] = argi;
       }
+#if PY_VERSION_HEX < 0x03000000
       argv[ 0 ] = Py_GetProgramName();
+#else
+// TODO: convert the wchar_t*
+      argv[ 0 ] = (char*)"python";
+#endif
 
       gApplication = new TPyROOTApplication( "PyROOT", &argc, argv, bLoadLibs );
       delete[] argv;     // TApplication ctor has copied argv, so done with it
@@ -130,7 +135,12 @@ Bool_t PyROOT::TPyROOTApplication::InitROOTGlobals()
    if ( ! gStyle ) gStyle = new TStyle();
 
    if ( ! gProgName )              // should have been set by TApplication
+#if PY_VERSION_HEX < 0x03000000
       gSystem->SetProgname( Py_GetProgramName() );
+#else
+// TODO: convert the wchar_t*
+      gSystem->SetProgname( "python" );
+#endif
 
    return kTRUE;
 }

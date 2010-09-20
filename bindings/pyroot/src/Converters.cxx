@@ -79,14 +79,14 @@ Bool_t PyROOT::T##name##Converter::SetArg(                                    \
       PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )       \
 {                                                                             \
 /* convert <pyobject> to C++ <<type>>, set arg for call, allow int -> char */ \
-   if ( PyString_Check( pyobject ) ) {                                        \
-      if ( PyString_GET_SIZE( pyobject ) == 1 ) {                             \
-         para.fl = (Long_t)PyString_AS_STRING( pyobject )[0];                 \
+   if ( PyBytes_Check( pyobject ) ) {                                         \
+      if ( PyBytes_GET_SIZE( pyobject ) == 1 ) {                              \
+         para.fl = (Long_t)PyBytes_AS_STRING( pyobject )[0];                  \
          if ( func )                                                          \
             func->SetArg( para.fl );                                          \
       } else {                                                                \
          PyErr_Format( PyExc_TypeError,                                       \
-            #type" expected, got string of size "PY_SSIZE_T_FORMAT, PyString_GET_SIZE( pyobject ) );\
+            #type" expected, got string of size "PY_SSIZE_T_FORMAT, PyBytes_GET_SIZE( pyobject ) );\
          return kFALSE;                                                       \
       }                                                                       \
    } else {                                                                   \
@@ -105,13 +105,13 @@ Bool_t PyROOT::T##name##Converter::SetArg(                                    \
                                                                               \
 PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
 {                                                                             \
-   return PyString_FromFormat( "%c", *((type*)address) );                     \
+   return PyBytes_FromFormat( "%c", *((type*)address) );                      \
 }                                                                             \
                                                                               \
 Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 {                                                                             \
-   if ( PyString_Check( value ) ) {                                           \
-      const char* buf = PyString_AsString( value );                           \
+   if ( PyBytes_Check( value ) ) {                                            \
+      const char* buf = PyBytes_AsString( value );                            \
       if ( PyErr_Occurred() )                                                 \
          return kFALSE;                                                       \
       int len = strlen( buf );                                                \
@@ -140,6 +140,11 @@ Bool_t PyROOT::TLongConverter::SetArg(
       PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
 {
 // convert <pyobject> to C++ long, set arg for call
+#if PY_VERSION_HEX >= 0x02070000
+// p2.7 silently converts floats to long ...
+   if ( ! (PyLong_Check( pyobject ) || PyInt_Check( pyobject )) )
+      return kFALSE;
+#endif
    para.fl = PyLong_AsLong( pyobject );
    if ( para.fl == -1 && PyErr_Occurred() )
       return kFALSE;
@@ -373,7 +378,7 @@ PyObject* PyROOT::TMacroConverter::FromMemory( void* address )
          case 'P':
             return PyFloat_FromDouble( (double) *(Double_t*)address );
          case 'T':
-            return PyString_FromString( *(char**)address );
+            return PyBytes_FromString( *(char**)address );
          default:
          // type unknown/not implemented
             PyErr_SetString( PyExc_NotImplementedError, "macro value could not be converted" );
@@ -458,7 +463,7 @@ Bool_t PyROOT::TCStringConverter::SetArg(
       PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
 {
 // construct a new string and copy it in new memory
-   const char* s = PyString_AsString( pyobject );
+   const char* s = PyBytes_AsString( pyobject );
    if ( PyErr_Occurred() )
       return kFALSE;
 
@@ -483,10 +488,10 @@ PyObject* PyROOT::TCStringConverter::FromMemory( void* address )
    if ( address && *(char**)address ) {
       if ( fMaxSize != UINT_MAX ) {          // need to prevent reading beyond boundary
          std::string buf( *(char**)address, fMaxSize );
-         return PyString_FromString( buf.c_str() );
+         return PyBytes_FromString( buf.c_str() );
       }
 
-      return PyString_FromString( *(char**)address );
+      return PyBytes_FromString( *(char**)address );
    }
 
 // empty string in case there's no address
@@ -497,12 +502,12 @@ PyObject* PyROOT::TCStringConverter::FromMemory( void* address )
 Bool_t PyROOT::TCStringConverter::ToMemory( PyObject* value, void* address )
 {
 // convert <value> to C++ const char*, write it at <address>
-   const char* s = PyString_AsString( value );
+   const char* s = PyBytes_AsString( value );
    if ( PyErr_Occurred() )
       return kFALSE;
 
 // verify (too long string will cause truncation, no crash)
-   if ( fMaxSize < (UInt_t)PyString_GET_SIZE( value ) )
+   if ( fMaxSize < (UInt_t)PyBytes_GET_SIZE( value ) )
       PyErr_Warn( PyExc_RuntimeWarning, (char*)"string too long for char array (truncated)" );
 
    if ( fMaxSize != UINT_MAX )
@@ -713,8 +718,8 @@ PyROOT::T##name##Converter::T##name##Converter() :                            \
 Bool_t PyROOT::T##name##Converter::SetArg(                                    \
       PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t user )  \
 {                                                                             \
-   if ( PyString_Check( pyobject ) ) {                                        \
-      fBuffer = PyString_AS_STRING( pyobject );                               \
+   if ( PyBytes_Check( pyobject ) ) {                                         \
+      fBuffer = PyBytes_AsString( pyobject );                                 \
       para.fv = &fBuffer;                                                     \
       if ( func )                                                             \
          func->SetArg( para.fl );                                             \
@@ -730,15 +735,15 @@ Bool_t PyROOT::T##name##Converter::SetArg(                                    \
 PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
 {                                                                             \
    if ( address )                                                             \
-      return PyString_FromString( ((strtype*)address)->DF1() );               \
+      return PyBytes_FromString( ((strtype*)address)->DF1() );                \
    Py_INCREF( PyStrings::gEmptyString );                                      \
    return PyStrings::gEmptyString;                                            \
 }                                                                             \
                                                                               \
 Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 {                                                                             \
-   if ( PyString_Check( value ) ) {                                           \
-      *((strtype*)address) = PyString_AS_STRING( value );                     \
+   if ( PyBytes_Check( value ) ) {                                            \
+      *((strtype*)address) = PyBytes_AS_STRING( value );                      \
       return kTRUE;                                                           \
    }                                                                          \
                                                                               \

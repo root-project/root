@@ -411,7 +411,7 @@ template PyObject* PyROOT::BuildRootClassBases< \
 //____________________________________________________________________________
 PyObject* PyROOT::MakeRootClass( PyObject*, PyObject* args )
 {
-   std::string cname = PyString_AsString( PyTuple_GetItem( args, 0 ) );
+   std::string cname = PyROOT_PyUnicode_AsString( PyTuple_GetItem( args, 0 ) );
 
    if ( PyErr_Occurred() )
       return 0;
@@ -456,7 +456,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       }
 
    // should be a string
-      scName = PyString_AsString( pyscope );
+      scName = PyROOT_PyUnicode_AsString( pyscope );
       Py_DECREF( pyscope );
       if ( PyErr_Occurred() )
          return 0;
@@ -569,7 +569,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
    std::string actual = klass.Name( ROOT::Reflex::FINAL );
 
 // first try to retrieve an existing class representation
-   PyObject* pyactual = PyString_FromString( actual.c_str() );
+   PyObject* pyactual = PyROOT_PyUnicode_FromString( actual.c_str() );
    PyObject* pyclass = force ? 0 : PyObject_GetAttr( scope, pyactual );
 
    Bool_t bClassFound = pyclass ? kTRUE : kFALSE;
@@ -630,7 +630,7 @@ template PyObject* PyROOT::MakeRootClassFromString< ROOT::Reflex::Scope,\
 PyObject* PyROOT::GetRootGlobal( PyObject*, PyObject* args )
 {
 // get the requested name
-   std::string ename = PyString_AsString( PyTuple_GetItem( args, 0 ) );
+   std::string ename = PyROOT_PyUnicode_AsString( PyTuple_GetItem( args, 0 ) );
 
    if ( PyErr_Occurred() )
       return 0;

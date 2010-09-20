@@ -105,7 +105,11 @@ Bool_t TPython::Initialize()
       }
 
    // set the command line arguments on python's sys.argv
+#if PY_VERSION_HEX < 0x03000000
       char* argv[] = { const_cast< char* >( "root" ) };
+#else
+      wchar_t* argv[] = { const_cast< wchar_t* >( L"root" ) };
+#endif
       PySys_SetArgv( sizeof(argv)/sizeof(argv[0]), argv );
 
    // force loading of the ROOT module
@@ -165,13 +169,13 @@ void TPython::LoadMacro( const char* name )
          // need to check for both exact and derived (differences exist between older and newer
          // versions of python ... bug?)
             if ( (pyModName && pyClName) &&\
-                 ( (PyString_CheckExact( pyModName ) && PyString_CheckExact( pyClName )) ||\
-                   (PyString_Check( pyModName ) && PyString_Check( pyClName ))\
+                 ( (PyBytes_CheckExact( pyModName ) && PyBytes_CheckExact( pyClName )) ||\
+                   (PyBytes_Check( pyModName ) && PyBytes_Check( pyClName ))\
                  ) ) {
             // build full, qualified name
-               std::string fullname = PyString_AS_STRING( pyModName );
+               std::string fullname = PyROOT_PyUnicode_AsString( pyModName );
                fullname += '.';
-               fullname += PyString_AS_STRING( pyClName );
+               fullname += PyROOT_PyUnicode_AsString( pyClName );
 
             // force class creation (this will eventually call TPyClassGenerator)
                TClass::GetClass( fullname.c_str(), kTRUE );
@@ -231,11 +235,16 @@ void TPython::ExecScript( const char* name, int argc, const char** argv )
 
 // create and set (add progam name) the new command line
    argc += 1;
+#if PY_VERSION_HEX < 0x03000000
    const char** argv2 = new const char*[ argc ];
    for ( int i = 1; i < argc; ++i ) argv2[ i ] = argv[ i-1 ];
    argv2[ 0 ] = Py_GetProgramName();
    PySys_SetArgv( argc, const_cast< char** >( argv2 ) );
    delete [] argv2;
+#else
+// TODO: fix this to work like above ...
+   argv = 0;
+#endif
 
 // actual script execution
    PyObject* gbl = PyDict_Copy( gMainDict );
@@ -302,7 +311,7 @@ const TPyReturn TPython::Eval( const char* expr )
 
 // results that require no convserion
    if ( result == Py_None || PyROOT::ObjectProxy_Check( result ) ||
-         PyString_Check( result ) ||
+         PyBytes_Check( result ) ||
          PyFloat_Check( result ) || PyLong_Check( result ) || PyInt_Check( result ) )
       return TPyReturn( result );
 
@@ -315,7 +324,7 @@ const TPyReturn TPython::Eval( const char* expr )
 
    // concat name
       std::string qname =
-         std::string( PyString_AS_STRING( module ) ) + '.' + PyString_AS_STRING( name );
+         std::string( PyROOT_PyUnicode_AsString( module ) ) + '.' + PyROOT_PyUnicode_AsString( name );
       Py_DECREF( module );
       Py_DECREF( name );
       Py_DECREF( pyclass );

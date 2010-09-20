@@ -4,7 +4,7 @@
 // Bindings
 #include "PyROOT.h"
 #include "structmember.h"    // from Python
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 5
+#if PY_VERSION_HEX >= 0x02050000
 #include "code.h"            // from Python
 #else
 #include "compile.h"         // from Python
@@ -99,7 +99,7 @@ namespace {
 //= PyROOT method proxy object behaviour =====================================
    PyObject* mp_name( MethodProxy* pymeth, void* )
    {
-      return PyString_FromString( pymeth->GetName().c_str() );
+      return PyROOT_PyUnicode_FromString( pymeth->GetName().c_str() );
    }
 
 //____________________________________________________________________________
@@ -123,10 +123,10 @@ namespace {
          return doc;
 
    // overloaded method
-      PyObject* separator = PyString_FromString( "\n" );
+      PyObject* separator = PyROOT_PyUnicode_FromString( "\n" );
       for ( Int_t i = 1; i < nMethods; ++i ) {
-         PyString_Concat( &doc, separator );
-         PyString_ConcatAndDel( &doc, methods[i]->GetDocString() );
+         PyROOT_PyUnicode_Append( &doc, separator );
+         PyROOT_PyUnicode_AppendAndDel( &doc, methods[i]->GetDocString() );
       }
       Py_DECREF( separator );
 
@@ -195,6 +195,7 @@ namespace {
 //____________________________________________________________________________
    PyObject* mp_func_code( MethodProxy* pymeth, void* )
    {
+#if PY_VERSION_HEX < 0x03000000
       MethodProxy::Methods_t& methods = pymeth->fMethodInfo->fMethods;
 
    // collect maximum number of arguments in set of overloads; this is also used
@@ -274,6 +275,12 @@ namespace {
       Py_DECREF( co_code );
 
       return code;
+#else
+// not important for functioning of most code, so not implemented for p3 for now (TODO)
+      pymeth = 0;
+      Py_INCREF( Py_None );
+      return Py_None;
+#endif
    }
 
 //____________________________________________________________________________
@@ -521,7 +528,7 @@ namespace {
          // this should not happen; set an error to prevent core dump and report
             PyObject* sig = methods[i]->GetPrototype();
             PyErr_Format( PyExc_SystemError, "%s =>\n    %s",
-               PyString_AS_STRING( sig ), (char*)"NULL result without error in mp_call" );
+               PyROOT_PyUnicode_AsString( sig ), (char*)"NULL result without error in mp_call" );
             Py_DECREF( sig );
          }
          PyError_t e;
@@ -530,14 +537,14 @@ namespace {
       }
 
    // first summarize, then add details
-      PyObject* value = PyString_FromFormat(
+      PyObject* value = PyROOT_PyUnicode_FromFormat(
          "none of the %d overloaded methods succeeded. Full details:", nMethods );
-      PyObject* separator = PyString_FromString( "\n  " );
+      PyObject* separator = PyROOT_PyUnicode_FromString( "\n  " );
 
    // if this point is reached, none of the overloads succeeded: notify user
       for ( std::vector< PyError_t >::iterator e = errors.begin(); e != errors.end(); ++e ) {
-         PyString_Concat( &value, separator );
-         PyString_Concat( &value, e->fValue );
+         PyROOT_PyUnicode_Append( &value, separator );
+         PyROOT_PyUnicode_Append( &value, e->fValue );
       }
 
       Py_DECREF( separator );
@@ -629,7 +636,7 @@ namespace {
          return PyType_Type.tp_richcompare( (PyObject*)self, (PyObject*)other, op );
 
    // defined by type + (shared) MethodInfo + bound self, with special case for fSelf (i.e. pseudo-function)
-      if ( ( self->ob_type == other->ob_type && self->fMethodInfo == other->fMethodInfo ) && \
+      if ( ( ((PyObject*)self)->ob_type == ((PyObject*)other)->ob_type && self->fMethodInfo == other->fMethodInfo ) && \
            ( ( IsPseudoFunc( self ) && IsPseudoFunc( other ) ) || self->fSelf == other->fSelf ) ) {
          Py_INCREF( Py_True );
          return Py_True;
@@ -642,19 +649,19 @@ namespace {
 //= PyROOT method proxy access to internals =================================
    PyObject* mp_disp( MethodProxy* pymeth, PyObject* sigarg )
    {
-      if ( ! PyString_Check( sigarg ) ) {
+      if ( ! PyROOT_PyUnicode_Check( sigarg ) ) {
          PyErr_Format( PyExc_TypeError, "disp() argument 1 must be string, not %.50s",
                        sigarg == Py_None ? "None" : sigarg->ob_type->tp_name );
          return 0;
       }
 
-      PyObject* sig1 = PyString_FromFormat( "(%s)", PyString_AsString( sigarg ) );
+      PyObject* sig1 = PyROOT_PyUnicode_FromFormat( "(%s)", PyROOT_PyUnicode_AsString( sigarg ) );
 
       MethodProxy::Methods_t& methods = pymeth->fMethodInfo->fMethods;
       for ( Int_t i = 0; i < (Int_t)methods.size(); ++i ) {
 
          PyObject* sig2 = methods[ i ]->GetSignature();
-         if ( PyObject_Compare( sig1, sig2 ) == 0 ) {
+         if ( PyObject_RichCompareBool( sig1, sig2, Py_EQ ) ) {
             Py_DECREF( sig2 );
 
             MethodProxy* newmeth = mp_new( NULL, NULL, NULL );
@@ -674,7 +681,7 @@ namespace {
       }
 
       Py_DECREF( sig1 );
-      PyErr_Format( PyExc_LookupError, "signature \"%s\" not found", PyString_AS_STRING( sigarg ) );
+      PyErr_Format( PyExc_LookupError, "signature \"%s\" not found", PyROOT_PyUnicode_AsString( sigarg ) );
       return 0;
    }
 
@@ -689,8 +696,7 @@ namespace {
 
 //= PyROOT method proxy type =================================================
 PyTypeObject MethodProxy_Type = {
-   PyObject_HEAD_INIT( &PyType_Type )
-   0,                         // ob_size
+   PyVarObject_HEAD_INIT( &PyType_Type, 0 )
    (char*)"ROOT.MethodProxy", // tp_name
    sizeof(MethodProxy),       // tp_basicsize
    0,                         // tp_itemsize
@@ -735,10 +741,10 @@ PyTypeObject MethodProxy_Type = {
    0,                         // tp_cache
    0,                         // tp_subclasses
    0                          // tp_weaklist
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 3
+#if PY_VERSION_HEX >= 0x02030000
    , 0                        // tp_del
 #endif
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 6
+#if PY_VERSION_HEX >= 0x02060000
    , 0                        // tp_version_tag
 #endif
 };

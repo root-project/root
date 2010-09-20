@@ -60,7 +60,7 @@ namespace {
       if ( ! mp ) {
       // there has been a user meta class override in a derived class, so do
       // the consistent thing, thus allowing user control over naming
-         new (&result->fClass) TClassRef( PyString_AS_STRING( PyTuple_GET_ITEM( args, 0 ) ) );
+         new (&result->fClass) TClassRef( PyROOT_PyUnicode_AsString( PyTuple_GET_ITEM( args, 0 ) ) );
       } else {
       // coming here from PyROOT, use meta class name instead of given name,
       // so that it is safe to inherit python classes from the bound class
@@ -78,12 +78,12 @@ namespace {
       PyObject* attr = PyType_Type.tp_getattro( pyclass, pyname );
 
    // extra ROOT lookup in case of failure (e.g. for inner classes on demand)
-      if ( ! attr && PyString_CheckExact( pyname ) ) {
+      if ( ! attr && PyROOT_PyUnicode_CheckExact( pyname ) ) {
          PyObject *etype, *value, *trace;
          PyErr_Fetch( &etype, &value, &trace );         // clears current exception
 
       // filter for python specials and lookup qualified class or function
-         std::string name = PyString_AS_STRING( pyname );
+         std::string name = PyROOT_PyUnicode_AsString( pyname );
          if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" ) {
 
             attr = MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( name, pyclass );
@@ -113,8 +113,7 @@ namespace {
 
 //= PyROOT object proxy type type ============================================
 PyTypeObject PyRootType_Type = {
-   PyObject_HEAD_INIT( &PyType_Type )
-   0,                         // ob_size
+   PyVarObject_HEAD_INIT( &PyType_Type, 0 )
    (char*)"ROOT.PyRootType",  // tp_name
    0,                         // tp_basicsize
    0,                         // tp_itemsize
@@ -159,10 +158,10 @@ PyTypeObject PyRootType_Type = {
    0,                         // tp_cache
    0,                         // tp_subclasses
    0                          // tp_weaklist
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 3
+#if PY_VERSION_HEX >= 0x02030000
    , 0                        // tp_del
 #endif
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 6
+#if PY_VERSION_HEX >= 0x02060000
    , 0                        // tp_version_tag
 #endif
 };

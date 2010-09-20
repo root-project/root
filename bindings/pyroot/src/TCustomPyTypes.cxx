@@ -4,13 +4,17 @@
 #include "PyROOT.h"
 #include "TCustomPyTypes.h"
 
+#if PY_VERSION_HEX >= 0x03000000
+// TODO: this will break functionality
+#define PyMethod_GET_CLASS( meth ) Py_None
+#endif
+
 
 namespace PyROOT {
 
 //= float type allowed for reference passing =================================
 PyTypeObject TCustomFloat_Type = {     // python float is a C/C++ double
-   PyObject_HEAD_INIT( &PyType_Type )
-   0,                         // ob_size
+   PyVarObject_HEAD_INIT( &PyType_Type, 0 )
    (char*)"ROOT.double",      // tp_name
    0,                         // tp_basicsize
    0,                         // tp_itemsize
@@ -56,18 +60,17 @@ PyTypeObject TCustomFloat_Type = {     // python float is a C/C++ double
    0,                         // tp_cache
    0,                         // tp_subclasses
    0                          // tp_weaklist
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 3
+#if PY_VERSION_HEX >= 0x02030000
    , 0                        // tp_del
 #endif
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 6
+#if PY_VERSION_HEX >= 0x02060000
    , 0                        // tp_version_tag
 #endif
 };
 
 //= long type allowed for reference passing ==================================
 PyTypeObject TCustomInt_Type = {       // python int is a C/C++ long
-   PyObject_HEAD_INIT( &PyType_Type )
-   0,                         // ob_size
+   PyVarObject_HEAD_INIT( &PyType_Type, 0 )
    (char*)"ROOT.long",        // tp_name
    0,                         // tp_basicsize
    0,                         // tp_itemsize
@@ -113,10 +116,10 @@ PyTypeObject TCustomInt_Type = {       // python int is a C/C++ long
    0,                         // tp_cache
    0,                         // tp_subclasses
    0                          // tp_weaklist
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 3
+#if PY_VERSION_HEX >= 0x02030000
    , 0                        // tp_del
 #endif
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 6
+#if PY_VERSION_HEX >= 0x02060000
    , 0                        // tp_version_tag
 #endif
 };
@@ -156,8 +159,10 @@ PyObject* TCustomInstanceMethod_New( PyObject* func, PyObject* self, PyObject* p
    im->im_func = func;
    Py_XINCREF( self );
    im->im_self = self;
+#if PY_VERSION_HEX < 0x03000000
    Py_XINCREF( pyclass );
    im->im_class = pyclass;
+#endif
    PyObject_GC_Track( im );
    return (PyObject*)im;
 }
@@ -174,7 +179,9 @@ static void im_dealloc( register PyMethodObject* im )
 
    Py_DECREF( im->im_func );
    Py_XDECREF( im->im_self );
+#if PY_VERSION_HEX < 0x03000000
    Py_XDECREF( im->im_class );
+#endif
 
    if ( numfree < PyMethod_MAXFREELIST ) {
       im->im_self = (PyObject*)free_list;
@@ -250,8 +257,7 @@ static PyObject* im_descr_get( PyObject* meth, PyObject* obj, PyObject* pyclass 
 
 //= PyROOT custom instance method type =======================================
 PyTypeObject TCustomInstanceMethod_Type = {
-   PyObject_HEAD_INIT( &PyType_Type )
-   0,                         // ob_size
+   PyVarObject_HEAD_INIT( &PyType_Type, 0 )
    (char*)"ROOT.InstanceMethod",      // tp_name
    0,                         // tp_basicsize
    0,                         // tp_itemsize
@@ -297,10 +303,10 @@ PyTypeObject TCustomInstanceMethod_Type = {
    0,                         // tp_cache
    0,                         // tp_subclasses
    0                          // tp_weaklist
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 3
+#if PY_VERSION_HEX >= 0x02030000
    , 0                        // tp_del
 #endif
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 6
+#if PY_VERSION_HEX >= 0x02060000
    , 0                        // tp_version_tag
 #endif
 };

@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 04/30/10
+# Last: 09/17/10
 
 """PyROOT user module.
 
@@ -25,7 +25,7 @@ import string as pystring
 
 ## there's no version_info in 1.5.2
 if sys.version[0:3] < '2.2':
-   raise ImportError, 'Python Version 2.2 or above is required.'
+   raise ImportError( 'Python Version 2.2 or above is required.' )
 
 ## 2.2 has 10 instructions as default, > 2.3 has 100 ... make same
 if sys.version[0:3] == '2.2':
@@ -76,8 +76,8 @@ if sys.platform == 'darwin':
       message='class \S* already in TClassTable$' )
 
 ### load PyROOT C++ extension module, special case for linux and Sun ------------
-needsGlobal =  ( 0 <= pystring.find( sys.platform, 'linux' ) ) or\
-               ( 0 <= pystring.find( sys.platform, 'sunos' ) )
+needsGlobal =  ( 0 <= sys.platform.find( 'linux' ) ) or\
+               ( 0 <= sys.platform.find( 'sunos' ) )
 if needsGlobal:
  # change dl flags to load dictionaries from pre-linked .so's
    dlflags = sys.getdlopenflags()
@@ -159,7 +159,7 @@ _sigPolicyAPI = [ 'SetSignalPolicy', 'kSignalFast', 'kSignalSafe' ]
 
 ### helpers ---------------------------------------------------------------------
 def split( str ):
-   npos = pystring.find( str, ' ' )
+   npos = str.find( ' ' )
    if 0 <= npos:
       return str[:npos], str[npos+1:]
    else:
@@ -199,7 +199,8 @@ class std:
       'deque', 'list', 'queue', 'stack', 'vector', 'map', 'multimap', 'set', 'multiset' )
 
    for name in stlclasses:
-      exec '%(name)s = Template( "std::%(name)s" )' % { 'name' : name }
+      locals()[ name ] = Template( "std::%s" % name )
+#      exec '%(name)s = Template( "std::%(name)s" )' % { 'name' : name }
 
    string = _root.MakeRootClass( 'string' )
 
@@ -247,7 +248,7 @@ def _excepthook( exctype, value, traceb ):
       if cmd == '.q':
          sys.exit( 0 )
       elif cmd == '.?' or cmd == '.help':
-         print """PyROOT emulation of CINT commands.
+         sys.stdout.write( """PyROOT emulation of CINT commands.
 All emulated commands must be preceded by a . (dot).
 ===========================================================================
 Help:        ?         : this help
@@ -259,7 +260,8 @@ Quit:        q         : quit python session
 
 The standard python help system is available through a call to 'help()' or
 'help(<id>)' where <id> is an identifier, e.g. a class or function such as
-TPad or TPad.cd, etc."""
+TPad or TPad.cd, etc.
+""" )
          return
       elif cmd == '.!' and arg:
          return os.system( arg )
@@ -279,15 +281,15 @@ TPad or TPad.cd, etc."""
          return sys.modules[ __name__ ].gDirectory.pwd()
    elif isinstance( value, SyntaxError ) and \
       value.msg == "can't assign to function call":
-         print """Are you trying to assign a value to a reference return, for example to the
+         sys.stdout.write( """Are you trying to assign a value to a reference return, for example to the
 result of a call to "double& SMatrix<>::operator()(int,int)"? If so, then
 please use operator[] instead, as in e.g. "mymatrix[i,j] = somevalue".
-"""
+""" )
 
  # normal exception processing
    _orig_ehook( exctype, value, traceb )
 
-if not __builtins__.has_key( '__IPYTHON__' ):
+if not '__IPYTHON__' in __builtins__:
  # IPython has its own ways of executing shell commands etc.
    sys.excepthook = _excepthook
 
@@ -466,7 +468,7 @@ class ModuleFacade( types.ModuleType ):
          sys.argv = argv
 
     # must be called after gApplication creation:
-      if __builtins__.has_key( '__IPYTHON__' ):
+      if '__IPYTHON__' in __builtins__:
        # IPython's FakeModule hack otherwise prevents usage of python from CINT
          _root.gROOT.ProcessLine( 'TPython::Exec( "" )' )
          sys.modules[ '__main__' ].__builtins__ = __builtins__
@@ -484,7 +486,7 @@ class ModuleFacade( types.ModuleType ):
 
           # system logon, user logon, and local logon (skip Rint.Logon)
             name = '.rootlogon.C'
-            logons = [ os.path.join( self.gRootDir, 'etc', 'system' + name ),
+            logons = [ os.path.join( str(self.gRootDir), 'etc', 'system' + name ),
                        os.path.expanduser( os.path.join( '~', name ) ) ]
             if logons[-1] != os.path.join( os.getcwd(), name ):
                logons.append( name )
@@ -532,7 +534,7 @@ def cleanup():
  # restore hooks
    import sys
    sys.displayhook = sys.__displayhook__
-   if not __builtins__.has_key( '__IPYTHON__' ):
+   if not '__IPYTHON__' in __builtins__:
       sys.excepthook = sys.__excepthook__
 
    facade = sys.modules[ __name__ ]
@@ -553,10 +555,11 @@ def cleanup():
 
  # remove otherwise (potentially) circular references
    import types
-   for k, v in facade.module.__dict__.items():
+   items = facade.module.__dict__.items()
+   for k, v in items:
       if type(v) == types.ModuleType:
-         del facade.module.__dict__[ k ]
-   del v, k, types
+         facade.module.__dict__[ k ] = None
+   del v, k, items, types
 
  # destroy facade
    facade.__dict__.clear()

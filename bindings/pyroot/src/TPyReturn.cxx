@@ -91,7 +91,7 @@ TPyReturn::~TPyReturn()
 TPyReturn::operator const char*() const
 {
 // Cast python return value to C-style string (may fail).
-   const char* s = PyString_AsString( fPyObject );
+   const char* s = PyBytes_AsString( fPyObject );
 
    if ( PyErr_Occurred() ) {
       PyErr_Print();

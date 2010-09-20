@@ -267,7 +267,7 @@ void PyROOT::TMethodHolder< T, M >::SetPyError_( PyObject* msg )
    std::string details = "";
    if ( evalue ) {
       PyObject* s = PyObject_Str( evalue );
-      details = PyString_AS_STRING( s );
+      details = PyROOT_PyUnicode_AsString( s );
       Py_DECREF( s );
    }
 
@@ -277,10 +277,10 @@ void PyROOT::TMethodHolder< T, M >::SetPyError_( PyObject* msg )
 
    if ( details != "" ) {
       PyErr_Format( PyExc_TypeError, "%s =>\n    %s (%s)",
-          PyString_AS_STRING( doc ), PyString_AS_STRING( msg ), details.c_str() );
+          PyROOT_PyUnicode_AsString( doc ), PyROOT_PyUnicode_AsString( msg ), details.c_str() );
    } else {
       PyErr_Format( PyExc_TypeError, "%s =>\n    %s",
-          PyString_AS_STRING( doc ), PyString_AS_STRING( msg ) );
+          PyROOT_PyUnicode_AsString( doc ), PyROOT_PyUnicode_AsString( msg ) );
    }
 
    Py_DECREF( doc );
@@ -340,7 +340,7 @@ template< class T, class M >
 PyObject* PyROOT::TMethodHolder< T, M >::GetSignature()
 {
 // construct python string from the method's signature
-   return PyString_FromString( GetSignatureString().c_str() );
+   return PyROOT_PyUnicode_FromString( GetSignatureString().c_str() );
 }
 
 //____________________________________________________________________________
@@ -348,7 +348,7 @@ template< class T, class M >
 PyObject* PyROOT::TMethodHolder< T, M >::GetPrototype()
 {
 // construct python string from the method's prototype
-   return PyString_FromFormat( "%s%s %s::%s%s",
+   return PyROOT_PyUnicode_FromFormat( "%s%s %s::%s%s",
       ( fMethod.IsStatic() ? "static " : "" ),
       fMethod.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S ).c_str(),
       fMethod.DeclaringScope().Name().c_str(), fMethod.Name().c_str(),
@@ -440,7 +440,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::GetArgSpec( Int_t iarg )
       argrep += parname;
    }
 
-   return PyString_FromString( argrep.c_str() );
+   return PyROOT_PyUnicode_FromString( argrep.c_str() );
 }
 
 //____________________________________________________________________________
@@ -458,7 +458,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::GetArgDefault( Int_t iarg )
           (char*)defvalue.c_str(), Py_eval_input, gRootModule, gRootModule );
       if ( ! pyval && PyErr_Occurred() ) {
          PyErr_Clear();
-         return PyString_FromString( defvalue.c_str() );
+         return PyROOT_PyUnicode_FromString( defvalue.c_str() );
       }
 
       return pyval;
@@ -527,7 +527,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::FilterArgs( ObjectProxy*& self, PyObjec
    }
 
 // no self, set error and lament
-   SetPyError_( PyString_FromFormat(
+   SetPyError_( PyROOT_PyUnicode_FromFormat(
       "unbound method %s::%s must be called with a %s instance as first argument",
       fClass.Name().c_str(), fMethod.Name().c_str(), fClass.Name().c_str() ) );
    return 0;
@@ -546,11 +546,11 @@ Bool_t PyROOT::TMethodHolder< T, M >::SetMethodArgs( PyObject* args, Long_t user
 
 // argc must be between min and max number of arguments
    if ( argc < fArgsRequired ) {
-      SetPyError_( PyString_FromFormat(
+      SetPyError_( PyROOT_PyUnicode_FromFormat(
          "takes at least %d arguments (%d given)", fArgsRequired, argc ) );
       return kFALSE;
    } else if ( argMax < argc ) {
-      SetPyError_( PyString_FromFormat(
+      SetPyError_( PyROOT_PyUnicode_FromFormat(
          "takes at most %d arguments (%d given)", argMax, argc ) );
       return kFALSE;
    }
@@ -559,7 +559,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::SetMethodArgs( PyObject* args, Long_t user
    for ( int i = 0; i < argc; ++i ) {
       if ( ! fConverters[ i ]->SetArg(
               PyTuple_GET_ITEM( args, i ), fParameters[i], fMethodCall, user ) ) {
-         SetPyError_( PyString_FromFormat( "could not convert argument %d", i+1 ) );
+         SetPyError_( PyROOT_PyUnicode_FromFormat( "could not convert argument %d", i+1 ) );
          return kFALSE;
       }
       fParamPtrs[i] = &fParameters[i];

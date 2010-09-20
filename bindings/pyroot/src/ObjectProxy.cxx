@@ -71,8 +71,8 @@ namespace {
    // the buffer contents; use a string for the class name, used when casting
    // on reading back in (see RootModule.cxx:TObjectExpand)
       PyObject* res2 = PyTuple_New( 2 );
-      PyTuple_SET_ITEM( res2, 0, PyString_FromStringAndSize( buff->Buffer(), buff->Length() ) );
-      PyTuple_SET_ITEM( res2, 1, PyString_FromString( self->ObjectIsA()->GetName() ) );
+      PyTuple_SET_ITEM( res2, 0, PyBytes_FromStringAndSize( buff->Buffer(), buff->Length() ) );
+      PyTuple_SET_ITEM( res2, 1, PyBytes_FromString( self->ObjectIsA()->GetName() ) );
 
       PyObject* result = PyTuple_New( 2 );
       Py_INCREF( s_expand );
@@ -104,7 +104,7 @@ namespace {
    void op_dealloc( ObjectProxy* pyobj )
    {
       op_dealloc_nofree( pyobj );
-      pyobj->ob_type->tp_free( (PyObject*)pyobj );
+      ((PyObject*)pyobj)->ob_type->tp_free( (PyObject*)pyobj );
    }
 
 //____________________________________________________________________________
@@ -123,7 +123,7 @@ namespace {
 
    // type + held pointer value defines identity (will cover if other is not
    // actually an ObjectProxy, as ob_type will be unequal)
-      else if ( self->ob_type == other->ob_type && self->fObject == other->fObject )
+      else if ( ((PyObject*)self)->ob_type == ((PyObject*)other)->ob_type && self->fObject == other->fObject )
          bIsEq = true;
 
       if ( ( op == Py_EQ && bIsEq ) || ( op == Py_NE && ! bIsEq ) ) {
@@ -149,9 +149,9 @@ namespace {
             const_cast< char* >( "GetName" ), const_cast< char* >( "" ) );
 
          if ( name ) {
-            if ( PyString_GET_SIZE( name ) != 0 ) {
-               PyObject* repr = PyString_FromFormat( "<ROOT.%s object (\"%s\") at %p>",
-                  clName.c_str(), PyString_AS_STRING( name ), pyobj->fObject );
+            if ( PyBytes_GET_SIZE( name ) != 0 ) {
+               PyObject* repr = PyROOT_PyUnicode_FromFormat( "<ROOT.%s object (\"%s\") at %p>",
+                  clName.c_str(), PyBytes_AS_STRING( name ), pyobj->fObject );
                Py_DECREF( name );
                return repr;
             }
@@ -161,7 +161,7 @@ namespace {
       }
 
    // get here if object has no method GetName() or name = ""
-      return PyString_FromFormat( const_cast< char* >( "<ROOT.%s object at %p>" ),
+      return PyROOT_PyUnicode_FromFormat( const_cast< char* >( "<ROOT.%s object at %p>" ),
          clName.c_str(), pyobj->fObject );
    }
 
@@ -190,30 +190,38 @@ PYROOT_STUB( div, /, PyStrings::gDiv )
       (binaryfunc)op_add_stub,        // nb_add
       (binaryfunc)op_sub_stub,        // nb_subtract
       (binaryfunc)op_mul_stub,        // nb_multiply
+#if PY_VERSION_HEX < 0x03000000
       (binaryfunc)op_div_stub,        // nb_divide
+#endif
       0,                              // nb_remainder
       0,                              // nb_divmod
       0,                              // nb_power
       0,                              // nb_negative
-      0,                              // tp_positive
-      0,                              // tp_absolute
-      0,                              // tp_nonzero
+      0,                              // nb_positive
+      0,                              // nb_absolute
+      0,                              // tp_nonzero (nb_bool in p3)
       0,                              // nb_invert
       0,                              // nb_lshift
       0,                              // nb_rshift
       0,                              // nb_and
       0,                              // nb_xor
       0,                              // nb_or
+#if PY_VERSION_HEX < 0x03000000
       0,                              // nb_coerce
+#endif
       0,                              // nb_int
-      0,                              // nb_long
+      0,                              // nb_long (nb_reserved in p3)
       0,                              // nb_float
+#if PY_VERSION_HEX < 0x03000000
       0,                              // nb_oct
       0,                              // nb_hex
+#endif
       0,                              // nb_inplace_add
       0,                              // nb_inplace_subtract
       0,                              // nb_inplace_multiply
+#if PY_VERSION_HEX < 0x03000000
       0,                              // nb_inplace_divide
+#endif
       0,                              // nb_inplace_remainder
       0,                              // nb_inplace_power
       0,                              // nb_inplace_lshift
@@ -221,13 +229,13 @@ PYROOT_STUB( div, /, PyStrings::gDiv )
       0,                              // nb_inplace_and
       0,                              // nb_inplace_xor
       0                               // nb_inplace_or
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 2
+#if PY_VERSION_HEX >= 0x02020000
       , 0                             // nb_floor_divide
       , 0                             // nb_true_divide
       , 0                             // nb_inplace_floor_divide
       , 0                             // nb_inplace_true_divide
 #endif
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 5
+#if PY_VERSION_HEX >= 0x02050000
       , 0                             // nb_index
 #endif
    };
@@ -237,8 +245,7 @@ PYROOT_STUB( div, /, PyStrings::gDiv )
 
 //= PyROOT object proxy type =================================================
 PyTypeObject ObjectProxy_Type = {
-   PyObject_HEAD_INIT( &PyRootType_Type )
-   0,                         // ob_size
+   PyVarObject_HEAD_INIT( &PyRootType_Type, 0 )
    (char*)"ROOT.ObjectProxy", // tp_name
    sizeof(ObjectProxy),       // tp_basicsize
    0,                         // tp_itemsize
@@ -286,10 +293,10 @@ PyTypeObject ObjectProxy_Type = {
    0,                         // tp_cache
    0,                         // tp_subclasses
    0                          // tp_weaklist
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 3
+#if PY_VERSION_HEX >= 0x02030000
    , 0                        // tp_del
 #endif
-#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 6
+#if PY_VERSION_HEX >= 0x02060000
    , 0                        // tp_version_tag
 #endif
 };

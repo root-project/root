@@ -22,7 +22,7 @@ namespace PyROOT {
    public:
       void Set( const std::string& name, PyObject* pyclass )
       {
-         fPyName  = PyString_FromString( const_cast< char* >( name.c_str() ) );
+         fPyName  = PyBytes_FromString( const_cast< char* >( name.c_str() ) );
          Py_XINCREF( pyclass );
          fPyClass = pyclass;
       }

@@ -168,7 +168,7 @@ namespace {
 //- "smart pointer" behavior ---------------------------------------------------
    PyObject* DeRefGetAttr( PyObject* self, PyObject* name )
    {
-      if ( ! PyString_Check( name ) )
+      if ( ! PyROOT_PyUnicode_Check( name ) )
          PyErr_SetString( PyExc_TypeError, "getattr(): attribute name must be string" );
 
       PyObject* pyptr = CallPyObjMethod( self, "__deref__" );
@@ -180,7 +180,7 @@ namespace {
          PyObject* val1 = PyObject_Str( self );
          PyObject* val2 = PyObject_Str( name );
          PyErr_Format( PyExc_AttributeError, "%s has no attribute \'%s\'",
-            PyString_AsString( val1 ), PyString_AsString( val2 ) );
+            PyROOT_PyUnicode_AsString( val1 ), PyROOT_PyUnicode_AsString( val2 ) );
          Py_DECREF( val2 );
          Py_DECREF( val1 );
 
@@ -196,7 +196,7 @@ namespace {
 //____________________________________________________________________________
    PyObject* FollowGetAttr( PyObject* self, PyObject* name )
    {
-      if ( ! PyString_Check( name ) )
+      if ( ! PyROOT_PyUnicode_Check( name ) )
          PyErr_SetString( PyExc_TypeError, "getattr(): attribute name must be string" );
 
       PyObject* pyptr = CallPyObjMethod( self, "__follow__" );
@@ -211,7 +211,7 @@ namespace {
 //- TObject behavior -----------------------------------------------------------
    PyObject* TObjectContains( PyObject* self, PyObject* obj )
    {
-      if ( ! ( ObjectProxy_Check( obj ) || PyString_Check( obj ) ) )
+      if ( ! ( ObjectProxy_Check( obj ) || PyROOT_PyUnicode_Check( obj ) ) )
          return PyInt_FromLong( 0l );
 
       PyObject* found = CallPyObjMethod( self, "FindObject", obj );
@@ -866,11 +866,17 @@ namespace {
    }
 
 //- string behavior as primitives ----------------------------------------------
+#if PY_VERSION_HEX >= 0x03000000
+// TODO: this is wrong, b/c it doesn't order
+static int PyObject_Compare( PyObject* one, PyObject* other ) {
+   return ! PyObject_RichCompareBool( one, other, Py_EQ );
+}
+#endif
 #define PYROOT_IMPLEMENT_STRING_PYTHONIZATION( name, func )                   \
    PyObject* name##StringRepr( PyObject* self )                               \
    {                                                                          \
       PyObject* data = CallPyObjMethod( self, #func );                        \
-      PyObject* repr = PyString_FromFormat( "\'%s\'", PyString_AsString( data ) ); \
+      PyObject* repr = PyROOT_PyUnicode_FromFormat( "\'%s\'", PyBytes_AsString( data ) ); \
       Py_DECREF( data );                                                      \
       return repr;                                                            \
    }                                                                          \
@@ -1017,7 +1023,7 @@ namespace {
          return 0;
       }
 
-      void* address = dir->GetObjectChecked( PyString_AS_STRING( name ), ptr->ObjectIsA() );
+      void* address = dir->GetObjectChecked( PyBytes_AS_STRING( name ), ptr->ObjectIsA() );
       if ( address ) {
          ptr->Set( address );
 
@@ -1025,7 +1031,7 @@ namespace {
          return Py_None;
       }
 
-      PyErr_Format( PyExc_LookupError, "no such object, \"%s\"", PyString_AS_STRING( name ) );
+      PyErr_Format( PyExc_LookupError, "no such object, \"%s\"", PyBytes_AS_STRING( name ) );
       return 0;
    }
 
@@ -1049,10 +1055,10 @@ namespace {
       Int_t result = 0;
       if ( option != 0 ) {
          result = dir->WriteObjectAny( wrt->GetObject(), wrt->ObjectIsA(),
-            PyString_AS_STRING( name ), PyString_AS_STRING( option ) );
+            PyBytes_AS_STRING( name ), PyBytes_AS_STRING( option ) );
       } else {
          result = dir->WriteObjectAny(
-            wrt->GetObject(), wrt->ObjectIsA(), PyString_AS_STRING( name ) );
+            wrt->GetObject(), wrt->ObjectIsA(), PyBytes_AS_STRING( name ) );
       }
 
       return PyInt_FromLong( (Long_t)result );
@@ -1067,7 +1073,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
    PyObject* TTreeGetAttr( ObjectProxy* self, PyObject* pyname )
    {
    // allow access to branches/leaves as if they are data members
-      const char* name = PyString_AsString( pyname );
+      const char* name = PyBytes_AsString( pyname );
       if ( ! name )
          return 0;
 
@@ -1154,7 +1160,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       ~TTreeMemberFunction() { Py_DECREF( fOrg ); fOrg = 0; }
 
    public:
-      virtual PyObject* GetSignature() { return PyString_FromString( "(...)" ); }
+      virtual PyObject* GetSignature() { return PyROOT_PyUnicode_FromString( "(...)" ); }
       virtual PyObject* GetPrototype() { return PyObject_GetAttrString( (PyObject*)fOrg, (char*)"__doc__" ); }
       virtual PyObject* GetScope()
       {
@@ -1208,11 +1214,11 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                if ( buf != 0 ) {
                   TBranch* branch = 0;
                   if ( argc == 4 ) {
-                     branch = tree->Branch( PyString_AS_STRING( name ), buf,
-                        PyString_AS_STRING( leaflist ), PyInt_AS_LONG( bufsize ) );
+                     branch = tree->Branch( PyBytes_AS_STRING( name ), buf,
+                        PyBytes_AS_STRING( leaflist ), PyInt_AS_LONG( bufsize ) );
                   } else {
                      branch = tree->Branch(
-                        PyString_AS_STRING( name ), buf, PyString_AS_STRING( leaflist ) );
+                        PyBytes_AS_STRING( name ), buf, PyBytes_AS_STRING( leaflist ) );
                   }
 
                   return BindRootObject( branch, TBranch::Class() );
@@ -1237,7 +1243,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
             }
 
             if ( bIsMatch == kTRUE ) {
-               std::string klName = clName ? PyString_AS_STRING( clName ) : "";
+               std::string klName = clName ? PyBytes_AS_STRING( clName ) : "";
                void* buf = 0;
 
                if ( ObjectProxy_Check( address ) ) {
@@ -1256,12 +1262,12 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                if ( buf != 0 && klName != "" ) {
                   TBranch* branch = 0;
                   if ( argc == 3 ) {
-                     branch = tree->Branch( PyString_AS_STRING( name ), klName.c_str(), buf );
+                     branch = tree->Branch( PyBytes_AS_STRING( name ), klName.c_str(), buf );
                   } else if ( argc == 4 ) {
-                     branch = tree->Branch( PyString_AS_STRING( name ), klName.c_str(), buf,
+                     branch = tree->Branch( PyBytes_AS_STRING( name ), klName.c_str(), buf,
                         PyInt_AS_LONG( bufsize ) );
                   } else if ( argc == 5 ) {
-                     branch = tree->Branch( PyString_AS_STRING( name ), klName.c_str(), buf,
+                     branch = tree->Branch( PyBytes_AS_STRING( name ), klName.c_str(), buf,
                         PyInt_AS_LONG( bufsize ), PyInt_AS_LONG( splitlevel ) );
                   }
 
@@ -1289,7 +1295,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
    public:
       virtual PyObject* GetPrototype()
       {
-         return PyString_FromString( "TBranch* TTree::SetBranchAddress( ... )" );
+         return PyROOT_PyUnicode_FromString( "TBranch* TTree::SetBranchAddress( ... )" );
       }
 
       virtual PyCallable* Clone() { return new TTreeSetBranchAddress( *this ); }
@@ -1326,7 +1332,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                   Utility::GetBuffer( address, '*', 1, buf, kFALSE );
 
                if ( buf != 0 ) {
-                  tree->SetBranchAddress( PyString_AS_STRING( name ), buf );
+                  tree->SetBranchAddress( PyBytes_AS_STRING( name ), buf );
 
                   Py_INCREF( Py_None );
                   return Py_None;
@@ -1458,9 +1464,9 @@ namespace {
       Bool_t IsCallable( PyObject* pyobject )
       {
          if ( ! pyobject || ! PyCallable_Check( pyobject ) ) {
-            PyObject* str = pyobject ? PyObject_Str( pyobject ) : PyString_FromString( "null pointer" );
+            PyObject* str = pyobject ? PyObject_Str( pyobject ) : PyROOT_PyUnicode_FromString( "null pointer" );
             PyErr_Format( PyExc_ValueError,
-               "\"%s\" is not a valid python callable", PyString_AS_STRING( str ) );
+               "\"%s\" is not a valid python callable", PyROOT_PyUnicode_AsString( str ) );
             Py_DECREF( str );
             return kFALSE;
          }
@@ -1480,10 +1486,10 @@ namespace {
       TF1InitWithPyFunc( int ntf = 1 ) : TPretendInterpreted( 2 + 2*ntf ) {}
 
    public:
-      virtual PyObject* GetSignature() { return PyString_FromString( "(...)" ); }
+      virtual PyObject* GetSignature() { return PyROOT_PyUnicode_FromString( "(...)" ); }
       virtual PyObject* GetPrototype()
       {
-         return PyString_FromString(
+         return PyROOT_PyUnicode_FromString(
             "TF1::TF1(const char* name, PyObject* callable, "
             "Double_t xmin, Double_t xmax, Int_t npar = 0)" );
       }
@@ -1508,7 +1514,7 @@ namespace {
             return 0;
 
       // use requested function name as identifier
-         const char* name = PyString_AsString( PyTuple_GET_ITEM( args, 0 ) );
+         const char* name = PyBytes_AsString( PyTuple_GET_ITEM( args, 0 ) );
          if ( PyErr_Occurred() )
             return 0;
 
@@ -1559,7 +1565,7 @@ namespace {
    public:
       virtual PyObject* GetPrototype()
       {
-         return PyString_FromString(
+         return PyROOT_PyUnicode_FromString(
             "TF2::TF2(const char* name, PyObject* callable, "
             "Double_t xmin, Double_t xmax, "
             "Double_t ymin, Double_t ymax, Int_t npar = 0)" );
@@ -1576,7 +1582,7 @@ namespace {
    public:
       virtual PyObject* GetPrototype()
       {
-         return PyString_FromString(
+         return PyROOT_PyUnicode_FromString(
             "TF3::TF3(const char* name, PyObject* callable, "
             "Double_t xmin, Double_t xmax, "
             "Double_t ymin, Double_t ymax, "
@@ -1599,10 +1605,10 @@ namespace {
       TMinuitSetFCN() : TPretendInterpreted( 1 ) {}
 
    public:
-      virtual PyObject* GetSignature() { return PyString_FromString( "(PyObject* callable)" ); }
+      virtual PyObject* GetSignature() { return PyROOT_PyUnicode_FromString( "(PyObject* callable)" ); }
       virtual PyObject* GetPrototype()
       {
-         return PyString_FromString(
+         return PyROOT_PyUnicode_FromString(
             "TMinuit::SetFCN(PyObject* callable)" );
       }
 
@@ -1627,7 +1633,7 @@ namespace {
          PyObject* pyname = PyObject_GetAttr( pyfunc, PyStrings::gName );
          const char* name = "dummy";
          if ( pyname != 0 ) {
-            name = PyString_AsString( pyname );
+            name = PyBytes_AsString( pyname );
             Py_DECREF( pyname );
          }
 
@@ -1673,6 +1679,10 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( pyclass == 0 )
       return kFALSE;
 
+#if PY_VERSION_HEX > 0x03000000
+// TODO: make pythonizations work
+    return kTRUE;
+#endif
 
 //- method name based pythonization --------------------------------------------
 
@@ -1690,7 +1700,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( HasAttrDirect( pyclass, PyStrings::gBegin ) && HasAttrDirect( pyclass, PyStrings::gEnd ) ) {
    // some classes may not have dicts for their iterators, making begin/end useless
       PyObject* pyfullname = PyObject_GetAttr( pyclass, PyStrings::gName );
-      TClass* klass = TClass::GetClass( PyString_AS_STRING( pyfullname ) );
+      TClass* klass = TClass::GetClass( PyROOT_PyUnicode_AsString( pyfullname ) );
       Py_DECREF( pyfullname );
       TMethod* meth = klass->GetMethodAllAny( "begin" );
 

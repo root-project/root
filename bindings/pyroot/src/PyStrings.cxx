@@ -50,7 +50,7 @@ PyObject* PyROOT::PyStrings::gTClassDynCast = 0;
 
 //____________________________________________________________________________
 #define PYROOT_INITIALIZE_STRING( var, str )                                 \
-   if ( ! ( PyStrings::var = PyString_InternFromString( (char*)#str ) ) )    \
+   if ( ! ( PyStrings::var = PyROOT_PyUnicode_InternFromString( (char*)#str ) ) )    \
       return kFALSE
 
 Bool_t PyROOT::CreatePyStrings() {
@@ -61,7 +61,7 @@ Bool_t PyROOT::CreatePyStrings() {
    PYROOT_INITIALIZE_STRING( gCppNe, __cpp_ne__ );
    PYROOT_INITIALIZE_STRING( gDeref, __deref__ );
    PYROOT_INITIALIZE_STRING( gDict, __dict__ );
-   if ( ! ( PyStrings::gEmptyString = PyString_FromString( (char*)"" ) ) )
+   if ( ! ( PyStrings::gEmptyString = PyBytes_FromString( (char*)"" ) ) )
       return kFALSE;
    PYROOT_INITIALIZE_STRING( gEq, __eq__ );
    PYROOT_INITIALIZE_STRING( gFollow, __follow__ );

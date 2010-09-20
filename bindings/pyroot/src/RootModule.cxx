@@ -42,16 +42,18 @@ namespace {
 //____________________________________________________________________________
    PyObject* LookupRootEntity( PyObject* pyname, PyObject* args )
    {
-      if ( ! ( pyname && PyString_CheckExact( pyname ) ) )
-         if ( ! ( args && PyArg_ParseTuple( args, const_cast< char* >( "S" ), &pyname ) ) )
-            return 0;
+      const char* cname = 0;
+      if ( pyname && PyROOT_PyUnicode_CheckExact( pyname ) )
+         cname = PyROOT_PyUnicode_AsString( pyname );
+      else if ( ! ( args && PyArg_ParseTuple( args, const_cast< char* >( "s" ), &cname ) ) )
+         return 0;
 
-      std::string name = PyString_AS_STRING( pyname );
+      std::string name = cname;
 
    // block search for privates
       if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" ) {
       // 1st attempt: look in myself
-         PyObject* attr = PyObject_GetAttr( gRootModule, pyname );
+         PyObject* attr = PyObject_GetAttrString( gRootModule, const_cast< char* >( cname ) );
          if ( attr != 0 )
             return attr;
 
@@ -153,8 +155,8 @@ namespace {
       }
 
    // copy initial argument (no check, comes from internal class)
-      PyObject* pyname = PyString_FromString(
-         PyString_AS_STRING( PyTuple_GET_ITEM( args, 0 ) ) );
+      PyObject* pyname = PyROOT_PyUnicode_FromString(
+         PyROOT_PyUnicode_AsString( PyTuple_GET_ITEM( args, 0 ) ) );
 
    // build "< type, type, ... >" part of class name (modifies pyname)
       if ( ! Utility::BuildTemplateName( pyname, args, 1 ) ) {
@@ -162,7 +164,7 @@ namespace {
          return 0;
       }
 
-      std::string name = PyString_AS_STRING( pyname );
+      std::string name = PyROOT_PyUnicode_AsString( pyname );
       Py_DECREF( pyname );
 
       return MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( name );
@@ -200,7 +202,7 @@ namespace {
             Py_XDECREF( pyprop );
 
             PyErr_Format( PyExc_TypeError,
-               "%s is not a valid data member", PyString_AS_STRING( pyname ) );
+               "%s is not a valid data member", PyROOT_PyUnicode_AsString( pyname ) );
             return 0;
          }
 
@@ -237,7 +239,7 @@ namespace {
    {
    // helper to catch common code between MakeNullPointer and BindObject
 
-      if ( ! PyString_Check( pyname ) ) {    // name given as string
+      if ( ! PyROOT_PyUnicode_Check( pyname ) ) {     // name given as string
          PyObject* nattr = PyObject_GetAttr( pyname, PyStrings::gName );
          if ( nattr )                        // object is actually a class
             pyname = nattr;
@@ -247,7 +249,7 @@ namespace {
          Py_INCREF( pyname );
       }
 
-      TClass* klass = TClass::GetClass( PyString_AS_STRING( pyname ) );
+      TClass* klass = TClass::GetClass( PyROOT_PyUnicode_AsString( pyname ) );
       Py_DECREF( pyname );
 
       if ( ! klass ) {
@@ -317,7 +319,7 @@ namespace {
       PyObject* pybuf = 0;
       const char* clname = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!s:__expand__" ),
-                &PyString_Type, &pybuf, &clname ) )
+                &PyBytes_Type, &pybuf, &clname ) )
          return 0;
 
    // TBuffer and its derived classes can't write themselves, but can be created
@@ -325,13 +327,13 @@ namespace {
       void* newObj = 0;
       if ( strcmp( clname, "TBufferFile" ) == 0 ) {
          TBufferFile* buf = new TBufferFile( TBuffer::kWrite );
-         buf->WriteFastArray( PyString_AS_STRING(pybuf), PyString_GET_SIZE( pybuf ) );
+         buf->WriteFastArray( PyBytes_AS_STRING(pybuf), PyBytes_GET_SIZE( pybuf ) );
          newObj = buf;
       } else {
       // use the PyString macro's to by-pass error checking; do not adopt the buffer,
       // as the local TBufferFile can go out of scope (there is no copying)
          TBufferFile buf( TBuffer::kRead,
-            PyString_GET_SIZE( pybuf ), PyString_AS_STRING( pybuf ), kFALSE );
+            PyBytes_GET_SIZE( pybuf ), PyBytes_AS_STRING( pybuf ), kFALSE );
          newObj = buf.ReadObjectAny( 0 );
       }
 
@@ -436,14 +438,51 @@ static PyMethodDef gPyROOTMethods[] = {
 };
 
 
+#if PY_VERSION_HEX >= 0x03000000
+struct module_state {
+    PyObject *error;
+};
+
+#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+
+static int rootmodule_traverse( PyObject* m, visitproc visit, void* arg )
+{
+    Py_VISIT( GETSTATE( m )->error );
+    return 0;
+}
+
+static int rootmodule_clear( PyObject* m )
+{
+    Py_CLEAR( GETSTATE( m )->error );
+    return 0;
+}
+
+
+static struct PyModuleDef moduledef = {
+   PyModuleDef_HEAD_INIT,
+   "libPyROOT",
+   NULL,
+   sizeof(struct module_state),
+   gPyROOTMethods,
+   NULL,
+   rootmodule_traverse,
+   rootmodule_clear,
+   NULL
+};
+
 //____________________________________________________________________________
+#define PYROOT_INIT_ERROR return NULL
+extern "C" PyObject* PyInit_libPyROOT()
+#else
+#define PYROOT_INIT_ERROR return
 extern "C" void initlibPyROOT()
+#endif
 {
    using namespace PyROOT;
 
 // load commonly used python strings
    if ( ! PyROOT::CreatePyStrings() )
-      return;
+      PYROOT_INIT_ERROR;
 
 // prepare for lazyness
    PyObject* dict = PyDict_New();
@@ -451,42 +490,46 @@ extern "C" void initlibPyROOT()
    Py_DECREF( dict );
 
 // setup PyROOT
+#if PY_VERSION_HEX >= 0x03000000
+   gRootModule = PyModule_Create( &moduledef );
+#else
    gRootModule = Py_InitModule( const_cast< char* >( "libPyROOT" ), gPyROOTMethods );
+#endif
    if ( ! gRootModule )
-      return;
+      PYROOT_INIT_ERROR;
 
 // keep gRootModule, but do not increase its reference count even as it is borrowed,
 // or a self-referencing cycle would be created
 
 // inject meta type
    if ( ! Utility::InitProxy( gRootModule, &PyRootType_Type, "PyRootType" ) )
-      return;
+      PYROOT_INIT_ERROR;
 
 // inject object proxy type
    if ( ! Utility::InitProxy( gRootModule, &ObjectProxy_Type, "ObjectProxy" ) )
-      return;
+      PYROOT_INIT_ERROR;
 
 // inject method proxy type
    if ( ! Utility::InitProxy( gRootModule, &MethodProxy_Type, "MethodProxy" ) )
-      return;
+      PYROOT_INIT_ERROR;
 
 // inject template proxy type
    if ( ! Utility::InitProxy( gRootModule, &TemplateProxy_Type, "TemplateProxy" ) )
-      return;
+      PYROOT_INIT_ERROR;
 
 // inject property proxy type
    if ( ! Utility::InitProxy( gRootModule, &PropertyProxy_Type, "PropertyProxy" ) )
-      return;
+      PYROOT_INIT_ERROR;
 
 // inject custom data types
    if ( ! Utility::InitProxy( gRootModule, &TCustomFloat_Type, "Double" ) )
-      return;
+      PYROOT_INIT_ERROR;
 
    if ( ! Utility::InitProxy( gRootModule, &TCustomInt_Type, "Long" ) )
-      return;
+      PYROOT_INIT_ERROR;
 
    if ( ! Utility::InitProxy( gRootModule, &TCustomInstanceMethod_Type, "InstanceMethod" ) )
-      return;
+      PYROOT_INIT_ERROR;
 
 // policy labels
    PyModule_AddObject( gRootModule, (char*)"kMemoryHeuristics", PyInt_FromLong( 1l ) );
@@ -503,4 +546,9 @@ extern "C" void initlibPyROOT()
 // inject ROOT namespace for convenience
    PyModule_AddObject( gRootModule, (char*)"ROOT",
       MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( "ROOT" ) );
+
+#if PY_VERSION_HEX >= 0x03000000
+   Py_INCREF( gRootModule );
+   return gRootModule;
+#endif
 }

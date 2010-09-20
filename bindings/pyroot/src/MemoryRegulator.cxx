@@ -55,9 +55,9 @@ namespace {
       {
          memset( &PyROOT_NoneType, 0, sizeof( PyROOT_NoneType ) );
 
-         PyROOT_NoneType.ob_type   = &PyType_Type;
-         PyROOT_NoneType.ob_size   = 0;
-         PyROOT_NoneType.ob_refcnt = 1;
+         ((PyObject&)PyROOT_NoneType).ob_type    = &PyType_Type;
+         ((PyObject&)PyROOT_NoneType).ob_refcnt  = 1;
+         ((PyVarObject&)PyROOT_NoneType).ob_size = 0;
 
          PyROOT_NoneType.tp_name        = const_cast< char* >( "PyROOT_NoneType" );
          PyROOT_NoneType.tp_flags       = Py_TPFLAGS_HAVE_RICHCOMPARE | Py_TPFLAGS_HAVE_GC;
@@ -67,7 +67,10 @@ namespace {
          PyROOT_NoneType.tp_dealloc     = (destructor)  &InitPyROOT_NoneType_t::DeAlloc;
          PyROOT_NoneType.tp_repr        = Py_None->ob_type->tp_repr;
          PyROOT_NoneType.tp_richcompare = (richcmpfunc) &InitPyROOT_NoneType_t::RichCompare;
+#if PY_VERSION_HEX < 0x03000000
+// tp_compare has become tp_reserved (place holder only) in p3
          PyROOT_NoneType.tp_compare     = (cmpfunc) &InitPyROOT_NoneType_t::Compare;
+#endif
          PyROOT_NoneType.tp_hash        = (hashfunc) &InitPyROOT_NoneType_t::PtrHash;
 
          PyROOT_NoneType.tp_as_mapping  = &PyROOT_NoneType_mapping;
@@ -85,7 +88,12 @@ namespace {
 
       static int Compare( PyObject*, PyObject* other )
       {
+#if PY_VERSION_HEX < 0x03000000
          return PyObject_Compare( other, Py_None );
+#else
+// TODO the following isn't correct as it doens't order, but will do for now ...
+         return ! PyObject_RichCompareBool( other, Py_None, Py_EQ );
+#endif
       }
    };
 
@@ -134,25 +142,25 @@ void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
       if ( ObjectProxy_Check( pyobj ) ) {
          if ( ! PyROOT_NoneType.tp_traverse ) {
          // take a reference as we're copying its function pointers
-            Py_INCREF( pyobj->ob_type );
+            Py_INCREF( ((PyObject*)pyobj)->ob_type );
 
          // all object that arrive here are expected to be of the same type ("instance")
-            PyROOT_NoneType.tp_traverse   = pyobj->ob_type->tp_traverse;
-            PyROOT_NoneType.tp_clear      = pyobj->ob_type->tp_clear;
-            PyROOT_NoneType.tp_free       = pyobj->ob_type->tp_free;
-         } else if ( PyROOT_NoneType.tp_traverse != pyobj->ob_type->tp_traverse ) {
+            PyROOT_NoneType.tp_traverse   = ((PyObject*)pyobj)->ob_type->tp_traverse;
+            PyROOT_NoneType.tp_clear      = ((PyObject*)pyobj)->ob_type->tp_clear;
+            PyROOT_NoneType.tp_free       = ((PyObject*)pyobj)->ob_type->tp_free;
+         } else if ( PyROOT_NoneType.tp_traverse != ((PyObject*)pyobj)->ob_type->tp_traverse ) {
             std::cerr << "in PyROOT::TMemoryRegulater, unexpected object of type: "
-                      << pyobj->ob_type->tp_name << std::endl;
+                      << ((PyObject*)pyobj)->ob_type->tp_name << std::endl;
 
          // leave before too much damage is done
             return;
          }
 
       // notify any other weak referents by playing dead
-         int refcnt = pyobj->ob_refcnt;
-         pyobj->ob_refcnt = 0;
+         int refcnt = ((PyObject*)pyobj)->ob_refcnt;
+         ((PyObject*)pyobj)->ob_refcnt = 0;
          PyObject_ClearWeakRefs( (PyObject*)pyobj );
-         pyobj->ob_refcnt = refcnt;
+         ((PyObject*)pyobj)->ob_refcnt = refcnt;
 
       // cleanup object internals
          pyobj->Release();              // held object is out of scope now anyway
@@ -160,8 +168,8 @@ void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
 
       // reset type object
          Py_INCREF( (PyObject*)(void*)&PyROOT_NoneType );
-         Py_DECREF( pyobj->ob_type );
-         pyobj->ob_type = &PyROOT_NoneType;
+         Py_DECREF( ((PyObject*)pyobj)->ob_type );
+         ((PyObject*)pyobj)->ob_type = &PyROOT_NoneType;
       }
 
    // erase the object from tracking
@@ -178,7 +186,7 @@ Bool_t PyROOT::TMemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* ob
 
    ObjectMap_t::iterator ppo = fgObjectTable->find( object );
    if ( ppo == fgObjectTable->end() ) {
-      object->SetBit( kMustCleanup );
+      object->SetBit( TObject::kMustCleanup );
       (*fgObjectTable)[ object ] = PyWeakref_NewRef( (PyObject*)pyobj, gObjectEraseCallback );
       return kTRUE;
    }

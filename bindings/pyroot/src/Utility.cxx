@@ -325,7 +325,7 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const char* op, co
 {
 // install binary operator op in pyclass, working on two instances of pyclass
    PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
-   std::string cname = TClassEdit::ResolveTypedef( PyString_AS_STRING( pyname ) );
+   std::string cname = TClassEdit::ResolveTypedef( PyROOT_PyUnicode_AsString( pyname ) );
    Py_DECREF( pyname ); pyname = 0;
 
    return AddBinaryOperator( pyclass, cname, cname, op, label );
@@ -373,25 +373,25 @@ Bool_t PyROOT::Utility::BuildTemplateName( PyObject*& pyname, PyObject* args, in
 // for a class as in MakeRootTemplateClass in RootModule.cxx) or for method lookup
 // (as in TemplatedMemberHook, below)
 
-   PyString_ConcatAndDel( &pyname, PyString_FromString( "<" ) );
+   PyROOT_PyUnicode_AppendAndDel( &pyname, PyROOT_PyUnicode_FromString( "<" ) );
 
    Py_ssize_t nArgs = PyTuple_GET_SIZE( args );
    for ( int i = argoff; i < nArgs; ++i ) {
    // add type as string to name
       PyObject* tn = PyTuple_GET_ITEM( args, i );
-      if ( PyString_Check( tn ) )
-         PyString_Concat( &pyname, tn );
+      if ( PyROOT_PyUnicode_Check( tn ) )
+         PyROOT_PyUnicode_Append( &pyname, tn );
       else if ( PyObject_HasAttr( tn, PyStrings::gName ) ) {
       // this works for type objects
          PyObject* tpName = PyObject_GetAttr( tn, PyStrings::gName );
 
       // special case for strings
-         if ( strcmp( PyString_AS_STRING( tpName ), "str" ) == 0 ) {
+         if ( strcmp( PyROOT_PyUnicode_AsString( tpName ), "str" ) == 0 ) {
             Py_DECREF( tpName );
-            tpName = PyString_FromString( "std::string" );
+            tpName = PyROOT_PyUnicode_FromString( "std::string" );
          }
 
-         PyString_ConcatAndDel( &pyname, tpName );
+         PyROOT_PyUnicode_AppendAndDel( &pyname, tpName );
       } else {
       // last ditch attempt, works for things like int values
          PyObject* pystr = PyObject_Str( tn );
@@ -399,19 +399,19 @@ Bool_t PyROOT::Utility::BuildTemplateName( PyObject*& pyname, PyObject* args, in
             return kFALSE;
          }
 
-         PyString_ConcatAndDel( &pyname, pystr );
+         PyROOT_PyUnicode_AppendAndDel( &pyname, pystr );
       }
 
    // add a comma, as needed
       if ( i != nArgs - 1 )
-         PyString_ConcatAndDel( &pyname, PyString_FromString( "," ) );
+         PyROOT_PyUnicode_AppendAndDel( &pyname, PyROOT_PyUnicode_FromString( "," ) );
    }
 
 // close template name; prevent '>>', which should be '> >'
-   if ( PyString_AsString( pyname )[ PyString_Size( pyname ) - 1 ] == '>' )
-      PyString_ConcatAndDel( &pyname, PyString_FromString( " >" ) );
+   if ( PyROOT_PyUnicode_AsString( pyname )[ PyROOT_PyUnicode_GetSize( pyname ) - 1 ] == '>' )
+      PyROOT_PyUnicode_AppendAndDel( &pyname, PyROOT_PyUnicode_FromString( " >" ) );
    else
-      PyString_ConcatAndDel( &pyname, PyString_FromString( ">" ) );
+      PyROOT_PyUnicode_AppendAndDel( &pyname, PyROOT_PyUnicode_FromString( ">" ) );
 
    return kTRUE;
 }
@@ -438,11 +438,13 @@ Bool_t PyROOT::Utility::InitProxy( PyObject* module, PyTypeObject* pytype, const
 int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& buf, Bool_t check )
 {
 // special case: don't handle strings here (yes, they're buffers, but not quite)
-   if ( PyString_Check( pyobject ) )
+   if ( PyBytes_Check( pyobject ) )
       return 0;
 
+#if PY_VERSION_HEX < 0x03000000
 // attempt to retrieve pointer to buffer interface
    PyBufferProcs* bufprocs = pyobject->ob_type->tp_as_buffer;
+
    PySequenceMethods* seqmeths = pyobject->ob_type->tp_as_sequence;
    if ( seqmeths != 0 && bufprocs != 0 && bufprocs->bf_getwritebuffer != 0 &&
         (*(bufprocs->bf_getsegcount))( pyobject, 0 ) == 1 ) {
@@ -454,7 +456,7 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
       // determine buffer compatibility (use "buf" as a status flag)
          PyObject* pytc = PyObject_GetAttr( pyobject, PyStrings::gTypeCode );
          if ( pytc != 0 ) {     // for array objects
-            if ( PyString_AS_STRING( pytc )[0] != tc )
+            if ( PyBytes_AS_STRING( pytc )[0] != tc )
                buf = 0;         // no match
             Py_DECREF( pytc );
          } else if ( seqmeths->sq_length &&
@@ -470,9 +472,9 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
          // clarify error message
             PyObject* pytype = 0, *pyvalue = 0, *pytrace = 0;
             PyErr_Fetch( &pytype, &pyvalue, &pytrace );
-            PyObject* pyvalue2 = PyString_FromFormat(
+            PyObject* pyvalue2 = PyROOT_PyUnicode_FromFormat(
                (char*)"%s and given element size (%ld) do not match needed (%d)",
-               PyString_AS_STRING( pyvalue ),
+               PyBytes_AS_STRING( pyvalue ),
                seqmeths->sq_length ? (long)(buflen / (*(seqmeths->sq_length))( pyobject )) : (long)buflen,
                size );
             Py_DECREF( pyvalue );
@@ -482,6 +484,7 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
 
       return buflen;
    }
+#endif
 
    return 0;
 }
@@ -608,7 +611,7 @@ const std::string PyROOT::Utility::ClassName( PyObject* pyobj )
       PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
 
       if ( pyname != 0 ) {
-         clname = PyString_AS_STRING( pyname );
+         clname = PyROOT_PyUnicode_AsString( pyname );
          Py_DECREF( pyname );
       } else
          PyErr_Clear();
@@ -654,10 +657,10 @@ void PyROOT::Utility::ErrMsgCallback( char* msg )
       PyErr_Fetch( &etype, &value, &trace );           // clears current exception
 
    // need to be sure that error can be added; otherwise leave earlier error in place
-      if ( PyString_Check( value ) ) {
+      if ( PyROOT_PyUnicode_Check( value ) ) {
          if ( ! PyErr_GivenExceptionMatches( etype, PyExc_IndexError ) )
-            PyString_ConcatAndDel( &value, PyString_FromString( (char*)"\n  " ) );
-         PyString_ConcatAndDel( &value, PyString_FromString( msg ) );
+            PyROOT_PyUnicode_AppendAndDel( &value, PyROOT_PyUnicode_FromString( (char*)"\n  " ) );
+         PyROOT_PyUnicode_AppendAndDel( &value, PyROOT_PyUnicode_FromString( msg ) );
       }
 
       PyErr_Restore( etype, value, trace );
