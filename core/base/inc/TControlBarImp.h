@@ -38,8 +38,8 @@ protected:
    TControlBarButton *fClicked; //Last clicked button 
    
 public:
-   TControlBarImp(TControlBar *c, const char * = "") : fControlBar(c), fClicked(0) { }
-   TControlBarImp(TControlBar *c, const char *, Int_t, Int_t) : fControlBar(c), fClicked(0) { }
+   TControlBarImp(TControlBar *c, const char * = "") : fControlBar(c), fXpos(0), fYpos(0), fClicked(0) { }
+   TControlBarImp(TControlBar *c, const char *, Int_t, Int_t) : fControlBar(c), fXpos(0), fYpos(0), fClicked(0) { }
    virtual ~TControlBarImp() { }
 
    virtual TControlBar *GetControlBar() { return fControlBar; }
