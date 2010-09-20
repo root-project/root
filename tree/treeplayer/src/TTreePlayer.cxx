@@ -1200,7 +1200,7 @@ Int_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *sele
    Int_t nch = option ? strlen(option) + 10 : 10;
    char *opt = new char[nch];
    if (option) strncpy(opt,option,nch-1);
-   else        strcpy(opt,"goff");
+   else        strncpy(opt,"goff",nch-1);
 
    Long64_t nsel = DrawSelect(varexp,selection,opt,nentries,firstentry);
 
@@ -1448,7 +1448,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    leaves = fTree->GetListOfLeaves();
    for (l=0;l<nleaves;l++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
-      strcpy(blen,leaf->GetName());
+      strncpy(blen,leaf->GetName(),1023);
       bname = &blen[0];
       while (*bname) {
          if (*bname == '.') *bname='_';
@@ -1505,8 +1505,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       leafcount =leaf->GetLeafCount();
       TBranch *branch = leaf->GetBranch();
       branchname[0] = 0;
-      strcpy(branchname,branch->GetName());
-      strcpy(aprefix,branch->GetName());
+      strncpy(branchname,branch->GetName(),1023);
+      strncpy(aprefix,branch->GetName(),1023);
       if (!branches.FindObject(branch)) branches.Add(branch);
       else leafStatus[l] = 1;
       if ( branch->GetNleaves() > 1) {
@@ -1518,7 +1518,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             char *dim =  (char*)strstr(branchname,"["); if (dim) dim[0] = 0;
          }
       } else {
-         strcpy(branchname,branch->GetName());
+         strncpy(branchname,branch->GetName(),1023);
       }
       char *twodim = (char*)strstr(leaf->GetTitle(),"][");
       bname = branchname;
@@ -1541,7 +1541,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       if (leafcount) {
          len = leafcount->GetMaximum();
          if (len<=0) len = 1;
-         strcpy(blen,leafcount->GetName());
+         strncpy(blen,leafcount->GetName(),1023);
          bname = &blen[0];
          while (*bname) {
             if (*bname == '.') *bname='_';
@@ -1592,7 +1592,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             if (!cle) {leafStatus[l] = 1; continue;}
             if (bre->GetStreamerType() == 66) leafStatus[l] = 0;
             char brename[256];
-            strcpy(brename,bre->GetName());
+            strncpy(brename,bre->GetName(),255);
             char *bren = brename;
             char *adot = strrchr(bren,'.');
             if (adot) bren = adot+1;
@@ -1614,14 +1614,6 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       }
       if (strlen(leaf->GetTypeName()) == 0) {leafStatus[l] = 1; continue;}
       if (leafcount) {
-         //len = leafcount->GetMaximum();
-         //strcpy(blen,leafcount->GetName());
-         //bname = &blen[0];
-         //while (*bname) {if (*bname == '.') *bname='_'; bname++;}
-         //lenb = strlen(blen);
-         //Int_t kmax = 0;
-         //if (blen[lenb-1] == '_') {blen[lenb-1] = 0; kmax = 1;}
-         //else                     sprintf(blen,"%d",len);
 
          const char *stars = " ";
          if (bre && bre->GetBranchCount2()) {
@@ -1637,7 +1629,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             if (twodim)    dimlen += strlen(twodim) + 1;
             dimensions = new char[dimlen];
             if (dimInName) {
-               strcpy(dimensions,dimInName);
+               strncpy(dimensions,dimInName,dimlen-1);
                dimInName[0] = 0; // terminate branchname before the array dimensions.
             } else dimensions[0] = 0;
             if (twodim) strcat(dimensions,(char*)(twodim+1));
@@ -1646,7 +1638,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          char b2len[1024];
          if (bre && bre->GetBranchCount2()) {
             TLeaf * l2 = (TLeaf*)bre->GetBranchCount2()->GetListOfLeaves()->At(0);
-            strcpy(b2len,l2->GetName());
+            strncpy(b2len,l2->GetName(),1023);
             bname = &b2len[0];
             while (*bname) {
                if (*bname == '.') *bname='_';
@@ -1842,9 +1834,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"   // Set object pointer\n");
       while( (obj = next()) ) {
          if (obj->InheritsFrom(TBranch::Class())) {
-            strcpy(branchname,((TBranch*)obj)->GetName() );
+            strncpy(branchname,((TBranch*)obj)->GetName(),1023 );
          } else if (obj->InheritsFrom(TLeaf::Class())) {
-            strcpy(branchname,((TLeaf*)obj)->GetName() );
+            strncpy(branchname,((TLeaf*)obj)->GetName(),1023 );
          }
          bname = branchname;
          while (*bname) {
@@ -1879,11 +1871,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       len = leaf->GetLen();
       leafcount =leaf->GetLeafCount();
       TBranch *branch = leaf->GetBranch();
-      strcpy(aprefix,branch->GetName());
+      strncpy(aprefix,branch->GetName(),1023);
 
       if ( branch->GetNleaves() > 1) {
          // More than one leaf for the branch we need to distinguish them
-         strcpy(branchname,branch->GetName());
+         strncpy(branchname,branch->GetName(),1023);
          strcat(branchname,".");
          strcat(branchname,leaf->GetTitle());
          if (leafcount) {
@@ -1891,7 +1883,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             char *dim =  (char*)strstr(branchname,"["); if (dim) dim[0] = 0;
          }
       } else {
-         strcpy(branchname,branch->GetName());
+         strncpy(branchname,branch->GetName(),1023);
          if (branch->IsA() == TBranchElement::Class()) {
             bre = (TBranchElement*)branch;
             if (bre->GetType() == 3 || bre->GetType()==4) strcat(branchname,"_");
@@ -1913,7 +1905,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             fprintf(fp,"   fChain->SetBranchAddress(\"%s\",(void*)-1,&b_%s);\n",branch->GetName(),R__GetBranchPointerName(leaf).Data());
             continue;
          }
-         strcpy(branchname,branch->GetName());
+         strncpy(branchname,branch->GetName(),1023);
       }
       if (branch->IsA() == TBranchElement::Class()) {
          if (((TBranchElement*)branch)->GetType() == 3) len =1;
@@ -2232,7 +2224,7 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 
       if ( branch->GetNleaves() > 1) {
          // More than one leaf for the branch we need to distinguish them
-         strcpy(branchname,branch->GetName());
+         strncpy(branchname,branch->GetName(),1023);
          strcat(branchname,".");
          strcat(branchname,leaf->GetTitle());
          if (leafcount) {
@@ -2241,8 +2233,8 @@ Int_t TTreePlayer::MakeCode(const char *filename)
             dim[0] = 0;
          }
       } else {
-         if (leafcount) strcpy(branchname,branch->GetName());
-         else           strcpy(branchname,leaf->GetTitle());
+         if (leafcount) strncpy(branchname,branch->GetName(),1023);
+         else           strncpy(branchname,leaf->GetTitle(),1023);
       }
       char *twodim = (char*)strstr(leaf->GetTitle(),"][");
       bname = branchname;
@@ -2273,7 +2265,7 @@ Int_t TTreePlayer::MakeCode(const char *filename)
             if (twodim)    dimlen += strlen(twodim) + 1;
             dimensions = new char[dimlen];
             if (dimInName) {
-               strcpy(dimensions,dimInName);
+               strncpy(dimensions,dimInName,dimlen-1);
                dimInName[0] = 0; // terminate branchname before the array dimensions.
             } else dimensions[0] = 0;
             if (twodim) strcat(dimensions,(char*)(twodim+1));
@@ -2301,7 +2293,7 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 
       if ( branch->GetNleaves() > 1) {
          // More than one leaf for the branch we need to distinguish them
-         strcpy(branchname,branch->GetName());
+         strncpy(branchname,branch->GetName(),1023);
          strcat(branchname,".");
          strcat(branchname,leaf->GetTitle());
          if (leafcount) {
@@ -2310,8 +2302,8 @@ Int_t TTreePlayer::MakeCode(const char *filename)
             dim[0] = 0;
          }
       } else {
-         if (leafcount) strcpy(branchname,branch->GetName());
-         else           strcpy(branchname,leaf->GetTitle());
+         if (leafcount) strncpy(branchname,branch->GetName(),1023);
+         else           strncpy(branchname,leaf->GetTitle(),1023);
       }
       bname = branchname;
       while (*bname) {
@@ -2326,7 +2318,7 @@ Int_t TTreePlayer::MakeCode(const char *filename)
       if (brak) *brak = 0;
       head = headOK;
       if (branch->IsA() == TBranchObject::Class()) {
-         strcpy(branchname,branch->GetName());
+         strncpy(branchname,branch->GetName(),1023);
          leafobj = (TLeafObject*)leaf;
          if (!leafobj->GetClass()) head = headcom;
       }
@@ -3015,7 +3007,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       if (!lenfile) {
          Int_t nch2 = strlen(fTree->GetName());
          fname = new char[nch2+10];
-         strcpy(fname, fTree->GetName());
+         strncpy(fname, fTree->GetName(),nch2+9);
          strcat(fname, "-scan.dat");
       }
       out.open(fname, ios::out);
