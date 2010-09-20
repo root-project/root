@@ -400,7 +400,7 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
       TDataMember::fOptions = new TList();
       char etypename[65];
       strncpy(etypename,this->GetTypeName(),64); //save the typename!!! must do it!
-
+      etypename[64]=0;
       const char *gtypename = 0;
       TList *globals = (TList*)(gROOT->GetListOfGlobals(kTRUE)); //get all globals
       if (!globals) return;

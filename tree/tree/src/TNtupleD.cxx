@@ -69,7 +69,7 @@ TNtupleD::TNtupleD(const char *name, const char *title, const char *varlist, Int
    Int_t nch = strlen(varlist);
    if (nch == 0) return;
    char *vars = new char[nch+1];
-   strncpy(vars,varlist,nch);
+   strncpy(vars,varlist,nch); vars[nch]=0;
    Int_t *pvars = new Int_t[nch+1];
    fNvar = 1;
    pvars[0] = 0;

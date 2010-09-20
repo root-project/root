@@ -172,7 +172,7 @@ TDataMember *TMethod::FindDataMember()
       Int_t i;
 
       strncpy(argstr,argstring,2047);       //let's move it to "worksapce"  copy
-
+      argstring[2047]=0;
       ptr2 = strtok(argstr,"{}");     //extract the data!
       ptr2 = strtok((char*)0,"{}");
 

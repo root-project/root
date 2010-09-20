@@ -746,7 +746,7 @@ void THStack::Paint(Option_t *option)
    if (strstr(loption,"lego")) return;
 
    char noption[32];
-   strncpy(noption,loption,31);
+   strncpy(noption,loption,31); noption[31]=0;
    Int_t nhists = fHists->GetSize();
    if (nostack) {
       lnk = (TObjOptLink*)fHists->FirstLink();
