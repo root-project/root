@@ -15,7 +15,11 @@
 
 #ifndef HAS_STRLCPY
 
-#include <sys/types.h>
+#ifndef WIN32
+#   include <unistd.h>
+#else
+#   include <sys/types.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
