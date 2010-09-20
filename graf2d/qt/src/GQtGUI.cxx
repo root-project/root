@@ -2239,7 +2239,7 @@ Int_t TGQt::TextWidth(FontStruct_t font, const char *s, Int_t len)
       char* str = new char[len+1];
       memset(str,0,len+1);
       strlcpy(str,s,len);
-      QString qstr = strlcpy(str,s,len);
+      QString qstr = strncpy(str,s,len);  //to be fixed
       delete [] str;
       textWidth = metric.width(qstr,len);
       // fprintf(stderr," TGQt::TextWidth  %d %d <%s> \n", textWidth, len, (const char *)qstr);

@@ -118,7 +118,7 @@ static void ReadContributors()
          buf[len-1] = 0;    // remove \n
          len -= 3;          // remove "N: "
          gContributors[cnt] = new char[len];
-         strncpy(gContributors[cnt], buf+3, len);
+         strlcpy(gContributors[cnt], buf+3, len);
          cnt++;
       }
    }

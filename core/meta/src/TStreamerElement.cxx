@@ -33,7 +33,6 @@
 #include "TDataType.h"
 #include "TVirtualMutex.h"
 #include <iostream>
-#include <snprintf.h>
 
 #include <string>
 namespace std {} using namespace std;

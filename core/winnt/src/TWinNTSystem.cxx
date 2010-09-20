@@ -723,7 +723,7 @@ namespace {
                   strcpy(szGotPath, pszShortcutFile);
                   hres = psl->GetPath(szGotPath, MAX_PATH, (WIN32_FIND_DATA *)&wfd,
                                       SLGP_UNCPRIORITY | SLGP_RAWPATH);
-                  strncpy(pszPath,szGotPath, maxbuf);
+                  strlcpy(pszPath,szGotPath, maxbuf);
                   if (maxbuf) pszPath[maxbuf-1] = 0;
                }
             }

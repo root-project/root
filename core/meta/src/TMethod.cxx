@@ -29,7 +29,6 @@
 #include "TInterpreter.h"
 #include "Strlen.h"
 #include "TDataMember.h"
-#include "snprintf.h"
 
 
 ClassImp(TMethod)

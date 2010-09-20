@@ -62,7 +62,6 @@
 #include "TIsAProxy.h"
 #include "TSchemaRule.h"
 #include "TSystem.h"
-#include "snprintf.h"
 
 #include <cstdio>
 #include <cctype>
