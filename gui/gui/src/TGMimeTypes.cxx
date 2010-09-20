@@ -242,7 +242,7 @@ Bool_t TGMimeTypes::GetType(const char *filename, char *type)
 
    memset(type, 0, strlen(type));
    if ((mime = Find(filename))) {
-      strcpy(type, mime->fType.Data());
+      strncpy(type, mime->fType.Data(), 255);
       return (strlen(type) > 0);
    }
    return kFALSE;
