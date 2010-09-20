@@ -2245,7 +2245,7 @@ TFile* TTree::ChangeFile(TFile* file)
    while (nus < 10) {
       uscore[nus] = '_';
       fname[0] = 0;
-      strncpy(fname, file->GetName(),2000); fname[1999]=0;
+      strlcpy(fname, file->GetName(),2000); fname[1999]=0;
       
       if (fFileNumber > 1) {
          char* cunder = strrchr(fname, '_');
@@ -5847,7 +5847,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
          in.ignore(8192,'\n');
          nch = strlen(bd);
       } else {
-         strncpy(bd,branchDescriptor,100000); bd[99999]=0;
+         strlcpy(bd,branchDescriptor,100000); bd[99999]=0;
       }
 
       //parse the branch descriptor and create a branch for each element
@@ -5858,7 +5858,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
       while (bdcur) {
          char *colon = strchr(bdcur,':');
          if (colon) *colon = 0;
-         strncpy(bdname,bdcur,4000); bdname[3999]=0;
+         strlcpy(bdname,bdcur,4000); bdname[3999]=0;
          char *slash = strchr(bdname,'/');
          if (slash) {
             *slash = 0;
