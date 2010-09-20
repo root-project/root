@@ -73,7 +73,7 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
       if (!strlen(s)) continue;    // skip empty lines
 
       if (*s == '[') {
-         strncpy(mime, line, 1024);
+         strncpy(mime, line, 1023);
          cnt = 0;
          continue;
       }
@@ -84,7 +84,7 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
          } else {
             s++;
             s = Strip(s);
-            strncpy(pattern, s, 256);
+            strncpy(pattern, s, 255);
             delete [] s;
          }
          cnt++;
@@ -98,14 +98,14 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
             char *s2;
             if ((s2 = strchr(s, ' '))) {
                *s2 = 0;
-               strncpy(icon, s, 256);
+               strncpy(icon, s, 255);
                s2++;
                s2 = Strip(s2);
-               strncpy(sicon, s2, 256);
+               strncpy(sicon, s2, 255);
                delete [] s2;
             } else {
-               strncpy(icon, s, 256);
-               strncpy(sicon, s, 256);
+               strncpy(icon, s, 255);
+               strncpy(sicon, s, 255);
             }
             delete [] s;
          }
@@ -117,7 +117,7 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
          } else {
             s++;
             s = Strip(s);
-            strncpy(action, s, 256);
+            strncpy(action, s, 255);
             delete [] s;
          }
          cnt++;
@@ -227,7 +227,7 @@ Bool_t TGMimeTypes::GetAction(const char *filename, char *action)
 
    action[0] = 0;
    if ((mime = Find(filename))) {
-      strcpy(action, mime->fAction.Data());
+      strncpy(action, mime->fAction.Data(), 511);
       return (strlen(action) > 0);
    }
    return kFALSE;
