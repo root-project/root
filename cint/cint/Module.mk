@@ -110,10 +110,10 @@ CINTS2       += $(MODDIRSD)/libstrm.cxx
 endif
 endif
 ifeq ($(PLATFORM),sunos)
-CINTS1       += $(MODDIRS)/sunos.c
+CINTS1       += $(MODDIRS)/config/sunos.c
 endif
 ifeq ($(PLATFORM),macos)
-CINTS2       += $(MODDIRS)/macos.cxx
+CINTS2       += $(MODDIRS)/config/macos.cxx
 CINTS2       += $(MODDIRSD)/fakestrm.cxx
 endif
 ifeq ($(PLATFORM),macosx)
@@ -123,7 +123,7 @@ ifeq ($(PLATFORM),lynxos)
 CINTS2       += $(MODDIRSD)/fakestrm.cxx
 endif
 ifeq ($(PLATFORM),win32)
-CINTS2       += $(MODDIRS)/winnt.cxx
+CINTS2       += $(MODDIRS)/config/winnt.cxx
 CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/longif3.cxx
 ifeq ($(VC_MAJOR),16)
