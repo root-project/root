@@ -55,6 +55,7 @@
 #include "TEntryList.h"
 #include "TEntryListFromFile.h"
 #include "TFileStager.h"
+#include "snprintf.h"
 
 const Long64_t theBigNumber = Long64_t(1234567890)<<28;
 
@@ -2391,7 +2392,7 @@ void TChain::SetEventList(TEventList *evlist)
    }
 
    char enlistname[100];
-   sprintf(enlistname, "%s_%s", evlist->GetName(), "entrylist");
+   snprintf(enlistname,100, "%s_%s", evlist->GetName(), "entrylist");
    TEntryList *enlist = new TEntryList(enlistname, evlist->GetTitle());
    enlist->SetDirectory(0);
 
