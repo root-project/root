@@ -915,6 +915,7 @@ G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal
    // Search local and global variables.
    //
    var = 0;
+   ig15 = 0;
    // Avoid searching variables when processing
    // a function-local const static during prerun.
    if (
@@ -924,8 +925,71 @@ G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal
       !G__constvar ||       // Not a const.
       !G__prerun            // Not in prerun (we are actually executing).
    ) {
-      int ig15 = 0;
-      var = G__searchvariable(varname, varhash, varlocal, varglobal, &G__struct_offset, &store_struct_offset, &ig15, G__decl || G__def_struct_member);
+      char* v = (char*) varname();
+      int vlen = strlen(v);
+      char* p = NULL;
+      if (vlen) {
+         int nest_angle = 0;
+         int nest_square_bracket = 0;
+         int nest_paren = 0;
+         bool done = false;
+         p = v + vlen - 1;
+         for (; !done && (p != v); --p) {
+            switch (*p) {
+               case '<':
+                  --nest_angle;
+                  break;
+               case '>':
+                  ++nest_angle;
+                  break;
+               case '[':
+                  --nest_square_bracket;
+                  break;
+               case ']':
+                  ++nest_square_bracket;
+                  break;
+               case '(':
+                  --nest_paren;
+                  break;
+               case ')':
+                  ++nest_paren;
+                  break;
+               case ':':
+                  if (nest_angle || nest_square_bracket || nest_paren) {
+                     continue;
+                  }
+                  if (*(p - 1) == ':') {
+                     done = true;
+                  } 
+                  break;
+               default:
+                  break;
+            }
+         }
+         if (done) {
+            ++p;
+         }
+         else {
+            p = NULL;
+         }
+      }
+      if ((p != NULL) && varglobal) {
+         int qual_id_len = p - v - 1;
+         if (qual_id_len > 0) {
+            G__FastAllocString qual_id(G__BUFLEN);
+            qual_id.Format("%*.*s", qual_id_len, qual_id_len, v);
+            int qual_id_tagnum = G__defined_tagname(qual_id(), 0);
+            if (qual_id_tagnum != -1) {
+               int store_tagnum = G__tagnum;
+               G__tagnum = qual_id_tagnum;
+               var = G__searchvariable(varname, varhash, G__struct.memvar[qual_id_tagnum], varglobal, &G__struct_offset, &store_struct_offset, &ig15, 1);
+               G__tagnum = store_tagnum;
+            }
+         }
+      }
+      else {
+         var = G__searchvariable(varname, varhash, varlocal, varglobal, &G__struct_offset, &store_struct_offset, &ig15, G__decl || G__def_struct_member);
+      }
    }
    //
    // Assign value.
@@ -978,73 +1042,6 @@ G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal
             G__genericerror(0);
             return G__null;
          }
-      } else if (var->statictype[ig15] == G__LOCALSTATIC && var->p_tagtable[ig15]!=-1 && var->type[ig15]=='u') {
-         //fprintf(stderr,"humm .. declaration of static variable %s\n",var->varnamebuf[ig15]);
-         // Let's assume this is the first definition of the class static variable (CINT currently allows the
-         // declaration to be there several times  ...
-         // First delete the memory allocated at the time of the declaration (inside the class declaration)
-         free((void*)var->p[ig15]);
-         var->p[ig15] = 0;
-         // And let's allocate the object (currently CINT does not allow a constructor in this case).
-         // (this is inpired from code in G__define_var
-         if ( G__struct.iscpplink[var->p_tagtable[ig15]] == G__CPPLINK) {
-            // -- The struct is compiled code.
-            G__FastAllocString temp1(G__ONELINE);
-            G__value reg = G__null;
-            int known;
-            temp1.Format("%s()", G__struct.name[var->p_tagtable[ig15]]);
-            if (G__struct.parent_tagnum[var->p_tagtable[ig15]] != -1) {
-               int store_exec_memberfunc = G__exec_memberfunc;
-               int store_memberfunc_tagnum = G__memberfunc_tagnum;
-               G__exec_memberfunc = 1;
-               G__memberfunc_tagnum = G__struct.parent_tagnum[var->p_tagtable[ig15]];
-               reg = G__getfunction(temp1, &known, G__CALLCONSTRUCTOR);
-               G__exec_memberfunc = store_exec_memberfunc;
-               G__memberfunc_tagnum = store_memberfunc_tagnum;
-            }
-            else {
-               int store_exec_memberfunc = G__exec_memberfunc;
-               int store_memberfunc_tagnum = G__memberfunc_tagnum;
-               int store_G__tagnum = G__tagnum;
-               G__exec_memberfunc = 0;
-               G__memberfunc_tagnum = -1;
-               G__tagnum = var->p_tagtable[ig15];
-               reg = G__getfunction(temp1, &known, G__CALLCONSTRUCTOR);
-               G__exec_memberfunc = store_exec_memberfunc;
-               G__memberfunc_tagnum = store_memberfunc_tagnum;
-               G__tagnum = store_G__tagnum;
-            }
-            var->p[ig15] = G__int(reg);
-         }
-         else {
-            // -- The struct is interpreted.
-            // Initialize it.
-            G__FastAllocString temp1(G__ONELINE);
-            // G__value reg = G__null;
-            // int known;
-            temp1.Format("new %s", G__struct.name[var->p_tagtable[ig15]]);
-
-            int store_exec_memberfunc = G__exec_memberfunc;
-            int store_memberfunc_tagnum = G__memberfunc_tagnum;
-            int store_tagnum = G__tagnum;
-            int store_prerun = G__prerun;
-            int store_vartype = G__var_type;
-            G__exec_memberfunc = 0;
-            G__memberfunc_tagnum = -1;
-            G__prerun = 0;
-            G__tagnum = var->p_tagtable[ig15];
-            G__value reg = G__getexpr(temp1);
-            G__exec_memberfunc = store_exec_memberfunc;
-            G__memberfunc_tagnum = store_memberfunc_tagnum;
-            G__tagnum = store_tagnum;
-            G__prerun = store_prerun;
-            G__var_type = store_vartype;
-            
-            var->p[ig15] = G__int(reg);
-            
-            // G__letvariable(var->varnamebuf[ig15], reg, &G__global, var);
-         }
-         
       }
       //
       //
@@ -1192,6 +1189,9 @@ G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal
          }
          G__var_type = 'p';
          if (G__reftype && (G__globalvarpointer != G__PVOID)) {
+            var->p[ig15] = G__globalvarpointer;
+         }
+         if (G__cppconstruct) {
             var->p[ig15] = G__globalvarpointer;
          }
          return result;
