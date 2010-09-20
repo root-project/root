@@ -425,7 +425,7 @@ TDirectory *TDirectoryFile::GetDirectory(const char *apath,
    TDirectory *result = this;
 
    char *path = new char[nch+1]; path[0] = 0;
-   if (nch) strcpy(path,apath);
+   if (nch) strncpy(path,apath,nch);
    char *s = (char*)strchr(path, ':');
    if (s) {
       *s = '\0';
@@ -1693,7 +1693,7 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
    char *newName = 0;
    if (oname[nch-1] == ' ') {
       newName = new char[nch+1];
-      strcpy(newName,oname);
+      strncpy(newName,oname,nch);
       for (Int_t i=0;i<nch;i++) {
          if (newName[nch-i-1] != ' ') break;
          newName[nch-i-1] = 0;
@@ -1817,7 +1817,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
    char *newName = 0;
    if (oname[nch-1] == ' ') {
       newName = new char[nch+1];
-      strcpy(newName,oname);
+      strncpy(newName,oname,nch);
       for (Int_t i=0;i<nch;i++) {
          if (newName[nch-i-1] != ' ') break;
          newName[nch-i-1] = 0;

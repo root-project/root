@@ -29,6 +29,7 @@
 #include "TInterpreter.h"
 #include "Strlen.h"
 #include "TDataMember.h"
+#include "snprintf.h"
 
 
 ClassImp(TMethod)
@@ -170,7 +171,7 @@ TDataMember *TMethod::FindDataMember()
       char *ptr2 = 0;
       Int_t i;
 
-      strcpy(argstr,argstring);       //let's move it to "worksapce"  copy
+      strncpy(argstr,argstring,2047);       //let's move it to "worksapce"  copy
 
       ptr2 = strtok(argstr,"{}");     //extract the data!
       ptr2 = strtok((char*)0,"{}");
@@ -183,8 +184,9 @@ TDataMember *TMethod::FindDataMember()
          ptr1 = strtok((char*) (cnt++ ? 0:ptr2),",;"); //extract tokens
                                                         // separated by , or ;
          if (ptr1) {
-            tok = new char[strlen(ptr1)+1];
-            strcpy(tok,ptr1);
+            Int_t nch = strlen(ptr1);
+            tok = new char[nch+1];
+            strncpy(tok,ptr1,nch);
             tokens[token_cnt] = tok;            //store this token.
             token_cnt++;
          }
@@ -237,15 +239,15 @@ TDataMember *TMethod::FindDataMember()
       char basename[64]    = "";
       const char *funcname = GetName();
       if ( strncmp(funcname,"Get",3) == 0 || strncmp(funcname,"Set",3) == 0 )
-         sprintf(basename,"%s",funcname+3);
+         snprintf(basename,63,"%s",funcname+3);
       else if ( strncmp(funcname,"Is",2) == 0 )
-         sprintf(basename,"%s",funcname+2);
+         snprintf(basename,63,"%s",funcname+2);
       else if (strncmp(funcname, "Has", 3) == 0)
-         sprintf(basename, "%s", funcname+3);
+         snprintf(basename,63, "%s", funcname+3);
       else
          return 0;
 
-      sprintf(dataname,"f%s",basename);
+      snprintf(dataname,63,"f%s",basename);
 
       TClass *cl = GetClass()->GetBaseDataMember(dataname);
       if (cl) {
@@ -253,7 +255,7 @@ TDataMember *TMethod::FindDataMember()
          if (a) a->fDataMember = member;
          return member;
       } else {
-         sprintf(dataname,"fIs%s",basename);  //in case of IsEditable()
+         snprintf(dataname,63,"fIs%s",basename);  //in case of IsEditable()
                                                         //and fIsEditable
          cl = GetClass()->GetBaseDataMember(dataname);
          if (cl) {
