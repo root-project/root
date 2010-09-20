@@ -171,7 +171,7 @@ TDataMember *TMethod::FindDataMember()
       char *ptr2 = 0;
       Int_t i;
 
-      strncpy(argstr,argstring,2047);       //let's move it to "worksapce"  copy
+      strlcpy(argstr,argstring,2047);       //let's move it to "worksapce"  copy
       argstring[2047]=0;
       ptr2 = strtok(argstr,"{}");     //extract the data!
       ptr2 = strtok((char*)0,"{}");
@@ -186,7 +186,7 @@ TDataMember *TMethod::FindDataMember()
          if (ptr1) {
             Int_t nch = strlen(ptr1);
             tok = new char[nch+1];
-            strncpy(tok,ptr1,nch+1);
+            strlcpy(tok,ptr1,nch+1);
             tokens[token_cnt] = tok;            //store this token.
             token_cnt++;
          }

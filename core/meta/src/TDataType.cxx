@@ -233,11 +233,11 @@ const char *TDataType::AsString(void *buf) const
    else if (!strcmp("short", name))
       sprintf(line, "%hd", *(short *)buf);
    else if (!strcmp("unsigned char", name))
-      strncpy(line, (char *)buf,80);
+      strlcpy(line, (char *)buf,80);
    else if (!strcmp("bool", name))
       sprintf(line, "%s", *(bool *)buf ? "true" : "false");
    else if (!strcmp("char", name))
-      strncpy(line, (char *)buf,80);
+      strlcpy(line, (char *)buf,80);
    else if (!strcmp("float", name))
       sprintf(line, "%g", *(float *)buf);
    else if (!strcmp("double", name))

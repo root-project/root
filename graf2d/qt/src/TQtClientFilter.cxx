@@ -213,7 +213,7 @@ static inline UInt_t MapKeySym(const QKeyEvent &qev)
 #if 0
    QByteArray oar = gQt->GetTextDecoder()->fromUnicode(qev.text());
    const char *r = oar.constData();
-   qstrncpy((char *)&text, (const char *)r,1);
+   qstrlcpy((char *)&text, (const char *)r,1);
    return text;
 #else
    text = UInt_t(qev.text().toAscii().data()[0]);
