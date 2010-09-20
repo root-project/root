@@ -39,6 +39,7 @@
 #include "TGraph.h"
 #include "TLegend.h"
 #include "TAxis.h"
+#include "snprintf.h"
 
 #define kMemValuePos 8
 #define kMemValuePosMaster 8
@@ -244,7 +245,7 @@ void TProofProgressMemoryPlot::DoPlot()
    Int_t min = -1;
    while ((selworker=(TGTextLBEntry*)nextworker())){
 
-      sprintf(name, "%s", selworker->GetText()->GetString());
+      snprintf(name, sizeof(name)-1, "%s", selworker->GetText()->GetString());
       char *token;
       token = strtok(name, " ");
       if (!strcmp(token, "average")) { //change that to id comparison later
