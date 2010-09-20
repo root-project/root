@@ -12,6 +12,7 @@
 #ifdef WIN32
 #include "Windows4Root.h"
 #include "RVersion.h"
+#include "strlcpy.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <ocidl.h>
@@ -160,7 +161,7 @@ static int DrawCreditItem(HDC hDC, const char *creditItem, const char **members,
    int lineSpacing;
 
    GetTextMetrics(hDC, &lptm);
-   
+
    lineSpacing = lptm.tmAscent + lptm.tmDescent;
 
    strcpy(credit, creditItem);
@@ -203,7 +204,7 @@ static int DrawCredits(HDC hDC, bool draw, bool extended)
    int lineSpacing, y;
 
    GetTextMetrics(hDC, &lptm);
-   
+
    lineSpacing = lptm.tmAscent + lptm.tmDescent;
    y = 0; // 140
    y = DrawCreditItem(hDC, "Conception: ", gConception, y, draw);
@@ -293,7 +294,7 @@ void CreateCredits(HDC hDC, bool extended)
 void ScrollCredits(BOOL extended)
 {
    // Track scroll position
-   
+
    static int nScrollY = 0;
 
    if (!gShow)
@@ -307,11 +308,11 @@ void ScrollCredits(BOOL extended)
       nScrollY = 0;
    }
 
-   BitBlt(gDCScreen, 0, 0, gCreditsBmpWidth, gCreditsBmpHeight, gDCCredits, 
+   BitBlt(gDCScreen, 0, 0, gCreditsBmpWidth, gCreditsBmpHeight, gDCCredits,
           0, nScrollY, SRCCOPY);
-   BitBlt(hDC, gCreditsRect.left, gCreditsRect.top, 
-          (gCreditsRect.right - gCreditsRect.left), 
-          (gCreditsRect.bottom - gCreditsRect.top), 
+   BitBlt(hDC, gCreditsRect.left, gCreditsRect.top,
+          (gCreditsRect.right - gCreditsRect.left),
+          (gCreditsRect.bottom - gCreditsRect.top),
           gDCScreen, 0, 0, SRCCOPY);
 
    GdiFlush();
@@ -427,7 +428,7 @@ void DisplayGraphic(HWND hwnd,HDC pDC)
 
          SelectObject(MemDC,BmpOld);
 
-         if (pPalMemOld) 
+         if (pPalMemOld)
             SelectPalette(MemDC,pPalMemOld, FALSE);
          DeleteObject(Bmp);
          DeleteDC(MemDC);
@@ -441,9 +442,9 @@ void DisplayGraphic(HWND hwnd,HDC pDC)
                       -gImageInfo.sizeInHiMetric.cy, &rc);
       }
 
-      if (hPalOld != 0) 
+      if (hPalOld != 0)
          SelectPalette(pDC,hPalOld, FALSE);
-      if (hPal) 
+      if (hPal)
          DeleteObject((HPALETTE)hPal);
    }
 }
@@ -513,7 +514,7 @@ BOOL CreateSplashScreen(HWND hParent)
             0,
             gInst,
             0);
-    
+
    return (gSplashWnd != 0);
 }
 
@@ -555,28 +556,28 @@ void CreateSplash(DWORD time, BOOL extended)
 
    if (extended)
       ReadContributors();
-    
+
    // Create the splash screen
    CreateSplashScreen(0);
 
    // Main message loop:
-   while (gStayUp) { 
-      if(PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) { 
-         PreTranslateMessage(&msg); 
-         TranslateMessage(&msg); 
-         DispatchMessage(&msg); 
-      } 
-      if(gShow) { 
-         if(extended) { 
-            ScrollCredits(extended); 
-         } 
-         else { 
-            ScrollCredits(extended); 
-            gShow = false; 
-         } 
-      } 
-   } 
-   
+   while (gStayUp) {
+      if(PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
+         PreTranslateMessage(&msg);
+         TranslateMessage(&msg);
+         DispatchMessage(&msg);
+      }
+      if(gShow) {
+         if(extended) {
+            ScrollCredits(extended);
+         }
+         else {
+            ScrollCredits(extended);
+            gShow = false;
+         }
+      }
+   }
+
    DestroySplashScreen();
 }
 
@@ -640,7 +641,7 @@ LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
             SetTimer(hWnd, ID_SPLASHSCREEN, gDelayVal, 0);
          RootSysDir = getenv("ROOTSYS");
          sprintf(FullBmpDir,"%s%s",RootSysDir,bmpDir);
-         // Retrieve a handle identifying the file. 
+         // Retrieve a handle identifying the file.
          OpenGraphic(FullBmpDir);
          hDC = GetDC(hWnd);
          DisplayGraphic(hWnd, hDC);
@@ -653,8 +654,8 @@ LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
          hFont = CreateFontIndirect(&lf);
          xScreen = GetSystemMetrics(SM_CXFULLSCREEN);
          yScreen = GetSystemMetrics(SM_CYFULLSCREEN);
-         SetWindowPos(hWnd, HWND_TOPMOST, (xScreen - gImageInfo.sizeInPix.cx)/2, 
-                      (yScreen - gImageInfo.sizeInPix.cy)/2, gImageInfo.sizeInPix.cx, 
+         SetWindowPos(hWnd, HWND_TOPMOST, (xScreen - gImageInfo.sizeInPix.cx)/2,
+                      (yScreen - gImageInfo.sizeInPix.cy)/2, gImageInfo.sizeInPix.cx,
                       gImageInfo.sizeInPix.cy, 0 );
          break;
 
