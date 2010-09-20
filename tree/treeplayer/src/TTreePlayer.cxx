@@ -1199,8 +1199,8 @@ Int_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *sele
 
    Int_t nch = option ? strlen(option) + 10 : 10;
    char *opt = new char[nch+1];
-   if (option) strncpy(opt,option,nch);
-   else        strncpy(opt,"goff",nch);
+   if (option) strncpy(opt,option,nch+1);
+   else        strncpy(opt,"goff",nch+1);
    opt[nch]=0;
    
    Long64_t nsel = DrawSelect(varexp,selection,opt,nentries,firstentry);
@@ -1638,7 +1638,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             if (twodim)    dimlen += strlen(twodim) + 1;
             dimensions = new char[dimlen];
             if (dimInName) {
-               strncpy(dimensions,dimInName,dimlen-1); dimensions[dimlen-1]=0;
+               strncpy(dimensions,dimInName,dimlen); dimensions[dimlen]=0;
                dimInName[0] = 0; // terminate branchname before the array dimensions.
             } else dimensions[0] = 0;
             if (twodim) strcat(dimensions,(char*)(twodim+1));
@@ -2276,7 +2276,7 @@ Int_t TTreePlayer::MakeCode(const char *filename)
             if (twodim)    dimlen += strlen(twodim) + 1;
             dimensions = new char[dimlen];
             if (dimInName) {
-               strncpy(dimensions,dimInName,dimlen-1); dimensions[dimlen-1]=0;
+               strncpy(dimensions,dimInName,dimlen); dimensions[dimlen]=0;
                dimInName[0] = 0; // terminate branchname before the array dimensions.
             } else dimensions[0] = 0;
             if (twodim) strcat(dimensions,(char*)(twodim+1));
@@ -3019,7 +3019,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       if (!lenfile) {
          Int_t nch2 = strlen(fTree->GetName());
          fname = new char[nch2+10];
-         strncpy(fname, fTree->GetName(),nch2+9); fname[nch2+9]=0;
+         strncpy(fname, fTree->GetName(),nch2+1);
          strcat(fname, "-scan.dat");
       }
       out.open(fname, ios::out);
