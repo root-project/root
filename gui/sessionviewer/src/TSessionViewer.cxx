@@ -3890,7 +3890,7 @@ void TSessionViewer::UpdateListOfProofs()
                   if (p && ((exists && ((desc->fTag == d->GetName()) ||
                       (desc->fName == d->GetTitle()))) ||
                       (!exists && (desc->fAddress == p->GetMaster())))) {
-                      desc->fConnected  = kTRUE;
+                     desc->fConnected  = kTRUE;
                      desc->fAttached   = kTRUE;
                      desc->fProof      = p;
                      desc->fProofMgr   = mgr;
