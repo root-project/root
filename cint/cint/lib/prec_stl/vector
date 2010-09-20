@@ -125,12 +125,12 @@ class vector {
 		typedef const_reference reference;
 
 		const_iterator();
-#if (G__MSC_VER>=1310) && \
+#if (G__MSC_VER>=1310 && G__MSC_VER<1600) && \
 	!_HAS_ITERATOR_DEBUGGING && !G__HAS_ITERATOR_DEBUGGING &&\
 	!_SECURE_SCL && !G__SECURE_SCL
 		//const_iterator(pointer _Ptr);
 		const_iterator(T *const  _Ptr);
-#elif _HAS_ITERATOR_DEBUGGING || _SECURE_SCL || G__HAS_ITERATOR_DEBUGGING || G__SECURE_SCL
+#elif G__MSC_VER>=1600 || _HAS_ITERATOR_DEBUGGING || _SECURE_SCL || G__HAS_ITERATOR_DEBUGGING || G__SECURE_SCL
 		const_iterator(T *const  _Ptr, const vector<T>* _Pvector );
 #endif
 
