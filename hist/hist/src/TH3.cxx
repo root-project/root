@@ -2337,7 +2337,7 @@ TH1 *TH3::Project3D(Option_t *option) const
    // option = "zy" return the z versus y projection into a TH2D histogram
    // NB: the notation "a vs b" means "a" vertical and "b" horizontal
    //
-   // option = "o" original axis range of the taget axes will be
+   // option = "o" original axis range of the target axes will be
    //   kept, but only bins inside the selected range will be filled.
    //
    // If option contains the string "e", errors are computed
