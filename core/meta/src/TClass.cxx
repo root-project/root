@@ -350,13 +350,13 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
                }
             }
             if (isPrintable) {
-               strlcpy(line + kvalue, *ppointer, i);
+               strncpy(line + kvalue, *ppointer, i);
                line[kvalue+i] = 0;
             } else {
                line[kvalue] = 0;
             }
          } else {
-            strlcpy(&line[kvalue], membertype->AsString(p3pointer), TMath::Min(kline-1-kvalue,(int)strlen(membertype->AsString(p3pointer))));
+            strncpy(&line[kvalue], membertype->AsString(p3pointer), TMath::Min(kline-1-kvalue,(int)strlen(membertype->AsString(p3pointer))));
          }
       } else if (!strcmp(memberFullTypeName, "char*") ||
                  !strcmp(memberFullTypeName, "const char*")) {
@@ -370,7 +370,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
             }
          }
          if (isPrintable) {
-            strlcpy(line + kvalue, *ppointer, i);
+            strncpy(line + kvalue, *ppointer, i);
             line[kvalue+i] = 0;
          } else {
             line[kvalue] = 0;
@@ -386,7 +386,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
       } else if (isbits) {
          snprintf(&line[kvalue],kline-kvalue,"0x%08x", *(UInt_t*)pointer);
       } else {
-         strlcpy(&line[kvalue], membertype->AsString(pointer), TMath::Min(kline-1-kvalue,(int)strlen(membertype->AsString(pointer))));
+         strncpy(&line[kvalue], membertype->AsString(pointer), TMath::Min(kline-1-kvalue,(int)strlen(membertype->AsString(pointer))));
       }
    else
       snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)pointer);
@@ -396,7 +396,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
       i = strlen(&line[0]); line[i] = ' ';
       Int_t lentit = strlen(memberTitle);
       if (lentit > 250-ktitle) lentit = 250-ktitle;
-      strlcpy(&line[ktitle],memberTitle,lentit);
+      strncpy(&line[ktitle],memberTitle,lentit);
       line[ktitle+lentit] = 0;
    }
    Printf("%s", line);
@@ -2599,7 +2599,7 @@ TDataMember *TClass::GetDataMember(const char *datamember) const
    size_t len = strlen(s);
    if (len > size_buffer - 2)
       len = size_buffer - 2;
-   strlcpy(memb, s, len);
+   strncpy(memb, s, len);
    memb[len] = 0;
 
    if ((s = strchr(memb, '['))) {
