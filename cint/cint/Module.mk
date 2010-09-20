@@ -26,7 +26,8 @@ CINTDIRT     := $(MODDIRBASE)/tool
 CINTCONF     := $(CINTDIRI)/configcint.h
 CINTH        := $(wildcard $(CINTDIRI)/*.h)
 CINTHT       := $(sort $(patsubst $(CINTDIRI)/%.h,include/%.h,$(CINTH) $(CINTCONF)))
-CINTS1       := $(wildcard $(MODDIRS)/*.c)
+CINTS1       := $(wildcard $(MODDIRS)/*.c) \
+                $(MODDIRS)/config/strlcpy.c $(MODDIRS)/config/strlcat.c $(MODDIRS)/config/snprintf.c
 CINTS2       := $(wildcard $(MODDIRS)/*.cxx) \
                 $(MODDIRSD)/longif.cxx $(MODDIRSD)/Apiif.cxx \
                 $(MODDIRSD)/stdstrct.cxx
@@ -40,10 +41,10 @@ CINTCONFMK   := cint/ROOT/configcint.mk
 
 CINTS1       := $(filter-out $(MODDIRS)/dlfcn.%,$(CINTS1))
 
-CINTS2       := $(filter-out $(MODDIRS)/sunos.%,$(CINTS2))
-CINTS2       := $(filter-out $(MODDIRS)/macos.%,$(CINTS2))
-CINTS2       := $(filter-out $(MODDIRS)/winnt.%,$(CINTS2))
-CINTS2       := $(filter-out $(MODDIRS)/newsos.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/config/sunos.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/config/macos.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/config/winnt.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/config/newsos.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/loadfile_tmp.%,$(CINTS2))
 
 # strip off possible leading path from compiler command name

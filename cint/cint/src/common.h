@@ -1521,6 +1521,8 @@ struct G__tempobject_list {
 #include "security.h"
 #include "fproto.h"
 #include "global.h"
+#include "config/snprintf.h"
+#include "config/strlcpy.h"
 
 #ifdef __cplusplus
 #include "FastAllocString.h"

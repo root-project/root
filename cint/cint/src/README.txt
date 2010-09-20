@@ -57,57 +57,57 @@ Source files are categorized as follows.
  G__OLDIMPLEMENTATION??? are used for revision control. G__OLDIMPLEMENTATION???
  are usually not defined.
 
-     v6_auxu.cxx
-     v6_cast.cxx
-     v6_debug.cxx
-     v6_decl.cxx
-     v6_disp.cxx
-     v6_dump.cxx
-     v6_end.cxx
-     v6_error.cxx
-     v6_expr.cxx
-     v6_fread.cxx
-     v6_func.cxx
+     auxu.cxx
+     cast.cxx
+     debug.cxx
+     decl.cxx
+     disp.cxx
+     dump.cxx
+     end.cxx
+     error.cxx
+     expr.cxx
+     fread.cxx
+     func.cxx
      g__cfunc.cxx
-     v6_gcoll.cxx
-     v6_global1.cxx
-     v6_global2.cxx
-     v6_ifunc.cxx
-     v6_inherit.cxx
-     v6_init.cxx
-     v6_input.cxx
-     v6_intrpt.cxx
-     v6_loadfile.cxx
-     v6_macro.cxx
-     v6_malloc.cxx
-     v6_memtest.cxx
-     v6_new.cxx
-     v6_newlink.cxx
-     v6_oldlink.cxx
-     v6_opr.cxx
-     v6_parse.cxx
-     v6_pause.cxx
-     v6_pcode.cxx
-     v6_pragma.cxx
-     v6_quote.cxx
-     v6_scrupto.cxx
-     v6_shl.cxx
-     v6_sizeof.cxx
-     v6_struct.cxx
-     v6_stub.cxx
-     v6_tmplt.cxx
-     v6_typedef.cxx
-     v6_val2a.cxx
-     v6_value.cxx
-     v6_var.cxx
+     gcoll.cxx
+     global1.cxx
+     global2.cxx
+     ifunc.cxx
+     inherit.cxx
+     init.cxx
+     input.cxx
+     intrpt.cxx
+     loadfile.cxx
+     macro.cxx
+     malloc.cxx
+     memtest.cxx
+     new.cxx
+     newlink.cxx
+     oldlink.cxx
+     opr.cxx
+     parse.cxx
+     pause.cxx
+     pcode.cxx
+     pragma.cxx
+     quote.cxx
+     scrupto.cxx
+     shl.cxx
+     sizeof.cxx
+     struct.cxx
+     stub.cxx
+     tmplt.cxx
+     typedef.cxx
+     val2a.cxx
+     value.cxx
+     var.cxx
 
   Files named after specific computer platform are only needed for 
  corresponding environment. 
 
-     v6_macos.cxx
-     v6_new.os.c
-     v6_sunos.cxx
-     v6_winnt.cxx
+     macos.cxx
+     new.os.c
+     sunos.cxx
+     winnt.cxx
 
 # Revision history
   HISTORY file contains source code modification history. Macro
@@ -120,7 +120,7 @@ Source files are categorized as follows.
   Following source files include C++ iostream library interface method.
  In most cases, libstrm.cxx works, however, special version is needed
  for Visual C++ and Borland C++. If non of following files work, use 
- fakestrm.cxx.  v6_dmystrm.cxx is provided for C-compiler-only installation.
+ fakestrm.cxx.  dmystrm.cxx is provided for C-compiler-only installation.
  Refer platform/README.txt for more detail.
 
      libstrm.cxx     # HP-UX, Linux, Solaris, AIX, IRIX, gcc 2.x, etc,...
@@ -132,12 +132,12 @@ Source files are categorized as follows.
      kccstrm.cxx     # KAI C++ compiler
      iccstrm.cxx     # Intel C++ compiler
      fakestrm.cxx    # Dummy for C++ compiler
-     v6_dmystrm.cxx       # Dummy for C compiler
+     dmystrm.cxx       # Dummy for C compiler
 
 # ANSI C standard library struct interface method
-  v6_stdstrct.cxx is needed to build cint. It contains inferface method for
+  stdstrct.cxx is needed to build cint. It contains inferface method for
  defining struct.
 
-     v6_stdstrct.cxx
-     v6_dmystrct.cxx
+     stdstrct.cxx
+     dmystrct.cxx
 

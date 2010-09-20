@@ -34,7 +34,6 @@
 #include "common.h"
 #include "Api.h"
 #include "FastAllocString.h"
-#include "snprintf.h"
 
 #ifndef G__TESTMAIN
 #include <sys/stat.h>
@@ -458,15 +457,15 @@ int G__getcintsysdir()
     if(env) {
 #ifdef G__ROOT
 #ifdef G__VMS
-/*      snprintf(G__cintsysdir,G__MAXFILENAME-1,env);
+/*      G__snprintf(G__cintsysdir,G__MAXFILENAME-1,env);
       strncpy(&G__cintsysdir[strlen(G__cintsysdir)-1],".cint]",G__MAXFILENAME);*/
-      snprintf(G__cintsysdir,G__MAXFILENAME-1,"%s[cint]",env);
+      G__snprintf(G__cintsysdir,G__MAXFILENAME-1,"%s[cint]",env);
 #else /* G__VMS */
 # ifdef ROOTBUILD
-      snprintf(G__cintsysdir, G__MAXFILENAME-1, "%s", env);
+      G__snprintf(G__cintsysdir, G__MAXFILENAME-1, "%s", env);
 # else /* ROOTBUILD */
 #  ifdef CINTINCDIR
-      snprintf(G__cintsysdir, G__MAXFILENAME-1, "%s", CINTINCDIR);
+      G__snprintf(G__cintsysdir, G__MAXFILENAME-1, "%s", CINTINCDIR);
 #  else
        if(G__UseCINTSYSDIR) {
           strncpy(G__cintsysdir,env, G__MAXFILENAME-1);
@@ -1046,7 +1045,7 @@ int G__loadfile_tmpfile(FILE *fp)
   G__ifile.filenum = G__nfile ;
   fentry = G__nfile;
   /* strncpy(G__ifile.name,"(tmpfile)",G__MAXFILENAME); */
-  snprintf(G__ifile.name,G__MAXFILENAME-1,"(tmp%d)",fentry);
+  G__snprintf(G__ifile.name,G__MAXFILENAME-1,"(tmp%d)",fentry);
   G__hash(G__ifile.name,hash,temp);
 
   G__srcfile[fentry].dictpos
@@ -1757,9 +1756,9 @@ int G__loadfile(const char *filenamein)
        **********************************************/
       if(G__USERHEADER==G__kindofheader) {
 #ifdef G__VMS
-         snprintf(G__ifile.name,G__MAXFILENAME-1,"./%s",filename());
+         G__snprintf(G__ifile.name,G__MAXFILENAME-1,"./%s",filename());
 #else
-         snprintf(G__ifile.name,G__MAXFILENAME-1,"./%s%s",filename(),addpost[i2]);
+         G__snprintf(G__ifile.name,G__MAXFILENAME-1,"./%s%s",filename(),addpost[i2]);
 #endif
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
@@ -1778,9 +1777,9 @@ int G__loadfile(const char *filenamein)
        **********************************************/
       if(G__USERHEADER==G__kindofheader) {
 #ifdef G__VMS
-         snprintf(G__ifile.name,G__MAXFILENAME-1,"%s",filename());
+         G__snprintf(G__ifile.name,G__MAXFILENAME-1,"%s",filename());
 #else
-         snprintf(G__ifile.name,G__MAXFILENAME-1,"%s%s",filename(),addpost[i2]);
+         G__snprintf(G__ifile.name,G__MAXFILENAME-1,"%s%s",filename(),addpost[i2]);
 #endif
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
@@ -1799,7 +1798,7 @@ int G__loadfile(const char *filenamein)
        **********************************************/
       ipath = &G__ipathentry;
       while(G__ifile.fp==NULL && ipath->pathname) {
-        snprintf(G__ifile.name,G__MAXFILENAME-1,"%s%s%s%s"
+        G__snprintf(G__ifile.name,G__MAXFILENAME-1,"%s%s%s%s"
                 ,ipath->pathname,G__psep,filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
@@ -1825,7 +1824,7 @@ int G__loadfile(const char *filenamein)
        **********************************************/
       G__getcintsysdir();
       if('\0'!=G__cintsysdir[0]) {
-        snprintf(G__ifile.name,G__MAXFILENAME-1,"%s%s%s%sinclude%s%s%s",G__cintsysdir,G__psep,G__CFG_COREVERSION
+        G__snprintf(G__ifile.name,G__MAXFILENAME-1,"%s%s%s%sinclude%s%s%s",G__cintsysdir,G__psep,G__CFG_COREVERSION
                 ,G__psep,G__psep,filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
@@ -1846,7 +1845,7 @@ int G__loadfile(const char *filenamein)
        **********************************************/
       G__getcintsysdir();
       if('\0'!=G__cintsysdir[0]) {
-        snprintf(G__ifile.name,G__MAXFILENAME-1,"%s%s%s%sstl%s%s%s",G__cintsysdir, G__psep, G__CFG_COREVERSION,
+        G__snprintf(G__ifile.name,G__MAXFILENAME-1,"%s%s%s%sstl%s%s%s",G__cintsysdir, G__psep, G__CFG_COREVERSION,
                 G__psep, G__psep, filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
@@ -1867,7 +1866,7 @@ int G__loadfile(const char *filenamein)
        **********************************************/
       /* G__getcintsysdir(); */
       if('\0'!=G__cintsysdir[0]) {
-        snprintf(G__ifile.name,G__MAXFILENAME-1,"%s%s%s%slib%s%s%s",G__cintsysdir, G__psep, G__CFG_COREVERSION,
+        G__snprintf(G__ifile.name,G__MAXFILENAME-1,"%s%s%s%slib%s%s%s",G__cintsysdir, G__psep, G__CFG_COREVERSION,
                 G__psep, G__psep,filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
@@ -1884,7 +1883,7 @@ int G__loadfile(const char *filenamein)
        **********************************************/
       G__getcintsysdir();
       if('\0'!=G__cintsysdir[0]) {
-        snprintf(G__ifile.name,G__MAXFILENAME-1,"include%s%s%s"
+        G__snprintf(G__ifile.name,G__MAXFILENAME-1,"include%s%s%s"
                 ,G__psep,filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
@@ -1905,7 +1904,7 @@ int G__loadfile(const char *filenamein)
        **********************************************/
       G__getcintsysdir();
       if('\0'!=G__cintsysdir[0]) {
-        snprintf(G__ifile.name,G__MAXFILENAME-1,"stl%s%s%s"
+        G__snprintf(G__ifile.name,G__MAXFILENAME-1,"stl%s%s%s"
                 ,G__psep,filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
@@ -1927,7 +1926,7 @@ int G__loadfile(const char *filenamein)
        * try /msdev/include
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-         snprintf(G__ifile.name,G__MAXFILENAME-1,"/msdev/include/%s%s",filename(),addpost[i2]);
+         G__snprintf(G__ifile.name,G__MAXFILENAME-1,"/msdev/include/%s%s",filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -1943,7 +1942,7 @@ int G__loadfile(const char *filenamein)
        * try /sc/include
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-         snprintf(G__ifile.name,G__MAXFILENAME-1,"/sc/include/%s%s",filename(),addpost[i2]);
+         G__snprintf(G__ifile.name,G__MAXFILENAME-1,"/sc/include/%s%s",filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -1959,9 +1958,9 @@ int G__loadfile(const char *filenamein)
        * try $ROOTSYS[include]
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-        /*  snprintf(G__ifile.name,G__MAXFILENAME-1,getenv("ROOTSYS"));
-            snprintf(&G__ifile.name[strlen(G__ifile.name)-1],...,".include]%s",filename);*/
-         snprintf(G__ifile.name,G__MAXFILENAME-1,"%s[include]%s",getenv("ROOTSYS"),filename());
+        /*  G__snprintf(G__ifile.name,G__MAXFILENAME-1,getenv("ROOTSYS"));
+            G__snprintf(&G__ifile.name[strlen(G__ifile.name)-1],...,".include]%s",filename);*/
+         G__snprintf(G__ifile.name,G__MAXFILENAME-1,"%s[include]%s",getenv("ROOTSYS"),filename());
 
         G__ifile.fp = fopen(G__ifile.name,"r");
         /*G__globalcomp=G__store_globalcomp;*/
@@ -1972,9 +1971,9 @@ int G__loadfile(const char *filenamein)
        * try $ROOTSYS[cint.include]
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-        /*   snprintf(G__ifile.name,"%s",G__cintsysdir);
-             snprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
-         snprintf(G__ifile.name,G__MAXFILENAME-1,"%s[include]%s",G__cintsysdir,filename());
+        /*   G__snprintf(G__ifile.name,"%s",G__cintsysdir);
+             G__snprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
+         G__snprintf(G__ifile.name,G__MAXFILENAME-1,"%s[include]%s",G__cintsysdir,filename());
 
         G__ifile.fp = fopen(G__ifile.name,"r");
         hdrprop = G__CINTHDR;
@@ -1986,7 +1985,7 @@ int G__loadfile(const char *filenamein)
        * try sys$common:[decc$lib.reference.decc$rtldef..]
        **********************************************/
 
-      snprintf(G__ifile.name,G__MAXFILENAME-1,"sys$common:decc$lib.reference.decc$rtdef]%s",filename());
+      G__snprintf(G__ifile.name,G__MAXFILENAME-1,"sys$common:decc$lib.reference.decc$rtdef]%s",filename());
 
       G__ifile.fp = fopen(G__ifile.name,"r");
       G__globalcomp=G__store_globalcomp;
@@ -2000,7 +1999,7 @@ int G__loadfile(const char *filenamein)
        * try /usr/include/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-         snprintf(G__ifile.name,G__MAXFILENAME-1,"/usr/include/%s%s",filename(),addpost[i2]);
+         G__snprintf(G__ifile.name,G__MAXFILENAME-1,"/usr/include/%s%s",filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -2016,7 +2015,7 @@ int G__loadfile(const char *filenamein)
        * try /usr/include/g++/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-         snprintf(G__ifile.name,G__MAXFILENAME-1,"/usr/include/g++/%s%s",filename(),addpost[i2]);
+         G__snprintf(G__ifile.name,G__MAXFILENAME-1,"/usr/include/g++/%s%s",filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -2033,7 +2032,7 @@ int G__loadfile(const char *filenamein)
        * try /usr/include/CC/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-         snprintf(G__ifile.name,G__MAXFILENAME-1,"/usr/include/CC/%s%s",filename(),addpost[i2]);
+         G__snprintf(G__ifile.name,G__MAXFILENAME-1,"/usr/include/CC/%s%s",filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -2051,7 +2050,7 @@ int G__loadfile(const char *filenamein)
        * try /usr/include/codelibs/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-        snprintf(G__ifile.name,G__MAXFILENAME-1,"/usr/include/codelibs/%s%s"
+        G__snprintf(G__ifile.name,G__MAXFILENAME-1,"/usr/include/codelibs/%s%s"
                 ,filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
@@ -2626,9 +2625,9 @@ int G__preprocessor(      char *outname,const char *inname,int cppflag
       }
       if('\0'==G__ccom[0]) {
 #ifdef __GNUC__
-        snprintf(G__ccom,G__MAXFILENAME,"g++ -E");
+        G__snprintf(G__ccom,G__MAXFILENAME,"g++ -E");
 #else
-        snprintf(G__ccom,G__MAXFILENAME,"CC -E");
+        G__snprintf(G__ccom,G__MAXFILENAME,"CC -E");
 #endif
       }
     }
@@ -2868,7 +2867,7 @@ char* G__tmpnam(char *name)
     strncpy(name,(tmp=tempnam(G__tmpdir,"")),G__MAXFILENAME-1);
     free((void*)tmp);
     if(strlen(name)<G__MAXFILENAME-10)
-      snprintf(name+strlen(name),G__MAXFILENAME-1-strlen(name),"%d%d",pid%10000,now%10000);
+      G__snprintf(name+strlen(name),G__MAXFILENAME-1-strlen(name),"%d%d",pid%10000,now%10000);
     if(strlen(name)<G__MAXFILENAME-6) strncat(name,appendix,G__MAXFILENAME-strlen(name));
     G__tmpfiles.Add(name);
     return(name);
@@ -2878,7 +2877,7 @@ char* G__tmpnam(char *name)
     free((void*)tmp);
     size_t lentemp=strlen(tempname);
     if(lentemp<G__MAXFILENAME-10)
-      snprintf(tempname+lentemp,G__MAXFILENAME-1-lentemp,"%d%d",pid%10000,now%10000);
+      G__snprintf(tempname+lentemp,G__MAXFILENAME-1-lentemp,"%d%d",pid%10000,now%10000);
     if(strlen(tempname)<G__MAXFILENAME-strlen(appendix)-1)
       strncat(tempname,appendix,G__MAXFILENAME-1-strlen(tempname));
     G__tmpfiles.Add(tempname);
@@ -2903,14 +2902,14 @@ char* G__tmpnam(char *name)
 
   char *tmp;
   if('\0'==tmpdir[0]) {
-    if((tmp=getenv("CINTTMPDIR"))) strncpy(tmpdir,tmp,G__MAXFILENAME-1);
-    else if((tmp=getenv("TEMP"))) strncpy(tmpdir,tmp,G__MAXFILENAME-1);
-    else if((tmp=getenv("TMP"))) strncpy(tmpdir,tmp,G__MAXFILENAME-1);
-    else strncpy(tmpdir,"/tmp",G__MAXFILENAME-1);
+    if((tmp=getenv("CINTTMPDIR"))) G__strlcpy(tmpdir,tmp,G__MAXFILENAME-1);
+    else if((tmp=getenv("TEMP"))) G__strlcpy(tmpdir,tmp,G__MAXFILENAME-1);
+    else if((tmp=getenv("TMP"))) G__strlcpy(tmpdir,tmp,G__MAXFILENAME-1);
+    else G__strlcpy(tmpdir,"/tmp",G__MAXFILENAME-1);
   }
 
   if (name==0) name = tempname;
-  strncpy(name, tmpdir,G__MAXFILENAME-1);
+  G__strlcpy(name, tmpdir,G__MAXFILENAME-1);
   strncat(name,"/XXXXXX",G__MAXFILENAME-1-strlen(name));
   int temp_fileno = mkstemp(name);/*mkstemp not only generate file name but also opens the file*/
   if (temp_fileno >= 0) {

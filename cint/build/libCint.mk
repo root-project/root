@@ -41,6 +41,8 @@ BCO        = $(addsuffix $(G__CFG_OBJEXT),$(addprefix $(G__CFG_COREVERSION)/src/
               bc_reader bc_type bc_exec bc_vtbl bc_debug \
               bc_assign))
 
+CONFIGO      = cint/src/config/snprintf.o cint/src/config/strlcpy.o cint/src/config/strlcat.o
+
 STUBSCXX     = $(addprefix $(G__CFG_COREVERSION)/src/,symbols.cxx)
 
 COREO        = $(filter-out $(CXXAPIO),\
@@ -49,21 +51,17 @@ COREO        = $(filter-out $(CXXAPIO),\
 	      $(filter-out $(G__CFG_COREVERSION)/src/dmy%,\
 	      $(filter-out $(G__CFG_COREVERSION)/src/bc_%,\
 	      $(filter-out $(G__CFG_COREVERSION)/src/stdstrct.cxx,\
-	      $(filter-out $(G__CFG_COREVERSION)/src/sunos.cxx,\
-	      $(filter-out $(G__CFG_COREVERSION)/src/newsos.cxx,\
-	      $(filter-out $(G__CFG_COREVERSION)/src/macos.cxx,\
-	      $(filter-out $(G__CFG_COREVERSION)/src/winnt.cxx,\
 	      $(filter-out $(G__CFG_COREVERSION)/src/oldlink.cxx,\
-         $(filter-out $(STUBSCXX), \
+	      $(filter-out $(STUBSCXX), \
 	      $(filter-out $(PRAGMATMPCXX),\
 	      $(filter-out $(LOADFILETMPCXX),\
-	      $(wildcard $(G__CFG_COREVERSION)/src/*.cxx)))))))))))))))
+	      $(wildcard $(G__CFG_COREVERSION)/src/*.cxx)))))))))))
 
 STREAMO    = $(G__CFG_COREVERSION)/src/dict/$(G__CFG_STREAMDIR)$(G__CFG_OBJEXT)
 
 STDSTRCTO  = $(G__CFG_COREVERSION)/src/dict/stdstrct$(G__CFG_OBJEXT)
 
-LIBOBJECTS = $(CXXAPIO) $(APIDICTO) $(BCO) $(STREAMO) $(RFLXO) $(COREO) $(G__CFG_COREVERSION)/src/g__cfunc$(G__CFG_OBJEXT) \
+LIBOBJECTS = $(CXXAPIO) $(APIDICTO) $(BCO) $(STREAMO) $(RFLXO) $(COREO) $(CONFIGO) $(G__CFG_COREVERSION)/src/g__cfunc$(G__CFG_OBJEXT) \
 	     $(STDSTRCTO) $(G__CFG_COREVERSION)/src/dict/longif3$(G__CFG_OBJEXT)
 ifneq ($(G__CFG_PLATFORMO),)
 LIBOBJECTS+= $(G__CFG_COREVERSION)/src/$(G__CFG_PLATFORMO)$(G__CFG_OBJEXT)
