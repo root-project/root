@@ -1963,6 +1963,7 @@ TH1D *TH3::DoProject1D(const char* name, const char* title, TAxis* projX,
    if ( projX == GetXaxis() ) { refX = &ixbin;   refY = &out1bin; refZ = &out2bin; }
    if ( projX == GetYaxis() ) { refX = &out2bin; refY = &ixbin;   refZ = &out1bin; }
    if ( projX == GetZaxis() ) { refX = &out2bin; refY = &out1bin; refZ = &ixbin;   }
+   R__ASSERT (refX != 0 && refY != 0 && refZ != 0); 
 
    // Fill the projected histogram excluding underflow/overflows if considered in the option
    // if specified in the option (by default they considered)
@@ -2198,6 +2199,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, TAxis* projX, TAxis
    if ( projX == GetZaxis() && projY == GetXaxis() ) { refX = &iybin;  refY = &outbin; refZ = &ixbin;  }
    if ( projX == GetYaxis() && projY == GetZaxis() ) { refX = &outbin; refY = &ixbin;  refZ = &iybin;  }
    if ( projX == GetZaxis() && projY == GetYaxis() ) { refX = &outbin; refY = &iybin;  refZ = &ixbin;  }
+   R__ASSERT (refX != 0 && refY != 0 && refZ != 0); 
 
    // Fill the projected histogram excluding underflow/overflows if considered in the option
    // if specified in the option (by default they considered)
@@ -2637,6 +2639,7 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, TAxis*
    if ( projX == GetZaxis() && projY == GetXaxis() ) { refX = &iybin;  refY = &outbin; refZ = &ixbin;  }
    if ( projX == GetYaxis() && projY == GetZaxis() ) { refX = &outbin; refY = &ixbin;  refZ = &iybin;  }
    if ( projX == GetZaxis() && projY == GetYaxis() ) { refX = &outbin; refY = &iybin;  refZ = &ixbin;  }
+   R__ASSERT (refX != 0 && refY != 0 && refZ != 0); 
 
    Int_t outmin = outAxis->GetFirst(); 
    Int_t outmax = outAxis->GetLast(); 

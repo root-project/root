@@ -3689,7 +3689,7 @@ Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 
    const Int_t nbins = GetXaxis()->GetNbins();
    if (!fIntegral) ComputeIntegral();
-   if (fIntegral && fIntegral[nbins+1] != fEntries) ComputeIntegral();
+   if (fIntegral[nbins+1] != fEntries) ComputeIntegral();
 
    Int_t i, ibin;
    Double_t *prob = (Double_t*)probSum;
@@ -7842,6 +7842,7 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
       else if (fft->GetNdim()==2)
          hout = new TH2D(name, name, n[0], 0, n[0], n[1], 0, n[1]);
    }
+   R__ASSERT(hout != 0);
    TString type=fft->GetType();
    Int_t ind[2];
    if (opt.Contains("RE")){
