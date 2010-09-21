@@ -1097,8 +1097,10 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
    Double_t x1,y1,x2,y2;
    Double_t dx,dy;
    TPad *pad;
-   char *name  = new char [strlen(GetName())+6];
-   char *title = new char [strlen(GetTitle())+6];
+   Int_t nchname  = strlen(GetName())+6;
+   Int_t nchtitle = strlen(GetTitle())+6;
+   char *name  = new char [nchname];
+   char *title = new char [nchtitle];
    Int_t n = 0;
    if (color == 0) color = GetFillColor();
    if (xmargin > 0 && ymargin > 0) {
@@ -1115,7 +1117,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
             x2 = x1 +dx -2*xmargin;
             if (x1 > x2) continue;
             n++;
-            sprintf(name,"%s_%d",GetName(),n);
+            snprintf(name,nchname,"%s_%d",GetName(),n);
             pad = new TPad(name,name,x1,y1,x2,y2,color);
             pad->SetNumber(n);
             pad->Draw();
@@ -1149,8 +1151,8 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
             y1 = y2 - dy;
             if (j == 0)    y2 = 1-yt;
             if (j == ny-1) y1 = 0;
-            sprintf(name,"%s_%d",GetName(),number);
-            sprintf(title,"%s_%d",GetTitle(),number);
+            snprintf(name,nchname,"%s_%d",GetName(),number);
+            snprintf(title,nchtitle,"%s_%d",GetTitle(),number);
             pad = new TPad(name,title,x1,y1,x2,y2);
             pad->SetNumber(number);
             pad->SetBorderMode(0);
@@ -1331,11 +1333,11 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
 
             Int_t dim = d->GetArrayDim();
             Int_t indx = 0;
-            sprintf(dname,"%s",obj->EscapeChars(d->GetName()));
+            snprintf(dname,256,"%s",obj->EscapeChars(d->GetName()));
             Int_t ldname = 0;
             while (indx < dim ){
                ldname = strlen(dname);
-               sprintf(&dname[ldname],"[%d]",d->GetMaxIndex(indx));
+               snprintf(&dname[ldname],256,"[%d]",d->GetMaxIndex(indx));
                indx++;
             }
             pt->AddText(x,(y-v1)/dv,dname);
@@ -4925,7 +4927,7 @@ void TPad::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    const char *cname = GetName();
    Int_t nch = strlen(cname);
    if (nch < 10) {
-      strcpy(lcname,cname);
+      strlcpy(lcname,cname,10);
       for (Int_t k=1;k<=nch;k++) {if (lcname[nch-k] == ' ') lcname[nch-k] = 0;}
       if (lcname[0] == 0) {
          if (this == gPad->GetCanvas()) {strcpy(lcname,"c1");  nch = 2;}
