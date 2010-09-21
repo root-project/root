@@ -41,4 +41,4 @@ size_t G__strlcat(char *dst, const char *src, size_t siz);
 
 #endif /* CINT_HAS_STRLCPY */
 
-#endif /* CINT_ROOT_strlcpy */
+#endif /* CINT_strlcpy */
