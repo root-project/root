@@ -426,7 +426,7 @@ void TPaveStats::Paint(Option_t *option)
 
          Int_t nchs = strlen(latex->GetTitle());
          sl = new char[nchs+1];
-         strlcpy(sl, latex->GetTitle(),nchs);
+         strlcpy(sl, latex->GetTitle(),nchs+1);
          // Draw all the histogram stats except the 2D under/overflow
          if (strpbrk(sl, "=") !=0 && print_name == 0) {
             st = strtok(sl, "=");
