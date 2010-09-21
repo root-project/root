@@ -194,6 +194,10 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
       if (fZ[p2]>z2)  {z2=fZ[p2]; x2=fX[p2]; y2=fY[p2]; i2=2;}
       if (i0==0 && i2==0) {
          Error("GetContourList", "wrong vertices ordering");
+         delete [] xs0;
+         delete [] ys0;
+         delete [] xs1;
+         delete [] ys1;
          return 0;
       } else {
          i1 = 3-i2-i0;
