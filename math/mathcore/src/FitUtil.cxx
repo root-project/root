@@ -420,10 +420,11 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
    }
    
    // reset the number of fitting data points
-   if (nRejected != 0)  nPoints = n - nRejected;
+   nPoints = n;  // no points are rejected 
+   //if (nRejected != 0)  nPoints = n - nRejected;   
 
 #ifdef DEBUG
-   std::cout << "chi2 = " << chi2 << " n = " << nRejected << std::endl;
+   std::cout << "chi2 = " << chi2 << " n = " << nPoints << " rejected = " << nRejected << std::endl;
 #endif
 
 
@@ -532,10 +533,11 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
    }
    
    // reset the number of fitting data points
-   if (nRejected != 0)  nPoints = n - nRejected;
+   nPoints = n;  // no points are rejected 
+   //if (nRejected != 0)  nPoints = n - nRejected;   
 
 #ifdef DEBUG
-   std::cout << "chi2 = " << chi2 << " n = " << nRejected << std::endl;
+   std::cout << "chi2 = " << chi2 << " n = " << nPoints << " rejected = " << nRejected << std::endl;
 #endif
 
    return chi2;

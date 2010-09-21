@@ -407,6 +407,7 @@ void FitResult::PrintCovMatrix(std::ostream &os) const {
       }
    }
    os << std::endl;   
+   int prevPrec = os.precision(kPrec);
    for (unsigned int i = 0; i < npar; ++i) {
       if (!IsParameterFixed(i) ) { 
          os << std::left << std::setw(parw) << GetParameterName(i) << "\t";
@@ -438,8 +439,9 @@ void FitResult::PrintCovMatrix(std::ostream &os) const {
          os << std::endl;
       }
    }
-   // restore right alignment 
+   // restore right alignment and precision
    os << std::right; 
+   os.precision(prevPrec);
 }
 
 void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, unsigned int stride2, const double * x, double * ci, double cl ) const {     
