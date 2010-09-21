@@ -274,6 +274,22 @@ G__FastAllocString& G__FastAllocString::Format(const char *fmt, ...)
    return *this;
 }
 
+void G__FastAllocString::Replace(size_t where, const char *replacement)
+{
+   // Replace the content of the string from 'where' to the end of the string
+   // with 'replacement'.
+   
+   if (replacement == 0) {
+      if (where < Capacity()) {
+         fBuf[where] = '\0';
+      }
+   } else {
+      size_t repl_len = strlen(replacement) + 1;
+      Resize(where + repl_len);
+      memcpy(fBuf + where, replacement, repl_len + 1);
+   }
+}
+
 void G__FastAllocString::ResizeToBucketNoCopy(int newbucket)
 {
    // Extend the size used by this buffer to at least newsize.

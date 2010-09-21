@@ -106,6 +106,8 @@ public:
       return pos + len;
       }*/
 
+   void Replace(size_t where, const char *replacement);
+                
 protected:
    static char* GetBuf(size_t &size);
 
