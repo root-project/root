@@ -39,7 +39,7 @@ void TTVRecord::ExecuteUserCode()
    if (fUserCode.Length()) {
       char code[250];
       code[0] = 0;
-      sprintf(code, "%s", fUserCode.Data());
+      snprintf(code,250, "%s", fUserCode.Data());
       gInterpreter->ProcessLine(code);
    }
 }
