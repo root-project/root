@@ -3208,6 +3208,7 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
    long ft = ftell(fd);
    if (ft <=0) {
       Error("ReadGIF", "unable to open GIF file");
+      fclose(fd);
       return pic;
    } else {
       filesize = Seek_t(ft);
