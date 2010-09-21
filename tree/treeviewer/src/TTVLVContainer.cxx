@@ -512,7 +512,7 @@ Bool_t TTVLVContainer::HandleButton(Event_t *event)
             if (fViewer) {
                char msg[2000];
                msg[0] = 0;
-               sprintf(msg, "Content : %s", f->GetTrueName());
+               snprintf(msg,2000, "Content : %s", f->GetTrueName());
                fViewer->Message(msg);
             }
          }
