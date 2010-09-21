@@ -35,10 +35,12 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 # the driver which includes the relevant files for the library:
 %_rflxdriver.C: %_rflx.cpp %_test.C TestHelper.h
-	$(CMDECHO) echo '#include "TestHelper.h" // some helper functions' > $@
+	$(CMDECHO) echo '#ifndef __CINT__' > $@
+	$(CMDECHO) echo '#include "TestHelper.h" // some helper functions' >> $@
 	$(CMDECHO) echo '#include "TSystem.h" // the dictionary' >> $@
 	$(CMDECHO) echo '#include "$*_rflx.cpp" // the dictionary' >> $@
 	$(CMDECHO) echo '#include "$*_test.C" // the test' >> $@
+	$(CMDECHO) echo '#endif' >> $@
 	$(CMDECHO) echo 'void $(@:.C=()){ gSystem->Setenv("LINES","-1"); $*_test();} // forward' >> $@
 
 # and the actual test, building and "running" the library

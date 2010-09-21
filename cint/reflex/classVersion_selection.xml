@@ -10,4 +10,7 @@
    <class pattern="std::vector<With*>::*" />
 </exclusion>
 
+<class name="WithClassDef"/>
+<class name="NoIO"/>
+<class name="FromTObject"/>
 </lcgdict>
