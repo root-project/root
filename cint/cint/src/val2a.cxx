@@ -539,7 +539,7 @@ const char* G__tagtype2string(int tagtype)
 char* G__fulltagname(int tagnum, int mask_dollar)
 {
    // return full tagname, if mask_dollar=1, $ for the typedef class is omitted
-   G__FastAllocString string(G__ONELINE);
+   static G__FastAllocString string(G__ONELINE);
    int p_tagnum[G__MAXBASE];
    int pt;
    int len = 0;
