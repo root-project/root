@@ -572,7 +572,8 @@ static void G__define_limit_var(G__DataMemberHandle &member, const char *name, d
    G__value value = G__null;
    value.type = 'd';
    value.obj.d = up/down;
-   G__letvariable((char*)name, value, &G__global, G__p_local, member);
+   G__FastAllocString tempname(name);
+   G__letvariable(tempname, value, &G__global, G__p_local, member);
    G__var_type = store_var_type;   
       
 }
@@ -620,7 +621,7 @@ static int G__atevaluate(G__value buf)
             if (buf2[c]=='1') break;
          }
          if (c!=strlen(buf2)) {
-            strcpy(buf2+c,"inf");
+            buf2.Replace(c,"inf");
          }
 #endif
       } else if (isnan(buf.obj.d)) {
@@ -632,7 +633,7 @@ static int G__atevaluate(G__value buf)
             if (buf2[c]=='1') break;
          }
          if (c!=strlen(buf2)) {
-            strcpy(buf2+c,"nan");
+            buf2.Replace(c,"nan");
          }
 #endif
       }                 
@@ -754,7 +755,7 @@ int G__reloadfile(char *filename, bool keep)
             if (G__srcfile[i].prepname) storecpp[storen] = 1;
             else                       storecpp[storen] = 0;
             storefname[storen] = (char*)malloc(strlen(G__srcfile[i].filename) + 1);
-            strcpy(storefname[storen], G__srcfile[i].filename);
+            strcpy(storefname[storen], G__srcfile[i].filename); // Okay, we allocated enough space
             ++storen;
          }
       }
@@ -1143,7 +1144,7 @@ static void G__redirectoutput(char *com
             ++j;
          }
          filename.Set(i, 0);
-         strcpy(pipefile, filename);
+         strcpy(pipefile, filename); // Legacy, we don't known the input buffer size.
 
          /* get filename to redirect
           *    cint> command > filename  /keyword
@@ -1202,7 +1203,7 @@ static void G__redirectoutput(char *com
 #ifndef G__WIN32
                   if (!strlen(stdoutsav)) {
                      const char *stdout_ttyname = ttyname(STDOUT_FILENO);
-                     if (stdout_ttyname) strcpy(stdoutsav, stdout_ttyname );
+                     if (stdout_ttyname) G__strlcpy(stdoutsav, stdout_ttyname, sizeof(stdoutsav) );
                      else {
                         G__fprinterr(G__serr, "Error: stdout was already redirected to a file, it will be redirected but we will not be able to undo this redirection!\n");
                      }
@@ -1227,7 +1228,7 @@ static void G__redirectoutput(char *com
 #ifndef G__WIN32
                   if (!strlen(stderrsav)) {
                      const char *stderr_ttyname = ttyname(STDERR_FILENO);
-                     if (stderr_ttyname) strcpy(stderrsav, stderr_ttyname);
+                     if (stderr_ttyname) G__strlcpy(stderrsav, stderr_ttyname, sizeof(stderrsav));
                      else {
                         G__fprinterr(G__serr, "Error: stderr was already redirected to a file, it will be redirected but we will not be able to undo this redirection!\n");
                      }
@@ -1303,7 +1304,7 @@ static void G__redirectoutput(char *com
          if (isspace(*redirectin)) {
             *psin = G__sin;
 #ifndef G__WIN32
-            if (!strlen(stdinsav)) strcpy(stdinsav, ttyname(STDIN_FILENO));
+            if (!strlen(stdinsav)) G__strlcpy(stdinsav, ttyname(STDIN_FILENO),sizeof(stdinsav));
 #endif
             G__sin = freopen(filename, "r", G__sin);
             if (!G__sin) {
@@ -1418,7 +1419,7 @@ readagain:
             ++i;
             if (0 == com[i] || '\n' == com[i]) {
                --i;
-               strcpy(com + i, G__input("> "));
+               strcpy(com + i, G__input("> ")); // Legacy, we don't known the input buffer size.
                if (G__return == G__RETURN_IMMEDIATE) return(-1);
             }
             break;
@@ -1449,10 +1450,10 @@ readagain:
             || 0 == strncmp(com, "while(", 6) || 0 == strncmp(com, "while ", 6)
             || 0 == strncmp(com, "do ", 3) || 0 == strncmp(com, "do{", 3)
             || 0 == strncmp(com, "namespace ", 10) || 0 == strncmp(com, "namespace{", 10)) {
-         strcpy(com + i, G__input("end with '}', '@':abort > "));
+         strcpy(com + i, G__input("end with '}', '@':abort > ")); // Legacy, we don't known the input buffer size.
       }
       else {
-         strcpy(com + i, G__input("end with ';', '@':abort > "));
+         strcpy(com + i, G__input("end with ';', '@':abort > ")); // Legacy, we don't known the input buffer size.
       }
       if (G__return == G__RETURN_IMMEDIATE) return(-1);
       if ('@' == com[i]) {
@@ -1469,7 +1470,7 @@ readagain:
          && 0 != strncmp(com, "do ", 3) && 0 != strncmp(com, "do{", 3)
          && 0 != strncmp(com, "namespace ", 10) && 0 != strncmp(com, "namespace{", 10)
       ) {
-      strcpy(com + i, G__input("end with ';', '@':abort > "));
+      strcpy(com + i, G__input("end with ';', '@':abort > ")); // Legacy, we don't known the input buffer size.
       if (G__return == G__RETURN_IMMEDIATE) return(-1);
       if ('@' == com[i]) {
          com[0] = 0;
@@ -1554,11 +1555,11 @@ const char* G__tmpfilenam();
 static void G__create_input_tmpfile(G__input_file& ftemp)
 {
 #ifdef G__WIN32
-   strcpy(ftemp.name, G__tmpfilenam());
+   G__strlcpy(ftemp.name, G__tmpfilenam(),G__MAXFILENAME);
    ftemp.fp = fopen(ftemp.name, "w+bTD"); // write and read (but write first), binary, temp, and delete when closed
 #else
    ftemp.fp = tmpfile();
-   strcpy(ftemp.name, "(tmpfile)");
+   G__strlcpy(ftemp.name, "(tmpfile)",G__MAXFILENAME);
 #endif
 }
 
@@ -2323,7 +2324,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
             G__FastAllocString tmp2(G__ONELINE);
             char *ptmp = strchr(syscom, ')');
             tmp2 = ptmp;
-            strcpy(ptmp, "const");
+            syscom.Replace((ptmp-syscom()), "const");
             syscom += tmp2;
          }
 #endif
@@ -2677,11 +2678,11 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
        *******************************************************/
       command[0] = ' ';
       if (command[1] == '\0') {
-         G__assertion[0] = '\0'; /* sprintf(G__assertion,""); */
+         G__assertion[0] = '\0';
          fprintf(G__sout, "Break assertion is deleted\n");
       }
       else {
-         sprintf(G__assertion, "%s", command + 1);
+         G__strlcpy(G__assertion, command + 1, sizeof(G__assertion));
          fprintf(G__sout, "Break only if (%s) is true\n"
                  , G__assertion);
       }
@@ -2805,11 +2806,11 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
             temp = 0;
             while (isspace(string[temp])) ++temp;
             if ('\0' == string[temp]) {
-               sprintf(G__breakline, "%d", G__ifile.line_number);
-               strcpy(G__breakfile, G__srcfile[G__ifile.filenum].filename);
+               G__snprintf(G__breakline, sizeof(G__breakline), "%d", G__ifile.line_number);
+               G__strlcpy(G__breakfile, G__srcfile[G__ifile.filenum].filename,sizeof(G__breakfile));
             }
             else {
-               strcpy(G__breakline, string + temp);
+               G__strlcpy(G__breakline, string + temp,sizeof(G__breakline));
             }
          }
       }
@@ -2864,7 +2865,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       else {
          view.file.filenum = temp;
          view.file.fp = G__srcfile[temp].fp;
-         strcpy(view.file.name, G__srcfile[temp].filename);
+         G__strlcpy(view.file.name, G__srcfile[temp].filename,G__MAXFILENAME);
          view.file.line_number = 1;
          G__pr(G__sout, view.file);
       }
@@ -2890,7 +2891,7 @@ vcommand:
          ) {
          view.file.filenum = filenum;
          view.file.fp = G__srcfile[filenum].fp;
-         strcpy(view.file.name, G__srcfile[filenum].filename);
+         G__strlcpy(view.file.name, G__srcfile[filenum].filename,G__MAXFILENAME);
          view.file.line_number = line_number;
          G__pr(G__sout, view.file);
       }
@@ -2923,7 +2924,7 @@ vcommand:
          }
          else if (local && local->prev_local) {
             view.file.filenum = local->prev_filenum ;
-            strcpy(view.file.name, G__srcfile[view.file.filenum].filename);
+            G__strlcpy(view.file.name, G__srcfile[view.file.filenum].filename,G__MAXFILENAME);
             view.file.fp = G__srcfile[view.file.filenum].fp;
             view.file.line_number = local->prev_line_number;
             view.var_local = local->prev_local;
@@ -3181,7 +3182,7 @@ vcommand:
          if (buf.isconst&G__PCONSTVAR) {
             char *ptmp = strchr(syscom, ')');
             G__FastAllocString tmp2(ptmp);
-            strcpy(ptmp, "const");
+            syscom.Replace((ptmp-syscom()), "const");
             syscom += tmp2;
          }
 #endif
@@ -3278,9 +3279,9 @@ multi_line_command:
            G__multi_line_temp = ftemp;
 
 #ifndef G__OLDIMPLEMENTATION1774
-            strcpy(prompt, "end with '}', '@':abort > ");
+           strcpy(prompt, "end with '}', '@':abort > "); // Legacy, we don't known the input buffer size.
 #else
-            strcpy(prompt, "end with '}'> ");
+           strcpy(prompt, "end with '}'> "); // Legacy, we don't known the input buffer size.
 #endif
             *more = temp;
             G__pause_return = 0;
@@ -3347,7 +3348,7 @@ multi_line_command:
             if (buf.isconst&G__PCONSTVAR) {
                char *ptmp = strchr(syscom, ')');
                G__FastAllocString tmp2(ptmp);
-               strcpy(ptmp, "const");
+               syscom.Replace((ptmp-syscom()), "const");
                syscom += tmp2;
             }
 #endif
@@ -3531,7 +3532,7 @@ multi_line_command:
             if (buf.isconst&G__PCONSTVAR) {
                char *ptmp = strchr(syscom, ')');
                G__FastAllocString tmp2(ptmp);
-               strcpy(ptmp, "const");
+               syscom.Replace((ptmp-syscom()), "const");
                syscom += tmp2;
             }
 #endif

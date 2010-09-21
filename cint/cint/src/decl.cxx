@@ -465,7 +465,8 @@ static int G__get_newname(G__FastAllocString& new_name)
          cin = G__fignorestream(")");
          cin = G__fignorestream("(");
          new_name.Resize(12);
-         strcpy(new_name + 9, "()");
+         new_name[9] = '\0';
+         new_name += "()";
       }
       return cin;
    }
@@ -482,7 +483,8 @@ static int G__get_newname(G__FastAllocString& new_name)
          cin = G__fignorestream(")");
          cin = G__fignorestream("(");
          new_name.Resize(13);
-         strcpy(new_name + 10, "()");
+         new_name[10] = '\0';
+         new_name += "()";
       }
       return(cin);
    }
@@ -758,7 +760,7 @@ static int G__initstruct(G__FastAllocString& new_name)
                // -- Data member is a fixed-size character array.
                // FIXME: We do not handle a data member which is an unspecified length array.
                if (memvar->varlabel[memindex][1] /* number of elements */ > (int) std::strlen((char*)reg.obj.i)) {
-                  std::strcpy((char*) buf.obj.i, (char*) reg.obj.i);
+                  std::strcpy((char*) buf.obj.i, (char*) reg.obj.i); // Legacy, we don't know the buffer size.
                }
                else {
                   std::strncpy((char*) buf.obj.i, (char*) reg.obj.i, memvar->varlabel[memindex][1] /* num of elements */);

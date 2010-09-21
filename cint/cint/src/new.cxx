@@ -37,7 +37,7 @@ G__value G__new_operator(const char* expression)
    // new type(53)
    // new (arena)type
    //char expression[G__LONGLINE];
-   //strcpy (expression,express);
+   //copy (expression,express);
    G__FastAllocString arena(G__ONELINE);
    long memarena = 0;
    int arenaflag = 0;

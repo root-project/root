@@ -246,7 +246,7 @@ G__value G__castvalue_bc(char* casttype, G__value result3, int bc)
    else if (strncmp(casttype, "typename", 8) == 0) {
       G__SlideString(casttype, 8);
    }
-   if (casttype[0] == ' ') strcpy(casttype, casttype + 1);
+   if (casttype[0] == ' ') G__SlideString(casttype, 1);
    while (strncmp(casttype, "const ", 6) == 0) {
       isconst = 1;
       G__SlideString(casttype, 6);

@@ -116,7 +116,7 @@ static int G__addpreprocessfile()
 
   /* Add the list */
   pkey->keystring = (char*)malloc(strlen(keystring)+1);
-  strcpy(pkey->keystring,keystring);
+  strcpy(pkey->keystring,keystring); // Okay we allocated enough space
   pkey->next
     =(struct G__Preprocessfilekey*)malloc(sizeof(struct G__Preprocessfilekey));
   pkey->next->next=(struct G__Preprocessfilekey*)NULL;
@@ -175,7 +175,7 @@ static void G__do_not_include()
 
   G__srcfile[G__nfile].hash = hash;
   G__srcfile[G__nfile].filename = (char*)malloc(strlen(fname)+1);
-  strcpy(G__srcfile[G__nfile].filename,fname);
+  strcpy(G__srcfile[G__nfile].filename,fname); // Okay we allocated enough space
   G__srcfile[G__nfile].included_from = -1;
 
   ++G__nfile;
@@ -578,16 +578,16 @@ int G__setautoccnames()
 
   /* assign autocc filenames */
   if(G__iscpp) 
-     sprintf(G__autocc_c,"G__AC%s%s",fname(),G__getmakeinfo1("CPPSRCPOST"));
+     G__snprintf(G__autocc_c,G__MAXNAME,"G__AC%s%s",fname(),G__getmakeinfo1("CPPSRCPOST"));
   else
-     sprintf(G__autocc_c,"G__AC%s%s",fname(),G__getmakeinfo1("CSRCPOST"));
-  sprintf(G__autocc_h,"G__AC%s",fname());
+     G__snprintf(G__autocc_c,G__MAXNAME,"G__AC%s%s",fname(),G__getmakeinfo1("CSRCPOST"));
+  G__snprintf(G__autocc_h,G__MAXNAME,"G__AC%s",fname());
 #ifdef G__WIN32
-  sprintf(G__autocc_sl,"G__AC%s%s",fname(),G__getmakeinfo1("DLLPOST"));
+  G__snprintf(G__autocc_sl,G__MAXNAME,"G__AC%s%s",fname(),G__getmakeinfo1("DLLPOST"));
 #else
-  sprintf(G__autocc_sl,"./G__AC%s%s",fname(),G__getmakeinfo1("DLLPOST"));
+  G__snprintf(G__autocc_sl,G__MAXNAME,"./G__AC%s%s",fname(),G__getmakeinfo1("DLLPOST"));
 #endif
-  sprintf(G__autocc_mak,"G__AC%s.mak",fname());
+  G__snprintf(G__autocc_mak,G__MAXNAME,"G__AC%s.mak",fname());
 
   /* copy autocc file backup */
   backup.Format("G__%s",G__autocc_c);
@@ -637,7 +637,7 @@ int G__autocc()
   if(G__isautoccupdate()) {
     G__fprinterr(G__serr,"Compiling #pragma compile ...\n");
     ansi[0]='\0';
-    if(G__cpp)  sprintf(cpp,"-p");
+    if(G__cpp)  G__strlcpy(cpp,"-p",sizeof(cpp));
     else        cpp[0]='\0';
 
     if(G__iscpp) {

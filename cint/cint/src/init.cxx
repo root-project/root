@@ -259,7 +259,7 @@ static void G__read_include_env(char* envname)
    if (env) {
       char *p, *pc;
       char* tmp = (char*)malloc(strlen(env) + 2);
-      strcpy(tmp, env);
+      strcpy(tmp, env); // Okay we allocated enough memory
       p = tmp;
       while ((pc = strchr(p, ';')) || (pc = strchr(p, ','))) {
          *pc = 0;
@@ -320,8 +320,8 @@ int G__init_cint(const char* command)
     * copy command to argbuf. argbuf will
     * be modified by G__split().
     ***************************************/
-   if (G__commandline != command) strcpy(G__commandline, command);
-   strcpy(argbuf, command);
+   if (G__commandline != command) G__strlcpy(G__commandline, command, G__LONGLINE);
+   G__strlcpy(argbuf, command, G__LONGLINE);
 
    /***************************************
     * split arguments as follows
@@ -559,7 +559,7 @@ int G__main(int argc, char** argv)
     * Interpreted code option related variables
     *************************************************************/
    int c, iarg;
-   char temp[G__ONELINE];
+   G__FastAllocString temp(G__ONELINE);
    long G__argpointer[G__MAXARG];
    char dumpfile[G__MAXFILENAME];
    G__value result;
@@ -611,10 +611,10 @@ int G__main(int argc, char** argv)
       G__Xdumpreadline[ii] = 0;
    }
    if (argv[0]) {
-      sprintf(G__nam, "%s", argv[0]); // get command name
+      G__strlcpy(G__nam, argv[0], sizeof(G__nam)); // get command name
    }
    else {
-      strcpy(G__nam, "cint");
+      G__strlcpy(G__nam, "cint", sizeof(G__nam));
    }
    /*************************************************************
     * Set stderr,stdin,stdout,NULL pointer values to global
@@ -683,7 +683,6 @@ int G__main(int argc, char** argv)
     * is set to some valid file name.
     *************************************************************/
    dumpfile[0] = '\0';
-   /* sprintf(dumpfile,""); */
 #ifndef G__TESTMAIN
    optind = 1;
 #endif
@@ -693,7 +692,7 @@ int G__main(int argc, char** argv)
     * Get command options
     *************************************************************/
    char magicchars[100];
-   strcpy(magicchars,".:a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:H:I:J:L:KM:N:O:P:QRSTU:VW:X:Y:Z:-:@+:");
+   G__strlcpy(magicchars,".:a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:H:I:J:L:KM:N:O:P:QRSTU:VW:X:Y:Z:-:@+:",100);
    while ((c = getopt(argc, argv, magicchars)) != EOF) {
       switch (c) {
 #ifndef G__OLDIMPLEMENTATION2226
@@ -871,7 +870,7 @@ int G__main(int argc, char** argv)
          case 'W':
             switch (optarg[1]) {
                case 'p':
-                  strcpy(G__ppopt, optarg + 2);
+                  G__ppopt = optarg + 2;
                   ppc = G__ppopt;
                   while ((ppc = strchr(ppc, ','))) * ppc = ' ';
                   break;
@@ -933,7 +932,7 @@ int G__main(int argc, char** argv)
                G__fprinterr(G__serr, "-d %s : Improper history dump file name\n"
                             , optarg);
             }
-            else sprintf(dumpfile, "%s", optarg);
+            else G__strlcpy(dumpfile, optarg, sizeof(dumpfile));
 #else
             G__fprinterr(G__serr,
                          " -d : func call dump not supported now\n");
@@ -1003,16 +1002,15 @@ int G__main(int argc, char** argv)
             stepfrommain = 1;
             break;
          case 'b': /* break line */
-            strcpy(G__breakline, optarg);
+            G__strlcpy(G__breakline, optarg, sizeof(G__breakline));
             break;
          case 'f': /* break file */
-            strcpy(G__breakfile, optarg);
+            G__strlcpy(G__breakfile, optarg, sizeof(G__breakfile));
             break;
          case 'a': /* assertion */
-            strcpy(G__assertion, optarg);
+            G__strlcpy(G__assertion, optarg, sizeof(G__assertion));
             break;
          case 'T': /* trace of input file */
-            /* sprintf(monitorfile,"%s",optarg); */
             G__fprinterr(G__serr, " -T : trace from pre-run\n");
             G__debugtrace = G__istrace = G__debug = 1;
             G__setdebugcond();
@@ -1027,12 +1025,10 @@ int G__main(int argc, char** argv)
             break;
          }
          case 't': /* trace of input file */
-            /* sprintf(monitorfile,"%s",optarg); */
             G__fprinterr(G__serr, " -t : trace execution\n");
             G__istrace = G__debugtrace = 1;
             break;
          case 'R': /* displays input file at the break point*/
-            /* sprintf(monitorfile,"%s",optarg); */
             G__fprinterr(G__serr, " -d : display at break point mode\n");
             G__breakdisp = 1;
             break;
@@ -1138,10 +1134,10 @@ int G__main(int argc, char** argv)
       int oldglobalcomp = G__globalcomp;
       G__globalcomp = G__NOLINK;
       if (G__cintv6) {
-         sprintf(temp, "G__CINTVERSION=%ld", (long) G__CINTVERSION_V6);
+         temp.Format("G__CINTVERSION=%ld", (long) G__CINTVERSION_V6);
       }
       else {
-         sprintf(temp, "G__CINTVERSION=%ld", (long) G__CINTVERSION_V5);
+         temp.Format("G__CINTVERSION=%ld", (long) G__CINTVERSION_V5);
       }
       G__add_macro(temp);
       G__globalcomp = oldglobalcomp;
@@ -1345,7 +1341,7 @@ int G__main(int argc, char** argv)
       G__redirect_on();
       G__init_process_cmd();
       char prompt[G__ONELINE];
-      strcpy(prompt, "cint>");
+      G__strlcpy(prompt, "cint>", G__ONELINE);
       G__process_cmd(icom, prompt, &more, 0, 0);
       G__scratch_all();
       return EXIT_SUCCESS;
@@ -1509,7 +1505,7 @@ int G__main(int argc, char** argv)
       if (G__breaksignal) {
          G__fprinterr(G__serr, "\nCALL main()\n");
       }
-      sprintf(temp, "main");
+      temp = "main";
       para.paran = 2;
       G__letint(&para.para[0], 'i', argc - optind);
       para.para[0].tagnum = -1;
@@ -2034,7 +2030,7 @@ static void G__defineMacro(const char* name, long value, const char* cintname = 
       return;
    }
 
-   sprintf(temp + 2, "!%s=%ld", name, value);
+   snprintf(temp + 2, G__ONELINE-2, "!%s=%ld", name, value);
 
    if (!compiler || G__globalcomp != G__NOLINK) {
       // add system version, which starts with a '!'
@@ -2049,7 +2045,7 @@ static void G__defineMacro(const char* name, long value, const char* cintname = 
    char* start = temp;
    if (cintname) {
       start +=3;
-      sprintf(start, "%s=%ld", cintname, value);
+      snprintf(start, G__ONELINE - (start-temp), "%s=%ld", cintname, value);
    }
    else {
       // generate CINT name:
@@ -2065,7 +2061,7 @@ static void G__defineMacro(const char* name, long value, const char* cintname = 
          --end;
       }
 
-      sprintf(end + 1, "=%ld", value);
+      snprintf(end + 1, G__ONELINE - (end-temp), "=%ld", value);
       while (cap && end != start) {
          // capitalize the CINT macro name
          *end = toupper(*end);
@@ -2184,7 +2180,7 @@ void G__platformMacro()
 #endif
 #if defined(__GNUC__) && defined(__GNUC_MINOR__)
    if (G__globalcomp == G__NOLINK) {
-      sprintf(temp, "G__GNUC_VER=%ld", (long)__GNUC__*1000 + __GNUC_MINOR__);
+      G__snprintf(temp, sizeof(temp), "G__GNUC_VER=%ld", (long)__GNUC__*1000 + __GNUC_MINOR__);
       G__add_macro(temp);
    }
 #endif
@@ -2196,13 +2192,13 @@ void G__platformMacro()
 #endif
 #ifdef __HP_aCC     /* HP aCC C++ compiler */
    if (G__globalcomp == G__NOLINK) {
-      sprintf(temp, "G__HP_aCC=%ld", (long)__HP_aCC);
+      G__snprintf(temp, sizeof(temp), "G__HP_aCC=%ld", (long)__HP_aCC);
       G__add_macro(temp);
    }
    G__DEFINE_MACRO_S_C(__HP_aCC);
 #if __HP_aCC > 15000
    if (G__globalcomp == G__NOLINK) {
-      sprintf(temp, "G__ANSIISOLIB=1");
+      G__snprintf(temp, sizeof(temp), "G__ANSIISOLIB=1");
       G__add_macro(temp);
    }
 #endif
@@ -2219,23 +2215,23 @@ void G__platformMacro()
 #endif
 #ifdef G__VISUAL    /* Microsoft Visual C++ compiler */
    if (G__globalcomp == G__NOLINK) {
-      sprintf(temp, "G__VISUAL=%ld", (long)G__VISUAL);
+      G__snprintf(temp, sizeof(temp), "G__VISUAL=%ld", (long)G__VISUAL);
       G__add_macro(temp);
    }
 #endif
 #ifdef _MSC_VER     /* Microsoft Visual C++ version */
    if (G__globalcomp == G__NOLINK) {
-      sprintf(temp, "G__VISUAL=%ld", (long)G__VISUAL);
+      G__snprintf(temp, sizeof(temp), "G__VISUAL=%ld", (long)G__VISUAL);
       G__add_macro(temp);
    }
    G__DEFINE_MACRO_C(_MSC_VER);
    if (G__globalcomp == G__NOLINK) {
 #ifdef _HAS_ITERATOR_DEBUGGING
-      sprintf(temp, "G__HAS_ITERATOR_DEBUGGING=%d", _HAS_ITERATOR_DEBUGGING);
+      G__snprintf(temp, sizeof(temp), "G__HAS_ITERATOR_DEBUGGING=%d", _HAS_ITERATOR_DEBUGGING);
       G__add_macro(temp);
 #endif
 #ifdef _SECURE_SCL
-      sprintf(temp, "G__SECURE_SCL=%d", _SECURE_SCL);
+      G__snprintf(temp, sizeof(temp), "G__SECURE_SCL=%d", _SECURE_SCL);
       G__add_macro(temp);
 #endif
    }
@@ -2261,9 +2257,9 @@ void G__platformMacro()
 #ifndef _AIX
 #ifdef __xlc__ /* IBM xlc compiler */
    if (G__globalcomp == G__NOLINK) {
-      sprintf(temp, "G__GNUC=%ld", (long)3 /*__GNUC__*/);
+      G__snprintf(temp, sizeof(temp), "G__GNUC=%ld", (long)3 /*__GNUC__*/);
       G__add_macro(temp);
-      sprintf(temp, "G__GNUC_MINOR=%ld", (long)3 /*__GNUC_MINOR__*/);
+      G__snprintf(temp, sizeof(temp), "G__GNUC_MINOR=%ld", (long)3 /*__GNUC_MINOR__*/);
       G__add_macro(temp);
    }
    G__DEFINE_MACRO_C(__xlc__);
@@ -2351,19 +2347,19 @@ void G__platformMacro()
     * application environment
     ***********************************************************************/
 #ifdef G__ROOT
-   sprintf(temp, "G__ROOT=%ld", (long)G__ROOT);
+   G__snprintf(temp, sizeof(temp), "G__ROOT=%ld", (long)G__ROOT);
    G__add_macro(temp);
 #endif
 #ifdef G__NO_STDLIBS
-   sprintf(temp, "G__NO_STDLIBS=%ld", (long)G__NO_STDLIBS);
+   G__snprintf(temp, sizeof(temp), "G__NO_STDLIBS=%ld", (long)G__NO_STDLIBS);
    G__add_macro(temp);
 #endif
 #ifdef G__NATIVELONGLONG
-   sprintf(temp, "G__NATIVELONGLONG=%ld", (long)G__NATIVELONGLONG);
+   G__snprintf(temp, sizeof(temp), "G__NATIVELONGLONG=%ld", (long)G__NATIVELONGLONG);
    G__add_macro(temp);
 #endif
 
-   sprintf(temp, "int& G__cintv6=*(int*)(%ld);", (long)(&G__cintv6));
+   G__snprintf(temp, sizeof(temp), "int& G__cintv6=*(int*)(%ld);", (long)(&G__cintv6));
    G__exec_text(temp);
 
    // setup size_t, ssize_t
@@ -2408,37 +2404,37 @@ void G__set_stdio()
 
    G__var_type = 'E';
    G__globalvarpointer = (long) & G__intp_sout;
-   sprintf(temp, "stdout=(FILE*)(%ld)", (long)G__intp_sout);
+   G__snprintf(temp, sizeof(temp), "stdout=(FILE*)(%ld)", (long)G__intp_sout);
    G__getexpr(temp);
    G__globalvarpointer = G__PVOID;
 
    G__var_type = 'E';
    G__globalvarpointer = (long) & G__intp_serr;
-   sprintf(temp, "stderr=(FILE*)(%ld)", (long)G__intp_serr);
+   G__snprintf(temp, sizeof(temp), "stderr=(FILE*)(%ld)", (long)G__intp_serr);
    G__getexpr(temp);
    G__globalvarpointer = G__PVOID;
 
    G__var_type = 'E';
    G__globalvarpointer = (long) & G__intp_sin;
-   sprintf(temp, "stdin=(FILE*)(%ld)", (long)G__intp_sin);
+   G__snprintf(temp, sizeof(temp), "stdin=(FILE*)(%ld)", (long)G__intp_sin);
    G__getexpr(temp);
    G__globalvarpointer = G__PVOID;
 
    G__definemacro = 1;
-   sprintf(temp, "EOF=%ld", (long)EOF);
+   G__snprintf(temp, sizeof(temp), "EOF=%ld", (long)EOF);
    G__getexpr(temp);
-   sprintf(temp, "NULL=%ld", (long)NULL);
+   G__snprintf(temp, sizeof(temp), "NULL=%ld", (long)NULL);
    G__getexpr(temp);
 #ifdef G__SHAREDLIB
-   sprintf(temp, "G__SHAREDLIB=1");
+   G__snprintf(temp, sizeof(temp), "G__SHAREDLIB=1");
    G__getexpr(temp);
 #endif
 #if defined(G__P2FCAST) || defined(G__P2FDECL)
-   sprintf(temp, "G__P2F=1");
+   G__snprintf(temp, sizeof(temp), "G__P2F=1");
    G__getexpr(temp);
 #endif
 #ifdef G__NEWSTDHEADER
-   sprintf(temp, "G__NEWSTDHEADER=1");
+   G__snprintf(temp, sizeof(temp), "G__NEWSTDHEADER=1");
    G__getexpr(temp);
 #endif
    G__platformMacro();
@@ -2477,19 +2473,19 @@ void G__set_stdio_handle(FILE *sout, FILE *serr, FILE *sin)
 
    G__var_type = 'E';
    G__globalvarpointer = (long) & G__intp_sout;
-   sprintf(temp, "stdout=(FILE*)(%ld)", (long)G__intp_sout);
+   G__snprintf(temp, sizeof(temp), "stdout=(FILE*)(%ld)", (long)G__intp_sout);
    G__getexpr(temp);
    G__globalvarpointer = G__PVOID;
 
    G__var_type = 'E';
    G__globalvarpointer = (long) & G__intp_serr;
-   sprintf(temp, "stderr=(FILE*)(%ld)", (long)G__intp_serr);
+   G__snprintf(temp, sizeof(temp), "stderr=(FILE*)(%ld)", (long)G__intp_serr);
    G__getexpr(temp);
    G__globalvarpointer = G__PVOID;
 
    G__var_type = 'E';
    G__globalvarpointer = (long) & G__intp_sin;
-   sprintf(temp, "stdin=(FILE*)(%ld)", (long)G__intp_sin);
+   G__snprintf(temp, sizeof(temp), "stdin=(FILE*)(%ld)", (long)G__intp_sin);
    G__getexpr(temp);
    G__globalvarpointer = G__PVOID;
 }
@@ -2525,7 +2521,7 @@ G__ConstStringList* G__AddConstStringList(G__ConstStringList* current, char* str
    next = (struct G__ConstStringList*)malloc(sizeof(struct G__ConstStringList));
 
    next->string = (char*)malloc(strlen(str) + 1);
-   strcpy(next->string, str);
+   strcpy(next->string, str); // Okay we allocated enough memory
 
    if (islen) {
       next->hash = strlen(str);

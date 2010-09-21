@@ -83,7 +83,7 @@ char *G__xdumpinput(const char *prompt)
       fclose(G__dumpreadline[0]);
       fprintf(G__sout,"End of readline dumpfile. ");
       G__popdumpinput();
-      sprintf(line,"P"); 
+      G__strlcpy(line,"P",sizeof(line));
       return(line);
     }
     for(i=0;i<G__LONGLINE-1;i++) {

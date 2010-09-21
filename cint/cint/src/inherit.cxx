@@ -149,10 +149,10 @@ int G__baseconstructorwp()
       pbaseparam->name = (char*)NULL;
       pbaseparam->param = (char*)NULL;
       pbaseparam->name=(char*)malloc(strlen(buf)+1);
-      strcpy(pbaseparam->name,buf);
+      strcpy(pbaseparam->name,buf); // Okay, we allocated enough space
       c=G__fgetstream_newtemplate(buf, 0, ")");
       pbaseparam->param=(char*)malloc(strlen(buf)+1);
-      strcpy(pbaseparam->param,buf);
+      strcpy(pbaseparam->param,buf); // Okay, we allocated enough space
       ++n;
       c=G__fgetstream(buf, 0, ",{");
     }

@@ -141,8 +141,7 @@ int G__Lsizeof(const char *type_name)
   int tagnum,typenum;
   int result;
   int pointlevel=0;
-  G__FastAllocString namebody_sb(G__MAXNAME+20);
-  char* namebody = namebody_sb;
+  G__FastAllocString namebody(G__MAXNAME+20);
   char *p;
   int i;
 
@@ -278,23 +277,22 @@ int G__Lsizeof(const char *type_name)
   while (type_name[pointlevel] == '*') {
     ++pointlevel;
   }
-  strcpy(namebody, type_name + pointlevel);
+  namebody = (type_name + pointlevel);
   while ((p = strrchr(namebody, '['))) {
     *p = '\0';
     ++pointlevel;
   }
-  G__hash(namebody,hash,ig15)
+  G__hash(namebody(),hash,ig15)
   var = G__getvarentry(namebody,hash,&ig15,&G__global,G__p_local);
   if (!var) {
-    G__FastAllocString temp_sb(G__ONELINE);
-    char* temp = temp_sb;
+    G__FastAllocString temp(G__ONELINE);
     if (G__memberfunc_tagnum != -1) { // questionable
-      sprintf(temp, "%s\\%x\\%x\\%x", namebody, G__func_page, G__func_now, G__memberfunc_tagnum);
+       temp.Format("%s\\%x\\%x\\%x", namebody(), G__func_page, G__func_now, G__memberfunc_tagnum);
     }
     else {
-      sprintf(temp, "%s\\%x\\%x", namebody, G__func_page, G__func_now);
+       temp.Format("%s\\%x\\%x", namebody(), G__func_page, G__func_now);
     }
-    G__hash(temp, hash, i)
+    G__hash(temp(), hash, i)
     var = G__getvarentry(temp, hash, &ig15, &G__global, G__p_local);
   }
   if (var) {
@@ -412,7 +410,7 @@ long *G__typeid(const char *typenamein)
   /**********************************************************************
   * In case of typeid(X&) , typeid(X*) , strip & or *
   ***********************************************************************/
-  strcpy(typenamebuf,typenamein);
+  typenamebuf_sb = typenamein;
   type_name=typenamebuf;
   len=strlen(type_name);
 
@@ -670,7 +668,6 @@ long *G__typeid(const char *typenamein)
 }
 #endif
 
-
 /******************************************************************
 * G__getcomment()
 *
@@ -735,7 +732,7 @@ void G__getcomment(char *buf,G__comment_info *pcomment,int tagnum)
       }
     }
     else if(-2==pcomment->filenum) {
-      strcpy(buf,pcomment->p.com);
+       G__strlcpy(buf,pcomment->p.com,G__ONELINE);
     }
     else {
       buf[0]='\0';
@@ -808,7 +805,7 @@ void G__getcommenttypedef(char *buf,G__comment_info *pcomment,int typenum)
       }
     }
     else if(-2==pcomment->filenum) {
-      strcpy(buf,pcomment->p.com);
+       G__strlcpy(buf,pcomment->p.com,G__ONELINE);
     }
     else {
       buf[0]='\0';
@@ -891,10 +888,10 @@ long G__get_classinfo(const char *item,int tagnum)
     for(i=0;i<baseclass->basen;i++) {
       if(baseclass->herit[i]->property&G__ISDIRECTINHERIT) {
         if(p) {
-          sprintf(buf+p,",");
+           sprintf(buf+p,","); // Legacy, we can't know the buffer length
           ++p;
         }
-        sprintf(buf+p,"%s%s" ,G__access2string(baseclass->herit[i]->baseaccess)
+        sprintf(buf+p,"%s%s" ,G__access2string(baseclass->herit[i]->baseaccess) // Legacy, we can't know the buffer length
                 ,G__struct.name[baseclass->herit[i]->basetagnum]);
         p=strlen(buf);
       }
@@ -998,7 +995,7 @@ long G__get_variableinfo(const char *item,long *phandle,long *pindex,int tagnum)
     tag_string_buf = G__defined_tagname("G__string_buf",0);
     G__alloc_tempobject(tag_string_buf, -1 );
     buf = (char*)G__p_tempbuf->obj.obj.i;
-    strcpy(buf,G__type2string(var->type[index] 
+    strcpy(buf,G__type2string(var->type[index]         // Legacy use, we can't know the buffer size
                               ,var->p_tagtable[index]
                               ,var->p_typetable[index] 
                               ,var->reftype[index],0));
@@ -1108,7 +1105,7 @@ long G__get_functioninfo(const char *item,long *phandle,long *pindex,int tagnum)
     tag_string_buf = G__defined_tagname("G__string_buf",0);
     G__alloc_tempobject(tag_string_buf, -1 );
     buf = (char*)G__p_tempbuf->obj.obj.i;
-    strcpy(buf,G__type2string(ifunc->type[index] 
+    strcpy(buf,G__type2string(ifunc->type[index]           // Legacy use, we can't know the buffer size
                               ,ifunc->p_tagtable[index]
                               ,ifunc->p_typetable[index] 
                               ,ifunc->reftype[index],0));
@@ -1127,17 +1124,16 @@ long G__get_functioninfo(const char *item,long *phandle,long *pindex,int tagnum)
     p=0;
     for(i=0;i<ifunc->para_nu[index];i++) {
       if(p) {
-        sprintf(buf+p,",");
+        sprintf(buf+p,",");  // Legacy use, we can't know the buffer size
         ++p;
       }
-      sprintf(buf+p,"%s",G__type2string(ifunc->param[index][i]->type
+      sprintf(buf+p,"%s",G__type2string(ifunc->param[index][i]->type         // Legacy use, we can't know the buffer size
                                         ,ifunc->param[index][i]->p_tagtable
                                         ,ifunc->param[index][i]->p_typetable
                                         ,ifunc->param[index][i]->reftype,0));
       p=strlen(buf);
       if(ifunc->param[index][i]->pdefault) {
-        sprintf(buf+p,"=");
-                /* ,G__valuemonitor(*ifunc->param[index][i]->pdefault,temp)); */
+        sprintf(buf+p,"=");  // Legacy use, we can't know the buffer size
       }
       p=strlen(buf);
     }

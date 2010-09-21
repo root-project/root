@@ -164,7 +164,9 @@ extern int G__mline;
 extern const char *G__macro;
 extern struct G__Deffuncmacro G__deffuncmacro;
 extern char G__macros[16*G__LONGLINE];
-extern char G__ppopt[16*G__ONELINE];
+#ifdef __cplusplus
+extern G__FastAllocString G__ppopt; 
+#endif
 extern char *G__allincludepath;
 extern const char *G__undeflist;
 struct G__funcmacro_stackelt;

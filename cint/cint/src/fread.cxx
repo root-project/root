@@ -22,7 +22,7 @@ int G__fgetstream_template(G__FastAllocString& string, size_t offset, const char
 int G__getstream_template(const char* source, int* isrc,G__FastAllocString&  string, size_t offset, const char* endmark);
 int G__fgetname(G__FastAllocString& string, size_t offset, const char *endmark);
 int G__getname(const char* source, int* isrc, char* string, const char* endmark);
-int G__getfullpath(char* string, char* pbegin, int i);
+static int G__getfullpath(G__FastAllocString &string, char* pbegin, int i);
 int G__fdumpstream(G__FastAllocString& string, size_t offset, const char *endmark);
 int G__fgetstream(G__FastAllocString& string, size_t offset, const char *endmark);
 void G__fgetstream_peek(char* string, int nchars);
@@ -1581,7 +1581,7 @@ int G__getname(const char* source, int* isrc, char* string, const char* endmark)
 }
 
 //______________________________________________________________________________
-int G__getfullpath(char* string, char* pbegin, int i)
+static int G__getfullpath(G__FastAllocString &string, char* pbegin, int i)
 {
    int tagnum = -1, typenum;
    string[i] = '\0';
@@ -1590,7 +1590,7 @@ int G__getfullpath(char* string, char* pbegin, int i)
    if (-1 == typenum) tagnum = G__defined_tagname(pbegin, 1);
    if ((-1 != typenum && -1 != G__newtype.parent_tagnum[typenum]) ||
          (-1 != tagnum  && -1 != G__struct.parent_tagnum[tagnum])) {
-      strcpy(pbegin, G__type2string(0, tagnum, typenum, 0, 0));
+      strcpy(pbegin, G__type2string(0, tagnum, typenum, 0, 0));  // Suspicious and hard to fix ... not clear what the relation between i and pbegin is and what would happen to pbegin if we resize the string.
       i = strlen(string);
    }
    return(i);

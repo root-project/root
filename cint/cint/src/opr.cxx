@@ -1958,7 +1958,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
 }
 
 //______________________________________________________________________________
-int G__scopeoperator(char* name, int* phash, long* pstruct_offset, int* ptagnum)
+int G__scopeoperator(char * name, int* phash, long* pstruct_offset, int* ptagnum)
 {
    // -- FIXME: Describe this function!
    // May need to modify this function to support multiple usage of
@@ -1989,7 +1989,7 @@ int G__scopeoperator(char* name, int* phash, long* pstruct_offset, int* ptagnum)
    if (pc == name) {
       /* strip scope operator, set hash and return */
       temp = name + 2;
-      strcpy(name, temp);
+      strcpy(name, temp); // Okay since we 'reduce' the size of the string
       G__hash(name, (*phash), i)
       /* If we do no have anymore scope operator, we know the request of
          for the global name space */
@@ -2000,7 +2000,7 @@ int G__scopeoperator(char* name, int* phash, long* pstruct_offset, int* ptagnum)
    if (strncmp(name, "std::", 5) == 0 && G__ignore_stdnamespace) {
       // strip scope operator, set hash and return
       temp = name + 5;
-      strcpy(name, temp);
+      strcpy(name, temp); // Okay since we 'reduce' the size of the string
       G__hash(name, (*phash), i)
       goto re_try_after_std;
    }
@@ -2061,10 +2061,10 @@ int G__scopeoperator(char* name, int* phash, long* pstruct_offset, int* ptagnum)
    temp = member;
    if (*name == '~') {
       // -- Explicit destructor.
-      strcpy(name + 1, temp);
+      strcpy(name + 1, temp); // Okay since we 'reduce' the size of the string
    }
    else {
-      strcpy(name, temp);
+      strcpy(name, temp); // Okay since we 'reduce' the size of the string
    }
    G__hash(name, *phash, i)
    return G__CLASSSCOPE;

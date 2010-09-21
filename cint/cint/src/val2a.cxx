@@ -478,19 +478,19 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
       switch (buf.obj.reftype.reftype) {
          case G__PARAP2P:
             sbuf = p;
-            strcpy(p + 1, sbuf);
+            strcpy(p + 1, sbuf); // Okay we resize appropriately
             break;
          case G__PARAP2P2P:
             sbuf = p;
             *(p + 1) = '*';
-            strcpy(p + 2, sbuf);
+            strcpy(p + 2, sbuf); // Okay we resize appropriately
             break;
          case G__PARANORMAL:
             break;
          default:
             sbuf = p;
             for (i = G__PARAP2P - 1;i < buf.obj.reftype.reftype;i++) *(p + i) = '*';
-            strcpy(p + buf.obj.reftype.reftype - G__PARAP2P + 1, sbuf);
+            strcpy(p + buf.obj.reftype.reftype - G__PARAP2P + 1, sbuf); // Okay we resize appropriately
             break;
       }
    }
@@ -539,11 +539,7 @@ const char* G__tagtype2string(int tagtype)
 char* G__fulltagname(int tagnum, int mask_dollar)
 {
    // return full tagname, if mask_dollar=1, $ for the typedef class is omitted
-#if !defined(G__OLDIMPLEMENTATION1823)
-   static char string[G__LONGLINE];
-#else
-   static char string[G__ONELINE];
-#endif
+   G__FastAllocString string(G__ONELINE);
    int p_tagnum[G__MAXBASE];
    int pt;
    int len = 0;
@@ -555,31 +551,35 @@ char* G__fulltagname(int tagnum, int mask_dollar)
       p_tagnum[pt+1] = G__struct.parent_tagnum[p_tagnum[pt]];
       ++pt;
    }
+   string[0] = '\0';
    while (pt) {
       --pt;
       if ('$' == G__struct.name[p_tagnum[pt]][0]) os = 1 * mask_dollar;
-      else                                     os = 0;
+      else                                        os = 0;
 #define G__OLDIMPLEMENTATION1503
 #ifndef G__OLDIMPLEMENTATION1503
-      if (-1 != G__struct.defaulttypenum[p_tagnum[pt]])
-         sprintf(string + len, "%s::"
-                 , G__newtype.name[G__struct.defaulttypenum[p_tagnum[pt]]]);
-      else
-         sprintf(string + len, "%s::", G__struct.name[p_tagnum[pt]] + os);
+      if (-1 != G__struct.defaulttypenum[p_tagnum[pt]]) {
+         string.Replace(len,G__newtype.name[G__struct.defaulttypenum[p_tagnum[pt]]]);
+      } else {
+         string.Replace(len,G__struct.name[p_tagnum[pt]] + os);
+      }
 #else
-      sprintf(string + len, "%s::", G__struct.name[p_tagnum[pt]] + os);
-#endif
-      len = strlen(string);
+      string.Replace(len,G__struct.name[p_tagnum[pt]] + os);
+#endif 
+     len = strlen(string);
+     string.Replace(len,"::");
+     len += 2; // strlen("::")
    }
    if ('$' == G__struct.name[tagnum][0]) os = 1 * mask_dollar;
    else                               os = 0;
 #ifndef G__OLDIMPLEMENTATION1503
-   if (-1 != G__struct.defaulttypenum[tagnum])
-      sprintf(string + len, "%s", G__newtype.name[G__struct.defaulttypenum[tagnum]]);
-   else
-      sprintf(string + len, "%s", G__struct.name[tagnum] + os);
+   if (-1 != G__struct.defaulttypenum[tagnum]) {
+      string.Replace(len,G__newtype.name[G__struct.defaulttypenum[tagnum]]);
+   } else {
+      string.Replace(len,G__struct.name[tagnum] + os);
+   }
 #else
-   sprintf(string + len, "%s", G__struct.name[tagnum] + os);
+   string.Replace(len,G__struct.name[tagnum] + os);
 #endif
 
 #if defined(_MSC_VER) && (_MSC_VER < 1310) /*vc6 and vc7.0*/
@@ -596,30 +596,30 @@ char* G__fulltagname(int tagnum, int mask_dollar)
 //______________________________________________________________________________
 char* G__type2string(int type, int tagnum, int typenum, int reftype, int isconst)
 {
-   static char stringbuf[G__LONGLINE];
-   char* string = stringbuf;
+   static G__FastAllocString buffer(G__LONGLINE);
+   buffer[0] = '\0';
+   size_t offset = 0;
    int ref = G__REF(reftype);
    reftype = G__PLVL(reftype);
-   int len;
    int i;
    if ((isconst & G__CONSTVAR) && ((typenum == -1) || !(isconst & G__newtype.isconst[typenum]))) {
-      strcpy(string, "const ");
-      string += 6;
+      buffer = "const ";
+      offset += 6;
    }
    // Handle G__longlong, G__ulonglong, and G__longdouble early
    if ((typenum == -1) && (tagnum != -1)) {
       char* ss = G__struct.name[tagnum];
       if (!strcmp(ss, "G__longlong") && !G__defined_macro("G__LONGLONGTMP")) {
-         strcpy(stringbuf, "long long");
-         return stringbuf;
+         buffer = "long long";
+         return buffer;
       }
       if (!strcmp(ss, "G__ulonglong") && !G__defined_macro("G__LONGLONGTMP")) {
-         strcpy(stringbuf, "unsigned long long");
-         return stringbuf;
+         buffer = "unsigned long long";
+         return buffer;
       }
       if (!strcmp(ss, "G__longdouble") && !G__defined_macro("G__LONGLONGTMP")) {
-         strcpy(stringbuf, "long double");
-         return stringbuf;
+         buffer = "long double";
+         return buffer;
       }
    }
 #ifndef G__OLDIMPLEMENTATION1503
@@ -637,10 +637,12 @@ char* G__type2string(int type, int tagnum, int typenum, int reftype, int isconst
    //
    if (typenum != -1) { // typedef
       if (G__newtype.parent_tagnum[typenum] != -1) {
-         sprintf(string, "%s::%s", G__fulltagname(G__newtype.parent_tagnum[typenum], 1), G__newtype.name[typenum]);
+         buffer += G__fulltagname(G__newtype.parent_tagnum[typenum], 1);
+         buffer += "::";
+         buffer += G__newtype.name[typenum];
       }
       else {
-         sprintf(string, "%s", G__newtype.name[typenum]);
+         buffer.Replace(offset,G__newtype.name[typenum]);
       }
       if (G__newtype.nindex[typenum]) { // We have array bounds.
          int pointlevel = 0;
@@ -757,93 +759,90 @@ char* G__type2string(int type, int tagnum, int typenum, int reftype, int isconst
    }
    else if (tagnum != -1) { // class/struct/union/enum/namespace
       if ((tagnum >= G__struct.alltag) || !G__struct.name[tagnum]) {
-         strcpy(stringbuf, "(invalid_class)");
-         return stringbuf;
+         buffer = "(invalid_class)";
+         return buffer;
       }
       if (G__struct.name[tagnum][0] == '$') { // unnamed class/struct/union/enum/namespace
-         len = 0;
          if (!G__struct.name[tagnum][1]) { // name is only '$', must be unnamed enum
             G__ASSERT(G__struct.type[tagnum] == 'e');
-            sprintf(string, "enum ");
-            len = 5;
+            buffer.Replace(offset,"enum ");
          }
       }
       else { // nothing special, normal named struct
          if ((G__globalcomp == G__CPPLINK) || G__iscpp) {
-            len = 0;
+            // len = 0;
          }
          else {
             switch (G__struct.type[tagnum]) {
                case 'e':
-                  sprintf(string, "enum ");
+                  buffer.Replace(offset, "enum ");
                   break;
                case 'c':
-                  sprintf(string, "class ");
+                  buffer.Replace(offset, "class ");
                   break;
                case 's':
-                  sprintf(string, "struct ");
+                  buffer.Replace(offset, "struct ");
                   break;
                case 'u':
-                  sprintf(string, "union ");
+                  buffer.Replace(offset, "union ");
                   break;
                case 'n':
-                  sprintf(string, "namespace ");
+                  buffer.Replace(offset, "namespace ");
                   break;
                case 'a':
-                  strcpy(string, "");
+                  buffer.Replace(offset, "");
                   break;
                case 0:
-                  sprintf(string, "(unknown) ");
+                  buffer.Replace(offset, "(unknown) ");
                   break;
             }
-            len = strlen(string);
          }
       }
-      sprintf(string + len, "%s", G__fulltagname(tagnum, 1));
+      buffer += G__fulltagname(tagnum, 1);
    }
    else { // fundamental type
       switch (tolower(type)) {
          case 'b':
-            strcpy(string, "unsigned char");
+            buffer.Replace(offset, "unsigned char");
             break;
          case 'c':
-            strcpy(string, "char");
+            buffer.Replace(offset, "char");
             break;
          case 'r':
-            strcpy(string, "unsigned short");
+            buffer.Replace(offset, "unsigned short");
             break;
          case 's':
-            strcpy(string, "short");
+            buffer.Replace(offset, "short");
             break;
          case 'h':
-            strcpy(string, "unsigned int");
+            buffer.Replace(offset, "unsigned int");
             break;
          case 'i':
-            strcpy(string, "int");
+            buffer.Replace(offset, "int");
             break;
          case 'k':
-            strcpy(string, "unsigned long");
+            buffer.Replace(offset, "unsigned long");
             break;
          case 'l':
-            strcpy(string, "long");
+            buffer.Replace(offset, "long");
             break;
          case 'g':
-            strcpy(string, "bool");
+            buffer.Replace(offset, "bool");
             break;
          case 'n':
-            strcpy(string, "long long");
+            buffer.Replace(offset, "long long");
             break;
          case 'm':
-            strcpy(string, "unsigned long long");
+            buffer.Replace(offset, "unsigned long long");
             break;
          case 'q':
-            strcpy(string, "long double");
+            buffer.Replace(offset, "long double");
             break;
          case 'f':
-            strcpy(string, "float");
+            buffer.Replace(offset, "float");
             break;
          case 'd':
-            strcpy(string, "double");
+            buffer.Replace(offset, "double");
             break;
 #ifndef G__OLDIMPLEMENTATION2191
          case '1':
@@ -851,13 +850,13 @@ char* G__type2string(int type, int tagnum, int typenum, int reftype, int isconst
          case 'q':
 #endif // G__OLDIMPLEMENTATION2191
          case 'y':
-            strcpy(string, "void");
+            buffer.Replace(offset, "void");
             break;
          case 'e':
-            strcpy(string, "FILE");
+            buffer.Replace(offset, "FILE");
             break;
          case 'u':
-            strcpy(string, "enum");
+            buffer.Replace(offset, "enum");
             break;
          case 't':
 #ifndef G__OLDIMPLEMENTATION2191
@@ -866,17 +865,17 @@ char* G__type2string(int type, int tagnum, int typenum, int reftype, int isconst
          case 'm':
 #endif
          case 'p':
-            sprintf(string, "#define");
-            return string;
+            buffer.Replace(offset, "#define");
+            return buffer;
          case 'o':
-            string[0] = '\0';
-            return string;
+            buffer[offset] = '\0';
+            return buffer;
          case 'a':
-            strcpy(string, "G__p2memfunc");
+            buffer.Replace(offset, "G__p2memfunc");
             type = tolower(type);
             break;
          default:
-            strcpy(string, "(unknown)");
+            buffer.Replace(offset, "(unknown)");
             break;
       }
    }
@@ -887,10 +886,10 @@ char* G__type2string(int type, int tagnum, int typenum, int reftype, int isconst
       // Take care of the first pointer level.
       if (isupper(type)) {
          if ((isconst & G__PCONSTVAR) && (reftype == G__PARANORMAL)) {
-            strcpy(string + strlen(string), " *const");
+            buffer += " *const";
          }
          else {
-            strcpy(string + strlen(string), "*");
+            buffer += "*";
          }
       }
       // Handle the second and greater pointer levels,
@@ -901,27 +900,27 @@ char* G__type2string(int type, int tagnum, int typenum, int reftype, int isconst
          case G__PARAREFERENCE:
             if ((typenum == -1) || (G__newtype.reftype[typenum] != G__PARAREFERENCE)) {
                if ((isconst & G__PCONSTVAR) && !(isconst & G__CONSTVAR)) {
-                  strcpy(string + strlen(string), " const&");
+                  buffer += " const&";
                }
                else {
-                  strcpy(string + strlen(string), "&");
+                  buffer += "&";
                }
             }
             break;
          case G__PARAP2P:
             if (isconst & G__PCONSTVAR) {
-               strcpy(string + strlen(string), " *const");
+               buffer += " *const";
             }
             else {
-               strcpy(string + strlen(string), "*");
+               buffer += "*";
             }
             break;
          case G__PARAP2P2P:
             if (isconst & G__PCONSTVAR) {
-               strcpy(string + strlen(string), " **const");
+               buffer += " **const";
             }
             else {
-               strcpy(string + strlen(string), "**");
+               buffer += "**";
             }
             break;
          default:
@@ -929,13 +928,13 @@ char* G__type2string(int type, int tagnum, int typenum, int reftype, int isconst
                break;
             }
             if (isconst & G__PCONSTVAR) {
-               strcpy(string + strlen(string), " ");
+               buffer += " ";
             }
             for (i = G__PARAP2P; i <= reftype; ++i) {
-               strcpy(string + strlen(string), "*");
+               buffer += "*";
             }
             if (isconst & G__PCONSTVAR) {
-               strcpy(string + strlen(string), " const");
+               buffer += " const";
             }
             break;
       }
@@ -943,13 +942,9 @@ char* G__type2string(int type, int tagnum, int typenum, int reftype, int isconst
    endof_type2string:
    // Handle a reference to two or more pointer levels.
    if (ref) { // We are a reference to a pointer to xxx.
-      strcat(stringbuf, "&");
+      buffer += "&";
    }
-   if (strlen(stringbuf) >= sizeof(stringbuf)) {
-      G__fprinterr(G__serr, "Error in G__type2string: string length (%d) greater than buffer length (%d)!", strlen(stringbuf), sizeof(stringbuf));
-      G__genericerror(0);
-   }
-   return stringbuf;
+   return buffer;
 }
 
 //______________________________________________________________________________

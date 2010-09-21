@@ -21,7 +21,7 @@ extern "C" {
 #ifdef G__BORLANDCC5
 double G__doubleM(G__value *buf);
 static void G__asm_toXvalue(G__value* result);
-void G__get__tm__(char *buf);
+void G__get__tm__(G__FastAllocBuf &buf);
 char* G__get__date__(void);
 char* G__get__time__(void);
 int G__isInt(int type);
@@ -2675,10 +2675,10 @@ G__value G__getreserved(const char *item ,void ** /* ptr */,void ** /* ppdict */
 *
 *  returns 'Sun Nov 28 21:40:32 1999\n' in buf
 **************************************************************************/
-void G__get__tm__(char *buf)
+void G__get__tm__(G__FastAllocString &buf)
 {
   time_t t = time(0);
-  sprintf(buf,"%s",ctime(&t));
+  buf.Format("%s",ctime(&t));
 }
 /**************************************************************************
 * G__get__date__()
@@ -7457,7 +7457,7 @@ int G__dasm(FILE *fout,int isthrow)
         fgetpos(G__ifile.fp,&store_pos);
         G__ifile.filenum = (short)G__asm_inst[pc+1];
         G__ifile.line_number = G__asm_inst[pc+2];
-        strcpy(G__ifile.name,G__srcfile[G__ifile.filenum].filename);
+        G__strlcpy(G__ifile.name,G__srcfile[G__ifile.filenum].filename,G__MAXFILENAME);
         G__ifile.fp = G__srcfile[G__ifile.filenum].fp;
         fsetpos(G__ifile.fp,&pos);
         G__asm_exec = 0;

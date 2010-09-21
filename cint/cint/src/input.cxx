@@ -112,16 +112,16 @@ void G__input_history(int *state,const char *string)
      * read history file and set command history
      ********************************************************/
     *state = 1;
-    prevstring[0]='\0'; /* sprintf(prevstring,""); */
+    prevstring[0]='\0'; 
     if (getenv("HOME"))
-      sprintf(histfile,"%s/%s",getenv("HOME"),homehist);
+       G__snprintf(histfile,sizeof(histfile),"%s/%s",getenv("HOME"),homehist);
     else
-      sprintf(histfile,"./%s",homehist);
+       G__snprintf(histfile,sizeof(histfile),"./%s",homehist);
     fp=fopen(histfile,"r");
     if(fp) {
       while(G__readline_FastAlloc(fp,G__oneline,G__argbuf,&argn,arg)!=0){
         add_history(arg[0]);
-        strcpy(prevstring,arg[0]);
+        G__strlcpy(prevstring,arg[0],sizeof(prevstring));
         *state = (*state)+1;
       }
       fclose(fp);
@@ -141,7 +141,7 @@ void G__input_history(int *state,const char *string)
     fprintf(fp,"%s\n",string);
     fclose(fp);
     *state = (*state)+1;
-    strcpy(prevstring,string);
+    G__strlcpy(prevstring,string,sizeof(prevstring));
     if(*state<G__history_size_max) return;
   }
   else {
@@ -207,7 +207,7 @@ char *G__input(const char *prompt)
   
   if(G__Xdumpreadline[0]) {
     pchar=G__xdumpinput(prompt);
-    strcpy(line,pchar);
+    G__strlcpy(line,pchar,sizeof(line));
   }
   else {
     
@@ -223,7 +223,7 @@ char *G__input(const char *prompt)
                    ,strlen(pchar),G__LONGLINE-5);
       pchar=readline(prompt);
     }
-    if(pchar) strcpy(line,pchar);
+    if(pchar) G__strlcpy(line,pchar,sizeof(line));
     else line[0]=0;
 #ifdef G__MEMTEST
     /* memory parity checker can not handle the pointer malloced in readlie */
@@ -239,13 +239,13 @@ char *G__input(const char *prompt)
     
     if(G__Xdumpreadline[0]) {
       pchar=G__xdumpinput(prompt);
-      strcpy(line,pchar);
+      G__strlcpy(line,pchar,sizeof(line));
     }
     else {
       if (G__GetGetlineFuncInternal()) {
 	 pchar = G__GetGetlineFuncInternal()(prompt);
 	 if (pchar) {
-	    strcpy(line, pchar);
+	    G__strlcpy(line, pchar, sizeof(line));
 	    if (G__GetHistaddFuncInternal()) {
 	       G__GetHistaddFuncInternal()(pchar);
 	    }

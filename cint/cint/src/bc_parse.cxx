@@ -2275,7 +2275,7 @@ struct G__var_array* G__blockscope::allocatevariable(G__TypeReader& type
     }
 
     char *buf = (char*)malloc(name.size()+1);
-    strcpy(buf,name.c_str());
+    strcpy(buf,name.c_str()); // Okay we allocated enough memory
 
     int size = type.Size();
     // todo, Reference argument works with and without following line.

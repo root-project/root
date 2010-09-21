@@ -274,7 +274,7 @@ static void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,G__ifunc_table_intern
   for(k=0;k<ifunc->para_nu[ifn];k++) {
     G__cppstub_setparam(pformat,pbody,tagnum,ifn,ifunc,k);
   }
-  fprintf(fp,"  sprintf(funccall,\"%s(%s)\"%s);\n"
+  fprintf(fp,"  snprintf(funccall,G__LONGLINE,\"%s(%s)\"%s);\n"
           ,ifunc->funcname[ifn],pformat(),pbody());
   fprintf(fp,"  buf=G__calc(funccall);\n");
 

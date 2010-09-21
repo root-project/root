@@ -70,7 +70,7 @@ char* G__saveconststring(char* string)
 
   pconststring->string=(char*)malloc(strlen(string)+2);
   pconststring->string[strlen(string)+1]='\0';
-  strcpy(pconststring->string,string);
+  strcpy(pconststring->string,string); // Okay, we allocated enough space
   pconststring->hash = hash;
 
   return(pconststring->string);
@@ -234,7 +234,7 @@ G__value G__strip_quotation(const char *string)
     }
     else {
       /* return string */
-      strcpy(temp,string);
+       G__strlcpy(temp,string,templen);
     }
   }
 
@@ -245,56 +245,56 @@ G__value G__strip_quotation(const char *string)
   return(result);
 }
 
+} /* extern "C" */
 
 /******************************************************************
 * char *G__charaddquote(c)
 *
 * Called by
-*   G__tocharexpr()
 *   G__valuemonitor()
 ******************************************************************/
-char *G__charaddquote(char *string,char c)
+G__FastAllocString &G__charaddquote(G__FastAllocString &string,char c)
 {
   switch(c) {
   case '\\':
-    sprintf(string,"'\\\\'");
+    string.Format("'\\\\'");
     break;
   case '\'':
-    sprintf(string,"'\\''");
+    string.Format("'\\''");
     break;
   case '\0':
-    sprintf(string,"'\\0'");
+    string.Format("'\\0'");
     break;
   case '\"':
-    sprintf(string,"'\\\"'");
+    string.Format("'\\\"'");
     break;
     /*
       case '\?':
-      sprintf(string,"'\\?'");
+      string.Format("'\\?'");
       break;
       */
     /*
       case '\a':
-      sprintf(string,"'\\a'");
+      string.Format("'\\a'");
       break;
       */
   case '\b':
-    sprintf(string,"'\\b'");
+    string.Format("'\\b'");
     break;
   case '\f':
-    sprintf(string,"'\\f'");
+    string.Format("'\\f'");
     break;
   case '\n':
-    sprintf(string,"'\\n'");
+    string.Format("'\\n'");
     break;
   case '\r':
-    sprintf(string,"'\\r'");
+    string.Format("'\\r'");
     break;
   case '\t':
-    sprintf(string,"'\\t'");
+    string.Format("'\\t'");
     break;
   case '\v':
-    sprintf(string,"'\\v'");
+    string.Format("'\\v'");
     break;
   default:
 #ifdef G__MULTIBYTE
@@ -302,11 +302,13 @@ char *G__charaddquote(char *string,char c)
       G__genericerror("Limitation: Multi-byte char in single quote not handled property");
     }
 #endif
-    sprintf(string,"'%c'",c);
+    string.Format("'%c'",c);
     break;
   }
   return(string);
 }
+
+extern "C" {
 
 /******************************************************************
 * G__strip_singlequotation
@@ -440,21 +442,6 @@ char *G__add_quotation(const char* string,G__FastAllocString& temp)
   return temp;
 }
 
-extern "C" {
-
-/******************************************************************
-* char *G__tocharexpr(result7)
-******************************************************************/
-char *G__tocharexpr(char *result7)
-{
-  if((result7[0]=='\\')&&(result7[1]=='\'')) {
-    G__charaddquote(result7,result7[2]);
-  }
-  return(NULL);
-}
-
-} // extern "C"
-
 /****************************************************************
 * char *G__string()
 * 
@@ -464,7 +451,7 @@ char *G__string(G__value buf, G__FastAllocString& temp)
   G__FastAllocString temp1(G__MAXNAME);
   switch(buf.type) {
   case '\0':
-    temp[0]='\0'; /* sprintf(temp,""); */
+    temp[0]='\0';
     break;
   case 'C': /* string */
     if(buf.obj.i) {

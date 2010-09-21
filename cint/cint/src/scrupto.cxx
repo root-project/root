@@ -321,7 +321,7 @@ static void G__close_inputfiles_upto(G__dictposition* pos)
          G__ifile.pos = 0;
          G__ifile.vindex = 0;
          G__ifile.fp = G__srcfile[G__nfile - 1].fp;
-         strcpy(G__ifile.name, G__srcfile[G__nfile - 1].filename);
+         G__strlcpy(G__ifile.name, G__srcfile[G__nfile - 1].filename,G__MAXFILENAME);
 
          for (
             std::list<G__DLLINIT>::const_iterator iInitsl = permanentsl[nperm].initsl->begin();

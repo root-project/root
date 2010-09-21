@@ -3175,32 +3175,32 @@ char *G__map_cpp_name(const char *in)
          out.Resize(2*j);
       }
       switch(c) {
-         case '+': strcpy(out+j,"pL"); j+=2; break;
-         case '-': strcpy(out+j,"mI"); j+=2; break;
-         case '*': strcpy(out+j,"mU"); j+=2; break;
-         case '/': strcpy(out+j,"dI"); j+=2; break;
-         case '&': strcpy(out+j,"aN"); j+=2; break;
-         case '%': strcpy(out+j,"pE"); j+=2; break;
-         case '|': strcpy(out+j,"oR"); j+=2; break;
-         case '^': strcpy(out+j,"hA"); j+=2; break;
-         case '>': strcpy(out+j,"gR"); j+=2; break;
-         case '<': strcpy(out+j,"lE"); j+=2; break;
-         case '=': strcpy(out+j,"eQ"); j+=2; break;
-         case '~': strcpy(out+j,"wA"); j+=2; break;
-         case '.': strcpy(out+j,"dO"); j+=2; break;
-         case '(': strcpy(out+j,"oP"); j+=2; break;
-         case ')': strcpy(out+j,"cP"); j+=2; break;
-         case '[': strcpy(out+j,"oB"); j+=2; break;
-         case ']': strcpy(out+j,"cB"); j+=2; break;
-         case '!': strcpy(out+j,"nO"); j+=2; break;
-         case ',': strcpy(out+j,"cO"); j+=2; break;
-         case '$': strcpy(out+j,"dA"); j+=2; break;
-         case ' ': strcpy(out+j,"sP"); j+=2; break;
-         case ':': strcpy(out+j,"cL"); j+=2; break;
-         case '"': strcpy(out+j,"dQ"); j+=2; break;
-         case '@': strcpy(out+j,"aT"); j+=2; break;
-         case '\'': strcpy(out+j,"sQ"); j+=2; break;
-         case '\\': strcpy(out+j,"fI"); j+=2; break;
+         case '+': strcpy(out+j,"pL"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '-': strcpy(out+j,"mI"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '*': strcpy(out+j,"mU"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '/': strcpy(out+j,"dI"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '&': strcpy(out+j,"aN"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '%': strcpy(out+j,"pE"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '|': strcpy(out+j,"oR"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '^': strcpy(out+j,"hA"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '>': strcpy(out+j,"gR"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '<': strcpy(out+j,"lE"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '=': strcpy(out+j,"eQ"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '~': strcpy(out+j,"wA"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '.': strcpy(out+j,"dO"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '(': strcpy(out+j,"oP"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case ')': strcpy(out+j,"cP"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '[': strcpy(out+j,"oB"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case ']': strcpy(out+j,"cB"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '!': strcpy(out+j,"nO"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case ',': strcpy(out+j,"cO"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '$': strcpy(out+j,"dA"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case ' ': strcpy(out+j,"sP"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case ':': strcpy(out+j,"cL"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '"': strcpy(out+j,"dQ"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '@': strcpy(out+j,"aT"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '\'': strcpy(out+j,"sQ"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '\\': strcpy(out+j,"fI"); j+=2; break; // Okay: we resized the underlying buffer if needed
          default: out[j++]=c; break;
       }
       ++i;
@@ -3796,11 +3796,11 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
     buf = linkfilepref;
     buf += ".h";
     G__CPPLINK_H = (char*)malloc(strlen(buf)+1);
-    strcpy(G__CPPLINK_H,buf);
+    strcpy(G__CPPLINK_H,buf); // Okay, we allocated the right size
 
     buf.Format("%s.%s",linkfilepref(),linkfilepostf());
     G__CPPLINK_C = (char*)malloc(strlen(buf)+1);
-    strcpy(G__CPPLINK_C,buf);
+    strcpy(G__CPPLINK_C,buf); // Okay, we allocated the right size
 
 #ifdef G__GENWINDEF
     if (G__PROJNAME[0])
@@ -3810,7 +3810,7 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
     else
       buf.Format("%s.def","G__lib");
     G__WINDEF = (char*)malloc(strlen(buf)+1);
-    strcpy(G__WINDEF,buf);
+    strcpy(G__WINDEF,buf); // Okay, we allocated the right size
     G__write_windef_header();
 #endif
 
@@ -3862,16 +3862,16 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
   case G__CLINK:
      buf.Format("%s.h",linkfilepref());
     G__CLINK_H = (char*)malloc(strlen(buf)+1);
-    strcpy(G__CLINK_H,buf);
+    strcpy(G__CLINK_H,buf); // Okay, we allocated the right size
 
     buf.Format("%s.c",linkfilepref());
     G__CLINK_C = (char*)malloc(strlen(buf)+1);
-    strcpy(G__CLINK_C,buf);
+    strcpy(G__CLINK_C,buf); // Okay, we allocated the right size
 
 #ifdef G__GENWINDEF
     buf.Format("%s.def",G__PROJNAME.data());
     G__WINDEF = (char*)malloc(strlen(buf)+1);
-    strcpy(G__WINDEF,buf);
+    strcpy(G__WINDEF,buf); // Okay, we allocated the right size
     G__write_windef_header();
 #endif
 
@@ -3894,11 +3894,11 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
   case R__CPPLINK:
     buf.Format("%s.h",linkfilepref());
     G__CPPLINK_H = (char*)malloc(strlen(buf)+1);
-    strcpy(G__CPPLINK_H,buf);
+    strcpy(G__CPPLINK_H,buf); // Okay, we allocated the right size
 
     buf.Format("%s.%s",linkfilepref(),linkfilepostf());
     G__CPPLINK_C = (char*)malloc(strlen(buf)+1);
-    strcpy(G__CPPLINK_C,buf);
+    strcpy(G__CPPLINK_C,buf); // Okay, we allocated the right size
 
 #ifdef G__GENWINDEF
     if (G__PROJNAME[0])
@@ -3908,7 +3908,7 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
     else
       buf.Format("%s.def","G__lib");
     G__WINDEF = (char*)malloc(strlen(buf)+1);
-    strcpy(G__WINDEF,buf);
+    strcpy(G__WINDEF,buf); // Okay, we allocated the right size
     G__write_windef_header();
 #endif
 
@@ -4300,7 +4300,7 @@ void G__add_ipath(const char *path)
 
   /* copy the path name */
   ipath->pathname = (char *)malloc((size_t)(strlen(temp)+1));
-  strcpy(ipath->pathname,temp);
+  strcpy(ipath->pathname,temp); // Okay, we allocated the right size
 
   /* allocate next entry */
   ipath->next=(struct G__includepath *)malloc(sizeof(struct G__includepath));
@@ -5906,7 +5906,7 @@ static int G__isprotecteddestructoronelevel(int tagnum)
   ifunc=G__struct.memfunc[tagnum];
   dtorname = (char*)malloc(strlen(G__struct.name[tagnum])+2);
   dtorname[0]='~';
-  strcpy(dtorname+1,G__struct.name[tagnum]);
+  strcpy(dtorname+1,G__struct.name[tagnum]); // Okay, we allocated the right size
   do {
     for(ifn=0;ifn<ifunc->allifunc;ifn++) {
       if(strcmp(dtorname,ifunc->funcname[ifn])==0) {
@@ -6753,7 +6753,7 @@ static int G__isprivatedestructorifunc(int tagnum)
   ifunc=G__struct.memfunc[tagnum];
   dtorname = (char*)malloc(strlen(G__struct.name[tagnum])+2);
   dtorname[0]='~';
-  strcpy(dtorname+1,G__struct.name[tagnum]);
+  strcpy(dtorname+1,G__struct.name[tagnum]); // Okay, we allocated the right size
   do {
     for(ifn=0;ifn<ifunc->allifunc;ifn++) {
       if(strcmp(dtorname,ifunc->funcname[ifn])==0) {
@@ -11644,14 +11644,14 @@ int G__memfunc_para_setup(int ifn,int type,int tagnum,int typenum,int reftype_co
      || (G__value*)NULL!=para_default
      ) {
     G__p_ifunc->param[G__func_now][ifn]->def=(char*)malloc(strlen(para_def)+1);
-    strcpy(G__p_ifunc->param[G__func_now][ifn]->def,para_def);
+    strcpy(G__p_ifunc->param[G__func_now][ifn]->def,para_def); // Okay, we allocated the right size
   }
   else {
     G__p_ifunc->param[G__func_now][ifn]->def=(char*)NULL;
   }
   if(para_name[0]) {
     G__p_ifunc->param[G__func_now][ifn]->name=(char*)malloc(strlen(para_name)+1);
-    strcpy(G__p_ifunc->param[G__func_now][ifn]->name,para_name);
+    strcpy(G__p_ifunc->param[G__func_now][ifn]->name,para_name); // Okay, we allocated the right size
   }
   else {
     G__p_ifunc->param[G__func_now][ifn]->name=(char*)NULL;

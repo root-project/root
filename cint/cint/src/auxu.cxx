@@ -113,7 +113,7 @@ int G__readline(FILE* fp, char* line, char* argbuf, int* argn, char* arg[])
    // -- FIXME: Describe this function!
    char* null_fgets = fgets(line, 2 * G__LONGLINE, fp);  // FIXME: Possible buffer overflow here!
    if (null_fgets) {
-      strcpy(argbuf, line);
+      strcpy(argbuf, line); // Legacy code, we have no way of knowing the buffer size
       G__split(line, argbuf, argn, arg);
    }
    else {
@@ -478,13 +478,13 @@ long G__what_type(char* name, char* type, char* tagname, char* type_name)
          break;
    }
    if (type) {
-      strcpy(type, vtype);
+      strcpy(type, vtype); // Legacy interface, we have no way of knowing input size
    }
    if (tagname && (buf.tagnum > -1)) {
-      strcpy(tagname, G__struct.name[buf.tagnum]);
+      strcpy(tagname, G__struct.name[buf.tagnum]); // Legacy interface, we have no way of knowing input size
    }
    if (type_name && (buf.typenum > -1)) {
-      strcpy(type_name, G__newtype.name[buf.typenum]);
+      strcpy(type_name, G__newtype.name[buf.typenum]); // Legacy interface, we have no way of knowing input size
    }
    vtype.Format("&%s", name);
    buf = G__calc_internal(vtype);

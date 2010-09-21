@@ -123,7 +123,7 @@ static int G__splitmessage(char* item)
    char* point;
    char* p;
    char* buf = (char*) malloc(strlen(item) + 1);
-   strcpy(buf, item);
+   strcpy(buf, item); // Okay we allocated enough space.
 #ifndef G__OLDIMPELMENTATION1186
    dot = (char*)G__findrpos(buf, ".");
    point = (char*)G__findrpos(buf, "->");

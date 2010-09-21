@@ -155,6 +155,7 @@ int G__fgetspace(void);
 int G__fgetspace_peek(void);
 #ifdef __cplusplus
 } // extern "C"
+char* G__setiparseobject(G__value* result,G__FastAllocString &str);
 int G__fgetvarname(G__FastAllocString& string, size_t offset, const char *endmark);
 int G__fgetname(G__FastAllocString& string, size_t offset, const char *endmark);
 int G__getname(const char* source,int* isrc,G__FastAllocString& string,const char *endmark);
@@ -176,7 +177,7 @@ long G__op2_operator_detail(int opr,G__value *lval,G__value *rval);
 int G__explicit_fundamental_typeconv(char* funcname,int hash,struct G__param *libp,G__value *presult3);
 int G__special_func(G__value *result7,char *funcname,struct G__param *libp,int hash);
 int G__library_func(G__value *result7,char *funcname,struct G__param *libp,int hash);
-char *G__charformatter(int ifmt,struct G__param *libp,char *result);
+char *G__charformatter(int ifmt,struct G__param *libp,char *result,size_t result_length);
 int G__istypename(char *temp);
 char* G__savestring(char** pbuf,char* name);
 struct G__ifunc_table* G__get_ifunc_ref(struct G__ifunc_table_internal*);
@@ -412,9 +413,7 @@ void G__asm_gen_strip_quotation(G__value *pval);
 int G__security_handle(G__UINT32 category);
 void G__asm_get_strip_quotation(G__value *pval);
 G__value G__strip_quotation(const char *string);
-char *G__charaddquote(char *string,char c);
 G__value G__strip_singlequotation(char *string);
-char *G__tocharexpr(char *result7);
 char *G__quotedstring(char *buf,char *result);
 char *G__logicstring(G__value buf,int dig,char *result);
 int G__revprint(FILE *fp);
@@ -444,6 +443,7 @@ G__value G__classassign(long pdest,int tagnum,G__value result);
 char *G__catparam(struct G__param *libp,int catn,const char *connect);
 #ifdef __cplusplus
 } // extern "C"
+G__FastAllocString &G__charaddquote(G__FastAllocString &string,char c);
 int G__readline_FastAlloc(FILE* fp, G__FastAllocString& line, G__FastAllocString& argbuf,
                           int* argn, char* arg[]);
 int G__separate_parameter(const char *original,int *pos,G__FastAllocString& param);
@@ -612,8 +612,6 @@ void G__DeleteConstStringList(struct G__ConstStringList* current);
 
 int G__ReadInputMode(void);
 
-char* G__setiparseobject(G__value* result,char *str);
-
 #ifdef G__SHMGLOBAL
 void* G__shmmalloc(int size);
 void* G__shmcalloc(int atomsize,int num);
@@ -745,8 +743,8 @@ void *G__UnregisterLibrary (void (*func) ());
 #ifdef __cplusplus
 } // extern "C"
 
-G__value G__letvariable(char *item,G__value expression,struct G__var_array *varglobal,struct G__var_array *varlocal);
-G__value G__letvariable(char *item,G__value expression,struct G__var_array *varglobal,struct G__var_array *varlocal,Cint::G__DataMemberHandle &member);
+G__value G__letvariable(G__FastAllocString &item,G__value expression,struct G__var_array *varglobal,struct G__var_array *varlocal);
+G__value G__letvariable(G__FastAllocString &item,G__value expression,struct G__var_array *varglobal,struct G__var_array *varlocal,Cint::G__DataMemberHandle &member);
 G__value G__letstructmem(int store_var_type,char *varname,char *membername,char *tagname,struct G__var_array *varglobal,G__value expression,int objptr,Cint::G__DataMemberHandle &member);
 
 #endif

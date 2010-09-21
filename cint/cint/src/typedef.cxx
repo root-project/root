@@ -949,7 +949,7 @@ void G__define_type()
       typenum = G__newtype.alltype;
       len = strlen(type_name);
       G__newtype.name[typenum] = (char*) malloc(len + 2);
-      strcpy(G__newtype.name[typenum], type_name);
+      strcpy(G__newtype.name[typenum], type_name); // Okay, we allocated the right size
       G__newtype.namerange->Insert(G__newtype.name[typenum], typenum);
       G__newtype.iscpplink[typenum] = G__NOLINK;
       G__newtype.comment[typenum].p.com = 0;
@@ -1367,7 +1367,7 @@ int G__search_typename(const char* typenamein, int typein, int tagnum, int refty
       }
       G__newtype.hash[G__newtype.alltype] = len;
       G__newtype.name[G__newtype.alltype] = (char*)malloc((size_t)(len + 1));
-      strcpy(G__newtype.name[G__newtype.alltype], type_name);
+      strcpy(G__newtype.name[G__newtype.alltype], type_name); // Okay, we allocated the right size
       G__newtype.namerange->Insert(G__newtype.name[G__newtype.alltype], G__newtype.alltype);
       G__newtype.nindex[G__newtype.alltype] = 0;
       G__newtype.parent_tagnum[G__newtype.alltype] = G__static_parent_tagnum;

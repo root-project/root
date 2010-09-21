@@ -12,7 +12,7 @@ extern "C" void G__exec_alloc_unlock();
 int G__exec_asm(int start, int stack, G__value* presult, long localmem)
 {
    // -- Execute the bytecode which was compiled on-the-fly by the interpreter.
-   static char clnull[1] = {0};
+   static G__FastAllocString clnull("");
    int pc; /* instruction program counter */
    int sp; /* data stack pointer */
    int strosp = 0; /* struct offset stack pointer */

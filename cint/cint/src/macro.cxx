@@ -19,11 +19,11 @@ extern "C" {
 
 // Static Functions.
 static int G__handle_as_typedef(char* oldtype, char* newtype);
-static void G__createmacro(char* new_name, char* initvalue);
+static void G__createmacro(G__FastAllocString &new_name, char* initvalue);
 static int G__createfuncmacro(char* new_name);
 static int G__replacefuncmacro(const char* item, G__Callfuncmacro* callfuncmacro, G__Charlist* callpara, G__Charlist* defpara, FILE* def_fp, fpos_t def_pos, int nobraces, int nosemic);
 static int G__transfuncmacro(const char* item, G__Deffuncmacro* deffuncmacro, G__Callfuncmacro* callfuncmacro, fpos_t call_pos, char* p, int nobraces, int nosemic);
-static int G__argsubstitute(char* symbol, G__Charlist* callpara, G__Charlist* defpara);
+static int G__argsubstitute(G__FastAllocString &symbol, G__Charlist* callpara, G__Charlist* defpara);
 static int G__getparameterlist(char* paralist, G__Charlist* charlist);
 
 // External Functions.
@@ -142,7 +142,7 @@ static int G__handle_as_typedef(char* oldtype, char* newtype)
    }
    /* this is only workaround for STL Allocator */
    if (strcmp(newtype, "Allocator") == 0) {
-      strcpy(G__Allocator, oldtype);
+      G__strlcpy(G__Allocator, oldtype, G__ONELINE);
    }
    else if (strcmp(newtype, "vector") == 0) {}
    else if (strcmp(newtype, "list") == 0) {}
@@ -172,7 +172,7 @@ static int G__handle_as_typedef(char* oldtype, char* newtype)
 }
 
 //______________________________________________________________________________
-static void G__createmacro(char* new_name, char* initvalue)
+static void G__createmacro(G__FastAllocString &new_name, char* initvalue)
 {
    // -- Handle #define MYMACRO ...\<EOL>
    //                   ...\<EOL>
@@ -203,7 +203,7 @@ static void G__createmacro(char* new_name, char* initvalue)
    /* print out header */
    ++G__mline;
    fprintf(G__mfp, "// #define %s  FILE:%s LINE:%d\n"
-           , new_name
+           , new_name()
            , G__ifile.name, G__ifile.line_number);
    fgetpos(G__mfp, &pos);
    fprintf(G__mfp, "# %d\n", ++G__mline);
@@ -292,7 +292,7 @@ static int G__createfuncmacro(char* new_name)
    while (deffuncmacro->next) deffuncmacro = deffuncmacro->next;
    /* store name */
    deffuncmacro->name = (char*)malloc(strlen(new_name) + 1);
-   strcpy(deffuncmacro->name, new_name);
+   strcpy(deffuncmacro->name, new_name); // Okay we allocate enough space
    /* store hash */
    G__hash(new_name, hash, i)
    deffuncmacro->hash = hash;
@@ -462,12 +462,12 @@ static int G__transfuncmacro(const char* item, G__Deffuncmacro* deffuncmacro, G_
 }
 
 //______________________________________________________________________________
-static int G__argsubstitute(char* symbol, G__Charlist* callpara, G__Charlist* defpara)
+static int G__argsubstitute(G__FastAllocString &symbol, G__Charlist* callpara, G__Charlist* defpara)
 {
    // -- Substitute macro argument.
    while (defpara->next) {
       if (strcmp(defpara->string, symbol) == 0) {
-         if (callpara->string) strcpy(symbol, callpara->string);
+         if (callpara->string) symbol = callpara->string;
          else {
             /* Line number is not quite correct in following error messaging */
             G__genericerror("Error: insufficient number of macro arguments");
@@ -501,10 +501,10 @@ static int G__getparameterlist(char* paralist, G__Charlist* charlist)
          charlist->string = (char*)malloc(strlen(string) + 2);
          charlist->string[0] = '\0';
       }
-      strcat(charlist->string, string);
+      strcat(charlist->string, string); // Okay we just allocated enough space
       if (c == ' ') {
          if (charlist->string[0] != '\0')
-            strcat(charlist->string, " ");
+            strcat(charlist->string, " ");  // Okay we just allocated enough space
       }
       else {
          int i = strlen(charlist->string);
@@ -593,13 +593,18 @@ void G__define()
                // Scan in next part.
                c = G__fgetstream(initvalue, strlen(initvalue), "\n\r\\/");
                break;
-            default:
+             default: {
                // -- Not a comment, take character.
                // Accumulate character.
-               sprintf(initvalue + strlen(initvalue), "/%c", c);
+               size_t ilen = strlen(initvalue);
+               if ( (ilen+3) > initvalue.Capacity() ) {
+                  initvalue.Resize(ilen+3);
+               }
+               sprintf(initvalue + strlen(initvalue), "/%c", c);  // Okay we resized if needed.
                // Scan in next part.
                c = G__fgetstream(initvalue, strlen(initvalue), "\n\r\\/");
                break;
+             }
          }
       }
       //
@@ -763,7 +768,7 @@ G__value G__execfuncmacro(const char* item, int* done)
    //
    G__ifile.fp = G__mfp;
    fsetpos(G__ifile.fp, &callfuncmacro->mfp_pos);
-   strcpy(G__ifile.name, G__macro);
+   G__strlcpy(G__ifile.name, G__macro, G__MAXFILENAME);
    //
    //  Execute macro function.
    //
@@ -900,7 +905,7 @@ int G__execfuncmacro_noexec(const char* macroname)
    //
    G__ifile.fp = G__mfp;
    fsetpos(G__ifile.fp, &callfuncmacro->mfp_pos);
-   strcpy(G__ifile.name, G__macro);
+   G__strlcpy(G__ifile.name, G__macro, G__MAXFILENAME);
    // Why not just call G__exec_statement recursively, i hear you ask,
    // instead of introducing this grotty funcstack stuff?
    // Because i want to allow funcmacros containing unbalanced

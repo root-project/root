@@ -3738,7 +3738,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
       if (G__no_exec_compile) return(1);
       G__CHECKNONULL(0, 'C');
       /* para[0]:description, para[1~paran-1]: */
-      G__charformatter(0, libp, temp);
+      G__charformatter(0, libp, temp, sizeof(temp));
       G__letint(result7, 'i', fprintf(G__intp_sout, "%s", temp));
       return(1);
    }
@@ -3748,7 +3748,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
       G__CHECKNONULL(0, 'E');
       G__CHECKNONULL(1, 'C');
       /* parameter[0]:pointer ,parameter[1]:description, para[2~paran-1]: */
-      G__charformatter(1, libp, temp);
+      G__charformatter(1, libp, temp, sizeof(temp));
       G__letint(result7, 'i',
             fprintf((FILE *)G__int(libp->para[0]), "%s", temp));
       return(1);
@@ -3759,7 +3759,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
       G__CHECKNONULL(0, 'C');
       G__CHECKNONULL(1, 'C');
       /* parameter[0]:charname ,para[1]:description, para[2~paran-1]: */
-      G__charformatter(1, libp, temp);
+      G__charformatter(1, libp, temp, sizeof(temp));
       G__letint(result7, 'i',
             sprintf((char *)G__int(libp->para[0]), "%s", temp));
       return(1);
@@ -4038,7 +4038,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
       }
       G__CHECKNONULL(1, 'C');
       G__charformatter((int)G__int(libp->para[0]), G__p_local->libp
-            , (char*)G__int(libp->para[1]));
+                       , (char*)G__int(libp->para[1]),G__int(libp->para[2]));
       G__letint(result7, 'C', G__int(libp->para[1]));
       return(1);
    }
@@ -4095,7 +4095,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
       if (G__no_exec_compile) return(1);
       G__CHECKNONULL(0, 'C');
       /* para[0]:description, para[1~paran-1]: */
-      G__charformatter(0, libp, temp);
+      G__charformatter(0, libp, temp, sizeof(temp));
       G__letint(result7, 'i', G__fprinterr(G__serr, "%s", temp));
       return(1);
    }
@@ -4803,29 +4803,29 @@ void G__printf_error()
       return result; \
    }
 
-void G__sprintformatll(char* result, const char* fmt, void *p, G__FastAllocString& buf)
+static void G__sprintformatll(char* result, size_t result_length, const char* fmt, void *p, G__FastAllocString& buf)
 {
    G__int64 *pll = (G__int64*)p;
    buf.Format(fmt, result, *pll);
-   strcpy(result, buf);
+   G__strlcpy(result, buf, result_length);
 }
-void G__sprintformatull(char* result, const char* fmt, void *p, G__FastAllocString& buf)
+static void G__sprintformatull(char* result, size_t result_length, const char* fmt, void *p, G__FastAllocString& buf)
 {
    G__uint64 *pll = (G__uint64*)p;
    buf.Format(fmt, result, *pll);
-   strcpy(result, buf);
+   G__strlcpy(result, buf, result_length);
 }
-void G__sprintformatld(char* result, const char* fmt, void *p, G__FastAllocString& buf)
+static void G__sprintformatld(char* result, size_t result_length, const char* fmt, void *p, G__FastAllocString& buf)
 {
    long double *pld = (long double*)p;
    buf.Format(fmt, result, *pld);
-   strcpy(result, buf);
+   G__strlcpy(result, buf, result_length);
 }
 
 /******************************************************************
  * char *G__charformatter(ifmt,libp,outbuf)
  ******************************************************************/
-char *G__charformatter(int ifmt, G__param *libp, char *result)
+char *G__charformatter(int ifmt, G__param *libp, char *result, size_t result_length)
 {
    int ipara, ichar, lenfmt;
    int ionefmt = 0, fmtflag = 0;
@@ -4846,7 +4846,7 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
             fmt = "%s";
             fmt += onefmt;
             onefmt.Format(fmt(), result);
-            strcpy(result, onefmt);
+            G__strlcpy(result, onefmt, result_length);
             ionefmt = 0;
             break;
          case 's': /* string */
@@ -4860,7 +4860,7 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
                      fmt += onefmt;
                   }
                   onefmt.Format(fmt(), result , (char *)G__int(libp->para[usedpara]));
-                  strcpy(result, onefmt);
+                  G__strlcpy(result, onefmt, result_length);
                }
                ipara++;
                ionefmt = 0;
@@ -4874,7 +4874,7 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
                fmt= "%s";
                fmt += onefmt;
                onefmt.Format(fmt(), result , (char)G__int(libp->para[usedpara]));
-               strcpy(result, onefmt);
+               G__strlcpy(result, onefmt, result_length);
                ipara++;
                ionefmt = 0;
                fmtflag = 0;
@@ -4891,7 +4891,7 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
                ipara++;
                G__FastAllocString resBuf;
                resBuf.Format(fmt(), result, onefmt());
-               strcpy(result, resBuf);
+               G__strlcpy(result, resBuf, result_length);
                ionefmt = 0;
             }
             break;
@@ -4910,12 +4910,12 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
                if ('n' == libp->para[usedpara].type) {
                   G__value *pval = &libp->para[usedpara];
                   ipara++;
-                  G__sprintformatll(result, fmt, &pval->obj.ll, onefmt);
+                  G__sprintformatll(result, result_length, fmt, &pval->obj.ll, onefmt);
                }
                else if ('m' == libp->para[usedpara].type) {
                   G__value *pval = &libp->para[usedpara];
                   ipara++;
-                  G__sprintformatull(result, fmt, &pval->obj.ull, onefmt);
+                  G__sprintformatull(result, result_length, fmt, &pval->obj.ull, onefmt);
                }
                else
                   if (
@@ -4928,25 +4928,25 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
                         llbuf.Format("G__printformatll((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
                                      , (long)fmt(), (long)onefmt(), pval->obj.i);
                         G__getitem(llbuf);
-                        strcat(result, fmt);
+                        G__strlcat(result, fmt, result_length);
                      }
                      else if (strcmp(G__struct.name[pval->tagnum], "G__ulonglong") == 0) {
                         llbuf.Format("G__printformatull((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
                                      , (long)fmt(), (long)onefmt(), pval->obj.i);
                         G__getitem(llbuf);
-                        strcat(result, fmt);
+                        G__strlcat(result, fmt, result_length);
                      }
                      else {
                         ++usedpara;
                         onefmt.Format(fmt(), result, G__int(libp->para[usedpara]));
                         ipara++;
-                        strcpy(result, onefmt);
+                        G__strlcpy(result, onefmt, result_length);
                      }
                   }
                   else {
                      onefmt.Format(fmt(), result, G__int(libp->para[usedpara]));
                      ipara++;
-                     strcpy(result, onefmt);
+                     G__strlcpy(result, onefmt, result_length);
                   }
                ionefmt = 0;
                fmtflag = 0;
@@ -4965,7 +4965,7 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
                if ('q' == libp->para[usedpara].type) {
                   G__value *pval = &libp->para[usedpara];
                   ipara++;
-                  G__sprintformatld(result, fmt, &pval->obj.ld, onefmt);
+                  G__sprintformatld(result, result_length, fmt, &pval->obj.ld, onefmt);
                }
                else
                   if (
@@ -4978,19 +4978,19 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
                         llbuf.Format("G__printformatld((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
                                      , (long)fmt(), (long)onefmt(), pval->obj.i);
                         G__getitem(llbuf);
-                        strcat(result, fmt);
+                        G__strlcat(result, fmt, result_length);
                      }
                      else {
                         ++usedpara;
                         onefmt.Format(fmt(), result, G__double(libp->para[usedpara]));
                         ipara++;
-                        strcpy(result, onefmt);
+                        G__strlcpy(result, onefmt, result_length);
                      }
                   }
                   else {
                      onefmt.Format(fmt(), result, G__double(libp->para[usedpara]));
                      ipara++;
-                     strcpy(result, onefmt);
+                     G__strlcpy(result, onefmt, result_length);
                   }
                ionefmt = 0;
                fmtflag = 0;
@@ -5001,7 +5001,7 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
             if ('q' == libp->para[usedpara].type) {
                G__value *pval = &libp->para[usedpara];
                ipara++;
-               G__sprintformatld(result, fmt(), &pval->obj.ld, result, onefmt);
+               G__sprintformatld(result, result_length, fmt(), &pval->obj.ld, result, onefmt);
             }
             break;
 #endif

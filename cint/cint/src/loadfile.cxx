@@ -122,7 +122,7 @@ static void G__copysourcetotmp(G__FastAllocString &prepname,G__input_file *pifil
     G__copyfile(fpout,pifile->fp);
     fseek(fpout,0L,SEEK_SET);
     G__srcfile[fentry].prepname = (char*)malloc(strlen(prepname)+1);
-    strcpy(G__srcfile[fentry].prepname,prepname);
+    strcpy(G__srcfile[fentry].prepname,prepname); // Okay, we allocated the right size
     G__srcfile[fentry].fp = fpout;
     fclose(pifile->fp);
     pifile->fp = fpout;
@@ -1058,7 +1058,7 @@ int G__loadfile_tmpfile(FILE *fp)
   G__srcfile[fentry].prepname = (char*)NULL;
   G__srcfile[fentry].hash = hash;
   G__srcfile[fentry].filename = (char*)malloc(strlen(G__ifile.name)+1);
-  strcpy(G__srcfile[fentry].filename,G__ifile.name);
+  strcpy(G__srcfile[fentry].filename,G__ifile.name); // Okay, we allocated the right size
   G__srcfile[fentry].fp=G__ifile.fp;
 
   G__srcfile[fentry].included_from = store_file.filenum;
@@ -2184,18 +2184,18 @@ int G__loadfile(const char *filenamein)
     G__srcfile[fentry].hash=hash;
     if(prepname[0]) {
       G__srcfile[fentry].prepname = (char*)malloc(strlen(prepname)+1);
-      strcpy(G__srcfile[fentry].prepname,prepname);
+      strcpy(G__srcfile[fentry].prepname,prepname); // Okay, we allocated the right size
     }
     else {
       G__srcfile[fentry].prepname = (char*)NULL;
     }
     if(G__globalcomp<G__NOLINK) {
       G__srcfile[fentry].filename = (char*)malloc(strlen(G__ifile.name)+1);
-      strcpy(G__srcfile[fentry].filename,G__ifile.name);
+      strcpy(G__srcfile[fentry].filename,G__ifile.name); // Okay, we allocated the right size
     }
     else {
       G__srcfile[fentry].filename = (char*)malloc(strlen(filename)+1);
-      strcpy(G__srcfile[fentry].filename,filename);
+      strcpy(G__srcfile[fentry].filename,filename); // Okay, we allocated the right size
     }
     G__srcfile[fentry].fp=G__ifile.fp;
     G__srcfile[fentry].included_from = store_file.filenum;
@@ -2481,7 +2481,7 @@ int  G__setfilecontext(const char* filename, G__input_file* ifile)
       G__srcfile[fentry].hash = hash;
       G__srcfile[fentry].prepname = NULL;
       G__srcfile[fentry].filename = (char*)malloc(strlen(filename)+1);
-      strcpy(G__srcfile[fentry].filename,filename);
+      strcpy(G__srcfile[fentry].filename,filename); // Okay, we allocated the right size
       G__srcfile[fentry].fp = 0;
       G__srcfile[fentry].included_from = G__ifile.filenum;
       G__srcfile[fentry].ispermanentsl = 1;
@@ -3107,7 +3107,7 @@ int G__register_sharedlib(const char *libname)
    G__srcfile[fentry].prepname = (char*)NULL;
    G__srcfile[fentry].hash = hash;
    G__srcfile[fentry].filename = (char*)malloc(strlen(libname)+1);
-   strcpy(G__srcfile[fentry].filename,libname);
+   strcpy(G__srcfile[fentry].filename,libname); // Okay, we allocated the right size
    G__srcfile[fentry].fp=0;
    
    G__srcfile[fentry].included_from = G__ifile.filenum;

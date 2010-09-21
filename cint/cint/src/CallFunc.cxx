@@ -322,7 +322,7 @@ void Cint::G__CallFunc::SetArgs(const char* args)
       if (tmp[0]) {
          // evaluate arg
          para.para[para.paran] = G__calc(tmp);
-         if(strlen(tmp)<G__ONELINE-1) strcpy(para.parameter[para.paran],tmp);
+         if(strlen(tmp)<G__ONELINE-1) G__strlcpy(para.parameter[para.paran],tmp,G__ONELINE);
          else para.parameter[para.paran][0]=0;
          ++para.paran; // increment argument count
       }

@@ -57,7 +57,7 @@ char* G__savestring(char** pbuf, char* name)
       *pbuf = 0;
    }
    *pbuf = (char*) malloc(strlen(name) + 1);
-   return strcpy(*pbuf, name);
+   return strcpy(*pbuf, name); // Okay we allocated enough space
 }
 
 
@@ -487,7 +487,7 @@ int G__class_autoloading(int* ptagnum)
       // loading it, and update that for dependent libraries
       // can change our libname.
       char* copyLibname = new char[strlen(libname) + 1];
-      strcpy(copyLibname, libname);
+      strcpy(copyLibname, libname); // Okay we allocated enough sapce
       if (G__p_class_autoloading) {
          int oldAutoLoading = G__enable_autoloading;
          G__enable_autoloading = 0;
@@ -532,8 +532,8 @@ int G__class_autoloading(int* ptagnum)
                   G__struct.namerange->Remove(old, tagnum);
 
                   G__struct.name[tagnum] = (char*)malloc(strlen(old)+50);
-                  strcpy(G__struct.name[tagnum],"@@ ex autload entry @@");
-                  strcat(G__struct.name[tagnum],old);
+                  strcpy(G__struct.name[tagnum],"@@ ex autload entry @@"); // Okay, we allocated enough space
+                  strcat(G__struct.name[tagnum],old); // Okay, we allocated enough space
                   G__struct.type[tagnum] = 0;
                   free(old);
                   tagnum = found_tagnum;
@@ -1448,14 +1448,14 @@ void G__set_class_autoloading_table(char* classname, char* libname)
       free((void*)G__struct.libname[tagnum]);
    }
    G__struct.libname[tagnum] = (char*)malloc(strlen(libname) + 1);
-   strcpy(G__struct.libname[tagnum], libname);
+   strcpy(G__struct.libname[tagnum], libname); // Okay we allocated enough space
    char* p = strchr(classname, '<');
    if (p) {
       // If the class is a template instantiation we need
       // to also register the template itself so that we
       // properly recognize it.
       char* buf = new char[strlen(classname)+1];
-      strcpy(buf, classname);
+      strcpy(buf, classname); // Okay we allocated enough space
       buf[p-classname] = '\0';
       if (!G__defined_templateclass(buf)) {
          int store_def_tagnum = G__def_tagnum;
@@ -1540,14 +1540,14 @@ int G__defined_tagname(const char* tagname, int noerror)
          temp = p;
          *p = ' ';
          ++p;
-         strcpy(p, temp);
+         strcpy(p, temp); // Legacy, G__defined_tagname modify its input without knowning its length ..
       }
       // handles X<int > as X<int>
       p = (char*) tagname;
       while (0 != (p = (char*) strstr(p, " >"))) {
          if ('>' != *(p - 1)) {
             temp = p + 1;
-            strcpy(p, temp);
+            strcpy(p, temp); // Legacy, G__defined_tagname modify its input without knowning its length ..
          }
          ++p;
       }
@@ -1555,7 +1555,7 @@ int G__defined_tagname(const char* tagname, int noerror)
       p = (char*) tagname;
       while (0 != (p = strstr(p, " <"))) {
          temp = p + 1;
-         strcpy(p, temp);
+         strcpy(p, temp); // Legacy, G__defined_tagname modify its input without knowning its length ..
          ++p;
       }
       // handles X<int>  as X<int>
@@ -1566,7 +1566,7 @@ int G__defined_tagname(const char* tagname, int noerror)
          }
          else {
             temp = p + 2;
-            strcpy(p + 1, temp);
+            strcpy(p + 1, temp); // Legacy, G__defined_tagname modify its input without knowning its length ..
             ++p;
          }
       }
@@ -1574,14 +1574,14 @@ int G__defined_tagname(const char* tagname, int noerror)
       p = (char*) tagname;
       while (0 != (p = strstr(p, "< "))) {
          temp = p + 2;
-         strcpy(p + 1, temp);
+         strcpy(p + 1, temp); // Legacy, G__defined_tagname modify its input without knowning its length ..
          ++p;
       }
       // handles X<int, int> as X<int,int>
       p = (char*) tagname;
       while (0 != (p = strstr(p, ", "))) {
          temp = p + 2;
-         strcpy(p + 1, temp);
+         strcpy(p + 1, temp); // Legacy, G__defined_tagname modify its input without knowning its length ..
          ++p;
       }
    }
@@ -1855,7 +1855,7 @@ int G__search_tagname(const char* tagname, int type)
       }
       G__struct.userparam[i] = 0;
       G__struct.name[i] = (char*) malloc((size_t)(len + 1));
-      strcpy(G__struct.name[i], atom_tagname);
+      strcpy(G__struct.name[i], atom_tagname); // Okay we allocated enough space
       G__struct.namerange->Insert(G__struct.name[i], i);
       G__struct.hash[i] = len;
       G__struct.size[i] = 0;

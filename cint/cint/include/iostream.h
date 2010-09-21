@@ -450,7 +450,7 @@ istream& WS(istream& i) {
 
 ostream& ostream::form(char *format ...) {
   char temp[1024];
-  return(*this<<G__charformatter(0,temp));
+  return(*this<<G__charformatter(0,temp,1024));
 }
 
 /*********************************************************************

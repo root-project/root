@@ -1395,8 +1395,8 @@ G__MethodInfo Cint::G__ClassInfo::AddMethod(const char* typenam,const char* fnam
            ifunc->param[index][i]->reftype = G__PARANORMAL;
         ifunc->param[index][i]->p_tagtable = para->para[i].tagnum;
         ifunc->param[index][i]->p_typetable = para->para[i].typenum;
-        ifunc->param[index][i]->name = (char*)malloc(10);
-        sprintf(ifunc->param[index][i]->name,"G__p%d",i);
+        ifunc->param[index][i]->name = (char*)malloc(20);
+        snprintf(ifunc->param[index][i]->name,20,"G__p%d",i);
         ifunc->param[index][i]->pdefault = (G__value*)NULL;
         ifunc->param[index][i]->def = (char*)NULL;
      }

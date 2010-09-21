@@ -657,17 +657,11 @@ static int G__iscastexpr_body(const char* ebuf, int lenbuf)
 {
    // --
    int result;
-   char* temp = (char*) malloc(strlen(ebuf) + 1);
-   if (!temp) {
-      G__genericerror("Internal error: malloc, G__iscastexpr_body(), temp");
-      return 0;
-   }
-   strcpy(temp, ebuf + 1);
+   G__FastAllocString temp(ebuf+1);
    temp[lenbuf-2] = 0;
    // Using G__istypename() is questionable.
    // May need to use G__string2type() for better language compliance.
    result = G__istypename(temp);
-   free((void*) temp);
    return result;
 }
 
@@ -936,11 +930,10 @@ static int G__getoperator(int newoperator, int oldoperator)
 //
 
 //______________________________________________________________________________
-extern "C"
-char* G__setiparseobject(G__value* result, char* str)
+char* G__setiparseobject(G__value* result, G__FastAllocString &str)
 {
    // --
-   sprintf(str, "_$%c%d%c_%d_%c%lu"
+   str.Format("_$%c%d%c_%d_%c%lu"
            , result->type
            , 0
            , (0 == result->isconst) ? '0' : '1'
@@ -1955,7 +1948,7 @@ G__value G__getitem(const char* item)
                         G__genericerror("Internal error: malloc in G__getitem(),sbuf");
                         return G__null;
                      }
-                     sprintf(sbuf, "$%s", item);
+                     sprintf(sbuf, "$%s", item); // Okay, right size.
                      G__gettingspecial = 1;
                      G__var_type = store_var_typeB;
                      result3 = G__getitem(sbuf);
