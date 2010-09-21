@@ -451,7 +451,9 @@ namespace ROOT { namespace Cintex {
          case TClassEdit::kNotSTL:
          case TClassEdit::kEnd:
          default:
-            root_class->SetBit(TClass::kIsForeign);
+            if (!typ.Properties().HasProperty("ClassDef")) {
+               root_class->SetBit(TClass::kIsForeign);
+            }
          }
       }
       return root_class;
