@@ -1338,7 +1338,7 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
                sprintf(&dname[ldname],"[%d]",d->GetMaxIndex(indx));
                indx++;
             }
-            ptext = pt->AddText(x,(y-v1)/dv,dname);
+            pt->AddText(x,(y-v1)/dv,dname);
          }
 
          // Draw a separator line
@@ -5830,8 +5830,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 
    if (type && type[0]) {
 
-      TPluginHandler *h;
-      if ((h = gPluginMgr->FindHandler("TVirtualViewer3D", type)))
+      if (gPluginMgr->FindHandler("TVirtualViewer3D", type))
          validType = kTRUE;
 
    }
