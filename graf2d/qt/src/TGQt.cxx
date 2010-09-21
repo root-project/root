@@ -926,7 +926,9 @@ Bool_t TGQt::Init(void* /*display*/)
    fFontTextCode = "ISO8859-1";
    const char *default_font =
       gEnv->GetValue("Gui.DefaultFont",  "-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1");
-   QApplication::setFont(*(QFont *)LoadQueryFont(default_font));
+   QFont *dfFont = (QFont *)LoadQueryFont(default_font);
+   QApplication::setFont(*dfFont);
+   delete dfFont;
    //  define the font code page
    QString fontName(default_font);
    fFontTextCode = fontName.section('-',13). toUpper();
@@ -1768,7 +1770,7 @@ void  TGQt::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
       }
       if (!textProxy) {
          QSize textSize = QFontMetrics(*fQFont).size(Qt::TextSingleLine,GetTextDecoder()->toUnicode(mess)) ;
-         w = textSize.width() ;
+         w = textSize.width();
          h = (unsigned int)(textSize.height());
       }
       // qDebug() << "  TGQt::GetTextExtent  w=" <<w <<" h=" << h << "font = " 

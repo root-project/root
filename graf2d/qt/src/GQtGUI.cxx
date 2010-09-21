@@ -1448,11 +1448,14 @@ FontStruct_t TGQt::LoadQueryFont(const char *font_name)
    // Parse X11-like font definition to QFont parameters:
    // -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
    // -adobe-helvetica-medium-r-*-*-*-12-*-*-*-*-iso8859-1
+   QString fontName(QString(font_name).trimmed());
+   QFont *newFont = 0;
+   if (fontName.toLower() == "qt-default") newFont = new QFont(QApplication::font());
+   else {
 #ifdef R__UNIX
-   QFont *newFont = new QFont();
-   newFont->setRawName(QString(font_name));
+   newFont = new QFont();
+   newFont->setRawName(fontName);
 #else
-   QString fontName(font_name);
    QString fontFamily = fontName.section('-',1,2);
    int weight = QFont::Normal;
 
@@ -1466,16 +1469,15 @@ FontStruct_t TGQt::LoadQueryFont(const char *font_name)
    int fontSize=12;
    int fontPointSize   = fontName.section('-',8,8).toInt(&ok);
    if (ok) fontSize = fontPointSize;
-   QFont *newFont = new QFont(fontFamily,fontSize,weight,italic);
+   newFont = new QFont(fontFamily,fontSize,weight,italic);
    if (!ok) {
       int fontPixelSize   = fontName.section('-',7,7).toInt(&ok);
       if (ok)
          newFont->setPixelSize(int(TMath::Max(fontPixelSize,1)));
    }
 #endif
-#if QT_VERSION >= 0x40000
    newFont->setStyleHint(QFont::System,QFont::PreferDevice);
-#endif   
+   }
    //fprintf(stderr, " 0x%p = LoadQueryFont(const char *%s) = family=%s, w=%s, size=%d (pt), pixel size=%d\n",
    //        newFont, font_name,(const char *)fontFamily,(const char *)fontWeight,fontSize,newFont->pixelSize());
    return FontStruct_t(newFont);
