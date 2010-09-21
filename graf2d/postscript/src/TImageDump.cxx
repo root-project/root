@@ -231,6 +231,7 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
       col = gROOT->GetColor(light);
       if (!col) {
          col = gROOT->GetColor(10);
+         if (!col) return;
       }
       fImage->DrawBox(pxl, pyl, pxt, pyt, // force image creation and resizing
                       "#ffffffff", 1,  TVirtualX::kFilled);
@@ -498,6 +499,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
       if (!col) { // no color, make it black
          fLineColor = 1;
          col = gROOT->GetColor(fLineColor);
+         if (!col) return;
       }
    }
 
