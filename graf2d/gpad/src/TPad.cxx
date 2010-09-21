@@ -2982,7 +2982,7 @@ void TPad::PaintDate()
          dates = dt.AsString();
       } else if (gStyle->GetOptDate() < 20) {
          //use ISO format like 2002-09-25
-         strlcpy(iso,dt.AsSQLString(),10); iso[10] = 0;
+         strlcpy(iso,dt.AsSQLString(),16);
          dates = iso;
       } else {
          //use ISO format like 2002-09-25 17:10:35

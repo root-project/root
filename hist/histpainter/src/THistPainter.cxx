@@ -3109,7 +3109,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"SPEC");
    if (l) {
       Hoption.Scat = 0;
-      strlcpy(l,"    ",4);
+      strncpy(l,"    ",4);
       Int_t bs=0;
       l = strstr(chopt,"BF(");
       if (l) {

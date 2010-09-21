@@ -164,14 +164,14 @@ TDataMember *TMethod::FindDataMember()
 
       if (!fMethodArgs) return 0;
 
-      char *argstr = new char[strlen(argstring)+1];    // workspace...
+      Int_t nchs = strlen(argstring);    // workspace...
+      char *argstr = new char[nchs+1];   // workspace...
       char *ptr1 = 0;
       char *tok  = 0;
       char *ptr2 = 0;
       Int_t i;
 
-      strlcpy(argstr,argstring,2047);       //let's move it to "worksapce"  copy
-      argstring[2047]=0;
+      strlcpy(argstr,argstring,nchs+1);       //let's move it to "worksapce"  copy
       ptr2 = strtok(argstr,"{}");     //extract the data!
       ptr2 = strtok((char*)0,"{}");
 
