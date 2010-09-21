@@ -252,6 +252,10 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass, const TH1* total, Option_t
    // Creates a TGraphAsymmErrors by dividing two input TH1 histograms:
    // pass/total. (see TGraphAsymmErrors::Divide)
 
+   if (!pass || !total) { 
+      Error("TGraphAsymmErrors","Invalid histogram pointers");
+      return;
+   }
    if (!CtorAllocate()) return;
 
    std::string sname = "divide_" + std::string(pass->GetName()) + "_by_" +
