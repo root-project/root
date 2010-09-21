@@ -966,7 +966,7 @@ void TAxis::SetTimeOffset(Double_t toffset, Option_t *option)
    // append the decimal part of the time offset
    Double_t ds = toffset-(Int_t)toffset;
    if(ds!= 0) {
-      sprintf(tmp,"s%g",ds);
+      snprintf(tmp,20,"s%g",ds);
       fTimeFormat.Append(tmp);
    }
 
