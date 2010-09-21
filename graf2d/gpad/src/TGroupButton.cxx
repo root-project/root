@@ -80,7 +80,7 @@ void TGroupButton::DisplayColorTable(const char *action, Double_t x0, Double_t y
       for (j=0;j<5;j++) {
          ylow = y0 + hs*j;
          color = 10*j + i + 1;
-         sprintf(command,"%s(%d)",action,10*j+i+1);
+         snprintf(command,32,"%s(%d)",action,10*j+i+1);
          colorpad = new TGroupButton("Color","",command,xlow, ylow, xlow+0.9*ws, ylow+0.9*hs);
          colorpad->SetFillColor(color);
          colorpad->SetBorderSize(1);
@@ -122,18 +122,20 @@ void TGroupButton::ExecuteAction()
       Int_t npixels = Int_t((YtoPixel(0) - YtoPixel(1))*text->GetTextSize());
       Double_t dy;
       pad = gROOT->GetSelectedPad();
+      if (!params) return;
+      Int_t nmax = (Int_t)(params-method);
       if (obj->InheritsFrom("TPaveLabel")) {
          TBox *pl = (TBox*)obj;
          dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels);
-         sprintf(params,"%f",dy/(pl->GetY2() - pl->GetY1()));
+         snprintf(params,nmax,"%f",dy/(pl->GetY2() - pl->GetY1()));
          obj->Execute("SetTextSize",params);
       } else {
          if (obj->InheritsFrom("TPave")) {
             dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels);
-            sprintf(params,"%f",dy/(pad->GetY2() - pad->GetY1()));
+            snprintf(params,nmax,"%f",dy/(pad->GetY2() - pad->GetY1()));
             obj->Execute("SetTextSize",params);
          } else {
-            sprintf(params,"%d",npixels);
+            snprintf(params,nmax,"%d",npixels);
             obj->Execute("SetTextSizePixels",params);
          }
       }
