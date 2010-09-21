@@ -197,7 +197,7 @@ void TQCanvasMenu::Dialog(TObject* object, TMethod* method)
       char        basictype [32];
 
       if (datatype) {
-         strlcpy(basictype, datatype->GetTypeName(),31);
+         strlcpy(basictype, datatype->GetTypeName(),32);
       }
       else {
          if (strncmp(type, "enum", 4) != 0)
@@ -213,14 +213,14 @@ void TQCanvasMenu::Dialog(TObject* object, TMethod* method)
       TDataMember *m = argument->GetDataMember();
       if (m && m->GetterMethod()) {
          char gettername[256] = "";
-         strlcpy(gettername, m->GetterMethod()->GetMethodName(),255);
+         strlcpy(gettername, m->GetterMethod()->GetMethodName(),256);
          m->GetterMethod()->Init(object->IsA(), gettername, "");
          // Get the current value and form it as a text:
          char val[256];
          if (!strncmp(basictype, "char*", 5)) {
             char *tdefval;
             m->GetterMethod()->Execute(object, "", &tdefval);
-            strlcpy(val, tdefval, 255);
+            strlcpy(val, tdefval, 256);
          }
          else if (!strncmp(basictype, "float", 5) ||
             !strncmp(basictype, "double", 6)) {
@@ -251,7 +251,7 @@ void TQCanvasMenu::Dialog(TObject* object, TMethod* method)
       else {    // if m not found ...
          char val[256] = "";
          const char *tval = argument->GetDefault();
-         if (tval) strlcpy(val, tval, 255);
+         if (tval) strlcpy(val, tval, 256);
          fDialog->Add(argname, val, type);
       }
    } //end while

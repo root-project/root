@@ -826,7 +826,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
       }
    }
    if (alias) snprintf(scratch,kMaxLen-1,"%s.%s",alias,leaf->GetName());
-   else if (leaf) strlcpy(scratch,leaf->GetName(),kMaxLen-1);
+   else if (leaf) strlcpy(scratch,leaf->GetName(),kMaxLen);
 
    TTree *tleaf = realtree;
    if (leaf) {
@@ -2273,7 +2273,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             // return -1;
             //}
             // We need to recover the info not used.
-            strlcpy(right,work,kMaxLen-1);
+            strlcpy(right,work,kMaxLen);
             strncat(right,"(",kMaxLen-1-strlen(right));
             strncat(right,params,kMaxLen-1-strlen(right));
             final = kTRUE;
@@ -2559,7 +2559,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
    }
 
    if (leaf && leaf->InheritsFrom(TLeafObject::Class()) ) {
-      if (strlen(right)==0) strlcpy(right,work,kMaxLen-1);
+      if (strlen(right)==0) strlcpy(right,work,kMaxLen);
    }
 
    if (leaf==0 && left[0]!=0) {
@@ -2740,7 +2740,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 
    // Find the top level leaf and deal with dimensions
 
-   char    cname[kMaxLen];  strlcpy(cname,name.Data(),kMaxLen-1);
+   char    cname[kMaxLen];  strlcpy(cname,name.Data(),kMaxLen);
    char     dims[kMaxLen];   dims[0] = '\0';
 
    Bool_t final = kFALSE;
@@ -4690,7 +4690,7 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
             }
          }
          if (val) {
-            strlcpy(value, val, kMAXLENGTH-1);
+            strlcpy(value, val, kMAXLENGTH);
          } else {
             value[0] = '\0';
          }

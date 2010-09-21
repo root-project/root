@@ -330,7 +330,7 @@ void TSAXParserCallback::Characters(void *fParser, const xmlChar *ch,
    TSAXParser *parser = (TSAXParser*)fParser;
 
    char *str = new char[len+1];
-   strlcpy(str, (const char*) ch, len);
+   strlcpy(str, (const char*) ch, len+1);
    str[len] = '\0';
 
    parser->OnCharacters(str);

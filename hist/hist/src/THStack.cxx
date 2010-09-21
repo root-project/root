@@ -679,7 +679,7 @@ void THStack::Paint(Option_t *option)
       TAxis *xaxis = h->GetXaxis();
       TAxis *yaxis = h->GetYaxis();
       if (h->GetDimension() > 1) {
-         if (strlen(option) == 0) strlcpy(loption,"lego1",31);
+         if (strlen(option) == 0) strlcpy(loption,"lego1",32);
          const TArrayD *xbins = xaxis->GetXbins();
          const TArrayD *ybins = yaxis->GetXbins();
          if (xbins->fN != 0 && ybins->fN != 0) {
@@ -746,7 +746,7 @@ void THStack::Paint(Option_t *option)
    if (strstr(loption,"lego")) return;
 
    char noption[32];
-   strlcpy(noption,loption,31); noption[31]=0;
+   strlcpy(noption,loption,32);
    Int_t nhists = fHists->GetSize();
    if (nostack) {
       lnk = (TObjOptLink*)fHists->FirstLink();

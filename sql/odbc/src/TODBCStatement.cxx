@@ -787,7 +787,7 @@ const char* TODBCStatement::GetString(Int_t npar)
       if (fBuffer[npar].fBstrbuffer==0)
          fBuffer[npar].fBstrbuffer = new char[len+1];
 
-      strlcpy(fBuffer[npar].fBstrbuffer, res, len);
+      strlcpy(fBuffer[npar].fBstrbuffer, res, len+1);
 
       res = fBuffer[npar].fBstrbuffer;
       *(res + len) = 0;
@@ -1031,7 +1031,7 @@ Bool_t TODBCStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 
    if (len>=fBuffer[npar].fBelementsize) {
       len = fBuffer[npar].fBelementsize;
-      strlcpy((char*) addr, value, len);
+      strlcpy((char*) addr, value, len+1);
       fBuffer[npar].fBlenarray[fBufferCounter] = len;
    } else
    if (len>0) {

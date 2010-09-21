@@ -2487,7 +2487,7 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
                   if (ltmp) {
                      if (tmpsalt[ltmp-1] == '#' &&
                          tmpsalt[ltmp-10] == '#') {
-                        strlcpy(ctag,&tmpsalt[ltmp-10],10);
+                        strlcpy(ctag,&tmpsalt[ltmp-10],11);
                         // We drop the random tag
                         ltmp -= 10;
                         tmpsalt[ltmp] = 0;
@@ -2516,7 +2516,7 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
                        " may result in corrupted rndmtag");
             }
             if (tmptag) {
-               strlcpy(ctag, tmptag, 10);
+               strlcpy(ctag, tmptag, 11);
                delete [] tmptag;
             }
          }
@@ -3535,15 +3535,14 @@ Int_t TAuthenticate::GenRSAKeys()
       char test[2 * rsa_STRLEN] = "ThisIsTheStringTest01203456-+/";
       Int_t lTes = 31;
       char *tdum = GetRandString(0, lTes - 1);
-      strlcpy(test, tdum, lTes);
+      strlcpy(test, tdum, lTes+1);
       delete [] tdum;
       char buf[2 * rsa_STRLEN];
       if (gDebug > 3)
          Info("GenRSAKeys", "local: test string: '%s' ", test);
 
       // Private/Public
-      strlcpy(buf, test, lTes);
-      buf[lTes] = 0;
+      strlcpy(buf, test, lTes+1);
 
       // Try encryption with private key
       int lout = TRSA_fun::RSA_encode()(buf, lTes, rsa_n, rsa_e);
@@ -3561,8 +3560,7 @@ Int_t TAuthenticate::GenRSAKeys()
          continue;
 
       // Public/Private
-      strlcpy(buf, test, lTes);
-      buf[lTes] = 0;
+      strlcpy(buf, test, lTes+1);
 
       // Try encryption with public key
       lout = TRSA_fun::RSA_encode()(buf, lTes, rsa_n, rsa_d);
@@ -3707,8 +3705,7 @@ Int_t TAuthenticate::SecureSend(TSocket *sock, Int_t enc,
    Int_t nsen = -1;
 
    if (key == 0) {
-      strlcpy(buftmp, str, slen);
-      buftmp[slen] = 0;
+      strlcpy(buftmp, str, slen+1);
 
       if (enc == 1)
          ttmp = TRSA_fun::RSA_encode()(buftmp, slen, fgRSAPriKey.n,
@@ -3861,16 +3858,14 @@ Int_t TAuthenticate::DecodeRSAPublic(const char *rsaPubExport, rsa_NUMBER &rsa_n
             // Get <hex_n> ...
             int l1 = (int) (pd2 - pd1 - 1);
             char *rsa_n_exp = new char[l1 + 1];
-            strlcpy(rsa_n_exp, pd1 + 1, l1);
-            rsa_n_exp[l1] = 0;
+            strlcpy(rsa_n_exp, pd1 + 1, l1+1);
             if (gDebug > 2)
                ::Info("TAuthenticate::DecodeRSAPublic",
                       "got %ld bytes for rsa_n_exp", (Long_t)strlen(rsa_n_exp));
             // Now <hex_d>
             int l2 = (int) (pd3 - pd2 - 1);
             char *rsa_d_exp = new char[l2 + 1];
-            strlcpy(rsa_d_exp, pd2 + 1, l2);
-            rsa_d_exp[l2] = 0;
+            strlcpy(rsa_d_exp, pd2 + 1, 13);
             if (gDebug > 2)
                ::Info("TAuthenticate::DecodeRSAPublic",
                       "got %ld bytes for rsa_d_exp", (Long_t)strlen(rsa_d_exp));
@@ -4039,8 +4034,7 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
    Int_t slen = fgRSAPubExport[key].len;
    Int_t ttmp = 0;
    if (key == 0) {
-      strlcpy(buftmp,fgRSAPubExport[key].keys,slen);
-      buftmp[slen] = 0;
+      strlcpy(buftmp,fgRSAPubExport[key].keys,slen+1);
       ttmp = TRSA_fun::RSA_encode()(buftmp, slen, rsa_n, rsa_d);
       sprintf(buflen, "%d", ttmp);
    } else if (key == 1) {

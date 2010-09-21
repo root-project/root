@@ -2238,7 +2238,7 @@ Int_t TGQt::TextWidth(FontStruct_t font, const char *s, Int_t len)
       QFontMetrics metric(*(QFont *)font);
       char* str = new char[len+1];
       memset(str,0,len+1);
-      strlcpy(str,s,len);
+      strlcpy(str,s,len+1);
       QString qstr = strncpy(str,s,len);  //to be fixed
       delete [] str;
       textWidth = metric.width(qstr,len);
@@ -2959,7 +2959,7 @@ char **TGQt::ListFonts(const char *fontname, Int_t max, Int_t &count)
        for ( QStringList::Iterator it = xlFonts.begin(); it != xlFonts.end(); ++it ) {
           char *nextFont = new char[(*it).length()+1];
           *list = nextFont; list++;
-          strlcpy(nextFont,(*it).toStdString().c_str(),(*it).length());
+          strlcpy(nextFont,(*it).toStdString().c_str(),(*it).length()+1);
        }
     }
     return listFont;

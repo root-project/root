@@ -671,7 +671,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
    char name[32];
    char block[32];
    char oldblock[32];
-   strlcpy(oldblock,"OLDBLOCK",31); oldblock[31]=0;
+   strlcpy(oldblock,"OLDBLOCK",32); 
    Int_t oldischar = -1;
    for (i=80;i>0;i--) {if (chtitl[i] == ' ') chtitl[i] = 0; }
    THbookTree *tree = new THbookTree(idname,id);
@@ -736,7 +736,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 
       if (ischar != oldischar || strcmp(oldblock,block) != 0) {
          varNumber = 0;
-         strlcpy(oldblock,block,31); oldblock[31]=0;
+         strlcpy(oldblock,block,32); 
          oldischar = ischar;
          Long_t add= (Long_t)&bigbuf[bufpos];
          Int_t lblock   = strlen(block);

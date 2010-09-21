@@ -96,7 +96,7 @@ void TODBCRow::CopyFieldValue(Int_t field)
 //         Info("CopyFieldValue","Before %d %s", ressize, fBuffer[field]);
          
          char* newbuf = new char[ressize+10];
-         strlcpy(newbuf, fBuffer[field], buffer_len-1);
+         strlcpy(newbuf, fBuffer[field], buffer_len);
          delete fBuffer[field];
          fBuffer[field] = newbuf;
          newbuf+=(buffer_len-1); // first data will not be read again
