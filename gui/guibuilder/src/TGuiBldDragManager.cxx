@@ -50,7 +50,6 @@
 #include "TGProgressBar.h"
 #include "TGScrollBar.h"
 #include "TGTextEntry.h"
-#include "snprintf.h"
 
 #undef DEBUG_LOCAL
 
