@@ -683,6 +683,7 @@ Bool_t TDecompLU::DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
          }
       } else {
          ::Error("TDecompLU::DecomposeLUCrout","matrix is singular");
+         if (isAllocated)  delete [] scale;
          return kFALSE;
       }
    }
