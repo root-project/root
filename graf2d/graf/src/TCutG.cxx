@@ -143,7 +143,7 @@ TCutG::TCutG(const char *name, Int_t n)
       const char *title = ttitle->GetTitle();
       Int_t nch = strlen(title);
       char *vars = new char[nch+1];
-      strlcpy(vars,title,nch);
+      strlcpy(vars,title,nch+1);
       char *col = strstr(vars,":");
       if (col) {
          *col = 0;
@@ -185,7 +185,7 @@ TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
       const char *title = ttitle->GetTitle();
       Int_t nch = strlen(title);
       char *vars = new char[nch+1];
-      strlcpy(vars,title,nch);
+      strlcpy(vars,title,nch+1);
       char *col = strstr(vars,":");
       if (col) {
          *col = 0;
@@ -227,7 +227,7 @@ TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
       const char *title = ttitle->GetTitle();
       Int_t nch = strlen(title);
       char *vars = new char[nch+1];
-      strlcpy(vars,title,nch);
+      strlcpy(vars,title,nch+1);
       char *col = strstr(vars,":");
       if (col) {
          *col = 0;
