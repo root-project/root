@@ -12,7 +12,6 @@
 #include "TSystem.h"
 #include "TFoamVect.h"
 
-#define SW2 setprecision(7) << setw(12)
 
 ClassImp(TFoamVect);
 
@@ -205,10 +204,12 @@ void TFoamVect::Print(Option_t *option) const
 // Printout of all vector components on "cout"
    if(!option) Error("Print ", "No option set \n");
    Int_t i;
+   Int_t pr = cout.precision(7); 
    cout << "(";
-   for(i=0; i<fDim-1; i++) cout  << SW2 << *(fCoords+i) << ",";
-   cout  << SW2 << *(fCoords+fDim-1);
+   for(i=0; i<fDim-1; i++) cout  << setw(12) << *(fCoords+i) << ",";
+   cout  << setw(12) << *(fCoords+fDim-1);
    cout << ")";
+   cout.precision(pr);
 }
 //______________________________________________________________________________
 void TFoamVect::PrintList(void)

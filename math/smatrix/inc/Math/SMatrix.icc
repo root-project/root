@@ -600,7 +600,7 @@ SVector<T,D1> SMatrix<T,D1,D2,R>::Col(unsigned int thecol) const {
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 std::ostream& SMatrix<T,D1,D2,R>::Print(std::ostream& os) const {
-   os.setf(std::ios::right,std::ios::adjustfield);
+   const std::ios_base::fmtflags prevFmt = os.setf(std::ios::right,std::ios::adjustfield);
    //  os.setf(ios::fixed);
    
    os << "[ ";
@@ -615,6 +615,7 @@ std::ostream& SMatrix<T,D1,D2,R>::Print(std::ostream& os) const {
    }
    os << " ]";
    
+   if (prevFmt != os.flags() ) os.setf(prevFmt, std::ios::adjustfield);
    return os;
 }
 

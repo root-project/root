@@ -496,13 +496,14 @@ SVector<T,D>& SVector<T,D>::Place_at(const VecExpr<A,T,D2>& rhs, unsigned int ro
 //==============================================================================
 template <class T, unsigned int D>
 std::ostream& SVector<T,D>::Print(std::ostream& os) const {
-   os.setf(std::ios::right,std::ios::adjustfield);
+   const std::ios_base::fmtflags prevFmt = os.setf(std::ios::right,std::ios::adjustfield);
    //  os.setf(ios::fixed);
    
    for (unsigned int i = 0; i < D; ++i ) {
       os << fArray[i];
       if (i != D-1) os << ", "; 
    } 
+   if (prevFmt != os.flags() ) os.setf(prevFmt, std::ios::adjustfield);
    return os;
 }
 

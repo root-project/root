@@ -362,7 +362,8 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
    os << "Minimizer is " << fMinimType << std::endl;
    const unsigned int nw = 25; // spacing for text  
    const unsigned int nn = 12; // spacing for numbers 
-   os << std::left; // set left alignment
+   const std::ios_base::fmtflags prFmt = os.setf(std::ios::left,std::ios::adjustfield); // set left alignment
+
    if (fVal != fChi2 || fChi2 < 0) 
       os << std::left << std::setw(nw) << "LogLikelihood" << " = " << std::right << std::setw(nn) << fVal << std::endl;
    if (fChi2 >= 0) 
@@ -386,6 +387,9 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
       os << std::endl; 
    }
 
+   // restore stremam adjustfield
+   if (prFmt != os.flags() ) os.setf(prFmt, std::ios::adjustfield);
+
    if (doCovMatrix) PrintCovMatrix(os); 
 }
 
@@ -400,6 +404,11 @@ void FitResult::PrintCovMatrix(std::ostream &os) const {
    const int kWidth = 8; 
    const int parw = 12; 
    const int matw = kWidth+4;
+
+   // query previous precision and format flags
+   int prevPrec = os.precision(kPrec);
+   const std::ios_base::fmtflags prevFmt = os.flags();   
+
    os << std::setw(parw) << " " << "\t"; 
    for (unsigned int i = 0; i < npar; ++i) {
       if (!IsParameterFixed(i) ) { 
@@ -407,7 +416,6 @@ void FitResult::PrintCovMatrix(std::ostream &os) const {
       }
    }
    os << std::endl;   
-   int prevPrec = os.precision(kPrec);
    for (unsigned int i = 0; i < npar; ++i) {
       if (!IsParameterFixed(i) ) { 
          os << std::left << std::setw(parw) << GetParameterName(i) << "\t";
@@ -439,8 +447,8 @@ void FitResult::PrintCovMatrix(std::ostream &os) const {
          os << std::endl;
       }
    }
-   // restore right alignment and precision
-   os << std::right; 
+   // restore alignment and precision
+   os.setf(prevFmt, std::ios::adjustfield);
    os.precision(prevPrec);
 }
 
