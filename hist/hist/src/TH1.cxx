@@ -7842,7 +7842,8 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
       else if (fft->GetNdim()==2)
          hout = new TH2D(name, name, n[0], 0, n[0], n[1], 0, n[1]);
    }
-   R__ASSERT(hout != 0);
+   //R__ASSERT(hout != 0); // this does not compile - need to expand macro because we are in a static function
+   if (!(hout)) ::Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); 
    TString type=fft->GetType();
    Int_t ind[2];
    if (opt.Contains("RE")){
