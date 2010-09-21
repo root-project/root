@@ -1936,7 +1936,9 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    // and all occurences of "kRight" keyword by "}".
    i = 0 ;
    while (i < length) {
-      strlcpy(buf,&text[i],TMath::Min(7,length-i)+1);
+      // The string in 'buf' does not need to be null terminated,
+      // we will only check with strncmp.
+      strncpy(buf,&text[i],TMath::Min(7,length-i));
       opFound = kFALSE ;
       for (k = 0 ; k < nLeft1 ; k++) {
          if (strncmp(buf,kLeft1[k],lLeft1)==0) {
@@ -1979,7 +1981,9 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
             case '"' : quote1 = !quote1 ; break ;
             case '\'': quote2 = !quote2 ; break ;
          }
-         strlcpy(buf,&text[i],TMath::Min(11,length-i)+1);
+         // The string in 'buf' does not need to be null terminated,
+         // we will only check with strncmp
+         strncpy(buf,&text[i],TMath::Min(11,length-i));
          opFound = kFALSE ;
 
          for(k=0;k<nkWord1;k++) {
