@@ -38,7 +38,6 @@
 #include "TObjString.h"
 #include "TTabCom.h"
 #include "TError.h"
-#include "snprintf.h"
 #include <stdlib.h>
 
 #ifdef R__BUILDEDITLINE

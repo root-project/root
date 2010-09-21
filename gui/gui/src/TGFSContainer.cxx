@@ -40,7 +40,6 @@
 #include "Riostream.h"
 #include "TRemoteObject.h"
 #include "TImage.h"
-#include "snprintf.h"
 #include <time.h>
 
 ClassImp(TGFileItem)

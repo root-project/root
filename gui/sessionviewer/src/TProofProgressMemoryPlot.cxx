@@ -39,7 +39,6 @@
 #include "TGraph.h"
 #include "TLegend.h"
 #include "TAxis.h"
-#include "snprintf.h"
 
 #define kMemValuePos 8
 #define kMemValuePosMaster 8

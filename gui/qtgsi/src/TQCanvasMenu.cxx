@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include "Riostream.h"
-#include "snprintf.h"
 #include "qevent.h"
 #include "qdialog.h"
 #include "qpushbutton.h"

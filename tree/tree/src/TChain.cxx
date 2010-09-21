@@ -55,7 +55,6 @@
 #include "TEntryList.h"
 #include "TEntryListFromFile.h"
 #include "TFileStager.h"
-#include "snprintf.h"
 
 const Long64_t theBigNumber = Long64_t(1234567890)<<28;
 

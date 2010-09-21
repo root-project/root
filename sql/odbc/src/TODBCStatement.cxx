@@ -22,7 +22,6 @@
 #include "TODBCStatement.h"
 #include "TODBCServer.h"
 #include "TDataType.h"
-#include "snprintf.h"
 #include "Riostream.h"
 
 #include <sqlext.h>

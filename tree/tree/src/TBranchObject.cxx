@@ -32,7 +32,6 @@
 #include "TStreamerInfo.h"
 #include "TTree.h"
 #include "TVirtualPad.h"
-#include "snprintf.h"
 
 ClassImp(TBranchObject)
 

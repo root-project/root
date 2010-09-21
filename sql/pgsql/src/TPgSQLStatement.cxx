@@ -20,7 +20,6 @@
 #include "TPgSQLStatement.h"
 #include "TDataType.h"
 #include "TDatime.h"
-#include "snprintf.h"
 
 #include <stdlib.h>
 

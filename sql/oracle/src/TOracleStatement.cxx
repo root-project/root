@@ -22,7 +22,6 @@
 #include "TOracleServer.h"
 #include "TDataType.h"
 #include <stdlib.h>
-#include "snprintf.h"
 
 ClassImp(TOracleStatement)
 

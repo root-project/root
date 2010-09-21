@@ -162,8 +162,6 @@
 
 #include "RConfigure.h"
 
-#include "snprintf.h"
-
 #include "Riostream.h"
 #include "TTreeViewer.h"
 #include "HelpText.h"

@@ -21,7 +21,6 @@
 #include "TMySQLServer.h"
 #include "TDataType.h"
 #include "TDatime.h"
-#include "snprintf.h"
 #include <stdlib.h>
 
 ClassImp(TMySQLStatement)

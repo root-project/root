@@ -38,7 +38,6 @@
 #include "TFile.h"
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
-#include "snprintf.h"
 
 extern "C" void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep);
 

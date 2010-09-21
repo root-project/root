@@ -84,7 +84,6 @@
 #include "TGToolTip.h"
 #include "TMath.h"
 #include "Riostream.h"
-#include "snprintf.h"
 #include <ctype.h>
 
 

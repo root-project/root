@@ -32,7 +32,6 @@
 #include "TTimeStamp.h"
 #include "TInterpreter.h"
 #include "TError.h"
-#include "snprintf.h"
 #include "Varargs.h"
 
 TThreadImp     *TThread::fgThreadImp = 0;

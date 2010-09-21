@@ -47,7 +47,6 @@
 #include "Riostream.h"
 #include "TGComboBox.h"
 #include "TGListBox.h"
-#include "snprintf.h"
 
 //_____________________________________________________________________________
 //

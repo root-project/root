@@ -29,7 +29,6 @@
 #include "Riostream.h"
 #include "TGHtmlBrowser.h"
 #include "TGText.h"
-#include "snprintf.h"
 
 #ifdef WIN32
 #include "TWin32SplashThread.h"

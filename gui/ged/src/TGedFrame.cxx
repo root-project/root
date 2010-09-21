@@ -26,7 +26,6 @@
 #include "TGToolTip.h"
 #include "TGCanvas.h"
 #include "TGScrollBar.h"
-#include "snprintf.h"
 
 
 ClassImp(TGedFrame)

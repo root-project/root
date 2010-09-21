@@ -359,7 +359,6 @@
 #include <sstream>
 #include <string>
 #include <stdio.h>
-#include "snprintf.h"
 
 Int_t    TTree::fgBranchStyle = 1;  // Use new TBranch style with TBranchElement.
 Long64_t TTree::fgMaxTreeSize = 100000000000LL;

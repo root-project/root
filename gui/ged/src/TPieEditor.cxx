@@ -25,7 +25,6 @@
 */
 //End_Html
 
-#include "snprintf.h"
 #include "TGedEditor.h"
 #include "TGComboBox.h"
 #include "TGButtonGroup.h"

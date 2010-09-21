@@ -43,7 +43,6 @@
 #include "TObjString.h"
 #include "TList.h"
 #include "TClass.h"
-#include "snprintf.h"
 
 #include <libxml/parser.h>
 #include <libxml/parserInternals.h>

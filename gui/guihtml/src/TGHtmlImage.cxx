@@ -42,7 +42,6 @@
 #include "TUrl.h"
 #include "TSocket.h"
 #include "TSystem.h"
-#include "snprintf.h"
 
 //______________________________________________________________________________
 TGHtmlImage::TGHtmlImage(TGHtml *htm, const char *url, const char *width,

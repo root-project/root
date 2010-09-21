@@ -57,7 +57,6 @@
 #include "TGDNDManager.h"
 #include "TBufferFile.h"
 #include "Riostream.h"
-#include "snprintf.h"
 
 Pixel_t          TGListTree::fgGrayPixel = 0;
 const TGFont    *TGListTree::fgDefaultFont = 0;

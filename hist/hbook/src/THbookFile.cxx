@@ -32,7 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <snprintf.h>
 
 #include "TROOT.h"
 #include "THbookFile.h"

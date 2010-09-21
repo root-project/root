@@ -36,7 +36,6 @@
 #include "TList.h"
 #include "NetErrors.h"
 #include "TRegexp.h"
-#include "snprintf.h"
 #include "TVirtualMutex.h"
 #include "TTimer.h"
 #include "TBase64.h"

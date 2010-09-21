@@ -68,7 +68,6 @@
 #include "TSchemaRule.h"
 
 #include "TVirtualMutex.h"
-#include <snprintf.h>
 
 TStreamerElement *TStreamerInfo::fgElement = 0;
 Int_t   TStreamerInfo::fgCount = 0;

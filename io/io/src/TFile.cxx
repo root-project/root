@@ -113,7 +113,6 @@
 #include <set>
 #include "TSchemaRule.h"
 #include "TSchemaRuleSet.h"
-#include "snprintf.h"
 
 TFile *gFile;                 //Pointer to current file
 

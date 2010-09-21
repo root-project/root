@@ -43,7 +43,6 @@
 #include "TGToolTip.h"
 #include "TGButton.h"
 #include "Riostream.h"
-#include "snprintf.h"
 #include "RStipples.h"
 
 ClassImp(TGedPopup)

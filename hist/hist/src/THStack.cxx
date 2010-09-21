@@ -23,7 +23,6 @@
 #include "TBrowser.h"
 #include "TMath.h"
 #include "TObjString.h"
-#include "snprintf.h"
 
 ClassImp(THStack)
 

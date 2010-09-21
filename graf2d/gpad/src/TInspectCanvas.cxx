@@ -20,7 +20,6 @@
 #include "TDataType.h"
 #include "TRealData.h"
 #include "TLatex.h"
-#include "snprintf.h"
 
 ClassImp(TInspectCanvas)
 

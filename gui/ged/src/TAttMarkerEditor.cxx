@@ -29,7 +29,6 @@
 #include "TGColorSelect.h"
 #include "TGNumberEntry.h"
 #include "TColor.h"
-#include "snprintf.h"
 
 ClassImp(TAttMarkerEditor)
 
