@@ -2620,15 +2620,15 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
                else {
                   expr.Format("*%s*)%ld", arg2(), expressionin.ref);
                }
-               strcpy(arg2, expr);
+               arg2 = expr;
             } else {
                G__fprinterr(G__serr, "G__overloadopr: expected ')' in %s\n", arg2());
             }
          } else if (expressionin.type == 'm') {
-            strcat(arg2, "ULL");
+            arg2 += "ULL";
          }
          else if (expressionin.type == 'n') {
-            strcat(arg2, "LL");
+            arg2 += "LL";
          }
       }
       if (defined->type == 'u') {
@@ -2670,7 +2670,7 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
                else {
                   expr.Format("*%s*)%ld", arg1(), defined->ref);
                }
-               strcpy(arg1, expr);
+               arg1 = expr;
             }
          }
          expr.Format("%s(%s,%s)", opr(), arg1(), arg2());

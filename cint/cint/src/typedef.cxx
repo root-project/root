@@ -282,7 +282,7 @@ void G__define_type()
 
    c = G__fgetname_template(type1, 0, "*{");
    if (c == '*') {
-      strcat(type1, "*");
+      type1 += "*";
       c = ' ';
    }
    // Consume any const, volatile, mutable, or typename qualifier. // FIXME: mutable is illegal in a typedef.
@@ -311,16 +311,16 @@ void G__define_type()
       // above since it does not allow for distinction between global
       // namespace and local namespace) ... but at least it is an improvement
       // over the current behavior.
-      strcpy(type1, type1 + 2);
+      strcpy((char*)type1, type1 + 2);  // Okay since we reduce the size ...
    }
    while (isspace(c)) {
       len = strlen(type1);
       c = G__fgetspace();
       if (c == ':') {
          c = G__fgetspace(); // skip the next ':'
-         strcat(type1, "::");
+         type1 += "::";
          c = G__fgetname_template(temp, 0, "{");
-         strcat(type1, temp);
+         type1 += temp;
       }
       else if ((c == '<') || (c == ',') || (type1[len-1] == '<') || (type1[len-1] == ',')) {
          type1[len++] = c;
@@ -363,27 +363,27 @@ void G__define_type()
    }
    else if (!strcmp(type1, "unsigned*")) {
       unsigned_flag = 1;
-      strcpy(type1, "int*");
+      type1 = "int*";
    }
    else if (!strcmp(type1, "signed*")) {
       unsigned_flag = 0;
-      strcpy(type1, "int*");
+      type1 = "int*";
    }
    else if (!strcmp(type1, "unsigned&")) {
       unsigned_flag = 1;
-      strcpy(type1, "int&");
+      type1 = "int&";
    }
    else if (!strcmp(type1, "signed&")) {
       unsigned_flag = 0;
-      strcpy(type1, "int&");
+      type1 = "int&";
    }
    else if (!strcmp(type1, "unsigned*&")) {
       unsigned_flag = 1;
-      strcpy(type1, "int*&");
+      type1 = "int*&";
    }
    else if (!strcmp(type1, "signed*&")) {
       unsigned_flag = 0;
-      strcpy(type1, "int*&");
+      type1 = "int*&";
    }
 
    /*

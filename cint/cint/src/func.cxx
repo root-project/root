@@ -872,7 +872,7 @@ char* G__rename_templatefunc(G__FastAllocString& funcname)
          }
          else {
             tagnum = G__defined_tagname(buf, 1);
-            if (-1 != tagnum) strcpy(buf, G__fulltagname(tagnum, 1));
+            if (-1 != tagnum) buf = G__fulltagname(tagnum, 1);
          }
          buf += buf2;
          funcname2 += buf;
@@ -3071,7 +3071,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
     ********************************************************************/
    var = G__getvarentry(funcname, hash, &ig15, &G__global, G__p_local);
    if (var && var->type[ig15] == '1') {
-      sprintf(result7, "*%s", funcname());
+      result7.Format("*%s", funcname());
       *known3 = 0;
       pfparam = (char*)strchr(item, '(');
       if (pfparam) {
@@ -4835,7 +4835,7 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
    short dig = 0;
    int usedpara = 0;
 
-   strcpy(pformat, (char *)G__int(libp->para[ifmt]));
+   pformat = (char *)G__int(libp->para[ifmt]);
    result[0] = '\0';
    ipara = ifmt + 1;
    lenfmt = strlen(pformat);
@@ -4931,9 +4931,8 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
                         strcat(result, fmt);
                      }
                      else if (strcmp(G__struct.name[pval->tagnum], "G__ulonglong") == 0) {
-                        sprintf(llbuf
-                              , "G__printformatull((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
-                                , (long)fmt(), (long)onefmt(), pval->obj.i);
+                        llbuf.Format("G__printformatull((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
+                                     , (long)fmt(), (long)onefmt(), pval->obj.i);
                         G__getitem(llbuf);
                         strcat(result, fmt);
                      }

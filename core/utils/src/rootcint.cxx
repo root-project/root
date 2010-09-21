@@ -1503,7 +1503,6 @@ bool IsTemplateDouble32(G__ClassInfo &cl)
    char *current, *next;
    G__FastAllocString arg( cl.Name() );
 
-   strcpy(arg, cl.Name());
    // arg is now is the name of class template instantiation.
    // We first need to find the start of the list of its template arguments
    // then we have a comma separated list of type names.  We want to return
@@ -1649,7 +1648,7 @@ G__TypeInfo &TemplateArg(G__DataMemberInfo &m, int count = 0)
    char *current, *next;
    G__FastAllocString arg( m.Name() );
 
-   strcpy(arg, m.Type()->TmpltArg());
+   arg = m.Type()->TmpltArg();
    // arg is now a comma separated list of type names, and we want
    // to return the 'count+1'-th element in the list.
    int len = strlen(arg);
@@ -1688,7 +1687,6 @@ G__TypeInfo &TemplateArg(G__BaseClassInfo &m, int count = 0)
    char *current, *next;
    G__FastAllocString arg( m.Name() );
 
-   strcpy(arg, m.Name());
    // arg is now is the name of class template instantiation.
    // We first need to find the start of the list of its template arguments
    // then we have a comma separated list of type names.  We want to return

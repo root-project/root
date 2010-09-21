@@ -696,7 +696,7 @@ void G__define_struct(char type)
       // -- We do not yet have a tagname.
       if (type == 'e') {
          // -- Unnamed enumeration, give it the name '$' (which may not be unique!).
-         strcpy(tagname, "$");
+         tagname = "$";
       }
       else if (type == 'n') {
          // -- Unnamed namespace, treat as global scope, namespace has no effect, handle and return.
@@ -709,7 +709,7 @@ void G__define_struct(char type)
       }
       else {
          // -- Otherwise name it 'G__NONAMEddd', where ddd is the tagnum that will be assigned.
-         sprintf(tagname, "G__NONAME%d", G__struct.alltag);
+         tagname.Format("G__NONAME%d", G__struct.alltag);
       }
    }
 #ifndef G__STD_NAMESPACE

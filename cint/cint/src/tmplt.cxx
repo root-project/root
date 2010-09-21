@@ -1982,7 +1982,7 @@ int G__gettemplatearglist(const char *paralist,G__Charlist *charlist_in
         G__string(buf,temp);
         if(strcmp(temp,string)!=0) {
           searchflag=1;
-          strcpy(string,temp);
+          string = temp;
         }
         break;
       }
@@ -2012,7 +2012,7 @@ int G__gettemplatearglist(const char *paralist,G__Charlist *charlist_in
   if(def_para) {
     while(def_para) {
       if(def_para->default_parameter) {
-        strcpy(string,def_para->default_parameter);
+        string = def_para->default_parameter;
         charlist->string = G__expand_def_template_arg (string,def_para_in,
                                                        charlist_in);
         {
@@ -2494,7 +2494,7 @@ int G__instantiate_templateclass(const char *tagnamein, int noerror)
     int i=0;
     char *p = strrchr(templatename,':');
     while(*p) templatename.Set(i++, *(++p));
-    sprintf(tagname,"%s<%s",templatename(),arg);
+    tagname.Format("%s<%s",templatename(),arg);
   }
 
   /* resolve template specialization */

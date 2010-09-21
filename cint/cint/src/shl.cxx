@@ -942,7 +942,7 @@ int G__shl_load(char *shlfile)
 
   size_t lendllidheader = strlen(p) + 1;
   G__FastAllocString dllidheader(lendllidheader);
-  strcpy(dllidheader,p);
+  dllidheader = p;
   post = strchr(dllidheader,'.');
   if(post)  *post = '\0';
 
@@ -2183,7 +2183,7 @@ void* G__RegisterLibrary(void (*func)()) {
    if (libname && libname[0]) {
       size_t lenLibName = strlen(libname);
       G__FastAllocString sbLibName(lenLibName);
-      strcpy(sbLibName, libname);
+      sbLibName = libname;
       // remove soversion at the end: .12.34
       size_t cutat = lenLibName - 1;
       while (cutat > 2) {

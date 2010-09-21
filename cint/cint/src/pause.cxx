@@ -977,10 +977,10 @@ int G__pause()
          else {
             p = strrchr(view.file.name, G__psep[0]);
             if (p && *(p + 1)) {
-               strcpy(filename, p + 1);
+               filename = p + 1;
             }
             else {
-               strcpy(filename, view.file.name);
+               filename = view.file.name;
             }
             command.Format("FILE:%s LINE:%d %s> ", G__stripfilename(filename), view.file.line_number, cintname());
          }
@@ -1631,11 +1631,11 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       return(0);
    }
    *prompt = '\0';
-   if ((com = getenv("EDITOR"))) strcpy(editor, com);
+   if ((com = getenv("EDITOR"))) editor = com;
 #ifdef G__WIN32
-   else strcpy(editor, "notepad");
+   else editor = "notepad";
 #else
-   else strcpy(editor, "vi");
+   else editor = "vi";
 #endif
    temp = 0;
    while (isspace(line[temp])) ++temp;
@@ -3326,7 +3326,7 @@ multi_line_command:
                ftemp.fp = (FILE*)NULL;
             }
             else {
-               strcpy(sname, tname);
+               sname = tname;
                G__command_eval = 1 ;
                buf = G__exec_tempfile(sname);
                if (G__security_error && G__pautoloading && (*G__pautoloading)(com)) {

@@ -119,4 +119,13 @@ private:
    size_t fCapacity; // measure representing the buffer's size, used by the internal reservoir
 };
 
+// Those 6 functions are intentionally not implemented as their are 'illegal'
+// and we should call the equivalent member function instead.
+void G__strlcpy(G__FastAllocString&, const char *, size_t);
+void G__strlcat(G__FastAllocString&, const char *, size_t);
+void G__snprintf(G__FastAllocString&, size_t, const char *, ...);
+void strcpy(G__FastAllocString&, const char *);
+void strcat(G__FastAllocString&, const char *);
+void sprintf(G__FastAllocString&, const char *, ...);
+
 #endif // G__FASTALLOGSTRING_H

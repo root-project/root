@@ -2437,7 +2437,7 @@ void G__define_var(int tagnum, int typenum)
                G__bitfield = -1;
             }
             if (!new_name[0]) {
-               sprintf(new_name, "G__pad%x", padn++);
+               new_name.Format("G__pad%x", padn++);
             }
          }
       }

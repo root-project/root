@@ -488,7 +488,7 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
          case G__PARANORMAL:
             break;
          default:
-            strcpy(sbuf, p);
+            sbuf = p;
             for (i = G__PARAP2P - 1;i < buf.obj.reftype.reftype;i++) *(p + i) = '*';
             strcpy(p + buf.obj.reftype.reftype - G__PARAP2P + 1, sbuf);
             break;

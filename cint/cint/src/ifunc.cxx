@@ -1787,7 +1787,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                      if (strcmp(buf, "short") && strcmp(buf, "int") && strcmp(buf, "long")) {
                         G__ifile.line_number = store_line;
                         fsetpos(G__ifile.fp, &pos);
-                        strcpy(buf, "int");
+                        buf = "int";
                         //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
                         c = ' ';
                      }
@@ -5893,7 +5893,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
          G__FastAllocString temp(G__ONELINE);
          cin = G__fgetstream(temp, 0, ",)");
          if (temp[0] != '\0') {
-            strcpy(paraname[ipara], temp);
+            paraname[ipara] = temp;
             ++ipara;
          }
       }
