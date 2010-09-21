@@ -590,6 +590,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                if (nCroch<0) {
                   // more "]" than "["
                   fError = "Missing \"[\"";
+                  delete [] text;
                   return TLatexFormSize(0,0,0);
                }
             }
