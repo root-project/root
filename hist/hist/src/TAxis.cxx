@@ -326,7 +326,7 @@ Int_t TAxis::FindBin(const char *label)
    // count number of labels in the list
    Int_t n = 0;
    TIter next(fLabels);
-   while ((obj = (TObjString*)next())) {
+   while (next()) {
       n++;
    }
    TH1 *h = (TH1*)fParent;
