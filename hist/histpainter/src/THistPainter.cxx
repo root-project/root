@@ -3075,7 +3075,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    char *l;
    char chopt[128];
    Int_t nch = strlen(choptin);
-   strcpy(chopt,choptin);
+   strlcpy(chopt,choptin,128);
 
    Hoption.Axis = Hoption.Bar    = Hoption.Curve   = Hoption.Error = 0;
    Hoption.Hist = Hoption.Line   = Hoption.Mark    = Hoption.Fill  = 0;
@@ -6486,7 +6486,7 @@ void THistPainter::PaintScatterPlot(Option_t *option)
    opt.ToLower();
    if (opt.Contains("scat=")) {
       char optscat[100];
-      strcpy(optscat,opt.Data());
+      strlcpy(optscat,opt.Data(),100);
       char *oscat = strstr(optscat,"scat=");
       char *blank = strstr(oscat," "); if (blank) *blank = 0;
       sscanf(oscat+5,"%lg",&scale);
