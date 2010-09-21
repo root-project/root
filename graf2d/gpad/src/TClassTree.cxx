@@ -438,8 +438,8 @@ void TClassTree::ls(Option_t *) const
 
    char line[500];
    for (Int_t i=0;i<fNclasses;i++) {
-      sprintf(line,"%s%s",fCnames[i]->Data(),"...........................");
-      sprintf(&line[30],"%s",fCtitles[i]->Data());
+      snprintf(line,500,"%s%s",fCnames[i]->Data(),"...........................");
+      snprintf(&line[30],460,"%s",fCtitles[i]->Data());
       line[79] = 0;
       printf("%5d %s\n",i,line);
    }
@@ -811,7 +811,7 @@ void TClassTree::ScanClasses(Int_t iclass)
    if (!sourceName) return;
    Int_t ncn = strlen(fCnames[iclass]->Data())+2;
    char *cname = new char[ncn+1];
-   sprintf(cname,"%s::",fCnames[iclass]->Data());
+   snprintf(cname,ncn,"%s::",fCnames[iclass]->Data());
        // open source file
    ifstream sourceFile;
    sourceFile.open( sourceName, ios::in );
