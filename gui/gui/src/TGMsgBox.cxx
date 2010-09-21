@@ -259,7 +259,7 @@ void TGMsgBox::PMsgBox(const char *title, const char *msg,
    nextLine = tmpMsg;
 
    line = tmpMsg;
-   strncpy(nextLine, msg, strlen(msg) + 1);
+   strlcpy(nextLine, msg, strlen(msg) + 1);
    while ((nextLine = strchr(line, '\n'))) {
       *nextLine = 0;
       label = new TGLabel(fLabelFrame, line);

@@ -446,7 +446,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case kIDF_NEW_FOLDER: {
                      char answer[128];
-                     strcpy(answer, "(empty)");
+                     strlcpy(answer, "(empty)", sizeof(answer));
                      new TGInputDialog(gClient->GetRoot(), GetMainFrame(),
                                        "Enter directory name:",
                                        answer/*"(empty)"*/, answer);

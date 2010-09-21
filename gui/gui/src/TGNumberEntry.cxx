@@ -261,7 +261,7 @@ static char *StrInt(char *text, Long_t i, Int_t digits)
    if (i < 0) {
       s = "-" + s;
    }
-   strncpy(text, (const char *) s, 250);
+   strlcpy(text, (const char *) s, 250);
    return text;
 }
 
@@ -280,21 +280,21 @@ static char *RealToStr(char *text, const RealInfo_t & ri)
    if (text == 0) {
       return 0;
    }
-   strncpy(p, "", 255);
+   strlcpy(p, "", 256);
    if (ri.fSign < 0) {
-      strncpy(p, "-", 255);
+      strlcpy(p, "-", 256);
       p++;
    }
    StrInt(p, TMath::Abs(ri.fIntNum), 0);
    p += strlen(p);
    if ((ri.fStyle == kRSFrac) || (ri.fStyle == kRSFracExpo)) {
-      strncpy(p, ".", 255-strlen(p));
+      strlcpy(p, ".", 256-strlen(p));
       p++;
       StrInt(p, TMath::Abs(ri.fFracNum), ri.fFracDigits);
       p += strlen(p);
    }
    if ((ri.fStyle == kRSExpo) || (ri.fStyle == kRSFracExpo)) {
-      strncpy(p, "e", 255-strlen(p));
+      strlcpy(p, "e", 256-strlen(p));
       p++;
       StrInt(p, ri.fExpoNum, 0);
       p += strlen(p);
@@ -317,7 +317,7 @@ static Double_t StrToReal(const char *text, RealInfo_t & ri)
       ri.fSign = 1;
       return 0.0;
    }
-   strncpy(buf, text, sizeof(buf) - 1);
+   strlcpy(buf, text, sizeof(buf));
    s = buf;
    frac = strchr(s, '.');
    if (frac == 0) {
@@ -462,7 +462,7 @@ static char *MIntToStr(char *text, Long_t l, Int_t digits)
    if (l < 0) {
       s = "-" + s;
    }
-   strncpy(text, (const char *) s, 255);
+   strlcpy(text, (const char *) s, 256);
    return text;
 }
 
@@ -481,7 +481,7 @@ static char *DIntToStr(char *text, Long_t l, Bool_t Sec, char Del)
    if (l < 0) {
       s = "-" + s;
    }
-   strncpy(text, (const char *) s, 255);
+   strlcpy(text, (const char *) s, 256);
    return text;
 }
 
@@ -600,7 +600,7 @@ static Long_t TranslateToNum(const char *text,
    case TGNumberFormat::kNESRealTwo:
       {
          char buf[256];
-         strncpy(buf, text, sizeof(buf) - 1);
+         strlcpy(buf, text, sizeof(buf));
          AppendFracZero(buf, 2);
          GetNumbers(buf, sign, n1, 12, n2, 2, n3, 0, ".,");
          return sign * (100 * n1 + GetSignificant(n2, 100));
@@ -608,7 +608,7 @@ static Long_t TranslateToNum(const char *text,
    case TGNumberFormat::kNESRealThree:
       {
          char buf[256];
-         strncpy(buf, text, sizeof(buf) - 1);
+         strlcpy(buf, text, sizeof(buf));
          AppendFracZero(buf, 3);
          GetNumbers(buf, sign, n1, 12, n2, 3, n3, 0, ".,");
          return sign * (1000 * n1 + GetSignificant(n2, 1000));
@@ -616,7 +616,7 @@ static Long_t TranslateToNum(const char *text,
    case TGNumberFormat::kNESRealFour:
       {
          char buf[256];
-         strncpy(buf, text, sizeof(buf) - 1);
+         strlcpy(buf, text, sizeof(buf));
          AppendFracZero(buf, 4);
          GetNumbers(buf, sign, n1, 12, n2, 4, n3, 0, ".,");
          return sign * (10000 * n1 + GetSignificant(n2, 10000));
@@ -682,7 +682,8 @@ static char *TranslateToStr(char *text, Long_t l,
              StringInt(TMath::Abs(l) % 100, 0) + "/" +
              StringInt((TMath::Abs(l) / 100) % 100, 0) + "/" +
              StringInt(TMath::Abs(l) / 10000, 0);
-         return strncpy(text, (const char *) date, 255);
+         strlcpy(text, (const char *) date, 256);
+         return text;
       }
    case TGNumberFormat::kNESMDayYear:
       {
@@ -690,7 +691,8 @@ static char *TranslateToStr(char *text, Long_t l,
              StringInt((TMath::Abs(l) / 100) % 100, 0) + "/" +
              StringInt(TMath::Abs(l) % 100, 0) + "/" +
              StringInt(TMath::Abs(l) / 10000, 0);
-         return strncpy(text, (const char *) date, 255);
+         strlcpy(text, (const char *) date, 256);
+         return text;
       }
    case TGNumberFormat::kNESHex:
       return IntToHexStr(text, (ULong_t) l);
@@ -1208,7 +1210,7 @@ void TGNumberEntryField::SetText(const char *text, Bool_t emit)
    // Set the value (text format).
 
    char buf[256];
-   strncpy(buf, text, sizeof(buf) - 1);
+   strlcpy(buf, text, sizeof(buf));
    EliminateGarbage(buf, fNumStyle, fNumAttr);
    TGTextEntry::SetText(buf, emit);
    fNeedsVerification = kFALSE;
@@ -1234,8 +1236,7 @@ Double_t TGNumberEntryField::GetNumber() const
       {
          char text[256];
          RealInfo_t ri;
-         strncpy(text, GetText(), 255);
-         text[255] = 0;
+         strlcpy(text, GetText(), sizeof(text));
          return StrToReal(text, ri);
       }
    case kNESDegree:

@@ -2305,11 +2305,9 @@ start:
       s = strchr(p, '/');
 
       if (!s) {
-         strncpy(dirname, p, 1023);
-         dirname[1023] = 0;
+         strlcpy(dirname, p, 1024);
       } else {
-         strncpy(dirname, p, s-p);
-         dirname[s-p] = 0;
+         strlcpy(dirname, p, s-p);
       }
 
       item = FindChildByName(item, dirname);
@@ -2361,11 +2359,11 @@ void TGListTree::GetPathnameFromItem(TGListTreeItem *item, char *path, Int_t dep
    *path = '\0';
    while (item) {
       snprintf(tmppath, 1023, "/%s%s", item->GetText(), path);
-      strncpy(path, tmppath, 1023);
+      strlcpy(path, tmppath, 1024);
       item = item->fParent;
       if (--depth == 0 && item) {
          snprintf(tmppath, 1023, "...%s", path);
-         strncpy(path, tmppath, 1023);
+         strlcpy(path, tmppath, 1024);
          return;
       }
    }

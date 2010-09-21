@@ -73,7 +73,7 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
       if (!strlen(s)) continue;    // skip empty lines
 
       if (*s == '[') {
-         strncpy(mime, line, 1023);
+         strlcpy(mime, line, 1024);
          cnt = 0;
          continue;
       }
@@ -84,7 +84,7 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
          } else {
             s++;
             s = Strip(s);
-            strncpy(pattern, s, 255);
+            strlcpy(pattern, s, 256);
             delete [] s;
          }
          cnt++;
@@ -98,14 +98,14 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
             char *s2;
             if ((s2 = strchr(s, ' '))) {
                *s2 = 0;
-               strncpy(icon, s, 255);
+               strlcpy(icon, s, 256);
                s2++;
                s2 = Strip(s2);
-               strncpy(sicon, s2, 255);
+               strlcpy(sicon, s2, 256);
                delete [] s2;
             } else {
-               strncpy(icon, s, 255);
-               strncpy(sicon, s, 255);
+               strlcpy(icon, s, 256);
+               strlcpy(sicon, s, 256);
             }
             delete [] s;
          }
@@ -117,7 +117,7 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
          } else {
             s++;
             s = Strip(s);
-            strncpy(action, s, 255);
+            strlcpy(action, s, 256);
             delete [] s;
          }
          cnt++;
@@ -227,7 +227,7 @@ Bool_t TGMimeTypes::GetAction(const char *filename, char *action)
 
    action[0] = 0;
    if ((mime = Find(filename))) {
-      strncpy(action, mime->fAction.Data(), 511);
+      strlcpy(action, mime->fAction.Data(), 512);
       return (strlen(action) > 0);
    }
    return kFALSE;
@@ -242,7 +242,7 @@ Bool_t TGMimeTypes::GetType(const char *filename, char *type)
 
    memset(type, 0, strlen(type));
    if ((mime = Find(filename))) {
-      strncpy(type, mime->fType.Data(), 255);
+      strlcpy(type, mime->fType.Data(), 256);
       return (strlen(type) > 0);
    }
    return kFALSE;

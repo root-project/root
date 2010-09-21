@@ -432,13 +432,12 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
          char        basictype[32];
 
          if (datatype) {
-            strncpy(basictype, datatype->GetTypeName(), 31);
-            basictype[31] = 0;
+            strlcpy(basictype, datatype->GetTypeName(), 32);
          } else {
             TClass *cl = TClass::GetClass(type);
             if (strncmp(type, "enum", 4) && (cl && !(cl->Property() & kIsEnum)))
                Warning("Dialog", "data type is not basic type, assuming (int)");
-            strcpy(basictype, "int");
+            strlcpy(basictype, "int", 32);
          }
 
          if (strchr(argname, '*')) {
@@ -463,7 +462,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
             if (!strncmp(basictype, "char*", 5)) {
                char *tdefval;
                m->GetterMethod()->Execute(object, "", &tdefval);
-               strncpy(val, tdefval, 255);
+               strlcpy(val, tdefval, sizeof(val));
             } else if (!strncmp(basictype, "float", 5) ||
                        !strncmp(basictype, "double", 6)) {
                Double_t ddefval;
@@ -512,7 +511,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
             const char *tval = argument->GetDefault();
             if (tval && strlen(tval)) {
                // Remove leading and trailing quotes
-               strncpy(val, tval + (tval[0] == '"' ? 1 : 0), 255);
+               strlcpy(val, tval + (tval[0] == '"' ? 1 : 0), sizeof(val));
                if (val[strlen(val)-1] == '"')
                   val[strlen(val)-1]= 0;
             }

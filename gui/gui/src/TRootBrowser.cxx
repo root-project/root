@@ -755,7 +755,8 @@ void TRootBrowser::HandleMenu(Int_t id)
       case kExecPluginCmd:
          {
             char command[1024];
-            strcpy(command, "new TGLSAViewer(gClient->GetRoot(), 0);");
+            strlcpy(command, "new TGLSAViewer(gClient->GetRoot(), 0);", 
+                    sizeof(command));
             new TGInputDialog(gClient->GetRoot(), this,
                               "Enter plugin command line:",
                               command, command);

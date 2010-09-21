@@ -1499,8 +1499,7 @@ Bool_t TGTextEntry::HandleSelectionRequest(Event_t *event)
    len = 0;
    if (fgClipboardText) len = fgClipboardText->Length();
    buffer = new char[len+1];
-   if (fgClipboardText) strcpy (buffer, fgClipboardText->Data());
-   buffer[len] = '\0';
+   if (fgClipboardText) strlcpy (buffer, fgClipboardText->Data(), len+1);
 
    gVirtualX->ChangeProperty((Window_t) event->fUser[0], (Atom_t) event->fUser[3],
                              (Atom_t) event->fUser[2], (UChar_t*) buffer,
