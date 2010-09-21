@@ -876,7 +876,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
    PyObject* name##StringRepr( PyObject* self )                               \
    {                                                                          \
       PyObject* data = CallPyObjMethod( self, #func );                        \
-      PyObject* repr = PyROOT_PyUnicode_FromFormat( "\'%s\'", PyBytes_AsString( data ) ); \
+      PyObject* repr = PyROOT_PyUnicode_FromFormat( "\'%s\'", PyROOT_PyUnicode_AsString( data ) ); \
       Py_DECREF( data );                                                      \
       return repr;                                                            \
    }                                                                          \
@@ -1023,7 +1023,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
          return 0;
       }
 
-      void* address = dir->GetObjectChecked( PyBytes_AS_STRING( name ), ptr->ObjectIsA() );
+      void* address = dir->GetObjectChecked( PyROOT_PyUnicode_AsString( name ), ptr->ObjectIsA() );
       if ( address ) {
          ptr->Set( address );
 
@@ -1031,7 +1031,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
          return Py_None;
       }
 
-      PyErr_Format( PyExc_LookupError, "no such object, \"%s\"", PyBytes_AS_STRING( name ) );
+      PyErr_Format( PyExc_LookupError, "no such object, \"%s\"", PyROOT_PyUnicode_AsString( name ) );
       return 0;
    }
 
@@ -1055,10 +1055,10 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
       Int_t result = 0;
       if ( option != 0 ) {
          result = dir->WriteObjectAny( wrt->GetObject(), wrt->ObjectIsA(),
-            PyBytes_AS_STRING( name ), PyBytes_AS_STRING( option ) );
+            PyROOT_PyUnicode_AsString( name ), PyROOT_PyUnicode_AsString( option ) );
       } else {
          result = dir->WriteObjectAny(
-            wrt->GetObject(), wrt->ObjectIsA(), PyBytes_AS_STRING( name ) );
+            wrt->GetObject(), wrt->ObjectIsA(), PyROOT_PyUnicode_AsString( name ) );
       }
 
       return PyInt_FromLong( (Long_t)result );
@@ -1073,7 +1073,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
    PyObject* TTreeGetAttr( ObjectProxy* self, PyObject* pyname )
    {
    // allow access to branches/leaves as if they are data members
-      const char* name = PyBytes_AsString( pyname );
+      const char* name = PyROOT_PyUnicode_AsString( pyname );
       if ( ! name )
          return 0;
 
@@ -1214,11 +1214,11 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                if ( buf != 0 ) {
                   TBranch* branch = 0;
                   if ( argc == 4 ) {
-                     branch = tree->Branch( PyBytes_AS_STRING( name ), buf,
-                        PyBytes_AS_STRING( leaflist ), PyInt_AS_LONG( bufsize ) );
+                     branch = tree->Branch( PyROOT_PyUnicode_AsString( name ), buf,
+                        PyROOT_PyUnicode_AsString( leaflist ), PyInt_AS_LONG( bufsize ) );
                   } else {
-                     branch = tree->Branch(
-                        PyBytes_AS_STRING( name ), buf, PyBytes_AS_STRING( leaflist ) );
+                     branch = tree->Branch( PyROOT_PyUnicode_AsString( name ), buf,
+                        PyROOT_PyUnicode_AsString( leaflist ) );
                   }
 
                   return BindRootObject( branch, TBranch::Class() );
@@ -1243,7 +1243,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
             }
 
             if ( bIsMatch == kTRUE ) {
-               std::string klName = clName ? PyBytes_AS_STRING( clName ) : "";
+               std::string klName = clName ? PyROOT_PyUnicode_AsString( clName ) : "";
                void* buf = 0;
 
                if ( ObjectProxy_Check( address ) ) {
@@ -1262,12 +1262,12 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                if ( buf != 0 && klName != "" ) {
                   TBranch* branch = 0;
                   if ( argc == 3 ) {
-                     branch = tree->Branch( PyBytes_AS_STRING( name ), klName.c_str(), buf );
+                     branch = tree->Branch( PyROOT_PyUnicode_AsString( name ), klName.c_str(), buf );
                   } else if ( argc == 4 ) {
-                     branch = tree->Branch( PyBytes_AS_STRING( name ), klName.c_str(), buf,
+                     branch = tree->Branch( PyROOT_PyUnicode_AsString( name ), klName.c_str(), buf,
                         PyInt_AS_LONG( bufsize ) );
                   } else if ( argc == 5 ) {
-                     branch = tree->Branch( PyBytes_AS_STRING( name ), klName.c_str(), buf,
+                     branch = tree->Branch( PyROOT_PyUnicode_AsString( name ), klName.c_str(), buf,
                         PyInt_AS_LONG( bufsize ), PyInt_AS_LONG( splitlevel ) );
                   }
 
@@ -1332,7 +1332,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                   Utility::GetBuffer( address, '*', 1, buf, kFALSE );
 
                if ( buf != 0 ) {
-                  tree->SetBranchAddress( PyBytes_AS_STRING( name ), buf );
+                  tree->SetBranchAddress( PyROOT_PyUnicode_AsString( name ), buf );
 
                   Py_INCREF( Py_None );
                   return Py_None;
@@ -1514,7 +1514,7 @@ namespace {
             return 0;
 
       // use requested function name as identifier
-         const char* name = PyBytes_AsString( PyTuple_GET_ITEM( args, 0 ) );
+         const char* name = PyROOT_PyUnicode_AsString( PyTuple_GET_ITEM( args, 0 ) );
          if ( PyErr_Occurred() )
             return 0;
 
@@ -1633,7 +1633,7 @@ namespace {
          PyObject* pyname = PyObject_GetAttr( pyfunc, PyStrings::gName );
          const char* name = "dummy";
          if ( pyname != 0 ) {
-            name = PyBytes_AsString( pyname );
+            name = PyROOT_PyUnicode_AsString( pyname );
             Py_DECREF( pyname );
          }
 
@@ -1678,11 +1678,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 {
    if ( pyclass == 0 )
       return kFALSE;
-
-#if PY_VERSION_HEX > 0x03000000
-// TODO: make pythonizations work
-    return kTRUE;
-#endif
 
 //- method name based pythonization --------------------------------------------
 

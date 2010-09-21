@@ -149,9 +149,9 @@ namespace {
             const_cast< char* >( "GetName" ), const_cast< char* >( "" ) );
 
          if ( name ) {
-            if ( PyBytes_GET_SIZE( name ) != 0 ) {
+            if ( PyROOT_PyUnicode_GET_SIZE( name ) != 0 ) {
                PyObject* repr = PyROOT_PyUnicode_FromFormat( "<ROOT.%s object (\"%s\") at %p>",
-                  clName.c_str(), PyBytes_AS_STRING( name ), pyobj->fObject );
+                  clName.c_str(), PyROOT_PyUnicode_AsString( name ), pyobj->fObject );
                Py_DECREF( name );
                return repr;
             }

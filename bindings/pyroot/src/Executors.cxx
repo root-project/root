@@ -38,7 +38,7 @@ PyObject* PyROOT::TLongExecutor::Execute( G__CallFunc* func, void* self )
 PyObject* PyROOT::TCharExecutor::Execute( G__CallFunc* func, void* self )
 {
 // execute <func> with argument <self>, construct python string return value
-   return PyBytes_FromFormat( "%c", (int)func->ExecInt( self ) );
+   return PyROOT_PyUnicode_FromFormat( "%c", (int)func->ExecInt( self ) );
 }
 
 //____________________________________________________________________________
@@ -120,10 +120,10 @@ PyObject* PyROOT::TSTLStringRefExecutor::Execute( G__CallFunc* func, void* self 
 {
 // execute <func> with argument <self>, return python string return value
    if ( ! fAssignable ) {
-      return PyBytes_FromString( ((std::string*)func->ExecInt( self ))->c_str() );
+      return PyROOT_PyUnicode_FromString( ((std::string*)func->ExecInt( self ))->c_str() );
    } else {
       std::string* result = (std::string*)func->ExecInt( self );
-      *result = std::string( PyBytes_AsString( fAssignable ) );
+      *result = std::string( PyROOT_PyUnicode_AsString( fAssignable ) );
 
       Py_DECREF( fAssignable );
       fAssignable = 0;
@@ -152,7 +152,7 @@ PyObject* PyROOT::TCStringExecutor::Execute( G__CallFunc* func, void* self )
       return PyStrings::gEmptyString;
    }
 
-   return PyBytes_FromString( result );
+   return PyROOT_PyUnicode_FromString( result );
 }
 
 
@@ -190,7 +190,7 @@ PyObject* PyROOT::TSTLStringExecutor::Execute( G__CallFunc* func, void* self )
       return PyStrings::gEmptyString;
    }
 
-   PyObject* pyresult = PyBytes_FromString( result->c_str() );
+   PyObject* pyresult = PyROOT_PyUnicode_FromString( result->c_str() );
 
 // stop CINT from tracking the object, then force delete
    G__pop_tempobject_nodel();

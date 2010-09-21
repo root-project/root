@@ -54,6 +54,8 @@
 #define PyROOT_PyUnicode_Check              PyString_Check
 #define PyROOT_PyUnicode_CheckExact         PyString_CheckExact
 #define PyROOT_PyUnicode_AsString           PyString_AS_STRING
+#define PyROOT_PyUnicode_AsStringChecked    PyString_AsString
+#define PyROOT_PyUnicode_GET_SIZE           PyString_GET_SIZE
 #define PyROOT_PyUnicode_GetSize            PyString_Size
 #define PyROOT_PyUnicode_FromFormat         PyString_FromFormat
 #define PyROOT_PyUnicode_FromString         PyString_FromString
@@ -68,7 +70,9 @@
 #define PyROOT_PyUnicode_Check              PyUnicode_Check
 #define PyROOT_PyUnicode_CheckExact         PyUnicode_CheckExact
 #define PyROOT_PyUnicode_AsString           _PyUnicode_AsString
+#define PyROOT_PyUnicode_AsStringChecked    _PyUnicode_AsString
 #define PyROOT_PyUnicode_GetSize            PyUnicode_GetSize
+#define PyROOT_PyUnicode_GET_SIZE           PyUnicode_GET_SIZE
 #define PyROOT_PyUnicode_FromFormat         PyUnicode_FromFormat
 #define PyROOT_PyUnicode_FromString         PyUnicode_FromString
 #define PyROOT_PyUnicode_InternFromString   PyUnicode_InternFromString

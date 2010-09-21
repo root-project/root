@@ -376,9 +376,13 @@ class ModuleFacade( types.ModuleType ):
             setattr( self.__class__, name, _root.GetRootGlobal( name ) )
          except LookupError:
           # allow a few limited cases where new globals can be set
+            if sys.hexversion >= 0x3000000:
+               pylong = int
+            else:
+               pylong = long
             tcnv = { bool        : 'bool %s = %d;',
                      int         : 'int %s = %d;',
-                     long        : 'long %s = %d;',
+                     pylong      : 'long %s = %d;',
                      float       : 'double %s = %f;',
                      str         : 'string %s = "%s";' }
             try:

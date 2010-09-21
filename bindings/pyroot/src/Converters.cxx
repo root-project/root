@@ -463,7 +463,7 @@ Bool_t PyROOT::TCStringConverter::SetArg(
       PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
 {
 // construct a new string and copy it in new memory
-   const char* s = PyBytes_AsString( pyobject );
+   const char* s = PyROOT_PyUnicode_AsStringChecked( pyobject );
    if ( PyErr_Occurred() )
       return kFALSE;
 
@@ -488,10 +488,10 @@ PyObject* PyROOT::TCStringConverter::FromMemory( void* address )
    if ( address && *(char**)address ) {
       if ( fMaxSize != UINT_MAX ) {          // need to prevent reading beyond boundary
          std::string buf( *(char**)address, fMaxSize );
-         return PyBytes_FromString( buf.c_str() );
+         return PyROOT_PyUnicode_FromString( buf.c_str() );
       }
 
-      return PyBytes_FromString( *(char**)address );
+      return PyROOT_PyUnicode_FromString( *(char**)address );
    }
 
 // empty string in case there's no address
@@ -502,12 +502,12 @@ PyObject* PyROOT::TCStringConverter::FromMemory( void* address )
 Bool_t PyROOT::TCStringConverter::ToMemory( PyObject* value, void* address )
 {
 // convert <value> to C++ const char*, write it at <address>
-   const char* s = PyBytes_AsString( value );
+   const char* s = PyROOT_PyUnicode_AsStringChecked( value );
    if ( PyErr_Occurred() )
       return kFALSE;
 
 // verify (too long string will cause truncation, no crash)
-   if ( fMaxSize < (UInt_t)PyBytes_GET_SIZE( value ) )
+   if ( fMaxSize < (UInt_t)PyROOT_PyUnicode_GET_SIZE( value ) )
       PyErr_Warn( PyExc_RuntimeWarning, (char*)"string too long for char array (truncated)" );
 
    if ( fMaxSize != UINT_MAX )
@@ -718,8 +718,8 @@ PyROOT::T##name##Converter::T##name##Converter() :                            \
 Bool_t PyROOT::T##name##Converter::SetArg(                                    \
       PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t user )  \
 {                                                                             \
-   if ( PyBytes_Check( pyobject ) ) {                                         \
-      fBuffer = PyBytes_AsString( pyobject );                                 \
+   if ( PyROOT_PyUnicode_Check( pyobject ) ) {                                \
+      fBuffer = PyROOT_PyUnicode_AsString( pyobject );                        \
       para.fv = &fBuffer;                                                     \
       if ( func )                                                             \
          func->SetArg( para.fl );                                             \
@@ -735,15 +735,15 @@ Bool_t PyROOT::T##name##Converter::SetArg(                                    \
 PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
 {                                                                             \
    if ( address )                                                             \
-      return PyBytes_FromString( ((strtype*)address)->DF1() );                \
+      return PyROOT_PyUnicode_FromString( ((strtype*)address)->DF1() );       \
    Py_INCREF( PyStrings::gEmptyString );                                      \
    return PyStrings::gEmptyString;                                            \
 }                                                                             \
                                                                               \
 Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 {                                                                             \
-   if ( PyBytes_Check( value ) ) {                                            \
-      *((strtype*)address) = PyBytes_AS_STRING( value );                      \
+   if ( PyROOT_PyUnicode_Check( value ) ) {                                   \
+      *((strtype*)address) = PyROOT_PyUnicode_AsString( value );              \
       return kTRUE;                                                           \
    }                                                                          \
                                                                               \

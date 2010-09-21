@@ -95,7 +95,7 @@ namespace {
    // if the method lookup fails, try to locate the "generic" version of the template
       PyErr_Clear();
       pymeth = PyObject_GetAttrString( pytmpl->fSelf, const_cast< char* >(
-         (std::string( "__generic_" ) + PyBytes_AS_STRING( pytmpl->fPyName )).c_str()) );
+         (std::string( "__generic_" ) + PyROOT_PyUnicode_AsString( pytmpl->fPyName )).c_str()) );
 
       if ( pymeth )
          return PyObject_Call( pymeth, args, kwds );   // non-templated, executed as-is

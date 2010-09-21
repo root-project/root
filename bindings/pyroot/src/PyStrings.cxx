@@ -61,7 +61,7 @@ Bool_t PyROOT::CreatePyStrings() {
    PYROOT_INITIALIZE_STRING( gCppNe, __cpp_ne__ );
    PYROOT_INITIALIZE_STRING( gDeref, __deref__ );
    PYROOT_INITIALIZE_STRING( gDict, __dict__ );
-   if ( ! ( PyStrings::gEmptyString = PyBytes_FromString( (char*)"" ) ) )
+   if ( ! ( PyStrings::gEmptyString = PyROOT_PyUnicode_FromString( (char*)"" ) ) )
       return kFALSE;
    PYROOT_INITIALIZE_STRING( gEq, __eq__ );
    PYROOT_INITIALIZE_STRING( gFollow, __follow__ );
