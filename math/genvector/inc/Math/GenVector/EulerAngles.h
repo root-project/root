@@ -285,11 +285,10 @@ public:
       Invert a rotation in place
    */
    // theta stays the same and negative rotation in Theta is done via a rotation 
-   // of + PI in pohi and Psi 
+   // of + PI in phi and Psi 
    void Invert() {
       Scalar tmp = -fPhi; 
       fPhi = -fPsi + Pi(); 
-      fTheta = fTheta; 
       fPsi=tmp + Pi();
    }
 
