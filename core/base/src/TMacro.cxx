@@ -204,22 +204,22 @@ TMD5 *TMacro::Checksum()
       Int_t len = line.Length();
       char *p = (char *) line.Data();
       if (left > len) {
-         strlcpy((char *)&buf[pos], p, len);
+         strlcpy((char *)&buf[pos], p, len+1);
          pos += len;
          left -= len;
       } else if (left == len) {
-         strlcpy((char *)&buf[pos], p, len);
+         strlcpy((char *)&buf[pos], p, len+1);
          md5->Update(buf, bufSize);
          pos = 0;
          left = bufSize;
       } else {
-         strlcpy((char *)&buf[pos], p, left);
+         strlcpy((char *)&buf[pos], p, left+1);
          md5->Update(buf, bufSize);
          len -= left;
          p += left;
          pos = 0;
          left = bufSize;
-         strlcpy((char *)&buf[pos], p, len);
+         strlcpy((char *)&buf[pos], p, len+1);
          pos += len;
          left -= len;
       }
