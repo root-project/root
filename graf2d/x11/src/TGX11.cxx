@@ -2859,7 +2859,7 @@ Int_t TGX11::SetTextFont(char *fontname, ETextSetMode mode)
          XSetFont(fDisplay, *gGCtext, gTextFont->fid);
          XSetFont(fDisplay, *gGCinvt, gTextFont->fid);
          gFont[gCurrentFontNumber].id = gTextFont;
-         strcpy(gFont[gCurrentFontNumber].name,fontname);
+         strlcpy(gFont[gCurrentFontNumber].name,fontname,80);
          gCurrentFontNumber++;
          if (gCurrentFontNumber == kMAXFONT) gCurrentFontNumber = 0;
       }
