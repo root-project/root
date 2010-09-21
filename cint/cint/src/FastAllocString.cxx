@@ -286,7 +286,7 @@ void G__FastAllocString::Replace(size_t where, const char *replacement)
    } else {
       size_t repl_len = strlen(replacement) + 1;
       Resize(where + repl_len);
-      memcpy(fBuf + where, replacement, repl_len + 1);
+      memcpy(fBuf + where, replacement, repl_len);
    }
 }
 
