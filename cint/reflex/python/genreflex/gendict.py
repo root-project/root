@@ -2622,6 +2622,7 @@ def ClassDefImplementation(selclasses, self) :
       extraval = '!RAW!' + str(derivesFromTObject)
       if attrs.has_key('extra') : attrs['extra']['ClassDef'] = extraval
       else                      : attrs['extra'] = {'ClassDef': extraval}
+      attrs['extra']['ClassVersion'] = '!RAW!' + clname + '::Class_Version()'
       id = attrs['id']
       template = ''
       namespacelevel = 0
