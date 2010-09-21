@@ -1433,7 +1433,7 @@ char *TGHtml::GetTokenName(TGHtmlElement *p)
          } else {
             zName = "Unknown";
          }
-         strncpy(zBuf, zName, 199);
+         strlcpy(zBuf, zName, sizeof(zBuf));
          break;
    }
 

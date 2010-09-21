@@ -787,7 +787,7 @@ TGHtmlElement *TGHtml::FillOutBlock(TGHtmlBlock *p)
 
    while (n > 0 && zBuf[n-1] == ' ') n--;
    p->fZ = new char[n+1];
-   strncpy(p->fZ, zBuf, n);
+   strlcpy(p->fZ, zBuf, n+1);
    p->fZ[n] = 0;
    p->fN = n;
 

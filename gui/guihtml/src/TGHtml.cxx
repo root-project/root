@@ -1586,7 +1586,7 @@ int TGHtml::GetColorByName(const char *zColor)
       if (i == n) {
          snprintf(zAltColor, 15, "#%s", zColor);
       } else {
-         strncpy(zAltColor, zColor, 15);
+         strlcpy(zAltColor, zColor, sizeof(zAltColor));
       }
       name = GetUid(zAltColor);
    } else {

@@ -350,8 +350,7 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
    int rc = 0;
    char buf[200], *base = buf, *suffix, *ep;
 
-   strncpy(buf, baseIx, sizeof(buf));
-   buf[sizeof(buf) - 1] = 0;
+   strlcpy(buf, baseIx, sizeof(buf));
 
    while (isspace((unsigned char)*base)) base++;
    ep = base;
