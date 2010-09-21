@@ -1021,15 +1021,15 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    SetLineWidth(1);
    SetColor(Int_t(fMarkerColor));
    markerstyle = abs(fMarkerStyle);
-   if (markerstyle <= 0) strcpy(chtemp, " m20");
-   if (markerstyle == 1) strcpy(chtemp, " m20");
-   if (markerstyle == 2) strcpy(chtemp, " m2");
-   if (markerstyle == 3) strcpy(chtemp, " m31");
-   if (markerstyle == 4) strcpy(chtemp, " m24");
-   if (markerstyle == 5) strcpy(chtemp, " m5");
-   if (markerstyle >= 6 && markerstyle <= 19) strcpy(chtemp, " m20");
-   if (markerstyle >= 20 && markerstyle <= 34 ) sprintf(chtemp, " m%d", markerstyle);
-   if (markerstyle >= 35) strcpy(chtemp, " m20");
+   if (markerstyle <= 0) strlcpy(chtemp, " m20",10);
+   if (markerstyle == 1) strlcpy(chtemp, " m20",10);
+   if (markerstyle == 2) strlcpy(chtemp, " m2",10);
+   if (markerstyle == 3) strlcpy(chtemp, " m31",10);
+   if (markerstyle == 4) strlcpy(chtemp, " m24",10);
+   if (markerstyle == 5) strlcpy(chtemp, " m5",10);
+   if (markerstyle >= 6 && markerstyle <= 19) strlcpy(chtemp, " m20",10);
+   if (markerstyle >= 20 && markerstyle <= 34 ) snprintf(chtemp,10," m%d", markerstyle);
+   if (markerstyle >= 35) strlcpy(chtemp, " m20",10);
 
    // Set the PostScript marker size
    if (markerstyle == 1) {
@@ -1095,15 +1095,15 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    SetLineWidth(1);
    SetColor(Int_t(fMarkerColor));
    markerstyle = abs(fMarkerStyle);
-   if (markerstyle <= 0) strcpy(chtemp, " m20");
-   if (markerstyle == 1) strcpy(chtemp, " m20");
-   if (markerstyle == 2) strcpy(chtemp, " m2");
-   if (markerstyle == 3) strcpy(chtemp, " m31");
-   if (markerstyle == 4) strcpy(chtemp, " m24");
-   if (markerstyle == 5) strcpy(chtemp, " m5");
-   if (markerstyle >= 6 && markerstyle <= 19) strcpy(chtemp, " m20");
-   if (markerstyle >= 20 && markerstyle <= 34 ) sprintf(chtemp, " m%d", markerstyle);
-   if (markerstyle >= 35) strcpy(chtemp, " m20");
+   if (markerstyle <= 0) strlcpy(chtemp, " m20",10);
+   if (markerstyle == 1) strlcpy(chtemp, " m20",10);
+   if (markerstyle == 2) strlcpy(chtemp, " m2",10);
+   if (markerstyle == 3) strlcpy(chtemp, " m31",10);
+   if (markerstyle == 4) strlcpy(chtemp, " m24",10);
+   if (markerstyle == 5) strlcpy(chtemp, " m5",10);
+   if (markerstyle >= 6 && markerstyle <= 19) strlcpy(chtemp, " m20",10);
+   if (markerstyle >= 20 && markerstyle <= 34 ) snprintf(chtemp,10," m%d", markerstyle);
+   if (markerstyle >= 35) strlcpy(chtemp, " m20",10);
 
    // Set the PostScript marker size
    if (markerstyle == 1) {
@@ -1899,7 +1899,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 
    char cdef[28];
    char cpat[5];
-   sprintf(cpat, " P%2.2d", ipat);
+   snprintf(cpat,5," P%2.2d", ipat);
 
    // fPatterns is used as an array of chars. If fPatterns[ipat] != 0 the
    // pattern number ipat as already be defined is this file and it
@@ -2153,7 +2153,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
             PrintStr(" f 30 30 m 30 70 l 70 70 l f");
             PrintStr(" gr end } >> [ 0.5 0 0 0.5 0 0 ]");
       };
-      sprintf(cdef, " makepattern /%s exch def",&cpat[1]);
+      snprintf(cdef,28," makepattern /%s exch def",&cpat[1]);
       PrintStr(cdef);
       fPatterns[ipat] = 1;
    }
@@ -2491,12 +2491,12 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    for (Int_t i=0; i<len;i++) {
       if (chars[i]!='\n') {
          if (chars[i]=='(' || chars[i]==')' || chars[i]=='\\') {
-            sprintf(str,"\\%c",chars[i]);
+            snprintf(str,8,"\\%c",chars[i]);
             PrintStr(str);
          } else if ((chars[i]=='-') && (font != 12)) {
             PrintStr("\\255");
          } else {
-            sprintf(str,"%c",chars[i]);
+            snprintf(str,8,"%c",chars[i]);
             PrintFast(1,str);
          }
       }
