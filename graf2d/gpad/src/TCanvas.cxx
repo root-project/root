@@ -1952,6 +1952,7 @@ void TCanvas::Streamer(TBuffer &b)
                                         colold->GetGreen(),
                                         colold->GetBlue(),
                                         colold->GetName());
+                  if (!colcur) return;
                }
             }
          }
