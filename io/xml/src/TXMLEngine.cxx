@@ -222,10 +222,10 @@ public:
       if (EndOfFile()) return 0;
       if (fInp!=0) {
          fInp->get(buf, maxsize, 0);
-         maxsize = strlen(buf);
+         maxsize = strlen(buf) + 1;
       } else {
          if (maxsize>fInpStrLen) maxsize = fInpStrLen;
-         strlcpy(buf, fInpStr, maxsize+1);
+         strlcpy(buf, fInpStr, maxsize);
          fInpStr+=maxsize;
          fInpStrLen-=maxsize;
       }
