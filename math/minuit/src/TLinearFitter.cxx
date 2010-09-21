@@ -443,7 +443,6 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fNdim=tlf.fNdim;
       fNfixed=tlf.fNfixed;
       fSpecial=tlf.fSpecial;
-      strlcpy(fFormula,tlf.fFormula,fFormulaSize+1);
       fIsSet=tlf.fIsSet;
       fStoreData=tlf.fStoreData;
       fChisquare=tlf.fChisquare;
@@ -527,7 +526,7 @@ void TLinearFitter::AddPoint(Double_t *x, Double_t y, Double_t e)
          fX(j,i)=x[i];
    }
    //add the point to the design matrix, if the formula has been set
-   if (!fFunctions.IsEmpty() || fInputFunction || fSpecial>199 || !fRobust)
+   if (!fFunctions.IsEmpty() || fInputFunction || fSpecial>200 || !fRobust)
       AddToDesign(x, y, e);
    else if (!fStoreData)
       Error("AddPoint", "Point can't be added, because the formula hasn't been set and data is not stored");
@@ -565,7 +564,7 @@ void TLinearFitter::AssignData(Int_t npoints, Int_t xncols, Double_t *x, Double_
       fE=1;
    }
    Int_t xfirst;
-   if (!fFunctions.IsEmpty() || fInputFunction || fSpecial>199) {
+   if (!fFunctions.IsEmpty() || fInputFunction || fSpecial>200) {
       if (same)
          xfirst=fNpoints;
 
@@ -819,7 +818,7 @@ Int_t TLinearFitter::Eval()
    // Returns 0 if the fit is ok, 1 if there are errors
 
    Double_t e;
-   if (fFunctions.IsEmpty()&&(!fInputFunction)&&(fSpecial<200)){
+   if (fFunctions.IsEmpty()&&(!fInputFunction)&&(fSpecial<=200)){
       Error("TLinearFitter::Eval", "The formula hasn't been set");
       return 1;
    }
@@ -2022,7 +2021,14 @@ Int_t TLinearFitter::EvalRobust(Double_t h)
    Int_t nmini = 300;
    Int_t i, j, maxind=0, k, k1 = 500;
    Int_t nbest = 10;
-   Double_t chi2;
+   Double_t chi2 = -1;
+
+   if (fFunctions.IsEmpty()&&(!fInputFunction)&&(fSpecial<=200)){
+      Error("TLinearFitter::EvalRobust", "The formula hasn't been set");
+      return 1;
+   }
+
+
    Double_t *bestchi2 = new Double_t[nbest];
    for (i=0; i<nbest; i++)
       bestchi2[i]=1e30;

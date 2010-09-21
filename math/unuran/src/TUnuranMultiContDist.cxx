@@ -76,13 +76,12 @@ double TUnuranMultiContDist::Pdf ( const double * x) const {
 
 
 void TUnuranMultiContDist::Gradient( const double * x, double * grad) const { 
-      // do numerical derivation of gradient
+   // do numerical derivation and return gradient in vector grad
+   // grad must point to a vector of at least ndim size
    unsigned int ndim = NDim();
-   std::vector<double> g( ndim ); 
    for (unsigned int i = 0; i < ndim; ++i) 
-      g[i] = Derivative(x,i); 
+      grad[i] = Derivative(x,i); 
       
-   grad = &g.front();
    return;
 }
 

@@ -108,7 +108,8 @@ void Fitter::SetFunction(const IGradModelFunction & func)
    fUseGradient = true;
    //std::cout << "set a grad function" << std::endl; 
    //  set the fit model function (clone the given one and keep a copy ) 
-   fFunc = dynamic_cast<IModelFunction *> ( func.Clone() ); 
+   fFunc = dynamic_cast<IGradModelFunction *> ( func.Clone() ); 
+   assert(fFunc != 0);
 
    // creates the parameter  settings 
    fConfig.CreateParamsSettings(*fFunc); 

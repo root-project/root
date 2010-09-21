@@ -47,7 +47,7 @@ TUnuranContDist::TUnuranContDist (const ROOT::Math::IGenFunction & pdf, const RO
 
 TUnuranContDist::TUnuranContDist (TF1 * pdf, TF1 * deriv, bool isLogPdf  ) : 
    fPdf(  (pdf) ? new ROOT::Math::WrappedTF1 ( *pdf) : 0 ), 
-   fDPdf( (deriv) ?  new ROOT::Math::WrappedTF1 ( *pdf) : 0 ),
+   fDPdf( (deriv) ?  new ROOT::Math::WrappedTF1 ( *deriv) : 0 ),
    fCdf(0), 
    fXmin(1.), 
    fXmax(-1.), 
