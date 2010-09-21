@@ -163,7 +163,7 @@ char  *TColorWheel::GetObjectInfo(Int_t px, Int_t py) const
    Int_t r = (Int_t)(255.01*color->GetRed());
    Int_t g = (Int_t)(255.01*color->GetGreen());
    Int_t b = (Int_t)(255.01*color->GetBlue());
-   sprintf(info,"col %d, %s, r=%3d, g=%3d, b=%3d",n,color->GetName(),r,g,b);
+   snprintf(info,50,"col %d, %s, r=%3d, g=%3d, b=%3d",n,color->GetName(),r,g,b);
    return info;
 }
 
