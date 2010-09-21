@@ -339,7 +339,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
 
 
    double chi2 = 0;
-   int nRejected = 0; 
+   //int nRejected = 0; 
    
    // do not cache parameter values (it is not thread safe)
    //func.SetParameters(p); 
@@ -424,7 +424,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
    //if (nRejected != 0)  nPoints = n - nRejected;   
 
 #ifdef DEBUG
-   std::cout << "chi2 = " << chi2 << " n = " << nPoints << " rejected = " << nRejected << std::endl;
+   std::cout << "chi2 = " << chi2 << " n = " << nPoints  /*<< " rejected = " << nRejected */ << std::endl;
 #endif
 
 
@@ -450,7 +450,7 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
    assert(data.HaveCoordErrors() ); 
 
    double chi2 = 0;
-   int nRejected = 0; 
+   //int nRejected = 0; 
    
 
    //func.SetParameters(p); 
@@ -537,7 +537,7 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
    //if (nRejected != 0)  nPoints = n - nRejected;   
 
 #ifdef DEBUG
-   std::cout << "chi2 = " << chi2 << " n = " << nPoints << " rejected = " << nRejected << std::endl;
+   std::cout << "chi2 = " << chi2 << " n = " << nPoints << /* " rejected = " << nRejected */ << std::endl;
 #endif
 
    return chi2;
