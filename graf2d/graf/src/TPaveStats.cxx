@@ -366,8 +366,9 @@ void TPaveStats::Paint(Option_t *option)
       while ((line = (TObject*) next())) {
          if (line->IsA() == TLatex::Class()) {
             latex = (TLatex*)line;
-            sl = new char[strlen(latex->GetTitle())+1];
-            strcpy(sl, latex->GetTitle());
+            Int_t nchs = strlen(latex->GetTitle());
+            sl = new char[nchs+1];
+            strlcpy(sl, latex->GetTitle(),nchs+1);
             if (strpbrk(sl, "=") !=0 && print_name == 0) {
                st = strtok(sl, "=");
                Int_t itok = 0;
@@ -423,8 +424,9 @@ void TPaveStats::Paint(Option_t *option)
          if (tfont  == 0) latex->SetTextFont(GetTextFont());
          if (tsize  == 0) latex->SetTextSize(GetTextSize());
 
-         sl = new char[strlen(latex->GetTitle())+1];
-         strcpy(sl, latex->GetTitle());
+         Int_t nchs = strlen(latex->GetTitle());
+         sl = new char[nchs+1];
+         strlcpy(sl, latex->GetTitle(),nchs);
          // Draw all the histogram stats except the 2D under/overflow
          if (strpbrk(sl, "=") !=0 && print_name == 0) {
             st = strtok(sl, "=");
