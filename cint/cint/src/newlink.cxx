@@ -480,10 +480,10 @@ and creates %d\n\n\
 **************************************************************************/
 static void G__fileerror(char *fname)
 {
-  char *buf = (char*)malloc(strlen(fname)+80);
-  sprintf(buf,"Error opening %s",fname);
-  perror(buf);
-  throw std::runtime_error(std::string("CINT: error opening ") + fname);
+   G__FastAllocString buf(G__MAXFILENAME);
+   buf.Format("Error opening %s",fname);
+   perror(buf);
+   throw std::runtime_error(std::string("CINT: error opening ") + fname);
 }
 
 /**************************************************************************
@@ -2778,47 +2778,44 @@ void G__gen_cpplink()
   if(!hfp) G__fileerror(G__CPPLINK_H);
 
   {
-    int algoflag=0;
-    int filen;
-    char *fname;
-    int lenstl;
-    char *sysstl;
-    G__getcintsysdir();
-    sysstl = (char*)malloc(strlen(G__cintsysdir)+20);
-    if (sysstl) {
-       sprintf(sysstl,"%s%s%s%sstl%s",G__cintsysdir,G__psep,G__CFG_COREVERSION,G__psep,G__psep);
-       lenstl=strlen(sysstl);
-       for(filen=0;filen<G__nfile;filen++) {
-          fname = G__srcfile[filen].filename;
-          if(strncmp(fname,sysstl,lenstl)==0) fname += lenstl;
-          if(strcmp(fname,"vector")==0 || strcmp(fname,"list")==0 ||
-             strcmp(fname,"deque")==0 || strcmp(fname,"map")==0 ||
-             strcmp(fname,"multimap")==0 || strcmp(fname,"set")==0 ||
-             strcmp(fname,"multiset")==0 || strcmp(fname,"stack")==0 ||
-             strcmp(fname,"queue")==0 || strcmp(fname,"climits")==0 ||
-             strcmp(fname,"valarray")==0) {
-             algoflag |= 1;
-          }
-          if(strcmp(fname,"vector.h")==0 || strcmp(fname,"list.h")==0 ||
-             strcmp(fname,"deque.h")==0 || strcmp(fname,"map.h")==0 ||
-             strcmp(fname,"multimap.h")==0 || strcmp(fname,"set.h")==0 ||
-             strcmp(fname,"multiset.h")==0 || strcmp(fname,"stack.h")==0 ||
-             strcmp(fname,"queue.h")==0) {
-             algoflag |= 2;
-          }
-       }
-       if(algoflag&1) {
-          fprintf(hfp,"#include <algorithm>\n");
-          if(G__ignore_stdnamespace) {
-             /* fprintf(hfp,"#ifndef __hpux\n"); */
-             fprintf(hfp,"namespace std { }\n");
-             fprintf(hfp,"using namespace std;\n");
-             /* fprintf(hfp,"#endif\n"); */
-          }
-       }
-       else if(algoflag&2) fprintf(hfp,"#include <algorithm.h>\n");
-       free((void*)sysstl);
-    }
+     int algoflag=0;
+     int filen;
+     char *fname;
+     int lenstl;
+     G__getcintsysdir();
+     G__FastAllocString sysstl(strlen(G__cintsysdir)+20);
+     
+     sysstl.Format("%s%s%s%sstl%s",G__cintsysdir,G__psep,G__CFG_COREVERSION,G__psep,G__psep);
+     lenstl=strlen(sysstl);
+     for(filen=0;filen<G__nfile;filen++) {
+        fname = G__srcfile[filen].filename;
+        if(strncmp(fname,sysstl,lenstl)==0) fname += lenstl;
+        if(strcmp(fname,"vector")==0 || strcmp(fname,"list")==0 ||
+           strcmp(fname,"deque")==0 || strcmp(fname,"map")==0 ||
+           strcmp(fname,"multimap")==0 || strcmp(fname,"set")==0 ||
+           strcmp(fname,"multiset")==0 || strcmp(fname,"stack")==0 ||
+           strcmp(fname,"queue")==0 || strcmp(fname,"climits")==0 ||
+           strcmp(fname,"valarray")==0) {
+           algoflag |= 1;
+        }
+        if(strcmp(fname,"vector.h")==0 || strcmp(fname,"list.h")==0 ||
+           strcmp(fname,"deque.h")==0 || strcmp(fname,"map.h")==0 ||
+           strcmp(fname,"multimap.h")==0 || strcmp(fname,"set.h")==0 ||
+           strcmp(fname,"multiset.h")==0 || strcmp(fname,"stack.h")==0 ||
+           strcmp(fname,"queue.h")==0) {
+           algoflag |= 2;
+        }
+     }
+     if(algoflag&1) {
+        fprintf(hfp,"#include <algorithm>\n");
+        if(G__ignore_stdnamespace) {
+           /* fprintf(hfp,"#ifndef __hpux\n"); */
+           fprintf(hfp,"namespace std { }\n");
+           fprintf(hfp,"using namespace std;\n");
+           /* fprintf(hfp,"#endif\n"); */
+        }
+     }
+     else if(algoflag&2) fprintf(hfp,"#include <algorithm.h>\n");
   }
 
 #if !defined(G__ROOT) || defined(G__OLDIMPLEMENTATION1817)
@@ -3542,13 +3539,13 @@ void* G__get_linked_user_param(int tag_num)
 **************************************************************************/
 char *G__get_link_tagname(int tagnum)
 {
-  static char mapped_tagname[G__MAXNAME*6];
+  static G__FastAllocString mapped_tagname(G__MAXNAME);
   if(G__struct.hash[tagnum]) {
-    sprintf(mapped_tagname,"G__%sLN_%s"  ,G__DLLID
-            ,G__map_cpp_name(G__fulltagname(tagnum,0)));
+     mapped_tagname.Format("G__%sLN_%s"  ,G__DLLID
+                           ,G__map_cpp_name(G__fulltagname(tagnum,0)));
   }
   else {
-    sprintf(mapped_tagname,"G__%sLN_%s%d"  ,G__DLLID
+    mapped_tagname.Format("G__%sLN_%s%d"  ,G__DLLID
            ,G__map_cpp_name(G__fulltagname(tagnum,0)),tagnum);
   }
   return(mapped_tagname);
@@ -4224,7 +4221,7 @@ void G__add_macro(const char *macroin)
       }
    }
    else {
-      sprintf(G__macros,"%s\"-D%s\" ",temp(),macro());
+      snprintf(G__macros,sizeof(G__macros),"%s\"-D%s\" ",temp(),macro());
    }
    
    switch(G__globalcomp) {
@@ -4286,7 +4283,7 @@ void G__add_ipath(const char *path)
     G__allincludepath[0] = '\0';
   }
   store_allincludepath = (char*)realloc((void*)G__allincludepath
-                                 ,strlen(G__allincludepath)+strlen(temp)+6);
+                                        ,strlen(G__allincludepath)+strlen(temp)+6);
   if(store_allincludepath) {
     int i=0,flag=0;
     while(temp[i]) if(isspace(temp[i++])) flag=1;
@@ -5330,7 +5327,7 @@ void G__make_default_ifunc(G__ifunc_table_internal *ifunc_copy)
         G__hash(funcname, hash, k);
 
         G__FastAllocString paras(G__MAXNAME*6);
-        sprintf(paras, "u '%s' - 11 - -",  G__fulltagname(i, 0));
+        paras.Format("u '%s' - 11 - -",  G__fulltagname(i, 0));
 
         ifunc = G__p_ifunc;
 #ifdef G__TRUEP2F
@@ -5395,9 +5392,8 @@ void G__make_default_ifunc(G__ifunc_table_internal *ifunc_copy)
         funcname =  "operator=";
         G__hash(funcname, hash, k);
 
-        G__FastAllocString paras_sb(G__MAXNAME*6);
-        char* paras = paras_sb;
-        sprintf(paras, "u '%s' - 11 - -",  G__fulltagname(i, 0));
+        G__FastAllocString paras(G__MAXNAME*6);
+        paras.Format("u '%s' - 11 - -",  G__fulltagname(i, 0));
 
         ifunc = G__p_ifunc;
 #ifdef G__TRUEP2F
@@ -5854,8 +5850,8 @@ int ifn;
 short page;
 int k)
 {
-  static char buf[G__ONELINE];
-  sprintf(buf,"G__P2F%d_%d_%d%s",ifn,page,k,G__PROJNAME.data());
+  static G__FastAllocString buf(G__ONELINE);
+  buf.Format("G__P2F%d_%d_%d%s",ifn,page,k,G__PROJNAME.data());
   return(buf);
 }
 
@@ -8610,11 +8606,11 @@ void G__cpplink_tagtable(FILE *fp, FILE *hfp)
 **************************************************************************/
 static char* G__vbo_funcname(int tagnum, int basetagnum, int basen)
 {
-  static char result[G__LONGLINE*16];
+  static G__FastAllocString result(G__LONGLINE);
   G__FastAllocString temp(G__LONGLINE);
   temp = G__map_cpp_name(G__fulltagname(tagnum,1));
-  sprintf(result,"G__2vbo_%s_%s_%d",temp()
-          ,G__map_cpp_name(G__fulltagname(basetagnum,1)),basen);
+  result.Format("G__2vbo_%s_%s_%d",temp()
+                ,G__map_cpp_name(G__fulltagname(basetagnum,1)),basen);
   return(result);
 }
 
@@ -9704,6 +9700,7 @@ void G__cpplink_memfunc(FILE *fp)
                 // the dictionary
                 G__FastAllocString res(G__ONELINE);
                 G__FastAllocString tmp(G__ONELINE);
+                G__FastAllocString value(G__ONELINE);
                 char *str = ifunc->param[j][k]->def;
                 int pos_res=0;
                 int pos_str=0;
@@ -9741,9 +9738,10 @@ void G__cpplink_memfunc(FILE *fp)
                       int known = 0;
                       result3 = G__getvariable(tmp, &known, &G__global, G__p_local);
                       if(var->type[ig15]=='P')
-                        sprintf(&res[pos_res], "%e", G__double(result3));
+                         value.Format("%e", G__double(result3));
                       else
-                        sprintf(&res[pos_res], "%ld", G__int(result3));
+                         value.Format("%ld", G__int(result3));
+                      res += value;
                       pos_res = strlen(res);
                     }
                     else {
@@ -11215,8 +11213,7 @@ int G__memfunc_setup_imp(const char *funcname,int hash
       isTemplate = 0;
 
    if (isTemplate) {
-      G__FastAllocString funcname_notmplt(strlen(funcname));
-      strcpy(funcname_notmplt, funcname);
+      G__FastAllocString funcname_notmplt(funcname);
       *(funcname_notmplt + (isTemplate - funcname)) = 0; // cut at template arg
       isTemplate = funcname_notmplt;
       int tmplthash = 0;
@@ -11777,15 +11774,15 @@ int G__set_sizep2memfunc(FILE *fp)
 **************************************************************************/
 int G__getcommentstring(G__FastAllocString& buf,int tagnum,G__comment_info *pcomment)
 {
-  G__FastAllocString temp(G__LONGLINE);
-  G__getcomment(temp,pcomment,tagnum);
-  if('\0'==temp[0]) {
-    sprintf(buf,"(char*)NULL");
-  }
-  else {
-    G__add_quotation(temp,buf);
-  }
-  return(1);
+   G__FastAllocString temp(G__LONGLINE);
+   G__getcomment(temp,pcomment,tagnum);
+   if('\0'==temp[0]) {
+      buf = "(char*)NULL";
+   }
+   else {
+      G__add_quotation(temp,buf);
+   }
+   return(1);
 }
 
 extern "C" {
@@ -12368,14 +12365,14 @@ void G__specify_link(int link_stub)
       else if(strcmp(p,")")==0) p=0;
     }
     if(p) {
-      G__FastAllocString funcname_sb(G__LONGLINE);
-      char* funcname = funcname_sb;
+      G__FastAllocString funcname(G__LONGLINE);
       G__FastAllocString param_sb(G__LONGLINE);
-      char* param = param_sb;
+
       if(')' == *(p+1) && '('== *(p+2) ) p = strchr(p+1,'(');
       *p='\0';
-      strcpy(funcname,buf);
-      strcpy(param,p+1);
+      funcname = buf;
+      param_sb = p+1;
+      char* param = param_sb;
       p=strrchr(param,')');
       *p='\0';
       G__SetGlobalcomp(funcname,param,globalcomp);
@@ -13152,7 +13149,7 @@ void G__incsetup_memvar(int tagnum)
 
     if (fileno != -1) {
       G__ifile.fp = G__srcfile[fileno].fp;
-      strcpy(G__ifile.name,G__srcfile[fileno].filename);
+      G__strlcpy(G__ifile.name,G__srcfile[fileno].filename,G__MAXFILENAME);
     }
 
 #ifdef G__OLDIMPLEMENTATION1125_YET
@@ -13217,7 +13214,7 @@ void G__incsetup_memfunc(int tagnum)
 
     if (fileno != -1) {
        G__ifile.fp = G__srcfile[fileno].fp;
-       strcpy(G__ifile.name,G__srcfile[fileno].filename);
+       G__strlcpy(G__ifile.name,G__srcfile[fileno].filename,G__MAXFILENAME);
     }
 
 #ifdef G__OLDIMPLEMENTATION1125_YET /* G__PHILIPPE26 */
@@ -13689,25 +13686,25 @@ long double* G__Longdoubleref(G__value *buf) {return G__refT<long double>(buf);}
 * has to be called from the pragma decoding!
 **************************************************************************/
 void G__specify_extra_include() {
-  int i;
-  int c;
-  G__FastAllocString buf(G__ONELINE);
-  char *tobecopied;
-  if (!G__extra_include) {
-    G__extra_include = (char**)malloc(G__MAXFILE*sizeof(char*));
-    for(i=0;i<G__MAXFILE;i++)
-      G__extra_include[i]=(char*)malloc(G__MAXFILENAME*sizeof(char));
-  };
-  c = G__fgetstream_template(buf, 0, ";\n\r<>");
-  if ( 1 ) { /* should we check if the file exist ? */
-    tobecopied = buf;
-    if (buf[0]=='\"' || buf[0]=='\'') tobecopied++;
-    i = strlen(buf);
-    if (buf[i-1]=='\"' || buf[i-1]=='\'') buf[i-1]='\0';
-    strcpy(G__extra_include[G__extra_inc_n++],tobecopied);
-  }
+   int i;
+   int c;
+   G__FastAllocString buf(G__ONELINE);
+   char *tobecopied;
+   if (!G__extra_include) {
+      G__extra_include = (char**)malloc(G__MAXFILE*sizeof(char*));
+      for(i=0;i<G__MAXFILE;i++)
+         G__extra_include[i]=(char*)malloc(G__MAXFILENAME*sizeof(char));
+   };
+   c = G__fgetstream_template(buf, 0, ";\n\r<>");
+   if ( 1 ) { /* should we check if the file exist ? */
+      tobecopied = buf;
+      if (buf[0]=='\"' || buf[0]=='\'') tobecopied++;
+      i = strlen(buf);
+      if (buf[i-1]=='\"' || buf[i-1]=='\'') buf[i-1]='\0';
+      G__strlcpy(G__extra_include[G__extra_inc_n++],tobecopied,G__MAXFILENAME);
+   }
 }
-
+   
 /**************************************************************************
  * G__gen_extra_include()
  * prepend the extra header files to the C or CXX file
