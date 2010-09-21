@@ -12,6 +12,8 @@
 
 #include <algorithm>
 #include <stdio.h>
+#include <string> 
+#include <sstream> 
 
 namespace ROOT {
 
@@ -45,12 +47,13 @@ MnUserTransformation::MnUserTransformation(const std::vector<double>& par, const
    fParameters.reserve(par.size());
    fExtOfInt.reserve(par.size());
    fCache.reserve(par.size());
-   char p[5];
-   p[0] = 'p';
-   p[4] = '\0';
+
+   std::string parName;
    for(unsigned int i = 0; i < par.size(); i++) {
-      sprintf(p+1,"%i",i);
-      Add(p, par[i], err[i]);
+      std::ostringstream buf;
+      buf << "p" << i;
+      buf.str(parName);
+      Add(parName, par[i], err[i]);
    }
 }
 
