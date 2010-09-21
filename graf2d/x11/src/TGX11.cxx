@@ -1063,7 +1063,7 @@ Int_t TGX11::OpenDisplay(Display *disp)
 
    // Inquire the the XServer Vendor
    char vendor[132];
-   strcpy(vendor, XServerVendor(fDisplay));
+   strlcpy(vendor, XServerVendor(fDisplay),132);
 
    // Create primitives graphic contexts
    for (i = 0; i < kMAXGC; i++)
