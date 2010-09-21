@@ -228,28 +228,28 @@ const char *TGuiBldMenuDialog::GetParameters()
 
       // if necessary, replace the selected object by it's address
       if (selfobjpos == nparam-1) {
-         if (params[0]) strncat(params, ",", 1023-strlen(params));
-         sprintf(param, "(TObject*)0x%lx", (Long_t)fObject);
-         strncat(params, param, 1023-strlen(params));
+         if (params[0]) strlcat(params, ",", 1024-strlen(params));
+         snprintf(param, 255, "(TObject*)0x%lx", (Long_t)fObject);
+         strlcat(params, param, 1024-strlen(params));
       }
 
-      if (params[0]) strncat(params, ",", 1023-strlen(params));
+      if (params[0]) strlcat(params, ",", 1024-strlen(params));
       if (data) {
          if (!strncmp(type, "char*", 5))
             snprintf(param, 255, "\"%s\"", data);
          else
-            strncpy(param, data, 255);
+            strlcpy(param, data, sizeof(param));
       } else
-         strcpy(param, "0");
+         strlcpy(param, "0", sizeof(param));
 
-      strncat(params, param, 1023-strlen(params));
+      strlcat(params, param, 1024-strlen(params));
    }
 
    // if selected object is the last argument, have to insert it here
    if (selfobjpos == nparam) {
-      if (params[0]) strncat(params, ",", 1023-strlen(params));
-      sprintf(param, "(TObject*)0x%lx", (Long_t)fObject);
-      strncat(params, param, 1023-strlen(params));
+      if (params[0]) strlcat(params, ",", 1024-strlen(params));
+      snprintf(param, 255, "(TObject*)0x%lx", (Long_t)fObject);
+      strlcat(params, param, 1024-strlen(params));
    }
 
    return params;
@@ -323,16 +323,16 @@ void TGuiBldMenuDialog::Build()
          char        basictype[32];
 
          if (datatype) {
-            strncpy(basictype, datatype->GetTypeName(), 30);
+            strlcpy(basictype, datatype->GetTypeName(), sizeof(basictype));
          } else {
             TClass *cl = TClass::GetClass(type);
             if (strncmp(type, "enum", 4) && (cl && !(cl->Property() & kIsEnum)))
                Warning("Dialog", "data type is not basic type, assuming (int)");
-            strncpy(basictype, "int", 30);
+            strlcpy(basictype, "int", sizeof(basictype));
          }
 
          if (strchr(argname, '*')) {
-            strncat(basictype, "*", 30-strlen(basictype));
+            strlcat(basictype, "*", 32-strlen(basictype));
             type = charstar;
          }
 
@@ -345,7 +345,7 @@ void TGuiBldMenuDialog::Build()
             if (!strncmp(basictype, "char*", 5)) {
                char *tdefval;
                m->GetterMethod()->Execute(fObject, "", &tdefval);
-               strncpy(val, tdefval, 255);
+               strlcpy(val, tdefval, sizeof(val));
             } else if (!strncmp(basictype, "float", 5) ||
                        !strncmp(basictype, "double", 6)) {
                Double_t ddefval;
@@ -375,7 +375,7 @@ void TGuiBldMenuDialog::Build()
 
             char val[256] = "";
             const char *tval = argument->GetDefault();
-            if (tval) strncpy(val, tval, 255);
+            if (tval) strlcpy(val, tval, sizeof(val));
             Add(argname, val, type);
          }
       }
