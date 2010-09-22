@@ -476,9 +476,9 @@ int main(int argc, char **argv)
    // Build argv vector
    argvv = new char* [argc+2];
 #ifdef ROOTBINDIR
-   sprintf(arg0, "%s/%s", ROOTBINDIR, ROOTBINARY);
+   snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTBINARY);
 #else
-   sprintf(arg0, "%s/bin/%s", getenv("ROOTSYS"), ROOTBINARY);
+   snprintf(arg0, sizeof(arg0), "%s/bin/%s", getenv("ROOTSYS"), ROOTBINARY);
 #endif
    argvv[0] = arg0;
    argvv[1] = (char *) "-splash";
