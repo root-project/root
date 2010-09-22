@@ -435,7 +435,7 @@ struct symtab **slookup(symbol, file)
 	register int first = 0;
 	register int last = file->i_ndefs - 1;
 
-	if (file) while (last >= first)
+	while (last >= first)
 	{
 	    /* Fast inline binary search */
 	    register char *s1;
