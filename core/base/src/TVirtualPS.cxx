@@ -69,15 +69,16 @@ void TVirtualPS::PrintStr(const char *str)
 {
    // Output the string str in the output buffer
 
+   if (!str || !str[0])
+      return;
    Int_t len = strlen(str);
-   if (!len || !str) return;
    while (len) {
       if (str[0] == '@') {
          if (fLenBuffer) {
             fStream->write(fBuffer, fLenBuffer);
             fNByte += fLenBuffer;
             fLenBuffer = 0;
-            fStream->write("\n", 1); 
+            fStream->write("\n", 1);
             fNByte++;
             fPrinted = kTRUE;
          }
