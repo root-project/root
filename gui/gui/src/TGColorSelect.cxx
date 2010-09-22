@@ -588,7 +588,7 @@ void TGColorSelect::SetColor(ULong_t color, Bool_t emit)
 }
 
 //______________________________________________________________________________
-void TGColorSelect::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGColorSelect::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save a color select widget as a C++ statement(s) on output stream out
 
@@ -609,6 +609,9 @@ void TGColorSelect::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out << GetName() << " = new TGColorSelect(" << fParent->GetName()
        << ", " << cvar.Data() << ", " << WidgetId() << ");" << endl;
    nn++;
+
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    if (!IsEnabled()) {
       out << "   " << GetName() << "->Disable();" << endl;

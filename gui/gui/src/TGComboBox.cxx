@@ -627,6 +627,8 @@ void TGComboBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    TGTextLBEntry *b;
    TGFrameElement *el;
@@ -668,7 +670,7 @@ TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
 }
 
 //______________________________________________________________________________
-void TGLineStyleComboBox::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGLineStyleComboBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a line style combo box widget as a C++ statement(s).
 
@@ -677,6 +679,8 @@ void TGLineStyleComboBox::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 
    out << GetName() << " = new TGLineStyleComboBox(" << fParent->GetName()
        << "," << fWidgetId << ");" << endl;
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
    out << "   " << GetName() << "->Resize(" << GetWidth()  << ","
        << GetHeight() << ");" << endl;
    out << "   " << GetName() << "->Select(" << GetSelected() << ");" << endl;
@@ -708,7 +712,7 @@ TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
 }
 
 //______________________________________________________________________________
-void TGLineWidthComboBox::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGLineWidthComboBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a line width combo box widget as a C++ statement(s).
 
@@ -717,6 +721,8 @@ void TGLineWidthComboBox::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 
    out << GetName() << " = new TGLineWidthComboBox(" << fParent->GetName()
        << "," << fWidgetId << ");" << endl;
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
    out << "   " << GetName() << "->Resize(" << GetWidth()  << ","
        << GetHeight() << ");" << endl;
    out << "   " << GetName() << "->Select(" << GetSelected() << ");" << endl;

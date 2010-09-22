@@ -2158,7 +2158,7 @@ const TGGC &TGTextEdit::GetCursor1GC()
 }
 
 //______________________________________________________________________________
-void TGTextEdit::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGTextEdit::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a text edit widget as a C++ statement(s) on output stream out
 
@@ -2167,6 +2167,8 @@ void TGTextEdit::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out << GetName() << " = new TGTextEdit(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight()
        << ");"<< endl;
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    if (IsReadOnly()) {
       out << "   " << GetName() << "->SetReadOnly(kTRUE);" << endl;

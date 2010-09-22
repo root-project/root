@@ -2434,6 +2434,8 @@ void TGCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    TGViewPort *vp = GetViewPort();
    out << endl << "   // canvas viewport" << endl;
@@ -2493,4 +2495,6 @@ void TGContainer::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 }

@@ -488,6 +488,8 @@ void TGFSComboBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    out << "   " << GetName() << "->Resize(" << GetWidth()  << ","
        << GetHeight() << ");" << endl;

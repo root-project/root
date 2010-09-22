@@ -639,7 +639,9 @@ void TGButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << GetOptionString() << "," << parGC.Data() << "," << parFont.Data() << ",ucolor);" << endl;
    }
-   
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+
    // setting layout manager
    out << "   " << GetName() <<"->SetLayoutManager(";
    GetLayoutManager()->SavePrimitive(out, option);
@@ -725,6 +727,8 @@ void TGHButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << parGC.Data() << "," << parFont.Data() << ",ucolor);" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    TGFrameElement *f;
    TIter next(GetList());
@@ -809,6 +813,8 @@ void TGVButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << parGC.Data() << "," << parFont.Data() << ",ucolor);" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    TGFrameElement *f;
    TIter next(GetList());

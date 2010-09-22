@@ -591,6 +591,8 @@ void TGVSplitter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
    // TGVSplitter->SetFrame( theframe ) can only be saved here
    // if fFrame is the frame on the left (since the frame on the
    // right will only be saved afterwards)... The other case is
@@ -622,6 +624,8 @@ void TGHSplitter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
    // TGHSplitter->SetFrame( theframe ) can only be saved here
    // if fFrame is the frame above (since the frame below will
    // only be saved afterwards)... The other case is handled in
@@ -653,6 +657,8 @@ void TGVFileSplitter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
    if (GetLeft()) out << ",kTRUE);" << endl;

@@ -409,6 +409,8 @@ void TGShutterItem::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
        << fButton->WidgetId() << "," << GetOptionString() << ");" << endl;
 
    delete [] outext;
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    TList *list = ((TGCompositeFrame *)GetContainer())->GetList();
 
@@ -444,6 +446,8 @@ void TGShutter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       out << "   " << GetName() << "->SetDefaultSize(";
       out << fDefWidth << "," << fDefHeight << ");" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    if (!fList) return;
 

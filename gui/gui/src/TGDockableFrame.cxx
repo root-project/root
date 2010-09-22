@@ -469,6 +469,8 @@ void TGDockableFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << fWidgetId << "," << GetOptionString() << ");" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    if (GetContainer()->GetList()->First()) {
       out << "   TGCompositeFrame *" << GetContainer()->GetName() << " = "

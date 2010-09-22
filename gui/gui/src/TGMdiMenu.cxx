@@ -178,6 +178,8 @@ void TGMdiMenuBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out << "   TGMdiMenuBar *";
    out << GetName() << " = new TGMdiMenuBar(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight() << ");" << endl;
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    if (!fList) return;
 

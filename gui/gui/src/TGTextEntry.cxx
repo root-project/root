@@ -1850,6 +1850,8 @@ void TGTextEntry::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       out << "," << fWidgetId << "," << parGC.Data() << "," << parFont.Data()
           << "," << GetOptionString() << ",ucolor);" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    out << "   " << GetName() << "->SetMaxLength(" << GetMaxLength() << ");" << endl;
 

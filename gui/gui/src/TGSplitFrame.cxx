@@ -752,6 +752,8 @@ void TGSplitFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    // setting layout manager if it differs from the main frame type
    TGLayoutManager * lm = GetLayoutManager();

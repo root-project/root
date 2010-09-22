@@ -651,6 +651,8 @@ void TGTripleHSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    else {
       out << ");" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    if (fVmin != 0 || fVmax != (Int_t)fWidth)
       out << "   " << GetName() << "->SetRange(" << fVmin << "," << fVmax
@@ -700,6 +702,8 @@ void TGTripleVSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    else {
       out << ");" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    if (fVmin != 0 || fVmax != (Int_t)fHeight)
       out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax

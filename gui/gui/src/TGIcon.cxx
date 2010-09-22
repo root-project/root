@@ -233,4 +233,6 @@ void TGIcon::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       out << GetName() << " = new TGIcon(" << fParent->GetName()  << ","
           << quote << name.Data() << quote << ");" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 }

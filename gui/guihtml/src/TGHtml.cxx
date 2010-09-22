@@ -2052,7 +2052,7 @@ int TGHtml::SetInsert(const char *insIx)
 }
 
 //______________________________________________________________________________
-void TGHtml::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGHtml::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a html widget as a C++ statement(s) on output stream out.
 
@@ -2060,6 +2060,8 @@ void TGHtml::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out << GetName() << " = new TGHtml(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight()
        << ");"<< endl;
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    if (fCanvas->GetBackground() != TGFrame::GetWhitePixel()) {
       out << "   " << GetName() << "->ChangeBackground(" << fCanvas->GetBackground() << ");" << endl;

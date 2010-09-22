@@ -773,6 +773,8 @@ void TGTab::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << parGC.Data() << "," << parFont.Data() << "," << GetOptionString()  << ",ucolor);" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    TGCompositeFrame *cf;
    TGLayoutManager * lm;

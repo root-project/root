@@ -453,6 +453,9 @@ void TGVProgressBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    out << "," << GetHeight() <<");" << endl;
 
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+
    if (GetFillType() == kBlockFill)
       out << "   " << GetName() <<"->SetFillType(TGProgressBar::kBlockFill);"<< endl;
 
@@ -474,6 +477,9 @@ void TGHProgressBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else if ((fBarType == kStandard) && (fBarWidth == kProgressBarStandardWidth)){
       out << ",TGProgressBar::kStandard";
    }
+
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    out << "," << GetWidth() << ");" << endl;
 

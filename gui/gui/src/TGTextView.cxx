@@ -1553,7 +1553,7 @@ const TGGC &TGTextView::GetDefaultSelectedBackgroundGC()
 }
 
 //______________________________________________________________________________
-void TGTextView::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGTextView::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a text edit widget as a C++ statement(s) on output stream out
 
@@ -1562,6 +1562,9 @@ void TGTextView::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out << GetName() << " = new TGTextView(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight()
        << ");"<< endl;
+
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    if (fCanvas->GetBackground() != TGFrame::fgWhitePixel) {
       out << "   " << GetName() << "->ChangeBackground(" << fCanvas->GetBackground() << ");" << endl;

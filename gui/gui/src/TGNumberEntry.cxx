@@ -2092,7 +2092,7 @@ void TGNumberEntry::ValueSet(Long_t val)
 }
 
 //______________________________________________________________________________
-void TGNumberEntry::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGNumberEntry::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a number entry widget as a C++ statement(s) on output stream out.
 
@@ -2194,6 +2194,8 @@ void TGNumberEntry::SavePrimitive(ostream &out, Option_t * /*= ""*/)
              << ",(TGNumberFormat::ELimit) " << GetNumLimits()
              << "," << GetNumMin() << "," << GetNumMax() << ");" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
    if (fButtonDown->GetState() == kButtonDisabled)
       out << "   " << GetName() << "->SetState(kFALSE);" << endl;
 
@@ -2208,7 +2210,7 @@ void TGNumberEntry::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 }
 
 //______________________________________________________________________________
-void TGNumberEntryField::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGNumberEntryField::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a number entry widget as a C++ statement(s) on output stream out.
 
@@ -2305,6 +2307,8 @@ void TGNumberEntryField::SavePrimitive(ostream &out, Option_t * /*= ""*/)
              << ",(TGNumberFormat::ELimit) " << GetNumLimits()
              << "," << GetNumMin() << "," << GetNumMax() << ");" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
    if (!IsEnabled())
       out << "   " << GetName() << "->SetState(kFALSE);" << endl;
 

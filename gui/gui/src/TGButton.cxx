@@ -1701,6 +1701,9 @@ void TGButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    char quote = '"';
 
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+   
    if (fState == kButtonDown) {
       out << "   " << GetName() << "->SetState(kButtonDown);"  << endl;
    }

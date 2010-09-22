@@ -1650,7 +1650,7 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
       savfr->SetName(main->GetName());
       main->SetList(savfr->GetList());
       main->SetLayoutBroken(savfr->IsLayoutBroken());
-      main->SaveSource(fname.Data(), "");
+      main->SaveSource(fname.Data(), "keep_names");
       savfr->SetWindowName(fname.Data());
       main->SetList(list);
 

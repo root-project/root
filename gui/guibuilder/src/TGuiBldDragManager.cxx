@@ -3104,7 +3104,7 @@ void TGuiBldDragManager::HandleCopy(Bool_t brk_layout)
       if (gVirtualX->InheritsFrom("TGX11")) tmp->SetIconPixmap("bld_rgb.xpm");
    }
    Bool_t quite =  brk_layout || (fPasteFileName == fTmpBuildFile);
-   tmp->SaveSource(fPasteFileName.Data(), quite ? "quiet" : "");
+   tmp->SaveSource(fPasteFileName.Data(), quite ? "keep_names quiet" : "keep_names");
    tmp->GetList()->Remove(fe);
 
    fPimpl->fGrab->SetX(x0);
@@ -3322,7 +3322,7 @@ Bool_t TGuiBldDragManager::Save(const char *file)
       main->SetClassHints(fname.Data(), fname.Data());
       // some problems here under win32
       if (gVirtualX->InheritsFrom("TGX11")) main->SetIconPixmap("bld_rgb.xpm");
-      main->SaveSource(fname.Data(), file ? "quiet" : "");
+      main->SaveSource(fname.Data(), file ? "keep_names quiet" : "keep_names");
 
       fBuilder->AddMacro(fname.Data(), img);
 

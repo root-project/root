@@ -1625,6 +1625,8 @@ void TGListBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << fWidgetId << "," << GetOptionString() << ",ucolor);" << endl;
    }
+   if (option && strstr(option, "keep_names"))
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    if (!fLbc->GetList()) return;
 
