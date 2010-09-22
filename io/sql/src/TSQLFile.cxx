@@ -353,7 +353,7 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
    TDirectoryFile::Build();
    fFile = this;
 
-   if (strstr(dbname,"oracle://")!=0) {
+   if (dbname && strstr(dbname,"oracle://")!=0) {
       fBasicTypes = oracle_BasicTypes;
       fOtherTypes = oracle_OtherTypes;
    }
