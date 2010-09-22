@@ -121,7 +121,7 @@ void TRemoteObject::Browse(TBrowser *b)
       if (ret) {
          TIter next(ret);
          while ((robj = (TRemoteObject *)next())) {
-            file = robj->GetName();
+            //file = robj->GetName();
             b->Add(robj, robj->GetName());
          }
       }
