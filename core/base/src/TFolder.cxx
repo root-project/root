@@ -210,11 +210,11 @@ const char *TFolder::FindFullPathName(const char *name) const
       gFolderPath[0] = '/';
       gFolderPath[1] = 0;
       for (Int_t l=0;l<=gFolderLevel;l++) {
-         strcat(gFolderPath,"/");
-         strcat(gFolderPath,gFolderD[l]);
+         strlcat(gFolderPath, "/", sizeof(gFolderPath));
+         strlcat(gFolderPath, gFolderD[l], sizeof(gFolderPath));
       }
-      strcat(gFolderPath,"/");
-      strcat(gFolderPath,name);
+      strlcat(gFolderPath, "/", sizeof(gFolderPath));
+      strlcat(gFolderPath,name, sizeof(gFolderPath));
       gFolderLevel = -1;
       return gFolderPath;
    }
