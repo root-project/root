@@ -1131,13 +1131,14 @@ void TSpider::SetCurrentEntries()
                ++entry;
             }
          }
-         if(inst == 0) loaded = kTRUE;
-         else if(!loaded){
+         if (!loaded) {
             // EvalInstance(0) always needs to be called so that
             // the proper branches are loaded.
             for (ui=0;ui<fNcols;ui++) {
                ((TTreeFormula*)fFormulas->At(ui))->EvalInstance(0);
             }
+            loaded = kTRUE;
+         } else if (inst == 0) {
             loaded = kTRUE;
          }
       }
