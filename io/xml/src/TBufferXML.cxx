@@ -1416,7 +1416,7 @@ UInt_t TBufferXML::WriteVersion(const TClass *cl, Bool_t /* useBcnt */)
 
    if (gDebug>2)
       Info("WriteVersion", "Class: %s, version = %d",
-          (cl ? cl->GetName() : "null"), fVersionBuf);
+           cl->GetName(), fVersionBuf);
 
    return 0;
 }
@@ -2963,7 +2963,7 @@ void TBufferXML::SetFloatFormat(const char* fmt)
    if (fmt==0) fmt = "%e";
    fgFloatFmt = fmt;
 }
-    
+
 const char* TBufferXML::GetFloatFormat()
 {
    // return current printf format for float/double members, default "%e"
