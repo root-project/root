@@ -40,10 +40,10 @@ Int_t TPosixThread::Run(TThread *th)
    pthread_attr_setdetachstate(attr, det);
    int ierr = pthread_create(&id, attr, &TThread::Function, th);
    if (!ierr) th->fId = (Long_t) id;
-   if (attr) {
-      pthread_attr_destroy(attr);
-      delete attr;
-   }
+
+   pthread_attr_destroy(attr);
+   delete attr;
+
    return ierr;
 }
 
