@@ -1097,8 +1097,7 @@ TParallelCoordSelect* TParallelCoord::SetCurrentSelection(const char* title)
    TIter next(fSelectList);
    TParallelCoordSelect* sel;
    while((sel = (TParallelCoordSelect*)next()) && strcmp(sel->GetTitle(),title))
-   if(!sel) return 0;
-   fCurrentSelection = sel;
+   if (sel) fCurrentSelection = sel;
    return sel;
 }
 
