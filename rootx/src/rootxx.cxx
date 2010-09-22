@@ -186,9 +186,9 @@ static void ReadContributors()
 
    char buf[2048];
 #ifdef ROOTDOCDIR
-   sprintf(buf, "%s/CREDITS", ROOTDOCDIR);
+   snprintf(buf, sizeof(buf, "%s/CREDITS", ROOTDOCDIR);
 #else
-   sprintf(buf, "%s/README/CREDITS", getenv("ROOTSYS"));
+   snprintf(buf, sizeof(buf), "%s/README/CREDITS", getenv("ROOTSYS"));
 #endif
 
    gContributors = 0;
