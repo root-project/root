@@ -1013,7 +1013,7 @@ const char *TFTP::GetDirEntry(Bool_t print)
       Info("GetDirEntry", "%s", mess);
 
    if (!strncmp(mess,"OK:",3)) {
-      strcpy(dirent,mess+3);
+      strlcpy(dirent,mess+3, sizeof(dirent));
       return (const char *)dirent;
    }
 
