@@ -241,10 +241,13 @@ static PyObject* im_call( PyObject* meth, PyObject* args, PyObject* kw )
 static PyObject* im_descr_get( PyObject* meth, PyObject* obj, PyObject* pyclass )
 {
 // from instancemethod: don't rebind an already bound method, or an unbound method
-// of a class that's not a base class of class
-   if ( PyMethod_GET_SELF( meth ) != NULL ||
-        ( PyMethod_GET_CLASS( meth ) != NULL &&
-          ! PyObject_IsSubclass( pyclass,  PyMethod_GET_CLASS(meth) ) ) ) {
+// of a class that's not a base class of pyclass
+   if ( PyMethod_GET_SELF( meth ) != NULL
+#if PY_VERSION_HEX < 0x03000000
+        || ( PyMethod_GET_CLASS( meth ) != NULL &&
+          ! PyObject_IsSubclass( pyclass,  PyMethod_GET_CLASS(meth) ) )
+#endif
+                                          ) {
       Py_INCREF( meth );
       return meth;
    }

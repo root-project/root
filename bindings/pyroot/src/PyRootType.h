@@ -56,7 +56,7 @@ namespace PyROOT {
    template< typename T >
    inline Bool_t PyRootType_CheckExact( T* object )
    {
-      return object && object->ob_type == &PyRootType_Type;
+      return object && Py_TYPE(object) == &PyRootType_Type;
    }
 
 } // namespace PyROOT

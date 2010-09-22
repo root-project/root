@@ -107,7 +107,7 @@ namespace {
             Py_INCREF( key );
             ep->me_key   = key;
             ep->me_hash  = hash;
-            ep->me_value = val->ob_type->tp_descr_get( val, NULL, NULL );
+            ep->me_value = Py_TYPE(val)->tp_descr_get( val, NULL, NULL );
          } else {
          // add reference to ROOT entity in the given dictionary
             ((DictLookup_t&)mp->ma_lookup) = gDictLookupOrg;     // prevent recursion

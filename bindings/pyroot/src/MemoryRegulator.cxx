@@ -65,7 +65,7 @@ namespace {
          PyROOT_NoneType.tp_traverse    = (traverseproc) 0;
          PyROOT_NoneType.tp_clear       = (inquiry) 0;
          PyROOT_NoneType.tp_dealloc     = (destructor)  &InitPyROOT_NoneType_t::DeAlloc;
-         PyROOT_NoneType.tp_repr        = Py_None->ob_type->tp_repr;
+         PyROOT_NoneType.tp_repr        = Py_TYPE(Py_None)->tp_repr;
          PyROOT_NoneType.tp_richcompare = (richcmpfunc) &InitPyROOT_NoneType_t::RichCompare;
 #if PY_VERSION_HEX < 0x03000000
 // tp_compare has become tp_reserved (place holder only) in p3
@@ -78,7 +78,7 @@ namespace {
          PyType_Ready( &PyROOT_NoneType );
       }
 
-      static void DeAlloc( PyObject* obj ) { obj->ob_type->tp_free( obj ); }
+      static void DeAlloc( PyObject* obj ) { Py_TYPE(obj)->tp_free( obj ); }
       static int PtrHash( PyObject* obj ) { return (int)Long_t(obj); }
 
       static PyObject* RichCompare( PyObject*, PyObject* other, int opid )
@@ -142,15 +142,15 @@ void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
       if ( ObjectProxy_Check( pyobj ) ) {
          if ( ! PyROOT_NoneType.tp_traverse ) {
          // take a reference as we're copying its function pointers
-            Py_INCREF( ((PyObject*)pyobj)->ob_type );
+            Py_INCREF( Py_TYPE(pyobj) );
 
          // all object that arrive here are expected to be of the same type ("instance")
-            PyROOT_NoneType.tp_traverse   = ((PyObject*)pyobj)->ob_type->tp_traverse;
-            PyROOT_NoneType.tp_clear      = ((PyObject*)pyobj)->ob_type->tp_clear;
-            PyROOT_NoneType.tp_free       = ((PyObject*)pyobj)->ob_type->tp_free;
-         } else if ( PyROOT_NoneType.tp_traverse != ((PyObject*)pyobj)->ob_type->tp_traverse ) {
+            PyROOT_NoneType.tp_traverse   = Py_TYPE(pyobj)->tp_traverse;
+            PyROOT_NoneType.tp_clear      = Py_TYPE(pyobj)->tp_clear;
+            PyROOT_NoneType.tp_free       = Py_TYPE(pyobj)->tp_free;
+         } else if ( PyROOT_NoneType.tp_traverse != Py_TYPE(pyobj)->tp_traverse ) {
             std::cerr << "in PyROOT::TMemoryRegulater, unexpected object of type: "
-                      << ((PyObject*)pyobj)->ob_type->tp_name << std::endl;
+                      << Py_TYPE(pyobj)->tp_name << std::endl;
 
          // leave before too much damage is done
             return;
@@ -168,7 +168,7 @@ void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
 
       // reset type object
          Py_INCREF( (PyObject*)(void*)&PyROOT_NoneType );
-         Py_DECREF( ((PyObject*)pyobj)->ob_type );
+         Py_DECREF( Py_TYPE(pyobj) );
          ((PyObject*)pyobj)->ob_type = &PyROOT_NoneType;
       }
 

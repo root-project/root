@@ -49,7 +49,7 @@ namespace {
 
 //____________________________________________________________________________
    Bool_t HasAttrDirect( PyObject* pyclass, PyObject* pyname, Bool_t mustBePyROOT = kFALSE ) {
-   // prevents calls to pyclass->ob_type->tp_getattr, which is unnecessary for our
+   // prevents calls to Py_TYPE(pyclass)->tp_getattr, which is unnecessary for our
    // purposes here and could tickle problems w/ spurious lookups into ROOT meta
       PyObject* attr = PyType_Type.tp_getattro( pyclass, pyname );
       if ( attr != 0 && ( ! mustBePyROOT || MethodProxy_Check( attr ) ) ) {
@@ -176,7 +176,7 @@ namespace {
          return 0;
 
    // prevent a potential infinite loop
-      if ( pyptr->ob_type == self->ob_type ) {
+      if ( Py_TYPE(pyptr) == Py_TYPE(self) ) {
          PyObject* val1 = PyObject_Str( self );
          PyObject* val2 = PyObject_Str( name );
          PyErr_Format( PyExc_AttributeError, "%s has no attribute \'%s\'",

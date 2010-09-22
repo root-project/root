@@ -56,7 +56,7 @@ namespace {
 
       Int_t nargs = PyTuple_GET_SIZE( args );
       for ( Int_t i = 0; i < nargs; ++i ) {
-         hash += (ULong_t) PyTuple_GET_ITEM( args, i )->ob_type;
+         hash += (ULong_t) Py_TYPE( PyTuple_GET_ITEM( args, i ) );
          hash += (hash << 10); hash ^= (hash >> 6);
       }
 
@@ -636,7 +636,7 @@ namespace {
          return PyType_Type.tp_richcompare( (PyObject*)self, (PyObject*)other, op );
 
    // defined by type + (shared) MethodInfo + bound self, with special case for fSelf (i.e. pseudo-function)
-      if ( ( ((PyObject*)self)->ob_type == ((PyObject*)other)->ob_type && self->fMethodInfo == other->fMethodInfo ) && \
+      if ( ( Py_TYPE(self) == Py_TYPE(other) && self->fMethodInfo == other->fMethodInfo ) && \
            ( ( IsPseudoFunc( self ) && IsPseudoFunc( other ) ) || self->fSelf == other->fSelf ) ) {
          Py_INCREF( Py_True );
          return Py_True;
@@ -651,7 +651,7 @@ namespace {
    {
       if ( ! PyROOT_PyUnicode_Check( sigarg ) ) {
          PyErr_Format( PyExc_TypeError, "disp() argument 1 must be string, not %.50s",
-                       sigarg == Py_None ? "None" : sigarg->ob_type->tp_name );
+                       sigarg == Py_None ? "None" : Py_TYPE(sigarg)->tp_name );
          return 0;
       }
 

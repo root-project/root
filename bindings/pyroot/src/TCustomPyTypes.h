@@ -27,7 +27,7 @@ namespace PyROOT {
    template< typename T >
    inline Bool_t TCustomFloat_CheckExact( T* object )
    {
-      return object && object->ob_type == &TCustomFloat_Type;
+      return object && Py_TYPE(object) == &TCustomFloat_Type;
    }
 
 //- custom long object type and type verification ----------------------------
@@ -42,7 +42,7 @@ namespace PyROOT {
    template< typename T >
    inline Bool_t TCustomInt_CheckExact( T* object )
    {
-      return object && object->ob_type == &TCustomInt_Type;
+      return object && Py_TYPE(object) == &TCustomInt_Type;
    }
 
 //- custom instance method object type and type verification -----------------
@@ -57,7 +57,7 @@ namespace PyROOT {
    template< typename T >
    inline Bool_t TCustomInstanceMethod_CheckExact( T* object )
    {
-      return object && object->ob_type == &TCustomInstanceMethod_Type;
+      return object && Py_TYPE(object) == &TCustomInstanceMethod_Type;
    }
 
    PyObject* TCustomInstanceMethod_New( PyObject* func, PyObject* self, PyObject* klass );

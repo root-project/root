@@ -100,6 +100,7 @@
 #if PY_VERSION_HEX < 0x02060000
 #define PyVarObject_HEAD_INIT(type, size)       \
     PyObject_HEAD_INIT(type) size,
+#define Py_TYPE(ob)             (((PyObject*)(ob))->ob_type)
 #endif
 
 // backwards compatibility, pre python 2.5

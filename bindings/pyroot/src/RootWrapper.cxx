@@ -72,7 +72,7 @@ namespace {
 
       PyObject* pymetabases = PyTuple_New( PyTuple_GET_SIZE( pybases ) );
       for ( int i = 0; i < PyTuple_GET_SIZE( pybases ); ++i ) {
-         PyObject* btype = (PyObject*)PyTuple_GetItem( pybases, i )->ob_type;
+         PyObject* btype = (PyObject*)Py_TYPE( PyTuple_GetItem( pybases, i ) );
          Py_INCREF( btype );
          PyTuple_SET_ITEM( pymetabases, i, btype );
       }
@@ -209,8 +209,8 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
    CallableCache_t cache;
 
 // bypass custom __getattr__ for efficiency
-   getattrofunc oldgetattro = pyclass->ob_type->tp_getattro;
-   pyclass->ob_type->tp_getattro = PyType_Type.tp_getattro;
+   getattrofunc oldgetattro = Py_TYPE(pyclass)->tp_getattro;
+   Py_TYPE(pyclass)->tp_getattro = PyType_Type.tp_getattro;
 
    const size_t nMethods = klass.FunctionMemberSize();
    for ( size_t inm = 0; inm < nMethods; ++inm ) {
@@ -343,7 +343,7 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
 
          if ( mb.IsStatic() ) {
          // allow access at the class level (always add after setting instance level)
-            PyObject_SetAttrString( (PyObject*)pyclass->ob_type,
+            PyObject_SetAttrString( (PyObject*)Py_TYPE(pyclass),
                const_cast< char* >( property->GetName().c_str() ), (PyObject*)property );
          }
 
@@ -352,7 +352,7 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
    }
 
 // restore custom __getattr__
-   pyclass->ob_type->tp_getattro = oldgetattro;
+   Py_TYPE(pyclass)->tp_getattro = oldgetattro;
 
 // all ok, done
    return 0;

@@ -104,7 +104,7 @@ namespace {
    void op_dealloc( ObjectProxy* pyobj )
    {
       op_dealloc_nofree( pyobj );
-      ((PyObject*)pyobj)->ob_type->tp_free( (PyObject*)pyobj );
+      Py_TYPE(pyobj)->tp_free( (PyObject*)pyobj );
    }
 
 //____________________________________________________________________________
@@ -123,7 +123,7 @@ namespace {
 
    // type + held pointer value defines identity (will cover if other is not
    // actually an ObjectProxy, as ob_type will be unequal)
-      else if ( ((PyObject*)self)->ob_type == ((PyObject*)other)->ob_type && self->fObject == other->fObject )
+      else if ( Py_TYPE(self) == Py_TYPE(other) && self->fObject == other->fObject )
          bIsEq = true;
 
       if ( ( op == Py_EQ && bIsEq ) || ( op == Py_NE && ! bIsEq ) ) {

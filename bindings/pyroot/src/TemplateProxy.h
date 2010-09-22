@@ -50,7 +50,7 @@ namespace PyROOT {
    template< typename T >
    inline Bool_t TemplateProxy_CheckExact( T* object )
    {
-      return object && object->ob_type == &TemplateProxy_Type;
+      return object && Py_TYPE(object) == &TemplateProxy_Type;
    }
 
 //- creation -----------------------------------------------------------------

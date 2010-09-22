@@ -443,9 +443,9 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
 
 #if PY_VERSION_HEX < 0x03000000
 // attempt to retrieve pointer to buffer interface
-   PyBufferProcs* bufprocs = pyobject->ob_type->tp_as_buffer;
+   PyBufferProcs* bufprocs = Py_TYPE(pyobject)->tp_as_buffer;
 
-   PySequenceMethods* seqmeths = pyobject->ob_type->tp_as_sequence;
+   PySequenceMethods* seqmeths = Py_TYPE(pyobject)->tp_as_sequence;
    if ( seqmeths != 0 && bufprocs != 0 && bufprocs->bf_getwritebuffer != 0 &&
         (*(bufprocs->bf_getsegcount))( pyobject, 0 ) == 1 ) {
 

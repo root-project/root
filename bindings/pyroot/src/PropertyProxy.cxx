@@ -114,7 +114,7 @@ namespace {
       using namespace std;
       pyprop->fName.~string();
       delete pyprop->fConverter;
-      ((PyObject*)pyprop)->ob_type->tp_free( (PyObject*)pyprop );
+      Py_TYPE(pyprop)->tp_free( (PyObject*)pyprop );
    }
 
 
