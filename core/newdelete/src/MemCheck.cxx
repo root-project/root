@@ -120,9 +120,9 @@ void TStackTable::Init()
    fSize = 65536;
    fCount = 0;
    fTable = (char *) malloc(fSize);
-   memset(fTable, 0, fSize);
    if (!fTable)
       _exit(1);
+   memset(fTable, 0, fSize);
    fNext = fTable;
    //initialize hash table
    fHashSize = 65536;
