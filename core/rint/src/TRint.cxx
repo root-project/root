@@ -224,7 +224,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    }
    Gl_histsize(hist_size, hist_save);
    Gl_histinit((char *)logon);
-     
+
 #ifdef R__BUILDEDITLINE
    // black on white or white on black?
    static const char* defaultColorsBW[] = {
@@ -484,9 +484,9 @@ char *TRint::GetPrompt()
 
    char *s = gCint->GetPrompt();
    if (s[0])
-      strcpy(fPrompt, s);
+      strlcpy(fPrompt, s, sizeof(fPrompt));
    else
-      sprintf(fPrompt, fDefaultPrompt.Data(), fNcmd);
+      snprintf(fPrompt, sizeof(fPrompt), fDefaultPrompt.Data(), fNcmd);
 
    return fPrompt;
 }
