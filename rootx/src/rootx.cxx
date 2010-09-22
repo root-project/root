@@ -140,13 +140,13 @@ static int ReadUtmp()
    if (!gUtmpContents) return 0;
 
    n_read = fread(gUtmpContents, 1, size, utmp);
-   if (ferror(utmp) || fclose(utmp) == EOF || n_read < size) {
-      free(gUtmpContents);
-      gUtmpContents = 0;
-      return 0;
-   }
+   if (!ferror(utmp) && fclose(utmp) != EOF && n_read == size)
+      return size / sizeof(STRUCT_UTMP);
 
-   return size / sizeof(STRUCT_UTMP);
+   free(gUtmpContents);
+   gUtmpContents = 0;
+   fclose(utmp);
+   return 0;
 }
 
 static STRUCT_UTMP *SearchEntry(int n, const char *tty)
