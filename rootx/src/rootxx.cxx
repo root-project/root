@@ -21,7 +21,7 @@
 #include <X11/Xlib.h>
 #include <X11/xpm.h>
 
-#include "RConfig.h"
+#include "Rtypes.h"
 
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
