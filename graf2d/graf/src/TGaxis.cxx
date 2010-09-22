@@ -1447,13 +1447,13 @@ L110:
                coded = &chcoded[0];
                if (if1 > 14) if1=14;
                if (if2 > 14) if2=14;
-               if (if2) sprintf(coded,"%%%d.%df",if1,if2);
-               else     sprintf(coded,"%%%d.%df",if1+1,1);
+               if (if2) snprintf(coded,8,"%%%d.%df",if1,if2);
+               else     snprintf(coded,8,"%%%d.%df",if1+1,1);
             }
 
 //*-*-              We draw labels
 
-            sprintf(chtemp,"%g",dwlabel);
+            snprintf(chtemp,256,"%g",dwlabel);
             Int_t ndecimals = 0;
             if (optionDecimals) {
                char *dot = strchr(chtemp,'.');
@@ -1483,7 +1483,7 @@ L110:
                if (optionM)    xlabel += 0.5*dxlabel;
 
                if (!optionText && !optionTime) {
-                  sprintf(label,&chcoded[0],wlabel);
+                  snprintf(label,256,&chcoded[0],wlabel);
                   label[28] = 0;
                   wlabel += dwlabel;
 
@@ -1541,7 +1541,7 @@ L110:
                   if (dwlabel<0.9) {
                      double tmpdb;
                      int tmplast;
-                     sprintf(label,"%%S%7.5f",modf(timed,&tmpdb));
+                     snprintf(label,256,"%%S%7.5f",modf(timed,&tmpdb));
                      tmplast = strlen(label)-1;
 
 //*-*-              We eliminate the non significiant 0 after '.'
@@ -1622,7 +1622,7 @@ L110:
 //*-*-                We use the format x 10 ** n
 
             if (flexe && !optionText && nexe)  {
-               sprintf(label,"#times10^{%d}", nexe);
+               snprintf(label,256,"#times10^{%d}", nexe);
                if (x0 != x1) { xfactor = x1-x0+0.1*charheight; yfactor = 0; }
                else          { xfactor = y1-y0+0.1*charheight; yfactor = 0; }
                Rotate (xfactor,yfactor,cosphi,sinphi,x0,y0,xx,yy);
@@ -1719,7 +1719,7 @@ L110:
 //*-*-              We generate labels (numeric only).
             if (noExponent) {
                rlab = TMath::Power(10,labelnumber);
-               sprintf(label, "%f", rlab);
+               snprintf(label,256, "%f", rlab);
                LabelsLimits(label,first,last);
                while (last > first) {
                   if (label[last] != '0') break;
@@ -1728,7 +1728,7 @@ L110:
                }
                if (label[last] == '.') {label[last] = 0; last--;}
             } else {
-               sprintf(label, "%d", labelnumber);
+               snprintf(label,256, "%d", labelnumber);
                LabelsLimits(label,first,last);
             }
             Rotate (xone,ylabel,cosphi,sinphi,x0,y0,xx,yy);
@@ -1760,7 +1760,7 @@ L110:
                   if (noExponent) {
                      textaxis->PaintTextNDC(xx,yy,&label[first]);
                   } else {
-                        sprintf(chtemp, "10^{%d}", labelnumber);
+                        snprintf(chtemp,256, "10^{%d}", labelnumber);
                         textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                                              gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
                                              0, textaxis->GetTextSize(), chtemp);
@@ -1806,14 +1806,14 @@ L160:
                if (moreLogLabels && !optionUnlab && !drawGridOnly && !overlap) {
                   if (noExponent) {
                      rlab = Double_t(k)*TMath::Power(10,labelnumber-1);
-                     sprintf(chtemp, "%g", rlab);
+                     snprintf(chtemp,256, "%g", rlab);
                   } else {
                      if (labelnumber-1 == 0) {
-                        sprintf(chtemp, "%d", k);
+                        snprintf(chtemp,256, "%d", k);
                      } else if (labelnumber-1 == 1) {
-                        sprintf(chtemp, "%d", 10*k);
+                        snprintf(chtemp,256, "%d", 10*k);
                      } else {
-                        sprintf(chtemp, "%d#times10^{%d}", k, labelnumber-1);
+                        snprintf(chtemp,256, "%d#times10^{%d}", k, labelnumber-1);
                      }
                   }
                   Rotate (xone,ylabel,cosphi,sinphi,x0,y0,xx,yy);
@@ -2189,7 +2189,7 @@ void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
    // append the decimal part of the time offset
    Double_t ds = toffset-(Int_t)toffset;
    if(ds!= 0) {
-      sprintf(tmp,"s%g",ds);
+      snprintf(tmp,20,"s%g",ds);
       fTimeFormat.Append(tmp);
    }
 
