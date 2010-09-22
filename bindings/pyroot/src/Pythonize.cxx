@@ -659,15 +659,23 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* TSeqCollectionSort( PyObject* self, PyObject* args )
+   PyObject* TSeqCollectionSort( PyObject* self, PyObject* args, PyObject* kw )
    {
-      if ( PyTuple_GET_SIZE( args ) == 0 ) {
+      if ( PyTuple_GET_SIZE( args ) == 0 && ! kw ) {
       // no specialized sort, use ROOT one
          return CallPyObjMethod( self, "Sort" );
       } else {
       // sort in a python list copy
          PyObject* l = PySequence_List( self );
-         PyObject* result = CallPyObjMethod( l, "sort", PyTuple_GET_ITEM( args, 0 ) );
+         PyObject* result = 0;
+         if ( PyTuple_GET_SIZE( args ) == 1 )
+            result = CallPyObjMethod( l, "sort", PyTuple_GET_ITEM( args, 0 ) );
+         else {
+            PyObject* pymeth = PyObject_GetAttrString( l, "sort" );
+            result = PyObject_Call( pymeth, args, kw );
+            Py_DECREF( pymeth );
+         }
+
          Py_XDECREF( result );
          if ( PyErr_Occurred() ) {
             Py_DECREF( l );
@@ -1773,7 +1781,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "count", (PyCFunction) TCollectionCount, METH_O );
 
       Utility::AddToClass( pyclass, "__len__",  "GetSize" );
-      Utility::AddToClass( pyclass, "__iter__", (PyCFunction) TCollectionIter, METH_NOARGS );
+      ((PyTypeObject*)pyclass)->tp_iter = (getiterfunc)TCollectionIter;
 
       return kTRUE;
    }
@@ -1786,7 +1794,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "insert",  (PyCFunction) TSeqCollectionInsert );
       Utility::AddToClass( pyclass, "pop",     (PyCFunction) TSeqCollectionPop );
       Utility::AddToClass( pyclass, "reverse", (PyCFunction) TSeqCollectionReverse, METH_NOARGS );
-      Utility::AddToClass( pyclass, "sort",    (PyCFunction) TSeqCollectionSort );
+      Utility::AddToClass( pyclass, "sort",    (PyCFunction) TSeqCollectionSort,
+                           METH_VARARGS | METH_KEYWORDS );
 
       Utility::AddToClass( pyclass, "index", (PyCFunction) TSeqCollectionIndex, METH_O );
 
@@ -1884,8 +1893,9 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    }
 
    if ( name == "TIter" ) {
-      Utility::AddToClass( pyclass, "__iter__", (PyCFunction) TIterIter, METH_NOARGS );
-      Utility::AddToClass( pyclass, "next",     (PyCFunction) TIterNext, METH_NOARGS );
+      ((PyTypeObject*)pyclass)->tp_iter     = (getiterfunc)TIterIter;
+      ((PyTypeObject*)pyclass)->tp_iternext = (iternextfunc)TIterNext;
+      Utility::AddToClass( pyclass, "next", (PyCFunction) TIterNext, METH_NOARGS );
 
       return kTRUE;
    }
