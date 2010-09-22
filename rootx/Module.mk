@@ -32,8 +32,8 @@ INCLUDEFILES += $(ROOTXDEP)
 include/%.h:    $(ROOTXDIRI)/%.h
 		cp $< $@
 
-$(ROOTX):       $(ROOTXO)
-		$(LD) $(LDFLAGS) -o $@ $(ROOTXO) $(XLIBS)
+$(ROOTX):       $(ROOTXO) $(STRLCPYO)
+		$(LD) $(LDFLAGS) -o $@ $(ROOTXO) $(STRLCPYO) $(XLIBS)
 
 all-$(MODNAME): $(ROOTX)
 

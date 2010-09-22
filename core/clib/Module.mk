@@ -27,6 +27,7 @@ CLIBS2       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 
 CLIBO        := $(CLIBS1:.c=.o) $(CLIBS2:.cxx=.o)
 SNPRINTFO    := $(CLIBDIRS)/snprintf.o
+STRLCPYO     := $(CLIBDIRS)/strlcpy.o $(CLIBDIRS)/strlcat.o
 
 CLIBDEP      := $(CLIBO:.o=.d) $(CLIBDO:.o=.d)
 
