@@ -4582,6 +4582,7 @@ int TUnixSystem::ReadUtmpFile()
 
    free(gUtmpContents);
    gUtmpContents = 0;
+   fclose(utmp);
    return 0;
 }
 
