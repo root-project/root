@@ -888,6 +888,10 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  arbitrary. Giving more than 4 variables without the option=para or
 //  option=candle or option=goff will produce an error.
 //
+//     Normalizing the ouput histogram to 1
+//     ====================================
+//  When option contains "norm" the output histogram is normalized to 1.
+//
 //     Saving the result of Draw to a TEventList or a TEntryList
 //     =========================================================
 //  TTree::Draw can be used to fill a TEventList object (list of entry numbers)
@@ -1057,6 +1061,8 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    Bool_t optpara   = kFALSE;
    Bool_t optcandle = kFALSE;
    Bool_t optgl5d   = kFALSE;
+   Bool_t optnorm   = kFALSE;
+   if (opt.Contains("norm")) {optnorm = kTRUE; opt.ReplaceAll("norm","");}
    if (opt.Contains("para")) optpara = kTRUE;
    if (opt.Contains("candle")) optcandle = kTRUE;
    if (opt.Contains("gl5d")) optgl5d = kTRUE;
@@ -1095,7 +1101,11 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    Bool_t draw = kFALSE;
    if (!drawflag && !opt.Contains("goff")) draw = kTRUE;
    if (!optcandle && !optpara) fHistogram = (TH1*)fSelector->GetObject();
-
+   if (optnorm) {
+      Double_t sumh= fHistogram->GetSumOfWeights();
+      if (sumh != 0) fHistogram->Scale(1./sumh);
+   }
+   
    //if (!nrows && draw && drawflag && !opt.Contains("same")) {
    //   if (gPad) gPad->Clear();
    //   return 0;
@@ -1104,14 +1114,14 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    //*-*- 1-D distribution
    if (fDimension == 1) {
       if (fSelector->GetVar1()->IsInteger()) fHistogram->LabelsDeflate("X");
-      if (draw) fHistogram->Draw(option);
+      if (draw) fHistogram->Draw(opt.Data());
 
    //*-*- 2-D distribution
    } else if (fDimension == 2 && !(optpara||optcandle)) {
       if (fSelector->GetVar1()->IsInteger()) fHistogram->LabelsDeflate("Y");
       if (fSelector->GetVar2()->IsInteger()) fHistogram->LabelsDeflate("X");
       if (action == 4) {
-         if (draw) fHistogram->Draw(option);
+         if (draw) fHistogram->Draw(opt.Data());
       } else {
          Bool_t graph = kFALSE;
          Int_t l = opt.Length();
@@ -1120,9 +1130,9 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
          if (opt.Contains("surf")  || opt.Contains("lego") || opt.Contains("cont")) graph = kFALSE;
          if (opt.Contains("col")   || opt.Contains("hist") || opt.Contains("scat")) graph = kFALSE;
          if (!graph) {
-            if (draw) fHistogram->Draw(option);
+            if (draw) fHistogram->Draw(opt.Data());
          } else {
-            if (fSelector->GetOldHistogram() && draw) fHistogram->Draw(option);
+            if (fSelector->GetOldHistogram() && draw) fHistogram->Draw(opt.Data());
          }
       }
    //*-*- 3-D distribution
@@ -1131,14 +1141,14 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
       if (fSelector->GetVar2()->IsInteger()) fHistogram->LabelsDeflate("Y");
       if (fSelector->GetVar3()->IsInteger()) fHistogram->LabelsDeflate("X");
       if (action == 23) {
-         if (draw) fHistogram->Draw(option);
+         if (draw) fHistogram->Draw(opt.Data());
       } else {
          Int_t noscat = opt.Length();
          if (opt.Contains("same")) noscat -= 4;
          if (noscat) {
-            if (draw) fHistogram->Draw(option);
+            if (draw) fHistogram->Draw(opt.Data());
          } else {
-            if (fSelector->GetOldHistogram() && draw) fHistogram->Draw(option);
+            if (fSelector->GetOldHistogram() && draw) fHistogram->Draw(opt.Data());
          }
       }
    //*-*- 4-D distribution
@@ -1146,7 +1156,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
       if (fSelector->GetVar1()->IsInteger()) fHistogram->LabelsDeflate("Z");
       if (fSelector->GetVar2()->IsInteger()) fHistogram->LabelsDeflate("Y");
       if (fSelector->GetVar3()->IsInteger()) fHistogram->LabelsDeflate("X");
-      if (draw) fHistogram->Draw(option);
+      if (draw) fHistogram->Draw(opt.Data());
       Int_t ncolors  = gStyle->GetNumberOfColors();
       TObjArray *pms = (TObjArray*)fHistogram->GetListOfFunctions()->FindObject("polymarkers");
       for (Int_t col=0;col<ncolors;col++) {
