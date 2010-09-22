@@ -629,13 +629,13 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
    // The function is available via the object context menu.
 
    //==============Save object as a root file===============================
-   if (strstr(filename,".root")) {
+   if (filename && strstr(filename,".root")) {
       if (gDirectory) gDirectory->SaveObjectAs(this,filename,"");
       return;
    }
 
    //==============Save object as a XML file================================
-   if (strstr(filename,".xml")) {
+   if (filename && strstr(filename,".xml")) {
       if (gDirectory) gDirectory->SaveObjectAs(this,filename,"");
       return;
    }
