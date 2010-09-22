@@ -160,9 +160,9 @@ static Pixmap GetRootLogo()
 
    char file[2048];
 #ifdef ROOTICONPATH
-   sprintf(file, "%s/Splash.xpm", ROOTICONPATH);
+   snprintf(file, sizeof(file), "%s/Splash.xpm", ROOTICONPATH);
 #else
-   sprintf(file, "%s/icons/Splash.xpm", getenv("ROOTSYS"));
+   snprintf(file, sizeof(file), "%s/icons/Splash.xpm", getenv("ROOTSYS"));
 #endif
    int ret = XpmReadFileToPixmap(gDisplay, gLogoWindow,
                                  file, &logo, 0, &attr);
