@@ -1072,7 +1072,11 @@ again:
 
       p = 0;
       if (c[0] == '.' && c[1] == '/' && c[-1] == ' ') { // $cwd
-         p = strcpy(buff, WorkingDirectory()); e = c + 1; if (!p) ier++;
+         strlcpy(buff, WorkingDirectory(), kBufSize);
+         p = buff;
+         e = c + 1;
+         if (!p)
+            ier++;
       }
 
       if (p) {                          // we have smth to copy */
@@ -1100,7 +1104,8 @@ again:
             p = Getenv(buff);
          }
          if (!p && !strcmp(buff, "cwd")) { // it is $cwd
-            p = strcpy(buff, WorkingDirectory());
+            strlcpy(buff, WorkingDirectory(), kBufSize);
+            p = buff;
          }
          if (!p && !strcmp(buff, "$")) { // it is $$ (replace by GetPid())
             sprintf(buff, "%d", GetPid());
@@ -1121,7 +1126,7 @@ again:
             int lp = strlen(p);
             if (lp >= kBufSize) {
                // make sure lx will be >= kBufSize (see below)
-               strncpy(x, p, kBufSize);
+               strlcpy(x, p, kBufSize);
                x += kBufSize;
                break;
             } else
