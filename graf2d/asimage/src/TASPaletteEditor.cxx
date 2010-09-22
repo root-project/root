@@ -443,7 +443,7 @@ void TASPaletteEditor::Save()
       // write into a ROOT file
       char fn[512];
       if (strcmp(".pal.root", fi.fFilename + strlen(fi.fFilename) - 9) != 0)
-         sprintf(fn, "%s%s", fi.fFilename, ".pal.root");
+         snprintf(fn,512, "%s%s", fi.fFilename, ".pal.root");
       else
          strcpy(fn, fi.fFilename);
 
@@ -484,7 +484,7 @@ void TASPaletteEditor::Open()
       // read from a ROOT file
       char fn[512];
       if (strcmp(".pal.root", fi.fFilename + strlen(fi.fFilename) - 9) != 0)
-         sprintf(fn, "%s%s", fi.fFilename, ".pal.root");
+         snprintf(fn,512, "%s%s", fi.fFilename, ".pal.root");
       else
          strcpy(fn, fi.fFilename);
       TDirectory *dirsav = gDirectory;
