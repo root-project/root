@@ -123,6 +123,14 @@ TSystem::TSystem(const char *name, const char *title) : TNamed(name, title), fAc
    fReadready           = 0;
    fWriteready          = 0;
    fSignals             = 0;
+   fDone                = kFALSE;
+   fAclicMode           = kDefault;
+   fInControl           = kFALSE;
+   fLevel               = 0;
+   fMaxrfd              = -1;
+   fMaxwfd              = -1;
+   fNfd                 = 0;
+   fSigcnt              = 0;
 
    gLibraryVersion = new Int_t [gLibraryVersionMax];
    memset(gLibraryVersion, 0, gLibraryVersionMax*sizeof(Int_t));
