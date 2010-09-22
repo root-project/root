@@ -144,7 +144,7 @@ namespace memstat {
 
 //______________________________________________________________________________
    int getSymbols(void *_pAddr,
-                  TString &/*_strInfo*/, TString &_strLib, TString &_strSymbol, TString &/*_strLine*/)
+                  TString &/*_strInfo*/, TString &_strLib, TString &_strSymbol)
    {
       // get the name of the function and library
 
@@ -186,15 +186,15 @@ namespace memstat {
       TString strInfo;
       TString strLib;
       TString strFun;
-      TString strLine;
-      int res = getSymbols(_pAddr, strInfo, strLib, strFun, strLine);
+      int res = getSymbols(_pAddr, strInfo, strLib, strFun);
       if(0 != res)
          return;
 
-      *_retInfo +=
-         strInfo + _separator +
-         strLib + _separator +
-         strFun;
+      *_retInfo += strInfo;
+      *_retInfo += _separator;
+      *_retInfo += strLib;
+      *_retInfo += _separator;
+      *_retInfo += strFun;
 #else
       if(_pAddr || _separator) { }
 #endif

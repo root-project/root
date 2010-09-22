@@ -263,59 +263,68 @@ void TMemStatMng::FreeHook(void* ptr, const void* /*caller*/)
 }
 
 //______________________________________________________________________________
-void TMemStatMng::AddPointer(void *ptr, Int_t size)
+Int_t TMemStatMng::generateBTID(UChar_t *CRCdigest, Int_t stackEntries,
+                                void **stackPointers)
 {
-   // Add pointer to table.
-   // This method is called every time when any of the hooks are triggered.
-   // The memory de-/allocation information will is recorded.
+   // An internal function, which returns a bitid for a corresponding CRC digest
 
-   void *stptr[g_BTStackLevel + 1];
-   const int stackentries = getBacktrace(stptr, g_BTStackLevel, fUseGNUBuiltinBacktrace);
+   // cache variables
+   static Int_t old_btid = -1;
+   static SCustomDigest old_digest;
 
-   // save only unique BTs
-   TMD5 md5;
-   md5.Update(reinterpret_cast<UChar_t*>(stptr), sizeof(void*) * stackentries);
-   md5.Final();
-   string crc_digest(md5.AsString());
+   Int_t ret_val = -1;
+   bool startCheck(false);
+   if(old_btid >= 0) {
+      for(int i = 0; i < g_digestSize; ++i) {
+         if(old_digest.fValue[i] != CRCdigest[i]) {
+            startCheck = true;
+            break;
+         }
+      }
+      ret_val = old_btid;
+   } else {
+      startCheck = true;
+   }
 
-   // for Debug. A counter of all (de)allacations.
-   ++fBTIDCount;
+   // return cached value
+   if(!startCheck)
+      return ret_val;
 
-   CRCSet_t::const_iterator found = fBTChecksums.find(crc_digest);
-   // TODO: define a proper default value
-   Int_t btid = -1;
+   old_digest = SCustomDigest(CRCdigest);
+   CRCSet_t::const_iterator found = fBTChecksums.find(CRCdigest);
+
    if(fBTChecksums.end() == found) {
       // check the size of the BT array container
       const int nbins = fHbtids->GetNbinsX();
       //check that the current allocation in fHbtids is enough, otherwise expend it with
-      if(fBTCount + stackentries + 1 >= nbins) {
+      if(fBTCount + stackEntries + 1 >= nbins) {
          fHbtids->SetBins(nbins * 2, 0, 1);
       }
 
       int *btids = fHbtids->GetArray();
       // A first value is a number of entries in a given stack
-      btids[fBTCount++] = stackentries;
-      btid = fBTCount;
-      if(stackentries <= 0) {
+      btids[fBTCount++] = stackEntries;
+      ret_val = fBTCount;
+      if(stackEntries <= 0) {
          Warning("AddPointer",
-                 "A number of stack entries is equal or less than zero. For btid %d", btid);
+                 "A number of stack entries is equal or less than zero. For btid %d", ret_val);
       }
 
       // add new BT's CRC value
-      pair<CRCSet_t::iterator, bool> res = fBTChecksums.insert(CRCSet_t::value_type(crc_digest, btid));
+      pair<CRCSet_t::iterator, bool> res = fBTChecksums.insert(CRCSet_t::value_type(CRCdigest, ret_val));
       if(!res.second)
          Error("AddPointer", "Can't added a new BTID to the container.");
 
       // save all symbols of this BT
-      for(int i = 0; i < stackentries; ++i) {
-         ULong_t func_addr = (ULong_t)(stptr[i]);
+      for(int i = 0; i < stackEntries; ++i) {
+         ULong_t func_addr = (ULong_t)(stackPointers[i]);
          Int_t idx = fFAddrs.find(func_addr);
          // check, whether it's a new symbol
          if(idx < 0) {
             TString strFuncAddr;
             strFuncAddr += func_addr;
             TString strSymbolInfo;
-            getSymbolFullInfo(stptr[i], &strSymbolInfo);
+            getSymbolFullInfo(stackPointers[i], &strSymbolInfo);
 
             TNamed *nm = new TNamed(strFuncAddr, strSymbolInfo);
             fFAddrsList->Add(nm);
@@ -331,8 +340,34 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
 
    } else {
       // reuse an existing BT
-      btid = found->second;
+      ret_val = found->second;
    }
+
+   old_btid = ret_val;
+
+   return ret_val;
+}
+
+//______________________________________________________________________________
+void TMemStatMng::AddPointer(void *ptr, Int_t size)
+{
+   // Add pointer to table.
+   // This method is called every time when any of the hooks are triggered.
+   // The memory de-/allocation information will is recorded.
+
+   void *stptr[g_BTStackLevel + 1];
+   const int stackentries = getBacktrace(stptr, g_BTStackLevel, fUseGNUBuiltinBacktrace);
+
+   // save only unique BTs
+   TMD5 md5;
+   md5.Update(reinterpret_cast<UChar_t*>(stptr), sizeof(void*) * stackentries);
+   UChar_t digest[g_digestSize];
+   md5.Final(digest);
+
+   // for Debug. A counter of all (de)allacations.
+   ++fBTIDCount;
+
+   Int_t btid(generateBTID(digest, stackentries, stptr));
 
    if(btid <= 0)
       Error("AddPointer", "bad BT id");
@@ -347,4 +382,3 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
    fBtID   = btid;
    fDumpTree->Fill();
 }
-

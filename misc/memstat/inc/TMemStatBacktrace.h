@@ -25,7 +25,7 @@ namespace memstat {
    //
    size_t getBacktrace(void **_trace, size_t _size, Bool_t _bUseGNUBuiltinBacktrace = kFALSE);
    int getSymbols(void *_pAddr,
-                  TString &_strInfo, TString &_strLib, TString &_strSymbol, TString &_strLine);
+                  TString &_strInfo, TString &_strLib, TString &_strSymbol);
    void getSymbolFullInfo(void *_pAddr, TString *_retInfo, const char *const _seporator = " | ");
    void demangle(char *_codeInfo, TString &_str);
 }
