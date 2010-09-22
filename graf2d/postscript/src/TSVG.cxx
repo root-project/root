@@ -1403,9 +1403,9 @@ void TSVG::SetColor(Float_t r, Float_t g, Float_t b)
       PrintFast(7,"\"white\"");
    } else {
       char str[12];
-      sprintf(str,"\"#%2.2x%2.2x%2.2x\"",Int_t(255.*r)
-                                        ,Int_t(255.*g)
-                                        ,Int_t(255.*b));
+      snprintf(str,12,"\"#%2.2x%2.2x%2.2x\"",Int_t(255.*r)
+                                            ,Int_t(255.*g)
+                                            ,Int_t(255.*b));
       PrintStr(str);
    }
 }
