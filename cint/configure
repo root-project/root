@@ -123,8 +123,8 @@ function config_linuxx8664gcc {
 
     EXTRA_LIB_DIR="/usr/local/lib64 /usr/lib64"
     CPP="gcc -E -C -m64"
-    CXXFLAGS="-m64  -fPIC ${CXXFLAGS}"
-    CFLAGS="-m64  -fPIC ${CFLAGS}"
+    CXXFLAGS="-m64  -fPIC -DG__64BIT ${CXXFLAGS}"
+    CFLAGS="-m64  -fPIC -DG__64BIT ${CFLAGS}"
     LDFLAGS="-m64 ${LDFLAGS}"
 }
 
@@ -169,8 +169,8 @@ function config_macos {
 
 function config_macosx64 {
     config_macos
-    CFLAGS="${CFLAGS} -m64"
-    CXXFLAGS="${CXXFLAGS} -m64"
+    CFLAGS="${CFLAGS} -DG__64BIT -m64"
+    CXXFLAGS="${CXXFLAGS} -DG__64BIT -m64"
     LDFLAGS="${LDFLAGS} -m64"
     SOFLAGS="${SOFLAGS} -m64"
 }
