@@ -2767,9 +2767,7 @@ const char *TUnixSystem::GetLinkedLibraries()
       }
       delete tok;
    }
-   if (p) {
-      ClosePipe(p);
-   }
+   ClosePipe(p);
 #endif
 
    delete [] exe;
