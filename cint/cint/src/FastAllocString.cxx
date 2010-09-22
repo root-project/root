@@ -93,11 +93,25 @@ namespace Cint {
             size_t fNumBuffers; // size of fBuffers
          };
 
+      private:
          G__BufferReservoir() {
             static size_t numBuffers[fgNumBuckets] = {256, 64, 16, 8, 4, 2, 1};
             for (size_t i = 0; i < fgNumBuckets; ++i) {
                fMap[i].init(numBuffers[i]);
             }
+            fgIsInitialized = true;
+         }
+
+         ~G__BufferReservoir() {
+            fgIsInitialized = false;
+         }
+
+      public:
+         static G__BufferReservoir& Instance()
+         {
+            // Return the static BufferReservoir
+            static G__BufferReservoir sReservoir;
+            return sReservoir;
          }
 
          static char logtwo(unsigned char i)  {
@@ -126,7 +140,7 @@ namespace Cint {
             //   2: 2*fgChunkSize+1 .. 4*fgChunkSize
             //   3: 4*fgChunkSize+1 .. 8*fgChunkSize
             // ...
-            if (!size) return -1;
+            if (!size || !fgIsInitialized) return -1;
             const size_t b = (size - 1) / fgChunkSize;
             if (b > (1L << (fgNumBuckets + 1)))
                return -1;
@@ -168,24 +182,18 @@ namespace Cint {
          }
 
       private:
+         static bool fgIsInitialized;
          static const size_t fgChunkSize = 1024;
          static const size_t fgNumBuckets = 7;
          Bucket fMap[fgNumBuckets]; // the buckets
       };
+      bool G__BufferReservoir::fgIsInitialized = false;
+
    } // Internal
 } // Cint
 
 using namespace Cint::Internal;
 
-namespace {
-static Cint::Internal::G__BufferReservoir&
-GetReservoir()
-{
-   // Return the static BufferReservoir
-   static G__BufferReservoir sReservoir;
-   return sReservoir;
-}
-}
 
 G__FastAllocString::G__FastAllocString(const char* s)
 {
@@ -213,7 +221,7 @@ G__FastAllocString::G__FastAllocString(const G__FastAllocString& other)
 G__FastAllocString::~G__FastAllocString()
 {
    // Give our buffer back to the BufMap, i.e. make it available again.
-   if (!GetReservoir().push(Capacity(), fBuf)) {
+   if (!G__BufferReservoir::Instance().push(Capacity(), fBuf)) {
       delete [] fBuf;
    }
 }
@@ -227,7 +235,7 @@ char* G__FastAllocString::GetBuf(size_t &size)
    // or -1 if no suitable buffer could be extracted from the pool.
 
    // Look for an existing bucket and update with the bucket index.
-   char* buf = GetReservoir().pop(size);
+   char* buf = G__BufferReservoir::Instance().pop(size);
    if (!buf) {
       buf = new char[size];
    }
@@ -349,7 +357,7 @@ void G__FastAllocString::ResizeNoCopy(size_t cap)
 
    char *newbuf = GetBuf(cap);
 
-   if (!GetReservoir().push(fCapacity, fBuf))
+   if (!G__BufferReservoir::Instance().push(fCapacity, fBuf))
       delete [] fBuf;
 
    fBuf = newbuf;
