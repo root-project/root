@@ -440,7 +440,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    atexit(CleanUpROOTAtExit);
 
    fgRootInit = kTRUE;
-   
+
    TClass::ReadRules(); // Read the default customization rules ...
 }
 
@@ -778,11 +778,13 @@ static TClass *R__FindSTLClass(const char *name, Bool_t load, Bool_t silent, con
       TDataType *objType = gROOT->GetType(name, load);
       if (objType) {
          const char *typedfName = objType->GetTypeName();
-         string defaultTypedefName(  TClassEdit::ShortType( typedfName, TClassEdit::kDropStlDefault ) );
+         if (typedfName) {
+            string defaultTypedefName(TClassEdit::ShortType(typedfName, TClassEdit::kDropStlDefault));
 
-         if (typedfName && strcmp(typedfName, name) && defaultTypedefName==name) {
-            cl = (TClass*)gROOT->GetListOfClasses()->FindObject(typedfName);
-            if (load && !cl) cl = gROOT->LoadClass(typedfName, silent);
+            if (strcmp(typedfName, name) && defaultTypedefName == name) {
+               cl = (TClass*)gROOT->GetListOfClasses()->FindObject(typedfName);
+               if (load && !cl) cl = gROOT->LoadClass(typedfName, silent);
+            }
          }
       }
    }
@@ -1226,7 +1228,7 @@ void TROOT::InitSystem()
       fgMemCheck = gEnv->GetValue("Root.MemCheck", 0);
 
       TObject::SetObjectStat(gEnv->GetValue("Root.ObjectStat", 0));
-      
+
    }
 }
 
@@ -1256,16 +1258,16 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
    // This function does not (and should not) attempt to check in the
    // list of loaded classes or in the typedef.
 
-   
+
    // We need to cache the requested name as in some case this function is
    // called with gROOT->LoadClass(cl->GetName()) and the loading of a library,
    // for example via the autoloader, can result in our argument becoming invalid.
    // In addition the call to the dictionary function (dict()) might also have
    // the same effect (change/delete requestedname).
    TString classname(requestedname);
-   
+
    VoidFuncPtr_t dict = TClassTable::GetDict(classname);
-   
+
    TString resolved;
 
    if (!dict) {
