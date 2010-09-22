@@ -45,6 +45,9 @@ TStopwatch::TStopwatch()
       gTicks = (Double_t)sysconf(_SC_CLK_TCK);
 #endif
 
+   fStopRealTime = 0;
+   fStopCpuTime  = 0;
+
    Start();
 }
 
