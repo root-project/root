@@ -134,7 +134,7 @@ const char *TTVLVEntry::ConvertAliases()
             fConvName.ReplaceAll(item->GetAlias(), item->GetTrueName());
       }
       if (fConvName == start) {
-         Warning(item->GetAlias(), "Cannot convert aliases for this expression.");
+         if (item) Warning(item->GetAlias(), "Cannot convert aliases for this expression.");
          return(fConvName.Data());
       }
    }
