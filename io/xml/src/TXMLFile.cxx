@@ -141,7 +141,7 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
 
-   if (!strncmp(filename, "xml:", 4))
+   if (filename && !strncmp(filename, "xml:", 4))
       filename += 4;
 
    gDirectory = 0;
