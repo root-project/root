@@ -100,7 +100,7 @@ TXMLFile::TXMLFile() :
    fKeyCounter(0)
 {
    // default TXMLFile constructor
-   
+
    SetBit(kBinaryFile, kFALSE);
    fIOVersion  = TXMLFile::Class_Version();
 }
@@ -500,18 +500,18 @@ void TXMLFile::SaveToFile()
 
    fXML->FreeAttr(fRootNode, xmlio::Ref);
    fXML->NewAttr(fRootNode, 0, xmlio::Ref, xmlio::Null);
-   
+
    if (GetIOVersion()>1) {
-   
+
       fXML->FreeAttr(fRootNode, xmlio::CreateTm);
       fXML->NewAttr(fRootNode, 0, xmlio::CreateTm, fDatimeC.AsSQLString());
-   
+
       fXML->FreeAttr(fRootNode, xmlio::ModifyTm);
       fXML->NewAttr(fRootNode, 0, xmlio::ModifyTm, fDatimeM.AsSQLString());
-   
+
       fXML->FreeAttr(fRootNode, xmlio::ObjectUUID);
       fXML->NewAttr(fRootNode, 0, xmlio::ObjectUUID, fUUID.AsString());
-      
+
       fXML->FreeAttr(fRootNode, xmlio::Title);
       if (strlen(GetTitle())>0)
          fXML->NewAttr(fRootNode, 0, xmlio::Title, GetTitle());
@@ -528,7 +528,7 @@ void TXMLFile::SaveToFile()
    TKeyXML* key = 0;
    while ((key=(TKeyXML*)iter()) !=0)
       fXML->AddChild(fRootNode, key->KeyNode());
-*/      
+*/
 
    CombineNodesTree(this, fRootNode, kTRUE);
 
@@ -555,18 +555,18 @@ void TXMLFile::SaveToFile()
 void TXMLFile::CombineNodesTree(TDirectory* dir, XMLNodePointer_t topnode, Bool_t dolink)
 {
    // Connect/disconnect all file nodes to single tree before/after saving
-   
+
    if (dir==0) return;
-   
+
    TIter iter(dir->GetListOfKeys());
    TKeyXML* key = 0;
 
    while ((key=(TKeyXML*)iter()) !=0) {
       if (dolink)
          fXML->AddChild(topnode, key->KeyNode());
-      else 
-         fXML->UnlinkNode(key->KeyNode());   
-      if (key->IsSubdir()) 
+      else
+         fXML->UnlinkNode(key->KeyNode());
+      if (key->IsSubdir())
          CombineNodesTree(FindKeyDir(dir, key->GetKeyId()), key->KeyNode(), dolink);
    }
 }
@@ -584,7 +584,7 @@ Bool_t TXMLFile::ReadFromFile()
    if (fDoc==0) return kFALSE;
 
    XMLNodePointer_t fRootNode = fXML->DocGetRootElement(fDoc);
-   
+
    if ((fRootNode==0) || !fXML->ValidateVersion(fDoc)) {
       fXML->FreeDoc(fDoc);
       fDoc=0;
@@ -592,14 +592,14 @@ Bool_t TXMLFile::ReadFromFile()
    }
 
    ReadSetupFromStr(fXML->GetAttr(fRootNode, xmlio::Setup));
-   
+
    if (fXML->HasAttr(fRootNode, xmlio::CreateTm)) {
-      TDatime tm(fXML->GetAttr(fRootNode, xmlio::CreateTm)); 
+      TDatime tm(fXML->GetAttr(fRootNode, xmlio::CreateTm));
       fDatimeC = tm;
    }
 
    if (fXML->HasAttr(fRootNode, xmlio::ModifyTm)) {
-      TDatime tm(fXML->GetAttr(fRootNode, xmlio::ModifyTm)); 
+      TDatime tm(fXML->GetAttr(fRootNode, xmlio::ModifyTm));
       fDatimeM = tm;
    }
 
@@ -607,14 +607,14 @@ Bool_t TXMLFile::ReadFromFile()
       TUUID id(fXML->GetAttr(fRootNode, xmlio::ObjectUUID));
       fUUID = id;
    }
-   
-   if (fXML->HasAttr(fRootNode, xmlio::Title)) 
+
+   if (fXML->HasAttr(fRootNode, xmlio::Title))
       SetTitle(fXML->GetAttr(fRootNode, xmlio::Title));
-      
-   if (fXML->HasAttr(fRootNode, xmlio::IOVersion)) 
+
+   if (fXML->HasAttr(fRootNode, xmlio::IOVersion))
       fIOVersion = fXML->GetIntAttr(fRootNode, xmlio::IOVersion);
    else
-      fIOVersion = 1;   
+      fIOVersion = 1;
 
    fStreamerInfoNode = fXML->GetChild(fRootNode);
    fXML->SkipEmpty(fStreamerInfoNode);
@@ -637,7 +637,7 @@ Bool_t TXMLFile::ReadFromFile()
    ReadKeysList(this, fRootNode);
 
    fXML->CleanNode(fRootNode);
-   
+
    return kTRUE;
 }
 
@@ -645,11 +645,11 @@ Bool_t TXMLFile::ReadFromFile()
 Int_t TXMLFile::ReadKeysList(TDirectory* dir, XMLNodePointer_t topnode)
 {
    // Read list of keys for directory
-   
+
    if ((dir==0) || (topnode==0)) return 0;
-   
+
    Int_t nkeys = 0;
-   
+
    XMLNodePointer_t keynode = fXML->GetChild(topnode);
    fXML->SkipEmpty(keynode);
    while (keynode!=0) {
@@ -663,14 +663,14 @@ Int_t TXMLFile::ReadKeysList(TDirectory* dir, XMLNodePointer_t topnode)
 
          if (gDebug>2)
             Info("ReadKeysList","Add key %s from node %s",key->GetName(), fXML->GetNodeName(keynode));
-            
+
          nkeys++;
       }
 
       keynode = next;
       fXML->SkipEmpty(keynode);
    }
-   
+
    return nkeys;
 }
 
@@ -877,7 +877,7 @@ void TXMLFile::ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo* info)
 
    char namebuf[100];
 
-   if (fXML->HasAttr(node, "numdim") && (elem!=0)) {
+   if (fXML->HasAttr(node, "numdim")) {
       int numdim = fXML->GetIntAttr(node,"numdim");
       elem->SetArrayDim(numdim);
       for (int ndim=0;ndim<numdim;ndim++) {
@@ -970,18 +970,18 @@ void TXMLFile::SetUseNamespaces(Bool_t iUseNamespaces)
 //______________________________________________________________________________
 Bool_t TXMLFile::AddXmlComment(const char* comment)
 {
-   // Add comment line on the top of the xml document 
-   // This line can only be seen in xml editor and cannot be accessed later 
+   // Add comment line on the top of the xml document
+   // This line can only be seen in xml editor and cannot be accessed later
    // with TXMLFile methods
-   
+
    if (!IsWritable() || (fXML==0)) return kFALSE;
-   
+
    return fXML->AddDocComment(fDoc, comment);
 }
 
 
 //______________________________________________________________________________
-Bool_t TXMLFile::AddXmlStyleSheet(const char* href, 
+Bool_t TXMLFile::AddXmlStyleSheet(const char* href,
                                   const char* type,
                                   const char* title,
                                   int alternate,
@@ -990,7 +990,7 @@ Bool_t TXMLFile::AddXmlStyleSheet(const char* href,
 {
    // Adds style sheet definition on the top of xml document
    // Creates <?xml-stylesheet alternate="yes" title="compact" href="small-base.css" type="text/css"?>
-   // Attributes href and type must be supplied, 
+   // Attributes href and type must be supplied,
    //  other attributes: title, alternate, media, charset are optional
    // if alternate==0, attribyte alternate="no" will be created,
    // if alternate>0, attribute alternate="yes"
@@ -998,9 +998,9 @@ Bool_t TXMLFile::AddXmlStyleSheet(const char* href,
    // This style sheet definition cannot be later access with TXMLFile methods.
 
    if (!IsWritable() || (fXML==0)) return kFALSE;
-    
+
    return fXML->AddDocStyleSheet(fDoc, href,type,title,alternate,media,charset);
-}                                  
+}
 
 //______________________________________________________________________________
 Bool_t TXMLFile::AddXmlLine(const char* line)
@@ -1010,10 +1010,10 @@ Bool_t TXMLFile::AddXmlLine(const char* line)
    // Line should has correct xml syntax that later it can be decoded by xml parser
    // To be parsed later by TXMLFile again, this line should contain either
    // xml comments or xml processing instruction
-   
+
    if (!IsWritable() || (fXML==0)) return kFALSE;
 
-   return fXML->AddDocRawLine(fDoc, line); 
+   return fXML->AddDocRawLine(fDoc, line);
 }
 
 //______________________________________________________________________________
@@ -1025,9 +1025,9 @@ Long64_t TXMLFile::DirCreateEntry(TDirectory* dir)
    if (mother==0) mother = this;
 
    TKeyXML* key = new TKeyXML(mother, ++fKeyCounter, dir, dir->GetName(), dir->GetTitle());
-   
+
    key->SetSubir();
-   
+
    return key->GetKeyId();
 }
 
@@ -1035,20 +1035,20 @@ Long64_t TXMLFile::DirCreateEntry(TDirectory* dir)
 TKeyXML* TXMLFile::FindDirKey(TDirectory* dir)
 {
    // Serach for key which correspond to direcory dir
-   
+
    TDirectory* motherdir = dir->GetMotherDir();
    if (motherdir==0) motherdir = this;
 
    TIter next(motherdir->GetListOfKeys());
    TObject* obj = 0;
-   
+
    while ((obj = next())!=0) {
       TKeyXML* key = dynamic_cast<TKeyXML*> (obj);
-      
+
       if (key!=0)
          if (key->GetKeyId()==dir->GetSeekDir()) return key;
    }
-   
+
    return 0;
 }
 
@@ -1058,18 +1058,18 @@ TDirectory* TXMLFile::FindKeyDir(TDirectory* motherdir, Long64_t keyid)
 {
    //Find a directory in motherdir with a seek equal to keyid
    if (motherdir==0) motherdir = this;
-   
+
    TIter next(motherdir->GetList());
    TObject* obj = 0;
-   
+
    while ((obj = next())!=0) {
       TDirectory* dir = dynamic_cast<TDirectory*> (obj);
       if (dir!=0)
          if (dir->GetSeekDir()==keyid) return dir;
    }
-   
+
    return 0;
-   
+
 }
 
 //______________________________________________________________________________
@@ -1077,10 +1077,10 @@ Int_t TXMLFile::DirReadKeys(TDirectory* dir)
 {
    // Read keys for directory
    // Make sence only once, while next time no new subnodes will be created
-   
+
    TKeyXML* key = FindDirKey(dir);
    if (key==0) return 0;
-   
+
    return ReadKeysList(dir, key->KeyNode());
 }
 
@@ -1091,7 +1091,7 @@ void TXMLFile::DirWriteKeys(TDirectory*)
 
    TIter next(GetListOfKeys());
    TObject* obj = 0;
-   
+
    while ((obj = next())!=0) {
       TKeyXML* key = dynamic_cast<TKeyXML*> (obj);
       if (key!=0) key->UpdateAttributes();
