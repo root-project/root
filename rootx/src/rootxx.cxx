@@ -241,7 +241,7 @@ static int DrawCreditItem(const char *creditItem, const char **members,
    int i;
    int lineSpacing = gFont->max_bounds.ascent + gFont->max_bounds.descent;
 
-   strcpy(credit, creditItem);
+   strlcpy(credit, creditItem, sizeof(credit));
    for (i = 0; members && members[i]; i++) {
       if (i) strcat(credit, ", ");
       if (XTextWidth(gFont, credit, strlen(credit)) +
