@@ -420,7 +420,7 @@ Bool_t TBrowserTimer::Notify()
 
 //______________________________________________________________________________
 TBrowserObject::TBrowserObject(void *obj, TClass *cl, const char *brname)
-   : TNamed(brname,cl->GetName()), fObj(obj), fClass(cl)
+   : TNamed(brname, cl ? cl->GetName() : ""), fObj(obj), fClass(cl)
 {
    // Constructor.
 
