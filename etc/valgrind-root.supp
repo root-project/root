@@ -111,6 +111,83 @@
    fun:_ZN13TStreamerInfo7CompileEv
 }
 
+{
+   StreamerInfo virtual table mechanism
+   Memcheck:Leak
+   fun:_Znam
+   fun:_ZN13TStreamerInfo8BuildOldEv
+   fun:_ZNK6TClass15GetStreamerInfoEi
+}
+
+{
+   StreamerInfo parts
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN4ROOTL13new_TObjArrayEPv
+   fun:_ZNK6TClass3NewENS_8ENewTypeE
+   fun:_ZN11TBufferFile13ReadObjectAnyEPK6TClass
+   fun:_ZrsI9TObjArrayER7TBufferS2_RPT_
+   fun:_ZN13TStreamerInfo8StreamerER7TBuffer
+}
+
+{
+   StreamerInfo parts
+   Memcheck:Leak
+   fun:_Znam
+   fun:_ZN8TStorage5AllocEm
+   fun:_ZN9TObjArray4InitEii
+   fun:_ZN9TObjArrayC1Eii
+   fun:_ZN4ROOTL13new_TObjArrayEPv
+   fun:_ZNK6TClass3NewENS_8ENewTypeE
+   fun:_ZN11TBufferFile13ReadObjectAnyEPK6TClass
+   fun:_ZrsI9TObjArrayER7TBufferS2_RPT_
+   fun:_ZN13TStreamerInfo8StreamerER7TBuffer
+}
+
+{
+   CollectionProxy objects
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN23TCollectionProxyFactory24GenEmulatedClassStreamerEPKc
+}
+
+{
+   TClass's list of RealData.
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
+   fun:_ZN5TList7AddLastEP7TObject
+   fun:_ZN5TList3AddEP7TObject
+   fun:_ZN6TClass21BuildEmulatedRealDataEPKclPS_
+}
+
+{
+   TClass's RealData objects.
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN6TClass21BuildEmulatedRealDataEPKclPS_
+}
+
+{
+   TClass's RealData objects.
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN6TClass13BuildRealDataEPvb
+}
+
+{
+   TEmulatedCollectionProxy configuration item
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN24TEmulatedCollectionProxy12InitializeExEv
+}
+
 ######### ROOT I/O
 
 {
@@ -130,6 +207,19 @@
    fun:G__overload_match
 }
 
+{
+   CINT's function parameter info
+   Memcheck:Leak
+   fun:malloc
+   fun:G__memfunc_para_setup
+}
+
+{
+   CINT's function info
+   Memcheck:Leak
+   fun:malloc
+   fun:G__memfunc_next
+ }
 
 ######### Misc
 
