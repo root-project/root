@@ -131,7 +131,7 @@ valgrind: $(ROOTTEST_LOC)scripts/analyze_valgrind
 	@( export valgrindlogfile=${PWD}/valgrind-`date +"%Y%m%d-%H%M%S"`.log; \
 	( \
 	valgrind-listener > $$valgrindlogfile 2>&1 & ) && \
-	valgrindlistenerpid=$$$$ && set -x && \
+	valgrindlistenerpid=$$$$ && \
 	$(MAKE) -C $$PWD $(filter-out valgrind,$(MAKECMDGOALS)) \
           CALLROOTEXE="valgrind --suppressions=$(ROOTSYS)/etc/valgrind-root.supp --suppressions=$(ROOTTEST_HOME)/scripts/valgrind-suppression_ROOT_optional.supp --log-socket=127.0.0.1 --error-limit=no --leak-check=full -v root.exe" ; \
 	killall valgrind-listener; \

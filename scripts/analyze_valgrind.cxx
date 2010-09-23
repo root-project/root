@@ -94,7 +94,7 @@ void Parse(long leakOffset) {
       while (!line.empty() && isspace(line[line.length() - 1]))
              line.erase(line.length() - 1);
 
-      if (line.find("My PID =") != std::string::npos) {
+      if (line.find("My PID =") != std::string::npos || line.find("Memcheck, a memory error detector") != std::string::npos ) {
          if (mapPIDInfos.find(pid) == mapPIDInfos.end())
             delete mapPIDInfos[pid];
          PIDInfo* pidinfo = new PIDInfo(pid);
@@ -115,20 +115,22 @@ void Parse(long leakOffset) {
       }
 
       if (line.find("ERROR SUMMARY") != string::npos) {
-         mapPIDInfos[pid]->fErrors = ParseNumber(line, " errors");
+         PIDInfo* pidinfo = mapPIDInfos[pid];
+         if (pidinfo) {
+            mapPIDInfos[pid]->fErrors = ParseNumber(line, " errors");
+
+            // this also marks the end of life for this PID.
+            if (pidinfo->fErrors > 0
+                || pidinfo->fLeakBytesDefinitely > leakOffset)
+               logPIDInfos.push_back(pidinfo);
+            mapPIDInfos.erase(pid);
+         }
       } else if (line.find("definitely lost: ") != string::npos) {
          mapPIDInfos[pid]->fLeakBytesDefinitely = ParseNumber(line, " bytes");
       } else if (line.find("possibly lost: ") != string::npos) {
          mapPIDInfos[pid]->fLeakBytesPossibly = ParseNumber(line, " bytes");
       } else if (line.find("still reachable: ") != string::npos) {
-         PIDInfo* pidinfo = mapPIDInfos[pid];
-         pidinfo->fLeakBytesReachable = ParseNumber(line, " bytes");
-
-         // this also marks the end of life for this PID.
-         if (pidinfo->fErrors > 0
-             || pidinfo->fLeakBytesDefinitely > leakOffset)
-            logPIDInfos.push_back(pidinfo);
-         mapPIDInfos.erase(pid);
+         mapPIDInfos[pid]->fLeakBytesReachable = ParseNumber(line, " bytes");
       }
    } while (in);
 
