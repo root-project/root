@@ -83,7 +83,8 @@ namespace memstat {
       void Disable();                      //Disable memory statistic
       static TMemStatMng* GetInstance();   //get instance of class - ONLY ONE INSTANCE
       static void Close();                 //close MemStatManager
-
+      void SetMaxcalls(Long64_t maxcalls);
+      
    public:
       //stack data members
       void SetUseGNUBuiltinBacktrace(Bool_t newVal) {
@@ -119,6 +120,7 @@ namespace memstat {
       Int_t    fNBytes;       //number of bytes allocated/freed
       UInt_t   fN;
       Int_t    fBtID;         //back trace identifier
+      Long64_t fMaxCalls;     //max number of malloc/frees to register in the output Tree
 
    private:
       TMemStatFAddrContainer fFAddrs;

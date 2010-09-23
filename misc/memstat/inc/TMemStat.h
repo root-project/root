@@ -16,8 +16,9 @@ private:
    Bool_t fIsActive;    // is object attached to MemStat
 
 public:
-   TMemStat(Option_t* option = "read");
+   TMemStat(Option_t* option = "read", Long64_t maxcalls=5000000);
    virtual ~TMemStat();
+   static  void Close();
    virtual void Disable();
    virtual void Enable();
    static  void Show(Double_t update=0.01, const char* fname="*");

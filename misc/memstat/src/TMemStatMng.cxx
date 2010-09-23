@@ -50,6 +50,7 @@ TMemStatMng::TMemStatMng():
    fNBytes(0),
    fN(0),
    fBtID(0),
+   fMaxCalls(5000000),
    fFAddrsList(0),
    fHbtids(0),
    fBTCount(0),
@@ -127,9 +128,10 @@ void TMemStatMng::Close()
    //fgInstance->fDumpFile->WriteObject(fgInstance->fFAddrsList, "FAddrsList");
 
    // to be documented
-   printf("TMemStatMng::Close called\n");
    fgInstance->fDumpTree->AutoSave();
    fgInstance->fDumpTree->GetUserInfo()->Delete();
+   
+   printf("TMemStat Tree saved to file %s\n",fgInstance->fDumpFile->GetName());
 
    //delete fgInstance->fFAddrsList;
    //delete fgInstance->fSysInfo;
@@ -150,6 +152,14 @@ TMemStatMng::~TMemStatMng()
    Info("~TMemStatMng", ">>> Unique BTIDs count: %zu", fBTChecksums.size());
 
    Disable();
+}
+
+//______________________________________________________________________________
+void TMemStatMng::SetMaxcalls(Long64_t maxcalls)
+{
+   //set the maximum number of new/delete registered in the output Tree
+   fMaxCalls = maxcalls;
+   printf("setting MasCalls=%lld\n",maxcalls);
 }
 
 //______________________________________________________________________________
@@ -381,4 +391,5 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
    fN      = 0;
    fBtID   = btid;
    fDumpTree->Fill();
+   if (fDumpTree->GetEntries() >= fMaxCalls) TMemStatMng::GetInstance()->Disable();
 }

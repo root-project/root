@@ -22,8 +22,20 @@
 //    root > .x somescript.C
 //    root > .q
 //
-// The file collected by TMemStat can be analyzed and results shown
+// another (may be more practical way) is to modify $ROOTSYS/etc/system.rootrc
+// and activate the variable
+//    Root.TMemStat:           1
+//
+// The file collected by TMemStat is named memstat_ProcessID and can be analyzed and results shown
 // by executing the static function Show.
+// When TMemStat is active it recors every call to malloc/free in a ROOT Tree.
+// You must be careful when running jobs with many millions (or more) of calls
+// to malloc/free because the generated Tree may become very large.
+// You can set a limit for the maximum number of calls to be registered in the Tree
+// by adding an extra parameter in the TMemStat constructor, eg
+//    TMemStat mm("gnubuiltin",2000000);  //default is 5000000
+// or by changing the following variable in $ROOTSYS/etc/system.rootrc
+//    Root.TMemStat.maxcalls   5000000
 //
 // TMemStat::Show creates 2 canvases.
 // -In canvas1 it displays a dynamic histogram showing for pages (10 kbytes by default)
@@ -64,7 +76,7 @@ using namespace memstat;
 _INIT_TOP_STACK;
 
 //______________________________________________________________________________
-TMemStat::TMemStat(Option_t* option): fIsActive(kFALSE)
+TMemStat::TMemStat(Option_t* option, Long64_t maxcalls): fIsActive(kFALSE)
 {
    // Supported options:
    //    "gnubuiltin" - if declared, then MemStat will use gcc build-in function,
@@ -89,6 +101,7 @@ TMemStat::TMemStat(Option_t* option): fIsActive(kFALSE)
    }
 
    TMemStatMng::GetInstance()->SetUseGNUBuiltinBacktrace(useBuiltin);
+   TMemStatMng::GetInstance()->SetMaxcalls(maxcalls);
    TMemStatMng::GetInstance()->Enable();
    // set this variable only if "NEW" mode is active
    fIsActive = kTRUE;
@@ -103,6 +116,13 @@ TMemStat::~TMemStat()
       TMemStatMng::GetInstance()->Disable();
       TMemStatMng::GetInstance()->Close();
    }
+}
+
+//______________________________________________________________________________
+void TMemStat::Close()
+{
+   //close the TMemStat manager
+   TMemStatMng::Close();
 }
 
 //______________________________________________________________________________
