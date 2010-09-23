@@ -97,7 +97,7 @@ public:
    virtual TGeoMaterial    *DecayMaterial(Double_t time, Double_t precision=0.001);
    virtual void             FillMaterialEvolution(TObjArray *population, Double_t precision=0.001);
    // getters & setters
-   virtual Int_t            GetByteCount() const {return sizeof(this);}
+   virtual Int_t            GetByteCount() const {return sizeof(*this);}
    virtual Double_t         GetA() const       {return fA;}
    virtual Double_t         GetZ()  const      {return fZ;}
    virtual Int_t            GetDefaultColor() const;

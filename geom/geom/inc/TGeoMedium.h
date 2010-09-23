@@ -46,7 +46,7 @@ public:
               Double_t fieldm, Double_t tmaxfd, Double_t stemax, Double_t deemax, Double_t epsil, Double_t stmin);
    virtual ~TGeoMedium();
    // methods
-   virtual Int_t            GetByteCount() const {return sizeof(this);}
+   virtual Int_t            GetByteCount() const {return sizeof(*this);}
    Int_t                    GetId()   const     {return fId;}
    Double_t                 GetParam(Int_t i) const {return fParams[i];}
    void                     SetParam(Int_t i, Double_t val)   {fParams[i] = val;}
