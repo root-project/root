@@ -55,7 +55,7 @@ TLegendEntry::TLegendEntry(const TObject* obj, const char* label, Option_t* opti
    if ( !label && obj ) fLabel = obj->GetTitle();
    else                 fLabel = label;
    fOption = option;
-   SetObject((TObject*)obj);
+   if (obj) SetObject((TObject*)obj);
 }
 
 
