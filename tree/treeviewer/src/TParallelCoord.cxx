@@ -237,7 +237,7 @@ void  TParallelCoord::ApplySelectionToTree()
    // Apply the current selection to the tree.
 
    if(!fTree) return;
-   if(fSelectList->GetSize() == 0) return;
+   if(fSelectList && fSelectList->GetSize() == 0) return;
    if(fCurrentSelection == 0) fCurrentSelection = (TParallelCoordSelect*)fSelectList->First();
    fCurrentEntries = GetEntryList();
    fNentries = fCurrentEntries->GetN();
