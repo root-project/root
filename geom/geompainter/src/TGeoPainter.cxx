@@ -896,7 +896,6 @@ void TGeoPainter::EstimateCameraMove(Double_t tmin, Double_t tmax, Double_t *sta
    while ((obj=next())) {
       if (strcmp(obj->ClassName(), "TGeoTrack")) continue;
       track = (TVirtualGeoTrack*)obj;
-      if (!track) continue;
       ntracks++;
       track->PaintCollect(tmin, start);
    }
