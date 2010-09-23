@@ -636,6 +636,11 @@ Int_t TGeoChecker::PropagateInGeom(Double_t *start, Double_t *dir)
    Int_t nzero = 0;
    Int_t nhits = 0;
    while (!fGeoManager->IsOutside()) {
+      if (nzero>3) {
+      // Problems in trying to cross a boundary
+         printf("Error in trying to cross boundary of %s\n", current->GetName());
+         return nhits;
+      }
       current = fGeoManager->FindNextBoundaryAndStep(TGeoShape::Big(), kFALSE);
       if (!current || fGeoManager->IsOutside()) return nhits;
       Double_t step = fGeoManager->GetStep();
@@ -644,11 +649,6 @@ Int_t TGeoChecker::PropagateInGeom(Double_t *start, Double_t *dir)
          continue;
       } 
       else nzero = 0;
-      if (nzero>3) {
-      // Problems in trying to cross a boundary
-         printf("Error in trying to cross boundary of %s\n", current->GetName());
-         return nhits;
-      }
       // Generate the hit
       nhits++;
       TGeoVolume *vol = current->GetVolume();
