@@ -1107,7 +1107,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
             return 0;
          }
       }
-      Error("GetBasket","File: %s at byte:%lld, branch:%s, entry:%lld, badread=%d, nerrors=%d, basketnumber=%d",file?file->GetName():"no file",basket->GetSeekKey(),GetName(),fReadEntry,badread,nerrors,basketnumber);
+      Error("GetBasket","File: %s at byte:%lld, branch:%s, entry:%lld, badread=%d, nerrors=%d, basketnumber=%d",file->GetName(),basket->GetSeekKey(),GetName(),fReadEntry,badread,nerrors,basketnumber);
       return 0;
    }
 
