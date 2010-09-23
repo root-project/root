@@ -630,9 +630,11 @@ find_includes(filep, file, file_red, recursion, failOK)
 		case ELIF:
 			if (!recursion)
 				gobble(filep, file, file_red);
+         /* fallthrough */
 		case ENDIF:
 			if (recursion)
 				return(type);
+         /* fallthrough */
 		case DEFINE:
 			define(line, file);
 			break;
