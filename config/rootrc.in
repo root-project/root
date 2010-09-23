@@ -41,6 +41,13 @@ Root.ZipMode:            1
 # Show where item is found in the specified path.
 Root.ShowPath:           false
 
+# Activate malloc/new, free/delete calls via the TMemStat class
+# the parameter TMemStat.maxcalls is the maximum number of new/delete calls to be monitored
+# 5 million calls is a reasonable number
+Root.TMemStat:           0
+Root.TMemStat.maxcalls   5000000
+Root.TMemStat.system     gnubuiltin
+
 # Activate memory statistics (size and cnt is used to trap allocation of
 # blocks of a certain size after cnt times).
 Root.MemStat:            0
