@@ -1506,8 +1506,8 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine* gdml, XMLNodePointer_t node)
    XMLNodePointer_t child = gdml->GetChild(node);
    const char* tempattr = "";
    TGeoVolume* lv = 0;
-   TGeoTranslation* pos = new TGeoTranslation(0,0,0);
-   TGeoRotation* rot = new TGeoRotation();
+   TGeoTranslation* pos = 0;
+   TGeoRotation* rot = 0;
    TGeoCombiTrans* matr;
    
    TGeoVolumeAssembly* assem = new TGeoVolumeAssembly(NameShort(name));
@@ -1515,7 +1515,7 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine* gdml, XMLNodePointer_t node)
    
    //PHYSVOL - run through child nodes of VOLUME again..
    
-   child = gdml->GetChild(node);
+//   child = gdml->GetChild(node);
    
    while (child!=0) {
       if((strcmp(gdml->GetNodeName(child), "physvol")) == 0){
@@ -3101,21 +3101,21 @@ XMLNodePointer_t TGDMLParse::Para(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
       name = Form("%s_%s", name, fCurrentFile);
    }
 
-   const char* xline = "";
-   const char* yline = "";
-   const char* zline = "";
+//   const char* xline = "";
+//   const char* yline = "";
+//   const char* zline = "";
    const char* philine = "";
    const char* alphaline = "";
    const char* thetaline = "";
-   const char* retlunit; 
+//   const char* retlunit; 
    const char* retaunit;
    
-   retlunit = GetScale(lunit);
+//   retlunit = GetScale(lunit);
    retaunit = GetScale(aunit);
    
-   xline = Form("%s*%s", x, retlunit);
-   yline = Form("%s*%s", y, retlunit);
-   zline = Form("%s*%s", z, retlunit);
+//   xline = Form("%s*%s", x, retlunit);
+//   yline = Form("%s*%s", y, retlunit);
+//   zline = Form("%s*%s", z, retlunit);
    philine = Form("%s*%s", phi, retaunit);
    alphaline = Form("%s*%s", alpha, retaunit);
    thetaline = Form("%s*%s", theta, retaunit);
@@ -3430,10 +3430,10 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    }
 
    const char* retlunit; 
-   const char* retaunit;
+//   const char* retaunit;
    
    retlunit = GetScale(lunit);
-   retaunit = GetScale(aunit);
+//   retaunit = GetScale(aunit);
    
    //START TO LOOK THRU CHILD NODES... 
 
