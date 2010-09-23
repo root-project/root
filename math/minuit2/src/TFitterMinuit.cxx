@@ -574,7 +574,8 @@ Int_t TFitterMinuit::GetParameter(Int_t ipar,char *name,Double_t &value,Double_t
    //   std::cout<<"GetParameter(Int_t ipar,char"<<std::endl;
    const MinuitParameter& mp = State().Parameter(ipar);
    //   std::cout<<"i= "<<ipar<<" verr= "<<mp.error()<<std::endl;
-   name = const_cast<char*>(mp.Name());
+   std::string mpName = mp.Name();
+   std::copy(mpName.c_str(), mpName.c_str() + mpName.size(), name);
    value = mp.Value();
    verr = mp.Error();
    vlow = mp.LowerLimit();

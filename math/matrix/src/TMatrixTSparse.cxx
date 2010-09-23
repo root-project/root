@@ -1254,12 +1254,16 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndex(Int_t nelems_ne
       Int_t nr = TMath::Min(nelems_new,this->fNelems);
       Int_t *oIp = fColIndex;
       fColIndex = new Int_t[nelems_new];
-      memmove(fColIndex,oIp,nr*sizeof(Int_t));
-      if (oIp) delete [] oIp;
+      if (oIp) { 
+         memmove(fColIndex,oIp,nr*sizeof(Int_t));
+         delete [] oIp;
+      }
       Element *oDp = fElements;
       fElements = new Element[nelems_new];
-      memmove(fElements,oDp,nr*sizeof(Element));
-      if (oDp) delete [] oDp;
+      if (oDp) { 
+         memmove(fElements,oDp,nr*sizeof(Element));
+         delete [] oDp;
+      }
       this->fNelems = nelems_new;
       if (nelems_new > nr) {
          memset(fElements+nr,0,(nelems_new-nr)*sizeof(Element));
