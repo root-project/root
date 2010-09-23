@@ -2145,6 +2145,7 @@ Double_t TGeoConeSeg::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t 
          break;
       case 3: // skip both
          saf[0] = TGeoShape::Big();
+         break;
       default:
          saf[0] = dz-TMath::Abs(point[2]);
    }
