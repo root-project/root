@@ -2255,7 +2255,7 @@ void TFitEditor::DoDataSet(Int_t selected)
    if ( objSelected->InheritsFrom(TTree::Class()) && 
         name.First(' ') == kNPOS ) {
       char variables[256] = {0}; char cuts[256] = {0};
-      strcpy(variables, "Sin input!");
+      strlcpy(variables, "Sin input!", 256);
       new TTreeInput( fClient->GetRoot(), GetMainFrame(), variables, cuts );
       if ( strcmp ( variables, "" ) == 0 ) {
          DoNoSelection();
