@@ -62,6 +62,10 @@ public:
 
 public:
 
+   enum { 
+      kCanDeleteLast = BIT(9)  // object can be deleted before creating a new one
+   };
+
    // inherited interface
    virtual Double_t  Chisquare(Int_t npar, Double_t *params) const;
    virtual void      Clear(Option_t *option="");
@@ -150,13 +154,14 @@ protected:
 private:
 
 
-   //ROOT::Fit::FitData * fFitData;
+   //ROOT::Fit::FitData * fFitData;          
    std::auto_ptr<ROOT::Fit::FitData>  fFitData;  //! data of the fit (managed by TBackCompFitter)
    std::auto_ptr<ROOT::Fit::Fitter>   fFitter;   //! pointer to fitter object (managed by TBackCompFitter)
    ROOT::Math::Minimizer * fMinimizer;
    ROOT::Math::IMultiGenFunction * fObjFunc; 
    ROOT::Math::IParamMultiFunction * fModelFunc; 
    mutable std::vector<double> fCovar; // cached covariance matrix (NxN)
+
 
 
    ClassDef(TBackCompFitter,1)  // Class providing backward compatibility for fitting by implementing the TVirtualFitter interface

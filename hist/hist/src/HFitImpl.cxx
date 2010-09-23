@@ -348,13 +348,20 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
       bcfitter->SetFitOption(fitOption); 
       bcfitter->SetObjectFit(h1);
       bcfitter->SetUserFunc(f1);
+      bcfitter->SetBit(TBackCompFitter::kCanDeleteLast);
       if (userFcn) { 
          bcfitter->SetFCN(userFcn); 
          // for interpreted FCN functions
          if (lastFitter->GetMethodCall() ) bcfitter->SetMethodCall(lastFitter->GetMethodCall() );
       }
          
-      if (lastFitter) delete lastFitter; 
+      // delete last fitter if it has been created here before
+      if (lastFitter) {          
+         TBackCompFitter * lastBCFitter = dynamic_cast<TBackCompFitter *> (lastFitter); 
+         if (lastBCFitter && lastBCFitter->TestBit(TBackCompFitter::kCanDeleteLast) ) 
+            delete lastBCFitter; 
+      }
+      //N.B=  this might create a memory leak if user does not delete the fitter he creates
       TVirtualFitter::SetFitter( bcfitter ); 
 
       // print results

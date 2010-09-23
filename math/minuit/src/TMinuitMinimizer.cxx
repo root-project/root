@@ -14,6 +14,7 @@
 #include "Math/IFunction.h"
 
 #include "TMinuit.h"
+#include "TROOT.h"
 
 #include "TGraph.h" // needed for scan 
 #include "TError.h"
@@ -36,35 +37,38 @@
 
 // initialize the static instances
 
-#define USE_STATIC_TMINUIT
 
 ROOT::Math::IMultiGenFunction * TMinuitMinimizer::fgFunc = 0; 
 TMinuit * TMinuitMinimizer::fgMinuit = 0;
 bool TMinuitMinimizer::fgUsed = false; 
+bool TMinuitMinimizer::fgUseStaticMinuit = true;   // default case use static Minuit instance
 
 ClassImp(TMinuitMinimizer)
 
 
-TMinuitMinimizer::TMinuitMinimizer(ROOT::Minuit::EMinimizerType type ) : 
+TMinuitMinimizer::TMinuitMinimizer(ROOT::Minuit::EMinimizerType type, unsigned int ndim ) : 
    fUsed(false),
    fMinosRun(false),
-   fDim(0),
+   fDim(ndim),
    fStrategy(1),
    fType(type), 
-   fMinuit(fgMinuit)
+   fMinuit(0)
 {
    // Constructor for TMinuitMinimier class via an enumeration specifying the minimization 
    // algorithm type. Supported types are : kMigrad, kSimplex, kCombined (a combined 
    // Migrad + Simplex minimization) and kMigradImproved (a Migrad mininimization folloed by an 
    // improved search for global minima). The default type is Migrad (kMigrad). 
+
+   // initialize if npar is given
+   if (fDim > 0) InitTMinuit(fDim);   
 }
 
-TMinuitMinimizer::TMinuitMinimizer(const char *  type ) : 
+TMinuitMinimizer::TMinuitMinimizer(const char *  type, unsigned int ndim ) : 
    fUsed(false),
    fMinosRun(false),
-   fDim(0),
+   fDim(ndim),
    fStrategy(1),
-   fMinuit(fgMinuit)
+   fMinuit(0)
 {
    // constructor from a char * for the algorithm type, used by the plug-in manager
    // The names supported (case unsensitive) are: 
@@ -82,14 +86,19 @@ TMinuitMinimizer::TMinuitMinimizer(const char *  type ) :
    if (algoname == "seek" )           algoType = ROOT::Minuit::kSeek; 
 
    fType = algoType; 
+
+   // initialize if npar is given
+   if (fDim > 0) InitTMinuit(fDim);
+
 }
 
 TMinuitMinimizer::~TMinuitMinimizer() 
 {
    // Destructor implementation.
-#ifndef USE_STATIC_TMINUIT
-   if (fMinuit) delete fMinuit; 
-#endif
+   if (fMinuit && !fgUseStaticMinuit) { 
+      delete fMinuit; 
+      fgMinuit = 0;
+   }
 }
 
 TMinuitMinimizer::TMinuitMinimizer(const TMinuitMinimizer &) : 
@@ -105,53 +114,104 @@ TMinuitMinimizer & TMinuitMinimizer::operator = (const TMinuitMinimizer &rhs)
    return *this;
 }
 
+bool TMinuitMinimizer::UseStaticMinuit(bool on ) { 
+   // static method to control usage of global TMinuit instance
+   bool prev = fgUseStaticMinuit; 
+   fgUseStaticMinuit = on; 
+   return prev; 
+}
+
+void TMinuitMinimizer::InitTMinuit(int dim) {
+
+   // when called a second time check dimension - create only if needed
+   // initialize the minuit instance - recreating a new one if needed 
+   if (fMinuit ==0 ||  dim > fMinuit->fMaxpar) { 
+
+      // case not using the global instance - recreate it all the time 
+      if (fgUseStaticMinuit) { 
+
+         // re-use gMinuit as static instance of TMinuit
+         // which can be accessed by the user after minimization
+         // check if fgMinuit is different than gMinuit
+         // case 1: fgMinuit not zero but fgMinuit has been deleted (not in gROOT): set to zero
+         // case 2: fgMinuit not zero and exists : set to gMinuit 
+         // case 3: fgMinuit zero - and gMinuit not zero: reuse gMinuit if possible
+         if (fgMinuit != gMinuit) { 
+            // if object exists in gROOT remove it to avoid a memory leak 
+            if (fgMinuit ) { 
+               if (gROOT->GetListOfSpecials()->FindObject(fgMinuit) == 0) { 
+                  // case 1: object does not exists in gROOT - means it has been deleted
+                  fgMinuit = 0; 
+               }
+               else {
+                  // case 2: object exists - but gMinuit points to something else
+                  // restore gMinuit to the one used before by TMinuitMinimizer
+                  gMinuit = fgMinuit; 
+               }
+            }
+            else {
+               // case 3: if fgMinuit is zero and gMinuit not zero  - reuse existing one 
+               fgMinuit = gMinuit;
+               fgUsed = true;  // need to reset in case  other gMinuit instance is later used
+            }
+         }
+         
+         // check if need to create a new TMinuit instance
+         if (fgMinuit == 0) {
+            fgUsed = false;
+            fgMinuit =  new TMinuit(dim);
+         }   
+         else if (fgMinuit->GetNumPars() != int(dim) ) { 
+            delete fgMinuit; 
+            fgUsed = false;
+            fgMinuit =  new TMinuit(dim);
+         }
+      
+         fMinuit = fgMinuit; 
+      }
+      
+      else { 
+         // re- create all the time a new instance of TMinuit (fgUseStaticMinuit is false)
+         if (fMinuit) delete fMinuit; 
+         fMinuit =  new TMinuit(dim);
+         fgMinuit = fMinuit; 
+         fgUsed = false; 
+      }
+
+   }  // endif fMinuit ==0 || dim > fMaxpar
+
+   fDim = dim; 
+
+   R__ASSERT(fMinuit);
+
+   // set print level in TMinuit
+   double arglist[1];
+   int ierr= 0; 
+   // TMinuit level is shift by 1 -1 means 0;
+   arglist[0] = PrintLevel() - 1;
+   fMinuit->mnexcm("SET PRINT",arglist,1,ierr);
+}
 
 
 void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) { 
    // Set the objective function to be minimized, by passing a function object implement the 
    // basic multi-dim Function interface. In this case the derivatives will be 
    // calculated by Minuit 
-
    // Here a TMinuit instance is created since only at this point we know the number of parameters 
-   // needed to create TMinuit
+
 
    fDim = func.NDim(); 
 
-#ifdef USE_STATIC_TMINUIT
-   if (fgMinuit == 0) {
-      fgUsed = false;
-      fgMinuit =  new TMinuit(fDim);
-   }
-   else if (fgMinuit->GetNumPars() != int(fDim) ) { 
-      delete fgMinuit; 
-      fgUsed = false;
-      fgMinuit =  new TMinuit(fDim);
-   }
-
-   fMinuit = fgMinuit; 
-#else
-   if (fMinuit) { 
-      //std::cout << "delete previously existing TMinuit " << (int) fMinuit << std::endl; 
-      delete fMinuit;  
-   }
-   fMinuit =  new TMinuit(fDim);
-#endif
-   
-   fDim = func.NDim(); 
+   // create TMinuit if needed
+   InitTMinuit(fDim); 
    
    // assign to the static pointer (NO Thread safety here)
    fgFunc = const_cast<ROOT::Math::IMultiGenFunction *>(&func); 
    fMinuit->SetFCN(&TMinuitMinimizer::Fcn);
 
-   // set print level in TMinuit
-   double arglist[1];
-   // TMinuit level is shift by 1 -1 means 0;
-   arglist[0] = PrintLevel() - 1;
-   int ierr= 0; 
-
-   fMinuit->mnexcm("SET PRINT",arglist,1,ierr);
-
    // switch off gradient calculations
+   double arglist[1]; 
+   int ierr = 0;
    fMinuit->mnexcm("SET NOGrad",arglist,0,ierr);
 }
 
@@ -162,40 +222,18 @@ void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func)
 
    fDim = func.NDim(); 
 
-#ifdef USE_STATIC_TMINUIT
-   if (fgMinuit == 0) {
-      fgUsed = false; 
-      fgMinuit =  new TMinuit(fDim);
-   }
-   else if (fgMinuit->GetNumPars() != int(fDim) ) { 
-      delete fgMinuit; 
-      fgUsed = false; 
-      fgMinuit =  new TMinuit(fDim);
-   }
-
-   fMinuit = fgMinuit; 
-#else
-   if (fMinuit) delete fMinuit;  
-   fMinuit =  new TMinuit(fDim);
-#endif
-   
-   fDim = func.NDim(); 
+   // create TMinuit if needed
+   InitTMinuit(fDim); 
    
    // assign to the static pointer (NO Thread safety here)
    fgFunc = const_cast<ROOT::Math::IMultiGradFunction *>(&func); 
    fMinuit->SetFCN(&TMinuitMinimizer::FcnGrad);
 
-   // set print level in TMinuit
-   double arglist[1];
-   // TMinuit level is shift by 1 -1 means 0;
-   arglist[0] = PrintLevel() - 1;
-   int ierr= 0; 
-
-   fMinuit->mnexcm("SET PRINT",arglist,1,ierr);
-
    // set gradient 
    // by default do not check gradient calculation 
    // it cannot be done here, check can be done only after having defined the parameters
+   double arglist[1]; 
+   int ierr = 0;
    arglist[0] = 1; 
    fMinuit->mnexcm("SET GRAD",arglist,1,ierr);
 }
@@ -226,9 +264,7 @@ bool TMinuitMinimizer::SetVariable(unsigned int ivar, const std::string & name, 
       return false; 
    }
 
-#ifdef USE_STATIC_TMINUIT
    fUsed = fgUsed; 
-#endif
 
    // clear after minimization when setting params
    if (fUsed) DoClear(); 
@@ -247,9 +283,7 @@ bool TMinuitMinimizer::SetLimitedVariable(unsigned int ivar, const std::string &
       return false; 
    }
 
-#ifdef USE_STATIC_TMINUIT
    fUsed = fgUsed; 
-#endif
 
    // clear after minimization when setting params
    if (fUsed) DoClear(); 
@@ -269,9 +303,7 @@ bool Minuit2Minimizer::SetLowerLimitedVariable(unsigned int ivar , const std::st
       return false; 
    }
 
-#ifdef USE_STATIC_TMINUIT
    fUsed = fgUsed; 
-#endif
 
    // clear after minimization when setting params
    if (fUsed) DoClear(); 
@@ -295,9 +327,7 @@ bool TMinuitMinimizer::SetFixedVariable(unsigned int ivar, const std::string & n
    }
 
    // clear after minimization when setting params
-#ifdef USE_STATIC_TMINUIT
    fUsed = fgUsed; 
-#endif
 
    // clear after minimization when setting params
    if (fUsed) DoClear(); 
@@ -331,7 +361,7 @@ bool TMinuitMinimizer::SetVariableValue(unsigned int ivar, double val) {
 std::string TMinuitMinimizer::VariableName(unsigned int ivar) const { 
    // return the variable name
    if (!fMinuit || (int) ivar > fMinuit->fNu) return std::string();
-return std::string(fMinuit->fCpnam[ivar]);
+   return std::string(fMinuit->fCpnam[ivar]);
 }
 
 int TMinuitMinimizer::VariableIndex(const std::string & ) const { 
@@ -418,9 +448,7 @@ bool TMinuitMinimizer::Minimize() {
 
    }
 
-#ifdef USE_STATIC_TMINUIT
    fgUsed = true; 
-#endif
    fUsed = true;
 
    fStatus = ierr; 
@@ -629,10 +657,7 @@ void TMinuitMinimizer::DoClear() {
    fMinuit->mnrn15(val,inseed);
 
    fUsed = false; 
-
-#ifdef USE_STATIC_TMINUIT
    fgUsed = false; 
-#endif
 
 }
 

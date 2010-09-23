@@ -55,12 +55,12 @@ public:
    /** 
       Default constructor
    */ 
-   TMinuitMinimizer ( ROOT::Minuit::EMinimizerType type = ROOT::Minuit::kMigrad); 
+   TMinuitMinimizer ( ROOT::Minuit::EMinimizerType type = ROOT::Minuit::kMigrad, unsigned int ndim = 0); 
 
    /** 
       Constructor from a char * (used by PM)
    */ 
-   TMinuitMinimizer ( const char * type ); 
+   TMinuitMinimizer ( const char * type , unsigned int ndim = 0); 
 
    /** 
       Destructor (no operations)
@@ -185,6 +185,10 @@ public:
    /// get index of variable given a variable given a name
    /// return always -1 . (It is Not implemented)
    virtual int VariableIndex(const std::string & name) const;
+
+   /// static function to switch on/off usage of static global TMinuit instance (gMinuit)
+   /// By default it is used (i.e. is on). Method returns the previous state
+   bool static UseStaticMinuit(bool on = true); 
    
 
 protected: 
@@ -193,6 +197,9 @@ protected:
    static void Fcn( int &, double * , double & f, double * , int);
    /// implementation of FCN for Minuit when user provided gradient is used
    static void FcnGrad( int &, double * g, double & f, double * , int);
+
+   /// initialize the TMinuit instance
+   void InitTMinuit(int ndim); 
 
    /// reset 
    void DoClear(); 
@@ -226,6 +233,7 @@ private:
    static TMinuit * fgMinuit; 
 
    static bool fgUsed;  // flag to control if static instance has done minimization
+   static bool fgUseStaticMinuit; // flag to control if using global TMInuit instance (gMinuit)
 
    ClassDef(TMinuitMinimizer,1)  //Implementation of Minimizer interface using TMinuit 
 
