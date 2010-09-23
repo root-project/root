@@ -1815,7 +1815,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
       vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
       while (endnode) {
          istep = 0;
-         vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
+         vis2 = endnode->IsOnScreen();
          if (ipoint>0) {
          // old visible node had an entry point -> finish segment
             line->SetPoint(ipoint, point[0], point[1], point[2]);
@@ -1848,8 +1848,6 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
             pm->Add(line);
             pm->Add(normline);
          } 
-         // now see if we can make an other step
-         if (endnode==0 && step>1E10) break;
          // generate an extra step to cross boundary
          startnode = endnode;    
          fGeoManager->FindNextBoundary();
