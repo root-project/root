@@ -1903,9 +1903,9 @@ void TSessionFrame::OnCommandLine()
    // if check box "clear view" is checked, open temp file in write mode
    // (overwrite), in append mode otherwise.
    if (fClearCheck->IsOn())
-      sprintf(opt, "w");
+      snprintf(opt, 2, "w");
    else
-      sprintf(opt, "a");
+      snprintf(opt, 2, "a");
 
    // if valid Proof session, pass the command to Proof
    if (fViewer->GetActDesc()->fProof &&
