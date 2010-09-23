@@ -840,10 +840,9 @@ Int_t TGeoVolume::Export(const char *filename, const char *name, Option_t *optio
       if (!f || f->IsZombie()) {
          Error("Export","Cannot open file");
          return 0;
-      }   
-      char keyname[256];
-      if (name) strcpy(keyname,name);
-      if (strlen(keyname) == 0) strcpy(keyname,GetName());
+      } 
+      TString keyname(name);
+      if (keyname.IsNull()) keyname = GetName();
       Int_t nbytes = Write(keyname);
       delete f;
       return nbytes;
