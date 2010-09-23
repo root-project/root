@@ -46,6 +46,7 @@
 #include "TUrl.h"
 
 TApplication *gApplication = 0;
+Bool_t tmemstat = kFALSE;
 Bool_t TApplication::fgGraphNeeded = kFALSE;
 Bool_t TApplication::fgGraphInit = kFALSE;
 TList *TApplication::fgApplications = 0;  // List of available applications
@@ -193,13 +194,21 @@ TApplication::TApplication(const char *appClassName,
 
    // to allow user to interact with TCanvas's under WIN32
    gROOT->SetLineHasBeenProcessed();
+   
+   if (gEnv->GetValue("Root.TMemStat", 0)) {
+      tmemstat = kTRUE;
+      Long64_t maxcalls = gEnv->GetValue("Root.TMemStat.maxcalls", 5000000);
+      const char *ssystem = gEnv->GetValue("Root.TMemStat.system","gnubuiltin");
+      if (maxcalls > 0) {
+         gROOT->ProcessLine(Form("new TMemStat(\"%s\",%lld);",ssystem,maxcalls));
+      }
+   }
 }
 
 //______________________________________________________________________________
 TApplication::~TApplication()
 {
    // TApplication dtor.
-
    for (int i = 0; i < fArgc; i++)
       if (fArgv[i]) delete [] fArgv[i];
    delete [] fArgv;
@@ -1074,6 +1083,11 @@ void TApplication::Terminate(Int_t status)
    // Terminate the application by call TSystem::Exit() unless application has
    // been told to return from Run(), by a call to SetReturnFromRun().
 
+   //clode TMemStat if any
+   if (tmemstat) {
+      ProcessLine("TMemStat::Close()");
+   }
+     
    Emit("Terminate(Int_t)", status);
 
    if (fReturnFromRun)
