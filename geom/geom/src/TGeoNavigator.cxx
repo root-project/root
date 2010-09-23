@@ -1699,7 +1699,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    Bool_t inside_current = (fCurrentNode==skipnode)?kTRUE:kFALSE;
    if (!downwards) {
    // we are looking upwards until inside current node or exit
-      if (fGeometry->IsActivityEnabled() && !vol->IsActive()) {
+      if (fGeometry->IsActivityEnabled() && !fCurrentNode->GetVolume()->IsActive()) {
          // We are inside an inactive volume-> go upwards
          CdUp();
          fIsSameLocation = kFALSE;
