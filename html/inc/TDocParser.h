@@ -47,6 +47,7 @@ class TDocMethodWrapper: public TObject {
 public:
    virtual TMethod* GetMethod() const = 0;
    virtual Int_t GetOverloadIdx() const = 0;
+   enum { kDocumented = 14 };
 };
 
 class TDocParser: public TObject {
@@ -141,7 +142,8 @@ protected:
    virtual void   InitKeywords() const;
    virtual TClass* IsDirective(const TString& line, Ssiz_t pos, const TString& word, Bool_t& begin) const;
    TMethod*       LocateMethodInCurrentLine(Ssiz_t& posMethodName, TString& ret, 
-      TString& name, TString& params, std::ostream &srcOut, TString &anchor, 
+      TString& name, TString& params, Bool_t& isconst,
+      std::ostream &srcOut, TString &anchor, 
       std::ifstream& sourcefile, Bool_t allowPureVirtual);
    void           LocateMethodsInSource(std::ostream& out);
    void           LocateMethodsInHeaderInline(std::ostream& out);
@@ -157,6 +159,7 @@ protected:
    void           WriteClassDoc(std::ostream& out, Bool_t first = kTRUE);
    void           WriteMethod(std::ostream& out, TString& ret, 
                               TString& name, TString& params,
+                              Bool_t isconst,
                               const char* file, TString& anchor,
                               TString& codeOneLiner);
    void           WriteSourceLine(std::ostream& out);

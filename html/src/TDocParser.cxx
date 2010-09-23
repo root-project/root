@@ -24,6 +24,7 @@
 #include "THtml.h"
 #include "TInterpreter.h"
 #include "TMethod.h"
+#include "TMethodArg.h"
 #include "TPRegexp.h"
 #include "TROOT.h"
 #include "TSystem.h"
@@ -1320,8 +1321,11 @@ Bool_t TDocParser::IsWord(UChar_t c)
 
 
 //______________________________________________________________________________
-TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& ret, TString& name, TString& params,
-                             std::ostream &srcOut, TString &anchor, std::ifstream& sourceFile, Bool_t allowPureVirtual)
+TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& ret,
+                                               TString& name, TString& params,
+                                               Bool_t& isconst, std::ostream &srcOut,
+                                               TString &anchor, std::ifstream& sourceFile,
+                                               Bool_t allowPureVirtual)
 {
    // Search for a method starting at posMethodName, and return its return type, 
    // its name, and its arguments. If the end of arguments is not found in the 
@@ -1331,6 +1335,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
    // If posMethodName == kNPOS, we look for the first matching method in fMethodCounts.
 
    typedef std::map<std::string /*method name*/, Int_t > MethodCount_t;
+   isconst = false;
 
    if (posMethodName == kNPOS) {
       name.Remove(0);
@@ -1352,8 +1357,8 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
             Ssiz_t posMethodEnd = posMethodName + lookFor.Length();
             while (isspace((UChar_t)fLineRaw[posMethodEnd])) ++posMethodEnd;
             if (fLineRaw[posMethodEnd] == '(') {
-               meth = LocateMethodInCurrentLine(posMethodName, ret, name, params, srcOut, 
-                                                anchor, sourceFile, allowPureVirtual);
+               meth = LocateMethodInCurrentLine(posMethodName, ret, name, params, isconst,
+                                                srcOut, anchor, sourceFile, allowPureVirtual);
                if (name.Length())
                   return meth;
             }
@@ -1508,6 +1513,13 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
             ++posParamEnd;
       }
    } // while bracketlevel, i.e. (...(..)...)
+
+   {
+      TString pastParams(params(posParamEnd, params.Length()));
+      pastParams = pastParams.Strip(TString::kLeading);
+      isconst = pastParams.BeginsWith("const") && !(isalnum(pastParams[5]) || pastParams[5] == '_');
+   }
+
    Ssiz_t posBlock     = params.Index('{', posParamEnd);
    Ssiz_t posSemicolon = params.Index(';', posParamEnd);
    Ssiz_t posPureVirt  = params.Index('=', posParamEnd);
@@ -1607,6 +1619,7 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
    TString methodRet;
    TString methodName;
    TString methodParam;
+   Bool_t methodIsConst = kFALSE;
    TString anchor;
    TString docxxComment;
 
@@ -1695,7 +1708,7 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
                savedComment = fComment;
                fComment = docxxComment;
             }
-            WriteMethod(out, methodRet, methodName, methodParam, 
+            WriteMethod(out, methodRet, methodName, methodParam, methodIsConst,
                gSystem->BaseName(srcHtmlOutName), anchor, codeOneLiner);
             docxxComment.Remove(0);
             if (savedComment[0]) {
@@ -1724,7 +1737,8 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
                   posPattern += patternRE[0].Length();
                }
                LocateMethodInCurrentLine(posPattern, methodRet, methodName, 
-                  methodParam, srcHtmlOut, anchor, sourceFile, allowPureVirtual);
+                                         methodParam, methodIsConst, srcHtmlOut,
+                                         anchor, sourceFile, allowPureVirtual);
                if (methodName.Length()) {
                   fDocContext = kDocFunc;
                   needAnchor = !anchor.Length();
@@ -1792,7 +1806,7 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
    if (methodName.Length()) {
       if (useDocxxStyle && docxxComment.Length())
          fComment = docxxComment;
-      WriteMethod(out, methodRet, methodName, methodParam, 
+      WriteMethod(out, methodRet, methodName, methodParam, methodIsConst,
          gSystem->BaseName(srcHtmlOutName), anchor, codeOneLiner);
       docxxComment.Remove(0);
    } else
@@ -2076,11 +2090,144 @@ void TDocParser::WriteClassDoc(std::ostream& out, Bool_t first /*= kTRUE*/)
 
 }
 
+namespace {
+   static void RemoveUnneededSpaces(TString& s) {
+      // Remove spaces except between identifier characters.
+      // Assumes s is stripped (does not start nor end with space).
+      for (Ssiz_t i = 1; i < s.Length() - 1; ++i) {
+         if (s[i] == ' ') {
+            char p = s[i - 1];
+            char n = s[i + 1];
+            if (((isalnum(p) || p == '_') && (isalnum(n) || n == '_'))
+                || (p == '>' && n == '>')) {
+               // "id id" or "> >": keep space
+            } else {
+               while (isspace(s[i])) {
+                  s.Remove(i, 1);
+               }
+            }
+         }
+      }
+   }
+
+   static void ParseParameters(TString& strippedParams, TList& paramArr) {
+      // Extract a list of strings (the parameters without initializers) from
+      // the signature.
+      int nest = 0;
+      bool init = false;
+      bool quoted = false;
+      Ssiz_t len = strippedParams.Length();
+      TString arg;
+      for (Ssiz_t i = 0; i < len; ++i) {
+         switch (strippedParams[i]) {
+         case '<': // fallthrough
+         case '(': // fallthrough
+         case '[': ++nest; break;
+         case '>': // fallthrough
+         case ')': // fallthrough
+         case ']': --nest; break;
+         case '=': init = true; break;
+         case '\'': ++i; if (strippedParams[i] == '\\') ++i; ++i; continue;
+         case '\\': ++i; continue; break;
+         case '"': quoted = !quoted; break;
+         case ',': {
+            if (!quoted && !nest) {
+               TString strippedArg(arg.Strip(TString::kBoth));
+               paramArr.AddLast(new TObjString(strippedArg));
+               init = false;
+               arg.Remove(0);
+               continue;
+            }
+         }
+         }
+         if (!init) {
+            arg += strippedParams[i];
+         }
+      }
+      TString strippedLastArg(arg.Strip(TString::kBoth));
+      if (strippedLastArg.Length()) {
+         paramArr.AddLast(new TObjString(strippedLastArg));
+      }
+   }
+
+   void MatchOverloadSignatures(TCollection* candidates, TList* paramArr)
+   {
+      // Check type identity of candidate signatures. For each argument, check whether it
+      // reduces the list of candidates to > 0 elements.
+      TList suppressed;
+      TIter iCandidate(candidates);
+      int nparams = paramArr->GetSize();
+      for (int iparam = 0; iparam < nparams && candidates->GetSize() > 1; ++iparam) {
+         TString& srcArg = ((TObjString*)paramArr->At(iparam))->String();
+         TString noParName(srcArg);
+         while (noParName.Length()
+                && (isalnum(noParName[noParName.Length() - 1]) || noParName[noParName.Length() - 1] == '_'))
+            noParName.Remove(noParName.Length() - 1);
+         noParName = noParName.Strip(TString::kTrailing);
+
+         if (noParName.Length()) {
+            RemoveUnneededSpaces(noParName);
+         }
+         RemoveUnneededSpaces(srcArg);
+         // comparison:
+         // 0: strcmp
+         // 1: source's parameter has last identifier (parameter name?) removed
+         // 2: candidate type name contained in source parameter
+         for (int comparison = 0; comparison < 5; ++comparison) {
+            if (comparison == 1 && noParName == srcArg)
+               // there is no parameter name to ignore
+               continue;
+            suppressed.Clear();
+            iCandidate.Reset();
+            TDocMethodWrapper* method = 0;
+            while ((method = (TDocMethodWrapper*) iCandidate())) {
+               TMethodArg* methArg = (TMethodArg*) method->GetMethod()->GetListOfMethodArgs()->At(iparam);
+               TString sMethArg = methArg->GetFullTypeName();
+               RemoveUnneededSpaces(sMethArg);
+               bool matches = false;
+               switch (comparison) {
+               case 0: matches = (srcArg == sMethArg); break;
+               case 1: matches = (noParName == sMethArg); break;
+               case 2: matches = srcArg.Contains(sMethArg) || sMethArg.Contains(srcArg); break;
+               }
+               if (!matches) {
+                  suppressed.Add(method);
+               }
+            }
+            if (suppressed.GetSize()
+                && suppressed.GetSize() < candidates->GetSize()) {
+               candidates->RemoveAll(&suppressed);
+               break;
+            }
+            if (!suppressed.GetSize()) {
+               // we have a match, no point in trying a looser matching
+               break;
+            }
+         }
+      }
+      if (candidates->GetSize() > 1) {
+         // use TDocMethodWrapper::kDocumented bit
+         suppressed.Clear();
+         iCandidate.Reset();
+         TDocMethodWrapper* method = 0;
+         while ((method = (TDocMethodWrapper*) iCandidate())) {
+            if (method->TestBit(TDocMethodWrapper::kDocumented)) {
+               suppressed.AddLast(method);
+            }
+         }
+         if (suppressed.GetSize()
+             && suppressed.GetSize() < candidates->GetSize()) {
+            candidates->RemoveAll(&suppressed);
+         }
+      }
+   }
+}
+
 //______________________________________________________________________________
 void TDocParser::WriteMethod(std::ostream& out, TString& ret, 
-                        TString& name, TString& params,
-                        const char* filename, TString& anchor, 
-                        TString& codeOneLiner)
+                             TString& name, TString& params, Bool_t isconst,
+                             const char* filename, TString& anchor, 
+                             TString& codeOneLiner)
 {
    // Write a method, forwarding to TClassDocOutput
 
@@ -2088,30 +2235,44 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
    if (fClassDocState < kClassDoc_Written)
       WriteClassDoc(out);
 
-   TDocMethodWrapper* guessedMethod = 0;
-   int nparams = params.CountChar(',');
    TString strippedParams(params);
    if (strippedParams[0] == '(') {
       strippedParams.Remove(0, 1);
       strippedParams.Remove(strippedParams.Length() - 1);
+      strippedParams = strippedParams.Strip(TString::kBoth);
    }
-   if (strippedParams.Strip(TString::kBoth).Length())
-      ++nparams;
 
+   TList paramArr;
+   paramArr.SetOwner();
+   ParseParameters(strippedParams, paramArr);
+   int nparams = paramArr.GetSize();
+
+   // Collect overload candidates
    TList candidates;
    for (int access = 0; access < 3; ++access) {
       TList* methList = fMethods[access].GetListForObject(name);
+      if (!methList) continue;
+
       TIter nextMethod(methList);
       TDocMethodWrapper* method = 0;
-      while ((method = (TDocMethodWrapper *) nextMethod()))
+      while ((method = (TDocMethodWrapper *) nextMethod())) {
          if (name == method->GetName()
+             && isconst == ((method->GetMethod()->Property() & kIsMethConst) > 0)
              && method->GetMethod()->GetListOfMethodArgs()->GetSize() == nparams) {
             candidates.Add(method);
          }
+      }
    }
 
-   if (candidates.GetSize() == 1)
+   if (nparams && candidates.GetSize() > 1) {
+      MatchOverloadSignatures(&candidates, &paramArr);
+   }
+
+   TDocMethodWrapper* guessedMethod = 0;
+   if (candidates.GetSize() == 1) {
       guessedMethod = (TDocMethodWrapper*) candidates.First();
+      guessedMethod->SetBit(TDocMethodWrapper::kDocumented);
+   }
 
    dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteMethod(out, ret, name, params, filename, anchor,
                                                            fComment, codeOneLiner, guessedMethod);
