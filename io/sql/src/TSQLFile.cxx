@@ -1450,10 +1450,6 @@ TSQLResult* TSQLFile::SQLQuery(const char* cmd, Int_t flag, Bool_t* ok)
    TSQLResult* res = fSQL->Query(cmd);
    if (ok!=0) *ok = res!=0;
    if (res==0) return 0;
-   if (flag==0) {
-      delete res;
-      return 0;
-   }
 //   if ((flag==2) && IsOracle())
 //      res = new TSQLResultCopy(res);
    return res;
