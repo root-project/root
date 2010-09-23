@@ -334,7 +334,7 @@ TString::TString(const char *cs)
    // Create TString and initialize it with string cs.
 
    if (cs) {
-      Ssiz_t n = cs ? strlen(cs) : 0;
+      Ssiz_t n = strlen(cs);
       fData = TStringRef::GetRep(n, n)->Data();
       memcpy(fData, cs, n);
    } else
