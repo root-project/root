@@ -2475,8 +2475,9 @@ void TBufferXML::ReadCharP(Char_t    *c)
    // Reads array of characters from buffer
 
    BeforeIOoperation();
-   const char* buf = XmlReadValue(xmlio::CharStar);
-   strcpy(c, buf);
+   const char* buf;
+   if ((buf = XmlReadValue(xmlio::CharStar)))
+      strcpy(c, buf);
 }
 
 //______________________________________________________________________________
