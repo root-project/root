@@ -1468,7 +1468,10 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
    TGeoMatrix* secondMatrix = new TGeoCombiTrans(*secondPos,secondRot->Inverse());
 
    TGeoCompositeShape* boolean = 0;
-
+   if (!first || !second) {
+      Fatal("BooSolid", "Incomplete solid %s, missing shape components", name);
+      return child;
+   }   
    switch (num) {
    case 1: boolean = new TGeoCompositeShape(NameShort(name),new TGeoSubtraction(first,second,firstMatrix,secondMatrix)); break;      // SUBTRACTION
    case 2: boolean = new TGeoCompositeShape(NameShort(name),new TGeoIntersection(first,second,firstMatrix,secondMatrix)); break;     // INTERSECTION 
