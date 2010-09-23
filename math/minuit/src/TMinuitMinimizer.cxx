@@ -134,8 +134,8 @@ void TMinuitMinimizer::InitTMinuit(int dim) {
          // which can be accessed by the user after minimization
          // check if fgMinuit is different than gMinuit
          // case 1: fgMinuit not zero but fgMinuit has been deleted (not in gROOT): set to zero
-         // case 2: fgMinuit not zero and exists : set to gMinuit 
-         // case 3: fgMinuit zero - and gMinuit not zero: reuse gMinuit if possible
+         // case 2: fgMinuit not zero and exists in global list  : set fgMinuit to gMinuit 
+         // case 3: fgMinuit zero - and gMinuit not zero: create a new instance locally to avoid conflict
          if (fgMinuit != gMinuit) { 
             // if object exists in gROOT remove it to avoid a memory leak 
             if (fgMinuit ) { 
@@ -150,9 +150,11 @@ void TMinuitMinimizer::InitTMinuit(int dim) {
                }
             }
             else {
-               // case 3: if fgMinuit is zero and gMinuit not zero  - reuse existing one 
-               fgMinuit = gMinuit;
-               fgUsed = true;  // need to reset in case  other gMinuit instance is later used
+               // case 3: avoid reusing existing one - mantain fgMinuit to zero
+               // otherwise we will get a double delete if user deletes externally gMinuit
+               // in this case we will loose gMinuit instance
+//                fgMinuit = gMinuit;
+//                fgUsed = true;  // need to reset in case  other gMinuit instance is later used
             }
          }
          
