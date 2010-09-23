@@ -18,21 +18,6 @@ else
    CMDECHO=
 endif
 
-.PHONY: valgrind
-scripts/analyze_valgrind: scripts/analyze_valgrind.cxx
-	$(CXX) $< -o $@
-valgrind: scripts/analyze_valgrind
-	@( export valgrindlogfile=$(ROOTTEST_HOME)/valgrind-`date +"%Y%m%d-%H%M%S"`.log; \
-	( \
-	valgrind-listener > $$valgrindlogfile 2>&1 & ) && \
-	valgrindlistenerpid=$$$$ && \
-	$(MAKE) -C $$PWD $(filter-out valgrind,$(MAKECMDGOALS)) \
-          CALLROOTEXE="valgrind --suppressions=$(ROOTSYS)/etc/valgrind-root.supp --suppressions=$(ROOTTEST_HOME)/scripts/valgrind-suppression_ROOT_optional.supp --log-socket=127.0.0.1 --error-limit=no --leak-check=full -v root.exe" ; \
-	killall valgrind-listener; \
-	grep '==[[:digit:]]\+==' $$valgrindlogfile | scripts/analyze_valgrind \
-	&& scripts/analyze_valgrind.sh $$valgrindlogfile > $$valgrindlogfile.summary.txt \
-	)
-
 ifneq ($(ROOTC7),)
 CALLROOTEXE:=rootc7.exe
 CALLROOTEXEBUILD:=$(CALLROOTEXE)
@@ -138,6 +123,21 @@ TESTTIMEPRE := export TIMEFORMAT="roottesttiming %S"; ( time
 TESTTIMEPOST :=  RUNNINGWITHTIMING=1 2>&1 ) 2> $(TESTTIMINGFILE).tmp &&  cat $(TESTTIMINGFILE).tmp | grep roottesttiming | sed -e 's,^roottesttiming ,,g' > $(TESTTIMINGFILE) && rm $(TESTTIMINGFILE).tmp
 TESTTIMEACTION = else if [ -f $(TESTTIMINGFILE) ]; then printf " %8s\n" "[`cat $(TESTTIMINGFILE)`ms]" && root.exe -q -b -l -n '$(ROOTTEST_HOME)/scripts/recordtiming.cc+("$(ROOTTEST_HOME)",$(ROOTTEST_RUNID),$(ROOTTEST_TESTID),"$(PWD)/$*","$(TESTTIMINGFILE)")' > /dev/null && rm -f $(TESTTIMINGFILE); fi
 endif
+
+.PHONY: valgrind
+scripts/analyze_valgrind: scripts/analyze_valgrind.cxx
+	$(CXX) $< -o $@
+valgrind: $(ROOTTEST_LOC)scripts/analyze_valgrind
+	@( export valgrindlogfile=$(ROOTTEST_HOME)/valgrind-`date +"%Y%m%d-%H%M%S"`.log; \
+	( \
+	valgrind-listener > $$valgrindlogfile 2>&1 & ) && \
+	valgrindlistenerpid=$$$$ && \
+	$(MAKE) -C $$PWD $(filter-out valgrind,$(MAKECMDGOALS)) \
+          CALLROOTEXE="valgrind --suppressions=$(ROOTSYS)/etc/valgrind-root.supp --suppressions=$(ROOTTEST_HOME)/scripts/valgrind-suppression_ROOT_optional.supp --log-socket=127.0.0.1 --error-limit=no --leak-check=full -v root.exe" ; \
+	killall valgrind-listener; \
+	grep '==[[:digit:]]\+==' $$valgrindlogfile | scripts/analyze_valgrind \
+	&& $(ROOTTEST_LOC)scripts/analyze_valgrind.sh $$valgrindlogfile > $$valgrindlogfile.summary.txt \
+	)
 
 EVENTDIR = $(ROOTTEST_LOC)/root/io/event
 $(EVENTDIR)/$(SUCCESS_FILE): $(ROOTCORELIBS)  
