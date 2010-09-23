@@ -2143,7 +2143,7 @@ void TGPopupMenu::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             }
             outext[i]=0;
             if (mentry->fShortcut) {
-               sprintf(shortcut, "\\t%s", mentry->GetShortcutText());
+               snprintf(shortcut, 80, "\\t%s", mentry->GetShortcutText());
             }
             else {
                memset(shortcut, 0, 80);

@@ -1590,7 +1590,7 @@ void TRootBrowserLite::DisplayTotal(Int_t total, Int_t selected)
    else
       fmt = "%d Object%s.";
 
-   sprintf(tmp, fmt, total, (total == 1) ? "" : "s", selected);
+   snprintf(tmp, 64, fmt, total, (total == 1) ? "" : "s", selected);
    fStatusBar->SetText(tmp, 0);
 }
 

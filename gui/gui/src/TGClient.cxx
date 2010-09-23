@@ -851,13 +851,13 @@ void TGClient::ProcessLine(TString cmd, Long_t msg, Long_t parm1, Long_t parm2)
 
    char s[32];
 
-   sprintf(s, "%ld", msg);
+   snprintf(s, sizeof(s), "%ld", msg);
    cmd.ReplaceAll("$MSG", s);
 
-   sprintf(s, "%ld", parm1);
+   snprintf(s, sizeof(s), "%ld", parm1);
    cmd.ReplaceAll("$PARM1", s);
 
-   sprintf(s, "%ld", parm2);
+   snprintf(s, sizeof(s), "%ld", parm2);
    cmd.ReplaceAll("$PARM2", s);
 
    gROOT->ProcessLine(cmd.Data());

@@ -442,12 +442,12 @@ Bool_t TGPrintDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      string = fBPrinter->GetString();
                      delete [] *fPrinter;
                      *fPrinter = new char[strlen(string)+1];
-                     strcpy(*fPrinter, string);
+                     strlcpy(*fPrinter, string, strlen(string)+1);
 
                      string = fBPrintCommand->GetString();
                      delete [] *fPrintCommand;
                      *fPrintCommand = new char[strlen(string)+1];
-                     strcpy(*fPrintCommand, string);
+                     strlcpy(*fPrintCommand, string, strlen(string)+1);
 
                      if (fBPrintCommand->GetTextLength() == 0) {
                         txt = "Please provide print command or use \"Cancel\"";
@@ -516,7 +516,7 @@ TGGotoDialog::TGGotoDialog(const TGWindow *p, const TGWindow *main,
    fBGoTo = new TGTextBuffer(50);
    if (*fRetCode > 0) {
       char curline[32];
-      sprintf(curline, "%ld", *fRetCode);
+      snprintf(curline, 32, "%ld", *fRetCode);
       fBGoTo->AddText(0, curline);
    } else
       fGotoButton->SetState(kButtonDisabled);

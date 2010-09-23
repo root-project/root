@@ -460,7 +460,7 @@ Bool_t TGText::Load(const char *fn, Long_t startpos, Long_t length)
       *dst = '\0';
       temp = new TGTextLine;
       buffer = new char[strlen(buf2)+1];
-      strcpy(buffer, buf2);
+      strlcpy(buffer, buf2, strlen(buf2)+1);
       temp->fLength = strlen(buf2);
       temp->fString = buffer;
       temp->fNext = temp->fPrev = 0;
@@ -551,7 +551,7 @@ next:
    *dst = '\0';
    temp = new TGTextLine;
    buffer = new char[strlen(buf2)+1];
-   strcpy(buffer, buf2);
+   strlcpy(buffer, buf2, strlen(buf2)+1);
    temp->fLength = strlen(buf2);
    temp->fString = buffer;
    temp->fNext = temp->fPrev = 0;

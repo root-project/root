@@ -1355,17 +1355,17 @@ void TGColorDialog::UpdateRGBentries(ULong_t *c)
    Int_t r, g, b;
    TColor::Pixel2RGB(*c, r, g, b);
 
-   sprintf(tmp, "%d", r);
+   snprintf(tmp, 20, "%d", r);
    fRtb->Clear();
    fRtb->AddText(0, tmp);
    gClient->NeedRedraw(fRte);
 
-   sprintf(tmp, "%d", g);
+   snprintf(tmp, 20, "%d", g);
    fGtb->Clear();
    fGtb->AddText(0, tmp);
    gClient->NeedRedraw(fGte);
 
-   sprintf(tmp, "%d", b);
+   snprintf(tmp, 20, "%d", b);
    fBtb->Clear();
    fBtb->AddText(0, tmp);
    gClient->NeedRedraw(fBte);
@@ -1384,17 +1384,17 @@ void TGColorDialog::UpdateHLSentries(ULong_t *c)
    TColor::Pixel2RGB(*c, r, g, b);
    TColor::RGB2HLS(r, g, b, h, l, s);
 
-   sprintf(tmp, "%d", h);
+   snprintf(tmp, 20, "%d", h);
    fHtb->Clear();
    fHtb->AddText(0, tmp);
    gClient->NeedRedraw(fHte);
 
-   sprintf(tmp, "%d", l);
+   snprintf(tmp, 20, "%d", l);
    fLtb->Clear();
    fLtb->AddText(0, tmp);
    gClient->NeedRedraw(fLte);
 
-   sprintf(tmp, "%d", s);
+   snprintf(tmp, 20, "%d", s);
    fStb->Clear();
    fStb->AddText(0, tmp);
    gClient->NeedRedraw(fSte);

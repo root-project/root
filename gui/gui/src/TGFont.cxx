@@ -1825,7 +1825,7 @@ char **TGFontPool::GetAttributeInfo(const FontAttributes_t *fa)
          strlcpy(result[i], str, strlen(str)+1);
       } else {
          result[i] = new char[20];
-         sprintf(result[i], "%d", num);
+         snprintf(result[i], 20, "%d", num);
       }
    }
 

@@ -531,11 +531,11 @@ void TGSpeedo::DrawText()
             if (nexe%3 == 0 && ww < 10000) break;
          }
          fImage2->DrawText((Int_t)xc - 9, (Int_t)yc + 72, "x10", 10, "#ffffff", ar);
-         sprintf(sval,"%d", nexe);
+         snprintf(sval, 80, "%d", nexe);
          fImage2->DrawText((Int_t)xc + 9, (Int_t)yc + 69, sval, 8, "#ffffff", ar);
       }
-      sprintf(sval, "%04d", (int)ww);
-      sprintf(dsval, "%c %c %c %c", sval[0], sval[1], sval[2], sval[3]);
+      snprintf(sval, 80, "%04d", (int)ww);
+      snprintf(dsval, 80, "%c %c %c %c", sval[0], sval[1], sval[2], sval[3]);
       // draw text in the counter
       if (gVirtualX->InheritsFrom("TGX11")) {
          // as there is a small difference between Windows and Linux...
@@ -611,11 +611,11 @@ void TGSpeedo::DoRedraw()
             if (nexe%3 == 0 && ww < 10000) break;
          }
          fImage2->DrawText((Int_t)xc - 9, (Int_t)yc + 72, "x10", 10, "#ffffff", ar);
-         sprintf(sval,"%d", nexe);
+         snprintf(sval, 80, "%d", nexe);
          fImage2->DrawText((Int_t)xc + 9, (Int_t)yc + 69, sval, 8, "#ffffff", ar);
       }
-      sprintf(sval, "%04d", (int)ww);
-      sprintf(dsval, "%c %c %c %c", sval[0], sval[1], sval[2], sval[3]);
+      snprintf(sval, 80, "%04d", (int)ww);
+      snprintf(dsval, 80, "%c %c %c %c", sval[0], sval[1], sval[2], sval[3]);
       // draw text in the counter
       if (gVirtualX->InheritsFrom("TGX11")) {
          // as there is a small difference between Windows and Linux...
