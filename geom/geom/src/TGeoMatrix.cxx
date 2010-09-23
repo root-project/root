@@ -1197,6 +1197,7 @@ void TGeoRotation::GetInverse(Double_t *invmat) const
 // Get the inverse rotation matrix (which is simply the transpose)
    if (!invmat) {
       Error("GetInverse", "no place to store the inverse matrix");
+      return;
    }
    for (Int_t i=0; i<3; i++) {
       for (Int_t j=0; j<3; j++) {   
