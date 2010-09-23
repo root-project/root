@@ -97,11 +97,9 @@ TStyleDialog::TStyleDialog(TStyleManager *sm, TStyle *cur, Int_t mode,
    h1->AddFrame(fNameLabel, layoutNameLabel);
 
    if (fMode == 1) {
-      Char_t *newName = (Char_t *)
-               malloc((5 + strlen(fCurStyle->GetName())) * sizeof(Char_t));
-      sprintf(newName, "%s_1", fCurStyle->GetName());
-      fName = new TGTextEntry(h1, newName, kName);
-      free(newName);
+      TString newName;
+      newName.Form("%s_1", fCurStyle->GetName());
+      fName = new TGTextEntry(h1, newName.Data(), kName);
    } else if (fMode == 2) {
       // The names of the 5 basics styles can not be modified.
       fName = new TGTextEntry(h1, fCurStyle->GetName(), kName);
