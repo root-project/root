@@ -24,4 +24,5 @@ void runtbox()
       y = y-bh-db;
    }
    fprintf(stdout,"all box were created without a crash\n");
+   delete Pat;
 }
