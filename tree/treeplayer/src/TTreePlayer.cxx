@@ -3026,8 +3026,8 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       if (!lenfile) {
          Int_t nch2 = strlen(fTree->GetName());
          fname = new char[nch2+10];
-         strlcpy(fname, fTree->GetName(),nch2+1);
-         strcat(fname, "-scan.dat");
+         strlcpy(fname, fTree->GetName(),nch2+10);
+         strlcat(fname, "-scan.dat",nch2+10);
       }
       out.open(fname, ios::out);
       if (!out.good ()) {
