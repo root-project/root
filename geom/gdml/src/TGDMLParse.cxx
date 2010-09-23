@@ -2638,6 +2638,10 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, X
    }
    
    fsolmap[name] = poly;
+   for(i = 0; i < numplanes; i++) {
+      delete [] table[i];
+   }
+   delete [] table;
    
    return node;
 }
