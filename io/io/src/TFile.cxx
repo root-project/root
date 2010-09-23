@@ -2406,8 +2406,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 
    // generate the shared lib
    if (!opt.Contains("+")) {
-      list->Delete();
       delete list;
+      filelist->Delete();
+      delete filelist;
       return;
    }
 
@@ -2425,8 +2426,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 #endif
    if (!fpMAKE) {
       Error("MakeProject", "cannot open file %s", path.Data());
-      list->Delete();
       delete list;
+      filelist->Delete();
+      delete filelist;
       return;
    }
 
@@ -2440,8 +2442,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 #endif
    if (!ifp) {
       Error("MakeProject", "cannot open path file %s", path.Data());
-      list->Delete();
       delete list;
+      filelist->Delete();
+      delete filelist;
       fclose(fpMAKE);
       return;
    }
@@ -2462,8 +2465,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 #endif
    if (!fp) {
       Error("MakeProject", "cannot open path file %s", path.Data());
-      list->Delete();
       delete list;
+      filelist->Delete();
+      delete filelist;
       fclose(fpMAKE);
       fclose(ifp);
       return;
@@ -2661,8 +2665,10 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    }
 
    extrainfos.Clear("nodelete");
-   delete filelist;
+   // filelist->Clear("nodetele");
    delete list;
+   filelist->Delete();
+   delete filelist;
 }
 
 //______________________________________________________________________________
