@@ -588,12 +588,14 @@ Bool_t TUri::SetUri(const TString &uri)
       case 10:
          // URI contains fragment delimiter '#'
          valid &= SetFragment(((TObjString*) tokens->At(9))->GetString());
+         // fallthrough
 
       case 8:
          // URI does not contain a fragment delimiter
          // if there is a query delimiter '?', set query
          if (!((TString)((TObjString*) tokens->At(6))->GetString()).IsNull())
             valid &= SetQuery(((TObjString*) tokens->At(7))->GetString());
+         // fallthrough
 
       case 6:
          // URI does not contain fragment or query delimiters
