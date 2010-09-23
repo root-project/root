@@ -1934,8 +1934,6 @@ TGeoNode *TGeoVolume::ReplaceNode(TGeoNode *nodeorig, TGeoShape *newshape, TGeoM
    }   
    TGeoShape  *shape = oldvol->GetShape();
    if (newshape && !nodeorig->IsOffset()) shape = newshape;
-   TGeoMatrix *pos = nodeorig->GetMatrix();
-   if (newpos && !nodeorig->IsOffset())   pos = newpos;
    TGeoMedium *med = oldvol->GetMedium();
    if (newmed) med = newmed;
    // Make a new volume
@@ -1953,6 +1951,11 @@ TGeoNode *TGeoVolume::ReplaceNode(TGeoNode *nodeorig, TGeoShape *newshape, TGeoM
    TGeoNode *newnode = nodeorig->MakeCopyNode();
    // Change the volume for the new node
    newnode->SetVolume(vol);
+   // Replace the matrix
+   if (newpos && !nodeorig->IsOffset()) {
+      TGeoNodeMatrix *nodemat = (TGeoNodeMatrix*)newnode;
+      nodemat->SetMatrix(newpos);
+   }   
    // Replace nodeorig with new one
    fNodes->RemoveAt(ind);
    fNodes->AddAt(newnode, ind);   

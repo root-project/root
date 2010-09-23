@@ -2221,10 +2221,10 @@ void TGeoChecker::TestOverlaps(const char* path)
       }
    }
    // draw all overlapping points
-   for (Int_t m=0; m<128; m++) {
-      marker = (TPolyMarker3D*)pm->At(m);
+//   for (Int_t m=0; m<128; m++) {
+//      marker = (TPolyMarker3D*)pm->At(m);
 //      if (marker) marker->Draw("SAME");
-   }
+//   }
    markthis->Draw("SAME");
    if (gPad) gPad->Update();
    // display overlaps
