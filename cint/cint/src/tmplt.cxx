@@ -1690,6 +1690,7 @@ void G__declare_template()
         else {
           G__genericerror("Error: operator() overloading syntax error");
           if (isfrienddecl) G__set_class_autoloading(autoload_old);
+          G__freetemplatearg(targ);
           return;
         }
       }
