@@ -626,8 +626,8 @@ void TRint::Terminate(Int_t status)
             ProcessFile(logoff);
          delete [] mac;
       }
-
-      gSystem->Exit(status);
+      TApplication::Terminate(status);
+      //gSystem->Exit(status);
    }
 }
 
