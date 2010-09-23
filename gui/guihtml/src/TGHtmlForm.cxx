@@ -654,8 +654,8 @@ void TGHtml::EncodeText(TGString *str, const char *z)
          } else if (*z == '\r') {
             // Ignore it...
          } else {
-            char zBuf[5];
-            sprintf(zBuf, "%%%02X", 0xff & *z);
+            char zBuf[10];
+            snprintf(zBuf, 10, "%%%02X", 0xff & *z);
             str->Append(zBuf, 3);
          }
          z++;

@@ -187,7 +187,7 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flag)
             break;
 
          case Html_EndTR:
-            sprintf(buf, "%d ", maxh);
+            snprintf(buf, 100, "%d ", maxh);
             istr.Append(buf);
             if (attrs) {
                attrstr.Append("} ");
