@@ -2,3 +2,17 @@
 <hr/>
 <a name="bindings"></a> 
 <h3>PyROOT</h3>
+
+<p>
+Python 3 now has some basic support.
+Problems remain with the impedance mismatch between Python 3's pervasive use
+of unicode, versus the more common basic strings in C++, and the renewed buffer
+interface.
+The former means that char* as byte* will lead to problems, the latter means
+that arrays are currently not supported at all.
+</p>
+
+<p>
+Significant changes to equality and non-equality operatores should make their
+behavior more consistent across the board.
+</p>
