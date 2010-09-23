@@ -1837,10 +1837,12 @@ void TBufferXML::ReadFastArray(Char_t    *c, Int_t n)
    // if nodename==CharStar, read all array as string
 
    if ((n>0) && VerifyItemNode(xmlio::CharStar)) {
-      const char* buf = XmlReadValue(xmlio::CharStar);
-      Int_t size = strlen(buf);
-      if (size<n) size = n;
-      memcpy(c, buf, size);
+      const char* buf;
+      if ((buf = XmlReadValue(xmlio::CharStar))) {
+         Int_t size = strlen(buf);
+         if (size<n) size = n;
+         memcpy(c, buf, size);
+      }
    } else
       TBufferXML_ReadFastArray(c);
 }
