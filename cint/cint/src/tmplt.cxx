@@ -849,6 +849,8 @@ int G__createtemplateclass(const char *new_name,G__Templatearg *targ
             while(deftmpclass->next) deftmpclass=deftmpclass->next;
           }
           deftmpclass->spec_arg = spec_arg;
+          // indicate that we took ownership
+          spec_arg = 0;
           override=0;
           break;
         }
@@ -942,6 +944,7 @@ int G__createtemplateclass(const char *new_name,G__Templatearg *targ
   }
   deftmpclass->isforwarddecl = isforwarddecl;
 
+  if (spec_arg) G__freetemplatearg(spec_arg);
   return(0);
 }
 
