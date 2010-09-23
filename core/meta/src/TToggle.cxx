@@ -82,10 +82,10 @@ void TToggle::SetState(Bool_t state)
    // argument.
 
    if (fInitialized) {
-      char stringon[7];
-      char stringoff[7];
-      sprintf(stringon,"%li",fOnValue);
-      sprintf(stringoff,"%li",fOffValue);
+      char stringon[20];
+      char stringoff[20];
+      snprintf(stringon,sizeof(stringon),"%li",fOnValue);
+      snprintf(stringoff,sizeof(stringoff),"%li",fOffValue);
 
       fSetter->Execute(fObject, state ? stringon:stringoff);
       fState=state;
@@ -100,8 +100,8 @@ void TToggle::SetValue(Long_t val)
    // the value is equal to fOnValue.
 
    if (fInitialized) {
-      char stringval[7];
-      sprintf(stringval,"%li",val);
+      char stringval[20];
+      snprintf(stringval,sizeof(stringval),"%li",val);
       fSetter->Execute(fObject, stringval);
       fState=(val==fOnValue);
       fValue= val;
@@ -123,8 +123,8 @@ void TToggle::Toggle()
          fGetter->Execute(fObject,fValue);
          fValue=( (fValue==fOnValue) ? fOffValue:fOnValue);
          fState=(!(fValue!=fOnValue));
-         char stringon[7];
-         sprintf(stringon,"%li",fValue);
+         char stringon[20];
+         snprintf(stringon,sizeof(stringon),"%li",fValue);
          fSetter->Execute(fObject, stringon);
       }
    }

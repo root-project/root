@@ -4720,11 +4720,11 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
                case 'i':
                { 
                   switch (outputSizeLevel) {
-                     case 0:  sprintf(value,Form("%%%s",decform),(Short_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                     case 2:  sprintf(value,Form("%%%s",decform),(Long_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                     case 3:  sprintf(value,Form("%%%s",decform),(Long64_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 0:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(Short_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 2:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(Long_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 3:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(Long64_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
                      case 1:
-                     default: sprintf(value,Form("%%%s",decform),(Int_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     default: snprintf(value,kMAXLENGTH,Form("%%%s",decform),(Int_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
                   }
                   break;
                }
@@ -4734,11 +4734,11 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
                case 'u':
                { 
                   switch (outputSizeLevel) {
-                     case 0:  sprintf(value,Form("%%%s",decform),(UShort_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                     case 2:  sprintf(value,Form("%%%s",decform),(ULong_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                     case 3:  sprintf(value,Form("%%%s",decform),(ULong64_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 0:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(UShort_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 2:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(ULong_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 3:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(ULong64_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
                      case 1:
-                     default: sprintf(value,Form("%%%s",decform),(UInt_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     default: snprintf(value,kMAXLENGTH,Form("%%%s",decform),(UInt_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
                   }
                   break;
                }
@@ -4749,15 +4749,15 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
                case 'G':
                {
                   switch (outputSizeLevel) {
-                     case 2:  sprintf(value,Form("%%%s",decform),(long double)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 2:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(long double)((TTreeFormula*)this)->EvalInstance(instance)); break;
                      case 1:
-                     default: sprintf(value,Form("%%%s",decform),((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     default: snprintf(value,kMAXLENGTH,Form("%%%s",decform),((TTreeFormula*)this)->EvalInstance(instance)); break;
                   }
                   expo = strchr(value,'e');
                   break;
                }
                default:
-                  sprintf(value,Form("%%%sg",decform),((TTreeFormula*)this)->EvalInstance(instance));
+                  snprintf(value,kMAXLENGTH,Form("%%%sg",decform),((TTreeFormula*)this)->EvalInstance(instance));
                   expo = strchr(value,'e');
             }
             if (expo) {
@@ -4775,7 +4775,7 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
                }
             }
          } else {
-            sprintf(value,Form(" %%%sc",decform),' ');
+            snprintf(value,kMAXLENGTH,Form(" %%%sc",decform),' ');
          }
       }
    }

@@ -2,7 +2,7 @@
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2000, Rene Brun and Fons .               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -203,7 +203,7 @@ const char *TDataType::AsString(void *buf) const
    // Return string containing value in buffer formatted according to
    // the basic data type. The result needs to be used or copied immediately.
 
-   static char line[81];
+   static TString line(81);
    const char *name;
 
    if (fInfo) {
@@ -215,35 +215,33 @@ const char *TDataType::AsString(void *buf) const
 
    line[0] = 0;
    if (!strcmp("unsigned int", name))
-      sprintf(line, "%u", *(unsigned int *)buf);
+      line.Form( "%u", *(unsigned int *)buf);
    else if (!strcmp("unsigned", name))
-      sprintf(line, "%u", *(unsigned int *)buf);
+      line.Form( "%u", *(unsigned int *)buf);
    else if (!strcmp("int", name))
-      sprintf(line, "%d", *(int *)buf);
+      line.Form( "%d", *(int *)buf);
    else if (!strcmp("unsigned long", name))
-      sprintf(line, "%lu", *(unsigned long *)buf);
+      line.Form( "%lu", *(unsigned long *)buf);
    else if (!strcmp("long", name))
-      sprintf(line, "%ld", *(long *)buf);
+      line.Form( "%ld", *(long *)buf);
    else if (!strcmp("unsigned long long", name))
-      sprintf(line, "%llu", *(ULong64_t *)buf);
+      line.Form( "%llu", *(ULong64_t *)buf);
    else if (!strcmp("long long", name))
-      sprintf(line, "%lld", *(Long64_t *)buf);
+      line.Form( "%lld", *(Long64_t *)buf);
    else if (!strcmp("unsigned short", name))
-      sprintf(line, "%hu", *(unsigned short *)buf);
+      line.Form( "%hu", *(unsigned short *)buf);
    else if (!strcmp("short", name))
-      sprintf(line, "%hd", *(short *)buf);
-   else if (!strcmp("unsigned char", name))
-      strlcpy(line, (char *)buf,81);
+      line.Form( "%hd", *(short *)buf);
    else if (!strcmp("bool", name))
-      sprintf(line, "%s", *(bool *)buf ? "true" : "false");
-   else if (!strcmp("char", name))
-      strlcpy(line, (char *)buf,81);
-   else if (!strcmp("float", name))
-      sprintf(line, "%g", *(float *)buf);
+      line.Form( "%s", *(bool *)buf ? "true" : "false");
+   else if (!strcmp("unsigned char", name) || !strcmp("char", name) ) {
+      line = (char*)buf;
+   } else if (!strcmp("float", name))
+      line.Form( "%g", *(float *)buf);
    else if (!strcmp("double", name))
-      sprintf(line, "%g", *(double *)buf);
+      line.Form( "%g", *(double *)buf);
    else if (!strcmp("char*", name))
-      sprintf(line, "%s", *(char**)buf);
+      line.Form( "%s", *(char**)buf);
 
    return line;
 }

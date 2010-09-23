@@ -1697,10 +1697,10 @@ void TStreamerSTL::ls(Option_t *) const
    // Print the content of the element.
 
    TString name(kMaxLen);
-   char cdim[20];
+   TString cdim;
    name = GetName();
    for (Int_t i=0;i<fArrayDim;i++) {
-      sprintf(cdim,"[%d]",fMaxIndex[i]);
+      cdim.Form("[%d]",fMaxIndex[i]);
       name += cdim;
    }
    printf("  %-14s %-15s offset=%3d type=%2d %s,stl=%d, ctype=%d, %-20s\n",

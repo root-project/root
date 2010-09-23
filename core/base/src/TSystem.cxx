@@ -3980,8 +3980,7 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
    }
 
    // remove the possible ACLiC + or ++ and g or O
-   char postfix[4];
-   postfix[0] = 0;
+   aclicMode.Clear();
    int len = strlen(fname);
    const char *mode = 0;
    if (len > 1) {
@@ -4000,17 +3999,16 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
       }
       if (remove) {
          fname[strlen(fname)-2] = 0;
-         strcpy(postfix, "++");
+         aclicMode = "++";
       } else {
          fname[strlen(fname)-1] = 0;
-         strcpy(postfix, "+");
+         aclicMode = "+";
       }
       if (mode)
-         strcat(postfix, mode);
+         aclicMode += mode;
    }
 
    TString resFilename = fname;
-   aclicMode = postfix;
    arguments = "(";
    if (arg) arguments += arg;
    else arguments = "";
