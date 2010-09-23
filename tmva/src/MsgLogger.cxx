@@ -172,7 +172,7 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    // putting the output string, the message type, and the color
    // switcher together into a single string
 
-   if (type < fMinType || (fgInhibitOutput && type!=kFATAL)) return; // no output
+   if ( (type < fMinType || fgInhibitOutput) && type!=kFATAL ) return; // no output
 
    InitMaps();
    std::map<EMsgType, std::string>::const_iterator stype;
