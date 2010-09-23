@@ -318,9 +318,9 @@ void TGeoTreeDialog::DoSelect(TGListTreeItem *item)
    static char name[256];
    if (!item || !item->GetUserData()) {
       fgSelectedObj = 0;
-      if (!strcmp(name, "Selected: -none-")) return;
       sprintf(name,"Selected: -none-");
       fObjLabel->SetText(name);
+      return;
    }
    fgSelectedObj = (TObject *)item->GetUserData();
    if (fgSelectedObj) {
