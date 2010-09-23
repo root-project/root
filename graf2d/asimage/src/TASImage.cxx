@@ -1040,7 +1040,7 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    }
 
    if (w == 0) {
-      w = pad->UtoPixel(1.);
+      w = TMath::Abs(pad->UtoPixel(1.));
    }
 
    if (h == 0) {
