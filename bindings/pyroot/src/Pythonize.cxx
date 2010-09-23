@@ -671,7 +671,7 @@ namespace {
          if ( PyTuple_GET_SIZE( args ) == 1 )
             result = CallPyObjMethod( l, "sort", PyTuple_GET_ITEM( args, 0 ) );
          else {
-            PyObject* pymeth = PyObject_GetAttrString( l, "sort" );
+            PyObject* pymeth = PyObject_GetAttrString( l, const_cast< char* >( "sort" ) );
             result = PyObject_Call( pymeth, args, kw );
             Py_DECREF( pymeth );
          }

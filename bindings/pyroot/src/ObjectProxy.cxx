@@ -31,19 +31,11 @@ namespace {
 //= PyROOT object proxy nullness checking ====================================
    PyObject* op_nonzero( ObjectProxy* self )
    {
-      return PyInt_FromLong( self->GetObject() ? 1 : 0 );
+      PyObject* result = self->GetObject() ? Py_True : Py_False;
+      Py_INCREF( result );
+      return result;
    }
 
-   PyObject* op_bool( ObjectProxy* self )    // for p3
-   {
-      if ( self->GetObject() ) {
-         Py_INCREF( Py_True );
-         return Py_True;
-      } else {
-         Py_INCREF( Py_False );
-         return Py_False;
-      }
-   }
 
 //= PyROOT object proxy pickle support =======================================
    PyObject* op_reduce( ObjectProxy* self )
@@ -96,7 +88,7 @@ namespace {
 //____________________________________________________________________________
    PyMethodDef op_methods[] = {
       { (char*)"__nonzero__", (PyCFunction)op_nonzero, METH_NOARGS, NULL },
-      { (char*)"__bool__",    (PyCFunction)op_bool,    METH_NOARGS, NULL }, // for p3
+      { (char*)"__bool__",    (PyCFunction)op_nonzero, METH_NOARGS, NULL }, // for p3
       { (char*)"__reduce__",  (PyCFunction)op_reduce,  METH_NOARGS, NULL },
       { (char*)NULL, NULL, 0, NULL }
    };
@@ -243,7 +235,11 @@ PYROOT_STUB( div, /, PyStrings::gDiv )
       0                               // nb_inplace_or
 #if PY_VERSION_HEX >= 0x02020000
       , 0                             // nb_floor_divide
+#if PY_VERSION_HEX < 0x03000000
       , 0                             // nb_true_divide
+#else
+      , (binaryfunc)op_div_stub       // nb_true_divide
+#endif
       , 0                             // nb_inplace_floor_divide
       , 0                             // nb_inplace_true_divide
 #endif

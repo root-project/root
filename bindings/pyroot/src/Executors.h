@@ -39,6 +39,7 @@ namespace PyROOT {
    }
 
 // executors for built-ins
+   PYROOT_DECLARE_BASIC_EXECUTOR( Bool );
    PYROOT_DECLARE_BASIC_EXECUTOR( Long );
    PYROOT_DECLARE_BASIC_EXECUTOR( Char );
    PYROOT_DECLARE_BASIC_EXECUTOR( Int );

@@ -60,7 +60,7 @@ namespace {
 
          gC2POperatorMapping[ "[]" ]  = "__getitem__";
          gC2POperatorMapping[ "()" ]  = "__call__";
-         gC2POperatorMapping[ "/" ]   = "__div__";
+         gC2POperatorMapping[ "/" ]   = PYROOT__div__;
          gC2POperatorMapping[ "%" ]   = "__mod__";
          gC2POperatorMapping[ "**" ]  = "__pow__";
          gC2POperatorMapping[ "<<" ]  = "__lshift__";
@@ -72,7 +72,7 @@ namespace {
          gC2POperatorMapping[ "+=" ]  = "__iadd__";
          gC2POperatorMapping[ "-=" ]  = "__isub__";
          gC2POperatorMapping[ "*=" ]  = "__imul__";
-         gC2POperatorMapping[ "/=" ]  = "__idiv__";
+         gC2POperatorMapping[ "/=" ]  = PYROOT__idiv__;
          gC2POperatorMapping[ "%=" ]  = "__imod__";
          gC2POperatorMapping[ "**=" ] = "__ipow__";
          gC2POperatorMapping[ "<<=" ] = "__ilshift__";
@@ -91,7 +91,7 @@ namespace {
          gC2POperatorMapping[ "const char*" ] = "__str__";
          gC2POperatorMapping[ "char*" ]       = "__str__";
          gC2POperatorMapping[ "int" ]         = "__int__";
-         gC2POperatorMapping[ "long" ]        = "__long__";
+         gC2POperatorMapping[ "long" ]        = PYROOT__long__;
          gC2POperatorMapping[ "double" ]      = "__float__";
 
       // the following type mappings are "okay"; the assumption is that they
@@ -99,16 +99,20 @@ namespace {
       // they are, that it is done consistently)
          gC2POperatorMapping[ "short" ]              = "__int__";
          gC2POperatorMapping[ "unsigned short" ]     = "__int__";
-         gC2POperatorMapping[ "unsigned int" ]       = "__long__";
-         gC2POperatorMapping[ "unsigned long" ]      = "__long__";
-         gC2POperatorMapping[ "long long" ]          = "__long__";
-         gC2POperatorMapping[ "unsigned long long" ] = "__long__";
+         gC2POperatorMapping[ "unsigned int" ]       = PYROOT__long__;
+         gC2POperatorMapping[ "unsigned long" ]      = PYROOT__long__;
+         gC2POperatorMapping[ "long long" ]          = PYROOT__long__;
+         gC2POperatorMapping[ "unsigned long long" ] = PYROOT__long__;
          gC2POperatorMapping[ "float" ]              = "__float__";
 
          gC2POperatorMapping[ "->" ]  = "__follow__";       // not an actual python operator
          gC2POperatorMapping[ "=" ]   = "__assign__";       // id.
 
+#if PY_VERSION_HEX < 0x03000000
          gC2POperatorMapping[ "bool" ] = "__nonzero__";
+#else
+         gC2POperatorMapping[ "bool" ] = "__bool__";
+#endif
       }
    } initOperatorMapping_;
 

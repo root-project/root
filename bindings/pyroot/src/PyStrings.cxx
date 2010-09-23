@@ -79,7 +79,7 @@ Bool_t PyROOT::CreatePyStrings() {
    PYROOT_INITIALIZE_STRING( gAdd, __add__ );
    PYROOT_INITIALIZE_STRING( gSub, __sub__ );
    PYROOT_INITIALIZE_STRING( gMul, __mul__ );
-   PYROOT_INITIALIZE_STRING( gDiv, __div__ );
+   PYROOT_INITIALIZE_STRING( gDiv, PYROOT__div__ );
 
    PYROOT_INITIALIZE_STRING( gAt, at );
    PYROOT_INITIALIZE_STRING( gBegin, begin );

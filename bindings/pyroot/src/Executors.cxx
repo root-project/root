@@ -28,6 +28,14 @@ PyROOT::ExecFactories_t PyROOT::gExecFactories;
 
 
 //- executors for built-ins ---------------------------------------------------
+PyObject* PyROOT::TBoolExecutor::Execute( G__CallFunc* func, void* self )
+{
+// execute <func> with argument <self>, construct python bool return value
+   PyObject* result = (bool)func->ExecInt( self ) ? Py_True : Py_False;
+   Py_INCREF( result );
+   return result;
+}
+
 PyObject* PyROOT::TLongExecutor::Execute( G__CallFunc* func, void* self )
 {
 // execute <func> with argument <self>, construct python long return value
@@ -346,6 +354,7 @@ namespace {
    using namespace PyROOT;
 
 // use macro rather than template for portability ...
+   PYROOT_EXECUTOR_FACTORY( Bool )
    PYROOT_EXECUTOR_FACTORY( Char )
    PYROOT_EXECUTOR_FACTORY( ShortRef )
    PYROOT_EXECUTOR_FACTORY( UShortRef )
@@ -405,7 +414,7 @@ namespace {
       NFp_t( "double",             &CreateDoubleExecutor              ),
       NFp_t( "double&",            &CreateDoubleRefExecutor           ),
       NFp_t( "void",               &CreateVoidExecutor                ),
-      NFp_t( "bool",               &CreateIntExecutor                 ),
+      NFp_t( "bool",               &CreateBoolExecutor                ),
       NFp_t( "const char*",        &CreateCStringExecutor             ),
       NFp_t( "char*",              &CreateCStringExecutor             ),
 

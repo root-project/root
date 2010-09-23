@@ -63,6 +63,10 @@
 #define PyROOT_PyUnicode_Append             PyString_Concat
 #define PyROOT_PyUnicode_AppendAndDel       PyString_ConcatAndDel
 
+#define PYROOT__long__ "__long__"
+#define PYROOT__idiv__ "__idiv__"
+#define PYROOT__div__  "__div__"
+
 #endif  // ! 3.0
 
 // for 3.0 support (backwards compatibility, really)
@@ -89,6 +93,10 @@
 #define PyInt_FromSsize_t    PyLong_FromSsize_t
 
 #define PyInt_Type      PyLong_Type
+
+#define PYROOT__long__ "__int__"
+#define PYROOT__idiv__ "__itruediv__"
+#define PYROOT__div__  "__truediv__"
 
 #define Py_TPFLAGS_HAVE_RICHCOMPARE 0
 #define Py_TPFLAGS_CHECKTYPES 0
