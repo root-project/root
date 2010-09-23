@@ -1781,7 +1781,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
          // Point *HAS* to be inside a cell
          Double_t dir[3];
          fGlobalMatrix->MasterToLocalVect(fDirection, dir);
-         node = finder->FindNode(point,dir);
+         finder->FindNode(point,dir);
          node = finder->CdNext();
          if (!node) return fCurrentNode;  // inside divided volume but not in a cell
       }   
