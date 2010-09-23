@@ -391,7 +391,15 @@ check_library() {
     libdirs="$*"
 
     if test ! "x$iossdk" = "x" ; then
-        libdirs="$iossdk/usr/lib"
+        sdklibs=""
+        for i in $libdirs; do
+            #if test $i = "/usr/lib"; then
+                sdklibs="$sdklibs ${iossdk}${i}"
+            #else
+            #    sdklibs="$sdklibs $i"
+            #fi
+        done
+        libdirs="$sdklibs"
     fi
 
     # Write a message
@@ -590,7 +598,15 @@ check_header()  {
     hdrdirs="$*"
 
     if test ! "x$iossdk" = "x" ; then
-        hdrdirs="$iossdk/usr/include"
+        sdkhdrs=""
+        for i in $hdrdirs; do
+            #if test $i = "/usr/include"; then
+                sdkhdrs="$sdkhdrs ${iossdk}${i}"
+            #else
+            #    sdkhdrs="$sdkhdrs $i"
+            #fi
+        done
+        hdrdirs="$sdkhdrs"
     fi
 
     # Write a message
@@ -3766,8 +3782,8 @@ if test ! "x$enable_xml" = "xno" ; then
        result "not found"
        # fall back in case xml2-config is not found
        keepincdir=$xmlincdir
-       check_header "libxml2/libxml/tree.h" "$xmlincdir" $XMLDIR $XMLDIR/include \
-           /opt/include $finkdir/include /usr/local/include
+       check_header "libxml/tree.h" "$xmlincdir" $XMLDIR $XMLDIR/include \
+           /opt/include/libxml2 /usr/local/include/libxml2 /usr/include/libxml2 $finkdir/include/libxml2
        xmlincdir=$found_dir
 
        keeplibdir=$xmllibdir
