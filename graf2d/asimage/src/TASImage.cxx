@@ -399,7 +399,10 @@ const char *TASImage::TypeFromMagicNumber(const char *file)
 
    if (!fp) return 0;
 
-   if (!fread(&magic, 1, 1, fp)) return 0;
+   if (!fread(&magic, 1, 1, fp)) {
+      fclose(fp);
+      return 0;
+   }
 
    switch (magic) {
       case 0x00:
