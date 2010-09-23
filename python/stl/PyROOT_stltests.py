@@ -1,7 +1,7 @@
 # File: roottest/python/stl/PyROOT_stltests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/25/05
-# Last: 07/29/10
+# Last: 20/09/10
 
 """STL unit tests for PyROOT package."""
 
@@ -289,7 +289,7 @@ class STL6IteratorComparisonTestCase( unittest.TestCase ):
       b1 = v.begin()
       b2 = v.begin()
 
-      if not 'win32' in sys.platform:
+      if sys.platform.find( 'win32' ) < 0:
        # out-of-line operator==/!= are a gcc feature ...
          self.assertRaises( LookupError, b1.__eq__, b2 )
          self.assertRaises( LookupError, b1.__ne__, b2 )

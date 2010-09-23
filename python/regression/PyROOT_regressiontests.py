@@ -1,7 +1,7 @@
 # File: roottest/python/regression/PyROOT_regressiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/02/07
-# Last: 07/26/10
+# Last: 08/03/10
 
 """Regression tests, lacking a better place, for PyROOT package."""
 
@@ -21,7 +21,8 @@ __all__ = [
    'Regression09CheckEnumExactMatch',
    'Regression10BreakSmartPtrCircularLoop',
    'Regression10TVector3Pythonize',
-   'Regression11CoralAttributeListIterators'
+   'Regression11CoralAttributeListIterators',
+   'Regression12ImportCout'
 ]
 
 
@@ -256,7 +257,15 @@ class Regression11CoralAttributeListIterators( unittest.TestCase ):
       b.__preinc__()
       self.assertEqual( b, e )
       self.assertNotEqual( b, a.begin() )
-      
+
+### importing cout should not result in printed errors =======================
+class Regression12ImportCout( unittest.TestCase ):
+   def test1ImportCout( self ):
+      """Test that ROOT.cout does not cause error messages"""
+
+      import ROOT
+      c = ROOT.cout
+
 
 Regression11CoralAttributeListIterators
 ## actual test run

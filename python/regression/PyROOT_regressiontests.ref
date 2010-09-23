@@ -13,6 +13,7 @@ Be able to pass enums as function arguments ... ok
 Smart class that returns itself on dereference should not loop ... ok
 Verify TVector3 pythonization ... ok
 Verify that the correct base class iterators is picked up ... ok
+Test that ROOT.cout does not cause error messages ... ok
 
 ----------------------------------------------------------------------
 

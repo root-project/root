@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_datatypetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 05/11/05
-# Last: 04/20/07
+# Last: 09/22/10
 
 """Data type conversion unit tests for PyROOT package."""
 
@@ -35,8 +35,8 @@ class DataTypes1InstanceDataTestCase( unittest.TestCase ):
       self.assertEqual( c.fUShort,  11 )
       self.assertEqual( c.fInt,    -22 )
       self.assertEqual( c.fUInt,    22 )
-      self.assertEqual( c.fLong,   -33L )
-      self.assertEqual( c.fULong,   33L )
+      self.assertEqual( c.fLong,   -33 )
+      self.assertEqual( c.fULong,   33 )
       self.assertEqual( round( c.fFloat  + 44., 5 ), 0 )
       self.assertEqual( round( c.fDouble + 55., 8 ), 0 )
 
@@ -110,12 +110,12 @@ class DataTypes1InstanceDataTestCase( unittest.TestCase ):
     # integer types
       names = [ 'Short', 'UShort', 'Int', 'UInt', 'Long', 'ULong' ]
       for i in range(len(names)):
-         exec 'c.f%s = %d' % (names[i],i)
-         self.assertEqual( eval( 'c.Get%s()' % names[i] ), i )
+         setattr( c, 'f'+names[i], i )
+         self.assertEqual( getattr( c, 'Get'+names[i] )(), i )
 
       for i in range(len(names)):
-         exec 'c.Set%s = %d' % (names[i],2*i)
-         self.assertEqual( eval( 'c.f%s' % names[i] ), i )
+         getattr( c, 'Set'+names[i] )( 2*i )
+         self.assertEqual( getattr( c, 'f'+names[i] ), 2*i )
 
     # float types
       c.fFloat = 0.123;     self.assertEqual( round( c.GetFloat()  - 0.123, 5 ), 0 )
@@ -131,20 +131,20 @@ class DataTypes1InstanceDataTestCase( unittest.TestCase ):
       atypes = [ 'h', 'H', 'i', 'I', 'l', 'L' ]
       for j in range(len(names)):
          b = array( atypes[j], a )
-         exec 'c.f%sArray = b' % names[j]   # buffer copies
+         setattr( c, 'f'+names[j]+'Array', b )    # buffer copies
          for i in range(N):
-            exec 'self.assertEqual( c.f%sArray[i], b[i] )' % names[j]
+            self.assertEqual( getattr( c, 'f'+names[j]+'Array' )[i], b[i] )
 
-         exec 'c.f%sArray2 = b' % names[j]  # pointer copies
+         setattr( c, 'f'+names[j]+'Array2', b )   # pointer copies
          b[i] = 28
          for i in range(N):
-            exec 'self.assertEqual( c.f%sArray2[i], b[i] )' % names[j]
+            self.assertEqual( getattr( c, 'f'+names[j]+'Array2' )[i], b[i] )
 
    def test3RangeAccess( self ):
       """Test the ranges of integer types"""
 
       def call( c, name, value ):
-         exec 'c.%s = %d' % (name,value)
+         setattr( c, name, value )
 
       c = ClassWithData()
       self.failUnless( isinstance( c, ClassWithData ) )
@@ -184,10 +184,10 @@ class DataTypes2ClassDataTestCase( unittest.TestCase ):
       self.assertEqual( c.sInt,                -202 )
       self.assertEqual( c.sUInt,                202 )
       self.assertEqual( ClassWithData.sUInt,    202 )
-      self.assertEqual( ClassWithData.sLong,   -303L )
-      self.assertEqual( c.sLong,               -303L )
-      self.assertEqual( c.sULong,               303L )
-      self.assertEqual( ClassWithData.sULong,   303L )
+      self.assertEqual( ClassWithData.sLong,   -303 )
+      self.assertEqual( c.sLong,               -303 )
+      self.assertEqual( c.sULong,               303 )
+      self.assertEqual( ClassWithData.sULong,   303 )
       self.assertEqual( round( ClassWithData.sFloat  + 404., 5 ), 0 )
       self.assertEqual( round( c.sFloat              + 404., 5 ), 0 )
       self.assertEqual( round( ClassWithData.sDouble + 505., 8 ), 0 )
@@ -226,14 +226,14 @@ class DataTypes2ClassDataTestCase( unittest.TestCase ):
       self.assertEqual( ClassWithData.sUInt,   4321 )
       self.assertRaises( ValueError, setattr, c,             'sUInt', -1 )
       self.assertRaises( ValueError, setattr, ClassWithData, 'sUInt', -1 )
-      ClassWithData.sLong                    = -87L
-      self.assertEqual( c.sLong,               -87L )
-      c.sLong                                =  876L
-      self.assertEqual( ClassWithData.sLong,    876L )
-      ClassWithData.sULong                   =  876L
-      self.assertEqual( c.sULong,               876L )
-      c.sULong                               =  678L
-      self.assertEqual( ClassWithData.sULong,   678L )
+      ClassWithData.sLong                    = -87
+      self.assertEqual( c.sLong,               -87 )
+      c.sLong                                =  876
+      self.assertEqual( ClassWithData.sLong,    876 )
+      ClassWithData.sULong                   =  876
+      self.assertEqual( c.sULong,               876 )
+      c.sULong                               =  678
+      self.assertEqual( ClassWithData.sULong,   678 )
       self.assertRaises( ValueError, setattr, ClassWithData, 'sULong', -1 )
       self.assertRaises( ValueError, setattr, c,             'sULong', -1 )
       ClassWithData.sFloat                   = -3.1415

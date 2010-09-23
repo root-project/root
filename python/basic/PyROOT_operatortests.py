@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_operatortests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 05/20/10
+# Last: 09/22/10
 
 """C++ operators interface unit tests for PyROOT package."""
 
@@ -14,6 +14,11 @@ __all__ = [
 ]
 
 gROOT.LoadMacro( "Operators.C+" )
+
+if sys.hexversion >= 0x3000000:
+   pylong = int
+else:
+   pylong = long
 
 
 ### C++ operators overloading test cases =====================================
@@ -89,7 +94,7 @@ class Cpp2ConverterOperatorsTestCase( unittest.TestCase ):
 
       o = OperatorLong(); o.m_long = 42
       self.assertEqual( o.m_long,    42 )
-      self.assertEqual( long( o ),   42 )
+      self.assertEqual( pylong( o ),   42 )
 
       o = OperatorDouble(); o.m_double = 3.1415
       self.assertEqual( o.m_double,      3.1415 )
@@ -104,11 +109,12 @@ class Cpp2ConverterOperatorsTestCase( unittest.TestCase ):
 
       o = OperatorUnsignedInt(); o.m_uint = 2147483647 + 32
       self.assertEqual( o.m_uint,           2147483647 + 32 )
-      self.assertEqual( long( o ),          2147483647 + 32 )
+      self.assertEqual( pylong( o ),          2147483647 + 32 )
 
-      o = OperatorUnsignedLong(); o.m_ulong = sys.maxint + 128
-      self.assertEqual( o.m_ulong,            sys.maxint + 128 )
-      self.assertEqual( long( o ),            sys.maxint + 128 )
+      if hasattr( sys, 'maxint' ):
+         o = OperatorUnsignedLong(); o.m_ulong = sys.maxint + 128
+         self.assertEqual( o.m_ulong,            sys.maxint + 128 )
+         self.assertEqual( pylong( o ),          sys.maxint + 128 )
 
       o = OperatorFloat(); o.m_float =      3.14
       self.assertEqual( round( o.m_float  - 3.14, 5 ), 0. )

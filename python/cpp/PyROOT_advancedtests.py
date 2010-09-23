@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 07/19/10
+# Last: 09/21/10
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -194,10 +194,10 @@ class Cpp3PassByNonConstRefTestCase( unittest.TestCase ):
    def test1TestPlaceHolders( self ):
       """Test usage of Long/Double place holders"""
 
-      l = Long( 42L )
-      self.assertEqual( l, 42L )
-      self.assertEqual( l/7L, 6L )
-      self.assertEqual( l*1L, l )
+      l = Long( 42 )
+      self.assertEqual( l, 42 )
+      self.assertEqual( l/7, 6 )
+      self.assertEqual( l*1, l )
 
       import math
       d = Double( math.pi )
@@ -207,7 +207,7 @@ class Cpp3PassByNonConstRefTestCase( unittest.TestCase ):
    def test2PassBuiltinsByNonConstRef( self ):
       """Test parameter passing of builtins through non-const reference"""
 
-      l = Long( 42L )
+      l = Long( 42 )
       SetLongThroughRef( l, 41 )
       self.assertEqual( l, 41 )
 
@@ -215,7 +215,7 @@ class Cpp3PassByNonConstRefTestCase( unittest.TestCase ):
       SetDoubleThroughRef( d, 3.1415 )
       self.assertEqual( d, 3.1415 )
 
-      i = Long( 42L )
+      i = Long( 42 )
       SetIntThroughRef( i, 13 )
       self.assertEqual( i, 13 )
 

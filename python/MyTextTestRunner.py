@@ -5,8 +5,20 @@
 
 import unittest
 
+
+if hasattr( unittest, 'TextTestResult' ):
+   class MyTextTestResult( unittest.TextTestResult ):
+      def getDescription(self, test):
+         return test.shortDescription()
+else:
+   class MyTextTestResult( object ):
+      pass
+
+
 class MyTextTestRunner( unittest.TextTestRunner ):
-   def run( self, test):
+   resultclass = MyTextTestResult
+
+   def run( self, test ):
       """Run the given test case or test suite."""
 
       result = self._makeResult()

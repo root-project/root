@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_basictests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/23/04
-# Last: 11/07/08
+# Last: 09/22/10
 
 """Basic unit tests for PyROOT package."""
 
@@ -199,7 +199,11 @@ class Basic4PythonizationTestCase( unittest.TestCase ):
       l.sort()
       self.assertEqual( list(l), ['2', '4', '5', '6', '8', 'a', 'b', 'i', 'j'] )
 
-      l.sort( lambda a, b: cmp(b.GetName(),a.GetName()) )
+      if sys.hexversion > 0x3000000:
+         l.sort( key=TObjString.GetName )
+         l.reverse()
+      else:
+         l.sort( lambda a, b: cmp(b.GetName(),a.GetName()) )
       self.assertEqual( list(l), ['j', 'i', 'b', 'a', '8', '6', '5', '4', '2'] )
 
       l2 = l[:3]
@@ -214,10 +218,14 @@ class Basic4PythonizationTestCase( unittest.TestCase ):
       self.assertEqual( list(l2+l3), ['j', 'i', 'b', '5', '4'] )
 
       i = iter(l2)
-      self.assertEqual( i.next(), 'j' )
-      self.assertEqual( i.next(), 'i' )
-      self.assertEqual( i.next(), 'b' )
-      self.assertRaises( StopIteration, i.next )
+      if sys.hexversion > 0x3000000:
+         next = i.__next__
+      else:
+         next = i.next
+      self.assertEqual( next(), 'j' )
+      self.assertEqual( next(), 'i' )
+      self.assertEqual( next(), 'b' )
+      self.assertRaises( StopIteration, next )
 
    def test3TVector( self ):
       """Test TVector2/3/T behavior"""
@@ -228,7 +236,7 @@ class Basic4PythonizationTestCase( unittest.TestCase ):
 
     # TVectorF is a typedef of floats
       v = TVectorF(N)
-      for i in xrange( N ):
+      for i in range( N ):
           v[i] = i*i
 
       for j in v:
