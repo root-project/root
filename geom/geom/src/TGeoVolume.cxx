@@ -1285,10 +1285,9 @@ void TGeoVolume::SaveAs(const char *filename, Option_t *option) const
    }
    if (fGeoManager->GetTopVolume() != this) fGeoManager->SetTopVolume((TGeoVolume*)this);
    
-   char fname[1000];
-   strcpy(fname,filename);
-   char *dot = strstr(fname,".");
-   if (dot) *dot = 0;  
+   TString fname(filename);
+   Int_t ind = fname.Index(".");
+   if (ind>0) fname.Remove(ind);
    out << "void "<<fname<<"() {" << endl;
    out << "   gSystem->Load(\"libGeom\");" << endl;
    ((TGeoVolume*)this)->SavePrimitive(out,option);
