@@ -2224,38 +2224,44 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 
    TString opt = option;
    opt.ToLower();
-   void *dir = gSystem->OpenDirectory(dirname);
-   TString path;
+   {
+      void *dir = gSystem->OpenDirectory(dirname);
+      TString dirpath;
 
-   if (opt.Contains("update")) {
-      // check that directory exist, if not create it
-      if (dir == 0) {
+      if (opt.Contains("update")) {
+         // check that directory exist, if not create it
+         if (dir == 0) {
+            gSystem->mkdir(dirname);
+         }
+         
+      } else if (opt.Contains("recreate")) {
+         // check that directory exist, if not create it
+         if (dir == 0) {
+            gSystem->mkdir(dirname);
+         }
+         // clear directory
+         while (dir) {
+            const char *afile = gSystem->GetDirEntry(dir);
+            if (afile == 0) break;
+            if (strcmp(afile,".") == 0) continue;
+            if (strcmp(afile,"..") == 0) continue;
+            dirpath.Form("%s/%s",dirname,afile);
+            gSystem->Unlink(dirpath);
+         }
+         
+      } else {
+         // new is assumed
+         // if directory already exist, print error message and return
+         if (dir) {
+            Error("MakeProject","cannot create directory %s, already existing",dirname);
+            gSystem->FreeDirectory(dir);
+            return;
+         }
          gSystem->mkdir(dirname);
       }
-
-   } else if (opt.Contains("recreate")) {
-      // check that directory exist, if not create it
-      if (dir == 0) {
-         gSystem->mkdir(dirname);
-      }
-      // clear directory
-      while (dir) {
-         const char *afile = gSystem->GetDirEntry(dir);
-         if (afile == 0) break;
-         if (strcmp(afile,".") == 0) continue;
-         if (strcmp(afile,"..") == 0) continue;
-         path.Form("%s/%s",dirname,afile);
-         gSystem->Unlink(path);
-      }
-
-   } else {
-      // new is assumed
-      // if directory already exist, print error message and return
       if (dir) {
-         Error("MakeProject","cannot create directory %s, already existing",dirname);
-         return;
+         gSystem->FreeDirectory(dir);
       }
-      gSystem->mkdir(dirname);
    }
    Bool_t genreflex = opt.Contains("genreflex");
 
@@ -2393,6 +2399,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       ngener += info->GenerateHeaderFile(dirname,&subClasses,&extrainfos);
       subClasses.Clear("nodelete");
    }
+   TString path;
    path.Form("%s/%sProjectHeaders.h",dirname,dirname);
    FILE *allfp = fopen(path,"a");
    if (!allfp) {
