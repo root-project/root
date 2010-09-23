@@ -3551,7 +3551,12 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    }
   
    fsolmap[name] = xtru;
-
+   delete [] vertx;
+   delete [] verty;
+   for(i = 0; i < nosects; i++){
+      delete [] section[i];
+   }
+   delete [] section;
    return node;
 }
 
