@@ -20,5 +20,6 @@
     allHits->Print();
     // Draw the histogram for the selected column
     allHits->Draw("energy");
+    delete allHits;
  }
  
