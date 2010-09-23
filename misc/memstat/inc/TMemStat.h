@@ -20,6 +20,7 @@ public:
    virtual ~TMemStat();
    virtual void Disable();
    virtual void Enable();
+   static  void Show(Double_t update=0.01, const char* fname="*");
 
    ClassDef(TMemStat, 0) // a user interface class of MemStat
 };

@@ -26,10 +26,10 @@ TREEVIEWERH  := TTreeViewerOld.h TPaveVar.h
 TREEVIEWERS  := TTreeViewerOld.cxx TPaveVar.cxx
 else
 TREEVIEWERH  := TTreeViewer.h TTVSession.h TTVLVContainer.h HelpTextTV.h TSpider.h TSpiderEditor.h TParallelCoord.h \
-                TParallelCoordVar.h TParallelCoordRange.h TParallelCoordEditor.h TGTreeTable.h
+                TParallelCoordVar.h TParallelCoordRange.h TParallelCoordEditor.h TGTreeTable.h TMemStatShow.h
 TREEVIEWERS  := TTreeViewer.cxx TTVSession.cxx TTVLVContainer.cxx HelpTextTV.cxx TSpider.cxx TSpiderEditor.cxx \
                 TParallelCoord.cxx TParallelCoordVar.cxx TParallelCoordRange.cxx TParallelCoordEditor.cxx \
-		TGTreeTable.cxx
+		TGTreeTable.cxx TMemStatShow.cxx
 endif
 TREEVIEWERH  := $(patsubst %,$(MODDIRI)/%,$(TREEVIEWERH))
 TREEVIEWERS  := $(patsubst %,$(MODDIRS)/%,$(TREEVIEWERS))
