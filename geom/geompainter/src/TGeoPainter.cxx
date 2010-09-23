@@ -542,7 +542,7 @@ Int_t TGeoPainter::CountNodes(TGeoVolume *volume, Int_t rlevel) const
    Bool_t last;
       
    while ((daughter=next())) {
-      vol = daughter->GetVolume();
+//      vol = daughter->GetVolume();
       level = next.GetLevel();
       nd = daughter->GetNdaughters();
       vis = daughter->IsVisible();
