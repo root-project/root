@@ -170,9 +170,9 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
          shape = new TGeoCompositeShape(newshape.Data());
          break;
    }      
-   if (boolop && !shape->IsValid()) {
+   if (boolop && (!shape || !shape->IsValid())) {
       Error("MakeBranch", "Shape %s not valid", newshape.Data());
-      delete shape;
+      if (shape) delete shape;
       return kFALSE;
    }      
    if (left) {
