@@ -752,7 +752,10 @@ void TGeoMixture::DefineElement(Int_t /*iel*/, Int_t z, Int_t natoms)
 // Define the mixture element at index iel by number of atoms in the chemical formula.
    TGeoElementTable *table = gGeoManager->GetElementTable();
    TGeoElement *elem = table->GetElement(z);
-   if (!elem) Fatal("DefineElement", "In mixture %s, element with Z=%i not found",GetName(),z);
+   if (!elem) {
+      Fatal("DefineElement", "In mixture %s, element with Z=%i not found",GetName(),z);
+      return;
+   }   
    AddElement(elem, natoms);
 }
    
