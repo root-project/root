@@ -313,7 +313,7 @@ void TSpider::AddVariable(const char* varexp)
 
    if(fSegmentDisplay){
       for(ui=0;ui<fNx*fNy;++ui) ((TList*)fPolyList->At(ui))->Delete();
-      for(ui=0;ui<fNcols-1;++ui) delete fAverageSlices[ui];
+      if (fAverageSlices) for(ui=0;ui<fNcols-1;++ui) delete fAverageSlices[ui];
    }
    fPolyList->Delete();
    delete fPolyList;
@@ -397,7 +397,7 @@ void TSpider::DeleteVariable(const char* varexp)
 
    if(fSegmentDisplay){
       for(ui=0;ui<fNx*fNy;++ui) ((TList*)fPolyList->At(ui))->Delete();
-      for(ui=0;ui<=fNcols;++ui) delete fAverageSlices[ui];
+      if (fAverageSlices) for(ui=0;ui<=fNcols;++ui) delete fAverageSlices[ui];
    }
    fPolyList->Delete();
    delete fPolyList;
@@ -1512,6 +1512,7 @@ void TSpider::SetVariablesExpression(const char* varexp)
    Int_t nch;
    fNcols=8;
 
+   if (!varexp) return;
    TObjArray *leaves = fTree->GetListOfLeaves();
    UInt_t nleaves = leaves->GetEntriesFast();
    if (nleaves < fNcols) fNcols = nleaves;
