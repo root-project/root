@@ -252,7 +252,7 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    container->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
 
    f1 = new TGCompositeFrame(container, 155, 10, kHorizontalFrame | kFixedWidth);
-   f1->AddFrame(label = new TGLabel(f1, "Depth"), new TGLayoutHints(kLHintsLeft, 2, 2, 4, 0));
+   f1->AddFrame(new TGLabel(f1, "Depth"), new TGLayoutHints(kLHintsLeft, 2, 2, 4, 0));
 //   gClient->GetColorByName("#0000ff", color);
 //   label->SetTextColor(color);
    fEVisLevel = new TGNumberEntry(f1, 0, 5, kVOL_VISLEVEL);

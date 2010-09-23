@@ -1355,7 +1355,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
    TGeoNode * node, *nodecheck;
    TGeoChecker *checker = (TGeoChecker*)this;
 
-   TGeoOverlap *nodeovlp = 0;
+//   TGeoOverlap *nodeovlp = 0;
    UInt_t id;
    Int_t level;
 // Check extrusion only for daughters of a non-assembly volume
@@ -1384,7 +1384,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
                }   
             }
             next1.GetPath(path);
-            nodeovlp = checker->MakeCheckOverlap(Form("%s extruded by: %s", vol->GetName(),path.Data()),
+            checker->MakeCheckOverlap(Form("%s extruded by: %s", vol->GetName(),path.Data()),
                                  (TGeoVolume*)vol,node->GetVolume(),gGeoIdentity,(TGeoMatrix*)next1.GetCurrentMatrix(),kFALSE,ovlp);
             next1.Skip();
          }
@@ -1468,7 +1468,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
                            next2.GetPath(path1);
                            hmat2 = node02->GetMatrix();
                            hmat2 *= *next2.GetCurrentMatrix();
-                           nodeovlp = checker->MakeCheckOverlap(Form("%s/%s overlapping %s/%s", vol->GetName(),path.Data(),vol->GetName(),path1.Data()),
+                           checker->MakeCheckOverlap(Form("%s/%s overlapping %s/%s", vol->GetName(),path.Data(),vol->GetName(),path1.Data()),
                                               node->GetVolume(),node1->GetVolume(),&hmat1,&hmat2,kTRUE,ovlp);  
                            next2.Skip();
                         }
@@ -1492,7 +1492,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
                            }   
                         }   
                      }
-                     nodeovlp = checker->MakeCheckOverlap(Form("%s/%s overlapping %s/%s", vol->GetName(),path.Data(),vol->GetName(),path1.Data()),
+                     checker->MakeCheckOverlap(Form("%s/%s overlapping %s/%s", vol->GetName(),path.Data(),vol->GetName(),path1.Data()),
                                         node->GetVolume(),node02->GetVolume(),&hmat1,node02->GetMatrix(),kTRUE,ovlp);  
                   }
                   next1.Skip();
@@ -1525,7 +1525,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
                      next2.GetPath(path1);
                      hmat2 = node02->GetMatrix();
                      hmat2 *= *next2.GetCurrentMatrix();
-                     nodeovlp = checker->MakeCheckOverlap(Form("%s/%s overlapping %s/%s", vol->GetName(),path.Data(),vol->GetName(),path1.Data()),
+                     checker->MakeCheckOverlap(Form("%s/%s overlapping %s/%s", vol->GetName(),path.Data(),vol->GetName(),path1.Data()),
                                         node01->GetVolume(),node1->GetVolume(),node01->GetMatrix(),&hmat2,kTRUE,ovlp);  
                      next2.Skip();
                   }
@@ -1533,7 +1533,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
             } else {
                // node1 also not assembly
                if (fSelectedNode && (fSelectedNode != node01) && (fSelectedNode != node02)) continue;
-               nodeovlp = checker->MakeCheckOverlap(Form("%s/%s overlapping %s/%s", vol->GetName(),path.Data(),vol->GetName(),path1.Data()),
+               checker->MakeCheckOverlap(Form("%s/%s overlapping %s/%s", vol->GetName(),path.Data(),vol->GetName(),path1.Data()),
                                   node01->GetVolume(),node02->GetVolume(),node01->GetMatrix(),node02->GetMatrix(),kTRUE,ovlp);  
             }
          }                         
