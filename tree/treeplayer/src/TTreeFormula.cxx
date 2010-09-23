@@ -252,11 +252,11 @@ void TTreeFormula::Init(const char*name, const char* expression)
       }
    }
    if (fNoper==1 && GetAction(0)==kAliasString) {
-      TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
+      TTreeFormula *subform = static_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
       R__ASSERT(subform);
       if (subform->TestBit(kIsCharacter)) SetBit(kIsCharacter);
    } else if (fNoper==2 && GetAction(0)==kAlternateString) {
-      TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
+      TTreeFormula *subform = static_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
       R__ASSERT(subform);
       if (subform->TestBit(kIsCharacter)) SetBit(kIsCharacter);
    }
