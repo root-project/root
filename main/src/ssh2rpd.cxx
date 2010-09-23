@@ -96,6 +96,10 @@ int main(int argc, char **argv)
 
    // Get logged username
    struct passwd *pw = getpwuid(getuid());
+   if (!pw) {
+      Info("ssh2rpd: user name not found");
+      exit(1);
+   }
 
    char pipeFile[kMAXPATHLEN];
    if (!tmpDir)
