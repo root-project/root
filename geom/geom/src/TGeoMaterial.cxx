@@ -863,6 +863,12 @@ TGeoMaterial *TGeoMixture::DecayMaterial(Double_t time, Double_t precision)
       }
    }
    if (ncomp1>1) mix = new TGeoMixture(Form("%s-evol",GetName()), ncomp, rho); 
+   else {
+      Error("DecayMaterial","No components left after decay of %s?", GetName());
+      delete [] weight;
+      delete pop;
+      return 0;
+   }
    for (i=0; i<ncomp; i++) {
       weight[i] /= amed;
       if (weight[i]<precision) continue;
