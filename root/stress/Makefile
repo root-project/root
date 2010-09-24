@@ -83,11 +83,12 @@ STRESSTESTSCOMP := $(filter-out $(STRESSTESTSCOMP_VETO),$(STRESSTESTS:-test=-cte
 
 
 STRESSFILES := \
+	$(filter-out %Dict.cxx,\
 	$(filter-out %/TrackMathCoreDict.cxx,\
 	$(wildcard $(ROOT_LOC)/test/*.cxx) \
 	$(wildcard $(ROOT_LOC)/test/*.h) \
 	$(wildcard $(ROOT_LOC)/test/*.ref) \
-	$(wildcard $(ROOT_LOC)/test/*.root)) \
+	$(wildcard $(ROOT_LOC)/test/*.root))) \
 $(ROOT_LOC)/test/Makefile.arch \
 $(ROOT_LOC)/test/Makefile
 
