@@ -3,13 +3,8 @@
 
 #include <vector>
 
-//NEW CODE!!
 #pragma link C++ class std::vector<std::pair<Char_t, UChar_t> >+;
 #pragma link C++ class std::pair<Char_t, UChar_t>+;
-//END OF NEW CODE!!
-
-//#pragma link C++ class vector<pair<char,unsigned char> >;
-//#pragma link C++ class std::pair<char,unsigned char>+;
 
 #endif
 
@@ -45,6 +40,8 @@ class regular {
    tp<Int_t> val2;
    vector<Int_t> val3;
    std::vector<std::pair<Char_t, UChar_t> > val4;
+public:
+   regular() : val1(0) {}
 };
 
 #ifdef __MAKECINT__
