@@ -324,13 +324,10 @@ void TPluginHandler::Print(Option_t *opt) const
    // Print info about the plugin handler. If option is "a" print
    // also the ctor's that will be used.
 
-   Int_t cntmiss = 0;
-
    const char *exist = "";
-   if (CheckPlugin() == -1) {
+   if (CheckPlugin() == -1)
       exist = " [*]";
-      cntmiss++;
-   }
+
    Printf("%-20s %-13s %-18s %s%s", fBase.Data(), fRegexp.Data(),
           fClass.Data(), fPlugin.Data(), exist);
    if (strchr(opt, 'a')) {
@@ -620,6 +617,8 @@ void TPluginManager::Print(Option_t *opt) const
    while ((h = (TPluginHandler*) next())) {
       cnt++;
       h->Print(opt);
+      if (h->CheckPlugin() == -1)
+         cntmiss++;
    }
    Printf("=====================================================================");
    Printf("%d plugin handlers registered", cnt);
