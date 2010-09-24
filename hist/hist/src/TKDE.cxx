@@ -187,29 +187,29 @@ void TKDE::AssureOptions() {
 void TKDE::CheckOptions( Bool_t isUserDefinedKernel) {
    // Sets User global options
    if (!(isUserDefinedKernel) && !(fKernelType >= kGaussian && fKernelType < kUserDefined)) {
-      this->Error("CheckOptions", "Illegal user kernel type input! Use template constructor for user defined kernel.");
-      exit(EXIT_FAILURE);
+      this->Fatal("CheckOptions", "Illegal user kernel type input! Use template constructor for user defined kernel.");
+      //exit(EXIT_FAILURE);
    }
    if (fIteration != kAdaptive && fIteration != kFixed) {
       this->Error("CheckOptions", "Illegal user iteration type input!");
-      exit(EXIT_FAILURE);
+      //exit(EXIT_FAILURE);
    }
    if (!(fMirror >= kNoMirror && fMirror <= kMirrorAsymBoth)) {
       this->Error("CheckOptions", "Illegal user mirroring type input!");
-      exit(EXIT_FAILURE);
+      //exit(EXIT_FAILURE);
    }
    SetMirror();
    if (!(fBinning >= kUnbinned && fBinning <= kForcedBinning)) {
       this->Error("CheckOptions", "Illegal user binning type input!");
-      exit(EXIT_FAILURE);
+      //exit(EXIT_FAILURE);
    }
    SetUseBins();
       if (fNBins >= fNEvents) {
          this->Warning("CheckOptions", "Default number of bins is greater or equal to number of events. Use SetNBins(UInt_t) to set the appropriate number of bins");
    }
    if (fRho <= 0.0) {
-      MATH_ERROR_MSG("CheckOptions", "rho cannot be non-positive!" << std::endl);
-      exit(EXIT_FAILURE);
+      Error("CheckOptions", "rho cannot be non-positive!");
+      //exit(EXIT_FAILURE);
    }
 }
 
@@ -415,8 +415,8 @@ void TKDE::SetKernelFunction(KernelFunction_Ptr kernfunc) {
             SetKernelSigma2();
             SetKernel();
          } else {
-            MATH_ERROR_MSG("SetKernelFunction", "Undefined user kernel function input!" << std::endl);
-            exit(EXIT_FAILURE);
+            Error("SetKernelFunction", "Undefined user kernel function input!");
+            //exit(EXIT_FAILURE);
          }
    }
 }
@@ -445,7 +445,7 @@ TH1D* TKDE::GetHistogram(UInt_t nbins, Double_t xMin, Double_t xMax) {
 void TKDE::SetRange(Double_t xMin, Double_t xMax) {
    // Sets minimum range value and maximum range value
    if (xMin >= xMax) {
-      MATH_ERROR_MSG("SetRange", "Minimum range cannot be bigger or equal than the maximum range! Present range values remain the same." << std::endl);
+      Error("SetRange", "Minimum range cannot be bigger or equal than the maximum range! Present range values remain the same.");
       return;
    }
    fXMin = xMin;
@@ -650,21 +650,21 @@ void TKDE::CheckKernelValidity() {
    Double_t unity = ComputeKernelIntegral();
    valid = valid && unity == 1.;
    if (!valid) {
-      MATH_ERROR_MSG("CheckKernelValidity", "Kernel's integral is " << unity << std::endl);
+      Error("CheckKernelValidity", "Kernel's integral is %f",unity);
    }
    Double_t mu = ComputeKernelMu();
    valid = valid && mu == 0.;
    if (!valid) {
-      MATH_ERROR_MSG("CheckKernelValidity", "Kernel's mu is " << mu << std::endl);
+      Error("CheckKernelValidity", "Kernel's mu is %f" ,mu);
    }
    Double_t sigma2 = ComputeKernelSigma2();
    valid = valid && sigma2 > 0 && sigma2 != std::numeric_limits<Double_t>::infinity();
    if (!valid) {
-      MATH_ERROR_MSG("CheckKernelValidity", "Kernel's sigma2 is " << sigma2 << std::endl);
+      Error("CheckKernelValidity", "Kernel's sigma2 is %f",sigma2);
    }
    if (!valid) {
-      MATH_ERROR_MSG("CheckKernelValidity", "Validation conditions: the kernel's integral must be 1, the kernel's mu must be zero and the kernel's sigma2 must be finite positive to be a suitable kernel." << std::endl);
-      exit(EXIT_FAILURE);
+      Error("CheckKernelValidity", "Validation conditions: the kernel's integral must be 1, the kernel's mu must be zero and the kernel's sigma2 must be finite positive to be a suitable kernel.");
+      //exit(EXIT_FAILURE);
    }
 }
 
