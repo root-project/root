@@ -706,6 +706,7 @@ distclean:      clean
 		-@cd RootShower && $(MAKE) distclean
 		-@cd rhtml && $(MAKE) distclean
 		-@cd RootIDE && $(MAKE) distclean
+		-@cd periodic && $(MAKE) distclean
 
 .SUFFIXES: .$(SrcSuf)
 
