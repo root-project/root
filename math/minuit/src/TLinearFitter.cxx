@@ -271,6 +271,7 @@ TLinearFitter::TLinearFitter(Int_t ndim, const char *formula, Option_t *opt)
    fFixedParams=0;
    fSpecial=0;
    fInputFunction=0;
+   fFormula = 0;
    TString option=opt;
    option.ToUpper();
    if (option.Contains("D"))
@@ -318,6 +319,8 @@ TLinearFitter::TLinearFitter(TFormula *function, Option_t *opt)
       fStoreData=kFALSE;
    fIsSet=kTRUE;
    fRobust=kFALSE;
+   fInputFunction=0;
+
    SetFormula(function);
 }
 
