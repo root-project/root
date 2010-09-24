@@ -626,7 +626,7 @@ Double_t TKDE::LowerConfidenceInterval(const Double_t* x, const Double_t* p) con
 }
 
 
-Double_t TKDE::GetBias(const Double_t x) const {
+Double_t TKDE::GetBias(Double_t x) const {
    // Returns the pointwise approximate estimated density bias
    ROOT::Math::Functor1D kern(this->fKernel, &TKDE::TKernel::operator());
    ROOT::Math::RichardsonDerivator rd;
