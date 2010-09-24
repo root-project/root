@@ -61,7 +61,7 @@
 // Overlap checker
 //-----------------
 //
-//  -> add it from the doc.
+//Begin_Html
 /*
 <img src="gif/t_checker.jpg">
 */
