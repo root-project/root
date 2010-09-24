@@ -128,11 +128,14 @@ void TMemStatMng::Close()
    //fgInstance->fDumpFile->WriteObject(fgInstance->fFAddrsList, "FAddrsList");
 
    // to be documented
+   fgInstance->Disable();
    fgInstance->fDumpTree->AutoSave();
    fgInstance->fDumpTree->GetUserInfo()->Delete();
    
    printf("TMemStat Tree saved to file %s\n",fgInstance->fDumpFile->GetName());
 
+   delete fgInstance->fDumpFile;
+   //fgInstance->fDumpFile->Close();
    //delete fgInstance->fFAddrsList;
    //delete fgInstance->fSysInfo;
 
