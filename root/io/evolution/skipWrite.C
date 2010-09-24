@@ -9,57 +9,32 @@
 class MyClass : public TObject, public TAttFill {
    public:
      Int_t    x;
-     
      TNamed   obj;
-     
      Int_t    x1;
-     
      TNamed*  pobj;
-
      Int_t    x2;
-     
      TObject*  skipObjectp;  //->
-     
      Int_t    x3;
-
      TObject*  skipObjectP;  
-
      Int_t    x4;
-
      TCut      skipObject;
-
      Int_t    x5;
-
      TRef      skipTRef;
-     
      Int_t    x6;
-     
      TRef      *skipTRefP;
-     
      Int_t    x7;
-     
      TRef      *skipTRefp;   //->
-
      Int_t    x8;
-     
      Int_t    host1;
      Int_t    host2;
      Int_t    host3;
-     
-     Int_t    skipsize;
-     
+     Int_t    skipsize;     
      Int_t    x9;
-     
      Float_t  *skip3;   // [skipsize]
-
      Int_t    x10;
-
      const char* skipstr;
-     
      Int_t    x11;
-     
      Int_t    x12;
-     
      Int_t    x13;
      
      MyClass() :
@@ -98,6 +73,8 @@ void skipWrite() {
   m.x9 = 9009;
   m.x10 = 10010;
   m.x11 = 110011;
+  m.x12 = 120012;
+  m.x13 = 130013;
   m.pobj = new TNamed("pobj","pobj title");
   m.skipObjectP = new TCut("CutNameP","Cut title for test skipObjectP");
   m.skipTRefP = new TRef;
