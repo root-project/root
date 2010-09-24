@@ -46,7 +46,6 @@
 #include "TUrl.h"
 
 TApplication *gApplication = 0;
-Bool_t tmemstat = kFALSE;
 Bool_t TApplication::fgGraphNeeded = kFALSE;
 Bool_t TApplication::fgGraphInit = kFALSE;
 TList *TApplication::fgApplications = 0;  // List of available applications
@@ -84,6 +83,7 @@ TApplication::TApplication()
    fNoLog           = kFALSE;
    fNoLogo          = kFALSE;
    fQuit            = kFALSE;
+   fUseMemstat      = kFALSE;
    fFiles           = 0;
    fIdleTimer       = 0;
    fSigHandler      = 0;
@@ -154,6 +154,7 @@ TApplication::TApplication(const char *appClassName,
    fNoLog           = kFALSE;
    fNoLogo          = kFALSE;
    fQuit            = kFALSE;
+   fUseMemstat      = kFALSE;
    fExitOnException = kDontExit;
    fAppImp          = 0;
 
@@ -194,9 +195,10 @@ TApplication::TApplication(const char *appClassName,
 
    // to allow user to interact with TCanvas's under WIN32
    gROOT->SetLineHasBeenProcessed();
-   
-   if (gEnv->GetValue("Root.TMemStat", 0)) {
-      tmemstat = kTRUE;
+
+   // activate TMemStat
+   if (fUseMemstat || gEnv->GetValue("Root.TMemStat", 0)) {
+      fUseMemstat = kTRUE;
       Long64_t maxcalls = gEnv->GetValue("Root.TMemStat.maxcalls", 5000000);
       const char *ssystem = gEnv->GetValue("Root.TMemStat.system","gnubuiltin");
       if (maxcalls > 0) {
@@ -209,20 +211,19 @@ TApplication::TApplication(const char *appClassName,
 TApplication::~TApplication()
 {
    // TApplication dtor.
-   
+
    for (int i = 0; i < fArgc; i++)
       if (fArgv[i]) delete [] fArgv[i];
    delete [] fArgv;
    SafeDelete(fAppImp);
    if (fgApplications)
       fgApplications->Remove(this);
-   
-   //close TMemStat if any
-   if (tmemstat) {
-      ProcessLine("TMemStat::Close()");
-      tmemstat = kFALSE;
-   }
 
+   //close TMemStat
+   if (fUseMemstat) {
+      ProcessLine("TMemStat::Close()");
+      fUseMemstat = kFALSE;
+   }
 }
 
 //______________________________________________________________________________
@@ -344,12 +345,14 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    //    -n : do not execute logon and logoff macros as specified in .rootrc
    //    -q : exit after processing command line macro files
    //    -l : do not show splash screen
+   //    -x : exit on exception
    // The last three options are only relevant in conjunction with TRint.
    // The following help and info arguments are supported:
-   //    -?      : print usage
-   //    -h      : print usage
-   //    --help  : print usage
-   //    -config : print ./configure options
+   //    -?       : print usage
+   //    -h       : print usage
+   //    --help   : print usage
+   //    -config  : print ./configure options
+   //    -memstat : run with memory usage monitoring
    // In addition to the above options the arguments that are not options,
    // i.e. they don't start with - or + are treated as follows:
    //   <file>.root are considered ROOT files and added to the InputFiles() list
@@ -389,11 +392,15 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          fprintf(stderr, "  -h      : print usage\n");
          fprintf(stderr, "  --help  : print usage\n");
          fprintf(stderr, "  -config : print ./configure options\n");
+         fprintf(stderr, "  -memstat : run with memory usage monitoring\n");
          fprintf(stderr, "\n");
          Terminate(0);
       } else if (!strcmp(argv[i], "-config")) {
          fprintf(stderr, "ROOT ./configure options:\n%s\n", gROOT->GetConfigOptions());
          Terminate(0);
+      } else if (!strcmp(argv[i], "-memstat")) {
+         fUseMemstat = kTRUE;
+         argv[i] = null;
       } else if (!strcmp(argv[i], "-b")) {
          MakeBatch();
          argv[i] = null;
@@ -1090,12 +1097,12 @@ void TApplication::Terminate(Int_t status)
    // Terminate the application by call TSystem::Exit() unless application has
    // been told to return from Run(), by a call to SetReturnFromRun().
 
-   //close TMemStat if any
-   if (tmemstat) {
+   //close TMemStat
+   if (fUseMemstat) {
       ProcessLine("TMemStat::Close()");
-      tmemstat = kFALSE;
+      fUseMemstat = kFALSE;
    }
-     
+
    Emit("Terminate(Int_t)", status);
 
    if (fReturnFromRun)

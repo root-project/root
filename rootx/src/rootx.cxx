@@ -356,10 +356,11 @@ static void PrintUsage(char *pname)
    fprintf(stderr, "  -x : exit on exception\n");
    fprintf(stderr, " dir : if dir is a valid directory cd to it before executing\n");
    fprintf(stderr, "\n");
-   fprintf(stderr, "  -?      : print usage\n");
-   fprintf(stderr, "  -h      : print usage\n");
-   fprintf(stderr, "  --help  : print usage\n");
-   fprintf(stderr, "  -config : print ./configure options\n");
+   fprintf(stderr, "  -?       : print usage\n");
+   fprintf(stderr, "  -h       : print usage\n");
+   fprintf(stderr, "  --help   : print usage\n");
+   fprintf(stderr, "  -config  : print ./configure options\n");
+   fprintf(stderr, "  -memstat : run with memory usage monitoring\n");
    fprintf(stderr, "\n");
 }
 
