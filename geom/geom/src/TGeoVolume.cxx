@@ -551,20 +551,11 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
       TObjArray *overlaps = fGeoManager->GetListOfOverlaps();
       Int_t novlps = overlaps->GetEntriesFast();
       TNamed *obj;
-      char name[15];
-      char num[15];
-      Int_t ndigits=1;
-      Int_t i,j, result=novlps;
-      while ((result /= 10)) ndigits++;
-      for (i=0; i<novlps; i++) {
+      TString name;
+      for (Int_t i=0; i<novlps; i++) {
          obj = (TNamed*)overlaps->At(i);
-         result = i;
-         name[0] = 'o';
-         name[1] = 'v';
-         for (j=0; j<ndigits; j++) name[j+2]='0';
-         name[ndigits+2] = 0;
-         sprintf(num,"%i", i);
-         memcpy(name+2+ndigits-strlen(num), num, strlen(num));
+         if (novlps<1000) name = Form("ov%03d", i);
+         else             name = Form("ov%06d", i);
          obj->SetName(name);
       }   
       if (novlps) Info("CheckOverlaps", "Number of illegal overlaps/extrusions for volume %s: %d\n", GetName(), novlps);
@@ -1513,12 +1504,9 @@ Bool_t TGeoVolume::GetOptimalVoxels() const
 char *TGeoVolume::GetPointerName() const
 {
 // Provide a pointer name containing uid.
-   static char name[40];
-//   Int_t uid = GetUniqueID();
-//   if (uid) sprintf(name,"p%s_%i", GetName(),uid);
-//   else     sprintf(name,"p%s", GetName());
-   sprintf(name, "p%s_%lx", GetName(), (ULong_t)this);
-   return name;
+   static TString name;
+   name = Form("p%s_%lx", GetName(), (ULong_t)this);
+   return (char*)name.Data();
 }
 
 //_____________________________________________________________________________

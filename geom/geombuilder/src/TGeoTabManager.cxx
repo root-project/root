@@ -315,16 +315,16 @@ TGeoTreeDialog::~TGeoTreeDialog()
 void TGeoTreeDialog::DoSelect(TGListTreeItem *item)
 {
 // Update dialog to reflect current clicked object.
-   static char name[256];
+   static TString name;
    if (!item || !item->GetUserData()) {
       fgSelectedObj = 0;
-      sprintf(name,"Selected: -none-");
+      name = "Selected: -none-";
       fObjLabel->SetText(name);
       return;
    }
    fgSelectedObj = (TObject *)item->GetUserData();
    if (fgSelectedObj) {
-      sprintf(name, "Selected %s", fgSelectedObj->GetName());
+      name = Form("Selected %s", fgSelectedObj->GetName());
       fObjLabel->SetText(name);
    }   
 }   

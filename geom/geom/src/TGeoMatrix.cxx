@@ -290,9 +290,9 @@ Int_t TGeoMatrix::GetByteCount() const
 char *TGeoMatrix::GetPointerName() const
 {
 // Provide a pointer name containing uid.
-   static char name[20];
-   sprintf(name,"pMatrix%d", GetUniqueID());
-   return name;
+   static TString name;
+   name = Form("pMatrix%d", GetUniqueID());
+   return (char*)name.Data();
 }    
 
 //_____________________________________________________________________________
@@ -540,14 +540,7 @@ void TGeoMatrix::SetDefaultName()
    TObjArray *matrices = gGeoManager->GetListOfMatrices();
    Int_t index = 0;
    if (matrices) index =matrices->GetEntriesFast() - 1;
-   Int_t digits = 1;
-   Int_t num = 10;
-   while ((Int_t)(index/num)) {
-      digits++;
-      num *= 10;
-   }
-   char *name = new char[digits+2];
-   sprintf(name, "%c%i", type, index);
+   TString name = Form("%c%d", type, index);
    SetName(name);
 }
 //=============================================================================

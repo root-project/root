@@ -317,12 +317,13 @@ void TGeoChecker::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
             hnew->Fill(i-20.);
             if(i>15) {
                const Double_t* norm = fGeoManager->FindNormal();
-               strcpy(path,fGeoManager->GetPath());
+               strncpy(path,fGeoManager->GetPath(),1024);
+               path[1023] = '\0';
                Double_t dotp = norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2];
                printf("Forward error i=%d p=%5.4f %5.4f %5.4f s=%5.4f dot=%5.4f path=%s\n",
                        i,xyz[0],xyz[1],xyz[2],step,dotp,path);
                hplotS->Fill(xyz[0],xyz[1],(Double_t)i);
-               strcpy(cdir,"Forward");
+               strncpy(cdir,"Forward",10);
                bug->Fill();
             }
 	         break;
@@ -337,11 +338,12 @@ void TGeoChecker::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
             hold->Fill(i-20.);
             if(i>15) {
                const Double_t* norm = fGeoManager->FindNormal();
-               strcpy(path,fGeoManager->GetPath());
+               strncpy(path,fGeoManager->GetPath(),1024);
+               path[1023] = '\0';
                Double_t dotp = norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2];
                printf("Backward error i=%d p=%5.4f %5.4f %5.4f s=%5.4f dot=%5.4f path=%s\n",
                        i,xyz[0],xyz[1],xyz[2],step,dotp,path);
-               strcpy(cdir,"Backward");
+               strncpy(cdir,"Backward",10);
                bug->Fill();
             }
             break;
@@ -549,7 +551,7 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    timer.Start();
    i = 0;
    char volname[30];
-   sprintf(volname, "Tracking %s", vol->GetName());
+   strncpy(volname, vol->GetName(),15); 
    volname[15] = '\0';
    OpProgress(volname,i++, nuid, &timer); 
    Score(vol, 1, TimingPerVolume(vol)); 
@@ -560,7 +562,7 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
       fFlags[uid] = kTRUE;
       next.GetPath(path);
       fGeoManager->cd(path.Data());
-      sprintf(volname, "Tracking %s", vol->GetName());
+      strncpy(volname, vol->GetName(),15); 
       volname[15] = '\0';
       OpProgress(volname,i++, nuid, &timer); 
       Score(vol,1,TimingPerVolume(vol));
@@ -1883,8 +1885,7 @@ TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
    gRandom = new TRandom3();
    Bool_t hasg3 = kFALSE;
    if (strlen(g3path)) hasg3 = kTRUE;
-   char geopath[200];
-   sprintf(geopath, "%s\n", fGeoManager->GetPath());
+   TString geopath = fGeoManager->GetPath();
    dist = 1E10;
    TString common = "";
    // cd to common path

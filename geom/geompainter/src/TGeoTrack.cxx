@@ -137,7 +137,7 @@ void TGeoTrack::AnimateTrack(Double_t tmin, Double_t tmax, Double_t nframes, Opt
    Double_t t = tmin;
    Bool_t geomanim = kFALSE;
    Bool_t issave = kFALSE;
-   char fname[15];
+   TString fname;
    
    TString opt(option);
    if (opt.Contains("/G")) geomanim = kTRUE;
@@ -181,12 +181,7 @@ void TGeoTrack::AnimateTrack(Double_t tmin, Double_t tmax, Double_t nframes, Opt
          gPad->Update();
       }     
       if (issave) {
-         Int_t ndigits=1;
-         Int_t result=i;
-         while ((result /= 10)) ndigits++;
-         sprintf(fname, "anim0000.gif");
-         char *fpos = fname+8-ndigits;
-         sprintf(fpos, "%d.gif", i);
+         fname = Form("anim%04d.gif", i);
          gPad->Print(fname);
       }   
       t += dt;

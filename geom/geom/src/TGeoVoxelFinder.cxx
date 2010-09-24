@@ -93,7 +93,10 @@ TGeoVoxelFinder::TGeoVoxelFinder()
 TGeoVoxelFinder::TGeoVoxelFinder(TGeoVolume *vol)
 {
 // Default constructor
-   if (!vol) Fatal("TGeoVoxelFinder", "Null pointer for volume");
+   if (!vol) {
+      Fatal("TGeoVoxelFinder", "Null pointer for volume");
+      return; // To make code checkers happy
+   }   
    fVolume  = vol;
    fVolume->SetCylVoxels(kFALSE);
    fNboxes   = 0;
