@@ -353,11 +353,11 @@ void TGeoTrack::ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
 char *TGeoTrack::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
 {
 // Get some info about the track.
-   static char info[128];
+   static TString info;
    Double_t x=0,y=0,z=0,t=0;
    GetPoint(0,x,y,z,t);
-   sprintf(info, "%s (%g, %g, %g) tof=%g", GetName(),x,y,z,t);
-   return info;
+   info = Form("%s (%g, %g, %g) tof=%g", GetName(),x,y,z,t);
+   return (char*)info.Data();
 }
 
 //______________________________________________________________________________
