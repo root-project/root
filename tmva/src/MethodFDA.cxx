@@ -74,8 +74,13 @@ TMVA::MethodFDA::MethodFDA( const TString& jobName,
    : MethodBase( jobName, Types::kFDA, methodTitle, theData, theOption, theTargetDir ), 
      IFitterTarget   (),
      fFormula        ( 0 ),
+     fNPars          ( 0 ),
      fFitter         ( 0 ),
-     fConvergerFitter( 0 )
+     fConvergerFitter( 0 ),
+     fSumOfWeightsSig( 0 ),
+     fSumOfWeightsBkg( 0 ),
+     fSumOfWeights   ( 0 ),
+     fOutputDimensions( 0 )
 {
    // standard constructor
 }
@@ -87,8 +92,13 @@ TMVA::MethodFDA::MethodFDA( DataSetInfo& theData,
    : MethodBase( Types::kFDA, theData, theWeightFile, theTargetDir ), 
      IFitterTarget   (),
      fFormula        ( 0 ),
+     fNPars          ( 0 ),
      fFitter         ( 0 ),
-     fConvergerFitter( 0 )
+     fConvergerFitter( 0 ),
+     fSumOfWeightsSig( 0 ),
+     fSumOfWeightsBkg( 0 ),
+     fSumOfWeights   ( 0 ),
+     fOutputDimensions( 0 )
 {
    // constructor from weight file
 }

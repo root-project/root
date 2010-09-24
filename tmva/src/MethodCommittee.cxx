@@ -72,7 +72,14 @@ TMVA::MethodCommittee::MethodCommittee( const TString& jobName,
                                         TDirectory* theTargetDir ) :
    TMVA::MethodBase( jobName, Types::kCommittee, methodTitle, dsi, theOption, theTargetDir ),
    fNMembers(100),
-   fBoostType("AdaBoost")
+   fBoostType("AdaBoost"),
+   fMemberType(Types::kMaxMethod),
+   fUseMemberDecision(kFALSE),
+   fUseWeightedMembers(kFALSE),
+   fITree(0),
+   fBoostFactor(0),
+   fErrorFraction(0),
+   fNnodes(0)
 {
    // constructor
 }
@@ -83,7 +90,14 @@ TMVA::MethodCommittee::MethodCommittee( DataSetInfo& theData,
                                         TDirectory* theTargetDir ) :
    TMVA::MethodBase( Types::kCommittee, theData, theWeightFile, theTargetDir ),
    fNMembers(100),
-   fBoostType("AdaBoost")
+   fBoostType("AdaBoost"),
+   fMemberType(Types::kMaxMethod),
+   fUseMemberDecision(kFALSE),
+   fUseWeightedMembers(kFALSE),
+   fITree(0),
+   fBoostFactor(0),
+   fErrorFraction(0),
+   fNnodes(0)
 {
    // constructor for calculating Committee-MVA using previously generatad decision trees
    // the result of the previous training (the decision trees) are read in via the

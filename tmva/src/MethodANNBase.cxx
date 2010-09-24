@@ -69,6 +69,8 @@ TMVA::MethodANNBase::MethodANNBase( const TString& jobName,
                                     const TString& theOption,
                                     TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, methodType, methodTitle, theData, theOption, theTargetDir )
+   , fEstimator(kMSE)
+   , fUseRegulator(kFALSE)
 {
    // standard constructor
    // Note: Right now it is an option to choose the neuron input function,
@@ -85,6 +87,8 @@ TMVA::MethodANNBase::MethodANNBase( Types::EMVA methodType,
                                     const TString& theWeightFile,
                                     TDirectory* theTargetDir )
    : TMVA::MethodBase( methodType, theData, theWeightFile, theTargetDir ) 
+   , fEstimator(kMSE)
+   , fUseRegulator(kFALSE)
 {
    // construct the Method from the weight file 
    InitANNBase();
@@ -137,7 +141,7 @@ void TMVA::MethodANNBase::ProcessOptions()
    // do nothing specific at this moment
   if      ( DoRegression() || DoMulticlass())  fEstimatorS = "MSE";    //zjh
   if      (fEstimatorS == "MSE" )  fEstimator = kMSE;    //zjh  (to test all others)
-	else if (fEstimatorS == "CE")    fEstimator = kCE;      //zjh
+  else if (fEstimatorS == "CE")    fEstimator = kCE;      //zjh
    vector<Int_t>* layout = ParseLayoutString(fLayerSpec);
    BuildNetwork(layout);
 }
