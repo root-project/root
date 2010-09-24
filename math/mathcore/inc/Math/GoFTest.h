@@ -50,17 +50,6 @@ public:
       kKS2s  // Kolmogorov-Smirnov 2-Samples Test
    };
    
-   /* Sets the user input distribution. To use with the template construtor to change the distribution parameter*/
-   template<class Dist>
-   void SetDistribution(Dist& dist, EUserDistribution userDist = kPDF) {
-      WrappedFunction<Dist&> wcdf(dist); 
-      SetDistributionFunction(wcdf, userDist);
-   }
-
-   /* Template specialization */
-   void SetDistribution(const IGenFunction& f, GoFTest::EUserDistribution userDist);
-   
-
    /* Constructor for using only with 2-samples tests */
    GoFTest(const Double_t* sample1, UInt_t sample1Size, const Double_t* sample2, UInt_t sample2Size);
   
@@ -69,13 +58,36 @@ public:
   
    /* Templated constructor for using only with 1-sample tests with a user specified distribution */  
    template<class Dist>
-   GoFTest(const Double_t* sample, UInt_t sampleSize, const Dist& dist, EUserDistribution userDist = kPDF) {
+   GoFTest(const Double_t* sample, UInt_t sampleSize, Dist& dist, EUserDistribution userDist = kPDF) {
       Instantiate(sample, sampleSize);
       SetDistribution(dist, userDist);
    }
+
+   /* specializetion using IGenFunction interface */
+   GoFTest(const Double_t* sample, UInt_t sampleSize, const IGenFunction& dist, EUserDistribution userDist = kPDF, 
+           Double_t xmin = 1, Double_t xmax = 0) 
+   {
+      Instantiate(sample, sampleSize);
+      SetDistribution(dist, userDist,xmin,xmax);
+   }
+
+   /* Sets the user input distribution. To use with the template construtor to change the distribution parameter*/
+   template<class Dist>
+   void SetDistribution(Dist& dist, EUserDistribution userDist = kPDF, Double_t xmin = 1, Double_t xmax = 0) {
+      WrappedFunction<Dist&> wcdf(dist); 
+      SetDistributionFunction(wcdf, userDist,xmin,xmax);
+   }
+
+   /* Template specialization */
+   void SetDistribution(const IGenFunction& f, GoFTest::EUserDistribution userDist, Double_t xmin = 1, Double_t xmax = 0) {
+      SetDistributionFunction(f, userDist,xmin,xmax); 
+   }
+   
+
    
    /* Sets the distribution type for the non templated 1-sample test */
    void SetDistributionType(EDistribution dist);
+
    
    virtual ~GoFTest();
 
@@ -129,7 +141,7 @@ private:
   
    Double_t fMean;
    Double_t fSigma;
-  
+
    std::vector<Double_t> fCombinedSamples;
   
    std::vector<std::vector<Double_t> > fSamples;
@@ -137,7 +149,7 @@ private:
    Bool_t fTestSampleFromH0;
    
    void SetCDF();
-   void SetDistributionFunction(const IGenFunction& cdf, Bool_t isPDF);
+   void SetDistributionFunction(const IGenFunction& cdf, Bool_t isPDF, Double_t xmin, Double_t xmax);
   
    void Instantiate(const Double_t* sample, UInt_t sampleSize);
     

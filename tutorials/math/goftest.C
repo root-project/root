@@ -79,7 +79,7 @@ void goftest() {
    /* Rebuild the test using the default 1-sample construtor */
    delete goftest_1;
    goftest_1 = new ROOT::Math::GoFTest(sample1, nEvents1); // User must then input a distribution type option
-   goftest_1->SetDistribution(ROOT::Math::GoFTest::kLogNormal);
+   goftest_1->SetDistributionType(ROOT::Math::GoFTest::kLogNormal);
    
    
    /* Possible calls for the Kolmogorov - Smirnov test */
@@ -219,15 +219,25 @@ void goftest() {
    /*-------------------------------------------------------*/
    
    /* a) User input PDF */
-   ROOT::Math::GoFTest* goftest_3a = new ROOT::Math::GoFTest(sample3, nEvents3, TMath::Landau);
-   
+   ROOT::Math::Functor1D f(TMath::Landau);
+   ROOT::Math::GoFTest* goftest_3a = new ROOT::Math::GoFTest(sample3, nEvents3, f,  ROOT::Math::GoFTest::kPDF, -100,100000);  // need to specify am interval
    /* b) User input CDF */
-   ROOT::Math::GoFTest* goftest_3b = new ROOT::Math::GoFTest(sample3, nEvents3, TMath::LandauI, ROOT::Math::GoFTest::kCDF);
+   ROOT::Math::Functor1D fI(TMath::LandauI);
+   ROOT::Math::GoFTest* goftest_3b = new ROOT::Math::GoFTest(sample3, nEvents3, fI, ROOT::Math::GoFTest::kCDF);
 
+   
    /* Returning the p-value for the Anderson-Darling test statistic */
    pvalueAD_1 = goftest_3a-> AndersonDarlingTest(); // p-value is the default choice
+   
    pvalueAD_2 = (*goftest_3b)(); // p-value and Anderson - Darling Test are the default choices
    
    /* Checking consistency between both tests */ 
-   assert(TMath::Abs(pvalueAD_1 - pvalueAD_2) < 0.00001 * pvalueAD_2);
+   std::cout << " \n\nTEST with LANDAU distribution:\t";
+   if (TMath::Abs(pvalueAD_1 - pvalueAD_2) > 1.E-1 * pvalueAD_2) { 
+      std::cout << "FAILED " << std::endl;
+      Error("goftest","Error in comparing testing using Landau and Landau CDF");
+      std::cerr << " pvalues are " << pvalueAD_1 << "  " << pvalueAD_2 << std::endl;
+   }
+   else 
+      std::cout << "OK ( pvalues = " << pvalueAD_2 << "  )" << std::endl;
 }

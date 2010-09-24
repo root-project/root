@@ -30,22 +30,43 @@ namespace ROOT {
 namespace Math {
    
    class PDFIntegral : public IGenFunction { 
-      const IGenFunction* fPDF;
+      Double_t fXmin; // lower range for x 
+      Double_t fXmax; // lower range for x 
+      Double_t fNorm; // normalization
+      mutable IntegratorOneDim fIntegral;
+      const IGenFunction* fPDF; // pdf pointer (owned by the class) 
    public:
 
       virtual ~PDFIntegral() { if (fPDF) delete fPDF; }
 
-      PDFIntegral(const IGenFunction* pdf) : fPDF(pdf) {
+      PDFIntegral(const IGenFunction* pdf, Double_t xmin=0, Double_t xmax=-1) : 
+         fXmin(xmin), 
+         fXmax(xmax),
+         fNorm(1),
+         fPDF(pdf)
+      {
+         // compute normalization
+         fIntegral.SetFunction(*pdf);
+         if (fXmin >= fXmax) {  
+            fXmin = -std::numeric_limits<double>::infinity();
+            fXmax = std::numeric_limits<double>::infinity();
+         }
+         if (fXmin ==  std::numeric_limits<double>::infinity() && fXmax == std::numeric_limits<double>::infinity() ) { 
+            fNorm = fIntegral.Integral();
+         }
+         else if (fXmin == std::numeric_limits<double>::infinity() )
+            fNorm = fIntegral.IntegralLow(fXmax);
+         else if (fXmax == std::numeric_limits<double>::infinity() )
+            fNorm = fIntegral.IntegralUp(fXmin);
+         else
+            fNorm = fIntegral.Integral(fXmin, fXmax);
       }
-      
-      Double_t operator() (Double_t x) const {
-         IntegratorOneDim  integral;
-         integral.SetFunction(*fPDF);
-         return integral.IntegralLow(x);
-      }
-      
+            
       Double_t DoEval(Double_t x) const {
-         return (*this)(x);
+         if (fXmin == std::numeric_limits<double>::infinity() )
+            return fIntegral.IntegralLow(x)/fNorm;
+         else 
+            return fIntegral.Integral(fXmin,x)/fNorm;
       }
       
       IGenFunction* Clone() const {
@@ -53,10 +74,6 @@ namespace Math {
       }
    };
 
-   void GoFTest::SetDistribution(const IGenFunction& f, GoFTest::EUserDistribution userDist) {
-      SetDistributionFunction(f, userDist); 
-   }
-   
    void GoFTest::SetDistributionType(EDistribution dist) {
       if (!(kGaussian <= dist && dist <= kExponential)) {
          std::cerr << "Cannot set distribution type! Distribution type option must be ennabled." << std::endl;
@@ -176,12 +193,13 @@ namespace Math {
       fCDF = std::auto_ptr<IGenFunction>(cdf);
    }
    
-   void GoFTest::SetDistributionFunction(const IGenFunction& f, Bool_t isPDF) {
+   void GoFTest::SetDistributionFunction(const IGenFunction& f, Bool_t isPDF, Double_t xmin, Double_t xmax) {
       if (fDist != kUserDefined) {
          std::cerr << "Cannot set distribution function! User defined distribution option must be ennabled." << std::endl;
          return;
       }
-      fCDF = std::auto_ptr<IGenFunction>(isPDF ? new PDFIntegral(f.Clone()) : f.Clone());
+      // need to clone the function for the template methods
+      fCDF = std::auto_ptr<IGenFunction>(isPDF ? new PDFIntegral(f.Clone(),xmin,xmax) : f.Clone());
    }
 
    void GoFTest::Instantiate(const Double_t* sample, UInt_t sampleSize) {
