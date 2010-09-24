@@ -104,7 +104,7 @@ public:
    virtual void       GetViewAngles(Double_t &/*longitude*/, Double_t &/*latitude*/, Double_t &/*psi*/) {;}
    virtual Int_t      GetVisLevel() const = 0; 
    virtual Int_t      GetVisOption() const = 0; 
-   virtual char      *GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const = 0;
+   virtual const char*GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const = 0;
    virtual void       GrabFocus(Int_t nfr=0, Double_t dlong=0, Double_t dlat=0, Double_t dpsi=0) =0;
    virtual Double_t  *GetViewBox() = 0;
    virtual Bool_t     IsPaintingShape() const = 0;

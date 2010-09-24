@@ -113,7 +113,7 @@ public:
    virtual void       ExecuteManagerEvent(TGeoManager *geom, Int_t event, Int_t px, Int_t py);
    virtual void       ExecuteShapeEvent(TGeoShape *shape, Int_t event, Int_t px, Int_t py);
    virtual void       ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py);
-   virtual char      *GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const;
+   virtual const char*GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const;
    virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const 
                                     {bombx=fBombX; bomby=fBombY; bombz=fBombZ; bombr=fBombR;}
    virtual Int_t      GetBombMode() const      {return fExplodedView;}

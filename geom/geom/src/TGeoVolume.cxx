@@ -1489,7 +1489,7 @@ char *TGeoVolume::GetObjectInfo(Int_t px, Int_t py) const
    TGeoVolume *vol = (TGeoVolume*)this;
    TVirtualGeoPainter *painter = fGeoManager->GetPainter();
    if (!painter) return 0;
-   return painter->GetVolumeInfo(vol, px, py);
+   return (char*)painter->GetVolumeInfo(vol, px, py);
 }
 
 //_____________________________________________________________________________

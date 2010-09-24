@@ -980,15 +980,15 @@ void TGeoPainter::ExecuteVolumeEvent(TGeoVolume * /*volume*/, Int_t event, Int_t
 }
 
 //______________________________________________________________________________
-char *TGeoPainter::GetVolumeInfo(const TGeoVolume *volume, Int_t /*px*/, Int_t /*py*/) const
+const char *TGeoPainter::GetVolumeInfo(const TGeoVolume *volume, Int_t /*px*/, Int_t /*py*/) const
 {
 // Get some info about the current selected volume.
-   const char *snull = "";
-   if (!gPad) return (char*)snull;
-   static char info[128];
+   static TString info;
+   info = "";
+   if (!gPad) return info;
    if (fPaintingOverlaps) {
       if (!fOverlap) {
-         sprintf(info, "wrong overlapping flag");
+         info =  "wrong overlapping flag";
          return info;
       }   
       TString ovtype, name;
@@ -996,10 +996,10 @@ char *TGeoPainter::GetVolumeInfo(const TGeoVolume *volume, Int_t /*px*/, Int_t /
       else ovtype = "OVERLAP";
       if (volume==fOverlap->GetFirstVolume()) name=volume->GetName();
       else name=fOverlap->GetSecondVolume()->GetName();
-      sprintf(info, "%s: %s of %g", name.Data(), ovtype.Data(), fOverlap->GetOverlap());
+      info = Form("%s: %s of %g", name.Data(), ovtype.Data(), fOverlap->GetOverlap());
       return info;
    }   
-   else sprintf(info,"%s, shape=%s", fVolInfo.Data(), volume->GetShape()->ClassName());
+   else info = Form("%s, shape=%s", fVolInfo.Data(), volume->GetShape()->ClassName());
    return info;
 }
 

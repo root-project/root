@@ -271,7 +271,7 @@ char *TGeoNode::GetObjectInfo(Int_t px, Int_t py) const
    if (!fVolume) return 0;
    TVirtualGeoPainter *painter = fVolume->GetGeoManager()->GetPainter();
    if (!painter) return 0;
-   return painter->GetVolumeInfo(fVolume, px, py);
+   return (char*)painter->GetVolumeInfo(fVolume, px, py);
 }
 
 //_____________________________________________________________________________
