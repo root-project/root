@@ -21,7 +21,6 @@ __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 ### system and interpreter setup ------------------------------------------------
 import os, sys, types
-import string as pystring
 
 ## there's no version_info in 1.5.2
 if sys.version[0:3] < '2.2':
@@ -61,7 +60,7 @@ try:
 
    readline.set_completer( FileNameCompleter().complete )
    readline.set_completer_delims(
-      pystring.replace( readline.get_completer_delims(), os.sep , '' ) )
+      readline.get_completer_delims().replace( os.sep , '' ) )
 
    readline.parse_and_bind( 'tab: complete' )
    readline.parse_and_bind( 'set show-all-if-ambiguous On' )
@@ -175,8 +174,7 @@ class Template:
       newargs = [ self.__name__[ 0 <= self.__name__.find( 'std::' ) and 5 or 0:] ]
       for arg in args:
          if type(arg) == str:
-            arg = pystring.join(
-               map( lambda x: pystring.strip(x), pystring.split(arg,',') ), ',' )
+            arg = ','.join( map( lambda x: x.strip(), arg.split(',') ) )
          newargs.append( arg )
       result = _root.MakeRootTemplateClass( *newargs )
 

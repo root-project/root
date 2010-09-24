@@ -1715,6 +1715,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       }
 
       if ( iklass && iklass->GetClassInfo() ) {
+         ((PyTypeObject*)pyclass)->tp_iter     = (getiterfunc)StlSequenceIter;
          Utility::AddToClass( pyclass, "__iter__", (PyCFunction) StlSequenceIter, METH_NOARGS );
       } else if ( HasAttrDirect( pyclass, PyStrings::gGetItem ) && HasAttrDirect( pyclass, PyStrings::gLen ) ) {
          Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
@@ -1847,6 +1848,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    }
 
    if ( name.find( "iterator" ) != std::string::npos ) {
+      ((PyTypeObject*)pyclass)->tp_iternext = (iternextfunc)StlIterNext;
       Utility::AddToClass( pyclass, "next", (PyCFunction) StlIterNext, METH_NOARGS );
 
    // special case, if operator== is a global overload and included in the dictionary
