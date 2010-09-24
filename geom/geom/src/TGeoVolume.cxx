@@ -883,16 +883,13 @@ void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, 
    }
 
    TGeoNodeMatrix *node = 0;
-   char *name = 0;         
    node = new TGeoNodeMatrix(vol, matrix);
    node->SetMotherVolume(this);
    fNodes->Add(node);
-   name = new char[strlen(vol->GetName())+15];
-   sprintf(name, "%s_%i", vol->GetName(), copy_no);
+   TString name = Form("%s_%d", vol->GetName(), copy_no);
    if (fNodes->FindObject(name))
-      Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
+      Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name.Data());
    node->SetName(name);
-   delete [] name;
    node->SetNumber(copy_no);
 }
 
@@ -914,10 +911,8 @@ void TGeoVolume::AddNodeOffset(const TGeoVolume *vol, Int_t copy_no, Double_t of
    TGeoNode *node = new TGeoNodeOffset(vol, copy_no, offset);
    node->SetMotherVolume(this);
    fNodes->Add(node);
-   char *name = new char[strlen(vol->GetName())+15];
-   sprintf(name, "%s_%i", vol->GetName(), copy_no+1);
+   TString name = Form("%s_%d", vol->GetName(), copy_no+1);
    node->SetName(name);
-   delete [] name;
    node->SetNumber(copy_no+1);
 }
 
@@ -951,18 +946,13 @@ void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix
       return;
    }
 
-   TGeoNodeMatrix *node = 0;
-   char *name = 0;
-
-   node = new TGeoNodeMatrix(vol, matrix);
+   TGeoNodeMatrix *node = new TGeoNodeMatrix(vol, matrix);
    node->SetMotherVolume(this);
    fNodes->Add(node);
-   name = new char[strlen(vol->GetName())+15];
-   sprintf(name, "%s_%i", vol->GetName(), copy_no);
+   TString name = Form("%s_%d", vol->GetName(), copy_no);
    if (fNodes->FindObject(name))
-      Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
+      Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name.Data());
    node->SetName(name);
-   delete [] name;
    node->SetNumber(copy_no);
    node->SetOverlapping();
    if (vol->GetMedium() == fMedium)
@@ -2352,13 +2342,9 @@ TGeoVolume *TGeoVolumeMulti::Divide(const char *divname, Int_t iaxis, Int_t ndiv
 //_____________________________________________________________________________
 TGeoVolume *TGeoVolumeMulti::MakeCopyVolume(TGeoShape *newshape)
 {
-    // make a copy of this volume
-//    printf("   Making a copy of %s\n", GetName());
-   char *name = new char[strlen(GetName())+1];
-   sprintf(name, "%s", GetName());
+   // Make a copy of this volume
    // build a volume with same name, shape and medium
-   TGeoVolume *vol = new TGeoVolume(name, newshape, fMedium);
-   delete [] name;
+   TGeoVolume *vol = new TGeoVolume(GetName(), newshape, fMedium);
    Int_t i=0;
    // copy volume attributes
    vol->SetVisibility(IsVisible());
