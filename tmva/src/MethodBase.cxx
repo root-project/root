@@ -1023,13 +1023,13 @@ void TMVA::MethodBase::TestClassification()
    for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
       
       const Event* ev = GetEvent(ievt);
-      Float_t v = (*mvaRes)[ievt];
+      Float_t v = (*mvaRes)[ievt][0];
       Float_t w = ev->GetWeight();
       
       if (DataInfo().IsSignal(ev)) {
          mva_s ->Fill( v, w );
          if (mvaProb) {
-            proba_s->Fill( (*mvaProb)[ievt], w );
+            proba_s->Fill( (*mvaProb)[ievt][0], w );
             rarity_s->Fill( GetRarity( v ), w );
          }
          
@@ -1038,7 +1038,7 @@ void TMVA::MethodBase::TestClassification()
       else {
          mva_b ->Fill( v, w );
          if (mvaProb) {
-            proba_b->Fill( (*mvaProb)[ievt], w );
+            proba_b->Fill( (*mvaProb)[ievt][0], w );
             rarity_b->Fill( GetRarity( v ), w );
          }
          mva_eff_b ->Fill( v, w );
@@ -1208,7 +1208,7 @@ void TMVA::MethodBase::WriteStateToFile() const
    Log() << kINFO << "Creating weight file in xml format: "
          << gTools().Color("lightblue") << xmlfname << gTools().Color("reset") << Endl;
    void* doc      = gTools().xmlengine().NewDoc();
-   void* rootnode = gTools().AddChild(0,"MethodSetup");
+   void* rootnode = gTools().AddChild(0,"MethodSetup", "", true);
    gTools().xmlengine().DocSetRootElement(doc,rootnode);
    gTools().AddAttr(rootnode,"Method", GetMethodTypeName() + "::" + GetMethodName());
    WriteStateToXML(rootnode);
@@ -1565,13 +1565,9 @@ void TMVA::MethodBase::AddSpectatorsXMLTo( void* parent ) const
 
       // we do not want to write spectators that are category-cuts,
       // except if the method is the category method and the spectators belong to it
-      if( vi.GetVarType()=='C' ) {
+      if( vi.GetVarType()=='C' )
          continue;
-         if(GetMethodTypeName()!="Category")
-            continue;
-         if(!vi.GetTitle().BeginsWith(GetMethodName()+":") )
-            continue;
-      }
+
       void* spec = gTools().AddChild( specs, "Spectator" );
       gTools().AddAttr( spec, "SpecIndex", writeIdx++ );
       vi.AddToXML( spec );
@@ -1711,6 +1707,8 @@ TDirectory* TMVA::MethodBase::BaseDir() const
    if (o!=0 && o->InheritsFrom(TDirectory::Class())) dir = (TDirectory*)o;
 
    if (dir != 0) return dir;
+
+   std::cout << "Trying to create '" << defaultDir << "'" << std::endl;
 
    TDirectory *sdir = methodDir->mkdir(defaultDir);
 

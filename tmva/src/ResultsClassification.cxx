@@ -34,13 +34,14 @@
 //_______________________________________________________________________
 TMVA::ResultsClassification::ResultsClassification( const DataSetInfo* dsi ) 
    : Results( dsi ),
+     fRet(1),
      fLogger( new MsgLogger("ResultsClassification", kINFO) )
 {
    // constructor
 }
 
 //_______________________________________________________________________
-TMVA::ResultsClassification::~ResultsClassification() 
+TMVA::ResultsClassification::~ResultsClassification()
 {
    // destructor
    delete fLogger;
@@ -48,10 +49,10 @@ TMVA::ResultsClassification::~ResultsClassification()
 
 //_______________________________________________________________________
 void TMVA::ResultsClassification::SetValue( Float_t value, Int_t ievt ) 
-{ 
+{
    // set MVA response
    if (ievt >= (Int_t)fMvaValues.size()) fMvaValues.resize( ievt+1 );
-   fMvaValues[ievt] = value; 
+   fMvaValues[ievt] = value;
 }
 
 

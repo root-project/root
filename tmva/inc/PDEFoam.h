@@ -82,10 +82,10 @@ namespace TMVA {
    // kTargetError   : error on target 0 (saved in cell element 1)
    // kMeanValue     : mean sampling value (saved in fIntegral)
    // kRms           : rms of sampling distribution (saved in fDriver)
-   // kRmsOvMean     : rms/mean of sampling distribution (saved in 
+   // kRmsOvMean     : rms/mean of sampling distribution (saved in
    //                  fDriver and fIntegral)
    // kDensity       : number of events/cell volume
-   enum ECellValue { kNev, kDiscriminator, kDiscriminatorError, kTarget0, 
+   enum ECellValue { kNev, kDiscriminator, kDiscriminatorError, kTarget0,
                      kTarget0Error, kMeanValue, kRms, kRmsOvMean, kDensity };
 }
 

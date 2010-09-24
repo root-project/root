@@ -78,6 +78,9 @@ namespace TMVA {
       TH1*                GetHist(const TString & alias) const;
       virtual Types::EAnalysisType  GetAnalysisType() { return Types::kNoAnalysisType; }
 
+      virtual const std::vector< Float_t >&  operator [] ( Int_t ievt ) const = 0;
+      
+
    private:
       Types::ETreeType             fTreeType;    //! tree type for this result 
       const DataSetInfo*           fDsi;         //! a pointer to the datasetinfo-object

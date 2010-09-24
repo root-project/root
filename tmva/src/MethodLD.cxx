@@ -48,22 +48,24 @@ ClassImp(TMVA::MethodLD)
 //_______________________________________________________________________
 TMVA::MethodLD::MethodLD( const TString& jobName,
                           const TString& methodTitle,
-                          DataSetInfo& dsi, 
+                          DataSetInfo& dsi,
                           const TString& theOption,
                           TDirectory* theTargetDir ) :
    MethodBase( jobName, Types::kLD, methodTitle, dsi, theOption, theTargetDir ),
-   fSumMatx   ( 0 ), 
+   fNRegOut   ( 0 ),
+   fSumMatx   ( 0 ),
    fSumValMatx( 0 ),
    fCoeffMatx ( 0 ),
    fLDCoeff   ( 0 )
 {
-   // standard constructor for the LD 
+   // standard constructor for the LD
 }
 
 //_______________________________________________________________________
 TMVA::MethodLD::MethodLD( DataSetInfo& theData, const TString& theWeightFile, TDirectory* theTargetDir )
    : MethodBase( Types::kLD, theData, theWeightFile, theTargetDir ),
-     fSumMatx   ( 0 ), 
+     fNRegOut   ( 0 ),
+     fSumMatx   ( 0 ),
      fSumValMatx( 0 ),
      fCoeffMatx ( 0 ),
      fLDCoeff   ( 0 )

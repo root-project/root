@@ -71,7 +71,7 @@ namespace TMVA {
 
       // getters
       Long64_t GetSize() const        { return fMultiClassValues.size(); }
-      std::vector< Float_t >&              operator [] ( Int_t ievt ) const { return fMultiClassValues.at(ievt); }
+      virtual const std::vector< Float_t >&  operator[] ( Int_t ievt ) const { return fMultiClassValues.at(ievt); }
       std::vector<std::vector< Float_t> >* GetValueVector()  { return &fMultiClassValues; }
 
       Types::EAnalysisType  GetAnalysisType() { return Types::kMulticlass; }

@@ -45,6 +45,8 @@ TMVA::RuleEnsemble::RuleEnsemble( RuleFit *rf )
    , fAverageSupport   ( 0.8 )
    , fAverageRuleSigma ( 0.4 )  // default value - used if only linear model is chosen
    , fRuleMinDist      ( 1e-3 ) // closest allowed 'distance' between two rules
+   , fEvent(0)
+   , fRuleMapEvents(0)
    , fLogger( new MsgLogger("RuleFit") )
 {
    // constructor
@@ -54,6 +56,9 @@ TMVA::RuleEnsemble::RuleEnsemble( RuleFit *rf )
 //_______________________________________________________________________
 TMVA::RuleEnsemble::RuleEnsemble( const RuleEnsemble& other )
    : fAverageSupport   ( 1 )
+   , fEvent(0)
+   , fRuleMapEvents(0)
+   , fRuleFit(0)
    , fLogger( new MsgLogger("RuleFit") )
 {
    // copy constructor

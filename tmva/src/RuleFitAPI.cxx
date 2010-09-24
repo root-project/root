@@ -42,11 +42,12 @@
 
 ClassImp(TMVA::RuleFitAPI)
 
-   TMVA::RuleFitAPI::RuleFitAPI( const MethodRuleFit *rfbase,
-                                 RuleFit *rulefit,
-                                 EMsgType minType = kINFO ) :
+TMVA::RuleFitAPI::RuleFitAPI( const MethodRuleFit *rfbase,
+                              RuleFit *rulefit,
+                              EMsgType minType = kINFO ) :
    fMethodRuleFit(rfbase),
    fRuleFit(rulefit),
+   fRFProgram(kRfTrain),
    fLogger("RuleFitAPI",minType)
 {
    // standard constructor

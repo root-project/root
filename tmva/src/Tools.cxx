@@ -1029,16 +1029,19 @@ void TMVA::Tools::ReadAttr( void* node, const char* attrname, TString& value )
 void TMVA::Tools::AddAttr( void* node, const char* attrname, const char* value )
 {
    // add attribute to node
+   if( node == 0 ) return;
    gTools().xmlengine().NewAttr(node, 0, attrname, value );
 }
 
 //_______________________________________________________________________
-void* TMVA::Tools::AddChild( void* parent, const char* childname, const char* content ) {
+void* TMVA::Tools::AddChild( void* parent, const char* childname, const char* content, bool isRootNode ) {
+   if( !isRootNode && parent == 0 ) return 0;
    return gTools().xmlengine().NewChild(parent, 0, childname, content);
 }
 
 //_______________________________________________________________________
 Bool_t TMVA::Tools::AddComment( void* node, const char* comment ) {
+   if( node == 0 ) return kFALSE;
    return gTools().xmlengine().AddComment(node, comment);
 }
 

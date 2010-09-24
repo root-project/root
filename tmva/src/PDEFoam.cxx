@@ -88,7 +88,11 @@ using namespace std;
 
 //_____________________________________________________________________
 TMVA::PDEFoam::PDEFoam() :
-   fLogger(new MsgLogger("PDEFoam"))
+   fNBin(0)
+   , fNSampl(0)
+   , fEvPerBin(0)
+   , fLastCe(0)
+   , fLogger(new MsgLogger("PDEFoam"))
 {
    // Default constructor for streamer, user should not use it.
    fDim      = 0;
@@ -195,17 +199,29 @@ TMVA::PDEFoam::~PDEFoam()
 }
 
 //_____________________________________________________________________
-TMVA::PDEFoam::PDEFoam(const PDEFoam &From):
-   TObject(From),
-   fLogger( new MsgLogger("PDEFoam"))
+TMVA::PDEFoam::PDEFoam(const PDEFoam &From) :
+   TObject(From)
+   , fMaskDiv(0)
+   , fInhiDiv(0)
+   , fCells(0)
+   , fHistEdg(0)
+   , fRvec(0)
+   , fPseRan(0)
+   , fAlpha(0)
+   , fXmin(0)
+   , fXmax(0)
+   , fDistr(0)
+   , fTimer(0)
+   , fVariableNames(0)
+   , fLogger(0)
 {
    // Copy Constructor  NOT IMPLEMENTED (NEVER USED)
    Log() << kFATAL << "COPY CONSTRUCTOR NOT IMPLEMENTED" << Endl;
 }
 
 //_____________________________________________________________________
-void TMVA::PDEFoam::SetkDim(Int_t kDim) 
-{ 
+void TMVA::PDEFoam::SetkDim(Int_t kDim)
+{
    // Sets dimension of cubical space
    if (kDim < 1)
       Log() << kFATAL << "<SetkDim>: Dimension is zero or negative!" << Endl;

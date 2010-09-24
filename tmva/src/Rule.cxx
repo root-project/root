@@ -63,6 +63,8 @@ TMVA::Rule::Rule( RuleEnsemble *re,
    , fImportance    ( 0.0 )
    , fImportanceRef ( 1.0 )
    , fRuleEnsemble  ( re )
+   , fSSB           ( 0 )
+   , fSSBNeve       ( 0 )
    , fLogger( new MsgLogger("RuleFit") )
 {
    // the main constructor for a Rule
@@ -72,7 +74,7 @@ TMVA::Rule::Rule( RuleEnsemble *re,
    //   nodes  - a vector of Node; from these all possible rules will be created
    //
    //
-   
+
    fCut     = new RuleCut( nodes );
    fSSB     = fCut->GetPurity();
    fSSBNeve = fCut->GetCutNeve();

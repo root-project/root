@@ -56,6 +56,25 @@ TMVA::MethodPDEFoam::MethodPDEFoam( const TString& jobName,
                                     const TString& theOption,
                                     TDirectory* theTargetDir ) :
    MethodBase( jobName, Types::kPDEFoam, methodTitle, dsi, theOption, theTargetDir )
+   , fSigBgSeparated(kFALSE)
+   , fFrac(0)
+   , fDiscrErrCut(0)
+   , fVolFrac(0)
+   , fVolFracInv(0)
+   , fnCells(0)
+   , fnActiveCells(0)
+   , fnSampl(0)
+   , fnBin(0)
+   , fEvPerBin(0)
+   , fNSigBgRatio(0)
+   , fCompress(kFALSE)
+   , fMultiTargetRegression(kFALSE)
+   , fNmin(0)
+   , fCutNmin(kFALSE)
+   , fRMSmin(0)
+   , fCutRMSmin(kFALSE)
+   , fKernel(kNone)
+   , fTargetSelection(kMean)
 {
    // init PDEFoam objects
 }
@@ -65,6 +84,25 @@ TMVA::MethodPDEFoam::MethodPDEFoam( DataSetInfo& dsi,
                                     const TString& theWeightFile,
                                     TDirectory* theTargetDir ) :
    MethodBase( Types::kPDEFoam, dsi, theWeightFile, theTargetDir )
+   , fSigBgSeparated(kFALSE)
+   , fFrac(0)
+   , fDiscrErrCut(0)
+   , fVolFrac(0)
+   , fVolFracInv(0)
+   , fnCells(0)
+   , fnActiveCells(0)
+   , fnSampl(0)
+   , fnBin(0)
+   , fEvPerBin(0)
+   , fNSigBgRatio(0)
+   , fCompress(kFALSE)
+   , fMultiTargetRegression(kFALSE)
+   , fNmin(0)
+   , fCutNmin(kFALSE)
+   , fRMSmin(0)
+   , fCutRMSmin(kFALSE)
+   , fKernel(kNone)
+   , fTargetSelection(kMean)
 {
    // constructor from weight file
 }

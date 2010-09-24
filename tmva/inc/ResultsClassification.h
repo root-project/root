@@ -46,7 +46,7 @@
 namespace TMVA {
 
    class MsgLogger;
-   
+
    class ResultsClassification :  public Results {
 
    public:
@@ -62,17 +62,18 @@ namespace TMVA {
 
       // getters
       Long64_t GetSize()                  const { return fMvaValues.size(); }
-      Float_t  operator [] ( Int_t ievt ) const { return fMvaValues[ievt]; }
+      virtual const std::vector< Float_t >&  operator [] ( Int_t ievt ) const { fRet[0] = fMvaValues[ievt]; return  fRet; }
       std::vector<Float_t>* GetValueVector()    { return &fMvaValues; }
 
       Types::EAnalysisType  GetAnalysisType() { return Types::kClassification; }
-      
+
 
    private:
-      
+
       std::vector< Float_t >  fMvaValues;   //! mva values (Results)
+      mutable std::vector< Float_t >  fRet;         //! return val
       mutable MsgLogger*      fLogger;      //! message logger
-      MsgLogger& Log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }
    };
 }
 

@@ -65,7 +65,7 @@
 // by splitting the sample e.g. into a "left-node" and a "right-node"   //
 // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right) //
 // this is then the quality crition which is optimized for when trying  //
-// to increase the information in the system (making the best selection //            
+// to increase the information in the system (making the best selection //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -83,18 +83,18 @@ namespace TMVA {
 
    public:
 
-      //default constructor
+      // default constructor
       SeparationBase();
 
-      //copy constructor
-      SeparationBase( const SeparationBase& s ): fName ( s.fName ) {}
+      // copy constructor
+      SeparationBase( const SeparationBase& s );
 
       // destructor
       virtual ~SeparationBase(){}
 
       // Return the gain in separation of the original sample is splitted in two sub-samples
-      // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right) 
-      Double_t GetSeparationGain( const Double_t& nSelS, const Double_t& nSelB, 
+      // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right)
+      Double_t GetSeparationGain( const Double_t& nSelS, const Double_t& nSelB,
                                   const Double_t& nTotS, const Double_t& nTotB );
 
       // Return the separation index (a measure for "purity" of the sample")
@@ -108,7 +108,7 @@ namespace TMVA {
       TString fName;  // name of the concrete Separation Index impementation
 
       Double_t fPrecisionCut;
- 
+
       ClassDef(SeparationBase,0) // Interface to different separation critiera used in training algorithms
    };
 

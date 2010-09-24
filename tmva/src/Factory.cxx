@@ -29,9 +29,9 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-//                                                                      
-// This is the main MVA steering class: it creates all MVA methods,     
-// and guides them through the training, testing and evaluation         
+//
+// This is the main MVA steering class: it creates all MVA methods,
+// and guides them through the training, testing and evaluation
 // phases
 //_______________________________________________________________________
 
@@ -1137,28 +1137,28 @@ void TMVA::Factory::EvaluateAllMethods( void )
    std::vector<std::vector<Double_t> > trainEff01(2), trainEff10(2), trainEff30(2);
 
    std::vector<std::vector<Double_t> > biastrain(1);  // "bias" of the regression on the training data
-   std::vector<std::vector<Double_t> > biastest(1);   // "bias" of the regression on test data 
+   std::vector<std::vector<Double_t> > biastest(1);   // "bias" of the regression on test data
    std::vector<std::vector<Double_t> > devtrain(1);   // "dev" of the regression on the training data
-   std::vector<std::vector<Double_t> > devtest(1);    // "dev" of the regression on test data 
+   std::vector<std::vector<Double_t> > devtest(1);    // "dev" of the regression on test data
    std::vector<std::vector<Double_t> > rmstrain(1);   // "rms" of the regression on the training data
-   std::vector<std::vector<Double_t> > rmstest(1);    // "rms" of the regression on test data 
+   std::vector<std::vector<Double_t> > rmstest(1);    // "rms" of the regression on test data
    std::vector<std::vector<Double_t> > minftrain(1);  // "minf" of the regression on the training data
-   std::vector<std::vector<Double_t> > minftest(1);   // "minf" of the regression on test data 
+   std::vector<std::vector<Double_t> > minftest(1);   // "minf" of the regression on test data
    std::vector<std::vector<Double_t> > rhotrain(1);   // correlation of the regression on the training data
-   std::vector<std::vector<Double_t> > rhotest(1);    // correlation of the regression on test data 
+   std::vector<std::vector<Double_t> > rhotest(1);    // correlation of the regression on test data
 
    // same as above but for 'truncated' quantities (computed for events within 2sigma of RMS)
-   std::vector<std::vector<Double_t> > biastrainT(1); 
-   std::vector<std::vector<Double_t> > biastestT(1);    
-   std::vector<std::vector<Double_t> > devtrainT(1);  
-   std::vector<std::vector<Double_t> > devtestT(1);    
-   std::vector<std::vector<Double_t> > rmstrainT(1);  
-   std::vector<std::vector<Double_t> > rmstestT(1);    
+   std::vector<std::vector<Double_t> > biastrainT(1);
+   std::vector<std::vector<Double_t> > biastestT(1);
+   std::vector<std::vector<Double_t> > devtrainT(1);
+   std::vector<std::vector<Double_t> > devtestT(1);
+   std::vector<std::vector<Double_t> > rmstrainT(1);
+   std::vector<std::vector<Double_t> > rmstestT(1);
    std::vector<std::vector<Double_t> > minftrainT(1);
-   std::vector<std::vector<Double_t> > minftestT(1); 
+   std::vector<std::vector<Double_t> > minftestT(1);
 
    // following vector contains all methods - with the exception of Cuts, which are special
-   MVector methodsNoCuts; 
+   MVector methodsNoCuts;
 
    Bool_t doRegression = kFALSE;
    Bool_t doMulticlass = kFALSE;
@@ -1173,7 +1173,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
       if (theMethod->DoRegression()) {
          doRegression = kTRUE;
 
-         Log() << kINFO << "Evaluate regression method: " << theMethod->GetMethodName() << Endl;         
+         Log() << kINFO << "Evaluate regression method: " << theMethod->GetMethodName() << Endl;
          Double_t bias, dev, rms, mInf;
          Double_t biasT, devT, rmsT, mInfT;
          Double_t rho;
@@ -1365,8 +1365,8 @@ void TMVA::Factory::EvaluateAllMethods( void )
          TMatrixD* overlapB = new TMatrixD( nmeth, nmeth );
          (*overlapS) *= 0; // init...
          (*overlapB) *= 0; // init...
-      
-         // loop over test tree      
+
+         // loop over test tree
          DataSet* defDs = DefaultDataSetInfo().GetDataSet();
          defDs->SetCurrentType(Types::kTesting);
          for (Int_t ievt=0; ievt<defDs->GetNEvents(); ievt++) {
@@ -1376,9 +1376,9 @@ void TMVA::Factory::EvaluateAllMethods( void )
             TMatrixD* theMat = 0;
             for (Int_t im=0; im<nmeth; im++) {
                // check for NaN value
-               Double_t retval = (Double_t)(*mvaRes[im])[ievt];               
+               Double_t retval = (Double_t)(*mvaRes[im])[ievt][0];
                if (TMath::IsNaN(retval)) {
-                  Log() << kWARNING << "Found NaN return value in event: " << ievt 
+                  Log() << kWARNING << "Found NaN return value in event: " << ievt
                         << " for method \"" << methodsNoCuts[im]->GetName() << "\"" << Endl;
                   dvec[im] = 0;
                }
@@ -1391,8 +1391,8 @@ void TMVA::Factory::EvaluateAllMethods( void )
             // count overlaps
             for (Int_t im=0; im<nmeth; im++) {
                for (Int_t jm=im; jm<nmeth; jm++) {
-                  if ((dvec[im] - rvec[im])*(dvec[jm] - rvec[jm]) > 0) { 
-                     (*theMat)(im,jm)++; 
+                  if ((dvec[im] - rvec[im])*(dvec[jm] - rvec[jm]) > 0) {
+                     (*theMat)(im,jm)++;
                      if (im != jm) (*theMat)(jm,im)++;
                   }
                }

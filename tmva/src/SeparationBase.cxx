@@ -49,19 +49,32 @@ ClassImp(TMVA::SeparationBase)
 
 
 TMVA::SeparationBase::SeparationBase() :
+   fName(""),
    fPrecisionCut(TMath::Sqrt(std::numeric_limits<double>::epsilon()))
-{}
+{
+   // default constructor
+
+}
+
+//copy constructor
+TMVA::SeparationBase::SeparationBase( const SeparationBase& s ) :
+   fName(s.fName),
+   fPrecisionCut(TMath::Sqrt(std::numeric_limits<double>::epsilon()))
+{
+   // copy constructor
+}
+
 
 //_______________________________________________________________________
-Double_t TMVA::SeparationBase::GetSeparationGain(const Double_t &nSelS, const Double_t& nSelB, 
+Double_t TMVA::SeparationBase::GetSeparationGain(const Double_t &nSelS, const Double_t& nSelB,
                                                  const Double_t& nTotS, const Double_t& nTotB)
 {
-   // Separation Gain:                                                     
-   // the measure of how the quality of separation of the sample increases 
-   // by splitting the sample e.g. into a "left-node" and a "right-node"   
-   // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right) 
-   // this is then the quality crition which is optimized for when trying  
-   // to increase the information in the system (making the best selection             
+   // Separation Gain:
+   // the measure of how the quality of separation of the sample increases
+   // by splitting the sample e.g. into a "left-node" and a "right-node"
+   // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right)
+   // this is then the quality crition which is optimized for when trying
+   // to increase the information in the system (making the best selection
 
    if ( (nTotS-nSelS)==nSelS && (nTotB-nSelB)==nSelB) return 0.;
 

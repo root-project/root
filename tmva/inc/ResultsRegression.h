@@ -56,7 +56,7 @@
 namespace TMVA {
 
    class MsgLogger;
-   
+
    class ResultsRegression : public Results {
 
    public:
@@ -71,7 +71,7 @@ namespace TMVA {
 
       // getters
       Long64_t GetSize() const        { return fRegValues.size(); }
-      std::vector< Float_t >&              operator [] ( Int_t ievt ) const { return fRegValues.at(ievt); }
+      virtual const std::vector< Float_t >& operator [] ( Int_t ievt ) const { return fRegValues.at(ievt); }
       std::vector<std::vector< Float_t> >* GetValueVector()  { return &fRegValues; }
 
       TH2F*  DeviationAsAFunctionOf( UInt_t varNum, UInt_t tgtNum );
