@@ -209,12 +209,20 @@ TApplication::TApplication(const char *appClassName,
 TApplication::~TApplication()
 {
    // TApplication dtor.
+   
    for (int i = 0; i < fArgc; i++)
       if (fArgv[i]) delete [] fArgv[i];
    delete [] fArgv;
    SafeDelete(fAppImp);
    if (fgApplications)
       fgApplications->Remove(this);
+   
+   //close TMemStat if any
+   if (tmemstat) {
+      ProcessLine("TMemStat::Close()");
+      tmemstat = kFALSE;
+   }
+
 }
 
 //______________________________________________________________________________
@@ -1030,7 +1038,6 @@ void TApplication::Run(Bool_t retrn)
    fIsRunning = kTRUE;
 
    gSystem->Run();
-
    fIsRunning = kFALSE;
 }
 
@@ -1083,9 +1090,10 @@ void TApplication::Terminate(Int_t status)
    // Terminate the application by call TSystem::Exit() unless application has
    // been told to return from Run(), by a call to SetReturnFromRun().
 
-   //clode TMemStat if any
+   //close TMemStat if any
    if (tmemstat) {
       ProcessLine("TMemStat::Close()");
+      tmemstat = kFALSE;
    }
      
    Emit("Terminate(Int_t)", status);
