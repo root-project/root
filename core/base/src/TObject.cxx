@@ -20,6 +20,9 @@
 // error handling, sorting, inspection, printing, drawing, etc.         //
 // Every object which inherits from TObject can be stored in the        //
 // ROOT collection classes.                                             //
+// TObject's bits can be used as flags, bits 0 - 13 and 24-31 are       //
+// reserved as  global bits while bits 14 - 23 can be used in different //
+// class hierarchies (watch out for overlaps).                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -64,10 +67,9 @@ TObject::TObject() : fUniqueID(0), fBits(kNotDeleted)
    // TObject constructor. It sets the two data words of TObject to their
    // initial values. The unique ID is set to 0 and the status word is
    // set depending if the object is created on the stack or allocated
-   // on the heap. Of the status word the high 8 bits are reserved for
-   // system usage and the low 24 bits are user settable. Depending on
-   // the ROOT environment variable "Root.MemStat" (see TEnv.h) the object
-   // is added to the global TObjectTable for bookkeeping.
+   // on the heap. Depending on the ROOT environment variable "Root.MemStat"
+   // (see TEnv) the object is added to the global TObjectTable for
+   // bookkeeping.
 
    if (TStorage::IsOnHeap(this))
       fBits |= kIsOnHeap;
