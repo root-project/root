@@ -131,8 +131,8 @@ void TMemStatMng::Close()
    fgInstance->Disable();
    fgInstance->fDumpTree->AutoSave();
    fgInstance->fDumpTree->GetUserInfo()->Delete();
-   
-   printf("TMemStat Tree saved to file %s\n",fgInstance->fDumpFile->GetName());
+
+   ::Info("TMemStatMng::Close", "Tree saved to file %s\n", fgInstance->fDumpFile->GetName());
 
    delete fgInstance->fDumpFile;
    //fgInstance->fDumpFile->Close();
@@ -160,9 +160,9 @@ TMemStatMng::~TMemStatMng()
 //______________________________________________________________________________
 void TMemStatMng::SetMaxcalls(Long64_t maxcalls)
 {
-   //set the maximum number of new/delete registered in the output Tree
+   // Set the maximum number of new/delete registered in the output Tree.
+
    fMaxCalls = maxcalls;
-   printf("setting MasCalls=%lld\n",maxcalls);
 }
 
 //______________________________________________________________________________
