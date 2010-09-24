@@ -10,13 +10,31 @@ class WithDouble {
 public:
    Double32_t d32;
    double regdouble;
+public:
+   inline WithDouble();
 };
 
-template <class T> class MyVector {
+inline WithDouble::WithDouble()
+      : d32(0.0)
+      , regdouble(0.0)
+{
+}
+
+template<class T>
+class MyVector {
 public:
    T d32;
    double regdouble;
+public:
+   MyVector();
 };
+
+template<class T>
+MyVector<T>::MyVector()
+      : d32(T())
+      , regdouble(0.0)
+{
+}
 
 class Contains {
 public:
