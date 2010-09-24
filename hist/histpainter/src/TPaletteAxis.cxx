@@ -290,7 +290,7 @@ char *TPaletteAxis::GetObjectInfo(Int_t /* px */, Int_t py) const
       z = (zmax-zmin)*((Double_t)(y-y1)/(Double_t)(y2-y1))+zmin;
    }
 
-   sprintf(info,"(z=%g)",z);
+   snprintf(info,64,"(z=%g)",z);
    return info;
 }
 
