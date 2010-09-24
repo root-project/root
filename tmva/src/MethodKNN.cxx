@@ -57,8 +57,19 @@ TMVA::MethodKNN::MethodKNN( const TString& jobName,
                             DataSetInfo& theData, 
                             const TString& theOption,
                             TDirectory* theTargetDir ) 
-   : TMVA::MethodBase(jobName, Types::kKNN, methodTitle, theData, theOption, theTargetDir),
-     fModule(0)
+   : TMVA::MethodBase(jobName, Types::kKNN, methodTitle, theData, theOption, theTargetDir)
+   , fSumOfWeightsS(0)
+   , fSumOfWeightsB(0)
+   , fModule(0)
+   , fnkNN(0)
+   , fBalanceDepth(0)
+   , fScaleFrac(0)
+   , fSigmaFact(0)
+   , fTrim(kFALSE)
+   , fUseKernel(kFALSE)
+   , fUseWeight(kFALSE)
+   , fUseLDA(kFALSE)
+   , fTreeOptDepth(0)
 {
    // standard constructor
 }
@@ -67,8 +78,19 @@ TMVA::MethodKNN::MethodKNN( const TString& jobName,
 TMVA::MethodKNN::MethodKNN( DataSetInfo& theData, 
                             const TString& theWeightFile,  
                             TDirectory* theTargetDir ) 
-   : TMVA::MethodBase( Types::kKNN, theData, theWeightFile, theTargetDir),
-     fModule(0)
+   : TMVA::MethodBase( Types::kKNN, theData, theWeightFile, theTargetDir)
+   , fSumOfWeightsS(0)
+   , fSumOfWeightsB(0)
+   , fModule(0)
+   , fnkNN(0)
+   , fBalanceDepth(0)
+   , fScaleFrac(0)
+   , fSigmaFact(0)
+   , fTrim(kFALSE)
+   , fUseKernel(kFALSE)
+   , fUseWeight(kFALSE)
+   , fUseLDA(kFALSE)
+   , fTreeOptDepth(0)
 {
    // constructor from weight file
 }

@@ -88,6 +88,8 @@ TMVA::Rule::Rule( RuleEnsemble *re )
    , fImportance    ( 0.0 )
    , fImportanceRef ( 1.0 )
    , fRuleEnsemble  ( re )
+   , fSSB           ( 0 )
+   , fSSBNeve       ( 0 )
    , fLogger( new MsgLogger("RuleFit") )
 {
    // the simple constructor
@@ -103,6 +105,8 @@ TMVA::Rule::Rule()
    , fImportance    ( 0.0 )
    , fImportanceRef ( 1.0 )
    , fRuleEnsemble  ( 0 )
+   , fSSB           ( 0 )
+   , fSSBNeve       ( 0 )
    , fLogger( new MsgLogger("RuleFit") )
 {
    // the simple constructor
@@ -112,6 +116,7 @@ TMVA::Rule::Rule()
 TMVA::Rule::~Rule() 
 {
    // destructor
+   delete fCut;
    delete fLogger;
 }
 

@@ -92,6 +92,9 @@ TMVA::DecisionTree::DecisionTree():
    fNCuts      (-1),
    fSepType    (NULL),
    fMinSize    (0),
+   fMinSepGain (0),
+   fUseSearchTree(kFALSE),
+   fPruneStrength(0),
    fPruneMethod(kCostComplexityPruning),
    fNodePurityLimit(0.5),
    fRandomisedTree (kFALSE),
@@ -100,7 +103,8 @@ TMVA::DecisionTree::DecisionTree():
    fNNodesMax(999999),
    fMaxDepth(999999),
    fClass(0),
-   fTreeID(0)
+   fTreeID(0),
+   fAnalysisType(Types::kClassification)
 {
    // default constructor using the GiniIndex as separation criterion, 
    // no restrictions on minium number of events in a leave note or the
@@ -116,6 +120,9 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType,Int_t minSize, I
    fNCuts          (nCuts),
    fSepType        (sepType),
    fMinSize        (minSize),
+   fMinSepGain     (0),
+   fUseSearchTree  (kFALSE),
+   fPruneStrength  (0),
    fPruneMethod    (kCostComplexityPruning),
    fNodePurityLimit(purityLimit),
    fRandomisedTree (randomisedTree),
@@ -155,7 +162,10 @@ TMVA::DecisionTree::DecisionTree( const DecisionTree &d ):
    fNCuts      (d.fNCuts),
    fSepType    (d.fSepType),
    fMinSize    (d.fMinSize),
-   fPruneMethod(d.fPruneMethod),
+   fMinSepGain (d.fMinSepGain),
+   fUseSearchTree  (d.fUseSearchTree),
+   fPruneStrength  (d.fPruneStrength),
+   fPruneMethod    (d.fPruneMethod),
    fNodePurityLimit(d.fNodePurityLimit),
    fRandomisedTree (d.fRandomisedTree),
    fUseNvars       (d.fUseNvars),
@@ -249,9 +259,11 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
    Float_t s=0, b=0;
    Float_t suw=0, buw=0;
    Float_t target=0, target2=0;
-   const UInt_t cNvars = fNvars;
-   Float_t *xmin = new Float_t[Int_t(cNvars)];
-   Float_t *xmax = new Float_t[Int_t(cNvars)];
+   Float_t *xmin = new Float_t[fNvars];
+   Float_t *xmax = new Float_t[fNvars];
+   for (UInt_t ivar=0; ivar<fNvars; ivar++) {
+      xmin[ivar]=xmax[ivar]=0;
+   }
    for (UInt_t iev=0; iev<eventSample.size(); iev++) {
       const TMVA::Event* evt = eventSample[iev];
       const Float_t weight = evt->GetWeight();

@@ -73,26 +73,46 @@ ClassImp(TMVA::MethodSVM)
 //_______________________________________________________________________
 TMVA::MethodSVM::MethodSVM( const TString& jobName, const TString& methodTitle, DataSetInfo& theData, 
                             const TString& theOption, TDirectory* theTargetDir ) 
-   : MethodBase( jobName, Types::kSVM, methodTitle, theData, theOption, theTargetDir ),
-     fWgSet(0),
-     fInputData(0),
-     fSupportVectors(0),
-     fSVKernelFunction(0),
-     fMinVars(0),
-     fMaxVars(0)
+   : MethodBase( jobName, Types::kSVM, methodTitle, theData, theOption, theTargetDir )
+   , fCost(0)
+   , fTolerance(0)
+   , fMaxIter(0)
+   , fNSubSets(0)
+   , fBparm(0)
+   , fGamma(0)
+   , fWgSet(0)
+   , fInputData(0)
+   , fSupportVectors(0)
+   , fSVKernelFunction(0)
+   , fMinVars(0)
+   , fMaxVars(0)
+   , fDoubleSigmaSquared(0)
+   , fOrder(0)
+   , fTheta(0)
+   , fKappa(0)
 {
    // standard constructor
 }
 
 //_______________________________________________________________________
 TMVA::MethodSVM::MethodSVM( DataSetInfo& theData, const TString& theWeightFile, TDirectory*  theTargetDir )
-   : MethodBase( Types::kSVM, theData, theWeightFile, theTargetDir ),
-     fWgSet(0),
-     fInputData(0),
-     fSupportVectors(0),
-     fSVKernelFunction(0),
-     fMinVars(0),
-     fMaxVars(0)
+   : MethodBase( Types::kSVM, theData, theWeightFile, theTargetDir )
+   , fCost(0)
+   , fTolerance(0)
+   , fMaxIter(0)
+   , fNSubSets(0)
+   , fBparm(0)
+   , fGamma(0)
+   , fWgSet(0)
+   , fInputData(0)
+   , fSupportVectors(0)
+   , fSVKernelFunction(0)
+   , fMinVars(0)
+   , fMaxVars(0)
+   , fDoubleSigmaSquared(0)
+   , fOrder(0)
+   , fTheta(0)
+   , fKappa(0)
 {
    // constructor from weight file
 }

@@ -43,6 +43,8 @@ TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& titl
      fTitle       ( title ),
      fUnit        ( unit ),
      fVarType     ( varType ),
+     fXmeanNorm   ( 0 ),
+     fXrmsNorm    ( 0 ),
      fNormalized  ( normalized ),
      fExternalData( external ),
      fVarCounter  ( varCounter )
@@ -75,7 +77,11 @@ TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& titl
 TMVA::VariableInfo::VariableInfo() 
    : fExpression  (""),
      fVarType     ('\0'),
-     fExternalData(0)
+     fXmeanNorm   ( 0 ),
+     fXrmsNorm    ( 0 ),
+     fNormalized  ( kFALSE ),
+     fExternalData( 0 ),
+     fVarCounter  ( 0 )
 {
    // default constructor
    fXminNorm     =  1e30;
@@ -98,6 +104,7 @@ TMVA::VariableInfo::VariableInfo( const VariableInfo& other )
      fXmaxNorm    ( other.fXmaxNorm ),
      fXmeanNorm   ( other.fXmeanNorm ),
      fXrmsNorm    ( other.fXrmsNorm ),
+     fNormalized  ( other.fNormalized ),
      fExternalData( other.fExternalData ),
      fVarCounter  ( other.fVarCounter )
 {

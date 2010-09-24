@@ -95,6 +95,8 @@ TMVA::MethodCFMlpANN::MethodCFMlpANN( const TString& jobName,
                                       const TString& theOption,
                                       TDirectory* theTargetDir  ) :
    TMVA::MethodBase( jobName, Types::kCFMlpANN, methodTitle, theData, theOption, theTargetDir  ),
+   fNlayers(0),
+   fNcycles(0),
    fNodes(0),
    fYNN(0)
 {
@@ -132,6 +134,8 @@ TMVA::MethodCFMlpANN::MethodCFMlpANN( DataSetInfo& theData,
                                       const TString& theWeightFile,  
                                       TDirectory* theTargetDir ):
    TMVA::MethodBase( Types::kCFMlpANN, theData, theWeightFile, theTargetDir ),
+   fNlayers(0),
+   fNcycles(0),
    fNodes(0),
    fYNN(0)
 {

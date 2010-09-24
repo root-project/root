@@ -545,6 +545,7 @@ void TMVA::MethodBoost::SingleBoost()
    Event * ev; Float_t w,v,wo; Bool_t sig=kTRUE;
    Double_t sumAll=0, sumWrong=0, sumAllOrig=0, sumWrongOrig=0, sumAll1=0;
    Bool_t* WrongDetection=new Bool_t[Data()->GetNEvents()];
+   for (Long64_t ievt=0; ievt<Data()->GetNEvents(); ievt++) WrongDetection[ievt]=kTRUE;
 
    // finding the MVA cut value for IsSignalLike, stored in the method
    FindMVACut();

@@ -46,7 +46,7 @@ ClassImp(TMVA::RuleFit)
 //_______________________________________________________________________
 TMVA::RuleFit::RuleFit( const MethodBase *rfbase )
    : fVisHistsUseImp( kTRUE ),
-   fLogger( new MsgLogger("RuleFit") )
+     fLogger( new MsgLogger("RuleFit") )
 {
    // constructor
    Initialize( rfbase );
@@ -55,7 +55,9 @@ TMVA::RuleFit::RuleFit( const MethodBase *rfbase )
 
 //_______________________________________________________________________
 TMVA::RuleFit::RuleFit()
-   : fVisHistsUseImp( kTRUE ),
+   : fMethodRuleFit(0),
+     fMethodBase(0),
+     fVisHistsUseImp( kTRUE ),
      fLogger( new MsgLogger("RuleFit") )
 {
    // default constructor

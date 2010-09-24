@@ -122,7 +122,7 @@ namespace TMVA {
       // copy constructor 
       DecisionTreeNode (const DecisionTreeNode &n, DecisionTreeNode* parent = NULL); 
     
-      virtual ~DecisionTreeNode(){}
+      virtual ~DecisionTreeNode();
 
       virtual Node* CreateNode() const { return new DecisionTreeNode(); }
     

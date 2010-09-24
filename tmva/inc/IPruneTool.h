@@ -44,7 +44,7 @@ namespace TMVA {
     
    public:
     
-      PruningInfo( ) {}
+      PruningInfo( ) : QualityIndex(0), PruneStrength(0), PruneSequence(0) {}
       PruningInfo( Double_t q, Double_t alpha, std::vector<DecisionTreeNode*> sequence );
       Double_t QualityIndex; //! quality measure for a pruned subtree T of T_max
       Double_t PruneStrength; //! the regularization parameter for pruning
@@ -107,7 +107,9 @@ namespace TMVA {
    };
   
    inline IPruneTool::IPruneTool( ) :  
-      fPruneStrength(0.0)
+      fPruneStrength(0.0),
+      S(0),
+      B(0)
    {}
    inline IPruneTool::~IPruneTool( ) {}
   

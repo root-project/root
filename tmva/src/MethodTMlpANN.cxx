@@ -86,6 +86,8 @@ TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName,
                                     TDirectory* theTargetDir) :
    TMVA::MethodBase( jobName, Types::kTMlpANN, methodTitle, theData, theOption, theTargetDir ),
    fMLP(0),
+   fNcycles(100),
+   fValidationFraction(0.5),
    fLearningMethod( "" )
 {
    // standard constructor
@@ -97,6 +99,8 @@ TMVA::MethodTMlpANN::MethodTMlpANN( DataSetInfo& theData,
                                     TDirectory* theTargetDir ) :
    TMVA::MethodBase( Types::kTMlpANN, theData, theWeightFile, theTargetDir ),
    fMLP(0),
+   fNcycles(100),
+   fValidationFraction(0.5),
    fLearningMethod( "" )
 {
    // constructor from weight file

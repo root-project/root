@@ -82,6 +82,55 @@ const char* TMVA::MethodCFMlpANN_Utils::fg_MethodName  = "--- CFMlpANN          
 TMVA::MethodCFMlpANN_Utils::MethodCFMlpANN_Utils()  
 {
    // default constructor
+   Int_t i(0);
+   for(i=0; i<max_nVar_;++i) fVarn_1.xmin[i] = 0;
+   fCost_1.ancout = 0;
+   fCost_1.ieps = 0;
+   fCost_1.tolcou = 0;
+
+   for(i=0; i<max_nNodes_;++i) fDel_1.coef[i] = 0;
+   for(i=0; i<max_nLayers_*max_nNodes_;++i) fDel_1.del[i] = 0;
+   for(i=0; i<max_nLayers_*max_nNodes_*max_nNodes_;++i) fDel_1.delta[i] = 0;
+   for(i=0; i<max_nLayers_*max_nNodes_*max_nNodes_;++i) fDel_1.delw[i] = 0;
+   for(i=0; i<max_nLayers_*max_nNodes_;++i) fDel_1.delww[i] = 0;
+   fDel_1.demin = 0;
+   fDel_1.demax = 0;
+   fDel_1.idde = 0;
+   for(i=0; i<max_nLayers_;++i) fDel_1.temp[i] = 0;
+
+   for(i=0; i<max_nNodes_;++i) fNeur_1.cut[i] = 0;
+   for(i=0; i<max_nLayers_*max_nNodes_;++i) fNeur_1.deltaww[i] = 0;
+   for(i=0; i<max_nLayers_;++i) fNeur_1.neuron[i] = 0;
+   for(i=0; i<max_nNodes_;++i) fNeur_1.o[i] = 0;
+   for(i=0; i<max_nLayers_*max_nNodes_*max_nNodes_;++i) fNeur_1.w[i] = 0;
+   for(i=0; i<max_nLayers_*max_nNodes_;++i) fNeur_1.ww[i] = 0;
+   for(i=0; i<max_nLayers_*max_nNodes_;++i) fNeur_1.x[i] = 0;
+   for(i=0; i<max_nLayers_*max_nNodes_;++i) fNeur_1.y[i] = 0;
+      
+   fParam_1.eeps = 0;
+   fParam_1.epsmin = 0;
+   fParam_1.epsmax = 0;
+   fParam_1.eta = 0;
+   fParam_1.ichoi = 0;
+   fParam_1.itest = 0;
+   fParam_1.layerm = 0;
+   fParam_1.lclass = 0;
+   fParam_1.nblearn = 0;
+   fParam_1.ndiv = 0;
+   fParam_1.ndivis = 0;
+   fParam_1.nevl = 0;
+   fParam_1.nevt = 0;
+   fParam_1.nunap = 0;
+   fParam_1.nunilec = 0;
+   fParam_1.nunishort = 0;
+   fParam_1.nunisor = 0;
+   fParam_1.nvar = 0;
+
+   fVarn_1.iclass = 0;
+   for(i=0; i<max_Events_;++i) fVarn_1.mclass[i] = 0;
+   for(i=0; i<max_Events_;++i) fVarn_1.nclass[i] = 0;
+   for(i=0; i<max_nVar_;++i) fVarn_1.xmax[i] = 0;
+
 }
 
 TMVA::MethodCFMlpANN_Utils::~MethodCFMlpANN_Utils() 
@@ -530,7 +579,7 @@ void TMVA::MethodCFMlpANN_Utils::Innit( char *det, Double_t *tout2, Double_t *ti
 
    Int_t i__, j;
    Int_t nevod, layer, ktest, i1, nrest;
-   Int_t ievent;
+   Int_t ievent(0);
    Int_t kkk;
    Double_t xxx, yyy;
 

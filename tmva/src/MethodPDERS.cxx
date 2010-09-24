@@ -100,8 +100,27 @@ TMVA::MethodPDERS::MethodPDERS( const TString& jobName,
                                 const TString& theOption,
                                 TDirectory* theTargetDir ) :
    MethodBase( jobName, Types::kPDERS, methodTitle, theData, theOption, theTargetDir ),
+   fFcnCall(0),
+   fVRangeMode(kAdaptive),
+   fKernelEstimator(kBox),
    fDelta(0),
-   fShift(0)
+   fShift(0),
+   fScaleS(0),
+   fScaleB(0),
+   fDeltaFrac(0),
+   fGaussSigma(0),
+   fGaussSigmaNorm(0),
+   fNRegOut(0),
+   fNEventsMin(0),
+   fNEventsMax(0),
+   fMaxVIterations(0),
+   fInitialScale(0),
+   fInitializedVolumeEle(0),
+   fkNNMin(0),
+   fkNNMax(0),
+   fMax_distance(0),
+   fPrinted(0),
+   fNormTree(0)
 {
    // standard constructor for the PDERS method
 }
@@ -111,8 +130,27 @@ TMVA::MethodPDERS::MethodPDERS( DataSetInfo& theData,
                                 const TString& theWeightFile,
                                 TDirectory* theTargetDir ) :
    MethodBase( Types::kPDERS, theData, theWeightFile, theTargetDir ),
-   fDelta( 0 ),
-   fShift( 0 )
+   fFcnCall(0),
+   fVRangeMode(kAdaptive),
+   fKernelEstimator(kBox),
+   fDelta(0),
+   fShift(0),
+   fScaleS(0),
+   fScaleB(0),
+   fDeltaFrac(0),
+   fGaussSigma(0),
+   fGaussSigmaNorm(0),
+   fNRegOut(0),
+   fNEventsMin(0),
+   fNEventsMax(0),
+   fMaxVIterations(0),
+   fInitialScale(0),
+   fInitializedVolumeEle(0),
+   fkNNMin(0),
+   fkNNMax(0),
+   fMax_distance(0),
+   fPrinted(0),
+   fNormTree(0)
 {
    // construct MethodPDERS through from file
 }
@@ -847,6 +885,8 @@ void TMVA::MethodPDERS::RKernelEstimate( const Event & event,
 
    for (Int_t ivar = 0; ivar < fNRegOut ; ivar++)
       pdfSum->at(ivar) /= pdfDiv;
+
+   delete[] dim_normalization;
 
    return;
 }

@@ -61,6 +61,7 @@ TMVA::GeneticAlgorithm::GeneticAlgorithm( IFitterTarget& target, Int_t populatio
      fPopulationSize(populationSize),
      fRanges( ranges ),
      fPopulation(ranges, populationSize, seed),
+     fBestFitness(DBL_MAX),
      fLogger( new MsgLogger("GeneticAlgorithm") )
 {
    // Constructor

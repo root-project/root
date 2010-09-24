@@ -59,6 +59,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode()
      fCutType ( kTRUE ),
      fSelector ( -1 ),       
      fResponse(-99 ),
+     fRMS(0),
      fNodeType (-99 ),
      fSequence ( 0 ),
      fIsTerminalNode( kFALSE )
@@ -83,6 +84,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Node* p, char pos)
      fCutType ( kTRUE ),
      fSelector( -1 ),  
      fResponse(-99 ),
+     fRMS(0),
      fNodeType( -99 ),
      fSequence( 0 ),
      fIsTerminalNode( kFALSE )
@@ -116,6 +118,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
      fCutType ( n.fCutType ),
      fSelector( n.fSelector ),  
      fResponse( n.fResponse ),
+     fRMS(0),
      fNodeType( n.fNodeType ),
      fSequence( n.fSequence ),
      fIsTerminalNode( n.fIsTerminalNode )  
@@ -139,6 +142,12 @@ TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
       //std::cout << "**Node constructor WITHOUT TrainingINFO"<<std::endl;
       fTrainInfo = 0;
    }
+}
+
+//_______________________________________________________________________
+TMVA::DecisionTreeNode::~DecisionTreeNode(){
+   // destructor
+   delete fTrainInfo;
 }
 
 
@@ -398,8 +407,10 @@ Float_t TMVA::DecisionTreeNode::GetSampleMax(UInt_t ivar) const {
 void TMVA::DecisionTreeNode::SetSampleMin(UInt_t ivar, Float_t xmin){
    // set the minimum of variable ivar from the training sample 
    // that pass/end up in this node 
-   if ( fTrainInfo && ivar >= fTrainInfo->fSampleMin.size()) fTrainInfo->fSampleMin.resize(ivar+1);
-   fTrainInfo->fSampleMin[ivar]=xmin;
+   if ( fTrainInfo) {
+      if ( ivar >= fTrainInfo->fSampleMin.size()) fTrainInfo->fSampleMin.resize(ivar+1);
+      fTrainInfo->fSampleMin[ivar]=xmin;
+   }
 }
 
 //_______________________________________________________________________

@@ -76,6 +76,7 @@ void TMVA::TNeuron::InitNeuron()
    fValue = UNINITIALIZED;
    fActivationValue = UNINITIALIZED;
    fDelta = UNINITIALIZED;
+   fDEDw = UNINITIALIZED;
    fError = UNINITIALIZED;
    fActivation = NULL;
    fForcedValue = kFALSE;

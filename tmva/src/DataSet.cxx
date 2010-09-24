@@ -550,7 +550,6 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
    Float_t weight;
    //   TObjString *className = new TObjString();
    char *className = new char[40];
-   TBranch *classNameBranch;
 
 
    //Float_t metVals[fResults.at(t).size()][Int_t(fdsi.GetNTargets()+1)];
@@ -561,7 +560,7 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
 
    // create branches for event-variables
    tree->Branch( "classID", &cls, "classID/I" ); 
-   classNameBranch = tree->Branch( "className",(void*)className, "className/C" ); 
+   tree->Branch( "className",(void*)className, "className/C" ); 
 
 
    // create all branches for the variables

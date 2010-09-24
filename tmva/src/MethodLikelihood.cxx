@@ -139,7 +139,10 @@ TMVA::MethodLikelihood::MethodLikelihood( const TString& jobName,
    fHistBgd_smooth( 0 ),
    fDefaultPDFLik ( 0 ),
    fPDFSig        ( 0 ),
-   fPDFBgd        ( 0 )
+   fPDFBgd        ( 0 ),
+   fNsmooth       ( 2 ),
+   fAverageEvtPerBin( 0 ),
+   fKDEfineFactor ( 0 )
 {
    // standard constructor
 }
@@ -158,7 +161,10 @@ TMVA::MethodLikelihood::MethodLikelihood( DataSetInfo& theData,
    fHistBgd_smooth( 0 ),
    fDefaultPDFLik ( 0 ),
    fPDFSig        ( 0 ),
-   fPDFBgd        ( 0 )
+   fPDFBgd        ( 0 ),
+   fNsmooth       ( 2 ),
+   fAverageEvtPerBin( 0 ),
+   fKDEfineFactor ( 0 )
 {  
    // construct likelihood references from file
 }

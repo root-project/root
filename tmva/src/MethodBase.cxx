@@ -1345,8 +1345,8 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
       }
       else if (nodeName=="MVAPdfs") {
          TString pdfname;
-         if (fMVAPdfS) delete fMVAPdfS;
-         if (fMVAPdfB) delete fMVAPdfB;
+         if (fMVAPdfS) { delete fMVAPdfS; fMVAPdfS=0; }
+         if (fMVAPdfB) { delete fMVAPdfB; fMVAPdfB=0; }
          void* pdfnode = gTools().GetChild(ch);
          if (pdfnode) {
             gTools().ReadAttr(pdfnode, "Name", pdfname);

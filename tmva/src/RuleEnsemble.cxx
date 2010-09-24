@@ -63,6 +63,9 @@ TMVA::RuleEnsemble::RuleEnsemble( const RuleEnsemble& other )
 //_______________________________________________________________________
 TMVA::RuleEnsemble::RuleEnsemble() :
    fAverageSupport( 1 ),
+   fEvent(0),
+   fRuleMapEvents(0),
+   fRuleFit(0),
    fLogger( new MsgLogger("RuleFit") )
 {
    // constructor

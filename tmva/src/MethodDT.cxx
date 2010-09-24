@@ -121,6 +121,17 @@ TMVA::MethodDT::MethodDT( const TString& jobName,
                           const TString& theOption,
                           TDirectory* theTargetDir ) :
    TMVA::MethodBase( jobName, Types::kDT, methodTitle, theData, theOption, theTargetDir )
+   , fNodeMinEvents(0)
+   , fNCuts(0)
+   , fUseYesNoLeaf(kFALSE)
+   , fNodePurityLimit(0)
+   , fErrorFraction(0)
+   , fPruneStrength(0)
+   , fAutomatic(kFALSE)
+   , fRandomisedTrees(kFALSE)
+   , fUseNvars(0)
+   , fPruneBeforeBoost(kFALSE)
+   , fDeltaPruneStrength(0)
 {
    // the standard constructor for just an ordinar "decision trees" 
 }
@@ -130,6 +141,17 @@ TMVA::MethodDT::MethodDT( DataSetInfo& dsi,
                           const TString& theWeightFile,  
                           TDirectory* theTargetDir ) :
    TMVA::MethodBase( Types::kDT, dsi, theWeightFile, theTargetDir )
+   , fNodeMinEvents(0)
+   , fNCuts(0)
+   , fUseYesNoLeaf(kFALSE)
+   , fNodePurityLimit(0)
+   , fErrorFraction(0)
+   , fPruneStrength(0)
+   , fAutomatic(kFALSE)
+   , fRandomisedTrees(kFALSE)
+   , fUseNvars(0)
+   , fPruneBeforeBoost(kFALSE)
+   , fDeltaPruneStrength(0)
 {
    //constructor from Reader
 }
