@@ -829,7 +829,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          if (min >= 2 && strncmp(&text[min-2],"{}",2)==0) {
             // upper and lower indice before the character
             // like with chemical element
-            sprintf(&text[ltext-2],"I ") ;
+            snprintf(&text[ltext-2],length-(ltext-2),"I ") ;
             ltext-- ;
          }
          fs1 = Anal1(spec,text,ltext);
@@ -875,7 +875,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          }
 
          if (min >= 2 && strncmp(&text[min-2],"{}",2)==0) {
-            sprintf(&text[min-2],"  ") ;
+            snprintf(&text[min-2],length-(min-2),"  ") ;
             Analyse(x+pos,y,spec,text,min-1);
          } else {
             Analyse(x+pos,y,spec,text,min);
@@ -917,7 +917,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          if (ltext >= 2 && strncmp(&text[ltext-2],"{}",2)==0) {
             // upper and lower indice before the character
             // like with chemical element
-            sprintf(&text[ltext-2],"I ") ;
+            snprintf(&text[ltext-2],length-(ltext-2),"I ") ;
             ltext-- ;
          }
          fs1 = Anal1(spec,text,ltext);
@@ -942,7 +942,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             Analyse(x+pos2,y-fs1.Over()*prop-fs2.Under(),specNewSize,text+opPower+1,length-opPower-1);
          }
          if (opPower >= 2 && strncmp(&text[opPower-2],"{}",2)==0) {
-            sprintf(&text[opPower-2],"  ") ;
+            snprintf(&text[opPower-2],length-(opPower-2),"  ") ;
             Analyse(x+pos,y,spec,text,opPower-1);
          } else {
             Analyse(x+pos,y,spec,text,opPower);
@@ -966,7 +966,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          if (ltext >= 2 && strncmp(&text[ltext-2],"{}",2)==0) {
             // upper and lower indice before the character
             // like with chemical element
-            sprintf(&text[ltext-2],"I ") ;
+            snprintf(&text[ltext-2],length-(ltext-2),"I ") ;
             ltext-- ;
          }
          fs1 = Anal1(spec,text,ltext);
@@ -989,7 +989,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             Analyse(x+pos2,y+fs1.Under()*prop+fs2.Over(),specNewSize,text+opUnder+1,length-opUnder-1);
          }
          if (opUnder >= 2 && strncmp(&text[opUnder-2],"{}",2)==0) {
-            sprintf(&text[opUnder-2],"  ") ;
+            snprintf(&text[opUnder-2],length-(opUnder-2),"  ") ;
             Analyse(x+pos,y,spec,text,opUnder-1);
          } else {
             Analyse(x+pos,y,spec,text,opUnder);
