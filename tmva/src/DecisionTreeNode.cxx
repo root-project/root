@@ -61,6 +61,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode()
      fResponse(-99 ),
      fRMS(0),
      fNodeType (-99 ),
+     fPurity (-99),
      fSequence ( 0 ),
      fIsTerminalNode( kFALSE )
 {
@@ -86,6 +87,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Node* p, char pos)
      fResponse(-99 ),
      fRMS(0),
      fNodeType( -99 ),
+     fPurity (-99),
      fSequence( 0 ),
      fIsTerminalNode( kFALSE )
 {
@@ -120,6 +122,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
      fResponse( n.fResponse ),
      fRMS(0),
      fNodeType( n.fNodeType ),
+     fPurity  ( n.fPurity),
      fSequence( n.fSequence ),
      fIsTerminalNode( n.fIsTerminalNode )
 {
@@ -154,11 +157,9 @@ TMVA::DecisionTreeNode::~DecisionTreeNode(){
 //_______________________________________________________________________
 Bool_t TMVA::DecisionTreeNode::GoesRight(const TMVA::Event & e) const
 {
-   // test event if it decends the tree at this node to the right  
-   Bool_t result;
-  
-   result =  (e.GetValue(this->GetSelector()) > this->GetCutValue() );
-  
+   // test event if it decends the tree at this node to the right
+   Bool_t result(e.GetValue(this->GetSelector()) > this->GetCutValue() );
+
    if (fCutType == kTRUE) return result; //the cuts are selecting Signal ;
    else return !result;
 
@@ -167,25 +168,25 @@ Bool_t TMVA::DecisionTreeNode::GoesRight(const TMVA::Event & e) const
 //_______________________________________________________________________
 Bool_t TMVA::DecisionTreeNode::GoesLeft(const TMVA::Event & e) const
 {
-   // test event if it decends the tree at this node to the left 
+   // test event if it decends the tree at this node to the left
    if (!this->GoesRight(e)) return kTRUE;
    else return kFALSE;
 }
 
 
 //_______________________________________________________________________
-Float_t TMVA::DecisionTreeNode::GetPurity( void ) const  
+void TMVA::DecisionTreeNode::SetPurity( void )
 {
    // return the S/(S+B) (purity) for the node
    // REM: even if nodes with purity 0.01 are very PURE background nodes, they still
    //      get a small value of the purity.
    if ( ( this->GetNSigEvents() + this->GetNBkgEvents() ) > 0 ) {
-      return this->GetNSigEvents() / ( this->GetNSigEvents() + this->GetNBkgEvents()); 
+      fPurity = this->GetNSigEvents() / ( this->GetNSigEvents() + this->GetNBkgEvents());
    }
    else {
       *fgLogger << kINFO << "Zero events in purity calcuation , return purity=0.5" << Endl;
       this->Print(*fgLogger);
-      return 0.5;
+      fPurity = 0.5;
    }
 }
 
@@ -313,6 +314,7 @@ Bool_t TMVA::DecisionTreeNode::ReadDataRecord( istream& is, UInt_t tmva_Version_
    this->SetSeparationIndex(separationIndex);
    this->SetSeparationGain(separationGain);
    this->SetNodeType(nodeType);
+   this->SetPurity();
 
    this->SetResponse(response);
    this->SetSequence(lseq);
@@ -333,6 +335,7 @@ void TMVA::DecisionTreeNode::ClearNodeAndAllDaughters()
    SetNEvents_unweighted(0);
    SetSeparationIndex(-1);
    SetSeparationGain(-1);
+   fPurity=0;
 
    if (this->GetLeft()  != NULL) ((DecisionTreeNode*)(this->GetLeft()))->ClearNodeAndAllDaughters();
    if (this->GetRight() != NULL) ((DecisionTreeNode*)(this->GetRight()))->ClearNodeAndAllDaughters();
@@ -444,6 +447,7 @@ void TMVA::DecisionTreeNode::ReadAttributes(void* node, UInt_t /* tmva_Version_C
    gTools().ReadAttr(node, "rms",   fRMS                    );
    gTools().ReadAttr(node, "nType", fNodeType               );
    gTools().ReadAttr(node, "CC",    tempCC                  );
+   fPurity = tempNSigEvents / (tempNSigEvents + tempNBkgEvents);
    if (fTrainInfo){
       SetNSigEvents(tempNSigEvents);
       SetNBkgEvents(tempNBkgEvents);

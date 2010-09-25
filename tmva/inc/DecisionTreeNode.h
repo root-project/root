@@ -152,10 +152,12 @@ namespace TMVA {
       void  SetNodeType( Int_t t ) { fNodeType = t;} 
       // return node type: 1 signal node, -1 bkg leave, 0 intermediate Node 
       Int_t GetNodeType( void ) const { return fNodeType; }
-    
-      //return  S/(S+B) (purity) at this node (from  training)
-      Float_t GetPurity( void ) const ;
 
+      //return  S/(S+B) (purity) at this node (from  training)
+      Float_t GetPurity( void ) const { return fPurity;}
+      //calculate S/(S+B) (purity) at this node (from  training)
+      void SetPurity( void );
+   
       //set the response of the node (for regression)
       void SetResponse( Float_t r ) { fResponse = r;}
 
@@ -328,6 +330,7 @@ namespace TMVA {
       Float_t  fResponse;        // response value in case of regression
       Float_t  fRMS;             // response RMS of the regression node 
       Int_t    fNodeType;        // Type of node: -1 == Bkg-leaf, 1 == Signal-leaf, 0 = internal 
+      Float_t  fPurity;          // the node purity
     
       ULong_t  fSequence;        // bit coded left right sequence to reach the node
 

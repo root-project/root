@@ -103,9 +103,9 @@ namespace TMVA {
                         DecisionTreeNode *node = NULL);
       // determine the way how a node is split (which variable, which cut value)
 
-      Float_t TrainNode( const EventList & eventSample,  DecisionTreeNode *node ) { return TrainNodeFast( eventSample, node ); }
-      Float_t TrainNodeFast( const EventList & eventSample,  DecisionTreeNode *node );
-      Float_t TrainNodeFull( const EventList & eventSample,  DecisionTreeNode *node );
+      Double_t TrainNode( const EventList & eventSample,  DecisionTreeNode *node ) { return TrainNodeFast( eventSample, node ); }
+      Double_t TrainNodeFast( const EventList & eventSample,  DecisionTreeNode *node );
+      Double_t TrainNodeFull( const EventList & eventSample,  DecisionTreeNode *node );
     
       // fill at tree with a given structure already (just see how many signa/bkgr
       // events end up in each node 
@@ -152,10 +152,10 @@ namespace TMVA {
       void CheckEventWithPrunedTree( const TMVA::Event& ) const;
 
       // calculate the normalization factor for a pruning validation sample
-      Float_t GetSumWeights( const EventList* validationSample ) const;
+      Double_t GetSumWeights( const EventList* validationSample ) const;
     
       void SetNodePurityLimit( Double_t p ) { fNodePurityLimit = p; }
-      Float_t GetNodePurityLimit( ) const { return fNodePurityLimit; }
+      Double_t GetNodePurityLimit( ) const { return fNodePurityLimit; }
 
       void DescendTree( DecisionTreeNode *n = NULL );
       void SetParentTreeInNodes( DecisionTreeNode *n = NULL );
@@ -194,22 +194,22 @@ namespace TMVA {
       // from individual samples.
     
       // calculates the purity S/(S+B) of a given event sample
-      Float_t SamplePurity(EventList eventSample);
+      Double_t SamplePurity(EventList eventSample);
 
       UInt_t    fNvars;          // number of variables used to separate S and B
       Int_t     fNCuts;          // number of grid point in variable cut scans
       SeparationBase *fSepType;  // the separation crition
       RegressionVariance *fRegType;  // the separation crition used in Regression
     
-      Float_t   fMinSize;        // min number of events in node
-      Float_t   fMinSepGain;     // min number of separation gain to perform node splitting
+      Double_t  fMinSize;        // min number of events in node
+      Double_t  fMinSepGain;     // min number of separation gain to perform node splitting
     
       Bool_t    fUseSearchTree;  // cut scan done with binary trees or simple event loop.
       Double_t  fPruneStrength;  // a parameter to set the "amount" of pruning..needs to be adjusted 
     
       EPruneMethod fPruneMethod; // method used for prunig 
     
-      Float_t   fNodePurityLimit;// purity limit to decide whether a node is signal
+      Double_t  fNodePurityLimit;// purity limit to decide whether a node is signal
     
       Bool_t    fRandomisedTree; // choose at each node splitting a random set of variables 
       Int_t     fUseNvars;       // the number of variables used in randomised trees;
