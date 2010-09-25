@@ -162,7 +162,7 @@ TMVA::BinaryTree* TMVA::BinaryTree::CreateFromXML(void* node, UInt_t tmva_Versio
 
 //_______________________________________________________________________
 ostream& TMVA::operator<< (ostream& os, const TMVA::BinaryTree& tree)
-{ 
+{
    // print the tree recursinvely using the << operator
    tree.Print(os);
    return os; // Return the output stream.

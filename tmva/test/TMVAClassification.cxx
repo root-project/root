@@ -95,7 +95,7 @@ int main( int argc, char** argv )
    Use["MLPBFGS"]         = 0; // recommended ANN with optional training method
    Use["MLPBNN"]          = 0; // recommended ANN with bayesian option
    Use["CFMlpANN"]        = 0; // *** missing
-   Use["TMlpANN"]         = 0; 
+   Use["TMlpANN"]         = 0;
    // ---
    Use["SVM"]             = 1;
    // ---
@@ -382,36 +382,36 @@ int main( int argc, char** argv )
    // CF(Clermont-Ferrand)ANN
    if (Use["CFMlpANN"])
       factory->BookMethod( TMVA::Types::kCFMlpANN, "CFMlpANN", "!H:!V:NCycles=2000:HiddenLayers=N+1,N"  ); // n_cycles:#nodes:#nodes:...  
-  
+
    // Tmlp(Root)ANN
    if (Use["TMlpANN"])
       factory->BookMethod( TMVA::Types::kTMlpANN, "TMlpANN", "!H:!V:NCycles=200:HiddenLayers=N+1,N:LearningMethod=BFGS:ValidationFraction=0.3"  ); // n_cycles:#nodes:#nodes:...
-  
+
    // Support Vector Machine
    if (Use["SVM"])
       factory->BookMethod( TMVA::Types::kSVM, "SVM", "Gamma=0.25:Tol=0.001:VarTransform=Norm" );
-   
+
    // Boosted Decision Trees
    if (Use["BDTG"]) // Gradient Boost
-      factory->BookMethod( TMVA::Types::kBDT, "BDTG", 
+      factory->BookMethod( TMVA::Types::kBDT, "BDTG",
                            "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.30:UseBaggedGrad:GradBaggingFraction=0.6:SeparationType=GiniIndex:nCuts=20:NNodesMax=5" );
 
    if (Use["BDT"])  // Adaptive Boost
-      factory->BookMethod( TMVA::Types::kBDT, "BDT", 
-                           "!H:!V:NTrees=400:nEventsMin=400:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning" );
-   
+      factory->BookMethod( TMVA::Types::kBDT, "BDT",
+                           "!H:!V:NTrees=400:nEventsMin=400:MaxDepth=3:UseYesNoLeaf=F:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning" );
+
    if (Use["BDTB"]) // Bagging
-      factory->BookMethod( TMVA::Types::kBDT, "BDTB", 
+      factory->BookMethod( TMVA::Types::kBDT, "BDTB",
                            "!H:!V:NTrees=400:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning" );
 
    if (Use["BDTD"]) // Decorrelation + Adaptive Boost
-      factory->BookMethod( TMVA::Types::kBDT, "BDTD", 
+      factory->BookMethod( TMVA::Types::kBDT, "BDTD",
                            "!H:!V:NTrees=400:nEventsMin=400:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning:VarTransform=Decorrelate" );
-   
+
    if (Use["RuleFit"]) // RuleFit -- TMVA implementation of Friedman's method
       factory->BookMethod( TMVA::Types::kRuleFit, "RuleFit",
                            "H:!V:RuleFitModule=RFTMVA:Model=ModRuleLinear:MinImp=0.001:RuleMinDist=0.001:NTrees=20:fEventsMin=0.01:fEventsMax=0.5:GDTau=-1.0:GDTauPrec=0.01:GDStep=0.01:GDNSteps=10000:GDErrScale=1.02" );
-   
+
    // For an example of the category classifier, see: TMVAClassificationCategory
 
    // --------------------------------------------------------------------------------------------------

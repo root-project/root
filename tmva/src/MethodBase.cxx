@@ -1362,7 +1362,7 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
          ReadWeightsFromXML(ch);
       }
       else {
-         std::cout << "Unparsed: " << nodeName << std::endl;
+         Log() << kWARNING << "Unparsed XML node: '" << nodeName << "'" << Endl;
       }
       ch = gTools().GetNextChild(ch);
 
@@ -1682,7 +1682,7 @@ void TMVA::MethodBase::ReadTargetsFromXML( void* tarnode )
       gTools().ReadAttr( ch, "TargetIndex", tarIdx);
       gTools().ReadAttr( ch, "Expression", expression);
       DataInfo().AddTarget(expression,"","",0,0);
-     
+
       ch = gTools().GetNextChild(ch);
    }
 }
@@ -1707,8 +1707,6 @@ TDirectory* TMVA::MethodBase::BaseDir() const
    if (o!=0 && o->InheritsFrom(TDirectory::Class())) dir = (TDirectory*)o;
 
    if (dir != 0) return dir;
-
-   std::cout << "Trying to create '" << defaultDir << "'" << std::endl;
 
    TDirectory *sdir = methodDir->mkdir(defaultDir);
 

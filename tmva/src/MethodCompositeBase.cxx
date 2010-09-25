@@ -165,6 +165,9 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
       fMethodWeight.push_back(methodWeight);
       MethodBase* meth = dynamic_cast<MethodBase*>(fMethods.back());
 
+      if(meth==0)
+         Log() << kFATAL << "Could not read method from XML" << Endl;
+
       void* methXML = gTools().GetChild(ch);
       meth->SetupMethod();
       meth->ReadWeightsFromXML(methXML);

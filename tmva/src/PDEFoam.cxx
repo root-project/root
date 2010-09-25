@@ -2217,9 +2217,15 @@ Double_t TMVA::PDEFoam::GetCellElement( PDEFoamCell *cell, UInt_t i )
 {
    // Returns cell element i of cell 'cell'.
 
-   assert(i < GetNElements());
+   if (i >= GetNElements())
+      Log() << kFATAL << "ERROR: Index out of range" << Endl;
 
-   return (*dynamic_cast<TVectorD*>(cell->GetElement()))(i);
+   TVectorD *vec = dynamic_cast<TVectorD*>(cell->GetElement());
+
+   if (!vec)
+      Log() << kFATAL << "<GetCellElement> ERROR: cell element is not a TVectorD*" << Endl;
+
+   return (*vec)(i);
 }
 
 //_____________________________________________________________________
@@ -2251,7 +2257,7 @@ void TMVA::PDEFoam::OutputGrow( Bool_t finished )
             << "                                 " << Endl;
       return;
    }
-   
+
    Int_t modulo = 1;
 
    if (fNCells        >= 100) modulo = Int_t(fNCells/100);

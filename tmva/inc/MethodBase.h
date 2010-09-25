@@ -263,9 +263,6 @@ namespace TMVA {
       const TString    GetProbaName     () const { return fTestvar + "_Proba"; }
       TString          GetWeightFileName() const;
 
-      virtual Bool_t   HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets ) = 0;
-
-
       // build classifier name in Test tree
       // MVA prefix (e.g., "TMVA_")
       void             SetTestvarName  ( const TString & v="" ) { fTestvar = (v=="") ? ("MVA_" + GetMethodName()) : v; }

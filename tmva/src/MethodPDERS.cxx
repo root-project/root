@@ -1066,23 +1066,25 @@ Float_t TMVA::MethodPDERS::GetError( Float_t countS, Float_t countB,
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDERS::AddWeightsXMLTo( void* parent ) const 
+void TMVA::MethodPDERS::AddWeightsXMLTo( void* parent ) const
 {
    // write weights to xml file
    void* wght = gTools().AddChild(parent, "Weights");
    if (fBinaryTree)
       fBinaryTree->AddXMLTo(wght);
    else
-      Log() << kFATAL << "Signal and background binary search tree not available" << Endl; 
+      Log() << kFATAL << "Signal and background binary search tree not available" << Endl;
    //Log() << kFATAL << "Please implement writing of weights as XML" << Endl;
 }
 
 //_______________________________________________________________________
 void TMVA::MethodPDERS::ReadWeightsFromXML( void* wghtnode)
 {
-   if (NULL != fBinaryTree) delete fBinaryTree; 
+   if (NULL != fBinaryTree) delete fBinaryTree;
    void* treenode = gTools().GetChild(wghtnode);
    fBinaryTree = dynamic_cast<BinarySearchTree*>(TMVA::BinaryTree::CreateFromXML(treenode));
+   if(!fBinaryTree)
+      Log() << kFATAL << "Could not create BinarySearchTree from XML" << Endl;
    fBinaryTree->SetPeriode( GetNvar() );
    fBinaryTree->CalcStatistics();
    fBinaryTree->CountNodes();
