@@ -293,6 +293,11 @@ void TMemStatShow::Show(double update, const char* fname)
       gHentry->SetBinContent(k+1,i);
       gHleaks->SetBinContent(k+1,ileaks[kk]);
    }
+   delete [] ileaks;
+   delete [] entry;
+   delete [] lindex;
+   delete [] nbold;
+   delete [] ientry;
    gHentry->SetEntries(nleaks);
    gHleaks->SetEntries(nleaks);
    
