@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$ 
-// Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Eckhard von Toerne, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Eckhard von Toerne, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
@@ -19,9 +19,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -30,29 +30,29 @@
 
 //_______________________________________________________________________
 /* Begin_Html
-  Multivariate optimisation of signal efficiency for given background  
+  Multivariate optimisation of signal efficiency for given background
   efficiency, applying rectangular minimum and maximum requirements.
 
   <p>
-  Also implemented is a "decorrelate/diagonlized cuts approach",            
-  which improves over the uncorrelated cuts ansatz by            
-  transforming linearly the input variables into a diagonal space,     
+  Also implemented is a "decorrelate/diagonlized cuts approach",
+  which improves over the uncorrelated cuts ansatz by
+  transforming linearly the input variables into a diagonal space,
   using the square-root of the covariance matrix.
 
   <p>
   <font size="-1">
   Other optimisation criteria, such as maximising the signal significance-
-  squared, S^2/(S+B), with S and B being the signal and background yields, 
-  correspond to a particular point in the optimised background rejection 
-  versus signal efficiency curve. This working point requires the knowledge 
-  of the expected yields, which is not the case in general. Note also that 
-  for rare signals, Poissonian statistics should be used, which modifies 
-  the significance criterion. 
+  squared, S^2/(S+B), with S and B being the signal and background yields,
+  correspond to a particular point in the optimised background rejection
+  versus signal efficiency curve. This working point requires the knowledge
+  of the expected yields, which is not the case in general. Note also that
+  for rare signals, Poissonian statistics should be used, which modifies
+  the significance criterion.
   </font>
 
   <p>
-  The rectangular cut of a volume in the variable space is performed using 
-  a binary tree to sort the training events. This provides a significant 
+  The rectangular cut of a volume in the variable space is performed using
+  a binary tree to sort the training events. This provides a significant
   reduction in computing time (up to several orders of magnitudes, depending
   on the complexity of the problem at hand).
 
@@ -60,23 +60,23 @@
   Technically, optimisation is achieved in TMVA by two methods:
 
   <ol>
-  <li>Monte Carlo generation using uniform priors for the lower cut value, 
-  and the cut width, thrown within the variable ranges. 
+  <li>Monte Carlo generation using uniform priors for the lower cut value,
+  and the cut width, thrown within the variable ranges.
 
   <li>A Genetic Algorithm (GA) searches for the optimal ("fittest") cut sample.
-  The GA is configurable by many external settings through the option 
-  string. For difficult cases (such as many variables), some tuning 
+  The GA is configurable by many external settings through the option
+  string. For difficult cases (such as many variables), some tuning
   may be necessary to achieve satisfying results
   </ol>
 
   <p>
   <font size="-1">
-  Attempts to use Minuit fits (Simplex ot Migrad) instead have not shown 
-  superior results, and often failed due to convergence at local minima. 
+  Attempts to use Minuit fits (Simplex ot Migrad) instead have not shown
+  superior results, and often failed due to convergence at local minima.
   </font>
 
   <p>
-  The tests we have performed so far showed that in generic applications, 
+  The tests we have performed so far showed that in generic applications,
   the GA is superior to MC sampling, and hence GA is the default method.
   It is worthwhile trying both anyway.
 
@@ -88,7 +88,7 @@ End_Html */
 //
 
 #include <iostream>
-#include <cstdlib> 
+#include <cstdlib>
 
 #include "Riostream.h"
 #include "TH1F.h"
@@ -123,7 +123,7 @@ const Double_t TMVA::MethodCuts::fgMaxAbsCutVal = 1.0e30;
 //_______________________________________________________________________
 TMVA::MethodCuts::MethodCuts( const TString& jobName,
                               const TString& methodTitle,
-                              DataSetInfo& theData, 
+                              DataSetInfo& theData,
                               const TString& theOption,
                               TDirectory* theTargetDir ) :
    MethodBase( jobName, Types::kCuts, methodTitle, theData, theOption, theTargetDir ),

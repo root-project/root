@@ -14,8 +14,8 @@
  *      Attila Krasznahorkay <Attila.Krasznahorkay@cern.ch> - CERN, Switzerland   *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -39,7 +39,7 @@ ClassImp(TMVA::MsgLogger)
 UInt_t TMVA::MsgLogger::fgMaxSourceSize = 25;
 Bool_t TMVA::MsgLogger::fgInhibitOutput = kFALSE;
 
-const std::string TMVA::MsgLogger::fgPrefix="--- ";     
+const std::string TMVA::MsgLogger::fgPrefix="--- ";
 const std::string TMVA::MsgLogger::fgSuffix=": ";
 std::map<TMVA::EMsgType, std::string> TMVA::MsgLogger::fgTypeMap=std::map<TMVA::EMsgType, std::string>();
 std::map<TMVA::EMsgType, std::string> TMVA::MsgLogger::fgColorMap=std::map<TMVA::EMsgType, std::string>();
@@ -48,9 +48,9 @@ void   TMVA::MsgLogger::InhibitOutput() { fgInhibitOutput = kTRUE;  }
 void   TMVA::MsgLogger::EnableOutput()  { fgInhibitOutput = kFALSE; }
 //_______________________________________________________________________
 TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
-   : fObjSource ( source ), 
-     fStrSource ( "" ), 
-     fActiveType( kINFO ), 
+   : fObjSource ( source ),
+     fStrSource ( "" ),
+     fActiveType( kINFO ),
      fMinType   ( minType )
 {
    // constructor
@@ -59,8 +59,8 @@ TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
 //_______________________________________________________________________
 TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType )
    : fObjSource ( 0 ),
-     fStrSource ( source ), 
-     fActiveType( kINFO ), 
+     fStrSource ( source ),
+     fActiveType( kINFO ),
      fMinType   ( minType )
 {
    // constructor
@@ -68,9 +68,9 @@ TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType )
 
 //_______________________________________________________________________
 TMVA::MsgLogger::MsgLogger( EMsgType minType )
-   : fObjSource ( 0 ), 
-     fStrSource ( "Unknown" ), 
-     fActiveType( kINFO ), 
+   : fObjSource ( 0 ),
+     fStrSource ( "Unknown" ),
+     fActiveType( kINFO ),
      fMinType   ( minType )
 {
    // constructor
@@ -87,13 +87,13 @@ TMVA::MsgLogger::MsgLogger( const MsgLogger& parent )
 }
 
 //_______________________________________________________________________
-TMVA::MsgLogger::~MsgLogger() 
+TMVA::MsgLogger::~MsgLogger()
 {
    // destructor
 }
 
 //_______________________________________________________________________
-TMVA::MsgLogger& TMVA::MsgLogger::operator= ( const MsgLogger& parent ) 
+TMVA::MsgLogger& TMVA::MsgLogger::operator= ( const MsgLogger& parent )
 {
    // assingment operator
    if (&parent != this) {
@@ -118,23 +118,23 @@ std::string TMVA::MsgLogger::GetFormattedSource() const
       source_name = source_name.substr( 0, fgMaxSourceSize - 3 );
       source_name += "...";
    }
-   
+
    return source_name;
 }
 
 //_______________________________________________________________________
 std::string TMVA::MsgLogger::GetPrintedSource() const
-{ 
+{
    // the full logger prefix
    std::string source_name = GetFormattedSource();
-   if (source_name.size() < fgMaxSourceSize) 
+   if (source_name.size() < fgMaxSourceSize)
       for (std::string::size_type i=source_name.size(); i<fgMaxSourceSize; i++) source_name.push_back( ' ' );
 
-   return fgPrefix + source_name + fgSuffix; 
+   return fgPrefix + source_name + fgSuffix;
 }
 
 //_______________________________________________________________________
-void TMVA::MsgLogger::Send() 
+void TMVA::MsgLogger::Send()
 {
    // activates the logger writer
 
@@ -167,7 +167,7 @@ void TMVA::MsgLogger::Send()
 }
 
 //_______________________________________________________________________
-void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const 
+void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
 {
    // putting the output string, the message type, and the color
    // switcher together into a single string
@@ -176,21 +176,23 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
 
    InitMaps();
    std::map<EMsgType, std::string>::const_iterator stype;
-   if ((stype = fgTypeMap.find( type )) == fgTypeMap.end()) return;
-   if (!gConfig().IsSilent() || type==kFATAL) {
-      if (gConfig().UseColor()) {
-         // no text for INFO or VERBOSE
-         if (type == kINFO || type == kVERBOSE)
-            std::cout << fgPrefix << line << std::endl; // no color for info
-         else
-            std::cout << fgColorMap.find( type )->second << fgPrefix << "<"
-                      << stype->second << "> " << line  << "\033[0m" << std::endl;
-      }
-      else {
-         if (type == kINFO) std::cout << fgPrefix << line << std::endl;
-         else               std::cout << fgPrefix << "<" << stype->second << "> " << line << std::endl;
+   if ((stype = fgTypeMap.find( type )) != fgTypeMap.end()) {
+      if (!gConfig().IsSilent() || type==kFATAL) {
+         if (gConfig().UseColor()) {
+            // no text for INFO or VERBOSE
+            if (type == kINFO || type == kVERBOSE)
+               std::cout << fgPrefix << line << std::endl; // no color for info
+            else
+               std::cout << fgColorMap.find( type )->second << fgPrefix << "<"
+                         << stype->second << "> " << line  << "\033[0m" << std::endl;
+         }
+         else {
+            if (type == kINFO) std::cout << fgPrefix << line << std::endl;
+            else               std::cout << fgPrefix << "<" << stype->second << "> " << line << std::endl;
+         }
       }
    }
+
    // take decision to stop if fatal error
    if (type == kFATAL) {
       std::cout << "***> abort program execution" << std::endl;
@@ -199,7 +201,7 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
 }
 
 //_______________________________________________________________________
-TMVA::MsgLogger& TMVA::MsgLogger::Endmsg( MsgLogger& logger ) 
+TMVA::MsgLogger& TMVA::MsgLogger::Endmsg( MsgLogger& logger )
 {
    // end line
    logger.Send();

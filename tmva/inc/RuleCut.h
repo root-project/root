@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -7,14 +7,14 @@
  * Class  : Rule                                                                  *
  *                                                                                *
  * Description:                                                                   *
- *      A class describing a 'rule cut'                                           * 
+ *      A class describing a 'rule cut'                                           *
  *                                                                                *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Fredrik Tegenfeldt <Fredrik.Tegenfeldt@cern.ch> - Iowa State U., USA      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
+ *      CERN, Switzerland                                                         *
  *      Iowa State U.                                                             *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
