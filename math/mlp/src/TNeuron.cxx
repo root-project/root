@@ -70,6 +70,8 @@ TNeuron::TNeuron(TNeuron::ENeuronType type /*= kSigmoid*/,
    fExtF  = 0;
    fExtD  = 0;
    fIndex = 0;
+   fDerivative = 0;
+   fInput = 0;
    if(fType==kExternal) {
       fExtF = (TFormula*)gROOT->FindObject(extF);
       fExtD = (TFormula*)gROOT->FindObject(extD);
