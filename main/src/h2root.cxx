@@ -291,8 +291,9 @@ int main(int argc, char **argv)
    if (argc > 2) {
       file_out=argv[2];
    } else {
-      file_out= new char[strlen(file_in)+strlen(".root")+1];
-      strcpy(file_out,file_in);
+      Int_t nchf = strlen(file_in)+strlen(".root")+1;
+      file_out= new char[nchf];
+      strlcpy(file_out,file_in,nchf);
       char *dot = strrchr(file_out,'.');
       if (dot) strcpy(dot+1,"root");
       else     strcat(file_out,".root");
@@ -320,7 +321,7 @@ int main(int argc, char **argv)
    }
 
    char root_file_title[2000];
-   sprintf(root_file_title,"HBOOK file: %s converted to ROOT",file_in);
+   snprintf(root_file_title,2000,"HBOOK file: %s converted to ROOT",file_in);
    TFile* hfile= TFile::Open(file_out,"RECREATE",root_file_title,compress);
 
    if (!hfile) {
@@ -424,7 +425,7 @@ void convert_directory(const char *dir)
          printf("Sorry cannot convert directory name %s because it contains a slash\n",chdir);
          continue;
       }   
-      strcpy(hbookdir,chdir);
+      strlcpy(hbookdir,chdir,17);
       for (i=16;i>0;i--) {
          if (chdir[i] == 0) continue;
          if (chdir[i] != ' ') break;
@@ -452,8 +453,8 @@ void convert_directory(const char *dir)
 void convert_1d(Int_t id)
 {
    //convert 1d histogram
-   if (id > 0) sprintf(idname,"h%d",id);
-   else        sprintf(idname,"h_%d",-id);
+   if (id > 0) snprintf(idname,128,"h%d",id);
+   else        snprintf(idname,128,"h_%d",-id);
    hnoent(id,nentries);
 #ifndef WIN32
    hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
@@ -505,8 +506,8 @@ void convert_1d(Int_t id)
 void convert_2d(Int_t id)
 {
    //convert 2d histogram
-   if (id > 0) sprintf(idname,"h%d",id);
-   else        sprintf(idname,"h_%d",-id);
+   if (id > 0) snprintf(idname,128,"h%d",id);
+   else        snprintf(idname,128,"h_%d",-id);
    hnoent(id,nentries);
 #ifndef WIN32
    hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
@@ -547,8 +548,8 @@ void convert_profile(Int_t id)
 //      if option S jbyt(iq(lw),1,2) = 1
 //      if option I jbyt(iq(lw),1,2) = 2
 
-   if (id > 0) sprintf(idname,"h%d",id);
-   else        sprintf(idname,"h_%d",-id);
+   if (id > 0) snprintf(idname,128,"h%d",id);
+   else        snprintf(idname,128,"h_%d",-id);
    hnoent(id,nentries);
    Int_t lw = lq[lcont];
    Int_t ln = lq[lw];
@@ -590,8 +591,8 @@ void convert_rwn(Int_t id)
    float *x;
    float rmin[1000], rmax[1000];
 
-   if (id > 0) sprintf(idname,"h%d",id);
-   else        sprintf(idname,"h_%d",-id);
+   if (id > 0) snprintf(idname,128,"h%d",id);
+   else        snprintf(idname,128,"h_%d",-id);
    hnoent(id,nentries);
    printf(" Converting RWN with ID= %d, nentries = %d\n",id,nentries);
    nvar=0;
@@ -657,8 +658,8 @@ void convert_cwn(Int_t id)
    float *x;
    float rmin[1000], rmax[1000];
 
-   if (id > 0) sprintf(idname,"h%d",id);
-   else        sprintf(idname,"h_%d",-id);
+   if (id > 0) snprintf(idname,128,"h%d",id);
+   else        snprintf(idname,128,"h_%d",-id);
    hnoent(id,nentries);
    printf(" Converting CWN with ID= %d, nentries = %d\n",id,nentries);
    nvar=0;
@@ -699,7 +700,7 @@ void convert_cwn(Int_t id)
    char block[512];
    char oldblock[512];
    Int_t nbits = 0;
-   strcpy(oldblock,"OLDBLOCK");
+   strlcpy(oldblock,"OLDBLOCK",512);
    Int_t oldischar = -1;
    for (i=80;i>0;i--) {if (chtitl[i] == ' ') chtitl[i] = 0; }
    TTree *tree = new TTree(idname,chtitl);
@@ -791,7 +792,7 @@ void convert_cwn(Int_t id)
       if (itype == 5) ischar = 1;
       else            ischar = 0;
       if (ischar != oldischar || strcmp(oldblock,block) != 0) {
-         strcpy(oldblock,block);
+         strlcpy(oldblock,block,512);
          oldischar = ischar;
          Int_t lblock   = strlen(block);
          add= (Long_t)&bigbuf[bufpos];

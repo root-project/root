@@ -122,7 +122,7 @@ int main( int argc, char **argv )
       } else if ( argv[a][0] == '-' ) {
          char ft[4];
          for( int j=0; j<=9; ++j ) {
-            sprintf(ft,"-f%d",j);
+            snprintf(ft,4,"-f%d",j);
             if (!strcmp(argv[a],ft)) {
                force = kTRUE;
                newcomp = j;
