@@ -1551,7 +1551,7 @@ Reflex::Type::IsConst() const {
 inline bool
 Reflex::Type::IsConstVolatile() const {
 //-------------------------------------------------------------------------------
-   return 0 != (fModifiers & CONST & VOLATILE);
+   return (fModifiers & CONST) && (fModifiers & VOLATILE);
 }
 
 
