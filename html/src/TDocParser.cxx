@@ -1628,7 +1628,7 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
    std::ofstream srcHtmlOut;
    TString srcHtmlOutName;
    if (sourceExt && sourceExt[0]) {
-      dynamic_cast<TClassDocOutput*>(fDocOutput)->CreateSourceOutputStream(srcHtmlOut, sourceExt, srcHtmlOutName);
+      static_cast<TClassDocOutput*>(fDocOutput)->CreateSourceOutputStream(srcHtmlOut, sourceExt, srcHtmlOutName);
       fLineNumber = 0;
    } else {
       sourceExt = 0;
@@ -2084,7 +2084,7 @@ void TDocParser::WriteClassDoc(std::ostream& out, Bool_t first /*= kTRUE*/)
 
    if (fClassDocState == kClassDoc_LookingHaveSomething || fClassDocState == kClassDoc_LookingNothingFound) {
       TString& classDoc = first || !fLastClassDoc.Length() ? fFirstClassDoc : fLastClassDoc;
-      dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteClassDescription(out, classDoc);
+      static_cast<TClassDocOutput*>(fDocOutput)->WriteClassDescription(out, classDoc);
       fClassDocState = kClassDoc_Written;
    }
 
@@ -2274,7 +2274,7 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
       guessedMethod->SetBit(TDocMethodWrapper::kDocumented);
    }
 
-   dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteMethod(out, ret, name, params, filename, anchor,
+   static_cast<TClassDocOutput*>(fDocOutput)->WriteMethod(out, ret, name, params, filename, anchor,
                                                            fComment, codeOneLiner, guessedMethod);
 
    DecrementMethodCount(name);
