@@ -69,6 +69,16 @@ ICC_GE_9      = 11
 ICC_GE_101    = 110
 endif
 
+ifeq ($(ICC_MAJOR),12)
+CXXFLAGS     += -m32 -wd1572 -wd279
+CFLAGS       += -m32 -wd1572 -wd279
+CINTCXXFLAGS += -m32 -wd1572 -wd279
+CINTCFLAGS   += -m32 -wd1572 -wd279
+LDFLAGS      += -m32
+ICC_GE_9      = 12
+ICC_GE_101    = 120
+endif
+
 # System libraries:
 SYSLIBS       = -limf -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB) \
                 $(ALLOCLIBDIR) $(ALLOCLIB) -rdynamic
