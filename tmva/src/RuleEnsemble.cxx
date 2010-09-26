@@ -1010,6 +1010,7 @@ void TMVA::RuleEnsemble::Print() const
 void TMVA::RuleEnsemble::PrintRaw( ostream & os ) const
 {
    // write rules to stream
+   Int_t dp = os.precision();
    UInt_t nrules = fRules.size();
    //   std::sort(fRules.begin(),fRules.end());
    //
@@ -1035,6 +1036,7 @@ void TMVA::RuleEnsemble::PrintRaw( ostream & os ) const
          << fLinDP[i] << " "
          << fLinImportance[i] << " " << std::endl;
    }
+   os << std::setprecision(dp);
 }
 
 //_______________________________________________________________________

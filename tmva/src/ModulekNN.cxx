@@ -119,6 +119,7 @@ void TMVA::kNN::Event::Print() const
 void TMVA::kNN::Event::Print(std::ostream& os) const
 {
    // print
+   Int_t dp = os.precision();
    os << "Event: ";
    for (UInt_t ivar = 0; ivar != GetNVar(); ++ivar) {
       if (ivar == 0) {
@@ -127,7 +128,7 @@ void TMVA::kNN::Event::Print(std::ostream& os) const
       else {
          os << ", ";
       }
-      
+
       os << std::setfill(' ') << std::setw(5) << std::setprecision(3) << GetVar(ivar);
    }
 
@@ -137,18 +138,25 @@ void TMVA::kNN::Event::Print(std::ostream& os) const
    else {
       os << " no variables";
    }
+   os << std::setprecision(dp);
 }
 
 //-------------------------------------------------------------------------------------------
 std::ostream& TMVA::kNN::operator<<(std::ostream& os, const TMVA::kNN::Event& event)
-{ 
+{
    // streamer
    event.Print(os);
    return os;
 }
 
+
+
+
+
+TRandom3 TMVA::kNN::ModulekNN::fgRndm(1);
+
 //-------------------------------------------------------------------------------------------
-TMVA::kNN::ModulekNN::ModulekNN() 
+TMVA::kNN::ModulekNN::ModulekNN()
    :fDimn(0),
     fTree(0),
     fLogger( new MsgLogger("ModulekNN") )
@@ -158,7 +166,7 @@ TMVA::kNN::ModulekNN::ModulekNN()
 
 //-------------------------------------------------------------------------------------------
 TMVA::kNN::ModulekNN::~ModulekNN()
-{ 
+{
    // destructor
    if (fTree) {
       delete fTree; fTree = 0;
@@ -398,7 +406,7 @@ Bool_t TMVA::kNN::ModulekNN::Find(const UInt_t nfind, const std::string &option)
          const VarType width = max - min;
          
          if (width < 0.0 || width > 0.0) {
-            dvec.push_back(min + width*double(std::rand())/double(RAND_MAX));
+            dvec.push_back(min + width*fgRndm.Rndm());
          }
          else {
             return kFALSE;
@@ -407,7 +415,7 @@ Bool_t TMVA::kNN::ModulekNN::Find(const UInt_t nfind, const std::string &option)
 
       const Event event(dvec, 1.0, etype);
       
-      Find(event, nfind);  
+      Find(event, nfind);
       
       return kTRUE;
    }

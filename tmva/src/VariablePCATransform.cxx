@@ -45,12 +45,12 @@ ClassImp(TMVA::VariablePCATransform)
 //_______________________________________________________________________
 TMVA::VariablePCATransform::VariablePCATransform( DataSetInfo& dsi )
 : VariableTransformBase( dsi, Types::kPCA, "PCA" )
-{ 
+{
    // constructor
 }
 
 //_______________________________________________________________________
-TMVA::VariablePCATransform::~VariablePCATransform() 
+TMVA::VariablePCATransform::~VariablePCATransform()
 {
    // destructor
    for (UInt_t i=0; i<fMeanValues.size(); i++) {
@@ -62,10 +62,10 @@ TMVA::VariablePCATransform::~VariablePCATransform()
 //_______________________________________________________________________
 void TMVA::VariablePCATransform::Initialize()
 {
-   // initialization of the transformation. 
-   // Has to be called in the preparation and not in the constructor, 
+   // initialization of the transformation.
+   // Has to be called in the preparation and not in the constructor,
    // since the number of classes it not known at construction, but
-   // only after the creation of the DataSet which might be later. 
+   // only after the creation of the DataSet which might be later.
 }
 
 //_______________________________________________________________________
@@ -87,15 +87,15 @@ Bool_t TMVA::VariablePCATransform::PrepareTransformation( const std::vector<Even
       return kFALSE;
    }
 
-   if (GetNVariables() > 200) { 
-      Log() << kINFO << "----------------------------------------------------------------------------" 
+   if (GetNVariables() > 200) {
+      Log() << kINFO << "----------------------------------------------------------------------------"
             << Endl;
-      Log() << kINFO 
+      Log() << kINFO
             << ": More than 200 variables, will not calculate PCA!" << Endl;
-      Log() << kINFO << "----------------------------------------------------------------------------" 
+      Log() << kINFO << "----------------------------------------------------------------------------"
             << Endl;
       return kFALSE;
-   }   
+   }
 
    CalculatePrincipalComponents( events );
 
@@ -111,7 +111,7 @@ const TMVA::Event* TMVA::VariablePCATransform::Transform( const Event* const ev,
    if (!IsCreated()) return 0;
 
    const Int_t nvar = ev->GetNVariables();
-   // if we have more than one class, take the last PCA analysis where all classes are combined if 
+   // if we have more than one class, take the last PCA analysis where all classes are combined if
    // the cls parameter is outside the defined classes
    // If there is only one class, then no extra class for all events of all classes has to be created
    if (cls < 0 || cls > GetNClasses()) cls = (fMeanValues.size()==1?0:2);//( GetNClasses() == 1 ? 0 : 1 );  ;
@@ -139,7 +139,7 @@ const TMVA::Event* TMVA::VariablePCATransform::Transform( const Event* const ev,
          fTransformedEvent->SetVal(ivar, rv[ivar]);
    }
    // set the targets
-   for (UInt_t itgt=0; itgt<ev->GetNTargets(); itgt++) 
+   for (UInt_t itgt=0; itgt<ev->GetNTargets(); itgt++)
       fTransformedEvent->SetTarget( itgt, ev->GetTarget(itgt) );
    // and the rest
    fTransformedEvent->SetWeight     ( ev->GetWeight() );
@@ -159,10 +159,10 @@ const TMVA::Event* TMVA::VariablePCATransform::InverseTransform( const Event* co
    if (!IsCreated()) return 0;
    const Int_t nvar = ev->GetNVariables();
 
-   // if we have more than one class, take the last PCA analysis where all classes are combined if 
+   // if we have more than one class, take the last PCA analysis where all classes are combined if
    // the cls parameter is outside the defined classes
    // If there is only one class, then no extra class for all events of all classes has to be created
-   if (cls < 0 || cls > GetNClasses()) cls = ( GetNClasses() == 1 ? 0 : 1 );  
+   if (cls < 0 || cls > GetNClasses()) cls = ( GetNClasses() == 1 ? 0 : 1 );
 
 
    // Perform PCA and put it into PCAed events tree
@@ -215,7 +215,7 @@ void TMVA::VariablePCATransform::CalculatePrincipalComponents( const std::vector
 
    for (UInt_t i=0; i<maxPCA; i++ ) {
       pca.at(i)->MakePrincipals();
-      
+
       // retrieve mean values, eigenvectors and sigmas
       fMeanValues[i]   = new TVectorD( *(pca.at(i)->GetMeanValues()) ); // need to copy since we want to own
       fEigenVectors[i] = new TMatrixD( *(pca.at(i)->GetEigenVectors()) );
@@ -291,7 +291,7 @@ void TMVA::VariablePCATransform::AttachXMLTo(void* parent) {
       TString meansdef = "";
       for (Int_t row = 0; row<means->GetNrows(); row++)
          meansdef += gTools().StringFromDouble((*means)[row]) + " ";
-      gTools().AddRawLine( meanxml, meansdef );      
+      gTools().AddRawLine( meanxml, meansdef );
    }
 
    // write eigenvectors to stream
@@ -311,7 +311,7 @@ void TMVA::VariablePCATransform::AttachXMLTo(void* parent) {
 }
 
 //_______________________________________________________________________
-void TMVA::VariablePCATransform::ReadFromXML( void* trfnode ) 
+void TMVA::VariablePCATransform::ReadFromXML( void* trfnode )
 {
    // Read the transformation matrices from the xml node
 
@@ -333,11 +333,11 @@ void TMVA::VariablePCATransform::ReadFromXML( void* trfnode )
          if (fMeanValues.size()<=clsIdx) fMeanValues.resize(clsIdx+1,0);
          if (fMeanValues[clsIdx]==0) fMeanValues[clsIdx] = new TVectorD( nrows );
          fMeanValues[clsIdx]->ResizeTo( nrows );
-         
+
          // now read vector entries
          std::stringstream s(gTools().GetContent(ch));
          for (Int_t row = 0; row<nrows; row++) s >> (*fMeanValues[clsIdx])(row);
-      } 
+      }
       else if ( nodeName == "Eigenvectors" ) {
          // Read eigenvectors
          gTools().ReadAttr(ch, "Class",      classtype);
@@ -393,7 +393,7 @@ void TMVA::VariablePCATransform::ReadTransformationFromStream( std::istream& ist
 
          sstr >> nrows;
          Int_t sbType = (strvar=="signal" ? 0 : 1);
-        
+
          if (fMeanValues[sbType] == 0) fMeanValues[sbType] = new TVectorD( nrows );
          else                          fMeanValues[sbType]->ResizeTo( nrows );
 
@@ -441,8 +441,8 @@ void TMVA::VariablePCATransform::ReadTransformationFromStream( std::istream& ist
 }
 
 //_______________________________________________________________________
-void TMVA::VariablePCATransform::MakeFunction( std::ostream& fout, const TString& fcncName, 
-                                               Int_t part, UInt_t trCounter, Int_t ) 
+void TMVA::VariablePCATransform::MakeFunction( std::ostream& fout, const TString& fcncName,
+                                               Int_t part, UInt_t trCounter, Int_t )
 {
    // creates C++ code fragment of the PCA transform for inclusion in standalone C++ class
 
@@ -494,9 +494,10 @@ void TMVA::VariablePCATransform::MakeFunction( std::ostream& fout, const TString
 
       // fill vector of mean values
       fout << "   // initialise vector of mean values" << std::endl;
+      Int_t dp = fout.precision();
       for (UInt_t index=0; index<numC; index++) {
          for (int i=0; i<fMeanValues[index]->GetNrows(); i++) {
-            fout << "   fMeanValues_"<<trCounter<<"["<<index<<"]["<<i<<"] = " << std::setprecision(12) 
+            fout << "   fMeanValues_"<<trCounter<<"["<<index<<"]["<<i<<"] = " << std::setprecision(12)
                  << (*fMeanValues[index])(i) << ";" << std::endl;
          }
       }
@@ -507,16 +508,17 @@ void TMVA::VariablePCATransform::MakeFunction( std::ostream& fout, const TString
       for (UInt_t index=0; index<numC; index++) {
          for (int i=0; i<fEigenVectors[index]->GetNrows(); i++) {
             for (int j=0; j<fEigenVectors[index]->GetNcols(); j++) {
-               fout << "   fEigenVectors_"<<trCounter<<"["<<index<<"]["<<i<<"]["<<j<<"] = " << std::setprecision(12) 
+               fout << "   fEigenVectors_"<<trCounter<<"["<<index<<"]["<<i<<"]["<<j<<"] = " << std::setprecision(12)
                     << (*fEigenVectors[index])(i,j) << ";" << std::endl;
             }
          }
       }
+      fout << std::setprecision(dp);
       fout << "}" << std::endl;
       fout << std::endl;
       fout << "//_______________________________________________________________________" << std::endl;
       fout << "inline void " << fcncName << "::Transform_"<<trCounter<<"( std::vector<double>& iv, int cls ) const" << std::endl;
-      fout << "{" << std::endl;      
+      fout << "{" << std::endl;
       fout << "   const int nvar = " << nvar << ";" << std::endl;
       fout << "   double *dv = new double[nvar];" << std::endl;
       fout << "   double *rv = new double[nvar];" << std::endl;

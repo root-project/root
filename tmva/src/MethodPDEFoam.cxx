@@ -268,10 +268,8 @@ void TMVA::MethodPDEFoam::CalcXminXmax()
    // Create and fill histograms for each dimension (with same events as before), to determine range 
    // based on number of events outside the range
    TH1F **range_h = new TH1F*[kDim]; 
-   char text[200];
    for (UInt_t dim=0; dim<kDim; dim++) {
-      sprintf(text, "range%i", dim);
-      range_h[dim]  = new TH1F(text, "range", rangehistbins, xmin[dim], xmax[dim]);
+      range_h[dim]  = new TH1F(Form("range%i", dim), "range", rangehistbins, xmin[dim], xmax[dim]);
    }
 
    // fill all testing events into histos 

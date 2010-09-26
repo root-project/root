@@ -188,7 +188,7 @@ namespace TMVA {
       // tree  to monitor values during the boosting
       TTree*            fMonitorTree;
 
-      // the stage of the boosting 
+      // the stage of the boosting
       Types::EBoostStage fBoostStage;
 
       //the number of histogram filled for every type of boosted classifier
@@ -198,7 +198,7 @@ namespace TMVA {
       Bool_t            fRecalculateMVACut;
 
 
-      
+
       DataSetManager* fDataSetManager; // DSMTEST
       friend class Factory; // DSMTEST
       friend class Reader;  // DSMTEST

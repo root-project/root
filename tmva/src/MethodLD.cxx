@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$ 
+// @(#)root/tmva $Id$
 // Author: Krzysztof Danielowski, Kamil Kraszewski, Maciej Kruk, Jan Therhaag
 
 /**********************************************************************************
@@ -95,10 +95,10 @@ TMVA::MethodLD::~MethodLD( void )
    if (fSumMatx)    { delete fSumMatx;    fSumMatx    = 0; }
    if (fSumValMatx) { delete fSumValMatx; fSumValMatx = 0; }
    if (fCoeffMatx)  { delete fCoeffMatx;  fCoeffMatx  = 0; }
-   if (fLDCoeff) { 
+   if (fLDCoeff) {
       for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); vi++)
          if (*vi) { delete *vi; *vi = 0; }
-      delete fLDCoeff; fLDCoeff = 0; 
+      delete fLDCoeff; fLDCoeff = 0;
    }
 }
 
@@ -126,7 +126,7 @@ void TMVA::MethodLD::Train( void )
 
    // compute fCoeffMatx and fLDCoeff
    GetLDCoeff();
-   
+
    // nice output
    PrintCoefficients();
 }
@@ -346,7 +346,7 @@ void TMVA::MethodLD::ReadWeightsFromXML( void* wghtnode )
    if (fLDCoeff) { 
       for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); vi++)
          if (*vi) { delete *vi; *vi = 0; }
-      delete fLDCoeff; fLDCoeff = 0; 
+      delete fLDCoeff; fLDCoeff = 0;
    }
    fLDCoeff = new vector< vector< Double_t >* >(fNRegOut);
    for (Int_t ivar = 0; ivar<fNRegOut; ivar++) (*fLDCoeff)[ivar] = new std::vector<Double_t>( ncoeff );
@@ -375,7 +375,10 @@ void TMVA::MethodLD::MakeClassSpecific( std::ostream& fout, const TString& class
    fout << "inline void " << className << "::Initialize() " << endl;
    fout << "{" << endl;
    for (UInt_t ivar=0; ivar<GetNvar()+1; ivar++) {
-      fout << "   fLDCoefficients.push_back( " << std::setprecision(12) << (*(*fLDCoeff)[0])[ivar] << " );" << endl;
+      Int_t dp = fout.precision();
+      fout << "   fLDCoefficients.push_back( "
+           << std::setprecision(12) << (*(*fLDCoeff)[0])[ivar]
+           << std::setprecision(dp) << " );" << endl;
    }
    fout << endl;
    fout << "   // sanity check" << endl;

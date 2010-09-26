@@ -14,8 +14,8 @@
  *      Rustem Ospanov <rustem@fnal.gov> - U. of Texas at Austin, USA             *
  *                                                                                *
  * Copyright (c) 2007:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      U. of Texas at Austin, USA                                                *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -45,6 +45,9 @@
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
+#ifndef ROOT_TRandom
+#include "TRandom3.h"
+#endif
 
 #ifndef ROOT_TMVA_NodekNN
 #include "TMVA/NodekNN.h"
@@ -66,7 +69,7 @@ namespace TMVA {
          Event(const VarVec &vec, Double_t weight, Short_t type);
          Event(const VarVec &vec, Double_t weight, Short_t type, const VarVec &tvec);
          ~Event();
-      
+
          Double_t GetWeight() const;
 
          VarType GetVar(UInt_t i) const;
@@ -145,6 +148,8 @@ namespace TMVA {
 
       private:
 
+         static TRandom3 fgRndm;
+
          UInt_t fDimn;
 
          Node<Event> *fTree;
@@ -153,7 +158,7 @@ namespace TMVA {
 
          mutable List  fkNNList;     // latest result from kNN search
          mutable Event fkNNEvent;    // latest event used for kNN search
-
+         
          std::map<Short_t, UInt_t> fCount; // count number of events of each type
 
          EventVec fEvent; // vector of all events used to build tree and analysis

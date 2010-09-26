@@ -55,9 +55,9 @@ namespace TMVA {
 
    // message types for MsgLogger
    // define outside of Types class to facilite access
-   enum EMsgType { 
+   enum EMsgType {
       kDEBUG   = 1,
-      kVERBOSE = 2, 
+      kVERBOSE = 2,
       kINFO    = 3,
       kWARNING = 4,
       kERROR   = 5,
@@ -66,21 +66,20 @@ namespace TMVA {
    };
 
    class Types {
-      
+
    public:
 
-         
       // available MVA methods
       enum EMVA {
          kVariable    = 0,
-         kCuts           ,     
+         kCuts           ,
          kLikelihood     ,
          kPDERS          ,
          kHMatrix        ,
          kFisher         ,
          kKNN            ,
          kCFMlpANN       ,
-         kTMlpANN        , 
+         kTMlpANN        ,
          kBDT            ,
          kDT             ,
          kRuleFit        ,
@@ -94,7 +93,7 @@ namespace TMVA {
          kLD             ,
          kPlugins        ,
          kCategory       ,
-         kMaxMethod      
+         kMaxMethod
       };
 
       // available variable transformations
@@ -108,43 +107,43 @@ namespace TMVA {
       };
 
       // type of analysis
-      enum EAnalysisType { 
-         kClassification = 0, 
+      enum EAnalysisType {
+         kClassification = 0,
          kRegression,
          kMulticlass,
          kNoAnalysisType,
-         kMaxAnalysisType         
+         kMaxAnalysisType
       };
 
-      enum ESBType { 
+      enum ESBType {
          kSignal = 0,  // Never change this number - it is elsewhere assumed to be zero !
-         kBackground, 
-         kSBBoth, 
+         kBackground,
+         kSBBoth,
          kMaxSBType,
          kTrueType
       };
 
-      enum ETreeType { 
-         kTraining = 0, 
-         kTesting, 
-         kMaxTreeType, 
-         kValidation, 
-         kTrainingOriginal 
+      enum ETreeType {
+         kTraining = 0,
+         kTesting,
+         kMaxTreeType,
+         kValidation,
+         kTrainingOriginal
       };
 
-      enum EBoostStage { 
-         kBoostProcBegin=0, 
-         kBeforeTraining, 
-         kBeforeBoosting, 
-         kAfterBoosting, 
-         kBoostValidation, 
-         kBoostProcEnd 
+      enum EBoostStage {
+         kBoostProcBegin=0,
+         kBeforeTraining,
+         kBeforeBoosting,
+         kAfterBoosting,
+         kBoostValidation,
+         kBoostProcEnd
       };
 
    public:
 
       static Types& Instance();
-      static void   DestroyInstance(); 
+      static void   DestroyInstance();
       ~Types();
 
       Types::EMVA   GetMethodType( const TString& method ) const;
@@ -154,15 +153,15 @@ namespace TMVA {
 
    private:
 
-      Types();      
+      Types();
       static Types* fgTypesPtr;
-                  
+
    private:
-         
+
       std::map<TString, TMVA::Types::EMVA> fStr2type; // types-to-text map
       mutable MsgLogger* fLogger;   // message logger
       MsgLogger& Log() const { return *fLogger; }
-         
+
    };
 }
 

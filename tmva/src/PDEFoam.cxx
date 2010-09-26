@@ -1871,13 +1871,12 @@ TH1D* TMVA::PDEFoam::Draw1Dim( const char *opt, Int_t nbin )
       return 0;
    }
 
-   char hname[100]; char htit[100];
-   sprintf(htit,"1-dimensional Foam: %s", opt);
-   sprintf(hname,"h%s",opt);
+
+   TString hname(Form("h%s",opt));
 
    TH1D* h1=(TH1D*)gDirectory->Get(hname);
    if (h1) delete h1;
-   h1= new TH1D(hname, htit, nbin, fXmin[0], fXmax[0]);
+   h1= new TH1D(hname, Form("1-dimensional Foam: %s", opt), nbin, fXmin[0], fXmax[0]);
 
    if (!h1) Log() << kFATAL << "ERROR: Can not create histo" << hname << Endl;
 
@@ -2012,14 +2011,12 @@ TH2D* TMVA::PDEFoam::Project2( Int_t idim1, Int_t idim2, const char *opt, const 
    }
 
    // create result histogram
-   char hname[100], htit[100];
-   sprintf(htit,"%s var%d vs var%d",opt,idim1,idim2);
-   sprintf(hname,"h%s_%d_vs_%d",opt,idim1,idim2);
+   TString hname(Form("h%s_%d_vs_%d",opt,idim1,idim2));
 
    // if histogram with this name already exists, delete it
-   TH2D* h1=(TH2D*)gDirectory->Get(hname);
+   TH2D* h1=(TH2D*)gDirectory->Get(hname.Data());
    if (h1) delete h1;
-   h1= new TH2D(hname, htit, nbin, fXmin[idim1], fXmax[idim1], nbin, fXmin[idim2], fXmax[idim2]);
+   h1= new TH2D(hname.Data(), Form("%s var%d vs var%d",opt,idim1,idim2), nbin, fXmin[idim1], fXmax[idim1], nbin, fXmin[idim2], fXmax[idim2]);
 
    if (!h1) Log() << kFATAL << "ERROR: Can not create histo" << hname << Endl;
 

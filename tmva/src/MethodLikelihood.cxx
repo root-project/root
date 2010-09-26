@@ -743,6 +743,7 @@ void TMVA::MethodLikelihood::MakeClassSpecificHeader( std::ostream& fout, const 
 void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
    // write specific classifier response
+   Int_t dp = fout.precision();
    fout << "   double       fEpsilon;" << endl;
 
    Int_t * nbin = new Int_t[GetNvar()];
@@ -752,8 +753,8 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
       nbin[ivar]=(*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX();
       if (nbin[ivar] > nbinMax) nbinMax=nbin[ivar];
    }
-   
-   fout << "   static float fRefS[][" << nbinMax << "]; " 
+
+   fout << "   static float fRefS[][" << nbinMax << "]; "
         << "// signal reference vector [nvars][max_nbins]" << endl;
    fout << "   static float fRefB[][" << nbinMax << "]; "
         << "// backgr reference vector [nvars][max_nbins]" << endl << endl;
@@ -771,20 +772,20 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
       fout << "   fNbin[" << ivar << "] = " << (*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX() << ";" << endl;
       // sanity check (for previous code lines)
       if ((((*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX() != nbin[ivar] ||
-            (*fPDFBgd)[ivar]->GetPDFHist()->GetNbinsX() != nbin[ivar]) 
+            (*fPDFBgd)[ivar]->GetPDFHist()->GetNbinsX() != nbin[ivar])
            ) ||
           (*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX() != (*fPDFBgd)[ivar]->GetPDFHist()->GetNbinsX()) {
-         Log() << kFATAL << "<MakeClassSpecific> Mismatch in binning of variable " 
+         Log() << kFATAL << "<MakeClassSpecific> Mismatch in binning of variable "
                << "\"" << GetOriginalVarName(ivar) << "\" of type: \'" << DataInfo().GetVariableInfo(ivar).GetVarType()
-               << "\' : " 
+               << "\' : "
                << "nxS = " << (*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX() << ", "
-               << "nxB = " << (*fPDFBgd)[ivar]->GetPDFHist()->GetNbinsX() 
+               << "nxB = " << (*fPDFBgd)[ivar]->GetPDFHist()->GetNbinsX()
                << " while we expect " << nbin[ivar]
                << Endl;
       }
    }
-   for (UInt_t ivar=0; ivar<GetNvar(); ivar++){ 
-      if ((*fPDFSig)[ivar]->GetInterpolMethod() == TMVA::PDF::kSpline0) 
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
+      if ((*fPDFSig)[ivar]->GetInterpolMethod() == TMVA::PDF::kSpline0)
          fout << "   fHasDiscretPDF[" << ivar <<"] = true;  " << endl;
       else
          fout << "   fHasDiscretPDF[" << ivar <<"] = false; " << endl;
@@ -792,7 +793,7 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
 
    fout << "}" << endl << endl;
 
-   fout << "inline double " << className 
+   fout << "inline double " << className
         << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << endl;
    fout << "{" << endl;
    fout << "   double ps(1), pb(1);" << endl;
@@ -806,7 +807,7 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    fout << endl;
    fout << "      // dummy at present... will be used for variable transforms" << endl;
    fout << "      double x[2] = { inputValuesSig[ivar], inputValuesBgd[ivar] };" << endl;
-   fout << endl;    
+   fout << endl;
    fout << "      for (int itype=0; itype < 2; itype++) {" << endl;
    fout << endl;
    fout << "         // interpolate linearly between adjacent bins" << endl;
@@ -824,12 +825,12 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    fout << "            x[itype] = fVmax[ivar];" << endl;
    fout << "         }" << endl;
    fout << endl;
-   fout << "         // find corresponding histogram from cached indices" << endl;               
+   fout << "         // find corresponding histogram from cached indices" << endl;
    fout << "         float ref = (itype == 0) ? fRefS[ivar][bin] : fRefB[ivar][bin];" << endl;
    fout << endl;
    fout << "         // sanity check" << endl;
    fout << "         if (ref < 0) {" << endl;
-   fout << "            std::cout << \"Fatal error in " << className 
+   fout << "            std::cout << \"Fatal error in " << className
         << ": bin entry < 0 ==> abort\" << std::endl;" << endl;
    fout << "            exit(1);" << endl;
    fout << "         }" << endl;
@@ -870,7 +871,7 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    fout << "   if (pb < fEpsilon) pb = fEpsilon;" << endl;
    fout << "   double r = ps/(ps + pb);" << endl;
    fout << "   if (r >= 1.0) r = 1. - 1.e-15;" << endl;
-   fout << endl;   
+   fout << endl;
    fout << "   if (" << (fTransformLikelihoodOutput ? "true" : "false") << ") {" << endl;
    fout << "      // inverse Fermi function" << endl;
    fout << endl;
@@ -906,7 +907,7 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
          if (ibin < nbinMax) fout << ", ";
       }
       fout << "   }, " << endl;
-   }   
+   }
    fout << "}; " << endl;
    fout << endl;
 
@@ -925,9 +926,10 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
          if (ibin < nbinMax) fout << ", ";
       }
       fout << "   }, " << endl;
-   }   
+   }
    fout << "}; " << endl;
    fout << endl;
+   fout << std::setprecision(dp);
 
    delete[] nbin;
 }
@@ -937,7 +939,7 @@ void TMVA::MethodLikelihood::GetHelpMessage() const
 {
    // get help message text
    //
-   // typical length of text line: 
+   // typical length of text line:
    //         "|--------------------------------------------------------------|"
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;

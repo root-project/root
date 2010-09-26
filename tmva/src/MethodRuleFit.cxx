@@ -603,6 +603,7 @@ void  TMVA::MethodRuleFit::WriteMonitoringHistosToFile( void ) const
 void TMVA::MethodRuleFit::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
    // write specific classifier response
+   Int_t dp = fout.precision();
    fout << "   // not implemented for class: \"" << className << "\"" << std::endl;
    fout << "};" << std::endl;
    fout << "void   " << className << "::Initialize(){}" << std::endl;
@@ -613,13 +614,14 @@ void TMVA::MethodRuleFit::MakeClassSpecific( std::ostream& fout, const TString& 
    MakeClassLinear(fout);
    fout << "   return rval;" << std::endl;
    fout << "}" << std::endl;
-
+   fout << std::setprecision(dp);
 }
 
 //_______________________________________________________________________
 void TMVA::MethodRuleFit::MakeClassRuleCuts( std::ostream& fout ) const
 {
    // print out the rule cuts
+   Int_t dp = fout.precision();
    if (!fRuleFit.GetRuleEnsemble().DoRules()) {
       fout << "   //" << std::endl;
       fout << "   // ==> MODEL CONTAINS NO RULES <==" << std::endl;
@@ -669,6 +671,7 @@ void TMVA::MethodRuleFit::MakeClassRuleCuts( std::ostream& fout ) const
       fout << ") rval+=" << setprecision(10) << (*rules)[ir]->GetCoefficient() << ";" << std::flush;
       fout << "   // importance = " << Form("%3.3f",impr) << std::endl;
    }
+   fout << std::setprecision(dp);
 }
 
 //_______________________________________________________________________

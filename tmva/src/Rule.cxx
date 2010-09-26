@@ -344,6 +344,7 @@ void TMVA::Rule::PrintLogger(const char *title) const
 void TMVA::Rule::PrintRaw( ostream& os ) const
 {
    // extensive print function used to print info for the weight file
+   Int_t dp = os.precision();
    const UInt_t nvars = fCut->GetNvars();
    os << "Parameters: "
       << std::setprecision(10)
@@ -367,6 +368,7 @@ void TMVA::Rule::PrintRaw( ostream& os ) const
          << " " << (fCut->GetCutDoMax(i) ? "T":"F")
          << std::endl;
    }
+   os << std::setprecision(dp);
 }
 
 //_______________________________________________________________________

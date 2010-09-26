@@ -70,18 +70,38 @@ TMVA::MethodBoost::MethodBoost( const TString& jobName,
                                 DataSetInfo& theData,
                                 const TString& theOption,
                                 TDirectory* theTargetDir ) :
-   TMVA::MethodCompositeBase( jobName, Types::kBoost, methodTitle, theData, theOption, theTargetDir ),
-   fBoostedMethodTitle(methodTitle),
-   fBoostedMethodOptions(theOption),
-   fMonitorHist(0)
+   TMVA::MethodCompositeBase( jobName, Types::kBoost, methodTitle, theData, theOption, theTargetDir )
+   , fBoostNum(0)
+   , fMethodError(0)
+   , fOrigMethodError(0)
+   , fBoostWeight(0)
+   , fADABoostBeta(0)
+   , fBoostedMethodTitle(methodTitle)
+   , fBoostedMethodOptions(theOption)
+   , fMonitorHist(0)
+   , fMonitorBoostedMethod(kFALSE)
+   , fBoostStage(Types::kBoostProcBegin)
+   , fDefaultHistNum(0)
+   , fRecalculateMVACut(kFALSE)
 {}
 
 //_______________________________________________________________________
 TMVA::MethodBoost::MethodBoost( DataSetInfo& dsi,
                                 const TString& theWeightFile,
                                 TDirectory* theTargetDir )
-   : TMVA::MethodCompositeBase( Types::kBoost, dsi, theWeightFile, theTargetDir ),
-     fBoostNum(0), fMonitorHist(0)
+   : TMVA::MethodCompositeBase( Types::kBoost, dsi, theWeightFile, theTargetDir )
+   , fBoostNum(0)
+   , fMethodError(0)
+   , fOrigMethodError(0)
+   , fBoostWeight(0)
+   , fADABoostBeta(0)
+   , fBoostedMethodTitle("")
+   , fBoostedMethodOptions("")
+   , fMonitorHist(0)
+   , fMonitorBoostedMethod(kFALSE)
+   , fBoostStage(Types::kBoostProcBegin)
+   , fDefaultHistNum(0)
+   , fRecalculateMVACut(kFALSE)
 {}
 
 //_______________________________________________________________________

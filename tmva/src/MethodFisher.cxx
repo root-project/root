@@ -613,6 +613,7 @@ void TMVA::MethodFisher::ReadWeightsFromXML( void* wghtnode )
 void TMVA::MethodFisher::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
    // write Fisher-specific classifier response
+   Int_t dp = fout.precision();
    fout << "   double              fFisher0;" << endl;
    fout << "   std::vector<double> fFisherCoefficients;" << endl;
    fout << "};" << endl;
@@ -648,6 +649,7 @@ void TMVA::MethodFisher::MakeClassSpecific( std::ostream& fout, const TString& c
    fout << "   // clear coefficients" << endl;
    fout << "   fFisherCoefficients.clear(); " << endl;
    fout << "}" << endl;
+   fout << std::setprecision(dp);
 }
 
 //_______________________________________________________________________
