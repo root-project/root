@@ -111,7 +111,7 @@ void TMVA::MethodANNBase::DeclareOptions()
    DeclareOptionRef( fNcycles    = 500,       "NCycles",         "Number of training cycles" );
    DeclareOptionRef( fLayerSpec  = "N,N-1",   "HiddenLayers",    "Specification of hidden layer architecture" );
    DeclareOptionRef( fNeuronType = "sigmoid", "NeuronType",      "Neuron activation function type" );
-   DeclareOptionRef( fRandomSeed = 0, "RandomSeed", "Random seed for initial synapse weights (0 means unique seed for each run)");
+   DeclareOptionRef( fRandomSeed = 1, "RandomSeed", "Random seed for initial synapse weights (0 means unique seed for each run; default value '1')");
 
    DeclareOptionRef(fEstimatorS="MSE", "EstimatorType",
                     "MSE (Mean Square Estimator) for Gaussian Likelihood or CE(Cross-Entropy) for Bernoulli Likelihood" ); //zjh
@@ -636,7 +636,7 @@ const std::vector<Float_t> &TMVA::MethodANNBase::GetMulticlassValues()
    TObjArray* inputLayer = (TObjArray*)fNetwork->At(0);
 
    const Event * ev = GetEvent();
-
+   
    for (UInt_t i = 0; i < GetNvar(); i++) {
       neuron = (TNeuron*)inputLayer->At(i);
       neuron->ForceValue( ev->GetValue(i) );
@@ -734,15 +734,9 @@ void TMVA::MethodANNBase::ReadWeightsFromXML( void* wghtnode )
    vector<Int_t>* layout = new vector<Int_t>();
 
    void* xmlLayout = NULL;
-   try{
-      xmlLayout = gTools().GetChild(wghtnode, "Layout");
-   } catch( std::logic_error& ) {
+   xmlLayout = gTools().GetChild(wghtnode, "Layout");
+   if( !xmlLayout )
       xmlLayout = wghtnode;
-   }
-   if( !xmlLayout ){
-      Log() << kFATAL << "xml node if layout is empty" << Endl;
-   }
-
 
    UInt_t nLayers;
    gTools().ReadAttr( xmlLayout, "NLayers", nLayers );
@@ -795,15 +789,10 @@ void TMVA::MethodANNBase::ReadWeightsFromXML( void* wghtnode )
    delete layout;
 
    void* xmlInvHessian = NULL;
-   try{
-      xmlInvHessian = gTools().GetChild(wghtnode, "InverseHessian");
-   } catch ( std::logic_error& ){
+   xmlInvHessian = gTools().GetChild(wghtnode, "InverseHessian");
+   if( !xmlInvHessian )
       // no inverse hessian available
-      return;  // ------------------ return from subroutine
-   }
-   if( !xmlInvHessian ){
-      Log() << kINFO << "xml node of inverse hessian is empty" << Endl;
-   }
+      return;
 
    fUseRegulator = kTRUE;
 
@@ -959,7 +948,14 @@ void TMVA::MethodANNBase::WriteMonitoringHistosToFile() const
    CreateWeightMonitoringHists( "weights_hist" );
 
    // now save all the epoch-wise monitoring information
-   TDirectory* epochdir = BaseDir()->mkdir( "EpochMonitoring" );
+   static int epochMonitoringDirectoryNumber = 0;
+   TDirectory* epochdir = NULL;
+   if( epochMonitoringDirectoryNumber == 0 )
+      epochdir = BaseDir()->mkdir( "EpochMonitoring" );
+   else
+      epochdir = BaseDir()->mkdir( Form("EpochMonitoring_%4d",epochMonitoringDirectoryNumber) );
+   ++epochMonitoringDirectoryNumber;
+
    epochdir->cd();
    for (std::vector<TH1*>::const_iterator it = fEpochMonHistS.begin(); it != fEpochMonHistS.end(); it++) {
       (*it)->Write();
@@ -1089,6 +1085,7 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
    fout << "   // nothing to clear" << endl;
    fout << "}" << endl;
 }
+
 //_________________________________________________________________________
 Bool_t TMVA::MethodANNBase::Debug() const 
 { 

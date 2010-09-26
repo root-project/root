@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
+// Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
@@ -21,9 +21,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -33,70 +33,70 @@
 
 //_______________________________________________________________________
 /* Begin_Html
-  Fisher and Mahalanobis Discriminants (Linear Discriminant Analysis) 
-  
+  Fisher and Mahalanobis Discriminants (Linear Discriminant Analysis)
+
   <p>
-  In the method of Fisher discriminants event selection is performed 
+  In the method of Fisher discriminants event selection is performed
   in a transformed variable space with zero linear correlations, by
-  distinguishing the mean values of the signal and background 
+  distinguishing the mean values of the signal and background
   distributions.<br></p>
-  
+
   <p>
-  The linear discriminant analysis determines an axis in the (correlated) 
-  hyperspace of the input variables 
-  such that, when projecting the output classes (signal and background) 
+  The linear discriminant analysis determines an axis in the (correlated)
+  hyperspace of the input variables
+  such that, when projecting the output classes (signal and background)
   upon this axis, they are pushed as far as possible away from each other,
-  while events of a same class are confined in a close vicinity. 
+  while events of a same class are confined in a close vicinity.
   The linearity property of this method is reflected in the metric with
   which "far apart" and "close vicinity" are determined: the covariance
   matrix of the discriminant variable space.
   </p>
 
   <p>
-  The classification of the events in signal and background classes 
-  relies on the following characteristics (only): overall sample means,    
+  The classification of the events in signal and background classes
+  relies on the following characteristics (only): overall sample means,
   <i><my:o>x</my:o><sub>i</sub></i>, for each input variable, <i>i</i>,
-  class-specific sample means, <i><my:o>x</my:o><sub>S(B),i</sub></i>, 
-  and total covariance matrix <i>T<sub>ij</sub></i>. The covariance matrix 
-  can be decomposed into the sum of a <i>within-</i> (<i>W<sub>ij</sub></i>) 
+  class-specific sample means, <i><my:o>x</my:o><sub>S(B),i</sub></i>,
+  and total covariance matrix <i>T<sub>ij</sub></i>. The covariance matrix
+  can be decomposed into the sum of a <i>within-</i> (<i>W<sub>ij</sub></i>)
   and a <i>between-class</i> (<i>B<sub>ij</sub></i>) class matrix. They describe
   the dispersion of events relative to the means of their own class (within-class
   matrix), and relative to the overall sample means (between-class matrix).
   The Fisher coefficients, <i>F<sub>i</sub></i>, are then given by <br>
   <center>
-  <img vspace=6 src="gif/tmva_fisherC.gif" align="bottom" > 
+  <img vspace=6 src="gif/tmva_fisherC.gif" align="bottom" >
   </center>
-  where in TMVA is set <i>N<sub>S</sub>=N<sub>B</sub></i>, so that the factor 
+  where in TMVA is set <i>N<sub>S</sub>=N<sub>B</sub></i>, so that the factor
   in front of the sum simplifies to &frac12;.
   The Fisher discriminant then reads<br>
   <center>
-  <img vspace=6 src="gif/tmva_fisherD.gif" align="bottom" > 
+  <img vspace=6 src="gif/tmva_fisherD.gif" align="bottom" >
   </center>
   The offset <i>F</i><sub>0</sub> centers the sample mean of <i>x</i><sub>Fi</sub>
   at zero. Instead of using the within-class matrix, the Mahalanobis variant
   determines the Fisher coefficients as follows:<br>
   <center>
-  <img vspace=6 src="gif/tmva_mahaC.gif" align="bottom" > 
+  <img vspace=6 src="gif/tmva_mahaC.gif" align="bottom" >
   </center>
   with resulting <i>x</i><sub>Ma</sub> that are very similar to the
   <i>x</i><sub>Fi</sub>. <br></p>
 
   TMVA provides two outputs for the ranking of the input variables:<br><p></p>
   <ul>
-  <li> <u>Fisher test:</u> the Fisher analysis aims at simultaneously maximising 
+  <li> <u>Fisher test:</u> the Fisher analysis aims at simultaneously maximising
   the between-class separation, while minimising the within-class dispersion.
-  A useful measure of the discrimination power of a variable is hence given 
+  A useful measure of the discrimination power of a variable is hence given
   by the diagonal quantity: <i>B<sub>ii</sub>/W<sub>ii</sub></i>.
   </li>
 
-  <li> <u>Discrimination power:</u> the value of the Fisher coefficient is a 
-  measure of the discriminating power of a variable. The discrimination power 
+  <li> <u>Discrimination power:</u> the value of the Fisher coefficient is a
+  measure of the discriminating power of a variable. The discrimination power
   of set of input variables can therefore be measured by the scalar
   <center>
-  <img vspace=6 src="gif/tmva_discpower.gif" align="bottom" > 
+  <img vspace=6 src="gif/tmva_discpower.gif" align="bottom" >
   </center>
   </li>
-  </ul>      
+  </ul>
   The corresponding numbers are printed on standard output.
   End_Html */
 //_______________________________________________________________________
@@ -122,7 +122,7 @@ ClassImp(TMVA::MethodFisher);
 //_______________________________________________________________________
 TMVA::MethodFisher::MethodFisher( const TString& jobName,
                                   const TString& methodTitle,
-                                  DataSetInfo& dsi, 
+                                  DataSetInfo& dsi,
                                   const TString& theOption,
                                   TDirectory* theTargetDir ) :
    MethodBase( jobName, Types::kFisher, methodTitle, dsi, theOption, theTargetDir ),
@@ -138,12 +138,12 @@ TMVA::MethodFisher::MethodFisher( const TString& jobName,
    fFisherCoeff  ( 0 ),
    fF0           ( 0 )
 {
-   // standard constructor for the "Fisher" 
+   // standard constructor for the "Fisher"
 }
 
 //_______________________________________________________________________
-TMVA::MethodFisher::MethodFisher( DataSetInfo& dsi, 
-                                  const TString& theWeightFile,  
+TMVA::MethodFisher::MethodFisher( DataSetInfo& dsi,
+                                  const TString& theWeightFile,
                                   TDirectory* theTargetDir ) :
    MethodBase( Types::kFisher, dsi, theWeightFile, theTargetDir ),
    fMeanMatx     ( 0 ),
@@ -177,7 +177,7 @@ void TMVA::MethodFisher::Init( void )
 }
 
 //_______________________________________________________________________
-void TMVA::MethodFisher::DeclareOptions() 
+void TMVA::MethodFisher::DeclareOptions()
 {
    //
    // MethodFisher options:
@@ -190,7 +190,7 @@ void TMVA::MethodFisher::DeclareOptions()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodFisher::ProcessOptions() 
+void TMVA::MethodFisher::ProcessOptions()
 {
    // process user options
    if (fTheMethod ==  "Fisher" ) fFisherMethod = kFisher;
@@ -252,7 +252,7 @@ void TMVA::MethodFisher::Train( void )
 Double_t TMVA::MethodFisher::GetMvaValue( Double_t* err )
 {
    // returns the Fisher value (no fixed range)
-   
+
    const Event * ev = GetEvent();
    Double_t result = fF0;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++)
@@ -296,7 +296,7 @@ void TMVA::MethodFisher::GetMean( void )
    // init vectors
    Double_t* sumS = new Double_t[nvar];
    Double_t* sumB = new Double_t[nvar];
-   for (UInt_t ivar=0; ivar<nvar; ivar++) { sumS[ivar] = sumB[ivar] = 0; }   
+   for (UInt_t ivar=0; ivar<nvar; ivar++) { sumS[ivar] = sumB[ivar] = 0; }
 
    // compute sample means
    for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
@@ -314,7 +314,7 @@ void TMVA::MethodFisher::GetMean( void )
       for (UInt_t ivar=0; ivar<nvar; ivar++) sum[ivar] += ev->GetValue( ivar )*weight;
    }
 
-   for (UInt_t ivar=0; ivar<nvar; ivar++) {   
+   for (UInt_t ivar=0; ivar<nvar; ivar++) {
       (*fMeanMatx)( ivar, 2 ) = sumS[ivar];
       (*fMeanMatx)( ivar, 0 ) = sumS[ivar]/fSumOfWeightsS;
 
@@ -323,7 +323,7 @@ void TMVA::MethodFisher::GetMean( void )
 
       // signal + background
       (*fMeanMatx)( ivar, 2 ) /= (fSumOfWeightsS + fSumOfWeightsB);
-   }  
+   }
    delete [] sumS;
    delete [] sumB;
 }

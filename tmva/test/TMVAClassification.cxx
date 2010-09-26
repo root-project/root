@@ -29,7 +29,7 @@
  * macros (simply say: root -l <../macros/macro.C>), which can be conveniently    *
  * invoked through a GUI launched by the command                                  *
  *                                                                                *
- *    root -l ./TMVAGui.C                                                        *
+ *    root -l ./TMVAGui.C                                                         *
  **********************************************************************************/
 
 #include <cstdlib>
@@ -147,17 +147,17 @@ int main( int argc, char** argv )
    // then run the performance analysis for you.
    //
    // The first argument is the base of the name of all the
-   // weightfiles in the directory weight/ 
+   // weightfiles in the directory weight/
    //
    // The second argument is the output file for the training results
-   // All TMVA output can be suppressed by removing the "!" (not) in 
+   // All TMVA output can be suppressed by removing the "!" (not) in
    // front of the "Silent" argument in the option string
    std::string factoryOptions( "!V:!Silent:Transformations=I;D;P;G,D:AnalysisType=Classification" );
    if (batchMode) factoryOptions += ":!Color:!DrawProgressBar";
 
    TMVA::Factory *factory = new TMVA::Factory( "TMVAClassification", outputFile, factoryOptions );
 
-   // If you wish to modify default settings 
+   // If you wish to modify default settings
    // (please check "src/Config.h" to see all available global options)
    //    (TMVA::gConfig().GetVariablePlotting()).fTimesRMS = 8.0;
    //    (TMVA::gConfig().GetIONames()).fWeightFileDir = "myWeightDirectory";
@@ -170,12 +170,12 @@ int main( int argc, char** argv )
    factory->AddVariable( "var3",                "Variable 3", "units", 'F' );
    factory->AddVariable( "var4",                "Variable 4", "units", 'F' );
 
-   // You can add so-called "Spectator variables", which are not used in the MVA training, 
-   // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the 
+   // You can add so-called "Spectator variables", which are not used in the MVA training,
+   // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the
    // input variables, the response values of all trained MVAs, and the spectator variables
    factory->AddSpectator( "spec1:=var1*2",  "Spectator 1", "units" );
    factory->AddSpectator( "spec2:=var1*3",  "Spectator 2", "units" );
-   
+
    // read training and test data
    if (ReadDataFromAsciiIFormat) {
 
@@ -188,7 +188,7 @@ int main( int argc, char** argv )
       TString datFileB = "tmva_example_bkg.dat";
       factory->SetInputTrees( datFileS, datFileB );
 
-   } 
+   }
    else {
 
       // load the signal and background event samples from ROOT trees
@@ -198,7 +198,7 @@ int main( int argc, char** argv )
          // first we try to find tmva_example.root in the local directory
          std::cout << "--- TMVAClassification       : Accessing " << fname << std::endl;
          input = TFile::Open( fname );
-      } 
+      }
 
       if (!input) {
          std::cout << "ERROR: could not open data file" << std::endl;
@@ -220,8 +220,8 @@ int main( int argc, char** argv )
       // factory->AddSignalTree( signalTrainingTree, signalTrainWeight, "Training" );
       // factory->AddSignalTree( signalTestTree,     signalTestWeight,  "Test" );
    }
-   
-   /// This would set individual event weights (the variables defined in the 
+
+   /// This would set individual event weights (the variables defined in the
    /// expression need to exist in the original TTree)
    factory->SetBackgroundWeightExpression("weight");
    // for signal    : factory->SetSignalWeightExpression("weight1*weight2");
@@ -235,11 +235,11 @@ int main( int argc, char** argv )
    factory->PrepareTrainingAndTestTree( mycuts, mycutb,
                                         "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" );
 
-   /// If no numbers of events are given, half of the events in the tree are used for training, and 
-   /// the other half for testing:
-   //    factory->PrepareTrainingAndTestTree( mycut, "SplitMode=random:!V" );  
+   // If no numbers of events are given, half of the events in the tree are used for training, and
+   // the other half for testing:
+   //    factory->PrepareTrainingAndTestTree( mycut, "SplitMode=random:!V" );
    // To also specify the number of testing events, use:
-   //    factory->PrepareTrainingAndTestTree( mycut, 
+   //    factory->PrepareTrainingAndTestTree( mycut,
    //                                         "NSigTrain=3000:NBkgTrain=3000:NSigTest=3000:NBkgTest=3000:SplitMode=Random:!V" );  
 
    // ---- Book MVA methods
@@ -251,83 +251,83 @@ int main( int argc, char** argv )
 
    // Cut optimisation
    if (Use["Cuts"])
-      factory->BookMethod( TMVA::Types::kCuts, "Cuts", 
+      factory->BookMethod( TMVA::Types::kCuts, "Cuts",
                            "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" );
 
    if (Use["CutsD"])
-      factory->BookMethod( TMVA::Types::kCuts, "CutsD", 
+      factory->BookMethod( TMVA::Types::kCuts, "CutsD",
                            "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart:VarTransform=Decorrelate" );
 
    if (Use["CutsPCA"])
-      factory->BookMethod( TMVA::Types::kCuts, "CutsPCA", 
+      factory->BookMethod( TMVA::Types::kCuts, "CutsPCA",
                            "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart:VarTransform=PCA" );
 
    if (Use["CutsGA"])
       factory->BookMethod( TMVA::Types::kCuts, "CutsGA",
                            "H:!V:FitMethod=GA:CutRangeMin[0]=-10:CutRangeMax[0]=10:VarProp[1]=FMax:EffSel:Steps=30:Cycles=3:PopSize=400:SC_steps=10:SC_rate=5:SC_factor=0.95" );
-   
+
    if (Use["CutsSA"])
       factory->BookMethod( TMVA::Types::kCuts, "CutsSA",
                            "!H:!V:FitMethod=SA:EffSel:MaxCalls=150000:KernelTemp=IncAdaptive:InitialTemp=1e+6:MinTemp=1e-6:Eps=1e-10:UseDefaultScale" );
-   
+
    // Likelihood
    if (Use["Likelihood"])
-      factory->BookMethod( TMVA::Types::kLikelihood, "Likelihood", 
+      factory->BookMethod( TMVA::Types::kLikelihood, "Likelihood",
                            "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" ); 
 
    // test the decorrelated likelihood
    if (Use["LikelihoodD"])
-      factory->BookMethod( TMVA::Types::kLikelihood, "LikelihoodD", 
+      factory->BookMethod( TMVA::Types::kLikelihood, "LikelihoodD",
                            "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmooth=5:NAvEvtPerBin=50:VarTransform=Decorrelate" ); 
 
    if (Use["LikelihoodPCA"])
-      factory->BookMethod( TMVA::Types::kLikelihood, "LikelihoodPCA", 
+      factory->BookMethod( TMVA::Types::kLikelihood, "LikelihoodPCA",
                            "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmooth=5:NAvEvtPerBin=50:VarTransform=PCA" ); 
- 
+
    // test the new kernel density estimator
    if (Use["LikelihoodKDE"])
-      factory->BookMethod( TMVA::Types::kLikelihood, "LikelihoodKDE", 
+      factory->BookMethod( TMVA::Types::kLikelihood, "LikelihoodKDE",
                            "!H:!V:!TransformOutput:PDFInterpol=KDE:KDEtype=Gauss:KDEiter=Adaptive:KDEFineFactor=0.3:KDEborder=None:NAvEvtPerBin=50" ); 
 
    // test the mixed splines and kernel density estimator (depending on which variable)
    if (Use["LikelihoodMIX"])
-      factory->BookMethod( TMVA::Types::kLikelihood, "LikelihoodMIX", 
+      factory->BookMethod( TMVA::Types::kLikelihood, "LikelihoodMIX",
                            "!H:!V:!TransformOutput:PDFInterpolSig[0]=KDE:PDFInterpolBkg[0]=KDE:PDFInterpolSig[1]=KDE:PDFInterpolBkg[1]=KDE:PDFInterpolSig[2]=Spline2:PDFInterpolBkg[2]=Spline2:PDFInterpolSig[3]=Spline2:PDFInterpolBkg[3]=Spline2:KDEtype=Gauss:KDEiter=Nonadaptive:KDEborder=None:NAvEvtPerBin=50" ); 
 
    // test the multi-dimensional probability density estimator
    // here are the options strings for the MinMax and RMS methods, respectively:
-   //      "!H:!V:VolumeRangeMode=MinMax:DeltaFrac=0.2:KernelEstimator=Gauss:GaussSigma=0.3" );   
-   //      "!H:!V:VolumeRangeMode=RMS:DeltaFrac=3:KernelEstimator=Gauss:GaussSigma=0.3" );   
+   //      "!H:!V:VolumeRangeMode=MinMax:DeltaFrac=0.2:KernelEstimator=Gauss:GaussSigma=0.3" );
+   //      "!H:!V:VolumeRangeMode=RMS:DeltaFrac=3:KernelEstimator=Gauss:GaussSigma=0.3" );
    if (Use["PDERS"])
-      factory->BookMethod( TMVA::Types::kPDERS, "PDERS", 
+      factory->BookMethod( TMVA::Types::kPDERS, "PDERS",
                            "!H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" );
 
    if (Use["PDERSkNN"])
-      factory->BookMethod( TMVA::Types::kPDERS, "PDERSkNN", 
+      factory->BookMethod( TMVA::Types::kPDERS, "PDERSkNN",
                            "!H:!V:VolumeRangeMode=kNN:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" );
 
    if (Use["PDERSD"])
-      factory->BookMethod( TMVA::Types::kPDERS, "PDERSD", 
+      factory->BookMethod( TMVA::Types::kPDERS, "PDERSD",
                            "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:VarTransform=Decorrelate" );
 
    if (Use["PDERSPCA"])
-      factory->BookMethod( TMVA::Types::kPDERS, "PDERSPCA", 
+      factory->BookMethod( TMVA::Types::kPDERS, "PDERSPCA",
                            "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:VarTransform=PCA" );
 
    // Multi-dimensional likelihood estimator using self-adapting phase-space binning
    if (Use["PDEFoam"])
-      factory->BookMethod( TMVA::Types::kPDEFoam, "PDEFoam", 
+      factory->BookMethod( TMVA::Types::kPDEFoam, "PDEFoam",
                            "H:!V:SigBgSeparate=F:TailCut=0.001:VolFrac=0.0333:nActiveCells=500:nSampl=2000:nBin=5:CutNmin=T:Nmin=100:Kernel=None:Compress=T" );
 
    // K-Nearest Neighbour classifier (KNN)
    if (Use["KNN"])
-      factory->BookMethod( TMVA::Types::kKNN, "KNN", 
+      factory->BookMethod( TMVA::Types::kKNN, "KNN",
                            "H:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" );
    // H-Matrix (chi2-squared) method
    if (Use["HMatrix"])
-      factory->BookMethod( TMVA::Types::kHMatrix, "HMatrix", "!H:!V" ); 
+      factory->BookMethod( TMVA::Types::kHMatrix, "HMatrix", "!H:!V" );
 
-   // Fisher discriminant   
+   // Fisher discriminant
    if (Use["Fisher"])
       factory->BookMethod( TMVA::Types::kFisher, "Fisher", "H:!V:Fisher:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=60:NsmoothMVAPdf=10" );
 
@@ -343,11 +343,11 @@ int main( int argc, char** argv )
    if (Use["LD"])
       factory->BookMethod( TMVA::Types::kLD, "LD", "H:!V:VarTransform=None" );
 
-	// Function discrimination analysis (FDA) -- test of various fitters - the recommended one is Minuit (or GA or SA)
+   // Function discrimination analysis (FDA) -- test of various fitters - the recommended one is Minuit (or GA or SA)
    if (Use["FDA_MC"])
       factory->BookMethod( TMVA::Types::kFDA, "FDA_MC",
                            "H:!V:Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):FitMethod=MC:SampleSize=100000:Sigma=0.1" );
-   
+
    if (Use["FDA_GA"]) // can also use Simulated Annealing (SA) algorithm (see Cuts_SA options])
       factory->BookMethod( TMVA::Types::kFDA, "FDA_GA",
                            "H:!V:Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):FitMethod=GA:PopSize=300:Cycles=3:Steps=20:Trim=True:SaveBestGen=1" );
@@ -444,7 +444,7 @@ int main( int argc, char** argv )
    factory->EvaluateAllMethods();
 
    // --------------------------------------------------------------
-   
+
    // Save the output
    outputFile->Close();
 

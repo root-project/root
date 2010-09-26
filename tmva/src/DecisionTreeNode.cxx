@@ -446,8 +446,12 @@ void TMVA::DecisionTreeNode::ReadAttributes(void* node, UInt_t /* tmva_Version_C
    gTools().ReadAttr(node, "res",   fResponse               );
    gTools().ReadAttr(node, "rms",   fRMS                    );
    gTools().ReadAttr(node, "nType", fNodeType               );
+   if(gTools().HasAttr(node, "purity")) {
+      gTools().ReadAttr(node, "purity",fPurity );
+   } else {
+      fPurity = tempNSigEvents / (tempNSigEvents + tempNBkgEvents);
+   }
    gTools().ReadAttr(node, "CC",    tempCC                  );
-   fPurity = tempNSigEvents / (tempNSigEvents + tempNBkgEvents);
    if (fTrainInfo){
       SetNSigEvents(tempNSigEvents);
       SetNBkgEvents(tempNBkgEvents);
@@ -457,7 +461,7 @@ void TMVA::DecisionTreeNode::ReadAttributes(void* node, UInt_t /* tmva_Version_C
       SetNEvents_unweighted(tempNEvents_unweighted);
       SetSeparationIndex(tempSeparationIndex);
       SetSeparationGain(tempSeparationGain);
-      SetCC(tempCC);  
+      SetCC(tempCC);
    }
 }
 

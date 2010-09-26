@@ -505,7 +505,8 @@ Double_t TMVA::Reader::EvaluateMVA( MethodBase* method, Double_t aux )
    // the aux value is only needed for MethodCuts: it sets the required signal efficiency
    if (method->GetMethodType() == TMVA::Types::kCuts)
       dynamic_cast<TMVA::MethodCuts*>(method)->SetTestSignalEfficiency( aux );
-   if (method->GetMethodType() == TMVA::Types::kMLP) return method->GetMvaValues( fMvaEventError, fMvaEventError2 ); //zjh
+   if (method->GetMethodType() == TMVA::Types::kMLP)
+      return method->GetMvaValues( fMvaEventError, fMvaEventError2 ); //zjh
    else  return method->GetMvaValue( &fMvaEventError ); // attributed MVA response and error
 }
 

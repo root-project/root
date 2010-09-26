@@ -26,7 +26,7 @@
 #include "TMVA/Tools.h"
 #include "TMVA/MethodCuts.h"
 
-int main( int argc, char** argv ) 
+int main( int argc, char** argv )
 {
    //---------------------------------------------------------------
    // default MVA methods to be trained + tested
@@ -63,9 +63,9 @@ int main( int argc, char** argv )
    // ---
    Use["MLP"]             = 0; // this is the recommended ANN
    Use["MLPBFGS"]         = 0; // recommended ANN with optional training method
-   Use["MLPBNN"]          = 0; 
+   Use["MLPBNN"]          = 0;
    Use["CFMlpANN"]        = 0; // *** missing
-   Use["TMlpANN"]         = 0; 
+   Use["TMlpANN"]         = 0;
    // ---
    Use["SVM"]             = 0;
    // ---
@@ -81,12 +81,19 @@ int main( int argc, char** argv )
    Use["Plugin"]          = 0;
    // ---------------------------------------------------------------
 
+   std::map<std::string,int> nIdenticalResults;
+
+
    std::cout << std::endl;
    std::cout << "==> Start TMVAClassificationApplication" << std::endl;
 
    std::cout << "Running the following methods" << std::endl;
    if (argc>1) {
-      for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) it->second = 0;
+      for (std::map<std::string,int>::iterator it = Use.begin();
+           it != Use.end(); it++) {
+         it->second = 0;
+         nIdenticalResults[it->first] = 0;
+      }
    }
    for (int i=1; i<argc; i++) {
       std::string regMethod(argv[i]);
@@ -102,10 +109,10 @@ int main( int argc, char** argv )
    //
    // create the Reader object
    //
-   TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );    
+   TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );
 
    // create a set of variables and declare them to the reader
-   // - the variable names must corresponds in name and type to 
+   // - the variable names must corresponds in name and type to
    // those given in the weight file(s) that you use
    Float_t var1, var2;
    Float_t var3, var4;
@@ -137,19 +144,19 @@ int main( int argc, char** argv )
       if (it->second) {
          TString methodName = it->first + " method";
          TString weightfile = dir + prefix + "_" + TString(it->first) + ".weights.xml";
-         reader->BookMVA( methodName, weightfile ); 
+         reader->BookMVA( methodName, weightfile );
       }
    }
-   
+
    // example how to use your own method as plugin
    if (Use["Plugin"]) {
-      // the weight file contains a line 
+      // the weight file contains a line
       // Method         : MethodName::InstanceName
 
       // if MethodName is not a known TMVA method, it is assumed to be
       // a user implemented method which has to be loaded via the
       // plugin mechanism
-      
+
       // for user implemented methods the line in the weight file can be
       // Method         : PluginName::InstanceName
       // where PluginName can be anything
@@ -158,7 +165,7 @@ int main( int argc, char** argv )
       // either through the following line in .rootrc:
       // # plugin handler          plugin       class            library        constructor format
       // Plugin.TMVA@@MethodBase:  PluginName   MethodClassName  UserPackage    "MethodName(DataSet&,TString)"
-      //  
+      //
       // or by telling the global plugin manager directly
       gPluginMgr->AddHandler("TMVA@@MethodBase", "PluginName", "MethodClassName", "UserPackage", "MethodName(DataSet&,TString)");
       // the class is then looked for in libUserPackage.so
@@ -189,8 +196,8 @@ int main( int argc, char** argv )
    if (Use["BoostedFisher"]) histFiB     = new TH1F( "MVA_BoostedFisher", "MVA_BoostedFisher", nbin, -2, 2 );
    if (Use["LD"])            histLD      = new TH1F( "MVA_LD",            "MVA_LD",            nbin, -2, 2 );
    if (Use["MLP"])           histNn      = new TH1F( "MVA_MLP",           "MVA_MLP",           nbin, -1.25, 1.5 );
-   if (Use["MLPBFGS"])       histNnbfgs  = new TH1F( "MVA_MLPBFGS",           "MVA_MLPBFGS",           nbin, -1.25, 1.5 );
-   if (Use["MLPBNN"])     histNnbnn      = new TH1F( "MVA_MLPBNN",           "MVA_MLPBNN",           nbin, -1.25, 1.5 );
+   if (Use["MLPBFGS"])       histNnbfgs  = new TH1F( "MVA_MLPBFGS",       "MVA_MLPBFGS",       nbin, -1.25, 1.5 );
+   if (Use["MLPBNN"])     histNnbnn      = new TH1F( "MVA_MLPBNN",        "MVA_MLPBNN",        nbin, -1.25, 1.5 );
    if (Use["CFMlpANN"])      histNnC     = new TH1F( "MVA_CFMlpANN",      "MVA_CFMlpANN",      nbin,  0, 1 );
    if (Use["TMlpANN"])       histNnT     = new TH1F( "MVA_TMlpANN",       "MVA_TMlpANN",       nbin, -1.3, 1.3 );
    if (Use["BDT"])           histBdt     = new TH1F( "MVA_BDT",           "MVA_BDT",           nbin, -0.8, 0.8 );
@@ -222,19 +229,19 @@ int main( int argc, char** argv )
    // Prepare input tree (this must be replaced by your data source)
    // in this example, there is a toy tree with signal and one with background events
    // we'll later on use only the "signal" events for the test in this example.
-   //   
+   //
    TFile *input(0);
-   TString fname = "./tmva_example.root";   
+   TString fname = "./tmva_example.root";
    if (!gSystem->AccessPathName( fname )) {
       // first we try to find tmva_example.root in the local directory
       std::cout << "--- Accessing data file: " << fname << std::endl;
       input = TFile::Open( fname );
-   } 
+   }
    else if (!gSystem->AccessPathName("./tmva_example.root")){
       std::cout << "--- TMVAClassificationApp    : Accessing tmva_example.root file from the test directory!" << std::endl;
       input = TFile::Open("./tmva_example.root" );
    }
-   
+
    if (!input) {
       std::cout << "ERROR: could not open data file: " << fname << std::endl;
       exit(1);
@@ -263,7 +270,8 @@ int main( int argc, char** argv )
    std::cout << "--- Processing: " << theTree->GetEntries() << " events" << std::endl;
    TStopwatch sw;
    sw.Start();
-   for (Long64_t ievt=0; ievt<theTree->GetEntries();ievt++) {
+   Int_t nEvent = theTree->GetEntries();
+   for (Long64_t ievt=0; ievt<nEvent; ievt++) {
 
       if (ievt%1000 == 0){
          std::cout << "--- ... Processing event: " << ievt << std::endl;
@@ -281,22 +289,29 @@ int main( int argc, char** argv )
       Category_cat2 = (var3>0)&&(var4<0);
       Category_cat3 = (var3>0)&&(var4>=0);
 
-      // test the twodifferent Reader::EvaluateMVA functions 
+      // test the twodifferent Reader::EvaluateMVA functions
       // access via registered variables compared to access via vector<float>
       vecVar[0]=var1;
       vecVar[1]=var2;
       vecVar[2]=var3;
-      vecVar[3]=var4;      
+      vecVar[3]=var4;
       for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
-         if (it->second) {
-            TString mName = it->first + " method";
-            Double_t mva1 = reader->EvaluateMVA( mName); 
-            Double_t mva2 = reader->EvaluateMVA( vecVar, mName); 
-            if (mva1 != mva2) {
-               std::cout << "++++++++++++++ ERROR in "<< mName <<", comparing different EvaluateMVA results val1=" << mva1 << " val2="<<mva2<<std::endl;
-            }
+         if (! it->second) continue;
+         TString mName = it->first + " method";
+         Double_t mva1, mva2;
+         if(it->first != "CutsGA") {
+            mva1 = reader->EvaluateMVA( mName);
+            mva2 = reader->EvaluateMVA( vecVar, mName);
+         } else {
+            // Cuts is a special case: give the desired signal efficienciy
+            mva1 = reader->EvaluateMVA( mName, effS );
+            mva2 = reader->EvaluateMVA( vecVar, mName, effS );
+         }
+         if(mva1 != mva2) {
+            std::cout << "++++++++++++++ ERROR in "<< mName <<", comparing different EvaluateMVA results val1=" << mva1 << " val2="<<mva2<<std::endl;
          }
       }
+
       // now test that the inputs do matter
       TRandom3 rand(0);
       vecVar[0]=rand.Rndm();
@@ -304,23 +319,26 @@ int main( int argc, char** argv )
       vecVar[2]=rand.Rndm();
       vecVar[3]=rand.Rndm();
       for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
-         if (it->second) {
-            TString mName = it->first + " method";
-            Double_t mva1 = reader->EvaluateMVA( mName); 
-            Double_t mva2 = reader->EvaluateMVA( vecVar, mName); 
-            if (mva1 == mva2) {
-               std::cout << "++++++++++++++ ERROR in "<< mName <<", obtaining idnetical output for different inputs" <<std::endl;
-            }
+         if (! it->second) continue;
+         TString mName = it->first + " method";
+         Double_t mva1, mva2;
+         if(it->first != "CutsGA") {
+            mva1 = reader->EvaluateMVA( mName);
+            mva2 = reader->EvaluateMVA( vecVar, mName);
+         } else {
+            // Cuts is a special case: give the desired signal efficienciy
+            mva1 = reader->EvaluateMVA( mName, effS );
+            mva2 = reader->EvaluateMVA( vecVar, mName, effS );
          }
+         if (mva1 == mva2)
+            nIdenticalResults[it->first]++;
       }
-      // 
+
+
+      //
       // return the MVAs and fill to histograms
-      // 
-      if (Use["CutsGA"]) {
-         // Cuts is a special case: give the desired signal efficienciy
-         Bool_t passed = reader->EvaluateMVA( "CutsGA method", effS );
-         if (passed) nSelCutsGA++;
-      }
+      //
+      if (Use["CutsGA"       ])   if(reader->EvaluateMVA( "CutsGA method", effS)) nSelCutsGA++;
       if (Use["Likelihood"   ])   histLk     ->Fill( reader->EvaluateMVA( "Likelihood method"    ) );
       if (Use["LikelihoodD"  ])   histLkD    ->Fill( reader->EvaluateMVA( "LikelihoodD method"   ) );
       if (Use["LikelihoodPCA"])   histLkPCA  ->Fill( reader->EvaluateMVA( "LikelihoodPCA method" ) );
@@ -332,12 +350,12 @@ int main( int argc, char** argv )
       if (Use["KNN"          ])   histKNN    ->Fill( reader->EvaluateMVA( "KNN method"           ) );
       if (Use["HMatrix"      ])   histHm     ->Fill( reader->EvaluateMVA( "HMatrix method"       ) );
       if (Use["Fisher"       ])   histFi     ->Fill( reader->EvaluateMVA( "Fisher method"        ) );
-      if (Use["FisherG"      ])   histFiG    ->Fill( reader->EvaluateMVA( "FisherG method"        ) );
-      if (Use["BoostedFisher"])   histFiB    ->Fill( reader->EvaluateMVA( "BoostedFisher method"        ) );
+      if (Use["FisherG"      ])   histFiG    ->Fill( reader->EvaluateMVA( "FisherG method"       ) );
+      if (Use["BoostedFisher"])   histFiB    ->Fill( reader->EvaluateMVA( "BoostedFisher method" ) );
       if (Use["LD"           ])   histLD     ->Fill( reader->EvaluateMVA( "LD method"            ) );
       if (Use["MLP"          ])   histNn     ->Fill( reader->EvaluateMVA( "MLP method"           ) );
-      if (Use["MLPBFGS"          ])   histNnbfgs     ->Fill( reader->EvaluateMVA( "MLPBFGS method"           ) );
-      if (Use["MLPBNN"          ])   histNnbnn     ->Fill( reader->EvaluateMVA( "MLPBNN method"           ) );
+      if (Use["MLPBFGS"      ])   histNnbfgs ->Fill( reader->EvaluateMVA( "MLPBFGS method"       ) );
+      if (Use["MLPBNN"       ])   histNnbnn  ->Fill( reader->EvaluateMVA( "MLPBNN method"        ) );
       if (Use["CFMlpANN"     ])   histNnC    ->Fill( reader->EvaluateMVA( "CFMlpANN method"      ) );
       if (Use["TMlpANN"      ])   histNnT    ->Fill( reader->EvaluateMVA( "TMlpANN method"       ) );
       if (Use["BDT"          ])   histBdt    ->Fill( reader->EvaluateMVA( "BDT method"           ) );
@@ -358,9 +376,9 @@ int main( int argc, char** argv )
          Double_t val = reader->EvaluateMVA( "PDEFoam method" );
          Double_t err = reader->GetMVAError();
          histPDEFoam   ->Fill( val );
-         histPDEFoamErr->Fill( err );         
+         histPDEFoamErr->Fill( err );
          histPDEFoamSig->Fill( val/err );
-      }         
+      }
 
       // retrieve probability instead of MVA output
       if (Use["Fisher"])   {
@@ -368,6 +386,17 @@ int main( int argc, char** argv )
          rarityHistFi->Fill( reader->GetRarity( "Fisher method" ) );
       }
    }
+
+   for (std::map<std::string,int>::iterator it = nIdenticalResults.begin();
+        it != nIdenticalResults.end(); it++) {
+      if (1.*it->second / nEvent > 0.30) {
+         std::cout << "+++++++++++++++++++++++ ERROR in method '"<< it->first
+                   << "', identical output test: "
+                   << 100. * it->second / nEvent << "%" <<std::endl;
+      }
+   }
+
+
 
    // get elapsed time
    sw.Stop();
@@ -382,18 +411,18 @@ int main( int argc, char** argv )
       // test: retrieve cuts for particular signal efficiency
       TMVA::MethodCuts* mcuts = dynamic_cast<TMVA::MethodCuts*>( reader->FindMVA( "CutsGA method" ) );
 
-      if (mcuts) {      
+      if (mcuts) {
          std::vector<Double_t> cutsMin;
          std::vector<Double_t> cutsMax;
          mcuts->GetCuts( 0.7, cutsMin, cutsMax );
          std::cout << "--- -------------------------------------------------------------" << std::endl;
          std::cout << "--- Retrieve cut values for signal efficiency of 0.7 from Reader" << std::endl;
          for (UInt_t ivar=0; ivar<cutsMin.size(); ivar++) {
-            std::cout << "... Cut: " 
-                      << cutsMin[ivar] 
-                      << " < \"" 
+            std::cout << "... Cut: "
+                      << cutsMin[ivar]
+                      << " < \""
                       << mcuts->GetInputVar(ivar)
-                      << "\" <= " 
+                      << "\" <= "
                       << cutsMax[ivar] << std::endl;
          }
          std::cout << "--- -------------------------------------------------------------" << std::endl;

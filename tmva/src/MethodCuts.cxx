@@ -435,10 +435,10 @@ Double_t TMVA::MethodCuts::GetMvaValue( Double_t* err )
       Int_t ibin = fEffBvsSLocal->FindBin( fTestSignalEff );
       if (ibin < 0      ) ibin = 0;
       else if (ibin >= fNbins) ibin = fNbins - 1;
-    
+
       Bool_t passed = kTRUE;
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++)
-         passed &= ( (ev->GetValue(ivar) >  fCutMin[ivar][ibin]) && 
+         passed &= ( (ev->GetValue(ivar) >  fCutMin[ivar][ibin]) &&
                      (ev->GetValue(ivar) <= fCutMax[ivar][ibin]) );
 
       return passed ? 1. : 0. ;
@@ -454,7 +454,7 @@ void TMVA::MethodCuts::PrintCuts( Double_t effS ) const
    std::vector<Double_t> cutsMin;
    std::vector<Double_t> cutsMax;
    Int_t ibin = fEffBvsSLocal->FindBin( effS );
-   
+
    Double_t trueEffS = GetCuts( effS, cutsMin, cutsMax );
 
    // retrieve variable expressions (could be transformations)
@@ -465,7 +465,7 @@ void TMVA::MethodCuts::PrintCuts( Double_t effS ) const
       for (UInt_t ivar=0; ivar<cutsMin.size(); ivar++) {
          varVec->push_back( DataInfo().GetVariableInfo(ivar).GetLabel() );
       }
-   }   
+   }
    else if (GetTransformationHandler().GetNumOfTransformations() == 1) {
       // get transformation string
       varVec = GetTransformationHandler().GetTransformationStringsOfLastTransform();
