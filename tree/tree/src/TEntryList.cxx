@@ -532,12 +532,12 @@ void TEntryList::DirectoryAutoAdd(TDirectory* dir)
 //________________________________________________________________________
 Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
 {
-//Add entry #entry to the list
-//When tree = 0, adds to the current list
-//When tree != 0, finds the list, corresponding to this tree
-//When tree is a chain, the entry is assumed to be global index and the local
-//entry is recomputed from the treeoffset information of the chain
-
+   //Add entry #entry to the list
+   //When tree = 0, adds to the current list
+   //When tree != 0, finds the list, corresponding to this tree
+   //When tree is a chain, the entry is assumed to be global index and the local
+   //entry is recomputed from the treeoffset information of the chain
+   
    if (!tree){
       if (!fLists) {
          if (!fBlocks) fBlocks = new TObjArray();
@@ -879,8 +879,10 @@ Long64_t TEntryList::Next()
          fCurrent = (TEntryList*)fLists->First();
          if (!fCurrent) return 0;
          if (fShift) {
-            while (fCurrent->GetTreeNumber()<0)
+            while (fCurrent->GetTreeNumber()<0) {
                fCurrent = (TEntryList*)fLists->After(fCurrent);
+               if (!fCurrent) return 0;
+            }
          }
       }
       result = fCurrent->Next();
@@ -906,6 +908,9 @@ Long64_t TEntryList::Next()
             fCurrent->fLastIndexQueried = -1;
             fCurrent->fLastIndexReturned = 0;
             fCurrent = (TEntryList*)fLists->After(fCurrent);
+            // fCurrent is guarantee to be non-zero because it is not the 'last' 
+            // element of the list.
+            if (!fCurrent) return 0;
             if (!fShift)
                result = fCurrent->Next();
             else {
