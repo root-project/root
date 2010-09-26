@@ -63,58 +63,58 @@
 class TRandom3;
 
 namespace TMVA {
-  
+
    class Event;
-  
+
    class DecisionTree : public BinaryTree {
 
    private:
 
       static const Int_t fgRandomSeed; // set nonzero for debugging and zero for random seeds
-    
+
    public:
 
       typedef std::vector<TMVA::Event*> EventList;
-    
+
       // the constructur needed for the "reading" of the decision tree from weight files
       DecisionTree( void );
-    
+
       // the constructur needed for constructing the decision tree via training with events
-      DecisionTree( SeparationBase *sepType, Int_t minSize, 
+      DecisionTree( SeparationBase *sepType, Int_t minSize,
                     Int_t nCuts,
                     UInt_t cls =0,
-                    Bool_t randomisedTree=kFALSE, Int_t useNvars=0, 
-                    UInt_t nNodesMax=999999, UInt_t nMaxDepth=9999999, 
+                    Bool_t randomisedTree=kFALSE, Int_t useNvars=0,
+                    UInt_t nNodesMax=999999, UInt_t nMaxDepth=9999999,
                     Int_t iSeed=fgRandomSeed, Float_t purityLimit=0.5,
                     Int_t treeID = 0);
-    
+
       // copy constructor
       DecisionTree (const DecisionTree &d);
-    
+
       virtual ~DecisionTree( void );
 
       virtual Node * CreateNode(UInt_t) const { return new DecisionTreeNode(); }
       virtual BinaryTree* CreateTree() const { return new DecisionTree(); }
       virtual const char* ClassName() const { return "DecisionTree"; }
-  
-      // building of a tree by recursivly splitting the nodes 
 
-      UInt_t BuildTree( const EventList & eventSample, 
+      // building of a tree by recursivly splitting the nodes
+
+      UInt_t BuildTree( const EventList & eventSample,
                         DecisionTreeNode *node = NULL);
       // determine the way how a node is split (which variable, which cut value)
 
       Double_t TrainNode( const EventList & eventSample,  DecisionTreeNode *node ) { return TrainNodeFast( eventSample, node ); }
       Double_t TrainNodeFast( const EventList & eventSample,  DecisionTreeNode *node );
       Double_t TrainNodeFull( const EventList & eventSample,  DecisionTreeNode *node );
-    
+
       // fill at tree with a given structure already (just see how many signa/bkgr
-      // events end up in each node 
+      // events end up in each node
 
       void FillTree( EventList & eventSample);
 
       // fill the existing the decision tree structure by filling event
       // in from the top node and see where they happen to end up
-      void FillEvent( TMVA::Event & event,  
+      void FillEvent( TMVA::Event & event,
                       TMVA::DecisionTreeNode *node  );
     
       // returns: 1 = Signal (right),  -1 = Bkg (left)

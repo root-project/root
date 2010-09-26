@@ -580,6 +580,7 @@ void TMVA::PDF::ValidatePDF( TH1* originalHist ) const
       Double_t ey = originalHist->GetBinError( bin );
 
       Int_t binPdfHist = fPDFHist->FindBin( x );
+      if(binPdfHist<0) continue; // happens only if hist-dim>3
 
       Double_t yref = GetVal( x );
       Double_t rref = ( originalHist->GetSumOfWeights()/fPDFHist->GetSumOfWeights() *

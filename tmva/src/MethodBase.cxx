@@ -1213,6 +1213,7 @@ void TMVA::MethodBase::WriteStateToFile() const
    gTools().AddAttr(rootnode,"Method", GetMethodTypeName() + "::" + GetMethodName());
    WriteStateToXML(rootnode);
    gTools().xmlengine().SaveDoc(doc,xmlfname);
+   gTools().xmlengine().FreeDoc(doc);
 }
 
 //_______________________________________________________________________
@@ -1231,6 +1232,7 @@ void TMVA::MethodBase::ReadStateFromFile()
       void* doc = gTools().xmlengine().ParseFile(tfname);
       void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
       ReadStateFromXML(rootnode);
+      gTools().xmlengine().FreeDoc(doc);
    }
    else {
       filebuf fb;
@@ -1256,18 +1258,17 @@ void TMVA::MethodBase::ReadStateFromFile()
 //_______________________________________________________________________
 void TMVA::MethodBase::ReadStateFromXMLString( const char* xmlstr ) {
    // for reading from memory
-   
+
 #if (ROOT_SVN_REVISION >= 32259) && (ROOT_VERSION_CODE >= 334336) // 5.26/00
    void* doc = gTools().xmlengine().ParseString(xmlstr);
-
    void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
-
-   return ReadStateFromXML(rootnode);
+   ReadStateFromXML(rootnode);
+   gTools().xmlengine().FreeDoc(doc);
 #else
    Log() << kFATAL << "Method MethodBase::ReadStateFromXMLString( const char* xmlstr ) is not available for ROOT versions prior to 5.26/00." << Endl;
-   return;
 #endif
 
+   return;
 }
 
 //_______________________________________________________________________

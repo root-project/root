@@ -407,7 +407,7 @@ void TMVA::MethodLD::MakeClassSpecific( std::ostream& fout, const TString& class
    fout << "}" << endl;
 }
 //_______________________________________________________________________
-const TMVA::Ranking* TMVA::MethodLD::CreateRanking() 
+const TMVA::Ranking* TMVA::MethodLD::CreateRanking()
 {
    // computes ranking of input variables
 
@@ -415,7 +415,7 @@ const TMVA::Ranking* TMVA::MethodLD::CreateRanking()
    fRanking = new Ranking( GetName(), "Discr. power" );
 
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-      fRanking->AddRank( *new Rank( GetInputLabel(ivar), TMath::Abs((* (*fLDCoeff)[0])[ivar+1] )) );
+      fRanking->AddRank( Rank( GetInputLabel(ivar), TMath::Abs((* (*fLDCoeff)[0])[ivar+1] )) );
    }
 
    return fRanking;

@@ -491,6 +491,8 @@ void TMVA::MethodBDT::InitEventSample( void )
          else {
             fEventSample.push_back(event);
          }
+      } else {
+         delete event;
       }
    }
    if (fAutomatic) {

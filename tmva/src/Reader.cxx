@@ -320,9 +320,10 @@ TMVA::Reader::GetMethodTypeFromFile( const TString& filename ) {
    TString fullMethodName("");
    if (filename.EndsWith(".xml")) {
       fin.close();
-      void* doc      = gTools().xmlengine().ParseFile(filename); 
+      void* doc      = gTools().xmlengine().ParseFile(filename);
       void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
       gTools().ReadAttr(rootnode, "Method", fullMethodName);
+      gTools().xmlengine().FreeDoc(doc);
    } else {
       char buf[512];
       fin.getline(buf,512);
