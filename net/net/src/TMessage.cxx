@@ -36,7 +36,8 @@ Bool_t TMessage::fgEvolution = kFALSE;
 ClassImp(TMessage)
 
 //______________________________________________________________________________
-TMessage::TMessage(UInt_t what) : TBufferFile(TBuffer::kWrite)
+TMessage::TMessage(UInt_t what, Int_t bufsiz) :
+   TBufferFile(TBuffer::kWrite, bufsiz + 2*sizeof(UInt_t))
 {
    // Create a TMessage object for storing objects. The "what" integer
    // describes the type of message. Predifined ROOT system message types
