@@ -4761,226 +4761,226 @@ void G__cppif_geninline(FILE *fp, struct G__ifunc_table_internal *ifunc, int i,i
  **************************************************************************/
 void G__write_dummy_param(FILE *fp, G__paramfunc *formal_param)
 {
-  int ispointer = 0;
-  char para_type = formal_param->type;
-  
-  if(isupper(formal_param->type)){
-    ispointer = 1;
-  }  
+   int ispointer = 0;
+   char para_type = formal_param->type;
+   
+   if(isupper(formal_param->type)){
+      ispointer = 1;
+   }  
+   
+   // By Value or By Reference?
+   if (!ispointer) {// By Value
+      if (formal_param->reftype==1&&(formal_param->p_typetable!=-1||formal_param->p_tagtable!=-1)){
+         if(formal_param->p_typetable==-1)
+            fprintf(fp,"*(%s*) 0x64",G__fulltagname(formal_param->p_tagtable,0));   
+         else  
+            fprintf(fp,"*(%s*) 0x64",G__fulltypename(formal_param->p_typetable));   
+      }
+      else {
+         
+         if (formal_param->reftype==1||para_type=='u'||para_type=='a')
+            fprintf(fp,"*");
+         
+         fprintf(fp,"(");
+         
+         // Parameter's type
+         switch(para_type) {
                
-  // By Value or By Reference?
-  if (!ispointer) {// By Value
-    if (formal_param->reftype==1&&(formal_param->p_typetable!=-1||formal_param->p_tagtable!=-1)){
-      if(formal_param->p_typetable==-1)
-        fprintf(fp,"*(%s*) 0x64",G__fulltagname(formal_param->p_tagtable,0));   
-      else  
-        fprintf(fp,"*(%s*) 0x64",G__fulltypename(formal_param->p_typetable));   
-    }
-    else {
-       
-       if (formal_param->reftype==1||para_type=='u'||para_type=='a')
-          fprintf(fp,"*");
-
-       fprintf(fp,"(");
-
-      // Parameter's type
-      switch(para_type) {
-
-        // Double = Double Word
-      case 'a' : fprintf(fp,"%s",G__fulltypename(formal_param->p_typetable)); 
-        break;
-
-        // Double = Double Word
-      case 'd' : fprintf(fp, "double");
-        break;
-                   
-        // Integer = Single Word
-      case 'i' :
-      {
-        if (formal_param->p_tagtable==-1)
-          fprintf(fp, "int");
-        else  
-          fprintf(fp, " %s ", G__fulltagname(formal_param->p_tagtable,0));
-      }
-      break;
-
-      // Unsigned Char ????
-      case 'b' : fprintf(fp, "unsigned char");
-        break;
-
-        // Char
-      case 'c' : fprintf(fp, "char");
-        break;
-            
-        // Short
-      case 's' : fprintf(fp, "short");
-        break;
-
-        // Unsigned Short
-      case 'r' : fprintf(fp, "unsigned short");
-        break;
-
-        // Unsigned Int
-      case 'h' : fprintf(fp, "unsigned int");
-        break;
-
-        // Long
-      case 'l' : fprintf(fp, "long");                 
-        break;
-
-        // Unsigned Long
-      case 'k': fprintf(fp, "unsigned long");
-        break;
-
-        // Float // Shouldnt it be treated as a double?
-      case 'f' : fprintf(fp, "float");
-        break;
-
-        // Long Long
-      case 'n' : fprintf(fp, "long long");
-        break;
-
-        // unsigned Long Long
-      case 'm' : fprintf(fp, "unsigned long long");
-        break;
-
-        // long double
-      case 'q' : fprintf(fp, "long double");
-        break;
-
-        // bool 
-      case 'g' : fprintf(fp, "bool");
-        break;
+               // Double = Double Word
+            case 'a' : fprintf(fp,"%s",G__fulltypename(formal_param->p_typetable)); 
+               break;
                
-      case '1': // Function Pointer
-      {
-        if(formal_param->p_typetable==-1)
-          fprintf(fp, "void");
-        else
-          fprintf(fp,"%s",G__fulltypename(formal_param->p_typetable)); 
+               // Double = Double Word
+            case 'd' : fprintf(fp, "double");
+               break;
+               
+               // Integer = Single Word
+            case 'i' :
+            {
+               if (formal_param->p_tagtable==-1)
+                  fprintf(fp, "int");
+               else  
+                  fprintf(fp, " %s ", G__fulltagname(formal_param->p_tagtable,0));
+            }
+               break;
+               
+               // Unsigned Char ????
+            case 'b' : fprintf(fp, "unsigned char");
+               break;
+               
+               // Char
+            case 'c' : fprintf(fp, "char");
+               break;
+               
+               // Short
+            case 's' : fprintf(fp, "short");
+               break;
+               
+               // Unsigned Short
+            case 'r' : fprintf(fp, "unsigned short");
+               break;
+               
+               // Unsigned Int
+            case 'h' : fprintf(fp, "unsigned int");
+               break;
+               
+               // Long
+            case 'l' : fprintf(fp, "long");                 
+               break;
+               
+               // Unsigned Long
+            case 'k': fprintf(fp, "unsigned long");
+               break;
+               
+               // Float // Shouldnt it be treated as a double?
+            case 'f' : fprintf(fp, "float");
+               break;
+               
+               // Long Long
+            case 'n' : fprintf(fp, "long long");
+               break;
+               
+               // unsigned Long Long
+            case 'm' : fprintf(fp, "unsigned long long");
+               break;
+               
+               // long double
+            case 'q' : fprintf(fp, "long double");
+               break;
+               
+               // bool 
+            case 'g' : fprintf(fp, "bool");
+               break;
+               
+            case '1': // Function Pointer
+            {
+               if(formal_param->p_typetable==-1)
+                  fprintf(fp, "void");
+               else
+                  fprintf(fp,"%s",G__fulltypename(formal_param->p_typetable)); 
+            }
+               break;
+               
+               // a class... treat it as a reference
+            case 'u' : fprintf(fp,"%s",G__fulltagname(formal_param->p_tagtable,0)); 
+               break;
+               
+            default:
+               fprintf(fp, " Unkown: %c", formal_param->type);
+               G__fprinterr(G__serr,"Type %c not known yet (methodcall)\n", para_type);
+         }
+         
+         
+         if (formal_param->reftype==1||para_type=='u'||para_type=='a')
+            fprintf(fp, "*) 0x64");
+         else     
+            fprintf(fp, ") 0");
+         
       }
-      break;
-
-      // a class... treat it as a reference
-      case 'u' : fprintf(fp,"%s",G__fulltagname(formal_param->p_tagtable,0)); 
-        break;
-
-      default:
-        fprintf(fp, " Unkown: %c", formal_param->type);
-        G__fprinterr(G__serr,"Type %c not known yet (methodcall)\n", para_type);
+   }
+   else {
+      // If this is something like "int*&"
+      // we deference it first
+      if (formal_param->reftype==1 || (formal_param->p_tagtable==-1 && formal_param->p_typetable!=-1 &&
+                                       formal_param->type=='Y')) {
+         fprintf(fp,"*");
       }
-     
-
-      if (formal_param->reftype==1||para_type=='u'||para_type=='a')
-         fprintf(fp, "*) 0x64");
-      else     
-         fprintf(fp, ") 0");
-
-    }
-  }
-  else {
-    // If this is something like "int*&"
-    // we deference it first
-    if (formal_param->reftype==1 || (formal_param->p_tagtable==-1 && formal_param->p_typetable!=-1 &&
-                                     formal_param->type=='Y')) {
-      fprintf(fp,"*");
-    }
-    fprintf(fp,"(");
-    if (formal_param->isconst&G__CONSTVAR)
-      fprintf(fp,"const ");
-
-    if(formal_param->p_tagtable!=-1) {
+      fprintf(fp,"(");
+      if (formal_param->isconst&G__CONSTVAR)
+         fprintf(fp,"const ");
+      
+      if(formal_param->p_tagtable!=-1) {
+         if (formal_param->reftype==1)
+            fprintf(fp,"%s", G__type2string(formal_param->type,formal_param->p_tagtable,formal_param->p_typetable,0,formal_param->isconst&G__CONSTVAR));
+         else
+            fprintf(fp,"%s*", G__fulltagname(formal_param->p_tagtable,0));
+      }
+      else {  
+         switch(formal_param->type) {
+               
+               // Double* 
+            case 'D': fprintf(fp, "double");
+               break;
+               
+               // Unsigned Integer*
+            case 'H': fprintf(fp, "unsigned int");
+               break;
+               
+               // Integer*
+            case 'I': fprintf(fp, "int");
+               break;
+               
+               // *UChar
+            case 'B': fprintf(fp,"unsigned char"); 
+               break;
+               
+               // *Char
+            case 'C': fprintf(fp,"char");
+               break;
+               
+               // FILE
+            case 'E': fprintf(fp,"FILE"); 
+               break;
+               
+               // (void*)
+            case 'Y':
+            {
+               if(formal_param->p_typetable==-1)
+                  fprintf(fp,"void");
+               else
+                  fprintf(fp,"%s",G__fulltypename(formal_param->p_typetable));
+            }
+               break;
+               
+               // *float
+            case 'F': fprintf(fp,"float"); 
+               break;
+               
+               // *long long
+            case 'N': fprintf(fp,"long long"); 
+               break;
+               
+               // *long
+            case 'L': fprintf(fp,"long"); 
+               break;
+               
+               // *short
+            case 'S': fprintf(fp,"short"); 
+               break;
+               
+               // Unsigned Long
+            case 'K': fprintf(fp,"unsigned long"); 
+               break;
+               
+               // bool
+            case 'G': fprintf(fp,"bool"); 
+               break;
+               
+               // Unsigned short
+            case 'R': fprintf(fp,"unsigned short"); 
+               break;
+               
+               // Unsigned Long Long
+            case 'M': fprintf(fp,"unsigned long long"); 
+               break;
+               
+               // long double
+            case 'Q': fprintf(fp,"long double"); 
+               break;
+               
+            default:
+               fprintf(fp, " Unkown: %c", formal_param->type);
+               G__fprinterr(G__serr,"Type %c not known yet (G__write_dummy_param)\n",formal_param->type);
+         }  
+         fprintf(fp,"*");
+      }
+      // Put the stars and give it a bogus value
       if (formal_param->reftype==1)
-        fprintf(fp,"%s", G__type2string(formal_param->type,formal_param->p_tagtable,formal_param->p_typetable,0,formal_param->isconst&G__CONSTVAR));
-      else
-        fprintf(fp,"%s*", G__fulltagname(formal_param->p_tagtable,0));
-    }
-    else {  
-      switch(formal_param->type) {
-                     
-        // Double* 
-      case 'D': fprintf(fp, "double");
-        break;
-                   
-        // Unsigned Integer*
-      case 'H': fprintf(fp, "unsigned int");
-        break;
-
-        // Integer*
-      case 'I': fprintf(fp, "int");
-        break;
-
-        // *UChar
-      case 'B': fprintf(fp,"unsigned char"); 
-        break;
-
-        // *Char
-      case 'C': fprintf(fp,"char");
-        break;
-                  
-        // FILE
-      case 'E': fprintf(fp,"FILE"); 
-        break;
-
-        // (void*)
-      case 'Y':
-      {
-        if(formal_param->p_typetable==-1)
-          fprintf(fp,"void");
-        else
-          fprintf(fp,"%s",G__fulltypename(formal_param->p_typetable));
-      }
-      break;
-
-      // *float
-      case 'F': fprintf(fp,"float"); 
-        break;
-
-        // *long long
-      case 'N': fprintf(fp,"long long"); 
-        break;
-
-        // *long
-      case 'L': fprintf(fp,"long"); 
-        break;
-
-        // *short
-      case 'S': fprintf(fp,"short"); 
-        break;
-
-        // Unsigned Long
-      case 'K': fprintf(fp,"unsigned long"); 
-        break;
-
-        // bool
-      case 'G': fprintf(fp,"bool"); 
-        break;
-
-        // Unsigned short
-      case 'R': fprintf(fp,"unsigned short"); 
-        break;
-
-        // Unsigned Long Long
-      case 'M': fprintf(fp,"unsigned long long"); 
-        break;
-
-        // long double
-      case 'Q': fprintf(fp,"long double"); 
-        break;
-
-      default:
-        fprintf(fp, " Unkown: %c", formal_param->type);
-        G__fprinterr(G__serr,"Type %c not known yet (G__write_dummy_param)\n",formal_param->type);
-      }  
-      fprintf(fp,"*");
-    }
-    // Put the stars and give it a bogus value
-    if (formal_param->reftype==1)
-      fprintf(fp,"*");
-    for(int id=1;id<formal_param->reftype;id++)
-      fprintf(fp,"*");
-    fprintf(fp,") 0x64");  
-  }        
+         fprintf(fp,"*");
+      for(int id=1;id<formal_param->reftype;id++)
+         fprintf(fp,"*");
+      fprintf(fp,") 0x64");  
+   }        
 }
 
 
@@ -4996,53 +4996,54 @@ void G__write_dummy_param(FILE *fp, G__paramfunc *formal_param)
  **************************************************************************/
 void G__cpp_methodcall(FILE *fp, struct G__ifunc_table_internal *ifunc, int i,int j)
 {
-  // Output the function name.
-
-  // 06-11-12
-  // Since we are now registering the symbols for the second dictionary too...
-  // We can try to inline all the functions without symbol
-  if( G__NOLINK>ifunc->globalcomp[j] &&  /* with -c-1 option */
+   // Output the function name.
+   
+   assert(i>=0);
+   
+   // 06-11-12
+   // Since we are now registering the symbols for the second dictionary too...
+   // We can try to inline all the functions without symbol
+   if( G__NOLINK>ifunc->globalcomp[j] &&  /* with -c-1 option */
       G__PUBLIC==ifunc->access[j] && /* public, this is always true */
       /*0==ifunc->staticalloc[j] &&*/
       ifunc->hash[j] ){//&&
-    //!ifunc->mangled_name[j]) { DMS
-    if(G__dicttype==kFunctionSymbols || G__dicttype==kNoWrappersDictionary) {
-      int hash;
-      int idx;
-      if(i != -1) {
-        G__hash(G__fulltagname(i,0),hash,idx);
-      }
+      //!ifunc->mangled_name[j]) { DMS
+      if(G__dicttype==kFunctionSymbols || G__dicttype==kNoWrappersDictionary) {
+         int hash;
+         int idx;
 
-      if(i != -1 && G__struct.type[i]!='n'){  // This is only for classes (we can't have an object of a namespace)
-        fprintf(fp,"  ptr_%d->", i);
-        fprintf(fp,"%s::%s(",G__fulltagname(i,0),ifunc->funcname[j]);
-      } 
-      else {
-        fprintf(fp,"%s::%s(",G__fulltagname(i,0),ifunc->funcname[j]);
-      }
+         G__hash(G__fulltagname(i,0),hash,idx);
+         
+         if(G__struct.type[i]!='n'){  // This is only for classes (we can't have an object of a namespace)
+            fprintf(fp,"  ptr_%d->", i);
+            fprintf(fp,"%s::%s(",G__fulltagname(i,0),ifunc->funcname[j]);
+         } 
+         else {
+            fprintf(fp,"%s::%s(",G__fulltagname(i,0),ifunc->funcname[j]);
+         }
+         
+         int paran = ifunc->para_nu[j];
+         int k = 0;
+         for (int counter=paran-1; counter>-1; counter--) {
+            k = (paran-1) - counter;
+            G__paramfunc *formal_param = ifunc->param[j][k];
             
-      int paran = ifunc->para_nu[j];
-      int k = 0;
-      for (int counter=paran-1; counter>-1; counter--) {
-        k = (paran-1) - counter;
-        G__paramfunc *formal_param = ifunc->param[j][k];
-
-        if (counter!=paran-1)
-          fprintf(fp,",");
-
-        if (formal_param->name){
-          if(strchr(formal_param->name,'[')){
-            fprintf(fp,"G__Ap%d->a",counter);
-            continue;
-          }
-        }
-
-        // Write every dummy parameter for this function
-        G__write_dummy_param(fp, formal_param);
+            if (counter!=paran-1)
+               fprintf(fp,",");
+            
+            if (formal_param->name){
+               if(strchr(formal_param->name,'[')){
+                  fprintf(fp,"G__Ap%d->a",counter);
+                  continue;
+               }
+            }
+            
+            // Write every dummy parameter for this function
+            G__write_dummy_param(fp, formal_param);
+         }
+         fprintf(fp,");\n");
       }
-      fprintf(fp,");\n");
-    }
-  }
+   }
 }  
 
 /**************************************************************************
