@@ -254,6 +254,7 @@ namespace TMVA {
 } // namespace TMVA
 
 //_______________________________________________________________________
+// coverity[ -tainted_data_argument : arg-2 ]
 template<typename T>
 void TMVA::Tools::ReadAttr( void* node, const char* attrname, T& value )
 {
