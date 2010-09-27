@@ -1516,7 +1516,7 @@ void TSpider::SetVariablesExpression(const char* varexp)
    TObjArray *leaves = fTree->GetListOfLeaves();
    UInt_t nleaves = leaves->GetEntriesFast();
    if (nleaves < fNcols) fNcols = nleaves;
-   nch = varexp ? strlen(varexp) : 0;
+   nch = strlen(varexp);
 
    // if varexp is empty, take first 8 columns by default
    Int_t allvar = 0;
