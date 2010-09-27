@@ -148,7 +148,6 @@ static int ReadUtmp()
 
    free(gUtmpContents);
    gUtmpContents = 0;
-   fclose(utmp);
    return 0;
 }
 
