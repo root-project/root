@@ -283,16 +283,8 @@ int G__warnundefined(const char* item)
          }
          else {
             G__FastAllocString tmp(item);
-            if (p) {
-               *p = 0;
-               p += 2;
-               G__fprinterr(G__serr,
-                            "Error: Symbol %s is not defined in %s ", p, tmp());
-            }
-            else {
-               G__fprinterr(G__serr,
-                            "Error: Symbol %s is not defined in current scope ", item[0] == '$' ? item + 1 : item);
-            }
+            G__fprinterr(G__serr,
+                         "Error: Symbol %s is not defined in current scope ", item[0] == '$' ? item + 1 : item);
          }
          G__genericerror(0);
       }

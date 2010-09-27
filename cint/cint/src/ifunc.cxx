@@ -495,7 +495,6 @@ void G__make_ifunctable(char* funcheader)
    char store_type;
    int store_tagnum;
    int store_typenum;
-   int isparam;
    int store_access;
    int paranu = 0;
    int dobody = 0;
@@ -908,7 +907,6 @@ void G__make_ifunctable(char* funcheader)
     *   func(   int   a   ,  double   b )
     *         -  -  - - - -
     */
-   isparam = 0;
    G__FastAllocString paraname(G__LONGLINE);
    cin = G__fgetname_template(paraname, 0, "<*&,()=");
    if (strlen(paraname) && isspace(cin)) {
@@ -1109,13 +1107,6 @@ void G__make_ifunctable(char* funcheader)
        ) && ((cin == ',') || (cin == ';'))
          && strncmp(funcheader, "ClassDef", 8) != 0
       ) {
-      /* this is ANSI style func proto without param name */
-      if (isparam) {
-         fsetpos(G__ifile.fp, &temppos);
-         G__ifile.line_number = store_line_number;
-         G__readansiproto(G__p_ifunc, func_now);
-         cin = G__fignorestream(",;");
-      }
       if (cin == ',') {
          /* ignore other prototypes */
          G__fignorestream(";");
@@ -1167,12 +1158,6 @@ void G__make_ifunctable(char* funcheader)
       }
       /* this is ANSI style func proto without param name */
       if (0 == G__p_ifunc->ansi[func_now]) G__p_ifunc->ansi[func_now] = 1;
-      if (isparam) {
-         fsetpos(G__ifile.fp, &temppos);
-         G__ifile.line_number = store_line_number;
-         G__readansiproto(G__p_ifunc, func_now);
-         cin = G__fignorestream(",;");
-      }
       if (cin == ',') {
          /* ignore other prototypes */
          G__fignorestream(";");
@@ -1207,12 +1192,6 @@ void G__make_ifunctable(char* funcheader)
       // This is an ANSI style function prototype without a parameter name.
       if (!G__p_ifunc->ansi[func_now]) {
          G__p_ifunc->ansi[func_now] = 1;
-      }
-      if (isparam) {
-         fsetpos(G__ifile.fp, &temppos);
-         G__ifile.line_number = store_line_number;
-         G__readansiproto(G__p_ifunc, func_now);
-         cin = G__fignorestream(",;{");
       }
       if (cin == ',') {/* ignore other prototypes */
          G__fignorestream(";");
@@ -1293,15 +1272,6 @@ void G__make_ifunctable(char* funcheader)
        *                             ^
        * and rewind file to just before the '{...}'
        */
-      if ('\0' == paraname[0] && isparam) {
-         /* Strange case
-          *   type f(type) { };
-          *          ^ <--  ^   */
-         fsetpos(G__ifile.fp, &temppos);
-         G__ifile.line_number = store_line_number;
-         G__readansiproto(G__p_ifunc, func_now);
-         cin = G__fignorestream("{");
-      }
       if (
          G__HASH_MAIN == G__p_ifunc->hash[func_now] &&
          !strcmp(G__p_ifunc->funcname[func_now], "main") &&
@@ -3505,22 +3475,6 @@ void G__rate_parameter_match(G__param* libp, G__ifunc_table_internal* p_ifunc, i
             G__store_struct_offset = store_struct_offset;
             if (ifunc2 && -1 != ifn2)
                funclist->p_rate[i] = G__USRCONVMATCH;
-            else {
-              // 4/04/07
-              // There is a particular case which should be handled in a
-              // especial way...
-              // va_list : take a look at TObject::DoError to see an axample,
-              // this built-in type is seen in gcc as a "char *" and it's seen
-              // in cint as a user defined structure so the matching
-              // wont work... the only thing I see as feasible for the moment
-              // is to hard code this case here... and say that when comparing
-              // a parameter -> va_list == char *
-              // Big note: as everything else donde for the stubs removal we
-              // need a few ifdef's (we dont know how it works for different
-              // compilers)
-              if( param_type=='C' && strcmp(G__struct.name[formal_tagnum], "va_list")==0 )
-                funclist->p_rate[i] = G__USRCONVMATCH;
-            }
          }
       }
 

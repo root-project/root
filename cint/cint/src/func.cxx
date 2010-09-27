@@ -908,7 +908,6 @@ G__value G__operatorfunction(G__value *presult, const char *item, int *known3, G
    int nest = 0;
    int double_quote = 0, single_quote = 0;
    int lenitem = strlen(item);
-   int castflag = 0;
    int base1 = 0;
    int nindex = 0;
    int itmp;
@@ -988,13 +987,7 @@ G__value G__operatorfunction(G__value *presult, const char *item, int *known3, G
           *                                       castflag=2
           *************************************************/
          if ((item[ig15] == ')') && (ig15 < lenitem - 1)) {
-            if (1 == castflag) {
-               if (('-' == item[ig15+1] && '>' == item[ig15+2]) || '.' == item[ig15+1])
-                  castflag = 3;
-               else                                       castflag = 2;
-            }
-            else if (('-' == item[ig15+1] && '>' == item[ig15+2]) || '.' == item[ig15+1]) {
-               castflag = 3;
+            if (('-' == item[ig15+1] && '>' == item[ig15+2]) || '.' == item[ig15+1]) {
                base1 = ig15 + 1;
             }
             else if (item[ig15+1] == '[') {
@@ -1072,8 +1065,6 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
    int tempstore;
    char *pfparam;
    struct G__var_array *var;
-   int nindex = 0;
-   int oprp = 0;
    int store_cp_asm = 0;
    store_struct_offset = G__store_struct_offset;
    store_tagnum = G__tagnum;
@@ -1170,12 +1161,6 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
             G__memberfunc_tagnum = store_memberfunc_tagnum;
             G__memberfunc_struct_offset = store_memberfunc_struct_offset;
             G__setclassdebugcond(G__memberfunc_tagnum, 0);
-            if (nindex &&
-                  (isupper(result3.type) || 'u' == result3.type)
-               ) {
-               G__getindexedvalue(&result3, libp->parameter[nindex]);
-            }
-            if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
             return(result3);
          }
 #define G__OLDIMPLEMENTATION1159
@@ -1257,12 +1242,6 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                      G__tagnum = store_tagnum;
                      G__def_tagnum = store_def_tagnum;
                      G__tagdefining = store_tagdefining;
-                     if (nindex &&
-                           (isupper(result3.type) || 'u' == result3.type)
-                        ) {
-                        G__getindexedvalue(&result3, libp->parameter[nindex]);
-                     }
-                     if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
                      return(result3);
                   }
                   if ('~' == funcname[0]) {
@@ -1290,9 +1269,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                      G__exec_memberfunc = store_exec_memberfunc;
                      G__memberfunc_tagnum = store_memberfunc_tagnum;
                      G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-                     /* don't know why if(oprp) is needed, copied from line 2111 */
-                     if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
-                     else *known3 = 1;
+                     *known3 = 1;
                      return(result3);
                   }
                   G__exec_memberfunc = store_exec_memberfunc;
@@ -1370,12 +1347,6 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
          G__memberfunc_tagnum = store_memberfunc_tagnum;
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
          G__setclassdebugcond(G__memberfunc_tagnum, 0);
-         if (nindex &&
-               (isupper(result3.type) || 'u' == result3.type)
-            ) {
-            G__getindexedvalue(&result3, libp->parameter[nindex]);
-         }
-         if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
          return(result3);
       }
       G__exec_memberfunc = tempstore;
@@ -1446,9 +1417,6 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         if (nindex && (isupper(result3.type) || 'u' == result3.type)) {
-            G__getindexedvalue(&result3, libp->parameter[nindex]);
-         }
          return result3;
       }
       /***************************************************************
@@ -1506,11 +1474,6 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         if (nindex &&
-               (isupper(result3.type) || 'u' == result3.type)
-            ) {
-            G__getindexedvalue(&result3, libp->parameter[nindex]);
-         }
          return(result3);
       }
 #ifdef G__TEMPLATEFUNC
@@ -1534,12 +1497,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         if (oprp) {
-            *known3 = G__additional_parenthesis(&result3, libp);
-         }
-         else {
-            *known3 = 1;
-         }
+         *known3 = 1;
          return result3;
       }
 #endif // G__TEMPLATEFUNC
@@ -1564,7 +1522,6 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                      , i , G__newtype.reftype[i], 0
                      , &result3, 0)) {
                *known3 = 1;
-               if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
                return(result3);
             }
             strcpy(funcname, G__type2string(G__newtype.type[i]
@@ -1748,12 +1705,10 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                }
                /* omitted constructor, return uninitialized object */
                *known3 = 1;
-               if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
                return(result3);
             }
             else {
                /* Return '*this' as result */
-               if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
                return(result3);
             }
          }
@@ -1766,27 +1721,11 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
          return(result3);
       }
    }
    if (G__parenthesisovld(&result3, funcname, libp, G__TRYNORMAL)) {
       *known3 = 1;
-      if (nindex &&
-            (isupper(result3.type) || 'u' == result3.type)
-         ) {
-         G__getindexedvalue(&result3, libp->parameter[nindex]);
-      }
-      else if (nindex && 'u' == result3.type) {
-         int len;
-         strcpy(libp->parameter[0], libp->parameter[nindex] + 1);
-         len = strlen(libp->parameter[0]);
-         if (len > 1) libp->parameter[0][len-1] = 0;
-         libp->para[0] = G__getexpr(libp->parameter[0]);
-         libp->paran = 1;
-         G__parenthesisovldobj(&result3, &result3, "operator[]", libp, G__TRYNORMAL);
-      }
-      if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
       return(result3);
    }
    /********************************************************************
@@ -1807,12 +1746,6 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         if (nindex &&
-               (isupper(result3.type) || 'u' == result3.type)
-            ) {
-            G__getindexedvalue(&result3, libp->parameter[nindex]);
-         }
-         if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
          return(result3);
       }
    }
@@ -1831,12 +1764,6 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
       result3 = G__execfuncmacro(item, known3);
       G__asm_clear_mask = 0;
       if (*known3) {
-         if (nindex &&
-               (isupper(result3.type) || 'u' == result3.type)
-            ) {
-            G__getindexedvalue(&result3, libp->parameter[nindex]);
-         }
-         if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
          return(result3);
       }
    }
