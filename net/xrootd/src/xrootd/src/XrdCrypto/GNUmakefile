@@ -4,9 +4,9 @@
 #-----------------------------------------------------------------------------#
 include ../GNUmake.env
 
-BINLIBS = $(CRYPTLIB) -L$(LIBDIR) -lXrdCrypto -lXrdSut -lXrdOuc
+BINLIBS = $(CRYPTLIB) -L$(LIBDIR) -lXrdCrypto -lXrdSut -lXrdOuc -lXrdSys
 
-LIBUTIL = $(LIBDIR)/libXrdSut.a $(LIBDIR)/libXrdOuc.a
+LIBUTIL = $(LIBDIR)/libXrdSut.a $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #

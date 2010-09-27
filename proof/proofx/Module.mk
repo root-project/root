@@ -66,8 +66,13 @@ PROOFXINCEXTRA += $(PROOFDDIRI:%=-I%)
 ifeq ($(PLATFORM),win32)
 PROOFXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
-PROOFXLIBEXTRA += -L$(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdNet -lXrdNetUtil \
-                  -lXrdClient
+PROOFXLIBEXTRA += -L$(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdNet -lXrdClient
+XRDNETUTIL     := $(shell if test -d $(XROOTDDIRL); then \
+                             find $(XROOTDDIRL) -name "*XrdNetUtil*"; \
+                          fi)
+ifneq ($(XRDNETUTIL),)
+PROOFXLIBEXTRA += -lXrdNetUtil
+endif
 endif
 
 ##### local rules #####
@@ -78,6 +83,7 @@ include/%.h:    $(PROOFXDIRI)/%.h $(XROOTDETAG)
 
 $(PROOFXLIB):   $(PROOFXO) $(PROOFXDO) $(XPCONNO) $(ORDER_) $(MAINLIBS) \
                 $(PROOFXLIBDEP) $(XRDPROOFXD)
+		@echo " XRDNETUTIL = $(XRDNETUTIL) "
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libProofx.$(SOEXT) $@ \
 		   "$(PROOFXO) $(XPCONNO) $(PROOFXDO)" \

@@ -15,10 +15,8 @@ SOURCES = \
         XrdOucArgs.cc        \
         XrdOucCRC.cc         \
         XrdOucEnv.cc         \
-        XrdSysError.cc       \
         XrdOucExport.cc      \
         XrdOucHashVal.cc     \
-        XrdSysLogger.cc      \
         XrdOucMsubs.cc       \
         XrdOucName2Name.cc   \
         XrdOucNList.cc       \
@@ -41,10 +39,8 @@ OBJECTS = \
         $(OBJDIR)/XrdOucArgs.o         \
         $(OBJDIR)/XrdOucCRC.o          \
         $(OBJDIR)/XrdOucEnv.o          \
-        $(OBJDIR)/XrdSysError.o        \
         $(OBJDIR)/XrdOucExport.o       \
         $(OBJDIR)/XrdOucHashVal.o      \
-        $(OBJDIR)/XrdSysLogger.o       \
         $(OBJDIR)/XrdOucMsubs.o        \
         $(OBJDIR)/XrdOucName2Name.o    \
         $(OBJDIR)/XrdOucNList.o        \

@@ -119,12 +119,20 @@ XPROOFDEXE     :=
 ifeq ($(BUILDXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
-XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdNetUtil -lXrdSys \
-                  -lXrdClient -lXrdSut $(DNSSDLIB)
+XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdSys \
+                  -lXrdClient -lXrdSut
 XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
-                  $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdNetUtil.a \
-                  $(XROOTDDIRL)/libXrdOuc.a \
+                  $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdOuc.a \
                   $(XROOTDDIRL)/libXrdSys.a $(XROOTDDIRL)/libXrdSut.a
+XRDNETUTIL     := $(shell if test -d $(XROOTDDIRL); then \
+                             find $(XROOTDDIRL) -name "*XrdNetUtil*"; \
+                          fi)
+ifneq ($(XRDNETUTIL),)
+XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdNetUtil
+XPROOFDEXELIBS += $(XROOTDDIRL)/libXrdNetUtil.a
+endif
+XPDLIBEXTRA    +=  $(DNSSDLIB)
+
 ifeq ($(PLATFORM),solaris)
 XPROOFDEXESYSLIBS := -lsendfile -lCstd
 endif
