@@ -243,8 +243,8 @@ TUUID::TUUID(const char *uuid)
 
    if (!uuid || !*uuid)
       Error("TUUID", "null string not allowed");
-
-   SetFromString(uuid);
+   else
+      SetFromString(uuid);
 }
 
 //______________________________________________________________________________
