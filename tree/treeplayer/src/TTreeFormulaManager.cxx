@@ -198,7 +198,7 @@ Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
          for (k = kMAXFORMDIM; (k > 0) ; k--) {
             if (fVarDims[k]) {
                Int_t index = fVarDims[k]->At(i);
-               if (fCumulUsedVarDims->At(i)==1 && index) index = 1;
+               if (fCumulUsedVarDims && fCumulUsedVarDims->At(i)==1 && index) index = 1;
                if (fUsedSizes[k]==1 || (index!=1 && index<fUsedSizes[k]))
                   local_overall *= index;
                else local_overall *= fUsedSizes[k];
