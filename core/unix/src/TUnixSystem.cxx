@@ -4129,7 +4129,13 @@ int TUnixSystem::UnixUnixService(const char *sockpath, int backlog)
    // Prepare structure
    memset(&unserver, 0, sizeof(unserver));
    unserver.sun_family = AF_UNIX;
-   sprintf(unserver.sun_path, "%s", sockpath);
+
+   if (strlen(sockpath) > sizeof(unserver.sun_path)-1) {
+      ::Error("TUnixSystem::UnixUnixService", "socket path %s, longer than max allowed length (%u)",
+              sockpath, (UInt_t)sizeof(unserver.sun_path)-1);
+      return -1;
+   }
+   strcpy(unserver.sun_path, sockpath);
 
    // Create socket
    if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
