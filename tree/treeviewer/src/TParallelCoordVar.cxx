@@ -415,23 +415,23 @@ char* TParallelCoordVar::GetObjectInfo(Int_t px, Int_t py) const
    Double_t yy = gPad->AbsPixeltoY(py);
    if (fX1 == fX2) {
       if (yy<fY1) {
-         sprintf(info,"%s = %f", GetTitle(), fMinCurrent);
+         snprintf(info,128,"%s = %f", GetTitle(), fMinCurrent);
       } else if (yy>fY2) {
-         sprintf(info,"%s = %f", GetTitle(), fMaxCurrent);
+         snprintf(info,128,"%s = %f", GetTitle(), fMaxCurrent);
       } else {
          Double_t axislength = fY2-fY1;
          Double_t pos = (yy-fY1)/axislength;
-         sprintf(info,"%s = %f", GetTitle(), fMinCurrent + pos*(fMaxCurrent-fMinCurrent));
+         snprintf(info,128,"%s = %f", GetTitle(), fMinCurrent + pos*(fMaxCurrent-fMinCurrent));
       }
    } else {
       if (xx<fX1) {
-         sprintf(info,"%s = %f", GetTitle(), fMinCurrent);
+         snprintf(info,128,"%s = %f", GetTitle(), fMinCurrent);
       } else if(xx>fX2) {
-         sprintf(info,"%s = %f", GetTitle(), fMaxCurrent);
+         snprintf(info,128,"%s = %f", GetTitle(), fMaxCurrent);
       } else {
          Double_t axislength = fX2-fX1;
          Double_t pos = (xx-fX1)/axislength;
-         sprintf(info,"%s = %f", GetTitle(), pos*(fMaxCurrent-fMinCurrent));
+         snprintf(info,128,"%s = %f", GetTitle(), pos*(fMaxCurrent-fMinCurrent));
       }
    }
    return info;
