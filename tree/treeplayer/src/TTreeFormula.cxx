@@ -2459,8 +2459,8 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             // No dot is allowed in subbranches and leaves, so
             // we always remove it in the present case.
             if (cname[i]) work[strlen(work)-1] = '\0';
-            snprintf(scratch,strlen(scratch),"%s.%s",first,work);
-            snprintf(scratch2,strlen(scratch2),"%s.%s.%s",first,second,work);
+            snprintf(scratch,sizeof(scratch),"%s.%s",first,work);
+            snprintf(scratch2,sizeof(scratch2),"%s.%s.%s",first,second,work);
 
             if (previousdot) {
                currentname = &(work[previousdot+1]);

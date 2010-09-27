@@ -445,7 +445,8 @@ void TSelectorDraw::Begin(TTree *tree)
    } else { // if (hname)
       hname  = hdefault;
       hkeep  = 0;
-      varexp = (char*)varexp0;
+      varexp = new char[strlen(varexp0)+1];
+      strlcpy(varexp,varexp0,strlen(varexp0)+1);
       if (gDirectory) {
          fOldHistogram = (TH1*)gDirectory->Get(hname);
          if (fOldHistogram) { fOldHistogram->Delete(); fOldHistogram = 0;}
