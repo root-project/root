@@ -1725,10 +1725,10 @@ char *TASImage::GetObjectInfo(Int_t px, Int_t py) const
    }
 
    if (fImage->alt.vector) {
-      sprintf(info, "x: %d  y: %d   %.5g",
+      snprintf(info,64,"x: %d  y: %d   %.5g",
               px, py, fImage->alt.vector[px + py * fImage->width]);
    } else {
-      sprintf(info, "x: %d  y: %d", px, py);
+      snprintf(info,64,"x: %d  y: %d", px, py);
    }
 
    return info;
