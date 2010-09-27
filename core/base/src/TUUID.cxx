@@ -654,8 +654,8 @@ void TUUID::SetUUID(const char *uuid)
 
    if (!uuid || !*uuid)
       Error("SetUUID", "null string not allowed");
-
-   SetFromString(uuid);
+   else
+      SetFromString(uuid);
 }
 
 //______________________________________________________________________________
