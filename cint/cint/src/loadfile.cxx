@@ -2224,12 +2224,13 @@ int G__loadfile(const char *filenamein)
     {
 #if !defined(ROOTBUILD) && !defined(G__BUILDING_CINTTMP)
       int allsl = G__shl_load(G__ifile.name);
-#else
-      int allsl = -1; // don't load any shared libs
-#endif
       if (allsl != -1) {
-        G__srcfile[fentry].slindex = allsl;
+         G__srcfile[fentry].slindex = allsl;
       }
+#else
+      // don't load any shared libs
+      // G__srcfile[fentry].slindex stays at -1
+#endif
     }
     G__nlibs_highwatermark = store_nlibs_highwatermark;
     if (G__initpermanentsl) {
