@@ -57,6 +57,7 @@ TFFTRealComplex::TFFTRealComplex()
    fOut  = 0;
    fPlan = 0;
    fN    = 0;
+   fFlags = 0;
 }
 
 //_____________________________________________________________________________
@@ -78,6 +79,7 @@ TFFTRealComplex::TFFTRealComplex(Int_t n, Bool_t inPlace)
    fTotalSize = n;
    fNdim = 1;
    fPlan = 0;
+   fFlags = 0;
 }
 
 //_____________________________________________________________________________
@@ -105,6 +107,8 @@ TFFTRealComplex::TFFTRealComplex(Int_t ndim, Int_t *n, Bool_t inPlace)
       fIn = fftw_malloc(sizeof(Double_t)*(2*sizeout));
       fOut = 0;
    }
+   fPlan = 0;
+   fFlags = 0;
 }
 
 //_____________________________________________________________________________

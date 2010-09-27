@@ -52,6 +52,7 @@ TFFTComplex::TFFTComplex()
    fOut  = 0;
    fPlan = 0;
    fN    = 0;
+   fFlags = 0; 
 }
 
 //_____________________________________________________________________________
@@ -70,6 +71,7 @@ TFFTComplex::TFFTComplex(Int_t n, Bool_t inPlace)
    fTotalSize = n;
    fNdim = 1;
    fPlan = 0;
+   fFlags = 0; 
 }
 
 //_____________________________________________________________________________
@@ -91,7 +93,7 @@ TFFTComplex::TFFTComplex(Int_t ndim, Int_t *n, Bool_t inPlace)
    else
       fOut = 0;
    fPlan = 0;
-
+   fFlags = 0; 
 }
 
 //_____________________________________________________________________________

@@ -35,6 +35,9 @@
 //          before running the Init() function
 //       2) FFTW computes unnormalized transform, so doing a transform followed by 
 //          its inverse will lead to the original array scaled by the transform size
+//
+//       3) In Complex to Real transform the input array is destroyed. It cannot then 
+//          be retrieved when using the Get's methods. 
 //                                                                      
 //////////////////////////////////////////////////////////////////////////
 
@@ -55,6 +58,7 @@ TFFTComplexReal::TFFTComplexReal()
    fPlan = 0;
    fN    = 0;
    fTotalSize = 0;
+   fFlags = 0;
 }
 
 //_____________________________________________________________________________
@@ -76,6 +80,7 @@ TFFTComplexReal::TFFTComplexReal(Int_t n, Bool_t inPlace)
    fN[0] = n;
    fPlan = 0;
    fTotalSize = n;
+   fFlags = 0;
 }
 
 //_____________________________________________________________________________
@@ -99,6 +104,8 @@ TFFTComplexReal::TFFTComplexReal(Int_t ndim, Int_t *n, Bool_t inPlace)
       fIn = fftw_malloc(sizeof(fftw_complex)*sizein);
       fOut = 0;
    }
+   fPlan = 0;
+   fFlags = 0;
 }
 
 
@@ -165,153 +172,130 @@ void TFFTComplexReal::Transform()
 void TFFTComplexReal::GetPoints(Double_t *data, Bool_t fromInput) const
 {
 //Fills the argument array with the computed transform
+// Works only for output (input array is destroyed in a C2R transform)
 
    if (fromInput){
-      Error("GetPoints", "the input array has been destroyed");
+      Error("GetPoints", "Input array has been destroyed");
       return;
    }
-   if (fOut){
-      for (Int_t i=0; i<fTotalSize; i++)
-         data[i] = ((Double_t*)fOut)[i];
-   }
-   else{
-      for (Int_t i=0; i<fTotalSize; i++)
-         data[i] = ((Double_t*)fOut)[i];
-   }
+   const Double_t * array =  (const Double_t*) ( (fOut) ?  fOut :  fIn );  
+   std::copy(array,array+fTotalSize, data);
 }
 
 //_____________________________________________________________________________
 Double_t TFFTComplexReal::GetPointReal(Int_t ipoint, Bool_t fromInput) const
 {
 //Returns the point #ipoint
+// Works only for output (input array is destroyed in a C2R transform)
 
-   if (fOut && !fromInput){
-      return ((Double_t*)fOut)[ipoint];
-   }
-   else if (fromInput){
-      Error("GetPointReal", "Input array was destroyed");
+   if (fromInput){
+      Error("GetPointReal", "Input array has been destroyed");
       return 0;
    }
-   else
-      return ((Double_t*)fIn)[ipoint];
+   const Double_t * array =  (const Double_t*) ( (fOut) ?  fOut :  fIn );  
+   return array[ipoint];
 }
 
 //_____________________________________________________________________________
 Double_t TFFTComplexReal::GetPointReal(const Int_t *ipoint, Bool_t fromInput) const
 {
 //For multidimensional transforms. Returns the point #ipoint
+// Works only for output (input array is destroyed in a C2R transform)
 
+   if (fromInput){
+      Error("GetPointReal", "Input array has been destroyed");
+      return 0;
+   }
    Int_t ireal = ipoint[0];
    for (Int_t i=0; i<fNdim-1; i++)
       ireal=fN[i+1]*ireal + ipoint[i+1];
 
-   if (fOut && !fromInput){
-      return ((Double_t*)fOut)[ireal];
-   }
-   else if (fromInput){
-      Error("GetPointReal", "Input array was destroyed");
-      return 0;
-   }
-   else
-      return ((Double_t*)fIn)[ireal];
+   const Double_t * array =  (const Double_t*) ( (fOut) ?  fOut :  fIn );  
+   return array[ireal];
 }
 
 
 //_____________________________________________________________________________
 void TFFTComplexReal::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, Bool_t fromInput) const
 {
+// Works only for output (input array is destroyed in a C2R transform)
+
    if (fromInput){
-      Error("GetPointReal", "Input array was destroyed");
+      Error("GetPointComplex", "Input array has been destroyed");
       return;
-   } else {
-      if (fOut){
-         re = ((Double_t*)fOut)[ipoint];
-         im = 0;
-      } else {
-         re = ((Double_t*)fIn)[ipoint];
-         im = 0;
-      }
    }
+   const Double_t * array =  (const Double_t*) ( (fOut) ?  fOut :  fIn );  
+   re = array[ipoint];
+   im = 0;         
 }
 
 //_____________________________________________________________________________
 void TFFTComplexReal::GetPointComplex(const Int_t *ipoint, Double_t &re, Double_t &im, Bool_t fromInput) const
 {
 //For multidimensional transforms. Returns the point #ipoint
+// Works only for output (input array is destroyed in a C2R transform)
+
+   if (fromInput){
+      Error("GetPointComplex", "Input array has been destroyed");
+      return;
+   }
+   const Double_t * array =  (const Double_t*) ( (fOut) ?  fOut :  fIn );  
 
    Int_t ireal = ipoint[0];
    for (Int_t i=0; i<fNdim-1; i++)
       ireal=fN[i+1]*ireal + ipoint[i+1];
 
-   if (fromInput){
-      Error("GetPointReal", "Input array was destroyed");
-      return;
-   } else {
-      if (fOut){
-         re = ((Double_t*)fOut)[ireal];
-         im = 0;
-      } else {
-         re = ((Double_t*)fIn)[ireal];
-         im = 0;
-      }
-   }
+   re = array[ireal];
+   im = 0;
 }
 //_____________________________________________________________________________
 Double_t* TFFTComplexReal::GetPointsReal(Bool_t fromInput) const
 {
 //Returns the array of computed transform
+// Works only for output (input array is destroyed in a C2R transform)
+   
+   // we have 2 different cases
+   // fromInput = false; fOut = !NULL (transformed is not in place) : return fOut 
+   // fromInput = false; fOut = NULL (transformed is in place) : return fIn
 
-   if (fromInput){
-      Error("GetPointsReal", "Input array has been destroyed");
-      return 0;
+   if (fromInput) { 
+      Error("GetPointsReal","Input array was destroyed"); 
+      return 0; 
    }
-   if (fOut)
-      return (Double_t*)fOut;
-   else
-      return (Double_t*)fIn;
+   return  (Double_t*) ( (fOut) ?  fOut :  fIn );  
 }
 
 //_____________________________________________________________________________
 void TFFTComplexReal::GetPointsComplex(Double_t *re, Double_t *im, Bool_t fromInput) const
 {
 //Fills the argument array with the computed transform
+// Works only for output (input array is destroyed in a C2R transform)
 
    if (fromInput){
       Error("GetPointsComplex", "Input array has been destroyed");
       return;
    }
-   if (fOut){
-      for (Int_t i=0; i<fTotalSize; i++){
-         re[i] = ((Double_t*)fOut)[i];
-         im[i] = 0;
-      }
-   }
-   else {
-      for (Int_t i=0; i<fTotalSize; i++){
-         re[i] = ((Double_t*)fIn)[i];
-         im[i] = 0;
-      }
+   const Double_t * array =  (const Double_t*) ( (fOut) ?  fOut :  fIn );  
+   for (Int_t i=0; i<fTotalSize; i++){
+      re[i] = array[i];
+      im[i] = 0;
    }
 }
 
 //_____________________________________________________________________________
 void TFFTComplexReal::GetPointsComplex(Double_t *data, Bool_t fromInput) const
 {
+//Fills the argument array with the computed transform. 
+// Works only for output (input array is destroyed in a C2R transform)
 
    if (fromInput){
       Error("GetPointsComplex", "Input array has been destroyed");
       return;
    }
-   if (fOut){
-      for (Int_t i=0; i<fTotalSize; i+=2){
-         data[i] = ((Double_t*)fOut)[i/2];
-         data[i+1]=0;
-      }
-   }  else {
-      for (Int_t i=0; i<fTotalSize; i+=2){
-         data[i] = ((Double_t*)fIn)[i/2];
-         data[i+1]=0;
-      }
+   const Double_t * array =  (const Double_t*) ( (fOut) ?  fOut :  fIn );  
+   for (Int_t i=0; i<fTotalSize; i+=2){
+      data[i] = array[i/2];
+      data[i+1]=0;
    }
 }
 

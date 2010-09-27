@@ -71,6 +71,7 @@ TFFTReal::TFFTReal()
    fPlan  = 0;
    fN     = 0;
    fKind  = 0;
+   fFlags = 0;
 }
 
 //_____________________________________________________________________________
@@ -89,6 +90,7 @@ TFFTReal::TFFTReal(Int_t n, Bool_t inPlace)
    fN[0] = n;
    fKind = 0;
    fTotalSize = n;
+   fFlags = 0;
 }
 
 //_____________________________________________________________________________
@@ -103,6 +105,7 @@ TFFTReal::TFFTReal(Int_t ndim, Int_t *n, Bool_t inPlace)
    fN = new Int_t[ndim];
    fKind = 0;
    fPlan = 0;
+   fFlags = 0; 
    for (Int_t i=0; i<ndim; i++){
       fTotalSize*=n[i];
       fN[i] = n[i];
@@ -211,14 +214,9 @@ void TFFTReal::GetPoints(Double_t *data, Bool_t fromInput) const
 //Copies the output (or input) points into the provided array, that should
 //be big enough
 
-   if (fromInput || !fOut){
-      for (Int_t i=0; i<fTotalSize; i++)
-         data[i] = ((Double_t*)fIn)[i];
-   }
-   else {
-      for (Int_t i=0; i<fTotalSize; i++)
-         data[i] = ((Double_t*)fOut)[i];
-   }
+   const Double_t * array = GetPointsReal(fromInput);
+   if (!array) return; 
+   std::copy(array, array+fTotalSize, data);
 }
 
 //_____________________________________________________________________________
@@ -230,10 +228,8 @@ Double_t TFFTReal::GetPointReal(Int_t ipoint, Bool_t fromInput) const
       Error("GetPointReal", "No such point");
       return 0;
    }
-   if (fromInput)
-      return ((Double_t*)fIn)[ipoint];
-   else
-      return ((Double_t*)fOut)[ipoint];
+   const Double_t * array = GetPointsReal(fromInput);
+   return ( array ) ? array[ipoint] : 0; 
 }
 
 //_____________________________________________________________________________
@@ -245,10 +241,8 @@ Double_t TFFTReal::GetPointReal(const Int_t *ipoint, Bool_t fromInput) const
    for (Int_t i=0; i<fNdim-1; i++)
       ireal=fN[i+1]*ireal + ipoint[i+1];
 
-   if (fromInput)
-      return ((Double_t*)fIn)[ireal];
-   else
-      return ((Double_t*)fOut)[ireal];
+   const Double_t * array = GetPointsReal(fromInput);
+   return ( array ) ? array[ireal] : 0; 
 }
 
 //_____________________________________________________________________________
@@ -256,38 +250,20 @@ void TFFTReal::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, Bool_t 
 {
 //Only for input of HC2R and output of R2HC
 
-   if (((fftw_r2r_kind*)fKind)[0]==FFTW_R2HC){
-      if (fOut){
-         if (ipoint<fN[0]/2+1){
-            re = ((Double_t*)fOut)[ipoint];
-            im = ((Double_t*)fOut)[fN[0]-ipoint];
-         } else {
-            re = ((Double_t*)fOut)[fN[0]-ipoint];
-            im = -((Double_t*)fOut)[ipoint];
-         }
-         if ((fN[0]%2)==0 && ipoint==fN[0]/2) im = 0;
-      } else {
-         if (ipoint<fN[0]/2+1){
-            re = ((Double_t*)fIn)[ipoint];
-            im = ((Double_t*)fIn)[fN[0]-ipoint];
-         } else {
-            re = ((Double_t*)fIn)[fN[0]-ipoint];
-            im = -((Double_t*)fIn)[ipoint];
-         }
-         if ((fN[0]%2)==0 && ipoint==fN[0]/2) im = 0;
-      }
-   }
-   if (((fftw_r2r_kind*)fKind)[0]==FFTW_HC2R && fromInput){
+   const Double_t * array = GetPointsReal(fromInput);
+   if (!array) return; 
+   if ( ( ((fftw_r2r_kind*)fKind)[0]==FFTW_R2HC && !fromInput ) ||
+        ( ((fftw_r2r_kind*)fKind)[0]==FFTW_HC2R &&  fromInput ) )
+   {
       if (ipoint<fN[0]/2+1){
-         re = ((Double_t*)fIn)[ipoint];
-         im = ((Double_t*)fIn)[fN[0]-ipoint];
+         re = array[ipoint];
+         im = array[fN[0]-ipoint];
       } else {
-         re = ((Double_t*)fIn)[fN[0]-ipoint];
-         im = -((Double_t*)fIn)[ipoint];
+         re = array[fN[0]-ipoint];
+         im = -array[ipoint];
       }
       if ((fN[0]%2)==0 && ipoint==fN[0]/2) im = 0;
    }
-
 }
 //_____________________________________________________________________________
 void TFFTReal::GetPointComplex(const Int_t *ipoint, Double_t &re, Double_t &im, Bool_t fromInput) const
@@ -302,10 +278,20 @@ Double_t* TFFTReal::GetPointsReal(Bool_t fromInput) const
 {
 //Returns the output (or input) array
 
-   if (fromInput)
-      return (Double_t*)fIn;
-   else
+   // we have 4 different cases
+   // fromInput = false; fOut = !NULL (transformed is not in place) : return fOut 
+   // fromInput = false; fOut = NULL (transformed is in place) : return fIn
+   // fromInput = true; fOut = !NULL :   return fIn
+   // fromInput = true; fOut = NULL return an error since input array is overwritten
+
+   if (!fromInput && fOut) 
       return (Double_t*)fOut;
+   else if (fromInput && !fOut) { 
+      Error("GetPointsReal","Input array was destroyed"); 
+      return 0; 
+   }
+   //R__ASSERT(fIn);
+   return (Double_t*)fIn;
 }
 
 //_____________________________________________________________________________
