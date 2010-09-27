@@ -405,9 +405,7 @@ G__value G__getrsvd(int i);
 int G__read_setmode(int *pmode);
 int G__pragma(void);
 int G__execpragma(const char *comname,char *args);
-#ifndef G__VMS
 void G__freepragma(struct G__AppPragma *paddpragma);
-#endif
 void G__free_bytecode(struct G__bytecodefunc *bytecode);
 void G__asm_gen_strip_quotation(G__value *pval);
 int G__security_handle(G__UINT32 category);

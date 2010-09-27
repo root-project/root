@@ -525,16 +525,8 @@ long Cint::G__MethodInfo::FilePosition()
   //                      ^
   long invalid=0L;
   if(IsValid()) {
-#ifdef G__VMS
-     G__fprinterr(G__err, 
-                  "Error: VMS support now broken; please complain to cint@pcroot.cern.ch if this matters to you!\n");
-    //Changed so that pos can be a long.
-    struct G__ifunc_table_VMS *ifunc2;
-    ifunc2 = (struct G__ifunc_table_VMS*)handle;
-#else
     struct G__ifunc_table_internal *ifunc2;
     ifunc2 = G__get_ifunc_internal((struct G__ifunc_table*)handle);
-#endif
     if(
        ifunc2->pentry[index]->filenum>=0 && ifunc2->pentry[index]->size>=0
        ) {

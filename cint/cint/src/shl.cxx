@@ -65,15 +65,6 @@ typedef HINSTANCE G__SHLHANDLE;
 #define TYPE_PROCEDURE 1
 #define TYPE_DATA 2
 /***************************************************
-* VMS
-****************************************************/
-#elif defined(G__VMS)
-#include <lib$routines.h>
-#include <descrip.h>
-typedef char* G__SHLHANDLE;
-#define TYPE_PROCEDURE 1
-#define TYPE_DATA 2
-/***************************************************
 * Non of above
 ****************************************************/
 #else /* non of above */
@@ -313,14 +304,6 @@ G__SHLHANDLE G__dlopen(const char *path)
       G__fprinterr(G__serr,"%s: %s", path, (char*)msg);
       ::LocalFree(msg);
    }
-   /****************************************************
-    * VMS
-    ****************************************************/
-# elif defined(G__VMS)
-   handle = path;
-   /****************************************************
-    * Non of above
-    ****************************************************/
 # else /* non of above */
    handle = (G__SHLHANDLE)NULL;
 # endif
@@ -356,15 +339,6 @@ void *G__shl_findsym(G__SHLHANDLE *phandle,const char *sym,short /* type */)
 {
   void *func = (void*)NULL;
 
-#ifdef G__VMS
-  char *file_s, *sym_s, *phandle_s;
-  char pfile[G__ONELINE],pfile1[G__ONELINE],*p,*post;
-  int lib_status;
-  int lib_func;
-  struct dsc$descriptor_s file_d;
-  struct dsc$descriptor_s sym_d;
-  struct dsc$descriptor_s phandle_d;
-#endif
   G__FastAllocString sym_underscore(strlen(sym) + 2 /* underscore */ + 5 /* __xv */);
 
   if(G__sym_underscore) {
@@ -394,74 +368,6 @@ void *G__shl_findsym(G__SHLHANDLE *phandle,const char *sym,short /* type */)
 ****************************************************/
 # elif defined(G__WIN32)
   func = (void*)GetProcAddress(*phandle,sym_underscore);
-/****************************************************
-* VMS
-****************************************************/
-# elif defined(G__VMS)
-
-/*
-Set up character string descriptors for the  call to lib$find_image_symbol.
-The first argument needs to be the filename alone without the directory info.
-The last argument needs the complete file name including device and extension.
-*/
-/*We need to see if the symbol contains the name of the file without
-directories or extensions because that is what is in what rootcint generates.
-lib$find_image_symbol crashes if we look for a symbol that is not in there,
-so we try to catch symbols not in there before we call it*/
-  G__strlcpy(pfile,G__ifile.name,G__ONELINE);
-
-  p = strrchr(pfile,']');
-
-  if (p) {
-     p++;
-  }
-  else {
-     p = pfile;
-  }
-
-  post = strchr(p,'.');
-  if( post ) *post = 0;
-
-/*printf("\nG__ifile.name is %s sym is %s\n, p is %s",G__ifile.name,sym,p);*/
-  if(!strstr(sym,p)) return 0;
-
-/*We also have no G__c_... stuff in cint files generated with rootcint.  Don't
-  call those either!!!*/
-  if(strstr(sym,"G__c_")) return 0;
-
-  G__strlcpy(pfile1,*phandle,G__ONELINE);
-  file_s = strrchr(pfile1,']')+1;
-  post = strrchr(file_s,'.');
-  if( post ) *post = 0;
-  file_d.dsc$a_pointer = file_s;
-  file_d.dsc$w_length = strlen(file_s);
-  file_d.dsc$b_dtype = DSC$K_DTYPE_T;
-  file_d.dsc$b_class = DSC$K_CLASS_S;
-
-  sym_s = sym;
-  if(strstr(sym_s,"G__cpp_dllrev")) {
-/*   This one is not defined as extern "C" in rootcint, so name is mangled */
-/*   We need to mangle this one to match up */
-     strcpy(&sym_s[strlen(sym_s)],"__xv");  // Okay we allocated enough space
-  } 
-  sym_d.dsc$a_pointer = sym_s;
-  sym_d.dsc$w_length = strlen(sym_s);
-  sym_d.dsc$b_dtype = DSC$K_DTYPE_T;
-  sym_d.dsc$b_class = DSC$K_CLASS_S;
-
-  phandle_s = *phandle;
-  phandle_d.dsc$a_pointer = phandle_s;
-  phandle_d.dsc$w_length = strlen(phandle_s);
-  phandle_d.dsc$b_dtype = DSC$K_DTYPE_T;
-  phandle_d.dsc$b_class = DSC$K_CLASS_S;
-
-printf("\nfile_s %s sym_s %s phandle_s %s",file_s,sym_s,phandle_s);
-/*printf("\n lengths are %d %d %d",file_d.dsc$w_length,sym_d.dsc$w_length,phandle_d.dsc$w_length);*/
-
-  lib_status = lib$find_image_symbol(&file_d,&sym_d,&lib_func,&phandle_d);
-
-  func = (void*)lib_func;
-
 /****************************************************
 * Non of above
 ****************************************************/
@@ -928,17 +834,6 @@ int G__shl_load(char *shlfile)
       p = shlfile;
     }
   }
-
-#ifdef G__VMS
-/*Have to do things differently for VMS files with directories attached*/
-  p = strrchr(shlfile,']');
-  if(p) {
-    p++;
-  }
-  else {
-    p = shlfile;
-  }
-#endif
 
   size_t lendllidheader = strlen(p) + 1;
   G__FastAllocString dllidheader(lendllidheader);

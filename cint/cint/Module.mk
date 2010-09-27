@@ -140,9 +140,6 @@ else
  endif
 endif
 endif
-ifeq ($(PLATFORM),vms)
-CINTS2       += $(MODDIRSD)/fakestrm.cxx
-endif
 ifeq ($(CXXCMD),icc)
 CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))

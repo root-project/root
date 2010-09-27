@@ -946,22 +946,6 @@ struct G__funcentry {
 #endif
 };
 
-#ifdef G__VMS
-/***************************************************************************
-*  Need for struct G__ifunc_table_VMS.  Neccessary for
-*  Cint_Method::FilePosition().
-***************************************************************************/
-struct G__funcentry_VMS {
-  /* file position and pointer for restoring start point */
-  fpos_tt pos; /* Set if interpreted func body defined, unknown otherwise */
-  void *p;     /* FILE* for source file or  int (*)() for compiled function
-                * (void*)NULL if no function body */
-  int  line_number; /* -1 if no function body or compiled function */
-  short filenum;    /* -1 if compiled function, otherwise interpreted func */
-};
-#endif
-
-
 /**************************************************************************
 * structure for ifunc (Interpreted FUNCtion) table
 *
@@ -1154,79 +1138,6 @@ struct G__ifunc_table_internal {
   short vtblindex[G__MAXIFUNC];
   short vtblbasetagnum[G__MAXIFUNC];
 };
-
-
-#ifdef G__VMS
-/**************************************************************************
-* For VMS:
-*  This is the same struct as G__ifunc_table excep pentry becomes
-*  G__funcentry_VMS.  This is needed in Cint_method::FilePosition().
-**************************************************************************/
-struct G__ifunc_table_VMS {
-  /* number of interpreted function */
-  int allifunc;
-
-  /* function name and hash for identification */
-  char *funcname[G__MAXIFUNC];
-  int  hash[G__MAXIFUNC];
-
-  struct G__funcentry entry[G__MAXIFUNC];
-  struct G__funcentry_VMS *pentry[G__MAXIFUNC];
-
-  /* type of return value */
-  G__SIGNEDCHAR_T type[G__MAXIFUNC];
-  short p_tagtable[G__MAXIFUNC];
-  short p_typetable[G__MAXIFUNC];
-  G__SIGNEDCHAR_T reftype[G__MAXIFUNC];
-  short para_nu[G__MAXIFUNC];
-  G__SIGNEDCHAR_T isconst[G__MAXIFUNC];
-  G__SIGNEDCHAR_T isexplicit[G__MAXIFUNC];
-
-  /* number and type of function parameter */
-  /* G__inheritclass() depends on type of following members */
-  char para_reftype[G__MAXIFUNC][G__MAXFUNCPARA];
-  char para_type[G__MAXIFUNC][G__MAXFUNCPARA];
-  char para_isconst[G__MAXIFUNC][G__MAXFUNCPARA];
-  short para_p_tagtable[G__MAXIFUNC][G__MAXFUNCPARA];
-  short para_p_typetable[G__MAXIFUNC][G__MAXFUNCPARA];
-  G__value *para_default[G__MAXIFUNC][G__MAXFUNCPARA];
-  char *para_name[G__MAXIFUNC][G__MAXFUNCPARA];
-  char *para_def[G__MAXIFUNC][G__MAXFUNCPARA];
-
-  /* C or C++ */
-  char iscpp[G__MAXIFUNC];
-
-  /* ANSI or standard header format */
-  char ansi[G__MAXIFUNC];
-
-  /**************************************************
-   * if function is called, busy[] is incremented
-   **************************************************/
-  short busy[G__MAXIFUNC];
-
-  struct G__ifunc_table *next;
-  short page;
-
-  G__SIGNEDCHAR_T access[G__MAXIFUNC];  /* private, protected, public */
-  char staticalloc[G__MAXIFUNC];
-
-  int tagnum;
-  char isvirtual[G__MAXIFUNC]; /* virtual function flag */
-  char ispurevirtual[G__MAXIFUNC]; /* virtual function flag */
-
-#ifdef G__FRIEND
-  struct G__friendtag *friendtag[G__MAXIFUNC];
-#endif
-
-  G__SIGNEDCHAR_T globalcomp[G__MAXIFUNC];
-
-  struct G__comment_info comment[G__MAXIFUNC];
-
-  void* userparam[G__MAXIFUNC];  /* user parameter array */
-  short vtblindex[G__MAXIFUNC];
-  short vtblbasetagnum[G__MAXIFUNC];
-};
-#endif
 
 /**************************************************************************
 * structure for class inheritance

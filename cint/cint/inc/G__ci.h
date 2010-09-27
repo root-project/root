@@ -341,10 +341,6 @@
 #endif
 #endif
 
-#ifdef __VMS
-#define G__VMS
-#endif
-
 #if defined(__BORLANDC__) || defined(__BCPLUSPLUS) || defined(__BCPLUSPLUS__) || defined(G__BORLANDCC5)
 #ifndef G__BORLAND
 #define G__BORLAND
@@ -435,15 +431,6 @@ typedef unsigned long long G__uint64;
 
 #ifndef G__IF_DUMMY
 #define G__IF_DUMMY /* avoid compiler warning */
-#endif
-
-#ifdef G__VMS
-#ifndef G__NONSCALARFPOS
-#define G__NONSCALARFPOS
-#endif
-typedef long fpos_tt; /* pos_t is defined to be a struct{32,32} in VMS.
-                         Therefore,pos_tt is defined to be a long. This
-                         is used in G__ifunc_table_VMS, G__functentry_VMS*/
 #endif
 
 #if defined(G__BORLAND) || defined(G__VISUAL)
@@ -1103,10 +1090,6 @@ struct G__friendtag;
 struct G__bytecodefunc;
 #endif
 struct G__funcentry;
-#ifdef G__VMS
-struct G__funcentry_VMS;
-struct G__ifunc_table_VMS;
-#endif
 struct G__ifunc_table;
 struct G__inheritance;
 struct G__var_array;

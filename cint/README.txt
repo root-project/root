@@ -66,7 +66,7 @@ Note: Search 'Installation' for installation instruction.
  * Portability
     CINT works on number of Operating Systems.
    HP-UX, Linux, SunOS, Solaris, AIX, Alpha-OSF, IRIX, FreeBSD, NetBSD, 
-   NEC EWS4800, NewsOS, BeBox, Windows-NT ,Windows-9x, MS-DOS, MacOS, VMS,
+   NEC EWS4800, NewsOS, BeBox, Windows-NT ,Windows-9x, MS-DOS, MacOS,
    NextStep, Convex. Porting should be easy. Refer to platform/README. 
    What about OS2, VxWorks, etc...?
 

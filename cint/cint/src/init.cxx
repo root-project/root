@@ -2148,9 +2148,6 @@ void G__platformMacro()
 #ifdef __APPLE__     /* Apple MacOS X */
    G__DEFINE_MACRO(__APPLE__);
 #endif
-#ifdef __VMS         /* DEC/Compac VMS */
-   G__DEFINE_MACRO(__VMS);
-#endif
 #ifdef _AIX          /* IBM AIX */
    G__DEFINE_MACRO(_AIX);
 #endif

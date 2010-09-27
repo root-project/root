@@ -1385,7 +1385,6 @@ interpreted source code.
    Sun/Solaris      G__SUN            same as __sun            
    Windows          G__WIN32          same as _WIN32           
    Apple            G__APPLE          same as __APPLE__
-   DEC/Compac VMS   G__VMS            same as __VMS            
    IBM AIX          G__AIX            same as _AIX             
    SGI IRIX         G__SGI            same as __sgi            
    Cygwin           G__CYGWIN         51                       

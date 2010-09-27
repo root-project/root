@@ -168,9 +168,6 @@ void checkcompilerversion(FILE* fp) {
 #if defined(G__WIN32)
   ccv(fp,"G__WIN32");
 #endif
-#if defined(G__VMS)
-  ccv(fp,"G__VMS");
-#endif
 #if defined(G__AIX)
   ccv(fp,"G__AIX");
 #endif

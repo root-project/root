@@ -343,11 +343,7 @@ const char *G__getmakeinfo(const char *item)
   ****************************************************************/
   /* Get $CINTSYSDIR/MAKEINFO file name */
   if(G__getcintsysdir()) return(buf);
-#ifdef G__VMS
-  makeinfo.Format("%s%s/MAKEINFO.txt",G__cintsysdir);
-#else
   makeinfo.Format("%s/%s/MAKEINFO",G__cintsysdir, G__CFG_COREVERSION);
-#endif
 
   /* Open MAKEINFO file */
   fp = fopen(makeinfo,"r");
@@ -455,11 +451,6 @@ int G__getcintsysdir()
 #endif
     if(env) {
 #ifdef G__ROOT
-#ifdef G__VMS
-/*      G__snprintf(G__cintsysdir,sizeof(G__cintsysdir),env);
-      G__strlcpy(&G__cintsysdir[strlen(G__cintsysdir)-1],".cint]",sizeof(G__cintsysdir));*/
-      G__snprintf(G__cintsysdir,sizeof(G__cintsysdir),"%s[cint]",env);
-#else /* G__VMS */
 # ifdef ROOTBUILD
       G__snprintf(G__cintsysdir,sizeof(G__cintsysdir), "%s", env);
 # else /* ROOTBUILD */
@@ -474,7 +465,6 @@ int G__getcintsysdir()
        }
 #  endif
 # endif /* ROOTBUILD */
-#endif /* G__VMS */
 
 #else /* G__ROOT */
       G__strlcpy(G__cintsysdir,env,sizeof(G__cintsysdir));
@@ -1757,11 +1747,7 @@ int G__loadfile(const char *filenamein)
        * try ./filename
        **********************************************/
       if(G__USERHEADER==G__kindofheader) {
-#ifdef G__VMS
-         G__snprintf(G__ifile.name,G__MAXFILENAME,"./%s",filename());
-#else
          G__snprintf(G__ifile.name,G__MAXFILENAME,"./%s%s",filename(),addpost[i2]);
-#endif
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -1778,11 +1764,7 @@ int G__loadfile(const char *filenamein)
        * try filename
        **********************************************/
       if(G__USERHEADER==G__kindofheader) {
-#ifdef G__VMS
-         snprintf(G__ifile.name,G__MAXFILENAME,"%s",filename());
-#else
          snprintf(G__ifile.name,G__MAXFILENAME,"%s%s",filename(),addpost[i2]);
-#endif
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -1954,45 +1936,6 @@ int G__loadfile(const char *filenamein)
       }
       if(G__ifile.fp) break;
 #endif /* G__SYMANTEC */
-
-#ifdef G__VMS
-       /**********************************************
-       * try $ROOTSYS[include]
-       **********************************************/
-      if('\0'!=G__cintsysdir[0]) {
-        /*  G__snprintf(G__ifile.name,G__MAXFILENAME,getenv("ROOTSYS"));
-            G__snprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
-         G__snprintf(G__ifile.name,G__MAXFILENAME,"%s[include]%s",getenv("ROOTSYS"),filename());
-
-        G__ifile.fp = fopen(G__ifile.name,"r");
-        /*G__globalcomp=G__store_globalcomp;*/
-      }
-      if(G__ifile.fp) break;
-
-       /**********************************************
-       * try $ROOTSYS[cint.include]
-       **********************************************/
-      if('\0'!=G__cintsysdir[0]) {
-         G__snprintf(G__ifile.name,G__MAXFILENAME,"%s[include]%s",G__cintsysdir,filename());
-
-        G__ifile.fp = fopen(G__ifile.name,"r");
-        hdrprop = G__CINTHDR;
-        G__globalcomp=G__NOLINK;
-      }
-      if(G__ifile.fp) break;
-
-       /**********************************************
-       * try sys$common:[decc$lib.reference.decc$rtldef..]
-       **********************************************/
-
-      G__snprintf(G__ifile.name,G__MAXFILENAME,"sys$common:decc$lib.reference.decc$rtdef]%s",filename());
-
-      G__ifile.fp = fopen(G__ifile.name,"r");
-      G__globalcomp=G__store_globalcomp;
-
-      if(G__ifile.fp) break;
-
-#endif  /*G__VMS*/
 
 #ifndef G__WIN32
       /**********************************************
