@@ -1059,6 +1059,7 @@ TString *TString::ReadString(TBuffer &b, const TClass *clReq)
          ::Error("TString::ReadObject", "could not create object of class %s",
                  clRef->GetName());
          // Exception
+         return a;
       }
 
       a->Streamer(b);
