@@ -1058,7 +1058,7 @@ again:
          p = HomeDirectory(); e = c + 1; if (!p) ier++;
       }
       if (p) {                         // we have smth to copy
-         strcpy(x, p); x += strlen(p); c = e-1; continue;
+         strlcpy(x, p, kBufSize); x += strlen(p); c = e-1; continue;
       }
 
       p = 0;
@@ -1067,7 +1067,7 @@ again:
          p = HomeDirectory(buff); e = c+1+n; if (!p) ier++;
       }
       if (p) {                          // we have smth to copy
-         strcpy(x,p); x += strlen(p); c = e-1; continue;
+         strlcpy(x, p, kBufSize); x += strlen(p); c = e-1; continue;
       }
 
       p = 0;
@@ -1075,12 +1075,9 @@ again:
          strlcpy(buff, WorkingDirectory(), kBufSize);
          p = buff;
          e = c + 1;
-         if (!p)
-            ier++;
       }
-
       if (p) {                          // we have smth to copy */
-         strcpy(x,p); x += strlen(p); c = e-1; continue;
+         strlcpy(x, p, kBufSize); x += strlen(p); c = e-1; continue;
       }
 
       if (c[0] != '$') {                // not $, simple copy
