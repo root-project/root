@@ -203,7 +203,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
 
    // Goto into raw terminal input mode
    char defhist[kMAXPATHLEN];
-   sprintf(defhist, "%s/.root_hist", gSystem->HomeDirectory());
+   snprintf(defhist, sizeof(defhist), "%s/.root_hist", gSystem->HomeDirectory());
    logon = gEnv->GetValue("Rint.History", defhist);
    // In the code we had HistorySize and HistorySave, in the rootrc and doc
    // we have HistSize and HistSave. Keep the doc as it is and check

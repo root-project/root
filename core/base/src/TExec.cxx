@@ -139,7 +139,7 @@ void TExec::Exec(const char *command)
          if (strchr(GetName(),'('))      {gROOT->ProcessLine(GetName()); return;}
          if (strchr(GetName(),'.'))      {gROOT->ProcessLine(GetName()); return;}
          char action[512];
-         sprintf(action,".x %s.C",GetName());
+         snprintf(action, sizeof(action), ".x %s.C", GetName());
          gROOT->ProcessLine(action);
       }
    }
