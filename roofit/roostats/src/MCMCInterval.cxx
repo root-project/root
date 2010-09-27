@@ -503,11 +503,10 @@ void MCMCInterval::CreateSparseHist()
    }
    fSparseHist = new THnSparseF("posterior", "MCMC Posterior Histogram",
          fDimension, bins, min, max);
-   // kbelasco: check here for memory leaks: does THnSparse copy min, max, and bins
-   // or can we not delete them?
-   //delete[] min;
-   //delete[] max;
-   //delete[] bins;
+
+   delete[] min;
+   delete[] max;
+   delete[] bins;
 
    // kbelasco: it appears we need to call Sumw2() just to get the
    // histogram to keep a running total of the weight so that Getsumw doesn't
@@ -1115,15 +1114,15 @@ Double_t MCMCInterval::LowerLimitBySparseHist(RooRealVar& param)
       return param.getMin();
    }
 
+   std::vector<Int_t> coord(fDimension);
    for (Int_t d = 0; d < fDimension; d++) {
       if (strcmp(fAxes[d]->GetName(), param.GetName()) == 0) {
          Long_t numBins = (Long_t)fSparseHist->GetNbins();
          Double_t lowerLimit = param.getMax();
          Double_t val;
-         Int_t coord;
          for (Long_t i = 0; i < numBins; i++) {
-            if (fSparseHist->GetBinContent(i, &coord) >= fHistCutoff) {
-               val = fSparseHist->GetAxis(d)->GetBinCenter(coord);
+            if (fSparseHist->GetBinContent(i, &coord[0]) >= fHistCutoff) {
+               val = fSparseHist->GetAxis(d)->GetBinCenter(coord[d]);
                if (val < lowerLimit)
                   lowerLimit = val;
             }
@@ -1188,15 +1187,15 @@ Double_t MCMCInterval::UpperLimitBySparseHist(RooRealVar& param)
       return param.getMax();
    }
 
+   std::vector<Int_t> coord(fDimension);
    for (Int_t d = 0; d < fDimension; d++) {
       if (strcmp(fAxes[d]->GetName(), param.GetName()) == 0) {
          Long_t numBins = (Long_t)fSparseHist->GetNbins();
          Double_t upperLimit = param.getMin();
          Double_t val;
-         Int_t coord;
          for (Long_t i = 0; i < numBins; i++) {
-            if (fSparseHist->GetBinContent(i, &coord) >= fHistCutoff) {
-               val = fSparseHist->GetAxis(d)->GetBinCenter(coord);
+            if (fSparseHist->GetBinContent(i, &coord[0]) >= fHistCutoff) {
+               val = fSparseHist->GetAxis(d)->GetBinCenter(coord[d]);
                if (val > upperLimit)
                   upperLimit = val;
             }

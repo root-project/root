@@ -94,7 +94,7 @@ struct  LikelihoodFunction {
       double nll = fFunc(x) - fOffset;
       double likelihood =  std::exp(-nll);
 //       ooccoutD((TObject*)0,NumIntegration)  
-      // std::cout     << "x[0] = " << x[0] << " x[1] = " << x[1] << "  nll = " << nll << "offset " << fOffset << " likelihood = " << likelihood << std::endl;
+//      std::cout     << "x[0] = " << x[0] << " x[1] = " << x[1]  << " func " << fFunc(x) << " nll = " << nll << "offset " << fOffset << " likelihood = " << likelihood << std::endl;
       return likelihood; 
    }
 
@@ -221,11 +221,14 @@ public:
       if (fXmin.size() == 1) { // 1D case  
          fIntegratorOneDim = std::auto_ptr<ROOT::Math::Integrator>(new ROOT::Math::Integrator() );
          fIntegratorOneDim->SetFunction(fLikelihood);
+         // interested only in relative tolerance
+         fIntegratorOneDim->SetAbsTolerance(1.E-300);
       }
       else if (fXmin.size() > 1) { // multiDim case          
          fIntegratorMultiDim = 
             std::auto_ptr<ROOT::Math::IntegratorMultiDim>(new ROOT::Math::IntegratorMultiDim(GetMultiDimIntegrationType(integType) ) );
          fIntegratorMultiDim->SetFunction(fLikelihood, fXmin.size());
+         fIntegratorMultiDim->SetAbsTolerance(1.E-300);
       }
    }
       
@@ -416,9 +419,16 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    // remove the constant parameters
    RemoveConstantParameters(constrainedParams);
    
+   std::cout <<  "\n in BC::GetPOsteriorFunction " << std::endl;
+   constrainedParams->Print("V");
+
+   std::cout << " prod pdf " << fProductPdf->getVal() << std::endl;
 
    // use RooFit::Constrain() to make product of likelihood with prior pdf
    fLogLike = fProductPdf->createNLL(*fData, RooFit::Constrain(*constrainedParams) );
+
+
+   std::cout << " log like " << fLogLike->getVal() << std::endl;
 
    // if pdf evaluates to zero, should be fixed, but this will
    // stop error messages.
@@ -440,11 +450,14 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    fNLLMin = 0; 
    if (ret) fNLLMin = minim.FValMinimum();
 
+
+   std::cout << " minimum " << fNLLMin << std::endl;
+
    delete nllFunc;
    delete constrainedParams;
 
    if ( fNuisanceParameters.getSize() == 0 ||  fIntegrationType.Contains("ROOFIT") ) { 
-      // cas of no nuiance parameters 
+      // case of no nuisance parameters 
       TString likeName = TString("likelihood_") + TString(fProductPdf->GetName());   
       TString formula; 
       formula.Form("exp(-@0+%f)",fNLLMin);
@@ -471,6 +484,9 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    }
 
    fIntegratedLikelihood->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
+
+   std::cout << " integr likelihood  " << fIntegratedLikelihood->getVal() << std::endl;
+
 
    return fIntegratedLikelihood; 
 }
@@ -731,7 +747,6 @@ void BayesianCalculator::ApproximatePosterior() const {
       fApproxPosterior = 0;
    }      
 
-
    RooAbsReal * posterior = GetPosteriorFunction();
 
    // try to reduce some error messages
@@ -784,8 +799,8 @@ void BayesianCalculator::ComputeShortestInterval( ) const {
    // compute via the approx posterior function
    ApproximatePosterior(); 
    TH1D * h1 = dynamic_cast<TH1D*>(fApproxPosterior->GetHistogram() );
-   h1->SetName(fApproxPosterior->GetName());
    assert(h1 != 0);
+   h1->SetName(fApproxPosterior->GetName());
    // get bins and sort them 
    double * bins = h1->GetArray(); 
    int n = h1->GetSize()-2; // exclude under/overflow bins

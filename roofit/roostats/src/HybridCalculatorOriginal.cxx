@@ -87,6 +87,7 @@ HybridCalculatorOriginal::HybridCalculatorOriginal(const char *name) :
    fNuisanceParameters(0),
    fPriorPdf(0),
    fData(0),
+   fGenerateBinned(false),
    fUsePriorPdf(false),   fTmpDoExtended(true)
 {
    // constructor with name and title

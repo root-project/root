@@ -49,7 +49,8 @@ HybridResult::HybridResult( const char *name) :
    HypoTestResult(name),
    fTestStat_data(-999.),
    fComputationsNulDoneFlag(false),
-   fComputationsAltDoneFlag(false)
+   fComputationsAltDoneFlag(false),
+   fSumLargerValues(false)
 {
    // HybridResult default constructor (with name )
 }

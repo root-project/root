@@ -85,7 +85,7 @@ using namespace RooStats;
 
 //____________________________________________________________________
 LikelihoodInterval::LikelihoodInterval(const char* name) :
-   ConfInterval(name), fBestFitParams(0), fLikelihoodRatio(0)
+   ConfInterval(name), fBestFitParams(0), fLikelihoodRatio(0), fConfidenceLevel(0.95)
 {
    // Default constructor with name and title
 }
@@ -95,7 +95,8 @@ LikelihoodInterval::LikelihoodInterval(const char* name, RooAbsReal* lr, const R
    ConfInterval(name), 
    fParameters(*params), 
    fBestFitParams(bestParams), 
-   fLikelihoodRatio(lr) 
+   fLikelihoodRatio(lr),
+   fConfidenceLevel(0.95)
 {
    // Alternate constructor taking a pointer to the profile likelihood ratio, parameter of interest and 
    // optionally a snaphot of best parameter of interest for interval

@@ -50,7 +50,6 @@ namespace RooStats {
     TIter it = set->createIterator();
     RooRealVar *myarg; 
     while ((myarg = (RooRealVar *)it.Next())) { 
-      if(!myarg) continue;
       if(myarg->isConstant()) constSet.add(*myarg);
     }
     set->remove(constSet);

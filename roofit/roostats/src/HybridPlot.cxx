@@ -127,8 +127,8 @@ HybridPlot::~HybridPlot()
   
   if (fSb_histo) delete fSb_histo;
   if (fB_histo) delete fB_histo;
-  if (fSb_histo_shaded) delete fSb_histo;
-  if (fB_histo_shaded) delete fB_histo;
+  if (fSb_histo_shaded) delete fSb_histo_shaded;
+  if (fB_histo_shaded) delete fB_histo_shaded;
   if (fData_testStat_line) delete fData_testStat_line;
   if (fLegend) delete fLegend;
 }
