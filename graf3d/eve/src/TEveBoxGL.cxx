@@ -325,6 +325,7 @@ void TEveBoxProjectedGL::Draw(TGLRnrCtx& rnrCtx) const
       TGLObject::Draw(rnrCtx);
    }
 
+   if (TEveBoxProjected::fgDebugCornerPoints && ! fM->fDebugPoints.empty())
    {
       glColor3f(1,0,0);
       Int_t N = fM->fDebugPoints.size();
@@ -347,7 +348,14 @@ void TEveBoxProjectedGL::DirectDraw(TGLRnrCtx&) const
 
    fMultiColor = (fM->fDrawFrame && fM->fFillColor != fM->fLineColor);
 
-   glPushAttrib(GL_ENABLE_BIT);
+   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
+
+   glDisable(GL_LIGHTING);
+
+   glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
+   glEnable(GL_COLOR_MATERIAL);
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   glDisable(GL_CULL_FACE);
 
    glEnable(GL_POLYGON_OFFSET_FILL);
    glPolygonOffset(1.0f, 1.0f);
