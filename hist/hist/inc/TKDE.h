@@ -61,13 +61,13 @@ public:
       kForcedBinning
    };
    
+   explicit TKDE(UInt_t events=0, const Double_t* data=0, Double_t xMin = 0.0, Double_t xMax = 0.0, Option_t* option = "KernelType:Gaussian;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0);
+
    template<class KernelFunction>
-   TKDE(const KernelFunction& kernfunc, UInt_t events, const Double_t* data, Double_t xMin = 0.0, Double_t xMax = 0.0, Option_t* option = "KernelType:UserDefined;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0) {
+   TKDE(const char * name, const KernelFunction& kernfunc, UInt_t events, const Double_t* data, Double_t xMin = 0.0, Double_t xMax = 0.0, Option_t* option = "KernelType:UserDefined;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0)  {
       Instantiate(new ROOT::Math::WrappedFunction<const KernelFunction&>(kernfunc), events, data, xMin, xMax, option, rho);
    }
-   
-   TKDE(UInt_t events, const Double_t* data, Double_t xMin = 0.0, Double_t xMax = 0.0, Option_t* option = "KernelType:Gaussian;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0);
-   
+      
    virtual ~TKDE();
    
    void Fill(Double_t data);
@@ -77,6 +77,7 @@ public:
    void SetBinning(EBinning);
    void SetNBins(UInt_t nbins);
    void SetUseBinsNEvents(UInt_t nEvents);
+   void SetAdaptiveTuneFactor(Double_t rho);
    void SetRange(Double_t xMin, Double_t xMax); // By default computed from the data
    
    Double_t operator()(Double_t x) const;
@@ -86,6 +87,8 @@ public:
    Double_t GetError(Double_t x) const;
 
    Double_t GetBias(Double_t x) const;
+   Double_t GetMean() const;
+   Double_t GetSigma() const;
 
 
    Double_t GetFixedWeight() const;
@@ -97,7 +100,7 @@ public:
    TF1* GetLowerFunction(Double_t confidenceLevel = 0.95);
    TF1* GetApproximateBias();
    
-   std::vector<Double_t> GetAdaptiveWeights() const;
+   const Double_t * GetAdaptiveWeights() const;
 
    
 private:
@@ -107,7 +110,6 @@ private:
    static const Double_t PI_OVER2;       // TMath::PiOver2()
    static const Double_t PI_OVER4;       // TMath::PiOver4()
    
-   TKDE();                    // Disallowed default constructor
    TKDE(TKDE& kde);           // Disallowed copy constructor
    TKDE operator=(TKDE& kde); // Disallowed assign operator
    
@@ -136,13 +138,16 @@ private:
    
    Bool_t fUseMirroring, fMirrorLeft, fMirrorRight, fAsymLeft, fAsymRight;
    Bool_t fUseBins;
-   
+   Bool_t fNewData;        // flag to control when new data are given
+   Bool_t fUseMinMaxFromData; // flag top control if min and max must be used from data
+         
    UInt_t fNBins;          // Number of bins for binned data option
    UInt_t fNEvents;        // Data's number of events
    UInt_t fUseBinsNEvents; // If the algorithm is allowed to use binning this is the minimum number of events to do so
-         
+
    Double_t fMean;  // Data mean
    Double_t fSigma; // Data std deviation
+   Double_t fSigmaRob; // Data std deviation (robust estimation)
    Double_t fXMin;  // Data minimum value
    Double_t fXMax;  // Data maximum value
    Double_t fRho;   // Adjustment factor for sigma
@@ -160,7 +165,8 @@ private:
    struct KernelIntegrand;
    friend struct KernelIntegrand;
    
-   void Instantiate(KernelFunction_Ptr kernfunc, UInt_t events, const Double_t* data, Double_t xMin, Double_t xMax, Option_t* option, Double_t rho);
+   void Instantiate(KernelFunction_Ptr kernfunc, UInt_t events, const Double_t* data, 
+                    Double_t xMin, Double_t xMax, Option_t* option, Double_t rho);
    
    inline Double_t GaussianKernel(Double_t x) const {
       // Returns the kernel evaluation at x 
@@ -207,6 +213,7 @@ private:
    void GetOptions(std::string optionType, std::string option);
    void AssureOptions();
    void SetData(const Double_t* data);
+   void InitFromNewData();
    void SetMirroredEvents();
       
    TH1D* GetKDEHistogram(UInt_t nbins, Double_t xMin, Double_t xMax);
