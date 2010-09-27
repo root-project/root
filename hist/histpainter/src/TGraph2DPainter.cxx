@@ -58,6 +58,12 @@ TGraph2DPainter::TGraph2DPainter()
    fYmax     = 0.;
    fZmin     = 0.;
    fZmax     = 0.;
+   fXNmin    = 0;
+   fXNmax    = 0;
+   fYNmin    = 0;
+   fYNmax    = 0;
+   fNdt      = 0;
+   fNpoints  = 0;
 }
 
 
