@@ -2305,65 +2305,67 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
    fprintf(fp,"\npublic:\n");
    fprintf(fp,"// Data Members.\n");
 
-   // Generate data members.
-   char *line = new char[kMaxLen];
-   TString name(128);
-   char cdim[20];
-   Int_t ltype = 10;
-   Int_t ldata = 10;
-   Int_t lt;
-   Int_t ld;
+   {
+      // Generate data members.
+      TString name(128);
+      Int_t ltype = 12;
+      Int_t ldata = 10;
+      Int_t lt,ld,is;
+      TString line;
+      line.Resize(kMaxLen);      
+      next.Reset();
+      while ((element = (TStreamerElement*)next())) {
 
-   next.Reset();
-   while ((element = (TStreamerElement*)next())) {
-      for (int i=0;i < kMaxLen;++i) line[i] = ' ';
-      line[kMaxLen-1] = '\0';
-
-      if (element->IsBase()) continue;
-      const char *ename = element->GetName();
-
-      name = ename;
-      for (Int_t i=0;i < element->GetArrayDim();i++) {
-         snprintf(cdim,19,"[%d]",element->GetMaxIndex(i));
-         name += cdim;
-      }
-      name += ";";
-      ld = name.Length();
-
-      TString enamebasic = element->GetTypeNameBasic();
-      if (element->IsA() == TStreamerSTL::Class()) {
-         // If we have a map, multimap, set or multiset,
-         // and the key is a class, we need to replace the
-         // container by a vector since we don't have the
-         // comparator function.
-         Int_t stltype = ((TStreamerSTL*)element)->GetSTLtype();
-         switch (stltype) {
-            case TStreamerElement::kSTLmap: 
-            case TStreamerElement::kSTLmultimap:
-            case TStreamerElement::kSTLset:
-            case TStreamerElement::kSTLmultiset:
+         if (element->IsBase()) continue;
+         const char *ename = element->GetName();
+         
+         name = ename;
+         for (Int_t i=0;i < element->GetArrayDim();i++) {
+            name += TString::Format("[%d]",element->GetMaxIndex(i));
+         }
+         name += ";";
+         ld = name.Length();
+         
+         TString enamebasic = element->GetTypeNameBasic();
+         if (element->IsA() == TStreamerSTL::Class()) {
+            // If we have a map, multimap, set or multiset,
+            // and the key is a class, we need to replace the
+            // container by a vector since we don't have the
+            // comparator function.
+            Int_t stltype = ((TStreamerSTL*)element)->GetSTLtype();
+            switch (stltype) {
+               case TStreamerElement::kSTLmap: 
+               case TStreamerElement::kSTLmultimap:
+               case TStreamerElement::kSTLset:
+               case TStreamerElement::kSTLmultiset:
                {
                   enamebasic = TMakeProject::UpdateAssociativeToVector(enamebasic);
                }
-            default:
-               // nothing to do.
-               break;
-         }
-      } 
+               default:
+                  // nothing to do.
+                  break;
+            }
+         } 
+         
+         lt = enamebasic.Length();
+         
+         line = "   ";
+         line += enamebasic;
+         if (lt>=ltype) ltype = lt+1;
+         
+         for (is = 3+lt; is < (3+ltype); ++is) line += ' ';
 
-      lt = enamebasic.Length();
+         line += name;
+         if (element->IsaPointer() && !strchr(line,'*')) line[2+ltype] = '*';
+         
+         if (ld>=ldata) ldata = ld+1;
+         for (is = 3+ltype+ld; is < (3+ltype+ldata); ++is) line += ' ';
 
-      strncpy(line+3,enamebasic.Data(),lt);
-      if (lt>=ltype) ltype = lt+1;
-
-      strncpy(line+3+ltype,name,ld);
-      if (element->IsaPointer() && !strchr(line,'*')) line[2+ltype] = '*';
-
-      if (ld>=ldata) ldata = ld+1;
-      sprintf(line+3+ltype+ldata,"   //%s",element->GetTitle());
-      fprintf(fp,"%s\n",line);
+         line += "   //";
+         line += element->GetTitle();
+         fprintf(fp,"%s\n",line.Data());
+      }
    }
-
    if (needGenericTemplate && isTemplate) {
       // Generate default functions, ClassDef and trailer.
       fprintf(fp,"\n   %s() {};\n",protoname.Data());
@@ -2567,8 +2569,6 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
    if (needGenericTemplate && isTemplate) {
       fprintf(fp,"#endif // generic template declaration\n");
    }
-
-   delete [] line;
 }
 
 //______________________________________________________________________________
@@ -2585,7 +2585,6 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *ext
    }
 
    TString name(1024);
-   char cdim[20];
    Int_t ltype = 10;
    Int_t ldata = 10;
    Int_t lt;
@@ -2600,8 +2599,7 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *ext
       if (colon2) ename = colon2+2;
       name = ename;
       for (Int_t i=0;i < element->GetArrayDim();i++) {
-         snprintf(cdim,19,"[%d]",element->GetMaxIndex(i));
-         name += cdim;
+         name += TString::Format("[%d]",element->GetMaxIndex(i));
       }
       ld = name.Length();
       lt = strlen(element->GetTypeName());
