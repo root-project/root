@@ -8260,9 +8260,12 @@ Int_t THistPainter::TableInit()
 
    if (maximum) zmax = fH->GetMaximumStored();
    if (minimum) zmin = fH->GetMinimumStored();
-   if (Hoption.Logz && zmax <= 0) {
+   if (Hoption.Logz && zmax < 0) {
       if (!Hoption.Same) Error(where, "log scale is requested but maximum is less or equal 0 (%f)", zmax);
       return 0;
+   } else if (Hoption.Logz && zmin>=0 && zmax==0) { // empty histogram in log scale
+      zmin = 0.01;
+      zmax = 10.;
    }
    if (zmin >= zmax && !Hoption.Plus) {
       if (Hoption.Logz) {
