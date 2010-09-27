@@ -2527,7 +2527,7 @@ int G__call_cppfunc(G__value *result7,G__param *libp,G__ifunc_table_internal *if
       G__asm_inst[G__asm_cp+3] = libp->paran;
       G__asm_inst[G__asm_cp+4] = (long) cppfunc;
       G__asm_inst[G__asm_cp+5] = 0;
-      if (ifunc && ifunc->pentry[ifn]) {
+      if (ifunc->pentry[ifn]) {
          G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
       }
       G__asm_inst[G__asm_cp+6] = (long) ifunc;
