@@ -2254,17 +2254,17 @@ void TUnixSystem::StackTrace()
                   ::pclose(pf);
                }
                if (nodebug)
-                  sprintf(buffer, format1, addr, symname,
-                          gte ? "+" : "-", diff, libname);
+                  snprintf(buffer, sizeof(buffer), format1, addr, symname,
+                           gte ? "+" : "-", diff, libname);
             } else {
                if (symaddr)
-                  sprintf(buffer, format1, addr, symname,
-                          gte ? "+" : "-", diff, libname);
+                  snprintf(buffer, sizeof(buffer), format1, addr, symname,
+                           gte ? "+" : "-", diff, libname);
                else
-                  sprintf(buffer, format3, addr, symname, libname);
+                  snprintf(buffer, sizeof(buffer), format3, addr, symname, libname);
             }
          } else {
-            sprintf(buffer, format4, addr);
+            snprintf(buffer, sizeof(buffer), format4, addr);
          }
 
          if (demangle)
