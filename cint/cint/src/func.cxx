@@ -1157,7 +1157,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
                G__valuemonitor(result3, result7);
                fprintf(G__dumpfile, "/* return(inp) %s.%s()=%s*/\n"
-                       , G__struct.name[G__tagnum], funcname, result7());
+                       , G__tagnum >= 0 ? G__struct.name[G__tagnum] : "unknown class", funcname, result7());
             }
 #endif
             if (G__store_struct_offset != store_struct_offset)
@@ -1304,7 +1304,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                   if (!G__no_exec_compile || G__asm_noverflow) {
                      if (0 == G__const_noerror)
                         G__fprinterr(G__serr, "Error: Can't call %s::%s in current scope"
-                              , G__struct.name[G__tagnum], item);
+                                     , G__tagnum > 0 ? G__struct.name[G__tagnum] : "unknown class", item);
                      G__genericerror((char*)NULL);
                   }
                   store_exec_memberfunc = G__exec_memberfunc;
@@ -2421,7 +2421,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                      fprintf(G__dumpfile, " ");
                   }
                   G__valuemonitor(result3, result7);
-                  fprintf(G__dumpfile, "/* return(inp) %s.%s()=%s*/\n", G__struct.name[G__tagnum], funcname(), result7());
+                  fprintf(G__dumpfile, "/* return(inp) %s.%s()=%s*/\n", G__tagnum >=0 ? G__struct.name[G__tagnum] : "unknown class", funcname(), result7());
                }
    #endif // G__DUMPFILE
                if (G__store_struct_offset != store_struct_offset) {
