@@ -535,11 +535,13 @@ Bool_t TCastorFile::WriteBuffer(const char *buf, Int_t len)
 
          // Change status of file in stage catalog from STAGED to STAGEOUT
          memset(&hsmfile, 0, sizeof(hsmfile));
-         strcpy(hsmfile.upath, fInternalPath);
+         hsmfile.upath = StrDup(fInternalPath);
          if (stage_updc_filchg(0, &hsmfile) < 0) {
-         Error("WriteBuffer", "error calling stage_updc_filchg");
-         return kTRUE;
+            Error("WriteBuffer", "error calling stage_updc_filchg");
+            delete [] hsmfile.upath;
+            return kTRUE;
          }
+         delete [] hsmfile.upath;
          fWrittenTo = kTRUE;
       }
    }
