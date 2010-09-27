@@ -2542,14 +2542,14 @@ Long64_t TSQLFile::StoreObjectInTables(Long64_t keyid, const void* obj, const TC
 
    TSQLStructure* s = buffer.SqlWriteAny(obj, cl, objid);
 
-   if ((buffer.GetErrorFlag()>0) && (s!=0)) {
+   if ((buffer.GetErrorFlag()>0) && s) {
       Error("StoreObjectInTables","Cannot convert object data to TSQLStructure");
       objid = -1;
    } else {
       TObjArray cmds;
       // here tables may be already created, therefore
       // it should be protected by transactions operations
-      if (!s->ConvertToTables(this, keyid, &cmds)) {
+      if (s && !s->ConvertToTables(this, keyid, &cmds)) {
          Error("StoreObjectInTables","Cannot convert to SQL statements");
          objid = -1;
       } else {
