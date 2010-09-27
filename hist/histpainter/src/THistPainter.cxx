@@ -6315,7 +6315,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
    if (TMath::Abs(x1[0] - x2[0]) >= epsil || TMath::Abs(x1[1] - x2[1]) > epsil) {
       axis->ImportAxisAttributes(fXaxis);
       axis->SetLabelOffset(fXaxis->GetLabelOffset()+fXaxis->GetTickLength());
-      if (Hoption.Logx) {
+      if (Hoption.Logx && !fH->InheritsFrom(TH3::Class())) {
          bmin = TMath::Power(10, rmin[0]);
          bmax = TMath::Power(10, rmax[0]);
       } else {
@@ -6347,7 +6347,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
       if (TMath::Abs(y1[0] - y2[0]) < epsil) {
          y2[0] = y1[0];
       }
-      if (Hoption.Logy) {
+      if (Hoption.Logy && !fH->InheritsFrom(TH3::Class())) {
          bmin = TMath::Power(10, rmin[1]);
          bmax = TMath::Power(10, rmax[1]);
       } else {
@@ -6370,7 +6370,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
    // Z axis drawing
    if (TMath::Abs(z1[0] - z2[0]) >= 100*epsil || TMath::Abs(z1[1] - z2[1]) > 100*epsil) {
       axis->ImportAxisAttributes(fZaxis);
-      if (Hoption.Logz) {
+      if (Hoption.Logz && !fH->InheritsFrom(TH3::Class())) {
          bmin = TMath::Power(10, rmin[2]);
          bmax = TMath::Power(10, rmax[2]);
       } else {
