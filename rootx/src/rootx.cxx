@@ -137,7 +137,10 @@ static int ReadUtmp()
    }
 
    gUtmpContents = (STRUCT_UTMP *) malloc(size);
-   if (!gUtmpContents) return 0;
+   if (!gUtmpContents) {
+      fclose(utmp);
+      return 0;
+   }
 
    n_read = fread(gUtmpContents, 1, size, utmp);
    if (!ferror(utmp) && fclose(utmp) != EOF && n_read == size)
