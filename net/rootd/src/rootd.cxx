@@ -1819,7 +1819,7 @@ void RootdChdir(const char *dir)
       }
 
       if (!getcwd(buffer, kMAXPATHLEN)) {
-         if (*dir == '/')
+         if (dir && *dir == '/')
             SPrintf(buffer, kMAXBUFLEN, "%s", dir);
       }
       NetSend(buffer, kROOTD_CHDIR);
