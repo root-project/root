@@ -2459,8 +2459,8 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             // No dot is allowed in subbranches and leaves, so
             // we always remove it in the present case.
             if (cname[i]) work[strlen(work)-1] = '\0';
-            sprintf(scratch,"%s.%s",first,work);
-            sprintf(scratch2,"%s.%s.%s",first,second,work);
+            snprintf(scratch,strlen(scratch),"%s.%s",first,work);
+            snprintf(scratch2,strlen(scratch2),"%s.%s.%s",first,second,work);
 
             if (previousdot) {
                currentname = &(work[previousdot+1]);
@@ -5419,7 +5419,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
                }
             }
             virt_dim++;
-         } else if (hasBranchCount2 && k==info->GetVarDim()) {
+         } else if (hasBranchCount2 && info && k==info->GetVarDim()) {
 
             // nothing to do, at some point I thought this might be useful:
             // if (fIndexes[i][k]>=0) {
