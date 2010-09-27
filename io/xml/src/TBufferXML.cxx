@@ -758,7 +758,7 @@ XMLNodePointer_t TBufferXML::XmlWriteObject(const void* obj, const TClass* cl)
    PopStack();
 
    if (gDebug>1)
-      Info("XmlWriteObject","Done write for class: %s", cl ? cl->GetName() : "<nil>");
+      Info("XmlWriteObject","Done write for class: %s", cl ? cl->GetName() : "null");
 
    return objnode;
 }
