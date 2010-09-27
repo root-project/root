@@ -40,6 +40,12 @@ bin content </li>
   and its sub-classes TEveQuadSet and TEveBoxSet.
 </li>
 
+<li>It is now possible to enforce all tesselations of geometry shapes
+  to only use triangles via static function <tt>void
+  TGLFaceSet::EnforceTriangles()</tt>. This is needed to export TGeo
+  shapes and CSG meshes to external triangle-mesh libraries that can
+  not handle arbitrary polygons.</li>
+
 </ul>
 
 <h4>Minor changes</h4>
@@ -153,8 +159,12 @@ postfix, 'F' postfix is another alias for float versions, e.g.:<pre>
   require fill color and outline color / line-width.</li>
 
 <li>New class TEveBox to draw simple cuboid with minimal memory
-  usage. Projectable.</li>
+  usage. It is projectable.</li>
 
+<li>TEveJetCone is now projectable.</li>
+
+<li>Several performance improvements when dealing with large
+  collections of EVE objects. Profiled with simulated heavy-ion data.</li>
 
 </ul>
 
