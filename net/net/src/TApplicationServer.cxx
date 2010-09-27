@@ -543,7 +543,7 @@ void TApplicationServer::HandleSocketInput()
                   mess->ReadString(str, sizeof(str));
                   {  Long_t size;
                      Int_t  bin;
-                     char   name[1024];
+                     char   name[2048];
                      sscanf(str, "%s %d %ld", name, &bin, &size);
                      ReceiveFile(name, bin ? kTRUE : kFALSE, size);
                   }
