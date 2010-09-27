@@ -224,6 +224,9 @@ void TTable::AsString(void *buf, EColumnType type, Int_t width,ostream &out) con
   //        type  - the basic data type for the value above
   //       width  - the number of psotion to be used to print the value out
   //
+   int prevPrec = out.precision();
+   const std::ios_base::fmtflags prevFmt = out.flags();
+   
    switch (type) {
       case kFloat:
          out << dec  << setw(width) << setprecision(width-3) << *(float *)buf;
@@ -265,6 +268,8 @@ void TTable::AsString(void *buf, EColumnType type, Int_t width,ostream &out) con
          out << "\"NaN\"";
          break;
    };
+   out.precision(prevPrec);
+   out.setf(prevFmt);
 }
 
 //________________________________________________________________________
@@ -704,7 +709,7 @@ TH1 *TTable::Draw(const char *varexp00, const char *selection, Option_t *option,
       EntryLoop(exprFileName,action,0,nentries, firstentry, option);
 
 //*-* an Event List
-   } else {
+   } else if (elist) {
       action = 5;
 //      Int_t oldEstimate = fEstimate;
 //      SetEstimate(1);
@@ -868,6 +873,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
             FindGoodLimits(nchans,gNbins[0],gVmin[0],gVmax[0]);
             ((TH1 *)obj)->SetBins(gNbins[0],gVmin[0],gVmax[0]);
          }
+         // Intentional fall though
          case  1:
             TAKEACTION_BEGIN
             if (results[1]) ((TH1 *)obj)->Fill(Axis_t(results[0]),Stat_t(results[1]));
@@ -889,6 +895,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
             if (gVmin[1] >= gVmax[1]) { gVmin[1] -= 1; gVmax[1] += 1;}
             FindGoodLimits(nchans,gNbins[1],gVmin[1],gVmax[1]);
             ((TH1*)obj)->SetBins(gNbins[1],gVmin[1],gVmax[1],gNbins[0],gVmin[0],gVmax[0]);
+            // Intentional fall though
          case   2:
             if (obj->IsA() == TH2F::Class()) {
                TAKEACTION_BEGIN
@@ -922,6 +929,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
             if (gVmin[1] >= gVmax[1]) { gVmin[1] -= 1; gVmax[1] += 1;}
             FindGoodLimits(nchans,gNbins[1],gVmin[1],gVmax[1]);
             ((TProfile*)obj)->SetBins(gNbins[1],gVmin[1],gVmax[1]);
+            // Intentional fall though
          case  4:
             TAKEACTION_BEGIN
             if (results[2]) ((TProfile*)obj)->Fill(Axis_t(results[0]),Axis_t(results[1]),Stat_t(results[2]));
@@ -942,6 +950,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
             if (gVmin[1] >= gVmax[1]) { gVmin[1] -= 1; gVmax[1] += 1;}
             FindGoodLimits(nchans,gNbins[1],gVmin[1],gVmax[1]);
             ((TH2F*)obj)->SetBins(gNbins[1],gVmin[1],gVmax[1],gNbins[0],gVmin[0],gVmax[0]);
+            // Intentional fall though
          case  12: {
             if (!strstr(option,"same") && !strstr(option,"goff")) {
                ((TH2F*)obj)->DrawCopy(option);
@@ -999,6 +1008,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
             gPad->Clear();
             gPad->Range(-1,-1,1,1);
             TView::CreateView(1,rmin,rmax);
+            // Intentional fall though
          case 13: {
             TPolyMarker3D *pm3d = new TPolyMarker3D(lastEntry-firstentry);
             pm3d->SetBit(kCanDelete);
@@ -1311,12 +1321,11 @@ void TTable::Browse(TBrowser *b){
          UInt_t k;
          for (k=0;k<nDim; k++) totalSize *= indx[k];
          for (k=0;k<totalSize;k++) {
-            char *buffer =  new char[strlen(colName)+13];
-            sprintf(buffer,"%s[%d]",colName,k);
+            TString buffer;
+            buffer.Form("%s[%d]",colName,k);
             view = new TColumnView(buffer,this);
             view->SetBit(kCanDelete);
             b->Add(view,view->GetName());
-            delete [] buffer;
          }
       }
    }
@@ -1404,10 +1413,8 @@ void TTable::Fit(const char *formula ,const char *varexp, const char *selection,
 //    directory.
 //
 
-   Int_t nch = strlen(option) + 10;
-   char *opt = new char[nch];
-   if (option) sprintf(opt,"%sgoff",option);
-   else        strcpy(opt,"goff");
+   TString opt(option);
+   opt += "goff";
 
    Draw(varexp,selection,opt,nentries,firstentry);
 
@@ -1503,13 +1510,9 @@ TTable *TTable::New(const Char_t *name, const Char_t *type, void *array, UInt_t 
    if (type && name) {
       TString tableType(type);
       TString t = tableType.Strip();
-//    t.ToLower();  // remove this
 
-      const Char_t *classprefix="St_";
-      const Int_t extralen = strlen(classprefix) + 1;
-      Char_t *classname = new Char_t[strlen(t.Data())+extralen];
-      strcpy(classname,classprefix);
-      strcat(classname,t.Data());
+      TString classname("St_");
+      classname += t;
       TClass *cl = TClass::GetClass(classname);
       if (cl) {
          table = (TTable *)cl->New();
@@ -1520,7 +1523,6 @@ TTable *TTable::New(const Char_t *name, const Char_t *type, void *array, UInt_t 
             table->SetUsedRows(size);
          }
       }
-      delete [] classname;
    }
    return table;
 }
@@ -1540,7 +1542,7 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
    TTableDescriptor *dscT = GetRowDescriptors();
    if (!dscT ) {
       Error("Print"," No dictionary entry for <%s> structure", GetTitle());
-      if (lenbuf>0) iOut += sprintf(strbuf+iOut," *** Errror ***");
+      if (lenbuf>0) iOut += snprintf(strbuf,lenbuf," *** Errror ***");
       return strbuf;
    }
 
@@ -1548,7 +1550,7 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
    if (lenbuf>0) {
       // cut of the "_st" suffix
       Char_t *typenam =  new Char_t [strlen(dscT->GetName())+1];
-      strcpy(typenam,dscT->GetName());
+      strlcpy(typenam,dscT->GetName(),strlen(dscT->GetName())+1);
       // look for the last "_"
       Char_t *last = strrchr(typenam,'_');
       // Check whether it is "_st"
@@ -1556,7 +1558,7 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
       if (last) eon = strstr(last,"_st");
       // Cut it off if any
       if (eon) *eon = '\0';
-      iOut += sprintf(strbuf+iOut,"struct %s {",typenam);
+      iOut += snprintf(strbuf+iOut,lenbuf-iOut,"struct %s {",typenam);
       delete [] typenam;
    } else {
       cout << "struct " << dscT->GetName() << " {" << endl;
@@ -1572,7 +1574,7 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
          // convert C type names to CORBA type names
          name.ReplaceAll("unsigned char","octet");
          name.ReplaceAll("int","long");
-         iOut += sprintf(strbuf+iOut," %s %s",name.Data(),(*dsc).fColumnName);
+         iOut += snprintf(strbuf+iOut,lenbuf-iOut," %s %s",name.Data(),(*dsc).fColumnName);
       } else
          cout << '\t'<< name.Data() << '\t'<< (*dsc).fColumnName;
 
@@ -1580,14 +1582,14 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
       Int_t dim = (*dsc).fDimensions;
       for  (indx = 0; indx < dim; indx++) {
          if (lenbuf>0)
-            iOut += sprintf(strbuf+iOut,"[%d]",(*dsc).fIndexArray[indx]);
+            iOut += snprintf(strbuf+iOut,lenbuf-iOut,"[%d]",(*dsc).fIndexArray[indx]);
          else
             cout <<  "[" << dec << (*dsc).fIndexArray[indx]<<"]";
       }
       // print comment if any
       TDataSet *nxc = nextComment();
       if (lenbuf>0)
-         iOut += sprintf(strbuf+iOut, ";");
+         iOut += snprintf(strbuf+iOut,lenbuf-iOut, ";");
       else {
          const char *title = nxc ? nxc->GetTitle() : " ";
          cout << ";\t//" << title << endl;
@@ -1596,7 +1598,7 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
 
    TROOT::IndentLevel();
    if (lenbuf>0)
-      iOut += sprintf(strbuf+iOut, "}");
+      iOut += snprintf(strbuf+iOut,lenbuf-iOut, "}");
    else
       cout << "}" << endl;
    return strbuf;
@@ -1776,13 +1778,11 @@ void TTable::Project(const char *hname, const char *varexp, const char *selectio
 //   Note that the dimension of hname must match with the dimension of varexp.
 //
 
-   Int_t nch = strlen(hname) + strlen(varexp);
-   char *var = new char[nch+5];
-   sprintf(var,"%s>>%s",varexp,hname);
-   nch = strlen(option) + 10;
-   char *opt = new char[nch];
-   if (option) sprintf(opt,"%sgoff",option);
-   else        strcpy(opt,"goff");
+   TString var;
+   var.Form("%s>>%s",varexp,hname);
+
+   TString opt(option);
+   opt += "goff";
 
    Draw(var,selection,opt,nentries,firstentry);
 
@@ -1974,10 +1974,8 @@ static Char_t *GetExpressionFileName()
    if (!tempDirs) tempDirs = "/tmp";
    if (gSystem->AccessPathName(tempDirs)) tempDirs = ".";
    if (gSystem->AccessPathName(tempDirs)) return 0;
-   Char_t buffer[16];
-   sprintf(buffer,"C.%d.tmp",gSystem->GetPid());
-   TString fileName = "Selection.";
-   fileName += buffer;
+   TString fileName;
+   fileName.Form("Selection.C.%d.tmp",gSystem->GetPid());
    return  gSystem->ConcatFileName(tempDirs,fileName.Data());
 }
 
