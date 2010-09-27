@@ -2394,7 +2394,7 @@ void TGFrame::SaveUserColor(ostream &out, Option_t *option)
       out << "   ULong_t ucolor;        // will reflect user color changes" << endl;
    }
    ULong_t ucolor;
-   if (!strcmp(option, "slider"))
+   if (option && !strcmp(option, "slider"))
       ucolor = GetDefaultFrameBackground();
    else
       ucolor = GetBackground();

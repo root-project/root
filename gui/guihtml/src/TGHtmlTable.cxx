@@ -276,8 +276,8 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flag)
 
          case Html_IMG:  // Images return: row col charoffset tokenid
             if (!images) break;
-            sprintf(buf, "%d %d %d %d ", rows-1, cols-1,
-                    substr.GetLength(), p->fElId);
+            snprintf(buf, sizeof(buf), "%d %d %d %d ", rows-1, cols-1,
+                     substr.GetLength(), p->fElId);
             imgstr.Append(buf);
             break;
       }
@@ -286,7 +286,7 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flag)
    while (nest--) str->Append("} ");
    istr.Append("} { ");
    for (j = 0; j < numcols && j < HTML_MAX_COLUMNS; j++) {
-      sprintf(buf, "%d ", maxw[j]);
+      snprintf(buf, sizeof(buf), "%d ", maxw[j]);
       istr.Append(buf);
    }
    istr.Append("} ");

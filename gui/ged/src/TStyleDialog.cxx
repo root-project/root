@@ -124,12 +124,11 @@ TStyleDialog::TStyleDialog(TStyleManager *sm, TStyle *cur, Int_t mode,
       case 2: 
          fTitle = new TGTextEntry(h2, fCurStyle->GetTitle(), kTitle);
          break;
-      case 3:
-         Char_t *newTitle = (Char_t *)
-                  malloc((30 + strlen(fCurPad->GetCanvas()->GetName())) * sizeof(Char_t));
-         sprintf(newTitle, "Imported from canvas %s", fCurPad->GetCanvas()->GetName());
-         fTitle = new TGTextEntry(h2, newTitle, kTitle);
-         free(newTitle);
+      case 3: {
+         TString newTitle("Imported from canvas ");
+         newTitle += fCurPad->GetCanvas()->GetName();
+         fTitle = new TGTextEntry(h2, newTitle.Data(), kTitle);
+      }
    }
    fTitle->Associate(this);
    fTitle->Resize(200, 22);
