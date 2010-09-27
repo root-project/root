@@ -3131,8 +3131,6 @@ int G__unregister_sharedlib(const char *libname)
    
    G__LockCriticalSection();
    
-   int envtagnum = -1;
-   
    /******************************************************************
     * check if file is already loaded.
     * if not so, return
@@ -3145,8 +3143,7 @@ int G__unregister_sharedlib(const char *libname)
    int ifn;
    for(ifn = G__nfile-1; ifn>0; --ifn) {
       if(G__srcfile[ifn].ispermanentsl == 2 
-         && G__matchfilename(ifn,libname)
-         && (-1==envtagnum||(envtagnum==G__srcfile[ifn].parent_tagnum))){
+         && G__matchfilename(ifn,libname)) {
          flag = true;
          break;
       }

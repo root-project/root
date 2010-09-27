@@ -46,11 +46,12 @@ G__blockscope_expr::G__blockscope_expr(G__blockscope* blockscope)
 }
 
 //______________________________________________________________________________
-G__value G__blockscope_expr::getitem(const string& item)
+G__value G__blockscope_expr::getitem(const string& item_string)
 {
    G__value result;
    int i = 0;
    int c;
+   const char *item = item_string.c_str();
    while ((c = item[i])) {
       switch (c) {
          case ':':
