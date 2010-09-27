@@ -563,7 +563,7 @@ void TUnixSystem::SetDisplay()
                           utmp_entry->ut_host);
                } else {
                   char disp[64];
-                  sprintf(disp, "%s:0.0", utmp_entry->ut_host);
+                  snprintf(disp, sizeof(disp), "%s:0.0", utmp_entry->ut_host);
                   Setenv("DISPLAY", disp);
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
                           disp);
@@ -574,7 +574,7 @@ void TUnixSystem::SetDisplay()
                if ((he = gethostbyaddr((const char*)&utmp_entry->ut_addr,
                                        sizeof(utmp_entry->ut_addr), AF_INET))) {
                   char disp[64];
-                  sprintf(disp, "%s:0.0", he->h_name);
+                  snprintf(disp, sizeof(disp), "%s:0.0", he->h_name);
                   Setenv("DISPLAY", disp);
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
                           disp);
