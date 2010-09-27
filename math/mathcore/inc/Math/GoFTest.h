@@ -51,42 +51,67 @@ public:
    };
    
    /* Constructor for using only with 2-samples tests */
-   GoFTest(const Double_t* sample1, UInt_t sample1Size, const Double_t* sample2, UInt_t sample2Size);
+   GoFTest( UInt_t sample1Size, const Double_t* sample1, UInt_t sample2Size, const Double_t* sample2 );
   
    /* Constructor for using only with 1-sample tests with a specified distribution */
-   GoFTest(const Double_t* sample, UInt_t sampleSize, EDistribution dist = kUndefined);
+   GoFTest(UInt_t sampleSize, const Double_t* sample, EDistribution dist = kUndefined);
   
    /* Templated constructor for using only with 1-sample tests with a user specified distribution */  
    template<class Dist>
-   GoFTest(const Double_t* sample, UInt_t sampleSize, Dist& dist, EUserDistribution userDist = kPDF) {
-      Instantiate(sample, sampleSize);
-      SetDistribution(dist, userDist);
-   }
-
-   /* specializetion using IGenFunction interface */
-   GoFTest(const Double_t* sample, UInt_t sampleSize, const IGenFunction& dist, EUserDistribution userDist = kPDF, 
+   GoFTest(UInt_t sampleSize, const Double_t* sample, Dist& dist, EUserDistribution userDist = kPDF,
            Double_t xmin = 1, Double_t xmax = 0) 
    {
       Instantiate(sample, sampleSize);
-      SetDistribution(dist, userDist,xmin,xmax);
+      SetUserDistribution<Dist>(dist, userDist, xmin, xmax);
    }
 
-   /* Sets the user input distribution. To use with the template construtor to change the distribution parameter*/
+   /* specializetion using IGenFunction interface */
+   GoFTest(UInt_t sampleSize, const Double_t* sample, const IGenFunction& dist, EUserDistribution userDist = kPDF, 
+           Double_t xmin = 1, Double_t xmax = 0) 
+   {
+      Instantiate(sample, sampleSize);
+      SetUserDistribution(dist, userDist,xmin,xmax);
+   }
+
+   /* Sets the user input distribution function for 1-sample tests. */
    template<class Dist>
-   void SetDistribution(Dist& dist, EUserDistribution userDist = kPDF, Double_t xmin = 1, Double_t xmax = 0) {
+   void SetUserDistribution(Dist& dist, EUserDistribution userDist = kPDF, Double_t xmin = 1, Double_t xmax = 0) {
       WrappedFunction<Dist&> wcdf(dist); 
       SetDistributionFunction(wcdf, userDist,xmin,xmax);
    }
 
-   /* Template specialization */
-   void SetDistribution(const IGenFunction& f, GoFTest::EUserDistribution userDist, Double_t xmin = 1, Double_t xmax = 0) {
+   /* Template specialization to set the user input distribution for 1-sample tests */
+   void SetUserDistribution(const IGenFunction& f, GoFTest::EUserDistribution userDist, Double_t xmin = 1, Double_t xmax = 0) {
       SetDistributionFunction(f, userDist,xmin,xmax); 
    }
    
+   /* Sets the user input distribution as a probability density function for 1-sample tests */
+   template<class Dist>
+   void SetUserPDF(Dist& dist, Double_t xmin = 1, Double_t xmax = 0) {
+      SetUserDistribution<Dist>(dist, kPDF,xmin,xmax);
+   }
+
+   /* Template specialization to set the user input distribution as a probability density function for 1-sample tests */
+   void SetUserPDF(const IGenFunction& f, Double_t xmin = 1, Double_t xmax = 0) {
+      SetUserDistribution(f, kPDF,xmin,xmax);
+   }
+
+   /* Sets the user input distribution as a cumulative distribution function for 1-sample tests 
+      The CDF must return zero 
+    */
+   template<class Dist>
+   void SetUserCDF(Dist& dist, Double_t xmin = 1, Double_t xmax = 0) {
+      SetUserDistribution<Dist>(dist, kCDF, xmin, xmax);
+   }
+
+   /* Template specialization to set the user input distribution as a cumulative distribution function for 1-sample tests */
+   void SetUserCDF(const IGenFunction& f, Double_t xmin = 1, Double_t xmax = 0)  {
+      SetUserDistribution(f, kCDF, xmin, xmax);
+   }
 
    
-   /* Sets the distribution type for the non templated 1-sample test */
-   void SetDistributionType(EDistribution dist);
+   /* Sets the distribution for the predefined distribution types  */
+   void SetDistribution(EDistribution dist);
 
    
    virtual ~GoFTest();
