@@ -298,7 +298,6 @@ namespace ROOT {
       fprintf(hf,"%s\n%-*s      %-*s(top,mid)",wroteFirst?",":"",offset," ",fMaxDatamemberType,"ffPrefix");
       wroteFirst = true;
 
-
       TString objInit = "top, mid";
       if ( GetIsClones() == kInsideClones || GetIsClones() == kInsideSTL ) {
          if (fListOfSubProxies.GetSize()) {
@@ -324,7 +323,7 @@ namespace ROOT {
       }
 
       fprintf(hf,"%s\n%-*s      %-*s(director, %s)",
-              wroteFirst?",":"",offset," ",fMaxDatamemberType,"obj",objInit.Data());
+              wroteFirst ? "," : "",offset," ",fMaxDatamemberType,"obj",objInit.Data());
       wroteFirst = true;
 
       TIter next(&fListOfSubProxies);

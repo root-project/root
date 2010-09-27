@@ -2220,15 +2220,11 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             TIter next(fTree->GetIteratorOnAllLeaves());
             TLeaf* leafcur = 0;
             while (!leaf && (leafcur = (TLeaf*) next())) {
-               if (leafcur) {
-                  TBranch* br = leafcur->GetBranch();
-                  Bool_t yes = BranchHasMethod(leafcur, br, work, params, readentry);
-                  if (yes) {
-                     leaf = leafcur;
-                     //fprintf(stderr, "Does have a method %s for %s found in leafcur %s.\n", work, leafcur->GetBranch()->GetName(), leafcur->GetName());
-                  }
-               } else {
-                  Fatal("FindLeafForExpression", "Tree has no leaves!");
+               TBranch* br = leafcur->GetBranch();
+               Bool_t yes = BranchHasMethod(leafcur, br, work, params, readentry);
+               if (yes) {
+                  leaf = leafcur;
+                  //fprintf(stderr, "Does have a method %s for %s found in leafcur %s.\n", work, leafcur->GetBranch()->GetName(), leafcur->GetName());
                }
             }
             if (!leaf) {
