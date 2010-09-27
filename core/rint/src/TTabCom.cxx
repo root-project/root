@@ -1320,7 +1320,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
          listOfMatches.Add(new TObjString(s5));
          listOfFullPaths.Add(new TObjString(s4));
          IfDebug(cerr << "adding " << s5 << '\t' << s4 << endl);
-      } else if (cmp == TString::kIgnoreCase) { 
+      } else if (cmp == TString::kIgnoreCase) {
          TString ts5(s5);
          if (ts5.BeginsWith(s3, cmp))
          {
@@ -1822,16 +1822,18 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 
          // Make sure autoloading happens (if it can).
          delete TryMakeClassFromClassName(namesp);
-         
+
          // Sometimes, eg on startup of ROOT fpNamespaces might be 0,
          // so create and fill the array.
          if (!fpNamespaces)
             RehashClasses();
-         
+
          // Try find the namesp string in the list of namespaces. If its found then
          // we need to treat the different prefices a little differently:
          TObjString objstr(namesp);
-         TObjString *foundstr = (TObjString *)fpNamespaces->FindObject(&objstr);
+         TObjString *foundstr = 0;
+         if (fpNamespaces)
+            foundstr = (TObjString *)fpNamespaces->FindObject(&objstr);
          if (foundstr) {
             TContainer *pList = new TContainer;
 
@@ -2449,7 +2451,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
          pclass = MakeClassFromVarName(parentName.Data(), subcontext, iter+1);
       } else {
          memberName = varName+cut+2;
-         if (0) printf("Member/method is [%s]\n", memberName.Data());         
+         if (0) printf("Member/method is [%s]\n", memberName.Data());
          EContext_t subcontext = kCXX_IndirectMember;
          pclass = MakeClassFromVarName(parentName.Data(), subcontext, iter+1);
       }
