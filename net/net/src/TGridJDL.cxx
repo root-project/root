@@ -226,7 +226,7 @@ TString TGridJDL::Generate()
                if (keyD) {
                   TObject *valueD = fDescriptionMap.GetValue(objectD);
                   TObjString *valueobjD = dynamic_cast<TObjString*>(valueD);
-                  if (!key->GetString().CompareTo(keyD->GetString())){
+                  if (valueobjD && !key->GetString().CompareTo(keyD->GetString())){
                      //Info("",Form("%s %s",key->GetString().Data(),keyD->GetString().Data()));
                      output += "# ";
                      output += valueobjD->GetString();
