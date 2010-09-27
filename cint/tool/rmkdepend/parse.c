@@ -488,10 +488,9 @@ int merge2defines(file1, file2)
                 {
                 	/* make sure deflen % SYMTABINC == 0 is still true */
                 	deflen += (SYMTABINC - deflen % SYMTABINC) % SYMTABINC;
-                	i_defs=(struct symtab**)
-			    malloc(deflen*sizeof(struct symtab*));
-                	if (i_defs==NULL) return 0;
+                	i_defs=(struct symtab**)malloc(deflen*sizeof(struct symtab*));
         	}
+         if (i_defs==NULL) return 0;
 
         	while ((last1 >= first1) && (last2 >= first2))
         	{
