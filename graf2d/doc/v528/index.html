@@ -177,7 +177,7 @@
 <h4>TText</h4>
 <ul>
 <li> New method <tt>GetTextAdvance</tt> to return the text advance for string
-     text taking the kerning into account or not.
+     text taking the kerning into account or not.</li>
 </li>
 </ul>
 
@@ -186,7 +186,14 @@
 <li> In case of horizontal axis with the font size in pixel (font precision = 3)
      the labels were not visible.</li>
 <li> Alpha numeric labels are not scaled anymore in case of text precision 3 
-     (size in pixels). They are in the other precisions.
+     (size in pixels). They are in the other precisions.</li>
+<li> Fix a precision issue on Mac. With the following lines the last label
+     (10^3) did not show:
+     <pre>
+     t1 = new TH1F("test","test", 100,1,1000);
+     t1.Draw();
+     gPad->SetLogx(1);
+     </pre></li>
 </ul>
 
 <h4>TPaveStats</h4>
