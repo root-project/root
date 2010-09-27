@@ -1062,7 +1062,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    Bool_t optcandle = kFALSE;
    Bool_t optgl5d   = kFALSE;
    Bool_t optnorm   = kFALSE;
-   if (opt.Contains("norm")) {optnorm = kTRUE; opt.ReplaceAll("norm","");}
+   if (opt.Contains("norm")) {optnorm = kTRUE; opt.ReplaceAll("norm",""); opt.ReplaceAll(" ","");}
    if (opt.Contains("para")) optpara = kTRUE;
    if (opt.Contains("candle")) optcandle = kTRUE;
    if (opt.Contains("gl5d")) optgl5d = kTRUE;
