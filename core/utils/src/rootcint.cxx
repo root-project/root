@@ -2339,41 +2339,36 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
    (*dictSrcOut) << "const char *" << clsname.c_str() << "::Class_Name()" << std::endl << "{" << std::endl
                  << "   return \"" << cl.Fullname() << "\";"  << std::endl <<"}" << std::endl << std::endl;
 
-   if (1 || !cl.IsTmplt()) {
-      // If the class is not templated and has a ClassDef,
-      // a ClassImp is required and already defines those function:
+   (*dictSrcOut) << "//_______________________________________"
+                 << "_______________________________________" << std::endl;
+   if (add_template_keyword) (*dictSrcOut) << "template <> ";
+   (*dictSrcOut) << "const char *" << clsname.c_str() << "::ImplFileName()"  << std::endl << "{" << std::endl
+                 << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
+                 << "*)0x0)->GetImplFileName();" << std::endl << "}" << std::endl << std::endl
 
-      (*dictSrcOut) << "//_______________________________________"
-                    << "_______________________________________" << std::endl;
-      if (add_template_keyword) (*dictSrcOut) << "template <> ";
-      (*dictSrcOut) << "const char *" << clsname.c_str() << "::ImplFileName()"  << std::endl << "{" << std::endl
-                    << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
-                    << "*)0x0)->GetImplFileName();" << std::endl << "}" << std::endl << std::endl
+                 << "//_______________________________________"
+                 << "_______________________________________" << std::endl;
+   if (add_template_keyword) (*dictSrcOut) <<"template <> ";
+   (*dictSrcOut) << "int " << clsname.c_str() << "::ImplFileLine()" << std::endl << "{" << std::endl
+                 << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
+                 << "*)0x0)->GetImplFileLine();" << std::endl << "}" << std::endl << std::endl
 
-                    << "//_______________________________________"
-                    << "_______________________________________" << std::endl;
-      if (add_template_keyword) (*dictSrcOut) <<"template <> ";
-      (*dictSrcOut) << "int " << clsname.c_str() << "::ImplFileLine()" << std::endl << "{" << std::endl
-                    << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
-                    << "*)0x0)->GetImplFileLine();" << std::endl << "}" << std::endl << std::endl
+                 << "//_______________________________________"
+                 << "_______________________________________" << std::endl;
+   if (add_template_keyword) (*dictSrcOut) << "template <> ";
+   (*dictSrcOut) << "void " << clsname.c_str() << "::Dictionary()" << std::endl << "{" << std::endl
+                 << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
+                 << "*)0x0)->GetClass();" << std::endl
+                 << "}" << std::endl << std::endl
 
-                    << "//_______________________________________"
-                    << "_______________________________________" << std::endl;
-      if (add_template_keyword) (*dictSrcOut) << "template <> ";
-      (*dictSrcOut) << "void " << clsname.c_str() << "::Dictionary()" << std::endl << "{" << std::endl
-                    << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
-                    << "*)0x0)->GetClass();" << std::endl
-                    << "}" << std::endl << std::endl
-
-                    << "//_______________________________________"
-                    << "_______________________________________" << std::endl;
-      if (add_template_keyword) (*dictSrcOut) << "template <> ";
-      (*dictSrcOut) << "TClass *" << clsname.c_str() << "::Class()" << std::endl << "{" << std::endl;
-      (*dictSrcOut) << "   if (!fgIsA) fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
-      (*dictSrcOut) << cl.Fullname() << "*)0x0)->GetClass();" << std::endl
-                    << "   return fgIsA;" << std::endl
-                    << "}" << std::endl << std::endl;
-   }
+                 << "//_______________________________________"
+                 << "_______________________________________" << std::endl;
+   if (add_template_keyword) (*dictSrcOut) << "template <> ";
+   (*dictSrcOut) << "TClass *" << clsname.c_str() << "::Class()" << std::endl << "{" << std::endl;
+   (*dictSrcOut) << "   if (!fgIsA) fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
+   (*dictSrcOut) << cl.Fullname() << "*)0x0)->GetClass();" << std::endl
+                 << "   return fgIsA;" << std::endl
+                 << "}" << std::endl << std::endl;
 
    while (enclSpaceNesting) {
       (*dictSrcOut) << "} // namespace " << nsname << std::endl;
