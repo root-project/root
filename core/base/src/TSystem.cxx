@@ -1045,7 +1045,7 @@ const char *TSystem::ExpandFileName(const char *fname)
    c = fname + strspn(fname, " \t\f\r");
    //VP  if (isalnum(c[0])) { strcpy(inp, WorkingDirectory()); strcat(inp, "/"); } // add $cwd
 
-   strcat(inp, c);
+   strlcat(inp, c, kBufSize);
 
 again:
    iter++; c = inp; ier = 0;
@@ -1133,7 +1133,7 @@ again:
    }
 
    x[0] = 0; lx = x - out;
-   if (ier && iter < 3) { strcpy(inp, out); goto again; }
+   if (ier && iter < 3) { strlcpy(inp, out, kBufSize); goto again; }
    ncopy = (lx >= kBufSize) ? kBufSize-1 : lx;
    xname[0] = 0; strncat(xname, out, ncopy);
 
