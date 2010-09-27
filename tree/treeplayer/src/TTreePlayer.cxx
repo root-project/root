@@ -1642,10 +1642,6 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          TString dimensions;
          char *dimInName = (char*) strstr(branchname,"[");
          if ( twodim || dimInName ) {
-            int dimlen = 0;
-            if (dimInName) dimlen = strlen(dimInName) + 1;
-            if (twodim)    dimlen += strlen(twodim) + 1;
-            dimensions = new char[dimlen];
             if (dimInName) {
                dimensions = dimInName; 
                dimInName[0] = 0; // terminate branchname before the array dimensions.
