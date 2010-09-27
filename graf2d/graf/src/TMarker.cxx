@@ -104,11 +104,11 @@ void TMarker::DisplayMarkerTypes()
    Double_t dx = 1/16.0;
    for (Int_t i=1;i<16;i++) {
       x += dx;
-      sprintf(atext,"%d",i);
+      snprintf(atext,7,"%d",i);
       marker->SetMarkerStyle(i);
       marker->DrawMarker(x,.35);
       text->DrawText(x,.17,atext);
-      sprintf(atext,"%d",i+19);
+      snprintf(atext,7,"%d",i+19);
       marker->SetMarkerStyle(i+19);
       marker->DrawMarker(x,.8);
       text->DrawText(x,.62,atext);
