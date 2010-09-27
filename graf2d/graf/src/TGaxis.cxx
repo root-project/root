@@ -1685,7 +1685,7 @@ L110:
          //the following statement is a trick to circumvent a gcc bug
          if (j < 0) printf("j=%d\n",j);
          if (x00 > xone) goto L160;
-         if (xone > x11) break;
+         if ((xone-x11)>epsilon) break;
          xtwo = xone;
          y    = 0;
          if (!mside) y -= atick[0];
