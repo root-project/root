@@ -48,8 +48,8 @@
   (i.e. direct copy of the raw byte on disk). The "fast" mode is typically
   5 times faster than the mode unzipping and unstreaming the baskets.
 
-  NOTE1: By default histograms are added. However if histograms have their bit kIsAverage
-        set, the contents are averaged instead of being summed. See TH1::Add.
+  NOTE1: By default histograms are added. However hadd does not support the case where
+         histograms have their bit TH1::kIsAverage set.
 
   NOTE2: hadd returns a status code: 0 if OK, -1 otherwise
 
