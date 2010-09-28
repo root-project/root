@@ -557,8 +557,6 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   std::vector<RooRealVar*> pdfvec ;  
   RooArgSet sweightset ;
    
-  char wname[256] ;
-
   // Create and label the variables
   // used to store the SWeights
 
