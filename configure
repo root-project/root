@@ -3846,6 +3846,24 @@ if test ! "x$xrdlibdir" = "x" && test ! "x$xrdincdir" = "x"; then
    externalxrd="yes"
 elif test ! "x$xrootddir" = "x"; then
    externalxrd="yes"
+   if test ! "x$xrdlibdir" = "x" && test ! "x$xrdincdir" = "x"; then
+      xrdcomm="no, using xrootd at $xrdlibdir, $xrdincdir"
+      if test ! -f "$xrdincdir/XrdVersion.hh" ; then
+         enable_xrootd="no"
+         xrdcomm="no, asked to use installation at $xrdincdir, but version file missing: disabling"
+      fi
+   elif test ! "x$xrootddir" = "x"; then
+      xrdlibdir="$xrootddir/lib"
+      xrdcomm="no, using xrootd at $xrootddir"
+      if test -f "$xrootddir/include/xrootd/XrdVersion.hh" ; then
+         xrdincdir="$xrootddir/include/xrootd"
+      elif test -f "$xrootddir/src/XrdVersion.hh" ; then
+         xrdincdir="$xrootddir/src"
+      else
+         enable_xrootd="no"
+         xrdcomm="no, asked to use installation at $xrootddir, but version file missing: disabling"
+      fi
+   fi
 fi
 # Decode version
 xrdver=
@@ -3870,25 +3888,6 @@ if test ! "x$enable_xrootd" = "xno" ; then
    fi
 fi
 if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
-
-   if test ! "x$xrdlibdir" = "x" && test ! "x$xrdincdir" = "x"; then
-      xrdcomm="no, using xrootd at $xrdlibdir, $xrdincdir"
-      if test ! -f "$xrdincdir/XrdVersion.hh" ; then
-         enable_xrootd="no"
-         xrdcomm="no, asked to use installation at $xrdincdir, but version file missing: disabling"
-      fi
-   elif test ! "x$xrootddir" = "x"; then
-      xrdlibdir="$xrootddir/lib"
-      xrdcomm="no, using xrootd at $xrootddir"
-      if test -f "$xrootddir/include/xrootd/XrdVersion.hh" ; then
-         xrdincdir="$xrootddir/include/xrootd"
-      elif test -f "$xrootddir/src/XrdVersion.hh" ; then
-         xrdincdir="$xrootddir/src"
-      else
-         enable_xrootd="no"
-         xrdcomm="no, asked to use installation at $xrootddir, but version file missing: disabling"
-      fi
-   fi
 
    if test "x$enable_xrootd" = "xyes" ; then
 
