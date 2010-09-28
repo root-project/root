@@ -306,9 +306,9 @@ static int DrawCredits(bool draw, bool extended)
          if (s) *s = 0;
          char line[1024];
          if (strlen(name))
-            sprintf(line, "Extra special thanks go to %s,", name);
+            snprintf(line, sizeof(line), "Extra special thanks go to %s,", name);
          else
-            sprintf(line, "Extra special thanks go to %s,", pwd->pw_name);
+            snprintf(line, sizeof(line), "Extra special thanks go to %s,", pwd->pw_name);
          delete [] name;
          y += 2*lineSpacing;
          y = DrawCreditItem(line, 0, y, draw);
