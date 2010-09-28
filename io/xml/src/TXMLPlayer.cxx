@@ -1050,15 +1050,15 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el,
          fs << ElementGetter(cl, el->GetName()) << ";" << endl;
 
       if (isarr && el->GetArrayLength()) {
-         strcpy(tabs, tab4);
+         strlcpy(tabs, tab4, sizeof(tabs));
          fs << tab3 << "for(int n=0;n<" << el->GetArrayLength() << ";n++) {" << endl;
       } else
-         strcpy(tabs, tab3);
+         strlcpy(tabs, tab3, sizeof(tabs));
 
-      strcpy(tabs2, tabs);
+      strlcpy(tabs2, tabs, sizeof(tabs2));
 
       if (isptr) {
-         strcat(tabs2, tab1);
+         strncat(tabs2, tab1, sizeof(tabs2));
          fs << tabs << "if (" << (isarr ? "*cont" : "cont") << "==0) {" << endl;
          fs << tabs2 << "buf.WriteSTLsize(0" << (isstr ? ",true);" : ");") << endl;
          fs << tabs << "} else {" << endl;
