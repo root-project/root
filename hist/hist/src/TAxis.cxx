@@ -469,9 +469,10 @@ Double_t TAxis::GetBinWidth(Int_t bin) const
 {
    // Return bin width
 
-   if (bin <1 ) bin = 1;
-   if (bin >fNbins) bin = fNbins;
+   if (fNbins <= 0) return 0;
    if (fXbins.fN <= 0)  return (fXmax - fXmin) / Double_t(fNbins);
+   if (bin >fNbins) bin = fNbins;
+   if (bin <1 ) bin = 1;
    return fXbins.fArray[bin] - fXbins.fArray[bin-1];
 }
 
