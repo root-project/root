@@ -4058,14 +4058,27 @@ static int G__keyword_anytime_5(G__FastAllocString& statement)
       G__IsFundamentalDecl() // the following type is a fundamental type
    ) {
       // -- We have a function-local const of non-class type.
+      //
+      // Handle this as a static because the value may be needed
+      // as a constant expression in the array index of a subsequent
+      // static array declaration.  For example:
+      //
+      //      void f() {
+      //        const int array_size = 3;
+      //        static int my_array[array_size] = { 1, 2, 3 };
+      //      }
+      //
+      // If we do not handle it as a static, then we will not have the
+      // value available during prerun when we parse the static array
+      // variable declaration and allocate memory for it.
+      //
       G__constvar = G__CONSTVAR;
       G__const_setnoerror();
-      // FIXME: Pretend a function-local const is a static, why?
-      //int rslt = G__keyword_anytime_6("static");
       struct G__var_array* store_local = G__p_local;
       if (G__prerun && (G__func_now != -1)) {
          G__p_local = 0;
       }
+      G__static_alloc = 1;
       int store_no_exec = G__no_exec;
       G__no_exec = 0;
       int brace_level = 0;
@@ -4076,7 +4089,6 @@ static int G__keyword_anytime_5(G__FastAllocString& statement)
       G__const_resetnoerror();
       G__security_error = G__NOERROR;
       G__return = G__RETURN_NON;
-      //return rslt;
       return 1;
    }
    if (statement[0] != '#') {
