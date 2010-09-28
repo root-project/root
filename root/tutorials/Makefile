@@ -28,7 +28,7 @@ TUTORIALSTESTS_NONBATCH := \
 
 TUTORIALSTESTS_VETO := htmlex  rootalias \
   fft/FFT \
-  fit/fit1_C  fit/TwoHistoFit2D fit/line3Dfit \
+  fit/fit1_C  fit/TwoHistoFit2D fit/line3Dfit fit/MDF \
   foam/% \
   graphs/graphstruct \
   html/% \
