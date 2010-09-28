@@ -270,7 +270,7 @@ void TCastorFile::FindServerAndPath()
          int nstcp_output;
 
          memset(&stcp_input, 0, sizeof(struct stgcat_entry));
-         strcpy(stcp_input.u1.h.xfile, fUrl.GetFile());
+         strlcpy(stcp_input.u1.h.xfile, fUrl.GetFile(), sizeof(stcp_input.u1.h.xfile));
          if (flags == O_RDONLY || st.filesize > 0) {
          // Do a recall
             if (stage_in_hsm((u_signed64) 0,          // Ebusy is possible...
