@@ -142,12 +142,19 @@ const char *TRegexp::MakeWildcard(const char *re)
    char *s = buf;
    if (!re) return "";
    int len = strlen(re);
+   int slen = 0;
 
    if (!len) return "";
 
    for (int i = 0; i < len; i++) {
-      if (i == 0 && re[i] != '^')
+      if ((unsigned)slen > fgMaxpat - 10) {
+         Error("MakeWildcard", "regexp too large");
+         break;
+      }
+      if (i == 0 && re[i] != '^') {
          *s++ = '^';
+         slen++;
+      }
       if (re[i] == '*') {
 #ifndef R__WIN32
          //const char *wc = "[a-zA-Z0-9-+_\\.,: []<>]";
@@ -158,9 +165,12 @@ const char *TRegexp::MakeWildcard(const char *re)
 #endif
          strcpy(s, wc);
          s += strlen(wc);
+         slen += strlen(wc);
       }
-      if (re[i] == '.')
+      if (re[i] == '.') {
          *s++ = '\\';
+         slen++;
+      }
       if (re[i] == '?') {
 #ifndef R__WIN32
          //const char *wc = "[a-zA-Z0-9-+_\\.,: []<>]";
@@ -171,10 +181,15 @@ const char *TRegexp::MakeWildcard(const char *re)
 #endif
          strcpy(s, wc);
          s += strlen(wc);
-      } else
+         slen += strlen(wc);
+      } else {
          *s++ = re[i];
-      if (i == len-1 && re[i] != '$')
+         slen++;
+      }
+      if (i == len-1 && re[i] != '$') {
          *s++ = '$';
+         slen++;
+      }
    }
    *s = '\0';
    return buf;
