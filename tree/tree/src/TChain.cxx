@@ -354,9 +354,9 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
       while ((obj = (TObjString*)next())) {
          file = obj->GetName();
          if (behind_dot_root.Length() != 0)
-            nf += AddFile(Form("%s/%s/%s",directory.Data(),file,behind_dot_root.Data()),kBigNumber);
+            nf += AddFile(Form("%s/%s/%s",directory.Data(),file,behind_dot_root.Data()),nentries);
          else
-            nf += AddFile(Form("%s/%s",directory.Data(),file),kBigNumber);
+            nf += AddFile(Form("%s/%s",directory.Data(),file),nentries);
       }
       l.Delete();
    }
