@@ -3674,9 +3674,6 @@ void  TFormula::MakePrimitive(const char *expr, Int_t pos)
    if (prim) {
       fPredefined[pos] = prim;
       if (prim->fType==10) {
-         if (paran>0 && nargs != 1) {
-            Error("MakePrimitive","For %s picked a single arguments overload while %d was requested\n",cbase.Data()+paran+1,nargs);
-         }
          SetActionOptimized(pos, kFD1);
       }
       if (prim->fType==110) {

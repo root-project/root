@@ -323,14 +323,12 @@ namespace ROOT {
       }
 
       fprintf(hf,"%s\n%-*s      %-*s(director, %s)",
-              wroteFirst ? "," : "",offset," ",fMaxDatamemberType,"obj",objInit.Data());
-      wroteFirst = true;
+              ",",offset," ",fMaxDatamemberType,"obj",objInit.Data());
 
       TIter next(&fListOfSubProxies);
       while ( (desc = (TBranchProxyDescriptor*)next()) ) {
-         if (wroteFirst) fprintf(hf,",");
+         fprintf(hf,",");
          desc->OutputInit(hf,offset,fMaxDatamemberType,GetSubBranchPrefix());
-         wroteFirst = true;
       }
       fprintf(hf,"\n%-*s   {};\n",offset," ");
 
@@ -360,15 +358,13 @@ namespace ROOT {
 
       if ( true ||  IsLoaded() || IsClones() || IsSTL() ) {
          fprintf(hf,"%s\n%-*s      %-*s(director, parent, membername)",
-                 wroteFirst?",":"",offset," ",fMaxDatamemberType,"obj");
-         wroteFirst = true;
+                 ",",offset," ",fMaxDatamemberType,"obj");
       }
 
       next.Reset();
       while ( (desc = (TBranchProxyDescriptor*)next()) ) {
-         if (wroteFirst) fprintf(hf,",");
+         fprintf(hf,",");
          desc->OutputInit(hf,offset,fMaxDatamemberType,GetSubBranchPrefix());
-         wroteFirst = true;
       }
       fprintf(hf,"\n%-*s   {};\n",offset," ");
 
