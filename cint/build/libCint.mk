@@ -41,7 +41,7 @@ BCO        = $(addsuffix $(G__CFG_OBJEXT),$(addprefix $(G__CFG_COREVERSION)/src/
               bc_reader bc_type bc_exec bc_vtbl bc_debug \
               bc_assign))
 
-CONFIGO      = cint/src/config/snprintf.o cint/src/config/strlcpy.o cint/src/config/strlcat.o
+CONFIGO      = cint/src/config/snprintf$(G__CFG_OBJEXT) cint/src/config/strlcpy$(G__CFG_OBJEXT) cint/src/config/strlcat$(G__CFG_OBJEXT)
 
 STUBSCXX     = $(addprefix $(G__CFG_COREVERSION)/src/,symbols.cxx)
 
@@ -63,7 +63,7 @@ STDSTRCTO  = $(G__CFG_COREVERSION)/src/dict/stdstrct$(G__CFG_OBJEXT)
 LIBOBJECTS = $(CXXAPIO) $(APIDICTO) $(BCO) $(STREAMO) $(RFLXO) $(COREO) $(CONFIGO) $(G__CFG_COREVERSION)/src/g__cfunc$(G__CFG_OBJEXT) \
 	     $(STDSTRCTO) $(G__CFG_COREVERSION)/src/dict/longif3$(G__CFG_OBJEXT)
 ifneq ($(G__CFG_PLATFORMO),)
-LIBOBJECTS+= $(G__CFG_COREVERSION)/src/$(G__CFG_PLATFORMO)$(G__CFG_OBJEXT)
+LIBOBJECTS+= $(G__CFG_COREVERSION)/src/config/$(G__CFG_PLATFORMO)$(G__CFG_OBJEXT)
 endif
 CINTTMPOBJ = $(filter-out $(LOADFILEO) $(PRAGMAO) $(APIDICTO),$(LIBOBJECTS)) $(PRAGMATMPO) $(LOADFILETMPO)
 
