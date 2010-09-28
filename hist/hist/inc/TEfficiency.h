@@ -52,7 +52,7 @@ protected:
       Double_t      (*fBoundary)(Int_t,Int_t,Double_t,Bool_t);               //!pointer to a method calculating the boundaries of confidence intervals
       Double_t      fConfLevel;              //confidence level (default = 0.95)
       TDirectory*   fDirectory;              //!pointer to directory holding this TEfficiency object
-      TList*        fFunctions;              //pointer to list of functions
+      TList*        fFunctions;              //->pointer to list of functions
       TGraphAsymmErrors* fPaintGraph;        //!temporary graph for painting
       TH1*          fPaintHisto;             //!temporary histogram for painting      
       TH1*          fPassedHistogram;        //histogram for events which passed certain criteria
@@ -109,9 +109,10 @@ public:
       const TH1*    GetTotalHistogram() const {return fTotalHistogram;}
       Double_t      GetWeight() const {return fWeight;}
       void          Merge(TCollection* list);      
-      TEfficiency& operator+=(const TEfficiency& rhs);
-      TEfficiency& operator=(const TEfficiency& rhs);
+      TEfficiency&  operator+=(const TEfficiency& rhs);
+      TEfficiency&  operator=(const TEfficiency& rhs);
       void          Paint(const Option_t* opt);
+      void          SavePrimitive(ostream& out,Option_t* opt="");
       void          SetBetaAlpha(Double_t alpha);
       void          SetBetaBeta(Double_t beta);      
       void          SetConfidenceLevel(Double_t level);
@@ -129,8 +130,10 @@ public:
       static Bool_t CheckBinning(const TH1& pass,const TH1& total);
       static Bool_t CheckConsistency(const TH1& pass,const TH1& total,Option_t* opt="");
       static Bool_t CheckEntries(const TH1& pass,const TH1& total,Option_t* opt="");
-      static TGraphAsymmErrors* Combine(TCollection* pList,Option_t* opt="",
-					Int_t n=0,Double_t* p=0);
+      static Double_t Combine(Double_t& up,Double_t& low,Int_t n,const Int_t* pass,const Int_t* total,
+			      const Double_t* alpha,const Double_t* beta,Double_t level=0.683,
+			      const Double_t* w=0,Option_t* opt="");
+      static TGraphAsymmErrors* Combine(TCollection* pList,Option_t* opt="N",Int_t n=0,const Double_t* w=0);
       
       //calculating boundaries of confidence intervals
       static Double_t AgrestiCoull(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);

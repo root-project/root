@@ -1159,7 +1159,7 @@ Bool_t TEfficiency::CheckBinning(const TH1& pass,const TH1& total)
    TAxis* ax1 = 0;
    TAxis* ax2 = 0;
    
-   //check binning along x axis
+   //check binning along axis
    for(Int_t j = 0; j < pass.GetDimension(); ++j) {
       switch(j) {
       case 0:
@@ -1178,14 +1178,15 @@ Bool_t TEfficiency::CheckBinning(const TH1& pass,const TH1& total)
       
       if(ax1->GetNbins() != ax2->GetNbins())
 	 return false;
-      if(ax1->GetXmin() != ax2->GetXmin())
-	 return false;
-      if(ax1->GetXmax() != ax2->GetXmax())
-	 return false;
 
-      for(Int_t i = 1; i <= ax1->GetNbins(); ++i)
-	 if(ax1->GetBinLowEdge(i) != ax2->GetBinLowEdge(i))
+      for(Int_t i = 1; i <= ax1->GetNbins() + 1; ++i)
+         if(!TMath::AreEqualRel(ax1->GetBinLowEdge(i), ax2->GetBinLowEdge(i), 1.E-15))
 	    return false;
+
+      if(!TMath::AreEqualRel(ax1->GetXmax(), ax2->GetXmax(), 1.E-15))
+         return false;
+
+
    }
 
    return true;
@@ -1204,14 +1205,20 @@ Bool_t TEfficiency::CheckConsistency(const TH1& pass,const TH1& total,Option_t* 
    //Option: - w: The check for unit weights is skipped and therefore histograms
    //             filled with weights are accepted.
    
-   if(pass.GetDimension() != total.GetDimension())
+   if(pass.GetDimension() != total.GetDimension()) {
+      gROOT->Error("TEfficiency::CheckConsistency","passed TEfficiency objects have different dimensions");
       return false;
+   }
+   
+   if(!CheckBinning(pass,total)) {
+      gROOT->Error("TEfficiency::CheckConsistency","passed TEfficiency objects have different binning");
+      return false;
+   }
 
-   if(!CheckBinning(pass,total))
+   if(!CheckEntries(pass,total,opt)) {
+      gROOT->Error("TEfficiency::CheckConsistency","passed TEfficiency objects do not have consistent bin contents");
       return false;
-
-   if(!CheckEntries(pass,total,opt))
-      return false;
+   }
 
    return true;
 }
@@ -1323,57 +1330,57 @@ Double_t TEfficiency::ClopperPearson(Int_t total,Int_t passed,Double_t level,Boo
 }
 
 //______________________________________________________________________________
-TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
-					 Int_t n,Double_t* p)
+Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
+			      const Int_t* pass,const Int_t* total,
+			      const Double_t* alpha,const Double_t* beta,
+			      Double_t level,const Double_t* w,Option_t* opt)
 {
-   //combines a list of 1-dimensional TEfficiency objects
+   //calculates the combined efficiency and its uncertainties
    //
-   //A TGraphAsymmErrors object is returned which contains the estimated
-   //efficiency and its uncertainty for each bin.
-   //If the combination fails, a zero pointer is returned.
-   //
-   //At the moment the combining is only implemented for bayesian statistics.
+   //This method does a bayesian combination of the given samples.
    //
    //Input:
-   //- pList  :
-   //- options  
-   // + s     : strict combining; only TEfficiency objects with the same beta
-   //           prior and the flag kIsBayesian == true are combined
-   // + v     : verbose mode; print information about combining
-   // + cl=x  : set confidence level (0 < cl < 1). If not specified, the
-   //           confidence level of the first TEfficiency object is used.
-   //- n      : number of weights (has to be the number of TEfficiency objects
-   //           in pList)
-   //           If no weights are passed, each TEfficiency object is weighted by
-   //           Begin_Latex GetWeight() #times GetTotalEvents(bin) End_Latex
-   //           Therefore the weights can differ from bin to bin.
-   //- p      : array of length n with weights for each TEfficiency object in
-   //           pList (p[0] correspond to pList->First ... p[n-1] -> pList->Last)
-   //           The weights do not have to be normalised. They are global for each
-   //           bin in the corresponding TEfficiency object.
-   //
-   //For each bin j the following calculation is done:
+   //- up     : contains the upper limit of the confidence interval afterwards
+   //- low    : contains the lower limit of the confidence interval afterwards
+   //- n      : number of samples which are combined
+   //- pass   : array of length n containing the number of passed events
+   //- total  : array of length n containing the corresponding numbers of total
+   //           events
+   //- alpha  : shape parameters for the beta distribution as prior
+   //- beta   : shape parameters for the beta distribution as prior
+   //- level  : desired confidence level
+   //- w      : weights for each sample; if not given, all samples get the weight 1
+   //- options:
+   // + N : The weight for each sample is multiplied by the number of total events.
+   //       -> weight = w[i] * N[i]
+   //       This can be usefull when the weights and probability for each sample are given by
+   //Begin_Latex(separator='=',align='rl')
+   // w_{i} = #frac{#sigma_{i} #times L}{N_{i}}
+   // p_{i} = #frac{#sigma_{i}}{sum_{j} #sigma_{j}} #equiv #frac{N_{i} #times w_{i}}{sum_{j} N_{j} #times w_{j}}
+   //End_Latex
    //Begin_Html
    //Notation:
    //<ul>
    //<li>k = passed events</li>
    //<li>N = total evens</li>
-   //<li>n = number of combined TEfficiency objects</li>
-   //<li>i = index for numbering TEfficiency objects</li>
-   //<li>w = global weight of TEfficiency object</li>
-   //<li>j = index of currently handled bin</li>
+   //<li>n = number of combined samples</li>
+   //<li>i = index for numbering samples</li>
+   //<li>p = probability of sample i (either w[i] or w[i] * N[i], see options)</li>
    //</ul>
    //calculation:
    //<ol>
    //<li>The combined posterior distributions is calculated</li>
    //End_Html
    //Begin_Latex(separator='=',align='rl')
-   //P_{comb,j}(#epsilon |{k_{i,j}}; {N_{i,j}}) = #frac{1}{sum p_{i}} #times #sum_{i} p_{i} #times P_{i,j}(#epsilon | k_{i,j}; N_{i,j})
-   //p_{i} = p[i] if weights are passed, otherwise w_{i} #times N_{i,j}
+   //P_{comb}(#epsilon |{k_{i}}; {N_{i}}) = #frac{1}{sum p_{i}} #times #sum_{i} p_{i} #times P_{i}(#epsilon | k_{i}; N_{i})
+   //p_{i} = w[i] or w_{i} #times N_{i} if option "N" is specified
    //End_Latex
    //Begin_Html
-   //<li>The estimated efficiency is given by the mean value of the resulting
-   //combined posterior distribution.</li>
+   //<li>The estimated efficiency is the weighted average of the individual efficiencies.</li>
+   //End_Html
+   //Begin_Latex #hat{#varepsilon}_{comb} = #frac{1}{sum p_{i}} #times #sum_{i} p_{i} #times #frac{pass_{i} + #alpha_{i}}{total_{i} + #alpha_{i} + #beta_{i}}
+   //End_Latex
+   //Begin_Html
    //<li>The boundaries of the confidence interval for a confidence level (1 - a)
    //are given by the a/2 and 1-a/2 quantiles of the resulting cumulative
    //distribution.</li>
@@ -1402,7 +1409,7 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    //  leg1->AddEntry(p1,"k1 = 18, N1 = 26","l");
    //  leg1->AddEntry(p2,"k2 = 3, N2 = 10","l");
    //  leg1->AddEntry(comb,"combined: p1 = 0.6, p2=0.4","l");
-   
+   //
    //  c1->cd(1);
    //  p1->Draw();
    //  p2->Draw("same");
@@ -1420,6 +1427,114 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    //  return c1;
    //}
    //End_Macro
+
+   Double_t sumweights = 0;
+   Double_t weight;
+   Double_t mean = 0;
+   TString formula = "( 0 ";
+
+   Bool_t bModWeights = false;
+
+   TString option = opt;
+   option.ToLower();
+   if(option.Contains("n"))
+     bModWeights = true;
+   
+   //create formula for cumulative of total posterior
+   // cdf = 1/sum of weights * sum_i (weight_i * cdf_i(pass_i,total_i,alpha_i,beta_i))
+   // and cdf_i(pass_i,total_i,alpha_i,beta_i) = beta_incomplete(pass_i + alpha_i,total_i - pass_i + beta_i)
+   //combined efficiency is weighted average of individual efficiencies
+   for(Int_t i = 0; i < n; ++i) {
+      //get weight
+      if(w) {
+	//check weights > 0
+	 if(w[i] > 0)
+	    weight = w[i];
+	 else {
+	    gROOT->Error("TEfficiency::Combine","invalid custom weight found w = %.2lf",w[i]);
+	    gROOT->Info("TEfficiency::Combine","stop combining");
+	    return -1;
+	 }
+      }
+      //no weights given -> all objects get the same weight
+      else
+         weight = 1;
+
+      if(bModWeights)
+	weight *= total[i];
+      
+      sumweights += weight;
+      //check: total >= pass
+      if(pass[i] > total[i]) {
+	 gROOT->Error("TEfficiency::Combine","total events = %i < passed events %i",total[i],pass[i]);
+	 gROOT->Info("TEfficiency::Combine","stop combining");
+	 return -1;
+      }
+      formula += TString::Format("+ %lf * TMath::BetaIncomplete(x,%lf,%lf) ",weight,
+				 pass[i]+alpha[i],total[i]-pass[i]+beta[i]);
+
+      //add combined efficiency
+      if(total[i] + alpha[i] + beta[i])
+	mean += weight * (pass[i] + alpha[i])/(total[i] + alpha[i] + beta[i]);
+   }
+   formula += TString::Format(") / %lf",sumweights);
+
+   //create pdf function
+   TF1* pdf = new TF1("pdf",formula.Data(),0,1);
+   
+   //get quantiles for (1-level)/2 and (1+level)/2   
+   low = pdf->GetX((1-level)/2,0,1);
+   up = pdf->GetX((1+level)/2,0,1);
+
+   delete pdf;
+
+   mean = mean/sumweights;
+
+   return mean;
+}
+
+//______________________________________________________________________________
+TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
+					 Int_t n,const Double_t* w)
+{
+   //combines a list of 1-dimensional TEfficiency objects
+   //
+   //A TGraphAsymmErrors object is returned which contains the estimated
+   //efficiency and its uncertainty for each bin.
+   //If the combination fails, a zero pointer is returned.
+   //
+   //At the moment the combining is only implemented for bayesian statistics.
+   //
+   //Input:
+   //- pList  : list containing TEfficiency objects which should be combined
+   //           only one-dimensional efficiencies are taken into account
+   //- options  
+   // + s     : strict combining; only TEfficiency objects with the same beta
+   //           prior and the flag kIsBayesian == true are combined
+   // + v     : verbose mode; print information about combining
+   // + cl=x  : set confidence level (0 < cl < 1). If not specified, the
+   //           confidence level of the first TEfficiency object is used.
+   // + N     : for each bin i the weight of each TEfficiency object j in pList
+   //           is multiplied by the number of total events as
+   //           Begin_Latex w{i,j} = weight{j} #times total{j}->GetBinContent(i) End_Latex
+   //           Begin_Html
+   //           <ul>
+   //            <li>w{i,j}: weight of bin i and TEfficiency object j</li>
+   //            <li>weight{j}: global weight of TEfficiency object j (either GetWeight() or w[j])</li>
+   //            <li>total{j}: histogram containing the total events of TEfficiency object j</li>
+   //           </ul>
+   //           End_Html
+   //           Otherwise the weights for the TEfficiency objects are global and
+   //           the same for each bin.
+   //- n      : number of weights (has to be the number of one-dimensional
+   //           TEfficiency objects in pList)
+   //           If no weights are passed, the internal weights GetWeight() of
+   //           the given TEfficiency objects are used.
+   //- w      : array of length n with weights for each TEfficiency object in
+   //           pList (w[0] correspond to pList->First ... w[n-1] -> pList->Last)
+   //           The weights do not have to be normalised.
+   //
+   //For each bin the calculation is done by the Combine(double&, double& ...) method.
    
    TString opt = option;
    opt.ToLower();
@@ -1440,26 +1555,31 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    std::vector<Double_t> vAlpha;
    std::vector<Double_t> vBeta;
 
-   if(opt.Contains("s"))
+   if(opt.Contains("s")) {
+      opt.ReplaceAll("s","");
       bStrict = true;
+   }
 
-   if(opt.Contains("v"))
+   if(opt.Contains("v")) {
+      opt.ReplaceAll("v","");
       bOutput = true;
+   }
 
    if(opt.Contains("cl=")) {
       sscanf(strstr(opt.Data(),"cl="),"cl=%lf",&level);
-      if((level <= 0) && (level >= 1))
+      if((level <= 0) || (level >= 1))
 	 level = 0;
+      opt.ReplaceAll("cl=","");
    }
 
    //are weights explicitly given
-   if(n && p) {
+   if(n && w) {
       bWeights = true;
       for(Int_t k = 0; k < n; ++k) {
-	 if(p[k] > 0)
-	    vWeights.push_back(p[k]);
+	 if(w[k] > 0)
+	    vWeights.push_back(w[k]);
 	 else {
-	    gROOT->Error("TEfficiency::Combine","invalid custom weight found w = %.2lf",p[k]);
+	    gROOT->Error("TEfficiency::Combine","invalid custom weight found w = %.2lf",w[k]);
 	    gROOT->Info("TEfficiency::Combine","stop combining");
 	    return 0;
 	 }
@@ -1524,13 +1644,13 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    }
 
    Int_t nbins_max = vTotal.at(0)->GetNbinsX();
-   //check consistency of all histograms
+   //check binning of all histograms
    for(UInt_t i=0; i<vTotal.size(); ++i) {
       try {
-	 TEfficiency::CheckConsistency(*vTotal.at(0),*vTotal.at(i));
+	 TEfficiency::CheckBinning(*vTotal.at(0),*vTotal.at(i));
       }
       catch(std::exception&) {
-	 gROOT->Warning("TEfficiency::Combine","histograms are not consistent -> results may be useless");
+	 gROOT->Warning("TEfficiency::Combine","histograms have not the same binning -> results may be useless");
       }
       if(vTotal.at(i)->GetNbinsX() < nbins_max) nbins_max = vTotal.at(i)->GetNbinsX();
    }
@@ -1556,62 +1676,54 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    Double_t* efflow = new Double_t[nbins_max];
    Double_t* effhigh = new Double_t[nbins_max];
 
-   TString formula;
-   char* sub = 0;
-   TF1* pdf = 0;
-   Double_t w = 0;
-   Double_t totalweight = 0;
-
+   //parameters for combining:
+   //number of objects
+   Int_t num = vTotal.size();
+   //shape parameters
+   Double_t* a = new Double_t[n];
+   Double_t* b = new Double_t[n];
+   Int_t* pass = new Int_t[n];
+   Int_t* total = new Int_t[n];
+   Double_t* weights = new Double_t[n];
+   
    //loop over all bins
+   Double_t low, up;
    for(Int_t i=1; i <= nbins_max; ++i) {
       //the binning of the x-axis is taken from the first total histogram
       x[i-1] = vTotal.at(0)->GetBinCenter(i);
       xlow[i-1] = x[i-1] - vTotal.at(0)->GetBinLowEdge(i);
       xhigh[i-1] = vTotal.at(0)->GetBinWidth(i) - xlow[i-1];
-      //reset normalisation factor
-      totalweight = 0;
-      //create formula string:
-      //(\sum_i weight_i * Beta(x;passed_i + alpha,total_i - passed_i + beta) )/totalweight
-      formula.Clear();
-      formula = "( 0 ";
-      //add the sum
-      for(UInt_t j=0; j < vTotal.size(); ++j) {
-	 //use custom weights
-	 if(bWeights)
-	    w = vWeights.at(j);
-	 //use generic weight = weight * N_total
-	 else
-	    w = vWeights.at(j)*(vTotal.at(j)->GetBinContent(i));
-	 
-	 totalweight += w;
-	 
-	 sub = new char[100];
-	 sprintf(sub,"+ %lf * TMath::BetaDist(x,%lf,%lf) ",w,
-		 vPassed.at(j)->GetBinContent(i)+vAlpha.at(j),vTotal.at(j)->GetBinContent(i)-
-		 vPassed.at(j)->GetBinContent(i)+vBeta.at(j));
-	 formula.Append(sub);
-	 delete [] sub;
-	 sub = 0;
+
+      for(Int_t j = 0; j < num; ++j) {
+	 a[j] = vAlpha.at(j);
+	 b[j] = vBeta.at(j);
+	 pass[j] = (Int_t)(vPassed.at(j)->GetBinContent(i) + 0.5);
+	 total[j] = (Int_t)(vTotal.at(j)->GetBinContent(i) + 0.5);
+         weights[j] = vWeights.at(j);
       }
-      //divide by total weight
-      sub = new char[20];
-      sprintf(sub,")/%lf",totalweight);
-      formula.Append(sub);
-      delete [] sub;
-      sub = 0;
       
-      pdf = new TF1("pdf",formula.Data(),0,1);
-
       //fill efficiency and errors
-      Double_t q[2];
-      Double_t quantil[2] = {(1-level)/2,(1+level)/2};
-      pdf->GetQuantiles(2,q,quantil);
-      eff[i-1] = pdf->Mean(0,1);
-      efflow[i-1]= eff[i-1] - q[0];
-      effhigh[i-1]= q[1] - eff[i-1];
-
-      delete pdf;
-      pdf = 0;      
+      eff[i-1] = Combine(up,low,num,pass,total,a,b,level,weights,opt.Data());
+      //did an error occured ?
+      if(eff[i-1] == -1) {
+	 gROOT->Error("TEfficiency::Combine","error occured during combining");
+	 gROOT->Info("TEfficiency::Combine","stop combining");
+	 //free memory
+ 	 delete [] x;
+	 delete [] xlow;
+	 delete [] xhigh;
+	 delete [] eff;
+	 delete [] efflow;
+	 delete [] effhigh;
+	 delete [] pass;
+	 delete [] total;
+	 delete [] weights;
+	 delete [] a;
+	 delete [] b;
+	 return 0;
+      }
+      efflow[i-1]= eff[i-1] - low;
+      effhigh[i-1]= up - eff[i-1];
    }//loop over all bins
 
    TGraphAsymmErrors* gr = new TGraphAsymmErrors(nbins_max,x,eff,xlow,xhigh,efflow,effhigh);
@@ -1622,6 +1734,11 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    delete [] eff;
    delete [] efflow;
    delete [] effhigh;
+   delete [] pass;
+   delete [] total;
+   delete [] weights;
+   delete [] a;
+   delete [] b;
 
    return gr;
 }
@@ -2115,6 +2232,161 @@ void TEfficiency::Paint(const Option_t* opt)
       fPaintHisto->Paint(option.Data());
       return;
    }
+}
+
+//______________________________________________________________________________
+void TEfficiency::SavePrimitive(ostream& out,Option_t* opt)
+{
+   //have histograms fixed bins along each axis?
+   Bool_t equi_bins = true;
+
+   //indentation
+   TString indent = "   ";
+   //names for arrays containing the bin edges
+   //static counter needed if more objects are saved
+   static Int_t naxis = 0;
+   TString sxaxis="xAxis",syaxis="yAxis",szaxis="zAxis";
+
+   //note the missing break statements!
+   switch(GetDimension()) {
+   case 3:
+     equi_bins = equi_bins && !fTotalHistogram->GetZaxis()->GetXbins()->fArray
+       && !fTotalHistogram->GetZaxis()->GetXbins()->fN;
+   case 2:
+     equi_bins = equi_bins && !fTotalHistogram->GetYaxis()->GetXbins()->fArray
+       && !fTotalHistogram->GetYaxis()->GetXbins()->fN;
+   case 1:
+     equi_bins = equi_bins && !fTotalHistogram->GetXaxis()->GetXbins()->fArray
+       && !fTotalHistogram->GetXaxis()->GetXbins()->fN;
+   }
+
+   //create arrays containing the variable binning
+   if(!equi_bins) {
+      Int_t i;
+      ++naxis;
+      sxaxis += naxis;
+      syaxis += naxis;
+      szaxis += naxis;
+      //x axis
+      out << indent << "Double_t " << sxaxis << "["
+	  << fTotalHistogram->GetXaxis()->GetXbins()->fN << "] = {";
+      for (i = 0; i < fTotalHistogram->GetXaxis()->GetXbins()->fN; ++i) {
+         if (i != 0) out << ", ";
+         out << fTotalHistogram->GetXaxis()->GetXbins()->fArray[i];
+      }
+      out << "}; " << std::endl;
+      //y axis
+      if(GetDimension() > 1) {
+	 out << indent << "Double_t " << syaxis << "["
+	     << fTotalHistogram->GetYaxis()->GetXbins()->fN << "] = {";
+	 for (i = 0; i < fTotalHistogram->GetYaxis()->GetXbins()->fN; ++i) {
+	   if (i != 0) out << ", ";
+	   out << fTotalHistogram->GetYaxis()->GetXbins()->fArray[i];
+	 }
+	 out << "}; " << std::endl;
+      }
+      //z axis
+      if(GetDimension() > 2) {
+	 out << indent << "Double_t " << szaxis << "["
+	     << fTotalHistogram->GetZaxis()->GetXbins()->fN << "] = {";
+	 for (i = 0; i < fTotalHistogram->GetZaxis()->GetXbins()->fN; ++i) {
+	   if (i != 0) out << ", ";
+	   out << fTotalHistogram->GetZaxis()->GetXbins()->fArray[i];
+	 }
+	 out << "}; " << std::endl;
+      }
+   }//creating variable binning
+
+   //TEfficiency pointer has efficiency name + counter
+   static Int_t eff_count = 0;
+   ++eff_count;
+   TString eff_name = GetName();
+   eff_name += eff_count;
+
+   const char* name = eff_name.Data();
+
+   //construct TEfficiency object
+   const char quote = '"';
+   out << indent << std::endl;
+   out << indent << ClassName() << " * " << name << " = new " << ClassName()
+       << "(" << quote << GetName() << quote << "," << quote
+       << GetTitle() << quote <<",";
+   //fixed bin size -> use n,min,max constructor
+   if(equi_bins) {
+      out << fTotalHistogram->GetXaxis()->GetNbins() << ","
+	  << fTotalHistogram->GetXaxis()->GetXmin() << ","
+	  << fTotalHistogram->GetXaxis()->GetXmax();
+      if(GetDimension() > 1) {
+ 	 out << "," << fTotalHistogram->GetYaxis()->GetNbins() << ","
+	     << fTotalHistogram->GetYaxis()->GetXmin() << ","
+	     << fTotalHistogram->GetYaxis()->GetXmax();
+      }
+      if(GetDimension() > 2) {
+	 out << "," << fTotalHistogram->GetZaxis()->GetNbins() << ","
+	     << fTotalHistogram->GetZaxis()->GetXmin() << ","
+	     << fTotalHistogram->GetZaxis()->GetXmax();
+      }
+   }
+   //variable bin size -> use n,*bins constructor
+   else {
+     out << fTotalHistogram->GetXaxis()->GetNbins() << "," << sxaxis;
+     if(GetDimension() > 1)
+        out << "," << fTotalHistogram->GetYaxis()->GetNbins() << ","
+	    << syaxis;
+     if(GetDimension() > 2)
+        out << "," << fTotalHistogram->GetZaxis()->GetNbins() << ","
+	    << szaxis;
+   }
+   out << ");" << std::endl;
+   out << indent << std::endl;
+
+   //set statistic options
+   out << indent << name << "->SetConfidenceLevel(" << fConfLevel << ");"
+       << std::endl;
+   out << indent << name << "->SetBetaAlpha(" << fBeta_alpha << ");"
+       << std::endl;
+   out << indent << name << "->SetBetaBeta(" << fBeta_beta << ");" << std::endl;
+   out << indent << name << "->SetWeight(" << fWeight << ");" << std::endl;
+   out << indent << name << "->SetStatisticOption(" << fStatisticOption << ");"
+       << std::endl;
+
+   //set bin contents
+   Int_t nbins = fTotalHistogram->GetNbinsX() + 2;
+   if(GetDimension() > 1)
+      nbins *= fTotalHistogram->GetNbinsY() + 2;
+   if(GetDimension() > 2)
+      nbins *= fTotalHistogram->GetNbinsZ() + 2;
+
+   //important: set first total number than passed number
+   for(Int_t i = 0; i < nbins; ++i) {
+     out << indent << name <<"->SetTotalEvents(" << i << "," <<
+       fTotalHistogram->GetBinContent(i) << ");" << std::endl;
+     out << indent << name <<"->SetPassedEvents(" << i << "," <<
+       fPassedHistogram->GetBinContent(i) << ");" << std::endl;
+   }
+
+   //save list of functions
+   TIter next(fFunctions);
+   TObject* obj = 0;
+   while((obj = next())) {
+      obj->SavePrimitive(out,"nodraw");
+      if(obj->InheritsFrom(TF1::Class())) {
+	 out << indent << name << "->GetListOfFunctions()->Add("
+	     << obj->GetName() << ");" << std::endl;
+      }
+   }
+
+   //set style
+   SaveFillAttributes(out,name);
+   SaveLineAttributes(out,name);
+   SaveMarkerAttributes(out,name);
+
+   //draw TEfficiency object
+   TString option = opt;
+   option.ToLower();
+   if (!option.Contains("nodraw"))
+      out<< indent << name<< "->Draw(" << quote << opt << quote << ");"
+	 << std::endl;
 }
 
 //______________________________________________________________________________
