@@ -59,8 +59,8 @@ for i in * ; do
 done
 
 echo "Making $ROOTALIB..."
-echo ar rv $ROOTALIB cint/cint/main/G__setup.o cint/cint/src/dict/*.o $objs
-ar rv $ROOTALIB cint/cint/main/G__setup.o cint/cint/src/dict/*.o $objs > /dev/null 2>&1
+echo ar rv $ROOTALIB cint/cint/main/G__setup.o cint/cint/src/dict/*.o cint/cint/src/config/*.o $objs
+ar rv $ROOTALIB cint/cint/main/G__setup.o cint/cint/src/dict/*.o cint/cint/src/config/*.o $objs > /dev/null 2>&1
 
 arstat=$?
 if [ $arstat -ne 0 ]; then
