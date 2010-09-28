@@ -14,9 +14,8 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 objArrayTest.log: TestObj_cpp.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l run.C > $@
 
-objArrayTest: objArrayTest.log
+objArrayTest: objArrayTest.log objArrayTest.ref
 	$(CMDECHO) diff -b objArrayTest.ref objArrayTest.log 
 
 save_C.$(DllSuf) : save.C TestObj_cpp.$(DllSuf)
