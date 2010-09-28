@@ -67,9 +67,14 @@ ifeq ($(PLATFORM),win32)
 PROOFXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
 PROOFXLIBEXTRA += -L$(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdNet -lXrdClient
+# Starting from Jul 2010 XrdNet has been split in two libs: XrdNet and XrdNetUtil;
+# both are needed
+XRDNETUTIL     :=
+ifneq ($(XRDVERSION),)
 XRDNETUTIL     := $(shell if test $(XRDVERSION) -gt 20100729; then \
                              echo "yes"; \
                           fi)
+endif
 ifeq ($(XRDNETUTIL),yes)
 PROOFXLIBEXTRA += -lXrdNetUtil
 endif

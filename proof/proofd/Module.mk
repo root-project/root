@@ -124,9 +124,14 @@ XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdSys \
 XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
                   $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdOuc.a \
                   $(XROOTDDIRL)/libXrdSys.a $(XROOTDDIRL)/libXrdSut.a
+# Starting from Jul 2010 XrdNet has been split in two libs: XrdNet and XrdNetUtil;
+# both are needed
+XRDNETUTIL     :=
+ifneq ($(XRDVERSION),)
 XRDNETUTIL     := $(shell if test $(XRDVERSION) -gt 20100729; then \
                              echo "yes"; \
                           fi)
+endif
 ifeq ($(XRDNETUTIL),yes)
 XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdNetUtil
 XPROOFDEXELIBS += $(XROOTDDIRL)/libXrdNetUtil.a
