@@ -53,27 +53,63 @@ struct pollfd {
 };
 #endif
 
+#ifndef EMSGSIZE
 #define EMSGSIZE        WSAEMSGSIZE 
+#endif
+#ifndef EAFNOSUPPORT
 #define EAFNOSUPPORT    WSAEAFNOSUPPORT 
+#endif
+#ifndef EWOULDBLOCK
 #define EWOULDBLOCK     WSAEWOULDBLOCK 
+#endif
+#ifndef ECONNRESET
 #define ECONNRESET      WSAECONNRESET 
+#endif
+#ifndef EINPROGRESS
 #define EINPROGRESS     WSAEINPROGRESS 
+#endif
+#ifndef ENOBUFS
 #define ENOBUFS         WSAENOBUFS 
+#endif
+#ifndef EPROTONOSUPPORT
 #define EPROTONOSUPPORT WSAEPROTONOSUPPORT 
+#endif
+#ifndef ECONNREFUSED
 #define ECONNREFUSED    WSAECONNREFUSED 
+#endif
+#ifndef EBADFD
 #define EBADFD          WSAENOTSOCK 
+#endif
+#ifndef EOPNOTSUPP
 #define EOPNOTSUPP      WSAEOPNOTSUPP 
+#endif
+#ifndef ENETUNREACH
 #define ENETUNREACH     WSAENETUNREACH
+#endif
+#ifndef EHOSTUNREACH
 #define EHOSTUNREACH    WSAEHOSTUNREACH
+#endif
+#ifndef EHOSTDOWN
 #define EHOSTDOWN       WSAEHOSTDOWN
+#endif
+#ifndef EISCONN
 #define EISCONN         WSAEISCONN
+#endif
+#ifndef ECONNRESET
 #define ECONNRESET      WSAECONNRESET
+#endif
+#ifndef ECONNABORTED
 #define ECONNABORTED    WSAECONNABORTED
+#endif
+#ifndef ESHUTDOWN
 #define ESHUTDOWN       WSAESHUTDOWN
+#endif
 #ifndef ETIMEDOUT
 #define ETIMEDOUT       WSAETIMEDOUT 
 #endif
+#ifndef ETXTBSY
 #define ETXTBSY         26 
+#endif
 
 #define WEXITSTATUS(w) (((w) >> 8) & 0xff) 
 #define WIFEXITED(w)   (((w) & 0xff) == 0) 
