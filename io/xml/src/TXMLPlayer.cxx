@@ -1058,7 +1058,7 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el,
       strlcpy(tabs2, tabs, sizeof(tabs2));
 
       if (isptr) {
-         strncat(tabs2, tab1, sizeof(tabs2));
+         strlcat(tabs2, tab1, sizeof(tabs2));
          fs << tabs << "if (" << (isarr ? "*cont" : "cont") << "==0) {" << endl;
          fs << tabs2 << "buf.WriteSTLsize(0" << (isstr ? ",true);" : ");") << endl;
          fs << tabs << "} else {" << endl;
