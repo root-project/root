@@ -1386,7 +1386,7 @@ TCanvas *TCanvas::MakeDefCanvas()
 
    TCanvas *c = new TCanvas(cdef, cdef, 1);
 
-   gROOT->Info("TCanvas::MakeDefCanvas"," created default TCanvas with name %s",cdef);
+   ::Info("TCanvas::MakeDefCanvas"," created default TCanvas with name %s",cdef);
    delete [] cdef;
    return c;
 }
