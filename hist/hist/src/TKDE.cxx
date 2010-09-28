@@ -538,24 +538,28 @@ TH1D* TKDE::GetHistogram(UInt_t nbins, Double_t xMin, Double_t xMax) {
    return GetKDEHistogram(nbins, xMin, xMax);
 }
 
-TF1* TKDE::GetFunction() {
-   // Returns the PDF estimate
-   return GetKDEFunction();
+TF1* TKDE::GetFunction(UInt_t npx, Double_t xMin, Double_t xMax) {
+   // Returns the PDF estimate as a function sampled in npx between xMin and xMax
+   // the KDE is not re-normalized to the xMin/xMax range. 
+   // The user manages the returned function
+   // For getting a non-sampled TF1, one can create a TF1 directly from the TKDE by doing 
+   // TF1 * f1  = new TF1("f1",kde,xMin,xMax,0);
+   return GetKDEFunction(npx,xMin,xMax);
 }
 
-TF1* TKDE::GetUpperFunction(Double_t confidenceLevel) {
+TF1* TKDE::GetUpperFunction(Double_t confidenceLevel, UInt_t npx, Double_t xMin, Double_t xMax) {
    // Returns the PDF upper estimate (upper confidence interval limit)
-   return GetPDFUpperConfidenceInterval(confidenceLevel);
+   return GetPDFUpperConfidenceInterval(confidenceLevel,npx,xMin,xMax);
 }
 
-TF1* TKDE::GetLowerFunction(Double_t confidenceLevel) {
+TF1* TKDE::GetLowerFunction(Double_t confidenceLevel, UInt_t npx, Double_t xMin, Double_t xMax) {
    // Returns the PDF lower estimate (lower confidence interval limit)
-   return GetPDFLowerConfidenceInterval(confidenceLevel);
+   return GetPDFLowerConfidenceInterval(confidenceLevel,npx,xMin,xMax);
 }
 
-TF1* TKDE::GetApproximateBias() {
+TF1* TKDE::GetApproximateBias(UInt_t npx, Double_t xMin, Double_t xMax) {
    // Returns the PDF estimate bias
-   return GetKDEApproximateBias();
+   return GetKDEApproximateBias(npx,xMin,xMax);
 }
 
 void TKDE::Fill(Double_t data) {
@@ -645,7 +649,7 @@ void TKDE::SetBinCountData() {
 Double_t TKDE::GetFixedWeight() const {
    Double_t result = -1.;
    if (fIteration == TKDE::kAdaptive) {
-      this->Warning("GetFixedWeight()", "Fixed iteration option not ennabled. Returning %f.", result);
+      this->Warning("GetFixedWeight()", "Fixed iteration option not enabled. Returning %f.", result);
    } else {
       result = fKernel->GetFixedWeight();
    }
@@ -654,7 +658,7 @@ Double_t TKDE::GetFixedWeight() const {
 
 const Double_t *  TKDE::GetAdaptiveWeights() const {
    if (fIteration != TKDE::kAdaptive) {
-      this->Warning("GetFixedWeight()", "Adaptive iteration option not ennabled. Returning a NULL  pointer");
+      this->Warning("GetFixedWeight()", "Adaptive iteration option not enabled. Returning a NULL  pointer");
       return 0; 
    }
    if (fNewData) (const_cast<TKDE*>(this))->InitFromNewData(); 
@@ -839,55 +843,65 @@ Double_t TKDE::KernelIntegrand::operator()(Double_t x) const {
    }
 }
 
-TH1D* TKDE::GetKDEHistogram(UInt_t nbins, Double_t xMin, Double_t xMax) {
+TH1D* TKDE::GetKDEHistogram(UInt_t nbins, Double_t xMin, Double_t xMax, Bool_t reNorm) {
    // Returns the histogram of the estimated density at data points
    // name and title are built using KDE name and title
-   TString name = "histo_from_KDE_";  name+= GetName();
+   // if norm is TRUE the histogram is renormalized in the new range
+   TString name = "KDEHist_";  name+= GetName();
    TString title = "Histogram of KDE"; title += GetTitle();
    TH1D * histogram = 0;
    if (xMin < xMax) {
-      histogram = new TH1D(name,title, nbins > 0 ? nbins : 100 /*fNBins*/, xMin, xMax);
+      histogram = new TH1D(name,title, nbins > 0 ? nbins : 100 /*fNBins*/, xMin, xMax);      
    } else {
       histogram = new TH1D(name,title, nbins > 0 ? nbins : 100 /*fNBins*/, fXMin, fXMax);  
+      reNorm = kFALSE;
    }
    for (Int_t bin = 1; bin <= histogram->GetNbinsX(); ++bin) {
       Double_t binCenter = histogram->GetBinCenter(bin);
       histogram->Fill(binCenter, (*fKernel)(binCenter));
    }
-   histogram->Scale(1. / histogram->Integral(), "width");
+   if (reNorm) histogram->Scale(1. / histogram->Integral(), "width");
    return  histogram;
 }
    
-TF1* TKDE::GetKDEFunction() {
+TF1* TKDE::GetKDEFunction(UInt_t npx, Double_t xMin , Double_t xMax) {
    //Returns the estimated density 
-   TString name = "KDE_"; name+= GetName();
+   TString name = "KDEFunc_"; name+= GetName();
    TString title = "KDE_"; title+= GetTitle();
-   fPDF = new TF1(name.Data(), this, fXMin, fXMax, 0);
-   fPDF->SetTitle(title);
+   if (xMin >= xMax) { xMin = fXMin; xMax = fXMax; }
+   fPDF = new TF1(name.Data(), this, xMin, xMax, 0);
+   if (npx > 0) fPDF->SetNpx(npx);
+   fPDF->SetTitle(title);   
    return (TF1*)fPDF->Clone();
 }
 
-TF1* TKDE::GetPDFUpperConfidenceInterval(Double_t confidenceLevel) {
+TF1* TKDE::GetPDFUpperConfidenceInterval(Double_t confidenceLevel, UInt_t npx, Double_t xMin , Double_t xMax) {
    // Returns the upper estimated density 
    TString name; 
    name.Form("KDE_UpperCL%f5.3_%s",confidenceLevel,GetName());
-   fUpperPDF = new TF1(name, this, &TKDE::UpperConfidenceInterval, fXMin, fXMax, 1, "TKDE", "UpperConfidenceInterval");
+   if (xMin >= xMax) { xMin = fXMin; xMax = fXMax; }
+   fUpperPDF = new TF1(name, this, &TKDE::UpperConfidenceInterval, xMin, xMax, 1, "TKDE", "UpperConfidenceInterval");
    fUpperPDF->SetParameter(0, confidenceLevel);
+   if (npx > 0) fUpperPDF->SetNpx(npx);
    return (TF1*)fUpperPDF->Clone();
 }
 
-TF1* TKDE::GetPDFLowerConfidenceInterval(Double_t confidenceLevel) {
+TF1* TKDE::GetPDFLowerConfidenceInterval(Double_t confidenceLevel, UInt_t npx, Double_t xMin , Double_t xMax) {
    // Returns the upper estimated density 
    TString name; 
    name.Form("KDE_LowerCL%f5.3_%s",confidenceLevel,GetName());
-   fLowerPDF = new TF1(name, this, &TKDE::LowerConfidenceInterval, fXMin, fXMax, 1, "TKDE", "LowerConfidenceInterval");
+   if (xMin >= xMax) { xMin = fXMin; xMax = fXMax; }
+   fLowerPDF = new TF1(name, this, &TKDE::LowerConfidenceInterval, xMin, xMax, 1);
    fLowerPDF->SetParameter(0, confidenceLevel);
+   if (npx > 0) fLowerPDF->SetNpx(npx);
    return (TF1*)fLowerPDF->Clone();
 }
 
-TF1* TKDE::GetKDEApproximateBias(){
+TF1* TKDE::GetKDEApproximateBias(UInt_t npx, Double_t xMin , Double_t xMax) {
    // Returns the approximate bias
    TString name = "KDE_Bias_"; name += GetName();
-   fApproximateBias = new TF1(name, this, &TKDE::ApproximateBias, fXMin, fXMax, 0, "TKDE", "ApproximateBias");
+   if (xMin >= xMax) { xMin = fXMin; xMax = fXMax; }
+   fApproximateBias = new TF1(name, this, &TKDE::ApproximateBias, xMin, xMax, 0);
+   if (npx > 0) fApproximateBias->SetNpx(npx);
    return (TF1*)fApproximateBias->Clone();
 }

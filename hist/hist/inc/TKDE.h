@@ -95,10 +95,10 @@ public:
    
    TH1D* GetHistogram(UInt_t nbins = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
    
-   TF1* GetFunction();
-   TF1* GetUpperFunction(Double_t confidenceLevel = 0.95);
-   TF1* GetLowerFunction(Double_t confidenceLevel = 0.95);
-   TF1* GetApproximateBias();
+   TF1* GetFunction(UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
+   TF1* GetUpperFunction(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
+   TF1* GetLowerFunction(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
+   TF1* GetApproximateBias(UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
    
    const Double_t * GetAdaptiveWeights() const;
 
@@ -216,12 +216,13 @@ private:
    void InitFromNewData();
    void SetMirroredEvents();
       
-   TH1D* GetKDEHistogram(UInt_t nbins, Double_t xMin, Double_t xMax);
+   TH1D* GetKDEHistogram(UInt_t nbins, Double_t xMin, Double_t xMax, Bool_t reNorm = kFALSE);
    
-   TF1* GetKDEFunction();
-   TF1* GetPDFUpperConfidenceInterval(Double_t confidenceLevel); // The density to estimate should be at least twice differentiable. 
-   TF1* GetPDFLowerConfidenceInterval(Double_t confidenceLevel); // The density to estimate should be at least twice differentiable. 
-   TF1* GetKDEApproximateBias();
+   TF1* GetKDEFunction(UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
+   TF1* GetKDEApproximateBias(UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
+   // The density to estimate should be at least twice differentiable. 
+   TF1* GetPDFUpperConfidenceInterval(Double_t confidenceLevel, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0); 
+   TF1* GetPDFLowerConfidenceInterval(Double_t confidenceLevel, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0); 
    
    ClassDef(TKDE, 1) // One dimensional semi-parametric Kernel Density Estimation 
    
