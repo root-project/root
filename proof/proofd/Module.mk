@@ -139,7 +139,7 @@ endif
 XPDLIBEXTRA    +=  $(DNSSDLIB)
 
 ifeq ($(PLATFORM),solaris)
-XPROOFDEXESYSLIBS := -lsendfile -lCstd
+XPROOFDEXESYSLIBS := -lsendfile
 endif
 XPROOFDEXE     := bin/xproofd
 endif
