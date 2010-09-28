@@ -38,5 +38,5 @@ Warning in <TClass::TClass>: no dictionary for class TMBL3ToolResults is availab
 Warning in <TClass::TClass>: no dictionary for class TMBL2EM is available
 Warning in <TClass::TClass>: no dictionary for class TMBL2Jet is available
 Warning in <TClass::TClass>: no dictionary for class TMBL2Muon is available
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
 G__catchexception=0
-<TCanvas::MakeDefCanvas>: created default TCanvas with name c1

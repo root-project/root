@@ -124,7 +124,7 @@ Input  file : twodim_99.root
    12   22   32   42   52   62   72   82   92  102
    13   23   33   43   53   63   73   83   93  103
 --------------
-<TCanvas::MakeDefCanvas>: created default TCanvas with name c1
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
 ***********************************
 *    Row   * Instance *        aa *
 ***********************************

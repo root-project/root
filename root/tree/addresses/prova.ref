@@ -1,6 +1,6 @@
 
 Processing runprova.C...
-<TCanvas::MakeDefCanvas>: created default TCanvas with name c1
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
 ************************
 *    Row   *   br.n_ev *
 ************************

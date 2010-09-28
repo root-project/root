@@ -21,10 +21,10 @@ treeChainFriend: treeChainFriend.log
 	$(CMDECHO) diff -b treeChainFriend.ref treeChainFriend.log 
 
 unevenFriend: unevenFriend.out
-	$(CMDECHO) diff -b unevenFriend.out unevenFriend.ref
+	$(CMDECHO) diff -b unevenFriend.ref unevenFriend.out
 
 unevenFriend.out:  unevenFriend.C unevenFriend.ref
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b unevenFriend.C > unevenFriend.out
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b unevenFriend.C > unevenFriend.out 2>&1
 
 ROOTFILE := Event.root
 

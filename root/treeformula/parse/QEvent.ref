@@ -101,4 +101,4 @@ Processing runQEvent.C...
 98   37
 99   18
 Warning in <TTreePlayer::StartViewer>: viewer cannot run in batch mode
-<TCanvas::MakeDefCanvas>: created default TCanvas with name c1
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1

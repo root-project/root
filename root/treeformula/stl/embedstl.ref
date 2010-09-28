@@ -33,6 +33,6 @@ Warning in <TClass::TClass>: no dictionary for class edm::Provenance is availabl
 Warning in <TClass::TClass>: no dictionary for class edm::EventProvenance is available
 Warning in <TClass::TClass>: no dictionary for class edm::CrossingFrame is available
 Warning in <TClass::TClass>: no dictionary for class edm::Wrapper<edm::CrossingFrame> is available
-<TCanvas::MakeDefCanvas>: created default TCanvas with name c1
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
 TH1.Print Name  = htemp, Entries= 1, Total sum= 1
 The mean should be 0: 0
