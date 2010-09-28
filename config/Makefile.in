@@ -227,6 +227,7 @@ XRDINCDIR      := @xrdincdir@
 XRDLIBDIR      := @xrdlibdir@
 XRDADDOPTS     := @xrdaddopts@
 EXTRA_XRDFLAGS := @extraxrdflags@
+XRDVERSION     := @xrdversion@
 
 SRPLIBDIR      := @srplibdir@
 SRPLIB         := @srplib@

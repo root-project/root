@@ -3833,6 +3833,7 @@ check_explicit "$enable_xml" "$enable_xml_explicit" \
 #
 message "Checking whether to build xrootd"
 xrdcomm=""
+vercomm=
 
 # If we are required to use an external XROOTD distribution
 # we just define the pointers
@@ -3845,6 +3846,28 @@ if test ! "x$xrdlibdir" = "x" && test ! "x$xrdincdir" = "x"; then
    externalxrd="yes"
 elif test ! "x$xrootddir" = "x"; then
    externalxrd="yes"
+fi
+# Decode version
+xrdver=
+decver=0
+if test ! "x$enable_xrootd" = "xno" ; then
+
+   if test "x$externalxrd" = "xyes"; then
+      verh=$xrdincdir/XrdVersion.hh
+   else
+      verh=net/xrootd/src/xrootd/src/XrdVersion.hh
+   fi
+   xrdver=`grep XrdVERSION $verh`
+   if test $? -eq 0 ; then
+      set $xrdver
+      xrdver=$3
+   else
+      xrdver="unknown"
+   fi
+   if test ! "x$xrdver" = "xunknown"; then
+      tmpver=`echo $xrdver | sed 's|v||' | cut -c2-9`
+      decver=`expr 1 \* 0"$tmpver"`
+   fi
 fi
 if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
 
@@ -3867,39 +3890,25 @@ if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
       fi
    fi
 
-   if test "x$enable_xrootd" = "yes" ; then
+   if test "x$enable_xrootd" = "xyes" ; then
 
       # Check version
-      verh=$xrdincdir/XrdVersion.hh
-      xrdver=`grep XrdVERSION $verh`
-      if test $? -eq 0 ; then
-         set $xrdver
-         xrdver=$3
-      else
-         xrdver="unknown"
-      fi
-
       decrefone=20070628
       decreftwo=20070723
       decrefthree=20071004
-      decver=0
-      if test ! "x$xrdver" = "xunknown"; then
-         tmpver=`echo $xrdver | cut -c2-9`
-         decver=`expr 1 \* 0"$tmpver"`
-      fi
       if [ $decver -gt $decrefone ] ; then
          if [ $decver -gt $decrefthree ] ; then
-            xrdcomm="$xrdcomm (version is > 20071004)"
+            xrdcomm="$xrdcomm"
             extraxrdflags="$extraxrdflags"
          elif [ $decver -gt $decreftwo ] ; then
-            xrdcomm="$xrdcomm (version is > 20070723)"
+            vercomm=" (>$decreftwo, <=$decrefthree: setting -DOLDXRDLOCATE)"
             extraxrdflags="-DOLDXRDLOCATE $extraxrdflags"
          else
-            xrdcomm="$xrdcomm (version is > 20070628)"
+            vercomm=" (>$decrefone, <=$decreftwo: setting -DOLDXRDLOCATE -DOLDXRDOUC)"
             extraxrdflags="-DOLDXRDOUC -DOLDXRDLOCATE $extraxrdflags"
          fi
       else
-         xrdcomm="$xrdcomm (version is <= 20070628: setting the appropriate compilation flag)"
+         vercomm=" (<= $decrefone: setting -DOLDXRDLOCATE -DOLDXRDOUC -DOLDXRCPHYCONN)"
          extraxrdflags="-DOLDXRCPHYCONN -DOLDXRDOUC -DOLDXRDLOCATE $extraxrdflags"
       fi
    fi
@@ -3955,12 +3964,13 @@ else
    xrdcomm="$enable_xrootd$xrdcomm"
 fi
 
+xrdcomm="$xrdcomm"
 result $xrdcomm
-
 if test "x$enable_xrootd" = "xyes"; then
     buildxrd="yes"
     hasxrd=""
     hasnotxrd="#"
+    echo "Xrootd version $xrdver $vercomm"
 else
     buildxrd="no"
     hasxrd="#"
@@ -6006,6 +6016,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@xrdaddopts@|$xrdaddopts|"            \
     -e "s|@xrdlibdir@|$xrdlibdir|"              \
     -e "s|@xrdincdir@|$xrdincdir|"              \
+    -e "s|@xrdversion@|$decver|"                \
     -e "s|@cursesincdir@|$cursesincdir|"        \
     -e "s|@curseshdr@|$curseshdr|"              \
     -e "s|@curseslib@|$curseslib|"              \

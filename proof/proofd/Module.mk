@@ -124,10 +124,10 @@ XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdSys \
 XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
                   $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdOuc.a \
                   $(XROOTDDIRL)/libXrdSys.a $(XROOTDDIRL)/libXrdSut.a
-XRDNETUTIL     := $(shell if test -d $(XROOTDDIRL); then \
-                             find $(XROOTDDIRL) -name "*XrdNetUtil*"; \
+XRDNETUTIL     := $(shell if test $(XRDVERSION) -gt 20100729; then \
+                             echo "yes"; \
                           fi)
-ifneq ($(XRDNETUTIL),)
+ifeq ($(XRDNETUTIL),yes)
 XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdNetUtil
 XPROOFDEXELIBS += $(XROOTDDIRL)/libXrdNetUtil.a
 endif
