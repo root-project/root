@@ -133,6 +133,7 @@ public:
    TSocket(const char *host, Int_t port, Int_t tcpwindowsize = -1);
    TSocket(const char *sockpath);
    TSocket(Int_t descriptor);
+   TSocket(Int_t descriptor, const char *sockpath);
    TSocket(const TSocket &s);
    virtual ~TSocket() { Close(); }
 

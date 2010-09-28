@@ -272,7 +272,7 @@ TSocket::TSocket(const char *sockpath) : TNamed(sockpath, "")
    fCompress  = 0;
    fTcpWindowSize = -1;
    fUUIDs = 0;
-   fLastUsageMtx   = 0;
+   fLastUsageMtx  = 0;
 
    fSocket = gSystem->OpenConnection(sockpath, -1, -1);
    if (fSocket > 0) {
@@ -284,7 +284,8 @@ TSocket::TSocket(const char *sockpath) : TNamed(sockpath, "")
 //______________________________________________________________________________
 TSocket::TSocket(Int_t desc) : TNamed("", "")
 {
-   // Create a socket. The socket will use descriptor desc.
+   // Create a socket. The socket will adopt previously opened TCP socket with
+   // descriptor desc.
 
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -308,6 +309,41 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
    } else
       fSocket = -1;
 }
+
+//______________________________________________________________________________
+TSocket::TSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
+{
+   // Create a socket. The socket will adopt previously opened Unix socket with
+   // descriptor desc. The sockpath arg is for info purposes only. Use
+   // this method to adopt e.g. a socket created via socketpair().
+
+   R__ASSERT(gROOT);
+   R__ASSERT(gSystem);
+
+   fUrl = sockpath;
+
+   fService = "unix";
+   fSecContext = 0;
+   fRemoteProtocol= -1;
+   fServType = kSOCKD;
+   fAddress.fPort = -1;
+   fName.Form("unix:%s", sockpath);
+   SetTitle(fService);
+   fBytesSent = 0;
+   fBytesRecv = 0;
+   fCompress  = 0;
+   fTcpWindowSize = -1;
+   fUUIDs = 0;
+   fLastUsageMtx  = 0;
+
+   if (desc >= 0) {
+      fSocket  = desc;
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfSockets()->Add(this);
+   } else
+      fSocket = -1;
+}
+
 
 //______________________________________________________________________________
 TSocket::TSocket(const TSocket &s) : TNamed(s)
