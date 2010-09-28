@@ -109,6 +109,29 @@ associated to this object and an option which a combination of:
 <li> F: draw a box with fill associated wit TAttFill if obj inherits TAttFill
 <li> E: draw vertical error bar if option "L" is also specified
 </ul>
+<p>
+As shown in the following example, passing a NULL pointer as first parameter in
+<tt>AddEntry</tt> is also valid. This allows to add text or blank lines in a
+legend.
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c2 = new TCanvas("c2","c2",500,300);
+
+   TLegend* leg = new TLegend(0.2, 0.2, .8, .8);
+   TH1* h = new TH1F("", "", 1, 0, 1);
+
+   leg->AddEntry(h, "Histogram \"h\"", "l"); 
+   leg->AddEntry((TObject*)0, "", "");  
+   leg->AddEntry((TObject*)0, "Some text", "");
+   leg->AddEntry((TObject*)0, "", "");  
+   leg->AddEntry(h, "Histogram \"h\" again", "l");
+
+   leg->Draw();
+   return c2;
+}
+End_Macro
 End_Html */
 
 
