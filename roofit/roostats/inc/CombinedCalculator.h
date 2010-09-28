@@ -78,6 +78,7 @@ namespace RooStats {
    public:
 
       CombinedCalculator() : 
+         fSize(0.),
          fPdf(0),
          fData(0)
       {}

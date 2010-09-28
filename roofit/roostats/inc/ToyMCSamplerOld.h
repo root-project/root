@@ -74,6 +74,9 @@ namespace RooStats {
       fCounter=0;
       fVarName = fTestStat->GetVarName();
       fLastDataSet = 0;
+      fNevents = 0; 
+      fNtoys = 0; 
+      fSize = 0.05; 
     }
 
     virtual ~ToyMCSamplerOld() {

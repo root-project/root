@@ -51,6 +51,7 @@ SamplingDistPlot::SamplingDistPlot(const Int_t nbins) :
 {
   // SamplingDistPlot default constructor with bin size
   fIterator = fItems.MakeIterator();
+  fIsWeighted = kFALSE;
   fBins = nbins;
   fMarkerType = 20;
   fColor = 1;
@@ -71,6 +72,7 @@ SamplingDistPlot::SamplingDistPlot(const char* name, const char* title, Int_t nb
 {
   // SamplingDistPlot constructor
   fHist = new TH1F(name, title, nbins, xmin, xmax);
+  fIsWeighted = kFALSE;
   fBins = nbins;
   fMarkerType = 20;
   fColor = 1;

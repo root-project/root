@@ -90,6 +90,7 @@ FeldmanCousins::FeldmanCousins(RooAbsData& data, ModelConfig& model) :
   fData(data),
   fTestStatSampler(0),
   fPointsToTest(0),
+  fConfBelt(0),
   fAdaptiveSampling(false), 
   fAdditionalNToysFactor(1.),
   fNbins(10), 
@@ -169,7 +170,6 @@ void FeldmanCousins::CreateParameterPoints() const{
     TIter it2 = fModel.GetParametersOfInterest()->createIterator();
     RooRealVar *myarg2; 
     while ((myarg2 = dynamic_cast<RooRealVar*>(it2.Next()))) { 
-      if(!myarg2) continue;
       myarg2->setBins(fNbins);
     }
     
@@ -208,7 +208,6 @@ void FeldmanCousins::CreateParameterPoints() const{
     TIter it = parameters->createIterator();
     RooRealVar *myarg; 
     while ((myarg = dynamic_cast<RooRealVar*>(it.Next()))) { 
-      if(!myarg) continue;
       myarg->setBins(fNbins);
     }
 

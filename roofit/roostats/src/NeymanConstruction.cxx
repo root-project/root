@@ -77,6 +77,7 @@ using namespace RooStats;
 
 //_______________________________________________________
 NeymanConstruction::NeymanConstruction(RooAbsData& data, ModelConfig& model):
+   fSize(0.05),
    fData(data),
    fModel(model),
    fLeftSideFraction(0), 

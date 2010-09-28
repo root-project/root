@@ -46,7 +46,8 @@ ClassImp(RooStats::ConfidenceBelt) ;
 using namespace RooStats;
 
 //____________________________________________________________________
-ConfidenceBelt::ConfidenceBelt() 
+ConfidenceBelt::ConfidenceBelt() :
+   fParameterPoints(0)
 {
    // Default constructor
 }

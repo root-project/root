@@ -47,14 +47,14 @@ using namespace RooStats;
 
 //____________________________________________________________________
 PointSetInterval::PointSetInterval(const char* name) :
-   ConfInterval(name), fParameterPointsInInterval(0)
+   ConfInterval(name), fConfidenceLevel(0.95), fParameterPointsInInterval(0)
 {
    // Default constructor
 }
 
 //____________________________________________________________________
 PointSetInterval::PointSetInterval(const char* name, RooAbsData& data) :
-   ConfInterval(name), fParameterPointsInInterval(&data)
+   ConfInterval(name), fConfidenceLevel(0.95), fParameterPointsInInterval(&data)
 {
    // Alternate constructor passing the dataset 
 }
@@ -98,7 +98,6 @@ Bool_t PointSetInterval::IsInInterval(const RooArgSet &parameterPoint) const
       TIter it = parameterPoint.createIterator();
       RooRealVar *myarg; 
       while ( samePoint && (myarg = (RooRealVar *)it.Next())) { 
-	if(!myarg) continue;
 	if(myarg->getVal() != thisPoint->getRealValue(myarg->GetName()))
 	  samePoint = false;
       }

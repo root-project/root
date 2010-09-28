@@ -127,9 +127,9 @@ namespace RooStats {
   ///////////////////////////
   class SamplingSummary : public TObject {
   public:
-    SamplingSummary() {}
+     SamplingSummary() : fParameterPointIndex(0) {}
     virtual ~SamplingSummary() {}
-    SamplingSummary(AcceptanceRegion& ar){
+     SamplingSummary(AcceptanceRegion& ar) : fParameterPointIndex(0) {
       AddAcceptanceRegion(ar);
     }
     Int_t GetParameterPointIndex(){return fParameterPointIndex;}

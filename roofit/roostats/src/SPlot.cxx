@@ -365,7 +365,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   for(Int_t i = 0; i < constParameters->getSize(); i++) 
     {
       RooRealVar* varTemp = ( dynamic_cast<RooRealVar*>( constParameters->at(i) ) );
-      if( varTemp->isConstant() == 0 )
+      if(varTemp &&  varTemp->isConstant() == 0 )
 	{
 	  varTemp->setConstant();
 	  constVarHolder.push_back(varTemp);
@@ -413,10 +413,12 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
       RooRealVar* thisyield = dynamic_cast<RooRealVar*>(yields.at(k)) ;
       RooRealVar* yieldinpdf = dynamic_cast<RooRealVar*>(parameters->find(thisyield->GetName() )) ;
 
-      coutI(InputArguments)<< "yield in pdf: " << yieldinpdf->GetName() << " " << thisyield->getVal() << endl;
+      if (thisyield && yieldinpdf) { 
+         coutI(InputArguments)<< "yield in pdf: " << yieldinpdf->GetName() << " " << thisyield->getVal() << endl;
       
-      yieldvars.push_back(yieldinpdf) ;
-      yieldvalues.push_back(thisyield->getVal()) ;
+         yieldvars.push_back(yieldinpdf) ;
+         yieldvalues.push_back(thisyield->getVal()) ;
+      }
     }
   
   Int_t numevents = fSData->numEntries() ;
@@ -564,16 +566,16 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
   for(Int_t k=0; k<nspec; ++k) 
     {
-      sprintf(wname,"%s_sw", yieldvars[k]->GetName()) ;
-      RooRealVar* var = new RooRealVar(wname,wname,0) ;
-      sweightvec.push_back( var) ;
-      sweightset.add(*var) ;
-      fSWeightVars.add(*var);
+       std::string wname = std::string(yieldvars[k]->GetName()) + "_sw";
+       RooRealVar* var = new RooRealVar(wname.c_str(),wname.c_str(),0) ;
+       sweightvec.push_back( var) ;
+       sweightset.add(*var) ;
+       fSWeightVars.add(*var);
     
-      sprintf(wname,"L_%s", yieldvars[k]->GetName()) ;
-      var = new RooRealVar(wname,wname,0) ;
-      pdfvec.push_back( var) ;
-      sweightset.add(*var) ;
+       wname = "L_" + std::string(yieldvars[k]->GetName());
+       var = new RooRealVar(wname.c_str(),wname.c_str(),0) ;
+       pdfvec.push_back( var) ;
+       sweightset.add(*var) ;
     }
 
   // Create and fill a RooDataSet

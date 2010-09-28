@@ -315,7 +315,7 @@ namespace RooStats {
       Int_t fDimension; // number of variables
       Int_t fNumBurnInSteps; // number of steps to discard as burn in, starting
                              // from the first
-      Double_t fIntervalSum; // sum of heights of bins in the interval
+      // LM (not used) Double_t fIntervalSum; // sum of heights of bins in the interval
       RooRealVar** fAxes; // array of pointers to RooRealVars representing
                           // the axes of the histogram
                           // fAxes[0] represents x-axis, [1] y, [2] z, etc
