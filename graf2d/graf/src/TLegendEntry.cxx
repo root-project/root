@@ -141,7 +141,7 @@ void TLegendEntry::SetObject(TObject* obj )
    // (re)set the obj pointed to by this entry
 
    if ( ( fObject && fLabel == fObject->GetTitle() ) || !fLabel ) {
-      fLabel = obj->GetTitle();
+      if (obj) fLabel = obj->GetTitle();
    }
    fObject = obj;
 }
