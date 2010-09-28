@@ -158,9 +158,9 @@ RooDataSet* MarkovChain::GetAsDataSet(RooArgSet* whichVars) const
    return data;
 }
 
-RooDataSet* MarkovChain::GetAsDataSet(RooCmdArg arg1, RooCmdArg arg2,
-      RooCmdArg arg3, RooCmdArg arg4, RooCmdArg arg5, RooCmdArg arg6,
-      RooCmdArg arg7, RooCmdArg arg8) const
+RooDataSet* MarkovChain::GetAsDataSet(const RooCmdArg& arg1, const RooCmdArg& arg2, 
+                                      const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
+                                      const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
    RooDataSet* data;
    data = (RooDataSet*)fChain->reduce(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
@@ -185,9 +185,9 @@ RooDataHist* MarkovChain::GetAsDataHist(RooArgSet* whichVars) const
    return hist;
 }
 
-RooDataHist* MarkovChain::GetAsDataHist(RooCmdArg arg1, RooCmdArg arg2,
-      RooCmdArg arg3, RooCmdArg arg4, RooCmdArg arg5, RooCmdArg arg6,
-      RooCmdArg arg7, RooCmdArg arg8) const
+RooDataHist* MarkovChain::GetAsDataHist(const RooCmdArg& arg1, const RooCmdArg& arg2, 
+                                        const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
+                                        const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
    RooDataSet* data;
    RooDataHist* hist;
@@ -218,11 +218,9 @@ THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const
    }
    THnSparseF* sparseHist = new THnSparseF("posterior", "MCMC Posterior Histogram",
          dim, bins, min, max);
-   // kbelasco: check here for memory leaks: does THnSparse copy min, max, and bins
-   // or can we not delete them?
-   //delete[] min;
-   //delete[] max;
-   //delete[] bins;
+   delete[] min;
+   delete[] max;
+   delete[] bins;
 
    // kbelasco: it appears we need to call Sumw2() just to get the
    // histogram to keep a running total of the weight so that Getsumw doesn't

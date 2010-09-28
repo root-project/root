@@ -77,11 +77,11 @@ namespace RooStats {
 
       // Get a clone of the markov chain on which this interval is based
       // as a RooDataSet.  You own the returned RooDataSet*
-      virtual RooDataSet* GetAsDataSet(RooCmdArg arg1,
-            RooCmdArg arg2 = RooCmdArg(), RooCmdArg arg3 = RooCmdArg(),
-            RooCmdArg arg4 = RooCmdArg(), RooCmdArg arg5 = RooCmdArg(),
-            RooCmdArg arg6 = RooCmdArg(), RooCmdArg arg7 = RooCmdArg(),
-            RooCmdArg arg8 = RooCmdArg()) const;
+      virtual RooDataSet* GetAsDataSet(const RooCmdArg& arg1,
+                                       const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
+                                       const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
+                                       const RooCmdArg& arg6=RooCmdArg::none(), const RooCmdArg& arg7=RooCmdArg::none(),
+                                       const RooCmdArg& arg8=RooCmdArg::none() ) const; 
 
       virtual const RooDataSet* GetAsConstDataSet() const { return fChain; }
 
@@ -93,11 +93,11 @@ namespace RooStats {
 
       // Get a clone of the markov chain on which this interval is based
       // as a RooDataHist.  You own the returned RooDataHist*
-      virtual RooDataHist* GetAsDataHist(RooCmdArg arg1,
-            RooCmdArg arg2 = RooCmdArg(), RooCmdArg arg3 = RooCmdArg(),
-            RooCmdArg arg4 = RooCmdArg(), RooCmdArg arg5 = RooCmdArg(),
-            RooCmdArg arg6 = RooCmdArg(), RooCmdArg arg7 = RooCmdArg(),
-            RooCmdArg arg8 = RooCmdArg()) const;
+      virtual RooDataHist* GetAsDataHist(const RooCmdArg & arg1,
+                                         const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
+                                         const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
+                                         const RooCmdArg& arg6=RooCmdArg::none(), const RooCmdArg& arg7=RooCmdArg::none(),
+                                         const RooCmdArg& arg8=RooCmdArg::none() ) const; 
 
       // Get a clone of the markov chain on which this interval is based
       // as a sparse histogram.  You own the returned THnSparse*

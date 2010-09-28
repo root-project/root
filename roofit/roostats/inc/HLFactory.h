@@ -56,7 +56,7 @@ namespace RooStats {
 
     /// Dump the Workspace content as configuration file
     /* It needs some workspace object list or something..*/
-    void DumpCfg(const char* cardname){cardname=0;}; // Dump the factory content as configuration file
+     void DumpCfg(const char* /*cardname*/ ){ /* t.b.i. */ }; // Dump the factory content as configuration file
 
     /// Get the combined signal plus background pdf
     RooAbsPdf* GetTotSigBkgPdf(); // Get the Signal and Background combined model
