@@ -9,18 +9,7 @@
 # It only suppresses leaks, no errors!
 
 
-#########  CINT
-{
-   Cint: leaking G__memfunc_para_setup called by dictionary
-   Memcheck:Leak
-   fun:malloc
-   fun:G__memfunc_para_setup
-   fun:G__parse_parameter_link
-   fun:G__memfunc_setup
-   fun:_Z*G__cpp_setup_func*
-   fun:G__cpp_setup_func*
-}
-
+#########  Intentional test errors
 
 
 

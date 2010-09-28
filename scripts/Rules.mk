@@ -71,8 +71,10 @@ ALL_LIBRARIES += AutoDict_* *_ACLiC_* *.success *.d *.o *.obj *.so *.def *.exp *
 
 include $(ROOTTEST_HOME)/scripts/Common.mk
 DEPENDENCIES_INCLUDES := $(wildcard *.d)
-ifneq ($(DEPENDENCIES_INCLUDES),)
-   -include $(wildcard *.d)
+ifeq ($(findstring clean,$(MAKECMDGOALS)),)
+   ifneq ($(DEPENDENCIES_INCLUDES),)
+      -include $(wildcard *.d)
+   endif
 endif
 
 ifeq ($(MAKECMDGOALS),cleantest)
@@ -134,6 +136,18 @@ valgrind: $(ROOTTEST_LOC)scripts/analyze_valgrind
 	valgrindlistenerpid=$$$$ && \
 	$(MAKE) -C $$PWD $(filter-out valgrind,$(MAKECMDGOALS)) \
           CALLROOTEXE="valgrind --suppressions=$(ROOTSYS)/etc/valgrind-root.supp --suppressions=$(ROOTTEST_HOME)/scripts/valgrind-suppression_ROOT_optional.supp --log-socket=127.0.0.1 --error-limit=no --leak-check=full -v root.exe" ; \
+	killall valgrind-listener; \
+	grep '==[[:digit:]]\+==' $$valgrindlogfile | $(ROOTTEST_HOME)/scripts/analyze_valgrind \
+	&& $(ROOTTEST_HOME)/scripts/analyze_valgrind.sh $$valgrindlogfile > $$valgrindlogfile.summary.txt \
+	)
+
+valgrind-summary: $(ROOTTEST_LOC)scripts/analyze_valgrind
+	@( export valgrindlogfile=${PWD}/valgrind-`date +"%Y%m%d-%H%M%S"`.log; \
+	( \
+	valgrind-listener > $$valgrindlogfile 2>&1 & ) && \
+	valgrindlistenerpid=$$$$ && \
+	$(MAKE) -C $$PWD $(filter-out valgrind,$(MAKECMDGOALS)) \
+          CALLROOTEXE="valgrind --suppressions=$(ROOTSYS)/etc/valgrind-root.supp --suppressions=$(ROOTTEST_HOME)/scripts/valgrind-suppression_ROOT_optional.supp --log-socket=127.0.0.1 --error-limit=no --leak-check=summary -v root.exe" ; \
 	killall valgrind-listener; \
 	grep '==[[:digit:]]\+==' $$valgrindlogfile | $(ROOTTEST_HOME)/scripts/analyze_valgrind \
 	&& $(ROOTTEST_HOME)/scripts/analyze_valgrind.sh $$valgrindlogfile > $$valgrindlogfile.summary.txt \
