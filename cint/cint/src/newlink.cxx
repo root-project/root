@@ -2978,9 +2978,7 @@ void G__clink_header(FILE *fp)
   if(G__multithreadlibcint)
     fprintf(fp,"#define G__MULTITHREADLIBCINTC\n");
   fprintf(fp,"#define G__ANSIHEADER\n");
-#if defined(G__VAARG_COPYFUNC) || !defined(G__OLDIMPLEMENTATION1530)
   fprintf(fp,"#define G__DICTIONARY\n");
-#endif
 #if defined(__hpux) && !defined(G__ROOT)
   G__getcintsysdir();
   fprintf(fp,"#include \"%s/%s/inc/G__ci.h\"\n",G__cintsysdir, G__CFG_COREVERSION);
@@ -3068,10 +3066,8 @@ void G__cpplink_header(FILE *fp)
   if(G__multithreadlibcint)
     fprintf(fp,"#define G__MULTITHREADLIBCINTCPP\n");
   fprintf(fp,"#define G__ANSIHEADER\n");
-#if defined(G__VAARG_COPYFUNC) || !defined(G__OLDIMPLEMENTATION1530)
   fprintf(fp,"#define G__DICTIONARY\n");
   fprintf(fp,"#define G__PRIVATE_GVALUE\n");
-#endif
 #if defined(__hpux) && !defined(G__ROOT)
   G__getcintsysdir();
   fprintf(fp,"#include \"%s/%s/inc/G__ci.h\"\n",G__cintsysdir, G__CFG_COREVERSION);

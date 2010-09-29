@@ -1178,13 +1178,8 @@ struct G__friendtag {
 **************************************************************************/
 struct G__param {
   int paran;
-#ifdef G__OLDIMPLEMENTATION1530
-  char parameter[G__MAXFUNCPARA][G__ONELINE];
-#endif
   G__value para[G__MAXFUNCPARA];
-#ifndef G__OLDIMPLEMENTATION1530
   char parameter[G__MAXFUNCPARA][G__ONELINE];
-#endif
 };
 
 
