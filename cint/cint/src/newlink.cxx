@@ -12355,7 +12355,7 @@ void G__specify_link(int link_stub)
 #endif /* 828 */
 
 
-    /* if the function is specified with paramters */
+    /* if the function is specified with parameters */
     p = strchr(buf,'(');
     if(p && strstr(buf,"operator()")==0) {
       if(strncmp(p,")(",2)==0) p+=2;
@@ -12365,7 +12365,7 @@ void G__specify_link(int link_stub)
       G__FastAllocString funcname(G__LONGLINE);
       G__FastAllocString param_sb(G__LONGLINE);
 
-      if(')' == *(p+1) && '('== *(p+2) ) p = strchr(p+1,'(');
+      if(')' == *(p+1) && '('== *(p+2) ) p += 2;
       *p='\0';
       funcname = buf;
       param_sb = p+1;
