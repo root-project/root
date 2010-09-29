@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 09/17/10
+# Last: 09/29/10
 
 """PyROOT user module.
 
@@ -456,7 +456,8 @@ class ModuleFacade( types.ModuleType ):
 
     # normally, you'll want a ROOT application; don't init any further if
     # one pre-exists from some C++ code somewhere
-      if PyConfig.IgnoreCommandLineOptions:
+      hasargv = hasattr( sys, 'argv' )
+      if hasargv and PyConfig.IgnoreCommandLineOptions:
          argv = sys.argv
          sys.argv = []
 
@@ -466,7 +467,7 @@ class ModuleFacade( types.ModuleType ):
          appc.InitCINTMessageCallback();
          appc.InitROOTMessageCallback();
 
-      if PyConfig.IgnoreCommandLineOptions:
+      if hasargv and PyConfig.IgnoreCommandLineOptions:
          sys.argv = argv
 
     # must be called after gApplication creation:
@@ -476,7 +477,7 @@ class ModuleFacade( types.ModuleType ):
          sys.modules[ '__main__' ].__builtins__ = __builtins__
 
     # custom logon file (must be after creation of ROOT globals)
-      if not '-n' in sys.argv:
+      if hasargv and not '-n' in sys.argv:
          rootlogon = os.path.expanduser( '~/.rootlogon.py' )
          if os.path.exists( rootlogon ):
           # could also have used execfile, but import is likely to give fewer surprises
@@ -572,8 +573,12 @@ def cleanup():
  # order of static object destruction; so far it only seemed needed for
  # sockets with PROOF, whereas files should not be touched this early ...
    gROOT = sys.modules[ 'libPyROOT' ].gROOT
+   if gROOT.GetListOfFiles():
+      gROOT.GetListOfFiles().Delete( 'slow' )
    if gROOT.GetListOfSockets():
       gROOT.GetListOfSockets().Delete()
+   if gROOT.GetListOfMappedFiles():
+      gROOT.GetListOfMappedFiles().Delete( 'slow' )
    del gROOT
 
  # cleanup cached python strings
