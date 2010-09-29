@@ -529,7 +529,7 @@ void TGraph2D::DirectoryAutoAdd(TDirectory *dir)
       SetDirectory(dir);
       if (dir) {
          ResetBit(kCanDelete);
-      }      
+      }
    }
 }
 
@@ -707,8 +707,8 @@ TFitResultPtr TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    //  =============================
    //   By default a chi2 fitting function is used for fitting a TGraph.
    //   The function is implemented in FitUtil::EvaluateChi2.
-   //   In case of TGraph2DErrors an effective chi2 is used 
-   //   (see TGraphErrors fit in TGraph::Fit) and is implemented in 
+   //   In case of TGraph2DErrors an effective chi2 is used
+   //   (see TGraphErrors fit in TGraph::Fit) and is implemented in
    //   FitUtil::EvaluateChi2Effective
    //   To specify a User defined fitting function, specify option "U" and
    //   call the following functions:
@@ -928,10 +928,10 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
    if (!fUserHisto) {
       Bool_t add = TH1::AddDirectoryStatus();
       TH1::AddDirectory(kFALSE);
-      Double_t xmax  = GetXmax();
-      Double_t ymax  = GetYmax();
-      Double_t xmin  = GetXmin();
-      Double_t ymin  = GetYmin();
+      Double_t xmax  = GetXmaxE();
+      Double_t ymax  = GetYmaxE();
+      Double_t xmin  = GetXminE();
+      Double_t ymin  = GetYminE();
       hxmin = xmin-fMargin*(xmax-xmin);
       hymin = ymin-fMargin*(ymax-ymin);
       hxmax = xmax+fMargin*(xmax-xmin);
@@ -961,12 +961,12 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
       if (fMinimum != -1111) {
          hzmin = fMinimum;
       } else {
-         hzmin = GetZmin();
+         hzmin = GetZminE();
       }
       if (fMaximum != -1111) {
          hzmax = fMaximum;
       } else {
-         hzmax = GetZmax();
+         hzmax = GetZmaxE();
       }
       if (hzmin==hzmax) {
          hzmin = hzmin-0.01*hzmin;
@@ -1104,6 +1104,8 @@ void TGraph2D::Paint(Option_t *option)
    }
 
    if (opt.Contains("line") && !opt.Contains("tri")) opt.Append("tri0");
+
+   if (opt.Contains("err")  && !opt.Contains("tri")) opt.Append("tri0");
 
    if (opt.Contains("tri0")) {
       GetHistogram("empty");

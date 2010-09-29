@@ -23,9 +23,60 @@
 ClassImp(TGraph2DErrors)
 
 //______________________________________________________________________________
-//
-//   A TGraph2DErrors is a TGraph2D with errors.
-//
+/* Begin_Html
+<center><h2>Graph 2D class with errors</h2></center>
+A TGraph2DErrors is a TGraph2D with errors. It behaves like a TGraph2D and has
+the same drawing options.
+<p>
+The <tt>"ERR"</tt> drawing option allows to display the error bars. The
+following example shows how to use it:
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c","Graph2DErrors example",0,0,600,600);
+   Double_t P = 6.;
+   Int_t np   = 200;
+
+   Double_t *rx=0, *ry=0, *rz=0;
+   Double_t *ex=0, *ey=0, *ez=0;
+
+   rx = new Double_t[np];
+   ry = new Double_t[np];
+   rz = new Double_t[np];
+   ex = new Double_t[np];
+   ey = new Double_t[np];
+   ez = new Double_t[np];
+
+   TRandom *r = new TRandom();
+
+   for (Int_t N=0; N<np;N++) {
+      rx[N] = 2*P*(r->Rndm(N))-P;
+      ry[N] = 2*P*(r->Rndm(N))-P;
+      rz[N] = rx[N]*rx[N]-ry[N]*ry[N];
+      rx[N] = 10.+rx[N];
+      ry[N] = 10.+ry[N];
+      rz[N] = 40.+rz[N];
+      ex[N] = r->Rndm(N);
+      ey[N] = r->Rndm(N);
+      ez[N] = 10*r->Rndm(N);
+   }
+
+   TGraph2DErrors *dte = new TGraph2DErrors(np, rx, ry, rz, ex, ey, ez);
+   dte->SetTitle("TGraph2D with error bars: option \"ERR\"");
+   dte->SetFillColor(29);
+   dte->SetMarkerSize(0.8);
+   dte->SetMarkerStyle(20);
+   dte->SetMarkerColor(kRed);
+   dte->SetLineColor(kBlue-3);
+   dte->SetLineWidth(2);
+   dte->Draw("err p0");
+   gPad->SetLogy(1);
+   return c;
+}
+End_Macro
+End_Html */
+
 
 //______________________________________________________________________________
 TGraph2DErrors::TGraph2DErrors(): TGraph2D()
@@ -44,7 +95,7 @@ TGraph2DErrors::TGraph2DErrors(Int_t n)
 {
    // TGraph2DErrors normal constructor
    // the arrays are preset to zero
-   
+
    if (n <= 0) {
       Error("TGraph2DErrors", "Invalid number of points (%d)", n);
       return;
@@ -73,11 +124,11 @@ TGraph2DErrors::TGraph2DErrors(Int_t n, Double_t *x, Double_t *y, Double_t *z,
       Error("TGraphErrors", "Invalid number of points (%d)", n);
       return;
    }
-        
+
    fEX = new Double_t[n];
    fEY = new Double_t[n];
    fEZ = new Double_t[n];
-   
+
    for (Int_t i=0;i<n;i++) {
       if (ex) fEX[i] = ex[i];
       else    fEX[i] = 0;
@@ -135,6 +186,73 @@ Double_t TGraph2DErrors::GetErrorZ(Int_t i) const
    return -1;
 }
 
+
+//______________________________________________________________________________
+Double_t TGraph2DErrors::GetXmaxE() const
+{
+   // Returns the X maximum with errors.
+
+   Double_t v = fX[0]+fEX[0];
+   for (Int_t i=1; i<fNpoints; i++) if (fX[i]>v) v=fX[i]+fEX[i];
+   return v;
+}
+
+
+//______________________________________________________________________________
+Double_t TGraph2DErrors::GetXminE() const
+{
+   // Returns the X minimum with errors.
+
+   Double_t v = fX[0]+fEX[0];
+   for (Int_t i=1; i<fNpoints; i++) if (fX[i]<v) v=fX[i]+fEX[i];
+   return v;
+}
+
+
+//______________________________________________________________________________
+Double_t TGraph2DErrors::GetYmaxE() const
+{
+   // Returns the Y maximum with errors.
+
+   Double_t v = fY[0]+fEY[0];
+   for (Int_t i=1; i<fNpoints; i++) if (fY[i]>v) v=fY[i]+fEY[i];
+   return v;
+}
+
+
+//______________________________________________________________________________
+Double_t TGraph2DErrors::GetYminE() const
+{
+   // Returns the Y minimum with errors.
+
+   Double_t v = fY[0]+fEY[0];
+   for (Int_t i=1; i<fNpoints; i++) if (fY[i]<v) v=fY[i]+fEY[i];
+   return v;
+}
+
+
+//______________________________________________________________________________
+Double_t TGraph2DErrors::GetZmaxE() const
+{
+   // Returns the Z maximum with errors.
+
+   Double_t v = fZ[0]+fEZ[0];
+   for (Int_t i=1; i<fNpoints; i++) if (fZ[i]>v) v=fZ[i]+fEZ[i];
+   return v;
+}
+
+
+//______________________________________________________________________________
+Double_t TGraph2DErrors::GetZminE() const
+{
+   // Returns the Z minimum with errors.
+
+   Double_t v = fZ[0]+fEZ[0];
+   for (Int_t i=1; i<fNpoints; i++) if (fZ[i]<v) v=fZ[i]+fEZ[i];
+   return v;
+}
+
+
 //______________________________________________________________________________
 void TGraph2DErrors::Set(Int_t n)
 {
@@ -144,7 +262,7 @@ void TGraph2DErrors::Set(Int_t n)
 
    if (n < 0) n = 0;
    if (n == fNpoints) return;
-   if (n >  fNpoints) SetPointError(n,0,0,0);          
+   if (n >  fNpoints) SetPointError(n,0,0,0);
    fNpoints = n;
 }
 

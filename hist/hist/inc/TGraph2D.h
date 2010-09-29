@@ -92,61 +92,67 @@ public:
 
    TGraph2D& operator=(const TGraph2D &);
    
-   virtual void     Clear(Option_t *option="");
-   virtual void     DirectoryAutoAdd(TDirectory *);
-   Int_t            DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void     Draw(Option_t *option="");
-   void             ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   virtual TObject *FindObject(const char *name) const;
-   virtual TObject *FindObject(const TObject *obj) const;
+   virtual void          Clear(Option_t *option="");
+   virtual void          DirectoryAutoAdd(TDirectory *);
+   Int_t                 DistancetoPrimitive(Int_t px, Int_t py);
+   virtual void          Draw(Option_t *option="");
+   void                  ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   virtual TObject      *FindObject(const char *name) const;
+   virtual TObject      *FindObject(const TObject *obj) const;
    virtual TFitResultPtr Fit(const char *formula ,Option_t *option="" ,Option_t *goption=""); // *MENU*
    virtual TFitResultPtr Fit(TF2 *f2 ,Option_t *option="" ,Option_t *goption=""); // *MENU*
-   virtual void     FitPanel(); // *MENU*
-   TList           *GetContourList(Double_t contour);
-   TDirectory      *GetDirectory() const {return fDirectory;}
-   Int_t            GetNpx() const {return fNpx;}
-   Int_t            GetNpy() const {return fNpy;}
-   TH2D            *GetHistogram(Option_t *option="");
-   TList           *GetListOfFunctions() const { return fFunctions; }
-   virtual Double_t GetErrorX(Int_t bin) const;
-   virtual Double_t GetErrorY(Int_t bin) const;
-   virtual Double_t GetErrorZ(Int_t bin) const;
-   Double_t         GetMargin() const {return fMargin;}
-   TAxis           *GetXaxis() const ;
-   TAxis           *GetYaxis() const ;
-   TAxis           *GetZaxis() const ;
-   Int_t            GetN() const {return fNpoints;}
-   Double_t        *GetX() const {return fX;}
-   Double_t        *GetY() const {return fY;}
-   Double_t        *GetZ() const {return fZ;}
-   virtual Double_t *GetEX() const {return 0;}
-   virtual Double_t *GetEY() const {return 0;}
-   virtual Double_t *GetEZ() const {return 0;}
-   Double_t         GetXmax() const;
-   Double_t         GetXmin() const;
-   Double_t         GetYmax() const;
-   Double_t         GetYmin() const;
-   Double_t         GetZmax() const;
-   Double_t         GetZmin() const;
-   Double_t         Interpolate(Double_t x, Double_t y);
-   void             Paint(Option_t *option="");
-   TH1             *Project(Option_t *option="x") const; // *MENU*
-   Int_t            RemovePoint(Int_t ipoint); // *MENU*
-   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
-   virtual void     Set(Int_t n);
-   virtual void     SetDirectory(TDirectory *dir);
-   virtual void     SetHistogram(TH2 *h);
-   void             SetMargin(Double_t m=0.1); // *MENU*
-   void             SetMarginBinsContent(Double_t z=0.); // *MENU*
-   void             SetMaximum(Double_t maximum=-1111); // *MENU*
-   void             SetMinimum(Double_t minimum=-1111); // *MENU*
-   void             SetMaxIter(Int_t n=100000) {fMaxIter = n;} // *MENU*
-   virtual void     SetName(const char *name); // *MENU*
-   virtual void     SetNameTitle(const char *name, const char *title);
-   void             SetNpx(Int_t npx=40); // *MENU*
-   void             SetNpy(Int_t npx=40); // *MENU*
-   virtual void     SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); // *MENU*
-   virtual void     SetTitle(const char *title=""); // *MENU*
+   virtual void          FitPanel(); // *MENU*
+   TList                *GetContourList(Double_t contour);
+   TDirectory           *GetDirectory() const {return fDirectory;}
+   Int_t                 GetNpx() const {return fNpx;}
+   Int_t                 GetNpy() const {return fNpy;}
+   TH2D                 *GetHistogram(Option_t *option="");
+   TList                *GetListOfFunctions() const { return fFunctions; }
+   virtual Double_t      GetErrorX(Int_t bin) const;
+   virtual Double_t      GetErrorY(Int_t bin) const;
+   virtual Double_t      GetErrorZ(Int_t bin) const;
+   Double_t              GetMargin() const {return fMargin;}
+   TAxis                *GetXaxis() const ;
+   TAxis                *GetYaxis() const ;
+   TAxis                *GetZaxis() const ;
+   Int_t                 GetN() const {return fNpoints;}
+   Double_t             *GetX() const {return fX;}
+   Double_t             *GetY() const {return fY;}
+   Double_t             *GetZ() const {return fZ;}
+   virtual Double_t     *GetEX() const {return 0;}
+   virtual Double_t     *GetEY() const {return 0;}
+   virtual Double_t     *GetEZ() const {return 0;}
+   Double_t              GetXmax() const;
+   Double_t              GetXmin() const;
+   Double_t              GetYmax() const;
+   Double_t              GetYmin() const;
+   Double_t              GetZmax() const;
+   Double_t              GetZmin() const;
+   virtual Double_t      GetXmaxE() const {return GetXmax();};
+   virtual Double_t      GetXminE() const {return GetXmin();};
+   virtual Double_t      GetYmaxE() const {return GetYmax();};
+   virtual Double_t      GetYminE() const {return GetYmin();};
+   virtual Double_t      GetZmaxE() const {return GetZmax();};
+   virtual Double_t      GetZminE() const {return GetZmin();};
+   Double_t              Interpolate(Double_t x, Double_t y);
+   void                  Paint(Option_t *option="");
+   TH1                  *Project(Option_t *option="x") const; // *MENU*
+   Int_t                 RemovePoint(Int_t ipoint); // *MENU*
+   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          Set(Int_t n);
+   virtual void          SetDirectory(TDirectory *dir);
+   virtual void          SetHistogram(TH2 *h);
+   void                  SetMargin(Double_t m=0.1); // *MENU*
+   void                  SetMarginBinsContent(Double_t z=0.); // *MENU*
+   void                  SetMaximum(Double_t maximum=-1111); // *MENU*
+   void                  SetMinimum(Double_t minimum=-1111); // *MENU*
+   void                  SetMaxIter(Int_t n=100000) {fMaxIter = n;} // *MENU*
+   virtual void          SetName(const char *name); // *MENU*
+   virtual void          SetNameTitle(const char *name, const char *title);
+   void                  SetNpx(Int_t npx=40); // *MENU*
+   void                  SetNpy(Int_t npx=40); // *MENU*
+   virtual void          SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); // *MENU*
+   virtual void          SetTitle(const char *title=""); // *MENU*
 
    ClassDef(TGraph2D,1)  //Set of n x[i],y[i],z[i] points with 3-d graphics including Delaunay triangulation
 };

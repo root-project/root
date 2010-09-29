@@ -38,6 +38,9 @@ protected:
    Double_t   *fZ;            //!Pointer to fGraph2D->fZ
    Double_t   *fXN;           //!Pointer to fDelaunay->fXN
    Double_t   *fYN;           //!Pointer to fDelaunay->fYN
+   Double_t   *fEX;           //!Pointer to fGraph2D->fXE
+   Double_t   *fEY;           //!Pointer to fGraph2D->fYE
+   Double_t   *fEZ;           //!Pointer to fGraph2D->fZE
    Double_t    fXNmin;        //!Equal to fDelaunay->fXNmin
    Double_t    fXNmax;        //!Equal to fDelaunay->fXNmax
    Double_t    fYNmin;        //!Equal to fDelaunay->fYNmin
@@ -70,10 +73,11 @@ public:
 
    TList *GetContourList(Double_t contour);
    void   Paint(Option_t *option);
-   void   PaintTriangles(Option_t *option);
+   void   PaintContour(Option_t *option);
+   void   PaintErrors(Option_t *option);
    void   PaintPolyMarker(Option_t *option);
    void   PaintPolyLine(Option_t *option);
-   void   PaintContour(Option_t *option);
+   void   PaintTriangles(Option_t *option);
 
    ClassDef(TGraph2DPainter,0)  // TGraph2D painter
 };
