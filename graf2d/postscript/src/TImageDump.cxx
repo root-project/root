@@ -132,6 +132,8 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    Int_t ix2 = x1 < x2 ? XtoPixel(x2) : XtoPixel(x1);
    Int_t iy1 = y1 < y2 ? YtoPixel(y1) : YtoPixel(y2);
    Int_t iy2 = y1 < y2 ? YtoPixel(y2) : YtoPixel(y1);
+   if (TMath::Abs(ix2-ix1) < 1) ix2 = ix1+1;
+   if (TMath::Abs(iy1-iy2) < 1) iy1 = iy2+1;
 
    Int_t fillis = fFillStyle/1000;
    Int_t fillsi = fFillStyle%1000;
