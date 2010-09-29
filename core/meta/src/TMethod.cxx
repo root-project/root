@@ -173,6 +173,10 @@ TDataMember *TMethod::FindDataMember()
 
       strlcpy(argstr,argstring,nchs+1);       //let's move it to "worksapce"  copy
       ptr2 = strtok(argstr,"{}");     //extract the data!
+      if (ptr2 == 0) {
+         Fatal("FindDataMember","Internal error found '*ARGS=\"' but not \"{}\" in %s",GetCommentString());
+         return 0;
+      }
       ptr2 = strtok((char*)0,"{}");
 
       //extract argument tokens//
