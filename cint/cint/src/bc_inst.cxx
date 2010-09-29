@@ -782,6 +782,7 @@ void G__bc_inst::LD_IFUNC(struct G__ifunc_table* iref, int ifn, int hash,
       int len;
       G__hash(p_ifunc->funcname[ifn], hash, len);
    }
+#ifdef G__LD_IFUNC_HANDLES_BYTECODE
    if (0 && p_ifunc->pentry[ifn]->bytecode && (p_ifunc->isvirtual[ifn] == 0)) {
       // TODO, this causes problem, maybe bytecode pointer is not initialized
       LD_FUNC(
@@ -794,6 +795,7 @@ void G__bc_inst::LD_IFUNC(struct G__ifunc_table* iref, int ifn, int hash,
       );
    }
    else {
+#endif
       G__asm_inst[G__asm_cp] = G__LD_IFUNC;
       G__asm_inst[G__asm_cp+1] = (long) p_ifunc->funcname[ifn];
       G__asm_inst[G__asm_cp+2] = (long) hash;
@@ -803,7 +805,9 @@ void G__bc_inst::LD_IFUNC(struct G__ifunc_table* iref, int ifn, int hash,
       G__asm_inst[G__asm_cp+6] = (long) memfunc_flag;
       G__asm_inst[G__asm_cp+7] = (long) ifn;
       inc_cp_asm(8, 0);
+#ifdef G__LD_IFUNC_HANDLES_BYTECODE
    }
+#endif
 }
 
 /**************************************************************************
