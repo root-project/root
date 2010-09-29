@@ -722,7 +722,9 @@ Int_t TGeoManager::AddShape(const TGeoShape *shape)
 //_____________________________________________________________________________
 Int_t TGeoManager::AddTrack(Int_t id, Int_t pdgcode, TObject *particle)
 {
-// Add a track to the list of tracks
+// Add a track to the list of tracks. Use this for primaries only. For secondaries,
+// add them to the parent track. The method create objects that are registered
+// to the analysis manager but have to be cleaned-up by the user via ClearTracks().
    Int_t index = fNtracks;
    fTracks->AddAtAndExpand(GetGeomPainter()->AddTrack(id,pdgcode,particle),fNtracks++);
    return index;
