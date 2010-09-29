@@ -218,8 +218,9 @@ class TGeoIterator;
 
 class TGeoIteratorPlugin : public TObject
 {
-private:
+protected:
    const TGeoIterator *fIterator;           // Caller iterator
+private:
    // No copy
    TGeoIteratorPlugin(const TGeoIteratorPlugin &);
    TGeoIteratorPlugin &operator=(const TGeoIteratorPlugin &);
