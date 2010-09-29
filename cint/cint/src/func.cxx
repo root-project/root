@@ -1001,7 +1001,7 @@ G__value G__operatorfunction(G__value *presult, const char *item, int *known3, G
             else {
                ++ig15;
                result7.Set(ig35, 0);
-               strcpy(fpara.parameter[fpara.paran], result7);
+               G__strlcpy(fpara.parameter[fpara.paran], result7, G__ONELINE);
                if (ig35) fpara.parameter[++fpara.paran][0] = '\0';
                for (itmp = 0;itmp < fpara.paran;itmp++) {
                   fpara.para[itmp] = G__getexpr(fpara.parameter[itmp]);
@@ -1021,10 +1021,10 @@ G__value G__operatorfunction(G__value *presult, const char *item, int *known3, G
          ig15++;
          result7.Set(ig35, 0);
          if (ig35 < G__ONELINE) {
-            strcpy(fpara.parameter[fpara.paran], result7);
+            G__strlcpy(fpara.parameter[fpara.paran], result7, G__ONELINE);
          }
          else {
-            strcpy(fpara.parameter[fpara.paran], "@");
+            G__strlcpy(fpara.parameter[fpara.paran], "@", G__ONELINE);
             fpara.para[fpara.paran] = G__getexpr(result7);
          }
          if (ig35) fpara.parameter[++fpara.paran][0] = '\0';
@@ -1979,7 +1979,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
          else if ((isalpha(item[0]) || (item[0] == '_') || (item[0] == '$'))) {
             int itmp;
             result7[ig35] = '\0';
-            strcpy(fpara.parameter[fpara.paran], result7);
+            G__strlcpy(fpara.parameter[fpara.paran], result7, G__ONELINE);
             if (ig35) {
                fpara.parameter[++fpara.paran][0] = '\0';
             }
@@ -2001,10 +2001,10 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
       ig15++;
       result7[ig35] = '\0';
       if (ig35 < G__ONELINE) {
-         strcpy(fpara.parameter[fpara.paran], result7);
+         G__strlcpy(fpara.parameter[fpara.paran], result7, G__ONELINE);
       }
       else {
-         strcpy(fpara.parameter[fpara.paran], "@");
+         G__strlcpy(fpara.parameter[fpara.paran], "@", G__ONELINE);
          fpara.para[fpara.paran] = G__getexpr(result7);
       }
       // Initialize next argument to the empty string.
@@ -2037,7 +2037,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
       if (base1) {
          strncpy(fpara.parameter[0], item, base1);
          fpara.parameter[0][base1] = '\0';
-         strcpy(fpara.parameter[1], item + base1);
+         G__strlcpy(fpara.parameter[1], item + base1, G__ONELINE);
       }
       if (memfunc_flag == G__CALLMEMFUNC) {
          result3 = G__getstructmem(store_var_type, funcname, fpara.parameter[1] + i, fpara.parameter[0], known3, 0, i);
