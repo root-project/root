@@ -263,8 +263,16 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
 
       //let's cut the part lying between {}
       ptr1 = strtok(opt_ptr  ,"{}");  //starts tokenizing:extracts "*OPTION={"
+      if (ptr1 == 0) {
+         Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+         return;
+      }
       ptr1 = strtok((char*)0,"{}");   //And now we have what we need in ptr1!!!
-
+      if (ptr1 == 0) {
+         Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+         return;
+      }
+      
       //and save it:
       strcpy(opt,ptr1);
 
@@ -291,8 +299,16 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
 
          if (strstr(tokens[i],"GetMethod")) {
             ptr1 = strtok(tokens[i],"\"");    //tokenizing-strip text "GetMethod"
+            if (ptr1 == 0) {
+               Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+               return;
+            }
             ptr1 = strtok(0,"\"");         //tokenizing - name is in ptr1!
-
+            if (ptr1 == 0) {
+               Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+               return;
+            }
+            
             if (GetClass()->GetMethod(ptr1,"")) // check whether such method exists
                // FIXME: wrong in case called derives via multiple inheritance from this class
                fValueGetter = new TMethodCall(GetClass(),ptr1,"");
@@ -302,7 +318,15 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
 
          if (strstr(tokens[i],"SetMethod")) {
             ptr1 = strtok(tokens[i],"\"");
+            if (ptr1 == 0) {
+               Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+               return;
+            }
             ptr1 = strtok((char*)0,"\"");    //name of Setter in ptr1
+            if (ptr1 == 0) {
+               Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+               return;
+            }
             if (GetClass()->GetMethod(ptr1,"1"))
                // FIXME: wrong in case called derives via multiple inheritance from this class
                fValueSetter = new TMethodCall(GetClass(),ptr1,"1");
@@ -317,8 +341,16 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
       for (i=0;i<token_cnt;i++) {
          if (strstr(tokens[i],"Items")) {
             ptr1 = strtok(tokens[i],"()");
+            if (ptr1 == 0) {
+               Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+               return;
+            }
             ptr1 = strtok((char*)0,"()");
-
+            if (ptr1 == 0) {
+               Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+               return;
+            }
+            
             char opts[2048];  //and save it!
             strcpy(opts,ptr1);
 
