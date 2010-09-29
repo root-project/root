@@ -175,6 +175,7 @@ TDataMember *TMethod::FindDataMember()
       ptr2 = strtok(argstr,"{}");     //extract the data!
       if (ptr2 == 0) {
          Fatal("FindDataMember","Internal error found '*ARGS=\"' but not \"{}\" in %s",GetCommentString());
+         delete [] argstr;
          return 0;
       }
       ptr2 = strtok((char*)0,"{}");
