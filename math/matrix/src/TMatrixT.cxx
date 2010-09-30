@@ -3183,7 +3183,7 @@ void TMatrixT<Element>::Streamer(TBuffer &R__b)
          R__b.CheckByteCount(R__s,R__c,TMatrixT<Element>::IsA());
       }
       // in version <=2 , the matrix was stored column-wise
-      if (R__v <= 2) {
+      if (R__v <= 2 && fElements) {
          for (Int_t i = 0; i < this->fNrows; i++) {
             const Int_t off_i = i*this->fNcols;
             for (Int_t j = i; j < this->fNcols; j++) {
