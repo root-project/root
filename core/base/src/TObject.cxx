@@ -446,7 +446,7 @@ char *TObject::GetObjectInfo(Int_t px, Int_t py) const
    static char info[64];
    Float_t x = gPad->AbsPixeltoX(px);
    Float_t y = gPad->AbsPixeltoY(py);
-   sprintf(info,"x=%g, y=%g",gPad->PadtoX(x),gPad->PadtoY(y));
+   snprintf(info,64,"x=%g, y=%g",gPad->PadtoX(x),gPad->PadtoY(y));
    return info;
 }
 
