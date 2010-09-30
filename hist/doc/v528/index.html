@@ -293,3 +293,99 @@
   used by TSpectrum2Painter. It is needed in case of very
   large canvases like 8000x5000.</li>
 </ul>
+
+
+<h4>New TEfficiency class</h4>
+<ul>
+  <li>
+This new class from Christian Gumpert (CERN summer student 2010) handles the calculation of efficiencies and their uncertainties. It
+provides several statistical methods for calculating frequentist and bayesian
+confidence intervals as well as a function for combining several efficiencies.</li>
+<li>Example of usage: Creating a <tt>TEfficiency</tt> object
+  <ul>
+    <li>If you start a new analysis, it is highly recommended to use the TEfficiency class
+from the beginning. You can then use one of the constructors for fixed or
+variable bin size and your desired dimension. These constructors append the
+created TEfficiency object to the current directory. So it will be written
+automatically to a file during the next <a
+    href="http://root.cern.ch/root/html/TFile.html#TFile:Write">TFile::Write</a>
+    command.</li>
+    <li>Example 1: create a twodimensional TEfficiency object with 10
+    bins along X and 20 bins along Y:
+    <pre>
+TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;y;#epsilon",10,0,10,20,-5,5);
+</pre>
+    </li>
+<li>  You can fill the TEfficiency object by calling the <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Fill">Fill(Bool_t bPassed,Double_t x,Double_t y,Double_t z)</a> method.
+   The boolean flag "bPassed" indicates whether the current event is a good
+   (both histograms are filled) or not (only <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:fTotalHistogram">fTotalHistogram</a> is filled).
+   The variables x,y and z determine the bin which is filled. For lower
+   dimensions the z- or even the y-value may be omitted.
+    </li>
+    
+    <li>You can also set the number of passed or total events for a bin directly by using the SetPassedEvents or SetTotalEvents method.</li>
+    
+    <li>If you already have two histograms filled with the number of passed and total
+events, you will use the constructor <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:TEfficiency%1">TEfficiency(const TH1& passed,const TH1& total)</a>
+to construct the TEfficiency object. The histograms "passed" and "total" have
+to fullfill the conditions  mentioned in <a
+    href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:CheckConsistency">CheckConsistency</a>,
+    otherwise the construction will fail.
+    <li>Example 2: Create TEfficiency from 2 existing histograms:
+    <pre>
+TEfficiency * pEff = 0;
+if (TEfficiency::CheckConsistency(h_pass,h_total)) 
+   pEff = new TEfficiency(h_pass,h_total);
+   </pre>
+    </li>
+</ul>
+  </li>
+ 
+<li>
+   The TEfficiency class provides various statistics option based on
+  frequentist or Bayesian statistics  to compute
+  the confidence interval on the efficiencies. For each statistical
+  option a corresponding static function esists taking as parameters
+  <tt>n</tt>, the number of total events, <tt>k</tt>, the number of
+  passed events and <tt>cl</tt> the desired confidence level and a
+  boolean flag specyfing if the upper (or lower) interval boundary
+  must be computed. Each statistics option can be set using the method
+  <tt>TEfficiency::SetStatisticOption</tt></li>
+ <li>The major statistics options are (see <a
+  href="http://root.cern.ch/root/htmldoc/TEfficiency.html#stat">class
+  documentation</a> for a full description and examples):
+  <ul>
+    <li>Clopper_pearson (default) using the function
+    <tt>TEfficiency::ClopperPearson(n, k, cl)</tt>
+    </li>
+    
+    <li>Bayesian methods using the function
+    <tt>TEfficiency::Bayesian(n, k, cl, alpha, beta)</tt>.
+    In this case the alpha and beta parameters of the
+  beta prior distribution for the efficiency can be specified.
+    </li>
+    </ul>
+  <br>
+   <li>Merging and combining different TEfficiency objects is
+   supported
+   (see the <a
+  href="http://root.cern.ch/root/htmldoc/TEfficiency.html#cm">class
+  documentation</a>):
+   </li>
+</ul>
+
+<h4>New TKDE class</h4>
+
+<ul>
+  <li>New class for Kernel density estimation from Bartolomeu
+  Rabacal. The algorithm used is described in "Cranmer KS, <i>Kernel Estimation in High-Energy
+   Physics</i>. Computer Physics Communications 136:198-207,2001" -
+  e-Print Archive: hep ex/0011057 and more information can be found
+  also in "Scott DW, <i>Multivariate Density Estimation. Theory, Practice and Visualization</i>. New York: Wiley", 
+    and "Jann Ben -, <i>Univariate kernel
+  density estimation document for KDENS</i> ". 
+  </li>
+
+  </ul>
+
+ 

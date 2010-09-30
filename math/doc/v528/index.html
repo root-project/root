@@ -5,7 +5,7 @@
 
 <h4>Mathcore</h4>
 <ul>
-  <li>New interface class <tt>ROOT::Math::DistSampler</tt> for
+  <li><b>New interface class <tt>ROOT::Math::DistSampler</tt></b> for
   generating random number according to a given distribution.
   <ul>
     <li>The  class defines the methods to generate a single number
@@ -21,13 +21,58 @@
   manager. Currently only one implementation based on Unuran exists.</li>
   </ul>
   </li>
-  <li>New class <tt>ROOT::Math::GoFTest</tt> for goodness of fit
-  tests. The class implements the Kolmogorov-Smmirnov and
+  <br>
+ <li><b>New class <tt>ROOT::Math::GoFTest</tt></b> for goodness of fit
+  tests of unbinned data
+  <ul>
+  <li>The class implements the Kolmogorov-Smmirnov and
   Anderson-Darling tests for two samples (data vs data ) and
   one sample (data vs distribution)
-  </li>
+  <li>For the data vs distribution test, the user can compare using a
+    predefined distributions (Gaussian, LogNormal or Exponential) or
+    by passing a user defined PDF or CDF.
+  <li>Example 1: perform a 2 sample GoF test from two arrays,
+    <tt>sample1[n1]</tt> and <tt>sample2[n2]</tt> containing the data
+    <pre>
+    ROOT::Math::GoFTest goftest(n1, sample1, n2, sample2);
+    double pValueAD = goftest.AndersonDarling2SamplesTest();
+    double pValueKS = goftest.KolmogorovSmirnov2SamplesTest();
+  </pre>
+ The class can return optionally also the test statistics instead of
+    the p value.</li>
+    <li>Example 2: perform a 1 sample test with a pre-defined
+    distribution starting from a data set <tt>sample[n]</tt>
+    <pre>
+    ROOT::Math::GoFTest goftest(n, sample, ROOT::Math::GoFTest::kGaussian);
+    double pValueAD = goftest.AndersonDarlingTest();
+    double pValueKS = goftest.KolmogorovSmirnovTest();
+    </pre>
+    </li>
+    <li>Example 3: perform a 1 sample test with a user-defined
+    distribution provided as cdf
+    <pre>
+         ROOT::Math::Functor1D cdf_func(&ROOT::Math::landau_cdf);
+         ROOT::Math::GofTest goftest(n, sample, cdf_func, ROOT::Math::GoFTest::kCDF);
+         double pValueAD = goftest.AndersonDarlingTest();
+   </pre>
+    </li>
+        <li>Example 4: perform a 1 sample test with a user-defined
+    distribution provided as pdf. Note that in this case to avoid
+    integration problems is sometimes reccomended to give some
+    reasanable xmin and xmax values. xmin (and xmax) should however be
+    smaller (larger) than the minimum (maximum) data value.
+    <pre>
+         ROOT::Math::Functor1D pdf_func(&ROOT::Math::landau_pdf);
+         double xmin = 5*TMath::Min_Element(n,sample);
+         double xmax = 5*TMath::Max_Element(n,sample);
+         ROOT::Math::GofTest goftest(n, sample, pdf_func, ROOT::Math::GoFTest::kPDF,xmin,xmax);
+         double pValueAD = goftest.AndersonDarlingTest();
+   </pre>
+    </li>
+    </ul>
+    </li>
 
-  <li>New statistical functions <tt>ROOT::Math::landau_quantile</tt> (inverse of landau cumulative distribution) 
+ <li>New statistical functions <tt>ROOT::Math::landau_quantile</tt> (inverse of landau cumulative distribution) 
    translated from RANLAN and
    <tt>ROOT::Math::landau_quantile_c</tt>.
   </li>
@@ -44,6 +89,10 @@
     integration</li>
     <li>Add the method <tt>IntegrationOneDim::kLEGENDRE</tt> based on
     the <tt>GaussLegendreIntegrator</tt> class. </li>
+    <li>Implement also for the GaussIntegrator and
+  GaussLegendreIntegrator the undefined and semi-undefined integral
+  using  a function transformation as it is done in the GSLIntegrator
+    <li>Fix a bug in <tt>IntegratorOneDim::SetAbsTolerance</tt>
   </ul>
 </li>
     <li>Improve the root finder and 1D minimization classes (<tt>BrentRootFinder</tt>
@@ -75,7 +124,13 @@
   class to avoid a conflict with <tt>TObject::Error</tt>
   (see bug <a href="https://savannah.cern.ch/bugs/index.php?67671">67671</a>). 
    </li>
-   
+  <li>Fix a bug in <tt>Tmath::AreEqualRel</tt> to take into account
+  the case when the two arguments may be null.</li>
+  <li>Improve implementation of the F distribution for large N and
+  M. Use now the same implementation in ROOT::Math and TMath</li>
+  <li>Fix the returned value of the incomplete gamma functions for
+  a=0 or a is a negative integer number.</li>
+ 
 </ul>
 
 <h4>Mathmore</h4>
@@ -122,10 +177,18 @@
   fix compilation issue observed with LLVM (Clang)</li>
 </ul>
 
+<h4>Minuit</h4>
+<ul>
+  <li>Fix a bug when using at the same time <tt>TMinuit</tt> or <tt>TFitter</tt> with
+  the new <tt>TMinuitMinimizer</tt> class. See bug  <a
+  href="https://savannah.cern.ch/bugs/?72909">72909</a>.
+  </li>
+  </ul>
+
 <h4>Minuit2</h4>
 <ul>
   <li>Fix the returned error from the Minimizer class for fixed and
-  constant parameters. Now is set explicity to zero.
+ constant parameters. Now is set explicity to zero.
   </li>
   <li>Fix a problem in re-defining fixed parameters as variable
   ones. Before it was not possible to release them.
