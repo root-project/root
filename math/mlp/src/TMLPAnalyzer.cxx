@@ -151,8 +151,8 @@ void TMLPAnalyzer::CheckNetwork()
    // Checks if some input variable is not needed
    char var[64], sel[64];
    for (Int_t i = 0; i < GetNeurons(1); i++) {
-      sprintf(var,"diff>>tmp%d",i);
-      sprintf(sel,"inNeuron==%d",i);
+      snprintf(var,64,"diff>>tmp%d",i);
+      snprintf(sel,64,"inNeuron==%d",i);
       fAnalysisTree->Draw(var, sel, "goff");
       TH1F* tmp = (TH1F*)gDirectory->Get(Form("tmp%d",i));
       if (!tmp) continue;
@@ -283,7 +283,7 @@ void TMLPAnalyzer::DrawDInput(Int_t i)
    // the ith input.
 
    char sel[64];
-   sprintf(sel, "inNeuron==%d", i);
+   snprintf(sel,64, "inNeuron==%d", i);
    fAnalysisTree->Draw("diff", sel);
 }
 
@@ -314,8 +314,8 @@ void TMLPAnalyzer::DrawDInputs()
    TH1F* tmp = 0;
    char var[64], sel[64];
    for(Int_t i = 0; i < GetNeurons(1); i++) {
-      sprintf(var, "diff>>tmp%d", i);
-      sprintf(sel, "inNeuron==%d", i);
+      snprintf(var,64, "diff>>tmp%d", i);
+      snprintf(sel,64, "inNeuron==%d", i);
       fAnalysisTree->Draw(var, sel, "goff");
       tmp = (TH1F*)gDirectory->Get(Form("tmp%d",i));
       tmp->SetDirectory(0);
