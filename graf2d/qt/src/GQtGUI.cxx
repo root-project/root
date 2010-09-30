@@ -1935,7 +1935,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
 {
    // Send event ev to window id.
 
-   if ( (ev->fType  == kClientMessage || ev->fType  == kDestroyNotify) && ev &&  id != kNone )
+   if (ev &&  (ev->fType  == kClientMessage || ev->fType  == kDestroyNotify) &&  id != kNone )
    {
       TQUserEvent qEvent(*ev);
       static TQtClientWidget *gMessageDispatcherWidget = 0;
