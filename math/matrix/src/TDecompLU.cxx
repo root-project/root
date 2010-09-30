@@ -582,7 +582,7 @@ TDecompLU &TDecompLU::operator=(const TDecompLU &source)
          fNIndex = source.fNIndex;
          fIndex = new Int_t[fNIndex];
       }
-      memcpy(fIndex,source.fIndex,fNIndex*sizeof(Int_t));
+      if (fIndex) memcpy(fIndex,source.fIndex,fNIndex*sizeof(Int_t));
    }
    return *this;
 }
