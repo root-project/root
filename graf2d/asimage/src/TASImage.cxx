@@ -5312,6 +5312,9 @@ void TASImage::CropPolygon(UInt_t npt, TPoint *ppt)
          delete [] firstWidth;
          delete [] firstPoint;
       }
+   } else {
+         if (firstWidth) delete [] firstWidth;
+         if (firstPoint) delete [] firstPoint;
    }
 }
 
