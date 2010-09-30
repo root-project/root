@@ -320,6 +320,10 @@ E: gulbrand@mit.edu
 D: monitoring facility for PROOF
 D: Clarens and PEAC interfaces for PROOF
 
+N: Christian Gumpert
+E: christian.gumpert@mailbox.tu-dresden.de
+D: class TEfficiency and new TGraphAsymmErrors::Divide
+
 N: Andrew Haas
 E: haas@yahoo.com
 D: add support for asymmetric errors in the GraphFitChisquare functions
@@ -648,6 +652,10 @@ D: contributed to TMath::Voigt
 N: Gilles Quemener
 E: quemener@lpsc.in2p3.fr
 D: contributed to TMultiDimFit::EvalError function
+
+N: Bartolomeu Rabacal
+E: brabacal@cern.ch
+D: Math libraries: GoFTest and TKDE classes 
 
 N: Sven Ravndal
 E: Sven.Ravndal@dresdner-bank.com
