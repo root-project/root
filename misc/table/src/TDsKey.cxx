@@ -105,7 +105,7 @@ TString TDsKey::GetKey() const
    Int_t lUrr = fUrr.GetSize();
    for (int i=0;i<lUrr;i++){
       tk +=".";
-      sprintf(ubuf,"%010u",fUrr[i]);
+      snprintf(ubuf,12,"%010u",fUrr[i]);
       tk +=ubuf;
    }
    return tk;
