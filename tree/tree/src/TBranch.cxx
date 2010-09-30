@@ -330,7 +330,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
          }
          if (lenName == 0 || ctype == leafname) {
             Warning("TBranch","No name was given to the leaf number '%d' in the leaflist of the branch '%s'.",fNleaves,name);
-            sprintf(leafname,"__noname%d",fNleaves);
+            snprintf(leafname,640,"__noname%d",fNleaves);
          }
          TLeaf* leaf = 0;
          if (*leaftype == 'C') {
@@ -1655,12 +1655,12 @@ void TBranch::Print(Option_t*) const
 
    Long64_t totBytes = GetTotalSize();
    if (fZipBytes) cx = (fTotBytes+0.00001)/fZipBytes;
-   if (titleLength) sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName(),GetTitle());
-   else             sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName()," ");
+   if (titleLength) snprintf(bline,aLength,"*Br%5d :%-9s : %-54s *",fgCount,GetName(),GetTitle());
+   else             snprintf(bline,aLength,"*Br%5d :%-9s : %-54s *",fgCount,GetName()," ");
    if (strlen(bline) > UInt_t(kLINEND)) {
       char *tmp = new char[strlen(bline)+1];
       if (titleLength) strcpy(tmp, GetTitle());
-      sprintf(bline,"*Br%5d :%-9s : ",fgCount,GetName());
+      snprintf(bline,aLength,"*Br%5d :%-9s : ",fgCount,GetName());
       int pos = strlen (bline);
       int npos = pos;
       int beg=0, end;
