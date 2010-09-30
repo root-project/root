@@ -276,7 +276,7 @@ void TQMimeTypes::SaveMimes()
    // Save mime types in user's mime type file.
 
    char filename[1024];
-   sprintf(filename, "%s/.root.mimes",  gSystem->HomeDirectory());
+   snprintf(filename,1024, "%s/.root.mimes",  gSystem->HomeDirectory());
 
    FILE *fp = fopen(filename, "w");
 
