@@ -836,8 +836,8 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
    const TArrayD *xbins = fXaxis.GetXbins();
    const TArrayD *ybins = fYaxis.GetXbins();
    for (ipar=0;ipar<npar;ipar++) {
-      sprintf(name,"%s_%d",GetName(),ipar);
-      sprintf(title,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
+      snprintf(name,80,"%s_%d",GetName(),ipar);
+      snprintf(title,80,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
       if (xbins->fN == 0) {
          hlist[ipar] = new TH2D(name, title,
                                 nbinsx, fXaxis.GetXmin(), fXaxis.GetXmax(),
@@ -850,7 +850,7 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
       hlist[ipar]->GetXaxis()->SetTitle(fXaxis.GetTitle());
       hlist[ipar]->GetYaxis()->SetTitle(fYaxis.GetTitle());
    }
-   sprintf(name,"%s_chi2",GetName());
+   snprintf(name,80,"%s_chi2",GetName());
    TH2D *hchi2 = new TH2D(name,"chisquare", nbinsx, fXaxis.GetXmin(), fXaxis.GetXmax()
       , nbinsy, fYaxis.GetXmin(), fYaxis.GetXmax());
 
