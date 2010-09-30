@@ -1105,7 +1105,7 @@ again:
             p = buff;
          }
          if (!p && !strcmp(buff, "$")) { // it is $$ (replace by GetPid())
-            sprintf(buff, "%d", GetPid());
+            snprintf(buff,kBufSize*4, "%d", GetPid());
             p = buff;
          }
          if (!p) {                      // too bad, nothing can help
