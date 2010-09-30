@@ -302,15 +302,15 @@ void TEventList::Print(Option_t *option) const
    Int_t nbuf = 0;
    char element[10];
    char *line = new char[100];
-   sprintf(line,"%5d : ",0);
+   snprintf(line,100,"%5d : ",0);
    for (i=0;i<fN;i++) {
       nbuf++;
       if (nbuf > 10) {
          printf("%s\n",line);
-         sprintf(line,"%5d : ",i);
+         snprintf(line,100,"%5d : ",i);
          nbuf = 1;
       }
-      sprintf(element,"%7lld ",fList[i]);
+      snprintf(element,10,"%7lld ",fList[i]);
       strcat(line,element);
    }
    if (nbuf) printf("%s\n",line);
