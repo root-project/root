@@ -1229,7 +1229,7 @@ void         TGQt::SetWindowBackground(Window_t id, ULong_t color)
    // Set the window background color.
    if (id == kNone || id == kDefault ) return;
    TQtClientWidget *wd =  dynamic_cast<TQtClientWidget*>(wid(id));
-   wd->setEraseColor(QtColor(color));
+   if (wd) wd->setEraseColor(QtColor(color));
 }
 //______________________________________________________________________________
 void         TGQt::SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm)
@@ -1237,7 +1237,7 @@ void         TGQt::SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm)
    // Set pixmap as window background.
    if (pxm  != kNone && id != kNone && id != kDefault ) {
       TQtClientWidget *wd =  dynamic_cast<TQtClientWidget*>(wid(id));
-      wd->setErasePixmap (*fQPixmapGuard.Pixmap(pxm));
+      if (wd) wd->setErasePixmap (*fQPixmapGuard.Pixmap(pxm));
    }
  }
 //______________________________________________________________________________
