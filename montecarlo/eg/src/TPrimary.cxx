@@ -161,7 +161,7 @@ const char *TPrimary::GetTitle() const
    //return title of primary particle
    static char title[128];
    Float_t pmom = TMath::Sqrt(fPx*fPx+fPy*fPy+fPz*fPz);
-   sprintf(title,"pmom=%f GeV",pmom);
+   snprintf(title,128,"pmom=%f GeV",pmom);
    return title;
 }
 
