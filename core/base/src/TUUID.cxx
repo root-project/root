@@ -521,7 +521,7 @@ const char *TUUID::AsString() const
 
    static char uuid[40];
 
-   sprintf(uuid, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+   snprintf(uuid,40, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
            fTimeLow, fTimeMid, fTimeHiAndVersion, fClockSeqHiAndReserved,
            fClockSeqLow, fNode[0], fNode[1], fNode[2], fNode[3], fNode[4],
            fNode[5]);
