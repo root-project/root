@@ -443,7 +443,7 @@ TKey *TFileIter::NextEventKey(UInt_t eventNumber, UInt_t runNumber, const char *
    while ( (key = SkipObjects()) ) {
       if (fDirection==kIterForward) fCursorPosition++;
       else                          fCursorPosition--;
-      if ( name[0] != '*') {
+      if ( name && name[0] != '*') {
          thisKey.SetKey(key->GetName());
          if (thisKey.GetName() < name)  continue;
          if (thisKey.GetName() > name) { key = 0; break; }
