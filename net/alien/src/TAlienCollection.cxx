@@ -1296,7 +1296,7 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
    char outline[4096];
 
    // write headers
-   sprintf(outline,
+   snprintf(outline,4096,
            "<?xml version=\"1.0\"?>\n<alien>\n  <collection name=\"%s\">\n",
            name);
    if ((exportfile->WriteBuffer(outline, strlen(outline)))) {
@@ -1336,7 +1336,7 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
          nextfile->Reset();
          groupcnt++;
          // open new event header
-         sprintf(outline, "    <event name=\"%d\">\n", groupcnt);
+         snprintf(outline,4096, "    <event name=\"%d\">\n", groupcnt);
          if ((exportfile->WriteBuffer(outline, strlen(outline)))) {
             Error("ExportXML", "Error writing XML to export file");
             exportfile->Close();
@@ -1350,7 +1350,7 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
                      // export this file
                      /////////////////////////////////////////////////////////////
                      // open file tag
-                     sprintf(outline, "      <file ");
+                     snprintf(outline,4096, "      <file ");
                      if ((exportfile->
                           WriteBuffer(outline, strlen(outline)))) {
                         Error("ExportXML",
@@ -1386,7 +1386,7 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
                                                         GetName()))->
                                GetValue(tagname);
                            if (TString(tagname->GetName()) != "evlist") {
-                              sprintf(outline, "%s=\"%s\" ",
+                              snprintf(outline,4096, "%s=\"%s\" ",
                                       tagname->GetName(),
                                       tagval->GetName());
                            } else {
@@ -1401,7 +1401,7 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
                                     slist += ",";
                                  slist += xmlentrylist->GetEntry(i);
                               }
-                              sprintf(outline, "%s=\"%s\" ",
+                              snprintf(outline,4096, "%s=\"%s\" ",
                                       tagname->GetName(), slist.Data());
                            }
 
@@ -1416,7 +1416,7 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
                      }
 
                      // close file tag
-                     sprintf(outline, "/>\n");
+                     snprintf(outline,4096, "/>\n");
                      if ((exportfile->
                           WriteBuffer(outline, strlen(outline)))) {
                         Error("ExportXML",
@@ -1430,7 +1430,7 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
          }
 
          // close event
-         sprintf(outline, "    </event>\n");
+         snprintf(outline,4096, "    </event>\n");
          if ((exportfile->WriteBuffer(outline, strlen(outline)))) {
             Error("ExportXML", "Error writing XML to export file");
             exportfile->Close();
@@ -1443,7 +1443,7 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
 
    // write export url if present
    if (GetExportUrl()) {
-      sprintf(outline, "    <export url=\"%s\">\n",GetExportUrl());
+      snprintf(outline,4096, "    <export url=\"%s\">\n",GetExportUrl());
       if ((exportfile->WriteBuffer(outline, strlen(outline)))) {
          Error("ExportXML", "Error writing XML to export file");
          exportfile->Close();
@@ -1453,7 +1453,7 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
 
 
    // write trailer
-   sprintf(outline,
+   snprintf(outline,4096,
            "    <info comment=\"%s\" />\n</collection>\n</alien>\n",
            comment);
    if ((exportfile->WriteBuffer(outline, strlen(outline)))) {
