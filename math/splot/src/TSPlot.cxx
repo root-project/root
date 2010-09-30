@@ -674,7 +674,7 @@ void TSPlot::FillXvarHists(Int_t nbins)
    //make the histograms
    char name[10];
    for (i=0; i<fNx; i++){
-      sprintf(name, "x%d", i);
+      snprintf(name,10, "x%d", i);
       TH1D *h = new TH1D(name, name, nbins, fMinmax(0, i), fMinmax(1, i));
       for (j=0; j<fNevents; j++)
          h->Fill(fXvar(j, i));
@@ -731,7 +731,7 @@ void TSPlot::FillYvarHists(Int_t nbins)
    //make the histograms
    char name[10];
    for (i=0; i<fNy; i++){
-      sprintf(name, "y%d", i);
+      snprintf(name,10, "y%d", i);
       TH1D *h=new TH1D(name, name, nbins, fMinmax(0, fNx+i), fMinmax(1, fNx+i));
       for (j=0; j<fNevents; j++)
          h->Fill(fYvar(j, i));
@@ -784,7 +784,7 @@ void TSPlot::FillYpdfHists(Int_t nbins)
    char name[30];
    for (ispecies=0; ispecies<fNSpecies; ispecies++){
       for (i=0; i<fNy; i++){
-         sprintf(name, "pdf_species%d_y%d", ispecies, i);
+         snprintf(name,30, "pdf_species%d_y%d", ispecies, i);
          //TH1D *h = new TH1D(name, name, nbins, ypdfmin[ispecies*fNy+i], ypdfmax[ispecies*fNy+i]);
          TH1D *h = new TH1D(name, name, nbins, fMinmax(0, fNx+fNy+ispecies*fNy+i), fMinmax(1, fNx+fNy+ispecies*fNy+i)); 
          for (j=0; j<fNevents; j++)
@@ -847,7 +847,7 @@ void TSPlot::FillSWeightsHists(Int_t nbins)
    //Fill histograms of x-variables weighted with sWeights
    for (Int_t ivar=0; ivar<fNx; ivar++){
       for (Int_t ispecies=0; ispecies<fNSpecies; ispecies++){
-            sprintf(name, "x%d_species%d", ivar, ispecies);
+            snprintf(name,30, "x%d_species%d", ivar, ispecies);
             TH1D *h = new TH1D(name, name, nbins, fMinmax(0, ivar), fMinmax(1, ivar));
             h->Sumw2();
             for (Int_t ievent=0; ievent<fNevents; ievent++)
@@ -859,7 +859,7 @@ void TSPlot::FillSWeightsHists(Int_t nbins)
    //Fill histograms of y-variables (exluded from the fit), weighted with sWeights
    for (Int_t iexcl=0; iexcl<fNy; iexcl++){
       for(Int_t ispecies=0; ispecies<fNSpecies; ispecies++){
-            sprintf(name, "y%d_species%d", iexcl, ispecies);
+            snprintf(name,30, "y%d_species%d", iexcl, ispecies);
             TH1D *h = new TH1D(name, name, nbins, fMinmax(0, fNx+iexcl), fMinmax(1, fNx+iexcl));
             h->Sumw2();
             for (Int_t ievent=0; ievent<fNevents; ievent++)
@@ -906,7 +906,7 @@ void TSPlot::RefillHist(Int_t type, Int_t nvar, Int_t nbins, Double_t min, Doubl
    if (type==1){
       hremove = (TH1D*)fXvarHists.RemoveAt(nvar);
       delete hremove;
-      sprintf(name,"x%d",nvar);
+      snprintf(name,20,"x%d",nvar);
       TH1D *h = new TH1D(name, name, nbins, min, max);
       for (j=0; j<fNevents;j++)
          h->Fill(fXvar(j, nvar));
@@ -915,7 +915,7 @@ void TSPlot::RefillHist(Int_t type, Int_t nvar, Int_t nbins, Double_t min, Doubl
    if (type==2){
       hremove = (TH1D*)fYvarHists.RemoveAt(nvar);
       delete hremove;
-      sprintf(name, "y%d", nvar);
+      snprintf(name,20, "y%d", nvar);
       TH1D *h = new TH1D(name, name, nbins, min, max);
       for (j=0; j<fNevents;j++)
          h->Fill(fYvar(j, nvar));
@@ -924,7 +924,7 @@ void TSPlot::RefillHist(Int_t type, Int_t nvar, Int_t nbins, Double_t min, Doubl
    if (type==3){
       hremove = (TH1D*)fYpdfHists.RemoveAt(nspecies*fNy+nvar);
       delete hremove;
-      sprintf(name, "pdf_species%d_y%d", nspecies, nvar);
+      snprintf(name,20, "pdf_species%d_y%d", nspecies, nvar);
       TH1D *h=new TH1D(name, name, nbins, min, max);
       for (j=0; j<fNevents; j++)
          h->Fill(fYpdf(j, nspecies*fNy+nvar));
@@ -933,7 +933,7 @@ void TSPlot::RefillHist(Int_t type, Int_t nvar, Int_t nbins, Double_t min, Doubl
    if (type==4){
       hremove = (TH1D*)fSWeightsHists.RemoveAt(fNSpecies*nvar+nspecies);
       delete hremove;
-      sprintf(name, "x%d_species%d", nvar, nspecies);
+      snprintf(name,20, "x%d_species%d", nvar, nspecies);
       TH1D *h = new TH1D(name, name, nbins, min, max);
       h->Sumw2();
       for (Int_t ievent=0; ievent<fNevents; ievent++)
@@ -943,7 +943,7 @@ void TSPlot::RefillHist(Int_t type, Int_t nvar, Int_t nbins, Double_t min, Doubl
    if (type==5){
       hremove = (TH1D*)fSWeightsHists.RemoveAt(fNx*fNSpecies + fNSpecies*nvar+nspecies);
       delete hremove;
-      sprintf(name, "y%d_species%d", nvar, nspecies);
+      snprintf(name,20, "y%d_species%d", nvar, nspecies);
       TH1D *h = new TH1D(name, name, nbins, min, max);
       h->Sumw2();
       for (Int_t ievent=0; ievent<fNevents; ievent++)
