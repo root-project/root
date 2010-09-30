@@ -1793,7 +1793,7 @@ char *TF1::GetObjectInfo(Int_t px, Int_t /* py */) const
 
    static char info[64];
    Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
-   sprintf(info,"(x=%g, f=%g)",x,((TF1*)this)->Eval(x));
+   snprintf(info,64,"(x=%g, f=%g)",x,((TF1*)this)->Eval(x));
    return info;
 }
 

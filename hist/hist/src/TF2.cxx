@@ -499,7 +499,7 @@ char *TF2::GetObjectInfo(Int_t px, Int_t py) const
       uymax=gPad->GetUymax();
       y = fYmin +(fYmax-fYmin)*(y-uymin)/(uymax-uymin);
    }
-   sprintf(info,"(x=%g, y=%g, f=%.18g)",x,y,((TF2*)this)->Eval(x,y));
+   snprintf(info,64,"(x=%g, y=%g, f=%.18g)",x,y,((TF2*)this)->Eval(x,y));
    return info;
 }
 
