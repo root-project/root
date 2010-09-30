@@ -599,7 +599,8 @@ void TVolume::PaintNodePosition(Option_t *option,TVolumePosition *pos)
    Int_t level = gGeometry->GeomLevel();
 //  if (option && option[0]=='r' && level > 3 && strcmp(option,"range") == 0) return;
    if ((!(GetVisibility() & kThisUnvisible)) && option && option[0]=='r' && level > 3 ) return;
-   Int_t iopt = atoi(option);
+   Int_t iopt = 0;
+   if (option) iopt = atoi(option);
    if ( (0 < iopt) && (iopt <= level) )  return;
 
    TTablePadView3D *view3D = (TTablePadView3D*)gPad->GetView3D();
