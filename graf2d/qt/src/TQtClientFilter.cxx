@@ -397,6 +397,7 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
    TQtClientWidget *frame = dynamic_cast<TQtClientWidget *>(qWidget);
    if (!(frame /* && gQt->IsRegistered(frame)  */) )    {
          if (filterTime) filterTime->Stop();
+         delete &evt;
          return kFALSE; // it is a desktop, it is NOT ROOT gui object
    }
    QPaintDevice *paintDev = (QPaintDevice *)frame;
