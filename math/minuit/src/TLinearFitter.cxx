@@ -1507,8 +1507,8 @@ void TLinearFitter::SetFormula(const char *formula)
       char pattern[5];
       char replacement[6];
       for (i=0; i<fNdim; i++){
-         sprintf(pattern, "x%d", i);
-         sprintf(replacement, "x[%d]", i);
+         snprintf(pattern,5, "x%d", i);
+         snprintf(replacement,6, "x[%d]", i);
          sstring = sstring.ReplaceAll(pattern, Int_t(i/10)+2, replacement, Int_t(i/10)+4);
       }
 

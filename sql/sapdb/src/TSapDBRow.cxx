@@ -157,23 +157,23 @@ const char *TSapDBRow::GetField(Int_t field)
       //case SQL_WCHAR:
       //case SQL_WVARCHAR:
       //case SQL_WLONGVARCHAR:
-         sprintf(fieldstr, "%-*.*s", (int)columnSize, (int)columnSize,
+         snprintf(fieldstr,4001, "%-*.*s", (int)columnSize, (int)columnSize,
                  (char*) targetValuePtr);
          break;
       case SQL_TINYINT:
       case SQL_SMALLINT:
       case SQL_INTEGER:
       case SQL_BIGINT:
-         sprintf(fieldstr, "%-*ld", (int)columnSize, *(long int*)(targetValuePtr));
+         snprintf(fieldstr,4001, "%-*ld", (int)columnSize, *(long int*)(targetValuePtr));
          break;
       case SQL_DECIMAL:
       case SQL_NUMERIC:
       case SQL_REAL:
       case SQL_FLOAT:
-         sprintf(fieldstr, "%-*.2f", (int)columnSize, *(float*)(targetValuePtr));
+         snprintf(fieldstr,4001, "%-*.2f", (int)columnSize, *(float*)(targetValuePtr));
          break;
       case SQL_DOUBLE:
-         sprintf(fieldstr, "%-*.2f", (int)columnSize, *(double*)(targetValuePtr));
+         snprintf(fieldstr,4001, "%-*.2f", (int)columnSize, *(double*)(targetValuePtr));
          break;
       case SQL_BIT:
       case SQL_BINARY:
@@ -183,7 +183,7 @@ const char *TSapDBRow::GetField(Int_t field)
       case SQL_TYPE_TIME:
       case SQL_TYPE_TIMESTAMP:
       default:
-         sprintf(fieldstr, "%-*.*s", (int)columnSize, (int)columnSize,
+         snprintf(fieldstr,4001, "%-*.*s", (int)columnSize, (int)columnSize,
                  (char*)targetValuePtr);
          break;
    }
