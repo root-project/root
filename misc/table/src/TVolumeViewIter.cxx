@@ -117,7 +117,7 @@ TVolumePosition *TVolumeViewIter::UpdateTempMatrix(TVolumePosition *curPosition)
                        ,newTranslation,newMatrix);
          Int_t num = gGeometry->GetListOfMatrices()->GetSize();
          Char_t anum[100];
-         sprintf(anum,"%d",num+1);
+         snprintf(anum,100,"%d",num+1);
          newPosition = SetPositionAt(curNode
                                 ,newTranslation[0],newTranslation[1],newTranslation[2]
                                 ,new TRotMatrix(anum,"NodeView",newMatrix));
