@@ -308,7 +308,7 @@ TTreeViewer::TTreeViewer(const char* treeName) :
    fTree = 0;
    if (!gClient) return;
    char command[128];
-   sprintf(command, "TTreeViewer *gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
+   snprintf(command,128, "TTreeViewer *gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
    gROOT->ProcessLine(command);
    gROOT->ProcessLine("TTree *tv__tree = 0;");
    fTreeList = new TList;
@@ -332,7 +332,7 @@ TTreeViewer::TTreeViewer(const TTree *tree) :
 
    fTree = 0;
    char command[128];
-   sprintf(command, "TTreeViewer *gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
+   snprintf(command,128, "TTreeViewer *gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
    gROOT->ProcessLine(command);
    if (!tree) return;
    gROOT->ProcessLine("TTree *tv__tree = 0;");
@@ -394,7 +394,7 @@ void TTreeViewer::AppendTree(TTree *tree)
       char command[100];
       command[0] = 0;
       // define a global "tree" variable for the same tree
-      sprintf(command, "tv__tree = (TTree *)0x%lx;", (ULong_t)tree);
+      snprintf(command,100, "tv__tree = (TTree *)0x%lx;", (ULong_t)tree);
       ExecuteCommand(command);
    }
    //--- add the tree to the list if it is not already in
@@ -1947,7 +1947,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         if (!gInterpreter->IsLoaded(info.fFilename)) gInterpreter->LoadMacro(info.fFilename);
                         char command[1024];
                         command[0] = 0;
-                        sprintf(command,"open_session((void*)0x%lx);", (Long_t)this);
+                        snprintf(command,1024,"open_session((void*)0x%lx);", (Long_t)this);
                         ExecuteCommand(command);
                      }
                      break;
@@ -1991,7 +1991,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         new TWin32SplashThread(kTRUE);
 #else
                         char str[32];
-                        sprintf(str, "About ROOT %s...", gROOT->GetVersion());
+                        snprintf(str,32, "About ROOT %s...", gROOT->GetVersion());
                         hd = new TRootHelpDialog(this, str, 600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
@@ -2093,23 +2093,23 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                            if (*itemType & kLTTreeType) {
                            // X, Y or Z clicked
                               char symbol = (char)((*itemType) >> 8);
-                              sprintf(msg2, "%c expression : %s", symbol, vname);
+                              snprintf(msg2,2000, "%c expression : %s", symbol, vname);
                            } else {
                               if (*itemType & kLTCutType) {
                               // scissors clicked
-                                 sprintf(msg2, "Cut : %s", vname);
+                                 snprintf(msg2,2000, "Cut : %s", vname);
                               } else {
                                  if (*itemType & kLTPackType) {
-                                    sprintf(msg2, "Box : %s", vname);
+                                    snprintf(msg2,2000, "Box : %s", vname);
                                  } else {
                                     if (*itemType & kLTExpressionType) {
                                        // expression clicked
-                                       sprintf(msg2, "Expression : %s", vname);
+                                       snprintf(msg2,2000, "Expression : %s", vname);
                                     } else {
                                        if (*itemType & kLTBranchType) {
-                                          sprintf(msg2, "Branch : %s", vname);
+                                          snprintf(msg2,2000, "Branch : %s", vname);
                                        } else {
-                                          sprintf(msg2, "Leaf : %s", vname);
+                                          snprintf(msg2,2000, "Leaf : %s", vname);
                                        }
                                     }
                                  }
@@ -2240,7 +2240,7 @@ void TTreeViewer::ExecuteCommand(const char* command, Bool_t fast)
          Warning("ExecuteCommand", "Command too long: aborting.");
          return;
       }
-      sprintf(comm, "%s", command);
+      snprintf(comm,2000, "%s", command);
       // print the command to history file
       Gl_histadd(comm);
    }
@@ -2618,7 +2618,7 @@ void TTreeViewer::PrintEntries()
 
    if (!fTree) return;
    char * msg = new char[100];
-   sprintf(msg, "First entry : %lld Last entry : %lld",
+   snprintf(msg,100, "First entry : %lld Last entry : %lld",
            (Long64_t)fSlider->GetMinPosition(), (Long64_t)fSlider->GetMaxPosition());
    Message(msg);
    delete[] msg;
