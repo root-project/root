@@ -161,7 +161,7 @@ const char *TDatime::AsSQLString() const
    UInt_t min   = (fDatime<<20)>>26;
    UInt_t sec   = (fDatime<<26)>>26;
 
-   sprintf(sqldate, "%04d-%02d-%02d %02d:%02d:%02d", (year+1995), month, day,
+   snprintf(sqldate,20, "%04d-%02d-%02d %02d:%02d:%02d", (year+1995), month, day,
            hour, min, sec);
 
    return sqldate;
