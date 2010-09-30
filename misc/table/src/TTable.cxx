@@ -1418,8 +1418,6 @@ void TTable::Fit(const char *formula ,const char *varexp, const char *selection,
 
    Draw(varexp,selection,opt,nentries,firstentry);
 
-   delete [] opt;
-
    TH1 *hfit = gCurrentTableHist;
    if (hfit) {
       Printf("hname=%s, formula=%s, option=%s, goption=%s\n",hfit->GetName(),formula,option,goption);
