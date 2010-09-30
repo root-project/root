@@ -1846,7 +1846,7 @@ Bool_t TROOT::Initialized()
 //______________________________________________________________________________
 Bool_t TROOT::MemCheck()
 {
-   // Return kTRUE if the memory leak checke is on.
+   // Return kTRUE if the memory leak checker is on.
    return fgMemCheck;
 }
 
