@@ -282,7 +282,7 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
 
    char aname[32];
    if (!name || !*name) {
-      sprintf(aname, "Color%d", color);
+      snprintf(aname,32, "Color%d", color);
       SetName(aname);
    }
 
