@@ -646,7 +646,7 @@ class TXlfd {
       if (fontSlant != "*" ) 
          fIsFontItalic = ((fontSlant[0] == 'i') || (fontSlant[0] == 'o')) ? 1 : 0;
       
-      bool ok;
+      bool ok=true;
       QString fontPointSize = fontName.section('-',8,8);
       if (fontPointSize != "*") 
         fPointSize = fontPointSize.toInt(&ok);
