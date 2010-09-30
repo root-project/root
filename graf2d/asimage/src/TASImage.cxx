@@ -5209,6 +5209,7 @@ Bool_t TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
       // in case of non-convex polygon
       if (i < 0) {
          delete [] firstWidth;
+	 delete [] firstPoint;
          return kTRUE;
       }
 
