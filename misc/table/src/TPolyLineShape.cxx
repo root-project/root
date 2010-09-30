@@ -401,7 +401,7 @@ void TPolyLineShape::Paint(Option_t *opt)
       view3D->SetLineAttr(GetColorAttribute(), (Int_t)GetSizeAttribute());
       view3D->PaintPoints3D(GetPoints(), mode.Data());
    }
-   if (!strstr(opt, "x3d")) {
+   if (opt && !strstr(opt, "x3d")) {
       if (fPointFlag) {
          SetMarkerColor(GetColorAttribute());
          SetMarkerSize(GetSizeAttribute());
