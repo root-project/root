@@ -67,7 +67,7 @@ ClassImp(TExec)
 //
 // A TExec object is automatically generated when invoking TPad::AddExec.
 // Each pad contains a TList of TExecs (0, 1 or more). When a mouse event
-// (motion, click, etc) happens, the pad object executes ssequentially
+// (motion, click, etc) happens, the pad object executes sequentially
 // this list of TExecs. In the code (interpreted or compiled) executed
 // by the TExec referenced command, one can call the pad service functions
 // such as TPad::GetEvent, TPad::GetEventX, TPad::GetEventY to find
