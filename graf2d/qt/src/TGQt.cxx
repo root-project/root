@@ -1365,6 +1365,7 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 
    static const int Q3=0;
 #endif
+   if (!fSelectedWindow ) return;
    TQtLock lock;
    // Some workaround to fix issue from TBox::ExecuteEvent case pC. 
    // The reason of the problem has not been found yet.
@@ -1385,18 +1386,15 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
       return;
    }
 
-   if (fSelectedWindow )
-   {
-      if ((mode == kHollow) || (fQBrush->style() == Qt::NoBrush) )
-      { 
-         TQtPainter p(this,TQtPainter::kUpdatePen);
-         p.setBrush(Qt::NoBrush);
-         p.drawRect(x1,y2,x2-x1+Q3,y1-y2+Q3);
-      } else if (fQBrush->GetColor().alpha() ) {
-         TQtPainter p(this);
-         if (fQBrush->style() != Qt::SolidPattern) p.setPen(fQBrush->GetColor());
-         p.fillRect(x1,y2,x2-x1,y1-y2,*fQBrush);
-      }
+   if ((mode == kHollow) || (fQBrush->style() == Qt::NoBrush) )
+   { 
+      TQtPainter p(this,TQtPainter::kUpdatePen);
+      p.setBrush(Qt::NoBrush);
+      p.drawRect(x1,y2,x2-x1+Q3,y1-y2+Q3);
+   } else if (fQBrush->GetColor().alpha() ) {
+      TQtPainter p(this);
+      if (fQBrush->style() != Qt::SolidPattern) p.setPen(fQBrush->GetColor());
+      p.fillRect(x1,y2,x2-x1,y1-y2,*fQBrush);
    }
 }
 
