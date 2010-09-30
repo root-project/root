@@ -5,10 +5,23 @@
 
 <ul>
 <li>Assorted small bug fixes have been applied. No major new features have been introduced since 5.26</li>
+<li>Normalization of <li>RooRealSumPdf</li> changed from sum of coefficents to sum of coefficients*integrals of input functions.</li>
 </ul>
 
 <a name="roostats"></a> 
 <h3>RooStats</h3>
+
+<h4>ModelConfig</h4>
+<ul>
+  <li>This class is now used extensively by the calculator tools.  It encapsulates the configuration of a model to define a particular hypothesis.</li>
+  <li>Various fixes by and improvements to make it usable with all
+  the existing calculator.</li>
+  <li><tt>ModelConfig</tt> contains now always a reference to an
+  external workspace who manages all the objects being part of the model (pdf's and parameter sets). The user needs then to
+  set always a workspace pointer before setting the various objects.
+  </li>
+
+</ul>
 
 <h4>Profile Likelihood </h4>
 <ul>
@@ -21,22 +34,23 @@
   zero is returned instead of the min/max of the variable range</li>
   <li><tt>LikelihoodIntervalPlot</tt> fix drawing of horizontal green
   line when limits are outside the variable range </li>
-
 </ul>
 
 <h4>HybridCalculator</h4>
 <ul>
    <li>New re-written class based on the <tt>TestStatSampler</tt> and
-  <tt>TestStatistic</tt> interface. The old class remains, but with a
-  new name: <tt>HybridCalculatorOriginal</tt>.  </li>
-  <li>The interface of the new HybridCalculator class is very different from the old
-  one. Users wishing to run their old macro should just change the
-  name of the class from <tt>HybridCalculatorOriginal</tt> to
-  <tt>HybridCalculatorOriginal</tt></li>
+  <tt>TestStatistic</tt> interfaces. The new class is designed to provide
+  consistent use of a ModelConfig, specifying the Pdf and Prior.  
+  The old class remains, but with a new name: <tt>HybridCalculatorOriginal</tt>. </li>
   <li>The tutorial <tt>rs201b_hybridcalculator</tt> shows the usage of
   the new class.</li>
   <li>Note that the new class can be constructed only from a
   <tt>ModelConfig</tt></li>
+  <li>One can specify a <tt>TestStatSampler</tt> in the constructor (which implies a choice of a <tt>TestStatistic</tt>, or by default the tool will use teh ToyMCSampler and the <tt>RatioOfProfiledLikelihoods</tt></li>
+  <li>The interface of the new HybridCalculator class is now more uniform with the other calculator tools, which is different from the original
+  HybridCalculator's interface. Users wishing to run their old macro are advised to use ModelConfig, but if that is too time consuming one can just change the
+  name of the class from <tt>HybridCalculator</tt> to
+  <tt>HybridCalculatorOriginal</tt></li>
   <li>Note also that with the new class no <tt>HybridResult</tt> is
   returned but directly the base class <tt>HypoTestResult</tt> which
   has been improved for this release.</li>
@@ -46,6 +60,13 @@
   <li> The classes <tt>HybridResult</tt> and <tt>HybridPlot</tt> work only
   with the <tt>HybridCalculatorOriginal</tt> and remain for maintaining
   a backward compatibility. </li>
+  <li>Given a ModelConfig, the tool will attempt to form the posterior pdf 
+    for the nuisance parameters based on the prior and the constraint terms 
+    in the pdf. However, this is not yet implemented.  In order to keep
+    logical consistency with other tools, the distribution being used
+    to smear the nuisance parameters should NOT be considered the prior in 
+    the model config.  Instead, one should use HybridCalculator's
+    <tt>ForcePriorNuisanceNull</tt> and <tt>ForcePriorNuisanceAlt</tt>.</li>
 
 </ul>  
   
@@ -59,13 +80,22 @@
 <h4>TestStatSampler and TestStatistics</h4>
 
 <ul>
+  <li>Cleanup of the interfaces.</li>
+  <li>TestStatistics now have a method <tt>PValueIsRightTail</tt> to specify the sign conventions for the test statistic.  This is used when making plots and calculating p-values.</li>
+  <li>make clear that <tt>TestStatistic::Evaluate</tt> should take data and values of the parameters that defien the null.</li>
+  <li>Add method <tt>TestStatSampler::SetParametersForTestStat</tt> that 
+    allows for greater control of parameters used for generating toy data
+    and parameters used for evaluating the test statistic.</li>
   <li>New version of <tt>ToyMCSampler</tt> which can smear the nuisance
-  parameters according to their distributions</li>
+  parameters according to their distributions for use with HybridCalculator</li>
+  <li><li>ProfileLikelihoodTestStat</li>Using the raw profile likelihood while reviewing the old algorithm used to provide robustness in situations with local minima.</li>
   <li>New test statistic classes:
   <ul>
-    <li><tt>SimpleLikelihoodRatioTestStat</tt></li>
-    <li><tt>RatioOfProfiledLikelihoodsTestStat</tt></li>
-  </ul></li>
+    <li><tt>SimpleLikelihoodRatioTestStat</tt> : log L_1 / L_0</li>
+    <li><tt>RatioOfProfiledLikelihoodsTestStat</tt>: log L(mu_1, hat(nu_1))/L(mu_0,hat(nu_0))</li>
+    <li><tt>MaxLikelihoodEstiamteTestStat</tt>: the MLE of a specified parameter</li>
+  </ul>
+  </li>
 </ul>
 
 <h4>BayesianCalculator</h4>
@@ -90,24 +120,15 @@
   <tt>SetLeftSideTailFraction(fraction)</tt></li>
 </ul>
 
-<h4>ModelConfig</h4>
-<ul>
-  <li>Various fixes by and improvements to make it usable with all
-  the existing calculator.</li>
-  <li><tt>ModelConfig</tt> contains now always a reference to an
-  external workspace who manages all the objects being part of the model (pdf's and parameter sets). The user needs then to
-  set always a workspace pointer before setting the various objects.
-  </li>
-
-</ul>
   
   
 <h4>Tutorials</h4>
 
 <ul>
 <li>New tutorial <tt>roostats/FourBins.C</tt> as an example of the generalization of the on/off problem </li>
-<li>New tutorial <tt>roostats/Zbi_Zgamma.C</tt> </li>
+<li>New tutorial <tt>roostats/Zbi_Zgamma.C</tt> : Shows equivalence of exact Z_Bi calculation and numerically integrated Z_bi.</li>
 <li>New tutorial <tt>rs201b_hybridcalculator</tt> showing the usage of
   the new HybridCalculator class.</li>
+<li>New tutorial <tt>MultivariateGaussianTest.C</tt>: demonstrate MCMC for a multivariate Gaussian with non-trivial covariance.</li>
 </ul>  
   
