@@ -359,7 +359,7 @@ Bool_t TASPaletteEditor::ProcessMessage(Long_t msg, Long_t param1, Long_t param2
                         fImagePad->Modified();
                         fImagePad->Update();
                      }
-                     UpdateScreen(kTRUE);
+                     if (fPalette) UpdateScreen(kTRUE);
                      break;
 
                   case 21: // redo
