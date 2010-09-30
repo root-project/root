@@ -44,7 +44,7 @@ protected:
 
 public:
 
-   TQtApplication() {};
+   TQtApplication() {fGUIThread=0;};
    TQtApplication(const char *appClassName, int &argc, char **argv);
    virtual ~TQtApplication();
    static bool Terminate();
