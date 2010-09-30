@@ -729,7 +729,7 @@ static void FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Float_t &
 //*-*  This mathod is a straight copy of void TTree::FindGoodLimits method
 //*-*
 
-   Double_t binlow,binhigh,binwidth;
+   Double_t binlow,binhigh,binwidth=0;
    Int_t n;
    Double_t dx = 0.1*(xmax-xmin);
    Double_t umin = xmin - dx;
