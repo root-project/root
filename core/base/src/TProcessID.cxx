@@ -105,7 +105,7 @@ TProcessID *TProcessID::AddProcessID()
 
    fgPIDs->Add(pid);
    char name[20];
-   sprintf(name,"ProcessID%d",apid);
+   snprintf(name,20,"ProcessID%d",apid);
    pid->SetName(name);
    TUUID u;
    apid = fgPIDs->GetEntriesFast();
