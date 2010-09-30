@@ -81,7 +81,7 @@ TQMimeTypes::TQMimeTypes(const char *iconPath, const char *filename)
       if (!strlen(s)) continue;    // skip empty lines
 
       if (*s == '[') {
-         strcpy(mime, line);
+         strlcpy(mime, line,1024);
          cnt = 0;
          continue;
       }
@@ -92,7 +92,7 @@ TQMimeTypes::TQMimeTypes(const char *iconPath, const char *filename)
          } else {
             s++;
             s = Strip(s);
-            strcpy(pattern, s);
+            strlcpy(pattern, s,256);
             delete [] s;
          }
          cnt++;
@@ -106,14 +106,14 @@ TQMimeTypes::TQMimeTypes(const char *iconPath, const char *filename)
             char *s2;
             if ((s2 = strchr(s, ' '))) {
                *s2 = 0;
-               strcpy(icon, s);
+               strlcpy(icon, s,256);
                s2++;
                s2 = Strip(s2);
-               strcpy(sicon, s2);
+               strlcpy(sicon, s2,256);
                delete [] s2;
             } else {
-               strcpy(icon, s);
-               strcpy(sicon, s);
+               strlcpy(icon, s,256);
+               strlcpy(sicon, s,256);
             }
             delete [] s;
          }
@@ -125,7 +125,7 @@ TQMimeTypes::TQMimeTypes(const char *iconPath, const char *filename)
          } else {
             s++;
             s = Strip(s);
-            strcpy(action, s);
+            strlcpy(action, s,256);
             delete [] s;
          }
          cnt++;
