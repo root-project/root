@@ -555,8 +555,9 @@ void TClonesArray::SetClass(const TClass *cl, Int_t s)
       Error("SetClass", "%s does not inherit from TObject", classname);
       return;
    }
-   char *name = new char[strlen(classname)+2];
-   sprintf(name, "%ss", classname);
+   Int_t nch = strlen(classname)+2;
+   char *name = new char[nch];
+   snprintf(name,nch, "%ss", classname);
    SetName(name);
    delete [] name;
 
