@@ -178,6 +178,10 @@ protected:
      fFA(), fNamedHash(0), fTabWidth(0), fUnderlinePos(0), fUnderlineHeight(0), fBarHeight(0)
    {
       SetRefCount(1);
+      for (Int_t i=0; i<256; i++) {
+         fWidths[i] = 0;
+	 fTypes[i]  = ' ';
+      }
    }
 
    TGFont(const TGFont &font);           // not implemented
