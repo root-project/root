@@ -53,11 +53,11 @@ void TLimitDataSource::AddChannel(TH1 * s, TH1 * b, TH1 * d)
    fBackground.AddLast(b);
    fCandidates.AddLast(d);
    char rndname[20];
-   sprintf(rndname, "rndname%f", generator.Rndm());
+   snprintf(rndname,20, "rndname%f", generator.Rndm());
    empty = new TVectorD(1);
    fErrorOnSignal.AddLast(empty);
    fDummyTA.AddLast(empty);
-   sprintf(rndname, "rndname%f", generator.Rndm());
+   snprintf(rndname,20, "rndname%f", generator.Rndm());
    empty = new TVectorD(1);
    fErrorOnBackground.AddLast(empty);
    fDummyTA.AddLast(empty);
