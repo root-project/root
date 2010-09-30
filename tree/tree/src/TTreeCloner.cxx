@@ -475,7 +475,7 @@ void TTreeCloner::CopyProcessIds()
             pids->AddAtAndExpand(pid,npids);
             pid->IncrementCount();
             char name[32];
-            sprintf(name,"ProcessID%d",npids);
+            snprintf(name,32,"ProcessID%d",npids);
             pid->Write(name);
             tofile->IncrementProcessIDs();
             if (gDebug > 0) {
