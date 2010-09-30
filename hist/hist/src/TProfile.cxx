@@ -890,7 +890,7 @@ char* TProfile::GetObjectInfo(Int_t px, Int_t py) const
    Double_t x  = gPad->PadtoX(gPad->AbsPixeltoX(px));
    Double_t y  = gPad->PadtoY(gPad->AbsPixeltoY(py));
    Int_t binx   = GetXaxis()->FindFixBin(x);
-   sprintf(info,"(x=%g, y=%g, binx=%d, binc=%g, bine=%g, binn=%d)", x, y, binx, GetBinContent(binx), GetBinError(binx), (Int_t)GetBinEntries(binx));
+   snprintf(info,200,"(x=%g, y=%g, binx=%d, binc=%g, bine=%g, binn=%d)", x, y, binx, GetBinContent(binx), GetBinError(binx), (Int_t)GetBinEntries(binx));
    return info;
 }
 

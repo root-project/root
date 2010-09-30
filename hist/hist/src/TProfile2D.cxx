@@ -1230,7 +1230,7 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
    if (strcmp(name,"_px") == 0) {
       Int_t nch = strlen(GetName()) + 4;
       pname = new char[nch];
-      sprintf(pname,"%s%s",GetName(),name);
+      snprintf(pname,nch,"%s%s",GetName(),name);
    }
    TH2D *h1 = new TH2D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),ny,fYaxis.GetXmin(),fYaxis.GetXmax());
    Bool_t computeErrors = kFALSE;
