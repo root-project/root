@@ -5267,6 +5267,9 @@ void TASImage::FillPolygon(UInt_t npt, TPoint *ppt, const char *col,
          delete [] firstWidth;
          delete [] firstPoint;
       }
+   } else {
+      if (firstWidth) delete [] firstWidth;
+      if (firstPoint) delete [] firstPoint;
    }
 }
 
