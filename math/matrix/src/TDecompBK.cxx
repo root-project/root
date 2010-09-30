@@ -664,7 +664,7 @@ TDecompBK &TDecompBK::operator=(const TDecompBK &source)
          fNIpiv = source.fNIpiv;
          fIpiv = new Int_t[fNIpiv];
       }
-      memcpy(fIpiv,source.fIpiv,fNIpiv*sizeof(Int_t));
+      if (fIpiv) memcpy(fIpiv,source.fIpiv,fNIpiv*sizeof(Int_t));
    }
    return *this;
 }
