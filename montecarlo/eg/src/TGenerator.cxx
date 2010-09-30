@@ -450,21 +450,21 @@ void TGenerator::Draw(Option_t *option)
    text->SetTextColor(tcolor);
    text->SetTextAlign(32);
    char tcount[32];
-   sprintf(tcount,"%d",ntracks);      text->DrawText(-0.55,-0.47,tcount);
-   sprintf(tcount,"%d",ninvol);       text->DrawText(-0.55,-0.52,tcount);
-   sprintf(tcount,"%d",nGammas);      text->DrawText(-0.55,-0.57,tcount);
-   sprintf(tcount,"%d",nProtons);     text->DrawText(-0.55,-0.62,tcount);
-   sprintf(tcount,"%d",nNeutrons);    text->DrawText(-0.55,-0.67,tcount);
-   sprintf(tcount,"%d",nAntiProtons); text->DrawText(-0.55,-0.72,tcount);
-   sprintf(tcount,"%d",nPionPlus);    text->DrawText(-0.55,-0.77,tcount);
-   sprintf(tcount,"%d",nPionMinus);   text->DrawText(-0.55,-0.82,tcount);
-   sprintf(tcount,"%d",nKaons);       text->DrawText(-0.55,-0.87,tcount);
-   sprintf(tcount,"%d",nElectrons);   text->DrawText(-0.55,-0.92,tcount);
+   snprintf(tcount,12,"%d",ntracks);      text->DrawText(-0.55,-0.47,tcount);
+   snprintf(tcount,12,"%d",ninvol);       text->DrawText(-0.55,-0.52,tcount);
+   snprintf(tcount,12,"%d",nGammas);      text->DrawText(-0.55,-0.57,tcount);
+   snprintf(tcount,12,"%d",nProtons);     text->DrawText(-0.55,-0.62,tcount);
+   snprintf(tcount,12,"%d",nNeutrons);    text->DrawText(-0.55,-0.67,tcount);
+   snprintf(tcount,12,"%d",nAntiProtons); text->DrawText(-0.55,-0.72,tcount);
+   snprintf(tcount,12,"%d",nPionPlus);    text->DrawText(-0.55,-0.77,tcount);
+   snprintf(tcount,12,"%d",nPionMinus);   text->DrawText(-0.55,-0.82,tcount);
+   snprintf(tcount,12,"%d",nKaons);       text->DrawText(-0.55,-0.87,tcount);
+   snprintf(tcount,12,"%d",nElectrons);   text->DrawText(-0.55,-0.92,tcount);
 
-   sprintf(tcount,"Protons/Pions= %4f",Float_t(nProtons)/Float_t(nPionPlus+nPionMinus));
+   snprintf(tcount,12,"Protons/Pions= %4f",Float_t(nProtons)/Float_t(nPionPlus+nPionMinus));
    text->SetTextAlign(12);
    text->DrawText(-0.45,-0.92,tcount);
-   sprintf(tcount,"Kaons/Pions= %4f",Float_t(nKaons)/Float_t(nPionPlus+nPionMinus));
+   snprintf(tcount,12,"Kaons/Pions= %4f",Float_t(nKaons)/Float_t(nPionPlus+nPionMinus));
    text->DrawText(0.30,-0.92,tcount);
 }
 
