@@ -158,7 +158,7 @@ void  TQtPadFont::SetTextFont(Font_t fontnumber)
    TAttText::SetTextFont(fontnumber);
 
    int it, bld;
-   const char *fontName = RomanFontName();
+   const char *fontName;
 
    switch(fTextFont/10) {
 
