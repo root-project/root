@@ -168,9 +168,9 @@ void TVirtualPS::WriteInteger(Int_t n, Bool_t space )
 
    char str[15];
    if (space) {
-      sprintf(str," %d", n);
+      snprintf(str,15," %d", n);
    } else {
-      sprintf(str,"%d", n);
+      snprintf(str,15,"%d", n);
    }
    PrintStr(str);
 }
@@ -182,6 +182,6 @@ void TVirtualPS::WriteReal(Float_t z)
    // Write a Real number to the file
 
    char str[15];
-   sprintf(str," %g", z);
+   snprintf(str,15," %g", z);
    PrintStr(str);
 }
