@@ -251,8 +251,10 @@ PyObject* PyROOT::TPyBufferFactory::PyBuffer_FromMemory( type* address, Py_ssize
 {                                                                               \
    size = size < 0 ? INT_MAX : size;                                            \
    PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size );        \
-   Py_INCREF( (PyObject*)(void*)&Py##name##Buffer_Type );                       \
-   buf->ob_type = &Py##name##Buffer_Type;                                       \
+   if ( buf ) {                                                                 \
+      Py_INCREF( (PyObject*)(void*)&Py##name##Buffer_Type );                    \
+      buf->ob_type = &Py##name##Buffer_Type;                                    \
+   }                                                                            \
    return buf;                                                                  \
 }                                                                               \
                                                                                 \

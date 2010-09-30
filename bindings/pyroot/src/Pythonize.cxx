@@ -1394,6 +1394,8 @@ namespace {
    // prepare arguments and call
       PyObject* arg1 = BufFac_t::Instance()->PyBuffer_FromMemory(
          (double*)G__int(libp->para[0]), 4 );
+      if ( ! arg1 )
+         return 0;
 
       if ( npar != 0 ) {
          PyObject* arg2 = BufFac_t::Instance()->PyBuffer_FromMemory(

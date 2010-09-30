@@ -79,14 +79,14 @@ Bool_t PyROOT::T##name##Converter::SetArg(                                    \
       PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )       \
 {                                                                             \
 /* convert <pyobject> to C++ <<type>>, set arg for call, allow int -> char */ \
-   if ( PyBytes_Check( pyobject ) ) {                                         \
-      if ( PyBytes_GET_SIZE( pyobject ) == 1 ) {                              \
-         para.fl = (Long_t)PyBytes_AS_STRING( pyobject )[0];                  \
+   if ( PyROOT_PyUnicode_Check( pyobject ) ) {                                \
+      if ( PyROOT_PyUnicode_GET_SIZE( pyobject ) == 1 ) {                     \
+         para.fl = (Long_t)PyROOT_PyUnicode_AsString( pyobject )[0];          \
          if ( func )                                                          \
             func->SetArg( para.fl );                                          \
       } else {                                                                \
          PyErr_Format( PyExc_TypeError,                                       \
-            #type" expected, got string of size "PY_SSIZE_T_FORMAT, PyBytes_GET_SIZE( pyobject ) );\
+            #type" expected, got string of size "PY_SSIZE_T_FORMAT, PyROOT_PyUnicode_GET_SIZE( pyobject ) );\
          return kFALSE;                                                       \
       }                                                                       \
    } else {                                                                   \
@@ -105,13 +105,13 @@ Bool_t PyROOT::T##name##Converter::SetArg(                                    \
                                                                               \
 PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
 {                                                                             \
-   return PyBytes_FromFormat( "%c", *((type*)address) );                      \
+   return PyROOT_PyUnicode_FromFormat( "%c", *((type*)address) );             \
 }                                                                             \
                                                                               \
 Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 {                                                                             \
-   if ( PyBytes_Check( value ) ) {                                            \
-      const char* buf = PyBytes_AsString( value );                            \
+   if ( PyROOT_PyUnicode_Check( value ) ) {                                   \
+      const char* buf = PyROOT_PyUnicode_AsString( value );                   \
       if ( PyErr_Occurred() )                                                 \
          return kFALSE;                                                       \
       int len = strlen( buf );                                                \
@@ -378,7 +378,7 @@ PyObject* PyROOT::TMacroConverter::FromMemory( void* address )
          case 'P':
             return PyFloat_FromDouble( (double) *(Double_t*)address );
          case 'T':
-            return PyBytes_FromString( *(char**)address );
+            return PyROOT_PyUnicode_FromString( *(char**)address );
          default:
          // type unknown/not implemented
             PyErr_SetString( PyExc_NotImplementedError, "macro value could not be converted" );
