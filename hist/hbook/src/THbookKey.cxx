@@ -23,7 +23,7 @@ THbookKey::THbookKey(Int_t id, THbookFile *file)
    fDirectory = file;
    fID = id;
    char name[10];
-   sprintf(name,"h%d",id);
+   snprintf(name,10,"h%d",id);
    SetName(name);
 }
 
