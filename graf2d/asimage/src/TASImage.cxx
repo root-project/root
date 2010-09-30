@@ -3347,6 +3347,7 @@ void TASImage::Crop(Int_t x, Int_t y, UInt_t width, UInt_t height)
    if (!imout) {
       Warning("Crop", "Failed to start image output");
       destroy_asimage(&img);
+      if (imdec) delete [] imdec;
       return;
    }
 
