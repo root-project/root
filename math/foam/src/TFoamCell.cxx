@@ -35,6 +35,7 @@ TFoamCell::TFoamCell(Int_t kDim)
    if (  kDim >0) {
       //---------=========----------
       fDim     = kDim;
+      fSerial   = 0;
       fStatus   = 1;
       fParent   = 0;
       fDaught0  = 0;
