@@ -331,7 +331,7 @@ void TVolume::Browse(TBrowser *b)
          posName += nodePosition->GetNode()->GetTitle();
          char num[10];
          posName += ";";
-         sprintf(num,"%d",posNumber);
+         snprintf(num,10,"%d",posNumber);
          posName += num;
          b->Add(nodePosition,posName.Data());
       }
@@ -447,7 +447,7 @@ void TVolume::Draw(Option_t *option)
    char buffer[10];
    if (iopt < 0) {
       // set the "positive option"
-      sprintf(buffer,"%d",-iopt);
+      snprintf(buffer,10,"%d",-iopt);
       option = buffer;
       // select parent to draw
       parent = this;
@@ -532,7 +532,7 @@ char *TVolume::GetObjectInfo(Int_t px, Int_t py) const
    //to be documented
    if (!gPad) return 0;
    static char info[512];
-   sprintf(info,"%s/%s",GetName(),GetTitle());
+   snprintf(info,512,"%s/%s",GetName(),GetTitle());
    Double_t x[3];
    ((TPad *)gPad)->AbsPixeltoXY(px,py,x[0],x[1]);
    x[2] = 0;
@@ -541,9 +541,10 @@ char *TVolume::GetObjectInfo(Int_t px, Int_t py) const
 
    TIter nextShape(fListOfShapes);
    TShape *shape = 0;
-   while( (shape = (TShape *)nextShape()) )
-      sprintf(&info[strlen(info)]," %6.2f/%6.2f: shape=%s/%s",x[0],x[1],shape->GetName(),shape->ClassName());
-
+   while( (shape = (TShape *)nextShape()) ) {
+      Int_t nchi = strlen(info);
+      snprintf(&info[nchi],512-nchi," %6.2f/%6.2f: shape=%s/%s",x[0],x[1],shape->GetName(),shape->ClassName());
+   }
    return info;
 }
 
