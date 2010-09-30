@@ -80,15 +80,17 @@ void TSystemFile::Edit()
 
 #ifndef _WIN32
    const char *ed = gEnv->GetValue("Editor", "vi");
-   Char_t *cmd = new Char_t[strlen(ed)+strlen(GetName()) + 50];
+   Int_t nch = strlen(ed)+strlen(GetName()) + 50;
+   Char_t *cmd = new Char_t[nch];
    if (!strcmp(ed, "vi"))
-      sprintf(cmd, "xterm -e vi %s &", GetName());
+      snprintf(cmd,nch, "xterm -e vi %s &", GetName());
    else
-      sprintf(cmd, "%s %s &", ed, GetName());
+      snprintf(cmd,nch, "%s %s &", ed, GetName());
 #else
    const char *ed = gEnv->GetValue("Editor", "notepad");
-   Char_t *cmd = new Char_t[strlen(ed)+strlen(GetName()) + 50];
-   sprintf(cmd, "start %s %s", ed, GetName());
+   Int_t nch = strlen(ed)+strlen(GetName()) + 50;
+   Char_t *cmd = new Char_t[nch];
+   snprintf(cmd,nch, "start %s %s", ed, GetName());
 #endif
    gSystem->Exec(cmd);
 
