@@ -176,7 +176,7 @@ TString TTableDescriptor::CreateLeafList() const
       if (totalSize > 1) {
          for ( k = 0; k < totalSize; k++) {
             Char_t buf[10];
-            sprintf(buf,"_%d",k);
+            snprintf(buf,10,"_%d",k);
             string += colName;
             string += buf;
             if (k==0) {
