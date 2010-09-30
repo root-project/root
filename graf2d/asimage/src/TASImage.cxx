@@ -500,7 +500,9 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
    iparams.return_animation_delay = -1;
 
    TString ext;
-   const char *dot = strrchr(filename, '.');
+   const char *dot;
+   if (filename) dot = strrchr(filename, '.');
+   else          dot = 0;
    ASImage *image = 0;
    TString fname = filename;
 
