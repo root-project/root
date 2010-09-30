@@ -357,7 +357,7 @@ TVolumeView::TVolumeView(Double_t *translate, Double_t *rotate, UInt_t positionI
       thisPosition  = new TVolumePosition(thisNode,thisX, thisY, thisZ, thisRotMatrix);
    } else
       Error("TVolumeView"," No rotation matrix is defined");
-   thisPosition->SetId(positionId);
+   if (thisPosition) thisPosition->SetId(positionId);
    SetObject(thisPosition);
    if (thisNode) {
       SetName(thisNode->GetName());
