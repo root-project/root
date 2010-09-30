@@ -233,7 +233,7 @@ TH1 *TSpectrum::Background(const TH1 * h, int numberIterations,
    //only bins in the range of the input histogram are filled
    Int_t nch = strlen(h->GetName());
    char *hbname = new char[nch+20];
-   sprintf(hbname,"%s_background",h->GetName());
+   snprintf(hbname,nch+20,"%s_background",h->GetName());
    TH1 *hb = (TH1*)h->Clone(hbname);
    hb->Reset();
    hb->GetListOfFunctions()->Delete();
