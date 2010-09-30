@@ -694,8 +694,8 @@ void TH2::DoFitSlices(bool onX,
    char *title  = new char[2000];
    const TArrayD *bins = outerAxis.GetXbins();
    for (ipar=0;ipar<npar;ipar++) {
-      sprintf(name,"%s_%d",GetName(),ipar);
-      sprintf(title,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
+      snprintf(name,2000,"%s_%d",GetName(),ipar);
+      snprintf(title,2000,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
       delete gDirectory->FindObject(name);
       if (bins->fN == 0) {
          hlist[ipar] = new TH1D(name,title, nbins, outerAxis.GetXmin(), outerAxis.GetXmax());
@@ -706,7 +706,7 @@ void TH2::DoFitSlices(bool onX,
       if (arr)
          (*arr)[ipar] = hlist[ipar];
    }
-   sprintf(name,"%s_chi2",GetName());
+   snprintf(name,2000,"%s_chi2",GetName());
    delete gDirectory->FindObject(name);
    TH1D *hchi2 = 0;
    if (bins->fN == 0) {
@@ -1887,7 +1887,7 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    if (name && strcmp(name, expectedName) == 0) {
       Int_t nch = strlen(GetName()) + 5;
       pname = new char[nch];
-      sprintf(pname,"%s%s",GetName(),name);
+      snprintf(pname,nch,"%s%s",GetName(),name);
    }
    TProfile *h1=0;
    //check if a profile with identical name exist
@@ -2175,7 +2175,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    if (name && strcmp(name,expectedName) == 0) {
       Int_t nch = strlen(GetName()) + 4;
       pname = new char[nch];
-      sprintf(pname,"%s%s",GetName(),name);
+      snprintf(pname,nch,"%s%s",GetName(),name);
    }
    TH1D *h1=0;
    //check if histogram with identical name exist
