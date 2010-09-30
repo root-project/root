@@ -356,8 +356,9 @@ TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, 
           localArgv  = new char*[args.size()]; // leaking :-(
           for (int i = 0; i < args.size(); ++i) {
              QString nextarg = args.at(i);
-             localArgv[i]= new char[nextarg.length()+1]; 
-             strcpy(localArgv[i], nextarg.toAscii().constData());
+             Int_t nchi = nextarg.length()+1;
+             localArgv[i]= new char[nchi]; 
+             strlcpy(localArgv[i], nextarg.toAscii().constData(),nchi);
           } 
        } else {
          localArgv  = argv;
