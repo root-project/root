@@ -2789,6 +2789,7 @@ Double_t *TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_thr
    fPalette = *pal;
    fImage->alt.vector = vec;
    UnZoom();
+   if (res) delete res;
    return (Double_t*)fImage->alt.vector;
 }
 
