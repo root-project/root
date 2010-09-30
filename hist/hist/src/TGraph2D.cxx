@@ -1160,10 +1160,10 @@ TH1 *TGraph2D::Project(Option_t *option) const
    TH2D *h2 = 0;
    Int_t nch = strlen(GetName()) +opt.Length() +2;
    char *name = new char[nch];
-   sprintf(name,"%s_%s",GetName(),option);
+   snprintf(name,nch,"%s_%s",GetName(),option);
    nch = strlen(GetTitle()) +opt.Length() +2;
    char *title = new char[nch];
-   sprintf(title,"%s_%s",GetTitle(),option);
+   snprintf(title,nch,"%s_%s",GetTitle(),option);
 
    Double_t hxmin = GetXmin();
    Double_t hxmax = GetXmax();
