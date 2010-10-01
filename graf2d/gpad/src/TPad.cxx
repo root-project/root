@@ -4455,7 +4455,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       l = (char*)strstr(opt,"Title:");
       if (l) {
          gVirtualPS->SetTitle(&opt[6]);
-         strcpy(l,"pdf");
+         strcpy(l,"pdf");  /intentional
       }
       gVirtualPS->Open(psname,pstype);
       gVirtualPS->SetBit(kPrintingPS);
@@ -4930,8 +4930,8 @@ void TPad::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       strlcpy(lcname,cname,10);
       for (Int_t k=1;k<=nch;k++) {if (lcname[nch-k] == ' ') lcname[nch-k] = 0;}
       if (lcname[0] == 0) {
-         if (this == gPad->GetCanvas()) {strcpy(lcname,"c1");  nch = 2;}
-         else                           {strcpy(lcname,"pad"); nch = 3;}
+         if (this == gPad->GetCanvas()) {strlcpy(lcname,"c1",10);  nch = 2;}
+         else                           {strlcpy(lcname,"pad",10); nch = 3;}
       }
       cname = lcname;
    }
