@@ -45,6 +45,9 @@ TGraph2DPainter::TGraph2DPainter()
    fX        = 0;
    fY        = 0;
    fZ        = 0;
+   fEX       = 0;
+   fEY       = 0;
+   fEZ       = 0;
    fXN       = 0;
    fYN       = 0;
    fPTried   = 0;
