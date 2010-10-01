@@ -1956,7 +1956,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
       // fprintf(stderr, "  TGQt::SendEvent(Window_t id, Event_t *ev) %p type=%d\n", wid(id), ev->fType);
       QApplication::postEvent(receiver,new TQUserEvent(*ev));
    } else {
-      fprintf(stderr,"TQt::SendEvent:: unknown event %d for widget: %p\n",ev->fType,wid(id));
+      if (ev) fprintf(stderr,"TQt::SendEvent:: unknown event %d for widget: %p\n",ev->fType,wid(id));
    }
 }
 //______________________________________________________________________________
