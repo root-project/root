@@ -3258,7 +3258,7 @@ void TFormula::ProcessLinear(TString &formula)
       //if there are "++", replaces them with +[i]*
       nf = 1;
       while (pch){
-         sprintf(repl, ")+[%d]*(", nf);
+         snprintf(repl,20, ")+[%d]*(", nf);
          offset = pch-formula.Data();
          if (nf<10) replsize = 7;
          else if (nf<100) replsize = 8;
@@ -3272,7 +3272,7 @@ void TFormula::ProcessLinear(TString &formula)
       //if there are no ++, create a new string with ++ instead of +[i]*
       formula2=formula2(4, formula2.Length()-4);
       pch= (char*)strchr(formula2.Data(), '[');
-      sprintf(repl, "++");
+      snprintf(repl,20, "++");
       nf = 1;
       while (pch){
          offset = pch-formula2.Data()-1;
