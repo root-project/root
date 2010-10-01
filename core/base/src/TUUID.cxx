@@ -240,6 +240,7 @@ TUUID::TUUID(const char *uuid)
    fClockSeqHiAndReserved = 0;
    fClockSeqLow           = 0;
    fNode[0]               = 0;
+   fUUIDIndex             = 0;
 
    if (!uuid || !*uuid)
       Error("TUUID", "null string not allowed");
