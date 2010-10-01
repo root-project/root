@@ -2431,7 +2431,7 @@ int RpdSshAuth(const char *sstr)
       }
 
       // Get ID
-      strcpy(pipeId,(char *)strstr(pipeFile,"SshPipe.")+strlen("SshPipe."));
+      strncpy(pipeId,(char *)strstr(pipeFile,"SshPipe.")+strlen("SshPipe."),10);
 
       // Communicate command to be executed via ssh ...
       std::string rootbindir;
