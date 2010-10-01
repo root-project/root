@@ -700,7 +700,7 @@ Bool_t TOracleStatement::NextResultRow()
         fBuffer[n].strbuf = 0;
         fBuffer[n].strbufsize = -1;
       }
-      if (!fResult->next() != oracle::occi::ResultSet::END_OF_FETCH) {
+      if (fResult->next() == oracle::occi::ResultSet::END_OF_FETCH) {
          fWorkingMode = 0;
          CloseBuffer();
          return kFALSE;
