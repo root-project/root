@@ -1292,7 +1292,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                      G__fprinterr(G__serr, "Possible candidates are...\n");
                      {
                         G__FastAllocString itemtmp(G__LONGLINE);
-                        itemtmp.Format("%s::%s", G__struct.name[G__tagnum], funcname);
+                        itemtmp.Format("%s::%s", G__tagnum !=-1 ? G__struct.name[G__tagnum] : "unknown scope", funcname);
                         G__display_proto_pretty(G__serr, itemtmp, 1);
                      }
                   }
