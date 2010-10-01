@@ -544,7 +544,7 @@ void TApplicationServer::HandleSocketInput()
                   {  Long_t size;
                      Int_t  bin;
                      char   name[2048];
-                     sscanf(str, "%s %d %ld", name, &bin, &size);
+                     sscanf(str, "%2047s %d %ld", name, &bin, &size);
                      ReceiveFile(name, bin ? kTRUE : kFALSE, size);
                   }
                   break;
