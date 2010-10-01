@@ -80,6 +80,8 @@ NeymanConstruction::NeymanConstruction(RooAbsData& data, ModelConfig& model):
    fSize(0.05),
    fData(data),
    fModel(model),
+   fTestStatSampler(0), 
+   fPointsToTest(0),
    fLeftSideFraction(0), 
    fConfBelt(0),  // constructed with tree data 
    fAdaptiveSampling(false),

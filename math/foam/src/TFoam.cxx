@@ -157,32 +157,42 @@ static const Double_t gVlow=-1.0e150;
 #define SW2 setprecision(7) << setw(12)
 
 //________________________________________________________________________________________________
-TFoam::TFoam()
+TFoam::TFoam() : 
+   fDim(0), fNCells(0), fRNmax(0), 
+   fOptDrive(0), fChat(0), fOptRej(0), 
+   fNBin(0), fNSampl(0), fEvPerBin(0), 
+   fMaskDiv(0), fInhiDiv(0), fOptPRD(0), fXdivPRD(0), 
+   fNoAct(0), fLastCe(0), fCells(0), 
+   fMCMonit(0), fMaxWtRej(0), 
+   fCellsAct(0), fPrimAcu(0), fHistEdg(0), fHistWt(0), 
+   fMCvect(0), fMCwt(0), fRvec(0), 
+   fRho(0), fMethodCall(0), fPseRan(0), 
+   fNCalls(0), fNEffev(0), 
+   fSumWt(0), fSumWt2(0), 
+   fSumOve(0), fNevGen(0), 
+   fWtMax(0), fWtMin(0), 
+   fPrime(0), fMCresult(0), fMCerror(0), 
+   fAlpha(0)
 {
   // Default constructor for streamer, user should not use it.
-   fDim      = 0;
-   fNoAct    = 0;
-   fNCells   = 0;
-   fRNmax    = 0;
-   fMaskDiv  = 0;
-   fInhiDiv  = 0;
-   fXdivPRD  = 0;
-   fCells    = 0;
-   fAlpha    = 0;
-   fCellsAct = 0;
-   fPrimAcu  = 0;
-   fHistEdg  = 0;
-   fHistWt   = 0;
-   fHistDbg  = 0;
-   fMCMonit  = 0;
-   fRho      = 0;  // Integrand function
-   fMCvect   = 0;
-   fRvec     = 0;
-   fPseRan   = 0;  // generator of pseudorandom numbers
-   fMethodCall=0;  // ROOT's pointer to global distribution function
 }
 //_________________________________________________________________________________________________
-TFoam::TFoam(const Char_t* Name)
+TFoam::TFoam(const Char_t* Name) :
+   fDim(0), fNCells(0), fRNmax(0), 
+   fOptDrive(0), fChat(0), fOptRej(0), 
+   fNBin(0), fNSampl(0), fEvPerBin(0), 
+   fMaskDiv(0), fInhiDiv(0), fOptPRD(0), fXdivPRD(0), 
+   fNoAct(0), fLastCe(0), fCells(0), 
+   fMCMonit(0), fMaxWtRej(0), 
+   fCellsAct(0), fPrimAcu(0), fHistEdg(0), fHistWt(0), 
+   fMCvect(0), fMCwt(0), fRvec(0), 
+   fRho(0), fMethodCall(0), fPseRan(0), 
+   fNCalls(0), fNEffev(0), 
+   fSumWt(0), fSumWt2(0), 
+   fSumOve(0), fNevGen(0), 
+   fWtMax(0), fWtMin(0), 
+   fPrime(0), fMCresult(0), fMCerror(0), 
+   fAlpha(0)
 {
 // User constructor, to be employed by the user
 

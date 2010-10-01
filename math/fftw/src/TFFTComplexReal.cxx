@@ -59,6 +59,7 @@ TFFTComplexReal::TFFTComplexReal()
    fN    = 0;
    fTotalSize = 0;
    fFlags = 0;
+   fNdim = 0; 
 }
 
 //_____________________________________________________________________________

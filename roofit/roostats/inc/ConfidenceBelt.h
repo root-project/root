@@ -101,7 +101,7 @@ namespace RooStats {
   ///////////////////////////
   class AcceptanceRegion : public TObject{
   public:
-    AcceptanceRegion() {}
+     AcceptanceRegion() : fLookupIndex(0), fLowerLimit(0), fUpperLimit(0) {}
     virtual ~AcceptanceRegion() {}
 
     AcceptanceRegion(Int_t lu, Double_t ll, Double_t ul){

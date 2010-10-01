@@ -72,6 +72,7 @@ SamplingDistPlot::SamplingDistPlot(const char* name, const char* title, Int_t nb
 {
   // SamplingDistPlot constructor
   fHist = new TH1F(name, title, nbins, xmin, xmax);
+  fIterator = fItems.MakeIterator();
   fIsWeighted = kFALSE;
   fBins = nbins;
   fMarkerType = 20;

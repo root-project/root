@@ -58,6 +58,8 @@ TFFTRealComplex::TFFTRealComplex()
    fPlan = 0;
    fN    = 0;
    fFlags = 0;
+   fNdim = 0;
+   fTotalSize = 0;
 }
 
 //_____________________________________________________________________________

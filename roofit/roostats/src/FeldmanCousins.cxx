@@ -86,6 +86,7 @@ FeldmanCousins::FeldmanCousins() :
 
 //_______________________________________________________
 FeldmanCousins::FeldmanCousins(RooAbsData& data, ModelConfig& model) : 
+  fSize(0.05), 
   fModel(model),
   fData(data),
   fTestStatSampler(0),
