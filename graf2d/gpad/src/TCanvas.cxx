@@ -1685,7 +1685,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
       }
       fname = new char[nch+3];
       strlcpy(fname,cname,nch+3);
-      strcat(fname,".C");
+      strncat(fname,".C",2);
       out.open(fname, ios::out);
    }
    if (!out.good ()) {
