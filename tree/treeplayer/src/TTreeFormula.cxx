@@ -1886,7 +1886,8 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                   }
                }
             } else {
-               Error("DefinedVariable","%s is not a datamember of %s",work,cl->GetName());
+               if (cl) Error("DefinedVariable","%s is not a datamember of %s",work,cl->GetName());
+               // no else, we warned earlier that the class was missing.
                return -1;
             }
 
