@@ -5314,7 +5314,8 @@ void THistPainter::PaintHist(Option_t *)
       yb = TMath::Min(yb, ymax);
       if (Hoption.Plus) {
    //            compute y1, y2
-         y1 = keepy[j-first];
+         if (keepy) y1 = keepy[j-first];
+	 else       y1 = yb;
          y2 = yb;
          if (Hoption.Plus == 1 || Hoption.Plus == -1) {
             if (Hoption.Logy)
