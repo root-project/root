@@ -1007,7 +1007,7 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    if (!fPlayer->GetInputList()->FindObject("PROOF_MaxSlavesPerNode"))
       SetParameter("PROOF_MaxSlavesPerNode", (Long_t)fNWorkers);
 
-   Bool_t hasNoData = (!dset || dset->TestBit(TDSet::kEmpty)) ? kTRUE : kFALSE;
+   Bool_t hasNoData = (!dset || (dset && dset->TestBit(TDSet::kEmpty))) ? kTRUE : kFALSE;
 
    // If just a name was given to identify the dataset, retrieve it from the
    // local files
@@ -1069,7 +1069,7 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
 
    // Start or reset the progress dialog
    if (!gROOT->IsBatch()) {
-      Int_t dsz = dset->GetListOfElements()->GetSize();
+      Int_t dsz = (dset && dset->GetListOfElements()) ? dset->GetListOfElements()->GetSize() : -1;
       if (fProgressDialog &&
           !TestBit(kUsingSessionGui) && TestBit(kUseProgressDialog)) {
          if (!fProgressDialogStarted) {

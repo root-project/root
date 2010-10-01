@@ -1017,7 +1017,7 @@ TFileCollection *TDataSetManagerFile::GetDataSet(const char *group,
    TFile *f = TFile::Open(path.Data());
    if (!f) {
       Error("GetDataSet", "could not open file %s", path.Data());
-      SafeDelete(*checksum);
+      if (checksum) SafeDelete(*checksum);
       return fileList;
    }
 

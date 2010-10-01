@@ -545,7 +545,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
             dse->SetName(uf.GetUrl());
          }
          TTree *friendTree = Load(dse, loc);
-         if (friendTree) {
+         if (friendTree && main) {
             // Make sure it has not yet been added
             Bool_t addfriend = kTRUE;
             TList *frnds = main->GetListOfFriends();

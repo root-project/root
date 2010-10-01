@@ -1711,7 +1711,7 @@ TList *TDataSetManager::ParseDataSetSrvMaps(const TString &srvmaps)
       }
    }
    // Done
-   srvmapslist->SetOwner(kTRUE);
+   if (srvmapslist) srvmapslist->SetOwner(kTRUE);
    return srvmapslist;
 }
 

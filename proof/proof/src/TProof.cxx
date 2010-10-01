@@ -6023,7 +6023,7 @@ void TProof::ClearData(UInt_t what, const char *dsname)
       // Get registered data files
       TString sel = TString::Format("/%s/%s/", GetGroup(), GetUser());
       TMap *fcmap = GetDataSets(sel);
-      if (!fcmap || fcmap->GetSize() <= 0) {
+      if (!fcmap || (fcmap && fcmap->GetSize() <= 0)) {
          PDB(kDataset,1)
          Warning("ClearData", "no dataset beloning to '%s'", sel.Data());
          SafeDelete(fcmap);
@@ -6031,51 +6031,53 @@ void TProof::ClearData(UInt_t what, const char *dsname)
 
       // Go thorugh and prepare the lists per node
       TString opt;
-      TIter nxfc(fcmap);
       TObjString *os = 0;
-      while ((os = (TObjString *) nxfc())) {
-         TFileCollection *fc = 0;
-         if ((fc = (TFileCollection *) fcmap->GetValue(os))) {
-            TFileInfo *fi = 0;
-            TIter nxfi(fc->GetList());
-            while ((fi = (TFileInfo *) nxfi())) {
-               // Get special "file:" url
-               fi->ResetUrl();
-               Int_t nurl = fi->GetNUrls();
-               TUrl *up = 0;
-               while (nurl-- && fi->NextUrl()) {
-                  up = fi->GetCurrentUrl();
-                  if (!strcmp(up->GetProtocol(), "file")) {
-                     opt = up->GetOptions();
-                     if (opt.BeginsWith("node=")) {
-                        host=opt;
-                        host.ReplaceAll("node=","");
-                        file = up->GetFile();
-                        PDB(kDataset,2)
-                           Info("ClearData", "found: host: %s, file: %s", host.Data(), file.Data());
-                        // Remove this from the full list, if there
-                        TList *fl = (TList *) afmap->GetValue(host.Data());
-                        if (fl) {
-                           TObjString *fn = (TObjString *) fl->FindObject(file.Data());
-                           if (fn) {
-                              fl->Remove(fn);
-                              SafeDelete(fn);
-                              nfiles--;
-                           } else {
-                              Warning("ClearData",
-                                      "registered file '%s' not found in the full list!", file.Data());
+      if (fcmap) {
+         TIter nxfc(fcmap);
+         while ((os = (TObjString *) nxfc())) {
+            TFileCollection *fc = 0;
+            if ((fc = (TFileCollection *) fcmap->GetValue(os))) {
+               TFileInfo *fi = 0;
+               TIter nxfi(fc->GetList());
+               while ((fi = (TFileInfo *) nxfi())) {
+                  // Get special "file:" url
+                  fi->ResetUrl();
+                  Int_t nurl = fi->GetNUrls();
+                  TUrl *up = 0;
+                  while (nurl-- && fi->NextUrl()) {
+                     up = fi->GetCurrentUrl();
+                     if (!strcmp(up->GetProtocol(), "file")) {
+                        opt = up->GetOptions();
+                        if (opt.BeginsWith("node=")) {
+                           host=opt;
+                           host.ReplaceAll("node=","");
+                           file = up->GetFile();
+                           PDB(kDataset,2)
+                              Info("ClearData", "found: host: %s, file: %s", host.Data(), file.Data());
+                           // Remove this from the full list, if there
+                           TList *fl = (TList *) afmap->GetValue(host.Data());
+                           if (fl) {
+                              TObjString *fn = (TObjString *) fl->FindObject(file.Data());
+                              if (fn) {
+                                 fl->Remove(fn);
+                                 SafeDelete(fn);
+                                 nfiles--;
+                              } else {
+                                 Warning("ClearData",
+                                       "registered file '%s' not found in the full list!", file.Data());
+                              }
                            }
+                           break;
                         }
-                        break;
                      }
                   }
                }
             }
          }
+         // Clean up the the received map
+         if (fcmap) fcmap->SetOwner(kTRUE);
+         SafeDelete(fcmap);
       }
-      // Clean up the the received map
-      if (fcmap) fcmap->SetOwner(kTRUE);
-      SafeDelete(fcmap);
       // List of the files to be removed
       Info("ClearData", "%d unregistered files to be removed:", nfiles);
       afmap->Print();

@@ -164,7 +164,10 @@ public:
       // Must return -1 if this is smaller than obj, 0 if objects are equal
       // and 1 if this is larger than obj.
       const TFileNode *obj = dynamic_cast<const TFileNode*>(other);
-      R__ASSERT(obj != 0);
+      if (!obj) {
+         Error("Compare", "input is not a TPacketizer::TFileNode object");
+         return 0;
+      }
 
       Int_t myVal = GetSlaveCnt();
       Int_t otherVal = obj->GetSlaveCnt();

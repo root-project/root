@@ -3236,12 +3236,20 @@ void TProofServ::SetQueryRunning(TProofQueryResult *pq)
          parlist += TString::Format(";%s",os->GetName());
    }
 
-   // Set in running state
-   pq->SetRunning(startlog, parlist, fProof ? fProof->GetParallel() : -1);
+   if (fProof) {
+      // Set in running state
+      pq->SetRunning(startlog, parlist, fProof->GetParallel());
 
-   // Bytes and CPU at start (we will calculate the differential at end)
-   pq->SetProcessInfo(pq->GetEntries(),
-                      fProof->GetCpuTime(), fProof->GetBytesRead());
+      // Bytes and CPU at start (we will calculate the differential at end)
+      pq->SetProcessInfo(pq->GetEntries(),
+                        fProof->GetCpuTime(), fProof->GetBytesRead());
+   } else {
+      // Set in running state
+      pq->SetRunning(startlog, parlist, -1);
+
+      // Bytes and CPU at start (we will calculate the differential at end)
+      pq->SetProcessInfo(pq->GetEntries(), 0., 0.);
+   }
 }
 
 //______________________________________________________________________________
@@ -3550,7 +3558,7 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
       MakePlayer();
 
       // Setup data set
-      if (dset->IsA() == TDSetProxy::Class())
+      if (dset && (dset->IsA() == TDSetProxy::Class()))
          ((TDSetProxy*)dset)->SetProofServ(this);
 
       // Get input data, if any

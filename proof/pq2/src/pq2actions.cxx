@@ -608,7 +608,7 @@ void do_anadist(const char *ds, const char *servers, const char *ignsrvs,
       // Analyse the global dataset
       if (do_anadist_ds(fctot, servers, ignsrvs, excsrvs,
                         optMet, fnout, &distinfo, outfile, infile) != 0) {
-         Printf("%s: problems analysing dataset '%s'", action, fc->GetName());
+         Printf("%s: problems analysing dataset '%s'", action, fc ? fc->GetName() : "<undef>");
       }
       // Cleanup
       SafeDelete(fcmap);

@@ -333,6 +333,8 @@ void TProofResourcesStatic::SetOption(TProofNodeInfo *nodeinfo,
 {
    // Static method to set the node info options.
 
+   if (!nodeinfo) return;
+   
    if (option == "workdir") {
       nodeinfo->fWorkDir = value;
    } else if (option == "image") {

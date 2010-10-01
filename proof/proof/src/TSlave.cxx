@@ -315,6 +315,11 @@ Int_t TSlave::Compare(const TObject *obj) const
 
    const TSlave *sl = dynamic_cast<const TSlave*>(obj);
 
+   if (!sl) {
+      Error("Compare", "input is not a TSlave object");
+      return 0;
+   }
+
    if (fPerfIdx > sl->GetPerfIdx()) return 1;
    if (fPerfIdx < sl->GetPerfIdx()) return -1;
    const char *myord = GetOrdinal();
