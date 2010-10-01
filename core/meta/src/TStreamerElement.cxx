@@ -1536,7 +1536,12 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    Int_t nch = strlen(t);
    char *s = new char[nch+1];
    strcpy(s,t);
-   char *sopen  = strchr(s,'<'); *sopen  = 0; sopen++;
+   char *sopen  = strchr(s,'<'); 
+   if (sopen == 0) {
+      Fatal("TStreamerSTL","For %s, the type name (%s) is not seemingly not a template (template argument not found)", name, s);
+      return;
+   }
+   *sopen  = 0; sopen++;
    // We are looking for the first arguments of the STL container, because
    // this arguments can be a templates we need to count the < and >
    char* current=sopen;
