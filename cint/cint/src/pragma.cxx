@@ -15,33 +15,29 @@
 
 #include "common.h"
 
-extern "C" {
-
 /**************************************************************************
 * G__addpragma()
 **************************************************************************/
+G__AppPragma::G__AppPragma(char *comname, void (*in_p2f)(char*) ) : 
+   name(comname), p2f(in_p2f), next(0)
+{
+   // Normal constructor.
+}
+
 void G__addpragma(char *comname, void (*p2f) G__P((char*)))
 {
-  struct G__AppPragma *paddpragma;
-
-  if(G__paddpragma) {
-    paddpragma=G__paddpragma;
-    while(paddpragma->next) paddpragma=paddpragma->next;
-    paddpragma->next
-      =(struct G__AppPragma*)malloc(sizeof(struct G__AppPragma)
-                                    +strlen(comname)+1);
-    paddpragma = paddpragma->next;
-  }
-  else {
-    G__paddpragma
-      =(struct G__AppPragma*)malloc(sizeof(struct G__AppPragma)+strlen(comname)+1);
-    paddpragma=G__paddpragma;
-  }
-
-  paddpragma->name=(char*)((long)paddpragma+sizeof(struct G__AppPragma));
-  strcpy(paddpragma->name,comname);
-  paddpragma->p2f=(void*)p2f;
-  paddpragma->next=(struct G__AppPragma*)NULL;
+   struct G__AppPragma *paddpragma;
+   
+   if(G__paddpragma) {
+      paddpragma = G__paddpragma;
+      while(paddpragma->next) paddpragma = paddpragma->next;
+      paddpragma->next = new G__AppPragma( comname, p2f); 
+      paddpragma = paddpragma->next;
+   }
+   else {
+      G__paddpragma = new G__AppPragma( comname, p2f); 
+      paddpragma=G__paddpragma;
+   }
 }
 
 /**************************************************************************
@@ -68,13 +64,16 @@ int G__execpragma(const char *comname,char *args)
 /**************************************************************************
 * G__freepragma()
 **************************************************************************/
+G__AppPragma::~G__AppPragma()
+{
+   delete next;
+}
 void G__freepragma(G__AppPragma *paddpragma)
 {
-  if(paddpragma) {
-    if(paddpragma->next) G__freepragma(paddpragma->next);
-    free(paddpragma);
-  }
+   delete paddpragma;
 }
+
+extern "C" {
 
 /**************************************************************************
 * G__read_setmode()

@@ -24,6 +24,7 @@ namespace Cint {
    class G__DataMemberHandle;
 }
 class G__FastAllocString;
+struct G__AppPragma;
 
 extern "C" {
 #endif
@@ -182,7 +183,6 @@ int G__istypename(char *temp);
 char* G__savestring(char** pbuf,char* name);
 struct G__ifunc_table* G__get_ifunc_ref(struct G__ifunc_table_internal*);
 void G__reset_ifunc_refs_for_tagnum(int tagnum);
-void G__make_ifunctable(char *funcheader);
 int G__interpret_func(G__value *result7,const char *funcname,struct G__param *libp,int hash,struct G__ifunc_table_internal *p_ifunc,int funcmatch,int memfunc_flag);
 struct G__ifunc_table_internal *G__ifunc_exist(struct G__ifunc_table_internal *ifunc_now,int allifunc,struct G__ifunc_table_internal *ifunc,int *piexist,int mask);
 struct G__ifunc_table_internal *G__ifunc_ambiguous(struct G__ifunc_table_internal *ifunc_now,int allifunc,struct G__ifunc_table_internal *ifunc,int *piexist,int derivedtagnum);
@@ -404,8 +404,6 @@ int G__dasm(FILE *fout,int isthrow);
 G__value G__getrsvd(int i);
 int G__read_setmode(int *pmode);
 int G__pragma(void);
-int G__execpragma(const char *comname,char *args);
-void G__freepragma(struct G__AppPragma *paddpragma);
 void G__free_bytecode(struct G__bytecodefunc *bytecode);
 void G__asm_gen_strip_quotation(G__value *pval);
 int G__security_handle(G__UINT32 category);
@@ -441,6 +439,7 @@ G__value G__classassign(long pdest,int tagnum,G__value result);
 char *G__catparam(struct G__param *libp,int catn,const char *connect);
 #ifdef __cplusplus
 } // extern "C"
+void G__make_ifunctable(G__FastAllocString &funcheader);
 G__FastAllocString &G__charaddquote(G__FastAllocString &string,char c);
 int G__readline_FastAlloc(FILE* fp, G__FastAllocString& line, G__FastAllocString& argbuf,
                           int* argn, char* arg[]);
@@ -457,6 +456,8 @@ int G__getstream_template(const char *source,int *isrc,G__FastAllocString& strin
 char* G__rename_templatefunc(G__FastAllocString& funcname);
 int G__templatesubstitute(G__FastAllocString& symbol,struct G__Charlist *callpara,struct G__Templatearg *defpara,const char *templatename,const char *tagname,int c,int npara,int isnew);
 char *G__valuemonitor(G__value buf,G__FastAllocString& temp);
+int G__execpragma(const char *comname,char *args);
+void G__freepragma(G__AppPragma *paddpragma);
 extern "C" {
 #endif
 void G__IntList_init(struct G__IntList *body,long iin,struct G__IntList *prev);

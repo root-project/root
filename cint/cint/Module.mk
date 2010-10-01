@@ -29,7 +29,7 @@ CINTHT       := $(sort $(patsubst $(CINTDIRI)/%.h,include/%.h,$(CINTH) $(CINTCON
 CINTS1       := $(wildcard $(MODDIRS)/*.c) \
                 $(MODDIRS)/config/strlcpy.c $(MODDIRS)/config/strlcat.c $(MODDIRS)/config/snprintf.c
 CINTS2       := $(wildcard $(MODDIRS)/*.cxx) \
-                $(MODDIRSD)/longif.cxx $(MODDIRSD)/Apiif.cxx \
+                $(MODDIRSD)/Apiif.cxx \
                 $(MODDIRSD)/stdstrct.cxx
 
 CINTS1       += $(CINTDIRM)/G__setup.c
@@ -52,8 +52,6 @@ CXXCMD       := $(shell echo $(CXX) | sed s/".*\/"//)
 
 ifeq ($(CXXCMD),KCC)
 CINTS2       += $(MODDIRSD)/kccstrm.cxx
-CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))
-CINTS2       += $(MODDIRSD)/longif3.cxx
 else
 ifeq ($(PLATFORM),linux)
 CINTS2       += $(MODDIRSD)/libstrm.cxx
@@ -70,16 +68,12 @@ endif
 ifeq ($(PLATFORM),hpux)
 ifeq ($(ARCH),hpuxia64acc)
 CINTS2       += $(MODDIRSD)/accstrm.cxx
-CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))
-CINTS2       += $(MODDIRSD)/longif3.cxx
 else
 CINTS2       += $(MODDIRSD)/libstrm.cxx
 endif
 endif
 ifeq ($(PLATFORM),solaris)
  ifeq ($(SUNCC5),true)
-CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))
-CINTS2       += $(MODDIRSD)/longif3.cxx
   ifeq ($(findstring -library=stlport4,$(CXXFLAGS)),)
 CINTS2       += $(MODDIRSD)/sunstrm.cxx
   else
@@ -124,8 +118,6 @@ CINTS2       += $(MODDIRSD)/fakestrm.cxx
 endif
 ifeq ($(PLATFORM),win32)
 CINTS2       += $(MODDIRS)/config/winnt.cxx
-CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))
-CINTS2       += $(MODDIRSD)/longif3.cxx
 ifeq ($(VC_MAJOR),16)
   CINTS2       += $(MODDIRSD)/vc10strm.cxx
 else
@@ -142,7 +134,6 @@ endif
 endif
 ifeq ($(CXXCMD),icc)
 CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
-CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))
  ifneq ($(ICC_GE_9),)
   ifneq ($(ICC_GE_101),)
  CINTS2       += $(MODDIRSD)/gcc4strm.cxx
@@ -152,32 +143,23 @@ CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))
  else
  CINTS2       += $(MODDIRSD)/iccstrm.cxx
 endif
-CINTS2       += $(MODDIRSD)/longif3.cxx
 endif
 ifeq ($(GCC_MAJOR),3)
 CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
-CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/gcc3strm.cxx
-CINTS2       += $(MODDIRSD)/longif3.cxx
 endif
 ifeq ($(GCC_MAJOR),4)
 CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
-CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/gcc4strm.cxx
-CINTS2       += $(MODDIRSD)/longif3.cxx
 endif
 ifeq ($(CLANG_MAJOR),2)
 CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
-CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/gcc4strm.cxx
-CINTS2       += $(MODDIRSD)/longif3.cxx
 endif
 ifeq ($(CXXCMD),xlC)
 ifeq ($(PLATFORM),macosx)
 CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
-CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/gcc3strm.cxx
-CINTS2       += $(MODDIRSD)/longif3.cxx
 endif
 endif
 

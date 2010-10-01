@@ -1584,13 +1584,16 @@ int G__getname(const char* source, int* isrc, char* string, const char* endmark)
 static int G__getfullpath(G__FastAllocString &string, char* pbegin, int i)
 {
    int tagnum = -1, typenum;
-   string[i] = '\0';
+   string.Set(i, '\0');
    if (0 == pbegin[0]) return(i);
    typenum = G__defined_typename(pbegin);
    if (-1 == typenum) tagnum = G__defined_tagname(pbegin, 1);
    if ((-1 != typenum && -1 != G__newtype.parent_tagnum[typenum]) ||
          (-1 != tagnum  && -1 != G__struct.parent_tagnum[tagnum])) {
-      strcpy(pbegin, G__type2string(0, tagnum, typenum, 0, 0));  // Suspicious and hard to fix ... not clear what the relation between i and pbegin is and what would happen to pbegin if we resize the string.
+      if ( (size_t)(pbegin - string) < string.Capacity() ) // sanity check
+      {
+         string.Replace(pbegin - string, G__type2string(0, tagnum, typenum, 0, 0));  
+      }
       i = strlen(string);
    }
    return(i);

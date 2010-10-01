@@ -480,8 +480,10 @@ int G__istypename(char* temp)
    return 0;
 }
 
+} // Extern "C"
+
 //______________________________________________________________________________
-void G__make_ifunctable(char* funcheader)
+void G__make_ifunctable(G__FastAllocString &funcheader)
 {
    // -- FIXME: Describe this function!
    //
@@ -638,15 +640,13 @@ void G__make_ifunctable(char* funcheader)
                       || (posEndType[0] == ':' && posEndType[1] == ':' && (++posEndType))
                       || *posEndType == '_')
                   ++posEndType;
-               char* ptrrefbuf = 0;
+               G__FastAllocString refbuf("");
                if (*posEndType) {
-                  ptrrefbuf = new char[strlen(posEndType) + 1];
-                  strcpy(ptrrefbuf, posEndType); // Okay we allocated enough space
+                  refbuf = posEndType;
                }
-               strcpy(oprtype, G__type2string(G__newtype.type[oprtypenum] , -1, -1, G__newtype.reftype[oprtypenum], G__newtype.isconst[oprtypenum]));
-               if (ptrrefbuf) {
-                  strcat(oprtype, ptrrefbuf);
-                  delete [] ptrrefbuf;
+               funcheader.Replace(oprtype-funcheader(), G__type2string(G__newtype.type[oprtypenum] , -1, -1, G__newtype.reftype[oprtypenum], G__newtype.isconst[oprtypenum]));
+               if (refbuf[0]) {
+                  funcheader += refbuf;
                }
             }
             else {
@@ -1647,6 +1647,8 @@ void G__make_ifunctable(char* funcheader)
 
    return;
 }
+
+extern "C" {
 
 //______________________________________________________________________________
 static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
@@ -2814,10 +2816,10 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
                   }
 #endif // G__ASM
                   if (param->obj.i < 0) {
-                     sprintf(parameter, "(%s)(%ld)", G__struct.name[formal_tagnum], param->obj.i);
+                     G__snprintf(parameter, G__ONELINE, "(%s)(%ld)", G__struct.name[formal_tagnum], param->obj.i); // parameter is G__param::parameter[index]
                   }
                   else {
-                     sprintf(parameter, "(%s)%ld", G__struct.name[formal_tagnum], param->obj.i);
+                     G__snprintf(parameter, G__ONELINE, "(%s)%ld", G__struct.name[formal_tagnum], param->obj.i); // parameter is G__param::parameter[index]
                   }
                }
                match = 1;
@@ -2882,7 +2884,7 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
             }
 #endif // G__ASM
             *param = G__p_tempbuf->obj;
-            sprintf(parameter, "(%s)%ld" , G__struct.name[formal_tagnum], G__p_tempbuf->obj.obj.i);
+            G__snprintf(parameter, G__ONELINE, "(%s)%ld" , G__struct.name[formal_tagnum], G__p_tempbuf->obj.obj.i); // parameter is G__param::parameter[index]
          }
       }
       else if (-1 != param->tagnum) {

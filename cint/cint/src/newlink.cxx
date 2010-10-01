@@ -4278,16 +4278,18 @@ void G__add_ipath(const char *path)
     G__allincludepath = (char*)malloc(1);
     G__allincludepath[0] = '\0';
   }
-  store_allincludepath = (char*)realloc((void*)G__allincludepath
-                                        ,strlen(G__allincludepath)+strlen(temp)+6);
+  size_t allincludepath_oldlen = strlen(G__allincludepath);
+  size_t allincludepath_newlen = allincludepath_oldlen+strlen(temp)+6;
+  store_allincludepath = (char*)realloc((void*)G__allincludepath,allincludepath_newlen);
   if(store_allincludepath) {
     int i=0,flag=0;
     while(temp[i]) if(isspace(temp[i++])) flag=1;
     G__allincludepath = store_allincludepath;
+    size_t increase = allincludepath_newlen - allincludepath_oldlen;
     if(flag)
-       sprintf(G__allincludepath+strlen(G__allincludepath) ,"-I\"%s\" ",temp());
+       G__snprintf(G__allincludepath+allincludepath_oldlen,increase,"-I\"%s\" ",temp());
     else
-       sprintf(G__allincludepath+strlen(G__allincludepath) ,"-I%s ",temp());
+       G__snprintf(G__allincludepath+allincludepath_oldlen,increase,"-I%s ",temp());
   }
   else {
     G__genericerror("Internal error: memory allocation failed for includepath buffer");
@@ -4295,8 +4297,9 @@ void G__add_ipath(const char *path)
 
 
   /* copy the path name */
-  ipath->pathname = (char *)malloc((size_t)(strlen(temp)+1));
-  strcpy(ipath->pathname,temp); // Okay, we allocated the right size
+  size_t templen = (size_t)(strlen(temp)+1);
+  ipath->pathname = (char *)malloc(templen);
+  G__strlcpy(ipath->pathname,temp,templen); // Okay, we allocated the right size
 
   /* allocate next entry */
   ipath->next=(struct G__includepath *)malloc(sizeof(struct G__includepath));

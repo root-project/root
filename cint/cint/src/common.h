@@ -759,15 +759,6 @@ struct G__filetable {
 #endif
 
 /**************************************************************************
-* user specified pragma statement
-**************************************************************************/
-struct G__AppPragma {
-  char *name;
-  void *p2f;
-  struct G__AppPragma *next;
-};
-
-/**************************************************************************
 * Flag to check global operator new/delete()
 **************************************************************************/
 #define G__IS_OPERATOR_NEW        0x01
@@ -1438,6 +1429,19 @@ struct G__tempobject_list {
 #ifdef __cplusplus
 #include "FastAllocString.h"
 using namespace Cint::Internal;
+
+/**************************************************************************
+ * user specified pragma statement
+ **************************************************************************/
+struct G__AppPragma {
+   G__FastAllocString name;
+   void (*p2f) G__P((char*));
+   struct G__AppPragma *next;
+
+   G__AppPragma(char *comname, void (*p2f) G__P((char*)) );
+   ~G__AppPragma();
+};
+
 #endif
 
 #endif /* G__COMMON_H */

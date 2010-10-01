@@ -1046,7 +1046,7 @@ G__value G__operatorfunction(G__value *presult, const char *item, int *known3, G
 /******************************************************************
  * G__value G__getfunction_libp
  ******************************************************************/
-G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, int* known3, int memfunc_flag)
+G__value G__getfunction_libp(const char* item, G__FastAllocString &funcname, G__param* libp, int* known3, int memfunc_flag)
 {
    G__value result3;
    G__FastAllocString result7(G__LONGLINE);
@@ -1110,7 +1110,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
     ***************************************************************/
    if (G__dumpfile != NULL && 0 == G__no_exec_compile) {
       for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
-      fprintf(G__dumpfile, "%s(", funcname);
+      fprintf(G__dumpfile, "%s(", funcname());
       for (ipara = 1;ipara <= libp->paran;ipara++) {
          if (ipara != 1) fprintf(G__dumpfile, ",");
          G__valuemonitor(libp->para[ipara-1], result7);
@@ -1148,7 +1148,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
                G__valuemonitor(result3, result7);
                fprintf(G__dumpfile, "/* return(inp) %s.%s()=%s*/\n"
-                       , G__tagnum >= 0 ? G__struct.name[G__tagnum] : "unknown class", funcname, result7());
+                       , G__tagnum >= 0 ? G__struct.name[G__tagnum] : "unknown class", funcname(), result7());
             }
 #endif
             if (G__store_struct_offset != store_struct_offset)
@@ -1263,7 +1263,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                         for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
                         G__valuemonitor(result3, result7);
                         fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n"
-                                , funcname, result7());
+                                , funcname(), result7());
                      }
 #endif
                      G__exec_memberfunc = store_exec_memberfunc;
@@ -1292,7 +1292,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                      G__fprinterr(G__serr, "Possible candidates are...\n");
                      {
                         G__FastAllocString itemtmp(G__LONGLINE);
-                        itemtmp.Format("%s::%s", G__tagnum !=-1 ? G__struct.name[G__tagnum] : "unknown scope", funcname);
+                        itemtmp.Format("%s::%s", G__tagnum !=-1 ? G__struct.name[G__tagnum] : "unknown scope", funcname() );
                         G__display_proto_pretty(G__serr, itemtmp, 1);
                      }
                   }
@@ -1339,7 +1339,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
             G__dumpspace -= 3;
             for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
             G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(inp) %s()=%s*/\n" , funcname, result7());
+            fprintf(G__dumpfile , "/* return(inp) %s()=%s*/\n" , funcname(), result7());
          }
 #endif
 
@@ -1373,7 +1373,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                   , "%3x,%3x: LD_FUNC compiled '%s' paran: %d  %s:%d\n"
                   , G__asm_cp
                   , G__asm_dt
-                  , funcname
+                  , funcname()
                   , libp->paran
                   , __FILE__
                   , __LINE__
@@ -1388,8 +1388,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
             G__asm_inst[G__asm_cp+5] = 0;
             G__asm_inst[G__asm_cp+6] = (long) G__p_ifunc;
             G__asm_inst[G__asm_cp+7] = -1;
-            if (G__asm_name_p + strlen(funcname) + 1 < G__ASM_FUNCNAMEBUF ) {
-               strcpy(G__asm_name + G__asm_name_p, funcname);
+            if ( G__strlcpy(G__asm_name + G__asm_name_p, funcname, G__ASM_FUNCNAMEBUF - G__asm_name_p) <  (size_t)(G__ASM_FUNCNAMEBUF - G__asm_name_p) ) {
                G__asm_name_p += strlen(funcname) + 1;
                G__inc_cp_asm(8, 0);
             }
@@ -1411,7 +1410,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
             G__dumpspace -= 3;
             for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
             G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(cmp) %s()=%s */\n" , funcname, result7());
+            fprintf(G__dumpfile , "/* return(cmp) %s()=%s */\n" , funcname(), result7());
          }
 #endif
          G__exec_memberfunc = store_exec_memberfunc;
@@ -1433,7 +1432,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
              ****************************************/
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: LD_FUNC library '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, funcname, libp->paran, __FILE__, __LINE__);
+               G__fprinterr(G__serr, "%3x,%3x: LD_FUNC library '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, funcname(), libp->paran, __FILE__, __LINE__);
             }
 #endif // G__ASM_DBG
             G__asm_inst[G__asm_cp] = G__LD_FUNC;
@@ -1444,8 +1443,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
             G__asm_inst[G__asm_cp+5] = 0;
             G__asm_inst[G__asm_cp+6] = (long) G__p_ifunc;    
             G__asm_inst[G__asm_cp+7] = -1;
-            if ((G__asm_name_p + strlen(funcname) + 1) < G__ASM_FUNCNAMEBUF) {
-               strcpy(G__asm_name + G__asm_name_p, funcname);
+            if ( G__strlcpy(G__asm_name + G__asm_name_p, funcname, G__ASM_FUNCNAMEBUF - G__asm_name_p) <  (size_t)G__ASM_FUNCNAMEBUF - G__asm_name_p ) {
                G__asm_name_p += strlen(funcname) + 1;
                G__inc_cp_asm(8, 0);
             }
@@ -1467,7 +1465,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
             G__dumpspace -= 3;
             for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
             G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n" , funcname, result7());
+            fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n" , funcname(), result7());
          }
 #endif
 
@@ -1491,7 +1489,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
             G__dumpspace -= 3;
             for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
             G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n" , funcname, result7());
+            fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n" , funcname(), result7());
          }
 #endif
          G__exec_memberfunc = store_exec_memberfunc;
@@ -1514,7 +1512,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
       G__var_type = store_var_typeX;
       if (-1 != i) {
          if (-1 != G__newtype.tagnum[i]) {
-            strcpy(funcname, G__struct.name[G__newtype.tagnum[i]]);
+            funcname = G__struct.name[G__newtype.tagnum[i]];
          }
          else {
             result3 = libp->para[0];
@@ -1524,9 +1522,9 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                *known3 = 1;
                return(result3);
             }
-            strcpy(funcname, G__type2string(G__newtype.type[i]
-                     , G__newtype.tagnum[i] , -1
-                     , G__newtype.reftype[i] , 0));
+            funcname = G__type2string(G__newtype.type[i]
+                                      , G__newtype.tagnum[i] , -1
+                                      , G__newtype.reftype[i] , 0);
          }
          G__hash(funcname, hash, i);
       }
@@ -1601,7 +1599,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                   G__fprinterr(G__serr,
                         "!!!Create temp object (%s)0x%lx,%d for %s()\n"
                         , G__struct.name[G__tagnum] , G__p_tempbuf->obj.obj.i
-                        , G__templevel , funcname);
+                        , G__templevel , funcname());
                }
 #ifdef G__ASM
                if (G__asm_noverflow) {
@@ -1669,7 +1667,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
 #endif
                   }
 #endif
-                  sprintf(funcname, "operator %s", G__fulltagname(i, 1));
+                  funcname.Format("operator %s", G__fulltagname(i, 1));
                   G__hash(funcname, hash, i);
                   G__incsetup_memfunc(G__tagnum);
                   libp->paran = 0;
@@ -1734,7 +1732,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
     ********************************************************************/
    var = G__getvarentry(funcname, hash, &ig15, &G__global, G__p_local);
    if (var && var->type[ig15] == '1') {
-      result7.Format("*%s", funcname);
+      result7.Format("*%s", funcname());
       *known3 = 0;
       pfparam = (char*)strchr(item, '(');
       if (pfparam) {
@@ -1839,7 +1837,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
 
    if (8 == ig15 && strncmp(funcname, "operator", 8) == 0 &&
          strncmp(item + ig15, "()(", 3) == 0) {
-      strcpy(funcname + 8, "()");
+      funcname.Replace(8, "()");
       hash = hash + '(' + ')';
       ig15 += 2;
    }
@@ -2613,8 +2611,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
             G__asm_inst[G__asm_cp+5] = 0;
             G__asm_inst[G__asm_cp+6] = (long) G__p_ifunc;    
             G__asm_inst[G__asm_cp+7] = -1;
-            if (G__asm_name_p + strlen(funcname) + 1 < G__ASM_FUNCNAMEBUF) {
-               strcpy(G__asm_name + G__asm_name_p, funcname);
+            if ( G__strlcpy(G__asm_name + G__asm_name_p, funcname, G__ASM_FUNCNAMEBUF - G__asm_name_p) <  (size_t)(G__ASM_FUNCNAMEBUF - G__asm_name_p) ) {
                G__asm_name_p += strlen(funcname) + 1;
                G__inc_cp_asm(8, 0);
             }
@@ -2675,8 +2672,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
             G__asm_inst[G__asm_cp+5] = 0;
             G__asm_inst[G__asm_cp+6] = (long) G__p_ifunc;
             G__asm_inst[G__asm_cp+7] = -1;
-            if ((G__asm_name_p + strlen(funcname) + 1) < G__ASM_FUNCNAMEBUF) {
-               strcpy(G__asm_name + G__asm_name_p, funcname);
+            if ( G__strlcpy(G__asm_name + G__asm_name_p, funcname, G__ASM_FUNCNAMEBUF - G__asm_name_p) <  (size_t)(G__ASM_FUNCNAMEBUF - G__asm_name_p) ) {
                G__asm_name_p += strlen(funcname) + 1;
                G__inc_cp_asm(8, 0);
             }
@@ -3229,8 +3225,7 @@ int G__special_func(G__value* result7, char* funcname, G__param* libp, int hash)
          if (!G__p_ifunc) {
             printf ("Serious trouble func 3519\n");
          }
-         if ((G__asm_name_p + strlen(funcname) + 1) < G__ASM_FUNCNAMEBUF) {
-            strcpy(G__asm_name + G__asm_name_p, funcname);
+         if ( G__strlcpy(G__asm_name + G__asm_name_p, funcname, G__ASM_FUNCNAMEBUF - G__asm_name_p) <  (size_t)(G__ASM_FUNCNAMEBUF - G__asm_name_p) ) {
             G__asm_name_p += strlen(funcname) + 1;
             G__inc_cp_asm(8, 0);
          }
@@ -3311,20 +3306,20 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 3:
             G__letint(result7, 'i'
-                  , sscanf((char *)G__int(libp->para[0])
+                  , sscanf((char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2]))) ;
             break;
          case 4:
             G__letint(result7, 'i'
-                  , sscanf((char *)G__int(libp->para[0])
+                  , sscanf((char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3]))) ;
             break;
          case 5:
             G__letint(result7, 'i'
-                  , sscanf((char *)G__int(libp->para[0])
+                  , sscanf((char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3332,7 +3327,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 6:
             G__letint(result7, 'i'
-                  , sscanf((char *)G__int(libp->para[0])
+                  , sscanf((char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3341,7 +3336,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 7:
             G__letint(result7, 'i'
-                  , sscanf((char *)G__int(libp->para[0])
+                  , sscanf((char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3351,7 +3346,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 8:
             G__letint(result7, 'i'
-                  , sscanf((char *)G__int(libp->para[0])
+                  , sscanf((char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3362,7 +3357,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 9:
             G__letint(result7, 'i'
-                  , sscanf((char *)G__int(libp->para[0])
+                  , sscanf((char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3374,7 +3369,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 10:
             G__letint(result7, 'i'
-                  , sscanf((char *)G__int(libp->para[0])
+                  , sscanf((char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3387,7 +3382,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 11:
             G__letint(result7, 'i'
-                  , sscanf((char *)G__int(libp->para[0])
+                  , sscanf((char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3401,7 +3396,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 12:
             G__letint(result7, 'i'
-                  , sscanf((char *)G__int(libp->para[0])
+                  , sscanf((char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3436,20 +3431,20 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 3:
             G__letint(result7, 'i'
-                  , fscanf((FILE *)G__int(libp->para[0])
+                  , fscanf((FILE *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2]))) ;
             break;
          case 4:
             G__letint(result7, 'i'
-                  , fscanf((FILE *)G__int(libp->para[0])
+                  , fscanf((FILE *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3]))) ;
             break;
          case 5:
             G__letint(result7, 'i'
-                  , fscanf((FILE *)G__int(libp->para[0])
+                  , fscanf((FILE *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3457,7 +3452,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 6:
             G__letint(result7, 'i'
-                  , fscanf((FILE *)G__int(libp->para[0])
+                  , fscanf((FILE *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3466,7 +3461,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 7:
             G__letint(result7, 'i'
-                  , fscanf((FILE *)G__int(libp->para[0])
+                  , fscanf((FILE *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3476,7 +3471,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 8:
             G__letint(result7, 'i'
-                  , fscanf((FILE *)G__int(libp->para[0])
+                  , fscanf((FILE *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3487,7 +3482,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 9:
             G__letint(result7, 'i'
-                  , fscanf((FILE *)G__int(libp->para[0])
+                  , fscanf((FILE *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3499,7 +3494,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 10:
             G__letint(result7, 'i'
-                  , fscanf((FILE *)G__int(libp->para[0])
+                  , fscanf((FILE *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3512,7 +3507,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 11:
             G__letint(result7, 'i'
-                  , fscanf((FILE *)G__int(libp->para[0])
+                  , fscanf((FILE *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3526,7 +3521,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 12:
             G__letint(result7, 'i'
-                  , fscanf((FILE *)G__int(libp->para[0])
+                  , fscanf((FILE *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , (char *)G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3560,25 +3555,25 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 2:
             G__letint(result7, 'i'
-                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])
+                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , G__int(libp->para[1]))) ;
             break;
          case 3:
             G__letint(result7, 'i'
-                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])
+                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , G__int(libp->para[1])
                      , G__int(libp->para[2]))) ;
             break;
          case 4:
             G__letint(result7, 'i'
-                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])
+                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3]))) ;
             break;
          case 5:
             G__letint(result7, 'i'
-                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])
+                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3586,7 +3581,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 6:
             G__letint(result7, 'i'
-                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])
+                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3595,7 +3590,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 7:
             G__letint(result7, 'i'
-                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])
+                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3605,7 +3600,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 8:
             G__letint(result7, 'i'
-                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])
+                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3616,7 +3611,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 9:
             G__letint(result7, 'i'
-                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])
+                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3628,7 +3623,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 10:
             G__letint(result7, 'i'
-                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])
+                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3641,7 +3636,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
             break;
          case 11:
             G__letint(result7, 'i'
-                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])
+                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0])  // This is an explicit user request ; this can not be avoided.
                      , G__int(libp->para[1])
                      , G__int(libp->para[2])
                      , G__int(libp->para[3])
@@ -3688,7 +3683,7 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
       /* parameter[0]:charname ,para[1]:description, para[2~paran-1]: */
       G__charformatter(1, libp, temp, sizeof(temp));
       G__letint(result7, 'i',
-            sprintf((char *)G__int(libp->para[0]), "%s", temp));
+            sprintf((char *)G__int(libp->para[0]), "%s", temp));  // This is an explicit user request ; this can not be avoided.
       return(1);
    }
 
@@ -4966,7 +4961,7 @@ char *G__charformatter(int ifmt, G__param *libp, char *result, size_t result_len
          case '*': /* printf("%*s",4,"*"); */
             if (fmtflag == 1) {
                onefmt.Resize(ionefmt + 100); // 100 digits for %ld should suffice
-               sprintf(onefmt + ionefmt, "%ld", G__int(libp->para[usedpara]));
+               onefmt.Format(ionefmt,"%ld", G__int(libp->para[usedpara]));
                ipara++;
                usedpara++;
                ionefmt = strlen(onefmt);

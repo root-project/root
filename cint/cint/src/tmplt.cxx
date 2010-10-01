@@ -228,69 +228,72 @@ void G__instantiate_templatememfunclater(G__Definedtemplateclass *deftmpclass
 * G__settemplatealias()
 *
 ***********************************************************************/
-int G__settemplatealias(const char *tagnamein,char *tagname,int tagnum
+int G__settemplatealias(const char *tagnamein,G__FastAllocString &tagname,int tagnum
                         ,G__Charlist *charlist,G__Templatearg *defpara,int encscope)
 {
-  char *p;
-  p=strchr(tagname,'<');
-  if(p) ++p;
-  else {
-    p = tagname + strlen(tagname);
-    *p++ = '<';
-  }
-  /* B<int,5*2>
-   *   ^ => p */
-  while(charlist->next) {
-    if(defpara->default_parameter) {
-	  char oldp = *(p-1);
-	  char oldp2 = *(p-2);
-	  if (oldp == '<') // all template args have defaults
-	    *(p-1) = 0;
-	  else {
-             if (oldp2 == '>') {
-                *(p-1) = ' ';
-                ++p;
-             }
-             *(p-1) = '>';
-             *p = 0;
-	  }
-      if(0!=strcmp(tagnamein,tagname) && -1==G__defined_typename(tagname)) {
-        int typenum=G__newtype.alltype++;
-        G__newtype.type[typenum]='u';
-        G__newtype.tagnum[typenum] = tagnum;
-        G__newtype.name[typenum]=(char*)malloc(strlen(tagname)+1);
-        strcpy(G__newtype.name[typenum],tagname); // Okay, we allocated enough memory
-        G__newtype.namerange->Insert(G__newtype.name[typenum], typenum);
-        G__newtype.hash[typenum] = strlen(tagname);
-        G__newtype.globalcomp[typenum] = G__globalcomp;
-        G__newtype.reftype[typenum] = G__PARANORMAL;
-        G__newtype.nindex[typenum] = 0;
-        G__newtype.index[typenum] = (int*)NULL;
-        G__newtype.iscpplink[typenum] = G__NOLINK;
-        G__newtype.comment[typenum].filenum = -1;
-        if(encscope) {
-          G__newtype.parent_tagnum[typenum] = G__get_envtagnum();
-        }
-        else {
-          G__newtype.parent_tagnum[typenum] = G__struct.parent_tagnum[tagnum];
-        }
+   size_t cursor = 0;
+   char *lessthan = strchr(tagname,'<');
+   if  (lessthan) {
+      cursor = (lessthan - tagname) + 1;
+   } else {
+      cursor = strlen(tagname);
+      tagname[cursor] = '<';
+      ++cursor;
+   }
+   /* B<int,5*2>
+    *   ^ => p */
+   while(charlist->next) {
+      if(defpara->default_parameter) {
+         char oldp = tagname[cursor-1];
+         char oldp2 = tagname[cursor-2];
+         if (oldp == '<') // all template args have defaults
+            tagname.Set(cursor-1, 0);
+         else {
+            if (oldp2 == '>') {
+               tagname.Set(cursor-1, ' ');
+               ++cursor;
+            }
+            tagname.Set(cursor-1, '>');
+            tagname.Set(cursor, 0);
+         }
+         if(0!=strcmp(tagnamein,tagname) && -1==G__defined_typename(tagname)) {
+            int typenum=G__newtype.alltype++;
+            G__newtype.type[typenum]='u';
+            G__newtype.tagnum[typenum] = tagnum;
+            size_t nlen = strlen(tagname)+1;
+            G__newtype.name[typenum]=(char*)malloc(nlen);
+            G__strlcpy(G__newtype.name[typenum],tagname,nlen);
+            G__newtype.namerange->Insert(G__newtype.name[typenum], typenum);
+            G__newtype.hash[typenum] = strlen(tagname);
+            G__newtype.globalcomp[typenum] = G__globalcomp;
+            G__newtype.reftype[typenum] = G__PARANORMAL;
+            G__newtype.nindex[typenum] = 0;
+            G__newtype.index[typenum] = (int*)NULL;
+            G__newtype.iscpplink[typenum] = G__NOLINK;
+            G__newtype.comment[typenum].filenum = -1;
+            if(encscope) {
+               G__newtype.parent_tagnum[typenum] = G__get_envtagnum();
+            }
+            else {
+               G__newtype.parent_tagnum[typenum] = G__struct.parent_tagnum[tagnum];
+            }
+         }
+         if (oldp2 == '>') {
+            --cursor;
+         }
+         tagname.Set(cursor-1, oldp);
       }
-      if (oldp2 == '>') {
-         --p;
+      tagname.Replace(cursor,charlist->string);
+      cursor += strlen(charlist->string);
+      charlist = charlist->next;
+      defpara = defpara->next;
+      if(charlist->next) {
+         tagname.Set(cursor, ','); ++cursor;
       }
-      *(p-1) = oldp;
-    }
-    strcpy(p,charlist->string);
-    p+=strlen(charlist->string);
-    charlist=charlist->next;
-    defpara=defpara->next;
-    if(charlist->next) {
-      *p=','; ++p;
-    }
-  }
-  *p='>'; ++p;
-  *p='\0'; ++p;
-  return 0;
+   }
+   tagname.Set(cursor, '>'); ++cursor;
+   tagname.Set(cursor, '\0'); ++cursor;
+   return 0;
 }
 #endif
 
@@ -340,26 +343,29 @@ extern "C" {
 /***********************************************************************
 * G__catparam()
 *
-* Cancatinate parameter string to libp->parameter[0] and return.
+* Concatenate parameter string to libp->parameter[0] and return.
 *
 *  "B<int"   "double"   "5>"     =>    "B<int,double,5>"
 ***********************************************************************/
 char *G__catparam(G__param *libp,int catn,const char *connect)
 {
-  int i;
-  char *p;
-  int lenconnect;
-  /* B<int\0
-   *      ^ => p */
-  p = libp->parameter[0]+strlen(libp->parameter[0]);
-  lenconnect = strlen(connect);
-  for(i=1;i<catn;i++) {
-    strcpy(p,connect);
-    p+=lenconnect;
-    strcpy(p,libp->parameter[i]);
-    p+=strlen(libp->parameter[i]);
-  }
-  return(libp->parameter[0]);
+   int i;
+   char *p;
+   int lenconnect;
+   /* B<int\0
+    *      ^ => p */
+   size_t lenused = strlen(libp->parameter[0]);
+   p = libp->parameter[0] + lenused;
+   lenconnect = strlen(connect);
+   for(i=1; i<catn; i++) {
+      G__strlcpy(p, connect, sizeof(libp->parameter[0]) - lenused);
+      p += lenconnect;
+      lenused += lenconnect;
+      G__strlcpy(p, libp->parameter[i], sizeof(libp->parameter[0]) - lenused);
+      p += strlen(libp->parameter[i]);
+      lenused += strlen(libp->parameter[i]);
+   }
+   return(libp->parameter[0]);
 }
 
 /**************************************************************************
@@ -1706,114 +1712,83 @@ void G__declare_template()
 *
 * separate and evaluate template argument list
 **************************************************************************/
-static void G__templatemaptypename(char *string)
+static void G__templatemaptypename(G__FastAllocString &string)
 {
-  int tagnum;
+   int tagnum;
 #ifdef G__OLDIMPLEMENTATION609_YET
-  int typenum;
+   int typenum;
 #endif
+   
+   size_t offset = 0;
+   while(strncmp(string+offset,"const ",6)==0) offset += 6;
 
-#if 0
-  if(strncmp(string,"const",5)==0 && string[5]!=' ') {
-    if(
-       strcmp(string+5,"int")==0||
-       strcmp(string+5,"unsigned int")==0||
-       strcmp(string+5,"char")==0||
-       strcmp(string+5,"unsigned char")==0||
-       strcmp(string+5,"short")==0||
-       strcmp(string+5,"unsigned short")==0||
-       strcmp(string+5,"long")==0||
-       strcmp(string+5,"unsigned long")==0||
-       strcmp(string+5,"double")==0||
-       strcmp(string+5,"float")==0||
-       strcmp(string+5,"int*")==0||
-       strcmp(string+5,"unsigned int*")==0||
-       strcmp(string+5,"char*")==0||
-       strcmp(string+5,"unsigned char*")==0||
-       strcmp(string+5,"short*")==0||
-       strcmp(string+5,"unsigned short*")==0||
-       strcmp(string+5,"long*")==0||
-       strcmp(string+5,"unsigned long*")==0||
-       strcmp(string+5,"double*")==0||
-       strcmp(string+5,"float*")==0
-       || G__istypename(string+5)
-      ) {
-      int len=strlen(string);
-      while(len>=5) {
-        string[len+1] = string[len];
-        --len;
+   if (strcmp(string,"short int")==0) string.Replace(offset,"short");
+   else if(strcmp(string,"short int*")==0) string.Replace(offset,"short*");
+   else if(strcmp(string,"long int")==0) string.Replace(offset,"long");
+   else if(strcmp(string,"long int*")==0) string.Replace(offset,"long*");
+   else if(strcmp(string,"unsigned")==0) string.Replace(offset,"unsigned int");
+   else if(strcmp(string,"unsigned int")==0) string.Replace(offset,"unsigned int");
+   else if(strcmp(string,"unsigned int*")==0) string.Replace(offset,"unsigned int*");
+   else if(strcmp(string,"unsigned long int")==0)
+      string.Replace(offset,"unsigned long");
+   else if(strcmp(string,"unsigned long int*")==0)
+      string.Replace(offset,"unsigned long*");
+   else if(strcmp(string,"unsigned short int")==0)
+      string.Replace(offset,"unsigned short");
+   else if(strcmp(string,"unsigned short int*")==0)
+      string.Replace(offset,"unsigned short*");
+   else if (strcmp(string,"Float16_t")==0||
+            strcmp(string,"Float16_t*")==0) 
+   { 
+      /* nothing to do, we want to keep those as is */
+      
+   }
+   else {
+      if (strcmp(string,"Double32_t")==0||
+          strcmp(string,"Double32_t*")==0) 
+      { 
+         /* nothing to do, we want to keep those as is */
+         
       }
-      string[5] = ' ';
-      string += 6;
-    }
-  }
-#endif
+   /* #define G__OLDIMPLEMENTATION787 */
+      else 
+      {
+         G__FastAllocString saveref(G__LONGLINE);
+         char* p = string + strlen (string);
+         while (p > string && (p[-1] == '*' || p[-1] == '&'))
+            --p;
 
-  while(strncmp(string,"const ",6)==0) string+=6;
-  if(strcmp(string,"short int")==0) strcpy(string,"short"); // Okay we are reducing the string length
-  else if(strcmp(string,"short int*")==0) strcpy(string,"short*"); // Okay we are reducing the string length
-  else if(strcmp(string,"long int")==0) strcpy(string,"long"); // Okay we are reducing the string length
-  else if(strcmp(string,"long int*")==0) strcpy(string,"long*"); // Okay we are reducing the string length
-  else if(strcmp(string,"unsigned")==0) strcpy(string,"unsigned int"); // Okay we are reducing the string length
-  else if(strcmp(string,"unsigned int")==0) strcpy(string,"unsigned int"); // Okay we are reducing the string length
-  else if(strcmp(string,"unsigned int*")==0) strcpy(string,"unsigned int*"); // Okay we are reducing the string length
-  else if(strcmp(string,"unsigned long int")==0)
-    strcpy(string,"unsigned long"); // Okay we are reducing the string length
-  else if(strcmp(string,"unsigned long int*")==0)
-    strcpy(string,"unsigned long*"); // Okay we are reducing the string length
-  else if(strcmp(string,"unsigned short int")==0)
-    strcpy(string,"unsigned short"); // Okay we are reducing the string length
-  else if(strcmp(string,"unsigned short int*")==0)
-    strcpy(string,"unsigned short*"); // Okay we are reducing the string length
-  else if (strcmp(string,"Float16_t")==0||
-           strcmp(string,"Float16_t*")==0) 
-    { 
-       /* nothing to do, we want to keep those as is */
-
-    }
-  else
-    if (strcmp(string,"Double32_t")==0||
-           strcmp(string,"Double32_t*")==0) 
-    { 
-       /* nothing to do, we want to keep those as is */
-
-    }
-/* #define G__OLDIMPLEMENTATION787 */
-  else {
-    char saveref[G__LONGLINE];
-    char* p = string + strlen (string);
-    while (p > string && (p[-1] == '*' || p[-1] == '&'))
-      --p;
-    G__ASSERT (strlen (p) < sizeof (saveref));
-    strcpy (saveref, p); // Okay we just did an hard check
-    *p = '\0';
-    if(-1!=(tagnum=G__defined_typename(string))) {
-      char type = G__newtype.type[tagnum];
-      int ref = G__newtype.reftype[tagnum];
+         saveref = p;
+         *p = '\0';
+         if(-1!=(tagnum=G__defined_typename(string+offset))) {
+            char type = G__newtype.type[tagnum];
+            int ref = G__newtype.reftype[tagnum];
 #ifndef G__OLDIMPLEMENTATION1712
-      if(0==strstr(string,"::") && -1!=G__newtype.parent_tagnum[tagnum]) {
-        ++G__templatearg_enclosedscope;
-      }
+            if(0==strstr(string+offset,"::") && -1!=G__newtype.parent_tagnum[tagnum]) {
+               ++G__templatearg_enclosedscope;
+            }
 #endif
-      if (G__newtype.tagnum[tagnum] >= 0 &&
-          G__struct.name[G__newtype.tagnum[tagnum]][0] == '$') {
-        ref = 0;
-        type = tolower (type);
-      }
-      strcpy (string,G__type2string (type,
-                                     G__newtype.tagnum[tagnum],
-                                     -1, ref, 0));
-    } else
-    if(-1!=(tagnum=G__defined_tagname(string,1))) {
+            if (G__newtype.tagnum[tagnum] >= 0 &&
+                G__struct.name[G__newtype.tagnum[tagnum]][0] == '$') {
+               ref = 0;
+               type = tolower (type);
+            }
+            string.Replace(offset,G__type2string (type,
+                                                  G__newtype.tagnum[tagnum],
+                                                  -1, ref, 0));
+         } else {
+            if(-1!=(tagnum=G__defined_tagname(string+offset,1))) {
 #ifndef G__OLDIMPLEMENTATION1712
-      if(0==strstr(string,"::") && -1!=G__struct.parent_tagnum[tagnum]) {
-        ++G__templatearg_enclosedscope;
-      }
+               if(0==strstr(string,"::") && -1!=G__struct.parent_tagnum[tagnum]) {
+                  ++G__templatearg_enclosedscope;
+               }
 #endif
-      strcpy(string,G__fulltagname(tagnum,1));
-    }
-    strcat (string, saveref);
-  }
+               string.Replace(offset,G__fulltagname(tagnum,1));
+            }
+         }
+         string += saveref;
+      }
+   }
 }
 
 /**************************************************************************
@@ -2020,12 +1995,12 @@ int G__gettemplatearglist(const char *paralist,G__Charlist *charlist_in
         charlist->string = G__expand_def_template_arg (string,def_para_in,
                                                        charlist_in);
         {
-          int len=strlen(charlist->string)*2;
-          /* workaround, G__templatemaptemplatename() overrides malloced mem*/
-          if(len<G__LONGLINE) len=G__LONGLINE;
-          charlist->string=(char*)realloc(charlist->string,len+1);
-          G__templatemaptypename(charlist->string);
-          G__ASSERT((int)strlen(charlist->string)<=(int)len);
+           /* workaround, G__templatemaptemplatename() modifies its input */
+           temp = charlist->string;
+           G__templatemaptypename(temp);
+           int len = strlen(temp);
+           charlist->string = (char*)realloc(charlist->string,len+1);
+           G__strlcpy(charlist->string, temp, len+1);
         }
         charlist->next=(struct G__Charlist*)malloc(sizeof(struct G__Charlist));
         charlist->next->next = (struct G__Charlist *)NULL;

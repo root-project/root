@@ -282,6 +282,49 @@ G__FastAllocString& G__FastAllocString::Format(const char *fmt, ...)
    return *this;
 }
 
+int G__FastAllocString::FormatArgList(size_t offset, const char *fmt, va_list args)
+{
+   // sprintf into this string, resizing until it fits.
+   if (!fmt) {
+      fBuf[0] = 0;
+      return 0;
+   }
+   int result = -1;
+   int bucket_req = -2;
+   
+   while (result == -1 && bucket_req != -1)
+   {
+#ifdef _MSC_VER
+      result = _vsnprintf(fBuf + offset, fCapacity - offset, fmt, args);
+#else
+      result = vsnprintf(fBuf + offset, fCapacity - offset, fmt, args);
+#endif
+      if (result == -1) {
+         if (bucket_req == -2)
+            bucket_req = G__BufferReservoir::bucket(fCapacity);
+         if (bucket_req != -1) {
+            // we had a valid bucket, increase it
+            ++bucket_req;
+            Resize( bucket_req );
+         }
+      }
+   }
+   return result;
+}
+
+G__FastAllocString& G__FastAllocString::Format(size_t offset, const char *fmt, ...)
+{
+   // sprintf into this string, resizing until it fits.
+   va_list args;
+   va_start(args, fmt);
+   if (offset > Capacity()) {
+      Resize(offset+strlen(fmt)*2); // The *2 is a fudge factor ..
+   }
+   FormatArgList(offset, fmt, args);
+   va_end(args);
+   return *this;
+}
+
 void G__FastAllocString::Replace(size_t where, const char *replacement)
 {
    // Replace the content of the string from 'where' to the end of the string

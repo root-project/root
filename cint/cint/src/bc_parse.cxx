@@ -1929,7 +1929,7 @@ int G__blockscope::initstruct(G__TypeReader& type, struct G__var_array* var, int
   }
   if (isauto) {
     // -- An unspecified length array.
-    G__malloc(num_of_elements, size, var->varnamebuf[varid]);
+    var->p[varid] = G__malloc(num_of_elements, size, var->varnamebuf[varid]);
   }
   // Read and discard up to next comma or semicolon.
   c = G__fignorestream(",;");
@@ -2131,7 +2131,7 @@ int G__blockscope::initscalarary(G__TypeReader& /*type*/, struct G__var_array* v
     // -- Unspecified length array.
     // Allocate in order to increment memory pointer
     // now that we know the final size.
-    G__malloc(num_of_elements, size, var->varnamebuf[ig15]);
+    var->p[ig15]=G__malloc(num_of_elements, size, var->varnamebuf[ig15]);
   }
   // Read and discard up to the next comma or semicolon.
   c = G__fignorestream(",;");
