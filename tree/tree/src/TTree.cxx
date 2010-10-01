@@ -1358,7 +1358,7 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
          Int_t noccur = folder->Occurence(obj);
          if (noccur > 0) {
             snprintf(occur,20, "_%d", noccur);
-            strcat(curname, occur);
+            strcat(curname, occur);  //intentional
          }
          TBranchElement* br = (TBranchElement*) Bronch(curname, obj->ClassName(), add, bufsize, splitlevel - 1);
          br->SetBranchFolder();
@@ -2252,22 +2252,22 @@ TFile* TTree::ChangeFile(TFile* file)
             snprintf(cunder,2000-Int_t(cunder-fname), "%s%d", uscore, fFileNumber);
             const char* cdot = strrchr(file->GetName(), '.');
             if (cdot) {
-               strcat(fname, cdot);
+               strcat(fname, cdot);  //intentional
             }
          } else {
             char fcount[10];
             snprintf(fcount,10, "%s%d", uscore, fFileNumber);
-            strcat(fname, fcount);
+            strcat(fname, fcount);  //intentional
          }
       } else {
          char* cdot = strrchr(fname, '.');
          if (cdot) {
             snprintf(cdot,2000-Int_t(fname-cdot), "%s%d", uscore, fFileNumber);
-            strcat(fname, strrchr(file->GetName(), '.'));
+            strcat(fname, strrchr(file->GetName(), '.'));  //intentional
          } else {
             char fcount[10];
             snprintf(fcount,10, "%s%d", uscore, fFileNumber);
-            strcat(fname, fcount);
+            strcat(fname, fcount);  //intentional
          }
       }
       if (gSystem->AccessPathName(fname)) {
