@@ -5854,7 +5854,11 @@ int RpdProtocol(int ServType)
             if (buf) delete[] buf;
             return -1;
          }
-         strcpy(proto,buf);
+         if (len > kMAXRECVBUF - 1) {
+            strncpy(proto,buf,kMAXRECVBUF);
+         } else {
+            strcpy(proto,buf);
+         }
       } else {
          // Empty buffer
          proto[0] = '\0';
