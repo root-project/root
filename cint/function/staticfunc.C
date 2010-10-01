@@ -6,7 +6,7 @@
 #endif
 
 struct SelLambda {
-   int Stopmin = 0;
+   static const int Stopmin = 0;
    void SelLambda::Loop(Long64_t inEntries)
    {
       
@@ -24,6 +24,8 @@ struct SelLambda {
          
          invMassPosNeg->Fill(3);
       }
+      delete invMassPosNeg;
+      invMassPosNeg = 0;
    }
 };
 
