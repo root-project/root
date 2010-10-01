@@ -3195,8 +3195,10 @@ void TMatrixT<Element>::Streamer(TBuffer &R__b)
          }
       }
       if (this->fNelems > 0 && this->fNelems <= this->kSizeMax) {
-         memcpy(fDataStack,fElements,this->fNelems*sizeof(Element));
-         delete [] fElements;
+         if (fElements) {
+            memcpy(fDataStack,fElements,this->fNelems*sizeof(Element));
+            delete [] fElements;
+         }
          fElements = fDataStack;
       } else if (this->fNelems < 0)
          this->Invalidate();
