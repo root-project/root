@@ -285,11 +285,12 @@ struct inclist *inc_path(char *file, char *include, boolean dot) {
       for (p = file + strlen(file); p > file; p--)
          if (*p == '/')
             break;
-      if (p == file)
-         strncpy(path, include, sizeof(path));
-      else {
+      if (p == file) {
+         strncpy(path, include, sizeof(path)-1);
+         path[sizeof(path)-1] = '\0';
+      } else {
          strncpy(path, file, (p - file) + 1);
-         path[(p-file) + 1 ] = '\0';
+         path[(p-file) + 1] = '\0';
          strncpy(path + (p - file) + 1, include, sizeof(path) - (p - file + 1));
       }
       remove_dotdot(path);
