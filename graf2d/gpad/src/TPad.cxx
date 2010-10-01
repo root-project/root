@@ -4455,7 +4455,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       l = (char*)strstr(opt,"Title:");
       if (l) {
          gVirtualPS->SetTitle(&opt[6]);
-         strcpy(l,"pdf");  /intentional
+         strcpy(l,"pdf");  //intentional
       }
       gVirtualPS->Open(psname,pstype);
       gVirtualPS->SetBit(kPrintingPS);
