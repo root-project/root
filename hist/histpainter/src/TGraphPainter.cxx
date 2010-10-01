@@ -1031,8 +1031,8 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
       // Create a temporary histogram and fill each channel with the
       // function value.
       char chopth[8] = " ";
-      if (strstr(chopt,"x+")) strcat(chopth, "x+");
-      if (strstr(chopt,"y+")) strcat(chopth, "y+");
+      if (strstr(chopt,"x+")) strncat(chopth, "x+",2);
+      if (strstr(chopt,"y+")) strncat(chopth, "y+",2);
       if (!theGraph->GetHistogram()) {
          // the graph is created with at least as many channels as there are
          // points to permit zooming on the full range.
