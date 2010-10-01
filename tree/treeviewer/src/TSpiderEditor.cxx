@@ -260,6 +260,7 @@ void TSpiderEditor::SetModel(TObject* obj)
 
    if (!obj) return;
    fSpider = dynamic_cast<TSpider*>(obj);
+   if (!fSpider) return;
    fAvoidSignal = kTRUE;
 
    Bool_t av = fSpider->GetDisplayAverage();
