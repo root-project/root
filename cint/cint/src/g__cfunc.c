@@ -2917,7 +2917,7 @@ int hash;
       G__letint(result7,'E',(long)0);
       return(1);
     }
-    G__letint(result7,'E',(long)tmpfile());
+    G__letint(result7,'E',(long)tmpfile()); // This is an explicit user request/call, this can not be avoided.
     return(1);
   }
 
