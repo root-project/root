@@ -214,9 +214,6 @@ const char *TAxis::ChooseTimeFormat(Double_t axislength)
       case 7:
         formatstr = "%m/%y";
         break;
-      default:
-        formatstr = "%H:%M:%S";
-        break;
    }
    return formatstr;
 }
