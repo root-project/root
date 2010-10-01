@@ -6485,7 +6485,8 @@ void TASImage::Gray(Bool_t on)
       CARD32 *bb = imdec->buffer.blue;
 
       ASScanline result;
-      prepare_scanline(fImage->width, 0, &result, fgVisual->BGR_mode);
+      ASScanline *sl = prepare_scanline(fImage->width, 0, &result, fgVisual->BGR_mode);
+      if (sl) delete sl;
 
       for (i = 0; i < fImage->height; i++) {
          imdec->decode_image_scanline(imdec);
