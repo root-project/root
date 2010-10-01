@@ -98,7 +98,7 @@ TPacketizerFile::TPacketizerFile(TList *workers, Long64_t, TList *input,
    fValid = kFALSE;
    fAssigned = 0;
 
-   if (!input || input->GetSize() <= 0) {
+   if (!input || (input && input->GetSize() <= 0)) {
       Error("TPacketizerFile", "input file is undefined or empty!");
       SetBit(TObject::kInvalidObject);
       return;

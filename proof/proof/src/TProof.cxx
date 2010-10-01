@@ -10466,7 +10466,7 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, TString &value)
    // Returns -1 in case of error (i.e. list is 0, parameter does not exist
    // or value type does not match), 0 otherwise.
 
-   TObject *obj = c->FindObject(par);
+   TObject *obj = c ? c->FindObject(par) : (TObject *)0;
    if (obj) {
       TNamed *p = dynamic_cast<TNamed*>(obj);
       if (p) {
@@ -10485,7 +10485,7 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Int_t &value)
    // Returns -1 in case of error (i.e. list is 0, parameter does not exist
    // or value type does not match), 0 otherwise.
 
-   TObject *obj = c->FindObject(par);
+   TObject *obj = c ? c->FindObject(par) : (TObject *)0;
    if (obj) {
       TParameter<Int_t> *p = dynamic_cast<TParameter<Int_t>*>(obj);
       if (p) {
@@ -10503,7 +10503,7 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Long_t &value)
    // Returns -1 in case of error (i.e. list is 0, parameter does not exist
    // or value type does not match), 0 otherwise.
 
-   TObject *obj = c->FindObject(par);
+   TObject *obj = c ? c->FindObject(par) : (TObject *)0;
    if (obj) {
       TParameter<Long_t> *p = dynamic_cast<TParameter<Long_t>*>(obj);
       if (p) {
@@ -10521,7 +10521,7 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Long64_t &value)
    // Returns -1 in case of error (i.e. list is 0, parameter does not exist
    // or value type does not match), 0 otherwise.
 
-   TObject *obj = c->FindObject(par);
+   TObject *obj = c ? c->FindObject(par) : (TObject *)0;
    if (obj) {
       TParameter<Long64_t> *p = dynamic_cast<TParameter<Long64_t>*>(obj);
       if (p) {
@@ -10539,7 +10539,7 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Double_t &value)
    // Returns -1 in case of error (i.e. list is 0, parameter does not exist
    // or value type does not match), 0 otherwise.
 
-   TObject *obj = c->FindObject(par);
+   TObject *obj = c ? c->FindObject(par) : (TObject *)0;
    if (obj) {
       TParameter<Double_t> *p = dynamic_cast<TParameter<Double_t>*>(obj);
       if (p) {
