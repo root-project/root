@@ -3896,7 +3896,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kObjectp: {
          TObject **obj = (TObject**)(ladd);
          TStreamerObjectPointer *el = (TStreamerObjectPointer*)aElement;
-         printf("(%s*)%lx",el->GetClass()->GetName(),(Long_t)(*obj));
+         printf("(%s*)%lx",el ? el->GetClass()->GetName() : "unknown_type",(Long_t)(*obj));
          break;
       }
 
@@ -3904,7 +3904,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kObjectP: {
          TObject **obj = (TObject**)(ladd);
          TStreamerObjectPointer *el = (TStreamerObjectPointer*)aElement;
-         printf("(%s*)%lx",el->GetClass()->GetName(),(Long_t)(*obj));
+         printf("(%s*)%lx",el ? el->GetClass()->GetName() : "unknown_type",(Long_t)(*obj));
          break;
       }
 
@@ -3936,7 +3936,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kAnyp:    {
          TObject **obj = (TObject**)(ladd);
          TStreamerObjectAnyPointer *el = (TStreamerObjectAnyPointer*)aElement;
-         printf("(%s*)0x%lx",el->GetClass()->GetName(),(Long_t)(*obj));
+         printf("(%s*)0x%lx",el ? el->GetClass()->GetName() : "unknown_type",(Long_t)(*obj));
          break;
       }
 
@@ -3944,7 +3944,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kAnyP:    {
          TObject **obj = (TObject**)(ladd);
          TStreamerObjectAnyPointer *el = (TStreamerObjectAnyPointer*)aElement;
-         printf("(%s*)0x%lx",el->GetClass()->GetName(),(Long_t)(*obj));
+         printf("(%s*)0x%lx",el ? el->GetClass()->GetName() : "unknown_type",(Long_t)(*obj));
          break;
       }
       // Any Class not derived from TObject
@@ -3952,13 +3952,15 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kOffsetL + kObjectP:
       case kAny:     {
          printf("printing kAny case (%d)",atype);
-         TMemberStreamer *pstreamer = aElement->GetStreamer();
-         if (pstreamer == 0) {
-            //printf("ERROR, Streamer is null\n");
-            //aElement->ls();
-            break;
-         }
-         //(*pstreamer)(b,ladd,0);
+//         if (aElement) {
+//            TMemberStreamer *pstreamer = aElement->GetStreamer();
+//            if (pstreamer == 0) {
+//               //printf("ERROR, Streamer is null\n");
+//               //aElement->ls();
+//               break;
+//            }
+//            //(*pstreamer)(b,ladd,0);
+//         }
          break;
       }
       // Base Class
@@ -3974,27 +3976,27 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kOffsetL + kTNamed:
       case kStreamer: {
          printf("printing kStreamer case (%d)",atype);
-         TMemberStreamer *pstreamer = aElement->GetStreamer();
-         if (pstreamer == 0) {
-            //printf("ERROR, Streamer is null\n");
-            //aElement->ls();
-            break;
-         }
-         //UInt_t start,count;
-         //b.ReadVersion(&start, &count);
-         //(*pstreamer)(b,ladd,0);
-         //b.CheckByteCount(start,count,IsA());
+//         TMemberStreamer *pstreamer = aElement->GetStreamer();
+//         if (pstreamer == 0) {
+//            //printf("ERROR, Streamer is null\n");
+//            //aElement->ls();
+//            break;
+//         }
+//         //UInt_t start,count;
+//         //b.ReadVersion(&start, &count);
+//         //(*pstreamer)(b,ladd,0);
+//         //b.CheckByteCount(start,count,IsA());
          break;
       }
 
       case kStreamLoop: {
          printf("printing kStreamLoop case (%d)",atype);
-         TMemberStreamer *pstreamer = aElement->GetStreamer();
-         if (pstreamer == 0) {
-            //printf("ERROR, Streamer is null\n");
-            //aElement->ls();
-            break;
-         }
+//         TMemberStreamer *pstreamer = aElement->GetStreamer();
+//         if (pstreamer == 0) {
+//            //printf("ERROR, Streamer is null\n");
+//            //aElement->ls();
+//            break;
+//         }
          //Int_t *counter = (Int_t*)(count);
          //UInt_t start,count;
          ///b.ReadVersion(&start, &count);
