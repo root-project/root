@@ -1490,15 +1490,15 @@ L110:
                   LabelsLimits(label,first,last);  //Eliminate blanks
 
                   if (label[first] == '.') { //check if '.' is preceeded by a digit
-                     strcpy(chtemp, "0");
-                     strcat(chtemp, &label[first]);
-                     strcpy(label, chtemp);
+                     strncpy(chtemp, "0",256);
+                     strncat(chtemp, &label[first], 256);
+                     strncpy(label, chtemp,256);
                      first = 1; last = strlen(label);
                   }
                   if (label[first] == '-' && label[first+1] == '.') {
-                     strcpy(chtemp, "-0");
-                     strcat(chtemp, &label[first+1]);
-                     strcpy(label, chtemp);
+                     strncpy(chtemp, "-0",256);
+                     strncat(chtemp, &label[first+1], 256);
+                     strncpy(label, chtemp, 256);
                      first = 1; last = strlen(label);
                   }
 
@@ -1518,7 +1518,7 @@ L110:
 //*-*-            Make sure the label is not "-0"
                   if (last-first == 1 && label[first] == '-'
                                       && label[last]  == '0') {
-                     strcpy(label, "0");
+                     strncpy(label, "0", 256);
                      label[last] = 0;
                   }
                }
@@ -1541,7 +1541,7 @@ L110:
                   if (dwlabel<0.9) {
                      double tmpdb;
                      int tmplast;
-                     snprintf(label,256,"%%S%7.5f",modf(timed,&tmpdb));
+                     snprintf(label, 256, "%%S%7.5f", modf(timed,&tmpdb));
                      tmplast = strlen(label)-1;
 
 //*-*-              We eliminate the non significiant 0 after '.'
@@ -1555,8 +1555,8 @@ L110:
 
                   }
 
-                  strftime(label,256,timeformattmp.Data(),utctis);
-                  strcpy(chtemp,&label[0]);
+                  strftime(label, 256, timeformattmp.Data(), utctis);
+                  strncpy(chtemp, &label[0], 256);
                   first = 0; last=strlen(label)-1;
                   wlabel = wTimeIni + (k+1)*dwlabel;
                }
@@ -1580,8 +1580,8 @@ L110:
                }
                if (!optionY || (x0 == x1)) {
                   if (!optionText) {
-                     if (first > last)  strcpy(chtemp, " ");
-                     else               strcpy(chtemp, &label[first]);
+                     if (first > last)  strncpy(chtemp, " ", 256);
+                     else               strncpy(chtemp, &label[first], 256);
                      textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
                            0,
@@ -1606,8 +1606,8 @@ L110:
                   for ( l=1; l<=lnlen; l++) {
                      if (!optionText) *chtemp = label[first+l-2];
                      else {
-                        if (lnlen == 0) strcpy(chtemp, " ");
-                        else            strcpy(chtemp, "1");
+                        if (lnlen == 0) strncpy(chtemp, " ", 256);
+                        else            strncpy(chtemp, "1", 256);
                      }
                      textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
