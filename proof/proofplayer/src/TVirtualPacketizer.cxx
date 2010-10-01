@@ -70,14 +70,14 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
    fMinPacketTime = 3;
    Double_t minPacketTime = 0;
    if (TProof::GetParameter(input, "PROOF_MinPacketTime", minPacketTime) == 0) {
-      Info("TPacketizerAdaptive", "setting minimum time for a packet to %f",
+      Info("TVirtualPacketizer", "setting minimum time for a packet to %f",
            minPacketTime);
       fMinPacketTime = (Int_t) minPacketTime;
    }
    fMaxPacketTime = 20;
    Double_t maxPacketTime = 0;
    if (TProof::GetParameter(input, "PROOF_MaxPacketTime", maxPacketTime) == 0) {
-      Info("TPacketizerAdaptive", "setting maximum packet time for a packet to %f",
+      Info("TVirtualPacketizer", "setting maximum packet time for a packet to %f",
            maxPacketTime);
       fMaxPacketTime = (Int_t) maxPacketTime;
    }
