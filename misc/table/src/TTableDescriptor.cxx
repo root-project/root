@@ -118,9 +118,9 @@ void  TTableDescriptor::AddAt(const void *c, Int_t i)
    if (c) {
       tableDescriptor_st *element = (tableDescriptor_st *)c;
 #ifdef NORESTRICTIONS
-      const char *comment = element->fColumnName[0] ? element->fColumnName : "N/A";
+      const char *comment = element->fColumnName && element->fColumnName[0] ? element->fColumnName : "N/A";
 #else
-      const char *comment = element->fColumnName ? element->fColumnName : "N/A";
+      const char *comment = element->fColumnName[0] ? element->fColumnName : "N/A";
 #endif
       AddAt(*(tableDescriptor_st *)c,comment,i);
    }
