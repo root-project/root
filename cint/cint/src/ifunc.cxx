@@ -6526,7 +6526,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
    else {
       G__ifile.name[0] = '\0';
    }
-   if (G__dispsource && G__ifile.name && G__ifile.name[0]) {
+   if (G__dispsource && G__ifile.name[0]) {
       G__fprinterr(G__serr, "\n# %s   ", G__ifile.name);
    }
    // Recover file pointer and fpos.
