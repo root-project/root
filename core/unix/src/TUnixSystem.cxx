@@ -4581,8 +4581,11 @@ int TUnixSystem::ReadUtmpFile()
    }
 
    n_read = fread(gUtmpContents, 1, size, utmp);
-   if (!ferror(utmp) && fclose(utmp) != EOF && n_read == size)
-      return size / sizeof(STRUCT_UTMP);
+   if (!ferror(utmp)) {
+      if (fclose(utmp) != EOF && n_read == size)
+         return size / sizeof(STRUCT_UTMP);
+   } else
+      fclose(utmp);
 
    free(gUtmpContents);
    gUtmpContents = 0;
