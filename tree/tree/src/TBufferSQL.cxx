@@ -292,7 +292,7 @@ void TBufferSQL::ReadCharP(Char_t *str)
 {
    // Operator>>
 
-   strcpy(str,(*fRowPtr)->GetField(*fIter));
+   strcpy(str,(*fRowPtr)->GetField(*fIter));  // Legacy interface, we have no way to know the user's buffer size ....
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
