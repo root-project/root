@@ -3248,7 +3248,7 @@ void TProofServ::SetQueryRunning(TProofQueryResult *pq)
       pq->SetRunning(startlog, parlist, -1);
 
       // Bytes and CPU at start (we will calculate the differential at end)
-      pq->SetProcessInfo(pq->GetEntries(), 0., 0.);
+      pq->SetProcessInfo(pq->GetEntries(), float(0.), 0);
    }
 }
 
