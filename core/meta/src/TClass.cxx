@@ -341,7 +341,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
       else if (membertype) {
          if (!strcmp(membertype->GetTypeName(), "char")) {
             i = strlen(*ppointer);
-            if (kvalue+i > kline) i=kline-kvalue;
+            if (kvalue+i > kline) i=kline-1-kvalue;
             Bool_t isPrintable = kTRUE;
             for (Int_t j = 0; j < i; j++) {
                if (!std::isprint((*ppointer)[j])) {
@@ -361,7 +361,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
       } else if (!strcmp(memberFullTypeName, "char*") ||
                  !strcmp(memberFullTypeName, "const char*")) {
          i = strlen(*ppointer);
-         if (kvalue+i >= kline) i=kline-kvalue;
+         if (kvalue+i >= kline) i=kline-1-kvalue;
          Bool_t isPrintable = kTRUE;
          for (Int_t j = 0; j < i; j++) {
             if (!std::isprint((*ppointer)[j])) {
