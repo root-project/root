@@ -3673,6 +3673,8 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
          return result;
       }
       var->varlabel[ig15][base+i] = 1;
+      // Since base == paran + 4 and i >= 0, the previous if statement insures that we have
+      //    (paran+4+i) < G__MAXVARDIM so (paran+4) < G__MAXVARDIM
       var->varlabel[ig15][paran+3] = element_count;
    }
    G__p2arylabel[0] = 0;
