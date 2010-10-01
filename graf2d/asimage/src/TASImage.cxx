@@ -507,7 +507,8 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
    TString fname = filename;
 
    if (!dot) {
-      ext = TypeFromMagicNumber(filename);
+      if (filename) ext = TypeFromMagicNumber(filename);
+      else ext = dot + 1;
    } else {
       ext = dot + 1;
    }
