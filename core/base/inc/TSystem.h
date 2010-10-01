@@ -145,8 +145,9 @@ struct FileStat_t {
    Long64_t fSize;         // total size in bytes
    Long_t   fMtime;        // modification date
    Bool_t   fIsLink;       // symbolic link
+   TString  fUrl;          // end point url of file
    FileStat_t() : fDev(0), fIno(0), fMode(0), fUid(0), fGid(0), fSize(0),
-                  fMtime(0), fIsLink(kFALSE) { }
+                  fMtime(0), fIsLink(kFALSE), fUrl("") { }
 };
 
 struct UserGroup_t {
@@ -265,7 +266,7 @@ public:
    enum EAclicProperties {
       kFlatBuildDir = BIT(0)           // If set and a BuildDir is selected, then do not created subdirectories
    };
-   
+
 protected:
    TFdSet          *fReadmask;         //!Files that should be checked for read events
    TFdSet          *fWritemask;        //!Files that should be checked for write events
@@ -325,7 +326,7 @@ protected:
    static const char *StripOffProto(const char *path, const char *proto) {
       return !strncmp(path, proto, strlen(proto)) ? path + strlen(proto) : path;
    }
-   
+
 private:
    TSystem(const TSystem&);              // not implemented
    TSystem& operator=(const TSystem&);   // not implemented
