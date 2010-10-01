@@ -354,7 +354,8 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    //    -config  : print ./configure options
    //    -memstat : run with memory usage monitoring
    // In addition to the above options the arguments that are not options,
-   // i.e. they don't start with - or + are treated as follows:
+   // i.e. they don't start with - or + are treated as follows (and also removed
+   // from the argument array):
    //   <file>.root are considered ROOT files and added to the InputFiles() list
    //   <macro>.C   are considered ROOT macros and also added to the InputFiles() list
    //   <dir>       is considered the desired working directory and available
@@ -363,6 +364,8 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    // In TRint we set the working directory to the <dir>, the ROOT files are
    // connected, and the macros are executed. If your main TApplication is not
    // TRint you have to decide yourself what to do whith these options.
+   // All specified arguments (also the ones removed) can always be retrieved
+   // via the TApplication::Argv() method.
 
    static char null[1] = { "" };
 
