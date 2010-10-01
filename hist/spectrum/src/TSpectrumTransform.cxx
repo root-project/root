@@ -1775,8 +1775,9 @@ L&quot;);</span></p>
       }
       break;
    }
+   if (!working_space) return;
    for (i = 0, old_area = 0; i < fSize; i++) {
-      if (working_space) old_area += working_space[i];
+      old_area += working_space[i];
    }
    for (i = 0, new_area = 0; i < fSize; i++) {
       if (i >= fXmin && i <= fXmax)
