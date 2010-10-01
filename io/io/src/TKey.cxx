@@ -730,7 +730,7 @@ TObject *TKey::ReadObj()
    if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
 
    if (cl->InheritsFrom(TDirectoryFile::Class())) {
-      TDirectory *dir = dynamic_cast<TDirectoryFile*>(tobj);
+      TDirectory *dir = static_cast<TDirectoryFile*>(tobj);
       dir->SetName(GetName());
       dir->SetTitle(GetTitle());
       dir->SetMother(fMotherDir);
