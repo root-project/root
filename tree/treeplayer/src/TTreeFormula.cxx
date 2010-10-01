@@ -1621,8 +1621,8 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                   Warning("DefinedVariable","No data member in content of %s in %s\n",
                            cl->GetName(),name.Data());
                }
-               if (1 || inside_cl) cl = inside_cl;
-               // if inside_cl is nul ... we have a problem of inconsistency :(
+               cl = inside_cl;
+               // if inside_cl is nul ... we have a problem of inconsistency.
             }
 
             if (!cl) {
