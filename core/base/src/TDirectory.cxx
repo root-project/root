@@ -615,7 +615,7 @@ TObject *TDirectory::FindObjectAny(const char *aname) const
    TIter next(fList);
    while( (obj = next()) ) {
       if (obj->IsA()->InheritsFrom(TDirectory::Class())) {
-         TDirectory* subdir = dynamic_cast<TDirectory*>(obj);
+         TDirectory* subdir = static_cast<TDirectory*>(obj);
          TObject *subobj = subdir->TDirectory::FindObjectAny(aname); // Explicitly recurse into _this_ exact function.
          if (subobj) {
             return subobj;
