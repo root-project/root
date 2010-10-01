@@ -311,7 +311,7 @@ void TEventList::Print(Option_t *option) const
          nbuf = 1;
       }
       snprintf(element,10,"%7lld ",fList[i]);
-      strcat(line,element);
+      strlcat(line,element,100);
    }
    if (nbuf) printf("%s\n",line);
    delete [] line;
