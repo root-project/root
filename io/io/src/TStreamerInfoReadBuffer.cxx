@@ -1446,7 +1446,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                            continue;
                         }
                         // And set each pointer to null.
-                        memset(pp[ndx], 0, vlen * sizeof(char*));
+                        memset(pp[ndx], 0, vlen * sizeof(char*)); // This is the right size we really have a char**: pp[ndx] = (char*) new char*[vlen];
                      }
                      if (!isPtrPtr) {
                         // -- We are a varying-length array of objects.
@@ -1532,7 +1532,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                            continue;
                         }
                         // And set each pointer to null.
-                        memset(pp[ndx], 0, vlen * sizeof(char*));
+                        memset(pp[ndx], 0, vlen * sizeof(char*)); // This is the right size we really have a char**: pp[ndx] = (char*) new char*[vlen];
                      }
                      if (!isPtrPtr) {
                         // -- We are a varying-length array of objects.
