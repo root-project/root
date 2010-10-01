@@ -2279,7 +2279,7 @@ void TUnixSystem::StackTrace()
          FILE *f = TempFileName(tmpf2);
          if (f) fclose(f);
          file1.close();
-         sprintf(buffer, "%s %s < %s > %s", filter, cppfiltarg, tmpf1.Data(), tmpf2.Data());
+         snprintf(buffer, sizeof(buffer), "%s %s < %s > %s", filter, cppfiltarg, tmpf1.Data(), tmpf2.Data());
          Exec(buffer);
          ifstream file2(tmpf2);
          TString line;
