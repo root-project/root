@@ -411,13 +411,15 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   for (Int_t k = 0; k < nspec; ++k) 
     {
       RooRealVar* thisyield = dynamic_cast<RooRealVar*>(yields.at(k)) ;
-      RooRealVar* yieldinpdf = dynamic_cast<RooRealVar*>(parameters->find(thisyield->GetName() )) ;
+      if (thisyield) { 
+         RooRealVar* yieldinpdf = dynamic_cast<RooRealVar*>(parameters->find(thisyield->GetName() )) ;
 
-      if (thisyield && yieldinpdf) { 
-         coutI(InputArguments)<< "yield in pdf: " << yieldinpdf->GetName() << " " << thisyield->getVal() << endl;
+         if (yieldinpdf) { 
+            coutI(InputArguments)<< "yield in pdf: " << yieldinpdf->GetName() << " " << thisyield->getVal() << endl;
       
-         yieldvars.push_back(yieldinpdf) ;
-         yieldvalues.push_back(thisyield->getVal()) ;
+            yieldvars.push_back(yieldinpdf) ;
+            yieldvalues.push_back(thisyield->getVal()) ;
+         }
       }
     }
   
