@@ -257,7 +257,8 @@ static int SubdivColorMap(NewColorMapType *NewColorSubdiv,
         /* Also as the colors are quantized and the BBoxes are full 0..255,  */
         /* they need to be rescaled.                                         */
         MaxColor = QuantizedColor -> RGB[SortRGBAxis];/* Max. of first half. */
-        MinColor = QuantizedColor -> Pnext -> RGB[SortRGBAxis];/* of second. */
+	if (QuantizedColor -> Pnext) MinColor = QuantizedColor -> Pnext -> RGB[SortRGBAxis];/* of second. */
+	else MinColor = 0;
         MaxColor <<= (8 - BITS_PER_PRIM_COLOR);
         MinColor <<= (8 - BITS_PER_PRIM_COLOR);
 
