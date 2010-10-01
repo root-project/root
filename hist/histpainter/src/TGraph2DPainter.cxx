@@ -561,6 +561,8 @@ void TGraph2DPainter::PaintErrors(Option_t * /* option */)
          gPad->PaintPolyLine(2,xm,ym);
       }
    }
+   delete [] xm;
+   delete [] ym;
 }
 
 
