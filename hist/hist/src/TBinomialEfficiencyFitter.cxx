@@ -431,7 +431,7 @@ void BinomialEfficiencyFitterFCN(Int_t& npar, Double_t* gin, Double_t& f,
 
    TBinomialEfficiencyFitter* fitter = dynamic_cast<TBinomialEfficiencyFitter*>(TBinomialEfficiencyFitter::GetFitter()->GetObjectFit());
    if (!fitter) {
-      fitter->Error("binomialFCN","Invalid fit object encountered!");
+      Error("binomialFCN","Invalid fit object encountered!");
       return;
    }
    fitter->ComputeFCN(npar, gin, f, par, flag);
