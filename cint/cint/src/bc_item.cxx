@@ -48,7 +48,6 @@ G__blockscope_expr::G__blockscope_expr(G__blockscope* blockscope)
 //______________________________________________________________________________
 G__value G__blockscope_expr::getitem(const string& item_string)
 {
-   G__value result;
    int i = 0;
    int c;
    const char *item = item_string.c_str();
@@ -56,7 +55,7 @@ G__value G__blockscope_expr::getitem(const string& item_string)
       switch (c) {
          case ':':
             if (':' == item[i+1]) {
-               result = scope_operator(item, i);
+               return scope_operator(item, i);
             }
             else {
                //error
@@ -64,12 +63,12 @@ G__value G__blockscope_expr::getitem(const string& item_string)
             break;
 
          case '.':
-            result = member_operator(item, i);
+            return member_operator(item, i);
             break;
 
          case '-':
             if ('>' == item[i+1]) {
-               result = pointer_operator(item, i);
+               return pointer_operator(item, i);
             }
             else {
                //error
@@ -77,15 +76,11 @@ G__value G__blockscope_expr::getitem(const string& item_string)
             break;
 
          case '[':
-            result = index_operator(item, i);
+            return index_operator(item, i);
             break;
 
          case '(':
-            result = fcall_operator(item, i);
-            break;
-
-         case 0:
-            result = getobject(item);
+            return fcall_operator(item, i);
             break;
 
          default:
@@ -93,7 +88,7 @@ G__value G__blockscope_expr::getitem(const string& item_string)
       }
       ++i;
    }
-   return result;
+   return getobject(item);
 }
 
 //______________________________________________________________________________
