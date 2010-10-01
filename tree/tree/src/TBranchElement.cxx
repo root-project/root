@@ -2373,6 +2373,7 @@ void TBranchElement::InitializeOffsets()
          if (motherDotAtEnd) {
             // -- Remove the top-level branch name from our name.
             dataName.Remove(0, motherName.Length());
+            // stlParentNameUpdated is false the first time in this loop.
             if (!stlParentNameUpdated && stlParentName.Length()) {
                stlParentName.Remove(0, motherName.Length());
                stlParentNameUpdated = kTRUE;
@@ -2393,6 +2394,7 @@ void TBranchElement::InitializeOffsets()
                //       this matches the exact test in TTree::Bronch().
                if (dataName.Length() == motherName.Length()) {
                   dataName.Remove(0, motherName.Length());
+                  // stlParentNameUpdated is false the first time in this loop.
                   if (!stlParentNameUpdated && stlParentName.Length()) {
                      stlParentName.Remove(0, motherName.Length());
                   }
