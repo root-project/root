@@ -972,7 +972,8 @@ UInt_t TBufferSQL2::WriteVersion(const TClass *cl, Bool_t /* useBcnt */)
    if (gDebug>2)
       cout << "TBufferSQL2::WriteVersion " << (cl ? cl->GetName() : "null") << "   ver = " << (cl ? cl->GetClassVersion() : 0) << endl;
 
-   Stack()->AddVersion(cl);
+   if (cl)
+      Stack()->AddVersion(cl);
 
    return 0;
 }
@@ -980,7 +981,8 @@ UInt_t TBufferSQL2::WriteVersion(const TClass *cl, Bool_t /* useBcnt */)
 //______________________________________________________________________________
 void* TBufferSQL2::ReadObjectAny(const TClass*)
 {
-   // Read object from buffer. Only used from TBuffer
+   // Read object from buffer. Only used from TBuffer.
+
    return SqlReadObject(0);
 }
 
