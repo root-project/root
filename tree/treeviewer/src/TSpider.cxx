@@ -265,7 +265,6 @@ void TSpider::AddVariable(const char* varexp)
                ++entry;
             }
          }
-         if(inst == 0) loaded = kTRUE;
          if (!loaded) {
             // EvalInstance(0) always needs to be called so that
             // the proper branches are loaded.
