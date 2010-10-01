@@ -907,6 +907,7 @@ void TParallelCoordEditor::SetModel(TObject* obj)
 
    if (!obj) return;
    fParallel = dynamic_cast<TParallelCoord*>(obj);
+   if (!fParallel) return;
    fAvoidSignal = kTRUE;
 
    Color_t c = fParallel->GetLineColor();
