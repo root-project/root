@@ -1002,7 +1002,7 @@ void TGLayoutHints::SavePrimitive(ostream &out, Option_t * option/*= ""*/)
 
    if (!GetLayoutHints()) return;
    
-   if ((option ==0) || strcmp(option, "nocoma"))
+   if ((option == 0) || strcmp(option, "nocoma"))
       out << ", ";
 
    if ((fLayoutHints == kLHintsNormal) && (pad == 0)) {
