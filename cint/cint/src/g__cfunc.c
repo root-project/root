@@ -2336,7 +2336,7 @@ int hash;
       G__letint(result7,'i',(long)0);
       return(1);
     }
-    G__letint(result7,'i',(long)rand());
+    G__letint(result7,'i',(long)rand()); // Explicit user request, this can not be avoided.
     return(1);
   }
 
