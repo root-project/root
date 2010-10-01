@@ -707,7 +707,7 @@ void THStack::Paint(Option_t *option)
       fHistogram->SetTitle(GetTitle());
    }
 
-   if (nostack) {*nostack = 0; strcat(nostack,nostack+7);}
+   if (nostack) {*nostack = 0; strncat(nostack,nostack+7,7);}
    //if (nostack) {strlcpy(nostack,"       ",7);}
    else fHistogram->GetPainter()->SetStack(fHists);
 
