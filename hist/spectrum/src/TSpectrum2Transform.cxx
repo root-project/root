@@ -3128,7 +3128,7 @@ style='font-size:10.0pt'>  trans-&gt;Draw(&quot;SURF&quot;);     </span></p>
       break;
    }
    for (i = 0; i < fSizeX; i++) {
-      delete[]working_matrix[i];
+      if (working_matrix) delete[]working_matrix[i];
    }
    delete[]working_matrix;
    delete[]working_vector;
