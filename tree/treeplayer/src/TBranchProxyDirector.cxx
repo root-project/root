@@ -88,9 +88,10 @@ namespace ROOT {
       Int_t nbins = gEnv->GetValue("Hist.Binning.1D.x",100);
       Double_t vmin=0, vmax=0;
       Double_t xmin=0, xmax=0;
-      Bool_t canRebin = kFALSE;
+      Bool_t canRebin = kTRUE;
       TString opt( options ); 
       Bool_t optSame = opt.Contains("same");
+      if (optSame) canRebin = kFALSE;
       
       if (gPad && optSame) {
          TListIter np(gPad->GetListOfPrimitives());
