@@ -1134,10 +1134,10 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el,
          fs << ElementGetter(cl, el->GetName()) << ";" << endl;
 
       if (isarr && el->GetArrayLength()) {
-         strcpy(tabs, tab4);
+         strlcpy(tabs, tab4, sizeof(tabs));
          fs << tab3 << "for(int n=0;n<" << el->GetArrayLength() << ";n++) {" << endl;
       } else
-         strcpy(tabs, tab3);
+         strlcpy(tabs, tab3, sizeof(tabs));
 
       fs << tabs << "int size = buf.ReadSTLsize(" << (isstr ? "true);" : ");") << endl;
 
