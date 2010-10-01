@@ -1491,13 +1491,13 @@ L110:
 
                   if (label[first] == '.') { //check if '.' is preceeded by a digit
                      strncpy(chtemp, "0",256);
-                     strncat(chtemp, &label[first], 256);
+                     strcat(chtemp, &label[first]);
                      strncpy(label, chtemp,256);
                      first = 1; last = strlen(label);
                   }
                   if (label[first] == '-' && label[first+1] == '.') {
                      strncpy(chtemp, "-0",256);
-                     strncat(chtemp, &label[first+1], 256);
+                     strcat(chtemp, &label[first+1]);
                      strncpy(label, chtemp, 256);
                      first = 1; last = strlen(label);
                   }
