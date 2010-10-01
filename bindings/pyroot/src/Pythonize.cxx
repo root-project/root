@@ -1357,6 +1357,38 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 
          return result;
       }
+
+   protected:
+      virtual PyObject* ReportTypeError()
+      {
+         PyErr_SetString( PyExc_TypeError,
+            "TTree::SetBranchAddress must be called with a TTree instance as first argument" );
+         return 0;
+      }
+   };
+
+
+// TChain overrides TTree's SetBranchAddress, so set it again (the python method only forwards
+//   onto a TTree*, so the C++ virtual function call will make sure the right method is used)
+   class TChainSetBranchAddress : public TTreeSetBranchAddress {
+   public:
+      TChainSetBranchAddress( MethodProxy* org ) : TTreeSetBranchAddress( org ) {}
+
+   public:
+      virtual PyObject* GetPrototype()
+      {
+         return PyROOT_PyUnicode_FromString( "TBranch* TChain::SetBranchAddress( ... )" );
+      }
+
+      virtual PyCallable* Clone() { return new TChainSetBranchAddress( *this ); }
+
+   protected:
+      virtual PyObject* ReportTypeError()
+      {
+         PyErr_SetString( PyExc_TypeError,
+            "TChain::SetBranchAddress must be called with a TChain instance as first argument" );
+         return 0;
+      }
    };
 
 } // namespace PyROOT
@@ -1941,7 +1973,18 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( name == "TChain" ) {
    // pretend a using
-      return Utility::AddUsingToClass( pyclass, "Process" );
+      Utility::AddUsingToClass( pyclass, "Process" );
+
+   // allow SetBranchAddress to take object directly, w/o needing AddressOf()
+      MethodProxy* original = (MethodProxy*)PyObject_GetAttr( pyclass, PyStrings::gSetBranchAddress );
+      MethodProxy* method = MethodProxy_New( "SetBranchAddress", new TChainSetBranchAddress( original ) );
+      Py_DECREF( original ); original = 0;
+
+      PyObject_SetAttrString(
+         pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
+      Py_DECREF( method ); method = 0;
+
+      return kTRUE;
    }
 
    if ( name == "TStyle" ) {
