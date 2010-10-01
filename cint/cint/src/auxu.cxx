@@ -161,7 +161,7 @@ void G__setarray(short array[], int num, short mask, char* mode)
 
    if (strcmp(mode, "rand") == 0) {
       for (i = 0;i < num;i++) {
-         array[i] = rand() & mask;
+         array[i] = rand() & mask; // This is a direct user request, can't be avoided
       }
    }
    if (strcmp(mode, "inc") == 0) {
