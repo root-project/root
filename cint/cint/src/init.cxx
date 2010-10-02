@@ -776,19 +776,7 @@ int G__main(int argc, char** argv)
                G__exit(EXIT_FAILURE);
             }
             else {
-#ifndef G__OLDIMPLEMENATTION1919
                xfileflag = optind - 1;
-#else
-#ifndef G__OLDIMPLEMENATTION1564
-               G__tmpnam(G__xfile); /* not used anymore */
-#else
-               tmpnam(G__xfile);
-#endif
-               G__ifile.fp = fopen(G__xfile, "w");
-               fprintf(G__ifile.fp, "%s\n", optarg);
-               fclose(G__ifile.fp);
-               xfileflag = 1;
-#endif
             }
             break;
          case 'I': /* Include path */
@@ -1214,7 +1202,6 @@ int G__main(int argc, char** argv)
     *************************************************************/
    while ((G__MAINEXIST != G__ismain && (optind < argc)) || xfileflag) {
       if (xfileflag) {
-#ifndef G__OLDIMPLEMENATTION1919
          FILE *tmpf = tmpfile();
          if (tmpf) {
             fprintf(tmpf, "%s\n", argv[xfileflag]);
@@ -1233,10 +1220,6 @@ int G__main(int argc, char** argv)
          else {
             xfileflag = 0;
          }
-#else
-         sourcefile = G__xfile;
-         xfileflag = 0;
-#endif
       }
       else {
          sourcefile = argv[optind];

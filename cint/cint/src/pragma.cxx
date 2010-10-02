@@ -24,7 +24,7 @@ G__AppPragma::G__AppPragma(char *comname, void (*in_p2f)(char*) ) :
    // Normal constructor.
 }
 
-void G__addpragma(char *comname, void (*p2f) G__P((char*)))
+extern "C" void G__addpragma(char *comname, void (*p2f) G__P((char*)))
 {
    struct G__AppPragma *paddpragma;
    
