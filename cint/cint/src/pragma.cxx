@@ -18,13 +18,13 @@
 /**************************************************************************
 * G__addpragma()
 **************************************************************************/
-G__AppPragma::G__AppPragma(char *comname, void (*in_p2f)(char*) ) : 
+G__AppPragma::G__AppPragma(char *comname, G__AppPragma_func_t in_p2f) : 
    name(comname), p2f(in_p2f), next(0)
 {
    // Normal constructor.
 }
 
-extern "C" void G__addpragma(char *comname, void (*p2f) G__P((char*)))
+extern "C" void G__addpragma(char *comname, G__AppPragma_func_t p2f)
 {
    struct G__AppPragma *paddpragma;
    

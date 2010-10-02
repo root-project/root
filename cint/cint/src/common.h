@@ -1433,12 +1433,17 @@ using namespace Cint::Internal;
 /**************************************************************************
  * user specified pragma statement
  **************************************************************************/
+extern "C" {
+   typedef void (*G__AppPragma_func_t)(char*);
+}
+
 struct G__AppPragma {
+
    G__FastAllocString name;
-   void (*p2f) G__P((char*));
+   G__AppPragma_func_t p2f;
    struct G__AppPragma *next;
 
-   G__AppPragma(char *comname, void (*p2f) G__P((char*)) );
+   G__AppPragma(char *comname, G__AppPragma_func_t p2f);
    ~G__AppPragma();
 };
 
