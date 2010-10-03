@@ -2818,17 +2818,6 @@ void G__gen_cpplink()
      else if(algoflag&2) fprintf(hfp,"#include <algorithm.h>\n");
   }
 
-#if !defined(G__ROOT) || defined(G__OLDIMPLEMENTATION1817)
-  if(G__CPPLINK==G__globalcomp&&-1!=G__defined_tagname("G__longlong",2)) {
-#if defined(__hpux) && !defined(G__ROOT)
-    G__getcintsysdir();
-    fprintf(hfp,"\n#include \"%s/%s/lib/longlong/longlong.h\"\n",G__cintsysdir,G__CFG_COREVERSION);
-#else
-    fprintf(hfp,"\n#include \"%s/lib/longlong/longlong.h\"\n",G__CFG_COREVERSION);
-#endif
-  }
-#endif /* G__ROOT */
-
   fprintf(fp,"#include <new>\n");
 
 #ifdef G__BUILTIN

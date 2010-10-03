@@ -2,19 +2,13 @@
 
 WIN32API =  ..\include\win32api.dll
 POSIX    =  ..\include\posix.dll
-LONG     =  ..\include\long.dll
 STDFUNC  =  ..\include\stdfunc.dll
 VECTOR   =  ..\stl\vector.dll
 
 
-done : $(WIN32API) $(POSIX) $(LONG) $(STDFUNC) $(VECTOR)
+done : $(WIN32API) $(POSIX) $(STDFUNC) $(VECTOR)
 	echo > done
 
-
-$(LONG) : longlong\longlong.h longlong\longdbl.h
-	cd longlong
-	setupbc.bat
-	cd ..
 
 $(STDFUNC) : stdstrct\stdfunc.h
 	cd stdstrct

@@ -3,11 +3,6 @@ lib/README.txt
  This directory contains several interesting precompiled library build
 environments. 
 
-lib/longlong
-   lib/longlong directory contains build environment for include/long.dll.
-  include/long.dll contains 'long long' integer support library. Goto 
-  lib/longlong directory and do 'sh setup' or 'setup.bat'.
-
 lib/posix
    lib/posix directory contains build environment for include/posix.dl. 
   include/posix.dl contains subset of POSIX.1 system calls. Goto lib/posix 

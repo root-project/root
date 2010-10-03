@@ -34,10 +34,6 @@ DLL files:
 	script. Those libraries can expand Cint capability beyond ANSI/ISO
 	C/C++.
 
-  include/long.dll     (created under lib/longlong)
-	This provides 64bit integer 'long long'. Created under lib/longlong
-	directory. This file is needed by both pure Cint and ROOT/CINT.
-
   include/stdfunc.dll  (created under lib/stdstrct)
 	This provides C standard library function. Cint mostly works fine
 	without this file. However, when it comes to a complicated function
