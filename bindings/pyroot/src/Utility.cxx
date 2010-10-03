@@ -788,3 +788,22 @@ PyObject* PyROOT::Utility::GetInstalledMethod( int tagnum, Long_t* extra )
       *extra = cinfo.second;
    return cinfo.first;
 }
+
+//____________________________________________________________________________
+PyObject* PyROOT::Utility::PyErr_Occurred_WithGIL()
+{
+// re-acquire the GIL before calling PyErr_Occurred() in case it has been
+// released; note that the p2.2 code assumes that there are no callbacks in
+// C++ to python (or at least none returning errors)
+#if PY_VERSION_HEX >= 0x02030000
+   PyGILState_STATE gstate = PyGILState_Ensure();
+   PyObject* e = PyErr_Occurred();
+   PyGILState_Release( gstate );
+#else
+   if ( PyThreadState_GET() )
+      return PyErr_Occurred();
+   PyObject* e = 0;
+#endif
+
+   return e;
+}

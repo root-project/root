@@ -122,6 +122,9 @@ namespace PyROOT {
 
       PyObject* GetInstalledMethod( int tagnum, Long_t* extra = 0 );
 
+   // for threading: save call to PyErr_Occurred()
+      PyObject* PyErr_Occurred_WithGIL();
+
    } // namespace Utility
 
 } // namespace PyROOT

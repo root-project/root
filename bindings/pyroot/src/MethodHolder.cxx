@@ -621,7 +621,8 @@ PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self )
       result = CallSafe( self );
    }
 
-   if ( result && result != (PyObject*)TPyExceptionMagic && PyErr_Occurred() ) {
+   if ( result && result != (PyObject*)TPyExceptionMagic
+           && Utility::PyErr_Occurred_WithGIL() ) {
    // can happen in the case of a CINT error: trigger exception processing
       Py_DECREF( result );
       result = 0;
