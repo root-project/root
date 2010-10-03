@@ -4288,7 +4288,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    }
 
    Int_t wid = 0;
-   if (!gROOT->IsBatch() && image) {
+   if (!gROOT->IsBatch() && image && fCanvas) {
       if ((gtype == TImage::kGif) && !ContainsTImage(fPrimitives)) {
          wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
          Color_t hc = gPad->GetCanvas()->GetHighLightColor();
