@@ -1,4 +1,3 @@
-cd $CINTSYSDIR/cint/lib/longlong;sh setup
 cd $CINTSYSDIR/cint/lib/posix;sh setup
 cd $CINTSYSDIR/cint/lib/socket;sh setup
 cd $CINTSYSDIR/cint/lib/ipc;sh setup
