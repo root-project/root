@@ -137,6 +137,8 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
 
    MethodBase *method = (dynamic_cast<MethodBase*>(addedMethod));
 
+   if(method==0) return 0;
+   
    method->SetupMethod();
    method->ParseOptions();
    method->ProcessSetup();
@@ -354,6 +356,7 @@ void TMVA::MethodCategory::Train()
    for (itrMethod = fMethods.begin(); itrMethod != fMethods.end(); ++itrMethod ) {
 
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
+      if(!mva) continue;
       if (!mva->HasAnalysisType( analysisType, 
                                  mva->DataInfo().GetNClasses(), 
                                  mva->DataInfo().GetNTargets() ) ) {
@@ -581,7 +584,11 @@ Double_t TMVA::MethodCategory::GetMvaValue( Double_t* err )
 
    // get mva value from the suitable sub-classifier
    ev->SetVariableArrangement(&fVarMaps[methodToUse]);
-   Double_t mvaValue = dynamic_cast<MethodBase*>(fMethods[methodToUse])->GetMvaValue(ev,err);
+   MethodBase* m = dynamic_cast<MethodBase*>(fMethods[methodToUse]);
+   Double_t mvaValue = 0;
+   if(m!=0) {
+      mvaValue = m->GetMvaValue(ev,err);
+   }
    ev->SetVariableArrangement(0);
 
    return mvaValue;

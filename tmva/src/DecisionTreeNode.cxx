@@ -420,7 +420,9 @@ void TMVA::DecisionTreeNode::SetSampleMin(UInt_t ivar, Float_t xmin){
 void TMVA::DecisionTreeNode::SetSampleMax(UInt_t ivar, Float_t xmax){
    // set the maximum of variable ivar from the training sample
    // that pass/end up in this node
-   if ( fTrainInfo && ivar >= fTrainInfo->fSampleMax.size()) fTrainInfo->fSampleMax.resize(ivar+1);
+   if( ! fTrainInfo ) return;
+   if ( ivar >= fTrainInfo->fSampleMax.size() ) 
+      fTrainInfo->fSampleMax.resize(ivar+1);
    fTrainInfo->fSampleMax[ivar]=xmax;
 }
 

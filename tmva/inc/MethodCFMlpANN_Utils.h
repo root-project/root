@@ -148,7 +148,7 @@ namespace TMVA {
             if (0 != fxx && ievt < fNevt && ivar < fNvar) return fxx[ievt][ivar];
             else {
                printf( "*** ERROR in varn3_(): fxx is zero pointer ==> abort ***\n") ;
-               // exit(1);
+               std::exit(1);
                return fxx[0][0];
             }
          }

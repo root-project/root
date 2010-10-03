@@ -940,6 +940,7 @@ void TMVA::Factory::TrainAllMethods()
    for( itrMethod = fMethods.begin(); itrMethod != fMethods.end(); ++itrMethod ) {
 
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
+      if(mva==0) continue;
 
       if (mva->Data()->GetNTrainingEvents() < MinNoTrainingEvents) {
          Log() << kWARNING << "Method " << mva->GetMethodName() 
@@ -988,6 +989,7 @@ void TMVA::Factory::TrainAllMethods()
       for (UInt_t i=0; i<fMethods.size(); i++) {
 
          MethodBase* m = dynamic_cast<MethodBase*>(fMethods[i]);
+         if(m==0) continue;
 
          TMVA::Types::EMVA methodType = m->GetMethodType();
          TString           weightfile = m->GetWeightFileName();
@@ -1066,6 +1068,7 @@ void TMVA::Factory::MakeClass( const TString& methodTitle ) const
       MVector::const_iterator itrMethodEnd = fMethods.end();
       for (; itrMethod != itrMethodEnd; itrMethod++) {
          MethodBase* method = dynamic_cast<MethodBase*>(*itrMethod);
+         if(method==0) continue;
          Log() << kINFO << "Make response class for classifier: " << method->GetMethodName() << Endl;
          method->MakeClass();
       }
@@ -1092,6 +1095,7 @@ void TMVA::Factory::PrintHelpMessage( const TString& methodTitle ) const
       MVector::const_iterator itrMethodEnd = fMethods.end();
       for (; itrMethod != itrMethodEnd; itrMethod++) {
          MethodBase* method = dynamic_cast<MethodBase*>(*itrMethod);
+         if(method==0) continue;
          Log() << kINFO << "Print help message for classifier: " << method->GetMethodName() << Endl;
          method->PrintHelpMessage();
       }
@@ -1171,6 +1175,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
    MVector::iterator itrMethodEnd = fMethods.end();
    for (; itrMethod != itrMethodEnd; itrMethod++) {
       MethodBase* theMethod = dynamic_cast<MethodBase*>(*itrMethod);
+      if(theMethod==0) continue;
       if (theMethod->GetMethodType() != Types::kCuts) methodsNoCuts.push_back( *itrMethod );
 
       if (theMethod->DoRegression()) {
@@ -1355,6 +1360,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
          std::vector<ResultsClassification*> mvaRes;
          for (itrMethod = methodsNoCuts.begin(); itrMethod != methodsNoCuts.end(); itrMethod++, ivar++) {
             MethodBase* m = dynamic_cast<MethodBase*>(*itrMethod);
+            if(m==0) continue;
             theVars->push_back( m->GetTestvarName() );
             rvec.push_back( m->GetSignalReferenceCut() );
             theVars->back().ReplaceAll( "MVA_", "" );

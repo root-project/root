@@ -229,7 +229,9 @@ Double_t TMVA::MethodCommittee::Boost( TMVA::MethodBase* method, UInt_t imember 
 {
    // apply the boosting alogrithim (the algorithm is selecte via the the "option" given
    // in the constructor. The return value is the boosting weight 
-  
+   if(!method)
+      return 0;
+   
    if      (fBoostType=="AdaBoost") return this->AdaBoost( method );
    else if (fBoostType=="Bagging")  return this->Bagging( imember );
    else {
@@ -399,7 +401,9 @@ void  TMVA::MethodCommittee::ReadWeightsFromStream( istream& istr )
       IMethod* method = ClassifierFactory::Instance().Create(std::string(Types::Instance().GetMethodName( fMemberType )), dsi, "" );
 
       // read weight file
-      (dynamic_cast<MethodBase*>(method))->ReadStateFromStream(istr);
+      MethodBase* m = dynamic_cast<MethodBase*>(method);
+      if(m)
+         m->ReadStateFromStream(istr);
       GetCommittee().push_back(method);
       GetBoostWeights().push_back(boostWeight);
    }
@@ -423,7 +427,10 @@ Double_t TMVA::MethodCommittee::GetMvaValue( Double_t* err )
    Double_t norm  = 0;
    for (UInt_t itree=0; itree<GetCommittee().size(); itree++) {
 
-      Double_t tmpMVA = ( fUseMemberDecision ? ( (dynamic_cast<MethodBase*>(GetCommittee()[itree]))->IsSignalLike() ? 1.0 : -1.0 ) 
+      MethodBase* m = dynamic_cast<MethodBase*>(GetCommittee()[itree]);
+      if(m==0) continue;
+
+      Double_t tmpMVA = ( fUseMemberDecision ? ( m->IsSignalLike() ? 1.0 : -1.0 ) 
                           : GetCommittee()[itree]->GetMvaValue() );
 
       if (fUseWeightedMembers){ 

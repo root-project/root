@@ -217,7 +217,8 @@ void  TMVA::MethodCompositeBase::ReadWeightsFromStream( istream& istr )
       fMethods.push_back(ClassifierFactory::Instance().Create( std::string(methodName), jobName, 
                                                                methodTitle,DataInfo(), optionString) );
       fMethodWeight.push_back( methodWeight );
-      dynamic_cast<MethodBase*>(fMethods.back())->ReadWeightsFromStream(istr);
+      if(MethodBase* m = dynamic_cast<MethodBase*>(fMethods.back()) )
+         m->ReadWeightsFromStream(istr);
    }
 }
 

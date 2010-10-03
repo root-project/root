@@ -195,12 +195,13 @@ namespace TMVA {
       // get number of events in cell during foam build-up
       Double_t GetBuildUpCellEvents(PDEFoamCell* cell);
       
+      PDEFoam(const PDEFoam&);    // Copy Constructor  NOT USED
+
       // ---------- Public functions ----------------------------------
    public:
       PDEFoam();                  // Default constructor (used only by ROOT streamer)
       PDEFoam(const TString&);    // Principal user-defined constructor
       virtual ~PDEFoam();         // Default destructor
-      PDEFoam(const PDEFoam&);    // Copy Constructor  NOT USED
 
       // ---------- Foam creation functions
 

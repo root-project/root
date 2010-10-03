@@ -55,10 +55,12 @@ TMVA::RuleFit::RuleFit( const MethodBase *rfbase )
 
 //_______________________________________________________________________
 TMVA::RuleFit::RuleFit()
-   : fMethodRuleFit(0),
-     fMethodBase(0),
-     fVisHistsUseImp( kTRUE ),
-     fLogger( new MsgLogger("RuleFit") )
+   : fNTreeSample(0)
+   , fNEveEffTrain(0)
+   , fMethodRuleFit(0)
+   , fMethodBase(0)
+   , fVisHistsUseImp( kTRUE )
+   , fLogger( new MsgLogger("RuleFit") )
 {
    // default constructor
    std::srand( randSEED ); // initialize random number generator used by std::random_shuffle
@@ -755,7 +757,7 @@ void TMVA::RuleFit::MakeVisHists()
    if (varDir==0) {
       Log() << kWARNING << "No input variable directory found - BUG?" << Endl;
       return;
-   }   
+   }
    corrDir = (TDirectory*)varDir->Get( corrDirName );
    if (corrDir==0) {
       Log() << kWARNING << "No correlation directory found" << Endl;
@@ -772,7 +774,11 @@ void TMVA::RuleFit::MakeVisHists()
    //
    // get correlation plot directory
    corrDir = (TDirectory *)varDir->Get(corrDirName);
-   if (corrDir==0) Log() << kWARNING << "No correlation directory found : " << corrDirName << Endl;
+   if (corrDir==0) {
+      Log() << kWARNING << "No correlation directory found : " << corrDirName << Endl;
+      return;
+   }
+
    // how many plots are in the var directory?
    Int_t noPlots = ((varDir->GetListOfKeys())->GetEntries()) / 2;
    Log() << kDEBUG << "Got number of plots = " << noPlots << Endl;
