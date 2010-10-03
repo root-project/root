@@ -33,10 +33,10 @@ protected:
    Float_t     fBottomMargin;    //BottomMargin
    Float_t     fTopMargin;       //TopMargin
    Float_t     fXfile;           //X position where to draw the file name
-   Float_t     fYfile;           //X position where to draw the file name
+   Float_t     fYfile;           //Y position where to draw the file name
    Float_t     fAfile;           //Alignment for the file name
    Float_t     fXstat;           //X position where to draw the statistics
-   Float_t     fYstat;           //X position where to draw the statistics
+   Float_t     fYstat;           //Y position where to draw the statistics
    Float_t     fAstat;           //Alignment for the statistics
    Color_t     fFrameFillColor;  //pad frame fill color
    Color_t     fFrameLineColor;  //pad frame line color
