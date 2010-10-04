@@ -91,7 +91,7 @@ TLinearMinimizer::TLinearMinimizer ( const char * type ) :
    std::string algoname(type);
    std::transform(algoname.begin(), algoname.end(), algoname.begin(), (int(*)(int)) tolower ); 
 
-   if (algoname == "robust") fRobust = true;
+   if (algoname.find("robust") != std::string::npos) fRobust = true;
 
 }
 
@@ -201,7 +201,8 @@ bool TLinearMinimizer::Minimize() {
    else { 
       // robust fitting - get h parameter using tolerance (t.b. improved)
       double h = Tolerance(); 
-      std::cout << "do robust fitting with h = " << h << std::endl; 
+      if (PrintLevel() >  0)
+         std::cout << "TLinearMinimizer: Robust fitting with h = " << h << std::endl; 
       iret = fFitter->EvalRobust(h); 
    }
    fStatus = iret; 

@@ -529,10 +529,14 @@ void TLinearFitter::AddPoint(Double_t *x, Double_t y, Double_t e)
          fX(j,i)=x[i];
    }
    //add the point to the design matrix, if the formula has been set
-   if (!fFunctions.IsEmpty() || fInputFunction || fSpecial>200 || !fRobust)
-      AddToDesign(x, y, e);
-   else if (!fStoreData)
-      Error("AddPoint", "Point can't be added, because the formula hasn't been set and data is not stored");
+   // (LM: why condition !fRobust ?? - remove it to fix Coverity 11602)
+   // when 100< fSpecial < 200 (Polynomial) fFunctions is not empty
+   // (see implementation of SetFormula method)
+   if (fFunctions.IsEmpty()&&(!fInputFunction)&&(fSpecial<=200)){
+      Error("AddPoint", "Point can't be added, because the formula hasn't been set");
+      return; 
+   }
+   if (!fRobust) AddToDesign(x, y, e);
 }
 
 //______________________________________________________________________________
@@ -567,7 +571,7 @@ void TLinearFitter::AssignData(Int_t npoints, Int_t xncols, Double_t *x, Double_
       fE=1;
    }
    Int_t xfirst;
-   if (!fFunctions.IsEmpty() || fInputFunction || fSpecial>200) {
+   if (!fFunctions.IsEmpty() || fInputFunction ||  fSpecial>200) {
       if (same)
          xfirst=fNpoints;
 
@@ -584,6 +588,8 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
 {
    //Add a point to the AtA matrix and to the Atb vector.
 
+
+
    Int_t i, j, ii;
    y/=e;
 
@@ -597,23 +603,21 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
          fVal[i]=fVal[i-1]*x[0];
       for (i=0; i<npar; i++)
          fVal[i]/=e;
+   } else if (fSpecial>200){
+      //Hyperplane fitting. Constant term is added
+      Int_t npar=fSpecial-201;
+      fVal[0]=1./e;
+      for (i=0; i<npar; i++)
+         fVal[i+1]=x[i]/e;
    } else {
-      if (fSpecial>200){
-         //Hyperplane fitting. Constant term is added
-         Int_t npar=fSpecial-201;
-         fVal[0]=1./e;
-         for (i=0; i<npar; i++)
-            fVal[i+1]=x[i]/e;
-      } else {
-         //general case
-         for (ii=0; ii<fNfunctions; ii++){
-            if (!fFunctions.IsEmpty()){
-               TFormula *f1 = (TFormula*)(fFunctions.UncheckedAt(ii));
-               fVal[ii]=f1->EvalPar(x)/e;
-            } else {
-               TFormula *f=(TFormula*)fInputFunction->GetLinearPart(ii);
-               fVal[ii]=f->EvalPar(x)/e;
-            }
+      //general case
+      for (ii=0; ii<fNfunctions; ii++){
+         if (!fFunctions.IsEmpty()){
+            TFormula *f1 = (TFormula*)(fFunctions.UncheckedAt(ii));
+            fVal[ii]=f1->EvalPar(x)/e;
+         } else {
+            TFormula *f=(TFormula*)fInputFunction->GetLinearPart(ii);
+            fVal[ii]=f->EvalPar(x)/e;
          }
       }
    }
@@ -2278,6 +2282,8 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
 {
    //The CStep procedure, as described in the article
 
+   R__ASSERT( !fFunctions.IsEmpty() || fInputFunction ||  fSpecial>200);
+
    Int_t i, j, itemp, n;
    Double_t func;
    Double_t val[100];
@@ -2299,19 +2305,18 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
                      val[j] = val[j-1]*fX(itemp, 0);
                   for (j=0; j<npar; j++)
                      func += fParams(j)*val[j];
+            } else if (fSpecial>200) {
+               //hyperplane case
+               npar = fSpecial-201;
+               func+=fParams(0);
+               for (j=0; j<npar; j++)
+                  func += fParams(j+1)*fX(itemp, j);
             } else {
-               if (fSpecial>200) {
-                  //hyperplane case
-                  npar = fSpecial-201;
-                  func+=fParams(0);
-                  for (j=0; j<npar; j++)
-                     func += fParams(j+1)*fX(itemp, j);
-               } else {
-                  for (j=0; j<fNfunctions; j++) {
-                     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
-                     val[j] = f1->EvalPar(TMatrixDRow(fX, itemp).GetPtr());
-                     func += fParams(j)*val[j];
-                  }
+               // general case
+               for (j=0; j<fNfunctions; j++) {
+                  TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
+                  val[j] = f1->EvalPar(TMatrixDRow(fX, itemp).GetPtr());
+                  func += fParams(j)*val[j];
                }
             }
          }
@@ -2333,19 +2338,17 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
                   val[j] = val[j-1]*fX(i, 0);
                for (j=0; j<npar; j++)
                   func += fParams(j)*val[j];
+            } else if (fSpecial>200) {
+               //hyperplane case
+               npar = fSpecial-201;
+               func+=fParams(0);
+               for (j=0; j<npar; j++)
+                  func += fParams(j+1)*fX(i, j);
             } else {
-               if (fSpecial>200) {
-                  //hyperplane case
-                  npar = fSpecial-201;
-                  func+=fParams(0);
-                  for (j=0; j<npar; j++)
-                     func += fParams(j+1)*fX(i, j);
-               } else {
-                  for (j=0; j<fNfunctions; j++) {
-                     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
-                     val[j] = f1->EvalPar(TMatrixDRow(fX, i).GetPtr());
-                     func += fParams(j)*val[j];
-                  }
+               for (j=0; j<fNfunctions; j++) {
+                  TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
+                  val[j] = f1->EvalPar(TMatrixDRow(fX, i).GetPtr());
+                  func += fParams(j)*val[j];
                }
             }
          }
@@ -2382,19 +2385,17 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
                      val[j] = val[j-1]*fX(itemp, 0);
                   for (j=0; j<npar; j++)
                      func += fParams(j)*val[j];
+            } else if (fSpecial>200) {
+               //hyperplane case
+               npar = fSpecial-201;
+               func+=fParams(0);
+               for (j=0; j<npar; j++)
+                  func += fParams(j+1)*fX(itemp, j);
             } else {
-               if (fSpecial>200) {
-                  //hyperplane case
-                  npar = fSpecial-201;
-                  func+=fParams(0);
-                  for (j=0; j<npar; j++)
-                     func += fParams(j+1)*fX(itemp, j);
-               } else {
-                  for (j=0; j<fNfunctions; j++) {
-                     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
-                     val[j] = f1->EvalPar(TMatrixDRow(fX, itemp).GetPtr());
-                     func += fParams(j)*val[j];
-                  }
+               for (j=0; j<fNfunctions; j++) {
+                  TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
+                  val[j] = f1->EvalPar(TMatrixDRow(fX, itemp).GetPtr());
+                  func += fParams(j)*val[j];
                }
             }
          }
