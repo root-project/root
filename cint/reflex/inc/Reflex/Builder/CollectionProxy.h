@@ -283,8 +283,8 @@ template <class T> struct Insert: public CollType<T> {
    }
 
 
-   static void resize(void* /* obj */, size_t) {
-      return 0;
+   static void resize(void* /* obj */, size_t) 
+   {
    }
 
 
@@ -327,7 +327,6 @@ template <class T> struct MapInsert: public CollType<T> {
 
 
    static void resize(void* /* obj */, size_t) {
-      return 0;
    }
 
 
