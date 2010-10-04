@@ -42,7 +42,7 @@ private:
    float fF;
    int
    foo(bool b,
-       char c) { if (b) { return c; } }
+       char c) { if (b) { return c; } else return 0; }
 
    std::vector<std::pair<int, float> > fV;
 };
