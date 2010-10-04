@@ -360,9 +360,16 @@ Int_t TXNetSystem::GetPathInfo(const char* path, FileStat_t &buf)
          Long_t flags;
          Long_t modtime;
 
-         // Extract the directory name
-         TString edir = TUrl(path).GetFile();
-         Bool_t ok = cg.ClientAdmin()->Stat(edir.Data(),id,size,flags,modtime);
+         // Issue the request
+         TUrl urlpath(path);
+         Bool_t ok = cg.ClientAdmin()->Stat(urlpath.GetFile(),id,size,flags,modtime);
+         if (ok) {
+            // Save the endpoint path
+            urlpath.SetProtocol(cg.ClientAdmin()->GetCurrentUrl().Proto.c_str());
+            urlpath.SetHost(cg.ClientAdmin()->GetCurrentUrl().Host.c_str());
+            urlpath.SetPort(cg.ClientAdmin()->GetCurrentUrl().Port);
+            buf.fUrl = urlpath.GetUrl();
+         }
          cg.ClientAdmin()->GoBackToRedirector();
 
          // Flag offline files
