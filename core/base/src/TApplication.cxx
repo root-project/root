@@ -342,10 +342,10 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    // Get and handle command line options. Arguments handled are removed
    // from the argument array. The following arguments are handled:
    //    -b : run in batch mode without graphics
+   //    -x : exit on exception
    //    -n : do not execute logon and logoff macros as specified in .rootrc
    //    -q : exit after processing command line macro files
    //    -l : do not show splash screen
-   //    -x : exit on exception
    // The last three options are only relevant in conjunction with TRint.
    // The following help and info arguments are supported:
    //    -?       : print usage
@@ -356,11 +356,13 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    // In addition to the above options the arguments that are not options,
    // i.e. they don't start with - or + are treated as follows (and also removed
    // from the argument array):
-   //   <file>.root are considered ROOT files and added to the InputFiles() list
-   //   <macro>.C   are considered ROOT macros and also added to the InputFiles() list
    //   <dir>       is considered the desired working directory and available
    //               via WorkingDirectory(), if more than one dir is specified the
-   //               last one will prevail
+   //               first one will prevail
+   //   <file>      if the file exists its added to the InputFiles() list
+   //   <file>.root are considered ROOT files and added to the InputFiles() list,
+   //               the file may be a remote file url
+   //   <macro>.C   are considered ROOT macros and also added to the InputFiles() list
    // In TRint we set the working directory to the <dir>, the ROOT files are
    // connected, and the macros are executed. If your main TApplication is not
    // TRint you have to decide yourself what to do whith these options.
@@ -385,10 +387,10 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          fprintf(stderr, "Usage: %s [-l] [-b] [-n] [-q] [dir] [[file:]data.root] [file1.C ... fileN.C]\n", argv[0]);
          fprintf(stderr, "Options:\n");
          fprintf(stderr, "  -b : run in batch mode without graphics\n");
+         fprintf(stderr, "  -x : exit on exception\n");
          fprintf(stderr, "  -n : do not execute logon and logoff macros as specified in .rootrc\n");
          fprintf(stderr, "  -q : exit after processing command line macro files\n");
          fprintf(stderr, "  -l : do not show splash screen\n");
-         fprintf(stderr, "  -x : exit on exception\n");
          fprintf(stderr, " dir : if dir is a valid directory cd to it before executing\n");
          fprintf(stderr, "\n");
          fprintf(stderr, "  -?      : print usage\n");
@@ -452,11 +454,13 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                Warning("GetOptions", "file %s has size 0, skipping", dir);
             }
          } else {
-            if (TString(udir.GetFile()).EndsWith(".root") && !strcmp(gROOT->GetName(), "Rint")) {
-               // file ending on .root but does not exist, likely a typo, warn user...
-               if (!strcmp(udir.GetProtocol(), "file"))
-                  Warning("GetOptions", "file %s not found", dir);
-               else {
+            if (TString(udir.GetFile()).EndsWith(".root")) {
+               if (!strcmp(udir.GetProtocol(), "file")) {
+                  // file ending on .root but does not exist, likely a typo
+                  // warn user if plain root...
+                  if (!strcmp(gROOT->GetName(), "Rint"))
+                     Warning("GetOptions", "file %s not found", dir);
+               } else {
                   // remote file, give it the benefit of the doubt and add it to list of files
                   if (!fFiles) fFiles = new TObjArray;
                   fFiles->Add(new TObjString(argv[i]));
