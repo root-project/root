@@ -831,7 +831,8 @@ namespace TStreamerInfoActions
    {
       const Int_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
       for(void *iter = start; iter != end; iter = (char*)iter + incr ) {
-         ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, (char**)&iter, config->fElemId, 1, config->fOffset, 1|2 );
+         void **iter_ptr = &iter;
+         ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, (char**)iter_ptr, config->fElemId, 1, config->fOffset, 1|2 );
       }
       return 0;
    }
