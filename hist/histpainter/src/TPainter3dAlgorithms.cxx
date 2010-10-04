@@ -106,8 +106,43 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(): TObject(), TAttLine(1,1,1), TAttFi
    }
 
    for (i=0;i<fNStack;i++) { fColorMain[i] = 1; fColorDark[i] = 1; }
-   for (i=0;i<3;i++)  { fRmin[i] = 0, fRmax[i] = 1; }
-   for (i=0;i<4;i++)  { fYls[i] = 0; }
+   for (i=0;i<3;i++)       { fRmin[i] = 0, fRmax[i] = 1; }
+   for (i=0;i<4;i++)       { fYls[i] = 0; }
+
+   for (i=0;i<30;i++)      { fJmask[i] = 0; }
+   for (i=0;i<200;i++)     { fLevelLine[i] = 0; }
+   for (i=0;i<465;i++)     { fMask[i] = 0; }
+   for (i=0;i<258;i++)     { fColorLevel[i] = 0; }
+   for (i=0;i<1200;i++)    { fPlines[i] = 0.; }
+   for (i=0;i<200;i++)     { fT[i] = 0.; }
+   for (i=0;i<2000;i++)    { fU[i] = 0.; fD[i] = 0.; }
+   for (i=0;i<12;i++)      { fVls[i] = 0.; }
+   for (i=0;i<257;i++)     { fFunLevel[i] = 0.; }
+   for (i=0;i<183;i++)     { fAphi[i] = 0.; }
+   for (i=0;i<8;i++)       { fF8[i] = 0.; }
+
+   fLoff   = 0;
+   fNT     = 0;
+   fNcolor = 0;
+   fNlines = 0;
+   fNqs    = 0;
+   fNxrast = 0;
+   fNyrast = 0;
+   fIc1    = 0;
+   fIc2    = 0;
+   fIc3    = 0;
+   fQA     = 0.;
+   fQD     = 0.;
+   fQS     = 0.;
+   fX0     = 0.;
+   fYdl    = 0.;
+   fXrast  = 0.;
+   fYrast  = 0.;
+   fFmin   = 0.;
+   fFmax   = 0.;
+   fDXrast = 0.;
+   fDYrast = 0.;
+   fDX     = 0.;
 }
 
 
@@ -148,8 +183,43 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    }
 
    for (i=0;i<fNStack;i++) { fColorMain[i] = 1; fColorDark[i] = 1; }
-   for (i=0;i<3;i++)  { fRmin[i] = rmin[i], fRmax[i] = rmax[i]; }
-   for (i=0;i<4;i++)  { fYls[i] = 0; }
+   for (i=0;i<3;i++)       { fRmin[i] = rmin[i], fRmax[i] = rmax[i]; }
+   for (i=0;i<4;i++)       { fYls[i] = 0; }
+
+   for (i=0;i<30;i++)      { fJmask[i] = 0; }
+   for (i=0;i<200;i++)     { fLevelLine[i] = 0; }
+   for (i=0;i<465;i++)     { fMask[i] = 0; }
+   for (i=0;i<258;i++)     { fColorLevel[i] = 0; }
+   for (i=0;i<1200;i++)    { fPlines[i] = 0.; }
+   for (i=0;i<200;i++)     { fT[i] = 0.; }
+   for (i=0;i<2000;i++)    { fU[i] = 0.; fD[i] = 0.; }
+   for (i=0;i<12;i++)      { fVls[i] = 0.; }
+   for (i=0;i<257;i++)     { fFunLevel[i] = 0.; }
+   for (i=0;i<183;i++)     { fAphi[i] = 0.; }
+   for (i=0;i<8;i++)       { fF8[i] = 0.; }
+
+   fLoff   = 0;
+   fNT     = 0;
+   fNcolor = 0;
+   fNlines = 0;
+   fNqs    = 0;
+   fNxrast = 0;
+   fNyrast = 0;
+   fIc1    = 0;
+   fIc2    = 0;
+   fIc3    = 0;
+   fQA     = 0.;
+   fQD     = 0.;
+   fQS     = 0.;
+   fX0     = 0.;
+   fYdl    = 0.;
+   fXrast  = 0.;
+   fYrast  = 0.;
+   fFmin   = 0.;
+   fFmax   = 0.;
+   fDXrast = 0.;
+   fDYrast = 0.;
+   fDX     = 0.;
 
    TView *view = 0;
    if (gPad) view = gPad->GetView();
