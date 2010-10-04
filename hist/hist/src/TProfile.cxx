@@ -1217,11 +1217,10 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
    Int_t nx = fXaxis.GetNbins();
 
 // Create the projection histogram
-   char *pname = (char*)name;
-   if (strcmp(name,"_px") == 0) {
-      Int_t nch = strlen(GetName()) + 4;
-      pname = new char[nch];
-      sprintf(pname,"%s%s",GetName(),name);
+   TString pname = name; 
+   if (pname == "_px") { 
+      pname = GetName(); 
+      pname.Append("_px");
    }
    TH1D *h1;
    const TArrayD *bins = fXaxis.GetXbins();
@@ -1239,7 +1238,6 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
    if (opt.Contains("w")) binWeight = kTRUE;
    if (opt.Contains("c=e")) {cequalErrors = kTRUE; computeErrors=kFALSE;}
    if (computeErrors || binWeight ) h1->Sumw2();
-   if (pname != name)  delete [] pname;
 
    // Fill the projected histogram
    Double_t cont;

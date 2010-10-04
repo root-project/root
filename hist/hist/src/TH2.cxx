@@ -2010,17 +2010,13 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
       TVirtualPad *padsav = gPad;
       TVirtualPad *pad = gROOT->GetSelectedPad();
       if (pad) pad->cd();
-      char *optin = new char[opt.Length()+2];
-      strcpy(optin,opt.Data());
-      char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
-      char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
+      opt.Remove(opt.First("d"),1);
       if (!gPad->FindObject(h1)) {
-         h1->Draw(optin);
+         h1->Draw(opt);
       } else {
-         h1->Paint(optin);
+         h1->Paint(opt);
       }
       if (padsav) padsav->cd();
-      delete [] optin;
    }
    return h1;
 }
@@ -2336,16 +2332,14 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
       TVirtualPad *padsav = gPad;
       TVirtualPad *pad = gROOT->GetSelectedPad();
       if (pad) pad->cd();
-      char *optin = new char[opt.Length()+1];
-      strcpy(optin,opt.Data());
-      char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
-      char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
+      opt.Remove(opt.First("d"),1);
+      // remove also other options
+      if (opt.Contains("e")) opt.Remove(opt.First("e"),1);
       if (!gPad || !gPad->FindObject(h1)) {
-         h1->Draw(optin);
+         h1->Draw(opt);
       } else {
-         h1->Paint(optin);
+         h1->Paint(opt);
       }
-      delete [] optin;
       if (padsav) padsav->cd();
    }
 
