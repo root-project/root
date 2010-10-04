@@ -32,7 +32,6 @@
 
 ClassImp(TH3GL);
 
-
 //______________________________________________________________________________
 TH3GL::TH3GL() :
    TGLPlot3D(), fM(0)
@@ -40,13 +39,13 @@ TH3GL::TH3GL() :
    // Constructor.
 }
 
-
 //______________________________________________________________________________
 TH3GL::~TH3GL()
 {
    // Destructor.
 }
 
+/******************************************************************************/
 
 //______________________________________________________________________________
 Bool_t TH3GL::SetModel(TObject* obj, const Option_t* opt)
@@ -59,7 +58,6 @@ Bool_t TH3GL::SetModel(TObject* obj, const Option_t* opt)
    if (SetModelCheckClass(obj, TH3::Class()))
    {
       fM = dynamic_cast<TH3*>(obj);
-      if (!fM) return kFALSE;
       if (option.Index("iso") != kNPOS)
          SetPainter( new TGLIsoPainter(fM, 0, &fCoord) );
       else if (option.Index("box") != kNPOS)
@@ -76,7 +74,6 @@ Bool_t TH3GL::SetModel(TObject* obj, const Option_t* opt)
    return kFALSE;
 }
 
-
 //______________________________________________________________________________
 void TH3GL::SetBBox()
 {
@@ -85,6 +82,7 @@ void TH3GL::SetBBox()
    fBoundingBox.Set(fPlotPainter->RefBackBox().Get3DBox());
 }
 
+/******************************************************************************/
 
 //______________________________________________________________________________
 void TH3GL::DirectDraw(TGLRnrCtx & rnrCtx) const
