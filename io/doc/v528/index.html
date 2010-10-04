@@ -79,6 +79,77 @@ has a custom streamer nor of any data members marked with //||
 </li>
 </ul>
 
+<h4>Run time performance</h4>
+
+We introduced an optimized infrastructure for reading objects using a StreamerInfo.  Rather than driving the streaming using a switch statement inside TStreamerInfo::ReadBuffer,
+the streaming is now driven using a simple loop over a sequence of configured StreamerInfo actions.  This improves run-time performance by allowing a dramatic reduction in function calls and code
+branches at the expense of some code duplication.  There are 3 versions of this loop implemented in TBufferFile and overloaded in TBufferXML and TBufferSQL:
+<ol>
+<li>virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &amp;sequence, void *object);</li>
+<li>virtual Int_t ReadSequenceVecPtr(const TStreamerInfoActions::TActionSequence &amp;sequence, void *start_collection, void *end_collection);</li>
+<li>virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &amp;sequence, void *start_collection, void *end_collection);</li>
+</ol>
+The 1st version is optimized to read a single object.  The 2nd version is optimized to read the content of TClonesArrays and vectors of pointers to objects.  The 3rd version is used to streamed any collections.
+<br/><br/>
+TBufferXML and TBufferSQL overload the loops to introduce extra code to help the buffer keep track of which streamer element is being streamed (this functionality is not used by TBufferFile.)
+<br/><br/>
+A TStreamerInfoActions::TActionSequence is an ordered sequence of configured actions.   
+<br/><br/>
+A configured action has both an action which is a free standing function and a configuration object deriving 
+from TStreamerInfoActions::TConfiguration. The configuration contains information that is specific to the action
+but varies from use to use, including the offset from the beginning of the object that needs to be updated.   
+Other examples of configuration include the number of bits requested for storing a Double32_t or its factor and minimum.   
+<br/><br/>
+When the sequence is intended for a collection, the sequence has a configuration object deriving
+from TStreamerInfoActions::TLoopConfiguration which contains for example the size of the element of
+a vector or the pointers to the iterators functions (see below).
+<br/><br/>
+Each TStreamerInfo has 2 reading sequences, one for object-wise reading (GetReadObjectWiseActions)
+and one for member-wise reading (GetReadMemberWiseActions) which is used when streaming a TClonesArray
+of a vector of pointer to the type of objects described by the TClass.
+<br/><br/>
+Each collection proxy has at least one reading sequences, one for the reading each version of the
+contained class layout.
+<br/><br/>
+Each case of the TStreamerInfo::ReadBuffer switch statement is replaced by 4 new action functions,
+one for the object wise reading, one for the member wise reading for TClonesArray and vector of pointers,
+one for the member wise reading for a vector of object and one for all other collections.
+<br/><br/>
+Each collection (proxy) needs to provide 5 new free standing functions:
+<br/>
+<pre style="border:gray 1px solid;padding:0.5em 2em;">
+   // Set of functions to iterate easily throught the collection
+   static const Int_t fgIteratorArenaSize = 16; // greater than sizeof(void*) + sizeof(UInt_t)
+
+   typedef void (*CreateIterators_t)(void *collection, void **begin_arena, void **end_arena);
+   virtual CreateIterators_t GetFunctionCreateIterators(Bool_t read = kTRUE) = 0; 
+   // begin_arena and end_arena should contain the location of a memory arena of size fgIteratorSize. 
+   // If the collection iterator are of that size or less, the iterators will be constructed in place in those location (new with placement)
+   // Otherwise the iterators will be allocated via a regular new and their address returned by modifying the value of begin_arena and end_arena.
+   
+   typedef void* (*CopyIterator_t)(void *dest, const void *source);
+   virtual CopyIterator_t GetFunctionCopyIterator(Bool_t read = kTRUE) = 0;
+   // Copy the iterator source, into dest.   dest should contain the location of a memory arena of size fgIteratorSize.
+   // If the collection iterator is of that size or less, the iterator will be constructed in place in this location (new with placement)
+   // Otherwise the iterator will be allocated via a regular new and its address returned by modifying the value of dest.
+   
+   typedef void* (*Next_t)(void *iter, const void *end);
+   virtual Next_t GetFunctionNext(Bool_t read = kTRUE) = 0;
+   // iter and end should be pointers to respectively an iterator to be incremented and the result of collection.end()
+   // If the iterator has not reached the end of the collection, 'Next' increment the iterator 'iter' and return 0 if 
+   // the iterator reached the end.
+   // If the end was not reached, 'Next' returns the address of the content pointed to by the iterator before the 
+   // incrementation ; if the collection contains pointers, 'Next' will return the value of the pointer.
+   
+   typedef void (*DeleteIterator_t)(void *iter);
+   typedef void (*DeleteTwoIterators_t)(void *begin, void *end);
+
+   virtual DeleteIterator_t GetFunctionDeleteIterator(Bool_t read = kTRUE) = 0;
+   virtual DeleteTwoIterators_t GetFunctionDeleteTwoIterators(Bool_t read = kTRUE) = 0;
+   // If the size of the iterator is greater than fgIteratorArenaSize, call delete on the addresses,
+   // Otherwise just call the iterator's destructor.
+</pre>
+
 <h4>TFile::MakeProject</h4>
 Extend TFile::MakeProject to support genreflex, cases of user's data model where
 the 2 distincts pointers point to a single object and more cases where we are 
