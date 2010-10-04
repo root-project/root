@@ -1174,19 +1174,17 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
       }
 
       // Remove aborted queries from the list
-      if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
-         if (fPlayer && fPlayer->GetListOfResults())
-            fPlayer->GetListOfResults()->Remove(pq);
+      if (fPlayer && fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
+         if (fPlayer->GetListOfResults()) fPlayer->GetListOfResults()->Remove(pq);
          if (fQMgr) fQMgr->RemoveQuery(pq);
       } else {
          // If the last object, notify the GUI that the result arrived
          QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
          // Keep in memory only light info about a query
          if (!(pq->IsDraw())) {
-            if (fQMgr->Queries()) {
+            if (fQMgr && fQMgr->Queries())
                // Remove from the fQueries list
                fQMgr->Queries()->Remove(pq);
-            }
          }
          // To get the prompt back
          TString msg;

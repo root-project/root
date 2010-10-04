@@ -612,10 +612,12 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       Int_t rsaKey = 0;
       if (reuse == 1) {
 
-         if (type != kROOTD_RSAKEY  || retval < 1 || retval > 2 )
-            Warning("Krb5Auth",
-                    "problems recvn RSA key flag: got message %d, flag: %d",
-                     type, rsaKey);
+         if (type != kROOTD_RSAKEY  || retval < 1 || retval > 2 ) {
+            Error("Krb5Auth",
+                  "problems recvn RSA key flag: got message %d, flag: %d",
+                  type, rsaKey);
+            return 0;
+         }
          rsaKey = retval - 1;
 
          // Send the key securely

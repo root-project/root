@@ -145,9 +145,12 @@ tryagain:
       }
    }
    // The path ...
-   stat(fsun, &sst);
+   if (stat(fsun, &sst) != 0) {
+      ErrorInfo("SshToolAllocateSocket: can't stat '%s' (errno: %d)", fsun, errno);
+      return -1;
+   }
    if ((unsigned int)sst.st_uid != Uid || (unsigned int)sst.st_gid != Gid) {
-      if (chown(fsun, Uid, Gid)) {
+      if (chown(fsun, Uid, Gid) != 0) {
          if (gDebug > 0) {
             ErrorInfo("SshToolAllocateSocket: chown: could not change path"
                       " '%s' ownership (errno= %d)",fsun, errno);
@@ -155,6 +158,7 @@ tryagain:
                       sst.st_uid, sst.st_gid);
             ErrorInfo("SshToolAllocateSocket: may follow authentication problems");
          }
+         return -1;
       }
    }
 

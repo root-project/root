@@ -378,9 +378,10 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    // Setup file & filenode structure
    Reset();
    // Optimize the number of files to be open when running on subsample
+   Bool_t byfile = kFALSE;
    Int_t validateMode = 0;
-   TProof::GetParameter(input, "PROOF_ValidateByFile", validateMode);
-   Bool_t byfile = (validateMode > 0 && num > -1) ? kTRUE : kFALSE;
+   if (TProof::GetParameter(input, "PROOF_ValidateByFile", validateMode) == 0)
+      byfile = (validateMode > 0 && num > -1) ? kTRUE : kFALSE;
    ValidateFiles(dset, slaves, num, byfile);
 
    if (!fValid) return;

@@ -574,7 +574,8 @@ void ProofdExec()
       for (fd = 3; fd < NOFILE; fd++) {
          ResetErrno();
          if (fstat(fd, &stbuf) == -1 && GetErrno() == EBADF) {
-            dup2(sockFd, fd);
+            if (dup2(sockFd, fd) < 0)
+               ErrorInfo("ProofdExec: problems executing 'dup2' (errno: %d)", errno);
             close(sockFd);
             sockFd = fd;
             close(2);

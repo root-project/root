@@ -1109,8 +1109,7 @@ Int_t TProof::AddWorkers(TList *workerList)
    }
 
    if (!workerList || !(workerList->GetSize())) {
-      Error("AddWorkers", "The list of workers should not be empty; NULL: %d",
-            workerList == 0);
+      Error("AddWorkers", "empty list of workers!");
       return -2;
    }
 
@@ -1118,8 +1117,7 @@ Int_t TProof::AddWorkers(TList *workerList)
 
    fImage = gProofServ->GetImage();
    if (fImage.IsNull())
-      fImage = Form("%s:%s", TUrl(gSystem->HostName()).GetHostFQDN(),
-                    gProofServ->GetWorkDir());
+      fImage.Form("%s:%s", TUrl(gSystem->HostName()).GetHostFQDN(), gProofServ->GetWorkDir());
 
    // Get all workers
    UInt_t nSlaves = workerList->GetSize();
@@ -1130,6 +1128,11 @@ Int_t TProof::AddWorkers(TList *workerList)
 
    // a list of TSlave objects for workers that are being added
    TList *addedWorkers = new TList();
+   if (!addedWorkers) {
+      // This is needed to silence Coverity ...
+      Error("AddWorkers", "cannot create new list for the workers to be added");
+      return -2;
+   }
    addedWorkers->SetOwner(kFALSE);
    TListIter next(workerList);
    TObject *to;
@@ -1256,11 +1259,11 @@ Int_t TProof::AddWorkers(TList *workerList)
    TString dyn = gSystem->GetDynamicPath();
    dyn.ReplaceAll(":", " ");
    dyn.ReplaceAll("\"", " ");
-   AddDynamicPath(dyn, addedWorkers);
+   AddDynamicPath(dyn, kFALSE, addedWorkers);
    TString inc = gSystem->GetIncludePath();
    inc.ReplaceAll("-I", " ");
    inc.ReplaceAll("\"", " ");
-   AddIncludePath(inc, addedWorkers);
+   AddIncludePath(inc, kFALSE, addedWorkers);
 
    // Cleanup
    delete addedWorkers;
@@ -5904,7 +5907,8 @@ void TProof::ClearData(UInt_t what, const char *dsname)
    if ((what & TProof::kPurge)) {
       // Prompt, if requested
       if (doask && !Prompt("Do you really want to remove all data files")) return;
-      fManager->Rm("~/data/*", "-rf", "all");
+      if (fManager->Rm("~/data/*", "-rf", "all") < 0)
+         Warning("ClearData", "problems purging data directory");
       return;
    } else if ((what & TProof::kDataset)) {
       // We must have got a name
@@ -9412,6 +9416,11 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
    // (*)|-------> call RegisterDataSet ------->|
    // (*) - optional
 
+   if (!IsValid()) {
+      Error("UploadDataSet", "not connected");
+      return -1;
+   }
+
    if (fProtocol < 15) {
       Info("UploadDataSet", "functionality not available: the server has an"
                             " incompatible version of TFileInfo");
@@ -9434,9 +9443,7 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
    if ((opt & kOverwriteAllFiles && opt & kOverwriteNoFiles) ||
        (opt & kNoOverwriteDataSet && opt & kAppend) ||
        (opt & kOverwriteDataSet && opt & kAppend) ||
-       (opt & kNoOverwriteDataSet && opt & kOverwriteDataSet) ||
-       (opt & kAskUser && opt & (kOverwriteDataSet | kNoOverwriteDataSet | kAppend |
-                                 kOverwriteAllFiles | kOverwriteNoFiles))) {
+       (opt & kNoOverwriteDataSet && opt & kOverwriteDataSet)) {
       Error("UploadDataSet", "you specified contradicting options.");
       return kError;
    }
@@ -9462,13 +9469,6 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
                "Provided skippedFiles argument does not point to a TList object.");
          return kError;
       }
-   }
-   TSocket *master;
-   if (fActiveSlaves->GetSize())
-      master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
-   else {
-      Error("UploadDataSet", "No connection to the master!");
-      return kError;
    }
 
    Int_t fileCount = 0; // return value

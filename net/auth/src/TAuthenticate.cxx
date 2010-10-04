@@ -1887,7 +1887,8 @@ Int_t TAuthenticate::SshAuth(TString &user)
       if (floc == 0) {
          // Try the temp directory
          fileErr = "rootsshtmp_";
-         floc = gSystem->TempFileName(fileErr);
+         if ((floc = gSystem->TempFileName(fileErr)))
+            fclose(floc);
       }
       fileErr.Append(".error");
       TString sshcmd(Form("%s -x -l %s %s",
@@ -5163,12 +5164,21 @@ Int_t OldProofServAuthSetup(TSocket *sock, Bool_t master, Int_t protocol,
             FILE *fKey = 0;
             char pubkey[kMAXPATHLEN] = { 0 };
             if (!gSystem->AccessPathName(keyfile.Data(), kReadPermission)) {
-               fKey = fopen(keyfile.Data(), "r");
-               if (fKey) {
+               if ((fKey = fopen(keyfile.Data(), "r"))) {
                   Int_t klen = fread((void *)pubkey,1,sizeof(pubkey),fKey);
+                  if (klen <= 0) {
+                     Error("OldProofServAuthSetup",
+                           "failed to read public key from '%s'", keyfile.Data());
+                     fclose(fKey);
+                     return -1;
+                  }
+                  pubkey[klen] = 0;
                   // Set RSA key
                   rsakey = TAuthenticate::SetRSAPublic(pubkey,klen);
                   fclose(fKey);
+               } else {
+                  Error("OldProofServAuthSetup", "failed to open '%s'", keyfile.Data());
+                  return -1;
                }
             }
          }
