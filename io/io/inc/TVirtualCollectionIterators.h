@@ -27,7 +27,7 @@
 #include "TError.h"
 #endif
 
-struct TVirtualCollectionIterators
+class TVirtualCollectionIterators
 {
 private:
    TVirtualCollectionIterators(); // Intentionally unimplemented.
@@ -79,7 +79,7 @@ public:
    }
 };
 
-struct TVirtualCollectionPtrIterators
+class TVirtualCollectionPtrIterators
 {
 public:
    typedef TVirtualCollectionProxy::Next_t Next_t;

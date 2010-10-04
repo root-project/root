@@ -991,7 +991,7 @@ static TConfiguredAction GetVectorAction(TVirtualStreamerInfo *info, TStreamerEl
       case TStreamerInfo::kSTL:  return TConfiguredAction( ReadVectorWrapping, new TConfiguration(info,i,0 /* 0 because we call the legacy code */) ); break;
       case TStreamerInfo::kBase: return TConfiguredAction( ReadVectorBase, new TConfiguration(info,i,0 /* 0 because we call the legacy code */) ); break;
       default:
-         return TConfiguredAction( ReadVectorWrapping, new TConfiguration(info,i,0 /* 0 because we call the legacy code */) ); break;
+         return TConfiguredAction( ReadVectorWrapping, new TConfiguration(info,i,0 /* 0 because we call the legacy code */) );
          // return TConfiguredAction( GenericVectorAction, new TConfigSTL(info,i,0 /* the offset will be used from TStreamerInfo */,0,proxy->GetCollectionClass(),0,0) );
          break;
    }
