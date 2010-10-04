@@ -5840,6 +5840,11 @@ void TPainter3dAlgorithms::IsoSurface (Int_t ns, Double_t *s, Int_t nx,
 
    static Int_t ind[8][3] = { { 0,0,0 }, { 1,0,0 }, { 1,0,1 }, { 0,0,1 },
                               { 0,1,0 }, { 1,1,0 }, { 1,1,1 }, { 0,1,1 } };
+   for (i=0;i<kNmaxp;i++) {
+      xyzn[i][0] = 0.;
+      xyzn[i][1] = 0.;
+      xyzn[i][2] = 0.;
+   }
 
    TView *view = 0;
 
