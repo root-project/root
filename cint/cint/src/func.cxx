@@ -2976,9 +2976,8 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
          G__getindexedvalue(&result3, fpara.parameter[nindex]);
       }
       else if (nindex && 'u' == result3.type) {
-         int len;
-         strcpy(fpara.parameter[0], fpara.parameter[nindex] + 1);
-         len = strlen(fpara.parameter[0]);
+         G__strlcpy(fpara.parameter[0], fpara.parameter[nindex] + 1, G__ONELINE);
+         int len = strlen(fpara.parameter[0]);
          if (len > 1) fpara.parameter[0][len-1] = 0;
          fpara.para[0] = G__getexpr(fpara.parameter[0]);
          fpara.paran = 1;
