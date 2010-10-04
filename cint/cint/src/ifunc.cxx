@@ -669,19 +669,17 @@ void G__make_ifunctable(G__FastAllocString &funcheader)
                         }
                      }
                   }
-                  char* ptrrefbuf = 0;
+                  G__FastAllocString refbuf("");
                   if (*posEndType) {
-                     ptrrefbuf = new char[strlen(posEndType) + 1];
-                     strcpy(ptrrefbuf, posEndType); // Okay we allocated enough space
+                     refbuf = posEndType;
                   }
-                  strcpy(oprtype, G__fulltagname(oprtagnum, 0));
-                  if (ptrrefbuf) {
-                     strcat(oprtype, ptrrefbuf);
-                     delete [] ptrrefbuf;
+                  funcheader.Replace(oprtype-funcheader(),G__fulltagname(oprtagnum, 0));
+                  if (refbuf[0]) {
+                     funcheader += refbuf;
                   }
                }
             }
-            strcat(oprtype, "(");
+            funcheader += "(";
          }
       }
       funcname = funcheader;
@@ -689,8 +687,8 @@ void G__make_ifunctable(G__FastAllocString &funcheader)
          (strstr(funcheader, ">>") != NULL && strchr(funcheader, '<') != NULL) ||
          (strstr(funcheader, "<<") != NULL && strchr(funcheader, '>') != NULL)
       ) {
-         char* pt1 = funcheader;
-         char* pt2 = funcname;
+         size_t pt1 = 0; // for funcheader;
+         size_t pt2 = 0; // for funcname;
          if ((char*)NULL != strstr(funcheader, "operator<<") &&
                (char*)NULL != strchr(funcheader, '>')) {
             /* we might have operator< <> or operator< <double>
@@ -699,31 +697,33 @@ void G__make_ifunctable(G__FastAllocString &funcheader)
             pt2 += strlen("operator<");
             pt1 += strlen("operator<");
             /*char *pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );*/
-            if (*(pt2 + 1) == '<') {
+            if (funcname[pt2 + 1] == '<') {
                /* we have operator<< <...> */
                ++pt2;
                ++pt1;
             }
-            *pt2 = ' ';
+            funcname.Set( pt2, ' ' );
             ++pt2;
-            strcpy(pt2, pt1);
+            funcname.Replace(pt2, funcheader() + pt1);
          }
-         else if ((char*)NULL != strstr(pt2, "operator>>") &&
-                  (char*)NULL != strchr(pt2, '<')) {
+         else if ((char*)NULL != strstr(funcname() + pt2, "operator>>") &&
+                  (char*)NULL != strchr(funcname() + pt2, '<')) {
             /* we might have operator>><>  */
             /* we have nothing to do ... yet (we may have to do something
                for nested templates */
             pt2 += strlen("operator>>");
             pt1 += strlen("operator>>");
          }
-         while ((char*)NULL != (pt1 = strstr(pt1, ">>"))) {
-            char *pt3 = strstr(pt2, ">>");
+         const char *next_pt1;
+         while ((char*)NULL != (next_pt1 = strstr(funcheader() + pt1, ">>"))) {
+            pt1 = next_pt1 - funcheader();
+            size_t pt3 = strstr(funcname() + pt2, ">>") - funcname();
             ++pt3;
-            *pt3 = ' ';
+            funcname.Set( pt3, ' ');
             ++pt3;
             ++pt1;
             pt2 = pt3;
-            strcpy(pt3, pt1);
+            funcname.Replace(pt3, funcheader() + pt1);
          }
       }
    }
