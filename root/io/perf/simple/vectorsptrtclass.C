@@ -35,6 +35,9 @@ public:
 #include <vector> 
 #include "TVirtualCollectionProxy.h"
 #include "TStreamerInfo.h"
+#include "TStreamerInfoActions.h"
+#include "TVirtualCollectionIterators.h"
+#include "Riostream.h"
 #ifdef __MAKECINT__
 #pragma link C++ class vector<simple*>+;
 #endif
@@ -58,18 +61,35 @@ void write(TBuffer &buf,int ntimes, int nelems) {
 
 void read(TBuffer &buf,int ntimes, int nelems) {
    vector<simple *> clones;
-   for(int e=0; e<nelems; ++e) {
-     clones.push_back(new simple());
-   }
    TClass *cl = TClass::GetClass(typeid(clones));
    TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
+
    TStreamerInfo *info = (TStreamerInfo*)simple::Class()->GetStreamerInfo();
+   info->SetBit(TVirtualStreamerInfo::kCannotOptimize);
+   info->Compile();
+
    TVirtualCollectionProxy::TPushPop helper(proxy,&clones);
+   
+   void* alternate = proxy->Allocate(nelems, true);   
+   TVirtualCollectionIterators *fIterators = new TVirtualCollectionIterators(proxy);
+   fIterators->CreateIterators(alternate);
+
+   for(int e=0; e<nelems; ++e) {
+      clones[e] = new simple();
+      cout << "e=" << e << " " << clones[e] << " " << &clones[e] << endl;
+   }
+   
+   TStreamerInfoActions::TActionSequence *fReadActionSequence = proxy->GetReadMemberWiseActions(cl->GetClassVersion());
+
    buf.SetReadMode();
    for(int i=0; i<ntimes; ++i) {
       buf.Reset();
-      //cl->Streamer(&clones,buf);
-      info->ReadBufferSTLPtrs(buf, proxy, nelems, -1, 0);
+      
+      fReadActionSequence->ReadBufferVecPtr(buf,fIterators->fBegin,fIterators->fEnd);
+
+      // cl->Streamer(&clones,buf);
+      // info->ReadBufferSTLPtrs(buf, proxy, nelems, -1, 0);
+
       // Intentionally leaking for now
       // obj->IsA()->Dump(obj);
       // delete obj;

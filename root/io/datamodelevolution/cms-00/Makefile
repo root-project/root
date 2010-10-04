@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *.root *_cint.cpp *_rflx.cpp *_ci
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += test1 test2 read_test1 reflex_test1 reflex_test2 
+TEST_TARGETS += test1 read_test1 test2 reflex_test1 reflex_test2 
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after

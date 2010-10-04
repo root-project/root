@@ -52,7 +52,7 @@ void write(TBuffer &buf,int ntimes, int nelems) {
    }
 }
 
-void read(TBuffer &buf,int ntimes, int nelems) {
+void read(TBuffer &buf,int ntimes, int /* nelems */) {
    vector<simple *> clones;
    TClass *cl = TClass::GetClass(typeid(clones));
    buf.SetReadMode();

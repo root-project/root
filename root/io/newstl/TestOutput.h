@@ -209,7 +209,7 @@ template <class T> void TestError(const std::string &test, T* orig, T* copy) {
    const char* classname = cl?cl->GetName():typeid(T).name();   
    
    if (orig==0 || copy==0) {
-      TestError(test,Form("For %s, non-initialized pointer %p %p",classname, orig,copy));
+      TestError(test,Form("For %s, non-initialized pointer %p %p",classname,(void*)orig,(void*)copy));
    } else {
       TestError(test, *orig, *copy); 
    }

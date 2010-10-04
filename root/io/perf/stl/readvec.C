@@ -89,13 +89,15 @@ void readvec(int what = 7, const char *filename = "vec.root") {
    if (what & 1) {
       readobj(file);
    }
-   TTree *tree = readtree(file);
+   if (what & (2|4) {
+      TTree *tree = readtree(file);
    
-   if (what & 2) {
-      readsplit(tree);
-   }
-   if (what & 4) {
-      readstrm(tree);
+      if (what & 2) {
+         readsplit(tree);
+      }
+      if (what & 4) {
+         readstrm(tree);
+      }
    }
 }
    

@@ -22,7 +22,7 @@ template <class T> bool IsEquiv(const std::string &test, T* orig, T* copy) {
    const char* classname = cl?cl->GetName():typeid(T).name();
 
    if ( (orig==0 && copy) || (orig && copy==0) ) {
-      TestError(test,Form("For %s, non-initialized pointer %p %p",classname,orig,copy));
+      TestError(test,Form("For %s, non-initialized pointer %p %p",classname,(void*)orig,(void*)copy));
       return false;
    }
    return IsEquiv(test, *orig, *copy);
