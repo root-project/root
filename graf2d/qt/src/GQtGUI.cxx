@@ -99,6 +99,7 @@ static TQtClientWidget* cwid(Window_t id) { return ((TQtClientWidget*)TGQt::wid(
 class QtGContext : public QWidget {
    friend class TGQt;
    friend class TQtPainter;
+   QtGContext(const QtGContext & /*src*/);
 protected:
    Mask_t       fMask;       // mask the active values
 #if QT_VERSION < 0x40000
@@ -123,7 +124,6 @@ public:
                  };
    QtGContext() : QWidget(0) ,fMask(0),fBrush(Qt::SolidPattern), fTilePixmap(0),fStipple(0),fClipMask(0),fFont(0) {}
    QtGContext(const GCValues_t &gval) : QWidget(0) ,fMask(0),fTilePixmap(0),fStipple(0),fClipMask(0),fFont(0){Copy(gval);}
-   QtGContext(const QtGContext & /*src*/)  : QWidget() {fprintf(stderr,"QtGContext(const QtGContext &src)\n");}
    void              Copy(const QtGContext &dst,Mask_t rootMask = 0xff);
    const QtGContext &Copy(const GCValues_t &gval);
    void              DumpMask() const;
@@ -2239,9 +2239,8 @@ Int_t TGQt::TextWidth(FontStruct_t font, const char *s, Int_t len)
    if (len >0 && s && s[0] != 0 ) {
       QFontMetrics metric(*(QFont *)font);
       char* str = new char[len+1];
-      memset(str,0,len+1);
-      strlcpy(str,s,len+1);
-      QString qstr = strncpy(str,s,len);  //to be fixed
+      memcpy(str,s,len); str[len]=0;
+      QString qstr(s);
       delete [] str;
       textWidth = metric.width(qstr,len);
       // fprintf(stderr," TGQt::TextWidth  %d %d <%s> \n", textWidth, len, (const char *)qstr);
@@ -2959,9 +2958,11 @@ char **TGQt::ListFonts(const char *fontname, Int_t max, Int_t &count)
     if (count) {
        char **list = listFont = new char*[count+1];  list[count] = 0;
        for ( QStringList::Iterator it = xlFonts.begin(); it != xlFonts.end(); ++it ) {
-          char *nextFont = new char[(*it).length()+1];
+          int fntln = (*it).length();
+          char *nextFont = new char[fntln+1];
           *list = nextFont; list++;
-          strlcpy(nextFont,(*it).toStdString().c_str(),(*it).length()+1);
+          memcpy(nextFont,(*it).toStdString().c_str(),fntln);
+          nextFont[fntln]=0;
        }
     }
     return listFont;

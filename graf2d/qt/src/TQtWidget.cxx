@@ -358,7 +358,8 @@ TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, 
              QString nextarg = args.at(i);
              Int_t nchi = nextarg.length()+1;
              localArgv[i]= new char[nchi]; 
-             strlcpy(localArgv[i], nextarg.toAscii().constData(),nchi);
+             memcpy(localArgv[i], nextarg.toAscii().constData(),nchi-1);
+             localArgv[nchi-1]=0;
           } 
        } else {
          localArgv  = argv;

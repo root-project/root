@@ -44,11 +44,11 @@ protected:
 public:
    TQtBrush();
    TQtBrush(const TQtBrush &src):QBrush(src)
-   {
-      fBackground=src.fBackground;
-      fStyle=src.fStyle;
-      fFasi=src.fFasi;
-   }
+      ,fBackground(src.fBackground)
+      ,fStyle(src.fStyle)
+      ,fFasi(src.fFasi)
+      ,fAlpha(src.fFasi)
+   { }
    TQtBrush(const TAttFill &rootFillAttributes);
    virtual ~TQtBrush();
    TQtBrush &operator=(const TAttFill &rootFillAttributes);

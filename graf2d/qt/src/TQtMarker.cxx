@@ -63,7 +63,7 @@ void TQtMarker::SetMarkerAttributes(const TAttMarker& markerAttributes)
    // Map Qt marker  attributes to ROOT TAttMaker parameters
    fCindex     = markerAttributes.GetMarkerColor();
    SetPenAttributes(markerAttributes.GetMarkerStyle());
-  // to be done yet:  fNumNode    = markerAttributes.GetMarkerSize();
+   fNumNode    = markerAttributes.GetMarkerSize();
 }
 
 //______________________________________________________________________________

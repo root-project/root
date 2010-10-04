@@ -74,7 +74,7 @@ protected:
    static Bool_t IsGrabSelected(UInt_t selectEventMask);
    static Bool_t SelectGrab(Event_t &event, UInt_t selectEventMask, QMouseEvent &me);
 public:
-   TQtClientFilter():fRootEventQueue(0),fNotifyClient(0),fKeyGrabber(0){;}
+   TQtClientFilter():fRootEventQueue(0),fNotifyClient(0),fKeyGrabber(0),fInputEventMask(0){;}
    virtual ~TQtClientFilter();
    static TQtClientWidget    *GetPointerGrabber();
    static TQtClientWidget    *GetButtonGrabber();

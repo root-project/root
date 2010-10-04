@@ -80,6 +80,7 @@ inline TQtMarker &TQtMarker::operator=(const TQtMarker&m)
 //_________________________________________________________
 inline TQtMarker::TQtMarker(const TQtMarker&m) : fNumNode(m.fNumNode),
 fChain(m.fChain), fCindex(m.fCindex),fMarkerType(m.fMarkerType),fLineWidth(m.fLineWidth) 
+, fLineOption()
 {}
 
 //_________________________________________________________

@@ -789,9 +789,10 @@ void TGQt::PostQtEvent(QObject *receiver, QEvent *event)
 }
 
 //______________________________________________________________________________
-TGQt::TGQt() : TVirtualX(),fDisplayOpened(kFALSE),fQPainter(0),fQClientFilterBuffer(0)
-,fCodec(0),fSymbolFontFamily("Symbol"),fQtEventHasBeenProcessed(0)
-,fFeedBackMode(kFALSE),fFeedBackWidget(0),fBlockRGB(kFALSE),fUseTTF(kTRUE)
+TGQt::TGQt() : TVirtualX(),fDisplayOpened(kFALSE),fQPainter(0),fhEvent ()
+,fQBrush(),fQPen(),fQtMarker(),fQFont(),fQClientFilter(),fQClientFilterBuffer(0)
+,fPointerGrabber(),fCodec(0),fSymbolFontFamily("Symbol"),fQtEventHasBeenProcessed(0)
+,fFeedBackMode(kFALSE),fFeedBackWidget(0),fBlockRGB(kFALSE),fUseTTF(kTRUE)      
 {
    //*-*-*-*-*-*-*-*-*-*-*-*Default Constructor *-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                    ===================
@@ -803,7 +804,7 @@ TGQt::TGQt() : TVirtualX(),fDisplayOpened(kFALSE),fQPainter(0),fQClientFilterBuf
 
 //______________________________________________________________________________
 TGQt::TGQt(const char *name, const char *title) : TVirtualX(name,title),fDisplayOpened(kFALSE)
-,fQPainter(0),fCursors(kNumCursors),fQClientFilter(0),fQClientFilterBuffer(0),fPointerGrabber(0)
+,fQPainter(0),fhEvent(),fCursors(kNumCursors),fQClientFilter(0),fQClientFilterBuffer(0),fPointerGrabber(0)
 ,fCodec(0),fSymbolFontFamily("Symbol"),fQtEventHasBeenProcessed(0)
 ,fFeedBackMode(kFALSE),fFeedBackWidget(0),fBlockRGB(kFALSE),fUseTTF(kTRUE)
 {
