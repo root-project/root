@@ -996,7 +996,8 @@ static TConfiguredAction GetVectorAction(TVirtualStreamerInfo *info, TStreamerEl
          // return TConfiguredAction( GenericVectorAction, new TConfigSTL(info,i,0 /* the offset will be used from TStreamerInfo */,0,proxy->GetCollectionClass(),0,0) );
          break;
    }
-   
+   R__ASSERT(0); // We should never be here
+   return TConfiguredAction();
 }
 
 //______________________________________________________________________________
