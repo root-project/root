@@ -268,8 +268,6 @@ public:
    inline       Element &operator()(Int_t i) {
       R__ASSERT(this->fMatrix->IsValid());
       const Int_t arown = i-this->fMatrix->GetRowLwb();
-      R__ASSERT(arown < this->fMatrix->GetNrows() && arown >= 0);
-      return (const_cast<Element *>(this->fPtr))[arown*this->fInc];
 
       if (arown < this->fMatrix->GetNrows() && arown >= 0)
          return (const_cast<Element *>(this->fPtr))[arown*this->fInc];
