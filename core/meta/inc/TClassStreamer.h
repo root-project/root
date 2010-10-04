@@ -35,7 +35,7 @@ public:
    virtual void SetOnFileClass( const TClass* cl ) { fOnFileClass = const_cast<TClass*>(cl); }
    virtual const TClass* GetOnFileClass() const { return fOnFileClass; }
 
-   virtual TClassStreamer *Generate() {
+   virtual TClassStreamer *Generate() const {
       // Virtual copy constructor.
       return new TClassStreamer(*this); 
    }
@@ -46,6 +46,23 @@ public:
       // The address passed to operator() will be the address of the start of the
       // object.
       
+      (*fStreamer)(b,objp);
+   }
+   virtual void Stream(TBuffer &b, void *objp, const TClass *onfileClass)
+   {
+      // The address passed to operator() will be the address of the start of the
+      // object.   Overload this routine, if your derived class can optimize
+      // the handling of the onfileClass (rather than storing and restoring from the
+      // fOnFileClass member.
+      
+      // Note we can not name this routine 'operator()' has it would be slightly
+      // backward incompatible and lead to the following warning/error from the
+      // compiler in the derived class overloading the other operator():
+//      include/TClassStreamer.h:51: error: ‘virtual void TClassStreamer::operator()(TBuffer&, void*, const TClass*)’ was hidden
+//      include/TCollectionProxyFactory.h:180: error:   by ‘virtual void TCollectionClassStreamer::operator()(TBuffer&, void*)’
+//   cc1plus: warnings being treated as errors
+      
+      SetOnFileClass(onfileClass);
       (*fStreamer)(b,objp);
    }
    

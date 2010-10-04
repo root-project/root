@@ -38,6 +38,7 @@
 #include "TFile.h"
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
+#include "TStreamerInfoActions.h"
 
 extern "C" void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep);
 
@@ -1357,6 +1358,13 @@ void TBufferXML::SetByteCount(UInt_t, Bool_t)
 }
 
 //______________________________________________________________________________
+void TBufferXML::SkipVersion(const TClass *cl)
+{
+   // Skip class version from I/O buffer.
+   ReadVersion(0,0,cl);
+}
+   
+//______________________________________________________________________________
 Version_t TBufferXML::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass * /*cl*/)
 {
    // read version value from buffer
@@ -1506,6 +1514,50 @@ void TBufferXML::ReadDouble32 (Double_t *d, TStreamerElement * /*ele*/)
    // read a Double32_t from the buffer
    BeforeIOoperation();
    XmlReadBasic(*d);
+}
+
+//______________________________________________________________________________
+void TBufferXML::ReadWithFactor(Float_t *ptr, Double_t /* factor */, Double_t /* minvalue */)
+{
+   // Read a Double32_t from the buffer when the factor and minimun value have been specified
+   // see comments about Double32_t encoding at TBufferFile::WriteDouble32().
+   // Currently TBufferXML does not optimize space in this case.
+   
+   BeforeIOoperation();
+   XmlReadBasic(*ptr);
+}
+
+//______________________________________________________________________________
+void TBufferXML::ReadWithNbits(Float_t *ptr, Int_t /* nbits */) 
+{
+   // Read a Float16_t from the buffer when the number of bits is specified (explicitly or not)
+   // see comments about Float16_t encoding at TBufferFile::WriteFloat16().
+   // Currently TBufferXML does not optimize space in this case.
+   
+   BeforeIOoperation();
+   XmlReadBasic(*ptr);
+}
+
+//______________________________________________________________________________
+void TBufferXML::ReadWithFactor(Double_t *ptr, Double_t /* factor */, Double_t /* minvalue */) 
+{
+   // Read a Double32_t from the buffer when the factor and minimun value have been specified
+   // see comments about Double32_t encoding at TBufferFile::WriteDouble32().   
+   // Currently TBufferXML does not optimize space in this case.
+   
+   BeforeIOoperation();
+   XmlReadBasic(*ptr);
+}
+
+//______________________________________________________________________________
+void TBufferXML::ReadWithNbits(Double_t *ptr, Int_t /* nbits */) 
+{
+   // Read a Double32_t from the buffer when the number of bits is specified (explicitly or not)
+   // see comments about Double32_t encoding at TBufferFile::WriteDouble32().   
+   // Currently TBufferXML does not optimize space in this case.
+   
+   BeforeIOoperation();
+   XmlReadBasic(*ptr);
 }
 
 //______________________________________________________________________________
@@ -2972,4 +3024,120 @@ const char* TBufferXML::GetFloatFormat()
    // return current printf format for float/double members, default "%e"
 
    return fgFloatFmt;
+}
+
+//______________________________________________________________________________
+Int_t TBufferXML::ReadSequence(const TStreamerInfoActions::TActionSequence &sequence, void *obj) 
+{
+   // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
+   // The collection needs to be a split TClonesArray or a split vector of pointers.
+   
+   TVirtualStreamerInfo *info = sequence.fStreamerInfo;
+   IncrementLevel(info);
+   
+   if (gDebug) {
+      //loop on all active members
+      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
+      for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
+          iter != end;
+          ++iter) {      
+         // Idea: Try to remove this function call as it is really needed only for XML streaming.
+         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         (*iter).PrintDebug(*this,obj);
+         (*iter)(*this,obj);
+      }
+      
+   } else {
+      //loop on all active members
+      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
+      for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
+          iter != end;
+          ++iter) {      
+         // Idea: Try to remove this function call as it is really needed only for XML streaming.
+         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         (*iter)(*this,obj);
+      }
+   }
+   
+   DecrementLevel(info);
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TBufferXML::ReadSequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) 
+{
+   // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
+   // The collection needs to be a split TClonesArray or a split vector of pointers.
+   
+   TVirtualStreamerInfo *info = sequence.fStreamerInfo;
+   IncrementLevel(info);
+   
+   if (gDebug) {
+      //loop on all active members
+      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
+      for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
+          iter != end;
+          ++iter) {      
+         // Idea: Try to remove this function call as it is really needed only for XML streaming.
+         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         (*iter).PrintDebug(*this,*(char**)start_collection);  // Warning: This limits us to TClonesArray and vector of pointers.
+         (*iter)(*this,start_collection,end_collection);
+      }
+      
+   } else {
+      //loop on all active members
+      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
+      for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
+          iter != end;
+          ++iter) {      
+         // Idea: Try to remove this function call as it is really needed only for XML streaming.
+         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         (*iter)(*this,start_collection,end_collection);
+      }
+   }
+   
+   DecrementLevel(info);
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TBufferXML::ReadSequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) 
+{
+   // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
+   
+   TVirtualStreamerInfo *info = sequence.fStreamerInfo;
+   IncrementLevel(info);
+   
+   TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig;
+   if (gDebug) {
+      
+      // Get the address of the first item for the PrintDebug.
+      // (Performance is not essential here since we are going to print to
+      // the screen anyway).
+      void *arr0 = loopconfig->GetFirstAddress(start_collection,end_collection);
+      // loop on all active members
+      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
+      for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
+          iter != end;
+          ++iter) {      
+         // Idea: Try to remove this function call as it is really needed only for XML streaming.
+         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         (*iter).PrintDebug(*this,arr0);
+         (*iter)(*this,start_collection,end_collection,loopconfig);
+      }
+      
+   } else {
+      //loop on all active members
+      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
+      for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
+          iter != end;
+          ++iter) {      
+         // Idea: Try to remove this function call as it is really needed only for XML streaming.
+         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         (*iter)(*this,start_collection,end_collection,loopconfig);
+      }
+   }
+   
+   DecrementLevel(info);
+   return 0;
 }

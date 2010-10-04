@@ -107,6 +107,10 @@ public:
    // Block commit of containees
    virtual void Commit(void* env);
 
+   // Read portion of the streamer
+   virtual void ReadBuffer(TBuffer &buff, void *pObj);
+   virtual void ReadBuffer(TBuffer &buff, void *pObj, const TClass *onfile);
+
    // Streamer for I/O handling
    virtual void Streamer(TBuffer &refBuffer);
 

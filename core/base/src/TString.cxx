@@ -1090,14 +1090,37 @@ void TString::Streamer(TBuffer &b)
    UChar_t nwh;
    if (b.IsReading()) {
       b >> nwh;
-      if (nwh == 255)
-         b >> nbig;
-      else
-         nbig = nwh;
-      Pref()->UnLink();
-      fData = TStringRef::GetRep(nbig,nbig)->Data();
-      b.ReadFastArray(fData,nbig);
-      //for (int i = 0; i < nbig; i++) b >> fData[i];
+      if (nwh == 0) {
+         if (Pref()->References() > 1) {
+            Pref()->UnLink();
+            gNullStringRef->AddReference();
+            fData = gNullStringRef->Data();
+         } else {
+            // Clear string without changing its capacity.
+            fData[Pref()->fNchars = 0] = 0;
+         }
+      } else {
+         if (nwh == 255)
+            b >> nbig;
+         else
+            nbig = nwh;
+
+         if (Pref()->References() > 1 ||
+             Capacity() < nbig ||
+             Capacity() - nbig > GetMaxWaste()) {
+
+            Pref()->UnLink();
+            // We trying to optimize the I/O of TNamed in particular, so we duplicate
+            // some of the code in TStringRef::GetRep to save on the 'if statement'
+            // at the start of the function.
+            TStringRef *ret = (TStringRef*)new char[nbig + sizeof(TStringRef) + 1];
+            ret->fCapacity = nbig;
+            ret->SetRefCount(1);
+            fData = ret->Data();
+         }
+         fData[Pref()->fNchars = nbig] = 0; // Terminating null
+         b.ReadFastArray(fData,nbig);
+      }
    } else {
       nbig = Length();
       if (nbig > 254) {

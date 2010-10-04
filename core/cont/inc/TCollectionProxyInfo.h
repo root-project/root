@@ -85,9 +85,6 @@ namespace ROOT {
    struct EnvironBase;
    template <typename T> struct Environ;
 #endif
-#if defined(R__VCXX6)
-   template <class T> void Destruct(T* obj) { obj->~T(); }
-#endif
 
    template <class T, class Q> struct PairHolder {
       T first;
@@ -162,10 +159,9 @@ namespace ROOT {
          TYPENAME T::const_reference ref = *(e->iter());
          return Type<T>::address(ref);
       }
-      static void* construct(void* env)  {
-         PEnv_t  e = PEnv_t(env);
-         PValue_t m = PValue_t(e->fStart);
-         for (size_t i=0; i<e->fSize; ++i, ++m)
+      static void* construct(void *what, size_t size)  {
+         PValue_t m = PValue_t(what);
+         for (size_t i=0; i<size; ++i, ++m)
             ::new(m) Value_t();
          return 0;
       }
@@ -177,18 +173,10 @@ namespace ROOT {
             ::new(m) Value_t(*i);
          return 0;
       }
-      static void* destruct(void* env)  {
-         PEnv_t   e = PEnv_t(env);
-         PValue_t m = PValue_t(e->fStart);
-#if defined(R__VCXX6)
-         PCont_t  c = PCont_t(e->fObject);
-         for (size_t i=0; i < e->fSize; ++i, ++m )
-            ROOT::Destruct(m);
-#else
-         for (size_t i=0; i < e->fSize; ++i, ++m )
+      static void destruct(void *what, size_t size)  {
+         PValue_t m = PValue_t(what);
+         for (size_t i=0; i < size; ++i, ++m )
             m->~Value_t();
-#endif
-         return 0;
       }
    };
 
@@ -209,18 +197,14 @@ namespace ROOT {
       typedef Env_t                 *PEnv_t;
       typedef Cont_t                *PCont_t;
       typedef Value_t               *PValue_t;
-      static void* resize(void* env)  {
-         PEnv_t  e = PEnv_t(env);
-         PCont_t c = PCont_t(e->fObject);
-         c->resize(e->fSize);
-         e->fIdx = 0;
-         return e->fStart = e->fSize ? Type<T>::address(*c->begin()) : 0;
+      static void resize(void* obj, size_t n) {
+         PCont_t c = PCont_t(obj);
+         c->resize(n);
       }
-      static void* feed(void* env)  {
-         PEnv_t   e = PEnv_t(env);
-         PCont_t  c = PCont_t(e->fObject);
-         PValue_t m = PValue_t(e->fStart); // Here start is actually a 'buffer' outside the buffer.
-         for (size_t i=0; i<e->fSize; ++i, ++m)
+      static void* feed(void *from, void *to, size_t size)  {
+         PCont_t  c = PCont_t(to);
+         PValue_t m = PValue_t(from);
+         for (size_t i=0; i<size; ++i, ++m)
             c->push_back(*m);
          return 0;
       }
@@ -246,16 +230,15 @@ namespace ROOT {
       typedef Env_t                 *PEnv_t;
       typedef Cont_t                *PCont_t;
       typedef Value_t               *PValue_t;
-      static void* feed(void* env)  {
-         PEnv_t   e = PEnv_t(env);
-         PCont_t  c = PCont_t(e->fObject);
-         PValue_t m = PValue_t(e->fStart);
-         for (size_t i=0; i<e->fSize; ++i, ++m)
+      static void* feed(void *from, void *to, size_t size)  {
+         PCont_t  c = PCont_t(to);
+         PValue_t m = PValue_t(from);
+         for (size_t i=0; i<size; ++i, ++m)
             c->insert(*m);
          return 0;
       }
-      static void* resize(void* /* env */ )  {
-         return 0;
+      static void resize(void* /* obj */, size_t )  {
+         ;
       }
       static int value_offset()  {
          return 0;
@@ -279,16 +262,15 @@ namespace ROOT {
       typedef Env_t                 *PEnv_t;
       typedef Cont_t                *PCont_t;
       typedef Value_t               *PValue_t;
-      static void* feed(void* env)  {
-         PEnv_t   e = PEnv_t(env);
-         PCont_t  c = PCont_t(e->fObject);
-         PValue_t m = PValue_t(e->fStart);
-         for (size_t i=0; i<e->fSize; ++i, ++m)
+      static void* feed(void *from, void *to, size_t size)  {
+         PCont_t  c = PCont_t(to);
+         PValue_t m = PValue_t(from);
+         for (size_t i=0; i<size; ++i, ++m)
             c->insert(*m);
          return 0;
       }
-      static void* resize(void* /* env */ )  {
-         return 0;
+      static void resize(void* /* obj */, size_t )  {
+         ;
       }
       static int value_offset()  {
          return ((char*)&((PValue_t(0x1000))->second)) - ((char*)PValue_t(0x1000));
@@ -304,29 +286,51 @@ namespace ROOT {
       size_t fValueDiff;
       int    fValueOffset;
       void*  (*fSizeFunc)(void*);
-      void*  (*fResizeFunc)(void*);
+      void   (*fResizeFunc)(void*,size_t);
       void*  (*fClearFunc)(void*);
       void*  (*fFirstFunc)(void*);
       void*  (*fNextFunc)(void*);
-      void*  (*fConstructFunc)(void*);
-      void*  (*fDestructFunc)(void*);
-      void*  (*fFeedFunc)(void*);
+      void*  (*fConstructFunc)(void*,size_t);
+      void   (*fDestructFunc)(void*,size_t);
+      void*  (*fFeedFunc)(void*,void*,size_t);
       void*  (*fCollectFunc)(void*);
       void*  (*fCreateEnv)();
-
+      
+      // Set of function of direct iteration of the collections.
+      void (*fGetIterators)(void *collection, void *&begin_arena, void *&end_arena); 
+      // begin_arena and end_arena should contain the location of memory arena  of size fgIteratorSize. 
+      // If the collection iterator are of that size or less, the iterators will be constructed in place in those location (new with placement)
+      // Otherwise the iterators will be allocated via a regular new and their address returned by modifying the value of begin_arena and end_arena.
+      
+      void (*fCopyIterator)(void *&dest, const void *source);
+      // Copy the iterator source, into dest.   dest should contain should contain the location of memory arena  of size fgIteratorSize.
+      // If the collection iterator are of that size or less, the iterator will be constructed in place in this location (new with placement)
+      // Otherwise the iterator will be allocated via a regular new and its address returned by modifying the value of dest.
+      
+      void* (*fNext)(void *iter, void *end);
+      // iter and end should be pointer to respectively an iterator to be incremented and the result of colleciton.end()
+      // 'Next' will increment the iterator 'iter' and return 0 if the iterator reached the end.
+      // If the end is not reached, 'Next' will return the address of the content unless the collection contains pointers in
+      // which case 'Next' will return the value of the pointer.
+      
+      void (*fDeleteSingleIterator)(void *iter);
+      void (*fDeleteTwoIterators)(void *begin, void *end);
+      // If the sizeof iterator is greater than fgIteratorArenaSize, call delete on the addresses,
+      // Otherwise just call the iterator's destructor.
+      
    public:
       TCollectionProxyInfo(const type_info& info,
                            size_t iter_size,
                            size_t value_diff,
                            int    value_offset,
                            void*  (*size_func)(void*),
-                           void*  (*resize_func)(void*),
+                           void   (*resize_func)(void*,size_t),
                            void*  (*clear_func)(void*),
                            void*  (*first_func)(void*),
                            void*  (*next_func)(void*),
-                           void*  (*construct_func)(void*),
-                           void*  (*destruct_func)(void*),
-                           void*  (*feed_func)(void*),
+                           void*  (*construct_func)(void*,size_t),
+                           void   (*destruct_func)(void*,size_t),
+                           void*  (*feed_func)(void*,void*,size_t),
                            void*  (*collect_func)(void*),
                            void*  (*create_env)()
                            ) :
@@ -335,7 +339,8 @@ namespace ROOT {
          fSizeFunc(size_func),fResizeFunc(resize_func),fClearFunc(clear_func),
          fFirstFunc(first_func),fNextFunc(next_func),fConstructFunc(construct_func),
          fDestructFunc(destruct_func),fFeedFunc(feed_func),fCollectFunc(collect_func),
-         fCreateEnv(create_env)
+         fCreateEnv(create_env),
+         fGetIterators(0),fCopyIterator(0),fNext(0),fDeleteSingleIterator(0),fDeleteTwoIterators(0)
       {
       }
  
@@ -434,7 +439,7 @@ namespace ROOT {
          // TODO: Need to find something for going backwards....
          return 0;
       }
-      static void* construct(void*)  {
+      static void* construct(void*,size_t)  {
          // Nothing to construct.
          return 0;
       }
@@ -446,9 +451,8 @@ namespace ROOT {
             ::new(m) Value_t(*i);
          return 0;
       }
-      static void* destruct(void*)  {
+      static void destruct(void*,size_t)  {
          // Nothing to destruct.
-         return 0;
       }
    };
    
@@ -461,18 +465,14 @@ namespace ROOT {
       typedef Cont_t                *PCont_t;
       typedef Value_t               *PValue_t;
       
-      static void* resize(void* env)  {
-         PEnv_t  e = PEnv_t(env);
-         PCont_t c = PCont_t(e->fObject);
-         c->resize(e->fSize);
-         e->fIdx = 0;
-         return 0;
+      static void resize(void* obj,size_t n) {
+         PCont_t c = PCont_t(obj);
+         c->resize(n);
       }
-      static void* feed(void* env)  {
-         PEnv_t   e = PEnv_t(env);
-         PCont_t  c = PCont_t(e->fObject);
-         PValue_t m = PValue_t(e->fStart); // Here start is actually a 'buffer' outside the container.
-         for (size_t i=0; i<e->fSize; ++i, ++m)
+      static void* feed(void* from, void *to, size_t size)  {
+         PCont_t  c = PCont_t(to);
+         PValue_t m = PValue_t(from);
+         for (size_t i=0; i<size; ++i, ++m)
             c->push_back(*m);
          return 0;
       }
@@ -535,7 +535,7 @@ namespace ROOT {
          e->fIterator.second = (e->fIterator.first != c->size()) ? c->test(e->fIterator.first) : false;
          return 0;
       }
-      static void* construct(void*)  {
+      static void* construct(void*,size_t)  {
          // Nothing to construct.
          return 0;
       }
@@ -547,9 +547,8 @@ namespace ROOT {
             *m = c->test(i);
          return 0;
       }
-      static void* destruct(void*)  {
+      static void destruct(void*,size_t)  {
          // Nothing to destruct.
-         return 0;
       }
    };
    
@@ -563,16 +562,12 @@ namespace ROOT {
       typedef Cont_t          *PCont_t;
       typedef Value_t         *PValue_t;
       
-      static void* resize(void* env)  {
-         PEnv_t  e = PEnv_t(env);
-         e->fIdx = 0;
-         return 0;
+      static void resize(void*,size_t)  {
       }
-      static void* feed(void* env)  {
-         PEnv_t   e = PEnv_t(env);
-         PCont_t  c = PCont_t(e->fObject);
-         PValue_t m = PValue_t(e->fStart); // Here start is actually a 'buffer' outside the container.
-         for (size_t i=0; i<e->fSize; ++i, ++m)
+      static void* feed(void *from, void *to, size_t size)  {
+         PCont_t  c = PCont_t(to);
+         PValue_t m = PValue_t(from); 
+         for (size_t i=0; i<size; ++i, ++m)
             c->set(i,*m);
          return 0;
       }

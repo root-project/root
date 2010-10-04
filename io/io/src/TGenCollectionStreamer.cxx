@@ -30,21 +30,22 @@
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "Riostream.h"
+#include "TVirtualCollectionIterators.h"
 
 TGenCollectionStreamer::TGenCollectionStreamer(const TGenCollectionStreamer& copy)
-      : TGenCollectionProxy(copy)
+      : TGenCollectionProxy(copy), fReadBufferFunc(&TGenCollectionStreamer::ReadBufferDefault)
 {
    // Build a Streamer for an emulated vector whose type is 'name'.
 }
 
 TGenCollectionStreamer::TGenCollectionStreamer(Info_t info, size_t iter_size)
-      : TGenCollectionProxy(info, iter_size)
+      : TGenCollectionProxy(info, iter_size), fReadBufferFunc(&TGenCollectionStreamer::ReadBufferDefault)
 {
    // Build a Streamer for a collection whose type is described by 'collectionClass'.
 }
 
 TGenCollectionStreamer::TGenCollectionStreamer(const ::ROOT::TCollectionProxyInfo &info, TClass *cl)
-      : TGenCollectionProxy(info, cl)
+      : TGenCollectionProxy(info, cl), fReadBufferFunc(&TGenCollectionStreamer::ReadBufferDefault)
 {
    // Build a Streamer for a collection whose type is described by 'collectionClass'.
 }
@@ -61,6 +62,7 @@ TVirtualCollectionProxy* TGenCollectionStreamer::Generate() const
    return new TGenCollectionStreamer(*this);
 }
 
+
 void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)
 {
    // Primitive input streamer.
@@ -73,7 +75,13 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)
    switch (fSTL_type)  {
       case TClassEdit::kVector:
          if (fVal->fKind != EDataType(kBOOL_t))  {
-            itm = (StreamHelper*)fResize.invoke(fEnv);
+            fResize(fEnv->fObject,fEnv->fSize);
+            fEnv->fIdx = 0;
+            
+            TVirtualVectorIterators iterators(fFunctionCreateIterators);
+            iterators.CreateIterators(fEnv->fObject);
+            itm = (StreamHelper*)iterators.fBegin;
+            fEnv->fStart = itm;
             break;
          }
       default:
@@ -137,7 +145,7 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)
          Error("TGenCollectionStreamer", "fType %d is not supported yet!\n", fVal->fKind);
    }
    if (feed)  {      // need to feed in data...
-      fEnv->fStart = fFeed.invoke(fEnv);
+      fEnv->fStart = fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
       if (memory)  {
          ::operator delete(memory);
       }
@@ -160,7 +168,15 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
          // Simple case: contiguous memory. get address of first, then jump.
       case TClassEdit::kVector:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
-         itm = (StreamHelper*)fResize.invoke(fEnv);
+         fResize(fEnv->fObject,fEnv->fSize);
+         fEnv->fIdx = 0;
+         
+         {
+            TVirtualVectorIterators iterators(fFunctionCreateIterators);
+            iterators.CreateIterators(fEnv->fObject);
+            itm = (StreamHelper*)iterators.fBegin;
+         }
+         fEnv->fStart = itm;
          switch (fVal->fCase) {
             case G__BIT_ISCLASS:
                DOLOOP(b.StreamObject(i, fVal->fType, onFileValClass ));
@@ -181,7 +197,9 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
       case TClassEdit::kList:
       case TClassEdit::kDeque:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)TGenCollectionProxy::At(idx); { x ;} ++idx;} break;}
-         fResize.invoke(fEnv);
+         fResize(fEnv->fObject,fEnv->fSize);
+         fEnv->fIdx = 0;
+         fEnv->fStart = 0;
          switch (fVal->fCase) {
             case G__BIT_ISCLASS:
                DOLOOP(b.StreamObject(i, fVal->fType, onFileValClass));
@@ -203,29 +221,29 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
       case TClassEdit::kSet:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;}}
          fEnv->fStart = itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
-         fConstruct.invoke(fEnv);
+         fConstruct(itm,nElements);
          switch (fVal->fCase) {
             case G__BIT_ISCLASS:
                DOLOOP(b.StreamObject(i, fVal->fType, onFileValClass));
-               fFeed.invoke(fEnv);
-               fDestruct.invoke(fEnv);
+               fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
+               fDestruct(fEnv->fStart,fEnv->fSize);
                break;
             case kBIT_ISSTRING:
                DOLOOP(i->read_std_string(b))
-               fFeed.invoke(fEnv);
-               fDestruct.invoke(fEnv);
+               fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
+               fDestruct(fEnv->fStart,fEnv->fSize);
                break;
             case G__BIT_ISPOINTER | G__BIT_ISCLASS:
                DOLOOP(i->set(b.ReadObjectAny(fVal->fType)));
-               fFeed.invoke(fEnv);
+               fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
                break;
             case G__BIT_ISPOINTER | kBIT_ISSTRING:
                DOLOOP(i->read_std_string_pointer(b))
-               fFeed.invoke(fEnv);
+               fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
                break;
             case G__BIT_ISPOINTER | kBIT_ISTSTRING | G__BIT_ISCLASS:
                DOLOOP(i->read_tstring_pointer(vsn3, b));
-               fFeed.invoke(fEnv);
+               fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
                break;
          }
 #undef DOLOOP
@@ -264,7 +282,15 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
          // Simple case: contiguous memory. get address of first, then jump.
       case TClassEdit::kVector:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
-         itm = (StreamHelper*)fResize.invoke(fEnv);
+         fResize(fEnv->fObject,fEnv->fSize);
+         fEnv->fIdx = 0;
+         
+         {
+            TVirtualVectorIterators iterators(fFunctionCreateIterators);
+            iterators.CreateIterators(fEnv->fObject);
+            itm = (StreamHelper*)iterators.fBegin;
+         }
+         fEnv->fStart = itm;
          switch (fVal->fCase) {
             case G__BIT_ISCLASS:
                DOLOOP(
@@ -280,7 +306,13 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
       case TClassEdit::kList:
       case TClassEdit::kDeque:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)TGenCollectionProxy::At(idx); { x ;} ++idx;} break;}
-         fResize.invoke(fEnv);
+         fResize(fEnv->fObject,fEnv->fSize);
+         fEnv->fIdx = 0;
+         {
+            TVirtualVectorIterators iterators(fFunctionCreateIterators);
+            iterators.CreateIterators(fEnv->fObject);
+            fEnv->fStart = iterators.fBegin;
+         }
          switch (fVal->fCase) {
             case G__BIT_ISCLASS:
                DOLOOP(
@@ -297,15 +329,15 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
       case TClassEdit::kSet:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;}}
          fEnv->fStart = itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
-         fConstruct.invoke(fEnv);
+         fConstruct(itm,nElements);
          switch (fVal->fCase) {
             case G__BIT_ISCLASS:
                DOLOOP(
                   char **where = (char**)(void*) & i;
                   pinfo->ReadBuffer(b, where, -1);
                );
-               fFeed.invoke(fEnv);
-               fDestruct.invoke(fEnv);
+               fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
+               fDestruct(fEnv->fStart,fEnv->fSize);
                break;
          }
 #undef DOLOOP
@@ -416,7 +448,7 @@ void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b)
    fEnv->fSize  = nElements;
    fEnv->fStart = (len < sizeof(buffer) ? buffer : memory =::operator new(len));
    addr = temp = (char*)fEnv->fStart;
-   fConstruct.invoke(fEnv);
+   fConstruct(addr,nElements);
    for (int loop, idx = 0; idx < nElements; ++idx)  {
       addr = temp + fValDiff * idx;
       v = fKey;
@@ -502,8 +534,8 @@ void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b)
          addr += fValOffset;
       }
    }
-   fFeed.invoke(fEnv);
-   fDestruct.invoke(fEnv);
+   fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
+   fDestruct(fEnv->fStart,fEnv->fSize);
    if (memory) {
       ::operator delete(memory);
    }
@@ -728,6 +760,207 @@ void TGenCollectionStreamer::WriteMap(int nElements, TBuffer &b)
          }
          addr += fValOffset;
          v = fVal;
+      }
+   }
+}
+
+template <typename basictype>
+void TGenCollectionStreamer::ReadBufferVectorPrimitives(TBuffer &b, void *obj)
+{
+   int nElements = 0;
+   b >> nElements;
+   fResize(obj,nElements);
+   
+   TVirtualVectorIterators iterators(fFunctionCreateIterators);
+   iterators.CreateIterators(obj);
+   b.ReadFastArray((basictype*)iterators.fBegin, nElements);
+}
+
+void TGenCollectionStreamer::ReadBufferVectorPrimitivesFloat16(TBuffer &b, void *obj)
+{
+   int nElements = 0;
+   b >> nElements;
+   fResize(obj,nElements);
+   
+   TVirtualVectorIterators iterators(fFunctionCreateIterators);
+   iterators.CreateIterators(obj);
+   b.ReadFastArrayFloat16((Float16_t*)iterators.fBegin, nElements);
+}
+
+void TGenCollectionStreamer::ReadBufferVectorPrimitivesDouble32(TBuffer &b, void *obj)
+{
+   int nElements = 0;
+   b >> nElements;
+   fResize(obj,nElements);
+   
+   TVirtualVectorIterators iterators(fFunctionCreateIterators);
+   iterators.CreateIterators(obj);
+   b.ReadFastArrayDouble32((Double32_t*)iterators.fBegin, nElements);
+}
+
+
+
+void TGenCollectionStreamer::ReadBuffer(TBuffer &b, void *obj, const TClass *onFileClass)
+{
+   // Call the specialized function.  The first time this call ReadBufferDefault which
+   // actually set to fReadBufferFunc to the 'right' specialized version.
+   
+   SetOnFileClass((TClass*)onFileClass);
+   (this->*fReadBufferFunc)(b,obj);
+}
+
+void TGenCollectionStreamer::ReadBuffer(TBuffer &b, void *obj)
+{
+   // Call the specialized function.  The first time this call ReadBufferDefault which
+   // actually set to fReadBufferFunc to the 'right' specialized version.
+   
+   (this->*fReadBufferFunc)(b,obj);
+}
+
+void TGenCollectionStreamer::ReadBufferDefault(TBuffer &b, void *obj)
+{
+ 
+   fReadBufferFunc = &TGenCollectionStreamer::ReadBufferGeneric;
+   // We will need this later, so let's make sure it is initialized.
+   if (!GetFunctionCreateIterators()) {
+      Fatal("TGenCollectionStreamer::ReadBufferDefault","No CreateIterators function for %s",fName.c_str());
+   }
+   if (fSTL_type == TClassEdit::kVector && ( fVal->fCase == G__BIT_ISFUNDAMENTAL || fVal->fCase == G__BIT_ISENUM ) )
+   {
+      // Only handle primitives this way
+      switch (int(fVal->fKind))   {
+         case kBool_t:
+            // Nothing use generic for now
+            break;
+         case kChar_t:
+            fReadBufferFunc = &TGenCollectionStreamer::ReadBufferVectorPrimitives<Char_t>;
+            break;
+         case kShort_t:
+            fReadBufferFunc = &TGenCollectionStreamer::ReadBufferVectorPrimitives<Short_t>;
+            break;
+         case kInt_t:
+            fReadBufferFunc = &TGenCollectionStreamer::ReadBufferVectorPrimitives<Int_t>;
+            break;
+         case kLong_t:
+            fReadBufferFunc = &TGenCollectionStreamer::ReadBufferVectorPrimitives<Long_t>;
+            break;
+         case kLong64_t:
+            fReadBufferFunc = &TGenCollectionStreamer::ReadBufferVectorPrimitives<Long64_t>;
+            break;
+         case kFloat_t:
+            fReadBufferFunc = &TGenCollectionStreamer::ReadBufferVectorPrimitives<Float_t>;
+            break;
+         case kFloat16_t:
+            fReadBufferFunc = &TGenCollectionStreamer::ReadBufferVectorPrimitivesFloat16;
+            break;
+         case kDouble_t:
+            fReadBufferFunc = &TGenCollectionStreamer::ReadBufferVectorPrimitives<Double_t>;
+            break;
+//         case kBOOL_t:
+//            fReadBufferFunc = &ReadBufferVectorPrimitives<>;
+//            break;
+         case kUChar_t:
+            fReadBufferFunc = &TGenCollectionStreamer::ReadBufferVectorPrimitives<UChar_t>;
+            break;
+         case kUShort_t:
+            fReadBufferFunc = &TGenCollectionStreamer::ReadBufferVectorPrimitives<UShort_t>;
+            break;
+         case kUInt_t:
+            fReadBufferFunc = &TGenCollectionStreamer::ReadBufferVectorPrimitives<UInt_t>;
+            break;
+         case kULong_t:
+            fReadBufferFunc = &TGenCollectionStreamer::ReadBufferVectorPrimitives<ULong_t>;
+            break;
+         case kULong64_t:
+            fReadBufferFunc = &TGenCollectionStreamer::ReadBufferVectorPrimitives<ULong64_t>;
+            break;
+         case kDouble32_t:
+            fReadBufferFunc = &TGenCollectionStreamer::ReadBufferVectorPrimitivesDouble32;
+            break;
+         case kchar:
+         case kNoType_t:
+         case kOther_t:
+            // Nothing use the generic for now
+            break;
+      }
+   }
+   (this->*fReadBufferFunc)(b,obj);
+}
+
+void TGenCollectionStreamer::ReadBufferGeneric(TBuffer &b, void *obj)
+{
+   TVirtualCollectionProxy::TPushPop env(this, obj);
+
+   int nElements = 0;
+   b >> nElements;
+
+   if (nElements == 0) {
+      if (obj) {
+         TGenCollectionProxy::Clear("force");
+      }
+   } else if (nElements > 0)  {
+      switch (fSTL_type)  {
+         case TClassEdit::kBitSet:
+            if (obj) {
+               if (fPointers)   {
+                  TGenCollectionProxy::Clear("force");
+               }  else {
+                  fClear.invoke(fEnv);
+               }
+            }
+            ReadPrimitives(nElements, b);
+            return;
+         case TClassEdit::kVector:
+            if (obj) {
+               if (fPointers)   {
+                  TGenCollectionProxy::Clear("force");
+               } // a resize will be called in ReadPrimitives/ReadObjects.
+               else if (fVal->fKind == EDataType(kBOOL_t)) {
+                  fClear.invoke(fEnv);                  
+               }
+            }
+            switch (fVal->fCase) {
+               case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
+               case G__BIT_ISENUM:
+                  ReadPrimitives(nElements, b);
+                  return;
+               default:
+                  ReadObjects(nElements, b);
+                  return;
+            }
+            break;
+         case TClassEdit::kList:
+         case TClassEdit::kDeque:
+         case TClassEdit::kMultiSet:
+         case TClassEdit::kSet:
+            if (obj) {
+               if (fPointers)   {
+                  TGenCollectionProxy::Clear("force");
+               }  else {
+                  fClear.invoke(fEnv);
+               }
+            }
+            switch (fVal->fCase) {
+               case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
+               case G__BIT_ISENUM:
+                  ReadPrimitives(nElements, b);
+                  return;
+               default:
+                  ReadObjects(nElements, b);
+                  return;
+            }
+            break;
+         case TClassEdit::kMap:
+         case TClassEdit::kMultiMap:
+            if (obj) {
+               if (fPointers)   {
+                  TGenCollectionProxy::Clear("force");
+               }  else {
+                  fClear.invoke(fEnv);
+               }
+            }
+            ReadMap(nElements, b);
+            break;
       }
    }
 }

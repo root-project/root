@@ -44,6 +44,8 @@ class TClassStreamer;
 class TVirtualArray;
 namespace ROOT { class TCollectionProxyInfo; }
 
+namespace TStreamerInfoActions { class TActionSequence; }
+
 class TStreamerInfo : public TVirtualStreamerInfo {
 
 #ifdef R__BROKEN_FUNCTION_TEMPLATES
@@ -80,7 +82,7 @@ protected:
          return *el;
       }
    private:
-     TVirtualCollectionProxy *fProxy;
+      TVirtualCollectionProxy *fProxy;
    };
 
 private:
@@ -104,6 +106,9 @@ private:
    ULong_t          *fVirtualInfoLoc;    //![fNVirtualInfoLoc] Location of the pointer to the TStreamerInfo inside the object (when emulated)
    ULong_t           fLiveCount;         //! Number of outstanding pointer to this StreamerInfo.
 
+   TStreamerInfoActions::TActionSequence *fReadObjectWise;      //! List of action resulting from the compilation.
+   TStreamerInfoActions::TActionSequence *fReadMemberWise;      //! List of action resulting from the compilation for use in member wise streaming.
+   
    static  Int_t     fgCount;            //Number of TStreamerInfo instances
    static TStreamerElement *fgElement;   //Pointer to current TStreamerElement
    static Double_t   GetValueAux(Int_t type, void *ladd, int k, Int_t len);
@@ -193,6 +198,8 @@ public:
    Int_t               GetDataMemberOffset(TDataMember *dm, TMemberStreamer *&streamer) const;
    TObjArray          *GetElements() const {return fElements;}
    ULong_t            *GetElems()   const {return fElem;}
+   TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Bool_t forCollection) { return forCollection ? fReadMemberWise : fReadObjectWise; }
+   TStreamerInfoActions::TActionSequence *GetReadObjectWiseActions() { return fReadObjectWise; }
    Int_t               GetNdata()   const {return fNdata;}
    Int_t               GetNumber()  const {return fNumber;}
    Int_t              *GetLengths() const {return fLength;}
@@ -231,10 +238,6 @@ public:
    Int_t               ReadBufferSkip(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    Int_t               ReadBufferConv(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    Int_t               ReadBufferArtificial(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-   Int_t               ReadBuffer(TBuffer &b, const TPointerCollectionAdapter &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
-   Int_t               ReadBufferSkip(TBuffer &b, const TPointerCollectionAdapter &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-   Int_t               ReadBufferConv(TBuffer &b, const TPointerCollectionAdapter &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-   Int_t               ReadBufferArtificial(TBuffer &b, const TPointerCollectionAdapter &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    Int_t               ReadBuffer(TBuffer &b, const TVirtualArray &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
    Int_t               ReadBufferSkip(TBuffer &b, const TVirtualArray &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    Int_t               ReadBufferConv(TBuffer &b, const TVirtualArray &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
@@ -252,7 +255,6 @@ public:
 
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
    Int_t               ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset );
-   Int_t               ReadBufferSTLPtrs(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset );
    void                SetCheckSum(UInt_t checksum) {fCheckSum = checksum;}
    void                SetClass(TClass *cl) {fClass = cl;}
    void                SetClassVersion(Int_t vers) {fClassVersion=vers;}

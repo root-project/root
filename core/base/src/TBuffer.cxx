@@ -288,3 +288,34 @@ UShort_t TBuffer::WriteProcessID(TProcessID *)
 
    return 0;
 }
+
+//______________________________________________________________________________
+void TBuffer::PushDataCache(TVirtualArray *obj)
+{
+   // Push a new data cache area onto the list of area to be used for
+   // temporarily store 'missing' data members.
+   
+   fCacheStack.push_back(obj);
+}
+
+//______________________________________________________________________________
+TVirtualArray *TBuffer::PeekDataCache() const
+{
+   // Return the 'current' data cache area from the list of area to be used for
+   // temporarily store 'missing' data members.
+   
+   if (fCacheStack.empty()) return 0;
+   return fCacheStack.back();
+}
+
+//______________________________________________________________________________
+TVirtualArray *TBuffer::PopDataCache()
+{
+   // Pop and Return the 'current' data cache area from the list of area to be used for
+   // temporarily store 'missing' data members.
+   
+   TVirtualArray *val = PeekDataCache();
+   fCacheStack.pop_back();
+   return val;
+}
+

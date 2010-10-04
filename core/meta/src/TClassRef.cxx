@@ -55,37 +55,31 @@ TClassRef::TClassRef(TClass *cl) : fClassPtr(cl), fPrevious(0), fNext(0)
 }
 
 //______________________________________________________________________________
-TClassRef &TClassRef::operator=(const TClassRef &rhs)
+void TClassRef::Assign(const TClassRef &rhs)
 {
-   // Assignment operator, increases reference count to original class object.
+   // Assignment operator implementation, increases reference count to original class object.
+   // This routines assumes that the copy actually need to be done.
 
-   if (this != &rhs) {      
-      if (fClassPtr != rhs.fClassPtr) {
-         if (fClassPtr) fClassPtr->RemoveRef(this);
-         fClassName = rhs.fClassName;
-         fClassPtr  = rhs.fClassPtr;
-         if (fClassPtr) fClassPtr->AddRef(this);
-      }
-   }
-   return *this;
+   if (fClassPtr) fClassPtr->RemoveRef(this);
+   fClassName = rhs.fClassName;
+   fClassPtr  = rhs.fClassPtr;
+   if (fClassPtr) fClassPtr->AddRef(this);
 }
 
 //______________________________________________________________________________
-TClassRef &TClassRef::operator=(TClass* rhs)
+void TClassRef::Assign(TClass* rhs)
 {
    // Assignment operator, increases reference count to original class object.
+   // This routines assumes that the copy actually need to be done.
 
-   if (this->fClassPtr != rhs) {      
-      if (fClassPtr) fClassPtr->RemoveRef(this);
-      fClassPtr  = rhs;
-      if (fClassPtr) {
-         fClassName = fClassPtr->GetName();
-         fClassPtr->AddRef(this);
-      } else {
-         fClassName.clear();
-      }
+   if (fClassPtr) fClassPtr->RemoveRef(this);
+   fClassPtr  = rhs;
+   if (fClassPtr) {
+      fClassName = fClassPtr->GetName();
+      fClassPtr->AddRef(this);
+   } else {
+      fClassName.clear();
    }
-   return *this;
 }
 
 //______________________________________________________________________________

@@ -412,7 +412,7 @@ UInt_t TMakeProject::GenerateForwardDeclaration(FILE *fp, const char *clname, ch
    UInt_t numberOfClasses = 0;
    UInt_t numberOfNamespaces = GenerateClassPrefix(fp, clname, kTRUE, protoname, &numberOfClasses, implementEmptyClass, needGenericTemplate);
 
-   fprintf(fp, ";\n");
+   if (!implementEmptyClass) fprintf(fp, ";\n");
    for (UInt_t i = 0;i < numberOfClasses;++i) {
       fprintf(fp, "}; // end of class.\n");
       fprintf(fp, "#endif\n");

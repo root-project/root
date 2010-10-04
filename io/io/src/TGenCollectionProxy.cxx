@@ -33,9 +33,12 @@
 #include "TInterpreter.h"
 #include "Riostream.h"
 #include "TVirtualMutex.h"
+#include "TStreamerInfoActions.h"
 #include <stdlib.h>
 
 #define MESSAGE(which,text)
+
+std::vector<TVirtualCollectionProxy*> gSlowIterator__Proxy;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -507,10 +510,10 @@ TGenCollectionProxy::TGenCollectionProxy(const TGenCollectionProxy& copy)
    fNext.call      = copy.fNext.call;
    fFirst.call     = copy.fFirst.call;
    fClear.call     = copy.fClear.call;
-   fResize.call    = copy.fResize.call;
-   fDestruct.call  = copy.fDestruct.call;
-   fConstruct.call = copy.fConstruct.call;
-   fFeed.call      = copy.fFeed.call;
+   fResize         = copy.fResize;
+   fDestruct       = copy.fDestruct;
+   fConstruct      = copy.fConstruct;
+   fFeed           = copy.fFeed;
    fCollect.call   = copy.fCollect.call;
    fCreateEnv.call = copy.fCreateEnv.call;
    fValOffset      = copy.fValOffset;
@@ -519,6 +522,11 @@ TGenCollectionProxy::TGenCollectionProxy(const TGenCollectionProxy& copy)
    fVal            = copy.fVal   ? new Value(*copy.fVal)   : 0;
    fKey            = copy.fKey   ? new Value(*copy.fKey)   : 0;
    fOnFileClass    = copy.fOnFileClass;
+   fReadMemberWise = new TObjArray(TCollection::kInitCapacity,-1);
+   fConversionReadMemberWise = 0;
+   fProperties     = copy.fProperties;
+   fFunctionCreateIterators    = copy.fFunctionCreateIterators;
+   fFunctionDeleteTwoIterators = copy.fFunctionDeleteTwoIterators;
 }
 
 //______________________________________________________________________________
@@ -532,12 +540,12 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
    fFirst.call      = 0;
    fNext.call       = 0;
    fClear.call      = 0;
-   fResize.call     = 0;
-   fDestruct.call   = 0;
-   fConstruct.call  = 0;
+   fResize          = 0;
+   fDestruct        = 0;
+   fConstruct       = 0;
    fCollect.call    = 0;
    fCreateEnv.call  = 0;
-   fFeed.call       = 0;
+   fFeed            = 0;
    fValue           = 0;
    fKey             = 0;
    fVal             = 0;
@@ -555,6 +563,10 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
             (Long_t)iter_size,
             (Long_t)sizeof(e.fIterator));
    }
+   fReadMemberWise = new TObjArray(TCollection::kInitCapacity,-1);
+   fConversionReadMemberWise   = 0;
+   fFunctionCreateIterators    = 0;
+   fFunctionDeleteTwoIterators = 0;
 }
 
 //______________________________________________________________________________
@@ -567,13 +579,13 @@ TGenCollectionProxy::TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info,
    fValDiff        = info.fValueDiff;
    fValOffset      = info.fValueOffset;
    fSize.call      = info.fSizeFunc;
-   fResize.call    = info.fResizeFunc;
+   fResize         = info.fResizeFunc;
    fNext.call      = info.fNextFunc;
    fFirst.call     = info.fFirstFunc;
    fClear.call     = info.fClearFunc;
-   fConstruct.call = info.fConstructFunc;
-   fDestruct.call  = info.fDestructFunc;
-   fFeed.call      = info.fFeedFunc;
+   fConstruct      = info.fConstructFunc;
+   fDestruct       = info.fDestructFunc;
+   fFeed           = info.fFeedFunc;
    fCollect.call   = info.fCollectFunc;
    fCreateEnv.call = info.fCreateEnv;
    
@@ -597,18 +609,21 @@ TGenCollectionProxy::TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info,
             (Long_t)info.fIterSize,
             (Long_t)sizeof(e.fIterator));
    }
+   fReadMemberWise = new TObjArray(TCollection::kInitCapacity,-1);
+   fConversionReadMemberWise   = 0;
+   fFunctionCreateIterators    = 0;
+   fFunctionDeleteTwoIterators = 0;
 }
 
 namespace {
-   typedef std::vector<ROOT::TCollectionProxyInfo::EnvironBase* > Proxies_t;
-   void clearProxies(Proxies_t& v)
+   template <class vec> 
+   void clearVector(vec& v)
    {
       // Clear out the proxies.
 
-      for(Proxies_t::iterator i=v.begin(); i != v.end(); ++i) {
-         ROOT::TCollectionProxyInfo::EnvironBase *e = *i;
+      for(typename vec::iterator i=v.begin(); i != v.end(); ++i) {
+         typename vec::value_type e = *i;
          if ( e ) {
-            if ( e->fTemp ) ::free(e->fTemp);
             delete e;
          }
       }
@@ -619,12 +634,24 @@ namespace {
 TGenCollectionProxy::~TGenCollectionProxy()
 {
    // Standard destructor
-   clearProxies(fProxyList);
-   clearProxies(fProxyKept);
+   clearVector(fProxyList);
+   clearVector(fProxyKept);
+   clearVector(fStaged);
 
    if ( fValue ) delete fValue;
    if ( fVal   ) delete fVal;
    if ( fKey   ) delete fKey;
+   
+   delete fReadMemberWise;
+   if (fConversionReadMemberWise) {
+      std::map<std::string, TObjArray*>::iterator it;
+      std::map<std::string, TObjArray*>::iterator end = fConversionReadMemberWise->end();
+      for( it = fConversionReadMemberWise->begin(); it != end; ++it ) {
+         delete it->second;
+      }
+      delete fConversionReadMemberWise;
+      fConversionReadMemberWise = 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -666,6 +693,7 @@ TGenCollectionProxy *TGenCollectionProxy::Initialize() const
    // Proxy initializer
    TGenCollectionProxy* p = const_cast<TGenCollectionProxy*>(this);
    if ( fValue ) return p;
+   const_cast<TGenCollectionProxy*>(this)->fProperties |= kIsInitialized;
    return p->InitializeEx();
 }
 
@@ -676,7 +704,7 @@ void TGenCollectionProxy::CheckFunctions() const
    if ( 0 == fSize.call ) {
       Fatal("TGenCollectionProxy","No 'size' function pointer for class %s present.",fName.c_str());
    }
-   if ( 0 == fResize.call ) {
+   if ( 0 == fResize ) {
       Fatal("TGenCollectionProxy","No 'resize' function for class %s present.",fName.c_str());
    }
    if ( 0 == fNext.call  ) {
@@ -688,13 +716,13 @@ void TGenCollectionProxy::CheckFunctions() const
    if ( 0 == fClear.call ) {
       Fatal("TGenCollectionProxy","No 'clear' function for class %s present.",fName.c_str());
    }
-   if ( 0 == fConstruct.call ) {
+   if ( 0 == fConstruct ) {
       Fatal("TGenCollectionProxy","No 'block constructor' function for class %s present.",fName.c_str());
    }
-   if ( 0 == fDestruct.call ) {
+   if ( 0 == fDestruct ) {
       Fatal("TGenCollectionProxy","No 'block destructor' function for class %s present.",fName.c_str());
    }
-   if ( 0 == fFeed.call ) {
+   if ( 0 == fFeed ) {
       Fatal("TGenCollectionProxy","No 'data feed' function for class %s present.",fName.c_str());
    }
    if ( 0 == fCollect.call ) {
@@ -738,39 +766,48 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
          if ( inside[0].find("__gnu_cxx::hash_") != std::string::npos )
             inside[0].replace(0,16,"std::");
          fSTL_type = TClassEdit::STLKind(inside[0].c_str());
+         switch ( fSTL_type ) {
+            case TClassEdit::kMap:
+            case TClassEdit::kMultiMap:
+            case TClassEdit::kSet:
+            case TClassEdit::kMultiSet:
+               fProperties |= kIsAssociative;
+               break;
+         };
+               
          int slong = sizeof(void*);
          switch ( fSTL_type ) {
-         case TClassEdit::kMap:
-         case TClassEdit::kMultiMap:
-            nam = "pair<"+inside[1]+","+inside[2];
-            nam += (nam[nam.length()-1]=='>') ? " >" : ">";
-            fValue = R__CreateValue(nam);
-
-            fVal   = R__CreateValue(inside[2]);
-            fKey   = R__CreateValue(inside[1]);
-            fPointers = fPointers || (0 != (fKey->fCase&G__BIT_ISPOINTER));
-            if ( 0 == fValDiff ) {
-               fValDiff = fKey->fSize + fVal->fSize;
-               fValDiff += (slong - fKey->fSize%slong)%slong;
-               fValDiff += (slong - fValDiff%slong)%slong;
-            }
-            if ( 0 == fValOffset ) {
-               fValOffset = fKey->fSize;
-               fValOffset += (slong - fKey->fSize%slong)%slong;
-            }
-            break;
-         case TClassEdit::kBitSet:
-            inside[1] = "bool";
-            // Intentional fall through
-         default:
-            fValue = R__CreateValue(inside[1]);
-
-            fVal   = new Value(*fValue);
-            if ( 0 == fValDiff ) {
-               fValDiff = fVal->fSize;
-               fValDiff += (slong - fValDiff%slong)%slong;
-            }
-            break;
+            case TClassEdit::kMap:
+            case TClassEdit::kMultiMap:
+               nam = "pair<"+inside[1]+","+inside[2];
+               nam += (nam[nam.length()-1]=='>') ? " >" : ">";
+               fValue = R__CreateValue(nam);
+               
+               fVal   = R__CreateValue(inside[2]);
+               fKey   = R__CreateValue(inside[1]);
+               fPointers = fPointers || (0 != (fKey->fCase&G__BIT_ISPOINTER));
+               if ( 0 == fValDiff ) {
+                  fValDiff = fKey->fSize + fVal->fSize;
+                  fValDiff += (slong - fKey->fSize%slong)%slong;
+                  fValDiff += (slong - fValDiff%slong)%slong;
+               }
+               if ( 0 == fValOffset ) {
+                  fValOffset = fKey->fSize;
+                  fValOffset += (slong - fKey->fSize%slong)%slong;
+               }
+               break;
+            case TClassEdit::kBitSet:
+               inside[1] = "bool";
+               // Intentional fall through
+            default:
+               fValue = R__CreateValue(inside[1]);
+               
+               fVal   = new Value(*fValue);
+               if ( 0 == fValDiff ) {
+                  fValDiff = fVal->fSize;
+                  fValDiff += (slong - fValDiff%slong)%slong;
+               }
+               break;
          }
 
          fPointers = fPointers || (0 != (fVal->fCase&G__BIT_ISPOINTER));
@@ -788,6 +825,27 @@ TClass *TGenCollectionProxy::GetCollectionClass()
 {
    // Return a pointer to the TClass representing the container
    return fClass ? fClass : Initialize()->fClass;
+}
+
+//______________________________________________________________________________
+Int_t TGenCollectionProxy::GetCollectionType()
+{
+   // Return the type of collection see TClassEdit::ESTLType
+
+   if (!fClass) {
+      Initialize();
+   }
+   return fSTL_type;
+}
+
+//______________________________________________________________________________
+ULong_t TGenCollectionProxy::GetIncrement() {
+   // Return the offset between two consecutive value_types (memory layout).
+
+   if (!fValue) {
+      Initialize();
+   }
+   return fValDiff;
 }
 
 //______________________________________________________________________________
@@ -902,7 +960,11 @@ UInt_t TGenCollectionProxy::Size() const
 {
    // Return the current size of the container
    if ( fEnv && fEnv->fObject ) {
-      return *(size_t*)fSize.invoke(fEnv);
+      if (fEnv->fUseTemp) {
+         return fEnv->fSize;
+      } else {
+         return *(size_t*)fSize.invoke(fEnv);
+      }
    }
    Fatal("TGenCollectionProxy","Size> Logic error - no proxy object set.");
    return 0;
@@ -922,7 +984,7 @@ void TGenCollectionProxy::Resize(UInt_t n, Bool_t force)
       }
       MESSAGE(3, "Resize(n)" );
       fEnv->fSize = n;
-      fResize.invoke(fEnv);
+      fResize(fEnv->fObject,fEnv->fSize);
       return;
    }
    Fatal("TGenCollectionProxy","Resize> Logic error - no proxy object set.");
@@ -932,73 +994,76 @@ void TGenCollectionProxy::Resize(UInt_t n, Bool_t force)
 void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
 {
    // Allocate the needed space.
+   // For associative collection, this returns a TStaging object that
+   // need to be deleted manually __or__ returned by calling Commit(TStaging*)
 
    if ( fEnv && fEnv->fObject ) {
       switch ( fSTL_type ) {
-      case TClassEdit::kSet:
-      case TClassEdit::kMultiSet:
-      case TClassEdit::kMap:
-      case TClassEdit::kMultiMap:
-         if ( fPointers )
-            Clear("force");
-         else
-            fClear.invoke(fEnv);
-         ++fEnv->fRefCount;
-         fEnv->fSize  = n;
-         if ( fEnv->fSpace < fValDiff*n ) {
-            fEnv->fTemp = fEnv->fTemp ? ::realloc(fEnv->fTemp,fValDiff*n) : ::malloc(fValDiff*n);
-            fEnv->fSpace = fValDiff*n;
-         }
-         fEnv->fUseTemp = kTRUE;
-         fEnv->fStart = fEnv->fTemp;
-         fConstruct.invoke(fEnv);
-         return fEnv;
-      case TClassEdit::kVector:
-      case TClassEdit::kList:
-      case TClassEdit::kDeque:
-         if( fPointers ) {
-            Clear("force");
-         }
-         fEnv->fSize = n;
-         fResize.invoke(fEnv);
-         return fEnv;
+         case TClassEdit::kSet:
+         case TClassEdit::kMultiSet:
+         case TClassEdit::kMap:
+         case TClassEdit::kMultiMap:
+            if ( fPointers )
+               Clear("force");
+            else
+               fClear.invoke(fEnv);
+            ++fEnv->fRefCount;
+            fEnv->fSize  = n;
 
-      case TClassEdit::kBitSet:
-         // Nothing to do.
-         return fEnv;
+            TStaging *s;
+            if (fStaged.empty()) {
+               s = new TStaging(n,fValDiff);
+            } else {
+               s = fStaged.back();
+               fStaged.pop_back();
+               s->Resize(n);
+            }
+            fConstruct(s->GetContent(),s->GetSize());
+            
+            s->SetTarget(fEnv->fObject);
+
+            fEnv->fTemp = s->GetContent();
+            fEnv->fUseTemp = kTRUE;
+            fEnv->fStart = fEnv->fTemp;
+
+            return s;
+         case TClassEdit::kVector:
+         case TClassEdit::kList:
+         case TClassEdit::kDeque:
+            if( fPointers ) {
+               Clear("force");
+            }
+            fEnv->fSize = n;
+            fResize(fEnv->fObject,n);
+            return fEnv->fObject;
+            
+         case TClassEdit::kBitSet:
+            // Nothing to do.
+            return fEnv->fObject;
       }
    }
    return 0;
 }
 
 //______________________________________________________________________________
-void TGenCollectionProxy::Commit(void* env)
+void TGenCollectionProxy::Commit(void* from)
 {
    // Commit the change.
 
-   switch (fSTL_type) {
-   case TClassEdit::kVector:
-   case TClassEdit::kList:
-   case TClassEdit::kDeque:
-   case TClassEdit::kBitSet:
-      return;
-   case TClassEdit::kMap:
-   case TClassEdit::kMultiMap:
-   case TClassEdit::kSet:
-   case TClassEdit::kMultiSet:
-      if ( env ) {
-         EnvironBase_t* e = (EnvironBase_t*)env;
-         if ( e->fObject ) {
-            e->fStart = e->fTemp;
-            fFeed.invoke(e);
+   if (fProperties & kIsAssociative) {
+//      case TClassEdit::kMap:
+//      case TClassEdit::kMultiMap:
+//      case TClassEdit::kSet:
+//      case TClassEdit::kMultiSet:
+      if ( from ) {
+         TStaging *s = (TStaging*) from;
+         if ( s->GetTarget() ) {
+            fFeed(s->GetContent(),s->GetTarget(),s->GetSize());
          }
-         fDestruct.invoke(e);
-         e->fStart = 0;
-         --e->fRefCount;
+         fDestruct(s->GetContent(),s->GetSize());
+         s->SetTarget(0);
+         fStaged.push_back(s);
       }
-      return;
-   default:
-      return;
    }
 }
 
@@ -1006,6 +1071,8 @@ void TGenCollectionProxy::Commit(void* env)
 void TGenCollectionProxy::PushProxy(void *objstart)
 {
    // Add an object.
+
+   gSlowIterator__Proxy.push_back(this);
 
    if ( !fValue ) Initialize();
    if ( !fProxyList.empty() ) {
@@ -1020,7 +1087,6 @@ void TGenCollectionProxy::PushProxy(void *objstart)
    EnvironBase_t* e    = 0;
    if ( fProxyKept.empty() ) {
       e = (EnvironBase_t*)fCreateEnv.invoke();
-      e->fSpace = 0;
       e->fTemp  = 0;
       e->fUseTemp = kFALSE;
    }
@@ -1043,6 +1109,8 @@ void TGenCollectionProxy::PopProxy()
 {
    // Remove the last object.
 
+   gSlowIterator__Proxy.pop_back();
+   
    if ( !fProxyList.empty() ) {
       EnvironBase_t* e = fProxyList.back();
       if ( --e->fRefCount <= 0 ) {
@@ -1080,6 +1148,18 @@ void TGenCollectionProxy::DeleteItem(Bool_t force, void* ptr) const
 }
 
 //______________________________________________________________________________
+void TGenCollectionProxy::ReadBuffer(TBuffer & /* b */, void * /* obj */, const TClass * /* onfileClass */)
+{
+   MayNotUse("TGenCollectionProxy::ReadBuffer(TBuffer &, void *, const TClass *)");
+}
+
+//______________________________________________________________________________
+void TGenCollectionProxy::ReadBuffer(TBuffer & /* b */, void * /* obj */)
+{
+   MayNotUse("TGenCollectionProxy::ReadBuffer(TBuffer &, void *)");
+}
+
+//______________________________________________________________________________
 void TGenCollectionProxy::Streamer(TBuffer &buff)
 {
    // Streamer Function.
@@ -1103,5 +1183,328 @@ void TGenCollectionProxy::operator()(TBuffer &b, void *objp)
 {
    // TClassStreamer IO overload
    Streamer(b, objp, 0);
+}
+
+
+struct TGenCollectionProxy__SlowIterator {
+   TVirtualCollectionProxy *fProxy;
+   UInt_t fIndex;
+   TGenCollectionProxy__SlowIterator(TVirtualCollectionProxy *proxy) : fProxy(proxy), fIndex(0) {}
+};
+
+//______________________________________________________________________________
+void TGenCollectionProxy__SlowCreateIterators(void * /* collection */, void **begin_arena, void **end_arena) 
+{
+   new (*begin_arena) TGenCollectionProxy__SlowIterator(gSlowIterator__Proxy.back());
+   *(UInt_t*)*end_arena = gSlowIterator__Proxy.back()->Size();
+}
+
+//______________________________________________________________________________
+void *TGenCollectionProxy__SlowNext(void *iter, const void *end) 
+{
+   TGenCollectionProxy__SlowIterator *iterator = (TGenCollectionProxy__SlowIterator*)iter;
+   if (iterator->fIndex != *(UInt_t*)end) {
+      void *result = iterator->fProxy->At(iterator->fIndex);
+      ++(iterator->fIndex);
+      return result;
+   } else {
+      return 0;
+   }
+}
+
+//______________________________________________________________________________
+void * TGenCollectionProxy__SlowCopyIterator(void *dest, const void *source) 
+{
+   *(TGenCollectionProxy__SlowIterator*)dest = *(TGenCollectionProxy__SlowIterator*)source;
+   return dest;
+}
+
+//______________________________________________________________________________
+void TGenCollectionProxy__SlowDeleteSingleIterators(void *) 
+{
+   // Nothing to do
+}
+
+//______________________________________________________________________________
+void TGenCollectionProxy__SlowDeleteTwoIterators(void *, void *) 
+{
+   // Nothing to do
+}
+
+
+//______________________________________________________________________________
+void TGenCollectionProxy__VectorCreateIterators(void *obj, void **begin_arena, void **end_arena) 
+{
+   // We can safely assume that the std::vector layout does not really depend on
+   // the content!
+   std::vector<char> *vec = (std::vector<char>*)obj;
+#ifdef R__VISUAL_CPLUSPLUS
+   if (vec->empty()) {
+      *begin_arena = 0;
+      *end_arena = 0;
+      return;
+   }
+   *begin_arena = &(*vec->begin());
+   *end_arena = &(*(vec->end()-1)) + 1; // On windows we can not dererence the end iterator at all.
+#else
+   *begin_arena = &(*vec->begin());
+   *end_arena = &(*vec->end());
+#endif
+   
+   // The following is a safer way but require the caller to have called TPushPop
+   //   TVirtualCollectionProxy *proxy = gSlowIterator__Proxy.back();
+   //   void *good_begin_arena = proxy->At(0);
+   //   void *good_end_arena = ((char*)proxy->At(0)) + proxy->Size() * proxy->GetIncrement();
+}
+
+//______________________________________________________________________________
+void *TGenCollectionProxy__VectorNext(void *, const void *) 
+{
+   // Should not be used.
+   R__ASSERT(0);
+   return 0;
+}
+
+//______________________________________________________________________________
+void *TGenCollectionProxy__VectorCopyIterator(void *dest, const void *source) 
+{
+   *(void**)dest = *(void**)source;
+   return dest;
+}
+
+//______________________________________________________________________________
+void TGenCollectionProxy__VectorDeleteSingleIterators(void *) 
+{
+   // Nothing to do
+}
+
+//______________________________________________________________________________
+void TGenCollectionProxy__VectorDeleteTwoIterators(void *, void *) 
+{
+   // Nothing to do
+}
+
+
+
+//______________________________________________________________________________
+void TGenCollectionProxy__StagingCreateIterators(void *obj, void **begin_arena, void **end_arena) 
+{
+   TGenCollectionProxy::TStaging * s = (TGenCollectionProxy::TStaging*)obj;
+   *begin_arena = s->GetContent();
+   *end_arena = s->GetEnd();
+}
+
+//______________________________________________________________________________
+void *TGenCollectionProxy__StagingNext(void *, const void *) 
+{
+   // Should not be used.
+   R__ASSERT(0);
+   return 0;
+}
+
+//______________________________________________________________________________
+void *TGenCollectionProxy__StagingCopyIterator(void *dest, const void *source) 
+{
+   *(void**)dest = *(void**)source;
+   return dest;
+}
+
+//______________________________________________________________________________
+void TGenCollectionProxy__StagingDeleteSingleIterators(void *) 
+{
+   // Nothing to do
+}
+
+//______________________________________________________________________________
+void TGenCollectionProxy__StagingDeleteTwoIterators(void *, void *) 
+{
+   // Nothing to do
+}
+
+
+//______________________________________________________________________________
+TVirtualCollectionProxy::CreateIterators_t TGenCollectionProxy::GetFunctionCreateIterators(Bool_t read) 
+{
+   // See typedef void (*CreateIterators_t)(void *collection, void *&begin_arena, void *&end_arena);
+   // begin_arena and end_arena should contain the location of memory arena  of size fgIteratorSize. 
+   // If the collection iterator are of that size or less, the iterators will be constructed in place in those location (new with placement)
+   // Otherwise the iterators will be allocated via a regular new and their address returned by modifying the value of begin_arena and end_arena.
+   
+   if ( fFunctionCreateIterators ) return fFunctionCreateIterators;
+   
+   if ( !fValue ) InitializeEx();
+
+//   fprintf(stderr,"GetFunctinCreateIterator for %s will give: ",fClass.GetClassName());
+//   if (fSTL_type==TClassEdit::kVector || (fProperties & kIsEmulated)) 
+//      fprintf(stderr,"vector/emulated iterator\n");
+//   else if ( (fProperties & kIsAssociative) && read)
+//      fprintf(stderr,"an associative read iterator\n");
+//   else 
+//      fprintf(stderr,"a generic iterator\n");
+      
+   if (fSTL_type==TClassEdit::kVector || (fProperties & kIsEmulated)) 
+      fFunctionCreateIterators = TGenCollectionProxy__VectorCreateIterators;
+   else if ( (fProperties & kIsAssociative) && read)
+      fFunctionCreateIterators = TGenCollectionProxy__StagingCreateIterators;
+   else 
+      fFunctionCreateIterators = TGenCollectionProxy__SlowCreateIterators;
+   return fFunctionCreateIterators;
+}
+
+//______________________________________________________________________________
+TVirtualCollectionProxy::CopyIterator_t TGenCollectionProxy::GetFunctionCopyIterator(Bool_t read)
+{
+   // See typedef void (*CopyIterator_t)(void *&dest, const void *source);
+   // Copy the iterator source, into dest.   dest should contain should contain the location of memory arena  of size fgIteratorSize.
+   // If the collection iterator are of that size or less, the iterator will be constructed in place in this location (new with placement)
+   // Otherwise the iterator will be allocated via a regular new and its address returned by modifying the value of dest.
+   
+   if ( !fValue ) InitializeEx();
+
+   if (fSTL_type==TClassEdit::kVector || (fProperties & kIsEmulated)) 
+      return TGenCollectionProxy__VectorCopyIterator;
+   else if ( (fProperties & kIsAssociative) && read)
+      return TGenCollectionProxy__StagingCopyIterator;
+   else 
+      return TGenCollectionProxy__SlowCopyIterator;
+}
+
+//______________________________________________________________________________
+TVirtualCollectionProxy::Next_t TGenCollectionProxy::GetFunctionNext(Bool_t read)
+{
+   // See typedef void* (*Next_t)(void *iter, void *end);
+   // iter and end should be pointer to respectively an iterator to be incremented and the result of colleciton.end()
+   // 'Next' will increment the iterator 'iter' and return 0 if the iterator reached the end.
+   // If the end is not reached, 'Next' will return the address of the content unless the collection contains pointers in
+   // which case 'Next' will return the value of the pointer.
+   
+   if ( !fValue ) InitializeEx();
+
+   if (fSTL_type==TClassEdit::kVector || (fProperties & kIsEmulated)) 
+      return TGenCollectionProxy__VectorNext;
+   else if ( (fProperties & kIsAssociative) && read)
+      return TGenCollectionProxy__StagingNext;
+   else 
+      return TGenCollectionProxy__SlowNext;
+}
+
+//______________________________________________________________________________
+TVirtualCollectionProxy::DeleteIterator_t TGenCollectionProxy::GetFunctionDeleteIterator(Bool_t read)
+{
+   // See typedef void (*DeleteIterator_t)(void *iter);
+   // If the sizeof iterator is greater than fgIteratorArenaSize, call delete on the addresses,
+   // Otherwise just call the iterator's destructor.
+
+   if ( !fValue ) InitializeEx();
+
+   if (fSTL_type==TClassEdit::kVector || (fProperties & kIsEmulated)) 
+      return TGenCollectionProxy__VectorDeleteSingleIterators;
+   else if ( (fProperties & kIsAssociative) && read)
+      return TGenCollectionProxy__StagingDeleteSingleIterators;
+   else 
+      return TGenCollectionProxy__SlowDeleteSingleIterators;
+}
+
+//______________________________________________________________________________
+TVirtualCollectionProxy::DeleteTwoIterators_t TGenCollectionProxy::GetFunctionDeleteTwoIterators(Bool_t read) 
+{
+   // See typedef void (*DeleteTwoIterators_t)(void *begin, void *end);
+   // If the sizeof iterator is greater than fgIteratorArenaSize, call delete on the addresses,
+   // Otherwise just call the iterator's destructor.
+
+   if ( fFunctionDeleteTwoIterators ) return fFunctionDeleteTwoIterators;
+   
+   if ( !fValue ) InitializeEx();
+   
+   if (fSTL_type==TClassEdit::kVector || (fProperties & kIsEmulated)) 
+      fFunctionDeleteTwoIterators = TGenCollectionProxy__VectorDeleteTwoIterators;
+   else if ( (fProperties & kIsAssociative) && read)
+      fFunctionDeleteTwoIterators = TGenCollectionProxy__StagingDeleteTwoIterators;
+   else 
+      fFunctionDeleteTwoIterators = TGenCollectionProxy__SlowDeleteTwoIterators;
+   return fFunctionDeleteTwoIterators;
+}
+
+//______________________________________________________________________________
+TStreamerInfoActions::TActionSequence *TGenCollectionProxy::GetConversionReadMemberWiseActions(TClass *oldClass, Int_t version)
+{
+   // Return the set of action necessary to stream in this collection member-wise coming from
+   // the old value class layout refered to by 'version'.
+   
+   TObjArray* arr = 0;
+   TStreamerInfoActions::TActionSequence *result = 0;
+   if (fConversionReadMemberWise) {
+      std::map<std::string, TObjArray*>::iterator it;
+      
+      it = fConversionReadMemberWise->find( oldClass->GetName() );
+      
+      if( it != fConversionReadMemberWise->end() ) {
+         arr = it->second;
+      }
+      
+      if (arr) {
+         result = (TStreamerInfoActions::TActionSequence *)arr->At(version);
+         if (result) {
+            return result;
+         }
+      }
+   }
+   
+   // Need to create it.
+   TClass *valueClass = GetValueClass();
+   if (valueClass == 0) {
+      return 0;
+   }
+   TVirtualStreamerInfo *info = valueClass->GetConversionStreamerInfo(oldClass,version);
+   if (info == 0) {
+      return 0;
+   }
+   result = TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(info,this);
+
+   if (!arr) {
+      arr = new TObjArray(version+10, -1);
+      if (!fConversionReadMemberWise) {
+         fConversionReadMemberWise = new std::map<std::string, TObjArray*>();
+      }
+      (*fConversionReadMemberWise)[oldClass->GetName()] = arr;
+   }
+   arr->AddAtAndExpand( result, version );
+   
+   return result;
+}
+
+//______________________________________________________________________________
+TStreamerInfoActions::TActionSequence *TGenCollectionProxy::GetReadMemberWiseActions(Int_t version)
+{
+   // Return the set of action necessary to stream in this collection member-wise coming from
+   // the old value class layout refered to by 'version'.
+   
+   TStreamerInfoActions::TActionSequence *result = 0;
+   if (version <= fReadMemberWise->GetSize()) {
+      result = (TStreamerInfoActions::TActionSequence *)fReadMemberWise->At(version);
+   }
+   if (result == 0) {
+      // Need to create it.
+      TClass *valueClass = GetValueClass();
+      if (valueClass == 0) {
+         return 0;
+      }
+      TVirtualStreamerInfo *info = valueClass->GetStreamerInfo(version);
+      if (info == 0) {
+         return 0;
+      }
+      result = TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(info,this);
+      fReadMemberWise->AddAtAndExpand(result,version);
+   }
+   return result;
+}
+
+//______________________________________________________________________________
+TStreamerInfoActions::TActionSequence *TGenCollectionProxy::GetWriteMemberWiseActions()
+{
+   // Return the set of action necessary to stream out this collection member-wise.
+ 
+   R__ASSERT(0 /* Not Implemented yet */);
+   return 0;
 }
 

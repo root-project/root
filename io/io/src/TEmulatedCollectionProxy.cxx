@@ -45,6 +45,7 @@ TEmulatedCollectionProxy::TEmulatedCollectionProxy(const TEmulatedCollectionProx
    : TGenCollectionProxy(copy)
 {
    // Build a Streamer for an emulated vector whose type is 'name'.
+   fProperties |= kIsEmulated;
 }
 
 TEmulatedCollectionProxy::TEmulatedCollectionProxy(const char* cl_name)
@@ -56,6 +57,7 @@ TEmulatedCollectionProxy::TEmulatedCollectionProxy(const char* cl_name)
    if ( this->TEmulatedCollectionProxy::InitializeEx() ) {
       fCreateEnv = TGenCollectionProxy::Env_t::Create;
    }
+   fProperties |= kIsEmulated;
 }
 
 TEmulatedCollectionProxy::~TEmulatedCollectionProxy()
@@ -128,6 +130,9 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
             inside[0].replace(0,16,"std::");
          }
          fSTL_type = TClassEdit::STLKind(inside[0].c_str());
+         // Note: an emulated collection proxy is never really associative
+         // since under-neath is actually an array.
+
          // std::cout << "Initialized " << typeid(*this).name() << ":" << fName << std::endl;
          int slong = sizeof(void*);
          switch ( fSTL_type )  {
@@ -431,7 +436,7 @@ void* TEmulatedCollectionProxy::Allocate(UInt_t n, Bool_t forceDelete)
    // Allocate the necessary space.
 
    Resize(n, forceDelete);
-   return fEnv;
+   return fEnv->fObject;
 }
 
 void TEmulatedCollectionProxy::Commit(void* /* env */ )
@@ -532,6 +537,29 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)
          DOLOOP( i->write_tstring_pointer(b) );
    }
 #undef DOLOOP
+}
+
+void TEmulatedCollectionProxy::ReadBuffer(TBuffer &b, void *obj, const TClass *onfileClass)
+{
+   // Read portion of the streamer.
+   
+   SetOnFileClass((TClass*)onfileClass);
+   ReadBuffer(b,obj);
+}
+
+void TEmulatedCollectionProxy::ReadBuffer(TBuffer &b, void *obj)
+{
+   // Read portion of the streamer.
+
+   TPushPop env(this,obj);
+   int nElements = 0;
+   b >> nElements;
+   if ( fEnv->fObject )  {
+      Resize(nElements,true);
+   }
+   if ( nElements > 0 )  {
+      ReadItems(nElements, b);
+   }
 }
 
 void TEmulatedCollectionProxy::Streamer(TBuffer &b)

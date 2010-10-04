@@ -32,10 +32,16 @@ class TString;
 class TProcessID;
 class TClonesArray;
 class TRefTable;
+class TVirtualArray;
+namespace TStreamerInfoActions {
+   class TActionSequence;
+}
 
 class TBuffer : public TObject {
 
 protected:
+   typedef std::vector<TVirtualArray*> CacheList_t;
+
    Bool_t           fMode;          //Read or write mode
    Int_t            fVersion;       //Buffer format version
    Int_t            fBufSize;       //Size of buffer
@@ -44,6 +50,7 @@ protected:
    char            *fBufMax;        //End of buffer
    TObject         *fParent;        //Pointer to parent object owning this buffer
    ReAllocCharFun_t fReAllocFunc;   //! Realloc function to be used when extending the buffer.
+   CacheList_t      fCacheStack;    //Stack of pointers to the cache where to temporarily store the value of 'missing' data members
 
    // Default ctor
    TBuffer() : TObject(), fMode(0), fVersion(0), fBufSize(0), fBuffer(0),
@@ -111,6 +118,7 @@ public:
    virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname) = 0;
    virtual void       SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE)= 0;
 
+   virtual void       SkipVersion(const TClass *cl = 0) = 0;
    virtual Version_t  ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, const TClass *cl = 0) = 0;
    virtual UInt_t     WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE) = 0;
    virtual UInt_t     WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt = kFALSE) = 0;
@@ -128,6 +136,10 @@ public:
    virtual void       ClassMember(const char*, const char* = 0, Int_t = -1, Int_t = -1) = 0;
    virtual TVirtualStreamerInfo *GetInfo() = 0;
 
+   virtual TVirtualArray *PeekDataCache() const;
+   virtual TVirtualArray *PopDataCache();
+   virtual void           PushDataCache(TVirtualArray *);
+   
    virtual TClass    *ReadClass(const TClass *cl = 0, UInt_t *objTag = 0) = 0;
    virtual void       WriteClass(const TClass *cl) = 0;
 
@@ -147,6 +159,10 @@ public:
    virtual   void     WriteFloat16(Float_t *f, TStreamerElement *ele=0) = 0;
    virtual   void     ReadDouble32 (Double_t *d, TStreamerElement *ele=0) = 0;
    virtual   void     WriteDouble32(Double_t *d, TStreamerElement *ele=0) = 0;
+   virtual   void     ReadWithFactor(Float_t *ptr, Double_t factor, Double_t minvalue) = 0;
+   virtual   void     ReadWithNbits(Float_t *ptr, Int_t nbits) = 0;
+   virtual   void     ReadWithFactor(Double_t *ptr, Double_t factor, Double_t minvalue) = 0;
+   virtual   void     ReadWithNbits(Double_t *ptr, Int_t nbits) = 0;
 
    virtual   Int_t    ReadArray(Bool_t    *&b) = 0;
    virtual   Int_t    ReadArray(Char_t    *&c) = 0;
@@ -289,6 +305,11 @@ public:
    virtual   Int_t    ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class = 0) = 0;
    virtual   Int_t    WriteClassBuffer(const TClass *cl, void *pointer) = 0;
 
+   // Utilites to streamer using sequences.
+   virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &sequence, void *object) = 0;      
+   virtual Int_t ReadSequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) = 0;      
+   virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) = 0;
+   
    static TClass *GetClass(const type_info &typeinfo);
    static TClass *GetClass(const char *className);
 

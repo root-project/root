@@ -21,6 +21,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGenCollectionProxy.h"
+#include "TCollectionProxyFactory.h"
 
 class TGenCollectionStreamer : public TGenCollectionProxy {
 
@@ -34,6 +35,18 @@ protected:
    void WriteObjects(int nElements, TBuffer &b);
    void WritePrimitives(int nElements, TBuffer &b);
 
+//   typedef void (TGenCollectionStreamer::*ReadBufferConv_t)(TBuffer &b, void *obj, const TClass *onfileClass);
+//   ReadBufferConv_t fReadBufferConvFunc;
+   
+   typedef void (TGenCollectionStreamer::*ReadBuffer_t)(TBuffer &b, void *obj);
+   ReadBuffer_t fReadBufferFunc;
+   
+   template <typename basictype> void ReadBufferVectorPrimitives(TBuffer &b, void *obj);
+   void ReadBufferVectorPrimitivesFloat16(TBuffer &b, void *obj);
+   void ReadBufferVectorPrimitivesDouble32(TBuffer &b, void *obj);
+   void ReadBufferDefault(TBuffer &b, void *obj);
+   void ReadBufferGeneric(TBuffer &b, void *obj);
+      
 public:
    // Virtual copy constructor
    virtual TVirtualCollectionProxy* Generate() const;
@@ -58,6 +71,12 @@ public:
    virtual void Streamer(TBuffer &buff, void *pObj, int siz)  {
       TGenCollectionProxy::Streamer(buff, pObj, siz);
    }
+
+   // Routine to read the content of the buffer into 'obj'.
+   virtual void ReadBuffer(TBuffer &b, void *obj, const TClass *onfileClass);
+
+   // Routine to read the content of the buffer into 'obj'.
+   virtual void ReadBuffer(TBuffer &b, void *obj);
 };
 
 template <typename T>
@@ -70,11 +89,11 @@ struct AnyCollectionStreamer : public TGenCollectionStreamer  {
       fFirst.call     = T::first;
       fNext.call      = T::next;
       fClear.call     = T::clear;
-      fResize.call    = T::resize;
+      fResize         = T::resize;
       fCollect.call   = T::collect;
-      fConstruct.call = T::construct;
-      fDestruct.call  = T::destruct;
-      fFeed.call      = T::feed;
+      fConstruct      = T::construct;
+      fDestruct       = T::destruct;
+      fFeed           = T::feed;
       CheckFunctions();
    }
    virtual ~AnyCollectionStreamer() {  }

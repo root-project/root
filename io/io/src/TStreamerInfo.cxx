@@ -69,6 +69,8 @@
 
 #include "TVirtualMutex.h"
 
+#include "TStreamerInfoActions.h"
+
 TStreamerElement *TStreamerInfo::fgElement = 0;
 Int_t   TStreamerInfo::fgCount = 0;
 
@@ -140,6 +142,9 @@ TStreamerInfo::TStreamerInfo()
    fNVirtualInfoLoc = 0;
    fVirtualInfoLoc = 0;
    fLiveCount = 0;
+   
+   fReadObjectWise = 0;
+   fReadMemberWise = 0;
 }
 
 //______________________________________________________________________________
@@ -168,6 +173,9 @@ TStreamerInfo::TStreamerInfo(TClass *cl)
    fNVirtualInfoLoc = 0;
    fVirtualInfoLoc = 0;
    fLiveCount = 0;
+   
+   fReadObjectWise = 0;
+   fReadMemberWise = 0;
 }
 
 //______________________________________________________________________________
@@ -187,6 +195,9 @@ TStreamerInfo::~TStreamerInfo()
    if (!fElements) return;
    fElements->Delete();
    delete fElements; fElements=0;
+   
+   delete fReadObjectWise;
+   delete fReadMemberWise;
 }
 
 //______________________________________________________________________________
@@ -1653,6 +1664,9 @@ void TStreamerInfo::Clear(Option_t *option)
       fNdata = 0;
       fSize = 0;
       ResetBit(kIsCompiled);
+      
+      if (fReadObjectWise) fReadObjectWise->fActions.clear();
+      if (fReadMemberWise) fReadMemberWise->fActions.clear();
    }
 }
 
@@ -1975,6 +1989,7 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
    return result;
 }
 
+
 //______________________________________________________________________________
 void TStreamerInfo::ComputeSize()
 {
@@ -2271,9 +2286,9 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
                   sub_numberOfNamespaces = TMakeProject::GenerateClassPrefix(fp, subinfo->GetName() + len+2, kFALSE, sub_protoname, &sub_numberOfClasses, 3);                  
                } else {
                   sub_numberOfNamespaces = TMakeProject::GenerateClassPrefix(fp, subinfo->GetName() + len+2, kFALSE, sub_protoname, &sub_numberOfClasses, kFALSE);
+                  fprintf(fp, ";\n");
                }
 
-               fprintf(fp, ";\n");
                for (UInt_t i = 0;i < sub_numberOfClasses;++i) {
                   fprintf(fp, "}; // end of class.\n");
                }

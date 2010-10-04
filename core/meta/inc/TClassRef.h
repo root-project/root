@@ -40,6 +40,8 @@ private:
 
    friend class TClass;
 
+   void Assign(const TClassRef &);
+   void Assign(TClass *);
    TClass   *InternalGetClass() const;
    void      ListReset();
 public:
@@ -47,8 +49,20 @@ public:
    TClassRef(TClass *cl);
    TClassRef(const char *classname);
    TClassRef(const TClassRef&);
-   TClassRef &operator=(const TClassRef&);
-   TClassRef &operator=(TClass*);
+   inline TClassRef &operator=(const TClassRef &rhs) {
+      // Inline implementation of operator= to speed the no-op case.
+      if (this != &rhs && fClassPtr != rhs.fClassPtr) {
+         this->Assign(rhs);
+      }
+      return *this;
+   }
+   inline TClassRef &operator=(TClass *rhs) {
+      // Inline implementation of operator= to speed the no-op case.
+      if (this->fClassPtr != rhs) {
+         this->Assign(rhs);
+      }
+      return *this;
+   }      
 
    ~TClassRef() { if (fClassPtr) fClassPtr->RemoveRef(this); };
 

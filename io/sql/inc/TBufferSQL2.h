@@ -152,8 +152,9 @@ public:
    virtual Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname); // SL
    virtual void     SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);  // SL
 
+   virtual void      SkipVersion(const TClass *cl = 0);
    virtual Version_t ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, const TClass *cl = 0);  // SL
-   virtual UInt_t   WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);  // SL
+   virtual UInt_t    WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);  // SL
 
    virtual void*    ReadObjectAny(const TClass* clCast);
    virtual void     SkipObjectAny();
@@ -172,7 +173,11 @@ public:
    virtual void     WriteFloat16(Float_t *f, TStreamerElement *ele=0);
    virtual void     ReadDouble32 (Double_t *d, TStreamerElement *ele=0);
    virtual void     WriteDouble32(Double_t *d, TStreamerElement *ele=0);
-
+   virtual void     ReadWithFactor(Float_t *ptr, Double_t factor, Double_t minvalue);
+   virtual void     ReadWithNbits(Float_t *ptr, Int_t nbits);
+   virtual void     ReadWithFactor(Double_t *ptr, Double_t factor, Double_t minvalue);
+   virtual void     ReadWithNbits(Double_t *ptr, Int_t nbits);
+   
    virtual Int_t    ReadArray(Bool_t    *&b);
    virtual Int_t    ReadArray(Char_t    *&c);
    virtual Int_t    ReadArray(UChar_t   *&c);
@@ -294,6 +299,10 @@ public:
    virtual   void     WriteDouble(Double_t   d);
    virtual   void     WriteCharP(const Char_t *c);
    virtual   void     WriteTString(const TString  &s);
+
+   virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);
+   virtual Int_t ReadSequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
+   virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
 
    static    void     SetFloatFormat(const char* fmt = "%e");
    static const char* GetFloatFormat();

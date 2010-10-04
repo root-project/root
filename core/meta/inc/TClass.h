@@ -131,6 +131,9 @@ private:
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
    ROOT::TSchemaRuleSet *fSchemaRules;  //! Schema evolution rules
 
+   typedef void (TClass::*StreamerImpl_t)(void *obj, TBuffer &b, const TClass *onfile_class) const;
+   mutable StreamerImpl_t fStreamerImpl;//! Pointer to the function implementing the right streaming behavior for the class represented by this object.
+
    TMethod           *GetClassMethod(Long_t faddr);
    TMethod           *GetClassMethod(const char *name, const char *signature);
    Int_t              GetBaseClassOffsetRecurse(const TClass *base);
@@ -143,7 +146,17 @@ private:
 
    void               SetClassVersion(Version_t version);
    void               SetClassSize(Int_t sizof) { fSizeof = sizof; }
-
+   
+   // Various implementation for TClass::Stramer
+   void StreamerExternal(void *object, TBuffer &b, const TClass *onfile_class) const;
+   void StreamerTObject(void *object, TBuffer &b, const TClass *onfile_class) const;
+   void StreamerTObjectInitialized(void *object, TBuffer &b, const TClass *onfile_class) const;
+   void StreamerTObjectEmulated(void *object, TBuffer &b, const TClass *onfile_class) const;
+   void StreamerInstrumented(void *object, TBuffer &b, const TClass *onfile_class) const;
+   void StreamerInstrumentedInitialized(void *object, TBuffer &b, const TClass *onfile_class) const;
+   void StreamerStreamerInfo(void *object, TBuffer &b, const TClass *onfile_class) const;
+   void StreamerDefault(void *object, TBuffer &b, const TClass *onfile_class) const;
+   
    static IdMap_t    *fgIdMap;          //Map from typeid to TClass pointer
    static ENewType    fgCallingNew;     //Intent of why/how TClass::New() is called
    static Int_t       fgClassCount;     //provides unique id for a each class
@@ -351,7 +364,11 @@ public:
    void               Destructor(void *obj, Bool_t dtorOnly = kFALSE);
    void              *DynamicCast(const TClass *base, void *obj, Bool_t up = kTRUE);
    Bool_t             IsFolder(void *obj) const;
-   void               Streamer(void *obj, TBuffer &b, const TClass *onfile_class = 0) const;
+   inline void        Streamer(void *obj, TBuffer &b, const TClass *onfile_class = 0) const
+   {
+      // Inline for performance, skipping one function call.
+       (this->*fStreamerImpl)(obj,b,onfile_class);
+   }
 
    ClassDef(TClass,0)  //Dictionary containing class information
 };

@@ -44,12 +44,14 @@ class TStreamerElement;
 class TClass;
 class TExMap;
 class TVirtualArray;
+namespace TStreamerInfoActions {
+   class TActionSequence;
+}
 
 class TBufferFile : public TBuffer {
 
 protected:
    typedef std::vector<TStreamerInfo*> InfoList_t;
-   typedef std::vector<TVirtualArray*> CacheList_t;
 
    Int_t           fMapCount;      //Number of objects or classes in map
    Int_t           fMapSize;       //Default size of map
@@ -59,14 +61,13 @@ protected:
    TExMap         *fClassMap;      //Map containing object,class pairs for reading
    TStreamerInfo  *fInfo;          //Pointer to TStreamerInfo object writing/reading the buffer
    InfoList_t      fInfoStack;     //Stack of pointers to the TStreamerInfos
-   CacheList_t     fCacheStack;    //Stack of pointers to the cache where to temporarily store the value of 'missing' data members
 
    static Int_t    fgMapSize;      //Default map size for all TBuffer objects
 
    // Default ctor
    TBufferFile() : TBuffer(), fMapCount(0), fMapSize(0),
                fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
-     fInfo(0), fInfoStack(), fCacheStack() {}
+     fInfo(0), fInfoStack() {}
 
    // TBuffer objects cannot be copied or assigned
    TBufferFile(const TBufferFile &);       // not implemented
@@ -108,6 +109,7 @@ public:
    virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname);
    virtual void       SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);
 
+   virtual void       SkipVersion(const TClass *cl = 0);
    virtual Version_t  ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, const TClass *cl = 0);
    virtual UInt_t     WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
    virtual UInt_t     WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt = kFALSE);
@@ -123,10 +125,6 @@ public:
    virtual void       ClassBegin(const TClass*, Version_t = -1) {}
    virtual void       ClassEnd(const TClass*) {}
    virtual void       ClassMember(const char*, const char* = 0, Int_t = -1, Int_t = -1) {}
-
-   virtual TVirtualArray *PeekDataCache() const;
-   virtual TVirtualArray *PopDataCache();
-   virtual void           PushDataCache(TVirtualArray *);
 
    virtual Int_t      ReadBuf(void *buf, Int_t max);
    virtual void       WriteBuf(const void *buf, Int_t max);
@@ -157,7 +155,11 @@ public:
    virtual   void     WriteFloat16(Float_t *f, TStreamerElement *ele=0);
    virtual   void     ReadDouble32 (Double_t *d, TStreamerElement *ele=0);
    virtual   void     WriteDouble32(Double_t *d, TStreamerElement *ele=0);
-
+   virtual   void     ReadWithFactor(Float_t *ptr, Double_t factor, Double_t minvalue);
+   virtual   void     ReadWithNbits(Float_t *ptr, Int_t nbits);
+   virtual   void     ReadWithFactor(Double_t *ptr, Double_t factor, Double_t minvalue);
+   virtual   void     ReadWithNbits(Double_t *ptr, Int_t nbits);
+   
    virtual   Int_t    ReadArray(Bool_t    *&b);
    virtual   Int_t    ReadArray(Char_t    *&c);
    virtual   Int_t    ReadArray(UChar_t   *&c);
@@ -298,6 +300,11 @@ public:
    virtual   Int_t  ReadClassBuffer(const TClass *cl, void *pointer, const TClass *onfile_class);
    virtual   Int_t  ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class);
    virtual   Int_t  WriteClassBuffer(const TClass *cl, void *pointer);
+   
+   // Utilites to streamer using sequences.
+   Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);      
+   Int_t ReadSequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);      
+   Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
 
    static void    SetGlobalReadParam(Int_t mapsize);
    static void    SetGlobalWriteParam(Int_t mapsize);

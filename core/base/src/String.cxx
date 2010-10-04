@@ -30,19 +30,23 @@ void std_string_streamer(TBuffer &b, void *objadd)
    UChar_t nwh;
    if (b.IsReading()) {
       b >> nwh;
-
-      if( obj->size() ) {
-         // Insure that the underlying data storage is not shared
-         (*obj)[0] = '\0';
-      }
-      if (nwh == 255)  {
-         b >> nbig;
-         obj->resize(nbig,'\0');
-         b.ReadFastArray((char*)obj->data(),nbig);
-      }
-      else  {
-         obj->resize(nwh,'\0');
-         b.ReadFastArray((char*)obj->data(),nwh);
+      ;
+      if (nwh == 0)  {
+         obj->clear();
+      } else {
+         if( obj->size() ) {
+            // Insure that the underlying data storage is not shared
+            (*obj)[0] = '\0';
+         }
+         if (nwh == 255)  {
+            b >> nbig;
+            obj->resize(nbig,'\0');
+            b.ReadFastArray((char*)obj->data(),nbig);
+         }
+         else  {
+            obj->resize(nwh,'\0');
+            b.ReadFastArray((char*)obj->data(),nwh);
+         }
       }
    } else if ( obj ) {
       nbig = obj->length();

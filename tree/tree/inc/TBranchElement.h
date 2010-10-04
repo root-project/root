@@ -34,7 +34,12 @@
 class TFolder;
 class TStreamerInfo;
 class TVirtualCollectionProxy;
+class TVirtualCollectionIterators;
+class TVirtualCollectionPtrIterators;
 class TVirtualArray;
+
+namespace TStreamerInfoActions { class TActionSequence; }
+
 
 class TBranchElement : public TBranch {
 
@@ -80,7 +85,10 @@ protected:
    TClassRef                fBranchClass;   //! Reference to class definition in fClassName
    Int_t                   *fBranchOffset;  //! Sub-Branch offsets with respect to current transient class
    Int_t                    fBranchID;      //! ID number assigned by a TRefTable.
-   std::vector<Int_t>       fIDs;           //! List of the serial number of all the StreamerInfo to be used.
+   std::vector<Int_t>       fIDs;           //! List of the serial number of all the StreamerInfo to be used.   
+   TStreamerInfoActions::TActionSequence *fReadActionSequence;  //! Set of actions to be executed to extract the data from the basket.
+   TVirtualCollectionIterators           *fIterators;     //! holds the iterators when the branch is of fType==4.
+   TVirtualCollectionPtrIterators        *fPtrIterators;  //! holds the iterators when the branch is of fType==4 and it is a split collection of pointers.
 
 // Not implemented
 private:
@@ -111,6 +119,7 @@ protected:
    void ReadLeavesMakeClass(TBuffer& b);
    void ReadLeavesCollection(TBuffer& b);
    void ReadLeavesCollectionSplitPtrMember(TBuffer& b);
+   void ReadLeavesCollectionSplitVectorPtrMember(TBuffer& b);
    void ReadLeavesCollectionMember(TBuffer& b);
    void ReadLeavesClones(TBuffer& b);
    void ReadLeavesClonesMember(TBuffer& b);
@@ -119,6 +128,7 @@ protected:
    void ReadLeavesMemberBranchCount(TBuffer& b);
    void ReadLeavesMemberCounter(TBuffer& b);
    void SetReadLeavesPtr();
+   void SetReadActionSequence();
 
 // Public Interface.
 public:
@@ -176,6 +186,7 @@ public:
    virtual void             SetBasketSize(Int_t buffsize);
    virtual void             SetBranchFolder() { SetBit(kBranchFolder); }
    virtual void             SetClassName(const char* name) { fClassName = name; }
+   virtual void             SetOffset(Int_t offset);
    inline  void             SetParentClass(TClass* clparent);
    virtual void             SetParentName(const char* name) { fParentName = name; }
    virtual void             SetTargetClassName(const char *name);

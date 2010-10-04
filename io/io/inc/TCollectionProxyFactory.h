@@ -28,8 +28,13 @@
 #ifndef ROOT_TClassStreamer
 #include "TClassStreamer.h"
 #endif
+
 #ifndef ROOT_TMemberStreamer
 #include "TMemberStreamer.h"
+#endif
+
+#ifndef ROOT_TGenCollectionProxy
+#include "TGenCollectionProxy.h"
 #endif
 
 // Forward declarations
@@ -154,7 +159,7 @@ public:
    /// Attach worker proxy
    void AdoptStreamer(TGenCollectionProxy* streamer);
    /// Streamer for I/O handling
-   void Streamer(TBuffer &refBuffer, void *pObject, int siz, TClass *onFileClass );
+   void Streamer(TBuffer &refBuffer, void *obj, int siz, TClass *onFileClass );
 };
 
 /** @class TEmulatedClassStreamer TCollectionProxy.h cont/TCollectionProxy.h
@@ -177,10 +182,25 @@ public:
    /// Standard destructor
    virtual ~TCollectionClassStreamer()                {                        }
    /// Streamer for I/O handling
-   virtual void operator()(TBuffer &buff, void *pObj ) { Streamer(buff,pObj,0,fOnFileClass); }
+   virtual void operator()(TBuffer &buff, void *obj ) { Streamer(buff,obj,0,fOnFileClass); }
 
+   virtual void Stream(TBuffer &b, void *obj, const TClass *onfileClass)
+   {
+      if (b.IsReading()) {
+         TGenCollectionProxy *proxy = TCollectionStreamer::fStreamer;
+         if (onfileClass==0 || onfileClass == proxy->GetCollectionClass()) {
+            proxy->ReadBuffer(b,obj);
+         } else {
+            proxy->ReadBuffer(b,obj,onfileClass);
+         }
+      } else {
+         // fStreamer->WriteBuffer(b,objp,onfileClass);
+         Streamer(b,obj,0,(TClass*)onfileClass);
+      }
+   }
+   
    /// Virtual copy constructor.
-   virtual TClassStreamer *Generate() {
+   virtual TClassStreamer *Generate() const {
       return new TCollectionClassStreamer(*this);
    }
 
@@ -208,8 +228,8 @@ public:
    /// Standard destructor
    virtual ~TCollectionMemberStreamer()             { }
    /// Streamer for I/O handling
-   virtual void operator()(TBuffer &buff,void *pObj,Int_t siz=0)
-   { Streamer(buff, pObj, siz, 0); /* FIXME */ }
+   virtual void operator()(TBuffer &buff,void *obj,Int_t siz=0)
+   { Streamer(buff, obj, siz, 0); /* FIXME */ }   
 };
 
 #endif

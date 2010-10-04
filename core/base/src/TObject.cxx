@@ -801,7 +801,7 @@ void TObject::Streamer(TBuffer &R__b)
    if (IsA()->CanIgnoreTObjectStreamer()) return;
    UShort_t pidf;
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(); if (R__v) { }
+      R__b.SkipVersion(); // Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       R__b >> fUniqueID;
       R__b >> fBits;
       fBits |= kIsOnHeap;  // by definition de-serialized object is on heap

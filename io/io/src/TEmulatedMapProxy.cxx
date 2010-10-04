@@ -204,6 +204,29 @@ void TEmulatedMapProxy::WriteMap(int nElements, TBuffer &b)
    }
 }
 
+void TEmulatedMapProxy::ReadBuffer(TBuffer &b, void *obj, const TClass *onfileClass)
+{
+   // Read portion of the streamer.
+
+   SetOnFileClass((TClass*)onfileClass);
+   ReadBuffer(b,obj);
+}
+
+void TEmulatedMapProxy::ReadBuffer(TBuffer &b, void *obj)
+{
+   // Read portion of the streamer.
+
+   TPushPop env(this,obj);
+   int nElements = 0;
+   b >> nElements;
+   if ( fEnv->fObject )  {
+      Resize(nElements,true);
+   }
+   if ( nElements > 0 )  {
+      ReadMap(nElements, b);
+   }
+}
+
 void TEmulatedMapProxy::Streamer(TBuffer &b)
 {
    // TClassStreamer IO overload.
