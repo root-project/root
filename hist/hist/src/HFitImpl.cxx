@@ -258,24 +258,31 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 //    }
 
 
+   // set all default minimizer options (tolerance, max iterations, etc..)
+   fitConfig.SetMinimizerOptions(minOption); 
 
+   // specific  print level options 
+   if (fitOption.Verbose) fitConfig.MinimizerOptions().SetPrintLevel(3); 
+   if (fitOption.Quiet)    fitConfig.MinimizerOptions().SetPrintLevel(0); 
+
+   // specific minimizer options depending on minimizer 
    if (linear) { 
-      if (fitOption.Robust && (fitOption.hRobust > 0 && fitOption.hRobust < 1.) ) { 
-         fitConfig.SetMinimizer("Linear","Robust");
+      if (fitOption.Robust  ) { 
+         // robust fitting
+         std::string type = "Robust";
+         // if an h is specified print out the value adding to the type 
+         if (fitOption.hRobust > 0 && fitOption.hRobust < 1.)
+            type += " (h=" + ROOT::Math::Util::ToString(fitOption.hRobust) + ")";
+         fitConfig.SetMinimizer("Linear",type.c_str());
          fitConfig.MinimizerOptions().SetTolerance(fitOption.hRobust); // use tolerance for passing robust parameter
       }
       else 
          fitConfig.SetMinimizer("Linear","");
    }
    else { 
-      // set all minimizer options (tolerance, max iterations, etc..)
-      fitConfig.SetMinimizerOptions(minOption); 
       if (fitOption.More) fitConfig.SetMinimizer("Minuit","MigradImproved");
    }
 
-   //override case in case print level is defined also in minOption ??
-   if (!fitOption.Verbose) fitConfig.MinimizerOptions().SetPrintLevel(0); 
-   else fitConfig.MinimizerOptions().SetPrintLevel(3); 
 
    // check if Error option (run Hesse and Minos) then 
    if (fitOption.Errors) { 
@@ -670,7 +677,7 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc,
    fitConfig.SetMinimizerOptions(minOption); 
 
    if (fitOption.Verbose)   fitConfig.MinimizerOptions().SetPrintLevel(3); 
-   else   fitConfig.MinimizerOptions().SetPrintLevel(0); 
+   if (fitOption.Quiet)     fitConfig.MinimizerOptions().SetPrintLevel(0); 
   
    // more 
    if (fitOption.More)   fitConfig.SetMinimizer("Minuit","MigradImproved");
