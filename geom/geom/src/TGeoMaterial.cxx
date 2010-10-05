@@ -869,22 +869,18 @@ TGeoMaterial *TGeoMixture::DecayMaterial(Double_t time, Double_t precision)
          ncomp1--;
       }
    }
-   if (ncomp1>1) mix = new TGeoMixture(Form("%s-evol",GetName()), ncomp, rho); 
-   else {
-      Error("DecayMaterial","No components left after decay of %s?", GetName());
+   if (ncomp1<2) {
       delete [] weight;
       delete pop;
-      return 0;
+      el = (TGeoElementRN *)pop->At(0);
+      if (ncomp1==1) return new TGeoMaterial(Form("%s-evol",GetName()), el, rho);
+      return NULL;
    }
+   mix = new TGeoMixture(Form("%s-evol",GetName()), ncomp, rho); 
    for (i=0; i<ncomp; i++) {
       weight[i] /= amed;
       if (weight[i]<precision) continue;
       el = (TGeoElementRN *)pop->At(i);
-      if (ncomp1==1) {
-         delete [] weight;
-         delete pop;
-         return new TGeoMaterial(Form("%s-evol",GetName()), el, rho);
-      }   
       mix->AddElement(el, weight[i]);
    }
    delete [] weight;
