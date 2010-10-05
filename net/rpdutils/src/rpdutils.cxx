@@ -806,7 +806,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
          }
          if (ok) {
             // Check file corruption: number of items
-            int ns = sscanf(ln, "%d %d %s", &lsec, &act, dumm);
+            int ns = sscanf(ln, "%d %d %4095s", &lsec, &act, dumm);
             if (ns < 3 ) {
                ErrorInfo("RpdUpdateAuthTab: opt=%d: file %s seems corrupted"
                          " (ns: %d)", opt, gRpdAuthTab.c_str(), ns);
@@ -1004,9 +1004,9 @@ int RpdCleanupAuthTab(const char *crypttoken)
          ErrorInfo("RpdCleanupAuthTab: pr:%d pw:%d (line:%s) (pId:%d)",
                     pr, pw, line, gParentId);
 
-      char dum1[kMAXPATHLEN], host[kMAXUSERLEN], user[kMAXUSERLEN],
-           ctkn[30], dum2[30];
-      nw = sscanf(line, "%d %d %d %d %s %s %s %s %s", &lsec, &act, &pkey,
+      char dum1[kMAXPATHLEN] = {0}, host[kMAXUSERLEN] = {0}, user[kMAXUSERLEN] = {0},
+           ctkn[30] = {0}, dum2[30] = {0};
+      nw = sscanf(line, "%d %d %d %d %127s %127s %29s %4095s %29s", &lsec, &act, &pkey,
                   &remid, host, user, ctkn, dum1, dum2);
 
       int deactivate = 0;
@@ -1161,7 +1161,7 @@ int RpdCleanupAuthTab(const char *Host, int RemId, int OffSet)
                     pr, pw, line, gParentId);
 
       char dumm[kMAXPATHLEN], host[kMAXUSERLEN], user[kMAXUSERLEN], shmbuf[30];
-      nw = sscanf(line, "%d %d %d %d %s %s %s %s", &lsec, &act, &pkey,
+      nw = sscanf(line, "%d %d %d %d %127s %127s %29s %4095s", &lsec, &act, &pkey,
                   &remid, host, user, shmbuf, dumm);
 
       if (nw > 5) {
@@ -1332,7 +1332,7 @@ int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
          // kGlobus:
          if (GlbsToolCheckContext(shmid)) {
             retval = 1;
-            strcpy(gUser, user);
+            strcpy(gUser, user, strlen(user), 64);
          } else {
             // set entry inactive
             RpdCleanupAuthTab(Host,RemId,*OffSet);
@@ -1414,7 +1414,7 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
    char host[kMAXPATHLEN], usr[kMAXPATHLEN], subj[kMAXPATHLEN],
        dumm[kMAXPATHLEN], tkn[20];
    int nw =
-       sscanf(line, "%d %d %d %d %s %s %s %s", &lsec, &act, &gRSAKey,
+       sscanf(line, "%d %d %d %d %4095s %4095s %19s %4095s", &lsec, &act, &gRSAKey,
               &remid, host, usr, tkn, dumm);
    if (gDebug > 2)
       ErrorInfo("RpdCheckOffSet: found line: %s", line);
@@ -1422,7 +1422,7 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
    if (nw > 5 && act > 0) {
       if ((lsec == Sec)) {
          if (lsec == 3) {
-            sscanf(line, "%d %d %d %d %s %s %d %s %s %s", &lsec, &act,
+            sscanf(line, "%d %d %d %d %4095s %4095s %d %4095s %19s %4095s", &lsec, &act,
                    &gRSAKey, &remid, host, usr, &shmid, subj, tkn,
                    dumm);
             if ((remid == RemId)
@@ -1441,7 +1441,7 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
       ofs = 0;
       while (reads(itab, line, sizeof(line))) {
 
-         nw = sscanf(line, "%d %d %d %d %s %s %s %s", &lsec, &act,
+         nw = sscanf(line, "%d %d %d %d %4095s %4095s %19s %4095s", &lsec, &act,
                      &gRSAKey, &remid, host, usr, tkn, dumm);
          if (gDebug > 2)
             ErrorInfo("RpdCheckOffSet: found line: %s", line);
@@ -1449,7 +1449,7 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
          if (nw > 5 && act > 0) {
             if (lsec == Sec) {
                if (lsec == 3) {
-                  sscanf(line, "%d %d %d %d %s %s %d %s %s %s", &lsec,
+                  sscanf(line, "%d %d %d %d %4095s %4095s %d %4095s %19s %4095s", &lsec,
                          &act, &gRSAKey, &remid, host, usr,
                          &shmid, subj, tkn, dumm);
                   if ((remid == RemId)
@@ -1537,12 +1537,12 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
       // return token if requested
       if (Token) {
          *Token = new char[strlen(tkn)+1];
-         strcpy(*Token,tkn);
+         strlcpy(*Token,tkn,strlen(tkn),strlen(tkn)+1);
       }
       if (Sec == 3) {
          if (GlbsUser) {
             *GlbsUser = new char[strlen(usr)+1];
-            strcpy(*GlbsUser,usr);
+            strlcpy(*GlbsUser,usr,strlen(usr),strlen(usr)+1);
          }
          if (ShmId)
             *ShmId = shmid;
@@ -1666,7 +1666,7 @@ int RpdReUseAuth(const char *sstr, int kind)
          if ((auth == 1) && (offset != gOffSet))
             auth = 2;
          // Fill gUser and free allocated memory
-         strcpy(gUser, user);
+         strlcpy(gUser, user, strlen(user), 64);
       }
    }
    // kKrb5
@@ -1688,7 +1688,7 @@ int RpdReUseAuth(const char *sstr, int kind)
          if ((auth == 1) && (offset != gOffSet))
             auth = 2;
          // Fill gUser and free allocated memory
-         strcpy(gUser, user);
+         strlcpy(gUser, user, strlen(user), 64);
       }
    }
    // kGlobus
@@ -1733,7 +1733,7 @@ int RpdReUseAuth(const char *sstr, int kind)
          if ((auth == 1) && (offset != gOffSet))
             auth = 2;
          // Fill gUser and free allocated memory
-         strcpy(gUser, user);
+         strlcpy(gUser, user, strlen(user), 64);
       }
       if (pipe) delete[] pipe;
    }
@@ -1874,7 +1874,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                   host[(int)(pcol-host)] = '\0';
             }
             if (strlen(host) == 0)
-               strcpy(host, "default");
+               strlcpy(host, "default", strlen("default"), kMAXPATHLEN);
 
             if (gDebug > 2)
                ErrorInfo("RpdCheckAuthAllow: found host: %s ", host);
@@ -2274,10 +2274,10 @@ int RpdSshAuth(const char *sstr)
 
    // Decode subject string
    char *user = new char[strlen(sstr)+1];
-   char pipeId[10];
+   char pipeId[10] = {0};
    int lenU, ofs, opt;
-   char rproto[20];
-   sscanf(sstr, "%d %d %d %s %d %s %s", &gRemPid, &ofs, &opt, pipeId, &lenU,
+   char rproto[20] = {0};
+   sscanf(sstr, "%d %d %d %9s %d %127s %19s", &gRemPid, &ofs, &opt, pipeId, &lenU,
           user, rproto);
    user[lenU] = '\0';
    gReUseRequired = (opt & kAUTH_REUSE_MSK);
@@ -2805,7 +2805,7 @@ int RpdKrb5Auth(const char *sstr)
       int lenU, ofs, opt;
       char dumm[256];
       // Decode subject string
-      sscanf(sstr, "%d %d %d %d %s", &gRemPid, &ofs, &opt, &lenU, dumm);
+      sscanf(sstr, "%d %d %d %d %255s", &gRemPid, &ofs, &opt, &lenU, dumm);
       gReUseRequired = (opt & kAUTH_REUSE_MSK);
 #if R__SSL
       if (gRSASSLKey) {
@@ -3024,7 +3024,7 @@ int RpdKrb5Auth(const char *sstr)
 
          krb5_ccache cache = 0;
          char ccacheName[256];
-         sprintf(ccacheName,"%s_root_%d",krb5_cc_default_name(context),getpid());
+         sprintf(ccacheName,"%240s_root_%d",krb5_cc_default_name(context),getpid());
          if ((retval = krb5_cc_resolve(context, ccacheName, &cache))) {
             ErrorInfo("RpdKrb5Auth: cc_default failed--%s",
                       error_message(retval));
@@ -3035,7 +3035,7 @@ int RpdKrb5Auth(const char *sstr)
          }
          {
             char *ccname = new char[strlen("KRB5CCNAME")+strlen(ccacheName)+2];
-            sprintf(ccname,"%s=%s","KRB5CCNAME",ccacheName);
+            sprintf(ccname,"KRB5CCNAME=%.*s", strlen(ccacheName), ccacheName);
             putenv(ccname);
          }
 
@@ -4251,7 +4251,7 @@ void RpdAuthCleanup(const char *sstr, int opt)
    int rpid = 0, sec = -1, offs = -1, nw = 0;
    char usr[64] = {0};
    if (sstr)
-      nw = sscanf(sstr, "%d %d %d %s", &rpid, &sec, &offs, usr);
+      nw = sscanf(sstr, "%d %d %d %63s", &rpid, &sec, &offs, usr);
 
    // Turn back to superuser for cleaning, if the case
    if (getuid() == 0) {
@@ -4359,7 +4359,7 @@ void RpdDefaultAuthAllow()
       if (gNumAllow == 0)
          temp.append("none");
       for (i = 0; i < gNumAllow; i++) {
-         sprintf(cm," %d",gAllowMeth[i]);
+         sprintf(cm," %3d",gAllowMeth[i]);
          temp.append(cm);
       }
       ErrorInfo
@@ -4589,7 +4589,7 @@ int RpdUser(const char *sstr)
       // Default anonymous account ...
       if (!strcmp(user, "anonymous")) {
          user[0] = '\0';
-         strcpy(user, "rootd");
+         strlcpy(user, "rootd", strlen("rootd"), 64);
       }
    }
 
@@ -4693,7 +4693,7 @@ int RpdUser(const char *sstr)
       }
    }
    // Ok: Save username and go to next steps
-   strcpy(gUser, user);
+   strlcpy(gUser, user, strlen(user), 64);
 
    // Salt vars
    char salt[30] = { 0 };
@@ -5261,7 +5261,7 @@ int RpdSecureRecv(char **str)
 
       // Prepare output
       *str = new char[strlen(buftmp) + 1];
-      strcpy(*str, buftmp);
+      strlcpy(*str, buftmp, strlen(buftmp), strlen(buftmp));
    } else if (gRSAKey == 2) {
 #ifdef R__SSL
       unsigned char iv[8];
@@ -5619,7 +5619,7 @@ int RpdRecvClientRSAKey()
       ErrorInfo("RpdRecvClientRSAKey:"
                 " could not import a valid key (type %d)",gRSAKey);
       char *elogfile = new char[gRpdKeyRoot.length() + 11];
-      sprintf(elogfile, "%serr.XXXXXX",gRpdKeyRoot.c_str());
+      sprintf(elogfile, "%.*serr.XXXXXX", (int)gRpdKeyRoot.length(), gRpdKeyRoot.c_str());
       int ielog = mkstemp(elogfile);
       if (ielog != -1) {
          char line[kMAXPATHLEN] = {0};
@@ -5688,7 +5688,7 @@ int RpdAuthenticate()
             return auth;
          }
       } else {
-         strcpy(buf,gBufOld);
+         strlcpy(buf,gBufOld, strlen(gBufOld), kMAXRECVBUF);
          kind = gKindOld;
          gBufOld[0] = '\0';
          gClientOld = 0;
@@ -5929,7 +5929,7 @@ int RpdProtocol(int ServType)
          delete[] buf;
          return -1;
       }
-      strcpy(proto,buf);
+      strlcpy(proto,buf, llen, kMAXRECVBUF);
       kind = kROOTD_PROTOCOL;
       readbuf = 0;
       delete[] buf;
@@ -5980,7 +5980,7 @@ int RpdProtocol(int ServType)
          case kROOTD_PROTOCOL:
 
             if (strlen(proto) > 0) {
-               sscanf(proto, "%d", &gClientProtocol);
+               gClientProtocol = atoi(proto);
             } else {
                if (ServType == kROOTD) {
                   // This is an old (TNetFile,TFTP) client:
@@ -5995,12 +5995,12 @@ int RpdProtocol(int ServType)
                      rc = -1;
                   }
                   if (kind != kROOTD_PROTOCOL2) {
-                     strcpy(gBufOld, proto);
+                     strlcpy(gBufOld, proto, strlen(proto), kMAXRECVBUF);
                      gKindOld = kind;
                      gClientOld = 1;
                      gClientProtocol = 0;
                   } else
-                     sscanf(proto, "%d", &gClientProtocol);
+                     gClientProtocol = atoi(proto);
                } else
                   gClientProtocol = 0;
             }
@@ -6522,7 +6522,7 @@ char *ItoA(int i)
    // This is the number of characters we need
    int nchr = (int)log10(double(i)) + 1;
    if (nchr > kMAXCHR)
-      strcpy(str,"-1");
+      strlcpy(str,"-1", strlen("-1"), kMAXCHR);
    else
       snprintf(str,30,"%d",i);
 

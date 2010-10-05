@@ -75,9 +75,9 @@ tryagain:
    // Determine unique pipe path: try with /tmp/rootdSSH_<random_string>
    char fsun[25] = {0};
    if (access("/tmp",W_OK) == 0) {
-      strcpy(fsun, "/tmp/rootdSSH_XXXXXX");
+      strncpy(fsun, "/tmp/rootdSSH_XXXXXX", 24);
    } else {
-      strcpy(fsun, "rootdSSH_XXXXXX");
+      strncpy(fsun, "rootdSSH_XXXXXX", 24);
    }
    int itmp = mkstemp(fsun);
    Int_t nAtt = 0;

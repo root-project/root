@@ -108,9 +108,10 @@ static Int_t SrvSetVars(string confdir)
       execdir = string(confdir).append("/bin");
    // Make it available to all the session via env
    if (execdir.length()) {
-      char *tmp = new char[15 + execdir.length()];
+      int len = 15 + execdir.length();
+      char *tmp = new char[len+1];
       if (tmp) {
-         sprintf(tmp, "ROOTBINDIR=%s", execdir.c_str());
+         sprintf(tmp, "ROOTBINDIR=%.*s", len, execdir.c_str());
          putenv(tmp);
       } else
          return -1;
@@ -121,9 +122,10 @@ static Int_t SrvSetVars(string confdir)
       etcdir = string(confdir).append("/etc");
    // Make it available to all the session via env
    if (etcdir.length()) {
-      char *tmp = new char[15 + etcdir.length()];
+      int len = 15 + etcdir.length();
+      char *tmp = new char[len+1];
       if (tmp) {
-         sprintf(tmp, "ROOTETCDIR=%s", etcdir.c_str());
+         sprintf(tmp, "ROOTETCDIR=%.*s", len, etcdir.c_str());
          putenv(tmp);
       } else
          return -1;
@@ -132,9 +134,10 @@ static Int_t SrvSetVars(string confdir)
    // If specified, set the special daemonrc file to be used
    string daemonrc = string(gEnv->GetValue("SrvAuth.DaemonRc",""));
    if (daemonrc.length()) {
-      char *tmp = new char[15 + daemonrc.length()];
+      int len = 15 + daemonrc.length();
+      char *tmp = new char[len+1];
       if (tmp) {
-         sprintf(tmp, "ROOTDAEMONRC=%s", daemonrc.c_str());
+         sprintf(tmp, "ROOTDAEMONRC=%.*s", len, daemonrc.c_str());
          putenv(tmp);
       } else
          return -1;
@@ -143,9 +146,10 @@ static Int_t SrvSetVars(string confdir)
    // If specified, set the special gridmap file to be used
    string gridmap = string(gEnv->GetValue("SrvAuth.GridMap",""));
    if (gridmap.length()) {
-      char *tmp = new char[15 + gridmap.length()];
+      int len = 15 + gridmap.length();
+      char *tmp = new char[len+1];
       if (tmp) {
-         sprintf(tmp, "GRIDMAP=%s", gridmap.c_str());
+         sprintf(tmp, "GRIDMAP=%.*s", len, gridmap.c_str());
          putenv(tmp);
       } else
          return -1;
@@ -154,9 +158,10 @@ static Int_t SrvSetVars(string confdir)
    // If specified, set the special hostcert.conf file to be used
    string hcconf = string(gEnv->GetValue("SrvAuth.HostCert",""));
    if (hcconf.length()) {
-      char *tmp = new char[15 + hcconf.length()];
+      int len = 15 + hcconf.length();
+      char *tmp = new char[len+1];
       if (tmp) {
-         sprintf(tmp, "ROOTHOSTCERT=%s", hcconf.c_str());
+         sprintf(tmp, "ROOTHOSTCERT=%.*s", len, hcconf.c_str());
          putenv(tmp);
       } else
          return -1;
