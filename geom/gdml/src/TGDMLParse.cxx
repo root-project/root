@@ -515,7 +515,7 @@ XMLNodePointer_t TGDMLParse::RotProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    //and stored in frotmap map using the name as its key. This function 
    //can also be called when declaring solids.
 
-   const char* aunit = "deg"; 
+   const char* aunit = "rad"; 
    const char* xpos = "0"; 
    const char* ypos = "0"; 
    const char* zpos = "0"; 
@@ -2010,7 +2010,7 @@ XMLNodePointer_t TGDMLParse::Tube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    //as its key.
 
    const char* lunit = "mm"; 
-   const char* aunit = "deg";
+   const char* aunit = "rad";
    const char* rmin = "0"; 
    const char* rmax = "0"; 
    const char* z = "0";
@@ -2095,7 +2095,7 @@ XMLNodePointer_t TGDMLParse::CutTube(TXMLEngine* gdml, XMLNodePointer_t node, XM
    //as its key.
 
    const char* lunit = "mm"; 
-   const char* aunit = "deg";
+   const char* aunit = "rad";
    const char* rmin = "0"; 
    const char* rmax = "0"; 
    const char* z = "0";
@@ -2224,7 +2224,7 @@ XMLNodePointer_t TGDMLParse::Cone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    //as its key.
 
    const char* lunit = "mm"; 
-   const char* aunit = "deg";
+   const char* aunit = "rad";
    const char* rmin1 = "0"; 
    const char* rmax1 = "0"; 
    const char* rmin2 = "0"; 
@@ -2324,7 +2324,7 @@ XMLNodePointer_t TGDMLParse::Trap(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    //as its key.
 
    const char* lunit = "mm"; 
-   const char* aunit = "deg";
+   const char* aunit = "rad";
    const char* x1 = "0"; 
    const char* x2 = "0"; 
    const char* x3 = "0"; 
@@ -2530,7 +2530,7 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, X
    //the rmin, rmax dimenstions at that point along z.
 
    const char* lunit = "mm"; 
-   const char* aunit = "deg";
+   const char* aunit = "rad";
    const char* rmin = "0"; 
    const char* rmax = "0"; 
    const char* z = "0";
@@ -2657,7 +2657,7 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine* gdml, XMLNodePointer_t node, 
    //the rmin, rmax dimenstions at that point along z.
 
    const char* lunit = "mm"; 
-   const char* aunit = "deg";
+   const char* aunit = "rad";
    const char* rmin = "0"; 
    const char* rmax = "0"; 
    const char* z = "0";
@@ -2798,7 +2798,7 @@ XMLNodePointer_t TGDMLParse::Sphere(TXMLEngine* gdml, XMLNodePointer_t node, XML
    //as its key.
 
    const char* lunit = "mm"; 
-   const char* aunit = "deg";
+   const char* aunit = "rad";
    const char* rmin = "0"; 
    const char* rmax = "0"; 
    const char* startphi = "0";
@@ -2889,7 +2889,7 @@ XMLNodePointer_t TGDMLParse::Torus(TXMLEngine* gdml, XMLNodePointer_t node, XMLA
    //as its key.
    
    const char* lunit = "mm"; 
-   const char* aunit = "deg";
+   const char* aunit = "rad";
    const char* rmin = "0"; 
    const char* rmax = "0"; 
    const char* rtor = "0";
@@ -2974,7 +2974,7 @@ XMLNodePointer_t TGDMLParse::Hype(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    //as its key.
 
    const char* lunit = "mm"; 
-   const char* aunit = "deg";
+   const char* aunit = "rad";
    const char* rmin = "0"; 
    const char* rmax = "0"; 
    const char* z = "0";
@@ -3059,7 +3059,7 @@ XMLNodePointer_t TGDMLParse::Para(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    //as its key.
 
    const char* lunit = "mm"; 
-   const char* aunit = "deg";
+   const char* aunit = "rad";
    const char* x = "0"; 
    const char* y = "0"; 
    const char* z = "0";
@@ -3152,7 +3152,7 @@ XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine* gdml, XMLNodePointer_t node, 
    //as its key.
 
    const char* lunit = "mm"; 
-   const char* aunit = "deg";
+   const char* aunit = "rad";
    const char* x1 = "0"; 
    const char* x2 = "0"; 
    const char* x3 = "0"; 
@@ -3404,7 +3404,7 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    //the vertice to a position within the xtru. 
 
    const char* lunit = "mm"; 
-   const char* aunit = "deg";
+   const char* aunit = "rad";
    const char* x = "0"; 
    const char* y = "0"; 
    const char* zorder = "0";
