@@ -34,7 +34,7 @@ all:	$(TARGETPRG) $(TARGETLIB)
 
 $(DICT): $(HDRS)
 	@echo "Generating dictionary $@..."
-	@$(ROOTCINT) -f $@ -c $^
+	$(ROOTCINT) -f $@ -c $^
 
 $(TARGETPRG): $(XSOBJS) $(DBOBJS) $(DICTO)
 	$(LD) $(LDFLAGS) $^ $(GLIBS) $(OutPutOpt)$@
@@ -42,9 +42,9 @@ $(TARGETPRG): $(XSOBJS) $(DBOBJS) $(DICTO)
 
 $(TARGETLIB): $(DBOBJS) $(DICTO)
 ifeq ($(PLATFORM),macosx)
-	@$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@
+	$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@
 else
-	@$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
+	$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
 endif
 
 distclean: clean
