@@ -63,7 +63,7 @@ public:
 //   cc1plus: warnings being treated as errors
       
       SetOnFileClass(onfileClass);
-      (*fStreamer)(b,objp);
+      (*this)(b,objp);
    }
    
 private:
