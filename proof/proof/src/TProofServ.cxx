@@ -4877,7 +4877,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                               // Cleanup
                               SafeDelete(md5local);
                            } else {
-                              Error("HandleCache", "kBuildPackage: failure calculating MD5sum for '%s'", par);
+                              Error("HandleCache", "kBuildPackage: failure calculating MD5sum for '%s'", par.Data());
                            }
                         }
                         delete [] gunzip;
