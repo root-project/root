@@ -3079,7 +3079,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    Hoption.Axis = Hoption.Bar    = Hoption.Curve   = Hoption.Error = 0;
    Hoption.Hist = Hoption.Line   = Hoption.Mark    = Hoption.Fill  = 0;
-   Hoption.Same = Hoption.Func   = Hoption.Plus    = Hoption.Scat  = 0;
+   Hoption.Same = Hoption.Func   = Hoption.Scat  = 0;
    Hoption.Star = Hoption.Arrow  = Hoption.Box     = Hoption.Text  = 0;
    Hoption.Char = Hoption.Color  = Hoption.Contour = Hoption.Logx  = 0;
    Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf  = 0;
@@ -3230,8 +3230,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l[3] == '3') { Hoption.Bar = 13; l[3] = ' '; }
       if (l[3] == '4') { Hoption.Bar = 14; l[3] = ' '; }
    }
-   l = strstr(chopt,"+-");   if (l) { Hoption.Plus = 2; strncpy(l,"  ",2); }
-   l = strstr(chopt,"-+");   if (l) { Hoption.Plus = 2; strncpy(l,"  ",2); }
 
    l = strstr(chopt,"ARR" ); if (l) { Hoption.Arrow  = 1; strncpy(l,"   ", 3); Hoption.Scat = 0; }
    l = strstr(chopt,"BOX" );
@@ -3306,8 +3304,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (strstr(chopt,"P")) { Hoption.Mark =1; Hoption.Hist = -1;}
    if (strstr(chopt,"Z"))   Hoption.Zscale =1;
    if (strstr(chopt,"*"))   Hoption.Star =1;
-   if (strstr(chopt,"+"))   Hoption.Plus =1;
-   if (strstr(chopt,"-"))   Hoption.Plus =-1;
    if (strstr(chopt,"H"))   Hoption.Hist =2;
    if (strstr(chopt,"P0"))  Hoption.Mark =10;
 
@@ -3357,22 +3353,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    //       Check options incompatibilities
    if (Hoption.Bar  == 1) Hoption.Hist = -1;
-   if (Hoption.Same && Hoption.Plus) {
-      Error("MakeChopt", "select only one of the options S,+");
-      return 0;
-   }
-   if (Hoption.Plus) {
-      if (Hoption.Line || Hoption.Curve || Hoption.Text || Hoption.Mark) {
-         Error("MakeChopt", "options L,C,T,P are incompatible with options U and K");
-         if (Hoption.Hist && Hoption.Bar) return 0;
-      }
-   }
-   if (Hoption.Error || Hoption.Func || Hoption.Star) {
-      if (Hoption.Plus) {
-         Error("MakeChopt", "U, + options incompatible with errors/function");
-         return 0;
-      }
-   }
    return 1;
 }
 
@@ -5269,9 +5249,8 @@ void THistPainter::PaintHist(Option_t *)
 
    Int_t htype, oldhtype;
    Int_t i, j, first, last, nbins, fixbin;
-   Double_t c1, yb, y1, y2, ym1, ym2, yadd, ycur, ypre;
-   Double_t ync, ynext, ypc;
-   yb = ynext = 0;
+   Double_t c1, yb;
+   yb = 0;
 
    strcpy(chopth, "                ");
 
@@ -5294,11 +5273,9 @@ void THistPainter::PaintHist(Option_t *)
    Double_t *keepy = 0;
    if (fXaxis->GetXbins()->fN) fixbin = 0;
    else                        fixbin = 1;
-   if (!Hoption.Plus) {
-      if (fixbin) keepx = new Double_t[2];
-      else        keepx = new Double_t[nbins+1];
-      keepy = new Double_t[nbins];
-   }
+   if (fixbin) keepx = new Double_t[2];
+   else        keepx = new Double_t[nbins+1];
+   keepy = new Double_t[nbins];
    Double_t logymin = 0;
    if (Hoption.Logy) logymin = TMath::Power(10,ymin);
 
@@ -5312,65 +5289,8 @@ void THistPainter::PaintHist(Option_t *)
       }
       yb = TMath::Max(yb, ymin);
       yb = TMath::Min(yb, ymax);
-      if (Hoption.Plus) {
-   //            compute y1, y2
-         if (keepy) y1 = keepy[j-first];
-	 else       y1 = yb;
-         y2 = yb;
-         if (Hoption.Plus == 1 || Hoption.Plus == -1) {
-            if (Hoption.Logy)
-               y2 = TMath::Log10(TMath::Power(10,y1) + Hoption.Plus*TMath::Power(10,y2));
-            else
-               y2 = y1 +y2*Hoption.Plus;
-         }
-   //            compute ym1, ym2
-         if (!Hoption.Bar) {
-            yadd = Hparam.factor*fH->GetBinContent(j);
-            if (Hoption.Logy) ycur = TMath::Power(10,keepy[j-first]);
-            else              ycur = keepy[j-first];
-            if (j != last) {
-               ync = Hparam.factor*fH->GetBinContent(j+1);
-               if (Hoption.Logy) ycur = TMath::Power(10,keepy[j-first+1]);
-               else              ycur = keepy[j-first+1];
-            }
-            else { ync = ynext = 0;}
-            if (j != first) {
-               ypc = Hparam.factor*fH->GetBinContent(j-1);
-               if (Hoption.Logy) ypre = TMath::Power(10,keepy[j-first]);
-               else              ypre = keepy[j-first];
-            }
-            else { ypc = ypre = 0;}
-            if (Hoption.Plus == 1) {
-               ym1 = TMath::Max(TMath::Min(ycur+yadd,ypre),ycur);
-               ym2 = TMath::Max(TMath::Min(ycur+yadd,ynext+ync),ycur);
-            }
-            else if(Hoption.Plus == -1) {
-               ym1 = TMath::Max(TMath::Min(ycur-yadd,ypre),ycur);
-               ym2 = TMath::Max(TMath::Min(ycur-yadd,ynext-ync),ycur);
-            }
-            else {
-               if (ycur > yadd) { ym1 = TMath::Max(yadd,ypc); ym2 = TMath::Max(yadd,ync); }
-               else {             ym1 = TMath::Min(yadd,ypc); ym2 = TMath::Min(yadd,ync); }
-            }
-            if (Hoption.Logy) {
-               if (ym1 > 0) ym1 = TMath::Log10(ym1);
-               if (ym2 > 0) ym2 = TMath::Log10(ym2);
-            }
-         }
-
-   //               Compute X1 X2
-         if (Hoption.Logy && c1 <= 0) continue;
-
-   //     Update the current plot
-
-         if (Hoption.Plus == 1 || Hoption.Plus == -1) keepy[j-first-1] = y2;
-      }
-      else {
-         keepy[j-first] = yb;
-      }
-   } // end of for loop
-
-   if (Hoption.Plus) return;
+      keepy[j-first] = yb;
+   }
 
    //              Draw histogram according to value of FillStyle and FillColor
 
@@ -5649,7 +5569,7 @@ Int_t THistPainter::PaintInit()
       ymin = xm;
    }
 
-   if (ymin >= ymax && !Hoption.Plus) {
+   if (ymin >= ymax) {
       if (Hoption.Logy) {
          if (ymax > 0) ymin = 0.001*ymax;
          else {
@@ -5706,7 +5626,7 @@ Int_t THistPainter::PaintInit()
       ymin = TMath::Log10(ymin);
       if (!minimum) ymin += TMath::Log10(0.5);
       ymax = TMath::Log10(ymax);
-      if (!maximum && !Hoption.Plus) ymax += TMath::Log10(2*(0.9/0.95));
+      if (!maximum) ymax += TMath::Log10(2*(0.9/0.95));
       if (!Hoption.Same) {
          Hparam.ymin = ymin;
          Hparam.ymax = ymax;
@@ -5731,7 +5651,7 @@ Int_t THistPainter::PaintInit()
    //         final adjustment of YMAXI for linear scale (if not option "Same"):
    //         decrease histogram height to MAX% of allowed height if HMAXIM
    //         has not been called.
-   if (!maximum && !Hoption.Plus) {
+   if (!maximum) {
       ymax += yMARGIN*(ymax-ymin);
    }
 
@@ -5836,7 +5756,7 @@ Int_t THistPainter::PaintInitH()
       return 0;
    }
    else xmin = xm;
-   if (xmin >= xmax && !Hoption.Plus) {
+   if (xmin >= xmax) {
       if (Hoption.Logx) {
          if (xmax > 0) xmin = 0.001*xmax;
          else {
@@ -5880,7 +5800,7 @@ Int_t THistPainter::PaintInitH()
       xmin = TMath::Log10(xmin);
       if (!minimum) xmin += TMath::Log10(0.5);
       xmax = TMath::Log10(xmax);
-      if (!maximum && !Hoption.Plus) xmax += TMath::Log10(2*(0.9/0.95));
+      if (!maximum) xmax += TMath::Log10(2*(0.9/0.95));
       if (!Hoption.Same) {
          Hparam.xmin = xmin;
          Hparam.xmax = xmax;
@@ -5899,7 +5819,7 @@ Int_t THistPainter::PaintInitH()
    //         final adjustment of YMAXI for linear scale (if not option "Same"):
    //         decrease histogram height to MAX% of allowed height if HMAXIM
    //         has not been called.
-   if (!maximum && !Hoption.Plus) {
+   if (!maximum) {
       xmax += yMARGIN*(xmax-xmin);
    }
    Hparam.xmin = xmin;
@@ -8268,7 +8188,7 @@ Int_t THistPainter::TableInit()
       zmin = 0.01;
       zmax = 10.;
    }
-   if (zmin >= zmax && !Hoption.Plus) {
+   if (zmin >= zmax) {
       if (Hoption.Logz) {
          if (zmax > 0) zmin = 0.001*zmax;
          else {
@@ -8302,7 +8222,7 @@ Int_t THistPainter::TableInit()
       zmin = TMath::Log10(zmin);
       if (!minimum) zmin += TMath::Log10(0.5);
       zmax = TMath::Log10(zmax);
-      if (!maximum && !Hoption.Plus) zmax += TMath::Log10(2*(0.9/0.95));
+      if (!maximum) zmax += TMath::Log10(2*(0.9/0.95));
       goto LZMIN;
    }
 
@@ -8311,7 +8231,7 @@ Int_t THistPainter::TableInit()
    //         has not been called.
    //         MAX% is the value in percent which has been set in HPLSET
    //         (default is 90%).
-   if (!maximum && !Hoption.Plus) {
+   if (!maximum) {
       zmax += yMARGIN*(zmax-zmin);
    }
 

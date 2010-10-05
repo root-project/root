@@ -35,7 +35,6 @@ typedef struct Hoption_t {
    int Mark;        // "P"  The current Marker is drawn at each point
    int Same;        // "S"  Histogram is plotted in the current PAD.
    int Update;      // "U"  Update histogram previously plotted with option K
-   int Plus;        // "+", "-", "+-"  Bin contents are added and/or substracted
    int Star;        // "*"  A * is plotted at each point
    int Arrow;       // "ARR"   Draw 2D plot with Arrows.
    int Box;         // "BOX"   Draw 2D plot with proportional Boxes.
