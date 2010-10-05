@@ -445,7 +445,7 @@ void TASPaletteEditor::Save()
       if (strcmp(".pal.root", fi.fFilename + strlen(fi.fFilename) - 9) != 0)
          snprintf(fn,512, "%s%s", fi.fFilename, ".pal.root");
       else
-         strncpy(fn, fi.fFilename,510);
+         strlcpy(fn, fi.fFilename,512);
 
       gROOT->ProcessLine(Form("gROOT->SaveObjectAs((TASPaletteEditor*)0x%lx,\"%s\",\"%s\");",(ULong_t)this,fn,"q"));
    }
