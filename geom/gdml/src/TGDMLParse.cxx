@@ -1616,7 +1616,7 @@ XMLNodePointer_t   TGDMLParse::TopProcess(TXMLEngine* gdml, XMLNodePointer_t nod
    return node;
 }
 
-//___________________________________________________________________
+//____________________________________________________retlunit_______________
 XMLNodePointer_t TGDMLParse::Box(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {   
    //In the solids section of the GDML file, a box may be declared. 
@@ -3108,30 +3108,30 @@ XMLNodePointer_t TGDMLParse::Para(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
       name = Form("%s_%s", name, fCurrentFile);
    }
 
-//   const char* xline = "";
-//   const char* yline = "";
-//   const char* zline = "";
-   const char* philine = "";
-   const char* alphaline = "";
-   const char* thetaline = "";
-//   const char* retlunit; 
-   const char* retaunit;
+   TString xline = "";
+   TString yline = "";
+   TString zline = "";
+   TString philine = "";
+   TString alphaline = "";
+   TString thetaline = "";
+   TString retlunit = ""; 
+   TString retaunit = "";
    
-//   retlunit = GetScale(lunit);
+   retlunit = GetScale(lunit);
    retaunit = GetScale(aunit);
    
-//   xline = Form("%s*%s", x, retlunit);
-//   yline = Form("%s*%s", y, retlunit);
-//   zline = Form("%s*%s", z, retlunit);
-   philine = Form("%s*%s", phi, retaunit);
-   alphaline = Form("%s*%s", alpha, retaunit);
-   thetaline = Form("%s*%s", theta, retaunit);
+   xline = Form("%s*%s", x, retlunit.Data());
+   yline = Form("%s*%s", y, retlunit.Data());
+   zline = Form("%s*%s", z, retlunit.Data());
+   philine = Form("%s*%s", phi, retaunit.Data());
+   alphaline = Form("%s*%s", alpha, retaunit.Data());
+   thetaline = Form("%s*%s", theta, retaunit.Data());
 
 
    TGeoPara* para = new TGeoPara(NameShort(name),
-                  Evaluate(x),
-                  Evaluate(y),
-                  Evaluate(z),
+                  Evaluate(xline),
+                  Evaluate(yline),
+                  Evaluate(zline),
                   Evaluate(alphaline),
                   Evaluate(thetaline),
                   Evaluate(philine));
@@ -3404,7 +3404,7 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    //the vertice to a position within the xtru. 
 
    const char* lunit = "mm"; 
-   const char* aunit = "rad";
+//   const char* aunit = "rad";
    const char* x = "0"; 
    const char* y = "0"; 
    const char* zorder = "0";
@@ -3425,9 +3425,6 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
       else if (strcmp(tempattr, "lunit") == 0){
          lunit = gdml->GetAttrValue(attr);
       }
-      else if (strcmp(tempattr, "aunit") == 0){
-         aunit = gdml->GetAttrValue(attr);
-      }
       
       attr = gdml->GetNextAttr(attr);   
    } 
@@ -3436,11 +3433,9 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
       name = Form("%s_%s", name, fCurrentFile);
    }
 
-   const char* retlunit; 
-//   const char* retaunit;
+   TString retlunit; 
    
    retlunit = GetScale(lunit);
-//   retaunit = GetScale(aunit);
    
    //START TO LOOK THRU CHILD NODES... 
 
@@ -3488,12 +3483,12 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
     
             if((strcmp(tempattr, "x")) == 0) { 
                x = gdml->GetAttrValue(attr);
-               xline = Form("%s*%s", x, retlunit);
+               xline = Form("%s*%s", x, retlunit.Data());
                vertx[vert] = Evaluate(xline);
             }
             else if(strcmp(tempattr, "y") == 0){
                y = gdml->GetAttrValue(attr);
-               yline = Form("%s*%s", y, retlunit);
+               yline = Form("%s*%s", y, retlunit.Data());
                verty[vert] = Evaluate(yline);
             }
        
@@ -3520,17 +3515,17 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
             }
             else if(strcmp(tempattr, "zPosition") == 0){
                zpos = gdml->GetAttrValue(attr);
-               zposline = Form("%s*%s", zpos, retlunit);
+               zposline = Form("%s*%s", zpos, retlunit.Data());
                section[sect][1] = Evaluate(zposline);
             }
             else if (strcmp(tempattr, "xOffset") == 0){
                xoff = gdml->GetAttrValue(attr);
-               xoffline = Form("%s*%s", xoff, retlunit);
+               xoffline = Form("%s*%s", xoff, retlunit.Data());
                section[sect][2] = Evaluate(xoffline);
             }
             else if (strcmp(tempattr, "yOffset") == 0){
                yoff = gdml->GetAttrValue(attr);
-               yoffline = Form("%s*%s", yoff, retlunit);
+               yoffline = Form("%s*%s", yoff, retlunit.Data());
                section[sect][3] = Evaluate(yoffline);
             }
             else if (strcmp(tempattr, "scalingFactor") == 0){
