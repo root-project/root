@@ -3460,7 +3460,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
       default:
          {
             Error("HandleInputMessage", "unknown command received from '%s' (what = %d)",
-                                      (sl ? sl->GetOrdinal() : "undef"), what);
+                                        sl->GetOrdinal(), what);
          }
          break;
    }
@@ -7329,8 +7329,8 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
 
    TMD5 *md5 = TMD5::FileChecksum(par);
 
-   if (UploadPackageOnClient(par, opt, md5) == -1) {
-      delete md5;
+   if (!md5 || (md5 && UploadPackageOnClient(par, opt, md5) == -1)) {
+      if (md5) delete md5;
       return -1;
    }
 

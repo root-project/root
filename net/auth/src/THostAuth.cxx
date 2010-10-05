@@ -212,7 +212,7 @@ THostAuth::THostAuth(const char *asstring) : TObject()
    strtmp.ReplaceAll(fNmet,"");
    fNmet.Remove(0,fNmet.Index(":")+1);
 
-   if (tmp) delete[] tmp;
+   delete[] tmp;
 
    fNumMethods = atoi(fNmet.Data());
    Int_t i = 0;
@@ -474,9 +474,9 @@ void  THostAuth::ReOrder(Int_t nmet, Int_t *fmet)
    // Reorder nmet methods according fmet[nmet]
 
    // Temporary arrays
-   Int_t   tMethods[kMAXSEC];
-   Int_t   tSuccess[kMAXSEC];
-   Int_t   tFailure[kMAXSEC];
+   Int_t   tMethods[kMAXSEC] = {0};
+   Int_t   tSuccess[kMAXSEC] = {0};
+   Int_t   tFailure[kMAXSEC] = {0};
    TString tDetails[kMAXSEC];
    Int_t   flag[kMAXSEC] = {0};
 

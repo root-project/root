@@ -1734,7 +1734,7 @@ Bool_t TDataSetManager::CheckDataSetSrvMaps(TUrl *furl, TString &file1, TList *s
    Bool_t replaced = kFALSE;
    if (!furl) return replaced;
 
-   const char *file = (furl) ? furl->GetUrl() : 0;
+   const char *file = furl->GetUrl();
    TList *mlist = (srvmaplist) ? srvmaplist : fgDataSetSrvMaps;
    if (mlist && mlist->GetSize() > 0) {
       TIter nxm(mlist);

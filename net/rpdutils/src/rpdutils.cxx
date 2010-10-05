@@ -164,13 +164,6 @@ extern "C" {
 extern krb5_deltat krb5_clockskew;
 #endif
 
-#define STRLCPY(x,y,s) \
-        if (len > kMAXRECVBUF - 1) { \
-           strncpy(proto,buf,kMAXRECVBUF); \
-        } else { \
-           strcpy(proto,buf); \
-        }
-
 #ifdef R__SSL
 // SSL specific headers for RSA keys
 #include <openssl/bio.h>
@@ -352,6 +345,20 @@ static gss_cred_id_t gGlbCredHandle = GSS_C_NO_CREDENTIAL;
 static bool gHaveGlobus = 1;
 static std::string gGlobusSubjName;
 #endif
+
+//______________________________________________________________________________
+static void strlcpy(char *dest, const char *src, size_t l, size_t n)
+{
+   // strlcpy local implementation
+   
+   if (l > n - 1) {
+      strncpy(dest, src, n - 1);
+      dest[n-1] = 0;
+   } else {
+      strcpy(dest, src);
+      dest[l] = 0;
+   }
+}
 
 //______________________________________________________________________________
 static int reads(int fd, char *buf, int len)
@@ -627,11 +634,6 @@ int RpdDeleteKeyFile(int ofs)
 
    // Some debug info
    if (gDebug > 2) {
-      struct stat st;
-      if (stat(pukfile.c_str(), &st) == 0) {
-         ErrorInfo("RpdDeleteKeyFile: file uid:%d gid:%d",
-                    st.st_uid,st.st_gid);
-      }
       ErrorInfo("RpdDeleteKeyFile: proc uid:%d gid:%d",
       getuid(),getgid());
    }
@@ -785,13 +787,18 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
 
       while ((bytesread = reads(itab, ln, sizeof(ln)))) {
 
-         // Current position
-         pr = lseek(itab,0,SEEK_CUR);
-
          bool ok = 1;
+         // Current position
+         if ((pr = lseek(itab,0,SEEK_CUR)) < 0) {
+            ErrorInfo("RpdUpdateAuthTab: opt=%d: problems lseeking file %s"
+                      " (errno: %d)", opt, gRpdAuthTab.c_str(), errno);
+            fwr = 1;
+            ok = 0;
+         }
+
          // Check file corruption: length and number of items
          int slen = bytesread;
-         if (slen < 1) {
+         if (ok && slen < 1) {
             ErrorInfo("RpdUpdateAuthTab: opt=%d: file %s seems corrupted"
                       " (slen: %d)", opt, gRpdAuthTab.c_str(), slen);
             fwr = 1;
@@ -1617,7 +1624,6 @@ int RpdReUseAuth(const char *sstr, int kind)
       ErrorInfo("RpdReUseAuth: analyzing: %s, %d", sstr, kind);
 
    char *user = new char[strlen(sstr)+1];
-   char *token = 0;
 
    // kClear
    if (kind == kROOTD_USER) {
@@ -1638,7 +1644,7 @@ int RpdReUseAuth(const char *sstr, int kind)
          if ((auth == 1) && (offset != gOffSet))
             auth = 2;
          // Fill gUser and free allocated memory
-         strcpy(gUser, user);
+         strlcpy(gUser, user, strlen(user), 64);
       }
    }
    // kSRP
@@ -1733,7 +1739,6 @@ int RpdReUseAuth(const char *sstr, int kind)
    }
 
    if (user) delete[] user;
-   if (token) delete[] token;
 
    // Flag if existing token has been re-used
    if (auth > 0)
@@ -1777,8 +1782,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
          if (pw != 0) {
             theDaemonRc = std::string(pw->pw_dir).append("/");
             theDaemonRc.append(gDaemonRc);
-         }
-         if (pw == 0 || access(theDaemonRc.c_str(), R_OK)) {
+         } else {
             if (getenv("ROOTETCDIR")) {
                theDaemonRc = std::string(getenv("ROOTETCDIR")).append("/system");
                theDaemonRc.append(gDaemonRc);
@@ -1839,7 +1843,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
 
       int cont = 0, jm = -1;
       while (ftab && fgets(line, sizeof(line), ftab)) {
-         int rc = 0, i ;
+         int i;
          if (line[0] == '#')
             continue;           // skip comment lines
          if (line[strlen(line) - 1] == '\n')
@@ -1887,9 +1891,6 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                   goto next;
             }
 
-            if (rc != 0)
-               continue;        // bad or unmatched name
-
             // Reset mth[kMAXSEC]
             nmet = 0;
             for (i = 0; i < kMAXSEC; i++) {
@@ -1922,7 +1923,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                strncpy(tmp, cmth, mlen);
                tmp[mlen] = '\0';
             } else {
-               strcpy(tmp, cmth);
+               strlcpy(tmp, cmth, strlen(cmth), 20);
             }
 
             if (strlen(tmp) > 1) {
@@ -2190,8 +2191,8 @@ int RpdCheckHost(const char *Host, const char *host)
       tk = strtok(0,"*");
 
    }
-   if (h)  delete[] h;
-   if (hh) delete[] hh;
+   delete[] h;
+   delete[] hh;
 
    if ((!sos || !eos) && !starts && !ends)
       rc = 0;
@@ -2302,11 +2303,11 @@ int RpdSshAuth(const char *sstr)
       if (pw) {
          std::string pipeFile =
             std::string(pw->pw_dir) + std::string("/RootSshPipe.") + pipeId;
-         if (access(pipeFile.c_str(),F_OK))
-            pipeFile= gTmpDir + std::string("/RootSshPipe.") + pipeId;
-
-
          FILE *fpipe = fopen(pipeFile.c_str(), "r");
+         if (!fpipe) {
+            pipeFile= gTmpDir + std::string("/RootSshPipe.") + pipeId;
+            fpipe = fopen(pipeFile.c_str(), "r");
+         } 
          char pipe[kMAXPATHLEN];
          if (fpipe) {
             while (fgets(pipe, sizeof(pipe), fpipe)) {
@@ -2462,7 +2463,8 @@ int RpdSshAuth(const char *sstr)
       }
 
       // Get ID
-      strncpy(pipeId,(char *)strstr(pipeFile,"SshPipe.")+strlen("SshPipe."),10);
+      char *pId = (char *)strstr(pipeFile,"SshPipe.")+strlen("SshPipe.");
+      strlcpy(pipeId, pId, strlen(pId), 10);
 
       // Communicate command to be executed via ssh ...
       std::string rootbindir;
@@ -2725,7 +2727,7 @@ int RpdSshAuth(const char *sstr)
    gSec = 4;
 
    // Save username ...
-   strcpy(gUser, user);
+   strlcpy(gUser, user, strlen(user), 64);
 
    char line[kMAXPATHLEN];
    if ((gReUseAllow & gAUTH_SSH_MSK) && gReUseRequired) {
@@ -3722,7 +3724,10 @@ int RpdPass(const char *pass, int errheq)
       goto authok;
    }
    // Get local passwd info for gUser
-   pw = getpwnam(gUser);
+   if (!(pw = getpwnam(gUser))) {
+      ErrorInfo("RpdPass: getpwnam failed!");
+      return auth;
+   }
 
 #ifdef R__AFS
    void *tok = GetAFSToken(gUser, passwd, 0, -1, &reason);
@@ -3828,7 +3833,7 @@ int RpdPass(const char *pass, int errheq)
                }
                NetSend(token, kMESS_STRING);
             }
-            if (token) delete[] token;
+            delete[] token;
          }
          gOffSet = offset;
 
@@ -4221,7 +4226,7 @@ int RpdRfioAuth(const char *sstr)
       return auth;
    }
    // Set username ....
-   strcpy(gUser, pw->pw_name);
+   strlcpy(gUser, pw->pw_name, strlen(pw->pw_name), 64);
 
 
    // Notify, if required ...
@@ -4487,6 +4492,7 @@ int RpdCheckSshd(int opt)
 
       // Fill relevant sockaddr_in structure
       struct sockaddr_in servAddr;
+      servAddr.sin_zero[0] = 0;
       servAddr.sin_family = h->h_addrtype;
       memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0],
              h->h_length);
@@ -4502,6 +4508,7 @@ int RpdCheckSshd(int opt)
 
       /* bind any port number */
       struct sockaddr_in localAddr;
+      localAddr.sin_zero[0] = 0;
       localAddr.sin_family = AF_INET;
       localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
       localAddr.sin_port = htons(0);
@@ -4624,7 +4631,7 @@ int RpdUser(const char *sstr)
    if (gCheckHostsEquiv && strlen(ruser)) {
       if (RpdCheckHostsEquiv(gOpenHost.c_str(),ruser,user,errheq)) {
          auth = 3;
-         strcpy(gUser, user);
+         strlcpy(gUser, user, strlen(user), 64);
          return auth;
       }
    }
@@ -4816,8 +4823,7 @@ int RpdUser(const char *sstr)
                   NetSend(kErrBadPasswd, kROOTD_ERR);
                ErrorInfo("RpdUser: rndm tag mis-match"
                          " (%s vs %s) - Failure",&passwd[plen-10],ctag);
-               if (passwd)
-                  delete[] passwd;
+               delete[] passwd;
                return auth;
             }
 
@@ -4833,8 +4839,7 @@ int RpdUser(const char *sstr)
                NetSend(kErrBadPasswd, kROOTD_ERR);
             ErrorInfo("RpdUser: rndm tag missing or incomplete"
                       " (pw length: %d) - Failure", plen);
-            if (passwd)
-               delete[] passwd;
+            delete[] passwd;
             return auth;
          }
       }
@@ -4866,7 +4871,7 @@ int RpdUser(const char *sstr)
 
    // Erase memory used for password
    passwd = (char *)rpdmemset((volatile void *)passwd,0,lpwd);
-   if (passwd) delete[] passwd;
+   delete[] passwd;
 
    return auth;
 }
@@ -4993,20 +4998,6 @@ int RpdGetRSAKeys(const char *pubkey, int Opt)
    // Parse input type
    if (Opt == 1) {
 
-      // Check first the permissions: should be 0600
-      struct stat st;
-      if (stat(pubkey, &st) == -1) {
-         ErrorInfo("RpdGetRSAKeys: cannot stat key file"
-                   " %s (errno: %d)", pubkey, GetErrno());
-         return 0;
-      }
-      if (!S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) ||
-          (st.st_mode & 0777) != (S_IRUSR | S_IWUSR)) {
-         ErrorInfo("RpdGetRSAKeys: key file %s: wrong permissions"
-                   " 0%o (should be 0600)", pubkey, (st.st_mode & 0777));
-         return 0;
-      }
-
       // Ok, now open it
       fKey = fopen(pubkey, "r");
       if (!fKey) {
@@ -5020,6 +5011,21 @@ int RpdGetRSAKeys(const char *pubkey, int Opt)
          } else
             ErrorInfo("RpdGetRSAKeys: cannot open key file"
                       " %s (errno: %d)", pubkey, GetErrno());
+         return 0;
+      }
+      // Check first the permissions: should be 0600
+      struct stat st;
+      if (fstat(fileno(fKey), &st) == -1) {
+         ErrorInfo("RpdGetRSAKeys: cannot stat descriptor %d"
+                   " %s (errno: %d)", fileno(fKey), GetErrno());
+         fclose(fKey);
+         return 0;
+      }
+      if (!S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) ||
+          (st.st_mode & 0777) != (S_IRUSR | S_IWUSR)) {
+         ErrorInfo("RpdGetRSAKeys: key file %s: wrong permissions"
+                   " 0%o (should be 0600)", pubkey, (st.st_mode & 0777));
+         fclose(fKey);
          return 0;
       }
       gPubKeyLen = fread((void *)str,1,sizeof(str),fKey);
@@ -5775,6 +5781,7 @@ int RpdAuthenticate()
          case kROOTD_CLEANUP:
             RpdAuthCleanup(buf,1);
             ErrorInfo("RpdAuthenticate: authentication stuff cleaned - exit");
+            // Fallthrough next case now to free the keys
          case kROOTD_BYE:
             RpdFreeKeys();
             return auth;
@@ -5884,7 +5891,7 @@ int RpdProtocol(int ServType)
             delete[] buf;
             return -1;
          }
-         STRLCPY(proto, buf, kMAXRECVBUF);
+         strlcpy(proto, buf, len, kMAXRECVBUF);
       } else {
          // Empty buffer
          proto[0] = '\0';
@@ -6604,22 +6611,20 @@ int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpw
          ("RpdRetrieveSpecialPass: checking file %s for user %s",rootdpass,
            pw->pw_name);
 
+
+   if ((fid = open(rootdpass, O_RDONLY)) == -1) {
+      ErrorInfo("RpdRetrieveSpecialPass: cannot open password file"
+                " %s (errno: %d)", rootdpass, GetErrno());
+      rc = -1;
+      goto back;
+   }
    // Check first the permissions: should be 0600
    struct stat st;
-   if (stat(rootdpass, &st) == -1) {
-      if (GetErrno() != ENOENT) {
-         ErrorInfo("RpdRetrieveSpecialPass: cannot stat password file"
-                   " %s (errno: %d)", rootdpass, GetErrno());
-         rc = -1;
-         goto back;
-      } else {
-         if (gDebug > 0)
-            ErrorInfo("RpdRetrieveSpecialPass: file %s does not exists",
-                      rootdpass);
-         pass[0] = 0;
-         rc = 0;
-         goto back;
-      }
+   if (fstat(fid, &st) == -1) {
+      ErrorInfo("RpdRetrieveSpecialPass: cannot stat descriptor %d"
+                  " %s (errno: %d)", fid, GetErrno());
+      rc = -1;
+      goto back;
    }
    if (!S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) ||
        (st.st_mode & (S_IWGRP | S_IWOTH | S_IRGRP | S_IROTH)) != 0) {
@@ -6628,13 +6633,6 @@ int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpw
       ErrorInfo("RpdRetrieveSpecialPass: %d %d",
                 S_ISREG(st.st_mode),S_ISDIR(st.st_mode));
       rc = -2;
-      goto back;
-   }
-
-   if ((fid = open(rootdpass, O_RDONLY)) == -1) {
-      ErrorInfo("RpdRetrieveSpecialPass: cannot open password file"
-                " %s (errno: %d)", rootdpass, GetErrno());
-      rc = -1;
       goto back;
    }
 

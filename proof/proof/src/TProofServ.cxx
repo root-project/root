@@ -4869,12 +4869,16 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                         } else {
                            // Store md5 in package/PROOF-INF/md5.txt
                            TMD5 *md5local = TMD5::FileChecksum(par);
-                           TString md5f = packagedir + "/" + package + "/PROOF-INF/md5.txt";
-                           TMD5::WriteChecksum(md5f, md5local);
-                           // Go down to the package directory
-                           gSystem->ChangeDirectory(pdir);
-                           // Cleanup
-                           SafeDelete(md5local);
+                           if (md5local) {
+                              TString md5f = packagedir + "/" + package + "/PROOF-INF/md5.txt";
+                              TMD5::WriteChecksum(md5f, md5local);
+                              // Go down to the package directory
+                              gSystem->ChangeDirectory(pdir);
+                              // Cleanup
+                              SafeDelete(md5local);
+                           } else {
+                              Error("HandleCache", "kBuildPackage: failure calculating MD5sum for '%s'", par);
+                           }
                         }
                         delete [] gunzip;
                      } else

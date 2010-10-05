@@ -152,8 +152,8 @@ Bool_t TProofDraw::Notify()
 
    PDB(kDraw,1) Info("Notify","Enter");
    if (fStatus == 0) {
-      fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"));
-      R__ASSERT(fStatus);
+      if (!(fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"))))
+         return kFALSE;
    }
    if (!fStatus->IsOk()) return kFALSE;
    if (!fManager) return kFALSE;
@@ -359,8 +359,8 @@ void TProofDraw::SetError(const char *sub, const char *mesg)
    // Sets the error status.
 
    if (fStatus == 0) {
-      fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"));
-      R__ASSERT(fStatus);
+      if (!(fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"))))
+         return;
    }
 
    TString m;
@@ -406,7 +406,9 @@ Bool_t TProofDraw::CompileVariables()
    if (fManager->GetMultiplicity()>=1) fMultiplicity = fManager->GetMultiplicity();
 
    return kTRUE;
-
+#if 0
+   // Commenting out to silence Coverity:
+   // but why was this made inactive? 
    if (fDimension==1) {
       TClass *cl = fVar[0]->EvalClass();
       if (cl) {
@@ -414,6 +416,7 @@ Bool_t TProofDraw::CompileVariables()
       }
    }
    return kTRUE;
+#endif
 }
 
 

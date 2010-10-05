@@ -145,23 +145,16 @@ tryagain:
       }
    }
    // The path ...
-   if (stat(fsun, &sst) != 0) {
-      ErrorInfo("SshToolAllocateSocket: can't stat '%s' (errno: %d)", fsun, errno);
+   if (chown(fsun, Uid, Gid) != 0) {
+      if (gDebug > 0) {
+         ErrorInfo("SshToolAllocateSocket: chown: could not change path"
+                     " '%s' ownership (errno= %d)",fsun, errno);
+         ErrorInfo("SshToolAllocateSocket: path (uid,gid) are: %d %d",
+                     sst.st_uid, sst.st_gid);
+         ErrorInfo("SshToolAllocateSocket: may follow authentication problems");
+      }
       return -1;
    }
-   if ((unsigned int)sst.st_uid != Uid || (unsigned int)sst.st_gid != Gid) {
-      if (chown(fsun, Uid, Gid) != 0) {
-         if (gDebug > 0) {
-            ErrorInfo("SshToolAllocateSocket: chown: could not change path"
-                      " '%s' ownership (errno= %d)",fsun, errno);
-            ErrorInfo("SshToolAllocateSocket: path (uid,gid) are: %d %d",
-                      sst.st_uid, sst.st_gid);
-            ErrorInfo("SshToolAllocateSocket: may follow authentication problems");
-         }
-         return -1;
-      }
-   }
-
 
    // Change permissions to access pipe to avoid hacking from a different
    // user account.

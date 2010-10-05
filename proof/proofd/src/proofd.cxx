@@ -319,17 +319,15 @@ const char *RerouteUser()
       // string::insert is buggy on some compilers (eg gcc 2.96):
       // new length correct but data not always null terminated
       conffile[conffile.length()] = 0;
-      if (access(conffile.c_str(), R_OK))
-         conffile = "";
    }
-   if (!conffile.length()) {
-      conffile.insert(0,"/etc/");
+   if (!(proofconf = fopen(conffile.c_str(), "r"))) {
+      conffile = "/etc/";
       conffile.insert(0,gConfDir);
       // string::insert is buggy on some compilers (eg gcc 2.96):
       // new length correct but data not always null terminated
       conffile[conffile.length()] = 0;
    }
-   if ((proofconf = fopen(conffile.c_str(), "r")) != 0) {
+   if (proofconf || (proofconf = fopen(conffile.c_str(), "r")) != 0) {
 
       // read configuration file
       static char user_on_node[32];
@@ -354,7 +352,8 @@ const char *RerouteUser()
          if (nword >= 2 && strcmp(word[0], "node") == 0) {
             if (gethostbyname(word[1]) != 0) {
                if (nnodes < kMaxSlaves) {
-                  strcpy(node_name[nnodes], word[1]);
+                  if (strlen(word[1]) < 32)
+                     strcpy(node_name[nnodes], word[1]);
                   nnodes++;
                }
             }
@@ -369,7 +368,8 @@ const char *RerouteUser()
              strcmp(word[1], gUser.c_str()) == 0 &&
              strcmp(word[2], "on") == 0) {
             // user <name> on <node>
-            strcpy(user_on_node, word[3]);
+            if (strlen(word[3]) < 32)
+               strcpy(user_on_node, word[3]);
             continue;
          }
       }
@@ -489,7 +489,8 @@ void ProofdExec()
          if (host != 0) {
             struct in_addr *host_addr = (struct in_addr*)(host->h_addr);
             char host_numb[32];
-            strcpy(host_numb, inet_ntoa(*host_addr));
+            if (strlen(inet_ntoa(*host_addr)) < 32)
+               strcpy(host_numb, inet_ntoa(*host_addr));
 
             if ((node = gethostbyname(node_name)) != 0) {
                struct in_addr *node_addr = (struct in_addr*)(node->h_addr);

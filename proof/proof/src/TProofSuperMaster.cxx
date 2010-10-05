@@ -289,7 +289,8 @@ void TProofSuperMaster::ValidateDSet(TDSet *dset)
       if (elem->GetValid()) continue;
       TPair *p = dynamic_cast<TPair*>(msds.FindObject(elem->GetMsd()));
       if (p && p->Value()) {
-         dynamic_cast<TList*>(p->Value())->Add(elem);
+         TList *xl = dynamic_cast<TList*>(p->Value());
+         if (xl) xl->Add(elem);
       } else {
          Error("ValidateDSet", "no mass storage domain '%s' associated"
                                " with available submasters",
@@ -316,8 +317,8 @@ void TProofSuperMaster::ValidateDSet(TDSet *dset)
          for (Int_t j = (i*nelements)/nsms;
                     j < ((i+1)*nelements)/nsms;
                     j++) {
-            TDSetElement *elem =
-               dynamic_cast<TDSetElement*>(setelements->At(j));
+            TDSetElement *elem = setelements ?
+               dynamic_cast<TDSetElement*>(setelements->At(j)) : (TDSetElement *)0;
             if (elem) {
                set.Add(elem->GetFileName(), elem->GetObjName(),
                      elem->GetDirectory(), elem->GetFirst(),

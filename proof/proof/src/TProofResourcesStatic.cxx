@@ -150,7 +150,7 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const char *confDir,
       if (cf)
          PDB(kGlobal,1)
             Info("ReadConfigFile", "file %s cannot be read:"
-                 " check existence and/or permissions", (cf ? cf : ""));
+                 " check existence and/or permissions", cf);
       if (fileName && strlen(fileName) > 0) {
          // Use user defined file or default
          // Add a proper path to the file name

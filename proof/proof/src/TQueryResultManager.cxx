@@ -693,9 +693,11 @@ void TQueryResultManager::SaveQuery(TProofQueryResult *pq, Int_t mxq)
             } else if (farc) {
                RemoveQuery(farc, kTRUE);
                fKeptQueries--;
+               farc = 0;
             } else if (fcom) {
                RemoveQuery(fcom);
                fKeptQueries--;
+               fcom = 0;
             }
          }
       }

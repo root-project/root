@@ -269,7 +269,7 @@ public:
       // relation between harddrive speed and network bandwidth.
 
       const TFileNode *obj = dynamic_cast<const TFileNode*>(other);
-      R__ASSERT(obj != 0);
+      if (!obj) return 0;
 
       // how many more events it has than obj
 
@@ -658,9 +658,10 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    // Setup file & filenode structure
    Reset();
    // Optimize the number of files to be open when running on subsample
+   Bool_t byfile = kFALSE;
    Int_t validateMode = 0;
-   TProof::GetParameter(input, "PROOF_ValidateByFile", validateMode);
-   Bool_t byfile = (validateMode > 0 && num > -1) ? kTRUE : kFALSE;
+   if (TProof::GetParameter(input, "PROOF_ValidateByFile", validateMode) == 0)
+      byfile = (validateMode > 0 && num > -1) ? kTRUE : kFALSE;
    ValidateFiles(dset, slaves, num, byfile);
 
 

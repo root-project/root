@@ -678,8 +678,7 @@ negotia:
                Info("Authenticate",
                     "remotely allowed methods not yet tried: %s",
                     answer);
-            if (answer)
-               delete[] answer;
+            delete[] answer;
          } else if (stat == 0) {
             Info("Authenticate",
                  "no more methods accepted remotely to be tried");
@@ -783,8 +782,10 @@ negotia:
    switch (action) {
    case 1:
       goto negotia;
+      // No break but we go away anyhow
    case 2:
       fSocket->Send("0", kROOTD_BYE);
+      // fallthrough
    case 3:
       if (strlen(noSupport) > 0)
          Info("Authenticate", "attempted methods %s are not supported"
@@ -959,26 +960,34 @@ void TAuthenticate::SetEnvironment()
       usdef[0] = '\0';
       if (fSecurity == kGlobus) {
          if (cd != 0) {
-            strcat(usdef," ");
-            strcat(usdef,cd);
+            if (strlen(cd) < kMAXPATHLEN - strlen(usdef) - 1) {
+               strcat(usdef," ");
+               strcat(usdef,cd);
+            }
             delete [] cd;
             cd = 0;
          }
          if (cf != 0) {
-            strcat(usdef," ");
-            strcat(usdef,cf);
+            if (strlen(cf) < kMAXPATHLEN - strlen(usdef) - 1) {
+               strcat(usdef," ");
+               strcat(usdef,cf);
+            }
             delete [] cf;
             cf = 0;
          }
          if (kf != 0) {
-            strcat(usdef," ");
-            strcat(usdef,kf);
+            if (strlen(kf) < kMAXPATHLEN - strlen(usdef) - 1) {
+               strcat(usdef," ");
+               strcat(usdef,kf);
+            }
             delete [] kf;
             kf = 0;
          }
          if (ad != 0) {
-            strcat(usdef," ");
-            strcat(usdef,ad);
+            if (strlen(ad) < kMAXPATHLEN - strlen(usdef) - 1) {
+               strcat(usdef," ");
+               strcat(usdef,ad);
+            }
             delete [] ad;
             ad = 0;
          }
@@ -1767,7 +1776,6 @@ Int_t TAuthenticate::SshAuth(TString &user)
          if (strcmp(gEnv->GetValue("SSH.ExecDir", "-1"), "-1")) {
             if (gDebug > 2)
                Info("SshAuth", "searching user defined path ...");
-            if (gSshExe) delete [] gSshExe;
             gSshExe = StrDup(Form("%s/%s",
                                   (char *)gEnv->GetValue("SSH.ExecDir", ""), scmd));
             if (gSystem->AccessPathName(gSshExe, kExecutePermission)) {
@@ -2147,6 +2155,7 @@ Int_t TAuthenticate::SshAuth(TString &user)
       if (SecureRecv(fSocket, 1, fRSAKey, &token) == -1) {
          Warning("SshAuth", "problems secure-receiving token -"
                  " may result in corrupted token");
+         delete [] token;
          return 0;
       }
       if (gDebug > 3)
@@ -2360,7 +2369,6 @@ Int_t TAuthenticate::RfioAuth(TString &username)
          return -1;
       }
    }
-   delete pw;
    return -1;
 }
 
@@ -3007,7 +3015,7 @@ void TAuthenticate::FileExpand(const char *fexp, FILE *ftmp)
                strlen(fileinc) + strlen(gSystem->HomeDirectory()) + 10;
             char *ffull = new char[flen];
             sprintf(ffull, "%s/%s", gSystem->HomeDirectory(), fileinc + 1);
-            strcpy(fileinc, ffull);
+            if (strlen(ffull) < kMAXPATHLEN - 1) strcpy(fileinc, ffull);
             delete [] ffull;
          }
          // Check if file exist and can be read ... ignore if not ...
@@ -3852,8 +3860,8 @@ Int_t TAuthenticate::DecodeRSAPublic(const char *rsaPubExport, rsa_NUMBER &rsa_n
 
          // The format is #<hex_n>#<hex_d>#
          char *pd1 = strstr(str, "#");
-         char *pd2 = strstr(pd1 + 1, "#");
-         char *pd3 = strstr(pd2 + 1, "#");
+         char *pd2 = pd1 ? strstr(pd1 + 1, "#") : (char *)0;
+         char *pd3 = pd2 ? strstr(pd2 + 1, "#") : (char *)0;
          if (pd1 && pd2 && pd3) {
             // Get <hex_n> ...
             int l1 = (int) (pd2 - pd1 - 1);
@@ -3881,31 +3889,31 @@ Int_t TAuthenticate::DecodeRSAPublic(const char *rsaPubExport, rsa_NUMBER &rsa_n
          } else
             ::Info("TAuthenticate::DecodeRSAPublic","bad format for input string");
 #ifdef R__SSL
-         } else {
-            // try SSL
-            keytype = 1;
+      } else {
+         // try SSL
+         keytype = 1;
 
-            RSA *rsatmp;
+         RSA *rsatmp;
 
-            // Bio for exporting the pub key
-            BIO *bpub = BIO_new(BIO_s_mem());
+         // Bio for exporting the pub key
+         BIO *bpub = BIO_new(BIO_s_mem());
 
-            // Write key from kbuf to BIO
-            BIO_write(bpub,(void *)str,strlen(str));
+         // Write key from kbuf to BIO
+         BIO_write(bpub,(void *)str,strlen(str));
 
-            // Read pub key from BIO
-            if (!(rsatmp = PEM_read_bio_RSAPublicKey(bpub, 0, 0, 0))) {
-               if (gDebug > 0)
-                  ::Info("TAuthenticate::DecodeRSAPublic",
-                         "unable to read pub key from bio");
-            } else
-               if (rsassl)
-                  *rsassl = (char *)rsatmp;
-               else
-                  ::Info("TAuthenticate::DecodeRSAPublic",
-                         "no space allocated for output variable");
-            BIO_free(bpub);
-         }
+         // Read pub key from BIO
+         if (!(rsatmp = PEM_read_bio_RSAPublicKey(bpub, 0, 0, 0))) {
+            if (gDebug > 0)
+               ::Info("TAuthenticate::DecodeRSAPublic",
+                        "unable to read pub key from bio");
+         } else
+            if (rsassl)
+               *rsassl = (char *)rsatmp;
+            else
+               ::Info("TAuthenticate::DecodeRSAPublic",
+                        "no space allocated for output variable");
+         BIO_free(bpub);
+      }
 #else
       } else {
          if (rsassl) { }   // To avoid compiler complains
@@ -4335,7 +4343,7 @@ Int_t TAuthenticate::ReadRootAuthrc()
    if (expand == 1)
       gSystem->Unlink(filetmp);
    // Cleanup allocated memory
-   if (authrc) delete [] authrc;
+   delete [] authrc;
 
    // Update authinfo with new info found
    TAuthenticate::MergeHostAuthList(authinfo,&tmpAuthInfo);
@@ -4418,7 +4426,7 @@ Int_t TAuthenticate::ReadRootAuthrc()
          // Go to next
          nxt = strtok(0," ");
       }
-      if (tmps) delete [] tmps;
+      delete [] tmps;
    }
 
    // Update proofauthinfo with new info found
