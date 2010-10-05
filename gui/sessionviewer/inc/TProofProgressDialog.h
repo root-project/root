@@ -59,6 +59,7 @@ private:
    TGTextButton       *fLog;
    TGTextButton       *fRatePlot;
    TGTextButton       *fMemPlot;
+   TGTextButton       *fUpdtSpeedo;
    TGCheckButton      *fKeepToggle;
    TGCheckButton      *fLogQueryToggle;
    TGTextBuffer       *fTextQuery;
@@ -72,6 +73,7 @@ private:
    TGLabel            *fRate;
    TGLabel            *fInit;
    TGLabel            *fSelector;
+   Bool_t              fSpeedoEnabled;    // whether to enable the speedometer
    TGSpeedo           *fSpeedo;           // speedometer
    TGCheckButton      *fSmoothSpeedo;     // use smooth speedometer update
    TProofProgressLog  *fLogWindow;        // transient frame for logs
@@ -137,6 +139,7 @@ public:
    void DoAsyn();
    void DoPlotRateGraph();
    void DoMemoryPlot();
+   void DoEnableSpeedo();
    void ToggleOdometerInfos();
    void ToggleThreshold();
 
