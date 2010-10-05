@@ -41,7 +41,7 @@ public:
       construct the Fit data object
   */
   
-  TChi2FitData() : fSize(0) {}
+   TChi2FitData() : fSize(0), fSkipEmptyBins(false), fIntegral(false) {}
 
   TChi2FitData(const TVirtualFitter & fitter,  bool skipEmptyBins = true); 
 

@@ -80,7 +80,7 @@ void TFitterFumili::CreateMinimizer(EMinimizerType ) {
       std::cout<<"TFitterFumili: Minimize using new Fumili algorithm "<<std::endl;
    
    const ModularFunctionMinimizer * minimizer = GetMinimizer();
-   if (!minimizer) delete minimizer;
+   if (minimizer) delete minimizer;
    SetMinimizer( new FumiliMinimizer() );
    
    SetStrategy(1);
