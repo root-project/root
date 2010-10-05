@@ -35,10 +35,10 @@ class TEfficiency: public TNamed, public TAttLine, public TAttFill, public TAttM
 public:  
       //enumaration type for different statistic options for calculating confidence intervals
       //kF* ... frequentist methods; kB* ... bayesian methods      
-      enum {
-	 kFCP,                             //Clopper-Pearson interval (recommended by PDG)
-	 kFNormal,                         //normal approximation
-	 kFWilson,                         //Wilson interval
+      enum EStatOption {
+	 kFCP = 0,                             //Clopper-Pearson interval (recommended by PDG)
+	 kFNormal,                            //normal approximation
+	 kFWilson,                           //Wilson interval
 	 kFAC,                             //Agresti-Coull interval
 	 kBJeffrey,                        //Jeffrey interval (Prior ~ Beta(0.5,0.5)
 	 kBUniform,                        //Prior ~ Uniform = Beta(1,1)
@@ -56,12 +56,13 @@ protected:
       TGraphAsymmErrors* fPaintGraph;        //!temporary graph for painting
       TH1*          fPaintHisto;             //!temporary histogram for painting      
       TH1*          fPassedHistogram;        //histogram for events which passed certain criteria
-      Int_t         fStatisticOption;        //defines how the confidence intervals are determined
+      EStatOption   fStatisticOption;        //defines how the confidence intervals are determined
       TH1*          fTotalHistogram;         //histogram for total number of events
       Double_t      fWeight;                 //weight for all events (default = 1)
 
       enum{
-	 kIsBayesian = BIT(14)               //bayesian statistics are used
+	 kIsBayesian       = BIT(14),              //bayesian statistics are used
+         kPosteriorMode    = BIT(15)               //use posterior mean for best estimate (Bayesian statistics)
       };
 
       void          Build(const char* name,const char* title);      
@@ -105,7 +106,7 @@ public:
       Int_t         GetGlobalBin(Int_t binx,Int_t biny=0,Int_t binz=0) const;
       TList*        GetListOfFunctions() const {return fFunctions;}
       const TH1*    GetPassedHistogram() const {return fPassedHistogram;}
-      Int_t         GetStatisticOption() const {return fStatisticOption;}
+      EStatOption   GetStatisticOption() const {return fStatisticOption;}
       const TH1*    GetTotalHistogram() const {return fTotalHistogram;}
       Double_t      GetWeight() const {return fWeight;}
       void          Merge(TCollection* list);      
@@ -114,24 +115,26 @@ public:
       void          Paint(const Option_t* opt);
       void          SavePrimitive(ostream& out,Option_t* opt="");
       void          SetBetaAlpha(Double_t alpha);
-      void          SetBetaBeta(Double_t beta);      
+      void          SetBetaBeta(Double_t beta);    
       void          SetConfidenceLevel(Double_t level);
       void          SetDirectory(TDirectory* dir);
       void          SetName(const char* name);
       Bool_t        SetPassedEvents(Int_t bin,Int_t events);
       Bool_t        SetPassedHistogram(const TH1& rPassed,Option_t* opt);
-      void          SetStatisticOption(Int_t option);
+      void          SetPosteriorMode(Bool_t on = true) { SetBit(kPosteriorMode,on); } 
+      void          SetStatisticOption(EStatOption option);
       void          SetTitle(const char* title);
       Bool_t        SetTotalEvents(Int_t bin,Int_t events);
       Bool_t        SetTotalHistogram(const TH1& rTotal,Option_t* opt);
       void          SetWeight(Double_t weight);    
       Bool_t        UsesBayesianStat() const {return TestBit(kIsBayesian);}
+      Bool_t        UsesPosteriorMode() const   {return TestBit(kPosteriorMode);} 
 
       static Bool_t CheckBinning(const TH1& pass,const TH1& total);
       static Bool_t CheckConsistency(const TH1& pass,const TH1& total,Option_t* opt="");
       static Bool_t CheckEntries(const TH1& pass,const TH1& total,Option_t* opt="");
       static Double_t Combine(Double_t& up,Double_t& low,Int_t n,const Int_t* pass,const Int_t* total,
-			      const Double_t* alpha,const Double_t* beta,Double_t level=0.683,
+			      Double_t alpha,Double_t beta,Double_t level=0.683,
 			      const Double_t* w=0,Option_t* opt="");
       static TGraphAsymmErrors* Combine(TCollection* pList,Option_t* opt="N",Int_t n=0,const Double_t* w=0);
       

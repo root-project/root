@@ -372,6 +372,9 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    // - ac    : Agresti-Coull interval (see TEfficiency::AgrestiCoull)
    // - b(a,b): bayesian interval using a prior probability ~Beta(a,b); a,b > 0
    //           (see TEfficiency::Bayesian)
+   // - mode  : use mode of posterior for Bayesian interval (default is mean)
+   // - empty : plot (in Bayesian case) efficiency and interval for bins where total=0 
+   //           (default is to skip them)
    //
    // Note:
    // Unfortunately there is no straightforward approach for determining a confidence
@@ -486,6 +489,11 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       option.ReplaceAll("b(","");
       bIsBayesian = true;
    }
+   Bool_t usePosteriorMode = false; 
+   if(bIsBayesian && option.Contains("mode") ) usePosteriorMode = true; 
+
+   Bool_t plot0Bins = false; 
+   if(bIsBayesian && option.Contains("empty") ) plot0Bins = true; 
    
    //Set the graph to have a number of points equal to the number of histogram
    //bins
@@ -523,10 +531,25 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
 
       //using bayesian statistics
       if(bIsBayesian) {
-	 if(t + alpha + beta)
-	    eff = (p + alpha)/(t + alpha + beta);
-	 else
-	    continue;
+         if (!t && !plot0Bins) continue; // skip bins with total = 0
+         if (!usePosteriorMode) { 
+            double d = double(t) + alpha + beta; 
+            if( d > 0 ) 
+               eff = (p + alpha)/d;
+            else
+               continue;
+         }
+         else { // mode of posterior
+            double d = double(t) + alpha + beta - 2.; 
+            if ( d > 0 ) {
+               eff = (p + alpha - 1)/d;
+               // when alpha,beta < 1 can get values outside (0,1) since mode is undefined
+               if (eff < 0) eff = 0; 
+               if (eff > 1) eff = 1;
+            }
+            else
+               continue; 
+         }
       
 	 low = TEfficiency::Bayesian(t,p,conf,alpha,beta,false);
 	 upper = TEfficiency::Bayesian(t,p,conf,alpha,beta,true);

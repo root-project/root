@@ -20,6 +20,7 @@
 #include "TROOT.h"
 #include "TStyle.h"
 #include "TVirtualPad.h"
+#include "TError.h"
 
 //custom headers
 #include "TEfficiency.h"
@@ -28,7 +29,7 @@
 const Double_t kDefBetaAlpha = 1;
 const Double_t kDefBetaBeta = 1;
 const Double_t kDefConfLevel = 0.682689492137; // 1 sigma
-const Int_t kDefStatOpt = TEfficiency::kFCP;
+const TEfficiency::EStatOption kDefStatOpt = TEfficiency::kFCP;
 const Double_t kDefWeight = 1;
 
 ClassImp(TEfficiency)
@@ -1329,6 +1330,8 @@ Double_t TEfficiency::ClopperPearson(Int_t total,Int_t passed,Double_t level,Boo
       return ((passed == 0) ? 0.0 : ROOT::Math::beta_quantile(alpha,passed,total-passed+1.0));
 }
 
+
+#ifdef OLD_COMBINATION   
 //______________________________________________________________________________
 Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
 			      const Int_t* pass,const Int_t* total,
@@ -1439,7 +1442,7 @@ Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
    option.ToLower();
    if(option.Contains("n"))
      bModWeights = true;
-   
+
    //create formula for cumulative of total posterior
    // cdf = 1/sum of weights * sum_i (weight_i * cdf_i(pass_i,total_i,alpha_i,beta_i))
    // and cdf_i(pass_i,total_i,alpha_i,beta_i) = beta_incomplete(pass_i + alpha_i,total_i - pass_i + beta_i)
@@ -1492,6 +1495,112 @@ Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
 
    return mean;
 }
+#endif
+//______________________________________________________________________________
+Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
+			      const Int_t* pass,const Int_t* total,
+			      Double_t alpha, Double_t beta,
+			      Double_t level,const Double_t* w,Option_t* opt)
+{
+   //calculates the combined efficiency and its uncertainties
+   //
+   //This method does a bayesian combination of the given samples.
+   //
+   //Input:
+   //- up     : contains the upper limit of the confidence interval afterwards
+   //- low    : contains the lower limit of the confidence interval afterwards
+   //- n      : number of samples which are combined
+   //- pass   : array of length n containing the number of passed events
+   //- total  : array of length n containing the corresponding numbers of total
+   //           events
+   //- alpha  : shape parameters for the beta distribution as prior
+   //- beta   : shape parameters for the beta distribution as prior
+   //- level  : desired confidence level
+   //- w      : weights for each sample; if not given, all samples get the weight 1
+   //- options:
+   // + N : The weight for each sample is multiplied by the number of total events.
+   //       -> weight = w[i] * N[i]
+   //       This can be usefull when the weights and probability for each sample are given by
+   // + mode : The mode is returned instead of the default mean of the posterior as best value
+   //Begin_Latex(separator='=',align='rl')
+   // w_{i} = #frac{#sigma_{i} #times L}{N_{i}}
+   // p_{i} = #frac{#sigma_{i}}{sum_{j} #sigma_{j}} #equiv #frac{N_{i} #times w_{i}}{sum_{j} N_{j} #times w_{j}}
+   //End_Latex
+   //Begin_Html
+   //Notation:
+   //<ul>
+   //<li>k = passed events</li>
+   //<li>N = total evens</li>
+   //<li>n = number of combined samples</li>
+   //<li>i = index for numbering samples</li>
+   //<li>p = probability of sample i (either w[i] or w[i] * N[i], see options)</li>
+   //</ul>
+   //calculation:
+   //<ol>
+   //<li>The combined posterior distributions is calculated from the Bayes theorem assuming a Beta prior distribution, 
+   //     (Begin_Latex {B(#epsilon,#alpha,#beta)}End_Latex</li>:
+   //End_Html
+   //Begin_Latex(separator='=',align='rl')
+   //P_{comb}(#epsilon |{w_{i}}; {k_{i}}; {N_{i}}) = B(#epsilon, #sum w_{i} k_{i} + #alpha, #sum w_{i}(n_{i}-k_{i})+#beta) 
+   //p_{i} = w[i] or w_{i} #times N_{i} if option "N" is specified
+   //End_Latex
+   //Begin_Html
+   //<li>The estimated efficiency is the mode (or the mean) of the obtained distribution </li>
+   //End_Html
+   //Begin_Html
+   //<li>The boundaries of the confidence interval for a confidence level (1 - a)
+   //are given by the a/2 and 1-a/2 quantiles of the resulting cumulative
+   //distribution.</li>
+   //</ol>
+   //End_Html
+
+   TString option(opt);
+   option.ToLower();
+
+   //LM:  new formula for combination 
+   // works only if alpha beta are the same always
+   // the weights are normalized to w(i) -> N_eff w(i)/ Sum w(i) 
+   // i.e. w(i) -> Sum (w(i) / Sum (w(i)^2) * w(i) 
+   // norm = Sum (w(i) / Sum (w(i)^2) 
+   double ntot = 0; 
+   double ktot = 0; 
+   double sumw = 0;
+   double sumw2 = 0;
+   for (int i = 0; i < n ; ++i) { 
+      if(pass[i] > total[i]) {
+	 ::Error("TEfficiency::Combine","total events = %i < passed events %i",total[i],pass[i]);
+	 ::Info("TEfficiency::Combine","stop combining");
+	 return -1;
+      }
+
+      ntot += w[i] * total[i]; 
+      ktot += w[i] * pass[i]; 
+      sumw += w[i]; 
+      sumw2 += w[i]*w[i]; 
+      //mean += w[i] * (pass[i] + alpha[i])/(total[i] + alpha[i] + beta[i]);
+   } 
+   double norm = sumw/sumw2;
+   ntot *= norm;
+   ktot *= norm; 
+   if(ktot > ntot) {
+      ::Error("TEfficiency::Combine","total  = %f < passed  %f",ntot,ktot);
+      ::Info("TEfficiency::Combine","stop combining");
+      return -1;
+   }
+
+   double a = ktot + alpha; 
+   double b = ntot - ktot + beta; 
+
+   double mean = a/(a+b); 
+   double mode = (a-1)/(a+b-2);
+
+   up = ROOT::Math::beta_quantile((1+level)/2,a,b);
+   low =  ROOT::Math::beta_quantile((1-level)/2,a,b);
+
+   if (option.Contains("mode")) return mode; 
+   return mean; 
+
+}
 
 //______________________________________________________________________________
 TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
@@ -1511,6 +1620,7 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    //- options  
    // + s     : strict combining; only TEfficiency objects with the same beta
    //           prior and the flag kIsBayesian == true are combined
+   //           If not specified the prior parameter of the first TEfficiency object is used 
    // + v     : verbose mode; print information about combining
    // + cl=x  : set confidence level (0 < cl < 1). If not specified, the
    //           confidence level of the first TEfficiency object is used.
@@ -1540,8 +1650,8 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    opt.ToLower();
 
    //parameter of prior distribution, confidence level and normalisation factor
-   Double_t alpha = 0;
-   Double_t beta = 0;
+   Double_t alpha = -1;
+   Double_t beta = -1;
    Double_t level = 0;
    
    //flags for combining
@@ -1549,11 +1659,11 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    Bool_t bOutput = false;
    Bool_t bWeights = false;
    //list of all information needed to weight and combine efficiencies
-   std::vector<TH1*> vTotal;
-   std::vector<TH1*> vPassed;
-   std::vector<Double_t> vWeights;
-   std::vector<Double_t> vAlpha;
-   std::vector<Double_t> vBeta;
+   std::vector<TH1*> vTotal;    vTotal.reserve(n); 
+   std::vector<TH1*> vPassed;   vPassed.reserve(n); 
+   std::vector<Double_t> vWeights;  vWeights.reserve(n);
+//    std::vector<Double_t> vAlpha;
+//    std::vector<Double_t> vBeta;
 
    if(opt.Contains("s")) {
       opt.ReplaceAll("s","");
@@ -1566,7 +1676,8 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    }
 
    if(opt.Contains("cl=")) {
-      sscanf(strstr(opt.Data(),"cl="),"cl=%lf",&level);
+      Ssiz_t pos = opt.Index("cl=") + 3; 
+      level = atof( opt(pos,opt.Length() ).Data() );
       if((level <= 0) || (level >= 1))
 	 level = 0;
       opt.ReplaceAll("cl=","");
@@ -1596,13 +1707,13 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
 	 if(pEff->GetDimension() > 1)
 	    continue;
 	 if(!level) level = pEff->GetConfidenceLevel();
+
+         if(alpha<1) alpha = pEff->GetBetaAlpha();
+         if(beta<1) beta = pEff->GetBetaBeta();
 	 
 	 //if strict combining, check priors, confidence level and statistic
 	 if(bStrict) {
-	    if(!alpha) alpha = pEff->GetBetaAlpha();
-	    if(!beta) beta = pEff->GetBetaBeta();
-	 
-	    if(alpha != pEff->GetBetaAlpha())
+            if(alpha != pEff->GetBetaAlpha())
 	       continue;	    
 	    if(beta != pEff->GetBetaBeta())
 	       continue;
@@ -1618,14 +1729,14 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
 	    vWeights.push_back(pEff->fWeight);
 
 	 //strict combining -> using global prior
-	 if(bStrict) {
-	    vAlpha.push_back(alpha);
-	    vBeta.push_back(beta);
-	 }
-	 else {
-	    vAlpha.push_back(pEff->GetBetaAlpha());
-	    vBeta.push_back(pEff->GetBetaBeta());
-	 }
+// 	 if(bStrict) {
+// 	    vAlpha.push_back(alpha);
+// 	    vBeta.push_back(beta);
+// 	 }
+// 	 else {
+// 	    vAlpha.push_back(pEff->GetBetaAlpha());
+// 	    vBeta.push_back(pEff->GetBetaBeta());
+// 	 }
       }
    }
 
@@ -1669,22 +1780,18 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    }
 
    //create TGraphAsymmErrors with efficiency
-   Double_t* x = new Double_t[nbins_max];
-   Double_t* xlow = new Double_t[nbins_max];
-   Double_t* xhigh = new Double_t[nbins_max];
-   Double_t* eff = new Double_t[nbins_max];
-   Double_t* efflow = new Double_t[nbins_max];
-   Double_t* effhigh = new Double_t[nbins_max];
+   std::vector<Double_t> x(nbins_max);
+   std::vector<Double_t> xlow(nbins_max);
+   std::vector<Double_t> xhigh(nbins_max);
+   std::vector<Double_t> eff(nbins_max); 
+   std::vector<Double_t> efflow(nbins_max);
+   std::vector<Double_t> effhigh(nbins_max);
 
    //parameters for combining:
    //number of objects
    Int_t num = vTotal.size();
-   //shape parameters
-   Double_t* a = new Double_t[n];
-   Double_t* b = new Double_t[n];
-   Int_t* pass = new Int_t[n];
-   Int_t* total = new Int_t[n];
-   Double_t* weights = new Double_t[n];
+   std::vector<Int_t> pass(num); 
+   std::vector<Int_t> total(num); 
    
    //loop over all bins
    Double_t low, up;
@@ -1695,50 +1802,23 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
       xhigh[i-1] = vTotal.at(0)->GetBinWidth(i) - xlow[i-1];
 
       for(Int_t j = 0; j < num; ++j) {
-	 a[j] = vAlpha.at(j);
-	 b[j] = vBeta.at(j);
 	 pass[j] = (Int_t)(vPassed.at(j)->GetBinContent(i) + 0.5);
 	 total[j] = (Int_t)(vTotal.at(j)->GetBinContent(i) + 0.5);
-         weights[j] = vWeights.at(j);
       }
       
       //fill efficiency and errors
-      eff[i-1] = Combine(up,low,num,pass,total,a,b,level,weights,opt.Data());
+      eff[i-1] = Combine(up,low,num,&pass[0],&total[0],alpha,beta,level,&vWeights[0],opt.Data());
       //did an error occured ?
       if(eff[i-1] == -1) {
 	 gROOT->Error("TEfficiency::Combine","error occured during combining");
 	 gROOT->Info("TEfficiency::Combine","stop combining");
-	 //free memory
- 	 delete [] x;
-	 delete [] xlow;
-	 delete [] xhigh;
-	 delete [] eff;
-	 delete [] efflow;
-	 delete [] effhigh;
-	 delete [] pass;
-	 delete [] total;
-	 delete [] weights;
-	 delete [] a;
-	 delete [] b;
 	 return 0;
       }
       efflow[i-1]= eff[i-1] - low;
       effhigh[i-1]= up - eff[i-1];
    }//loop over all bins
 
-   TGraphAsymmErrors* gr = new TGraphAsymmErrors(nbins_max,x,eff,xlow,xhigh,efflow,effhigh);
-
-   delete [] x;
-   delete [] xlow;
-   delete [] xhigh;
-   delete [] eff;
-   delete [] efflow;
-   delete [] effhigh;
-   delete [] pass;
-   delete [] total;
-   delete [] weights;
-   delete [] a;
-   delete [] b;
+   TGraphAsymmErrors* gr = new TGraphAsymmErrors(nbins_max,&x[0],&eff[0],&xlow[0],&xhigh[0],&efflow[0],&effhigh[0]);
 
    return gr;
 }
@@ -1752,6 +1832,9 @@ void TEfficiency::Draw(const Option_t* opt)
    //- 1-dimensional case: same options as TGraphAsymmErrors::Draw()
    //- 2-dimensional case: same options as TH2::Draw()
    //- 3-dimensional case: not yet supported
+   //
+   // TEfficiency drawing options: 
+   // - empty - plot bins (in baysian statistics) where the total number of passed events is zero
    
    //check options
    TString option = opt;
@@ -1940,16 +2023,31 @@ Double_t TEfficiency::GetEfficiency(Int_t bin) const
    //        for frequentist ones:
    //        Begin_Latex #hat{#varepsilon} = #frac{passed}{total} End_Latex
    //        for bayesian ones the expectation value of the resulting posterior
-   //        distribution is returned:
+   //        distribution is returned if the but kPosteriorMean is set otherwise the 
+   //        mode (most probable value) of the posterior is returned
    //        Begin_Latex #hat{#varepsilon} = #frac{passed + #alpha}{total + #alpha + #beta} End_Latex
    //      - If the denominator is equal to 0, an efficiency of 0 is returned.
    
    Int_t total = (Int_t)fTotalHistogram->GetBinContent(bin);
    Int_t passed = (Int_t)fPassedHistogram->GetBinContent(bin);
       
-   if(TestBit(kIsBayesian))
-      return (total + fBeta_alpha + fBeta_beta)?
-	 (passed + fBeta_alpha)/(total + fBeta_alpha + fBeta_beta): 0;
+   if(TestBit(kIsBayesian)) { 
+
+
+      if (!TestBit(kPosteriorMode) ) {
+         Double_t d = double(total) + fBeta_alpha + fBeta_beta; 
+         return ( d > 0 ) ? (double(passed) + fBeta_alpha)/d : 0;
+      }
+      else {// use posterior mode (make sense only for alpha,beta > 1
+            // otehrwise is undefined for bins with passed = 0 or passed=total 
+         Double_t d = double(total) + fBeta_alpha + fBeta_beta - 2.0; 
+         // treat case when mode can be undefined (a, b) < 1 and one gets value of e outside (0,1)
+         Double_t e = (d > 0 ) ? ( double(passed) + fBeta_alpha - 1.0)/d: 0;
+         if (e < 0) return 0.;
+         if (e > 1.) return 1.;
+         return e; 
+      }
+   } 
    else
       return (total)? ((Double_t)passed)/total : 0;
 }
@@ -2155,6 +2253,9 @@ void TEfficiency::Paint(const Option_t* opt)
    TString option = opt;
    option.ToLower();
 
+   Bool_t plot0Bins = false; 
+   if (TestBit(kIsBayesian) && option.Contains("empty") ) plot0Bins = true; 
+
    //use TGraphAsymmErrors for painting
    if(GetDimension() == 1) {
       Int_t npoints = fTotalHistogram->GetNbinsX();
@@ -2167,8 +2268,9 @@ void TEfficiency::Paint(const Option_t* opt)
 
       //errors for points
       Double_t xlow,xup,ylow,yup;
-      //point i corresponds to bin i+1 in histogram
-      for(Int_t i = 0; i < npoints; ++i) {
+      //point i corresponds to bin i+1 in histogram      
+      for (Int_t i = 0; i < npoints; ++i) {
+         if (!plot0Bins && fTotalHistogram->GetBinContent(i+1) == 0 ) continue;
 	 fPaintGraph->SetPoint(i,fTotalHistogram->GetBinCenter(i+1),GetEfficiency(i+1));
 	 xlow = fTotalHistogram->GetBinCenter(i+1) - fTotalHistogram->GetBinLowEdge(i+1);
 	 xup = fTotalHistogram->GetBinWidth(i+1) - xlow;
@@ -2542,7 +2644,7 @@ Bool_t TEfficiency::SetPassedHistogram(const TH1& rPassed,Option_t* opt)
 }
 
 //______________________________________________________________________________
-void TEfficiency::SetStatisticOption(Int_t option)
+void TEfficiency::SetStatisticOption(EStatOption option)
 {
    //sets the statistic option which affects the calculation of the confidence interval
    //
