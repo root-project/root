@@ -131,6 +131,9 @@ TMVA::PDEFoam::PDEFoam() :
 //_____________________________________________________________________
 TMVA::PDEFoam::PDEFoam(const TString& Name)
    : fRvec ( 0 )
+   , fNElements( 0 )
+   , fNmin     ( 100 )
+   , fRMSmin   ( 1.0 )
    , fLogger(new MsgLogger("PDEFoam"))
 {
    // User constructor, to be employed by the user

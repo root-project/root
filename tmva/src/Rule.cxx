@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
+// Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      A class describung a 'rule'                                               * 
+ *      A class describung a 'rule'                                               *
  *      Each internal node of a tree defines a rule from all the parental nodes.  *
  *      A rule consists of atleast 2 nodes.                                       *
  *      Input: a decision tree (in the constructor)                               *
@@ -18,9 +18,9 @@
  *      Helge Voss         <Helge.Voss@cern.ch>         - MPI-KP Heidelberg, Ger. *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
+ *      CERN, Switzerland                                                         *
  *      Iowa State U.                                                             *
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -463,6 +463,7 @@ void TMVA::Rule::ReadRaw( istream& istr )
         >> fNorm
         >> fSSB
         >> fSSBNeve;
+   // coverity[tainted_data]
    istr >> dummy >> nvars;
    Double_t cutmin,cutmax;
    UInt_t   sel,idum;

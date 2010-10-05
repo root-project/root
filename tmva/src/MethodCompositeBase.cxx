@@ -190,20 +190,21 @@ void  TMVA::MethodCompositeBase::ReadWeightsFromStream( istream& istr )
    TString methodName, methodTitle=GetMethodName(),
     jobName=GetJobName(),optionString=GetOptions();
    UInt_t methodNum; Double_t methodWeight;
-   // and read the Weights (BDT coefficients)  
+   // and read the Weights (BDT coefficients)
    istr >> dummy >> methodNum;
    Log() << kINFO << "Read " << methodNum << " Classifiers" << Endl;
    for (UInt_t i=0;i<fMethods.size();i++) delete fMethods[i];
    fMethods.clear();
    fMethodWeight.clear();
+   // coverity[-tainted_data]
    for (UInt_t i=0; i<methodNum; i++) {
       istr >> dummy >> methodName >>  dummy >> fMethodIndex >> dummy >> methodWeight;
       if ((UInt_t)fMethodIndex != i) {
-         Log() << kFATAL << "Error while reading weight file; mismatch MethodIndex=" 
-               << fMethodIndex << " i=" << i 
+         Log() << kFATAL << "Error while reading weight file; mismatch MethodIndex="
+               << fMethodIndex << " i=" << i
                << " MethodName " << methodName
                << " dummy " << dummy
-               << " MethodWeight= " << methodWeight 
+               << " MethodWeight= " << methodWeight
                << Endl;
       }
       if (GetMethodType() != Types::kBoost || i==0) {
@@ -214,7 +215,7 @@ void  TMVA::MethodCompositeBase::ReadWeightsFromStream( istream& istr )
             ((TMVA::MethodBoost*)this)->BookMethod( Types::Instance().GetMethodType( methodName), methodTitle,  optionString );
       }
       else methodTitle=Form("%s (%04i)",GetMethodName().Data(),fMethodIndex);
-      fMethods.push_back(ClassifierFactory::Instance().Create( std::string(methodName), jobName, 
+      fMethods.push_back(ClassifierFactory::Instance().Create( std::string(methodName), jobName,
                                                                methodTitle,DataInfo(), optionString) );
       fMethodWeight.push_back( methodWeight );
       if(MethodBase* m = dynamic_cast<MethodBase*>(fMethods.back()) )

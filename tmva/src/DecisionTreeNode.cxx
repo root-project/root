@@ -195,12 +195,12 @@ void TMVA::DecisionTreeNode::SetPurity( void )
 void TMVA::DecisionTreeNode::Print(ostream& os) const
 {
    //print the node
-   os << "< ***  "  << std::endl; 
+   os << "< ***  "  << std::endl;
    os << " d: "     << this->GetDepth()
       << " seq: "   << this->GetSequence()
       << " ivar: "  << this->GetSelector()
-      << " cut: "   << this->GetCutValue() 
-      << " cType: " << this->GetCutType() 
+      << " cut: "   << this->GetCutValue()
+      << " cType: " << this->GetCutType()
       << " s: "     << this->GetNSigEvents()
       << " b: "     << this->GetNBkgEvents()
       << " nEv: "   << this->GetNEvents()
@@ -211,12 +211,12 @@ void TMVA::DecisionTreeNode::Print(ostream& os) const
       << " sepG: "  << this->GetSeparationGain()
       << " nType: " << this->GetNodeType()
       << std::endl;
-   
+
    os << "My address is " << long(this) << ", ";
    if (this->GetParent() != NULL) os << " parent at addr: "         << long(this->GetParent()) ;
    if (this->GetLeft()   != NULL) os << " left daughter at addr: "  << long(this->GetLeft());
    if (this->GetRight()  != NULL) os << " right daughter at addr: " << long(this->GetRight()) ;
-   
+
    os << " **** > " << std::endl;
 }
 
@@ -225,13 +225,13 @@ void TMVA::DecisionTreeNode::PrintRec(ostream& os) const
 {
    //recursively print the node and its daughters (--> print the 'tree')
 
-   os << this->GetDepth() 
+   os << this->GetDepth()
       << std::setprecision(6)
-      << " "         << this->GetPos() 
+      << " "         << this->GetPos()
       << " seq: "    << this->GetSequence()
       << " ivar: "   << this->GetSelector()
-      << " cut: "    << this->GetCutValue() 
-      << " cType: "  << this->GetCutType() 
+      << " cut: "    << this->GetCutValue()
+      << " cType: "  << this->GetCutType()
       << " s: "      << this->GetNSigEvents()
       << " b: "      << this->GetNBkgEvents()
       << " nEv: "    << this->GetNEvents()
@@ -245,18 +245,18 @@ void TMVA::DecisionTreeNode::PrintRec(ostream& os) const
       << " nType: "  << this->GetNodeType();
    if (this->GetCC() > 10000000000000.) os << " CC: " << 100000. << std::endl;
    else os << " CC: "  << this->GetCC() << std::endl;
-  
+
    if (this->GetLeft()  != NULL) this->GetLeft() ->PrintRec(os);
    if (this->GetRight() != NULL) this->GetRight()->PrintRec(os);
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::DecisionTreeNode::ReadDataRecord( istream& is, UInt_t tmva_Version_Code ) 
+Bool_t TMVA::DecisionTreeNode::ReadDataRecord( istream& is, UInt_t tmva_Version_Code )
 {
    // Read the data block
 
    string tmp;
-   
+
    Float_t cutVal, cutType, nsig, nbkg, nEv, nsig_unweighted, nbkg_unweighted, nEv_unweighted;
    Float_t separationIndex, separationGain, response(-99), cc(0);
    Int_t   depth, ivar, nodeType;
@@ -305,20 +305,20 @@ Bool_t TMVA::DecisionTreeNode::ReadDataRecord( istream& is, UInt_t tmva_Version_
    this->SetSelector((UInt_t)ivar);
    this->SetCutValue(cutVal);
    this->SetCutType(cutType);
-   this->SetNSigEvents(nsig);
-   this->SetNBkgEvents(nbkg);
-   this->SetNEvents(nEv);
-   this->SetNSigEvents_unweighted(nsig_unweighted);
-   this->SetNBkgEvents_unweighted(nbkg_unweighted);
-   this->SetNEvents_unweighted(nEv_unweighted);
-   this->SetSeparationIndex(separationIndex);
-   this->SetSeparationGain(separationGain);
    this->SetNodeType(nodeType);
-   this->SetPurity();
+   if (fTrainInfo){
+      this->SetNSigEvents(nsig);
+      this->SetNBkgEvents(nbkg);
+      this->SetNEvents(nEv);
+      this->SetNSigEvents_unweighted(nsig_unweighted);
+      this->SetNBkgEvents_unweighted(nbkg_unweighted);
+      this->SetNEvents_unweighted(nEv_unweighted);
+      this->SetSeparationIndex(separationIndex);
+      this->SetSeparationGain(separationGain);
+      this->SetPurity();
+      this->SetCC(cc);
+   }
 
-   this->SetResponse(response);
-   this->SetSequence(lseq);
-   this->SetCC(cc);
 
    return kTRUE;
 }
@@ -360,9 +360,9 @@ void TMVA::DecisionTreeNode::ResetValidationData( ) {
 void TMVA::DecisionTreeNode::PrintPrune( ostream& os ) const {
    // printout of the node (can be read in with ReadDataRecord)
 
-   os << "----------------------" << std::endl 
-      << "|~T_t| " << GetNTerminal() << std::endl 
-      << "R(t): " << GetNodeR() << std::endl 
+   os << "----------------------" << std::endl
+      << "|~T_t| " << GetNTerminal() << std::endl
+      << "R(t): " << GetNodeR() << std::endl
       << "R(T_t): " << GetSubTreeR() << std::endl
       << "g(t): " << GetAlpha() << std::endl
       << "G(t): "  << GetAlphaMinSubtree() << std::endl;
@@ -492,13 +492,13 @@ void TMVA::DecisionTreeNode::AddAttributesToNode(void* node) const
 
 //_______________________________________________________________________
 void TMVA::DecisionTreeNode::AddContentToNode( std::stringstream& /*s*/ ) const
-{   
+{
    // adding attributes to tree node  (well, was used in BinarySearchTree,
    // and somehow I guess someone programmed it such that we need this in
    // this tree too, although we don't..)
 }
 
-//_______________________________________________________________________ 
+//_______________________________________________________________________
 void TMVA::DecisionTreeNode::ReadContent( std::stringstream& /*s*/ )
 {
    // reading attributes from tree node  (well, was used in BinarySearchTree,

@@ -962,7 +962,7 @@ ostream& TMVA::operator<< ( ostream& os, const PDF& pdf )
    os << "Weights " << std::endl;
    os << std::setprecision(8);
    for (Int_t i=0; i<nBins; i++) {
-      os << std::setw(15) << std::left << histToWrite->GetBinContent(i+1) << " ";
+      os << std::setw(15) << std::left << histToWrite->GetBinContent(i+1) << std::right << " ";
       if ((i+1)%5==0) os << std::endl;
    }
 

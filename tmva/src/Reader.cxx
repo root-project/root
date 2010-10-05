@@ -134,7 +134,7 @@ TMVA::Reader::Reader( const TString& theOption, Bool_t verbose )
 
 //    DataSetManager::CreateInstance(fDataInputHandler); // DSMTEST removed
 //    DataSetManager::Instance().AddDataSetInfo(fDataSetInfo); // DSMTEST removed
-   fDataSetManager = new DataSetManager( fDataInputHandler ); // DSMTEST 
+   fDataSetManager = new DataSetManager( fDataInputHandler ); // DSMTEST
    fDataSetManager->AddDataSetInfo(fDataSetInfo); // DSMTEST
    
 
@@ -450,11 +450,14 @@ Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, const 
 
    // create a temporary event from the vector.
    IMethod* imeth = FindMVA( methodTag );
-   MethodBase* meth = dynamic_cast<TMVA::MethodBase*>(imeth); 
+   MethodBase* meth = dynamic_cast<TMVA::MethodBase*>(imeth);
    if(meth==0) return 0;
    Event* tmpEvent=new Event(inputVec, 2); // ToDo resolve magic 2 issue
-   if (meth->GetMethodType() == TMVA::Types::kCuts)
-      dynamic_cast<TMVA::MethodCuts*>(meth)->SetTestSignalEfficiency( aux );
+   if (meth->GetMethodType() == TMVA::Types::kCuts) {
+      TMVA::MethodCuts* mc = dynamic_cast<TMVA::MethodCuts*>(meth);
+      if(mc)
+         mc->SetTestSignalEfficiency( aux );
+   }
    Double_t val = meth->GetMvaValue( tmpEvent, &fMvaEventError);
    delete tmpEvent;
    return val;
@@ -470,7 +473,7 @@ Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& inputVec, const
    if(fTmpEvalVec.size() != inputVec.size())
       fTmpEvalVec.resize(inputVec.size());
 
-   for (UInt_t idx=0; idx!=inputVec.size(); idx++ ) 
+   for (UInt_t idx=0; idx!=inputVec.size(); idx++ )
       fTmpEvalVec[idx]=inputVec[idx];
 
    return EvaluateMVA( fTmpEvalVec, methodTag, aux );
@@ -508,11 +511,12 @@ Double_t TMVA::Reader::EvaluateMVA( MethodBase* method, Double_t aux )
    // the aux value is only needed for MethodCuts: it sets the required signal efficiency
    if (method->GetMethodType() == TMVA::Types::kCuts) {
       TMVA::MethodCuts* mc = dynamic_cast<TMVA::MethodCuts*>(method);
-      mc->SetTestSignalEfficiency( aux );
+      if(mc)
+         mc->SetTestSignalEfficiency( aux );
    }
    if (method->GetMethodType() == TMVA::Types::kMLP) {
       return method->GetMvaValues( fMvaEventError, fMvaEventError2 );
-   } else 
+   } else
       return method->GetMvaValue( &fMvaEventError ); // attributed MVA response and error
 }
 

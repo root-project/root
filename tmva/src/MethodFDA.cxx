@@ -575,6 +575,7 @@ void  TMVA::MethodFDA::ReadWeightsFromStream( istream& istr )
    // read back the training results from a file (stream)
 
    // retrieve best function parameters
+   // coverity[tainted_data_argument]
    istr >> fNPars;
 
    fBestPars.clear();

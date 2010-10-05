@@ -372,32 +372,32 @@ void TMVA::MethodCategory::Train()
       mva->SetAnalysisType( analysisType );
       if (mva->Data()->GetNTrainingEvents() >= MinNoTrainingEvents) {
 
-         Log() << kINFO << "Train method: " << mva->GetMethodName() << " for " 
+         Log() << kINFO << "Train method: " << mva->GetMethodName() << " for "
                << (analysisType == Types::kRegression ? "Regression" : "Classification") << Endl;
          mva->TrainMethod();
          Log() << kINFO << "Training finished" << Endl;
 
       } else {
 
-         Log() << kWARNING << "Method " << mva->GetMethodName() 
+         Log() << kWARNING << "Method " << mva->GetMethodName()
                << " not trained (training tree has less entries ["
-               << mva->Data()->GetNTrainingEvents() 
-               << "] than required [" << MinNoTrainingEvents << "]" << Endl; 
+               << mva->Data()->GetNTrainingEvents()
+               << "] than required [" << MinNoTrainingEvents << "]" << Endl;
       }
    }
 
    if (analysisType != Types::kRegression) {
 
-      // variable ranking 
+      // variable ranking
       Log() << kINFO << "Begin ranking of input variables..." << Endl;
       for (itrMethod = fMethods.begin(); itrMethod != fMethods.end(); itrMethod++) {
          MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
-         if (mva->Data()->GetNTrainingEvents() >= MinNoTrainingEvents) {
+         if (mva && mva->Data()->GetNTrainingEvents() >= MinNoTrainingEvents) {
             const Ranking* ranking = (*itrMethod)->CreateRanking();
             if (ranking != 0)
                ranking->Print();
             else
-               Log() << kINFO << "No variable ranking supplied by classifier: " 
+               Log() << kINFO << "No variable ranking supplied by classifier: "
                      << dynamic_cast<MethodBase*>(*itrMethod)->GetMethodName() << Endl;
          }
       }
@@ -405,13 +405,13 @@ void TMVA::MethodCategory::Train()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodCategory::AddWeightsXMLTo( void* parent ) const 
+void TMVA::MethodCategory::AddWeightsXMLTo( void* parent ) const
 {
    // create XML description of Category classifier
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr( wght, "NSubMethods", fMethods.size() );
    void* submethod(0);
-   
+
    std::vector<IMethod*>::iterator itrMethod;
 
    // iterate over methods and write them to XML file

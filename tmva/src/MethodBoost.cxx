@@ -481,12 +481,14 @@ void TMVA::MethodBoost::WriteEvaluationHistosToFile(Types::ETreeType treetype)
    MethodBase::WriteEvaluationHistosToFile(treetype);
    if(treetype==Types::kTraining) return;
    UInt_t nloop = fTestSigMVAHist.size();
-   if (fMethods.size()<nloop) nloop = fMethods.size(); 
+   if (fMethods.size()<nloop) nloop = fMethods.size();
    if (fMonitorBoostedMethod) {
       TDirectory* dir=0;
       for (UInt_t imtd=0;imtd<nloop;imtd++) {
          //writing the histograms in the specific classifier's directory
-         dir = dynamic_cast<MethodBase*>(fMethods[imtd])->BaseDir();
+         MethodBase* mva = dynamic_cast<MethodBase*>(fMethods[imtd]);
+         if(!mva) continue;
+         dir = mva->BaseDir();
          if(dir==0) continue;
          dir->cd();
          fTestSigMVAHist[imtd]->SetDirectory(dir);

@@ -137,13 +137,13 @@ int main( int argc, char** argv )
    // book the MVA methods
    //
    TString dir    = "weights/";
-   TString prefix = "TMVAClassification";
+   TString prefix = "TMVAnalysis";
 
    // book method(s)
    for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
       if (it->second) {
          TString methodName = it->first + " method";
-         TString weightfile = dir + prefix + "_" + TString(it->first) + ".weights.xml";
+         TString weightfile = dir + prefix + "_" + TString(it->first) + ".weights.txt";
          reader->BookMVA( methodName, weightfile );
       }
    }
@@ -197,7 +197,7 @@ int main( int argc, char** argv )
    if (Use["LD"])            histLD      = new TH1F( "MVA_LD",            "MVA_LD",            nbin, -2, 2 );
    if (Use["MLP"])           histNn      = new TH1F( "MVA_MLP",           "MVA_MLP",           nbin, -1.25, 1.5 );
    if (Use["MLPBFGS"])       histNnbfgs  = new TH1F( "MVA_MLPBFGS",       "MVA_MLPBFGS",       nbin, -1.25, 1.5 );
-   if (Use["MLPBNN"])     histNnbnn      = new TH1F( "MVA_MLPBNN",        "MVA_MLPBNN",        nbin, -1.25, 1.5 );
+   if (Use["MLPBNN"])        histNnbnn   = new TH1F( "MVA_MLPBNN",        "MVA_MLPBNN",        nbin, -1.25, 1.5 );
    if (Use["CFMlpANN"])      histNnC     = new TH1F( "MVA_CFMlpANN",      "MVA_CFMlpANN",      nbin,  0, 1 );
    if (Use["TMlpANN"])       histNnT     = new TH1F( "MVA_TMlpANN",       "MVA_TMlpANN",       nbin, -1.3, 1.3 );
    if (Use["BDT"])           histBdt     = new TH1F( "MVA_BDT",           "MVA_BDT",           nbin, -0.8, 0.8 );

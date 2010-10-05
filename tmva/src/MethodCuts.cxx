@@ -1178,13 +1178,14 @@ void  TMVA::MethodCuts::ReadWeightsFromStream( istream& istr )
    TString dummy;
    UInt_t  dummyInt;
 
-   // first the dimensions   
+   // first the dimensions
    istr >> dummy >> dummy;
+   // coverity[-tainted_data_argument]
    istr >> dummy >> fNbins;
 
    // get rid of one read-in here because we read in once all ready to check for decorrelation
    istr >> dummy >> dummy >> dummy >> dummy >> dummy >> dummy >> dummyInt >> dummy ;
-   
+
    // sanity check
    if (dummyInt != Data()->GetNVariables()) {
       Log() << kFATAL << "<ReadWeightsFromStream> fatal error: mismatch "

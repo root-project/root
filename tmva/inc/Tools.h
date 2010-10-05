@@ -254,9 +254,8 @@ namespace TMVA {
 } // namespace TMVA
 
 //_______________________________________________________________________
-// coverity[ -tainted_data_argument : arg ]
-template<typename T>
-void TMVA::Tools::ReadAttr( void* node, const char* attrname, T& value )
+// coverity[ -tainted_data_argument : arg-2 ]
+template<typename T> void TMVA::Tools::ReadAttr( void* node, const char* attrname, T& value )
 {
    // read attribute from xml
    TString val;

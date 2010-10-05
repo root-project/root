@@ -943,39 +943,39 @@ void TMVA::Factory::TrainAllMethods()
       if(mva==0) continue;
 
       if (mva->Data()->GetNTrainingEvents() < MinNoTrainingEvents) {
-         Log() << kWARNING << "Method " << mva->GetMethodName() 
+         Log() << kWARNING << "Method " << mva->GetMethodName()
                << " not trained (training tree has less entries ["
-               << mva->Data()->GetNTrainingEvents() 
-               << "] than required [" << MinNoTrainingEvents << "]" << Endl; 
+               << mva->Data()->GetNTrainingEvents()
+               << "] than required [" << MinNoTrainingEvents << "]" << Endl;
          continue;
       }
 
-      Log() << kINFO << "Train method: " << mva->GetMethodName() << " for " 
-            << (fAnalysisType == Types::kRegression ? "Regression" : 
-		(fAnalysisType == Types::kMulticlass ? "Multiclass classification" : "Classification")) << Endl;
+      Log() << kINFO << "Train method: " << mva->GetMethodName() << " for "
+            << (fAnalysisType == Types::kRegression ? "Regression" :
+                (fAnalysisType == Types::kMulticlass ? "Multiclass classification" : "Classification")) << Endl;
       mva->TrainMethod();
       Log() << kINFO << "Training finished" << Endl;
    }
 
    if (fAnalysisType != Types::kRegression) {
 
-      // variable ranking 
+      // variable ranking
       Log() << Endl;
       Log() << kINFO << "Begin ranking of input variables..." << Endl;
       for (itrMethod = fMethods.begin(); itrMethod != fMethods.end(); itrMethod++) {
          MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
-         if (mva->Data()->GetNTrainingEvents() >= MinNoTrainingEvents) {
-            
+         if (mva && mva->Data()->GetNTrainingEvents() >= MinNoTrainingEvents) {
+
             // create and print ranking
             const Ranking* ranking = (*itrMethod)->CreateRanking();
             if (ranking != 0) ranking->Print();
-            else Log() << kINFO << "No variable ranking supplied by classifier: " 
-                         << dynamic_cast<MethodBase*>(*itrMethod)->GetMethodName() << Endl;
+            else Log() << kINFO << "No variable ranking supplied by classifier: "
+                       << dynamic_cast<MethodBase*>(*itrMethod)->GetMethodName() << Endl;
          }
       }
    }
 
-   // delete all methods and recreate them from weight file - this ensures that the application 
+   // delete all methods and recreate them from weight file - this ensures that the application
    // of the methods (in TMVAClassificationApplication) is consistent with the results obtained
    // in the testing
    Log() << Endl;

@@ -494,7 +494,7 @@ void TMVA::VariablePCATransform::MakeFunction( std::ostream& fout, const TString
 
       // fill vector of mean values
       fout << "   // initialise vector of mean values" << std::endl;
-      Int_t dp = fout.precision();
+      std::streamsize dp = fout.precision();
       for (UInt_t index=0; index<numC; index++) {
          for (int i=0; i<fMeanValues[index]->GetNrows(); i++) {
             fout << "   fMeanValues_"<<trCounter<<"["<<index<<"]["<<i<<"] = " << std::setprecision(12)

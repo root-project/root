@@ -31,6 +31,8 @@
 
 #include <cstdlib>
 
+#include <assert.h>
+
 // ROOT include(s):
 
 ClassImp(TMVA::MsgLogger)
@@ -197,6 +199,7 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    if (type == kFATAL) {
       std::cout << "***> abort program execution" << std::endl;
       std::exit(1);
+      assert(false);
    }
 }
 

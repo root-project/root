@@ -68,6 +68,7 @@ void TMVA::RuleCut::MakeCuts( const std::vector<const Node*> & nodes )
 
    // Set number of events and S/S+B in last node
    const DecisionTreeNode* dtn = dynamic_cast<const DecisionTreeNode*>(nodes.back());
+   if(!dtn) return;
    fCutNeve = dtn->GetNEvents();
    fPurity  = dtn->GetPurity();
 
@@ -92,6 +93,7 @@ void TMVA::RuleCut::MakeCuts( const std::vector<const Node*> & nodes )
    for ( UInt_t i=0; i<nnodes-1; i++) {
       nextNode = nodes[i+1];
       const DecisionTreeNode* dtn_ = dynamic_cast<const DecisionTreeNode*>(nodes[i]);
+      if(!dtn_) return;
       sel = dtn_->GetSelector();
       val = dtn_->GetCutValue();
       if (nodes[i]->GetRight() == nextNode) { // val>cut
