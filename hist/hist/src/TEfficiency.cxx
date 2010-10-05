@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <stdlib.h>
 
 //ROOT headers
 #include "Math/QuantFuncMathCore.h"
