@@ -746,7 +746,7 @@ XMLNodePointer_t TBufferXML::XmlWriteObject(const void* obj, const TClass* cl)
    if (!cl) obj = 0;
    if (ProcessPointer(obj, objnode)) return objnode;
 
-   TString clname = XmlConvertClassName(cl ? cl->GetName() : "");
+   TString clname = XmlConvertClassName(cl->GetName());
 
    fXML->NewAttr(objnode, 0, xmlio::ObjClass, clname);
 
