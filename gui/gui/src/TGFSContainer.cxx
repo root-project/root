@@ -248,6 +248,37 @@ TGFileItem::TGFileItem(const TGWindow *p,
 {
    // Create a list view item.
 
+   FileStat_t buf;
+
+   buf.fMode   = type;
+   buf.fSize   = size;
+   buf.fUid    = uid;
+   buf.fGid    = gid;
+   buf.fMtime  = modtime;
+   buf.fIsLink = (blpic != 0);  // FIXME: hack...
+
+   Init(blpic, slpic, buf, viewMode);
+}
+
+//______________________________________________________________________________
+TGFileItem::TGFileItem(const TGWindow *p,
+                       const TGPicture *bpic, const TGPicture *blpic,
+                       const TGPicture *spic, const TGPicture *slpic,
+                       TGString *name, FileStat_t &stat, EListViewMode viewMode,
+                       UInt_t options, ULong_t back) :
+   TGLVEntry(p, bpic, spic, name, 0, viewMode, options, back)
+{
+   // Create a list view item.
+
+   Init(blpic, slpic, stat, viewMode);
+}
+
+//______________________________________________________________________________
+void TGFileItem::Init(const TGPicture *blpic, const TGPicture *slpic,
+                      FileStat_t &stat, EListViewMode viewMode)
+{
+   // Common initializer for file list view item.
+
    char tmp[256];
    Long64_t fsize, bsize;
 
@@ -262,42 +293,40 @@ TGFileItem::TGFileItem(const TGWindow *p,
    fViewMode = (EListViewMode) -1;
    SetViewMode(viewMode);
 
-   fType = type;
-   fSize = size;
-   fUid  = uid;
-   fGid  = gid;
-   fModTime = modtime;
-
-   // FIXME: hack...
-   fIsLink = (blpic != 0);
+   fType    = stat.fMode;
+   fSize    = stat.fSize;
+   fUid     = stat.fUid;
+   fGid     = stat.fGid;
+   fModTime = stat.fMtime;
+   fIsLink  = stat.fIsLink;
 
    fSubnames = new TGString* [6];
 
    // file type
-   snprintf(tmp, 255, "%c%c%c%c%c%c%c%c%c%c",
-                (fIsLink ?
-                 'l' :
-                 R_ISREG(type) ?
-                  '-' :
-                  (R_ISDIR(type) ?
-                   'd' :
-                    (R_ISCHR(type) ?
-                     'c' :
-                     (R_ISBLK(type) ?
-                      'b' :
-                      (R_ISFIFO(type) ?
-                       'p' :
-                       (R_ISSOCK(type) ?
-                        's' : '?' )))))),
-                 ((type & kS_IRUSR) ? 'r' : '-'),
-                 ((type & kS_IWUSR) ? 'w' : '-'),
-                 ((type & kS_ISUID) ? 's' : ((type & kS_IXUSR) ? 'x' : '-')),
-                 ((type & kS_IRGRP) ? 'r' : '-'),
-                 ((type & kS_IWGRP) ? 'w' : '-'),
-                 ((type & kS_ISGID) ? 's' : ((type & kS_IXGRP) ? 'x' : '-')),
-                 ((type & kS_IROTH) ? 'r' : '-'),
-                 ((type & kS_IWOTH) ? 'w' : '-'),
-                 ((type & kS_ISVTX) ? 't' : ((type & kS_IXOTH) ? 'x' : '-')));
+   snprintf(tmp, sizeof(tmp), "%c%c%c%c%c%c%c%c%c%c",
+            (fIsLink ?
+             'l' :
+             R_ISREG(fType) ?
+             '-' :
+             (R_ISDIR(fType) ?
+              'd' :
+              (R_ISCHR(fType) ?
+               'c' :
+               (R_ISBLK(fType) ?
+                'b' :
+                (R_ISFIFO(fType) ?
+                 'p' :
+                 (R_ISSOCK(fType) ?
+                  's' : '?' )))))),
+            ((fType & kS_IRUSR) ? 'r' : '-'),
+            ((fType & kS_IWUSR) ? 'w' : '-'),
+            ((fType & kS_ISUID) ? 's' : ((fType & kS_IXUSR) ? 'x' : '-')),
+            ((fType & kS_IRGRP) ? 'r' : '-'),
+            ((fType & kS_IWGRP) ? 'w' : '-'),
+            ((fType & kS_ISGID) ? 's' : ((fType & kS_IXGRP) ? 'x' : '-')),
+            ((fType & kS_IROTH) ? 'r' : '-'),
+            ((fType & kS_IWOTH) ? 'w' : '-'),
+            ((fType & kS_ISVTX) ? 't' : ((fType & kS_IXOTH) ? 'x' : '-')));
    fSubnames[0] = new TGString(tmp);
 
    // file size
@@ -306,12 +335,12 @@ TGFileItem::TGFileItem(const TGWindow *p,
       fsize /= 1024;
       if (fsize > 1024) {
          // 3.7MB is more informative than just 3MB
-         snprintf(tmp, 255, "%lld.%lldM", fsize/1024, (fsize%1024)/103);
+         snprintf(tmp, sizeof(tmp), "%lld.%lldM", fsize/1024, (fsize%1024)/103);
       } else {
-         snprintf(tmp, 255, "%lld.%lldK", bsize/1024, (bsize%1024)/103);
+         snprintf(tmp, sizeof(tmp), "%lld.%lldK", bsize/1024, (bsize%1024)/103);
       }
    } else {
-      snprintf(tmp, 255, "%lld", bsize);
+      snprintf(tmp, sizeof(tmp), "%lld", bsize);
    }
    fSubnames[1] = new TGString(tmp);
 
@@ -332,9 +361,9 @@ TGFileItem::TGFileItem(const TGWindow *p,
    struct tm *newtime;
    time_t loctime = (time_t) fModTime;
    newtime = localtime(&loctime);
-   snprintf(tmp, 255, "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
-           newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
-           newtime->tm_min);
+   snprintf(tmp, sizeof(tmp), "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
+            newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
+            newtime->tm_min);
    fSubnames[4] = new TGString(tmp);
 
    fSubnames[5] = 0;
@@ -602,7 +631,7 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
          if (img2) img1->Merge(img2);
          TString lnk_name = ((const TGPicture *)*pic)->GetName();
          lnk_name.Prepend("lnk_");
-         *pic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(), 
+         *pic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(),
                               img1->GetPixmap(), img1->GetMask());
          fCleanups->Add(((TObject *)*pic));
          if (img2) delete img2; delete img1;
@@ -613,7 +642,7 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
          if (img2) img1->Merge(img2);
          lnk_name = ((const TGPicture *)*lpic)->GetName();
          lnk_name.Prepend("lnk_");
-         *lpic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(), 
+         *lpic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(),
                               img1->GetPixmap(), img1->GetMask());
          fCleanups->Add(((TObject *)*lpic));
          if (img2) delete img2; delete img1;
@@ -697,10 +726,6 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
 {
    // Add file in container.
 
-   Bool_t      is_link;
-   Int_t       type, uid, gid;
-   Long_t      modtime;
-   Long64_t    size;
    TString     filename;
    TGFileItem *item = 0;
    const TGPicture *spic, *slpic;
@@ -708,21 +733,7 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
 
    FileStat_t sbuf;
 
-   type    = 0;
-   size    = 0;
-   uid     = 0;
-   gid     = 0;
-   modtime = 0;
-   is_link = kFALSE;
-
-   if (gSystem->GetPathInfo(name, sbuf) == 0) {
-      is_link = sbuf.fIsLink;
-      type    = sbuf.fMode;
-      size    = sbuf.fSize;
-      uid     = sbuf.fUid;
-      gid     = sbuf.fGid;
-      modtime = sbuf.fMtime;
-   } else {
+   if (gSystem->GetPathInfo(name, sbuf)) {
       if (sbuf.fIsLink) {
          Info("AddFile", "Broken symlink of %s.", name);
       } else {
@@ -736,22 +747,22 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
    }
 
    filename = name;
-   if (R_ISDIR(type) || fFilter == 0 ||
+   if (R_ISDIR(sbuf.fMode) || fFilter == 0 ||
        (fFilter && filename.Index(*fFilter) != kNPOS)) {
 
       if (ipic && ilpic) { // dynamic icons
          spic = ipic;
          slpic = ilpic;
       } else {
-         GetFilePictures(&spic, &slpic, type, is_link, name, kTRUE);
+         GetFilePictures(&spic, &slpic, sbuf.fMode, sbuf.fIsLink, name, kTRUE);
       }
 
       pic = (TGPicture*)spic; pic->AddReference();
       lpic = (TGPicture*)slpic; lpic->AddReference();
 
-      item = new TGFileItem(this,lpic, slpic, spic, pic, 
+      item = new TGFileItem(this, lpic, slpic, spic, pic,
                             new TGString(gSystem->BaseName(name)),
-                            type, size, uid, gid, modtime, fViewMode);
+                            sbuf, fViewMode);
       AddItem(item);
    }
 
@@ -764,10 +775,6 @@ TGFileItem *TGFileContainer::AddRemoteFile(TObject *obj, const TGPicture *ipic,
 {
    // Add remote file in container.
 
-   Bool_t      is_link;
-   Int_t       type, uid, gid;
-   Long_t      modtime;
-   Long64_t    size;
    TString     filename;
    TGFileItem *item = 0;
    const TGPicture *spic, *slpic;
@@ -775,38 +782,26 @@ TGFileItem *TGFileContainer::AddRemoteFile(TObject *obj, const TGPicture *ipic,
 
    FileStat_t sbuf;
 
-   type    = 0;
-   size    = 0;
-   uid     = 0;
-   gid     = 0;
-   modtime = 0;
-   is_link = kFALSE;
-   
    TRemoteObject *robj = (TRemoteObject *)obj;
 
    robj->GetFileStat(&sbuf);
-   is_link = sbuf.fIsLink;
-   type    = sbuf.fMode;
-   size    = sbuf.fSize;
-   uid     = sbuf.fUid;
-   gid     = sbuf.fGid;
-   modtime = sbuf.fMtime;
    filename = robj->GetName();
-   if (R_ISDIR(type) || fFilter == 0 ||
+
+   if (R_ISDIR(sbuf.fMode) || fFilter == 0 ||
        (fFilter && filename.Index(*fFilter) != kNPOS)) {
 
       if (ipic && ilpic) { // dynamic icons
          spic = ipic;
          slpic = ilpic;
       } else {
-         GetFilePictures(&spic, &slpic, type, is_link, filename, kTRUE);
+         GetFilePictures(&spic, &slpic, sbuf.fMode, sbuf.fIsLink, filename, kTRUE);
       }
 
       pic = (TGPicture*)spic; pic->AddReference();
       lpic = (TGPicture*)slpic; lpic->AddReference();
 
       item = new TGFileItem(this, lpic, slpic, spic, pic, new TGString(filename),
-                            type, size, uid, gid, modtime, fViewMode);
+                            sbuf, fViewMode);
       AddItem(item);
    }
    return item;

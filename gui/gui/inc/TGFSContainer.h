@@ -51,6 +51,8 @@ class TGFileIcon;
 class TGFileItem;
 class TTimer;
 class TString;
+struct FileStat_t;
+
 
 class TGFileItem : public TGLVEntry {
 
@@ -66,6 +68,8 @@ protected:
    TBufferFile      *fBuf;          // buffer used for Drag and Drop
    TDNDData          fDNDData;      // Drag and Drop data
 
+   void         Init(const TGPicture *blpic, const TGPicture *slpic,
+                     FileStat_t &stat, EListViewMode viewMode);
    virtual void DoRedraw();
 
 public:
@@ -74,6 +78,13 @@ public:
               const TGPicture *spic = 0, const TGPicture *slpic = 0,
               TGString *name = 0, Int_t type = 0, Long64_t size = 1,
               Int_t uid = 0, Int_t gid = 0, Long_t modtime = 0,
+              EListViewMode viewMode = kLVList, UInt_t options = kVerticalFrame,
+              Pixel_t back = GetWhitePixel());
+
+   TGFileItem(const TGWindow *p,
+              const TGPicture *bpic, const TGPicture *blpic,
+              const TGPicture *spic, const TGPicture *slpic,
+              TGString *name, FileStat_t &stat,
               EListViewMode viewMode = kLVList, UInt_t options = kVerticalFrame,
               Pixel_t back = GetWhitePixel());
 
@@ -153,7 +164,7 @@ protected:
    const TGPicture  *fSlink_t;        // small symbolic link icon
    const TGPicture  *fSlink_s;        // big symbolic link icon
    Bool_t            fCachePictures;  // kTRUE use caching
-   Bool_t            fDisplayStat;    // kFALSE to interrupt display directory 
+   Bool_t            fDisplayStat;    // kFALSE to interrupt display directory
                                       // contents in case of many files inside
 
    void CreateFileList();
