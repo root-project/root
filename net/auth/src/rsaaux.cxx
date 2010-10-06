@@ -165,6 +165,7 @@ static int aux_rand()
 {
    // rand() implementation using /udev/random or /dev/random, if available
 
+#ifndef WIN32
    int frnd = open("/udev/random", O_RDONLY);
    if (frnd < 0) frnd = open("/dev/random", O_RDONLY);
 
@@ -174,6 +175,7 @@ static int aux_rand()
       close(frnd);
       if (rs == sizeof(int)) return r;
    }
+#endif
    // No special random device available: use rand()
    return rand();
 }
