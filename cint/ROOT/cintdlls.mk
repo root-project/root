@@ -22,16 +22,17 @@ CINTDLLS = $(addsuffix .dll,$(addprefix $(CINTDLLDIRSTL)/,$(CINTSTLDLLNAMES)) \
 
 CINTDLLNAMES = $(CINTSTLDLLNAMES) $(CINTINCDLLNAMES)
 
-.PRECIOUS: \
-	$(addsuffix .cc ,$(addprefix core/metautils/src/stlLoader_,$(CINTSTLDLLNAMES))) \
-	$(addsuffix .o  ,$(addprefix core/metautils/src/stlLoader_,$(CINTSTLDLLNAMES))) \
+CINTDLLS_SOURCE_FILES = $(addsuffix .cc ,$(addprefix core/metautils/src/stlLoader_,$(CINTSTLDLLNAMES))) \
 	$(addsuffix .cxx,$(addprefix $(CINTDLLDIRDLLSTL)/G__cpp_,$(CINTSTLDLLNAMES))) \
-	$(addsuffix .o  ,$(addprefix $(CINTDLLDIRDLLSTL)/G__cpp_,$(CINTSTLDLLNAMES))) \
 	$(addsuffix .cxx,$(addprefix $(CINTDLLDIRDLLSTL)/rootcint_,$(CINTSTLDLLNAMES))) \
-	$(addsuffix .o  ,$(addprefix $(CINTDLLDIRDLLSTL)/rootcint_,$(CINTSTLDLLNAMES))) \
 	$(addsuffix .cxx,$(addprefix $(CINTDLLDIRL)/G__cpp_,$(CINTINCDLLNAMES))) \
+	$(addsuffix .c  ,$(addprefix $(CINTDLLDIRL)/G__c_,$(CINTINCDLLNAMES))) 
+
+.PRECIOUS: $(CINTDLLS_SOURCE_FILES)
+	$(addsuffix .o  ,$(addprefix core/metautils/src/stlLoader_,$(CINTSTLDLLNAMES))) \
+	$(addsuffix .o  ,$(addprefix $(CINTDLLDIRDLLSTL)/G__cpp_,$(CINTSTLDLLNAMES))) \
+	$(addsuffix .o  ,$(addprefix $(CINTDLLDIRDLLSTL)/rootcint_,$(CINTSTLDLLNAMES))) \
 	$(addsuffix .o  ,$(addprefix $(CINTDLLDIRL)/G__cpp_,$(CINTINCDLLNAMES))) \
-	$(addsuffix .c  ,$(addprefix $(CINTDLLDIRL)/G__c_,$(CINTINCDLLNAMES))) \
 	$(addsuffix .o  ,$(addprefix $(CINTDLLDIRL)/G__c_,$(CINTINCDLLNAMES)))
 
 # these need dictionaries
@@ -85,11 +86,15 @@ ALLCINTDLLS = $(CINTDLLS) $(CINTDICTDLLS)
 ALLLIBS    += $(ALLCINTDLLS)
 ALLMAPS    += $(CINTDICTMAPS)
 
-INCLUDEFILES += $(addsuffix .d,$(addprefix core/metautils/src/stlLoader_,$(CINTSTLDLLNAMES))) \
+CINTDLLS_DEPENDENCY_FILES = $(addsuffix .d,$(addprefix core/metautils/src/stlLoader_,$(CINTSTLDLLNAMES))) \
 	$(addsuffix .d,$(addprefix $(CINTDLLDIRL)/G__cpp_,$(CINTINCDLLNAMES))) \
 	$(addsuffix .d,$(addprefix $(CINTDLLDIRDLLSTL)/G__cpp_,$(CINTSTLDLLNAMES))) \
 	$(addsuffix .d,$(addprefix $(CINTDLLDIRDLLSTL)/rootcint_,$(CINTSTLDLLNAMES))) \
 	$(CINTDLLDIRL)/posix/mktypes.d $(CINTDLLDIRL)/posix/exten.d
+
+cintdlls_cleanup_dependency_files_trigger := $(shell grep ORDER_ $(wildcard $(CINTDLLS_DEPENDENCY_FILES)) /dev/null > /dev/null || rm -f $(CINTDLLS_SOURCE_FILES) $(CINTDLLS_DEPENDENCY_FILES) )
+
+INCLUDEFILES += $(CINTDLLS_DEPENDENCY_FILES)
 
 cintdlls: $(ALLCINTDLLS)
 
@@ -258,6 +263,12 @@ clean-$(CLEANCINTDLLSTARGET):
 	  $(patsubst clean-%dll,cint/%,$@)/lib/G__c_$${cintdll}.o \
 	  $(patsubst clean-%dll,cint/%,$@)/lib/G__cpp_$${cintdll}.o \
 	  core/metautils/src/stlLoader_$${cintdll}.o; done)
+	@(for cintdll in $(CINTDLLNAMES); do \
+	  rm -f $(patsubst clean-%dll,cint/%,$@)/lib/dll_stl/rootcint_$${cintdll}.d \
+	  $(patsubst clean-%dll,cint/%,$@)/lib/dll_stl/G__cpp_$${cintdll}.d \
+	  $(patsubst clean-%dll,cint/%,$@)/lib/G__c_$${cintdll}.d \
+	  $(patsubst clean-%dll,cint/%,$@)/lib/G__cpp_$${cintdll}.d \
+	  core/metautils/src/stlLoader_$${cintdll}.d; done)
 	@rm -f $(ALLCINTDLLS) \
 	  $(patsubst clean-%dll,cint/%,$@)/lib//posix/exten.o \
 	  $(patsubst clean-%dll,cint/%,$@)/include/posix.* \
