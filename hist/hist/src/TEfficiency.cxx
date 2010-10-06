@@ -1332,8 +1332,7 @@ Double_t TEfficiency::ClopperPearson(Int_t total,Int_t passed,Double_t level,Boo
 }
 
 
-#ifdef OLD_COMBINATION   
-//______________________________________________________________________________
+#ifdef OLD_COMBINATION   //______________________________________________________________________________
 Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
 			      const Int_t* pass,const Int_t* total,
 			      const Double_t* alpha,const Double_t* beta,
@@ -1523,6 +1522,7 @@ Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
    //       -> weight = w[i] * N[i]
    //       This can be usefull when the weights and probability for each sample are given by
    // + mode : The mode is returned instead of the default mean of the posterior as best value
+   //
    //Begin_Latex(separator='=',align='rl')
    // w_{i} = #frac{#sigma_{i} #times L}{N_{i}}
    // p_{i} = #frac{#sigma_{i}}{sum_{j} #sigma_{j}} #equiv #frac{N_{i} #times w_{i}}{sum_{j} N_{j} #times w_{j}}
@@ -1538,15 +1538,15 @@ Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
    //</ul>
    //calculation:
    //<ol>
-   //<li>The combined posterior distributions is calculated from the Bayes theorem assuming a Beta prior distribution, 
-   //     (Begin_Latex {B(#epsilon,#alpha,#beta)}End_Latex</li>:
+   //<li>The combined posterior distributions is calculated from the Bayes theorem assuming a Beta prior distribution</li>: 
    //End_Html
+   //Begin_Latex Prior = B(#epsilon,#alpha,#beta) End_Latex 
    //Begin_Latex(separator='=',align='rl')
    //P_{comb}(#epsilon |{w_{i}}; {k_{i}}; {N_{i}}) = B(#epsilon, #sum w_{i} k_{i} + #alpha, #sum w_{i}(n_{i}-k_{i})+#beta) 
    //p_{i} = w[i] or w_{i} #times N_{i} if option "N" is specified
    //End_Latex
    //Begin_Html
-   //<li>The estimated efficiency is the mode (or the mean) of the obtained distribution </li>
+   //<li>The estimated efficiency is the mode (or the mean) of the obtained posterior distribution </li>
    //End_Html
    //Begin_Html
    //<li>The boundaries of the confidence interval for a confidence level (1 - a)
@@ -1602,7 +1602,6 @@ Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
    return mean; 
 
 }
-
 //______________________________________________________________________________
 TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
 					 Int_t n,const Double_t* w)
@@ -1637,6 +1636,8 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    //           End_Html
    //           Otherwise the weights for the TEfficiency objects are global and
    //           the same for each bin.
+   // + mode    Use mode of combined posterior as estimated value for the efficiency
+   // 
    //- n      : number of weights (has to be the number of one-dimensional
    //           TEfficiency objects in pList)
    //           If no weights are passed, the internal weights GetWeight() of
@@ -2024,11 +2025,16 @@ Double_t TEfficiency::GetEfficiency(Int_t bin) const
    //        for frequentist ones:
    //        Begin_Latex #hat{#varepsilon} = #frac{passed}{total} End_Latex
    //        for bayesian ones the expectation value of the resulting posterior
-   //        distribution is returned if the but kPosteriorMean is set otherwise the 
-   //        mode (most probable value) of the posterior is returned
+   //        distribution is returned:
    //        Begin_Latex #hat{#varepsilon} = #frac{passed + #alpha}{total + #alpha + #beta} End_Latex
+   //        If the bit kPosteriorMode is set (or the method TEfficiency::UsePosteriorMode() has been called ) the 
+   //        mode (most probable value) of the posterior is returned: 
+   //        Begin_Latex #hat{#varepsilon} = #frac{passed + #alpha -1}{total + #alpha + #beta -2} End_Latex
+   //       
    //      - If the denominator is equal to 0, an efficiency of 0 is returned.
-   
+   //      - When  Begin_Latex passed + #alpha < 1 End_Latex or Begin_Latex total - passed + #beta < 1 End_latex the above 
+   //        formula for the mode is not valid. In these cases values the estimated efficiency is 0 or 1.  
+
    Int_t total = (Int_t)fTotalHistogram->GetBinContent(bin);
    Int_t passed = (Int_t)fPassedHistogram->GetBinContent(bin);
       
