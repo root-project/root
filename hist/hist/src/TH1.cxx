@@ -5876,6 +5876,7 @@ void TH1::Streamer(TBuffer &b)
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      if (fDirectory) fDirectory->Remove(this);
       fDirectory = 0;
       if (R__v > 2) {
          b.ReadClassBuffer(TH1::Class(), this, R__v, R__s, R__c);
