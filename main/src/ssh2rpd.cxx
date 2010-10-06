@@ -31,12 +31,13 @@
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include "Varargs.h"
-#include "snprintf.h"
+#include "Rtypes.h"
 #include <string.h>
 #ifdef R__GLOBALSTL
 namespace std { using ::string; }
 #endif
 
+int gDebug;
 
 #define kMAXPATHLEN 4096
 
@@ -66,7 +67,6 @@ int main(int argc, char **argv)
    // Small program to communicate successful result of sshd auth to the
    // relevant root server daemons.
 
-   int   gDebug = 0;
    char *pipeId = 0;
    char *tmpDir = 0;
 
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
    // Preparing socket connection
    struct sockaddr_un servAddr;
    servAddr.sun_family = AF_UNIX;
-   strcpy(servAddr.sun_path,pipe);
+   strlcpy(servAddr.sun_path, pipe, sizeof(servAddr.sun_path));
    int sd;
    if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
       Info("ssh2rpd: cannot open socket: exiting ");
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 
    // Sending 'OK <username>'
    char okbuf[256];
-   sprintf(okbuf,"OK %s",pw->pw_name);
+   snprintf(okbuf, sizeof(okbuf), "OK %s", pw->pw_name);
    int lbuf = strlen(okbuf);
    lbuf = htonl(lbuf);
    rc = send(sd, &lbuf, sizeof(lbuf), 0);
