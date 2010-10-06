@@ -130,7 +130,7 @@ else
       currentFileBase = buf + 1;
       currentDependencies = posColon + 2;
    }
-   if (fwrite(": $(wildcard ", 13, 1, stdout) != 1)
+   if (fwrite(": $(ORDER_) $(wildcard ", 23, 1, stdout) != 1)
       fprintf(stderr, "Warning: ROOT_adddep: fwrite error\n");
    if (fwrite(posColon + 4, len - (posColon + 4 - buf), 1, stdout) != 1)
       fprintf(stderr, "Warning: ROOT_adddep: fwrite error\n");

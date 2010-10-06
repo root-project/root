@@ -85,8 +85,11 @@ ALLCINTDLLS = $(CINTDLLS) $(CINTDICTDLLS)
 ALLLIBS    += $(ALLCINTDLLS)
 ALLMAPS    += $(CINTDICTMAPS)
 
-INCLUDEFILES += $(addsuffix .d,$(addprefix core/metautils/src/stlLoader_,$(CINTSTLDLLNAMES)))\
-   $(CINTDLLDIRL)/posix/mktypes.d $(CINTDLLDIRL)/posix/exten.d
+INCLUDEFILES += $(addsuffix .d,$(addprefix core/metautils/src/stlLoader_,$(CINTSTLDLLNAMES))) \
+	$(addsuffix .d,$(addprefix $(CINTDLLDIRL)/G__cpp_,$(CINTINCDLLNAMES))) \
+	$(addsuffix .d,$(addprefix $(CINTDLLDIRDLLSTL)/G__cpp_,$(CINTSTLDLLNAMES))) \
+	$(addsuffix .d,$(addprefix $(CINTDLLDIRDLLSTL)/rootcint_,$(CINTSTLDLLNAMES))) \
+	$(CINTDLLDIRL)/posix/mktypes.d $(CINTDLLDIRL)/posix/exten.d
 
 cintdlls: $(ALLCINTDLLS)
 
