@@ -92,9 +92,9 @@ CINTDLLS_DEPENDENCY_FILES = $(addsuffix .d,$(addprefix core/metautils/src/stlLoa
 	$(addsuffix .d,$(addprefix $(CINTDLLDIRDLLSTL)/rootcint_,$(CINTSTLDLLNAMES))) \
 	$(CINTDLLDIRL)/posix/mktypes.d $(CINTDLLDIRL)/posix/exten.d
 
-cintdlls_cleanup_dependency_files_trigger := $(shell grep ORDER_ $(wildcard $(CINTDLLS_DEPENDENCY_FILES)) /dev/null > /dev/null || rm -f $(CINTDLLS_SOURCE_FILES) $(CINTDLLS_DEPENDENCY_FILES) )
+cintdlls_cleanup_dependency_files_trigger := $(shell grep ORDER_ $(wildcard $(CINTDLLS_DEPENDENCY_FILES)) /dev/null > /dev/null && ( rm -f `find . -name \*.d -exec grep -c ORDER_ {} /dev/null \; 2>&1 | grep -v ':0' | cut -d: -f1 | sed -e 's/\.d/\.o/' `  1>&2 ) )
 
-INCLUDEFILES += $(CINTDLLS_DEPENDENCY_FILES)
+# INCLUDEFILES += $(CINTDLLS_DEPENDENCY_FILES)
 
 cintdlls: $(ALLCINTDLLS)
 
