@@ -36,6 +36,8 @@ Some files have been modified compare to the official libAfterImage version:
    libjpeg/jmorecfg.h generated a warning on Windows: "a benign redifinition".
    This warning has been disabled.
 
+   libjpeg/jconfig.h: disable INLINE definition.
+
    "configure":
    - has been modified to look at the ".dylib" file extension to find
      the X11 libraries. This is needed on the Mac Leopard system.
