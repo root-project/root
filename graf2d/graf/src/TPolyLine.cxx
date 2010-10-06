@@ -474,7 +474,7 @@ Int_t TPolyLine::Merge(TCollection *li)
    }
 
    //extend this polyline to hold npoints
-   if (pl) pl->SetPoint(npoints-1,0,0);
+   if (npoints > 1) SetPoint(npoints-1,0,0);
 
    //merge all polylines
    next.Reset();
