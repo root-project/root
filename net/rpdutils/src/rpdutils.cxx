@@ -2427,6 +2427,7 @@ int RpdSshAuth(const char *sstr)
       int itmp = 0;
       pipeFile = new char[strlen(pw->pw_dir) + 25];
       sprintf(pipeFile, "%s/RootSshPipe.XXXXXX", pw->pw_dir);
+      mode_t oldumask = umask(0700);
       int ipipe = mkstemp(pipeFile);
       if (ipipe == -1) {
          delete[] pipeFile;
@@ -2435,6 +2436,7 @@ int RpdSshAuth(const char *sstr)
          ipipe = mkstemp(pipeFile);
          itmp = 1;
       }
+      umask(oldumask);
       FILE *fpipe = 0;
       if (ipipe == -1 || !(fpipe = fdopen(ipipe,"w")) ) {
          ErrorInfo("RpdSshAuth: failure creating pipe file %s (errno: %d)",
@@ -2488,6 +2490,7 @@ int RpdSshAuth(const char *sstr)
       // Allocate a file to be overwritten by the client
       authFile = new char[strlen(pw->pw_dir) + 25];
       sprintf(authFile, "%s/RootSshAuth.XXXXXX", pw->pw_dir);
+      mode_t oldumask = umask(0700);
       int iauth = mkstemp(authFile);
       if (iauth == -1) {
          if (gDebug > 2)
@@ -2502,9 +2505,11 @@ int RpdSshAuth(const char *sstr)
             NetSend(kErrFileOpen, kROOTD_ERR);
             delete[] authFile;
             delete[] user;
+            umask(oldumask);
             return auth;
          }
       }
+      umask(oldumask);
 
       // Store stat result to check changes
       if (stat(authFile, &st0) == -1)
@@ -5620,7 +5625,9 @@ int RpdRecvClientRSAKey()
                 " could not import a valid key (type %d)",gRSAKey);
       char *elogfile = new char[gRpdKeyRoot.length() + 11];
       sprintf(elogfile, "%.*serr.XXXXXX", (int)gRpdKeyRoot.length(), gRpdKeyRoot.c_str());
+      mode_t oldumask = umask(0700);
       int ielog = mkstemp(elogfile);
+      umask(oldumask);
       if (ielog != -1) {
          char line[kMAXPATHLEN] = {0};
          //
