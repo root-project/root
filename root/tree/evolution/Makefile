@@ -65,25 +65,27 @@ MyClassVector_cxx.$(DllSuf): MyClass.h MyClassVector.cxx
 MyClassList_cxx.$(DllSuf) : MyClass.h MyClassVector.cxx
 
 clonesfile.root: $(ROOTCORELIBS) MyClassClones_cxx.$(DllSuf) WriteClones.C
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l WriteClones.C > WriteClones.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l WriteClones.C > WriteClones.log 2>&1 || handleError.sh --result=$$? --log=WriteClones.log
 
 vectorfile.root: $(ROOTCORELIBS) MyClassVector_cxx.$(DllSuf) WriteVector.C
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l WriteVector.C > WriteVector.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l WriteVector.C > WriteVector.log 2>&1  || handleError.sh --result=$$? --log=WriteVector.log
 
 listfile.root: $(ROOTCORELIBS) MyClassList_cxx.$(DllSuf) WriteList.C
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l WriteList.C > WriteList.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l WriteList.C > WriteList.log 2>&1  || handleError.sh --result=$$? --log=WriteList.log
 
 ReadClones.log: $(ROOTCORELIBS) MyClassClones_cxx.$(DllSuf) ReadClones.C clonesfile.root  vectorfile.root listfile.root
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l ReadClones.C > ReadClones.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l ReadClones.C > ReadClones.log 2>&1 || handleError.sh --result=$$? --log=ReadClones.log
 
 ReadVector.log:  $(ROOTCORELIBS) MyClassVector_cxx.$(DllSuf) ReadVector.C clonesfile.root vectorfile.root listfile.root
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l ReadVector.C > ReadVector.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l ReadVector.C > ReadVector.log 2>&1 || handleError.sh --result=$$? --log=ReadVector.log
 
 ReadList.log:  $(ROOTCORELIBS) MyClassList_cxx.$(DllSuf) ReadList.C clonesfile.root vectorfile.root listfile.root
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l ReadList.C > ReadList.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l ReadList.C > ReadList.log 2>&1 || handleError.sh --result=$$? --log=ReadList.log
 
 ReadNolib.log:  $(ROOTCORELIBS) ReadNolib.C clonesfile.root vectorfile.root listfile.root
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l ReadNolib.C 2>&1 | grep -v 'Warning in <TClass::TClass>: no dictionary for class' > ReadNolib.log || handleError.sh --result=$$? --log=ReadNoLib.lob
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l ReadNolib.C > ReadNolib.raw.log 2>&1 ; result=$$? ; \
+		cat ReadNolib.raw.log | grep -v 'Warning in <TClass::TClass>: no dictionary for class' > ReadNolib.log ; \
+		test $$result -eq 0 || handleError.sh --result=$$? --log=ReadNoLib.log
 
 containerEvolution.log: $(ROOTCORELIBS) MyClassClones_cxx.$(DllSuf) MyClassVector_cxx.$(DllSuf) MyClassList_cxx.$(DllSuf)
 
