@@ -1100,7 +1100,6 @@ merge_layers( ASVisual *asv,
 			  	int dst_height,
 			  	ASAltImFormats out_format, unsigned int compression_out, int quality )
 {
-	ASImage *fake_bg = NULL ;
 	ASImage *dst = NULL ;
 	ASImageDecoder **imdecs ;
 	ASImageOutput  *imout ;
@@ -1122,10 +1121,6 @@ LOCAL_DEBUG_CALLER_OUT( "dst_width = %d, dst_height = %d", dst_width, dst_height
 
 	imdecs = safecalloc( count+20, sizeof(ASImageDecoder*));
 
-/*  don't really know why the hell we need that ???
- *  if( pcurr->im == NULL )
-		pcurr->im = fake_bg = create_asimage( 1, 1, 0 );
- */
 	for( i = 0 ; i < count ; i++ )
 	{
 		/* all laayers but first must have valid image or solid_color ! */
@@ -1249,12 +1244,6 @@ LOCAL_DEBUG_OUT( "min_y = %d, max_y = %d", min_y, max_y );
 			stop_image_decoding( &(imdecs[i]) );
 		}
 	free( imdecs );
-	if( fake_bg )
-	{
-		if( layers[0].im == fake_bg )
-			layers[0].im = NULL ;
-		destroy_asimage( &fake_bg );
-	}
 	free_scanline( &dst_line, True );
 	SHOW_TIME("", started);
 	return dst;
@@ -1389,9 +1378,9 @@ make_gradient_diag_height( ASImageOutput *imout, ASScanline *dither_lines, int d
 		eps += smaller;
 		if( (eps << 1) >= bigger )
 		{
-			++k ;
-			if( k < width )
-				offsets[k] = offsets[k-1] ; /* seeding the offset */
+			if( ++k >= width )
+				break;
+			offsets[k] = offsets[k-1] ; /* seeding the offset */
 			eps -= bigger ;
 		}
 	}
@@ -3272,21 +3261,21 @@ LOCAL_DEBUG_OUT("pixelizing actually...%s", "");
 			for( y = 0 ; y < max_y ; y++  )
 			{
 				int pixel_x = 0, x ;
-				ASScanline *src = &(imdec->buffer);
 				imdec->decode_image_scanline( imdec );
 				for (x = 0; x < clip_width; x += pixel_width)
 				{
 					int xx = x+pixel_width;
+					ASScanline *srcsl = &(imdec->buffer);
 					
 					if (xx > clip_width)
 						xx = clip_width;
 					
 					while ( --xx >= x)
 					{
-						pixels->red[pixel_x] += src->red[xx];
-						pixels->green[pixel_x] += src->green[xx];
-						pixels->blue[pixel_x] += src->blue[xx];
-						pixels->alpha[pixel_x] += src->alpha[xx];
+						pixels->red[pixel_x] += srcsl->red[xx];
+						pixels->green[pixel_x] += srcsl->green[xx];
+						pixels->blue[pixel_x] += srcsl->blue[xx];
+						pixels->alpha[pixel_x] += srcsl->alpha[xx];
 					}
 					++pixel_x;
 				}
@@ -3390,14 +3379,14 @@ fprintf (stderr, "color2alpha():%d: color: red = 0x%8.8X green = 0x%8.8X blue = 
 		for( y = 0 ; y < max_y ; y++  )
 		{
 			int x ;
-			ASScanline *src = &(imdec->buffer);
+			ASScanline *srcsl = &(imdec->buffer);
 			imdec->decode_image_scanline( imdec );
 			for (x = 0; x < imdec->buffer.width; ++x)
 			{
-				CARD32 r = src->red[x];
-				CARD32 g = src->green[x];
-				CARD32 b = src->blue[x];
-				CARD32 a = src->alpha[x];
+				CARD32 r = srcsl->red[x];
+				CARD32 g = srcsl->green[x];
+				CARD32 b = srcsl->blue[x];
+				CARD32 a = srcsl->alpha[x];
 				/* the following logic is stolen from gimp and altered for our color format and beauty*/
 				{
 					CARD32 aa = a, ar, ag, ab;
@@ -3428,12 +3417,12 @@ fprintf (stderr, "alpha: (%8.8X %8.8X %8.8X)->%8.8X; ", ar, ag, ab, a);
 #else
 #define APPLY_ALPHA_TO_CHAN(chan)	chan	
 #endif
-	  				src->red[x] 	= APPLY_ALPHA_TO_CHAN(r);
-					src->green[x] 	= APPLY_ALPHA_TO_CHAN(g);
-		  			src->blue[x] 	= APPLY_ALPHA_TO_CHAN(b);
+	  				srcsl->red[x] 	= APPLY_ALPHA_TO_CHAN(r);
+					srcsl->green[x] 	= APPLY_ALPHA_TO_CHAN(g);
+		  			srcsl->blue[x] 	= APPLY_ALPHA_TO_CHAN(b);
 #undef APPLY_ALPHA_TO_CHAN
 					a = a*aa>>12;
-	  				src->alpha[x] = (a>255)?255:a;
+	  				srcsl->alpha[x] = (a>255)?255:a;
 
 #if defined(LOCAL_DEBUG) && !defined(NO_DEBUG_OUTPUT)					
 fprintf (stderr, "result: %8.8X %8.8X %8.8X %8.8X.\n", src->alpha[x], src->red[x], src->green[x], src->blue[x]);
@@ -3442,7 +3431,7 @@ fprintf (stderr, "result: %8.8X %8.8X %8.8X %8.8X.\n", src->alpha[x], src->red[x
 				}
 				/* end of gimp code */
 			}
-			imout->output_image_scanline( imout, src, 1);
+			imout->output_image_scanline( imout, srcsl, 1);
 		}
 		stop_image_output( &imout );
 	}

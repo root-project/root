@@ -17,7 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#undef LOCAL_DEBUG
+#define LOCAL_DEBUG
 #undef DO_CLOCKING
 #ifndef NO_DEBUG_OUTPUT
 #undef DEBUG_RECTS
@@ -396,7 +396,7 @@ asimage_destroy (ASHashableValue value, void *data)
 			else
 				im->imageman = NULL ;
 		}
-		if( (char*)value != im->name ) 
+		if( im == NULL || (char*)value != im->name ) 
 			free( (char*)value );/* name */
 		destroy_asimage( &im );
 	}
@@ -1107,7 +1107,6 @@ vectorize_asimage( ASImage *im, unsigned int max_colors, unsigned int dither,
 	ASVectorPalette* pal ;
 	double *vec ;
 	ASColormap cmap;
-	int *res;
     unsigned int r, g, b, v;
 	unsigned int x, y, j ;
 
@@ -1118,20 +1117,25 @@ vectorize_asimage( ASImage *im, unsigned int max_colors, unsigned int dither,
 	/* contributed by Valeriy Onuchin from Root project at cern.ch */   
 
  	dither = dither > 7 ? 7 : dither;
- 	res = colormap_asimage(im, &cmap, max_colors, dither, opaque_threshold);
+	{
+ 		int *res = colormap_asimage(im, &cmap, max_colors, dither, opaque_threshold);
  
-    for ( y = 0; y < im->height; y++) {
-       for ( x = 0; x < im->width; x++) {
-          int i = y*im->width + x;
-          g = INDEX_SHIFT_GREEN(cmap.entries[res[i]].green);
-          b = INDEX_SHIFT_BLUE(cmap.entries[res[i]].blue);
-          r = INDEX_SHIFT_RED(cmap.entries[res[i]].red);
-          v = MAKE_INDEXED_COLOR24(r,g,b);
-          v = (v>>12)&0x0FFF;
-          vec[(im->height - y - 1)*im->width + x] = ((double)v)/0x0FFF;
-       }
-    }
-
+    	for ( y = 0; y < im->height; y++) 
+		{
+       		for ( x = 0; x < im->width; x++) 
+			{
+          		int i = y*im->width + x;
+          		g = INDEX_SHIFT_GREEN(cmap.entries[res[i]].green);
+          		b = INDEX_SHIFT_BLUE(cmap.entries[res[i]].blue);
+          		r = INDEX_SHIFT_RED(cmap.entries[res[i]].red);
+          		v = MAKE_INDEXED_COLOR24(r,g,b);
+		        v = (v>>12)&0x0FFF;
+          		vec[(im->height - y - 1)*im->width + x] = ((double)v)/0x0FFF;
+       		}
+    	}
+	
+		free (res);
+	}
     pal = safecalloc( 1, sizeof(ASVectorPalette));
 
 	pal->npoints = cmap.count ;	

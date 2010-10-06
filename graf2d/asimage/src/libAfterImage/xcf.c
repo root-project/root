@@ -609,6 +609,14 @@ read_xcf_hierarchy( XcfImage *xcf_im, FILE *fp, CARD8 opacity, ARGB32 colormask 
 			CARD8 			*tile_buf = &(xcf_im->tile_buf[0]);
 			int i;
 
+			if( xcf_im->compression == XCF_COMPRESS_RLE )
+				decode_func = decode_xcf_tile_rle ;
+			else if( xcf_im->compression != XCF_COMPRESS_NONE )
+			{
+				show_error( "XCF image contains information compressed with usupported method." );
+				return h;
+			}
+
 			if (XCF_TILE_WIDTH < h->width)
 				tile_buf = safemalloc (h->width*XCF_TILE_HEIGHT*6);
 				
@@ -618,14 +626,6 @@ read_xcf_hierarchy( XcfImage *xcf_im, FILE *fp, CARD8 opacity, ARGB32 colormask 
 					free_scanline (&(xcf_im->scanline_buf[i]), True); 
 					prepare_scanline (h->width,0,&(xcf_im->scanline_buf[i]), False );
 				}
-
-			if( xcf_im->compression == XCF_COMPRESS_RLE )
-				decode_func = decode_xcf_tile_rle ;
-			else if( xcf_im->compression != XCF_COMPRESS_NONE )
-			{
-				show_error( "XCF image contains information compressed with usupported method." );
-				return h;
-			}
 
 			h->image = create_asimage(  h->width, h->height, 0/* no compression */ );
 			while( height_left > 0 && tile )

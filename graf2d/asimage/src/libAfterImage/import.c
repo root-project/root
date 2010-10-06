@@ -2958,6 +2958,7 @@ tga2ASImage( const char * path, ASImageImportParams *params )
 	if( im == NULL )
 		show_error( "invalid or unsupported TGA format in image file \"%s\"", path );
 
+	if (cmap) free (cmap);
 	fclose( infile );
 	SHOW_TIME("image loading",started);
 	return im ;

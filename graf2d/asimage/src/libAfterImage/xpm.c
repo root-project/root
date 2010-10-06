@@ -558,7 +558,7 @@ open_xpm_file( const char *realfilename )
 /*			xpm_file->bytes_in = AS_XPM_BUFFER_UNDO+fread( &(xpm_file->buffer[AS_XPM_BUFFER_UNDO]), 1, AS_XPM_BUFFER_SIZE, fp ); */
 			xpm_file->bytes_in = AS_XPM_BUFFER_UNDO+read( fd, &(xpm_file->buffer[AS_XPM_BUFFER_UNDO]),  AS_XPM_BUFFER_SIZE );
 			xpm_file->curr_byte = AS_XPM_BUFFER_UNDO ;
-			if( get_xpm_string( xpm_file ) )
+			if (get_xpm_string( xpm_file ) == XPM_Success)
 				success = parse_xpm_header( xpm_file );
 		}
 #else                                          /* libXpm interface : */
@@ -603,7 +603,7 @@ open_xpm_data( const char **data )
                 xpm_file->parse_state = XPM_InFile ;
                 xpm_file->buffer = 0;
                 xpm_file->curr_byte = AS_XPM_BUFFER_UNDO ;
-                if( get_xpm_string( xpm_file ) ) {
+                if( get_xpm_string( xpm_file ) == XPM_Success) {
                         success = parse_xpm_header( xpm_file );
                }
 
@@ -639,7 +639,7 @@ open_xpm_raw_data( const char *data )
 		xpm_file->buffer = (char*)data;
 		xpm_file->curr_byte = AS_XPM_BUFFER_UNDO ;
       xpm_file->bytes_in = AS_XPM_BUFFER_UNDO + strlen(data);
-		if( get_xpm_string( xpm_file ) )
+		if( get_xpm_string( xpm_file )  == XPM_Success)
 			success = parse_xpm_header( xpm_file );
 
 		if( !success ) {
@@ -665,7 +665,7 @@ get_xpm_string( ASXpmFile *xpm_file )
 {
 
    if( xpm_file == NULL )
-      return XPM_Error;;
+      return XPM_Error;
    if( !xpm_file->buffer )
    {
       xpm_file->str_buf = xpm_file->data[xpm_file->curr_img_line];
@@ -843,7 +843,7 @@ build_xpm_colormap( ASXpmFile *xpm_file )
 		}
 #else
 		char *colornames[6] ;
-		if( !get_xpm_string( xpm_file ) )
+		if( get_xpm_string( xpm_file ) != XPM_Success)
 			break;
 LOCAL_DEBUG_OUT( "cmap[%d]: \"%s\"\n",  i, xpm_file->str_buf );
 		if( !parse_xpm_cmap_entry( xpm_file, &(colornames[0])))
@@ -884,7 +884,7 @@ convert_xpm_scanline( ASXpmFile *xpm_file, unsigned int line )
 	unsigned int *data = xpm_file->xpmImage.data+k*line ;
 #else
 	unsigned char *data ;
-	if( !get_xpm_string( xpm_file ) )
+	if( get_xpm_string( xpm_file ) != XPM_Success)
 		return False ;
 	data = (unsigned char*)xpm_file->str_buf ;
 #endif

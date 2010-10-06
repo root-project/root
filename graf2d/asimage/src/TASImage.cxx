@@ -2096,7 +2096,7 @@ Bool_t TASImage::InitVisual()
 {
    // Static function to initialize the ASVisual.
 
-   Display *dpy;
+   Display *disp;
 
    Bool_t inbatch = fgVisual && (fgVisual->dpy == (void*)1); // was in batch
    Bool_t noX = gROOT->IsBatch() || gVirtualX->InheritsFrom("TGWin32");
@@ -2113,13 +2113,13 @@ Bool_t TASImage::InitVisual()
 
    // batch or win32 mode
    if (!fgVisual && noX) {
-      dpy = 0;
+      disp = 0;
       fgVisual = create_asvisual(0, 0, 0, 0);
       fgVisual->dpy = (Display*)1; //fake (not used)
       return kTRUE;
    }
 
-   dpy = (Display*) gVirtualX->GetDisplay();
+   disp = (Display*) gVirtualX->GetDisplay();
    Int_t screen  = gVirtualX->GetScreen();
    Int_t depth   = gVirtualX->GetDepth();
    Visual *vis   = (Visual*) gVirtualX->GetVisual();
@@ -2128,7 +2128,7 @@ Bool_t TASImage::InitVisual()
    if (vis == 0 || cmap == 0) {
       fgVisual = create_asvisual(0, 0, 0, 0);
    } else {
-      fgVisual = create_asvisual_for_id(dpy, screen, depth,
+      fgVisual = create_asvisual_for_id(disp, screen, depth,
                                         XVisualIDFromVisual(vis), cmap, 0);
    }
 #else

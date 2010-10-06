@@ -1181,7 +1181,7 @@ handle_asxml_tag_set( ASImageXMLState *state, xml_elem_t* doc, xml_elem_t* parm)
 		char *tmp = (char*)var ; 
 		if( var_domain && var_domain[0] != '\0' )
 		{
-			int vd_len = var_domain?strlen(var_domain):0 ;
+			int vd_len = strlen(var_domain);
 			tmp = safemalloc( vd_len + 1 + strlen(var) + 1 );
 			sprintf( tmp, ( var_domain[vd_len-1] != '.' )?"%s.%s":"%s%s", var_domain, var );
 		}
@@ -2314,6 +2314,8 @@ handle_asxml_tag_pad( ASImageXMLState *state, xml_elem_t* doc, xml_elem_t* parm,
 	return result;
 }
 
+#define REPLACE_STRING(str,val) do {if(str)free(str);(str) = (val);}while(0)
+
 /* Each tag is only allowed to return ONE image. */
 ASImage*
 build_image_from_xml( ASVisual *asv, ASImageManager *imman, ASFontManager *fontman, xml_elem_t* doc, xml_elem_t** rparm, ASFlagType flags, int verbose, Window display_win)
@@ -2347,7 +2349,7 @@ build_image_from_xml( ASVisual *asv, ASImageManager *imman, ASFontManager *fontm
 		for (ptr = parm ; ptr ; ptr = ptr->next)
 		{	
 			if (ptr->tag[0] == 'i' && ptr->tag[1] == 'd' && ptr->tag[2] == '\0')
-				id = mystrdup(ptr->parm);
+				REPLACE_STRING(id,mystrdup(ptr->parm));
 			else if (strcmp(ptr->tag, "refid") == 0 ) 	refid = ptr->parm ;
 			else if (strcmp(ptr->tag, "width") == 0 ) 	width_str = ptr->parm ;
 			else if (strcmp(ptr->tag, "height") == 0 ) 	height_str = ptr->parm ;
@@ -2357,6 +2359,7 @@ build_image_from_xml( ASVisual *asv, ASImageManager *imman, ASFontManager *fontm
 			if( (result = fetch_asimage( imman, id)) != NULL ) 
 			{
 				free( id );
+				xml_elem_delete(NULL, parm);
 				return result ; 
 			}
 

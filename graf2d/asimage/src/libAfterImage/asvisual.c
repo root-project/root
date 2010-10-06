@@ -433,22 +433,23 @@ int as_colormap_type2size( int type )
 }
 
 Bool
-visual2visual_prop( ASVisual *asv, size_t *size,
-								   unsigned long *version,
-								   unsigned long **data )
+visual2visual_prop( ASVisual *asv, size_t *size_ret,
+								   unsigned long *version_ret,
+								   unsigned long **data_ret )
 {
 	int cmap_size = 0 ;
 	unsigned long *prop ;
+	size_t size;
 
-	if( asv == NULL || data == NULL)
+	if( asv == NULL || data_ret == NULL)
 		return False;
 
 	cmap_size = as_colormap_type2size( asv->as_colormap_type );
 
 	if( cmap_size > 0 && asv->as_colormap == NULL )
 		return False ;
-
-	prop = safemalloc( *size ) ;
+	size = (1+1+2+1+cmap_size)*sizeof(unsigned long);
+	prop = safemalloc( size ) ;
 #ifndef X_DISPLAY_MISSING
 	prop[0] = asv->visual_info.visualid ;
 	prop[1] = asv->colormap ;
@@ -461,12 +462,12 @@ visual2visual_prop( ASVisual *asv, size_t *size,
 		for( i = 0 ; i < cmap_size ; i++ )
 			prop[i+5] = asv->as_colormap[i] ;
 	}
-	if( size )
-		*size = (1+1+2+1+cmap_size)*sizeof(unsigned long);
+	if( size_ret )
+		*size_ret = size;
 #endif /*ifndef X_DISPLAY_MISSING */
-	if( version )
-		*version = (1<<16)+0;                        /* version is 1.0 */
-	*data = prop ;
+	if( version_ret )
+		*version_ret = (1<<16)+0;                        /* version is 1.0 */
+	*data_ret = prop ;
 	return True;
 }
 
