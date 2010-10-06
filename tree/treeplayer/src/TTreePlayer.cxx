@@ -210,8 +210,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "snprintf.h"
-
 #include "Riostream.h"
 #include "TTreePlayer.h"
 #include "TROOT.h"
