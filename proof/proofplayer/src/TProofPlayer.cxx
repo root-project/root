@@ -3435,8 +3435,8 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
             for (Int_t j = (i*nelements)/nmasters;
                        j < ((i+1)*nelements)/nmasters;
                        j++) {
-               TDSetElement *elem =
-                  dynamic_cast<TDSetElement*>(setelements->At(j));
+               TDSetElement *elem = setelements ?
+                  dynamic_cast<TDSetElement*>(setelements->At(j)) : (TDSetElement *)0;
                if (elem) {
                   set.Add(elem->GetFileName(), elem->GetObjName(),
                         elem->GetDirectory(), elem->GetFirst(),

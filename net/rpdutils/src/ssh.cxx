@@ -79,7 +79,6 @@ tryagain:
    } else {
       strncpy(fsun, "rootdSSH_XXXXXX", 24);
    }
-   mode_t oldumask = umask(0700);
    int itmp = mkstemp(fsun);
    Int_t nAtt = 0;
    while (itmp == -1 && nAtt < kMAXRSATRIES) {
@@ -89,7 +88,6 @@ tryagain:
                    nAtt,errno);
       itmp = mkstemp(fsun);
    }
-   umask(oldumask);
    if (itmp == -1) {
       ErrorInfo("SshToolAllocateSocket: mkstemp failed %d times - return",
                 kMAXRSATRIES);
@@ -104,7 +102,7 @@ tryagain:
                  fsun, nAtt0);
 
    // Save path ...
-   strcpy(servAddr.sun_path, fsun);
+   strncpy(servAddr.sun_path, fsun, 104);
 
    // bind to socket
    if (bind(sd, (struct sockaddr *) &servAddr, sizeof(servAddr)) < 0) {
@@ -173,7 +171,7 @@ tryagain:
    }
 
    // Fill output
-   strcpy(*pipe, fsun);
+   *pipe = strdup(fsun);
 
    // return socket fd
    return sd;

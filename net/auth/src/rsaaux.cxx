@@ -160,6 +160,24 @@ typedef long off_t;
  */
 
 
+//______________________________________________________________________________
+static int aux_rand()
+{
+   // rand() implementation using /udev/random or /dev/random, if available
+
+   int frnd = open("/udev/random", O_RDONLY);
+   if (frnd < 0) frnd = open("/dev/random", O_RDONLY);
+
+   if (frnd >= 0) {
+      int r;
+      ssize_t rs = read(frnd, (void *) &r, sizeof(int));
+      close(frnd);
+      if (rs == sizeof(int)) return r;
+   }
+   // No special random device available: use rand()
+   return rand();
+}
+
 /*
  * Konstante 1, 2
  */
@@ -868,9 +886,9 @@ int p_prim(rsa_NUMBER *n, int m)
       /* ziehe zufaellig a aus 2..n-1		*/
       do {
          for (i=n->n_len-1, p=a.n_part; i; i--)
-            *p++ = (rsa_INT)rand();
+            *p++ = (rsa_INT)aux_rand();
          if ((i=n->n_len) )
-            *p = (rsa_INT)( rand() % ((unsigned long)n->n_part[i-1] +1) );
+            *p = (rsa_INT)( aux_rand() % ((unsigned long)n->n_part[i-1] +1) );
          while ( i && ! *p )
             p--,i--;
          a.n_len = i;
@@ -969,7 +987,7 @@ void gen_number(int len, rsa_NUMBER *n)
    *p-- = '\0';
 
    for (l=len; l--; p--) {
-      i = rand() % 16;
+      i = aux_rand() % 16;
       *p = hex[ i ];
    }
    p++;

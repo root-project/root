@@ -560,7 +560,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
 
          // Send length first
          char buflen[20];
-         sprintf(buflen, "%d", outdata.length);
+         snprintf(buflen, 20, "%d", outdata.length);
          nsen = sock->Send(buflen, kROOTD_KRB5);
          if (nsen <= 0) {
             Error("Krb5Authenticate","Sending <buflen>");
@@ -646,9 +646,9 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       }
 
       // Parse answer
-      char *lUser= new char[retval];
-      int offset = -1;
-      sscanf(rfrm,"%s %d", lUser, &offset);
+      char lUser[128], i1[20];
+      sscanf(rfrm,"%127s %19s", lUser, i1);
+      int offset = atoi(i1);
       // Save username
       user = lUser;
 

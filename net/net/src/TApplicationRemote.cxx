@@ -797,7 +797,7 @@ Int_t TApplicationRemote::SendFile(const char *file, Int_t opt, const char *rfil
    if (gDebug > 1 && size > 0)
       Info("SendFile", "sending file %s", file);
 
-   sprintf(buf, "%s %d %lld", fnam, bin, size);
+   snprintf(buf, kMAXBUF, "%s %d %lld", fnam, bin, size);
    if (Broadcast(buf, kMESS_ANY, kRRT_File) == -1) {
       SafeDelete(fSocket);
       return -1;

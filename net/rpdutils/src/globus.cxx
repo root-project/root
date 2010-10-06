@@ -466,13 +466,13 @@ char *GlbsToolExpand(char *file)
 
       if (file[0] == '/' || (!getenv("HOME"))) {
          fret = new char[strlen(file) + 1];
-         strcpy(fret, file);
+         strncpy(fret, file, strlen(file));
       } else {
          fret = new char[strlen(file) + strlen(getenv("HOME")) + 2];
          if (file[0] == '~') {
-            sprintf(fret, "%s/%s", getenv("HOME"), file + 1);
+            SPrintf(fret, strlen(file) + strlen(getenv("HOME")) + 2, "%s/%s", getenv("HOME"), file + 1);
          } else {
-            sprintf(fret, "%s/%s", getenv("HOME"), file);
+            SPrintf(fret, strlen(file) + strlen(getenv("HOME")) + 2, "%s/%s", getenv("HOME"), file);
          }
       }
 

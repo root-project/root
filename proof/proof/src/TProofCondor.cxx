@@ -191,8 +191,11 @@ Bool_t TProofCondor::StartSlaves(Bool_t)
                claims.Remove(c);
             } else {
                TPair *p = dynamic_cast<TPair*>(claims.Remove(c));
-               delete dynamic_cast<TTimer*>(p->Value());
-               delete p;
+               if (p) {
+                  TTimer *xt = dynamic_cast<TTimer*>(p->Value());
+                  if (xt) delete xt;
+                  delete p;
+               }
             }
             nClaimsDone++;
             TMessage m(kPROOF_SERVERSTARTED);

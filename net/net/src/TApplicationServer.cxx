@@ -26,6 +26,7 @@
    #include <io.h>
    typedef long off_t;
 #endif
+#include <stdlib.h>
 #include <errno.h>
 #include <time.h>
 #include <fcntl.h>
@@ -362,7 +363,7 @@ Int_t TApplicationServer::Setup()
    // Return 0 on success, -1 on failure
 
    char str[512];
-   sprintf(str, "**** Remote session @ %s started ****", gSystem->HostName());
+   snprintf(str, 512, "**** Remote session @ %s started ****", gSystem->HostName());
    if (fSocket->Send(str) != 1+static_cast<Int_t>(strlen(str))) {
       Error("Setup", "failed to send startup message");
       return -1;
@@ -541,10 +542,10 @@ void TApplicationServer::HandleSocketInput()
                case kRRT_File:
                   // A file follows
                   mess->ReadString(str, sizeof(str));
-                  {  Long_t size;
-                     Int_t  bin;
-                     char   name[2048];
-                     sscanf(str, "%2047s %d %ld", name, &bin, &size);
+                  {  char   name[2048], i1[20], i2[40];
+                     sscanf(str, "%2047s %19s %39s", name, i1, i2);
+                     Int_t  bin = atoi(i1);
+                     Long_t size = atol(i2);
                      ReceiveFile(name, bin ? kTRUE : kFALSE, size);
                   }
                   break;
@@ -1240,10 +1241,10 @@ Long_t TApplicationServer::ProcessLine(const char *line, Bool_t, Int_t *)
                // A file follows
                char str[2048];
                rm->ReadString(str, sizeof(str));
-               Long_t size;
-               Int_t  bin;
-               char name[2048];
-               sscanf(str, "%2047s %d %ld", name, &bin, &size);
+               char   name[2048], i1[20], i2[40];
+               sscanf(str, "%2047s %19s %39s", name, i1, i2);
+               Int_t  bin = atoi(i1);
+               Long_t size = atol(i2);
                ReceiveFile(name, bin ? kTRUE : kFALSE, size);
             }
          }

@@ -111,7 +111,7 @@ static Int_t SrvSetVars(string confdir)
       int len = 15 + execdir.length();
       char *tmp = new char[len+1];
       if (tmp) {
-         sprintf(tmp, "ROOTBINDIR=%.*s", len, execdir.c_str());
+         snprintf(tmp,len+1, "ROOTBINDIR=%.*s", len, execdir.c_str());
          putenv(tmp);
       } else
          return -1;
@@ -125,7 +125,7 @@ static Int_t SrvSetVars(string confdir)
       int len = 15 + etcdir.length();
       char *tmp = new char[len+1];
       if (tmp) {
-         sprintf(tmp, "ROOTETCDIR=%.*s", len, etcdir.c_str());
+         snprintf(tmp, len+1, "ROOTETCDIR=%.*s", len, etcdir.c_str());
          putenv(tmp);
       } else
          return -1;
@@ -137,7 +137,7 @@ static Int_t SrvSetVars(string confdir)
       int len = 15 + daemonrc.length();
       char *tmp = new char[len+1];
       if (tmp) {
-         sprintf(tmp, "ROOTDAEMONRC=%.*s", len, daemonrc.c_str());
+         snprintf(tmp, len+1, "ROOTDAEMONRC=%.*s", len, daemonrc.c_str());
          putenv(tmp);
       } else
          return -1;
@@ -149,7 +149,7 @@ static Int_t SrvSetVars(string confdir)
       int len = 15 + gridmap.length();
       char *tmp = new char[len+1];
       if (tmp) {
-         sprintf(tmp, "GRIDMAP=%.*s", len, gridmap.c_str());
+         snprintf(tmp, len+1, "GRIDMAP=%.*s", len, gridmap.c_str());
          putenv(tmp);
       } else
          return -1;
@@ -161,7 +161,7 @@ static Int_t SrvSetVars(string confdir)
       int len = 15 + hcconf.length();
       char *tmp = new char[len+1];
       if (tmp) {
-         sprintf(tmp, "ROOTHOSTCERT=%.*s", len, hcconf.c_str());
+         snprintf(tmp, len+1, "ROOTHOSTCERT=%.*s", len, hcconf.c_str());
          putenv(tmp);
       } else
          return -1;

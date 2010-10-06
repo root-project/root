@@ -3080,10 +3080,10 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                   Int_t frac = (Int_t) (done*100.)/tot;
                   char msg[512] = {0};
                   if (frac >= 100) {
-                     sprintf(msg,"%s: OK (%d %s)                 \n",
+                     snprintf(msg, 512, "%s: OK (%d %s)                 \n",
                              action.Data(),tot, type.Data());
                   } else {
-                     sprintf(msg,"%s: %d out of %d (%d %%)\r",
+                     snprintf(msg, 512, "%s: %d out of %d (%d %%)\r",
                              action.Data(), done, tot, frac);
                   }
                   if (fSync)

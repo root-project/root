@@ -122,6 +122,24 @@ Int_t StdCheckSecCtx(const char *, TRootSecContext *);
 ClassImp(TAuthenticate)
 
 //______________________________________________________________________________
+static int auth_rand()
+{
+   // rand() implementation using /udev/random or /dev/random, if available
+
+   int frnd = open("/udev/random", O_RDONLY);
+   if (frnd < 0) frnd = open("/dev/random", O_RDONLY);
+
+   if (frnd >= 0) {
+      int r;
+      ssize_t rs = read(frnd, (void *) &r, sizeof(int));
+      close(frnd);
+      if (rs == sizeof(int)) return r;
+   }
+   // No special random device available: use rand()
+   return rand();
+}
+
+//______________________________________________________________________________
 TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
                              const char *proto, const char *user)
 {
@@ -271,7 +289,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
          tmp = TString(gEnv->GetValue("Rootd.Authentication", "0"));
       }
       char am[kMAXSEC][10];
-      Int_t nw = sscanf(tmp.Data(), "%s %s %s %s %s %s",
+      Int_t nw = sscanf(tmp.Data(), "%5s %5s %5s %5s %5s %5s",
                         am[0], am[1], am[2], am[3], am[4], am[5]);
 
       Int_t i = 0, nm = 0, me[kMAXSEC];
@@ -415,9 +433,9 @@ negotia:
 
    // Keep track of tried methods in a list
    if (strlen(triedMeth) > 0)
-      sprintf(triedMeth, "%s %s", triedMeth, fgAuthMeth[fSecurity].Data());
+      snprintf(triedMeth, 80, "%s %s", triedMeth, fgAuthMeth[fSecurity].Data());
    else
-      sprintf(triedMeth, "%s", fgAuthMeth[fSecurity].Data());
+      snprintf(triedMeth, 80, "%s", fgAuthMeth[fSecurity].Data());
 
    // Set environments
    SetEnvironment();
@@ -525,9 +543,9 @@ negotia:
             Info("Authenticate",
                  "remote daemon does not support Kerberos authentication");
          if (strlen(noSupport) > 0)
-            sprintf(noSupport, "%s/Krb5", noSupport);
+            snprintf(noSupport, 80, "%s/Krb5", noSupport);
          else
-            sprintf(noSupport, "Krb5");
+            snprintf(noSupport, 80, "Krb5");
       }
 
    } else if (fSecurity == kGlobus) {
@@ -553,9 +571,9 @@ negotia:
             Info("Authenticate",
                  "remote daemon does not support Globus authentication");
          if (strlen(noSupport) > 0)
-            sprintf(noSupport, "%s/Globus", noSupport);
+            snprintf(noSupport, 80, "%s/Globus", noSupport);
          else
-            sprintf(noSupport, "Globus");
+            snprintf(noSupport, 80, "Globus");
       }
 
 
@@ -571,9 +589,9 @@ negotia:
             Info("Authenticate",
                  "remote daemon does not support SSH authentication");
          if (strlen(noSupport) > 0)
-            sprintf(noSupport, "%s/SSH", noSupport);
+            snprintf(noSupport, 80, "%s/SSH", noSupport);
          else
-            sprintf(noSupport, "SSH");
+            snprintf(noSupport, 80, "SSH");
       }
 
    } else if (fSecurity == kRfio) {
@@ -588,9 +606,9 @@ negotia:
             Info("Authenticate",
                  "remote daemon does not support UidGid authentication");
          if (strlen(noSupport) > 0)
-            sprintf(noSupport, "%s/UidGid", noSupport);
+            snprintf(noSupport, 80, "%s/UidGid", noSupport);
          else
-            sprintf(noSupport, "UidGid");
+            snprintf(noSupport, 80, "UidGid");
       }
    }
    //
@@ -671,9 +689,12 @@ negotia:
                Warning("Authenticate",
                        "strings with accepted methods not received (%d:%d)",
                        kind, nrec);
+            char ii[6][20];
             remMeth =
-               sscanf(answer, "%d %d %d %d %d %d", &rMth[0], &rMth[1],
-                      &rMth[2], &rMth[3], &rMth[4], &rMth[5]);
+               sscanf(answer, "%19s %19s %19s %19s %19s %19s", ii[0], ii[1],
+                      ii[2], ii[3], ii[4], ii[5]);
+            Int_t iik = 0;
+            for (iik = 0; iik < 6; iik++) { rMth[iik] = atoi(ii[iik]); }
             if (gDebug > 0 && remloc > 0)
                Info("Authenticate",
                     "remotely allowed methods not yet tried: %s",
@@ -705,7 +726,7 @@ negotia:
                   break;
                }
                if (i == 0)
-                  sprintf(locav, "%s %d", locav, fHostAuth->GetMethod(j));
+                  snprintf(locav, 40, "%s %d", locav, fHostAuth->GetMethod(j));
             }
             if (methfound) break;
          }
@@ -832,31 +853,31 @@ void TAuthenticate::SetEnvironment()
    // Decode fDetails, is non empty ...
    if (fDetails != "") {
       char usdef[kMAXPATHLEN] = { 0 };
-      Int_t lDet = strlen(fDetails.Data()) + 2;
       char pt[5] = { 0 }, ru[5] = { 0 };
       Int_t hh = 0, mm = 0;
-      char *us = 0, *cd = 0, *cf = 0, *kf = 0, *ad = 0, *cp = 0, *pp = 0;
+      char us[kMAXPATHLEN] = {0}, cp[kMAXPATHLEN] = {0}, pp[kMAXPATHLEN] = {0};
+      char cd[kMAXPATHLEN] = {0}, cf[kMAXPATHLEN] = {0}, kf[kMAXPATHLEN] = {0}, ad[kMAXPATHLEN] = {0};
       const char *ptr;
 
       TString usrPromptDef = TString(GetAuthMethod(fSecurity)) + ".LoginPrompt";
       if ((ptr = strstr(fDetails, "pt:")) != 0) {
-         sscanf(ptr + 3, "%s %s", pt, usdef);
+         sscanf(ptr + 3, "%4s %8191s", pt, usdef);
       } else {
          if (!strncasecmp(gEnv->GetValue(usrPromptDef,""),"no",2) ||
              !strncmp(gEnv->GetValue(usrPromptDef,""),"0",1))
-            strcpy(pt,"0");
+            strncpy(pt,"0",1);
          else
-            strcpy(pt,"1");
+            strncpy(pt,"1",1);
       }
       TString usrReUseDef = TString(GetAuthMethod(fSecurity)) + ".ReUse";
       if ((ptr = strstr(fDetails, "ru:")) != 0) {
-         sscanf(ptr + 3, "%s %s", ru, usdef);
+         sscanf(ptr + 3, "%4s %8191s", ru, usdef);
       } else {
          if (!strncasecmp(gEnv->GetValue(usrReUseDef,""),"no",2) ||
              !strncmp(gEnv->GetValue(usrReUseDef,""),"0",1))
-            strcpy(ru,"0");
+            strncpy(ru,"0",1);
          else
-            strcpy(ru,"1");
+            strncpy(ru,"1",1);
       }
       TString usrValidDef = TString(GetAuthMethod(fSecurity)) + ".Valid";
       TString hours(gEnv->GetValue(usrValidDef,"24:00"));
@@ -874,56 +895,38 @@ void TAuthenticate::SetEnvironment()
 
       // Now action depends on method ...
       if (fSecurity == kGlobus) {
-         cd = new char[lDet];
-         cf = new char[lDet];
-         kf = new char[lDet];
-         ad = new char[lDet];
-         cd[0] = '\0';
-         cf[0] = '\0';
-         kf[0] = '\0';
-         ad[0] = '\0';
          if ((ptr = strstr(fDetails, "cd:")) != 0)
-            sscanf(ptr, "%s %s", cd, usdef);
+            sscanf(ptr, "%8191s %8191s", cd, usdef);
          if ((ptr = strstr(fDetails, "cf:")) != 0)
-            sscanf(ptr, "%s %s", cf, usdef);
+            sscanf(ptr, "%8191s %8191s", cf, usdef);
          if ((ptr = strstr(fDetails, "kf:")) != 0)
-            sscanf(ptr, "%s %s", kf, usdef);
+            sscanf(ptr, "%8191s %8191s", kf, usdef);
          if ((ptr = strstr(fDetails, "ad:")) != 0)
-            sscanf(ptr, "%s %s", ad, usdef);
+            sscanf(ptr, "%8191s %8191s", ad, usdef);
          if (gDebug > 2) {
             Info("SetEnvironment",
                  "details:%s, pt:%s, ru:%s, cd:%s, cf:%s, kf:%s, ad:%s",
                  fDetails.Data(), pt, ru, cd, cf, kf, ad);
          }
       } else if (fSecurity == kClear) {
-         us = new char[lDet];
-         us[0] = '\0';
-         cp = new char[lDet];
-         cp[0] = '\0';
          if ((ptr = strstr(fDetails, "us:")) != 0)
-            sscanf(ptr + 3, "%s %s", us, usdef);
+            sscanf(ptr + 3, "%8191s %8191s", us, usdef);
          if ((ptr = strstr(fDetails, "cp:")) != 0)
-            sscanf(ptr + 3, "%s %s", cp, usdef);
+            sscanf(ptr + 3, "%8191s %8191s", cp, usdef);
          if (gDebug > 2)
             Info("SetEnvironment", "details:%s, pt:%s, ru:%s, us:%s cp:%s",
                  fDetails.Data(), pt, ru, us, cp);
       } else if (fSecurity == kKrb5) {
-         us = new char[lDet];
-         us[0] = '\0';
-         pp = new char[lDet];
-         pp[0] = '\0';
          if ((ptr = strstr(fDetails, "us:")) != 0)
-            sscanf(ptr + 3, "%s %s", us, usdef);
+            sscanf(ptr + 3, "%8191s %8191s", us, usdef);
          if ((ptr = strstr(fDetails, "pp:")) != 0)
-            sscanf(ptr + 3, "%s %s", pp, usdef);
+            sscanf(ptr + 3, "%8191s %8191s", pp, usdef);
          if (gDebug > 2)
             Info("SetEnvironment", "details:%s, pt:%s, ru:%s, us:%s pp:%s",
                  fDetails.Data(), pt, ru, us, pp);
       } else {
-         us = new char[lDet];
-         us[0] = '\0';
          if ((ptr = strstr(fDetails, "us:")) != 0)
-            sscanf(ptr + 3, "%s %s", us, usdef);
+            sscanf(ptr + 3, "%8191s %8191s", us, usdef);
          if (gDebug > 2)
             Info("SetEnvironment", "details:%s, pt:%s, ru:%s, us:%s",
                  fDetails.Data(), pt, ru, us);
@@ -959,81 +962,33 @@ void TAuthenticate::SetEnvironment()
       // Build UserDefaults
       usdef[0] = '\0';
       if (fSecurity == kGlobus) {
-         if (cd != 0) {
-            if (strlen(cd) < kMAXPATHLEN - strlen(usdef) - 1) {
-               strcat(usdef," ");
-               strcat(usdef,cd);
-            }
-            delete [] cd;
-            cd = 0;
-         }
-         if (cf != 0) {
-            if (strlen(cf) < kMAXPATHLEN - strlen(usdef) - 1) {
-               strcat(usdef," ");
-               strcat(usdef,cf);
-            }
-            delete [] cf;
-            cf = 0;
-         }
-         if (kf != 0) {
-            if (strlen(kf) < kMAXPATHLEN - strlen(usdef) - 1) {
-               strcat(usdef," ");
-               strcat(usdef,kf);
-            }
-            delete [] kf;
-            kf = 0;
-         }
-         if (ad != 0) {
-            if (strlen(ad) < kMAXPATHLEN - strlen(usdef) - 1) {
-               strcat(usdef," ");
-               strcat(usdef,ad);
-            }
-            delete [] ad;
-            ad = 0;
-         }
+         if (strlen(cd) > 0) { snprintf(usdef,8192," %s",cd); }
+         if (strlen(cf) > 0) { snprintf(usdef,8192,"%s %s",usdef, cf); }
+         if (strlen(kf) > 0) { snprintf(usdef,8192,"%s %s",usdef, kf); }
+         if (strlen(ad) > 0) { snprintf(usdef,8192,"%s %s",usdef, ad); }
       } else {
          if (fSecurity == kKrb5) {
             // Collect info about principal, if any
-            if (pp && strlen(pp) > 0) {
+            if (strlen(pp) > 0) {
                fgKrb5Principal = TString(pp);
-               delete [] pp;
-               pp = 0;
             } else {
                // Allow specification via 'us:' key
-               if (us && strlen(us) > 0 && strstr(us,"@")) {
+               if (strlen(us) > 0 && strstr(us,"@"))
                   fgKrb5Principal = TString(us);
-                  delete [] us;
-                  us = 0;
-               }
             }
             // command line user specification (fUser) gets highest priority
             if (fUser.Length()) {
-               sprintf(usdef, "%s", fUser.Data());
+               snprintf(usdef, kMAXPATHLEN, "%s", fUser.Data());
             } else {
-               if (us && strlen(us) > 0 && !strstr(us,"@")) {
-                  sprintf(usdef, "%s", us);
-                  delete [] us;
-                  us = 0;
-               }
-            }
-            if (us != 0) {
-               delete [] us;
-               us = 0;
-            }
-            if (pp != 0) {
-               delete [] pp;
-               pp = 0;
+               if (strlen(us) > 0 && !strstr(us,"@"))
+                  snprintf(usdef, kMAXPATHLEN, "%s", us);
             }
          } else {
             // give highest priority to command-line specification
             if (fUser == "") {
-               if (us != 0) {
-                  sprintf(usdef, "%s", us);
-                  delete [] us;
-                  us = 0;
-               }
+               if (strlen(us) > 0) snprintf(usdef, kMAXPATHLEN, "%s", us);
             } else
-               sprintf(usdef, "%s", fUser.Data());
+               snprintf(usdef, kMAXPATHLEN, "%s", fUser.Data());
          }
       }
       if (strlen(usdef) > 0) {
@@ -1056,14 +1011,6 @@ void TAuthenticate::SetEnvironment()
 
       if (gDebug > 2)
          Info("SetEnvironment", "usdef:%s", fgDefaultUser.Data());
-
-      if (us) delete [] us;
-      if (cd) delete [] cd;
-      if (cf) delete [] cf;
-      if (kf) delete [] kf;
-      if (ad) delete [] ad;
-      if (cp) delete [] cp;
-      if (pp) delete [] pp;
    }
 }
 
@@ -1209,8 +1156,8 @@ again:
                if (line[0] == '#')
                   continue;
                char word[6][64];
-               int nword = sscanf(line, "%s %s %s %s %s %s", word[0], word[1],
-                                  word[2], word[3], word[4], word[5]);
+               int nword = sscanf(line, "%63s %63s %63s %63s %63s %63s",
+                                        word[0], word[1], word[2], word[3], word[4], word[5]);
                if (nword != 6)
                   continue;
                if (srppwd && strcmp(word[0], "secure"))
@@ -2032,9 +1979,10 @@ Int_t TAuthenticate::SshAuth(TString &user)
                newsock->Send("failure notification");
          }
          // prepare info to send
-         char cd1[1024], pipe[1024], dum[1024];
+         char cd1[1024], pipe[1024], dum[1024], i3[20];
          Int_t id3;
-         sscanf(cmdinfo, "%s %d %s %s", cd1, &id3, pipe, dum);
+         sscanf(cmdinfo, "%1023s %19s %1023s %1023s", cd1, i3, pipe, dum);
+         id3 = atoi(i3);
          snprintf(secName, kMAXPATHLEN, "%d -1 0 %s %d %s %d",
                   -fgProcessID, pipe,
                   (int)strlen(user), user.Data(), TSocket::GetClientProtocol());
@@ -2142,9 +2090,10 @@ Int_t TAuthenticate::SshAuth(TString &user)
               nrec);
 
    // Parse answer
-   char lUser[128];
+   char lUser[128], i1[20];
    int offset = -1;
-   sscanf(answer, "%s %d", lUser, &offset);
+   sscanf(answer, "%127s %19s", lUser, i1);
+   offset = atoi(i1);
    if (gDebug > 3)
       Info("SshAuth", "received from server: user: %s, offset: %d", lUser,
            offset);
@@ -2662,9 +2611,9 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
                  nrec);
 
       // Parse answer
-      Int_t offset = -1;
-      char lUser[128];
-      sscanf(answer, "%s %d", lUser, &offset);
+      char lUser[128], i1[20];
+      sscanf(answer, "%127s %19s", lUser, i1);
+      Int_t offset = atoi(i1);
       if (gDebug > 3)
          Info("ClearAuth",
               "received from server: user: %s, offset: %d (%s)", lUser,
@@ -2978,7 +2927,7 @@ void TAuthenticate::FileExpand(const char *fexp, FILE *ftmp)
          line[strlen(line) - 1] = '\0';
       if (gDebug > 2)
          ::Info("TAuthenticate::FileExpand", "read line ... '%s'", line);
-      int nw = sscanf(line, "%s %s", cinc, fileinc);
+      int nw = sscanf(line, "%19s %8191s", cinc, fileinc);
       if (nw < 1)
          continue;              // Not enough info in this line
       if (strcmp(cinc, "include") != 0) {
@@ -2990,7 +2939,7 @@ void TAuthenticate::FileExpand(const char *fexp, FILE *ftmp)
          TString ln(line);
          ln.ReplaceAll("\"",1,"",0);
          ln.ReplaceAll("'",1,"",0);
-         sscanf(ln.Data(), "%s %s", cinc, fileinc);
+         sscanf(ln.Data(), "%19s %8191s", cinc, fileinc);
 
          // support environment directories ...
          if (fileinc[0] == '$') {
@@ -3003,7 +2952,8 @@ void TAuthenticate::FileExpand(const char *fexp, FILE *ftmp)
                   finc.Remove(0,1);
                   finc.ReplaceAll(edir.Data(),gSystem->Getenv(edir.Data()));
                   fileinc[0] = '\0';
-                  strcpy(fileinc,finc.Data());
+                  strncpy(fileinc,finc.Data(),kMAXPATHLEN);
+                  fileinc[kMAXPATHLEN-1] = '\0';
                }
             }
          }
@@ -3014,7 +2964,7 @@ void TAuthenticate::FileExpand(const char *fexp, FILE *ftmp)
             int flen =
                strlen(fileinc) + strlen(gSystem->HomeDirectory()) + 10;
             char *ffull = new char[flen];
-            sprintf(ffull, "%s/%s", gSystem->HomeDirectory(), fileinc + 1);
+            snprintf(ffull, flen, "%s/%s", gSystem->HomeDirectory(), fileinc + 1);
             if (strlen(ffull) < kMAXPATHLEN - 1) strcpy(fileinc, ffull);
             delete [] ffull;
          }
@@ -3051,48 +3001,48 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
    if (sec == TAuthenticate::kClear) {
       if (strlen(usr) == 0 || !strncmp(usr,"*",1))
          usr = gEnv->GetValue("UsrPwd.Login", "");
-      sprintf(temp, "pt:%s ru:%s cp:%s us:%s",
-              gEnv->GetValue("UsrPwd.LoginPrompt", copt[opt]),
-              gEnv->GetValue("UsrPwd.ReUse", "1"),
-              gEnv->GetValue("UsrPwd.Crypt", "1"), usr);
+      snprintf(temp, kMAXPATHLEN, "pt:%s ru:%s cp:%s us:%s",
+               gEnv->GetValue("UsrPwd.LoginPrompt", copt[opt]),
+               gEnv->GetValue("UsrPwd.ReUse", "1"),
+               gEnv->GetValue("UsrPwd.Crypt", "1"), usr);
 
       // SRP
    } else if (sec == TAuthenticate::kSRP) {
       if (strlen(usr) == 0 || !strncmp(usr,"*",1))
          usr = gEnv->GetValue("SRP.Login", "");
-      sprintf(temp, "pt:%s ru:%s us:%s",
-              gEnv->GetValue("SRP.LoginPrompt", copt[opt]),
-              gEnv->GetValue("SRP.ReUse", "0"), usr);
+      snprintf(temp, kMAXPATHLEN, "pt:%s ru:%s us:%s",
+               gEnv->GetValue("SRP.LoginPrompt", copt[opt]),
+               gEnv->GetValue("SRP.ReUse", "0"), usr);
 
       // Kerberos
    } else if (sec == TAuthenticate::kKrb5) {
       if (strlen(usr) == 0 || !strncmp(usr,"*",1))
          usr = gEnv->GetValue("Krb5.Login", "");
-      sprintf(temp, "pt:%s ru:%s us:%s",
-              gEnv->GetValue("Krb5.LoginPrompt", copt[opt]),
-              gEnv->GetValue("Krb5.ReUse", "0"), usr);
+      snprintf(temp, kMAXPATHLEN, "pt:%s ru:%s us:%s",
+               gEnv->GetValue("Krb5.LoginPrompt", copt[opt]),
+               gEnv->GetValue("Krb5.ReUse", "0"), usr);
 
       // Globus
    } else if (sec == TAuthenticate::kGlobus) {
-      sprintf(temp, "pt:%s ru:%s %s",
-              gEnv->GetValue("Globus.LoginPrompt", copt[opt]),
-              gEnv->GetValue("Globus.ReUse", "1"),
-              gEnv->GetValue("Globus.Login", ""));
+      snprintf(temp, kMAXPATHLEN,"pt:%s ru:%s %s",
+               gEnv->GetValue("Globus.LoginPrompt", copt[opt]),
+               gEnv->GetValue("Globus.ReUse", "1"),
+               gEnv->GetValue("Globus.Login", ""));
 
       // SSH
    } else if (sec == TAuthenticate::kSSH) {
       if (strlen(usr) == 0 || !strncmp(usr,"*",1))
          usr = gEnv->GetValue("SSH.Login", "");
-      sprintf(temp, "pt:%s ru:%s us:%s",
-              gEnv->GetValue("SSH.LoginPrompt", copt[opt]),
-              gEnv->GetValue("SSH.ReUse", "1"), usr);
+      snprintf(temp, kMAXPATHLEN, "pt:%s ru:%s us:%s",
+               gEnv->GetValue("SSH.LoginPrompt", copt[opt]),
+               gEnv->GetValue("SSH.ReUse", "1"), usr);
 
       // Uid/Gid
    } else if (sec == TAuthenticate::kRfio) {
       if (strlen(usr) == 0 || !strncmp(usr,"*",1))
          usr = gEnv->GetValue("UidGid.Login", "");
-      sprintf(temp, "pt:%s us:%s",
-              gEnv->GetValue("UidGid.LoginPrompt", copt[opt]), usr);
+      snprintf(temp, kMAXPATHLEN, "pt:%s us:%s",
+               gEnv->GetValue("UidGid.LoginPrompt", copt[opt]), usr);
    }
    if (gDebug > 2)
       ::Info("TAuthenticate::GetDefaultDetails", "returning ... %s", temp);
@@ -3270,7 +3220,7 @@ Int_t TAuthenticate::AuthExists(TString username, Int_t method, const char *opti
             if (stat > 1) {
                // Create hex from tag
                char tag[9] = {0};
-               sprintf(tag,"%08x",stat);
+               snprintf(tag, 9, "%08x",stat);
                // Add to token
                token += tag;
             }
@@ -3486,7 +3436,7 @@ Int_t TAuthenticate::GenRSAKeys()
       nAttempts++;
       if (gDebug > 2 && nAttempts > 1) {
          Info("GenRSAKeys", "retry no. %d",nAttempts);
-         srand(rand());
+         srand(auth_rand());
       }
 
       // Valid pair of primes
@@ -3499,7 +3449,7 @@ Int_t TAuthenticate::GenRSAKeys()
          nPrimes++;
          if (gDebug > 2)
             Info("GenRSAKeys", "equal primes: regenerate (%d times)",nPrimes);
-         srand(rand());
+         srand(auth_rand());
          p1 = TRSA_fun::RSA_genprim()(thePrimeLen, thePrimeExp);
          p2 = TRSA_fun::RSA_genprim()(thePrimeLen+1, thePrimeExp);
       }
@@ -3671,7 +3621,7 @@ char *TAuthenticate::GetRandString(Int_t opt, Int_t len)
    Int_t k = 0;
    Int_t i, j, l, m, frnd;
    while (k < len) {
-      frnd = rand();
+      frnd = auth_rand();
       for (m = 7; m < 32; m += 7) {
          i = 0x7F & (frnd >> m);
          j = i / 32;
@@ -4044,7 +3994,7 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
    if (key == 0) {
       strlcpy(buftmp,fgRSAPubExport[key].keys,slen+1);
       ttmp = TRSA_fun::RSA_encode()(buftmp, slen, rsa_n, rsa_d);
-      sprintf(buflen, "%d", ttmp);
+      snprintf(buflen, 20, "%d", ttmp);
    } else if (key == 1) {
 #ifdef R__SSL
       Int_t lcmax = RSA_size(RSASSLServer) - 11;
@@ -4066,7 +4016,7 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
          ns -= lc;
       }
       ttmp = ke;
-      sprintf(buflen, "%d", ttmp);
+      snprintf(buflen, 20, "%d", ttmp);
 #else
       if (gDebug > 0)
          ::Info("TAuthenticate::SendRSAPublicKey","not compiled with SSL support:"
@@ -4126,9 +4076,9 @@ Int_t TAuthenticate::ReadRootAuthrc()
 #else
       char etc[1024];
 #ifdef WIN32
-      sprintf(etc, "%s\\etc", gRootDir);
+      snprintf(etc, 1024, "%s\\etc", gRootDir);
 #else
-      sprintf(etc, "%s/etc", gRootDir);
+      snprintf(etc, 1024, "%s/etc", gRootDir);
 #endif
       authrc = gSystem->ConcatFileName(etc,"system.rootauthrc");
 #endif

@@ -279,46 +279,59 @@ int main(int argc,const char *argv[])
    }
 
    Int_t rc = 0;
-   if (iact == 0) {
-      // ls
-      do_ls(dataset, options);
+   try {
+      if (iact == 0) {
+         // ls
+         do_ls(dataset, options);
 
-   } else if (iact == 1) {
-      // ls-files
-      do_ls_files_server(dataset, 0);
+      } else if (iact == 1) {
+         // ls-files
+         do_ls_files_server(dataset, 0);
 
-   } else if (iact == 2) {
-      // ls-files-server
-      do_ls_files_server(dataset, servers);
+      } else if (iact == 2) {
+         // ls-files-server
+         do_ls_files_server(dataset, servers);
 
-   } else if (iact == 3) {
-      // info-server
-      do_info_server(servers);
+      } else if (iact == 3) {
+         // info-server
+         do_info_server(servers);
 
-   } else if (iact == 4) {
-      // put
-      do_put(dataset, options);
+      } else if (iact == 4) {
+         // put
+         do_put(dataset, options);
 
-   } else if (iact == 5) {
-      // rm
-      do_rm(dataset);
+      } else if (iact == 5) {
+         // rm
+         do_rm(dataset);
 
-   } else if (iact == 6) {
-      // verify
-      rc = do_verify(dataset, options, redir);
+      } else if (iact == 6) {
+         // verify
+         rc = do_verify(dataset, options, redir);
 
-   } else if (iact == 7) {
-      // ana-dist
-      do_anadist(dataset, servers, ignsrvs, excsrvs, metrics, fout, plot, outfile, infile);
+      } else if (iact == 7) {
+         // ana-dist
+         do_anadist(dataset, servers, ignsrvs, excsrvs, metrics, fout, plot, outfile, infile);
 
-   } else if (iact == 8) {
-      // cache
-      bool clear = (!strcmp(options, "clear")) ? 1 : 0;
-      do_cache(clear, dataset);
+      } else if (iact == 8) {
+         // cache
+         bool clear = (!strcmp(options, "clear")) ? 1 : 0;
+         do_cache(clear, dataset);
 
-   } else {
-      // Unknown
-      Printf("Unknown action code: %d - Protocol error?", iact);
+      } else {
+         // Unknown
+         Printf("Unknown action code: %d - Protocol error?", iact);
+      }
+   }
+   catch (std::exception& exc) {
+      Printf("Standard exception caught: we abort whatever it is ...");
+      throw;
+   }
+   catch (const char *str) {
+      Printf("Exception thrown: %s", str);
+   }
+   // handle every exception
+   catch (...) {
+      Printf("Handle uncaugth exception, terminating");
    }
 
    if (!gSystem->AccessPathName(ferr)) {

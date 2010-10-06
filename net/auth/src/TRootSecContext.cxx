@@ -218,11 +218,11 @@ void TRootSecContext::Print(Option_t *opt) const
 
    // If asked to print ordinal number, preapre the string
    if (ord > -1) {
-      sprintf(cord,"%d)",ord);
+      snprintf(cord,10,"%d)",ord);
       // and take care of alignment
       Int_t len=strlen(cord);
       while (len--)
-         strcat(cspc," ");
+         strncat(cspc," ",10);
    }
 
    if (!strncasecmp(opt,"F",1)) {

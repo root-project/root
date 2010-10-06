@@ -197,7 +197,8 @@ THostAuth::THostAuth(const char *asstring) : TObject()
 
    TString strtmp(asstring);
    char *tmp = new char[strlen(asstring)+1];
-   strcpy(tmp,asstring);
+   strncpy(tmp,asstring,strlen(asstring));
+   tmp[strlen(asstring)] = 0;
 
    fHost = TString((const char *)strtok(tmp," "));
    strtmp.ReplaceAll(fHost,"");
@@ -221,8 +222,8 @@ THostAuth::THostAuth(const char *asstring) : TObject()
       det.Remove(0,det.Index("'")+1);
       det.Resize(det.Index("'"));
       // Remove leading spaces, if
-      char cmet[2];
-      sscanf(det.Data(),"%s",cmet);
+      char cmet[20];
+      sscanf(det.Data(),"%10s",cmet);
       Int_t met = atoi(cmet);
       if (met > -1 && met < kMAXSEC) {
          det.ReplaceAll(cmet,"");
