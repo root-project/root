@@ -24,7 +24,6 @@
 #include "TInterpreter.h"
 #include "TMath.h"
 #include "TRandom.h"
-#include <cassert>
 
 #include "TError.h"
 
@@ -1370,7 +1369,7 @@ void THnSparse::RebinnedAdd(const THnSparse* h, Double_t c)
    // In contrast to Add(), RebinnedAdd() does not require consist binning of
    // this and h; instead, each bin's center is used to determine the target bin.
 
-   if (fNdimensions!=h->GetNdimensions()) {
+   if (fNdimensions != h->GetNdimensions()) {
       Warning("RebinnedAdd", "Different number of dimensions, cannot carry out operation on the histograms");
       return;
    }
@@ -1383,6 +1382,7 @@ void THnSparse::RebinnedAdd(const THnSparse* h, Double_t c)
    // Now add the contents: in this case we have the union of the sets of bins
    Int_t* coord = new Int_t[fNdimensions];
    memset(coord, 0, sizeof(Int_t) * fNdimensions);
+   Double_t* x = new Double_t[fNdimensions];
 
    if (!fBins.GetSize() && fBinContent.GetSize()) {
       FillExMap();
@@ -1398,7 +1398,11 @@ void THnSparse::RebinnedAdd(const THnSparse* h, Double_t c)
    for (Long64_t i = 0; i < h->GetNbins(); ++i) {
       // Get the content of the bin from the second histogram
       Double_t v = h->GetBinContent(i, coord);
-      AddBinContent(coord, c * v);
+      // Get the bin center given a coord
+      for (Int_t j = 0; j < fNdimensions; ++j)
+         x[j] = h->GetAxis(j)->GetBinCenter(coord[j]);
+
+      Fill(x, c * v);
       if (haveErrors) {
          Double_t err1 = GetBinError(coord);
          Double_t err2 = h->GetBinError(coord) * c;
@@ -1408,6 +1412,7 @@ void THnSparse::RebinnedAdd(const THnSparse* h, Double_t c)
 
 
    delete [] coord;
+   delete [] x;
 
    Double_t nEntries = GetEntries() + c * h->GetEntries();
    SetEntries(nEntries);
@@ -1501,36 +1506,38 @@ void THnSparse::Multiply(TF1* f, Double_t c)
     // you should call Sumw2 before making this operation.
     // This is particularly important if you fit the histogram after THnSparse::Multiply
 
-   std::vector<Int_t>    coord(fNdimensions);
-   std::vector<Double_t> points(fNdimensions);
-   
-   Double_t value(0);
-   
-   Bool_t wantErrors( GetCalculateErrors() );
+   Int_t* coord = new Int_t[fNdimensions];
+   memset(coord, 0, sizeof(Int_t) * fNdimensions);
+   Double_t* points = new Double_t[fNdimensions];
+
+
+   Bool_t wantErrors = GetCalculateErrors();
    if (wantErrors) Sumw2();
 
    ULong64_t nEntries = GetNbins();
-   for ( ULong64_t i = 0; i < nEntries; i++ )
-   {
-      value = GetBinContent( i, &coord[0] );
-      
+   for (ULong64_t i = 0; i < nEntries; ++i) {
+      Double_t value = GetBinContent(i, coord);
+
       // Get the bin co-ordinates given an coord
-      for ( Int_t j = 0; j < fNdimensions; j++ )
-         points[j] = GetAxis( j )->GetBinCenter( coord[j] );
-      
-      if ( !f->IsInside( &points[0] ) )
+      for (Int_t j = 0; j < fNdimensions; ++j)
+         points[j] = GetAxis(j)->GetBinCenter(coord[j]);
+
+      if (!f->IsInside(points))
          continue;
       TF1::RejectPoint(kFALSE);
-      
+
       // Evaulate function at points
-      Double_t fvalue = f->EvalPar( &points[0], NULL );
-      
-      SetBinContent( &coord[0], c * fvalue * value );
+      Double_t fvalue = f->EvalPar(points, NULL);
+
+      SetBinContent(coord, c * fvalue * value);
       if (wantErrors) {
-         Double_t error( GetBinError( i ) );
-         SetBinError(&coord[0], c * fvalue * error);
+         Double_t error(GetBinError(i));
+         SetBinError(coord, c * fvalue * error);
       }
    }
+   
+   delete [] points;
+   delete [] coord;
 }
 
 //______________________________________________________________________________
@@ -1738,12 +1745,14 @@ void THnSparse::SetBinError(Long64_t bin, Double_t e)
 
    THnSparseArrayChunk* chunk = GetChunk(bin / fChunkSize);
    if (!chunk->fSumw2 ) {
-      // if fSumw2 is zero GetCalcualteErrors should return false
-      assert(!GetCalculateErrors() );
+      // if fSumw2 is zero GetCalculateErrors should return false
+      if (GetCalculateErrors()) {
+         Error("SetBinError", "GetCalculateErrors() logic error!");
+      }
       Sumw2(); // enable error calculation
    }
 
-   chunk->fSumw2->SetAt(e*e, bin % fChunkSize);
+   chunk->fSumw2->SetAt(e * e, bin % fChunkSize);
 }
 
 //______________________________________________________________________________

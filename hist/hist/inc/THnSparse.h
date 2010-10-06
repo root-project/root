@@ -32,6 +32,9 @@
 #ifndef ROOT_TArrayD
 #include "TArrayD.h"
 #endif
+#ifndef ROOT_TFitResultPtr
+#include "TFitResultPtr.h"
+#endif
 
 // needed only for template instantiations of THnSparseT:
 #ifndef ROOT_TArrayF
@@ -52,14 +55,11 @@
 
 class TAxis;
 class TCollection;
-class TFitResultPtr;
 class TH1;
 class TH1D;
 class TH2D;
 class TH3D;
 class TF1;
-
-#include "TFitResultPtr.h"
 
 class THnSparseArrayChunk: public TObject {
  private:
