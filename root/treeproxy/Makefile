@@ -68,15 +68,17 @@ define hideLibraryCreation
 	     -e _cint.cxx -e '_[0-9]*.cxx' -e '_.cxx' \
 	     -e 'Warning in <TClassTable::Add>: class generatedSel already in TClassTable'
 endef
-	     
+
 leaflist.log: simPosProxy.C hsimpleProxy.C Makefile runleaflist.C
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l runleaflist.C 2>&1 | $(hideLibraryCreation) > leaflist.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runleaflist.C > leaflist.raw.log 2>&1 ; result=$$? ; cat leaflist.raw.log | $(hideLibraryCreation) > leaflist.log ; \
+		test $$result -eq 0 || handleError.sh --result=$$? --log=$@ --test=$@
 
 leaflist: leaflist.log
 	$(TestDiff)
 
 producereducedSpill.log: producereducedSpill.C
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b producereducedSpill.C 2>&1 | $(RemoveDirs) > producereducedSpill.log
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b producereducedSpill.C > producereducedSpill.raw.log 2>&1 ; result=$$? ; cat  producereducedSpill.raw.log | $(RemoveDirs) > producereducedSpill.log ; \
+		test $$result -eq 0 || handleError.sh --result=$$? --log=$@ --test=$@
 
 producereducedSpill: producereducedSpill.log
 	$(TestDiff)
@@ -124,7 +126,7 @@ vectorintSel.h: dude.h dude.C $(CORELIBS) runvectorint_C.$(DllSuf) vec.root
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l 'runvectorint.C+(4)' > vectorintSel_h.create.log 2>&1 || handleError.sh --result=$$? --log=vectorintSel_h.create.log --test=$@ --rm=$@
 
 #vectorintSel_h.$(DllSuf): vectorintSel.h dude.h dude.C vec.root
-	
+
 vectorint.clog: vectorintSel_h.$(DllSuf) $(CORELIBS) runvectorint_C.$(DllSuf) dude.C vec.root vectorintSel.h
 	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runvectorint.C+(5)' > vectorint.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$@ 
 
@@ -133,23 +135,26 @@ vectorint: vectorint.clog
 
 vectorintEmuSel.h: dude.h dude.cxx $(CORELIBS) runvectorintEmu_C.$(DllSuf) vec.root
 	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runvectorintEmu.C+(4)' > vectorintEmuSel_h.create.log 2>&1 || handleError.sh --result=$$? --log=vectorintEmuSel_h.create.log --test=$@ --rm=$@
-	
+
 #vectorintEmuSel_h.$(DllSuf): dude.h dude.cxx
-	
+
 vectorintEmu.clog: vectorintEmuSel_h.$(DllSuf) $(CORELIBS) runvectorintEmu_C.$(DllSuf) vec.root dude.cxx vectorintEmuSel.h vectorintEmu.ref
-	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runvectorintEmu.C+(5)' 2>&1 | grep -v 'Warning in <TClass::TClass>: no dictionary for class' > vectorintEmu.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$@
+	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runvectorintEmu.C+(5)' > vectorintEmu.raw.clog 2>&1 ; result=$$? ; cat vectorintEmu.raw.clog | grep -v 'Warning in <TClass::TClass>: no dictionary for class' > vectorintEmu.clog 2>&1 ; \
+		test $$result -eq 0 || handleError.sh --result=$$? --log=$@ --test=$@
 
 vectorintEmu: vectorintEmu.clog
 	$(TestDiff)
 
 make_tuple.log: runmake_tuple.C make_tuple.C make_tuple_draw.C  $(CORELIBS) 
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l runmake_tuple.C 2>&1 | $(hideLibraryCreation) > make_tuple.log || handleError.sh --result=$$? --log=$@ --test=$@
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l runmake_tuple.C > make_tuple.raw.log 2>&1 ; result=$$? ; cat  make_tuple.raw.log | $(hideLibraryCreation) > make_tuple.log ; \
+		test $$result -eq 0 || handleError.sh --result=$$? --log=$@ --test=$@
 
 make_tuple: make_tuple.log
 	$(TestDiff)
 
 friendchain.log: runfriendchain.C vertex.C make_chains.cxx  $(CORELIBS) 
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l runfriendchain.C 2>&1 | $(hideLibraryCreation) > friendchain.log || handleError.sh --result=$$? --log=$@ --test=$@
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l runfriendchain.C > friendchain.raw.log  2>&1; result=$$? ; cat friendchain.raw.log  | $(hideLibraryCreation) > friendchain.log ; \
+		test $$result -eq 0 || handleError.sh --result=$$? --log=$@ --test=$@
 
 friendchain: friendchain.log
 	$(TestDiff)
