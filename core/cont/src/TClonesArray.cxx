@@ -286,12 +286,18 @@ void TClonesArray::Clear(Option_t *option)
    // is called for all objects in the array. In the function Clear(), one
    // can delete objects or dynamic arrays allocated in the class.
    // This procedure is much faster than calling TClonesArray::Delete().
+   // When the option starts with "C+", eg "C+xyz" the objects in the array
+   // are in turn cleared with the option "xyz"
 
    if (option && option[0] == 'C') {
+      const char *cplus = strstr(option,"+");
       Int_t n = GetEntriesFast();
       for (Int_t i = 0; i < n; i++) {
          TObject *obj = UncheckedAt(i);
-         if (obj) obj->Clear();
+         if (obj) {
+            if (cplus) obj->Clear(cplus+1);
+            else obj->Clear();
+         }
       }
    }
 
