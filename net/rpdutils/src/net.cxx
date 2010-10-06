@@ -308,12 +308,14 @@ int NetRecv(char *msg, int len, EMessageTypes &kind)
    if (mlen == 0) {
       msg[0] = 0;
       return 0;
-   } else if (mlen > len) {
+   } else if (mlen > len-1) {
       strncpy(msg, buf, len-1);
       msg[len-1] = 0;
       mlen = len;
-   } else
-      strcpy(msg, buf);
+   } else {
+      strncpy(msg, buf, mlen);
+      msg[mlen] = 0;
+   }
 
    delete [] buf;
 
