@@ -20,8 +20,11 @@ namespace Math {
 
    
    double beta_pdf(double x, double a, double b) {
-      if (x <= 0 || x >= 1.0) return 0; 
-      return std::exp( ROOT::Math::lgamma(a + b) - ROOT::Math::lgamma(a) - ROOT::Math::lgamma(b) + std::log(x) * (a -1.) + ROOT::Math::log1p(-x ) * (b - 1.) ); 
+      if (x < 0 || x > 1.0) return 0;
+      if (x == 0 && a == 1) return b; // to avoid a nan from log(0)*0 
+      if (x == 1 && b == 1) return a;
+      return std::exp( ROOT::Math::lgamma(a + b) - ROOT::Math::lgamma(a) - ROOT::Math::lgamma(b) + 
+                       std::log(x) * (a -1.) + ROOT::Math::log1p(-x ) * (b - 1.) ); 
    }
    
    double binomial_pdf(unsigned int k, double p, unsigned int n) {

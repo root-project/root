@@ -489,14 +489,9 @@ double incbet( double aa, double bb, double xx )
    if( aa <= 0.0 || bb <= 0.0 )
       return( 0.0 );
 
-   if( (xx <= 0.0) || ( xx >= 1.0) )
-   {
-      if( xx ==0 )
-         return(0.0);
-      if( xx ==1 )
-         return( 1.0 );
-      return( 0.0 );
-   }
+   // LM: changed: for X > 1 return 1.
+   if  (xx <= 0.0)  return( 0.0 );
+   if ( xx >= 1.0)  return( 1.0 );
 
    flag = 0;
 
