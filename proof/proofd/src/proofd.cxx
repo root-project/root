@@ -689,7 +689,7 @@ void ProofdExec()
       snprintf(ldpath, 32+gConfDir.length(), "DYLD_LIBRARY_PATH=%s/lib", gConfDir.c_str());
    }
 #   else
-   if (getenv("LD_LIBRARY_PATH")) {
+   if (getenv("LD_LIBRARY_PATH") && strlen(getenv("LD_LIBRARY_PATH")) > 0) {
       ldpath = new char[32+gConfDir.length()+strlen(getenv("LD_LIBRARY_PATH"))];
       snprintf(ldpath, 32+gConfDir.length()+strlen(getenv("LD_LIBRARY_PATH")),
                       "LD_LIBRARY_PATH=%s/lib:%s", gConfDir.c_str(), getenv("LD_LIBRARY_PATH"));
