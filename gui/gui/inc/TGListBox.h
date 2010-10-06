@@ -264,6 +264,7 @@ public:
    virtual void       SetListBox(TGListBox *lb) { fListBox = lb; }
    TGListBox         *GetListBox() const { return fListBox; }
    virtual Bool_t     HandleButton(Event_t *event);
+   virtual Bool_t     HandleDoubleClick(Event_t *event);
    virtual Bool_t     HandleMotion(Event_t *event);
    virtual Int_t      GetSelected() const;
    virtual Bool_t     GetSelection(Int_t id);
@@ -369,6 +370,9 @@ public:
    virtual void Selected(Int_t widgetId, Int_t id);   //*SIGNAL*
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); } //*SIGNAL*
    virtual void Selected(const char *txt) { Emit("Selected(char*)", txt); } //*SIGNAL
+   virtual void DoubleClicked(Int_t widgetId, Int_t id);   //*SIGNAL*
+   virtual void DoubleClicked(Int_t id) { Emit("DoubleClicked(Int_t)", id); } //*SIGNAL*
+   virtual void DoubleClicked(const char *txt) { Emit("DoubleClicked(char*)", txt); } //*SIGNAL
    virtual void SelectionChanged() { Emit("SelectionChanged()"); } //*SIGNAL*
 
    ClassDef(TGListBox,0)  // Listbox widget
