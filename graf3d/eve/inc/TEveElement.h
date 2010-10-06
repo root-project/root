@@ -159,6 +159,7 @@ public:
    Int_t   NumParents()    const { return  fParents.size();   }
    Bool_t  HasParents()    const { return !fParents.empty();  }
 
+   const List_t& RefChildren() const { return  fChildren;     }
    List_i  BeginChildren()       { return  fChildren.begin(); }
    List_i  EndChildren()         { return  fChildren.end();   }
    List_ci BeginChildren() const { return  fChildren.begin(); }
