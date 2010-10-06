@@ -26,6 +26,6 @@
 #include "NetErrors.h"
 #endif
 
-typedef void (*ErrorHandler_t)(int level, const char *msg);
+typedef void (*ErrorHandler_t)(int level, const char *msg, int size);
 
 #endif

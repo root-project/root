@@ -170,25 +170,26 @@ static Int_t SrvSetVars(string confdir)
    return 0;
 }
 
+
 //______________________________________________________________________________
-void Err(int level, const char *msg)
+void Err(int level, const char *msg, int size)
 {
-   Perror((char *)msg);
+   Perror((char *)msg, size);
    if (level > -1) NetSend(level, kROOTD_ERR);
 }
 
 //______________________________________________________________________________
-void ErrFatal(int level, const char *msg)
+void ErrFatal(int level, const char *msg, int size)
 {
-   Perror((char *)msg);
+   Perror((char *)msg, size);
    if (level > -1) NetSend(msg, kMESS_STRING);
 }
 
 //______________________________________________________________________________
-void ErrSys(int level, const char *msg)
+void ErrSys(int level, const char *msg, int size)
 {
-   Perror((char *)msg);
-   ErrFatal(level, msg);
+   Perror((char *)msg, size);
+   ErrFatal(level, msg, size);
 }
 
 //______________________________________________________________________________
@@ -530,17 +531,17 @@ namespace ROOT {
    }
 
 //______________________________________________________________________________
-   void Perror(char *buf)
+   void Perror(char *buf, int size)
    {
       // Return in buf the message belonging to errno.
 
       int len = strlen(buf);
 #if (defined(__sun) && defined (__SVR4)) || defined (__linux) || \
    defined(_AIX) || defined(__MACH__)
-      sprintf(buf+len, " (%s)", strerror(GetErrno()));
+      snprintf(buf+len, size, " (%s)", strerror(GetErrno()));
 #else
       if (GetErrno() >= 0 && GetErrno() < sys_nerr)
-         sprintf(buf+len, " (%s)", sys_errlist[GetErrno()]);
+         snprintf(buf+len, size, " (%s)", sys_errlist[GetErrno()]);
 #endif
    }
 
@@ -575,7 +576,7 @@ namespace ROOT {
 
       // Actions are defined by the specific error handler (
       // see rootd.cxx and proofd.cxx)
-      if (func) (*func)(code,(const char *)buf);
+      if (func) (*func)(code,(const char *)buf, sizeof(buf));
    }
 
 } // namespace ROOT

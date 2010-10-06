@@ -372,24 +372,24 @@ using namespace ROOT;
 //--- Error handlers -----------------------------------------------------------
 
 //______________________________________________________________________________
-void Err(int level,const char *msg)
+void Err(int level,const char *msg, int size)
 {
-   Perror((char *)msg);
+   Perror((char *)msg,size);
    if (level > -1) NetSendError((ERootdErrors)level);
 }
 //______________________________________________________________________________
-void ErrFatal(int level,const char *msg)
+void ErrFatal(int level,const char *msg, int size)
 {
-   Perror((char *)msg);
+   Perror((char *)msg,size);
    if (level > -1) NetSendError((ERootdErrors)level);
    RootdClose();
    exit(1);
 }
 //______________________________________________________________________________
-void ErrSys(int level,const char *msg)
+void ErrSys(int level,const char *msg, int size)
 {
-   Perror((char *)msg);
-   ErrFatal(level,msg);
+   Perror((char *)msg,size);
+   ErrFatal(level,msg,size);
 }
 
 //--- Rootd routines -----------------------------------------------------------

@@ -43,7 +43,7 @@ extern Int_t SrvAuthImpl(TSocket *socket, const char *, const char *,
                          Int_t &type, std::string &ctoken, TSeqCollection *);
 extern Int_t SrvClupImpl(TSeqCollection *);
 
-typedef void (*ErrorHandler_t)(int level, const char *msg);
+typedef void (*ErrorHandler_t)(int level, const char *msg, int size);
 
 
 namespace ROOT {
@@ -57,7 +57,7 @@ int  GetErrno();
 void ResetErrno();
 void ErrorInit(const char *ident);
 void ErrorInfo(const char *fmt, ...);
-void Perror(char *buf);
+void Perror(char *buf, int size);
 void Error(ErrorHandler_t ErrHand,int code,const char *fmt, ...);
 
 void RpdAuthCleanup(const char *sstr, int opt);
