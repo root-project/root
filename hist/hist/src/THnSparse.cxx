@@ -1402,11 +1402,11 @@ void THnSparse::RebinnedAdd(const THnSparse* h, Double_t c)
       for (Int_t j = 0; j < fNdimensions; ++j)
          x[j] = h->GetAxis(j)->GetBinCenter(coord[j]);
 
-      Fill(x, c * v);
+      Long64_t binidx = Fill(x, c * v);
       if (haveErrors) {
-         Double_t err1 = GetBinError(coord);
-         Double_t err2 = h->GetBinError(coord) * c;
-         SetBinError(coord, TMath::Sqrt(err1 * err1 + err2 * err2));
+         Double_t err1 = GetBinError(binidx);
+         Double_t err2 = h->GetBinError(i) * c;
+         SetBinError(binidx, TMath::Sqrt(err1 * err1 + err2 * err2));
       }
    }
 
