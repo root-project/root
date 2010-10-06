@@ -694,9 +694,6 @@ Int_t TApplication::ParseRemoteLine(const char *ln,
             script += "\"";
             isScript = kFALSE;
             break;
-         } else {
-            ::Warning("TApplication::ParseRemoteLine",
-                      "inconsistent input line %s", line.Data());
          }
       }
    }
