@@ -1180,7 +1180,7 @@ void  TMVA::MethodCuts::ReadWeightsFromStream( istream& istr )
 
    // first the dimensions
    istr >> dummy >> dummy;
-   // coverity[-tainted_data_argument]
+   // coverity[tainted_data]
    istr >> dummy >> fNbins;
 
    // get rid of one read-in here because we read in once all ready to check for decorrelation

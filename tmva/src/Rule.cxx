@@ -463,7 +463,7 @@ void TMVA::Rule::ReadRaw( istream& istr )
         >> fNorm
         >> fSSB
         >> fSSBNeve;
-   // coverity[tainted_data]
+   // coverity[tainted_data_argument]
    istr >> dummy >> nvars;
    Double_t cutmin,cutmax;
    UInt_t   sel,idum;
