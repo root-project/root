@@ -241,6 +241,22 @@ SOURCE=.\libjpeg\jdcolor.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\libjpeg\transupp.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\libjpeg\jaricom.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\libjpeg\jdarith.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\libjpeg\jcarith.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\libjpeg\jddctmgr.c
 # End Source File
 # Begin Source File
@@ -266,10 +282,6 @@ SOURCE=.\libjpeg\jdmaster.c
 # Begin Source File
 
 SOURCE=.\libjpeg\jdmerge.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\libjpeg\jdphuff.c
 # End Source File
 # Begin Source File
 

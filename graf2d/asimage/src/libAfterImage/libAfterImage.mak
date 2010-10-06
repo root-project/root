@@ -90,6 +90,10 @@ LIB32_OBJS= \
 	"$(INTDIR)\jdatasrc.obj" \
 	"$(INTDIR)\jdcoefct.obj" \
 	"$(INTDIR)\jdcolor.obj" \
+	"$(INTDIR)\transupp.obj" \
+	"$(INTDIR)\jaricom.obj" \
+	"$(INTDIR)\jdarith.obj" \
+	"$(INTDIR)\jcarith.obj" \
 	"$(INTDIR)\jddctmgr.obj" \
 	"$(INTDIR)\jdhuff.obj" \
 	"$(INTDIR)\jdinput.obj" \
@@ -97,7 +101,6 @@ LIB32_OBJS= \
 	"$(INTDIR)\jdmarker.obj" \
 	"$(INTDIR)\jdmaster.obj" \
 	"$(INTDIR)\jdmerge.obj" \
-	"$(INTDIR)\jdphuff.obj" \
 	"$(INTDIR)\jdpostct.obj" \
 	"$(INTDIR)\jdsample.obj" \
 	"$(INTDIR)\jdtrans.obj" \
@@ -223,6 +226,10 @@ LIB32_OBJS= \
 	"$(INTDIR)\jdatasrc.obj" \
 	"$(INTDIR)\jdcoefct.obj" \
 	"$(INTDIR)\jdcolor.obj" \
+	"$(INTDIR)\transupp.obj" \
+	"$(INTDIR)\jaricom.obj" \
+	"$(INTDIR)\jdarith.obj" \
+	"$(INTDIR)\jcarith.obj" \
 	"$(INTDIR)\jddctmgr.obj" \
 	"$(INTDIR)\jdhuff.obj" \
 	"$(INTDIR)\jdinput.obj" \
@@ -230,7 +237,6 @@ LIB32_OBJS= \
 	"$(INTDIR)\jdmarker.obj" \
 	"$(INTDIR)\jdmaster.obj" \
 	"$(INTDIR)\jdmerge.obj" \
-	"$(INTDIR)\jdphuff.obj" \
 	"$(INTDIR)\jdpostct.obj" \
 	"$(INTDIR)\jdsample.obj" \
 	"$(INTDIR)\jdtrans.obj" \
@@ -556,6 +562,30 @@ SOURCE=.\libjpeg\jdcolor.c
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
+SOURCE=.\libjpeg\transupp.c
+
+"$(INTDIR)\transupp.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=.\libjpeg\jaricom.c
+
+"$(INTDIR)\jaricom.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=.\libjpeg\jdarith.c
+
+"$(INTDIR)\jdarith.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=.\libjpeg\jcarith.c
+
+"$(INTDIR)\jcarith.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
 SOURCE=.\libjpeg\jddctmgr.c
 
 "$(INTDIR)\jddctmgr.obj" : $(SOURCE) "$(INTDIR)"
@@ -595,12 +625,6 @@ SOURCE=.\libjpeg\jdmaster.c
 SOURCE=.\libjpeg\jdmerge.c
 
 "$(INTDIR)\jdmerge.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-SOURCE=.\libjpeg\jdphuff.c
-
-"$(INTDIR)\jdphuff.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
