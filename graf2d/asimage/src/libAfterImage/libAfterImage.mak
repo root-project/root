@@ -111,7 +111,6 @@ LIB32_OBJS= \
 	"$(INTDIR)\jidctflt.obj" \
 	"$(INTDIR)\jidctfst.obj" \
 	"$(INTDIR)\jidctint.obj" \
-	"$(INTDIR)\jidctred.obj" \
 	"$(INTDIR)\jmemmgr.obj" \
 	"$(INTDIR)\jmemnobs.obj" \
 	"$(INTDIR)\jquant1.obj" \
@@ -247,7 +246,6 @@ LIB32_OBJS= \
 	"$(INTDIR)\jidctflt.obj" \
 	"$(INTDIR)\jidctfst.obj" \
 	"$(INTDIR)\jidctint.obj" \
-	"$(INTDIR)\jidctred.obj" \
 	"$(INTDIR)\jmemmgr.obj" \
 	"$(INTDIR)\jmemnobs.obj" \
 	"$(INTDIR)\jquant1.obj" \
@@ -685,12 +683,6 @@ SOURCE=.\libjpeg\jidctfst.c
 SOURCE=.\libjpeg\jidctint.c
 
 "$(INTDIR)\jidctint.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-SOURCE=.\libjpeg\jidctred.c
-
-"$(INTDIR)\jidctred.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 

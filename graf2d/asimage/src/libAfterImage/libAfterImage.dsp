@@ -325,10 +325,6 @@ SOURCE=.\libjpeg\jidctint.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\libjpeg\jidctred.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\libjpeg\jmemmgr.c
 # End Source File
 # Begin Source File

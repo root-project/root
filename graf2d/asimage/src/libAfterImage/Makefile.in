@@ -19,7 +19,7 @@ LIBJPEG_OBJS = 	libjpeg/jaricom.o libjpeg/jcarith.o libjpeg/jdarith.o \
 		libjpeg/jdpostct.o libjpeg/jdsample.o libjpeg/jdtrans.o \
 		libjpeg/jerror.o libjpeg/jfdctflt.o libjpeg/jfdctfst.o \
 		libjpeg/jfdctint.o libjpeg/jidctflt.o libjpeg/jidctfst.o \
-		libjpeg/jidctint.o libjpeg/jidctred.o libjpeg/jquant1.o \
+		libjpeg/jidctint.o libjpeg/jquant1.o \
 		libjpeg/jquant2.o libjpeg/jutils.o libjpeg/jmemmgr.o libjpeg/jmemnobs.o \
 		libjpeg/transupp.o
 
