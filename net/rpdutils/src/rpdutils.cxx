@@ -3669,7 +3669,7 @@ int RpdPass(const char *pass, int errheq)
 {
    // Check user's password.
 
-   char passwd[64];
+   char passwd[128];
    char *passw;
    char *pass_crypt;
    struct passwd *pw;
@@ -3726,7 +3726,7 @@ int RpdPass(const char *pass, int errheq)
       return auth;
    }
    // Inversion is done in RpdUser, if needed
-   strlcpy(passwd, pass, strlen(pass), 64);
+   strlcpy(passwd, pass, strlen(pass), sizeof(passwd));
 
    // Special treatment for anonimous ...
    if (gAnon) {
@@ -4744,7 +4744,9 @@ int RpdUser(const char *sstr)
             }
 
             if (gSaltRequired) {
-               if (!strncmp(passw, "$1$", 3)) {
+               // The crypt man page says that alternative salts can be in the form '$1$...$';
+               // but on Ubuntu 10.04 the salt are in the form '$j$...$' where j is 6 or other. 
+               if (passw[0] == '$' && passw[2] == '$') {
                   // Shadow passwd
                   char *pd = strstr(passw + 4, "$");
                   lenS = (int) (pd - passw);
