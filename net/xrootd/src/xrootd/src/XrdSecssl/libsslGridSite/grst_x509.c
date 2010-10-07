@@ -48,6 +48,7 @@
 #include <pwd.h>
 #include <errno.h>
 #include <getopt.h>
+#include <pthread.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -73,6 +74,8 @@
 #define GRST_PROXYCACHE		"/../proxycache/"
 #define GRST_MAX_CHAIN_LEN	9
 #define GRST_BACKDATE_SECONDS	300
+
+pthread_mutex_t vomsmutex;
 
 /// Compare X509 Distinguished Name strings
 int GRSTx509NameCmp(char *a, char *b)
@@ -202,7 +205,9 @@ static int GRSTx509VerifySig(time_t *time1_time, time_t *time2_time,
    time_t         voms_service_time1, voms_service_time2;
 
    prvkey = X509_extract_key(cert);
-   if (prvkey == NULL) return GRST_RET_FAILED;
+   if (prvkey == NULL) {
+     return GRST_RET_FAILED;
+   }
             
    OpenSSL_add_all_digests();
 #if OPENSSL_VERSION_NUMBER >= 0x0090701fL
@@ -221,18 +226,20 @@ static int GRSTx509VerifySig(time_t *time1_time, time_t *time2_time,
 #endif
    EVP_PKEY_free(prvkey);
 
-   if (ret != 1) return GRST_RET_FAILED;
+   if (ret != 1) {
+     return GRST_RET_FAILED;
+   }
 
-   voms_service_time1 = 
+   voms_service_time1 =
            GRSTasn1TimeToTimeT(ASN1_STRING_data(X509_get_notBefore(cert)),0);
           if (voms_service_time1 > *time1_time) 
                              *time1_time = voms_service_time1; 
            
-   voms_service_time2 = 
+   voms_service_time2 =
            GRSTasn1TimeToTimeT(ASN1_STRING_data(X509_get_notAfter(cert)),0);
           if (voms_service_time2 < *time1_time) 
-                             *time2_time = voms_service_time2; 
-            
+                             *time2_time = voms_service_time2;
+
    return GRST_RET_OK ; /* verified */
 }
 
@@ -258,16 +265,31 @@ static int GRSTx509VerifyVomsSig(time_t *time1_time, time_t *time2_time,
 
    FILE          *fp;
    struct stat    statbuf;
+   static int    voms_mutex_init=0;
 
-   if ((vomsdir == NULL) || (vomsdir[0] == '\0')) return GRST_RET_FAILED;
+   if (!voms_mutex_init) {
+     // initialize a protection mutex
+     voms_mutex_init = 1;
+     pthread_mutex_init(&vomsmutex,NULL);
+   }
 
-   snprintf(dn_coords, sizeof(dn_coords), 
+   pthread_mutex_lock(&vomsmutex);
+
+   if ((vomsdir == NULL) || (vomsdir[0] == '\0')) {
+     pthread_mutex_unlock(&vomsmutex);
+     return GRST_RET_FAILED;
+   }
+
+   snprintf(dn_coords, sizeof(dn_coords),
             GRST_ASN1_COORDS_VOMS_DN, acnumber);
    
    if (GRSTasn1GetX509Name(acvomsdn, sizeof(acvomsdn), dn_coords,
-         (char*)asn1string, taglist, lasttag) != GRST_RET_OK) return GRST_RET_FAILED;
+			   (char*)asn1string, taglist, lasttag) != GRST_RET_OK) {
+     pthread_mutex_unlock(&vomsmutex);
+     return GRST_RET_FAILED;
+   }
          
-   snprintf(info_coords, sizeof(info_coords), 
+   snprintf(info_coords, sizeof(info_coords),
             GRST_ASN1_COORDS_VOMS_INFO, acnumber);
    iinfo = GRSTasn1SearchTaglist(taglist, lasttag, info_coords);
 
@@ -275,13 +297,19 @@ static int GRSTx509VerifyVomsSig(time_t *time1_time, time_t *time2_time,
             GRST_ASN1_COORDS_VOMS_SIG, acnumber);
    isig  = GRSTasn1SearchTaglist(taglist, lasttag, sig_coords);
 
-   if ((iinfo < 0) || (isig < 0)) return GRST_RET_FAILED;
+   if ((iinfo < 0) || (isig < 0)) {
+     pthread_mutex_unlock(&vomsmutex);
+     return GRST_RET_FAILED;
+   }
 
    vomsDIR = opendir(vomsdir);
-   if (vomsDIR == NULL) return GRST_RET_FAILED;
-   
+   if (vomsDIR == NULL) {
+     pthread_mutex_unlock(&vomsmutex);
+     return GRST_RET_FAILED;
+   }
+
    while ((vomsdirent = readdir(vomsDIR)) != NULL)
-        {        
+        {
           if (vomsdirent->d_name[0] == '.') continue;
         
           sprintf(certpath, "%s/%s", vomsdir, vomsdirent->d_name);
@@ -324,7 +352,8 @@ static int GRSTx509VerifyVomsSig(time_t *time1_time, time_t *time2_time,
                       X509_free(cert);
                       closedir(vomsDIR2);
                       closedir(vomsDIR);
-                      return GRST_RET_OK ; /* verified */              
+		      pthread_mutex_unlock(&vomsmutex);
+		      return GRST_RET_OK ; /* verified */
                     }
             
                   X509_free(cert);
@@ -352,7 +381,8 @@ static int GRSTx509VerifyVomsSig(time_t *time1_time, time_t *time2_time,
                 {
                   X509_free(cert);
                   closedir(vomsDIR);
-                  return GRST_RET_OK ; /* verified */              
+		  pthread_mutex_unlock(&vomsmutex);
+                  return GRST_RET_OK ; /* verified */
                 }
             
               X509_free(cert);
@@ -360,6 +390,7 @@ static int GRSTx509VerifyVomsSig(time_t *time1_time, time_t *time2_time,
         }
 
    closedir(vomsDIR);   
+   pthread_mutex_unlock(&vomsmutex);
    return GRST_RET_FAILED;
 }
 

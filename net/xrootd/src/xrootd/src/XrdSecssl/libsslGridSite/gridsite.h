@@ -33,6 +33,10 @@
  * For more about GridSite: http://www.gridsite.org/             *
  *---------------------------------------------------------------*/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef GRST_VERSION
 #define GRST_VERSION 010500
 #endif
@@ -63,23 +67,23 @@
 #define TRUE (!FALSE)
 #endif
 
-/* Everything ok (= OpenSSL X509_V_OK) */
+// Everything ok (= OpenSSL X509_V_OK)
 #define GRST_RET_OK		0
 
-/* Failed for unspecified reason */
+// Failed for unspecified reason
 #define GRST_RET_FAILED		1000
 
-/* Failed to find certificate in some cert store / directory */
+// Failed to find certificate in some cert store / directory
 #define GRST_RET_CERT_NOT_FOUND	1001
 
-/* Bad signature */
+// Bad signature
 #define GRST_RET_BAD_SIGNATURE	1002
 
-/* No such file or directory */
+// No such file or directory
 #define GRST_RET_NO_SUCH_FILE	1003
 
 
-/* #define GRSTerrorLog(GRSTerrorLevel, GRSTerrorFmt, ...) if (GRSTerrorLogFunc != NULL) (GRSTerrorLogFunc)(__FILE__, __LINE__, GRSTerrorLevel, GRSTerrorFmt, __VA_ARGS__) */
+// #define GRSTerrorLog(GRSTerrorLevel, GRSTerrorFmt, ...) if (GRSTerrorLogFunc != NULL) (GRSTerrorLogFunc)(__FILE__, __LINE__, GRSTerrorLevel, GRSTerrorFmt, __VA_ARGS__)
 
 #define GRSTerrorLog(GRSTerrorLevel, ...) if (GRSTerrorLogFunc != NULL) (GRSTerrorLogFunc)(__FILE__, __LINE__, GRSTerrorLevel, __VA_ARGS__)
 
@@ -106,9 +110,6 @@ typedef struct { char                      *auri;
                  void                      *next;     } GRSTgaclCred;
 
 /* used by pre-AURI GRSTgaclCred structs */ 
-#ifndef SUNCC
-__attribute__ ((deprecated))
-#endif
 typedef struct { char                      *name;
                  char                      *value;
                  void                      *next;  } GRSTgaclNamevalue;
@@ -234,16 +235,10 @@ typedef struct { unsigned char total_length_msb;
 
 int GRSTgaclInit(void);
 
-#ifndef SUNCC
-__attribute__ ((deprecated))
-#endif
 GRSTgaclCred *GRSTgaclCredNew(char *);
 
 GRSTgaclCred *GRSTgaclCredCreate(char *, char *);
 
-#ifndef SUNCC
-__attribute__ ((deprecated))
-#endif
 int	GRSTgaclCredAddValue(GRSTgaclCred *, char *, char *);
 
 #define GRSTgaclCredGetAuri(cred) ((cred)->auri)
@@ -345,9 +340,6 @@ int       GRSTgaclUserAddCred(GRSTgaclUser *, GRSTgaclCred *);
 /*  #define GACLuserHasCred(x,y)	GRSTgaclUserHasCred((x),(y)) */
 int       GRSTgaclUserHasCred(GRSTgaclUser *, GRSTgaclCred *);
 
-#ifndef SUNCC
-__attribute__ ((deprecated))
-#endif
 int       GRSTgaclUserSetDNlists(GRSTgaclUser *, char *);
 
 int       GRSTgaclUserLoadDNlists(GRSTgaclUser *, char *);
@@ -355,9 +347,6 @@ int       GRSTgaclUserLoadDNlists(GRSTgaclUser *, char *);
 /*  #define GACLuserFindCredType(x,y) GRSTgaclUserFindCredtype((x),(y)) */
 GRSTgaclCred *GRSTgaclUserFindCredtype(GRSTgaclUser *, char *);
 
-#ifndef SUNCC
-__attribute__ ((deprecated))
-#endif
 int GRSTgaclDNlistHasUser(char *, GRSTgaclUser *);
 
 int GRSTgaclUserHasAURI(GRSTgaclUser *, char *);
@@ -385,19 +374,10 @@ int GRSTx509IsCA(X509 *);
 int GRSTx509CheckChain(int *, X509_STORE_CTX *);
 int GRSTx509VerifyCallback(int, X509_STORE_CTX *);
 
-#ifndef SUNCC
-__attribute__ ((deprecated))
-#endif
 int GRSTx509GetVomsCreds(int *, int, size_t, char *, X509 *, STACK_OF(X509) *, char *);
 
-#ifndef SUNCC
-__attribute__ ((deprecated))
-#endif
 GRSTgaclCred *GRSTx509CompactToCred(char *);
 
-#ifndef SUNCC
-__attribute__ ((deprecated))
-#endif
 int GRSTx509CompactCreds(int *, int, size_t, char *, STACK_OF(X509) *, char *, X509 *);
 #endif 
 
@@ -453,3 +433,7 @@ int    GRSThtcpNOPresponseMake(char **, int *, unsigned int);
 int    GRSThtcpTSTrequestMake(char **, int *, unsigned int, char *, char *, char *);
 int    GRSThtcpTSTresponseMake(char **, int *, unsigned int, char *, char *, char *);
 int    GRSThtcpMessageParse(GRSThtcpMessage *, char *, int);
+
+#ifdef __cplusplus
+}
+#endif

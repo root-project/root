@@ -1,9 +1,9 @@
 
 
 noinst_LTLIBRARIES = libsslGridSite.la
-INCLUDES = ${OPENSSL_INCDIR} -I/usr/kerberos/include -I. ${XML2_INCDIR}
+INCLUDES = ${OPENSSL_INCDIR} -I. ${XML2_INCDIR}
 
-libsslGridSite_la_CFLAGS = -Wall -Wno-deprecated-declarations -Wno-deprecated-declarations -DOPENSSL_NO_KRB5 -U_FORTIFY_SOURCE ${CFLAGS}
+libsslGridSite_la_CFLAGS = -DOPENSSL_NO_KRB5 -U_FORTIFY_SOURCE ${CFLAGS}
 
 libsslGridSite_la_SOURCES = \
 	grst_err.c  \

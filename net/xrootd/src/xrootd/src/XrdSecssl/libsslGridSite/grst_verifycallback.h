@@ -23,6 +23,7 @@ extern "C"
   int GRST_callback_SSLVerify_wrapper(int ok, X509_STORE_CTX *ctx);
   void GRST_print_ssl_creds(void *grst_chain);
   char* GRST_get_voms_roles_and_free(void *grst_chain);
+  void GRST_free_chain(void *grst_chain);
 
   X509_STORE *SSL_X509_STORE_create(char *cpFile, char *cpPath);
   int SSL_X509_STORE_lookup(X509_STORE *pStore, int nType,

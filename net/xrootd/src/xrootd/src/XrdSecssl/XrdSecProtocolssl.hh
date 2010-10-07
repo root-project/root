@@ -52,6 +52,7 @@
 #include "XrdSec/XrdSecInterface.hh"
 #include "XrdSec/XrdSecTLayer.hh"
 #include "XrdSecssl/XrdSecProtocolsslTrace.hh"
+#include "XrdSecssl/XrdSecProtocolsslProc.hh"
 #include "libsslGridSite/grst_verifycallback.h"
 #include "libsslGridSite/gridsite.h"
 
@@ -69,15 +70,14 @@
 #define PEM_read_SSL_SESSION(fp,x,cb,u) (SSL_SESSION *)PEM_ASN1_read( (void *(*)(void **, const unsigned char **, long int))d2i_SSL_SESSION,PEM_STRING_SSL_SESSION,fp,(void **)x,cb,u)
 
 #define PEM_write_SSL_SESSION(fp,x) PEM_ASN1_write((int (*)(void*, unsigned char**))i2d_SSL_SESSION, PEM_STRING_SSL_SESSION,fp, (char *)x,  NULL,NULL,0,NULL,NULL)
-#endif
-
-#if defined(__APPLE__) && !defined(MAC_OS_X_VERSION_10_5)
+#else
+#ifdef __macos__
 #undef PEM_read_SSL_SESSION
 #undef PEM_write_SSL_SESSION
 
-#define PEM_read_SSL_SESSION(fp,x,cb,u) (SSL_SESSION *)PEM_ASN1_read( (char *(*)(...))d2i_SSL_SESSION,PEM_STRING_SSL_SESSION,fp,(char **)x,cb,u)
-
-#define PEM_write_SSL_SESSION(fp,x) PEM_ASN1_write((int (*)(...))i2d_SSL_SESSION, PEM_STRING_SSL_SESSION,fp, (char *)x,  NULL,NULL,0,NULL,NULL)
+#define PEM_read_SSL_SESSION(fp,x,cb,u) (SSL_SESSION *)PEM_ASN1_read( (char *\
+(*)(...))d2i_SSL_SESSION,PEM_STRING_SSL_SESSION,fp,(char **)x  ,cb,u)
+#endif
 #endif
 
 #define l2n(l,c)        (*((c)++)=(unsigned char)(((l)>>24)&0xff), \
@@ -116,7 +116,7 @@ public:
 #else
   bool HardLock(const char* path) {sessionfd = open(path,O_RDWR); if ( (sessionfd>0) && (!flock(sessionfd,LOCK_EX)))return true;return false;}
   bool HardUnLock() {if (sessionfd>0) {flock(sessionfd,LOCK_UN);close(sessionfd);sessionfd=0;}return true;}
-  ~XrdSecsslSessionLock() {if (sessionfd>0) {flock(sessionfd,LOCK_UN);close(sessionfd);};sessionmutex.UnLock();}
+  ~XrdSecsslSessionLock() {if (sessionfd>0) {flock(sessionfd,LOCK_UN);close(sessionfd);};}
 #endif
 
 };
@@ -128,7 +128,7 @@ class XrdSecProtocolssl : public XrdSecTLayer
 public:
   friend class XrdSecProtocolDummy; // Avoid stupid gcc warnings about destructor
 
-  XrdSecProtocolssl(const char* hostname, const struct sockaddr  *ipaddr) : XrdSecTLayer("ssl",XrdSecTLayer::isServer) {
+  XrdSecProtocolssl(const char* hostname, const struct sockaddr  *ipaddr) : XrdSecTLayer("ssl",XrdSecTLayer::isClient) {
     credBuff    = 0;
     ssl         = 0;
     Entity.name = 0;
@@ -144,13 +144,17 @@ public:
     server_cert=0;
     ssl = 0 ;
     clientctx = 0;
+    terminate = 0;
   }
-  
   
   virtual void   secClient(int theFD, XrdOucErrInfo      *einfo);
   virtual void   secServer(int theFD, XrdOucErrInfo      *einfo=0);
 
-  virtual void              Delete() {delete this;}
+  // triggers purging of expired SecTLayer threads
+  static  int    dummy(const char* key, XrdSecProtocolssl *ssl, void* Arg) { return 0;}
+
+  // delayed garbage collection
+  virtual void              Delete() { terminate = true; if (secTid) XrdSysThread::Join(secTid,NULL); secTid=0; delete this; }
 
 
   static int GenerateSession(const SSL* ssl, unsigned char *id, unsigned int *id_len);
@@ -166,7 +170,7 @@ public:
   static char*              sslproxyexportdir;
   static bool               sslproxyexportplain;
   static char               sslserverexportpassword[EXPORTKEYSTRENGTH+1];
-  
+  static int                threadsinuse;
   static char*              gridmapfile;
   static char*              vomsmapfile;
   static bool               mapuser;
@@ -175,6 +179,19 @@ public:
   static bool               mapcerncertificates;
   static int                debug;
   static time_t             sslsessionlifetime;
+  static int                sslselecttimeout;
+  static int                sslsessioncachesize;
+  static char*              procdir;
+  static XrdSecProtocolsslProc* proc;
+
+  static int                errortimeout;
+  static int                errorverify;
+  static int                errorqueue;
+  static int                erroraccept;
+  static int                errorabort;
+  static int                errorread;
+  static int                forwardedproxies;
+
   static bool               isServer;
   static bool               forwardProxy;
   static bool               allowSessions;
@@ -200,6 +217,9 @@ public:
   static  XrdSysMutex               VomsMapMutex;
   static  XrdSysMutex               GridMapMutex;
   static  XrdSysMutex*              CryptoMutexPool[PROTOCOLSSL_MAX_CRYPTO_MUTEX];
+  static  XrdSysMutex               ThreadsInUseMutex;
+  static  XrdSysMutex               ErrorMutex;
+
   // for error logging and tracing
   static XrdSysLogger       Logger;
   static XrdSysError        ssleDest;
@@ -216,8 +236,7 @@ public:
   SSL_CTX* clientctx;
 
   XrdSysMutex SSLMutex;
-private:
-  
+  bool terminate;
   ~XrdSecProtocolssl() {
     if (credBuff)    free(credBuff);
     if (Entity.name) free(Entity.name);
@@ -251,5 +270,12 @@ extern "C"
 			       const char    *parms,
 			       XrdOucErrInfo *erp);
 }
+
+
+class XrdSecsslThreadInUse {
+public:
+  XrdSecsslThreadInUse() {XrdSecProtocolssl::ThreadsInUseMutex.Lock();XrdSecProtocolssl::threadsinuse++;XrdSecProtocolssl::ThreadsInUseMutex.UnLock();}
+  ~XrdSecsslThreadInUse() {XrdSecProtocolssl::ThreadsInUseMutex.Lock();XrdSecProtocolssl::threadsinuse--;XrdSecProtocolssl::ThreadsInUseMutex.UnLock();}
+};
 
 
