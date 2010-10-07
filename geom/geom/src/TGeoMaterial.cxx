@@ -399,12 +399,10 @@ TGeoMaterial *TGeoMaterial::DecayMaterial(Double_t time, Double_t precision)
       }
    }
    if (ncomp1<2) {
+      el = (TGeoElementRN *)pop->At(0);
       delete [] weight;
       delete pop;
-      if (ncomp1==1) {
-         el = (TGeoElementRN *)pop->At(0);
-         return new TGeoMaterial(Form("%s-evol",GetName()), el, rho);
-      }
+      if (ncomp1==1) return new TGeoMaterial(Form("%s-evol",GetName()), el, rho);
       return NULL;
    }   
    mix = new TGeoMixture(Form("%s-evol",GetName()), ncomp, rho);
@@ -870,9 +868,9 @@ TGeoMaterial *TGeoMixture::DecayMaterial(Double_t time, Double_t precision)
       }
    }
    if (ncomp1<2) {
+      el = (TGeoElementRN *)pop->At(0);
       delete [] weight;
       delete pop;
-      el = (TGeoElementRN *)pop->At(0);
       if (ncomp1==1) return new TGeoMaterial(Form("%s-evol",GetName()), el, rho);
       return NULL;
    }
