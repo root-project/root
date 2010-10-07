@@ -24,7 +24,8 @@
 // Finally, for debugging reasons, the struct compareOptions can be              //
 // used to define the level of output of the tests, beging set                   //
 // generally for the whole suit in defaultEqualOptions.                          //
-//                                                                               //
+// >> stressHistogram 1      : to print result for all tests                     //
+// >> stressHistogram 2      : ro print each comparison, done for each bin       //
 //                                                                               //
 // An example of output when all the tests run OK is shown below:                //
 // ****************************************************************************  //
@@ -108,7 +109,7 @@ enum compareOptions {
    cmpOptStats=8
 };
 
-const int defaultEqualOptions = 0; //cmpOptPrint;
+int defaultEqualOptions = 0; //cmpOptPrint;
 //int defaultEqualOptions = cmpOptPrint;
 
 const double defaultErrorLimit = 1.E-10;
@@ -9368,6 +9369,11 @@ int main(int argc, char** argv)
 
    if ( __DRAW__ )
       theApp = new TApplication("App",&argc,argv);
+
+   if (argc > 1) { 
+      // for changing printing option (0 default, 1 print all test, 2 debug) 
+      defaultEqualOptions = atoi(argv[1] );
+   }
 
    int ret = stressHistogram();
 
