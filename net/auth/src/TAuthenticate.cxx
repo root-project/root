@@ -132,10 +132,11 @@ static int auth_rand()
 #ifndef WIN32
    int frnd = open("/dev/urandom", O_RDONLY);
    if (frnd < 0) frnd = open("/dev/random", O_RDONLY);
+   int r;
    if (frnd >= 0) {
-      int r;
       ssize_t rs = read(frnd, (void *) &r, sizeof(int));
       close(frnd);
+      if (r < 0) r = -r;
       if (rs == sizeof(int)) return r;
    }
    Printf("+++ERROR+++ : auth_rand: neither /dev/urandom nor /dev/random are available or readable!");
@@ -144,7 +145,9 @@ static int auth_rand()
       int t1, t2;
       memcpy((void *)&t1, (void *)&tv.tv_sec, sizeof(int));
       memcpy((void *)&t2, (void *)&tv.tv_usec, sizeof(int));
-      return (t1+t2);
+      r = t1 + t2;
+      if (r < 0) r = -r;
+      return r;
    }
    return -1;
 #else
