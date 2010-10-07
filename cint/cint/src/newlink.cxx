@@ -12363,6 +12363,9 @@ void G__specify_link(int link_stub)
       param_sb = p+1;
       char* param = param_sb;
       p = strrchr(param,')');
+      if (p==0) {
+         return;
+      }
       *p='\0';
       G__SetGlobalcomp(funcname,param,globalcomp);
       if(rfUseStubs) G__SetForceStub(funcname,param);
