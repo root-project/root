@@ -675,7 +675,6 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
 
       det = details;
       if (token) delete[] token;
-      if (lUser) delete[] lUser;
    } else {
       nrec = sock->Recv(answer, 100, type);  // returns user
       if (nrec <= 0) {

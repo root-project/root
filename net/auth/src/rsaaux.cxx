@@ -43,6 +43,7 @@ MA  02110-1301  USA
 typedef long off_t;
 #else
 #  include <unistd.h>
+#  include <sys/time.h>
 #endif
 
 #include "rsaaux.h"
@@ -166,18 +167,27 @@ static int aux_rand()
    // rand() implementation using /udev/random or /dev/random, if available
 
 #ifndef WIN32
-   int frnd = open("/udev/random", O_RDONLY);
+   int frnd = open("/dev/urandom", O_RDONLY);
    if (frnd < 0) frnd = open("/dev/random", O_RDONLY);
-
    if (frnd >= 0) {
       int r;
       ssize_t rs = read(frnd, (void *) &r, sizeof(int));
       close(frnd);
       if (rs == sizeof(int)) return r;
    }
-#endif
+   printf("+++ERROR+++ : aux_rand: neither /dev/urandom nor /dev/random are available or readable!\n");
+   struct timeval tv;
+   if (gettimeofday(&tv,0) == 0) {
+      int t1, t2;
+      memcpy((void *)&t1, (void *)&tv.tv_sec, sizeof(int));
+      memcpy((void *)&t2, (void *)&tv.tv_usec, sizeof(int));
+      return (t1+t2);
+   }
+   return -1;
+#else
    // No special random device available: use rand()
    return rand();
+#endif
 }
 
 /*

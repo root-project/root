@@ -281,7 +281,7 @@ void TProofSuperMaster::ValidateDSet(TDSet *dset)
       } else {
          smlist = dynamic_cast<TList*>(p->Key());
       }
-      smlist->Add(sl);
+      if (smlist) smlist->Add(sl);
    }
 
    TIter nextElem(dset->GetListOfElements());
