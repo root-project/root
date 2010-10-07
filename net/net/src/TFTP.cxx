@@ -1087,7 +1087,7 @@ Int_t TFTP::GetPathInfo(const char *path, FileStat_t &buf, Bool_t print)
       if (id == -1)
          return 1;
       buf.fDev    = (id >> 24);
-      buf.fIno    = (id && 0x00FFFFFF);
+      buf.fIno    = (id & 0x00FFFFFF);
       if (flags == 0)
          buf.fMode = kS_IFREG;
       if (flags & 1)
