@@ -1083,6 +1083,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                      subinfo = (TStreamerInfo*)oldProxy->GetValueClass()->GetStreamerInfo( vClVersion );
                      newProxy = oldProxy;
                   }
+                  if (subinfo->IsOptimized()) {
+                     subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
+                     subinfo->Compile();
+                  }
 
                   DOLOOP {
                      void* env;
@@ -1177,6 +1181,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   } else {
                      subinfo = (TStreamerInfo*)valueClass->GetStreamerInfo( vClVersion );
                      newProxy = oldProxy;
+                  }
+                  if (subinfo->IsOptimized()) {
+                     subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
+                     subinfo->Compile();
                   }
 
                   DOLOOP {
