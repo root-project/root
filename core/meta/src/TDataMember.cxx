@@ -255,7 +255,7 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
    Int_t token_cnt;
    Int_t i;
 
-   strcpy(cmt,gCint->DataMemberInfo_Title(fInfo));
+   strlcpy(cmt,gCint->DataMemberInfo_Title(fInfo),2048);
 
    if ((opt_ptr=strstr(cmt,"*OPTION={"))) {
 
@@ -274,7 +274,7 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
       }
       
       //and save it:
-      strcpy(opt,ptr1);
+      strlcpy(opt,ptr1,2048);
 
       // Let's extract sub-tokens extracted by ';' sign.
       // We'll put'em in an array for convenience;
@@ -287,8 +287,9 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
       do {                          //tokenizing loop
          ptr1=strtok((char*) (cnt++ ? 0:opt),";");
          if (ptr1){
-            tok=new char[strlen(ptr1)+1];
-            strcpy(tok,ptr1);
+            Int_t nch = strlen(ptr1)+1;
+            tok=new char[nch];
+            strlcpy(tok,ptr1,nch);
             tokens[token_cnt]=tok;
             token_cnt++;
          }
@@ -352,7 +353,7 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
             }
             
             char opts[2048];  //and save it!
-            strcpy(opts,ptr1);
+            strlcpy(opts,ptr1,2048);
 
             //now parse it...
             //fistly we just store strings like: xxx="Label Name"
@@ -811,15 +812,17 @@ TOptionListItem::TOptionListItem(TDataMember *d, Long_t val, Long_t valmask,
    fToggleMaskBit = tglmask;
    if (name){
 
-      fOptName = new char[strlen(name)+1];
-      strcpy(fOptName,name);
+      Int_t nch1 = strlen(name)+1;
+      fOptName = new char[nch1];
+      strlcpy(fOptName,name,nch1);
 
    } else fOptName = 0;
 
    if(label){
 
-      fOptLabel = new char[strlen(label)+1];
-      strcpy(fOptLabel,label);
+      Int_t nch2 = strlen(label)+1;
+      fOptLabel = new char[nch2];
+      strlcpy(fOptLabel,label,nch2);
 
    } else fOptLabel = 0;
 }
