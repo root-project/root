@@ -177,7 +177,7 @@ $(CLEAN_TARGETS_DIR): %.clean:
 	@(cd $*; $(MAKE) --no-print-directory clean)
 
 clean:  $(CLEAN_TARGETS_DIR)
-	$(CMDECHO) rm -rf main *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS)
+	$(CMDECHO) rm -rf main AutoDict* *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS)
 
 ifneq ($(MAKECMDGOALS),distclean)
 CLEAN_TARGETS += .root_hist
