@@ -2655,9 +2655,6 @@ int RpdSshAuth(const char *sstr)
          return auth;
       }
       if (!strncmp(res,"1",1)) {
-         // Stat again file to check for modification
-         if (stat(authFile, &st1) == -1)
-            ErrorInfo("RpdSshAuth: cannot stat %s",authFile);
          // Client pretends success: lets check it locally
          FILE *floc = fopen(authFile,"r");
          if (!floc) {
@@ -2668,6 +2665,15 @@ int RpdSshAuth(const char *sstr)
                if (GetErrno() != ENOENT)
                   ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
                             authFile,GetErrno());
+            delete[] authFile;
+            // Set to Auth failed
+            auth = 0;
+            return auth;
+         }
+         // Stat again file to check for modification
+         if (fstat(fileno(floc), &st1) == -1) {
+            ErrorInfo("RpdSshAuth: cannot fstat descriptor %d", fileno(floc));
+            fclose(floc);
             delete[] authFile;
             // Set to Auth failed
             auth = 0;
