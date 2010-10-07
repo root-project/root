@@ -244,6 +244,7 @@ Int_t TBranchSTL::Fill()
          continue;
       }
 
+      // coverity[dereference] since this is a TBranchSTL by definition the collection contains pointers to objects. 
       actClass = cl->GetActualClass( element );
       brIter = fBranchMap.find( actClass );
 
@@ -464,7 +465,7 @@ Int_t TBranchSTL::GetEntry( Long64_t entry, Int_t getall )
          }
          if (proxy) {
             tmpClass = proxy->GetValueClass();
-            if (tmpClass) {
+            if (tmpClass && elClass) {
                fBranchVector[index].fBaseOffset = tmpClass->GetBaseClassOffset( elClass );
                fBranchVector[index].fPosition = 0;
             } else {

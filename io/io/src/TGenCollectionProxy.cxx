@@ -1459,7 +1459,7 @@ TStreamerInfoActions::TActionSequence *TGenCollectionProxy::GetConversionReadMem
    if (info == 0) {
       return 0;
    }
-   result = TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(info,this);
+   result = TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(info,*this);
 
    if (!arr) {
       arr = new TObjArray(version+10, -1);
@@ -1493,7 +1493,7 @@ TStreamerInfoActions::TActionSequence *TGenCollectionProxy::GetReadMemberWiseAct
       if (info == 0) {
          return 0;
       }
-      result = TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(info,this);
+      result = TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(info,*this);
       fReadMemberWise->AddAtAndExpand(result,version);
    }
    return result;

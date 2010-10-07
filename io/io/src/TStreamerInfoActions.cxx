@@ -388,6 +388,7 @@ namespace TStreamerInfoActions
          void* env = oldProxy->Allocate(nobjects,true);
 
          if (nobjects || vers < 7 ) {
+            // coverity[dereference] since this is a member streaming action by definition the collection contains objects. 
             TStreamerInfo *subinfo = (TStreamerInfo*)oldProxy->GetValueClass()->GetStreamerInfo( 0 );
 
             if (subinfo->IsOptimized()) {
@@ -461,6 +462,7 @@ namespace TStreamerInfoActions
             void* env = oldProxy->Allocate(nobjects,true);
 
             if (nobjects || vers < 7 ) {
+               // coverity[dereference] since this is a member streaming action by definition the collection contains objects. 
                TStreamerInfo *subinfo = (TStreamerInfo*)oldProxy->GetValueClass()->GetStreamerInfo( 0 );
 
                if (subinfo->IsOptimized()) {
@@ -1352,16 +1354,16 @@ void TStreamerInfo::Compile()
    }
 }
 
-TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy *proxy)
+TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy &proxy)
 {
    // Create the bundle of the actions necessary for the streaming memberwise of the content described by 'info' into the collection described by 'proxy'
 
 
    UInt_t ndata = info->GetElements()->GetEntries();
    TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(info,ndata);
-   if ( (proxy->GetCollectionType() == TClassEdit::kVector) || (proxy->GetProperties() & TVirtualCollectionProxy::kIsEmulated) ) 
+   if ( (proxy.GetCollectionType() == TClassEdit::kVector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) ) 
    {
-      if (proxy->HasPointers()) {
+      if (proxy.HasPointers()) {
          // Instead of the creating a new one let's copy the one from the StreamerInfo.
          delete sequence;
          
@@ -1371,15 +1373,15 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       }
       
       // We can speed up the iteration in case of vector.  We also know that all emulated collection are stored internally as a vector.
-      Long_t increment = proxy->GetIncrement();
+      Long_t increment = proxy.GetIncrement();
       sequence->fLoopConfig = new TVectorLoopConfig(increment);
-   } else if (proxy->GetCollectionType() == TClassEdit::kSet || proxy->GetCollectionType() == TClassEdit::kMultiSet
-              || proxy->GetCollectionType() == TClassEdit::kMap || proxy->GetCollectionType() == TClassEdit::kMultiMap) {
-      Long_t increment = proxy->GetValueClass()->Size();
+   } else if (proxy.GetCollectionType() == TClassEdit::kSet || proxy.GetCollectionType() == TClassEdit::kMultiSet
+              || proxy.GetCollectionType() == TClassEdit::kMap || proxy.GetCollectionType() == TClassEdit::kMultiMap) {
+      Long_t increment = proxy.GetValueClass()->Size();
       sequence->fLoopConfig = new TVectorLoopConfig(increment);
       // sequence->fLoopConfig = new TAssocLoopConfig(proxy);
    } else {
-      sequence->fLoopConfig = new TGenericLoopConfig(proxy);
+      sequence->fLoopConfig = new TGenericLoopConfig(&proxy);
    }
    for (UInt_t i = 0; i < ndata; ++i) {
       TStreamerElement *element = (TStreamerElement*) info->GetElements()->At(i);
@@ -1411,9 +1413,9 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
             oldType += TVirtualStreamerInfo::kSkip;
          }
       }
-      if ( (proxy->GetCollectionType() == TClassEdit::kVector) || (proxy->GetProperties() & TVirtualCollectionProxy::kIsEmulated)  
-            || (proxy->GetCollectionType() == TClassEdit::kSet || proxy->GetCollectionType() == TClassEdit::kMultiSet
-            || proxy->GetCollectionType() == TClassEdit::kMap || proxy->GetCollectionType() == TClassEdit::kMultiMap) )
+      if ( (proxy.GetCollectionType() == TClassEdit::kVector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated)  
+            || (proxy.GetCollectionType() == TClassEdit::kSet || proxy.GetCollectionType() == TClassEdit::kMultiSet
+            || proxy.GetCollectionType() == TClassEdit::kMap || proxy.GetCollectionType() == TClassEdit::kMultiMap) )
       {
 
          // We can speed up the iteration in case of vector.  We also know that all emulated collection are stored internally as a vector.
@@ -1424,9 +1426,9 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
             sequence->AddAction(GetVectorAction(info,element,oldType,i,offset));
          }
          
-//         } else if (proxy->GetCollectionType() == TClassEdit::kSet || proxy->GetCollectionType() == TClassEdit::kMultiSet
-//                    || proxy->GetCollectionType() == TClassEdit::kMap || proxy->GetCollectionType() == TClassEdit::kMultiMap) {
-//            sequence->AddAction( GenericAssocCollectionAction, new TConfigSTL(info,i,offset,0,proxy->GetCollectionClass(),0,0) );
+//         } else if (proxy.GetCollectionType() == TClassEdit::kSet || proxy.GetCollectionType() == TClassEdit::kMultiSet
+//                    || proxy.GetCollectionType() == TClassEdit::kMap || proxy.GetCollectionType() == TClassEdit::kMultiMap) {
+//            sequence->AddAction( GenericAssocCollectionAction, new TConfigSTL(info,i,offset,0,proxy.GetCollectionClass(),0,0) );
       } else {
          // The usual collection case.
          if (element->TestBit(TStreamerElement::kCache)) {
@@ -1477,7 +1479,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
                case TStreamerInfo::kTObject: sequence->AddAction( GenericLooper<ReadTObject >, new TConfiguration(info,i,offset) );    break;
                case TStreamerInfo::kTString: sequence->AddAction( GenericLooper<ReadTString >, new TConfiguration(info,i,offset) );    break;
                default:
-                  sequence->AddAction( GenericCollectionAction, new TConfigSTL(info,i,0 /* the offset will be used from TStreamerInfo */,0,proxy->GetCollectionClass(),0,0) );
+                  sequence->AddAction( GenericCollectionAction, new TConfigSTL(info,i,0 /* the offset will be used from TStreamerInfo */,0,proxy.GetCollectionClass(),0,0) );
                   break;
             }
          }

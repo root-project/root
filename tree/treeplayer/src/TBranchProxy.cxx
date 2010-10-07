@@ -156,6 +156,10 @@ Bool_t ROOT::TBranchProxy::Setup()
          if (fCollection) delete fCollection;
          fCollection = pcl->GetCollectionProxy()->Generate();
          pcl = fCollection->GetValueClass();
+         if (pcl == 0) {
+            Error("Setup","Not finding TClass for collecion for the data member %s seems no longer be in class %s",fDataMember.Data(),fParent->GetClass()->GetName());
+            return false;
+         }         
       }
 
       fElement = (TStreamerElement*)pcl->GetStreamerInfo()->GetElements()->FindObject(fDataMember);

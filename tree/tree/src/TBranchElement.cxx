@@ -2592,7 +2592,7 @@ void TBranchElement::InitializeOffsets()
                }
                if (fBranchCount && fBranchCount->fCollProxy && fBranchCount->fCollProxy->GetValueClass()) {
                   pClass = fBranchCount->fCollProxy->GetValueClass();
-                  Warning("InitializeOffsets", "subBranch: '%s' has no parent class!  Assuming parent class is: '%s'.", subBranch->GetName(), pClass->GetName());
+                  Warning("InitializeOffsets", "subBranch: '%s' has no parent class!  Assuming parent class is: '%s'.", subBranch->GetName(), pClass ? pClass->GetName() : "unknowned class");
                }
                if (!pClass) {
                   // -- Still no parent class, assume our parent class is our parent branch's class.
@@ -3232,6 +3232,7 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
       for( ; i < fNdata; ++i )
       {
          void **el = (void**)proxy->At( i );
+         // coverity[dereference] since this is a member streaming action by definition the collection contains objects and elClass is not null.
          *el = elClass->New();
       }
    }
@@ -4353,7 +4354,7 @@ void TBranchElement::SetReadActionSequence()
          } else {
             // Base class and embedded objects.
             
-            transient = TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(GetInfo(),GetCollectionProxy());
+            transient = TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(GetInfo(),*GetCollectionProxy());
             original = transient;
          }
       }

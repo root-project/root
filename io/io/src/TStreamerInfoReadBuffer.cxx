@@ -1082,6 +1082,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   TStreamerInfo *subinfo = 0;
                   
                   if( newProxy ) {
+                     // coverity[dererence] oldProxy->GetValueClass() can not be null since this was streamed memberwise.
                      subinfo = (TStreamerInfo*)newProxy->GetValueClass()->GetConversionStreamerInfo( oldProxy->GetValueClass(), vClVersion );
                   } else {
                      subinfo = (TStreamerInfo*)oldProxy->GetValueClass()->GetStreamerInfo( vClVersion );
@@ -1180,6 +1181,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   TStreamerInfo *subinfo = 0;
 
                   if( newProxy ) {
+                     // coverity[dererence] oldProxy->GetValueClass() can not be null since this was streamed memberwise.
                      subinfo = (TStreamerInfo*)newProxy->GetValueClass()->GetConversionStreamerInfo( oldProxy->GetValueClass(), vClVersion );
                   } else {
                      subinfo = (TStreamerInfo*)valueClass->GetStreamerInfo( vClVersion );
