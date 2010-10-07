@@ -144,7 +144,7 @@ void TGButtonGroup::Init()
    fExclGroup    = kFALSE;
    fRadioExcl    = kFALSE;
    fDrawBorder   = kTRUE;
-   
+
    SetWindowName();
 }
 
@@ -181,7 +181,7 @@ void TGButtonGroup::DrawBorder()
    //
    // if frame is kRaisedFrame  - a frame border is of "wall style",
    // otherwise of "groove style".
-   
+
    if (!fDrawBorder) return;
 
    Int_t x, y, l, t, r, b, gl, gr, sep, max_ascent, max_descent;
@@ -205,10 +205,10 @@ void TGButtonGroup::DrawBorder()
 
    switch (fTitlePos) {
       case kRight:
-         gl = fWidth>rr ? fWidth - rr : 5 + sep;
+         gl = fWidth>rr ? Int_t(fWidth - rr) : 5 + sep;
          break;
       case kCenter:
-         gl = fWidth>tw ? ((fWidth - tw)>>1) - sep : 5 + sep;
+         gl = fWidth>tw ? Int_t((fWidth - tw)>>1) - sep : 5 + sep;
          break;
       case kLeft:
       default:
@@ -305,7 +305,7 @@ void TGButtonGroup::SetRadioButtonExclusive(Bool_t enable)
 }
 
 //______________________________________________________________________________
-void TGButtonGroup::SetState(Bool_t state) 
+void TGButtonGroup::SetState(Bool_t state)
 {
    // Sets the state of all the buttons in the group to enable or disable.
 
@@ -368,7 +368,7 @@ Int_t TGButtonGroup::Insert(TGButton *button, Int_t id)
 
    button->fGroup = this;
    button->Associate(this);
-   
+
    static Int_t seq_no = -2;
    Long_t bid;
 
@@ -599,19 +599,19 @@ void TGButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    TString parGC, parFont;
    parFont.Form("%s::GetDefaultFontStruct()",IsA()->GetName());
    parGC.Form("%s::GetDefaultGC()()",IsA()->GetName());
-   
+
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          parFont.Form("ufont->GetFontStruct()");
-      } 
+      }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          parGC.Form("uGC->GetGC()");
-      } 
+      }
    }
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
@@ -674,7 +674,7 @@ void TGButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (!IsEnabled())
       out << "   " << GetName() <<"->SetState(kFALSE);" << endl;
-   
+
    out << "   " << GetName() << "->Show();" << endl;
 }
 
@@ -690,19 +690,19 @@ void TGHButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    TString parGC, parFont;
    parFont.Form("%s::GetDefaultFontStruct()",IsA()->GetName());
    parGC.Form("%s::GetDefaultGC()()",IsA()->GetName());
-   
+
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          parFont.Form("ufont->GetFontStruct()");
-      } 
+      }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          parGC.Form("uGC->GetGC()");
-      } 
+      }
    }
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
@@ -777,19 +777,19 @@ void TGVButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    TString parGC, parFont;
    parFont.Form("%s::GetDefaultFontStruct()",IsA()->GetName());
    parGC.Form("%s::GetDefaultGC()()",IsA()->GetName());
-   
+
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          parFont.Form("ufont->GetFontStruct()");
-      } 
+      }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          parGC.Form("uGC->GetGC()");
-      } 
+      }
    }
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
@@ -842,6 +842,6 @@ void TGVButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    out << "   " << GetName() << "->Resize(" << GetWidth()
        << "," << GetHeight() << ");"<< endl;
-    
+
    out << "   " << GetName() << "->Show();" << endl;
 }
