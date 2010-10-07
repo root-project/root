@@ -1195,6 +1195,7 @@ void TMVA::RuleEnsemble::ReadRaw( istream & istr )
    //
    UInt_t nlinear;
    //
+   // coverity[tainted_data_argument]
    istr >> dummy >> nlinear;
    //
    fLinNorm        .resize( nlinear );

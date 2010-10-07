@@ -460,6 +460,7 @@ void TMVA::VariableDecorrTransform::ReadTransformationFromStream( std::istream& 
          UInt_t cls=0;
          if(strvar=="background") cls=1;
          if(strvar==classname) classIdx = cls;
+         // coverity[tainted_data_argument]
          sstr >> nrows >> dummy >> ncols;
          if (fDecorrMatrices.size() <= cls ) fDecorrMatrices.resize(cls+1);
          if (fDecorrMatrices.at(cls) != 0) delete fDecorrMatrices.at(cls);

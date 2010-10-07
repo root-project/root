@@ -489,6 +489,7 @@ void TMVA::VariableGaussTransform::ReadTransformationFromStream( std::istream& i
          TString devnullS(""),hname("");
          Int_t   nbins(0);
 
+         // coverity[tainted_data_argument]
          sstr  >> type >> ivar >> hname >> nbins >> fElementsperbin;
 
          Float_t *Binnings = new Float_t[nbins+1];

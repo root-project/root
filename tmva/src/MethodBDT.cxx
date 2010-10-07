@@ -1229,6 +1229,7 @@ void  TMVA::MethodBDT::ReadWeightsFromStream( istream& istr )
    //   Types::EAnalysisType analysisType;
    Int_t analysisType(0);
 
+   // coverity[tainted_data_argument]
    istr >> dummy >> fNTrees;
    Log() << kINFO << "Read " << fNTrees << " Decision trees" << Endl;
 

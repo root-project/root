@@ -191,7 +191,7 @@ void  TMVA::MethodCompositeBase::ReadWeightsFromStream( istream& istr )
     jobName=GetJobName(),optionString=GetOptions();
    UInt_t methodNum; Double_t methodWeight;
    // and read the Weights (BDT coefficients)
-   // coverity[tainted_data]
+   // coverity[tainted_data_argument]
    istr >> dummy >> methodNum;
    Log() << kINFO << "Read " << methodNum << " Classifiers" << Endl;
    for (UInt_t i=0;i<fMethods.size();i++) delete fMethods[i];

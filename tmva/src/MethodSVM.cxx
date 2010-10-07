@@ -320,6 +320,7 @@ void  TMVA::MethodSVM::ReadWeightsFromStream( istream& istr )
    istr >> fBparm;
 
    UInt_t fNsupv;
+   // coverity[tainted_data_argument]
    istr >> fNsupv;
    fSupportVectors->reserve(fNsupv);
 

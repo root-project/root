@@ -418,6 +418,7 @@ void TMVA::VariablePCATransform::ReadTransformationFromStream( std::istream& ist
       sstr >> strvar;
       if (strvar=="signal" || strvar=="background") {
 
+         // coverity[tainted_data_argument]
          sstr >> nrows >> dummy >> ncols;
          Int_t sbType = (strvar=="signal" ? 0 : 1);
 

@@ -422,7 +422,7 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromStream( istream & istr )
    fYNN = new Double_t*[fParam_1.layerm];
    for (Int_t layer=0; layer<fParam_1.layerm; layer++) {
       // read number of neurons for each layer
-      // coverity[tainted_data]
+      // coverity[tainted_data_argument]
       istr >> fNeur_1.neuron[layer];
       fYNN[layer] = new Double_t[fNeur_1.neuron[layer]];
    }
@@ -575,6 +575,7 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromXML( void* wghtnode )
    stringstream ncontent(neuronscontent);
    for (Int_t layer=0; layer<fParam_1.layerm; layer++) {              
       // read number of neurons for each layer;
+      // coverity[tainted_data_argument]
       ncontent >> fNeur_1.neuron[layer];
       fYNN[layer] = new Double_t[fNeur_1.neuron[layer]];
    }

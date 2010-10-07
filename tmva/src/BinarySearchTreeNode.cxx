@@ -192,6 +192,7 @@ Bool_t TMVA::BinarySearchTreeNode::ReadDataRecord( istream& is, UInt_t /* Tmva_V
    this->SetSelector(selIdx);
 
    // next line: read and build the event
+   // coverity[tainted_data_argument]
    is >> nvar;
    fEventV.clear();
    for (UInt_t ivar=0; ivar<nvar; ivar++) {

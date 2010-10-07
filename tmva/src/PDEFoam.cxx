@@ -2515,6 +2515,7 @@ void TMVA::PDEFoam::ReadStream( istream & istr )
    // inherited class variables: fLastCe, fNCells, fDim[GetTotDim()]
    istr >> fLastCe;
    istr >> fNCells;
+   // coverity[tainted_data_argument]
    istr >> fDim;
 
 
