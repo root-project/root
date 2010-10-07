@@ -928,14 +928,10 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
    if (!fUserHisto) {
       Bool_t add = TH1::AddDirectoryStatus();
       TH1::AddDirectory(kFALSE);
-      Double_t xmax  = GetXmax();
-      Double_t ymax  = GetYmax();
-      Double_t xmin  = GetXmin();
-      Double_t ymin  = GetYmin();
-///      Double_t xmax  = GetXmaxE();
-///      Double_t ymax  = GetYmaxE();
-///      Double_t xmin  = GetXminE();
-///      Double_t ymin  = GetYminE();
+      Double_t xmax  = GetXmaxE();
+      Double_t ymax  = GetYmaxE();
+      Double_t xmin  = GetXminE();
+      Double_t ymin  = GetYminE();
       hxmin = xmin-fMargin*(xmax-xmin);
       hymin = ymin-fMargin*(ymax-ymin);
       hxmax = xmax+fMargin*(xmax-xmin);
@@ -1111,7 +1107,7 @@ void TGraph2D::Paint(Option_t *option)
 
    if (opt.Contains("line") && !opt.Contains("tri")) opt.Append("tri0");
 
-///   if (opt.Contains("err")  && !opt.Contains("tri")) opt.Append("tri0");
+   if (opt.Contains("err")  && !opt.Contains("tri")) opt.Append("tri0");
 
    if (opt.Contains("tri0")) {
       GetHistogram("empty");

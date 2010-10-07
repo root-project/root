@@ -193,7 +193,7 @@ Double_t TGraph2DErrors::GetXmaxE() const
    // Returns the X maximum with errors.
 
    Double_t v = fX[0]+fEX[0];
-   for (Int_t i=1; i<fNpoints; i++) if (fX[i]>v) v=fX[i]+fEX[i];
+   for (Int_t i=1; i<fNpoints; i++) if (fX[i]+fEX[i]>v) v=fX[i]+fEX[i];
    return v;
 }
 
@@ -203,8 +203,8 @@ Double_t TGraph2DErrors::GetXminE() const
 {
    // Returns the X minimum with errors.
 
-   Double_t v = fX[0]+fEX[0];
-   for (Int_t i=1; i<fNpoints; i++) if (fX[i]<v) v=fX[i]+fEX[i];
+   Double_t v = fX[0]-fEX[0];
+   for (Int_t i=1; i<fNpoints; i++) if (fX[i]-fEX[i]<v) v=fX[i]-fEX[i];
    return v;
 }
 
@@ -215,7 +215,7 @@ Double_t TGraph2DErrors::GetYmaxE() const
    // Returns the Y maximum with errors.
 
    Double_t v = fY[0]+fEY[0];
-   for (Int_t i=1; i<fNpoints; i++) if (fY[i]>v) v=fY[i]+fEY[i];
+   for (Int_t i=1; i<fNpoints; i++) if (fY[i]+fEY[i]>v) v=fY[i]+fEY[i];
    return v;
 }
 
@@ -226,7 +226,7 @@ Double_t TGraph2DErrors::GetYminE() const
    // Returns the Y minimum with errors.
 
    Double_t v = fY[0]+fEY[0];
-   for (Int_t i=1; i<fNpoints; i++) if (fY[i]<v) v=fY[i]+fEY[i];
+   for (Int_t i=1; i<fNpoints; i++) if (fY[i]-fEY[i]<v) v=fY[i]-fEY[i];
    return v;
 }
 
@@ -237,7 +237,7 @@ Double_t TGraph2DErrors::GetZmaxE() const
    // Returns the Z maximum with errors.
 
    Double_t v = fZ[0]+fEZ[0];
-   for (Int_t i=1; i<fNpoints; i++) if (fZ[i]>v) v=fZ[i]+fEZ[i];
+   for (Int_t i=1; i<fNpoints; i++) if (fZ[i]+fEZ[i]>v) v=fZ[i]+fEZ[i];
    return v;
 }
 
@@ -248,7 +248,7 @@ Double_t TGraph2DErrors::GetZminE() const
    // Returns the Z minimum with errors.
 
    Double_t v = fZ[0]+fEZ[0];
-   for (Int_t i=1; i<fNpoints; i++) if (fZ[i]<v) v=fZ[i]+fEZ[i];
+   for (Int_t i=1; i<fNpoints; i++) if (fZ[i]-fEZ[i]<v) v=fZ[i]-fEZ[i];
    return v;
 }
 

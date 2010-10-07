@@ -74,7 +74,7 @@ private:
 
    Bool_t      fUserHisto;   // True when SetHistogram has been called
 
-protected: 
+protected:
 
 public:
 
@@ -91,7 +91,7 @@ public:
    virtual ~TGraph2D();
 
    TGraph2D& operator=(const TGraph2D &);
-   
+
    virtual void          Clear(Option_t *option="");
    virtual void          DirectoryAutoAdd(TDirectory *);
    Int_t                 DistancetoPrimitive(Int_t px, Int_t py);
@@ -128,12 +128,12 @@ public:
    Double_t              GetYmin() const;
    Double_t              GetZmax() const;
    Double_t              GetZmin() const;
-///virtual Double_t      GetXmaxE() const {return GetXmax();};
-///virtual Double_t      GetXminE() const {return GetXmin();};
-///virtual Double_t      GetYmaxE() const {return GetYmax();};
-///virtual Double_t      GetYminE() const {return GetYmin();};
-///virtual Double_t      GetZmaxE() const {return GetZmax();};
-///virtual Double_t      GetZminE() const {return GetZmin();};
+   virtual Double_t      GetXmaxE() const {return GetXmax();};
+   virtual Double_t      GetXminE() const {return GetXmin();};
+   virtual Double_t      GetYmaxE() const {return GetYmax();};
+   virtual Double_t      GetYminE() const {return GetYmin();};
+   virtual Double_t      GetZmaxE() const {return GetZmax();};
+   virtual Double_t      GetZminE() const {return GetZmin();};
    Double_t              Interpolate(Double_t x, Double_t y);
    void                  Paint(Option_t *option="");
    TH1                  *Project(Option_t *option="x") const; // *MENU*

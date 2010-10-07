@@ -3079,7 +3079,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    Hoption.Axis = Hoption.Bar    = Hoption.Curve   = Hoption.Error = 0;
    Hoption.Hist = Hoption.Line   = Hoption.Mark    = Hoption.Fill  = 0;
-   Hoption.Same = Hoption.Func   = Hoption.Scat  = 0;
+   Hoption.Same = Hoption.Func   = Hoption.Scat    = 0;
    Hoption.Star = Hoption.Arrow  = Hoption.Box     = Hoption.Text  = 0;
    Hoption.Char = Hoption.Color  = Hoption.Contour = Hoption.Logx  = 0;
    Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf  = 0;
@@ -3271,6 +3271,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       Hoption.Tri = 1; strncpy(l,"   ",3);
       l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
+      l = strstr(chopt,"ERR");  if (l) strncpy(l,"   ",3);
    }
 
    l = strstr(chopt,"AITOFF");
