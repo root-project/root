@@ -283,8 +283,8 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
 
    if (fWindow) {
       gVirtualX->TranslateCoordinates(fWindow->GetId(), GetParent()->GetId(),
-                                      fX == -1 ? fWindow->GetWidth() >> 1 : fX,
-                                      fY == -1 ? fWindow->GetHeight() : fY,
+                                      fX == -1 ? Int_t(fWindow->GetWidth() >> 1) : fX,
+                                      fY == -1 ? Int_t(fWindow->GetHeight()) : fY,
                                       x, y, wtarget);
    } else if(fPad) {
       if (fBox) {
@@ -314,7 +314,7 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
    UInt_t screenW = fClient->GetDisplayWidth();
    UInt_t screenH = fClient->GetDisplayHeight();
 
-   gVirtualX->QueryPointer(gVirtualX->GetDefaultRootWindow(), 
+   gVirtualX->QueryPointer(gVirtualX->GetDefaultRootWindow(),
                            dum1, dum2, mx, my, mx, my, mask);
 
    fLabel->SetWrapLength(-1);
@@ -335,8 +335,8 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
       move += 2;
    }
 
-   // check if the mouse is inside the tooltip (may happen after 
-   // adjusting the position when out of screen) and place the tooltip 
+   // check if the mouse is inside the tooltip (may happen after
+   // adjusting the position when out of screen) and place the tooltip
    // on the other side of the mouse pointer
    TGRectangle rect(x, y, x+fWidth, y+fHeight);
    if (rect.Contains(mx, my)) {
