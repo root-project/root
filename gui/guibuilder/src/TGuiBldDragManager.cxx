@@ -3535,7 +3535,7 @@ void TGuiBldDragManager::DoResize()
             if (IsFixedW(fr)) {
                w =  fr->GetDefaultWidth();
             } else {
-               w = fr->GetX() + x > (Int_t)wp ? wp - fr->GetX() : x;
+               w = fr->GetX() + x > Int_t(wp) ? wp - fr->GetX() : UInt_t(x);
             }
             x = fr->GetX();
             y = fr->GetY() + y;
@@ -3570,7 +3570,7 @@ void TGuiBldDragManager::DoResize()
             if (fr->GetX() + x < 2) {
                x = 2 - fr->GetX();
             }
-            h = fr->GetY() + y > (Int_t)hp ? hp - fr->GetY() : y;
+            h = fr->GetY() + y > Int_t(hp) ? hp - fr->GetY() : UInt_t(y);
             w = fr->GetWidth() - x;
             x = fr->GetX() + x;
 
@@ -3591,8 +3591,8 @@ void TGuiBldDragManager::DoResize()
          break;
       case kBottomRight:
          if ((x > 0) && (y > 0)) {
-            w = !IsFixedW(fr) ? x : fr->GetDefaultWidth();
-            h = !IsFixedH(fr) ? y : fr->GetDefaultHeight();
+            w = !IsFixedW(fr) ? UInt_t(x) : fr->GetDefaultWidth();
+            h = !IsFixedH(fr) ? UInt_t(y) : fr->GetDefaultHeight();
 
             h = fr->GetY() + h > hp ? hp - fr->GetY() : h;
             w = fr->GetX() + w > wp ? wp - fr->GetX() : w;
@@ -3608,7 +3608,7 @@ void TGuiBldDragManager::DoResize()
             }
 
             w = fr->GetWidth();
-            h = fr->GetY() + y > (Int_t)hp ? hp - fr->GetY() : y;
+            h = fr->GetY() + y > (Int_t)hp ? hp - fr->GetY() : UInt_t(y);
 
             //canResize(comp, 0, 0, w, h);
             fr->Resize(w, h);
@@ -3639,7 +3639,7 @@ void TGuiBldDragManager::DoResize()
             }
 
             h = fr->GetHeight();
-            w = fr->GetX() + x > (Int_t)wp ? wp - fr->GetX() : x;
+            w = fr->GetX() + x > (Int_t)wp ? wp - fr->GetX() : UInt_t(x);
             //canResize(comp, 0, 0, w, h);
             fr->Resize(w, h);
          }
@@ -3965,8 +3965,8 @@ void TGuiBldDragManager::PlaceFrame(TGFrame *frame, TGLayoutHints *hints)
    h = h < frame->GetDefaultHeight() + 2 ? frame->GetDefaultHeight() + 2 : h;
 
    // do not create frame out of editable space
-   x = x + w > root->GetWidth() ? root->GetWidth() - w : x;
-   y = y + h > root->GetHeight() ? root->GetHeight() - h : y;
+   x = x + w > root->GetWidth() ? Int_t(root->GetWidth() - w) : x;
+   y = y + h > root->GetHeight() ? Int_t(root->GetHeight() - h) : y;
 
    frame->Move(x, y);
 
