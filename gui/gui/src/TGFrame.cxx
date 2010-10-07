@@ -113,7 +113,7 @@ const TGGC   *TGGroupFrame::fgDefaultGC = 0;
 
 TGLayoutHints *TGCompositeFrame::fgDefaultHints = 0;
 
-static const char *gSaveMacroTypes[] = { 
+static const char *gSaveMacroTypes[] = {
    "ROOT macros", "*.C",
    "GIF",         "*.gif",
    "PNG",         "*.png",
@@ -1521,8 +1521,8 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
             else {
                Int_t retval;
                new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
-                            TString::Format("file (%s) cannot be saved with this extension", 
-                            fname.Data()), kMBIconExclamation, 
+                            TString::Format("file (%s) cannot be saved with this extension",
+                            fname.Data()), kMBIconExclamation,
                             kMBRetry | kMBCancel, &retval);
                if (retval == kMBRetry)
                   HandleKey(event);
@@ -2156,10 +2156,10 @@ void TGGroupFrame::DrawBorder()
 
    switch (fTitlePos) {
       case kRight:
-         gl = fWidth>rr ? fWidth - rr : 5 + sep;
+         gl = fWidth>rr ? Int_t(fWidth - rr) : 5 + sep;
          break;
       case kCenter:
-         gl = fWidth>tw ? ((fWidth - tw)>>1) - sep : 5 + sep;
+         gl = fWidth>tw ? Int_t((fWidth - tw)>>1) - sep : 5 + sep;
          break;
       case kLeft:
       default:
