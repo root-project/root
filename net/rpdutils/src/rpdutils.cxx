@@ -2820,8 +2820,7 @@ int RpdKrb5Auth(const char *sstr)
       int lenU, ofs, opt;
       char dumm[256];
       // Decode subject string
-      sscanf(sstr, "%19s %19s %19s %19s %255s", int1, int2, int3, int4, dumm);
-      gRemPid = atoi(int1); ofs = atoi(int2); opt = atoi(int3); lenU = atoi(int4);
+      sscanf(sstr, "%d %d %d %d %255s", &gRemPid, &ofs, &opt, &lenU, dumm);
       gReUseRequired = (opt & kAUTH_REUSE_MSK);
 #if R__SSL
       if (gRSASSLKey) {
@@ -3221,8 +3220,7 @@ int RpdSRPUser(const char *sstr)
    if (gClientProtocol > 8) {
       int lenU, ofs, opt;
       char dumm[20];
-      sscanf(sstr, "%19s %19s %19s %19s %127s %19s", int1, int2, int3, int4, user, dumm);
-      gRemPid = atoi(int1); ofs = atoi(int2); opt = atoi(int3); lenU = atoi(int4);
+      sscanf(sstr, "%d %d %d %d %127s %19s", &gRemPid, &ofs, &opt, &lenU, user, dumm);
       lenU = (lenU > kMAXUSERLEN) ? kMAXUSERLEN-1 : lenU;
       user[lenU] = '\0';
       gReUseRequired = (opt & kAUTH_REUSE_MSK);
@@ -3963,8 +3961,7 @@ int RpdGlobusAuth(const char *sstr)
    char Subj[kMAXPATHLEN];
    int opt;
    char dumm[20];
-   sscanf(sstr, "%19s %19s %19s %19s %4095s %19s", int1, int2, int3, int4, Subj, dumm);
-   gRemPid = atoi(int1); offset = atoi(int2); opt = atoi(int3); lSubj = atoi(int4);
+   sscanf(sstr, "%d %d %d %d %4095s %19s", &gRemPid, &offset, &opt, &lSubj, Subj, dumm);
 
    Subj[lSubj] = '\0';
    gReUseRequired = (opt & kAUTH_REUSE_MSK);
