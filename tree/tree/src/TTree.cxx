@@ -80,7 +80,7 @@
 //           be of a type related to the one pointed to by the pointer.  It should be either
 //           a parent or derived class.
 //       * if splitlevel=0, the object is serialized in the branch buffer.
-//       * if splitlevel=1 (default), this branch will automatically be split
+//       * if splitlevel=1, this branch will automatically be split
 //           into subbranches, with one subbranch for each data member or object
 //           of the object itself. In case the object member is a TClonesArray,
 //           the mechanism described in case C is applied to this array.
