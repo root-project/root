@@ -2721,7 +2721,7 @@ void TGX11::SetRGB(int cindex, float r, float g, float b)
       xcol.red   = (UShort_t)(r * kBIGGEST_RGB_VALUE);
       xcol.green = (UShort_t)(g * kBIGGEST_RGB_VALUE);
       xcol.blue  = (UShort_t)(b * kBIGGEST_RGB_VALUE);
-      xcol.flags = DoRed || DoGreen || DoBlue;
+      xcol.flags = DoRed | DoGreen | DoBlue;
       XColor_t &col = GetColor(cindex);
       if (col.fDefined) {
          // if color is already defined with same rgb just return
@@ -2734,7 +2734,7 @@ void TGX11::SetRGB(int cindex, float r, float g, float b)
       }
       if (AllocColor(fColormap, &xcol)) {
          col.fDefined = kTRUE;
-         col.fPixel  = xcol.pixel;
+         col.fPixel   = xcol.pixel;
          col.fRed     = xcol.red;
          col.fGreen   = xcol.green;
          col.fBlue    = xcol.blue;
