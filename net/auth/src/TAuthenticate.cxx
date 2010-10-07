@@ -703,12 +703,9 @@ negotia:
                Warning("Authenticate",
                        "strings with accepted methods not received (%d:%d)",
                        kind, nrec);
-            char ii[6][20];
             remMeth =
-               sscanf(answer, "%19s %19s %19s %19s %19s %19s", ii[0], ii[1],
-                      ii[2], ii[3], ii[4], ii[5]);
-            Int_t iik = 0;
-            for (iik = 0; iik < 6; iik++) { rMth[iik] = atoi(ii[iik]); }
+               sscanf(answer, "%d %d %d %d %d %d", &rMth[0], &rMth[1],
+                      &rMth[2], &rMth[3], &rMth[4], &rMth[5]);
             if (gDebug > 0 && remloc > 0)
                Info("Authenticate",
                     "remotely allowed methods not yet tried: %s",
@@ -1993,10 +1990,9 @@ Int_t TAuthenticate::SshAuth(TString &user)
                newsock->Send("failure notification");
          }
          // prepare info to send
-         char cd1[1024], pipe[1024], dum[1024], i3[20];
+         char cd1[1024], pipe[1024], dum[1024];
          Int_t id3;
-         sscanf(cmdinfo, "%1023s %19s %1023s %1023s", cd1, i3, pipe, dum);
-         id3 = atoi(i3);
+         sscanf(cmdinfo, "%1023s %d %1023s %1023s", cd1, &id3, pipe, dum);
          snprintf(secName, kMAXPATHLEN, "%d -1 0 %s %d %s %d",
                   -fgProcessID, pipe,
                   (int)strlen(user), user.Data(), TSocket::GetClientProtocol());
@@ -2104,10 +2100,9 @@ Int_t TAuthenticate::SshAuth(TString &user)
               nrec);
 
    // Parse answer
-   char lUser[128], i1[20];
+   char lUser[128];
    int offset = -1;
-   sscanf(answer, "%127s %19s", lUser, i1);
-   offset = atoi(i1);
+   sscanf(answer, "%127s %d", lUser, &offset);
    if (gDebug > 3)
       Info("SshAuth", "received from server: user: %s, offset: %d", lUser,
            offset);
@@ -2625,9 +2620,9 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
                  nrec);
 
       // Parse answer
-      char lUser[128], i1[20];
-      sscanf(answer, "%127s %19s", lUser, i1);
-      Int_t offset = atoi(i1);
+      char lUser[128];
+      Int_t offset = -1;
+      sscanf(answer, "%127s %d", lUser, &offset);
       if (gDebug > 3)
          Info("ClearAuth",
               "received from server: user: %s, offset: %d (%s)", lUser,

@@ -329,12 +329,6 @@ static unsigned int gUserAlwLen[kMAXSEC] = { 0 };
 static unsigned int gUserIgnLen[kMAXSEC] = { 0 };
 static char *gUserIgnore[kMAXSEC] = { 0 };
 
-static char int1[20] = { 0 };
-static char int2[20] = { 0 };
-static char int3[20] = { 0 };
-static char int4[20] = { 0 };
-static char int5[20] = { 0 };
-
 //
 // Kerberos stuff
 #ifdef R__KRB5
@@ -841,8 +835,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
          }
          if (ok) {
             // Check file corruption: number of items
-            int ns = sscanf(ln, "%19s %19s %4095s", int1, int2, dumm);
-            lsec = atoi(int1); act = atoi(int2);
+            int ns = sscanf(ln, "%d %d %4095s", &lsec, &act, dumm);
             if (ns < 3 ) {
                ErrorInfo("RpdUpdateAuthTab: opt=%d: file %s seems corrupted"
                          " (ns: %d)", opt, gRpdAuthTab.c_str(), ns);
@@ -1042,9 +1035,8 @@ int RpdCleanupAuthTab(const char *crypttoken)
 
       char dum1[kMAXPATHLEN] = {0}, host[kMAXUSERLEN] = {0}, user[kMAXUSERLEN] = {0},
            ctkn[30] = {0}, dum2[30] = {0};
-      nw = sscanf(line, "%19s %19s %19s %19s %127s %127s %29s %4095s %29s", int1, int2, int3,
-                  int4, host, user, ctkn, dum1, dum2);
-      lsec = atoi(int1); act = atoi(int2); pkey = atoi(int3); remid = atoi(int4);
+      nw = sscanf(line, "%d %d %d %d %127s %127s %29s %4095s %29s",
+                        &lsec, &act, &pkey, &remid, host, user, ctkn, dum1, dum2);
 
       int deactivate = 0;
 
@@ -1198,9 +1190,8 @@ int RpdCleanupAuthTab(const char *Host, int RemId, int OffSet)
                     pr, pw, line, gParentId);
 
       char dumm[kMAXPATHLEN], host[kMAXUSERLEN], user[kMAXUSERLEN], shmbuf[30];
-      nw = sscanf(line, "%19s %19s %19s %19s %127s %127s %29s %4095s", int1, int2, int3,
-                  int4, host, user, shmbuf, dumm);
-      lsec = atoi(int1); act = atoi(int2); pkey = atoi(int3); remid = atoi(int4);
+      nw = sscanf(line, "%d %d %d %d %127s %127s %29s %4095s",
+                        &lsec, &act, &pkey, &remid, host, user, shmbuf, dumm);
 
       if (nw > 5) {
          if (all || OffSet > -1 ||
@@ -1452,19 +1443,16 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
    char host[kMAXPATHLEN], usr[kMAXPATHLEN], subj[kMAXPATHLEN],
        dumm[kMAXPATHLEN], tkn[20];
    int nw =
-       sscanf(line, "%19s %19s %19s %19s %4095s %4095s %19s %4095s", int1, int2, int3,
-              int4, host, usr, tkn, dumm);
-   lsec = atoi(int1); act = atoi(int2); gRSAKey = atoi(int3); remid = atoi(int4);
+       sscanf(line, "%d %d %d %d %4095s %4095s %19s %4095s",
+                    &lsec, &act, &gRSAKey, &remid, host, usr, tkn, dumm);
    if (gDebug > 2)
       ErrorInfo("RpdCheckOffSet: found line: %s", line);
 
    if (nw > 5 && act > 0) {
       if ((lsec == Sec)) {
          if (lsec == 3) {
-            sscanf(line, "%19s %19s %19s %19s %4095s %4095s %19s %4095s %19s %4095s", int1, int2,
-                   int3, int4, host, usr, int5, subj, tkn, dumm);
-            lsec = atoi(int1); act = atoi(int2); gRSAKey = atoi(int3);
-            remid = atoi(int4); shmid = atoi(int5);
+            sscanf(line, "%d %d %d %d %4095s %4095s %d %4095s %19s %4095s",
+                         &lsec, &act, &gRSAKey, &remid, host, usr, &shmid, subj, tkn, dumm);
             if ((remid == RemId)
                 && !strcmp(host, Host) && !strcmp(subj, User))
                goodOfs = 1;
@@ -1481,19 +1469,16 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
       ofs = 0;
       while (reads(itab, line, sizeof(line))) {
 
-         nw = sscanf(line, "%19s %19s %19s %19s %4095s %4095s %19s %4095s", int1, int2,
-                     int3, int4, host, usr, tkn, dumm);
-         lsec = atoi(int1); act = atoi(int2); gRSAKey = atoi(int3); remid = atoi(int4);
+         nw = sscanf(line, "%d %d %d %d %4095s %4095s %19s %4095s",
+                     &lsec, &act, &gRSAKey, &remid, host, usr, tkn, dumm);
          if (gDebug > 2)
             ErrorInfo("RpdCheckOffSet: found line: %s", line);
 
          if (nw > 5 && act > 0) {
             if (lsec == Sec) {
                if (lsec == 3) {
-                  sscanf(line, "%19s %19s %19s %19s %4095s %4095s %19s %4095s %19s %4095s", int1,
-                         int2, int3, int4, host, usr, int5, subj, tkn, dumm);
-                  lsec = atoi(int1); act = atoi(int2); gRSAKey = atoi(int3);
-                  remid = atoi(int4); shmid = atoi(int5);
+                  sscanf(line, "%d %d %d %d %4095s %4095s %d %4095s %19s %4095s",
+                         &lsec, &act, &gRSAKey, &remid, host, usr, &shmid, subj, tkn, dumm);
                   if ((remid == RemId)
                       && !strcmp(host, Host) && !strcmp(subj, User)) {
                      goodOfs = 1;
@@ -1674,8 +1659,7 @@ int RpdReUseAuth(const char *sstr, int kind)
       }
       gSec = 0;
       // Decode subject string
-      sscanf(sstr, "%19s %19s %19s %19s %63s", int1, int2, int3, int4, user);
-      gRemPid = atoi(int1); offset = atoi(int2); opt = atoi(int3); lenU = atoi(int4);
+      sscanf(sstr, "%d %d %d %d %63s", &gRemPid, &offset, &opt, &lenU, user);
       user[lenU] = '\0';
       if ((gReUseRequired = (opt & kAUTH_REUSE_MSK))) {
          gOffSet = offset;
@@ -1696,8 +1680,7 @@ int RpdReUseAuth(const char *sstr, int kind)
       }
       gSec = 1;
       // Decode subject string
-      sscanf(sstr, "%19s %19s %19s %19s %63s", int1, int2, int3, int4, user);
-      gRemPid = atoi(int1); offset = atoi(int2); opt = atoi(int3); lenU = atoi(int4);
+      sscanf(sstr, "%d %d %d %d %63s", &gRemPid, &offset, &opt, &lenU, user);
       user[lenU] = '\0';
       if ((gReUseRequired = (opt & kAUTH_REUSE_MSK))) {
          gOffSet = offset;
@@ -1718,8 +1701,7 @@ int RpdReUseAuth(const char *sstr, int kind)
       }
       gSec = 2;
       // Decode subject string
-      sscanf(sstr, "%19s %19s %19s %19s %63s", int1, int2, int3, int4, user);
-      gRemPid = atoi(int1); offset = atoi(int2); opt = atoi(int3); lenU = atoi(int4);
+      sscanf(sstr, "%d %d %d %d %63s", &gRemPid, &offset, &opt, &lenU, user);
       user[lenU] = '\0';
       if ((gReUseRequired = (opt & kAUTH_REUSE_MSK))) {
          gOffSet = offset;
@@ -1741,8 +1723,7 @@ int RpdReUseAuth(const char *sstr, int kind)
       gSec = 3;
       // Decode subject string
       int lenS;
-      sscanf(sstr, "%19s %19s %19s %19s %63s", int1, int2, int3, int4, user);
-      gRemPid = atoi(int1); offset = atoi(int2); opt = atoi(int3); lenS = atoi(int4);
+      sscanf(sstr, "%d %d %d %d %63s", &gRemPid, &offset, &opt, &lenS, user);
       user[lenS] = '\0';
       if ((gReUseRequired = (opt & kAUTH_REUSE_MSK))) {
          gOffSet = offset;
@@ -1762,8 +1743,7 @@ int RpdReUseAuth(const char *sstr, int kind)
       gSec = 4;
       // Decode subject string
       char pipe[kMAXPATHLEN];
-      sscanf(sstr, "%19s %19s %19s %4095s %19s %63s", int1, int2, int3, pipe, int4, user);
-      gRemPid = atoi(int1); offset = atoi(int2); opt = atoi(int3); lenU = atoi(int4);
+      sscanf(sstr, "%d %d %d %4095s %d %63s", &gRemPid, &offset, &opt, pipe, &lenU, user);
       user[lenU] = '\0';
       if ((gReUseRequired = (opt & kAUTH_REUSE_MSK))) {
          gOffSet = offset;
@@ -2313,8 +2293,7 @@ int RpdSshAuth(const char *sstr)
    char pipeId[10] = {0};
    int lenU, ofs, opt;
    char rproto[20] = {0};
-   sscanf(sstr, "%19s %19s %19s %9s %19s %127s %19s", int1, int2, int3, pipeId, int4, user, rproto);
-   gRemPid = atoi(int1); ofs = atoi(int2); opt = atoi(int3); lenU = atoi(int4);
+   sscanf(sstr, "%d %d %d %9s %d %127s %19s", &gRemPid, &ofs, &opt, pipeId, &lenU, user, rproto);
    
    user[lenU] = '\0';
    gReUseRequired = (opt & kAUTH_REUSE_MSK);
@@ -4224,8 +4203,7 @@ int RpdRfioAuth(const char *sstr)
    }
    // Decode subject string
    unsigned int uid, gid;
-   sscanf(sstr, "%19s %19s", int1, int2);
-   uid = (unsigned int)atoi(int1); gid = (unsigned int)atoi(int2);
+   sscanf(sstr, "%u %u", &uid, &gid);
 
    // Now inquire passwd ...
    struct passwd *pw;
@@ -4285,10 +4263,8 @@ void RpdAuthCleanup(const char *sstr, int opt)
 
    int rpid = 0, sec = -1, offs = -1, nw = 0;
    char usr[64] = {0};
-   if (sstr) {
-      nw = sscanf(sstr, "%19s %19s %19s %63s", int1, int2, int3, usr);
-      rpid = atoi(int1); sec = atoi(int2); offs = atoi(int3);
-   }
+   if (sstr)
+      nw = sscanf(sstr, "%d %d %d %63s", &rpid, &sec, &offs, usr);
 
    // Turn back to superuser for cleaning, if the case
    if (getuid() == 0) {
@@ -4594,8 +4570,8 @@ int RpdUser(const char *sstr)
    if (gClientProtocol > 8) {
       int ulen, ofs, opt, rulen;
       // Decode subject string
-      int nw = sscanf(sstr, "%19s %19s %19s %19s %63s %19s %63s", int1, int2, int3, int4, user, int5, ruser);
-      gRemPid = atoi(int1); ofs = atoi(int2); opt = atoi(int3); ulen = atoi(int4); rulen = atoi(int5);
+      int nw = sscanf(sstr, "%d %d %d %d %63s %d %63s",
+                            &gRemPid, &ofs, &opt, &ulen, user, &rulen, ruser);
       ulen = (ulen >= kMAXUSERLEN) ? kMAXUSERLEN-1 : ulen;
       rulen = (rulen >= kMAXUSERLEN) ? kMAXUSERLEN-1 : rulen;
       user[ulen] = '\0';

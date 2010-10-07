@@ -10755,13 +10755,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
             emsg.Form("error integrating dataset %s", dataset->GetName());
             continue;
          }
-         if (enl) {
-            if (!entrylist) {
-               entrylist = enl;
-            } else {
-               entrylist->Add(enl);
-            }
-         }
+         if (enl) entrylist = enl;
       }
       if (missingFiles) {
          // The missing files objects have to be removed from the dataset

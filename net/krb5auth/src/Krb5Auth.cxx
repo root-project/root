@@ -646,9 +646,9 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       }
 
       // Parse answer
-      char lUser[128], i1[20];
-      sscanf(rfrm,"%127s %19s", lUser, i1);
-      int offset = atoi(i1);
+      char lUser[128];
+      int offset = -1;
+      sscanf(rfrm,"%127s %d", lUser, &offset);
       // Save username
       user = lUser;
 

@@ -1352,10 +1352,8 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
       case kPROOF_GROUPVIEW:
          if (all) {
             mess->ReadString(str, sizeof(str));
-            char int1[20], int2[20];
-            sscanf(str, "%19s %19s", int1, int2);
-            fGroupId = atoi(int1);
-            fGroupSize = atoi(int2);
+            // coverity[secure_coding]
+            sscanf(str, "%d %d", &fGroupId, &fGroupSize);
          } else {
             rc = -1;
          }
@@ -1364,10 +1362,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
       case kPROOF_LOGLEVEL:
          {  UInt_t mask;
             mess->ReadString(str, sizeof(str));
-            char int1[20], int2[20];
-            sscanf(str, "%19s %19s", int1, int2);
-            fLogLevel = atoi(int1);
-            mask = (UInt_t) atoi(int2);
+            sscanf(str, "%d %u", &fLogLevel, &mask);
             gProofDebugLevel = fLogLevel;
             gProofDebugMask  = (TProofDebug::EProofDebugMask) mask;
             if (IsMaster())
@@ -1573,15 +1568,11 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             Long_t size;
             Int_t  bin, fw = 1;
             char   name[1024];
-            char   int1[20], int2[20], int3[40];
             if (fProtocol > 5) {
-               sscanf(str, "%1023s %19s %39s %19s", name, int1, int3, int2);
-               fw = atoi(int2);
+               sscanf(str, "%1023s %d %ld %d", name, &bin, &size, &fw);
             } else {
-               sscanf(str, "%1023s %19s %39s", name, int1, int3);
+               sscanf(str, "%1023s %d %ld", name, &bin, &size);
             }
-            bin = atoi(int1);
-            size = atol(int3);
             TString fnam(name);
             Bool_t copytocache = kTRUE;
             if (fnam.BeginsWith("cache:")) {

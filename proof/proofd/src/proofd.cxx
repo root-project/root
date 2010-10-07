@@ -343,6 +343,7 @@ const char *RerouteUser()
       while (fgets(line, sizeof(line), proofconf) != 0) {
          char word[4][64];
          if (line[0] == '#') continue;  // skip comment lines
+         // coverity[secure_coding]
          int nword = sscanf(line, "%63s %63s %63s %63s",
                             word[0], word[1], word[2], word[3]);
 
