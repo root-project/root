@@ -94,7 +94,7 @@ CINTDLLS_DEPENDENCY_FILES = $(addsuffix .d,$(addprefix core/metautils/src/stlLoa
 
 cintdlls_cleanup_dependency_files_trigger := $(shell grep ORDER_ $(wildcard $(CINTDLLS_DEPENDENCY_FILES)) /dev/null > /dev/null && ( rm -f `find . -name \*.d -exec grep -c ORDER_ {} /dev/null \; 2>&1 | grep -v ':0' | cut -d: -f1 | sed -e 's/\.d/\.o/' `  1>&2 ) )
 
-# INCLUDEFILES += $(CINTDLLS_DEPENDENCY_FILES)
+INCLUDEFILES += $(CINTDLLS_DEPENDENCY_FILES)
 
 cintdlls: $(ALLCINTDLLS)
 
@@ -180,25 +180,25 @@ $(CINTDLLDIRDLLSTL)/G__cpp_%.cxx:
            -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
 	   -D__MAKECINT__ -DG__MAKECINT \
            $(addprefix $(patsubst %lib/dll_stl/,-I%,$(dir $@)),lib/dll_stl lib) \
-	   -c-1 -A -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
+	   -c-1 -A -Z0 $(filter-out $(CINTDLLDIRDLLSTL)/G__cpp_%, $(filter-out $(IOSENUM),$(filter $(CINTDLLDIRDLLSTL)/%,$(filter %.h,$^))))
 
 $(CINTDLLDIRL)/G__cpp_%.cxx:
 	$(patsubst %lib/,%,$(dir $@))/main/cint_tmp \
 	   -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
 	   -D__MAKECINT__ -DG__MAKECINT -I$(dir $@) \
-	   -c-1 -A -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
+	   -c-1 -A -Z0 $(filter-out $(CINTDLLDIRL)/G__cpp%, $(filter-out $(IOSENUM),$(filter $(CINTDLLDIRL)/%,$(filter %.h,$^))))
 
 $(CINTDLLDIRL)/G__c_%.c:
 	$(patsubst %lib/,%,$(dir $@))/main/cint_tmp \
 	   -K -w1 -z$(notdir $*) -n$@ -D__MAKECINT__ -DG__MAKECINT \
-	   $(MACOSX_UNIX03) -c-2 -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
+	   $(MACOSX_UNIX03) -c-2 -Z0 $(filter-out $(CINTDLLDIRL)/G__c_%, $(filter-out $(IOSENUM),$(filter $(CINTDLLDIRL)/%,$(filter %.h,$^))))
 
 $(CINTDLLDIRDLLSTL)/G__cpp_complex.cxx: $(CINTDLLDIRL)/dll_stl/cmplx.h $(CINTCPPDEP)
 	$(patsubst %lib/dll_stl/,%,$(dir $@))/main/cint_tmp \
            -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
 	   -D__MAKECINT__ -DG__MAKECINT \
            $(addprefix $(patsubst %lib/dll_stl/,-I%,$(dir $@)),lib/dll_stl lib) \
-	   -V -c-1 -A -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
+	   -V -c-1 -A -Z0 $(CINTDLLDIRL)/dll_stl/cmplx.h
 
 ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 # MACOSX_MINOR > 4
