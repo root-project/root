@@ -1896,7 +1896,7 @@ int G__blockscope::initstruct(G__TypeReader& type, struct G__var_array* var, int
         type_tmp.Init(memvar, memindex);
         type_tmp.incplevel();
         m_bc_inst.CAST(type_tmp);
-        G__value reg = G__getexpr(expr);
+        /* G__value reg = */ G__getexpr(expr);
         m_bc_inst.LETNEWVAL();
         // Move to next data member.
 	memvar = G__incmemvar(memvar, &memindex, &buf);
