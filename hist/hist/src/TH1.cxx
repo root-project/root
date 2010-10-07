@@ -6654,7 +6654,7 @@ void TH1::ResetStats()
    // and replace with values calculates from bin content
    // The number of entries is set to the total bin content or (in case of weighted histogram)
    // to number of effective entries
-   Double_t stats[kNstat];
+   Double_t stats[kNstat] = {0};
    fTsumw = 0;
    fEntries = 1; // to force re-calculation of the statistics in TH1::GetStats
    GetStats(stats);

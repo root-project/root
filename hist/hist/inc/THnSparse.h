@@ -165,6 +165,8 @@ class THnSparse: public TNamed {
                    const TObjArray* axes, Bool_t keepTargetAxis) const;
    TObject* ProjectionAny(Int_t ndim, const Int_t* dim,
                           Bool_t wantSparse, Option_t* option = "") const;
+   Bool_t PrintBin(Long64_t idx, Int_t* coord, Option_t* options) const;
+   void AddInternal(const THnSparse* h, Double_t c, Bool_t rebinned);
 
  public:
    virtual ~THnSparse();
@@ -257,6 +259,13 @@ class THnSparse: public TNamed {
 
    Double_t ComputeIntegral();
    void GetRandom(Double_t *rand, Bool_t subBinRandom = kTRUE);
+
+   void Print(Option_t* option = "") const;
+   void PrintEntries(Long64_t from = 0, Long64_t howmany = -1, Option_t* options = 0) const;
+   void PrintBin(Int_t* coord, Option_t* options) const {
+      PrintBin(-1, coord, options);
+   }
+   void PrintBin(Long64_t idx, Option_t* options) const;
 
    //void Draw(Option_t* option = "");
 
