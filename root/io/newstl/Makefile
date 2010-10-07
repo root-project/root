@@ -16,7 +16,7 @@ FILEDIR := $(VERSION)
 
 #Set the list of files to be delete by clean:
 CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log *.clog  result.root $(LIBDIRTOP) emulvector.root \
-   test.root samplerootfile.root memberwise.root *.libs
+   test.root samplerootfile.root memberwise.root *.libs pospelov 
 # We intentionally do not delete the output file in $(FILEDIR) so that 
 # we can keep the historic versions.
 
@@ -221,5 +221,10 @@ execMemberWise_cxx.$(DllSuf):
 	$(CMDECHO) echo 'do nothing' > /dev/null
 
 execMemberWise.clog: $(LIBDIR)execMemberWise_cxx.$(DllSuf) memberwise.root $(ROOTCORELIBS)
+
+pospelov/pospelov.$(DllSuf): $(ROOTCORELIBS)
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q buildPospelov.C > buildPospelov.log 2>&1 || handleError.sh --log=buildPospelov.log --res=$$? 
+
+PospelovPrintFile.log: pospelov/pospelov.$(DllSuf)
 
 # DO NOT DELETE
