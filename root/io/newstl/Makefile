@@ -222,7 +222,7 @@ execMemberWise_cxx.$(DllSuf):
 
 execMemberWise.clog: $(LIBDIR)execMemberWise_cxx.$(DllSuf) memberwise.root $(ROOTCORELIBS)
 
-pospelov/pospelov.$(DllSuf): $(ROOTCORELIBS)
+pospelov/pospelov.$(DllSuf): buildPospelov.C $(ROOTCORELIBS)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q buildPospelov.C > buildPospelov.log 2>&1 || handleError.sh --log=buildPospelov.log --res=$$? 
 
 execPospelovPrintFile.log: pospelov/pospelov.$(DllSuf)
