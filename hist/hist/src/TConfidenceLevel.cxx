@@ -151,21 +151,14 @@ Double_t TConfidenceLevel::CLb(bool use_sMC) const
    // Get the Confidence Level for the background only
 
    Double_t result = 0;
-   switch (use_sMC) {
-   case kFALSE:
-      {
-         for (Int_t i = 0; i < fNMC; i++)
-            if (fTSB[fISB[i]] < fTSD)
-               result = (Double_t(i + 1)) / fNMC;
-         return result;
-      }
-   case kTRUE:
-      {
-         for (Int_t i = 0; i < fNMC; i++)
-            if (fTSS[fISS[i]] < fTSD)
-               result += (1 / (fLRS[fISS[i]] * fNMC));
-         return result;
-      }
+   if (use_sMC) {
+      for (Int_t i = 0; i < fNMC; i++)
+         if (fTSS[fISS[i]] < fTSD)
+            result += (1 / (fLRS[fISS[i]] * fNMC));
+   } else {
+      for (Int_t i = 0; i < fNMC; i++)
+         if (fTSB[fISB[i]] < fTSD)
+            result = (Double_t(i + 1)) / fNMC;
    }
    return result;
 }
@@ -177,21 +170,14 @@ Double_t TConfidenceLevel::CLsb(bool use_sMC) const
    // Get the Confidence Level for the signal plus background hypothesis
 
    Double_t result = 0;
-   switch (use_sMC) {
-   case kFALSE:
-      {
-         for (Int_t i = 0; i < fNMC; i++)
-            if (fTSB[fISB[i]] <= fTSD)
-               result += (fLRB[fISB[i]]) / fNMC;
-         return result;
-      }
-   case kTRUE:
-      {
-         for (Int_t i = 0; i < fNMC; i++)
-            if (fTSS[fISS[i]] <= fTSD)
-               result = i / fNMC;
-         return result;
-      }
+   if (use_sMC) {
+      for (Int_t i = 0; i < fNMC; i++)
+         if (fTSS[fISS[i]] <= fTSD)
+            result = i / fNMC;
+   } else {
+      for (Int_t i = 0; i < fNMC; i++)
+         if (fTSB[fISB[i]] <= fTSD)
+            result += (fLRB[fISB[i]]) / fNMC;
    }
    return result;
 }
@@ -449,8 +435,8 @@ void  TConfidenceLevel::Draw(const Option_t*)
 void  TConfidenceLevel::SetTSB(Double_t * in)
 {
    // Set the TSB.
-   fTSB = in; 
-   TMath::Sort(fNNMC, fTSB, fISB, 0); 
+   fTSB = in;
+   TMath::Sort(fNNMC, fTSB, fISB, 0);
 }
 
 
@@ -458,6 +444,6 @@ void  TConfidenceLevel::SetTSB(Double_t * in)
 void  TConfidenceLevel::SetTSS(Double_t * in)
 {
    // Set the TSS.
-   fTSS = in; 
-   TMath::Sort(fNNMC, fTSS, fISS, 0); 
+   fTSS = in;
+   TMath::Sort(fNNMC, fTSS, fISS, 0);
 }
