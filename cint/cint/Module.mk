@@ -27,7 +27,8 @@ CINTCONF     := $(CINTDIRI)/configcint.h
 CINTH        := $(wildcard $(CINTDIRI)/*.h)
 CINTHT       := $(sort $(patsubst $(CINTDIRI)/%.h,include/%.h,$(CINTH) $(CINTCONF)))
 CINTS1       := $(wildcard $(MODDIRS)/*.c) \
-                $(MODDIRS)/config/strlcpy.c $(MODDIRS)/config/strlcat.c $(MODDIRS)/config/snprintf.c
+                $(MODDIRS)/config/strlcpy.c $(MODDIRS)/config/strlcat.c \
+                $(MODDIRS)/config/snprintf.c
 CINTS2       := $(wildcard $(MODDIRS)/*.cxx) \
                 $(MODDIRSD)/Apiif.cxx \
                 $(MODDIRSD)/stdstrct.cxx
