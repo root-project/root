@@ -163,7 +163,6 @@
 
 #include "RConfigure.h"
 #include "RConfig.h"
-#include "Rtypes.h"
 #include <iostream>
 #include <memory>
 #include "Shadow.h"
@@ -506,7 +505,7 @@ const char *GetExePath()
 
       // get our pid and build the name of the link in /proc
       pid = getpid();
-      snprintf(linkname,PATH_MAX, "/proc/%i/exe", pid);
+      sprintf(linkname, "/proc/%i/exe", pid);
       int ret = readlink(linkname, buf, 1024);
       if (ret > 0 && ret < 1024) {
          buf[ret] = 0;
@@ -541,13 +540,12 @@ void SetRootSys()
             return;
          } else {
             fprintf(stderr, "rootcint: error getting realpath of rootcint, please set ROOTSYS in the shell");
-            strlcpy(ep, exepath,PATH_MAX);
+            strcpy(ep, exepath);
          }
       }
 #else
-      int nche = strlen(exepath)+1;
-      char *ep = new char[nche];
-      strlcpy(ep, exepath,nche);
+      char *ep = new char[strlen(exepath)+1];
+      strcpy(ep, exepath);
 #endif
       char *s;
       if ((s = strrchr(ep, '/'))) {
@@ -565,9 +563,8 @@ void SetRootSys()
          // There was no slashes at all let now change ROOTSYS
          return;
       }
-      int ncha = strlen(ep) + 10;
-      char *env = new char[ncha];
-      snprintf(env, ncha, "ROOTSYS=%s", ep);
+      char *env = new char[strlen(ep) + 10];
+      sprintf(env, "ROOTSYS=%s", ep);
       putenv(env);
       delete [] ep;
    }
@@ -635,9 +632,9 @@ string R__tmpnam()
       std::cerr << "Temporary file name too long! Trying with /tmp..." << std::endl;
       tmpdir = "/tmp/";
    }
-   strlcpy(filename, tmpdir.c_str(),L_tmpnam+2);
-   strlcat(filename, prefix,L_tmpnam+2);
-   strlcat(filename, radix,L_tmpnam+2);
+   strcpy(filename, tmpdir.c_str());
+   strcat(filename, prefix);
+   strcat(filename, radix);
    int temp_fileno = mkstemp(filename);/*mkstemp not only generate file name but also opens the file*/
    if (temp_fileno >= 0) {
       close(temp_fileno);
@@ -697,8 +694,7 @@ void LoadLibraryMap()
    string filename;
    static char *buffer = 0;
    static unsigned int sbuffer = 0;
-   int nchbuffer = 0;
-   
+
    while ( filelist >> filename ) {
 #ifdef WIN32
       struct _stati64 finfo;
@@ -760,11 +756,10 @@ void LoadLibraryMap()
                            gAutoloads[base] = ""; // We never load namespaces on their own.
                            if (sbuffer < base.size()+20) {
                               delete [] buffer;
-			      nchbuffer = base.size()+20;
-                              buffer = new char[nchbuffer];
+                              buffer = new char[base.size()+20];
                               sbuffer = base.size()+20;
                            }
-                           strlcpy(buffer,base.c_str(),nchbuffer);
+                           strcpy(buffer,base.c_str());
                            G__set_class_autoloading_table(buffer, (char*)""); // We never load namespaces on their own.
                         }
                         ++k;
@@ -783,11 +778,10 @@ void LoadLibraryMap()
             gAutoloads[classname] = line;
             if (sbuffer < classname.size()+20) {
                delete [] buffer;
-	       nchbuffer = nchbuffer;
-               buffer = new char[nchbuffer];
+               buffer = new char[classname.size()+20];
                sbuffer = classname.size()+20;
             }
-            strlcpy(buffer,classname.c_str(),nchbuffer);
+            strcpy(buffer,classname.c_str());
             G__set_class_autoloading_table(buffer,(char*)line.c_str());
          }
       }
@@ -832,9 +826,8 @@ bool CheckInputOperator(G__ClassInfo &cl, int dicttype)
    G__ClassInfo gcl;
    long offset;
 
-   int ncha = strlen(cl.Fullname())+13;
-   char *proto = new char[ncha];
-   snprintf(proto,ncha,"TBuffer&,%s*&",cl.Fullname());
+   char *proto = new char[strlen(cl.Fullname())+13];
+   sprintf(proto,"TBuffer&,%s*&",cl.Fullname());
 
    G__MethodInfo methodinfo = gcl.GetMethod("operator>>",proto,&offset);
 
@@ -896,7 +889,7 @@ string FixSTLName(const string& cintName) {
 
    const char *s = cintName.c_str();
    char type[kMaxLen];
-   strlcpy(type, s,kMaxLen);
+   strcpy(type, s);
 
 #if 0 // (G__GNUC<3) && !defined (G__KCC)
    if (!strncmp(type, "vector",6)   ||
@@ -1847,19 +1840,21 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
    };
 
    long prop = ti.Property();
-   string tiName(ti.Name());
-   string objType(ShortTypeName(tiName.c_str()));
-   string tiFullname;
+   char tiName[kMaxLen],tiFullname[kMaxLen],objType[kMaxLen];
+   strcpy(tiName,ti.Name());
+   strcpy(objType,ShortTypeName(tiName));
    if (ti.Fullname())
-      tiFullname = ti.Fullname();
-   int isTObj = (ti.IsBase("TObject") || tiFullname == "TObject");
+      strcpy(tiFullname,ti.Fullname());
+   else
+      tiFullname[0] = 0;
+   int isTObj = (ti.IsBase("TObject") || !strcmp(tiFullname, "TObject"));
    int isStre = (ti.HasMethod("Streamer"));
 
    long kase = prop & (G__BIT_ISPOINTER|G__BIT_ISFUNDAMENTAL|G__BIT_ISENUM);
-   if (isTObj)              kase |= R__BIT_ISTOBJECT;
-   if (tiName == "string")  kase |= kBIT_ISSTRING;
-   if (tiName == "string*") kase |= kBIT_ISSTRING;
-   if (isStre)              kase |= R__BIT_HASSTREAMER;
+   if (isTObj)                      kase |= R__BIT_ISTOBJECT;
+   if (strcmp("string" ,tiName)==0) kase |= kBIT_ISSTRING;
+   if (strcmp("string*",tiName)==0) kase |= kBIT_ISSTRING;
+   if (isStre)                      kase |= R__BIT_HASSTREAMER;
 
    //    if (strcmp(objType,"string")==0) RStl::inst().GenerateTClassFor( "string"  );
 
@@ -2284,7 +2279,7 @@ void WriteInputOperator(G__ClassInfo &cl)
 #ifdef WIN32
    G__ClassInfo space = cl.EnclosingSpace();
    if (space.Property() & G__BIT_ISNAMESPACE)
-      snprintf(space_prefix,kMaxLen,"%s::",space.Fullname());
+      sprintf(space_prefix,"%s::",space.Fullname());
 #endif
 
    if (cl.IsTmplt()) {
@@ -2386,7 +2381,6 @@ void WriteClassInit(G__ClassInfo &cl)
 {
    // Write the code to initialize the class name and the initialization object.
 
-   // coverity[fun_call_w_exception] - that's just fine.
    string classname = GetLong64_Name( RStl::DropDefaultArg( cl.Fullname() ) );
    string mappedname = G__map_cpp_name((char*)classname.c_str());
    string csymbol = classname;
@@ -2551,12 +2545,10 @@ void WriteClassInit(G__ClassInfo &cl)
       G__ClassInfo gcl;
       long offset;
       const char *versionFunc = "GetClassVersion";
-      int ncha = strlen(classname.c_str())+strlen(versionFunc)+5;
-      char *funcname= new char[ncha];
-      snprintf(funcname,ncha,"%s<%s >",versionFunc,classname.c_str());
-      ncha = strlen(classname.c_str())+ 10 ;
-      char *proto = new char[ncha];
-      snprintf(proto,ncha,"%s*",classname.c_str());
+      char *funcname= new char[strlen(classname.c_str())+strlen(versionFunc)+5];
+      sprintf(funcname,"%s<%s >",versionFunc,classname.c_str());
+      char *proto = new char[strlen(classname.c_str())+ 10 ];
+      sprintf(proto,"%s*",classname.c_str());
       G__MethodInfo methodinfo = gcl.GetMethod(versionFunc,proto,&offset);
       delete [] funcname;
       delete [] proto;
@@ -2705,7 +2697,6 @@ void WriteNamespaceInit(G__ClassInfo &cl)
 
    if (! (cl.Property() & G__BIT_ISNAMESPACE) ) return;
 
-   // coverity[fun_call_w_exception] - that's just fine.
    string classname = GetLong64_Name( RStl::DropDefaultArg( cl.Fullname() ) );
    string mappedname = G__map_cpp_name((char*)classname.c_str());
 
@@ -2763,12 +2754,10 @@ void WriteNamespaceInit(G__ClassInfo &cl)
       G__ClassInfo gcl;
       long offset;
       const char *versionFunc = "GetClassVersion";
-      int ncha = strlen(classname.c_str())+strlen(versionFunc)+5;
-      char *funcname= new char[ncha];
-      snprintf(funcname,ncha,"%s<%s >",versionFunc,classname.c_str());
-      ncha = strlen(classname.c_str())+ 10 ;
-      char *proto = new char[ncha];
-      snprintf(proto,ncha,"%s*",classname.c_str());
+      char *funcname= new char[strlen(classname.c_str())+strlen(versionFunc)+5];
+      sprintf(funcname,"%s<%s >",versionFunc,classname.c_str());
+      char *proto = new char[strlen(classname.c_str())+ 10 ];
+      sprintf(proto,"%s*",classname.c_str());
       G__MethodInfo methodinfo = gcl.GetMethod(versionFunc,proto,&offset);
       delete [] funcname;
       delete [] proto;
@@ -3366,8 +3355,10 @@ void WritePointersSTL(G__ClassInfo &cl)
 {
    // Write interface function for STL members
 
-   string a;
-   string clName(G__map_cpp_name((char *)cl.Fullname()));
+   // char a[80],fun[80];
+   char a[G__LONGLINE];
+   char clName[G__LONGLINE];
+   strcpy(clName, G__map_cpp_name((char *)cl.Fullname()));
    int version = GetClassVersion( cl);
    if (version == 0) return;
    if (version < 0 && !(cl.RootFlag() & G__USEBYTECOUNT) ) return;
@@ -3394,13 +3385,9 @@ void WritePointersSTL(G__ClassInfo &cl)
             const char *rightb = strchr(leftb,']');
             if (rightb) {
                pCounter++;
-               a = m.Type()->Name();
-               char *astar = (char*)strchr(a.c_str(),'*');
-               if (!astar) {
-                  Error(0, "Expected '*' in type name '%s' of member '%s'\n", a.c_str(), m.Name());
-               } else {
-                  *astar = 0;
-               }
+               strcpy(a,m.Type()->Name());
+               char *astar = (char*)strchr(a,'*');
+               *astar = 0;
                if (strstr(m.Type()->Name(),"**")) pCounter++;
             }
          }
@@ -3600,10 +3587,10 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 
    // Inspect data members
    G__DataMemberInfo m(cl);
-   char cdim[1024];
-   string cvar;
-   string clName(G__map_cpp_name((char *)cl.Fullname()));
+   char cdim[1024], cvar[4096];
+   char clName[G__LONGLINE];
    string fun;
+   strcpy(clName,G__map_cpp_name((char *)cl.Fullname()));
    int version = GetClassVersion(cl);
    int clflag = 1;
    if (version == 0 || cl.RootFlag() == 0) clflag = 0;
@@ -3624,11 +3611,11 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
              ((m.Type())->Property() & G__BIT_ISENUM)) {
             if (m.Property() & G__BIT_ISARRAY &&
                 m.Property() & G__BIT_ISPOINTER) {
-               cvar = '*';
-               cvar += m.Name();
+               cvar[0] = '*';
+               strcpy(cvar+1, m.Name());
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
-                  snprintf(cdim,1024, "[%d]", m.MaxIndex(dim));
-                  cvar += cdim;
+                  sprintf(cdim, "[%d]", m.MaxIndex(dim));
+                  strcat(cvar, cdim);
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", &"
                              << prefix << m.Name() << ");" << std::endl;
@@ -3636,17 +3623,17 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"*" << m.Name() << "\", &"
                              << prefix << m.Name() << ");" << std::endl;
             } else if (m.Property() & G__BIT_ISARRAY) {
-               cvar = m.Name();
+               strcpy(cvar, m.Name());
                bool vardim = false;
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
                   int maxInd = m.MaxIndex(dim);
                   if (maxInd < 0) {
-                     strlcpy(cdim,"[]",1024);
+                     strcpy(cdim,"[]");
                      vardim = true;
                   } else {
-                     snprintf(cdim, 1024,"[%d]", maxInd);
+                     sprintf(cdim, "[%d]", maxInd);
                   }
-                  cvar += cdim;
+                  strcat(cvar, cdim);
                }
                if (vardim) {
                   (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", &"
@@ -3665,11 +3652,11 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 
             if (m.Property() & G__BIT_ISARRAY &&
                 m.Property() & G__BIT_ISPOINTER) {
-               cvar = '*';
-               cvar += m.Name();
+               cvar[0] = '*';
+               strcpy(cvar+1, m.Name());
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
-                  snprintf(cdim,1024, "[%d]", m.MaxIndex(dim));
-                  cvar += cdim;
+                  sprintf(cdim, "[%d]", m.MaxIndex(dim));
+                  strcat(cvar, cdim);
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", &"
                              << prefix << m.Name() << ");" << std::endl;
@@ -3682,10 +3669,10 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                   (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"*" << m.Name() << "\",R__"
                                 << clName << "_" << m.Name() << ");" << std::endl;
             } else if (m.Property() & G__BIT_ISARRAY) {
-               cvar = m.Name();
+               strcpy(cvar, m.Name());
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
-                  snprintf(cdim,1024, "[%d]", m.MaxIndex(dim));
-                  cvar += cdim;
+                  sprintf(cdim, "[%d]", m.MaxIndex(dim));
+                  strcat(cvar, cdim);
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", "
                              << prefix << m.Name() << ");" << std::endl;
@@ -3711,11 +3698,12 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                                 << "\", (void*)&" << prefix << m.Name() << ");" << std::endl;
                   /* if (can call ShowStreamer) */
 
-                  string compareName(clName);
-                  compareName += "::";
+                  char compareName[G__LONGLINE];
+                  strcpy(compareName,clName);
+                  strcat(compareName,"::");
 
                   if (strlen(m.Type()->Name()) &&
-                      compareName != m.Type()->Name() ) {
+                      strcmp(compareName,m.Type()->Name())!=0 ) {
                      // Filter out the unamed type from with a the class.
 
                      string typeWithDefaultStlName( RStl::DropDefaultArg(m.Type()->Name()) );
@@ -3838,7 +3826,6 @@ void WriteClassCode(G__ClassInfo &cl, bool force = false)
    if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && (force || cl.Linkage() == G__CPPLINK) ) {
 
       if ( TClassEdit::IsSTLCont(cl.Name()) ) {
-         // coverity[fun_call_w_exception] - that's just fine.
          RStl::inst().GenerateTClassFor( cl.Name() );
          return;
       }
@@ -3907,11 +3894,11 @@ void GenerateLinkdef(int *argc, char **argv, int iv)
       }
       if (nostr || noinp) {
          trail[0] = 0;
-         if (nostr) strlcat(trail, "-",3);
-         if (noinp) strlcat(trail, "!",3);
+         if (nostr) strcat(trail, "-");
+         if (noinp) strcat(trail, "!");
       }
       if (bcnt) {
-         strlcpy(trail, "+",3);
+         strcpy(trail, "+");
          if (nostr)
             Error(0, "option + mutual exclusive with -\n");
       }
@@ -3934,46 +3921,43 @@ void GenerateLinkdef(int *argc, char **argv, int iv)
 }
 
 //______________________________________________________________________________
-bool Which(const char *fname, string& pname)
+const char *Which(const char *fname)
 {
    // Find file name in path specified via -I statements to CINT.
    // Can be only called after G__main(). Return pointer to static
    // space containing full pathname or 0 in case file not found.
 
+   static char pname[1024];
    FILE *fp = 0;
 
-   pname = fname;
+   strcpy(pname, fname);
 #ifdef WIN32
-   fp = fopen(pname.c_str(), "rb");
+   fp = fopen(pname, "rb");
 #else
-   fp = fopen(pname.c_str(), "r");
+   fp = fopen(pname, "r");
 #endif
    if (fp) {
       fclose(fp);
-      return true;
+      return pname;
    }
 
    struct G__includepath *ipath = G__getipathentry();
 
    while (!fp && ipath->pathname) {
-      pname = ipath->pathname;
 #ifdef WIN32
-      pname += "\\";
-      static const char* fopenopts = "rb";
+      sprintf(pname, "%s\\%s", ipath->pathname, fname);
+      fp = fopen(pname, "rb");
 #else
-      pname += "/";
-      static const char* fopenopts = "r";
+      sprintf(pname, "%s/%s", ipath->pathname, fname);
+      fp = fopen(pname, "r");
 #endif
-      pname += fname;
-      fp = fopen(pname.c_str(), fopenopts);
       ipath = ipath->next;
    }
    if (fp) {
       fclose(fp);
-      return true;
+      return pname;
    }
-   pname = "";
-   return false;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -3985,9 +3969,8 @@ char *StrDup(const char *str)
    if (!str) return 0;
 
    // allocate 20 extra characters in case of eg, vector<vector<T>>
-   int nch = strlen(str)+20;
-   char *s = new char[nch];
-   if (s) strlcpy(s, str,nch);
+   char *s = new char[strlen(str)+20];
+   if (s) strcpy(s, str);
 
    return s;
 }
@@ -4059,37 +4042,39 @@ const char *CopyArg(const char *original)
 }
 
 //______________________________________________________________________________
-void StrcpyWithEsc(string& escaped, const char *original)
+void StrcpyWithEsc(char *escaped, const char *original)
 {
    // Copy original into escaped BUT make sure that the \ characters
    // are properly escaped (on Windows temp files have \'s).
 
    int j, k;
    j = 0; k = 0;
-   escaped = "";
    while (original[j] != '\0') {
       if (original[j] == '\\')
-         escaped += '\\';
-      escaped += original[j++];
+         escaped[k++] = '\\';
+      escaped[k++] = original[j++];
    }
+   escaped[k] = '\0';
 }
 
 //______________________________________________________________________________
-void StrcpyArg(string& dest, const char *original)
+void StrcpyArg(char *dest, const char *original)
 {
    // Copy the command line argument, stripping MODULE/inc if
    // necessary.
 
-   dest = CopyArg( original );
+   std::string copy( CopyArg( original ) );
+   strcpy(dest,copy.c_str());
 }
 
 //______________________________________________________________________________
-void StrcpyArgWithEsc(string& escaped, const char *original)
+void StrcpyArgWithEsc(char *escaped, const char *original)
 {
    // Copy the command line argument, stripping MODULE/inc if
    // necessary and then escaping string.
 
-   escaped = CopyArg( original );
+   std::string copy( CopyArg( original ) );
+   StrcpyWithEsc(escaped,original);
 }
 
 //______________________________________________________________________________
@@ -4145,35 +4130,34 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
       return;
    }
 
-   string tmpdictname(dictname);
-   tmpdictname += "_+_+_+rootcinttmp";
-   FILE *tmpdict = fopen(tmpdictname.c_str(), "w");
+   char tmpdictname[512];
+   sprintf(tmpdictname, "%s_+_+_+rootcinttmp", dictname);
+   FILE *tmpdict = fopen(tmpdictname, "w");
    if (!tmpdict) {
       Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-            tmpdictname.c_str());
+            tmpdictname);
       fclose(fpd);
       return;
    }
 
-   string esc_bundlename;
+   char esc_bundlename[512];
    StrcpyWithEsc(esc_bundlename, bundlename.c_str());
 
-   string checkline("  G__add_compiledheader(\"");
-   checkline += esc_bundlename;
-   checkline += "\");";
-   int clen = checkline.length();
+   char checkline[kMaxLen];
+   sprintf(checkline, "  G__add_compiledheader(\"%s\");", esc_bundlename);
+   int clen = strlen(checkline);
 
    char line[BUFSIZ];
    if (tmpdict && fpd) {
       while (fgets(line, BUFSIZ, fpd)) {
-         if (!strncmp(line, checkline.c_str(), clen)) {
+         if (!strncmp(line, checkline, clen)) {
             FILE *fb = fopen(bundlename.c_str(), "r");
             if (!fb) {
                Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
                      bundlename.c_str());
                fclose(fpd);
                fclose(tmpdict);
-               remove(tmpdictname.c_str());
+               remove(tmpdictname);
                return;
             }
             while (fgets(line, BUFSIZ, fb)) {
@@ -4198,7 +4182,7 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
    fclose(tmpdict);
    fclose(fpd);
 
-   ReplaceFile(tmpdictname.c_str(),dictname);
+   ReplaceFile(tmpdictname,dictname);
 
    // Next patch dict.h. Create tmp file and copy dict.h to this file.
    // When discovering a line like:
@@ -4206,37 +4190,37 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
    // replace it by the appropriate number of lines contained in the bundle.
 
    // make dict.h
-   string dictnameh(dictname);
-   size_t dh = dictnameh.rfind('.');
-   if (dh != std::string::npos) {
-      dictnameh.erase(dh + 1);
-      dictnameh += "h";
+   char dictnameh[kMaxLen];
+   strcpy(dictnameh, dictname);
+   char *dh = strrchr(dictnameh, '.');
+   if (dh) {
+      *(dh+1) = 'h';
+      *(dh+2) = 0;
    } else {
       Error(0, "rootcint: failed create dict.h in ReplaceBundleInDict()\n");
       return;
    }
 
-   fpd = fopen(dictnameh.c_str(), "r");
+   fpd = fopen(dictnameh, "r");
    if (!fpd) {
       Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-            dictnameh.c_str());
+            dictnameh);
       return;
    }
-   tmpdict = fopen(tmpdictname.c_str(), "w");
+   tmpdict = fopen(tmpdictname, "w");
    if (!tmpdict) {
       Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-            tmpdictname.c_str());
+            tmpdictname);
       fclose(fpd);
       return;
    }
 
-   checkline = "#include \"";
-   checkline += esc_bundlename + "\"";
-   clen = checkline.length();
+   sprintf(checkline, "#include \"%s\"", esc_bundlename);
+   clen = strlen(checkline);
 
    if (tmpdict && fpd) {
       while (fgets(line, BUFSIZ, fpd)) {
-         if (!strncmp(line, checkline.c_str(), clen)) {
+         if (!strncmp(line, checkline, clen)) {
             FILE *fb = fopen(bundlename.c_str(), "r");
             if (!fb) {
                Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
@@ -4267,7 +4251,7 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
    fclose(tmpdict);
    fclose(fpd);
 
-   ReplaceFile(tmpdictname.c_str(),dictnameh.c_str());
+   ReplaceFile(tmpdictname,dictnameh);
 }
 
 string bundlename;
@@ -4343,8 +4327,7 @@ int main(int argc, char **argv)
          dict_type=kDictTypeGCCXML;
    }
 
-   // coverity[secure_coding] - pid can have up to 47 digits!
-   snprintf(autold,64, autoldtmpl, getpid());
+   sprintf(autold, autoldtmpl, getpid());
 
    ic = 1;
    if (!strcmp(argv[ic], "-v")) {
@@ -4546,9 +4529,8 @@ int main(int argc, char **argv)
          ic++;
          argvv[argcc++] = (char *)"-q0";
          argvv[argcc++] = (char *)"-n";
-	 int ncha = strlen(argv[ifl])+1;
-         argvv[argcc] = (char *)calloc(ncha, 1);
-         strlcpy(argvv[argcc], argv[ifl],ncha); argcc++;
+         argvv[argcc] = (char *)calloc(strlen(argv[ifl])+1, 1);
+         strcpy(argvv[argcc], argv[ifl]); argcc++;
          argvv[argcc++] = (char *)"-N";
          s = strrchr(dictname,'.');
          argvv[argcc] = (char *)calloc(strlen(dictname), 1);
@@ -4628,61 +4610,59 @@ int main(int argc, char **argv)
             // so that the header file are properly parsed.
 #ifdef __KCC
             argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__KCC=%ld", (long)__KCC); argcc++;
+            sprintf(argvv[argcc], "-D__KCC=%ld", (long)__KCC); argcc++;
 #endif
 #ifdef __INTEL_COMPILER
             argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER); argcc++;
+            sprintf(argvv[argcc], "-D__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER); argcc++;
 #endif
 #ifdef __xlC__
             argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__xlC__=%ld", (long)__xlC__); argcc++;
+            sprintf(argvv[argcc], "-D__xlC__=%ld", (long)__xlC__); argcc++;
 #endif
 #ifdef __GNUC__
             argvv[argcc] = (char *)calloc(64, 1);
-            // coverity[secure_coding] - sufficient space
-            snprintf(argvv[argcc],64, "-D__GNUC__=%ld", (long)__GNUC__); argcc++;
+            sprintf(argvv[argcc], "-D__GNUC__=%ld", (long)__GNUC__); argcc++;
 #endif
 #ifdef __GNUC_MINOR__
             argvv[argcc] = (char *)calloc(64, 1);
-            // coverity[secure_coding] - sufficient space
-            snprintf(argvv[argcc],64, "-D__GNUC_MINOR__=%ld", (long)__GNUC_MINOR__); argcc++;
+            sprintf(argvv[argcc], "-D__GNUC_MINOR__=%ld", (long)__GNUC_MINOR__); argcc++;
 #endif
 #ifdef __HP_aCC
             argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64 "-D__HP_aCC=%ld", (long)__HP_aCC); argcc++;
+            sprintf(argvv[argcc], "-D__HP_aCC=%ld", (long)__HP_aCC); argcc++;
 #endif
 #ifdef __sun
             argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__sun=%ld", (long)__sun); argcc++;
+            sprintf(argvv[argcc], "-D__sun=%ld", (long)__sun); argcc++;
 #endif
 #ifdef __SUNPRO_CC
             argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__SUNPRO_CC=%ld", (long)__SUNPRO_CC); argcc++;
+            sprintf(argvv[argcc], "-D__SUNPRO_CC=%ld", (long)__SUNPRO_CC); argcc++;
 #endif
 #ifdef __ia64__
             argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__ia64__=%ld", (long)__ia64__); argcc++;
+            sprintf(argvv[argcc], "-D__ia64__=%ld", (long)__ia64__); argcc++;
 #endif
 #ifdef __x86_64__
             argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__x86_64__=%ld", (long)__x86_64__); argcc++;
+            sprintf(argvv[argcc], "-D__x86_64__=%ld", (long)__x86_64__); argcc++;
 #endif
 #ifdef R__B64
             argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-DR__B64"); argcc++;
+            sprintf(argvv[argcc], "-DR__B64"); argcc++;
 #endif
 #ifdef _WIN32
             argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D_WIN32=%ld",(long)_WIN32); argcc++;
+            sprintf(argvv[argcc], "-D_WIN32=%ld",(long)_WIN32); argcc++;
 #endif
 #ifdef WIN32
             argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-DWIN32=%ld",(long)WIN32); argcc++;
+            sprintf(argvv[argcc], "-DWIN32=%ld",(long)WIN32); argcc++;
 #endif
 #ifdef _MSC_VER
             argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D_MSC_VER=%ld",(long)_MSC_VER); argcc++;
+            sprintf(argvv[argcc], "-D_MSC_VER=%ld",(long)_MSC_VER); argcc++;
 #endif
          }
 #ifdef ROOTBUILD
@@ -4755,7 +4735,7 @@ int main(int argc, char **argv)
    il = 0;
 
    std::list<std::string> includedFilesForBundle;
-   string esc_arg;
+   char esc_arg[512];
    bool insertedBundle = false;
    FILE *bundle = 0;
    if (use_preprocessor) {
@@ -4800,7 +4780,7 @@ int main(int argc, char **argv)
       if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+') {
          StrcpyArgWithEsc(esc_arg, argv[i]);
          // see comment about <> and "" above
-         fprintf(bundle,"#include <%s>\n", esc_arg.c_str());
+         fprintf(bundle,"#include <%s>\n", esc_arg);
          includedFilesForBundle.push_back(argv[i]);
          if (!insertedBundle) {
             argvv[argcc++] = (char*)bundlename.c_str();
@@ -4809,12 +4789,8 @@ int main(int argc, char **argv)
       } else {
          if (strcmp("-pipe", argv[ic])!=0) {
             // filter out undesirable options
-            string argkeep;
-            StrcpyArg(argkeep, argv[i]);
-	    int ncha = argkeep.length()+1;
-            argvv[argcc++] = (char*)calloc(ncha,1);
-            // coverity[secure_coding] - sufficient space
-            strlcpy(argvv[argcc-1],argkeep.c_str(),ncha);
+            argvv[argcc++] = (char*)calloc(strlen(argv[i])+1,1);
+            StrcpyArg(argvv[argcc-1],argv[i]);
          }
       }
    }
@@ -5120,14 +5096,13 @@ int main(int argc, char **argv)
          fpld = fopen(autold, "r");
       } else {
          // Open file specified on command line
-         string filename;
-         bool found = Which(argv[il], filename);
-         if (!found) {
+         const char* filename=Which(argv[il]);
+         if (!filename) {
             Error(0, "%s: cannot open file %s\n", argv[0], argv[il]);
             CleanupOnExit(1);
             return 1;
          }
-         fpld = fopen(filename.c_str(), "r");
+         fpld = fopen(filename, "r");
       }
       if (!fpld) {
          Error(0, "%s: cannot open file %s\n", argv[0], il ? argv[il] : autold);
@@ -5171,7 +5146,6 @@ int main(int argc, char **argv)
       shadowMaker = &myShadowMaker;
 
       G__ShadowMaker::VetoShadow(false);
-      // coverity[fun_call_w_exception] - that's just fine.
       shadowMaker->WriteAllShadowClasses();
 
       //
@@ -5188,7 +5162,6 @@ int main(int argc, char **argv)
          if ((clLocal.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && clLocal.Linkage() == G__CPPLINK) {
             // Write Code for initialization object (except for STL containers)
             if ( TClassEdit::IsSTLCont(clLocal.Name()) ) {
-               // coverity[fun_call_w_exception] - that's just fine.
                RStl::inst().GenerateTClassFor( clLocal.Name() );
             } else {
                WriteClassInit(clLocal);
@@ -5233,8 +5206,8 @@ int main(int argc, char **argv)
 
          bool skip = true;
          bool forceLink = false;
-         strlcpy(cline,line,256);
-         strlcpy(nline,line,256);
+         strcpy(cline,line);
+         strcpy(nline,line);
          int len = strlen(line);
 
          // Check if the line contains a "#pragma link C++ class" specification,
@@ -5341,7 +5314,6 @@ int main(int argc, char **argv)
                   if (NeedShadowClass(clRequest)) {
                      (*dictSrcOut) << "namespace ROOT {" << std::endl
                                    << "   namespace Shadow {" << std::endl;
-                     // coverity[fun_call_w_exception] - that's just fine.
                      shadowMaker->WriteShadowClass(clRequest);
                      (*dictSrcOut) << "   } // Of namespace ROOT::Shadow" << std::endl
                                    << "} // Of namespace ROOT" << std::endl << std::endl;
@@ -5381,7 +5353,6 @@ int main(int argc, char **argv)
       }
 
       //RStl::inst().WriteStreamer(fp); //replaced by new Markus code
-      // coverity[fun_call_w_exception] - that's just fine.
       RStl::inst().WriteClassInit(0);
 
       fclose(fpld);
@@ -5412,13 +5383,17 @@ int main(int argc, char **argv)
 
          // make name of dict include file "aapDict.cxx" -> "aapDict.h"
          int  nl = 0;
+         char inclf[kMaxLen];
+
          // 07-11-07
          // Include the temporaries here to get one file with everything
+         char inclfTmp1[kMaxLen];
+         char inclfTmp2[kMaxLen];
          char *s = strrchr(dictname, '.');
          if (s) *s = 0;
-         string inclf(dictname); inclf += ".h";
-         string inclfTmp1(dictname); inclfTmp1 += "Tmp1.cxx";
-         string inclfTmp2(dictname); inclfTmp2 += "Tmp2.cxx";
+         sprintf(inclf, "%s.h", dictname);
+         sprintf(inclfTmp1, "%sTmp1.cxx", dictname);
+         sprintf(inclfTmp2, "%sTmp2.cxx", dictname);
          if (s) *s = '.';
 
          // during copy put dict include on top and remove later reference
@@ -5440,20 +5415,20 @@ int main(int argc, char **argv)
                default:;
                }
                if (longheadername && dictpathname.length() ) {
-                  fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclf.c_str());
+                  fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclf);
                } else {
-                  fprintf(fpd, "#include \"%s\"\n", inclf.c_str());
+                  fprintf(fpd, "#include \"%s\"\n", inclf);
                }
 
                // 07-11-07
                // Put the includes to temporary files when generating the third dictionary
                if(dicttype==3){
                   if (longheadername && dictpathname.length() ) {
-                     fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclfTmp1.c_str());
-                     fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclfTmp2.c_str());
+                     fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclfTmp1);
+                     fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclfTmp2);
                   } else {
-                     fprintf(fpd, "#include \"%s\"\n", inclfTmp1.c_str());
-                     fprintf(fpd, "#include \"%s\"\n", inclfTmp2.c_str());
+                     fprintf(fpd, "#include \"%s\"\n", inclfTmp1);
+                     fprintf(fpd, "#include \"%s\"\n", inclfTmp2);
                   }
                }
 
