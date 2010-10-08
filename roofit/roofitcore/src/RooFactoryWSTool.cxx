@@ -1331,8 +1331,8 @@ string RooFactoryWSTool::processCreateArg(string& func, vector<string>& args)
 
   // Split function part in class name and instance name
   char* save ;
-  char *className = strtok_r(buf,":",&save) ;
-  char *instName = strtok_r(0,":",&save) ;
+  const char *className = strtok_r(buf,":",&save) ;
+  const char *instName = strtok_r(0,":",&save) ;
   if (!className) className = "";
   if (!instName) instName = "" ;
 
@@ -2028,10 +2028,10 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     char buf[256] ;
     strcpy(buf,pargv[1].c_str()) ;
     char* save ;
-    char* intobs = strtok_r(buf,"|",&save) ;
+    const char* intobs = strtok_r(buf,"|",&save) ;
     if (!intobs) intobs="" ;
 
-    char* range = strtok_r(0,"",&save) ;
+    const char* range = strtok_r(0,"",&save) ;
     if (!range) range="" ;
 
     RooAbsReal* integral = 0 ;
