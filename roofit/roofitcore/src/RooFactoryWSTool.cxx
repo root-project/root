@@ -139,7 +139,7 @@ static char *strtok_r(char *s1, const char *s2, char **lasts)
 
 
 //_____________________________________________________________________________
-RooFactoryWSTool::RooFactoryWSTool(RooWorkspace& inws) : _ws(&inws)
+RooFactoryWSTool::RooFactoryWSTool(RooWorkspace& inws) : _ws(&inws), _errorCount(0)
 {
   // Default constructor  
 }
@@ -978,7 +978,8 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
 
   // Process token into arguments
   char* save ;
-  func = strtok_r(buf,"([",&save) ;
+  char* tmpx = strtok_r(buf,"([",&save) ;
+  func = tmpx ? tmpx : "" ;
   char* p = strtok_r(0,"",&save) ;
   
   // Return here if token is fundamental
@@ -1332,6 +1333,8 @@ string RooFactoryWSTool::processCreateArg(string& func, vector<string>& args)
   char* save ;
   char *className = strtok_r(buf,":",&save) ;
   char *instName = strtok_r(0,":",&save) ;
+  if (!className) className = "";
+  if (!instName) instName = "" ;
 
   // Concatenate list of args into comma separated string
   char pargs[1024] ;
@@ -1401,7 +1404,8 @@ vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
 
   // Process token into arguments
   char* save ;
-  func = strtok_r(buf,"(",&save) ;
+  char* tmpx = strtok_r(buf,"(",&save) ;  
+  func = tmpx ? tmpx : "" ;
   char* p = strtok_r(0,"",&save) ;
   
   // Return here if token is fundamental
@@ -2022,7 +2026,10 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     strcpy(buf,pargv[1].c_str()) ;
     char* save ;
     char* intobs = strtok_r(buf,"|",&save) ;
+    if (!intobs) intobs="" ;
+
     char* range = strtok_r(0,"",&save) ;
+    if (!range) range="" ;
 
     RooAbsReal* integral = 0 ;
     if (pargv.size()==2) {

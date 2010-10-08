@@ -25,7 +25,9 @@ class RooRealVar ;
 class RooFFTConvPdf : public RooAbsCachedPdf {
 public:
 
-  RooFFTConvPdf() {} ;
+  RooFFTConvPdf() {
+    // coverity[UNINIT_CTOR]
+  } ;
   RooFFTConvPdf(const char *name, const char *title, RooRealVar& convVar, RooAbsPdf& pdf1, RooAbsPdf& pdf2, Int_t ipOrder=2);
   RooFFTConvPdf(const char *name, const char *title, RooAbsReal& pdfConvVar, RooRealVar& convVar, RooAbsPdf& pdf1, RooAbsPdf& pdf2, Int_t ipOrder=2);
   RooFFTConvPdf(const RooFFTConvPdf& other, const char* name=0) ;

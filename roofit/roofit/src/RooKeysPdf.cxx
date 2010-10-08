@@ -51,6 +51,7 @@ ClassImp(RooKeysPdf)
 //_____________________________________________________________________________
 RooKeysPdf::RooKeysPdf() : _dataPts(0), _weights(0)
 {
+  // coverity[UNINIT_CTOR]
 }
 
 

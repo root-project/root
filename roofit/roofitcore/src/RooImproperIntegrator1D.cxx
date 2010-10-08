@@ -59,10 +59,10 @@ void RooImproperIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 
 //_____________________________________________________________________________
 RooImproperIntegrator1D::RooImproperIntegrator1D() :  
-  _function(0), _integrator1(0), _integrator2(0), _integrator3(0)
+  _case(ClosedBothEnds), _xmin(-10), _xmax(10), _useIntegrandLimits(kTRUE),
+  _origFunc(0), _function(0), _integrator1(0), _integrator2(0), _integrator3(0)
 {
   // Default constructor
-
 }
 
 

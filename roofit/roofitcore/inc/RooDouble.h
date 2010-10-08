@@ -22,7 +22,7 @@
 class RooDouble : public TNamed {
 public:
 
-  RooDouble() {
+  RooDouble() : _value(0) {
     // Default constructor
   } ;
   RooDouble(Double_t value) ;

@@ -55,7 +55,7 @@ ClassImp(RooStreamParser)
 
 //_____________________________________________________________________________
 RooStreamParser::RooStreamParser(istream& is) : 
-  _is(&is), _atEOF(kFALSE), _prefix(""), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
+  _is(&is), _atEOL(kFALSE), _atEOF(kFALSE), _prefix(""), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
 {
   // Construct parser on given input stream
 }
@@ -63,7 +63,7 @@ RooStreamParser::RooStreamParser(istream& is) :
 
 //_____________________________________________________________________________
 RooStreamParser::RooStreamParser(istream& is, const TString& errorPrefix) : 
-  _is(&is), _atEOF(kFALSE), _prefix(errorPrefix), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
+  _is(&is), _atEOL(kFALSE), _atEOF(kFALSE), _prefix(errorPrefix), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
 {
   // Construct parser on given input stream. Use given errorPrefix to 
   // prefix any parsing error messages

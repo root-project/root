@@ -30,6 +30,7 @@ public:
   // Constructors etc.
   inline RooGenCategory() { 
     // Default constructor
+    // coverity[UNINIT_CTOR]
   }
   RooGenCategory(const char *name, const char *title, void* userFunc, RooArgSet& catList);
   RooGenCategory(const RooGenCategory& other, const char *name=0) ;

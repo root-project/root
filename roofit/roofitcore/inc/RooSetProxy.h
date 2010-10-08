@@ -31,7 +31,10 @@ public:
 #endif
 
   // Constructors, assignment etc.
-  RooSetProxy() { _iter = createIterator() ; _owner = 0 ; } ;
+  RooSetProxy() { 
+    // coverity[UNINIT_CTOR]
+    _iter = createIterator() ; _owner = 0 ; 
+  } ;
   RooSetProxy(const char* name, const char* desc, RooAbsArg* owner, 
 	      Bool_t defValueServer=kTRUE, Bool_t defShapeServer=kFALSE) ;
   RooSetProxy(const char* name, RooAbsArg* owner, const RooSetProxy& other) ;

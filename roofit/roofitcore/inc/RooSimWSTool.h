@@ -163,7 +163,7 @@ protected:
 class RooSimWSTool::ObjBuildConfig
 {
  public:
-  ObjBuildConfig() {} ;
+  ObjBuildConfig() : _masterCat(0) {} ;
   virtual ~ObjBuildConfig() {} ;
   void print() ;
 

@@ -84,6 +84,8 @@ RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal& func, const R
     x.Print("1");
     _valid= kFALSE;
   }
+
+  _xvecValid = kTRUE ;
 }
 
 

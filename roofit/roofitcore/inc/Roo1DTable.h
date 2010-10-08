@@ -28,6 +28,7 @@ public:
   // Constructors, cloning and assignment
   Roo1DTable() {
     // Default constructor
+    // coverity[UNINIT_CTOR]
   } ;
   virtual ~Roo1DTable();
   Roo1DTable(const char *name, const char *title, const RooAbsCategory &cat);

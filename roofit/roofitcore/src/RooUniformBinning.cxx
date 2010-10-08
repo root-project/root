@@ -43,6 +43,7 @@ RooUniformBinning::RooUniformBinning(const char* name) :
   RooAbsBinning(name)
 {  
   // Default Constructor
+  // coverity[UNINIT_CTOR]
   _array = 0 ;
 }
 

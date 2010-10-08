@@ -73,6 +73,7 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
     index++ ;
   }
   delete iter ;
+  _xvecValid = kTRUE ;
 }
 
 

@@ -77,6 +77,7 @@ ClassImp(RooPlot)
 RooPlot::RooPlot() : _hist(0), _plotVarClone(0), _plotVarSet(0), _normVars(0), _normObj(0), _dir(0)
 {
   // Default constructor
+  // coverity[UNINIT_CTOR]
 
   _iterator= _items.MakeIterator() ;
 

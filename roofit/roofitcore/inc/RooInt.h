@@ -22,7 +22,7 @@
 class RooInt : public TNamed {
 public:
 
-  RooInt() {} ;
+  RooInt() : _value(0) {} ;
   RooInt(Int_t value) : TNamed(), _value(value) {} ;
   RooInt(const RooInt& other) : TNamed(other), _value(other._value) {}
   virtual ~RooInt() {} ;

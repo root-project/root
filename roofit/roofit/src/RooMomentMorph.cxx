@@ -29,6 +29,7 @@ ClassImp(RooMomentMorph)
 //_____________________________________________________________________________
 RooMomentMorph::RooMomentMorph() : _curNormSet(0), _mref(0), _M(0) 
 {
+  // coverity[UNINIT_CTOR]
   _varItr    = _varList.createIterator() ;
   _pdfItr    = _pdfList.createIterator() ; 
 }

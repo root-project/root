@@ -22,7 +22,9 @@
 class RooLinTransBinning : public RooAbsBinning {
 public:
 
-  RooLinTransBinning(const char* name=0) : RooAbsBinning(name) {} ; 
+  RooLinTransBinning(const char* name=0) : RooAbsBinning(name) {
+    // coverity[UNINIT_CTOR]
+  } ; 
   RooLinTransBinning(const RooAbsBinning& input, Double_t slope=1.0, Double_t offset=0.0, const char* name=0) ;
   RooLinTransBinning(const RooLinTransBinning&, const char* name=0) ;
   virtual RooAbsBinning* clone(const char* name=0) const { return new RooLinTransBinning(*this,name) ; }

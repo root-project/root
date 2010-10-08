@@ -140,7 +140,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
     // WVE do something here
     return ;
   }
-  
+
   // Save fit command options
   if (pc.hasProcessed("FitOptArgs")) {
     RooCmdArg* fitOptArg = static_cast<RooCmdArg*>(cmdList.FindObject("FitOptArgs")) ;
@@ -210,9 +210,11 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
 
     _perExptGenParams = kFALSE ;
   }
+
   
   // Extract generator and fit models
   _genModel = const_cast<RooAbsPdf*>(&model) ;
+  _genSample = 0 ;
   RooAbsPdf* fitModel = static_cast<RooAbsPdf*>(pc.getObject("fitModel",0)) ;
   _fitModel = fitModel ? fitModel : _genModel ;
   
@@ -358,6 +360,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
     _genContext = 0 ;
   }
   _genParams = _genModel->getParameters(&_dependents) ;
+  _genSample = 0 ;
   RooArgSet* tmp = genModel.getParameters(&dependents) ;
   _genInitParams = (RooArgSet*) tmp->snapshot(kFALSE) ;
   delete tmp ;

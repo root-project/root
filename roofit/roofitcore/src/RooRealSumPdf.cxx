@@ -52,6 +52,7 @@ ClassImp(RooRealSumPdf)
 RooRealSumPdf::RooRealSumPdf() 
 {
   // Default constructor
+  // coverity[UNINIT_CTOR]
   _funcIter  = _funcList.createIterator() ;
   _coefIter  = _coefList.createIterator() ;
   _extended = kFALSE ;

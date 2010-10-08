@@ -36,7 +36,7 @@ public:
   enum BasisSign { Both=0, Plus=+1, Minus=-1 } ;
 
   // Constructors, assignment etc
-  inline RooGaussModel() { }
+  inline RooGaussModel() : _flatSFInt(kFALSE), _asympInt(kFALSE) { }
   RooGaussModel(const char *name, const char *title, RooRealVar& x, 
 		RooAbsReal& mean, RooAbsReal& sigma) ; 
   RooGaussModel(const char *name, const char *title, RooRealVar& x, 

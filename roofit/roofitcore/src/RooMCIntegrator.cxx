@@ -89,9 +89,11 @@ void RooMCIntegrator::registerIntegrator(RooNumIntFactory& fact)
 
 
 //_____________________________________________________________________________
-RooMCIntegrator::RooMCIntegrator()
+ RooMCIntegrator::RooMCIntegrator()
 {
-  // Default constructor
+  // Default constructor 
+  // 
+  // coverity[UNINIT_CTOR] 
 }
 
 
@@ -109,7 +111,7 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
   // can be 'QuasiRandom' (default) and 'PseudoRandom'. Consult the original
   // VEGAS documentation on details of the mode and type parameters.
 
-
+  // coverity[UNINIT_CTOR]
   if(!(_valid= _grid.isValid())) return;
   if(_verbose) _grid.Print();
 } 

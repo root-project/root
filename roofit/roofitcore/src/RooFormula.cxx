@@ -48,6 +48,7 @@ ClassImp(RooFormula)
 RooFormula::RooFormula() : TFormula(), _nset(0)
 {
   // Default constructor
+  // coverity[UNINIT_CTOR]
 }
 
 

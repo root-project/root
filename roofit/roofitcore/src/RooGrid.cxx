@@ -44,7 +44,7 @@ ClassImp(RooGrid)
 
 //_____________________________________________________________________________
 RooGrid::RooGrid() :
-  _xl(0),  _xu(0),  _delx(0),  _d(0),  _xi(0),  _xin(0),  _weight(0)
+  _valid(kFALSE), _dim(0), _bins(0), _boxes(0), _vol(0), _xl(0),  _xu(0),  _delx(0),  _d(0),  _xi(0),  _xin(0),  _weight(0)
 {
   // Default constructor
 }

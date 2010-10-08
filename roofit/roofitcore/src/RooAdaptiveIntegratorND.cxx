@@ -67,6 +67,9 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND()
   // Default ctor
   _xmin = 0 ;
   _xmax = 0 ;
+  _epsRel = 1e-7 ;
+  _epsAbs = 1e-7 ;
+  _nmax = 10000 ;
   _func = 0 ;
   _integrator = 0 ;
   _nError = 0 ;
@@ -85,6 +88,7 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
   // integration limits are taken from the definition in the function binding
   //_func = function.
 
+
   _func = new RooMultiGenFunction(function) ;  
   _nWarn = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxWarn")) ;
   switch (_func->NDim()) {
@@ -101,6 +105,8 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
   _xmax = 0 ;
   _nError = 0 ;
   _nWarn = 0 ;
+  _epsRel = 1e-7 ;
+  _epsAbs = 1e-7 ;
   checkLimits() ;
   _intName = function.getName() ;
 } 

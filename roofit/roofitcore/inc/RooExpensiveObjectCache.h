@@ -50,7 +50,7 @@ public:
 
   class ExpensiveObject {
   public:
-    ExpensiveObject() { _payload = 0 ; } ;
+    ExpensiveObject() { _uid = 0 ; _payload = 0 ; } ;
     ExpensiveObject(Int_t uid, const char* ownerName, TObject& payload, TIterator* paramIter) ;
     ExpensiveObject(Int_t uid, const ExpensiveObject& other) ;
     virtual ~ExpensiveObject() ;

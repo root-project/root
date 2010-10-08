@@ -57,8 +57,9 @@ void RooSegmentedIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 //_____________________________________________________________________________
 RooSegmentedIntegrator1D::RooSegmentedIntegrator1D()
 {
-  // Destructor
-
+  // Constructor
+  //
+  // coverity[UNINIT_CTOR]
 }
 
 

@@ -517,6 +517,8 @@ Double_t RooProdPdf::evaluate() const
   RooLinkedList *nlist(0) ;
   getPartIntList(_curNormSet,0,plist,nlist,code) ;
 
+  // preceding call to getPartIntList guarantees non-null return
+  // coverity[NULL_RETURNS]
   CacheElem* cache = (CacheElem*) _cacheMgr.getObj(_curNormSet,0,&code,0) ;
   Double_t ret =  calculate(*cache) ;
 
@@ -1921,6 +1923,8 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
     delete nset ;
     delete iset ;
 
+    // preceding call to getPartIntList guarantees non-null return
+    // coverity[NULL_RETURNS]
     cache = (CacheElem*) _cacheMgr.getObj(nset,iset,&code2,RooNameReg::ptr(rangeName)) ;
 
 

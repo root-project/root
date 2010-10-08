@@ -65,6 +65,8 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
       oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: This context must"
 			       << " generate the index category" << endl ;
       _isValid = kFALSE ;
+      _numPdf = 0 ;
+      _haveIdxProto = kFALSE ;
       return ;
     }
   } else {
@@ -85,6 +87,8 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
       oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: This context must"
 			       << " generate all components of a derived index category" << endl ;
       _isValid = kFALSE ;
+      _numPdf = 0 ;
+      _haveIdxProto = kFALSE ;
       return ;
     }
   }
@@ -97,6 +101,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
     oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: Need either extended mode"
 			     << " or prototype data to calculate number of events per category" << endl ;
     _isValid = kFALSE ;
+    _numPdf = 0 ;
     return ;
   }
 

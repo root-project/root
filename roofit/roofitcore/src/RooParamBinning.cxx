@@ -41,7 +41,7 @@ ClassImp(RooParamBinning)
 
 //_____________________________________________________________________________
 RooParamBinning::RooParamBinning(const char* name) : 
-  RooAbsBinning(name), _xlo(0), _xhi(0), _lp(0), _owner(0)
+  RooAbsBinning(name), _xlo(0), _xhi(0), _nbins(100), _binw(0), _lp(0), _owner(0)
 {  
   // Default constructor
 //   cout << "RooParamBinning(" << this << ") default ctor" << endl ;
@@ -56,6 +56,7 @@ RooParamBinning::RooParamBinning(RooAbsReal& xloIn, RooAbsReal& xhiIn, Int_t nBi
   _xlo(&xloIn),
   _xhi(&xhiIn),
   _nbins(nBins),
+  _binw(0),
   _lp(0),
   _owner(0)
 {
@@ -78,7 +79,7 @@ RooParamBinning::~RooParamBinning()
 
 //_____________________________________________________________________________
 RooParamBinning::RooParamBinning(const RooParamBinning& other, const char* name) :
-  RooAbsBinning(name), _owner(0)
+  RooAbsBinning(name), _binw(0), _owner(0)
 {
   // Copy constructor
 //   cout << "RooParamBinning::cctor(" << this << ") orig = " << &other << endl ;

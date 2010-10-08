@@ -141,6 +141,9 @@ RooCatType RooMultiCategory::evaluate() const
   // Calculate the current value 
 
   if (isShapeDirty()) const_cast<RooMultiCategory*>(this)->updateIndexList() ;
+
+  // current label is can be looked up by definition 
+  // coverity[NULL_RETURNS] 
   return *lookupType(currentLabel()) ;
 }
 

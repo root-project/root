@@ -19,7 +19,9 @@
 
 class RooCachedReal : public RooAbsCachedReal {
 public:
-  RooCachedReal() {} 
+  RooCachedReal() {
+    // coverity[UNINIT_CTOR] 
+  } 
   RooCachedReal(const char *name, const char *title, RooAbsReal& _func, const RooArgSet& cacheObs);
   RooCachedReal(const char *name, const char *title, RooAbsReal& _func);
   RooCachedReal(const RooCachedReal& other, const char* name=0) ;

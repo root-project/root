@@ -354,7 +354,11 @@ RooAbsCollection &RooAbsCollection::assignFast(const RooAbsCollection& other)
   RooLinkedListIter iter = _list.iterator() ;
   RooLinkedListIter iter2 = other._list.iterator() ;
   while((elem=(RooAbsArg*)iter.Next())) {
+
+    // Identical size of iterators is documented assumption of method
+    // coverity[NULL_RETURNS]
     theirs= (RooAbsArg*)iter2.Next() ;
+
     theirs->syncCache() ;
     elem->copyCache(theirs,kTRUE) ;
   }

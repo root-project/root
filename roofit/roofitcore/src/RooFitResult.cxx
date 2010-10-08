@@ -67,7 +67,7 @@ RooFitResult::RooFitResult(const char* name, const char* title) :
   _CM(0), _VM(0), _GC(0)
 {  
   // Constructor with name and title
-
+  // coverity[UNINIT_CTOR]
   if (name) appendToDir(this,kTRUE) ;
 }
 

@@ -37,7 +37,9 @@ public:
   enum Type { Normal, Flipped };  
 
   // Constructors, assignment etc
-  inline RooGExpModel() { }
+  inline RooGExpModel() { 
+    // coverity[UNINIT_CTOR]
+  }
   RooGExpModel(const char *name, const char *title, RooRealVar& x, 
 	       RooAbsReal& sigma, RooAbsReal& rlife, 
 	       Bool_t nlo=kFALSE, Type type=Normal) ; 

@@ -28,7 +28,9 @@ class RooNumGenFactory ;
 
 class RooAcceptReject : public RooAbsNumGenerator {
 public:
-  RooAcceptReject() : _nextCatVar(0), _nextRealVar(0) {} ; 
+  RooAcceptReject() : _nextCatVar(0), _nextRealVar(0) {
+    // coverity[UNINIT_CTOR]
+  } ; 
   RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, Bool_t verbose=kFALSE, const RooAbsReal* maxFuncVal=0);
   RooAbsNumGenerator* clone(const RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& /*condVars*/, 
 			    const RooNumGenConfig& config, Bool_t verbose=kFALSE, const RooAbsReal* maxFuncVal=0) const {

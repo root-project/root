@@ -77,7 +77,9 @@ RooDataHistSliceIter::RooDataHistSliceIter(RooDataHist& hist, RooAbsArg& sliceAr
 RooDataHistSliceIter::RooDataHistSliceIter(const RooDataHistSliceIter& other) : 
   TIterator(other), 
   _hist(other._hist), 
-  _sliceArg(other._sliceArg), 
+  _sliceArg(other._sliceArg),   
+  _baseIndex(other._baseIndex),
+  _stepSize(other._stepSize),
   _nStep(other._nStep), 
   _curStep(other._curStep)
 {

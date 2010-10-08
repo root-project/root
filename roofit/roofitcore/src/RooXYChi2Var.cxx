@@ -50,6 +50,7 @@ ClassImp(RooXYChi2Var)
 //_____________________________________________________________________________
 RooXYChi2Var::RooXYChi2Var() 
 {
+  // coverity[UNINIT_CTOR]
   _funcInt = 0 ;
   _rrvIter = _rrvArgs.createIterator() ;
 }

@@ -583,7 +583,9 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       }
       stateName = physName ;
       physName = strchr(stateName,'=') ;
-      *(physName++) = 0 ;      
+      if (physName) {
+	*(physName++) = 0 ;      
+      }
     } else {
       stateName = physName ;
     }
@@ -646,7 +648,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       stateList = 0 ;
     }
 
-    RooCategory* splitCat = dynamic_cast<RooCategory*>(dependents.find(catName)) ;
+    RooCategory* splitCat = catName ? dynamic_cast<RooCategory*>(dependents.find(catName)) : 0 ;
     if (!splitCat) {
       coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR requested split category " << catName 
 			    << " is not a RooCategory in the dataset" << endl ;

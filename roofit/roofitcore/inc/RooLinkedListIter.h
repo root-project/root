@@ -31,7 +31,9 @@
 class RooLinkedListIter : public TIterator {
 public:
 
-  RooLinkedListIter() {} ;
+  RooLinkedListIter() {
+    // coverity[UNINIT_CTOR]
+  } ;
 
 
   RooLinkedListIter(const RooLinkedList* list, Bool_t forward) : 

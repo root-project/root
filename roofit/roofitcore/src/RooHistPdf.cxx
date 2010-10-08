@@ -44,6 +44,7 @@ ClassImp(RooHistPdf)
 RooHistPdf::RooHistPdf() : _dataHist(0), _totVolume(0), _unitNorm(kFALSE)
 {
   // Default constructor
+  // coverity[UNINIT_CTOR]
   _histObsIter = _histObsList.createIterator() ;
   _pdfObsIter = _pdfObsList.createIterator() ;
 }

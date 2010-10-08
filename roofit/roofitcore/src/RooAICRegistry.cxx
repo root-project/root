@@ -39,7 +39,7 @@ ClassImp(RooAICRegistry)
 
 //_____________________________________________________________________________
 RooAICRegistry::RooAICRegistry(Int_t regSize) :
-  _regSize(regSize), _clArr(0), _asArr1(0), _asArr2(0), _asArr3(0), _asArr4(0)
+  _regSize(regSize), _clSize(0), _clArr(0), _asArr1(0), _asArr2(0), _asArr3(0), _asArr4(0)
 {
   // Constructor
 }
@@ -48,7 +48,7 @@ RooAICRegistry::RooAICRegistry(Int_t regSize) :
 
 //_____________________________________________________________________________
 RooAICRegistry::RooAICRegistry(const RooAICRegistry& other) :
-  _regSize(other._regSize), _clArr(0), _asArr1(0), _asArr2(0), _asArr3(0), _asArr4(0)
+  _regSize(other._regSize), _clSize(0), _clArr(0), _asArr1(0), _asArr2(0), _asArr3(0), _asArr4(0)
 {
   // Copy constructor
 

@@ -45,6 +45,7 @@ ClassImp(RooPolynomial)
 //_____________________________________________________________________________
 RooPolynomial::RooPolynomial()
 {
+  // coverity[UNINIT_CTOR]
   _coefIter = _coefList.createIterator() ;
 }
 

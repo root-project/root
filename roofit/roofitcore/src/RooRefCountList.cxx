@@ -60,7 +60,9 @@ void RooRefCountList::Add(TObject* obj, Int_t count)
     //cout << "RooRefCountList::AddLast(" << obj << ") adding object" << endl ;
   } else {
     RooLinkedListElem* link = findLink(obj) ;
-    while(count--) link->incRefCount() ;    
+    if(link) {
+      while(count--) link->incRefCount() ;    
+    }
     //cout << "RooRefCountList::AddLast(" << obj << ") incremented reference count to " << link->refCount() << endl ;
   }
 
