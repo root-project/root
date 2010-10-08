@@ -379,20 +379,6 @@ static int rpd_rand()
 }
 
 //______________________________________________________________________________
-static void strlcpy(char *dest, const char *src, size_t l, size_t n)
-{
-   // strlcpy local implementation
-   
-   if (l > n - 1) {
-      strncpy(dest, src, n - 1);
-      dest[n-1] = 0;
-   } else {
-      strncpy(dest, src, l);
-      dest[l] = 0;
-   }
-}
-
-//______________________________________________________________________________
 static int reads(int fd, char *buf, int len)
 {
    //  reads in at most one less than len characters from open
@@ -1364,7 +1350,7 @@ int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
          // kGlobus:
          if (GlbsToolCheckContext(shmid)) {
             retval = 1;
-            strlcpy(gUser, user, strlen(user), 64);
+            strlcpy(gUser, user, sizeof(gUser));
          } else {
             // set entry inactive
             RpdCleanupAuthTab(Host,RemId,*OffSet);
@@ -1567,12 +1553,12 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
       // return token if requested
       if (Token) {
          *Token = new char[strlen(tkn)+1];
-         strlcpy(*Token,tkn,strlen(tkn),strlen(tkn)+1);
+         strlcpy(*Token,tkn,strlen(tkn)+1);
       }
       if (Sec == 3) {
          if (GlbsUser) {
             *GlbsUser = new char[strlen(usr)+1];
-            strlcpy(*GlbsUser,usr,strlen(usr),strlen(usr)+1);
+            strlcpy(*GlbsUser,usr,strlen(usr)+1);
          }
          if (ShmId)
             *ShmId = shmid;
@@ -1673,7 +1659,7 @@ int RpdReUseAuth(const char *sstr, int kind)
          if ((auth == 1) && (offset != gOffSet))
             auth = 2;
          // Fill gUser and free allocated memory
-         strlcpy(gUser, user, strlen(user), 64);
+         strlcpy(gUser, user, sizeof(gUser));
       }
    }
    // kSRP
@@ -1694,7 +1680,7 @@ int RpdReUseAuth(const char *sstr, int kind)
          if ((auth == 1) && (offset != gOffSet))
             auth = 2;
          // Fill gUser and free allocated memory
-         strlcpy(gUser, user, strlen(user), 64);
+         strlcpy(gUser, user, sizeof(gUser));
       }
    }
    // kKrb5
@@ -1715,7 +1701,7 @@ int RpdReUseAuth(const char *sstr, int kind)
          if ((auth == 1) && (offset != gOffSet))
             auth = 2;
          // Fill gUser and free allocated memory
-         strlcpy(gUser, user, strlen(user), 64);
+         strlcpy(gUser, user, sizeof(gUser));
       }
    }
    // kGlobus
@@ -1757,7 +1743,7 @@ int RpdReUseAuth(const char *sstr, int kind)
          if ((auth == 1) && (offset != gOffSet))
             auth = 2;
          // Fill gUser and free allocated memory
-         strlcpy(gUser, user, strlen(user), 64);
+         strlcpy(gUser, user, sizeof(gUser));
       }
    }
 
@@ -1875,7 +1861,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
          // Check if a continuation line
          if (cont == 1) {
             cont = 0;
-            strlcpy(rest, pstr, strlen(pstr), kMAXPATHLEN); 
+            strlcpy(rest, pstr, kMAXPATHLEN); 
          } else {
             jm = -1;
             // Get 'host' first ...
@@ -1893,7 +1879,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                   host[(int)(pcol-host)] = '\0';
             }
             if (strlen(host) == 0)
-               strlcpy(host, "default", strlen("default"), kMAXPATHLEN);
+               strlcpy(host, "default", kMAXPATHLEN);
 
             if (gDebug > 2)
                ErrorInfo("RpdCheckAuthAllow: found host: %s ", host);
@@ -1942,7 +1928,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                strncpy(tmp, cmth, mlen);
                tmp[mlen] = '\0';
             } else {
-               strlcpy(tmp, cmth, strlen(cmth), 20);
+               strlcpy(tmp, cmth, sizeof(tmp));
             }
 
             if (strlen(tmp) > 1) {
@@ -2003,7 +1989,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                      free(gUserIgnore[mth[jm]]);
                      gUserIgnLen[mth[jm]] += kMAXPATHLEN;
                      gUserIgnore[mth[jm]] = new char[gUserIgnLen[mth[jm]]];
-                     strlcpy(gUserIgnore[mth[jm]], tmpUI, strlen(tmpUI), gUserIgnLen[mth[jm]]);
+                     strlcpy(gUserIgnore[mth[jm]], tmpUI, sizeof(gUserIgnLen[mth[jm]]));
                      free(tmpUI);
                   }
                   char usr[256];
@@ -2012,7 +1998,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                      strncpy(usr, pd, ulen);
                      usr[ulen] = '\0';
                   } else {
-                     strlcpy(usr, pd, strlen(pd), 256);
+                     strlcpy(usr, pd, sizeof(usr));
                   }
                   struct passwd *pw = getpwnam(usr);
                   if (pw != 0)
@@ -2034,7 +2020,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                      free(gUserAllow[mth[jm]]);
                      gUserAlwLen[mth[jm]] += kMAXPATHLEN;
                      gUserAllow[mth[jm]] = new char[gUserAlwLen[mth[jm]]];
-                     strlcpy(gUserAllow[mth[jm]], tmpUI, strlen(tmpUI), gUserAlwLen[mth[jm]]);
+                     strlcpy(gUserAllow[mth[jm]], tmpUI, sizeof(gUserAlwLen[mth[jm]]));
                      free(tmpUI);
                   }
                   char usr[256];
@@ -2043,7 +2029,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                      strncpy(usr, pd, ulen);
                      usr[ulen] = '\0';
                   } else {
-                     strlcpy(usr, pd, strlen(pd), 256);
+                     strlcpy(usr, pd, sizeof(usr));
                   }
                   struct passwd *pw = getpwnam(usr);
                   if (pw != 0)
@@ -2170,7 +2156,7 @@ int RpdCheckHost(const char *Host, const char *host)
          ErrorInfo("RpdCheckHost: Checking Host IP: %s", hh);
    } else {
       hh = new char[strlen(Host)+1];
-      strlcpy(hh,Host,strlen(Host),strlen(Host)+1);
+      strlcpy(hh,Host,strlen(Host)+1);
       if (gDebug > 2)
          ErrorInfo("RpdCheckHost: Checking Host name: %s", hh);
    }
@@ -2191,7 +2177,7 @@ int RpdCheckHost(const char *Host, const char *host)
    int ends= 0;
    int starts= 0;
    char *h = new char[strlen(host)+1];
-   strlcpy(h,host,strlen(host),strlen(host)+1);
+   strlcpy(h,host,strlen(host)+1);
    char *tk = strtok(h,"*");
    while (tk) {
 
@@ -2478,7 +2464,7 @@ int RpdSshAuth(const char *sstr)
 
       // Get ID
       char *pId = (char *)strstr(pipeFile,"SshPipe.")+strlen("SshPipe.");
-      strlcpy(pipeId, pId, strlen(pId), 10);
+      strlcpy(pipeId, pId, sizeof(pipeId));
 
       // Communicate command to be executed via ssh ...
       std::string rootbindir;
@@ -2743,7 +2729,7 @@ int RpdSshAuth(const char *sstr)
    gSec = 4;
 
    // Save username ...
-   strlcpy(gUser, user, strlen(user), 64);
+   strlcpy(gUser, user, sizeof(gUser));
 
    char line[kMAXPATHLEN];
    if ((gReUseAllow & gAUTH_SSH_MSK) && gReUseRequired) {
@@ -3260,7 +3246,7 @@ int RpdSRPUser(const char *sstr)
 
    NetSend(auth, kROOTD_AUTH);
 
-   strlcpy(gUser, user, strlen(user), 64);
+   strlcpy(gUser, user, sizeof(gUser));
 
    std::string srootdpass, srootdconf;
    if (gAltSRPPass.length()) {
@@ -3726,11 +3712,11 @@ int RpdPass(const char *pass, int errheq)
       return auth;
    }
    // Inversion is done in RpdUser, if needed
-   strlcpy(passwd, pass, strlen(pass), sizeof(passwd));
+   strlcpy(passwd, pass, sizeof(passwd));
 
    // Special treatment for anonimous ...
    if (gAnon) {
-      strlcpy(gPasswd, passwd, strlen(passwd), kMAXUSERLEN);
+      strlcpy(gPasswd, passwd, sizeof(gPasswd));
       goto authok;
    }
    // ... and SpecialPass ...
@@ -4239,7 +4225,7 @@ int RpdRfioAuth(const char *sstr)
       return auth;
    }
    // Set username ....
-   strlcpy(gUser, pw->pw_name, strlen(pw->pw_name), 64);
+   strlcpy(gUser, pw->pw_name, sizeof(gUser));
 
 
    // Notify, if required ...
@@ -4602,7 +4588,7 @@ int RpdUser(const char *sstr)
       // Default anonymous account ...
       if (!strcmp(user, "anonymous")) {
          user[0] = '\0';
-         strlcpy(user, "rootd", strlen("rootd"), 64);
+         strlcpy(user, "rootd", sizeof(user));
       }
    }
 
@@ -4644,7 +4630,7 @@ int RpdUser(const char *sstr)
    if (gCheckHostsEquiv && strlen(ruser)) {
       if (RpdCheckHostsEquiv(gOpenHost.c_str(),ruser,user,errheq)) {
          auth = 3;
-         strlcpy(gUser, user, strlen(user), 64);
+         strlcpy(gUser, user, sizeof(gUser));
          return auth;
       }
    }
@@ -4706,7 +4692,7 @@ int RpdUser(const char *sstr)
       }
    }
    // Ok: Save username and go to next steps
-   strlcpy(gUser, user, strlen(user), 64);
+   strlcpy(gUser, user, sizeof(gUser));
 
    // Salt vars
    char salt[30] = { 0 };
@@ -5276,7 +5262,7 @@ int RpdSecureRecv(char **str)
 
       // Prepare output
       *str = new char[strlen(buftmp) + 1];
-      strlcpy(*str, buftmp, strlen(buftmp), strlen(buftmp));
+      strlcpy(*str, buftmp, strlen(buftmp)+1);
    } else if (gRSAKey == 2) {
 #ifdef R__SSL
       unsigned char iv[8];
@@ -5705,7 +5691,7 @@ int RpdAuthenticate()
             return auth;
          }
       } else {
-         strlcpy(buf,gBufOld, strlen(gBufOld), kMAXRECVBUF);
+         strlcpy(buf,gBufOld, sizeof(buf));
          kind = gKindOld;
          gBufOld[0] = '\0';
          gClientOld = 0;
@@ -5908,7 +5894,7 @@ int RpdProtocol(int ServType)
             delete[] buf;
             return -1;
          }
-         strlcpy(proto, buf, len, kMAXRECVBUF);
+         strlcpy(proto, buf, sizeof(proto));
       } else {
          // Empty buffer
          proto[0] = '\0';
@@ -5946,7 +5932,7 @@ int RpdProtocol(int ServType)
          delete[] buf;
          return -1;
       }
-      strlcpy(proto,buf, llen, kMAXRECVBUF);
+      strlcpy(proto,buf, sizeof(proto));
       kind = kROOTD_PROTOCOL;
       readbuf = 0;
       delete[] buf;
@@ -6012,7 +5998,7 @@ int RpdProtocol(int ServType)
                      rc = -1;
                   }
                   if (kind != kROOTD_PROTOCOL2) {
-                     strlcpy(gBufOld, proto, strlen(proto), kMAXRECVBUF);
+                     strlcpy(gBufOld, proto, sizeof(gBufOld));
                      gKindOld = kind;
                      gClientOld = 1;
                      gClientProtocol = 0;
@@ -6539,7 +6525,7 @@ char *ItoA(int i)
    // This is the number of characters we need
    int nchr = (int)log10(double(i)) + 1;
    if (nchr > kMAXCHR)
-      strlcpy(str,"-1", strlen("-1"), kMAXCHR);
+      strlcpy(str,"-1", sizeof(str));
    else
       snprintf(str,30,"%d",i);
 

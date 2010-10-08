@@ -488,9 +488,9 @@ needshell:
 
    char cmd[kMAXPATHLEN];
 #ifdef __hpux
-   strcpy(cmd, "/bin/echo ");
+   strlcpy(cmd, "/bin/echo ", sizeof(cmd));
 #else
-   strcpy(cmd, "echo ");
+   strlcpy(cmd, "echo ", sizeof(cmd));
 #endif
 
    // emulate csh -> popen executes sh
@@ -1039,30 +1039,30 @@ void RootdOpen(const char *msg)
    } else {
 
       if (gClientProtocol > 14) {
-         strcpy(gFile, file);
+         strlcpy(gFile, file, sizeof(gFile));
       } else {
          // Old clients send an additional slash at the beginning
          if (file[0] == '/')
-            strcpy(gFile, &file[1]);
+            strlcpy(gFile, &file[1], sizeof(gFile));
          else
-            strcpy(gFile, file);
+            strlcpy(gFile, file, sizeof(gFile));
       }
 
       gFile[strlen(file)] = '\0';
    }
 
-   strcpy(gOption, option);
+   strlcpy(gOption, option, sizeof(gOption));
 
    int forceOpen = 0;
    if (option[0] == 'f') {
       forceOpen = 1;
-      strcpy(gOption, &option[1]);
+      strlcpy(gOption, &option[1], sizeof(gOption));
    }
 
    int forceRead = 0;
    if (!strcmp(option, "+read")) {
       forceRead = 1;
-      strcpy(gOption, &option[1]);
+      strlcpy(gOption, &option[1], sizeof(gOption));
    }
 
    int create = 0;
@@ -1073,7 +1073,7 @@ void RootdOpen(const char *msg)
    int read     = strcmp(gOption, "read")     ? 0 : 1;
    if (!create && !recreate && !update && !read) {
       read = 1;
-      strcpy(gOption, "read");
+      strlcpy(gOption, "read", sizeof(gOption));
    }
 
    if (!read && gReadOnly)
@@ -1083,7 +1083,7 @@ void RootdOpen(const char *msg)
    if (!gAnon) {
       char *fname;
       if ((fname = RootdExpandPathName(gFile))) {
-         strcpy(gFile, fname);
+         strlcpy(gFile, fname, sizeof(gFile));
          free(fname);
       } else
          Error(ErrFatal, kErrBadFile, "RootdOpen: bad file name %s", gFile);
@@ -1102,7 +1102,7 @@ void RootdOpen(const char *msg)
       else {
          recreate = 0;
          create   = 1;
-         strcpy(gOption, "create");
+         strlcpy(gOption, "create", sizeof(gOption));
       }
    }
 
@@ -1115,7 +1115,7 @@ void RootdOpen(const char *msg)
          update = 0;
          create = 1;
          wasupdt = 1;
-         strcpy(gOption, "create");
+         strlcpy(gOption, "create", sizeof(gOption));
       }
       if (update && access(gFile, W_OK))
          Error(ErrFatal, kErrNoAccess,
@@ -1427,9 +1427,9 @@ void RootdPutFile(const char *msg)
 
    if (file[0] == '-') {
       forceopen = 1;
-      strcpy(gFile, file+1);
+      strlcpy(gFile, file+1, sizeof(gFile));
    } else
-      strcpy(gFile, file);
+      strlcpy(gFile, file, sizeof(gFile));
 
    // anon user may not overwrite existing files...
    struct stat st;
@@ -1637,9 +1637,9 @@ void RootdGetFile(const char *msg)
 
    if (file[0] == '-') {
       forceopen = 1;
-      strcpy(gFile, file+1);
+      strlcpy(gFile, file+1, sizeof(gFile));
    } else
-      strcpy(gFile, file);
+      strlcpy(gFile, file, sizeof(gFile));
 
    // remove lock from file
    if (forceopen)
