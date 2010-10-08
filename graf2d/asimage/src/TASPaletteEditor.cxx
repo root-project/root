@@ -470,9 +470,11 @@ void TASPaletteEditor::Open()
       FILE *fl = fopen(fi.fFilename, "r");
       if (!fl) return;
       UInt_t numPoints;
+      // coverity [Calling risky function : FALSE]
       if (fscanf(fl, "%u\n", &numPoints)) {;}
       newPalette = new TImagePalette(numPoints);
       for (Int_t pt = 0; pt < Int_t(numPoints); pt++)
+         // coverity [Calling risky function : FALSE]
          if (fscanf(fl, "%lf %hx %hx %hx %hx\n",
                 newPalette->fPoints + pt,
                 newPalette->fColorRed + pt,
@@ -486,7 +488,7 @@ void TASPaletteEditor::Open()
       if (strcmp(".pal.root", fi.fFilename + strlen(fi.fFilename) - 9) != 0)
          snprintf(fn,512, "%s%s", fi.fFilename, ".pal.root");
       else
-         strcpy(fn, fi.fFilename);
+         strlcpy(fn, fi.fFilename,512);
       TDirectory *dirsav = gDirectory;
 
       TFile *fsave = new TFile(fn, "READ");
