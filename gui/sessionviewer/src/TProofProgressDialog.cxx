@@ -96,6 +96,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
    fRightInfo     = 0;
    fSpeedoEnabled = kFALSE;
    fSpeedo        = 0;
+   fUpdtSpeedo    = 0;
    fSmoothSpeedo  = 0;
 
    // Make sure we are attached to a good instance
