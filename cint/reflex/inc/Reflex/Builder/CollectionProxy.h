@@ -15,7 +15,7 @@
 #include <cstddef>
 
 // Macro indicating the version of the Collection Proxy interface followed
-// by this Reflex build, this must match the version number of 
+// by this Reflex build, this must match the version number of
 // ROOT_COLLECTIONPROXY_VERSION in ROOT's TVirtutalCollectionProxy.h
 
 #define REFLEX_COLLECTIONPROXY_VERSION 3
@@ -283,9 +283,7 @@ template <class T> struct Insert: public CollType<T> {
    }
 
 
-   static void resize(void* /* obj */, size_t) 
-   {
-   }
+   static void resize(void* /* obj */, size_t) { }
 
 
    static int
@@ -691,8 +689,7 @@ struct Pushback<StdBitSetHelper<Bitset_t> > : public CollType<StdBitSetHelper<Bi
    typedef Cont_t* PCont_t;
    typedef Value_t* PValue_t;
 
-   static void resize(void* obj, size_t n) {
-   }
+   static void resize(void* /*obj*/, size_t) { }
 
 
    static void*
