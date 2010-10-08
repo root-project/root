@@ -513,8 +513,8 @@ Double_t RooProdPdf::evaluate() const
   // Calculate current value of object
 
   Int_t code ;
-  RooArgList *plist ;
-  RooLinkedList *nlist ;
+  RooArgList *plist(0) ;
+  RooLinkedList *nlist(0) ;
   getPartIntList(_curNormSet,0,plist,nlist,code) ;
 
   CacheElem* cache = (CacheElem*) _cacheMgr.getObj(_curNormSet,0,&code,0) ;
@@ -888,6 +888,7 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
 	}
 	delete niter ;
 // 	cout<<"FK: rangeIdentical Single = "<<(rangeIdentical ? 'T':'F')<<endl;
+	// coverity[CONSTANT_EXPRESSION_RESULT]
 	if (!rangeIdentical || 1) {
 // 	  cout << "PREPARING RATIO HERE (SINGLE TERM)" << endl ;	  
 	  RooAbsReal* ratio = makeCondPdfRatioCorr(*(RooAbsReal*)term->first(),termNSet,termImpSet,normRange(),RooNameReg::str(_refRangeName)) ;	  
@@ -1878,8 +1879,8 @@ Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 
   // Retrieve (or create) the required partial integral list
   Int_t code ;
-  RooArgList *plist ;
-  RooLinkedList *nlist ;
+  RooArgList *plist(0) ;
+  RooLinkedList *nlist(0) ;
   getPartIntList(normSet,&allVars,plist,nlist,code,rangeName) ;
 //   cout << "RooProdPdf::getAIWN(" << GetName() << ") allVars = " << allVars << " rangeName = " << (rangeName?rangeName:"<none>") << " code = " << code << endl ;
   
@@ -1904,8 +1905,8 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
   // Partial integration scenarios
   CacheElem* cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1) ;
   
-  RooArgList* partIntList ;
-  RooLinkedList* normList ;
+  RooArgList* partIntList(0) ;
+  RooLinkedList* normList(0) ;
 
   // If cache has been sterilized, revive this slot
   if (cache==0) {
@@ -2235,8 +2236,8 @@ void RooProdPdf::getParametersHook(const RooArgSet* nset, RooArgSet* params, Boo
   if (!nset || nset->getSize()==0) return ;
 
   // Get/create appropriate term list for this normalization set
-  RooArgList *plist ;
-  RooLinkedList *nlist ;
+  RooArgList *plist(0) ;
+  RooLinkedList *nlist(0) ;
   Int_t code ;
   getPartIntList(nset,0,plist,nlist,code) ;
 

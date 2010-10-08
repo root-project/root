@@ -1824,6 +1824,7 @@ void RooDataHist::cacheValidEntries()
     _binValid[i] = kTRUE ;
     iter->Reset() ;
     while((arg=(RooAbsArg*)iter->Next())) {
+      // coverity[CHECKED_RETURN]
       _binValid[i] &= arg->inRange(0) ;      
     }
   }

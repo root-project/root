@@ -168,6 +168,8 @@ Double_t RooBCPEffDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, co
     if (basisIndex==_basisSin || basisIndex==_basisCos) {
       return 0 ;
     }
+    break ;
+
   default:
     assert(0) ;
   }

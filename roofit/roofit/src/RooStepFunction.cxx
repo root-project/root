@@ -87,7 +87,6 @@ RooStepFunction::RooStepFunction(const char* name, const char* title,
     }
     _boundaryList.add(*boundary) ;
   }
-  delete coefIter ;
 
   if (_boundaryList.getSize()!=_coefList.getSize()+1) {
     coutE(InputArguments) << "RooStepFunction::ctor(" << GetName() << ") ERROR: Number of boundaries must be number of coefficients plus 1" << endl ;

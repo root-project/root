@@ -106,6 +106,9 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 
       impDeps = (RooArgSet*)impIter->Next() ;
       termDeps = (RooArgSet*)normIter->Next() ;
+      if (impDeps==0 || termDeps==0) {
+	break ;
+      }
 
       cxcoutD(Generation) << "RooProdGenContext::ctor() analyzing product term " << *term << " with observable(s) " << *termDeps ;
       if (impDeps->getSize()>0) {

@@ -1204,8 +1204,8 @@ RooPlot* RooAbsData::statOn(RooPlot* frame, const char* what, const char *label,
 
   // create the box and set its options
   TPaveText *box= new TPaveText(xmin,ymax,xmax,ymin,"BRNDC");
-  box->SetName(Form("%s_statBox",GetName())) ;
   if(!box) return 0;
+  box->SetName(Form("%s_statBox",GetName())) ;
   box->SetFillColor(0);
   box->SetBorderSize(1);
   box->SetTextAlign(12);

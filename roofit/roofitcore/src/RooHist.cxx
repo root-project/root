@@ -379,7 +379,7 @@ void RooHist::addBin(Axis_t binCenter, Double_t n, Double_t binWidth, Double_t x
 
   if (fabs((double)((n-Int_t(n))>1e-5))) {
     // need interpolation
-    Double_t ym1,yp1,ym2,yp2 ;
+    Double_t ym1(0),yp1(0),ym2(0),yp2(0) ;
     Int_t n1 = Int_t(n) ;
     Int_t n2 = n1+1 ;
     if(!RooHistError::instance().getPoissonInterval(n1,ym1,yp1,_nSigma) ||

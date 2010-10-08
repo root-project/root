@@ -668,6 +668,8 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   Double_t xlo = getMin() ;
   Double_t xhi = getMax() ;
   Int_t nbins = getBins() ;
+
+  // coverity[ARRAY_VS_SINGLETON]
   return (TH1F*)createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nbins);
 }
 
@@ -683,6 +685,8 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   // object and is responsible for deleting it.
 
   RooArgList list(*this) ;
+
+  // coverity[ARRAY_VS_SINGLETON]
   return (TH1F*)createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nBins);
 }
 
@@ -695,6 +699,8 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
 
   RooArgList list(*this) ;
   const RooAbsBinning* pbins = &bins ;
+
+  // coverity[ARRAY_VS_SINGLETON]
   return (TH1F*)createHistogram(name, list, yAxisLabel, &pbins);
 }
 
@@ -755,6 +761,7 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 
 
   RooArgList list(*this,yvar) ;
+  // coverity[OVERRUN_STATIC] 
   return (TH2F*)createHistogram(name, list, zAxisLabel, xlo2, xhi2, nBins2);
 }
 

@@ -167,13 +167,13 @@ void RooCFunction1Ref<VO,VI>::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
 
      UInt_t R__s, R__c;
-     R__b.ReadVersion(&R__s, &R__c);      
+     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);      
 
      // Read name from file
      TString tmpName ;
      tmpName.Streamer(R__b) ;       
 
-     if (tmpName=="UNKNOWN") {
+     if (tmpName=="UNKNOWN" && R__v>0) {
 
        coutW(ObjectHandling) << "WARNING: Objected embeds function pointer to unknown function, object will not be functional" << endl ;
        _ptr = dummyFunction ;

@@ -934,10 +934,11 @@ std::string RooFactoryWSTool::processCompositeExpression(const char* token)
 
   string ret ;
   list<char>::iterator ic = separator.begin() ;
-  for (list<string>::iterator ii = singleExpr.begin() ; ii!=singleExpr.end() ; ii++,ic++) {
+  for (list<string>::iterator ii = singleExpr.begin() ; ii!=singleExpr.end() ; ii++) {
     ret += processSingleExpression(ii->c_str()) ;
     if (ic != separator.end()) {
       ret += *ic ;
+      ic++ ;
     }
   }
 

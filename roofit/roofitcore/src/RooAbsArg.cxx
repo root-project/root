@@ -2018,8 +2018,9 @@ void RooAbsArg::graphVizTree(ostream& os, const char* delimiter, bool useTitle, 
     string nodeLabel = (useTitle && !nodeTitle.empty()) ? nodeTitle : nodeName;
 
     // if using latex, replace ROOT's # with normal latex backslash
-    while(useLatex && nodeLabel.find("#")!=nodeLabel.npos){
-      nodeLabel.replace(nodeLabel.find("#"), 1, "\\");
+    string::size_type position = nodeLabel.find("#") ;
+    while(useLatex && position!=nodeLabel.npos){
+      nodeLabel.replace(position, 1, "\\");
     }
 
     string typeFormat = "\\texttt{";

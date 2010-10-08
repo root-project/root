@@ -570,6 +570,8 @@ Double_t RooRealMPFE::evaluate() const
 	if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName() 
 				 << ") IPC fromServer> SendError Arg " << ptr << " Msg " << msgbuf1 << endl ;    
 	
+	// WVE: null char is read from pipe  
+	// coverity[STRING_NULL]
 	logEvalError(ptr,msgbuf3,msgbuf1,msgbuf2) ;
       }
 	

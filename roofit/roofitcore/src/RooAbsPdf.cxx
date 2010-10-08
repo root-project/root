@@ -2234,7 +2234,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   const RooAbsCategoryLValue* asymCat = (const RooAbsCategoryLValue*) pc.getObject("asymCat") ;
   const char* compSpec = pc.getString("compSpec") ;
   const RooArgSet* compSet = (const RooArgSet*) pc.getObject("compSet") ;
-  Bool_t haveCompSel = (strlen(compSpec)>0 || compSet) ;
+  Bool_t haveCompSel = ( (compSpec && strlen(compSpec)>0) || compSet) ;
 
   // Suffix for curve name
   TString nameSuffix ;
@@ -2696,8 +2696,8 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t show
 
   // create the box and set its options
   TPaveText *box= new TPaveText(xmin,ymax,xmax,ymin,"BRNDC");
-  box->SetName(Form("%s_paramBox",GetName())) ;
   if(!box) return 0;
+  box->SetName(Form("%s_paramBox",GetName())) ;
   box->SetFillColor(0);
   box->SetBorderSize(1);
   box->SetTextAlign(12);

@@ -282,9 +282,11 @@ void RooBinning::setRange(Double_t xlo, Double_t xhi)
   
   // Remove previous boundaries 
   
-  for (set<Double_t>::iterator iter = _boundaries.begin() ; iter!=_boundaries.end() ; ++iter) {    
+  for (set<Double_t>::iterator iter = _boundaries.begin() ; iter!=_boundaries.end() ;) {    
     if ((*iter == _xlo && _ownBoundLo) || (*iter == _xhi && _ownBoundHi)) {
-      _boundaries.erase(iter) ;
+      _boundaries.erase(iter++) ;
+    } else {
+      ++iter ;
     }
   }
 

@@ -290,6 +290,8 @@ RooIntegralMorph::MorphCacheElem::~MorphCacheElem()
 {
   // Destructor
 
+  delete _rf1 ;
+  delete _rf2 ;
   delete[] _yatX ;
   delete[] _calcX ;
 }

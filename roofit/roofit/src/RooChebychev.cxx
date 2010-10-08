@@ -122,8 +122,11 @@ Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) con
   Double_t xmin = _x.min(rangeName); Double_t xmax = _x.max(rangeName);
   Double_t norm(0) ;
   switch(_coefList.getSize()) {
+  // coverity[MISSING_BREAK]
   case  7: case  6: norm+=((RooAbsReal&)_coefList[5]).getVal()*(-1 + 18./3. - 48./5. + 32./7.);
+  // coverity[MISSING_BREAK]
   case  5: case  4: norm+=((RooAbsReal&)_coefList[3]).getVal()*( 1 -  8./3. +  8./5.);
+  // coverity[MISSING_BREAK]
   case  3: case  2: norm+=((RooAbsReal&)_coefList[1]).getVal()*(-1 +  2./3.);
   case  1: case  0: norm+= 1;
   }

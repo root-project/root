@@ -277,10 +277,11 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
 	delete os2 ;
 	newStream.os = &cout ;
       }
+    } else {
+      _files["outFile"] = os2 ;
+      newStream.os = os2 ;
     }
-    _files["outFile"] = os2 ;
 
-    newStream.os = os2 ;
         
   } else {
 

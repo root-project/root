@@ -500,8 +500,9 @@ void RooLinkedList::swapWithNext(RooLinkedListElem* elemB)
 
   RooLinkedListElem* elemA = elemB->_prev ;
   RooLinkedListElem* elemC = elemB->_next ;
-  RooLinkedListElem* elemD = elemC->_next ;
   if (!elemC) return ;
+
+  RooLinkedListElem* elemD = elemC->_next ;
 
   if (elemA) {
     elemA->_next = elemC ;
