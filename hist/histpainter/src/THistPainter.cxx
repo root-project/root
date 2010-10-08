@@ -3760,15 +3760,19 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    axis.ImportAxisAttributes(fXaxis);
 
    chopt[0] = 0;
+   // coverity [Calling risky function]
    strcat(chopt, "SDH");
+   // coverity [Calling risky function]
    if (ndivx < 0) strcat(chopt, "N");
    if (gPad->GetGridx()) {
       gridl = (aymax-aymin)/(gPad->GetY2() - gPad->GetY1());
+      // coverity [Calling risky function]
       strcat(chopt, "W");
    }
 
    // Define X-Axis limits
    if (Hoption.Logx) {
+      // coverity [Calling risky function]
       strcat(chopt, "G");
       ndiv = TMath::Abs(ndivx);
       if (useHparam) {
@@ -3791,6 +3795,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
 
    // Display axis as time
    if (fXaxis->GetTimeDisplay()) {
+      // coverity [Calling risky function]
       strcat(chopt,"t");
       if (strlen(fXaxis->GetTimeFormatOnly()) == 0) {
          axis.SetTimeFormat(fXaxis->ChooseTimeFormat(Hparam.xmax-Hparam.xmin));
@@ -3815,6 +3820,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    ndivsave = ndiv;
    axis.SetOption(chopt);
    if (xAxisPos) {
+      // coverity [Calling risky function]
       strcat(chopt, "-");
       gridl = -gridl;
    }
@@ -3832,8 +3838,10 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
          cw=strstr(chopt,"-");
          *cw='z';
       } else {
+         // coverity [Calling risky function]
          strcat(chopt, "-");
       }
+      // coverity [Calling risky function]
       if (gPad->GetTickx() < 2) strcat(chopt, "U");
       if ((cw=strstr(chopt,"W"))) *cw='z';
       axis.SetTitle("");
@@ -3847,15 +3855,19 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    axis.ImportAxisAttributes(fYaxis);
 
    chopt[0] = 0;
+   // coverity [Calling risky function]
    strcat(chopt, "SDH");
+   // coverity [Calling risky function]
    if (ndivy < 0) strcat(chopt, "N");
    if (gPad->GetGridy()) {
       gridl = (axmax-axmin)/(gPad->GetX2() - gPad->GetX1());
+      // coverity [Calling risky function]
       strcat(chopt, "W");
    }
 
    // Define Y-Axis limits
    if (Hoption.Logy) {
+      // coverity [Calling risky function]
       strcat(chopt, "G");
       ndiv = TMath::Abs(ndivy);
       if (useHparam) {
@@ -3878,6 +3890,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
 
    // Display axis as time
    if (fYaxis->GetTimeDisplay()) {
+      // coverity [Calling risky function]
       strcat(chopt,"t");
       if (strlen(fYaxis->GetTimeFormatOnly()) == 0) {
          axis.SetTimeFormat(fYaxis->ChooseTimeFormat(Hparam.ymax-Hparam.ymin));
@@ -3902,6 +3915,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    ndivsave = ndiv;
    axis.SetOption(chopt);
    if (yAxisPos) {
+      // coverity [Calling risky function]
       strcat(chopt, "+L");
       gridl = -gridl;
    }
@@ -3916,9 +3930,11 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    // Paint the additional Y axis (if needed)
    if (gPad->GetTicky()) {
       if (gPad->GetTicky() < 2) {
+         // coverity [Calling risky function]
          strcat(chopt, "U");
          axis.SetTickSize(-fYaxis->GetTickLength());
       } else {
+         // coverity [Calling risky function]
          strcat(chopt, "+L");
       }
       if ((cw=strstr(chopt,"W"))) *cw='z';
@@ -5253,7 +5269,7 @@ void THistPainter::PaintHist(Option_t *)
    Double_t c1, yb;
    yb = 0;
 
-   strcpy(chopth, "                ");
+   strlcpy(chopth, "                ",17);
 
    Double_t ymin = Hparam.ymin;
    Double_t ymax = Hparam.ymax;
@@ -5334,7 +5350,9 @@ void THistPainter::PaintHist(Option_t *)
       chopth[8] = 'N';
    }
 
+   // coverity [Calling risky function]
    if (Hoption.Fill == 2)    strcat(chopth,"2");
+   // coverity [Calling risky function]
    if (Hoption.HighRes != 0) strcat(chopth,"9");
 
    //         Option LOGX
@@ -6198,15 +6216,18 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
    Double_t *rmax = view->GetRmax();
 
    // Initialize the axis options
-   if (x1[0] > x2[0]) strcpy(chopax, "SDH=+");
-   else               strcpy(chopax, "SDH=-");
-   if (y1[0] > y2[0]) strcpy(chopay, "SDH=+");
-   else               strcpy(chopay, "SDH=-");
-   strcpy(chopaz, "SDH+=");
+   if (x1[0] > x2[0]) strlcpy(chopax, "SDH=+",8);
+   else               strlcpy(chopax, "SDH=-",8);
+   if (y1[0] > y2[0]) strlcpy(chopay, "SDH=+",8);
+   else               strlcpy(chopay, "SDH=-",8);
+   strlcpy(chopaz, "SDH+=",8);
 
    // Option LOG is required ?
+   // coverity [Calling risky function]
    if (Hoption.Logx) strcat(chopax,"G");
+   // coverity [Calling risky function]
    if (Hoption.Logy) strcat(chopay,"G");
+   // coverity [Calling risky function]
    if (Hoption.Logz) strcat(chopaz,"G");
 
    // Initialize the number of divisions. If the
@@ -6216,14 +6237,17 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
    ndivz = fZaxis->GetNdivisions();
    if (ndivx < 0) {
       ndivx = TMath::Abs(ndivx);
+      // coverity [Calling risky function]
       strcat(chopax, "N");
    }
    if (ndivy < 0) {
       ndivy = TMath::Abs(ndivy);
+      // coverity [Calling risky function]
       strcat(chopay, "N");
    }
    if (ndivz < 0) {
       ndivz = TMath::Abs(ndivz);
+      // coverity [Calling risky function]
       strcat(chopaz, "N");
    }
 
@@ -6246,6 +6270,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
       }
       // Option time display is required ?
       if (fXaxis->GetTimeDisplay()) {
+         // coverity [Calling risky function]
          strcat(chopax,"t");
          if (strlen(fXaxis->GetTimeFormatOnly()) == 0) {
             axis->SetTimeFormat(fXaxis->ChooseTimeFormat(bmax-bmin));
@@ -6263,7 +6288,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
       axis->SetLabelOffset(fYaxis->GetLabelOffset()+fYaxis->GetTickLength());
 
       if (fH->GetDimension() < 2) {
-         strcpy(chopay, "V=+UN");
+         strlcpy(chopay, "V=+UN",8);
          ndivy = 0;
       }
       if (TMath::Abs(y1[0] - y2[0]) < epsil) {
@@ -6278,6 +6303,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
       }
       // Option time display is required ?
       if (fYaxis->GetTimeDisplay()) {
+         // coverity [Calling risky function]
          strcat(chopay,"t");
          if (strlen(fYaxis->GetTimeFormatOnly()) == 0) {
             axis->SetTimeFormat(fYaxis->ChooseTimeFormat(bmax-bmin));
@@ -6301,6 +6327,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
       }
       // Option time display is required ?
       if (fZaxis->GetTimeDisplay()) {
+         // coverity [Calling risky function]
          strcat(chopaz,"t");
          if (strlen(fZaxis->GetTimeFormatOnly()) == 0) {
             axis->SetTimeFormat(fZaxis->ChooseTimeFormat(bmax-bmin));
