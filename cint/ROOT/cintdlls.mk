@@ -28,7 +28,7 @@ CINTDLLS_SOURCE_FILES = $(addsuffix .cc ,$(addprefix core/metautils/src/stlLoade
 	$(addsuffix .cxx,$(addprefix $(CINTDLLDIRL)/G__cpp_,$(CINTINCDLLNAMES))) \
 	$(addsuffix .c  ,$(addprefix $(CINTDLLDIRL)/G__c_,$(CINTINCDLLNAMES))) 
 
-.PRECIOUS: $(CINTDLLS_SOURCE_FILES)
+.PRECIOUS: $(CINTDLLS_SOURCE_FILES) \
 	$(addsuffix .o  ,$(addprefix core/metautils/src/stlLoader_,$(CINTSTLDLLNAMES))) \
 	$(addsuffix .o  ,$(addprefix $(CINTDLLDIRDLLSTL)/G__cpp_,$(CINTSTLDLLNAMES))) \
 	$(addsuffix .o  ,$(addprefix $(CINTDLLDIRDLLSTL)/rootcint_,$(CINTSTLDLLNAMES))) \
