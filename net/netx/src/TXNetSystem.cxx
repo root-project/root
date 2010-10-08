@@ -377,7 +377,7 @@ Int_t TXNetSystem::GetPathInfo(const char* path, FileStat_t &buf)
             buf.fMode = kS_IFOFF;
          } else if (ok) {
             buf.fDev = (id >> 24);
-            buf.fIno = (id && 0x00FFFFFF);
+            buf.fIno = (id & 0x00FFFFFF);
             buf.fUid = -1;       // not all information available in xrootd
             buf.fGid = -1;       // not available
             buf.fSize = size;
