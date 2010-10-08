@@ -1505,13 +1505,16 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
          ndivx = 100*nx2 + Int_t(Double_t(nx1)*gPad->GetAbsWNDC());
       }
       ndiv  =TMath::Abs(ndivx);
+      // coverity [Calling risky function]
       if (ndivx < 0) strcat(choptaxis, "N");
       if (gPad->GetGridx()) {
+         // coverity [Calling risky function]
          strcat(choptaxis, "W");
       }
       if (gPad->GetLogx()) {
          rwmin = TMath::Power(10,rwxmin);
          rwmax = TMath::Power(10,rwxmax);
+         // coverity [Calling risky function]
          strcat(choptaxis, "G");
       }
       TGaxis *axis = new TGaxis();
@@ -1531,15 +1534,18 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
          nx2   = ndivy/100;
          nx1   = TMath::Max(1, ndivy%100);
          ndivy = 100*nx2 + Int_t(Double_t(nx1)*gPad->GetAbsHNDC());
+         // coverity [Calling risky function]
          strcat(choptaxis, "N");
       }
       ndiv  =TMath::Abs(ndivy);
       if (gPad->GetGridy()) {
+         // coverity [Calling risky function]
          strcat(choptaxis, "W");
       }
       if (gPad->GetLogy()) {
          rwmin = TMath::Power(10,rwymin);
          rwmax = TMath::Power(10,rwymax);
+         // coverity [Calling risky function]
          strcat(choptaxis,"G");
       }
       axis->SetLineColor(gStyle->GetAxisColor("Y"));
