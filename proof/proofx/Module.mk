@@ -88,7 +88,6 @@ include/%.h:    $(PROOFXDIRI)/%.h $(XROOTDETAG)
 
 $(PROOFXLIB):   $(PROOFXO) $(PROOFXDO) $(XPCONNO) $(ORDER_) $(MAINLIBS) \
                 $(PROOFXLIBDEP) $(XRDPROOFXD)
-		@echo " XRDNETUTIL = $(XRDNETUTIL) "
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libProofx.$(SOEXT) $@ \
 		   "$(PROOFXO) $(XPCONNO) $(PROOFXDO)" \
