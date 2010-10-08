@@ -4546,7 +4546,7 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
             //       container which we are splitting.  It does not
             //       appear in the branch heirarchy either.
             // Note: We can use parent class (clParent) != branch class (elemClass) to detection elision.
-            Int_t unroll = Unroll(name, clParent, clOfBase, ptr + offset, basketsize, splitlevel-1+splitSTLP, btype);
+            Int_t unroll = Unroll(name, clParent, clOfBase, ptr + offset, basketsize, splitlevel+splitSTLP, btype);
             if (unroll < 0) {
                // FIXME: We could not split because we are abstract, should we be doing this?
                if (strlen(name)) {
