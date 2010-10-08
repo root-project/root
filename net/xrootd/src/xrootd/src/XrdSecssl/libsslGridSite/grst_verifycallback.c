@@ -186,15 +186,13 @@ int GRST_callback_SSLVerify_wrapper(int ok, X509_STORE_CTX *ctx)
           }
 
 	// we don't free it but rather put it into the SSL context application data
-        //GRSTx509ChainFree(grst_chain);
-
-        //GRSTx509ChainFree(grst_chain);
-	
 	if ((grst_old_chain = SSL_get_app_data(ssl))) {
+	  SSL_set_app_data(ssl,grst_chain);
+	  GRSTerrorLog(GRST_LOG_INFO,"Free Chain %llx", grst_old_chain);
 	  GRSTx509ChainFree(grst_old_chain);
+	} else {
+	  SSL_set_app_data(ssl,grst_chain);
 	}
-	  
-	SSL_set_app_data(ssl,grst_chain);
      }
 
    return returned_ok;
@@ -309,10 +307,18 @@ char* GRST_get_voms_roles_and_free(void* in_chain)
   }
 
 
-  GRSTx509ChainFree(grst_chain);
+  if (grst_chain) {
+    GRSTerrorLog(GRST_LOG_INFO,"Free Chain %llx", grst_chain);
+    GRSTx509ChainFree(grst_chain);
+  }
   return voms_roles;
 }
 
+void GRST_free_chain(void* in_chain) {
+  GRSTx509Chain *grst_chain = (GRSTx509Chain*) in_chain;
+  if (grst_chain) 
+    GRSTx509ChainFree(grst_chain);
+}
 
 
 /*                      _             _
