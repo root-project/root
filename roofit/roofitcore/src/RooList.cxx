@@ -85,6 +85,7 @@ Bool_t RooList::moveBefore(const char *before, const char *target, const char *c
     RooList::AddFirst(obj, opt.Data());
   }
   else {
+    // coverity[RESOURCE_LEAK]
     NewOptLink(obj, opt.Data(), beforeLink->Prev());
     fSize++;
     Changed();

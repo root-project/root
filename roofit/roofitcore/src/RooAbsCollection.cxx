@@ -1124,9 +1124,13 @@ void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, 
 	RooRealVar* par = (RooRealVar*) ((RooArgList*)listListRRV.At(k))->at(i+j*nrow) ;
 	if (par) {
 	  if (option) {
-	    ofs << *par->format(sigDigit,(k==0)?option:sibOption.Data()) ;
+	    TString* tmp = par->format(sigDigit,(k==0)?option:sibOption.Data()) ;
+	    ofs << *tmp ;
+	    delete tmp ;
 	  } else {
-	    ofs << *par->format((k==0)?*formatCmd:sibFormatCmd) ;
+	    TString* tmp = par->format((k==0)?*formatCmd:sibFormatCmd) ;
+	    ofs << *tmp ;
+	    delete tmp ;
 	  }
 	}
 	if (!(j==ncol-1 && k==nlist-1)) {

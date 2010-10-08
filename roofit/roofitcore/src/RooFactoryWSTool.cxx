@@ -1409,7 +1409,10 @@ vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
   char* p = strtok_r(0,"",&save) ;
   
   // Return here if token is fundamental
-  if (!p) return args ;
+  if (!p) {
+    delete[] buf ;
+    return args ;
+  }
 
   char* tok = p ;
   Int_t blevel=0 ;

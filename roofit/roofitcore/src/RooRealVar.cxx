@@ -590,7 +590,9 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
 
       os << " " ;
     } else {
-      os << format(_printSigDigits,"EFA")->Data() << " " ;
+      TString* tmp = format(_printSigDigits,"EFA") ;
+      os << tmp->Data() << " " ;
+      delete tmp ;
     }
 
     // Append limits if not constants

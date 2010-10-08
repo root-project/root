@@ -445,9 +445,12 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
     // Increment current iterator
     binCur[curObs]++ ;
     curObs=0 ;      
-
+    
   }
-  
+
+  delete[] obsLV ;
+  delete[] binMax ;
+  delete[] binCur ;
   
 }
 

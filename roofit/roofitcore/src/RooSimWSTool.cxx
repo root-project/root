@@ -607,7 +607,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
   // Delete customizers
   customizerList->Delete() ;
   delete customizerList ;
-
+  delete fclIter ;
   return (RooSimultaneous*) _ws->pdf(simPdf->GetName()) ;
 }
 

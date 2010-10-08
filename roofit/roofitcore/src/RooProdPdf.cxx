@@ -1423,6 +1423,9 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
   // Do not rearrage terms if numerator and denominator are effectively empty
   if (nomList.getSize()==0) {
+    delete iter1 ;
+    delete iter2 ;
+    delete itern ;
     return ;
   }
 
