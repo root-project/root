@@ -207,12 +207,21 @@ ClassImp(TEfficiency)
 // #Rightarrow P(#epsilon | k ; N) = #frac{1}{norm'} #times #epsilon^{k + #alpha - 1} #times (1 - #epsilon)^{N - k + #beta - 1} #equiv Beta(#epsilon; k + #alpha, N - k + #beta)
 //    End_Latex
 //    Begin_Html
-//    The expectation value of this posterior distribution is used as estimator for the efficiency:
+//    By default the expectation value of this posterior distribution is used as estimator for the efficiency:
 //    End_Html
 //    Begin_Latex
 // #hat{#varepsilon} = #frac{k + #alpha}{N + #alpha + #beta}
 //    End_Latex
-//    Begin_Html   
+//    Begin_Html  
+//    Optionally the mode can also be used as value for the estimated efficiency. This can be done by calling SetBit(kPosteriorMode) or 
+//    UsePosteriorMode(). in this case the estimated efficiency is
+//    End_Html
+//    Begin_Latex
+// #hat{#varepsilon} = #frac{k + #alpha -1}{N + #alpha + #beta - 2}
+//    End_Latex
+//    Begin_Html  
+//    In the case of a uniform prior distribution, B(x,1,1), the posterior mode is k/n, equivalent to the frequentist estimate (the maximum likelihood value). 
+//   
 // The statistic options also specifiy which confidence interval is used for calculating
 // the uncertainties of the efficiency. The following properties define the error
 // calculation:
@@ -511,12 +520,17 @@ ClassImp(TEfficiency)
 // histograms, the result is not stored in a TEfficiency object but a TGraphAsymmErrors
 // is returned which shows the estimated combined efficiency and its uncertainty
 // for each bin. At the moment the combination method <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Combine">Combine </a>only supports combination of 1-dimensional efficiencies in a bayesian approach.<br />
-// For calculating the combined efficiency and its uncertainty for each bin, a weighted average posterior distribution is constructed. An equal-tailed confidence interval is constructed which might be not the shortest one.
+// For calculating the combined efficiency and its uncertainty for each bin onlyBayesian statistics is used. No frequentists methods are presently 
+// supported for computing the combined efficiency and its confidence interval.
+// In the case of the Bayesian statistics a combined posterior is constructed taking into account the weight of each TEfficiency object. The same prior is used 
+// for all the TEfficiency objects.
+//
 // End_Html
 // Begin_Latex(separator='=',align='rl')
-// P_{comb}(#epsilon | {k_{i}} , {N_{i}}) = norm #times #sum_{j} p_{j} #times P_{j}(#epsilon | k_{j} , N_{j})
-// p_{j} = probability of an event coming from sub sample j
-// p_{j} = w_{j} #times N_{j} is used if no probabilites are given
+// P_{comb}(#epsilon | {w_{i}}, {k_{i}} , {N_{i}}) = #frac{1}{norm} #prod_{i}{L(k_{i} | N_{i}, #epsilon)}^{w_{i}} #pi( #epsilon )  
+// L(k_{i} | N_{i}, #epsilon) is the likelihood function for the sample i ( a Binomial distribution) 
+// #pi( #epsilon) is the prior, a beta distribution B(#epsilon, #alpha, #beta)
+// 
 // #hat{#varepsilon} = #int_{0}^{1} #epsilon #times P_{comb}(#epsilon | {k_{i}} , {N_{i}}) d#epsilon
 // confidence level = 1 - #alpha
 // #frac{#alpha}{2} = #int_{0}^{#epsilon_{low}} P_{comb}(#epsilon | {k_{i}} , {N_{i}}) d#epsilon ... defines lower boundary
@@ -526,14 +540,13 @@ ClassImp(TEfficiency)
 // <b>Example:</b><br />
 // If you use cuts to select electrons which can originate from two different
 // processes, you can determine the selection efficiency for each process. The
-// overall selection efficiency is then the combined efficiency. The weights for
-// the individual posterior distributions should be the probability that an
+// overall selection efficiency is then the combined efficiency. The weights to be used in the 
+// combination should be the probability that an
 // electron comes from the corresponding process.
 // End_Html
 // Begin_Latex
 // p_{1} = #frac{#sigma_{1}}{#sigma_{1} + #sigma_{2}} = #frac{N_{1}w_{1}}{N_{1}w_{1} + N_{2}w_{2}}
-// p_{2} = #frac{#sigma_{2}}{#sigma_{1} + #sigma{2}} = #frac{N_{2}w_{2}}{N_{1}w_{1} + N_{2}w_{2}}
-// P_{ges}(#epsilon | k_{1}, k_{2}; N_{1}, N_{2}) = p_{1} #times P_{1}(#epsilon | k_{1}; N_{1}) + p_{2} #times P_{2}(#epsilon | k_{2}; N_{2})
+// p_{2} = #frac{#sigma_{2}}{#sigma_{1} + #sigma_{2}} = #frac{N_{2}w_{2}}{N_{1}w_{1} + N_{2}w_{2}}
 // End_Latex
 // Begin_Html
 // <h3><a name="other">VI. Further operations</a></h3>
@@ -2187,6 +2200,15 @@ TEfficiency& TEfficiency::operator+=(const TEfficiency& rhs)
    //weight of rhs = Begin_Latex w_{2} End_Latex
    //Begin_Latex w_{new} = \frac{w_{1} \times w_{2}}{w_{1} + w_{2}}End_Latex
    
+
+   if (fTotalHistogram == 0 && fPassedHistogram == 0) { 
+      // efficiency is empty just copy it over
+      *this = rhs; 
+      return *this;
+   }
+
+   R__ASSERT(fTotalHistogram && fPassedHistogram);
+
    fTotalHistogram->ResetBit(TH1::kIsAverage);
    fPassedHistogram->ResetBit(TH1::kIsAverage);
 
