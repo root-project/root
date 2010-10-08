@@ -163,6 +163,7 @@
 
 #include "RConfigure.h"
 #include "RConfig.h"
+#include "Rtypes.h"
 #include <iostream>
 #include <memory>
 #include "Shadow.h"
@@ -505,7 +506,7 @@ const char *GetExePath()
 
       // get our pid and build the name of the link in /proc
       pid = getpid();
-      sprintf(linkname, "/proc/%i/exe", pid);
+      snprintf(linkname,PATH_MAX, "/proc/%i/exe", pid);
       int ret = readlink(linkname, buf, 1024);
       if (ret > 0 && ret < 1024) {
          buf[ret] = 0;
@@ -540,12 +541,12 @@ void SetRootSys()
             return;
          } else {
             fprintf(stderr, "rootcint: error getting realpath of rootcint, please set ROOTSYS in the shell");
-            strcpy(ep, exepath);
+            strlcpy(ep, exepath,PATH_MAX);
          }
       }
 #else
       char *ep = new char[strlen(exepath)+1];
-      strcpy(ep, exepath);
+      strlcpy(ep, exepath,PATH_MAX);
 #endif
       char *s;
       if ((s = strrchr(ep, '/'))) {
@@ -563,8 +564,9 @@ void SetRootSys()
          // There was no slashes at all let now change ROOTSYS
          return;
       }
-      char *env = new char[strlen(ep) + 10];
-      sprintf(env, "ROOTSYS=%s", ep);
+      int ncha = strlen(ep) + 10;
+      char *env = new char[ncha];
+      snprintf(env, ncha, "ROOTSYS=%s", ep);
       putenv(env);
       delete [] ep;
    }
@@ -632,9 +634,9 @@ string R__tmpnam()
       std::cerr << "Temporary file name too long! Trying with /tmp..." << std::endl;
       tmpdir = "/tmp/";
    }
-   strcpy(filename, tmpdir.c_str());
-   strcat(filename, prefix);
-   strcat(filename, radix);
+   strlcpy(filename, tmpdir.c_str(),L_tmpnam+2);
+   strlcat(filename, prefix,L_tmpnam+2);
+   strlcat(filename, radix,L_tmpnam+2);
    int temp_fileno = mkstemp(filename);/*mkstemp not only generate file name but also opens the file*/
    if (temp_fileno >= 0) {
       close(temp_fileno);
@@ -694,7 +696,8 @@ void LoadLibraryMap()
    string filename;
    static char *buffer = 0;
    static unsigned int sbuffer = 0;
-
+   int nchbuffer = 0;
+   
    while ( filelist >> filename ) {
 #ifdef WIN32
       struct _stati64 finfo;
@@ -756,10 +759,11 @@ void LoadLibraryMap()
                            gAutoloads[base] = ""; // We never load namespaces on their own.
                            if (sbuffer < base.size()+20) {
                               delete [] buffer;
-                              buffer = new char[base.size()+20];
+			      nchbuffer = base.size()+20;
+                              buffer = new char[nchbuffer];
                               sbuffer = base.size()+20;
                            }
-                           strcpy(buffer,base.c_str());
+                           strlcpy(buffer,base.c_str(),nchbuffer);
                            G__set_class_autoloading_table(buffer, (char*)""); // We never load namespaces on their own.
                         }
                         ++k;
@@ -778,10 +782,11 @@ void LoadLibraryMap()
             gAutoloads[classname] = line;
             if (sbuffer < classname.size()+20) {
                delete [] buffer;
-               buffer = new char[classname.size()+20];
+	       nchbuffer = nchbuffer;
+               buffer = new char[nchbuffer];
                sbuffer = classname.size()+20;
             }
-            strcpy(buffer,classname.c_str());
+            strlcpy(buffer,classname.c_str(),nchbuffer);
             G__set_class_autoloading_table(buffer,(char*)line.c_str());
          }
       }
@@ -826,8 +831,9 @@ bool CheckInputOperator(G__ClassInfo &cl, int dicttype)
    G__ClassInfo gcl;
    long offset;
 
-   char *proto = new char[strlen(cl.Fullname())+13];
-   sprintf(proto,"TBuffer&,%s*&",cl.Fullname());
+   int ncha = strlen(cl.Fullname())+13;
+   char *proto = new char[ncha];
+   snprintf(proto,ncha,"TBuffer&,%s*&",cl.Fullname());
 
    G__MethodInfo methodinfo = gcl.GetMethod("operator>>",proto,&offset);
 
@@ -889,7 +895,7 @@ string FixSTLName(const string& cintName) {
 
    const char *s = cintName.c_str();
    char type[kMaxLen];
-   strcpy(type, s);
+   strlcpy(type, s,kMaxLen);
 
 #if 0 // (G__GNUC<3) && !defined (G__KCC)
    if (!strncmp(type, "vector",6)   ||
@@ -2277,7 +2283,7 @@ void WriteInputOperator(G__ClassInfo &cl)
 #ifdef WIN32
    G__ClassInfo space = cl.EnclosingSpace();
    if (space.Property() & G__BIT_ISNAMESPACE)
-      sprintf(space_prefix,"%s::",space.Fullname());
+      snprintf(space_prefix,kMaxLen,"%s::",space.Fullname());
 #endif
 
    if (cl.IsTmplt()) {
@@ -2544,10 +2550,12 @@ void WriteClassInit(G__ClassInfo &cl)
       G__ClassInfo gcl;
       long offset;
       const char *versionFunc = "GetClassVersion";
-      char *funcname= new char[strlen(classname.c_str())+strlen(versionFunc)+5];
-      sprintf(funcname,"%s<%s >",versionFunc,classname.c_str());
-      char *proto = new char[strlen(classname.c_str())+ 10 ];
-      sprintf(proto,"%s*",classname.c_str());
+      int ncha = strlen(classname.c_str())+strlen(versionFunc)+5;
+      char *funcname= new char[ncha];
+      snprintf(funcname,ncha,"%s<%s >",versionFunc,classname.c_str());
+      ncha = strlen(classname.c_str())+ 10 ;
+      char *proto = new char[ncha];
+      snprintf(proto,ncha,"%s*",classname.c_str());
       G__MethodInfo methodinfo = gcl.GetMethod(versionFunc,proto,&offset);
       delete [] funcname;
       delete [] proto;
@@ -2754,10 +2762,12 @@ void WriteNamespaceInit(G__ClassInfo &cl)
       G__ClassInfo gcl;
       long offset;
       const char *versionFunc = "GetClassVersion";
-      char *funcname= new char[strlen(classname.c_str())+strlen(versionFunc)+5];
-      sprintf(funcname,"%s<%s >",versionFunc,classname.c_str());
-      char *proto = new char[strlen(classname.c_str())+ 10 ];
-      sprintf(proto,"%s*",classname.c_str());
+      int ncha = strlen(classname.c_str())+strlen(versionFunc)+5;
+      char *funcname= new char[ncha];
+      snprintf(funcname,ncha,"%s<%s >",versionFunc,classname.c_str());
+      ncha = strlen(classname.c_str())+ 10 ;
+      char *proto = new char[ncha];
+      snprintf(proto,ncha,"%s*",classname.c_str());
       G__MethodInfo methodinfo = gcl.GetMethod(versionFunc,proto,&offset);
       delete [] funcname;
       delete [] proto;
@@ -3616,7 +3626,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                cvar = '*';
                cvar += m.Name();
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
-                  sprintf(cdim, "[%d]", m.MaxIndex(dim));
+                  snprintf(cdim,1024, "[%d]", m.MaxIndex(dim));
                   cvar += cdim;
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", &"
@@ -3630,10 +3640,10 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
                   int maxInd = m.MaxIndex(dim);
                   if (maxInd < 0) {
-                     strcpy(cdim,"[]");
+                     strlcpy(cdim,"[]",1024);
                      vardim = true;
                   } else {
-                     sprintf(cdim, "[%d]", maxInd);
+                     snprintf(cdim, 1024,"[%d]", maxInd);
                   }
                   cvar += cdim;
                }
@@ -3657,7 +3667,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                cvar = '*';
                cvar += m.Name();
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
-                  sprintf(cdim, "[%d]", m.MaxIndex(dim));
+                  snprintf(cdim,1024, "[%d]", m.MaxIndex(dim));
                   cvar += cdim;
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", &"
@@ -3673,7 +3683,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
             } else if (m.Property() & G__BIT_ISARRAY) {
                cvar = m.Name();
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
-                  sprintf(cdim, "[%d]", m.MaxIndex(dim));
+                  snprintf(cdim,1024, "[%d]", m.MaxIndex(dim));
                   cvar += cdim;
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", "
@@ -3896,11 +3906,11 @@ void GenerateLinkdef(int *argc, char **argv, int iv)
       }
       if (nostr || noinp) {
          trail[0] = 0;
-         if (nostr) strcat(trail, "-");
-         if (noinp) strcat(trail, "!");
+         if (nostr) strlcat(trail, "-",3);
+         if (noinp) strlcat(trail, "!",3);
       }
       if (bcnt) {
-         strcpy(trail, "+");
+         strlcpy(trail, "+",3);
          if (nostr)
             Error(0, "option + mutual exclusive with -\n");
       }
@@ -3974,8 +3984,9 @@ char *StrDup(const char *str)
    if (!str) return 0;
 
    // allocate 20 extra characters in case of eg, vector<vector<T>>
-   char *s = new char[strlen(str)+20];
-   if (s) strcpy(s, str);
+   int nch = strlen(str)+20;
+   char *s = new char[nch];
+   if (s) strlcpy(s, str,nch);
 
    return s;
 }
@@ -4332,7 +4343,7 @@ int main(int argc, char **argv)
    }
 
    // coverity[secure_coding] - pid can have up to 47 digits!
-   sprintf(autold, autoldtmpl, getpid());
+   snprintf(autold,64, autoldtmpl, getpid());
 
    ic = 1;
    if (!strcmp(argv[ic], "-v")) {
@@ -4534,8 +4545,9 @@ int main(int argc, char **argv)
          ic++;
          argvv[argcc++] = (char *)"-q0";
          argvv[argcc++] = (char *)"-n";
-         argvv[argcc] = (char *)calloc(strlen(argv[ifl])+1, 1);
-         strcpy(argvv[argcc], argv[ifl]); argcc++;
+	 int ncha = strlen(argv[ifl])+1;
+         argvv[argcc] = (char *)calloc(ncha, 1);
+         strlcpy(argvv[argcc], argv[ifl],ncha); argcc++;
          argvv[argcc++] = (char *)"-N";
          s = strrchr(dictname,'.');
          argvv[argcc] = (char *)calloc(strlen(dictname), 1);
@@ -4615,63 +4627,61 @@ int main(int argc, char **argv)
             // so that the header file are properly parsed.
 #ifdef __KCC
             argvv[argcc] = (char *)calloc(64, 1);
-            sprintf(argvv[argcc], "-D__KCC=%ld", (long)__KCC); argcc++;
+            snprintf(argvv[argcc],64, "-D__KCC=%ld", (long)__KCC); argcc++;
 #endif
 #ifdef __INTEL_COMPILER
             argvv[argcc] = (char *)calloc(64, 1);
-            sprintf(argvv[argcc], "-D__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER); argcc++;
+            snprintf(argvv[argcc],64, "-D__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER); argcc++;
 #endif
 #ifdef __xlC__
             argvv[argcc] = (char *)calloc(64, 1);
-            sprintf(argvv[argcc], "-D__xlC__=%ld", (long)__xlC__); argcc++;
+            snprintf(argvv[argcc],64, "-D__xlC__=%ld", (long)__xlC__); argcc++;
 #endif
 #ifdef __GNUC__
             argvv[argcc] = (char *)calloc(64, 1);
             // coverity[secure_coding] - sufficient space
-            sprintf(argvv[argcc], "-D__GNUC__=%ld", (long)__GNUC__); argcc++;
+            snprintf(argvv[argcc],64, "-D__GNUC__=%ld", (long)__GNUC__); argcc++;
 #endif
 #ifdef __GNUC_MINOR__
             argvv[argcc] = (char *)calloc(64, 1);
             // coverity[secure_coding] - sufficient space
-            sprintf(argvv[argcc], "-D__GNUC_MINOR__=%ld", (long)__GNUC_MINOR__); argcc++;
+            snprintf(argvv[argcc],64, "-D__GNUC_MINOR__=%ld", (long)__GNUC_MINOR__); argcc++;
 #endif
 #ifdef __HP_aCC
             argvv[argcc] = (char *)calloc(64, 1);
-            sprintf(argvv[argcc], "-D__HP_aCC=%ld", (long)__HP_aCC); argcc++;
+            snprintf(argvv[argcc],64 "-D__HP_aCC=%ld", (long)__HP_aCC); argcc++;
 #endif
 #ifdef __sun
             argvv[argcc] = (char *)calloc(64, 1);
-            sprintf(argvv[argcc], "-D__sun=%ld", (long)__sun); argcc++;
+            snprintf(argvv[argcc],64, "-D__sun=%ld", (long)__sun); argcc++;
 #endif
 #ifdef __SUNPRO_CC
             argvv[argcc] = (char *)calloc(64, 1);
-            sprintf(argvv[argcc], "-D__SUNPRO_CC=%ld", (long)__SUNPRO_CC); argcc++;
+            snprintf(argvv[argcc],64, "-D__SUNPRO_CC=%ld", (long)__SUNPRO_CC); argcc++;
 #endif
 #ifdef __ia64__
             argvv[argcc] = (char *)calloc(64, 1);
-            sprintf(argvv[argcc], "-D__ia64__=%ld", (long)__ia64__); argcc++;
+            snprintf(argvv[argcc],64, "-D__ia64__=%ld", (long)__ia64__); argcc++;
 #endif
 #ifdef __x86_64__
             argvv[argcc] = (char *)calloc(64, 1);
-            // coverity[secure_coding] - sufficient space
-            sprintf(argvv[argcc], "-D__x86_64__=%ld", (long)__x86_64__); argcc++;
+            snprintf(argvv[argcc],64, "-D__x86_64__=%ld", (long)__x86_64__); argcc++;
 #endif
 #ifdef R__B64
             argvv[argcc] = (char *)calloc(64, 1);
-            // coverity[secure_coding] - sufficient space
-            sprintf(argvv[argcc], "-DR__B64"); argcc++;
+            snprintf(argvv[argcc],64, "-DR__B64"); argcc++;
 #endif
 #ifdef _WIN32
             argvv[argcc] = (char *)calloc(64, 1);
-            sprintf(argvv[argcc], "-D_WIN32=%ld",(long)_WIN32); argcc++;
+            snprintf(argvv[argcc],64, "-D_WIN32=%ld",(long)_WIN32); argcc++;
 #endif
 #ifdef WIN32
             argvv[argcc] = (char *)calloc(64, 1);
-            sprintf(argvv[argcc], "-DWIN32=%ld",(long)WIN32); argcc++;
+            snprintf(argvv[argcc],64, "-DWIN32=%ld",(long)WIN32); argcc++;
 #endif
 #ifdef _MSC_VER
             argvv[argcc] = (char *)calloc(64, 1);
-            sprintf(argvv[argcc], "-D_MSC_VER=%ld",(long)_MSC_VER); argcc++;
+            snprintf(argvv[argcc],64, "-D_MSC_VER=%ld",(long)_MSC_VER); argcc++;
 #endif
          }
 #ifdef ROOTBUILD
@@ -4800,9 +4810,10 @@ int main(int argc, char **argv)
             // filter out undesirable options
             string argkeep;
             StrcpyArg(argkeep, argv[i]);
-            argvv[argcc++] = (char*)calloc(argkeep.length()+1,1);
+	    int ncha = argkeep.length()+1;
+            argvv[argcc++] = (char*)calloc(ncha,1);
             // coverity[secure_coding] - sufficient space
-            strcpy(argvv[argcc-1],argkeep.c_str());
+            strlcpy(argvv[argcc-1],argkeep.c_str(),ncha);
          }
       }
    }
@@ -5221,8 +5232,8 @@ int main(int argc, char **argv)
 
          bool skip = true;
          bool forceLink = false;
-         strcpy(cline,line);
-         strcpy(nline,line);
+         strlcpy(cline,line,256);
+         strlcpy(nline,line,256);
          int len = strlen(line);
 
          // Check if the line contains a "#pragma link C++ class" specification,
