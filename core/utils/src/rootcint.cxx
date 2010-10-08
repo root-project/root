@@ -4207,7 +4207,7 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
 
    // make dict.h
    string dictnameh(dictname);
-   size_t dh = dictnameh.find('.');
+   size_t dh = dictnameh.rfind('.');
    if (dh != std::string::npos) {
       dictnameh.erase(dh + 1);
       dictnameh += "h";
