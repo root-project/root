@@ -581,6 +581,7 @@ void RooPlot::printValue(ostream& os) const
     }
     if(obj->IsA()->InheritsFrom(RooPrintable::Class())) {
       RooPrintable* po = dynamic_cast<RooPrintable*>(obj) ;
+      // coverity[FORWARD_NULL]
       po->printStream(os,kClassName|kName,kInline) ;
     }
     // is it a TNamed subclass?

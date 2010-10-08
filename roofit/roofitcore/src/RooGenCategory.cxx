@@ -35,6 +35,7 @@
 #include "TMethodCall.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string>
 #include "TString.h"
 #include "TInterpreter.h"  
 #include "RooGenCategory.h"
@@ -158,7 +159,7 @@ void RooGenCategory::updateIndexList()
   RooArgSet* tmp=(RooArgSet*) RooArgSet(_superCatProxy.arg()).snapshot(kTRUE) ;
   if (!tmp) {
     coutE(ObjectHandling) << "RooGenCategory::updateIndexList(" << GetName() << ") Couldn't deep-clone super category, abort," << endl ;
-    RooErrorHandler::softAbort() ;
+    throw std::string("RooGenCategory: Cannot deep clone super category") ;
   }
   RooSuperCategory* superClone = (RooSuperCategory*) tmp->find(_superCatProxy.arg().GetName()) ;
 

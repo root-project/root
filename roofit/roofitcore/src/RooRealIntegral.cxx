@@ -386,6 +386,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 	    //overlapOK=kFALSE ;
 	  }
 	}      	
+	// coverity[DEADCODE]
 	if (!overlapOK) depOK=kFALSE ;      
 
  	//cout << "overlap check returns OK=" << (depOK?"T":"F") << endl ;

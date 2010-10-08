@@ -179,6 +179,7 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents)
       // ok= kFALSE;
     }
     delete iterator;
+    // coverity[DEADCODE]
     if(!ok) return 0;
   }
 

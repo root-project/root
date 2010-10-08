@@ -785,9 +785,6 @@ gsl_integration_qag (const gsl_function *f,
     case GSL_INTEG_GAUSS61:
       integration_rule = gsl_integration_qk61 ;
       break ;      
-    default:
-      GSL_ERROR("value of key does specify a known integration rule", 
-                GSL_EINVAL) ;
     }
 
   status = qag (f, a, b, epsabs, epsrel, limit,
@@ -2414,8 +2411,8 @@ qags (const gsl_function * f,
           err_ext += correc;
         }
 
-      if (error_type == 0)
-        error_type = 3;
+//       if (error_type == 0)
+//         error_type = 3;
 
       if (res_ext != 0.0 && area != 0.0)
         {

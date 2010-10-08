@@ -955,9 +955,6 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
 			  bins[2]->numBins(),bins[2]->array()) ;
     }
     break;
-  default:
-    assert(0);
-    break;
   }
   if(!histogram) {
     oocoutE((TObject*)0,InputArguments) << "RooAbsReal::createHistogram: unable to create a new histogram" << endl;

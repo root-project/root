@@ -45,6 +45,6 @@ Int_t RooDouble::Compare(const TObject* other) const
   // to faciliate sorting of RooDoubles in a ROOT container
 
   const RooDouble* otherD = dynamic_cast<const RooDouble*>(other) ;
-  if (!other) return 0 ;
+  if (!otherD) return 0 ;
   return (_value>otherD->_value) ? 1 : -1 ;
 }

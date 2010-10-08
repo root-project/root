@@ -754,7 +754,9 @@ void RooDataHist::initialize(const char* binningName, Bool_t fillTree)
 	rrv->setBinning(rrv->getBinning(binningName)) ;
       }
     }
+    // coverity[FORWARD_NULL]
     _lvvars.push_back(dynamic_cast<RooAbsLValue*>(rvarg)) ;    
+    // coverity[FORWARD_NULL]
     const RooAbsBinning* binning = dynamic_cast<RooAbsLValue*>(rvarg)->getBinningPtr(0) ;
     _lvbins.push_back(binning ? binning->clone() : 0) ;    
   }
@@ -863,7 +865,9 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   _iterator->Reset() ;
   RooAbsArg* rvarg ;
   while((rvarg=(RooAbsArg*)_iterator->Next())) {
+    // coverity[FORWARD_NULL]
     _lvvars.push_back(dynamic_cast<RooAbsLValue*>(rvarg)) ;
+    // coverity[FORWARD_NULL]
     const RooAbsBinning* binning = dynamic_cast<RooAbsLValue*>(rvarg)->getBinningPtr(0) ;
     _lvbins.push_back(binning ? binning->clone() : 0) ;    
   }

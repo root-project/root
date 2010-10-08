@@ -41,6 +41,6 @@ Int_t RooInt::Compare(const TObject* other) const
   // object is not a RooInt
 
   const RooInt* otherD = dynamic_cast<const RooInt*>(other) ;
-  if (!other) return 0 ;
+  if (!otherD) return 0 ;
   return (_value>otherD->_value) ? 1 : -1 ;
 }

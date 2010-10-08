@@ -182,6 +182,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 
       _ownData = kTRUE ;
     } else {
+      // coverity[DEADCODE]
       _dataClone = &indata ;
       _ownData = kFALSE ;
     }

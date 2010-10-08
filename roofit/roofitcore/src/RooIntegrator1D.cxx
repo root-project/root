@@ -312,7 +312,7 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
 	extrapolate(j);
       } else {
 	_extrapValue = _s[j] ;
-	_extrapError = _s[j]-(j>0?_s[j-1]:0) ;
+	_extrapError = _s[j]-_s[j-1] ;
       }
 
       if(fabs(_extrapError) <= _epsRel*fabs(_extrapValue)) {
