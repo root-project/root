@@ -545,8 +545,9 @@ void SetRootSys()
          }
       }
 #else
-      char *ep = new char[strlen(exepath)+1];
-      strlcpy(ep, exepath,PATH_MAX);
+      int nche = strlen(exepath)+1;
+      char *ep = new char[nche];
+      strlcpy(ep, exepath,nche);
 #endif
       char *s;
       if ((s = strrchr(ep, '/'))) {
