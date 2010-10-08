@@ -874,14 +874,14 @@ Bool_t TXNetFile::WriteBuffer(const char *buffer, Int_t bufferLength)
    if (!fClient->Write(buffer, fOffset, bufferLength)) {
       if (gDebug > 0)
          Info("WriteBuffer",
-              "error writing %d bytes of data wrote to offset %Ld",
+              "error writing %d bytes of data wrote to offset %lld",
               bufferLength , fOffset);
       return kTRUE;
    }
 
    if (gDebug > 1)
       Info("WriteBuffer", " %d bytes of data wrote to offset"
-                         " %Ld", bufferLength , fOffset);
+                         " %lld", bufferLength , fOffset);
 
    fOffset += bufferLength;
    fBytesWrite += bufferLength;
