@@ -1674,7 +1674,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             } else {
                TMessage answ(kPROOF_GETSLAVEINFO);
                TList *info = new TList;
-               TSlaveInfo *wi = new TSlaveInfo(GetOrdinal(), TUrl(gSystem->HostName()).GetHostFQDN(), 0);
+               TSlaveInfo *wi = new TSlaveInfo(GetOrdinal(), TUrl(gSystem->HostName()).GetHostFQDN(), 0, "", GetDataDir());
                SysInfo_t si;
                gSystem->GetSysInfo(&si);
                wi->SetSysInfo(si);

@@ -206,15 +206,16 @@ void TSlaveInfo::Print(Option_t *opt) const
    if (oo == "bad" && fStatus != kBad) return;
 
    if (newfmt) {
-      TString msd, si;
+      TString msd, si, datadir;
       if (!(fMsd.IsNull())) msd.Form("| msd: %s ", fMsd.Data());
+      if (!(fDataDir.IsNull())) datadir.Form("| datadir: %s ", fDataDir.Data());
       if (fSysInfo.fCpus > 0) {
          si.Form("| %s, %d cores, %d MB ram", fHostName.Data(),
                fSysInfo.fCpus, fSysInfo.fPhysRam);
       } else {
          si.Form("| %s", fHostName.Data());
       }
-      Printf("Worker: %9s %s %s| %s", fOrdinal.Data(), si.Data(), msd.Data(), stat.Data());
+      Printf("Worker: %9s %s %s%s| %s", fOrdinal.Data(), si.Data(), msd.Data(), datadir.Data(), stat.Data());
 
    } else {
       TString msd  = fMsd.IsNull() ? "<null>" : fMsd.Data();
@@ -3355,6 +3356,8 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                         if (!strcmp(ourwi->GetOrdinal(), slinfo->GetOrdinal())) {
                            ourwi->SetSysInfo(slinfo->GetSysInfo());
                            ourwi->fHostName = slinfo->GetName();
+                           if (slinfo->GetDataDir() && (strlen(slinfo->GetDataDir()) > 0))
+                           ourwi->fDataDir = slinfo->GetDataDir();
                            break;
                         }
                      }

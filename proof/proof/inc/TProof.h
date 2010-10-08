@@ -124,9 +124,10 @@ class TMacro;
 // 27 -> 28: Support for multi-datasets, fix global pack dirs, fix AskStatistics,
 //           package download, dataset caching
 // 28 -> 29: Support for config parameters in EnablePackage, idle-timeout
+// 29 -> 30: Add information about data dir in TSlaveInfo
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 29;            // protocol version number
+const Int_t       kPROOF_Protocol        = 30;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
@@ -225,15 +226,17 @@ public:
    TString      fOrdinal;      //slave ordinal
    TString      fHostName;     //hostname this slave is running on
    TString      fMsd;          //mass storage domain slave is in
+   TString      fDataDir;      //directory for user data
    Int_t        fPerfIndex;    //relative performance of this slave
    SysInfo_t    fSysInfo;      //Infomation about its hardware
    ESlaveStatus fStatus;       //slave status
 
    TSlaveInfo(const char *ordinal = "", const char *host = "", Int_t perfidx = 0,
-              const char *msd = "") :
-              fOrdinal(ordinal), fHostName(host), fMsd(msd),
+              const char *msd = "", const char *datadir = "") :
+              fOrdinal(ordinal), fHostName(host), fMsd(msd), fDataDir(datadir),
               fPerfIndex(perfidx), fSysInfo(), fStatus(kNotActive) { }
 
+   const char *GetDataDir() const { return fDataDir; }
    const char *GetMsd() const { return fMsd; }
    const char *GetName() const { return fHostName; }
    const char *GetOrdinal() const { return fOrdinal; }
@@ -245,7 +248,7 @@ public:
    Bool_t IsSortable() const { return kTRUE; }
    void   Print(Option_t *option="") const;
 
-   ClassDef(TSlaveInfo,3) //basic info on slave
+   ClassDef(TSlaveInfo,4) //basic info on workers
 };
 
 // Merger info class
