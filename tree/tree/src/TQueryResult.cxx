@@ -216,6 +216,7 @@ void TQueryResult::SaveSelector(const char *selector)
       // Locate the included header file
       char *p = (char *) strrchr(selc,'.');
       if (p) {
+         // coverity [Calling risky function]
          strcpy(p+1,"h");
       } else {
          Warning("SaveSelector",
