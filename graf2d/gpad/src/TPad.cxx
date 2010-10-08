@@ -4456,7 +4456,8 @@ void TPad::Print(const char *filenam, Option_t *option)
       l = (char*)strstr(opt,"Title:");
       if (l) {
          gVirtualPS->SetTitle(&opt[6]);
-         strcpy(l,"pdf");  //intentional
+         //Please fix this bug, we may overwrite an input argument
+         strcpy(l,"pdf");
       }
       gVirtualPS->Open(psname,pstype);
       gVirtualPS->SetBit(kPrintingPS);
@@ -4484,6 +4485,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       l = (char*)strstr(opt,"Title:");
       if (l) {
          gVirtualPS->SetTitle(&opt[6]);
+         //Please fix this bug, we may overwrite an input argument
          strcpy(l,"pdf");
       }
       Info("Print", "Current canvas added to %s file %s", opt, psname.Data());
