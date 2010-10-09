@@ -214,7 +214,7 @@ ClassImp(TEfficiency)
 //    End_Latex
 //    Begin_Html  
 //    Optionally the mode can also be used as value for the estimated efficiency. This can be done by calling SetBit(kPosteriorMode) or 
-//    UsePosteriorMode(). in this case the estimated efficiency is
+//    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetPosteriorMode">SetPosteriorMode</a>. In this case the estimated efficiency is:
 //    End_Html
 //    Begin_Latex
 // #hat{#varepsilon} = #frac{k + #alpha -1}{N + #alpha + #beta - 2}
@@ -520,13 +520,12 @@ ClassImp(TEfficiency)
 // histograms, the result is not stored in a TEfficiency object but a TGraphAsymmErrors
 // is returned which shows the estimated combined efficiency and its uncertainty
 // for each bin. At the moment the combination method <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Combine">Combine </a>only supports combination of 1-dimensional efficiencies in a bayesian approach.<br />
-// For calculating the combined efficiency and its uncertainty for each bin onlyBayesian statistics is used. No frequentists methods are presently 
+// For calculating the combined efficiency and its uncertainty for each bin only Bayesian statistics is used. No frequentists methods are presently 
 // supported for computing the combined efficiency and its confidence interval.
 // In the case of the Bayesian statistics a combined posterior is constructed taking into account the weight of each TEfficiency object. The same prior is used 
 // for all the TEfficiency objects.
-//
 // End_Html
-// Begin_Latex(separator='=',align='rl')
+// Begin_Latex
 // P_{comb}(#epsilon | {w_{i}}, {k_{i}} , {N_{i}}) = #frac{1}{norm} #prod_{i}{L(k_{i} | N_{i}, #epsilon)}^{w_{i}} #pi( #epsilon )  
 // L(k_{i} | N_{i}, #epsilon) is the likelihood function for the sample i ( a Binomial distribution) 
 // #pi( #epsilon) is the prior, a beta distribution B(#epsilon, #alpha, #beta)
@@ -1343,172 +1342,6 @@ Double_t TEfficiency::ClopperPearson(Int_t total,Int_t passed,Double_t level,Boo
    else
       return ((passed == 0) ? 0.0 : ROOT::Math::beta_quantile(alpha,passed,total-passed+1.0));
 }
-
-
-#ifdef OLD_COMBINATION   //______________________________________________________________________________
-Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
-			      const Int_t* pass,const Int_t* total,
-			      const Double_t* alpha,const Double_t* beta,
-			      Double_t level,const Double_t* w,Option_t* opt)
-{
-   //calculates the combined efficiency and its uncertainties
-   //
-   //This method does a bayesian combination of the given samples.
-   //
-   //Input:
-   //- up     : contains the upper limit of the confidence interval afterwards
-   //- low    : contains the lower limit of the confidence interval afterwards
-   //- n      : number of samples which are combined
-   //- pass   : array of length n containing the number of passed events
-   //- total  : array of length n containing the corresponding numbers of total
-   //           events
-   //- alpha  : shape parameters for the beta distribution as prior
-   //- beta   : shape parameters for the beta distribution as prior
-   //- level  : desired confidence level
-   //- w      : weights for each sample; if not given, all samples get the weight 1
-   //- options:
-   // + N : The weight for each sample is multiplied by the number of total events.
-   //       -> weight = w[i] * N[i]
-   //       This can be usefull when the weights and probability for each sample are given by
-   //Begin_Latex(separator='=',align='rl')
-   // w_{i} = #frac{#sigma_{i} #times L}{N_{i}}
-   // p_{i} = #frac{#sigma_{i}}{sum_{j} #sigma_{j}} #equiv #frac{N_{i} #times w_{i}}{sum_{j} N_{j} #times w_{j}}
-   //End_Latex
-   //Begin_Html
-   //Notation:
-   //<ul>
-   //<li>k = passed events</li>
-   //<li>N = total evens</li>
-   //<li>n = number of combined samples</li>
-   //<li>i = index for numbering samples</li>
-   //<li>p = probability of sample i (either w[i] or w[i] * N[i], see options)</li>
-   //</ul>
-   //calculation:
-   //<ol>
-   //<li>The combined posterior distributions is calculated</li>
-   //End_Html
-   //Begin_Latex(separator='=',align='rl')
-   //P_{comb}(#epsilon |{k_{i}}; {N_{i}}) = #frac{1}{sum p_{i}} #times #sum_{i} p_{i} #times P_{i}(#epsilon | k_{i}; N_{i})
-   //p_{i} = w[i] or w_{i} #times N_{i} if option "N" is specified
-   //End_Latex
-   //Begin_Html
-   //<li>The estimated efficiency is the weighted average of the individual efficiencies.</li>
-   //End_Html
-   //Begin_Latex #hat{#varepsilon}_{comb} = #frac{1}{sum p_{i}} #times #sum_{i} p_{i} #times #frac{pass_{i} + #alpha_{i}}{total_{i} + #alpha_{i} + #beta_{i}}
-   //End_Latex
-   //Begin_Html
-   //<li>The boundaries of the confidence interval for a confidence level (1 - a)
-   //are given by the a/2 and 1-a/2 quantiles of the resulting cumulative
-   //distribution.</li>
-   //</ol>
-   //End_Html
-   //Example (uniform prior distribution):
-   //Begin_Macro
-   //{
-   //  TCanvas* c1 = new TCanvas("c1","",600,800);
-   //  c1->Divide(1,2);
-   //  c1->SetFillStyle(1001);
-   //  c1->SetFillColor(kWhite);
-   //
-   //  TF1* p1 = new TF1("p1","TMath::BetaDist(x,18,8)",0,1);
-   //  TF1* p2 = new TF1("p2","TMath::BetaDist(x,3,7)",0,1);
-   //  TF1* comb = new TF1("comb","0.6*p1 + 0.4*p2",0,1);
-   //  TF1* const1 = new TF1("const1","0.05",0,1);
-   //  TF1* const2 = new TF1("const2","0.95",0,1);
-   //
-   //  p1->SetLineColor(kRed);
-   //  p1->SetTitle("combined posteriors;#epsilon;P(#epsilon|k,N)");
-   //  p2->SetLineColor(kBlue);
-   //  comb->SetLineColor(kGreen+2);
-   //
-   //  TLegend* leg1 = new TLegend(0.2,0.65,0.6,0.85);
-   //  leg1->AddEntry(p1,"k1 = 18, N1 = 26","l");
-   //  leg1->AddEntry(p2,"k2 = 3, N2 = 10","l");
-   //  leg1->AddEntry(comb,"combined: p1 = 0.6, p2=0.4","l");
-   //
-   //  c1->cd(1);
-   //  p1->Draw();
-   //  p2->Draw("same");
-   //  comb->Draw("same");
-   //  leg1->Draw("same");
-   //  c1->cd(2);
-   //  const1->SetLineWidth(1);
-   //  const2->SetLineWidth(1);
-   //  TGraph* gr = (TGraph*)comb->DrawIntegral();
-   //  gr->SetTitle("cumulative function of combined posterior with boundaries for cl = 95%;#epsilon;CDF");   
-   //  const1->Draw("same");
-   //  const2->Draw("same");   
-   //
-   //  c1->cd(0);
-   //  return c1;
-   //}
-   //End_Macro
-
-   Double_t sumweights = 0;
-   Double_t weight;
-   Double_t mean = 0;
-   TString formula = "( 0 ";
-
-   Bool_t bModWeights = false;
-
-   TString option = opt;
-   option.ToLower();
-   if(option.Contains("n"))
-     bModWeights = true;
-
-   //create formula for cumulative of total posterior
-   // cdf = 1/sum of weights * sum_i (weight_i * cdf_i(pass_i,total_i,alpha_i,beta_i))
-   // and cdf_i(pass_i,total_i,alpha_i,beta_i) = beta_incomplete(pass_i + alpha_i,total_i - pass_i + beta_i)
-   //combined efficiency is weighted average of individual efficiencies
-   for(Int_t i = 0; i < n; ++i) {
-      //get weight
-      if(w) {
-	//check weights > 0
-	 if(w[i] > 0)
-	    weight = w[i];
-	 else {
-	    gROOT->Error("TEfficiency::Combine","invalid custom weight found w = %.2lf",w[i]);
-	    gROOT->Info("TEfficiency::Combine","stop combining");
-	    return -1;
-	 }
-      }
-      //no weights given -> all objects get the same weight
-      else
-         weight = 1;
-
-      if(bModWeights)
-	weight *= total[i];
-      
-      sumweights += weight;
-      //check: total >= pass
-      if(pass[i] > total[i]) {
-	 gROOT->Error("TEfficiency::Combine","total events = %i < passed events %i",total[i],pass[i]);
-	 gROOT->Info("TEfficiency::Combine","stop combining");
-	 return -1;
-      }
-      formula += TString::Format("+ %lf * TMath::BetaIncomplete(x,%lf,%lf) ",weight,
-				 pass[i]+alpha[i],total[i]-pass[i]+beta[i]);
-
-      //add combined efficiency
-      if(total[i] + alpha[i] + beta[i])
-	mean += weight * (pass[i] + alpha[i])/(total[i] + alpha[i] + beta[i]);
-   }
-   formula += TString::Format(") / %lf",sumweights);
-
-   //create pdf function
-   TF1* pdf = new TF1("pdf",formula.Data(),0,1);
-   
-   //get quantiles for (1-level)/2 and (1+level)/2   
-   low = pdf->GetX((1-level)/2,0,1);
-   up = pdf->GetX((1+level)/2,0,1);
-
-   delete pdf;
-
-   mean = mean/sumweights;
-
-   return mean;
-}
-#endif
 //______________________________________________________________________________
 Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
 			      const Int_t* pass,const Int_t* total,
@@ -1567,6 +1400,51 @@ Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
    //distribution.</li>
    //</ol>
    //End_Html
+   //Example (uniform prior distribution):
+   //Begin_Macro
+   //{
+   //  TCanvas* c1 = new TCanvas("c1","",600,800);
+   //  c1->Divide(1,2);
+   //  c1->SetFillStyle(1001);
+   //  c1->SetFillColor(kWhite);
+   //
+   //  TF1* p1 = new TF1("p1","TMath::BetaDist(x,19,9)",0,1);
+   //  TF1* p2 = new TF1("p2","TMath::BetaDist(x,4,8)",0,1);
+   //  TF1* comb = new TF1("comb2","TMath::BetaDist(x,[0],[1])",0,1);
+   //  double norm = 1./(0.6*0.6+0.4*0.4); // weight normalization
+   //  double a = 0.6*18.0 + 0.4*3.0 + 1.0;  // new alpha parameter of combined beta dist.
+   //  double b = 0.6*10+0.4*7+1.0;  // new beta parameter of combined beta dist.
+   //  comb->SetParameters(norm*a ,norm *b );
+   //  TF1* const1 = new TF1("const1","0.05",0,1);
+   //  TF1* const2 = new TF1("const2","0.95",0,1);
+   //
+   //  p1->SetLineColor(kRed);
+   //  p1->SetTitle("combined posteriors;#epsilon;P(#epsilon|k,N)");
+   //  p2->SetLineColor(kBlue);
+   //  comb->SetLineColor(kGreen+2);
+   //
+   //  TLegend* leg1 = new TLegend(0.12,0.65,0.5,0.85);
+   //  leg1->AddEntry(p1,"k1 = 18, N1 = 26","l");
+   //  leg1->AddEntry(p2,"k2 = 3, N2 = 10","l");
+   //  leg1->AddEntry(comb,"combined: p1 = 0.6, p2=0.4","l");
+   //
+   //  c1->cd(1);
+   //  comb->Draw();
+   //  p1->Draw("same");
+   //  p2->Draw("same");
+   //  leg1->Draw("same");
+   //  c1->cd(2);
+   //  const1->SetLineWidth(1);
+   //  const2->SetLineWidth(1);
+   //  TGraph* gr = (TGraph*)comb->DrawIntegral();
+   //  gr->SetTitle("cumulative function of combined posterior with boundaries for cl = 95%;#epsilon;CDF");   
+   //  const1->Draw("same");
+   //  const2->Draw("same");   
+   //
+   //  c1->cd(0);
+   //  return c1;
+   //}
+   //End_Macro
 
    TString option(opt);
    option.ToLower();
