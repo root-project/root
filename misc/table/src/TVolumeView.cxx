@@ -742,7 +742,8 @@ void TVolumeView::Paint(Option_t *option)
 //
 // restrict the levels for "range" option
    Int_t level = gGeometry->GeomLevel();
-   if (option && option[0]=='r' && level > 3 ) return;
+   if (!option) return;
+   if (option[0]=='r' && level > 3 ) return;
 
    Int_t iFirst =  atoi(option);
    Int_t iLast = 0;
