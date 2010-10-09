@@ -325,7 +325,7 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
    // write a HTML header
    WriteHtmlHeader(out, title, relpath);
 
-   if (context || context[0])
+   if (context && context[0])
       out << context << endl;
    else if (title && title[0])
       out << "<h1 class=\"convert\">" << title << "</h1>" << endl;
@@ -1772,10 +1772,13 @@ void TDocOutput::ReferenceEntity(TSubString& str, TDataMember* entity, const cha
    fHtml->GetHtmlFileName(scope, link);
    link += "#";
 
-   TString mangledName(scope->GetName());
-   NameSpace2FileName(mangledName);
-   link += mangledName;
-   link += ":";
+   TString mangledName;
+   if (scope) {
+      mangledName = scope->GetName();
+      NameSpace2FileName(mangledName);
+      link += mangledName;
+      link += ":";
+   }
 
    mangledName = entity->GetName();
    NameSpace2FileName(mangledName);
@@ -2425,8 +2428,11 @@ void TDocOutput::WriteTopLinks(std::ostream& out, TModuleDocInfo* module, const 
    // link to the user home page (if exist)
    const char* userHomePage = GetHtml()->GetHomepage();
    const char* productName = fHtml->GetProductName();
-   if (productName && !strcmp(productName, "ROOT"))
+   if (!productName) {
+      productName = "";
+   } else if (!strcmp(productName, "ROOT")) {
       userHomePage = "";
+   }
    if (userHomePage && *userHomePage)
       out << "<a class=\"descrheadentry\" href=\"" << userHomePage << "\">" << productName << "</a>" << endl;
    out << "<a class=\"descrheadentry\" href=\"http://root.cern.ch\">ROOT Homepage</a>" << endl

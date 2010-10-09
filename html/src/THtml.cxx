@@ -1542,6 +1542,8 @@ void  THtml::GetModuleNameForClass(TString& module, TClass* cl) const
    // Use the cached information from fDocEntityInfo.fClasses.
 
    module = "(UNKNOWN)";
+   if (!cl) return;
+
    TClassDocInfo* cdi = (TClassDocInfo*)fDocEntityInfo.fClasses.FindObject(cl->GetName());
    if (!cdi || !cdi->GetModule())
       return;
