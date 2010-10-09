@@ -216,8 +216,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 
 
 //_____________________________________________________________________________
-RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCmdArg arg1, RooCmdArg arg2, RooCmdArg arg3,
-			 RooCmdArg arg4,RooCmdArg arg5,RooCmdArg arg6,RooCmdArg arg7,RooCmdArg arg8) :
+RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
+			 const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) :
   RooAbsData(name,title,RooArgSet(vars,(RooAbsArg*)RooCmdConfig::decodeObjOnTheFly("RooDataHist::RooDataHist", "IndexCat",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8))), 
   _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
 {
@@ -306,7 +306,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       // Initialize importing mapped set of TH1s
       map<string,TH1*> hmap ;
       char tmp[1024] ;
-      strcpy(tmp,impSliceNames) ;
+      strlcpy(tmp,impSliceNames,1024) ;
       char* token = strtok(tmp,",") ;
       TIterator* hiter = impSliceHistos.MakeIterator() ;
       while(token) {
@@ -319,7 +319,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       // Initialize importing mapped set of RooDataHists
       map<string,RooDataHist*> dmap ;
       char tmp[1024] ;
-      strcpy(tmp,impSliceDNames) ;
+      strlcpy(tmp,impSliceDNames,1024) ;
       char* token = strtok(tmp,",") ;
       TIterator* hiter = impSliceDHistos.MakeIterator() ;
       while(token) {
@@ -1533,6 +1533,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
 
     // Check if this bin belongs in selected slice
     _iterator->Reset() ;
+    // coverity[UNUSED_VALUE]
     while((!skip && (arg=(RooAbsArg*)_iterator->Next()))) {
       idx  = tmp / _idxMult[ivar] ;
       tmp -= idx*_idxMult[ivar] ;

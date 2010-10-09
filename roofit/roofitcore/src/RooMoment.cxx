@@ -42,6 +42,7 @@
 #include "RooFormulaVar.h"
 #include "RooGlobalFunc.h"
 #include "RooConstVar.h"
+#include "RooRealIntegral.h"
 #include <string>
 using namespace std ;
 

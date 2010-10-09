@@ -13,6 +13,7 @@
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooSetProxy.h"
+#include "RooListProxy.h"
 #include "RooArgList.h"
 
 #include "TMatrixD.h"

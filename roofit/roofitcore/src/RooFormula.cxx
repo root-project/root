@@ -303,7 +303,7 @@ Int_t RooFormula::DefinedVariable(TString &name)
   // that represent this variable.
 
   char argName[1024];
-  strcpy(argName,name.Data()) ;
+  strlcpy(argName,name.Data(),1024) ;
 
   // Find :: operator and split string if found
   char *labelName = strstr(argName,"::") ;

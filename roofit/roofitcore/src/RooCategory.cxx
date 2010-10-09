@@ -235,7 +235,7 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
 
   // Parse list of state names, verify that each is valid and add them to the list
   char* buf = new char[strlen(stateNameList)+1] ;
-  strcpy(buf,stateNameList) ;
+  strlcpy(buf,stateNameList,strlen(stateNameList)+1) ;
   char* token = strtok(buf,",") ;
   while(token) {
     const RooCatType* state = lookupType(token,kFALSE) ;

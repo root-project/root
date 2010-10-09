@@ -355,7 +355,7 @@ Bool_t RooAbsCategory::isValid() const
 
 
 //_____________________________________________________________________________
-Bool_t RooAbsCategory::isValid(RooCatType value)  const
+Bool_t RooAbsCategory::isValid(const RooCatType& value)  const
 {
   // Check if given state is defined for this object
 

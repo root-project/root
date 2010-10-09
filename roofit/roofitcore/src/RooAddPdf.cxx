@@ -64,6 +64,7 @@
 #include "RooMsgService.h"
 #include "RooRecursiveFraction.h"
 #include "RooGlobalFunc.h"
+#include "RooRealIntegral.h"
 
 #include "Riostream.h"
 #include <algorithm>

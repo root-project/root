@@ -351,7 +351,7 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
 
     char buf[4096] ;
     list<const RooCatType*> rlist ;
-    strcpy(buf,riter->second.c_str()) ;
+    strlcpy(buf,riter->second.c_str(),4096) ;
     
     char* tok = strtok(buf,"{,}") ;
     while(tok) {
@@ -646,8 +646,8 @@ void RooSimWSTool::SplitRule::splitParameter(const char* paramNameList, const ch
 
   char paramBuf[4096] ;
   char catBuf[4096] ;
-  strcpy(paramBuf,paramNameList) ;
-  strcpy(catBuf,categoryNameList) ;
+  strlcpy(paramBuf,paramNameList,4096) ;
+  strlcpy(catBuf,categoryNameList,4096) ;
 
   // First parse category list
   list<string> catList ;
@@ -674,8 +674,8 @@ void RooSimWSTool::SplitRule::splitParameterConstrained(const char* paramNameLis
 
   char paramBuf[4096] ;
   char catBuf[4096] ;
-  strcpy(paramBuf,paramNameList) ;
-  strcpy(catBuf,categoryNameList) ;
+  strlcpy(paramBuf,paramNameList,4096) ;
+  strlcpy(catBuf,categoryNameList,4096) ;
 
   // First parse category list
   list<string> catList ;
@@ -780,7 +780,7 @@ void RooSimWSTool::BuildConfig::internalAddPdf(const char* pdfName, const char* 
   // and split rules 'sr' to configuration
 
   char buf[4096] ;
-  strcpy(buf,miStateNameList) ;
+  strlcpy(buf,miStateNameList,4096) ;
   
   char* tok = strtok(buf,",") ;
   while(tok) {

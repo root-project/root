@@ -533,7 +533,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
   Int_t buflen = strlen(((RooStringVar*)buildConfig.find("physModels"))->getVal())+1 ;
   char *buf = new char[buflen] ;
 
-  strcpy(buf,((RooStringVar*)buildConfig.find("physModels"))->getVal()) ;
+  strlcpy(buf,((RooStringVar*)buildConfig.find("physModels"))->getVal(),buflen) ;
   RooAbsCategoryLValue* physCat(0) ;
   if (strstr(buf," : ")) {
     const char* physCatName = strtok(buf,spaceChars) ;
@@ -627,7 +627,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
   delete[] buf ; 
   buflen = strlen(((RooStringVar*)buildConfig.find("splitCats"))->getVal())+1 ;
   buf = new char[buflen] ;
-  strcpy(buf,((RooStringVar*)buildConfig.find("splitCats"))->getVal()) ;
+  strlcpy(buf,((RooStringVar*)buildConfig.find("splitCats"))->getVal(),buflen) ;
 
   char *catName = strtok(buf,spaceChars) ;
   char *stateList(0) ;
@@ -754,7 +754,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       buflen = strlen(ruleStr->getVal())+1 ;
       buf = new char[buflen] ;
 
-      strcpy(buf,ruleStr->getVal()) ;
+      strlcpy(buf,ruleStr->getVal(),buflen) ;
       char *tokenPtr(0) ;
 
       char* token = strtok_r(buf,spaceChars,&tokenPtr) ;

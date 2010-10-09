@@ -827,7 +827,7 @@ Bool_t RooPlot::setDrawOptions(const char *name, TString options)
   if(0 == link) return kFALSE;
 
   DrawOpt opt(link->GetOption()) ;
-  strcpy(opt.drawOptions,options) ;
+  strlcpy(opt.drawOptions,options,128) ;
   link->SetOption(opt.rawOpt());
   return kTRUE;
 }
@@ -959,7 +959,7 @@ void RooPlot::DrawOpt::initialize(const char* inRawOpt)
     invisible=kFALSE ;
     return ;
   }
-  strcpy(drawOptions,inRawOpt) ;
+  strlcpy(drawOptions,inRawOpt,128) ;
   strtok(drawOptions,":") ;
   const char* extraOpt = strtok(0,":") ;
   if (extraOpt) {
@@ -973,9 +973,9 @@ const char* RooPlot::DrawOpt::rawOpt() const
 {
   // Return the raw draw options
   static char buf[128] ;
-  strcpy(buf,drawOptions) ;
+  strlcpy(buf,drawOptions,128) ;
   if (invisible) {
-    strcat(buf,":I") ;
+    strlcat(buf,":I",128) ;
   }
   return buf ;
 }

@@ -32,6 +32,7 @@
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooBCPGenDecay.h"
+#include "RooRealIntegral.h"
 
 ClassImp(RooBCPGenDecay) 
 ;

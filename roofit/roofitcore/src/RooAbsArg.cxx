@@ -1832,8 +1832,8 @@ TString RooAbsArg::cleanBranchName() const
 
   // Name is too long, truncate and include CRC32 checksum of full name in clean name
   static char buf[1024] ;
-  strcpy(buf,cleanName.Data()) ;
-  sprintf(buf+46,"_CRC%08x",crc32(cleanName.Data())) ;
+  strlcpy(buf,cleanName.Data(),1024) ;
+  snprintf(buf+46,1024-46,"_CRC%08x",crc32(cleanName.Data())) ;
 
   return TString(buf) ;
 }
@@ -1961,7 +1961,7 @@ RooLinkedList RooAbsArg::getCloningAncestors() const
   while(iter != _boolAttrib.end()) {
     if (TString(*iter).BeginsWith("CloneOf(")) {
       char buf[128] ;
-      strcpy(buf,iter->c_str()) ;
+      strlcpy(buf,iter->c_str(),128) ;
       strtok(buf,"(") ;
       char* ptrToken = strtok(0,")") ;
       RooAbsArg* ptr = (RooAbsArg*) strtol(ptrToken,0,16) ;

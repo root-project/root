@@ -55,6 +55,7 @@
 #include "RooRealConstant.h"
 #include "RooNameReg.h"
 #include "RooMsgService.h"
+#include "RooRealIntegral.h"
 
 #include "Riostream.h"
 

@@ -68,7 +68,7 @@ RooAbsString::RooAbsString(const RooAbsString& other, const char* name) :
 {
   // Copy constructor
 
-  strcpy(_value,other._value) ;
+  strlcpy(_value,other._value,_len) ;
 }
 
 
@@ -90,7 +90,7 @@ const char* RooAbsString::getVal() const
 
   if (isValueDirty()) {
     clearValueDirty() ;
-    strcpy(_value,traceEval()) ;
+    strlcpy(_value,traceEval(),_len) ;
   } 
   
   return _value ;
@@ -215,7 +215,7 @@ void RooAbsString::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/)
   RooAbsString* other = dynamic_cast<RooAbsString*>(const_cast<RooAbsArg*>(source)) ;
   assert(other!=0) ;
 
-  strcpy(_value,other->_value) ;
+  strlcpy(_value,other->_value,_len) ;
   setValueDirty() ;
 }
 

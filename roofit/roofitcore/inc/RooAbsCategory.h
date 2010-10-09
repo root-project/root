@@ -80,6 +80,7 @@ protected:
 
   // Function evaluation and error tracing
   RooCatType traceEval() const ;
+  // coverity[PASS_BY_VALUE]
   virtual Bool_t traceEvalHook(RooCatType /*value*/) const { 
     // Hook function for trace evaluation (dummy)
     return kFALSE ;
@@ -94,7 +95,7 @@ protected:
   void clearTypes() ;
 
   virtual Bool_t isValid() const ;
-  virtual Bool_t isValid(RooCatType value) const ;
+  virtual Bool_t isValid(const RooCatType& value) const ;
 
   virtual void syncCache(const RooArgSet* set=0) ;
   virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) ;

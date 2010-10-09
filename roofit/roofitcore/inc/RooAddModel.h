@@ -18,6 +18,7 @@
 
 #include "RooResolutionModel.h"
 #include "RooListProxy.h"
+#include "RooSetProxy.h"
 #include "RooAICRegistry.h"
 #include "RooNormSetCache.h"
 #include "RooNameSet.h"

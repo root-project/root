@@ -451,9 +451,9 @@ RooAbsReal* RooAbsReal::createProfile(const RooArgSet& paramsOfInterest)
 
 
 //_____________________________________________________________________________
-RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg arg1, const RooCmdArg arg2,
-				       const RooCmdArg arg3, const RooCmdArg arg4, const RooCmdArg arg5, 
-				       const RooCmdArg arg6, const RooCmdArg arg7, const RooCmdArg arg8) const 
+RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
+				       const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
+				       const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const 
 {
   // Create an object that represents the integral of the function over one or more observables listed in iset
   // The actual integration calculation is only performed when the return object is evaluated. The name
@@ -516,7 +516,7 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
   RooArgSet components ;
   
   // char* buf = new char[strlen(rangeName)+1] ;
-  //   strcpy(buf,rangeName) ;
+  //   strlcpy(buf,rangeName) ;
   //   char* range = strtok(buf,",") ;
   
   //   while (range) {
@@ -1174,7 +1174,7 @@ TH1* RooAbsReal::createHistogram(const char* varNameList, Int_t xbins, Int_t ybi
 
   // Parse list of variable names
   char buf[1024] ;
-  strcpy(buf,varNameList) ;
+  strlcpy(buf,varNameList,1024) ;
   char* varName = strtok(buf,",:") ;
 
   RooArgSet* vars = getVariables() ;
@@ -1461,7 +1461,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 
     // Separate named ranges using strtok
     char buf[1024] ;
-    strcpy(buf,rcmd->getString(0)) ;
+    strlcpy(buf,rcmd->getString(0),1024) ;
     char* oneRange = strtok(buf,",") ;
     while(oneRange) {
       rlist.push_back(oneRange) ;
@@ -1573,7 +1573,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 
     // Prepare comma separated label list for parsing
     char buf[1024] ;
-    strcpy(buf,sliceCatState) ;
+    strlcpy(buf,sliceCatState,1024) ;
     const char* slabel = strtok(buf,",") ;
 
     // Loop over all categories provided by (multiple) Slice() arguments
@@ -1694,6 +1694,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 
 
 //_____________________________________________________________________________
+// coverity[PASS_BY_VALUE]
 RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 {
   // Plotting engine function for internal use
@@ -2090,6 +2091,7 @@ RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Opti
 
 
 //_____________________________________________________________________________
+// coverity[PASS_BY_VALUE]
 RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const
 
 {
@@ -3264,7 +3266,7 @@ Double_t RooAbsReal::maxVal(Int_t /*code*/) const
 void RooAbsReal::EvalError::setMessage(const char* tmp) 
 { 
   if (strlen(tmp)<1023) {
-    strcpy(_msg,tmp) ; 
+    strlcpy(_msg,tmp,1023) ; 
   } else {
     strncpy(_msg,tmp,1020); 
     _msg[1020]='.' ; _msg[1021]='.' ; 
@@ -3278,7 +3280,7 @@ void RooAbsReal::EvalError::setMessage(const char* tmp)
 void RooAbsReal::EvalError::setServerValues(const char* tmp) 
 { 
   if (strlen(tmp)<1023) {
-    strcpy(_srvval,tmp) ; 
+    strlcpy(_srvval,tmp,1023) ; 
   } else {
     strncpy(_srvval,tmp,1020); 
     _srvval[1020]='.' ; _srvval[1021]='.' ;
@@ -3562,9 +3564,9 @@ RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooAr
 
 
 //_____________________________________________________________________________
-RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCmdArg arg1, const RooCmdArg arg2,
-				 const RooCmdArg arg3, const RooCmdArg arg4, const RooCmdArg arg5, 
-				 const RooCmdArg arg6, const RooCmdArg arg7, const RooCmdArg arg8) 
+RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
+				 const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
+				 const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) 
 {
   // Create an object that represents the running integral of the function over one or more observables listed in iset, i.e.
   // 
@@ -3923,9 +3925,9 @@ RooMultiGenFunction* RooAbsReal::iGenFunction(const RooArgSet& observables, cons
 
 
 //_____________________________________________________________________________
-RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, RooCmdArg arg1,  RooCmdArg arg2,  
-				    RooCmdArg arg3,  RooCmdArg arg4, RooCmdArg arg5,  
-				    RooCmdArg arg6,  RooCmdArg arg7, RooCmdArg arg8) 
+RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,  
+				    const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,  
+				    const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8) 
 {  
   // Perform a chi^2 fit to given histogram By default the fit is executed through the MINUIT
   // commands MIGRAD, HESSE in succession
@@ -3999,9 +4001,9 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdL
 
 
 //_____________________________________________________________________________
-RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, RooCmdArg arg1,  RooCmdArg arg2,  
-				   RooCmdArg arg3,  RooCmdArg arg4, RooCmdArg arg5,  
-				   RooCmdArg arg6,  RooCmdArg arg7, RooCmdArg arg8) 
+RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,  
+				   const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,  
+				   const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8) 
 {
   // Create a chi-2 from a histogram and this function.
   //
@@ -4050,9 +4052,9 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdLi
 
 
 //_____________________________________________________________________________
-RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, RooCmdArg arg1,  RooCmdArg arg2,  
-				      RooCmdArg arg3,  RooCmdArg arg4, RooCmdArg arg5,  
-				      RooCmdArg arg6,  RooCmdArg arg7, RooCmdArg arg8) 
+RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  const RooCmdArg& arg2,  
+				      const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,  
+				      const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8) 
 {
   // Create a chi-2 from a series of x and y value stored in a dataset.
   // The y values can either be the event weights, or can be another column designated
@@ -4124,9 +4126,9 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmd
 
 
 //_____________________________________________________________________________
-RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, RooCmdArg arg1,  RooCmdArg arg2,  
-				     RooCmdArg arg3,  RooCmdArg arg4, RooCmdArg arg5,  
-				     RooCmdArg arg6,  RooCmdArg arg7, RooCmdArg arg8) 
+RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,  
+				     const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,  
+				     const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8) 
 {
   // Create a chi-2 from a series of x and y value stored in a dataset.
   // The y values can either be the event weights (default), or can be another column designated

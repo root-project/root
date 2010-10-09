@@ -61,7 +61,7 @@ HypoTestInverterResult::~HypoTestInverterResult()
 }
 
 
-bool HypoTestInverterResult::Add( HypoTestInverterResult /* otherResult */  )
+bool HypoTestInverterResult::Add( const HypoTestInverterResult& /* otherResult */  )
 {
   /// Merge this HypoTestInverterResult with another
   /// HypoTestInverterResult passed as argument

@@ -17,7 +17,6 @@
 #define ROO_LINKED_LIST_ELEM
 
 #include "Rtypes.h"
-#include "RooLinkedListElem.h"
 
 class TObject ;
 class RooLinkedListElem ;

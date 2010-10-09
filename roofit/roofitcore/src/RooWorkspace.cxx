@@ -241,7 +241,7 @@ Bool_t RooWorkspace::import(const char* fileSpec, const RooCmdArg& arg1, const R
 
   // Parse file/workspace/objectname specification
   char buf[1024] ;
-  strcpy(buf,fileSpec) ;
+  strlcpy(buf,fileSpec,1024) ;
   char* filename = strtok(buf,":") ;
   char* wsname = strtok(0,":") ;
   char* objname = strtok(0,":") ;
@@ -381,14 +381,14 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
     
     // Parse comma separated lists into map<string,string>
     char tmp[1024] ;
-    strcpy(tmp,varChangeIn) ;
+    strlcpy(tmp,varChangeIn,1024) ;
     list<string> tmpIn,tmpOut ;
     char* ptr = strtok(tmp,",") ;
     while (ptr) {
       tmpIn.push_back(ptr) ;
       ptr = strtok(0,",") ;
     }
-    strcpy(tmp,varChangeOut) ;
+    strlcpy(tmp,varChangeOut,1024) ;
     ptr = strtok(tmp,",") ;
     while (ptr) {
       tmpOut.push_back(ptr) ;
@@ -406,7 +406,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
   std::set<string> exceptVarNames ;
   char tmp[1024] ;
   if (exceptVars && strlen(exceptVars)) {
-    strcpy(tmp,exceptVars) ;
+    strlcpy(tmp,exceptVars,1024) ;
     char* ptr = strtok(tmp,",") ;
     while(ptr) {
       exceptVarNames.insert(ptr) ;
@@ -701,14 +701,14 @@ Bool_t RooWorkspace::import(RooAbsData& inData, const RooCmdArg& arg1, const Roo
     
     // Parse comma separated lists of variable name changes
     char tmp[1024] ;
-    strcpy(tmp,varChangeIn) ;
+    strlcpy(tmp,varChangeIn,1024) ;
     list<string> tmpIn,tmpOut ;
     char* ptr = strtok(tmp,",") ;
     while (ptr) {
       tmpIn.push_back(ptr) ;
       ptr = strtok(0,",") ;
     }
-    strcpy(tmp,varChangeOut) ;
+    strlcpy(tmp,varChangeOut,1024) ;
     ptr = strtok(tmp,",") ;
     while (ptr) {
       tmpOut.push_back(ptr) ;
@@ -805,7 +805,7 @@ Bool_t RooWorkspace::defineSet(const char* name, const char* contentList)
 
   // Check all constituents of provided set
   char buf[1024] ;
-  strcpy(buf,contentList) ;
+  strlcpy(buf,contentList,1024) ;
   char* token = strtok(buf,",") ;
   while(token) {
     // If missing, either import or report error
@@ -838,7 +838,7 @@ Bool_t RooWorkspace::extendSet(const char* name, const char* newContents)
 
   // Check all constituents of provided set
   char buf[1024] ;
-  strcpy(buf,newContents) ;
+  strlcpy(buf,newContents,1024) ;
   char* token = strtok(buf,",") ;
   while(token) {
     // If missing, either import or report error
@@ -1146,7 +1146,7 @@ RooArgSet RooWorkspace::argSet(const char* nameList) const
   RooArgSet ret ;
 
   char tmp[1024] ;
-  strcpy(tmp,nameList) ;
+  strlcpy(tmp,nameList,1024) ;
   char* token = strtok(tmp,",") ;
   while(token) {
     RooAbsArg* oneArg = arg(token) ;
@@ -1571,7 +1571,7 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
       if (strstr(buf,"#include")) {
 	// Process #include statements here
 	char tmp[1024] ;
-	strcpy(tmp,buf) ;
+	strlcpy(tmp,buf,1024) ;
 	strtok(tmp," <\"") ;
 	char* incfile = strtok(0," <\"") ;
 	
@@ -2621,7 +2621,7 @@ void RooWorkspace::unExport()
   TObject* wobj ;
   while((wobj=iter->Next())) {
     if (isValidCPPID(wobj->GetName())) {
-      strcpy(buf,Form("%s::%s",_exportNSName.c_str(),wobj->GetName())) ;
+      strlcpy(buf,Form("%s::%s",_exportNSName.c_str(),wobj->GetName()),1024) ;
       G__deletevariable(buf) ;
     }
   }

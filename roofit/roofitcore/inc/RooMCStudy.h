@@ -33,9 +33,9 @@ class RooMCStudy : public TNamed {
 public:
 
   RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables, 
-	     RooCmdArg arg1=RooCmdArg::none(), RooCmdArg arg2=RooCmdArg::none(),
-             RooCmdArg arg3=RooCmdArg::none(), RooCmdArg arg4=RooCmdArg::none(), RooCmdArg arg5=RooCmdArg::none(),
-             RooCmdArg arg6=RooCmdArg::none(), RooCmdArg arg7=RooCmdArg::none(), RooCmdArg arg8=RooCmdArg::none()) ;
+	     const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
+             const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
+             const RooCmdArg& arg6=RooCmdArg::none(), const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
 	
   RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel, 
 	     const RooArgSet& dependents, const char* genOptions="",

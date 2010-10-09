@@ -29,6 +29,7 @@
 #include "TMath.h"
 #include "RooRealVar.h"
 #include "RooBMixDecay.h"
+#include "RooRealIntegral.h"
 #include "RooRandom.h"
 
 ClassImp(RooBMixDecay) 

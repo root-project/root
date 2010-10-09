@@ -73,9 +73,9 @@ ClassImp(RooMCStudy)
 
 //_____________________________________________________________________________
 RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
-   		       RooCmdArg arg1, RooCmdArg arg2,
-   		       RooCmdArg arg3,RooCmdArg arg4,RooCmdArg arg5,
-   		       RooCmdArg arg6,RooCmdArg arg7,RooCmdArg arg8) : TNamed("mcstudy","mcstudy")
+   		       const RooCmdArg& arg1, const RooCmdArg& arg2,
+   		       const RooCmdArg& arg3,const RooCmdArg& arg4,const RooCmdArg& arg5,
+   		       const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) : TNamed("mcstudy","mcstudy")
 
 {
   // Construct Monte Carlo Study Manager. This class automates generating data from a given PDF,
@@ -451,7 +451,7 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
   // later via genData().
   //
   // When generating, data sets will be written out in ascii form if the pattern string is supplied
-  // The pattern, which is a template for sprintf, should look something like "data/toymc_%04d.dat"
+  // The pattern, which is a template for snprintf, should look something like "data/toymc_%04d.dat"
   // and should contain one integer field that encodes the sample serial number.
   //
   // When fitting only, data sets may optionally be read from ascii files, using the same file
@@ -550,7 +550,7 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
 
       // Load sample from ASCII file
       char asciiFile[1024] ;
-      sprintf(asciiFile,asciiFilePat,nSamples) ;
+      snprintf(asciiFile,1024,asciiFilePat,nSamples) ;
       RooArgList depList(_allDependents) ;
       _genSample = RooDataSet::read(asciiFile,depList,"q") ;      
       
@@ -584,7 +584,7 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
     // Optionally write to ascii file
     if (doGenerate && asciiFilePat && *asciiFilePat) {
       char asciiFile[1024] ;
-      sprintf(asciiFile,asciiFilePat,nSamples) ;
+      snprintf(asciiFile,1024,asciiFilePat,nSamples) ;
       RooDataSet* unbinnedData = dynamic_cast<RooDataSet*>(_genSample) ;
       if (unbinnedData) {
 	unbinnedData->write(asciiFile) ;
@@ -646,7 +646,7 @@ Bool_t RooMCStudy::generateAndFit(Int_t nSamples, Int_t nEvtPerSample, Bool_t ke
   // later via genData().
   //
   // Data sets will be written out is ascii form if the pattern string is supplied.
-  // The pattern, which is a template for sprintf, should look something like "data/toymc_%04d.dat"
+  // The pattern, which is a template for snprintf, should look something like "data/toymc_%04d.dat"
   // and should contain one integer field that encodes the sample serial number.
   //
   
@@ -668,7 +668,7 @@ Bool_t RooMCStudy::generate(Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenD
   // and can be accessed later via genData().
   //
   // Data sets will be written out in ascii form if the pattern string is supplied.
-  // The pattern, which is a template for sprintf, should look something like "data/toymc_%04d.dat"
+  // The pattern, which is a template for snprintf, should look something like "data/toymc_%04d.dat"
   // and should contain one integer field that encodes the sample serial number.
   //
   
@@ -685,7 +685,7 @@ Bool_t RooMCStudy::fit(Int_t nSamples, const char* asciiFilePat)
 {
   // Fit 'nSamples' datasets, which are read from ASCII files.
   //
-  // The ascii file pattern, which is a template for sprintf, should look something like "data/toymc_%04d.dat"
+  // The ascii file pattern, which is a template for snprintf, should look something like "data/toymc_%04d.dat"
   // and should contain one integer field that encodes the sample serial number.
   //
   

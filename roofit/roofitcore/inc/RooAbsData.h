@@ -45,8 +45,8 @@ public:
   virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet* vars=0) const = 0 ;
 
   // Reduction methods
-  RooAbsData* reduce(RooCmdArg arg1,RooCmdArg arg2=RooCmdArg(),RooCmdArg arg3=RooCmdArg(),RooCmdArg arg4=RooCmdArg(),
-                     RooCmdArg arg5=RooCmdArg(),RooCmdArg arg6=RooCmdArg(),RooCmdArg arg7=RooCmdArg(),RooCmdArg arg8=RooCmdArg()) ;
+  RooAbsData* reduce(const RooCmdArg& arg1,const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),const RooCmdArg& arg4=RooCmdArg(),
+                     const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg()) ;
   RooAbsData* reduce(const char* cut) ;
   RooAbsData* reduce(const RooFormulaVar& cutVar) ;
   RooAbsData* reduce(const RooArgSet& varSubset, const char* cut=0) ;

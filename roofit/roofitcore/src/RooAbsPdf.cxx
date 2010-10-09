@@ -150,6 +150,7 @@
 #include "RooXYChi2Var.h"
 #include "RooChi2Var.h"
 #include "RooMinimizer.h"
+#include "RooRealIntegral.h"
 #include <string>
 
 ClassImp(RooAbsPdf) 
@@ -659,8 +660,8 @@ Double_t RooAbsPdf::extendedTerm(UInt_t observed, const RooArgSet* nset) const
 
 
 //_____________________________________________________________________________
-RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2, RooCmdArg arg3, RooCmdArg arg4, 
-                                             RooCmdArg arg5, RooCmdArg arg6, RooCmdArg arg7, RooCmdArg arg8) 
+RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4, 
+                                             const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) 
 {
   // Construct representation of -log(L) of PDFwith given dataset. If dataset is unbinned, an unbinned likelihood is constructed. If the dataset
   // is binned, a binned likelihood is constructed. 
@@ -804,7 +805,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     // Composite case: multiple ranges
     RooArgList nllList ;
     char* buf = new char[strlen(rangeName)+1] ;
-    strcpy(buf,rangeName) ;
+    strlcpy(buf,rangeName,strlen(rangeName)+1) ;
     char* token = strtok(buf,",") ;
     while(token) {
       RooAbsReal* nllComp = new RooNLLVar(Form("%s_%s",baseName.c_str(),token),"-log(likelihood)",*this,data,projDeps,ext,token,addCoefRangeName,numcpu,kFALSE,verbose,splitr,cloneData) ;
@@ -858,8 +859,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 
 
 //_____________________________________________________________________________
-RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2, RooCmdArg arg3, RooCmdArg arg4, 
-                                                 RooCmdArg arg5, RooCmdArg arg6, RooCmdArg arg7, RooCmdArg arg8) 
+RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4, 
+                                                 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) 
 {
   // Fit PDF to given dataset. If dataset is unbinned, an unbinned maximum likelihood is performed. If the dataset
   // is binned, a binned maximum likelihood is performed. By default the fit is executed through the MINUIT
@@ -1374,9 +1375,9 @@ RooFitResult* RooAbsPdf::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdLi
 
 
 //_____________________________________________________________________________
-RooAbsReal* RooAbsPdf::createChi2(RooDataHist& data, RooCmdArg arg1,  RooCmdArg arg2,  
-				   RooCmdArg arg3,  RooCmdArg arg4, RooCmdArg arg5,  
-				   RooCmdArg arg6,  RooCmdArg arg7, RooCmdArg arg8) 
+RooAbsReal* RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,  
+				   const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,  
+				   const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8) 
 {
   // Create a chi-2 from a histogram and this function.
   //
@@ -2299,7 +2300,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
       } else if (pc.hasProcessed("RangeWithName")) {    
 
 	char tmp[1024] ;
-	strcpy(tmp,pc.getString("rangeName",0,kTRUE)) ;
+	strlcpy(tmp,pc.getString("rangeName",0,kTRUE),1024) ;
 	char* rangeNameToken = strtok(tmp,",") ;
 	while(rangeNameToken) {
 	  Double_t rangeLo = frame->getPlotVar()->getMin(rangeNameToken) ;
@@ -2322,7 +2323,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
       // Specification of a normalization range override those in a regular ranage
       if (pc.hasProcessed("NormRange")) {    
 	char tmp[1024] ;
-	strcpy(tmp,pc.getString("normRangeName",0,kTRUE)) ;
+	strlcpy(tmp,pc.getString("normRangeName",0,kTRUE),1024) ;
 	char* rangeNameToken = strtok(tmp,",") ;
 	rangeLim.clear() ;
 	while(rangeNameToken) {
@@ -2503,6 +2504,7 @@ void RooAbsPdf::plotOnCompSelect(RooArgSet* selNodes) const
 
 
 //_____________________________________________________________________________
+// coverity[PASS_BY_VALUE]
 RooPlot* RooAbsPdf::plotOn(RooPlot *frame, PlotOpt o) const
 {
   // Plot oneself on 'frame'. In addition to features detailed in  RooAbsReal::plotOn(),
@@ -2704,19 +2706,18 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t show
   box->SetTextSize(0.04F);
   box->SetFillStyle(1001);
   box->SetFillColor(0);
-  TText *text = 0;
-//char buffer[512];
+  //char buffer[512];
   index= nPar;
   pIter->Reset() ;
   while((var=(RooRealVar*)pIter->Next())) {
     if(var->isConstant() && !showConstants) continue;
     
     TString *formatted= options ? var->format(sigDigits, options) : var->format(*formatCmd) ;
-    text= box->AddText(formatted->Data());
+    box->AddText(formatted->Data());
     delete formatted;
   }
   // add the optional label if specified
-  if(showLabel) text= box->AddText(label);
+  if(showLabel) box->AddText(label);
 
   // Add box to frame 
   frame->addObject(box) ;
@@ -2835,9 +2836,9 @@ RooAbsReal* RooAbsPdf::createCdf(const RooArgSet& iset, const RooArgSet& nset)
 
 
 //_____________________________________________________________________________
-RooAbsReal* RooAbsPdf::createCdf(const RooArgSet& iset, const RooCmdArg arg1, const RooCmdArg arg2,
-				 const RooCmdArg arg3, const RooCmdArg arg4, const RooCmdArg arg5, 
-				 const RooCmdArg arg6, const RooCmdArg arg7, const RooCmdArg arg8) 
+RooAbsReal* RooAbsPdf::createCdf(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
+				 const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
+				 const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) 
 {
   // Create an object that represents the integral of the function over one or more observables listed in iset
   // The actual integration calculation is only performed when the return object is evaluated. The name

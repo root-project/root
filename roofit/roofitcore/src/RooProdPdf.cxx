@@ -61,6 +61,7 @@
 #include "RooWorkspace.h"
 #include "RooRangeBoolean.h"
 #include "RooCustomizer.h"
+#include "RooRealIntegral.h"
 
 #include <string.h>
 #include <sstream>
@@ -767,6 +768,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
   TIterator* innIter = depIntNoNormList.MakeIterator() ;
 
 //   cout << "now making second loop over terms" << endl ;
+  // coverity[UNUSED_VALUE]
   while((term=(RooArgSet*)lIter->Next())) {
     RooArgSet* normDeps = (RooArgSet*) ldIter->Next() ;
     RooArgSet* allDeps = (RooArgSet*) laIter->Next() ;
@@ -1219,7 +1221,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
   list<string> rangeComps ;
   char buf[1024] ;  
-  strcpy(buf,_normRange.Data()) ;
+  strlcpy(buf,_normRange.Data(),1024) ;
   char* save(0) ;
   char* token = strtok_r(buf,",",&save) ;
   while(token) {
@@ -1236,6 +1238,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
   while((part=(RooAbsReal*)iterp->Next())) {
 
+    // coverity[UNUSED_VALUE]
     nset = (RooArgSet*) itern->Next() ;
     num = (RooAbsReal*) iter1->Next() ;
     den = (RooAbsReal*) iter2->Next() ;

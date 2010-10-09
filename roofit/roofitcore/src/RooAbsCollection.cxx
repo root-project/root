@@ -541,7 +541,7 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
     return kFALSE;
   }
 
-  RooAbsArg *other= find(name);
+  RooAbsArg *other ;
 
   // is var2's name already in this list?
   if (dynamic_cast<RooArgSet*>(this)) {
@@ -714,7 +714,7 @@ RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, Bool_t ve
   TIterator* iter = createIterator() ;
 
   char* buf = new char[strlen(nameList)+1] ;
-  strcpy(buf,nameList) ;
+  strlcpy(buf,nameList,strlen(nameList)+1) ;
   char* wcExpr = strtok(buf,",") ;
   while(wcExpr) {
     TRegexp rexp(wcExpr,kTRUE) ;
@@ -1055,7 +1055,7 @@ void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, 
     tmp.ReplaceAll("N","") ;    
     tmp.ReplaceAll("n","") ;    
     static char buf[100] ;
-    strcpy(buf,tmp.Data()) ;
+    strlcpy(buf,tmp.Data(),100) ;
     sibFormatCmd._s[0] = buf ;
   }
 
@@ -1163,7 +1163,7 @@ Bool_t RooAbsCollection::allInRange(const char* rangeSpec) const
       cutVec.push_back(rangeSpec) ;
     } else {
       char* buf = new char[strlen(rangeSpec)+1] ;
-      strcpy(buf,rangeSpec) ;
+      strlcpy(buf,rangeSpec,strlen(rangeSpec)+1) ;
       const char* oneRange = strtok(buf,",") ;
       while(oneRange) {
 	cutVec.push_back(oneRange) ;

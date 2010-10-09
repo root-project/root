@@ -74,7 +74,7 @@ RooNameSet::RooNameSet(const RooNameSet& other) : TObject(other), RooPrintable(o
 
   _len = other._len ;
   _nameList = new char[_len] ;
-  strcpy(_nameList,other._nameList) ;
+  strlcpy(_nameList,other._nameList,_len) ;
 }
 
 
@@ -133,7 +133,7 @@ RooArgSet* RooNameSet::select(const RooArgSet& list) const
   RooArgSet* output = new RooArgSet ;
 
   char buffer[1024] ;
-  strcpy(buffer,_nameList) ;
+  strlcpy(buffer,_nameList,1024) ;
   char* token = strtok(buffer,":") ;
   
   while(token) {
@@ -182,7 +182,7 @@ RooNameSet& RooNameSet::operator=(const RooNameSet& other)
 
   _len = other._len ;
   _nameList = new char[_len] ;
-  strcpy(_nameList,other._nameList) ;  
+  strlcpy(_nameList,other._nameList,_len) ;  
 
   return *this ;
 }

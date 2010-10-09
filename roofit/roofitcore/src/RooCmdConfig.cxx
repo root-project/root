@@ -778,7 +778,7 @@ void RooCmdConfig::stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge)
   
   // Copy command list for parsing
   char buf[1024] ;
-  strcpy(buf,cmdsToPurge) ;
+  strlcpy(buf,cmdsToPurge,1024) ;
   
   char* name = strtok(buf,",") ;
   while(name) {
@@ -802,7 +802,7 @@ RooLinkedList RooCmdConfig::filterCmdList(RooLinkedList& cmdInList, const char* 
 
   // Copy command list for parsing
   char buf[1024] ;
-  strcpy(buf,cmdNameList) ;
+  strlcpy(buf,cmdNameList,1024) ;
   
   char* name = strtok(buf,",") ;
   while(name) {

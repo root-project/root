@@ -460,7 +460,7 @@ const char* RooMath::cacheFileName()
 {
   // Construct and return the name of the complex error function cache file
   static char fileName[1024] ;  
-  sprintf(fileName,"/tmp/RooMath_CERFcache_R%04d_I%04d_%d.dat",_reBins,_imBins,gSystem->GetUid()) ;
+  snprintf(fileName,1024,"/tmp/RooMath_CERFcache_R%04d_I%04d_%d.dat",_reBins,_imBins,gSystem->GetUid()) ;
   return fileName ;
 }
 

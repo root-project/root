@@ -20,6 +20,7 @@
 #include "TList.h"
 #include "RooAbsPdf.h"
 #include "RooCategoryProxy.h"
+#include "RooRealProxy.h"
 #include "RooSetProxy.h"
 #include "RooAICRegistry.h"
 #include "RooObjCacheManager.h"

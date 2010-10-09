@@ -34,9 +34,9 @@ public:
   RooDataSet(const char *name, const char *title, const RooArgSet& vars, const char* wgtVarName=0) ;
 
   // Universal constructor
-  RooDataSet(const char* name, const char* title, const RooArgSet& vars, RooCmdArg arg1, RooCmdArg arg2=RooCmdArg(), 
-	     RooCmdArg arg3=RooCmdArg(), RooCmdArg arg4=RooCmdArg(),RooCmdArg arg5=RooCmdArg(),
-	     RooCmdArg arg6=RooCmdArg(),RooCmdArg arg7=RooCmdArg(),RooCmdArg arg8=RooCmdArg()) ; 
+  RooDataSet(const char* name, const char* title, const RooArgSet& vars, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg(), 
+	     const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),
+	     const RooCmdArg& arg6=RooCmdArg(),const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg()) ; 
 
     // Constructor for subset of existing dataset
   RooDataSet(const char *name, const char *title, RooDataSet *data, const RooArgSet& vars, 

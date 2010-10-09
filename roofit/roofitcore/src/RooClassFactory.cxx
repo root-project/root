@@ -450,7 +450,7 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
 
   if (realArgNames && *realArgNames) {
     char* buf = new char[strlen(realArgNames)+1] ;
-    strcpy(buf,realArgNames) ;
+    strlcpy(buf,realArgNames,strlen(realArgNames)+1) ;
     char* token = strtok(buf,",") ;
     while(token) {
       alist.push_back(token) ;
@@ -461,7 +461,7 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
   }
   if (catArgNames && *catArgNames) {
     char* buf = new char[strlen(catArgNames)+1] ;
-    strcpy(buf,catArgNames) ;
+    strlcpy(buf,catArgNames,strlen(catArgNames)+1) ;
     char* token = strtok(buf,",") ;
     while(token) {
       alist.push_back(token) ;
@@ -648,7 +648,7 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
     // Expected form is observable:expression,observable,observable:expression;[...]
     if (intExpression && *intExpression) {
       char* buf = new char[strlen(intExpression)+1] ;
-      strcpy(buf,intExpression) ;
+      strlcpy(buf,intExpression,strlen(intExpression)+1) ;
       char* ptr = strtok(buf,":") ;
       while(ptr) {
 	intObs.push_back(ptr) ;

@@ -192,7 +192,7 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
   // Add listed state names
   if (stateNameList) {
     char *tmp = new char[strlen(stateNameList)+1] ;
-    strcpy(tmp,stateNameList) ;
+    strlcpy(tmp,stateNameList,strlen(stateNameList)+1) ;
     char* save ;
     char* tok = strtok_r(tmp,",",&save) ;
     while(tok) {
@@ -248,7 +248,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 
   _args.clear() ;
   char tmp[1024] ;
-  strcpy(tmp,varList) ;
+  strlcpy(tmp,varList,1024) ;
   char* p=tmp ;
   char* tok=tmp ;
   Int_t blevel(0) ;
@@ -454,7 +454,7 @@ RooAddPdf* RooFactoryWSTool::add(const char *objName, const char* specList, Bool
   try {
 
     char buf[1024] ;
-    strcpy(buf,specList) ;
+    strlcpy(buf,specList,1024) ;
     char* save ;
     char* tok = strtok_r(buf,",",&save) ;
     while(tok) {
@@ -496,7 +496,7 @@ RooRealSumPdf* RooFactoryWSTool::amplAdd(const char *objName, const char* specLi
   try {
 
     char buf[1024] ;
-    strcpy(buf,specList) ;
+    strlcpy(buf,specList,1024) ;
     char* save ;
     char* tok = strtok_r(buf,",",&save) ;
     while(tok) {
@@ -534,7 +534,7 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
   RooLinkedList cmdList ;
   string regPdfList="{" ;
   char buf[1024] ;
-  strcpy(buf,pdfList) ;
+  strlcpy(buf,pdfList,1024) ;
   char* save ;
   char* tok = strtok_r(buf,",",&save) ;
   while(tok) {
@@ -591,7 +591,7 @@ RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexC
   map<string,RooAbsPdf*> theMap ;
   // Add p.d.f. to index state mappings
   char buf[1024] ;
-  strcpy(buf,pdfMap) ;
+  strlcpy(buf,pdfMap,1024) ;
   char* save ;
   char* tok = strtok_r(buf,",",&save) ;
   while(tok) {
@@ -643,7 +643,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
   try {
 
     char buf[1024] ;
-    strcpy(buf,specList) ;
+    strlcpy(buf,specList,1024) ;
     char* save ;
     char* tok = strtok_r(buf,",",&save) ;
     while(tok) {
@@ -895,7 +895,7 @@ std::string RooFactoryWSTool::processCompositeExpression(const char* token)
   // Allocate and fill work buffer
   char* buf_base = new char[strlen(token)+1] ;   
   char* buf = buf_base ;
-  strcpy(buf,token) ;
+  strlcpy(buf,token,strlen(token)+1) ;
   char* p = buf ;
 
   list<string> singleExpr ;
@@ -968,7 +968,7 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
 
   // Allocate and fill work buffer
   char* buf = new char[strlen(arg)+1] ; 
-  strcpy(buf,arg) ;
+  strlcpy(buf,arg,strlen(arg)+1) ;
   char* bufptr = buf ;
 
   string func,prefix ;
@@ -1106,7 +1106,7 @@ string RooFactoryWSTool::processListExpression(const char* arg)
 
   // Allocate and fill work buffer
   char* buf = new char[strlen(arg)+1] ;
-  strcpy(buf,arg) ;
+  strlcpy(buf,arg,strlen(arg)+1) ;
 
   vector<string> args ;
 
@@ -1325,7 +1325,7 @@ string RooFactoryWSTool::processCreateArg(string& func, vector<string>& args)
 
   // Allocate and fill work buffer
   char buf[1024] ;
-  strcpy(buf,func.c_str()) ;
+  strlcpy(buf,func.c_str(),1024) ;
 
   // Split function part in class name and instance name
   char* save ;
@@ -1341,11 +1341,11 @@ string RooFactoryWSTool::processCreateArg(string& func, vector<string>& args)
   vector<string> pargv ;
   Int_t iarg(0) ;
   while(iter!=args.end()) {
-    if (strlen(pargs)>0) strcat(pargs,",") ;
+    if (strlen(pargs)>0) strlcat(pargs,",",1024) ;
     _autoNamePrefix.push(Form("%s_%d",instName,iarg+1)) ;
     string tmp = processExpression(iter->c_str()) ;
     _autoNamePrefix.pop() ;
-    strcat(pargs,tmp.c_str()) ;
+    strlcat(pargs,tmp.c_str(),1024) ;
     pargv.push_back(tmp) ;
     iter++ ;
     iarg++ ;
@@ -1375,9 +1375,9 @@ std::string RooFactoryWSTool::processMetaArg(std::string& func, std::vector<std:
   vector<string>::iterator iter = args.begin() ;
   vector<string> pargv ;
   while(iter!=args.end()) {
-    if (strlen(pargs)>0) strcat(pargs,",") ;
+    if (strlen(pargs)>0) strlcat(pargs,",",1024) ;
     string tmp = processExpression(iter->c_str()) ;
-    strcat(pargs,tmp.c_str()) ;
+    strlcat(pargs,tmp.c_str(),1024) ;
     pargv.push_back(tmp) ;
     iter++ ;
   }
@@ -1394,7 +1394,7 @@ vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
 {
   // Allocate and fill work buffer
   char* buf = new char[strlen(funcExpr)+1] ; 
-  strcpy(buf,funcExpr) ;
+  strlcpy(buf,funcExpr,strlen(funcExpr)+1) ;
   char* bufptr = buf ;
 
   string func ;
@@ -1681,7 +1681,7 @@ RooArgSet RooFactoryWSTool::asSET(const char* arg)
   // CINT constructor interface, return constructor string argument #idx as RooArgSet of objects found in workspace
 
   char tmp[1024] ;
-  strcpy(tmp,arg) ;
+  strlcpy(tmp,arg,1024) ;
 
   RooArgSet s ;
   
@@ -1723,7 +1723,7 @@ RooArgList RooFactoryWSTool::asLIST(const char* arg)
   // CINT constructor interface, return constructor string argument #idx as RooArgList of objects found in workspace
 
   char tmp[1024] ;
-  strcpy(tmp,arg) ;
+  strlcpy(tmp,arg,1024) ;
 
   RooArgList l ;
   char* save ;
@@ -1886,9 +1886,9 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
   vector<string>::iterator iter = args.begin() ;
   vector<string> pargv ;
   while(iter!=args.end()) {
-    if (strlen(pargs)>0) strcat(pargs,",") ;
+    if (strlen(pargs)>0) strlcat(pargs,",",1024) ;
     string tmp = ft.processExpression(iter->c_str()) ;
-    strcat(pargs,tmp.c_str()) ;
+    strlcat(pargs,tmp.c_str(),1024) ;
     pargv.push_back(tmp) ;
     iter++ ;
   }
@@ -1931,13 +1931,13 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
       ft.createArg("RooGenericPdf",instName,pargs) ;
     } else {      
       char genargs[1024] ;
-      strcpy(genargs,args[0].c_str()) ;      
-      strcat(genargs,",{") ;
+      strlcpy(genargs,args[0].c_str(),1024) ;      
+      strlcat(genargs,",{",1024) ;
       for (UInt_t i=1 ; i<args.size() ; i++) {
-	if (i!=1) strcat(genargs,",") ;
-	strcat(genargs,args[i].c_str()) ;
+	if (i!=1) strlcat(genargs,",",1024) ;
+	strlcat(genargs,args[i].c_str(),1024) ;
       }
-      strcat(genargs,"}") ;
+      strlcat(genargs,"}",1024) ;
       ft.createArg("RooGenericPdf",instName,genargs) ;
     }
   
@@ -1968,13 +1968,13 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
       ft.createArg("RooFormulaVar",instName,pargs) ;
     } else {      
       char genargs[1024] ;
-      strcpy(genargs,args[0].c_str()) ;      
-      strcat(genargs,",{") ;
+      strlcpy(genargs,args[0].c_str(),1024) ;      
+      strlcat(genargs,",{",1024) ;
       for (UInt_t i=1 ; i<args.size() ; i++) {
-	if (i!=1) strcat(genargs,",") ;
-	strcat(genargs,args[i].c_str()) ;
+	if (i!=1) strlcat(genargs,",",1024) ;
+	strlcat(genargs,args[i].c_str(),1024) ;
       }
-      strcat(genargs,"}") ;
+      strlcat(genargs,"}",1024) ;
       ft.createArg("RooFormulaVar",instName,genargs) ;
     }
 
@@ -2024,7 +2024,7 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     RooAbsReal& func = ft.asFUNC(pargv[0].c_str()) ;
 
     char buf[256] ;
-    strcpy(buf,pargv[1].c_str()) ;
+    strlcpy(buf,pargv[1].c_str(),256) ;
     char* save ;
     const char* intobs = strtok_r(buf,"|",&save) ;
     if (!intobs) intobs="" ;

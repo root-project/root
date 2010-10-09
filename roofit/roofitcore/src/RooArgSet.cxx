@@ -970,7 +970,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
 Bool_t RooArgSet::isInRange(const char* rangeSpec) 
 {
   char buf[1024] ;
-  strcpy(buf,rangeSpec) ;
+  strlcpy(buf,rangeSpec,1024) ;
   char* token = strtok(buf,",") ;
   
   TIterator* iter = createIterator() ;

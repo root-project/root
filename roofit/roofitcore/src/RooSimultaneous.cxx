@@ -612,7 +612,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
     // Prepare comma separated label list for parsing
     char buf[1024] ;
-    strcpy(buf,sliceCatState) ;
+    strlcpy(buf,sliceCatState,1024) ;
     const char* slabel = strtok(buf,",") ;
 
     // Loop over all categories provided by (multiple) Slice() arguments

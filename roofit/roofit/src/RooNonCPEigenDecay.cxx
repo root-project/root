@@ -52,6 +52,7 @@
 #include "RooRandom.h"
 #include "RooNonCPEigenDecay.h"
 #include "TMath.h"
+#include "RooRealIntegral.h"
 
 ClassImp(RooNonCPEigenDecay);
 
