@@ -77,13 +77,16 @@ namespace {
 
    void Declare_additional_CINT_typedefs() {
       // as the function name says
-      char name[4096], value[8192];
+      std::string name;
+      std::string value;
       int autoload = G__set_class_autoloading(0); // To avoid recursive loads
       for ( size_t i = 0; i < sizeof(btypes)/sizeof(char*); i ++ ) {
          //--- vector ---
-         sprintf(name,"vector<%s>", btypes[i]);
-         sprintf(value,"vector<%s,allocator<%s> >", btypes[i], btypes[i]);
-         CINTTypedefBuilder::Set(name, value);
+         name = std::string("vector<") + btypes[i];
+         value = name;
+         name += ">";
+         value += std::string(",allocator<") + btypes[i] + "> >";
+         CINTTypedefBuilder::Set(name.c_str(), value.c_str());
       }
       // Now that genreflex always translates basic_string<char> to string
       // we need a "typedef" (the wrong way!) for backward compatibility:
