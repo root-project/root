@@ -90,6 +90,8 @@ TVolumePosition *TVolumeViewIter::UpdateTempMatrix(TVolumePosition *curPosition)
    if (curPosition) {
       curNode       = curPosition->GetNode();
       curPositionId = curPosition->GetId();
+   } else {
+      return 0;
    }
    if (fDepth-1) {
       TVolumePosition *oldPosition = 0;
