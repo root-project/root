@@ -16,12 +16,10 @@
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// BEGIN_HTML
+// Begin_Html
 //
 // <b>This tool has now been superceded by RooSimWSTool</b>
 // 
-//Begin_Html
-//  </pre>
 //  <p>
 //    <tt>RooSimPdfBuilder</tt> is a powerful tool to build <tt>RooSimultaneous</tt>
 //    PDFs that are defined in terms component PDFs that are identical in
@@ -411,10 +409,8 @@
 //    <tt>RooSimultaneous</tt> returned by <tt>buildPdf()</tt>. Therefore the builder instance should 
 //    exist as long as the constructed PDFs needs to exist.
 //  </p>
-//  <pre>
-//End_Html
 //
-// END_HTML
+// End_Html
 //
 
 
