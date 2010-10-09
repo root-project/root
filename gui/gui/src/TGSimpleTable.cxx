@@ -25,7 +25,7 @@
 ClassImp(TGSimpleTable)
 
 //______________________________________________________________________________
-/* Begin Html 
+/* Begin_Html 
 <center><h2>TGSimpleTable</h2></center> 
 <br><br> 
 To provide a simple class to visualize an array of doubles, the class
