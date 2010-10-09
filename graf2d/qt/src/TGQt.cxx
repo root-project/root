@@ -479,7 +479,8 @@ protected:
         fFreeWindowsIdStack.push(Id);
         if (fIDMax == Id) SetMaxId(--fIDMax);
      }
-     return device;
+     //return device; this was a huge bug
+     return 0;
    }
    //______________________________________________________________________________
    inline const QPaintDevice *ReplaceById(Int_t Id, QPaintDevice *newDev)
