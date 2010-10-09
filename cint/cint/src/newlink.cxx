@@ -9994,10 +9994,7 @@ void G__cpplink_memfunc(FILE *fp)
                 fprintf(fp,"0,");
               }
 
-              if (0 == isdestructor)
-                fprintf(fp, "%s, ", G__map_cpp_funcname(i, funcname, j, page));
-              else
-                fprintf(fp, "(G__InterfaceMethod) NULL, ");
+              fprintf(fp, "%s, ", G__map_cpp_funcname(i, funcname, j, page));
 
               fprintf(fp, "(int) ('y'), ");
               fprintf(fp, "-1, "); /* tagnum */
