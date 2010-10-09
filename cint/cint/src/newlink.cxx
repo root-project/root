@@ -9991,10 +9991,7 @@ void G__cpplink_memfunc(FILE *fp)
               fprintf(fp, "\"%s\", %d, ", funcname(), hash);
               //04-07-07 print the mangled name after the funcname and hash
               if(G__dicttype!=kCompleteDictionary){
-                if( isdestructor && ifunc_destructor->mangled_name[j])
-                  fprintf(fp,"\"%s\",", ifunc_destructor->mangled_name[j]);
-                else
-                  fprintf(fp,"0,");
+                fprintf(fp,"0,");
               }
 
               if (0 == isdestructor)
