@@ -120,7 +120,7 @@ TVolumePosition::TVolumePosition(const TVolumePosition* oldPosition, const TVolu
    // Create a new position
    Double_t newMatrix[9];
 
-   if(oldMatrix)  {
+   if(oldMatrix && curMatrix && curPosition)  {
       TGeometry::UpdateTempMatrix(oldTranslation,oldMatrix->GetMatrix(),
                                  curPosition->GetX(),curPosition->GetY(),curPosition->GetZ(),
                                  curMatrix->GetMatrix(),
