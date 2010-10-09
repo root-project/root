@@ -41,7 +41,7 @@ Reflex::Class::Class(const char* typ,
 //-------------------------------------------------------------------------------
 // Construct a Class instance.
    : ScopedType(typ, size, classType, ti, Type(), modifiers,
-                (typ && (typ[0] == 'F') && !strcmp(typ, "FILE")) ? (REPRESTYPE) 'e': REPRES_STRUCT),
+                ((typ[0] == 'F') && !strcmp(typ, "FILE")) ? (REPRESTYPE) 'e': REPRES_STRUCT),
    fAllBases(0),
    fCompleteType(false),
    fInherited(0) {
