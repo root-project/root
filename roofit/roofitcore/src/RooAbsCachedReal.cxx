@@ -183,9 +183,7 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
   RooArgSet* nset2 = self.actualObservables(nset?*nset:RooArgSet()) ;
 
   RooArgSet orderedObs ;
-  if (nset2) {
-    self.preferredObservableScanOrder(*nset2,orderedObs) ;
-  }
+  self.preferredObservableScanOrder(*nset2,orderedObs) ;
 
   // Create RooDataHist
   TString hname = self.inputBaseName() ;

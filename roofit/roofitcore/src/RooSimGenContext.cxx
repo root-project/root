@@ -35,7 +35,7 @@
 #include "RooMsgService.h"
 #include "RooRandom.h"
 
-
+#include <string>
 
 ClassImp(RooSimGenContext)
 ;
@@ -142,7 +142,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   _idxCatSet = (RooArgSet*) RooArgSet(model._indexCat.arg()).snapshot(kTRUE) ;
   if (!_idxCatSet) {
     oocoutE(_pdf,Generation) << "RooSimGenContext::RooSimGenContext(" << GetName() << ") Couldn't deep-clone index category, abort," << endl ;
-    RooErrorHandler::softAbort() ;
+    throw std::string("RooSimGenContext::RooSimGenContext() Couldn't deep-clone index category, abort") ;
   }
   
   _idxCat = (RooAbsCategoryLValue*) _idxCatSet->find(model._indexCat.arg().GetName()) ;

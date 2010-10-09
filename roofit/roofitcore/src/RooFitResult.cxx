@@ -748,7 +748,7 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
       cout << "RooFitResult::isIdentical: cannot find constant parameter " << _constPars->at(i)->GetName() << " in reference" << endl ;
       ret = kFALSE ;
     }
-    if (fabs(static_cast<RooAbsReal*>(_constPars->at(i))->getVal()-ov->getVal())>=tol) {
+    if (ov && fabs(static_cast<RooAbsReal*>(_constPars->at(i))->getVal()-ov->getVal())>=tol) {
       cout << "RooFitResult::isIdentical: constant parameter " << _constPars->at(i)->GetName() 
 	   << " differs in value: " << static_cast<RooAbsReal*>(_constPars->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
       ret = kFALSE ;
@@ -761,7 +761,7 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
       cout << "RooFitResult::isIdentical: cannot find initial parameter " << _initPars->at(i)->GetName() << " in reference" << endl ;
       ret = kFALSE ;
     }
-    if (fabs(static_cast<RooAbsReal*>(_initPars->at(i))->getVal()-ov->getVal())>=tol) {
+    if (ov && fabs(static_cast<RooAbsReal*>(_initPars->at(i))->getVal()-ov->getVal())>=tol) {
       cout << "RooFitResult::isIdentical: initial parameter " << _initPars->at(i)->GetName() 
 	   << " differs in value: " << static_cast<RooAbsReal*>(_initPars->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
       ret = kFALSE ;
@@ -774,7 +774,7 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
       cout << "RooFitResult::isIdentical: cannot find final parameter " << _finalPars->at(i)->GetName() << " in reference" << endl ;
       ret = kFALSE ;
     }
-    if (fabs(static_cast<RooAbsReal*>(_finalPars->at(i))->getVal()-ov->getVal())>=tol) {
+    if (ov && fabs(static_cast<RooAbsReal*>(_finalPars->at(i))->getVal()-ov->getVal())>=tol) {
       cout << "RooFitResult::isIdentical: final parameter " << _finalPars->at(i)->GetName() 
 	   << " differs in value: " << static_cast<RooAbsReal*>(_finalPars->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
       ret = kFALSE ;

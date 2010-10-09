@@ -131,7 +131,7 @@ const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const Ro
   if (iset) {
     nset2->add(*iset) ;
   }
-  RooAbsReal* proj = intpdf.arg().createIntegral(*iset,nset2,0,rangeName) ;
+  RooAbsReal* proj = intpdf.arg().createIntegral(iset?*iset:RooArgSet(),nset2,0,rangeName) ;
   delete nset2 ;
 
   cache = new CacheElem ;

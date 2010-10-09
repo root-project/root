@@ -166,6 +166,7 @@ RooCatType RooSuperCategory::evaluate() const
   if (!ret) {
     coutE(Eval) << "RooSuperCat::evaluate(" << this << ") error: current state not defined: '" << currentLabel() << "'" << endl ;
     printStream(ccoutE(Eval),0,kVerbose) ;
+    return RooCatType() ;
   }
   return *ret ;
 }

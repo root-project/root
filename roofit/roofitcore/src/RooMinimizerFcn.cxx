@@ -118,6 +118,8 @@ Bool_t RooMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings>& p
     if (!par) continue ;
 
     RooRealVar *oldpar= dynamic_cast<RooRealVar*>(_initConstParamList->at(index)) ;
+    if (!oldpar) continue ;
+
     // Test if constness changed
     if (!par->isConstant()) {      
     
@@ -155,6 +157,7 @@ Bool_t RooMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings>& p
   // Handle floatParamList
   for(index= 0; index < _floatParamList->getSize(); index++) {
     RooRealVar *par= dynamic_cast<RooRealVar*>(_floatParamList->at(index)) ;
+    if (!par) continue ;
 
     Double_t pstep(0) ;
     Double_t pmin(0) ;

@@ -273,7 +273,7 @@ Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Dou
   if(0 != Ql) loProb= (*Ql)(&pointEstimate);
   if(0 != Qu) hiProb= (*Qu)(&pointEstimate);
 
-  if(0 == Ql || loProb > alpha + beta)  {
+  if (Qu && (0 == Ql || loProb > alpha + beta))  {
     // Force the low edge to be at the pointEstimate
     lo= pointEstimate;
     Double_t target= loProb - beta;
@@ -281,7 +281,7 @@ Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Dou
     RooBrentRootFinder uFinder(*Qu);
     ok= uFinder.findRoot(hi,hi-stepSize,hi,target);
   }
-  else if(0 == Qu || hiProb < alpha) {
+  else if(Ql && (0 == Qu || hiProb < alpha)) {
     // Force the high edge to be at pointEstimate
     hi= pointEstimate;
     Double_t target= hiProb + beta;
@@ -289,7 +289,7 @@ Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Dou
     RooBrentRootFinder lFinder(*Ql);
     ok= lFinder.findRoot(lo,lo,lo+stepSize,target);
   }
-  else {
+  else if (Qu && Ql) {
     // use a central interval
     lo= seek(*Ql,pointEstimate,-stepSize,alpha+beta);
     hi= seek(*Qu,pointEstimate,+stepSize,alpha);

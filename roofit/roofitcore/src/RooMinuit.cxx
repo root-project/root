@@ -585,6 +585,7 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
     if (!par) continue ;
 
     RooRealVar *oldpar= dynamic_cast<RooRealVar*>(_initConstParamList->at(index)) ;
+    if (!oldpar) continue ;
 
     // Test if constness changed
     if (!par->isConstant()) {
@@ -620,11 +621,12 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
   // Synchronize MINUIT with function state
   for(index= 0; index < _nPar; index++) {
     RooRealVar *par= dynamic_cast<RooRealVar*>(_floatParamList->at(index)) ;
+    if (!par) continue ;
 
     Double_t pstep(0) ;
     Double_t pmin(0) ;
     Double_t pmax(0) ;
-
+    
     if(!par->isConstant()) {
 
       // Verify that floating parameter is indeed of type RooRealVar

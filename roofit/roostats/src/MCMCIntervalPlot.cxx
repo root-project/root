@@ -328,7 +328,9 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
          fPosteriorKeysPdf->plotOn(frame,
                RooFit::Normalization(1, RooAbsReal::Raw));
       }
-      frame->Draw(options);
+      if (frame) {
+	frame->Draw(options);
+      }
 
       TLine* llLine = new TLine(ll, 0, ll, height);
       TLine* ulLine = new TLine(ul, 0, ul, height);

@@ -48,6 +48,8 @@
 #include "RooErrorHandler.h"
 #include "RooMsgService.h"
 
+#include <string>
+
 ClassImp(RooAbsTestStatistic)
 ;
 
@@ -430,6 +432,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   TList* dsetList = const_cast<RooAbsData*>(data)->split(simCat,processEmptyDataSets()) ;
   if (!dsetList) {
     coutE(Fitting) << "RooAbsTestStatistic::initSimMode(" << GetName() << ") ERROR: index category of simultaneous pdf is missing in dataset, aborting" << endl ;
+    throw std::string("RooAbsTestStatistic::initSimMode() ERROR, index category of simultaneous pdf is missing in dataset, aborting") ;
     RooErrorHandler::softAbort() ;
   }
 

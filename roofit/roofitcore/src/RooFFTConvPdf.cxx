@@ -413,6 +413,7 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
     RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(arg) ;
     obsLV[i] = lvarg ;
     binCur[i] = 0 ;
+    // coverity[FORWARD_NULL]
     binMax[i] = lvarg->numBins(binningName())-1 ;    
     i++ ;
   }

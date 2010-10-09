@@ -719,7 +719,13 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 	term->add(*pdf) ;
 	termNormDeps->add(pdfNormDeps,kFALSE) ;
 	termAllDeps->add(pdfAllDeps,kFALSE) ;
+	if (!termIntDeps) {
+	  termIntDeps = new RooArgSet("termIntDeps") ;
+	}
 	termIntDeps->add(*pdfIntSet,kFALSE) ;
+	if (!termIntNoNormDeps) {
+	  termIntNoNormDeps = new RooArgSet("termIntNoNormDeps") ;
+	}
 	termIntNoNormDeps->add(pdfIntNoNormDeps,kFALSE) ;
 	done = kTRUE ;
       }

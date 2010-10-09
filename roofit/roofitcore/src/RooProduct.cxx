@@ -418,7 +418,7 @@ void RooProduct::printMetaArgs(ostream& os) const
   RooAbsCategory* ccomp ;
   while((ccomp=(RooAbsCategory*)_compCIter->Next())) {
     if (!first) {  os << " * " ; } else {  first = kFALSE ; }
-    os << rcomp->GetName() ;
+    os << ccomp->GetName() ;
   }
 
   os << " " ;    

@@ -60,14 +60,15 @@ void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/)
   if (_pkg==0) {
     cout << "RooProofDriverSelector::SlaveBegin() no RooStudyPackage found, aborting process" << endl ;
     fStatus = kAbortProcess ;
-  }
-  cout << "workspace contents = " << endl ;
-  _pkg->wspace().Print() ;
+  } else {
+    cout << "workspace contents = " << endl ;
+    _pkg->wspace().Print() ;
     
-  // Initialize study pack
-  seed = _pkg->initRandom() ;
-  _pkg->initialize() ;
-
+    // Initialize study pack
+    seed = _pkg->initRandom() ;
+    _pkg->initialize() ;
+  }
+    
 }
 
 Bool_t RooProofDriverSelector::Process(Long64_t entry)

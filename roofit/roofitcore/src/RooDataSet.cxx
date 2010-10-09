@@ -197,7 +197,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     initialize(0) ;
     
     map<string,RooAbsDataStore*> storeMap ;
-    RooCategory* icat = (RooCategory*) _vars.find(indexCat->GetName()) ;
+    RooCategory* icat = (RooCategory*) (indexCat ? _vars.find(indexCat->GetName()) : 0 ) ;
     for (map<string,RooAbsData*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
       // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
       if (!indexCat->lookupType(hiter->first.c_str())) {

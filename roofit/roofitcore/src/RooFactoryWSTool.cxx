@@ -878,8 +878,6 @@ std::string RooFactoryWSTool::processExpression(const char* token)
     // Process token as single item otherwise
     return processCompositeExpression(token) ;
   }
-
-  return string() ;
 }
 
 

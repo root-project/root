@@ -830,7 +830,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 
   // Include constraints, if any, in likelihood
   RooAbsReal* nllCons(0) ;
-  if (allConstraints.getSize()>0) {   
+  if (allConstraints.getSize()>0 && cPars) {   
 
     coutI(Minimization) << " Including the following contraint terms in minimization: " << allConstraints << endl ;
 

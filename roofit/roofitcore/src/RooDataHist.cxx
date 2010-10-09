@@ -437,7 +437,7 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, ma
   }
 
   // Check consistency in number of dimensions
-  if (vars.getSize() != histo->GetDimension()) {
+  if (histo && (vars.getSize() != histo->GetDimension())) {
     coutE(InputArguments) << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension of input histogram must match "
 			  << "number of continuous variables" << endl ;
     assert(0) ; 
@@ -1517,6 +1517,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
       mask[i] = kFALSE ;
     } else {
       mask[i] = kTRUE ;
+      // coverity[FORWARD_NULL]
       refBin[i] = (dynamic_cast<RooAbsLValue*>(arg))->getBin() ;
     }
     i++ ;

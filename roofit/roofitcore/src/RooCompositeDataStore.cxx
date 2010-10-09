@@ -132,6 +132,7 @@ const RooArgSet* RooCompositeDataStore::get(Int_t index) const
 Double_t RooCompositeDataStore::weight() const 
 {  
   if (!_curStore) get(0) ;
+  // coverity[FORWARD_NULL]
   return _curStore->weight(_curIndex) ;
 }
 
@@ -153,6 +154,7 @@ Double_t RooCompositeDataStore::weight(Int_t index) const
 Double_t RooCompositeDataStore::weightError(RooAbsData::ErrorType etype) const 
 {  
   if (!_curStore) get(0) ;
+  // coverity[FORWARD_NULL]
   return _curStore->weightError(etype) ;
 }
 
@@ -163,6 +165,7 @@ Double_t RooCompositeDataStore::weightError(RooAbsData::ErrorType etype) const
 void RooCompositeDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype) const 
 {
   if (!_curStore) get(0) ;
+  // coverity[FORWARD_NULL]
   return _curStore->weightError(lo,hi,etype) ;
 }
 

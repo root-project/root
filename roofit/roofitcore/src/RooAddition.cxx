@@ -289,7 +289,9 @@ void RooAddition::printMetaArgs(ostream& os) const
       } else {
 	first = kFALSE ;
       }
-      arg2=(RooAbsArg*)_setIter2->Next() ;
+      if (_setIter2) {
+	arg2=(RooAbsArg*)_setIter2->Next() ;
+      }
       os << arg1->GetName() << " * " << arg2->GetName() ;
     }
 

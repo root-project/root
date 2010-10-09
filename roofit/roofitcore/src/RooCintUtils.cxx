@@ -176,7 +176,7 @@ namespace RooCintUtils
     G__MethodInfo method(scope);
     while(method.Next()) {
       // If method name matches, check argument list
-      if (string(methodName)==method.Name()) {
+      if (string(methodName?methodName:"")==method.Name()) {
 	
 	// Construct list of arguments
 	string s ;

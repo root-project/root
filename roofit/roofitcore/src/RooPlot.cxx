@@ -618,7 +618,9 @@ void RooPlot::printMultiline(ostream& os, Int_t /*content*/, Bool_t verbose, TSt
       // Is this a printable object?
       if(obj->IsA()->InheritsFrom(RooPrintable::Class())) {
 	RooPrintable* po = dynamic_cast<RooPrintable*>(obj) ;
-	po->printStream(os,kName|kClassName|kArgs|kExtras,kSingleLine) ;
+	if (po) {
+	  po->printStream(os,kName|kClassName|kArgs|kExtras,kSingleLine) ;
+	}
       }
       // is it a TNamed subclass?
       else {
@@ -854,10 +856,10 @@ void RooPlot::setInvisible(const char* name, Bool_t flag)
 
   if(link) {
     opt.initialize(link->GetOption()) ;
+    opt.invisible = flag ;
+    link->SetOption(opt.rawOpt()) ;
   }
 
-  opt.invisible = flag ;
-  link->SetOption(opt.rawOpt()) ;
 }
 
 

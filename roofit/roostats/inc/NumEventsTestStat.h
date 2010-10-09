@@ -49,11 +49,14 @@ namespace RooStats {
     
      // Main interface to evaluate the test statistic on a dataset
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& /*paramsOfInterest*/)  {       
-       if(!&data){ cout << "problem with data" << endl;}
+       if(!&data) { 
+	 cout << "problem with data" << endl;
+	 return 0 ;
+       } else {
        
-       RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
-
-       return data.numEntries();
+	 RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;	 
+	 return data.numEntries();
+       }
      }
 
       // Get the TestStatistic

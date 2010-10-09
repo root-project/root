@@ -117,7 +117,7 @@ ConfInterval* NeymanConstruction::GetInterval() const {
   }
   
   if(!&fData) {
-    oocoutF(&fData,Contents) << "Neyman Construction: data is not set, can't get interval" << endl;
+    oocoutF((TObject*)0,Contents) << "Neyman Construction: data is not set, can't get interval" << endl;
     return 0;
   }
   Int_t npass = 0;

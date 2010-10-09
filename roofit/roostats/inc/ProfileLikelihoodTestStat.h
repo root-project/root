@@ -70,6 +70,7 @@ namespace RooStats {
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) {
        if (!&data) {
 	 cout << "problem with data" << endl;
+	 return 0 ;
        }
        
        RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();

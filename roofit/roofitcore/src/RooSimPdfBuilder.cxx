@@ -1031,7 +1031,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       }
       if (mode!=SplitCat) {
 	coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR in parsing, expected " 
-			      << (mode==Colon?":":"parameter list") << " after " << token << endl ;
+			      << (mode==Colon?":":"parameter list") << " after " << (token?token:"(null)") << endl ;
       }
 
       //RooArgSet* paramSet = physModel->getParameters(dependents) ;
