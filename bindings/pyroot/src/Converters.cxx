@@ -513,6 +513,7 @@ Bool_t PyROOT::TCStringConverter::ToMemory( PyObject* value, void* address )
    if ( fMaxSize != UINT_MAX )
       strncpy( *(char**)address, s, fMaxSize );   // padds remainder
    else
+      // coverity[secure_coding] - can't help it, it's intentional.
       strcpy( *(char**)address, s );
 
    return kTRUE;
