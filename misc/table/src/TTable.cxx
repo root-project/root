@@ -709,11 +709,11 @@ TH1 *TTable::Draw(const char *varexp00, const char *selection, Option_t *option,
       EntryLoop(exprFileName,action,0,nentries, firstentry, option);
 
 //*-* an Event List
-   } else if (elist) {
-      action = 5;
+   //} else if (elist) {
+   //   action = 5;
 //      Int_t oldEstimate = fEstimate;
 //      SetEstimate(1);
-      EntryLoop(exprFileName,action,elist,nentries, firstentry, option);
+   //   EntryLoop(exprFileName,action,elist,nentries, firstentry, option);
 //      SetEstimate(oldEstimate);
    }
    delete [] exprFileName;
