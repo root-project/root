@@ -39,6 +39,7 @@ static string
 currpath(string lib) {
    char buff[PATH_MAX];
    if (!::getcwd(buff, sizeof(buff))) {
+      // coverity[secure_coding] - PATH_MAX is > 2
       strcpy(buff, ".");
    }
    string tmp = buff;
@@ -137,7 +138,7 @@ main(int argc,
          cout << "Output directory:" << dir << "'" << endl;
       }
 
-      if (!dir.empty() && ::stat(dir.c_str(), &buf) == -1 && errno == ENOENT) {
+      if (!dir.empty()) {
          if (::mkdir(dir.c_str(), S_IRWXU | S_IRGRP | S_IROTH) != 0 && errno != EEXIST) {
             cout << "ERR0R: error creating directory: '" << dir << "'" << endl;
             return 1;
