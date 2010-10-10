@@ -257,11 +257,11 @@ void TSecContext::Print(Option_t *opt) const
 
    // If asked to print ordinal number, preapre the string
    if (ord > -1) {
-      sprintf(aOrd,"%d)",ord);
+      snprintf(aOrd,10,"%d)",ord);
       // and take care of alignment
       Int_t len=strlen(aOrd);
       while (len--)
-         strcat(aSpc," ");
+         strlcat(aSpc," ",10);
    }
 
    if (!strncasecmp(opt,"F",1)) {
