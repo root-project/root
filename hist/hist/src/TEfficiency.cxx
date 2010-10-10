@@ -2064,7 +2064,7 @@ TEfficiency& TEfficiency::operator+=(const TEfficiency& rhs)
       return *this;
    }
 
-   R__ASSERT(fTotalHistogram && fPassedHistogram);
+   R__ASSERT(fTotalHistogram || fPassedHistogram);
 
    fTotalHistogram->ResetBit(TH1::kIsAverage);
    fPassedHistogram->ResetBit(TH1::kIsAverage);
