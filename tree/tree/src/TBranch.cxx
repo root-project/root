@@ -310,7 +310,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
    char* leafname = new char[640];
    char* leaftype = new char[320];
    // Note: The default leaf type is a float.
-   strcpy(leaftype, "F");
+   strlcpy(leaftype, "F",320);
    char* pos = const_cast<char*>(leaflist);
    const char* leaflistEnd = leaflist + strlen(leaflist);
    for (; pos <= leaflistEnd; ++pos) {
@@ -325,7 +325,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
             ctype = strstr(leafname, "/");
             if (ctype) {
                *ctype = 0;
-               strcpy(leaftype, ctype + 1);
+               strlcpy(leaftype, ctype + 1,320);
             }
          }
          if (lenName == 0 || ctype == leafname) {
@@ -1659,7 +1659,7 @@ void TBranch::Print(Option_t*) const
    else             snprintf(bline,aLength,"*Br%5d :%-9s : %-54s *",fgCount,GetName()," ");
    if (strlen(bline) > UInt_t(kLINEND)) {
       char *tmp = new char[strlen(bline)+1];
-      if (titleLength) strcpy(tmp, GetTitle());
+      if (titleLength) strlcpy(tmp, GetTitle(),strlen(bline)+1);
       snprintf(bline,aLength,"*Br%5d :%-9s : ",fgCount,GetName());
       int pos = strlen (bline);
       int npos = pos;
