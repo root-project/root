@@ -528,8 +528,9 @@ ClassImp(TEfficiency)
 // Begin_Latex
 // P_{comb}(#epsilon | {w_{i}}, {k_{i}} , {N_{i}}) = #frac{1}{norm} #prod_{i}{L(k_{i} | N_{i}, #epsilon)}^{w_{i}} #pi( #epsilon )  
 // L(k_{i} | N_{i}, #epsilon) is the likelihood function for the sample i ( a Binomial distribution) 
-// #pi( #epsilon) is the prior, a beta distribution B(#epsilon, #alpha, #beta)
-// 
+// #pi( #epsilon) is the prior, a beta distribution B(#epsilon, #alpha, #beta).
+// The resulting combined posterior is 
+// P_{comb}(#epsilon |{w_{i}}; {k_{i}}; {N_{i}}) = B(#epsilon, #sum_{i}{ w_{i} k_{i}} + #alpha, #sum_{i}{ w_{i}(n_{i}-k_{i})}+#beta)  
 // #hat{#varepsilon} = #int_{0}^{1} #epsilon #times P_{comb}(#epsilon | {k_{i}} , {N_{i}}) d#epsilon
 // confidence level = 1 - #alpha
 // #frac{#alpha}{2} = #int_{0}^{#epsilon_{low}} P_{comb}(#epsilon | {k_{i}} , {N_{i}}) d#epsilon ... defines lower boundary
@@ -1363,32 +1364,20 @@ Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
    //- beta   : shape parameters for the beta distribution as prior
    //- level  : desired confidence level
    //- w      : weights for each sample; if not given, all samples get the weight 1
+   //           The weights do not need to be normalized, since they are internally renormalized 
+   //           to the number of effective entries. 
    //- options:
-   // + N : The weight for each sample is multiplied by the number of total events.
-   //       -> weight = w[i] * N[i]
-   //       This can be usefull when the weights and probability for each sample are given by
+   //
    // + mode : The mode is returned instead of the default mean of the posterior as best value
    //
-   //Begin_Latex(separator='=',align='rl')
-   // w_{i} = #frac{#sigma_{i} #times L}{N_{i}}
-   // p_{i} = #frac{#sigma_{i}}{sum_{j} #sigma_{j}} #equiv #frac{N_{i} #times w_{i}}{sum_{j} N_{j} #times w_{j}}
-   //End_Latex
-   //Begin_Html
-   //Notation:
-   //<ul>
-   //<li>k = passed events</li>
-   //<li>N = total evens</li>
-   //<li>n = number of combined samples</li>
-   //<li>i = index for numbering samples</li>
-   //<li>p = probability of sample i (either w[i] or w[i] * N[i], see options)</li>
-   //</ul>
-   //calculation:
+   //Calculation:
    //<ol>
    //<li>The combined posterior distributions is calculated from the Bayes theorem assuming a common prior Beta distribution. 
    //     It is easy to proof that the combined posterior is then:</li> 
    //Begin_Latex(separator='=',align='rl')
-   //P_{comb}(#epsilon |{w_{i}}; {k_{i}}; {N_{i}}) = B(#epsilon, #sum w_{i} k_{i} + #alpha, #sum w_{i}(n_{i}-k_{i})+#beta) 
-   //p_{i} = w[i] or w_{i} #times N_{i} if option "N" is specified
+   //P_{comb}(#epsilon |{w_{i}}; {k_{i}}; {N_{i}}) = B(#epsilon, #sum_{i}{ w_{i} k_{i}} + #alpha, #sum_{i}{ w_{i}(n_{i}-k_{i})}+#beta) 
+   //w_{i} = weight for each sample renormalized to the effective entries 
+   //w_{i} \rightarrow   w_{i} \frac{ \sum_{i} {w_{i} } } { \sum_{i} {w_{i}^{2} } }  
    //End_Latex
    //Begin_Html
    //<li>The estimated efficiency is the mode (or the mean) of the obtained posterior distribution </li>
@@ -1514,18 +1503,6 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    // + v     : verbose mode; print information about combining
    // + cl=x  : set confidence level (0 < cl < 1). If not specified, the
    //           confidence level of the first TEfficiency object is used.
-   // + N     : for each bin i the weight of each TEfficiency object j in pList
-   //           is multiplied by the number of total events as
-   //           Begin_Latex w{i,j} = weight{j} #times total{j}->GetBinContent(i) End_Latex
-   //           Begin_Html
-   //           <ul>
-   //            <li>w{i,j}: weight of bin i and TEfficiency object j</li>
-   //            <li>weight{j}: global weight of TEfficiency object j (either GetWeight() or w[j])</li>
-   //            <li>total{j}: histogram containing the total events of TEfficiency object j</li>
-   //           </ul>
-   //           End_Html
-   //           Otherwise the weights for the TEfficiency objects are global and
-   //           the same for each bin.
    // + mode    Use mode of combined posterior as estimated value for the efficiency
    // 
    //- n      : number of weights (has to be the number of one-dimensional
@@ -1721,12 +1698,14 @@ void TEfficiency::Draw(const Option_t* opt)
    //draws the current TEfficiency object
    //
    //options:
-   //- 1-dimensional case: same options as TGraphAsymmErrors::Draw()
+   //- 1-dimensional case: same options as TGraphAsymmErrors::Draw() 
+   //    but as default "AP" is used
    //- 2-dimensional case: same options as TH2::Draw()
    //- 3-dimensional case: not yet supported
    //
-   // TEfficiency drawing options: 
-   // - empty - plot bins (in baysian statistics) where the total number of passed events is zero
+   // specific TEfficiency drawing options: 
+   // - E0 - plot bins where the total number of passed events is zero
+   //      (the error interval will be [0,1] )
    
    //check options
    TString option = opt;
@@ -2052,6 +2031,7 @@ Double_t TEfficiency::Normal(Int_t total,Int_t passed,Double_t level,Bool_t bUpp
    //End_Latex
 
    Double_t alpha = (1.0 - level)/2;
+   if (total == 0) return (bUpper) ? 1 : 0;
    Double_t average = ((Double_t)passed) / total;
    Double_t sigma = std::sqrt(average * (1 - average) / total);
    Double_t delta = ROOT::Math::normal_quantile(1 - alpha,sigma);
@@ -2160,7 +2140,7 @@ void TEfficiency::Paint(const Option_t* opt)
    option.ToLower();
 
    Bool_t plot0Bins = false; 
-   if (TestBit(kIsBayesian) && option.Contains("empty") ) plot0Bins = true; 
+   if (option.Contains("e0") ) plot0Bins = true; 
 
    //use TGraphAsymmErrors for painting
    if(GetDimension() == 1) {
@@ -2174,16 +2154,22 @@ void TEfficiency::Paint(const Option_t* opt)
 
       //errors for points
       Double_t xlow,xup,ylow,yup;
-      //point i corresponds to bin i+1 in histogram      
+      //point i corresponds to bin i+1 in histogram   
+      // point j is point graph index
+      Int_t j = 0;
       for (Int_t i = 0; i < npoints; ++i) {
          if (!plot0Bins && fTotalHistogram->GetBinContent(i+1) == 0 ) continue;
-	 fPaintGraph->SetPoint(i,fTotalHistogram->GetBinCenter(i+1),GetEfficiency(i+1));
+	 fPaintGraph->SetPoint(j,fTotalHistogram->GetBinCenter(i+1),GetEfficiency(i+1));
 	 xlow = fTotalHistogram->GetBinCenter(i+1) - fTotalHistogram->GetBinLowEdge(i+1);
 	 xup = fTotalHistogram->GetBinWidth(i+1) - xlow;
 	 ylow = GetEfficiencyErrorLow(i+1);
 	 yup = GetEfficiencyErrorUp(i+1);
-	 fPaintGraph->SetPointError(i,xlow,xup,ylow,yup);
+	 fPaintGraph->SetPointError(j,xlow,xup,ylow,yup);
+         j++;
       }
+      // tell the graph the effective number of points 
+      fPaintGraph->Set(j);
+      fPaintGraph->SetMaximum(1);
 
       //copying style information
       TAttLine::Copy(*fPaintGraph);
@@ -2752,6 +2738,7 @@ Double_t TEfficiency::Wilson(Int_t total,Int_t passed,Double_t level,Bool_t bUpp
    //End_Latex
    
    Double_t alpha = (1.0 - level)/2;
+   if (total == 0) return (bUpper) ? 1 : 0; 
    Double_t average = ((Double_t)passed) / total;
    Double_t kappa = ROOT::Math::normal_quantile(1 - alpha,1);
 

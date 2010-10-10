@@ -89,7 +89,7 @@ public:
       ~TEfficiency();
       
       void          Add(const TEfficiency& rEff) {*this += rEff;}
-      void          Draw(const Option_t* opt="");
+      void          Draw(const Option_t* opt="AP");
       void          Fill(Bool_t bPassed,Double_t x,Double_t y=0,Double_t z=0);
       Int_t         FindFixBin(Double_t x,Double_t y=0,Double_t z=0) const;
       Int_t         Fit(TF1* f1,Option_t* opt="");
@@ -136,7 +136,7 @@ public:
       static Double_t Combine(Double_t& up,Double_t& low,Int_t n,const Int_t* pass,const Int_t* total,
 			      Double_t alpha,Double_t beta,Double_t level=0.683,
 			      const Double_t* w=0,Option_t* opt="");
-      static TGraphAsymmErrors* Combine(TCollection* pList,Option_t* opt="N",Int_t n=0,const Double_t* w=0);
+      static TGraphAsymmErrors* Combine(TCollection* pList,Option_t* opt="",Int_t n=0,const Double_t* w=0);
       
       //calculating boundaries of confidence intervals
       static Double_t AgrestiCoull(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);

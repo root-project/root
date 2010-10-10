@@ -330,10 +330,10 @@ void TGraphAsymmErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t 
 {
    //This function is only kept for backward compatibility.
    //You should rather use the Divide method.
-   //It calls Divide(pass,total,"cl=0.683 b(1,1)") which is equivalent to the
+   //It calls Divide(pass,total,"cl=0.683 b(1,1) mode") which is equivalent to the
    //former BayesDivide method.
 
-   Divide(pass,total,"cl=0.683 b(1,1)");
+   Divide(pass,total,"cl=0.683 b(1,1) mode");
 }
 
 //______________________________________________________________________________
@@ -373,7 +373,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    // - b(a,b): bayesian interval using a prior probability ~Beta(a,b); a,b > 0
    //           (see TEfficiency::Bayesian)
    // - mode  : use mode of posterior for Bayesian interval (default is mean)
-   // - empty : plot (in Bayesian case) efficiency and interval for bins where total=0 
+   // - e0    : plot (in Bayesian case) efficiency and interval for bins where total=0 
    //           (default is to skip them)
    //
    // Note:
@@ -438,6 +438,20 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       bVerbose = true;
    }
 
+   // use posterior mode
+   Bool_t usePosteriorMode = false; 
+   if(bIsBayesian && option.Contains("mode") ) { 
+      usePosteriorMode = true; 
+      option.ReplaceAll("mode","");
+   }
+
+   Bool_t plot0Bins = false; 
+   if(option.Contains("e0") ) { 
+      plot0Bins = true; 
+      option.ReplaceAll("e0","");
+   }
+
+
    //confidence level
    if(option.Contains("cl=")) {
       Double_t level = -1;
@@ -489,11 +503,6 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       option.ReplaceAll("b(","");
       bIsBayesian = true;
    }
-   Bool_t usePosteriorMode = false; 
-   if(bIsBayesian && option.Contains("mode") ) usePosteriorMode = true; 
-
-   Bool_t plot0Bins = false; 
-   if(bIsBayesian && option.Contains("empty") ) plot0Bins = true; 
    
    //Set the graph to have a number of points equal to the number of histogram
    //bins
@@ -529,26 +538,23 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
 	 p = int(pass->GetBinContent(b) + 0.5);
       }
 
+      if (!t && !plot0Bins) continue; // skip bins with total = 0
+      eff = 0; // default value when total =0;
+
       //using bayesian statistics
       if(bIsBayesian) {
-         if (!t && !plot0Bins) continue; // skip bins with total = 0
          if (!usePosteriorMode) { 
             double d = double(t) + alpha + beta; 
-            if( d > 0 ) 
-               eff = (p + alpha)/d;
-            else
-               continue;
+            if( d > 0 )  eff = (p + alpha)/d;
          }
          else { // mode of posterior
             double d = double(t) + alpha + beta - 2.; 
-            if ( d > 0 ) {
+            if ( d > 0 || d < 0) {
                eff = (p + alpha - 1)/d;
                // when alpha,beta < 1 can get values outside (0,1) since mode is undefined
                if (eff < 0) eff = 0; 
                if (eff > 1) eff = 1;
             }
-            else
-               continue; 
          }
       
 	 low = TEfficiency::Bayesian(t,p,conf,alpha,beta,false);
@@ -557,8 +563,6 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       else {
 	 if(t)
 	    eff = ((Double_t)p)/t;
-	 else
-	    continue;
 	 
 	 low = pBound(t,p,conf,false);
 	 upper = pBound(t,p,conf,true);
