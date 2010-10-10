@@ -83,7 +83,7 @@ NdbMTReacDesc::Init(const char *filename)
 		while (1) {
 			fgets(str2,sizeof(str2),f);
 			if (str2[0] == '\n') break;
-			strcat(str,str2);
+			strlcat(str,str2,512);
 		}
 		str[strlen(str)-1] = 0;
 		desc[i] = strdup(str);
@@ -93,7 +93,7 @@ NdbMTReacDesc::Init(const char *filename)
 		while (1) {
 			fgets(str2,sizeof(str2),f);
 			if (str2[0] == '\n') break;
-			strcat(str,str2);
+			strlcat(str,str2,512);
 		}
 		str[strlen(str)-1] = 0;
 		comment[i] = strdup(str);

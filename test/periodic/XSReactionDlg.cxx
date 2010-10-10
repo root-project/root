@@ -630,26 +630,26 @@ XSReactionDlg::CreatePath( int option )
 {
 	static	char	path[256];
 
-	strcpy(path, DBDIR);	// Initialise directory
-	strcat(path, XSelements->Mnemonic(Z));
-	strcat(path, PATHSEP);
+	strlcpy(path, DBDIR,256);	// Initialise directory
+	strlcat(path, XSelements->Mnemonic(Z),256);
+	strlcat(path, PATHSEP,256);
 
 	if (option == PATHIsotope) return path;
 
 	/* --- add the selected isotope --- */
-	strcat(path, GetString(ISOTOPE_COMBO));
-	strcat(path, PATHSEP);
+	strlcat(path, GetString(ISOTOPE_COMBO),256);
+	strlcat(path, PATHSEP,256);
 
 	if (option == PATHProjectile) return path;
 
 	/* --- add the selected projectile --- */
-	strcat(path, GetString(PROJECTILE_COMBO));
-	strcat(path, PATHSEP);
+	strlcat(path, GetString(PROJECTILE_COMBO),256);
+	strlcat(path, PATHSEP,256);
 
 	if (option == PATHDatabase) return path;
 
 	/* --- finally add the file --- */
-	strcat(path, GetString(DATABASE_COMBO));
+	strlcat(path, GetString(DATABASE_COMBO),256);
 
 	return path;
 } // CreatePath
@@ -678,8 +678,8 @@ XSReactionDlg::UpdateContainer( TGListBox *lb, char *path, int option)
 		if (entry->d_name[0] == '.') continue;
 
 		char	fn[256];
-		strcpy(fn,path);
-		strcat(fn,entry->d_name);
+		strlcpy(fn,path,256);
+		strlcat(fn,entry->d_name,256);
 		stat(fn,&st);
 		if (((option == DIROnlyFiles) && !S_ISDIR(st.st_mode)) ||
 		    ((option == DIROnlyDirectories) && S_ISDIR(st.st_mode)) ||
@@ -824,7 +824,7 @@ XSReactionDlg::SetElement(UInt_t aZ)
 	fClient->NeedRedraw(elementText);
 	nameLbl->SetText(new TGString(elem->Name()));
 
-	sprintf(str,"%d",Z);
+	snprintf(str,5,"%d",Z);
 	zLbl->SetText(new TGString(str));
 
 	// --- Update several values for element ---
@@ -892,7 +892,7 @@ XSReactionDlg::ElementEntryChanged()
 		// issue message and put the old one
 		char	msg[256];
 		int	retval;
-		sprintf(msg,"Element %s not found!", elementBuf->GetString());
+		snprintf(msg,256,"Element %s not found!", elementBuf->GetString());
 		new TGMsgBox(fClient->GetRoot(),this,"Not found",msg,
 				kMBIconAsterisk,kMBOk,&retval);
 		SetElement(Z);
@@ -911,7 +911,7 @@ XSReactionDlg::UpdateGraph( NdbMTReactionXS *xs )
 	XSGraph *gr = new XSGraph(xs);
 
 	// Prepare the title
-	sprintf(title,"%s-%s %s",
+	snprintf(title,256,"%s-%s %s",
 			XSelements->Mnemonic(Z),
 			GetString(ISOTOPE_COMBO),
 			xs->Description().Data()
