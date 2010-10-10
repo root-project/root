@@ -99,20 +99,6 @@ TMVA::RuleEnsemble::RuleEnsemble()
    , fLogger( new MsgLogger("RuleFit") )
 {
    // constructor
-
-   SetAverageRuleSigma(0.4); // default value - used if only linear model is chosen
-   UInt_t nvars =  GetMethodBase()->GetNvar();
-   fVarImportance.clear();
-   fLinPDFB.clear();
-   fLinPDFS.clear();
-   //
-   fVarImportance.resize( nvars,0.0 );
-   fLinPDFB.resize( nvars,0 );
-   fLinPDFS.resize( nvars,0 );
-   for (UInt_t i=0; i<nvars; i++) { // a priori all linear terms are equally valid
-      fLinTermOK.push_back(kTRUE);
-   }
-
 }
 
 //_______________________________________________________________________
