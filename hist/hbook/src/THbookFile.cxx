@@ -606,14 +606,14 @@ TFile *THbookFile::Convert2root(const char *rootname, Int_t /*lrecl*/,
       strlcpy(rfile,GetName(),nch+1);
       char *dot = strrchr(rfile,'.');
       if (dot) strcpy(dot+1,"root");
-      else     strcat(rfile,".root");
+      else     strlcat(rfile,".root",nch+1);
    }
 
    nch = 2*nch+50;
    char *cmd = new char[nch+1];
    snprintf(cmd,nch,"h2root %s %s",GetName(),rfile);
-   if (opt.Contains("c")) strcat (cmd," 0");
-   if (opt.Contains("l")) strcat (cmd," 0");
+   if (opt.Contains("c")) strlcat (cmd," 0",nch+1);
+   if (opt.Contains("l")) strlcat (cmd," 0",nch+1);
 
    gSystem->Exec(cmd);
    
@@ -721,13 +721,13 @@ TObject *THbookFile::ConvertCWN(Int_t id)
          if (block[j] == ' ') block[j] = 0;
          else break;
       }
-      if (itype == 1 && isize == 4) strcat(fullname,"/F");
-      if (itype == 1 && isize == 8) strcat(fullname,"/D");
-      if (itype == 2) strcat(fullname,"/I");
-      if (itype == 3) strcat(fullname,"/i");
-//     if (itype == 4) strcat(fullname,"/i");
-      if (itype == 4) strcat(fullname,"/b");
-      if (itype == 5) strcat(fullname,"/C");
+      if (itype == 1 && isize == 4) strlcat(fullname,"/F",64);
+      if (itype == 1 && isize == 8) strlcat(fullname,"/D",64);
+      if (itype == 2) strlcat(fullname,"/I",64);
+      if (itype == 3) strlcat(fullname,"/i",64);
+//     if (itype == 4) strlcat(fullname,"/i",64);
+      if (itype == 4) strlcat(fullname,"/b",64);
+      if (itype == 5) strlcat(fullname,"/C",64);
 //printf("Creating branch:%s, block:%s, fullname:%s, nsub=%d, itype=%d, isize=%d, ielem=%d, bufpos=%d\n",name,block,fullname,nsub,itype,isize,ielem,bufpos);
       Int_t ischar;
       if (itype == 5) ischar = 1;

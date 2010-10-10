@@ -441,7 +441,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
          }
 
          if (strchr(argname, '*')) {
-            strcat(basictype, "*");
+            strlcat(basictype, "*",32);
             if (!strncmp(type, "char", 4))
                type = charstar;
             else if (strstr(argname, "[default:")) {
@@ -467,7 +467,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
                        !strncmp(basictype, "double", 6)) {
                Double_t ddefval;
                m->GetterMethod()->Execute(object, "", ddefval);
-               sprintf(val, "%g", ddefval);
+               snprintf(val,256, "%g", ddefval);
             } else if (!strncmp(basictype, "char", 4) ||
                        !strncmp(basictype, "bool", 4) ||
                        !strncmp(basictype, "int", 3)  ||
@@ -475,7 +475,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
                        !strncmp(basictype, "short", 5)) {
                Long_t ldefval;
                m->GetterMethod()->Execute(object, "", ldefval);
-               sprintf(val, "%li", ldefval);
+               snprintf(val,256, "%li", ldefval);
             }
 
             // Find out whether we have options ...
@@ -493,7 +493,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
                   Long_t value  = it->fValue;
                   if (value != -9999) {
                      char val[256];
-                     sprintf(val, "%li", value);
+                     snprintf(val,256, "%li", value);
                      o->AddItem(name, val);
                   }else
                      o->AddItem(name, label);
