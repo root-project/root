@@ -2734,8 +2734,8 @@ const char *TUnixSystem::GetLinkedLibraries()
       // it's not a dll and exe doesn't end on ".exe";
       // need to add it for cygcheck to find it:
       char* longerexe = new char[lenexe + 5];
-      strcpy(longerexe, exe);
-      strcat(longerexe, ".exe");
+      strlcpy(longerexe, exe,lenexe+5);
+      strlcat(longerexe, ".exe",lenexe+5);
       delete [] exe;
       exe = longerexe;
    }
@@ -4751,8 +4751,8 @@ static void GetDarwinMemInfo(MemInfo_t *meminfo)
       char fname [MAXNAMLEN];
       if (strncmp(dp->d_name, "swapfile", 8))
          continue;
-      strcpy(fname, "/private/var/vm/");
-      strcat (fname, dp->d_name);
+      strlcpy(fname, "/private/var/vm/",MAXNAMLEN);
+      strlcat (fname, dp->d_name,MAXNAMLEN);
       if (stat(fname, &sb) < 0)
          continue;
       swap_total += sb.st_size;
