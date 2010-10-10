@@ -383,7 +383,7 @@ void TAxis3D::PaintAxis(TGaxis *axis, Float_t ang)
          case 2 :
             ax[0] = z1[0]; ax[1] = z2[0];
             ay[0] = z1[1]; ay[1] = z2[1];
-            strcpy(chopax, "SDH+=");
+            strlcpy(chopax, "SDH+=",10);
             logAx = gPad->GetLogz();
             break;
          default:
@@ -395,16 +395,16 @@ void TAxis3D::PaintAxis(TGaxis *axis, Float_t ang)
       if ( ( TMath::Abs(ax[0] - ax[1]) + TMath::Abs(ay[0] - ay[1]))  < epsil  ) continue;
 
       if (i != 2 ) {
-         if (ax[0] > ax[1]) strcpy(chopax, "SDHV=+");
-         else               strcpy(chopax, "SDHV=-");
+         if (ax[0] > ax[1]) strlcpy(chopax, "SDHV=+",10);
+         else               strlcpy(chopax, "SDHV=-",10);
       }
 
       if (i==1 && (TMath::Abs(z1[0] - z2[0]) + TMath::Abs(z1[1] - z2[1])) < epsil)
-         strcpy(chopax, "SDH+=");
+         strlcpy(chopax, "SDH+=",10);
 
       // Initialize the axis options
       if (logAx) {
-         strcat(chopax,"G");
+         strlcat(chopax,"G",10);
          bmin = TMath::Power(10, rmin[i]);
          bmax = TMath::Power(10, rmax[i]);
       } else {
@@ -436,7 +436,7 @@ void TAxis3D::PaintAxis(TGaxis *axis, Float_t ang)
 
       // Option time display is required ?
       if (fAxis[i].GetTimeDisplay()) {
-         strcat(chopax,"t");
+         strlcat(chopax,"t",10);
          if (strlen(fAxis[i].GetTimeFormatOnly()) == 0) {
             axis->SetTimeFormat(fAxis[i].ChooseTimeFormat(bmax-bmin));
          } else {
