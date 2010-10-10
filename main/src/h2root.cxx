@@ -296,7 +296,7 @@ int main(int argc, char **argv)
       strlcpy(file_out,file_in,nchf);
       char *dot = strrchr(file_out,'.');
       if (dot) strcpy(dot+1,"root");
-      else     strcat(file_out,".root");
+      else     strlcat(file_out,".root",nchf);
    }
 
 #if defined(_HIUX_SOURCE) && !defined(__GNUC__)
@@ -736,8 +736,8 @@ void convert_cwn(Int_t id)
          else break;
       }
       if (itype == 1) {
-         if( isize == 4 )     strcat(fullname,"/F");
-         else if( isize == 8) strcat(fullname,"/D");
+         if( isize == 4 )     strlcat(fullname,"/F",1024);
+         else if( isize == 8) strlcat(fullname,"/D",1024);
       }
 
 
@@ -747,18 +747,18 @@ void convert_cwn(Int_t id)
       if( itype == 2 ) {
          if( optcwn == 1 ) {
             if( nbits > 16 ) {
-               strcat(fullname,"/I");
+               strlcat(fullname,"/I",1024);
             } else {
                if( nbits > 8 ) {
-                  strcat(fullname,"/S");
+                  strlcat(fullname,"/S",1024);
                   nBytesUsed = 2;
                } else {
-                  strcat(fullname,"/B");
+                  strlcat(fullname,"/B",1024);
                   nBytesUsed = 1;
                }
             }
          } else {
-            strcat(fullname,"/I");
+            strlcat(fullname,"/I",1024);
          }
       }
 
@@ -766,27 +766,27 @@ void convert_cwn(Int_t id)
       if ( itype == 3 ) {
          if(  optcwn == 1 ) {
             if( nbits > 16) {
-               strcat(fullname,"/i");
+               strlcat(fullname,"/i",1024);
             } else {
                if( nbits > 8 ) {
-                  strcat(fullname,"/s");
+                  strlcat(fullname,"/s",1024);
                   nBytesUsed = 2;
                } else {
-                  strcat(fullname,"/b");
+                  strlcat(fullname,"/b",1024);
                   nBytesUsed = 1;
                }
             }
          } else {
-            strcat(fullname,"/i");
+            strlcat(fullname,"/i",1024);
          }
       }
 
 
 
 
-//     if (itype == 4) strcat(fullname,"/i");
-      if (itype == 4) strcat(fullname,"/b");
-      if (itype == 5) strcat(fullname,"/C");
+//     if (itype == 4) strlcat(fullname,"/i",1024);
+      if (itype == 4) strlcat(fullname,"/b",1024);
+      if (itype == 5) strlcat(fullname,"/C",1024);
       printf("Creating branch:%s, block:%s, fullname:%s, nsub=%d, itype=%d, isize=%d, ielem=%d\n",name,block,fullname,nsub,itype,isize,ielem);
       Int_t ischar;
       if (itype == 5) ischar = 1;
