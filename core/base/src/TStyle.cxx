@@ -1052,8 +1052,8 @@ void TStyle::SetLineStyleString(Int_t i, const char *text)
    char *l;
    Int_t nch = strlen(text);
    char *st = new char[nch+10];
-   sprintf(st," ");
-   strcat(st,text);
+   snprintf(st,nch+10," ");
+   strlcat(st,text,nch+10);
    l = strstr(st,"["); if (l) l[0] = ' ';
    l = strstr(st,"]"); if (l) l[0] = ' ';
    if (i >= 1 && i <= 29) fLineStyle[i] = st;
