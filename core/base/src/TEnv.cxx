@@ -335,23 +335,24 @@ TString TEnvRec::ExpandValue(const char *value)
    }
 
    v = vorg;
-   char *nv = new char[strlen(v) + len];
+   int nch = strlen(v) + len;
+   char *nv = new char[nch];
    *nv = 0;
 
    while ((s1 = (char*)strstr(v, "$("))) {
       *s1 = 0;
-      strcat(nv, v);
+      strlcat(nv, v,nch);
       *s1 = '$';
       s1 += 2;
       s2 = (char*)strchr(s1, ')');
       *s2 = 0;
       vv = gSystem->Getenv(s1);
-      if (vv) strcat(nv, vv);
+      if (vv) strlcat(nv, vv,nch);
       *s2 = ')';
       v = s2 + 1;
    }
 
-   if (*v) strcat(nv, v);
+   if (*v) strlcat(nv, v,nch);
 
    TString val = nv;
    delete [] nv;
