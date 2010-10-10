@@ -308,7 +308,7 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
    TDirectory *result = this;
 
    char *path = new char[nch+1]; path[0] = 0;
-   if (nch) strcpy(path,apath);
+   if (nch) strlcpy(path,apath,nch+1);
    char *s = (char*)strrchr(path, ':');
    if (s) {
       *s = '\0';
@@ -825,12 +825,12 @@ const char *TDirectory::GetPathStatic() const
 
    for (int i = depth-1; i >= 0; i--) {
       if (i == depth-1) {    // file or TROOT name
-         strcpy(path, d[i]->GetName());
-         strcat(path, ":");
-         if (i == 0) strcat(path, "/");
+         strlcpy(path, d[i]->GetName(),len+2);
+         strlcat(path, ":",len+2);
+         if (i == 0) strlcat(path, "/",len+2);
       } else {
-         strcat(path, "/");
-         strcat(path, d[i]->GetName());
+         strlcat(path, "/",len+2);
+         strlcat(path, d[i]->GetName(),len+2);
       }
    }
 
