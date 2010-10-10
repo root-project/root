@@ -1384,9 +1384,8 @@ Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
    //</ul>
    //calculation:
    //<ol>
-   //<li>The combined posterior distributions is calculated from the Bayes theorem assuming a Beta prior distribution</li>: 
-   //End_Html
-   //Begin_Latex Prior = B(#epsilon,#alpha,#beta) End_Latex 
+   //<li>The combined posterior distributions is calculated from the Bayes theorem assuming a common prior Beta distribution. 
+   //     It is easy to proof that the combined posterior is then:</li> 
    //Begin_Latex(separator='=',align='rl')
    //P_{comb}(#epsilon |{w_{i}}; {k_{i}}; {N_{i}}) = B(#epsilon, #sum w_{i} k_{i} + #alpha, #sum w_{i}(n_{i}-k_{i})+#beta) 
    //p_{i} = w[i] or w_{i} #times N_{i} if option "N" is specified
@@ -1401,7 +1400,7 @@ Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
    //</ol>
    //End_Html
    //Example (uniform prior distribution):
-   //Begin_Macro
+   //Begin_Macro(source)
    //{
    //  TCanvas* c1 = new TCanvas("c1","",600,800);
    //  c1->Divide(1,2);

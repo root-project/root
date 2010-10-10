@@ -2033,7 +2033,7 @@ Bool_t THnSparse::PrintBin(Long64_t idx, Int_t* bin, Option_t* options) const
       v = GetBinContent(idx, bin);
    }
 
-   if (strchr(options, '0') && v == 0.) {
+   if (options && strchr(options, '0') && v == 0.) {
       if (GetCalculateErrors()) {
          if (GetBinError(idx) == 0.) {
             // suppress zeros, and we have one.
