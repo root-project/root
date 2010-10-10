@@ -4586,7 +4586,7 @@ TVirtualStreamerInfo *TClass::SetStreamerInfo(Int_t /*version*/, const char * /*
       char *save, *temp, *blank, *colon, *comma;
       save = new char[10000];
       temp = save;
-      strcpy(temp,info);
+      strlcpy(temp,info,10000);
       //remove heading and trailing blanks
       while (*temp == ' ') temp++;
       while (save[nch-1] == ' ') {nch--; save[nch] = 0;}
@@ -4603,7 +4603,7 @@ TVirtualStreamerInfo *TClass::SetStreamerInfo(Int_t /*version*/, const char * /*
       char token[100];
       while ((colon=strchr(temp,';'))) {
          *colon = 0;
-         strcpy(token,temp);
+         strlcpy(token,temp,100);
          blank = strchr(token,' ');
          if (blank) {
             *blank = 0;
@@ -4612,25 +4612,25 @@ TVirtualStreamerInfo *TClass::SetStreamerInfo(Int_t /*version*/, const char * /*
                return;
             }
             while (blank) {
-               strcat(final,token);
-               strcat(final," ");
+               strlcat(final,token,1000);
+               strlcat(final," ",1000);
                comma = strchr(blank+1,','); if (comma) *comma=0;
-               strcat(final,blank+1);
-               strcat(final,";");
+               strlcat(final,blank+1,1000);
+               strlcat(final,";",1000);
                blank = comma;
             }
 
          } else {
             if (TClass::GetClass(token,update)) {
                //a class name
-               strcat(final,token); strcat(final,";");
+               strlcat(final,token,1000); strlcat(final,";",1000);
             } else {
                //a data member name
                dm = (TDataMember*)GetListOfDataMembers()->FindObject(token);
                if (dm) {
-                  strcat(final,dm->GetFullTypeName());
-                  strcat(final," ");
-                  strcat(final,token); strcat(final,";");
+                  strlcat(final,dm->GetFullTypeName(),1000);
+                  strlcat(final," ",1000);
+                  strlcat(final,token,1000); strlcat(final,";",1000);
                } else {
                   Error("SetStreamerInfo","Illegal name: %s in %s",token,info);
                   return;
@@ -4657,8 +4657,8 @@ TVirtualStreamerInfo *TClass::SetStreamerInfo(Int_t /*version*/, const char * /*
    TIter nextb(GetListOfBases());
    TBaseClass *base;
    while ((base = (TBaseClass*) nextb())) {
-      sprintf(local,"%s;",base->GetName());
-      strcat(temp,local);
+      snprintf(local,100,"%s;",base->GetName());
+      strlcat(temp,local,10000);
    }
 
    //add list of data members and types
@@ -4678,10 +4678,10 @@ TVirtualStreamerInfo *TClass::SetStreamerInfo(Int_t /*version*/, const char * /*
       // applies
       const char * index = dm->GetArrayIndex();
       if (strlen(index)==0)
-         sprintf(local,"%s %s;",dm->GetFullTypeName(),dm->GetName());
+         snprintf(local,100,"%s %s;",dm->GetFullTypeName(),dm->GetName());
       else
-         sprintf(local,"%s %s[%s];",dm->GetFullTypeName(),dm->GetName(),index);
-      strcat(temp,local);
+         snprintf(local,100,"%s %s[%s];",dm->GetFullTypeName(),dm->GetName(),index);
+      strlcat(temp,local,10000);
    }
    //fStreamerInfo = temp;
    delete [] temp;
