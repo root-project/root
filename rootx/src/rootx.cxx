@@ -195,15 +195,17 @@ static void SetRootSys()
 {
    const char *exepath = GetExePath();
    if (exepath && *exepath) {
-      char *ep = new char[strlen(exepath)+1];
-      strcpy(ep, exepath);
+      int l1 = strlen(exepath)+1;
+      char *ep = new char[l1];
+      strlcpy(ep, exepath, l1);
       char *s;
       if ((s = strrchr(ep, '/'))) {
          *s = 0;
          if ((s = strrchr(ep, '/'))) {
             *s = 0;
-            char *env = new char[strlen(ep) + 10];
-            sprintf(env, "ROOTSYS=%s", ep);
+            int l2 = strlen(ep) + 10;
+            char *env = new char[l2];
+            snprintf(env, l2, "ROOTSYS=%s", ep);
             putenv(env);
          }
       }
