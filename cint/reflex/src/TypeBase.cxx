@@ -137,7 +137,11 @@ Reflex::Scope() const {
    case TYPETEMPLATEINSTANCE:
    case UNION:
    case ENUM:
-      return (dynamic_cast<const ScopeBase*>(this))->ThisScope();
+      {
+         const ScopeBase* sb = dynamic_cast<const ScopeBase*>(this);
+         if (!sb) return Dummy::Scope();
+         return sb->ThisScope();
+      }
    case TYPEDEF:
       return FinalType();
    default:
