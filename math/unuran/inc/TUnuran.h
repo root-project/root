@@ -48,8 +48,8 @@ class TUnuranEmpDist;
    The sampling is provided via these methods: 
     - TUnuran::Sample()   returns a double for all one-dimensional distribution
     - TUnuran::SampleDiscr()  returns an integer for one-dimensional discrete distribution
-    - TUnuran::Sample(double *) sample a multi-dimensional distribution. A pointer to a vector of 
-      size as the distribution dimension must be passed
+    - TUnuran::Sample(double *) sample a multi-dimensional distribution. A pointer to a vector with  
+      size at least equal to the distribution dimension must be passed
 
    In addition is possible to set the random number generator in the constructor of the class, its seed 
    via the TUnuran::SetSeed() method.

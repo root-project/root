@@ -12,7 +12,7 @@ UNURANDIR    := $(MODDIR)
 UNURANDIRS   := $(UNURANDIR)/src
 UNURANDIRI   := $(UNURANDIR)/inc
 
-UNRVERS      := unuran-1.7.2-root
+UNRVERS      := unuran-1.8.devel-root
 
 UNRSRCS      := $(MODDIRS)/$(UNRVERS).tar.gz
 UNRDIRS      := $(MODDIRS)/$(UNRVERS)
