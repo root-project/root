@@ -2855,7 +2855,9 @@ char* G__tmpnam(char *name)
   if (name==0) name = tempname;
   G__strlcpy(name, tmpdir, G__MAXFILENAME);
   G__strlcat(name,"/XXXXXX", G__MAXFILENAME);
+  mode_t old_umask = umask(077); // be restrictive for mkstemp()
   int temp_fileno = mkstemp(name);/*mkstemp not only generate file name but also opens the file*/
+  umask(old_umask);
   if (temp_fileno >= 0) {
      close(temp_fileno);
   }
@@ -2885,6 +2887,7 @@ static int G__istmpnam=0;
 void G__openmfp()
 {
 #ifndef G__TMPFILE
+  // Coverity[secure_temp]: we don't care about predictable names.
   G__mfp=tmpfile();
   if(!G__mfp) {
     do {
