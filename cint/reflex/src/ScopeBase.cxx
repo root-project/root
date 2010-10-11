@@ -151,7 +151,11 @@ Reflex::Type() const {
    case TYPETEMPLATEINSTANCE:
    case UNION:
    case ENUM:
-      return (dynamic_cast<const TypeBase*>(this))->ThisType();
+      {
+         const TypeBase* tb = dynamic_cast<const TypeBase*>(this);
+         if (!tb) return Dummy::Type();
+         return tb->ThisType();
+      }
    default:
       return Dummy::Type();
    }
