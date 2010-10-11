@@ -138,7 +138,7 @@ LDAPMod *TLDAPAttribute::GetMod(Int_t op)
    }
 
    values[iCount] = 0;
-   strcpy(type, GetName());
+   strlcpy(type, GetName(),strlen(GetName())+1);
    tmpMod->mod_values = values;
    tmpMod->mod_type = type;
    tmpMod->mod_op = op;
