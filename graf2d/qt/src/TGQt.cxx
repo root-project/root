@@ -877,7 +877,7 @@ Bool_t TGQt::Init(void* /*display*/)
    fMarkerStyle = -1;
 
    //
-   // Retrieve the applicaiton instance
+   // Retrieve the application instance
    //
 
    // --   fHInstance = GetModuleHandle(NULL);
