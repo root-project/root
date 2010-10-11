@@ -903,6 +903,7 @@ G__value G__exec_text(const char* unnamedmacro)
       return(G__null);
    }
 
+   // Coverity[secure_temp]: we don't care about predictable names.
    fp = tmpfile();
    if (!fp) {
       G__tmpnam(tname);  /* not used anymore 0 */
@@ -964,6 +965,7 @@ const char* G__load_text(const char* namedmacro)
    static char tname[G__MAXFILENAME];
 #endif
 
+   // Coverity[secure_temp]: we don't care about predictable names.
    fp = tmpfile();
    if (!fp) {
       G__tmpnam(tname);  /* not used anymore */
