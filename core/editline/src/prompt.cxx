@@ -152,7 +152,11 @@ prompt_print(EditLine_t* el, int op) {
                // bg color, not supported
             }
 
-            col.fForeColor = term__atocolor(strColor);
+            if (strColor) {
+               col.fForeColor = term__atocolor(strColor);
+            } else {
+               col.fForeColor = -1;
+            }
             p += i + 1; // skip escape
             continue;
          }

@@ -223,7 +223,7 @@ el_protected ElAction_t
 em_copy_region(EditLine_t* el, int /*c*/) {
    char* kp, * cp;
 
-   if (el->fCharEd.fKill.fMark) {
+   if (!el->fCharEd.fKill.fMark) {
       return CC_ERROR;
    }
 
