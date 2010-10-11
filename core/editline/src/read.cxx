@@ -244,6 +244,10 @@ read_getcmd(EditLine_t* el, ElAction_t* cmdnum, char* ch) {
          el->fState.fMetaNext = 0;
          *ch |= 0200;
       }
+      // Coverity is complaining that the value of ch comes from the user
+      // and nowhere do we check its value. But that's fine: it's 0<=ch<255,
+      // and fCurrent has 256 entries.
+      // Coverity[data_index]
       cmd = el->fMap.fCurrent[(unsigned char) *ch];
 
       if (cmd == ED_SEQUENCE_LEAD_IN) {
@@ -300,7 +304,14 @@ read_char(EditLine_t* el, char* cp) {
          *cp = 0;
          return 0;
       }
-      *cp = fgetc(el->fIn);
+      int chread = fgetc(el->fIn);
+#ifdef DEBUG_READ
+      if (chread < 0 || chread > 255) {
+         fprintf(el->fErrFile,
+                 "Read unexpected character value %d\n", chread);
+      }
+#endif
+      *cp = (char)chread;
       num_read = 1;
    }
    // don't do this - "new" char may be a command char e.g <- or ->
@@ -402,7 +413,7 @@ el_gets(EditLine_t* el, int* nread) {
 
       while ((numRead = read_char(el, cp)) == 1) {
          /* make sure there is space for next character */
-         if (cp + 1 >= el->fLine.fLimit) {
+         if (cp + 4 >= el->fLine.fLimit) { // "+4" for "EOF" below
             idx = (cp - el->fLine.fBuffer);
 
             if (!ch_enlargebufs(el, 2)) {
@@ -628,7 +639,7 @@ el_gets(EditLine_t* el, int* nread) {
       el->fLine.fLastChar++;
       *el->fLine.fLastChar = 0;
 
-      return num ? el->fLine.fBuffer : NULL;
+      return el->fLine.fBuffer;
    }
 
    CMacro_t* ma = &el->fCharEd.fMacro;

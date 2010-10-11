@@ -1436,6 +1436,7 @@ map_bind(EditLine_t* el, int argc, const char** argv) {
       }
       break;
 
+   // Coverity[dead_error_begin]
    default:
       EL_ABORT((el->fErrFile, "Bad XK_ type\n", ntype));
       break;

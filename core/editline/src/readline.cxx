@@ -247,6 +247,7 @@ rl_initialize(void) {
    /* so this can be overriden */
    // NO vi at the ROOT prompt, please!
    char* editor = 0; // getenv("EDITOR");
+   // Coverity[dead_error_line] - yes, this is always "emacs".
    el_set(gEditLine, EL_EDITOR, editor ? editor : "emacs");
 
    /*

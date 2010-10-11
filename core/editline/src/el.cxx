@@ -153,6 +153,7 @@ el_set(EditLine_t* el, int op, ...) {
    va_start(va, op);
 
    if (el == NULL) {
+      va_end(va);
       return -1;
    }
 

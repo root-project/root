@@ -341,7 +341,8 @@ Getlinem(int mode, const char* prompt) {
    // mode -1 = init
    if (mode == -1) {
       if (prompt) {
-         strcpy(sprompt, prompt);
+         strncpy(sprompt, prompt, sizeof(sprompt) - 1);
+         sprompt[sizeof(sprompt) - 1] = 0; // force 0 termination
       }
       input_buffer = readline(sprompt, true /*newline*/);
 
@@ -351,7 +352,8 @@ Getlinem(int mode, const char* prompt) {
    // mode 1 = one char at a time
    if (mode == 1) {
       if (prompt) {
-         strcpy(sprompt, prompt);
+         strncpy(sprompt, prompt, sizeof(sprompt) - 1);
+         sprompt[sizeof(sprompt) - 1] = 0; // force 0 termination
       }
 
       // note: input_buffer will be null unless complete line entered

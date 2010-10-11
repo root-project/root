@@ -214,8 +214,9 @@ TTermManip::SetColor(int idx) {
 
 char*
 TTermManip::GetTermStr(const char* cap) {
-   char capid[8];
-   strcpy(capid, cap);
+   char capid[10];
+   strncpy(capid, cap, sizeof(capid) - 1);
+   capid[sizeof(capid) - 1] = 0; // force 0 termination
    char* termstr = tigetstr(capid);
 
    if (termstr == (char*) -1) {
@@ -230,8 +231,9 @@ TTermManip::GetTermStr(const char* cap) {
 
 int
 TTermManip::GetTermNum(const char* cap) {
-   char capid[8];
-   strcpy(capid, cap);
+   char capid[10];
+   strncpy(capid, cap, sizeof(capid) - 1);
+   capid[sizeof(capid) - 1] = 0; // force 0 termination
    return tigetnum(capid);
 }
 
