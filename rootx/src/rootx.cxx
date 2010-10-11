@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfigure.h"
+#include "Rtypes.h"
 
 #include <stdio.h>
 #include <stdlib.h>
