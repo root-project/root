@@ -526,9 +526,9 @@ ClassImp(TEfficiency)
 // for all the TEfficiency objects.
 // End_Html
 // Begin_Latex
-// P_{comb}(#epsilon | {w_{i}}, {k_{i}} , {N_{i}}) = #frac{1}{norm} #prod_{i}{L(k_{i} | N_{i}, #epsilon)}^{w_{i}} #pi( #epsilon )  
+// P_{comb}(#epsilon | {w_{i}}, {k_{i}} , {N_{i}}) = #frac{1}{norm} #prod_{i}{L(k_{i} | N_{i}, #epsilon)}^{w_{i}} #Pi( #epsilon )  
 // L(k_{i} | N_{i}, #epsilon) is the likelihood function for the sample i ( a Binomial distribution) 
-// #pi( #epsilon) is the prior, a beta distribution B(#epsilon, #alpha, #beta).
+// #Pi( #epsilon) is the prior, a beta distribution B(#epsilon, #alpha, #beta).
 // The resulting combined posterior is 
 // P_{comb}(#epsilon |{w_{i}}; {k_{i}}; {N_{i}}) = B(#epsilon, #sum_{i}{ w_{i} k_{i}} + #alpha, #sum_{i}{ w_{i}(n_{i}-k_{i})}+#beta)  
 // #hat{#varepsilon} = #int_{0}^{1} #epsilon #times P_{comb}(#epsilon | {k_{i}} , {N_{i}}) d#epsilon
@@ -1370,6 +1370,7 @@ Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
    //
    // + mode : The mode is returned instead of the default mean of the posterior as best value
    //
+   //Begin_Html
    //Calculation:
    //<ol>
    //<li>The combined posterior distributions is calculated from the Bayes theorem assuming a common prior Beta distribution. 
@@ -1377,7 +1378,7 @@ Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
    //Begin_Latex(separator='=',align='rl')
    //P_{comb}(#epsilon |{w_{i}}; {k_{i}}; {N_{i}}) = B(#epsilon, #sum_{i}{ w_{i} k_{i}} + #alpha, #sum_{i}{ w_{i}(n_{i}-k_{i})}+#beta) 
    //w_{i} = weight for each sample renormalized to the effective entries 
-   //w_{i} \rightarrow   w_{i} \frac{ \sum_{i} {w_{i} } } { \sum_{i} {w_{i}^{2} } }  
+   //w^{'}_{i} =  w_{i} #frac{ #sum_{i} {w_{i} } } { #sum_{i} {w_{i}^{2} } }  
    //End_Latex
    //Begin_Html
    //<li>The estimated efficiency is the mode (or the mean) of the obtained posterior distribution </li>
@@ -2063,8 +2064,19 @@ TEfficiency& TEfficiency::operator+=(const TEfficiency& rhs)
       *this = rhs; 
       return *this;
    }
+   else if (fTotalHistogram == 0 || fPassedHistogram == 0) {
+      Fatal("operator+=","Adding to a non consistent TEfficiency object which has not a total or a passed histogram "); 
+      return *this;
+   }
 
-   R__ASSERT(fTotalHistogram || fPassedHistogram);
+   if (rhs.fTotalHistogram == 0 && rhs.fTotalHistogram == 0 ) {
+      Warning("operator+=","no operation: adding an empty object");
+      return *this;
+   }
+   else  if (rhs.fTotalHistogram == 0  || rhs.fTotalHistogram == 0 ) {
+      Fatal("operator+=","Adding a non consistent TEfficiency object which has not a total or a passed histogram "); 
+      return *this;
+   }
 
    fTotalHistogram->ResetBit(TH1::kIsAverage);
    fPassedHistogram->ResetBit(TH1::kIsAverage);

@@ -438,20 +438,6 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       bVerbose = true;
    }
 
-   // use posterior mode
-   Bool_t usePosteriorMode = false; 
-   if(bIsBayesian && option.Contains("mode") ) { 
-      usePosteriorMode = true; 
-      option.ReplaceAll("mode","");
-   }
-
-   Bool_t plot0Bins = false; 
-   if(option.Contains("e0") ) { 
-      plot0Bins = true; 
-      option.ReplaceAll("e0","");
-   }
-
-
    //confidence level
    if(option.Contains("cl=")) {
       Double_t level = -1;
@@ -503,6 +489,21 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       option.ReplaceAll("b(","");
       bIsBayesian = true;
    }
+
+   // use posterior mode
+   Bool_t usePosteriorMode = false; 
+   if(bIsBayesian && option.Contains("mode") ) { 
+      usePosteriorMode = true; 
+      option.ReplaceAll("mode","");
+   }
+
+   Bool_t plot0Bins = false; 
+   if(option.Contains("e0") ) { 
+      plot0Bins = true; 
+      option.ReplaceAll("e0","");
+   }
+
+
    
    //Set the graph to have a number of points equal to the number of histogram
    //bins
