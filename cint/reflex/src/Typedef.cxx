@@ -25,7 +25,13 @@ Reflex::Typedef::Typedef(const char* typ,
                          const Type& finalType,
                          REPRESTYPE represType)
 //-------------------------------------------------------------------------------
-   : TypeBase(typ, typedefType.SizeOf(), typeTyp, typeid(UnknownType), finalType, represType ? represType: (REPRESTYPE)(((typedefType.RepresType() == 'y') && typ && strchr(typ, '(')) ? (REPRESTYPE) '1': typedefType.RepresType())), fTypedefType(typedefType) {
+   : TypeBase(typ, typedefType.SizeOf(), typeTyp, typeid(UnknownType), finalType,
+              represType != REPRES_NOTYPE
+              ? represType
+              : (REPRESTYPE)(((typedefType.RepresType() == 'y') && strchr(typ, '('))
+                             ? (REPRESTYPE) '1'
+                             : typedefType.RepresType())),
+     fTypedefType(typedefType) {
    // Construct typedef info.
 
    Type current = typedefType;
