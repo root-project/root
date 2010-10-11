@@ -586,10 +586,10 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       stateName = physName ;
     }
 
-    RooAbsPdf* physModel = (RooAbsPdf*) _protoPdfSet.find(physName) ;
+    RooAbsPdf* physModel = (RooAbsPdf*) (physName ? _protoPdfSet.find(physName) : 0 );
     if (!physModel) {
       coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR requested physics model " 
-			    << physName << " is not defined" << endl ;
+			    << (physName?physName:"(null)") << " is not defined" << endl ;
       delete[] buf ;
       return 0 ;
     }    
@@ -646,7 +646,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
     RooCategory* splitCat = catName ? dynamic_cast<RooCategory*>(dependents.find(catName)) : 0 ;
     if (!splitCat) {
-      coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR requested split category " << catName 
+      coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR requested split category " << (catName?catName:"(null)") 
 			    << " is not a RooCategory in the dataset" << endl ;
       delete[] buf ;
       return 0 ;

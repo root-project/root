@@ -2034,13 +2034,13 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
 
     RooAbsReal* integral = 0 ;
     if (pargv.size()==2) {
-      if (range) {
+      if (range && strlen(range)) {
 	integral = func.createIntegral(ft.asSET(intobs),Range(range)) ;
       } else {
 	integral = func.createIntegral(ft.asSET(intobs)) ;
       }
     } else {
-      if (range) {
+      if (range && strlen(range)) {
 	integral = func.createIntegral(ft.asSET(intobs),Range(range),NormSet(ft.asSET(pargv[2].c_str()))) ;
       } else {
 	integral = func.createIntegral(ft.asSET(intobs),NormSet(ft.asSET(pargv[2].c_str()))) ;

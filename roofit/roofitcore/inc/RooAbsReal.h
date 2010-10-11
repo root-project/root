@@ -240,7 +240,7 @@ public:
   class EvalError {
   public:
     EvalError() { _msg[0] = 0 ; _srvval[0] = 0 ; }
-    EvalError(const EvalError& other) { strcpy(_msg,other._msg) ; strcpy(_srvval,other._srvval) ; } ;
+    EvalError(const EvalError& other) { strcpy(_msg,other._msg) ; strlcpy(_srvval,other._srvval,1024) ; } ;
     void setMessage(const char* tmp) ;
     void setServerValues(const char* tmp) ;
     char _msg[1024] ;

@@ -560,13 +560,13 @@ Double_t RooRealMPFE::evaluate() const
 	}
 
 	UInt_t tmp6 = read(_pipeToClient[0],&ntext1,sizeof(Int_t)) ;
-	if (ntext1>1023) ntext1=1023 ;
+	if (ntext1>1023) ntext1=1023 ; if (ntext1<0) ntext1=0 ; 
 	UInt_t tmp7 = read(_pipeToClient[0],msgbuf1,ntext1+1) ;
 	UInt_t tmp8 = read(_pipeToClient[0],&ntext2,sizeof(Int_t)) ;
-	if (ntext2>1023) ntext2=1023 ;
+	if (ntext2>1023) ntext2=1023 ; if (ntext2<0) ntext2=0 ; 
 	UInt_t tmp9 = read(_pipeToClient[0],msgbuf2,ntext2+1) ;
 	UInt_t tmp10= read(_pipeToClient[0],&ntext3,sizeof(Int_t)) ;
-	if (ntext3>1023) ntext3=1023 ;
+	if (ntext3>1023) ntext3=1023 ; if (ntext3<0) ntext3=0 ; 
 	UInt_t tmp11= read(_pipeToClient[0],msgbuf3,ntext3+1) ;
 	if (tmp6+tmp7+tmp8+tmp9+tmp10+tmp11<sizeof(Int_t)+ntext1+1+sizeof(Int_t)+ntext2+1+sizeof(Int_t)+ntext3+1) perror("read") ;
 	

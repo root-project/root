@@ -330,7 +330,7 @@ Double_t RooBlindTools::RandomizeTag(Double_t STag, Int_t EventNumber) const{
 Double_t RooBlindTools::Randomizer(const char *StringAlphabet) const{
 
   char lowerseed[1024] ;
-  strcpy(lowerseed,_stSeed) ;
+  strlcpy(lowerseed,_stSeed,1024) ;
 
   Int_t lengthSeed = strlen(lowerseed);
 

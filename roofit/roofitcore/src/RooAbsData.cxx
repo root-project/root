@@ -1213,7 +1213,6 @@ RooPlot* RooAbsData::statOn(RooPlot* frame, const char* what, const char *label,
   box->SetFillStyle(1001);
 
   // add formatted text for each statistic
-  TText *text = 0;
   RooRealVar N("N","Number of Events",sumEntries(cutSpec,cutRange));
   N.setPlotLabel("Entries") ;
   RooRealVar *meanv= meanVar(*(RooRealVar*)frame->getPlotVar(),cutSpec,cutRange);
@@ -1242,7 +1241,7 @@ RooPlot* RooAbsData::statOn(RooPlot* frame, const char* what, const char *label,
   delete rms;
 
   // add the optional label if specified
-  if(showLabel) text= box->AddText(label);
+  if(showLabel) box->AddText(label);
 
   frame->addObject(box) ;
   return frame ;

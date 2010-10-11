@@ -199,15 +199,18 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     
     map<string,RooAbsDataStore*> storeMap ;
     RooCategory* icat = (RooCategory*) (indexCat ? _vars.find(indexCat->GetName()) : 0 ) ;
+    if (!icat) {
+      throw std::string("RooDataSet::RooDataSet() ERROR in constructor, cannot find index category") ;
+    }
     for (map<string,RooAbsData*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
       // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
-      if (!indexCat->lookupType(hiter->first.c_str())) {
+      if (indexCat && !indexCat->lookupType(hiter->first.c_str())) {
 	indexCat->defineType(hiter->first.c_str()) ;
 	coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
       }
-      if (!icat->lookupType(hiter->first.c_str())) {	
+      if (icat && !icat->lookupType(hiter->first.c_str())) {	
 	icat->defineType(hiter->first.c_str()) ;
-	  }
+      }
       icat->setLabel(hiter->first.c_str()) ;
       storeMap[icat->getLabel()]=hiter->second->store() ;
     }

@@ -138,6 +138,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   pc.process(cmdList) ;
   if (!pc.ok(kTRUE)) {
     // WVE do something here
+    throw std::string("RooMCStudy::RooMCStudy() Error in parsing arguments passed to contructor") ;
     return ;
   }
 
@@ -321,7 +322,8 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   _genParData(0),
   _fitOptions(fitOptions),
   _canAddFitResults(kTRUE),
-  _perExptGenParams(0)
+  _perExptGenParams(0),
+  _silence(kFALSE)
 {
   // OBSOLETE, RETAINED FOR BACKWARD COMPATIBILY. PLEASE
   // USE CONSTRUCTOR WITH NAMED ARGUMENTS

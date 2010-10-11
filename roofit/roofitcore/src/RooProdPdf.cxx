@@ -1483,6 +1483,8 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
   cache._rearrangedDen = norm ;
   cache._isRearranged = kTRUE ;
 
+  delete iter1 ;
+  delete iter2 ;
   delete iterp ;
   delete itern ;
   

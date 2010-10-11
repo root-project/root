@@ -34,7 +34,7 @@ public:
   inline RooCatType(const RooCatType& other) : 
     TObject(other), RooPrintable(other), _value(other._value) { 
     // Copy constructor
-    strcpy(_label,other._label) ;
+    strlcpy(_label,other._label,256) ;
   } ;
 
   virtual ~RooCatType() {
