@@ -180,7 +180,7 @@ static const char *GetExePath()
 
       // get our pid and build the name of the link in /proc
       pid = getpid();
-      sprintf(linkname, "/proc/%i/exe", pid);
+      snprintf(linkname,64, "/proc/%i/exe", pid);
       int ret = readlink(linkname, buf, kMAXPATHLEN);
       if (ret > 0 && ret < kMAXPATHLEN) {
          buf[ret] = 0;
