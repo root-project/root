@@ -131,10 +131,12 @@ TVolumePosition::TVolumePosition(const TVolumePosition* oldPosition, const TVolu
       fMatrix = new TRotMatrix(anum,"NodeView",newMatrix);
       SetMatrixOwner(kTRUE);
    } else {
-      fX[0] = oldTranslation[0] + curPosition->GetX();
-      fX[1] = oldTranslation[1] + curPosition->GetY();
-      fX[2] = oldTranslation[2] + curPosition->GetZ();
-      fMatrix = curMatrix;
+      if (curPosition) {
+         fX[0] = oldTranslation[0] + curPosition->GetX();
+         fX[1] = oldTranslation[1] + curPosition->GetY();
+         fX[2] = oldTranslation[2] + curPosition->GetZ();
+         fMatrix = curMatrix;
+      }
    }
    fId = curPositionId;
    fNode = curNode;
