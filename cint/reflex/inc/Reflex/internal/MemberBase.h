@@ -376,8 +376,12 @@ private:
 
 } //namespace Reflex
 
+#ifndef Reflex_Object
 #include "Reflex/Object.h"
+#endif
+#ifndef Reflex_MemberTemplate
 #include "Reflex/MemberTemplate.h"
+#endif
 
 
 //-------------------------------------------------------------------------------

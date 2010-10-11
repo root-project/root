@@ -15,7 +15,9 @@
 // Include files
 #include "Reflex/Kernel.h"
 
+#ifndef Reflex_Scope
 #include "Reflex/Scope.h"
+#endif
 #include "Reflex/internal/OwnedPropertyList.h"
 #include "Reflex/internal/BuilderContainer.h"
 #include <vector>
