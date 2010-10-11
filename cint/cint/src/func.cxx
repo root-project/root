@@ -2038,10 +2038,10 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
          G__strlcpy(fpara.parameter[1], item + base1, G__ONELINE);
       }
       if (memfunc_flag == G__CALLMEMFUNC) {
-         result3 = G__getstructmem(store_var_type, funcname, fpara.parameter[1] + i, fpara.parameter[0], known3, 0, i);
+         result3 = G__getstructmem(store_var_type, funcname, fpara.parameter[1] + i, G__ONELINE - i - 1, fpara.parameter[0], known3, 0, i);
       }
       else {
-         result3 = G__getstructmem(store_var_type, funcname, fpara.parameter[1] + i, fpara.parameter[0], known3, &G__global, i);
+         result3 = G__getstructmem(store_var_type, funcname, fpara.parameter[1] + i, G__ONELINE - i - 1, fpara.parameter[0], known3, &G__global, i);
       }
       G__var_type = store_var_type;
       return result3;

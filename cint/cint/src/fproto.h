@@ -507,7 +507,6 @@ G__value G__letVvalue(G__value *p,G__value result);
 G__value G__letPvalue(G__value *p,G__value result);
 G__value G__letvalue(G__value *p,G__value result);
 G__value G__getvariable(char *item,int *known2,struct G__var_array *varglobal,struct G__var_array *varlocal);
-G__value G__getstructmem(int store_var_type,char *varname,char *membername,char *tagname,int *known2,struct G__var_array *varglobal,int objptr);
 void G__letstruct(G__value *result,int p_inc,struct G__var_array *var,int ig15,const char *item,int paran,long G__struct_offset);
 void G__letstructp(G__value result,long G__struct_offset,int ig15,int p_inc,struct G__var_array *var,int paran,const char *item,G__value *para,int pp_inc);
 void G__returnvartype(G__value* presult,struct G__var_array *var,int ig15,int paran);
@@ -742,9 +741,13 @@ void *G__UnregisterLibrary (void (*func) ());
 #ifdef __cplusplus
 } // extern "C"
 
+G__value G__getstructmem(int store_var_type,G__FastAllocString& varname,char *membername,int memnamesize,char *tagname,int *known2,struct G__var_array *varglobal,int objptr);
 G__value G__letvariable(G__FastAllocString &item,G__value expression,struct G__var_array *varglobal,struct G__var_array *varlocal);
 G__value G__letvariable(G__FastAllocString &item,G__value expression,struct G__var_array *varglobal,struct G__var_array *varlocal,Cint::G__DataMemberHandle &member);
-G__value G__letstructmem(int store_var_type,char *varname,char *membername,char *tagname,struct G__var_array *varglobal,G__value expression,int objptr,Cint::G__DataMemberHandle &member);
+G__value G__letstructmem(int store_var_type,G__FastAllocString& varname,int membernameoffset,
+                         G__FastAllocString& result7,char* tagname,
+                         struct G__var_array *varglobal,G__value expression,int objptr,
+                         Cint::G__DataMemberHandle &member);
 
 #endif
 

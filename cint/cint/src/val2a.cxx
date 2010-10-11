@@ -1354,6 +1354,10 @@ G__value G__checkBase(const char* string, int* known4)
    if (type == 'i') {
       if (value > (G__uint64(-1ll)) / 2)
          type = 'm'; // ull
+      // On 64bit platforms, value cannot be greater than ULONG_MAX and
+      // we always widen to (u)long. But that's just fine; this is relevant
+      // on 32 bit where long != long long.
+      // Coverity[result_independent_of_operands]
       else if (value > ULONG_MAX)
          type = 'n'; // ll
       else if (value > LONG_MAX)
@@ -1512,6 +1516,10 @@ int G__isfloat(const char* string, int* type)
       else if (len == lenmaxl) {
          if (unsign) {
             G__uint64 l = G__expr_strtoull(string, 0, 10);
+            // On 64bit platforms, l cannot be greater than ULONG_MAX and we always
+            // widen to long. But that's just fine; this is relevant on 32 bit
+            // where long != long long.
+            // Coverity[result_independent_of_operands]
             if (l > ULONG_MAX)
                *type = 'n'; // unsign adjusted below
             else

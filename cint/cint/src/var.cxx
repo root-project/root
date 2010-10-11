@@ -24,7 +24,7 @@
 
 using namespace Cint;
 
-static G__value G__allocvariable(G__value result, G__value para[], G__var_array* varglobal, G__var_array* varlocal, int paran, int varhash, char* item, char* varname, int parameter00, G__DataMemberHandle &member);
+static G__value G__allocvariable(G__value result, G__value para[], G__var_array* varglobal, G__var_array* varlocal, int paran, int varhash, const char* item, char* varname, int parameter00, G__DataMemberHandle &member);
 
 extern "C" {
 
@@ -535,7 +535,7 @@ G__value G__letvariable(G__FastAllocString &item, G__value expression, G__var_ar
    int store_var_type = 0;
    long G__struct_offset = 0L;
    char* tagname = 0;
-   char* membername = 0;
+   int membername = -1;
    int varhash = 0;
    long address = 0L;
    long store_struct_offset = 0L;
@@ -670,7 +670,7 @@ G__value G__letvariable(G__FastAllocString &item, G__value expression, G__var_ar
                result7 = item;
                result7.Set(ig2++, 0);
                tagname = result7;
-               membername = result7 + ig2;
+               membername = ig2;
                flag = 1;
             }
             break;
@@ -680,7 +680,7 @@ G__value G__letvariable(G__FastAllocString &item, G__value expression, G__var_ar
                result7.Set(ig2++, 0);
                result7.Set(ig2++, 0);
                tagname = result7;
-               membername = result7 + ig2;
+               membername = ig2;
                flag = 2;
             }
             break;
@@ -718,7 +718,7 @@ G__value G__letvariable(G__FastAllocString &item, G__value expression, G__var_ar
    double_quote = 0;
    paren = 0;
    if (flag) {
-      result = G__letstructmem(store_var_type, varname, membername, tagname, varglobal, expression, flag, member);
+      result = G__letstructmem(store_var_type, varname, membername, result7, tagname, varglobal, expression, flag, member);
       return result;
    }
    /************************************************************
@@ -1744,7 +1744,11 @@ void G__letautomatic(G__var_array* var, int ig15, long G__struct_offset, int lin
 } // extern "C"
 
 //______________________________________________________________________________
-G__value G__letstructmem(int store_var_type, char* varname, char* membername, char* tagname, G__var_array* varglobal, G__value expression, int objptr  /* 1: object, 2: pointer */, Cint::G__DataMemberHandle &member)
+G__value G__letstructmem(int store_var_type, G__FastAllocString& varname,
+                         int membernameoffset, G__FastAllocString& result7,
+                         char* tagname, G__var_array* varglobal,
+                         G__value expression, int objptr  /* 1: object, 2: pointer */,
+                         Cint::G__DataMemberHandle &member)
 {
    // -- FIXME: Describe me!
    G__value result;
@@ -1755,13 +1759,13 @@ G__value G__letstructmem(int store_var_type, char* varname, char* membername, ch
    /* add pointer operater if necessary */
 
    if (store_var_type == 'P') {
-      std::sprintf(varname, "&%s", membername); // Legacy, only add one character
-      std::strcpy(membername, varname); // Legacy, only increase use by on charater
+      varname = "&"; varname += (result7 + membernameoffset); // Legacy, only add one character
+      result7.Replace(membernameoffset, varname); // Legacy, only increase use by on charater
 
    }
    if (store_var_type == 'v') {
-      std::sprintf(varname, "*%s", membername); // Legacy, only add one character
-      std::strcpy(membername, varname); // Legacy, only add one character
+      varname = "*"; varname += (result7 + membernameoffset); // Legacy, only add one character
+      result7.Replace(membernameoffset, varname); // Legacy, only add one character
 
    }
    int store_tagnum = G__tagnum;
@@ -1945,7 +1949,7 @@ G__value G__letstructmem(int store_var_type, char* varname, char* membername, ch
    G__do_setmemfuncenv = 1;
    G__incsetup_memvar(G__tagnum);
    {   
-      G__FastAllocString temp_membername(membername);
+      G__FastAllocString temp_membername(result7 + membernameoffset);
       result = G__letvariable(temp_membername, expression, 0, G__struct.memvar[G__tagnum], member);
    }
    G__do_setmemfuncenv = store_do_setmemfuncenv;
@@ -2927,7 +2931,7 @@ int G__fundamental_conversion_operator(int type, int tagnum, int typenum, int re
 
 extern "C++" {
 template<class CASTTYPE, class CONVFUNC>
-inline void G__alloc_var_ref(int SIZE, CONVFUNC f, char* item, G__var_array* var, int ig15, G__value& result)
+inline void G__alloc_var_ref(int SIZE, CONVFUNC f, const char* item, G__var_array* var, int ig15, G__value& result)
 {
    if (islower(G__var_type)) {
       /* -- Not a pointer, may be an array. */
@@ -3159,7 +3163,7 @@ inline void G__alloc_var_ref(int SIZE, CONVFUNC f, char* item, G__var_array* var
 } // extern "C"
 
 //______________________________________________________________________________
-static G__value G__allocvariable(G__value result, G__value para[], G__var_array* varglobal, G__var_array* varlocal, int paran, int varhash, char* item, char* varname, int parameter00, G__DataMemberHandle &member)
+static G__value G__allocvariable(G__value result, G__value para[], G__var_array* varglobal, G__var_array* varlocal, int paran, int varhash, const char* item, char* varname, int parameter00, G__DataMemberHandle &member)
 {
    // -- Allocate memory for a variable and initialize it.
    if (!varname) {
@@ -3177,7 +3181,7 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
       }
       if (pp) {
          G__fprinterr(G__serr,
-            "Error: Variable name has bad character '%s'", varname);
+                      "Error: Variable name has bad character '%s'", varname);
          G__genericerror(0);
          return result;
       }
@@ -3476,6 +3480,9 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
                ttt.Format("%s\\%x\\%x", varname, G__func_page, G__func_now);
             }
 #endif // G__NEWINHERIT
+            // We have no idea how big varname is. G__searchvariable() takes a char* which becomes
+            // varname here; we would have to change that signature to know the size of varname here.
+            // Coverity[secure_coding]
             std::strcpy(varname, ttt);
             int junk;
             G__hash(ttt, varhash, junk);
@@ -5285,7 +5292,9 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
                   char* tagname = tmp;
                   char* membername = tmp + i;
                   G__FastAllocString varname(2*G__MAXNAME);
-                  G__value val = G__getstructmem(store_var_type, varname, membername, tagname, known, varglobal, 1);
+                  G__value val = G__getstructmem(store_var_type, varname, membername,
+                                                 tmp.Capacity() - i - 1, tagname,
+                                                 known, varglobal, 1);
                   return val;
                }
                break;
@@ -5300,7 +5309,9 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
                   char* tagname = tmp;
                   char* membername = item + i;
                   G__FastAllocString varname(2*G__MAXNAME);
-                  G__value val = G__getstructmem(store_var_type, varname, membername, tagname, known, varglobal, 2);
+                  G__value val = G__getstructmem(store_var_type, varname, membername,
+                                                 INT_MAX /* we don't know */, tagname,
+                                                 known, varglobal, 2);
                   return val;
                }
                break;
@@ -6340,11 +6351,16 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
    return result;
 }
 
+} // extern "C"
+
 #undef G__GET_VAR
 #undef G__GET_PVAR
 
 //______________________________________________________________________________
-G__value G__getstructmem(int store_var_type, char* varname, char* membername, char* tagname, int* known2, G__var_array* varglobal, int objptr /* 1 : object , 2 : pointer */)
+G__value G__getstructmem(int store_var_type, G__FastAllocString& varname,
+                         char* membername, int memnamesize, char* tagname,
+                         int* known2, G__var_array* varglobal,
+                         int objptr /* 1 : object , 2 : pointer */)
 {
    // -- FIXME: Describe me!
    int store_tagnum = 0;
@@ -6362,12 +6378,12 @@ G__value G__getstructmem(int store_var_type, char* varname, char* membername, ch
    // because child G__getvariable() needs that information.
    //
    if (store_var_type == 'P') {
-      sprintf(varname, "&%s", membername); // Legacy, only add one character
-      strcpy(membername, varname); // Legacy, only add one character
+      varname = "&"; varname += membername; // Legacy, only add one character
+      G__strlcpy(membername, varname, memnamesize - 1); // Legacy, only add one character
    }
    else if (store_var_type == 'v') {
-      sprintf(varname, "*%s", membername); // Legacy, only add one character
-      strcpy(membername, varname); // Legacy, only add one character
+      varname = "*"; varname += membername; // Legacy, only add one character
+      G__strlcpy(membername, varname, memnamesize - 1); // Legacy, only add one character
    }
    store_tagnum = G__tagnum;
    store_struct_offset = G__store_struct_offset;
@@ -6735,6 +6751,8 @@ G__value G__getstructmem(int store_var_type, char* varname, char* membername, ch
 #endif // G__ASM
    return result;
 }
+
+extern "C" {
 
 //______________________________________________________________________________
 int G__getthis(G__value* result7, const char* varname, const char* item)
@@ -7400,6 +7418,8 @@ struct G__var_array* G__searchvariable(char* varname, int varhash, G__var_array*
 #ifdef G__ROOT
    if ((varname[0] == '$') && G__GetSpecialObject && (G__GetSpecialObject != G__getreserved)) {
       G__FastAllocString temp(varname + 1);
+      // We copy less into varname than it contained before:
+      // Coverity[secure_coding]
       strcpy(varname, temp);
       specialflag = 1;
    }
