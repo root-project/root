@@ -1225,7 +1225,7 @@ void TDocOutput::CreateClassTypeDefs()
             << "<div class=\"classdescr\">" << endl;
 
          outfile << dtName << " is a typedef to ";
-         std::string shortClsName(fHtml->ShortType(cls->GetName()));
+         std::string shortClsName(fHtml->ShortType(cdi->GetName()));
          parser.DecorateKeywords(outfile, shortClsName.c_str());
          outfile << endl
             << "</div>" << std::endl
