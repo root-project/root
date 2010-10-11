@@ -265,7 +265,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
          for (Int_t i=0;i<kline;i++) line[i] = ' ';
          line[kline-1] = 0;
          strlcpy(pname,rd->GetName(),kline-kname);
-         if (strstr(member->GetFullTypeName(),"**")) strcat(pname,"**");
+         if (strstr(member->GetFullTypeName(),"**")) strlcat(pname,"**",kline-kname);
 
          // Encode data value or pointer value
          tval = &tvalue;
