@@ -175,7 +175,7 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    }
 
    if (fillis == 0) {
-      fImage->DrawBox(ix1, iy1, ix2, iy2, linecol->AsHexString(), 1, TVirtualX::kHollow);
+      fImage->DrawBox(ix1, iy1, ix2, iy2, linecol->AsHexString(), fLineWidth, TVirtualX::kHollow);
    }
 }
 
