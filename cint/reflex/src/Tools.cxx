@@ -921,7 +921,7 @@ Tools::Demangle(const std::type_info& ti) {
 #elif defined(__GNUC__)
 
    int status = 0;
-   bool remove_additional_pointer = false;
+#define RFLX_REMOVE_ADDITIONAL_POINTER false
    std::string mangled = ti.name();
 
    // if the At Name is string return the final string Name
@@ -936,7 +936,8 @@ Tools::Demangle(const std::type_info& ti) {
    // and remove it at the end.
    if (mangled[0] == 'F') {
       mangled.insert(0, "P");
-      remove_additional_pointer = true;
+#undef RFLX_REMOVE_ADDITIONAL_POINTER
+#define RFLX_REMOVE_ADDITIONAL_POINTER true;
    }
 # elif __GNUC__ >= 4
 
@@ -986,7 +987,7 @@ Tools::Demangle(const std::type_info& ti) {
       std::string demangled = c_demangled;
       free(c_demangled);
 
-      if (remove_additional_pointer) {
+      if (RFLX_REMOVE_ADDITIONAL_POINTER) {
          demangled = demangled.replace(demangled.find("(*)"), 3, "");
       }
 
