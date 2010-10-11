@@ -287,7 +287,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
             }
 
             if (!p3pointer) {
-               sprintf(&line[kvalue],"->0");
+               snprintf(&line[kvalue],kline-kvalue,"->0");
             } else if (!member->IsBasic()) {
                if (pass == 1) {
                   tlink = new TLink(xvalue+0.1, ytext, p3pointer);
@@ -314,7 +314,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
                strlcpy(&line[kvalue], membertype->AsString(pointer),kline-kvalue);
             }
          else
-            sprintf(&line[kvalue],"->%lx ", (Long_t)pointer);
+            snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)pointer);
 
          // Encode data member title
          Int_t ltit = 0;
