@@ -620,7 +620,7 @@ void ProofdExec()
       ErrorInfo("ProofdExec: setting: %s", roottmp);
    // User, host, rpid
    char *rootentity = new char[gUser.length()+gOpenHost.length()+33];
-   snprintf(rootentity, gUser.length()+gOpenHost.length()+33, 
+   snprintf(rootentity, gUser.length()+gOpenHost.length()+33,
            "ROOTENTITY=%s:%d@%s", gUser.c_str(), gRemPid, gOpenHost.c_str());
    putenv(rootentity);
    if (gDebug > 2)
@@ -661,39 +661,39 @@ void ProofdExec()
       ErrorInfo("ProofdExec: setting: %s", rootsys);
 #endif
 #ifndef ROOTLIBDIR
-   char *ldpath;
+   char *oldpath, *ldpath;
 #   if defined(__hpux) || defined(_HIUX_SOURCE)
-   if (getenv("SHLIB_PATH")) {
-      ldpath = new char[32+gConfDir.length()+strlen(getenv("SHLIB_PATH"))];
-      snprintf(ldpath, 32+gConfDir.length()+strlen(getenv("SHLIB_PATH")),
-                      "SHLIB_PATH=%s/lib:%s", gConfDir.c_str(), getenv("SHLIB_PATH"));
+   if ((oldpath = getenv("SHLIB_PATH")) && strlen(oldpath) > 0) {
+      ldpath = new char[32+gConfDir.length()+strlen(oldpath)];
+      snprintf(ldpath, 32+gConfDir.length()+strlen(oldpath),
+                      "SHLIB_PATH=%s/lib:%s", gConfDir.c_str(), oldpath);
    } else {
       ldpath = new char[32+gConfDir.length()];
       snprintf(ldpath, 32+gConfDir.length(), "SHLIB_PATH=%s/lib", gConfDir.c_str());
    }
 #   elif defined(_AIX)
-   if (getenv("LIBPATH")) {
-      ldpath = new char[32+gConfDir.length()+strlen(getenv("LIBPATH"))];
-      snprintf(ldpath, 32+gConfDir.length()+strlen(getenv("LIBPATH")),
-                       "LIBPATH=%s/lib:%s", gConfDir.c_str(), getenv("LIBPATH"));
+   if ((oldpath = getenv("LIBPATH")) && strlen(oldpath) > 0) {
+      ldpath = new char[32+gConfDir.length()+strlen(oldpath)];
+      snprintf(ldpath, 32+gConfDir.length()+strlen(oldpath),
+                       "LIBPATH=%s/lib:%s", gConfDir.c_str(), oldpath);
    } else {
       ldpath = new char[32+gConfDir.length()];
       snprintf(ldpath, 32+gConfDir.length(), "LIBPATH=%s/lib", gConfDir.c_str());
    }
 #   elif defined(__APPLE__)
-   if (getenv("DYLD_LIBRARY_PATH")) {
-      ldpath = new char[32+gConfDir.length()+strlen(getenv("DYLD_LIBRARY_PATH"))];
-      snprintf(ldpath, 32+gConfDir.length()+strlen(getenv("DYLD_LIBRARY_PATH")),
-                      "DYLD_LIBRARY_PATH=%s/lib:%s", gConfDir.c_str(), getenv("DYLD_LIBRARY_PATH"));
+   if ((oldpath = getenv("DYLD_LIBRARY_PATH")) && strlen(oldpath) > 0) {
+      ldpath = new char[32+gConfDir.length()+strlen(oldpath)];
+      snprintf(ldpath, 32+gConfDir.length()+strlen(oldpath),
+                      "DYLD_LIBRARY_PATH=%s/lib:%s", gConfDir.c_str(), oldpath);
    } else {
       ldpath = new char[32+gConfDir.length()];
       snprintf(ldpath, 32+gConfDir.length(), "DYLD_LIBRARY_PATH=%s/lib", gConfDir.c_str());
    }
 #   else
-   if (getenv("LD_LIBRARY_PATH") && strlen(getenv("LD_LIBRARY_PATH")) > 0) {
-      ldpath = new char[32+gConfDir.length()+strlen(getenv("LD_LIBRARY_PATH"))];
-      snprintf(ldpath, 32+gConfDir.length()+strlen(getenv("LD_LIBRARY_PATH")),
-                      "LD_LIBRARY_PATH=%s/lib:%s", gConfDir.c_str(), getenv("LD_LIBRARY_PATH"));
+   if ((oldpath = getenv("LD_LIBRARY_PATH")) && strlen(oldpath) > 0) {
+      ldpath = new char[32+gConfDir.length()+strlen(oldpath)];
+      snprintf(ldpath, 32+gConfDir.length()+strlen(oldpath),
+                      "LD_LIBRARY_PATH=%s/lib:%s", gConfDir.c_str(), oldpath);
    } else {
       ldpath = new char[32+gConfDir.length()];
       snprintf(ldpath, 32+gConfDir.length(), "LD_LIBRARY_PATH=%s/lib", gConfDir.c_str());
