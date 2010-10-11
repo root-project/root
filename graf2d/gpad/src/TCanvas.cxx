@@ -790,8 +790,14 @@ void TCanvas::Draw(Option_t *)
    }
    if (old) { gROOT->GetListOfCanvases()->Remove(old); delete old;}
 
-   if (fWindowWidth  == 0) fWindowWidth  = 800;
-   if (fWindowHeight == 0) fWindowHeight = 600;
+   if (fWindowWidth  == 0) {
+      if (fCw !=0) fWindowWidth = fCw+4; 
+      else         fWindowWidth = 800;
+   }
+   if (fWindowHeight == 0) {
+      if (fCh !=0) fWindowHeight = fCh+28;
+      else         fWindowHeight = 600;
+   }
    fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
                                              fWindowWidth, fWindowHeight);
    fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
