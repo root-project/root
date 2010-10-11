@@ -529,7 +529,7 @@ void ProofdExec()
       if ((lab = RpdProofGetAuthSetup(&authbuff)) > 0) {
          // Save it in an environment variable
          char *rootproofauthsetup = new char[20+strlen(authbuff)];
-         snprintf(rootproofauthsetup, sizeof(rootproofauthsetup), "ROOTPROOFAUTHSETUP=%s", authbuff);
+         snprintf(rootproofauthsetup, 20 + strlen(authbuff), "ROOTPROOFAUTHSETUP=%s", authbuff);
          putenv(rootproofauthsetup);
       } else if (lab < 0) {
          ErrorInfo("ProofdExec: problems receiving auth buffer");
@@ -565,7 +565,7 @@ void ProofdExec()
          if (gDebug > 0) ErrorInfo("ProofdExec: setting: %s", buf);
          char *p = index(buf, '=');
          if (p) {
-            if (buf != (char *) vb) strcat(all, ","); // skip the first one
+            if (buf != (char *) vb) strncat(all, ",", 1); // skip the first one
             strncat(all, buf, p-buf);
             putenv(buf);
          }
@@ -1023,7 +1023,7 @@ int main(int argc, char **argv)
    // Make it available to all the session via env
    if (gRootBinDir.length()) {
       char *tmp = new char[15 + gRootBinDir.length()];
-      snprintf(tmp, sizeof(tmp), "ROOTBINDIR=%s", gRootBinDir.c_str());
+      snprintf(tmp, 15 + gRootBinDir.length(), "ROOTBINDIR=%s", gRootBinDir.c_str());
       putenv(tmp);
    }
 
@@ -1033,27 +1033,27 @@ int main(int argc, char **argv)
    // Make it available to all the session via env
    if (rootetcdir.length()) {
       char *tmp = new char[15 + rootetcdir.length()];
-      snprintf(tmp, sizeof(tmp), "ROOTETCDIR=%s", rootetcdir.c_str());
+      snprintf(tmp, 15 + rootetcdir.length(), "ROOTETCDIR=%s", rootetcdir.c_str());
       putenv(tmp);
    }
 
    // If specified, set the special daemonrc file to be used
    if (daemonrc.length()) {
       char *tmp = new char[15+daemonrc.length()];
-      snprintf(tmp, sizeof(tmp), "ROOTDAEMONRC=%s", daemonrc.c_str());
+      snprintf(tmp, 15+daemonrc.length(), "ROOTDAEMONRC=%s", daemonrc.c_str());
       putenv(tmp);
    }
 #ifdef R__GLBS
    // If specified, set the special gridmap file to be used
    if (gridmap.length()) {
       char *tmp = new char[15+gridmap.length()];
-      snprintf(tmp, sizeof(tmp), "GRIDMAP=%s", gridmap.c_str());
+      snprintf(tmp, 15+gridmap.length(), "GRIDMAP=%s", gridmap.c_str());
       putenv(tmp);
    }
    // If specified, set the special hostcert.conf file to be used
    if (hostcertconf.length()) {
       char *tmp = new char[15+hostcertconf.length()];
-      snprintf(tmp, sizeof(tmp), "ROOTHOSTCERT=%s", hostcertconf.c_str());
+      snprintf(tmp, 15+hostcertconf.length(), "ROOTHOSTCERT=%s", hostcertconf.c_str());
       putenv(tmp);
    }
 #endif
