@@ -25,7 +25,10 @@ using namespace std;
 Reflex::Pointer::Pointer(const Type& pointerType,
                          const std::type_info& ti)
 //-------------------------------------------------------------------------------
-   : TypeBase(BuildTypeName(pointerType).c_str(), sizeof(void*), POINTER, ti, Type(), (REPRESTYPE) toupper(pointerType.RepresType() ? pointerType.RepresType(): Reflex::REPRES_CLASS)),
+   : TypeBase(BuildTypeName(pointerType).c_str(), sizeof(void*), POINTER, ti, Type(),
+              (REPRESTYPE) toupper(pointerType.RepresType() != REPRES_NOTYPE
+                                   ? pointerType.RepresType()
+                                   : Reflex::REPRES_CLASS)),
    fPointerType(pointerType) {
    // Construct the dictionary info for a pointer type.
 }
