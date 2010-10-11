@@ -881,10 +881,10 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
 Double_t TMath::Voigt(Double_t xx, Double_t sigma, Double_t lg, Int_t r)
 {
    // Computation of Voigt function (normalised).
-   // Voigt is a convolution of
+   // Voigt is a convolution of 
    // gauss(xx) = 1/(sqrt(2*pi)*sigma) * exp(xx*xx/(2*sigma*sigma)
    // and
-   // lorentz(xx) = (1/pi) * (lg/2) / (xx*xx + g*g/4)
+   // lorentz(xx) = (1/pi) * (lg/2) / (xx*xx + lg*lg/4)
    // functions.
    //
    // The Voigt function is known to be the real part of Faddeeva function also
