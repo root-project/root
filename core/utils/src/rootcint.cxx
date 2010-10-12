@@ -638,7 +638,9 @@ string R__tmpnam()
    strlcpy(filename, tmpdir.c_str(),L_tmpnam+2);
    strlcat(filename, prefix,L_tmpnam+2);
    strlcat(filename, radix,L_tmpnam+2);
+   mode_t old_umask = umask(077); // be restrictive for mkstemp()
    int temp_fileno = mkstemp(filename);/*mkstemp not only generate file name but also opens the file*/
+   umask(old_umask);
    if (temp_fileno >= 0) {
       close(temp_fileno);
    }
@@ -1403,7 +1405,7 @@ bool CheckConstructor(G__ClassInfo& cl)
    // For now we never issue a warning at rootcint time.
    // There will be a warning at run-time.
    result = true;
-
+#if 0
    if (!result) {
       //Error(cl.Fullname(), "I/O has been requested but there is no constructor calleable without arguments\n"
       //      "\tand a custom operator new has been defined.\n"
@@ -1411,7 +1413,7 @@ bool CheckConstructor(G__ClassInfo& cl)
       Warning(cl.Fullname(), "I/O has been requested but is missing an explicit default constructor.\n"
               "\tEither disable the I/O or add an explicit default constructor.\n",cl.Fullname());
    }
-
+#endif
    return result;
 }
 
@@ -1858,6 +1860,9 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
    if (tiName == "string*") kase |= kBIT_ISSTRING;
    if (isStre)              kase |= R__BIT_HASSTREAMER;
 
+   if (tcl == 0) {
+      tcl = " internal error in rootcint ";
+   }
    //    if (strcmp(objType,"string")==0) RStl::inst().GenerateTClassFor( "string"  );
 
    if (rwmode == 0) {  //Read mode
@@ -2954,11 +2959,6 @@ void WriteStreamer(G__ClassInfo &cl)
       return;
    }
 
-   // see if we should generate Streamer with extra byte count code
-   int ubc = 0;
-   //if ((cl.RootFlag() & G__USEBYTECOUNT)) ubc = 1;
-   ubc = 1;   // now we'll always generate byte count streamers
-
    // loop twice: first time write reading code, second time writing code
    string classname = cl.Fullname();
    if (strstr(cl.Fullname(),"::")) {
@@ -2972,19 +2972,13 @@ void WriteStreamer(G__ClassInfo &cl)
       int decli = 0;
 
       if (i == 0) {
-         if (ubc) (*dictSrcOut) << "   UInt_t R__s, R__c;" << std::endl;
+         (*dictSrcOut) << "   UInt_t R__s, R__c;" << std::endl;
          (*dictSrcOut) << "   if (R__b.IsReading()) {" << std::endl;
-         if (ubc)
-            (*dictSrcOut) << "      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }" << std::endl;
-         else
-            (*dictSrcOut) << "      Version_t R__v = R__b.ReadVersion(); if (R__v) { }" << std::endl;
+         (*dictSrcOut) << "      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }" << std::endl;
       } else {
-         if (ubc) (*dictSrcOut) << "      R__b.CheckByteCount(R__s, R__c, " << classname.c_str() << "::IsA());" << std::endl;
+         (*dictSrcOut) << "      R__b.CheckByteCount(R__s, R__c, " << classname.c_str() << "::IsA());" << std::endl;
          (*dictSrcOut) << "   } else {" << std::endl;
-         if (ubc)
-            (*dictSrcOut) << "      R__c = R__b.WriteVersion(" << classname.c_str() << "::IsA(), kTRUE);" << std::endl;
-         else
-            (*dictSrcOut) << "      R__b.WriteVersion(" << classname.c_str() << "::IsA());" << std::endl;
+         (*dictSrcOut) << "      R__c = R__b.WriteVersion(" << classname.c_str() << "::IsA(), kTRUE);" << std::endl;
       }
 
       // Stream base class(es) when they have the Streamer() method
@@ -3273,7 +3267,7 @@ void WriteStreamer(G__ClassInfo &cl)
          }
       }
    }
-   if (ubc) (*dictSrcOut) << "      R__b.SetByteCount(R__c, kTRUE);" << std::endl;
+   (*dictSrcOut) << "      R__b.SetByteCount(R__c, kTRUE);" << std::endl;
    (*dictSrcOut) << "   }" << std::endl
                  << "}" << std::endl << std::endl;
 
@@ -3420,132 +3414,6 @@ void WritePointersSTL(G__ClassInfo &cl)
          //          fprintf(stderr," %s\n",m.Type()->TrueName() );
          RStl::inst().GenerateTClassFor( m.Type()->Name() );
       }
-      if (k<0) continue;
-      else if (k>0) continue; // do not generate the member streamer for STL containers anymore.
-
-      // Check whether we need a streamer function.
-      // For now we use it only for variable size array of objects (well maybe ... it is not really tested!)
-      if (!pCounter) continue;
-
-      // We no longer need a custom streamer for variable size arrays of objects.
-      continue;
-
-      {
-         string fun ( string("R__")+ clName +"_" + m.Name() );
-         // sprintf(fun,"R__%s_%s",clName,m.Name());
-         SetFun(fun);
-      }
-
-      (*dictSrcOut) << "//_______________________________________"
-                    << "_______________________________________" << std::endl
-                    << "void R__" << clName << "_" << m.Name() << "(TBuffer &R__b, void *R__p, int";
-      if (pCounter) {
-         (*dictSrcOut) << " R__n";
-      }
-      (*dictSrcOut) << ")" << std::endl
-                    << "{" << std::endl;
-      // remove all 'const' keyword.
-      string mTypeName = G__ShadowMaker::GetNonConstTypeName(m);
-      // Define a variable for easy access to the data member.
-      if (m.Property() & G__BIT_ISARRAY) {
-         (*dictSrcOut) << "   " << mTypeName << "* " << m.Name() << " = (" << mTypeName << "*)R__p;" << std::endl;
-      } else {
-         if (m.Property() & G__BIT_ISPOINTER) {
-            (*dictSrcOut) << "   " << mTypeName << "* " << m.Name() << " = (" << mTypeName << "*)R__p;" << std::endl;
-         } else {
-            (*dictSrcOut) << "   " << mTypeName << " &" << m.Name() << " = *(" << mTypeName << " *)R__p;" << std::endl;
-         }
-      }
-      (*dictSrcOut) << "   if (R__b.IsReading()) {" << std::endl;
-      if (m.Type()->IsTmplt() && IsSTLContainer(m)) {
-         STLContainerStreamer(m, 0);
-      } else {
-         if (m.Property() & G__BIT_ISARRAY) {
-            int len = 1;
-            for (int dim = 0; dim < m.ArrayDim(); dim++) len *= m.MaxIndex(dim);
-            (*dictSrcOut) << "      for (Int_t R__l = 0; R__l < " << len << "; R__l++) {" << std::endl;
-            if (m.Property() & G__BIT_ISPOINTER) {
-               (*dictSrcOut) << "         R__b >> " << m.Name() << "[R__l];" << std::endl;
-            } else {
-               (*dictSrcOut) << "         " << m.Name() << "[R__l].Streamer(R__b);" << std::endl;
-            }
-            (*dictSrcOut) << "      }" << std::endl;
-         } else {
-            if (m.Property() & G__BIT_ISPOINTER) {
-               if (pCounter == 2) {
-                  (*dictSrcOut) << "      delete [] *" << m.Name() << ";" << std::endl
-                                << "      if (!R__n) return;" << std::endl
-                                << "      *" << m.Name() << " = new " << a << "*[R__n];" << std::endl
-                                << "      " << a << "** R__s = *" << m.Name() << ";" << std::endl
-                                << "      for (Int_t R__l = 0; R__l < R__n; R__l++) {" << std::endl
-                                << "         R__s[R__l] = new " << a << "();" << std::endl
-                                << "         R__s[R__l]->Streamer(R__b);" << std::endl
-                                << "      }" << std::endl;
-               } else if (pCounter == 1) {
-                  (*dictSrcOut) << "      delete [] *" << m.Name() << ";" << std::endl
-                                << "      if (!R__n) return;"  << std::endl
-                                << "      *" << m.Name() << " = new " << a << "[R__n];" << std::endl
-                                << "      " << a << "* R__s = *" << m.Name() << ";" << std::endl
-                                << "      for (Int_t R__l = 0; R__l < R__n; R__l++) {" << std::endl
-                                << "         R__s[R__l].Streamer(R__b);" << std::endl
-                                << "      }" << std::endl;
-               } else {
-                  if (strncmp(m.Title(),"->",2) == 0)
-                     (*dictSrcOut) << "      (*" << m.Name() << ")->Streamer(R__b);" << std::endl;
-                  else
-                     (*dictSrcOut) << "      R__b >> *" << m.Name() << ";" << std::endl;
-               }
-            } else {
-               (*dictSrcOut) << "      " << m.Name() << ".Streamer(R__b);" << std::endl;
-            }
-         }
-      }
-      (*dictSrcOut) << "   } else {" << std::endl;
-      if (m.Type()->IsTmplt() && IsSTLContainer(m)) {
-         STLContainerStreamer(m, 1);
-      } else {
-         if (m.Property() & G__BIT_ISARRAY) {
-            int len = 1;
-            for (int dim = 0; dim < m.ArrayDim(); dim++) len *= m.MaxIndex(dim);
-            (*dictSrcOut) << "      for (Int_t R__l = 0; R__l < " << len << "; R__l++) {" << std::endl;
-            if (m.Property() & G__BIT_ISPOINTER) {
-               if (m.Type()->IsBase("TObject"))
-                  (*dictSrcOut) << "         R__b << (TObject*)" << m.Name() << "[R__l];" << std::endl;
-               else
-                  (*dictSrcOut) << "         R__b << " << m.Name() << "[R__l];" << std::endl;
-            } else {
-               (*dictSrcOut) << "         " << m.Name() << "[R__l].Streamer(R__b);" << std::endl;
-            }
-            (*dictSrcOut) << "      }" << std::endl;
-         } else {
-            if (m.Property() & G__BIT_ISPOINTER) {
-               if (pCounter == 2) {
-                  (*dictSrcOut) << "      " << a << "** R__s = *" << m.Name() << ";" << std::endl
-                                << "      for (Int_t R__l = 0; R__l < R__n; R__l++) {" << std::endl
-                                << "         R__s[R__l]->Streamer(R__b);" << std::endl
-                                << "      }" << std::endl;
-               } else if(pCounter == 1) {
-                  (*dictSrcOut) << "      " << a << "* R__s = *" << m.Name() << ";" << std::endl
-                                << "      for (Int_t R__l = 0; R__l < R__n; R__l++) {" << std::endl
-                                << "         R__s[R__l].Streamer(R__b);" << std::endl
-                                << "      }" << std::endl;
-               } else {
-                  if (strncmp(m.Title(),"->",2) == 0)
-                     (*dictSrcOut) << "      (*" << m.Name() << ")->Streamer(R__b);" << std::endl;
-                  else {
-                     if (m.Type()->IsBase("TObject"))
-                        (*dictSrcOut) << "      R__b << (TObject*)*" << m.Name() << ";" << std::endl;
-                     else
-                        (*dictSrcOut) << "      R__b << *" << m.Name() << ";" << std::endl;
-                  }
-               }
-            } else {
-               (*dictSrcOut) << "      " << m.Name() << ".Streamer(R__b);" << std::endl;
-            }
-         }
-      }
-      (*dictSrcOut) << "   }" << std::endl
-                    << "}" << std::endl << std::endl;
    }
 }
 
@@ -4807,10 +4675,12 @@ int main(int argc, char **argv)
          if (strcmp("-pipe", argv[ic])!=0) {
             // filter out undesirable options
             string argkeep;
+            // [coverity: tainted_data] The OS should already limit the argument size, so we are safe here
             StrcpyArg(argkeep, argv[i]);
 	    int ncha = argkeep.length()+1;
+            // [coverity: tainted_data] The OS should already limit the argument size, so we are safe here
             argvv[argcc++] = (char*)calloc(ncha,1);
-            // coverity[secure_coding] - sufficient space
+            // [coverity: tainted_data] The OS should already limit the argument size, so we are safe here
             strlcpy(argvv[argcc-1],argkeep.c_str(),ncha);
          }
       }

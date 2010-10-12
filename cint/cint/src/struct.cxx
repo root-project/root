@@ -1855,6 +1855,7 @@ int G__search_tagname(const char* tagname, int type)
       }
       G__struct.userparam[i] = 0;
       G__struct.name[i] = (char*) malloc((size_t)(len + 1));
+      // coverity[secure_coding] we allocated enough space
       strcpy(G__struct.name[i], atom_tagname); // Okay we allocated enough space
       G__struct.namerange->Insert(G__struct.name[i], i);
       G__struct.hash[i] = len;

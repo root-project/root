@@ -236,16 +236,16 @@ public:
       // We can safely assume that the std::vector layout does not really depend on
       // the content!
       std::vector<char> *vec = (std::vector<char>*)collection;
-#ifdef R__VISUAL_CPLUSPLUS
       if (vec->empty()) {
          fBegin = 0;
          fEnd = 0;
          return;
       }
       fBegin= &(*vec->begin());
+#ifdef R__VISUAL_CPLUSPLUS
       fEnd = &(*(vec->end()-1)) + 1; // On windows we can not dererence the end iterator at all.
 #else
-      fBegin = &(*vec->begin());
+      // coverity[invalidate_iterator] Safe on other platforms
       fEnd = &(*vec->end());
 #endif
       //fCreateIterators(collection, &fBegin, &fEnd);

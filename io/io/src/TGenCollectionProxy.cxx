@@ -1238,16 +1238,16 @@ void TGenCollectionProxy__VectorCreateIterators(void *obj, void **begin_arena, v
    // We can safely assume that the std::vector layout does not really depend on
    // the content!
    std::vector<char> *vec = (std::vector<char>*)obj;
-#ifdef R__VISUAL_CPLUSPLUS
    if (vec->empty()) {
       *begin_arena = 0;
       *end_arena = 0;
       return;
    }
    *begin_arena = &(*vec->begin());
+#ifdef R__VISUAL_CPLUSPLUS
    *end_arena = &(*(vec->end()-1)) + 1; // On windows we can not dererence the end iterator at all.
 #else
-   *begin_arena = &(*vec->begin());
+   // coverity[invalidate_iterator] Safe on other platforms
    *end_arena = &(*vec->end());
 #endif
    

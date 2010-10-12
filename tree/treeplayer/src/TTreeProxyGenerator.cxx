@@ -1724,6 +1724,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       FILE *hf;
       TString tmpfilename;
       if (updating) {
+         // Coverity[secure_temp]: we don't care about predictable names.
          tmpfilename = gSystem->BaseName( tmpnam(0) );
          tmpfilename.Append("_proxy.h");
          hf = fopen(tmpfilename.Data(),"w");

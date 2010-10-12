@@ -701,7 +701,7 @@ namespace TStreamerInfoActions
          TStreamerInfo *info = (TStreamerInfo*)config->fInfo;
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
          char *ptr = (char*)start;
-         UInt_t n = (((char*)end)-((char*)start))/sizeof(void*);
+         UInt_t n = (((void**)end)-((void**)start));
          info->ReadBufferSkip(b,&ptr,config->fElemId,info->GetTypes()[config->fElemId]+TStreamerInfo::kSkip,aElement,n,0);
       } else {
          TVectorLoopConfig cached_config( cached->fClass->Size() );
@@ -773,7 +773,7 @@ namespace TStreamerInfoActions
 
    Int_t GenericVectorPtrAction(TBuffer &buf, void *iter, const void *end, const TConfiguration *config) 
    {
-      Int_t n = ( ((char*)end) - ((char*)iter) ) / sizeof(void*);
+      Int_t n = ( ((void**)end) - ((void**)iter) );
       char **arr = (char**)iter;
       return ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, arr, config->fElemId, n, config->fOffset, 1|2 );
    }
@@ -1358,7 +1358,6 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 {
    // Create the bundle of the actions necessary for the streaming memberwise of the content described by 'info' into the collection described by 'proxy'
 
-
    UInt_t ndata = info->GetElements()->GetEntries();
    TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(info,ndata);
    if ( (proxy.GetCollectionType() == TClassEdit::kVector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) ) 
@@ -1376,8 +1375,9 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       Long_t increment = proxy.GetIncrement();
       sequence->fLoopConfig = new TVectorLoopConfig(increment);
    } else if (proxy.GetCollectionType() == TClassEdit::kSet || proxy.GetCollectionType() == TClassEdit::kMultiSet
-              || proxy.GetCollectionType() == TClassEdit::kMap || proxy.GetCollectionType() == TClassEdit::kMultiMap) {
-      Long_t increment = proxy.GetValueClass()->Size();
+              || proxy.GetCollectionType() == TClassEdit::kMap || proxy.GetCollectionType() == TClassEdit::kMultiMap) 
+   {
+      Long_t increment = proxy.GetIncrement();
       sequence->fLoopConfig = new TVectorLoopConfig(increment);
       // sequence->fLoopConfig = new TAssocLoopConfig(proxy);
    } else {
