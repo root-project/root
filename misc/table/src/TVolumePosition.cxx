@@ -97,6 +97,7 @@ TVolumePosition::TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t 
 //______________________________________________________________________________
 TVolumePosition::TVolumePosition(const TVolumePosition* oldPosition, const TVolumePosition* curPosition){
    // Pick the "old" position by pieces
+   fMatrix = 0;
    SetMatrixOwner(kFALSE);
    TVolume *curNode = 0;
    UInt_t curPositionId    = 0;
