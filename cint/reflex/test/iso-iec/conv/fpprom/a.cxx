@@ -2,6 +2,7 @@
 
 #include "Reflex/Type.h"
 #include "Reflex/Object.h"
+#include "Reflex/Member.h"
 
 using namespace Reflex;
 
