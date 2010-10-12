@@ -234,7 +234,6 @@ template <class T> T Object_Cast(const Object& o);
 
 } // namespace Reflex
 
-#include "Reflex/Member.h"
 #include "Reflex/Tools.h"
 
 //-------------------------------------------------------------------------------
