@@ -332,7 +332,7 @@ void StatusPrint(Int_t id,const TString &title,Bool_t status)
   // Print test program number and its title
   const Int_t kMAX = 65;
   Char_t number[4];
-  snprintf(number,4,"%2d",id);
+  sprintf(number,"%2d",id);
   TString header = TString("Test ")+number+" : "+title;
   const Int_t nch = header.Length();
   for (Int_t i = nch; i < kMAX; i++) header += '.';
@@ -2098,17 +2098,17 @@ void mstress_matrix_io()
 
     if (verbose)
       cout << "\nWrite matrix m to database" << endl;
-    snprintf(name,80,"m_%d",msize);
+    sprintf(name,"m_%d",msize);
     m.Write(name);
 
     if (verbose)
       cout << "\nWrite matrix ma which adopts to database" << endl;
-    snprintf(name,80,"ma_%d",msize);
+    sprintf(name,"ma_%d",msize);
     ma.Write(name);
 
     if (verbose)
       cout << "\nWrite symmetric matrix ms to database" << endl;
-    snprintf(name,80,"ms_%d",msize);
+    sprintf(name,"ms_%d",msize);
     ms.Write(name);
 
     delete [] pattern_array;
@@ -2132,11 +2132,11 @@ void mstress_matrix_io()
 
     TMatrixD m(msize,msize);
     m = pattern;
-    snprintf(name,80,"m_%d",msize);
+    sprintf(name,"m_%d",msize);
     TMatrixD *mr  = (TMatrixD*) f1->Get(name);
-    snprintf(name,80,"ma_%d",msize);
+    sprintf(name,"ma_%d",msize);
     TMatrixD *mar = (TMatrixD*) f1->Get(name);
-    snprintf(name,80,"ms_%d",msize);
+    sprintf(name,"ms_%d",msize);
     TMatrixDSym *msr = (TMatrixDSym*) f1->Get(name);
 
     if (verbose)
@@ -3124,12 +3124,12 @@ void spstress_matrix_io()
 
     if (verbose)
       cout << "\nWrite matrix m to database" << endl;
-    snprintf(name,80,"m_%d",msize);
+    sprintf(name,"m_%d",msize);
     m.Write(name);
 
     if (verbose)
       cout << "\nWrite matrix ma which adopts to database" << endl;
-    snprintf(name,80,"ma_%d",msize);
+    sprintf(name,"ma_%d",msize);
     ma.Write(name);
 
     iloop--;
@@ -3151,11 +3151,11 @@ void spstress_matrix_io()
 
     TMatrixD m_d(msize,msize); m_d = pattern;
     TMatrixDSparse m(m_d);
-    snprintf(name,80,"m_%d",msize);
+    sprintf(name,"m_%d",msize);
     TMatrixDSparse *mr  = (TMatrixDSparse*) f1->Get(name);
-    snprintf(name,80,"ma_%d",msize);
+    sprintf(name,"ma_%d",msize);
     TMatrixDSparse *mar = (TMatrixDSparse*) f1->Get(name);
-    snprintf(name,80,"ms_%d",msize);
+    sprintf(name,"ms_%d",msize);
 
     if (verbose)
       cout << "\nRead matrix should be same as original" << endl;
@@ -3766,9 +3766,9 @@ void vstress_vector_io()
     if (verbose)
       cout << "\nWrite vector v to database" << endl;
 
-    snprintf(name,80,"v_%d",msize);
+    sprintf(name,"v_%d",msize);
     v.Write(name);
-    snprintf(name,80,"va_%d",msize);
+    sprintf(name,"va_%d",msize);
     va.Write(name);
 
     delete [] pattern_array;
@@ -3793,9 +3793,9 @@ void vstress_vector_io()
     TVectorD v(msize);
     v = pattern;
 
-    snprintf(name,80,"v_%d",msize);
+    sprintf(name,"v_%d",msize);
     TVectorD *vr  = (TVectorD*) f1->Get(name);
-    snprintf(name,80,"va_%d",msize);
+    sprintf(name,"va_%d",msize);
     TVectorD *var = (TVectorD*) f1->Get(name);
 
     if (verbose)

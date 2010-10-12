@@ -810,7 +810,7 @@ void InfoPad::PaintModified()
 
    char    str[40];
 
-   snprintf(str,40,"%d",fValue);
+   sprintf(str,"%d",fValue);
 
    TObject *obj = GetListOfPrimitives()->First();
 
