@@ -1020,7 +1020,10 @@ Long64_t TTree::AutoSave(Option_t* option)
    TFile *file = fDirectory->GetFile();
    if (file) file->WriteStreamerInfo();
 
-   if (opt.Contains("saveself")) fDirectory->SaveSelf();
+   if (opt.Contains("saveself")) {
+      fDirectory->SaveSelf();
+      if (file) file->WriteHeader();
+   }
 
    return nbytes;
 }
