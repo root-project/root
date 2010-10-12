@@ -70,9 +70,9 @@ CanvSave::CanvSave(const TGWindow *p, const TGWindow *main, UInt_t w,
    fCombo = new TGComboBox(fF1, 10);
    fCombo->Associate(this);
    char tmp[20];
-   sprintf(tmp, "%s", ".ps");
+   snprintf(tmp,20, "%s", ".ps");
    fCombo->AddEntry(tmp, 1);
-   sprintf(tmp, "%s", ".gif");
+   snprintf(tmp,20, "%s", ".gif");
    fCombo->AddEntry(tmp, 2);
    fCombo->Resize(100, 20);
    fCombo->Select(1);

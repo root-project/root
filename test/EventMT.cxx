@@ -142,8 +142,8 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
   if (ev >= 10000) nch += 3;
   if (fEventName) delete [] fEventName;
   fEventName = new char[nch];
-  sprintf(fEventName,"Event%d_Run%d",ev,200);
-  sprintf(etype,"type%d",ev%5);
+  snprintf(fEventName,nch,"Event%d_Run%d",ev,200);
+  snprintf(etype,20,"type%d",ev%5);
   SetType(etype);
   SetHeader(ev, 200, 960312, random);
   SetNseg(Int_t(10*ntrack+20*sigmas));

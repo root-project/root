@@ -281,7 +281,7 @@ int main(int argc, char **argv)
    char line1[100], line2[100];
    printf("\n");
    printf("*******************************************************************************\n");
-   sprintf(line1,"Comparing STL vector with TClonesArray: Root %-8s",gROOT->GetVersion());
+   snprintf(line1,100,"Comparing STL vector with TClonesArray: Root %-8s",gROOT->GetVersion());
    printf("*       %s                 *\n",line1);
    Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
    if (UNIX) {
@@ -299,7 +299,7 @@ int main(int argc, char **argv)
       }
    } else {
       const char *os = gSystem->Getenv("OS");
-      sprintf(line2,"Windows");
+      snprintf(line2,100,"Windows");
       if (!os) printf("*  Windows 95\n");
       else     printf("*  %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
    }

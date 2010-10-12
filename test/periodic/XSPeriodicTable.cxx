@@ -22,7 +22,7 @@ XSTblElement::XSTblElement(const TGWindow *p, Int_t z, UInt_t color)
 	Z = z;
 
 	char str[5];
-	sprintf(str,"%d",Z);
+	snprintf(str,5,"%d",Z);
 	lZ    = new TGLabel(this,str);
 	lName = new TGLabel(this,XSelements->Mnemonic(Z), blueBoldGC);
 

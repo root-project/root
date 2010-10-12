@@ -486,9 +486,9 @@ void setColor(int red = 0)
 {
    char command[13];
    if ( red ) 
-      sprintf(command, "%c[%d;%d;%dm", 0x1B, 1, 1 + 30, 8 + 40);
+      snprintf(command,13, "%c[%d;%d;%dm", 0x1B, 1, 1 + 30, 8 + 40);
    else 
-      sprintf(command, "%c[%d;%d;%dm", 0x1B, 0, 0 + 30, 8 + 40);
+      snprintf(command,13, "%c[%d;%d;%dm", 0x1B, 0, 0 + 30, 8 + 40);
    printf("%s", command);
 }
 

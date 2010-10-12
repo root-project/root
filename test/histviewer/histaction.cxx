@@ -326,9 +326,9 @@ HistAction::HistAction(const TGWindow *p, UInt_t w, UInt_t h) :
    fFilterBox = new TGComboBox(fC1, M_FILTER);
    fFilterBox->Associate(this);
    char filt[50];
-   sprintf(filt, "%s", "All files  (*)");
+   snprintf(filt,50, "%s", "All files  (*)");
    fFilterBox->AddEntry(filt, 1);
-   sprintf(filt, "%s", "ROOT files  (*.root)");
+   snprintf(filt,50, "%s", "ROOT files  (*.root)");
    fFilterBox->AddEntry(filt, 2);
    fFilterBox->Resize(150, 20);
    fFilterBox->Select(2);

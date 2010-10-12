@@ -212,7 +212,7 @@ XSGui::ProcessMessage(Long_t msg, Long_t param1, Long_t)
 			switch (GET_SUBMSG(msg)) {
 
 				case kCM_BUTTON:
-					sprintf(str,
+					snprintf(str,100,
 					   "Button was pressed, id = %ld\n",
 					    param1);
 					statusBar->SetText(str);

@@ -68,8 +68,8 @@ void sample_volume(Int_t ivol)
    Double_t dvv = TMath::Abs(vv-vshape[ivol-1]);
    Double_t sigma = vv/TMath::Sqrt(iin+1);
    char result[16];
-   sprintf(result, "FAILED");
-   if (dvv<2*sigma) sprintf(result, "OK");
+   snprintf(result,16, "FAILED");
+   if (dvv<2*sigma) snprintf(result,16, "OK");
    printf("---> testing %-4s ............... %s\n", vol->GetName(), result);
 }
 
@@ -155,9 +155,9 @@ void length()
       char result[16];
       drms = TMath::Abs(rms[i-1]-hist->GetRMS());
       dmean = TMath::Abs(mean[i-1]-hist->GetMean());
-      sprintf(result, "FAILED");
+      snprintf(result,16, "FAILED");
       if (dmean<0.01) {
-         if (drms<0.01) sprintf(result,"OK");
+         if (drms<0.01) snprintf(result,16,"OK");
       }   
       printf("   %-4s : mean_len=%7.4g RMS=%7.4g total_len=%11.4g ... %s\n", 
              volume->GetName(), hist->GetMean(), hist->GetRMS(), len[i],result);
