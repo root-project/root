@@ -421,7 +421,7 @@ term_alloc(EditLine_t* el, const struct TermCapStr_t* t, const char* cap) {
     * New string is shorter; no need to allocate space
     */
    if (clen <= tlen) {
-      // Coverity[secure_coding]
+      // coverity[secure_coding]
       (void) strcpy(*str, cap);                 /* XXX strcpy is safe */
       return;
    }
@@ -431,7 +431,7 @@ term_alloc(EditLine_t* el, const struct TermCapStr_t* t, const char* cap) {
     */
    if (el->fTerm.fLoc + 3 < TC_BUFSIZE) {
       /* XXX strcpy is safe */
-      // Coverity[secure_coding]
+      // coverity[secure_coding]
       (void) strcpy(*str = &el->fTerm.fBuf[el->fTerm.fLoc],
                     cap);
       el->fTerm.fLoc += clen + 1;            /* one for \0 */
@@ -463,7 +463,7 @@ term_alloc(EditLine_t* el, const struct TermCapStr_t* t, const char* cap) {
       return;
    }
    /* XXX strcpy is safe */
-   // Coverity[secure_coding]
+   // coverity[secure_coding]
    (void) strcpy(*str = &el->fTerm.fBuf[el->fTerm.fLoc], cap);
    el->fTerm.fLoc += clen + 1;       /* one for \0 */
    return;

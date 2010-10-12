@@ -247,7 +247,7 @@ read_getcmd(EditLine_t* el, ElAction_t* cmdnum, char* ch) {
       // Coverity is complaining that the value of ch comes from the user
       // and nowhere do we check its value. But that's fine: it's 0<=ch<255,
       // and fCurrent has 256 entries.
-      // Coverity[data_index]
+      // coverity[data_index]
       cmd = el->fMap.fCurrent[(unsigned char) *ch];
 
       if (cmd == ED_SEQUENCE_LEAD_IN) {

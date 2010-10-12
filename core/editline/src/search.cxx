@@ -278,7 +278,7 @@ ce_inc_search(EditLine_t* el, int dir) {
       // Coverity is complaining that the value of ch comes from the user
       // and nowhere do we check its value. But that's fine: it's 0<=ch<255,
       // and fCurrent has 256 entries.
-      // Coverity[tainted_data]
+      // coverity[tainted_data]
       switch (el->fMap.fCurrent[(unsigned char) ch]) {
       case ED_INSERT:
       case ED_DIGIT:

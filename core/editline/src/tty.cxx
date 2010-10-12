@@ -562,7 +562,7 @@ tty_setup(EditLine_t* el) {
       }
    } else {
       // This cannot be reached as rst is set to 1 above.
-      // Coverity[dead_error_line]
+      // coverity[dead_error_line]
       tty__setchar(&el->fTTY.t_ex, el->fTTY.t_c[EX_IO]);
    }
 
