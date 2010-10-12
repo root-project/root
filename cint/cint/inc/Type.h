@@ -16,7 +16,9 @@
 #ifndef G__TYPEINFOX_H
 #define G__TYPEINFOX_H 
 
+#ifndef G__API_H
 #include "Api.h"
+#endif
 
 namespace Cint {
 

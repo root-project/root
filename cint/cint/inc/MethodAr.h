@@ -17,7 +17,9 @@
 #ifndef G__METHODARGINFO_H
 #define G__METHODARGINFO_H
 
+#ifndef G__API_H
 #include "Api.h"
+#endif
 
 namespace Cint {
 

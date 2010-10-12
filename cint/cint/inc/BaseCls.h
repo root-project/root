@@ -18,8 +18,9 @@
 #ifndef G__BaseClassInfo_H
 #define G__BaseClassInfo_H
 
-
+#ifndef G__API_H
 #include "Api.h"
+#endif
 
 namespace Cint {
 

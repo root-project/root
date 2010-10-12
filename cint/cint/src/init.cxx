@@ -1202,7 +1202,7 @@ int G__main(int argc, char** argv)
     *************************************************************/
    while ((G__MAINEXIST != G__ismain && (optind < argc)) || xfileflag) {
       if (xfileflag) {
-         // Coverity[secure_temp]: we don't care about predictable names.
+         // coverity[secure_temp]: we don't care about predictable names.
          FILE *tmpf = tmpfile();
          if (tmpf) {
             fprintf(tmpf, "%s\n", argv[xfileflag]);

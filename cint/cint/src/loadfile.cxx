@@ -2887,7 +2887,7 @@ static int G__istmpnam=0;
 void G__openmfp()
 {
 #ifndef G__TMPFILE
-  // Coverity[secure_temp]: we don't care about predictable names.
+  // coverity[secure_temp]: we don't care about predictable names.
   G__mfp=tmpfile();
   if(!G__mfp) {
     do {

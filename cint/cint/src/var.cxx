@@ -3482,7 +3482,7 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
 #endif // G__NEWINHERIT
             // We have no idea how big varname is. G__searchvariable() takes a char* which becomes
             // varname here; we would have to change that signature to know the size of varname here.
-            // Coverity[secure_coding]
+            // coverity[secure_coding]
             std::strcpy(varname, ttt);
             int junk;
             G__hash(ttt, varhash, junk);
@@ -7419,7 +7419,7 @@ struct G__var_array* G__searchvariable(char* varname, int varhash, G__var_array*
    if ((varname[0] == '$') && G__GetSpecialObject && (G__GetSpecialObject != G__getreserved)) {
       G__FastAllocString temp(varname + 1);
       // We copy less into varname than it contained before:
-      // Coverity[secure_coding]
+      // coverity[secure_coding]
       strcpy(varname, temp);
       specialflag = 1;
    }

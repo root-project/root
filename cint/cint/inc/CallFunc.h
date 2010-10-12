@@ -18,7 +18,9 @@
 #ifndef G__CALLFUNC_H
 #define G__CALLFUNC_H
 
+#ifndef G__API_H
 #include "Api.h"
+#endif
 
 namespace Cint {
 
