@@ -558,15 +558,15 @@ void ProofdExec()
       char *buf = (char *) vb;
       char *end = buf + len;
       const char name[] = "PROOF_ALLVARS=";
-      char *all = new char[strlen(name)+len]; // strlen("PROOF_ALLVARS=") = 14
-      strncpy(all, name, strlen(name)+len);
-      all[strlen(name)+len-1] = 0;
+      int alen = strlen(name)+len;
+      char *all = new char[alen]; // strlen("PROOF_ALLVARS=") = 14
+      strlcpy(all, name, alen);
       while (buf < end) {
          if (gDebug > 0) ErrorInfo("ProofdExec: setting: %s", buf);
          char *p = index(buf, '=');
          if (p) {
-            if (buf != (char *) vb) strncat(all, ",", 1); // skip the first one
-            strncat(all, buf, p-buf);
+            if (buf != (char *) vb) strlcat(all, ",", alen); // skip the first one
+            strlcat(all, buf, alen);
             putenv(buf);
          }
          buf += strlen(buf) + 1;
