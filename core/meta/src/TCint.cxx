@@ -931,8 +931,9 @@ Bool_t TCint::CheckClassInfo(const char *name, Bool_t autoload /*= kTRUE*/)
 
    R__LOCKGUARD(gCINTMutex);
 
-   char *classname = new char[strlen(name)*2];
-   strcpy(classname,name);
+   Int_t nch = strlen(name)*2;
+   char *classname = new char[nch];
+   strlcpy(classname,name,nch);
 
    char *current = classname;
    while (*current) {
@@ -969,7 +970,7 @@ Bool_t TCint::CheckClassInfo(const char *name, Bool_t autoload /*= kTRUE*/)
       *current = ':';
       current += 2;
    }
-   strcpy(classname,name);
+   strlcpy(classname,name,nch);
 
    int flag = 2;
    if (!autoload) {
@@ -1451,19 +1452,19 @@ const char *TCint::TypeName(const char *typeDesc)
       s = (char*)strchr(typeDesc, ' ');
       template_start = (char*)strchr(typeDesc, '<');
       if (!strcmp(typeDesc, "long long"))
-         strcpy(t, typeDesc);
+         strlcpy(t, typeDesc,dlen+1);
       else if (!strncmp(typeDesc,"unsigned ",s+1-typeDesc))
-         strcpy(t, typeDesc);
+         strlcpy(t, typeDesc,dlen+1);
       // s is the position of the second 'word' (if any)
       // except in the case of templates where there will be a space
       // just before any closing '>': eg.
       //    TObj<std::vector<UShort_t,__malloc_alloc_template<0> > >*
       else if (s && (template_start==0 || (s < template_start)) )
-         strcpy(t, s+1);
+         strlcpy(t, s+1,dlen+1);
       else
-         strcpy(t, typeDesc);
+         strlcpy(t, typeDesc,dlen+1);
    } else {
-      strcpy(t, typeDesc);
+      strlcpy(t, typeDesc,dlen+1);
    }
 
    int l = strlen(t);

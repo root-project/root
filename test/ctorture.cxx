@@ -49,7 +49,7 @@ int main () {
   // Torture Square roots
   serr=0;
   ifail=0;
-  strcpy(title,"Sqrt");
+  strlcpy(title,"Sqrt",20);
   for(i=0; i<np; i++) {
     a=TComplex(10*(1-2*gRandom->Rndm()),10*(1-2*gRandom->Rndm()));
     b=a*a;
@@ -63,7 +63,7 @@ int main () {
   // Torture exp and log
   serr=0;
   ifail=0;
-  strcpy(title,"Exp&Log");
+  strlcpy(title,"Exp&Log",20);
   for(i=0; i<np; i++) {
     a=TComplex(10*(1-2*gRandom->Rndm()),10*(1-2*gRandom->Rndm()));
     b=TComplex::Log(a);
@@ -75,7 +75,7 @@ int main () {
   // Torture sin and asin
   serr=0;
   ifail=0;
-  strcpy(title,"Sin&ASin");
+  strlcpy(title,"Sin&ASin",20);
   for(i=0; i<np; i++) {
     a=TComplex(10*(1-2*gRandom->Rndm()),10*(1-2*gRandom->Rndm()));
     b=TComplex::ASin(a);
@@ -87,7 +87,7 @@ int main () {
   // Torture cos and acos
   serr=0;
   ifail=0;
-  strcpy(title,"Cos&ACos");
+  strlcpy(title,"Cos&ACos",20);
   for(i=0; i<np; i++) {
     a=TComplex(10*(1-2*gRandom->Rndm()),10*(1-2*gRandom->Rndm()));
     b=TComplex::ACos(a);
@@ -99,7 +99,7 @@ int main () {
   // Torture tan and atan
   serr=0;
   ifail=0;
-  strcpy(title,"Tan&ATan");
+  strlcpy(title,"Tan&ATan",20);
   for(i=0; i<np; i++) {
     a=TComplex(10*(1-2*gRandom->Rndm()),10*(1-2*gRandom->Rndm()));
     b=TComplex::ATan(a);
@@ -111,7 +111,7 @@ int main () {
   // Torture SinH and ASinH
   serr=0;
   ifail=0;
-  strcpy(title,"SinH&ASinH");
+  strlcpy(title,"SinH&ASinH",20);
   for(i=0; i<np; i++) {
     a=TComplex(10*(1-2*gRandom->Rndm()),10*(1-2*gRandom->Rndm()));
     b=TComplex::ASinH(a);
@@ -123,7 +123,7 @@ int main () {
   // Torture CosH and ACosH
   serr=0;
   ifail=0;
-  strcpy(title,"CosH&ACosH");
+  strlcpy(title,"CosH&ACosH",20);
   for(i=0; i<np; i++) {
     a=TComplex(10*(1-2*gRandom->Rndm()),10*(1-2*gRandom->Rndm()));
     b=TComplex::ACosH(a);
@@ -135,7 +135,7 @@ int main () {
   // Torture TanH and ATanH
   serr=0;
   ifail=0;
-  strcpy(title,"TanH&ATanH");
+  strlcpy(title,"TanH&ATanH",20);
   for(i=0; i<np; i++) {
     a=TComplex(10*(1-2*gRandom->Rndm()),10*(1-2*gRandom->Rndm()));
     b=TComplex::ATanH(a);
@@ -189,7 +189,7 @@ int main () {
   //
   serr=0;
   ifail=0;
-  strcpy(title,"Power C-C");
+  strlcpy(title,"Power C-C",20);
   for(i=0; i<np; i++) {
     a=TComplex(10*(1-2*gRandom->Rndm()),10*(1-2*gRandom->Rndm()));
     while (TComplex::Abs(
@@ -205,7 +205,7 @@ int main () {
   // Torture Power complex - real
   serr=0;
   ifail=0;
-  strcpy(title,"Power C-R");
+  strlcpy(title,"Power C-R",20);
   for(i=0; i<np; i++) {
     a=TComplex(10*(1-2*gRandom->Rndm()),10*(1-2*gRandom->Rndm()));
     while (TMath::Abs(x=10*(1-2*gRandom->Rndm()))<0.1) { }
@@ -218,7 +218,7 @@ int main () {
   // Torture Power real - complex
   serr=0;
   ifail=0;
-  strcpy(title,"Power R-C");
+  strlcpy(title,"Power R-C",20);
   for(i=0; i<np; i++) {
     while (TComplex::Abs(
 			 a=TComplex(10*(1-2*gRandom->Rndm()),

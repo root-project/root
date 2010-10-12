@@ -2259,7 +2259,7 @@ Int_t TFormula::Compile(const char *expression)
 
    if (chaine.Contains(";")) {
       char *sctemp = new char[chaine.Length()+1];
-      strcpy(sctemp,chaine.Data());
+      strlcpy(sctemp,chaine.Data(),chaine.Length()+1);
       char *semicol = (char*)strstr(sctemp,";");
       if (semicol) *semicol = 0;
       chaine = sctemp;

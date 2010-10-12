@@ -223,7 +223,7 @@ Int_t THDFSFile::SysOpen(const char * pathname, Int_t flags, UInt_t)
    if (fPath == 0) {
       SysError("THDFSFile", "Unable to allocate memory for path.");
    }
-   strcpy(fPath, file);
+   strlcpy(fPath, file,path_size+1);
    if ((fHdfsFH = hdfsOpenFile(fFS, fPath, flags, 0, 0, 0)) == 0) {
       SysError("THDFSFile", "Unable to open file %s in HDFS", pathname);
       return -1;

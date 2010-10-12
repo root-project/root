@@ -1277,9 +1277,9 @@ void TFile::Map()
       frombuf(buffer, &nwhc);
       for (int i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
       classname[(int)nwhc] = '\0'; //cast to avoid warning with gcc3.4
-      if (idcur == fSeekFree) strcpy(classname,"FreeSegments");
-      if (idcur == fSeekInfo) strcpy(classname,"StreamerInfo");
-      if (idcur == fSeekKeys) strcpy(classname,"KeysList");
+      if (idcur == fSeekFree) strlcpy(classname,"FreeSegments",512);
+      if (idcur == fSeekInfo) strlcpy(classname,"StreamerInfo",512);
+      if (idcur == fSeekKeys) strlcpy(classname,"KeysList",512);
       TDatime::GetDateTime(datime, date, time);
       if (objlen != nbytes-keylen) {
          Float_t cx = Float_t(objlen+keylen)/Float_t(nbytes);

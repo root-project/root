@@ -2647,7 +2647,7 @@ void TTreeViewer::SaveSource(const char* filename, Option_t *)
       out.open(fname, ios::out);
    } else {
       fname = new char[13];
-      strcpy(fname, "treeviewer.C");
+      strlcpy(fname, "treeviewer.C",13);
       out.open(fname, ios::out);
    }
    if (!out.good ()) {

@@ -298,7 +298,7 @@ void TFileDrawMap::DrawObject()
 
    // case of a TTree
    char *info = new char[fName.Length()+1];
-   strcpy(info,fName.Data());
+   strlcpy(info,fName.Data(),fName.Length()+1);
    char *cbasket = (char*)strstr(info,", basket=");
    if (cbasket) {
       *cbasket = 0;
@@ -355,7 +355,7 @@ TObject *TFileDrawMap::GetObject()
 
    if (strstr(GetName(),"entry=")) return 0;
    char *info = new char[fName.Length()+1];
-   strcpy(info,fName.Data());
+   strlcpy(info,fName.Data(),fName.Length()+1);
    char *colon = strstr(info,"::");
    if (!colon) return 0;
    colon--;

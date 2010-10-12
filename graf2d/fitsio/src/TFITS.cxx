@@ -411,7 +411,7 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
                } else {
                   //No elements: set dummy
                   for (long row = 0; row < table_rows; row++) {
-                     strcpy(array[row], "-"); 
+                     strlcpy(array[row], "-",dispwidth+1); 
                   }
                }
                
@@ -582,7 +582,7 @@ void TFITSHDU::PrintFileMetadata(const Option_t *opt) const
 
          if (strcmp(keyname, "EXTNAME") == 0) {
             //Extension name
-            strcpy(extname, keyvalue);
+            strlcpy(extname, keyvalue,FLEN_CARD);
          }
       }
 

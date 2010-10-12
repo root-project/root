@@ -1716,7 +1716,7 @@ Int_t TAuthenticate::SshAuth(TString &user)
    if (fVersion < 4)
       sshproto = 0;
 
-   // Find out whihc command we should be using
+   // Find out which command we should be using
    char cmdref[2][5] = {"ssh", "scp"};
    char scmd[5] = "";
    char *gSshExe = 0;
@@ -1724,7 +1724,7 @@ Int_t TAuthenticate::SshAuth(TString &user)
 
    while (notfound && sshproto > -1) {
 
-      strcpy(scmd,cmdref[sshproto]);
+      strlcpy(scmd,cmdref[sshproto],5);
 
       // Check First if a 'scmd' executable exists ...
       gSshExe = gSystem->Which(gSystem->Getenv("PATH"),
@@ -2977,7 +2977,7 @@ void TAuthenticate::FileExpand(const char *fexp, FILE *ftmp)
                strlen(fileinc) + strlen(gSystem->HomeDirectory()) + 10;
             char *ffull = new char[flen];
             snprintf(ffull, flen, "%s/%s", gSystem->HomeDirectory(), fileinc + 1);
-            if (strlen(ffull) < kMAXPATHLEN - 1) strcpy(fileinc, ffull);
+            if (strlen(ffull) < kMAXPATHLEN - 1) strlcpy(fileinc, ffull,kMAXPATHLEN);
             delete [] ffull;
          }
          // Check if file exist and can be read ... ignore if not ...
@@ -3759,7 +3759,7 @@ Int_t TAuthenticate::SecureRecv(TSocket *sock, Int_t dec, Int_t key, char **str)
 
       // Prepare output
       *str = new char[strlen(buftmp) + 1];
-      strcpy(*str, buftmp);
+      strlcpy(*str, buftmp,strlen(buftmp) + 1);
 
    } else if (key == 1) {
 #ifdef R__SSL
@@ -4181,7 +4181,7 @@ Int_t TAuthenticate::ReadRootAuthrc()
                  "could not allocate temporary buffer");
          return 0;
       }
-      strcpy(tmp,line);
+      strlcpy(tmp,line,strlen(line)+1);
       char *nxt = strtok(tmp," ");
 
       if (!strcmp(nxt, "proofserv") || cont) {
@@ -4319,7 +4319,7 @@ Int_t TAuthenticate::ReadRootAuthrc()
    TList tmpproofauthinfo;
    if (proofserv.Length() > 0) {
       char *tmps = new char[proofserv.Length()+1];
-      strcpy(tmps,proofserv.Data());
+      strlcpy(tmps,proofserv.Data(),proofserv.Length()+1);
       char *nxt = strtok(tmps," ");
       while (nxt) {
          TString tmp((const char *)nxt);

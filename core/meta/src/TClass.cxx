@@ -2492,8 +2492,9 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    // CheckClassInfo might modify the content of its parameter if it is
    // a template and has extra or missing space (eg. one<two<tree>> becomes
    // one<two<three> >
-   char *modifiable_name = new char[strlen(name)*2];
-   strcpy(modifiable_name,name);
+   Int_t nch = strlen(name)*2;
+   char *modifiable_name = new char[nch];
+   strlcpy(modifiable_name,name,nch);
    if (gInterpreter->CheckClassInfo(modifiable_name)) {
       const char *altname = gInterpreter->GetInterpreterTypeName(modifiable_name,kTRUE);
       if (strcmp(altname,name)!=0) {

@@ -2740,7 +2740,7 @@ void TF1::Paint(Option_t *option)
    if (semicol) {
       Int_t nxt = strlen(semicol);
       char *ctemp = new char[nxt];
-      strcpy(ctemp,semicol+1);
+      strlcpy(ctemp,semicol+1,nxt);
       semicol = (char*)strstr(ctemp,";");
       if (semicol) {
          *semicol = 0;
