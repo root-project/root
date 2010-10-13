@@ -108,6 +108,7 @@ TVolumePosition::TVolumePosition(const TVolumePosition* oldPosition, const TVolu
       curMatrix     = (TRotMatrix *) curPosition->GetMatrix();
    }
    TRotMatrix *oldMatrix = 0;
+   fX[0] = 0; fX[1] = 0; fX[2] = 0;
    Double_t oldTranslation[] = { 0, 0, 0 };
    if (oldPosition) {
       oldMatrix         = (TRotMatrix *) oldPosition->GetMatrix();
