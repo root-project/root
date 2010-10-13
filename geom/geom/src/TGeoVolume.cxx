@@ -2478,7 +2478,7 @@ void TGeoVolumeAssembly::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatri
 {
 // Add a component to the assembly. 
    TGeoVolume::AddNode(vol,copy_no,mat,option);
-   ((TGeoShapeAssembly*)fShape)->NeedsBBoxRecompute();
+   fShape->ComputeBBox();
 }   
 
 //_____________________________________________________________________________

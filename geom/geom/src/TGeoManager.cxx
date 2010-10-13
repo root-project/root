@@ -345,7 +345,6 @@ TGeoManager::TGeoManager()
       fCurrentNavigator = 0;
       fMaterials = 0;
       fHashPNE = 0;
-      fArrayPNE = 0;
       fMatrices = 0;
       fNodes = 0;
       fOverlaps = 0;
@@ -439,7 +438,6 @@ void TGeoManager::Init()
    fBits = new UChar_t[50000]; // max 25000 nodes per volume
    fCurrentNavigator = 0;
    fHashPNE = new THashList(256,3);
-   fArrayPNE = 0;
    fMaterials = new THashList(200,3);
    fMatrices = new TObjArray(256);
    fNodes = new TObjArray(30);
@@ -554,7 +552,6 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fHashVolumes(gm.fHashVolumes),
   fHashGVolumes(gm.fHashGVolumes),
   fHashPNE(gm.fHashPNE),
-  fArrayPNE(gm.fArrayPNE),
   fSizePNEId(0),
   fNPNEId(0),
   fKeyPNEId(0),
@@ -633,7 +630,6 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fHashVolumes=gm.fHashVolumes;
       fHashGVolumes=gm.fHashGVolumes;
       fHashPNE=gm.fHashPNE;
-      fArrayPNE=gm.fArrayPNE;
       fSizePNEId = 0;
       fNPNEId = 0;
       fKeyPNEId = 0;
@@ -667,7 +663,6 @@ TGeoManager::~TGeoManager()
    SafeDelete(fHashVolumes);
    SafeDelete(fHashGVolumes);
    if (fHashPNE) {fHashPNE->Delete(); SafeDelete(fHashPNE);}
-   if (fArrayPNE) {delete fArrayPNE;}
    if (fVolumes) {fVolumes->Delete(); SafeDelete(fVolumes);}
    if (fShapes) {fShapes->Delete(); SafeDelete( fShapes );}
    if (fPhysicalNodes) {fPhysicalNodes->Delete(); SafeDelete( fPhysicalNodes );}
@@ -2691,7 +2686,6 @@ TGeoPNEntry *TGeoManager::SetAlignableEntry(const char *unique_name, const char 
 // provided, in which case PN entries can be searched fast by uid.
    if (!CheckPath(path)) return NULL;
    if (!fHashPNE) fHashPNE = new THashList(256,3);
-   if (!fArrayPNE) fArrayPNE = new TObjArray(256);
    TGeoPNEntry *entry = GetAlignableEntry(unique_name);
    if (entry) {
       Error("SetAlignableEntry", "An alignable object with name %s already existing. NOT ADDED !", unique_name);
@@ -2700,7 +2694,6 @@ TGeoPNEntry *TGeoManager::SetAlignableEntry(const char *unique_name, const char 
    entry = new TGeoPNEntry(unique_name, path);
    Int_t ientry = fHashPNE->GetSize();
    fHashPNE->Add(entry);
-   fArrayPNE->AddAtAndExpand(entry, ientry);
    if (uid>=0) {
       Bool_t added = InsertPNEId(uid, ientry);
       if (!added) Error("SetAlignableEntry", "A PN entry: has already uid=%i", uid);
@@ -2720,18 +2713,18 @@ TGeoPNEntry *TGeoManager::GetAlignableEntry(const char *name) const
 TGeoPNEntry *TGeoManager::GetAlignableEntry(Int_t index) const
 {
 // Retreives an existing alignable object at a given index.
-   if (!fArrayPNE && !InitArrayPNE()) return 0;
-   return (TGeoPNEntry*)fArrayPNE->At(index);
+   if (!fHashPNE) return 0;
+   return (TGeoPNEntry*)fHashPNE->At(index);
 }
 
 //_____________________________________________________________________________
 TGeoPNEntry *TGeoManager::GetAlignableEntryByUID(Int_t uid) const
 {
 // Retreives an existing alignable object having a preset UID.
-   if (!fNPNEId || (!fArrayPNE && !InitArrayPNE())) return NULL;
+   if (!fNPNEId || !fHashPNE) return NULL;
    Int_t index = TMath::BinarySearch(fNPNEId, fKeyPNEId, uid);
    if (index<0 || fKeyPNEId[index]!=uid) return NULL;
-   return (TGeoPNEntry*)fArrayPNE->At(fValuePNEId[index]);
+   return (TGeoPNEntry*)fHashPNE->At(fValuePNEId[index]);
 }
 
 //_____________________________________________________________________________
@@ -3105,14 +3098,8 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
    // check shapes first
    if (fgVerboseLevel>0) Info("CheckGeometry","Fixing runtime shapes...");
    TIter next(fShapes);
-   TIter nextv(fVolumes);
    TGeoShape *shape;
-   TGeoVolume *vol;
    Bool_t has_runtime = kFALSE;
-   // Compute bounding  box for assemblies
-   while ((vol = (TGeoVolume*)nextv())) {
-      if (vol->IsAssembly()) vol->GetShape()->ComputeBBox();
-   }   
    while ((shape = (TGeoShape*)next())) {
       if (shape->IsRunTimeShape()) {
          has_runtime = kTRUE;
@@ -3440,22 +3427,6 @@ void TGeoManager::UpdateElements()
          }
       }
    }
-}
-
-//___________________________________________________________________________
-Bool_t TGeoManager::InitArrayPNE() const
-{
-// Initialize PNE array for fast access via index and unique-id.
-   if (fHashPNE) {
-     fArrayPNE = new TObjArray(fHashPNE->GetSize());
-     TIter next(fHashPNE);
-     TObject *obj;
-     while ((obj = next())) {
-       fArrayPNE->Add(obj);
-     }
-     return kTRUE;
-   }
-   return kFALSE;
 }
 
 //___________________________________________________________________________

@@ -50,7 +50,7 @@
 #include "TGeoVoxelFinder.h"
 #include "TGeoCache.h"
 #include "TGeoMatrix.h"
-#include "TGeoShapeAssembly.h"
+#include "TGeoShape.h"
 #include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
 
@@ -216,7 +216,7 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    for (i=fLevel-1; i>0; i--) {
       vd = GetVolume(i);
       if (!vd->IsAssembly()) break;
-      ((TGeoShapeAssembly*)vd->GetShape())->NeedsBBoxRecompute();
+      vd->GetShape()->ComputeBBox();
       if (vd->GetVoxels()) vd->GetVoxels()->SetNeedRebuild();
    }
 
