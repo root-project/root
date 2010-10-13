@@ -248,6 +248,7 @@ read_getcmd(EditLine_t* el, ElAction_t* cmdnum, char* ch) {
       // and nowhere do we check its value. But that's fine: it's 0<=ch<255,
       // and fCurrent has 256 entries.
       // coverity[data_index]
+      // coverity[tainted_data]
       cmd = el->fMap.fCurrent[(unsigned char) *ch];
 
       if (cmd == ED_SEQUENCE_LEAD_IN) {
