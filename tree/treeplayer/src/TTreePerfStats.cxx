@@ -94,6 +94,7 @@
 #include "TGaxis.h"
 #include "TTimeStamp.h"
 #include "TDatime.h"
+#include "TMath.h"
 
 const Double_t kScaleTime = 1e-20;
 
@@ -305,7 +306,7 @@ void TTreePerfStats::Finish()
    fCpuTime       = fWatch->CpuTime();
    Int_t npoints  = fGraphIO->GetN();
    if (!npoints) return;
-   Double_t iomax = fGraphIO->GetY()[npoints-1];
+   Double_t iomax = TMath::MaxElement(npoints,fGraphIO->GetY());
    fRealNorm      = iomax/fRealTime;
    fGraphTime->GetY()[0] = fRealNorm*fGraphTime->GetEY()[0];
    // we normalize the fGraphTime such that it can be drawn on top of fGraphIO
@@ -344,7 +345,7 @@ void TTreePerfStats::Paint(Option_t *option)
       if (!fRealTimeAxis) {
          Double_t uxmax = gPad->GetUxmax();
          Double_t uymax = gPad->GetUymax();
-         Double_t rtmax = fRealTime*uymax/iomax;
+         Double_t rtmax = uymax/fRealNorm;
          fRealTimeAxis = new TGaxis(uxmax,0,uxmax,uymax,0.,rtmax,510,"+L");
          fRealTimeAxis->SetName("RealTimeAxis");
          fRealTimeAxis->SetLineColor(kRed);
