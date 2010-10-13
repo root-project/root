@@ -495,6 +495,8 @@ el_gets(EditLine_t* el, int* nread) {
 #endif /* DEBUG_EDIT */
 
    /* if EOF or error */
+   // See coverity[data_index] in read_getcmd():
+   // coverity[tainted_data]
    if ((num = read_getcmd(el, &cmdnum, &ch)) != OKCMD) {
 #ifdef DEBUG_READ
          (void) fprintf(el->fErrFile,
