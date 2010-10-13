@@ -5308,10 +5308,13 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       hnew = (TH1*)Clone(newname);
    }
 
+   //reset kCanRebin bit to avoid a rebinning in SetBinContent
+   Int_t bitRebin = hnew->TestBit(kCanRebin);
+   hnew->SetBit(kCanRebin,0);
+
    // save original statistics
    Double_t stat[kNstat];
    GetStats(stat);
-
    bool resetStat = false;
    // change axis specs and rebuild bin contents array::RebinAx
    if(!xbins && (newbins*ngroup != nbins)) {
@@ -5400,6 +5403,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    }
    hnew->SetBinContent(newbins+1,binContent);
    if (oldErrors) hnew->SetBinError(newbins+1,TMath::Sqrt(binError));
+   hnew->SetBit(kCanRebin,bitRebin);
 
    //restore statistics and entries  modified by SetBinContent
    hnew->SetEntries(entries);
