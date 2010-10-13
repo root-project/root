@@ -462,7 +462,7 @@ ostream& ostream::form(char *format ...) {
 struct G__CINT_IOFLAGS {
 #pragma ifndef G__TMPLTIOS
    typedef ios ios_base;
-#endif
+#pragma endif
    int flag, mask;
 };
 class G__CINT_ENDL { int dmy; } endl;
