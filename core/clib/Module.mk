@@ -19,6 +19,8 @@ CLIBDO       := $(CLIBDS:.cxx=.o)
 CLIBDH       := $(CLIBDS:.cxx=.h)
 
 CLIBH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+CLIBHH       := $(CLIBDIRI)/strlcpy.h $(CLIBDIRI)/snprintf.h \
+                $(CLIBDIRI)/Getline.h
 CLIBS1       := $(wildcard $(MODDIRS)/*.c)
 ifeq ($(BUILDEDITLINE),yes)
 CLIBS1       := $(filter-out $(MODDIRS)/Getline.c,$(CLIBS1))
@@ -43,9 +45,9 @@ INCLUDEFILES += $(CLIBDEP)
 include/%.h:    $(CLIBDIRI)/%.h
 		cp $< $@
 
-$(CLIBDS):      $(CLIBDIRI)/Getline.h $(CLIBL) $(ROOTCINTTMPDEP)
+$(CLIBDS):      $(CLIBHH) $(CLIBL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(CLIBDIRI)/Getline.h $(CLIBL)
+		$(ROOTCINTTMP) -f $@ -c $(CLIBHH) $(CLIBL)
 
 all-$(MODNAME): $(CLIBO) $(CLIBDO)
 

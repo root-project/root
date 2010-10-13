@@ -14,6 +14,8 @@
 #include "RConfig.h"
 #endif
 
+#ifndef __CINT__
+
 #ifdef NEED_SNPRINTF
 
 #include <stdio.h>
@@ -34,7 +36,7 @@ int vsnprintf(char *string, size_t length, const char *format, va_list args);
 int snprintf(char *string, size_t length, const char *format, ...);
 
 #ifdef WIN32
-#pragma warning( pop ) 
+#pragma warning( pop )
 #endif
 
 #ifdef __cplusplus
@@ -42,5 +44,11 @@ int snprintf(char *string, size_t length, const char *format, ...);
 #endif
 
 #endif /* NEED_SNPRINTF */
+
+#else
+
+int snprintf(char *string, size_t length, const char *format, ...);
+
+#endif /* __CINT__ */
 
 #endif /* ROOT_snprintf */
