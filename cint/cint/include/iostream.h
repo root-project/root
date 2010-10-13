@@ -459,16 +459,49 @@ ostream& ostream::form(char *format ...) {
 *  Following description must be deleted when pointer to compiled 
 * function is fully supported.
 *********************************************************************/
+struct G__CINT_IOFLAGS {
+#pragma ifndef G__TMPLTIOS
+   typedef ios ios_base;
+#endif
+   int flag, mask;
+};
 class G__CINT_ENDL { int dmy; } endl;
 class G__CINT_ENDS { int dmy; } ends;
 class G__CINT_FLUSH { int dmy; } flush;
 class G__CINT_ws { int dmy; } ws;
 class G__CINT_WS { int dmy; } WS;
+
+#define G__DECL_IOFM(WHAT, MASK) \
+   G__CINT_IOFLAGS WHAT = {ios_base::WHAT, ios_base::MASK}
+G__DECL_IOFM(hex,basefield);
+G__DECL_IOFM(oct,basefield);
+G__DECL_IOFM(dec,basefield);
+G__DECL_IOFM(scientific,floatfield);
+G__DECL_IOFM(fixed,floatfield);
+G__DECL_IOFM(left,adjustfield);
+G__DECL_IOFM(right,adjustfield);
+G__DECL_IOFM(internal,adjustfield);
+#undef G__DECL_IOFM
+
+#define G__DECL_IOF(WHAT) \
+   G__CINT_IOFLAGS WHAT = {ios_base::WHAT, ios_base::WHAT}
+G__DECL_IOF(boolalpha);
+G__DECL_IOF(showbase);
+G__DECL_IOF(showpoint);
+G__DECL_IOF(showpos);
+G__DECL_IOF(skipws);
+G__DECL_IOF(unitbuf);
+G__DECL_IOF(uppercase);
+
+
+/*
 class G__CINT_HEX { int dmy; } hex;
 class G__CINT_DEC { int dmy; } dec;
 class G__CINT_OCT { int dmy; } oct;
+class G__CINT_OCT { int dmy; } showpoint;
 class G__CINT_SCIENTIFIC { int dmy; } scientific;
 class G__CINT_FIXED { int dmy; } fixed;
+*/
 class G__CINT_NOSUPPORT { int dmy; } ;
 
 #ifndef G__STD_IOSTREAM
