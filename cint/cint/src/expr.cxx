@@ -945,6 +945,13 @@ char* G__setiparseobject(G__value* result, G__FastAllocString &str)
 }
 
 //______________________________________________________________________________
+static bool G__IsIdentifier(int c) {
+   // Check for character that is valid for an identifier.
+   // If start is true, digits are not allowed
+   return isalnum(c) || c == '_';
+}
+
+//______________________________________________________________________________
 extern "C"
 G__value G__calc_internal(const char* exprwithspace)
 {
@@ -966,10 +973,9 @@ G__value G__calc_internal(const char* exprwithspace)
 #endif // SIGBUS
 #endif // G__EH_SIGNAL
    char *exprnospace = (char*)malloc(strlen(exprwithspace) + 2);
-   int iin = 0, iout = 0, ipunct = 0;
+   int iin = 0, iout = 0;
    int single_quote = 0, double_quote = 0;
    G__value result;
-   int len = 0;
    int store_asm_exec = G__asm_exec;
    int store_asm_noverflow = G__asm_noverflow;
    G__asm_noverflow = 0;
@@ -980,56 +986,68 @@ G__value G__calc_internal(const char* exprwithspace)
    bool isdeletearr = false;
 
    while (exprwithspace[iin] != '\0') {
+      bool next_double_quote = double_quote;
+      bool next_single_quote = single_quote;
+      bool skipchar = false;
       switch (exprwithspace[iin]) {
          case '"' : /* double quote */
             if (single_quote == 0) {
-               double_quote ^= 1;
+               next_double_quote ^= 1;
             }
-            exprnospace[iout++] = exprwithspace[iin++] ;
             break;
          case '\'' : /* single quote */
             if (double_quote == 0) {
-               single_quote ^= 1;
+               next_single_quote ^= 1;
             }
-            exprnospace[iout++] = exprwithspace[iin++] ;
             break;
+         case ';' : /* semi-column */
+            skipchar = true;
+            // intentional fall-through:
          case '\n': /* end of line */
          case '\r': /* end of line */
-         case ';' : /* semi-column */
          case ' ' : /* space */
          case '\t' : /* tab */
             exprnospace[iout] = '\0'; /* temporarily terminate string */
-            len = strlen(exprnospace);
-            if ((single_quote != 0) || (double_quote != 0)
-                  || (len >= 5 + ipunct && strncmp(exprnospace + ipunct, "const", 5) == 0)
-               ) {
-               
-               exprnospace[iout++] = exprwithspace[iin] ;
-            } else if (len >= 3 + ipunct && strncmp(exprnospace + ipunct, "new", 3) == 0) {
-               exprnospace[iout++] = exprwithspace[iin] ;
-            } else if (len >= 8 && strncmp(exprnospace, "delete[]", 8) == 0) {
+            if (iout == 8 && strncmp(exprnospace, "delete[]", 8) == 0) {
                iout = 0;
-               ipunct = 0;
                isdeletearr = true;
             }
-            else if (len >= 6 && strncmp(exprnospace, "delete", 6) == 0) {
+            else if (iout == 6 && strncmp(exprnospace, "delete", 6) == 0) {
                iout = 0;
-               ipunct = 0;
                isdelete = true;
             }
-            iin++;
             break;
-         case '=':
-         case '(':
-         case ')':
-         case ',':
-         case '<':
-            ipunct = iout + 1;
-            // Mark as a punctuation as continue as usual
          default :
-            exprnospace[iout++] = exprwithspace[iin++] ;
             break;
       }
+      // adapted from fread's G__fgetstream_newtemplate_internal()
+      if (iout > 0 && !single_quote && !double_quote
+          && isspace(exprnospace[iout - 1])) {
+         char c = exprwithspace[iin];
+
+         // We want to append to a space. Do we keep it?
+         if (isspace(c)) --iout; // replace ' ' by ' '
+         else if (iout == 1) {
+            // string is " " - remove leading space.
+            --iout;
+         } else {
+            char pp = exprnospace[iout - 2];
+            // We only keep spaces between "identifiers" like "new const long long"
+            // and between '> >'
+            if ((G__IsIdentifier(pp) && G__IsIdentifier(c)) || (pp == '>' && c == '>')) {
+            } else {
+               // replace previous ' '
+               --iout;
+            }
+         }
+      }
+      if (!skipchar) {
+         exprnospace[iout++] = exprwithspace[iin++];
+      } else {
+         ++iin;
+      }
+      double_quote = next_double_quote;
+      single_quote = next_single_quote;
    }
    exprnospace[iout++] = '\0';
    if (isdelete) {
