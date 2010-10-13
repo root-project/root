@@ -245,7 +245,7 @@ public:
 #ifdef R__VISUAL_CPLUSPLUS
       fEnd = &(*(vec->end()-1)) + 1; // On windows we can not dererence the end iterator at all.
 #else
-      // coverity[invalidate_iterator] Safe on other platforms
+      // coverity[past_the_end] Safe on other platforms
       fEnd = &(*vec->end());
 #endif
       //fCreateIterators(collection, &fBegin, &fEnd);

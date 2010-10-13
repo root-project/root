@@ -1247,7 +1247,7 @@ void TGenCollectionProxy__VectorCreateIterators(void *obj, void **begin_arena, v
 #ifdef R__VISUAL_CPLUSPLUS
    *end_arena = &(*(vec->end()-1)) + 1; // On windows we can not dererence the end iterator at all.
 #else
-   // coverity[invalidate_iterator] Safe on other platforms
+   // coverity[past_the_end] Safe on other platforms
    *end_arena = &(*vec->end());
 #endif
    
