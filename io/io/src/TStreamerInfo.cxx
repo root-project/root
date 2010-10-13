@@ -801,12 +801,6 @@ void TStreamerInfo::BuildCheck()
                R__ASSERT(0);
             }
          }
-      } else {
-         if (info) {
-            Error("BuildCheck","Wrong class info");
-            SetBit(kCanDelete);
-            return;
-         }
       }
       if (!fClass->IsLoaded() &&  this->fOnFileClassVersion>1)
       {
