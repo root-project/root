@@ -122,8 +122,8 @@ public:
                  , kFont
                  , kAllFields
                  };
-   QtGContext() : QWidget(0) ,fMask(0),fBrush(Qt::SolidPattern), fTilePixmap(0),fStipple(0),fClipMask(0),fFont(0) {}
-   QtGContext(const GCValues_t &gval) : QWidget(0) ,fMask(0),fTilePixmap(0),fStipple(0),fClipMask(0),fFont(0){Copy(gval);}
+   QtGContext() : QWidget(0) ,fMask(0),fROp(),  fPen(), fBrush(Qt::SolidPattern), fTilePixmap(0),fStipple(0),fClipMask(0),fFont(0) {}
+   QtGContext(const GCValues_t &gval) : QWidget(0) ,fMask(0),fROp(), fPen(), fBrush(),fTilePixmap(0),fStipple(0),fClipMask(0),fFont(0){Copy(gval);}
    void              Copy(const QtGContext &dst,Mask_t rootMask = 0xff);
    const QtGContext &Copy(const GCValues_t &gval);
    void              DumpMask() const;
