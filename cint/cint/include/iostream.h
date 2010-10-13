@@ -478,9 +478,12 @@ G__DECL_IOFM(oct,basefield);
 G__DECL_IOFM(dec,basefield);
 G__DECL_IOFM(scientific,floatfield);
 G__DECL_IOFM(fixed,floatfield);
+/*
+Better not, or "left" will become a CINT reserved variable.
 G__DECL_IOFM(left,adjustfield);
 G__DECL_IOFM(right,adjustfield);
 G__DECL_IOFM(internal,adjustfield);
+*/
 #undef G__DECL_IOFM
 
 #define G__DECL_IOF(WHAT) \
