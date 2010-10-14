@@ -236,6 +236,7 @@ namespace TMVA {
       void SetSignalClass( Int_t cls )     { fSignalClass = cls; fDistr->SetSignalClass( cls ); } // TODO: intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
       void SetBackgroundClass( Int_t cls ) { fBackgroundClass = cls; fDistr->SetBackgroundClass( cls ); } // TODO: intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
 
+      // coverity[ -tainted_data_return ]
       Int_t    GetTotDim()    const {return fDim;  } // Get total dimension
       TString  GetFoamName()  const {return fName; } // Get name of foam
       UInt_t   GetNElements() const {return fNElements; } // returns number of elements, saved on every cell
@@ -296,11 +297,11 @@ namespace TMVA {
       // ---------- Foam projection methods
 
       // project foam to two-dimensional histogram
-      TH2D* Project2(Int_t idim1, Int_t idim2, const char *opt="nev", 
+      TH2D* Project2(Int_t idim1, Int_t idim2, const char *opt="nev",
                      const char *ker="kNone", UInt_t maxbins=0);
 
       // helper function for Project2()
-      Double_t GetProjectionCellValue( PDEFoamCell* cell, 
+      Double_t GetProjectionCellValue( PDEFoamCell* cell,
                                        Int_t idim1, Int_t idim2, ECellValue cv );
 
       // Project one-dimensional foam to a 1-dim histogram
@@ -308,9 +309,9 @@ namespace TMVA {
 
       // Generates C++ code (root macro) for drawing foam with boxes (only 2-dim!)
       void RootPlot2dim( const TString& filename, std::string what,
-                         Bool_t CreateCanvas = kTRUE, Bool_t colors = kTRUE, 
+                         Bool_t CreateCanvas = kTRUE, Bool_t colors = kTRUE,
                          Bool_t log_colors = kFALSE  );
-      
+
       // ---------- Foam evaluation functions
 
       // get cell value for a given event
@@ -327,18 +328,20 @@ namespace TMVA {
       Double_t GetCellRegValue0(std::vector<Float_t>, EKernel kernel=kNone);
 
       // returns regression value i, given all variables (multi target regression)
-      std::vector<Float_t> GetProjectedRegValue(std::vector<Float_t> vals, EKernel kernel=kNone, ETargetSelection ts=kMean);
+      std::vector<Float_t> GetProjectedRegValue(std::vector<Float_t> vals,
+                                                EKernel kernel=kNone,
+                                                ETargetSelection ts=kMean);
 
       // ---------- ROOT class definition
       ClassDef(PDEFoam,3)
-   }; // end of PDEFoam 
+   }; // end of PDEFoam
 
 }  // namespace TMVA
 
 // ---------- Inline functions
 
 //_____________________________________________________________________
-inline Float_t TMVA::PDEFoam::VarTransform(Int_t idim, Float_t x) 
+inline Float_t TMVA::PDEFoam::VarTransform(Int_t idim, Float_t x)
 {
    // transform variable x from [xmin, xmax] --> [0, 1]
    return (x-fXmin[idim])/(fXmax[idim]-fXmin[idim]);
@@ -356,7 +359,7 @@ inline std::vector<Float_t> TMVA::PDEFoam::VarTransform(std::vector<Float_t> inv
 
 //_____________________________________________________________________
 inline Float_t TMVA::PDEFoam::VarTransformInvers(Int_t idim, Float_t x)
-{ 
+{
    // transform variable x from [0, 1] --> [xmin, xmax]
    return x*(fXmax[idim]-fXmin[idim]) + fXmin[idim];
 }
