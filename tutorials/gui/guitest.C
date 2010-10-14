@@ -10,6 +10,7 @@
 #include <stdlib.h>
 
 #include <TROOT.h>
+#include <TClass.h>
 #include <TApplication.h>
 #include <TVirtualX.h>
 #include <TVirtualPadEditor.h>
