@@ -1020,7 +1020,12 @@ Long64_t TTree::AutoSave(Option_t* option)
    TFile *file = fDirectory->GetFile();
    if (file) file->WriteStreamerInfo();
 
-   if (opt.Contains("saveself")) fDirectory->SaveSelf();
+   if (opt.Contains("saveself")) {
+      fDirectory->SaveSelf();
+      //the following line is required in case GetUserInfo contains a user class
+      //for which the StreamerInfo must be written. One could probably be a bit faster (Rene)
+      if (file) file->WriteHeader();
+   }
 
    return nbytes;
 }
