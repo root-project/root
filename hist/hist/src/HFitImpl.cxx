@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <cmath>
 #include <memory>
+#include <limits>
 
 //#define DEBUG
 
@@ -443,17 +444,37 @@ void HFit::GetDrawingRange(TH1 * h1, ROOT::Fit::DataRange & range) {
 void HFit::GetDrawingRange(TGraph * gr,  ROOT::Fit::DataRange & range) { 
    // get range for graph (used sub-set histogram)
    // N.B. : this is different than in previous implementation of TGraph::Fit where range used was from xmin to xmax.
-   HFit::GetDrawingRange(gr->GetHistogram(), range);
+   TH1 * h1 = gr->GetHistogram();
+   // an histogram is normally always returned for a TGraph
+   if (h1) HFit::GetDrawingRange(h1, range);
 }
 void HFit::GetDrawingRange(TMultiGraph * mg,  ROOT::Fit::DataRange & range) { 
    // get range for multi-graph (used sub-set histogram)
    // N.B. : this is different than in previous implementation of TMultiGraph::Fit where range used was from data xmin to xmax.
-   HFit::GetDrawingRange(mg->GetHistogram(), range);
+   TH1 * h1 = mg->GetHistogram();
+   if (h1) {
+      HFit::GetDrawingRange(h1, range);
+   } 
+   else if (range.Size(0) == 0) { 
+      // compute range from all the TGraph's belonging to the MultiGraph
+      double xmin = std::numeric_limits<double>::infinity(); 
+      double xmax = -std::numeric_limits<double>::infinity(); 
+      TIter next(mg->GetListOfGraphs() );
+      TGraph * g = 0; 
+      while (  (g = (TGraph*) next() ) ) { 
+         double x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+         g->ComputeRange(x1,y1,x2,y2); 
+         if (x1 < xmin) xmin = x1; 
+         if (x2 > xmax) xmax = x2; 
+      }
+      range.AddRange(xmin,xmax);
+   }
 }
 void HFit::GetDrawingRange(TGraph2D * gr,  ROOT::Fit::DataRange & range) { 
    // get range for graph2D (used sub-set histogram)
    // N.B. : this is different than in previous implementation of TGraph2D::Fit. There range used was always(0,0)
-   HFit::GetDrawingRange(gr->GetHistogram(), range);
+   TH1 * h1 = gr->GetHistogram();
+   if (h1) HFit::GetDrawingRange(h1, range);
 }
 
 void HFit::GetDrawingRange(THnSparse * s1, ROOT::Fit::DataRange & range) { 
