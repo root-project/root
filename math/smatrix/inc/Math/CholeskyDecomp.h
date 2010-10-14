@@ -18,6 +18,9 @@
  *	obtain the inverse matrix from the decomposition
  */
 
+#include <cmath>
+#include <algorithm>
+
 namespace ROOT { 
 
    namespace Math { 
