@@ -21,7 +21,7 @@ public:
    static  void Close();
    virtual void Disable();
    virtual void Enable();
-   static  void Show(Double_t update=0.01, const char* fname="*");
+   static  void Show(Double_t update=0.01, Int_t nbigleaks=20, const char* fname="*");
 
    ClassDef(TMemStat, 0) // a user interface class of MemStat
 };
