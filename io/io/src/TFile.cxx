@@ -2502,23 +2502,24 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          if (cl->GetSchemaRules()) {
             rules = cl->GetSchemaRules()->FindRules(cl->GetName(), info->GetClassVersion());
             TString strrule;
-            for(Int_t art = 0; art < rules->GetEntries(); ++art) {
-               ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)rules->At(art);
-               strrule.Clear();
-               if (genreflex) {
-                  rule->AsString(strrule,"x");
-                  strrule.Append("\n");
-                  if ( selections.Index(strrule) == kNPOS ) {
-                     selections.Append(strrule);
+            if (rules) {
+               for(Int_t art = 0; art < rules->GetEntries(); ++art) {
+                  ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)rules->At(art);
+                  strrule.Clear();
+                  if (genreflex) {
+                     rule->AsString(strrule,"x");
+                     strrule.Append("\n");
+                     if ( selections.Index(strrule) == kNPOS ) {
+                        selections.Append(strrule);
+                     }
+                  } else {
+                     rule->AsString(strrule);
+                     if (strncmp(strrule.Data(),"type=",5)==0) {
+                        strrule.Remove(0,5);
+                     }
+                     fprintf(fp,"#pragma %s;\n",strrule.Data());
                   }
-               } else {
-                  rule->AsString(strrule);
-                  if (strncmp(strrule.Data(),"type=",5)==0) {
-                     strrule.Remove(0,5);
-                  }
-                  fprintf(fp,"#pragma %s;\n",strrule.Data());
                }
-
             }
             delete rules;
          }
