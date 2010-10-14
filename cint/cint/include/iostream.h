@@ -460,6 +460,7 @@ ostream& ostream::form(char *format ...) {
 * function is fully supported.
 *********************************************************************/
 struct G__CINT_IOFLAGS {
+   G__CINT_IOFLAGS(int f = 0, int m = 0): flag(f), mask(m) {}
 #pragma ifndef G__TMPLTIOS
    typedef ios ios_base;
 #pragma endif
@@ -472,7 +473,7 @@ class G__CINT_ws { int dmy; } ws;
 class G__CINT_WS { int dmy; } WS;
 
 #define G__DECL_IOFM(WHAT, MASK) \
-   G__CINT_IOFLAGS WHAT = {ios_base::WHAT, ios_base::MASK}
+   G__CINT_IOFLAGS WHAT(ios_base::WHAT, ios_base::MASK);
 G__DECL_IOFM(hex,basefield);
 G__DECL_IOFM(oct,basefield);
 G__DECL_IOFM(dec,basefield);
@@ -486,8 +487,8 @@ G__DECL_IOFM(internal,adjustfield);
 */
 #undef G__DECL_IOFM
 
-#define G__DECL_IOF(WHAT) \
-   G__CINT_IOFLAGS WHAT = {ios_base::WHAT, ios_base::WHAT}
+#define G__DECL_IOF(WHAT)\
+   G__CINT_IOFLAGS WHAT(ios_base::WHAT, ios_base::WHAT);
 G__DECL_IOF(boolalpha);
 G__DECL_IOF(showbase);
 G__DECL_IOF(showpoint);
