@@ -341,8 +341,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
       TString btstring = "";
       TMemStatShow::FillBTString(ll,btstring);
       strlcpy(temp,btstring.Data(),nchar);
-      Int_t nbytes  = (Int_t)gHleaks->GetBinContent(ll);
-      htotleaks->Fill(temp,nbytes);
+      htotleaks->Fill(temp,gHleaks->GetBinContent(ll));
    }
    htotleaks->LabelsOption(">");
    htotleaks->GetXaxis()->SetRange(1,nbigleaks); 
