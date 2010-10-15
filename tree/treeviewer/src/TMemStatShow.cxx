@@ -334,18 +334,36 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    c3->SetFrameFillColor(kCyan-6);
    c3->SetGridx();
    c3->SetGridy();
+   c3->SetLogx();
+   c3->SetLeftMargin(0.05);
+   c3->SetRightMargin(0.7);
    TH1I *htotleaks = new TH1I("htotleaks","main leaks sorted by btids",100,0,0);
-   char temp[1000];
-   Int_t nchar = 200;
-   for (Int_t ll=1;ll<=nleaks;ll++) {
+   Int_t l;
+   for (l=1;l<=nleaks;l++) {
       TString btstring = "";
-      TMemStatShow::FillBTString(ll,btstring);
-      strlcpy(temp,btstring.Data(),nchar);
-      htotleaks->Fill(temp,gHleaks->GetBinContent(ll));
+      TMemStatShow::FillBTString(l,1,btstring);
+      htotleaks->Fill(btstring.Data()+2,gHleaks->GetBinContent(l));
    }
    htotleaks->LabelsOption(">");
    htotleaks->GetXaxis()->SetRange(1,nbigleaks); 
-   htotleaks->Draw();
+   htotleaks->GetXaxis()->SetLabelSize(0.03);
+   htotleaks->SetFillColor(kBlue-3);
+   htotleaks->Draw("hbar2 y+");
+   
+   //now loop on all the sorted bins and count the number of leaks
+   TString btstring;
+   for (Int_t lb=1;lb<=nbigleaks;lb++) {
+      const char *label = htotleaks->GetXaxis()->GetBinLabel(lb);
+      Int_t nchlabel = strlen(label);
+      Int_t nl =0;
+      for (l=1;l<=nleaks;l++) {
+         btstring = "";
+         TMemStatShow::FillBTString(l,1,btstring);
+         if (!strncmp(btstring.Data()+2,label,nchlabel)) nl++;
+      }
+      printf("bin %d, nl=%d, label=%s\n",lb,nl, label);
+   }
+   
 }
 
 //______________________________________________________________________
@@ -363,7 +381,7 @@ void TMemStatShow::EventInfo(Int_t event, Int_t px, Int_t , TObject *selected)
    Int_t entry   = (Int_t)gHentry->GetBinContent(bin);
    Double_t time = 0.0001*gV3[entry];
    TString ttip;
-   TMemStatShow::FillBTString(bin,ttip);
+   TMemStatShow::FillBTString(bin,0,ttip);
       
    if (selected) {
       TString form1 = TString::Format("  Leak number=%d, leaking %d bytes at entry=%d    time=%gseconds\n\n",bin,nbytes,entry,time);
@@ -374,7 +392,7 @@ void TMemStatShow::EventInfo(Int_t event, Int_t px, Int_t , TObject *selected)
 }
 
 //______________________________________________________________________
-void TMemStatShow::FillBTString(Int_t bin,TString &btstring)
+void TMemStatShow::FillBTString(Int_t bin,Int_t mode,TString &btstring)
 {
    // static: fill btstring with the traceback corresponding to bin in gHleaks
    //          btstring must be initialized in calling function
@@ -387,20 +405,25 @@ void TMemStatShow::FillBTString(Int_t bin,TString &btstring)
    if (!gBtidlist) gBtidlist = (TObjArray*)gFile->Get("FAddrsList"); //old memstat files
    if (!gBtidlist) return;
    Int_t nbt = (Int_t)hbtids->GetBinContent(btid-1);
-
    for (Int_t i=0;i<nbt;i++) {
       Int_t j = (Int_t)hbtids->GetBinContent(btid+i);
       TNamed *nm = (TNamed*)gBtidlist->At(j);
       if (nm==0) break;
       char *title = (char*)nm->GetTitle();
       Int_t nch = strlen(title);
-      if (nch < 20) continue;
-      if (nch > 100) title[100] =0;
-      const char *bar = strstr(title,"| ");
-      if (!bar) continue;
+      if (nch < 10) continue;
+      if (strstr(title,"memstat")) continue;
+      char *bar = strchr(title+5,'|');
+      if (!bar) bar = title;
+      
       if (strstr(bar,"operator new")) continue;
       if (strstr(bar,"libMemStat")) continue;
       if (strstr(bar,"G__Exception")) continue;
-      btstring += TString::Format("%2d %s\n",i,bar+1);
+      if (mode) {
+         btstring += TString::Format("%s ",bar);
+         if (btstring.Length() > 80) return;
+      } else {
+         btstring += TString::Format("%2d %s\n",i,bar+1);
+      }
    }
 }
