@@ -392,11 +392,13 @@ ifeq ($(MACOSX_MINOR),)
 endif
 ifeq ($(subst $(MACOSX_MINOR),,123),123)
 UNDEFOPT      = dynamic_lookup
-LD           ?= MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
+LD           ?= c++
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) $(LD)
 else
 ifeq ($(MACOSX_MINOR),3)
 UNDEFOPT      = dynamic_lookup
-LD           ?= MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
+LD           ?= c++
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) $(LD)
 CXXFLAGS     += -Wno-long-double
 else
 UNDEFOPT      = suppress
@@ -429,11 +431,13 @@ ifeq ($(MACOSX_MINOR),)
 endif
 ifeq ($(subst $(MACOSX_MINOR),,123),123)
 UNDEFOPT      = dynamic_lookup
-LD           ?= MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
+LD           ?= c++
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) $(LD)
 else
 ifeq ($(MACOSX_MINOR),3)
 UNDEFOPT      = dynamic_lookup
-LD           ?= MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
+LD           ?= c++
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) $(LD)
 else
 UNDEFOPT      = suppress
 LD           ?= g++
@@ -464,11 +468,13 @@ ifeq ($(MACOSX_MINOR),)
 endif
 ifeq ($(subst $(MACOSX_MINOR),,123),123)
 UNDEFOPT      = dynamic_lookup
-LD           ?= MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) icpc
+LD           ?= icpc
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) $(LD)
 else
 ifeq ($(MACOSX_MINOR),3)
 UNDEFOPT      = dynamic_lookup
-LD           ?= MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) icpc
+LD           ?= icpc
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) $(LD)
 else
 UNDEFOPT      = suppress
 LD           ?= icpc
