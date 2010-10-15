@@ -271,8 +271,15 @@ SetPathForBuild = $(ROOTTEST_LOC)scripts/roottestpath
 ifeq ($(ROOT_LOC),)
    export ROOT_LOC := $(shell cygpath -u '$(ROOTSYS)')
 endif
+else
+ROOT_LOC=$(ROOTSYS)
+endif
 # Avoid common typo
 ROOTLOC=$(ROOT_LOC)
+
+include $(ROOT_LOC)/config/Makefile.comp
+
+ifeq ($(PLATFORM),win32)
 
 # Windows with the VC++ compiler
 ObjSuf        = obj
@@ -281,7 +288,7 @@ ExeSuf        = .exe
 DllSuf        = dll
 LibSuf        = lib
 OutPutOpt     = -out:
-CXX           = cl
+CXX          ?= cl
 #CXXOPT        = -O2
 CXXOPT        = -Z7
 #CXXFLAGS      = $(CXXOPT) -G5 -GR -MD -DWIN32 -D_WINDOWS -nologo \
@@ -291,7 +298,8 @@ ifeq ($(RCONFIG_INC),)
 endif
 CXXFLAGS      += $(CXXOPT) -nologo -I$(RCONFIG_INC) -FIw32pragma.h
 CXXFLAGS      += -TP 
-LD            = link -nologo
+# replace script invocation for LD in Makefile.comp
+LD             = link -nologo
 #LDOPT         = -opt:ref
 #LDOPT         = -debug
 #LDFLAGS       = $(LDOPT) -nologo -nodefaultlib -incremental:no
@@ -321,8 +329,8 @@ endif
 ifeq ($(ARCH),linux)
 
 # Linux with egcs, gcc 2.9x, gcc 3.x (>= RedHat 5.2)
-CXX           = g++
-LD            = g++
+CXX          ?= g++
+LD           ?= g++
 ifeq ($(ROOTBUILD),debug)
 CXXFLAGS      += -g -Wall -fPIC
 else
@@ -333,8 +341,8 @@ endif
 
 ifeq ($(ARCH),linuxx8664gcc)
 
-CXX           = g++
-LD            = g++
+CXX          ?= g++
+LD           ?= g++
 ifeq ($(ROOTBUILD),debug)
 CXXFLAGS      += -g -Wall -fPIC
 else
@@ -345,9 +353,9 @@ endif
 
 ifeq ($(ARCH),linuxicc)
 # Linux with Intel icc compiler in 32-bit mode
-CC  = icc
-CXX = icpc
-LD  = icpc
+CC ?= icc
+CXX?= icpc
+LD ?= icpc
 ifeq ($(ROOTBUILD),debug)
 CXXFLAGS += -g -wd191 -fPIC 
 else
@@ -358,9 +366,9 @@ endif
 
 ifeq ($(ARCH),linuxx8664icc)
 # Linux with Intel icc compiler in 64-bit mode
-CC  = icc
-CXX = icpc
-LD  = icpc
+CC ?= icc
+CXX?= icpc
+LD ?= icpc
 ifeq ($(ROOTBUILD),debug)
 CXXFLAGS += -g -wd191 -fPIC
 else
@@ -373,7 +381,7 @@ ifeq ($(ARCH),macosx)
 
 # MacOSX with cc/g++
 export DYLD_LIBRARY_PATH:=$(ROOTTEST_HOME)/scripts:$(DYLD_LIBRARY_PATH)
-CXX           = g++
+CXX          ?= g++
 ifeq ($(ROOTBUILD),debug)
 CXXFLAGS      += -m32 -g -pipe -Wall -fPIC -Woverloaded-virtual
 else
@@ -384,15 +392,15 @@ ifeq ($(MACOSX_MINOR),)
 endif
 ifeq ($(subst $(MACOSX_MINOR),,123),123)
 UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
+LD           ?= MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
 else
 ifeq ($(MACOSX_MINOR),3)
 UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
+LD           ?= MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
 CXXFLAGS     += -Wno-long-double
 else
 UNDEFOPT      = suppress
-LD            = c++
+LD           ?= c++
 CXXFLAGS     += -Wno-long-double
 endif
 endif
@@ -410,7 +418,7 @@ ifeq ($(ARCH),macosx64)
 
 # MacOSX 64 bit with cc/g++
 export DYLD_LIBRARY_PATH:=$(ROOTTEST_HOME)/scripts:$(DYLD_LIBRARY_PATH)
-CXX           = g++
+CXX          ?= g++
 ifeq ($(ROOTBUILD),debug)
 CXXFLAGS      += -m64 -g -pipe -Wall -fPIC -Woverloaded-virtual
 else
@@ -421,14 +429,14 @@ ifeq ($(MACOSX_MINOR),)
 endif
 ifeq ($(subst $(MACOSX_MINOR),,123),123)
 UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
+LD           ?= MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
 else
 ifeq ($(MACOSX_MINOR),3)
 UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
+LD           ?= MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
 else
 UNDEFOPT      = suppress
-LD            = g++
+LD           ?= g++
 endif
 endif
 LDFLAGS       = -m64
@@ -444,8 +452,8 @@ ifeq ($(ARCH),macosxicc)
 
 # MacOSX 32/64 bit with Intel icc
 export DYLD_LIBRARY_PATH:=$(ROOTTEST_HOME)/scripts:$(DYLD_LIBRARY_PATH)
-CC            = icc
-CXX           = icpc
+CC           ?= icc
+CXX          ?= icpc
 ifeq ($(ROOTBUILD),debug)
 CXXFLAGS      += -g -fPIC -wd191 -wd1476
 else
@@ -456,14 +464,14 @@ ifeq ($(MACOSX_MINOR),)
 endif
 ifeq ($(subst $(MACOSX_MINOR),,123),123)
 UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) icpc
+LD           ?= MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) icpc
 else
 ifeq ($(MACOSX_MINOR),3)
 UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) icpc
+LD           ?= MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) icpc
 else
 UNDEFOPT      = suppress
-LD            = icpc
+LD           ?= icpc
 endif
 endif
 LDFLAGS       =
