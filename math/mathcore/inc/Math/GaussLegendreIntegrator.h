@@ -65,7 +65,9 @@ public:
        Gauss-Legendre: W(x)=1 -1<x<1 
                        (j+1)P_{j+1} = (2j+1)xP_j-jP_{j-1}
    */
-   void GetWeightVectors(double *x, double *w);
+   void GetWeightVectors(double *x, double *w) const;
+
+   int GetNumberPoints() const { return fNum; }
 
 
 private:

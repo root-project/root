@@ -11,6 +11,7 @@
 #include "Math/GaussLegendreIntegrator.h"
 #include <cmath>
 #include <string.h>
+#include <algorithm>
 
 namespace ROOT {
 namespace Math {
@@ -43,12 +44,12 @@ void GaussLegendreIntegrator::SetNumberPoints(int num)
    CalcGaussLegendreSamplingPoints();
 }
 
-void GaussLegendreIntegrator::GetWeightVectors(double *x, double *w)
+void GaussLegendreIntegrator::GetWeightVectors(double *x, double *w) const
 {
    // Returns the arrays x and w.
 
-   memcpy(x, fX, fNum);
-   memcpy(w, fW, fNum);
+   std::copy(fX,fX+fNum, x);
+   std::copy(fW,fW+fNum, w);
 }
 
 
