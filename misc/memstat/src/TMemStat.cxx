@@ -49,6 +49,7 @@
 //  in the bin below the mouse.
 //
 // -In canvas3 it displays the histogram of the nbigleaks largest leaks (default is 20)
+//    for each leak, the number of allocs and average alloc size is shown.
 //
 //
 // Simply do:
