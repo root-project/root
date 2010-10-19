@@ -53,12 +53,32 @@ TEveProjectable::~TEveProjectable()
       p->UnRefProjectable(this);
       TEveElement* el = p->GetProjectedAsElement();
       assert(el);
-      // if (el)
       {
          gEve->PreDeleteElement(el);
          delete el;
       }
    }
+}
+
+//______________________________________________________________________________
+void TEveProjectable::AnnihilateProjecteds()
+{
+   // Optimized destroy of projected elements with condition 
+   // there is only one parent for projected element. Method is 
+   // called from TEveElement::Annihilate(). 
+
+   for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
+   {
+      (*i)->UnRefProjectable(this, kFALSE);
+      (*i)->GetProjectedAsElement()->Annihilate();
+   }
+   fProjectedList.clear();
+}
+
+//______________________________________________________________________________
+void TEveProjectable::ClearProjectedList()
+{
+   fProjectedList.clear();
 }
 
 //______________________________________________________________________________
@@ -185,7 +205,7 @@ void TEveProjected::SetProjection(TEveProjectionManager* mng, TEveProjectable* m
 }
 
 //______________________________________________________________________________
-void TEveProjected::UnRefProjectable(TEveProjectable* assumed_parent)
+void TEveProjected::UnRefProjectable(TEveProjectable* assumed_parent, bool notifyParent)
 {
    // Remove reference to projectable.
 
@@ -193,7 +213,7 @@ void TEveProjected::UnRefProjectable(TEveProjectable* assumed_parent)
 
    assert(fProjectable == assumed_parent);
 
-   fProjectable->RemoveProjected(this);
+   if (notifyParent) fProjectable->RemoveProjected(this);
    fProjectable = 0;
 }
 

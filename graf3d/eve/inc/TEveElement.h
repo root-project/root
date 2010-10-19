@@ -104,6 +104,7 @@ protected:
 
    virtual void PreDeleteElement();
    virtual void RemoveElementsInternal();
+   virtual void AnnihilateRecursively();
 
    static const char* ToString(Bool_t b);
 
@@ -192,9 +193,9 @@ public:
    virtual void PadPaint(Option_t* option);
    virtual void PaintStandard(TObject* id);
 
-   virtual TObject* GetObject      (const TEveException& eh="TEveElement::GetObject ") const;
-   virtual TObject* GetEditorObject(const TEveException& eh="TEveElement::GetEditorObject ") const { return GetObject(eh); }
-   virtual TObject* GetRenderObject(const TEveException& eh="TEveElement::GetRenderObject ") const { return GetObject(eh); }
+   virtual TObject* GetObject      (const TEveException& eh) const;
+   virtual TObject* GetEditorObject(const TEveException& eh) const { return GetObject(eh); }
+   virtual TObject* GetRenderObject(const TEveException& eh) const { return GetObject(eh); }
 
    // --------------------------------
 
@@ -234,6 +235,9 @@ public:
    virtual void RemoveElementLocal(TEveElement* el);
    virtual void RemoveElements();
    virtual void RemoveElementsLocal();
+
+   virtual void AnnihilateElements();
+   virtual void Annihilate();
 
    virtual void ProjectChild(TEveElement* el, Bool_t same_depth=kTRUE);
    virtual void ProjectAllChildren(Bool_t same_depth=kTRUE);
@@ -319,6 +323,13 @@ protected:
       kCSCBApplyMainTransparencyToMatchingChildren = BIT(5)  // compound will apply transparency change to all children with matching color
    };
 
+   enum EDestruct
+   {
+      kNone,
+      kStandard,
+      kAnnihilate,
+   };
+
    UChar_t fCSCBits;
 
 public:
@@ -377,7 +388,7 @@ public:
 
 protected:
    UChar_t      fChangeBits;  //!
-   Bool_t       fDestructing; //!
+   Char_t       fDestructing; //!
 
 public:
    void StampColorSelection() { AddStamp(kCBColorSelection); }

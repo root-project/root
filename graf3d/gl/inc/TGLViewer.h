@@ -42,6 +42,7 @@ class TGLClipSet;
 class TGLManipSet;
 class TGLCameraOverlay;
 class TGLContextIdentity;
+class TGLAutoRotator;
 class TTimer;
 
 class TContextMenu;
@@ -91,6 +92,7 @@ protected:
    TGLOrthoCamera       fOrthoXnOZCamera;      //!
    TGLOrthoCamera       fOrthoZnOYCamera;      //!
    TGLCamera           *fCurrentCamera;        //!
+   TGLAutoRotator      *fAutoRotator;          //!
 
    // Stereo
    Bool_t               fStereo;               //! use stereo rendering
@@ -277,6 +279,7 @@ public:
    void   PickAnnotate()        { fPushAction = kPushAnnotate;  RefreshPadEditor(this); }
    TGLCameraOverlay* GetCameraOverlay() const { return fCameraOverlay; }
    void SetCameraOverlay(TGLCameraOverlay* m) { fCameraOverlay = m; }
+   TGLAutoRotator* GetAutoRotator();
 
    // Stereo
    Bool_t  GetStereo()               const { return fStereo; }

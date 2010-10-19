@@ -58,6 +58,9 @@ public:
    virtual void AddProjected(TEveProjected* p)    { fProjectedList.push_back(p); }
    virtual void RemoveProjected(TEveProjected* p) { fProjectedList.remove(p);   }
 
+   virtual void AnnihilateProjecteds();
+   virtual void ClearProjectedList();
+
    virtual void AddProjectedsToSet(std::set<TEveElement*>& set);
 
    virtual void PropagateVizParams(TEveElement* el=0);
@@ -100,7 +103,7 @@ public:
    Float_t                GetDepth()       const { return fDepth; }
 
    virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
-   virtual void UnRefProjectable(TEveProjectable* assumed_parent);
+   virtual void UnRefProjectable(TEveProjectable* assumed_parent, bool notifyParent = true);
 
    virtual void UpdateProjection() = 0;   
    virtual TEveElement* GetProjectedAsElement();

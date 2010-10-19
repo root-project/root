@@ -19,6 +19,7 @@
 #include "GuiTypes.h"
 
 #include <list>
+#include <map>
 #include <set>
 #include <exception>
 
@@ -186,7 +187,10 @@ public:
 class TEveRefBackPtr : public TEveRefCnt
 {
 protected:
-   std::list<TEveElement*> fBackRefs;
+   typedef std::map<TEveElement*, Int_t> RefMap_t;
+   typedef RefMap_t::iterator            RefMap_i;
+
+   RefMap_t fBackRefs;
 
 public:
    TEveRefBackPtr();

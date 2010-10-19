@@ -17,6 +17,7 @@
 #include "TGLLightSet.h"
 #include "TGLManipSet.h"
 #include "TGLCameraOverlay.h"
+#include "TGLAutoRotator.h"
 
 #include "TGLScenePad.h"
 #include "TGLLogicalShape.h"
@@ -110,6 +111,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fOrthoXnOZCamera(TGLOrthoCamera::kXnOZ, TGLVector3( 0.0, 1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking down  Y axis, -X horz, Z vert
    fOrthoZnOYCamera(TGLOrthoCamera::kZnOY, TGLVector3( 1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  X axis, -Z horz, Y vert
    fCurrentCamera(&fPerspectiveCameraXOZ),
+   fAutoRotator(0),
 
    fStereo               (kFALSE),
    fStereoZeroParallax   (0.03f),
@@ -172,6 +174,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fOrthoXnOZCamera(TGLOrthoCamera::kXnOZ, TGLVector3( 0.0, 1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking down  Y axis, -X horz, Z vert
    fOrthoZnOYCamera(TGLOrthoCamera::kZnOY, TGLVector3( 1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  X axis, -Z horz, Y vert
    fCurrentCamera(&fPerspectiveCameraXOZ),
+   fAutoRotator(0),
 
    fStereo               (kFALSE),
    fStereoZeroParallax   (0.03f),
@@ -266,6 +269,8 @@ void TGLViewer::InitSecondaryObjects()
 TGLViewer::~TGLViewer()
 {
    // Destroy viewer object.
+
+   delete fAutoRotator;
 
    delete fLightSet;
    // fClipSet, fSelectedPShapeRef and fCameraOverlay deleted via overlay.
@@ -1608,7 +1613,9 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
    }
 
    // TODO: Move these into a vector!
-   switch(cameraType) {
+   TGLCamera *prev = fCurrentCamera;
+   switch (cameraType)
+   {
       case kCameraPerspXOZ: {
          fCurrentCamera = &fPerspectiveCameraXOZ;
          break;
@@ -1651,12 +1658,29 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
       }
    }
 
-   // Ensure any viewport has been propigated to the current camera
-   fCurrentCamera->SetViewport(fViewport);
-   RefreshPadEditor(this);
+   if (fCurrentCamera != prev)
+   {
+      // Ensure any viewport has been propigated to the current camera
+      fCurrentCamera->SetViewport(fViewport);
+      RefreshPadEditor(this);
 
-   // And viewer is redrawn
-   RequestDraw(TGLRnrCtx::kLODHigh);
+      if (fAutoRotator)
+      {
+         if (fAutoRotator->IsRunning())
+         {
+            fAutoRotator->Stop();
+         }
+         else
+         {
+            if (fAutoRotator->GetCamera() == fCurrentCamera)
+            {
+               fAutoRotator->Start();
+            }
+         }
+      }
+
+      RequestDraw(TGLRnrCtx::kLODHigh);
+   }
 }
 
 //______________________________________________________________________________
@@ -1754,6 +1778,16 @@ void TGLViewer::SetPerspectiveCamera(ECameraType camera,
          break;
       }
    }
+}
+
+//______________________________________________________________________________
+TGLAutoRotator* TGLViewer::GetAutoRotator()
+{
+   // Get the auto-rotator for this viewer.
+
+   if (fAutoRotator == 0)
+      fAutoRotator = new TGLAutoRotator(this);
+   return fAutoRotator;
 }
 
 

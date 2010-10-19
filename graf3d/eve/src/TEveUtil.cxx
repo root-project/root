@@ -610,7 +610,7 @@ void TEveRefBackPtr::IncRefCount(TEveElement* re)
    // Increase reference cound and add re to the list of back-references.
 
    TEveRefCnt::IncRefCount();
-   fBackRefs.push_back(re);
+   ++fBackRefs[re];
 }
 
 //______________________________________________________________________________
@@ -620,10 +620,10 @@ void TEveRefBackPtr::DecRefCount(TEveElement* re)
 
    static const TEveException eh("TEveRefBackPtr::DecRefCount ");
 
-   std::list<TEveElement*>::iterator i =
-      std::find(fBackRefs.begin(), fBackRefs.end(), re);
+   RefMap_i i = fBackRefs.find(re);
    if (i != fBackRefs.end()) {
-      fBackRefs.erase(i);
+      if (--(i->second) <= 0)
+         fBackRefs.erase(i);
       TEveRefCnt::DecRefCount();
    } else {
       Warning(eh, "render element '%s' not found in back-refs.",
@@ -638,10 +638,10 @@ void TEveRefBackPtr::StampBackPtrElements(UChar_t stamps)
 {
    // Add givem stamps to elements in the list of reverse references.
 
-   std::list<TEveElement*>::iterator i = fBackRefs.begin();
+   RefMap_i i = fBackRefs.begin();
    while (i != fBackRefs.end())
    {
-      (*i)->AddStamp(stamps);
+      i->first->AddStamp(stamps);
       ++i;
    }
 }

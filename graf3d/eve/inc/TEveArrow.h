@@ -47,7 +47,7 @@ public:
              Float_t xOrg=0, Float_t yOrg=0, Float_t zOrg=0);
    virtual ~TEveArrow() {}
 
-   virtual TObject* GetObject(const TEveException& /*eh*/="TEveElementList::GetObject ") const
+   virtual TObject* GetObject(const TEveException& ) const
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
    void SetTubeR(Float_t x) { fTubeR = x; }

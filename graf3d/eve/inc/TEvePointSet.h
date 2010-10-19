@@ -52,7 +52,7 @@ public:
    TEvePointSet(const TEvePointSet& e);
    virtual ~TEvePointSet();
 
-   virtual TObject* GetObject(const TEveException& /*eh*/="TEvePointSet::GetObject ") const
+   virtual TObject* GetObject(const TEveException&) const
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
    virtual TEvePointSet* CloneElement() const { return new TEvePointSet(*this); }

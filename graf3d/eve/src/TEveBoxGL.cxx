@@ -193,6 +193,7 @@ void TEveBoxGL::Draw(TGLRnrCtx& rnrCtx) const
    {
       if (fM->fDrawFrame)
       {
+         glEnable(GL_BLEND);
          TGLUtil::LineWidth(fM->fLineWidth);
          TGLUtil::Color(fM->fLineColor);
       }
@@ -221,9 +222,9 @@ void TEveBoxGL::DirectDraw(TGLRnrCtx&) const
    // Frame
    if (fM->fDrawFrame)
    {
+      glEnable(GL_BLEND);
       TGLUtil::Color(fM->fLineColor);
       TGLUtil::LineWidth(fM->fLineWidth);
-      glEnable(GL_LINE_SMOOTH);
       RenderOutline(fM->fVertices);
    }
 
@@ -315,6 +316,7 @@ void TEveBoxProjectedGL::Draw(TGLRnrCtx& rnrCtx) const
    {
       if (fM->fDrawFrame)
       {
+         glEnable(GL_BLEND);
          TGLUtil::LineWidth(fM->fLineWidth);
          TGLUtil::Color(fM->fLineColor);
       }
@@ -365,9 +367,9 @@ void TEveBoxProjectedGL::DirectDraw(TGLRnrCtx&) const
    // Frame
    if (fM->fDrawFrame)
    {
+      glEnable(GL_BLEND);
       TGLUtil::Color(fM->fLineColor);
       TGLUtil::LineWidth(fM->fLineWidth);
-      glEnable(GL_LINE_SMOOTH);
       RenderPoints(GL_LINE_LOOP);
    }
 

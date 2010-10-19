@@ -31,6 +31,7 @@
 #include "TGLClipSetEditor.h"
 #include "TGLUtil.h"
 #include "TGLCameraOverlay.h"
+#include "TGLAutoRotator.h"
 
 //______________________________________________________________________________
 //
@@ -75,9 +76,8 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, 
    fCamMode(0),
    fCamOverlayOn(0),
    fClipSet(0),
-   fStereoZeroParallax(0),
-   fStereoEyeOffsetFac(0),
-   fStereoFrustumAsymFac(0),
+   fARotDt(0), fARotWPhi(0), fARotATheta(0), fARotWTheta(0), fARotADolly(0), fARotWDolly(0),
+   fStereoZeroParallax(0), fStereoEyeOffsetFac(0), fStereoFrustumAsymFac(0),
    fViewer(0),
    fIsInPad(kTRUE)
 {
@@ -86,7 +86,7 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, 
    CreateStyleTab();
    CreateGuidesTab();
    CreateClippingTab();
-   CreateStereoTab();
+   CreateExtrasTab();
 }
 
 //______________________________________________________________________________
@@ -134,6 +134,13 @@ void TGLViewerEditor::ConnectSignals2Slots()
 
    fCamMode->Connect("Selected(Int_t)", "TGLViewerEditor", this, "DoCameraOverlay()");
    fCamOverlayOn->Connect("Clicked()", "TGLViewerEditor", this, "DoCameraOverlay()");
+
+   fARotDt    ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
+   fARotWPhi  ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
+   fARotATheta->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
+   fARotWTheta->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
+   fARotADolly->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
+   fARotWDolly->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
 
    fStereoZeroParallax  ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateStereo()");
    fStereoEyeOffsetFac  ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateStereo()");
@@ -201,6 +208,17 @@ void TGLViewerEditor::SetModel(TObject* obj)
    // push action
    fCaptureCenter->SetTextColor((fViewer->GetPushAction() == TGLViewer::kPushCamCenter) ? 0xa03060 : 0x000000);
    fCaptureAnnotate->SetDown( (fViewer->GetPushAction() == TGLViewer::kPushAnnotate), kFALSE);
+
+   {
+      TGLAutoRotator *r = fViewer->GetAutoRotator();
+
+      fARotDt    ->SetNumber(r->GetDt());
+      fARotWPhi  ->SetNumber(r->GetWPhi());
+      fARotATheta->SetNumber(r->GetATheta());
+      fARotWTheta->SetNumber(r->GetWTheta());
+      fARotADolly->SetNumber(r->GetADolly());
+      fARotWDolly->SetNumber(r->GetWDolly());
+   }
 
    if (fViewer->GetStereo())
    {
@@ -539,14 +557,57 @@ void TGLViewerEditor::CreateClippingTab()
 }
 
 //______________________________________________________________________________
-void TGLViewerEditor::CreateStereoTab()
+void TGLViewerEditor::CreateExtrasTab()
 {
-   // Create GUI controls - clip type (none/plane/box) and plane/box properties.
-
-   fStereoFrame = CreateEditorTabSubFrame("Stereo");
+   // Create Extra Tab controls - camera rotator and stereo.
 
    Int_t labw = 80;
-   TGCompositeFrame *p = fStereoFrame;
+
+   TGCompositeFrame *tab = CreateEditorTabSubFrame("Extras"), *p = 0;
+
+   // ----- Auto rotator -----
+
+   p = new TGGroupFrame(tab, "Auto rotator", kVerticalFrame);
+
+   fARotDt = MakeLabeledNEntry(p, "Delta T:", labw, 5, TGNumberFormat::kNESRealThree);
+   fARotDt->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.001, 1);
+
+   fARotWPhi = MakeLabeledNEntry(p, "Omega Phi:", labw, 5, TGNumberFormat::kNESRealTwo);
+   fARotWPhi->SetLimits(TGNumberFormat::kNELLimitMinMax, -10, 10);
+
+   fARotATheta = MakeLabeledNEntry(p, "A Theta:", labw, 5, TGNumberFormat::kNESRealTwo);
+   fARotATheta->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.01, 1);
+
+   fARotWTheta = MakeLabeledNEntry(p, "Omega Theta:", labw, 5, TGNumberFormat::kNESRealTwo);
+   fARotWTheta->SetLimits(TGNumberFormat::kNELLimitMinMax, -10, 10);
+
+   fARotADolly = MakeLabeledNEntry(p, "A Dolly:", labw, 5, TGNumberFormat::kNESRealTwo);
+   fARotADolly->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.01, 1);
+
+   fARotWDolly = MakeLabeledNEntry(p, "Omega Dolly:", labw, 5, TGNumberFormat::kNESRealTwo);
+   fARotWDolly->SetLimits(TGNumberFormat::kNELLimitMinMax, -10, 10);
+
+   {
+      TGCompositeFrame *l = new TGHorizontalFrame(p);
+
+      TGTextButton *b = new TGTextButton(l, "Start");
+      b->Connect("Clicked()", "TGLViewerEditor", this, "DoRotatorStart()");
+      l->AddFrame(b, new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
+
+      b = new TGTextButton(l, "Stop");
+      b->Connect("Clicked()", "TGLViewerEditor", this, "DoRotatorStop()");
+      l->AddFrame(b, new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
+
+      p->AddFrame(l, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 4, 0));
+   }
+
+   tab->AddFrame(p, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
+
+   // ----- Stereo -----
+
+   fStereoFrame = p = new TGGroupFrame(tab, "Stereo", kVerticalFrame);
+
+   // Int_t labw = 80;
 
    fStereoZeroParallax = MakeLabeledNEntry(p, "Zero parallax:", labw, 5, TGNumberFormat::kNESRealThree);
    fStereoZeroParallax->SetLimits(TGNumberFormat::kNELLimitMinMax, 0, 1);
@@ -556,6 +617,8 @@ void TGLViewerEditor::CreateStereoTab()
 
    fStereoFrustumAsymFac = MakeLabeledNEntry(p, "Asymetry:", labw, 5, TGNumberFormat::kNESRealTwo);
    fStereoFrustumAsymFac->SetLimits(TGNumberFormat::kNELLimitMinMax, 0, 2);
+
+   tab->AddFrame(p, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 }
 
 
@@ -623,6 +686,37 @@ void TGLViewerEditor::SetGuides()
       if (fr->IsMapped())
          fr->UnmapWindow();
    }
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::UpdateRotator()
+{
+   // Update rotator related variables.
+
+   TGLAutoRotator *r = fViewer->GetAutoRotator();
+
+   r->SetDt    (fARotDt->GetNumber());
+   r->SetWPhi  (fARotWPhi->GetNumber());
+   r->SetATheta(fARotATheta->GetNumber());
+   r->SetWTheta(fARotWTheta->GetNumber());
+   r->SetADolly(fARotADolly->GetNumber());
+   r->SetWDolly(fARotWDolly->GetNumber());
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::DoRotatorStart()
+{
+   // Start auto-rotator.
+
+   fViewer->GetAutoRotator()->Start();
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::DoRotatorStop()
+{
+   // Stop auto-rotator.
+
+   fViewer->GetAutoRotator()->Stop();
 }
 
 //______________________________________________________________________________

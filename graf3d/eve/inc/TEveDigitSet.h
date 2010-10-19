@@ -84,7 +84,7 @@ public:
    TEveDigitSet(const char* n="TEveDigitSet", const char* t="");
    virtual ~TEveDigitSet();
 
-   virtual TObject* GetObject(const TEveException& /*eh*/="TEveDigitSet::GetObject ") const
+   virtual TObject* GetObject(const TEveException&) const
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
    void   UseSingleColor();

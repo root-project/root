@@ -64,7 +64,7 @@ TEveScene::~TEveScene()
 {
    // Destructor.
 
-   fDestructing = kTRUE;
+   fDestructing = kStandard;
 
    gEve->GetViewers()->SceneDestructing(this);
    gEve->GetScenes()->RemoveElement(this);
@@ -140,13 +140,15 @@ void TEveScene::RetransHierarchicallyRecurse(TEveElement* el, const TEveTrans& t
    // Set transformation matrix for physical shape of element el in
    // the GL-scene and recursively descend into children (if enabled).
 
+   static const TEveException eh("TEveScene::RetransHierarchicallyRecurse ");
+
    TEveTrans t(tp);
    if (el->HasMainTrans())
       t *= el->RefMainTrans();
 
    if (el->GetRnrSelf() && el != this)
    {
-      fGLScene->UpdatePhysioLogical(el->GetRenderObject(), t.Array(), 0);
+      fGLScene->UpdatePhysioLogical(el->GetRenderObject(eh), t.Array(), 0);
    }
 
    if (el->GetRnrChildren())
@@ -190,8 +192,10 @@ void TEveScene::DestroyElementRenderers(TEveElement* element)
    // Remove element from the scene.
    // It is not an error if the element is not found in the scene.
 
+   static const TEveException eh("TEveScene::DestroyElementRenderers ");
+
    fGLScene->BeginUpdate();
-   Bool_t changed = fGLScene->DestroyLogical(element->GetRenderObject(), kFALSE);
+   Bool_t changed = fGLScene->DestroyLogical(element->GetRenderObject(eh), kFALSE);
    fGLScene->EndUpdate(changed, changed);
 }
 
@@ -286,7 +290,9 @@ void TEveSceneList::DestroyElementRenderers(TEveElement* element)
    // Loop over all scenes and remove all instances of element from
    // them.
 
-   TObject* obj = element->GetRenderObject();
+   static const TEveException eh("TEveSceneList::DestroyElementRenderers ");
+
+   TObject* obj = element->GetRenderObject(eh);
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       ((TEveScene*)*i)->DestroyElementRenderers(obj);
@@ -308,6 +314,8 @@ void TEveSceneList::ProcessSceneChanges(Bool_t dropLogicals, TExMap* stampMap)
    // parallel iteration over this list and the list of logical shapes
    // in every scene.
 
+   static const TEveException eh("TEveSceneList::ProcessSceneChanges ");
+
    typedef std::map<TObject*, TEveElement*> mObjectElement_t;
    typedef mObjectElement_t::iterator       mObjectElement_i;
 
@@ -318,7 +326,7 @@ void TEveSceneList::ProcessSceneChanges(Bool_t dropLogicals, TExMap* stampMap)
       while (stamped_elements.Next(key, value))
       {
          TEveElement *el = reinterpret_cast<TEveElement*>(key);
-         changed_objects.insert(std::make_pair(el->GetRenderObject(), el));
+         changed_objects.insert(std::make_pair(el->GetRenderObject(eh), el));
       }
    }
 

@@ -63,7 +63,7 @@ Float_t TEveCaloData::CellData_t::Value(Bool_t isEt) const
    if (isEt)
       return fValue;
    else
-      return TMath::Abs(fValue/TMath::Cos(Theta()));
+      return TMath::Abs(fValue/TMath::Sin(Theta()));
 }
 
 //______________________________________________________________________________
@@ -618,7 +618,7 @@ void TEveCaloDataVec::DataChanged()
 
    fMaxValE = 0;
    fMaxValEt = 0;
-   Float_t sum=0, cos=0;
+   Float_t sum=0;
    //   printf("geom vec %d slices %d\n",fGeomVec.size(), fSliceVec.size() );
 
    for (UInt_t tw=0; tw<fGeomVec.size(); tw++)
@@ -629,8 +629,8 @@ void TEveCaloDataVec::DataChanged()
 
       if (sum > fMaxValEt ) fMaxValEt=sum;
 
-      cos = Cos(2*ATan(Exp( -Abs(fGeomVec[tw].Eta()))));
-      sum /= Abs(cos);
+      sum /= Abs(Sin(EtaToTheta(fGeomVec[tw].Eta())));
+
       if (sum > fMaxValE) fMaxValE=sum;
    }
 
@@ -784,8 +784,8 @@ void TEveCaloDataHist::DataChanged()
 
          if (value > fMaxValEt ) fMaxValEt = value;
 
-         Double_t cos = Cos(2*ATan(Exp(-Abs(eta))));
-         value /= Abs(cos);
+         value /= Abs(Sin(EtaToTheta(eta)));
+
          if (value > fMaxValE) fMaxValE = value;
       }
    }

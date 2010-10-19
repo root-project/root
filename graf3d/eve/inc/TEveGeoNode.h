@@ -46,7 +46,7 @@ protected:
 public:
    TEveGeoNode(TGeoNode* node);
 
-   virtual TObject* GetObject(const TEveException& /*eh*/="TEveElementList::GetObject ") const
+   virtual TObject* GetObject(const TEveException&) const
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
    virtual const char* GetName()  const;

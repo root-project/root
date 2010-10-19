@@ -138,7 +138,7 @@ void TEveTrackPropagator::Helix_t::Step(const TEveVector4& v, const TEveVector& 
    {
       TEveVector d = fE2*(fR*fSin) + fE3*(fR*(1-fCos)) + fE1*fLStep;
       vOut    += d;
-      vOut.fT += fLStep;
+      vOut.fT += TMath::Abs(fLStep);
 
       pOut = fPl + fE2*(fPtMag*fCos) + fE3*(fPtMag*fSin);
 
@@ -148,7 +148,8 @@ void TEveTrackPropagator::Helix_t::Step(const TEveVector4& v, const TEveVector& 
    {
       // case: pT < kPtMinSqr or B < kBMin
       // might happen if field directon changes pT ~ 0 or B becomes zero
-      vOut += p * (fMaxStep / p.Mag());
+      vOut    += p * (fMaxStep / p.Mag());
+      vOut.fT += fMaxStep;
       pOut  = p;
    }
 }
@@ -267,10 +268,10 @@ void TEveTrackPropagator::ElementChanged(Bool_t update_scenes, Bool_t redraw)
    // Virtual from TEveElement.
 
    TEveTrack* track;
-   std::list<TEveElement*>::iterator i = fBackRefs.begin();
+   RefMap_i i = fBackRefs.begin();
    while (i != fBackRefs.end())
    {
-      track = dynamic_cast<TEveTrack*>(*i);
+      track = dynamic_cast<TEveTrack*>(i->first);
       track->StampObjProps();
       ++i;
    }
@@ -523,11 +524,7 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
    // make the remaining fractional step
    if (np > first_point)
    {
-      TEveVector d1 = v;
-      d1 -= currV;
-      Float_t d1_mag = d1.Mag();
-
-      if (d1_mag > kStepEps)
+      if ((v - currV).Mag() > kStepEps)
       {
          Float_t step_frac = prod0 / (prod0 - prod1);
          if (step_frac > 0)
@@ -535,7 +532,7 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
             // Step for fraction of previous step size.
             // We pass 'enforce_max_step' flag to Update().
             Float_t orig_max_step = fH.fMaxStep;
-            fH.fMaxStep = d1_mag * step_frac;
+            fH.fMaxStep = step_frac * (forwV - currV).Mag();
             Update(currV, p, kTRUE, kTRUE);
             Step(currV, p, forwV, forwP);
             p     = forwP;
@@ -547,7 +544,7 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
 
          // Distribute offset to desired crossing point over all segment.
 
-         TEveVector off(v); off -= currV;
+         TEveVector off(v - currV);
          off *= 1.0f / currV.fT;
 
          // Calculate the required momentum rotation.
@@ -752,10 +749,10 @@ void TEveTrackPropagator::RebuildTracks()
    // Rebuild all tracks using this render-style.
 
    TEveTrack* track;
-   std::list<TEveElement*>::iterator i = fBackRefs.begin();
+   RefMap_i i = fBackRefs.begin();
    while (i != fBackRefs.end())
    {
-      track = dynamic_cast<TEveTrack*>(*i);
+      track = dynamic_cast<TEveTrack*>(i->first);
       track->MakeTrack();
       track->StampObjProps();
       ++i;

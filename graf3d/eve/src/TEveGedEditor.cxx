@@ -368,6 +368,8 @@ Bool_t TEveGedNameTextButton::HandleButton(Event_t* event)
 {
    // Handle button.
 
+   static const TEveException eh("TEveGedNameTextButton::HandleButton ");
+
    if (fTip) fTip->Hide();
    if (fState == kButtonDisabled) return kTRUE;
 
@@ -377,7 +379,7 @@ Bool_t TEveGedNameTextButton::HandleButton(Event_t* event)
       TEveElement   *el   = eged->GetEveElement();
       if (el)
          TEveGedEditor::GetContextMenu()->Popup(event->fXRoot, event->fYRoot,
-                                                el->GetObject());
+                                                el->GetObject(eh));
       return 1;
    }
    else if (event->fCode == kButton1)
