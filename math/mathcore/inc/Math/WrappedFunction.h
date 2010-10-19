@@ -38,9 +38,9 @@ namespace Math {
 
 struct NullTypeFunc1D {}; 
 
-typedef double( * FreeFunctionPtr ) (double ); 
+typedef double(*FreeFunctionPtr)(double);
 
-typedef double( * FreeMultiFunctionPtr ) (const double *); 
+typedef double(*FreeMultiFunctionPtr)(const double*); 
 
 /**
    Template class to wrap any C++ callable object which takes one argument 
