@@ -47,6 +47,8 @@
 #pragma warning (disable: 4181)
 /* /GS can not buffer overrun protect parameters and locals: function not optimized */
 #pragma warning (disable: 4748)
+/* function(): resolved overload was found by argument-dependent lookup */
+#pragma warning (disable: 4675)
 
 /* function is hidden */
 #pragma warning (3: 4266)
