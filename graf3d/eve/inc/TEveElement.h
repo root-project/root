@@ -327,7 +327,7 @@ protected:
    {
       kNone,
       kStandard,
-      kAnnihilate,
+      kAnnihilate
    };
 
    UChar_t fCSCBits;

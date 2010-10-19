@@ -1687,7 +1687,8 @@ void TEveElement::Annihilate()
 
    if (fParents.size() > 1)
    {
-      Warning(eh.Data(), Form("More than one parent. Memory leak. %s %d \n", GetElementName(), fParents.size()));
+      Warning(eh, "More than one parent for '%s': %d. Refusing to delete.",
+              GetElementName(), (Int_t) fParents.size());
       return;
    }
 
