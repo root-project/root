@@ -21,6 +21,7 @@
 #include "TArrayL64.h"
 #include "TH1.h"
 #include "TMD5.h"
+#include "TMath.h"
 // Memstat
 #include "TMemStatBacktrace.h"
 #include "TMemStatMng.h"
@@ -48,14 +49,21 @@ TMemStatMng::TMemStatMng():
    fPos(0),
    fTimems(0),
    fNBytes(0),
-   fN(0),
    fBtID(0),
    fMaxCalls(5000000),
+   fBufferSize(10000),
+   fBufN(0),
+   fBufPos(0),
+   fBufTimems(0),
+   fBufNBytes(0),
+   fBufBtID(0),
+   fIndex(0),
+   fMustWrite(0),
    fFAddrsList(0),
    fHbtids(0),
    fBTCount(0),
    fBTIDCount(0),
-   fSysInfo(NULL)
+   fSysInfo(0)
 {
    // Default constructor
 }
@@ -128,11 +136,13 @@ void TMemStatMng::Close()
    //fgInstance->fDumpFile->WriteObject(fgInstance->fFAddrsList, "FAddrsList");
 
    // to be documented
+   fgInstance->FillTree();
    fgInstance->Disable();
    fgInstance->fDumpTree->AutoSave();
    fgInstance->fDumpTree->GetUserInfo()->Delete();
 
    ::Info("TMemStatMng::Close", "Tree saved to file %s\n", fgInstance->fDumpFile->GetName());
+   ::Info("TMemStatMng::Close", "Tree entries = %d, file size = %g MBytes\n", (Int_t)fgInstance->fDumpTree->GetEntries(),1e-6*Double_t(fgInstance->fDumpFile->GetEND()));
 
    delete fgInstance->fDumpFile;
    //fgInstance->fDumpFile->Close();
@@ -158,7 +168,25 @@ TMemStatMng::~TMemStatMng()
 }
 
 //______________________________________________________________________________
-void TMemStatMng::SetMaxcalls(Long64_t maxcalls)
+void TMemStatMng::SetBufferSize(Int_t buffersize)
+{
+   // Set the maximum number of alloc/free calls to be buffered.
+   //if the alloc and free are in the buffer, the corresponding entries
+   //are not saved tio the Tree, reducing considerably the Tree output size
+
+   fBufferSize = buffersize;
+   if (fBufferSize < 1) fBufferSize = 1;
+   fBufN = 0;
+   fBufPos    = new ULong64_t[fBufferSize];
+   fBufTimems = new Int_t[fBufferSize];
+   fBufNBytes = new Int_t[fBufferSize];
+   fBufBtID   = new Int_t[fBufferSize];
+   fIndex     = new Int_t[fBufferSize];
+   fMustWrite = new Bool_t[fBufferSize];
+}
+
+//______________________________________________________________________________
+void TMemStatMng::SetMaxCalls(Int_t maxcalls)
 {
    // Set the maximum number of new/delete registered in the output Tree.
 
@@ -186,6 +214,7 @@ void TMemStatMng::Disable()
 {
    // Disble memory hooks
 
+   //FillTree();
    if(this != GetInstance())
       return;
 #if defined(__APPLE__)
@@ -387,12 +416,58 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
 
    fTimeStamp.Set();
    Double_t CurTime = fTimeStamp.AsDouble();
-   fTimems = Int_t(10000.*(CurTime - fBeginTime));
+   fBufTimems[fBufN] = Int_t(10000.*(CurTime - fBeginTime));
    ULong_t ul = (ULong_t)(ptr);
-   fPos    = (ULong64_t)(ul);
-   fNBytes = size;
-   fN      = 0;
-   fBtID   = btid;
-   fDumpTree->Fill();
-   if (fDumpTree->GetEntries() >= fMaxCalls) TMemStatMng::GetInstance()->Disable();
+   fBufPos[fBufN]    = (ULong64_t)(ul);
+   fBufNBytes[fBufN] = size;
+   fBufBtID[fBufN]   = btid;
+   fBufN++;
+   if (fBufN >= fBufferSize) {
+      FillTree();
+   }
 }
+
+//______________________________________________________________________________
+void TMemStatMng::FillTree()
+{
+   //loop on all entries in the buffer and fill the output Tree
+   //entries with alloc and free in the buffer are eliminated
+   
+   
+   //eliminate alloc/free pointing to the same location in the current buffer
+   TMath::Sort(fBufN,fBufPos,fIndex,kFALSE);
+   memset(fMustWrite,0,fBufN*sizeof(Bool_t));
+   Int_t i=0,j;
+   while (i<fBufN) {
+      Int_t indi = fIndex[i];
+      Int_t indmin = indi;
+      Int_t indmax = indi;
+      j = i+1;;
+      ULong64_t pos = fBufPos[indi];
+      while (j < fBufN) {
+         Int_t indj = fIndex[j];
+         ULong64_t posj = fBufPos[indj];
+         if (posj != pos) break;
+         if (indmin > indj) indmin = indj;
+         if (indmax < indj) indmax = indj;
+         j++;
+      }
+      if (indmin == indmax) fMustWrite[indmin] = kTRUE;
+      if (fBufNBytes[indmin] == -1) fMustWrite[indmin] = kTRUE;
+      if (fBufNBytes[indmax] > 0)   fMustWrite[indmax] = kTRUE;
+      i = j;  
+   }
+   
+   // now fill the Tree with the remaining allocs/frees
+   for (i=0;i<fBufN;i++) {
+      if (!fMustWrite[i]) continue;
+      fPos    = fBufPos[i];
+      fTimems = fBufTimems[i];
+      fNBytes = fBufNBytes[i];
+      fBtID   = fBufBtID[i];
+      fDumpTree->Fill();
+   }
+   
+   fBufN = 0;
+   if (fDumpTree->GetEntries() >= fMaxCalls) TMemStatMng::GetInstance()->Disable();
+}   

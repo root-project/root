@@ -83,7 +83,8 @@ namespace memstat {
       void Disable();                      //Disable memory statistic
       static TMemStatMng* GetInstance();   //get instance of class - ONLY ONE INSTANCE
       static void Close();                 //close MemStatManager
-      void SetMaxcalls(Long64_t maxcalls);
+      void SetBufferSize(Int_t buffersize);
+      void SetMaxCalls(Int_t maxcalls);
       
    public:
       //stack data members
@@ -98,6 +99,7 @@ namespace memstat {
 #endif
       void Init();
       void AddPointer(void *ptr, Int_t size);    //add pointer to the table
+      void FillTree();
       static void *AllocHook(size_t size, const void* /*caller*/);
       static void FreeHook(void* ptr, const void* /*caller*/);
       static void MacAllocHook(void *ptr, size_t size);
@@ -114,14 +116,21 @@ namespace memstat {
 
       Bool_t fUseGNUBuiltinBacktrace;
       TTimeStamp fTimeStamp;
-      Double_t fBeginTime;    //time when monitoring starts
-      ULong64_t  fPos;        //position in memory where alloc/free happens
-      Int_t    fTimems;       //10000*(current time - begin time)
-      Int_t    fNBytes;       //number of bytes allocated/freed
-      UInt_t   fN;
-      Int_t    fBtID;         //back trace identifier
-      Long64_t fMaxCalls;     //max number of malloc/frees to register in the output Tree
-
+      Double_t  fBeginTime;   //time when monitoring starts
+      ULong64_t fPos;         //position in memory where alloc/free happens
+      Int_t     fTimems;      //10000*(current time - begin time)
+      Int_t     fNBytes;      //number of bytes allocated/freed
+      Int_t     fBtID;        //back trace identifier
+      Int_t     fMaxCalls;    //max number of malloc/frees to register in the output Tree
+      Int_t     fBufferSize;  //max number of malloc/free to keep in the buffer
+      Int_t     fBufN;        //current number of alloc or free in the buffer
+      ULong64_t *fBufPos;     //position in memory where alloc/free happens
+      Int_t     *fBufTimems;  //10000*(current time - begin time)
+      Int_t     *fBufNBytes;  //number of bytes allocated/freed
+      Int_t     *fBufBtID;    //back trace identifier
+      Int_t     *fIndex;      //array to sort fBufPos
+      Bool_t    *fMustWrite;  //flag to write or not the entry
+            
    private:
       TMemStatFAddrContainer fFAddrs;
       TObjArray *fFAddrsList;

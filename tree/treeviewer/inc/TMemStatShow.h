@@ -34,7 +34,7 @@ public:
    static void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
    static void FillBTString(Int_t bin, Int_t mode, TString &btstring);
    
-   static void Show(Double_t update=0.01, Int_t nbigleaks=20, const char* fname="*");
+   static void Show(Double_t update=0.1, Int_t nbigleaks=20, const char* fname="*");
 
    ClassDef(TMemStatShow,0)  //class to visualize the results of TMemStat 
 };
