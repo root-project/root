@@ -689,6 +689,10 @@ int main(int argc,const char *argv[])
   gBenchmark = new TBenchmark();
   const char *fitter = "Minuit";
   if (argc > 1)  fitter = argv[1];
+  if (strcmp(fitter,"Minuit") || strcmp(fitter,"Minuit2") || strcmp(fitter,"Fumili")) {
+     printf("stressFit illegal option %s, using Minuit instead\n",fitter);
+     fitter = "Minuit";
+  }
   Int_t N = 2000;
   if (argc > 2) N = atoi(argv[2]);
   stressFit(fitter,N);  //default is Minuit
