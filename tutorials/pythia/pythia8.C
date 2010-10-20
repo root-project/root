@@ -50,8 +50,9 @@ void pythia8(Int_t nev  = 100, Int_t ndeb = 1) {
       for (Int_t ip = 0; ip < np; ip++) {
          TParticle* part = (TParticle*) particles->At(ip);
          Int_t ist = part->GetStatusCode();
+         // Positive codes are final particles.
+         if (ist <= 0) continue;
          Int_t pdg = part->GetPdgCode();
-         if (ist != 1) continue;
          Float_t charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge();
          if (charge == 0.) continue;
          Float_t eta = part->Eta();
