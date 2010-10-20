@@ -199,10 +199,11 @@ TApplication::TApplication(const char *appClassName,
    // activate TMemStat
    if (fUseMemstat || gEnv->GetValue("Root.TMemStat", 0)) {
       fUseMemstat = kTRUE;
-      Long64_t maxcalls = gEnv->GetValue("Root.TMemStat.maxcalls", 5000000);
+      Int_t buffersize = gEnv->GetValue("Root.TMemStat.buffersize", 100000);
+      Int_t maxcalls   = gEnv->GetValue("Root.TMemStat.maxcalls", 5000000);
       const char *ssystem = gEnv->GetValue("Root.TMemStat.system","gnubuiltin");
       if (maxcalls > 0) {
-         gROOT->ProcessLine(Form("new TMemStat(\"%s\",%lld);",ssystem,maxcalls));
+         gROOT->ProcessLine(Form("new TMemStat(\"%s\",%d,%d);",ssystem,buffersize,maxcalls));
       }
    }
 }
