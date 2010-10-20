@@ -45,11 +45,8 @@ Bool_t TEveQuadSetGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   if (SetModelCheckClass(obj, TEveQuadSet::Class())) {
-      fM  = dynamic_cast<TEveQuadSet*>(obj);
-      return kTRUE;
-   }
-   return kFALSE;
+   fM = SetModelDynCast<TEveQuadSet>(obj);
+   return kTRUE;
 }
 
 /******************************************************************************/

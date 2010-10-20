@@ -73,6 +73,7 @@ Bool_t TGLObject::SetModelCheckClass(TObject* obj, TClass* cls)
 {
    // Checks if obj is of proper class and sets the model.
    // Protected helper for subclasses.
+   // Most sub-classes use exception-throwing SetModelDynCast() instead.
 
    if(obj->InheritsFrom(cls) == kFALSE) {
       Warning("TGLObject::SetModelCheckClass", "object of wrong class passed.");

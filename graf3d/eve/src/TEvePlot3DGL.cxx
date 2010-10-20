@@ -38,12 +38,9 @@ Bool_t TEvePlot3DGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   if (SetModelCheckClass(obj, TEvePlot3D::Class())) {
-      fM = dynamic_cast<TEvePlot3D*>(obj);
-      fPlotLogical = TGLPlot3D::CreatePlot(fM->fPlot, fM->fPlotOption, fM->fLogX, fM->fLogY, fM->fLogZ);
-      return kTRUE;
-   }
-   return kFALSE;
+   fM = SetModelDynCast<TEvePlot3D>(obj);
+   fPlotLogical = TGLPlot3D::CreatePlot(fM->fPlot, fM->fPlotOption, fM->fLogX, fM->fLogY, fM->fLogZ);
+   return kTRUE;
 }
 
 //______________________________________________________________________________

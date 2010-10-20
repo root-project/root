@@ -55,28 +55,25 @@ Bool_t TH2GL::SetModel(TObject* obj, const Option_t* opt)
    TString option(opt);
    option.ToLower();
 
-   if (SetModelCheckClass(obj, TH2::Class()))
-   {
-      fM = dynamic_cast<TH2*>(obj);
+   fM = SetModelDynCast<TH2>(obj);
 
-      // Plot type
-      if (option.Index("surf") != kNPOS)
-         SetPainter( new TGLSurfacePainter(fM, 0, &fCoord) );
-      else
-         SetPainter( new TGLLegoPainter(fM, 0, &fCoord) );
+   // Plot type
+   if (option.Index("surf") != kNPOS)
+      SetPainter( new TGLSurfacePainter(fM, 0, &fCoord) );
+   else
+      SetPainter( new TGLLegoPainter(fM, 0, &fCoord) );
 
-      if (option.Index("sph") != kNPOS)
-         fCoord.SetCoordType(kGLSpherical);
-      else if (option.Index("pol") != kNPOS)
-         fCoord.SetCoordType(kGLPolar);
-      else if (option.Index("cyl") != kNPOS)
-         fCoord.SetCoordType(kGLCylindrical);
+   if (option.Index("sph") != kNPOS)
+      fCoord.SetCoordType(kGLSpherical);
+   else if (option.Index("pol") != kNPOS)
+      fCoord.SetCoordType(kGLPolar);
+   else if (option.Index("cyl") != kNPOS)
+      fCoord.SetCoordType(kGLCylindrical);
 
-      fPlotPainter->AddOption(option);
-      fPlotPainter->InitGeometry();
-      return kTRUE;
-   }
-   return kFALSE;
+   fPlotPainter->AddOption(option);
+   fPlotPainter->InitGeometry();
+
+   return kTRUE;
 }
 
 //______________________________________________________________________________

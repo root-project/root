@@ -55,23 +55,21 @@ Bool_t TH3GL::SetModel(TObject* obj, const Option_t* opt)
    TString option(opt);
    option.ToLower();
 
-   if (SetModelCheckClass(obj, TH3::Class()))
-   {
-      fM = dynamic_cast<TH3*>(obj);
-      if (option.Index("iso") != kNPOS)
-         SetPainter( new TGLIsoPainter(fM, 0, &fCoord) );
-      else if (option.Index("box") != kNPOS)
-         SetPainter( new TGLBoxPainter(fM, 0, &fCoord) );
-      else {
-         Warning("SetModel", "Option '%s' not supported, assuming 'box'.", option.Data());
-         SetPainter( new TGLBoxPainter(fM, 0, &fCoord) );
-      }
+   fM = SetModelDynCast<TH3>(obj);
 
-      fPlotPainter->AddOption(option);
-      fPlotPainter->InitGeometry();
-      return kTRUE;
+   if (option.Index("iso") != kNPOS)
+      SetPainter( new TGLIsoPainter(fM, 0, &fCoord) );
+   else if (option.Index("box") != kNPOS)
+      SetPainter( new TGLBoxPainter(fM, 0, &fCoord) );
+   else {
+      Warning("SetModel", "Option '%s' not supported, assuming 'box'.", option.Data());
+      SetPainter( new TGLBoxPainter(fM, 0, &fCoord) );
    }
-   return kFALSE;
+
+   fPlotPainter->AddOption(option);
+   fPlotPainter->InitGeometry();
+
+   return kTRUE;
 }
 
 //______________________________________________________________________________

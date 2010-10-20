@@ -44,16 +44,14 @@ Bool_t TGLParametricEquationGL::SetModel(TObject* obj, const Option_t* opt)
 {
    // Set model object.
 
-   if (SetModelCheckClass(obj, TGLParametricEquation::Class()))
-   {
-      fM = dynamic_cast<TGLParametricEquation*>(obj);
-      SetPainter( new TGLParametricPlot(fM, 0) );
-      TString option(opt);
-      fPlotPainter->AddOption(option);
-      fPlotPainter->InitGeometry();
-      return kTRUE;
-   }
-   return kFALSE;
+   fM = SetModelDynCast<TGLParametricEquation>(obj);
+
+   SetPainter( new TGLParametricPlot(fM, 0) );
+   TString option(opt);
+   fPlotPainter->AddOption(option);
+   fPlotPainter->InitGeometry();
+
+   return kTRUE;
 }
 
 //______________________________________________________________________________

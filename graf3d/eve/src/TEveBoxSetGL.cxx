@@ -204,11 +204,8 @@ Bool_t TEveBoxSetGL::SetModel(TObject* obj, const Option_t* /*opt*/)
    // Set model object.
    // Virtual from TGLObject.
 
-   if (SetModelCheckClass(obj, TEveBoxSet::Class())) {
-      fM = dynamic_cast<TEveBoxSet*>(obj);
-      return kTRUE;
-   }
-   return kFALSE;
+   fM = SetModelDynCast<TEveBoxSet>(obj);
+   return kTRUE;
 }
 
 /******************************************************************************/

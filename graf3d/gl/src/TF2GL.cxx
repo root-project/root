@@ -55,29 +55,27 @@ Bool_t TF2GL::SetModel(TObject* obj, const Option_t* opt)
    TString option(opt);
    option.ToLower();
 
-   if (SetModelCheckClass(obj, TF2::Class()))
-   {
-      fM = dynamic_cast<TF2*>(obj);
-      fH = (TH2*) fM->CreateHistogram();
-      fH->GetZaxis()->SetLimits(fH->GetMinimum(), fH->GetMaximum());
+   fM = SetModelDynCast<TF2>(obj);
 
-      if (dynamic_cast<TF3*>(fM))
-         SetPainter( new TGLTF3Painter((TF3*)fM, fH, 0, &fCoord) );
-      else
-         SetPainter( new TGLSurfacePainter(fH, 0, &fCoord) );
+   fH = (TH2*) fM->CreateHistogram();
+   fH->GetZaxis()->SetLimits(fH->GetMinimum(), fH->GetMaximum());
 
-      if (option.Index("sph") != kNPOS)
-         fCoord.SetCoordType(kGLSpherical);
-      else if (option.Index("pol") != kNPOS)
-         fCoord.SetCoordType(kGLPolar);
-      else if (option.Index("cyl") != kNPOS)
-         fCoord.SetCoordType(kGLCylindrical);
+   if (dynamic_cast<TF3*>(fM))
+      SetPainter( new TGLTF3Painter((TF3*)fM, fH, 0, &fCoord) );
+   else
+      SetPainter( new TGLSurfacePainter(fH, 0, &fCoord) );
 
-      fPlotPainter->AddOption(option);
-      fPlotPainter->InitGeometry();
-      return kTRUE;
-   }
-   return kFALSE;
+   if (option.Index("sph") != kNPOS)
+      fCoord.SetCoordType(kGLSpherical);
+   else if (option.Index("pol") != kNPOS)
+      fCoord.SetCoordType(kGLPolar);
+   else if (option.Index("cyl") != kNPOS)
+      fCoord.SetCoordType(kGLCylindrical);
+
+   fPlotPainter->AddOption(option);
+   fPlotPainter->InitGeometry();
+
+   return kTRUE;
 }
 
 //______________________________________________________________________________

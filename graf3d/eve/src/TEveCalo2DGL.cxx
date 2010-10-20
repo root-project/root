@@ -46,11 +46,8 @@ Bool_t TEveCalo2DGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   if (SetModelCheckClass(obj, TEveCalo2D::Class())) {
-      fM = dynamic_cast<TEveCalo2D*>(obj);
-      return kTRUE;
-   }
-   return kFALSE;
+   fM = SetModelDynCast<TEveCalo2D>(obj);
+   return kTRUE;
 }
 
 //______________________________________________________________________________

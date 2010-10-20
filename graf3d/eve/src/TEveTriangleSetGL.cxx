@@ -49,11 +49,8 @@ Bool_t TEveTriangleSetGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   if(SetModelCheckClass(obj, TEveTriangleSet::Class())) {
-      fM = dynamic_cast<TEveTriangleSet*>(obj);
-      return kTRUE;
-   }
-   return kFALSE;
+   fM = SetModelDynCast<TEveTriangleSet>(obj);
+   return kTRUE;
 }
 
 //______________________________________________________________________________

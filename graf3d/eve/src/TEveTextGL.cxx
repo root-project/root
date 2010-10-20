@@ -41,11 +41,8 @@ Bool_t TEveTextGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   if (SetModelCheckClass(obj, TEveText::Class())) {
-      fM = dynamic_cast<TEveText*>(obj);
-      return kTRUE;
-   }
-   return kFALSE;
+   fM = SetModelDynCast<TEveText>(obj);
+   return kTRUE;
 }
 
 //______________________________________________________________________________

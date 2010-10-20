@@ -42,12 +42,9 @@ Bool_t TEveTrackProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   if (TEveTrackGL::SetModel(obj) == kFALSE) return kFALSE;
-   if (SetModelCheckClass(obj, TEveTrackProjected::Class())) {
-      fM = dynamic_cast<TEveTrackProjected*>(obj);
-      return kTRUE;
-   }
-   return kFALSE;
+   TEveTrackGL::SetModel(obj);
+   fM = DynCast<TEveTrackProjected>(obj);
+   return kTRUE;
 }
 
 /******************************************************************************/

@@ -42,11 +42,8 @@ Bool_t TEveLineGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   if (SetModelCheckClass(obj, TEveLine::Class())) {
-      fM = dynamic_cast<TEveLine*>(obj);
-      return kTRUE;
-   }
-   return kFALSE;
+   fM = SetModelDynCast<TEveLine>(obj);
+   return kTRUE;
 }
 
 /******************************************************************************/

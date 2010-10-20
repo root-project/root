@@ -85,12 +85,8 @@ Bool_t TEveCaloLegoGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   if (SetModelCheckClass(obj, TEveCaloLego::Class())) {
-      fM = dynamic_cast<TEveCaloLego*>(obj);
-      return kTRUE;
-   }
-
-   return kFALSE;
+   fM = SetModelDynCast<TEveCaloLego>(obj);
+   return kTRUE;
 }
 
 //______________________________________________________________________________

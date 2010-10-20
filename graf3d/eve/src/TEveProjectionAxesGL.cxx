@@ -45,12 +45,9 @@ Bool_t TEveProjectionAxesGL::SetModel(TObject* obj, const Option_t* /*opt*/)
    // Set model object.
    // Virtual from TGLObject.
 
-   if (SetModelCheckClass(obj, TEveProjectionAxes::Class())) {
-      fM = dynamic_cast<TEveProjectionAxes*>(obj);
-      fAxisPainter.SetAttAxis(fM);
-      return fM->GetManager() ? kTRUE : kFALSE;
-   }
-   return kFALSE;
+   fM = SetModelDynCast<TEveProjectionAxes>(obj);
+   fAxisPainter.SetAttAxis(fM);
+   return fM->GetManager() ? kTRUE : kFALSE;
 }
 
 //______________________________________________________________________________

@@ -41,11 +41,8 @@ Bool_t TEveBoxGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   if (SetModelCheckClass(obj, TEveBox::Class())) {
-      fM = dynamic_cast<TEveBox*>(obj);
-      return kTRUE;
-   }
-   return kFALSE;
+   fM = SetModelDynCast<TEveBox>(obj);
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -258,11 +255,8 @@ Bool_t TEveBoxProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   if (SetModelCheckClass(obj, TEveBoxProjected::Class())) {
-      fM = dynamic_cast<TEveBoxProjected*>(obj);
-      return kTRUE;
-   }
-   return kFALSE;
+   fM = SetModelDynCast<TEveBoxProjected>(obj);
+   return kTRUE;
 }
 
 //______________________________________________________________________________

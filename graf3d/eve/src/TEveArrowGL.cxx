@@ -37,11 +37,8 @@ Bool_t TEveArrowGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   if (SetModelCheckClass(obj, TEveArrow::Class())) {
-      fM = dynamic_cast<TEveArrow*>(obj);
-      return kTRUE;
-   }
-   return kFALSE;
+   fM = SetModelDynCast<TEveArrow>(obj);
+   return kTRUE;
 }
 
 //______________________________________________________________________________

@@ -14,6 +14,7 @@
 
 #include "TGLLogicalShape.h"
 #include "TMap.h"
+#include <stdexcept>
 
 class TClass;
 
@@ -32,6 +33,21 @@ protected:
                              Float_t ymin, Float_t ymax,
                              Float_t zmin, Float_t zmax);
    void   SetAxisAlignedBBox(const Float_t* p);
+
+   template <class TT> TT* SetModelDynCast(TObject* obj)
+   {
+      TT *ret = dynamic_cast<TT*>(obj);
+      if (!ret) throw std::runtime_error("Object of wrong type passed.");
+      fExternalObj = obj;
+      return ret;
+   }
+
+   template <class TT> TT* DynCast(TObject* obj)
+   {
+      TT *ret = dynamic_cast<TT*>(obj);
+      if (!ret) throw std::runtime_error("Object of wrong type passed.");
+      return ret;
+   }
 
 public:
    TGLObject() : TGLLogicalShape(0), fMultiColor(kFALSE) {}

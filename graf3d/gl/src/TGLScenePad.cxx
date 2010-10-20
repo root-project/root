@@ -697,7 +697,17 @@ TGLLogicalShape* TGLScenePad::AttemptDirectRenderer(TObject* id)
 
    TGLObject* rnr = reinterpret_cast<TGLObject*>(cls->New());
    if (rnr) {
-      if (rnr->SetModel(id) == kFALSE) {
+      Bool_t status;
+      try
+      {
+         status = rnr->SetModel(id);
+      }
+      catch (std::exception&)
+      {
+         status = kFALSE;
+      }
+      if (!status)
+      {
          Warning("TGLScenePad::AttemptDirectRenderer", "failed initializing direct rendering.");
          delete rnr;
          return 0;

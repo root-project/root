@@ -42,11 +42,8 @@ Bool_t TEveJetConeGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   if (SetModelCheckClass(obj, TEveJetCone::Class())) {
-      fC = dynamic_cast<TEveJetCone*>(obj);
-      return kTRUE;
-   }
-   return kFALSE;
+   fC = SetModelDynCast<TEveJetCone>(obj);
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -200,12 +197,9 @@ Bool_t TEveJetConeProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   if (SetModelCheckClass(obj, TEveJetConeProjected::Class())) {
-      fM = dynamic_cast<TEveJetConeProjected*>(obj);
-      fC = dynamic_cast<TEveJetCone*>(fM->GetProjectable());
-      return kTRUE;
-   }
-   return kFALSE;
+   fM = SetModelDynCast<TEveJetConeProjected>(obj);
+   fC = dynamic_cast<TEveJetCone*>(fM->GetProjectable());
+   return fC != 0;
 }
 
 //______________________________________________________________________________

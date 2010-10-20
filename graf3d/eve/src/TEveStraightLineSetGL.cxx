@@ -43,11 +43,8 @@ Bool_t TEveStraightLineSetGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   if (SetModelCheckClass(obj, TEveStraightLineSet::Class())) {
-      fM = dynamic_cast<TEveStraightLineSet*>(obj);
-      return kTRUE;
-   }
-   return kFALSE;
+   fM = SetModelDynCast<TEveStraightLineSet>(obj);
+   return kTRUE;
 }
 
 //______________________________________________________________________________

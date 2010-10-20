@@ -42,12 +42,9 @@ Bool_t TEveTrackGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   if (TEveLineGL::SetModel(obj) == kFALSE) return kFALSE;
-   if (SetModelCheckClass(obj, TEveTrack::Class())) {
-      fTrack = dynamic_cast<TEveTrack*>(obj);
-      return kTRUE;
-   }
-   return kFALSE;
+   TEveLineGL::SetModel(obj);
+   fTrack = DynCast<TEveTrack>(obj);
+   return kTRUE;
 }
 
 //______________________________________________________________________________
