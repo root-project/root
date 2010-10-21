@@ -66,3 +66,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(EGDEP) $(EGDS) $(EGDH) $(EGLIB) $(EGMAP)
 
 distclean::     distclean-$(MODNAME)
+
+##### target variables #####
+$(MODDIRS)/TGenerator.o: CXXFLAGS:=$(filter-out -Wshadow,$(CXXFLAGS))
