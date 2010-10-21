@@ -889,16 +889,6 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
       return repr;                                                            \
    }                                                                          \
                                                                               \
-   PyObject* name##StringCompare( PyObject* self, PyObject* obj )             \
-   {                                                                          \
-      PyObject* data = CallPyObjMethod( self, #func );                        \
-      int result = PyObject_Compare( data, obj );                             \
-      Py_DECREF( data );                                                      \
-      if ( PyErr_Occurred() )                                                 \
-         return 0;                                                            \
-      return PyInt_FromLong( result );                                        \
-   }                                                                          \
-                                                                              \
    PyObject* name##StringIsEqual( PyObject* self, PyObject* obj )             \
    {                                                                          \
       PyObject* data = CallPyObjMethod( self, #func );                        \
@@ -919,12 +909,26 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
       return result;                                                          \
    }
 
-   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( Stl, c_str )
+   // Only define StlStringCompare:
+   // TStringCompare is unused and generates a warning;
+#define PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( name, func )               \
+   PyObject* name##StringCompare( PyObject* self, PyObject* obj )             \
+   {                                                                          \
+      PyObject* data = CallPyObjMethod( self, #func );                        \
+      int result = PyObject_Compare( data, obj );                             \
+      Py_DECREF( data );                                                      \
+      if ( PyErr_Occurred() )                                                 \
+         return 0;                                                            \
+      return PyInt_FromLong( result );                                        \
+   }                                                                          \
+                                                                              \
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( name, func )
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( Stl, c_str )
    PYROOT_IMPLEMENT_STRING_PYTHONIZATION(   T, Data )
 
 
 //- TObjString behavior --------------------------------------------------------
-   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( TObj, GetName )
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( TObj, GetName )
 
 //____________________________________________________________________________
    PyObject* TObjStringLength( PyObject* self )

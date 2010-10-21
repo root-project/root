@@ -680,7 +680,7 @@ Bool_t PyROOT::T##name##ArrayConverter::ToMemory( PyObject* value, void* address
          PyErr_SetString( PyExc_ValueError, "buffer too large for value" );  \
          return kFALSE;                                                      \
       }                                                                      \
-      memcpy( *(type**)address, buf, 0 < buflen ? buflen : sizeof(type) );   \
+      memcpy( *(type**)address, buf, 0 < buflen ? ((size_t) buflen) : sizeof(type) );\
    } else                                                                    \
       *(type**)address = (type*)buf;                                         \
    return kTRUE;                                                             \
