@@ -6,6 +6,7 @@ Test auto-loading by retrieving a non-preloaded class ... ok
 Test accessibility to macro classes ... ok
 Test doc strings existence ... ok
 Test (un)bound method calls ... ok
+Test whether the GIL can be properly released ... ok
 Test string/TString/TObjString compatibility ... ok
 Test list/TList behavior and compatibility ... ok
 Test TVector2/3/T behavior ... ok

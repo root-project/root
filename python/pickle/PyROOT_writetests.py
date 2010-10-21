@@ -1,13 +1,14 @@
 # File: roottest/python/pickle/PyROOT_writetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 04/16/08
-# Last: 04/16/08
+# Last: 09/24/10
 
 """Pickle writing unit tests for PyROOT package."""
 
 import os, sys, unittest
 import pickle, cPickle
 from ROOT import *
+from common import *
 
 __all__ = [
    'PickleWritingSimpleObjectsTestCase'
@@ -15,11 +16,9 @@ __all__ = [
 
 gROOT.LoadMacro( "PickleTypes.C+" )
 
-from common import *
-
 
 ### Write various objects with the two pickle modules ========================
-class PickleWritingSimpleObjectsTestCase( unittest.TestCase ):
+class PickleWritingSimpleObjectsTestCase( MyTestCase ):
    out1 = open( pclfn, 'w' )       # names from common.py
    out2 = open( cpclfn, 'w' )
 

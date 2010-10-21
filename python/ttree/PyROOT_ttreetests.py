@@ -1,12 +1,15 @@
 # File: roottest/python/ttree/PyROOT_ttreetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/13/06
-# Last: 04/16/08
+# Last: 09/30/10
 
 """TTree reading/writing unit tests for PyROOT package."""
 
-import os, sys, unittest
+import sys, os, unittest
+sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+
 from ROOT import *
+from common import *
 
 __all__ = [
    'TTree1ReadWriteSimpleObjectsTestCase'
@@ -16,7 +19,7 @@ gROOT.LoadMacro( "TTreeTypes.C+" )
 
 
 ### Write/Read an std::vector to/from file ===================================
-class TTree1ReadWriteSimpleObjectsTestCase( unittest.TestCase ):
+class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
    N, M = 5, 10
    fname, tname, ttitle = 'test.root', 'test', 'test tree'
 
@@ -140,7 +143,6 @@ class TTree1ReadWriteSimpleObjectsTestCase( unittest.TestCase ):
 
 ## actual test run
 if __name__ == '__main__':
-   sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
    from MyTextTestRunner import MyTextTestRunner
 
    loader = unittest.TestLoader()

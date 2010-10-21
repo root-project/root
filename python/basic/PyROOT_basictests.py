@@ -1,12 +1,15 @@
 # File: roottest/python/basic/PyROOT_basictests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/23/04
-# Last: 09/22/10
+# Last: 10/03/10
 
 """Basic unit tests for PyROOT package."""
 
-import os, sys, unittest
+import sys, os, unittest
+sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+
 from ROOT import *
+from common import *
 
 __all__ = [
    'Basic1ModuleTestCase',
@@ -17,7 +20,7 @@ __all__ = [
 
 
 ### basic module test cases ==================================================
-class Basic1ModuleTestCase( unittest.TestCase ):
+class Basic1ModuleTestCase( MyTestCase ):
    def test1Import( self ):
       """Test import error handling"""
 
@@ -28,7 +31,7 @@ class Basic1ModuleTestCase( unittest.TestCase ):
 
 
 ### basic functioning test cases =============================================
-class Basic2SetupTestCase( unittest.TestCase ):
+class Basic2SetupTestCase( MyTestCase ):
    def test1Globals( self ):
       """Test the availability of ROOT globals"""
 
@@ -83,7 +86,7 @@ class Basic2SetupTestCase( unittest.TestCase ):
 
 
 ### basic python language features test cases ================================
-class Basic3PythonLanguageTestCase( unittest.TestCase ):
+class Basic3PythonLanguageTestCase( MyTestCase ):
    def test1HaveDocString( self ):
       """Test doc strings existence"""
 
@@ -103,9 +106,15 @@ class Basic3PythonLanguageTestCase( unittest.TestCase ):
       b.SetX( 1.0 )
       self.assertEqual( 1.0, m( b ) )
 
+   def test3ThreadingSupport( self ):
+      """Test whether the GIL can be properly released"""
+
+      gROOT.GetVersion._threaded = 1
+      gROOT.GetVersion()
+
 
 ### basic extension features test cases ======================================
-class Basic4PythonizationTestCase( unittest.TestCase ):
+class Basic4PythonizationTestCase( MyTestCase ):
    def test1Strings( self ):
       """Test string/TString/TObjString compatibility"""
 
@@ -199,7 +208,7 @@ class Basic4PythonizationTestCase( unittest.TestCase ):
       l.sort()
       self.assertEqual( list(l), ['2', '4', '5', '6', '8', 'a', 'b', 'i', 'j'] )
 
-      if sys.hexversion > 0x3000000:
+      if sys.hexversion >= 0x3000000:
          l.sort( key=TObjString.GetName )
          l.reverse()
       else:
@@ -245,7 +254,6 @@ class Basic4PythonizationTestCase( unittest.TestCase ):
 
 ## actual test run
 if __name__ == '__main__':
-   sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
    from MyTextTestRunner import MyTextTestRunner
 
    loader = unittest.TestLoader()

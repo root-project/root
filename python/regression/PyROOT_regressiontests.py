@@ -1,13 +1,19 @@
 # File: roottest/python/regression/PyROOT_regressiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/02/07
-# Last: 08/03/10
+# Last: 09/30/10
 
 """Regression tests, lacking a better place, for PyROOT package."""
 
-import os, sys, unittest
-import commands
+import sys, os, unittest
+sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+
+try:
+   import commands
+except ImportError:
+   import subprocess as commands
 from ROOT import *
+from common import *
 
 __all__ = [
    'Regression01TwiceImportStarTestCase',
@@ -29,7 +35,7 @@ __all__ = [
 ### "from ROOT import *" done in import-*-ed module ==========================
 from Amir import *
 
-class Regression01TwiceImportStarTestCase( unittest.TestCase ):
+class Regression01TwiceImportStarTestCase( MyTestCase ):
    def test1FromROOTImportStarInModule( self ):
       """Test handling of twice 'from ROOT import*'"""
 
@@ -37,7 +43,7 @@ class Regression01TwiceImportStarTestCase( unittest.TestCase ):
 
 
 ### TPyException thrown from C++ code ========================================
-class Regression02PyExceptionTestcase( unittest.TestCase ):
+class Regression02PyExceptionTestcase( MyTestCase ):
    def test1RaiseAndTrapPyException( self ):
       """Test thrown TPyException object processing"""
 
@@ -47,19 +53,19 @@ class Regression02PyExceptionTestcase( unittest.TestCase ):
       self.assertRaises( SyntaxError, ThrowPyException )
       try:
          ThrowPyException()
-      except SyntaxError, e:
-         self.assertEqual( str(e), "test error message" )
+      except SyntaxError:
+         self.assertEqual( str(sys.exc_info()[1]), "test error message" )
 
     # test of overloaded function
       self.assertRaises( SyntaxError, MyThrowingClass.ThrowPyException, 1 )
       try:
          MyThrowingClass.ThrowPyException( 1 )
-      except SyntaxError, e:
-         self.assertEqual( str(e), "overloaded int test error message" )
+      except SyntaxError:
+         self.assertEqual( str(sys.exc_info()[1]), "overloaded int test error message" )
 
 
 ### By-value return for class that defines operator new ======================
-class Regression03UserDefinedNewOperatorTestCase( unittest.TestCase ):
+class Regression03UserDefinedNewOperatorTestCase( MyTestCase ):
    def test1CreateTemporary( self ):
       """Test handling of a temporary for user defined operator new"""
 
@@ -70,7 +76,7 @@ class Regression03UserDefinedNewOperatorTestCase( unittest.TestCase ):
 
 
 ### Test the condition under which to (not) start the GUI thread =============
-class Regression04ThreadingTestCase( unittest.TestCase ):
+class Regression04ThreadingTestCase( MyTestCase ):
 
    hasThread = gROOT.IsBatch() and 5 or 6   # can't test if no display ...
    noThread  = 5
@@ -149,7 +155,7 @@ class Regression04ThreadingTestCase( unittest.TestCase ):
 
 
 ### Test the proper resolution of a template with namespaced parameter =======
-class Regression05LoKiNamespaceTestCase( unittest.TestCase ):
+class Regression05LoKiNamespaceTestCase( MyTestCase ):
    def test1TemplateWithNamespaceParameter( self ):
       """Test name resolution of template with namespace parameter"""
 
@@ -162,9 +168,9 @@ class Regression05LoKiNamespaceTestCase( unittest.TestCase ):
          LoKi.BooleanConstant( rcp ).__name__, 'LoKi::BooleanConstant<%s>' % rcp )
 
 ### Test conversion of int64 objects to ULong64_t and ULong_t ================
-class Regression06Int64ConversionTestCase( unittest.TestCase ):
+class Regression06Int64ConversionTestCase( MyTestCase ):
    limit1  = 4294967295
-   limit1L = 4294967295L
+   limit1L = pylong(4294967295)
 
    def test1IntToULongTestCase( self ):
       """Test conversion of Int(64) limit values to unsigned long"""
@@ -174,7 +180,7 @@ class Regression06Int64ConversionTestCase( unittest.TestCase ):
       self.assertEqual( self.limit1,  ULongFunc( self.limit1 ) )
       self.assertEqual( self.limit1L, ULongFunc( self.limit1 ) )
       self.assertEqual( self.limit1L, ULongFunc( self.limit1L ) )
-      self.assertEqual( sys.maxint + 2, ULongFunc( sys.maxint + 2 ) )
+      self.assertEqual( maxvalue + 2, ULongFunc( maxvalue + 2 ) )
 
    def test2IntToULongLongTestCase( self ):
       """Test conversion of Int(64) limit values to unsigned long long"""
@@ -182,11 +188,11 @@ class Regression06Int64ConversionTestCase( unittest.TestCase ):
       self.assertEqual( self.limit1,  ULong64Func( self.limit1 ) )
       self.assertEqual( self.limit1L, ULong64Func( self.limit1 ) )
       self.assertEqual( self.limit1L, ULong64Func( self.limit1L ) )
-      self.assertEqual( sys.maxint + 2, ULong64Func( sys.maxint + 2 ) )
+      self.assertEqual( maxvalue + 2, ULong64Func( maxvalue + 2 ) )
 
 
 ### Proper match-up of return type and overloaded function ===================
-class Regression07MatchConstWithProperReturn( unittest.TestCase ):
+class Regression07MatchConstWithProperReturn( MyTestCase ):
    def test1OverloadOrderWithProperReturn( self ):
       """Test return type against proper overload w/ const and covariance"""
 
@@ -197,7 +203,7 @@ class Regression07MatchConstWithProperReturn( unittest.TestCase ):
 
 
 ### Don't forget namespace when looking up a class in Pythonize! =============
-class Regression08UseNamespaceProperlyInPythonize( unittest.TestCase ):
+class Regression08UseNamespaceProperlyInPythonize( MyTestCase ):
    def test1UseNamespaceInIteratorPythonization( self ):
       """Do not crash on classes with iterators in a namespace"""
 
@@ -206,7 +212,7 @@ class Regression08UseNamespaceProperlyInPythonize( unittest.TestCase ):
 
 
 ### enum type conversions (used to fail exact match in CINT) =================
-class Regression09CheckEnumExactMatch( unittest.TestCase ):
+class Regression09CheckEnumExactMatch( MyTestCase ):
    def test1CheckEnumCalls( self ):
       """Be able to pass enums as function arguments"""
 
@@ -218,7 +224,7 @@ class Regression09CheckEnumExactMatch( unittest.TestCase ):
 
 
 ### "smart" classes that return themselves on dereference cause a loop =======
-class Regression10BreakSmartPtrCircularLoop( unittest.TestCase ):
+class Regression10BreakSmartPtrCircularLoop( MyTestCase ):
    def test1VerifyNoLoopt( self ):
       """Smart class that returns itself on dereference should not loop"""
 
@@ -228,7 +234,7 @@ class Regression10BreakSmartPtrCircularLoop( unittest.TestCase ):
 
 
 ### test pythonization of TVector3 ===========================================
-class Regression10TVector3Pythonize( unittest.TestCase ):
+class Regression10TVector3Pythonize( MyTestCase ):
    def test1TVector3( self ):
       """Verify TVector3 pythonization"""
 
@@ -237,7 +243,7 @@ class Regression10TVector3Pythonize( unittest.TestCase ):
 
 
 ### test pythonization coral::AttributeList iterators ========================
-class Regression11CoralAttributeListIterators( unittest.TestCase ):
+class Regression11CoralAttributeListIterators( MyTestCase ):
    def test1IterateWithBaseIterator( self ):
       """Verify that the correct base class iterators is picked up"""
 
@@ -259,7 +265,7 @@ class Regression11CoralAttributeListIterators( unittest.TestCase ):
       self.assertNotEqual( b, a.begin() )
 
 ### importing cout should not result in printed errors =======================
-class Regression12ImportCout( unittest.TestCase ):
+class Regression12ImportCout( MyTestCase ):
    def test1ImportCout( self ):
       """Test that ROOT.cout does not cause error messages"""
 
@@ -267,11 +273,8 @@ class Regression12ImportCout( unittest.TestCase ):
       c = ROOT.cout
 
 
-Regression11CoralAttributeListIterators
 ## actual test run
 if __name__ == '__main__':
-   
-   sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
    from MyTextTestRunner import MyTextTestRunner
 
    loader = unittest.TestLoader()

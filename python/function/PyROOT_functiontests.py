@@ -1,13 +1,16 @@
 # File: roottest/python/function/PyROOT_functiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/24/04
-# Last: 01/18/08
+# Last: 09/30/10
 
 """Unit tests for PyROOT python/TF1 function interactions."""
 
-import os, sys, unittest
+import sys, os, unittest
+sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+
 from math import exp
 from ROOT import *
+from common import *
 
 __all__ = [
    'Func1CallFunctionTestCase',
@@ -19,7 +22,6 @@ __all__ = [
 
 # needs to be early to prevent "ifunc_table overflow!"
 gROOT.LoadMacro( "InstallableFunction.C+" )
-
 
 
 ### helpers for general test cases -------------------------------------------
@@ -79,7 +81,7 @@ ncount = 0
 
 
 ### basic function test cases ================================================
-class Func1CallFunctionTestCase( unittest.TestCase ):
+class Func1CallFunctionTestCase( MyTestCase ):
    def test1GlobalFunction( self ):
       """Test calling of a python global function"""
 
@@ -105,7 +107,7 @@ class Func1CallFunctionTestCase( unittest.TestCase ):
 
 
 ### fitting with functions ===================================================
-class Func2FitFunctionTestCase( unittest.TestCase ):
+class Func2FitFunctionTestCase( MyTestCase ):
    def test1FitGaussian( self ):
       """Test fitting with a python global function"""
 
@@ -123,7 +125,7 @@ class Func2FitFunctionTestCase( unittest.TestCase ):
 
 
 ### calling a global function ================================================
-class Func3GlobalCppFunctionTestCase( unittest.TestCase ):
+class Func3GlobalCppFunctionTestCase( MyTestCase ):
    def test1CallGlobalCppFunction( self ):
       """Test calling of a C++ global function."""
 
@@ -134,7 +136,7 @@ class Func3GlobalCppFunctionTestCase( unittest.TestCase ):
 
 
 ### using a global function as python class member ===========================
-class Func4GlobalCppFunctionAsMethodTestCase( unittest.TestCase ):
+class Func4GlobalCppFunctionAsMethodTestCase( MyTestCase ):
    def test1InstallAndCallGlobalCppFunctionAsPythonMethod( self ):
       """Test installing and calling global C++ function as python method"""
 
@@ -145,7 +147,7 @@ class Func4GlobalCppFunctionAsMethodTestCase( unittest.TestCase ):
 
 
 ### test minuit callback functionality and fit results =======================
-class Func5MinuitTestCase( unittest.TestCase ):
+class Func5MinuitTestCase( MyTestCase ):
    def test1MinuitFit( self ):
       """Test minuit callback and fit"""
 
@@ -208,7 +210,6 @@ class Func5MinuitTestCase( unittest.TestCase ):
 
 ## actual test run
 if __name__ == '__main__':
-   sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
    from MyTextTestRunner import MyTextTestRunner
 
    loader = unittest.TestLoader()

@@ -1,24 +1,16 @@
-# File: roottest/python/pickle/common.py
+# File: roottest/python/common.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
-# Created: 04/16/08
-# Last: 09/24/10
+# Created: 09/24/10
+# Last: 09/30/10
 
-import sys, unittest
+__all__ = [ 'pylong', 'maxvalue', 'MyTestCase' ]
 
-pclfn     = "PyROOT_test.pcl"
-cpclfn    = "PyROOT_test.cpcl"
-
-h1name    = 'h'
-h1title   = 'test'
-h1nbins   = 100
-h1binl    = -4.
-h1binh    = +4.
-h1entries = 20000
-
-Nvec      = 12
-Mvec      =  7
+import os, sys, unittest
 
 if sys.hexversion >= 0x3000000:
+   pylong = int
+   maxvalue = sys.maxsize
+
    class MyTestCase( unittest.TestCase ):
       def shortDescription( self ):
          desc = str(self)
@@ -30,5 +22,8 @@ if sys.hexversion >= 0x3000000:
             desc = doc_first_line
          return desc
 else:
+   pylong = long
+   maxvalue = sys.maxint
+
    class MyTestCase( unittest.TestCase ):
       pass

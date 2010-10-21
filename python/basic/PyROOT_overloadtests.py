@@ -1,13 +1,16 @@
 # File: roottest/python/basic/PyROOT_overloadtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 04/15/05
-# Last: 08/26/10
+# Last: 09/30/10
 
 """Overload unit tests for PyROOT package."""
 
-import os, sys, unittest
+import sys, os, unittest
+sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+
 from array import array
 from ROOT import *
+from common import *
 
 __all__ = [
    'Overloads1ClassArrayTestCase',
@@ -18,7 +21,7 @@ gROOT.LoadMacro( "Overloads.C+" )
 
 
 ### class/array overloaded functions =========================================
-class Overloads1ClassArrayTestCase( unittest.TestCase ):
+class Overloads1ClassArrayTestCase( MyTestCase ):
    def test1ClassOverloads( self ):
       """Test functions overloaded on different ROOT clases"""
 
@@ -74,7 +77,7 @@ class Overloads1ClassArrayTestCase( unittest.TestCase ):
 
 
 ### basic functioning test cases =============================================
-class Overloads2TMathTestCase( unittest.TestCase ):
+class Overloads2TMathTestCase( MyTestCase ):
    def test1MeanOverloads( self ):
       """Test overloads using TMath::Mean(), TMath::Median"""
 
@@ -116,7 +119,6 @@ class Overloads2TMathTestCase( unittest.TestCase ):
 
 ## actual test run
 if __name__ == '__main__':
-   sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
    from MyTextTestRunner import MyTextTestRunner
 
    loader = unittest.TestLoader()

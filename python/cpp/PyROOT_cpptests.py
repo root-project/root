@@ -1,12 +1,15 @@
 # File: roottest/python/cpp/PyROOT_cpptests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/03/05
-# Last: 07/26/10
+# Last: 09/30/10
 
 """C++ language interface unit tests for PyROOT package."""
 
-import os, sys, unittest
+import sys, os, unittest
+sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+
 from ROOT import *
+from common import *
 
 __all__ = [
    'Cpp1LanguageFeatureTestCase'
@@ -14,7 +17,7 @@ __all__ = [
 
 
 ### C++ language constructs test cases =======================================
-class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
+class Cpp1LanguageFeatureTestCase( MyTestCase ):
    def test01ClassEnum( self ):
       """Test class enum access and values"""
 
@@ -198,7 +201,6 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
 
 ## actual test run
 if __name__ == '__main__':
-   sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
    from MyTextTestRunner import MyTextTestRunner
 
    loader = unittest.TestLoader()

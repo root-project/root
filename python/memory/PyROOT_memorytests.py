@@ -1,7 +1,7 @@
 # File: roottest/python/memory/PyROOT_memorytests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 02/15/05
-# Last: 04/13/09
+# Last: 09/24/10
 
 """Memory tests for PyROOT package."""
 
@@ -12,9 +12,24 @@ __all__ = [
    'Memory1TestCase'
 ]
 
+if sys.hexversion >= 0x3000000:
+   class MyTestCase( unittest.TestCase ):
+      def shortDescription( self ):
+         desc = str(self)
+         doc_first_line = None
+
+         if self._testMethodDoc:
+            doc_first_line = self._testMethodDoc.split("\n")[0].strip()
+         if doc_first_line:
+            desc = doc_first_line
+         return desc
+else:
+   class MyTestCase( unittest.TestCase ):
+      pass
+
 
 ### Memory management test cases =============================================
-class Memory1TestCase( unittest.TestCase ):
+class Memory1TestCase( MyTestCase ):
    def test1ObjectCreationDestruction( self ):
       """Test object creation and destruction"""
 

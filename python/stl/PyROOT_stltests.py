@@ -1,12 +1,15 @@
 # File: roottest/python/stl/PyROOT_stltests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/25/05
-# Last: 20/09/10
+# Last: 09/30/10
 
 """STL unit tests for PyROOT package."""
 
-import os, sys, unittest
+import sys, os, unittest
+sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+
 from ROOT import *
+from common import *
 
 __all__ = [
    'STL1VectorTestCase',
@@ -21,7 +24,7 @@ gROOT.LoadMacro( "StlTypes.C+" )
 
 
 ### STL vector test case =====================================================
-class STL1VectorTestCase( unittest.TestCase ):
+class STL1VectorTestCase( MyTestCase ):
    N = 13
 
    def test1BuiltinVectorType( self ):
@@ -88,7 +91,7 @@ class STL1VectorTestCase( unittest.TestCase ):
 
 
 ### STL list test case =======================================================
-class STL2ListTestCase( unittest.TestCase ):
+class STL2ListTestCase( MyTestCase ):
    N = 13
 
    def test1BuiltinListType( self ):
@@ -117,7 +120,7 @@ class STL2ListTestCase( unittest.TestCase ):
 
 
 ### STL map test case ========================================================
-class STL3MapTestCase( unittest.TestCase ):
+class STL3MapTestCase( MyTestCase ):
    N = 13
 
    def test1BuiltinMapType( self ):
@@ -181,14 +184,14 @@ class STL3MapTestCase( unittest.TestCase ):
       mul = std.map( str, 'unsigned long' )()
       mul[ 'two' ] = 2
       self.assertEqual( mul[ 'two' ], 2 )
-      mul[ 'maxint' ] = sys.maxint + 3
-      self.assertEqual( mul[ 'maxint' ], sys.maxint + 3 )
+      mul[ 'maxint' ] = maxvalue + 3
+      self.assertEqual( mul[ 'maxint' ], maxvalue + 3 )
 
       self.assertRaises( ValueError, mul.__setitem__, 'minus two', -2 )
 
 
 ### Protocol mapping for an STL like class ===================================
-class STL4STLLikeClassTestCase( unittest.TestCase ):
+class STL4STLLikeClassTestCase( MyTestCase ):
    def test1STLLikeClassIndexingOverloads( self ):
       """Test overloading of operator[] in STL like class"""
 
@@ -207,7 +210,7 @@ class STL4STLLikeClassTestCase( unittest.TestCase ):
 
 
 ### String handling ==========================================================
-class STL5StringHandlingTestCase( unittest.TestCase ):
+class STL5StringHandlingTestCase( MyTestCase ):
    def test1StringArgumentPassing( self ):
       """Test mapping of python strings and std::string"""
 
@@ -250,7 +253,7 @@ class STL5StringHandlingTestCase( unittest.TestCase ):
 
 
 ### Iterator comparison ======================================================
-class STL6IteratorComparisonTestCase( unittest.TestCase ):
+class STL6IteratorComparisonTestCase( MyTestCase ):
    def test1BuiltinVectorIterators( self ):
       """Test iterator comparison with operator== reflected"""
 
@@ -262,21 +265,25 @@ class STL6IteratorComparisonTestCase( unittest.TestCase ):
 
       self.assert_( b1.__eq__( b2 ) )
       self.assert_( not b1.__ne__( b2 ) )
-      self.assertEqual( cmp( b1, b2 ), 0 )
+      if sys.hexversion < 0x3000000:
+         self.assertEqual( cmp( b1, b2 ), 0 )
 
       self.assert_( e1.__eq__( e2 ) )
       self.assert_( not e1.__ne__( e2 ) )
-      self.assertEqual( cmp( e1, e2 ), 0 )
+      if sys.hexversion < 0x3000000:
+         self.assertEqual( cmp( e1, e2 ), 0 )
 
       self.assert_( not b1.__eq__( e1 ) )
       self.assert_( b1.__ne__( e1 ) )
-      self.assertNotEqual( cmp( b1, e1 ), 0 )
+      if sys.hexversion < 0x3000000:
+         self.assertNotEqual( cmp( b1, e1 ), 0 )
 
       b1.__preinc__()
       self.assert_( not b1.__eq__( b2 ) )
       self.assert_( b1.__eq__( e2 ) )
-      self.assertNotEqual( cmp( b1, b2 ), 0 )
-      self.assertEqual( cmp( b1, e1 ), 0 )
+      if sys.hexversion < 0x3000000:
+         self.assertNotEqual( cmp( b1, b2 ), 0 )
+         self.assertEqual( cmp( b1, e1 ), 0 )
       self.assertNotEqual( b1, b2 )
       self.assertEqual( b1, e2 )
 
@@ -293,12 +300,12 @@ class STL6IteratorComparisonTestCase( unittest.TestCase ):
        # out-of-line operator==/!= are a gcc feature ...
          self.assertRaises( LookupError, b1.__eq__, b2 )
          self.assertRaises( LookupError, b1.__ne__, b2 )
-         self.assertRaises( LookupError, cmp, b1, b2 )
+         if sys.hexversion < 0x3000000:
+            self.assertRaises( LookupError, cmp, b1, b2 )
 
 
 ## actual test run
 if __name__ == '__main__':
-   sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
    from MyTextTestRunner import MyTextTestRunner
 
    loader = unittest.TestLoader()

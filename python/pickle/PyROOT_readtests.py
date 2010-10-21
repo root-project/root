@@ -1,13 +1,14 @@
 # File: roottest/python/pickle/PyROOT_readingtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 04/16/08
-# Last: 10/17/08
+# Last: 09/24/10
 
 """Pickle writing unit tests for PyROOT package."""
 
 import os, sys, unittest
 import pickle, cPickle
 from ROOT import *
+from common import *
 
 __all__ = [
    'PickleReadingSimpleObjectsTestCase',
@@ -16,11 +17,9 @@ __all__ = [
 
 gROOT.LoadMacro( "PickleTypes.C+" )
 
-from common import *
-
 
 ### Read various objects with the two pickle modules =========================
-class PickleReadingSimpleObjectsTestCase( unittest.TestCase ):
+class PickleReadingSimpleObjectsTestCase( MyTestCase ):
    in1 = open( pclfn, 'r' )        # names from common.py
    in2 = open( cpclfn, 'r' )
 
@@ -83,7 +82,7 @@ class PickleReadingSimpleObjectsTestCase( unittest.TestCase ):
 
 
 ### Pretend-write and read back objects that gave complications ==============
-class PickleReadingComplicationsTestCase( unittest.TestCase ):
+class PickleReadingComplicationsTestCase( MyTestCase ):
 
    def test1RefCountCheck( self ):
       """Test reference counting of pickled object"""

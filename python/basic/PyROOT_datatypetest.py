@@ -1,13 +1,16 @@
 # File: roottest/python/basic/PyROOT_datatypetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 05/11/05
-# Last: 09/22/10
+# Last: 09/30/10
 
 """Data type conversion unit tests for PyROOT package."""
 
-import os, sys, unittest
+import sys, os, unittest
+sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+
 from array import array
 from ROOT import *
+from common import *
 
 __all__ = [
    'DataTypes1InstanceDataTestCase',
@@ -19,7 +22,7 @@ gROOT.LoadMacro( "DataTypes.C+" )
 
 
 ### access to instance data members ==========================================
-class DataTypes1InstanceDataTestCase( unittest.TestCase ):
+class DataTypes1InstanceDataTestCase( MyTestCase ):
  # N = 5 (imported from ROOT as global)
 
    def test1ReadAccess( self ):
@@ -35,8 +38,8 @@ class DataTypes1InstanceDataTestCase( unittest.TestCase ):
       self.assertEqual( c.fUShort,  11 )
       self.assertEqual( c.fInt,    -22 )
       self.assertEqual( c.fUInt,    22 )
-      self.assertEqual( c.fLong,   -33 )
-      self.assertEqual( c.fULong,   33 )
+      self.assertEqual( c.fLong,   pylong(-33) )
+      self.assertEqual( c.fULong,  pylong( 33) )
       self.assertEqual( round( c.fFloat  + 44., 5 ), 0 )
       self.assertEqual( round( c.fDouble + 55., 8 ), 0 )
 
@@ -166,7 +169,7 @@ class DataTypes1InstanceDataTestCase( unittest.TestCase ):
 
 
 ### access to class data members =============================================
-class DataTypes2ClassDataTestCase( unittest.TestCase ):
+class DataTypes2ClassDataTestCase( MyTestCase ):
    def test1ReadAccess( self ):
       """Test read access to class public data and verify values"""
 
@@ -184,10 +187,10 @@ class DataTypes2ClassDataTestCase( unittest.TestCase ):
       self.assertEqual( c.sInt,                -202 )
       self.assertEqual( c.sUInt,                202 )
       self.assertEqual( ClassWithData.sUInt,    202 )
-      self.assertEqual( ClassWithData.sLong,   -303 )
-      self.assertEqual( c.sLong,               -303 )
-      self.assertEqual( c.sULong,               303 )
-      self.assertEqual( ClassWithData.sULong,   303 )
+      self.assertEqual( ClassWithData.sLong,   pylong(-303) )
+      self.assertEqual( c.sLong,               pylong(-303) )
+      self.assertEqual( c.sULong,              pylong( 303) )
+      self.assertEqual( ClassWithData.sULong,  pylong( 303) )
       self.assertEqual( round( ClassWithData.sFloat  + 404., 5 ), 0 )
       self.assertEqual( round( c.sFloat              + 404., 5 ), 0 )
       self.assertEqual( round( ClassWithData.sDouble + 505., 8 ), 0 )
@@ -226,14 +229,14 @@ class DataTypes2ClassDataTestCase( unittest.TestCase ):
       self.assertEqual( ClassWithData.sUInt,   4321 )
       self.assertRaises( ValueError, setattr, c,             'sUInt', -1 )
       self.assertRaises( ValueError, setattr, ClassWithData, 'sUInt', -1 )
-      ClassWithData.sLong                    = -87
-      self.assertEqual( c.sLong,               -87 )
-      c.sLong                                =  876
-      self.assertEqual( ClassWithData.sLong,    876 )
-      ClassWithData.sULong                   =  876
-      self.assertEqual( c.sULong,               876 )
-      c.sULong                               =  678
-      self.assertEqual( ClassWithData.sULong,   678 )
+      ClassWithData.sLong                    = pylong(-87)
+      self.assertEqual( c.sLong,               pylong(-87) )
+      c.sLong                                = pylong( 876)
+      self.assertEqual( ClassWithData.sLong,   pylong( 876) )
+      ClassWithData.sULong                   = pylong( 876)
+      self.assertEqual( c.sULong,              pylong( 876) )
+      c.sULong                               = pylong( 678)
+      self.assertEqual( ClassWithData.sULong,  pylong( 678) )
       self.assertRaises( ValueError, setattr, ClassWithData, 'sULong', -1 )
       self.assertRaises( ValueError, setattr, c,             'sULong', -1 )
       ClassWithData.sFloat                   = -3.1415
@@ -248,7 +251,7 @@ class DataTypes2ClassDataTestCase( unittest.TestCase ):
 
 
 ### access to data through buffer interface ==================================
-class DataTypes3BufferDataTestCase( unittest.TestCase ):
+class DataTypes3BufferDataTestCase( MyTestCase ):
    def test1SetBufferSize( self ):
       """Test usage of buffer sizing"""
 
@@ -271,7 +274,6 @@ class DataTypes3BufferDataTestCase( unittest.TestCase ):
 
 ## actual test run
 if __name__ == '__main__':
-   sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
    from MyTextTestRunner import MyTextTestRunner
 
    loader = unittest.TestLoader()

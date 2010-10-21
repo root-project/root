@@ -1,12 +1,15 @@
 # File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 09/21/10
+# Last: 09/30/10
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
-import os, sys, unittest
+import sys, os, unittest
+sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+
 from ROOT import *
+from common import *
 
 __all__ = [
    'Cpp1VirtualInheritenceTestCase',
@@ -22,7 +25,7 @@ gROOT.LoadMacro( "AdvancedCpp.C+" )
 
 
 ### C++ virtual inheritence test cases =======================================
-class Cpp1InheritenceTestCase( unittest.TestCase ):
+class Cpp1InheritenceTestCase( MyTestCase ):
    def test1DataMembers( self ):
       """Test data member access when using virtual inheritence"""
 
@@ -128,7 +131,7 @@ class Cpp1InheritenceTestCase( unittest.TestCase ):
 
 
 ### C++ template tests =======================================================
-class Cpp2TemplateLookupTestCase( unittest.TestCase ):
+class Cpp2TemplateLookupTestCase( MyTestCase ):
    def test1SingleInstantiatedTemplate( self ):
       """Test data member access for a templated class"""
 
@@ -170,7 +173,7 @@ class Cpp2TemplateLookupTestCase( unittest.TestCase ):
 
       self.assertEqual( m.GetSize( 'char' )(),   m.GetCharSize() )
       self.assertEqual( m.GetSize( int )(),      m.GetIntSize() )
-      self.assertEqual( m.GetSize( long )(),     m.GetLongSize() )
+      self.assertEqual( m.GetSize( pylong )(),   m.GetLongSize() )
       self.assertEqual( m.GetSize( float )(),    m.GetFloatSize() )
       self.assertEqual( m.GetSize( 'double' )(), m.GetDoubleSize() )
 
@@ -190,14 +193,14 @@ class Cpp2TemplateLookupTestCase( unittest.TestCase ):
 
 
 ### C++ by-non-const-ref arguments tests =====================================
-class Cpp3PassByNonConstRefTestCase( unittest.TestCase ):
+class Cpp3PassByNonConstRefTestCase( MyTestCase ):
    def test1TestPlaceHolders( self ):
       """Test usage of Long/Double place holders"""
 
-      l = Long( 42 )
-      self.assertEqual( l, 42 )
-      self.assertEqual( l/7, 6 )
-      self.assertEqual( l*1, l )
+      l = Long( pylong(42) )
+      self.assertEqual( l, pylong(42) )
+      self.assertEqual( l/7, pylong(6) )
+      self.assertEqual( l*pylong(1), l )
 
       import math
       d = Double( math.pi )
@@ -207,7 +210,7 @@ class Cpp3PassByNonConstRefTestCase( unittest.TestCase ):
    def test2PassBuiltinsByNonConstRef( self ):
       """Test parameter passing of builtins through non-const reference"""
 
-      l = Long( 42 )
+      l = Long( pylong(42) )
       SetLongThroughRef( l, 41 )
       self.assertEqual( l, 41 )
 
@@ -215,7 +218,7 @@ class Cpp3PassByNonConstRefTestCase( unittest.TestCase ):
       SetDoubleThroughRef( d, 3.1415 )
       self.assertEqual( d, 3.1415 )
 
-      i = Long( 42 )
+      i = Long( pylong(42) )
       SetIntThroughRef( i, 13 )
       self.assertEqual( i, 13 )
 
@@ -228,7 +231,7 @@ class Cpp3PassByNonConstRefTestCase( unittest.TestCase ):
 
 
 ### C++ abstract classes should behave normally, but be non-instatiatable ====
-class Cpp4HandlingAbstractClassesTestCase( unittest.TestCase ):
+class Cpp4HandlingAbstractClassesTestCase( MyTestCase ):
    def test1ClassHierarchy( self ):
       """Test abstract class in a hierarchy"""
 
@@ -245,7 +248,7 @@ class Cpp4HandlingAbstractClassesTestCase( unittest.TestCase ):
 
 
 ### Return by reference should call assignment operator ======================
-class Cpp5AssignToRefArbitraryClassTestCase( unittest.TestCase ):
+class Cpp5AssignToRefArbitraryClassTestCase( MyTestCase ):
    def test1AssignToReturnByRef( self ):
       """Test assignment to an instance returned by reference"""
 
@@ -261,7 +264,7 @@ class Cpp5AssignToRefArbitraryClassTestCase( unittest.TestCase ):
 
 
 ### Check availability of math conversions ===================================
-class Cpp6MathConvertersTestCase( unittest.TestCase ):
+class Cpp6MathConvertersTestCase( MyTestCase ):
    def test1MathConverters( self ):
       """Test operator int/long/double incl. typedef"""
 
@@ -269,16 +272,16 @@ class Cpp6MathConvertersTestCase( unittest.TestCase ):
       a.m_i = 1234
       a.m_d = 4321.
 
-      self.assertEqual( int(a), 1234 )
-      self.assertEqual( int(a), a.m_i )
-      self.assertEqual( long(a), a.m_i )
+      self.assertEqual( int(a),     1234 )
+      self.assertEqual( int(a),    a.m_i )
+      self.assertEqual( pylong(a), a.m_i )
 
       self.assertEqual( float(a), 4321. )
       self.assertEqual( float(a), a.m_d )
 
 
 ### Check global operator== overload =========================================
-class Cpp7GloballyOverloadedComparatorTestCase( unittest.TestCase ):
+class Cpp7GloballyOverloadedComparatorTestCase( MyTestCase ):
    def test1Comparator( self ):
       """Check that the global operator!=/== is picked up"""
 
@@ -298,7 +301,6 @@ class Cpp7GloballyOverloadedComparatorTestCase( unittest.TestCase ):
 
 ## actual test run
 if __name__ == '__main__':
-   sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
    from MyTextTestRunner import MyTextTestRunner
 
    loader = unittest.TestLoader()
