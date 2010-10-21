@@ -1576,7 +1576,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
    palette when drawing legos, surfaces or contours.
    <p>
    if ncolors > 50 and colors=0, the DeepSea palette is used.
-   (see TStyle::CreateGradientColorTable for more details)
+   (see TColor::CreateGradientColorTable for more details)
    <p>
    <tt>if ncolors > 0 and colors = 0</tt>, the default palette is used
    with a maximum of ncolors.

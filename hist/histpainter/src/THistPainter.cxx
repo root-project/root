@@ -2075,7 +2075,7 @@ red spectrum is created. It is recommended you use this palette when drawing
 legos, surfaces or contours.
 
 <p>If ncolors > 50 and colors=0, the DeepSea palette is used.
-(see <tt>TStyle::CreateGradientColorTable</tt> for more details)
+(see <tt>TColor::CreateGradientColorTable</tt> for more details)
 
 <p> If <tt>ncolors > 0 && colors == 0</tt>, the default palette is used
 with a maximum of ncolors.
