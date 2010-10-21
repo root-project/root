@@ -195,7 +195,11 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    if (fBranch && fBranch->GetTree()) {
       pTree = fBranch->GetTree();
    }
-   TLeaf* leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
+   TLeaf* leaf = (TLeaf*) GetBranch()->GetListOfLeaves()->FindObject(countname);
+   if (leaf == 0) {
+      // Try outside the branch:
+      leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
+   }
    //if not found, make one more trial in case the leaf name has a "."
    if (!leaf && strchr(GetName(), '.')) {
       char* withdot = new char[strlen(GetName())+strlen(countname)+1];
@@ -205,6 +209,11 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
       leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
       delete[] withdot;
       withdot = 0;
+   }
+   if (!leaf && strchr(countname,'.')) {
+      // Not yet found and the countname has a dot in it, let's try
+      // to find the leaf using its full name
+      leaf = pTree->FindLeaf(countname);
    }
    Int_t i = 0;
    if (leaf) {
