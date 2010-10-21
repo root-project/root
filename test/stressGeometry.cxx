@@ -223,7 +223,7 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
          
       fname = TString::Format("files/%s_ref_3.root", exps[i]);
       
-      if (gen_ref || !TFile::Open(Form("http://root.cern.ch/files/%s_ref_3.root",exps[i])),"CACHEREAD") {
+      if (gen_ref || !TFile::Open(Form("http://root.cern.ch/files/%s_ref_3.root",exps[i]),"CACHEREAD")) {
          if (!gen_ref) fprintf(stderr,"File: %s does not exist, generating it\n", fname.Data());
          else               fprintf(stderr,"Generating reference file %s\n", fname.Data());
          WriteRef(i);
