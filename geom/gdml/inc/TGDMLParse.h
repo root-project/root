@@ -124,9 +124,9 @@ public:
    }
 
    static TGeoVolume* StartGDML(const char* filename){
-      TGDMLParse* fParser = new TGDMLParse;
-      TGeoVolume* fWorld = fParser->GDMLReadFile(filename);
-      return fWorld;
+      TGDMLParse* parser = new TGDMLParse;
+      TGeoVolume* world = parser->GDMLReadFile(filename);
+      return world;
    }
    
    TGeoVolume*       GDMLReadFile(const char* filename = "test.gdml");
