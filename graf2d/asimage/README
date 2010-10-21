@@ -40,8 +40,6 @@ Some files have been modified compare to the official libAfterImage version:
 
    libjpeg/jidctred.c: removed from repository (replaced by jidctint.c)
 
-   libjpeg/jdatadst.c: fix a few warning (clang).
-
    "configure":
    - has been modified to look at the ".dylib" file extension to find
      the X11 libraries. This is needed on the Mac Leopard system.
