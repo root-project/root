@@ -62,6 +62,7 @@
 #define PyROOT_PyUnicode_InternFromString   PyString_InternFromString
 #define PyROOT_PyUnicode_Append             PyString_Concat
 #define PyROOT_PyUnicode_AppendAndDel       PyString_ConcatAndDel
+#define PyROOT_PyUnicode_FromStringAndSize  PyString_FromStringAndSize
 
 #define PYROOT__long__ "__long__"
 #define PYROOT__idiv__ "__idiv__"
@@ -82,6 +83,7 @@
 #define PyROOT_PyUnicode_InternFromString   PyUnicode_InternFromString
 #define PyROOT_PyUnicode_Append             PyUnicode_Append
 #define PyROOT_PyUnicode_AppendAndDel       PyUnicode_AppendAndDel
+#define PyROOT_PyUnicode_FromStringAndSize  PyUnicode_FromStringAndSize
 
 #define PyIntObject          PyLongObject
 #define PyInt_Check          PyLong_Check
