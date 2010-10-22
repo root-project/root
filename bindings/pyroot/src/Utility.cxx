@@ -441,26 +441,38 @@ Bool_t PyROOT::Utility::InitProxy( PyObject* module, PyTypeObject* pytype, const
 //____________________________________________________________________________
 int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& buf, Bool_t check )
 {
-// special case: don't handle strings here (yes, they're buffers, but not quite)
+// special case: don't handle character strings here (yes, they're buffers, but not quite)
    if ( PyBytes_Check( pyobject ) )
       return 0;
 
-#if PY_VERSION_HEX < 0x03000000
 // attempt to retrieve pointer to buffer interface
    PyBufferProcs* bufprocs = Py_TYPE(pyobject)->tp_as_buffer;
 
    PySequenceMethods* seqmeths = Py_TYPE(pyobject)->tp_as_sequence;
-   if ( seqmeths != 0 && bufprocs != 0 && bufprocs->bf_getwritebuffer != 0 &&
-        (*(bufprocs->bf_getsegcount))( pyobject, 0 ) == 1 ) {
+   if ( seqmeths != 0 && bufprocs != 0
+#if  PY_VERSION_HEX < 0x03000000
+        && bufprocs->bf_getwritebuffer != 0
+        && (*(bufprocs->bf_getsegcount))( pyobject, 0 ) == 1
+#else
+        && bufprocs->bf_getbuffer != 0
+#endif
+      ) {
 
    // get the buffer
+#if PY_VERSION_HEX < 0x03000000
       Py_ssize_t buflen = (*(bufprocs->bf_getwritebuffer))( pyobject, 0, &buf );
+#else
+      Py_buffer bufinfo;
+      (*(bufprocs->bf_getbuffer))( pyobject, &bufinfo, PyBUF_WRITABLE );
+      buf = (char*)bufinfo.buf;
+      Py_ssize_t buflen = bufinfo.len;
+#endif
 
       if ( check == kTRUE ) {
       // determine buffer compatibility (use "buf" as a status flag)
          PyObject* pytc = PyObject_GetAttr( pyobject, PyStrings::gTypeCode );
          if ( pytc != 0 ) {     // for array objects
-            if ( PyBytes_AS_STRING( pytc )[0] != tc )
+            if ( PyROOT_PyUnicode_AsString( pytc )[0] != tc )
                buf = 0;         // no match
             Py_DECREF( pytc );
          } else if ( seqmeths->sq_length &&
@@ -478,7 +490,7 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
             PyErr_Fetch( &pytype, &pyvalue, &pytrace );
             PyObject* pyvalue2 = PyROOT_PyUnicode_FromFormat(
                (char*)"%s and given element size (%ld) do not match needed (%d)",
-               PyBytes_AS_STRING( pyvalue ),
+               PyROOT_PyUnicode_AsString( pyvalue ),
                seqmeths->sq_length ? (long)(buflen / (*(seqmeths->sq_length))( pyobject )) : (long)buflen,
                size );
             Py_DECREF( pyvalue );
@@ -488,7 +500,6 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
 
       return buflen;
    }
-#endif
 
    return 0;
 }

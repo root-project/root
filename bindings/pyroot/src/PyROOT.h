@@ -102,6 +102,8 @@
 #define Py_TPFLAGS_CHECKTYPES 0
 
 #define PyClass_Check   PyType_Check
+
+#define PyBuffer_Type   PyMemoryView_Type
 #endif  // ! 3.0
 
 // feature of 3.0 not in 2.5 and earlier
