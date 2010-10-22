@@ -876,7 +876,7 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
    // Returns 0 in case of error.
    // Returns 0 if a directory with the same name already exists.
    // Note that the directory name may be of the form "a/b/c" to create a hierarchy of directories.
-   // In this case, the function returns the pointer to the "a" directory if teh operation is successful.
+   // In this case, the function returns the pointer to the "a" directory if the operation is successful.
    
    if (!name || !title || !strlen(name)) return 0;
    if (!strlen(title)) title = name;
