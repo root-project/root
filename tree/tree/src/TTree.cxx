@@ -5826,14 +5826,24 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
    //    T.ReadFile("file1.dat","branch descriptor");
    //    T.ReadFile("file2.dat");
 
-   gTree = this;
    std::ifstream in;
    in.open(filename);
    if (!in.good()) {
       Error("ReadFile","Cannot open file: %s",filename);
       return 0;
    }
+   return ReadStream(in, branchDescriptor);
+}
 
+//______________________________________________________________________________
+Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor)
+{
+   // Create or simply read branches from an input stream.
+   //
+   // See reference information for TTree::ReadFile
+
+   gTree = this;
+   std::istream& in = inputStream;
    TBranch *branch;
    Int_t nbranches = fBranches.GetEntries();
    if (nbranches == 0) {
@@ -5845,7 +5855,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
       if (!nch) {
          in >> bd;
          if (!in.good()) {
-            Error("ReadFile","Error reading file: %s",filename);
+            Error("ReadStream","Error reading stream");
             return 0;
          }
          in.ignore(8192,'\n');
@@ -5878,7 +5888,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
          branch = new TBranch(this,bdname,address,desc.Data(),32000);
          if (branch->IsZombie()) {
             delete branch;
-            Warning("ReadFile","Illegal branch definition: %s",bdcur);
+            Warning("ReadStream","Illegal branch definition: %s",bdcur);
          } else {
             fBranches.Add(branch);
             branch->SetAddress(0);
@@ -5909,7 +5919,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
             if (in.eof()) return nlines;
             status = in.good();
             if (!status) {
-               Warning("ReadFile","Illegal value after line %lld\n",nlines);
+               Warning("ReadStream","Illegal value after line %lld\n",nlines);
                in.clear();
                break;
             }
