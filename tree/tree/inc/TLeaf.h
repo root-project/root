@@ -83,7 +83,7 @@ public:
    virtual void     PrintValue(Int_t i = 0) const;
    virtual void     ReadBasket(TBuffer&) {}
    virtual void     ReadBasketExport(TBuffer&, TClonesArray*, Int_t) {}
-   virtual void     ReadValue(ifstream& /*s*/) {}
+   virtual void     ReadValue(istream& /*s*/) {}
            Int_t    ResetAddress(void* add, Bool_t destructor = kFALSE);
    virtual void     SetAddress(void* add = 0);
    virtual void     SetBranch(TBranch* branch) { fBranch = branch; }

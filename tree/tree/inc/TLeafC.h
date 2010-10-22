@@ -50,7 +50,7 @@ public:
    virtual void    PrintValue(Int_t i=0) const;
    virtual void    ReadBasket(TBuffer &b);
    virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
-   virtual void    ReadValue(ifstream & s);
+   virtual void    ReadValue(istream & s);
    virtual void    SetAddress(void *add=0);
    
    ClassDef(TLeafC,1);  //A TLeaf for a variable length string.

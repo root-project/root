@@ -177,9 +177,9 @@ void TLeafC::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 }
 
 //______________________________________________________________________________
-void TLeafC::ReadValue(ifstream &s)
+void TLeafC::ReadValue(istream &s)
 {
-   // Read a string from ifstream s and store it into the branch buffer.
+   // Read a string from istream s and store it into the branch buffer.
 
    string temp;
    s >> temp;

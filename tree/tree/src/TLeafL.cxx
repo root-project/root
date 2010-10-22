@@ -202,9 +202,9 @@ void TLeafL::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 }
 
 //______________________________________________________________________________
-void TLeafL::ReadValue(ifstream &s)
+void TLeafL::ReadValue(istream &s)
 {
-// read a long integer from ifstream s and store it into the branch buffer
+// read a long integer from istream s and store it into the branch buffer
 #if defined(_MSC_VER) && (_MSC_VER<1300)
    printf("Due to a bug in VC++6, the function TLeafL::ReadValue is dummy\n");
 #else
