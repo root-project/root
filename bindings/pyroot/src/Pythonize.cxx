@@ -1022,8 +1022,8 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
    PyObject* TDirectoryGetObject( ObjectProxy* self, PyObject* args )
    {
       PyObject* name = 0; ObjectProxy* ptr = 0;
-      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "SO!:TDirectory::GetObject" ),
-               &name, &ObjectProxy_Type, &ptr ) )
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!:TDirectory::GetObject" ),
+               &PyROOT_PyUnicode_Type, &name, &ObjectProxy_Type, &ptr ) )
          return 0;
 
       TDirectory* dir =
@@ -1051,8 +1051,9 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
    PyObject* TDirectoryWriteObject( ObjectProxy* self, PyObject* args )
    {
       ObjectProxy *wrt = 0; PyObject *name = 0, *option = 0;
-      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!OS|S:TDirectory::WriteObject" ),
-               &ObjectProxy_Type, &wrt, &name, &option ) )
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!OO!|O!:TDirectory::WriteObject" ),
+               &ObjectProxy_Type, &wrt, &PyROOT_PyUnicode_Type, &name,
+               &PyROOT_PyUnicode_Type, &option ) )
          return 0;
 
       TDirectory* dir =
@@ -1214,8 +1215,9 @@ namespace PyROOT {      // workaround for Intel icc on Linux
             PyObject *bufsize = 0, *splitlevel = 0;
 
          // try: ( const char*, void*, const char*, Int_t = 32000 )
-            if ( PyArg_ParseTuple( args, const_cast< char* >( "SOS|O!:Branch" ),
-                    &name, &address, &leaflist, &PyInt_Type, &bufsize ) ) {
+            if ( PyArg_ParseTuple( args, const_cast< char* >( "O!OO!|O!:Branch" ),
+                   &PyROOT_PyUnicode_Type, &name, &address, &PyROOT_PyUnicode_Type,
+                   &leaflist, &PyInt_Type, &bufsize ) ) {
 
                void* buf = 0;
                if ( ObjectProxy_Check( address ) )
@@ -1242,15 +1244,17 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          // try: ( const char*, const char*, T**, Int_t = 32000, Int_t = 99 )
          //  or: ( const char*,              T**, Int_t = 32000, Int_t = 99 ) 
             Bool_t bIsMatch = kFALSE;
-            if ( PyArg_ParseTuple( args, const_cast< char* >( "SSO|O!O!:Branch" ),
-                    &name, &clName, &address, &PyInt_Type, &bufsize, &PyInt_Type, &splitlevel ) ) {
+            if ( PyArg_ParseTuple( args, const_cast< char* >( "O!O!O|O!O!:Branch" ),
+                   &PyROOT_PyUnicode_Type, &name, &PyROOT_PyUnicode_Type, &clName, &address,
+                   &PyInt_Type, &bufsize, &PyInt_Type, &splitlevel ) ) {
                bIsMatch = kTRUE;
             } else {
                PyErr_Clear(); clName = 0;    // clName no longer used
-               if ( PyArg_ParseTuple( args, const_cast< char* >( "SO|O!O!" ),
-                       &name, &address, &PyInt_Type, &bufsize, &PyInt_Type, &splitlevel ) )
+               if ( PyArg_ParseTuple( args, const_cast< char* >( "O!O|O!O!" ),
+                      &PyROOT_PyUnicode_Type, &name, &address,
+                      &PyInt_Type, &bufsize, &PyInt_Type, &splitlevel ) ) {
                   bIsMatch = kTRUE;
-               else
+               } else
                   PyErr_Clear();
             }
 

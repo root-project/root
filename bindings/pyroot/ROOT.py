@@ -181,7 +181,7 @@ class Template:
     # special case pythonization (builtin_map is not available from the C-API)
       if hasattr( result, 'push_back' ):
          def iadd( self, ll ):
-            map( self.push_back, ll )
+            [ self.push_back(x) for x in ll ]
             return self
 
          result.__iadd__ = iadd

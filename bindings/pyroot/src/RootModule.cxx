@@ -176,7 +176,8 @@ namespace {
    // helper to get the address (address-of-address) of various object proxy types
       ObjectProxy* pyobj = 0;
       PyObject* pyname = 0;
-      if ( PyArg_ParseTuple( args, const_cast< char* >( "O|S" ), &pyobj, &pyname ) &&
+      if ( PyArg_ParseTuple( args, const_cast< char* >( "O|O!" ), &pyobj,
+             &PyROOT_PyUnicode_Type, &pyname ) &&
            ObjectProxy_Check( pyobj ) && pyobj->fObject ) {
 
          if ( pyname != 0 ) {
