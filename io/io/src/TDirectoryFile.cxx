@@ -1086,22 +1086,32 @@ TDirectory *TDirectoryFile::mkdir(const char *name, const char *title)
    // Create a sub-directory and return a pointer to the created directory.
    // Returns 0 in case of error.
    // Returns 0 if a directory with the same name already exists.
-   // Note that the directory name cannot contain slashes.
+   // Note that the directory name may be of the form "a/b/c" to create a hierarchy of directories.
+   // In this case, the function returns the pointer to the "a" directory if teh operation is successful.
 
    if (!name || !title || !strlen(name)) return 0;
    if (!strlen(title)) title = name;
-   if (strchr(name,'/')) {
-      ::Error("TDirectoryFile::mkdir","directory name (%s) cannot contain a slash", name);
-      return 0;
-   }
    if (GetKey(name)) {
       Error("mkdir","An object with name %s exists already",name);
       return 0;
    }
+   TDirectoryFile *newdir = 0;
+   if (const char *slash = strchr(name,'/')) {
+      Long_t size = Long_t(slash-name);
+      char *workname = new char[size+1];
+      strncpy(workname, name, size);
+      workname[size] = 0;
+      TDirectoryFile *tmpdir = (TDirectoryFile*)mkdir(workname,title);
+      if (!tmpdir) return 0;
+      if (!newdir) newdir = tmpdir;
+      tmpdir->mkdir(slash+1);
+      delete[] workname;
+      return newdir;
+   }
 
    TDirectory::TContext ctxt(this);
 
-   TDirectoryFile *newdir = new TDirectoryFile(name, title, "", this);
+   newdir = new TDirectoryFile(name, title, "", this);
 
    return newdir;
 }
