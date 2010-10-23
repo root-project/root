@@ -5855,6 +5855,8 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor)
       if (!nch) {
          in >> bd;
          if (!in.good()) {
+            delete [] bdname;
+            delete [] bd;
             Error("ReadStream","Error reading stream");
             return 0;
          }
