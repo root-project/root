@@ -98,17 +98,6 @@ void printMatrix<TMatrixTSym<double> >(const TMatrixTSym<double> & m ) {
    m.Print(); 
 } 
 
-// generate all matrices
-template<class M>
-void generate(std::vector<M*> & v) { 
-   int n = v.size(); 
-   gRandom->SetSeed(111);
-   for (int i = 0; i < n; ++i) {
-      v[i] = createMatrix<M>();
-      genMatrix(*v[i] ); 
-   }
-}
-
 // generate matrices 
 template<class M> 
 void genMatrix(M  & m ) { 
@@ -125,6 +114,17 @@ void genMatrix(M  & m ) {
          m(j,i) = m(i,j); // needed for TMatrix
       }
    }   
+}
+
+// generate all matrices
+template<class M>
+void generate(std::vector<M*> & v) { 
+   int n = v.size(); 
+   gRandom->SetSeed(111);
+   for (int i = 0; i < n; ++i) {
+      v[i] = createMatrix<M>();
+      genMatrix(*v[i] ); 
+   }
 }
 
 
