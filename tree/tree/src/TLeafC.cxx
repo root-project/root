@@ -194,7 +194,7 @@ void TLeafC::ReadValue(istream &s)
          fValue = new char[fNdata];
       }
    }
-   strcpy(fValue,temp.c_str());
+   strlcpy(fValue,temp.c_str(),fNdata);
 }
 
 //______________________________________________________________________________
