@@ -16,6 +16,7 @@
 // 3 - magnetic field with a zero-field region;
 // 4 - CMS magnetic field - simple track;
 // 5 - CMS magnetic field - track with different path-marks.
+// 6 - Concpetual ILC detector, problematic track
 
 #if defined(__CINT__) && !defined(__MAKECINT__)
 {
@@ -302,6 +303,34 @@ void track(Int_t mode = 5, Bool_t isRungeKutta = kTRUE)
          track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(1.483827e+02, 5.124750e+02, 5.064311e+01)));
          track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(1.674676e+02, 6.167731e+02, 6.517403e+01)));
          track->AddPathMark(TEvePathMark(TEvePathMark::kDecay,    TEveVector(1.884976e+02, 7.202000e+02, 7.919290e+01)));
+
+	 track->SetRnrPoints(kTRUE);
+	 track->SetMarkerStyle(4);
+
+         break;
+      }
+
+      case 6:
+      {
+         // Problematic track from Druid
+         prop->SetMagFieldObj(new TEveMagFieldDuo(350, -3.5, 2.0));
+         prop->SetMaxR(1000);
+         prop->SetMaxZ(1000);
+	 prop->SetRnrReferences(kTRUE);
+	 prop->SetRnrDaughters(kTRUE);
+	 prop->SetRnrDecay(kTRUE);
+	 prop->RefPMAtt().SetMarkerStyle(4);
+         list->SetElementName(Form("%s, Some ILC Detector field", list->GetElementName()));
+
+         TEveRecTrack *rc = new TEveRecTrack();
+         rc->fV.Set(57.1068, 31.2401, -7.07629);
+         rc->fP.Set(4.82895, 2.35083, -0.611757);
+         rc->fSign = 1;
+         track = new TEveTrack(rc, prop);
+
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(1.692235e+02, 7.047929e+01, -2.064785e+01), TEveVector()));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(5.806180e+02, 6.990633e+01, -6.450000e+01), TEveVector()));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDecay,    TEveVector(6.527213e+02, 1.473249e+02, -8.348498e+01)));
 
 	 track->SetRnrPoints(kTRUE);
 	 track->SetMarkerStyle(4);
