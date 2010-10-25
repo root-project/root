@@ -346,9 +346,11 @@ void TEveJetConeProjectedGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 
    fMultiColor = (fM->fDrawFrame && fM->fFillColor != fM->fLineColor);
 
+   glPushAttrib(GL_ENABLE_BIT);
+   glDisable(GL_LIGHTING);
+
    if (fM->fDrawFrame)
    {
-      glPushAttrib(GL_ENABLE_BIT);
       glEnable(GL_POLYGON_OFFSET_FILL);
       glPolygonOffset(1.0f, 1.0f);
    }
@@ -362,7 +364,7 @@ void TEveJetConeProjectedGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
       TGLUtil::Color(fM->fLineColor);
       TGLUtil::LineWidth(fM->fLineWidth);
       RenderOutline();
-
-      glPopAttrib();
    }
+
+   glPopAttrib();
 }

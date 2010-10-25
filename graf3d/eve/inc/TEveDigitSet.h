@@ -127,6 +127,7 @@ public:
    DigitBase_t* GetDigit(Int_t n) const { return (DigitBase_t*) fPlex.Atom(n); }
    TObject*     GetId(Int_t n) const;
    void*        GetUserData(Int_t n) const;
+   using TEveElement::GetUserData;
 
    // --------------------------------
 
