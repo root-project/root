@@ -78,7 +78,7 @@ TEveGeoNode::TEveGeoNode(TGeoNode* node) :
    SetMainColorPtr((Color_t*)(l + sizeof(void*)));
    SetMainTransparency(fNode->GetVolume()->GetTransparency());
 
-   fRnrSelf = fNode->TGeoAtt::IsVisible();
+   SetRnrSelfChildren(fNode->IsVisible(), fNode->IsVisDaughters());
 }
 
 //______________________________________________________________________________
