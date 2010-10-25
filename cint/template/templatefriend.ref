@@ -1,9 +1,9 @@
 
 Processing runtemplatefriend.C...
 Automatic building of dictionaries now off
-shared_ptr<T>::shared_ptr(T *) [with T = Child]
-shared_ptr<T>::shared_ptr(const shared_ptr<Y> &) [with Y = Child, T = Parent]
+shared_ptr<Child>::c'tor(T)
+shared_ptr<Parent>::c'tor(Y)
 (int)0
-shared_ptr<T>::shared_ptr(T *) [with T = Child]
-shared_ptr<T>::shared_ptr(const shared_ptr<Y> &) [with Y = Child, T = Parent]
+shared_ptr<Child>::c'tor(T)
+shared_ptr<Parent>::c'tor(Y)
 (int)0

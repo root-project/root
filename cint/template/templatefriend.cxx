@@ -22,6 +22,17 @@ class shared_ptr
   T *theobject;
   // this shared_ptr class is of course missing any 
   // reference counting mechanism
+   void PF(const char* func) {
+      std::string clname;
+#if defined(__CINT__) || defined(_MSC_VER)
+      clname = T::ClassName();
+#else
+      clname = __PRETTY_FUNCTION__;
+      if (clname.find("Parent") != std::string::npos) clname = "Parent";
+      else clname = "Child";
+#endif
+      std::cout << "shared_ptr<" << clname << ">::" << func << std::endl;
+   }
 
 public:
 
@@ -31,11 +42,7 @@ public:
 
   shared_ptr(T* someobject) 
   { 
-#if defined(__CINT__) || defined(_MSC_VER)
-     std::cout << "shared_ptr<T>::shared_ptr(T *) [with T = " << T::ClassName() << "]" << endl;
-#else
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
-#endif
+     PF("c'tor(T)");
     theobject = someobject; 
   }
 
@@ -43,12 +50,7 @@ public:
   shared_ptr(shared_ptr<Y> const &rhs) 
     : theobject(dynamic_cast<T*>(rhs.theobject)) 
   {
-#if defined(__CINT__) || defined(_MSC_VER)
-     std::cout << "shared_ptr<T>::shared_ptr(const shared_ptr<Y> &) [with Y = " << Y::ClassName()
-               << ", T = " << T::ClassName() << "]" << endl;
-#else
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
-#endif
+     PF("c'tor(Y)");
   };
 };
 
