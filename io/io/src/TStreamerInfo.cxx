@@ -3082,6 +3082,24 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
       ladd  = pointer + fOffset[i];
       atype = fNewType[i];
       len = ((TStreamerElement*)fElem[i])->GetArrayLength();
+      if (atype == kSTL) {
+         TClass *newClass = ((TStreamerElement*)fElem[i])->GetNewClass();
+         if (newClass == 0) {
+            newClass = ((TStreamerElement*)fElem[i])->GetClassPointer();
+         }
+         TClass *innerClass = newClass->GetCollectionProxy()->GetValueClass();
+         if (innerClass) {
+            return 0; // We don't know which member of the class we would want.
+         } else {
+            TVirtualCollectionProxy *proxy = newClass->GetCollectionProxy();
+            atype = proxy->GetType();
+            TVirtualCollectionProxy::TPushPop pop(proxy,ladd);
+            Int_t nc = proxy->Size();
+            if (j >= nc) return 0;
+            char *element_ptr = (char*)proxy->At(j);
+            return GetValueAux(atype,element_ptr,0,1);
+         }
+      }
    }
    return GetValueAux(atype,ladd,j,len);
 }
