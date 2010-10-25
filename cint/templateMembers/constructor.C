@@ -1,42 +1,48 @@
 #include <iostream>
 using namespace std;
 
-struct C { };
-
+struct TemplateArgument {};
 class TRootIOCtor;
-const char* nameof(C*) { return "C"; }
+const char* nameof(TemplateArgument*) { return "TemplateArgument"; }
 const char* nameof(TRootIOCtor*) { return "TRootIOCtor"; }
 const char* nameof(TRootIOCtor**) { return "TRootIOCtor*"; }
+
+const char* PF2cl(const char* PF) {
+   if (strstr(PF,"TemplateArgument")) return "TemplateArgument";
+   return "NOT TemplateArgument!";
+}
 
 struct A {
   A() { };
 
   template <class U>
+   A(const U&) { 
+      cout << "c'tor taking " << 
 #if defined(__CINT__) || defined(_MSC_VER)
-  A(const U& u) { 
-	  cout << "A::A(const U &) [with U = " << nameof((U*)0) << "]" << endl;
+      nameof((U*)0)
 #else
-  A(const U&) { 
-	  cout << __PRETTY_FUNCTION__ << endl; 
+      PF2cl(__PRETTY_FUNCTION__)
 #endif
+      << endl;
   }
 
   template <class U>
+   void doit(const U&) { 
+      cout << "doit taking " << 
 #if defined(__CINT__) || defined(_MSC_VER)
-  void doit(const U& u) { 
-	  cout << "void A::doit(const U &) [with U = " << nameof((U*)0) << "]" << endl;
+      nameof((U*)0)
 #else
-  void doit(const U&) { 
-	  cout << __PRETTY_FUNCTION__ << endl; 
+      PF2cl(__PRETTY_FUNCTION__)
 #endif
+      << endl;
   } 
 
 };
 
 #ifdef __MAKECINT__
 #pragma link C++ class A+;
-#pragma link C++ class C+;
-#pragma link C++ function A::A(const C&);
-#pragma link C++ function A::doit(const C&);
+#pragma link C++ class TemplateArgument+;
+#pragma link C++ function A::A(const TemplateArgument&);
+#pragma link C++ function A::doit(const TemplateArgument&);
 #endif
 

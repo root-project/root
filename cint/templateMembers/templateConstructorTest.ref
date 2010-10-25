@@ -1,4 +1,4 @@
 
 Processing runConstructor.C...
-void A::doit(const U &) [with U = C]
-A::A(const U &) [with U = C]
+doit taking TemplateArgument
+c'tor taking TemplateArgument
