@@ -938,7 +938,8 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
                // list tree item by RecursiveRemove()
                // it is better to read the object each time anyway, 
                // as it may have changed in the file
-               //item->SetUserData(obj);
+               if (obj->InheritsFrom("TDirectory"))
+                  item->SetUserData(obj);
             }
          }
       }
@@ -1116,7 +1117,8 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                // list tree item by RecursiveRemove()
                // it is better to read the object each time anyway, 
                // as it may have changed in the file
-               //item->SetUserData(obj);
+               if (obj->InheritsFrom("TDirectory"))
+                  item->SetUserData(obj);
             }
          }
       }
