@@ -934,7 +934,11 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
             void *add = gDirectory->FindObjectAny((char *) name.Data());
             if (add && cl->IsTObject()) {
                obj = (TObject*)add;
-               item->SetUserData(obj);
+               // don't change the user data, to avoid deletion of the 
+               // list tree item by RecursiveRemove()
+               // it is better to read the object each time anyway, 
+               // as it may have changed in the file
+               //item->SetUserData(obj);
             }
          }
       }
@@ -1108,7 +1112,11 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             void *add = gDirectory->FindObjectAny((char *) name.Data());
             if (add && cl->IsTObject()) {
                obj = (TObject*)add;
-               item->SetUserData(obj);
+               // don't change the user data, to avoid deletion of the 
+               // list tree item by RecursiveRemove()
+               // it is better to read the object each time anyway, 
+               // as it may have changed in the file
+               //item->SetUserData(obj);
             }
          }
       }
