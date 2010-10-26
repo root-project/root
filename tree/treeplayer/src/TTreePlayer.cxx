@@ -3390,8 +3390,8 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
                memcpy(arow+fields[i-1],aresult,len);
                fields[i] = fields[i-1] + len;
             }
-            res->AddRow(new TTreeRow(ncols,fields,arow));
          }
+         res->AddRow(new TTreeRow(ncols,fields,arow));
          fSelectedRows++;
       }
    }
