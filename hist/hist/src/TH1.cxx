@@ -7596,7 +7596,7 @@ void TH1::Sumw2()
 
    if ( fEntries > 0 )
       for (Int_t bin=0; bin<fNcells; bin++) {
-         fSumw2.fArray[bin] = GetBinContent(bin);
+         fSumw2.fArray[bin] = TMath::Abs(GetBinContent(bin));
       }
 }
 
