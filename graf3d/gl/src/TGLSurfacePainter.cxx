@@ -1221,6 +1221,13 @@ Bool_t TGLSurfacePainter::HasProjections()const
 void TGLSurfacePainter::DrawPalette()const
 {
    //Draw. Palette.
+   //Originally, fCamera was never null.
+   //It can be a null now because of gl-viewer.
+   if (!fCamera) {
+      //Thank you, gl-viewer!
+      return;
+   }
+
    Rgl::DrawPalette(fCamera, fPalette);
 
    glFinish();

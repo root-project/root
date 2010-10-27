@@ -517,6 +517,13 @@ Bool_t TGLBoxPainter::HasSections()const
 void TGLBoxPainter::DrawPalette()const
 {
    //Draw. Palette.
+   //Originally, fCamera was never null.
+   //It can be a null now because of gl-viewer.
+   if (!fCamera) {
+      //Thank you, gl-viewer!
+      return;
+   }
+
    const TGLLevelPalette * palette = 0;
    const TGLVertex3 *frame = fBackBox.Get3DBox();
 
