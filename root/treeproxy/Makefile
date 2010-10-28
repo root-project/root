@@ -93,7 +93,7 @@ red.h:
 
 execsearch.log: searchSelector_h.$(DllSuf)
 
-searchSelector.h: 
+searchSelector.h: createSearch.C
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b createSearch.C > createSearch.log 2>&1 ||  handleError.sh --result=$$? --log=createSearch.log --test=createSearch
 
 Track_C.$(DllSuf): Track.h
