@@ -18,6 +18,7 @@ const char *XrdSysPthreadCVSID = "$Id$";
 #include <unistd.h>
 #include <sys/time.h>
 #else
+#undef ETIMEDOUT       // Make sure that the definition from Winsock2.h is used ... 
 #include <Winsock2.h>
 #include <time.h>
 #include "XrdSys/XrdWin32.hh"
