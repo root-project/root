@@ -283,7 +283,7 @@ Int_t PutPoint()
 }
 
 //______________________________________________________________________________
-void PrintStressProgress(Long64_t total, Long64_t processed, Float_t)
+void PrintStressProgress(Long64_t total, Long64_t processed, Float_t, Long64_t)
 {
    // Print some progress information
 

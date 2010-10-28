@@ -165,7 +165,7 @@ const char* const kGUNZIP = "gunzip";
 
 R__EXTERN TVirtualMutex *gProofMutex;
 
-typedef void (*PrintProgress_t)(Long64_t tot, Long64_t proc, Float_t proctime);
+typedef void (*PrintProgress_t)(Long64_t tot, Long64_t proc, Float_t proctime, Long64_t bytes);
 
 // Structure for the progress information
 class TProofProgressInfo : public TObject {
@@ -668,7 +668,8 @@ private:
    void     DeActivateAsyncInput();
 
    Int_t    GetQueryReference(Int_t qry, TString &ref);
-   void     PrintProgress(Long64_t total, Long64_t processed, Float_t procTime = -1.);
+   void     PrintProgress(Long64_t total, Long64_t processed,
+                          Float_t procTime = -1.,  Long64_t bytesread = -1);
 
    // Managing mergers
    Bool_t   CreateMerger(TSlave *sl, Int_t port);

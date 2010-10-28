@@ -7985,7 +7985,8 @@ TList *TProof::GetListOfEnabledPackages()
 }
 
 //______________________________________________________________________________
-void TProof::PrintProgress(Long64_t total, Long64_t processed, Float_t procTime)
+void TProof::PrintProgress(Long64_t total, Long64_t processed,
+                           Float_t procTime, Long64_t bytesread)
 {
    // Print a progress bar on stderr. Used in batch mode.
 
@@ -7993,7 +7994,7 @@ void TProof::PrintProgress(Long64_t total, Long64_t processed, Float_t procTime)
       Bool_t redirlog = fRedirLog;
       fRedirLog = kFALSE;
       // Call the external function
-      (*fPrintProgress)(total, processed, procTime);
+      (*fPrintProgress)(total, processed, procTime, bytesread);
       fRedirLog = redirlog;
       return;
    }
@@ -8012,12 +8013,31 @@ void TProof::PrintProgress(Long64_t total, Long64_t processed, Float_t procTime)
          fprintf(stderr, "=");
    }
    Float_t evtrti = (procTime > 0. && processed > 0) ? processed / procTime : -1.;
-   if (evtrti > 0.)
-      fprintf(stderr, "| %.02f %% [%.1f evts/s]\r",
-              (total ? ((100.0*processed)/total) : 100.0), evtrti);
-   else
+   Float_t mbsrti = (procTime > 0. && bytesread > 0) ? bytesread / procTime : -1.;
+   if (evtrti > 0.) {
+      if (mbsrti > 0.) {
+         TString sunit("B/s");
+         const Float_t toK = 1024., toM = 1048576., toG = 1073741824.;
+         if (mbsrti >= toG) {
+            mbsrti /= toG;
+            sunit = "GB/s";
+         } else if (mbsrti >= toM) {
+            mbsrti /= toM;
+            sunit = "MB/s";
+         } else if (mbsrti >= toK) {
+            mbsrti /= toK;
+            sunit = "kB/s";
+         }
+         fprintf(stderr, "| %.02f %% [%.1f evts/s, %.1f %s]\r",
+                (total ? ((100.0*processed)/total) : 100.0), evtrti, mbsrti, sunit.Data());
+      } else {
+         fprintf(stderr, "| %.02f %% [%.1f evts/s]\r",
+                (total ? ((100.0*processed)/total) : 100.0), evtrti);
+      }
+   } else {
       fprintf(stderr, "| %.02f %%\r",
               (total ? ((100.0*processed)/total) : 100.0));
+   }
    if (processed >= total)
       fprintf(stderr, "\n");
 }
@@ -8030,7 +8050,7 @@ void TProof::Progress(Long64_t total, Long64_t processed)
 
    if (fPrintProgress) {
       // Call the external function
-      return (*fPrintProgress)(total, processed, -1.);
+      return (*fPrintProgress)(total, processed, -1., -1);
    }
 
    PDB(kGlobal,1)
@@ -8060,7 +8080,7 @@ void TProof::Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
    if (gROOT->IsBatch()) {
       // Simple progress bar
       if (total > 0)
-         PrintProgress(total, processed, procTime);
+         PrintProgress(total, processed, procTime, bytesread);
    } else {
       EmitVA("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
              7, total, processed, bytesread, initTime, procTime, evtrti, mbrti);
@@ -8082,7 +8102,7 @@ void TProof::Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
    if (gROOT->IsBatch()) {
       // Simple progress bar
       if (total > 0)
-         PrintProgress(total, processed, procTime);
+         PrintProgress(total, processed, procTime, bytesread);
    } else {
       EmitVA("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)",
              10, total, processed, bytesread, initTime, procTime, evtrti, mbrti, actw, tses, eses);
