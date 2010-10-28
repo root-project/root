@@ -2945,7 +2945,7 @@ Bool_t TProofPlayerRemote::IsClient() const
 {
    // Is the player running on the client?
 
-   return fProof->TestBit(TProof::kIsClient);
+   return fProof ? fProof->TestBit(TProof::kIsClient) : kFALSE;
 }
 
 //______________________________________________________________________________
