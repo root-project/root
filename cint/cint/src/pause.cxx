@@ -764,7 +764,7 @@ int G__reloadfile(char *filename, bool keep)
       return(G__loadfile(filename));
    }
 
-   if (storefname[0] || G__UNLOADFILE_SUCCESS != G__unloadfile(storefname[0])) {
+   if (!storefname[0] || G__UNLOADFILE_SUCCESS != G__unloadfile(storefname[0])) {
       return(1);
    }
 
