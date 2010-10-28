@@ -33,7 +33,7 @@ namespace ROOT {
    private:
       TList          fListOfSubProxies;
       TList          fListOfBaseProxies;
-      ELocation      fIsClones;      // 1 for the general case, 2 when this a split clases inside a TClonesArray, 3 when this is a split classes inside an STL container.
+      ELocation      fIsClones;      // 0 for the general case, 1 when this a split clases inside a TClonesArray, 2 when this is a split classes inside an STL container.
       TString        fContainerName; // Name of the container if any
       Bool_t         fIsLeafList;    // true if the branch was constructed from a leaf list.
       UInt_t         fSplitLevel;

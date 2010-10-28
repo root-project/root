@@ -260,7 +260,7 @@ namespace ROOT {
       virtual void *GetStlStart(UInt_t i=0) {
          // return the address of the start of the object being proxied. Assumes
          // that Setup() has been called.  Assumes the object containing this data
-         // member is held in TClonesArray.
+         // member is held in STL Collection.
 
          char *location=0;
 
@@ -300,6 +300,8 @@ namespace ROOT {
          }
 
       }
+      
+      Int_t GetOffset() { return fOffset; }
    };
 
    //____________________________________________________________________________________________
@@ -420,7 +422,7 @@ namespace ROOT {
 
       const TVirtualCollectionProxy* GetPtr() {
          if (!Read()) return 0;
-         return GetCollection();;
+         return GetCollection();
       }
 
       Int_t GetEntries() {

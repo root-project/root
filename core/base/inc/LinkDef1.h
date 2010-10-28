@@ -135,6 +135,7 @@
 #pragma link C++ class TBrowser+;
 #pragma link C++ class TBrowserImp+;
 #pragma link C++ class TBuffer;
+#pragma link C++ class TRootIOCtor+;
 #pragma link C++ class TCanvasImp;
 #pragma link C++ class TColor+;
 #pragma link C++ class TContextMenu+;

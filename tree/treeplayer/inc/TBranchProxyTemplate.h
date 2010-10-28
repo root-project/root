@@ -41,6 +41,8 @@ namespace ROOT {
          obj(director,parent, name, top, mid) {};
       ~TObjProxy() {};
 
+      Int_t GetOffset() { return obj.GetOffset(); }
+
       void Print() {
          obj.Print();
          cout << "fWhere " << obj.GetWhere() << endl;

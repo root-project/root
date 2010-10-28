@@ -386,8 +386,27 @@ namespace ROOT {
             fprintf(hf,"%-*sTClaObjProxy<%s > obj;\n", offset+3, " ", type);
          } else if ( IsSTL() ) {
             if (fContainerName.Length() && IsLoaded(fContainerName)) {
-               fprintf(hf,"%-*sconst %s& operator[](Int_t i) { return obj.GetPtr()->at(i); }\n", offset+3," ",type);
-               fprintf(hf,"%-*sconst %s& operator[](UInt_t i) { return obj.GetPtr()->at(i); }\n", offset+3," ",type);
+               fprintf(hf,"%-*sconst %s& At(UInt_t i) {\n",offset+3," ",type);
+               TClass *stlCl = TClass::GetClass(fContainerName);
+               TClass *cl = TClass::GetClass(GetTitle());
+               if (cl->GetMethodWithPrototype(cl->GetName(),"TRootIOCtor*")) {  
+                  fprintf(hf,"%-*s   static %s default_val((TRootIOCtor*)0);\n",offset+3," ",type);
+               } else {
+                  fprintf(hf,"%-*s   static %s default_val;\n",offset+3," ",type);
+               }
+               fprintf(hf,"%-*s   if (!obj.Read()) return default_val;\n",offset+3," ");
+               if (stlCl->GetCollectionProxy()->GetValueClass() == cl) {
+                  fprintf(hf,"%-*s   %s *temp = & obj.GetPtr()->at(i);\n",offset+3," ",type);                  
+               } else {
+                  fprintf(hf,"%-*s   %s *temp = (%s *)( obj.GetProxy()->GetStlStart(i) );\n",offset+3," ",type,type);
+               }
+               //fprintf(hf,"%-*s   %s *temp = (%s *)( obj.GetPtr()->at(i)) + obj.GetOffset() );\n",offset+3," ",type,type);
+                  //fprintf(hf,"%-*s   %s *temp = (%s *)(void*)(&obj.At(i));\n",offset+3," ",type,type);
+               fprintf(hf,"%-*s   if (temp) return *temp; else return default_val;\n",offset+3," ");
+               fprintf(hf,"%-*s}\n",offset+3," ");
+
+               fprintf(hf,"%-*sconst %s& operator[](Int_t i) { return At(i); }\n", offset+3," ",type);
+               fprintf(hf,"%-*sconst %s& operator[](UInt_t i) { return At(i); }\n", offset+3," ",type);
                fprintf(hf,"%-*sInt_t GetEntries() { return obj.GetPtr()->size(); }\n",offset+3," ");
                fprintf(hf,"%-*sconst %s* operator->() { return obj.GetPtr(); }\n", offset+3," ",fContainerName.Data());
                fprintf(hf,"%-*soperator %s*() { return obj.GetPtr(); }\n", offset+3," ",fContainerName.Data());

@@ -135,6 +135,8 @@ Bool_t ROOT::TBranchProxy::Setup()
    }
    if (fParent) {
 
+      fParent->Setup();
+      
       TClass *pcl = fParent->GetClass();
       R__ASSERT(pcl);
 
