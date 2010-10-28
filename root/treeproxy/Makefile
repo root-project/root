@@ -8,7 +8,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.clog *.log red.h generatedSel.h val3dimSel.h
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += reducedSpill leaflist valdim3 vectorint vectorintEmu make_tuple friendchain
+TEST_TARGETS += search reducedSpill leaflist valdim3 vectorint vectorintEmu make_tuple friendchain
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -90,6 +90,11 @@ reducedSpill: reducedSpill.log
 
 red.h: 
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b createRed.C > createRed.log 2>&1
+
+execsearch.log: searchSelector_h.$(DllSuf)
+
+searchSelector.h: 
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b createSearch.C > createSearch.log 2>&1 ||  handleError.sh --result=$$? --log=createSearch.log --test=createSearch
 
 Track_C.$(DllSuf): Track.h
 
