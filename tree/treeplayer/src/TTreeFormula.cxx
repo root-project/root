@@ -4772,7 +4772,14 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
                }
             }
          } else {
-            snprintf(value,kMAXLENGTH,Form(" %%%sc",decform),' ');
+            if (isalpha(decform[strlen(decform)-1])) {
+               TString short_decform(decform);
+               short_decform.Remove(short_decform.Length()-1);
+               snprintf(value,kMAXLENGTH,Form(" %%%sc",short_decform.Data()),' ');               
+            } else {
+               snprintf(value,kMAXLENGTH,Form(" %%%sc",decform),' ');
+            }
+            
          }
       }
    }
