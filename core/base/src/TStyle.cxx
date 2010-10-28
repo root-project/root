@@ -1403,6 +1403,10 @@ void TStyle::SetTimeOffset(Double_t toffset)
    // one has to set an offset time that will be added to the axis begining,
    // in order to plot times correctly and conveniently. A convenient way to
    // set the time offset is to use TDatime::Convert().
+   //
+   // By default the time offset is set to 788918400 which corresponds to
+   // 01/01/1995. This allows to have valid dates until 2072. The standard
+   // UNIX time offset in 1970 allows only valid dates until 2030.
 
    fTimeOffset = toffset;
 }
