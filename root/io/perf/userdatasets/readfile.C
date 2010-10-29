@@ -9,6 +9,33 @@
 #include "TStopwatch.h"
 #include "TEnv.h"
 
+// Instructions to use this script
+// 
+// You can run the script in different configurations depending
+//    on the values given to the 5 arguments (all optional)
+//    -options: a string containing of:
+//        nolib : do not load any library.
+//        genreflex : use a reflex dictionary.
+//        tree=somename : use a non standard name for the dictionary, this _must_ be the last options.     
+//    -cachesize: by default ROOT will take the best value computed when writing
+//        the file. You can specify a larger cache, eg 80000000 (80 MBytes)
+//        You can disable the treeCache by setting cachesize=0.
+//    -i_nentries: number of entries to be read, if set to -1 (the default), the script read the 
+//        whole tree.
+//    -percententries: fraction of the entries to be read (default to all)
+//    -percentbranches: fraction of the branches to be read (default to all)
+//
+//   for example the following session
+//       root > .x readfile.C("atlasFlushed.root","",60000000,-1,1,0.33)
+//   will use a 60 MBytes cache, reading all branches and only 1/3 of entries
+//
+// If the file does not exist locally, we look for the file in http://root.cern.ch/files/
+//
+// Note: The very first time, this script is used on a file, it will call MakeProject
+// to create a library named after the file.  For myfile.root, the library is named
+// libmyfile/libmyfile.so in the rootcint case and libgenMyfile/libgenMyfile.root
+// when using genreflex.
+
 void fixLHCb()
 {
    TClass::AddRule("KeyedContainer<LHCb::HepMCEvent,Containers::KeyedObjectManager<Containers::hashmap> >     m_sequential   attributes=Owner");
@@ -118,9 +145,8 @@ void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesi
    Ssiz_t pos = opt.Index("tree=");
    const char *treename = 0;
    if ( pos != kNPOS) {
-      treename = &(opt[pos]);
+      treename = &(opt[pos+strlen("tree=")]);
    }
-   
    TFile *file = openFileAndLib(filename,loadlibrary,genreflex);
 
    if (file==0) return;
@@ -129,9 +155,7 @@ void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesi
 
    TFile::SetReadaheadSize(0);  // (256*1024);
    Long64_t nentries = T->GetEntries();
-   if (i_nentries == -1) {
-     nentries = 200;
-   } else if (i_nentries != -2) {
+   if (i_nentries >= 0) {
      nentries = i_nentries;
    } 
    int efirst = 0;
