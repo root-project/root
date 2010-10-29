@@ -526,10 +526,38 @@ TProof::TProof() : fUrl(""), fServType(TProofMgr::kXProofd)
    fWorkersToMerge = 0;
    fFinalizationRunning = kFALSE;
 
+   // Check if the user defined a list of environment variables to send over:
+   // include them into the dedicated list
+   if (gSystem->Getenv("PROOF_ENVVARS")) {
+      TString envs(gSystem->Getenv("PROOF_ENVVARS")), env, envsfound;
+      Int_t from = 0;
+      while (envs.Tokenize(env, from, ",")) {
+         if (!env.IsNull()) {
+            if (!gSystem->Getenv(env)) {
+               Warning("Init", "request for sending over undefined environemnt variable '%s' - ignoring", env.Data());
+            } else {
+               if (!envsfound.IsNull()) envsfound += ",";
+               envsfound += env;
+               TProof::DelEnvVar(env);
+               TProof::AddEnvVar(env, gSystem->Getenv(env));
+            }
+         }
+      }
+      if (envsfound.IsNull()) {
+         Warning("Init", "none of the requested env variables were found: '%s'", envs.Data());
+      } else {
+         Info("Init", "the following environment variables have been added to the list to be sent to the nodes: '%s'", envsfound.Data());
+      }
+   }
+
+   // The position of this was changed for > 5.26, but it does not hurt to leave it here
    if (!gROOT->GetListOfProofs()->FindObject(this))
       gROOT->GetListOfProofs()->Add(this);
 
    gProof = this;
+
+   // Done
+   return;
 }
 
 //______________________________________________________________________________
@@ -3479,14 +3507,17 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                   }
                   // Mergers count will be set dynamically
                   if (fMergersCount == 0) {
-                     if (GetNumberOfSlaves() > 1)
-                        fMergersCount = TMath::Nint(TMath::Sqrt(GetNumberOfSlaves()));
+                     if (GetNumberOfActiveSlaves() > 1) {
+                        fMergersCount = TMath::Nint(TMath::Sqrt(GetNumberOfActiveSlaves()));
+                        if (GetNumberOfActiveSlaves() / fMergersCount < 2)
+                           fMergersCount = (Int_t) TMath::Sqrt(GetNumberOfActiveSlaves());
+                     }
                      if (fMergersCount > 1)
                         msg.Form("%s: Number of mergers set dynamically to %d (for %d workers)",
-                                 prefix, fMergersCount, GetNumberOfSlaves());
+                                 prefix, fMergersCount, GetNumberOfActiveSlaves());
                      else {
                         msg.Form("%s: No mergers will be used for %d workers",
-                                 prefix, GetNumberOfSlaves()); 
+                                 prefix, GetNumberOfActiveSlaves());
                         fMergersCount = -1;
                      }
                      if (gProofServ)
@@ -3495,7 +3526,7 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                         Printf("%s",msg.Data());
                   } else {
                      msg.Form("%s: Number of mergers set by user to %d (for %d workers)",
-                              prefix, fMergersCount, GetNumberOfSlaves());
+                              prefix, fMergersCount, GetNumberOfActiveSlaves());
                      if (gProofServ)
                         gProofServ->SendAsynMessage(msg);
                      else
@@ -3900,6 +3931,20 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
       } else {
          fBadSlaves->Add(wrk);
          wrk->Close();
+         // Update the mergers count, if needed
+         if (fMergersSet) {
+            Int_t mergersCount = -1;
+            TParameter<Int_t> *mc = dynamic_cast<TParameter<Int_t> *>(GetParameter("PROOF_UseMergers"));
+            if (mc) mergersCount = mc->GetVal(); // Value set by user
+            // Mergers count is set dynamically: recalculate it
+            if (mergersCount == 0) {
+               if (GetNumberOfActiveSlaves() > 1) {
+                  fMergersCount = TMath::Nint(TMath::Sqrt(GetNumberOfActiveSlaves()));
+                  if (GetNumberOfActiveSlaves() / fMergersCount < 2)
+                     fMergersCount = (Int_t) TMath::Sqrt(GetNumberOfActiveSlaves());
+               }
+            }
+         }
       }
 
       // Update session workers files
