@@ -2058,6 +2058,15 @@ void TBranch::SetObject(void * /* obj */)
    Warning("SetObject","is not supported in TBranch objects");
 }
 
+//______________________________________________________________________________
+void TBranch::SetStatus(Bool_t status)
+{
+   // Set branch status to Process or DoNotProcess.
+      
+   if (status) ResetBit(kDoNotProcess);
+   else        SetBit(kDoNotProcess);
+}
+
 //_______________________________________________________________________
 void TBranch::Streamer(TBuffer& b)
 {
