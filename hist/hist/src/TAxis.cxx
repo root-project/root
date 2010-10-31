@@ -235,6 +235,7 @@ void TAxis::Copy(TObject &obj) const
    ((TAxis&)obj).fTimeFormat   = fTimeFormat;
    ((TAxis&)obj).fTimeDisplay  = fTimeDisplay;
    ((TAxis&)obj).fParent       = fParent;
+   ((TAxis&)obj).fLabels       = 0;
    if (fLabels) {
       for (Int_t i=1;i<=fNbins;i++) ((TAxis&)obj).SetBinLabel(i,this->GetBinLabel(i));
    }
