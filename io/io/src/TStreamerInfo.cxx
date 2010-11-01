@@ -788,12 +788,21 @@ void TStreamerInfo::BuildCheck()
                }
             }
             if (warn) {
-               Warning("BuildCheck", "\n\
+               if (gDirectory && gDirectory->GetFile()) {
+                  Warning("BuildCheck", "\n\
    The StreamerInfo of class %s read from file %s\n\
    has the same version (=%d) as the active class but a different checksum.\n\
    You should update the version to ClassDef(%s,%d).\n\
    Do not try to write objects with the current class definition,\n\
    the files will not be readable.\n", GetName(), gDirectory->GetFile()->GetName(), fClassVersion, GetName(), fClassVersion + 1);
+               } else {
+                  Warning("BuildCheck", "\n\
+   The StreamerInfo of class %s \n\
+   has the same version (=%d) as the active class but a different checksum.\n\
+   You should update the version to ClassDef(%s,%d).\n\
+   Do not try to write objects with the current class definition,\n\
+   the files will not be readable.\n", GetName(), fClassVersion, GetName(), fClassVersion + 1);
+               }
                fClass->SetBit(TClass::kWarned);
             }
          } else {
