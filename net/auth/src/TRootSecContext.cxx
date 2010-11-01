@@ -201,9 +201,6 @@ void TRootSecContext::Print(Option_t *opt) const
    // If opt is "S" prints short in-line form for calls within TFTP,
    // TSlave, TProof ...
 
-   char cord[10] = {0};
-   char cspc[10] = {0};
-
    // Check if option is numeric
    Int_t ord = -1, i = 0;
    for (; i < (Int_t)strlen(opt); i++) {
@@ -215,15 +212,6 @@ void TRootSecContext::Print(Option_t *opt) const
    // If numeric get the cardinality and prepare the strings
    if (ord == -1)
       ord = atoi(opt);
-
-   // If asked to print ordinal number, preapre the string
-   if (ord > -1) {
-      snprintf(cord,10,"%d)",ord);
-      // and take care of alignment
-      Int_t len=strlen(cord);
-      while (len--)
-         strncat(cspc," ",10);
-   }
 
    if (!strncasecmp(opt,"F",1)) {
       Info("Print",
@@ -253,13 +241,12 @@ void TRootSecContext::Print(Option_t *opt) const
       }
    } else {
       // special printing form for THostAuth
-      Info("PrintEstblshed","+ %s h:%s met:%d (%s) us:'%s'",
-           cord, GetHost(), fMethod, GetMethodName(),
-           fUser.Data());
-      Info("PrintEstblshed","+ %s offset:%d id: '%s'",
-           cspc, fOffSet, fID.Data());
+      Info("PrintEstblshed","+ %d \t h:%s met:%d (%s) us:'%s'",
+                               ord, GetHost(), fMethod, GetMethodName(),
+                               fUser.Data());
+      Info("PrintEstblshed","+ \t offset:%d id: '%s'", fOffSet, fID.Data());
       if (fOffSet > -1)
-         Info("PrintEstblshed","+ %s expiring: %s",cspc,fExpDate.AsString());
+         Info("PrintEstblshed","+ \t expiring: %s",fExpDate.AsString());
    }
 }
 
