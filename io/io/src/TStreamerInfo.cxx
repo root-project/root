@@ -720,9 +720,11 @@ void TStreamerInfo::BuildCheck()
             delete info;
             info = 0;
          }
+         TString origin;
          if (!match && !fClass->TestBit(TClass::kWarned)) {
             if (oldIsNonVersioned) {
-               Warning("BuildCheck", "\n\
+               if (gDirectory && gDirectory->GetFile()) {
+                  Warning("BuildCheck", "\n\
    The class %s transitioned from not having a specified class version\n\
    to having a specified class version (the current class version is %d).\n\
    However too many different non-versioned layouts of the class have been\n\
@@ -730,25 +732,56 @@ void TStreamerInfo::BuildCheck()
    the class layout version %d, in particular from the file:\n\
    %s.\n\
    To work around this issue, load fewer 'old' files in the same ROOT session.",
-                       GetName(),fClass->GetClassVersion(),fClassVersion,gDirectory->GetFile()->GetName());
-            } else {
-               if (done) {
+                          GetName(),fClass->GetClassVersion(),fClassVersion,gDirectory->GetFile()->GetName());
+               } else {
                   Warning("BuildCheck", "\n\
-   The StreamerInfo for version %d of class %s read from file %s\n\
+   The class %s transitioned from not having a specified class version\n\
+   to having a specified class version (the current class version is %d).\n\
+   However too many different non-versioned layouts of the class have been\n\
+   loaded so far.  This prevent the proper reading of objects written with\n\
+   the class layout version %d.\n\
+   To work around this issue, load fewer 'old' files in the same ROOT session.",
+                          GetName(),fClass->GetClassVersion(),fClassVersion);
+               }
+            } else {
+               if (gDirectory && gDirectory->GetFile()) {
+                  if (done) {
+                     Warning("BuildCheck", "\n\
+   The StreamerInfo for version %d of class %s read from the file %s\n\
    has a different checksum than the previously loaded StreamerInfo.\n\
    Reading objects of type %s from the file %s \n\
    (and potentially other files) might not work correctly.\n\
    Most likely the version number of the class was not properly\n\
    updated [See ClassDef(%s,%d)].", 
-                          fClassVersion, GetName(), gDirectory->GetFile()->GetName(), GetName(), gDirectory->GetFile()->GetName(), GetName(), fClassVersion);
-               } else {
-                  Warning("BuildCheck", "\n\
+                             fClassVersion, GetName(), gDirectory->GetFile()->GetName(), GetName(), gDirectory->GetFile()->GetName(), GetName(), fClassVersion);
+                  } else {
+                     Warning("BuildCheck", "\n\
    The StreamerInfo from %s does not match existing one (%s:%d)\n\
    The existing one has not been used yet and will be discarded.\n\
-   Reading the %s will work properly, however writing object of\n\
+   Reading the file %s will work properly, however writing object of\n\
    type %s will not work properly.  Most likely the version number\n\
    of the class was not properly updated [See ClassDef(%s,%d)].", 
-                          gDirectory->GetFile()->GetName(), GetName(), fClassVersion,gDirectory->GetFile()->GetName(),GetName(), GetName(), fClassVersion);
+                             gDirectory->GetFile()->GetName(), GetName(), fClassVersion,gDirectory->GetFile()->GetName(),GetName(), GetName(), fClassVersion);
+                  }
+               } else {
+                  if (done) {
+                     Warning("BuildCheck", "\n\
+   The StreamerInfo for version %d of class %s\n\
+   has a different checksum than the previously loaded StreamerInfo.\n\
+   Reading objects of type %s\n\
+   (and potentially other files) might not work correctly.\n\
+   Most likely the version number of the class was not properly\n\
+   updated [See ClassDef(%s,%d)].", 
+                             fClassVersion, GetName(), GetName(), GetName(), fClassVersion);
+                  } else {
+                     Warning("BuildCheck", "\n\
+   The StreamerInfo from %s does not match existing one (%s:%d)\n\
+   The existing one has not been used yet and will be discarded.\n\
+   Reading should work properly, however writing object of\n\
+   type %s will not work properly.  Most likely the version number\n\
+   of the class was not properly updated [See ClassDef(%s,%d)].", 
+                             gDirectory->GetFile()->GetName(), GetName(), fClassVersion, GetName(), GetName(), fClassVersion);
+                  }
                }
             }
             CompareContent(0,info,kTRUE,kTRUE);
