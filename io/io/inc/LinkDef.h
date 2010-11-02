@@ -30,6 +30,7 @@
 #pragma link C++ class TArchiveMember+;
 #pragma link C++ class TZIPFile+;
 #pragma link C++ class TZIPMember+;
+#pragma link C++ class TLockFile;
 #pragma link C++ class TStreamerInfo-;
 #pragma link C++ class TCollectionProxyFactory-;
 #pragma link C++ class TEmulatedCollectionProxy-;

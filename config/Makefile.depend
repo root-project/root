@@ -107,7 +107,6 @@ UNURANLIBDEPM          = $(HISTLIB) $(MATHCORELIB)
 WIN32GDKLIBDEPM        = $(GRAFLIB)
 X11TTFLIBDEPM          = $(X11LIB) $(GRAFLIB)
 MONALISALIBDEPM        = $(NETLIB) $(IOLIB)
-THREADLIBDEPM          = $(IOLIB)
 EVELIBDEPM             = $(GEOMLIB) $(GEOMPAINTERLIB) $(G3DLIB) $(GUILIB) \
                          $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(PHYSICSLIB) \
                          $(GEDLIB) $(EGLIB) $(TREELIB) $(TREEPLAYERLIB) \
@@ -347,7 +346,6 @@ GDMLLIBEXTRA            = lib/libGeom.lib lib/libXMLIO.lib lib/libHist.lib \
                           lib/libRIO.lib
 UNURANLIBEXTRA          = lib/libHist.lib lib/libMathCore.lib
 MONALISALIBEXTRA        = lib/libNet.lib lib/libRIO.lib
-THREADLIBEXTRA          = lib/libRIO.lib
 EVELIBEXTRA             = lib/libGeom.lib lib/libGeomPainter.lib \
                           lib/libGpad.lib lib/libGraf3d.lib lib/libGui.lib \
                           lib/libGraf.lib lib/libHist.lib lib/libPhysics.lib \
@@ -465,7 +463,6 @@ MYSQLLIBEXTRA           = -Llib -lNet -lRIO
 GDMLLIBEXTRA            = -Llib -lGeom -lXMLIO -lHist -lRIO
 UNURANLIBEXTRA          = -Llib -lHist -lMathCore
 MONALISALIBEXTRA        = -Llib -lNet -lRIO
-THREADLIBEXTRA          = -Llib -lRIO
 EVELIBEXTRA             = -Llib -lGeom -lGeomPainter -lGraf3d -lGui -lGpad \
                           -lGraf -lHist -lPhysics -lGed -lEG -lTree \
                           -lTreePlayer -lRGL -lRIO -lRint -lMathCore

@@ -35,6 +35,5 @@
 #pragma link C++ class TThreadImp;
 #pragma link C++ class TRWLock;
 #pragma link C++ class TAtomicCount;
-#pragma link C++ class TLockFile;
 
 #endif

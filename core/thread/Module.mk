@@ -22,8 +22,7 @@ THREADH      := $(MODDIRI)/TCondition.h $(MODDIRI)/TConditionImp.h \
                 $(MODDIRI)/TMutex.h $(MODDIRI)/TMutexImp.h \
                 $(MODDIRI)/TRWLock.h $(MODDIRI)/TSemaphore.h \
                 $(MODDIRI)/TThread.h $(MODDIRI)/TThreadFactory.h \
-                $(MODDIRI)/TThreadImp.h $(MODDIRI)/TAtomicCount.h \
-                $(MODDIRI)/TLockFile.h
+                $(MODDIRI)/TThreadImp.h $(MODDIRI)/TAtomicCount.h
 ifneq ($(ARCH),win32)
 THREADH      += $(MODDIRI)/TPosixCondition.h $(MODDIRI)/TPosixMutex.h \
                 $(MODDIRI)/TPosixThread.h $(MODDIRI)/TPosixThreadFactory.h \
@@ -41,7 +40,7 @@ THREADS      := $(MODDIRS)/TCondition.cxx $(MODDIRS)/TConditionImp.cxx \
                 $(MODDIRS)/TMutex.cxx $(MODDIRS)/TMutexImp.cxx \
                 $(MODDIRS)/TRWLock.cxx $(MODDIRS)/TSemaphore.cxx \
                 $(MODDIRS)/TThread.cxx $(MODDIRS)/TThreadFactory.cxx \
-                $(MODDIRS)/TThreadImp.cxx $(MODDIRS)/TLockFile.cxx
+                $(MODDIRS)/TThreadImp.cxx
 ifneq ($(ARCH),win32)
 THREADS      += $(MODDIRS)/TPosixCondition.cxx $(MODDIRS)/TPosixMutex.cxx \
                 $(MODDIRS)/TPosixThread.cxx $(MODDIRS)/TPosixThreadFactory.cxx
