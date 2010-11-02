@@ -1253,6 +1253,11 @@ void TXNetFile::SetEnv()
                                         DFLT_DFLTTCPWINDOWSIZE);
    EnvPutInt(NAME_DFLTTCPWINDOWSIZE, tcpWindowSize);
 
+   // Change the transaction timeout
+   Int_t transactionTimeout = gEnv->GetValue("XNet.TransactionTimeout",
+                                             DFLT_TRANSACTIONTIMEOUT);
+   EnvPutInt(NAME_TRANSACTIONTIMEOUT, transactionTimeout);
+
    // Whether to activate automatic rootd backward-compatibility
    // (We override XrdClient default)
    fgRootdBC = gEnv->GetValue("XNet.RootdFallback", 1);
