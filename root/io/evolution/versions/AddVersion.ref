@@ -161,7 +161,7 @@ StreamerInfo for class: MyClass, version=1, checksum=0x4f48eb1f
 
 Loading myclass1.root
 Warning in <TStreamerInfo::BuildCheck>: 
-   The StreamerInfo for version 1 of class MyClass read from file myclass1.root
+   The StreamerInfo for version 1 of class MyClass read from the file myclass1.root
    has a different checksum than the previously loaded StreamerInfo.
    Reading objects of type MyClass from the file myclass1.root 
    (and potentially other files) might not work correctly.
