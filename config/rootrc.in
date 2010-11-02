@@ -559,6 +559,10 @@ XNet.ParStreamsPerPhyConn: 0
 #                         and MacOsX (at least). Value in bytes [0]
 # XNet.DfltTcpWindowSize  262144
 
+# XNet.TransactionTimeout
+#                       - The maximum amount of time either a request or a server
+#                         wait request can be before the client declares an error.
+# XNet.TransactionTimeout: 28800
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.
