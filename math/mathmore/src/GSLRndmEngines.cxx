@@ -290,20 +290,32 @@ namespace Math {
    }
 
 
-
+   // old ranlux - equivalent to TRandom1
    GSLRngRanLux::GSLRngRanLux() : GSLRandomEngine() 
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlux) );
    }
 
-   // second generation of Ranlux (double precision version)
-   GSLRngRanLux2::GSLRngRanLux2() : GSLRandomEngine() 
+   // second generation of Ranlux (single precision version - luxury 1)
+   GSLRngRanLuxS1::GSLRngRanLuxS1() : GSLRandomEngine() 
+   {
+      SetType(new GSLRngWrapper(gsl_rng_ranlxs1) );
+   }
+
+   // second generation of Ranlux (single precision version - luxury 2)
+   GSLRngRanLuxS2::GSLRngRanLuxS2() : GSLRandomEngine() 
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlxs2) );
    }
 
-   // 48 bits version
-   GSLRngRanLux48::GSLRngRanLux48() : GSLRandomEngine() 
+   // double precision  version - luxury 1 
+   GSLRngRanLuxD1::GSLRngRanLuxD1() : GSLRandomEngine() 
+   {
+      SetType(new GSLRngWrapper(gsl_rng_ranlxd1) );
+   }
+   
+   // double precision  version - luxury 2 
+   GSLRngRanLuxD2::GSLRngRanLuxD2() : GSLRandomEngine() 
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlxd2) );
    }

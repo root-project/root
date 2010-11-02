@@ -269,7 +269,8 @@ namespace Math {
 
    //_____________________________________________________________________________________
    /**
-      Ranlux generator (James, Luscher) (defaul luxury)
+      Old Ranlux generator (James, Luscher) (default luxury level, p = 223)
+      (This is eequivalent to TRandom1 with default luxury level)
       see <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-number-generator-algorithms.html">here</A>
 
       @ingroup Random
@@ -281,27 +282,58 @@ namespace Math {
 
    //_____________________________________________________________________________________
    /**
-      Second generation of Ranlux generator (with  luxury level of 2)
+      Second generation of Ranlux generator for single precision with  luxury level of 1
+      (It throws away 202 values for every 12 used)
       see <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-number-generator-algorithms.html">here</A>
 
       @ingroup Random
    */
-   class GSLRngRanLux2 : public GSLRandomEngine { 
+   class GSLRngRanLuxS1 : public GSLRandomEngine { 
    public: 
-      GSLRngRanLux2(); 
+      GSLRngRanLuxS1(); 
+   };
+   typedef GSLRngRanLuxS1 GSLRngRanLux1; // for backward compatibility
+
+   //_____________________________________________________________________________________
+   /**
+      Second generation of Ranlux generator for Single precision with  luxury level of 2
+      (It throws away 397 value for every 12 used)
+      see <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-number-generator-algorithms.html">here</A>
+
+      @ingroup Random
+   */
+   class GSLRngRanLuxS2 : public GSLRandomEngine { 
+   public: 
+      GSLRngRanLuxS2(); 
+   };
+   typedef GSLRngRanLuxS2 GSLRngRanLux2; // for backward compatibility
+
+   //_____________________________________________________________________________________
+   /**
+      Double precision (48 bits) version of Second generation of Ranlux generator with  luxury level of 1
+      (It throws away 202 value for every 12 used)
+      see <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-number-generator-algorithms.html">here</A>
+
+      @ingroup Random
+   */
+   class GSLRngRanLuxD1 : public GSLRandomEngine { 
+   public: 
+      GSLRngRanLuxD1(); 
    };
 
    //_____________________________________________________________________________________
    /**
-      48 bits version of Second generation of Ranlux generator (with  luxury level of 2)
+      Double precision (48 bits) version of Second generation of Ranlux generator with  luxury level of 2
+      (It throws away 397 value for every 12 used)
       see <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-number-generator-algorithms.html">here</A>
 
       @ingroup Random
    */
-   class GSLRngRanLux48 : public GSLRandomEngine { 
+   class GSLRngRanLuxD2 : public GSLRandomEngine { 
    public: 
-      GSLRngRanLux48(); 
+      GSLRngRanLuxD2(); 
    };
+   typedef GSLRngRanLuxD2 GSLRngRanLux48; // for backward compatibility
 
 
    //_____________________________________________________________________________________

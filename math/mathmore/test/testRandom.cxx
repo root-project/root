@@ -13,6 +13,14 @@
 
 #include <limits>
 
+#ifdef HAVE_CLHEP
+#include "CLHEP/Random/RandFlat.h"
+#include "CLHEP/Random/RanluxEngine.h"
+#include "CLHEP/Random/Ranlux64Engine.h"
+#endif
+
+
+
 #ifndef PI
 #define PI       3.14159265358979323846264338328      /* pi */
 #endif
@@ -23,6 +31,11 @@
 #endif
 
 using namespace ROOT::Math;
+
+#ifdef HAVE_CLHEP
+using namespace CLHEP;
+#endif
+
 
 // wrapper for stdrand
 
@@ -49,6 +62,40 @@ private:
   double fScale; 
 
 }; 
+
+
+
+// wrapper for clhep
+
+template <class Engine> 
+class RandomCLHEP { 
+public: 
+   RandomCLHEP(Engine & e) : 
+      fRand(e)
+   { 
+   }
+
+  inline void RndmArray(int n, double * x) {
+     fRand.flatArray(n,x);
+  }
+  inline double Uniform() { 
+     return fRand.flat();
+  }
+
+   std::string Type() const { return std::string("CLHEP ") + Engine::engineName(); }
+   unsigned int EngineSize() const { return 0; }
+
+  void SetSeed(int seed) { fRand.setSeed(seed); }
+
+private: 
+   Engine & fRand; 
+
+}; 
+
+
+
+
+
 template <class R> 
 void printName( const R & r) { 
   std::cout << "\nRandom :\t " << r.Type() << " \t size of state = " << r.EngineSize() << std::endl;
@@ -124,8 +171,10 @@ int main() {
   Random<GSLRngMT>         r1;
   Random<GSLRngTaus>       r2;
   Random<GSLRngRanLux>     r3;
-  Random<GSLRngRanLux2>    r31;
-  Random<GSLRngRanLux48>   r32;
+  Random<GSLRngRanLuxS1>   r3s1;
+  Random<GSLRngRanLuxS2>   r3s2;
+  Random<GSLRngRanLuxD1>   r3d1;
+  Random<GSLRngRanLuxD2>   r3d2;
   Random<GSLRngGFSR4>      r4;
   Random<GSLRngCMRG>       r5;
   Random<GSLRngMRG>        r6;
@@ -136,12 +185,22 @@ int main() {
 
   TRandom                  tr0;
   TRandom1                 tr1;
+  TRandom1                 tr1a(0,0);
+  TRandom1                 tr1b(0,1);
+  TRandom1                 tr1c(0,2);
+  TRandom1                 tr1d(0,3);
+  TRandom1                 tr1e(0,4);
   TRandom2                 tr2;
   TRandom3                 tr3;
 
 
   generate(tr0);
   generate(tr1);
+  generate(tr1a);
+  generate(tr1b);
+  generate(tr1c);
+  generate(tr1d);
+  generate(tr1e);
   generate(tr2);
   generate(tr3);
 
@@ -150,8 +209,10 @@ int main() {
   generate(r1);
   generate(r2);
   generate(r3);
-  generate(r31);
-  generate(r32);
+  generate(r3s1);
+  generate(r3s2);
+  generate(r3d1);
+  generate(r3d2);
   generate(r4);
   generate(r5);
   generate(r6);
@@ -159,6 +220,29 @@ int main() {
   generate(r8);
   generate(r9);
 
+
+#ifdef HAVE_CLHEP
+  RanluxEngine             e1(1,3);
+  RanluxEngine             e2(1,4);
+  Ranlux64Engine           e3(1,0);
+  Ranlux64Engine           e4(1,1);
+  Ranlux64Engine           e5(1,2);
+
+  RandomCLHEP<RanluxEngine>  crlx3(e1);
+  RandomCLHEP<RanluxEngine>  crlx4(e2);
+
+  RandomCLHEP<Ranlux64Engine>  crlx64a(e3);
+  RandomCLHEP<Ranlux64Engine>  crlx64b(e4);
+  RandomCLHEP<Ranlux64Engine>  crlx64c(e5);
+
+  generate(crlx3);
+  generate(crlx4);
+
+  generate(crlx64a);
+  generate(crlx64b);
+  generate(crlx64c);
+
+#endif
 
   // generate 1000 number with GSL MT and check with TRandom3
   int n = 1000;

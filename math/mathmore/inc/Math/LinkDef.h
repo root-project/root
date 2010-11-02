@@ -67,10 +67,18 @@
 #pragma link C++ class ROOT::Math::GSLRngMT+;
 #pragma link C++ class ROOT::Math::GSLRngTaus+;
 #pragma link C++ class ROOT::Math::GSLRngRanLux+;
+#pragma link C++ class ROOT::Math::GSLRngRanLuxS1+;
+#pragma link C++ class ROOT::Math::GSLRngRanLuxS2+;
+#pragma link C++ class ROOT::Math::GSLRngRanLuxD1+;
+#pragma link C++ class ROOT::Math::GSLRngRanLuxD2+;
 #pragma link C++ class ROOT::Math::GSLRngGFSR4+;
 #pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngMT>+;
 #pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngTaus>+;
 #pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngRanLux>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngRanLuxS1>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngRanLuxS2>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngRanLuxD1>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngRanLuxD2>+;
 #pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngGFSR4>+;
 
 #pragma link C++ class ROOT::Math::KelvinFunctions+;
