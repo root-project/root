@@ -115,6 +115,7 @@
 #pragma link C++ class ROOT::Math::RootFinder+;
 #pragma link C++ class ROOT::Math::IRootFinderMethod+;
 #pragma link C++ class ROOT::Math::BrentRootFinder+;
+#pragma link C++ class ROOT::Math::IMinimizer1D+;
 #pragma link C++ class ROOT::Math::BrentMinimizer1D+;
 
 #pragma link C++ class ROOT::Math::DistSampler+;
