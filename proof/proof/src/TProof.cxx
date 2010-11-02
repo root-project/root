@@ -2340,7 +2340,7 @@ void TProof::ReleaseMonitor(TMonitor *mon)
 }
 
 //______________________________________________________________________________
-Int_t TProof::Collect(const TSlave *sl, Long_t timeout, Int_t endtype)
+Int_t TProof::Collect(const TSlave *sl, Long_t timeout, Int_t endtype, Bool_t deactonfail)
 {
    // Collect responses from slave sl. Returns the number of slaves that
    // responded (=1).
@@ -2361,13 +2361,13 @@ Int_t TProof::Collect(const TSlave *sl, Long_t timeout, Int_t endtype)
    }
    mon->Activate(sl->GetSocket());
 
-   rc = Collect(mon, timeout, endtype);
+   rc = Collect(mon, timeout, endtype, deactonfail);
    ReleaseMonitor(mon);
    return rc;
 }
 
 //______________________________________________________________________________
-Int_t TProof::Collect(TList *slaves, Long_t timeout, Int_t endtype)
+Int_t TProof::Collect(TList *slaves, Long_t timeout, Int_t endtype, Bool_t deactonfail)
 {
    // Collect responses from the slave servers. Returns the number of slaves
    // that responded.
@@ -2392,13 +2392,13 @@ Int_t TProof::Collect(TList *slaves, Long_t timeout, Int_t endtype)
          mon->Activate(sl->GetSocket());
    }
 
-   rc = Collect(mon, timeout, endtype);
+   rc = Collect(mon, timeout, endtype, deactonfail);
    ReleaseMonitor(mon);
    return rc;
 }
 
 //______________________________________________________________________________
-Int_t TProof::Collect(ESlaves list, Long_t timeout, Int_t endtype)
+Int_t TProof::Collect(ESlaves list, Long_t timeout, Int_t endtype, Bool_t deactonfail)
 {
    // Collect responses from the slave servers. Returns the number of slaves
    // that responded.
@@ -2419,13 +2419,13 @@ Int_t TProof::Collect(ESlaves list, Long_t timeout, Int_t endtype)
    }
    mon->ActivateAll();
 
-   rc = Collect(mon, timeout, endtype);
+   rc = Collect(mon, timeout, endtype, deactonfail);
    ReleaseMonitor(mon);
    return rc;
 }
 
 //______________________________________________________________________________
-Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
+Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deactonfail)
 {
    // Collect responses from the slave servers. Returns the number of messages
    // received. Can be 0 if there are no active slaves.
@@ -2504,7 +2504,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
 
       if (s && s != (TSocket *)(-1)) {
          // Get and analyse the info it did receive
-         rc = CollectInputFrom(s, endtype);
+         rc = CollectInputFrom(s, endtype, deactonfail);
          if (rc  == 1 || (rc == 2 && !savedMonitor)) {
             // Deactivate it if we are done with it
             mon->DeActivate(s);
@@ -2598,7 +2598,7 @@ void TProof::CleanGDirectory(TList *ol)
 }
 
 //______________________________________________________________________________
-Int_t TProof::CollectInputFrom(TSocket *s, Int_t endtype)
+Int_t TProof::CollectInputFrom(TSocket *s, Int_t endtype, Bool_t deactonfail)
 {
    // Collect and analyze available input from socket s.
    // Returns 0 on success, -1 if any failure occurs.
@@ -2632,7 +2632,7 @@ Int_t TProof::CollectInputFrom(TSocket *s, Int_t endtype)
 
    Int_t what = mess->What();
    TSlave *sl = FindSlave(s);
-   rc = HandleInputMessage(sl, mess);
+   rc = HandleInputMessage(sl, mess, deactonfail);
    if (rc == 1 && (endtype >= 0) && (what != endtype))
       // This message was for the base monitor in recursive case
       rc = 2;
@@ -2642,7 +2642,7 @@ Int_t TProof::CollectInputFrom(TSocket *s, Int_t endtype)
 }
 
 //______________________________________________________________________________
-Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
+Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
 {
    // Analyze the received message.
    // Returns 0 on success (1 if this the last message from this socket), -1 if
@@ -2771,7 +2771,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
             Int_t size;
             (*mess) >> size;
             PDB(kGlobal,2)
-               Info("HandleInputMessage","kPROOF_LOGFILE: size: %d", size);
+               Info("HandleInputMessage","%s: kPROOF_LOGFILE: size: %d", sl->GetOrdinal(), size);
             RecvLogFile(s, size);
          }
          break;
@@ -2779,9 +2779,14 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
       case kPROOF_LOGDONE:
          (*mess) >> sl->fStatus >> sl->fParallel;
          PDB(kCollect,2)
-            Info("HandleInputMessage","kPROOF_LOGDONE:%s: status %d  parallel %d",
+            Info("HandleInputMessage","%s: kPROOF_LOGDONE: status %d  parallel %d",
                  sl->GetOrdinal(), sl->fStatus, sl->fParallel);
-         if (sl->fStatus != 0) fStatus = sl->fStatus; //return last nonzero status
+         if (sl->fStatus != 0) {
+            // Return last nonzero status
+            fStatus = sl->fStatus;
+            // Deactivate the worker, if required
+            if (deactonfail) DeactivateWorker(sl->fOrdinal);
+         }
          rc = 1;
          break;
 
@@ -2946,7 +2951,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
       case kPROOF_OUTPUTLIST:
          {
             PDB(kGlobal,2)
-               Info("HandleInputMessage","kPROOF_OUTPUTLIST: enter");
+               Info("HandleInputMessage","%s: kPROOF_OUTPUTLIST: enter", sl->GetOrdinal());
             TList *out = 0;
             if (fPlayer) {
                if (TestBit(TProof::kIsMaster) || fProtocol < 7) {
@@ -2967,7 +2972,8 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                      QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
                   } else {
                      PDB(kGlobal,2)
-                        Info("HandleInputMessage","kPROOF_OUTPUTLIST: query result missing");
+                        Info("HandleInputMessage",
+                             "%s: kPROOF_OUTPUTLIST: query result missing", sl->GetOrdinal());
                   }
                }
                if (out) {
@@ -2975,10 +2981,13 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                   fPlayer->AddOutput(out); // Incorporate the list
                   SafeDelete(out);
                } else {
-                  PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_OUTPUTLIST: ouputlist is empty");
+                  PDB(kGlobal,2)
+                     Info("HandleInputMessage",
+                          "%s: kPROOF_OUTPUTLIST: ouputlist is empty", sl->GetOrdinal());
                }
             } else {
-               Warning("HandleInputMessage", "kPROOF_OUTPUTLIST: player undefined!");
+               Warning("HandleInputMessage",
+                       "%s: kPROOF_OUTPUTLIST: player undefined!", sl->GetOrdinal());
             }
             // On clients at this point processing is over
             if (TestBit(TProof::kIsClient) && !IsLite())
@@ -6780,7 +6789,9 @@ Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient, TList *loadop
    mess << Int_t(kLoadPackage) << pac;
    if (loadopts) mess << loadopts;
    Broadcast(mess);
-   Collect();
+   // On the master, workers that fail are deactivated
+   Bool_t deactivateOnFailure = (IsMaster()) ? kTRUE : kFALSE;
+   Collect(kActive, -1, -1, deactivateOnFailure);
 
    return fStatus;
 }
