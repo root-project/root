@@ -56,7 +56,7 @@ StreamerInfo for class: Tdata, version=1, checksum=0x30d1fe9d
   double         mydouble_two    offset= n/a type= 8                     
    i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 Warning in <TStreamerInfo::BuildCheck>: 
-   The StreamerInfo for version 1 of class Tdata read from file data1.root
+   The StreamerInfo for version 1 of class Tdata read from the file data1.root
    has a different checksum than the previously loaded StreamerInfo.
    Reading objects of type Tdata from the file data1.root 
    (and potentially other files) might not work correctly.
@@ -196,7 +196,7 @@ StreamerInfo for class: Tdata, version=1, checksum=0x30d1fe9d
   double         mydouble_two    offset= n/a type= 8                     
    i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 Warning in <TStreamerInfo::BuildCheck>: 
-   The StreamerInfo for version 1 of class Tdata read from file data1.root
+   The StreamerInfo for version 1 of class Tdata read from the file data1.root
    has a different checksum than the previously loaded StreamerInfo.
    Reading objects of type Tdata from the file data1.root 
    (and potentially other files) might not work correctly.
@@ -232,7 +232,7 @@ StreamerInfo for class: Tdata, version=1, checksum=0x30d1fe9d
   double         mydouble_two    offset= n/a type= 8                     
    i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 Warning in <TStreamerInfo::BuildCheck>: 
-   The StreamerInfo for version 1 of class Tdata read from file data1.root
+   The StreamerInfo for version 1 of class Tdata read from the file data1.root
    has a different checksum than the previously loaded StreamerInfo.
    Reading objects of type Tdata from the file data1.root 
    (and potentially other files) might not work correctly.
