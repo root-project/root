@@ -70,6 +70,28 @@ else
    fi
 fi
 
+# Apply limit on the resident memory, if requested
+ECHOMEM=""
+if [ "x$PROOF_RESMEMMAX" != "x" ]; then
+   resmemmax=`expr $PROOF_RESMEMMAX \* 1024`
+   ulimit -m $resmemmax
+   ECHOMEM="yes"
+fi
+# Apply limit on the virtual memory, if requested
+if [ "x$PROOF_VIRTMEMMAX" != "x" -o  "x$ROOTPROOFASHARD" != "x" ]; then
+   if [ "x$PROOF_VIRTMEMMAX" != "x" ]; then
+      virmemmax=`expr $PROOF_VIRTMEMMAX \* 1024`
+   else
+      virmemmax=`expr $ROOTPROOFASHARD \* 1024`
+   fi
+   ulimit -v $virmemmax
+   ECHOMEM="yes"
+fi
+if [ "x$ECHOMEM" != "x" ]; then
+   NOW=`date +%H:%M:%S`
+   echo "$NOW: $1: limiting {resident, virtual} memory to {$resmemmax,$virmemmax} kBytes" >> $LOGFILE
+fi
+
 if [ "x$WRAPPER" != "x" ]; then
    NOW=`date +%H:%M:%S`
    echo "$NOW: $1: executing $WRAPPER @bindir@/proofserv.exe $@" >> $LOGFILE

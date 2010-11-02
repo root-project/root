@@ -539,6 +539,18 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
       if (mmx < kMaxLong && mmx > 0)
          fVirtMemMax = mmx * 1024;
    }
+   if (gSystem->Getenv("PROOF_VIRTMEMMAX")) {
+      Long_t mmx = strtol(gSystem->Getenv("PROOF_VIRTMEMMAX"), 0, 10);
+      if (mmx < kMaxLong && mmx > 0)
+         fVirtMemMax = mmx * 1024;
+   }
+   // Upper limit on Resident Memory (in kB)
+   fResMemMax = gEnv->GetValue("Proof.ResMemMax",-1);
+   if (fResMemMax < 0 && gSystem->Getenv("PROOF_RESMEMMAX")) {
+      Long_t mmx = strtol(gSystem->Getenv("PROOF_RESMEMMAX"), 0, 10);
+      if (mmx < kMaxLong && mmx > 0)
+         fResMemMax = mmx * 1024;
+   }
 
    // Wait (loop) to allow debugger to connect
    Bool_t test = (*argc >= 4 && !strcmp(argv[3], "test")) ? kTRUE : kFALSE;
