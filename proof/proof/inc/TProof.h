@@ -627,10 +627,10 @@ private:
    Int_t    BroadcastObject(const TObject *obj, Int_t kind = kMESS_OBJECT, ESlaves list = kActive);
    Int_t    BroadcastRaw(const void *buffer, Int_t length, TList *slaves);
    Int_t    BroadcastRaw(const void *buffer, Int_t length, ESlaves list = kActive);
-   Int_t    Collect(const TSlave *sl, Long_t timeout = -1, Int_t endtype = -1);
-   Int_t    Collect(TMonitor *mon, Long_t timeout = -1, Int_t endtype = -1);
-   Int_t    CollectInputFrom(TSocket *s, Int_t endtype = -1);
-   Int_t    HandleInputMessage(TSlave *wrk, TMessage *m);
+   Int_t    Collect(const TSlave *sl, Long_t timeout = -1, Int_t endtype = -1, Bool_t deactonfail = kFALSE);
+   Int_t    Collect(TMonitor *mon, Long_t timeout = -1, Int_t endtype = -1, Bool_t deactonfail = kFALSE);
+   Int_t    CollectInputFrom(TSocket *s, Int_t endtype = -1, Bool_t deactonfail = kFALSE);
+   Int_t    HandleInputMessage(TSlave *wrk, TMessage *m, Bool_t deactonfail = kFALSE);
    void     HandleSubmerger(TMessage *mess, TSlave *sl);
    void     SetMonitor(TMonitor *mon = 0, Bool_t on = kTRUE);
 
@@ -711,8 +711,8 @@ protected:
 
    virtual void SaveWorkerInfo();
 
-   Int_t    Collect(ESlaves list = kActive, Long_t timeout = -1, Int_t endtype = -1);
-   Int_t    Collect(TList *slaves, Long_t timeout = -1, Int_t endtype = -1);
+   Int_t    Collect(ESlaves list = kActive, Long_t timeout = -1, Int_t endtype = -1, Bool_t deactonfail = kFALSE);
+   Int_t    Collect(TList *slaves, Long_t timeout = -1, Int_t endtype = -1, Bool_t deactonfail = kFALSE);
 
    void         SetDSet(TDSet *dset) { fDSet = dset; }
    virtual void ValidateDSet(TDSet *dset);
