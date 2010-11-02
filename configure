@@ -5660,7 +5660,8 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  asimage/src/headers.d asimage/src/G__ASImageGS.* \
  core/utils/src/rootcint7.cxx core/utils/src/RStl7.cxx \
  core/metautils/src/TClassEdit7.cxx \
- core/metautils/src/RConversionRuleParser7.cxx
+ core/metautils/src/RConversionRuleParser7.cxx \
+ core/thread/src/TLockFile.*
 
 ######################################################################
 #
