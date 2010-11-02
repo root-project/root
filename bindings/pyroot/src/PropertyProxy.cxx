@@ -207,6 +207,9 @@ void PyROOT::PropertyProxy::Set( TGlobal* gbl )
    std::string fullType = gbl->GetFullTypeName();
    if ( fullType == "void*" ) // actually treated as address to void*
       fullType = "void**";
+   if ( (int)gbl->GetArrayDim() != 0 ) {
+      fullType.append( "*" );
+   }
    fConverter = CreateConverter( fullType, gbl->GetMaxIndex( 0 ) );
    fName      = gbl->GetName();
 
