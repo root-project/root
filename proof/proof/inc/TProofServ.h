@@ -164,6 +164,8 @@ private:
    // Memory limits (-1 to disable) set by envs ROOTPROOFASSOFT and RPPTPROFOASHARD
    Long_t        fVirtMemHWM;       //Above this we terminate gently (in kB)
    Long_t        fVirtMemMax;       //Hard limit enforced by the system (in kB)
+   Long_t        fResMemMax;        //Hard limit on the resident memory checked
+                                    //in TProofPlayer::Process (in kB)
 
    // In bytes; default is 1MB
    Long64_t      fMsgSizeHWM;       //High-Water-Mark on the size of messages with results
@@ -266,6 +268,8 @@ public:
    Int_t          GetInflateFactor() const { return fInflateFactor; }
 
    Long_t         GetVirtMemHWM() const { return fVirtMemHWM; }
+   Long_t         GetVirtMemMax() const { return fVirtMemMax; }
+   Long_t         GetResMemMax() const { return fResMemMax; }
 
    Long64_t       GetMsgSizeHWM() const { return fMsgSizeHWM; }
 
