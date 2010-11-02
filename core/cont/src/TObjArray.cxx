@@ -699,9 +699,9 @@ void TObjArray::Randomize(Int_t ntimes)
    for (Int_t i = 0; i < ntimes; i++) {
       for (Int_t j = 0; j < fLast; j++) {
 #ifdef R__WIN32
-         Int_t k = (Int_t)(fLast*rand()/(RAND_MAX+1.0));
+         Int_t k = (Int_t)(0.5+fLast*Double_t(rand())/Double_t((RAND_MAX+1.0)));
 #else
-         Int_t k = (Int_t)(fLast*random()/(RAND_MAX+1.0));
+         Int_t k = (Int_t)(0.5+fLast*Double_t(random())/Double_t((RAND_MAX+1.0)));
 #endif
          if (k == j) continue;
          TObject *obj = fCont[j];
