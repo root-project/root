@@ -65,6 +65,7 @@ public:
    virtual void      InitPolynom(Double_t xmin, Double_t xmax);
    virtual void      InitExpo(Double_t xmin, Double_t xmax);
    virtual void      InitGaus(Double_t xmin, Double_t xmax);
+   virtual Int_t     IsInside(Double_t x, Double_t y) const;
    TH1F             *GetHistogram() const;
    TF1              *GetFunction(const char *name) const;
    TList            *GetListOfGraphs() const { return fGraphs; }

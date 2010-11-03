@@ -159,6 +159,7 @@ public:
    virtual Int_t         InsertPoint(); // *MENU*
    virtual Double_t      Integral(Int_t first=0, Int_t last=-1) const;
    virtual Bool_t        IsEditable() const {return !TestBit(kNotEditable);}
+   virtual Int_t         IsInside(Double_t x, Double_t y) const;
    virtual void          LeastSquareFit(Int_t m, Double_t *a, Double_t xmin=0, Double_t xmax=0);
    virtual void          LeastSquareLinearFit(Int_t n, Double_t &a0, Double_t &a1, Int_t &ifail, Double_t xmin=0, Double_t xmax=0);
    virtual Int_t         Merge(TCollection* list);

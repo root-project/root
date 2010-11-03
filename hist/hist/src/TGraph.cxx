@@ -1047,7 +1047,7 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f,
    //                                 Double_t *u, Int_t flag);
    //
-   //   
+   //
    // TGraphErrors fit:
    // =================
    //
@@ -1145,7 +1145,7 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //  minosResult and Minuit2Minimizer::Hesse for the hesseResult.
    //  If other minimizers are used see their specific documentation for the status code
    //  returned. For example in the case of Fumili, for the status returned see TFumili::Minimize.
-   //   
+   //
    // Associated functions:
    // =====================
    //
@@ -1656,6 +1656,24 @@ Double_t TGraph::Integral(Int_t first, Int_t last) const
       sum += (fY[i]+fY[j])*(fX[j]-fX[i]);
    }
    return 0.5*TMath::Abs(sum);
+}
+
+
+//______________________________________________________________________________
+Int_t TGraph::IsInside(Double_t x, Double_t y) const
+{
+   // Return 1 if the point (x,y) is inside the polygon defined by
+   // the graph vertices 0 otherwise.
+   //
+   // Algorithm:
+   // The loop is executed with the end-point coordinates of a line segment
+   // (X1,Y1)-(X2,Y2) and the Y-coordinate of a horizontal line.
+   // The counter inter is incremented if the line (X1,Y1)-(X2,Y2) intersects
+   // the horizontal line. In this case XINT is set to the X-coordinate of the
+   // intersection point. If inter is an odd number, then the point x,y is within
+   // the polygon.
+
+   return (Int_t)TMath::IsInside(x, y, fNpoints, fX, fY);
 }
 
 
