@@ -343,27 +343,6 @@ Double_t TCutG::IntegralHist(TH2 *h, Option_t *option) const
 
 
 //______________________________________________________________________________
-Int_t TCutG::IsInside(Double_t x, Double_t y) const
-{
-   // Function which returns 1 if point x,y lies inside the polygon defined by
-   // the graph points 0 otherwise. This function assumes that the first and
-   // the last point of the TCutG are the same (closed polygon).
-   //
-   // Algorithm:
-   // The loop is executed with the end-point coordinates of a line segment
-   // (X1,Y1)-(X2,Y2) and the Y-coordinate of a horizontal line.
-   // The counter inter is incremented if the line (X1,Y1)-(X2,Y2) intersects
-   // the horizontal line. In this case XINT is set to the X-coordinate of the
-   // intersection point. If inter is an odd number, then the point x,y is within
-   // the polygon.
-   //
-   // This function is based on an original algorithm developed by R.Nierhaus.
-
-   return (Int_t)TMath::IsInside(x,y,fNpoints,fX,fY);
-}
-
-
-//______________________________________________________________________________
 void TCutG::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out.
