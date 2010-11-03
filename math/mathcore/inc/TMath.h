@@ -831,22 +831,22 @@ template <typename T> T * TMath::Normal2Plane(const T p1[3],const T p2[3],const 
 template <typename T> Bool_t TMath::IsInside(T xp, T yp, Int_t np, T *x, T *y)
 {
    // Function which returns kTRUE if point xp,yp lies inside the
-   // polygon defined by the np points in arrays x and y, kFALSE otherwise
-   // NOTE that the polygon must be a closed polygon (1st and last point
-   // must be identical).
+   // polygon defined by the np points in arrays x and y, kFALSE otherwise.
+   // Note that the polygon may be open or closed.
 
-   Double_t xint;
-   Int_t i;
-   Int_t inter = 0;
-   for (i=0;i<np-1;i++) {
-      if (y[i] == y[i+1]) continue;
-      if (yp <= y[i] && yp <= y[i+1]) continue;
-      if (y[i] < yp && y[i+1] < yp) continue;
-      xint = x[i] + (yp-y[i])*(x[i+1]-x[i])/(y[i+1]-y[i]);
-      if ((Double_t)xp < xint) inter++;
+   Int_t i, j = np-1 ;
+   Bool_t oddNodes = kFALSE;
+
+   for (i=0; i<np; i++) {
+      if (y[i]<yp && y[j]>=yp || y[j]<yp && y[i]>=yp) {
+         if (x[i]+(yp-y[i])/(y[j]-y[i])*(x[j]-x[i])<xp) {
+            oddNodes = !oddNodes;
+         }
+      }
+      j=i;
    }
-   if (inter%2) return kTRUE;
-   return kFALSE;
+
+   return oddNodes;
 }
 
 template <typename T> Double_t TMath::Median(Long64_t n, const T *a,  const Double_t *w, Long64_t *work)
