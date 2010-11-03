@@ -374,8 +374,14 @@ TPacketizerAdaptive::TSlaveStat::TSlaveStat(TSlave *slave)
    // The slave name is a special one in PROOF-Lite: avoid blocking on the DNS
    // for non existing names
    fWrkFQDN = slave->GetName();
-   if (strcmp(slave->ClassName(), "TSlaveLite"))
+   if (strcmp(slave->ClassName(), "TSlaveLite")) {
       fWrkFQDN = TUrl(fWrkFQDN).GetHostFQDN();
+      // Get full name for local hosts
+      if (fWrkFQDN.Contains("localhost") || fWrkFQDN == "127.0.0.1")
+         fWrkFQDN = TUrl(gSystem->HostName()).GetHostFQDN();
+   }
+   PDB(kPacketizer, 2)
+      Info("TSlaveStat", "wrk FQDN: %s", fWrkFQDN.Data());
 }
 
 //______________________________________________________________________________
@@ -607,7 +613,12 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
            strncmp(url.GetProtocol(),"rfio", 4)) ) {
          host = "no-host";
       } else {
-         host = url.GetHost();
+         host = url.GetHostFQDN();
+      }
+      // Get full name for local hosts
+      if (host.Contains("localhost") || host == "127.0.0.1") {
+         url.SetHost(gSystem->HostName());
+         host = url.GetHostFQDN();
       }
 
       // Find on which disk is the file, if any
@@ -758,6 +769,11 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
            strncmp(url.GetProtocol(),"rfio", 4)) ) {
          host = "no-host";
       } else {
+         host = url.GetHostFQDN();
+      }
+      // Get full name for local hosts
+      if (host.Contains("localhost") || host == "127.0.0.1") {
+         url.SetHost(gSystem->HostName());
          host = url.GetHostFQDN();
       }
 
@@ -1054,10 +1070,25 @@ void TPacketizerAdaptive::Reset()
    TObject *key;
    while ((key = slaves.Next()) != 0) {
       TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue(key);
-      fn = (TFileNode*) fFileNodes->FindObject(slstat->GetName());
-      if (fn != 0 ) {
-         slstat->SetFileNode(fn);
-         fn->IncMySlaveCnt();
+      // Find out which file nodes are on the worker machine and assign the
+      // one with less workers assigned
+      TFileNode *fnmin = 0;
+      Int_t fncnt = fSlaveStats->GetSize();
+      files.Reset();
+      while ((fn = (TFileNode*) files.Next()) != 0) {
+         if (!strcmp(slstat->GetName(), TUrl(fn->GetName()).GetHost())) {
+            if (fn->GetMySlaveCnt() < fncnt) {
+               fnmin = fn;
+               fncnt = fn->GetMySlaveCnt();
+            }
+         }
+      }
+      if (fnmin != 0 ) {
+         slstat->SetFileNode(fnmin);
+         fnmin->IncMySlaveCnt();
+         PDB(kPacketizer, 2)
+            Info("Reset","assigning node '%s' to '%s' (cnt: %d)",
+                         fnmin->GetName(), slstat->GetName(), fnmin->GetMySlaveCnt());
       }
       slstat->fCurFile = 0;
    }
@@ -1723,12 +1754,12 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
          }
       }
 
-      // try to find an unused filenode first
+      // Try to find an unused filenode first
       if(file == 0 && !fForceLocal) {
          file = GetNextUnAlloc(0, nodeHostName);
       }
 
-      // then look at the active filenodes
+      // Then look at the active filenodes
       if(file == 0 && !fForceLocal) {
          file = GetNextActive();
       }
