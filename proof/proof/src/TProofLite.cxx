@@ -704,13 +704,13 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
       return -1;
    }
    // ROOTSYS
-#if R__HAVE_CONFIG
+#ifdef R__HAVE_CONFIG
    fprintf(fenv, "export ROOTSYS=%s\n", ROOTPREFIX);
 #else
    fprintf(fenv, "export ROOTSYS=%s\n", gSystem->Getenv("ROOTSYS"));
 #endif
    // Conf dir
-#if R__HAVE_CONFIG
+#ifdef R__HAVE_CONFIG
    fprintf(fenv, "export ROOTCONFDIR=%s\n", ROOTETCDIR);
 #else
    fprintf(fenv, "export ROOTCONFDIR=%s\n", gSystem->Getenv("ROOTSYS"));
