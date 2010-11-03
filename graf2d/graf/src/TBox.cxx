@@ -562,6 +562,17 @@ void TBox::HideToolTip(Int_t event)
 
 
 //______________________________________________________________________________
+Int_t TBox::IsInside(Double_t x, Double_t y) const
+{
+   // Function which returns 1 if point x,y lies inside the box, 0 otherwise.
+   
+   if (x < fX1 || x > fX2) return 0;
+   if (y < fY1 || y > fY2) return 0;
+   return 1;
+}
+
+
+//______________________________________________________________________________
 void TBox::ls(Option_t *) const
 {
    // List this box with its attributes.

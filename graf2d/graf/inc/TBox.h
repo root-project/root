@@ -64,6 +64,7 @@ public:
    Double_t      GetY1() const { return fY1; }
    Double_t      GetY2() const { return fY2; }
    virtual void  HideToolTip(Int_t event);
+   virtual Int_t IsInside(Double_t x, Double_t y) const;
    virtual void  ls(Option_t *option="") const;
    virtual void  Paint(Option_t *option="");
    virtual void  PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option="");
