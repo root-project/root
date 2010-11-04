@@ -183,7 +183,7 @@ protected:
       kGetLeaf           = BIT(8),
       kLoadTree          = BIT(9),
       kPrint             = BIT(10),
-      kRemoveFriend      = BIT(12),
+      kRemoveFriend      = BIT(11),
       kSetBranchStatus   = BIT(12)
    };
    
