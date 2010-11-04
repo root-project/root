@@ -2486,10 +2486,10 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
                while ((xs = (TSocket *)nxs())) {
                   TSlave *wrk = FindSlave(xs);
                   if (wrk)
-                     Info("Collect","   %s", wrk->GetName());
+                     Info("Collect","   %s (%s)", wrk->GetName(), wrk->GetOrdinal());
                   else
                      Info("Collect","   %p: %s:%d", xs, xs->GetInetAddress().GetHostName(),
-                                                      xs->GetInetAddress().GetPort());
+                                                        xs->GetInetAddress().GetPort());
                }
             }
          }
@@ -3630,7 +3630,7 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                      fMergers = new TList();
                      fLastAssignedMerger = 0;
                      // Total number of workers, which will not act as mergers ('pure workers')
-                     fWorkersToMerge = (GetNumberOfSlaves() - fMergersCount);
+                     fWorkersToMerge = (GetNumberOfActiveSlaves() - fMergersCount);
                      // Establish the first merger
                      if (!CreateMerger(sl, merging_port)) {
                         // Cannot establish first merger
@@ -4023,6 +4023,11 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
          delete wrk;
       } else {
          fBadSlaves->Add(wrk);
+         fActiveSlaves->Remove(wrk);
+         fUniqueSlaves->Remove(wrk);
+         fAllUniqueSlaves->Remove(wrk);
+         fNonUniqueMasters->Remove(wrk);
+         if (fCurrentMonitor) fCurrentMonitor->DeActivate(wrk->GetSocket());
          wrk->Close();
          // Update the mergers count, if needed
          if (fMergersSet) {
