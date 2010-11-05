@@ -160,8 +160,8 @@
 //   1. debug=[what:]level
 //
 //      Controls verbosity; 'level' is an integer number and the optional string
-//      'what' one of the enum names in TProofDebug.h .
-//      e.g. runProof("eventproc(debug=kPacketizer:2)") runs 'eventproc' enabling
+//      'what' one or more of the enum names in TProofDebug.h .
+//      e.g. runProof("eventproc(debug=kPacketizer|kCollect:2)") runs 'eventproc' enabling
 //           all printouts matching TProofDebug::kPacketizer and having level
 //           equal or larger than 2 .
 //
@@ -1041,46 +1041,51 @@ int getDebugEnum(const char *what)
    // Check if 'what' matches one of the TProofDebug enum and return the corresponding
    // integer. Relies on a perfect synchronization with the content of TProofDebug.h .
 
-   TString sw(what);
-   if (sw.BeginsWith("k")) sw.Remove(0,1);
+   TString sws(what), sw;
+   int rcmask = 0;
+   int from = 0;
+   while (sws.Tokenize(sw, from , "|")) {
+      if (sw.BeginsWith("k")) sw.Remove(0,1);
 
-   if (sw == "None") {
-      return (int) TProofDebug::kNone;
-   } else if (sw == "Packetizer") {
-      return (int) TProofDebug::kPacketizer;
-   } else if (sw == "Loop") {
-      return (int) TProofDebug::kLoop;
-   } else if (sw == "Selector") {
-      return (int) TProofDebug::kSelector;
-   } else if (sw == "Output") {
-      return (int) TProofDebug::kOutput;
-   } else if (sw == "Input") {
-      return (int) TProofDebug::kInput;
-   } else if (sw == "Global") {
-      return (int) TProofDebug::kGlobal;
-   } else if (sw == "Package") {
-      return (int) TProofDebug::kPackage;
-   } else if (sw == "Feedback") {
-      return (int) TProofDebug::kFeedback;
-   } else if (sw == "Condor") {
-      return (int) TProofDebug::kCondor;
-   } else if (sw == "Draw") {
-      return (int) TProofDebug::kDraw;
-   } else if (sw == "Asyn") {
-      return (int) TProofDebug::kAsyn;
-   } else if (sw == "Cache") {
-      return (int) TProofDebug::kCache;
-   } else if (sw == "Collect") {
-      return (int) TProofDebug::kCollect;
-   } else if (sw == "Dataset") {
-      return (int) TProofDebug::kDataset;
-   } else if (sw == "Submerger") {
-      return (int) TProofDebug::kSubmerger;
-   } else if (sw == "All") {
-      return (int) TProofDebug::kAll;
-   } else if (!sw.IsNull()) {
-      Printf("WARNING: requested debug enum name '%s' does not exist: assuming 'All'", sw.Data());
+      if (sw == "None") {
+         rcmask |= TProofDebug::kNone;
+      } else if (sw == "Packetizer") {
+         rcmask |= TProofDebug::kPacketizer;
+      } else if (sw == "Loop") {
+         rcmask |= TProofDebug::kLoop;
+      } else if (sw == "Selector") {
+         rcmask |= TProofDebug::kSelector;
+      } else if (sw == "Output") {
+         rcmask |= TProofDebug::kOutput;
+      } else if (sw == "Input") {
+         rcmask |= TProofDebug::kInput;
+      } else if (sw == "Global") {
+         rcmask |= TProofDebug::kGlobal;
+      } else if (sw == "Package") {
+         rcmask |= TProofDebug::kPackage;
+      } else if (sw == "Feedback") {
+         rcmask |= TProofDebug::kFeedback;
+      } else if (sw == "Condor") {
+         rcmask |= TProofDebug::kCondor;
+      } else if (sw == "Draw") {
+         rcmask |= TProofDebug::kDraw;
+      } else if (sw == "Asyn") {
+         rcmask |= TProofDebug::kAsyn;
+      } else if (sw == "Cache") {
+         rcmask |= TProofDebug::kCache;
+      } else if (sw == "Collect") {
+         rcmask |= TProofDebug::kCollect;
+      } else if (sw == "Dataset") {
+         rcmask |= TProofDebug::kDataset;
+      } else if (sw == "Submerger") {
+         rcmask |= TProofDebug::kSubmerger;
+      } else if (sw == "All") {
+         rcmask |= TProofDebug::kAll;
+      } else if (!sw.IsNull()) {
+         Printf("WARNING: requested debug enum name '%s' does not exist: assuming 'All'", sw.Data());
+         rcmask |= TProofDebug::kAll;
+      }
    }
-   // Nothing found
-   return (int) TProofDebug::kAll;
+   // Done
+   return rcmask;
 }
