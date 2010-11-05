@@ -426,6 +426,20 @@ Int_t TXProofServ::CreateServer()
       SendAsynMessage(msg.Data());
    }
 
+   // Setup the idle timer
+   if (IsMaster() && !fIdleTOTimer) {
+      // Check activity on socket every 5 mins
+      Int_t idle_to = gEnv->GetValue("ProofServ.IdleTimeout", -1);
+      if (idle_to > 0) {
+         fIdleTOTimer = new TIdleTOTimer(this, idle_to * 1000);
+         fIdleTOTimer->Start(-1, kTRUE);
+         if (gProofDebugLevel > 0)
+            Info("CreateServer", " idle timer started (%d secs)", idle_to);
+      } else if (gProofDebugLevel > 0) {
+         Info("CreateServer", " idle timer not started (no idle timeout requested)");
+      }
+   }
+
    // Done
    return 0;
 }
