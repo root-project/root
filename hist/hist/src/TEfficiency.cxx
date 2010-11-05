@@ -8,7 +8,8 @@
 #include <stdlib.h>
 
 //ROOT headers
-#include "Math/QuantFuncMathCore.h"
+#include "Math/ProbFunc.h"
+#include "Math/QuantFunc.h"
 #include "TBinomialEfficiencyFitter.h"
 #include "TDirectory.h"
 #include "TF1.h"
@@ -22,6 +23,8 @@
 #include "TStyle.h"
 #include "TVirtualPad.h"
 #include "TError.h"
+#include "Math/BrentMinimizer1D.h"
+#include "Math/WrappedFunction.h"
 
 //custom headers
 #include "TEfficiency.h"
@@ -230,6 +233,7 @@ ClassImp(TEfficiency)
 // <li><b>fStatisticOption:</b> defines which method is used to calculate the boundaries of the confidence interval (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetStatisticOption">SetStatisticOption</a>)</li>
 // <li><b>fBeta_alpha, fBeta_beta:</b> parameters for the prior distribution which is only used in the bayesian case (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetBetaAlpha">GetBetaAlpha</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetBetaBeta">GetBetaBeta</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetBetaAlpha">SetBetaAlpha</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetBetaBeta">SetBetaBeta</a>)</li>
 // <li><b>kIsBayesian:</b> flag whether bayesian statistics are used or not (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:UsesBayesianStat">UsesBayesianStat</a>)</li>
+// <li><b>kShortestInterval:</b> flag whether shortest interval (instead of central one) are used in case of Bayesian statistics  (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:UsesShortestInterval">UsesShortestInterval</a>). Normally shortest interval should be used in combination with the mode (see <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:UsesPosteriorMode">UsesPosteriorMode</a>)</li>
 // <li><b>fWeight:</b> global weight for this TEfficiency object which is used during combining or merging with other TEfficiency objects(<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetWeight">GetWeight</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetWeight">SetWeight</a>)</li>
 // </ul>
 //    In the following table the implemented confidence intervals are listed
@@ -1092,9 +1096,9 @@ Double_t TEfficiency::AgrestiCoull(Int_t total,Int_t passed,Double_t level,Bool_
 }
 
 //______________________________________________________________________________
-Double_t TEfficiency::Bayesian(Int_t total,Int_t passed,Double_t level,Double_t alpha,Double_t beta,Bool_t bUpper)
+Double_t TEfficiency::Bayesian(Int_t total,Int_t passed,Double_t level,Double_t alpha,Double_t beta,Bool_t bUpper, Bool_t bShortest)
 {
-   //calculates the boundaries for a baysian confidence interval
+   //calculates the boundaries for a Bayesian confidence interval (shortest or central interval depending on the option)
    //
    //Input: - total : number of total events
    //       - passed: 0 <= number of passed events <= total
@@ -1104,8 +1108,9 @@ Double_t TEfficiency::Bayesian(Int_t total,Int_t passed,Double_t level,Double_t 
    //       - bUpper: true  - upper boundary is returned
    //                 false - lower boundary is returned
    //
-   //Note: The equal-tailed confidence interval is calculated which might be not
-   //      the shortest interval containing the desired coverage probability.
+   //Note: In the case central confidence interval is calculated. 
+   //      when passed = 0 (or passed = total) the lower (or upper) 
+   //      interval values will be larger than 0 (or smaller than 1).   
    //
    //Calculation:
    //
@@ -1120,27 +1125,188 @@ Double_t TEfficiency::Bayesian(Int_t total,Int_t passed,Double_t level,Double_t 
    //Begin_Latex Prior(#varepsilon) = #frac{1}{B(#alpha,#beta)} #varepsilon ^{#alpha - 1} (1 - #varepsilon)^{#beta - 1}End_Latex
    //The posterior probability is therefore again given by a beta distribution:
    //Begin_Latex P(#varepsilon |k,N) #propto #varepsilon ^{k + #alpha - 1} (1 - #varepsilon)^{N - k + #beta - 1} End_Latex
-   //The lower boundary for the equal-tailed confidence interval is given by the
+   //In case of central intervals 
+   //the lower boundary for the equal-tailed confidence interval is given by the
    //inverse cumulative (= quantile) function for the quantile Begin_Latex #frac{1 - level}{2} End_Latex.
    //The upper boundary for the equal-tailed confidence interval is given by the
    //inverse cumulative (= quantile) function for the quantile Begin_Latex #frac{1 + level}{2} End_Latex.
    //Hence it is the solution Begin_Latex #varepsilon End_Latex of the following equation:
    //Begin_Latex I_{#varepsilon}(k + #alpha,N - k + #beta) = #frac{1}{norm} #int_{0}^{#varepsilon} dt t^{k + #alpha - 1} (1 - t)^{N - k + #beta - 1} =  #frac{1 #pm level}{2} End_Latex
+   // In the case of shortest interval the minimum interval aorund the mode is found by minimizing the length of all intervals whith the 
+   // given probability content. See TEfficiency::BetaShortestInterval
+
+   Double_t a = double(passed)+alpha;
+   Double_t b = double(total-passed)+beta;
+
+   if (bShortest) { 
+      double lower = 0; 
+      double upper = 1;
+      BetaShortestInterval(level,a,b,lower,upper);
+      return (bUpper) ? upper : lower; 
+   }
+   else 
+      return BetaCentralInterval(level, a, b, bUpper);
+}
+//______________________________________________________________________________
+Double_t TEfficiency::BetaCentralInterval(Double_t level,Double_t a,Double_t b,Bool_t bUpper)
+{
+   //calculates the boundaries for a central confidence interval for a Beta distribution
+   //
+   //Input: - level : confidence level
+   //       -    a  : parameter > 0 for the beta distribution (for a posterior is passed + prior_alpha
+   //       -    b  : parameter > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta 
+   //       - bUpper: true  - upper boundary is returned
+   //                 false - lower boundary is returned
+   //
 
    if(bUpper) {
-      if((alpha > 0) && (beta > 0))
-	 return (passed == total)? 1.0 : ROOT::Math::beta_quantile((1+level)/2,passed+alpha,total-passed+beta);
-      else
+      if((a > 0) && (b > 0))
+	 return ROOT::Math::beta_quantile((1+level)/2,a,b);
+      else { 
+         gROOT->Error("TEfficiency::BayesianCentral","Invalid input parameters - return 1");
 	 return 1;
+      }
    }
    else {
-      if((alpha > 0) && (beta > 0))
-	 return (passed == 0)? 0.0 : ROOT::Math::beta_quantile((1-level)/2,passed+alpha,total-passed+beta);
-      else
+      if((a > 0) && (b > 0))
+	 return ROOT::Math::beta_quantile((1-level)/2,a,b);
+      else {
+         gROOT->Error("TEfficiency::BayesianCentral","Invalid input parameters - return 0");
 	 return 0;
+      }
    }
 }
 
+struct Beta_interval_length { 
+   Beta_interval_length(Double_t level,Double_t alpha,Double_t beta ) : 
+      fCL(level), fAlpha(alpha), fBeta(beta)                                     
+   {}
+
+   Double_t LowerMax() { 
+      // max allowed value of lower given the interval size 
+      return ROOT::Math::beta_quantile_c(fCL, fAlpha,fBeta);
+   }
+
+   Double_t operator() (double lower) const {
+      // return length of interval
+      Double_t plow = ROOT::Math::beta_cdf(lower, fAlpha, fBeta); 
+      Double_t pup = plow + fCL; 
+      double upper = ROOT::Math::beta_quantile(pup, fAlpha,fBeta);
+      return upper-lower;
+   }
+   Double_t fCL; // interval size (confidence level)
+   Double_t fAlpha; // beta distribution alpha parameter
+   Double_t fBeta; // beta distribution beta parameter
+
+};
+
+//______________________________________________________________________________
+Bool_t TEfficiency::BetaShortestInterval(Double_t level,Double_t a,Double_t b, Double_t & lower, Double_t & upper)
+{
+   //calculates the boundaries for a shortest confidence interval for a Beta  distribution
+   //
+   //Input: - level : confidence level
+   //       -    a  : parameter > 0 for the beta distribution (for a posterior is passed + prior_alpha
+   //       -    b  : parameter > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta 
+   //       - bUpper: true  - upper boundary is returned
+   //                 false - lower boundary is returned
+   //
+   //
+   //The lower/upper boundary are then obtained by finding the shortest interval of the beta distribbution 
+   // contained the desired probability level. 
+   // The length of all possible intervals is minimized in order to find the shortest one
+
+   if (a <= 0 || b <= 0) {
+      lower = 0; upper = 1; 
+      gROOT->Error("TEfficiency::BayesianShortest","Invalid input parameters - return [0,1]");
+      return kFALSE; 
+   }
+
+   // treat here special cases when mode == 0 or 1
+   double mode = BetaMode(a,b);
+   if (mode == 0.0) { 
+      lower = 0; 
+      upper = ROOT::Math::beta_quantile(level, a, b);
+      return kTRUE;
+   } 
+   if (mode == 1.0) { 
+      lower = ROOT::Math::beta_quantile_c(level, a, b);
+      upper = 1.0;
+      return kTRUE;
+   }
+   // special case when the shortest interval is undefined  return the central interval
+   // can happen for a posterior when passed=total=0
+   //
+   if ( a==b && a<1.0) { 
+      lower = BetaCentralInterval(level,a,b,kFALSE);
+      upper = BetaCentralInterval(level,a,b,kTRUE);
+      return kTRUE;
+   }
+
+   // for the other case perform a minimization
+   // make a function of the length of the posterior interval as a function of lower bound
+   Beta_interval_length intervalLength(level,a,b);
+   // minimize the interval length
+   ROOT::Math::WrappedFunction<const Beta_interval_length &> func(intervalLength);
+   ROOT::Math::BrentMinimizer1D minim;
+   minim.SetFunction(func, 0, intervalLength.LowerMax() );
+   minim.SetNpx(2); // no need to bracket with many iterations. Just do few times to estimate some better points
+   bool ret = minim.Minimize(100, 1.E-10,1.E-10);
+   if (!ret) { 
+      gROOT->Error("TEfficiency::BayesianShortes","Error finding the shortest interval"); 
+      return kFALSE;
+   }
+   lower = minim.XMinimum();
+   upper = lower + minim.FValMinimum();
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Double_t TEfficiency::BetaMean(Double_t a,Double_t b)
+{
+   // compute the mean (average) of the beta distribution
+   //
+   //Input:    a  : parameter > 0 for the beta distribution (for a posterior is passed + prior_alpha
+   //          b  : parameter > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta 
+   //
+
+   if (a <= 0 || b <= 0 ) { 
+      gROOT->Error("TEfficiency::BayesianMean","Invalid input parameters - return 0");
+      return 0;
+   }
+
+   Double_t mean =  a / (a + b);
+   return mean; 
+}
+
+//______________________________________________________________________________
+Double_t TEfficiency::BetaMode(Double_t a,Double_t b)
+{
+   // compute the mode of the beta distribution
+   //
+   //Input:    a  : parameter > 0 for the beta distribution (for a posterior is passed + prior_alpha
+   //          b  : parameter > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta 
+   //
+   // note the mode is defined for a Beta(a,b) only if (a,b)>1 (a = passed+alpha; b = total-passed+beta)
+   // return then the following in case (a,b) < 1: 
+   //  if (a==b) return 0.5 (it is really undefined)
+   //  if (a < b) return 0;
+   //  if (a > b) return 1;
+
+   if (a <= 0 || b <= 0 ) { 
+      gROOT->Error("TEfficiency::BayesianMode","Invalid input parameters - return 0");
+      return 0;
+   }
+   if ( a <= 1 || b <= 1) {
+      if ( a < b) return 0;
+      if ( a > b) return 1; 
+      if (a == b) return 0.5; // cannot do otherwise
+   }
+      
+   // since a and b are > 1 here denominator cannot be 0 or < 0
+   Double_t mode =  (a - 1.0) / (a + b -2.0);
+   return mode; 
+}
 //______________________________________________________________________________
 void TEfficiency::Build(const char* name,const char* title)
 {
@@ -1368,7 +1534,10 @@ Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
    //           to the number of effective entries. 
    //- options:
    //
-   // + mode : The mode is returned instead of the default mean of the posterior as best value
+   // + mode : The mode is returned instead of the mean of the posterior as best value
+   //          When using the mode the shortest interval is also computed instead of the central one
+   // + shortest: compute shortest interval (done by default if mode option is set)
+   // + central: compute central interval (done by default if mode option is NOT set)
    //
    //Begin_Html
    //Calculation:
@@ -1473,10 +1642,17 @@ Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
    double b = ntot - ktot + beta; 
 
    double mean = a/(a+b); 
-   double mode = (a-1)/(a+b-2);
+   double mode = BetaMode(a,b);
 
-   up = ROOT::Math::beta_quantile((1+level)/2,a,b);
-   low =  ROOT::Math::beta_quantile((1-level)/2,a,b);
+
+   Bool_t shortestInterval = option.Contains("sh") || ( option.Contains("mode") && !option.Contains("cent") ); 
+
+   if (shortestInterval) 
+      BetaShortestInterval(level, a, b, low, up); 
+   else {
+      low = BetaCentralInterval(level, a, b, false);  
+      up = BetaCentralInterval(level, a, b, true);  
+   }
 
    if (option.Contains("mode")) return mode; 
    return mean; 
@@ -1505,6 +1681,8 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    // + cl=x  : set confidence level (0 < cl < 1). If not specified, the
    //           confidence level of the first TEfficiency object is used.
    // + mode    Use mode of combined posterior as estimated value for the efficiency
+   // + shortest: compute shortest interval (done by default if mode option is set)
+   // + central: compute central interval (done by default if mode option is NOT set)
    // 
    //- n      : number of weights (has to be the number of one-dimensional
    //           TEfficiency objects in pList)
@@ -1910,20 +2088,15 @@ Double_t TEfficiency::GetEfficiency(Int_t bin) const
       
    if(TestBit(kIsBayesian)) { 
 
+      // parameters for the beta prior distribution
+      Double_t alpha = TestBit(kUseBinPrior) ? GetBetaAlpha(bin) : GetBetaAlpha(); 
+      Double_t beta  = TestBit(kUseBinPrior) ? GetBetaBeta(bin)  : GetBetaBeta();
 
-      if (!TestBit(kPosteriorMode) ) {
-         Double_t d = double(total) + fBeta_alpha + fBeta_beta; 
-         return ( d > 0 ) ? (double(passed) + fBeta_alpha)/d : 0;
-      }
-      else {// use posterior mode (make sense only for alpha,beta > 1
-            // otehrwise is undefined for bins with passed = 0 or passed=total 
-         Double_t d = double(total) + fBeta_alpha + fBeta_beta - 2.0; 
-         // treat case when mode can be undefined (a, b) < 1 and one gets value of e outside (0,1)
-         Double_t e = (d > 0 ) ? ( double(passed) + fBeta_alpha - 1.0)/d: 0;
-         if (e < 0) return 0.;
-         if (e > 1.) return 1.;
-         return e; 
-      }
+      if (!TestBit(kPosteriorMode) ) 
+         return BetaMean(double(passed) + alpha , double(total-passed) + beta);
+      else  
+         return BetaMode(double(passed) + alpha , double(total-passed) + beta);
+
    } 
    else
       return (total)? ((Double_t)passed)/total : 0;
@@ -1942,9 +2115,12 @@ Double_t TEfficiency::GetEfficiencyErrorLow(Int_t bin) const
    Int_t passed = (Int_t)fPassedHistogram->GetBinContent(bin);
 
    Double_t eff = GetEfficiency(bin);
+   // parameters for the beta prior distribution
+   Double_t alpha = TestBit(kUseBinPrior) ? GetBetaAlpha(bin) : GetBetaAlpha(); 
+   Double_t beta  = TestBit(kUseBinPrior) ? GetBetaBeta(bin)  : GetBetaBeta();
 
    if(TestBit(kIsBayesian))
-      return (eff - Bayesian(total,passed,fConfLevel,fBeta_alpha,fBeta_beta,false));
+      return (eff - Bayesian(total,passed,fConfLevel,alpha,beta,false,TestBit(kShortestInterval)));
    else
       return (eff - fBoundary(total,passed,fConfLevel,false));
 }
@@ -1962,9 +2138,12 @@ Double_t TEfficiency::GetEfficiencyErrorUp(Int_t bin) const
    Int_t passed = (Int_t)fPassedHistogram->GetBinContent(bin);
 
    Double_t eff = GetEfficiency(bin);
+   // parameters for the beta prior distribution
+   Double_t alpha = TestBit(kUseBinPrior) ? GetBetaAlpha(bin) : GetBetaAlpha(); 
+   Double_t beta  = TestBit(kUseBinPrior) ? GetBetaBeta(bin)  : GetBetaBeta();
 
    if(TestBit(kIsBayesian))
-      return (Bayesian(total,passed,fConfLevel,fBeta_alpha,fBeta_beta,true) - eff);
+      return (Bayesian(total,passed,fConfLevel,alpha,beta,true,TestBit(kShortestInterval)) - eff);
    else
       return fBoundary(total,passed,fConfLevel,true) - eff;
 }
@@ -2432,6 +2611,34 @@ void TEfficiency::SetBetaBeta(Double_t beta)
 }
 
 //______________________________________________________________________________
+void TEfficiency::SetBetaBinParameters(Int_t bin, Double_t alpha, Double_t beta)
+{
+   //sets different  shape parameter Begin_Latex \alpha and \beta End_Latex
+   // for the prior distribution for each bin. By default the global parameter are used if they are not set 
+   // for the specific bin 
+   //The prior probability of the efficiency is given by the beta distribution:
+   //Begin_Latex
+   // f(\varepsilon;\alpha;\beta) = \frac{1}{B(\alpha,\beta)} \varepsilon^{\alpha-1} (1 - \varepsilon)^{\beta-1}
+   //End_Latex
+   //
+   //Note: - both shape parameters have to be positive (i.e. > 0)
+
+   if (!fPassedHistogram || !fTotalHistogram) return;
+   TH1 * h1 = fTotalHistogram;
+   // doing this I get h1->fN which is available only for a TH1D 
+   UInt_t n = h1->GetBin(h1->GetNbinsX()+1, h1->GetNbinsY()+1, h1->GetNbinsZ()+1 ) + 1;
+
+   // in case vector is not created do with defult alpha, beta params
+   if (fBeta_bin_params.size() != n )       
+      fBeta_bin_params = std::vector<std::pair<Double_t, Double_t> >(n, std::make_pair(fBeta_alpha, fBeta_beta) ); 
+
+   // vector contains also values for under/overflows
+   fBeta_bin_params[bin] = std::make_pair(alpha,beta);
+   SetBit(kUseBinPrior,true);
+
+}
+
+//______________________________________________________________________________
 void TEfficiency::SetConfidenceLevel(Double_t level)
 {
    //sets the confidence level (0 < level < 1)
@@ -2599,11 +2806,13 @@ void TEfficiency::SetStatisticOption(EStatOption option)
       fBeta_alpha = 0.5;
       fBeta_beta = 0.5;
       SetBit(kIsBayesian,true);
+      SetBit(kUseBinPrior,false);
       break;
    case kBUniform:
       fBeta_alpha = 1;
       fBeta_beta = 1;
       SetBit(kIsBayesian,true);
+      SetBit(kUseBinPrior,false);
       break;
    case kBBayesian:
       SetBit(kIsBayesian,true);

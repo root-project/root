@@ -373,6 +373,8 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    // - b(a,b): bayesian interval using a prior probability ~Beta(a,b); a,b > 0
    //           (see TEfficiency::Bayesian)
    // - mode  : use mode of posterior for Bayesian interval (default is mean)
+   // - shortest: use shortest interval (done by default if mode is set) 
+   // - central: use central interval (done by default if mode is NOT set)
    // - e0    : plot (in Bayesian case) efficiency and interval for bins where total=0 
    //           (default is to skip them)
    //
@@ -503,6 +505,10 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       option.ReplaceAll("e0","");
    }
 
+   Bool_t useShortestInterval = false; 
+   if (bIsBayesian && ( option.Contains("sh") || (usePosteriorMode && !option.Contains("cen") ) ) ) {
+      useShortestInterval = true; 
+   }
 
    
    //Set the graph to have a number of points equal to the number of histogram
@@ -544,23 +550,22 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
 
       //using bayesian statistics
       if(bIsBayesian) {
-         if (!usePosteriorMode) { 
-            double d = double(t) + alpha + beta; 
-            if( d > 0 )  eff = (p + alpha)/d;
+         double aa = double(p) + alpha; 
+         double bb = double(t-p) + beta; 
+         if (usePosteriorMode) 
+            eff = TEfficiency::BetaMode(aa,bb);
+         else 
+            eff = TEfficiency::BetaMean(aa,bb);
+         
+         if (useShortestInterval) { 
+            TEfficiency::BetaShortestInterval(conf,aa,bb,low,upper);
          }
-         else { // mode of posterior
-            double d = double(t) + alpha + beta - 2.; 
-            if ( d > 0 || d < 0) {
-               eff = (p + alpha - 1)/d;
-               // when alpha,beta < 1 can get values outside (0,1) since mode is undefined
-               if (eff < 0) eff = 0; 
-               if (eff > 1) eff = 1;
-            }
+         else { 
+            low = TEfficiency::BetaCentralInterval(conf,aa,bb,false);
+            upper = TEfficiency::BetaCentralInterval(conf,aa,bb,true);
          }
-      
-	 low = TEfficiency::Bayesian(t,p,conf,alpha,beta,false);
-	 upper = TEfficiency::Bayesian(t,p,conf,alpha,beta,true);
       }
+      // case of non-bayesian statistics
       else {
 	 if(t)
 	    eff = ((Double_t)p)/t;
