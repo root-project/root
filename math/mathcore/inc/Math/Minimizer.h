@@ -17,9 +17,9 @@
 #include "Math/IFunction.h"
 #endif
 
-// #ifndef ROOT_Math_Util
-// #include "Math/Util.h"
-// #endif
+#ifndef ROOT_Math_MinimizerOptions
+#include "Math/MinimizerOptions.h"
+#endif
 
 
 #include <vector> 
@@ -28,10 +28,6 @@
 #include <limits> 
 #include <cmath>
 
-//#define DEBUG
-#ifdef DEBUG
-#include <iostream> 
-#endif
 
 namespace ROOT { 
    
@@ -83,18 +79,14 @@ public:
    */ 
    Minimizer () : 
       fValidError(false),
-#ifndef DEBUG
-      fDebug(0), 
-#else
-      fDebug(3),
-#endif 
-      fStrategy(1),
+      fDebug(MinimizerOptions::DefaultPrintLevel()), 
+      fStrategy(MinimizerOptions::DefaultStrategy()), 
       fStatus(-1),
-      fMaxCalls(0), 
-      fMaxIter(0),
-      fTol(1.E-6), 
-      fPrec(-1),
-      fUp(1.)
+      fMaxCalls(MinimizerOptions::DefaultMaxFunctionCalls()), 
+      fMaxIter(MinimizerOptions::DefaultMaxIterations()), 
+      fTol(MinimizerOptions::DefaultTolerance()), 
+      fPrec(MinimizerOptions::DefaultPrecision()), 
+      fUp(MinimizerOptions::DefaultErrorDef() )
    {} 
 
    /** 
@@ -141,11 +133,6 @@ public:
    int SetVariables(const VariableIterator & begin, const VariableIterator & end) { 
       unsigned int ivar = 0; 
       for ( VariableIterator vitr = begin; vitr != end; ++vitr) { 
-#ifdef DEBUG
-         std::cout << "adding variable " << ivar << "  " << vitr->Name(); 
-         if (vitr->IsDoubleBound() ) std::cout << " bounded to [ " <<  vitr->LowerLimit() << " , " <<  vitr->UpperLimit() << " ] ";
-         std::cout << std::endl; 
-#endif
          bool iret = false; 
          if (vitr->IsFixed() )
             iret = SetFixedVariable(ivar,  vitr->Name(), vitr->Value() ); 
@@ -159,14 +146,8 @@ public:
             iret = SetVariable( ivar, vitr->Name(), vitr->Value(), vitr->StepSize() ); 
 
          if (iret) ivar++; 
-#ifdef DEBUG
-         if (iret) 
-            std::cout << "Added variable " << vitr->Name() << " val = " << vitr->Value() << " step " << vitr->StepSize() 
-                      << std::endl; 
-         else 
-            std::cout << "Failed to Add variable " << vitr->Name() << std::endl; 
-#endif
 
+         // an error message should be eventually be reported in the virtual single SetVariable methods
       }
       return ivar; 
    }
@@ -365,7 +346,27 @@ public:
    /// flag to check if minimizer needs to perform accurate error analysis (e.g. run Hesse for Minuit)
    void SetValidError(bool on) { fValidError = on; } 
 
+   /// set all options in one go
+   void SetOptions(const ROOT::Math::MinimizerOptions & opt) { 
+      fDebug = opt.PrintLevel();
+      fStrategy = opt.Strategy();
+      fMaxCalls = opt.MaxFunctionCalls();
+      fMaxIter = opt.MaxIterations();
+      fTol = opt.Tolerance();
+      fPrec = opt.Precision();
+      fUp = opt.ErrorDef();
+   }
 
+   /// reset the defaut options (defined in MinimizerOptions)
+   void SetDefaultOptions() { 
+      fDebug = MinimizerOptions::DefaultPrintLevel();
+      fStrategy = MinimizerOptions::DefaultStrategy();
+      fMaxCalls = MinimizerOptions::DefaultMaxFunctionCalls();
+      fMaxIter = MinimizerOptions::DefaultMaxIterations();
+      fTol = MinimizerOptions::DefaultTolerance();
+      fPrec = MinimizerOptions::DefaultPrecision();
+      fUp = MinimizerOptions::DefaultErrorDef();
+   }
 
 protected: 
 
