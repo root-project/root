@@ -25,16 +25,12 @@
 #include "TString.h"
 #include <stdlib.h>
 #include <string.h>
-#include <string>
 
 ClassImp(TXMLEngine);
 
 struct SXmlAttr_t {
-   SXmlAttr_t(const char *name, const char *value): fNext(0), fName(name), fValue(value) {}
-   SXmlAttr_t(Ssiz_t namelen, Ssiz_t valuelen): fNext(0), fName(namelen), fValue(valuelen) {}
    SXmlAttr_t  *fNext;
-   TString      fName;   // this is the attribute name, if 0 this is special attribute
-   TString      fValue;  // This is the attribute value
+   char         fName; // this is first symbol of attribute name, if 0 this is special attribute
 };
 
 enum EXmlNodeType {
@@ -45,27 +41,14 @@ enum EXmlNodeType {
 };
 
 struct SXmlNode_t {
-   SXmlNode_t(const char *name) : fType(kXML_NODE), fAttr(0), fNs(0), fNext(0), fChild(0), fLastChild(0), fParent(0), fName(name) {}
-   
-   EXmlNodeType fType;      //  this is node type - node, comment, processing instruction and so on
-   SXmlAttr_t  *fAttr;      // first attribute 
-   SXmlAttr_t  *fNs;        // name space definition (if any)
-   SXmlNode_t  *fNext;      // next node on the same level of hierarchy 
-   SXmlNode_t  *fChild;     // first child node
+   EXmlNodeType fType;    //  this is node type - node, comment, processing instruction and so on
+   SXmlAttr_t  *fAttr;    // first attribute 
+   SXmlAttr_t  *fNs;      // name space definition (if any)
+   SXmlNode_t  *fNext;    // next node on the same level of hierarchy 
+   SXmlNode_t  *fChild;   // first child node
    SXmlNode_t  *fLastChild; // last child node
-   SXmlNode_t  *fParent;    // parent node
-   TString      fName;      // this is node name if any
-   TString      fContent;   // This is the content if any
-   
-   void AddAttribute(SXmlAttr_t *attr) {
-      if (fAttr==0)
-         fAttr = attr;
-      else {
-         SXmlAttr_t* d = fAttr;
-         while (d->fNext!=0) d = d->fNext;
-         d->fNext = attr;
-      }
-   }      
+   SXmlNode_t  *fParent;   // parent node
+   char         fName;    // this is start of node name, if 0 next byte is start of content
 };
 
 struct SXmlDoc_t {
@@ -412,7 +395,7 @@ Bool_t TXMLEngine::HasAttr(XMLNodePointer_t xmlnode, const char* name)
    if (xmlnode==0) return kFALSE;
    SXmlAttr_t* attr = ((SXmlNode_t*)xmlnode)->fAttr;
    while (attr!=0) {
-      if ( attr->fName == name ) return kTRUE;
+      if (strcmp(&(attr->fName),name)==0) return kTRUE;
       attr = attr->fNext;
    }
    return kFALSE;
@@ -426,8 +409,8 @@ const char* TXMLEngine::GetAttr(XMLNodePointer_t xmlnode, const char* name)
    if (xmlnode==0) return 0;
    SXmlAttr_t* attr = ((SXmlNode_t*)xmlnode)->fAttr;
    while (attr!=0) {
-      if ( attr->fName == name )
-         return attr->fValue.Data();
+      if (strcmp(&(attr->fName),name)==0)
+         return &(attr->fName) + strlen(name) + 1;
       attr = attr->fNext;
    }
    return 0;
@@ -454,7 +437,16 @@ XMLAttrPointer_t TXMLEngine::NewAttr(XMLNodePointer_t xmlnode, XMLNsPointer_t,
 
    if (xmlnode==0) return 0;
 
-   SXmlAttr_t* attr = (SXmlAttr_t*) AllocateAttr(name, value, xmlnode);
+   int namelen = strlen(name), valuelen = strlen(value);
+   SXmlAttr_t* attr = (SXmlAttr_t*) AllocateAttr(namelen, valuelen, xmlnode);
+
+   char* attrname = &(attr->fName);
+   strcpy(attrname, name);
+   attrname += (namelen + 1);
+   if ((value!=0) && (valuelen>0))
+      strcpy(attrname, value);
+   else
+      *attrname=0;
 
    return (XMLAttrPointer_t) attr;
 }
@@ -480,13 +472,13 @@ void TXMLEngine::FreeAttr(XMLNodePointer_t xmlnode, const char* name)
    SXmlAttr_t* attr = ((SXmlNode_t*) xmlnode)->fAttr;
    SXmlAttr_t* prev = 0;
    while (attr!=0) {
-      if ( attr->fName == name) {
+      if (strcmp(&(attr->fName),name)==0) {
          if (prev!=0)
             prev->fNext = attr->fNext;
          else
             ((SXmlNode_t*) xmlnode)->fAttr = attr->fNext;
          //fNumNodes--;
-         delete attr;
+         free(attr);
          return;
       }
 
@@ -505,7 +497,7 @@ void TXMLEngine::FreeAllAttr(XMLNodePointer_t xmlnode)
    SXmlAttr_t* attr = node->fAttr;
    while (attr!=0) {
       SXmlAttr_t* next = attr->fNext;
-      delete attr;
+      free(attr);
       attr = next;
    }
    node->fAttr = 0;
@@ -543,7 +535,7 @@ const char* TXMLEngine::GetAttrName(XMLAttrPointer_t xmlattr)
 
    if (xmlattr==0) return 0;
 
-   return ((SXmlAttr_t*) xmlattr)->fName.Data();
+   return &(((SXmlAttr_t*) xmlattr)->fName);
    
 }
 
@@ -554,7 +546,8 @@ const char* TXMLEngine::GetAttrValue(XMLAttrPointer_t xmlattr)
    
    if (xmlattr==0) return 0;
    
-   return ((SXmlAttr_t*) xmlattr)->fValue.Data();
+   const char* attrname = &(((SXmlAttr_t*) xmlattr)->fName);
+   return attrname + strlen(attrname) + 1;
 }
 
 //______________________________________________________________________________
@@ -563,14 +556,19 @@ XMLNodePointer_t TXMLEngine::NewChild(XMLNodePointer_t parent, XMLNsPointer_t ns
 {
    // create new child element for parent node
 
-   SXmlNode_t* node = (SXmlNode_t*) AllocateNode(name, parent);
+   SXmlNode_t* node = (SXmlNode_t*) AllocateNode(strlen(name), parent);
 
+   strcpy(&(node->fName), name);
    node->fNs = (SXmlAttr_t*) ns;
    if (content!=0) {
       int contlen = strlen(content);
       if (contlen>0) {
-         SXmlNode_t* contnode = (SXmlNode_t*) AllocateNode(0, node);
-         contnode->fContent = content;
+         SXmlNode_t* contnode = (SXmlNode_t*) AllocateNode(contlen+1, node);
+         char* cptr = &(contnode->fName);
+         // first zero indicate that this is just content value
+         *cptr = 0;
+         cptr++;
+         strcpy(cptr,content);
       }
    }
 
@@ -584,9 +582,10 @@ XMLNsPointer_t TXMLEngine::NewNS(XMLNodePointer_t xmlnode, const char* reference
    // namespace attribute will be always the first in list of node attributes
 
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
-   if (name==0) name = node->fName.Data();
-   TString nsname("xmlns:");
-   nsname += name;
+   if (name==0) name = &(node->fName);
+   char* nsname = new char[strlen(name)+7];
+   strcpy(nsname, "xmlns:");
+   strcat(nsname, name);
 
    SXmlAttr_t* first = node->fAttr;
    node->fAttr = 0;
@@ -597,6 +596,7 @@ XMLNsPointer_t TXMLEngine::NewNS(XMLNodePointer_t xmlnode, const char* reference
    nsattr->fNext = first;
 
    node->fNs = nsattr;
+   delete[] nsname;
    return (XMLNsPointer_t) nsattr;
 }
 
@@ -676,8 +676,9 @@ Bool_t TXMLEngine::AddComment(XMLNodePointer_t xmlnode, const char* comment)
    
    if ((xmlnode==0) || (comment==0)) return kFALSE;
    
-   SXmlNode_t* node = (SXmlNode_t*) AllocateNode(comment, xmlnode);
+   SXmlNode_t* node = (SXmlNode_t*) AllocateNode(strlen(comment), xmlnode);
    node->fType = kXML_COMMENT;
+   strcpy(&(node->fName), comment);
    
    return kTRUE;
 }
@@ -708,8 +709,9 @@ Bool_t TXMLEngine::AddRawLine(XMLNodePointer_t xmlnode, const char* line)
 
    if ((xmlnode==0) || (line==0)) return kFALSE;
    
-   SXmlNode_t* node = (SXmlNode_t*) AllocateNode(line, xmlnode);
+   SXmlNode_t* node = (SXmlNode_t*) AllocateNode(strlen(line), xmlnode);
    node->fType = kXML_RAWLINE;
+   strcpy(&(node->fName), line);
    
    return kTRUE;
 }
@@ -753,8 +755,9 @@ Bool_t TXMLEngine::AddStyleSheet(XMLNodePointer_t xmlnode,
    
    const char* nodename = "xml-stylesheet";
    
-   SXmlNode_t* node = (SXmlNode_t*) AllocateNode(nodename, xmlnode);
+   SXmlNode_t* node = (SXmlNode_t*) AllocateNode(strlen(nodename), xmlnode);
    node->fType = kXML_PI_NODE;
+   strcpy(&(node->fName), nodename);
    
    if (alternate>=0)
      NewAttr(node, 0, "alternate", (alternate>0) ? "yes" : "no");
@@ -840,11 +843,14 @@ void TXMLEngine::FreeNode(XMLNodePointer_t xmlnode)
    while (attr!=0) {
       SXmlAttr_t* next = attr->fNext;
       //fNumNodes--;
-      delete attr;
+      free(attr);
       attr = next;
    }
 
-   delete node;
+   //delete[] node->fName;
+   // delete[] node->content;
+   free(node);
+
    //fNumNodes--;
 }
 
@@ -862,7 +868,7 @@ const char* TXMLEngine::GetNodeName(XMLNodePointer_t xmlnode)
 {
    // returns name of xmlnode
 
-   return xmlnode==0 ? 0 : ((SXmlNode_t*) xmlnode)->fName.Data();
+   return xmlnode==0 ? 0 : & (((SXmlNode_t*) xmlnode)->fName);
 }
 
 //______________________________________________________________________________
@@ -872,8 +878,8 @@ const char* TXMLEngine::GetNodeContent(XMLNodePointer_t xmlnode)
 
    if (xmlnode==0) return 0;
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
-   if ((node->fChild==0) || (node->fChild->fName.Length()!=0)) return 0;
-   return node->fChild->fContent.Data();
+   if ((node->fChild==0) || (node->fChild->fName!=0)) return 0;
+   return &(node->fChild->fName) + 1;
 }
 
 //______________________________________________________________________________
@@ -883,7 +889,7 @@ XMLNodePointer_t TXMLEngine::GetChild(XMLNodePointer_t xmlnode)
 
    SXmlNode_t* res = xmlnode==0 ? 0 :((SXmlNode_t*) xmlnode)->fChild;
    // skip content node
-   if ((res!=0) && (res->fName.Length()==0)) res = res->fNext;
+   if ((res!=0) && (res->fName==0)) res = res->fNext;
    return (XMLNodePointer_t) res;
 }
 
@@ -1170,7 +1176,7 @@ char* TXMLEngine::Makestr(const char* str)
    int len = strlen(str);
    if (len==0) return 0;
    char* res = new char[len+1];
-   strncpy(res, str, len+1);
+   strcpy(res, str);
    return res;
 }
 
@@ -1187,13 +1193,21 @@ char* TXMLEngine::Makenstr(const char* str, int len)
 }
 
 //______________________________________________________________________________
-XMLNodePointer_t TXMLEngine::AllocateNode(const char *name, XMLNodePointer_t parent)
+XMLNodePointer_t TXMLEngine::AllocateNode(int namelen, XMLNodePointer_t parent)
 {
    // Allocates new xml node with specified namelength
 
    //fNumNodes++;
 
-   SXmlNode_t* node = new SXmlNode_t(name);
+   SXmlNode_t* node = (SXmlNode_t*) malloc(sizeof(SXmlNode_t) + namelen);
+
+   node->fType = kXML_NODE;
+   node->fParent = 0;
+   node->fNs = 0;
+   node->fAttr = 0;
+   node->fChild = 0;
+   node->fLastChild = 0;
+   node->fNext = 0;
 
    if (parent!=0)
       AddChild(parent, (XMLNodePointer_t) node);
@@ -1202,32 +1216,26 @@ XMLNodePointer_t TXMLEngine::AllocateNode(const char *name, XMLNodePointer_t par
 }
 
 //______________________________________________________________________________
-XMLAttrPointer_t TXMLEngine::AllocateAttr(const char *name, const char *value, XMLNodePointer_t xmlnode)
+XMLAttrPointer_t TXMLEngine::AllocateAttr(int namelen, int valuelen, XMLNodePointer_t xmlnode)
 {
    // Allocate new attribute with specified name length and value length
-   
-   //fNumNodes++;
-   
-   SXmlAttr_t* attr = new SXmlAttr_t(name,value);
-   
-   SXmlNode_t* node = (SXmlNode_t*) xmlnode;
-   node->AddAttribute(attr);
-   
-   return (XMLAttrPointer_t) attr;
-}
 
-//______________________________________________________________________________
-XMLAttrPointer_t TXMLEngine::AllocateAttr(Ssiz_t namelen, Ssiz_t valuelen, XMLNodePointer_t xmlnode)
-{
-   // Allocate new attribute with specified name length and value length
-   
    //fNumNodes++;
-   
-   SXmlAttr_t* attr = new SXmlAttr_t(namelen,valuelen);
-   
+
+   SXmlAttr_t* attr = (SXmlAttr_t*) malloc(sizeof(SXmlAttr_t) + namelen + valuelen + 1);
+
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
-   node->AddAttribute(attr);
-   
+
+   attr->fNext = 0;
+
+   if (node->fAttr==0)
+      node->fAttr = attr;
+   else {
+      SXmlAttr_t* d = node->fAttr;
+      while (d->fNext!=0) d = d->fNext;
+      d->fNext = attr;
+   }
+
    return (XMLAttrPointer_t) attr;
 }
 
@@ -1239,7 +1247,7 @@ XMLNsPointer_t TXMLEngine::FindNs(XMLNodePointer_t xmlnode, const char* name)
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
    while (node!=0) {
       if (node->fNs!=0) {
-         const char* nsname = node->fNs->fName.Data() + 6;
+         const char* nsname = &(node->fNs->fName) + 6;
          if (strcmp(nsname, name)==0) return node->fNs;
       }
       node = node->fParent;
@@ -1254,10 +1262,13 @@ void TXMLEngine::TruncateNsExtension(XMLNodePointer_t xmlnode)
 
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
    if (node==0) return;
-   Ssiz_t colon = node->fName.First(':');
-   if (colon==kNPOS) return;
+   char* colon = strchr(&(node->fName),':');
+   if (colon==0) return;
 
-   node->fName.Remove( colon );
+   char* copyname = &(node->fName);
+
+   while (*colon!=0)
+     *(copyname++) = *(++colon);
 }
 
 //______________________________________________________________________________
@@ -1325,8 +1336,8 @@ void TXMLEngine::SaveNode(XMLNodePointer_t xmlnode, TXMLOutputStream* out, Int_t
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
 
    // this is output for content
-   if (node->fName.Length()==0) {
-      out->Write(node->fContent.Data());
+   if (node->fName==0) {
+      out->Write(&(node->fName)+1);
       return;
    }
    
@@ -1336,13 +1347,13 @@ void TXMLEngine::SaveNode(XMLNodePointer_t xmlnode, TXMLOutputStream* out, Int_t
 
    if (node->fType==kXML_COMMENT) {
       out->Write("<!--");
-      out->Write(node->fName.Data());
+      out->Write(&(node->fName));
       out->Write("-->");
       if (layout>0) out->Put('\n');
       return;
    } else
    if (node->fType==kXML_RAWLINE) {
-      out->Write(node->fName.Data());
+      out->Write(&(node->fName));
       if (layout>0) out->Put('\n');
       return; 
    }
@@ -1352,17 +1363,19 @@ void TXMLEngine::SaveNode(XMLNodePointer_t xmlnode, TXMLOutputStream* out, Int_t
    
    // we suppose that ns is always first attribute
    if ((node->fNs!=0) && (node->fNs!=node->fAttr)) {
-      out->Write(node->fNs->fName.Data()+6);
+      out->Write(&(node->fNs->fName)+6);
       out->Put(':');
    }
-   out->Write(node->fName.Data());
+   out->Write(&(node->fName));
 
    SXmlAttr_t* attr = node->fAttr;
    while (attr!=0) {
       out->Put(' ');
-      out->Write(attr->fName.Data());
+      char* attrname = &(attr->fName);
+      out->Write(attrname);
       out->Write("=\"");
-      OutputValue((char*)attr->fValue.Data(), out);
+      attrname += strlen(attrname) + 1;
+      OutputValue(attrname, out);
       out->Put('\"');
       attr = attr->fNext;
    }
@@ -1400,10 +1413,10 @@ void TXMLEngine::SaveNode(XMLNodePointer_t xmlnode, TXMLOutputStream* out, Int_t
    out->Write("</");
    // we suppose that ns is always first attribute
    if ((node->fNs!=0) && (node->fNs!=node->fAttr)) {
-      out->Write(node->fNs->fName.Data()+6);
+      out->Write(&(node->fNs->fName)+6);
       out->Put(':');
    }
-   out->Write(node->fName.Data());
+   out->Write(&(node->fName));
    out->Put('>');
    if (layout>0) out->Put('\n');
 }
@@ -1431,15 +1444,14 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
       if (commentlen<=0) { resvalue = -10; return 0; }
 
       if (!fSkipComments) {
-         node = (SXmlNode_t*) AllocateNode(0, xmlparent);
-         node->fName.Resize(commentlen);
-         char* nameptr = (char*)node->fName.Data();
+         node = (SXmlNode_t*) AllocateNode(commentlen, xmlparent);
+         char* nameptr = &(node->fName);
          node->fType = kXML_COMMENT;
          strncpy(nameptr, inp->fCurrent, commentlen);
-         nameptr += commentlen;
+         nameptr+=commentlen;
          *nameptr = 0;
       }
-      
+
       if (!inp->ShiftCurrent(commentlen+3)) { resvalue = -1; return node; }
       if (!inp->SkipSpaces()) { resvalue = -1; return node; }
 
@@ -1454,9 +1466,10 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
       int contlen = inp->LocateContent();
       if (contlen<0) return 0;
 
-      SXmlNode_t* contnode = (SXmlNode_t*) AllocateNode(0,xmlparent);
-      contnode->fContent.Resize(contlen);
-      char* contptr = (char*)contnode->fContent.Data();
+      SXmlNode_t* contnode = (SXmlNode_t*) AllocateNode(contlen+1, xmlparent);
+      char* contptr = &(contnode->fName);
+      *contptr = 0;
+      contptr++;
       UnpackSpecialCharacters(contptr, inp->fCurrent, contlen);
       if (!inp->ShiftCurrent(contlen)) return 0;
       resvalue = 2;
@@ -1474,7 +1487,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
 
       if (parent==0) { resvalue = -4; return 0; }
 
-      if ( strncmp(parent->fName.Data(), inp->fCurrent, len)!=0) {
+      if (strncmp(&(parent->fName), inp->fCurrent, len)!=0) {
          resvalue = -5;
          return 0;
       }
@@ -1508,19 +1521,18 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
    if (!inp->SkipSpaces()) return 0;
    Int_t len = inp->LocateIdentifier();
    if (len<=0) return 0;
-   node = (SXmlNode_t*) AllocateNode(0, xmlparent);
-   node->fName.Resize(len);
-   char* nameptr = (char*)node->fName.Data();
+   node = (SXmlNode_t*) AllocateNode(len, xmlparent);
+   char* nameptr = &(node->fName);
    node->fType = nodetype;
 
    strncpy(nameptr, inp->fCurrent, len);
    nameptr+=len;
    *nameptr = 0;
    
-   char* colon = strchr((char*)node->fName.Data(),':');
+   char* colon = strchr(&(node->fName),':');
    if ((colon!=0) && (parent!=0)) {
       *colon = 0;
-      node->fNs = (SXmlAttr_t*) FindNs(xmlparent, node->fName.Data());
+      node->fNs = (SXmlAttr_t*) FindNs(xmlparent, &(node->fName));
       *colon =':';
    }
 
@@ -1568,18 +1580,19 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
 
          SXmlAttr_t* attr = (SXmlAttr_t*) AllocateAttr(attrlen, valuelen-3, (XMLNodePointer_t) node);
 
-         attr->fName.Resize(attrlen);
-         char* attrname = (char*)attr->fName.Data();
+         char* attrname = &(attr->fName);
          strncpy(attrname, inp->fCurrent, attrlen);
-         attrname[attrlen] = '\0';
-         attr->fValue.Resize(valuelen-3);
-         char* attrvalue = (char*)attr->fValue.Data();
-         UnpackSpecialCharacters(attrvalue, valuestart+2, valuelen-3);
+         attrname+=attrlen;
+         *attrname = 0;
+         attrname++;
+         UnpackSpecialCharacters(attrname, valuestart+2, valuelen-3);
 
          if (!inp->ShiftCurrent(attrlen+valuelen)) return 0;
 
+         attrname = &(attr->fName);
+
          if ((strlen(attrname)>6) && (strstr(attrname,"xmlns:")==attrname)) {
-            if (strcmp(node->fName.Data(), attrname + 6)!=0) {
+            if (strcmp(&(node->fName), attrname + 6)!=0) {
                resvalue = -8;
                //return 0;
             }
