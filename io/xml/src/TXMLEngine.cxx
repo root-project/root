@@ -1086,11 +1086,8 @@ XMLDocPointer_t TXMLEngine::ParseStream(TXMLInputStream* inp)
       
       if (resvalue!=2) break;
 
-      if (!inp->EndOfStream()) {
-         if (!inp->SkipSpaces()) { 
-            resvalue = -1; break; 
-         }
-      }
+      if (!inp->EndOfStream()) inp->SkipSpaces();
+
       if (inp->EndOfStream()) {
          success = true; 
          break;
