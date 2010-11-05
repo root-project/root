@@ -95,18 +95,42 @@ public:
    int SaveToFile(const char *file);
 };
 
+class XpdEnv {
+public:
+   XrdOucString   fName;
+   XrdOucString   fEnv;
+   XrdOucString   fUsers;
+   XrdOucString   fGroups;
+   int            fSvnMin;
+   int            fSvnMax;
+   int            fVerMin;
+   int            fVerMax;
+   XpdEnv(const char *n, const char *env, const char *usr = 0, const char *grp = 0,
+          int smi = -1, int smx = -1, int vmi = -1, int vmx = -1) :
+          fName(n), fEnv(env), fUsers(usr), fGroups(grp),
+          fSvnMin(smi), fSvnMax(smx), fVerMin(vmi), fVerMax(vmx) { }
+   void Reset(const char *n, const char *env, const char *usr = 0, const char *grp = 0,
+              int smi = -1, int smx = -1, int vmi = -1, int vmx = -1) {
+              fName = n; fEnv = env; fUsers = usr; fGroups = grp;
+              fSvnMin = smi; fSvnMax = smx; fVerMin = vmi; fVerMax = vmx; }
+   int Matches(const char *usr, const char *grp, int svn = -1, int ver = -1);
+   void Print(const char *what);
+   static int     ToVersCode(int ver, bool hex = 0);       
+};
+
 class XrdProofdProofServMgr : public XrdProofdConfig {
 
    XrdProofdManager  *fMgr;
    XrdSysRecMutex     fMutex;
    XrdSysRecMutex     fRecoverMutex;
+   XrdSysRecMutex     fEnvsMutex;    // Protect usage of envs lists
    XrdSysSemWait      fForkSem;   // To serialize fork requests
    XrdSysSemWait      fProcessSem;   // To serialize process requests
    XrdSysLogger      *fLogger;    // Error logger
    int                fInternalWait;   // Timeout on replies from proofsrv
    XrdOucString       fProofPlugin;    // String identifying the plug-in to be loaded, e.g. "condor:"
-   std::list<XrdOucString> fProofServEnvs;  // Additional envs to be exported before proofserv
-   std::list<XrdOucString> fProofServRCs;   // Additional rcs to be passed to proofserv
+   std::list<XpdEnv>  fProofServEnvs;  // Additional envs to be exported before proofserv
+   std::list<XpdEnv>  fProofServRCs;   // Additional rcs to be passed to proofserv
 
    int                fShutdownOpt;    // What to do when a client disconnects
    int                fShutdownDelay;  // Delay shutdown by this (if enabled)
@@ -139,6 +163,13 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
    int                DoDirectivePutEnv(char *, XrdOucStream *, bool);
    int                DoDirectivePutRc(char *, XrdOucStream *, bool);
    int                DoDirectiveShutdown(char *, XrdOucStream *, bool);
+   void               ExtractEnv(char *, XrdOucStream *,
+                                 XrdOucString &users, XrdOucString &groups,
+                                 XrdOucString &rcval, XrdOucString &rcnam,
+                                 int &smi, int &smx, int &vmi, int &vmx, bool &hex);
+   void               FillEnvList(std::list<XpdEnv> *el, const char *nam, const char *val,
+                                  const char *usrs = 0, const char *grps = 0,
+                                  int smi = -1, int smx = -1, int vmi = -1, int vmx = -1, bool hex = 0);
 
    int                PrepareSessionRecovering();
    int                ResolveSession(const char *fpid);

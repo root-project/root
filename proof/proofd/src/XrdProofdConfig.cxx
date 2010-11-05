@@ -63,10 +63,12 @@ void XrdProofdConfig::SetCfgEDest(const char *fn, XrdSysError *edest)
 }
 
 //__________________________________________________________________________
-bool XrdProofdConfig::ReadFile()
+bool XrdProofdConfig::ReadFile(bool update)
 {
    // Return true if the file has never been read or did change since last
    // reading, false otherwise.
+   // If update is true, the modification time is updated, so next call will
+   // return 0.
    XPDLOC(ALL, "Config::ReadFile")
 
    // If we have a file, record the time of last change
@@ -83,8 +85,8 @@ bool XrdProofdConfig::ReadFile()
       if (st.st_mtime <= fCfgFile.fMtime)
          return 0;
 
-      // Save the modification time
-      fCfgFile.fMtime = st.st_mtime;
+      // Save the modification time, if requested
+      if (update) fCfgFile.fMtime = st.st_mtime;
 
       // Never read or changed: read it again
       return 1;
