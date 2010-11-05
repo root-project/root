@@ -1019,7 +1019,7 @@ void TString::ReadBuffer(char *&buffer)
       nchars = nwh;
 
    if (nchars < 0) {
-      Printf("Error in TString::ReadBuffer, found case with nwh=%d and nchars=%d", nwh, nchars);
+      Error("ReadBuffer", "found case with nwh=%d and nchars=%d", nwh, nchars);
       return;
    }
    fData = TStringRef::GetRep(nchars, nchars)->Data();
