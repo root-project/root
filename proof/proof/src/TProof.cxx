@@ -4001,6 +4001,9 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
             gProofServ->ReleaseWorker(ord.Data());
          }
       }
+   } else if (TestBit(TProof::kIsClient) && !strcmp(reason, kPROOF_WorkerIdleTO)) {
+      // We are invalid after this
+      fValid = kFALSE;
    }
 
    fActiveSlaves->Remove(wrk);
