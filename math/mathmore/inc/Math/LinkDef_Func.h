@@ -48,7 +48,8 @@
 #pragma link C++ function ROOT::Math::tdistribution_quantile_c(double,double);
 #pragma link C++ function ROOT::Math::tdistribution_quantile(double,double);
 
-#pragma link C++ function ROOT::Math::chisquared_quantile(double,double);
-#pragma link C++ function ROOT::Math::gamma_quantile(double,double,double);
+#pragma link C++ namespace ROOT::MathMore;
+#pragma link C++ function ROOT::MathMore::chisquared_quantile(double,double);
+#pragma link C++ function ROOT::MathMore::gamma_quantile(double,double,double);
 
 #endif

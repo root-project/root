@@ -9,21 +9,6 @@ namespace Math {
 
 
 
-
-  double chisquared_quantile(double z, double r) {
-
-    return gsl_cdf_chisq_Pinv(z, r);
-
-  }
-
-
-  double gamma_quantile(double z, double alpha, double theta) {
-
-    return gsl_cdf_gamma_Pinv(z, alpha, theta);
-
-  }
-
-
   double tdistribution_quantile_c(double z, double r) {
 
     return gsl_cdf_tdist_Qinv(z, r);
@@ -38,10 +23,24 @@ namespace Math {
 
   }
 
-
-
-
-
-
 } // namespace Math
+
+namespace MathMore  {
+   // re-impelment some function already existing in MathCore (defined in ROOT::Math namespace)
+
+  double chisquared_quantile(double z, double r) {
+
+    return gsl_cdf_chisq_Pinv(z, r);
+
+  }
+
+
+  double gamma_quantile(double z, double alpha, double theta) {
+
+    return gsl_cdf_gamma_Pinv(z, alpha, theta);
+
+  }
+
+} // namespace MathMore
+
 } // namespace ROOT

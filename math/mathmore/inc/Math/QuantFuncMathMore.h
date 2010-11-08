@@ -82,45 +82,6 @@ namespace Math {
   //@{
 
 
-
-
-
-  /**
-
-  Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
-  function of the lower tail of the \f$\chi^2\f$ distribution 
-  with \f$r\f$ degrees of freedom (#chisquared_cdf). For detailed description see 
-  <A HREF="http://mathworld.wolfram.com/Chi-SquaredDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC303">GSL</A>.
-
-  @ingroup QuantFunc
-
-  */
-
-  double chisquared_quantile(double z, double r);
-
-
-
-
-  /**
-
-  Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
-  function of the lower tail of the gamma distribution
-  (#gamma_cdf). For detailed description see 
-  <A HREF="http://mathworld.wolfram.com/GammaDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC300">GSL</A>.
-  
-  @ingroup QuantFunc
-
-  */
-
-  double gamma_quantile(double z, double alpha, double theta);
-
-
-
-
   /**
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
@@ -154,6 +115,7 @@ namespace Math {
 
   double tdistribution_quantile(double z, double r);
 
+
 #ifdef HAVE_OLD_STAT_FUNC
 
   //@}
@@ -182,6 +144,47 @@ namespace Math {
 
 
 } // namespace Math
+
+namespace MathMore {
+
+
+
+  /**
+
+  Re-implementation in MathMore of the Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
+  function of the lower tail of the \f$\chi^2\f$ distribution 
+  with \f$r\f$ degrees of freedom (#chisquared_cdf). For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/Chi-SquaredDistribution.html">
+  Mathworld</A>. The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC303">GSL</A>.
+
+  @ingroup QuantFunc
+
+  */
+
+  double chisquared_quantile(double z, double r);
+
+
+
+
+  /**
+
+  Re-implementation in MathMore of the Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
+  function of the lower tail of the gamma distribution
+  (#gamma_cdf). For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/GammaDistribution.html">
+  Mathworld</A>. The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC300">GSL</A>.
+  
+  @ingroup QuantFunc
+
+  */
+
+  double gamma_quantile(double z, double alpha, double theta);
+
+
+
+} // end namespace MathMore
 } // namespace ROOT
 
 

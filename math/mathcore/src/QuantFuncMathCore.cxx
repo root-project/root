@@ -64,12 +64,11 @@ namespace Math {
    }
 
 
-#ifndef R__HAS_MATHMORE
    double chisquared_quantile(double z, double r) {
-      // use Cephes (probably large error for z approx 1) 
+      // if possible, should use MathMore function ROOT::Math::chisquared_quantile for z close to zero 
+      // otherwise will always return zero for z  value smaller than eps 
       return 2.* ROOT::Math::Cephes::igami( 0.5 *r, 1. - z); 
    }
-#endif
 
 
    double exponential_quantile_c(double z, double lambda) {
@@ -116,12 +115,11 @@ namespace Math {
 
    }
 
-#ifndef R__HAS_MATHMORE
    double gamma_quantile(double z, double alpha, double theta) {
-      // use gamma_quantile_c (large error for z close to 1)
+      // if possible, should use MathMore function ROOT::Math::gamma_quantile for z close to zero 
+      // otherwise will always return zero for z  value smaller than eps 
       return theta * ROOT::Math::Cephes::igami( alpha, 1.- z); 
    }
-#endif
 
 
 

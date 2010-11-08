@@ -27,11 +27,6 @@
 #ifndef ROOT_Math_QuantFuncMathCore
 #define ROOT_Math_QuantFuncMathCore
 
-// required for R__HAS_MATHMORE
-#ifndef ROOT_RConfigure
-#include "RConfigure.h"
-#endif
-
 
 namespace ROOT {
 namespace Math {
@@ -206,8 +201,6 @@ namespace Math {
 
 
 
-#ifndef R__HAS_MATHMORE
-
    /**
 
       Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
@@ -216,15 +209,14 @@ namespace Math {
       <A HREF="http://mathworld.wolfram.com/Chi-SquaredDistribution.html">
       Mathworld</A>. 
       It is implemented using  chisquared_quantile_c, therefore is not very precise for small z. 
-      It is reccomended to use the MathMore function implemented using GSL
+      It is reccomended to use the MathMore function (ROOT::MathMore::chisquared_quantile )implemented using GSL
 
-      @ingroup QuantFunc_def_in_MathMore
+      @ingroup QuantFunc
 
    */
 
    double chisquared_quantile(double z, double r);  
 
-#endif
 
 
    /**
@@ -310,7 +302,6 @@ namespace Math {
 
 
 
-#ifndef R__HAS_MATHMORE
 
    /**
 
@@ -320,15 +311,16 @@ namespace Math {
       <A HREF="http://mathworld.wolfram.com/GammaDistribution.html">
       Mathworld</A>.
       It is implemented using  chisquared_quantile_c, therefore is not very precise for small z. 
-      It is reccomended to use the MathMore function implemented using GSL
+      For this special cases it is reccomended to use the MathMore function ROOT::MathMore::gamma_quantile
+      implemented using GSL
+
   
-      @ingroup QuantFunc_def_in_MathMore
+      @ingroup QuantFunc
 
    */
 
    double gamma_quantile(double z, double alpha, double theta);
 
-#endif
 
 
    /**
@@ -638,6 +630,6 @@ namespace Math {
 
 
 
-#endif // ROOT_Math_QuantFuncMathMore
+#endif // ROOT_Math_QuantFuncMathCore
 
 #endif // if defined (__CINT__) && !defined(__MAKECINT__)
