@@ -210,30 +210,26 @@ class allocator<void> {
 template <class X> class auto_ptr {
 private:
   X* ptr;
-  mutable bool owns;
   //template<class Y> struct auto_ptr_ref { };
 public:
   typedef X element_type;
-  explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
-  auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
+  explicit auto_ptr(X* p = 0) : ptr(p) {}
+  auto_ptr(auto_ptr& a) {ptr=a.ptr;}
   
   // this implementation may not be correct
-  template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
+  template <class T> auto_ptr(auto_ptr<T>& a) {ptr=a.release();}
   
 #if 0
   // this does not exist in standard.
   template <class T> auto_ptr(T* a) {
     ptr=a;
-    owns=true;
   }
 #endif
   
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
-      if (owns) delete ptr;
-      owns = a.owns;
+      delete ptr;
       ptr = a.ptr;
-      a.owns = 0;
     }
     return(*this);
   }
@@ -241,26 +237,24 @@ public:
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
-      if (owns) delete ptr;
-      owns = a.owns;
-      ptr = a.release();
+       delete ptr;
+       ptr = a.release();
     }
     return(*this);
   }
   
-  ~auto_ptr() { if(owns) delete ptr; }
+  ~auto_ptr() { delete ptr; }
   
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
-  X* release() { owns=false; return ptr; }
+  X* release() { X *old = ptr; ptr = 0; return 0; }
 #if 0
   // My g++, VC++, BC++ does not support this so far.
   void reset(X* p=0) {
-    if(p!=ptr || !owns) { 
-      if(owns) delete ptr;  
+    if(p!=ptr) { 
+      delete ptr;  
       ptr = p; 
-      owns = p?true:false;
     }
   }
 #endif

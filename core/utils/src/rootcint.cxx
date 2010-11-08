@@ -1065,9 +1065,11 @@ bool NeedShadowClass(G__ClassInfo& cl)
    
    if (strcmp(cl.Name(),"complex<float>") == 0 || strcmp(cl.Name(),"complex<double>") == 0) return true;
 
-   if (cl.FileName() && !strncmp(cl.FileName(),"prec_stl",8))
+   if (cl.FileName() && !strncmp(cl.FileName(),"prec_stl",8)) {
+      // Allow I/O for auto_ptr ...
+      if (strncmp(cl.Name(),"auto_ptr<",strlen("auto_ptr<"))==0) return true;
       return false;
-
+   }
    // This means templated classes hiding members won't have
    // a proper shadow class, and the use has no change of
    // vetoring a shadow, as we need it for ShowMembers :-/
