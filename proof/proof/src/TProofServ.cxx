@@ -40,6 +40,10 @@
 #endif
 #include <cstdlib>
 
+// To handle exceptions
+#include <exception>
+#include <new>
+
 #if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || \
     (defined(__APPLE__) && (!defined(MAC_OS_X_VERSION_10_3) || \
      (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)))
@@ -120,6 +124,9 @@ FILE *TProofServ::fgErrorHandlerFile = 0;
 
 // To control allowed actions while processing
 Int_t TProofServ::fgRecursive = 0;
+
+// Last message before exceptions
+TString TProofServ::fgLastMsg("<undef>");
 
 //----- Termination signal handler ---------------------------------------------
 //______________________________________________________________________________
@@ -1229,64 +1236,105 @@ void TProofServ::HandleSocketInput()
    Bool_t all = (fgRecursive > 0) ? kFALSE : kTRUE;
    fgRecursive++;
 
-   // Get message
    TMessage *mess;
-   if (fSocket->Recv(mess) <= 0 || !mess) {
-      // Pending: do something more intelligent here
-      // but at least get a message in the log file
-      Error("HandleSocketInput", "retrieving message from input socket");
-      Terminate(0);
-      return;
-   }
-   Int_t what = mess->What();
-   PDB(kCollect, 1)
-      Info("HandleSocketInput", "got type %d from '%s'", what, fSocket->GetTitle());
-
    // We use to check in the end if something wrong went on during processing
    Bool_t parallel = IsParallel();
-   fNcmd++;
-
-   if (fProof) fProof->SetActive();
-
-   Bool_t doit = kTRUE;
-
    Int_t rc = 0;
-   while (doit) {
+   TString exmsg;
 
-      // Process the message
-      rc = HandleSocketInput(mess, all);
-      if (rc < 0) {
-         TString emsg;
-         if (rc == -1) {
-            emsg.Form("HandleSocketInput: command %d cannot be executed while processing", what);
-         } else if (rc == -3) {
-            emsg.Form("HandleSocketInput: message %d undefined! Protocol error?", what);
-         } else {
-            emsg.Form("HandleSocketInput: unknown command %d! Protocol error?", what);
+   try {
+   
+      // Get message
+      if (fSocket->Recv(mess) <= 0 || !mess) {
+         // Pending: do something more intelligent here
+         // but at least get a message in the log file
+         Error("HandleSocketInput", "retrieving message from input socket");
+         Terminate(0);
+         return;
+      }
+      Int_t what = mess->What();
+      PDB(kCollect, 1)
+         Info("HandleSocketInput", "got type %d from '%s'", what, fSocket->GetTitle());
+
+      fNcmd++;
+
+      if (fProof) fProof->SetActive();
+
+      Bool_t doit = kTRUE;
+
+      while (doit) {
+
+         // Process the message
+         rc = HandleSocketInput(mess, all);
+         if (rc < 0) {
+            TString emsg;
+            if (rc == -1) {
+               emsg.Form("HandleSocketInput: command %d cannot be executed while processing", what);
+            } else if (rc == -3) {
+               emsg.Form("HandleSocketInput: message %d undefined! Protocol error?", what);
+            } else {
+               emsg.Form("HandleSocketInput: unknown command %d! Protocol error?", what);
+            }
+            SendAsynMessage(emsg.Data());
+         } else if (rc == 2) {
+            // Add to the queue
+            fQueuedMsg->Add(mess);
+            PDB(kGlobal, 1)
+               Info("HandleSocketInput", "message of type %d enqueued; sz: %d",
+                                          what, fQueuedMsg->GetSize());
+            mess = 0;
          }
-         SendAsynMessage(emsg.Data());
-      } else if (rc == 2) {
-         // Add to the queue
-         fQueuedMsg->Add(mess);
-         PDB(kGlobal, 1)
-            Info("HandleSocketInput", "message of type %d enqueued; sz: %d",
-                                       what, fQueuedMsg->GetSize());
-         mess = 0;
-      }
 
-      // Still something to do?
-      doit = 0;
-      if (fgRecursive == 1 && fQueuedMsg->GetSize() > 0) {
-         // Add to the queue
-         PDB(kCollect, 1)
-            Info("HandleSocketInput", "processing enqueued message of type %d; left: %d",
-                                       what, fQueuedMsg->GetSize());
-         all = 1;
-         SafeDelete(mess);
-         mess = (TMessage *) fQueuedMsg->First();
-         if (mess) fQueuedMsg->Remove(mess);
-         doit = 1;
+         // Still something to do?
+         doit = 0;
+         if (fgRecursive == 1 && fQueuedMsg->GetSize() > 0) {
+            // Add to the queue
+            PDB(kCollect, 1)
+               Info("HandleSocketInput", "processing enqueued message of type %d; left: %d",
+                                          what, fQueuedMsg->GetSize());
+            all = 1;
+            SafeDelete(mess);
+            mess = (TMessage *) fQueuedMsg->First();
+            if (mess) fQueuedMsg->Remove(mess);
+            doit = 1;
+         }
       }
+   
+   } catch (std::bad_alloc &eba) {
+      // Memory allocation problem:
+      exmsg.Form("%s: caught exception 'bad_alloc' (memory leak?) %s", GetOrdinal(), fgLastMsg.Data());
+      // Try to warn the user
+      SendAsynMessage(exmsg.Data());
+      // Terminate
+      Terminate(0);
+   } catch (std::exception &exc) {
+      // Standard exception caught
+      exmsg.Form("%s: caught standard exception '%s' %s", GetOrdinal(), exc.what(), fgLastMsg.Data());
+      // Try to warn the user
+      SendAsynMessage(exmsg.Data());
+      // Terminate
+      Terminate(0);
+   } catch (int i) {
+      // Other exception caught
+      exmsg.Form("%s: caught exception throwing %d %s", GetOrdinal(), i, fgLastMsg.Data());
+      // Try to warn the user
+      SendAsynMessage(exmsg.Data());
+      // Terminate
+      Terminate(0);
+   } catch (const char *str) {
+      // Other exception caught
+      exmsg.Form("%s: caught exception throwing '%s' %s", GetOrdinal(), str, fgLastMsg.Data());
+      // Try to warn the user
+      SendAsynMessage(exmsg.Data());
+      // Terminate
+      Terminate(0);
+   } catch (...) {
+      // Caught other exception
+      exmsg.Form("%s: caught exception <unknown> %s", GetOrdinal(), fgLastMsg.Data());
+      // Try to warn the user
+      SendAsynMessage(exmsg.Data());
+      // Terminate
+      Terminate(0);
    }
 
    fgRecursive--;
@@ -3637,9 +3685,11 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
 
       // Check if we are in merging mode (i.e. parameter PROOF_UseMergers exists)
       Bool_t isInMergingMode = kFALSE;
-      Int_t nm = 0;
-      if (TProof::GetParameter(input, "PROOF_UseMergers", nm) == 0) {
-         isInMergingMode = (nm >= 0) ? kTRUE : kFALSE;
+      if (!(fPlayer->TestBit(TVirtualProofPlayer::kHighMemory))) {
+         Int_t nm = 0;
+         if (TProof::GetParameter(input, "PROOF_UseMergers", nm) == 0) {
+            isInMergingMode = (nm >= 0) ? kTRUE : kFALSE;
+         }
       }
       PDB(kGlobal, 2) Info("HandleProcess", "merging mode check: %d", isInMergingMode);
 
@@ -5970,7 +6020,13 @@ void TProofServ::HandleException(Int_t sig)
 {
    // Exception handler: we do not try to recover here, just exit.
 
-   Error("HandleException","exception triggered by signal: %d", sig);
+   Error("HandleException", "caugth exception triggered by signal: %d", sig);
+   // Description
+   TString emsg;
+   emsg.Form("%s: caught exception triggered by signal '%d' %s",
+             GetOrdinal(), sig, fgLastMsg.Data());
+   // Try to warn the user
+   SendAsynMessage(emsg.Data());
 
    gSystem->Exit(sig);
 }
@@ -6616,6 +6672,14 @@ Int_t TProofServ::CleanupWaitingQueries(Bool_t del, TList *qls)
    }
    // Done
    return ncq;
+}
+
+//______________________________________________________________________________
+void TProofServ::SetLastMsg(const char *lastmsg)
+{
+   // Set the message to be sent back in case of exceptions
+
+   fgLastMsg = lastmsg;
 }
 
 //______________________________________________________________________________

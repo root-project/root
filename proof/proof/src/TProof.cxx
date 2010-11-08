@@ -3589,15 +3589,17 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                TString msg;
                if (!fMergersSet) {
 
+                  Int_t activeWorkers = fCurrentMonitor ? fCurrentMonitor->GetActive() : GetNumberOfActiveSlaves();
+                  
                   // First pass - setting number of mergers according to user or dynamically
                   fMergersCount = -1; // No mergers used if not set by user
                   TParameter<Int_t> *mc = dynamic_cast<TParameter<Int_t> *>(GetParameter("PROOF_UseMergers"));
                   if (mc) fMergersCount = mc->GetVal(); // Value set by user
 
                   // Mergers count specified by user but not valid
-                  if (fMergersCount < 0 || (fMergersCount > (GetNumberOfSlaves()/2) )) {
+                  if (fMergersCount < 0 || (fMergersCount > (activeWorkers/2) )) {
                      msg.Form("%s: Invalid request: cannot start %d mergers for %d workers",
-                              prefix, fMergersCount, GetNumberOfSlaves());
+                              prefix, fMergersCount, activeWorkers);
                      if (gProofServ)
                         gProofServ->SendAsynMessage(msg);
                      else
@@ -3606,17 +3608,17 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                   }
                   // Mergers count will be set dynamically
                   if (fMergersCount == 0) {
-                     if (GetNumberOfActiveSlaves() > 1) {
-                        fMergersCount = TMath::Nint(TMath::Sqrt(GetNumberOfActiveSlaves()));
-                        if (GetNumberOfActiveSlaves() / fMergersCount < 2)
-                           fMergersCount = (Int_t) TMath::Sqrt(GetNumberOfActiveSlaves());
+                     if (activeWorkers > 1) {
+                        fMergersCount = TMath::Nint(TMath::Sqrt(activeWorkers));
+                        if (activeWorkers / fMergersCount < 2)
+                           fMergersCount = (Int_t) TMath::Sqrt(activeWorkers);
                      }
                      if (fMergersCount > 1)
                         msg.Form("%s: Number of mergers set dynamically to %d (for %d workers)",
-                                 prefix, fMergersCount, GetNumberOfActiveSlaves());
+                                 prefix, fMergersCount, activeWorkers);
                      else {
                         msg.Form("%s: No mergers will be used for %d workers",
-                                 prefix, GetNumberOfActiveSlaves());
+                                 prefix, activeWorkers);
                         fMergersCount = -1;
                      }
                      if (gProofServ)
@@ -3625,7 +3627,7 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                         Printf("%s",msg.Data());
                   } else {
                      msg.Form("%s: Number of mergers set by user to %d (for %d workers)",
-                              prefix, fMergersCount, GetNumberOfActiveSlaves());
+                              prefix, fMergersCount, activeWorkers);
                      if (gProofServ)
                         gProofServ->SendAsynMessage(msg);
                      else
@@ -3636,7 +3638,7 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                      fMergers = new TList();
                      fLastAssignedMerger = 0;
                      // Total number of workers, which will not act as mergers ('pure workers')
-                     fWorkersToMerge = (GetNumberOfActiveSlaves() - fMergersCount);
+                     fWorkersToMerge = (activeWorkers - fMergersCount);
                      // Establish the first merger
                      if (!CreateMerger(sl, merging_port)) {
                         // Cannot establish first merger
@@ -4042,10 +4044,11 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
             if (mc) mergersCount = mc->GetVal(); // Value set by user
             // Mergers count is set dynamically: recalculate it
             if (mergersCount == 0) {
-               if (GetNumberOfActiveSlaves() > 1) {
-                  fMergersCount = TMath::Nint(TMath::Sqrt(GetNumberOfActiveSlaves()));
-                  if (GetNumberOfActiveSlaves() / fMergersCount < 2)
-                     fMergersCount = (Int_t) TMath::Sqrt(GetNumberOfActiveSlaves());
+               Int_t activeWorkers = fCurrentMonitor ? fCurrentMonitor->GetActive() : GetNumberOfActiveSlaves();
+               if (activeWorkers > 1) {
+                  fMergersCount = TMath::Nint(TMath::Sqrt(activeWorkers));
+                  if (activeWorkers / fMergersCount < 2)
+                     fMergersCount = (Int_t) TMath::Sqrt(activeWorkers);
                }
             }
          }

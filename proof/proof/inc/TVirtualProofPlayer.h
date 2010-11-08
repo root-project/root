@@ -47,9 +47,11 @@ class TProofProgressInfo;
 class TVirtualProofPlayer : public TObject, public TQObject {
 
 public:
+   // TDSet status bits
+   enum EStatusBits { kHighMemory = BIT(16) };
    enum EExitStatus { kFinished, kStopped, kAborted };
 
-   TVirtualProofPlayer() { }
+   TVirtualProofPlayer() { ResetBit(TVirtualProofPlayer::kHighMemory); }
    virtual ~TVirtualProofPlayer() { }
 
    virtual Long64_t  Process(TDSet *set,

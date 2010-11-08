@@ -230,6 +230,8 @@ protected:
    Bool_t        IsIdle();
    Bool_t        UnlinkDataDir(const char *path);
 
+   static TString fgLastMsg;    // Message about status before exception
+
 public:
    TProofServ(Int_t *argc, char **argv, FILE *flog = 0);
    virtual ~TProofServ();
@@ -327,6 +329,8 @@ public:
                                const char *msg);
 
    static void    ResolveKeywords(TString &fname, const char *path = 0);
+
+   static void    SetLastMsg(const char *lastmsg);
 
    static Bool_t      IsActive();
    static TProofServ *This();
