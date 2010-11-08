@@ -847,14 +847,17 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    gAbort = kFALSE;
    Long64_t entry;
    fProgressStatus->Reset();
-
-   // Get the frequency for checking memory consumption and logging information
-   TParameter<Long64_t> *par = (TParameter<Long64_t>*)fInput->FindObject("PROOF_MemLogFreq");
-   volatile Long64_t memlogfreq = (par) ? par->GetVal() : 100;
-   volatile Long_t memlim = gProofServ ? gProofServ->GetVirtMemMax() : -1;
-   volatile Bool_t warn80 = kTRUE;
+   ResetBit(TVirtualProofPlayer::kHighMemory);
 
    TRY {
+
+      // Get the frequency for checking memory consumption and logging information
+      TParameter<Long64_t> *par = (TParameter<Long64_t>*)fInput->FindObject("PROOF_MemLogFreq");
+      Long64_t memlogfreq = (par) ? par->GetVal() : 100;
+      Long_t resmemlim = gProofServ ? gProofServ->GetResMemMax() : -1;
+      Long_t virmemlim = gProofServ ? gProofServ->GetVirtMemMax() : -1;
+      Bool_t warn80res = kTRUE, warn80vir = kTRUE;
+      TString lastMsg;
 
       TPair *currentElem = 0;
       // The event loop on the worker
@@ -866,6 +869,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
          // Give the possibility to the selector to access additional info in the
          // incoming packet
+         lastMsg = "(unfortunately no detailed info is available about current packet)";
          if (dset->Current()) {
             if (!currentElem) {
                currentElem = new TPair(new TObjString("PROOF_CurrentElement"), dset->Current());
@@ -877,7 +881,17 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                   dset->Current()->ResetBit(TDSetElement::kNewRun);
                }
             }
+            if (dset->TestBit(TDSet::kEmpty)) {
+               lastMsg.Form("while processing cycle:%lld - check logs for possible stacktrace", entry);
+            } else {
+               TDSetElement *elem = dynamic_cast<TDSetElement *>(currentElem->Value());
+               TString fn = (elem) ? elem->GetFileName() : "<undef>";
+               lastMsg.Form("while processing dset:'%s', file:'%s', event:%lld"
+                            " - check logs for possible stacktrace", dset->GetName(), fn.Data(), entry);
+            }
          }
+         // This will be sent to clients in case of exceptions ...
+         TProofServ::SetLastMsg(lastMsg);
 
          if (version == 0) {
             PDB(kLoop,3)
@@ -904,37 +918,25 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             if (gMonitoringWriter)
                gMonitoringWriter->SendProcessingProgress(fProgressStatus->GetEntries(),
                        TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
-            if (memlogfreq > 0 && GetEventsProcessed()%memlogfreq == 0) {
-               // Record the memory information
-               ProcInfo_t pi;
-               if (!gSystem->GetProcInfo(&pi)){
-                  Info("Process|Svc", "Memory %ld virtual %ld resident event %lld",
-                                      pi.fMemVirtual, pi.fMemResident, GetEventsProcessed());
-                  // Apply limit, if any: warn if above 80%, stop if above 95% of the HWM
-                  TString wmsg;
-                  if (memlim > 0) {
-                     if (pi.fMemVirtual > 0.95 * memlim) {
-                        wmsg.Form("using more than 95%% of allowed memory (%ld kB) - STOP processing", pi.fMemVirtual);
-                        Error("Process", "%s", wmsg.Data());
-                        if (gProofServ) {
-                           wmsg.Insert(0, TString::Format("ERROR:%s ", gProofServ->GetOrdinal()));
-                           gProofServ->SendAsynMessage(wmsg.Data());
-                        }
-                        fExitStatus = kStopped;
-                        SetProcessing(kFALSE);
-                        break;
-                     } else if (pi.fMemVirtual > 0.80 * memlim && warn80) {
-                        // Refine monitoring
-                        memlogfreq = 1;
-                        wmsg.Form("using more than 80%% of allowed memory (%ld kB)", pi.fMemVirtual);
-                        Warning("Process", "%s", wmsg.Data());
-                        if (gProofServ) {
-                           wmsg.Insert(0, TString::Format("WARNING:%s ", gProofServ->GetOrdinal()));
-                           gProofServ->SendAsynMessage(wmsg.Data());
-                        }
-                        warn80 = kFALSE;
-                     }
-                  }
+         }
+         // Check the memory footprint, if required
+         TString wmsg;
+         if (!CheckMemUsage(resmemlim, virmemlim, memlogfreq, warn80res, warn80vir, wmsg)) {
+            Error("Process", "%s", wmsg.Data());
+            if (gProofServ) {
+               wmsg.Insert(0, TString::Format("ERROR:%s, entry:%lld, ", gProofServ->GetOrdinal(), entry));
+               gProofServ->SendAsynMessage(wmsg.Data());
+            }
+            fExitStatus = kStopped;
+            SetProcessing(kFALSE);
+            SetBit(TVirtualProofPlayer::kHighMemory);
+            break;
+         } else {
+            if (!wmsg.IsNull()) {
+               Warning("Process", "%s", wmsg.Data());
+               if (gProofServ) {
+                  wmsg.Insert(0, TString::Format("WARNING:%s, entry:%lld, ", gProofServ->GetOrdinal(), entry));
+                  gProofServ->SendAsynMessage(wmsg.Data());
                }
             }
          }
@@ -1032,6 +1034,61 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       TPerfStats::Stop();
 
    return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TProofPlayer::CheckMemUsage(Long_t rlim, Long_t vlim,
+                                   Long64_t &mfreq, Bool_t &w80r,
+                                   Bool_t &w80v, TString &wmsg)
+{
+   // Check the memory usage, if requested.
+   // Return kTRUE if OK, kFALSE if above 95% of at least one between virtual or
+   // resident limits are depassed.
+
+   if (mfreq > 0 && GetEventsProcessed()%mfreq == 0) {
+      // Record the memory information
+      ProcInfo_t pi;
+      if (!gSystem->GetProcInfo(&pi)){
+         Info("CheckMemUsage|Svc", "Memory %ld virtual %ld resident event %lld",
+                                   pi.fMemVirtual, pi.fMemResident, GetEventsProcessed());
+         wmsg = "";
+         // Apply limit on virtual memory, if any: warn if above 80%, stop if above 95% of max
+         if (vlim > 0) {
+            if (pi.fMemVirtual > 0.95 * vlim) {
+               wmsg.Form("using more than 95%% of allowed virtual memory (%ld kB)"
+                         " - STOP processing", pi.fMemVirtual);
+               return kFALSE;
+            } else if (pi.fMemVirtual > 0.80 * vlim && w80v) {
+               // Refine monitoring
+               mfreq = 1;
+               wmsg.Form("using more than 80%% of allowed virtual memory (%ld kB)",
+                         pi.fMemVirtual);
+               w80v = kFALSE;
+            }
+         }
+         // Apply limit on resident memory, if any: warn if above 80%, stop if above 95% of max
+         if (rlim > 0) {
+            if (pi.fMemResident > 0.95 * rlim) {
+               wmsg.Form("using more than 95%% of allowed resident memory (%ld kB)"
+                         " - STOP processing", pi.fMemResident);
+               return kFALSE;
+            } else if (pi.fMemResident > 0.80 * rlim && w80r) {
+               // Refine monitoring
+               mfreq = 1;
+               if (wmsg.Length() > 0) {
+                  wmsg.Form("using more than 80%% of allowed both virtual and resident memory ({%ld,%ld} kB)",
+                            pi.fMemVirtual, pi.fMemResident);
+               } else {
+                  wmsg.Form("using more than 80%% of allowed resident memory (%ld kB)",
+                            pi.fMemResident);
+               }
+               w80r = kFALSE;
+            }
+         }
+      }
+   }
+   // Done
+   return kTRUE;
 }
 
 //______________________________________________________________________________
