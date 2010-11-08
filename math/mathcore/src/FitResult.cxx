@@ -21,7 +21,7 @@
 #include "Math/IParamFunction.h"
 #include "Math/OneDimFunctionAdapter.h"
 
-#include "Math/DistFunc.h"
+#include "Math/ProbFuncMathCore.h"
 
 #include "TMath.h"  
 #include "Math/RichardsonDerivator.h"
