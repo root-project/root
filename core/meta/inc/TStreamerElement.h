@@ -48,7 +48,6 @@ protected:
    TClass          *fClassObject;     //!pointer to class of object
    TClass          *fNewClass;        //!new element class when reading
    TMemberStreamer *fStreamer;        //!pointer to element Streamer
-   TMethodCall     *fMethod;          //!pointer to TMethodCall
    Double_t         fXmin;            //!Minimum of data member if a range is specified  [xmin,xmax,nbits]
    Double_t         fXmax;            //!Maximum of data member if a range is specified  [xmin,xmax,nbits]
    Double_t         fFactor;          //!Conversion factor if a range is specified fFactor = (1<<nbits/(xmax-xmin)
@@ -126,9 +125,10 @@ private:
    TStreamerBase&operator=(const TStreamerBase&); // Not implemented
    
 protected:
-   Int_t            fBaseVersion;         //version number of the base class FIXME: What for? What about the schema evolution issues?
-   TClass          *fBaseClass;           //!pointer to base class
-   TClass          *fNewBaseClass;        //!pointer to new base class if renamed
+   Int_t             fBaseVersion;    //version number of the base class FIXME: What for? What about the schema evolution issues?
+   TClass           *fBaseClass;      //!pointer to base class
+   TClass           *fNewBaseClass;   //!pointer to new base class if renamed
+   ClassStreamerFunc_t fStreamerFunc; //!Pointer to a wrapper around a custom streamer member function.
 
 public:
 
@@ -139,7 +139,7 @@ public:
    virtual TClass  *GetClassPointer() const;
    const char      *GetInclude() const;
    TClass          *GetNewBaseClass() { return fNewBaseClass; }
-   ULong_t          GetMethod() const {return ULong_t(fMethod);}
+   ULong_t          GetMethod() const {return 0;}
    Int_t            GetSize() const;
    virtual void     Init(TObject *obj=0);
    Bool_t           IsBase() const;

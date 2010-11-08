@@ -112,13 +112,14 @@ private:
    IsAGlobalFunc_t    fGlobalIsA;       //pointer to a global IsA function.
    mutable TMethodCall *fIsAMethod;       //!saved info to call a IsA member function
 
-   ROOT::NewFunc_t    fNew;             //pointer to a function newing one object.
-   ROOT::NewArrFunc_t fNewArray;        //pointer to a function newing an array of objects.
-   ROOT::DelFunc_t    fDelete;          //pointer to a function deleting one object.
-   ROOT::DelArrFunc_t fDeleteArray;     //pointer to a function deleting an array of objects.
-   ROOT::DesFunc_t    fDestructor;      //pointer to a function call an object's destructor.
-   ROOT::DirAutoAdd_t fDirAutoAdd;//pointer which implements the Directory Auto Add feature for this class.
-   Int_t              fSizeof;          //Sizeof the class.
+   ROOT::NewFunc_t     fNew;            //pointer to a function newing one object.
+   ROOT::NewArrFunc_t  fNewArray;       //pointer to a function newing an array of objects.
+   ROOT::DelFunc_t     fDelete;         //pointer to a function deleting one object.
+   ROOT::DelArrFunc_t  fDeleteArray;    //pointer to a function deleting an array of objects.
+   ROOT::DesFunc_t     fDestructor;     //pointer to a function call an object's destructor.
+   ROOT::DirAutoAdd_t  fDirAutoAdd;     //pointer which implements the Directory Auto Add feature for this class.']'
+   ClassStreamerFunc_t fStreamerFunc;   //Wrapper around this class custom Streamer member function.
+   Int_t               fSizeof;         //Sizeof the class.
 
    mutable Bool_t     fVersionUsed;     //!Indicates whether GetClassVersion has been called
    mutable Long_t     fProperty;        //!Property
@@ -153,7 +154,6 @@ private:
    void StreamerTObjectInitialized(void *object, TBuffer &b, const TClass *onfile_class) const;
    void StreamerTObjectEmulated(void *object, TBuffer &b, const TClass *onfile_class) const;
    void StreamerInstrumented(void *object, TBuffer &b, const TClass *onfile_class) const;
-   void StreamerInstrumentedInitialized(void *object, TBuffer &b, const TClass *onfile_class) const;
    void StreamerStreamerInfo(void *object, TBuffer &b, const TClass *onfile_class) const;
    void StreamerDefault(void *object, TBuffer &b, const TClass *onfile_class) const;
    
@@ -293,6 +293,7 @@ public:
    const char        *GetSharedLibs();
    ShowMembersFunc_t  GetShowMembersWrapper() const { return fShowMembers; }
    TClassStreamer    *GetStreamer() const; 
+   ClassStreamerFunc_t GetStreamerFunc() const;
    TObjArray         *GetStreamerInfos() const { return fStreamerInfo; }
    TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0) const;
    const type_info   *GetTypeInfo() const { return fTypeInfo; };
@@ -342,6 +343,7 @@ public:
    void               AdoptStreamer(TClassStreamer *strm);
    void               AdoptMemberStreamer(const char *name, TMemberStreamer *strm);
    void               SetMemberStreamer(const char *name, MemberStreamerFunc_t strm);
+   void               SetStreamerFunc(ClassStreamerFunc_t strm);
 
    // Function to retrieve the TClass object and dictionary function
    static void           AddClass(TClass *cl);

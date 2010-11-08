@@ -170,7 +170,6 @@ TStreamerElement::TStreamerElement()
    fArrayDim    = 0;
    fArrayLength = 0;
    fStreamer    = 0;
-   fMethod      = 0;
    fOffset      = 0;
    fClassObject = (TClass*)(-1);
    fNewClass    = 0;
@@ -195,7 +194,6 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
    fArrayLength = 0;
    fTypeName    = TClassEdit::ResolveTypedef(typeName);
    fStreamer    = 0;
-   fMethod      = 0;
    fClassObject = (TClass*)(-1);
    fNewClass    = 0;
    fTObjectOffset = 0;
@@ -217,7 +215,6 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
 TStreamerElement::~TStreamerElement()
 {
    // TStreamerElement dtor.
-   delete fMethod;
 }
 
 
@@ -505,7 +502,7 @@ void TStreamerElement::Update(const TClass *oldClass, TClass *newClass)
 ClassImp(TStreamerBase)
 
 //______________________________________________________________________________
-TStreamerBase::TStreamerBase()
+TStreamerBase::TStreamerBase() : fStreamerFunc(0)
 {
    // Default ctor.
 
@@ -516,7 +513,7 @@ TStreamerBase::TStreamerBase()
 
 //______________________________________________________________________________
 TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
-        : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kBase,"BASE")
+        : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kBase,"BASE"),fStreamerFunc(0)
 {
    // Create a TStreamerBase object.
 
@@ -563,16 +560,7 @@ void TStreamerBase::Init(TObject *)
    fBaseClass = TClass::GetClass(GetName());
    if (!fBaseClass) return;
    if (!fBaseClass->GetMethodAny("StreamerNVirtual")) return;
-
-   // When called via TMapFile (e.g. Update()) make sure that the dictionary
-   // gets allocated on the heap and not in the mapped file.
-   void *save = gMmallocDesc;
-   gMmallocDesc = 0;
-   delete fMethod;
-   fMethod = new TMethodCall();
-   fMethod->InitWithPrototype(fBaseClass,"StreamerNVirtual","TBuffer &");
-   gMmallocDesc = save;
-   //fBaseClass = TClass::GetClass(GetName());
+   fStreamerFunc = fBaseClass->GetStreamerFunc();
 }
 
 //______________________________________________________________________________
@@ -610,14 +598,11 @@ Int_t TStreamerBase::ReadBuffer (TBuffer &b, char *pointer)
 {
    // Read the content of the buffer.
 
-   if (fMethod) {
-      ULong_t args[1];
-      args[0] = (ULong_t)&b;
-      R__LOCKGUARD2(gCINTMutex);
-      fMethod->SetParamPtrs(args);
-      fMethod->Execute((void*)(pointer+fOffset));
+   if (fStreamerFunc) {
+      // We have a custom Streamer member function, we must use it.
+      fStreamerFunc(b,pointer+fOffset);
    } else {
-      // We don't have a StreamerNVirtual(). That still doesn't mean
+      // We don't have a custom Streamer member function. That still doesn't mean
       // that there is no streamer - it could be an external one:
       // If the old base class has an adopted streamer we take that
       // one instead of the new base class:
@@ -680,8 +665,8 @@ void TStreamerBase::Streamer(TBuffer &R__b)
 //______________________________________________________________________________
 void TStreamerBase::Update(const TClass *oldClass, TClass *newClass)
 {
-   //function called by the TClass constructor when replacing an emulated class
-   //by the real class
+   //Function called by the TClass constructor when replacing an emulated class
+   //by the real class.
 
    if (fClassObject == oldClass) fClassObject = newClass;
    else if (fClassObject == 0) {
@@ -697,6 +682,11 @@ void TStreamerBase::Update(const TClass *oldClass, TClass *newClass)
        fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
       fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
    }
+   if (fBaseClass && fBaseClass != (TClass*)-1) {
+      fStreamerFunc = fBaseClass->GetStreamerFunc();
+   } else {
+      fStreamerFunc = 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -704,8 +694,11 @@ Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
 {
    // Write the base class into the buffer.
 
-   if (!fMethod) {
-      // We don't have a StreamerNVirtual(). That still doesn't mean
+   if (fStreamerFunc) {
+      // We have a custom Streamer member function, we must use it.
+      fStreamerFunc(b,pointer+fOffset);      
+   } else {
+      // We don't have a custom Streamer member function. That still doesn't mean
       // that there is no streamer - it could be an external one:
       // If the old base class has an adopted streamer we take that
       // one instead of the new base class:
@@ -731,12 +724,6 @@ Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
          }
       }
    }
-   ULong_t args[1];
-   args[0] = (ULong_t)&b;
-   R__LOCKGUARD2(gCINTMutex);
-   fMethod->SetParamPtrs(args);
-   fMethod->Execute((void*)(pointer+fOffset));
-   b.ForceWriteInfo(fBaseClass->GetStreamerInfo(),kFALSE);
    return 0;
 }
 

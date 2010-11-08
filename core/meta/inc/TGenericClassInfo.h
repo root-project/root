@@ -56,6 +56,7 @@ namespace ROOT {
       DesFunc_t                   fDestructor;
       DirAutoAdd_t                fDirAutoAdd;
       TClassStreamer             *fStreamer;
+      ClassStreamerFunc_t         fStreamerFunc;
       TVirtualCollectionProxy    *fCollectionProxy;
       Int_t                       fSizeof;
       TCollectionProxyInfo       *fCollectionProxyInfo;
@@ -130,6 +131,7 @@ namespace ROOT {
       void                              SetReadRawRules( const std::vector<TSchemaHelper>& rules );
       void                              SetReadRules( const std::vector<TSchemaHelper>& rules );
       Short_t                           SetStreamer(ClassStreamerFunc_t);
+      void                              SetStreamerFunc(ClassStreamerFunc_t);
       Short_t                           SetVersion(Short_t version);
 
       //   protected:

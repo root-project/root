@@ -2330,7 +2330,7 @@ TVirtualCollectionProxy *TClass::GetCollectionProxy() const
 //______________________________________________________________________________
 TClassStreamer *TClass::GetStreamer() const
 {
-   // Return the proxy describinb the collection (if any).
+   // Return the Streamer Class allowing streaming (if any).
 
    if (gThreadTsd && fStreamer) {
       TClassLocalStorage *local = TClassLocalStorage::GetStorage(this);
@@ -2346,6 +2346,13 @@ TClassStreamer *TClass::GetStreamer() const
       return local->fStreamer;
    }
    return fStreamer;
+}
+//______________________________________________________________________________
+ClassStreamerFunc_t TClass::GetStreamerFunc() const
+{
+   // Get a wrapper/accessor function around this class custom streamer (member function).
+
+   return fStreamerFunc;
 }
 
 //______________________________________________________________________________
@@ -4451,13 +4458,20 @@ Long_t TClass::Property() const
              && strcmp( gCint->ClassInfo_FileName(fClassInfo),"{CINTEX dictionary translator}")==0) {
             kl->SetBit(kIsForeign);
          }
-         kl->fStreamerType  = kInstrumented;
-         kl->fStreamerImpl   = &TClass::StreamerInstrumented;
+         if (kl->fStreamerFunc) {
+            kl->fStreamerType  = kInstrumented;
+            kl->fStreamerImpl  = &TClass::StreamerInstrumented;            
+         } else {
+            // We have an automatic streamer using the StreamerInfo .. no need to go through the
+            // Streamer method function itself.
+            kl->fStreamerType  = kInstrumented;
+            kl->fStreamerImpl  = &TClass::StreamerStreamerInfo;            
+         }
       }
 
       if (fStreamer) {
          kl->fStreamerType  = kExternal;
-         kl->fStreamerImpl   = &TClass::StreamerExternal;
+         kl->fStreamerImpl  = &TClass::StreamerExternal;
       }
 
    } else {
@@ -4938,43 +4952,7 @@ void TClass::StreamerInstrumented(void *object, TBuffer &b, const TClass * /* on
    // Case of instrumented class with a library
    
    // case kInstrumented:
-   R__LOCKGUARD2(gCINTMutex);
-   CallFunc_t *func = (CallFunc_t*)fInterStreamer;
-   
-   if (!func)  {
-      // When called via TMapFile (e.g. Update()) make sure that the dictionary
-      // gets allocated on the heap and not in the mapped file.
-      TMmallocDescTemp setreset;
-      func  = gCint->CallFunc_Factory();
-      gCint->CallFunc_SetFuncProto(func,fClassInfo,"Streamer","TBuffer&",&fOffsetStreamer);
-      fInterStreamer = func;
-      fStreamerImpl = &TClass::StreamerInstrumentedInitialized;
-   } else {
-      // Reset the argument list!
-      gCint->CallFunc_SetArgs(func,"");
-   }
-   
-   // set arguments
-   gCint->CallFunc_SetArg(func,(Long_t)&b);
-   // call function
-   gCint->CallFunc_Exec(func,(char*)((Long_t)object + fOffsetStreamer) );
-}
-
-//______________________________________________________________________________
-void TClass::StreamerInstrumentedInitialized(void *object, TBuffer &b, const TClass * /* onfile_class */) const
-{
-   // Case of instrumented class with a library
-   
-   // case kInstrumented:
-   R__LOCKGUARD2(gCINTMutex);
-   CallFunc_t *func = (CallFunc_t*)fInterStreamer;
-   
-   // Reset the argument list!
-   gCint->CallFunc_SetArgs(func,"");   
-   // set arguments
-   gCint->CallFunc_SetArg(func,(Long_t)&b);
-   // call function
-   gCint->CallFunc_Exec(func,(char*)((Long_t)object + fOffsetStreamer) );
+   fStreamerFunc(b,object);
 }
 
 //______________________________________________________________________________
@@ -5039,6 +5017,23 @@ void TClass::AdoptStreamer(TClassStreamer *str)
          fProperty = -1;
          Property();
       }
+   }
+}
+
+//______________________________________________________________________________
+void TClass::SetStreamerFunc(ClassStreamerFunc_t strm)
+{
+   // Set a wrapper/accessor function around this class custom streamer.
+   
+   if (fProperty != -1 && 
+       ( (fStreamerFunc == 0 && strm != 0) || (fStreamerFunc != 0 && strm == 0) ) ) 
+   {
+      // If the initialization has already been done, make sure to have it redone. 
+      fStreamerFunc = strm;
+      fProperty = -1;
+      Property();
+   } else {
+      fStreamerFunc = strm;
    }
 }
 

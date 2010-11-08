@@ -48,7 +48,7 @@ namespace ROOT {
         fIsA(isa), fShowMembers(showmembers),
         fVersion(1),
         fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fCollectionProxy(0), fSizeof(sizof),
+        fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
    {
       // Constructor.
@@ -68,7 +68,7 @@ namespace ROOT {
         fIsA(isa), fShowMembers(showmembers),
         fVersion(version),
         fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fCollectionProxy(0), fSizeof(sizof),
+        fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
    {
       // Constructor with version number.
@@ -88,7 +88,7 @@ namespace ROOT {
         fIsA(isa), fShowMembers(0),
         fVersion(version),
         fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fCollectionProxy(0), fSizeof(sizof),
+        fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
 
    {
@@ -110,7 +110,7 @@ namespace ROOT {
         fIsA(0), fShowMembers(0),
         fVersion(version),
         fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fCollectionProxy(0), fSizeof(0),
+        fStreamerFunc(0), fCollectionProxy(0), fSizeof(0),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
 
    {
@@ -223,6 +223,7 @@ namespace ROOT {
          fClass->SetDeleteArray(fDeleteArray);
          fClass->SetDestructor(fDestructor);
          fClass->SetDirectoryAutoAdd(fDirAutoAdd);
+         fClass->SetStreamerFunc(fStreamerFunc);
          fClass->AdoptStreamer(fStreamer); fStreamer = 0;
          // If IsZombie is true, something went wront and we will not be
          // able to properly copy the collection proxy
@@ -438,7 +439,7 @@ namespace ROOT {
 
    Short_t TGenericClassInfo::SetStreamer(ClassStreamerFunc_t streamer)
    {
-      // Set a Streamer function.
+      // Set a External Streamer function.
 
       delete fStreamer; fStreamer = 0;
       if (fClass) {
@@ -448,6 +449,14 @@ namespace ROOT {
       }
       return 0;
    }
+   
+   void TGenericClassInfo::SetStreamerFunc(ClassStreamerFunc_t streamer)
+   {
+      // Set a wrapper around the Streamer memger function.
+      
+      fStreamerFunc = streamer;
+      if (fClass) fClass->SetStreamerFunc(streamer);
+   }      
 
    const char *TGenericClassInfo::GetDeclFileName() const
    {

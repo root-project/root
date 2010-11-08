@@ -1441,6 +1441,16 @@ bool NeedDestructor(G__ClassInfo& cl)
 }
 
 //______________________________________________________________________________
+bool HasCustomStreamerMemberFunction(G__ClassInfo &cl)
+{
+   // Return true if the class has a custom member function streamer.
+   
+   long offset;
+   static const char *proto = "TBuffer&";
+   return (cl.GetMethod("Streamer",proto,&offset).IsValid() && ( (cl.RootFlag() & G__NOSTREAMER) || (!(cl.RootFlag() & G__USEBYTECOUNT)) ) );
+}
+
+//______________________________________________________________________________
 bool IsTemplateFloat16(G__ClassInfo &cl)
 {
    // Return true if any of the argument is or contains a Float16.
@@ -1805,6 +1815,12 @@ void WriteAuxFunctions(G__ClassInfo &cl)
                      << "   }" << std::endl;
    }
 
+   if (HasCustomStreamerMemberFunction(cl)) {
+      (*dictSrcOut) << "   // Wrapper around a custom streamer member function." << std::endl
+      << "   static void streamer_" << mappedname.c_str() << "(TBuffer &buf, void *obj) {" << std::endl
+      << "      ((" << classname.c_str() << "*)obj)->" << classname.c_str() << "::Streamer(buf);" << std::endl
+      << "   }" << std::endl;
+   }      
 
    (*dictSrcOut) << "} // end of namespace ROOT for class " << classname.c_str() << std::endl << std::endl;
 }
@@ -2426,7 +2442,9 @@ void WriteClassInit(G__ClassInfo &cl)
    if (HasDirectoryAutoAdd(cl)) {
       (*dictSrcOut)<< "   static void directoryAutoAdd_" << mappedname.c_str() << "(void *p, TDirectory *dir);" << std::endl;
    }
-
+   if (HasCustomStreamerMemberFunction(cl)) {
+      (*dictSrcOut)<< "   static void streamer_" << mappedname.c_str() << "(TBuffer &buf, void *obj);" << std::endl;      
+   }
    //--------------------------------------------------------------------------
    // Check if we have any schema evolution rules for this class
    //--------------------------------------------------------------------------
@@ -2614,6 +2632,10 @@ void WriteClassInit(G__ClassInfo &cl)
    }
    if (HasDirectoryAutoAdd(cl)) {
       (*dictSrcOut) << "      instance.SetDirectoryAutoAdd(&directoryAutoAdd_" << mappedname.c_str() << ");" << std::endl;
+   }
+   if (HasCustomStreamerMemberFunction(cl)) {
+      // We have a custom member function streamer or an older (not StreamerInfo based) automatic streamer.
+      (*dictSrcOut) << "      instance.SetStreamerFunc(&streamer_" << mappedname.c_str() << ");" << std::endl;      
    }
    if (bset) {
       (*dictSrcOut) << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::"
