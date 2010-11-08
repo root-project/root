@@ -36,12 +36,11 @@ private:
 
    static XrdOucString            fgHost;
 
-   bool   ReadFile();
-
 protected:
    XrdSysError                   *fEDest;
 
    int    ParseFile(bool rcf = false);
+   bool   ReadFile(bool update = true);
    void   Register(const char *dname, XrdProofdDirective *d)
                                             { fDirectives.Add(dname, d); }
 public:

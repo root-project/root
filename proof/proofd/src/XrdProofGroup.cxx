@@ -348,6 +348,9 @@ int XrdProofGroupMgr::Config(const char *fn)
       return -1;
    TRACE(DBG, "enter: time of last modification: " << st.st_mtime);
 
+   // Nothing to do if the file did not change
+   if (st.st_mtime <= fCfgFile.fMtime) return fGroups.Num();
+   
    // Save the modification time
    fCfgFile.fMtime = st.st_mtime;
 
@@ -362,9 +365,12 @@ int XrdProofGroupMgr::Config(const char *fn)
 
    // Read now the directives (recursive processing of 'include sub-file'
    // in here)
-   if (ParseInfoFrom(fCfgFile.fName.c_str()) != -1) {
+   if (ParseInfoFrom(fCfgFile.fName.c_str()) != 0) {
       TRACE(XERR, "problems parsing config file "<<fCfgFile.fName);
    }
+   
+   // Notify the content
+   Print(0);
 
    // Return the number of active groups
    return fGroups.Num();

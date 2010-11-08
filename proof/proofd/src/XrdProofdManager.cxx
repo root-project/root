@@ -94,6 +94,12 @@ void *XrdProofdManagerCron(void *p)
          tw = mid - now + 2; // Always run a check just after midnight
          mid += 86400;
       }
+      
+      // Check if reconfiguration of some services is required (triggered by a change
+      // of the configuration file)
+      if (mgr->SessionMgr()) mgr->SessionMgr()->Config(1);
+      if (mgr->GroupsMgr()) mgr->GroupsMgr()->Config(mgr->GroupsMgr()->GetCfgFile());
+      
       XrdSysTimer::Wait(tw * 1000);
    }
 

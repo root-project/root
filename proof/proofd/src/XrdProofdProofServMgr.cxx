@@ -57,6 +57,11 @@ typedef struct {
    XrdProofGroupMgr *fGroupMgr;
    int *fNBroadcast;
 } XpdBroadcastPriority_t;
+typedef struct {
+   XrdProofdManager *fMgr;
+   XrdProofdClient *fClient;
+   FILE *fEnv;
+} XpdWriteEnv_t;
 
 // Tracing utilities
 #include "XrdProofdTrace.h"
@@ -322,6 +327,17 @@ int XrdProofdProofServMgr::Config(bool rcf)
    // Return 0 on success, -1 on error
    XPDLOC(SMGR, "ProofServMgr::Config")
 
+   XrdSysMutexHelper mhp(fEnvsMutex);
+
+   bool notify = (rcf) ? 0 : 1;
+   if (rcf && ReadFile(0)) {
+      // Cleanup lists of envs and RCs
+      fProofServRCs.clear();
+      fProofServEnvs.clear();
+      // Notify possible new settings
+      notify = 1;
+   }
+
    // Run first the configurator
    if (XrdProofdConfig::Config(rcf) != 0) {
       TRACE(XERR, "problems parsing file ");
@@ -330,11 +346,11 @@ int XrdProofdProofServMgr::Config(bool rcf)
 
    XrdOucString msg;
    msg = (rcf) ? "re-configuring" : "configuring";
-   XPDPRT(msg);
+   if (notify) XPDPRT(msg);
 
    // Notify timeout on internal communications
    XPDFORM(msg, "setting internal timeout to %d secs", fInternalWait);
-   XPDPRT(msg);
+   if (notify) XPDPRT(msg);
 
    // Shutdown options
    msg = "client sessions shutdown after disconnection";
@@ -342,35 +358,44 @@ int XrdProofdProofServMgr::Config(bool rcf)
       XPDFORM(msg, "client sessions kept %sfor %d secs after disconnection",
                    (fShutdownOpt == 1) ? "idle " : "", fShutdownDelay);
    }
-   XPDPRT(msg);
+   if (notify) XPDPRT(msg);
 
-   // Admin paths
-   fActiAdminPath = fMgr->AdminPath();
-   fActiAdminPath += "/activesessions";
-   fTermAdminPath = fMgr->AdminPath();
-   fTermAdminPath += "/terminatedsessions";
+   if (!rcf) {
+      // Admin paths
+      fActiAdminPath = fMgr->AdminPath();
+      fActiAdminPath += "/activesessions";
+      fTermAdminPath = fMgr->AdminPath();
+      fTermAdminPath += "/terminatedsessions";
 
-   // Make sure they exist
-   XrdProofUI ui;
-   XrdProofdAux::GetUserInfo(fMgr->EffectiveUser(), ui);
-   if (XrdProofdAux::AssertDir(fActiAdminPath.c_str(), ui, 1) != 0) {
-      TRACE(XERR, "unable to assert the admin path: "<<fActiAdminPath);
-      fActiAdminPath = "";
-      return -1;
+      // Make sure they exist
+      XrdProofUI ui;
+      XrdProofdAux::GetUserInfo(fMgr->EffectiveUser(), ui);
+      if (XrdProofdAux::AssertDir(fActiAdminPath.c_str(), ui, 1) != 0) {
+         TRACE(XERR, "unable to assert the admin path: "<<fActiAdminPath);
+         fActiAdminPath = "";
+         return -1;
+      }
+      XPDPRT("active sessions admin path set to: "<<fActiAdminPath);
+
+      if (XrdProofdAux::AssertDir(fTermAdminPath.c_str(), ui, 1) != 0) {
+         TRACE(XERR, "unable to assert the admin path "<<fTermAdminPath);
+         fTermAdminPath = "";
+         return -1;
+      }
+      XPDPRT("terminated sessions admin path set to "<<fTermAdminPath);
    }
-   XPDPRT("active sessions admin path set to: "<<fActiAdminPath);
 
-   if (XrdProofdAux::AssertDir(fTermAdminPath.c_str(), ui, 1) != 0) {
-      TRACE(XERR, "unable to assert the admin path "<<fTermAdminPath);
-      fTermAdminPath = "";
-      return -1;
-   }
-   XPDPRT("terminated sessions admin path set to "<<fTermAdminPath);
-
-   TRACE(DBG, "RC settings: "<< fProofServRCs.size());
-   if (TRACING(DBG) && fProofServRCs.size() > 0) {
-      std::list<XrdOucString>::iterator ircs = fProofServRCs.begin();
-      for ( ; ircs != fProofServRCs.end(); ircs++) { TRACE(DBG, "  "<< *ircs); }
+   if (notify) {
+      XPDPRT("RC settings: "<< fProofServRCs.size());
+      if (fProofServRCs.size() > 0) {
+         std::list<XpdEnv>::iterator ircs = fProofServRCs.begin();
+         for ( ; ircs != fProofServRCs.end(); ircs++) { (*ircs).Print("rc"); }
+      }
+      XPDPRT("ENV settings: "<< fProofServEnvs.size());
+      if (fProofServEnvs.size() > 0) {
+         std::list<XpdEnv>::iterator ienvs = fProofServEnvs.begin();
+         for ( ; ienvs != fProofServEnvs.end(); ienvs++) { (*ienvs).Print("env"); }
+      }
    }
 
    if (!rcf) {
@@ -1161,7 +1186,7 @@ int XrdProofdProofServMgr::DoDirective(XrdProofdDirective *d,
 }
 
 //______________________________________________________________________________
-int XrdProofdProofServMgr::DoDirectiveProofServMgr(char *val, XrdOucStream *cfg, bool)
+int XrdProofdProofServMgr::DoDirectiveProofServMgr(char *val, XrdOucStream *cfg, bool rcf)
 {
    // Process 'proofswrvmgr' directive
    // eg: xpd.proofswrvmgr checkfq:120 termto:100 verifyto:5 recoverto:20
@@ -1170,6 +1195,10 @@ int XrdProofdProofServMgr::DoDirectiveProofServMgr(char *val, XrdOucStream *cfg,
    if (!val || !cfg)
       // undefined inputs
       return -1;
+
+   if (rcf)
+      // Do not reconfigure this (need to check what happens with the cron thread ...
+      return 0;
 
    int checkfq = -1;
    int termto = -1;
@@ -1221,7 +1250,7 @@ int XrdProofdProofServMgr::DoDirectiveProofServMgr(char *val, XrdOucStream *cfg,
 }
 
 //______________________________________________________________________________
-int XrdProofdProofServMgr::DoDirectivePutEnv(char *val, XrdOucStream *, bool)
+int XrdProofdProofServMgr::DoDirectivePutEnv(char *val, XrdOucStream *cfg, bool)
 {
    // Process 'putenv' directives
 
@@ -1229,8 +1258,20 @@ int XrdProofdProofServMgr::DoDirectivePutEnv(char *val, XrdOucStream *, bool)
       // undefined inputs
       return -1;
 
-   // Env variable to exported to 'proofserv'
-   fProofServEnvs.push_back(XrdOucString(val));
+   // Parse env variables to be passed to 'proofserv':
+   XrdOucString users, groups, rcval, rcnam;
+   int smi = -1, smx = -1, vmi = -1, vmx = -1; 
+   bool hex = 0;
+   ExtractEnv(val, cfg, users, groups, rcval, rcnam, smi, smx, vmi, vmx, hex);
+
+   // Adjust name of the variable
+   int iequ = rcnam.find('=');
+   if (iequ == STR_NPOS) return -1;
+   rcnam.erase(iequ);
+   
+   // Fill entries
+   FillEnvList(&fProofServEnvs, rcnam.c_str(), rcval.c_str(),
+                                users.c_str(), groups.c_str(), smi, smx, vmi, vmx, hex);
 
    return 0;
 }
@@ -1238,21 +1279,140 @@ int XrdProofdProofServMgr::DoDirectivePutEnv(char *val, XrdOucStream *, bool)
 //______________________________________________________________________________
 int XrdProofdProofServMgr::DoDirectivePutRc(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'putenv' directives
+   // Process 'putrc' directives.
+   // Syntax:
+   //    xpd.putrc  [u:<usr1>,<usr2>,...] [g:<grp1>,<grp2>,...] 
+   //               [s:[svnmin][-][svnmax]] [v:[vermin][-][vermax]] RcVarName RcVarValue
+   // NB: <usr1>,... and <grp1>,... may contain the wild card '*' 
 
    if (!val || !cfg)
       // undefined inputs
       return -1;
-
-   // rootrc variable to be passed to 'proofserv':
-   XrdOucString rcval(val);
-   while ((val = cfg->GetWord()) && val[0]) {
-      rcval += ' ';
-      rcval += val;
-   }
-   fProofServRCs.push_back(rcval);
+   
+   // Parse rootrc variables to be passed to 'proofserv':
+   XrdOucString users, groups, rcval, rcnam;
+   int smi = -1, smx = -1, vmi = -1, vmx = -1; 
+   bool hex = 0;
+   ExtractEnv(val, cfg, users, groups, rcval, rcnam, smi, smx, vmi, vmx, hex);
+   
+   // Fill entries
+   FillEnvList(&fProofServRCs, rcnam.c_str(), rcval.c_str(),
+                               users.c_str(), groups.c_str(), smi, smx, vmi, vmx, hex);
 
    return 0;
+}
+
+//______________________________________________________________________________
+void XrdProofdProofServMgr::ExtractEnv(char *val, XrdOucStream *cfg,
+                                       XrdOucString &users, XrdOucString &groups,
+                                       XrdOucString &rcval, XrdOucString &rcnam,
+                                       int &smi, int &smx, int &vmi, int &vmx, bool &hex)
+{
+   // Extract env information from the stream 'cfg'
+
+   XrdOucString ssvn, sver;
+   int idash = -1; 
+   while (val && val[0]) {
+      if (!strncmp(val, "u:", 2)) {
+         users = val;
+         users.erase(0,2);
+      } else if (!strncmp(val, "g:", 2)) {
+         groups = val;
+         groups.erase(0,2);
+      } else if (!strncmp(val, "s:", 2)) {
+         ssvn = val;
+         ssvn.erase(0,2);
+         idash = ssvn.find('-');
+         if (idash != STR_NPOS) {
+            if (ssvn.isdigit(0, idash-1)) smi = ssvn.atoi(0, idash-1);
+            if (ssvn.isdigit(idash+1)) smx = ssvn.atoi(idash+1);
+         } else {
+            if (ssvn.isdigit()) smi = ssvn.atoi();
+         }
+      } else if (!strncmp(val, "v:", 2)) {
+         sver = val;
+         sver.erase(0,2);
+         hex = 0;
+         if (sver.beginswith('x')) {
+            hex = 1;
+            sver.erase(0,1);
+         }
+         idash = sver.find('-');
+         if (idash != STR_NPOS) {
+            if (sver.isdigit(0, idash-1)) vmi = sver.atoi(0, idash-1);
+            if (sver.isdigit(idash+1)) vmx = sver.atoi(idash+1);
+         } else {
+            if (sver.isdigit()) vmi = sver.atoi();
+         }
+      } else {
+        if (rcval.length() > 0) {
+           rcval += ' ';
+        } else {
+           rcnam = val;
+        }
+        rcval += val;
+      }
+      val = cfg->GetWord();
+   }
+   // Done
+   return;
+}
+
+//______________________________________________________________________________
+void XrdProofdProofServMgr::FillEnvList(std::list<XpdEnv> *el, const char *nam, const char *val,
+                                        const char *usrs, const char *grps,
+                                        int smi, int smx, int vmi, int vmx, bool hex)
+{
+   // Fill env entry(ies) in the relevant list
+   XPDLOC(SMGR, "ProofServMgr::FillEnvList")
+
+   if (!el) {
+      TRACE(ALL, "env list undefined!");
+      return;
+   }
+   
+   XrdOucString users(usrs), groups(grps);
+   // Transform version numbers in the human unreadable format used internally (version code)
+   if (vmi > 0) vmi = XpdEnv::ToVersCode(vmi, hex);
+   if (vmx > 0) vmx = XpdEnv::ToVersCode(vmx, hex);
+   // Create the entry
+   XpdEnv xpe(nam, val, users.c_str(), groups.c_str(), smi, smx, vmi, vmx);
+   if (users.length() > 0) {
+      XrdOucString usr;
+      int from = 0;
+      while ((from = users.tokenize(usr, from, ',')) != -1) {
+         if (usr.length() > 0) {
+            if (groups.length() > 0) {
+               XrdOucString grp;
+               int fromg = 0;
+               while ((fromg = groups.tokenize(grp, from, ',')) != -1) {
+                  if (grp.length() > 0) {
+                     xpe.Reset(nam, val, usr.c_str(), grp.c_str(), smi, smx, vmi, vmx);
+                     el->push_back(xpe);
+                  }
+               }
+            } else {
+               xpe.Reset(nam, val, usr.c_str(), 0, smi, smx, vmi, vmx);
+               el->push_back(xpe);
+            }
+         }
+      }
+   } else {
+      if (groups.length() > 0) {
+         XrdOucString grp;
+         int fromg = 0;
+         while ((fromg = groups.tokenize(grp, fromg, ',')) != -1) {
+            if (grp.length() > 0) {
+               xpe.Reset(nam, val, 0, grp.c_str(), smi, smx, vmi, vmx);
+               el->push_back(xpe);
+            }
+         }
+      } else {
+         el->push_back(xpe);
+      }
+   }
+   // Done
+   return;
 }
 
 //______________________________________________________________________________
@@ -2276,6 +2436,39 @@ int XrdProofdProofServMgr::Destroy(XrdProofdProtocol *p)
    return 0;
 }
 
+//__________________________________________________________________________
+static int WriteSessEnvs(const char *, XpdEnv *env, void *s)
+{
+   // Run thorugh entries to broadcast the relevant priority
+   XPDLOC(SMGR, "WriteSessEnvs")
+
+   XrdOucString emsg;
+   
+   XpdWriteEnv_t *xwe = (XpdWriteEnv_t *)s;  
+
+   if (env && xwe && xwe->fMgr && xwe->fClient &&  xwe->fEnv) {
+      if (env->fEnv.length() > 0) {
+         // Resolve keywords
+         xwe->fMgr->ResolveKeywords(env->fEnv, xwe->fClient);
+         // Set the env now
+         char *ev = new char[env->fEnv.length()+1];
+         strncpy(ev, env->fEnv.c_str(), env->fEnv.length());
+         ev[env->fEnv.length()] = 0;
+         putenv(ev);
+         fprintf(xwe->fEnv, "%s\n", ev);
+         TRACE(DBG, ev);
+      }
+      // Go to next
+      return 0;
+   } else {
+      emsg = "some input undefined";
+   }
+
+   // Some problem
+   TRACE(XERR,"protocol error: "<<emsg);
+   return 1;
+}
+
 //______________________________________________________________________________
 int XrdProofdProofServMgr::SetProofServEnvOld(XrdProofdProtocol *p, void *input)
 {
@@ -2456,22 +2649,36 @@ int XrdProofdProofServMgr::SetProofServEnvOld(XrdProofdProtocol *p, void *input)
    xps->SetFileout(in->fLogFile.c_str());
 
    // Additional envs (xpd.putenv directive)
-   if (fProofServEnvs.size() > 0) {
-      // Go through the list
-      std::list<XrdOucString>::iterator ienv = fProofServEnvs.begin();
-      for ( ; ienv != fProofServEnvs.end(); ienv++) {
-         XrdOucString env = *ienv;
-         if (env.length() > 0) {
-            // Resolve keywords
-            fMgr->ResolveKeywords(env, p->Client());
-            // Set the env now
-            ev = new char[env.length()+1];
-            strncpy(ev, env.c_str(), env.length());
-            ev[env.length()] = 0;
-            putenv(ev);
-            fprintf(fenv, "%s\n", ev);
-            TRACE(DBG, ev);
+   {  XrdSysMutexHelper mhp(fEnvsMutex);
+      if (fProofServEnvs.size() > 0) {
+         // Hash list of the directives applying to this {user, group, svn, version}
+         XrdOucHash<XpdEnv> sessenvs;
+         std::list<XpdEnv>::iterator ienvs = fProofServEnvs.begin();
+         for ( ; ienvs != fProofServEnvs.end(); ienvs++) {
+            int envmatch = (*ienvs).Matches(p->Client()->User(), p->Client()->Group(),
+                                            p->Client()->ROOT()->SvnRevision(),
+                                            p->Client()->ROOT()->VersionCode());
+            if (envmatch >= 0) {
+               XpdEnv *env = sessenvs.Find((*ienvs).fName.c_str());
+               if (env) {
+                  int envmtcex = env->Matches(p->Client()->User(), p->Client()->Group(),
+                                              p->Client()->ROOT()->SvnRevision(),
+                                              p->Client()->ROOT()->VersionCode());
+                  if (envmatch > envmtcex) {
+                     // Replace the entry
+                     env = &(*ienvs);
+                     sessenvs.Rep(env->fName.c_str(), env, 0, Hash_keepdata);
+                  }
+               } else {
+                  // Add an entry
+                  env = &(*ienvs);
+                  sessenvs.Add(env->fName.c_str(), env, 0, Hash_keepdata);
+               }
+               TRACE(HDBG, "Adding: "<<(*ienvs).fEnv);
+            }
          }
+         XpdWriteEnv_t xpwe = {fMgr, p->Client(), fenv};
+         sessenvs.Apply(WriteSessEnvs, (void *)&xpwe);
       }
    }
 
@@ -2624,6 +2831,34 @@ void XrdProofdProofServMgr::GetTagDirs(XrdProofdProtocol *p, XrdProofdProofServ 
 
    // Done
    return;
+}
+
+//__________________________________________________________________________
+static int WriteSessRCs(const char *, XpdEnv *erc, void *f)
+{
+   // Run thorugh entries to broadcast the relevant priority
+   XPDLOC(SMGR, "WriteSessRCs")
+
+   XrdOucString emsg;
+   FILE *frc = (FILE *)f;
+   if (frc && erc) {
+      XrdOucString rc = erc->fEnv;
+      if (rc.length() > 0) {
+         if (rc.find("Proof.DataSetManager") != STR_NPOS) {
+            TRACE(ALL,"Proof.DataSetManager ignored: use xpd.datasetsrc to define dataset managers");
+         } else {
+            fprintf(frc, "%s\n", rc.c_str());
+         }
+      }
+      // Go to next
+      return 0;
+   } else {
+      emsg = "file or input entry undefined";
+   }
+
+   // Some problem
+   TRACE(XERR,"protocol error: "<<emsg);
+   return 1;
 }
 
 //______________________________________________________________________________
@@ -2830,22 +3065,38 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
    }
 
    // Additional rootrcs (xpd.putrc directive)
-   if (fProofServRCs.size() > 0) {
-      fprintf(frc, "# Additional rootrcs (xpd.putrc directives)\n");
-      // Go through the list
-      std::list<XrdOucString>::iterator ircs = fProofServRCs.begin();
-      for ( ; ircs != fProofServRCs.end(); ircs++) {
-         XrdOucString rc = *ircs;
-         if (rc.length() > 0) {
-            if (rc.find("Proof.DataSetManager") != STR_NPOS) {
-               TRACE(ALL,"Proof.DataSetManager ignored: use xpd.datasetsrc to define dataset managers");
-            } else {
-               fprintf(frc, "%s\n", rc.c_str());
+   {  XrdSysMutexHelper mhp(fEnvsMutex);
+      if (fProofServRCs.size() > 0) {
+         fprintf(frc, "# Additional rootrcs (xpd.putrc directives)\n");
+         // Hash list of the directives applying to this {user, group, svn, version}
+         XrdOucHash<XpdEnv> sessrcs;
+         std::list<XpdEnv>::iterator ircs = fProofServRCs.begin();
+         for ( ; ircs != fProofServRCs.end(); ircs++) {
+            int rcmatch = (*ircs).Matches(p->Client()->User(), p->Client()->Group(),
+                                          p->Client()->ROOT()->SvnRevision(),
+                                          p->Client()->ROOT()->VersionCode());
+            if (rcmatch >= 0) {
+               XpdEnv *rcenv = sessrcs.Find((*ircs).fName.c_str());
+               if (rcenv) {
+                  int rcmtcex = rcenv->Matches(p->Client()->User(), p->Client()->Group(),
+                                               p->Client()->ROOT()->SvnRevision(),
+                                               p->Client()->ROOT()->VersionCode());
+                  if (rcmatch > rcmtcex) {
+                     // Replace the entry
+                     rcenv = &(*ircs);
+                     sessrcs.Rep(rcenv->fName.c_str(), rcenv, 0, Hash_keepdata);
+                  }
+               } else {
+                  // Add an entry
+                  rcenv = &(*ircs);
+                  sessrcs.Add(rcenv->fName.c_str(), rcenv, 0, Hash_keepdata);
+               }
+               TRACE(HDBG, "Adding: "<<(*ircs).fEnv);
             }
          }
+         sessrcs.Apply(WriteSessRCs, (void *)frc);
       }
    }
-
    // If applicable, add dataset managers initiators
    if (fMgr->DataSetSrcs()->size() > 0) {
       fprintf(frc, "# Dataset sources\n");
@@ -2994,25 +3245,38 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
    }
 
    // Additional envs (xpd.putenv directive)
-   if (fProofServEnvs.size() > 0) {
-      // Go through the list
-      std::list<XrdOucString>::iterator ienv = fProofServEnvs.begin();
-      for ( ; ienv != fProofServEnvs.end(); ienv++) {
-         XrdOucString env = *ienv;
-         if (env.length() > 0) {
-            // Resolve keywords
-            fMgr->ResolveKeywords(env, p->Client());
-            // Set the env now
-            ev = new char[env.length()+1];
-            strncpy(ev, env.c_str(), env.length());
-            ev[env.length()] = 0;
-            putenv(ev);
-            fprintf(fenv, "%s\n", ev);
-            TRACE(DBG, ev);
+   {  XrdSysMutexHelper mhp(fEnvsMutex);
+      if (fProofServEnvs.size() > 0) {
+         // Hash list of the directives applying to this {user, group, svn, version}
+         XrdOucHash<XpdEnv> sessenvs;
+         std::list<XpdEnv>::iterator ienvs = fProofServEnvs.begin();
+         for ( ; ienvs != fProofServEnvs.end(); ienvs++) {
+            int envmatch = (*ienvs).Matches(p->Client()->User(), p->Client()->Group(),
+                                            p->Client()->ROOT()->SvnRevision(),
+                                            p->Client()->ROOT()->VersionCode());
+            if (envmatch >= 0) {
+               XpdEnv *env = sessenvs.Find((*ienvs).fName.c_str());
+               if (env) {
+                  int envmtcex = env->Matches(p->Client()->User(), p->Client()->Group(),
+                                              p->Client()->ROOT()->SvnRevision(),
+                                              p->Client()->ROOT()->VersionCode());
+                  if (envmatch > envmtcex) {
+                     // Replace the entry
+                     env = &(*ienvs);
+                     sessenvs.Rep(env->fName.c_str(), env, 0, Hash_keepdata);
+                  }
+               } else {
+                  // Add an entry
+                  env = &(*ienvs);
+                  sessenvs.Add(env->fName.c_str(), env, 0, Hash_keepdata);
+               }
+               TRACE(HDBG, "Adding: "<<(*ienvs).fEnv);
+            }
          }
+         XpdWriteEnv_t xpwe = {fMgr, p->Client(), fenv};
+         sessenvs.Apply(WriteSessEnvs, (void *)&xpwe);
       }
    }
-
    // Set the user envs
    if (xps->UserEnvs() &&
        strlen(xps->UserEnvs()) && strstr(xps->UserEnvs(),"=")) {
@@ -4175,4 +4439,98 @@ int XrdProofSessionInfo::ReadFromFile(const char *file)
 
    // Done
    return 0;
+}
+
+//______________________________________________________________________________
+int XpdEnv::Matches(const char *usr, const char *grp, int svn, int ver)
+{
+   // Check if this env applies to 'usr', 'grp, 'svn', 'ver'.
+   // Returns -1 if it does not match, >=0 if it matches. The value is a linear
+   // combination of matching lengths for user and group, with a weight of 1000 for
+   // the users one, so that an exact user match will always win.
+   XPDLOC(SMGR, "XpdEnv::Matches")
+
+   int nmtc = -1;
+   // Check the user
+   if (fUsers.length() > 0) {
+      XrdOucString u(usr);
+      if ((nmtc = u.matches(fUsers.c_str())) == 0) return -1;
+   } else {
+      nmtc = strlen(usr);
+   }
+   nmtc += 1000;   // Weigth of user name match
+   // Check the group
+   int nmtcg = -1;
+   if (fGroups.length() > 0) {
+      XrdOucString g(grp);
+      if ((nmtcg = g.matches(fGroups.c_str())) == 0) return -1;
+   } else {
+      nmtcg = strlen(grp);
+   }
+   nmtc += nmtcg;
+
+   TRACE(HDBG, fEnv <<", u:"<<usr<<", g:"<<grp<<" --> nmtc: "<<nmtc);
+
+   // Check the subversion number
+   TRACE(HDBG, fEnv <<", svn:"<<svn);
+   if (fSvnMin > 0 && svn < fSvnMin) return -1; 
+   if (fSvnMax > 0 && svn > fSvnMax) return -1; 
+
+   // Check the version code
+   TRACE(HDBG, fEnv <<", ver:"<<ver);
+   if (fVerMin > 0 && ver < fVerMin) return -1; 
+   if (fVerMax > 0 && ver > fVerMax) return -1; 
+   
+   // If we are here then it matches
+   return nmtc;
+}
+
+//______________________________________________________________________________
+int XpdEnv::ToVersCode(int ver, bool hex)
+{
+   // Transform version number ver (format patch + 100*minor + 10000*maj, e.g. 52706)
+   // If 'hex' is true, the components are decoded as hex numbers
+   
+   int maj = -1, min = -1, ptc = -1, xv = ver;
+   if (hex) {
+      maj = xv / 65536;
+      xv -= maj * 65536;
+      min = xv / 256;
+      ptc = xv - min * 256;
+   } else {
+      maj = xv / 10000;
+      xv -= maj * 10000;
+      min = xv / 100;
+      ptc = xv - min * 100;
+   }
+   // Get the version code now
+   int vc = (maj << 16) + (min << 8) + ptc;
+   return vc;
+}
+
+//______________________________________________________________________________
+void XpdEnv::Print(const char *what)
+{
+   // Print the content of this env
+   XPDLOC(SMGR, what)
+   
+   XrdOucString vmi("-1"), vmx("-1");
+   if (fVerMin > 0) {
+      int maj = (fVerMin >> 16);
+      int min = ((fVerMin - maj * 65536) >> 8);
+      int ptc = fVerMin - maj * 65536 - min * 256;
+      XPDFORM(vmi, "%d%d%d", maj, min, ptc);
+   }
+   if (fVerMax > 0) {
+      int maj = (fVerMax >> 16);
+      int min = ((fVerMax - maj * 65536) >> 8);
+      int ptc = fVerMax - maj * 65536 - min * 256;
+      XPDFORM(vmx, "%d%d%d", maj, min, ptc);
+   }
+   XrdOucString u("allusers"), g("allgroups");
+   if (fUsers.length() > 0) u = fUsers;
+   if (fGroups.length() > 0) u = fGroups;
+
+   TRACE(ALL, "'"<<fEnv<<"' {"<<u<<"|"<<g<<
+         "} svn:["<<fSvnMin<<","<<fSvnMax<<"] vers:["<<vmi<<","<<vmx<<"]");
 }
