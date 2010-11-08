@@ -1300,7 +1300,7 @@ void TProofServ::HandleSocketInput()
          }
       }
    
-   } catch (std::bad_alloc &eba) {
+   } catch (std::bad_alloc &) {
       // Memory allocation problem:
       exmsg.Form("%s: caught exception 'bad_alloc' (memory leak?) %s", GetOrdinal(), fgLastMsg.Data());
       // Try to warn the user
