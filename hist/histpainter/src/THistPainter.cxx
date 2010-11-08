@@ -20,6 +20,7 @@
 #include "TSystem.h"
 #include "THistPainter.h"
 #include "TH2.h"
+#include "TH2Poly.h"
 #include "TH3.h"
 #include "TProfile.h"
 #include "THStack.h"
@@ -39,6 +40,7 @@
 #include "TPoints.h"
 #include "TStyle.h"
 #include "TGraph.h"
+#include "TMultiGraph.h"
 #include "TPie.h"
 #include "TGaxis.h"
 #include "TColor.h"
@@ -101,6 +103,7 @@
 <li><a href="#HP18">The "SURFace" options</li></a>
 <li><a href="#HP19">Cylindrical, Polar, Spherical and PseudoRapidity/Phi options</li></a>
 <li><a href="#HP20">Base line for bar-charts and lego plots</li></a>
+<li><a href="#HP20a">TH2Poly Drawing</li></a>
 <li><a href="#HP21">The SPEC option</li></a>
 <li><a href="#HP22">Option "Z" : Adding the color palette on the right side of the pad</li></a>
 <li><a href="#HP23">Setting the color palette</li></a>
@@ -1996,7 +1999,7 @@ Begin_Macro(source)
    float d_35_0[nx] = {0.75, -3.30, -0.92, 0.10, 0.08, -1.69, -1.29, -2.37};
    float d_35_1[nx] = {1.01, -3.02, -0.65, 0.37, 0.34, -1.42, -1.02, -2.10};
 
-   TCanvas *cb = new TCanvas("cbh","cbh",400,600);
+   TCanvas *cbh = new TCanvas("cbh","cbh",400,600);
    cbh->SetGrid();
 
    gStyle->SetHistMinimumZero();
@@ -2026,6 +2029,86 @@ Begin_Macro(source)
    h2bh->Draw("hbar same");
 
    return cbh;
+}
+End_Macro
+Begin_Html
+
+
+<a name="HP20a"></a><h3>TH2Poly Drawing</h3>
+
+<tt>TH2Poly</tt> can be drawn as a color plot (option COL).
+<tt>TH2Poly</tt> bins can have any shapes. The bins are defined as graphs. The 
+following macro is a very simple example showing how to book a TH2Poly and draw
+it.
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *ch2p1 = new TCanvas("ch2p1","ch2p1",600,400);
+   TH2Poly *h2p = new TH2Poly();
+   h2p->SetName("h2poly_name");
+   h2p->SetTitle("h2poly_title");
+   Double_t x1[] = {0, 5, 6};
+   Double_t y1[] = {0, 0, 5};
+   Double_t x2[] = {0, -1, -1, 0};
+   Double_t y2[] = {0, 0, -1, 3};
+   Double_t x3[] = {4, 3, 0, 1, 2.4};
+   Double_t y3[] = {4, 3.7, 1, 4.7, 3.5};
+   h2p->AddBin(3, x1, y1);
+   h2p->AddBin(4, x2, y2);
+   h2p->AddBin(4, x3, y3);
+   h2p->Fill(0.1, 0.01, 3);
+   h2p->Fill(-0.5, -0.5, 7);
+   h2p->Fill(-0.7, -0.5, 1);
+   h2p->Fill(1, 3, 1.5);
+   Double_t fx[] = {0.1, -0.5, -0.7, 1};
+   Double_t fy[] = {0.01, -0.5, -0.5, 3};
+   Double_t fw[] = {3, 1, 1, 1.5};
+   h2p->FillN(4, fx, fy, fw);
+   gStyle->SetPalette(1);
+   h2p->Draw("col");
+   return ch2p1;
+}
+End_Macro
+Begin_Html
+
+<p>Rectangular bins are a frequent case. The method <tt>AddBinBox</tt> allows
+to define them more easily like shown in the following example.
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *ch2p2 = new TCanvas("ch2p2","ch2p2",600,400);
+   TH2Poly *h2p = new TH2Poly();
+   h2p->SetName("Boxes");
+   h2p->SetTitle("TH2Poly Boxes");
+   gStyle->SetPalette(1);
+
+   Int_t i,j;
+   Int_t nx = 40;
+   Int_t ny = 40;
+   Double_t x1,y1,x2,y2;
+   Double_t dx=0.2, dy=0.1;
+   x1 = 0.;
+   x2 = dx;
+
+   for (i = 0; i<nx; i++) {
+      y1 = 0.;
+      y2 = dy;
+      for (j = 0; j<ny; j++) {
+         h2p->AddBin(x1, y1, x2, y2);
+         y1 = y2;
+         y2 = y2+y2*dy;
+      }
+      x1 = x2;
+      x2 = x2+x2*dx;
+   }
+
+   TRandom ran;
+   for (i = 0; i<300000; i++) {
+      h2p->Fill(50*ran.Gaus(2.,1), ran.Gaus(2.,1));
+   }
+   h2p->Draw("col");
+   return ch2p2;
 }
 End_Macro
 Begin_Html
@@ -2726,6 +2809,12 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 
    //     if object is 2D or 3D return this object
    if (fH->GetDimension() == 2) {
+      if (fH->InheritsFrom(TH2Poly::Class())) {
+         TH2Poly *th2 = (TH2Poly*)fH;
+         Int_t bin = th2->FindBin(gPad->AbsPixeltoX(px), gPad->AbsPixeltoY(py));
+         if (bin>0) {curdist =1; goto FUNCTIONS;}
+         else return big;
+      }
       Int_t delta2 = 5; //Give a margin of delta2 pixels to be in the 2-d area
       if ( px > puxmin + delta2
         && px < puxmax - delta2
@@ -3020,8 +3109,14 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
       for (Int_t bin=binmin;bin<=binx;bin++) {integ += fH->GetBinContent(bin);}
       snprintf(info,100,"(x=%g, y=%g, binx=%d, binc=%g, Sum=%g)",x,y,binx,fH->GetBinContent(binx),integ);
    } else {
-      biny = fYaxis->FindFixBin(y);
-      snprintf(info,100,"(x=%g, y=%g, binx=%d, biny=%d, binc=%g)",x,y,binx,biny,fH->GetCellContent(binx,biny));
+      if (fH->InheritsFrom(TH2Poly::Class())) {
+         TH2Poly *th2 = (TH2Poly*)fH;
+         biny = th2->FindBin(x,y);
+         snprintf(info,100,"%s (x=%g, y=%g, bin=%d, binc=%g)",th2->GetBinTitle(biny),x,y,biny,th2->GetBinContent(biny));
+      } else {
+         biny = fYaxis->FindFixBin(y);
+         snprintf(info,100,"(x=%g, y=%g, binx=%d, biny=%d, binc=%g)",x,y,binx,biny,fH->GetCellContent(binx,biny));
+      }
    }
    return info;
 }
@@ -7601,7 +7696,9 @@ void THistPainter::PaintTable(Option_t *option)
       if (palette) delete palette;
    }
 
-   if (fH->GetEntries() != 0 && Hoption.Axis<=0) {
+   if (fH->InheritsFrom(TH2Poly::Class())) {
+      if (Hoption.Color)   PaintTH2PolyColorLevels(option);
+   } else if (fH->GetEntries() != 0 && Hoption.Axis<=0) {
       if (Hoption.Scat)    PaintScatterPlot(option);
       if (Hoption.Arrow)   PaintArrows(option);
       if (Hoption.Box)     PaintBoxes(option);
@@ -7632,6 +7729,53 @@ void THistPainter::PaintTable(Option_t *option)
    if (Hoption.Same != 1) {
       if (!fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
          PaintStat2(gStyle->GetOptStat(),fit);
+      }
+   }
+}
+
+
+//______________________________________________________________________________
+void THistPainter::PaintTH2PolyColorLevels(Option_t *)
+{
+   /* Begin_html
+    <a href="#HP20a">Control function to draw a TH2Poly.</a>
+    End_html */
+
+   Int_t ncolors, theColor;
+   Double_t zmin = fH->GetMinimum();
+   Double_t zmax = fH->GetMaximum();
+
+   ncolors   = gStyle->GetNumberOfColors();
+
+   TH2PolyBin  *b;
+
+   TIter next(((TH2Poly*)fH)->GetBins());
+   TObject *obj, *poly;
+
+   while ((obj=next())) {
+      b     = (TH2PolyBin*)obj;
+      poly  = b->GetPolygon();
+
+      if (poly->IsA() == TGraph::Class()) {
+         TGraph *g  = (TGraph*)poly;
+         theColor = (Int_t)(((b->GetContent()-zmin)/(zmax-zmin))*(ncolors-1));
+         g->SetFillColor(gStyle->GetColorPalette(theColor));
+         g->TAttFill::Modify();
+         g->Paint("F");
+      }
+
+      if (poly->IsA() == TMultiGraph::Class()) {
+         TMultiGraph *mg = (TMultiGraph*)poly;
+         TList *gl = mg->GetListOfGraphs();
+         if (!gl) return;
+         TGraph *g;
+         TIter nextg(gl);
+         theColor = (Int_t)(((b->GetContent()-zmin)/(zmax-zmin))*(ncolors-1));
+         while ((g = (TGraph*) nextg())) {
+            g->SetFillColor(gStyle->GetColorPalette(theColor));
+            g->TAttFill::Modify();
+            g->Paint("F");
+         }
       }
    }
 }

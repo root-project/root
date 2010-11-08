@@ -985,8 +985,12 @@ void TMultiGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
          lnk = (TObjOptLink*)lnk->Next();
       }
    }
-   out<<"   multigraph->Draw(" <<quote<<option<<quote<<");"<<endl;
-
+   const char *l = strstr(option,"th2poly");
+   if (l) {
+      out<<"   "<<l+7<<"->AddBin(multigraph);"<<endl;
+   } else {
+      out<<"   multigraph->Draw(" <<quote<<option<<quote<<");"<<endl;
+   }
    TAxis *xaxis = GetXaxis();
    TAxis *yaxis = GetYaxis();
 

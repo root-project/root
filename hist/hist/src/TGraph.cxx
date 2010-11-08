@@ -1943,12 +1943,18 @@ void TGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       }
    }
 
-   const char *l = strstr(option,"multigraph");
+   const char *l;
+   l = strstr(option,"multigraph");
    if (l) {
       out<<"   multigraph->Add(graph,"<<quote<<l+10<<quote<<");"<<endl;
-   } else {
-      out<<"   graph->Draw("<<quote<<option<<quote<<");"<<endl;
-   }
+      return;
+   } 
+   l = strstr(option,"th2poly");
+   if (l) {
+      out<<"   "<<l+7<<"->AddBin(graph);"<<endl;
+      return;
+   } 
+   out<<"   graph->Draw("<<quote<<option<<quote<<");"<<endl;
 }
 
 

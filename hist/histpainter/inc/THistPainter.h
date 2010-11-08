@@ -79,6 +79,7 @@ public:
    virtual void       PaintBarH(Option_t *option);
    virtual void       PaintBoxes(Option_t *option);
    virtual void       PaintColorLevels(Option_t *option);
+   virtual void       PaintTH2PolyColorLevels(Option_t *option);
    virtual void       PaintContour(Option_t *option);
    virtual Int_t      PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, Double_t y1,
                           Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,

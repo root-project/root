@@ -1,0 +1,1369 @@
+// @(#)root/hist:$Id$
+// TH2Poly v2.1
+// Author: Olivier Couet, Deniz Gunceler
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#include "TROOT.h"
+#include "TClass.h"
+#include "TH2Poly.h"
+#include "TCutG.h"
+#include "TList.h"
+#include "TMath.h"
+#include "TMultiGraph.h"
+#include "TGraph.h"
+#include "TStyle.h"
+#include "TCanvas.h"
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <ctype.h>
+#include "Riostream.h"
+
+ClassImp(TH2Poly)
+
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>TH2Poly: 2D Histogram with Polygonal Bins</h2></center>
+
+<h3>Overview</h3>
+TH2Poly is a 2D Histogram class (TH2) that allows for polygonic bins of arbitary
+shape.
+<p>
+Each bin in the TH2Poly histogram is a TH2PolyBin object. TH2PolyBin is a very
+simple class that contains the vertices and contents of the polygonal bin as
+well as several related functions.
+<p>
+Essentially, TH2Poly is a TList of TH2PolyBin objects together with methods to
+manipulate them.
+<p>
+When adding a new bin, the user needs to pass the number of vertices and
+their x and y coordinates to AddBin(). This should be done before filling.
+The vertices are connected in the order they are specified in the arrays.
+The last and first vertices in the array don't need  be the same; the method
+can handle both cases.
+<p>
+The histogram can be filled with <tt>Fill(Double_t x, Double_t y, Double_t w)
+</tt>. <tt>w</tt> is the weight.
+If no weight is specified, it is assumed to be 1.
+<p>
+Not all areas in the histogram need to binned. If the user attempts to
+fill an area without a bin, then Fill() falls into the overflows. Adding a bin
+is not retroactive; it doesn't affect previous fillings. A Fill() command, that
+was previously ignored due to the lack of a bin at the specified location, is
+not reconsidered when that location is binned later.
+<p>
+If there are two overlapping bins, the first one in the list will be incremented
+by Fill().
+<p>
+The histogram automatically extends its limits if a bin outside the
+histogram limits is added. For example, the default constructor (with no
+arguments) generates a histogram with zero width and height; but adding bins
+to it will extend it up to a proper size.
+<p>
+TH2Poly implements a partitioning algorithm to speed up filling of bins. The
+partitioning algorithm divides the histogram into regions called ‘cells’.
+The bins that each cell intersects are recorded in an array of Tlists.
+When a coordinate in the histogram is to be filled; the method (quickly) finds
+which cell the coordinate belongs.  It then loops over only the bins
+intersecting that cell to find the bin the input coordinate corresponds to.
+The partitioning of the histogram is updated continuously as each bin is added.
+The default number of cells on each axis is 25. This number could be set to
+another value in the constructor or adjusted later by calling the
+<tt>ChangePartition(Int_t, Int_t)</tt> method. The partitioning algorithm is
+considerably faster than the brute force algorithm (i.e. checking if each bin
+contains the input coordinates), especially if the histogram is to be filled
+many times.
+
+<h3>Partitioning Algorithm</h3>
+The partitioning algorithm forms an essential part of the TH2Poly class. It is
+implemented to speed up the filling of bins.
+<p>
+With the brute force approach, the filling is done in the following way:  An
+iterator loops over all bins in the TH2Poly and invokes TMath::IsInside(). This
+method checks to see if the input location is in that bin. If the filling
+coordinate is inside, it increments the bin. The brute force algorithm is very
+slow, filling 500000 times in a 70x45 histogram with 3324 bins (Test Case: Map
+of Europe) takes over 20 minutes to complete.
+<p>
+The alternative is to divide the histogram into virtual rectangular regions
+called ‘cells’. Each cell stores (in a TList) the pointers of the bins
+intersecting it.  The cells themselves form an array of TLists.
+When a coordinate is to be filled, the method finds which cell the coordinate
+falls into. Since the cells are rectangular, this can be done very quickly.
+It then only loops over the bins associated with that cell.
+<p>
+The addition of bins to the appropriate cells is done when the bin is added
+to the histogram. To do this, AddBin() calls the AddBinToPartition() method.
+This method adds the input bin to the partitioning matrix.
+<p>
+The number of partition cells per axis can be specified in the constructor.
+If it is not specified, the default value of 25 along each axis will be
+assigned. This value was chosen because it is small enough to avoid slowing
+down AddBin(), while being large enough to enhance Fill() by a considerable
+amount. Regardless of how it is initialized at the constructor, it can be
+changed later with the ChangePartition() method. ChangePartition() deletes the
+old partition matrix and generates a new one with the specified number of cells
+on each axis.
+<p>
+The optimum number of partition cells per axis changes with the number of
+times Fill() will be called.  Although partitioning greatly speeds up filling,
+it also adds a constant time delay into the code.  When Fill() is to be
+called many times, it is more efficient to divide the histogram into a large
+number cells.  However, if the histogram is to be filled only a few times,
+it is better to divide into a small number of cells.
+End_Html */
+
+
+//______________________________________________________________________________
+TH2Poly::TH2Poly()
+{
+   // Default Constructor. No boundaries specified.
+
+   Initialize(0., 0., 0., 0., 25, 25);
+   SetName("NoName");
+   SetTitle("NoTitle");
+   SetFloat();
+}
+
+
+//______________________________________________________________________________
+TH2Poly::TH2Poly(const char *name,const char *title, Double_t xlow,Double_t xup
+                                             , Double_t ylow,Double_t yup)
+{
+   // Constructor with specified name and boundaries,
+   // but no partition cell number.
+
+   Initialize(xlow, xup, ylow, yup, 25, 25);
+   SetName(name);
+   SetTitle(title);
+   SetFloat(kFALSE);
+}
+
+
+//______________________________________________________________________________
+TH2Poly::TH2Poly(const char *name,const char *title,
+           Int_t nX, Double_t xlow, Double_t xup,
+           Int_t nY, Double_t ylow, Double_t yup)
+{
+   // Constructor with specified name and boundaries and partition cell number.
+
+   Initialize(xlow, xup, ylow, yup, nX, nY);
+   SetName(name);
+   SetTitle(title);
+   SetFloat(kFALSE);
+}
+
+
+//______________________________________________________________________________
+TH2Poly::~TH2Poly()
+{
+   // Destructor.
+}
+
+
+//______________________________________________________________________________
+Int_t TH2Poly::AddBin(TObject *poly)
+{
+   // Adds a new bin to the histogram. It can be any object having the method
+   // IsInside(). It returns the bin number in the histogram. It returns 0 if
+   // it failed to add. To allow the histogram limits to expand when a bin
+   // outside the limits is added, call SetFloat() before adding the bin.
+
+   if (!poly) return 0;
+
+   if (fBins == 0) {fBins = new TList();}
+
+   fNcells++;
+   TH2PolyBin *bin = new TH2PolyBin(poly, fNcells);
+
+   // If the bin lies outside histogram boundaries, then extends the boundaries.
+   // Also changes the partition information accordingly
+   Bool_t flag = kFALSE;
+   if (fFloat) {
+      if (fXaxis.GetXmin() > bin->GetXMin()) {
+         fXaxis.Set(100, bin->GetXMin(), fXaxis.GetXmax());
+         flag = kTRUE;
+      }
+      if (fXaxis.GetXmax() < bin->GetXMax()) {
+         fXaxis.Set(100, fXaxis.GetXmin(), bin->GetXMax());
+         flag = kTRUE;
+      }
+      if (fYaxis.GetXmin() > bin->GetYMin()) {
+         fYaxis.Set(100, bin->GetYMin(), fYaxis.GetXmax());
+         flag = kTRUE;
+      }
+      if (fYaxis.GetXmax() < bin->GetYMax()) {
+         fYaxis.Set(100, fYaxis.GetXmin(), bin->GetYMax());
+         flag = kTRUE;
+      }
+      if (flag) ChangePartition(fCellX, fCellY);
+   } else {
+      /*Implement polygon clipping code here*/
+   }
+
+   fBins->Add((TObject*) bin);
+   SetNewBinAdded(kTRUE);
+
+   // Adds the bin to the partition matrix
+   AddBinToPartition(bin);
+
+   return fNcells;
+}
+
+
+//______________________________________________________________________________
+Int_t TH2Poly::AddBin(Int_t n, Double_t *x, Double_t *y)
+{
+   // Adds a new bin to the histogram. The number of vertices and their (x,y)
+   // coordinates are required as input. It returns the bin number in the
+   // histogram.
+
+   TGraph *g = new TGraph(n, x, y);
+   Int_t bin = AddBin(g);
+   return bin;
+}
+
+
+//______________________________________________________________________________
+Int_t TH2Poly::AddBin(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
+{
+   // Add a new bin to the histogram. The bin shape is a rectangle.
+   // It returns the bin number of the bin in the histogram.
+
+   Double_t x[] = {x1, x1, x2, x2};
+   Double_t y[] = {y1, y2, y2, y1};
+   TGraph *g = new TGraph(4, x, y);
+   Int_t bin = AddBin(g);
+   return bin;
+}
+
+
+//______________________________________________________________________________
+void TH2Poly::AddBinToPartition(TH2PolyBin *bin)
+{
+   // Adds the input bin into the partition cell matrix. This method is called
+   // in AddBin() and ChangePartition().
+
+   // Cell Info
+   Int_t nl, nr, mb, mt; // Max/min indices of the cells that contain the bin
+   Double_t xclipl, xclipr, yclipb, yclipt; // x and y coordinates of a cell
+   Double_t binXmax, binXmin, binYmax, binYmin; // The max/min bin coordinates
+
+   binXmax = bin->GetXMax();
+   binXmin = bin->GetXMin();
+   binYmax = bin->GetYMax();
+   binYmin = bin->GetYMin();
+   nl = (Int_t)(floor((binXmin - fXaxis.GetXmin())/fStepX));
+   nr = (Int_t)(floor((binXmax - fXaxis.GetXmin())/fStepX));
+   mb = (Int_t)(floor((binYmin - fYaxis.GetXmin())/fStepY));
+   mt = (Int_t)(floor((binYmax - fYaxis.GetXmin())/fStepY));
+
+   // Make sure the array indices are correct.
+   if (nr>=fCellX) nr = fCellX-1;
+   if (mt>=fCellY) mt = fCellY-1;
+   if (nl<0)       nl = 0;
+   if (mb<0)       mb = 0;
+
+   Bool_t *contained;
+   fNCells = fCellX*fCellY;
+   contained = new Bool_t[fNCells];
+
+   // Loop over all cells
+   for (int i = nl; i <= nr; i++) {
+      xclipl = fXaxis.GetXmin() + i*fStepX;
+      xclipr = xclipl + fStepX;
+      for (int j = mb; j <= mt; j++) {
+         yclipb = fYaxis.GetXmin() + j*fStepY;
+         yclipt = yclipb + fStepY;
+
+         // If the bin is completely inside the cell,
+         // add that bin to the cell then return
+         if ((binXmin >= xclipl) && (binXmax <= xclipr) &&
+             (binYmax <= yclipt) && (binYmin >= yclipb)){
+            fCells[i + j*fCellX].Add((TObject*) bin);
+            fIsEmpty[i + j*fCellX] = kFALSE;  // Makes the cell non-empty
+            return;
+         }
+
+         // If any of the sides of the cell intersect with any side of the bin, add that bin then continue
+         if (IsIntersecting(bin, xclipl, xclipr, yclipb, yclipt)) {
+            fCells[i + j*fCellX].Add((TObject*) bin);
+            fIsEmpty[i + j*fCellX] = kFALSE;  // Makes the cell non-empty
+            continue;
+         }
+         // If a corner of the cell is inside the bin and since there is no intersection, then that cell completely inside the bin.
+         if((bin->IsInside(xclipl,yclipb)) || (bin->IsInside(xclipl,yclipt))){
+            fCells[i + j*fCellX].Add((TObject*) bin);
+            fIsEmpty[i + j*fCellX] = kFALSE;  // Makes the cell non-empty
+            fCompletelyInside[i + fCellX*j] = kTRUE;
+            continue;
+         }
+         if((bin->IsInside(xclipr,yclipb)) || (bin->IsInside(xclipr,yclipt))){
+            fCells[i + j*fCellX].Add((TObject*) bin);
+            fIsEmpty[i + j*fCellX] = kFALSE;  // Makes the cell non-empty
+            fCompletelyInside[i + fCellX*j] = kTRUE;
+            continue;
+         }
+      }
+   }
+}
+
+
+//______________________________________________________________________________
+void TH2Poly::ChangePartition(Int_t n, Int_t m)
+{
+   // Changes the number of partition cells in the histogram.
+   // Deletes the old partition and constructs a new one.
+
+   fCellX = n;                          // Set the number of cells
+   fCellY = m;                          // Set the number of cells
+
+   delete [] fCells;                    // Deletes the old partition
+
+   fNCells = fCellX*fCellY;
+   fCells  = new TList [fNCells];  // Sets an empty partition
+
+   fStepX = (fXaxis.GetXmax() - fXaxis.GetXmin())/fCellX;      // Calculate cell width
+   fStepY = (fYaxis.GetXmax() - fYaxis.GetXmin())/fCellY;      // Calculate cell height
+
+   delete [] fIsEmpty;
+   delete [] fCompletelyInside;
+   fIsEmpty = new Bool_t [fNCells];
+   fCompletelyInside = new Bool_t [fNCells];
+
+   // Initializes the flags
+   for (int i = 0; i<fNCells; i++) {
+      fIsEmpty[i]          = kTRUE;
+      fCompletelyInside[i] = kFALSE;
+   }
+
+   // TList iterator
+   TIter    next(fBins);
+   TObject  *obj;
+
+   while((obj = next())){   // Loop over bins and add them to the partition
+      AddBinToPartition((TH2PolyBin*) obj);
+   }
+}
+
+
+//______________________________________________________________________________
+void TH2Poly::ClearBinContents()
+{
+   // Clears the contents of all bins in the histogram.
+
+   TIter next(fBins);
+   TObject *obj;
+   TH2PolyBin *bin;
+
+   // Clears the bin contents
+   while ((obj = next())) {
+      bin = (TH2PolyBin*) obj;
+      bin->ClearContent();
+   }
+
+   // Clears the statistics
+   fTsumw   = 0;
+   fTsumwx  = 0;
+   fTsumwx2 = 0;
+   fTsumwy  = 0;
+   fTsumwy2 = 0;
+   fEntries = 0;
+}
+
+
+//______________________________________________________________________________
+void TH2Poly::Draw(Option_t * option)
+{
+   // Draws the histogram on the canvas.
+   // Options:
+   //    ""     2D Color
+   //    "glhp" Lego plot using OpenGL
+
+   if (fNcells==0) return;
+
+   TString opt = option;
+   opt.ToLower();
+
+   fZaxis.Set(100, GetMinimum(), GetMaximum());
+
+   if (opt.Contains("glhp")) {
+      gStyle->SetCanvasPreferGL(kTRUE);
+   }
+
+   if (gPad) {
+      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
+      if (opt.Contains("a")) gPad->Clear();
+   }
+   AppendPad(opt);
+}
+
+
+//______________________________________________________________________________
+Int_t TH2Poly::FindBin(Double_t x, Double_t y, Double_t)
+{
+   // Returns the bin number of the bin at the given coordinate. -1 to -9 are the
+   // overflow and underflow bins.  overflow bin -5 is the unbinned areas in
+   // the histogram (also called "the sea"). The third parameter can be left
+   // blank.
+   // The overflow/underflow bins are:
+   //
+   // -1 | -2 | -3
+   // -------------
+   // -4 | -5 | -6
+   // -------------
+   // -7 | -8 | -9
+   //
+   // where -5 means is the "sea" bin (i.e. unbinned areas)
+
+
+   // Checks for overflow/underflow
+   Int_t overflow = 0;
+   if      (y > fYaxis.GetXmax()) overflow += -1;
+   else if (y > fYaxis.GetXmin()) overflow += -4;
+   else                           overflow += -7;
+   if      (x > fXaxis.GetXmax()) overflow += -2;
+   else if (x > fXaxis.GetXmin()) overflow += -1;
+   if (overflow != -5) return overflow;  // If there is an overflow/undeflow, returns that value
+
+   // Finds the cell (x,y) coordinates belong to
+   Int_t n = (Int_t)(floor((x-fXaxis.GetXmin())/fStepX));
+   Int_t m = (Int_t)(floor((y-fYaxis.GetXmin())/fStepY));
+
+   // Make sure the array indices are correct.
+   if (n>=fCellX) n = fCellX-1;
+   if (m>=fCellY) m = fCellY-1;
+   if (n<0)       n = 0;
+   if (m<0)       m = 0;
+
+   if (fIsEmpty[n+fCellX*m]) return -5;  // If the cell is empty, then the point must be on "the sea"
+
+   TH2PolyBin *bin;
+
+   TIter next(&fCells[n+fCellX*m]);
+   TObject *obj;
+
+   // Search for the bin in the cell
+   while ((obj=next())) {
+      bin  = (TH2PolyBin*)obj;
+      if (bin->IsInside(x,y)) return bin->GetBinNumber();
+   }
+
+   // If the search has not returned a bin, the point must be on "the sea"
+   return -5;
+}
+
+
+//______________________________________________________________________________
+Int_t TH2Poly::Fill(Double_t x, Double_t y)
+{
+   // Increment the bin containing (x,y) by 1.
+   // Uses the partitioning algorithm.
+
+   return Fill(x, y, 1.0);
+}
+
+
+//______________________________________________________________________________
+Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
+{
+   // Increment the bin containing (x,y) by w.
+   // Uses the partitioning algorithm.
+
+   if (fNcells==0) return 0;  // If there are no bins in the histogram, does nothing
+   Int_t overflow = 0;
+   if      (y > fYaxis.GetXmax()) overflow += -1;
+   else if (y > fYaxis.GetXmin()) overflow += -4;
+   else                           overflow += -7;
+   if      (x > fXaxis.GetXmax()) overflow += -2;
+   else if(x > fXaxis.GetXmin())  overflow += -1;
+   if (overflow != -5) {
+      fOverflow[-overflow - 1]++;
+      return 0;
+   }
+
+   // Finds the cell (x,y) coordinates belong to
+   Int_t n = (Int_t)(floor((x-fXaxis.GetXmin())/fStepX));
+   Int_t m = (Int_t)(floor((y-fYaxis.GetXmin())/fStepY));
+
+   // Make sure the array indices are correct.
+   if (n>=fCellX) n = fCellX-1;
+   if (m>=fCellY) m = fCellY-1;
+   if (n<0)       n = 0;
+   if (m<0)       m = 0;
+
+   if (fIsEmpty[n+fCellX*m]) return 0;  // If the cell is empty, then does not do anything
+
+   TH2PolyBin *bin;
+   Int_t bi;
+
+   TIter next(&fCells[n+fCellX*m]);
+   TObject *obj;
+
+   while ((obj=next())) {
+      bin  = (TH2PolyBin*)obj;
+      bi = bin->GetBinNumber()-1;
+      if (bin->IsInside(x,y)) {
+         bin->Fill(w);
+
+         // Statistics
+         fTsumw   = fTsumw + w;       // Increments the total number of content
+         fTsumwx  = fTsumwx + w*x;    // Increments the weighted sum of x coordinates
+         fTsumwx2 = fTsumwx2 + w*x*x; // Increments the weighted sum of squares of x coordinates
+         fTsumwy  = fTsumwy + w*y;    // Increments the weighted sum of y coordinates
+         fTsumwy2 = fTsumwy2 + w*y*y; // Increments the weighted sum of squares of y coordinates
+         if (fSumw2.fN) fSumw2.fArray[bi] += w*w;
+         fEntries++;                  // Increments the total number of times Fill() was called
+
+         SetBinContentChanged(kTRUE);
+
+         return 0;
+      }
+   }
+
+   fOverflow[4]++;  // Increments the "sea".
+   return 0;
+}
+
+
+//______________________________________________________________________________
+void TH2Poly::FillN(Int_t ntimes, const Double_t* x, const Double_t* y,
+                               const Double_t* w, Int_t stride)
+{
+   // Fills a 2-D histogram with an array of values and weights.
+   //
+   // ntimes:  number of entries in arrays x and w
+   //          (array size must be ntimes*stride)
+   // x:       array of x values to be histogrammed
+   // y:       array of y values to be histogrammed
+   // w:       array of weights
+   // stride:  step size through arrays x, y and w
+
+   for (int i = 0; i < ntimes; i += stride) {
+      Fill(x[i], y[i], w[i]);
+   }
+}
+
+
+//______________________________________________________________________________
+Double_t TH2Poly::Integral(Option_t* option) const
+{
+   // Returns the integral of bin contents.
+   // By default the integral is computed as the sum of bin contents.
+   // If option "width" or "area" is specified, the integral is the sum of
+   // the bin contents multiplied by the area of the bin.
+
+   TString opt = option;
+   opt.ToLower();
+
+   if ((opt.Contains("width")) || (opt.Contains("area"))) {
+      Double_t w;  // Weight of each bin.  Equals to the area of the bin if options "width" or "area" are specified.
+      Double_t integral = 0.;
+
+      TIter    next(fBins);
+      TObject *obj;
+      TH2PolyBin *bin;
+      while ((obj=next())) {
+         bin       = (TH2PolyBin*) obj;
+         w         = bin->GetArea();
+         integral += w*(bin->GetContent());
+      }
+
+      return integral;
+   } else {
+      return fTsumw;
+   }
+}
+
+
+//______________________________________________________________________________
+Double_t TH2Poly::GetBinContent(Int_t bin) const
+{
+   // Returns the content of the input bin
+   // For the overflow/underflow/sea bins:
+   //
+   // -1 | -2 | -3
+   // -------------
+   // -4 | -5 | -6
+   // -------------
+   // -7 | -8 | -9
+   //
+   // where -5 is the "sea" bin (i.e. unbinned areas)
+
+   if (bin > (fNcells))  return 0;
+   if (bin < 0)          return fOverflow[-bin - 1];
+   return ((TH2PolyBin*) fBins->At(bin-1))->GetContent();
+}
+
+
+//______________________________________________________________________________
+Double_t TH2Poly::GetBinError(Int_t bin) const
+{
+   // Returns the value of error associated to bin number bin.
+   // If the sum of squares of weights has been defined (via Sumw2),
+   // this function returns the sqrt(sum of w2).
+   // otherwise it returns the sqrt(contents) for this bin.
+
+   if (bin < 0) bin = 0;
+   if (bin > (fNcells)) return 0;
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
+   if (fSumw2.fN) {
+      Double_t err2 = fSumw2.fArray[bin-1];
+      return TMath::Sqrt(err2);
+   }
+   Double_t error2 = TMath::Abs(GetBinContent(bin));
+   return TMath::Sqrt(error2);
+}
+
+
+//______________________________________________________________________________
+const char *TH2Poly::GetBinName(Int_t bin) const
+{
+   // Returns the bin name.
+
+   if (bin > (fNcells))  return "";
+   if (bin < 0)          return "";
+   return ((TH2PolyBin*) fBins->At(bin-1))->GetPolygon()->GetName();
+}
+
+
+//______________________________________________________________________________
+const char *TH2Poly::GetBinTitle(Int_t bin) const
+{
+   // Returns the bin title.
+
+   if (bin > (fNcells))  return "";
+   if (bin < 0)          return "";
+   return ((TH2PolyBin*) fBins->At(bin-1))->GetPolygon()->GetTitle();
+}
+
+
+//______________________________________________________________________________
+Double_t TH2Poly::GetMaximum() const
+{
+   // Returns the maximum value of the histogram.
+
+   if (fNcells==0) return 0;
+
+   TH2PolyBin  *b;
+
+   TIter next(fBins);
+   TObject *obj;
+   Double_t max,c;
+
+   max = ((TH2PolyBin*) next())->GetContent();
+
+   while ((obj=next())) {
+      b = (TH2PolyBin*)obj;
+      c = b->GetContent();
+      if (c>max) max = c;
+   }
+   return max;
+}
+
+
+//______________________________________________________________________________
+Double_t TH2Poly::GetMaximum(Double_t maxval) const
+{
+   // Returns the maximum value of the histogram that is less than maxval.
+
+   if (fNcells==0) return 0;
+
+   TH2PolyBin  *b;
+
+   TIter next(fBins);
+   TObject *obj;
+   Double_t max,c;
+
+   max = ((TH2PolyBin*) next())->GetContent();
+
+   while ((obj=next())) {
+      b = (TH2PolyBin*)obj;
+      c = b->GetContent();
+      if (c>max && c<maxval) max=c;
+   }
+   return max;
+}
+
+
+//______________________________________________________________________________
+Double_t TH2Poly::GetMinimum() const
+{
+   // Returns the minimum value of the histogram.
+
+   if (fNcells==0) return 0;
+
+   TH2PolyBin  *b;
+
+   TIter next(fBins);
+   TObject *obj;
+   Double_t min,c;
+
+   min = ((TH2PolyBin*) next())->GetContent();
+
+   while ((obj=next())) {
+      b = (TH2PolyBin*)obj;
+      c = b->GetContent();
+      if (c<min) min=c;
+   }
+   return min;
+}
+
+
+//______________________________________________________________________________
+Double_t TH2Poly::GetMinimum(Double_t minval) const
+{
+   // Returns the minimum value of the histogram that is greater than minval.
+
+   if (fNcells==0) return 0;
+
+   TH2PolyBin  *b;
+
+   TIter next(fBins);
+   TObject *obj;
+   Double_t min,c;
+
+   min = ((TH2PolyBin*) next())->GetContent();
+
+   while ((obj=next())) {
+      b = (TH2PolyBin*)obj;
+      c = b->GetContent();
+      if (c<min && c>minval) min=c;
+   }
+   return min;
+}
+
+
+//______________________________________________________________________________
+void TH2Poly::Honeycomb(Double_t xstart, Double_t ystart, Double_t a,
+                     Int_t k, Int_t s)
+{
+   // Bins the histogram using a honeycomb structure
+
+   // Add the bins
+   Double_t numberOfHexagonsInTheRow;
+   Double_t x[6], y[6];
+   Double_t xloop, yloop, xtemp;
+   xloop = xstart; yloop = ystart + a/2.0;
+   for (int sCounter = 0; sCounter < s; sCounter++) {
+
+      xtemp = xloop; // Resets the temp variable
+
+      // Determine the number of hexagons in that row
+      if(sCounter%2 == 0){numberOfHexagonsInTheRow = k;}
+      else{numberOfHexagonsInTheRow = k - 1;}
+
+      for (int kCounter = 0; kCounter <  numberOfHexagonsInTheRow; kCounter++) {
+
+         // Go around the hexagon
+         x[0] = xtemp;
+         y[0] = yloop;
+         x[1] = x[0];
+         y[1] = y[0] + a;
+         x[2] = x[1] + a*sqrt(3)/2.0;
+         y[2] = y[1] + a/2.0;
+         x[3] = x[2] + a*sqrt(3)/2.0;
+         y[3] = y[1];
+         x[4] = x[3];
+         y[4] = y[0];
+         x[5] = x[2];
+         y[5] = y[4] - a/2.0;
+
+         this->AddBin(6, x, y);
+
+         // Go right
+         xtemp += a*sqrt(3);
+      }
+
+      // Increment the starting position
+      if (sCounter%2 == 0) xloop += a*sqrt(3)/2.0;
+      else                 xloop -= a*sqrt(3)/2.0;
+      yloop += 1.5*a;
+   }
+}
+
+
+//______________________________________________________________________________
+void TH2Poly::Initialize(Double_t xlow, Double_t xup,
+                      Double_t ylow, Double_t yup, Int_t n, Int_t m)
+{
+   // Initializes the TH2Poly object.  This method is called by the constructor.
+
+   fDimension = 2;  //The dimesion of the histogram
+
+   fBins   = 0;
+   fNcells = 0;
+
+   // Sets the boundaries of the histogram
+   fXaxis.Set(100, xlow, xup);
+   fYaxis.Set(100, ylow, yup);
+
+   // Statistics
+   fEntries = 0;   // The total number of entries
+   fTsumw   = 0.;  // Total amount of content in the histogram
+   fTsumwx  = 0.;  // Weighted sum of x coordinates
+   fTsumwx2 = 0.;  // Weighted sum of the squares of x coordinates
+   fTsumwy2 = 0.;  // Weighted sum of the squares of y coordinates
+   fTsumwy  = 0.;  // Weighted sum of y coordinates
+
+   fCellX = n; // Set the number of cells to default
+   fCellY = m; // Set the number of cells to default
+
+   fNCells = fCellX*fCellY;
+   fCells  = new TList [fNCells];  // Sets an empty partition
+   fStepX  = (fXaxis.GetXmax() - fXaxis.GetXmin())/fCellX;     // Calculate cell width
+   fStepY  = (fYaxis.GetXmax() - fYaxis.GetXmin())/fCellY;     // Calculate cell height
+
+   fIsEmpty = new Bool_t [fNCells];                            // Declares the 'empty partition' flag
+   fCompletelyInside = new Bool_t [fNCells];                   // Declares the 'cell is completely inside bin' flag
+
+   for (int i = 0; i < fNCells; i++) {   // Initializes the flags
+      fIsEmpty[i] = kTRUE;
+      fCompletelyInside[i] = kFALSE;
+   }
+
+   // 3D Painter flags
+   SetNewBinAdded(kFALSE);
+   SetBinContentChanged(kFALSE);
+}
+
+
+//______________________________________________________________________________
+Bool_t TH2Poly::IsIntersecting(TH2PolyBin *bin,
+                               Double_t xclipl, Double_t xclipr,
+                               Double_t yclipb, Double_t yclipt)
+{
+   // Returns kTRUE if the input bin is intersecting with the
+   // input rectangle (xclipl, xclipr, yclipb, yclipt)
+
+   Int_t     gn;
+   Double_t *gx;
+   Double_t *gy;
+   Bool_t inter = kFALSE;
+   TObject *poly = bin->GetPolygon();
+
+   if (poly->IsA() == TGraph::Class()) {
+      TGraph *g = (TGraph*)poly;
+      gx = g->GetX();
+      gy = g->GetY();
+      gn = g->GetN();
+      inter = IsIntersectingPolygon(gn, gx, gy, xclipl, xclipr, yclipb, yclipt);
+   }
+
+   if (poly->IsA() == TMultiGraph::Class()) {
+      TMultiGraph *mg = (TMultiGraph*)poly;
+      TList *gl = mg->GetListOfGraphs();
+      if (!gl) return inter;
+      TGraph *g;
+      TIter next(gl);
+      while ((g = (TGraph*) next())) {
+         gx = g->GetX();
+         gy = g->GetY();
+         gn = g->GetN();
+         inter = IsIntersectingPolygon(gn, gx, gy, xclipl, xclipr, yclipb, yclipt);
+         if (inter) return inter;
+      }
+   }
+
+   return inter;
+}
+
+//______________________________________________________________________________
+Bool_t TH2Poly::IsIntersectingPolygon(Int_t bn, Double_t *x, Double_t *y,
+                                      Double_t xclipl, Double_t xclipr,
+                                      Double_t yclipb, Double_t yclipt)
+{
+   // Returns kTRUE if the input polygon (bn, x, y) is intersecting with the
+   // input rectangle (xclipl, xclipr, yclipb, yclipt)
+
+   Bool_t p0R, p0L, p0T, p0B, p0xM, p0yM, p1R, p1L, p1T, p1B, p1xM, p1yM, p0In, p1In;
+
+   for (int counter = 0; counter < (bn-1); counter++) {
+      // If both are on the same side, return kFALSE
+      p0L = x[counter]     <= xclipl; // Point 0 is on the left
+      p1L = x[counter + 1] <= xclipl; // Point 1 is on the left
+      if (p0L && p1L) continue;
+      p0R = x[counter]     >= xclipr; // Point 0 is on the right
+      p1R = x[counter + 1] >= xclipr; // Point 1 is on the right
+      if (p0R && p1R) continue;
+      p0T = y[counter]     >= yclipt; // Point 0 is at the top
+      p1T = y[counter + 1] >= yclipt; // Point 1 is at the top
+      if (p0T && p1T) continue;
+      p0B = y[counter]     <= yclipb; // Point 0 is at the bottom
+      p1B = y[counter + 1] <= yclipb; // Point 1 is at the bottom
+      if (p0B && p1B) continue;
+
+      // Checks to see if any are inside
+      p0xM = !p0R && !p0L;
+      p0yM = !p0T && !p0B;
+      p1xM = !p1R && !p1L;
+      p1yM = !p1T && !p1B;
+      p0In = p0xM && p0yM;
+      if (p0In) {
+         if (p1xM && p1yM) continue;
+         return kTRUE;
+      }
+      p1In = p1xM && p1yM;
+      if (p1In) {
+         if (p0In) continue;
+         return kTRUE;
+      }
+
+      // We know by now that the points are not in the same side and not inside.
+
+      // Checks to see if they are opposite
+
+      if (p0xM && p1xM) return kTRUE;
+      if (p0yM && p1yM) return kTRUE;
+
+      // We now know that the points are in different x and y indices
+
+      Double_t *xcoord, *ycoord;
+      xcoord    = new Double_t[3];
+      ycoord    = new Double_t[3];
+      xcoord[0] = x[counter];
+      xcoord[1] = x[counter + 1];
+      ycoord[0] = y[counter];
+      ycoord[1] = y[counter + 1];
+
+      if (p0L) {
+         if(p1T){
+            xcoord[2] = xclipl;
+            ycoord[2] = yclipb;
+            if((TMath::IsInside(xclipl, yclipt, 3, xcoord, ycoord)) ||
+               (TMath::IsInside(xclipr, yclipb, 3, xcoord, ycoord))) continue;
+            else return kTRUE;
+         } else if (p1B) {
+            xcoord[2] = xclipl;
+            ycoord[2] = yclipt;
+            if((TMath::IsInside(xclipl, yclipb, 3, xcoord, ycoord)) ||
+               (TMath::IsInside(xclipr, yclipt, 3, xcoord, ycoord))) continue;
+            else return kTRUE;
+         } else { // p1yM
+            if (p0T) {
+               xcoord[2] = xclipl;
+               ycoord[2] = yclipb;
+               if (TMath::IsInside(xclipr, yclipt, 3, xcoord, ycoord)) continue;
+               else return kTRUE;
+            }
+            if (p0B) {
+               xcoord[2] = xclipl;
+               ycoord[2] = yclipt;
+               if (TMath::IsInside(xclipr, yclipb, 3, xcoord, ycoord)) continue;
+               else return kTRUE;
+            }
+         }
+      } else if (p0R) {
+         if (p1T) {
+            xcoord[2] = xclipl;
+            ycoord[2] = yclipb;
+            if ((TMath::IsInside(xclipr, yclipb, 3, xcoord, ycoord)) ||
+                (TMath::IsInside(xclipl, yclipt, 3, xcoord, ycoord))) continue;
+            else return kTRUE;
+         } else if (p1B) {
+            xcoord[2] = xclipl;
+            ycoord[2] = yclipt;
+            if ((TMath::IsInside(xclipl, yclipb, 3, xcoord, ycoord)) ||
+                (TMath::IsInside(xclipr, yclipt, 3, xcoord, ycoord))) continue;
+            else return kTRUE;
+         } else{ // p1yM
+            if (p0T) {
+               xcoord[2] = xclipr;
+               ycoord[2] = yclipb;
+               if (TMath::IsInside(xclipl, yclipt, 3, xcoord, ycoord)) continue;
+               else return kTRUE;
+            }
+            if (p0B) {
+               xcoord[2] = xclipr;
+               ycoord[2] = yclipt;
+               if (TMath::IsInside(xclipl, yclipb, 3, xcoord, ycoord)) continue;
+               else return kTRUE;
+            }
+         }
+      }
+   }
+   return kFALSE;
+}
+
+
+//______________________________________________________________________________
+void TH2Poly::SavePrimitive(ostream &out, Option_t *option)
+{
+   // Save primitive as a C++ statement(s) on output stream out
+
+   out <<"   "<<endl;
+   out <<"   "<< ClassName() <<" *";
+
+   //histogram pointer has by default the histogram name.
+   //however, in case histogram has no directory, it is safer to add a incremental suffix
+   static Int_t hcounter = 0;
+   TString histName = GetName();
+   if (!fDirectory && !histName.Contains("Graph")) {
+      hcounter++;
+      histName += "__";
+      histName += hcounter;
+   }
+   const char *hname = histName.Data();
+
+   //Construct the class initialization
+   out << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
+       << GetTitle() << "\", " << fCellX << ", " << fXaxis.GetXmin() << ", " << fXaxis.GetXmax()
+       << ", " << fCellY << ", " << fYaxis.GetXmin() << ", " << fYaxis.GetXmax() << ");" << endl;
+
+   // Save Bins
+   TIter       next(fBins);
+   TObject    *obj;
+   TH2PolyBin *th2pBin;
+
+   while((obj = next())){
+      th2pBin = (TH2PolyBin*) obj;
+      th2pBin->GetPolygon()->SavePrimitive(out, Form("th2poly%s",histName.Data()));
+   }
+
+   // save bin contents
+   out<<"   "<<endl;
+   Int_t bin;
+   for (bin=1;bin<=fNcells;bin++) {
+      Double_t bc = GetBinContent(bin);
+      if (bc) {
+         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
+      }
+   }
+
+   // save bin errors
+   if (fSumw2.fN) {
+      for (bin=1;bin<=fNcells;bin++) {
+         Double_t be = GetBinError(bin);
+         if (be) {
+            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");"<<endl;
+         }
+      }
+   }
+   TH1::SavePrimitiveHelp(out, hname, option);
+}
+
+
+//______________________________________________________________________________
+void TH2Poly::SetBinContent(Int_t bin, Double_t content)
+{
+   // Sets the contents of the input bin to the input content
+
+   if (bin > (fNcells)) return;
+   ((TH2PolyBin*) fBins->At(bin-1))->SetContent(content);
+   SetBinContentChanged(kTRUE);
+}
+
+
+//______________________________________________________________________________
+void TH2Poly::SetFloat(Bool_t flag)
+{
+   // When set to kTRUE, allows the histogram to expand if a bin outside the
+   // limits is added.
+
+   fFloat = flag;
+}
+
+
+//______________________________________________________________________________
+TH2PolyBin::TH2PolyBin()
+{
+   // Default constructor.
+
+   fPoly    = 0;
+   fContent = 0.;
+   fNumber  = 0;
+   fXmax    = -1111;
+   fXmin    = -1111;
+   fYmax    = -1111;
+   fYmin    = -1111;
+}
+
+
+//______________________________________________________________________________
+TH2PolyBin::TH2PolyBin(TObject *poly, Int_t bin_number)
+{
+   // Normal constructor.
+
+   fContent = 0.;
+   fNumber  = bin_number;
+   fArea    = 0.;
+   fPoly    = poly;
+   fXmax    = -1111;
+   fXmin    = -1111;
+   fYmax    = -1111;
+   fYmin    = -1111;
+   /// Orient();
+   SetChanged(kTRUE);
+}
+
+
+//______________________________________________________________________________
+TH2PolyBin::~TH2PolyBin()
+{
+   // Destructor.
+
+   if (fPoly) delete fPoly;
+}
+
+
+//______________________________________________________________________________
+Double_t TH2PolyBin::GetArea()
+{
+   // Returns the area of the bin.
+
+   Int_t     bn;
+   Double_t *bx;
+   Double_t *by;
+
+   if (fArea == 0) {
+      if (fPoly->IsA() == TGraph::Class()) {
+         TGraph *g = (TGraph*)fPoly;
+         bx    = g->GetX();
+         by    = g->GetY();
+         bn    = g->GetN();
+         fArea = GetAreaPolygon(bn, bx, by);
+      }
+
+      if (fPoly->IsA() == TMultiGraph::Class()) {
+         TMultiGraph *mg = (TMultiGraph*)fPoly;
+         TList *gl = mg->GetListOfGraphs();
+         if (!gl) return fArea;
+         TGraph *g;
+         TIter next(gl);
+         while ((g = (TGraph*) next())) {
+            bx = g->GetX();
+            by = g->GetY();
+            bn = g->GetN();
+            fArea = fArea + GetAreaPolygon(bn, bx, by);
+         }
+      }
+   }
+
+   return fArea;
+}
+
+
+//______________________________________________________________________________
+Double_t TH2PolyBin::GetAreaPolygon(Int_t n, Double_t *x, Double_t *y)
+{
+   // Returns the area of a polygon.
+
+   Double_t area, signedArea = 0;
+
+   for (int i = 0; i<(n-1); i++) {
+      signedArea += (x[i]*y[i+1] - y[i]*x[i+1]);
+   }
+
+   area = TMath::Abs(signedArea/2.0);
+   return area;
+}
+
+
+//______________________________________________________________________________
+Double_t TH2PolyBin::GetXMax()
+{
+   // Returns the maximum value for the x coordinates of the bin.
+
+   if (fXmax != -1111) return fXmax;
+
+   Int_t     bn,i;
+   Double_t *bx;
+
+   if (fPoly->IsA() == TGraph::Class()) {
+      TGraph *g = (TGraph*)fPoly;
+      bx    = g->GetX();
+      bn    = g->GetN();
+      fXmax = bx[0];
+      for (i=1; i<bn; i++) {if (fXmax < bx[i]) fXmax = bx[i];}
+   }
+
+   if (fPoly->IsA() == TMultiGraph::Class()) {
+      TMultiGraph *mg = (TMultiGraph*)fPoly;
+      TList *gl = mg->GetListOfGraphs();
+      if (!gl) return fXmax;
+      TGraph *g;
+      TIter next(gl);
+      Bool_t first = kTRUE;
+      while ((g = (TGraph*) next())) {
+         bx = g->GetX();
+         bn = g->GetN();
+         if (first) {fXmax = bx[0]; first = kFALSE;}
+         for (i=0; i<bn; i++) {if (fXmax < bx[i]) fXmax = bx[i];}
+      }
+   }
+
+   return fXmax;
+}
+
+
+//______________________________________________________________________________
+Double_t TH2PolyBin::GetXMin()
+{
+   // Returns the minimum value for the x coordinates of the bin.
+
+   if (fXmin != -1111) return fXmin;
+
+   Int_t     bn,i;
+   Double_t *bx;
+
+   if (fPoly->IsA() == TGraph::Class()) {
+      TGraph *g = (TGraph*)fPoly;
+      bx    = g->GetX();
+      bn    = g->GetN();
+      fXmin = bx[0];
+      for (i=1; i<bn; i++) {if (fXmin > bx[i]) fXmin = bx[i];}
+   }
+
+   if (fPoly->IsA() == TMultiGraph::Class()) {
+      TMultiGraph *mg = (TMultiGraph*)fPoly;
+      TList *gl = mg->GetListOfGraphs();
+      if (!gl) return fXmin;
+      TGraph *g;
+      TIter next(gl);
+      Bool_t first = kTRUE;
+      while ((g = (TGraph*) next())) {
+         bx = g->GetX();
+         bn = g->GetN();
+         if (first) {fXmin = bx[0]; first = kFALSE;}
+         for (i=0; i<bn; i++) {if (fXmin > bx[i]) fXmin = bx[i];}
+      }
+   }
+
+   return fXmin;
+}
+
+
+//______________________________________________________________________________
+Double_t TH2PolyBin::GetYMax()
+{
+   // Returns the maximum value for the y coordinates of the bin.
+
+   if (fYmax != -1111) return fYmax;
+
+   Int_t     bn,i;
+   Double_t *by;
+
+   if (fPoly->IsA() == TGraph::Class()) {
+      TGraph *g = (TGraph*)fPoly;
+      by    = g->GetY();
+      bn    = g->GetN();
+      fYmax = by[0];
+      for (i=1; i<bn; i++) {if (fYmax < by[i]) fYmax = by[i];}
+   }
+
+   if (fPoly->IsA() == TMultiGraph::Class()) {
+      TMultiGraph *mg = (TMultiGraph*)fPoly;
+      TList *gl = mg->GetListOfGraphs();
+      if (!gl) return fYmax;
+      TGraph *g;
+      TIter next(gl);
+      Bool_t first = kTRUE;
+      while ((g = (TGraph*) next())) {
+         by = g->GetY();
+         bn = g->GetN();
+         if (first) {fYmax = by[0]; first = kFALSE;}
+         for (i=0; i<bn; i++) {if (fYmax < by[i]) fYmax = by[i];}
+      }
+   }
+
+   return fYmax;
+}
+
+
+//______________________________________________________________________________
+Double_t TH2PolyBin::GetYMin()
+{
+   // Returns the minimum value for the y coordinates of the bin.
+
+   if (fYmin != -1111) return fYmin;
+
+   Int_t     bn,i;
+   Double_t *by;
+
+   if (fPoly->IsA() == TGraph::Class()) {
+      TGraph *g = (TGraph*)fPoly;
+      by    = g->GetY();
+      bn    = g->GetN();
+      fYmin = by[0];
+      for (i=1; i<bn; i++) {if (fYmin > by[i]) fYmin = by[i];}
+   }
+
+   if (fPoly->IsA() == TMultiGraph::Class()) {
+      TMultiGraph *mg = (TMultiGraph*)fPoly;
+      TList *gl = mg->GetListOfGraphs();
+      if (!gl) return fYmin;
+      TGraph *g;
+      TIter next(gl);
+      Bool_t first = kTRUE;
+      while ((g = (TGraph*) next())) {
+         by = g->GetY();
+         bn = g->GetN();
+         if (first) {fYmin = by[0]; first = kFALSE;}
+         for (i=0; i<bn; i++) {if (fYmin > by[i]) fYmin = by[i];}
+      }
+   }
+
+   return fYmin;
+}
+
+
+//______________________________________________________________________________
+Bool_t TH2PolyBin::IsInside(Double_t x, Double_t y) const
+{
+   // Return "true" if the point (x,y) is inside the bin.
+
+   Int_t in=0;
+
+   if (fPoly->IsA() == TGraph::Class()) {
+      TGraph *g = (TGraph*)fPoly;
+      in = g->IsInside(x, y);
+   }
+
+   if (fPoly->IsA() == TMultiGraph::Class()) {
+      TMultiGraph *mg = (TMultiGraph*)fPoly;
+      in = mg->IsInside(x, y);
+   }
+
+   return in;
+}
+
+
+//______________________________________________________________________________
+void TH2PolyBin::Orient()
+{
+///// Orients the TH2PolyBin polygon in the counterclockwise orientation.
+///// This is required for the OpenGL lego plot (option = "glhp") of TH2Poly.
+///
+///Double_t *bx = GetX();
+///Double_t *by = GetY();
+///Int_t     bn = GetN();
+///
+///// Determine the orientation
+///Double_t signedArea = 0;
+///for (int i = 0; i<(bn-1); i++) {
+///   signedArea += (bx[i]*by[i+1] - by[i]*bx[i+1]);
+///}
+///
+///// Orient, if necessary
+///if (signedArea < 0) {
+///   int a, b;
+///   Double_t swap;
+///
+///   for (a = 0; a<=((bn/2) - 1); a++) {
+///      b     = bn-1-a;
+///      swap  = bx[a];
+///      bx[a] = bx[b];
+///      bx[b] = swap;
+///      swap  = by[a];
+///      by[a] = by[b];
+///      by[b] = swap;
+///   }
+///}
+}

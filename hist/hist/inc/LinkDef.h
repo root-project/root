@@ -48,6 +48,8 @@
 #pragma link C++ class TH2C-;
 #pragma link C++ class TH2D-;
 #pragma link C++ class TH2F-;
+#pragma link C++ class TH2Poly+;
+#pragma link C++ class TH2PolyBin+;
 #pragma link C++ class TH2S-;
 #pragma link C++ class TH2I+;
 #pragma link C++ class TH3-;
