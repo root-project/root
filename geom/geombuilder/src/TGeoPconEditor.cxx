@@ -462,7 +462,7 @@ TGeoPconSection::TGeoPconSection(const TGWindow *p, UInt_t w, UInt_t h, Int_t id
    fNumber = id;
    TGTextEntry *nef;
    // Label with number
-   AddFrame(new TGLabel(this, Form("#%i",id)), new TGLayoutHints(kLHintsLeft, 2, 4, 6, 0));
+   AddFrame(new TGLabel(this, TString::Format("#%i",id)), new TGLayoutHints(kLHintsLeft, 2, 4, 6, 0));
    
    // Z entry
    fEZ = new TGNumberEntry(this, 0., 5);

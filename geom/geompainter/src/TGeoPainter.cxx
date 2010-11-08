@@ -430,7 +430,7 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *volume, Int_t px, Int_t py
 
    // Iterate the volume content
    TGeoIterator next(vol);
-   next.SetTopName(Form("%s_1",vol->GetName()));
+   next.SetTopName(TString::Format("%s_1",vol->GetName()));
    TGeoNode *daughter;
 
    Int_t level, nd;
@@ -661,16 +661,16 @@ void TGeoPainter::DrawBatemanSol(TGeoBatemanSol *sol, Option_t *option)
    TString formula = "";
    for (i=0; i<ncoeff; i++) {
       sol->GetCoeff(i, cn, lambda);
-      formula += Form("%g*exp(-%g*x)",cn, lambda);
+      formula += TString::Format("%g*exp(-%g*x)",cn, lambda);
       if (i < ncoeff-1) formula += "+";
       if (lambda < lambdamin &&
           lambda > 0.) lambdamin = lambda;
    }
    if (autorange) thi = 10./lambdamin;
    formula += ";time[s]";
-   formula += Form(";Concentration_of_%s",sol->GetElement()->GetName());
+   formula += TString::Format(";Concentration_of_%s",sol->GetElement()->GetName());
    // Create a function
-   TF1 *func = new TF1(Form("conc%s",sol->GetElement()->GetName()), formula.Data(), tlo,thi);
+   TF1 *func = new TF1(TString::Format("conc%s",sol->GetElement()->GetName()), formula.Data(), tlo,thi);
    func->SetMinimum(1.e-3);
    func->SetMaximum(1.25*TMath::Max(sol->Concentration(tlo), sol->Concentration(thi)));
    func->SetLineColor(sol->GetLineColor());
@@ -996,10 +996,10 @@ const char *TGeoPainter::GetVolumeInfo(const TGeoVolume *volume, Int_t /*px*/, I
       else ovtype = "OVERLAP";
       if (volume==fOverlap->GetFirstVolume()) name=volume->GetName();
       else name=fOverlap->GetSecondVolume()->GetName();
-      info = Form("%s: %s of %g", name.Data(), ovtype.Data(), fOverlap->GetOverlap());
+      info = TString::Format("%s: %s of %g", name.Data(), ovtype.Data(), fOverlap->GetOverlap());
       return info;
    }   
-   else info = Form("%s, shape=%s", fVolInfo.Data(), volume->GetShape()->ClassName());
+   else info = TString::Format("%s, shape=%s", fVolInfo.Data(), volume->GetShape()->ClassName());
    return info;
 }
 

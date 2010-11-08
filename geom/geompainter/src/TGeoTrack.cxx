@@ -181,7 +181,7 @@ void TGeoTrack::AnimateTrack(Double_t tmin, Double_t tmax, Double_t nframes, Opt
          gPad->Update();
       }     
       if (issave) {
-         fname = Form("anim%04d.gif", i);
+         fname = TString::Format("anim%04d.gif", i);
          gPad->Print(fname);
       }   
       t += dt;
@@ -351,7 +351,7 @@ char *TGeoTrack::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
    static TString info;
    Double_t x=0,y=0,z=0,t=0;
    GetPoint(0,x,y,z,t);
-   info = Form("%s (%g, %g, %g) tof=%g", GetName(),x,y,z,t);
+   info = TString::Format("%s (%g, %g, %g) tof=%g", GetName(),x,y,z,t);
    return (char*)info.Data();
 }
 

@@ -78,7 +78,7 @@ TGeoNodeCache::TGeoNodeCache(TGeoNode *top, Bool_t nodeid, Int_t capacity)
    fMatrixBranch = new TGeoHMatrix *[fGeoCacheMaxLevels];
    fMPB = new TGeoHMatrix *[fGeoCacheMaxLevels];
    for (Int_t i=0; i<fGeoCacheMaxLevels; i++) {
-      fMPB[i] = new TGeoHMatrix(Form("global_%d",i));
+      fMPB[i] = new TGeoHMatrix(TString::Format("global_%d",i));
       fMatrixBranch[i] = 0;
    }
    fMatrix = fMatrixBranch[0] = fMPB[0];

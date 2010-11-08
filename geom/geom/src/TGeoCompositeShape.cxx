@@ -193,7 +193,7 @@ TGeoCompositeShape::TGeoCompositeShape(const char *expression)
    fNode  = 0;
    MakeNode(expression);
    if (!fNode) {
-      TString message = Form("Composite (no name) could not parse expression %s", expression);
+      TString message = TString::Format("Composite (no name) could not parse expression %s", expression);
       Error("ctor", "%s", message.Data());
       return;
    }

@@ -447,11 +447,11 @@ void TGeoElementRN::MakeName(Int_t a, Int_t z, Int_t iso)
       fName = "neutron";
       return;
    }
-   if (z>=1 && z<= gMaxElem) fName += Form("%3d-%s-",z,gElName[z-1]);
+   if (z>=1 && z<= gMaxElem) fName += TString::Format("%3d-%s-",z,gElName[z-1]);
    else fName = "?? -?? -";
-   if (a>=1 && a<=999) fName += Form("%3.3d",a);
+   if (a>=1 && a<=999) fName += TString::Format("%3.3d",a);
    else fName += "??";
-   if (iso>0 && iso<gMaxLevel) fName += Form("%c", gLevName[iso]);
+   if (iso>0 && iso<gMaxLevel) fName += TString::Format("%c", gLevName[iso]);
    fName.ReplaceAll(" ","");
 }
 
@@ -1032,9 +1032,9 @@ void TGeoElementTable::ImportElementsRN()
    TGeoElementRN *elem;
    TString rnf;
 #ifdef ROOTETCDIR
-   rnf.Form("%s/RadioNuclides.txt", ROOTETCDIR);
+   rnf.TString::Format("%s/RadioNuclides.txt", ROOTETCDIR);
 #else
-   rnf.Form("%s/etc/RadioNuclides.txt", gSystem->Getenv("ROOTSYS"));
+   rnf.TString::Format("%s/etc/RadioNuclides.txt", gSystem->Getenv("ROOTSYS"));
 #endif
    FILE *fp = fopen(rnf, "r");
    if (!fp) {
@@ -1404,10 +1404,10 @@ void TGeoBatemanSol::Normalize(Double_t factor)
 void TGeoBatemanSol::Print(Option_t * /*option*/) const
 {
 // Print concentration evolution.
-   TString formula = Form("N[%s]/N[%s] = ", fElem->GetName(), fElemTop->GetName());
+   TString formula = TString::Format("N[%s]/N[%s] = ", fElem->GetName(), fElemTop->GetName());
    for (Int_t i=0; i<fNcoeff; i++) {
-      if (i == fNcoeff-1) formula += Form("%g*exp(-%g*t)", fCoeff[i].cn, fCoeff[i].lambda);
-      else                formula += Form("%g*exp(-%g*t) + ", fCoeff[i].cn, fCoeff[i].lambda);
+      if (i == fNcoeff-1) formula += TString::Format("%g*exp(-%g*t)", fCoeff[i].cn, fCoeff[i].lambda);
+      else                formula += TString::Format("%g*exp(-%g*t) + ", fCoeff[i].cn, fCoeff[i].lambda);
    }
    printf("%s\n", formula.Data());
 }

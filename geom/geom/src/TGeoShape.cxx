@@ -634,8 +634,8 @@ const char *TGeoShape::GetPointerName() const
 // Provide a pointer name containing uid.
    static TString name;
    Int_t uid = GetUniqueID();
-   if (uid) name = Form("p%s_%d", GetName(),uid);
-   else     name = Form("p%s", GetName());
+   if (uid) name = TString::Format("p%s_%d", GetName(),uid);
+   else     name = TString::Format("p%s", GetName());
    return name.Data();
 }
 

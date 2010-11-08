@@ -164,7 +164,7 @@ void TGeoTabManager::GetEditors(TClass *cl)
 // Get editor for a class.
    // Look in fVolumeTab for any object deriving from TGedFrame,
 
-   TClass *class2 = TClass::GetClass(Form("%sEditor",cl->GetName()));
+   TClass *class2 = TClass::GetClass(TString::Format("%sEditor",cl->GetName()));
    if (class2 && class2->InheritsFrom(TGedFrame::Class())) {
       TGFrameElement *fr;
       TIter next(fVolumeTab->GetList());
@@ -324,7 +324,7 @@ void TGeoTreeDialog::DoSelect(TGListTreeItem *item)
    }
    fgSelectedObj = (TObject *)item->GetUserData();
    if (fgSelectedObj) {
-      name = Form("Selected %s", fgSelectedObj->GetName());
+      name = TString::Format("Selected %s", fgSelectedObj->GetName());
       fObjLabel->SetText(name);
    }   
 }   
@@ -421,7 +421,7 @@ void TGeoVolumeDialog::DoItemClick(TGListTreeItem *item, Int_t btn)
       if (i<ind) continue;
       icopy++;
       for (j=ind+1; j<nd; j++) if (parent_vol->GetNode(j)->GetVolume() == vol) icopy++;
-      daughter_item = fLT->AddItem(item, ((icopy>1)?Form("%s (%i)",vol->GetName(),icopy):vol->GetName()), 
+      daughter_item = fLT->AddItem(item, ((icopy>1)?(TString::Format("%s (%i)",vol->GetName(),icopy)).Data():vol->GetName()), 
                     vol,((vol->GetNdaughters())?pic_fldo:pic_fileo), ((vol->GetNdaughters())?pic_fld:pic_file));
       if (strlen(vol->GetTitle())) daughter_item->SetTipText(vol->GetTitle());            
    }
@@ -477,7 +477,7 @@ void TGeoShapeDialog::BuildListTree()
       parent_item = fLT->FindChildByName(NULL, fld_name.Data());
       if (!parent_item) {
          parent_item = fLT->AddItem(NULL, fld_name.Data(), pic_fldo, pic_fld);
-         parent_item->SetTipText(Form("List of %s shapes",fld_name.Data()));
+         parent_item->SetTipText(TString::Format("List of %s shapes",fld_name.Data()));
       }
       fLT->AddItem(parent_item, shape->GetName(), shape, pic_shape, pic_shape);
    }   
@@ -768,7 +768,7 @@ void TGeoTransientPanel::GetEditors(TClass *cl)
 // Get editor for a class.
    // Look in fStyle for any object deriving from TGedFrame,
 
-   TClass *class2 = TClass::GetClass(Form("%sEditor",cl->GetName()));
+   TClass *class2 = TClass::GetClass(TString::Format("%sEditor",cl->GetName()));
    if (class2 && class2->InheritsFrom(TGedFrame::Class())) {
       TGFrameElement *fr;
       TIter next(fStyle->GetList());

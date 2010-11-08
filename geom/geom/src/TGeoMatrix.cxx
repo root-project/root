@@ -291,7 +291,7 @@ char *TGeoMatrix::GetPointerName() const
 {
 // Provide a pointer name containing uid.
    static TString name;
-   name = Form("pMatrix%d", GetUniqueID());
+   name = TString::Format("pMatrix%d", GetUniqueID());
    return (char*)name.Data();
 }    
 
@@ -540,7 +540,7 @@ void TGeoMatrix::SetDefaultName()
    TObjArray *matrices = gGeoManager->GetListOfMatrices();
    Int_t index = 0;
    if (matrices) index =matrices->GetEntriesFast() - 1;
-   TString name = Form("%c%d", type, index);
+   TString name = TString::Format("%c%d", type, index);
    SetName(name);
 }
 //=============================================================================

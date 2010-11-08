@@ -1531,7 +1531,7 @@ void TGeoManager::AnimateTracks(Double_t tmin, Double_t tmax, Int_t nframes, Opt
          ModifiedPad();
       }
       if (save) {
-         fname = Form("anim%04d.gif", i);
+         fname = TString::Format("anim%04d.gif", i);
          gPad->Print(fname);
       }
       t += dt;
@@ -2985,7 +2985,7 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
 //   fMasterVolume->FindMatrixOfDaughterVolume(vol);
 //   fCurrentMatrix->Print();
    fTopNode = new TGeoNodeMatrix(vol, gGeoIdentity);
-   fTopNode->SetName(Form("%s_1",vol->GetName()));
+   fTopNode->SetName(TString::Format("%s_1",vol->GetName()));
    fTopNode->SetNumber(1);
    fTopNode->SetTitle("Top logical node");
    fNodes->AddAt(fTopNode, 0);
@@ -3246,7 +3246,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
       gROOT->ProcessLine("TPython::Exec(\"topV = geomgr.GetTopVolume()\")");
 
       // instanciate writer
-      const char *cmd=Form("TPython::Exec(\"gdmlwriter = writer.writer('%s')\")",filename);
+      const char *cmd=TString::Format("TPython::Exec(\"gdmlwriter = writer.writer('%s')\")",filename);
       gROOT->ProcessLine(cmd);
       gROOT->ProcessLine("TPython::Exec(\"binding = ROOTwriter.ROOTwriter(gdmlwriter)\")");
 
@@ -3362,7 +3362,7 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    if (strstr(filename,".gdml")) {
       // import from a gdml file
       new TGeoManager("GDMLImport", "Geometry imported from GDML");
-      const char* cmd = Form("TGDMLParse::StartGDML(\"%s\")", filename);
+      const char* cmd = TString::Format("TGDMLParse::StartGDML(\"%s\")", filename);
       TGeoVolume* world = (TGeoVolume*)gROOT->ProcessLineFast(cmd);
 
       if(world == 0) {

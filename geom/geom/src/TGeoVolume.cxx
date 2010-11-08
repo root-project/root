@@ -477,15 +477,15 @@ void TGeoVolume::Browse(TBrowser *b)
    for (Int_t i=0; i<GetNdaughters(); i++) { 
       daughter = GetNode(i)->GetVolume();
       if(!strlen(daughter->GetTitle())) {
-         if (daughter->IsAssembly()) title.Form("Assembly with %d daughter(s)", 
+         if (daughter->IsAssembly()) title.TString::Format("Assembly with %d daughter(s)", 
                                                 daughter->GetNdaughters());
          else if (daughter->GetFinder()) {
             TString s1 = daughter->GetFinder()->ClassName();
             s1.ReplaceAll("TGeoPattern","");
-            title.Form("Volume having %s shape divided in %d %s slices",
+            title.TString::Format("Volume having %s shape divided in %d %s slices",
                        daughter->GetShape()->ClassName(),daughter->GetNdaughters(), s1.Data()); 
                        
-         } else title.Form("Volume with %s shape having %d daughter(s)", 
+         } else title.TString::Format("Volume with %s shape having %d daughter(s)", 
                          daughter->GetShape()->ClassName(),daughter->GetNdaughters());
          daughter->SetTitle(title.Data());
       }   
@@ -554,8 +554,8 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
       TString name;
       for (Int_t i=0; i<novlps; i++) {
          obj = (TNamed*)overlaps->At(i);
-         if (novlps<1000) name = Form("ov%03d", i);
-         else             name = Form("ov%06d", i);
+         if (novlps<1000) name = TString::Format("ov%03d", i);
+         else             name = TString::Format("ov%06d", i);
          obj->SetName(name);
       }   
       if (novlps) Info("CheckOverlaps", "Number of illegal overlaps/extrusions for volume %s: %d\n", GetName(), novlps);
@@ -877,7 +877,7 @@ void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, 
    node = new TGeoNodeMatrix(vol, matrix);
    node->SetMotherVolume(this);
    fNodes->Add(node);
-   TString name = Form("%s_%d", vol->GetName(), copy_no);
+   TString name = TString::Format("%s_%d", vol->GetName(), copy_no);
    if (fNodes->FindObject(name))
       Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name.Data());
    node->SetName(name);
@@ -902,7 +902,7 @@ void TGeoVolume::AddNodeOffset(const TGeoVolume *vol, Int_t copy_no, Double_t of
    TGeoNode *node = new TGeoNodeOffset(vol, copy_no, offset);
    node->SetMotherVolume(this);
    fNodes->Add(node);
-   TString name = Form("%s_%d", vol->GetName(), copy_no+1);
+   TString name = TString::Format("%s_%d", vol->GetName(), copy_no+1);
    node->SetName(name);
    node->SetNumber(copy_no+1);
 }
@@ -940,7 +940,7 @@ void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix
    TGeoNodeMatrix *node = new TGeoNodeMatrix(vol, matrix);
    node->SetMotherVolume(this);
    fNodes->Add(node);
-   TString name = Form("%s_%d", vol->GetName(), copy_no);
+   TString name = TString::Format("%s_%d", vol->GetName(), copy_no);
    if (fNodes->FindObject(name))
       Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name.Data());
    node->SetName(name);
@@ -1505,7 +1505,7 @@ char *TGeoVolume::GetPointerName() const
 {
 // Provide a pointer name containing uid.
    static TString name;
-   name = Form("p%s_%lx", GetName(), (ULong_t)this);
+   name = TString::Format("p%s_%lx", GetName(), (ULong_t)this);
    return (char*)name.Data();
 }
 

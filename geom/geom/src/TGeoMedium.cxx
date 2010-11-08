@@ -110,7 +110,7 @@ char *TGeoMedium::GetPointerName() const
 {
 // Provide a pointer name containing uid.
    static TString name;
-   name = Form("pMed%d", GetUniqueID());
+   name = TString::Format("pMed%d", GetUniqueID());
    return (char*)name.Data();
 }    
 

@@ -239,7 +239,7 @@ char *TGeoMaterial::GetPointerName() const
 {
 // Provide a pointer name containing uid.
    static TString name;
-   name = Form("pMat%d", GetUniqueID());
+   name = TString::Format("pMat%d", GetUniqueID());
    return (char*)name.Data();
 }    
 
@@ -402,10 +402,10 @@ TGeoMaterial *TGeoMaterial::DecayMaterial(Double_t time, Double_t precision)
       el = (TGeoElementRN *)pop->At(0);
       delete [] weight;
       delete pop;
-      if (ncomp1==1) return new TGeoMaterial(Form("%s-evol",GetName()), el, rho);
+      if (ncomp1==1) return new TGeoMaterial(TString::Format("%s-evol",GetName()), el, rho);
       return NULL;
    }   
-   mix = new TGeoMixture(Form("%s-evol",GetName()), ncomp, rho);
+   mix = new TGeoMixture(TString::Format("%s-evol",GetName()), ncomp, rho);
    for (i=0; i<ncomp; i++) {
       weight[i] /= amed;
       if (weight[i]<precision) continue;
@@ -871,10 +871,10 @@ TGeoMaterial *TGeoMixture::DecayMaterial(Double_t time, Double_t precision)
       el = (TGeoElementRN *)pop->At(0);
       delete [] weight;
       delete pop;
-      if (ncomp1==1) return new TGeoMaterial(Form("%s-evol",GetName()), el, rho);
+      if (ncomp1==1) return new TGeoMaterial(TString::Format("%s-evol",GetName()), el, rho);
       return NULL;
    }
-   mix = new TGeoMixture(Form("%s-evol",GetName()), ncomp, rho); 
+   mix = new TGeoMixture(TString::Format("%s-evol",GetName()), ncomp, rho); 
    for (i=0; i<ncomp; i++) {
       weight[i] /= amed;
       if (weight[i]<precision) continue;

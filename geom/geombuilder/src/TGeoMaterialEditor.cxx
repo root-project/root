@@ -540,8 +540,8 @@ void TGeoMixtureEditor::DoSelectElement(Int_t ielem)
 {
 // Slot for selecting an element.
    TGeoElement *el = gGeoManager->GetElementTable()->GetElement(ielem);
-   TString z = Form("Z=%d",el->Z());
-   TString a = Form("A=%d",(Int_t)el->A());
+   TString z = TString::Format("Z=%d",el->Z());
+   TString a = TString::Format("A=%d",(Int_t)el->A());
    fAelem->SetText(a.Data());
    fZelem->SetText(z.Data());
 }   
@@ -610,10 +610,10 @@ void TGeoMixtureEditor::UpdateElements()
       TString s;
       Bool_t byfrac = (fMixture->GetNmixt())?kFALSE:kTRUE;
       if (byfrac) 
-         s.Form("%d-%s-%d: Wmass = %g %%", (Int_t)fMixture->GetZmixt()[i], fMixture->GetElement(i)->GetName(), 
+         s.TString::Format("%d-%s-%d: Wmass = %g %%", (Int_t)fMixture->GetZmixt()[i], fMixture->GetElement(i)->GetName(), 
                 (Int_t)fMixture->GetAmixt()[i],fMixture->GetWmixt()[i]);
       else
-         s.Form("%d-%s-%d: Natoms = %d", (Int_t)fMixture->GetZmixt()[i], fMixture->GetElement(i)->GetName(), 
+         s.TString::Format("%d-%s-%d: Natoms = %d", (Int_t)fMixture->GetZmixt()[i], fMixture->GetElement(i)->GetName(), 
                 (Int_t)fMixture->GetAmixt()[i],fMixture->GetNmixt()[i]);
                      
       TGLabel *label = new TGLabel(fComps, s);
