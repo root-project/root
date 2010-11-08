@@ -767,9 +767,9 @@ void TH2Poly::Honeycomb(Double_t xstart, Double_t ystart, Double_t a,
          y[0] = yloop;
          x[1] = x[0];
          y[1] = y[0] + a;
-         x[2] = x[1] + a*sqrt(3)/2.0;
+         x[2] = x[1] + a*TMath::Sqrt(3)/2.0;
          y[2] = y[1] + a/2.0;
-         x[3] = x[2] + a*sqrt(3)/2.0;
+         x[3] = x[2] + a*TMath::Sqrt(3)/2.0;
          y[3] = y[1];
          x[4] = x[3];
          y[4] = y[0];
@@ -779,12 +779,12 @@ void TH2Poly::Honeycomb(Double_t xstart, Double_t ystart, Double_t a,
          this->AddBin(6, x, y);
 
          // Go right
-         xtemp += a*sqrt(3);
+         xtemp += a*TMath::Sqrt(3);
       }
 
       // Increment the starting position
-      if (sCounter%2 == 0) xloop += a*sqrt(3)/2.0;
-      else                 xloop -= a*sqrt(3)/2.0;
+      if (sCounter%2 == 0) xloop += a*TMath::Sqrt(3)/2.0;
+      else                 xloop -= a*TMath::Sqrt(3)/2.0;
       yloop += 1.5*a;
    }
 }
