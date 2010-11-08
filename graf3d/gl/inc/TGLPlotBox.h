@@ -41,6 +41,11 @@ private:
    mutable TGLVertex3     f2DBoxU[8];
    mutable Int_t          fFrontPoint;
 
+   //The sizes of a "unit" cube.
+   Double_t               fRangeXU;
+   Double_t               fRangeYU;
+   Double_t               fRangeZU;
+
 public:
 
    TGLPlotBox(Bool_t xoySelectable, Bool_t xozSelectable, Bool_t yozSelectable);
@@ -55,6 +60,10 @@ public:
    void SetPlotBox(const Rgl::Range_t &xRange,
                    const Rgl::Range_t &yRange,
                    const Rgl::Range_t &zRange);
+   void SetPlotBox(const Rgl::Range_t &xRange, Double_t rangeXU,
+                   const Rgl::Range_t &yRange, Double_t rangeYU,
+                   const Rgl::Range_t &zRange, Double_t rangeZU);
+
    void SetFrameColor(const TColor *color);
 
    Int_t FindFrontPoint()const;

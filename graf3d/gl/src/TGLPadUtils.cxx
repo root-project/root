@@ -552,19 +552,54 @@ extern "C" {
 }
 
 //______________________________________________________________________________
-Tesselator::Tesselator()
+void Begin(Int_t type)
+{
+   Tesselation_t *dump = Tesselator::GetDump();
+   if (!dump)
+      return;
+
+   dump->push_back(MeshPatch_t(type));
+}
+
+//______________________________________________________________________________
+void Vertex(const Double_t *v)
+{
+   Tesselation_t *dump = Tesselator::GetDump();
+   if (!dump)
+      return;
+
+   std::vector<Double_t> & vs = dump->back().fPatch;
+   vs.push_back(v[0]);
+   vs.push_back(v[1]);
+   vs.push_back(v[2]);
+}
+
+//______________________________________________________________________________
+void End()
+{
+}
+
+Tesselation_t *Tesselator::fVs = 0;
+
+//______________________________________________________________________________
+Tesselator::Tesselator(Bool_t dump)
                : fTess(0)
 {
    GLUtesselator *tess = gluNewTess();
    if (!tess)
       throw std::runtime_error("tesselator creation failed");
 
-   gluTessCallback(tess, (GLenum)GLU_BEGIN,  (tess_t) glBegin);
-   gluTessCallback(tess, (GLenum)GLU_END,    (tess_t) glEnd);
-   gluTessCallback(tess, (GLenum)GLU_VERTEX, (tess_t) glVertex3dv);
+   if (!dump) {
+      gluTessCallback(tess, (GLenum)GLU_BEGIN,  (tess_t) glBegin);
+      gluTessCallback(tess, (GLenum)GLU_END,    (tess_t) glEnd);
+      gluTessCallback(tess, (GLenum)GLU_VERTEX, (tess_t) glVertex3dv);
+   } else {
+      gluTessCallback(tess, (GLenum)GLU_BEGIN,  (tess_t) Begin);
+      gluTessCallback(tess, (GLenum)GLU_END,    (tess_t) End);
+      gluTessCallback(tess, (GLenum)GLU_VERTEX, (tess_t) Vertex);
+   }
 
    gluTessProperty(tess, GLU_TESS_TOLERANCE, 1e-10);
-   
    fTess = tess;
 }
 

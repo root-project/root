@@ -127,6 +127,7 @@
 #pragma link C++ class TF2GL+;
 #pragma link C++ class TH2GL+;
 #pragma link C++ class TH3GL+;
+#pragma link C++ class TGLH2PolyPainter;
 #pragma link C++ class TGLParametricEquationGL;
 #pragma link C++ class TGLPadPainter;
 #pragma link C++ class TGL5DDataSet;

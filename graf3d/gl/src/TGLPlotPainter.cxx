@@ -21,6 +21,8 @@
 #include "TColor.h"
 #include "TAxis.h"
 #include "TMath.h"
+#include "TList.h"
+#include "TH2Poly.h"
 #include "TH1.h"
 #include "TH3.h"
 #include "TF3.h"
@@ -171,6 +173,9 @@ void TGLPlotPainter::Paint()
    
    if (gVirtualPS)
       PrintPlot();
+
+
+
    DrawPlot();
    //Restore material properties from stack.
    glPopAttrib();
@@ -200,6 +205,7 @@ void TGLPlotPainter::Paint()
          gPad->ResetBit(TGraph::kClipFrame);
    } else if(fDrawPalette)
       DrawPaletteAxis();
+
 }
 
 //______________________________________________________________________________
@@ -819,10 +825,12 @@ Double_t TGLPlotCoordinates::GetFactor()const
 
 namespace {
 
-   Bool_t FindAxisRange(const TAxis *axis, Bool_t log, Rgl::BinRange_t &bins, Rgl::Range_t &range);
-   Bool_t FindAxisRange(const TH1 *hist, Bool_t logZ, const Rgl::BinRange_t &xBins,
-                        const Rgl::BinRange_t &yBins, Rgl::Range_t &zRange,
-                        Double_t &factor, Bool_t errors);
+Bool_t FindAxisRange(const TAxis *axis, Bool_t log, Rgl::BinRange_t &bins, Rgl::Range_t &range);
+Bool_t FindAxisRange(const TH1 *hist, Bool_t logZ, const Rgl::BinRange_t &xBins,
+                     const Rgl::BinRange_t &yBins, Rgl::Range_t &zRange,
+                     Double_t &factor, Bool_t errors);
+
+Bool_t FindAxisRange(TH2Poly *hist, Rgl::Range_t &zRange);
 
 }
 
@@ -893,6 +901,57 @@ Bool_t TGLPlotCoordinates::SetRangesCartesian(const TH1 *hist, Bool_t errors, Bo
 
    return kTRUE;
 }
+
+//
+//______________________________________________________________________________
+Bool_t TGLPlotCoordinates::SetRanges(TH2Poly *hist)
+{
+   //Set bin ranges, ranges, etc.
+   Rgl::BinRange_t xBins;
+   Rgl::Range_t    xRange;
+   FindAxisRange(hist->GetXaxis(), kFALSE, xBins, xRange);//kFALSE == never logarithmic.
+
+   Rgl::BinRange_t yBins;
+   Rgl::Range_t    yRange;
+   FindAxisRange(hist->GetYaxis(), kFALSE, yBins, yRange);//kFALSE == never logarithmic.
+
+   Rgl::BinRange_t zBins;
+   Rgl::Range_t zRange;
+   Double_t factor = 1.;
+
+   if (!FindAxisRange(hist, zRange))
+      return kFALSE;
+
+   //Finds the maximum dimension and adjust scale coefficients
+   const Double_t x = xRange.second - xRange.first;
+   const Double_t y = yRange.second - yRange.first;
+   const Double_t z = zRange.second - zRange.first;
+
+   if (!x || !y || !z) {
+      Error("TGLPlotCoordinates::SetRanges", "Zero axis range.");
+      return kFALSE;
+   }
+
+   if (xRange != fXRange || yRange != fYRange || zRange != fZRange ||
+       xBins != fXBins || yBins != fYBins || zBins != fZBins || fFactor != factor)
+   {
+      fModified = kTRUE;
+   }
+
+   fXRange = xRange, fXBins = xBins, fYRange = yRange, fYBins = yBins, fZRange = zRange, fZBins = zBins;
+   fFactor = factor;
+
+   fXScale = 1.7 / x;
+   fYScale = 1.7 / y;
+   fZScale = 1. / z;
+
+   fXRangeScaled.first = fXRange.first * fXScale, fXRangeScaled.second = fXRange.second * fXScale;
+   fYRangeScaled.first = fYRange.first * fYScale, fYRangeScaled.second = fYRange.second * fYScale;
+   fZRangeScaled.first = fZRange.first * fZScale, fZRangeScaled.second = fZRange.second * fZScale;
+
+   return kTRUE;
+}
+//
 
 //______________________________________________________________________________
 Bool_t TGLPlotCoordinates::SetRanges(const TAxis *xAxis, const TAxis *yAxis, const TAxis *zAxis)
@@ -1225,6 +1284,52 @@ namespace {
             zRange.second += TMath::Log10(2*(0.9/0.95));//This magic numbers are from THistPainter.
          return kTRUE;
       }
+
+      if (!maximum)
+         zRange.second += margin * (zRange.second - zRange.first);
+      if (!minimum) {
+         if (gStyle->GetHistMinimumZero())
+            zRange.first >= 0 ? zRange.first = 0. : zRange.first -= margin * (zRange.second - zRange.first);
+         else
+            zRange.first >= 0 && zRange.first - margin * (zRange.second - zRange.first) <= 0 ?
+               zRange.first = 0 : zRange.first -= margin * (zRange.second - zRange.first);
+      }
+
+      return kTRUE;
+   }
+
+   //______________________________________________________________________________
+   Bool_t FindAxisRange(TH2Poly *hist, Rgl::Range_t &zRange)
+   {
+      //First, look through hist to find minimum and maximum values.
+      TList *bins = hist->GetBins();
+      if (!bins || !bins->GetEntries()) {
+         Error("FindAxisRange", "TH2Poly returned empty list of bins");
+         return kFALSE;
+      }
+
+      TObjLink *link = bins->FirstLink();
+      TH2PolyBin *bin0 = static_cast<TH2PolyBin *>(link->GetObject());
+      zRange.second = bin0->GetContent(), zRange.first = zRange.second;
+
+      for (Int_t i = 1, e = bins->GetEntries(); i < e; ++i) {
+         const Double_t val = static_cast<TH2PolyBin *>(bins->At(i))->GetContent();
+         zRange.second = TMath::Max(val, zRange.second);
+         zRange.first = TMath::Min(val, zRange.first);
+      }
+
+      const Bool_t minimum = hist->GetMinimumStored() != -1111;
+      const Bool_t maximum = hist->GetMaximumStored() != -1111;
+
+      if (maximum)
+         zRange.second = hist->GetMaximumStored();
+      if (minimum)
+         zRange.first = hist->GetMinimumStored();
+
+      if (zRange.first >= zRange.second)
+         zRange.first = 0.001 * zRange.second;
+
+      const Double_t margin = gStyle->GetHistTopMargin();
 
       if (!maximum)
          zRange.second += margin * (zRange.second - zRange.first);

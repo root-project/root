@@ -13,6 +13,7 @@
 #define ROOT_TGLPadUtils
 
 #include <vector>
+#include <list>
 
 #ifndef ROOT_RStipples
 #include "RStipples.h"
@@ -139,17 +140,50 @@ public:
 
 };
 
+//
+// OpenGL's tesselator calls callback functions glBegin(MODE), glVertex3(v), glEnd(),
+// where v can be new vertex (or existing) and MODE is a type of mesh patch.
+// MeshPatch_t is a class to save such a tesselation
+// (instead of using glVertex and glBegin to draw.
+//
+struct MeshPatch_t {
+   MeshPatch_t(Int_t type) : fPatchType(type)
+   {}
+
+   Int_t                 fPatchType; //GL_QUADS, GL_QUAD_STRIP, etc.
+   std::vector<Double_t> fPatch;     //vertices.
+};
+
+typedef std::list<MeshPatch_t> Tesselation_t;
+
 class Tesselator {
+
+
 public:
-   Tesselator();
+   Tesselator(Bool_t dump = kFALSE);
+
    ~Tesselator();
    
    void *GetTess()const
    {
       return fTess;
    }
+
+   static void SetDump(Tesselation_t *t)
+   {
+      fVs = t;
+   }
+
+   static Tesselation_t *GetDump()
+   {
+      return fVs;
+   }
+
 private:
+
    void *fTess;
+
+   static Tesselation_t *fVs;//the current tesselator's dump.
 };
 
 /*

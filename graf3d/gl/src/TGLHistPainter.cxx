@@ -31,6 +31,7 @@
 #include "TGLTF3Painter.h"
 #include "TGLParametric.h"
 #include "TGL5DPainter.h"
+#include "TGLH2PolyPainter.h"
 
 ClassImp(TGLHistPainter)
 
@@ -607,6 +608,8 @@ TGLHistPainter::ParsePaintOption(const TString &option)const
       parsedOption.fPlotType = kGLBoxPlot;
    if (option.Index("iso") != kNPOS)
       parsedOption.fPlotType = kGLIsoPlot;
+   if (option.Index("hp") != kNPOS)
+      parsedOption.fPlotType = kGLHPoly;
 
    return parsedOption;
 }
@@ -635,6 +638,9 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
    } else if (option.fPlotType == kGLIsoPlot) {
       if (!fGLPainter.get())
          fGLPainter.reset(new TGLIsoPainter(fHist, &fCamera, &fCoord));
+   } else if (option.fPlotType == kGLHPoly) {
+      if (!fGLPainter.get())
+         fGLPainter.reset(new TGLH2PolyPainter(fHist, &fCamera, &fCoord));
    }
 
    if (fGLPainter.get()) {

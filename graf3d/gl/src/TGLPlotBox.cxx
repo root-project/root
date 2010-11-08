@@ -54,7 +54,10 @@ TGLPlotBox::TGLPlotBox(Bool_t xoy, Bool_t xoz, Bool_t yoz)
                  fXOZSelectable(xoz),
                  fYOZSelectable(yoz),
                  fSelectablePairs(),
-                 fFrontPoint(0)
+                 fFrontPoint(0),
+                 fRangeXU(1.),
+                 fRangeYU(1.),
+                 fRangeZU(1.)
 {
    // Constructor.
    //Front point is 0.
@@ -163,6 +166,17 @@ void TGLPlotBox::SetPlotBox(const Rgl::Range_t &x, const Rgl::Range_t &y, const 
    f3DBox[7].Set(x.first,  y.second, z.second);
 }
 
+//______________________________________________________________________________
+void TGLPlotBox::SetPlotBox(const Rgl::Range_t &x, Double_t xr, const Rgl::Range_t &y, Double_t yr,
+                            const Rgl::Range_t &z, Double_t zr)
+{
+   // Set up a frame box.
+   fRangeXU = xr;
+   fRangeYU = yr;
+   fRangeZU = zr;
+
+   SetPlotBox(x, y, z);
+}
 
 //______________________________________________________________________________
 void TGLPlotBox::SetFrameColor(const TColor *color)
@@ -198,7 +212,12 @@ Int_t TGLPlotBox::FindFrontPoint()const
    const Double_t zMin = f3DBox[0].Z();
    const Double_t zMax = f3DBox[4].Z();
 
-   const Double_t uBox[][2] = {{-0.5, -0.5}, {0.5, -0.5}, {0.5, 0.5}, {-0.5, 0.5}};
+   const Double_t uBox[][2] = {{-fRangeXU / 2., -fRangeYU / 2.},
+                               { fRangeXU / 2., -fRangeYU / 2.},
+                               { fRangeXU / 2.,  fRangeYU / 2.},
+                               {-fRangeXU / 2.,  fRangeYU / 2.}};
+   //const Double_t uBox[][2] = {{-1., -1.}, {1., -1.}, {1., 1.}, {-1., 1.}};
+
 
    for (Int_t i = 0; i < 4; ++i) {
       gluProject(f3DBox[i].X(), f3DBox[i].Y(), zMin, mvMatrix, prMatrix, viewport,
