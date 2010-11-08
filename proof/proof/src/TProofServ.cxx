@@ -3639,7 +3639,7 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
       Bool_t isInMergingMode = kFALSE;
       Int_t nm = 0;
       if (TProof::GetParameter(input, "PROOF_UseMergers", nm) == 0) {
-         isInMergingMode = kTRUE;
+         isInMergingMode = (nm >= 0) ? kTRUE : kFALSE;
       }
       PDB(kGlobal, 2) Info("HandleProcess", "merging mode check: %d", isInMergingMode);
 
@@ -3995,8 +3995,10 @@ void TProofServ::ProcessNext(TString *slb)
    // not express itself on the subject
    if (gEnv->Lookup("Proof.UseMergers") && !input->FindObject("PROOF_UseMergers")) {
       Int_t smg = gEnv->GetValue("Proof.UseMergers",-1);
-      input->Add(new TParameter<Int_t>("PROOF_UseMergers", smg));
-      PDB(kSubmerger, 2) Info("ProcessNext", "PROOF_UseMergers set to %d", smg);
+      if (smg >= 0) {
+         input->Add(new TParameter<Int_t>("PROOF_UseMergers", smg));
+         PDB(kSubmerger, 2) Info("ProcessNext", "PROOF_UseMergers set to %d", smg);
+      }
    }
 
    // Set input
