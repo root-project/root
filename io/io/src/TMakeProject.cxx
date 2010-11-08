@@ -562,6 +562,9 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
       }
    }
 
+   if (strncmp(clname, "auto_ptr<", strlen("auto_ptr<")) == 0) {
+      AddUniqueStatement(fp, Form("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", clname), inclist);
+   }
    return ninc;
 }
 
