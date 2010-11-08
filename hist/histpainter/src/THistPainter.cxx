@@ -8644,7 +8644,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             }
             c->Clear();
             c->cd();
-            TH1 *hp = (TH2*)h3->Project3D("x");
+            TH1 *hp = h3->Project3D("x");
             yaxis->SetRange(firstY,lastY);
             zaxis->SetRange(firstZ,lastZ);
             hp->SetFillColor(38);
@@ -8749,7 +8749,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             }
             c->Clear();
             c->cd();
-            TH1 *hp = (TH2*)h3->Project3D("y");
+            TH1 *hp = h3->Project3D("y");
             xaxis->SetRange(firstX,lastX);
             zaxis->SetRange(firstZ,lastZ);
             hp->SetFillColor(38);
@@ -8854,7 +8854,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             }
             c->Clear();
             c->cd();
-            TH1 *hp = (TH2*)h3->Project3D("z");
+            TH1 *hp = h3->Project3D("z");
             xaxis->SetRange(firstX,lastX);
             yaxis->SetRange(firstY,lastY);
             hp->SetFillColor(38);
