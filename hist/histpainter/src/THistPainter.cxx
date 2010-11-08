@@ -8644,13 +8644,13 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             }
             c->Clear();
             c->cd();
-            TH2 *hp = (TH2*)h3->Project3D("x");
+            TH1 *hp = (TH2*)h3->Project3D("x");
             yaxis->SetRange(firstY,lastY);
             zaxis->SetRange(firstZ,lastZ);
             hp->SetFillColor(38);
             hp->SetTitle(Form("ProjectionX of biny=%d binz=%d", biny, binz));
-            hp->SetXTitle(fH->GetYaxis()->GetTitle());
-            hp->SetZTitle("Number of Entries");
+            hp->SetXTitle(fH->GetXaxis()->GetTitle());
+            hp->SetYTitle("Number of Entries");
             hp->Draw(fShowOption.Data());
          }
          break;
@@ -8749,13 +8749,13 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             }
             c->Clear();
             c->cd();
-            TH2 *hp = (TH2*)h3->Project3D("y");
+            TH1 *hp = (TH2*)h3->Project3D("y");
             xaxis->SetRange(firstX,lastX);
             zaxis->SetRange(firstZ,lastZ);
             hp->SetFillColor(38);
             hp->SetTitle(Form("ProjectionY of binx=%d binz=%d", binx, binz));
             hp->SetXTitle(fH->GetYaxis()->GetTitle());
-            hp->SetZTitle("Number of Entries");
+            hp->SetYTitle("Number of Entries");
             hp->Draw(fShowOption.Data());
          }
          break;
@@ -8854,13 +8854,13 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             }
             c->Clear();
             c->cd();
-            TH2 *hp = (TH2*)h3->Project3D("z");
+            TH1 *hp = (TH2*)h3->Project3D("z");
             xaxis->SetRange(firstX,lastX);
             yaxis->SetRange(firstY,lastY);
             hp->SetFillColor(38);
             hp->SetTitle(Form("ProjectionZ of binx=%d biny=%d", binx, biny));
-            hp->SetXTitle(fH->GetYaxis()->GetTitle());
-            hp->SetZTitle("Number of Entries");
+            hp->SetXTitle(fH->GetZaxis()->GetTitle());
+            hp->SetYTitle("Number of Entries");
             hp->Draw(fShowOption.Data());
          }
          break;
@@ -8929,6 +8929,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             if(nbins==1)hp->SetTitle(Form("ProjectionXY of binz=%d (%.1f)", binz,value1));
             else        hp->SetTitle(Form("ProjectionXY, binz range=%d-%d (%.1f-%.1f)", binz,binz+nbins-1,value1,value2));
             hp->SetXTitle(fH->GetYaxis()->GetTitle());
+            hp->SetYTitle(fH->GetXaxis()->GetTitle());
             hp->SetZTitle("Number of Entries");
             hp->Draw(fShowOption.Data());
          }
@@ -8996,7 +8997,8 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             hp->SetFillColor(38);
             if(nbins==1)hp->SetTitle(Form("ProjectionYX of binz=%d (%.1f)", binz,value1));
             else        hp->SetTitle(Form("ProjectionXY, binz range=%d-%d (%.1f-%.1f)", binz,binz+nbins-1,value1,value2));
-            hp->SetXTitle(fH->GetYaxis()->GetTitle());
+            hp->SetXTitle(fH->GetXaxis()->GetTitle());
+            hp->SetYTitle(fH->GetYaxis()->GetTitle());
             hp->SetZTitle("Number of Entries");
             hp->Draw(fShowOption.Data());
          }
@@ -9064,7 +9066,8 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             hp->SetFillColor(38);
             if(nbins==1)hp->SetTitle(Form("ProjectionXZ of biny=%d (%.1f)", biny,value1));
             else        hp->SetTitle(Form("ProjectionXZ, biny range=%d-%d (%.1f-%.1f)", biny,biny+nbins-1,value1,value2));
-            hp->SetXTitle(fH->GetYaxis()->GetTitle());
+            hp->SetXTitle(fH->GetZaxis()->GetTitle());
+            hp->SetYTitle(fH->GetXaxis()->GetTitle());
             hp->SetZTitle("Number of Entries");
             hp->Draw(fShowOption.Data());
          }
@@ -9132,7 +9135,8 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             hp->SetFillColor(38);
             if(nbins==1)hp->SetTitle(Form("ProjectionZX of biny=%d (%.1f)", biny,value1));
             else        hp->SetTitle(Form("ProjectionZX, binY range=%d-%d (%.1f-%.1f)", biny,biny+nbins-1,value1,value2));
-            hp->SetXTitle(fH->GetYaxis()->GetTitle());
+            hp->SetXTitle(fH->GetXaxis()->GetTitle());
+            hp->SetYTitle(fH->GetZaxis()->GetTitle());
             hp->SetZTitle("Number of Entries");
             hp->Draw(fShowOption.Data());
          }
@@ -9200,7 +9204,8 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             hp->SetFillColor(38);
             if(nbins==1)hp->SetTitle(Form("ProjectionYZ of binx=%d (%.1f)", binx,value1));
             else        hp->SetTitle(Form("ProjectionYZ, binx range=%d-%d (%.1f-%.1f)", binx,binx+nbins-1,value1,value2));
-            hp->SetXTitle(fH->GetYaxis()->GetTitle());
+            hp->SetXTitle(fH->GetZaxis()->GetTitle());
+            hp->SetYTitle(fH->GetYaxis()->GetTitle());
             hp->SetZTitle("Number of Entries");
             hp->Draw(fShowOption.Data());
          }
@@ -9270,6 +9275,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             if(nbins==1)hp->SetTitle(Form("ProjectionZY of binx=%d (%.1f)", binx,value1));
             else        hp->SetTitle(Form("ProjectionZY, binx range=%d-%d (%.1f-%.1f)", binx,binx+nbins-1,value1,value2));
             hp->SetXTitle(fH->GetYaxis()->GetTitle());
+            hp->SetYTitle(fH->GetZaxis()->GetTitle());
             hp->SetZTitle("Number of Entries");
             hp->Draw(fShowOption.Data());
          }
