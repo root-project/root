@@ -1237,8 +1237,6 @@ void TProofServ::HandleSocketInput()
    fgRecursive++;
 
    TMessage *mess;
-   // We use to check in the end if something wrong went on during processing
-   Bool_t parallel = IsParallel();
    Int_t rc = 0;
    TString exmsg;
 
@@ -1302,37 +1300,27 @@ void TProofServ::HandleSocketInput()
    
    } catch (std::bad_alloc &eba) {
       // Memory allocation problem:
-      exmsg.Form("%s: caught exception 'bad_alloc' (memory leak?) %s", GetOrdinal(), fgLastMsg.Data());
-      // Try to warn the user
-      SendAsynMessage(exmsg.Data());
-      // Terminate
-      Terminate(0);
+      exmsg.Form("caught exception 'bad_alloc' (memory leak?) %s", fgLastMsg.Data());
    } catch (std::exception &exc) {
       // Standard exception caught
-      exmsg.Form("%s: caught standard exception '%s' %s", GetOrdinal(), exc.what(), fgLastMsg.Data());
-      // Try to warn the user
-      SendAsynMessage(exmsg.Data());
-      // Terminate
-      Terminate(0);
+      exmsg.Form("caught standard exception '%s' %s", exc.what(), fgLastMsg.Data());
    } catch (int i) {
       // Other exception caught
-      exmsg.Form("%s: caught exception throwing %d %s", GetOrdinal(), i, fgLastMsg.Data());
-      // Try to warn the user
-      SendAsynMessage(exmsg.Data());
-      // Terminate
-      Terminate(0);
+      exmsg.Form("caught exception throwing %d %s", i, fgLastMsg.Data());
    } catch (const char *str) {
       // Other exception caught
-      exmsg.Form("%s: caught exception throwing '%s' %s", GetOrdinal(), str, fgLastMsg.Data());
-      // Try to warn the user
-      SendAsynMessage(exmsg.Data());
-      // Terminate
-      Terminate(0);
+      exmsg.Form("caught exception throwing '%s' %s", str, fgLastMsg.Data());
    } catch (...) {
       // Caught other exception
-      exmsg.Form("%s: caught exception <unknown> %s", GetOrdinal(), fgLastMsg.Data());
+      exmsg.Form("caught exception <unknown> %s", fgLastMsg.Data());
+   }
+
+   // Terminate on exception
+   if (!exmsg.IsNull()) {
+      // Save info in the log file too
+      Error("HandleSocketInput", "%s", exmsg.Data());
       // Try to warn the user
-      SendAsynMessage(exmsg.Data());
+      SendAsynMessage(TString::Format("%s: %s", GetOrdinal(), exmsg.Data()));
       // Terminate
       Terminate(0);
    }
@@ -1342,7 +1330,8 @@ void TProofServ::HandleSocketInput()
    if (fProof) {
       // If something wrong went on during processing and we do not have
       // any worker anymore, we shutdown this session
-      if (rc == 0 && parallel != IsParallel()) {
+      Int_t ngwrks = fProof->GetListOfActiveSlaves()->GetSize() + fProof->GetListOfInactiveSlaves()->GetSize();
+      if (rc == 0 && ngwrks == 0) {
          SendAsynMessage(" *** No workers left: cannot continue! Terminating ... *** ");
          Terminate(0);
       }
@@ -6006,7 +5995,8 @@ void TProofServ::HandleException(Int_t sig)
 {
    // Exception handler: we do not try to recover here, just exit.
 
-   Error("HandleException", "caugth exception triggered by signal: %d", sig);
+   Error("HandleException", "caugth exception triggered by signal '%d' %s",
+                            sig, fgLastMsg.Data());
    // Description
    TString emsg;
    emsg.Form("%s: caught exception triggered by signal '%d' %s",
