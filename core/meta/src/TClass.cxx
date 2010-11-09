@@ -712,7 +712,7 @@ TClass::TClass() :
    fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
-   fDestructor(0), fDirAutoAdd(0), fSizeof(-1),
+   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fVersionUsed(kFALSE), fProperty(0),
    fInterStreamer(0), fOffsetStreamer(0), fStreamerType(kNone),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
@@ -736,7 +736,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
-   fDestructor(0), fDirAutoAdd(0), fSizeof(-1),
+   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fVersionUsed(kFALSE), fProperty(0),
    fInterStreamer(0), fOffsetStreamer(0), fStreamerType(kNone),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
@@ -786,7 +786,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
-   fDestructor(0), fDirAutoAdd(0), fSizeof(-1),
+   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fVersionUsed(kFALSE), fProperty(0),
    fInterStreamer(0), fOffsetStreamer(0), fStreamerType(kNone),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
@@ -1071,6 +1071,7 @@ TClass::TClass(const TClass& cl) :
   fDeleteArray(cl.fDeleteArray),
   fDestructor(cl.fDestructor),
   fDirAutoAdd(cl.fDirAutoAdd),
+  fStreamerFunc(cl.fStreamerFunc),
   fSizeof(cl.fSizeof),
   fVersionUsed(cl.fVersionUsed),
   fProperty(cl.fProperty),
@@ -1940,6 +1941,7 @@ TObject *TClass::Clone(const char *new_name) const
    copy->SetDeleteArray(fDeleteArray);
    copy->SetDestructor(fDestructor);
    copy->SetDirectoryAutoAdd(fDirAutoAdd);
+   copy->fStreamerFunc = fStreamerFunc;
    if (fStreamer) {
       copy->AdoptStreamer(fStreamer->Generate());
    }
