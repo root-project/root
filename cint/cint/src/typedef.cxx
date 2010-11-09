@@ -1339,35 +1339,37 @@ int G__search_typename(const char* typenamein, int typein, int tagnum, int refty
       type_name[--len] = '\0';
       ispointer = 'A' - 'a';
    }
-   // Deal with potential scope in the name.
-   char *p = (char*) G__find_last_scope_operator(type_name);
    const char *atom_tagname = type_name;
-   if (p) {
-      if (G__static_parent_tagnum != -1) {
-         // humm something is wrong, we specify the parent in 2 different
-         // ways.
-      }
-      atom_tagname = p+2;
-      *p = '\0';
-      int scope_tagnum = -1;
-      if (p == type_name) {
-         scope_tagnum = -1;  // global scope
-      }
+   if ( strstr(type_name,"(*)") == 0 ) {
+      // Deal with potential scope in the name but only when not a function type
+      char *p = (char*) G__find_last_scope_operator(type_name);
+      if (p) {
+         if (G__static_parent_tagnum != -1) {
+            // humm something is wrong, we specify the parent in 2 different
+            // ways.
+         }
+         atom_tagname = p+2;
+         *p = '\0';
+         int scope_tagnum = -1;
+         if (p == type_name) {
+            scope_tagnum = -1;  // global scope
+         }
 #ifndef G__STD_NAMESPACE
-      else if (!strcmp(type_name, "std") && G__ignore_stdnamespace) {
-         scope_tagnum = -1;
-      }
+         else if (!strcmp(type_name, "std") && G__ignore_stdnamespace) {
+            scope_tagnum = -1;
+         }
 #endif // G__STD_NAMESPACE
-      else {
-         // first try a typedef, so we don't trigger autoloading here:
-         int scope_typenum = G__defined_typename_noerror(type_name, 1);
-         if (scope_typenum != -1 && G__newtype.type[scope_typenum] == 'u')
-            scope_tagnum = G__newtype.tagnum[scope_typenum];
-         else
-            scope_tagnum = G__defined_tagname(type_name, 0);
+         else {
+            // first try a typedef, so we don't trigger autoloading here:
+            int scope_typenum = G__defined_typename_noerror(type_name, 1);
+            if (scope_typenum != -1 && G__newtype.type[scope_typenum] == 'u')
+               scope_tagnum = G__newtype.tagnum[scope_typenum];
+            else
+               scope_tagnum = G__defined_tagname(type_name, 0);
+         }
+         G__static_parent_tagnum = scope_tagnum;
+         len = strlen(atom_tagname);
       }
-      G__static_parent_tagnum = scope_tagnum;
-      len = strlen(atom_tagname);
    }
    
    NameMap::Range nameRange = G__newtype.namerange->Find(atom_tagname);
