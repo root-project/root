@@ -2228,6 +2228,194 @@ UInt_t TStreamerInfo::GetCheckSum(UInt_t code) const
 }
 
 //______________________________________________________________________________
+static void R__WriteConstructorBody(FILE *file, TIter &next)
+{
+   TStreamerElement *element = 0;
+   next.Reset();
+   while ((element = (TStreamerElement*)next())) {
+      if (element->GetType() == TVirtualStreamerInfo::kObjectp || element->GetType() == TVirtualStreamerInfo::kObjectP ||
+          element->GetType() == TVirtualStreamerInfo::kAnyp || element->GetType() == TVirtualStreamerInfo::kAnyP || 
+          element->GetType() == TVirtualStreamerInfo::kCharStar || element->GetType() == TVirtualStreamerInfo::kSTLp) {
+         if(element->GetArrayLength() <= 1) {
+            fprintf(file,"   %s = 0;\n",element->GetName());
+         } else {
+            fprintf(file,"   memset(%s,0,%d);\n",element->GetName(),element->GetSize());
+         }
+      }
+      if (TVirtualStreamerInfo::kOffsetP <= element->GetType() && element->GetType() < TVirtualStreamerInfo::kObject ) {
+         fprintf(file,"   %s = 0;\n",element->GetName());
+      }
+   }
+}
+
+//______________________________________________________________________________
+static void R__WriteMoveConstructorBody(FILE *file, const TString &protoname, TIter &next)
+{
+   // Write down the body of the 'move' constructor.
+
+   TStreamerElement *element = 0;
+   next.Reset();
+   Bool_t atstart = kTRUE;
+   while ((element = (TStreamerElement*)next())) {
+      if (element->IsBase()) {
+         if (atstart) { fprintf(file,"   : "); atstart = kFALSE; }
+         else fprintf(file,"   , ");
+         fprintf(file, "%s(const_cast<%s &>( rhs ))\n", element->GetName(),protoname.Data());
+      } else {
+         if (element->GetArrayLength() <= 1) {
+            if (atstart) { fprintf(file,"   : "); atstart = kFALSE; }
+            else fprintf(file,"   , ");
+            fprintf(file, "%s(const_cast<%s &>( rhs ).%s)\n",element->GetName(),protoname.Data(),element->GetName());
+         }
+      }
+   }
+   fprintf(file,"{\n");
+   fprintf(file,"   // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).\n");
+   fprintf(file,"   // Use at your own risk!\n");
+   fprintf(file,"   if (&rhs) {} // avoid warning about unused parameter\n");
+   next.Reset();
+   Bool_t defMod = kFALSE;
+   while ((element = (TStreamerElement*)next())) {
+      if (element->GetType() == TVirtualStreamerInfo::kObjectp || element->GetType() == TVirtualStreamerInfo::kObjectP||
+          element->GetType() == TVirtualStreamerInfo::kAnyp || element->GetType() == TVirtualStreamerInfo::kAnyP
+          || element->GetType() == TVirtualStreamerInfo::kAnyPnoVT) 
+      {
+         if (!defMod) { fprintf(file,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
+         const char *ename = element->GetName();
+         const char *colon2 = strstr(ename,"::");
+         if (colon2) ename = colon2+2;
+         if(element->GetArrayLength() <= 1) {
+            fprintf(file,"   modrhs.%s = 0;\n",ename);
+         } else {
+            fprintf(file,"   memset(modrhs.%s,0,%d);\n",ename,element->GetSize());
+         }
+      } else {
+         const char *ename = element->GetName();
+         if (element->GetType() == kCharStar) {
+            if (!defMod) { 
+               fprintf(file,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; 
+            };
+            fprintf(file,"   modrhs.%s = 0;\n",ename);
+         } else if (TVirtualStreamerInfo::kOffsetP <= element->GetType() && element->GetType() < TVirtualStreamerInfo::kObject ) { 
+            if (!defMod) { 
+               fprintf(file,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; 
+            };
+            fprintf(file,"   modrhs.%s = 0;\n",ename);
+         } else if (element->GetArrayLength() > 1) {
+            // FIXME: Need to add support for variable length array.
+            if (element->GetArrayDim() == 1) {
+               fprintf(file,"   for (Int_t i=0;i<%d;i++) %s[i] = rhs.%s[i];\n",element->GetArrayLength(),ename,ename);            
+            } else if (element->GetArrayDim() >= 2) {
+               fprintf(file,"   for (Int_t i=0;i<%d;i++) (&(%s",element->GetArrayLength(),ename);
+               for (Int_t d = 0; d < element->GetArrayDim(); ++d) {
+                  fprintf(file,"[0]");
+               }
+               fprintf(file,"))[i] = (&(rhs.%s",ename);
+               for (Int_t d = 0; d < element->GetArrayDim(); ++d) {
+                  fprintf(file,"[0]");
+               }
+               fprintf(file,"))[i];\n");
+            }
+         } else if (element->GetType() == TVirtualStreamerInfo::kSTLp) {
+            if (!defMod) { fprintf(file,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
+            fprintf(file,"   modrhs.%s = 0;\n",ename);
+         } else if (element->GetType() == TVirtualStreamerInfo::kSTL) {
+            if (!defMod) { 
+               fprintf(file,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; 
+            }
+            if (element->IsBase()) {
+               fprintf(file,"   modrhs.clear();\n");
+            } else {
+               fprintf(file,"   modrhs.%s.clear();\n",ename);
+            }
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
+static void R__WriteDestructorBody(FILE *file, TIter &next)
+{
+   TStreamerElement *element = 0;
+   next.Reset();
+   while ((element = (TStreamerElement*)next())) {
+      if (element->GetType() == TVirtualStreamerInfo::kObjectp || element->GetType() == TVirtualStreamerInfo::kObjectP||
+          element->GetType() == TVirtualStreamerInfo::kAnyp || element->GetType() == TVirtualStreamerInfo::kAnyP
+          || element->GetType() == TVirtualStreamerInfo::kAnyPnoVT) 
+      {
+         const char *ename = element->GetName();
+         const char *colon2 = strstr(ename,"::");
+         if (colon2) ename = colon2+2;
+         if (element->TestBit(TStreamerElement::kDoNotDelete)) {
+            if(element->GetArrayLength() <= 1) {
+               fprintf(file,"   %s = 0;\n",ename);
+            } else {
+               fprintf(file,"   memset(%s,0,%d);\n",ename,element->GetSize());
+            }
+         } else {
+            if(element->GetArrayLength() <= 1) {
+               fprintf(file,"   delete %s;   %s = 0;\n",ename,ename);
+            } else {
+               fprintf(file,"   for (Int_t i=0;i<%d;i++) delete %s[i];   memset(%s,0,%d);\n",element->GetArrayLength(),ename,ename,element->GetSize());
+            }
+         }
+      }
+      if (element->GetType() == TVirtualStreamerInfo::kCharStar) {
+         const char *ename = element->GetName();
+         if (element->TestBit(TStreamerElement::kDoNotDelete)) {
+            fprintf(file,"   %s = 0;\n",ename);
+         } else {
+            fprintf(file,"   delete [] %s;   %s = 0;\n",ename,ename);
+         }
+      }
+      if (TVirtualStreamerInfo::kOffsetP <= element->GetType() && element->GetType() < TVirtualStreamerInfo::kObject ) { 
+         const char *ename = element->GetName();
+         if (element->TestBit(TStreamerElement::kDoNotDelete)) {
+            fprintf(file,"   %s = 0;\n",ename);
+         } else if (element->HasCounter()) {
+            fprintf(file,"   delete %s;   %s = 0;\n",ename,ename);
+         } else {
+            fprintf(file,"   delete [] %s;   %s = 0;\n",ename,ename);
+         }
+      }
+      if (element->GetType() == TVirtualStreamerInfo::kSTL || element->GetType() == TVirtualStreamerInfo::kSTLp) {
+         const char *ename = element->GetName();
+         const char *prefix = "";
+         if ( element->GetType() == TVirtualStreamerInfo::kSTLp ) {
+            prefix = "*";
+         } else if ( element->IsBase() ) {
+            ename = "this";
+         }
+         TVirtualCollectionProxy *proxy = element->GetClassPointer()->GetCollectionProxy();
+         if (!element->TestBit(TStreamerElement::kDoNotDelete) && element->GetClassPointer() && proxy) {
+            Int_t stltype = ((TStreamerSTL*)element)->GetSTLtype();
+            
+            if (proxy->HasPointers()) {
+               fprintf(file,"   std::for_each( (%s %s).rbegin(), (%s %s).rend(), DeleteObjectFunctor() );\n",prefix,ename,prefix,ename);
+               //fprintf(file,"      %s::iterator iter;\n");
+               //fprintf(file,"      %s::iterator begin = (%s %s).begin();\n");
+               //fprintf(file,"      %s::iterator end (%s %s).end();\n");
+               //fprintf(file,"      for( iter = begin; iter != end; ++iter) { delete *iter; }\n");
+            } else {
+               if (stltype == TStreamerElement::kSTLmap || stltype == TStreamerElement::kSTLmultimap) {
+                  TString enamebasic = TMakeProject::UpdateAssociativeToVector(element->GetTypeNameBasic());
+                  std::vector<std::string> inside;
+                  int nestedLoc;
+                  TClassEdit::GetSplit(enamebasic, inside, nestedLoc, TClassEdit::kLong64);
+                  if (inside[1][inside[1].size()-1]=='*' || inside[2][inside[2].size()-1]=='*') {
+                     fprintf(file,"   std::for_each( (%s %s).rbegin(), (%s %s).rend(), DeleteObjectFunctor() );\n",prefix,ename,prefix,ename);
+                  }
+               }
+               }
+         }
+         if ( prefix[0] ) {
+            fprintf(file,"   delete %s;   %s = 0;\n",ename,ename);
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
 void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subClasses, Bool_t top)
 {
    // Write the Declaration of class.
@@ -2419,9 +2607,15 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
    }
    if (needGenericTemplate && isTemplate) {
       // Generate default functions, ClassDef and trailer.
-      fprintf(fp,"\n   %s() {};\n",protoname.Data());
-      fprintf(fp,"   %s(const %s & );\n",protoname.Data(),protoname.Data());
-      fprintf(fp,"   virtual ~%s() {};\n\n",protoname.Data());
+      fprintf(fp,"\n   %s() {\n",protoname.Data());
+      R__WriteConstructorBody(fp,next);      
+      fprintf(fp,"   }\n");
+      fprintf(fp,"   %s(const %s & rhs )\n",protoname.Data(),protoname.Data());
+      R__WriteMoveConstructorBody(fp,protoname,next);
+      fprintf(fp,"   }\n");
+      fprintf(fp,"   virtual ~%s() {\n",protoname.Data());
+      R__WriteDestructorBody(fp,next);
+      fprintf(fp,"   }\n\n");
 
    } else {
       // Generate default functions, ClassDef and trailer.
@@ -2434,174 +2628,15 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       fprintf(sfp,"#ifndef %s_cxx\n",guard.Data());
       fprintf(sfp,"#define %s_cxx\n",guard.Data());
       fprintf(sfp,"%s::%s() {\n",GetName(),protoname.Data());
-      next.Reset();
-      while ((element = (TStreamerElement*)next())) {
-         if (element->GetType() == kObjectp || element->GetType() == kObjectP ||
-             element->GetType() == kAnyp || element->GetType() == kAnyP || 
-             element->GetType() == kCharStar || element->GetType() == kSTLp) {
-            if(element->GetArrayLength() <= 1) {
-               fprintf(sfp,"   %s = 0;\n",element->GetName());
-            } else {
-               fprintf(sfp,"   memset(%s,0,%d);\n",element->GetName(),element->GetSize());
-            }
-         }
-         if (kOffsetP <= element->GetType() && element->GetType() < kObject ) {
-            fprintf(sfp,"   %s = 0;\n",element->GetName());
-         }
-      }
+      R__WriteConstructorBody(sfp,next);
       fprintf(sfp,"}\n");
 
       fprintf(sfp,"%s::%s(const %s & rhs)\n",GetName(),protoname.Data(),protoname.Data());
-      next.Reset();
-      Bool_t atstart = kTRUE;
-      while ((element = (TStreamerElement*)next())) {
-         if (element->IsBase()) {
-            if (atstart) { fprintf(sfp,"   : "); atstart = kFALSE; }
-            else fprintf(sfp,"   , ");
-            fprintf(sfp, "%s(const_cast<%s &>( rhs ))\n", element->GetName(),protoname.Data());
-         } else {
-            if (element->GetArrayLength() <= 1) {
-               if (atstart) { fprintf(sfp,"   : "); atstart = kFALSE; }
-               else fprintf(sfp,"   , ");
-               fprintf(sfp, "%s(const_cast<%s &>( rhs ).%s)\n",element->GetName(),protoname.Data(),element->GetName());
-            }
-         }
-      }
-      fprintf(sfp,"{\n");
-      fprintf(sfp,"   // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).\n");
-      fprintf(sfp,"   // Use at your own risk!\n");
-      fprintf(sfp,"   if (&rhs) {} // avoid warning about unused parameter\n");
-      next.Reset();
-      Bool_t defMod = kFALSE;
-      while ((element = (TStreamerElement*)next())) {
-         if (element->GetType() == kObjectp || element->GetType() == kObjectP||
-             element->GetType() == kAnyp || element->GetType() == kAnyP
-             || element->GetType() == kAnyPnoVT) 
-         {
-            if (!defMod) { fprintf(sfp,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
-            const char *ename = element->GetName();
-            const char *colon2 = strstr(ename,"::");
-            if (colon2) ename = colon2+2;
-            if(element->GetArrayLength() <= 1) {
-               fprintf(sfp,"   modrhs.%s = 0;\n",ename);
-            } else {
-               fprintf(sfp,"   memset(modrhs.%s,0,%d);\n",ename,element->GetSize());
-            }
-         } else {
-            const char *ename = element->GetName();
-            if (element->GetType() == kCharStar) {
-               if (!defMod) { fprintf(sfp,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
-               fprintf(sfp,"   modrhs.%s = 0;\n",ename);
-            } else if (kOffsetP <= element->GetType() && element->GetType() < kObject ) { 
-               if (!defMod) { fprintf(sfp,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
-               fprintf(sfp,"   modrhs.%s = 0;\n",ename);
-            } else if (element->GetArrayLength() > 1) {
-               // FIXME: Need to add support for variable length array.
-               if (element->GetArrayDim() == 1) {
-                  fprintf(sfp,"   for (Int_t i=0;i<%d;i++) %s[i] = rhs.%s[i];\n",element->GetArrayLength(),ename,ename);            
-               } else if (element->GetArrayDim() >= 2) {
-                  fprintf(sfp,"   for (Int_t i=0;i<%d;i++) (&(%s",element->GetArrayLength(),ename);
-                  for (Int_t d = 0; d < element->GetArrayDim(); ++d) {
-                     fprintf(sfp,"[0]");
-                  }
-                  fprintf(sfp,"))[i] = (&(rhs.%s",ename);
-                  for (Int_t d = 0; d < element->GetArrayDim(); ++d) {
-                     fprintf(sfp,"[0]");
-                  }
-                  fprintf(sfp,"))[i];\n");
-               }
-            } else if (element->GetType() == kSTLp) {
-               if (!defMod) { fprintf(sfp,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
-               fprintf(sfp,"   modrhs.%s = 0;\n",ename);
-            } else if (element->GetType() == kSTL) {
-               if (!defMod) { fprintf(sfp,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
-               if (element->IsBase()) {
-                  fprintf(sfp,"   modrhs.clear();\n");
-               } else {
-                  fprintf(sfp,"   modrhs.%s.clear();\n",ename);
-               }
-            }
-         }
-      }
+      R__WriteMoveConstructorBody(sfp,protoname,next);
       fprintf(sfp,"}\n");
 
       fprintf(sfp,"%s::~%s() {\n",GetName(),protoname.Data());
-      next.Reset();
-      while ((element = (TStreamerElement*)next())) {
-         if (element->GetType() == kObjectp || element->GetType() == kObjectP||
-             element->GetType() == kAnyp || element->GetType() == kAnyP
-             || element->GetType() == kAnyPnoVT) 
-         {
-            const char *ename = element->GetName();
-            const char *colon2 = strstr(ename,"::");
-            if (colon2) ename = colon2+2;
-            if (element->TestBit(TStreamerElement::kDoNotDelete)) {
-               if(element->GetArrayLength() <= 1) {
-                  fprintf(sfp,"   %s = 0;\n",ename);
-               } else {
-                  fprintf(sfp,"   memset(%s,0,%d);\n",ename,element->GetSize());
-               }
-            } else {
-               if(element->GetArrayLength() <= 1) {
-                  fprintf(sfp,"   delete %s;   %s = 0;\n",ename,ename);
-               } else {
-                  fprintf(sfp,"   for (Int_t i=0;i<%d;i++) delete %s[i];   memset(%s,0,%d);\n",element->GetArrayLength(),ename,ename,element->GetSize());
-               }
-            }
-         }
-         if (element->GetType() == kCharStar) {
-            const char *ename = element->GetName();
-            if (element->TestBit(TStreamerElement::kDoNotDelete)) {
-               fprintf(sfp,"   %s = 0;\n",ename);
-            } else {
-               fprintf(sfp,"   delete [] %s;   %s = 0;\n",ename,ename);
-            }
-         }
-         if (kOffsetP <= element->GetType() && element->GetType() < kObject ) { 
-            const char *ename = element->GetName();
-            if (element->TestBit(TStreamerElement::kDoNotDelete)) {
-               fprintf(sfp,"   %s = 0;\n",ename);
-            } else if (element->HasCounter()) {
-               fprintf(sfp,"   delete %s;   %s = 0;\n",ename,ename);
-            } else {
-               fprintf(sfp,"   delete [] %s;   %s = 0;\n",ename,ename);
-            }
-         }
-         if (element->GetType() == kSTL || element->GetType() == kSTLp) {
-            const char *ename = element->GetName();
-            const char *prefix = "";
-            if ( element->GetType() == kSTLp ) {
-               prefix = "*";
-            } else if ( element->IsBase() ) {
-               ename = "this";
-            }
-            TVirtualCollectionProxy *proxy = element->GetClassPointer()->GetCollectionProxy();
-            if (!element->TestBit(TStreamerElement::kDoNotDelete) && element->GetClassPointer() && proxy) {
-               Int_t stltype = ((TStreamerSTL*)element)->GetSTLtype();
-
-               if (proxy->HasPointers()) {
-                   fprintf(sfp,"   std::for_each( (%s %s).rbegin(), (%s %s).rend(), DeleteObjectFunctor() );\n",prefix,ename,prefix,ename);
-                  //fprintf(sfp,"      %s::iterator iter;\n");
-                  //fprintf(sfp,"      %s::iterator begin = (%s %s).begin();\n");
-                  //fprintf(sfp,"      %s::iterator end (%s %s).end();\n");
-                  //fprintf(sfp,"      for( iter = begin; iter != end; ++iter) { delete *iter; }\n");
-               } else {
-                  if (stltype == TStreamerElement::kSTLmap || stltype == TStreamerElement::kSTLmultimap) {
-                     TString enamebasic = TMakeProject::UpdateAssociativeToVector(element->GetTypeNameBasic());
-                     std::vector<std::string> inside;
-                     int nestedLoc;
-                     TClassEdit::GetSplit(enamebasic, inside, nestedLoc, TClassEdit::kLong64);
-                     if (inside[1][inside[1].size()-1]=='*' || inside[2][inside[2].size()-1]=='*') {
-                        fprintf(sfp,"   std::for_each( (%s %s).rbegin(), (%s %s).rend(), DeleteObjectFunctor() );\n",prefix,ename,prefix,ename);
-                     }
-                  }
-               }
-            }
-            if ( prefix[0] ) {
-               fprintf(sfp,"   delete %s;   %s = 0;\n",ename,ename);
-            }
-         }
-      }
+      R__WriteDestructorBody(sfp,next);
       fprintf(sfp,"}\n");
       fprintf(sfp,"#endif // %s_cxx\n\n",guard.Data());
    }
