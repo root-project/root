@@ -1,18 +1,19 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include "TStopwatch.h"
+#include "TMultiGraph.h"
+#include "TH2Poly.h"
+#include "TGraph.h"
+#include "TClass.h"
 #include "TStyle.h"
 #include "TError.h"
 #include "TColor.h"
-#include "TClass.h"
 #include "TMath.h"
 #include "TList.h"
 #include "TROOT.h"
-#include "TH2Poly.h"
 
-#include "TGLPlotCamera.h"
 #include "TGLH2PolyPainter.h"
+#include "TGLPlotCamera.h"
 #include "TGLIncludes.h"
 
 
@@ -32,7 +33,7 @@ TGLH2PolyPainter::TGLH2PolyPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoor
 //______________________________________________________________________________
 char *TGLH2PolyPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 {
-   //Show number of bin and content, if bin is under cursor.
+   //Show number of bin and bin contents, if bin is under the cursor.
    fBinInfo = "";
    if (fSelectedPart) {
       if (fSelectedPart < fSelectionBase) {
@@ -43,7 +44,7 @@ char *TGLH2PolyPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
       } else if (!fHighColor) {
          const Int_t binIndex = fSelectedPart - fSelectionBase;
          TH2Poly *h = static_cast<TH2Poly *>(fHist);
-         fBinInfo.Form("(bin = %d; binc = %f)", binIndex, h->GetBinContent(binIndex));
+         fBinInfo.Form("(bin = %d; binc = %f)", binIndex, h->GetBinContent(binIndex + 1));//+ 1: bins in ROOT start from 1.
       } else
          fBinInfo = "Switch to true-color mode to obtain the correct info";
    }
@@ -55,6 +56,10 @@ char *TGLH2PolyPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 Bool_t TGLH2PolyPainter::InitGeometry()
 {
    //Tesselate polygons, if not done yet.
+   //All pointers are validated here (and in functions called from here).
+   //If any pointer is invalid - zero, or has unexpected type (dynamic_cast fails) -
+   //InitGeometry will return false and nothing will be painted later.
+   //That's why there are no checks in other functions.
    TH2Poly* hp = static_cast<TH2Poly *>(fHist);
    if (!fCoord->SetRanges(hp))
       return kFALSE;
@@ -165,6 +170,7 @@ void TGLH2PolyPainter::DeInitGL()const
 namespace {
 
 Double_t Distance(const Double_t *p1, const Double_t *p2);
+Bool_t   IsPolygonCW(const Double_t *xs, const Double_t *ys, Int_t n);
 
 }
 
@@ -179,13 +185,7 @@ void TGLH2PolyPainter::DrawPlot()const
    fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
 
    DrawExtrusion();
-
-//glPolygonMode(GL_FRONT, GL_LINE);
-
    DrawCaps();
-
-//glPolygonMode(GL_FRONT, GL_FILL);
-
 }
 
 //______________________________________________________________________________
@@ -193,78 +193,78 @@ void TGLH2PolyPainter::DrawExtrusion()const
 {
    //Extruded part of bins.
    //GL_QUADS, GL_QUAD_STRIP - have the same time on my laptop, so I use
-   //GL_QUADS and forgot about vertex arrays (can require more memory BTW.
-
-   TList * bins = static_cast<TH2Poly *>(fHist)->GetBins();
-   if (!bins || !bins->GetEntries()) {
-      Error("TGLH2PolyPainter::DrawPlot", "Bad list of bins");
-      return;
-   }
-
-   const Double_t xScale = fCoord->GetXScale();
-   const Double_t yScale = fCoord->GetYScale();
+   //GL_QUADS and forgot about vertex arrays (can require more memory BTW).
+   TList *bins = static_cast<TH2Poly *>(fHist)->GetBins();
    const Double_t zMin = fBackBox.Get3DBox()[0].Z();
-   Double_t normal[3] = {};
-
-   Int_t i = 0;
-   for(TObjLink * link = bins->FirstLink(); link; link = link->Next(), ++i) {
+   Int_t binIndex = 0;
+   for(TObjLink * link = bins->FirstLink(); link; link = link->Next(), ++binIndex) {
       TH2PolyBin *bin = static_cast<TH2PolyBin *>(link->GetObject());
-      if (!bin) {
-         Error("TGLH2PolyPainter::DrawPlot", "null bin pointer in a list of bins");
-         return;
-      }
-
-      const Double_t *xs = bin->GetX();
-      const Double_t *ys = bin->GetY();
-
-
-      if (!xs || !ys) {
-         Error("TGLH2PolyPainter::DrawPlot", "null array in a bin");
-         continue;
-      }
-
-      const Int_t nV = bin->GetN();
-      if (nV <= 0)
-         continue;
-
       const Double_t zMax = bin->GetContent() * fCoord->GetZScale();
-      const Int_t binID = fSelectionBase + i;
 
-      if (fSelectionPass) {
-         if (!fHighColor)
-            Rgl::ObjectIDToColor(binID, kFALSE);
-      } else {
-         SetBinColor(i);
-         if(!fHighColor && fSelectedPart == binID)
-            glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
-      }
-
-      for (Int_t j = 0; j < nV - 1; ++j) {
-         const Double_t v0[] = {xs[j] * xScale, ys[j] * yScale, zMin};
-         const Double_t v1[] = {xs[j + 1] * xScale, ys[j + 1] * yScale, zMin};
-
-         if (Distance(v0, v1) < 1e-10)
-            continue;
-
-         const Double_t v2[] = {v1[0], v1[1], zMax};
-         const Double_t v3[] = {v0[0], v0[1], zMax};
-
-         TMath::Normal2Plane(v0, v1, v2, normal);
-
-         glBegin(GL_QUADS);
-         glNormal3dv(normal);
-         glVertex3dv(v0);
-         glVertex3dv(v1);
-         glVertex3dv(v2);
-         glVertex3dv(v3);
-         glEnd();
-
-      }
-
-      if (!fHighColor && !fSelectionPass && fSelectedPart == binID)
-         glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
-
+      if (const TGraph * poly = dynamic_cast<TGraph*>(bin->GetPolygon())) {
+         DrawExtrusion(poly, zMin, zMax, binIndex);
+      } else if (const TMultiGraph * mg = dynamic_cast<TMultiGraph*>(bin->GetPolygon())) {
+         DrawExtrusion(mg, zMin, zMax, binIndex);
+      }//else is impossible.
    }
+}
+
+//______________________________________________________________________________
+void TGLH2PolyPainter::DrawExtrusion(const TGraph *poly, Double_t zMin, Double_t zMax, Int_t binIndex)const
+{
+   //Extrude polygon, described by TGraph.
+   const Double_t *xs = poly->GetX();
+   const Double_t *ys = poly->GetY();
+       
+   const Int_t nV = poly->GetN();
+   const Int_t binID = fSelectionBase + binIndex;
+
+   if (fSelectionPass) {
+      if (!fHighColor)
+         Rgl::ObjectIDToColor(binID, kFALSE);
+   } else {
+      SetBinColor(binIndex);
+      if(!fHighColor && fSelectedPart == binID)
+         glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
+   }
+
+   //Before, orientation was always done in TH2Poly.
+   //Now we do it every time here.
+   FillTemporaryPolygon(xs, ys, 0., nV); //0. == z is not important here.
+
+   Double_t normal[3] = {};
+   for (Int_t j = 0; j < nV - 1; ++j) {
+      const Double_t v0[] = {fPolygon[j * 3], fPolygon[j * 3 + 1], zMin};
+      const Double_t v1[] = {fPolygon[(j + 1) * 3], fPolygon[(j + 1) * 3 + 1], zMin};
+
+      if (Distance(v0, v1) < 1e-10)
+         continue;
+
+      const Double_t v2[] = {v1[0], v1[1], zMax};
+      const Double_t v3[] = {v0[0], v0[1], zMax};
+
+      TMath::Normal2Plane(v0, v1, v2, normal);
+
+      glBegin(GL_QUADS);
+      glNormal3dv(normal);
+      glVertex3dv(v0);
+      glVertex3dv(v1);
+      glVertex3dv(v2);
+      glVertex3dv(v3);
+      glEnd();
+   }
+
+   if (!fHighColor && !fSelectionPass && fSelectedPart == binID)
+      glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
+}
+
+//______________________________________________________________________________
+void TGLH2PolyPainter::DrawExtrusion(const TMultiGraph *mg, Double_t zMin, Double_t zMax, Int_t binIndex)const
+{
+   //Multigraph contains a list of graphs, draw them.
+   const TList *graphs = mg->GetListOfGraphs();
+   for (TObjLink *link = graphs->FirstLink(); link; link = link->Next())
+      DrawExtrusion((TGraph *)(link->GetObject()), zMin, zMax, binIndex);
 }
 
 //______________________________________________________________________________
@@ -273,32 +273,58 @@ void TGLH2PolyPainter::DrawCaps()const
    //Caps on bins.
    glNormal3d(0., 0., 1.);
 
-   typedef std::list<Rgl::Pad::Tesselation_t>::const_iterator CIter_t;
-   int bin = 0;
-   for (CIter_t cap = fCaps.begin(); cap != fCaps.end(); ++cap, ++bin) {
-      const Int_t binID = fSelectionBase + bin;
-      if (fSelectionPass) {
-         if (!fHighColor)
-            Rgl::ObjectIDToColor(binID, kFALSE);
-      } else {
-         SetBinColor(bin);
-         if(!fHighColor && fSelectedPart == binID)
-            glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
+   Int_t binIndex = 0;
+   const TList *bins = static_cast<TH2Poly *>(fHist)->GetBins();
+   CIter_t cap = fCaps.begin();
+
+   if(!bins->FirstLink())
+      throw 1;
+
+   //Very ugly iteration statement. Number of caps is equal to number of links (in a list
+   //of bins including nested links in multigraphs. But this is not obvious from the code here,
+   //so, I've added check cap != fCaps.end() to make it more or less clear.
+   for (TObjLink *link = bins->FirstLink(); link && cap != fCaps.end(); link = link->Next()) {
+      TH2PolyBin *polyBin = static_cast<TH2PolyBin *>(link->GetObject());
+      if (dynamic_cast<TGraph *>(polyBin->GetPolygon())) {
+         DrawCap(cap, binIndex);
+         ++cap;
+      } else if (TMultiGraph *mg = dynamic_cast<TMultiGraph *>(polyBin->GetPolygon())) {
+         const TList *gs = mg->GetListOfGraphs();
+         TObjLink *graphLink = gs->FirstLink();
+         for (; graphLink && cap != fCaps.end(); graphLink = graphLink->Next(), ++cap)
+            DrawCap(cap, binIndex);
       }
 
-      const Rgl::Pad::Tesselation_t &t = *cap;
-      typedef std::list<Rgl::Pad::MeshPatch_t>::const_iterator CMIter_t;
-      for (CMIter_t p = t.begin(); p != t.end(); ++p) {
-         const std::vector<Double_t> &vs = p->fPatch;
-         glBegin(GLenum(p->fPatchType));
-         for (UInt_t i = 0; i < vs.size(); i += 3)
-            glVertex3dv(&vs[i]);
-         glEnd();
-      }
-
-      if (!fHighColor && !fSelectionPass && fSelectedPart == binID)
-         glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
+      ++binIndex;
    }
+}
+
+//______________________________________________________________________________
+void TGLH2PolyPainter::DrawCap(CIter_t cap, Int_t binIndex)const
+{
+   //Draw a cap on top of a bin.
+   const Int_t binID = fSelectionBase + binIndex;
+   if (fSelectionPass) {
+      if (!fHighColor)
+         Rgl::ObjectIDToColor(binID, kFALSE);
+   } else {
+      SetBinColor(binIndex);
+      if(!fHighColor && fSelectedPart == binID)
+         glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
+   }
+
+   const Rgl::Pad::Tesselation_t &t = *cap;
+   typedef std::list<Rgl::Pad::MeshPatch_t>::const_iterator CMIter_t;
+   for (CMIter_t p = t.begin(); p != t.end(); ++p) {
+      const std::vector<Double_t> &vs = p->fPatch;
+      glBegin(GLenum(p->fPatchType));
+      for (UInt_t i = 0; i < vs.size(); i += 3)
+         glVertex3dv(&vs[i]);
+      glEnd();
+   }
+
+   if (!fHighColor && !fSelectionPass && fSelectedPart == binID)
+      glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
 }
 
 //______________________________________________________________________________
@@ -316,61 +342,97 @@ Bool_t TGLH2PolyPainter::CacheGeometry()
    const Double_t zMax = fHist->GetMaximum();
    const Int_t nColors = gStyle->GetNumberOfColors();
 
-   const Double_t xScale = fCoord->GetXScale();
-   const Double_t yScale = fCoord->GetYScale();
-
    fBinColors.clear();
    fBinColors.reserve(bins->GetEntries());
-   fCap.clear();
+   fPolygon.clear();
    fCaps.clear();
 
    Rgl::Pad::Tesselator tesselator(kTRUE);
 
    for (TObjLink * link = bins->FirstLink(); link; link = link->Next()) {
-      TH2PolyBin * b = static_cast<TH2PolyBin *>(link->GetObject());
-      if (!b) {
-         Error("TGH2PolyPainter::InitGeometry", "Null bin's pointer in a list of bins");
+      TH2PolyBin * bin = static_cast<TH2PolyBin *>(link->GetObject());
+      if (!bin || !bin->GetPolygon()) {
+         Error("TGH2PolyPainter::InitGeometry", "Null bin or polygon pointer in a list of bins");
          return kFALSE;
       }
 
-      const Double_t *xs = b->GetX();
-      const Double_t *ys = b->GetY();
-
-      if (!xs || !ys) {
-         Error("TGLH2PolyPainter::DrawPlot", "null array in a bin");
-         continue;
+      if (const TGraph *g = dynamic_cast<TGraph *>(bin->GetPolygon())) {
+         if (!BuildTesselation(tesselator, g, bin->GetContent() * fCoord->GetZScale()))
+            return kFALSE;
+      } else if (const TMultiGraph *mg = dynamic_cast<TMultiGraph *>(bin->GetPolygon())) {
+         if (!BuildTesselation(tesselator, mg, bin->GetContent() * fCoord->GetZScale()))
+            return kFALSE;
+      } else {
+         //Da vy chto, sgovorilis' chto li???
+         Error("TGLH2PolyPainter::CacheGeometry", "Bin contains object of unknown type");
+         return kFALSE;
       }
 
-      const Int_t nV = b->GetN();
-      if (nV <= 0)
-         continue;
-
-      const Int_t colorIndex = gStyle->GetColorPalette(Int_t(((b->GetContent() - zMin) / (zMax - zMin)) * (nColors - 1)));
+      const Int_t colorIndex = gStyle->GetColorPalette(Int_t(((bin->GetContent() - zMin) / (zMax - zMin)) * (nColors - 1)));
       fBinColors.push_back(colorIndex);
+   }
 
-      const Double_t z = b->GetContent() * fCoord->GetZScale();
+   return kTRUE;
+}
 
-      fCaps.push_back(Rgl::Pad::Tesselation_t());
+//______________________________________________________________________________
+Bool_t TGLH2PolyPainter::BuildTesselation(Rgl::Pad::Tesselator &tess, const TGraph *g, Double_t z)
+{
+   //Tesselate a polygon described by TGraph.
+   const Double_t *xs = g->GetX();
+   const Double_t *ys = g->GetY();
 
-      fCap.resize(nV * 3);
-      for (Int_t j = 0; j < nV; ++j) {
-         fCap[j * 3]     = xs[j] * xScale;
-         fCap[j * 3 + 1] = ys[j] * yScale;
-         fCap[j * 3 + 2] = z;
+   if (!xs || !ys) {
+      Error("TGLH2PolyPainter::BuildTesselation", "null array(s) in a polygon");
+      return kFALSE;
+   }
+
+   const Int_t nV = g->GetN();
+   if (nV < 3) {
+      Error("TGLH2PolyPainter::BuildTesselation", "number of vertices in a polygon must be >= 3");
+      return kFALSE;
+   }
+
+   fCaps.push_back(Rgl::Pad::Tesselation_t());
+
+   FillTemporaryPolygon(xs, ys, z, nV);
+
+   tess.SetDump(&fCaps.back());
+
+   GLUtesselator *t = (GLUtesselator *)tess.GetTess();
+   gluBeginPolygon(t);
+   gluNextContour(t, (GLenum)GLU_UNKNOWN);
+
+   glNormal3d(0., 0., 1.);
+
+   for (Int_t j = 0; j < nV; ++j)
+      gluTessVertex(t, &fPolygon[j * 3], &fPolygon[j * 3]);
+
+   gluEndPolygon(t);
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLH2PolyPainter::BuildTesselation(Rgl::Pad::Tesselator &tess, const TMultiGraph *mg, Double_t z)
+{
+   //Iterate over multi graph contents and tesselate nested TGraphs.
+   const TList *graphs = mg->GetListOfGraphs();
+   if (!graphs) {
+      Error("TGLH2PolyPainter::BuildTesselation", "null list of graphs in a multigraph");
+      return kFALSE;
+   }
+
+   for(TObjLink *link = graphs->FirstLink(); link; link = link->Next()) {
+      const TGraph *graph = dynamic_cast<TGraph *>(link->GetObject());
+      if (!graph) {
+         //Da chto za fignia v konce koncov????
+         Error("TGLH2PolyPainter::BuildTesselation", "TGraph expected inside a multigraph, got something else");
+         return kFALSE;
       }
 
-      tesselator.SetDump(&fCaps.back());
-
-      GLUtesselator *t = (GLUtesselator *)tesselator.GetTess();
-      gluBeginPolygon(t);
-      gluNextContour(t, (GLenum)GLU_UNKNOWN);
-
-      glNormal3d(0., 0., 1.);
-
-      for (Int_t j = 0; j < nV; ++j)
-         gluTessVertex(t, &fCap[j * 3], &fCap[j * 3]);
-
-      gluEndPolygon(t);
+      if (!BuildTesselation(tess, graph, z))
+         return kFALSE;
    }
 
    return kTRUE;
@@ -393,23 +455,25 @@ Bool_t TGLH2PolyPainter::UpdateGeometry()
    }
 
    std::list<Rgl::Pad::Tesselation_t>::iterator cap = fCaps.begin();
-   for (TObjLink * link = bins->FirstLink(); link; link = link->Next(), ++cap) {
-      TH2PolyBin * b = static_cast<TH2PolyBin *>(link->GetObject());
+   for (TObjLink *link = bins->FirstLink(); link; link = link->Next(), ++cap) {
+      TH2PolyBin *b = static_cast<TH2PolyBin *>(link->GetObject());
       if (!b) {
-         Error("TGH2PolyPainter::InitGeometry", "Null bin's pointer in a list of bins");
+         Error("TGH2PolyPainter::UpdateGeometry", "Null bin's pointer in a list of bins");
          return kFALSE;
       }
 
       const Int_t nV = b->GetN();
-      if (nV <= 0)
-         continue;
+      if (nV < 3) {
+         Error("TGH2PolyPainter::UpdateGeometry", "Polygon must have at least 3 vertices");
+         return kFALSE;
+      }
 
       const Double_t z = b->GetContent() * fCoord->GetZScale();
       //Update z coordinate in all patches.
-      Rgl::Pad::Tesselation_t & tess = *cap;
+      Rgl::Pad::Tesselation_t &tess = *cap;
       Rgl::Pad::Tesselation_t::iterator patch = tess.begin();
       for (; patch != tess.end(); ++patch) {
-         std::vector<Double_t> & mesh = patch->fPatch;
+         std::vector<Double_t> &mesh = patch->fPatch;
          for (UInt_t i = 0, e = mesh.size() / 3; i < e; ++i)
             mesh[i * 3 + 2] = z;
       }
@@ -470,15 +534,59 @@ void TGLH2PolyPainter::DrawPaletteAxis()const
    //Not yet.
 }
 
+//______________________________________________________________________________
+void TGLH2PolyPainter::FillTemporaryPolygon(const Double_t *xs, const Double_t *ys, Double_t z, Int_t nV)const
+{
+   //Since I probably have to re-orient polygon, I need a temporary polygon.
+   const Double_t xScale = fCoord->GetXScale();
+   const Double_t yScale = fCoord->GetYScale();
+  
+   fPolygon.resize(nV * 3);
+   for (Int_t j = 0; j < nV; ++j) {
+      fPolygon[j * 3]     = xs[j] * xScale;
+      fPolygon[j * 3 + 1] = ys[j] * yScale;
+      fPolygon[j * 3 + 2] = z;
+   }
+
+   if (IsPolygonCW(xs, ys, nV))
+      MakePolygonCCW();
+}
+
+//______________________________________________________________________________
+void TGLH2PolyPainter::MakePolygonCCW()const
+{
+   //Code taken from the original TH2Poly. 
+   const Int_t nV = Int_t(fPolygon.size() / 3);
+   for (Int_t a = 0; a <= (nV / 2) - 1; a++) {
+      const Int_t b = nV - 1 - a;
+      std::swap(fPolygon[a * 3], fPolygon[b * 3]);
+      std::swap(fPolygon[a * 3 + 1], fPolygon[b * 3 + 1]);
+   }
+}
+
+
 namespace {
 
+//______________________________________________________________________________
 Double_t Distance(const Double_t *p1, const Double_t *p2)
 {
-   //Why do not we have this crap in TMath???
-   //Why it it based on TGLVertex3  in TGLUtil???
+   //
    return TMath::Sqrt((p1[0] - p2[0]) * (p1[0] - p2[0]) +
                       (p1[1] - p2[1]) * (p1[1] - p2[1]) +
                       (p1[2] - p2[2]) * (p1[2] - p2[2]));
+}
+
+//______________________________________________________________________________
+Bool_t IsPolygonCW(const Double_t *xs, const Double_t *ys, Int_t n)
+{
+   //Before, TH2Poly always produced good GL polygons - CCW. Now,
+   //this code (by Deniz Gunceler) was deleted from TH2Poly.
+   Double_t signedArea = 0.;
+
+   for (Int_t j = 0; j < n - 1; ++j)
+      signedArea += xs[j] * ys[j + 1] - ys[j] * xs[j + 1];
+
+   return signedArea < 0.;         
 }
 
 }
