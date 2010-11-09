@@ -6768,7 +6768,7 @@ Double_t TH1::DoIntegral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int
             if (width) integral += GetBinContent(bin)*dx*dy*dz;
             else       integral += GetBinContent(bin);
             if (doError) {
-               if (width)  igerr2 += GetBinError(bin)*GetBinError(bin)*dx*dy*dz;
+               if (width)  igerr2 += GetBinError(bin)*GetBinError(bin)*dx*dx*dy*dy*dz*dz;
                else        igerr2 += GetBinError(bin)*GetBinError(bin);
             }
          }
