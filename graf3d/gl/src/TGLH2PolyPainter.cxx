@@ -217,6 +217,10 @@ void TGLH2PolyPainter::DrawExtrusion(const TGraph *poly, Double_t zMin, Double_t
    const Double_t *ys = poly->GetY();
        
    const Int_t nV = poly->GetN();
+
+   //nV can never be less than 3 - InitGeometry fails on such polygons.
+   //So, no checks here.
+
    const Int_t binID = fSelectionBase + binIndex;
 
    if (fSelectionPass) {
@@ -244,14 +248,19 @@ void TGLH2PolyPainter::DrawExtrusion(const TGraph *poly, Double_t zMin, Double_t
       const Double_t v3[] = {v0[0], v0[1], zMax};
 
       TMath::Normal2Plane(v0, v1, v2, normal);
+      Rgl::DrawQuadFilled(v0, v1, v2, v3, normal);
+   }
 
-      glBegin(GL_QUADS);
-      glNormal3dv(normal);
-      glVertex3dv(v0);
-      glVertex3dv(v1);
-      glVertex3dv(v2);
-      glVertex3dv(v3);
-      glEnd();
+   //Now, close the polygon.
+   const Double_t v0[] = {fPolygon[(nV - 1) * 3], fPolygon[(nV - 1) * 3 + 1], zMin};
+   const Double_t v1[] = {fPolygon[0], fPolygon[1], zMin};
+
+   if (Distance(v0, v1) > 1e-10) {
+      const Double_t v2[] = {v1[0], v1[1], zMax};
+      const Double_t v3[] = {v0[0], v0[1], zMax};
+
+      TMath::Normal2Plane(v0, v1, v2, normal);
+      Rgl::DrawQuadFilled(v0, v1, v2, v3, normal);
    }
 
    if (!fHighColor && !fSelectionPass && fSelectedPart == binID)
@@ -442,35 +451,44 @@ Bool_t TGLH2PolyPainter::BuildTesselation(Rgl::Pad::Tesselator &tess, const TMul
 Bool_t TGLH2PolyPainter::UpdateGeometry()
 {
    //Update cap's z-coordinates for all caps.
+   //Here no pointers are checked, this was already done
+   //by InitGeometry. So, if histogram was broken somehow
+   //- hehe, good luck.
    TH2Poly *hp = static_cast<TH2Poly *>(fHist);
    TList *bins = hp->GetBins();
-   if (!bins || !bins->GetEntries()) {
-      Error("TGLH2PolyPainter::UpdateGeometry", "Empty list of bins in TH2Poly");
-      return kFALSE;
-   }
-
-   if (Int_t(fCaps.size()) != bins->GetEntries()) {
-      Error("TGLH2PolyPainter::UpdateGeometry", "Unexpected number of bins in a TH2Poly");
-      return kFALSE;
-   }
 
    std::list<Rgl::Pad::Tesselation_t>::iterator cap = fCaps.begin();
-   for (TObjLink *link = bins->FirstLink(); link; link = link->Next(), ++cap) {
-      TH2PolyBin *b = static_cast<TH2PolyBin *>(link->GetObject());
-      if (!b) {
-         Error("TGH2PolyPainter::UpdateGeometry", "Null bin's pointer in a list of bins");
-         return kFALSE;
-      }
 
+   //Ugly iteration statements, but still, number of links and caps will be
+   //ok - this is checked in InitGeometry. Check cap != fCaps.end() is added
+   //to make it clear (not required).
+   for (TObjLink *link = bins->FirstLink(); link && cap != fCaps.end(); link = link->Next()) {
+      TH2PolyBin *b = static_cast<TH2PolyBin *>(link->GetObject());
       const Double_t z = b->GetContent() * fCoord->GetZScale();
       //Update z coordinate in all patches.
-      Rgl::Pad::Tesselation_t &tess = *cap;
-      Rgl::Pad::Tesselation_t::iterator patch = tess.begin();
-      for (; patch != tess.end(); ++patch) {
-         std::vector<Double_t> &mesh = patch->fPatch;
-         for (UInt_t i = 0, e = mesh.size() / 3; i < e; ++i)
-            mesh[i * 3 + 2] = z;
-      }
+      if (dynamic_cast<TGraph *>(b->GetPolygon())) {
+         //Only one cap.
+         Rgl::Pad::Tesselation_t &tess = *cap;
+         Rgl::Pad::Tesselation_t::iterator patch = tess.begin();
+         for (; patch != tess.end(); ++patch) {
+            std::vector<Double_t> &mesh = patch->fPatch;
+            for (UInt_t i = 0, e = mesh.size() / 3; i < e; ++i)
+               mesh[i * 3 + 2] = z;
+         }
+
+         ++cap;
+      } else if (const TMultiGraph *mg = dynamic_cast<TMultiGraph *>(b->GetPolygon())) {
+         const TList *gs = mg->GetListOfGraphs();
+         for (TObjLink * graphLink = gs->FirstLink(); graphLink && cap != fCaps.end(); graphLink = graphLink->Next(), ++cap) {
+            Rgl::Pad::Tesselation_t &tess = *cap;
+            Rgl::Pad::Tesselation_t::iterator patch = tess.begin();
+            for (; patch != tess.end(); ++patch) {
+               std::vector<Double_t> &mesh = patch->fPatch;
+               for (UInt_t i = 0, e = mesh.size() / 3; i < e; ++i)
+                  mesh[i * 3 + 2] = z;
+            }
+         }
+      }//else is impossible and processed by InitGeometry.
    }
 
    return kTRUE;

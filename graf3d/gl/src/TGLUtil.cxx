@@ -2526,905 +2526,1097 @@ const UChar_t *TGLSelectionBuffer::GetPixelColor(Int_t px, Int_t py)const
 
 namespace Rgl {
 
-   const Float_t gRedEmission[]    = {1.f, 0.f,  0.f, 1.f};
-   const Float_t gGreenEmission[]  = {0.f, 1.f,  0.f, 1.f};
-   const Float_t gBlueEmission[]   = {0.f, 0.f,  1.f, 1.f};
-   const Float_t gOrangeEmission[] = {1.f, 0.4f, 0.f, 1.f};
-   const Float_t gWhiteEmission[]  = {1.f, 1.f,  1.f, 1.f};
-   const Float_t gGrayEmission[]   = {0.3f,0.3f, 0.3f,1.f};
-   const Float_t gNullEmission[]   = {0.f, 0.f,  0.f, 1.f};
+const Float_t gRedEmission[]    = {1.f, 0.f,  0.f, 1.f};
+const Float_t gGreenEmission[]  = {0.f, 1.f,  0.f, 1.f};
+const Float_t gBlueEmission[]   = {0.f, 0.f,  1.f, 1.f};
+const Float_t gOrangeEmission[] = {1.f, 0.4f, 0.f, 1.f};
+const Float_t gWhiteEmission[]  = {1.f, 1.f,  1.f, 1.f};
+const Float_t gGrayEmission[]   = {0.3f,0.3f, 0.3f,1.f};
+const Float_t gNullEmission[]   = {0.f, 0.f,  0.f, 1.f};
 
-   namespace {
-      struct RGB_t {
-         Int_t fRGB[3];
-      };
+namespace {
+   struct RGB_t {
+      Int_t fRGB[3];
+   };
 
-      RGB_t gColorTriplets[] = {{{255, 0, 0}},
-                                {{0, 255, 0}},
-                                {{0, 0, 255}},
-                                {{255, 255, 0}},
-                                {{255, 0, 255}},
-                                {{0, 255, 255}},
-                                {{255, 255, 255}}};
+   RGB_t gColorTriplets[] = {{{255, 0, 0}},
+                              {{0, 255, 0}},
+                              {{0, 0, 255}},
+                              {{255, 255, 0}},
+                              {{255, 0, 255}},
+                              {{0, 255, 255}},
+                              {{255, 255, 255}}};
 
-      Bool_t operator < (const RGB_t &lhs, const RGB_t &rhs)
-      {
-         if (lhs.fRGB[0] < rhs.fRGB[0])
-            return kTRUE;
-         else if (lhs.fRGB[0] > rhs.fRGB[0])
-            return kFALSE;
-         else if (lhs.fRGB[1] < rhs.fRGB[1])
-            return kTRUE;
-         else if (lhs.fRGB[1] > rhs.fRGB[1])
-            return kFALSE;
-         else if (lhs.fRGB[2] < rhs.fRGB[2])
-            return kTRUE;
-
+   Bool_t operator < (const RGB_t &lhs, const RGB_t &rhs)
+   {
+      if (lhs.fRGB[0] < rhs.fRGB[0])
+         return kTRUE;
+      else if (lhs.fRGB[0] > rhs.fRGB[0])
          return kFALSE;
+      else if (lhs.fRGB[1] < rhs.fRGB[1])
+         return kTRUE;
+      else if (lhs.fRGB[1] > rhs.fRGB[1])
+         return kFALSE;
+      else if (lhs.fRGB[2] < rhs.fRGB[2])
+         return kTRUE;
+
+      return kFALSE;
+   }
+
+   typedef std::map<Int_t, RGB_t> ColorLookupTable_t;
+   typedef ColorLookupTable_t::const_iterator CLTCI_t;
+
+   ColorLookupTable_t gObjectIDToColor;
+
+   typedef std::map<RGB_t, Int_t> ObjectLookupTable_t;
+   typedef ObjectLookupTable_t::const_iterator OLTCI_t;
+
+   ObjectLookupTable_t gColorToObjectID;
+}
+//______________________________________________________________________________
+void ObjectIDToColor(Int_t objectID, Bool_t highColor)
+{
+   //Object id encoded as rgb triplet.
+   if (!highColor)
+      glColor3ub(objectID & 0xff, (objectID & 0xff00) >> 8, (objectID & 0xff0000) >> 16);
+   else {
+      if (!gObjectIDToColor.size()) {
+      //Initialize lookup tables.
+         for (Int_t i = 0, id = 1; i < Int_t(sizeof gColorTriplets / sizeof(RGB_t)); ++i, ++id)
+            gObjectIDToColor[id] = gColorTriplets[i];
+         for (Int_t i = 0, id = 1; i < Int_t(sizeof gColorTriplets / sizeof(RGB_t)); ++i, ++id)
+            gColorToObjectID[gColorTriplets[i]] = id;
       }
 
-      typedef std::map<Int_t, RGB_t> ColorLookupTable_t;
-      typedef ColorLookupTable_t::const_iterator CLTCI_t;
+      CLTCI_t it = gObjectIDToColor.find(objectID);
 
-      ColorLookupTable_t gObjectIDToColor;
-
-      typedef std::map<RGB_t, Int_t> ObjectLookupTable_t;
-      typedef ObjectLookupTable_t::const_iterator OLTCI_t;
-
-      ObjectLookupTable_t gColorToObjectID;
-   }
-   //______________________________________________________________________________
-   void ObjectIDToColor(Int_t objectID, Bool_t highColor)
-   {
-      //Object id encoded as rgb triplet.
-      if (!highColor)
-         glColor3ub(objectID & 0xff, (objectID & 0xff00) >> 8, (objectID & 0xff0000) >> 16);
+      if (it != gObjectIDToColor.end())
+         glColor3ub(it->second.fRGB[0], it->second.fRGB[1], it->second.fRGB[2]);
       else {
-         if (!gObjectIDToColor.size()) {
-         //Initialize lookup tables.
-            for (Int_t i = 0, id = 1; i < Int_t(sizeof gColorTriplets / sizeof(RGB_t)); ++i, ++id)
-               gObjectIDToColor[id] = gColorTriplets[i];
-            for (Int_t i = 0, id = 1; i < Int_t(sizeof gColorTriplets / sizeof(RGB_t)); ++i, ++id)
-               gColorToObjectID[gColorTriplets[i]] = id;
-         }
-
-         CLTCI_t it = gObjectIDToColor.find(objectID);
-
-         if (it != gObjectIDToColor.end())
-            glColor3ub(it->second.fRGB[0], it->second.fRGB[1], it->second.fRGB[2]);
-         else {
-            Error("ObjectIDToColor", "No color for such object ID: %d", objectID);
-            glColor3ub(0, 0, 0);
-         }
+         Error("ObjectIDToColor", "No color for such object ID: %d", objectID);
+         glColor3ub(0, 0, 0);
       }
    }
+}
 
-   //______________________________________________________________________________
-   Int_t ColorToObjectID(const UChar_t *pixel, Bool_t highColor)
-   {
-      if (!highColor)
-         return pixel[0] | (pixel[1] << 8) | (pixel[2] << 16);
-      else {
-         if (!gObjectIDToColor.size())
-            return 0;
+//______________________________________________________________________________
+Int_t ColorToObjectID(const UChar_t *pixel, Bool_t highColor)
+{
+   if (!highColor)
+      return pixel[0] | (pixel[1] << 8) | (pixel[2] << 16);
+   else {
+      if (!gObjectIDToColor.size())
+         return 0;
 
-         RGB_t triplet = {{pixel[0], pixel[1], pixel[2]}};
-         OLTCI_t it = gColorToObjectID.find(triplet);
+      RGB_t triplet = {{pixel[0], pixel[1], pixel[2]}};
+      OLTCI_t it = gColorToObjectID.find(triplet);
 
-         if (it != gColorToObjectID.end())
-            return it->second;
-         else
-            return 0;
-      }
+      if (it != gColorToObjectID.end())
+         return it->second;
+      else
+         return 0;
+   }
+}
+
+
+//______________________________________________________________________________
+void DrawQuadOutline(const TGLVertex3 &v1, const TGLVertex3 &v2,
+                     const TGLVertex3 &v3, const TGLVertex3 &v4)
+{
+   //Draw quad outline.
+   glBegin(GL_LINE_LOOP);
+   glVertex3dv(v1.CArr());
+   glVertex3dv(v2.CArr());
+   glVertex3dv(v3.CArr());
+   glVertex3dv(v4.CArr());
+   glEnd();
+}
+
+//______________________________________________________________________________
+void DrawQuadFilled(const TGLVertex3 &v0, const TGLVertex3 &v1, const TGLVertex3 &v2,
+                     const TGLVertex3 &v3, const TGLVector3 &normal)
+{
+   //Draw quad face.
+   glBegin(GL_POLYGON);
+   glNormal3dv(normal.CArr());
+   glVertex3dv(v0.CArr());
+   glVertex3dv(v1.CArr());
+   glVertex3dv(v2.CArr());
+   glVertex3dv(v3.CArr());
+   glEnd();
+}
+
+//______________________________________________________________________________
+void DrawQuadFilled(const Double_t *v0, const Double_t *v1, const Double_t *v2, const Double_t *v3,
+                    const Double_t *normal)
+{
+   //Draw quad face.
+   glBegin(GL_QUADS);
+   glNormal3dv(normal);
+   glVertex3dv(v0);
+   glVertex3dv(v1);
+   glVertex3dv(v2);
+   glVertex3dv(v3);
+   glEnd();
+}
+
+//______________________________________________________________________________
+void DrawSmoothFace(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
+                  const TGLVector3 &norm1, const TGLVector3 &norm2, const TGLVector3 &norm3)
+{
+   //Draws triangle face, each vertex has its own averaged normal
+   glBegin(GL_POLYGON);
+   glNormal3dv(norm1.CArr());
+   glVertex3dv(v1.CArr());
+   glNormal3dv(norm2.CArr());
+   glVertex3dv(v2.CArr());
+   glNormal3dv(norm3.CArr());
+   glVertex3dv(v3.CArr());
+   glEnd();
+}
+
+const Int_t    gBoxFrontQuads[][4] = {{0, 1, 2, 3}, {4, 0, 3, 5}, {4, 5, 6, 7}, {7, 6, 2, 1}};
+const Double_t gBoxFrontNormals[][3] = {{-1., 0., 0.}, {0., -1., 0.}, {1., 0., 0.}, {0., 1., 0.}};
+const Int_t    gBoxFrontPlanes[][2] = {{0, 1}, {1, 2}, {2, 3}, {3, 0}};
+
+//______________________________________________________________________________
+void DrawBoxFront(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
+                  Double_t zMin, Double_t zMax, Int_t fp)
+{
+   //Draws lego's bar as a 3d box
+   if (zMax < zMin)
+      std::swap(zMax, zMin);
+
+   //Bottom is always drawn.
+   glBegin(GL_POLYGON);
+   glNormal3d(0., 0., -1.);
+   glVertex3d(xMax, yMin, zMin);
+   glVertex3d(xMin, yMin, zMin);
+   glVertex3d(xMin, yMax, zMin);
+   glVertex3d(xMax, yMax, zMin);
+   glEnd();
+   //Draw two visible front planes.
+   const Double_t box[][3] = {{xMin, yMin, zMax}, {xMin, yMax, zMax}, {xMin, yMax, zMin}, {xMin, yMin, zMin},
+                              {xMax, yMin, zMax}, {xMax, yMin, zMin}, {xMax, yMax, zMin}, {xMax, yMax, zMax}};
+   const Int_t *verts = gBoxFrontQuads[gBoxFrontPlanes[fp][0]];
+
+   glBegin(GL_POLYGON);
+   glNormal3dv(gBoxFrontNormals[gBoxFrontPlanes[fp][0]]);
+   glVertex3dv(box[verts[0]]);
+   glVertex3dv(box[verts[1]]);
+   glVertex3dv(box[verts[2]]);
+   glVertex3dv(box[verts[3]]);
+   glEnd();
+
+   verts = gBoxFrontQuads[gBoxFrontPlanes[fp][1]];
+
+   glBegin(GL_POLYGON);
+   glNormal3dv(gBoxFrontNormals[gBoxFrontPlanes[fp][1]]);
+   glVertex3dv(box[verts[0]]);
+   glVertex3dv(box[verts[1]]);
+   glVertex3dv(box[verts[2]]);
+   glVertex3dv(box[verts[3]]);
+   glEnd();
+
+   //Top is always drawn.
+   glBegin(GL_POLYGON);
+   glNormal3d(0., 0., 1.);
+   glVertex3d(xMax, yMin, zMax);
+   glVertex3d(xMax, yMax, zMax);
+   glVertex3d(xMin, yMax, zMax);
+   glVertex3d(xMin, yMin, zMax);
+   glEnd();
+}
+
+//______________________________________________________________________________
+void DrawBoxFrontTextured(Double_t xMin, Double_t xMax, Double_t yMin,
+                           Double_t yMax, Double_t zMin, Double_t zMax,
+                           Double_t texMin, Double_t texMax, Int_t fp)
+{
+   //Draws lego's bar as a 3d box
+   //LULULULU
+   if (zMax < zMin) {
+      std::swap(zMax, zMin);
+      std::swap(texMax, texMin);
    }
 
+   //Top and bottom are always drawn.
+   glBegin(GL_POLYGON);
+   glNormal3d(0., 0., 1.);
+   glTexCoord1d(texMax);
+   glVertex3d(xMax, yMin, zMax);
+   glVertex3d(xMax, yMax, zMax);
+   glVertex3d(xMin, yMax, zMax);
+   glVertex3d(xMin, yMin, zMax);
+   glEnd();
 
-   //______________________________________________________________________________
-   void DrawQuadOutline(const TGLVertex3 &v1, const TGLVertex3 &v2,
-                        const TGLVertex3 &v3, const TGLVertex3 &v4)
-   {
-      //Draw quad outline.
-      glBegin(GL_LINE_LOOP);
-      glVertex3dv(v1.CArr());
-      glVertex3dv(v2.CArr());
-      glVertex3dv(v3.CArr());
-      glVertex3dv(v4.CArr());
-      glEnd();
-   }
+   glBegin(GL_POLYGON);
+   glTexCoord1d(texMin);
+   glNormal3d(0., 0., -1.);
+   glVertex3d(xMax, yMin, zMin);
+   glVertex3d(xMin, yMin, zMin);
+   glVertex3d(xMin, yMax, zMin);
+   glVertex3d(xMax, yMax, zMin);
+   glEnd();
+   //Draw two visible front planes.
+   const Double_t box[][3] = {{xMin, yMin, zMax}, {xMin, yMax, zMax}, {xMin, yMax, zMin}, {xMin, yMin, zMin},
+                              {xMax, yMin, zMax}, {xMax, yMin, zMin}, {xMax, yMax, zMin}, {xMax, yMax, zMax}};
 
-   //______________________________________________________________________________
-   void DrawQuadFilled(const TGLVertex3 &v0, const TGLVertex3 &v1, const TGLVertex3 &v2,
-                       const TGLVertex3 &v3, const TGLVector3 &normal)
-   {
-      //Draw quad face.
-      glBegin(GL_POLYGON);
-      glNormal3dv(normal.CArr());
-      glVertex3dv(v0.CArr());
-      glVertex3dv(v1.CArr());
-      glVertex3dv(v2.CArr());
-      glVertex3dv(v3.CArr());
-      glEnd();
-   }
+   const Double_t tex[] = {texMax, texMax, texMin, texMin, texMax, texMin, texMin, texMax};
+   const Int_t *verts = gBoxFrontQuads[gBoxFrontPlanes[fp][0]];
 
-   //______________________________________________________________________________
-   void DrawSmoothFace(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
-                     const TGLVector3 &norm1, const TGLVector3 &norm2, const TGLVector3 &norm3)
-   {
-      //Draws triangle face, each vertex has its own averaged normal
-      glBegin(GL_POLYGON);
-      glNormal3dv(norm1.CArr());
-      glVertex3dv(v1.CArr());
-      glNormal3dv(norm2.CArr());
-      glVertex3dv(v2.CArr());
-      glNormal3dv(norm3.CArr());
-      glVertex3dv(v3.CArr());
-      glEnd();
-   }
+   glBegin(GL_POLYGON);
+   glNormal3dv(gBoxFrontNormals[gBoxFrontPlanes[fp][0]]);
+   glTexCoord1d(tex[verts[0]]);
+   glVertex3dv(box[verts[0]]);
+   glTexCoord1d(tex[verts[1]]);
+   glVertex3dv(box[verts[1]]);
+   glTexCoord1d(tex[verts[2]]);
+   glVertex3dv(box[verts[2]]);
+   glTexCoord1d(tex[verts[3]]);
+   glVertex3dv(box[verts[3]]);
+   glEnd();
 
-   const Int_t    gBoxFrontQuads[][4] = {{0, 1, 2, 3}, {4, 0, 3, 5}, {4, 5, 6, 7}, {7, 6, 2, 1}};
-   const Double_t gBoxFrontNormals[][3] = {{-1., 0., 0.}, {0., -1., 0.}, {1., 0., 0.}, {0., 1., 0.}};
-   const Int_t    gBoxFrontPlanes[][2] = {{0, 1}, {1, 2}, {2, 3}, {3, 0}};
+   verts = gBoxFrontQuads[gBoxFrontPlanes[fp][1]];
 
-   //______________________________________________________________________________
-   void DrawBoxFront(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
-                     Double_t zMin, Double_t zMax, Int_t fp)
-   {
-      //Draws lego's bar as a 3d box
-      if (zMax < zMin)
-         std::swap(zMax, zMin);
-
-      //Bottom is always drawn.
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., -1.);
-      glVertex3d(xMax, yMin, zMin);
-      glVertex3d(xMin, yMin, zMin);
-      glVertex3d(xMin, yMax, zMin);
-      glVertex3d(xMax, yMax, zMin);
-      glEnd();
-      //Draw two visible front planes.
-      const Double_t box[][3] = {{xMin, yMin, zMax}, {xMin, yMax, zMax}, {xMin, yMax, zMin}, {xMin, yMin, zMin},
-                                 {xMax, yMin, zMax}, {xMax, yMin, zMin}, {xMax, yMax, zMin}, {xMax, yMax, zMax}};
-      const Int_t *verts = gBoxFrontQuads[gBoxFrontPlanes[fp][0]];
-
-      glBegin(GL_POLYGON);
-      glNormal3dv(gBoxFrontNormals[gBoxFrontPlanes[fp][0]]);
-      glVertex3dv(box[verts[0]]);
-      glVertex3dv(box[verts[1]]);
-      glVertex3dv(box[verts[2]]);
-      glVertex3dv(box[verts[3]]);
-      glEnd();
-
-      verts = gBoxFrontQuads[gBoxFrontPlanes[fp][1]];
-
-      glBegin(GL_POLYGON);
-      glNormal3dv(gBoxFrontNormals[gBoxFrontPlanes[fp][1]]);
-      glVertex3dv(box[verts[0]]);
-      glVertex3dv(box[verts[1]]);
-      glVertex3dv(box[verts[2]]);
-      glVertex3dv(box[verts[3]]);
-      glEnd();
-
-      //Top is always drawn.
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., 1.);
-      glVertex3d(xMax, yMin, zMax);
-      glVertex3d(xMax, yMax, zMax);
-      glVertex3d(xMin, yMax, zMax);
-      glVertex3d(xMin, yMin, zMax);
-      glEnd();
-   }
-
-   //______________________________________________________________________________
-   void DrawBoxFrontTextured(Double_t xMin, Double_t xMax, Double_t yMin,
-                             Double_t yMax, Double_t zMin, Double_t zMax,
-                             Double_t texMin, Double_t texMax, Int_t fp)
-   {
-      //Draws lego's bar as a 3d box
-      //LULULULU
-      if (zMax < zMin) {
-         std::swap(zMax, zMin);
-         std::swap(texMax, texMin);
-      }
-
-      //Top and bottom are always drawn.
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., 1.);
-      glTexCoord1d(texMax);
-      glVertex3d(xMax, yMin, zMax);
-      glVertex3d(xMax, yMax, zMax);
-      glVertex3d(xMin, yMax, zMax);
-      glVertex3d(xMin, yMin, zMax);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      glTexCoord1d(texMin);
-      glNormal3d(0., 0., -1.);
-      glVertex3d(xMax, yMin, zMin);
-      glVertex3d(xMin, yMin, zMin);
-      glVertex3d(xMin, yMax, zMin);
-      glVertex3d(xMax, yMax, zMin);
-      glEnd();
-      //Draw two visible front planes.
-      const Double_t box[][3] = {{xMin, yMin, zMax}, {xMin, yMax, zMax}, {xMin, yMax, zMin}, {xMin, yMin, zMin},
-                                 {xMax, yMin, zMax}, {xMax, yMin, zMin}, {xMax, yMax, zMin}, {xMax, yMax, zMax}};
-
-      const Double_t tex[] = {texMax, texMax, texMin, texMin, texMax, texMin, texMin, texMax};
-      const Int_t *verts = gBoxFrontQuads[gBoxFrontPlanes[fp][0]];
-
-      glBegin(GL_POLYGON);
-      glNormal3dv(gBoxFrontNormals[gBoxFrontPlanes[fp][0]]);
-      glTexCoord1d(tex[verts[0]]);
-      glVertex3dv(box[verts[0]]);
-      glTexCoord1d(tex[verts[1]]);
-      glVertex3dv(box[verts[1]]);
-      glTexCoord1d(tex[verts[2]]);
-      glVertex3dv(box[verts[2]]);
-      glTexCoord1d(tex[verts[3]]);
-      glVertex3dv(box[verts[3]]);
-      glEnd();
-
-      verts = gBoxFrontQuads[gBoxFrontPlanes[fp][1]];
-
-      glBegin(GL_POLYGON);
-      glNormal3dv(gBoxFrontNormals[gBoxFrontPlanes[fp][1]]);
-      glTexCoord1d(tex[verts[0]]);
-      glVertex3dv(box[verts[0]]);
-      glTexCoord1d(tex[verts[1]]);
-      glVertex3dv(box[verts[1]]);
-      glTexCoord1d(tex[verts[2]]);
-      glVertex3dv(box[verts[2]]);
-      glTexCoord1d(tex[verts[3]]);
-      glVertex3dv(box[verts[3]]);
-      glEnd();
-   }
+   glBegin(GL_POLYGON);
+   glNormal3dv(gBoxFrontNormals[gBoxFrontPlanes[fp][1]]);
+   glTexCoord1d(tex[verts[0]]);
+   glVertex3dv(box[verts[0]]);
+   glTexCoord1d(tex[verts[1]]);
+   glVertex3dv(box[verts[1]]);
+   glTexCoord1d(tex[verts[2]]);
+   glVertex3dv(box[verts[2]]);
+   glTexCoord1d(tex[verts[3]]);
+   glVertex3dv(box[verts[3]]);
+   glEnd();
+}
 
 
-   //______________________________________________________________________________
-   void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin,
-                     Double_t yMax, Double_t zMin, Double_t zMax)
-   {
-      //Cylinder for lego3.
-      GLUquadric *quad = quadric->Get();
-
-      if (quad) {
-         if (zMin > zMax)
-            std::swap(zMin, zMax);
-         const Double_t xCenter = xMin + (xMax - xMin) / 2;
-         const Double_t yCenter = yMin + (yMax - yMin) / 2;
-         const Double_t radius = TMath::Min((xMax - xMin) / 2, (yMax - yMin) / 2);
-
-         glPushMatrix();
-         glTranslated(xCenter, yCenter, zMin);
-         gluCylinder(quad, radius, radius, zMax - zMin, 40, 1);
-         glPopMatrix();
-         glPushMatrix();
-         glTranslated(xCenter, yCenter, zMax);
-         gluDisk(quad, 0., radius, 40, 1);
-         glPopMatrix();
-         glPushMatrix();
-         glTranslated(xCenter, yCenter, zMin);
-         glRotated(180., 0., 1., 0.);
-         gluDisk(quad, 0., radius, 40, 1);
-         glPopMatrix();
-      }
-   }
-
-   //______________________________________________________________________________
-   void DrawSphere(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin,
-                     Double_t yMax, Double_t zMin, Double_t zMax)
-   {
-      //Cylinder for lego3.
-      GLUquadric *quad = quadric->Get();
-
-      if (quad) {
-         const Double_t xCenter = xMin + (xMax - xMin) / 2;
-         const Double_t yCenter = yMin + (yMax - yMin) / 2;
-         const Double_t zCenter = zMin + (zMax - zMin) / 2;
-
-         const Double_t radius = TMath::Min((zMax - zMin) / 2,
-                                             TMath::Min((xMax - xMin) / 2, (yMax - yMin) / 2));
-
-         glPushMatrix();
-         glTranslated(xCenter, yCenter, zCenter);
-         gluSphere(quad, radius, 10, 10);
-         glPopMatrix();
-      }
-   }
-
-
-  //______________________________________________________________________________
-   void DrawError(Double_t xMin, Double_t xMax, Double_t yMin,
+//______________________________________________________________________________
+void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin,
                   Double_t yMax, Double_t zMin, Double_t zMax)
-   {
-      const Double_t xWid = xMax - xMin;
-      const Double_t yWid = yMax - yMin;
+{
+   //Cylinder for lego3.
+   GLUquadric *quad = quadric->Get();
 
-      glBegin(GL_LINES);
-      glVertex3d(xMin + xWid / 2, yMin + yWid / 2, zMin);
-      glVertex3d(xMin + xWid / 2, yMin + yWid / 2, zMax);
-      glEnd();
-
-      glBegin(GL_LINES);
-      glVertex3d(xMin + xWid / 2, yMin, zMin);
-      glVertex3d(xMin + xWid / 2, yMax, zMin);
-      glEnd();
-
-      glBegin(GL_LINES);
-      glVertex3d(xMin, yMin + yWid / 2, zMin);
-      glVertex3d(xMax, yMin + yWid / 2, zMin);
-      glEnd();
-   }
-
-   void CylindricalNormal(const Double_t *v, Double_t *normal)
-   {
-      const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1]);
-      if (n > 0.) {
-         normal[0] = v[0] / n;
-         normal[1] = v[1] / n;
-         normal[2] = 0.;
-      } else {
-         normal[0] = v[0];
-         normal[1] = v[1];
-         normal[2] = 0.;
-      }
-   }
-
-   void CylindricalNormalInv(const Double_t *v, Double_t *normal)
-   {
-      const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1]);
-      if (n > 0.) {
-         normal[0] = -v[0] / n;
-         normal[1] = -v[1] / n;
-         normal[2] = 0.;
-      } else {
-         normal[0] = -v[0];
-         normal[1] = -v[1];
-         normal[2] = 0.;
-      }
-   }
-
-   void DrawTrapezoid(const Double_t ver[][2], Double_t zMin, Double_t zMax, Bool_t color)
-   {
-      //In polar coordinates, box became trapezoid.
-      //Four faces need normal calculations.
+   if (quad) {
       if (zMin > zMax)
          std::swap(zMin, zMax);
-      //top
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., 1.);
-      glVertex3d(ver[0][0], ver[0][1], zMax);
-      glVertex3d(ver[1][0], ver[1][1], zMax);
-      glVertex3d(ver[2][0], ver[2][1], zMax);
-      glVertex3d(ver[3][0], ver[3][1], zMax);
-      glEnd();
-      //bottom
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., -1.);
-      glVertex3d(ver[0][0], ver[0][1], zMin);
-      glVertex3d(ver[3][0], ver[3][1], zMin);
-      glVertex3d(ver[2][0], ver[2][1], zMin);
-      glVertex3d(ver[1][0], ver[1][1], zMin);
-      glEnd();
-      //
+      const Double_t xCenter = xMin + (xMax - xMin) / 2;
+      const Double_t yCenter = yMin + (yMax - yMin) / 2;
+      const Double_t radius = TMath::Min((xMax - xMin) / 2, (yMax - yMin) / 2);
 
-      Double_t trapezoid[][3] = {{ver[0][0], ver[0][1], zMin}, {ver[1][0], ver[1][1], zMin},
-                                 {ver[2][0], ver[2][1], zMin}, {ver[3][0], ver[3][1], zMin},
-                                 {ver[0][0], ver[0][1], zMax}, {ver[1][0], ver[1][1], zMax},
-                                 {ver[2][0], ver[2][1], zMax}, {ver[3][0], ver[3][1], zMax}};
-      Double_t normal[3] = {0.};
-      glBegin(GL_POLYGON);
-      CylindricalNormal(trapezoid[1], normal), glNormal3dv(normal), glVertex3dv(trapezoid[1]);
-      CylindricalNormal(trapezoid[2], normal), glNormal3dv(normal), glVertex3dv(trapezoid[2]);
-      CylindricalNormal(trapezoid[6], normal), glNormal3dv(normal), glVertex3dv(trapezoid[6]);
-      CylindricalNormal(trapezoid[5], normal), glNormal3dv(normal), glVertex3dv(trapezoid[5]);
-      glEnd();
+      glPushMatrix();
+      glTranslated(xCenter, yCenter, zMin);
+      gluCylinder(quad, radius, radius, zMax - zMin, 40, 1);
+      glPopMatrix();
+      glPushMatrix();
+      glTranslated(xCenter, yCenter, zMax);
+      gluDisk(quad, 0., radius, 40, 1);
+      glPopMatrix();
+      glPushMatrix();
+      glTranslated(xCenter, yCenter, zMin);
+      glRotated(180., 0., 1., 0.);
+      gluDisk(quad, 0., radius, 40, 1);
+      glPopMatrix();
+   }
+}
 
-      glBegin(GL_POLYGON);
-      CylindricalNormalInv(trapezoid[0], normal), glNormal3dv(normal), glVertex3dv(trapezoid[0]);
-      CylindricalNormalInv(trapezoid[4], normal), glNormal3dv(normal), glVertex3dv(trapezoid[4]);
-      CylindricalNormalInv(trapezoid[7], normal), glNormal3dv(normal), glVertex3dv(trapezoid[7]);
-      CylindricalNormalInv(trapezoid[3], normal), glNormal3dv(normal), glVertex3dv(trapezoid[3]);
-      glEnd();
+//______________________________________________________________________________
+void DrawSphere(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin,
+                  Double_t yMax, Double_t zMin, Double_t zMax)
+{
+   //Cylinder for lego3.
+   GLUquadric *quad = quadric->Get();
 
-      glBegin(GL_POLYGON);
-      if (color) {
-         TMath::Normal2Plane(trapezoid[0], trapezoid[1], trapezoid[5], normal);
-         glNormal3dv(normal);
-      }
-      glVertex3dv(trapezoid[0]);
-      glVertex3dv(trapezoid[1]);
-      glVertex3dv(trapezoid[5]);
-      glVertex3dv(trapezoid[4]);
-      glEnd();
+   if (quad) {
+      const Double_t xCenter = xMin + (xMax - xMin) / 2;
+      const Double_t yCenter = yMin + (yMax - yMin) / 2;
+      const Double_t zCenter = zMin + (zMax - zMin) / 2;
 
-      glBegin(GL_POLYGON);
-      if (color) {
-         TMath::Normal2Plane(trapezoid[3], trapezoid[7], trapezoid[6], normal);
-         glNormal3dv(normal);
-      }
-      glVertex3dv(trapezoid[3]);
-      glVertex3dv(trapezoid[7]);
-      glVertex3dv(trapezoid[6]);
-      glVertex3dv(trapezoid[2]);
-      glEnd();
+      const Double_t radius = TMath::Min((zMax - zMin) / 2,
+                                          TMath::Min((xMax - xMin) / 2, (yMax - yMin) / 2));
+
+      glPushMatrix();
+      glTranslated(xCenter, yCenter, zCenter);
+      gluSphere(quad, radius, 10, 10);
+      glPopMatrix();
+   }
+}
+
+
+//______________________________________________________________________________
+void DrawError(Double_t xMin, Double_t xMax, Double_t yMin,
+               Double_t yMax, Double_t zMin, Double_t zMax)
+{
+   const Double_t xWid = xMax - xMin;
+   const Double_t yWid = yMax - yMin;
+
+   glBegin(GL_LINES);
+   glVertex3d(xMin + xWid / 2, yMin + yWid / 2, zMin);
+   glVertex3d(xMin + xWid / 2, yMin + yWid / 2, zMax);
+   glEnd();
+
+   glBegin(GL_LINES);
+   glVertex3d(xMin + xWid / 2, yMin, zMin);
+   glVertex3d(xMin + xWid / 2, yMax, zMin);
+   glEnd();
+
+   glBegin(GL_LINES);
+   glVertex3d(xMin, yMin + yWid / 2, zMin);
+   glVertex3d(xMax, yMin + yWid / 2, zMin);
+   glEnd();
+}
+
+void CylindricalNormal(const Double_t *v, Double_t *normal)
+{
+   const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1]);
+   if (n > 0.) {
+      normal[0] = v[0] / n;
+      normal[1] = v[1] / n;
+      normal[2] = 0.;
+   } else {
+      normal[0] = v[0];
+      normal[1] = v[1];
+      normal[2] = 0.;
+   }
+}
+
+void CylindricalNormalInv(const Double_t *v, Double_t *normal)
+{
+   const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1]);
+   if (n > 0.) {
+      normal[0] = -v[0] / n;
+      normal[1] = -v[1] / n;
+      normal[2] = 0.;
+   } else {
+      normal[0] = -v[0];
+      normal[1] = -v[1];
+      normal[2] = 0.;
+   }
+}
+
+void DrawTrapezoid(const Double_t ver[][2], Double_t zMin, Double_t zMax, Bool_t color)
+{
+   //In polar coordinates, box became trapezoid.
+   //Four faces need normal calculations.
+   if (zMin > zMax)
+      std::swap(zMin, zMax);
+   //top
+   glBegin(GL_POLYGON);
+   glNormal3d(0., 0., 1.);
+   glVertex3d(ver[0][0], ver[0][1], zMax);
+   glVertex3d(ver[1][0], ver[1][1], zMax);
+   glVertex3d(ver[2][0], ver[2][1], zMax);
+   glVertex3d(ver[3][0], ver[3][1], zMax);
+   glEnd();
+   //bottom
+   glBegin(GL_POLYGON);
+   glNormal3d(0., 0., -1.);
+   glVertex3d(ver[0][0], ver[0][1], zMin);
+   glVertex3d(ver[3][0], ver[3][1], zMin);
+   glVertex3d(ver[2][0], ver[2][1], zMin);
+   glVertex3d(ver[1][0], ver[1][1], zMin);
+   glEnd();
+   //
+
+   Double_t trapezoid[][3] = {{ver[0][0], ver[0][1], zMin}, {ver[1][0], ver[1][1], zMin},
+                              {ver[2][0], ver[2][1], zMin}, {ver[3][0], ver[3][1], zMin},
+                              {ver[0][0], ver[0][1], zMax}, {ver[1][0], ver[1][1], zMax},
+                              {ver[2][0], ver[2][1], zMax}, {ver[3][0], ver[3][1], zMax}};
+   Double_t normal[3] = {0.};
+   glBegin(GL_POLYGON);
+   CylindricalNormal(trapezoid[1], normal), glNormal3dv(normal), glVertex3dv(trapezoid[1]);
+   CylindricalNormal(trapezoid[2], normal), glNormal3dv(normal), glVertex3dv(trapezoid[2]);
+   CylindricalNormal(trapezoid[6], normal), glNormal3dv(normal), glVertex3dv(trapezoid[6]);
+   CylindricalNormal(trapezoid[5], normal), glNormal3dv(normal), glVertex3dv(trapezoid[5]);
+   glEnd();
+
+   glBegin(GL_POLYGON);
+   CylindricalNormalInv(trapezoid[0], normal), glNormal3dv(normal), glVertex3dv(trapezoid[0]);
+   CylindricalNormalInv(trapezoid[4], normal), glNormal3dv(normal), glVertex3dv(trapezoid[4]);
+   CylindricalNormalInv(trapezoid[7], normal), glNormal3dv(normal), glVertex3dv(trapezoid[7]);
+   CylindricalNormalInv(trapezoid[3], normal), glNormal3dv(normal), glVertex3dv(trapezoid[3]);
+   glEnd();
+
+   glBegin(GL_POLYGON);
+   if (color) {
+      TMath::Normal2Plane(trapezoid[0], trapezoid[1], trapezoid[5], normal);
+      glNormal3dv(normal);
+   }
+   glVertex3dv(trapezoid[0]);
+   glVertex3dv(trapezoid[1]);
+   glVertex3dv(trapezoid[5]);
+   glVertex3dv(trapezoid[4]);
+   glEnd();
+
+   glBegin(GL_POLYGON);
+   if (color) {
+      TMath::Normal2Plane(trapezoid[3], trapezoid[7], trapezoid[6], normal);
+      glNormal3dv(normal);
+   }
+   glVertex3dv(trapezoid[3]);
+   glVertex3dv(trapezoid[7]);
+   glVertex3dv(trapezoid[6]);
+   glVertex3dv(trapezoid[2]);
+   glEnd();
+}
+
+//______________________________________________________________________________
+void DrawTrapezoidTextured(const Double_t ver[][2], Double_t zMin, Double_t zMax,
+                           Double_t texMin, Double_t texMax)
+{
+   //In polar coordinates, box became trapezoid.
+   //Four faces need normal calculations.
+   if (zMin > zMax) {
+      std::swap(zMin, zMax);
+      std::swap(texMin, texMax);
    }
 
-   //______________________________________________________________________________
-   void DrawTrapezoidTextured(const Double_t ver[][2], Double_t zMin, Double_t zMax,
+   //top
+   glBegin(GL_POLYGON);
+   glNormal3d(0., 0., 1.);
+   glTexCoord1d(texMax);
+   glVertex3d(ver[0][0], ver[0][1], zMax);
+   glVertex3d(ver[1][0], ver[1][1], zMax);
+   glVertex3d(ver[2][0], ver[2][1], zMax);
+   glVertex3d(ver[3][0], ver[3][1], zMax);
+   glEnd();
+   //bottom
+   glBegin(GL_POLYGON);
+   glNormal3d(0., 0., -1.);
+   glTexCoord1d(texMin);
+   glVertex3d(ver[0][0], ver[0][1], zMin);
+   glVertex3d(ver[3][0], ver[3][1], zMin);
+   glVertex3d(ver[2][0], ver[2][1], zMin);
+   glVertex3d(ver[1][0], ver[1][1], zMin);
+   glEnd();
+   //
+
+   Double_t trapezoid[][3] = {{ver[0][0], ver[0][1], zMin}, {ver[1][0], ver[1][1], zMin},
+                              {ver[2][0], ver[2][1], zMin}, {ver[3][0], ver[3][1], zMin},
+                              {ver[0][0], ver[0][1], zMax}, {ver[1][0], ver[1][1], zMax},
+                              {ver[2][0], ver[2][1], zMax}, {ver[3][0], ver[3][1], zMax}};
+   Double_t normal[3] = {0.};
+   glBegin(GL_POLYGON);
+   CylindricalNormal(trapezoid[1], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[1]);
+   CylindricalNormal(trapezoid[2], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[2]);
+   CylindricalNormal(trapezoid[6], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[6]);
+   CylindricalNormal(trapezoid[5], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[5]);
+   glEnd();
+
+   glBegin(GL_POLYGON);
+   CylindricalNormalInv(trapezoid[0], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[0]);
+   CylindricalNormalInv(trapezoid[4], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[4]);
+   CylindricalNormalInv(trapezoid[7], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[7]);
+   CylindricalNormalInv(trapezoid[3], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[3]);
+   glEnd();
+
+   glBegin(GL_POLYGON);
+   TMath::Normal2Plane(trapezoid[0], trapezoid[1], trapezoid[5], normal);
+   glNormal3dv(normal);
+   glTexCoord1d(texMin);
+   glVertex3dv(trapezoid[0]);
+   glTexCoord1d(texMin);
+   glVertex3dv(trapezoid[1]);
+   glTexCoord1d(texMax);
+   glVertex3dv(trapezoid[5]);
+   glTexCoord1d(texMax);
+   glVertex3dv(trapezoid[4]);
+   glEnd();
+
+   glBegin(GL_POLYGON);
+   TMath::Normal2Plane(trapezoid[3], trapezoid[7], trapezoid[6], normal);
+   glNormal3dv(normal);
+   glTexCoord1d(texMin);
+   glVertex3dv(trapezoid[3]);
+   glTexCoord1d(texMax);
+   glVertex3dv(trapezoid[7]);
+   glTexCoord1d(texMax);
+   glVertex3dv(trapezoid[6]);
+   glTexCoord1d(texMin);
+   glVertex3dv(trapezoid[2]);
+   glEnd();
+}
+
+//______________________________________________________________________________
+void DrawTrapezoidTextured2(const Double_t ver[][2], Double_t zMin, Double_t zMax,
                               Double_t texMin, Double_t texMax)
-   {
-      //In polar coordinates, box became trapezoid.
-      //Four faces need normal calculations.
-      if (zMin > zMax) {
-         std::swap(zMin, zMax);
-         std::swap(texMin, texMax);
+{
+   //In polar coordinates, box became trapezoid.
+   if (zMin > zMax)
+      std::swap(zMin, zMax);
+
+   const Double_t trapezoid[][3] = {{ver[0][0], ver[0][1], zMin}, {ver[1][0], ver[1][1], zMin},
+                                    {ver[2][0], ver[2][1], zMin}, {ver[3][0], ver[3][1], zMin},
+                                    {ver[0][0], ver[0][1], zMax}, {ver[1][0], ver[1][1], zMax},
+                                    {ver[2][0], ver[2][1], zMax}, {ver[3][0], ver[3][1], zMax}};
+   const Double_t tex[] = {texMin, texMax, texMax, texMin, texMin, texMax, texMax, texMin};
+   //top
+   glBegin(GL_POLYGON);
+   glNormal3d(0., 0., 1.);
+   glTexCoord1d(tex[4]), glVertex3dv(trapezoid[4]);
+   glTexCoord1d(tex[5]), glVertex3dv(trapezoid[5]);
+   glTexCoord1d(tex[6]), glVertex3dv(trapezoid[6]);
+   glTexCoord1d(tex[7]), glVertex3dv(trapezoid[7]);
+   glEnd();
+   //bottom
+   glBegin(GL_POLYGON);
+   glNormal3d(0., 0., -1.);
+   glTexCoord1d(tex[0]), glVertex3dv(trapezoid[0]);
+   glTexCoord1d(tex[3]), glVertex3dv(trapezoid[3]);
+   glTexCoord1d(tex[2]), glVertex3dv(trapezoid[2]);
+   glTexCoord1d(tex[1]), glVertex3dv(trapezoid[1]);
+   glEnd();
+   //
+   glBegin(GL_POLYGON);
+   Double_t normal[3] = {};
+   CylindricalNormal(trapezoid[1], normal), glNormal3dv(normal), glTexCoord1d(tex[1]), glVertex3dv(trapezoid[1]);
+   CylindricalNormal(trapezoid[2], normal), glNormal3dv(normal), glTexCoord1d(tex[2]), glVertex3dv(trapezoid[2]);
+   CylindricalNormal(trapezoid[6], normal), glNormal3dv(normal), glTexCoord1d(tex[6]), glVertex3dv(trapezoid[6]);
+   CylindricalNormal(trapezoid[5], normal), glNormal3dv(normal), glTexCoord1d(tex[5]), glVertex3dv(trapezoid[5]);
+   glEnd();
+
+   glBegin(GL_POLYGON);
+   CylindricalNormalInv(trapezoid[0], normal), glNormal3dv(normal), glTexCoord1d(tex[0]), glVertex3dv(trapezoid[0]);
+   CylindricalNormalInv(trapezoid[4], normal), glNormal3dv(normal), glTexCoord1d(tex[4]), glVertex3dv(trapezoid[4]);
+   CylindricalNormalInv(trapezoid[7], normal), glNormal3dv(normal), glTexCoord1d(tex[7]), glVertex3dv(trapezoid[7]);
+   CylindricalNormalInv(trapezoid[3], normal), glNormal3dv(normal), glTexCoord1d(tex[3]), glVertex3dv(trapezoid[3]);
+   glEnd();
+
+   glBegin(GL_POLYGON);
+   TMath::Normal2Plane(trapezoid[0], trapezoid[1], trapezoid[5], normal);
+   glNormal3dv(normal);
+   glTexCoord1d(tex[0]), glVertex3dv(trapezoid[0]);
+   glTexCoord1d(tex[1]), glVertex3dv(trapezoid[1]);
+   glTexCoord1d(tex[5]), glVertex3dv(trapezoid[5]);
+   glTexCoord1d(tex[4]), glVertex3dv(trapezoid[4]);
+   glEnd();
+
+   glBegin(GL_POLYGON);
+   TMath::Normal2Plane(trapezoid[3], trapezoid[7], trapezoid[6], normal);
+   glNormal3dv(normal);
+   glTexCoord1d(tex[3]), glVertex3dv(trapezoid[3]);
+   glTexCoord1d(tex[7]), glVertex3dv(trapezoid[7]);
+   glTexCoord1d(tex[6]), glVertex3dv(trapezoid[6]);
+   glTexCoord1d(tex[2]), glVertex3dv(trapezoid[2]);
+   glEnd();
+}
+
+//______________________________________________________________________________
+void SphericalNormal(const Double_t *v, Double_t *normal)
+{
+   const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+   if (n > 0.) {
+      normal[0] = v[0] / n;
+      normal[1] = v[1] / n;
+      normal[2] = v[2] / n;
+   } else {
+      normal[0] = v[0];
+      normal[1] = v[1];
+      normal[2] = v[2];
+   }
+}
+
+//______________________________________________________________________________
+void SphericalNormalInv(const Double_t *v, Double_t *normal)
+{
+   const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+   if (n > 0.) {
+      normal[0] = -v[0] / n;
+      normal[1] = -v[1] / n;
+      normal[2] = -v[2] / n;
+   } else {
+      normal[0] = -v[0];
+      normal[1] = -v[1];
+      normal[2] = -v[2];
+   }
+}
+
+//______________________________________________________________________________
+void DrawTrapezoid(const Double_t ver[][3])
+{
+   Double_t normal[3] = {0.};
+
+   glBegin(GL_POLYGON);
+   TMath::Normal2Plane(ver[1], ver[2], ver[3], normal);
+   glNormal3dv(normal);
+   glVertex3dv(ver[0]);
+   glVertex3dv(ver[1]);
+   glVertex3dv(ver[2]);
+   glVertex3dv(ver[3]);
+   glEnd();
+   //bottom
+   glBegin(GL_POLYGON);
+   TMath::Normal2Plane(ver[4], ver[7], ver[6], normal);
+   glNormal3dv(normal);
+   glVertex3dv(ver[4]);
+   glVertex3dv(ver[7]);
+   glVertex3dv(ver[6]);
+   glVertex3dv(ver[5]);
+   glEnd();
+   //
+
+   glBegin(GL_POLYGON);
+   TMath::Normal2Plane(ver[0], ver[3], ver[7], normal);
+   glNormal3dv(normal);
+   glVertex3dv(ver[0]);
+   glVertex3dv(ver[3]);
+   glVertex3dv(ver[7]);
+   glVertex3dv(ver[4]);
+   glEnd();
+
+   glBegin(GL_POLYGON);
+   SphericalNormal(ver[3], normal), glNormal3dv(normal), glVertex3dv(ver[3]);
+   SphericalNormal(ver[2], normal), glNormal3dv(normal), glVertex3dv(ver[2]);
+   SphericalNormal(ver[6], normal), glNormal3dv(normal), glVertex3dv(ver[6]);
+   SphericalNormal(ver[7], normal), glNormal3dv(normal), glVertex3dv(ver[7]);
+   glEnd();
+
+   glBegin(GL_POLYGON);
+   TMath::Normal2Plane(ver[5], ver[6], ver[2], normal);
+   glNormal3dv(normal);
+   glVertex3dv(ver[5]);
+   glVertex3dv(ver[6]);
+   glVertex3dv(ver[2]);
+   glVertex3dv(ver[1]);
+   glEnd();
+
+   glBegin(GL_POLYGON);
+   SphericalNormalInv(ver[0], normal), glNormal3dv(normal), glVertex3dv(ver[0]);
+   SphericalNormalInv(ver[4], normal), glNormal3dv(normal), glVertex3dv(ver[4]);
+   SphericalNormalInv(ver[5], normal), glNormal3dv(normal), glVertex3dv(ver[5]);
+   SphericalNormalInv(ver[1], normal), glNormal3dv(normal), glVertex3dv(ver[1]);
+   glEnd();
+}
+
+//______________________________________________________________________________
+void DrawTrapezoidTextured(const Double_t ver[][3], Double_t texMin, Double_t texMax)
+{
+   Double_t normal[3] = {};
+   if (texMin > texMax)
+      std::swap(texMin, texMax);
+
+   const Double_t tex[] = {texMin, texMin, texMax, texMax, texMin, texMin, texMax, texMax};
+   glBegin(GL_POLYGON);
+   TMath::Normal2Plane(ver[0], ver[1], ver[2], normal);
+   glNormal3dv(normal);
+   glTexCoord1d(tex[0]), glVertex3dv(ver[0]);
+   glTexCoord1d(tex[1]), glVertex3dv(ver[1]);
+   glTexCoord1d(tex[2]), glVertex3dv(ver[2]);
+   glTexCoord1d(tex[3]), glVertex3dv(ver[3]);
+   glEnd();
+   glBegin(GL_POLYGON);
+   TMath::Normal2Plane(ver[4], ver[7], ver[6], normal);
+   glNormal3dv(normal);
+   glTexCoord1d(tex[4]), glVertex3dv(ver[4]);
+   glTexCoord1d(tex[7]), glVertex3dv(ver[7]);
+   glTexCoord1d(tex[6]), glVertex3dv(ver[6]);
+   glTexCoord1d(tex[5]), glVertex3dv(ver[5]);
+   glEnd();
+   glBegin(GL_POLYGON);
+   TMath::Normal2Plane(ver[0], ver[3], ver[7], normal);
+   glNormal3dv(normal);
+   glTexCoord1d(tex[0]), glVertex3dv(ver[0]);
+   glTexCoord1d(tex[3]), glVertex3dv(ver[3]);
+   glTexCoord1d(tex[7]), glVertex3dv(ver[7]);
+   glTexCoord1d(tex[4]), glVertex3dv(ver[4]);
+   glEnd();
+   glBegin(GL_POLYGON);
+   SphericalNormal(ver[3], normal), glNormal3dv(normal), glTexCoord1d(tex[3]), glVertex3dv(ver[3]);
+   SphericalNormal(ver[2], normal), glNormal3dv(normal), glTexCoord1d(tex[2]), glVertex3dv(ver[2]);
+   SphericalNormal(ver[6], normal), glNormal3dv(normal), glTexCoord1d(tex[6]), glVertex3dv(ver[6]);
+   SphericalNormal(ver[7], normal), glNormal3dv(normal), glTexCoord1d(tex[7]), glVertex3dv(ver[7]);
+   glEnd();
+   glBegin(GL_POLYGON);
+   TMath::Normal2Plane(ver[5], ver[6], ver[2], normal);
+   glNormal3dv(normal);
+   glTexCoord1d(tex[5]), glVertex3dv(ver[5]);
+   glTexCoord1d(tex[6]), glVertex3dv(ver[6]);
+   glTexCoord1d(tex[2]), glVertex3dv(ver[2]);
+   glTexCoord1d(tex[1]), glVertex3dv(ver[1]);
+   glEnd();
+   glBegin(GL_POLYGON);
+   SphericalNormalInv(ver[0], normal), glNormal3dv(normal), glTexCoord1d(tex[0]), glVertex3dv(ver[0]);
+   SphericalNormalInv(ver[4], normal), glNormal3dv(normal), glTexCoord1d(tex[4]), glVertex3dv(ver[4]);
+   SphericalNormalInv(ver[5], normal), glNormal3dv(normal), glTexCoord1d(tex[5]), glVertex3dv(ver[5]);
+   SphericalNormalInv(ver[1], normal), glNormal3dv(normal), glTexCoord1d(tex[1]), glVertex3dv(ver[1]);
+   glEnd();
+}
+
+
+void Draw2DAxis(TAxis *axis, Double_t xMin, Double_t yMin, Double_t xMax, Double_t yMax,
+               Double_t min, Double_t max, Bool_t log, Bool_t z = kFALSE)
+{
+   //Axes are drawn with help of TGaxis class
+   std::string option;
+   option.reserve(20);
+
+   if (xMin > xMax || z) option += "SDH=+";
+   else option += "SDH=-";
+
+   if (log) option += 'G';
+
+   Int_t nDiv = axis->GetNdivisions();
+
+   if (nDiv < 0) {
+      option += 'N';
+      nDiv = -nDiv;
+   }
+
+   TGaxis axisPainter;
+   axisPainter.SetLineWidth(1);
+
+   static const Double_t zero = 0.001;
+
+   if (TMath::Abs(xMax - xMin) >= zero || TMath::Abs(yMax - yMin) >= zero) {
+      axisPainter.ImportAxisAttributes(axis);
+      axisPainter.SetLabelOffset(axis->GetLabelOffset() + axis->GetTickLength());
+
+      if (log) {
+         min = TMath::Power(10, min);
+         max = TMath::Power(10, max);
       }
+      //Option time display is required ?
+      if (axis->GetTimeDisplay()) {
+         option += 't';
 
-      //top
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., 1.);
-      glTexCoord1d(texMax);
-      glVertex3d(ver[0][0], ver[0][1], zMax);
-      glVertex3d(ver[1][0], ver[1][1], zMax);
-      glVertex3d(ver[2][0], ver[2][1], zMax);
-      glVertex3d(ver[3][0], ver[3][1], zMax);
-      glEnd();
-      //bottom
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., -1.);
-      glTexCoord1d(texMin);
-      glVertex3d(ver[0][0], ver[0][1], zMin);
-      glVertex3d(ver[3][0], ver[3][1], zMin);
-      glVertex3d(ver[2][0], ver[2][1], zMin);
-      glVertex3d(ver[1][0], ver[1][1], zMin);
-      glEnd();
-      //
-
-      Double_t trapezoid[][3] = {{ver[0][0], ver[0][1], zMin}, {ver[1][0], ver[1][1], zMin},
-                                 {ver[2][0], ver[2][1], zMin}, {ver[3][0], ver[3][1], zMin},
-                                 {ver[0][0], ver[0][1], zMax}, {ver[1][0], ver[1][1], zMax},
-                                 {ver[2][0], ver[2][1], zMax}, {ver[3][0], ver[3][1], zMax}};
-      Double_t normal[3] = {0.};
-      glBegin(GL_POLYGON);
-      CylindricalNormal(trapezoid[1], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[1]);
-      CylindricalNormal(trapezoid[2], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[2]);
-      CylindricalNormal(trapezoid[6], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[6]);
-      CylindricalNormal(trapezoid[5], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[5]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      CylindricalNormalInv(trapezoid[0], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[0]);
-      CylindricalNormalInv(trapezoid[4], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[4]);
-      CylindricalNormalInv(trapezoid[7], normal), glNormal3dv(normal), glTexCoord1d(texMax), glVertex3dv(trapezoid[7]);
-      CylindricalNormalInv(trapezoid[3], normal), glNormal3dv(normal), glTexCoord1d(texMin), glVertex3dv(trapezoid[3]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(trapezoid[0], trapezoid[1], trapezoid[5], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(texMin);
-      glVertex3dv(trapezoid[0]);
-      glTexCoord1d(texMin);
-      glVertex3dv(trapezoid[1]);
-      glTexCoord1d(texMax);
-      glVertex3dv(trapezoid[5]);
-      glTexCoord1d(texMax);
-      glVertex3dv(trapezoid[4]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(trapezoid[3], trapezoid[7], trapezoid[6], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(texMin);
-      glVertex3dv(trapezoid[3]);
-      glTexCoord1d(texMax);
-      glVertex3dv(trapezoid[7]);
-      glTexCoord1d(texMax);
-      glVertex3dv(trapezoid[6]);
-      glTexCoord1d(texMin);
-      glVertex3dv(trapezoid[2]);
-      glEnd();
-   }
-
-   //______________________________________________________________________________
-   void DrawTrapezoidTextured2(const Double_t ver[][2], Double_t zMin, Double_t zMax,
-                               Double_t texMin, Double_t texMax)
-   {
-      //In polar coordinates, box became trapezoid.
-      if (zMin > zMax)
-         std::swap(zMin, zMax);
-
-      const Double_t trapezoid[][3] = {{ver[0][0], ver[0][1], zMin}, {ver[1][0], ver[1][1], zMin},
-                                       {ver[2][0], ver[2][1], zMin}, {ver[3][0], ver[3][1], zMin},
-                                       {ver[0][0], ver[0][1], zMax}, {ver[1][0], ver[1][1], zMax},
-                                       {ver[2][0], ver[2][1], zMax}, {ver[3][0], ver[3][1], zMax}};
-      const Double_t tex[] = {texMin, texMax, texMax, texMin, texMin, texMax, texMax, texMin};
-      //top
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., 1.);
-      glTexCoord1d(tex[4]), glVertex3dv(trapezoid[4]);
-      glTexCoord1d(tex[5]), glVertex3dv(trapezoid[5]);
-      glTexCoord1d(tex[6]), glVertex3dv(trapezoid[6]);
-      glTexCoord1d(tex[7]), glVertex3dv(trapezoid[7]);
-      glEnd();
-      //bottom
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., -1.);
-      glTexCoord1d(tex[0]), glVertex3dv(trapezoid[0]);
-      glTexCoord1d(tex[3]), glVertex3dv(trapezoid[3]);
-      glTexCoord1d(tex[2]), glVertex3dv(trapezoid[2]);
-      glTexCoord1d(tex[1]), glVertex3dv(trapezoid[1]);
-      glEnd();
-      //
-      glBegin(GL_POLYGON);
-      Double_t normal[3] = {};
-      CylindricalNormal(trapezoid[1], normal), glNormal3dv(normal), glTexCoord1d(tex[1]), glVertex3dv(trapezoid[1]);
-      CylindricalNormal(trapezoid[2], normal), glNormal3dv(normal), glTexCoord1d(tex[2]), glVertex3dv(trapezoid[2]);
-      CylindricalNormal(trapezoid[6], normal), glNormal3dv(normal), glTexCoord1d(tex[6]), glVertex3dv(trapezoid[6]);
-      CylindricalNormal(trapezoid[5], normal), glNormal3dv(normal), glTexCoord1d(tex[5]), glVertex3dv(trapezoid[5]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      CylindricalNormalInv(trapezoid[0], normal), glNormal3dv(normal), glTexCoord1d(tex[0]), glVertex3dv(trapezoid[0]);
-      CylindricalNormalInv(trapezoid[4], normal), glNormal3dv(normal), glTexCoord1d(tex[4]), glVertex3dv(trapezoid[4]);
-      CylindricalNormalInv(trapezoid[7], normal), glNormal3dv(normal), glTexCoord1d(tex[7]), glVertex3dv(trapezoid[7]);
-      CylindricalNormalInv(trapezoid[3], normal), glNormal3dv(normal), glTexCoord1d(tex[3]), glVertex3dv(trapezoid[3]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(trapezoid[0], trapezoid[1], trapezoid[5], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[0]), glVertex3dv(trapezoid[0]);
-      glTexCoord1d(tex[1]), glVertex3dv(trapezoid[1]);
-      glTexCoord1d(tex[5]), glVertex3dv(trapezoid[5]);
-      glTexCoord1d(tex[4]), glVertex3dv(trapezoid[4]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(trapezoid[3], trapezoid[7], trapezoid[6], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[3]), glVertex3dv(trapezoid[3]);
-      glTexCoord1d(tex[7]), glVertex3dv(trapezoid[7]);
-      glTexCoord1d(tex[6]), glVertex3dv(trapezoid[6]);
-      glTexCoord1d(tex[2]), glVertex3dv(trapezoid[2]);
-      glEnd();
-   }
-
-   //______________________________________________________________________________
-   void SphericalNormal(const Double_t *v, Double_t *normal)
-   {
-      const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-      if (n > 0.) {
-         normal[0] = v[0] / n;
-         normal[1] = v[1] / n;
-         normal[2] = v[2] / n;
-      } else {
-         normal[0] = v[0];
-         normal[1] = v[1];
-         normal[2] = v[2];
-      }
-   }
-
-   //______________________________________________________________________________
-   void SphericalNormalInv(const Double_t *v, Double_t *normal)
-   {
-      const Double_t n = TMath::Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-      if (n > 0.) {
-         normal[0] = -v[0] / n;
-         normal[1] = -v[1] / n;
-         normal[2] = -v[2] / n;
-      } else {
-         normal[0] = -v[0];
-         normal[1] = -v[1];
-         normal[2] = -v[2];
-      }
-   }
-
-   //______________________________________________________________________________
-   void DrawTrapezoid(const Double_t ver[][3])
-   {
-      Double_t normal[3] = {0.};
-
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[1], ver[2], ver[3], normal);
-      glNormal3dv(normal);
-      glVertex3dv(ver[0]);
-      glVertex3dv(ver[1]);
-      glVertex3dv(ver[2]);
-      glVertex3dv(ver[3]);
-      glEnd();
-      //bottom
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[4], ver[7], ver[6], normal);
-      glNormal3dv(normal);
-      glVertex3dv(ver[4]);
-      glVertex3dv(ver[7]);
-      glVertex3dv(ver[6]);
-      glVertex3dv(ver[5]);
-      glEnd();
-      //
-
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[0], ver[3], ver[7], normal);
-      glNormal3dv(normal);
-      glVertex3dv(ver[0]);
-      glVertex3dv(ver[3]);
-      glVertex3dv(ver[7]);
-      glVertex3dv(ver[4]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      SphericalNormal(ver[3], normal), glNormal3dv(normal), glVertex3dv(ver[3]);
-      SphericalNormal(ver[2], normal), glNormal3dv(normal), glVertex3dv(ver[2]);
-      SphericalNormal(ver[6], normal), glNormal3dv(normal), glVertex3dv(ver[6]);
-      SphericalNormal(ver[7], normal), glNormal3dv(normal), glVertex3dv(ver[7]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[5], ver[6], ver[2], normal);
-      glNormal3dv(normal);
-      glVertex3dv(ver[5]);
-      glVertex3dv(ver[6]);
-      glVertex3dv(ver[2]);
-      glVertex3dv(ver[1]);
-      glEnd();
-
-      glBegin(GL_POLYGON);
-      SphericalNormalInv(ver[0], normal), glNormal3dv(normal), glVertex3dv(ver[0]);
-      SphericalNormalInv(ver[4], normal), glNormal3dv(normal), glVertex3dv(ver[4]);
-      SphericalNormalInv(ver[5], normal), glNormal3dv(normal), glVertex3dv(ver[5]);
-      SphericalNormalInv(ver[1], normal), glNormal3dv(normal), glVertex3dv(ver[1]);
-      glEnd();
-   }
-
-   //______________________________________________________________________________
-   void DrawTrapezoidTextured(const Double_t ver[][3], Double_t texMin, Double_t texMax)
-   {
-      Double_t normal[3] = {};
-      if (texMin > texMax)
-         std::swap(texMin, texMax);
-
-      const Double_t tex[] = {texMin, texMin, texMax, texMax, texMin, texMin, texMax, texMax};
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[0], ver[1], ver[2], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[0]), glVertex3dv(ver[0]);
-      glTexCoord1d(tex[1]), glVertex3dv(ver[1]);
-      glTexCoord1d(tex[2]), glVertex3dv(ver[2]);
-      glTexCoord1d(tex[3]), glVertex3dv(ver[3]);
-      glEnd();
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[4], ver[7], ver[6], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[4]), glVertex3dv(ver[4]);
-      glTexCoord1d(tex[7]), glVertex3dv(ver[7]);
-      glTexCoord1d(tex[6]), glVertex3dv(ver[6]);
-      glTexCoord1d(tex[5]), glVertex3dv(ver[5]);
-      glEnd();
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[0], ver[3], ver[7], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[0]), glVertex3dv(ver[0]);
-      glTexCoord1d(tex[3]), glVertex3dv(ver[3]);
-      glTexCoord1d(tex[7]), glVertex3dv(ver[7]);
-      glTexCoord1d(tex[4]), glVertex3dv(ver[4]);
-      glEnd();
-      glBegin(GL_POLYGON);
-      SphericalNormal(ver[3], normal), glNormal3dv(normal), glTexCoord1d(tex[3]), glVertex3dv(ver[3]);
-      SphericalNormal(ver[2], normal), glNormal3dv(normal), glTexCoord1d(tex[2]), glVertex3dv(ver[2]);
-      SphericalNormal(ver[6], normal), glNormal3dv(normal), glTexCoord1d(tex[6]), glVertex3dv(ver[6]);
-      SphericalNormal(ver[7], normal), glNormal3dv(normal), glTexCoord1d(tex[7]), glVertex3dv(ver[7]);
-      glEnd();
-      glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[5], ver[6], ver[2], normal);
-      glNormal3dv(normal);
-      glTexCoord1d(tex[5]), glVertex3dv(ver[5]);
-      glTexCoord1d(tex[6]), glVertex3dv(ver[6]);
-      glTexCoord1d(tex[2]), glVertex3dv(ver[2]);
-      glTexCoord1d(tex[1]), glVertex3dv(ver[1]);
-      glEnd();
-      glBegin(GL_POLYGON);
-      SphericalNormalInv(ver[0], normal), glNormal3dv(normal), glTexCoord1d(tex[0]), glVertex3dv(ver[0]);
-      SphericalNormalInv(ver[4], normal), glNormal3dv(normal), glTexCoord1d(tex[4]), glVertex3dv(ver[4]);
-      SphericalNormalInv(ver[5], normal), glNormal3dv(normal), glTexCoord1d(tex[5]), glVertex3dv(ver[5]);
-      SphericalNormalInv(ver[1], normal), glNormal3dv(normal), glTexCoord1d(tex[1]), glVertex3dv(ver[1]);
-      glEnd();
-   }
-
-
-   void Draw2DAxis(TAxis *axis, Double_t xMin, Double_t yMin, Double_t xMax, Double_t yMax,
-                  Double_t min, Double_t max, Bool_t log, Bool_t z = kFALSE)
-   {
-      //Axes are drawn with help of TGaxis class
-      std::string option;
-      option.reserve(20);
-
-      if (xMin > xMax || z) option += "SDH=+";
-      else option += "SDH=-";
-
-      if (log) option += 'G';
-
-      Int_t nDiv = axis->GetNdivisions();
-
-      if (nDiv < 0) {
-         option += 'N';
-         nDiv = -nDiv;
-      }
-
-      TGaxis axisPainter;
-      axisPainter.SetLineWidth(1);
-
-      static const Double_t zero = 0.001;
-
-      if (TMath::Abs(xMax - xMin) >= zero || TMath::Abs(yMax - yMin) >= zero) {
-         axisPainter.ImportAxisAttributes(axis);
-         axisPainter.SetLabelOffset(axis->GetLabelOffset() + axis->GetTickLength());
-
-         if (log) {
-            min = TMath::Power(10, min);
-            max = TMath::Power(10, max);
-         }
-         //Option time display is required ?
-         if (axis->GetTimeDisplay()) {
-            option += 't';
-
-            if (!strlen(axis->GetTimeFormatOnly()))
-               axisPainter.SetTimeFormat(axis->ChooseTimeFormat(max - min));
-            else
-               axisPainter.SetTimeFormat(axis->GetTimeFormat());
-         }
-
-         axisPainter.SetOption(option.c_str());
-         axisPainter.PaintAxis(xMin, yMin, xMax, yMax, min, max, nDiv, option.c_str());
-      }
-   }
-
-   const Int_t gFramePoints[][2] = {{3, 1}, {0, 2}, {1, 3}, {2, 0}};
-   //Each point has two "neighbouring axes" (left and right). Axes types are 1 (ordinata) and 0 (abscissa)
-   const Int_t gAxisType[][2]    = {{1, 0}, {0, 1}, {1, 0}, {0, 1}};
-
-   //______________________________________________________________________________
-   void DrawAxes(Int_t fp, const Int_t *vp, const TGLVertex3 *box, const TGLPlotCoordinates *coord,
-                 TAxis *xAxis, TAxis *yAxis, TAxis *zAxis)
-   {
-      //Using front point, find, where to draw axes and which labels to use for them
-      //gVirtualX->SelectWindow(gGLManager->GetVirtualXInd(fGLDevice));
-      //gVirtualX->SetDrawMode(TVirtualX::kCopy);//TCanvas by default sets in kInverse
-
-      const Int_t left  = gFramePoints[fp][0];
-      const Int_t right = gFramePoints[fp][1];
-      const Double_t xLeft = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw()
-                                               + box[left].X() - vp[0]));
-      const Double_t yLeft = gPad->AbsPixeltoY(Int_t(vp[3] - box[left].Y()
-                                               + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
-                                               * gPad->GetWh() + vp[1]));
-      const Double_t xMid = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw()
-                                              + box[fp].X()  - vp[0]));
-      const Double_t yMid = gPad->AbsPixeltoY(Int_t(vp[3] - box[fp].Y()
-                                              + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
-                                              * gPad->GetWh() + vp[1]));
-      const Double_t xRight = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC()
-                                                * gPad->GetWw() + box[right].X() - vp[0]));
-      const Double_t yRight = gPad->AbsPixeltoY(Int_t(vp[3] - box[right].Y()
-                                                + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
-                                                * gPad->GetWh() + vp[1]));
-      const Double_t points[][2] = {{coord->GetXRange().first,  coord->GetYRange().first },
-                                    {coord->GetXRange().second, coord->GetYRange().first },
-                                    {coord->GetXRange().second, coord->GetYRange().second},
-                                    {coord->GetXRange().first,  coord->GetYRange().second}};
-      const Int_t    leftType      = gAxisType[fp][0];
-      const Int_t    rightType     = gAxisType[fp][1];
-      const Double_t leftLabel     = points[left][leftType];
-      const Double_t leftMidLabel  = points[fp][leftType];
-      const Double_t rightMidLabel = points[fp][rightType];
-      const Double_t rightLabel    = points[right][rightType];
-
-      if (xLeft - xMid || yLeft - yMid) {//To supress error messages from TGaxis
-         TAxis *axis = leftType ? yAxis : xAxis;
-         if (leftLabel < leftMidLabel)
-            Draw2DAxis(axis, xLeft, yLeft, xMid, yMid, leftLabel, leftMidLabel,
-                       leftType ? coord->GetYLog() : coord->GetXLog());
+         if (!strlen(axis->GetTimeFormatOnly()))
+            axisPainter.SetTimeFormat(axis->ChooseTimeFormat(max - min));
          else
-            Draw2DAxis(axis, xMid, yMid, xLeft, yLeft, leftMidLabel, leftLabel,
-                       leftType ? coord->GetYLog() : coord->GetXLog());
+            axisPainter.SetTimeFormat(axis->GetTimeFormat());
       }
 
-      if (xRight - xMid || yRight - yMid) {//To supress error messages from TGaxis
-         TAxis *axis = rightType ? yAxis : xAxis;
+      axisPainter.SetOption(option.c_str());
+      axisPainter.PaintAxis(xMin, yMin, xMax, yMax, min, max, nDiv, option.c_str());
+   }
+}
 
-         if (rightMidLabel < rightLabel)
-            Draw2DAxis(axis, xMid, yMid, xRight, yRight, rightMidLabel, rightLabel,
-                       rightType ? coord->GetYLog() : coord->GetXLog());
-         else
-            Draw2DAxis(axis, xRight, yRight, xMid, yMid, rightLabel, rightMidLabel,
-                       rightType ? coord->GetYLog() : coord->GetXLog());
-      }
+const Int_t gFramePoints[][2] = {{3, 1}, {0, 2}, {1, 3}, {2, 0}};
+//Each point has two "neighbouring axes" (left and right). Axes types are 1 (ordinata) and 0 (abscissa)
+const Int_t gAxisType[][2]    = {{1, 0}, {0, 1}, {1, 0}, {0, 1}};
 
-      const Double_t xUp = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw()
-                                             + box[left + 4].X() - vp[0]));
-      const Double_t yUp = gPad->AbsPixeltoY(Int_t(vp[3] - box[left + 4].Y()
+//______________________________________________________________________________
+void DrawAxes(Int_t fp, const Int_t *vp, const TGLVertex3 *box, const TGLPlotCoordinates *coord,
+               TAxis *xAxis, TAxis *yAxis, TAxis *zAxis)
+{
+   //Using front point, find, where to draw axes and which labels to use for them
+   //gVirtualX->SelectWindow(gGLManager->GetVirtualXInd(fGLDevice));
+   //gVirtualX->SetDrawMode(TVirtualX::kCopy);//TCanvas by default sets in kInverse
+
+   const Int_t left  = gFramePoints[fp][0];
+   const Int_t right = gFramePoints[fp][1];
+   const Double_t xLeft = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw()
+                                             + box[left].X() - vp[0]));
+   const Double_t yLeft = gPad->AbsPixeltoY(Int_t(vp[3] - box[left].Y()
                                              + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
                                              * gPad->GetWh() + vp[1]));
-      Draw2DAxis(zAxis, xLeft, yLeft, xUp, yUp, coord->GetZRange().first,
-                 coord->GetZRange().second, coord->GetZLog(), kTRUE);
+   const Double_t xMid = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw()
+                                             + box[fp].X()  - vp[0]));
+   const Double_t yMid = gPad->AbsPixeltoY(Int_t(vp[3] - box[fp].Y()
+                                             + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
+                                             * gPad->GetWh() + vp[1]));
+   const Double_t xRight = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC()
+                                             * gPad->GetWw() + box[right].X() - vp[0]));
+   const Double_t yRight = gPad->AbsPixeltoY(Int_t(vp[3] - box[right].Y()
+                                             + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
+                                             * gPad->GetWh() + vp[1]));
+   const Double_t points[][2] = {{coord->GetXRange().first,  coord->GetYRange().first },
+                                 {coord->GetXRange().second, coord->GetYRange().first },
+                                 {coord->GetXRange().second, coord->GetYRange().second},
+                                 {coord->GetXRange().first,  coord->GetYRange().second}};
+   const Int_t    leftType      = gAxisType[fp][0];
+   const Int_t    rightType     = gAxisType[fp][1];
+   const Double_t leftLabel     = points[left][leftType];
+   const Double_t leftMidLabel  = points[fp][leftType];
+   const Double_t rightMidLabel = points[fp][rightType];
+   const Double_t rightLabel    = points[right][rightType];
+
+   if (xLeft - xMid || yLeft - yMid) {//To supress error messages from TGaxis
+      TAxis *axis = leftType ? yAxis : xAxis;
+      if (leftLabel < leftMidLabel)
+         Draw2DAxis(axis, xLeft, yLeft, xMid, yMid, leftLabel, leftMidLabel,
+                     leftType ? coord->GetYLog() : coord->GetXLog());
+      else
+         Draw2DAxis(axis, xMid, yMid, xLeft, yLeft, leftMidLabel, leftLabel,
+                     leftType ? coord->GetYLog() : coord->GetXLog());
    }
 
-   void SetZLevels(TAxis *zAxis, Double_t zMin, Double_t zMax,
-                   Double_t zScale, std::vector<Double_t> &zLevels)
-   {
-      Int_t nDiv = zAxis->GetNdivisions() % 100;
-      Int_t nBins = 0;
-      Double_t binLow = 0., binHigh = 0., binWidth = 0.;
-      THLimitsFinder::Optimize(zMin, zMax, nDiv, binLow, binHigh, nBins, binWidth, " ");
-      zLevels.resize(nBins + 1);
+   if (xRight - xMid || yRight - yMid) {//To supress error messages from TGaxis
+      TAxis *axis = rightType ? yAxis : xAxis;
 
-      for (Int_t i = 0; i < nBins + 1; ++i)
-         zLevels[i] = (binLow + i * binWidth) * zScale;
+      if (rightMidLabel < rightLabel)
+         Draw2DAxis(axis, xMid, yMid, xRight, yRight, rightMidLabel, rightLabel,
+                     rightType ? coord->GetYLog() : coord->GetXLog());
+      else
+         Draw2DAxis(axis, xRight, yRight, xMid, yMid, rightLabel, rightMidLabel,
+                     rightType ? coord->GetYLog() : coord->GetXLog());
    }
 
-   //______________________________________________________________________________
-   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
-                         Double_t t1, Double_t t2, Double_t t3, const TGLVector3 &norm1,
-                         const TGLVector3 &norm2, const TGLVector3 &norm3)
-   {
-      //Draw textured triangle
+   const Double_t xUp = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw()
+                                          + box[left + 4].X() - vp[0]));
+   const Double_t yUp = gPad->AbsPixeltoY(Int_t(vp[3] - box[left + 4].Y()
+                                          + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
+                                          * gPad->GetWh() + vp[1]));
+   Draw2DAxis(zAxis, xLeft, yLeft, xUp, yUp, coord->GetZRange().first,
+               coord->GetZRange().second, coord->GetZLog(), kTRUE);
+}
 
-      glBegin(GL_POLYGON);
-      glNormal3dv(norm1.CArr());
-      glTexCoord1d(t1);
-      glVertex3dv(v1.CArr());
-      glNormal3dv(norm2.CArr());
-      glTexCoord1d(t2);
-      glVertex3dv(v2.CArr());
-      glNormal3dv(norm3.CArr());
-      glTexCoord1d(t3);
-      glVertex3dv(v3.CArr());
-      glEnd();
+void SetZLevels(TAxis *zAxis, Double_t zMin, Double_t zMax,
+                  Double_t zScale, std::vector<Double_t> &zLevels)
+{
+   Int_t nDiv = zAxis->GetNdivisions() % 100;
+   Int_t nBins = 0;
+   Double_t binLow = 0., binHigh = 0., binWidth = 0.;
+   THLimitsFinder::Optimize(zMin, zMax, nDiv, binLow, binHigh, nBins, binWidth, " ");
+   zLevels.resize(nBins + 1);
+
+   for (Int_t i = 0; i < nBins + 1; ++i)
+      zLevels[i] = (binLow + i * binWidth) * zScale;
+}
+
+//______________________________________________________________________________
+void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
+                        Double_t t1, Double_t t2, Double_t t3, const TGLVector3 &norm1,
+                        const TGLVector3 &norm2, const TGLVector3 &norm3)
+{
+   //Draw textured triangle
+
+   glBegin(GL_POLYGON);
+   glNormal3dv(norm1.CArr());
+   glTexCoord1d(t1);
+   glVertex3dv(v1.CArr());
+   glNormal3dv(norm2.CArr());
+   glTexCoord1d(t2);
+   glVertex3dv(v2.CArr());
+   glNormal3dv(norm3.CArr());
+   glTexCoord1d(t3);
+   glVertex3dv(v3.CArr());
+   glEnd();
+}
+
+//______________________________________________________________________________
+void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
+                        Double_t t1, Double_t t2, Double_t t3, Double_t z,
+                        const TGLVector3 &normal)
+{
+   //Draw textured triangle on a plane
+   glBegin(GL_POLYGON);
+   glNormal3dv(normal.CArr());
+   glTexCoord1d(t1);
+   glVertex3d(v1.X(), v1.Y(), z);
+   glTexCoord1d(t2);
+   glVertex3d(v2.X(), v2.Y(), z);
+   glTexCoord1d(t3);
+   glVertex3d(v3.X(), v3.Y(), z);
+   glEnd();
+}
+
+//______________________________________________________________________________
+void GetColor(Float_t v, Float_t vmin, Float_t vmax, Int_t type, Float_t *rgba)
+{
+   //This function creates color for parametric surface's vertex,
+   //using its 'u' value.
+   //I've found it in one of Apple's Carbon tutorials , and it's based
+   //on Paul Bourke work. Very nice colors!!! :)
+   Float_t dv,vmid;
+   //Float_t c[] = {1.f, 1.f, 1.f};
+   Float_t c1[3] = {}, c2[3] = {}, c3[3] = {};
+   Float_t ratio ;
+   rgba[3] = 1.f;
+
+   if (v < vmin)
+      v = vmin;
+   if (v > vmax)
+      v = vmax;
+   dv = vmax - vmin;
+
+   switch (type) {
+   case 0:
+      rgba[0] = 1.f;
+      rgba[1] = 1.f;
+      rgba[2] = 1.f;
+   break;
+   case 1:
+   if (v < (vmin + 0.25 * dv)) {
+      rgba[0] = 0;
+      rgba[1] = 4 * (v - vmin) / dv;
+      rgba[2] = 1;
+   } else if (v < (vmin + 0.5 * dv)) {
+      rgba[0] = 0;
+      rgba[1] = 1;
+      rgba[2] = 1 + 4 * (vmin + 0.25 * dv - v) / dv;
+   } else if (v < (vmin + 0.75 * dv)) {
+      rgba[0] = 4 * (v - vmin - 0.5 * dv) / dv;
+      rgba[1] = 1;
+      rgba[2] = 0;
+   } else {
+      rgba[0] = 1;
+      rgba[1] = 1 + 4 * (vmin + 0.75 * dv - v) / dv;
+      rgba[2] = 0;
    }
-
-   //______________________________________________________________________________
-   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
-                         Double_t t1, Double_t t2, Double_t t3, Double_t z,
-                         const TGLVector3 &normal)
-   {
-      //Draw textured triangle on a plane
-      glBegin(GL_POLYGON);
-      glNormal3dv(normal.CArr());
-      glTexCoord1d(t1);
-      glVertex3d(v1.X(), v1.Y(), z);
-      glTexCoord1d(t2);
-      glVertex3d(v2.X(), v2.Y(), z);
-      glTexCoord1d(t3);
-      glVertex3d(v3.X(), v3.Y(), z);
-      glEnd();
-   }
-
-   //______________________________________________________________________________
-   void GetColor(Float_t v, Float_t vmin, Float_t vmax, Int_t type, Float_t *rgba)
-   {
-      //This function creates color for parametric surface's vertex,
-      //using its 'u' value.
-      //I've found it in one of Apple's Carbon tutorials , and it's based
-      //on Paul Bourke work. Very nice colors!!! :)
-      Float_t dv,vmid;
-      //Float_t c[] = {1.f, 1.f, 1.f};
-      Float_t c1[3] = {}, c2[3] = {}, c3[3] = {};
-      Float_t ratio ;
-      rgba[3] = 1.f;
-
-      if (v < vmin)
-         v = vmin;
-      if (v > vmax)
-         v = vmax;
-      dv = vmax - vmin;
-
-      switch (type) {
-      case 0:
-         rgba[0] = 1.f;
-         rgba[1] = 1.f;
-         rgba[2] = 1.f;
+   break;
+   case 2:
+      rgba[0] = (v - vmin) / dv;
+      rgba[1] = 0;
+      rgba[2] = (vmax - v) / dv;
       break;
-      case 1:
+   case 3:
+      rgba[0] = (v - vmin) / dv;
+      rgba[1] = rgba[0];
+      rgba[2] = rgba[0];
+      break;
+   case 4:
+      if (v < (vmin + dv / 6.0)) {
+         rgba[0] = 1;
+         rgba[1] = 6 * (v - vmin) / dv;
+         rgba[2] = 0;
+      } else if (v < (vmin + 2.0 * dv / 6.0)) {
+         rgba[0] = 1 + 6 * (vmin + dv / 6.0 - v) / dv;
+         rgba[1] = 1;
+         rgba[2] = 0;
+      } else if (v < (vmin + 3.0 * dv / 6.0)) {
+         rgba[0] = 0;
+         rgba[1] = 1;
+         rgba[2] = 6 * (v - vmin - 2.0 * dv / 6.0) / dv;
+      } else if (v < (vmin + 4.0 * dv / 6.0)) {
+         rgba[0] = 0;
+         rgba[1] = 1 + 6 * (vmin + 3.0 * dv / 6.0 - v) / dv;
+         rgba[2] = 1;
+      } else if (v < (vmin + 5.0 * dv / 6.0)) {
+         rgba[0] = 6 * (v - vmin - 4.0 * dv / 6.0) / dv;
+         rgba[1] = 0;
+         rgba[2] = 1;
+      } else {
+         rgba[0] = 1;
+         rgba[1] = 0;
+         rgba[2] = 1 + 6 * (vmin + 5.0 * dv / 6.0 - v) / dv;
+      }
+      break;
+   case 5:
+      rgba[0] = (v - vmin) / (vmax - vmin);
+      rgba[1] = 1;
+      rgba[2] = 0;
+      break;
+   case 6:
+      rgba[0] = (v - vmin) / (vmax - vmin);
+      rgba[1] = (vmax - v) / (vmax - vmin);
+      rgba[2] = rgba[0];
+      break;
+   case 7:
+      if (v < (vmin + 0.25 * dv)) {
+         rgba[0] = 0;
+         rgba[1] = 4 * (v - vmin) / dv;
+         rgba[2] = 1 - rgba[1];
+      } else if (v < (vmin + 0.5 * dv)) {
+         rgba[0] = 4 * (v - vmin - 0.25 * dv) / dv;
+         rgba[1] = 1 - rgba[0];
+         rgba[2] = 0;
+      } else if (v < (vmin + 0.75 * dv)) {
+         rgba[1] = 4 * (v - vmin - 0.5 * dv) / dv;
+         rgba[0] = 1 - rgba[1];
+         rgba[2] = 0;
+      } else {
+         rgba[0] = 0;
+         rgba[2] = 4 * (v - vmin - 0.75 * dv) / dv;
+         rgba[1] = 1 - rgba[2];
+      }
+      break;
+   case 8:
+      if (v < (vmin + 0.5 * dv)) {
+         rgba[0] = 2 * (v - vmin) / dv;
+         rgba[1] = rgba[0];
+         rgba[2] = rgba[0];
+      } else {
+         rgba[0] = 1 - 2 * (v - vmin - 0.5 * dv) / dv;
+         rgba[1] = rgba[0];
+         rgba[2] = rgba[0];
+      }
+      break;
+   case 9:
+      if (v < (vmin + dv / 3)) {
+         rgba[2] = 3 * (v - vmin) / dv;
+         rgba[1] = 0;
+         rgba[0] = 1 - rgba[2];
+      } else if (v < (vmin + 2 * dv / 3)) {
+         rgba[0] = 0;
+         rgba[1] = 3 * (v - vmin - dv / 3) / dv;
+         rgba[2] = 1;
+      } else {
+         rgba[0] = 3 * (v - vmin - 2 * dv / 3) / dv;
+         rgba[1] = 1 - rgba[0];
+         rgba[2] = 1;
+      }
+      break;
+   case 10:
+      if (v < (vmin + 0.2 * dv)) {
+         rgba[0] = 0;
+         rgba[1] = 5 * (v - vmin) / dv;
+         rgba[2] = 1;
+      } else if (v < (vmin + 0.4 * dv)) {
+         rgba[0] = 0;
+         rgba[1] = 1;
+         rgba[2] = 1 + 5 * (vmin + 0.2 * dv - v) / dv;
+      } else if (v < (vmin + 0.6 * dv)) {
+         rgba[0] = 5 * (v - vmin - 0.4 * dv) / dv;
+         rgba[1] = 1;
+         rgba[2] = 0;
+      } else if (v < (vmin + 0.8 * dv)) {
+         rgba[0] = 1;
+         rgba[1] = 1 - 5 * (v - vmin - 0.6 * dv) / dv;
+         rgba[2] = 0;
+      } else {
+         rgba[0] = 1;
+         rgba[1] = 5 * (v - vmin - 0.8 * dv) / dv;
+         rgba[2] = 5 * (v - vmin - 0.8 * dv) / dv;
+      }
+      break;
+   case 11:
+      c1[0] = 200 / 255.0; c1[1] =  60 / 255.0; c1[2] =   0 / 255.0;
+      c2[0] = 250 / 255.0; c2[1] = 160 / 255.0; c2[2] = 110 / 255.0;
+      rgba[0] = (c2[0] - c1[0]) * (v - vmin) / dv + c1[0];
+      rgba[1] = (c2[1] - c1[1]) * (v - vmin) / dv + c1[1];
+      rgba[2] = (c2[2] - c1[2]) * (v - vmin) / dv + c1[2];
+      break;
+   case 12:
+      c1[0] =  55 / 255.0; c1[1] =  55 / 255.0; c1[2] =  45 / 255.0;
+      c2[0] = 200 / 255.0; c2[1] =  60 / 255.0; c2[2] =   0 / 255.0;
+      c3[0] = 250 / 255.0; c3[1] = 160 / 255.0; c3[2] = 110 / 255.0;
+      ratio = 0.4;
+      vmid = vmin + ratio * dv;
+      if (v < vmid) {
+         rgba[0] = (c2[0] - c1[0]) * (v - vmin) / (ratio*dv) + c1[0];
+         rgba[1] = (c2[1] - c1[1]) * (v - vmin) / (ratio*dv) + c1[1];
+         rgba[2] = (c2[2] - c1[2]) * (v - vmin) / (ratio*dv) + c1[2];
+      } else {
+         rgba[0] = (c3[0] - c2[0]) * (v - vmid) / ((1-ratio)*dv) + c2[0];
+         rgba[1] = (c3[1] - c2[1]) * (v - vmid) / ((1-ratio)*dv) + c2[1];
+         rgba[2] = (c3[2] - c2[2]) * (v - vmid) / ((1-ratio)*dv) + c2[2];
+      }
+      break;
+   case 13:
+      c1[0] =   0 / 255.0; c1[1] = 255 / 255.0; c1[2] =   0 / 255.0;
+      c2[0] = 255 / 255.0; c2[1] = 150 / 255.0; c2[2] =   0 / 255.0;
+      c3[0] = 255 / 255.0; c3[1] = 250 / 255.0; c3[2] = 240 / 255.0;
+      ratio = 0.3;
+      vmid = vmin + ratio * dv;
+      if (v < vmid) {
+         rgba[0] = (c2[0] - c1[0]) * (v - vmin) / (ratio*dv) + c1[0];
+         rgba[1] = (c2[1] - c1[1]) * (v - vmin) / (ratio*dv) + c1[1];
+         rgba[2] = (c2[2] - c1[2]) * (v - vmin) / (ratio*dv) + c1[2];
+      } else {
+         rgba[0] = (c3[0] - c2[0]) * (v - vmid) / ((1-ratio)*dv) + c2[0];
+         rgba[1] = (c3[1] - c2[1]) * (v - vmid) / ((1-ratio)*dv) + c2[1];
+         rgba[2] = (c3[2] - c2[2]) * (v - vmid) / ((1-ratio)*dv) + c2[2];
+      }
+      break;
+   case 14:
+      rgba[0] = 1;
+      rgba[1] = 1 - (v - vmin) / dv;
+      rgba[2] = 0;
+      break;
+   case 15:
       if (v < (vmin + 0.25 * dv)) {
          rgba[0] = 0;
          rgba[1] = 4 * (v - vmin) / dv;
@@ -3432,245 +3624,67 @@ namespace Rgl {
       } else if (v < (vmin + 0.5 * dv)) {
          rgba[0] = 0;
          rgba[1] = 1;
-         rgba[2] = 1 + 4 * (vmin + 0.25 * dv - v) / dv;
+         rgba[2] = 1 - 4 * (v - vmin - 0.25 * dv) / dv;
       } else if (v < (vmin + 0.75 * dv)) {
          rgba[0] = 4 * (v - vmin - 0.5 * dv) / dv;
          rgba[1] = 1;
          rgba[2] = 0;
       } else {
          rgba[0] = 1;
-         rgba[1] = 1 + 4 * (vmin + 0.75 * dv - v) / dv;
-         rgba[2] = 0;
+         rgba[1] = 1;
+         rgba[2] = 4 * (v - vmin - 0.75 * dv) / dv;
       }
       break;
-      case 2:
-         rgba[0] = (v - vmin) / dv;
-         rgba[1] = 0;
-         rgba[2] = (vmax - v) / dv;
-         break;
-      case 3:
-         rgba[0] = (v - vmin) / dv;
-         rgba[1] = rgba[0];
-         rgba[2] = rgba[0];
-         break;
-      case 4:
-         if (v < (vmin + dv / 6.0)) {
-            rgba[0] = 1;
-            rgba[1] = 6 * (v - vmin) / dv;
-            rgba[2] = 0;
-         } else if (v < (vmin + 2.0 * dv / 6.0)) {
-            rgba[0] = 1 + 6 * (vmin + dv / 6.0 - v) / dv;
-            rgba[1] = 1;
-            rgba[2] = 0;
-         } else if (v < (vmin + 3.0 * dv / 6.0)) {
-            rgba[0] = 0;
-            rgba[1] = 1;
-            rgba[2] = 6 * (v - vmin - 2.0 * dv / 6.0) / dv;
-         } else if (v < (vmin + 4.0 * dv / 6.0)) {
-            rgba[0] = 0;
-            rgba[1] = 1 + 6 * (vmin + 3.0 * dv / 6.0 - v) / dv;
-            rgba[2] = 1;
-         } else if (v < (vmin + 5.0 * dv / 6.0)) {
-            rgba[0] = 6 * (v - vmin - 4.0 * dv / 6.0) / dv;
-            rgba[1] = 0;
-            rgba[2] = 1;
-         } else {
-            rgba[0] = 1;
-            rgba[1] = 0;
-            rgba[2] = 1 + 6 * (vmin + 5.0 * dv / 6.0 - v) / dv;
-         }
-         break;
-      case 5:
-         rgba[0] = (v - vmin) / (vmax - vmin);
-         rgba[1] = 1;
-         rgba[2] = 0;
-         break;
-      case 6:
-         rgba[0] = (v - vmin) / (vmax - vmin);
-         rgba[1] = (vmax - v) / (vmax - vmin);
-         rgba[2] = rgba[0];
-         break;
-      case 7:
-         if (v < (vmin + 0.25 * dv)) {
-            rgba[0] = 0;
-            rgba[1] = 4 * (v - vmin) / dv;
-            rgba[2] = 1 - rgba[1];
-         } else if (v < (vmin + 0.5 * dv)) {
-            rgba[0] = 4 * (v - vmin - 0.25 * dv) / dv;
-            rgba[1] = 1 - rgba[0];
-            rgba[2] = 0;
-         } else if (v < (vmin + 0.75 * dv)) {
-            rgba[1] = 4 * (v - vmin - 0.5 * dv) / dv;
-            rgba[0] = 1 - rgba[1];
-            rgba[2] = 0;
-         } else {
-            rgba[0] = 0;
-            rgba[2] = 4 * (v - vmin - 0.75 * dv) / dv;
-            rgba[1] = 1 - rgba[2];
-         }
-         break;
-      case 8:
-         if (v < (vmin + 0.5 * dv)) {
-            rgba[0] = 2 * (v - vmin) / dv;
-            rgba[1] = rgba[0];
-            rgba[2] = rgba[0];
-         } else {
-            rgba[0] = 1 - 2 * (v - vmin - 0.5 * dv) / dv;
-            rgba[1] = rgba[0];
-            rgba[2] = rgba[0];
-         }
-         break;
-      case 9:
-         if (v < (vmin + dv / 3)) {
-            rgba[2] = 3 * (v - vmin) / dv;
-            rgba[1] = 0;
-            rgba[0] = 1 - rgba[2];
-         } else if (v < (vmin + 2 * dv / 3)) {
-            rgba[0] = 0;
-            rgba[1] = 3 * (v - vmin - dv / 3) / dv;
-            rgba[2] = 1;
-         } else {
-            rgba[0] = 3 * (v - vmin - 2 * dv / 3) / dv;
-            rgba[1] = 1 - rgba[0];
-            rgba[2] = 1;
-         }
-         break;
-      case 10:
-         if (v < (vmin + 0.2 * dv)) {
-            rgba[0] = 0;
-            rgba[1] = 5 * (v - vmin) / dv;
-            rgba[2] = 1;
-         } else if (v < (vmin + 0.4 * dv)) {
-            rgba[0] = 0;
-            rgba[1] = 1;
-            rgba[2] = 1 + 5 * (vmin + 0.2 * dv - v) / dv;
-         } else if (v < (vmin + 0.6 * dv)) {
-            rgba[0] = 5 * (v - vmin - 0.4 * dv) / dv;
-            rgba[1] = 1;
-            rgba[2] = 0;
-         } else if (v < (vmin + 0.8 * dv)) {
-            rgba[0] = 1;
-            rgba[1] = 1 - 5 * (v - vmin - 0.6 * dv) / dv;
-            rgba[2] = 0;
-         } else {
-            rgba[0] = 1;
-            rgba[1] = 5 * (v - vmin - 0.8 * dv) / dv;
-            rgba[2] = 5 * (v - vmin - 0.8 * dv) / dv;
-         }
-         break;
-      case 11:
-         c1[0] = 200 / 255.0; c1[1] =  60 / 255.0; c1[2] =   0 / 255.0;
-         c2[0] = 250 / 255.0; c2[1] = 160 / 255.0; c2[2] = 110 / 255.0;
-         rgba[0] = (c2[0] - c1[0]) * (v - vmin) / dv + c1[0];
-         rgba[1] = (c2[1] - c1[1]) * (v - vmin) / dv + c1[1];
-         rgba[2] = (c2[2] - c1[2]) * (v - vmin) / dv + c1[2];
-         break;
-      case 12:
-         c1[0] =  55 / 255.0; c1[1] =  55 / 255.0; c1[2] =  45 / 255.0;
-         c2[0] = 200 / 255.0; c2[1] =  60 / 255.0; c2[2] =   0 / 255.0;
-         c3[0] = 250 / 255.0; c3[1] = 160 / 255.0; c3[2] = 110 / 255.0;
-         ratio = 0.4;
-         vmid = vmin + ratio * dv;
-         if (v < vmid) {
-            rgba[0] = (c2[0] - c1[0]) * (v - vmin) / (ratio*dv) + c1[0];
-            rgba[1] = (c2[1] - c1[1]) * (v - vmin) / (ratio*dv) + c1[1];
-            rgba[2] = (c2[2] - c1[2]) * (v - vmin) / (ratio*dv) + c1[2];
-         } else {
-            rgba[0] = (c3[0] - c2[0]) * (v - vmid) / ((1-ratio)*dv) + c2[0];
-            rgba[1] = (c3[1] - c2[1]) * (v - vmid) / ((1-ratio)*dv) + c2[1];
-            rgba[2] = (c3[2] - c2[2]) * (v - vmid) / ((1-ratio)*dv) + c2[2];
-         }
-         break;
-      case 13:
-         c1[0] =   0 / 255.0; c1[1] = 255 / 255.0; c1[2] =   0 / 255.0;
-         c2[0] = 255 / 255.0; c2[1] = 150 / 255.0; c2[2] =   0 / 255.0;
-         c3[0] = 255 / 255.0; c3[1] = 250 / 255.0; c3[2] = 240 / 255.0;
-         ratio = 0.3;
-         vmid = vmin + ratio * dv;
-         if (v < vmid) {
-            rgba[0] = (c2[0] - c1[0]) * (v - vmin) / (ratio*dv) + c1[0];
-            rgba[1] = (c2[1] - c1[1]) * (v - vmin) / (ratio*dv) + c1[1];
-            rgba[2] = (c2[2] - c1[2]) * (v - vmin) / (ratio*dv) + c1[2];
-         } else {
-            rgba[0] = (c3[0] - c2[0]) * (v - vmid) / ((1-ratio)*dv) + c2[0];
-            rgba[1] = (c3[1] - c2[1]) * (v - vmid) / ((1-ratio)*dv) + c2[1];
-            rgba[2] = (c3[2] - c2[2]) * (v - vmid) / ((1-ratio)*dv) + c2[2];
-         }
-         break;
-      case 14:
-         rgba[0] = 1;
-         rgba[1] = 1 - (v - vmin) / dv;
-         rgba[2] = 0;
-         break;
-      case 15:
-         if (v < (vmin + 0.25 * dv)) {
-            rgba[0] = 0;
-            rgba[1] = 4 * (v - vmin) / dv;
-            rgba[2] = 1;
-         } else if (v < (vmin + 0.5 * dv)) {
-            rgba[0] = 0;
-            rgba[1] = 1;
-            rgba[2] = 1 - 4 * (v - vmin - 0.25 * dv) / dv;
-         } else if (v < (vmin + 0.75 * dv)) {
-            rgba[0] = 4 * (v - vmin - 0.5 * dv) / dv;
-            rgba[1] = 1;
-            rgba[2] = 0;
-         } else {
-            rgba[0] = 1;
-            rgba[1] = 1;
-            rgba[2] = 4 * (v - vmin - 0.75 * dv) / dv;
-         }
-         break;
-      case 16:
-         if (v < (vmin + 0.5 * dv)) {
-            rgba[0] = 0.0;
-            rgba[1] = 2 * (v - vmin) / dv;
-            rgba[2] = 1 - 2 * (v - vmin) / dv;
-         } else {
-            rgba[0] = 2 * (v - vmin - 0.5 * dv) / dv;
-            rgba[1] = 1 - 2 * (v - vmin - 0.5 * dv) / dv;
-            rgba[2] = 0.0;
-         }
-         break;
-      case 17:
-         if (v < (vmin + 0.5 * dv)) {
-            rgba[0] = 1.0;
-            rgba[1] = 1 - 2 * (v - vmin) / dv;
-            rgba[2] = 2 * (v - vmin) / dv;
-         } else {
-            rgba[0] = 1 - 2 * (v - vmin - 0.5 * dv) / dv;
-            rgba[1] = 2 * (v - vmin - 0.5 * dv) / dv;
-            rgba[2] = 1.0;
-         }
-         break;
-      case 18:
-         rgba[0] = 0;
-         rgba[1] = (v - vmin) / (vmax - vmin);
-         rgba[2] = 1;
-         break;
-      case 19:
-         rgba[0] = (v - vmin) / (vmax - vmin);
-         rgba[1] = rgba[0];
-         rgba[2] = 1;
-         break;
-      case 20:
-         c1[0] =   0 / 255.0; c1[1] = 160 / 255.0; c1[2] =   0 / 255.0;
-         c2[0] = 180 / 255.0; c2[1] = 220 / 255.0; c2[2] =   0 / 255.0;
-         c3[0] = 250 / 255.0; c3[1] = 220 / 255.0; c3[2] = 170 / 255.0;
-         ratio = 0.3;
-         vmid = vmin + ratio * dv;
-         if (v < vmid) {
-            rgba[0] = (c2[0] - c1[0]) * (v - vmin) / (ratio*dv) + c1[0];
-            rgba[1] = (c2[1] - c1[1]) * (v - vmin) / (ratio*dv) + c1[1];
-            rgba[2] = (c2[2] - c1[2]) * (v - vmin) / (ratio*dv) + c1[2];
-         } else {
-            rgba[0] = (c3[0] - c2[0]) * (v - vmid) / ((1-ratio)*dv) + c2[0];
-            rgba[1] = (c3[1] - c2[1]) * (v - vmid) / ((1-ratio)*dv) + c2[1];
-            rgba[2] = (c3[2] - c2[2]) * (v - vmid) / ((1-ratio)*dv) + c2[2];
-         }
-         break;
+   case 16:
+      if (v < (vmin + 0.5 * dv)) {
+         rgba[0] = 0.0;
+         rgba[1] = 2 * (v - vmin) / dv;
+         rgba[2] = 1 - 2 * (v - vmin) / dv;
+      } else {
+         rgba[0] = 2 * (v - vmin - 0.5 * dv) / dv;
+         rgba[1] = 1 - 2 * (v - vmin - 0.5 * dv) / dv;
+         rgba[2] = 0.0;
       }
+      break;
+   case 17:
+      if (v < (vmin + 0.5 * dv)) {
+         rgba[0] = 1.0;
+         rgba[1] = 1 - 2 * (v - vmin) / dv;
+         rgba[2] = 2 * (v - vmin) / dv;
+      } else {
+         rgba[0] = 1 - 2 * (v - vmin - 0.5 * dv) / dv;
+         rgba[1] = 2 * (v - vmin - 0.5 * dv) / dv;
+         rgba[2] = 1.0;
+      }
+      break;
+   case 18:
+      rgba[0] = 0;
+      rgba[1] = (v - vmin) / (vmax - vmin);
+      rgba[2] = 1;
+      break;
+   case 19:
+      rgba[0] = (v - vmin) / (vmax - vmin);
+      rgba[1] = rgba[0];
+      rgba[2] = 1;
+      break;
+   case 20:
+      c1[0] =   0 / 255.0; c1[1] = 160 / 255.0; c1[2] =   0 / 255.0;
+      c2[0] = 180 / 255.0; c2[1] = 220 / 255.0; c2[2] =   0 / 255.0;
+      c3[0] = 250 / 255.0; c3[1] = 220 / 255.0; c3[2] = 170 / 255.0;
+      ratio = 0.3;
+      vmid = vmin + ratio * dv;
+      if (v < vmid) {
+         rgba[0] = (c2[0] - c1[0]) * (v - vmin) / (ratio*dv) + c1[0];
+         rgba[1] = (c2[1] - c1[1]) * (v - vmin) / (ratio*dv) + c1[1];
+         rgba[2] = (c2[2] - c1[2]) * (v - vmin) / (ratio*dv) + c1[2];
+      } else {
+         rgba[0] = (c3[0] - c2[0]) * (v - vmid) / ((1-ratio)*dv) + c2[0];
+         rgba[1] = (c3[1] - c2[1]) * (v - vmid) / ((1-ratio)*dv) + c2[1];
+         rgba[2] = (c3[2] - c2[2]) * (v - vmid) / ((1-ratio)*dv) + c2[2];
+      }
+      break;
    }
+}
 
 }
 

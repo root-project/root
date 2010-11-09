@@ -1180,143 +1180,148 @@ class TAxis;
 
 namespace Rgl {
 
-   extern const Float_t gRedEmission[];
-   extern const Float_t gGreenEmission[];
-   extern const Float_t gBlueEmission[];
-   extern const Float_t gOrangeEmission[];
-   extern const Float_t gWhiteEmission[];
-   extern const Float_t gGrayEmission[];
-   extern const Float_t gNullEmission[];
+extern const Float_t gRedEmission[];
+extern const Float_t gGreenEmission[];
+extern const Float_t gBlueEmission[];
+extern const Float_t gOrangeEmission[];
+extern const Float_t gWhiteEmission[];
+extern const Float_t gGrayEmission[];
+extern const Float_t gNullEmission[];
 
-   typedef std::pair<Int_t, Int_t> BinRange_t;
-   typedef std::pair<Double_t, Double_t> Range_t;
+typedef std::pair<Int_t, Int_t> BinRange_t;
+typedef std::pair<Double_t, Double_t> Range_t;
 
-   void ObjectIDToColor(Int_t objectID, Bool_t highColor);
-   Int_t ColorToObjectID(const UChar_t *color, Bool_t highColor);
-   void DrawQuadOutline(const TGLVertex3 &v1, const TGLVertex3 &v2,
-                        const TGLVertex3 &v3, const TGLVertex3 &v4);
-   void DrawQuadFilled(const TGLVertex3 &v0, const TGLVertex3 &v1,
-                       const TGLVertex3 &v2, const TGLVertex3 &v3,
-                       const TGLVector3 &normal);
-   void DrawSmoothFace(const TGLVertex3 &v1, const TGLVertex3 &v2,
-                       const TGLVertex3 &v3, const TGLVector3 &norm1,
-                       const TGLVector3 &norm2, const TGLVector3 &norm3);
-   void DrawBoxFront(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
-                     Double_t zMin, Double_t zMax, Int_t fp);
+void ObjectIDToColor(Int_t objectID, Bool_t highColor);
+Int_t ColorToObjectID(const UChar_t *color, Bool_t highColor);
+void DrawQuadOutline(const TGLVertex3 &v1, const TGLVertex3 &v2,
+                     const TGLVertex3 &v3, const TGLVertex3 &v4);
+void DrawQuadFilled(const TGLVertex3 &v0, const TGLVertex3 &v1,
+                    const TGLVertex3 &v2, const TGLVertex3 &v3,
+                    const TGLVector3 &normal);
+void DrawQuadFilled(const Double_t *v0, const Double_t *v1,
+                    const Double_t *v2, const Double_t *v3,
+                    const Double_t *normal);
 
-   void DrawBoxFrontTextured(Double_t xMin, Double_t xMax, Double_t yMin,
-                             Double_t yMax, Double_t zMin, Double_t zMax,
-                             Double_t tMin, Double_t tMax, Int_t front);
+void DrawSmoothFace(const TGLVertex3 &v1, const TGLVertex3 &v2,
+                     const TGLVertex3 &v3, const TGLVector3 &norm1,
+                     const TGLVector3 &norm2, const TGLVector3 &norm3);
+void DrawBoxFront(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
+                  Double_t zMin, Double_t zMax, Int_t fp);
+
+void DrawBoxFrontTextured(Double_t xMin, Double_t xMax, Double_t yMin,
+                          Double_t yMax, Double_t zMin, Double_t zMax,
+                          Double_t tMin, Double_t tMax, Int_t front);
 
 #ifndef __CINT__
-   void DrawTrapezoidTextured(const Double_t ver[][2], Double_t zMin, Double_t zMax,
-                              Double_t tMin, Double_t tMax);
-   void DrawTrapezoidTextured(const Double_t ver[][3], Double_t texMin, Double_t texMax);
-   void DrawTrapezoidTextured2(const Double_t ver[][2], Double_t zMin, Double_t zMax,
-                               Double_t tMin, Double_t tMax);
+void DrawTrapezoidTextured(const Double_t ver[][2], Double_t zMin, Double_t zMax,
+                           Double_t tMin, Double_t tMax);
+void DrawTrapezoidTextured(const Double_t ver[][3], Double_t texMin, Double_t texMax);
+void DrawTrapezoidTextured2(const Double_t ver[][2], Double_t zMin, Double_t zMax,
+                            Double_t tMin, Double_t tMax);
 #endif
 
-   void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin,
-                     Double_t yMax, Double_t zMin, Double_t zMax);
-   void DrawSphere(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin,
-                   Double_t yMax, Double_t zMin, Double_t zMax);
-   void DrawError(Double_t xMin, Double_t xMax, Double_t yMin,
+void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin,
                   Double_t yMax, Double_t zMin, Double_t zMax);
+void DrawSphere(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin,
+                Double_t yMax, Double_t zMin, Double_t zMax);
+void DrawError(Double_t xMin, Double_t xMax, Double_t yMin,
+               Double_t yMax, Double_t zMin, Double_t zMax);
 
 #ifndef __CINT__
-   void DrawTrapezoid(const Double_t ver[][2], Double_t zMin, Double_t zMax, Bool_t color = kTRUE);
-   void DrawTrapezoid(const Double_t ver[][3]);
+void DrawTrapezoid(const Double_t ver[][2], Double_t zMin, Double_t zMax, Bool_t color = kTRUE);
+void DrawTrapezoid(const Double_t ver[][3]);
 #endif
 
-   void DrawAxes(Int_t frontPoint, const Int_t *viewport, const TGLVertex3 *box2D,
-                 const TGLPlotCoordinates *plotCoord, TAxis *xAxis, TAxis *yAxis,
-                 TAxis *zAxis);
-   void SetZLevels(TAxis *zAxis, Double_t zMin, Double_t zMax,
-                   Double_t zScale, std::vector<Double_t> &zLevels);
+void DrawAxes(Int_t frontPoint, const Int_t *viewport, const TGLVertex3 *box2D,
+              const TGLPlotCoordinates *plotCoord, TAxis *xAxis, TAxis *yAxis,
+              TAxis *zAxis);
+void SetZLevels(TAxis *zAxis, Double_t zMin, Double_t zMax,
+                Double_t zScale, std::vector<Double_t> &zLevels);
 
-   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
-                         Double_t t1, Double_t t2, Double_t t3, const TGLVector3 &norm1,
-                         const TGLVector3 &norm2, const TGLVector3 &norm3);
-   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
-                         Double_t t1, Double_t t2, Double_t t3, Double_t z, const TGLVector3 &planeNormal);
-   void GetColor(Float_t v, Float_t vmin, Float_t vmax, Int_t type, Float_t *rgba);
+void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
+                      Double_t t1, Double_t t2, Double_t t3, const TGLVector3 &norm1,
+                      const TGLVector3 &norm2, const TGLVector3 &norm3);
+void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
+                      Double_t t1, Double_t t2, Double_t t3, Double_t z, const TGLVector3 &planeNormal);
+void GetColor(Float_t v, Float_t vmin, Float_t vmax, Int_t type, Float_t *rgba);
 
-   class TGuardBase {
-   private:
-      mutable Bool_t fActive;
+class TGuardBase {
+private:
+   mutable Bool_t fActive;
 
-      TGuardBase &operator = (const TGuardBase &rhs);
-   protected:
-      TGuardBase()
-         : fActive(kTRUE)
-      {
-      }
-      TGuardBase(const TGuardBase &rhs)
-         : fActive(kTRUE)
-      {
-         rhs.fActive = kFALSE;
-      }
-
-      Bool_t IsActive()const
-      {
-         return fActive;
-      }
-
-   public:
-      void Stop()const
-      {
-         fActive = kFALSE;
-      }
-   };
-
-   template<class Func, class Arg>
-   class TOneArgGuard : public TGuardBase {
-   private:
-      Func fFunc;
-      Arg  fArg;
-   public:
-      TOneArgGuard(Func f, Arg a)
-         : fFunc(f), fArg(a)
-      {
-      }
-      ~TOneArgGuard()
-      {
-         if (IsActive())
-            fFunc(fArg);
-      }
-   };
-
-   template<class Func, class Arg1, class Arg2>
-   class TTwoArgsGuard : public TGuardBase {
-   private:
-      Func fFunc;
-      Arg1 fArg1;
-      Arg2 fArg2;
-
-   public:
-      TTwoArgsGuard(Func f, Arg1 a1, Arg2 a2)
-         : fFunc(f), fArg1(a1), fArg2(a2)
-      {
-      }
-      ~TTwoArgsGuard()
-      {
-         if (IsActive())
-            fFunc(fArg1, fArg2);
-      }
-   };
-
-   template<class Func, class Arg>
-   TOneArgGuard<Func, Arg> make_guard(Func f, Arg a)
+   TGuardBase &operator = (const TGuardBase &rhs);
+protected:
+   TGuardBase()
+      : fActive(kTRUE)
    {
-      return TOneArgGuard<Func, Arg>(f, a);
+   }
+   TGuardBase(const TGuardBase &rhs)
+      : fActive(kTRUE)
+   {
+      rhs.fActive = kFALSE;
    }
 
-   template<class Func, class Arg1, class Arg2>
-   TTwoArgsGuard<Func, Arg1, Arg2> make_guard(Func f, Arg1 a1, Arg2 a2)
+   Bool_t IsActive()const
    {
-      return TTwoArgsGuard<Func, Arg1, Arg2>(f, a1, a2);
+      return fActive;
    }
+
+public:
+   void Stop()const
+   {
+      fActive = kFALSE;
+   }
+};
+
+template<class Func, class Arg>
+class TOneArgGuard : public TGuardBase {
+private:
+   Func fFunc;
+   Arg  fArg;
+public:
+   TOneArgGuard(Func f, Arg a)
+      : fFunc(f), fArg(a)
+   {
+   }
+   ~TOneArgGuard()
+   {
+      if (IsActive())
+         fFunc(fArg);
+   }
+};
+
+template<class Func, class Arg1, class Arg2>
+class TTwoArgsGuard : public TGuardBase {
+private:
+   Func fFunc;
+   Arg1 fArg1;
+   Arg2 fArg2;
+
+public:
+   TTwoArgsGuard(Func f, Arg1 a1, Arg2 a2)
+      : fFunc(f), fArg1(a1), fArg2(a2)
+   {
+   }
+   ~TTwoArgsGuard()
+   {
+      if (IsActive())
+         fFunc(fArg1, fArg2);
+   }
+};
+
+template<class Func, class Arg>
+TOneArgGuard<Func, Arg> make_guard(Func f, Arg a)
+{
+   return TOneArgGuard<Func, Arg>(f, a);
 }
+
+template<class Func, class Arg1, class Arg2>
+TTwoArgsGuard<Func, Arg1, Arg2> make_guard(Func f, Arg1 a1, Arg2 a2)
+{
+   return TTwoArgsGuard<Func, Arg1, Arg2>(f, a1, a2);
+}
+
+}//namespace Rgl.
 
 class TGLLevelPalette {
 private:
