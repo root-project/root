@@ -1304,7 +1304,7 @@ public:
    void Print() {
       NameMap_t::iterator iMap = fMap.begin();
       while( iMap != fMap.end() ) {
-         fprintf(stderr,"key=%s size=%ld\n",iMap->first,iMap->second.size());
+         fprintf(stderr,"key=%s size=%ld\n",iMap->first,(long)iMap->second.size());
          ++iMap;
       }  
    }
