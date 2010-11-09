@@ -67,7 +67,7 @@ public:
       return range size for coordinate icoord (starts from zero)
       Size == 0 indicates no range is present [-inf, + inf]
    */
-   unsigned int Size(unsigned int icoord) const { 
+   unsigned int Size(unsigned int icoord = 0) const { 
       return icoord <  fRanges.size() ? fRanges[icoord].size() : 0;
    }
 
@@ -85,18 +85,16 @@ public:
    /** 
        return the vector of ranges for the coordinate icoord
    */ 
-   const RangeSet & Ranges(unsigned int icoord) const { 
+   const RangeSet & Ranges(unsigned int icoord = 0) const { 
       // return icoord <  fRanges.size() ? fRanges[icoord] : RangeSet(); 
       return fRanges.at(icoord); 
    }
 
    /** 
-       return the first range for the coordinate icoord.
+       return the i-th range for the coordinate icoord.
        Useful method when only one range is present for the given coordinate 
    */ 
-   std::pair<double, double> operator() (unsigned int icoord) const {
-     return Size(icoord) >  0 ? fRanges[icoord].front() : std::make_pair<double,double>(0,0);     
-   }  
+   std::pair<double, double> operator() (unsigned int icoord = 0,unsigned int irange = 0) const;
 
    /**
       get the first range for given coordinate. If range does not exist

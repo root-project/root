@@ -37,6 +37,7 @@ double MinimStep(const IGenFunction* function, int type, double &xmin, double &x
    //         4-returns X corresponding to fy
 
    double x,y, dx;
+   if (npx < 2) return 0.5*(xmax-xmin); // no bracketing - return just mid-point
    dx = (xmax-xmin)/(npx-1);
    double xxmin = xmin;
    double yymin;

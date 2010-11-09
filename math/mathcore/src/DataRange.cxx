@@ -75,6 +75,22 @@ bool lessRange( const std::pair<double,double> & r1, const std::pair<double,doub
    return r1.second <  r2.second; 
 }
 
+std::pair<double, double> DataRange::operator() (unsigned int icoord,unsigned int irange) const {
+   if ( Size(icoord) >  irange )
+      return fRanges[icoord].at(irange);
+   else if (irange == 0)  {
+      // return [-inf +inf] for the other dimension 
+      double xmin = 0; double xmax = 0; 
+      GetInfRange(xmin,xmax);
+      return std::make_pair<double,double>(xmin,xmax);     
+   }                                               
+   else { 
+      // in case the irange-th does not exist for the given coordinate
+      MATH_ERROR_MSG("DataRange::operator()","invalid range number - return (0,0)");
+      return std::make_pair<double,double>(0,0);     
+   }
+}  
+
 void DataRange::AddRange(unsigned  int  icoord , double xmin, double xmax  ) { 
    // add a range [xmin,xmax] for the new coordinate icoord 
 
