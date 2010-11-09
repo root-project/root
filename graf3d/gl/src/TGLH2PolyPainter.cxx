@@ -462,12 +462,6 @@ Bool_t TGLH2PolyPainter::UpdateGeometry()
          return kFALSE;
       }
 
-      const Int_t nV = b->GetN();
-      if (nV < 3) {
-         Error("TGH2PolyPainter::UpdateGeometry", "Polygon must have at least 3 vertices");
-         return kFALSE;
-      }
-
       const Double_t z = b->GetContent() * fCoord->GetZScale();
       //Update z coordinate in all patches.
       Rgl::Pad::Tesselation_t &tess = *cap;

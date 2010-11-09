@@ -40,16 +40,12 @@ public:
    Double_t  GetContent() const{return fContent;}
    Bool_t    GetChanged() const{return fChanged;}
    Int_t     GetBinNumber() const {return fNumber;}
-   Int_t     GetN() {return 0;} // To be revisited needed by TGLH2PolyPainter.cxx
    TObject  *GetPolygon() const {return fPoly;}
-   Double_t *GetX() {return 0;} // To be revisited needed by TGLH2PolyPainter.cxx
-   Double_t *GetY() {return 0;} // To be revisited needed by TGLH2PolyPainter.cxx
    Double_t  GetXMax();
    Double_t  GetXMin();
    Double_t  GetYMax();
    Double_t  GetYMin();
    Bool_t    IsInside(Double_t x, Double_t y) const;
-   void      Orient();
    void      SetChanged(Bool_t flag){fChanged = flag;}
    void      SetContent(Double_t content){fContent = content; SetChanged(true);}
 

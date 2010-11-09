@@ -1099,7 +1099,6 @@ TH2PolyBin::TH2PolyBin(TObject *poly, Int_t bin_number)
    fXmin    = -1111;
    fYmax    = -1111;
    fYmin    = -1111;
-   /// Orient();
    SetChanged(kTRUE);
 }
 
@@ -1332,38 +1331,4 @@ Bool_t TH2PolyBin::IsInside(Double_t x, Double_t y) const
    }
 
    return in;
-}
-
-
-//______________________________________________________________________________
-void TH2PolyBin::Orient()
-{
-///// Orients the TH2PolyBin polygon in the counterclockwise orientation.
-///// This is required for the OpenGL lego plot (option = "glhp") of TH2Poly.
-///
-///Double_t *bx = GetX();
-///Double_t *by = GetY();
-///Int_t     bn = GetN();
-///
-///// Determine the orientation
-///Double_t signedArea = 0;
-///for (int i = 0; i<(bn-1); i++) {
-///   signedArea += (bx[i]*by[i+1] - by[i]*bx[i+1]);
-///}
-///
-///// Orient, if necessary
-///if (signedArea < 0) {
-///   int a, b;
-///   Double_t swap;
-///
-///   for (a = 0; a<=((bn/2) - 1); a++) {
-///      b     = bn-1-a;
-///      swap  = bx[a];
-///      bx[a] = bx[b];
-///      bx[b] = swap;
-///      swap  = by[a];
-///      by[a] = by[b];
-///      by[b] = swap;
-///   }
-///}
 }
