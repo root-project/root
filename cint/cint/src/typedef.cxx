@@ -1339,10 +1339,41 @@ int G__search_typename(const char* typenamein, int typein, int tagnum, int refty
       type_name[--len] = '\0';
       ispointer = 'A' - 'a';
    }
-   NameMap::Range nameRange = G__newtype.namerange->Find(type_name);
+   // Deal with potential scope in the name.
+   char *p = (char*) G__find_last_scope_operator(type_name);
+   const char *atom_tagname = type_name;
+   if (p) {
+      if (G__static_parent_tagnum != -1) {
+         // humm something is wrong, we specify the parent in 2 different
+         // ways.
+      }
+      atom_tagname = p+2;
+      *p = '\0';
+      int scope_tagnum = -1;
+      if (p == type_name) {
+         scope_tagnum = -1;  // global scope
+      }
+#ifndef G__STD_NAMESPACE
+      else if (!strcmp(type_name, "std") && G__ignore_stdnamespace) {
+         scope_tagnum = -1;
+      }
+#endif // G__STD_NAMESPACE
+      else {
+         // first try a typedef, so we don't trigger autoloading here:
+         int scope_typenum = G__defined_typename_noerror(type_name, 1);
+         if (scope_typenum != -1 && G__newtype.type[scope_typenum] == 'u')
+            scope_tagnum = G__newtype.tagnum[scope_typenum];
+         else
+            scope_tagnum = G__defined_tagname(type_name, 0);
+      }
+      G__static_parent_tagnum = scope_tagnum;
+      len = strlen(atom_tagname);
+   }
+   
+   NameMap::Range nameRange = G__newtype.namerange->Find(atom_tagname);
    if (nameRange) {
       for (i = nameRange.First();i <= nameRange.Last();i++) {
-         if (len == G__newtype.hash[i] && strcmp(G__newtype.name[i], type_name) == 0 &&
+         if (len == G__newtype.hash[i] && strcmp(G__newtype.name[i], atom_tagname) == 0 &&
              (G__static_parent_tagnum == -1 ||
               G__newtype.parent_tagnum[i] == G__static_parent_tagnum)) {
             flag = 1;
@@ -1367,7 +1398,7 @@ int G__search_typename(const char* typenamein, int typein, int tagnum, int refty
       }
       G__newtype.hash[G__newtype.alltype] = len;
       G__newtype.name[G__newtype.alltype] = (char*)malloc((size_t)(len + 1));
-      strcpy(G__newtype.name[G__newtype.alltype], type_name); // Okay, we allocated the right size
+      strcpy(G__newtype.name[G__newtype.alltype], atom_tagname); // Okay, we allocated the right size
       G__newtype.namerange->Insert(G__newtype.name[G__newtype.alltype], G__newtype.alltype);
       G__newtype.nindex[G__newtype.alltype] = 0;
       G__newtype.parent_tagnum[G__newtype.alltype] = G__static_parent_tagnum;

@@ -1284,7 +1284,9 @@ public:
    };
 
    NameMap() {}
-   void Insert(const char* name, int idx) { fMap[name].insert(idx); }
+   void Insert(const char* name, int idx) {
+      fMap[name].insert(idx); 
+   }
    void Remove(const char* name, int idx) {
       NameMap_t::iterator iMap = fMap.find(name);
       if (iMap != fMap.end()) {
@@ -1298,6 +1300,13 @@ public:
       if (iMap != fMap.end() && !iMap->second.empty())
          return Range(iMap->second);
       return Range();
+   }
+   void Print() {
+      NameMap_t::iterator iMap = fMap.begin();
+      while( iMap != fMap.end() ) {
+         fprintf(stderr,"key=%s size=%ld\n",iMap->first,iMap->second.size());
+         ++iMap;
+      }  
    }
    
 private:
