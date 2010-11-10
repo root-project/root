@@ -93,7 +93,6 @@ TVirtualMC *TVirtualMC::GetMC()
    return fgMC;
 }
 
-
 //_____________________________________________________________________________
 void TVirtualMC::SetStack(TVirtualMCStack* stack)
 {
