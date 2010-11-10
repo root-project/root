@@ -28,6 +28,14 @@ typedef _object PyObject;
 
 class TPySelector : public TSelector {
 public:
+   using TSelector::fStatus;
+// using TSelector::fAbort;
+   using TSelector::fOption;
+   using TSelector::fObject;
+   using TSelector::fInput;
+   using TSelector::fOutput;
+
+public:
    TTree* fChain;
 
 public:
