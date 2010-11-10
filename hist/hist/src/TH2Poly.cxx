@@ -899,19 +899,17 @@ Bool_t TH2Poly::IsIntersectingPolygon(Int_t bn, Double_t *x, Double_t *y,
       if (p0B && p1B) continue;
 
       // Checks to see if any are inside
-      p0xM = !p0R && !p0L;
-      p0yM = !p0T && !p0B;
-      p1xM = !p1R && !p1L;
-      p1yM = !p1T && !p1B;
-      p0In = p0xM && p0yM;
+      p0xM = !p0R && !p0L; // Point 0 is inside along x
+      p0yM = !p0T && !p0B; // Point 1 is inside along x
+      p1xM = !p1R && !p1L; // Point 0 is inside along y
+      p1yM = !p1T && !p1B; // Point 1 is inside along y
+      p0In = p0xM && p0yM; // Point 0 is inside
+      p1In = p1xM && p1yM; // Point 1 is inside
       if (p0In) {
-         if (p1xM && p1yM) continue;
+         if (p1In) continue;
          return kTRUE;
-      }
-      p1In = p1xM && p1yM;
-      if (p1In) {
-         if (p0In) continue;
-         return kTRUE;
+      } else {
+         if (p1In) return kTRUE;
       }
 
       // We know by now that the points are not in the same side and not inside.
