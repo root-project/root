@@ -923,9 +923,7 @@ Bool_t TH2Poly::IsIntersectingPolygon(Int_t bn, Double_t *x, Double_t *y,
 
       // We now know that the points are in different x and y indices
 
-      Double_t *xcoord, *ycoord;
-      xcoord    = new Double_t[3];
-      ycoord    = new Double_t[3];
+      Double_t xcoord[3], ycoord[3];
       xcoord[0] = x[counter];
       xcoord[1] = x[counter + 1];
       ycoord[0] = y[counter];
