@@ -1081,6 +1081,8 @@ TH2PolyBin::TH2PolyBin()
    fXmin    = -1111;
    fYmax    = -1111;
    fYmin    = -1111;
+   fArea    = 0;
+   SetChanged(kTRUE);
 }
 
 
