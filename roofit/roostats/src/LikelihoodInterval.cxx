@@ -282,8 +282,8 @@ bool LikelihoodInterval::CreateMinimizer() {
    }
 
    //std::cout << "print minimizer result..........." << std::endl;
+   //fMinimizer->PrintResults();
 
-   fMinimizer->PrintResults();
    return true; 
 }
 
@@ -329,7 +329,6 @@ bool LikelihoodInterval::FindLimits(const RooRealVar & param, double &lower, dou
    
    unsigned int ivarX = ix; 
 
-   fMinimizer->SetPrintLevel(1);
    double elow = 0; 
    double eup = 0;
    ret = fMinimizer->GetMinosError(ivarX, elow, eup );
