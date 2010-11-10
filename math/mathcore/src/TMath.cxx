@@ -802,9 +802,12 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
 //            if (ib > nb) {ok = kTRUE; break;}
 //         }
 //
+//
 //  NOTE1
 //  A good description of the Kolmogorov test can be seen at:
 //    http://www.itl.nist.gov/div898/handbook/eda/section3/eda35g.htm
+
+//  LM: Nov 2010: clean up and returns now a zero distance when vectors are the same 
 
    TString opt = option;
    opt.ToUpper();
@@ -820,48 +823,41 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
    Double_t rnb = nb;
    Double_t sa  = 1./rna;
    Double_t sb  = 1./rnb;
-   Double_t rdiff;
-   Int_t ia,ib;
-//     Starting values for main loop
-   if (a[0] < b[0]) {
-      rdiff = -sa;
-      ia = 2;
-      ib = 1;
-   } else {
-      rdiff = sb;
-      ib = 2;
-      ia = 1;
-   }
-   Double_t rdmax = TMath::Abs(rdiff);
+   Double_t rdiff = 0;
+   Double_t rdmax = 0;
+   Int_t ia = 0;
+   Int_t ib = 0;
 
 //    Main loop over point sets to find max distance
 //    rdiff is the running difference, and rdmax the max.
    Bool_t ok = kFALSE;
    for (Int_t i=0;i<na+nb;i++) {
-      if (a[ia-1] < b[ib-1]) {
+      if (a[ia] < b[ib]) {
          rdiff -= sa;
          ia++;
-         if (ia > na) {ok = kTRUE; break;}
-      } else if (a[ia-1] > b[ib-1]) {
+         if (ia >= na) {ok = kTRUE; break;}
+      } else if (a[ia] > b[ib]) {
          rdiff += sb;
          ib++;
-         if (ib > nb) {ok = kTRUE; break;}
+         if (ib >= nb) {ok = kTRUE; break;}
       } else {
-         double x = a[ia-1];
-         while(a[ia-1] == x && ia <= na) {
+         // special cases for the ties 
+         double x = a[ia];
+         while(a[ia] == x && ia < na) {
             rdiff -= sa;
             ia++;
          }
-         while(b[ib-1] == x && ib <= nb) {
+         while(b[ib] == x && ib < nb) {
             rdiff += sb;
             ib++;
          }
-         if (ia > na) {ok = kTRUE; break;}
-         if (ib > nb) {ok = kTRUE; break;}
+         if (ia >= na) {ok = kTRUE; break;}
+         if (ib >= nb) {ok = kTRUE; break;}
       }
       rdmax = TMath::Max(rdmax,TMath::Abs(rdiff));
    }
-//    Should never terminate this loop with ok = kFALSE!
+   //    Should never terminate this loop with ok = kFALSE!
+   R__ASSERT(ok);
 
    if (ok) {
       rdmax = TMath::Max(rdmax,TMath::Abs(rdiff));
