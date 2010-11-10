@@ -271,9 +271,7 @@ void TH2Poly::AddBinToPartition(TH2PolyBin *bin)
    if (nl<0)       nl = 0;
    if (mb<0)       mb = 0;
 
-   Bool_t *contained;
    fNCells = fCellX*fCellY;
-   contained = new Bool_t[fNCells];
 
    // Loop over all cells
    for (int i = nl; i <= nr; i++) {
