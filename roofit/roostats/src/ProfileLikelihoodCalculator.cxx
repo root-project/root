@@ -136,6 +136,9 @@ void  ProfileLikelihoodCalculator::DoGlobalFit() const {
    delete constrainedParams; 
    // store fit result for further use 
    fFitResult =  fit; 
+   if (fFitResult == 0) 
+      oocoutI((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::DoGlobalFit -  Global fit failed " << std::endl;      
+
 }
 
 //_______________________________________________________
@@ -168,7 +171,7 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
    // perform a Best Fit 
    if (!fFitResult) DoGlobalFit();
    // if fit fails return
-   if (!fFitResult) return 0;
+   if (!fFitResult)   return 0;
 
    // t.b.f. " RooProfileLL should keep and provide possibility to query on global minimum
    // set POI to fit value (this will speed up profileLL calculation of global minimum)

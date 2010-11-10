@@ -196,10 +196,7 @@ Double_t LikelihoodInterval::LowerLimit(const RooRealVar& param, bool & status)
 
    double lower = 0; 
    double upper = 0; 
-   RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
-   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
    status = FindLimits(param, lower, upper); 
-   RooMsgService::instance().setGlobalKillBelow(msglevel);
    return lower; 
 }
 
@@ -213,10 +210,7 @@ Double_t LikelihoodInterval::UpperLimit(const RooRealVar& param, bool & status)
 
    double lower = 0; 
    double upper = 0; 
-   RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
-   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
    status = FindLimits(param, lower, upper); 
-   RooMsgService::instance().setGlobalKillBelow(msglevel);
    return upper; 
 }
 
