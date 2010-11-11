@@ -45,6 +45,12 @@ class TH1;
 class TAxis;
 class TMethodCall;
 
+namespace ROOT { 
+   namespace Fit { 
+      class FitResult; 
+   }
+}
+
 class TF1 : public TFormula, public TAttLine, public TAttFill, public TAttMarker {
 
 protected:
@@ -255,6 +261,7 @@ public:
    virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
    virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     SetChisquare(Double_t chi2) {fChisquare = chi2;}
+   virtual void     SetFitResult(const ROOT::Fit::FitResult & result, const Int_t * indpar = 0);
    template <class PtrObj, typename MemFn> 
    void SetFunction( PtrObj& p, MemFn memFn );
    template <typename Func> 

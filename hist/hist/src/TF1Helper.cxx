@@ -95,7 +95,7 @@ double IntegralError(TF1 * func, Int_t ndim, const double * a, const double * b,
    TVectorD ig(npar); 
 
    for (int i=0; i < npar; ++i) {       
-      // check that parameter error is not zero - otehrwise skip   
+      // check that parameter error is not zero - otherwise skip it    
       // should check the limits 
       double integral  = 0;
       if (covMatrix(i,i) > 0 ) {          
