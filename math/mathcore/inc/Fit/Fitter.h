@@ -153,39 +153,40 @@ public:
    /**
       Fit using the a generic FCN function as a C++ callable object implementing 
       double () (const double *) 
-      The function dimension (i.e. the number of parameter) is needed in this case
-      For the other arguments same consideration as in the previous methods
+      Note that the function dimension (i.e. the number of parameter) is needed in this case
+      For the options see documentation for following methods FitFCN(IMultiGenFunction & fcn,..)
     */
    template <class Function>
-   bool FitFCN(unsigned int npar, Function  & fcn, const double * params = 0, unsigned int dataSize = 0);
+   bool FitFCN(unsigned int npar, Function  & fcn, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
-      fit using the given FCN function represented by a multi-dimensional function interface 
+      Fit using the given FCN function represented by a multi-dimensional function interface 
       (ROOT::Math::IMultiGenFunction). 
-      Give optionally initial the parameter values and data size to have the fit Ndf correctly 
-      set in the FitResult. 
-      If the parameters values are not given (parameter pointers=0) the 
+      Give optionally the initial arameter values, data size to have the fit Ndf correctly 
+      set in the FitResult and flag specifying if it is a chi2 fit. 
+      Note that if the parameters values are not given (parameter pointers=0) the 
       current parameter settings are used. The parameter settings can be created before 
       by using the FitConfig::SetParamsSetting. If they have not been created they are created 
       automatically when the params pointer is not zero
     */
-   bool FitFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params = 0, unsigned int dataSize = 0 ); 
+   bool FitFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false); 
 
    /**
       Fit using the given FCN function representing a multi-dimensional gradient function 
       interface (ROOT::Math::IMultiGradFunction). In this case the minimizer will use the 
       gradient information provided by the function. 
-      For the other arguments same consideration as in the previous method
+      For the options same consideration as in the previous method
     */
-   bool FitFCN(const ROOT::Math::IMultiGradFunction & fcn, const double * params = 0, unsigned int dataSize = 0); 
+   bool FitFCN(const ROOT::Math::IMultiGradFunction & fcn, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false); 
 
       
    /**
       fit using user provided FCN with Minuit-like interface
-      Parameter Settings must have be created before
+      If npar = 0 it is assumed that the parameters are specified in the parameter settings created before
+      For the options same consideration as in the previous method
     */
    typedef  void (* MinuitFCN_t )(int &npar, double *gin, double &f, double *u, int flag);
-   bool FitFCN( MinuitFCN_t fcn);
+   bool FitFCN( MinuitFCN_t fcn, int npar = 0, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
       do a linear fit on a set of bin-data
@@ -326,9 +327,9 @@ private:
 #endif
 
 template<class Function>
-bool ROOT::Fit::Fitter::FitFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize) {
+bool ROOT::Fit::Fitter::FitFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize,bool chi2fit) {
    ROOT::Math::WrappedMultiFunction<Function &> wf(f,npar); 
-   return FitFCN(wf,par,datasize);
+   return FitFCN(wf,par,datasize,chi2fit);
 }
 
 #endif  // endif __CINT__

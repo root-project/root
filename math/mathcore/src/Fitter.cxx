@@ -128,10 +128,14 @@ void Fitter::SetFunction(const IGradModel1DFunction & func)
 }
 
 
-bool Fitter::FitFCN(const BaseFunc & fcn, const double * params, unsigned int dataSize) { 
+bool Fitter::FitFCN(const BaseFunc & fcn, const double * params, unsigned int dataSize, bool chi2fit) { 
    // fit a user provided FCN function
    // create fit parameter settings
    unsigned int npar  = fcn.NDim(); 
+   if (npar == 0) { 
+      MATH_ERROR_MSG("Fitter::FitFCN","FCN function has zero parameters ");
+      return false;
+   }
    if (params != 0 ) 
       fConfig.SetParamsSettings(npar, params);
    else {
@@ -140,7 +144,7 @@ bool Fitter::FitFCN(const BaseFunc & fcn, const double * params, unsigned int da
          return false;
       }
    }
-   fBinFit = false; 
+   fBinFit = chi2fit; 
 
    // create Minimizer  
    fMinimizer = std::auto_ptr<ROOT::Math::Minimizer> ( fConfig.CreateMinimizer() );
@@ -152,9 +156,13 @@ bool Fitter::FitFCN(const BaseFunc & fcn, const double * params, unsigned int da
    return DoMinimization<BaseFunc> (fcn, dataSize); 
 }
 
-bool Fitter::FitFCN(const BaseGradFunc & fcn, const double * params, unsigned int dataSize) { 
+bool Fitter::FitFCN(const BaseGradFunc & fcn, const double * params, unsigned int dataSize, bool chi2fit) { 
    // fit a user provided FCN gradient function
    unsigned int npar  = fcn.NDim(); 
+   if (npar == 0) { 
+      MATH_ERROR_MSG("Fitter::FitFCN","FCN function has zero parameters ");
+      return false;
+   }
    if (params != 0  ) 
       fConfig.SetParamsSettings(npar, params);
    else {
@@ -163,7 +171,7 @@ bool Fitter::FitFCN(const BaseGradFunc & fcn, const double * params, unsigned in
          return false;
       }
    }
-   fBinFit = false; 
+   fBinFit = chi2fit; 
 
    // create Minimizer  (need to be done afterwards)
    fMinimizer = std::auto_ptr<ROOT::Math::Minimizer> ( fConfig.CreateMinimizer() );
@@ -176,18 +184,19 @@ bool Fitter::FitFCN(const BaseGradFunc & fcn, const double * params, unsigned in
    return DoMinimization<BaseGradFunc> (fcn, dataSize); 
 }
 
-bool Fitter::FitFCN(MinuitFCN_t fcn ) { 
+bool Fitter::FitFCN(MinuitFCN_t fcn, int npar, const double * params , unsigned int dataSize , bool chi2fit ) { 
    // fit using Minuit style FCN type (global function pointer)  
    // create corresponfing objective function from that function
-   int npar = fConfig.ParamsSettings().size(); 
-   if (npar == 0) { 
-      MATH_ERROR_MSG("Fitter::FitFCN","wrong fit parameter settings - npar = 0 ");
-      return false;
+   if (npar == 0) {
+      npar = fConfig.ParamsSettings().size(); 
+      if (npar == 0) { 
+         MATH_ERROR_MSG("Fitter::FitFCN","Fit Parameter settings have not been created ");
+         return false;
+      }
    }
-   fBinFit = false; 
 
    ROOT::Fit::FcnAdapter  newFcn(fcn,npar); 
-   return FitFCN(newFcn); 
+   return FitFCN(newFcn,params,dataSize,chi2fit); 
 }
 
 bool Fitter::DoLeastSquareFit(const BinData & data) { 
