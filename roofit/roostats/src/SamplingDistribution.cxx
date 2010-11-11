@@ -37,7 +37,7 @@ using namespace RooStats;
 
 //_______________________________________________________
 SamplingDistribution::SamplingDistribution( const char *name, const char *title,
-					    std::vector<Double_t>& samplingDist, const TString varName) :
+					    std::vector<Double_t>& samplingDist, const char * varName) :
   TNamed(name,title)
 {
   // SamplingDistribution constructor
@@ -53,7 +53,7 @@ SamplingDistribution::SamplingDistribution( const char *name, const char *title,
 
 //_______________________________________________________
 SamplingDistribution::SamplingDistribution( const char *name, const char *title,
-					    std::vector<Double_t>& samplingDist, std::vector<Double_t>& sampleWeights, const TString varName) :
+					    std::vector<Double_t>& samplingDist, std::vector<Double_t>& sampleWeights, const char * varName) :
   TNamed(name,title)
 {
   // SamplingDistribution constructor
@@ -66,7 +66,7 @@ SamplingDistribution::SamplingDistribution( const char *name, const char *title,
 }
 
 //_______________________________________________________
-SamplingDistribution::SamplingDistribution( const char *name, const char *title, const TString varName) :
+SamplingDistribution::SamplingDistribution( const char *name, const char *title, const char * varName) :
   TNamed(name,title)
 {
    // SamplingDistribution constructor (with name and title)
@@ -78,7 +78,7 @@ SamplingDistribution::SamplingDistribution(
    const char *name,
    const char *title,
    RooDataSet& dataSet,
-   const TString varName
+   const char * varName
 ) : TNamed(name, title) {
    // Creates a SamplingDistribution from a RooDataSet for debugging
    // purposes; e.g. if you need a Gaussian type SamplingDistribution
