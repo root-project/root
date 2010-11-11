@@ -43,7 +43,10 @@ namespace PyROOT {
 
    private:
       typedef std::map< TObject*, PyObject* > ObjectMap_t;
-      static ObjectMap_t* fgObjectTable;
+      typedef std::map< PyObject*, ObjectMap_t::iterator > WeakRefMap_t;
+
+      static ObjectMap_t*  fgObjectTable;
+      static WeakRefMap_t* fgWeakRefTable;
    };
 
 } // namespace PyROOT

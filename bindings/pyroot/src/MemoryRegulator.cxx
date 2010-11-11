@@ -17,7 +17,8 @@
 
 
 //- static data --------------------------------------------------------------
-PyROOT::TMemoryRegulator::ObjectMap_t* PyROOT::TMemoryRegulator::fgObjectTable = 0;
+PyROOT::TMemoryRegulator::ObjectMap_t*  PyROOT::TMemoryRegulator::fgObjectTable  = 0;
+PyROOT::TMemoryRegulator::WeakRefMap_t* PyROOT::TMemoryRegulator::fgWeakRefTable = 0;
 
 
 namespace {
@@ -108,12 +109,18 @@ PyROOT::TMemoryRegulator::TMemoryRegulator()
 
    assert( fgObjectTable == 0 );
    fgObjectTable = new ObjectMap_t;
+
+   assert( fgWeakRefTable == 0 );
+   fgWeakRefTable = new WeakRefMap_t;
 }
 
 //____________________________________________________________________________
 PyROOT::TMemoryRegulator::~TMemoryRegulator()
 {
 // cleanup weakref cache
+   delete fgWeakRefTable;
+   fgWeakRefTable = 0;
+
    delete fgObjectTable;
    fgObjectTable = 0;
 }
@@ -130,10 +137,14 @@ void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
    ObjectMap_t::iterator ppo = fgObjectTable->find( object );
 
    if ( ppo != fgObjectTable->end() ) {
+      fgWeakRefTable->erase( fgWeakRefTable->find( ppo->second ) );
+ 
    // get the tracked object
       ObjectProxy* pyobj = (ObjectProxy*)PyWeakref_GetObject( ppo->second );
-      if ( ! pyobj )
+      if ( ! pyobj ) {
+         fgObjectTable->erase( ppo );
          return;
+      }
 
    // clean up the weak reference.
       Py_DECREF( ppo->second );
@@ -172,7 +183,7 @@ void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
          ((PyObject*)pyobj)->ob_type = &PyROOT_NoneType;
       }
 
-   // erase the object from tracking
+   // erase the object from tracking (weakref table already cleared, above)
       fgObjectTable->erase( ppo );
    }
 }
@@ -187,7 +198,9 @@ Bool_t PyROOT::TMemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* ob
    ObjectMap_t::iterator ppo = fgObjectTable->find( object );
    if ( ppo == fgObjectTable->end() ) {
       object->SetBit( TObject::kMustCleanup );
-      (*fgObjectTable)[ object ] = PyWeakref_NewRef( (PyObject*)pyobj, gObjectEraseCallback );
+      PyObject* pyref = PyWeakref_NewRef( (PyObject*)pyobj, gObjectEraseCallback );
+      ObjectMap_t::iterator newppo = fgObjectTable->insert( std::make_pair( object, pyref ) ).first;
+      (*fgWeakRefTable)[ pyref ] = newppo;  // no Py_INCREF on pyref, as object table has one
       return kTRUE;
    }
 
@@ -201,6 +214,7 @@ Bool_t PyROOT::TMemoryRegulator::UnregisterObject( TObject* object )
    ObjectMap_t::iterator ppo = fgObjectTable->find( object );
 
    if ( ppo != fgObjectTable->end() ) {
+      fgWeakRefTable->erase( fgWeakRefTable->find( ppo->second ) );
       fgObjectTable->erase( ppo );
       return kTRUE;
    }
@@ -241,22 +255,19 @@ PyObject* PyROOT::TMemoryRegulator::ObjectEraseCallback( PyObject*, PyObject* py
       // erase if tracked
          ObjectMap_t::iterator ppo = fgObjectTable->find( object );
          if ( ppo != fgObjectTable->end() ) {
-         // cleanup weak reference, and table entry
+         // cleanup table entries and weak reference
+            fgWeakRefTable->erase( fgWeakRefTable->find( ppo->second ) );
             Py_DECREF( ppo->second );
             fgObjectTable->erase( ppo );
          }
       }
    } else {
-      ObjectMap_t::iterator ppo = fgObjectTable->begin();
-      for ( ; ppo != fgObjectTable->end(); ++ppo ) {
-         if ( ppo->second == pyref )
-            break;
-      }
-
-      if ( ppo != fgObjectTable->end() ) {
-      // cleanup weak reference, and table entry
-         Py_DECREF( ppo->second );
-         fgObjectTable->erase( ppo );
+   // object already dead; need to clean up the weak ref from the table
+      WeakRefMap_t::iterator wri = fgWeakRefTable->find( pyref );
+      if ( wri != fgWeakRefTable->end() ) {
+         fgObjectTable->erase( wri->second );
+         fgWeakRefTable->erase( wri );
+         Py_DECREF( pyref );
       }
    }
 
