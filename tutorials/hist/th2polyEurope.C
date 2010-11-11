@@ -33,21 +33,23 @@ void th2polyEurope()
 
    // Real surfaces taken from Wikipedia.
    const Int_t nx = 36;
-   char *countries[nx] = { "france", "spain", "sweden", "germany", "finland",
-                           "norway", "poland", "italy", "yugoslavia",
-                           "united_kingdom", "romania", "belarus", "greece",
-                           "czechoslovakia", "bulgaria", "iceland", "hungary",
-                           "portugal", "austria", "ireland", "lithuania",
-                           "latvia", "estonia", "denmark", "netherlands",
-                           "switzerland", "moldova", "belgium", "albania",
-                           "cyprus", "luxembourg", "andorra", "malta",
-                           "liechtenstein", "san_marino", "monaco" };
-   Float_t surfaces[nx] = { 547030, 505580, 449964, 357021, 338145, 324220,
-                            312685, 301230, 255438, 244820, 237500, 207600,
-                            131940, 127711, 110910, 103000, 93030, 89242, 83870,
-                            70280, 65200, 64589, 45226, 43094, 41526, 41290,
-                            33843, 30528, 28748, 9250, 2586, 468, 316, 160, 61,
-                            2};
+   // see http://en.wikipedia.org/wiki/Area_and_population_of_European_countries
+   char *countries[nx] = { "france",     "spain",  "sweden",  "germany",       "finland",
+                           "norway",     "poland", "italy",   "yugoslavia",    "united_kingdom", 
+			   "romania",    "belarus","greece",  "czechoslovakia","bulgaria", 
+			   "iceland",    "hungary","portugal","austria",       "ireland", 
+			   "lithuania",  "latvia", "estonia", "denmark",       "netherlands",
+                           "switzerland","moldova","belgium", "albania",       "cyprus", 
+			   "luxembourg", "andorra","malta",   "liechtenstein", "san_marino", 
+			   "monaco" };
+   Float_t surfaces[nx] = { 547030,        505580,   449964,      357021,        338145, 
+                            324220,        312685,   301230,      255438,        244820, 
+			    237500,        207600,   131940,      127711,        110910, 
+			    103000,         93030,    89242,       83870,         70280, 
+			     65200,         64589,    45226,       43094,         41526, 
+			     41290,         33843,    30528,       28748,          9250, 
+			      2586,           468,      316,         160,            61,
+                                 2};
 
    TH1F *h = new TH1F("h","Countries surfaces (in km^{2})",3,0,3);
    for (i=0; i<nx; i++) h->Fill(countries[i], surfaces[i]);
@@ -87,7 +89,7 @@ void th2polyEurope()
       latitude  = r.Uniform(-dr*90,dr*90);
    // Fill TH2Poly according to a Mercator projection.
    gBenchmark->Start("Filling");
-   for (i=0; i<1000000; i++) {
+   for (i=0; i<500000; i++) {
       longitude = r.Uniform(dr*lon1,dr*lon2);
       //latitude  = r.Uniform(-dr*90,dr*90);
       latitude  = r.Uniform(dr*lat1,dr*lat2);
@@ -152,7 +154,7 @@ void th2polyEurope()
    TLegend *leg = new TLegend(0.5,0.67,0.92,0.8,NULL,"NDC");
    leg->SetTextFont(42);
    leg->SetTextSize(0.025);
-   leg->AddEntry(h,"Real countries surfaces from Wikipedia (in km^{2})","l");
+   leg->AddEntry(h,"Real countries surfaces from Wikipedia (in km^{2})","lp");
    leg->AddEntry(h2,"Countries surfaces from TH2Poly (with errors)","lp");
    leg->Draw();
 }
