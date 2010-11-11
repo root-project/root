@@ -1,19 +1,23 @@
 //This tutorial illustrates how to create an histogram with polygonal
-//bins (TH2Poly), fill it and draw it. The initial data are stored
+//bins (TH2Poly), fill it and draw it using GL. The initial data are stored
 //in TMultiGraphs. They represent the USA.
+//
 //The initial data have been downloaded from: http://www.maproom.psu.edu/dcw/
+//This database was developed in 1991/1992 and national boundaries reflect
+//political reality as of that time.
+//
 //Author: Olivier Couet
 
 void th2polyUSA()
 {
+	gStyle->SetCanvasPreferGL(true);
    TCanvas *usa = new TCanvas("USA", "USA");
    usa->ToggleEventStatus();
-
-   Double_t x1 = -130;
-   Double_t x2 = -65;
-   Double_t y1 = 24;
-   Double_t y2 = 50;
-   TH2Poly *p = new TH2Poly("USA","USA",x1,x2,y1,y2);
+   Double_t lon1 = -130;
+   Double_t lon2 = -65;
+   Double_t lat1 = 24;
+   Double_t lat2 = 50;
+   TH2Poly *p = new TH2Poly("USA","USA",lon1,lon2,lat1,lat2);
 
    TFile *f;
    f = TFile::Open("http://root.cern.ch/files/usa.root");
@@ -30,25 +34,20 @@ void th2polyUSA()
    }
 
    TRandom r;
-   Double_t px,py;
+   Double_t longitude, latitude;
+   Double_t x, y, dr = TMath::Pi()/180, rd = 180/TMath::Pi();
 
-   gBenchmark->Start("Partitioning");
    p->ChangePartition(100, 100);
-   gBenchmark->Show("Partitioning");
 
    for (Int_t i=0; i<500000; i++) {
-      px = (x2-x1)*r.Gaus(2.,1)+(x2+x1)/2;
-      py = (y2-y1)*r.Gaus(2.,1)+(y2+y1)/2;
-      p->Fill(px,py);
+      longitude = r.Uniform(dr*lon1,dr*lon2);
+      latitude  = r.Uniform(-dr*90,dr*90);
+      x         = rd*longitude;
+      y         = 39*TMath::Log(TMath::Tan((TMath::Pi()/4)+(latitude/2)));
+      p->Fill(x,y);
    }
-   gBenchmark->Show("Filling");
 
    gStyle->SetOptStat(11);
    gStyle->SetPalette(1); 
-   p->Draw("COL");
-   printf("Nbins = %d Minimum = %g Maximum = %g Integral = %f \n",
-          p->GetNumberOfBins(),
-          p->GetMinimum(),
-          p->GetMaximum(),
-          p->Integral("width"));
+   p->Draw("glhp");
 }
