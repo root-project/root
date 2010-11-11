@@ -276,7 +276,7 @@ static int G__get_newname(G__FastAllocString& new_name)
          else if (strcmp(new_name, "const&") == 0) {
             cin = G__fgetvarname(new_name, 0, ",;=():");
             G__reftype = G__PARAREFERENCE;
-            G__constvar |= G__PCONSTVAR;
+            G__constvar |= G__CONSTVAR;
          }
          else if (strcmp(new_name, "*const&") == 0) {
             cin = G__fgetvarname(new_name, 1, ",;=():");
