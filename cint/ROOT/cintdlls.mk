@@ -240,10 +240,10 @@ $(CINTDLLDIRDLLSTL)/rootcint_%.cxx: core/metautils/src/%Linkdef.h $(CINTDLLROOTC
 $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDLLDIRDLLSTL)/rootcint_%.o,$(CINTDICTDLLS)): CINTCXXFLAGS += -I.
 $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDLLDIRDLLSTL)/rootcint_%.cxx,$(CINTDICTDLLS)): $(CINTDLLROOTCINTTMPDEP)
 
-lib/libvectorDict.rootmap: bin/rlibmap$(EXEEXT) $(MAKEFILEDEP)
+lib/libvectorDict.rootmap: bin/rlibmap$(EXEEXT) $(MAKEFILEDEP) core/metautils/src/vectorLinkdef.h
 	$(RLIBMAP) -o $@ -l vector.dll -d vectorbool.dll -c core/metautils/src/vectorLinkdef.h
 
-$(filter-out lib/libvectorDict.rootmap,$(CINTDICTMAPS)): lib/lib%Dict.rootmap: bin/rlibmap$(EXEEXT) $(MAKEFILEDEP)
+$(filter-out lib/libvectorDict.rootmap,$(CINTDICTMAPS)): lib/lib%Dict.rootmap: bin/rlibmap$(EXEEXT) $(MAKEFILEDEP) core/metautils/src/%Linkdef.h
 	$(RLIBMAP) -o $@ -l $*.dll -c core/metautils/src/$*Linkdef.h
 
 $(CINTDICTDLLS): lib/lib%Dict.$(SOEXT): $(CINTDLLDIRDLLSTL)/rootcint_%.o
