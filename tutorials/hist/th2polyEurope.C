@@ -21,6 +21,9 @@ void th2polyEurope()
    Double_t R = (lat2-lat1)/(lon2-lon1);
    Int_t W    = 800;
    Int_t H    = (Int_t)(R*800);
+   gStyle->SetTitleX(0.2);
+   gStyle->SetStatY(0.89);
+   gStyle->SetStatW(0.15);
 
    // Canvas used to draw TH2Poly (the map)
    TCanvas *ce = new TCanvas("ce", "ce",0,0,W,H);
@@ -53,7 +56,10 @@ void th2polyEurope()
    TFile *f;
    f = TFile::Open("http://root.cern.ch/files/europe.root");
 
-   TH2Poly *p = new TH2Poly("Europe","Europe",lon1,lon2,lat1,lat2);
+   TH2Poly *p = new TH2Poly(
+             "Europe",
+             "Europe (bins' contains are normalize to the surfaces in km^{2})",
+             lon1,lon2,lat1,lat2);
    p->GetXaxis()->SetNdivisions(520);
 
    TMultiGraph *mg;
@@ -86,10 +92,6 @@ void th2polyEurope()
    }
    gBenchmark->Show("Filling");
 
-   gStyle->SetOptStat(1111);
-   gStyle->SetPalette(1);
-   p->Draw("COL");
-
    Int_t nbins = p->GetNumberOfBins();
    Double_t maximum = p->GetMaximum();
    printf("Nbins = %d Minimum = %g Maximum = %g Integral = %f \n",
@@ -97,6 +99,7 @@ void th2polyEurope()
            p->GetMinimum(),
            maximum,
            p->Integral());
+
 
    // h2 contains the surfaces computed from TH2Poly.
    TH1F *h2 = h->Clone();
@@ -110,28 +113,36 @@ void th2polyEurope()
       }
    }
 
+   // Normalize the TH2Poly bin contents to the real surfaces.
+   Double_t scale = surfaces[0]/maximum;
+   for (i=0; i<nbins; i++) p->SetBinContent(i+1, scale*p->GetBinContent(i+1));
+
+   gStyle->SetOptStat(1111);
+   gStyle->SetPalette(1);
+   p->Draw("COL");
+
    TCanvas *c1 = new TCanvas("c1", "c1",W+10,0,W-20,H);
    c1->SetRightMargin(0.047);
 
-   gStyle->SetTitleX(0.35);
    Double_t scale = h->GetMaximum()/h2->GetMaximum();
 
-   h->Draw();
    h->SetStats(0);
-   h->SetFillColor(38);
+   h->Draw("L");
+   h->SetLineColor(kRed-3);
+   h->SetLineWidth(2);
    h->GetXaxis()->SetLabelFont(42);
    h->GetXaxis()->SetLabelSize(0.03);
    h->GetYaxis()->SetLabelFont(42);
 
    h2->Scale(scale);
-   h2->Draw("E3 SAME");
-   h2->SetFillColor(kRed-3);
-   h2->SetFillStyle(3001);
+   h2->Draw("E SAME");
+   h2->SetMarkerStyle(20);
+   h2->SetMarkerSize(0.8);
 
    TLegend *leg = new TLegend(0.5,0.67,0.92,0.8,NULL,"NDC");
    leg->SetTextFont(42);
    leg->SetTextSize(0.025);
-   leg->AddEntry(h,"Real countries' surfaces from Wikipedia (in km^{2})","f");
-   leg->AddEntry(h2,"Countries' surfaces from TH2Poly (with errors)","f");
+   leg->AddEntry(h,"Real countries' surfaces from Wikipedia (in km^{2})","l");
+   leg->AddEntry(h2,"Countries' surfaces from TH2Poly (with errors)","lp");
    leg->Draw();
 }
