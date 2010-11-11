@@ -49,18 +49,21 @@ void th2polyEurope()
                             33843, 30528, 28748, 9250, 2586, 468, 316, 160, 61,
                             2};
 
-   TH1F *h = new TH1F("h","Countries' surfaces (in km^{2})",3,0,3);
+   TH1F *h = new TH1F("h","Countries surfaces (in km^{2})",3,0,3);
    for (i=0; i<nx; i++) h->Fill(countries[i], surfaces[i]);
    h->LabelsDeflate();
 
+   TFile::SetCacheFileDir(".");
    TFile *f;
-   f = TFile::Open("http://root.cern.ch/files/europe.root");
+   f = TFile::Open("http://root.cern.ch/files/europe.root","cacheread");
 
    TH2Poly *p = new TH2Poly(
              "Europe",
-             "Europe (bins' contains are normalize to the surfaces in km^{2})",
+             "Europe (bin contents are normalized to the surfaces in km^{2})",
              lon1,lon2,lat1,lat2);
    p->GetXaxis()->SetNdivisions(520);
+   p->GetXaxis()->SetTitle("longitude");
+   p->GetYaxis()->SetTitle("latitude");
 
    TMultiGraph *mg;
    TKey *key;
@@ -104,7 +107,7 @@ void th2polyEurope()
 
 
    // h2 contains the surfaces computed from TH2Poly.
-   TH1F *h2 = h->Clone();
+   TH1F *h2 = h->Clone("h2");
    h2->Reset();
    for (j=0; j<nx; j++) {
       for (i=0; i<nbins; i++) {
@@ -129,9 +132,12 @@ void th2polyEurope()
    Double_t scale = h->GetMaximum()/h2->GetMaximum();
 
    h->SetStats(0);
-   h->Draw("L");
    h->SetLineColor(kRed-3);
    h->SetLineWidth(2);
+   h->SetMarkerStyle(20);
+   h->SetMarkerColor(kBlue);
+   h->SetMarkerSize(0.8);
+   h->Draw("LP");
    h->GetXaxis()->SetLabelFont(42);
    h->GetXaxis()->SetLabelSize(0.03);
    h->GetYaxis()->SetLabelFont(42);
@@ -146,7 +152,7 @@ void th2polyEurope()
    TLegend *leg = new TLegend(0.5,0.67,0.92,0.8,NULL,"NDC");
    leg->SetTextFont(42);
    leg->SetTextSize(0.025);
-   leg->AddEntry(h,"Real countries' surfaces from Wikipedia (in km^{2})","l");
-   leg->AddEntry(h2,"Countries' surfaces from TH2Poly (with errors)","lp");
+   leg->AddEntry(h,"Real countries surfaces from Wikipedia (in km^{2})","l");
+   leg->AddEntry(h2,"Countries surfaces from TH2Poly (with errors)","lp");
    leg->Draw();
 }
