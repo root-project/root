@@ -135,6 +135,8 @@ void th2polyEurope()
    h->GetYaxis()->SetLabelFont(42);
 
    h2->Scale(scale);
+   Double_t scale2=TMath::Sqrt(scale);
+   for (i=0; i<nx; i++) h2->SetBinError(i+1, scale2*h2->GetBinError(i+1));
    h2->Draw("E SAME");
    h2->SetMarkerStyle(20);
    h2->SetMarkerSize(0.8);
