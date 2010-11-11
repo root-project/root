@@ -185,8 +185,13 @@ void TBuffer::Expand(Int_t newsize)
    // Expand the I/O buffer to newsize bytes.
 
    Int_t l  = Length();
-   fBuffer  = fReAllocFunc(fBuffer, newsize+kExtraSpace,
-                           fBufSize+kExtraSpace);
+   if ( (fMode&kWrite)!=0 ) {
+      fBuffer  = fReAllocFunc(fBuffer, newsize+kExtraSpace,
+                              fBufSize+kExtraSpace);
+   } else {
+      fBuffer  = fReAllocFunc(fBuffer, newsize,
+                              fBufSize);
+   }
    if (fBuffer == 0) {
       if (fReAllocFunc == TStorage::ReAllocChar) {
          Fatal("Expand","Failed to expand the data buffer using TStorage::ReAllocChar.");
