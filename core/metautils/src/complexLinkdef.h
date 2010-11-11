@@ -3,12 +3,12 @@
 using namespace std;
 #endif
 
-#pragma create TClass std::complex<int>+;
-#pragma create TClass std::complex<long>+;
-#pragma create TClass std::complex<float>+;
-#pragma create TClass std::complex<double>+;
+#pragma create TClass complex<int>+;
+#pragma create TClass complex<long>+;
+#pragma create TClass complex<float>+;
+#pragma create TClass complex<double>+;
 
 #ifdef G__NATIVELONGLONG
-#pragma create TClass std::complex<long long>+;
-// #pragma create TClass std::complex<long double>+;
+#pragma create TClass complex<long long>+;
+// #pragma create TClass complex<long double>+;
 #endif
