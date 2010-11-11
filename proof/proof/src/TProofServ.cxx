@@ -128,6 +128,12 @@ Int_t TProofServ::fgRecursive = 0;
 // Last message before exceptions
 TString TProofServ::fgLastMsg("<undef>");
 
+// Memory controllers
+Long_t TProofServ::fgVirtMemMax = -1;
+Long_t TProofServ::fgResMemMax = -1;
+Float_t TProofServ::fgMemHWM = 0.80;
+Float_t TProofServ::fgMemStop = 0.95;
+
 //----- Termination signal handler ---------------------------------------------
 //______________________________________________________________________________
 class TProofServTerminationHandler : public TSignalHandler {
@@ -533,31 +539,41 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    if (!gSystem->AccessPathName(rcfile, kReadPermission))
       gEnv->ReadFile(rcfile, kEnvChange);
 
-   // Set Memory limits, if any (in kB)
-   fVirtMemHWM = -1;
-   fVirtMemMax = -1;
-   if (gSystem->Getenv("ROOTPROOFASSOFT")) {
-      Long_t hwm = strtol(gSystem->Getenv("ROOTPROOFASSOFT"), 0, 10);
-      if (hwm < kMaxLong && hwm > 0)
-         fVirtMemHWM = hwm * 1024;
-   }
-   if (gSystem->Getenv("ROOTPROOFASHARD")) {
-      Long_t mmx = strtol(gSystem->Getenv("ROOTPROOFASHARD"), 0, 10);
-      if (mmx < kMaxLong && mmx > 0)
-         fVirtMemMax = mmx * 1024;
-   }
-   if (gSystem->Getenv("PROOF_VIRTMEMMAX")) {
+   // Upper limit on Virtual Memory (in kB)
+   fgVirtMemMax = gEnv->GetValue("Proof.VirtMemMax",-1);
+   if (fgVirtMemMax < 0 && gSystem->Getenv("PROOF_VIRTMEMMAX")) {
       Long_t mmx = strtol(gSystem->Getenv("PROOF_VIRTMEMMAX"), 0, 10);
       if (mmx < kMaxLong && mmx > 0)
-         fVirtMemMax = mmx * 1024;
+         fgVirtMemMax = mmx * 1024;
+   }
+   // Old variable for backward compatibility
+   if (fgVirtMemMax < 0 && gSystem->Getenv("ROOTPROOFASHARD")) {
+      Long_t mmx = strtol(gSystem->Getenv("ROOTPROOFASHARD"), 0, 10);
+      if (mmx < kMaxLong && mmx > 0)
+         fgVirtMemMax = mmx * 1024;
    }
    // Upper limit on Resident Memory (in kB)
-   fResMemMax = gEnv->GetValue("Proof.ResMemMax",-1);
-   if (fResMemMax < 0 && gSystem->Getenv("PROOF_RESMEMMAX")) {
+   fgResMemMax = gEnv->GetValue("Proof.ResMemMax",-1);
+   if (fgResMemMax < 0 && gSystem->Getenv("PROOF_RESMEMMAX")) {
       Long_t mmx = strtol(gSystem->Getenv("PROOF_RESMEMMAX"), 0, 10);
       if (mmx < kMaxLong && mmx > 0)
-         fResMemMax = mmx * 1024;
+         fgResMemMax = mmx * 1024;
    }
+   // Thresholds for warnings and stop processing
+   fgMemStop = gEnv->GetValue("Proof.MemStop", 0.95);
+   fgMemHWM = gEnv->GetValue("Proof.MemHWM", 0.80);
+   if (fgVirtMemMax > 0 || fgResMemMax > 0) {
+      if ((fgMemStop < 0.) || (fgMemStop > 1.)) {
+         Warning("TProofServ", "requested memory fraction threshold to stop processing"
+                               " (MemStop) out of range [0,1] - ignoring");
+         fgMemStop = 0.95;
+      }
+      if ((fgMemHWM < 0.) || (fgMemHWM > fgMemStop)) {
+         Warning("TProofServ", "requested memory fraction threshold for warning and finer monitoring"
+                               " (MemHWM) out of range [0,MemStop] - ignoring");
+         fgMemHWM = 0.80;
+      }
+   }   
 
    // Wait (loop) to allow debugger to connect
    Bool_t test = (*argc >= 4 && !strcmp(argv[3], "test")) ? kTRUE : kFALSE;
@@ -649,6 +665,9 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fMergingMonitor  = 0;
    fMergedWorkers   = 0;
 
+   // Bit to flg high-memory footprint
+   ResetBit(TProofServ::kHighMemory);
+   
    // Max message size
    fMsgSizeHWM = gEnv->GetValue("ProofServ.MsgSizeHWM", 1000000);
 
@@ -1318,6 +1337,18 @@ void TProofServ::HandleSocketInput()
    // Terminate on exception
    if (!exmsg.IsNull()) {
       // Save info in the log file too
+      Error("HandleSocketInput", "%s", exmsg.Data());
+      // Try to warn the user
+      SendAsynMessage(TString::Format("%s: %s", GetOrdinal(), exmsg.Data()));
+      // Terminate
+      Terminate(0);
+   }
+   
+   // Terminate also if a high memory footprint was detected before the related
+   // exception was thrwon
+   if (TestBit(TProofServ::kHighMemory)) {
+      // Save info in the log file too
+      exmsg.Form("high-memory footprint detected during Process(...) - terminating");
       Error("HandleSocketInput", "%s", exmsg.Data());
       // Try to warn the user
       SendAsynMessage(TString::Format("%s: %s", GetOrdinal(), exmsg.Data()));
@@ -3081,12 +3112,8 @@ void TProofServ::Terminate(Int_t status)
    // Notify the memory footprint
    ProcInfo_t pi;
    if (!gSystem->GetProcInfo(&pi)){
-      Info("Terminate", "process memory footprint: %ld kB virtual, %ld kB resident ",
-                        pi.fMemVirtual, pi.fMemResident);
-      if (fVirtMemHWM > 0 || fVirtMemMax > 0) {
-         Info("Terminate", "process virtual memory limits: %ld kB HWM, %ld kB max ",
-                           fVirtMemHWM, fVirtMemMax);
-      }
+      Info("Terminate", "process memory footprint: %ld/%ld kB virtual, %ld/%ld kB resident ",
+                        pi.fMemVirtual, fgVirtMemMax, pi.fMemResident, fgResMemMax);
    }
 
    // Cleanup session directory
@@ -3675,7 +3702,7 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
 
       // Check if we are in merging mode (i.e. parameter PROOF_UseMergers exists)
       Bool_t isInMergingMode = kFALSE;
-      if (!(fPlayer->TestBit(TVirtualProofPlayer::kHighMemory))) {
+      if (!(TestBit(TProofServ::kHighMemory))) {
          Int_t nm = 0;
          if (TProof::GetParameter(input, "PROOF_UseMergers", nm) == 0) {
             isInMergingMode = (nm >= 0) ? kTRUE : kFALSE;
@@ -6671,6 +6698,31 @@ void TProofServ::SetLastMsg(const char *lastmsg)
    // Set the message to be sent back in case of exceptions
 
    fgLastMsg = lastmsg;
+}
+
+//______________________________________________________________________________
+Long_t TProofServ::GetVirtMemMax()
+{
+   // VirtMemMax getter
+   return fgVirtMemMax;
+}
+//______________________________________________________________________________
+Long_t TProofServ::GetResMemMax()
+{
+   // ResMemMax getter
+   return fgResMemMax;
+}
+//______________________________________________________________________________
+Float_t TProofServ::GetMemHWM()
+{
+   // MemHWM getter
+   return fgMemHWM;
+}
+//______________________________________________________________________________
+Float_t TProofServ::GetMemStop()
+{
+   // MemStop getter
+   return fgMemStop;
 }
 
 //______________________________________________________________________________

@@ -1007,12 +1007,8 @@ void TXProofServ::Terminate(Int_t status)
    // Notify the memory footprint
    ProcInfo_t pi;
    if (!gSystem->GetProcInfo(&pi)){
-      Info("Terminate", "process memory footprint: %ld kB virtual, %ld kB resident ",
-                        pi.fMemVirtual, pi.fMemResident);
-      if (fVirtMemHWM > 0 || fVirtMemMax > 0) {
-         Info("Terminate", "process virtual memory limits: %ld kB HWM, %ld kB max ",
-                           fVirtMemHWM, fVirtMemMax);
-      }
+      Info("Terminate", "process memory footprint: %ld/%ld kB virtual, %ld/%ld kB resident ",
+                        pi.fMemVirtual, fgVirtMemMax, pi.fMemResident, fgResMemMax);
    }
 
    // Deactivate current monitor, if any
