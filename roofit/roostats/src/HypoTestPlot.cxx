@@ -25,8 +25,7 @@ using namespace RooStats;
 
 HypoTestPlot::HypoTestPlot(HypoTestResult& result, Int_t bins) :
    SamplingDistPlot(bins),
-   fHypoTestResult(&result),
-   fTsDataDistr(NULL)
+   fHypoTestResult(&result)
 {
    ApplyResult(result);
 }

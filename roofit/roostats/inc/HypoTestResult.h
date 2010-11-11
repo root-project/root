@@ -77,7 +77,7 @@ namespace RooStats {
       void SetTestStatisticData(const Double_t tsd);
 
       void SetPValueIsRightTail(Bool_t pr);
-      Bool_t GetPValueIsRightTail(void) { return fPValueIsRightTail; }
+      Bool_t GetPValueIsRightTail(void) const { return fPValueIsRightTail; }
 
       /// The error on the "confidence level" of the null hypothesis
       Double_t CLbError() const;
@@ -88,13 +88,17 @@ namespace RooStats {
       /// The error on the ratio CLs+b/CLb
       Double_t CLsError() const;
 
+      Double_t NullPValueError() const;
 
-      void Print(const Option_t* ) const {
+
+      void Print(const Option_t* = "") const {
          // Print out some information about the results
 
          cout << endl << "Results " << GetName() << ": " << endl;
-	 cout << " - Null p-value = " << NullPValue() << endl;
-	 cout << " - Significance = " << Significance() << " sigma" << endl;
+         if(HasTestStatisticData()  &&  fNullDistr) {
+            cout << " - Null p-value = " << NullPValue() << " +/- " << NullPValueError() << endl;
+            cout << " - Significance = " << Significance() << " sigma" << endl;
+         }
          if(fAltDistr)
             cout << " - Number of S+B toys: " << fAltDistr->GetSize() << std::endl;
          if(fNullDistr)

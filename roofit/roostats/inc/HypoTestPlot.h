@@ -29,7 +29,7 @@ class HypoTestPlot: public SamplingDistPlot {
    public:
       /// Constructor
       HypoTestPlot(HypoTestResult& result, Int_t bins=100);
-      ~HypoTestPlot(void) { if(fTsDataDistr) delete fTsDataDistr; }
+      ~HypoTestPlot(void) {}
 
       // Applies a HypoTestResult.
       void ApplyResult(HypoTestResult& result);
@@ -38,7 +38,6 @@ class HypoTestPlot: public SamplingDistPlot {
 
    private:
       HypoTestResult *fHypoTestResult;
-      SamplingDistribution *fTsDataDistr; // to visualize the value of the test statistic evaluated on the data
 
    protected:
    ClassDef(HypoTestPlot,1)

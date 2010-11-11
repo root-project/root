@@ -18,7 +18,7 @@
 SamplingDistribution : 
 
 This class simply holds a sampling distribution of some test statistic.  
-The distribution can either be an emperical distribution (eg. the samples themselves) or
+The distribution can either be an empirical distribution (eg. the samples themselves) or
 a weighted set of points (eg. for the FFT method).
 The class supports merging.
 */
@@ -73,6 +73,37 @@ SamplingDistribution::SamplingDistribution( const char *name, const char *title,
   fVarName = varName;
 }
 
+
+SamplingDistribution::SamplingDistribution(
+   const char *name,
+   const char *title,
+   RooDataSet& dataSet,
+   const TString varName
+) : TNamed(name, title) {
+   // Creates a SamplingDistribution from a RooDataSet for debugging
+   // purposes; e.g. if you need a Gaussian type SamplingDistribution
+   // you can generate it from a Gaussian pdf and use the resulting
+   // RooDataSet with this constructor.
+   //
+   // The result is the projected distribution onto varName
+   // marginalizing the other variables.
+   //
+   // If varName is not given, the first variable will be used.
+   // This is useful mostly for RooDataSets with only one observable.
+
+   fVarName = varName;
+   if(fVarName.Length() == 0) {
+      // no leak. none of these transfers ownership.
+      fVarName = dataSet.get()->first()->GetName();
+   }
+
+   for(Int_t i=0; i < dataSet.numEntries(); i++) {
+      fSamplingDist.push_back(dataSet.get(i)->getRealValue(fVarName));
+      fSampleWeights.push_back(dataSet.weight());
+   }
+}
+
+
 //_______________________________________________________
 SamplingDistribution::SamplingDistribution( ) :
   TNamed("SamplingDistribution_DefaultName","SamplingDistribution")
@@ -93,7 +124,9 @@ SamplingDistribution::~SamplingDistribution()
 //_______________________________________________________
 void SamplingDistribution::Add(const SamplingDistribution* other)
 {
-   // merge SamplingDistributions (does nothing if NULL is given)
+   // Merge SamplingDistributions (does nothing if NULL is given).
+   // If variable name was not set before, it is copied from the added
+   // SamplingDistribution.
 
    if(!other) return;
 
@@ -112,6 +145,15 @@ void SamplingDistribution::Add(const SamplingDistribution* other)
     fSamplingDist.push_back(newSamplingDist[i]);
     fSampleWeights.push_back(newSampleWeights[i]);
   }
+
+
+  if(GetVarName().Length() == 0  &&  other->GetVarName().Length() > 0)
+     fVarName = other->GetVarName();
+
+  if(strlen(GetName()) == 0  &&  strlen(other->GetName()) > 0)
+     SetName(other->GetName());
+  if(strlen(GetTitle()) == 0  &&  strlen(other->GetTitle()) > 0)
+     SetTitle(other->GetTitle());
 
 }
 
@@ -136,7 +178,7 @@ Double_t SamplingDistribution::Integral(Double_t low, Double_t high, Bool_t norm
    for(unsigned int i=0; i<fSamplingDist.size(); i++) {
       double value = fSamplingDist[i];
       if(value >= low  &&  value < high) sum += fSampleWeights[i];
-      if(fSampleWeights[i] != 1.0) cout << "WARNING" << endl;
+      //if(fSampleWeights[i] != 1.0) cout << "WARNING" << endl;
    }
 
    if(normalize) {
@@ -148,6 +190,11 @@ Double_t SamplingDistribution::Integral(Double_t low, Double_t high, Bool_t norm
    }
 
    return sum;
+}
+
+//_______________________________________________________
+Double_t SamplingDistribution::CDF(Double_t x) const {
+   return Integral(-RooNumber::infinity(), x);
 }
 
 

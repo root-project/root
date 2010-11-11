@@ -57,7 +57,7 @@ SamplingDistPlot::SamplingDistPlot(const Int_t nbins) :
   fColor = 1;
 }
 
-
+/*
 //_______________________________________________________
 SamplingDistPlot::SamplingDistPlot(const char* name, const char* title, Int_t nbins, Double_t xmin, Double_t xmax) :
    fHist(0),
@@ -78,19 +78,7 @@ SamplingDistPlot::SamplingDistPlot(const char* name, const char* title, Int_t nb
   fMarkerType = 20;
   fColor = 1;
 }
-
-//_______________________________________________________
-SamplingDistPlot::~SamplingDistPlot()
-{
-  // SamplingDistPlot destructor
-
-  fSamplingDistr.clear();
-  fSampleWeights.clear();
-
-  fItems.Clear();
-  fOtherItems.Clear();
-}
-
+*/
 
 //_______________________________________________________
 Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *samplingDist, Option_t *drawOptions) {
@@ -111,24 +99,24 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
    fHist->GetXaxis()->SetTitle(varName.Data());
    if(varName.Length() > 0) fVarName = samplingDist->GetVarName().Data();
 
-   // normalization
-   double weightSum = 0.0;
-   if(options.Contains("NORMALIZE")) {
-      for (unsigned int w = 0; w < fSampleWeights.size(); w++) weightSum += fSampleWeights[w];
-
-      options.ReplaceAll("NORMALIZE", "");
-      options.Strip();
-   }else{
-      weightSum = 1.0;
-   }
 
    std::vector<Double_t>::iterator valuesIt = fSamplingDistr.begin();
    for (int w_idx = 0; valuesIt != fSamplingDistr.end(); ++valuesIt, ++w_idx) {
-      if (fIsWeighted) fHist->Fill(*valuesIt, fSampleWeights[w_idx] * 1./weightSum);
-      else fHist->Fill(*valuesIt, 1./weightSum);
+      if (fIsWeighted) fHist->Fill(*valuesIt, fSampleWeights[w_idx]);
+      else fHist->Fill(*valuesIt);
    }
 
+   // NORMALIZATION
    fHist->Sumw2();
+   double weightSum = 1.0;
+   if(options.Contains("NORMALIZE")) {
+      weightSum = fHist->Integral("width");
+      fHist->Scale(1./weightSum);
+
+      options.ReplaceAll("NORMALIZE", "");
+      options.Strip();
+   }
+
 
    //some basic aesthetics
    fHist->SetMarkerStyle(fMarkerType);

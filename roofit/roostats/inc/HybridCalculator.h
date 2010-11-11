@@ -76,7 +76,30 @@ namespace RooStats {
       // TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
       TestStatSampler* GetTestStatSampler(void) { return fTestStatSampler; }
 
+      // Enable adaptive sampling (for use with toymcsampler).
+      // A value different from 0.0 enables adaptive sampling.
+      void SetAdaptiveSampling(Double_t toysInTails = 0.0) { fToysInTails = toysInTails; }
+
+      // Wrapper for ToyMCSampler function when adaptive sampling is used.
+      // See doc in toymcsampler.
+      void SetMaxToys(Double_t t);
+
+      // sets importance density and snapshot (optional)
+      void SetNullImportanceDensity(RooAbsPdf *p, RooArgSet *s = NULL) {
+         fNullImportanceDensity = p;
+         fNullImportanceSnapshot = s;
+      }
+
    private:
+      void SetupSampler(ModelConfig& model) const;
+      void SetAdaptiveLimits(Double_t obsTestStat, Bool_t forNull) const;
+      SamplingDistribution* GenerateSamplingDistribution(
+         ModelConfig *thisModel,
+         double obsTestStat,
+         RooAbsPdf *impDens=NULL,
+         RooArgSet *impSnapshot=NULL
+      ) const;
+
       ModelConfig &fAltModel;
       ModelConfig &fNullModel;
       RooAbsData &fData;
@@ -86,7 +109,10 @@ namespace RooStats {
       TestStatSampler* fDefaultSampler;
       TestStatistic* fDefaultTestStat;
 
-      void SetupSampler(ModelConfig& model) const;
+      Double_t fToysInTails; // a value different from 0.0 enables adaptive sampling
+
+      RooAbsPdf *fNullImportanceDensity;
+      RooArgSet *fNullImportanceSnapshot;
 
    protected:
    ClassDef(HybridCalculator,1)

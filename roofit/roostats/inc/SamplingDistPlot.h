@@ -35,16 +35,16 @@ namespace RooStats {
    public:
     // Constructors for SamplingDistribution
     SamplingDistPlot(const Int_t nbins = 100);
-    SamplingDistPlot(const char* name, const char* title, Int_t nbins, Double_t xmin, Double_t xmax);
+//    SamplingDistPlot(const char* name, const char* title, Int_t nbins, Double_t xmin, Double_t xmax);
 
     // Destructor of SamplingDistribution
-    virtual ~SamplingDistPlot();
+    virtual ~SamplingDistPlot() {}
 
     // adds the sampling distribution and returns the scale factor
-    Double_t AddSamplingDistribution(const SamplingDistribution *samplingDist, Option_t *drawOptions=0);
+    Double_t AddSamplingDistribution(const SamplingDistribution *samplingDist, Option_t *drawOptions="NORMALIZE HIST");
     // Like AddSamplingDistribution, but also sets a shaded area in the
     // minShaded and maxShaded boundaries.
-    Double_t AddSamplingDistributionShaded(const SamplingDistribution *samplingDist, Double_t minShaded, Double_t maxShaded, Option_t *drawOptions);
+    Double_t AddSamplingDistributionShaded(const SamplingDistribution *samplingDist, Double_t minShaded, Double_t maxShaded, Option_t *drawOptions="NORMALIZE HIST");
 
     // add a line
     void AddLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char* title = NULL);

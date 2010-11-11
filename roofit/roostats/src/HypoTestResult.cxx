@@ -136,33 +136,77 @@ Bool_t HypoTestResult::HasTestStatisticData(void) const {
    return !IsNaN(fTestStatisticData);
 }
 
+Double_t HypoTestResult::NullPValueError() const {
+   if(!fNullDistr  ||  !HasTestStatisticData()) return 0.0;
 
+   double squares = 0.0;
+   vector<Double_t> values = fNullDistr->GetSamplingDistribution();
+   vector<Double_t> weights = fNullDistr->GetSampleWeights();
+   size_t entries = values.size();
+
+
+   // weights
+   for(size_t i=0; i < entries; i++) {
+      if( (GetPValueIsRightTail()  &&  values[i] > fTestStatisticData) ||
+          (!GetPValueIsRightTail()  &&  values[i] < fTestStatisticData)
+      ) {
+         squares += pow(weights[i], 2);
+      }
+   }
+   squares /= entries;
+
+   //cout << "NullPValue Binomial error: " << TMath::Sqrt(NullPValue() * (1. - NullPValue()) / entries) << endl;
+   return sqrt( (squares - pow(NullPValue(),2)) / entries );
+}
 
 //____________________________________________________________________
 Double_t HypoTestResult::CLbError() const {
-   // Returns an estimate of the error on CLb assuming a binomial error on
-   // CLb:
-   // BEGIN_LATEX
-   // #sigma_{CL_{b}} = #sqrt{CL_{b} #left( 1 - CL_{b} #right) / n_{toys}}
-   // END_LATEX
+   if(!fNullDistr  ||  !HasTestStatisticData()) return 0.0;
 
-   if(!fNullDistr) return 0.0;
-   unsigned const int n = fNullDistr->GetSamplingDistribution().size();
-   return TMath::Sqrt(CLb() * (1. - CLb()) / n);
+   double squares = 0.0;
+   vector<Double_t> values = fNullDistr->GetSamplingDistribution();
+   vector<Double_t> weights = fNullDistr->GetSampleWeights();
+   size_t entries = values.size();
+
+
+   // weights
+   for(size_t i=0; i < entries; i++) {
+      if( (GetPValueIsRightTail()  &&  values[i] < fTestStatisticData) ||
+          (!GetPValueIsRightTail()  &&  values[i] > fTestStatisticData)
+      ) {
+         squares += pow(weights[i], 2);
+      }
+   }
+   squares /= entries;
+
+   //cout << "CLb Binomial error: " << TMath::Sqrt(CLb() * (1. - CLb()) / entries) << endl;
+   return sqrt( (squares - pow(CLb(),2)) / entries );
 }
 
 //____________________________________________________________________
 Double_t HypoTestResult::CLsplusbError() const {
-   // Returns an estimate of the error on CLsplusb assuming a binomial
-   // error on CLsplusb:
-   // BEGIN_LATEX
-   // #sigma_{CL_{s+b}} = #sqrt{CL_{s+b} #left( 1 - CL_{s+b} #right) / n_{toys}}
-   // END_LATEX
+   if(!fAltDistr  ||  !HasTestStatisticData()) return 0.0;
 
-   if(!fAltDistr) return 0.0;
-   unsigned const int n = fAltDistr->GetSamplingDistribution().size();
-   return TMath::Sqrt(CLsplusb() * (1. - CLsplusb()) / n);
+   double squares = 0.0;
+   vector<Double_t> values = fAltDistr->GetSamplingDistribution();
+   vector<Double_t> weights = fAltDistr->GetSampleWeights();
+   size_t entries = values.size();
+
+
+   // weights
+   for(size_t i=0; i < entries; i++) {
+      if( (GetPValueIsRightTail()  &&  values[i] < fTestStatisticData) ||
+          (!GetPValueIsRightTail()  &&  values[i] > fTestStatisticData)
+      ) {
+         squares += pow(weights[i], 2);
+      }
+   }
+   squares /= entries;
+
+   //cout << "CLs+b Binomial error: " << TMath::Sqrt(CLsplusb() * (1. - CLsplusb()) / entries) << endl;
+   return sqrt( (squares - pow(CLsplusb(),2)) / entries );
 }
+
 
 //____________________________________________________________________
 Double_t HypoTestResult::CLsError() const {

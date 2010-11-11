@@ -21,6 +21,12 @@ ToyMCSampler is an implementation of the TestStatSampler interface.
 It generates Toy Monte Carlo for a given parameter point and evaluates a
 TestStatistic.
 </p>
+
+<p>
+For parallel runs, ToyMCSampler can be given an instance of ProofConfig
+and then run in parallel using proof or proof-lite. Internally, it uses
+ToyMCStudy with the RooStudyManager.
+</p>
 END_HTML
 */
 //
@@ -36,10 +42,12 @@ END_HTML
 #include "RooStats/SamplingDistribution.h"
 #include "RooStats/TestStatistic.h"
 #include "RooStats/ModelConfig.h"
+#include "RooStats/ProofConfig.h"
 
 #include "RooWorkspace.h"
 #include "RooMsgService.h"
 #include "RooAbsPdf.h"
+#include "RooRealVar.h"
 
 #include "RooDataSet.h"
 
@@ -48,8 +56,35 @@ namespace RooStats {
 class ToyMCSampler: public TestStatSampler {
 
    public:
+      ToyMCSampler() :
+         fTestStat(NULL), fSamplingDistName("temp"), fNToys(1)
+      {
+         // Proof constructor. Do not use.
+
+         fPdf = NULL;
+         fPriorNuisance = NULL;
+         fNullPOI = NULL;
+         fNuisancePars = NULL;
+         fObservables = NULL;
+         fGlobalObservables = NULL;
+
+         fSize = 0.05;
+         fNEvents = 0;
+         fGenerateBinned = kFALSE;
+         fExpectedNuisancePar = kFALSE;
+
+         fToysInTails = 0.0;
+         fMaxToys = RooNumber::infinity();
+         fAdaptiveLowLimit = -RooNumber::infinity();
+         fAdaptiveHighLimit = RooNumber::infinity();
+
+         fImportanceDensity = NULL;
+         fImportanceSnapshot = NULL;
+
+         fProofConfig = NULL;
+      }
       ToyMCSampler(TestStatistic &ts, Int_t ntoys) :
-         fTestStat(&ts), fSamplingDistName("temp"), fNToys(ntoys)
+         fTestStat(&ts), fSamplingDistName(ts.GetVarName()), fNToys(ntoys)
       {
          fPdf = NULL;
          fPriorNuisance = NULL;
@@ -62,6 +97,16 @@ class ToyMCSampler: public TestStatSampler {
          fNEvents = 0;
          fGenerateBinned = kFALSE;
          fExpectedNuisancePar = kFALSE;
+
+         fToysInTails = 0.0;
+         fMaxToys = RooNumber::infinity();
+         fAdaptiveLowLimit = -RooNumber::infinity();
+         fAdaptiveHighLimit = RooNumber::infinity();
+
+         fImportanceDensity = NULL;
+         fImportanceSnapshot = NULL;
+
+         fProofConfig = NULL;
       }
 
       virtual ~ToyMCSampler() {
@@ -69,6 +114,10 @@ class ToyMCSampler: public TestStatSampler {
 
       // main interface
       virtual SamplingDistribution* GetSamplingDistribution(RooArgSet& paramPoint);
+
+      virtual SamplingDistribution* GetSamplingDistributionSingleWorker(RooArgSet& paramPoint);
+
+
 
       // generates toy data
       virtual RooAbsData* GenerateToyData(RooArgSet& /*paramPoint*/) const;
@@ -108,6 +157,7 @@ class ToyMCSampler: public TestStatSampler {
          RooArgSet& /*nuisanceParameters*/
       ) {}
 
+      virtual Int_t GetNToys(void) { return fNToys; }
       virtual void SetNToys(const Int_t ntoy) { fNToys = ntoy; }
       virtual void SetNEventsPerToy(const Int_t nevents) {
          // Forces n events even for extended PDFs. Set NEvents=0 to
@@ -138,9 +188,8 @@ class ToyMCSampler: public TestStatSampler {
       // Set the TestStatistic (want the argument to be a function of the data & parameter points
       virtual void SetTestStatistic(TestStatistic *testStatistic) { fTestStat = testStatistic; }
 
-      // SetModel does not load the snapshot. Use LoadSnapshot if necessary.
-      virtual void SetExpectedNuisancePar(Bool_t i) { fExpectedNuisancePar = i; cout << "WILL NOT WORK YET" << endl; } // TODO
-      virtual void SetAsimovNuisancePar(Bool_t i) { fExpectedNuisancePar = i; cout << "WILL NOT WORK YET" << endl; } // TODO
+      virtual void SetExpectedNuisancePar(Bool_t i = kTRUE) { fExpectedNuisancePar = i; }
+      virtual void SetAsimovNuisancePar(Bool_t i = kTRUE) { fExpectedNuisancePar = i; }
 
       // Checks for sufficient information to do a GetSamplingDistribution(...).
       Bool_t CheckConfig(void);
@@ -150,8 +199,41 @@ class ToyMCSampler: public TestStatSampler {
 
       // Set the name of the sampling distribution used for plotting
       void SetSamplingDistName(const char* name) { if(name) fSamplingDistName = name; }
+      string GetSamplingDistName(void) { return fSamplingDistName; }
+
+      // This option forces a maximum number of total toys.
+      void SetMaxToys(Double_t t) { fMaxToys = t; }
+
+      void SetToysLeftTail(Double_t toys, Double_t threshold) {
+         fToysInTails = toys;
+         fAdaptiveLowLimit = threshold;
+         fAdaptiveHighLimit = RooNumber::infinity();
+      }
+      void SetToysRightTail(Double_t toys, Double_t threshold) {
+         fToysInTails = toys;
+         fAdaptiveHighLimit = threshold;
+         fAdaptiveLowLimit = -RooNumber::infinity();
+      }
+      void SetToysBothTails(Double_t toys, Double_t low_threshold, Double_t high_threshold) {
+         fToysInTails = toys;
+         fAdaptiveHighLimit = high_threshold;
+         fAdaptiveLowLimit = low_threshold;
+      }
+
+      // for importance sampling, specifies the pdf to sample from
+      void SetImportanceDensity(RooAbsPdf *p) { fImportanceDensity = p; }
+      // for importance sampling, a snapshot of the parameters used in importance density
+      void SetImportanceSnapshot(const RooArgSet &s) { fImportanceSnapshot = &s; }
+
+      // calling with argument or NULL deactivates proof
+      void SetProofConfig(ProofConfig *pc = NULL) { fProofConfig = pc; }
 
    protected:
+
+      // helper for GenerateToyData
+      RooAbsData* Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooDataSet *protoData=NULL, int forceEvents=0) const;
+
+
 
       TestStatistic *fTestStat; // test statistic that is being sampled
       RooAbsPdf *fPdf; // model
@@ -167,6 +249,21 @@ class ToyMCSampler: public TestStatSampler {
       Bool_t fExpectedNuisancePar; // whether to use expectation values for nuisance parameters (ie Asimov data set)
       Bool_t fGenerateBinned;
 
+      // minimum no of toys in tails for adaptive sampling
+      // (taking weights into account, therefore double)
+      // Default: 0.0 which means no adaptive sampling
+      Double_t fToysInTails;
+      // maximum no of toys
+      // (taking weights into account, therefore double)
+      Double_t fMaxToys;
+      // tails
+      Double_t fAdaptiveLowLimit;
+      Double_t fAdaptiveHighLimit;
+
+      RooAbsPdf *fImportanceDensity; // in dev
+      const RooArgSet *fImportanceSnapshot; // in dev
+
+      ProofConfig *fProofConfig;   //!
 
    protected:
    ClassDef(ToyMCSampler,1) // A simple implementation of the TestStatSampler interface

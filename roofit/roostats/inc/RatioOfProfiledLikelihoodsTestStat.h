@@ -37,10 +37,20 @@ namespace RooStats {
 
 class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
 
-   public:
+  public:
+
+   RatioOfProfiledLikelihoodsTestStat() :
+      fNullPdf(NULL),
+      fAltPdf(NULL),
+      fAltPOI(NULL),
+      fSubtractMLE(true)
+   {
+      // Proof constructor. Don't use.
+   }
+
   RatioOfProfiledLikelihoodsTestStat(RooAbsPdf& nullPdf, RooAbsPdf& altPdf, 
 				     const RooArgSet* altPOI=0) :
-    fNullPdf(nullPdf), fAltPdf(altPdf), fSubtractMLE(true)
+    fNullPdf(&nullPdf), fAltPdf(&altPdf), fSubtractMLE(true)
       {
 	/*
          Calculates the ratio of profiled likelihoods. 
@@ -108,27 +118,31 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
       RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
       RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
       
-      /*
-	// if we want to set params back to what they were
-      RooArgSet *nullParams = fNullPdf.getParameters(data);
-      RooArgSet *altParams = fAltPdf.getParameters(data);
+/*
+      // construct allVars
+      RooArgSet *allVars = fNullPdf->getVariables();
+      RooArgSet *altVars = fAltPdf->getVariables();
       allVars->add(*altVars);
-      RooArgSet *saveAll = (RooArgSet*)allVars->snapshot();  
-      */
-      
+      delete altVars;
+
+      RooArgSet *saveNullPOI = (RooArgSet*)nullParamsOfInterest.snapshot();
+      RooArgSet *saveAll = (RooArgSet*)allVars->snapshot();
+*/
+
       // null
-      double nullNLL = ProfiledLikelihood(data, nullParamsOfInterest, fNullPdf);
+      double nullNLL = ProfiledLikelihood(data, nullParamsOfInterest, *fNullPdf);
       
       // alt 
-      double altNLL = ProfiledLikelihood(data, *fAltPOI, fAltPdf);
+      double altNLL = ProfiledLikelihood(data, *fAltPOI, *fAltPdf);
            
-      /*      
+/*
       // set variables back to where they were
+      nullParamsOfInterest = *saveNullPOI;
       *allVars = *saveAll;
       delete saveAll;
       delete allVars;
-      */
-      
+*/
+
       RooMsgService::instance().setGlobalKillBelow(msglevel);
       return nullNLL -altNLL;
     }
@@ -141,13 +155,13 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
     void SetSubtractMLE(bool subtract){fSubtractMLE = subtract;}
     
   private:
-    RooAbsPdf& fNullPdf;
-    RooAbsPdf& fAltPdf;
+    RooAbsPdf* fNullPdf;
+    RooAbsPdf* fAltPdf;
     RooArgSet* fAltPOI;
     Bool_t fSubtractMLE;
     
   protected:
-    ClassDef(RatioOfProfiledLikelihoodsTestStat,1)
+    ClassDef(RatioOfProfiledLikelihoodsTestStat,2)
       };
 
 }

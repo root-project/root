@@ -22,6 +22,10 @@
 
 #include <sstream>
 
+
+ClassImp(RooStats::ModelConfig)
+
+
 namespace RooStats {
 
 ModelConfig::~ModelConfig() { 
@@ -144,10 +148,12 @@ void ModelConfig::SetSnapshot(const RooArgSet& set) {
 }    
 
 const RooArgSet * ModelConfig::GetSnapshot() const{
-   // load the snapshot from ws and return the corresponding set with the snapshot values
+   // Load the snapshot from ws and return the corresponding set with the snapshot values.
+   // User must delete returned RooArgSet.
    if (!fWS) return 0; 
    if (!(fWS->loadSnapshot(fSnapshotName.c_str())) ) return 0;
-   return fWS->set(fSnapshotName.c_str() );
+
+   return dynamic_cast<const RooArgSet*>(fWS->set(fSnapshotName.c_str() )->snapshot());
 }
 
 void ModelConfig::LoadSnapshot() const{

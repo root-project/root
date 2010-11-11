@@ -21,6 +21,8 @@
 #endif
 
 #include "Rtypes.h"
+#include "RooDataSet.h"
+
 
 #include <vector>
 
@@ -38,6 +40,8 @@ namespace RooStats {
 
 
     SamplingDistribution(const char *name,const char *title, const TString varName = "");
+
+    SamplingDistribution(const char *name,const char *title, RooDataSet& dataSet, const TString varName = 0);
 
     // Default constructor for SamplingDistribution
     SamplingDistribution();
@@ -70,6 +74,9 @@ namespace RooStats {
     
     // numerical integral in these limits
     Double_t Integral(Double_t low, Double_t high, Bool_t normalize = kTRUE) const;
+
+    // calculate CDF as a special case of Integral(...) with lower limit equal to -inf
+    Double_t CDF(Double_t x) const;
 
   private:
     std::vector<Double_t> fSamplingDist; // vector of points for the sampling distribution
