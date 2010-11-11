@@ -51,6 +51,47 @@
 // Considering that a new/delete costs about 70 mus on a 300 MHz HP,    //
 // O(10^9) new/deletes will save about 19 hours.                        //
 //                                                                      //
+//  NOTE 1
+//  ======
+// C/C++ offer the possibility to allocate and delete memory. 
+// Forgetting to delete allocated memory is a programming error that originate "leaks", 
+// i.e. the memory of your process grows and eventually your program crashes. 
+// Even if you *always* delete the allocated memory, the recovered space may not be
+// efficiently reused. The process knows that there are portions of free memory, 
+// but when you allocate it again, a fresh piece of memory is grabbed. 
+// Your program is free from semantic errors, but the total memory of your process 
+// still grows. Moreover your program's memory is full of "holes" which reduce the 
+// efficiency of memory access, this is called "memory fragmentation". 
+// Moreover new / delete are expensive operations in terms of CPU time.
+//
+// Without entering into technical details, the TClonesArray allow to "reuse" the 
+// same portion of memory for new/delete avoiding memory fragmentation and memory 
+// growth and improving by orders of magnitude the performance. Every time the 
+// memory of the TClonesArray has to be reused, the Clear() method is employed. 
+// To provide its benefits, each TClonesArray must be allocated *once* per process 
+// and disposed of (deleted) *only when not needed any more*.
+// So a job should see *only one* deletion for each TClonesArray, which should be 
+// "Cleared()" in between several times. Keep deleting a TClonesArray is a double 
+// waste. Not only you do not avoid memory fragmentation, but you worsen it because
+// the TClonesArray itself is a rather heavy structure, and there is quite some 
+// code in the destructor, so you have more memory fragmentation and slower code.
+//
+//  NOTE 2
+//  ======
+//
+// When investigating misuse of TClonesArray, please make sure of the following:
+//
+//    * Use Clear() or Clear("C") instead of Delete(). This will improve program 
+//      execution time.
+//    * TClonesArray object classes containing pointers allocate memory. 
+//      To avoid causing memory leaks, special Clear("C") must be used for 
+//      clearing TClonesArray. When option "C" is specified, ROOT automatically 
+//      executes the Clear() method (by default it is empty contained in TObject).
+//      This method must be overridden in the relevant TClonesArray object class, 
+//      implementing the reset procedure for pointer objects.
+//    * To reduce memory fragmentation, please make sure that the TClonesArrays 
+//      are not destroyed and created on every event. 
+//      They must only be constructed/destructed at the beginning/end of the run. 
 //////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
