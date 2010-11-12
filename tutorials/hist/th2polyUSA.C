@@ -10,14 +10,39 @@
 
 void th2polyUSA()
 {
-	gStyle->SetCanvasPreferGL(true);
+   Int_t i, bin;
+   const Int_t nx = 48;
+   char *states [nx] = {
+      "alabama",      "arizona",        "arkansas",       "california",
+      "colorado",     "connecticut",    "delaware",       "florida",
+      "georgia",      "idaho",          "illinois",       "indiana",
+      "iowa",         "kansas",         "kentucky",       "louisiana",
+      "maine",        "maryland",       "massachusetts",  "michigan",
+      "minnesota",    "mississippi",    "missouri",       "montana",
+      "nebraska",     "nevada",         "new_hampshire",  "new_jersey",
+      "new_mexico",   "new_york",       "north_carolina", "north_dakota",
+      "ohio",         "oklahoma",       "oregon",         "pennsylvania",
+      "rhode_island", "south_carolina", "south_dakota",   "tennessee",
+      "texas",        "utah",           "vermont",        "virginia",
+      "washington",   "west_virginia",  "wisconsin",      "wyoming"
+   };
+   Float_t pop[nx] = {
+    4708708, 6595778,  2889450, 36961664, 5024748,  3518288,  885122, 18537969,
+    9829211, 1545801, 12910409,  6423113, 3007856,  2818747, 4314113,  4492076,
+    1318301, 5699478,  6593587,  9969727, 5266214,  2951996, 5987580,   974989,
+    1796619, 2643085,  1324575,  8707739, 2009671, 19541453, 9380884,   646844,
+   11542645, 3687050,  3825657, 12604767, 1053209,  4561242,  812383,  6296254,
+   24782302, 2784572,   621760,  7882590, 6664195,  1819777, 5654774,   544270
+   };
+
+   gStyle->SetCanvasPreferGL(true);
    TCanvas *usa = new TCanvas("USA", "USA");
    usa->ToggleEventStatus();
    Double_t lon1 = -130;
    Double_t lon2 = -65;
    Double_t lat1 = 24;
    Double_t lat2 = 50;
-   TH2Poly *p = new TH2Poly("USA","USA",lon1,lon2,lat1,lat2);
+   TH2Poly *p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
 
    TFile *f;
    f = TFile::Open("http://root.cern.ch/files/usa.root");
@@ -29,25 +54,16 @@ void th2polyUSA()
       obj = key->ReadObj();
       if (obj->InheritsFrom("TMultiGraph")) {
          mg = (TMultiGraph*)obj;
-         p->AddBin(mg);
+         bin = p->AddBin(mg);
+	 for (i=0; i<nx; i++) {
+            if (strstr(states[i],mg->GetName())) {
+               p->SetBinContent(bin, pop[i]);
+            }
+         }
       }
    }
 
-   TRandom r;
-   Double_t longitude, latitude;
-   Double_t x, y, dr = TMath::Pi()/180, rd = 180/TMath::Pi();
-
-   p->ChangePartition(100, 100);
-
-   for (Int_t i=0; i<500000; i++) {
-      longitude = r.Uniform(dr*lon1,dr*lon2);
-      latitude  = r.Uniform(-dr*90,dr*90);
-      x         = rd*longitude;
-      y         = 39*TMath::Log(TMath::Tan((TMath::Pi()/4)+(latitude/2)));
-      p->Fill(x,y);
-   }
-
    gStyle->SetOptStat(11);
-   gStyle->SetPalette(1); 
+   gStyle->SetPalette(1);
    p->Draw("gllego");
 }
