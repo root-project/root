@@ -34,6 +34,7 @@
 class THashList;
 class TMap;
 class TList;
+class TCollection;
 class TFileInfo;
 class TFileInfoMeta;
 class TObjString;
@@ -72,6 +73,7 @@ public:
 
    TObjString     *ExportInfo(const char *name = 0, Int_t popt = 0);
 
+   Long64_t        Merge(TCollection* list);
    Int_t           RemoveDuplicates();
    Int_t           Update(Long64_t avgsize = -1);
    void            Sort();
