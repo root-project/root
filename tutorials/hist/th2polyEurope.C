@@ -9,9 +9,12 @@
 //This database was developed in 1991/1992 and national boundaries reflect
 //political reality as of that time.
 //
+//The script is shooting npoints (script argument) randomly over the Europe area.
+//The number of points inside the countries should be proportional to the country surface
+//The estimated surface is compared to the surfaces taken from wikipedia.
 //Author: Olivier Couet
 
-void th2polyEurope()
+void th2polyEurope(Int_t npoints=500000)
 {
    Int_t i,j;
    Double_t lon1 = -25;
@@ -88,7 +91,7 @@ void th2polyEurope()
 
    // Fill TH2Poly according to a Mercator projection.
    gBenchmark->Start("Filling");
-   for (i=0; i<500000; i++) {
+   for (i=0; i<npoints; i++) {
       longitude = r.Uniform(lon1,lon2);
       latitude  = r.Uniform(lat1,lat2);
       x         = longitude;
@@ -99,11 +102,6 @@ void th2polyEurope()
 
    Int_t nbins = p->GetNumberOfBins();
    Double_t maximum = p->GetMaximum();
-   printf("Nbins = %d Minimum = %g Maximum = %g Integral = %f \n",
-           nbins,
-           p->GetMinimum(),
-           maximum,
-           p->Integral());
 
 
    // h2 contains the surfaces computed from TH2Poly.
@@ -155,4 +153,10 @@ void th2polyEurope()
    leg->AddEntry(h,"Real countries surfaces from Wikipedia (in km^{2})","lp");
    leg->AddEntry(h2,"Countries surfaces from TH2Poly (with errors)","lp");
    leg->Draw();
+   leg->Draw();
+   
+   Double_t wikiSum = h->Integral();
+   Double_t polySum = h2->Integral();
+   Double_t error = TMath::Abs(wikiSum-polySum)/wikiSum;
+   printf("THPoly Europe surface estimation error wrt wikipedia = %f per cent when using %d points\n",100*error,npoints);
 }
