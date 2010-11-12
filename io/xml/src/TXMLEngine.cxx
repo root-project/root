@@ -1113,7 +1113,7 @@ XMLDocPointer_t TXMLEngine::ParseStream(TXMLInputStream* inp)
       
       if (resvalue!=2) break;
 
-      // coverity[CHECKED_RETURN] at this place result of SkipSpaces() doesn't matter - either file is finished (false) or there is some more nodes to analyse (true)
+      // coverity[unchecked_value] at this place result of SkipSpaces() doesn't matter - either file is finished (false) or there is some more nodes to analyse (true)
       if (!inp->EndOfStream()) inp->SkipSpaces();
 
       if (inp->EndOfStream()) {
