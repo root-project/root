@@ -1,4 +1,3 @@
-
 Manual Data Model Evolution Capabilities - the user documentation
 
 1. Overview
