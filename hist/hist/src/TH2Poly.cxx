@@ -383,7 +383,7 @@ void TH2Poly::Draw(Option_t * option)
    // Draws the histogram on the canvas.
    // Options:
    //    ""     2D Color
-   //    "glhp" Lego plot using OpenGL
+   //    "gllego" Lego plot using OpenGL
 
    if (fNcells==0) return;
 
@@ -392,7 +392,7 @@ void TH2Poly::Draw(Option_t * option)
 
    fZaxis.Set(100, GetMinimum(), GetMaximum());
 
-   if (opt.Contains("glhp")) {
+   if (opt.Contains("gllego")) {
       gStyle->SetCanvasPreferGL(kTRUE);
    }
 

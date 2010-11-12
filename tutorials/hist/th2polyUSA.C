@@ -49,5 +49,5 @@ void th2polyUSA()
 
    gStyle->SetOptStat(11);
    gStyle->SetPalette(1); 
-   p->Draw("glhp");
+   p->Draw("gllego");
 }

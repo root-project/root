@@ -13,5 +13,5 @@ void th2polyHoneycomb(){
       hc->Fill(ran.Gaus(2.,1), ran.Gaus(2.,1));
    }
 
-   hc->Draw("glhp");
+   hc->Draw("gllego");
 }

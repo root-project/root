@@ -12,11 +12,12 @@
 #include <stdexcept>
 #include <cstring>
 
-#include "TROOT.h"
-#include "TClass.h"
 #include "TVirtualGL.h"
 #include "KeySymbols.h"
 #include "Buttons.h"
+#include "TH2Poly.h"
+#include "TClass.h"
+#include "TROOT.h"
 #include "TGL5D.h"
 #include "TMath.h"
 #include "TPad.h"
@@ -25,13 +26,13 @@
 
 #include "TGLSurfacePainter.h"
 #include "TGLTH3Composition.h"
+#include "TGLH2PolyPainter.h"
 #include "TGLHistPainter.h"
 #include "TGLLegoPainter.h"
 #include "TGLBoxPainter.h"
 #include "TGLTF3Painter.h"
 #include "TGLParametric.h"
 #include "TGL5DPainter.h"
-#include "TGLH2PolyPainter.h"
 
 ClassImp(TGLHistPainter)
 
@@ -608,8 +609,6 @@ TGLHistPainter::ParsePaintOption(const TString &option)const
       parsedOption.fPlotType = kGLBoxPlot;
    if (option.Index("iso") != kNPOS)
       parsedOption.fPlotType = kGLIsoPlot;
-   if (option.Index("hp") != kNPOS)
-      parsedOption.fPlotType = kGLHPoly;
 
    return parsedOption;
 }
@@ -624,8 +623,12 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
    }
 
    if (option.fPlotType == kGLLegoPlot) {
-      if (!fGLPainter.get())
-         fGLPainter.reset(new TGLLegoPainter(fHist, &fCamera, &fCoord));
+      if (!fGLPainter.get()) {
+         if (dynamic_cast<TH2Poly*>(fHist))
+            fGLPainter.reset(new TGLH2PolyPainter(fHist, &fCamera, &fCoord));
+         else
+            fGLPainter.reset(new TGLLegoPainter(fHist, &fCamera, &fCoord));
+      }
    } else if (option.fPlotType == kGLSurfacePlot) {
       if (!fGLPainter.get())
          fGLPainter.reset(new TGLSurfacePainter(fHist, &fCamera, &fCoord));
@@ -638,9 +641,6 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
    } else if (option.fPlotType == kGLIsoPlot) {
       if (!fGLPainter.get())
          fGLPainter.reset(new TGLIsoPainter(fHist, &fCamera, &fCoord));
-   } else if (option.fPlotType == kGLHPoly) {
-      if (!fGLPainter.get())
-         fGLPainter.reset(new TGLH2PolyPainter(fHist, &fCamera, &fCoord));
    }
 
    if (fGLPainter.get()) {
