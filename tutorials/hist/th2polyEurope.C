@@ -80,21 +80,19 @@ void th2polyEurope()
 
    TRandom r;
    Double_t longitude, latitude;
-   Double_t x, y, dr = TMath::Pi()/180, rd = 180/TMath::Pi();
-
+   Double_t x, y, pi4 = TMath::Pi()/4, alpha = TMath::Pi()/360;
+   
    gBenchmark->Start("Partitioning");
    p->ChangePartition(100, 100);
    gBenchmark->Show("Partitioning");
 
-      latitude  = r.Uniform(-dr*90,dr*90);
    // Fill TH2Poly according to a Mercator projection.
    gBenchmark->Start("Filling");
    for (i=0; i<500000; i++) {
-      longitude = r.Uniform(dr*lon1,dr*lon2);
-      //latitude  = r.Uniform(-dr*90,dr*90);
-      latitude  = r.Uniform(dr*lat1,dr*lat2);
-      x         = rd*longitude;
-      y         = 39*TMath::Log(TMath::Tan((TMath::Pi()/4)+(latitude/2)));
+      longitude = r.Uniform(lon1,lon2);
+      latitude  = r.Uniform(lat1,lat2);
+      x         = longitude;
+      y         = 38*TMath::Log(TMath::Tan(pi4+alpha*latitude));
       p->Fill(x,y);
    }
    gBenchmark->Show("Filling");
