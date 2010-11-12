@@ -59,6 +59,7 @@ public:
    virtual Bool_t        IsAssembly() const {return kTRUE;}
    virtual Bool_t        IsCylType() const {return kFALSE;}
    void                  NeedsBBoxRecompute() {fBBoxOK = kFALSE;}
+   void                  RecomputeBoxLast();
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(ostream &out, Option_t *option = "");
    virtual void          SetPoints(Double_t *points) const;

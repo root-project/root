@@ -2478,7 +2478,7 @@ void TGeoVolumeAssembly::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatri
 {
 // Add a component to the assembly. 
    TGeoVolume::AddNode(vol,copy_no,mat,option);
-   ((TGeoShapeAssembly*)fShape)->NeedsBBoxRecompute();
+   ((TGeoShapeAssembly*)fShape)->RecomputeBoxLast();
 }   
 
 //_____________________________________________________________________________
@@ -2512,7 +2512,7 @@ TGeoVolume *TGeoVolumeAssembly::CloneVolume() const
    // make copy nodes
    vol->MakeCopyNodes(this);
 //   CloneNodesAndConnect(vol);
-   vol->GetShape()->ComputeBBox();
+   ((TGeoShapeAssembly*)vol->GetShape())->NeedsBBoxRecompute();
    // copy voxels
    TGeoVoxelFinder *voxels = 0;
    if (fVoxels) {

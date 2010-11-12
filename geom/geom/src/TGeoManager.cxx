@@ -2856,7 +2856,6 @@ void TGeoManager::RefreshPhysicalNodes(Bool_t lock)
 {
 // Refresh physical nodes to reflect the actual geometry paths after alignment
 // was applied. Optionally locks physical nodes (default).
-
    TIter next(gGeoManager->GetListOfPhysicalNodes());
    TGeoPhysicalNode *pn;
    while ((pn=(TGeoPhysicalNode*)next())) pn->Refresh();
@@ -3111,10 +3110,6 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
    TGeoShape *shape;
    TGeoVolume *vol;
    Bool_t has_runtime = kFALSE;
-   // Compute bounding  box for assemblies
-   while ((vol = (TGeoVolume*)nextv())) {
-      if (vol->IsAssembly()) vol->GetShape()->ComputeBBox();
-   }   
    while ((shape = (TGeoShape*)next())) {
       if (shape->IsRunTimeShape()) {
          has_runtime = kTRUE;
@@ -3124,6 +3119,10 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
    }
    if (has_runtime) fTopNode->CheckShapes();
    else if (fgVerboseLevel>0) Info("CheckGeometry","...Nothing to fix");
+   // Compute bounding  box for assemblies
+   while ((vol = (TGeoVolume*)nextv())) {
+      if (vol->IsAssembly()) vol->GetShape()->ComputeBBox();
+   }   
 }
 
 //_____________________________________________________________________________

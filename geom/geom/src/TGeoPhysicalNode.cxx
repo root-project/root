@@ -214,10 +214,12 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
 
    // Re-compute bounding box of mother(s) if needed
    for (i=fLevel-1; i>0; i--) {
+      Bool_t dassm = vd->IsAssembly(); // is daughter assembly ?
       vd = GetVolume(i);
-      if (!vd->IsAssembly()) break;
-      ((TGeoShapeAssembly*)vd->GetShape())->NeedsBBoxRecompute();
-      if (vd->GetVoxels()) vd->GetVoxels()->SetNeedRebuild();
+      Bool_t cassm = vd->IsAssembly(); // is current assembly ?
+      if (cassm) ((TGeoShapeAssembly*)vd->GetShape())->NeedsBBoxRecompute();
+      if ((cassm || dassm) && vd->GetVoxels()) vd->GetVoxels()->SetNeedRebuild();
+      if (!cassm) break;
    }
 
    // Now we have to re-voxelize the mother volume

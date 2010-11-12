@@ -103,6 +103,52 @@ void TGeoShapeAssembly::ComputeBBox()
 }   
 
 //_____________________________________________________________________________   
+void TGeoShapeAssembly::RecomputeBoxLast()
+{
+// Recompute bounding box of the assembly after adding a node.
+   Int_t nd = fVolume->GetNdaughters();
+   if (!nd) {
+      Warning("RecomputeBoxLast", "No daughters for volume %s yet", fVolume->GetName());
+      return;
+   }   
+   TGeoNode *node = fVolume->GetNode(nd-1);
+   Double_t xmin, xmax, ymin, ymax, zmin, zmax;
+   if (nd==1) {
+      xmin = ymin = zmin = TGeoShape::Big();
+      xmax = ymax = zmax = -TGeoShape::Big();
+   } else {
+      xmin = fOrigin[0]-fDX;
+      xmax = fOrigin[0]+fDX;
+      ymin = fOrigin[1]-fDY;
+      ymax = fOrigin[1]+fDY;
+      zmin = fOrigin[2]-fDZ;
+      zmax = fOrigin[2]+fDZ;
+   }      
+   Double_t vert[24];
+   Double_t pt[3];
+   TGeoBBox *box = (TGeoBBox*)node->GetVolume()->GetShape();
+   if (TGeoShape::IsSameWithinTolerance(box->GetDX(), 0) ||
+       node->GetVolume()->IsAssembly()) node->GetVolume()->GetShape()->ComputeBBox();
+   box->SetBoxPoints(vert);
+   for (Int_t ipt=0; ipt<8; ipt++) {
+      node->LocalToMaster(&vert[3*ipt], pt);
+      if (pt[0]<xmin) xmin=pt[0];
+      if (pt[0]>xmax) xmax=pt[0];
+      if (pt[1]<ymin) ymin=pt[1];
+      if (pt[1]>ymax) ymax=pt[1];
+      if (pt[2]<zmin) zmin=pt[2];
+      if (pt[2]>zmax) zmax=pt[2];
+   }
+   fDX = 0.5*(xmax-xmin);
+   fOrigin[0] = 0.5*(xmin+xmax);
+   fDY = 0.5*(ymax-ymin);
+   fOrigin[1] = 0.5*(ymin+ymax);
+   fDZ = 0.5*(zmax-zmin);
+   fOrigin[2] = 0.5*(zmin+zmax);   
+   fBBoxOK = kTRUE;      
+}  
+
+//_____________________________________________________________________________   
 void TGeoShapeAssembly::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. Should not be called.
