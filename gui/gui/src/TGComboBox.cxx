@@ -785,6 +785,7 @@ TGFontTypeComboBox::~TGFontTypeComboBox()
 {
    // Text font combo box dtor.
 
-   for (int i = 0; i < kMaxFonts && fFonts[i] != 0; i++)
-      gVirtualX->DeleteFont(fFonts[i]);
+   for (int i = 0; i < kMaxFonts && fFonts[i] != 0; i++) {
+      if (fFonts[i] != TGTextLBEntry::GetDefaultFontStruct()) gVirtualX->DeleteFont(fFonts[i]);
+   }
 }
