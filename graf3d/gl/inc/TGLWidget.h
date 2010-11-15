@@ -51,6 +51,8 @@ private:
    TGEventHandler                   *fEventHandler;
 
 public:
+   static TGLWidget* CreateDummy();
+
    static TGLWidget* Create(const TGWindow* parent, Bool_t selectInput,
              Bool_t shareDefault, const TGLPaintDevice *shareDevice,
              UInt_t width, UInt_t height);

@@ -12,9 +12,9 @@
 #ifndef ROOT_TGLFormat
 #define ROOT_TGLFormat
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
+
+#include <vector>
 
 /*
    TGLFormat class describes the pixel format of a drawing surface.
@@ -31,23 +31,32 @@
    -double/single buffered
 */
 
-class TGLFormat {
+class TGLFormat
+{
 public:
-   enum EFormatOptions {
+   enum EFormatOptions
+   {
+      kNone         = 0,
       kDoubleBuffer = 1,
       kDepth        = 2,
       kAccum        = 4,
       kStencil      = 8,
-      kStereo       = 16
+      kStereo       = 16,
+      kMultiSample  = 32
    };
 
 private:
    Bool_t fDoubleBuffered;
    Bool_t fStereo;
-   UInt_t fDepthSize;
-   UInt_t fAccumSize;
-   UInt_t fStencilSize;
-   
+   Int_t  fDepthSize;
+   Int_t  fAccumSize;
+   Int_t  fStencilSize;
+   Int_t  fSamples;
+
+   static std::vector<Int_t> fgAvailableSamples;
+
+   static Int_t GetDefaultSamples();
+   static void  InitAvailableSamples();
 
 public:
    TGLFormat();
@@ -60,16 +69,16 @@ public:
    Bool_t operator == (const TGLFormat &rhs)const;
    Bool_t operator != (const TGLFormat &rhs)const;
 
-   UInt_t GetDepthSize()const;
-   void   SetDepthSize(UInt_t depth);
+   Int_t  GetDepthSize()const;
+   void   SetDepthSize(Int_t depth);
    Bool_t HasDepth()const;
 
-   UInt_t GetStencilSize()const;
-   void   SetStencilSize(UInt_t stencil);
+   Int_t  GetStencilSize()const;
+   void   SetStencilSize(Int_t stencil);
    Bool_t HasStencil()const;
 
-   UInt_t GetAccumSize()const;
-   void   SetAccumSize(UInt_t accum);
+   Int_t  GetAccumSize()const;
+   void   SetAccumSize(Int_t accum);
    Bool_t HasAccumBuffer()const;
 
    Bool_t IsDoubleBuffered()const;
@@ -78,7 +87,11 @@ public:
    Bool_t IsStereo()const;
    void   SetStereo(Bool_t db);
 
-   ClassDef(TGLFormat, 0) // Describes GL buffer format.
+   Int_t  GetSamples()const;
+   void   SetSamples(Int_t samples);
+   Bool_t HasMultiSampling()const;
+
+   ClassDef(TGLFormat, 0); // Describes GL buffer format.
 };
 
 #endif

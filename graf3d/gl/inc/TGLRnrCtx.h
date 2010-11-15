@@ -259,11 +259,8 @@ public:
    GLUquadric* GetGluQuadric() { return fQuadric; }
 
    // Picture grabbing
-   void     SetGrabImage(Bool_t gi, Int_t buf=-1) { fGrabImage = gi; fGrabBuffer = buf; }
+   void     SetGrabImage(Bool_t gi) { fGrabImage = gi;   }
    Bool_t   GetGrabImage()    const { return fGrabImage; }
-   Int_t    GetGrabBuffer()   const { return fGrabBuffer; }
-   UChar_t* GetGrabbedImage() const { return fGrabbedImage; }
-   void     SetGrabbedImage(UChar_t* img) { fGrabbedImage = img; }
 
    // Matrix manipulation helpers
    void ProjectionMatrixPushIdentity();

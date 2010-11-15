@@ -345,8 +345,6 @@ void TGLSAViewer::CreateGLWidget()
    if (fFormat == 0)
       fFormat = new TGLFormat;
 
-   ResetInitGL();
-
    fGLWidget = TGLWidget::Create(*fFormat, fRightVerticalFrame, kTRUE, kTRUE, 0, 10, 10);
    fGLWidget->SetEventHandler(fEventHandler);
 
@@ -366,8 +364,6 @@ void TGLSAViewer::DestroyGLWidget()
       Error("DestroyGLWidget", "Widget does not exist.");
       return;
    }
-
-   ResetInitGL();
 
    fGLWidget->UnmapWindow();
    fGLWidget->SetEventHandler(0);

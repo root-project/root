@@ -46,7 +46,6 @@ private:
    TGLContextIdentity *fIdentity;
 
    static Bool_t fgGlewInitDone;
-   void GlewInit();
 
 public:
    TGLContext(TGLWidget *glWidget, Bool_t shareDefault=kTRUE, const TGLContext *shareList=0);
@@ -69,6 +68,7 @@ public:
    Bool_t           IsValid() const { return fValid; }
 
    static TGLContext *GetCurrent();
+   static void GlewInit();
 
 private:
    TGLContext(const TGLContext &);

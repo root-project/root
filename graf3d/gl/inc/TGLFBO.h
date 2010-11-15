@@ -24,20 +24,28 @@ protected:
    UInt_t  fFrameBuffer;
    UInt_t  fColorTexture;
    UInt_t  fDepthBuffer;
-   // UInt_t  fStencilBuffer;
+   UInt_t  fMSFrameBuffer;
+   UInt_t  fMSColorBuffer;
 
-   Int_t   fW, fH;
+   Int_t   fW, fH, fMSSamples, fMSCoverageSamples;
 
-   Bool_t  fIsRescaled;
    Float_t fWScale, fHScale;
+   Bool_t  fIsRescaled;
 
    static Bool_t fgRescaleToPow2;
+   static Bool_t fgMultiSampleNAWarned;
+
+   void InitStandard();
+   void InitMultiSample();
+
+   UInt_t CreateAndAttachRenderBuffer(Int_t format, Int_t type);
+   UInt_t CreateAndAttachColorTexture();
 
 public:
    TGLFBO();
    virtual ~TGLFBO();
 
-   void Init(int w, int h);
+   void Init(int w, int h, int ms_samples=0);
    void Release();
 
    void Bind();
@@ -45,6 +53,8 @@ public:
 
    void BindTexture();
    void UnbindTexture();
+
+   void SetAsReadBuffer();
 
    ClassDef(TGLFBO, 0); // Frame-buffer object.
 };

@@ -137,7 +137,6 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fReferencePos(0.0, 0.0, 0.0),
    fDrawCameraCenter(kFALSE),
    fCameraOverlay(0),
-   fInitGL(kFALSE),
    fSmartRefresh(kFALSE),
    fDebugMode(kFALSE),
    fIsPrinting(kFALSE),
@@ -200,7 +199,6 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fReferencePos(0.0, 0.0, 0.0),
    fDrawCameraCenter(kFALSE),
    fCameraOverlay(0),
-   fInitGL(kFALSE),
    fSmartRefresh(kFALSE),
    fDebugMode(kFALSE),
    fIsPrinting(kFALSE),
@@ -400,28 +398,16 @@ void TGLViewer::PostSceneBuildSetup(Bool_t resetCameras)
 /**************************************************************************/
 /**************************************************************************/
 
-void TGLViewer::ResetInitGL()
-{
-   // Reset GL initialization flag.
-   // This is needed if GL-context is destroyed from outside.
-
-   fInitGL = kFALSE;
-}
-
 //______________________________________________________________________________
 void TGLViewer::InitGL()
 {
-   // Initialise GL state if not already done
-   if (fInitGL) {
-      Error("TGLViewer::InitGL", "GL already initialised");
-   }
+   // Initialise GL state.
 
-   // GL initialisation
    glEnable(GL_LIGHTING);
    glEnable(GL_DEPTH_TEST);
    glEnable(GL_CULL_FACE);
    glCullFace(GL_BACK);
-   glClearColor(0.f, 0.f, 0.f, 1.f);
+   glClearColor(0.f, 0.f, 0.f, 0.f);
    glClearDepth(1.0);
    glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
    glEnable(GL_COLOR_MATERIAL);
@@ -438,7 +424,6 @@ void TGLViewer::InitGL()
    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
    TGLUtil::CheckError("TGLViewer::InitGL");
-   fInitGL = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -505,6 +490,15 @@ void TGLViewer::PreRender()
 
    if (fSmoothPoints) glEnable(GL_POINT_SMOOTH); else glDisable(GL_POINT_SMOOTH);
    if (fSmoothLines)  glEnable(GL_LINE_SMOOTH);  else glDisable(GL_LINE_SMOOTH);
+   if (fSmoothPoints || fSmoothLines)
+   {
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      glEnable(GL_BLEND);
+   }
+   else
+   {
+      glDisable(GL_BLEND);
+   }
 
    TGLViewerBase::PreRender();
 
@@ -518,14 +512,14 @@ void TGLViewer::PostRender()
    // Restore state set in PreRender().
    // Called after every render.
 
+   TGLViewerBase::PostRender();
+
    TGLUtil::SetPointSizeScale(1);
    TGLUtil::SetLineWidthScale(1);
-
-   TGLViewerBase::PostRender();
 }
 
 //______________________________________________________________________________
-void TGLViewer::DoDraw()
+void TGLViewer::DoDraw(Bool_t swap_buffers)
 {
    // Draw out the viewer.
 
@@ -571,11 +565,11 @@ void TGLViewer::DoDraw()
    if (fStereo && fCurrentCamera->IsPerspective() && !fRnrCtx->GetGrabImage() &&
        !fIsPrinting)
    {
-      DoDrawStereo();
+      DoDrawStereo(swap_buffers);
    }
    else
    {
-      DoDrawMono();
+      DoDrawMono(swap_buffers);
    }
 
    ReleaseLock(kDrawLock);
@@ -601,7 +595,7 @@ void TGLViewer::DoDraw()
 }
 
 //______________________________________________________________________________
-void TGLViewer::DoDrawMono()
+void TGLViewer::DoDrawMono(Bool_t swap_buffers)
 {
    // Draw out in monoscopic mode.
 
@@ -636,11 +630,14 @@ void TGLViewer::DoDrawMono()
 
    PostDraw();
 
-   SwapBuffers();
+   if (swap_buffers)
+   {
+      SwapBuffers();
+   }
 }
 
 //______________________________________________________________________________
-void TGLViewer::DoDrawStereo()
+void TGLViewer::DoDrawStereo(Bool_t swap_buffers)
 {
    // Draw out in stereoscopic mode.
 
@@ -747,7 +744,11 @@ void TGLViewer::DoDrawStereo()
    PostDraw();
 
    // End
-   SwapBuffers();
+   if (swap_buffers)
+   {
+      SwapBuffers();
+   }
+
    glDrawBuffer(GL_BACK);
 }
 
@@ -781,7 +782,7 @@ Bool_t TGLViewer::SavePicture(const TString &fileName)
    }
    else
    {
-      if (GLEW_VERSION_1_5)
+      if (GLEW_EXT_framebuffer_object)
       {
          return SavePictureUsingFBO(fileName, fViewport.Width(), fViewport.Height(), kFALSE);
       }
@@ -818,24 +819,28 @@ Bool_t TGLViewer::SavePictureUsingBB(const TString &fileName)
 
    TUnlocker ulck(this);
 
-   std::auto_ptr<TImage> image(TImage::Create());
-
-   fRnrCtx->SetGrabImage(kTRUE, GL_BACK);
-
    fLOD = TGLRnrCtx::kLODHigh;
+   fRnrCtx->SetGrabImage(kTRUE);
 
    if (!gVirtualX->IsCmdThread())
-      gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoDraw()", (ULong_t)this));
+      gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoDraw(kFALSE)", (ULong_t)this));
    else
-      DoDraw();
-
-   image->FromGLBuffer(fRnrCtx->GetGrabbedImage(), fViewport.Width(), fViewport.Height());
+      DoDraw(kFALSE);
 
    fRnrCtx->SetGrabImage(kFALSE);
-   delete [] fRnrCtx->GetGrabbedImage();
-   fRnrCtx->SetGrabbedImage(0);
 
-   image->WriteImage(fileName.Data());
+   glReadBuffer(GL_BACK);
+
+   UChar_t* xx = new UChar_t[4 * fViewport.Width() * fViewport.Height()];
+   glPixelStorei(GL_PACK_ALIGNMENT, 1);
+   glReadPixels(0, 0, fViewport.Width(), fViewport.Height(),
+                GL_BGRA, GL_UNSIGNED_BYTE, xx);
+
+   std::auto_ptr<TImage> image(TImage::Create());
+   image->FromGLBuffer(xx, fViewport.Width(), fViewport.Height());
+   image->WriteImage(fileName);
+
+   delete [] xx;
 
    return kTRUE;
 }
@@ -872,14 +877,12 @@ Bool_t TGLViewer::SavePictureUsingFBO(const TString &fileName, Int_t w, Int_t h,
 
    TUnlocker ulck(this);
 
-   std::auto_ptr<TImage> image(TImage::Create());
-
    MakeCurrent();
 
    TGLFBO *fbo = new TGLFBO();
    try
    {
-      fbo->Init(w, h);
+      fbo->Init(w, h, fGLWidget->GetPixelFormat()->GetSamples());
    }
    catch (std::runtime_error& exc)
    {
@@ -897,27 +900,34 @@ Bool_t TGLViewer::SavePictureUsingFBO(const TString &fileName, Int_t w, Int_t h,
       fRnrCtx->SetRenderScale(old_scale * pixel_object_scale);
    }
 
-   fRnrCtx->SetGrabImage(kTRUE, 0);
-
-   fLOD = TGLRnrCtx::kLODHigh;
-
    fbo->Bind();
 
+   fLOD = TGLRnrCtx::kLODHigh;
+   fRnrCtx->SetGrabImage(kTRUE);
+
    if (!gVirtualX->IsCmdThread())
-      gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoDraw()", (ULong_t)this));
+      gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoDraw(kFALSE)", (ULong_t)this));
    else
-      DoDraw();
-
-   fbo->Unbind();
-   delete fbo;
-
-   image->FromGLBuffer(fRnrCtx->GetGrabbedImage(), fViewport.Width(), fViewport.Height());
+      DoDraw(kFALSE);
 
    fRnrCtx->SetGrabImage(kFALSE);
-   delete [] fRnrCtx->GetGrabbedImage();
-   fRnrCtx->SetGrabbedImage(0);
 
-   image->WriteImage(fileName.Data());
+   fbo->Unbind();
+
+   fbo->SetAsReadBuffer();
+
+   UChar_t* xx = new UChar_t[4 * fViewport.Width() * fViewport.Height()];
+   glPixelStorei(GL_PACK_ALIGNMENT, 1);
+   glReadPixels(0, 0, fViewport.Width(), fViewport.Height(),
+                GL_BGRA, GL_UNSIGNED_BYTE, xx);
+
+   std::auto_ptr<TImage> image(TImage::Create());
+   image->FromGLBuffer(xx, fViewport.Width(), fViewport.Height());
+   image->WriteImage(fileName);
+
+   delete [] xx;
+
+   delete fbo;
 
    if (pixel_object_scale != 0)
    {
@@ -1037,10 +1047,7 @@ void TGLViewer::PreDraw()
 {
    // Perform GL work which must be done before each draw.
 
-   // Initialise GL if not done
-   if (!fInitGL) {
-      InitGL();
-   }
+   InitGL();
 
    // For embedded gl clear color must be pad's background color.
    {
@@ -1052,10 +1059,10 @@ void TGLViewer::PreDraw()
       else
          rgb[0] = rgb[1] = rgb[2] = 0.0f;
 
-      glClearColor(rgb[0], rgb[1], rgb[2], 1.0f);
+      glClearColor(rgb[0], rgb[1], rgb[2], 0.0f);
    }
 
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
    TGLUtil::CheckError("TGLViewer::PreDraw");
 }
@@ -1066,20 +1073,6 @@ void TGLViewer::PostDraw()
    // Perform GL work which must be done after each draw.
 
    glFlush();
-   if (fRnrCtx->GetGrabImage())
-   {
-      UChar_t* xx = new UChar_t[4 * fViewport.Width() * fViewport.Height()];
-      if (fRnrCtx->GetGrabBuffer() != 0)
-      {
-         glReadBuffer(fRnrCtx->GetGrabBuffer());
-      }
-      glPixelStorei(GL_PACK_ALIGNMENT,1);
-      glReadPixels(0, 0, fViewport.Width(), fViewport.Height(),
-                   GL_BGRA, GL_UNSIGNED_BYTE, xx);
-
-      fRnrCtx->SetGrabbedImage(xx);
-   }
-
    TGLUtil::CheckError("TGLViewer::PostDraw");
 }
 

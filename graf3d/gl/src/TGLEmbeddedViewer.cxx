@@ -108,8 +108,6 @@ void TGLEmbeddedViewer::CreateGLWidget()
       return;
    }
 
-   ResetInitGL();
-
    fGLWidget = TGLWidget::Create(fFrame, kTRUE, kTRUE, 0, 10, 10);
    fGLWidget->SetEventHandler(fEventHandler);
 
@@ -130,8 +128,6 @@ void TGLEmbeddedViewer::DestroyGLWidget()
       Error("DestroyGLWidget", "Widget does not exist.");
       return;
    }
-
-   ResetInitGL();
 
    fGLWidget->UnmapWindow();
    fGLWidget->SetEventHandler(0);

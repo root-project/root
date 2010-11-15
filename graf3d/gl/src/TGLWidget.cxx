@@ -70,6 +70,16 @@ ClassImp(TGLWidget);
 //==============================================================================
 
 //______________________________________________________________________________
+TGLWidget* TGLWidget::CreateDummy()
+{
+   // Static constructor for creating widget with default pixel format.
+
+   TGLFormat format(TGLFormat::kNone);
+
+   return Create(format, gClient->GetDefaultRoot(), kFALSE, kFALSE, 0, 1, 1);
+}
+
+//______________________________________________________________________________
 TGLWidget* TGLWidget::Create(const TGWindow* parent, Bool_t selectInput,
               Bool_t shareDefault, const TGLPaintDevice *shareDevice,
               UInt_t width, UInt_t height)
@@ -126,6 +136,7 @@ TGLWidget::TGLWidget(Window_t glw, const TGWindow* p, Bool_t selectInput)
    : TGFrame(gClient, glw, p),
      fGLContext(0),
      fWindowIndex(-1),
+     fGLFormat(TGLFormat::kNone),
      fFromInit(kTRUE),
      fEventHandler(0)
 {
@@ -371,8 +382,8 @@ void TGLWidget::SetFormat()
 #else // Non WIN32
 //==============================================================================
 
-namespace {
-
+namespace
+{
    void fill_format(std::vector<Int_t> &format, const TGLFormat &request)
    {
       format.push_back(GLX_RGBA);
@@ -405,8 +416,17 @@ namespace {
          format.push_back(1);
       }
 
-      if (request.IsStereo())
-        format.push_back(GLX_STEREO);
+      if (request.IsStereo()) {
+         format.push_back(GLX_STEREO);
+      }
+
+      if (request.HasMultiSampling())
+      {
+         format.push_back(GLX_SAMPLE_BUFFERS_ARB);
+         format.push_back(1);
+         format.push_back(GLX_SAMPLES_ARB);
+         format.push_back(request.GetSamples());
+      }
 
       format.push_back(None);
    }

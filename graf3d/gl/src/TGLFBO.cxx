@@ -12,6 +12,7 @@
 #include "TGLFBO.h"
 #include <TMath.h>
 #include <TString.h>
+#include <TError.h>
 
 #include <GL/glew.h>
 
@@ -30,17 +31,22 @@
 
 ClassImp(TGLFBO);
 
-Bool_t TGLFBO::fgRescaleToPow2 = kTRUE; // For ATI.
+Bool_t TGLFBO::fgRescaleToPow2       = kTRUE; // For ATI.
+Bool_t TGLFBO::fgMultiSampleNAWarned = kFALSE;
 
 TGLFBO::TGLFBO() :
    fFrameBuffer  (0),
    fColorTexture (0),
    fDepthBuffer  (0),
+   fMSFrameBuffer(0),
+   fMSColorBuffer(0),
    fW (-1),
    fH (-1),
-   fIsRescaled (kFALSE),
+   fMSSamples  (0),
+   fMSCoverageSamples (0),
    fWScale     (1),
-   fHScale     (1)
+   fHScale     (1),
+   fIsRescaled (kFALSE)
 {
    // Constructor.
 }
@@ -54,15 +60,17 @@ TGLFBO::~TGLFBO()
 }
 
 //______________________________________________________________________________
-void TGLFBO::Init(int w, int h)
+void TGLFBO::Init(int w, int h, int ms_samples)
 {
-   // Acquire GL resources for given width and height.
+   // Acquire GL resources for given width, height and number of
+   // multi-sampling samples.
 
    static const std::string eh("TGLFBO::Init ");
 
-   if (!GLEW_VERSION_1_5)
+   // Should be replaced with ARB_framebuffer_object (SLC6).
+   if (!GLEW_EXT_framebuffer_object)
    {
-      throw std::runtime_error(eh + "GL version 1.5 required for FBO.");
+      throw std::runtime_error(eh + "GL_EXT_framebuffer_object extension required for FBO.");
    }
 
    fIsRescaled = kFALSE;
@@ -79,9 +87,19 @@ void TGLFBO::Init(int w, int h)
       }
    }
 
+   if (ms_samples > 0 && ! GLEW_EXT_framebuffer_multisample)
+   {
+      if (!fgMultiSampleNAWarned)
+      {
+         Info(eh.c_str(), "GL implementation does not support multi-sampling for FBOs.");
+         fgMultiSampleNAWarned = kTRUE;
+      }
+      ms_samples = 0;
+   }
+
    if (fFrameBuffer != 0)
    {
-      if (fW == w || fH == h)
+      if (fW == w && fH == h && fMSSamples == ms_samples)
          return;
       Release();
    }
@@ -93,49 +111,37 @@ void TGLFBO::Init(int w, int h)
       throw std::runtime_error(eh + Form("maximum size supported by GL implementation is %d.", maxSize));
    }
 
-   fW = w; fH = h;
+   fW = w; fH = h; fMSSamples = ms_samples;
 
-   glGenFramebuffersEXT (1, &fFrameBuffer);
-   glGenTextures        (1, &fColorTexture);
-   glGenRenderbuffersEXT(1, &fDepthBuffer);
-   // glGenRenderbuffersEXT(1, &fStencilBuffer);
+   if (fMSSamples > 0)
+   {
+      if (GLEW_NV_framebuffer_multisample_coverage)
+      {
+         GLint n_modes;
+         glGetIntegerv(GL_MAX_MULTISAMPLE_COVERAGE_MODES_NV, &n_modes);
+         GLint *modes = new GLint[2*n_modes];
+         glGetIntegerv(GL_MULTISAMPLE_COVERAGE_MODES_NV, modes);
 
-   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fFrameBuffer);
+         for (int i = 0; i < n_modes; ++i)
+         {
+            if (modes[i*2+1] == fMSSamples && modes[i*2] > fMSCoverageSamples)
+               fMSCoverageSamples = modes[i*2];
+         }
 
-   // initialize color texture
-   glBindTexture(GL_TEXTURE_2D, fColorTexture);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, fW, fH, 0, GL_RGB,
-                GL_UNSIGNED_BYTE, NULL);
-
-   glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
-                             GL_TEXTURE_2D, fColorTexture, 0);
-
-   // initialize depth renderbuffer
-   glBindRenderbufferEXT   (GL_RENDERBUFFER_EXT, fDepthBuffer);
-   glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, fW, fH);
-
-   glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
-                                GL_RENDERBUFFER_EXT, fDepthBuffer);
-
-   /*
-   // initialize stencil renderbuffer
-   glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, fStencilBuffer);
-   glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_STENCIL_INDEX, fW, fH);
-
-   glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT,
-   GL_RENDERBUFFER_EXT, fStencilBuffer);
-   */
-
-   //-------------------------
+         delete [] modes;
+      }
+      Info(eh.c_str(), "InitMultiSample coverage_samples=%d, color_samples=%d.", fMSCoverageSamples, fMSSamples);
+      InitMultiSample();
+   }
+   else
+   {
+      printf("TGLFBO::Init InitStandard ...\n");
+      InitStandard();
+   }
 
    GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
 
    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT,  0);
-   glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0); // ? is needed
    glBindTexture        (GL_TEXTURE_2D,       0);
 
    switch (status)
@@ -150,7 +156,7 @@ void TGLFBO::Init(int w, int h)
          break;
       default:
          Release();
-         throw std::runtime_error(eh + "Constructed TGLFBO is crap, fix code in TGLFBO class.");
+         throw std::runtime_error(eh + "Constructed TGLFBO is not complete, unexpected error.");
          break;
    }
 }
@@ -161,12 +167,15 @@ void TGLFBO::Release()
    // Release the allocated GL resources.
 
    glDeleteFramebuffersEXT (1, &fFrameBuffer);
-   glDeleteTextures        (1, &fColorTexture);
    glDeleteRenderbuffersEXT(1, &fDepthBuffer);
-   //glDeleteRenderbuffersEXT(1, &fStencilBuffer);
 
-   fColorTexture = fFrameBuffer = fDepthBuffer = 0;
-   fW = fH = -1;
+   if (fMSFrameBuffer) glDeleteFramebuffersEXT (1, &fMSFrameBuffer);
+   if (fMSColorBuffer) glDeleteRenderbuffersEXT(1, &fMSColorBuffer);
+   if (fColorTexture)  glDeleteTextures        (1, &fColorTexture);
+
+   fW = fH = -1; fMSSamples = fMSCoverageSamples = 0;
+   fFrameBuffer = fColorTexture = fDepthBuffer = fMSFrameBuffer = fMSColorBuffer = 0;
+
 }
 
 //______________________________________________________________________________
@@ -174,13 +183,29 @@ void TGLFBO::Bind()
 {
    // Bind the frame-buffer object.
 
-   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fFrameBuffer);
+   if (fMSSamples > 0) {
+      glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fMSFrameBuffer);
+      // On by default
+      //   glEnable(GL_MULTISAMPLE);
+      // Experimenting:
+      //   glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
+      //   glEnable(GL_SAMPLE_COVERAGE_ARB);
+   } else {
+      glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fFrameBuffer);
+   }
 }
 
 //______________________________________________________________________________
 void TGLFBO::Unbind()
 {
    // Unbind the frame-buffer object.
+
+   if (fMSSamples > 0)
+   {
+      glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, fMSFrameBuffer);
+      glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, fFrameBuffer);
+      glBlitFramebufferEXT(0, 0, fW, fH, 0, 0, fW, fH, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+   }
 
    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }
@@ -194,10 +219,13 @@ void TGLFBO::BindTexture()
    glBindTexture(GL_TEXTURE_2D, fColorTexture);
    glEnable(GL_TEXTURE_2D);
 
-   glMatrixMode(GL_TEXTURE);
-   glPushMatrix();
-   glScalef(fWScale, fHScale, 1);
-   glMatrixMode(GL_MODELVIEW);
+   if (fIsRescaled)
+   {
+      glMatrixMode(GL_TEXTURE);
+      glPushMatrix();
+      glScalef(fWScale, fHScale, 1);
+      glMatrixMode(GL_MODELVIEW);
+   }
 }
 
 //______________________________________________________________________________
@@ -205,9 +233,94 @@ void TGLFBO::UnbindTexture()
 {
    // Unbind texture.
 
-   glMatrixMode(GL_TEXTURE);
-   glPopMatrix();
-   glMatrixMode(GL_MODELVIEW);
+   if (fIsRescaled)
+   {
+      glMatrixMode(GL_TEXTURE);
+      glPopMatrix();
+      glMatrixMode(GL_MODELVIEW);
+   }
 
    glPopAttrib();
+}
+
+//______________________________________________________________________________
+void TGLFBO::SetAsReadBuffer()
+{
+   glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, fFrameBuffer);
+}
+
+//==============================================================================
+
+//______________________________________________________________________________
+void TGLFBO::InitStandard()
+{
+   glGenFramebuffersEXT(1, &fFrameBuffer);
+   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fFrameBuffer);
+
+   fDepthBuffer  = CreateAndAttachRenderBuffer(GL_DEPTH_COMPONENT24, GL_DEPTH_ATTACHMENT);
+   fColorTexture = CreateAndAttachColorTexture();
+}
+
+//______________________________________________________________________________
+void TGLFBO::InitMultiSample()
+{
+   glGenFramebuffersEXT(1, &fMSFrameBuffer);
+   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fMSFrameBuffer);
+
+   fMSColorBuffer = CreateAndAttachRenderBuffer(GL_RGBA8,             GL_COLOR_ATTACHMENT0);
+   fDepthBuffer   = CreateAndAttachRenderBuffer(GL_DEPTH_COMPONENT24, GL_DEPTH_ATTACHMENT);
+   // fDepthBuffer   = CreateAndAttachRenderBuffer(GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL_ATTACHMENT);
+
+   glGenFramebuffersEXT(1, &fFrameBuffer);
+   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fFrameBuffer);
+
+   fColorTexture = CreateAndAttachColorTexture();
+}
+
+//______________________________________________________________________________
+UInt_t TGLFBO::CreateAndAttachRenderBuffer(Int_t format, Int_t type)
+{
+   UInt_t id = 0;
+
+   glGenRenderbuffersEXT(1, &id);
+   glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, id);
+
+   if (fMSSamples > 0)
+   {
+      if (fMSCoverageSamples > 0)
+         glRenderbufferStorageMultisampleCoverageNV(GL_RENDERBUFFER_EXT, fMSCoverageSamples, fMSSamples, format, fW, fH);
+      else
+         glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, fMSSamples, format, fW, fH);
+   }
+   else
+   {
+      glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, format, fW, fH);
+   }
+
+   glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, type, GL_RENDERBUFFER_EXT, id);
+
+   return id;
+}
+
+//______________________________________________________________________________
+UInt_t TGLFBO::CreateAndAttachColorTexture()
+{
+   // Initialize color-texture and attach it to current FB.
+
+   UInt_t id = 0;
+
+   glGenTextures(1, &id);
+
+   glBindTexture(GL_TEXTURE_2D, id);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, fW, fH, 0, GL_RGBA,
+                GL_UNSIGNED_BYTE, NULL);
+
+   glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+                             GL_TEXTURE_2D, id, 0);
+
+   return id;
 }

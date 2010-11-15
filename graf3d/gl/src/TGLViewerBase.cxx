@@ -430,14 +430,13 @@ void TGLViewerBase::RenderNonSelected()
 
    SubRenderScenes(&TGLSceneBase::RenderOpaque);
 
-   glDepthMask(GL_FALSE);
-   glEnable(GL_BLEND);
+   TGLCapabilityEnabler blend(GL_BLEND, kTRUE);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glDepthMask(GL_FALSE);
 
    SubRenderScenes(&TGLSceneBase::RenderTransp);
 
    glDepthMask(GL_TRUE);
-   glDisable(GL_BLEND);
 
    TGLUtil::CheckError("TGLViewerBase::RenderNonSelected - pre exit check");
 }
@@ -449,14 +448,13 @@ void TGLViewerBase::RenderSelected()
 
    SubRenderScenes(&TGLSceneBase::RenderSelOpaque);
 
-   glDepthMask(GL_FALSE);
-   glEnable(GL_BLEND);
+   TGLCapabilityEnabler blend(GL_BLEND, kTRUE);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glDepthMask(GL_FALSE);
 
    SubRenderScenes(&TGLSceneBase::RenderSelTransp);
 
    glDepthMask(GL_TRUE);
-   glDisable(GL_BLEND);
 
    TGLUtil::CheckError("TGLViewerBase::RenderSelected - pre exit check");
 }

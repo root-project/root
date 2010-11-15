@@ -77,14 +77,17 @@ TGLContext::TGLContext(TGLWidget *wid, Bool_t shareDefault,
 void TGLContext::GlewInit()
 {
    // Initialize GLEW - static private function.
-   // Called immediately after creation of the firs GL context.
+   // Called immediately after creation of the first GL context.
 
-   GLenum status = glewInit();
-   if (status != GLEW_OK)
-      Warning("TGLContext::GlewInit", "GLEW initalization failed.");
-   else if (gDebug > 0)
-      Info("TGLContext::GlewInit", "GLEW initalization successful.");
-   fgGlewInitDone = kTRUE;
+   if (!fgGlewInitDone)
+   {
+      GLenum status = glewInit();
+      if (status != GLEW_OK)
+         Warning("TGLContext::GlewInit", "GLEW initalization failed.");
+      else if (gDebug > 0)
+         Info("TGLContext::GlewInit", "GLEW initalization successful.");
+      fgGlewInitDone = kTRUE;
+   }
 }
 
 //==============================================================================

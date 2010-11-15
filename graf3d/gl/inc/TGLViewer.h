@@ -147,7 +147,6 @@ protected:
    Bool_t         fDrawCameraCenter; //! reference marker on?
    TGLCameraOverlay  *fCameraOverlay; //! markup size of viewport in scene units
 
-   Bool_t         fInitGL;         //! has GL been initialised?
    Bool_t         fSmartRefresh;   //! cache logicals during scene rebuilds, use TAtt3D time-stamp to determine if they are still valid
 
    // Debug tracing (for scene rebuilds)
@@ -193,8 +192,6 @@ public:
    TGLViewer(TVirtualPad* pad, Int_t x, Int_t y, Int_t width, Int_t height);
    TGLViewer(TVirtualPad* pad);
    virtual ~TGLViewer();
-
-   void ResetInitGL();
 
    // TVirtualViewer3D interface ... mostly a facade
 
@@ -311,9 +308,9 @@ public:
    void RequestDraw(Short_t LOD = TGLRnrCtx::kLODMed); // Cross thread draw request
    virtual void PreRender();
    virtual void PostRender();
-   void DoDraw();
-   void DoDrawMono();
-   void DoDrawStereo();
+   void DoDraw(Bool_t swap_buffers=kTRUE);
+   void DoDrawMono(Bool_t swap_buffers);
+   void DoDrawStereo(Bool_t swap_buffers);
 
    void DrawGuides();
    void DrawDebugInfo();
