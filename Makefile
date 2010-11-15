@@ -626,7 +626,8 @@ endif
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean maintainer-clean compiledata \
                 version html changelog install uninstall showbuild \
-                releasenotes static map debian redhat skip postbin
+                releasenotes static map debian redhat skip postbin \
+                showit help
 
 ifneq ($(findstring map, $(MAKECMDGOALS)),)
 .NOTPARALLEL:
@@ -1320,3 +1321,10 @@ showit:
 	@echo "Libraries:$(word 1, $(ALLLIBS))"
 	@$(foreach l, $(filter-out $(word 1, $(ALLLIBS)), $(ALLLIBS)), \
 	  echo -e "\t$(l)" ;)
+
+help:
+	@$(MAKE) --print-data-base --question |               \
+	awk '/^[^.%][-A-Za-z0-9_]*:/                          \
+		{ print substr($$1, 1, length($$1)-1) }' |    \
+	sort | uniq |                                         \
+	pr -t -w 80 -4
