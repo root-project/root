@@ -3,7 +3,8 @@
 //
 //Author: Olivier Couet
 
-void th2polyBoxes(){
+{
+   TCanvas *ch2p2 = new TCanvas("ch2p2","ch2p2",600,400);
    TH2Poly *h2p = new TH2Poly();
    h2p->SetName("Boxes");
    h2p->SetTitle("Boxes");
@@ -35,4 +36,5 @@ void th2polyBoxes(){
    }
 
    h2p->Draw("COL");
+   return ch2p2;
 }
