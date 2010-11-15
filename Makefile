@@ -440,8 +440,9 @@ endif
 ##### Utilities #####
 
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
-   MAKEDIR     = +@[ -d $(dir $@) ] || mkdir -p $(dir $@)
-   POSTBIN    += copydirs
+   MAKEDIR      = +@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+   RUNTIMEDIRS := etc macros icons fonts README tutorials test man
+   POSTBIN     += $(RUNTIMEDIRS)
 endif
 
 MAKEDEP        = $(RMKDEP)
@@ -1193,7 +1194,7 @@ uninstall:
 
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 # install directrories needed at run-time
-copydirs:
+$(RUNTIMEDIRS):
 	@echo "Rsync'ing $(ROOT_SRCDIR)/etc..."; \
 	$(RSYNC) \
 		--exclude '.svn' \
@@ -1212,11 +1213,17 @@ copydirs:
 	echo "Rsync'ing $(ROOT_SRCDIR)/macros..."; \
 	$(RSYNC) \
 		--exclude '.svn' \
-		--exclude root.mimes \
+		--exclude html.C \
 		$(ROOT_SRCDIR)/macros . ; \
 	for d in icons fonts README tutorials test man; do \
 		echo "Rsync'ing $(ROOT_SRCDIR)/$$d..."; \
-		$(RSYNC) --exclude '.svn' $(ROOT_SRCDIR)/$$d . ; \
+		$(RSYNC) \
+			--exclude '.svn' \
+			--exclude '*.o' \
+			--exclude '*.so' \
+			--exclude '*.lib' \
+			--exclude '*.dll' \
+			$(ROOT_SRCDIR)/$$d . ; \
 	done;
 endif
 
