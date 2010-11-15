@@ -155,8 +155,8 @@ test-$(MODNAME): all-$(MODNAME)
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@$(INSTALL) $(MATHCOREDIR)/test $(MATHCOREDIRT)
 endif
-		@cd $(MATHCOREDIRT); $(MAKE) ROOTCONFIG=../../../bin/root-config
-		@cd $(MATHCOREDIRT)/fit; $(MAKE) ROOTCONFIG=../../../bin/root-config
+		@cd $(MATHCOREDIRT) && $(MAKE) ROOTCONFIG=../../../bin/root-config
+		@cd $(MATHCOREDIRT)/fit && $(MAKE) ROOTCONFIG=../../../../bin/root-config
 
 ##### extra rules ######
 $(MATHCOREO): CXXFLAGS += -DUSE_ROOT_ERROR
