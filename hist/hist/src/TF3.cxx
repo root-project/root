@@ -16,7 +16,6 @@
 #include "TVirtualPad.h"
 #include "TRandom.h"
 #include "TVectorD.h"
-#include "TPainter3dAlgorithms.h"
 #include "Riostream.h"
 #include "TColor.h"
 #include "TVirtualFitter.h"
