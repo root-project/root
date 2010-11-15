@@ -308,7 +308,7 @@ ifeq ($(GCC_MAJOR),4)
 $(call stripsrc,$(CINTDIRSD)/gcc4strm.o): CINTCXXFLAGS += -Wno-strict-aliasing
 endif
 
-$(MAKECINTO) $(CINTO): $(CINTCONF) $(CINTINCLUDES)
+$(MAKECINTO) $(CINTO): $(CINTCONF) $(ORDER_) $(CINTINCLUDES)
 
 $(MAKECINTO): CXXFLAGS := $(CINTCXXFLAGS)
 $(call stripsrc,$(CINTDIRSD)/stdstrct.o):    CINTCXXFLAGS += -I$(CINTDIRL)/stdstrct
