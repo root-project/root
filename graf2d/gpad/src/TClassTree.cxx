@@ -192,7 +192,7 @@ TClassTree::TClassTree()
    SetLabelDx();
    SetYoffset(0);
 #ifdef ROOTSRCDIR
-   SetSourceDir(".:src:" ROOTSRCDIR "/src");
+   SetSourceDir(".:src:" ROOTSRCDIR);
 #else
    SetSourceDir(".:src:$ROOTSYS/src");
 #endif
@@ -223,7 +223,7 @@ TClassTree::TClassTree(const char *name, const char *classes)
    SetLabelDx();
    SetYoffset(0);
 #ifdef ROOTSRCDIR
-   SetSourceDir(".:src:" ROOTSRCDIR "/src");
+   SetSourceDir(".:src:" ROOTSRCDIR);
 #else
    SetSourceDir(".:src:$ROOTSYS/src");
 #endif
