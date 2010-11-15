@@ -45,6 +45,10 @@ endif
 ##### However, if we are building packages or cleaning, we #####
 ##### don't include this file since it may screw up things #####
 
+ifndef ROOT_SRCDIR
+$(error Please run ./configure again, the build system has been updated)
+endif
+
 ifeq ($(findstring $(MAKECMDGOALS), maintainer-clean debian redhat),)
 include $(ROOT_SRCDIR)/config/Makefile.$(ARCH)
 endif
