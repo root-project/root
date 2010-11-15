@@ -33,45 +33,43 @@ ClassImp(TH2Poly)
 <center><h2>TH2Poly: 2D Histogram with Polygonal Bins</h2></center>
 
 <h3>Overview</h3>
-TH2Poly is a 2D Histogram class (TH2) that allows for polygonic bins of arbitary
-shape.
+<tt>TH2Poly</tt> is a 2D Histogram class (TH2) that allows for polygonal bins
+of arbitary shape.
 <p>
-Each bin in the TH2Poly histogram is a TH2PolyBin object. TH2PolyBin is a very
-simple class that contains the vertices and contents of the polygonal bin as
-well as several related functions.
+Each bin in the <tt>TH2Poly</tt> histogram is a <tt>TH2PolyBin</tt> object.
+<tt>TH2PolyBin</tt> is a very simple class that contains the vertices (stored
+as <tt>TGraph</tt>s and <tt>TMultiGraph</tt>s ) and contents of the polygonal
+bin as well as several related functions.
 <p>
-Essentially, TH2Poly is a TList of TH2PolyBin objects together with methods to
-manipulate them.
+Essentially, <tt>TH2Poly</tt> is a TList of <tt>TH2PolyBin</tt> objects
+together with methods to manipulate them.
 <p>
-When adding a new bin, the user needs to pass the number of vertices and
-their x and y coordinates to AddBin(). This should be done before filling.
-The vertices are connected in the order they are specified in the arrays.
-The last and first vertices in the array don't need  be the same; the method
-can handle both cases.
+Bins are defined using one of the <tt>AddBin()</tt> methods. The bin definition
+should be done before filling.
 <p>
 The histogram can be filled with <tt>Fill(Double_t x, Double_t y, Double_t w)
 </tt>. <tt>w</tt> is the weight.
 If no weight is specified, it is assumed to be 1.
 <p>
-Not all areas in the histogram need to binned. If the user attempts to
-fill an area without a bin, then Fill() falls into the overflows. Adding a bin
-is not retroactive; it doesn't affect previous fillings. A Fill() command, that
+Not all histogram's area need to be binned. Filling an area without bins,
+will falls into the overflows. Adding a bin is not retroactive; it doesn't
+affect previous fillings. A <tt>Fill()</tt> call, that
 was previously ignored due to the lack of a bin at the specified location, is
 not reconsidered when that location is binned later.
 <p>
 If there are two overlapping bins, the first one in the list will be incremented
-by Fill().
+by <tt>Fill()</tt>.
 <p>
 The histogram automatically extends its limits if a bin outside the
 histogram limits is added. For example, the default constructor (with no
 arguments) generates a histogram with zero width and height; but adding bins
 to it will extend it up to a proper size.
 <p>
-TH2Poly implements a partitioning algorithm to speed up filling of bins. The
-partitioning algorithm divides the histogram into regions called ‘cells’.
-The bins that each cell intersects are recorded in an array of Tlists.
+<tt>TH2Poly</tt> implements a partitioning algorithm to speed up bins' filling.
+The partitioning algorithm divides the histogram into regions called‘cells.
+The bins that each cell intersects are recorded in an array of <tt>TList</tt>s.
 When a coordinate in the histogram is to be filled; the method (quickly) finds
-which cell the coordinate belongs.  It then loops over only the bins
+which cell the coordinate belongs.  It then only loops over the bins
 intersecting that cell to find the bin the input coordinate corresponds to.
 The partitioning of the histogram is updated continuously as each bin is added.
 The default number of cells on each axis is 25. This number could be set to
@@ -80,27 +78,53 @@ another value in the constructor or adjusted later by calling the
 considerably faster than the brute force algorithm (i.e. checking if each bin
 contains the input coordinates), especially if the histogram is to be filled
 many times.
+<p>
+The following very simple macro shows how to build and fill a <tt>TH2Poly</tt>:
+<pre>
+{
+   TH2Poly *h2p = new TH2Poly();
+
+   Double_t x1[] = {0, 5, 5};  
+   Double_t y1[] = {0, 0, 5};  
+   Double_t x2[] = {0, -1, -1, 0}; 
+   Double_t y2[] = {0, 0, -1, -1}; 
+   Double_t x3[] = {4, 3, 0, 1, 2.4}; 
+   Double_t y3[] = {4, 3.7, 1, 4.7, 3.5}; 
+
+   h2p->AddBin(3, x1, y1);
+   h2p->AddBin(3, x2, y2);
+   h2p->AddBin(3, x3, y3);
+
+   h2p->Fill(   3,    1, 3); // fill bin 1
+   h2p->Fill(-0.5, -0.5, 7); // fill bin 2
+   h2p->Fill(-0.7, -0.5, 1); // fill bin 2
+   h2p->Fill(   1,    3, 5); // fill bin 3
+}
+</pre>
+
+More examples can bin found in <tt>$ROOTSYS/tutorials/hist/th2poly*.C</tt>
 
 <h3>Partitioning Algorithm</h3>
-The partitioning algorithm forms an essential part of the TH2Poly class. It is
-implemented to speed up the filling of bins.
+The partitioning algorithm forms an essential part of the <tt>TH2Poly</tt>
+class. It is implemented to speed up the filling of bins.
 <p>
 With the brute force approach, the filling is done in the following way:  An
-iterator loops over all bins in the TH2Poly and invokes TMath::IsInside(). This
-method checks to see if the input location is in that bin. If the filling
-coordinate is inside, it increments the bin. The brute force algorithm is very
-slow, filling 500000 times in a 70x45 histogram with 3324 bins (Test Case: Map
-of Europe) takes over 20 minutes to complete.
+iterator loops over all bins in the <tt>TH2Poly</tt> and invokes the 
+method <tt>IsInside(),/t>.
+This method checks to see if the input location is in that bin. If the filling
+coordinate is inside, it increments the bin. Looping over all the bin is
+very slow. 
 <p>
 The alternative is to divide the histogram into virtual rectangular regions
-called ‘cells’. Each cell stores (in a TList) the pointers of the bins
-intersecting it.  The cells themselves form an array of TLists.
+called "cells". Each cell stores the pointers of the bins
+intersecting it. 
 When a coordinate is to be filled, the method finds which cell the coordinate
 falls into. Since the cells are rectangular, this can be done very quickly.
 It then only loops over the bins associated with that cell.
 <p>
 The addition of bins to the appropriate cells is done when the bin is added
-to the histogram. To do this, AddBin() calls the AddBinToPartition() method.
+to the histogram. To do this, <tt>AddBin()</tt> calls the 
+<tt>AddBinToPartition()</tt> method.
 This method adds the input bin to the partitioning matrix.
 <p>
 The number of partition cells per axis can be specified in the constructor.
@@ -108,16 +132,17 @@ If it is not specified, the default value of 25 along each axis will be
 assigned. This value was chosen because it is small enough to avoid slowing
 down AddBin(), while being large enough to enhance Fill() by a considerable
 amount. Regardless of how it is initialized at the constructor, it can be
-changed later with the ChangePartition() method. ChangePartition() deletes the
+changed later with the <tt>ChangePartition()</tt> method.
+<tt>ChangePartition()</tt> deletes the
 old partition matrix and generates a new one with the specified number of cells
 on each axis.
 <p>
 The optimum number of partition cells per axis changes with the number of
-times Fill() will be called.  Although partitioning greatly speeds up filling,
-it also adds a constant time delay into the code.  When Fill() is to be
-called many times, it is more efficient to divide the histogram into a large
-number cells.  However, if the histogram is to be filled only a few times,
-it is better to divide into a small number of cells.
+times <tt>Fill()</tt> will be called.  Although partitioning greatly speeds up
+filling, it also adds a constant time delay into the code. When <tt>Fill()</tt>
+is to be called many times, it is more efficient to divide the histogram into
+a large number cells. However, if the histogram is to be filled only a few
+times, it is better to divide into a small number of cells.
 End_Html */
 
 
