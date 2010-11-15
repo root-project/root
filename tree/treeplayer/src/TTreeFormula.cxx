@@ -4912,7 +4912,15 @@ void TTreeFormula::UpdateFormulaLeaves()
       names.Form("%s/%s",fLeafNames[i]->GetTitle(),fLeafNames[i]->GetName());
       TLeaf *leaf = fTree->GetLeaf(names);
       fLeaves[i] = leaf;
-      if (fBranches[i] && leaf) fBranches[i]=leaf->GetBranch();
+      if (fBranches[i] && leaf) {
+         fBranches[i]=leaf->GetBranch();
+         // Since sometimes we might no read all the branches for all the entries, we 
+         // might sometimes only read the branch count and thus reset the colleciton
+         // but might not read the data branches, to insure that a subsequent read 
+         // from TTreeFormula will properly load the data branches even if fQuickLoad is true,
+         // we reset the entry of all branches in the TTree.
+         ((TBranch*)fBranches[i])->ResetReadEntry();
+      }
       if (leaf==0) SetBit( kMissingLeaf );
    }
    for (Int_t j=0; j<kMAXCODES; j++) {
@@ -5238,7 +5246,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             } else {
                // Since we do not read the full branch let's reset the read entry number
                // so that a subsequent read from TTreeFormula will properly load the full
-               // object event if fQuickLoad is true.
+               // object even if fQuickLoad is true.
                branchcount->TBranch::GetEntry(readentry);
                branchcount->ResetReadEntry();
             }
