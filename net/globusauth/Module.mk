@@ -5,7 +5,7 @@
 # Mod by: Gerardo Ganis, 18/1/2003
 
 MODNAME      := globusauth
-MODDIR       := net/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -16,7 +16,7 @@ GLBSAUTHDIRI := $(GLBSAUTHDIR)/inc
 ##### libGlobusAuth #####
 GLBSAUTHH    := $(wildcard $(MODDIRI)/*.h)
 GLBSAUTHS    := $(wildcard $(MODDIRS)/*.cxx)
-GLBSAUTHO    := $(GLBSAUTHS:.cxx=.o)
+GLBSAUTHO    := $(call stripsrc,$(GLBSAUTHS:.cxx=.o))
 
 GLBSAUTHDEP  := $(GLBSAUTHO:.o=.d)
 
@@ -28,7 +28,7 @@ GLBPATCHO     :=
 GLBPATCHDEP   :=
 ifneq ($(GLBPATCHFLAGS),)
 GLBPATCHS     := $(MODDIRS)/globus_gsi_credential.c
-GLBPATCHO     := $(GLBPATCHS:.c=.o)
+GLBPATCHO     := $(call stripsrc,$(GLBPATCHS:.c=.o))
 GLBPATCHDEP   := $(GLBPATCHO:.o=.d)
 endif
 

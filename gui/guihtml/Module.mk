@@ -4,7 +4,7 @@
 # Author: Valeriy Onuchin, 24/4/2007
 
 MODNAME      := guihtml
-MODDIR       := gui/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/gui/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ GUIHTMLDIRI  := $(GUIHTMLDIR)/inc
 
 ##### libGuiHtml #####
 GUIHTMLL     := $(MODDIRI)/LinkDef.h
-GUIHTMLDS    := $(MODDIRS)/G__GuiHtml.cxx
+GUIHTMLDS    := $(call stripsrc,$(MODDIRS)/G__GuiHtml.cxx)
 GUIHTMLDO    := $(GUIHTMLDS:.cxx=.o)
 GUIHTMLDH    := $(GUIHTMLDS:.cxx=.h)
 
 GUIHTMLH     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GUIHTMLS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GUIHTMLO     := $(GUIHTMLS:.cxx=.o)
+GUIHTMLO     := $(call stripsrc,$(GUIHTMLS:.cxx=.o))
 
 GUIHTMLDEP   := $(GUIHTMLO:.o=.d) $(GUIHTMLDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(GUIHTMLLIB):  $(GUIHTMLO) $(GUIHTMLDO) $(ORDER_) $(MAINLIBS) $(GUIHTMLLIBDEP)
 		   "$(GUIHTMLLIBEXTRA)"
 
 $(GUIHTMLDS):   $(GUIHTMLH) $(GUIHTMLL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GUIHTMLH) $(GUIHTMLL)
 
 $(GUIHTMLMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(GUIHTMLL)
-		$(RLIBMAP) -o $(GUIHTMLMAP) -l $(GUIHTMLLIB) \
+		$(RLIBMAP) -o $@ -l $(GUIHTMLLIB) \
 		   -d $(GUIHTMLLIBDEPM) -c $(GUIHTMLL)
 
 all-$(MODNAME): $(GUIHTMLLIB) $(GUIHTMLMAP)

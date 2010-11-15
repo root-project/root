@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := newdelete
-MODDIR       := core/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -15,7 +15,7 @@ NEWDIRI      := $(NEWDIR)/inc
 ##### libNew #####
 NEWH         := $(wildcard $(MODDIRI)/*.h)
 NEWS         := $(wildcard $(MODDIRS)/*.cxx)
-NEWO         := $(NEWS:.cxx=.o)
+NEWO         := $(call stripsrc,$(NEWS:.cxx=.o))
 
 NEWDEP       := $(NEWO:.o=.d)
 

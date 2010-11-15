@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 12/5/2002
 
 MODNAME      := glite
-MODDIR       := net/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ GLITEDIRI    := $(GLITEDIR)/inc
 
 ##### libRgLite #####
 GLITEL       := $(MODDIRI)/LinkDef.h
-GLITEDS      := $(MODDIRS)/G__gLite.cxx
+GLITEDS      := $(call stripsrc,$(MODDIRS)/G__gLite.cxx)
 GLITEDO      := $(GLITEDS:.cxx=.o)
 GLITEDH      := $(GLITEDS:.cxx=.h)
 
 GLITEH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GLITES       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GLITEO       := $(GLITES:.cxx=.o)
+GLITEO       := $(call stripsrc,$(GLITES:.cxx=.o))
 
 GLITEDEP     := $(GLITEO:.o=.d) $(GLITEDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(GLITELIB):    $(GLITEO) $(GLITEDO) $(ORDER_) $(MAINLIBS) $(GLITELIBDEP)
 		   "$(GLITELIBEXTRA) $(GLITELIBDIR) $(GAWLIB)"
 
 $(GLITEDS):     $(GLITEH) $(GLITEL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GLITEH) $(GLITEL)
 
 $(GLITEMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(GLITEL)
-		$(RLIBMAP) -o $(GLITEMAP) -l $(GLITELIB) \
+		$(RLIBMAP) -o $@ -l $(GLITELIB) \
 		   -d $(GLITELIBDEPM) -c $(GLITEL)
 
 all-$(MODNAME): $(GLITELIB) $(GLITEMAP)

@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 23/1/2006
 
 MODNAME      := fftw
-MODDIR       := math/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ FFTWDIRI     := $(FFTWDIR)/inc
 
 #### libFFTW ####
 FFTWL        := $(MODDIRI)/LinkDef.h
-FFTWDS       := $(MODDIRS)/G__FFTW.cxx
+FFTWDS       := $(call stripsrc,$(MODDIRS)/G__FFTW.cxx)
 FFTWDO       := $(FFTWDS:.cxx=.o)
 FFTWDH       := $(FFTWDS:.cxx=.h)
 
 FFTWH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 FFTWS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-FFTWO        := $(FFTWS:.cxx=.o)
+FFTWO        := $(call stripsrc,$(FFTWS:.cxx=.o))
 
 FFTWDEP      := $(FFTWO:.o=.d) $(FFTWDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(FFTWLIB):     $(FFTWO) $(FFTWDO) $(ORDER_) $(MAINLIBS) $(FFTWLIBDEP)
 		   "$(FFTWLIBEXTRA) $(FFTW3LIBDIR) $(FFTW3LIB)"
 
 $(FFTWDS):      $(FFTWH) $(FFTWL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FFTWH) $(FFTWL)
 
 $(FFTWMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(FFTWL)
-		$(RLIBMAP) -o $(FFTWMAP) -l $(FFTWLIB) \
+		$(RLIBMAP) -o $@ -l $(FFTWLIB) \
 		   -d $(FFTWLIBDEPM) -c $(FFTWL)
 
 all-$(MODNAME): $(FFTWLIB) $(FFTWMAP)

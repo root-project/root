@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 9/12/2005
 
 MODNAME      := gfal
-MODDIR       := io/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/io/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ GFALDIRI     := $(GFALDIR)/inc
 
 ##### libGFAL #####
 GFALL        := $(MODDIRI)/LinkDef.h
-GFALDS       := $(MODDIRS)/G__GFAL.cxx
+GFALDS       := $(call stripsrc,$(MODDIRS)/G__GFAL.cxx)
 GFALDO       := $(GFALDS:.cxx=.o)
 GFALDH       := $(GFALDS:.cxx=.h)
 
 GFALH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GFALS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GFALO        := $(GFALS:.cxx=.o)
+GFALO        := $(call stripsrc,$(GFALS:.cxx=.o))
 
 GFALDEP      := $(GFALO:.o=.d) $(GFALDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(GFALLIB):     $(GFALO) $(GFALDO) $(ORDER_) $(MAINLIBS) $(GFALLIBDEP)
 		   "$(GFALLIBEXTRA) $(GFALLIBDIR) $(GFALCLILIB)"
 
 $(GFALDS):      $(GFALH) $(GFALL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GFALH) $(GFALL)
 
 $(GFALMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GFALL)
-		$(RLIBMAP) -o $(GFALMAP) -l $(GFALLIB) \
+		$(RLIBMAP) -o $@ -l $(GFALLIB) \
 		   -d $(GFALLIBDEPM) -c $(GFALL)
 
 all-$(MODNAME): $(GFALLIB) $(GFALMAP)

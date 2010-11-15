@@ -97,6 +97,22 @@ FILE *FOpenAndSleep(const char *filename, const char *mode) {
 # define fopen(A,B) FOpenAndSleep((A),(B))
 #endif
 
+// cross-compiling for iOS and iOS simulator (assumes host is Intel Mac OS X)
+#if defined(R__IOSSIM) || defined(R__IOS)
+#ifdef __x86_64__
+#undef __x86_64__
+#endif
+#ifdef __i386__
+#undef __i386
+#endif
+#ifdef R__IOSSIM
+#define __i386 1
+#endif
+#ifdef R__IOS
+#define __arm__ 1
+#endif
+#endif
+
 static void AllocateRootSpecial( int tagnum )
 {
   if(G__struct.rootspecial[tagnum]) return;

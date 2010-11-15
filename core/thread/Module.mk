@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := thread
-MODDIR       := core/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,7 +14,7 @@ THREADDIRI   := $(THREADDIR)/inc
 
 ##### libThread #####
 THREADL      := $(MODDIRI)/LinkDef.h
-THREADDS     := $(MODDIRS)/G__Thread.cxx
+THREADDS     := $(call stripsrc,$(MODDIRS)/G__Thread.cxx)
 THREADDO     := $(THREADDS:.cxx=.o)
 THREADDH     := $(THREADDS:.cxx=.h)
 
@@ -49,7 +49,7 @@ THREADS      += $(MODDIRS)/TWin32Condition.cxx $(MODDIRS)/TWin32Mutex.cxx \
                 $(MODDIRS)/TWin32Thread.cxx $(MODDIRS)/TWin32ThreadFactory.cxx
 endif
 
-THREADO      := $(THREADS:.cxx=.o)
+THREADO      := $(call stripsrc,$(THREADS:.cxx=.o))
 
 THREADDEP    := $(THREADO:.o=.d) $(THREADDO:.o=.d)
 
@@ -81,11 +81,12 @@ $(THREADLIB):   $(THREADO) $(THREADDO) $(ORDER_) $(MAINLIBS) $(THREADLIBDEP)
 		   "$(THREADLIBEXTRA) $(OSTHREADLIBDIR) $(OSTHREADLIB)"
 
 $(THREADDS):    $(THREADH) $(THREADL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(THREADH) $(THREADL)
 
 $(THREADMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(THREADL)
-		$(RLIBMAP) -o $(THREADMAP) -l $(THREADLIB) \
+		$(RLIBMAP) -o $@ -l $(THREADLIB) \
 		   -d $(THREADLIBDEPM) -c $(THREADL)
 
 all-$(MODNAME): $(THREADLIB) $(THREADMAP)

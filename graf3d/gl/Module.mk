@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := gl
-MODDIR       := graf3d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf3d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,7 +14,7 @@ GLDIRI       := $(GLDIR)/inc
 
 ##### libRGL #####
 GLL          := $(MODDIRI)/LinkDef.h
-GLDS         := $(MODDIRS)/G__GL.cxx
+GLDS         := $(call stripsrc,$(MODDIRS)/G__GL.cxx)
 GLDO         := $(GLDS:.cxx=.o)
 GLDH         := $(GLDS:.cxx=.h)
 
@@ -45,7 +45,7 @@ ifeq ($(ARCH),win32)
 GLLIBS       := opengl32.lib glu32.lib
 endif
 
-GLO          := $(GLS:.cxx=.o)
+GLO          := $(call stripsrc,$(GLS:.cxx=.o))
 GLDEP        := $(GLO:.o=.d) $(GLDO:.o=.d) $(GLO1:.o=.d)
 
 GLLIB        := $(LPATH)/libRGL.$(SOEXT)
@@ -71,11 +71,12 @@ $(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) $(GL
 		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS)"
 
 $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GLH2) $(GLL)
 
 $(GLMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(GLL)
-		$(RLIBMAP) -o $(GLMAP) -l $(GLLIB) \
+		$(RLIBMAP) -o $@ -l $(GLLIB) \
 		   -d $(GLLIBDEPM) -c $(GLL)
 
 all-$(MODNAME): $(GLLIB) $(GLMAP)
@@ -98,11 +99,11 @@ else
 $(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%)
 endif
 
-$(GLDIRS)/TGLText.o: $(FREETYPEDEP)
-$(GLDIRS)/TGLText.o: CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
+$(call stripsrc,$(GLDIRS)/TGLText.o): $(FREETYPEDEP)
+$(call stripsrc,$(GLDIRS)/TGLText.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
 
-$(GLDIRS)/TGLFontManager.o: $(FREETYPEDEP)
-$(GLDIRS)/TGLFontManager.o: CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
+$(call stripsrc,$(GLDIRS)/TGLFontManager.o): $(FREETYPEDEP)
+$(call stripsrc,$(GLDIRS)/TGLFontManager.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
 
 # Optimize dictionary with stl containers.
 $(GLDO): NOOPT = $(OPT)

@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := x11ttf
-MODDIR       := graf2d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ X11TTFDIRI   := $(X11TTFDIR)/inc
 
 ##### libGX11TTF #####
 X11TTFL      := $(MODDIRI)/LinkDef.h
-X11TTFDS     := $(MODDIRS)/G__X11TTF.cxx
+X11TTFDS     := $(call stripsrc,$(MODDIRS)/G__X11TTF.cxx)
 X11TTFDO     := $(X11TTFDS:.cxx=.o)
 X11TTFDH     := $(X11TTFDS:.cxx=.h)
 
 X11TTFH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 X11TTFS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-X11TTFO      := $(X11TTFS:.cxx=.o)
+X11TTFO      := $(call stripsrc,$(X11TTFS:.cxx=.o))
 
 X11TTFDEP    := $(X11TTFO:.o=.d) $(X11TTFDO:.o=.d)
 
@@ -54,11 +54,12 @@ $(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) \
 		    $(X11TTFLIBEXTRA) $(XLIBS)"
 
 $(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FREETYPEINC) $(X11TTFH) $(X11TTFL)
 
 $(X11TTFMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(X11TTFL)
-		$(RLIBMAP) -o $(X11TTFMAP) -l $(X11TTFLIB) \
+		$(RLIBMAP) -o $@ -l $(X11TTFLIB) \
 		   -d $(X11TTFLIBDEPM) -c $(X11TTFL)
 
 all-$(MODNAME): $(X11TTFLIB) $(X11TTFMAP)

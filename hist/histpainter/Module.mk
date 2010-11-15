@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := histpainter
-MODDIR       := hist/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/hist/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,14 +14,14 @@ HISTPAINTERDIRI := $(HISTPAINTERDIR)/inc
 
 ##### libHistPainter #####
 HISTPAINTERL  := $(MODDIRI)/LinkDef.h
-HISTPAINTERDS := $(MODDIRS)/G__HistPainter.cxx
+HISTPAINTERDS := $(call stripsrc,$(MODDIRS)/G__HistPainter.cxx)
 HISTPAINTERDO := $(HISTPAINTERDS:.cxx=.o)
 HISTPAINTERDH := $(HISTPAINTERDS:.cxx=.h)
 
 HISTPAINTERH1 := $(wildcard $(MODDIRI)/T*.h)
 HISTPAINTERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 HISTPAINTERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-HISTPAINTERO  := $(HISTPAINTERS:.cxx=.o)
+HISTPAINTERO  := $(call stripsrc,$(HISTPAINTERS:.cxx=.o))
 
 HISTPAINTERDEP := $(HISTPAINTERO:.o=.d) $(HISTPAINTERDO:.o=.d)
 
@@ -50,11 +50,12 @@ $(HISTPAINTERLIB): $(HISTPAINTERO) $(HISTPAINTERDO) $(ORDER_) $(MAINLIBS) \
 		   "$(HISTPAINTERLIBEXTRA)"
 
 $(HISTPAINTERDS): $(HISTPAINTERH1) $(HISTPAINTERL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(HISTPAINTERH1) $(HISTPAINTERL)
 
 $(HISTPAINTERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(HISTPAINTERL)
-		$(RLIBMAP) -o $(HISTPAINTERMAP) -l $(HISTPAINTERLIB) \
+		$(RLIBMAP) -o $@ -l $(HISTPAINTERLIB) \
 		   -d $(HISTPAINTERLIBDEPM) -c $(HISTPAINTERL)
 
 all-$(MODNAME): $(HISTPAINTERLIB) $(HISTPAINTERMAP)

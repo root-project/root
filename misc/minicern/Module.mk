@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 18/2/2002
 
 MODNAME      := minicern
-MODDIR       := misc/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/misc/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -15,8 +15,8 @@ MINICERNDIRI := $(MINICERNDIR)/inc
 ##### libminicern.a #####
 MINICERNS1   := $(wildcard $(MODDIRS)/*.c)
 MINICERNS2   := $(wildcard $(MODDIRS)/*.f)
-MINICERNO1   := $(MINICERNS1:.c=.o)
-MINICERNO2   := $(MINICERNS2:.f=.o)
+MINICERNO1   := $(call stripsrc,$(MINICERNS1:.c=.o))
+MINICERNO2   := $(call stripsrc,$(MINICERNS2:.f=.o))
 MINICERNO    := $(MINICERNO1) $(MINICERNO2)
 
 MINICERNDEP  := $(MINICERNS1:.c=.d)

@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := rootx
-MODDIR       := $(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -15,7 +15,7 @@ ROOTXDIRI    := $(ROOTXDIR)/inc
 ##### rootx #####
 ROOTXH       := $(wildcard $(MODDIRI)/*.h)
 ROOTXS       := $(wildcard $(MODDIRS)/*.cxx)
-ROOTXO       := $(ROOTXS:.cxx=.o)
+ROOTXO       := $(call stripsrc,$(ROOTXS:.cxx=.o))
 ROOTXDEP     := $(ROOTXO:.o=.d)
 ROOTX        := bin/root
 
@@ -46,5 +46,3 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ROOTXDEP) $(ROOTX)
 
 distclean::     distclean-$(MODNAME)
-
-##### extra rules ######

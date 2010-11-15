@@ -4,7 +4,7 @@
 # Authors: Pere Mato, Wim Lavrijsen, 22/4/2004
 
 MODNAME      := pyroot
-MODDIR       := bindings/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/bindings/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -16,7 +16,7 @@ PYROOTDIRI   := $(PYROOTDIR)/inc
 ifeq ($(ARCH),macosx64)
 ifeq ($(MACOSX_MINOR),5)
 PYTHON64S    := $(MODDIRS)/python64.c
-PYTHON64O    := $(PYTHON64S:.c=.o)
+PYTHON64O    := $(call stripsrc,$(PYTHON64S:.c=.o))
 PYTHON64     := bin/python64
 PYTHON64DEP  := $(PYTHON64O:.o=.d)
 endif
@@ -24,13 +24,13 @@ endif
 
 ##### libPyROOT #####
 PYROOTL      := $(MODDIRI)/LinkDef.h
-PYROOTDS     := $(MODDIRS)/G__PyROOT.cxx
+PYROOTDS     := $(call stripsrc,$(MODDIRS)/G__PyROOT.cxx)
 PYROOTDO     := $(PYROOTDS:.cxx=.o)
 PYROOTDH     := $(PYROOTDS:.cxx=.h)
 
 PYROOTH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PYROOTS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-PYROOTO      := $(PYROOTS:.cxx=.o)
+PYROOTO      := $(call stripsrc,$(PYROOTS:.cxx=.o))
 
 PYROOTDEP    := $(PYROOTO:.o=.d) $(PYROOTDO:.o=.d)
 
@@ -92,11 +92,12 @@ ifeq ($(ARCH),win32)
 endif
 
 $(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PYROOTH) $(PYROOTL)
 
 $(PYROOTMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(PYROOTL)
-		$(RLIBMAP) -o $(PYROOTMAP) -l $(PYROOTLIB) \
+		$(RLIBMAP) -o $@ -l $(PYROOTLIB) \
 		   -d $(PYROOTLIBDEPM) -c $(PYROOTL)
 
 $(PYTHON64):    $(PYTHON64O)

@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := unix
-MODDIR       := core/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ UNIXDIRI     := $(UNIXDIR)/inc
 
 ##### libUnix (part of libCore) #####
 UNIXL        := $(MODDIRI)/LinkDef.h
-UNIXDS       := $(MODDIRS)/G__Unix.cxx
+UNIXDS       := $(call stripsrc,$(MODDIRS)/G__Unix.cxx)
 UNIXDO       := $(UNIXDS:.cxx=.o)
 UNIXDH       := $(UNIXDS:.cxx=.h)
 
 UNIXH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 UNIXS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-UNIXO        := $(UNIXS:.cxx=.o)
+UNIXO        := $(call stripsrc,$(UNIXS:.cxx=.o))
 
 UNIXDEP      := $(UNIXO:.o=.d) $(UNIXDO:.o=.d)
 
@@ -37,6 +37,7 @@ include/%.h:    $(UNIXDIRI)/%.h
 		cp $< $@
 
 $(UNIXDS):      $(UNIXH) $(UNIXL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(UNIXH) $(UNIXL)
 

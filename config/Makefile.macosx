@@ -21,19 +21,20 @@ endif
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -m32 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
-                -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
+                -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
+                $(TARGETFLAGS)
 CFLAGS        = -m32 -pipe -Wshadow -W -Wall -fsigned-char -fno-common \
-                $(EXTRA_CFLAGS) $(FINK_CFLAGS)
+                $(EXTRA_CFLAGS) $(FINK_CFLAGS) $(TARGETFLAGS)
 CINTCXXFLAGS  = -m32 -pipe -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
-                -DG__STD_EXCEPTION
+                -DG__STD_EXCEPTION $(TARGETFLAGS)
 CINTCFLAGS    = -m32 -pipe -W -Wall -fsigned-char -fno-common \
                 $(EXTRA_CFLAGS) $(FINK_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
-                -DG__STD_EXCEPTION
+                -DG__STD_EXCEPTION $(TARGETFLAGS)
 COMPILER      = gnu
 
 # OS version

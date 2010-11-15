@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 18/3/2002
 
 MODNAME      := krb5auth
-MODDIR       := net/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,7 +14,7 @@ KRB5AUTHDIRI := $(KRB5AUTHDIR)/inc
 
 ##### libKrb5Auth #####
 KRB5AUTHL    := $(MODDIRI)/LinkDef.h
-KRB5AUTHDS   := $(MODDIRS)/G__Krb5Auth.cxx
+KRB5AUTHDS   := $(call stripsrc,$(MODDIRS)/G__Krb5Auth.cxx)
 KRB5AUTHDO   := $(KRB5AUTHDS:.cxx=.o)
 KRB5AUTHDH   := $(KRB5AUTHDS:.cxx=.h)
 
@@ -22,7 +22,7 @@ KRB5AUTHH1   := $(patsubst %,$(MODDIRI)/%,TKSocket.h)
 
 KRB5AUTHH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 KRB5AUTHS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-KRB5AUTHO    := $(KRB5AUTHS:.cxx=.o)
+KRB5AUTHO    := $(call stripsrc,$(KRB5AUTHS:.cxx=.o))
 
 KRB5AUTHDEP  := $(KRB5AUTHO:.o=.d)
 
@@ -52,11 +52,12 @@ $(KRB5AUTHLIB): $(KRB5AUTHO) $(KRB5AUTHDO) $(ORDER_) $(MAINLIBS) $(KRB5AUTHLIBDE
 		    $(CRYPTOLIBDIR) $(CRYPTOLIB) $(KRB5AUTHLIBEXTRA)"
 
 $(KRB5AUTHDS):  $(KRB5AUTHH1) $(KRB5AUTHL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(KRB5INCDIR:%=-I%) $(KRB5AUTHH1) $(KRB5AUTHL)
 
 $(KRB5AUTHMAP): $(RLIBMAP) $(MAKEFILEDEP) $(KRB5AUTHL)
-		$(RLIBMAP) -o $(KRB5AUTHMAP) -l $(KRB5AUTHLIB) \
+		$(RLIBMAP) -o $@ -l $(KRB5AUTHLIB) \
 		   -d $(KRB5AUTHLIBDEPM) -c $(KRB5AUTHL)
 
 all-$(MODNAME): $(KRB5AUTHLIB) $(KRB5AUTHMAP)

@@ -4,7 +4,7 @@
 # Author: Bertrand Bellenot, 29/09/2008
 
 MODNAME   := recorder
-MODDIR    := gui/$(MODNAME)
+MODDIR    := $(ROOT_SRCDIR)/gui/$(MODNAME)
 MODDIRS   := $(MODDIR)/src
 MODDIRI   := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ RECDIRI   := $(RECDIR)/inc
 
 ##### libRecorder #####
 RECL      := $(MODDIRI)/LinkDef.h
-RECDS     := $(MODDIRS)/G__Recorder.cxx
+RECDS     := $(call stripsrc,$(MODDIRS)/G__Recorder.cxx)
 RECDO     := $(RECDS:.cxx=.o)
 RECDH     := $(RECDS:.cxx=.h)
 
 RECH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 RECS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-RECO      := $(RECS:.cxx=.o)
+RECO      := $(call stripsrc,$(RECS:.cxx=.o))
 
 RECDEP    := $(RECO:.o=.d) $(RECDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(RECLIB):      $(RECO) $(RECDO) $(ORDER_) $(MAINLIBS) $(RECLIBDEP)
 		   "$(RECLIBEXTRA)"
 
 $(RECDS):       $(RECH) $(RECL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RECH) $(RECL)
 
 $(RECMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(RECL)
-		$(RLIBMAP) -o $(RECMAP) -l $(RECLIB) \
+		$(RLIBMAP) -o $@ -l $(RECLIB) \
 		   -d $(RECLIBDEPM) -c $(RECL)
 
 all-$(MODNAME): $(RECLIB) $(RECMAP)

@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := reflex
-MODDIR       := cint/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/cint/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -12,7 +12,7 @@ MODDIRI      := $(MODDIR)/inc
 
 ##### libReflex #####
 REFLEXL      := $(MODDIRI)/LinkDef.h
-REFLEXDS     := $(MODDIRS)/G__Reflex.cxx
+REFLEXDS     := $(call stripsrc,$(MODDIRS)/G__Reflex.cxx)
 REFLEXDO     := $(REFLEXDS:.cxx=.o)
 REFLEXDH     := $(REFLEXDS:.cxx=.h)
 
@@ -64,7 +64,7 @@ RFLX_CPPUNITI   = $(CPPUNIT)/include
 RFLX_CPPUNITLL  = -L$(CPPUNIT)/lib -lcppunit
 endif
 
-RFLX_TESTD      = $(REFLEXDIR)/test
+RFLX_TESTD      = $(call stripsrc,$(REFLEXDIR)/test)
 RFLX_TESTDL     = $(RFLX_TESTD)/lib
 RFLX_TESTLIBD1  = $(RFLX_TESTD)/testDict1
 RFLX_TESTLIBD2  = $(RFLX_TESTD)/testDict2
@@ -84,8 +84,8 @@ RFLX_UNITTESTO = $(subst .cxx,.o,$(RFLX_UNITTESTS))
 RFLX_UNITTESTX = $(subst .cxx,,$(RFLX_UNITTESTS))
 
 RFLX_GENMAPS   = $(REFLEXDIRS)/genmap/genmap.cxx
-RFLX_GENMAPO   = $(RFLX_GENMAPS:.cxx=.o)
-RFLX_GENMAPDEP = $(RFLX_GENMAPS:.cxx=.d)
+RFLX_GENMAPO   = $(call stripsrc,$(RFLX_GENMAPS:.cxx=.o))
+RFLX_GENMAPDEP = $(RFLX_GENMAPO:.o=.d)
 
 # include all dependency files
 INCLUDEFILES += $(RFLX_GENMAPDEP)
@@ -141,11 +141,12 @@ $(REFLEXDICTLIB): $(REFLEXDO) $(ORDER_) $(MAINLIBS) $(REFLEXLIB)
 		"$(REFLEXDICTLIBEXTRA)"
 
 $(REFLEXDS): $(REFLEXAPIH) $(REFLEXL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -p -Icint/reflex/inc $(REFLEXAPIH) $(REFLEXL)
 
-$(REFLEXDICTMAP): bin/rlibmap$(EXEEXT) $(MAKEFILEDEP) $(REFLEXL)
-		$(RLIBMAP) -o $(REFLEXDICTMAP) -l $(REFLEXDICTLIB) \
+$(REFLEXDICTMAP): $(RLIBMAP) $(MAKEFILEDEP) $(REFLEXL)
+		$(RLIBMAP) -o $@ -l $(REFLEXDICTLIB) \
 		   -d $(REFLEXDICTLIBDEPM) -c $(REFLEXL)
 
 all-$(MODNAME): $(REFLEXLIB) $(REFLEXDICTLIB) $(REFLEXDICTMAP) $(RFLX_GRFLXPYC) $(RFLX_GRFLXPY)

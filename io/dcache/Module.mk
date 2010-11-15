@@ -3,7 +3,7 @@
 # Author: Grzegorz Mazur <mazur@mail.desy.de>, 16/1/2002
 
 MODNAME      := dcache
-MODDIR       := io/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/io/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -13,13 +13,13 @@ DCACHEDIRI   := $(DCACHEDIR)/inc
 
 ##### libDCache #####
 DCACHEL      := $(MODDIRI)/LinkDef.h
-DCACHEDS     := $(MODDIRS)/G__DCache.cxx
+DCACHEDS     := $(call stripsrc,$(MODDIRS)/G__DCache.cxx)
 DCACHEDO     := $(DCACHEDS:.cxx=.o)
 DCACHEDH     := $(DCACHEDS:.cxx=.h)
 
 DCACHEH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 DCACHES      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-DCACHEO      := $(DCACHES:.cxx=.o)
+DCACHEO      := $(call stripsrc,$(DCACHES:.cxx=.o))
 
 DCACHEDEP    := $(DCACHEO:.o=.d) $(DCACHEDO:.o=.d)
 
@@ -38,19 +38,20 @@ INCLUDEFILES += $(DCACHEDEP)
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(DCACHEDIRI)/%.h
-	cp $< $@
+		cp $< $@
 
 $(DCACHELIB):   $(DCACHEO) $(DCACHEDO) $(ORDER_) $(MAINLIBS) $(DCACHELIBDEP)
-	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-	"$(SOFLAGS)" libDCache.$(SOEXT) $@ "$(DCACHEO) $(DCACHEDO)" \
-	"$(DCACHELIBEXTRA) $(DCAPLIBDIR) $(DCAPLIB)"
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libDCache.$(SOEXT) $@ "$(DCACHEO) $(DCACHEDO)" \
+		   "$(DCACHELIBEXTRA) $(DCAPLIBDIR) $(DCAPLIB)"
 
 $(DCACHEDS):    $(DCACHEH) $(DCACHEL) $(ROOTCINTTMPDEP)
-	@echo "Generating dictionary $@..."
-	$(ROOTCINTTMP) -f $@ -c $(DCACHEH) $(DCACHEL)
+		$(MAKEDIR)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(DCACHEH) $(DCACHEL)
 
 $(DCACHEMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(DCACHEL)
-		$(RLIBMAP) -o $(DCACHEMAP) -l $(DCACHELIB) \
+		$(RLIBMAP) -o $@ -l $(DCACHELIB) \
 		   -d $(DCACHELIBDEPM) -c $(DCACHEL)
 
 all-$(MODNAME): $(DCACHELIB) $(DCACHEMAP)

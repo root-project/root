@@ -4,7 +4,7 @@
 # Author: Brian Bockelman, 29/9/2009
 
 MODNAME      := hdfs
-MODDIR       := io/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/io/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ HDFSDIRI     := $(HDFSDIR)/inc
 
 ##### libHDFS #####
 HDFSL        := $(MODDIRI)/LinkDef.h
-HDFSDS       := $(MODDIRS)/G__HDFS.cxx
+HDFSDS       := $(call stripsrc,$(MODDIRS)/G__HDFS.cxx)
 HDFSDO       := $(HDFSDS:.cxx=.o)
 HDFSDH       := $(HDFSDS:.cxx=.h)
 
 HDFSH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 HDFSS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-HDFSO        := $(HDFSS:.cxx=.o)
+HDFSO        := $(call stripsrc,$(HDFSS:.cxx=.o))
 
 HDFSDEP      := $(HDFSO:.o=.d) $(HDFSDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(HDFSLIB):     $(HDFSO) $(HDFSDO) $(ORDER_) $(MAINLIBS) $(HDFSLIBDEP)
 		   "$(HDFSLIBEXTRA) $(HDFSLIBDIR) $(HDFSCLILIB) $(JVMLIBDIR) $(JVMCLILIB)"
 
 $(HDFSDS):      $(HDFSH) $(HDFSL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(HDFSH) $(HDFSL)
 
 $(HDFSMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HDFSL)
-		$(RLIBMAP) -o $(HDFSMAP) -l $(HDFSLIB) \
+		$(RLIBMAP) -o $@ -l $(HDFSLIB) \
 		   -d $(HDFSLIBDEPM) -c $(HDFSL)
 
 all-$(MODNAME): $(HDFSLIB) $(HDFSMAP)

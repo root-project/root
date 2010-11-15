@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := table
-MODDIR       := misc/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/misc/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ TABLEDIRI    := $(TABLEDIR)/inc
 
 ##### libTable #####
 TABLEL       := $(MODDIRI)/LinkDef.h
-TABLEDS      := $(MODDIRS)/G__Table.cxx
+TABLEDS      := $(call stripsrc,$(MODDIRS)/G__Table.cxx)
 TABLEDO      := $(TABLEDS:.cxx=.o)
 TABLEDH      := $(TABLEDS:.cxx=.h)
 
 TABLEH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 TABLES       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-TABLEO       := $(TABLES:.cxx=.o)
+TABLEO       := $(call stripsrc,$(TABLES:.cxx=.o))
 
 TABLEDEP     := $(TABLEO:.o=.d) $(TABLEDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(TABLELIB):    $(TABLEO) $(TABLEDO) $(ORDER_) $(MAINLIBS) $(TABLELIBDEP)
 		   "$(TABLELIBEXTRA)"
 
 $(TABLEDS):     $(TABLEH) $(TABLEL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TABLEH) $(TABLEL)
 
 $(TABLEMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(TABLEL)
-		$(RLIBMAP) -o $(TABLEMAP) -l $(TABLELIB) \
+		$(RLIBMAP) -o $@ -l $(TABLELIB) \
 		   -d $(TABLELIBDEPM) -c $(TABLEL)
 
 all-$(MODNAME): $(TABLELIB) $(TABLEMAP)

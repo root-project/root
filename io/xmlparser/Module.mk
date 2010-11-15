@@ -4,7 +4,7 @@
 # Authors: Jose Lo
 
 MODNAME       := xmlparser
-MODDIR        := io/$(MODNAME)
+MODDIR        := $(ROOT_SRCDIR)/io/$(MODNAME)
 MODDIRS       := $(MODDIR)/src
 MODDIRI       := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ XMLPARSERDIRI := $(XMLPARSERDIR)/inc
 
 ##### libXMLParser #####
 XMLPARSERL    := $(MODDIRI)/LinkDef.h
-XMLPARSERDS   := $(MODDIRS)/G__XMLParser.cxx
+XMLPARSERDS   := $(call stripsrc,$(MODDIRS)/G__XMLParser.cxx)
 XMLPARSERDO   := $(XMLPARSERDS:.cxx=.o)
 XMLPARSERDH   := $(XMLPARSERDS:.cxx=.h)
 
 XMLPARSERH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 XMLPARSERS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-XMLPARSERO    := $(XMLPARSERS:.cxx=.o)
+XMLPARSERO    := $(call stripsrc,$(XMLPARSERS:.cxx=.o))
 
 XMLPARSERDEP  := $(XMLPARSERO:.o=.d) $(XMLPARSERDO:.o=.d)
 
@@ -48,11 +48,12 @@ $(XMLPARSERLIB): $(XMLPARSERO) $(XMLPARSERDO) $(ORDER_) $(MAINLIBS)
 		   "$(XMLLIBDIR) $(XMLCLILIB)"
 
 $(XMLPARSERDS): $(XMLPARSERH) $(XMLPARSERL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(XMLPARSERH) $(XMLPARSERL)
 
 $(XMLPARSERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(XMLPARSERL)
-		$(RLIBMAP) -o $(XMLPARSERMAP) -l $(XMLPARSERLIB) \
+		$(RLIBMAP) -o $@ -l $(XMLPARSERLIB) \
 		   -d $(XMLPARSERLIBDEPM) -c $(XMLPARSERL)
 
 all-$(MODNAME): $(XMLPARSERLIB) $(XMLPARSERMAP)

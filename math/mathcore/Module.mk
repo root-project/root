@@ -4,22 +4,23 @@
 # Author: Fons Rademakers, 20/6/2005
 
 MODNAME      := mathcore
-MODDIR       := math/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
 MATHCOREDIR  := $(MODDIR)
 MATHCOREDIRS := $(MATHCOREDIR)/src
 MATHCOREDIRI := $(MATHCOREDIR)/inc
+MATHCOREDIRT := $(call stripsrc,$(MATHCOREDIR)/test)
 
 ##### libMathCore #####
 MATHCOREL1   := $(MODDIRI)/LinkDef1.h
 MATHCOREL2   := $(MODDIRI)/LinkDef2.h
 MATHCORELINC := $(MODDIRI)/LinkDef_Func.h
 MATHCOREL3   := $(MODDIRI)/LinkDef3.h
-MATHCOREDS1  := $(MODDIRS)/G__Math.cxx
-MATHCOREDS2  := $(MODDIRS)/G__MathCore.cxx
-MATHCOREDS3  := $(MODDIRS)/G__MathFit.cxx
+MATHCOREDS1  := $(call stripsrc,$(MODDIRS)/G__Math.cxx)
+MATHCOREDS2  := $(call stripsrc,$(MODDIRS)/G__MathCore.cxx)
+MATHCOREDS3  := $(call stripsrc,$(MODDIRS)/G__MathFit.cxx)
 MATHCOREDO1  := $(MATHCOREDS1:.cxx=.o)
 MATHCOREDO2  := $(MATHCOREDS2:.cxx=.o)
 MATHCOREDO3  := $(MATHCOREDS3:.cxx=.o)
@@ -70,7 +71,7 @@ MATHCOREH3   := $(filter-out $(MODDIRI)/Fit/LinkDef%,$(wildcard $(MODDIRI)/Fit/*
 MATHCOREH    := $(MATHCOREH1) $(MATHCOREH2) $(MATHCOREH3)
 
 MATHCORES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-MATHCOREO    := $(MATHCORES:.cxx=.o)
+MATHCOREO    := $(call stripsrc,$(MATHCORES:.cxx=.o))
 
 MATHCOREDEP  := $(MATHCOREO:.o=.d) $(MATHCOREDO:.o=.d)
 
@@ -112,19 +113,22 @@ $(MATHCORELIB): $(MATHCOREO) $(MATHCOREDO) $(ORDER_) $(MAINLIBS)
 		   "$(MATHCORELIBEXTRA)"
 
 $(MATHCOREDS1): $(MATHCOREDH1) $(MATHCOREL1) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MATHCOREDH1) $(MATHCOREL1)
 
 $(MATHCOREDS2): $(MATHCOREDH2) $(MATHCOREL2) $(MATHCORELINC) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MATHCOREDH2) $(MATHCOREL2)
 
 $(MATHCOREDS3): $(MATHCOREDH3) $(MATHCOREL3) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MATHCOREDH3) $(MATHCOREL3)
 
 $(MATHCOREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(ALLMATHCOREL)
-		$(RLIBMAP) -o $(MATHCOREMAP) -l $(MATHCORELIB) \
+		$(RLIBMAP) -o $@ -l $(MATHCORELIB) \
 		   -d $(MATHCORELIBDEPM) -c $(MATHCOREL) $(MATHCORELINC)
 
 all-$(MODNAME): $(MATHCORELIB) $(MATHCOREMAP)
@@ -138,14 +142,21 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MATHCOREDEP) $(MATHCOREDS) $(MATHCOREDH) \
 		   $(MATHCORELIB) $(MATHCOREMAP)
 		@rm -rf include/Math include/Fit
-		@cd $(MATHCOREDIR)/test; $(MAKE) distclean ROOTCONFIG=../../../bin/root-config
-		@cd $(MATHCOREDIR)/test/fit; $(MAKE) distclean ROOTCONFIG=../../../../bin/root-config
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@rm -rf $(MATHCOREDIRT)
+else
+		@cd $(MATHCOREDIRT); $(MAKE) distclean ROOTCONFIG=../../../bin/root-config
+		@cd $(MATHCOREDIRT)/fit; $(MAKE) distclean ROOTCONFIG=../../../../bin/root-config
+endif
 
 distclean::     distclean-$(MODNAME)
 
 test-$(MODNAME): all-$(MODNAME)
-		@cd $(MATHCOREDIR)/test; $(MAKE) ROOTCONFIG=../../../bin/root-config
-		@cd $(MATHCOREDIR)/test/fit; $(MAKE) ROOTCONFIG=../../../bin/root-config
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@$(INSTALL) $(MATHCOREDIR)/test $(MATHCOREDIRT)
+endif
+		@cd $(MATHCOREDIRT); $(MAKE) ROOTCONFIG=../../../bin/root-config
+		@cd $(MATHCOREDIRT)/fit; $(MAKE) ROOTCONFIG=../../../bin/root-config
 
 ##### extra rules ######
 $(MATHCOREO): CXXFLAGS += -DUSE_ROOT_ERROR
@@ -155,5 +166,3 @@ $(MATHCOREDO): CXXFLAGS += -DUSE_ROOT_ERROR
 $(MATHCOREDO1) : NOOPT = $(OPT)
 $(MATHCOREDO2) : NOOPT = $(OPT)
 $(MATHCOREDO3) : NOOPT = $(OPT)
-
-

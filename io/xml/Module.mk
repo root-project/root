@@ -4,7 +4,7 @@
 # Authors: Linev Sergey, Rene Brun 10/05/2004
 
 MODNAME      := xml
-MODDIR       := io/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/io/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ XMLDIRI      := $(XMLDIR)/inc
 
 ##### libXMLIO #####
 XMLL         := $(MODDIRI)/LinkDef.h
-XMLDS        := $(MODDIRS)/G__XML.cxx
+XMLDS        := $(call stripsrc,$(MODDIRS)/G__XML.cxx)
 XMLDO        := $(XMLDS:.cxx=.o)
 XMLDH        := $(XMLDS:.cxx=.h)
 
 XMLH         := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 XMLS         := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-XMLO         := $(XMLS:.cxx=.o)
+XMLO         := $(call stripsrc,$(XMLS:.cxx=.o))
 
 XMLDEP       := $(XMLO:.o=.d) $(XMLDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(XMLLIB):      $(XMLO) $(XMLDO) $(ORDER_) $(MAINLIBS) $(XMLLIBDEP)
 		   "$(XMLLIBEXTRA)"
 
 $(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(XMLH) $(XMLL)
 
 $(XMLMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(XMLL)
-		$(RLIBMAP) -o $(XMLMAP) -l $(XMLLIB) \
+		$(RLIBMAP) -o $@ -l $(XMLLIB) \
 		   -d $(XMLLIBDEPM) -c $(XMLL)
 
 all-$(MODNAME): $(XMLLIB) $(XMLMAP)
@@ -65,4 +66,3 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(XMLDEP) $(XMLDS) $(XMLDH) $(XMLLIB) $(XMLMAP)
 
 distclean::     distclean-$(MODNAME)
-

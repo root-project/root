@@ -4,7 +4,7 @@
 # Author: Rene Brun, 28/09/2006
 
 MODNAME      := spectrum
-MODDIR       := hist/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/hist/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ SPECTRUMDIRI := $(SPECTRUMDIR)/inc
 
 ##### libSpectrum #####
 SPECTRUML    := $(MODDIRI)/LinkDef.h
-SPECTRUMDS   := $(MODDIRS)/G__Spectrum.cxx
+SPECTRUMDS   := $(call stripsrc,$(MODDIRS)/G__Spectrum.cxx)
 SPECTRUMDO   := $(SPECTRUMDS:.cxx=.o)
 SPECTRUMDH   := $(SPECTRUMDS:.cxx=.h)
 
 SPECTRUMH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 SPECTRUMS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-SPECTRUMO    := $(SPECTRUMS:.cxx=.o)
+SPECTRUMO    := $(call stripsrc,$(SPECTRUMS:.cxx=.o))
 
 SPECTRUMDEP  := $(SPECTRUMO:.o=.d) $(SPECTRUMDO:.o=.d)
 
@@ -49,11 +49,12 @@ $(SPECTRUMLIB): $(SPECTRUMO) $(SPECTRUMDO) $(ORDER_) $(MAINLIBS) \
 		   "$(SPECTRUMLIBEXTRA)"
 
 $(SPECTRUMDS):  $(SPECTRUMH) $(SPECTRUML) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SPECTRUMH) $(SPECTRUML)
 
 $(SPECTRUMMAP): $(RLIBMAP) $(MAKEFILEDEP) $(SPECTRUML)
-		$(RLIBMAP) -o $(SPECTRUMMAP) -l $(SPECTRUMLIB) \
+		$(RLIBMAP) -o $@ -l $(SPECTRUMLIB) \
 		   -d $(SPECTRUMLIBDEPM) -c $(SPECTRUML)
 
 all-$(MODNAME): $(SPECTRUMLIB) $(SPECTRUMMAP)

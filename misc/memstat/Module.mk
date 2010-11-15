@@ -4,7 +4,7 @@
 # Author: Anar Manafov 17/06/2008
 
 MODNAME       := memstat
-MODDIR        := misc/$(MODNAME)
+MODDIR        := $(ROOT_SRCDIR)/misc/$(MODNAME)
 MODDIRS       := $(MODDIR)/src
 MODDIRI       := $(MODDIR)/inc
 
@@ -14,7 +14,7 @@ MEMSTATDIRI   := $(MEMSTATDIR)/inc
 
 ##### libMemStat #####
 MEMSTATL      := $(MODDIRI)/LinkDef.h
-MEMSTATDS     := $(MODDIRS)/G__MemStat.cxx
+MEMSTATDS     := $(call stripsrc,$(MODDIRS)/G__MemStat.cxx)
 MEMSTATDO     := $(MEMSTATDS:.cxx=.o)
 MEMSTATDH     := $(MEMSTATDS:.cxx=.h)
 
@@ -26,7 +26,7 @@ MEMSTATH      := $(MODDIRI)/TMemStatHelpers.h \
 MEMSTATS      := $(MODDIRS)/TMemStat.cxx $(MODDIRS)/TMemStatMng.cxx \
 		 $(MODDIRS)/TMemStatBacktrace.cxx \
 		 $(MODDIRS)/TMemStatHelpers.cxx $(MODDIRS)/TMemStatHook.cxx
-MEMSTATO      := $(MEMSTATS:.cxx=.o)
+MEMSTATO      := $(call stripsrc,$(MEMSTATS:.cxx=.o))
 
 MEMSTATDEP    := $(MEMSTATO:.o=.d) $(MEMSTATDO:.o=.d)
 
@@ -54,11 +54,12 @@ $(MEMSTATLIB):  $(MEMSTATO) $(MEMSTATDO) $(ORDER_) $(MAINLIBS) $(MEMSTATLIBDEP)
 		   "$(MEMSTATO) $(MEMSTATDO)" "$(MEMSTATLIBEXTRA)"
 
 $(MEMSTATDS):   $(MEMSTATH) $(MEMSTATL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MEMSTATH) $(MEMSTATL)
 
 $(MEMSTATMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(MEMSTATL)
-		$(RLIBMAP) -o $(MEMSTATMAP) -l $(MEMSTATLIB) \
+		$(RLIBMAP) -o $@ -l $(MEMSTATLIB) \
 		   -d $(MEMSTATLIBDEPM) -c $(MEMSTATL)
 
 

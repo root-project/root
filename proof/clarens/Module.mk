@@ -4,7 +4,7 @@
 # Author: Maarten Ballintijn 18/10/2004
 
 MODNAME      := clarens
-MODDIR       := proof/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ CLARENSDIRI  := $(CLARENSDIR)/inc
 
 ##### libClarens #####
 CLARENSL     := $(MODDIRI)/LinkDef.h
-CLARENSDS    := $(MODDIRS)/G__Clarens.cxx
+CLARENSDS    := $(call stripsrc,$(MODDIRS)/G__Clarens.cxx)
 CLARENSDO    := $(CLARENSDS:.cxx=.o)
 CLARENSDH    := $(CLARENSDS:.cxx=.h)
 
 CLARENSH     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 CLARENSS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-CLARENSO     := $(CLARENSS:.cxx=.o)
+CLARENSO     := $(call stripsrc,$(CLARENSS:.cxx=.o))
 
 CLARENSDEP   := $(CLARENSO:.o=.d) $(CLARENSDO:.o=.d)
 
@@ -48,11 +48,12 @@ $(CLARENSLIB):  $(CLARENSO) $(CLARENSDO) $(ORDER_) $(MAINLIBS) $(CLARENSLIBDEP)
 		   "$(CLARENSLIBEXTRA)"
 
 $(CLARENSDS):   $(CLARENSH) $(CLARENSL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(CLARENSH) $(CLARENSL)
 
 $(CLARENSMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(CLARENSL)
-		$(RLIBMAP) -o $(CLARENSMAP) -l $(CLARENSLIB) \
+		$(RLIBMAP) -o $@ -l $(CLARENSLIB) \
 		   -d $(CLARENSLIBDEPM) -c $(CLARENSL)
 
 all-$(MODNAME): $(CLARENSLIB) $(CLARENSMAP)

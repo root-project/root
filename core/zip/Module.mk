@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := zip
-MODDIR       := core/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -49,7 +49,7 @@ else
 ZIPH	     := $(ZIPOLDH)
 ZIPS	     := $(ZIPOLDS)
 endif
-ZIPO         := $(ZIPS:.c=.o)
+ZIPO         := $(call stripsrc,$(ZIPS:.c=.o))
 ZIPDEP       := $(ZIPO:.o=.d)
 
 # used in the main Makefile

@@ -4,7 +4,7 @@
 # Author: Ilka Antcheva, 18/2/2004
 
 MODNAME   := ged
-MODDIR    := gui/$(MODNAME)
+MODDIR    := $(ROOT_SRCDIR)/gui/$(MODNAME)
 MODDIRS   := $(MODDIR)/src
 MODDIRI   := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ GEDDIRI   := $(GEDDIR)/inc
 
 ##### libGed #####
 GEDL      := $(MODDIRI)/LinkDef.h
-GEDDS     := $(MODDIRS)/G__Ged.cxx
+GEDDS     := $(call stripsrc,$(MODDIRS)/G__Ged.cxx)
 GEDDO     := $(GEDDS:.cxx=.o)
 GEDDH     := $(GEDDS:.cxx=.h)
 
 GEDH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GEDS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GEDO      := $(GEDS:.cxx=.o)
+GEDO      := $(call stripsrc,$(GEDS:.cxx=.o))
 
 GEDDEP    := $(GEDO:.o=.d) $(GEDDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(GEDLIB):      $(GEDO) $(GEDDO) $(ORDER_) $(MAINLIBS) $(GEDLIBDEP)
 		   "$(GEDLIBEXTRA)"
 
 $(GEDDS):       $(GEDH) $(GEDL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GEDH) $(GEDL)
 
 $(GEDMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GEDL)
-		$(RLIBMAP) -o $(GEDMAP) -l $(GEDLIB) \
+		$(RLIBMAP) -o $@ -l $(GEDLIB) \
 		   -d $(GEDLIBDEPM) -c $(GEDL)
 
 all-$(MODNAME): $(GEDLIB) $(GEDMAP)

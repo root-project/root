@@ -4,7 +4,7 @@
 # Author: Andreas Peters, 07/12/2005
 
 MODNAME      := monalisa
-MODDIR       := net/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ MONALISADIRI := $(MONALISADIR)/inc
 
 ##### libMonaLisa #####
 MONALISAL    := $(MODDIRI)/LinkDef.h
-MONALISADS   := $(MODDIRS)/G__MonaLisa.cxx
+MONALISADS   := $(call stripsrc,$(MODDIRS)/G__MonaLisa.cxx)
 MONALISADO   := $(MONALISADS:.cxx=.o)
 MONALISADH   := $(MONALISADS:.cxx=.h)
 
 MONALISAH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 MONALISAS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-MONALISAO    := $(MONALISAS:.cxx=.o)
+MONALISAO    := $(call stripsrc,$(MONALISAS:.cxx=.o))
 
 MONALISADEP  := $(MONALISAO:.o=.d) $(MONALISADO:.o=.d)
 
@@ -47,11 +47,12 @@ $(MONALISALIB): $(MONALISAO) $(MONALISADO) $(ORDER_) $(MAINLIBS) $(MONALISALIBDE
 		   "$(MONALISALIBEXTRA) $(MONALISALIBDIR) $(MONALISACLILIB)"
 
 $(MONALISADS):  $(MONALISAH) $(MONALISAL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MONALISAH) $(MONALISAL)
 
 $(MONALISAMAP): $(RLIBMAP) $(MAKEFILEDEP) $(MONALISAL)
-		$(RLIBMAP) -o $(MONALISAMAP) -l $(MONALISALIB) \
+		$(RLIBMAP) -o $@ -l $(MONALISALIB) \
 		   -d $(MONALISALIBDEPM) -c $(MONALISAL)
 
 all-$(MODNAME): $(MONALISALIB) $(MONALISAMAP)

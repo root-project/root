@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := postscript
-MODDIR       := graf2d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ POSTSCRIPTDIRI := $(POSTSCRIPTDIR)/inc
 
 ##### libPostscript #####
 POSTSCRIPTL  := $(MODDIRI)/LinkDef.h
-POSTSCRIPTDS := $(MODDIRS)/G__PostScript.cxx
+POSTSCRIPTDS := $(call stripsrc,$(MODDIRS)/G__PostScript.cxx)
 POSTSCRIPTDO := $(POSTSCRIPTDS:.cxx=.o)
 POSTSCRIPTDH := $(POSTSCRIPTDS:.cxx=.h)
 
 POSTSCRIPTH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 POSTSCRIPTS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-POSTSCRIPTO  := $(POSTSCRIPTS:.cxx=.o)
+POSTSCRIPTO  := $(call stripsrc,$(POSTSCRIPTS:.cxx=.o))
 
 POSTSCRIPTDEP := $(POSTSCRIPTO:.o=.d) $(POSTSCRIPTDO:.o=.d)
 
@@ -53,11 +53,12 @@ $(POSTSCRIPTLIB): $(POSTSCRIPTO) $(POSTSCRIPTDO) $(ORDER_) $(MAINLIBS) \
 		   "$(POSTSCRIPTLIBEXTRA)"
 
 $(POSTSCRIPTDS): $(POSTSCRIPTH) $(POSTSCRIPTL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(POSTSCRIPTH) $(POSTSCRIPTL)
 
 $(POSTSCRIPTMAP): $(RLIBMAP) $(MAKEFILEDEP) $(POSTSCRIPTL)
-		$(RLIBMAP) -o $(POSTSCRIPTMAP) -l $(POSTSCRIPTLIB) \
+		$(RLIBMAP) -o $@ -l $(POSTSCRIPTLIB) \
 		   -d $(POSTSCRIPTLIBDEPM) -c $(POSTSCRIPTL)
 
 all-$(MODNAME): $(POSTSCRIPTLIB) $(POSTSCRIPTMAP)
@@ -75,5 +76,5 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 ifeq ($(ARCH),alphacxx6)
-$(POSTSCRIPTDIRS)/TPostScript.o: OPT = $(NOOPT)
+$(call stripsrc,$(POSTSCRIPTDIRS)/TPostScript.o): OPT = $(NOOPT)
 endif

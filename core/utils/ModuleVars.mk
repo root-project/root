@@ -4,7 +4,7 @@
 # Author: Axel Naumann, 2008-06-10
 
 MODNAME      := utils
-MODDIR       := core/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 UTILSDIR     := $(MODDIR)
 UTILSDIRS    := $(UTILSDIR)/src
 UTILSDIRI    := $(UTILSDIR)/inc
@@ -12,9 +12,9 @@ UTILSDIRI    := $(UTILSDIR)/inc
 ##### rootcint #####
 ROOTCINTS    := $(UTILSDIRS)/rootcint.cxx \
                 $(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/R*.cxx))
-ROOTCINTTMPO := $(ROOTCINTS:.cxx=_tmp.o)
+ROOTCINTTMPO := $(call stripsrc,$(ROOTCINTS:.cxx=_tmp.o))
 
-ROOTCINTTMPEXE:= $(UTILSDIRS)/rootcint_tmp$(EXEEXT)
+ROOTCINTTMPEXE:= $(call stripsrc,$(UTILSDIRS)/rootcint_tmp$(EXEEXT))
 ROOTCINTEXE  := bin/rootcint$(EXEEXT)
 ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
 

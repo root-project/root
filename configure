@@ -707,7 +707,7 @@ check_link() {
           logmsg " trying to link against $linkdir $linklib"
        fi
        cat <<EOF > conftest.mk
-include config/Makefile.${arch}
+include ${ac_srcdir}/config/Makefile.${arch}
 conftest: conftest.c
 	\$(CC) \$(CFLAGS) \$(LDFLAGS) $linkdir $linklib \$< -o \$@
 
@@ -721,7 +721,7 @@ EOF
            logmsg " trying to resolve symbol $linksymbol in $linkdir $linklib"
        fi
        cat <<EOF > conftest.mk
-include config/Makefile.${arch}
+include ${ac_srcdir}/config/Makefile.${arch}
 conftest:conftest.c
 	\$(CC) \$(CFLAGS) \$(LDFLAGS) $linkdir $linklib \$< -o \$@
 
@@ -895,10 +895,10 @@ check_comp() {
     case $comptype in
     C)
         if test "x$altcc" = "x" ; then
-            if `make -f config/Makefile.$arch CONFIGURE=yes showcc > /dev/null 2>&1` ; then
-                altcc=`make -f config/Makefile.$arch CONFIGURE=yes showcc`
+            if `make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showcc > /dev/null 2>&1` ; then
+                altcc=`make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showcc`
             else
-                altcc=`grep '^CC ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
+                altcc=`grep '^CC ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             fi
         fi
         altcc1=`echo "$altcc" | awk '{print $1}'`
@@ -911,10 +911,10 @@ check_comp() {
         ;;
     C++)
         if test "x$altcxx" = "x" ; then
-            if `make -f config/Makefile.$arch CONFIGURE=yes showcxx > /dev/null 2>&1` ; then
-                altcxx=`make -f config/Makefile.$arch CONFIGURE=yes showcxx`
+            if `make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showcxx > /dev/null 2>&1` ; then
+                altcxx=`make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showcxx`
             else
-                altcxx=`grep '^CXX ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
+                altcxx=`grep '^CXX ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             fi
         fi
         altcxx1=`echo "$altcxx" | awk '{print $1}'`
@@ -927,10 +927,10 @@ check_comp() {
         ;;
     LD)
         if test "x$altld" = "x" ; then
-            if `make -f config/Makefile.$arch CONFIGURE=yes showld > /dev/null 2>&1` ; then
-                altld=`make -f config/Makefile.$arch CONFIGURE=yes showld`
+            if `make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showld > /dev/null 2>&1` ; then
+                altld=`make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showld`
             else
-                altld=`grep '^LD ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
+                altld=`grep '^LD ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
                 if test "x$arch" = "xwin32" ; then
                     altldorg="link"
                     altldtmp="$altld"
@@ -957,10 +957,10 @@ check_comp() {
         ;;
     F77)
         if test "x$altf77" = "x" ; then
-            if `make -f config/Makefile.$arch CONFIGURE=yes showf77 > /dev/null 2>&1` ; then
-                altf77=`make -f config/Makefile.$arch CONFIGURE=yes showf77`
+            if `make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showf77 > /dev/null 2>&1` ; then
+                altf77=`make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showf77`
             else
-                altf77=`grep '^F77 ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
+                altf77=`grep '^F77 ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
                 if test "x$arch" = "xwin32" ; then
                     altf77org="fl32"
                     altf77tmp="$altf77"
@@ -1078,72 +1078,6 @@ guess_architecture() {
     logmsg "$arch"
 }
 
-###################################################################
-#
-### echo %%% Some skeleton and config files
-#
-ARCHS=config/ARCHS
-MAKEIN=config/Makefile.in
-MAKEOUT=config/Makefile.config
-MAKECOMPIN=config/Makefile-comp.in
-MAKECOMPOUT=config/Makefile.comp
-CONFIGUREIN=config/RConfigure.in
-CONFIGUREOUT=include/RConfigure.h
-CONFIGOPTIN=config/RConfigOptions.in
-CONFIGOPTOUT=include/RConfigOptions.h
-RCONFIN=config/root-config.in
-RCONFOUT=bin/root-config
-ROOTRCIN=config/rootrc.in
-ROOTRCOUT=etc/system.rootrc
-ROOTAUTHRCIN=config/rootauthrc.in
-ROOTAUTHRCOUT=etc/system.rootauthrc
-ROOTDAEMONRCIN=config/rootdaemonrc.in
-ROOTDAEMONRCOUT=etc/system.rootdaemonrc
-MEMPROBEIN=config/memprobe.in
-MEMPROBEOUT=bin/memprobe
-MIMEUNIXIN=config/mimes.unix.in
-MIMEWIN32IN=config/mimes.win32.in
-MIMEOUT=etc/root.mimes
-ROOTDIN=config/rootd.in
-ROOTDOUT=etc/daemons/rootd.rc.d
-ROOTDXINETDIN=config/rootd.xinetd.in
-ROOTDXINETDOUT=etc/daemons/rootd.xinetd
-PROOFDIN=config/proofd.in
-PROOFDOUT=etc/daemons/proofd.rc.d
-PROOFDXINETDIN=config/proofd.xinetd.in
-PROOFDXINETDOUT=etc/daemons/proofd.xinetd
-PROOFSERVIN=config/proofserv.in
-PROOFSERVOUT=main/src/proofserv.sh
-XROOTDIN=config/xrootd.in
-XROOTDOUT=etc/daemons/xrootd.rc.d
-CMSDIN=config/cmsd.in
-CMSDOUT=etc/daemons/cmsd.rc.d
-OLBDIN=config/olbd.in
-OLBDOUT=etc/daemons/olbd.rc.d
-ROOTHELPIN=config/root-help.el.in
-ROOTHELPOUT=build/misc/root-help.el
-ROOTSIN=config/roots.in
-ROOTSOUT=main/src/roots.sh
-HTMLIN=config/html.C.in
-HTMLOUT=macros/html.C
-THISROOTSHIN=config/thisroot.sh
-THISROOTSHOUT=bin/thisroot.sh
-THISROOTCSHIN=config/thisroot.csh
-THISROOTCSHOUT=bin/thisroot.csh
-THISROOTBATIN=config/thisroot.bat
-THISROOTBATOUT=bin/thisroot.bat
-GENREFLEXSHIN=config/genreflex.in
-GENREFLEXSHOUT=bin/genreflex
-GENREFLEXBATIN=config/genreflex.bat.in
-GENREFLEXBATOUT=bin/genreflex.bat
-GENREFLEXROOTCINTSHIN=config/genreflex-rootcint.in
-GENREFLEXROOTCINTSHOUT=bin/genreflex-rootcint
-GENREFLEXROOTCINTBATIN=config/genreflex-rootcint.bat.in
-GENREFLEXROOTCINTBATOUT=bin/genreflex-rootcint.bat
-
-# unset global command options that can cause havoc
-unset GREP_OPTIONS
-
 ######################################################################
 #
 ### echo %%% Testing the echo features
@@ -1158,6 +1092,158 @@ if `(echo "testing\c"; echo 1,2,3) | grep c > /dev/null` ; then
 else
   ac_n= ac_c='\c' ac_t=
 fi
+
+######################################################################
+#
+### echo %%% Find the source directory
+#
+message "Checking for source directory"
+ac_pwd=`pwd` && test -n "$ac_pwd" && ls_di=`ls -di .` &&
+pwd_ls_di=`cd "$ac_pwd" && ls -di .` ||
+   { echo "$0: error: Working directory cannot be determined" >&2
+      exit 1; }
+test "x$ls_di" = "x$pwd_ls_di" ||
+  { echo "$0: error: pwd does not report name of working directory" >&2
+      exit 1; }
+
+# Find the source files
+# Try the directory containing this script, then the parent directory.
+ac_confdir=`dirname -- "$0" ||
+ expr X"$0" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+      X"$0" : 'X\(//\)[^/]' \| \
+      X"$0" : 'X\(//\)$' \| \
+      X"$0" : 'X\(/\)' \| . 2>/dev/null ||
+echo X"$0" |
+ sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{
+         s//\1/
+         q
+       }
+       /^X\(\/\/\)[^/].*/{
+         s//\1/
+         q
+       }
+       /^X\(\/\/\)$/{
+         s//\1/
+         q
+       }
+       /^X\(\/\).*/{
+         s//\1/
+         q
+       }
+       s/.*/./; q'`
+ac_srcdir=$ac_confdir
+ac_unique_file="core/base/src/TObject.cxx"
+if test ! -r "$ac_srcdir/$ac_unique_file"; then
+   ac_srcdir=..
+fi
+if test ! -r "$ac_srcdir/$ac_unique_file"; then
+   test ac_srcdir="$ac_confdir or .."
+   { echo "$0: error: cannot find sources ($ac_unique_file) in $ac_srcdir" >&2
+     exit 1; }
+fi
+ac_msg="sources are in $ac_srcdir, but \`cd $ac_srcdir' does not work"
+ac_abs_confdir=`(
+        cd "$ac_srcdir" && test -r "./$ac_unique_file" || { echo "$0: error: $ac_msg" >&2
+   exit 1; }
+   pwd)`
+
+# When building in place, set ac_srcdir=.
+if test "$ac_abs_confdir" = "$ac_pwd"; then
+   ac_srcdir=.
+fi
+# Remove unnecessary trailing slashes from ac_srcdir.
+# Double slashes in file names in object file debugging info
+# mess up M-x gdb in Emacs.
+case $ac_srcdir in
+*/) ac_srcdir=`expr "X$ac_srcdir" : 'X\(.*[^/]\)' \| "X$ac_srcdir" : 'X\(.*\)'`;;
+esac
+
+top_builddir=$ac_pwd
+
+case $ac_srcdir in
+.) # we are building in place
+   top_srcdir=$ac_pwd ;;
+[\\/]* | ?:[\\/]* )  # absolute name
+   top_srcdir=$ac_srcdir ;;
+*) # Relative name
+   top_srcdir=$ac_pwd/$ac_srcdir ;;
+esac
+
+# populate build directory
+if test ! "x$ac_srcdir" = "x."; then
+   for d in config bin include build/misc main/src etc/daemons macros; do
+      test ! -d $d && mkdir -p $d
+   done
+   cp -f ${ac_srcdir}/Makefile .
+   cp -f ${ac_srcdir}/LICENSE .
+fi
+result "$top_srcdir"
+
+###################################################################
+#
+### echo %%% Some skeleton and config files
+#
+ARCHS=${ac_srcdir}/config/ARCHS
+MAKEIN=${ac_srcdir}/config/Makefile.in
+MAKEOUT=config/Makefile.config
+MAKECOMPIN=${ac_srcdir}/config/Makefile-comp.in
+MAKECOMPOUT=config/Makefile.comp
+CONFIGUREIN=${ac_srcdir}/config/RConfigure.in
+CONFIGUREOUT=include/RConfigure.h
+CONFIGOPTIN=${ac_srcdir}/config/RConfigOptions.in
+CONFIGOPTOUT=include/RConfigOptions.h
+RCONFIN=${ac_srcdir}/config/root-config.in
+RCONFOUT=bin/root-config
+ROOTRCIN=${ac_srcdir}/config/rootrc.in
+ROOTRCOUT=etc/system.rootrc
+ROOTAUTHRCIN=${ac_srcdir}/config/rootauthrc.in
+ROOTAUTHRCOUT=etc/system.rootauthrc
+ROOTDAEMONRCIN=${ac_srcdir}/config/rootdaemonrc.in
+ROOTDAEMONRCOUT=etc/system.rootdaemonrc
+MEMPROBEIN=${ac_srcdir}/config/memprobe.in
+MEMPROBEOUT=bin/memprobe
+MIMEUNIXIN=${ac_srcdir}/config/mimes.unix.in
+MIMEWIN32IN=${ac_srcdir}/config/mimes.win32.in
+MIMEOUT=etc/root.mimes
+ROOTDIN=${ac_srcdir}/config/rootd.in
+ROOTDOUT=etc/daemons/rootd.rc.d
+ROOTDXINETDIN=${ac_srcdir}/config/rootd.xinetd.in
+ROOTDXINETDOUT=etc/daemons/rootd.xinetd
+PROOFDIN=${ac_srcdir}/config/proofd.in
+PROOFDOUT=etc/daemons/proofd.rc.d
+PROOFDXINETDIN=${ac_srcdir}/config/proofd.xinetd.in
+PROOFDXINETDOUT=etc/daemons/proofd.xinetd
+PROOFSERVIN=${ac_srcdir}/config/proofserv.in
+PROOFSERVOUT=main/src/proofserv.sh
+XROOTDIN=${ac_srcdir}/config/xrootd.in
+XROOTDOUT=etc/daemons/xrootd.rc.d
+CMSDIN=${ac_srcdir}/config/cmsd.in
+CMSDOUT=etc/daemons/cmsd.rc.d
+OLBDIN=${ac_srcdir}/config/olbd.in
+OLBDOUT=etc/daemons/olbd.rc.d
+ROOTHELPIN=${ac_srcdir}/config/root-help.el.in
+ROOTHELPOUT=build/misc/root-help.el
+ROOTSIN=${ac_srcdir}/config/roots.in
+ROOTSOUT=main/src/roots.sh
+HTMLIN=${ac_srcdir}/config/html.C.in
+HTMLOUT=macros/html.C
+THISROOTSHIN=${ac_srcdir}/config/thisroot.sh
+THISROOTSHOUT=bin/thisroot.sh
+THISROOTCSHIN=${ac_srcdir}/config/thisroot.csh
+THISROOTCSHOUT=bin/thisroot.csh
+THISROOTBATIN=${ac_srcdir}/config/thisroot.bat
+THISROOTBATOUT=bin/thisroot.bat
+GENREFLEXSHIN=${ac_srcdir}/config/genreflex.in
+GENREFLEXSHOUT=bin/genreflex
+GENREFLEXBATIN=${ac_srcdir}/config/genreflex.bat.in
+GENREFLEXBATOUT=bin/genreflex.bat
+GENREFLEXROOTCINTSHIN=${ac_srcdir}/config/genreflex-rootcint.in
+GENREFLEXROOTCINTSHOUT=bin/genreflex-rootcint
+GENREFLEXROOTCINTBATIN=${ac_srcdir}/config/genreflex-rootcint.bat.in
+GENREFLEXROOTCINTBATOUT=bin/genreflex-rootcint.bat
+
+# unset global command options that can cause havoc
+unset GREP_OPTIONS
 
 ######################################################################
 #
@@ -1388,7 +1474,7 @@ cross compiling options, currently only used when building for ios and iossim
 Supported Architectures:
 
 EOF
-   cat config/ARCHS | sed -e 's/^/   /'
+   cat ${ac_srcdir}/config/ARCHS | sed -e 's/^/   /'
 cat <<EOF
 
 Help output is rather long, so you may want to pipe it through a pager, like
@@ -1448,7 +1534,7 @@ else
    exit 1
 fi
 
-platform=`grep "^PLATFORM *=" config/Makefile.$arch | awk '{ print $3 }'`
+platform=`grep "^PLATFORM *=" ${ac_srcdir}/config/Makefile.$arch | awk '{ print $3 }'`
 
 case $arch in
 sgicc)
@@ -1468,7 +1554,7 @@ solaris64CC5)
    checksolaris64="yes" ;;
 ios*)
    logmsg "Will check iOS SDK libraries"
-   iossdk=`make -f config/Makefile.$arch CONFIGURE=yes showsdk`
+   iossdk=`make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showsdk`
    enable_cintex="no"
    enable_reflex="no"
    enable_genvector="no"
@@ -1498,7 +1584,7 @@ fi
 # and for sanity of source e.g. pcre-*.tar.gz must exist
 # which might not be the case if source was unpacked with StuffIt
 if test "x$platform" = "xmacosx" ; then
-   if test ! -f core/pcre/src/pcre-*.tar.gz ; then
+   if test ! -f ${ac_srcdir}/core/pcre/src/pcre-*.tar.gz ; then
       echo "Source tree does not contain expected files, please unpack"
       echo "using tar and not StuffIt"
       exit 1
@@ -1908,7 +1994,7 @@ fi
 #
 #
 if test ! "x$host" = "x"; then
-    if ! test -f config/Makefile.$host; then
+    if ! test -f ${ac_srcdir}/config/Makefile.$host; then
         echo 'Invalid host platform' $host
         exit 1
     fi
@@ -3873,7 +3959,7 @@ if test ! "x$enable_xrootd" = "xno" ; then
    if test "x$externalxrd" = "xyes"; then
       verh=$xrdincdir/XrdVersion.hh
    else
-      verh=net/xrootd/src/xrootd/src/XrdVersion.hh
+      verh=$top_srcdir/net/xrootd/src/xrootd/src/XrdVersion.hh
    fi
    xrdver=`grep XrdVERSION $verh`
    if test $? -eq 0 ; then
@@ -5989,7 +6075,7 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
         < Makefile.tmp > Makefile.tmpp
 mv Makefile.tmpp Makefile.tmp
 
-sed -e "s|@srcdir@|$srcdir|"                    \
+sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@srpincdir@|$srpincdir|"              \
     -e "s|@srplib@|$srplib|"                    \
     -e "s|@srplibdir@|$srplibdir|"              \
@@ -6006,6 +6092,8 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@threadflag@|$threadflag|"            \
     -e "s|@threadlib@|$threadlib|"              \
     -e "s|@threadlibdir@|$threadlibdir|"        \
+    -e "s|@top_builddir@|$top_builddir|"        \
+    -e "s|@top_srcdir@|$top_srcdir|"            \
     -e "s|@ttffontdir@|$fontdir|"               \
     -e "s|@tutdir@|$tutdir|"                    \
     -e "s|@winrtdebug@|$enable_winrtdebug|"     \
@@ -6079,7 +6167,6 @@ result "done"
 #---------------------------------------------------------------------
 # config/Makefile.comp
 #
-
 message "Writing $MAKECOMPOUT"
 sed -e "s|@altcc@|$altcc|"     \
     -e "s|@altcxx@|$altcxx|"   \
@@ -6113,7 +6200,7 @@ sed \
     -e "s|@hasmathmore@|$hasmathmore|"     \
     -e "s|@haspthread@|$haspthread|"       \
     -e "s|@hasxft@|$hasxft|"               \
-    -e "s|@hascling@|$hascling|"               \
+    -e "s|@hascling@|$hascling|"           \
     < RConfigure.tmp > RConfigure-out.tmp
 rm -f RConfigure.tmp
 

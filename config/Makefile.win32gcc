@@ -84,5 +84,5 @@ CYGVER1051201 = $(shell test $(CYGWINVERSION) -ge 1051201 \
 
 # Extras
 ifeq ($(CYGVER1051201),)
-POSTBIN+=rebase
+POSTBIN += rebase
 endif

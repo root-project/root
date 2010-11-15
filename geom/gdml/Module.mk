@@ -4,7 +4,7 @@
 # Author: Ben Lloyd 09/11/06
 
 MODNAME      := gdml
-MODDIR       := geom/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/geom/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ GDMLDIRI     := $(GDMLDIR)/inc
 
 ##### libGdml #####
 GDMLL        := $(MODDIRI)/LinkDef.h
-GDMLDS       := $(MODDIRS)/G__Gdml.cxx
+GDMLDS       := $(call stripsrc,$(MODDIRS)/G__Gdml.cxx)
 GDMLDO       := $(GDMLDS:.cxx=.o)
 GDMLDH       := $(GDMLDS:.cxx=.h)
 
 GDMLH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GDMLS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GDMLO        := $(GDMLS:.cxx=.o)
+GDMLO        := $(call stripsrc,$(GDMLS:.cxx=.o))
 
 GDMLDEP      := $(GDMLO:.o=.d) $(GDMLDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(GDMLLIB):     $(GDMLO) $(GDMLDO) $(ORDER_) $(MAINLIBS) $(GDMLLIBDEP)
 		   "$(GDMLLIBEXTRA)"
 
 $(GDMLDS):      $(GDMLH) $(GDMLL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GDMLH) $(GDMLL)
 
 $(GDMLMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GDMLL)
-		$(RLIBMAP) -o $(GDMLMAP) -l $(GDMLLIB) \
+		$(RLIBMAP) -o $@ -l $(GDMLLIB) \
 		   -d $(GDMLLIBDEPM) -c $(GDMLL)
 
 all-$(MODNAME): $(GDMLLIB) $(GDMLMAP)

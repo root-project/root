@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := editline
-MODDIR       := core/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ EDITLINEDIRI := $(EDITLINEDIR)/inc
 
 ##### libEditline (part of libCore) #####
 EDITLINEL    := $(MODDIRI)/LinkDef.h
-EDITLINEDS   := $(MODDIRS)/G__Editline.cxx
+EDITLINEDS   := $(call stripsrc,$(MODDIRS)/G__Editline.cxx)
 EDITLINEDO   := $(EDITLINEDS:.cxx=.o)
 EDITLINEDH   := $(EDITLINEDS:.cxx=.h)
 
 EDITLINEH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 EDITLINES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-EDITLINEO    := $(EDITLINES:.cxx=.o)
+EDITLINEO    := $(call stripsrc,$(EDITLINES:.cxx=.o))
 
 EDITLINEDEP  := $(EDITLINEO:.o=.d) $(EDITLINEDO:.o=.d)
 
@@ -37,6 +37,7 @@ include/%.h:    $(EDITLINEDIRI)/%.h
 		cp $< $@
 
 $(EDITLINEDS):  $(EDITLINEH) $(EDITLINEL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(EDITLINEH) $(EDITLINEL)
 

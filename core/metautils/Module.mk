@@ -4,7 +4,7 @@
 # Author: Philippe Canal 9/1/2004
 
 MODNAME        := metautils
-MODDIR         := core/$(MODNAME)
+MODDIR         := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS        := $(MODDIR)/src
 MODDIRI        := $(MODDIR)/inc
 
@@ -14,11 +14,11 @@ METAUTILSDIRI  := $(METAUTILSDIR)/inc
 
 ##### $(METAUTILSO) #####
 METAUTILSH     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-METAUTILSS     := $(filter-out %7.cxx,$(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
-METAUTILSO     := $(METAUTILSS:.cxx=.o)
+METAUTILSS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+METAUTILSO     := $(call stripsrc,$(METAUTILSS:.cxx=.o))
 
 METAUTILSL     := $(MODDIRI)/LinkDef.h
-METAUTILSDS    := $(MODDIRS)/G__MetaUtils.cxx
+METAUTILSDS    := $(call stripsrc,$(MODDIRS)/G__MetaUtils.cxx)
 METAUTILSDO    := $(METAUTILSDS:.cxx=.o)
 METAUTILSDH    := $(METAUTILSDS:.cxx=.h)
 
@@ -37,6 +37,7 @@ include/%.h:    $(METAUTILSDIRI)/%.h
 		cp $< $@
 
 $(METAUTILSDS): $(METAUTILSH) $(METAUTILSL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -DG__API $(METAUTILSH) $(METAUTILSL)
 

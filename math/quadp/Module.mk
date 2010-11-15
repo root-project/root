@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, Eddy Offermann, 21/05/2003
 
 MODNAME      := quadp
-MODDIR       := math/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ QUADPDIRI    := $(QUADPDIR)/inc
 
 ##### libQuadp #####
 QUADPL       := $(MODDIRI)/LinkDef.h
-QUADPDS      := $(MODDIRS)/G__Quadp.cxx
+QUADPDS      := $(call stripsrc,$(MODDIRS)/G__Quadp.cxx)
 QUADPDO      := $(QUADPDS:.cxx=.o)
 QUADPDH      := $(QUADPDS:.cxx=.h)
 
 QUADPH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 QUADPS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-QUADPO       := $(QUADPS:.cxx=.o)
+QUADPO       := $(call stripsrc,$(QUADPS:.cxx=.o))
 
 QUADPDEP     := $(QUADPO:.o=.d) $(QUADPDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(QUADPLIB):    $(QUADPO) $(QUADPDO) $(ORDER_) $(MAINLIBS) $(QUADPLIBDEP)
 		   "$(QUADPLIBEXTRA)"
 
 $(QUADPDS):     $(QUADPH) $(QUADPL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(QUADPH) $(QUADPL)
 
 $(QUADPMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(QUADPL)
-		$(RLIBMAP) -o $(QUADPMAP) -l $(QUADPLIB) \
+		$(RLIBMAP) -o $@ -l $(QUADPLIB) \
 		   -d $(QUADPLIBDEPM) -c $(QUADPL)
 
 all-$(MODNAME): $(QUADPLIB) $(QUADPMAP)

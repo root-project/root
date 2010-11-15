@@ -20,18 +20,18 @@ distclean::     distclean-$(MODNAME)
 
 else
 
-MODDIR       := core/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 
 PCREVERS     := pcre-7.8
-PCREDIR      := $(MODDIR)
-PCREDIRS     := $(MODDIRS)
-PCREDIRI     := $(MODDIRS)/$(PCREVERS)
+PCREDIR      := $(call stripsrc,$(MODDIR))
+PCREDIRS     := $(call stripsrc,$(MODDIRS))
+PCREDIRI     := $(PCREDIRS)/$(PCREVERS)
 
 ##### libpcre #####
 PCRELIBS     := $(MODDIRS)/$(PCREVERS).tar.gz
 ifeq ($(PLATFORM),win32)
-PCRELIBA     := $(MODDIRS)/Win32/libpcre-7.8.lib
+PCRELIBA     := $(call stripsrc,$(MODDIRS)/Win32/libpcre-7.8.lib)
 PCRELIB      := $(LPATH)/libpcre.lib
 ifeq (yes,$(WINRTDEBUG))
 PCREBLD      := "libpcre - Win32 Debug"
@@ -39,7 +39,7 @@ else
 PCREBLD      := "libpcre - Win32 Release"
 endif
 else
-PCRELIBA     := $(MODDIRS)/$(PCREVERS)/.libs/libpcre.a
+PCRELIBA     := $(call stripsrc,$(MODDIRS)/$(PCREVERS)/.libs/libpcre.a)
 PCRELIB      := $(LPATH)/libpcre.a
 endif
 PCREINC      := $(PCREDIRI:%=-I%)
@@ -56,6 +56,7 @@ $(PCRELIB): $(PCRELIBA)
 		fi)
 
 $(PCRELIBA): $(PCRELIBS)
+		$(MAKEDIR)
 ifeq ($(PLATFORM),win32)
 		@(if [ -d $(PCREDIRS)/$(PCREVERS) ]; then \
 			rm -rf $(PCREDIRS)/$(PCREVERS); \
@@ -63,7 +64,7 @@ ifeq ($(PLATFORM),win32)
 		echo "*** Building $@..."; \
 		cd $(PCREDIRS); \
 		if [ ! -d $(PCREVERS) ]; then \
-			gunzip -c $(PCREVERS).tar.gz | tar xf -; \
+			gunzip -c $(PCRELIBS) | tar xf -; \
 		fi; \
 		cd win32; \
 		unset MAKEFLAGS; \
@@ -76,7 +77,7 @@ else
 		echo "*** Building $@..."; \
 		cd $(PCREDIRS); \
 		if [ ! -d $(PCREVERS) ]; then \
-			gunzip -c $(PCREVERS).tar.gz | tar xf -; \
+			gunzip -c $(PCRELIBS) | tar xf -; \
 		fi; \
 		cd $(PCREVERS); \
 		PCRECC=$(CC); \
@@ -146,9 +147,13 @@ ifeq ($(PLATFORM),win32)
 			nmake -nologo -f Makefile.msc distclean; \
 		fi)
 endif
+ifeq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@mv $(PCRELIBS) $(PCREDIRS)/-$(PCREVERS).tar.gz
+endif
 		@rm -rf $(PCRELIB) $(PCREDIRS)/pcre-*
+ifeq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@mv $(PCREDIRS)/-$(PCREVERS).tar.gz $(PCRELIBS)
+endif
 
 distclean::     distclean-$(MODNAME)
 

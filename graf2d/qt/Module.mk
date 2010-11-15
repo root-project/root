@@ -5,7 +5,7 @@
 # Author: Valeri Fine, 21/10/2001
 
 MODNAME       := qt
-MODDIR        := graf2d/$(MODNAME)
+MODDIR        := $(ROOT_SRCDIR)/graf2d/$(MODNAME)
 MODDIRS       := $(MODDIR)/src
 MODDIRI       := $(MODDIR)/inc
 
@@ -15,7 +15,7 @@ GQTDIRI       := $(GQTDIR)/inc
 
 ##### libGQt #####
 GQTL          := $(MODDIRI)/LinkDef.h
-GQTDS         := $(MODDIRS)/G__GQt.cxx
+GQTDS         := $(call stripsrc,$(MODDIRS)/G__GQt.cxx)
 GQTDO         := $(GQTDS:.cxx=.o)
 GQTDH         := $(GQTDS:.cxx=.h)
 
@@ -29,14 +29,14 @@ GQTH1         := $(GQTDIRI)/TGQt.h  $(GQTDIRI)/TQtTimer.h              \
 GQTH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GQTS          := $(filter-out $(MODDIRS)/moc_%,\
                  $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
-GQTO          := $(GQTS:.cxx=.o)
+GQTO          := $(call stripsrc,$(GQTS:.cxx=.o))
 
 GQTMOCH       := $(MODDIRI)/TQtWidget.h       $(MODDIRI)/TQtEmitter.h     \
                  $(MODDIRI)/TQtClientFilter.h $(MODDIRI)/TQtClientGuard.h \
                  $(MODDIRI)/TQtClientWidget.h  $(MODDIRI)/TQtTimer.h      \
                  $(MODDIRI)/TQtRootSlot.h
 
-GQTMOC        := $(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(GQTMOCH)))
+GQTMOC        := $(call stripsrc,$(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(GQTMOCH))))
 GQTMOCO       := $(GQTMOC:.cxx=.o)
 
 GQTDEP        := $(GQTO:.o=.d) $(GQTDO:.o=.d)
@@ -95,11 +95,12 @@ $(GQTLIB):      $(GQTO) $(GQTDO) $(GQTMOCO) $(ORDER_) $(MAINLIBS) $(GQTLIBDEP)
 		   "$(GQTLIBEXTRA) $(QTLIBDIR) $(QTLIB)"
 
 $(GQTDS):       $(GQTH1) $(GQTL) $(ROOTCINTTMPEXE)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GQTH1) $(GQTL)
 
 $(GQTMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GQTL)
-		$(RLIBMAP) -o $(GQTMAP) -l $(GQTLIB) \
+		$(RLIBMAP) -o $@ -l $(GQTLIB) \
 		   -d $(GQTLIBDEPM) -c $(GQTL)
 
 all-$(MODNAME): $(GQTLIB) $(GQTMAP)
@@ -118,7 +119,8 @@ distclean::     distclean-$(MODNAME)
 $(sort $(GQTMOCO) $(GQTO)): CXXFLAGS += $(GQTCXXFLAGS)
 $(GQTDO): CXXFLAGS += $(GQTCXXFLAGS)
 
-$(GQTMOC) : $(GQTDIRS)/moc_%.cxx: $(GQTDIRI)/%.h
+$(GQTMOC) : $(call stripsrc,$(GQTDIRS)/moc_%.cxx): $(GQTDIRI)/%.h
+	$(MAKEDIR)
 ifeq (,$(QT4))
 	$(QTMOCEXE)  $< -o $@
 else

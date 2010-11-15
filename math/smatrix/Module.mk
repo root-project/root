@@ -4,20 +4,21 @@
 # Author: Fons Rademakers, 20/6/2005
 
 MODNAME      := smatrix
-MODDIR       := math/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
 SMATRIXDIR  := $(MODDIR)
 SMATRIXDIRS := $(SMATRIXDIR)/src
 SMATRIXDIRI := $(SMATRIXDIR)/inc/Math
+SMATRIXDIRT := $(call stripsrc,$(SMATRIXDIR)/test)
 
 ##### libSmatrix #####
 SMATRIXL    := $(MODDIRI)/LinkDef.h
 SMATRIXL32  := $(MODDIRI)/LinkDefD32.h
 #SMATRIXLINC :=
-SMATRIXDS   := $(MODDIRS)/G__Smatrix.cxx
-SMATRIXDS32 := $(MODDIRS)/G__Smatrix32.cxx
+SMATRIXDS   := $(call stripsrc,$(MODDIRS)/G__Smatrix.cxx)
+SMATRIXDS32 := $(call stripsrc,$(MODDIRS)/G__Smatrix32.cxx)
 SMATRIXDO   := $(SMATRIXDS:.cxx=.o)
 SMATRIXDO32 := $(SMATRIXDS32:.cxx=.o)
 SMATRIXDH   := $(SMATRIXDS:.cxx=.h)
@@ -35,7 +36,7 @@ SMATRIXH1   := $(filter-out $(MODDIRI)/Math/LinkDef%, $(wildcard $(MODDIRI)/Math
 SMATRIXH2   := $(filter-out $(MODDIRI)/Math/LinkDef%, $(wildcard $(MODDIRI)/Math/*.icc))
 SMATRIXH    := $(SMATRIXH1) $(SMATRIXH2)
 SMATRIXS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-SMATRIXO    := $(SMATRIXS:.cxx=.o)
+SMATRIXO    := $(call stripsrc,$(SMATRIXS:.cxx=.o))
 
 SMATRIXDEP  := $(SMATRIXO:.o=.d)  $(SMATRIXDO:.o=.d) $(SMATRIXDO32:.o=.d)
 
@@ -53,7 +54,7 @@ INCLUDEFILES += $(SMATRIXDEP)
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) \
-                test-$(MODNAME) check-$(MODNAME)
+                test-$(MODNAME)
 
 include/Math/%.h: $(SMATRIXDIRI)/%.h
 		@(if [ ! -d "include/Math" ]; then     \
@@ -74,18 +75,19 @@ $(SMATRIXLIB): $(SMATRIXO) $(SMATRIXDO) $(SMATRIXDO32) $(ORDER_) $(MAINLIBS)
 		   "$(SMATRIXLIBEXTRA)"
 
 $(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		@echo "for files $(SMATRIXDH1)"
+		$(MAKEDIR)
 		$(ROOTCINTTMP) -f $@ -c $(SMATRIXDH1) $(SMATRIXL)
-#		python reflex/python/genreflex/genreflex.py $(SMATRIXDIRS)/Dict.h -I$(SMATRIXDIRI) --selection_file=$(SMATRIXDIRS)/Selection.xml -o $(SMATRIXDIRS)/G__Smatrix.cxx
 
 $(SMATRIXDS32): $(SMATRIXDH1) $(SMATRIXL32) $(SMATRIXLINC) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		@echo "for files $(SMATRIXDH1)"
+		$(MAKEDIR)
 		$(ROOTCINTTMP) -f $@ -c $(SMATRIXDH1) $(SMATRIXL32)
 
 $(SMATRIXMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(SMATRIXL) $(SMATRIXLINC)
-		$(RLIBMAP) -o $(SMATRIXMAP) -l $(SMATRIXLIB) \
+		$(RLIBMAP) -o $@ -l $(SMATRIXLIB) \
 		   -d $(SMATRIXLIBDEPM) -c $(SMATRIXL) $(SMATRIXLINC)
 
 ifneq ($(ICC_MAJOR),)
@@ -108,12 +110,16 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(SMATRIXDEP) $(SMATRIXDS) $(SMATRIXDS32) $(SMATRIXDH) \
 		   $(SMATRIXDH32) $(SMATRIXLIB) $(SMATRIXMAP)
 		@rm -rf include/Math
-		-@cd $(SMATRIXDIR)/test && $(MAKE) distclean ROOTCONFIG=../../../bin/root-config
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@rm -rf $(SMATRIXDIRT)
+else
+		-@cd $(SMATRIXDIRT) && $(MAKE) distclean ROOTCONFIG=../../../bin/root-config
+endif
 
 distclean::     distclean-$(MODNAME)
 
 test-$(MODNAME): all-$(MODNAME)
-		@cd $(SMATRIXDIR)/test && $(MAKE) ROOTCONFIG=../../../bin/root-config
-
-check-$(MODNAME): test-$(MODNAME)
-		@cd $(SMATRIXDIR)/test && $(MAKE) ROOTCONFIG=../../../bin/root-config
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@$(INSTALL) $(SMATRIXDIR)/test $(SMATRIXDIRT)
+endif
+		@cd $(SMATRIXDIRT) && $(MAKE) ROOTCONFIG=../../../bin/root-config

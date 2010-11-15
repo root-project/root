@@ -18,13 +18,19 @@ if [ "x$1" != "x" ]; then
   what=" because $1 has changed"
 fi
 
+if [ "x$2" != "x" ]; then
+  srcdir="$2"
+else
+  srcdir="."
+fi
+
 echo ""
 echo "Trying to reconfigure${what}."
 echo "Using config statement:"
-echo "./configure $confline"
+echo "$srcdir/configure $confline"
 echo ""
-./configure $confline --nohowto || exit 1
+$srcdir/configure $confline --nohowto || exit 1
 echo "Reconfigure successful."
-echo "If the build fails, please run ./configure again."
+echo "If the build fails, please run $srcdir/configure again."
 echo ""
 test -e Makefile && sleep 1 && touch Makefile

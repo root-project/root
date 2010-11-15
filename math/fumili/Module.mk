@@ -4,7 +4,7 @@
 # Author: Rene Brun, 07/05/2003
 
 MODNAME      := fumili
-MODDIR       := math/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ FUMILIDIRI   := $(FUMILIDIR)/inc
 
 ##### libFumili #####
 FUMILIL      := $(MODDIRI)/LinkDef.h
-FUMILIDS     := $(MODDIRS)/G__Fumili.cxx
+FUMILIDS     := $(call stripsrc,$(MODDIRS)/G__Fumili.cxx)
 FUMILIDO     := $(FUMILIDS:.cxx=.o)
 FUMILIDH     := $(FUMILIDS:.cxx=.h)
 
 FUMILIH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 FUMILIS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-FUMILIO      := $(FUMILIS:.cxx=.o)
+FUMILIO      := $(call stripsrc,$(FUMILIS:.cxx=.o))
 
 FUMILIDEP    := $(FUMILIO:.o=.d) $(FUMILIDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(FUMILILIB):   $(FUMILIO) $(FUMILIDO) $(ORDER_) $(MAINLIBS) $(FUMILILIBDEP)
 		   "$(FUMILILIBEXTRA)"
 
 $(FUMILIDS):    $(FUMILIH) $(FUMILIL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FUMILIH) $(FUMILIL)
 
 $(FUMILIMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(FUMILIL)
-		$(RLIBMAP) -o $(FUMILIMAP) -l $(FUMILILIB) \
+		$(RLIBMAP) -o $@ -l $(FUMILILIB) \
 		   -d $(FUMILILIBDEPM) -c $(FUMILIL)
 
 all-$(MODNAME): $(FUMILILIB) $(FUMILIMAP)

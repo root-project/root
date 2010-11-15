@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := gui/gui
+MODNAME      := gui
+MODDIR       := $(ROOT_SRCDIR)/gui/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -15,9 +16,9 @@ GUIDIRI      := $(GUIDIR)/inc
 GUIL1        := $(MODDIRI)/LinkDef1.h
 GUIL2        := $(MODDIRI)/LinkDef2.h
 GUIL3        := $(MODDIRI)/LinkDef3.h
-GUIDS1       := $(MODDIRS)/G__Gui1.cxx
-GUIDS2       := $(MODDIRS)/G__Gui2.cxx
-GUIDS3       := $(MODDIRS)/G__Gui3.cxx
+GUIDS1       := $(call stripsrc,$(MODDIRS)/G__Gui1.cxx)
+GUIDS2       := $(call stripsrc,$(MODDIRS)/G__Gui2.cxx)
+GUIDS3       := $(call stripsrc,$(MODDIRS)/G__Gui3.cxx)
 GUIDO1       := $(GUIDS1:.cxx=.o)
 GUIDO2       := $(GUIDS2:.cxx=.o)
 GUIDO3       := $(GUIDS3:.cxx=.o)
@@ -59,7 +60,7 @@ GUIH3        := $(patsubst %,$(MODDIRI)/%,$(GUIH3))
 GUIH4        := $(patsubst %,$(MODDIRI)/%,$(GUIH4))
 GUIH         := $(GUIH1) $(GUIH2) $(GUIH3) $(GUIH4)
 GUIS         := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GUIO         := $(GUIS:.cxx=.o)
+GUIO         := $(call stripsrc,$(GUIS:.cxx=.o))
 
 GUIDEP       := $(GUIO:.o=.d) $(GUIDO:.o=.d)
 
@@ -75,6 +76,8 @@ ALLMAPS     += $(GUIMAP)
 INCLUDEFILES += $(GUIDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(GUIDIRI)/%.h
 		cp $< $@
 
@@ -84,27 +87,30 @@ $(GUILIB):      $(GUIO) $(GUIDO) $(ORDER_) $(MAINLIBS) $(GUILIBDEP)
 		   "$(GUILIBEXTRA)"
 
 $(GUIDS1):      $(GUIH1) $(GUIL1) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GUIH1) $(GUIL1)
 $(GUIDS2):      $(GUIH2) $(GUIL2) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GUIH2) $(GUIL2)
 $(GUIDS3):      $(GUIH3) $(GUIL3) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GUIH3) $(GUIL3)
 
 $(GUIMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GUIL)
-		$(RLIBMAP) -o $(GUIMAP) -l $(GUILIB) \
+		$(RLIBMAP) -o $@ -l $(GUILIB) \
 		   -d $(GUILIBDEPM) -c $(GUIL)
 
-all-gui:        $(GUILIB) $(GUIMAP)
+all-$(MODNAME): $(GUILIB) $(GUIMAP)
 
-clean-gui:
+clean-$(MODNAME):
 		@rm -f $(GUIO) $(GUIDO)
 
-clean::         clean-gui
+clean::         clean-$(MODNAME)
 
-distclean-gui:  clean-gui
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GUIDEP) $(GUIDS) $(GUIDH) $(GUILIB) $(GUIMAP)
 
-distclean::     distclean-gui
+distclean::     distclean-$(MODNAME)

@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := minuit
-MODDIR       := math/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ MINUITDIRI   := $(MINUITDIR)/inc
 
 ##### libMinuit #####
 MINUITL      := $(MODDIRI)/LinkDef.h
-MINUITDS     := $(MODDIRS)/G__Minuit.cxx
+MINUITDS     := $(call stripsrc,$(MODDIRS)/G__Minuit.cxx)
 MINUITDO     := $(MINUITDS:.cxx=.o)
 MINUITDH     := $(MINUITDS:.cxx=.h)
 
 MINUITH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 MINUITS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-MINUITO      := $(MINUITS:.cxx=.o)
+MINUITO      := $(call stripsrc,$(MINUITS:.cxx=.o))
 
 MINUITDEP    := $(MINUITO:.o=.d) $(MINUITDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(MINUITLIB):   $(MINUITO) $(MINUITDO) $(ORDER_) $(MAINLIBS) $(MINUITLIBDEP)
 		   "$(MINUITLIBEXTRA)"
 
 $(MINUITDS):    $(MINUITH) $(MINUITL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MINUITH) $(MINUITL)
 
 $(MINUITMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(MINUITL)
-		$(RLIBMAP) -o $(MINUITMAP) -l $(MINUITLIB) \
+		$(RLIBMAP) -o $@ -l $(MINUITLIB) \
 		   -d $(MINUITLIBDEPM) -c $(MINUITL)
 
 all-$(MODNAME): $(MINUITLIB) $(MINUITMAP)

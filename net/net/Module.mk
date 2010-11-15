@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := net
-MODDIR       := net/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ NETDIRI      := $(NETDIR)/inc
 
 ##### libNet #####
 NETL         := $(MODDIRI)/LinkDef.h
-NETDS        := $(MODDIRS)/G__Net.cxx
+NETDS        := $(call stripsrc,$(MODDIRS)/G__Net.cxx)
 NETDO        := $(NETDS:.cxx=.o)
 NETDH        := $(NETDS:.cxx=.h)
 
 NETH         := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 NETS         := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-NETO         := $(NETS:.cxx=.o)
+NETO         := $(call stripsrc,$(NETS:.cxx=.o))
 
 NETDEP       := $(NETO:.o=.d) $(NETDO:.o=.d)
 
@@ -49,11 +49,12 @@ $(NETLIB):      $(NETO) $(NETDO) $(ORDER_) $(MAINLIBS) $(NETLIBDEP)
 		   "$(NETLIBEXTRA)"
 
 $(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(NETH) $(NETL)
 
 $(NETMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(NETL)
-		$(RLIBMAP) -o $(NETMAP) -l $(NETLIB) -d $(NETLIBDEPM) -c $(NETL)
+		$(RLIBMAP) -o $@ -l $(NETLIB) -d $(NETLIBDEPM) -c $(NETL)
 
 all-$(MODNAME): $(NETLIB) $(NETMAP)
 

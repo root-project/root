@@ -4,7 +4,7 @@
 # Author: Ilka Antcheva, 02/10/2006
 
 MODNAME      := fitpanel
-MODDIR       := gui/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/gui/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ FITPANELDIRI := $(FITPANELDIR)/inc
 
 ##### libFitPanel #####
 FITPANELL    := $(MODDIRI)/LinkDef.h
-FITPANELDS   := $(MODDIRS)/G__FitPanel.cxx
+FITPANELDS   := $(call stripsrc,$(MODDIRS)/G__FitPanel.cxx)
 FITPANELDO   := $(FITPANELDS:.cxx=.o)
 FITPANELDH   := $(FITPANELDS:.cxx=.h)
 
 FITPANELH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 FITPANELS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-FITPANELO    := $(FITPANELS:.cxx=.o)
+FITPANELO    := $(call stripsrc,$(FITPANELS:.cxx=.o))
 
 FITPANELDEP  := $(FITPANELO:.o=.d) $(FITPANELDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(FITPANELLIB): $(FITPANELO) $(FITPANELDO) $(ORDER_) $(MAINLIBS) $(FITPANELLIBDE
 		   "$(FITPANELLIBEXTRA)"
 
 $(FITPANELDS):  $(FITPANELH) $(FITPANELL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FITPANELH) $(FITPANELL)
 
 $(FITPANELMAP): $(RLIBMAP) $(MAKEFILEDEP) $(FITPANELL)
-		$(RLIBMAP) -o $(FITPANELMAP) -l $(FITPANELLIB) \
+		$(RLIBMAP) -o $@ -l $(FITPANELLIB) \
 		   -d $(FITPANELLIBDEPM) -c $(FITPANELL)
 
 all-$(MODNAME): $(FITPANELLIB) $(FITPANELMAP)

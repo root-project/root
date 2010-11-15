@@ -4,13 +4,14 @@
 # Author: Fons Rademakers, 20/6/2005
 
 MODNAME       := genvector
-MODDIR        := math/$(MODNAME)
+MODDIR        := $(ROOT_SRCDIR)/math/$(MODNAME)
 MODDIRS       := $(MODDIR)/src
 MODDIRI       := $(MODDIR)/inc
 
 GENVECTORDIR  := $(MODDIR)
 GENVECTORDIRS := $(GENVECTORDIR)/src
 GENVECTORDIRI := $(GENVECTORDIR)/inc
+GENVECTORDIRT := $(call stripsrc,$(GENVECTORDIR)/test)
 
 ##### libGenvector #####
 GENVECTORL    := $(MODDIRI)/Math/LinkDef_GenVector.h
@@ -21,8 +22,8 @@ GENVECTORLINC :=  \
                 $(MODDIRI)/Math/LinkDef_Vector4D.h \
                 $(MODDIRI)/Math/LinkDef_GenVector2.h \
                 $(MODDIRI)/Math/LinkDef_Rotation.h
-GENVECTORDS   := $(MODDIRS)/G__GenVector.cxx
-GENVECTORDS32 := $(MODDIRS)/G__GenVector32.cxx
+GENVECTORDS   := $(call stripsrc,$(MODDIRS)/G__GenVector.cxx)
+GENVECTORDS32 := $(call stripsrc,$(MODDIRS)/G__GenVector32.cxx)
 GENVECTORDO   := $(GENVECTORDS:.cxx=.o)
 GENVECTORDO32 := $(GENVECTORDS32:.cxx=.o)
 GENVECTORDH   := $(GENVECTORDS:.cxx=.h)
@@ -52,20 +53,17 @@ GENVECTORDH1  := $(MODDIRI)/Math/Vector2D.h \
                  $(MODDIRI)/Math/VectorUtil.h \
                  $(MODDIRI)/Math/VectorUtil_Cint.h  
 
-
 GENVECTORDH132:= $(MODDIRI)/Math/Vector2D.h \
 	         $(MODDIRI)/Math/Point2D.h \
 	         $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/Point3D.h \
                  $(MODDIRI)/Math/Vector4D.h \
 
-
-
 GENVECTORAH   := $(filter-out $(MODDIRI)/Math/LinkDef%, $(wildcard $(MODDIRI)/Math/*.h))
 GENVECTORGVH  := $(filter-out $(MODDIRI)/Math/GenVector/LinkDef%, $(wildcard $(MODDIRI)/Math/GenVector/*.h))
 GENVECTORH    := $(GENVECTORAH) $(GENVECTORGVH)
 GENVECTORS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GENVECTORO    := $(GENVECTORS:.cxx=.o)
+GENVECTORO    := $(call stripsrc,$(GENVECTORS:.cxx=.o))
 
 GENVECTORDEP  := $(GENVECTORO:.o=.d)  $(GENVECTORDO:.o=.d) $(GENVECTORDO32:.o=.d)
 
@@ -98,15 +96,19 @@ $(GENVECTORLIB): $(GENVECTORO) $(GENVECTORDO) $(GENVECTORDO32) $(ORDER_) $(MAINL
 		   "$(GENVECTORLIBEXTRA)"
 
 $(GENVECTORDS):  $(GENVECTORDH1) $(GENVECTORL) $(GENVECTORLINC) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
+		$(MAKEDIR)
 		$(ROOTCINTTMP) -f $@ -c $(GENVECTORDH1) $(GENVECTORL)
 
 $(GENVECTORDS32): $(GENVECTORDH132) $(GENVECTORL32) $(GENVECTORLINC) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
+		$(MAKEDIR)
 		$(ROOTCINTTMP) -f $@ -c $(GENVECTORDH132) $(GENVECTORL32)
 
 $(GENVECTORMAP): $(RLIBMAP) $(MAKEFILEDEP) $(GENVECTORL) $(GENVECTORLINC) $(GENVECTORL32)
-		$(RLIBMAP) -o $(GENVECTORMAP) -l $(GENVECTORLIB) \
+		$(RLIBMAP) -o $@ -l $(GENVECTORLIB) \
 		   -d $(GENVECTORLIBDEPM) -c $(GENVECTORL) $(GENVECTORLINC) $(GENVECTORL32)
 
 all-$(MODNAME): $(GENVECTORLIB) $(GENVECTORMAP)
@@ -121,16 +123,22 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		   $(GENVECTORDH) $(GENVECTORDH32) \
 		   $(GENVECTORLIB) $(GENVECTORMAP)
 		@rm -rf include/Math
-		@cd $(GENVECTORDIR)/test; $(MAKE) distclean ROOTCONFIG=../../../bin/root-config
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@rm -rf $(GENVECTORDIRT)
+else
+		@cd $(GENVECTORDIRT); $(MAKE) distclean ROOTCONFIG=../../../bin/root-config
+endif
 
 distclean::     distclean-$(MODNAME)
 
 test-$(MODNAME): all-$(MODNAME)
-		@cd $(GENVECTORDIR)/test; $(MAKE) ROOTCONFIG=../../../bin/root-config
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@$(INSTALL) $(GENVECTORDIR)/test $(GENVECTORDIRT)
+endif
+		@cd $(GENVECTORDIRT); $(MAKE) ROOTCONFIG=../../../bin/root-config
 
 ##### extra rules ######
 
 # Optimize dictionary with stl containers.
 $(GENVECTORDO): NOOPT = $(OPT)
 $(GENVECTORDO32): NOOPT = $(OPT)
-

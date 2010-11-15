@@ -4,7 +4,7 @@
 # Author: Rene Brun 01/11/2007
 
 MODNAME      := pythia8
-MODDIR       := montecarlo/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/montecarlo/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ PYTHIA8DIRI  := $(PYTHIA8DIR)/inc
 
 ##### libEGPythia8 #####
 PYTHIA8L     := $(MODDIRI)/LinkDef.h
-PYTHIA8DS    := $(MODDIRS)/G__Pythia8.cxx
+PYTHIA8DS    := $(call stripsrc,$(MODDIRS)/G__Pythia8.cxx)
 PYTHIA8DO    := $(PYTHIA8DS:.cxx=.o)
 PYTHIA8DH    := $(PYTHIA8DS:.cxx=.h)
 
 PYTHIA8H     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PYTHIA8S     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-PYTHIA8O     := $(PYTHIA8S:.cxx=.o)
+PYTHIA8O     := $(call stripsrc,$(PYTHIA8S:.cxx=.o))
 
 PYTHIA8DEP   := $(PYTHIA8O:.o=.d) $(PYTHIA8DO:.o=.d)
 
@@ -47,12 +47,13 @@ $(PYTHIA8LIB):  $(PYTHIA8O) $(PYTHIA8DO) $(ORDER_) $(MAINLIBS) $(PYTHIA8LIBDEP)
 		   "$(PYTHIA8O) $(PYTHIA8DO)" \
 		   "$(PYTHIA8LIBEXTRA) $(FPYTHIA8LIBDIR) $(FPYTHIA8LIB)"
 
-$(PYTHIA8DS):   $(PYTHIA8H) $(PYTHIA8L) $(ROOTCINTTMPEXE)
+$(PYTHIA8DS):   $(PYTHIA8H) $(PYTHIA8L) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -I$(FPYTHIA8INCDIR) $(PYTHIA8H) $(PYTHIA8L)
 
 $(PYTHIA8MAP):  $(RLIBMAP) $(MAKEFILEDEP) $(PYTHIA8L)
-		$(RLIBMAP) -o $(PYTHIA8MAP) -l $(PYTHIA8LIB) \
+		$(RLIBMAP) -o $@ -l $(PYTHIA8LIB) \
 		   -d $(PYTHIA8LIBDEPM) -c $(PYTHIA8L)
 
 all-$(MODNAME): $(PYTHIA8LIB) $(PYTHIA8MAP)

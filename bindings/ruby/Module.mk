@@ -4,7 +4,7 @@
 # Authors: Elias Athanasopoulos, 31/5/2004
 
 MODNAME        := ruby
-MODDIR         := bindings/$(MODNAME)
+MODDIR         := $(ROOT_SRCDIR)/bindings/$(MODNAME)
 MODDIRS        := $(MODDIR)/src
 MODDIRI        := $(MODDIR)/inc
 
@@ -16,7 +16,7 @@ RUBYROOTDIRI   := $(RUBYROOTDIR)/inc
 ifeq ($(ARCH),macosx64)
 ifeq ($(MACOSX_MINOR),5)
 RUBY64S        := $(MODDIRS)/ruby64.c
-RUBY64O        := $(RUBY64S:.c=.o)
+RUBY64O        := $(call stripsrc,$(RUBY64S:.c=.o))
 RUBY64         := bin/ruby64
 RUBY64DEP      := $(RUBY64O:.o=.d)
 endif
@@ -24,13 +24,13 @@ endif
 
 ##### libRuby #####
 RUBYROOTL      := $(MODDIRI)/LinkDef.h
-RUBYROOTDS     := $(MODDIRS)/G__Ruby.cxx
+RUBYROOTDS     := $(call stripsrc,$(MODDIRS)/G__Ruby.cxx)
 RUBYROOTDO     := $(RUBYROOTDS:.cxx=.o)
 RUBYROOTDH     := $(RUBYROOTDS:.cxx=.h)
 
 RUBYROOTH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 RUBYROOTS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-RUBYROOTO      := $(RUBYROOTS:.cxx=.o)
+RUBYROOTO      := $(call stripsrc,$(RUBYROOTS:.cxx=.o))
 
 RUBYROOTDEP    := $(RUBYROOTO:.o=.d) $(RUBYROOTDO:.o=.d)
 
@@ -61,11 +61,12 @@ $(RUBYROOTLIB): $(RUBYROOTO) $(RUBYROOTDO) $(ORDER_) $(MAINLIBS) $(RUBYLIBDEP)
 		   "$(RUBYLIBDIR) $(RUBYLIB) $(RUBYLIBEXTRA) $(CRYPTLIBS)"
 
 $(RUBYROOTDS):  $(RUBYROOTH) $(RUBYROOTL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RUBYROOTH) $(RUBYROOTL)
 
 $(RUBYROOTMAP): $(RLIBMAP) $(MAKEFILEDEP) $(RUBYROOTL)
-		$(RLIBMAP) -o $(RUBYROOTMAP) -l $(RUBYROOTLIB) \
+		$(RLIBMAP) -o $@ -l $(RUBYROOTLIB) \
 		   -d $(RUBYROOTLIBDEPM) -c $(RUBYROOTL)
 
 $(RUBY64):      $(RUBY64O)

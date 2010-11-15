@@ -4,7 +4,7 @@
 # Author: Yan Liu, 11/17/2004
 
 MODNAME       := oracle
-MODDIR        := sql/$(MODNAME)
+MODDIR        := $(ROOT_SRCDIR)/sql/$(MODNAME)
 MODDIRS       := $(MODDIR)/src
 MODDIRI       := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ ORACLEDIRI    := $(ORACLEDIR)/inc
 
 ##### libOracle #####
 ORACLEL       := $(MODDIRI)/LinkDef.h
-ORACLEDS      := $(MODDIRS)/G__Oracle.cxx
+ORACLEDS      := $(call stripsrc,$(MODDIRS)/G__Oracle.cxx)
 ORACLEDO      := $(ORACLEDS:.cxx=.o)
 ORACLEDH      := $(ORACLEDS:.cxx=.h)
 
 ORACLEH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 ORACLES       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-ORACLEO       := $(ORACLES:.cxx=.o)
+ORACLEO       := $(call stripsrc,$(ORACLES:.cxx=.o))
 
 ORACLEDEP     := $(ORACLEO:.o=.d) $(ORACLEDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(ORACLELIB):   $(ORACLEO) $(ORACLEDO) $(ORDER_) $(MAINLIBS) $(ORACLELIBDEP)
 		   "$(ORACLELIBEXTRA) $(ORACLELIBDIR) $(ORACLECLILIB)"
 
 $(ORACLEDS):    $(ORACLEH) $(ORACLEL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ORACLEH) $(ORACLEL)
 
 $(ORACLEMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(ORACLEL)
-		$(RLIBMAP) -o $(ORACLEMAP) -l $(ORACLELIB) \
+		$(RLIBMAP) -o $@ -l $(ORACLELIB) \
 		   -d $(ORACLELIBDEPM) -c $(ORACLEL)
 
 all-$(MODNAME): $(ORACLELIB) $(ORACLEMAP)

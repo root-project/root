@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 16/3/2007
 
 MODNAME      := proofplayer
-MODDIR       := proof/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,7 +14,7 @@ PROOFPLAYERDIRI := $(PROOFPLAYERDIR)/inc
 
 ##### libProofPlayer #####
 PROOFPLAYERL  := $(MODDIRI)/LinkDef.h
-PROOFPLAYERDS := $(MODDIRS)/G__ProofPlayer.cxx
+PROOFPLAYERDS := $(call stripsrc,$(MODDIRS)/G__ProofPlayer.cxx)
 PROOFPLAYERDO := $(PROOFPLAYERDS:.cxx=.o)
 PROOFPLAYERDH := $(PROOFPLAYERDS:.cxx=.h)
 
@@ -22,7 +22,7 @@ PROOFPLAYERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PROOFPLAYERH  := $(filter-out $(MODDIRI)/TProofDraw%,$(PROOFPLAYERH))
 PROOFPLAYERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 PROOFPLAYERS  := $(filter-out $(MODDIRS)/TProofDraw%,$(PROOFPLAYERS))
-PROOFPLAYERO  := $(PROOFPLAYERS:.cxx=.o)
+PROOFPLAYERO  := $(call stripsrc,$(PROOFPLAYERS:.cxx=.o))
 
 PROOFPLAYERDEP := $(PROOFPLAYERO:.o=.d) $(PROOFPLAYERDO:.o=.d)
 
@@ -31,13 +31,13 @@ PROOFPLAYERMAP := $(PROOFPLAYERLIB:.$(SOEXT)=.rootmap)
 
 ##### libProofDraw #####
 PROOFDRAWL   := $(MODDIRI)/LinkDefDraw.h
-PROOFDRAWDS  := $(MODDIRS)/G__ProofDraw.cxx
+PROOFDRAWDS  := $(call stripsrc,$(MODDIRS)/G__ProofDraw.cxx)
 PROOFDRAWDO  := $(PROOFDRAWDS:.cxx=.o)
 PROOFDRAWDH  := $(PROOFDRAWDS:.cxx=.h)
 
 PROOFDRAWH   := $(MODDIRI)/TProofDraw.h
 PROOFDRAWS   := $(MODDIRS)/TProofDraw.cxx
-PROOFDRAWO   := $(PROOFDRAWS:.cxx=.o)
+PROOFDRAWO   := $(call stripsrc,$(PROOFDRAWS:.cxx=.o))
 
 PROOFDRAWDEP := $(PROOFDRAWO:.o=.d) $(PROOFDRAWDO:.o=.d)
 
@@ -67,11 +67,12 @@ $(PROOFPLAYERLIB): $(PROOFPLAYERO) $(PROOFPLAYERDO) $(ORDER_) $(MAINLIBS) \
 		   "$(PROOFPLAYERLIBEXTRA)"
 
 $(PROOFPLAYERDS): $(PROOFPLAYERH) $(PROOFPLAYERL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PROOFPLAYERH) $(PROOFPLAYERL)
 
 $(PROOFPLAYERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(PROOFPLAYERL)
-		$(RLIBMAP) -o $(PROOFPLAYERMAP) -l $(PROOFPLAYERLIB) \
+		$(RLIBMAP) -o $@ -l $(PROOFPLAYERLIB) \
 		   -d $(PROOFPLAYERLIBDEPM) -c $(PROOFPLAYERL)
 
 $(PROOFDRAWLIB): $(PROOFDRAWO) $(PROOFDRAWDO) $(ORDER_) $(MAINLIBS) \
@@ -82,6 +83,7 @@ $(PROOFDRAWLIB): $(PROOFDRAWO) $(PROOFDRAWDO) $(ORDER_) $(MAINLIBS) \
 		   "$(PROOFDRAWLIBEXTRA)"
 
 $(PROOFDRAWDS): $(PROOFDRAWH) $(PROOFDRAWL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PROOFDRAWH) $(PROOFDRAWL)
 

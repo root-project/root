@@ -20,27 +20,27 @@ distclean::     distclean-$(MODNAME)
 
 else
 
-MODDIR       := graf2d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 
 FREETYPEVERS := freetype-2.3.12
-FREETYPEDIR  := $(MODDIR)
-FREETYPEDIRS := $(MODDIRS)
-FREETYPEDIRI := $(MODDIRS)/$(FREETYPEVERS)/include
+FREETYPEDIR  := $(call stripsrc,$(MODDIR))
+FREETYPEDIRS := $(call stripsrc,$(MODDIRS))
+FREETYPEDIRI := $(FREETYPEDIRS)/$(FREETYPEVERS)/include
 
 ##### libfreetype #####
 FREETYPELIBS := $(MODDIRS)/$(FREETYPEVERS).tar.gz
 ifeq ($(PLATFORM),win32)
 FREETYPELIB  := $(LPATH)/libfreetype.lib
 ifeq (yes,$(WINRTDEBUG))
-FREETYPELIBA := $(MODDIRS)/$(FREETYPEVERS)/objs/freetype2312MT_D.lib
+FREETYPELIBA := $(call stripsrc,$(MODDIRS)/$(FREETYPEVERS)/objs/freetype2312MT_D.lib)
 FTNMCFG      := "freetype - Win32 Debug Multithreaded"
 else
-FREETYPELIBA := $(MODDIRS)/$(FREETYPEVERS)/objs/freetype2312MT.lib
+FREETYPELIBA := $(call stripsrc,$(MODDIRS)/$(FREETYPEVERS)/objs/freetype2312MT.lib)
 FTNMCFG      := "freetype - Win32 Release Multithreaded"
 endif
 else
-FREETYPELIBA := $(MODDIRS)/$(FREETYPEVERS)/objs/.libs/libfreetype.a
+FREETYPELIBA := $(call stripsrc,$(MODDIRS)/$(FREETYPEVERS)/objs/.libs/libfreetype.a)
 FREETYPELIB  := $(LPATH)/libfreetype.a
 endif
 FREETYPEINC  := $(FREETYPEDIRI:%=-I%)
@@ -61,6 +61,7 @@ else
 endif
 
 $(FREETYPELIBA): $(FREETYPELIBS)
+		$(MAKEDIR)
 ifeq ($(PLATFORM),win32)
 		@(if [ -d $(FREETYPEDIRS)/$(FREETYPEVERS) ]; then \
 			rm -rf $(FREETYPEDIRS)/$(FREETYPEVERS); \
@@ -68,7 +69,7 @@ ifeq ($(PLATFORM),win32)
 		echo "*** Building $@..."; \
 		cd $(FREETYPEDIRS); \
 		if [ ! -d $(FREETYPEVERS) ]; then \
-			gunzip -c $(FREETYPEVERS).tar.gz | tar xf -; \
+			gunzip -c $(FREETYPELIBS) | tar xf -; \
 		fi; \
 		cd $(FREETYPEVERS)/builds/win32/visualc; \
 		cp ../../../../win/freetype.mak .; \
@@ -84,7 +85,7 @@ else
 		echo "*** Building $@..."; \
 		cd $(FREETYPEDIRS); \
 		if [ ! -d $(FREETYPEVERS) ]; then \
-			gunzip -c $(FREETYPEVERS).tar.gz | tar xf -; \
+			gunzip -c $(FREETYPELIBS) | tar xf -; \
 		fi; \
 		cd $(FREETYPEVERS); \
 		FREECC=$(CC); \
@@ -166,9 +167,13 @@ endif
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
+ifeq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@mv $(FREETYPELIBS) $(FREETYPEDIRS)/-$(FREETYPEVERS).tar.gz
+endif
 		@rm -rf $(FREETYPELIB) $(FREETYPEDIRS)/freetype-*
+ifeq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@mv $(FREETYPEDIRS)/-$(FREETYPEVERS).tar.gz $(FREETYPELIBS)
+endif
 
 distclean::     distclean-$(MODNAME)
 

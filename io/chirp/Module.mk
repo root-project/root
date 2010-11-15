@@ -3,7 +3,7 @@
 # Author: Dan Bradley <dan@hep.wisc.edu>, 16/12/2002
 
 MODNAME     := chirp
-MODDIR      := io/$(MODNAME)
+MODDIR      := $(ROOT_SRCDIR)/io/$(MODNAME)
 MODDIRS     := $(MODDIR)/src
 MODDIRI     := $(MODDIR)/inc
 
@@ -13,13 +13,13 @@ CHIRPDIRI   := $(CHIRPDIR)/inc
 
 ##### libChirp #####
 CHIRPL      := $(MODDIRI)/LinkDef.h
-CHIRPDS     := $(MODDIRS)/G__Chirp.cxx
+CHIRPDS     := $(call stripsrc,$(MODDIRS)/G__Chirp.cxx)
 CHIRPDO     := $(CHIRPDS:.cxx=.o)
 CHIRPDH     := $(CHIRPDS:.cxx=.h)
 
 CHIRPH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 CHIRPS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-CHIRPO      := $(CHIRPS:.cxx=.o)
+CHIRPO      := $(call stripsrc,$(CHIRPS:.cxx=.o))
 
 CHIRPDEP    := $(CHIRPO:.o=.d) $(CHIRPDO:.o=.d)
 
@@ -46,11 +46,12 @@ $(CHIRPLIB):    $(CHIRPO) $(CHIRPDO) $(ORDER_) $(MAINLIBS) $(CHIRPLIBDEP)
 		   "$(CHIRPLIBEXTRA) $(CHIRPLIBDIR) $(CHIRPCLILIB)"
 
 $(CHIRPDS):     $(CHIRPH) $(CHIRPL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(CHIRPH) $(CHIRPL)
 
 $(CHIRPMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(CHIRPL)
-		$(RLIBMAP) -o $(CHIRPMAP) -l $(CHIRPLIB) \
+		$(RLIBMAP) -o $@ -l $(CHIRPLIB) \
 		   -d $(CHIRPLIBDEPM) -c $(CHIRPL)
 
 all-$(MODNAME): $(CHIRPLIB) $(CHIRPMAP)

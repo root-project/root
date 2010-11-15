@@ -4,7 +4,7 @@
 # Author: Maarten Ballintijn 18/10/2004
 
 MODNAME      := peac
-MODDIR       := proof/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ PEACDIRI     := $(PEACDIR)/inc
 
 ##### libPeac #####
 PEACL        := $(MODDIRI)/LinkDef.h
-PEACDS       := $(MODDIRS)/G__Peac.cxx
+PEACDS       := $(call stripsrc,$(MODDIRS)/G__Peac.cxx)
 PEACDO       := $(PEACDS:.cxx=.o)
 PEACDH       := $(PEACDS:.cxx=.h)
 
 PEACH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PEACS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-PEACO        := $(PEACS:.cxx=.o)
+PEACO        := $(call stripsrc,$(PEACS:.cxx=.o))
 
 PEACDEP      := $(PEACO:.o=.d) $(PEACDO:.o=.d)
 
@@ -29,13 +29,13 @@ PEACMAP      := $(PEACLIB:.$(SOEXT)=.rootmap)
 
 ##### libPeacGui #####
 PEACGUIL     := $(MODDIRI)/LinkDefGui.h
-PEACGUIDS    := $(MODDIRS)/G__PeacGui.cxx
+PEACGUIDS    := $(call stripsrc,$(MODDIRS)/G__PeacGui.cxx)
 PEACGUIDO    := $(PEACGUIDS:.cxx=.o)
 PEACGUIDH    := $(PEACGUIDS:.cxx=.h)
 
 PEACGUIH     := $(MODDIRI)/TProofStartupDialog.h
 PEACGUIS     := $(MODDIRS)/TProofStartupDialog.cxx
-PEACGUIO     := $(PEACGUIS:.cxx=.o)
+PEACGUIO     := $(call stripsrc,$(PEACGUIS:.cxx=.o))
 
 PEACGUIDEP   := $(PEACGUIO:.o=.d) $(PEACGUIDO:.o=.d)
 
@@ -69,11 +69,12 @@ $(PEACLIB):     $(PEACO) $(PEACDO) $(ORDER_) $(MAINLIBS) $(PEACLIBDEP)
 		   "$(PEACLIBEXTRA)"
 
 $(PEACDS):      $(PEACH) $(PEACL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PEACH) $(PEACL)
 
 $(PEACMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(PEACL)
-		$(RLIBMAP) -o $(PEACMAP) -l $(PEACLIB) \
+		$(RLIBMAP) -o $@ -l $(PEACLIB) \
 		   -d $(PEACLIBDEPM) -c $(PEACL)
 
 $(PEACGUILIB):  $(PEACGUIO) $(PEACGUIDO) $(ORDER_) $(MAINLIBS) $(PEACGUILIBDEP)
@@ -83,6 +84,7 @@ $(PEACGUILIB):  $(PEACGUIO) $(PEACGUIDO) $(ORDER_) $(MAINLIBS) $(PEACGUILIBDEP)
 		   "$(PEACGUILIBEXTRA)"
 
 $(PEACGUIDS):   $(PEACGUIH) $(PEACGUIL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PEACGUIH) $(PEACGUIL)
 

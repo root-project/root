@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 24/8/2001
 
 MODNAME      := sapdb
-MODDIR       := sql/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/sql/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ SAPDBDIRI    := $(SAPDBDIR)/inc
 
 ##### libSapDB #####
 SAPDBL       := $(MODDIRI)/LinkDef.h
-SAPDBDS      := $(MODDIRS)/G__SapDB.cxx
+SAPDBDS      := $(call stripsrc,$(MODDIRS)/G__SapDB.cxx)
 SAPDBDO      := $(SAPDBDS:.cxx=.o)
 SAPDBDH      := $(SAPDBDS:.cxx=.h)
 
 SAPDBH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 SAPDBS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-SAPDBO       := $(SAPDBS:.cxx=.o)
+SAPDBO       := $(call stripsrc,$(SAPDBS:.cxx=.o))
 
 SAPDBDEP     := $(SAPDBO:.o=.d) $(SAPDBDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(SAPDBLIB):    $(SAPDBO) $(SAPDBDO) $(ORDER_) $(MAINLIBS)
 		   "$(SAPDBLIBEXTRA) $(SAPDBLIBDIR) $(SAPDBCLILIB)"
 
 $(SAPDBDS):     $(SAPDBH) $(SAPDBL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SAPDBH) $(SAPDBL)
 
 $(SAPDBMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(SAPDBL)
-		$(RLIBMAP) -o $(SAPDBMAP) -l $(SAPDBLIB) \
+		$(RLIBMAP) -o $@ -l $(SAPDBLIB) \
 		   -d $(SAPDBLIBDEPM) -c $(SAPDBL)
 
 all-$(MODNAME): $(SAPDBLIB) $(SAPDBMAP)

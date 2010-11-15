@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := winnt
-MODDIR       := core/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,14 +14,14 @@ WINNTDIRI    := $(WINNTDIR)/inc
 
 ##### libWinNT (part of libCore) #####
 WINNTL       := $(MODDIRI)/LinkDef.h
-WINNTDS      := $(MODDIRS)/G__WinNT.cxx
+WINNTDS      := $(call stripsrc,$(MODDIRS)/G__WinNT.cxx)
 WINNTDO      := $(WINNTDS:.cxx=.o)
 WINNTDH      := $(WINNTDS:.cxx=.h)
 
 WINNTH1      := $(MODDIRI)/TWinNTSystem.h
 WINNTH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 WINNTS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-WINNTO       := $(WINNTS:.cxx=.o)
+WINNTO       := $(call stripsrc,$(WINNTS:.cxx=.o))
 
 WINNTDEP     := $(WINNTO:.o=.d) $(WINNTDO:.o=.d)
 
@@ -38,6 +38,7 @@ include/%.h:    $(WINNTDIRI)/%.h
 		cp $< $@
 
 $(WINNTDS):     $(WINNTH1) $(WINNTL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(WINNTH1) $(WINNTL)
 

@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := castor
-MODDIR       := io/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/io/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ CASTORDIRI   := $(CASTORDIR)/inc
 
 ##### libRCastor #####
 CASTORL      := $(MODDIRI)/LinkDef.h
-CASTORDS     := $(MODDIRS)/G__CASTOR.cxx
+CASTORDS     := $(call stripsrc,$(MODDIRS)/G__CASTOR.cxx)
 CASTORDO     := $(CASTORDS:.cxx=.o)
 CASTORDH     := $(CASTORDS:.cxx=.h)
 
 CASTORH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 CASTORS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-CASTORO      := $(CASTORS:.cxx=.o)
+CASTORO      := $(call stripsrc,$(CASTORS:.cxx=.o))
 
 CASTORDEP    := $(CASTORO:.o=.d) $(CASTORDO:.o=.d)
 
@@ -48,11 +48,12 @@ $(CASTORLIB):   $(CASTORO) $(CASTORDO) $(ORDER_) $(MAINLIBS) $(CASTORLIBDEP)
 		   "$(CASTORLIBEXTRA) $(CASTORLIBDIR) $(CASTORCLILIB)"
 
 $(CASTORDS):    $(CASTORH) $(CASTORL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(CASTORH) $(CASTORL)
 
 $(CASTORMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(CASTORL)
-		$(RLIBMAP) -o $(CASTORMAP) -l $(CASTORLIB) \
+		$(RLIBMAP) -o $@ -l $(CASTORLIB) \
 		   -d $(CASTORLIBDEPM) -c $(CASTORL)
 
 all-$(MODNAME): $(CASTORLIB) $(CASTORMAP)

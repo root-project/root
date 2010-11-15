@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 27/11/2001
 
 MODNAME      := win32gdk
-MODDIR       := graf2d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -18,8 +18,8 @@ GDKDIRI      := $(MODDIR)/$(GDKVERS)/gdk
 GLIBDIRI     := $(MODDIR)/$(GDKVERS)/glib
 
 ##### gdk-1.3.dll #####
-GDKDLLA      := $(GDKDIRS)/gdk-1.3.dll
-GDKLIBA      := $(GDKDIRS)/gdk-1.3.lib
+GDKDLLA      := $(call stripsrc,$(GDKDIRS)/gdk-1.3.dll)
+GDKLIBA      := $(call stripsrc,$(GDKDIRS)/gdk-1.3.lib)
 GDKDLL       := bin/gdk-1.3.dll
 GDKLIB       := $(LPATH)/gdk-1.3.lib
 GDKSRC       := $(wildcard $(GDKDIRS)/*.c) $(wildcard $(GDKDIRS)/win32/*.c)
@@ -32,7 +32,7 @@ endif
 
 ##### libWin32gdk #####
 WIN32GDKL    := $(MODDIRI)/LinkDef.h
-WIN32GDKDS   := $(MODDIRS)/G__Win32gdk.cxx
+WIN32GDKDS   := $(call stripsrc,$(MODDIRS)/G__Win32gdk.cxx)
 WIN32GDKDO   := $(WIN32GDKDS:.cxx=.o)
 WIN32GDKDH   := $(WIN32GDKDS:.cxx=.h)
 
@@ -42,7 +42,7 @@ WIN32GDKS1   := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 WIN32GDKS2   := $(wildcard $(MODDIRS)/*.c)
 WIN32GDKO1   := $(WIN32GDKS1:.cxx=.o)
 WIN32GDKO2   := $(WIN32GDKS2:.c=.o)
-WIN32GDKO    := $(WIN32GDKO1) $(WIN32GDKO2)
+WIN32GDKO    := $(call stripsrc,$(WIN32GDKO1) $(WIN32GDKO2))
 
 WIN32GDKDEP  := $(WIN32GDKO:.o=.d) $(WIN32GDKDO:.o=.d)
 
@@ -80,9 +80,16 @@ $(GDKDLL):      $(GDKLIBA)
 		cp $(GDKDLLA) $@
 
 $(GDKLIBA):     $(GDKSRC)
+		$(MAKEDIR)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@$(INSTALL) $(GDKDIRS) $(call stripsrc,$(GDKDIRS))
+		@(find $(call stripsrc,$(GDKDIRS)) -name "*.o" -exec rm -f {} \; >/dev/null 2>&1;true)
+		@(find $(call stripsrc,$(GDKDIRS)) -name .svn -exec rm -f {} \; >/dev/null 2>&1;true)
+		@rm -f $(GDKLIBA)
+endif
 		@(echo "*** Building $@..."; \
 		  unset MAKEFLAGS; \
-		  cd $(GDKDIRS)/win32; \
+		  cd $(call stripsrc,$(GDKDIRS)/win32); \
 		  nmake -nologo -f makefile.msc \
 		  NMCXXFLAGS=$(GDKNMCXXFLAGS) VC_MAJOR=$(VC_MAJOR); \
 		  cd ..; \
@@ -97,11 +104,12 @@ $(WIN32GDKLIB): $(WIN32GDKO) $(WIN32GDKDO) $(FREETYPEDEP) $(GDKLIB) $(GDKDLL) \
 		   "$(FREETYPELDFLAGS) $(FREETYPELIB) $(GDKLIB) $(WIN32GDKLIBEXTRA) $(GDKLIBS) Glu32.lib Opengl32.lib"
 
 $(WIN32GDKDS):  $(WIN32GDKH1) $(WIN32GDKL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(WIN32GDKH1) $(WIN32GDKL)
 
 $(WIN32GDKMAP): $(RLIBMAP) $(MAKEFILEDEP) $(WIN32GDKL)
-		$(RLIBMAP) -o $(WIN32GDKMAP) -l $(WIN32GDKLIB) \
+		$(RLIBMAP) -o $@ -l $(WIN32GDKLIB) \
 		   -d $(WIN32GDKLIBDEPM) -c $(WIN32GDKL)
 
 all-$(MODNAME): $(WIN32GDKLIB) $(WIN32GDKMAP)
@@ -114,9 +122,13 @@ clean::         clean-$(MODNAME)
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(WIN32GDKDEP) $(WIN32GDKDS) $(WIN32GDKDH) \
 		   $(WIN32GDKLIB) $(WIN32GDKMAP) $(GDKLIBS) $(GDKDLLS)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		rm -rf $(call stripsrc,$(GDKDIRS))
+else
 ifeq ($(PLATFORM),win32)
-		-@(cd $(GDKDIRS); unset MAKEFLAGS; \
+		-@(cd $(call stripsrc,$(GDKDIRS)); unset MAKEFLAGS; \
 		nmake -nologo -f makefile.msc clean VC_MAJOR=$(VC_MAJOR))
+endif
 endif
 
 distclean::     distclean-$(MODNAME)

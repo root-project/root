@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := reflex
-MODDIR       := cint/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/cint/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -15,7 +15,7 @@ REFLEXDIRI   := $(REFLEXDIR)/inc
 REFLEXLIB    := $(LPATH)/libReflex.$(SOEXT)
 
 REFLEXS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-REFLEXO      := $(REFLEXS:.cxx=.o)
+REFLEXO      := $(call stripsrc,$(REFLEXS:.cxx=.o))
 
 # genreflex
 ifeq ($(PLATFORM),win32)

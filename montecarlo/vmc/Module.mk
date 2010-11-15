@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 12/4/2002
 
 MODNAME      := vmc
-MODDIR       := montecarlo/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/montecarlo/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,14 +14,14 @@ VMCDIRI      := $(VMCDIR)/inc
 
 ##### libVMC #####
 VMCL         := $(MODDIRI)/LinkDef.h
-VMCDS        := $(MODDIRS)/G__VMC.cxx
+VMCDS        := $(call stripsrc,$(MODDIRS)/G__VMC.cxx)
 VMCDO        := $(VMCDS:.cxx=.o)
 VMCDH        := $(VMCDS:.cxx=.h)
 
 VMCH1        := $(wildcard $(MODDIRI)/T*.h)
 VMCH         := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 VMCS         := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-VMCO         := $(VMCS:.cxx=.o)
+VMCO         := $(call stripsrc,$(VMCS:.cxx=.o))
 
 VMCDEP       := $(VMCO:.o=.d) $(VMCDO:.o=.d)
 
@@ -48,11 +48,12 @@ $(VMCLIB):      $(VMCO) $(VMCDO) $(ORDER_) $(MAINLIBS) $(VMCLIBDEP)
 		   "$(VMCLIBEXTRA)"
 
 $(VMCDS):       $(VMCH1) $(VMCL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(VMCH1) $(VMCL)
 
 $(VMCMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(VMCL)
-		$(RLIBMAP) -o $(VMCMAP) -l $(VMCLIB) \
+		$(RLIBMAP) -o $@ -l $(VMCLIB) \
 		   -d $(VMCLIBDEPM) -c $(VMCL)
 
 all-$(MODNAME): $(VMCLIB) $(VMCMAP)

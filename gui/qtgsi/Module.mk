@@ -4,29 +4,30 @@
 # Author: Bertrand Bellenot, 22/02/2006
 
 MODNAME      := qtgsi
-MODDIR       := gui/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/gui/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
 QTGSIDIR     := $(MODDIR)
 QTGSIDIRS    := $(QTGSIDIR)/src
 QTGSIDIRI    := $(QTGSIDIR)/inc
+QTGSIDIRT    := $(call stripsrc,$(QTGSIDIR)/test)
 
 ##### libQtGSI #####
 QTGSIL        := $(MODDIRI)/LinkDef.h
-QTGSIDS       := $(MODDIRS)/G__QtGSI.cxx
+QTGSIDS       := $(call stripsrc,$(MODDIRS)/G__QtGSI.cxx)
 QTGSIDO       := $(QTGSIDS:.cxx=.o)
 QTGSIDH       := $(QTGSIDS:.cxx=.h)
 
 QTGSIH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 QTGSIS        := $(filter-out $(MODDIRS)/moc_%,\
                  $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
-QTGSIO        := $(QTGSIS:.cxx=.o)
+QTGSIO        := $(call stripsrc,$(QTGSIS:.cxx=.o))
 
 QTGSIMOCH     := $(MODDIRI)/TQCanvasMenu.h $(MODDIRI)/TQRootApplication.h \
                  $(MODDIRI)/TQRootCanvas.h $(MODDIRI)/TQRootDialog.h
 
-QTGSIMOC      := $(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(QTGSIMOCH)))
+QTGSIMOC      := $(call stripsrc,$(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(QTGSIMOCH))))
 QTGSIMOCO     := $(QTGSIMOC:.cxx=.o)
 
 QTGSIDEP      := $(QTGSIO:.o=.d) $(QTGSIDO:.o=.d) $(QTGSIMOCO:.o=.d)
@@ -65,27 +66,33 @@ $(QTGSILIB):    $(QTGSIO) $(QTGSIDO) $(QTGSIMOCO) $(ORDER_) $(MAINLIBS) $(QTGSIL
 		   "$(QTGSILIBEXTRA) $(QTLIBDIR) $(QTLIB)"
 
 $(QTGSIDS):     $(QTGSIH) $(QTGSIL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -DQTVERS=$(QTVERS) $(QTGSIH) $(QTGSIL)
 
 $(QTGSIMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(QTGSIL)
-		$(RLIBMAP) -o $(QTGSIMAP) -l $(QTGSILIB) \
+		$(RLIBMAP) -o $@ -l $(QTGSILIB) \
 		   -d $(QTGSILIBDEPM) -c $(QTGSIL)
 
 all-$(MODNAME): $(QTGSILIB) $(QTGSIMAP)
 
-test-$(MODNAME): $(QTGSILIB)
-		cd $(QTGSIDIR)/test; $(MAKE) $(QTTESTOPTS)
+test-$(MODNAME): all-$(MODNAME)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@$(INSTALL) $(QTGSIDIR)/test $(QTGSIDIRT)
+endif
+		cd $(QTGSIDIRT); $(MAKE) $(QTTESTOPTS)
 
 clean-$(MODNAME):
 		@rm -f $(QTGSIO) $(QTGSIDO) $(QTGSIMOCO)
-		-@cd $(QTGSIDIR)/test; $(MAKE) ROOTCONFIG=../../../bin/root-config clean
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(QTGSIDEP) $(QTGSIMOC) $(QTGSILIB) $(QTGSIMAP)
 		@rm -f $(QTGSIDS) $(QTGSIDH)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@rm -rf $(QTGSIDIRT)
+endif
 
 distclean::     distclean-$(MODNAME)
 
@@ -96,5 +103,6 @@ $(QTGSIDO): CXXFLAGS := $(filter-out -Wshadow,$(CXXFLAGS))
 $(sort $(QTGSIMOCO) $(QTGSIO)): CXXFLAGS += $(QTGSICXXFLAGS)
 $(QTGSIDO): CXXFLAGS += $(QTGSICXXFLAGS)
 
-$(QTGSIMOC): $(QTGSIDIRS)/moc_%.cxx: $(QTGSIDIRI)/%.h
+$(QTGSIMOC): $(call stripsrc,$(QTGSIDIRS)/moc_%.cxx): $(QTGSIDIRI)/%.h
+	$(MAKEDIR)
 	$(QTMOCEXE) $< -o $@

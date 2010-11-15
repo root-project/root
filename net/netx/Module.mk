@@ -4,7 +4,7 @@
 # Author: G. Ganis, 8/7/2004
 
 MODNAME      := netx
-MODDIR       := net/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ NETXDIRI     := $(NETXDIR)/inc
 
 ##### libNetx #####
 NETXL        := $(MODDIRI)/LinkDef.h
-NETXDS       := $(MODDIRS)/G__Netx.cxx
+NETXDS       := $(call stripsrc,$(MODDIRS)/G__Netx.cxx)
 NETXDO       := $(NETXDS:.cxx=.o)
 NETXDH       := $(NETXDS:.cxx=.h)
 
 NETXH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 NETXS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-NETXO        := $(NETXS:.cxx=.o)
+NETXO        := $(call stripsrc,$(NETXS:.cxx=.o))
 
 NETXDEP      := $(NETXO:.o=.d) $(NETXDO:.o=.d)
 
@@ -65,7 +65,7 @@ endif
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-include/%.h:    $(NETXDIRI)/%.h $(XROOTDETAG)
+include/%.h:    $(NETXDIRI)/%.h $(XROOTDMAKE)
 		cp $< $@
 
 $(NETXLIB):     $(NETXO) $(NETXDO) $(ORDER_) $(MAINLIBS) $(NETXLIBDEP) \
@@ -74,12 +74,13 @@ $(NETXLIB):     $(NETXO) $(NETXDO) $(ORDER_) $(MAINLIBS) $(NETXLIBDEP) \
 		   "$(SOFLAGS)" libNetx.$(SOEXT) $@ "$(NETXO) $(NETXDO)" \
 		   "$(NETXLIBEXTRA)"
 
-$(NETXDS):      $(NETXH1) $(NETXL) $(XROOTDETAG) $(ROOTCINTTMPDEP) $(XRDPLUGINS)
+$(NETXDS):      $(NETXH1) $(NETXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP) $(XRDPLUGINS)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(NETXINCEXTRA) $(NETXH) $(NETXL)
 
 $(NETXMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(NETXL)
-		$(RLIBMAP) -o $(NETXMAP) -l $(NETXLIB) -d $(NETXLIBDEPM) -c $(NETXL)
+		$(RLIBMAP) -o $@ -l $(NETXLIB) -d $(NETXLIBDEPM) -c $(NETXL)
 
 all-$(MODNAME): $(NETXLIB) $(NETXMAP)
 
@@ -94,7 +95,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(NETXO) $(NETXDO): $(XROOTDETAG) $(XRDHDRS)
+$(NETXO) $(NETXDO): $(XROOTDMAKE) $(XRDHDRS)
 $(NETXO) $(NETXDO): CXXFLAGS += $(NETXINCEXTRA) $(EXTRA_XRDFLAGS)
 ifeq ($(PLATFORM),win32)
 $(NETXO) $(NETXDO): CXXFLAGS += -DNOGDI $(NETXINCEXTRA) $(EXTRA_XRDFLAGS)

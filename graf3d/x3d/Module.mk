@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := x3d
-MODDIR       := graf3d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf3d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,7 +14,7 @@ X3DDIRI      := $(X3DDIR)/inc
 
 ##### libX3d #####
 X3DL         := $(MODDIRI)/LinkDef.h
-X3DDS        := $(MODDIRS)/G__X3D.cxx
+X3DDS        := $(call stripsrc,$(MODDIRS)/G__X3D.cxx)
 X3DDO        := $(X3DDS:.cxx=.o)
 X3DDH        := $(X3DDS:.cxx=.h)
 
@@ -23,7 +23,7 @@ X3DH2        := $(MODDIRI)/x3d.h
 X3DH         := $(X3DH1) $(X3DH2)
 X3DS1        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 X3DS2        := $(wildcard $(MODDIRS)/*.c)
-X3DO         := $(X3DS1:.cxx=.o) $(X3DS2:.c=.o)
+X3DO         := $(call stripsrc,$(X3DS1:.cxx=.o) $(X3DS2:.c=.o))
 
 X3DDEP       := $(X3DO:.o=.d) $(X3DDO:.o=.d)
 
@@ -50,11 +50,12 @@ $(X3DLIB):      $(X3DO) $(X3DDO) $(ORDER_) $(MAINLIBS) $(X3DLIBDEP)
 		   "$(X3DLIBEXTRA) $(XLIBS)"
 
 $(X3DDS):       $(X3DH1) $(X3DL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(X3DH1) $(X3DL)
 
 $(X3DMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(X3DL)
-		$(RLIBMAP) -o $(X3DMAP) -l $(X3DLIB) \
+		$(RLIBMAP) -o $@ -l $(X3DLIB) \
 		   -d $(X3DLIBDEPM) -c $(X3DL)
 
 all-$(MODNAME): $(X3DLIB) $(X3DMAP)

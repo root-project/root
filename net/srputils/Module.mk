@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := srputils
-MODDIR       := net/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -15,7 +15,7 @@ SRPUTILSDIRI := $(SRPUTILSDIR)/inc
 ##### libSRPAuth #####
 SRPUTILSH    := $(wildcard $(MODDIRI)/*.h)
 SRPUTILSS    := $(wildcard $(MODDIRS)/*.cxx)
-SRPUTILSO    := $(SRPUTILSS:.cxx=.o)
+SRPUTILSO    := $(call stripsrc,$(SRPUTILSS:.cxx=.o))
 
 SRPUTILSDEP  := $(SRPUTILSO:.o=.d)
 
@@ -23,13 +23,13 @@ SRPUTILSLIB  := $(LPATH)/libSRPAuth.$(SOEXT)
 
 ##### rpasswd #####
 RPASSWDS     := $(MODDIRS)/rpasswd.c
-RPASSWDO     := $(RPASSWDS:.c=.o)
+RPASSWDO     := $(call stripsrc,$(RPASSWDS:.c=.o))
 RPASSWDDEP   := $(RPASSWDO:.o=.d)
 RPASSWD      := bin/rpasswd
 
 ##### rtconf #####
 RTCONFS      := $(MODDIRS)/rtconf.c
-RTCONFO      := $(RTCONFS:.c=.o)
+RTCONFO      := $(call stripsrc,$(RTCONFS:.c=.o))
 RTCONFDEP    := $(RTCONFO:.o=.d)
 RTCONF       := bin/rtconf
 

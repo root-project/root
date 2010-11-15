@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := unuran
-MODDIR       := math/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -15,13 +15,14 @@ UNURANDIRI   := $(UNURANDIR)/inc
 UNRVERS      := unuran-1.8.0-root
 
 UNRSRCS      := $(MODDIRS)/$(UNRVERS).tar.gz
-UNRDIRS      := $(MODDIRS)/$(UNRVERS)
-UNURANETAG   := $(UNURANDIRS)/headers.d
-UNRCFG       := $(UNURANDIRS)/$(UNRVERS)/config.h
+UNRDIR       := $(call stripsrc,$(MODDIRS))
+UNRDIRS      := $(call stripsrc,$(MODDIRS)/$(UNRVERS))
+UNURANETAG   := $(call stripsrc,$(UNURANDIRS)/headers.d)
+UNRCFG       := $(call stripsrc,$(UNURANDIRS)/$(UNRVERS)/config.h)
 
-UNRTARCONTENT:=$(subst $(UNRVERS),$(UNRDIRS),$(shell cd $(UNURANDIRS); gunzip -c $(UNRVERS).tar.gz | tar tf -))
-UNRS         := $(filter %.c,\
-                $(filter $(UNRDIRS)/src/utils/%,$(UNRTARCONTENT))\
+UNRTARCONTENT:=$(subst $(UNRVERS),$(UNRDIRS),$(shell mkdir -p $(UNRDIR); cd $(UNRDIR); gunzip -c $(UNRSRCS) | tar tf -))
+UNRS         := $(filter %.c, \
+                $(filter $(UNRDIRS)/src/utils/%,$(UNRTARCONTENT)) \
                 $(filter $(UNRDIRS)/src/methods/%,$(UNRTARCONTENT)) \
                 $(filter $(UNRDIRS)/src/specfunct/%,$(UNRTARCONTENT)) \
                 $(filter $(UNRDIRS)/src/distr/%,$(UNRTARCONTENT)) \
@@ -33,16 +34,16 @@ UNRS         := $(filter %.c,\
 UNRO         := $(UNRS:.c=.o)
 
 ifeq ($(PLATFORM),win32)
-UNRLIBS      := $(MODDIRS)/$(UNRVERS)/src/.libs/libunuran.lib
+UNRLIBS      := $(UNRDIRS)/src/.libs/libunuran.lib
 else
-UNRLIBS      := $(MODDIRS)/$(UNRVERS)/src/.libs/libunuran.a
+UNRLIBS      := $(UNRDIRS)/src/.libs/libunuran.a
 endif
 
-UNRFLAGS     :=  -I$(MODDIRS)/$(UNRVERS)/src
+UNRFLAGS     :=  -I$(UNRDIRS)/src
 
 ##### libUnuran #####
 UNURANL      := $(MODDIRI)/LinkDef.h
-UNURANDS     := $(MODDIRS)/G__Unuran.cxx
+UNURANDS     := $(call stripsrc,$(MODDIRS)/G__Unuran.cxx)
 UNURANDO     := $(UNURANDS:.cxx=.o)
 UNURANDH     := $(UNURANDS:.cxx=.h)
 UNURANDH1    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
@@ -50,7 +51,7 @@ UNURANDH1    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 UNURANH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 UNURANS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 
-UNURANO      := $(UNURANS:.cxx=.o)
+UNURANO      := $(call stripsrc,$(UNURANS:.cxx=.o))
 
 UNURANDEP    := $(UNURANO:.o=.d) $(UNURANDO:.o=.d)
 
@@ -75,21 +76,22 @@ $(UNURANDEP):   $(UNRCFG)
 $(UNRS):        $(UNURANETAG)
 
 $(UNURANETAG):	$(UNRSRCS)
+		$(MAKEDIR)
 		@echo "**** untarring UNURAN !!!!"
 		@(if  [ -d $(UNRDIRS) ]; then \
 		   rm -rf $(UNRDIRS); \
 		fi; \
-		cd $(UNURANDIRS); \
+		cd $(UNRDIR); \
 		rm -rf unuran*root; \
 		if [ ! -d $(UNRVERS) ]; then \
-		   gunzip -c $(UNRVERS).tar.gz | tar xf -; \
+		   gunzip -c $(UNRSRCS) | tar xf -; \
 		   etag=`basename $(UNURANETAG)` ; \
 		   touch $$etag ; \
 		fi); 
 
 #configure unuran (required for creating the config.h used by unuran source files)
 $(UNRCFG):	$(UNURANETAG)
-		@(cd $(UNURANDIRS)/$(UNRVERS) ; \
+		@(cd $(UNRDIRS); \
 		ACC=$(CC); \
 		if [ "$(CC)" = "icc" ]; then \
 			ACC="icc"; \
@@ -131,11 +133,12 @@ $(UNURANLIB):   $(UNRCFG) $(UNRO) $(UNURANO) $(UNURANDO) $(ORDER_) \
 		   "$(UNURANLIBEXTRA) $(UNRO)"
 
 $(UNURANDS):    $(UNRINIT) $(UNURANDH1) $(UNURANL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(UNRFLAGS) $(UNURANDH1) $(UNURANL)
 
 $(UNURANMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(UNURANL) $(UNURANLINC)
-		$(RLIBMAP) -o $(UNURANMAP) -l $(UNURANLIB) \
+		$(RLIBMAP) -o $@ -l $(UNURANLIB) \
 		   -d $(UNURANLIBDEPM) -c $(UNURANL) $(UNURANLINC)
 
 all-$(MODNAME): $(UNURANLIB) $(UNURANMAP)
@@ -152,15 +155,15 @@ clean::         clean-$(MODNAME)
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(UNURANO) $(UNURANDO) $(UNURANETAG) $(UNURANDEP) \
 		   $(UNURANDS) $(UNURANDH) $(UNURANLIB) $(UNURANMAP)
-		@mv $(UNRSRCS) $(UNURANDIRS)/-$(UNRVERS).tar.gz
+		@mv $(UNRSRCS) $(UNRDIR)/-$(UNRVERS).tar.gz
 ifeq ($(UNURKEEP),yes)
-		@mv $(UNURANDIRS)/$(UNRVERS) $(UNURANDIRS)/$(UNRVERS).keep
+		@mv $(UNRDIRS) $(UNRDIRS).keep
 endif
-		@rm -rf $(UNURANDIRS)/$(UNRVERS)
+		@rm -rf $(UNRDIRS)
 ifeq ($(UNURKEEP),yes)
-		@mv $(UNURANDIRS)/$(UNRVERS).keep $(UNURANDIRS)/$(UNRVERS)
+		@mv $(UNRDIRS).keep $(UNRDIRS)
 endif
-		@mv $(UNURANDIRS)/-$(UNRVERS).tar.gz $(UNRSRCS)
+		@mv $(UNRDIR)/-$(UNRVERS).tar.gz $(UNRSRCS)
 
 distclean::     distclean-$(MODNAME)
 

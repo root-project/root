@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 8/8/2002
 
 MODNAME      := asimage
-MODDIR       := graf2d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,8 +14,8 @@ ASIMAGEDIRI  := $(ASIMAGEDIR)/inc
 
 ASTEPVERS    := libAfterImage
 ifeq ($(BUILTINASIMAGE),yes)
-ASTEPDIRS    := $(MODDIRS)/$(ASTEPVERS)
-ASTEPDIRI    := -I$(MODDIRS)/$(ASTEPVERS)
+ASTEPDIRS    := $(call stripsrc,$(MODDIRS)/$(ASTEPVERS))
+ASTEPDIRI    := -I$(ASTEPDIRS)
 ASTEPMAKE    := $(ASTEPDIRS)/Makefile
 else
 ASTEPDIRS    :=
@@ -54,14 +54,14 @@ endif
 
 ##### libASImage #####
 ASIMAGEL     := $(MODDIRI)/LinkDef.h
-ASIMAGEDS    := $(MODDIRS)/G__ASImage.cxx
+ASIMAGEDS    := $(call stripsrc,$(MODDIRS)/G__ASImage.cxx)
 ASIMAGEDO    := $(ASIMAGEDS:.cxx=.o)
 ASIMAGEDH    := $(ASIMAGEDS:.cxx=.h)
 
 ASIMAGEH     := $(MODDIRI)/TASImage.h $(MODDIRI)/TASImagePlugin.h \
-					 $(MODDIRI)/TASPluginGS.h
+                $(MODDIRI)/TASPluginGS.h
 ASIMAGES     := $(MODDIRS)/TASImage.cxx $(MODDIRS)/TASPluginGS.cxx
-ASIMAGEO     := $(ASIMAGES:.cxx=.o)
+ASIMAGEO     := $(call stripsrc,$(ASIMAGES:.cxx=.o))
 
 ASIMAGEDEP   := $(ASIMAGEO:.o=.d) $(ASIMAGEDO:.o=.d)
 
@@ -70,13 +70,13 @@ ASIMAGEMAP   := $(ASIMAGELIB:.$(SOEXT)=.rootmap)
 
 ##### libASImageGui #####
 ASIMAGEGUIL  := $(MODDIRI)/LinkDefGui.h
-ASIMAGEGUIDS := $(MODDIRS)/G__ASImageGui.cxx
+ASIMAGEGUIDS := $(call stripsrc,$(MODDIRS)/G__ASImageGui.cxx)
 ASIMAGEGUIDO := $(ASIMAGEGUIDS:.cxx=.o)
 ASIMAGEGUIDH := $(ASIMAGEGUIDS:.cxx=.h)
 
 ASIMAGEGUIH  := $(MODDIRI)/TASPaletteEditor.h
 ASIMAGEGUIS  := $(MODDIRS)/TASPaletteEditor.cxx
-ASIMAGEGUIO  := $(ASIMAGEGUIS:.cxx=.o)
+ASIMAGEGUIO  := $(call stripsrc,$(ASIMAGEGUIS:.cxx=.o))
 
 ASIMAGEGUIDEP := $(ASIMAGEGUIO:.o=.d) $(ASIMAGEGUIDO:.o=.d)
 
@@ -106,6 +106,10 @@ $(ASTEPLIB):    $(ASTEPLIBA)
 		fi)
 
 $(ASTEPMAKE):
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		$(MAKEDIR)
+		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.a' $(ASIMAGEDIRS)/$(ASTEPVERS) $(call stripsrc,$(ASIMAGEDIRS))
+endif
 ifeq ($(PLATFORM),win32)
 		@touch $(ASTEPMAKE)
 else
@@ -186,7 +190,7 @@ else
 		$$TIFFINCDIR)
 endif
 
-$(ASTEPLIBA):   $(ASTEPMAKE) $(ASTEPDIRS)/*.h $(ASTEPDIRS)/*.c
+$(ASTEPLIBA):   $(ASTEPMAKE) $(wildcard $(ASTEPDIRS)/*.h) $(wildcard $(ASTEPDIRS)/*.c)
 ifeq ($(PLATFORM),win32)
 		@(cd $(ASTEPDIRS); \
 		echo "*** Building libAfterImage ..." ; \
@@ -212,11 +216,12 @@ $(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(ASTEPDEP) $(FREETYPEDEP) \
 		    $(ASEXTRALIBDIR) $(ASEXTRALIB) $(XLIBS)"
 
 $(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ASIMAGEH) $(ASIMAGEL)
 
 $(ASIMAGEMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(ASIMAGEL)
-		$(RLIBMAP) -o $(ASIMAGEMAP) -l $(ASIMAGELIB) \
+		$(RLIBMAP) -o $@ -l $(ASIMAGELIB) \
 		   -d $(ASIMAGELIBDEPM) -c $(ASIMAGEL)
 
 ##### libASImageGui #####
@@ -230,6 +235,7 @@ $(ASIMAGEGUILIB):  $(ASIMAGEGUIO) $(ASIMAGEGUIDO) $(ASTEPDEP) $(FREETYPEDEP) \
 		    $(ASEXTRALIBDIR) $(ASEXTRALIB) $(XLIBS)"
 
 $(ASIMAGEGUIDS): $(ASIMAGEGUIH) $(ASIMAGEGUIL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ASIMAGEGUIH) $(ASIMAGEGUIL)
 
@@ -266,6 +272,9 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		   $(ASIMAGEGUILIB) $(ASIMAGEGUIMAP)
 ifeq ($(BUILTINASIMAGE),yes)
 		@rm -f $(ASTEPLIB)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@rm -rf $(ASTEPDIRS)
+else
 ifeq ($(PLATFORM),win32)
 		@(if [ -f $(ASTEPMAKE) ]; then \
 			cd $(ASTEPDIRS); \
@@ -278,6 +287,7 @@ else
 			cd $(ASTEPDIRS); \
 			$(MAKE) distclean; \
 		fi)
+endif
 endif
 endif
 

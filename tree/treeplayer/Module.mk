@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := treeplayer
-MODDIR       := tree/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/tree/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ TREEPLAYERDIRI := $(TREEPLAYERDIR)/inc
 
 ##### libTreePlayer #####
 TREEPLAYERL  := $(MODDIRI)/LinkDef.h
-TREEPLAYERDS := $(MODDIRS)/G__TreePlayer.cxx
+TREEPLAYERDS := $(call stripsrc,$(MODDIRS)/G__TreePlayer.cxx)
 TREEPLAYERDO := $(TREEPLAYERDS:.cxx=.o)
 TREEPLAYERDH := $(TREEPLAYERDS:.cxx=.h)
 
 TREEPLAYERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 TREEPLAYERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-TREEPLAYERO  := $(TREEPLAYERS:.cxx=.o)
+TREEPLAYERO  := $(call stripsrc,$(TREEPLAYERS:.cxx=.o))
 
 TREEPLAYERDEP := $(TREEPLAYERO:.o=.d) $(TREEPLAYERDO:.o=.d)
 
@@ -49,11 +49,12 @@ $(TREEPLAYERLIB): $(TREEPLAYERO) $(TREEPLAYERDO) $(ORDER_) $(MAINLIBS) \
 		   "$(TREEPLAYERLIBEXTRA)"
 
 $(TREEPLAYERDS): $(TREEPLAYERH) $(TREEPLAYERL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TREEPLAYERH) $(TREEPLAYERL)
 
 $(TREEPLAYERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(TREEPLAYERL)
-		$(RLIBMAP) -o $(TREEPLAYERMAP) -l $(TREEPLAYERLIB) \
+		$(RLIBMAP) -o $@ -l $(TREEPLAYERLIB) \
 		   -d $(TREEPLAYERLIBDEPM) -c $(TREEPLAYERL)
 
 all-$(MODNAME): $(TREEPLAYERLIB) $(TREEPLAYERMAP)
@@ -73,14 +74,13 @@ distclean::     distclean-$(MODNAME)
 ifeq ($(PLATFORM),macosx)
 ifeq ($(GCC_VERS_FULL),gcc-4.0.1)
 ifneq ($(filter -O%,$(OPT)),)
-   $(TREEPLAYERDIRS)/TTreeFormula.o: OPT = $(NOOPT)
+   $(call stripsrc,$(TREEPLAYERDIRS)/TTreeFormula.o): OPT = $(NOOPT)
 endif
 endif
 ifeq ($(ICC_MAJOR),10)
-$(TREEPLAYERDIRS)/TTreeFormula.o: OPT = $(NOOPT)
+$(call stripsrc,$(TREEPLAYERDIRS)/TTreeFormula.o): OPT = $(NOOPT)
 endif
 endif
 
 # Optimize dictionary with stl containers.
 $(TREEPLAYERDO): NOOPT = $(OPT)
-

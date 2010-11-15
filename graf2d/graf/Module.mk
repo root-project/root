@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := graf
-MODDIR       := graf2d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ GRAFDIRI     := $(GRAFDIR)/inc
 
 ##### libGraf #####
 GRAFL        := $(MODDIRI)/LinkDef.h
-GRAFDS       := $(MODDIRS)/G__Graf.cxx
+GRAFDS       := $(call stripsrc,$(MODDIRS)/G__Graf.cxx)
 GRAFDO       := $(GRAFDS:.cxx=.o)
 GRAFDH       := $(GRAFDS:.cxx=.h)
 
 GRAFH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GRAFS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GRAFO        := $(GRAFS:.cxx=.o)
+GRAFO        := $(call stripsrc,$(GRAFS:.cxx=.o))
 
 GRAFDEP      := $(GRAFO:.o=.d) $(GRAFDO:.o=.d)
 
@@ -48,11 +48,12 @@ $(GRAFLIB):     $(GRAFO) $(GRAFDO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) $(GRAFLI
 		   "$(FREETYPELDFLAGS) $(FREETYPELIB) $(GRAFLIBEXTRA)"
 
 $(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GRAFH) $(GRAFL)
 
 $(GRAFMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GRAFL)
-		$(RLIBMAP) -o $(GRAFMAP) -l $(GRAFLIB) \
+		$(RLIBMAP) -o $@ -l $(GRAFLIB) \
 		   -d $(GRAFLIBDEPM) -c $(GRAFL)
 
 all-$(MODNAME): $(GRAFLIB) $(GRAFMAP)
@@ -72,13 +73,13 @@ $(GRAFDO):     $(FREETYPEDEP)
 $(GRAFDO):     OPT = $(NOOPT)
 $(GRAFDO):     CXXFLAGS += $(FREETYPEINC)
 
-$(GRAFDIRS)/TTF.o $(GRAFDIRS)/TText.o $(GRAFDIRS)/TLatex.o: \
+$(call stripsrc,$(GRAFDIRS)/TTF.o $(GRAFDIRS)/TText.o $(GRAFDIRS)/TLatex.o): \
                 $(FREETYPEDEP)
-$(GRAFDIRS)/TTF.o $(GRAFDIRS)/TText.o $(GRAFDIRS)/TLatex.o: \
+$(call stripsrc,$(GRAFDIRS)/TTF.o $(GRAFDIRS)/TText.o $(GRAFDIRS)/TLatex.o): \
                 CXXFLAGS += $(FREETYPEINC)
 
 ifeq ($(PLATFORM),win32)
 ifeq (,$(findstring $(VC_MAJOR),14 15))
-$(GRAFDIRS)/TLatex.o: OPT = $(NOOPT)
+$(call stripsrc,$(GRAFDIRS)/TLatex.o): OPT = $(NOOPT)
 endif
 endif

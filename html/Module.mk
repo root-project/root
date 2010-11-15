@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := html
-MODDIR       := $(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ HTMLDIRI     := $(HTMLDIR)/inc
 
 ##### libHtml #####
 HTMLL        := $(MODDIRI)/LinkDef.h
-HTMLDS       := $(MODDIRS)/G__Html.cxx
+HTMLDS       := $(call stripsrc,$(MODDIRS)/G__Html.cxx)
 HTMLDO       := $(HTMLDS:.cxx=.o)
 HTMLDH       := $(HTMLDS:.cxx=.h)
 
 HTMLH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 HTMLS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-HTMLO        := $(HTMLS:.cxx=.o)
+HTMLO        := $(call stripsrc,$(HTMLS:.cxx=.o))
 
 HTMLDEP      := $(HTMLO:.o=.d) $(HTMLDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(HTMLLIB):     $(HTMLO) $(HTMLDO) $(ORDER_) $(MAINLIBS) $(HTMLLIBDEP)
 		   "$(HTMLLIBEXTRA)"
 
 $(HTMLDS):      $(HTMLH) $(HTMLL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(HTMLH) $(HTMLL)
 
 $(HTMLMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HTMLL)
-		$(RLIBMAP) -o $(HTMLMAP) -l $(HTMLLIB) \
+		$(RLIBMAP) -o $@ -l $(HTMLLIB) \
 		   -d $(HTMLLIBDEPM) -c $(HTMLL)
 
 all-$(MODNAME): $(HTMLLIB) $(HTMLMAP)

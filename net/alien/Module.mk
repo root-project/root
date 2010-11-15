@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 12/5/2002
 
 MODNAME      := alien
-MODDIR       := net/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ ALIENDIRI    := $(ALIENDIR)/inc
 
 ##### libRAliEn #####
 ALIENL       := $(MODDIRI)/LinkDef.h
-ALIENDS      := $(MODDIRS)/G__Alien.cxx
+ALIENDS      := $(call stripsrc,$(MODDIRS)/G__Alien.cxx)
 ALIENDO      := $(ALIENDS:.cxx=.o)
 ALIENDH      := $(ALIENDS:.cxx=.h)
 
 ALIENH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 ALIENS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-ALIENO       := $(ALIENS:.cxx=.o)
+ALIENO       := $(call stripsrc,$(ALIENS:.cxx=.o))
 
 ALIENDEP     := $(ALIENO:.o=.d) $(ALIENDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(ALIENLIB):    $(ALIENO) $(ALIENDO) $(ORDER_) $(MAINLIBS) $(ALIENLIBDEP)
 		   "$(ALIENLIBEXTRA) $(ALIENLIBDIR) $(ALIENCLILIB)"
 
 $(ALIENDS):     $(ALIENH) $(ALIENL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ALIENH) $(ALIENL)
 
 $(ALIENMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(ALIENL)
-		$(RLIBMAP) -o $(ALIENMAP) -l $(ALIENLIB) \
+		$(RLIBMAP) -o $@ -l $(ALIENLIB) \
 		   -d $(ALIENLIBDEPM) -c $(ALIENL)
 
 all-$(MODNAME): $(ALIENLIB) $(ALIENMAP)

@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := x11
-MODDIR       := graf2d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,7 +14,7 @@ X11DIRI      := $(X11DIR)/inc
 
 ##### libGX11 #####
 X11L         := $(MODDIRI)/LinkDef.h
-X11DS        := $(MODDIRS)/G__X11.cxx
+X11DS        := $(call stripsrc,$(MODDIRS)/G__X11.cxx)
 X11DO        := $(X11DS:.cxx=.o)
 X11DH        := $(X11DS:.cxx=.h)
 
@@ -22,7 +22,7 @@ X11H1        := $(wildcard $(MODDIRI)/T*.h)
 X11H         := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 X11S1        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 X11S2        := $(wildcard $(MODDIRS)/*.c)
-X11O         := $(X11S1:.cxx=.o) $(X11S2:.c=.o)
+X11O         := $(call stripsrc,$(X11S1:.cxx=.o) $(X11S2:.c=.o))
 
 X11DEP       := $(X11O:.o=.d) $(X11DO:.o=.d)
 
@@ -49,11 +49,12 @@ $(X11LIB):      $(X11O) $(X11DO) $(ORDER_) $(MAINLIBS)
 		   "$(X11LIBEXTRA) $(XLIBS)"
 
 $(X11DS):       $(X11H1) $(X11L) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(X11H1) $(X11L)
 
 $(X11MAP):      $(RLIBMAP) $(MAKEFILEDEP) $(X11L)
-		$(RLIBMAP) -o $(X11MAP) -l $(X11LIB) \
+		$(RLIBMAP) -o $@ -l $(X11LIB) \
 		   -d $(X11LIBDEPM) -c $(X11L)
 
 all-$(MODNAME): $(X11LIB) $(X11MAP)

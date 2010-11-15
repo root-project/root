@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := mysql
-MODDIR       := sql/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/sql/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ MYSQLDIRI    := $(MYSQLDIR)/inc
 
 ##### libRMySQL #####
 MYSQLL       := $(MODDIRI)/LinkDef.h
-MYSQLDS      := $(MODDIRS)/G__MySQL.cxx
+MYSQLDS      := $(call stripsrc,$(MODDIRS)/G__MySQL.cxx)
 MYSQLDO      := $(MYSQLDS:.cxx=.o)
 MYSQLDH      := $(MYSQLDS:.cxx=.h)
 
 MYSQLH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 MYSQLS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-MYSQLO       := $(MYSQLS:.cxx=.o)
+MYSQLO       := $(call stripsrc,$(MYSQLS:.cxx=.o))
 
 MYSQLDEP     := $(MYSQLO:.o=.d) $(MYSQLDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(MYSQLLIB):    $(MYSQLO) $(MYSQLDO) $(ORDER_) $(MAINLIBS) $(MYSQLLIBDEP)
 		   "$(MYSQLLIBEXTRA) $(MYSQLLIBDIR) $(MYSQLCLILIB)"
 
 $(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MYSQLINCDIR:%=-I%) $(MYSQLH) $(MYSQLL)
 
 $(MYSQLMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(MYSQLL)
-		$(RLIBMAP) -o $(MYSQLMAP) -l $(MYSQLLIB) \
+		$(RLIBMAP) -o $@ -l $(MYSQLLIB) \
 		   -d $(MYSQLLIBDEPM) -c $(MYSQLL)
 
 all-$(MODNAME): $(MYSQLLIB) $(MYSQLMAP)

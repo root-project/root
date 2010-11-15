@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 18/2/2002
 
 MODNAME      := hbook
-MODDIR       := hist/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/hist/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ HBOOKDIRI    := $(HBOOKDIR)/inc
 
 ##### libHbook #####
 HBOOKL       := $(MODDIRI)/LinkDef.h
-HBOOKDS      := $(MODDIRS)/G__Hbook.cxx
+HBOOKDS      := $(call stripsrc,$(MODDIRS)/G__Hbook.cxx)
 HBOOKDO      := $(HBOOKDS:.cxx=.o)
 HBOOKDH      := $(HBOOKDS:.cxx=.h)
 
 HBOOKH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 HBOOKS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-HBOOKO       := $(HBOOKS:.cxx=.o)
+HBOOKO       := $(call stripsrc,$(HBOOKS:.cxx=.o))
 
 HBOOKDEP     := $(HBOOKO:.o=.d) $(HBOOKDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(HBOOKLIB):    $(HBOOKO) $(HBOOKDO) $(ORDER_) $(MAINLIBS) $(HBOOKLIBDEP)
 		   "$(HBOOKLIBEXTRA)"
 
 $(HBOOKDS):     $(HBOOKH) $(HBOOKL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(HBOOKH) $(HBOOKL)
 
 $(HBOOKMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(HBOOKL)
-		$(RLIBMAP) -o $(HBOOKMAP) -l $(HBOOKLIB) \
+		$(RLIBMAP) -o $@ -l $(HBOOKLIB) \
 		   -d $(HBOOKLIBDEPM) -c $(HBOOKL)
 
 all-$(MODNAME): $(HBOOKLIB) $(HBOOKMAP)

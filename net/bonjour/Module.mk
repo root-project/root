@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/05/2009
 
 MODNAME      := bonjour
-MODDIR       := net/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ BONJDIRI     := $(BONJDIR)/inc
 
 ##### libBonjour #####
 BONJL        := $(MODDIRI)/LinkDef.h
-BONJDS       := $(MODDIRS)/G__BONJ.cxx
+BONJDS       := $(call stripsrc,$(MODDIRS)/G__BONJ.cxx)
 BONJDO       := $(BONJDS:.cxx=.o)
 BONJDH       := $(BONJDS:.cxx=.h)
 
 BONJH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 BONJS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-BONJO        := $(BONJS:.cxx=.o)
+BONJO        := $(call stripsrc,$(BONJS:.cxx=.o))
 
 BONJDEP      := $(BONJO:.o=.d) $(BONJDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(BONJLIB):     $(BONJO) $(BONJDO) $(ORDER_) $(MAINLIBS)
 		   "$(BONJLIBEXTRA) $(DNSSDLIBDIR) $(DNSSDLIB)"
 
 $(BONJDS):      $(BONJH) $(BONJL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(BONJH) $(BONJL)
 
 $(BONJMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(BONJL)
-		$(RLIBMAP) -o $(BONJMAP) -l $(BONJLIB) \
+		$(RLIBMAP) -o $@ -l $(BONJLIB) \
 		   -d $(BONJLIBDEPM) -c $(BONJL)
 
 all-$(MODNAME): $(BONJLIB) $(BONJMAP)

@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := cintex
-MODDIR       := cint/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/cint/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -16,7 +16,7 @@ CINTEXDIRI   := $(CINTEXDIR)/inc
 CINTEXL      := $(CINTEXDIRI)/LinkDef.h
 CINTEXH      := $(wildcard $(MODDIRI)/Cintex/*.h)
 CINTEXS      := $(wildcard $(MODDIRS)/*.cxx)
-CINTEXO      := $(CINTEXS:.cxx=.o)
+CINTEXO      := $(call stripsrc,$(CINTEXS:.cxx=.o))
 
 CINTEXDEP    := $(CINTEXO:.o=.d)
 
@@ -68,7 +68,7 @@ endif
 
 GENREFLEX_CMD2 = python ../../../../lib/python/genreflex/genreflex.py
 
-CINTEXTESTD     = $(CINTEXDIR)/test
+CINTEXTESTD     = $(call stripsrc,$(CINTEXDIR)/test)
 CINTEXTESTDICTD = $(CINTEXTESTD)/dict
 CINTEXTESTDICTL = $(CINTEXTESTDICTD)/lib
 CINTEXTESTDICTH = $(CINTEXTESTDICTD)/CintexTest.h
@@ -96,7 +96,7 @@ $(CINTEXLIB):   $(CINTEXO) $(CINTEXPY) $(CINTEXPYC) $(CINTEXPYO) \
 		"$(CINTEXLIBEXTRA)"
 
 $(CINTEXMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(CINTEXL)
-		$(RLIBMAP) -o $(CINTEXMAP) -l $(CINTEXLIB) \
+		$(RLIBMAP) -o $@ -l $(CINTEXLIB) \
 		   -d $(CINTEXLIBDEPM) -c $(CINTEXL)
 
 all-$(MODNAME): $(CINTEXLIB) $(CINTEXMAP)
@@ -133,15 +133,15 @@ $(CINTEXTESTDICTS): $(CINTEXTESTDICTH) $(CINTEXTESTDICTD)/selection.xml
 ifeq ($(PLATFORM),macosx)
 ifeq ($(ICC_MAJOR),9)
 ifeq ($(ICC_MINOR),1)
-$(CINTEXDIRS)/ROOTClassEnhancer.o: OPT = $(NOOPT)
+$(call stripsrc,$(CINTEXDIRS)/ROOTClassEnhancer.o): OPT = $(NOOPT)
 endif
 endif
 endif
 
 ifneq ($(subst -ftest-coverage,,$(OPT)),$(OPT))
 # we have coverage on - not good for Cintex's trampolines
-$(CINTEXDIRS)/CINTFunctional.o : override OPT:= $(subst -fprofile-arcs,,$(subst -ftest-coverage,,$(OPT)))
+$(call stripsrc,$(CINTEXDIRS)/CINTFunctional.o): override OPT:= $(subst -fprofile-arcs,,$(subst -ftest-coverage,,$(OPT)))
 endif
 ifeq ($(PLATFORM),win32)
-$(CINTEXDIRS)/CINTFunctional.o : override CXXFLAGS:=$(subst -RTC1,,$(CXXFLAGS))
+$(call stripsrc,$(CINTEXDIRS)/CINTFunctional.o): override CXXFLAGS:=$(subst -RTC1,,$(CXXFLAGS))
 endif

@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := geompainter
-MODDIR       := geom/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/geom/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,14 +14,14 @@ GEOMPAINTERDIRI := $(GEOMPAINTERDIR)/inc
 
 ##### libGeomPainter #####
 GEOMPAINTERL  := $(MODDIRI)/LinkDef.h
-GEOMPAINTERDS := $(MODDIRS)/G__GeomPainter.cxx
+GEOMPAINTERDS := $(call stripsrc,$(MODDIRS)/G__GeomPainter.cxx)
 GEOMPAINTERDO := $(GEOMPAINTERDS:.cxx=.o)
 GEOMPAINTERDH := $(GEOMPAINTERDS:.cxx=.h)
 
 GEOMPAINTERH1 := $(wildcard $(MODDIRI)/T*.h)
 GEOMPAINTERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GEOMPAINTERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GEOMPAINTERO  := $(GEOMPAINTERS:.cxx=.o)
+GEOMPAINTERO  := $(call stripsrc,$(GEOMPAINTERS:.cxx=.o))
 
 GEOMPAINTERDEP := $(GEOMPAINTERO:.o=.d) $(GEOMPAINTERDO:.o=.d)
 
@@ -50,11 +50,12 @@ $(GEOMPAINTERLIB): $(GEOMPAINTERO) $(GEOMPAINTERDO) $(ORDER_) $(MAINLIBS) \
 		   "$(GEOMPAINTERLIBEXTRA)"
 
 $(GEOMPAINTERDS): $(GEOMPAINTERH1) $(GEOMPAINTERL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GEOMPAINTERH1) $(GEOMPAINTERL)
 
 $(GEOMPAINTERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(GEOMPAINTERL)
-		$(RLIBMAP) -o $(GEOMPAINTERMAP) -l $(GEOMPAINTERLIB) \
+		$(RLIBMAP) -o $@ -l $(GEOMPAINTERLIB) \
 		   -d $(GEOMPAINTERLIBDEPM) -c $(GEOMPAINTERL)
 
 all-$(MODNAME): $(GEOMPAINTERLIB) $(GEOMPAINTERMAP)

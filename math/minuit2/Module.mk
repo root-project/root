@@ -4,13 +4,14 @@
 # Author: Rene Brun, 07/05/2003
 
 MODNAME       := minuit2
-MODDIR        := math/$(MODNAME)
+MODDIR        := $(ROOT_SRCDIR)/math/$(MODNAME)
 MODDIRS       := $(MODDIR)/src
 MODDIRI       := $(MODDIR)/inc
 
 MINUIT2DIR    := $(MODDIR)
 MINUIT2DIRS   := $(MINUIT2DIR)/src
 MINUIT2DIRI   := $(MINUIT2DIR)/inc
+MINUIT2DIRT   := $(call stripsrc,$(MINUIT2DIR)/test)
 
 MINUITBASEVERS := Minuit-1_7_6
 MINUITBASESRCS := $(MODDIRS)/$(MINUITBASEVERS).tar.gz
@@ -35,7 +36,7 @@ MINUITBASEDEP       := $(MINUITBASELIB)
 
 ##### libMinuit2 #####
 MINUIT2L     := $(MODDIRI)/LinkDef.h
-MINUIT2DS    := $(MODDIRS)/G__Minuit2.cxx
+MINUIT2DS    := $(call stripsrc,$(MODDIRS)/G__Minuit2.cxx)
 MINUIT2DO    := $(MINUIT2DS:.cxx=.o)
 MINUIT2DH    := $(MINUIT2DS:.cxx=.h)
 
@@ -43,7 +44,7 @@ MINUIT2AH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 MINUIT2BH    := $(filter-out $(MODDIRI)/Minuit2/LinkDef%,$(wildcard $(MODDIRI)/Minuit2/*.h))
 MINUIT2H     := $(MINUIT2AH) $(MINUIT2BH)
 MINUIT2S     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-MINUIT2O     := $(MINUIT2S:.cxx=.o)
+MINUIT2O     := $(call stripsrc,$(MINUIT2S:.cxx=.o))
 
 MINUIT2DEP   := $(MINUIT2O:.o=.d) $(MINUIT2DO:.o=.d)
 
@@ -83,17 +84,21 @@ $(MINUIT2LIB):  $(MINUIT2O) $(MINUIT2DO) $(ORDER_) $(MAINLIBS) $(MINUIT2LIBDEP)
 		   "$(MINUIT2LIBEXTRA)"
 
 $(MINUIT2DS):   $(MINUIT2H) $(MINUIT2L) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MINUIT2H) $(MINUIT2L)
 
 $(MINUIT2MAP):  $(RLIBMAP) $(MAKEFILEDEP) $(MINUIT2L)
-		$(RLIBMAP) -o $(MINUIT2MAP) -l $(MINUIT2LIB) \
+		$(RLIBMAP) -o $@ -l $(MINUIT2LIB) \
 		   -d $(MINUIT2LIBDEPM) -c $(MINUIT2L)
 
 all-$(MODNAME):  $(MINUIT2LIB) $(MINUIT2MAP)
 
-test-$(MODNAME): $(MINUIT2LIB)
-		cd $(MINUIT2DIR)/test; $(MAKE) ROOTCONFIG=../../../bin/root-config
+test-$(MODNAME): all-$(MODNAME)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@$(INSTALL) $(MINUIT2DIR)/test $(MINUIT2DIRT)
+endif
+		@cd $(MINUIT2DIRT) && $(MAKE) ROOTCONFIG=../../../bin/root-config
 
 clean-$(MODNAME):
 		@rm -f $(MINUIT2O) $(MINUIT2DO)
@@ -104,7 +109,11 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MINUIT2DEP) $(MINUIT2DS) $(MINUIT2DH) $(MINUIT2LIB) \
 		   $(MINUIT2MAP)
 		@rm -rf include/Minuit2
-		@cd $(MINUIT2DIR)/test; $(MAKE) distclean ROOTCONFIG=../../../bin/root-config
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@rm -rf $(MINUIT2DIRT)
+else
+		@cd $(MINUIT2DIRT) && $(MAKE) distclean ROOTCONFIG=../../../bin/root-config
+endif
 
 distclean::     distclean-$(MODNAME)
 

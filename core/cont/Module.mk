@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := cont
-MODDIR       := core/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ CONTDIRI     := $(CONTDIR)/inc
 
 ##### libCont (part of libCore) #####
 CONTL        := $(MODDIRI)/LinkDef.h
-CONTDS       := $(MODDIRS)/G__Cont.cxx
+CONTDS       := $(call stripsrc,$(MODDIRS)/G__Cont.cxx)
 CONTDO       := $(CONTDS:.cxx=.o)
 CONTDH       := $(CONTDS:.cxx=.h)
 
 CONTH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 CONTS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-CONTO        := $(CONTS:.cxx=.o)
+CONTO        := $(call stripsrc,$(CONTS:.cxx=.o))
 
 CONTDEP      := $(CONTO:.o=.d) $(CONTDO:.o=.d)
 
@@ -37,6 +37,7 @@ include/%.h:    $(CONTDIRI)/%.h
 		cp $< $@
 
 $(CONTDS):      $(CONTH) $(CONTL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(CONTH) $(CONTL)
 

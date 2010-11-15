@@ -4,7 +4,7 @@
 # Author: Rene Brun, 27/8/2003
 
 MODNAME      := mlp
-MODDIR       := math/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ MLPDIRI      := $(MLPDIR)/inc
 
 ##### libMLP #####
 MLPL         := $(MODDIRI)/LinkDef.h
-MLPDS        := $(MODDIRS)/G__MLP.cxx
+MLPDS        := $(call stripsrc,$(MODDIRS)/G__MLP.cxx)
 MLPDO        := $(MLPDS:.cxx=.o)
 MLPDH        := $(MLPDS:.cxx=.h)
 
 MLPH         := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 MLPS         := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-MLPO         := $(MLPS:.cxx=.o)
+MLPO         := $(call stripsrc,$(MLPS:.cxx=.o))
 
 MLPDEP       := $(MLPO:.o=.d) $(MLPDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(MLPLIB):      $(MLPO) $(MLPDO) $(ORDER_) $(MAINLIBS) $(MLPLIBDEP)
 		   "$(MLPLIBEXTRA)"
 
 $(MLPDS):       $(MLPH) $(MLPL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MLPH) $(MLPL)
 
 $(MLPMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(MLPL)
-		$(RLIBMAP) -o $(MLPMAP) -l $(MLPLIB) -d $(MLPLIBDEPM) -c $(MLPL)
+		$(RLIBMAP) -o $@ -l $(MLPLIB) -d $(MLPLIBDEPM) -c $(MLPL)
 
 all-$(MODNAME): $(MLPLIB) $(MLPMAP)
 

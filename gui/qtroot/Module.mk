@@ -4,7 +4,7 @@
 # Author: Valeri Fine, 20/5/2003
 
 MODNAME      := qtroot
-MODDIR       := gui/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/gui/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ QTROOTDIRI   := $(QTROOTDIR)/inc
 
 ##### libQtRoot #####
 QTROOTL      := $(MODDIRI)/LinkDef.h
-QTROOTDS     := $(MODDIRS)/G__QtRoot.cxx
+QTROOTDS     := $(call stripsrc,$(MODDIRS)/G__QtRoot.cxx)
 QTROOTDO     := $(QTROOTDS:.cxx=.o)
 QTROOTDH     := $(QTROOTDS:.cxx=.h)
 
 QTROOTH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 QTROOTS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-QTROOTO      := $(QTROOTS:.cxx=.o)
+QTROOTO      := $(call stripsrc,$(QTROOTS:.cxx=.o))
 
 QTROOTDEP    := $(QTROOTO:.o=.d) $(QTROOTDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(QTROOTLIB):   $(QTROOTO) $(QTROOTDO) $(ORDER_) $(MAINLIBS) $(QTROOTLIBDEP)
 		   "$(QTROOTLIBEXTRA) $(QTLIBDIR) $(QTLIB)"
 
 $(QTROOTDS):    $(QTROOTH) $(QTROOTL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(QTROOTH) $(QTROOTL)
 
 $(QTROOTMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(QTROOTL)
-		$(RLIBMAP) -o $(QTROOTMAP) -l $(QTROOTLIB) \
+		$(RLIBMAP) -o $@ -l $(QTROOTLIB) \
 		   -d $(QTROOTLIBDEPM) -c $(QTROOTL)
 
 all-$(MODNAME): $(QTROOTLIB) $(QTROOTMAP)

@@ -4,7 +4,7 @@
 # Author: Matevz & Timur, 8/5/2009
 
 MODNAME      := glew
-MODDIR       := graf3d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf3d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -15,7 +15,7 @@ GLEWDIRI     := $(GLEWDIR)/inc
 ##### libGLEW #####
 GLEWH        := $(filter-out $(MODDIRI)/GL/LinkDef%,$(wildcard $(MODDIRI)/GL/*.h))
 GLEWS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.c))
-GLEWO        := $(GLEWS:.c=.o)
+GLEWO        := $(call stripsrc,$(GLEWS:.c=.o))
 
 GLEWDEP      := $(GLEWO:.o=.d)
 

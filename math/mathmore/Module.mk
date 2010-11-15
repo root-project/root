@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := mathmore
-MODDIR       := math/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -22,7 +22,7 @@ MATHMOREL    := $(MODDIRI)/Math/LinkDef.h
 MATHMORELINC := $(MODDIRI)/Math/LinkDef_Func.h \
                 $(MODDIRI)/Math/LinkDef_RootFinding.h
 
-MATHMOREDS   := $(MODDIRS)/G__MathMore.cxx
+MATHMOREDS   := $(call stripsrc,$(MODDIRS)/G__MathMore.cxx)
 MATHMOREDO   := $(MATHMOREDS:.cxx=.o)
 MATHMOREDH   := $(MATHMOREDS:.cxx=.h)
 MATHMOREDH1  := $(MODDIRI)/Math/DistFuncMathMore.h \
@@ -54,7 +54,7 @@ MATHMOREDH1  := $(MODDIRI)/Math/DistFuncMathMore.h \
 
 MATHMOREH    := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
 MATHMORES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-MATHMOREO    := $(MATHMORES:.cxx=.o)
+MATHMOREO    := $(call stripsrc,$(MATHMORES:.cxx=.o))
 
 MATHMOREDEP  := $(MATHMOREO:.o=.d) $(MATHMOREDO:.o=.d)
 
@@ -85,11 +85,12 @@ $(MATHMORELIB): $(MATHMOREO) $(MATHMOREDO) $(ORDER_) $(MAINLIBS) $(MATHMORELIBDE
 		   "$(MATHMORELIBEXTRA) $(GSLLIBDIR) $(GSLLIBS)"
 
 $(MATHMOREDS):  $(MATHMOREDH1) $(MATHMOREL) $(MATHMORELINC) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP)  -f  $@ -c $(MATHMOREDH1)  $(MATHMOREL)
 
 $(MATHMOREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(MATHMOREL) $(MATHMORELINC)
-		$(RLIBMAP) -o $(MATHMOREMAP) -l $(MATHMORELIB) \
+		$(RLIBMAP) -o $@ -l $(MATHMORELIB) \
 		   -d $(MATHMORELIBDEPM) -c $(MATHMOREL) $(MATHMORELINC)
 
 all-$(MODNAME): $(MATHMORELIB) $(MATHMOREMAP)

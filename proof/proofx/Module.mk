@@ -4,7 +4,7 @@
 # Author: Gerardo Ganis  12/12/2005
 
 MODNAME      := proofx
-MODDIR       := proof/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,7 +14,7 @@ PROOFXDIRI   := $(PROOFXDIR)/inc
 
 ##### libProofx #####
 PROOFXL      := $(MODDIRI)/LinkDef.h
-PROOFXDS     := $(MODDIRS)/G__Proofx.cxx
+PROOFXDS     := $(call stripsrc,$(MODDIRS)/G__Proofx.cxx)
 PROOFXDO     := $(PROOFXDS:.cxx=.o)
 PROOFXDH     := $(PROOFXDS:.cxx=.h)
 
@@ -29,7 +29,7 @@ else
 PROOFXH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PROOFXS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 endif
-PROOFXO      := $(PROOFXS:.cxx=.o)
+PROOFXO      := $(call stripsrc,$(PROOFXS:.cxx=.o))
 
 PROOFXDEP    := $(PROOFXO:.o=.d) $(PROOFXDO:.o=.d)
 
@@ -83,7 +83,7 @@ endif
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-include/%.h:    $(PROOFXDIRI)/%.h $(XROOTDETAG)
+include/%.h:    $(PROOFXDIRI)/%.h $(XROOTDMAKE)
 		cp $< $@
 
 $(PROOFXLIB):   $(PROOFXO) $(PROOFXDO) $(XPCONNO) $(ORDER_) $(MAINLIBS) \
@@ -93,12 +93,13 @@ $(PROOFXLIB):   $(PROOFXO) $(PROOFXDO) $(XPCONNO) $(ORDER_) $(MAINLIBS) \
 		   "$(PROOFXO) $(XPCONNO) $(PROOFXDO)" \
 		   "$(PROOFXLIBEXTRA)"
 
-$(PROOFXDS):    $(PROOFXH) $(PROOFXL) $(XROOTDETAG) $(ROOTCINTTMPDEP)
+$(PROOFXDS):    $(PROOFXH) $(PROOFXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PROOFXINCEXTRA) $(PROOFXH) $(PROOFXL)
 
 $(PROOFXMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(PROOFXL)
-		$(RLIBMAP) -o $(PROOFXMAP) -l $(PROOFXLIB) \
+		$(RLIBMAP) -o $@ -l $(PROOFXLIB) \
 		   -d $(PROOFXLIBDEPM) -c $(PROOFXL)
 
 all-$(MODNAME): $(PROOFXLIB) $(PROOFXMAP)
@@ -114,7 +115,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(PROOFXO) $(PROOFXDO): $(XROOTDETAG) $(XRDHDRS)
+$(PROOFXO) $(PROOFXDO): $(XROOTDMAKE) $(XRDHDRS)
 
 ifeq ($(PLATFORM),win32)
 $(PROOFXO) $(PROOFXDO): CXXFLAGS += $(PROOFXINCEXTRA) $(EXTRA_XRDFLAGS)

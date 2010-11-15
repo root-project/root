@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := rint
-MODDIR       := core/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ RINTDIRI     := $(RINTDIR)/inc
 
 ##### libRint #####
 RINTL        := $(MODDIRI)/LinkDef.h
-RINTDS       := $(MODDIRS)/G__Rint.cxx
+RINTDS       := $(call stripsrc,$(MODDIRS)/G__Rint.cxx)
 RINTDO       := $(RINTDS:.cxx=.o)
 RINTDH       := $(RINTDS:.cxx=.h)
 
 RINTH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 RINTS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-RINTO        := $(RINTS:.cxx=.o)
+RINTO        := $(call stripsrc,$(RINTS:.cxx=.o))
 
 RINTDEP      := $(RINTO:.o=.d) $(RINTDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(RINTLIB):     $(RINTO) $(RINTDO) $(ORDER_) $(MAINLIBS)
 		   "$(RINTLIBEXTRA)"
 
 $(RINTDS):      $(RINTH) $(RINTL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RINTH) $(RINTL)
 
 $(RINTMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(RINTL)
-		$(RLIBMAP) -o $(RINTMAP) -l $(RINTLIB) \
+		$(RLIBMAP) -o $@ -l $(RINTLIB) \
 		   -d $(RINTLIBDEPM) -c $(RINTL)
 
 all-$(MODNAME): $(RINTLIB) $(RINTMAP)

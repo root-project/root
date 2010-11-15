@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := g3d
-MODDIR       := graf3d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf3d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,7 +14,7 @@ G3DDIRI      := $(G3DDIR)/inc
 
 ##### libGraf3d #####
 G3DL         := $(MODDIRI)/LinkDef.h
-G3DDS        := $(MODDIRS)/G__G3D.cxx
+G3DDS        := $(call stripsrc,$(MODDIRS)/G__G3D.cxx)
 G3DDO        := $(G3DDS:.cxx=.o)
 G3DDH        := $(G3DDS:.cxx=.h)
 
@@ -25,7 +25,7 @@ G3DH2        := $(MODDIRI)/X3DBuffer.h $(MODDIRI)/X3DDefs.h
 G3DH         := $(G3DH1) $(G3DH2)
 G3DS1        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 G3DS2        := $(wildcard $(MODDIRS)/*.c)
-G3DO         := $(G3DS1:.cxx=.o) $(G3DS2:.c=.o)
+G3DO         := $(call stripsrc,$(G3DS1:.cxx=.o) $(G3DS2:.c=.o))
 
 G3DDEP       := $(G3DO:.o=.d) $(G3DDO:.o=.d)
 
@@ -52,11 +52,12 @@ $(G3DLIB):      $(G3DO) $(G3DDO) $(ORDER_) $(MAINLIBS) $(G3DLIBDEP)
 		   "$(G3DLIBEXTRA)"
 
 $(G3DDS):       $(G3DH1) $(G3DL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(G3DH1) $(G3DL)
 
 $(G3DMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(G3DL)
-		$(RLIBMAP) -o $(G3DMAP) -l $(G3DLIB) \
+		$(RLIBMAP) -o $@ -l $(G3DLIB) \
 		   -d $(G3DLIBDEPM) -c $(G3DL)
 
 all-$(MODNAME): $(G3DLIB) $(G3DMAP)

@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := pythia6
-MODDIR       := montecarlo/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/montecarlo/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ PYTHIA6DIRI  := $(PYTHIA6DIR)/inc
 
 ##### libEGPythia6 #####
 PYTHIA6L     := $(MODDIRI)/LinkDef.h
-PYTHIA6DS    := $(MODDIRS)/G__Pythia6.cxx
+PYTHIA6DS    := $(call stripsrc,$(MODDIRS)/G__Pythia6.cxx)
 PYTHIA6DO    := $(PYTHIA6DS:.cxx=.o)
 PYTHIA6DH    := $(PYTHIA6DS:.cxx=.h)
 
 PYTHIA6H     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PYTHIA6S     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-PYTHIA6O     := $(PYTHIA6S:.cxx=.o)
+PYTHIA6O     := $(call stripsrc,$(PYTHIA6S:.cxx=.o))
 
 PYTHIA6DEP   := $(PYTHIA6O:.o=.d) $(PYTHIA6DO:.o=.d)
 
@@ -48,11 +48,12 @@ $(PYTHIA6LIB):  $(PYTHIA6O) $(PYTHIA6DO) $(ORDER_) $(MAINLIBS) $(PYTHIA6LIBDEP)
 		   "$(PYTHIA6LIBEXTRA) $(FPYTHIA6LIBDIR) $(FPYTHIA6LIB)"
 
 $(PYTHIA6DS):   $(PYTHIA6H) $(PYTHIA6L) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PYTHIA6H) $(PYTHIA6L)
 
 $(PYTHIA6MAP):  $(RLIBMAP) $(MAKEFILEDEP) $(PYTHIA6L)
-		$(RLIBMAP) -o $(PYTHIA6MAP) -l $(PYTHIA6LIB) \
+		$(RLIBMAP) -o $@ -l $(PYTHIA6LIB) \
 		   -d $(PYTHIA6LIBDEPM) -c $(PYTHIA6L)
 
 all-$(MODNAME): $(PYTHIA6LIB) $(PYTHIA6MAP)

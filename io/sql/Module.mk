@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 7/12/2005
 
 MODNAME      := sql
-MODDIR       := io/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/io/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ SQLDIRI      := $(SQLDIR)/inc
 
 ##### libSQL #####
 SQLL         := $(MODDIRI)/LinkDef.h
-SQLDS        := $(MODDIRS)/G__SQL.cxx
+SQLDS        := $(call stripsrc,$(MODDIRS)/G__SQL.cxx)
 SQLDO        := $(SQLDS:.cxx=.o)
 SQLDH        := $(SQLDS:.cxx=.h)
 
 SQLH         := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 SQLS         := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-SQLO         := $(SQLS:.cxx=.o)
+SQLO         := $(call stripsrc,$(SQLS:.cxx=.o))
 
 SQLDEP       := $(SQLO:.o=.d) $(SQLDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(SQLLIB):      $(SQLO) $(SQLDO) $(ORDER_) $(MAINLIBS) $(SQLLIBDEP)
 		   "$(SQLLIBEXTRA)"
 
 $(SQLDS):       $(SQLH) $(SQLL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SQLH) $(SQLL)
 
 $(SQLMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(SQLL)
-		$(RLIBMAP) -o $(SQLMAP) -l $(SQLLIB) \
+		$(RLIBMAP) -o $@ -l $(SQLLIB) \
 		   -d $(SQLLIBDEPM) -c $(SQLL)
 
 all-$(MODNAME): $(SQLLIB) $(SQLMAP)

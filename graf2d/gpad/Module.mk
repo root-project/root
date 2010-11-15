@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := gpad
-MODDIR       := graf2d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ GPADDIRI     := $(GPADDIR)/inc
 
 ##### libGpad #####
 GPADL        := $(MODDIRI)/LinkDef.h
-GPADDS       := $(MODDIRS)/G__GPad.cxx
+GPADDS       := $(call stripsrc,$(MODDIRS)/G__GPad.cxx)
 GPADDO       := $(GPADDS:.cxx=.o)
 GPADDH       := $(GPADDS:.cxx=.h)
 
 GPADH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GPADS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GPADO        := $(GPADS:.cxx=.o)
+GPADO        := $(call stripsrc,$(GPADS:.cxx=.o))
 
 GPADDEP      := $(GPADO:.o=.d) $(GPADDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(GPADLIB):     $(GPADO) $(GPADDO) $(ORDER_) $(MAINLIBS) $(GPADLIBDEP)
 		   "$(GPADLIBEXTRA)"
 
 $(GPADDS):      $(GPADH) $(GPADL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GPADH) $(GPADL)
 
 $(GPADMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GPADL)
-		$(RLIBMAP) -o $(GPADMAP) -l $(GPADLIB) \
+		$(RLIBMAP) -o $@ -l $(GPADLIB) \
 		   -d $(GPADLIBDEPM) -c $(GPADL)
 
 all-$(MODNAME): $(GPADLIB) $(GPADMAP)

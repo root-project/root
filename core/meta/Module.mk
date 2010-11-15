@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := meta
-MODDIR       := core/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ METADIRI     := $(METADIR)/inc
 
 ##### libMeta (part of libCore) #####
 METAL        := $(MODDIRI)/LinkDef.h
-METADS       := $(MODDIRS)/G__Meta.cxx
+METADS       := $(call stripsrc,$(MODDIRS)/G__Meta.cxx)
 METADO       := $(METADS:.cxx=.o)
 METADH       := $(METADS:.cxx=.h)
 
 ifneq ($(BUILDCLING),yes)
 METACL       := $(MODDIRI)/LinkDef_TCint.h
-METACDS      := $(MODDIRS)/G__TCint.cxx
+METACDS      := $(call stripsrc,$(MODDIRS)/G__TCint.cxx)
 else
 METACL       :=
 METACDS      :=
@@ -34,7 +34,7 @@ METAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 ifeq ($(BUILDCLING),yes)
 METAS        := $(filter-out $(MODDIRS)/TCint.cxx,$(METAS))
 endif
-METAO        := $(METAS:.cxx=.o)
+METAO        := $(call stripsrc,$(METAS:.cxx=.o))
 
 METADEP      := $(METAO:.o=.d) $(METADO:.o=.d) $(METACDO:.o=.d)
 
@@ -51,10 +51,12 @@ include/%.h:    $(METADIRI)/%.h
 		cp $< $@
 
 $(METADS):      $(METAH) $(METAL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -DG__API $(METAH) $(METAL)
 
 $(METACDS):     $(METACH) $(METACL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -DG__API $(METACH) $(METACL)
 
@@ -72,4 +74,3 @@ distclean::     distclean-$(MODNAME)
 
 # Optimize dictionary with stl containers.
 $(METADO): NOOPT = $(OPT)
-

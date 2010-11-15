@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 20/11/2002
 
 MODNAME      := ldap
-MODDIR       := net/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ LDAPDIRI     := $(LDAPDIR)/inc
 
 ##### libRLDAP #####
 LDAPL        := $(MODDIRI)/LinkDef.h
-LDAPDS       := $(MODDIRS)/G__LDAP.cxx
+LDAPDS       := $(call stripsrc,$(MODDIRS)/G__LDAP.cxx)
 LDAPDO       := $(LDAPDS:.cxx=.o)
 LDAPDH       := $(LDAPDS:.cxx=.h)
 
 LDAPH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 LDAPS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-LDAPO        := $(LDAPS:.cxx=.o)
+LDAPO        := $(call stripsrc,$(LDAPS:.cxx=.o))
 
 LDAPDEP      := $(LDAPO:.o=.d) $(LDAPDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(LDAPLIB):     $(LDAPO) $(LDAPDO) $(ORDER_) $(MAINLIBS)
 		   "$(LDAPLIBEXTRA) $(LDAPLIBDIR) $(LDAPCLILIB)"
 
 $(LDAPDS):      $(LDAPH) $(LDAPL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(LDAPH) $(LDAPL)
 
 $(LDAPMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(LDAPL)
-		$(RLIBMAP) -o $(LDAPMAP) -l $(LDAPLIB) \
+		$(RLIBMAP) -o $@ -l $(LDAPLIB) \
 		   -d $(LDAPLIBDEPM) -c $(LDAPL)
 
 all-$(MODNAME): $(LDAPLIB) $(LDAPMAP)

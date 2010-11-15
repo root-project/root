@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := tree
-MODDIR       := tree/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/tree/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,20 +14,20 @@ TREEDIRI     := $(TREEDIR)/inc
 
 ##### libTree #####
 TREEL        := $(MODDIRI)/LinkDef.h
-TREEDS       := $(MODDIRS)/G__Tree.cxx
+TREEDS       := $(call stripsrc,$(MODDIRS)/G__Tree.cxx)
 TREEDO       := $(TREEDS:.cxx=.o)
 TREEDH       := $(TREEDS:.cxx=.h)
 
 # ManualBase4 only needs to be regenerated (and then changed manually) when
 # the dictionary interface changes
 TREEL2       := $(MODDIRI)/LinkDef2.h
-TREEDS2      := $(MODDIRS)/ManualTree2.cxx
+TREEDS2      := $(call stripsrc,$(MODDIRS)/ManualTree2.cxx)
 TREEDO2      := $(TREEDS2:.cxx=.o)
 TREEDH2      := TTree.h
 
 TREEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 TREES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-TREEO        := $(TREES:.cxx=.o)
+TREEO        := $(call stripsrc,$(TREES:.cxx=.o))
 
 TREEDEP      := $(TREEO:.o=.d) $(TREEDO:.o=.d)
 
@@ -42,20 +42,7 @@ ALLMAPS     += $(TREEMAP)
 # include all dependency files
 INCLUDEFILES += $(TREEDEP)
 
-
-
-
-
-
-
-
-
-
-
-
 ##### local rules #####
-$(TREEDO2): CXXFLAGS += -Iinclude/cint
-
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(TREEDIRI)/%.h
@@ -67,6 +54,7 @@ $(TREELIB):     $(TREEO) $(TREEDO) $(ORDER_) $(MAINLIBS) $(TREELIBDEP)
 		   "$(TREELIBEXTRA)"
 
 $(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TREEH) $(TREEL)
 
@@ -74,10 +62,11 @@ $(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMPDEP)
 # on demand after deleting the file
 $(TREEDS2):
 		@echo "Generating dictionary $@..."
+		$(MAKEDIR)
 		$(ROOTCINTTMP) -f $@ -c $(TREEDH2) $(TREEL2)
 
 $(TREEMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TREEL)
-		$(RLIBMAP) -o $(TREEMAP) -l $(TREELIB) \
+		$(RLIBMAP) -o $@ -l $(TREELIB) \
 		   -d $(TREELIBDEPM) -c $(TREEL)
 
 all-$(MODNAME): $(TREELIB) $(TREEMAP)
@@ -91,3 +80,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(TREEDEP) $(TREEDS) $(TREEDH) $(TREELIB) $(TREEMAP)
 
 distclean::     distclean-$(MODNAME)
+
+##### extra rules ######
+$(TREEDO2): CXXFLAGS += -Iinclude/cint

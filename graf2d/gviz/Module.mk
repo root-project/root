@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 2/9/2009
 
 MODNAME      := gviz
-MODDIR       := graf2d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ GVIZDIRI     := $(GVIZDIR)/inc
 
 ##### libGviz #####
 GVIZL        := $(MODDIRI)/LinkDef.h
-GVIZDS       := $(MODDIRS)/G__Gviz.cxx
+GVIZDS       := $(call stripsrc,$(MODDIRS)/G__Gviz.cxx)
 GVIZDO       := $(GVIZDS:.cxx=.o)
 GVIZDH       := $(GVIZDS:.cxx=.h)
 
 GVIZH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GVIZS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GVIZO        := $(GVIZS:.cxx=.o)
+GVIZO        := $(call stripsrc,$(GVIZS:.cxx=.o))
 
 GVIZDEP      := $(GVIZO:.o=.d) $(GVIZDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(GVIZLIB):     $(GVIZO) $(GVIZDO) $(ORDER_) $(MAINLIBS) $(GVIZLIBDEP)
 		   "$(GVIZLIBEXTRA) $(GRAPHVIZLIB)"
 
 $(GVIZDS):      $(GVIZH) $(GVIZL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GVIZH) $(GVIZL)
 
 $(GVIZMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GVIZL)
-		$(RLIBMAP) -o $(GVIZMAP) -l $(GVIZLIB) \
+		$(RLIBMAP) -o $@ -l $(GVIZLIB) \
 		   -d $(GVIZLIBDEPM) -c $(GVIZL)
 
 all-$(MODNAME): $(GVIZLIB) $(GVIZMAP)

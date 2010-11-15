@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := hist
-MODDIR       := hist/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/hist/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,7 +14,7 @@ HISTDIRI     := $(HISTDIR)/inc
 
 ##### libHist #####
 HISTL        := $(MODDIRI)/LinkDef.h
-HISTDS       := $(MODDIRS)/G__Hist.cxx
+HISTDS       := $(call stripsrc,$(MODDIRS)/G__Hist.cxx)
 HISTDO       := $(HISTDS:.cxx=.o)
 HISTDH       := $(HISTDS:.cxx=.h)
 
@@ -24,7 +24,7 @@ HISTHMAT     := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math
 HISTHH       := $(HISTH) $(HISTHMAT) 
 
 HISTS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-HISTO        := $(HISTS:.cxx=.o)
+HISTO        := $(call stripsrc,$(HISTS:.cxx=.o))
 
 HISTDEP      := $(HISTO:.o=.d) $(HISTDO:.o=.d)
 
@@ -58,11 +58,12 @@ $(HISTLIB):     $(HISTO) $(HISTDO) $(ORDER_) $(MAINLIBS) $(HISTLIBDEP)
 		   "$(HISTLIBEXTRA)"
 
 $(HISTDS):      $(HISTHH) $(HISTL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(HISTHH) $(HISTL)
 
 $(HISTMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HISTL)
-		$(RLIBMAP) -o $(HISTMAP) -l $(HISTLIB) \
+		$(RLIBMAP) -o $@ -l $(HISTLIB) \
 		   -d $(HISTLIBDEPM) -c $(HISTL)
 
 all-$(MODNAME): $(HISTLIB) $(HISTMAP)
@@ -79,4 +80,3 @@ distclean::     distclean-$(MODNAME)
 
 # Optimize dictionary with stl containers.
 $(HISTDO): NOOPT = $(OPT)
-

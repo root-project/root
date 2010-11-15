@@ -4,7 +4,7 @@
 # Author: Wouter Verkerke, 18/4/2005
 
 MODNAME      := roofit
-MODDIR       := roofit/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/roofit/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ ROOFITDIRI   := $(ROOFITDIR)/inc
 
 ##### libRooFit #####
 ROOFITL      := $(MODDIRI)/LinkDef1.h
-ROOFITDS     := $(MODDIRS)/G__RooFit.cxx
+ROOFITDS     := $(call stripsrc,$(MODDIRS)/G__RooFit.cxx)
 ROOFITDO     := $(ROOFITDS:.cxx=.o)
 ROOFITDH     := $(ROOFITDS:.cxx=.h)
 
 ROOFITH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 ROOFITS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-ROOFITO      := $(ROOFITS:.cxx=.o)
+ROOFITO      := $(call stripsrc,$(ROOFITS:.cxx=.o))
 
 ROOFITDEP    := $(ROOFITO:.o=.d) $(ROOFITDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(ROOFITLIB):   $(ROOFITO) $(ROOFITDO) $(ORDER_) $(MAINLIBS) $(ROOFITLIBDEP)
 		   "$(ROOFITLIBEXTRA)"
 
 $(ROOFITDS):    $(ROOFITH) $(ROOFITL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ROOFITH) $(ROOFITL)
 
 $(ROOFITMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(ROOFITL)
-		$(RLIBMAP) -o $(ROOFITMAP) -l $(ROOFITLIB) \
+		$(RLIBMAP) -o $@ -l $(ROOFITLIB) \
 		   -d $(ROOFITLIBDEPM) -c $(ROOFITL)
 
 all-$(MODNAME): $(ROOFITLIB) $(ROOFITMAP)

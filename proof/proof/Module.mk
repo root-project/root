@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := proof
-MODDIR       := proof/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ PROOFDIRI    := $(PROOFDIR)/inc
 
 ##### libProof #####
 PROOFL       := $(MODDIRI)/LinkDef.h
-PROOFDS      := $(MODDIRS)/G__Proof.cxx
+PROOFDS      := $(call stripsrc,$(MODDIRS)/G__Proof.cxx)
 PROOFDO      := $(PROOFDS:.cxx=.o)
 PROOFDH      := $(PROOFDS:.cxx=.h)
 
 PROOFH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PROOFS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-PROOFO       := $(PROOFS:.cxx=.o)
+PROOFO       := $(call stripsrc,$(PROOFS:.cxx=.o))
 
 PROOFDEP     := $(PROOFO:.o=.d) $(PROOFDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(PROOFLIB):    $(PROOFO) $(PROOFDO) $(ORDER_) $(MAINLIBS) $(PROOFLIBDEP)
 		   "$(PROOFLIBEXTRA)"
 
 $(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PROOFH) $(PROOFL)
 
 $(PROOFMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(PROOFL)
-		$(RLIBMAP) -o $(PROOFMAP) -l $(PROOFLIB) \
+		$(RLIBMAP) -o $@ -l $(PROOFLIB) \
 		   -d $(PROOFLIBDEPM) -c $(PROOFL)
 
 all-$(MODNAME): $(PROOFLIB) $(PROOFMAP)

@@ -3,7 +3,9 @@
 #
 # Author: Axel Naumann, 2006-09-14
 
-.PHONY: cintdlls distclean-cintdll clean-cintdll
+MODNAME      := cintdlls
+
+.PHONY: all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 # no: iterator pair
 # already in libCore (core/base/inc/Linkdef2.h): string 
@@ -96,7 +98,7 @@ cintdlls_cleanup_dependency_files_trigger := $(shell grep ORDER_ $(wildcard $(CI
 
 INCLUDEFILES += $(CINTDLLS_DEPENDENCY_FILES)
 
-cintdlls: $(ALLCINTDLLS)
+all-$(MODNAME): $(ALLCINTDLLS) $(CINTDICTMAPS)
 
 CINTCPPDEP := $(CINTDLLDICTVER) $(ORDER_) $(CINTDLLCINTTMP) $(CINTDLLIOSENUM)
 
@@ -144,7 +146,7 @@ endif # need to mv to .dll
 ##### all cintdlls end on .dll - END
 
 # Filter out the explicit link flag
-ifneq ($(subst build/unix/makelib.sh,,$(MAKELIB)),$(MAKELIB))
+ifneq ($(subst $(ROOT_SRCDIR)/build/unix/makelib.sh,,$(MAKELIB)),$(MAKELIB))
   $(CINTDLLS): MAKELIB := $(subst -x,,$(MAKELIB))
 endif
 
@@ -168,7 +170,7 @@ $(CINTDLLDIRDLLS)/%.dll: $(CINTDLLDIRL)/G__c_%.o
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $(filter-out $(MAINLIBS),$^)
 	$(CINTDLLSOEXTCMD)
 
-core/metautils/src/stlLoader_%.cc: core/metautils/src/stlLoader.cc
+core/metautils/src/stlLoader_%.cc: $(ROOT_SRCDIR)/core/metautils/src/stlLoader.cc
 	cp -f $< $@
 
 core/metautils/src/stlLoader_%.o: core/metautils/src/stlLoader_%.cc
@@ -232,19 +234,19 @@ $(CINTDLLDIRDLLS)/sys/ipc.dll: $(CINTDLLDIRL)/G__c_ipc.o
 ##### ipc special treatment - END
 
 ##### dictionaries
-$(CINTDLLDIRDLLSTL)/rootcint_%.cxx: core/metautils/src/%Linkdef.h $(CINTDLLROOTCINTTMPDEP)
+$(CINTDLLDIRDLLSTL)/rootcint_%.cxx: $(ROOT_SRCDIR)/core/metautils/src/%Linkdef.h $(CINTDLLROOTCINTTMPDEP)
 	core/utils/src/rootcint_tmp -f $@ -c \
 	   $(subst multi,,${*:2=}) \
-	   core/metautils/src/$*Linkdef.h
+	   $(ROOT_SRCDIR)/core/metautils/src/$*Linkdef.h
 
 $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDLLDIRDLLSTL)/rootcint_%.o,$(CINTDICTDLLS)): CINTCXXFLAGS += -I.
 $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDLLDIRDLLSTL)/rootcint_%.cxx,$(CINTDICTDLLS)): $(CINTDLLROOTCINTTMPDEP)
 
-lib/libvectorDict.rootmap: bin/rlibmap$(EXEEXT) $(MAKEFILEDEP) core/metautils/src/vectorLinkdef.h
-	$(RLIBMAP) -o $@ -l vector.dll -d vectorbool.dll -c core/metautils/src/vectorLinkdef.h
+lib/libvectorDict.rootmap: $(RLIBMAP) $(MAKEFILEDEP) $(ROOT_SRCDIR)/core/metautils/src/vectorLinkdef.h
+	$(RLIBMAP) -o $@ -l vector.dll -d vectorbool.dll -c $(ROOT_SRCDIR)/core/metautils/src/vectorLinkdef.h
 
-$(filter-out lib/libvectorDict.rootmap,$(CINTDICTMAPS)): lib/lib%Dict.rootmap: bin/rlibmap$(EXEEXT) $(MAKEFILEDEP) core/metautils/src/%Linkdef.h
-	$(RLIBMAP) -o $@ -l $*.dll -c core/metautils/src/$*Linkdef.h
+$(filter-out lib/libvectorDict.rootmap,$(CINTDICTMAPS)): lib/lib%Dict.rootmap: $(RLIBMAP) $(MAKEFILEDEP) $(ROOT_SRCDIR)/core/metautils/src/%Linkdef.h
+	$(RLIBMAP) -o $@ -l $*.dll -c $(ROOT_SRCDIR)/core/metautils/src/$*Linkdef.h
 
 $(CINTDICTDLLS): lib/lib%Dict.$(SOEXT): $(CINTDLLDIRDLLSTL)/rootcint_%.o
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ $(filter-out $(MAINLIBS),$^)
@@ -254,43 +256,42 @@ $(CINTDICTDLLS): lib/lib%Dict.$(SOEXT): $(CINTDLLDIRDLLSTL)/rootcint_%.o
 ##### clean
 
 # remove only .o, .dll, .$(SOEXT)
-CLEANCINTDLLSTARGET := cintdll
 
-clean-$(CLEANCINTDLLSTARGET):
+clean-$(MODNAME):
 	@(for cintdll in $(CINTDLLNAMES); do \
-	  rm -f $(patsubst clean-%dll,cint/%,$@)/lib/dll_stl/rootcint_$${cintdll}.o \
-	  $(patsubst clean-%dll,cint/%,$@)/lib/dll_stl/G__cpp_$${cintdll}.o \
-	  $(patsubst clean-%dll,cint/%,$@)/lib/G__c_$${cintdll}.o \
-	  $(patsubst clean-%dll,cint/%,$@)/lib/G__cpp_$${cintdll}.o \
+	  rm -f $(CINTDLLDIRDLLSTL)/rootcint_$${cintdll}.o \
+	  $(CINTDLLDIRDLLSTL)/G__cpp_$${cintdll}.o \
+	  $(CINTDLLDIRL)/G__c_$${cintdll}.o \
+	  $(CINTDLLDIRL)/G__cpp_$${cintdll}.o \
 	  core/metautils/src/stlLoader_$${cintdll}.o; done)
 	@(for cintdll in $(CINTDLLNAMES); do \
-	  rm -f $(patsubst clean-%dll,cint/%,$@)/lib/dll_stl/rootcint_$${cintdll}.d \
-	  $(patsubst clean-%dll,cint/%,$@)/lib/dll_stl/G__cpp_$${cintdll}.d \
-	  $(patsubst clean-%dll,cint/%,$@)/lib/G__c_$${cintdll}.d \
-	  $(patsubst clean-%dll,cint/%,$@)/lib/G__cpp_$${cintdll}.d \
+	  rm -f $(CINTDLLDIRDLLSTL)/rootcint_$${cintdll}.d \
+	  $(CINTDLLDIRDLLSTL)/G__cpp_$${cintdll}.d \
+	  $(CINTDLLDIRL)/G__c_$${cintdll}.d \
+	  $(CINTDLLDIRL)/G__cpp_$${cintdll}.d \
 	  core/metautils/src/stlLoader_$${cintdll}.d; done)
 	@rm -f $(ALLCINTDLLS) \
-	  $(patsubst clean-%dll,cint/%,$@)/lib//posix/exten.o \
-	  $(patsubst clean-%dll,cint/%,$@)/include/posix.* \
-	  $(patsubst clean-%dll,cint/%,$@)/include/ipc.*
+	  $(CINTDLLDIRL)/posix/exten.o \
+	  $(CINTDLLDIRDLLS)/posix.* \
+	  $(CINTDLLDIRDLLS)/ipc.*
 
-clean:: clean-$(CLEANCINTDLLSTARGET)
+clean:: clean-$(MODNAME)
 
 # remove generated code, too.
-distclean-$(CLEANCINTDLLSTARGET): clean-$(CLEANCINTDLLSTARGET)
+distclean-$(MODNAME): clean-$(MODNAME)
 	@(for cintdll in $(CINTDLLNAMES); do \
-	  rm -f $(patsubst distclean-%dll,cint/%,$@)/lib/dll_stl/rootcint_$${cintdll}.* \
-	  $(patsubst distclean-%dll,cint/%,$@)/lib/dll_stl/G__cpp_$${cintdll}.* \
-	  $(patsubst distclean-%dll,cint/%,$@)/lib/G__c_$${cintdll}.* \
-	  $(patsubst distclean-%dll,cint/%,$@)/lib/G__cpp_$${cintdll}.* \
+	  rm -f $(CINTDLLDIRDLLSTL)/rootcint_$${cintdll}.* \
+	  $(CINTDLLDIRDLLSTL)/G__cpp_$${cintdll}.* \
+	  $(CINTDLLDIRL)/G__c_$${cintdll}.* \
+	  $(CINTDLLDIRL)/G__cpp_$${cintdll}.* \
 	  core/metautils/src/stlLoader_$${cintdll}.*; done)
 	@rm -f $(ALLCINTDLLS) $(CINTDICTMAPS) \
-	  $(patsubst distclean-%dll,cint/%,$@)/lib/posix/mktypes$(EXEEXT)
+	  $(CINTDLLDIRL)/posix/mktypes$(EXEEXT)
 ifeq ($(PLATFORM),macosx)
-	@rm -f  $(patsubst distclean-%dll,cint/%,$@)/stl/*.so
-	@rm -rf $(patsubst distclean-%dll,cint/%,$@)/lib/posix/mktypes.dSYM
+	@rm -f  $(CINTDLLDIRSTL)/*.so
+	@rm -rf $(CINTDLLDIRL)/posix/mktypes.dSYM
 endif
 
-distclean:: distclean-$(CLEANCINTDLLSTARGET)
+distclean:: distclean-$(MODNAME)
 
 ##### clean - END

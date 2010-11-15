@@ -5,7 +5,7 @@
 
 MODNAME      := cint
 MODDIRBASE   := cint
-MODDIR       := $(MODDIRBASE)/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/$(MODDIRBASE)/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRSD     := $(MODDIRS)/dict
 MODDIRI      := $(MODDIR)/inc
@@ -15,15 +15,18 @@ CINTDIRS     := $(CINTDIR)/src
 CINTDIRSD    := $(CINTDIRS)/dict
 CINTDIRI     := $(CINTDIR)/inc
 CINTDIRM     := $(CINTDIR)/main
-CINTDIRL     := $(CINTDIR)/lib
-CINTDIRDLLS  := $(CINTDIR)/include
-CINTDIRSTL   := $(CINTDIR)/stl
+CINTDIRL     := $(call stripsrc,$(CINTDIR)/lib)
+CINTDIRDLLS  := $(call stripsrc,$(CINTDIR)/include)
+CINTDIRSTL   := $(call stripsrc,$(CINTDIR)/stl)
 CINTDIRDLLSTL:= $(CINTDIRL)/dll_stl
-CINTDIRIOSEN := $(MODDIRBASE)/iosenum
-CINTDIRT     := $(MODDIRBASE)/tool
+CINTDIRIOSEN := $(ROOT_SRCDIR)/$(MODDIRBASE)/iosenum
+CINTDIRT     := $(ROOT_SRCDIR)/$(MODDIRBASE)/tool
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+CINTINCLUDES := $(CINTDIRL) $(CINTDIRDLLS) $(CINTDIRSTL)
+endif
 
 ##### libCint #####
-CINTCONF     := $(CINTDIRI)/configcint.h
+CINTCONF     := $(call stripsrc,$(CINTDIRI)/configcint.h)
 CINTH        := $(wildcard $(CINTDIRI)/*.h)
 CINTHT       := $(sort $(patsubst $(CINTDIRI)/%.h,include/%.h,$(CINTH) $(CINTCONF)))
 CINTS1       := $(wildcard $(MODDIRS)/*.c) \
@@ -35,10 +38,7 @@ CINTS2       := $(wildcard $(MODDIRS)/*.cxx) \
 
 CINTS1       += $(CINTDIRM)/G__setup.c
 
-CINTALLO     := $(CINTS1:.c=.o) $(CINTS2:.cxx=.o)
-CINTALLDEP   := $(CINTALLO:.o=.d)
-
-CINTCONFMK   := cint/ROOT/configcint.mk
+CINTCONFMK   := $(ROOT_SRCDIR)/cint/ROOT/configcint.mk
 
 CINTS1       := $(filter-out $(MODDIRS)/dlfcn.%,$(CINTS1))
 
@@ -165,29 +165,28 @@ endif
 endif
 
 CINTS        := $(CINTS1) $(CINTS2)
-CINTO        := $(CINTS1:.c=.o) $(CINTS2:.cxx=.o)
+CINTO        := $(call stripsrc,$(CINTS1:.c=.o) $(CINTS2:.cxx=.o))
 CINTTMPO     := $(subst loadfile.o,loadfile_tmp.o,$(CINTO))
-CINTTMPINC   := -I$(MODDIR)/include -I$(MODDIR)/stl -I$(MODDIR)/lib
+CINTTMPINC   := -I$(CINTDIRDLLS) -I$(CINTDIRSTL) -I$(CINTDIRL)
 CINTDEP      := $(CINTO:.o=.d)
-CINTDEP      += $(MODDIRS)/loadfile_tmp.d
-CINTALLDEP   += $(MODDIRS)/loadfile_tmp.d
+CINTDEP      += $(call stripsrc,$(MODDIRS)/loadfile_tmp.d)
 
 CINTLIB      := $(LPATH)/libCint.$(SOEXT)
 
 ##### cint #####
 CINTEXES     := $(CINTDIRM)/cppmain.cxx
-CINTEXEO     := $(CINTEXES:.cxx=.o)
+CINTEXEO     := $(call stripsrc,$(CINTEXES:.cxx=.o))
 CINTEXEDEP   := $(CINTEXEO:.o=.d)
-CINTTMP      := $(CINTDIRM)/cint_tmp$(EXEEXT)
+CINTTMP      := $(call stripsrc,$(CINTDIRM)/cint_tmp$(EXEEXT))
 CINT         := bin/cint$(EXEEXT)
 
 ##### makecint #####
 MAKECINTS    := $(CINTDIRT)/makecint.cxx
-MAKECINTO    := $(MAKECINTS:.cxx=.o)
+MAKECINTO    := $(call stripsrc,$(MAKECINTS:.cxx=.o))
 MAKECINT     := bin/makecint$(EXEEXT)
 
 ##### iosenum.h #####
-IOSENUM      := $(MODDIR)/include/iosenum.h
+IOSENUM      := $(call stripsrc,$(MODDIR)/include/iosenum.h)
 IOSENUMC     := $(CINTDIRIOSEN)/iosenum.cxx
 ifeq ($(CLANG_MAJOR),2)
 IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
@@ -206,8 +205,14 @@ endif
 # used in the main Makefile
 ALLHDRS     += $(CINTHT)
 
-CINTCXXFLAGS += -DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__CINTBODY -I$(CINTDIRI) -I$(CINTDIRS) -I$(CINTDIRSD)
-CINTCFLAGS += -DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__CINTBODY -I$(CINTDIRI) -I$(CINTDIRS) -I$(CINTDIRSD)
+CINTCXXFLAGS += -DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__CINTBODY
+CINTCFLAGS += -DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__CINTBODY
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+CINTCXXFLAGS += -I$(call stripsrc,$(CINTDIRI))
+CINTCFLAGS += -I$(call stripsrc,$(CINTDIRI))
+endif
+CINTCXXFLAGS += -I$(CINTDIRI) -I$(CINTDIRS) -I$(CINTDIRSD)
+CINTCFLAGS += -I$(CINTDIRI) -I$(CINTDIRS) -I$(CINTDIRSD)
 
 ##### used by cintdlls.mk #####
 CINTDLLDIRSTL    := $(CINTDIRSTL)
@@ -230,6 +235,18 @@ INCLUDEFILES += $(CINTDEP) $(CINTEXEDEP)
 include/%.h: $(CINTDIRI)/%.h
 		cp $< $@
 
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+$(CINTDIRL):
+		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.d' --exclude 'rootcint_*' --exclude 'G__cpp_*' --exclude 'G__c_*' $(CINTDIR)/lib $(dir $@)
+		@touch $(CINTDIRL)
+$(CINTDIRDLLS):
+		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.d' --exclude '*.dll' $(CINTDIR)/include $(dir $@)
+		@touch $(CINTDIRDLLS)
+$(CINTDIRSTL):
+		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.d' --exclude '*.dll' $(CINTDIR)/stl $(dir $@)
+		@touch $(CINTDIRSTL)
+endif
+
 $(CINTLIB):     $(CINTO)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libCint.$(SOEXT) $@ "$^" "$(CINTLIBEXTRA)"
@@ -245,8 +262,13 @@ $(CINTTMP):     $(CINTEXEO) $(CINTTMPO)
 $(MAKECINT):    $(MAKECINTO)
 		$(LD) $(LDFLAGS) -o $@ $(MAKECINTO)
 
-$(IOSENUM):     $(IOSENUMA)
-		cp $< $@
+$(IOSENUM): 
+		$(MAKEDIR)
+		@(if [ ! -r $(IOSENUMA) ]; then \
+			echo "Missing $(IOSENUMA), run: make $IOSENUMA)"; \
+		else \
+			cp $(IOSENUMA) $@; \
+		fi)
 
 $(IOSENUMA):    $(CINTTMP)
 		@(if [ ! -r $@ ]; then \
@@ -260,42 +282,47 @@ $(IOSENUMA):    $(CINTTMP)
 all-$(MODNAME): $(CINTLIB) $(CINTTMP) $(IOSENUM)
 
 clean-$(MODNAME):
-		@rm -f $(CINTTMPO) $(CINTALLO) $(CINTEXEO) $(MAKECINTO)
+		@rm -f $(CINTTMPO) $(CINTO) $(CINTEXEO) $(MAKECINTO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(CINTALLDEP) $(CINTLIB) $(IOSENUM) $(CINTEXEDEP) \
+		@rm -f $(CINTDEP) $(CINTLIB) $(IOSENUM) $(CINTEXEDEP) \
 		   $(CINT) $(CINTTMP) $(MAKECINT) $(CINTDIRM)/*.exp \
-		   $(CINTDIRM)/*.lib $(CINTDIRS)/loadfile_tmp.cxx \
+		   $(CINTDIRM)/*.lib \
+		   $(call stripsrc,$(CINTDIRS)/loadfile_tmp.cxx) \
 		   $(CINTDIRDLLS)/sys/types.h $(CINTDIRDLLS)/systypes.h \
 		   $(CINTHT) $(CINTCONF)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@rm -rf $(CINTINCLUDES)
+endif
 
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(CINTDIRSD)/libstrm.o:  CINTCXXFLAGS += -I$(CINTDIRL)/stream
-$(CINTDIRSD)/sun5strm.o: CINTCXXFLAGS += -I$(CINTDIRL)/sunstrm
-$(CINTDIRSD)/vcstrm.o:   CINTCXXFLAGS += -I$(CINTDIRL)/vcstream
-$(CINTDIRSD)/%strm.o:    CINTCXXFLAGS += -I$(CINTDIRL)/$(notdir $(basename $@))
+$(call stripsrc,$(CINTDIRSD)/libstrm.o):  CINTCXXFLAGS += -I$(CINTDIRL)/stream
+$(call stripsrc,$(CINTDIRSD)/sun5strm.o): CINTCXXFLAGS += -I$(CINTDIRL)/sunstrm
+$(call stripsrc,$(CINTDIRSD)/vcstrm.o):   CINTCXXFLAGS += -I$(CINTDIRL)/vcstream
+$(call stripsrc,$(CINTDIRSD)/%strm.o):    CINTCXXFLAGS += -I$(CINTDIRL)/$(notdir $(basename $@))
 ifeq ($(GCC_MAJOR),4)
-$(CINTDIRSD)/gcc4strm.o:  CINTCXXFLAGS += -Wno-strict-aliasing
+$(call stripsrc,$(CINTDIRSD)/gcc4strm.o): CINTCXXFLAGS += -Wno-strict-aliasing
 endif
 
-$(MAKECINTO) $(CINTALLO): $(CINTCONF)
+$(MAKECINTO) $(CINTO): $(CINTCONF) $(CINTINCLUDES)
 
 $(MAKECINTO): CXXFLAGS := $(CINTCXXFLAGS)
-$(CINTDIRSD)/stdstrct.o:     CINTCXXFLAGS += -I$(CINTDIRL)/stdstrct
-$(CINTDIRS)/loadfile_tmp.o: CINTCXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD
+$(call stripsrc,$(CINTDIRSD)/stdstrct.o):    CINTCXXFLAGS += -I$(CINTDIRL)/stdstrct
+$(call stripsrc,$(CINTDIRS)/loadfile_tmp.o): CINTCXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD
 
-$(CINTDIRS)/loadfile_tmp.cxx: $(CINTDIRS)/loadfile.cxx
+$(call stripsrc,$(CINTDIRS)/loadfile_tmp.cxx): $(CINTDIRS)/loadfile.cxx
+	$(MAKEDIR)
 	cp -f $< $@
 
-$(CINTDIRS)/loadfile_tmp.o $(CINTO): OPT:=$(filter-out -Wshadow,$(OPT))
-$(CINTDIRS)/loadfile_tmp.o $(CINTO): CXXFLAGS:=$(filter-out -Wshadow,$(CXXFLAGS))
+$(call stripsrc,$(CINTDIRS)/loadfile_tmp.o) $(CINTO): OPT := $(filter-out -Wshadow,$(OPT))
+$(call stripsrc,$(CINTDIRS)/loadfile_tmp.o) $(CINTO): CXXFLAGS:=$(filter-out -Wshadow,$(CXXFLAGS))
 ifneq ($(subst -ftest-coverage,,$(OPT)),$(OPT))
 # we have coverage on - not interesting for dictionaries
-$(subst .cxx,.o,$(wildcard $(CINTDIRSD)/*.cxx)): override OPT:= $(subst -fprofile-arcs,,$(subst -ftest-coverage,,$(OPT)))
+$(call stripsrc,$(subst .cxx,.o,$(wildcard $(CINTDIRSD)/*.cxx))): override OPT := $(subst -fprofile-arcs,,$(subst -ftest-coverage,,$(OPT)))
 endif
 
 ##### configcint.h
@@ -308,4 +335,4 @@ include $(CINTCONFMK)
 ##### configcint.h - END
 
 ##### cintdlls #####
-include cint/ROOT/cintdlls.mk
+include $(ROOT_SRCDIR)/cint/ROOT/cintdlls.mk

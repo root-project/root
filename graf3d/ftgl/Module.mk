@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 15/11/2006
 
 MODNAME      := ftgl
-MODDIR       := graf3d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf3d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -15,7 +15,7 @@ FTGLDIRI     := $(FTGLDIR)/inc
 ##### libFTGL #####
 FTGLH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 FTGLS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-FTGLO        := $(FTGLS:.cxx=.o)
+FTGLO        := $(call stripsrc,$(FTGLS:.cxx=.o))
 
 FTGLDEP      := $(FTGLO:.o=.d)
 

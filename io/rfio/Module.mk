@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := rfio
-MODDIR       := io/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/io/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ RFIODIRI     := $(RFIODIR)/inc
 
 ##### libRFIO #####
 RFIOL        := $(MODDIRI)/LinkDef.h
-RFIODS       := $(MODDIRS)/G__RFIO.cxx
+RFIODS       := $(call stripsrc,$(MODDIRS)/G__RFIO.cxx)
 RFIODO       := $(RFIODS:.cxx=.o)
 RFIODH       := $(RFIODS:.cxx=.h)
 
 RFIOH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 RFIOS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-RFIOO        := $(RFIOS:.cxx=.o)
+RFIOO        := $(call stripsrc,$(RFIOS:.cxx=.o))
 
 RFIODEP      := $(RFIOO:.o=.d) $(RFIODO:.o=.d)
 
@@ -47,11 +47,12 @@ $(RFIOLIB):     $(RFIOO) $(RFIODO) $(ORDER_) $(MAINLIBS) $(RFIOLIBDEP)
 		   "$(SHIFTLIBDIR) $(SHIFTLIB) $(RFIOLIBEXTRA)"
 
 $(RFIODS):      $(RFIOH) $(RFIOL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RFIOH) $(RFIOL)
 
 $(RFIOMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(RFIOL)
-		$(RLIBMAP) -o $(RFIOMAP) -l $(RFIOLIB) \
+		$(RLIBMAP) -o $@ -l $(RFIOLIB) \
 		   -d $(RFIOLIBDEPM) -c $(RFIOL)
 
 all-$(MODNAME): $(RFIOLIB) $(RFIOMAP)

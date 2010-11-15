@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME          := geombuilder
-MODDIR           := geom/$(MODNAME)
+MODDIR           := $(ROOT_SRCDIR)/geom/$(MODNAME)
 MODDIRS          := $(MODDIR)/src
 MODDIRI          := $(MODDIR)/inc
 
@@ -14,7 +14,7 @@ GEOMBUILDERDIRI  := $(GEOMBUILDERDIR)/inc
 
 ##### libGeomBuilder #####
 GEOMBUILDERL     := $(MODDIRI)/LinkDef.h
-GEOMBUILDERDS    := $(MODDIRS)/G__GeomBuilder.cxx
+GEOMBUILDERDS    := $(call stripsrc,$(MODDIRS)/G__GeomBuilder.cxx)
 GEOMBUILDERDO    := $(GEOMBUILDERDS:.cxx=.o)
 GEOMBUILDERDH    := $(GEOMBUILDERDS:.cxx=.h)
 
@@ -27,7 +27,7 @@ GEOMBUILDERH     := TGeoVolumeEditor.h TGeoBBoxEditor.h TGeoMediumEditor.h \
                     TGeoPgonEditor.h TGeoTrapEditor.h TGeoGedFrame.h
 GEOMBUILDERH     := $(patsubst %,$(MODDIRI)/%,$(GEOMBUILDERH))
 GEOMBUILDERS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GEOMBUILDERO     := $(GEOMBUILDERS:.cxx=.o)
+GEOMBUILDERO     := $(call stripsrc,$(GEOMBUILDERS:.cxx=.o))
 
 GEOMBUILDERDEP   := $(GEOMBUILDERO:.o=.d) $(GEOMBUILDERDO:.o=.d)
 
@@ -56,11 +56,12 @@ $(GEOMBUILDERLIB): $(GEOMBUILDERO) $(GEOMBUILDERDO) $(ORDER_) $(MAINLIBS) \
 		   "$(GEOMBUILDERLIBEXTRA)"
 
 $(GEOMBUILDERDS): $(GEOMBUILDERH) $(GEOMBUILDERL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GEOMBUILDERH) $(GEOMBUILDERL)
 
 $(GEOMBUILDERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(GEOMBUILDERL)
-		$(RLIBMAP) -o $(GEOMBUILDERMAP) -l $(GEOMBUILDERLIB) \
+		$(RLIBMAP) -o $@ -l $(GEOMBUILDERLIB) \
 		   -d $(GEOMBUILDERLIBDEPM) -c $(GEOMBUILDERL)
 
 all-$(MODNAME): $(GEOMBUILDERLIB) $(GEOMBUILDERMAP)

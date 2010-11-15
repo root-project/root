@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := eg
-MODDIR       := montecarlo/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/montecarlo/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,14 +14,14 @@ EGDIRI       := $(EGDIR)/inc
 
 ##### libEG #####
 EGL          := $(MODDIRI)/LinkDef.h
-EGDS         := $(MODDIRS)/G__EG.cxx
+EGDS         := $(call stripsrc,$(MODDIRS)/G__EG.cxx)
 EGDO         := $(EGDS:.cxx=.o)
 EGDH         := $(EGDS:.cxx=.h)
 
 EGH1         := $(wildcard $(MODDIRI)/T*.h)
 EGH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 EGS          := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-EGO          := $(EGS:.cxx=.o)
+EGO          := $(call stripsrc,$(EGS:.cxx=.o))
 
 EGDEP        := $(EGO:.o=.d) $(EGDO:.o=.d)
 
@@ -48,11 +48,12 @@ $(EGLIB):       $(EGO) $(EGDO) $(ORDER_) $(MAINLIBS) $(EGLIBDEP)
 		   "$(EGLIBEXTRA)"
 
 $(EGDS):        $(EGH1) $(EGL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(EGH1) $(EGL)
 
 $(EGMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(EGL)
-		$(RLIBMAP) -o $(EGMAP) -l $(EGLIB) \
+		$(RLIBMAP) -o $@ -l $(EGLIB) \
 		   -d $(EGLIBDEPM) -c $(EGL)
 
 all-$(MODNAME): $(EGLIB) $(EGMAP)

@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := physics
-MODDIR       := math/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ PHYSICSDIRI  := $(PHYSICSDIR)/inc
 
 ##### libPhysics #####
 PHYSICSL     := $(MODDIRI)/LinkDef.h
-PHYSICSDS    := $(MODDIRS)/G__Physics.cxx
+PHYSICSDS    := $(call stripsrc,$(MODDIRS)/G__Physics.cxx)
 PHYSICSDO    := $(PHYSICSDS:.cxx=.o)
 PHYSICSDH    := $(PHYSICSDS:.cxx=.h)
 
 PHYSICSH     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PHYSICSS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-PHYSICSO     := $(PHYSICSS:.cxx=.o)
+PHYSICSO     := $(call stripsrc,$(PHYSICSS:.cxx=.o))
 
 PHYSICSDEP   := $(PHYSICSO:.o=.d) $(PHYSICSDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(PHYSICSLIB):  $(PHYSICSO) $(PHYSICSDO) $(ORDER_) $(MAINLIBS) $(PHYSICSLIBDEP)
 		   "$(PHYSICSO) $(PHYSICSDO)" "$(PHYSICSLIBEXTRA)"
 
 $(PHYSICSDS):   $(PHYSICSH) $(PHYSICSL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PHYSICSH) $(PHYSICSL)
 
 $(PHYSICSMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(PHYSICSL)
-		$(RLIBMAP) -o $(PHYSICSMAP) -l $(PHYSICSLIB) \
+		$(RLIBMAP) -o $@ -l $(PHYSICSLIB) \
 		   -d $(PHYSICSLIBDEPM) -c $(PHYSICSL)
 
 all-$(MODNAME): $(PHYSICSLIB) $(PHYSICSMAP)

@@ -4,7 +4,7 @@
 # Author: Rene Brun 06/02/2007
 
 MODNAME      := io
-MODDIR       := io/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/io/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ IODIRI       := $(IODIR)/inc
 
 ##### libRIO #####
 IOL          := $(MODDIRI)/LinkDef.h
-IODS         := $(MODDIRS)/G__IO.cxx
+IODS         := $(call stripsrc,$(MODDIRS)/G__IO.cxx)
 IODO         := $(IODS:.cxx=.o)
 IODH         := $(IODS:.cxx=.h)
 
 IOH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 IOS          := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-IOO          := $(IOS:.cxx=.o)
+IOO          := $(call stripsrc,$(IOS:.cxx=.o))
 
 IODEP        := $(IOO:.o=.d) $(IODO:.o=.d)
 
@@ -47,11 +47,12 @@ $(IOLIB):       $(IOO) $(IODO) $(ORDER_) $(MAINLIBS)
 		   "$(IOLIBEXTRA)"
 
 $(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(IOH) $(IOL)
 
 $(IOMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(IOL)
-		$(RLIBMAP) -o $(IOMAP) -l $(IOLIB) -d $(IOLIBDEPM) -c $(IOL)
+		$(RLIBMAP) -o $@ -l $(IOLIB) -d $(IOLIBDEPM) -c $(IOL)
 
 all-$(MODNAME): $(IOLIB) $(IOMAP)
 
@@ -69,6 +70,6 @@ distclean::     distclean-$(MODNAME)
 #ifeq ($(GCC_VERS_FULL),gcc-4.4.0)
 ifeq ($(GCC_VERS),gcc-4.4)
 ifneq ($(filter -O%,$(OPT)),)
-   $(IODIRS)/TStreamerInfoReadBuffer.o: CXXFLAGS += -DR__EXPLICIT_FUNCTION_INSTANTIATION
+   $(call stripsrc,$(IODIRS)/TStreamerInfoReadBuffer.o): CXXFLAGS += -DR__EXPLICIT_FUNCTION_INSTANTIATION
 endif
 endif

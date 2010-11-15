@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := clib
-MODDIR       := core/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,7 +14,7 @@ CLIBDIRI     := $(CLIBDIR)/inc
 
 ##### libClib (part of libCore) #####
 CLIBL        := $(MODDIRI)/LinkDef.h
-CLIBDS       := $(MODDIRS)/G__Clib.cxx
+CLIBDS       := $(call stripsrc,$(MODDIRS)/G__Clib.cxx)
 CLIBDO       := $(CLIBDS:.cxx=.o)
 CLIBDH       := $(CLIBDS:.cxx=.h)
 
@@ -27,9 +27,9 @@ CLIBS1       := $(filter-out $(MODDIRS)/Getline.c,$(CLIBS1))
 endif
 CLIBS2       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 
-CLIBO        := $(CLIBS1:.c=.o) $(CLIBS2:.cxx=.o)
-SNPRINTFO    := $(CLIBDIRS)/snprintf.o
-STRLCPYO     := $(CLIBDIRS)/strlcpy.o $(CLIBDIRS)/strlcat.o
+CLIBO        := $(call stripsrc,$(CLIBS1:.c=.o) $(CLIBS2:.cxx=.o))
+SNPRINTFO    := $(call stripsrc,$(CLIBDIRS)/snprintf.o)
+STRLCPYO     := $(call stripsrc,$(CLIBDIRS)/strlcpy.o $(CLIBDIRS)/strlcat.o)
 
 CLIBDEP      := $(CLIBO:.o=.d) $(CLIBDO:.o=.d)
 
@@ -46,6 +46,7 @@ include/%.h:    $(CLIBDIRI)/%.h
 		cp $< $@
 
 $(CLIBDS):      $(CLIBHH) $(CLIBL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(CLIBHH) $(CLIBL)
 

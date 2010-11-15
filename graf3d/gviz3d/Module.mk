@@ -4,7 +4,7 @@
 # Author: Rene Brun, 26/8/2009
 
 MODNAME      := gviz3d
-MODDIR       := graf3d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf3d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ GVIZ3DDIRI   := $(GVIZ3DDIR)/inc
 
 ##### libGviz3d #####
 GVIZ3DL      := $(MODDIRI)/LinkDef.h
-GVIZ3DDS     := $(MODDIRS)/G__Gviz3d.cxx
+GVIZ3DDS     := $(call stripsrc,$(MODDIRS)/G__Gviz3d.cxx)
 GVIZ3DDO     := $(GVIZ3DDS:.cxx=.o)
 GVIZ3DDH     := $(GVIZ3DDS:.cxx=.h)
 
 GVIZ3DH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GVIZ3DS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GVIZ3DO      := $(GVIZ3DS:.cxx=.o)
+GVIZ3DO      := $(call stripsrc,$(GVIZ3DS:.cxx=.o))
 
 GVIZ3DDEP    := $(GVIZ3DO:.o=.d) $(GVIZ3DDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(GVIZ3DLIB):   $(GVIZ3DO) $(GVIZ3DDO) $(ORDER_) $(MAINLIBS) $(GVIZ3DLIBDEP)
 		   "$(GVIZ3DLIBEXTRA)"
 
 $(GVIZ3DDS):    $(GVIZ3DH) $(GVIZ3DL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GVIZ3DH) $(GVIZ3DL)
 
 $(GVIZ3DMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(GVIZ3DL)
-		$(RLIBMAP) -o $(GVIZ3DMAP) -l $(GVIZ3DLIB) \
+		$(RLIBMAP) -o $@ -l $(GVIZ3DLIB) \
 		   -d $(GVIZ3DLIBDEPM) -c $(GVIZ3DL)
 
 all-$(MODNAME): $(GVIZ3DLIB) $(GVIZ3DMAP)

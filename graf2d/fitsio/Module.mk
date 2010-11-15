@@ -4,7 +4,7 @@
 # Author: Claudi Martinez, 24/07/2010
 
 MODNAME      := fitsio
-MODDIR       := graf2d/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ FITSIODIRI   := $(FITSIODIR)/inc
 
 ##### libFITSIO #####
 FITSIOL      := $(MODDIRI)/LinkDef.h
-FITSIODS     := $(MODDIRS)/G__FITSIO.cxx
+FITSIODS     := $(call stripsrc,$(MODDIRS)/G__FITSIO.cxx)
 FITSIODO     := $(FITSIODS:.cxx=.o)
 FITSIODH     := $(FITSIODS:.cxx=.h)
 
 FITSIOH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 FITSIOS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-FITSIOO      := $(FITSIOS:.cxx=.o)
+FITSIOO      := $(call stripsrc,$(FITSIOS:.cxx=.o))
 
 FITSIODEP    := $(FITSIOO:.o=.d) $(FITSIODO:.o=.d)
 
@@ -47,11 +47,12 @@ $(FITSIOLIB):   $(FITSIOO) $(FITSIODO) $(ORDER_) $(MAINLIBS) $(FITSIOLIBDEP)
          "$(FITSIOLIBEXTRA) $(CFITSIOLIBDIR) $(CFITSIOLIB)"
 
 $(FITSIODS):    $(FITSIOH) $(FITSIOL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FITSIOH) $(FITSIOL)
 
 $(FITSIOMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(FITSIOL)
-		$(RLIBMAP) -o $(FITSIOMAP) -l $(FITSIOLIB) \
+		$(RLIBMAP) -o $@ -l $(FITSIOLIB) \
 		   -d $(FITSIOLIBDEPM) -c $(FITSIOL)
 
 all-$(MODNAME): $(FITSIOLIB) $(FITSIOMAP)

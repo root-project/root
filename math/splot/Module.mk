@@ -4,7 +4,7 @@
 # Author: Rene Brun, 27/8/2003
 
 MODNAME     := splot
-MODDIR      := math/$(MODNAME)
+MODDIR      := $(ROOT_SRCDIR)/math/$(MODNAME)
 MODDIRS     := $(MODDIR)/src
 MODDIRI     := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ SPLOTDIRI   := $(SPLOTDIR)/inc
 
 ##### libSPlot #####
 SPLOTL      := $(MODDIRI)/LinkDef.h
-SPLOTDS     := $(MODDIRS)/G__SPlot.cxx
+SPLOTDS     := $(call stripsrc,$(MODDIRS)/G__SPlot.cxx)
 SPLOTDO     := $(SPLOTDS:.cxx=.o)
 SPLOTDH     := $(SPLOTDS:.cxx=.h)
 
 SPLOTH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 SPLOTS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-SPLOTO      := $(SPLOTS:.cxx=.o)
+SPLOTO      := $(call stripsrc,$(SPLOTS:.cxx=.o))
 
 SPLOTDEP    := $(SPLOTO:.o=.d) $(SPLOTDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(SPLOTLIB):    $(SPLOTO) $(SPLOTDO) $(ORDER_) $(MAINLIBS) $(SPLOTLIBDEP)
 		   "$(SPLOTLIBEXTRA)"
 
 $(SPLOTDS):     $(SPLOTH) $(SPLOTL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SPLOTH) $(SPLOTL)
 
 $(SPLOTMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(SPLOTL)
-		$(RLIBMAP) -o $(SPLOTMAP) -l $(SPLOTLIB) \
+		$(RLIBMAP) -o $@ -l $(SPLOTLIB) \
 		   -d $(SPLOTLIBDEPM) -c $(SPLOTL)
 
 all-$(MODNAME): $(SPLOTLIB) $(SPLOTMAP)

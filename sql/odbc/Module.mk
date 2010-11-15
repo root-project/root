@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME     := odbc
-MODDIR      := sql/$(MODNAME)
+MODDIR      := $(ROOT_SRCDIR)/sql/$(MODNAME)
 MODDIRS     := $(MODDIR)/src
 MODDIRI     := $(MODDIR)/inc
 
@@ -14,18 +14,18 @@ ODBCDIRI    := $(ODBCDIR)/inc
 
 ##### libODBC #####
 ODBCL       := $(MODDIRI)/LinkDef.h
-ODBCDS      := $(MODDIRS)/G__ODBC.cxx
+ODBCDS      := $(call stripsrc,$(MODDIRS)/G__ODBC.cxx)
 ODBCDO      := $(ODBCDS:.cxx=.o)
 ODBCDH      := $(ODBCDS:.cxx=.h)
 
 ODBCH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 ODBCS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-ODBCO       := $(ODBCS:.cxx=.o)
+ODBCO       := $(call stripsrc,$(ODBCS:.cxx=.o))
 
 ODBCDEP     := $(ODBCO:.o=.d) $(ODBCDO:.o=.d)
 
 ODBCLIB     := $(LPATH)/libRODBC.$(SOEXT)
-ODBCMAP      := $(ODBCLIB:.$(SOEXT)=.rootmap)
+ODBCMAP     := $(ODBCLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ODBCH))
@@ -47,11 +47,12 @@ $(ODBCLIB):     $(ODBCO) $(ODBCDO) $(ORDER_) $(MAINLIBS) $(ODBCLIBDEP)
 		   "$(ODBCLIBEXTRA) $(ODBCLIBDIR) $(ODBCCLILIB)"
 
 $(ODBCDS):     $(ODBCH) $(ODBCL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ODBCINCDIR:%=-I%) $(ODBCH) $(ODBCL)
 
 $(ODBCMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(ODBCL)
-		$(RLIBMAP) -o $(ODBCMAP) -l $(ODBCLIB) \
+		$(RLIBMAP) -o $@ -l $(ODBCLIB) \
 		   -d $(ODBCLIBDEPM) -c $(ODBCL)
 
 all-$(MODNAME): $(ODBCLIB) $(ODBCMAP)

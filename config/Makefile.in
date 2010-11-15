@@ -2,6 +2,23 @@
 #
 # Makefile definitions included by the top Makefile
 
+# The macro below is expanded when 'realpath' is not built-in.
+# Built-in 'realpath' is available on GNU Make 3.81.
+realpath = $(shell cd $(1); pwd)
+
+ROOT_SRCDIR    := $(call realpath, @top_srcdir@)
+ROOT_OBJDIR    := $(call realpath, @top_builddir@)
+
+ifndef ROOT_SRCDIR
+$(error Error determining ROOT_SRCDIR)
+endif
+ifndef ROOT_OBJDIR
+$(error Error determining ROOT_OBJDIR)
+endif
+
+# The macro below strips off the source dir path to make a relative path name
+stripsrc = $(subst $(ROOT_SRCDIR)/,,$(1))
+
 ARCH           := @architecture@
 HOST           := @host@
 @rootbuild@
@@ -327,5 +344,6 @@ ROOTDICTTYPE   := @dicttype@
 INSTALL        := cp -dpR
 INSTALLDATA    := cp -dpR
 INSTALLDIR     := mkdir -p
+RSYNC          := rsync -au
 
 ROOTDRPMREL    := 1

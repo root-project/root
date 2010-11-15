@@ -4,7 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := foam
-MODDIR       := math/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ FOAMDIRI     := $(FOAMDIR)/inc
 
 ##### libFoam.so #####
 FOAML      := $(MODDIRI)/LinkDef.h
-FOAMDS     := $(MODDIRS)/G__Foam.cxx
+FOAMDS     := $(call stripsrc,$(MODDIRS)/G__Foam.cxx)
 FOAMDO     := $(FOAMDS:.cxx=.o)
 FOAMDH     := $(FOAMDS:.cxx=.h)
 
 FOAMH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 FOAMS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-FOAMO      := $(FOAMS:.cxx=.o)
+FOAMO      := $(call stripsrc,$(FOAMS:.cxx=.o))
 
 FOAMDEP    := $(FOAMO:.o=.d) $(FOAMDO:.o=.d)
 
@@ -47,11 +47,12 @@ $(FOAMLIB):     $(FOAMO) $(FOAMDO) $(ORDER_) $(MAINLIBS) $(FOAMLIBDEP)
 		   "$(FOAMLIBEXTRA)"
 
 $(FOAMDS):      $(FOAMH) $(FOAML) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FOAMH) $(FOAML)
 
 $(FOAMMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(FOAML)
-		$(RLIBMAP) -o $(FOAMMAP) -l $(FOAMLIB) \
+		$(RLIBMAP) -o $@ -l $(FOAMLIB) \
 		   -d $(FOAMLIBDEPM) -c $(FOAML)
 
 all-$(MODNAME): $(FOAMLIB) $(FOAMMAP)
