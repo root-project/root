@@ -140,7 +140,9 @@ TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess,
    sandbox.ReplaceAll(gSystem->HomeDirectory(),"");
    sandbox.ReplaceAll("/","-");
    sandbox.Replace(0,1,"/",1);
-   if (strlen(gEnv->GetValue("Proof.Sandbox", "")) > 0) {
+   if (strlen(gEnv->GetValue("ProofLite.Sandbox", "")) > 0) {
+      sandbox.Insert(0, gEnv->GetValue("ProofLite.Sandbox", ""));
+   } else if (strlen(gEnv->GetValue("Proof.Sandbox", "")) > 0) {
       sandbox.Insert(0, gEnv->GetValue("Proof.Sandbox", ""));
    } else {
       TString sb;
@@ -184,11 +186,17 @@ TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess,
       }
 
       // Locate the session dir
+      Int_t isx = isess;
       TNamed *n = (TNamed *) olddirs->First();
-      while (isess-- > 0) {
+      while (isx-- > 0) {
          olddirs->Remove(n);
          delete n;
          n = (TNamed *) olddirs->First();
+      }
+      if (!n) {
+         Error("GetSessionLogs", "cannot locate session dir for index '%d' under '%s':"
+                                 " cannot continue!", isess, sandbox.Data());
+         return (TProofLog *)0;
       }
       sessiondir = n->GetTitle();
       tag = gSystem->BaseName(sessiondir);
