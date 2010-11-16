@@ -2182,11 +2182,13 @@ static int G__generate_template_dict(const char* tagname,G__Definedtemplateclass
     if( (char)gValue.type == 'u' || (char)gValue.type == 'U' ) {
       int index = gValue.tagnum;
       index = G__struct.filenum[index];
-      if( index < 0 ) return -3;
-      if (G__srcfile[index].filename && G__srcfile[index].filename[0] == '{')
-         // ignore "{CINTEX dictionary translator}"
-         return -4;
-      index = G__findSrcFile(index, gValue.tagnum, headers, fwdDecls, unknown);
+      if( index >= 0 ) {
+         if (G__srcfile[index].filename && G__srcfile[index].filename[0] == '{')
+            // ignore "{CINTEX dictionary translator}"
+            return -4;
+         index = G__findSrcFile(index, gValue.tagnum, headers, fwdDecls, unknown);
+      }
+      // not else: index is changed by G__findSrcFile()
       if (index < 0) {
          if (gValue.type == 'U') {
             fwdDecls.push_back(G__fulltagname(gValue.tagnum, 1));

@@ -150,7 +150,15 @@ int TCint_GenerateDictionary(const std::vector<std::string> &classes,
       for (it = unknown.begin(); it != unknown.end(); ++it) {
          TClass* cl = TClass::GetClass(it->c_str());
          if (cl && cl->GetDeclFileName()) {
-            fileContent += TString("#include \"") + cl->GetDeclFileName() + "\"\n";
+            TString header(gSystem->BaseName(cl->GetDeclFileName()));
+            TString dir(gSystem->DirName(cl->GetDeclFileName()));
+            while (dir.Length() && dir != "."
+                   && !dir.EndsWith("/include") && !dir.EndsWith("\\include")
+                   && !dir.EndsWith("/inc") && !dir.EndsWith("\\inc")) {
+               gSystem->PrependPathName(gSystem->BaseName(dir), header);
+               dir = gSystem->DirName(dir);
+            }
+            fileContent += TString("#include \"") + header + "\"\n";
          }
       }
 
