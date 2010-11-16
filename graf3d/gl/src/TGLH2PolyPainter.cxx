@@ -42,9 +42,9 @@ char *TGLH2PolyPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
          fBinInfo += "::";
          fBinInfo += fHist->GetName();
       } else if (!fHighColor) {
-         const Int_t binIndex = fSelectedPart - fSelectionBase;
+         const Int_t binIndex = fSelectedPart - fSelectionBase + 1;
          TH2Poly *h = static_cast<TH2Poly *>(fHist);
-         fBinInfo.Form("(bin = %d; binc = %f)", binIndex, h->GetBinContent(binIndex + 1));//+ 1: bins in ROOT start from 1.
+         fBinInfo.Form("%s (bin = %d; binc = %f)", h->GetBinTitle(binIndex), binIndex, h->GetBinContent(binIndex));//+ 1: bins in ROOT start from 1.
       } else
          fBinInfo = "Switch to true-color mode to obtain the correct info";
    }
