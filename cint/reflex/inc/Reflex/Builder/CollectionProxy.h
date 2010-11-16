@@ -110,6 +110,11 @@ template <class T> struct CollType
    : public Address<typename T::const_reference>
 #endif
 {
+#ifdef _KCC  // KAI compiler
+   typedef Address<typename T::value_type&> Address_t;
+#else
+   typedef Address<typename T::const_reference> Address_t;
+#endif
    typedef T Cont_t;
    typedef typename T::iterator Iter_t;
    typedef typename T::value_type Value_t;
@@ -153,7 +158,7 @@ template <class T> struct CollType
 #else
       typename T::const_reference ref = *(e->iter());
 #endif
-      return e->fStart = address(ref);
+      return e->fStart = Address_t::address(ref);
    }
 
 
@@ -171,7 +176,7 @@ template <class T> struct CollType
 #else
       typename T::const_reference ref = *(e->iter());
 #endif
-      return address(ref);
+      return Address_t::address(ref);
    }
 
 
