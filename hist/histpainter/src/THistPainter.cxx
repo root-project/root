@@ -2037,7 +2037,7 @@ Begin_Html
 <a name="HP20a"></a><h3>TH2Poly Drawing</h3>
 
 <tt>TH2Poly</tt> can be drawn as a color plot (option COL).
-<tt>TH2Poly</tt> bins can have any shapes. The bins are defined as graphs. The 
+<tt>TH2Poly</tt> bins can have any shapes. The bins are defined as graphs. The
 following macro is a very simple example showing how to book a TH2Poly and draw
 it.
 End_Html
@@ -7708,11 +7708,32 @@ void THistPainter::PaintTH2PolyColorLevels(Option_t *)
     <a href="#HP20a">Control function to draw a TH2Poly.</a>
     End_html */
 
-   Int_t ncolors, theColor;
+   Int_t ncolors, color, theColor;
+   Double_t z, zc;
    Double_t zmin = fH->GetMinimum();
    Double_t zmax = fH->GetMaximum();
+   if (Hoption.Logz) {
+      if (zmax > 0) {
+         if (zmin <= 0) zmin = TMath::Min((Double_t)1, (Double_t)0.001*zmax);
+         zmin = TMath::Log10(zmin);
+         zmax = TMath::Log10(zmax);
+      } else {
+         return;
+      }
+   }
+   printf("%g %g\n",zmin,zmax);
+   Double_t dz = zmax - zmin;
 
-   ncolors   = gStyle->GetNumberOfColors();
+   // Initialize the levels on the Z axis
+   ncolors     = gStyle->GetNumberOfColors();
+   Int_t ndiv  = fH->GetContour();
+   if (ndiv == 0 ) {
+      ndiv = gStyle->GetNumberContours();
+      fH->SetContour(ndiv);
+   }
+   Int_t ndivz  = TMath::Abs(ndiv);
+   if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
+   Double_t scale = ndivz/dz;
 
    TH2PolyBin  *b;
 
@@ -7723,21 +7744,47 @@ void THistPainter::PaintTH2PolyColorLevels(Option_t *)
       b     = (TH2PolyBin*)obj;
       poly  = b->GetPolygon();
 
+      z = b->GetContent();
+      if (Hoption.Logz) {
+         if (z > 0) z = TMath::Log10(z);
+         else       z = zmin;
+      }
+      if (z < zmin) continue;
+
+      // Define the bin color.
+      if (fH->TestBit(TH1::kUserContour)) {
+         zc = fH->GetContourLevelPad(0);
+         if (z < zc) continue;
+         color = -1;
+         for (Int_t k=0; k<ndiv; k++) {
+            zc = fH->GetContourLevelPad(k);
+            if (z < zc) {
+               continue;
+            } else {
+               color++;
+            }
+         }
+      } else {
+         color = Int_t(0.01+(z-zmin)*scale);
+      }
+      theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
+      if (theColor > ncolors-1) theColor = ncolors-1;
+
+      // Paint the TGraph bins.
       if (poly->IsA() == TGraph::Class()) {
          TGraph *g  = (TGraph*)poly;
-         theColor = (Int_t)(((b->GetContent()-zmin)/(zmax-zmin))*(ncolors-1));
          g->SetFillColor(gStyle->GetColorPalette(theColor));
          g->TAttFill::Modify();
          g->Paint("F");
       }
 
+      // Paint the TMultiGraph bins.
       if (poly->IsA() == TMultiGraph::Class()) {
          TMultiGraph *mg = (TMultiGraph*)poly;
          TList *gl = mg->GetListOfGraphs();
          if (!gl) return;
          TGraph *g;
          TIter nextg(gl);
-         theColor = (Int_t)(((b->GetContent()-zmin)/(zmax-zmin))*(ncolors-1));
          while ((g = (TGraph*) nextg())) {
             g->SetFillColor(gStyle->GetColorPalette(theColor));
             g->TAttFill::Modify();
@@ -7745,6 +7792,7 @@ void THistPainter::PaintTH2PolyColorLevels(Option_t *)
          }
       }
    }
+   if (Hoption.Zscale) PaintPalette();
 }
 
 
