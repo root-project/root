@@ -35,6 +35,6 @@
       h2p->Fill(50*ran.Gaus(2.,1), ran.Gaus(2.,1));
    }
 
-   h2p->Draw("COL");
+   h2p->Draw("COLZ");
    return ch2p2;
 }

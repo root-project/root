@@ -25,7 +25,8 @@ void th2polyEurope(Int_t npoints=500000)
    Int_t W    = 800;
    Int_t H    = (Int_t)(R*800);
    gStyle->SetTitleX(0.2);
-   gStyle->SetStatY(0.89);
+   gStyle->SetStatX(0.28);
+   gStyle->SetStatY(0.45);
    gStyle->SetStatW(0.15);
 
    // Canvas used to draw TH2Poly (the map)
@@ -69,6 +70,8 @@ void th2polyEurope(Int_t npoints=500000)
    p->GetXaxis()->SetNdivisions(520);
    p->GetXaxis()->SetTitle("longitude");
    p->GetYaxis()->SetTitle("latitude");
+
+   p->SetContour(100);
 
    TMultiGraph *mg;
    TKey *key;
@@ -122,7 +125,7 @@ void th2polyEurope(Int_t npoints=500000)
 
    gStyle->SetOptStat(1111);
    gStyle->SetPalette(1);
-   p->Draw("COL");
+   p->Draw("COLZ");
 
    TCanvas *c1 = new TCanvas("c1", "c1",W+10,0,W-20,H);
    c1->SetRightMargin(0.047);
