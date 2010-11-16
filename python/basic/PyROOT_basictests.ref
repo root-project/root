@@ -10,6 +10,7 @@ Test whether the GIL can be properly released ... ok
 Test string/TString/TObjString compatibility ... ok
 Test list/TList behavior and compatibility ... ok
 Test TVector2/3/T behavior ... ok
+Test TObjArray iterator-based copying ... ok
 
 ----------------------------------------------------------------------
 

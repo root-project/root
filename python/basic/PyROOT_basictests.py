@@ -227,14 +227,10 @@ class Basic4PythonizationTestCase( MyTestCase ):
       self.assertEqual( list(l2+l3), ['j', 'i', 'b', '5', '4'] )
 
       i = iter(l2)
-      if sys.hexversion > 0x3000000:
-         next = i.__next__
-      else:
-         next = i.next
-      self.assertEqual( next(), 'j' )
-      self.assertEqual( next(), 'i' )
-      self.assertEqual( next(), 'b' )
-      self.assertRaises( StopIteration, next )
+      self.assertEqual( i.next(), 'j' )
+      self.assertEqual( i.next(), 'i' )
+      self.assertEqual( i.next(), 'b' )
+      self.assertRaises( StopIteration, i.next )
 
    def test3TVector( self ):
       """Test TVector2/3/T behavior"""
@@ -250,6 +246,14 @@ class Basic4PythonizationTestCase( MyTestCase ):
 
       for j in v:
          self.assertEqual( round( v[ int(math.sqrt(j)+0.5) ] - j, 5 ), 0 )
+
+   def test4TObjArray( self ):
+      """Test TObjArray iterator-based copying"""
+
+      a = TObjArray()
+      b = list( a )
+
+      self.assertEqual( b, [] )
 
 
 ## actual test run
