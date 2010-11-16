@@ -161,7 +161,6 @@ Warning in <TClass::TClass>: no dictionary for class edm::Wrapper<edmNew::DetSet
 Warning in <TClass::TClass>: no dictionary for class edmNew::DetSetVector<SiStripCluster> is available
 Warning in <TClass::TClass>: no dictionary for class edm::Wrapper<reco::BeamSpot> is available
 Warning in <TClass::TClass>: no dictionary for class reco::BeamSpot is available
-Warning in <TClass::TClass>: no dictionary for class ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::DefaultCoordinateSystemTag> is available
 Warning in <TClass::TClass>: no dictionary for class ROOT::Math::SymMatrixOffsets<7> is available
 Warning in <TClass::TClass>: no dictionary for class edm::Wrapper<reco::CaloTauDiscriminator> is available
 Warning in <TClass::TClass>: no dictionary for class reco::CaloTauDiscriminator is available
