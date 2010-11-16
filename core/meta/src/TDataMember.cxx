@@ -200,9 +200,9 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
    if (!fInfo && !fClass) return; // default ctor is called
 
    if (fInfo) {
-      fFullTypeName = gCint->DataMemberInfo_TypeName(fInfo);
-      fTrueTypeName = gCint->DataMemberInfo_TypeTrueName(fInfo);
-      fTypeName     = gCint->TypeName(fFullTypeName);
+      fFullTypeName = TClassEdit::GetLong64_Name(gCint->DataMemberInfo_TypeName(fInfo));
+      fTrueTypeName = TClassEdit::GetLong64_Name(gCint->DataMemberInfo_TypeTrueName(fInfo));
+      fTypeName     = TClassEdit::GetLong64_Name(gCint->TypeName(fFullTypeName));
       SetName(gCint->DataMemberInfo_Name(fInfo));
       const char *t = gCint->DataMemberInfo_Title(fInfo);
       SetTitle(t);

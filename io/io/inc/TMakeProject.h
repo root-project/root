@@ -27,6 +27,7 @@
 #endif
 
 class TList;
+class TVirtualStreamerInfo;
 class TStreamerElement;
 
 class TMakeProject
@@ -44,7 +45,7 @@ public:
    static UInt_t GenerateForwardDeclaration(FILE *fp, const char *clname, char *inclist, Bool_t implementEmptyClass, Bool_t needGenericTemplate, const TList *extrainfos);
    static UInt_t GenerateIncludeForTemplate(FILE *fp, const char *clname, char *inclist, Bool_t forward, const TList *extrainfos);
    static TString UpdateAssociativeToVector(const char *name);
-
+   static void GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo *info, char *inclist);
 };
 
 #endif // ROOT_TMakeProject

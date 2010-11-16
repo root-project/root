@@ -46,6 +46,20 @@
 #pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Cylindrical3D<double> >+;
 #pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::CylindricalEta3D<double> >+;
 
+#if 0
+// Work around CINT and autoloader deficiency with template default parameter
+// Those requests are solely for rlibmap, they do no need to be seen by rootcint.
+#pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::DefaultCoordinateSystemTag >+;
+#pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double>,ROOT::Math::DefaultCoordinateSystemTag >+;
+#pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cylindrical3D<double>,ROOT::Math::DefaultCoordinateSystemTag >+;
+#pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double>,ROOT::Math::DefaultCoordinateSystemTag >+;
+
+#pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::DefaultCoordinateSystemTag >+;
+#pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Polar3D<double>,ROOT::Math::DefaultCoordinateSystemTag >+;
+#pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Cylindrical3D<double>,ROOT::Math::DefaultCoordinateSystemTag >+;
+#pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::CylindricalEta3D<double>,ROOT::Math::DefaultCoordinateSystemTag >+;
+#endif
+
 #pragma link C++ class ROOT::Math::PxPyPzE4D<double>+;
 #pragma link C++ class ROOT::Math::PtEtaPhiE4D<double>+;
 #pragma link C++ class ROOT::Math::PxPyPzM4D<double>+;

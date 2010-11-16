@@ -2561,6 +2561,23 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
                   }
                   break;
                }
+            default:
+               if (strncmp(key->GetName(),"pair<",strlen("pair<"))==0) {
+                  if (genreflex) {
+                     tmp.Form("<class name=\"%s\" />\n",key->GetName());
+                     if ( selections.Index(tmp) == kNPOS ) {
+                        selections.Append(tmp);
+                     }
+                     tmp.Form("template class %s;\n",key->GetName());
+                     if ( instances.Index(tmp) == kNPOS ) {
+                        instances.Append(tmp);
+                     }
+                  } else {
+                     what.ReplaceAll("std::","");
+                     fprintf(fp,"#pragma link C++ class %s+;\n",key->GetName());
+                  }
+               }
+               break;
             }
          }
          continue;

@@ -28,13 +28,23 @@
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<Double32_t> >+;
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<Double32_t> >+;
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cylindrical3D<Double32_t> >+;
-#
+
 #pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<Double32_t> >+;
 #pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::CylindricalEta3D<Double32_t> >+;
 #pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Polar3D<Double32_t> >+;
 #pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Cylindrical3D<Double32_t> >+;
 
-// using a tag (only cartesuab abd cylindrical eta)
+// using a tag (only cartesian and cylindrical eta)
+
+#if 0
+// Work around CINT and autoloader deficiency with template default parameter
+// Those requests as solely for rlibmap, they do no need to be seen by rootcint
+#pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag >+;
+#pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag >+;
+
+#pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag >+;
+#pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::CylindricalEta3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag >+;
+#endif
 
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t>, ROOT::Math::LocalCoordinateSystemTag >+;
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<Double32_t>,ROOT::Math::LocalCoordinateSystemTag >+;

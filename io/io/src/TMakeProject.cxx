@@ -570,6 +570,44 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
 
 
 //______________________________________________________________________________
+void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo *info, char *inclist)
+{
+   // Add to the header file anything that need to appear after the class
+   // declaration (this includes some #pragma link).
+ 
+   TIter next(info->GetElements());
+   TStreamerElement *element;
+   while( (element = (TStreamerElement*)next()) ) {      
+      Int_t stlType = TClassEdit::IsSTLCont(element->GetTypeName());      
+      if (stlType) {
+         std::vector<std::string> inside;
+         int nestedLoc;
+         TClassEdit::GetSplit( element->GetTypeName(), inside, nestedLoc, TClassEdit::kLong64 );
+         Int_t stlkind =  TClassEdit::STLKind(inside[0].c_str());
+         TClass *key = TClass::GetClass(inside[1].c_str());
+         TString what;
+         if (strncmp(inside[1].c_str(),"pair<",strlen("pair<"))==0) {
+            what = inside[1].c_str();
+         } else if (key) {
+            switch (stlkind)  {
+               case TClassEdit::kMap:
+               case TClassEdit::kMultiMap: 
+               {
+                  // Already done (see GenerateIncludeForTemplate
+                  break;
+               }
+               default:
+                  break;
+            }
+         }
+         if (what.Length()) {
+            AddUniqueStatement(fp, Form("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n",what.Data()), inclist);               
+         }
+      }
+   }
+}
+   
+//______________________________________________________________________________
 TString TMakeProject::UpdateAssociativeToVector(const char *name)
 {
    // If we have a map, multimap, set or multiset,

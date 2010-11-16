@@ -1030,10 +1030,28 @@ namespace {
 
       TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
       TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
+      
+      TClass *oldContent = oldProxy->GetValueClass();
+      TClass *newContent = newProxy->GetValueClass();
 
-      if (oldProxy->GetValueClass() == newProxy->GetValueClass()) {
-         if ((oldProxy->GetValueClass() ==0 && oldProxy->GetType() == newProxy->GetType())
-             ||(oldProxy->GetValueClass() && oldProxy->HasPointers() == newProxy->HasPointers())) {
+      Bool_t contentMatch = kFALSE;
+      if (oldContent) {
+         if (oldContent == newContent) {
+            contentMatch = kTRUE;
+         } else if (newContent) {
+            TString oldFlatContent( TMakeProject::UpdateAssociativeToVector(oldContent->GetName()) );
+            TString newFlatContent( TMakeProject::UpdateAssociativeToVector(newContent->GetName()) );
+            contentMatch = kTRUE;
+         } else {
+            contentMatch = kFALSE;
+         }
+      } else {
+         contentMatch = (newContent==0);
+      }
+
+      if (contentMatch) {
+         if ((oldContent==0 && oldProxy->GetType() == newProxy->GetType())
+             ||(oldContent && oldProxy->HasPointers() == newProxy->HasPointers())) {
             // We have compatibles collections (they have the same content)!
             return kTRUE;
          }
@@ -2834,6 +2852,8 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
    TString sourcename; sourcename.Form( "%s/%sProjectSource.cxx", dirname, dirname );
    FILE *sfp = fopen( sourcename.Data(), "a" );
    GenerateDeclaration(fp, sfp, subClasses);
+   
+   TMakeProject::GeneratePostDeclaration(fp, this, inclist);
 
    fprintf(fp,"#endif\n");
 
