@@ -29,7 +29,16 @@
 ** THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+/* ROOT additions begin */
+
 #define GLEW_BUILD
+
+#if defined(__APPLE__)
+#  define GLEW_APPLE_GLX
+#endif
+
+/* ROOT additions end */
+
 
 #include <GL/glew.h>
 

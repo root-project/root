@@ -16,10 +16,13 @@
 
 #include "TGLIncludes.h"
 
-#ifdef WIN32
-#include <GL/wglew.h>
+#if defined(WIN32)
+#  include <GL/wglew.h>
 #else
-#include <GL/glxew.h>
+#  if defined(__APPLE__)
+#    define GLEW_APPLE_GLX
+#  endif
+#  include <GL/glxew.h>
 #endif
 
 #endif
