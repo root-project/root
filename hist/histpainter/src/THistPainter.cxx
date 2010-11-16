@@ -7721,7 +7721,6 @@ void THistPainter::PaintTH2PolyColorLevels(Option_t *)
          return;
       }
    }
-   printf("%g %g\n",zmin,zmax);
    Double_t dz = zmax - zmin;
 
    // Initialize the levels on the Z axis
