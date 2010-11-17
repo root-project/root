@@ -13,8 +13,6 @@ while [ "$1" != "" ]; do
    shift
 done
 
-#echo calling cl.exe $args
-
 cl.exe $args
 stat=$?
 
