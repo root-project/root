@@ -7805,12 +7805,12 @@ TH1 *TH1::ShowBackground(Int_t niter, Option_t *option)
 //______________________________________________________________________________
 Int_t TH1::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
 {
-   //Interface to TSpectrum::Search
-   //the function finds peaks in this histogram where the width is > sigma
+   //Interface to TSpectrum::Search.
+   //The function finds peaks in this histogram where the width is > sigma
    //and the peak maximum greater than threshold*maximum bin content of this.
-   //for more detauils see TSpectrum::Search.
-   //note the difference in the default value for option compared to TSpectrum::Search
-   //option="" by default (instead of "goff")
+   //For more details see TSpectrum::Search.
+   //Note the difference in the default value for option compared to TSpectrum::Search
+   //option="" by default (instead of "goff").
 
    return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum::StaticSearch((TH1*)0x%lx,%g,\"%s\",%g)",
                                              (ULong_t)this, sigma, option, threshold));
