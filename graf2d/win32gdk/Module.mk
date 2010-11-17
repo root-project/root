@@ -40,9 +40,9 @@ WIN32GDKH1   := $(MODDIRI)/TGWin32.h $(MODDIRI)/TGWin32GL.h
 WIN32GDKH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 WIN32GDKS1   := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 WIN32GDKS2   := $(wildcard $(MODDIRS)/*.c)
-WIN32GDKO1   := $(WIN32GDKS1:.cxx=.o)
-WIN32GDKO2   := $(WIN32GDKS2:.c=.o)
-WIN32GDKO    := $(call stripsrc,$(WIN32GDKO1) $(WIN32GDKO2))
+WIN32GDKO1   := $(call stripsrc,$(WIN32GDKS1:.cxx=.o))
+WIN32GDKO2   := $(call stripsrc,$(WIN32GDKS2:.c=.o))
+WIN32GDKO    := $(WIN32GDKO1) $(WIN32GDKO2)
 
 WIN32GDKDEP  := $(WIN32GDKO:.o=.d) $(WIN32GDKDO:.o=.d)
 

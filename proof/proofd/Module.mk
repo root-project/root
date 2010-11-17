@@ -29,7 +29,7 @@ ifeq ($(PLATFORM),win32)
 
 ##### XrdProofd plugin ####
 XPDH         := $(wildcard $(MODDIRI)/X*.h)
-XPDS         := $(wildcard $(MODDIRS)/X*.cxx)
+XPDS         := $(MODDIRS)/XProofProtUtils.cxx
 XPDO         := $(call stripsrc,$(XPDS:.cxx=.o))
 
 ##### Object files used by libProofx #####
@@ -39,9 +39,7 @@ XPCONNH      := $(MODDIRI)/XrdProofConn.h $(MODDIRI)/XrdProofPhyConn.h \
 XPCONNS      := $(MODDIRS)/XrdProofConn.cxx $(MODDIRS)/XrdProofPhyConn.cxx \
                 $(MODDIRS)/XProofProtUtils.cxx
 
-XPCONNO      := $(call stripsrc,$(MODDIRS)/XrdProofConn.o \
-                $(MODDIRS)/XrdProofPhyConn.o \
-                $(MODDIRS)/XProofProtUtils.o)
+XPCONNO      := $(call stripsrc,$(XPCONNS:.cxx=.o))
 
 XPDDEP       := $(XPCONNO:.o=.d)
 
