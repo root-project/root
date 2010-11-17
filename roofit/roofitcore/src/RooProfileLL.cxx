@@ -36,6 +36,24 @@ using namespace std ;
 ClassImp(RooProfileLL) 
 
 
+//_____________________________________________________________________________ 
+ RooProfileLL::RooProfileLL() : 
+   RooAbsReal("RooProfileLL","RooProfileLL"), 
+   _nll(), 
+   _obs("paramOfInterest","Parameters of interest",this), 
+   _par("nuisanceParam","Nuisance parameters",this,kFALSE,kFALSE), 
+   _startFromMin(kTRUE), 
+   _minuit(0), 
+   _absMinValid(kFALSE), 
+   _absMin(0) 
+{ 
+  // Default constructor 
+  // Should only be used by proof. 
+  _piter = _par.createIterator() ; 
+  _oiter = _obs.createIterator() ; 
+} 
+
+
 //_____________________________________________________________________________
 RooProfileLL::RooProfileLL(const char *name, const char *title, 
 			   RooAbsReal& nllIn, const RooArgSet& observables) :
