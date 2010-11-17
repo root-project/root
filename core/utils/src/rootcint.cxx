@@ -4315,19 +4315,6 @@ int main(int argc, char **argv)
       force = 0;
    }
 
-#ifdef _WIN32
-   for (int iic = ic; iic < argc; ++iic) {
-      char* posCygdrive = strstr(argv[iic], "/cygdrive/");
-      if (posCygdrive) {
-         std::string fname;
-         fname += posCygdrive[10];
-         fname += ':';
-         fname += posCygdrive + 11;
-         strlcpy(posCygdrive, fname.c_str(), fname.length() + 1);
-      }
-   }
-#endif
-
    string header("");
    if (strstr(argv[ic],".C")  || strstr(argv[ic],".cpp") ||
        strstr(argv[ic],".cp") || strstr(argv[ic],".cxx") ||

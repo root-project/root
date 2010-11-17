@@ -114,3 +114,4 @@ F77LIBS       =
 endif
 
 # Extras
+ROOTCINTTMP   = build/win/rootcint_tmp.sh -$(ROOTDICTTYPE)
