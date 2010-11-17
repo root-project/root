@@ -102,6 +102,12 @@ else
 		if [ $(ARCH) = "macosx64" ]; then \
 			PCRE_CFLAGS="-m64"; \
 		fi; \
+		if [ $(ARCH) = "iossim" ]; then \
+			PCRE_CFLAGS="-arch i386"; \
+		fi; \
+		if [ $(ARCH) = "ios" ]; then \
+			PCRE_CFLAGS="-arch armv7"; \
+		fi; \
 		if [ $(ARCH) = "solaris64CC5" ]; then \
 			PCRE_CFLAGS="-m64"; \
 		fi; \

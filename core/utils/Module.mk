@@ -4,6 +4,19 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := utils
+
+ifneq ($(HOST),)
+
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
+all-$(MODNAME):
+
+clean-$(MODNAME):
+
+distclean-$(MODNAME):
+
+else
+
 MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
@@ -63,3 +76,5 @@ $(call stripsrc,$(UTILSDIRS)%_tmp.cxx): $(UTILSDIRS)%.cxx
 	cp $< $@
 
 $(ROOTCINTTMPO):  CXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD -I$(UTILSDIRS)
+
+endif

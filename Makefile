@@ -303,6 +303,11 @@ endif
 
 MODULES      += main   # must be last, $(ALLLIBS) must be fully formed
 
+ifeq ($(BUILDTOOLS),yes)
+MODULES       = build cint/cint core/metautils core/clib core/base core/meta \
+                core/utils
+endif
+
 ##### ROOT libraries #####
 
 LPATH         = lib
@@ -443,6 +448,10 @@ ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
    MAKEDIR      = +@[ -d $(dir $@) ] || mkdir -p $(dir $@)
    RUNTIMEDIRS := etc macros icons fonts README tutorials test man
    POSTBIN     += $(RUNTIMEDIRS)
+endif
+
+ifneq ($(HOST),)
+BUILDTOOLSDIR := buildtools
 endif
 
 MAKEDEP        = $(RMKDEP)
@@ -637,8 +646,7 @@ endif
 ifeq ($(HOST),)
 all:            rootexecs postbin
 else
-#all:            hosttools rootexecs postbin
-all:            hosttools rootexecs
+all:            buildtools rootexecs postbin
 endif
 
 fast:           rootexecs
@@ -668,9 +676,25 @@ rootlibs:       rootcint compiledata $(ALLLIBS) $(ALLMAPS)
 
 rootexecs:      rootlibs $(ALLEXECS)
 
-hosttools:
-		make HOSTBUILD=yes TARGETFLAGS=-DR__$(shell echo $(ARCH) | tr 'a-z' 'A-Z') \
-		   $(RMKDEP) all-cint all-utils
+ifneq ($(HOST),)
+.PHONY:         buildtools
+
+buildtools:     $(BUILDTOOLSDIR)/bin/rootcint
+
+$(BUILDTOOLSDIR)/bin/rootcint:
+		if [ ! -f $(BUILDTOOLSDIR)/Makefile ]; then \
+		   mkdir -p $(BUILDTOOLSDIR); \
+		   cd $(BUILDTOOLSDIR); \
+		   $(ROOT_SRCDIR)/configure $(HOST) --minimal; \
+		fi; \
+		(make BUILDTOOLS=yes \
+		   TARGETFLAGS=-DR__$(shell echo $(ARCH) | tr 'a-z' 'A-Z') \
+		   rootcint \
+		) || exit 1;
+
+distclean::
+		@rm -rf buildtools
+endif
 
 postbin:        $(POSTBIN)
 
@@ -718,17 +742,10 @@ $(COMPILEDATA): $(ROOT_SRCDIR)/config/Makefile.$(ARCH) config/Makefile.comp \
 	   "$(LIBDIR)" "$(BOOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" \
 	   "$(MAKESHAREDLIB)" "$(MAKEEXE)" "$(ARCH)" "$(ROOTBUILD)" "$(EXPLICITLINK)"
 
-ifeq ($(HOST),)
 build/dummy.d: config Makefile $(ALLHDRS) $(RMKDEP) $(BINDEXP)
 	@(if [ ! -f $@ ] ; then \
 	   touch $@; \
 	fi)
-else
-build/dummy.d: config Makefile $(ALLHDRS) $(BINDEXP)
-	@(if [ ! -f $@ ] ; then \
-	   touch $@; \
-	fi)
-endif
 
 $(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(PCREDEP) $(CORELIBDEP)
 ifneq ($(ARCH),alphacxx6)

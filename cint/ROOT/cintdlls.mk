@@ -178,25 +178,25 @@ core/metautils/src/stlLoader_%.o: core/metautils/src/stlLoader_%.cc
 	$(CXX) $(OPT) $(CINTDLLCXXFLAGS) $(INCDIRS) -DWHAT=\"$*\" $(CXXOUT)$@ -c $<
 
 $(CINTDLLDIRDLLSTL)/G__cpp_%.cxx:
-	$(patsubst %lib/dll_stl/,%,$(dir $@))/main/cint_tmp \
+	$(CINTDLLCINTTMP) \
            -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
 	   -D__MAKECINT__ -DG__MAKECINT \
            $(addprefix $(patsubst %lib/dll_stl/,-I%,$(dir $@)),lib/dll_stl lib) \
 	   -c-1 -A -Z0 $(filter-out $(CINTDLLDIRDLLSTL)/G__cpp_%, $(filter-out $(IOSENUM),$(filter $(CINTDLLDIRDLLSTL)/%,$(filter %.h,$^))))
 
 $(CINTDLLDIRL)/G__cpp_%.cxx:
-	$(patsubst %lib/,%,$(dir $@))/main/cint_tmp \
+	$(CINTDLLCINTTMP) \
 	   -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
 	   -D__MAKECINT__ -DG__MAKECINT -I$(dir $@) \
 	   -c-1 -A -Z0 $(filter-out $(CINTDLLDIRL)/G__cpp%, $(filter-out $(IOSENUM),$(filter $(CINTDLLDIRL)/%,$(filter %.h,$^))))
 
 $(CINTDLLDIRL)/G__c_%.c:
-	$(patsubst %lib/,%,$(dir $@))/main/cint_tmp \
+	$(CINTDLLCINTTMP) \
 	   -K -w1 -z$(notdir $*) -n$@ -D__MAKECINT__ -DG__MAKECINT \
 	   $(MACOSX_UNIX03) -c-2 -Z0 $(filter-out $(CINTDLLDIRL)/G__c_%, $(filter-out $(IOSENUM),$(filter $(CINTDLLDIRL)/%,$(filter %.h,$^))))
 
 $(CINTDLLDIRDLLSTL)/G__cpp_complex.cxx: $(CINTDLLDIRL)/dll_stl/cmplx.h $(CINTCPPDEP)
-	$(patsubst %lib/dll_stl/,%,$(dir $@))/main/cint_tmp \
+	$(CINTDLLCINTTMP) \
            -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
 	   -D__MAKECINT__ -DG__MAKECINT \
            $(addprefix $(patsubst %lib/dll_stl/,-I%,$(dir $@)),lib/dll_stl lib) \
@@ -235,7 +235,7 @@ $(CINTDLLDIRDLLS)/sys/ipc.dll: $(CINTDLLDIRL)/G__c_ipc.o
 
 ##### dictionaries
 $(CINTDLLDIRDLLSTL)/rootcint_%.cxx: $(ROOT_SRCDIR)/core/metautils/src/%Linkdef.h $(CINTDLLROOTCINTTMPDEP)
-	core/utils/src/rootcint_tmp -f $@ -c \
+	$(CINTDLLROOTCINTTMP) -f $@ -c \
 	   $(subst multi,,${*:2=}) \
 	   $(ROOT_SRCDIR)/core/metautils/src/$*Linkdef.h
 

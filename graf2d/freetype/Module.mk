@@ -119,6 +119,14 @@ else
 			FREECC="$$FREECC -m64"; \
 			FREE_CFLAGS="-m64"; \
 		fi; \
+		if [ $(ARCH) = "iossim" ]; then \
+			FREECC="$$FREECC -arch i386"; \
+			FREE_CFLAGS="-arch i386"; \
+		fi; \
+		if [ $(ARCH) = "ios" ]; then \
+			FREECC="$$FREECC -arch armv7"; \
+			FREE_CFLAGS="-arch armv7"; \
+		fi; \
 		if [ $(ARCH) = "solaris64CC5" ]; then \
 			FREECC="$$FREECC -m64"; \
 			FREE_CFLAGS="-m64"; \

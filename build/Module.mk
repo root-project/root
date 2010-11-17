@@ -3,6 +3,12 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
+ifneq ($(HOST),)
+
+RMKDEP       := $(BUILDTOOLSDIR)/bin/rmkdepend$(EXEEXT)
+
+else
+
 MODNAME      := build
 MODDIR       := $(ROOT_SRCDIR)/$(MODNAME)
 
@@ -89,3 +95,5 @@ $(call stripsrc,$(RMKDEPDIR)/mainroot.o): $(RMKDEPDIR)/def.h
 ##### local rules #####
 $(RMKDEPO1): CFLAGS += $(RMKDEPCFLAGS)
 $(RMKDEPO2): CXXFLAGS += $(RMKDEPCFLAGS)
+
+endif
