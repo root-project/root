@@ -151,6 +151,19 @@ namespace {
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( Float,  Float_t,  Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
 
+   int pyroot_buffer_ass_subscript( PyObject* self, PyObject* idx, PyObject* val ) {
+      if ( PyIndex_Check( idx ) ) {
+         Py_ssize_t i = PyNumber_AsSsize_t( idx, PyExc_IndexError );
+         if ( i == -1 && PyErr_Occurred() )
+            return -1;
+         return Py_TYPE(self)->tp_as_sequence->sq_ass_item( self, i, val );
+      } else {
+         PyErr_SetString( PyExc_TypeError, "buffer indices must be integers" );
+         return -1;
+      }
+   }
+
+
 //____________________________________________________________________________
    PyObject* buffer_setsize( PyObject* self, PyObject* pynlen )
    {
@@ -229,7 +242,7 @@ PyROOT::TPyBufferFactory* PyROOT::TPyBufferFactory::Instance()
    if ( PyBuffer_Type.tp_as_mapping ) { /* p2.6 and later */                    \
       Py##name##Buffer_MapMethods.mp_length    = (lenfunc)buffer_length;        \
       Py##name##Buffer_MapMethods.mp_subscript = (binaryfunc)name##_buffer_subscript;\
-      Py##name##Buffer_MapMethods.mp_ass_subscript = 0;                         \
+      Py##name##Buffer_MapMethods.mp_ass_subscript = (objobjargproc)pyroot_buffer_ass_subscript;\
       Py##name##Buffer_Type.tp_as_mapping      = &Py##name##Buffer_MapMethods;  \
    }                                                                            \
    Py##name##Buffer_Type.tp_str             = (reprfunc)name##_buffer_str;      \
