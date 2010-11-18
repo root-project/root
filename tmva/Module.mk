@@ -51,10 +51,10 @@ TMVAH4       := TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivat
 		TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h \
 		VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h \
 		VariableGaussTransform.h VariableNormalizeTransform.h
-TMVAH1C      := $(patsubst %,$(ROOT_OBJDIR)/include/TMVA/%,$(TMVAH1))
-TMVAH2C      := $(patsubst %,$(ROOT_OBJDIR)/include/TMVA/%,$(TMVAH2))
-TMVAH3C      := $(patsubst %,$(ROOT_OBJDIR)/include/TMVA/%,$(TMVAH3))
-TMVAH4C      := $(patsubst %,$(ROOT_OBJDIR)/include/TMVA/%,$(TMVAH4))
+TMVAH1C      := $(patsubst %,include/TMVA/%,$(TMVAH1))
+TMVAH2C      := $(patsubst %,include/TMVA/%,$(TMVAH2))
+TMVAH3C      := $(patsubst %,include/TMVA/%,$(TMVAH3))
+TMVAH4C      := $(patsubst %,include/TMVA/%,$(TMVAH4))
 TMVAH1       := $(patsubst %,$(MODDIRI)/%,$(TMVAH1))
 TMVAH2       := $(patsubst %,$(MODDIRI)/%,$(TMVAH2))
 TMVAH3       := $(patsubst %,$(MODDIRI)/%,$(TMVAH3))
