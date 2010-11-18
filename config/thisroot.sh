@@ -15,7 +15,7 @@ if [ "x${BASH_ARGV[0]}" = "x" ]; then
     if [ ! -f bin/thisroot.sh ]; then
         echo ERROR: must "cd where/root/is" before calling ". bin/thisroot.sh" for this version of bash!
         ROOTSYS=; export ROOTSYS
-        return
+        return 1
     fi
     ROOTSYS="$PWD"; export ROOTSYS
 else
@@ -25,6 +25,11 @@ else
 fi
 
 if [ -n "${OLD_ROOTSYS}" ] ; then
+   if [ ! -e @bindir@/drop_from_path ]; then
+      echo "ERROR: the utility drop_from_path has not been build yet. Do:"
+      echo "make drop_from_path"
+      return 1
+   fi
    if [ -n "${PATH}" ]; then
       PATH=`@bindir@/drop_from_path -e "${OLD_ROOTSYS}/bin"`
    fi

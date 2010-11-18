@@ -17,6 +17,11 @@ set THIS="`dirname ${ARGS[2]}`"
 setenv ROOTSYS "`(cd ${THIS}/..;pwd)`"
 
 if ($?OLD_ROOTSYS) then
+   if ( ! -e @bindir@/drop_from_path ) then
+      echo "ERROR: the utility drop_from_path has not been build yet. Do:"
+      echo "make drop_from_path"
+      exit 1
+   endif   
    setenv PATH `@bindir@/drop_from_path -e "$OLD_ROOTSYS/bin"`
    if ($?LD_LIBRARY_PATH) then
       setenv LD_LIBRARY_PATH `@bindir@/drop_from_path -D -e -p "$LD_LIBRARY_PATH" "$OLD_ROOTSYS/lib"`
