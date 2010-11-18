@@ -326,11 +326,9 @@ $(call stripsrc,$(CINTDIRS)/loadfile_tmp.cxx): $(CINTDIRS)/loadfile.cxx
 $(call stripsrc,$(CINTDIRS)/loadfile_tmp.o) $(CINTO): OPT := $(filter-out -Wshadow,$(OPT))
 $(call stripsrc,$(CINTDIRS)/loadfile_tmp.o) $(CINTO): CXXFLAGS:=$(filter-out -Wshadow,$(CXXFLAGS))
 
-ifeq ($(PLATFORM),macosx)
 ifeq ($(ICC_MAJOR),12)
 ifeq ($(ICC_MINOR),0)
 $(call stripsrc,$(CINTDIRS)/val2a.o): OPT := -O0
-endif
 endif
 endif
 
