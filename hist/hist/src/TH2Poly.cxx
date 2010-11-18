@@ -33,8 +33,8 @@ ClassImp(TH2Poly)
 <center><h2>TH2Poly: 2D Histogram with Polygonal Bins</h2></center>
 
 <h3>Overview</h3>
-<tt>TH2Poly</tt> is a 2D Histogram class (TH2) that allows for polygonal bins
-of arbitary shape.
+<tt>TH2Poly</tt> is a 2D Histogram class (TH2) that allowing to define polygonal
+bins of arbitary shape.
 <p>
 Each bin in the <tt>TH2Poly</tt> histogram is a <tt>TH2PolyBin</tt> object.
 <tt>TH2PolyBin</tt> is a very simple class that contains the vertices (stored
@@ -613,15 +613,15 @@ Double_t TH2Poly::GetBinContent(Int_t bin) const
    // For the overflow/underflow/sea bins:
    //
    // -1 | -2 | -3
-   // -------------
+   // ---+----+----
    // -4 | -5 | -6
-   // -------------
+   // ---+----+----
    // -7 | -8 | -9
    //
    // where -5 is the "sea" bin (i.e. unbinned areas)
 
-   if (bin > (fNcells))  return 0;
-   if (bin < 0)          return fOverflow[-bin - 1];
+   if (bin>fNcells || bin==0) return 0;
+   if (bin<0) return fOverflow[-bin - 1];
    return ((TH2PolyBin*) fBins->At(bin-1))->GetContent();
 }
 
