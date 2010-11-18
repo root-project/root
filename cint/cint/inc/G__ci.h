@@ -1391,8 +1391,6 @@ extern void (*G__aterror)();
 #define G__P(funcparam) ()
 #endif
 
-extern G__EXPORT unsigned long G__uint G__P((G__value buf));
-
 #if defined(G__DEBUG) && !defined(G__MEMTEST_C)
 #include "src/memtest.h"
 #endif
