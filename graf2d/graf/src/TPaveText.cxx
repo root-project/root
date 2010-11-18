@@ -850,7 +850,7 @@ void TPaveText::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    if (fBorderSize != 4) {
       out<<"   pt->SetBorderSize("<<fBorderSize<<");"<<endl;
    }
-   SaveFillAttributes(out,"pt",0,1001);
+   SaveFillAttributes(out,"pt",19,1001);
    SaveLineAttributes(out,"pt",1,1,1);
    SaveTextAttributes(out,"pt",22,0,1,62,0);
    SaveLines(out,"pt");
