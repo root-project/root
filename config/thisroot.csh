@@ -19,7 +19,7 @@ setenv ROOTSYS "`(cd ${THIS}/..;pwd)`"
 if ($?OLD_ROOTSYS) then
    if ( ! -e @bindir@/drop_from_path ) then
       echo "ERROR: the utility drop_from_path has not been build yet. Do:"
-      echo "make drop_from_path"
+      echo "make bin/drop_from_path"
       exit 1
    endif   
    setenv PATH `@bindir@/drop_from_path -e "$OLD_ROOTSYS/bin"`
