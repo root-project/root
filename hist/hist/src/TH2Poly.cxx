@@ -819,6 +819,7 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
 {
    // Initializes the TH2Poly object.  This method is called by the constructor.
 
+   Int_t i;
    fDimension = 2;  //The dimesion of the histogram
 
    fBins   = 0;
@@ -827,6 +828,8 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
    // Sets the boundaries of the histogram
    fXaxis.Set(100, xlow, xup);
    fYaxis.Set(100, ylow, yup);
+
+   for (i=0; i<9; i++) fOverflow[i] = 0.;
 
    // Statistics
    fEntries = 0;   // The total number of entries
@@ -847,7 +850,7 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
    fIsEmpty = new Bool_t [fNCells];                            // Declares the 'empty partition' flag
    fCompletelyInside = new Bool_t [fNCells];                   // Declares the 'cell is completely inside bin' flag
 
-   for (int i = 0; i < fNCells; i++) {   // Initializes the flags
+   for (i = 0; i<fNCells; i++) {   // Initializes the flags
       fIsEmpty[i] = kTRUE;
       fCompletelyInside[i] = kFALSE;
    }
