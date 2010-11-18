@@ -1783,6 +1783,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
       Utility::AddToClass( pyclass, "__len__",  "GetSize" );
       ((PyTypeObject*)pyclass)->tp_iter = (getiterfunc)TCollectionIter;
+      Utility::AddToClass( pyclass, "__iter__",  (PyCFunction)TCollectionIter, METH_NOARGS );
 
       return kTRUE;
    }
@@ -1896,6 +1897,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( name == "TIter" ) {
       ((PyTypeObject*)pyclass)->tp_iter     = (getiterfunc)TIterIter;
+      Utility::AddToClass( pyclass, "__iter__", (PyCFunction) TIterIter, METH_NOARGS );
+
       ((PyTypeObject*)pyclass)->tp_iternext = (iternextfunc)TIterNext;
       Utility::AddToClass( pyclass, "next", (PyCFunction) TIterNext, METH_NOARGS );
 
