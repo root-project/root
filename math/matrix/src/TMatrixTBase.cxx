@@ -854,6 +854,7 @@ void TMatrixTBase<Element>::Print(Option_t *option) const
       for (Int_t j = sheet_counter; j < sheet_counter+cols_per_sheet && j <= ncols; j++)
          printf(ftopbar,j+collwb-1);
       printf("\n%s\n",topbar);
+      if (fNelems <= 0) continue;
       for (Int_t i = 1; i <= nrows; i++) {
          printf("%4d |",i+rowlwb-1);
          for (Int_t j = sheet_counter; j < sheet_counter+cols_per_sheet && j <= ncols; j++)
