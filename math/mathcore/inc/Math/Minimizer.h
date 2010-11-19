@@ -321,6 +321,19 @@ public:
    ///return true if Minimizer has performed a detailed error validation (e.g. run Hesse for Minuit)
    bool IsValidError() const { return fValidError; }
 
+   /// retrieve the minimizer options (implement derived class if needed)
+   virtual ROOT::Math::MinimizerOptions  Options() const { 
+      ROOT::Math::MinimizerOptions opt; 
+      opt.SetPrintLevel(fDebug);
+      opt.SetStrategy(fStrategy);
+      opt.SetMaxFunctionCalls(fMaxCalls);
+      opt.SetMaxIterations(fMaxIter);
+      opt.SetTolerance(fTol);
+      opt.SetPrecision(fPrec);
+      opt.SetErrorDef(fUp);
+      return opt;
+   }
+
    /// set print level
    void SetPrintLevel(int level) { fDebug = level; }
 

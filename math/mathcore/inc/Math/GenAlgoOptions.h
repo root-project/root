@@ -1,9 +1,9 @@
 // @(#)root/mathcore:$Id$ 
-// Author: L. Moneta Fri Aug 15 2008
+// Author: L. Moneta Nov 2010
 
 /**********************************************************************
  *                                                                    *
- * Copyright (c) 2008  LCG ROOT Math Team, CERN/PH-SFT                *
+ * Copyright (c) 2010  LCG ROOT Math Team, CERN/PH-SFT                *
  *                                                                    *
  *                                                                    *
  **********************************************************************/
@@ -24,7 +24,7 @@ namespace ROOT {
 
 //_______________________________________________________________________________
 /** 
-    class impelmenting generic options for a numerical algorithm
+    class implementing generic options for a numerical algorithm
     Just store the otions in a maps of string-value pair 
 
     @ingroup NumAlgo
@@ -93,6 +93,19 @@ public:
       Print(fRealOpts,os);
    } 
 
+
+   // static methods to retrieve the default options 
+
+   // find the option given a name 
+   // return 0 if the option is not found
+   static IOptions * FindDefault(const char * algoname);
+
+   // retrieve options given the name 
+   // if option is not found create a new GenAlgoOption for the given name 
+   static IOptions & Default(const char * algoname);
+
+   /// print all the default options
+   static void PrintAllDefault(std::ostream & os = std::cout); 
 
 
 protected: 

@@ -41,8 +41,6 @@ namespace IntegOneDim {
    static unsigned int gDefaultNPointsGSLAdaptive = 3;  // corresponds to 31 points
    static unsigned int gDefaultNPoints = gDefaultNPointsGSLAdaptive;  
    
-   // extra options
-   static std::map<std::string, ROOT::Math::IOptions *> gExtraOptions; 
    
 }
 
@@ -54,42 +52,14 @@ namespace IntegMultiDim {
    static unsigned int gDefaultWKSize = 100000;
    static unsigned int gDefaultNCalls = 100000;
 
-   // extra options
-   static std::map<std::string, ROOT::Math::IOptions *> gExtraOptions; 
 
 }
 
 
-// some utility function
+// some utility functions
 
 namespace IntegOptionsUtil { 
 
-
-
-   IOptions * GetDefault(std::string & algoname, const std::map<std::string, ROOT::Math::IOptions *> & extraOpts) { 
-      // retrieve default extra options for the given algorithm type 
-      // return zero if not found
-      std::transform(algoname.begin(), algoname.end(), algoname.begin(), (int(*)(int)) toupper ); 
-      
-      std::map<std::string, ROOT::Math::IOptions *>::const_iterator pos = extraOpts.find(algoname); 
-      if (pos !=  extraOpts.end() ) { 
-         return pos->second; 
-      }
-      return 0; 
-   }
-
-
-   IOptions & Default(const char * algo, std::map<std::string, ROOT::Math::IOptions *> & extraOpts) { 
-      // create default extra options for the given algorithm type 
-      std::string algoname(algo);
-      IOptions * opt = IntegOptionsUtil::GetDefault(algoname, extraOpts); 
-      if (opt == 0) { 
-         // create new extra options for the given type
-         opt = new ROOT::Math::GenAlgoOptions(); 
-         extraOpts.insert( std::map<std::string, ROOT::Math::IOptions *>::value_type(algoname, opt) );
-      }
-      return *opt;
-   }
 
    // traits for the specific methods 1D - ND
    template<class OptionType> 
@@ -133,40 +103,17 @@ namespace IntegOptionsUtil {
 
    /// print default  options 
    template <class OptionType>
-   void PrintDefault(const char * name, std::ostream & os, const std::map<std::string, ROOT::Math::IOptions *> & extraOpts) {
+   void PrintDefault(const char * name, std::ostream & os) {
       //print default options
-      if (name == 0) { 
-         OptionType::PrintAllDefault(os);
-         return;
-      }
-      std::string algoname(name);
-      IOptions * opts = IntegOptionsUtil::GetDefault(algoname,extraOpts);
-      
+      if (name == 0)  name = OptionType::DefaultIntegrator().c_str();      
       os << "Default options for numerical integrator "  << name << " : " << std::endl;
       os << std::setw(25) << "Absolute tolerance"     << " : " << std::setw(15) << OptionType::DefaultAbsTolerance() << std::endl;
       os << std::setw(25) << "Relative tolerance"     << " : " <<std::setw(15) << OptionType::DefaultRelTolerance() << std::endl;
       os << std::setw(25) << "Workspace size"         << " : " << std::setw(15) << OptionType::DefaultWKSize() << std::endl;
       typedef  OptionTrait<OptionType> OPT; 
       os << std::setw(25) <<  OPT::DescriptionOfN()   << " : " << std::setw(15) << OPT::N() << std::endl;
+      IOptions * opts = GenAlgoOptions::FindDefault(name);
       if (opts) opts->Print(os);
-   }
-
-   /// print all default  options 
-   template <class OptionType>
-   void PrintAllDefault(std::ostream & os,const std::map<std::string, ROOT::Math::IOptions *> & extraOpts) {
-      //print all default options
-      os << std::setw(25) << "Integrator Type" << " : " << std::setw(15) << OptionType::DefaultIntegrator() << std::endl;
-      os << std::setw(25) << "Absolute tolerance"     << " : " << std::setw(15) << OptionType::DefaultAbsTolerance() << std::endl;
-      os << std::setw(25) << "Relative tolerance"     << " : " <<std::setw(15) << OptionType::DefaultRelTolerance() << std::endl;
-      os << std::setw(25) << "Workspace size"         << " : " << std::setw(15) << OptionType::DefaultWKSize() << std::endl;
-      typedef  OptionTrait<OptionType> OPT; 
-      os << std::setw(25) <<  OPT::DescriptionOfN()   << " : " << std::setw(15) << OPT::N() << std::endl;
-
-      for (  std::map<std::string, ROOT::Math::IOptions *>::const_iterator pos = extraOpts.begin(); 
-          pos != extraOpts.end(); ++pos) { 
-         os << "Default specific options for integrator "  << pos->first << " : " << std::endl;
-         pos->second->Print(os);         
-      }
    }
 
 }
@@ -232,7 +179,7 @@ IntegratorOneDimOptions::IntegratorOneDimOptions(IOptions * opts):
    // check  the default options if opts = 0
    if (!fExtraOptions) { 
       std::string igname = DefaultIntegrator();
-      IOptions * gopts = GetDefault( igname.c_str() );
+      IOptions * gopts = FindDefault( igname.c_str() );
       if (gopts) fExtraOptions = gopts->Clone();
    }
 }
@@ -257,15 +204,9 @@ void IntegratorOneDimOptions::Print(std::ostream & os) const {
 /// print default  options 
 void IntegratorOneDimOptions::PrintDefault(const char * name, std::ostream & os) {
    //print default options
-   IntegOptionsUtil::PrintDefault<IntegratorOneDimOptions>(name,os, IntegOneDim::gExtraOptions);
+   IntegOptionsUtil::PrintDefault<IntegratorOneDimOptions>(name,os);
 }
 
-/// print all default  options 
-void IntegratorOneDimOptions::PrintAllDefault(std::ostream & os) {
-   //print default options
-   os << "Default One-Dimensional Numerical Integrator Options" << std::endl;
-   IntegOptionsUtil::PrintAllDefault<IntegratorOneDimOptions>(os, IntegOneDim::gExtraOptions);
-}
 
 
 void IntegratorOneDimOptions::SetDefaultIntegrator(const char * algo ) {   
@@ -317,13 +258,12 @@ unsigned int IntegratorOneDimOptions::DefaultNPoints()        { return IntegOneD
 
 IOptions & IntegratorOneDimOptions::Default(const char * algo) { 
    // create default extra options for the given algorithm type 
-   return IntegOptionsUtil::Default(algo, IntegOneDim::gExtraOptions);
+   return GenAlgoOptions::Default(algo);
 }
 
-IOptions * IntegratorOneDimOptions::GetDefault(const char * algo) { 
-   // create default extra options for the given algorithm type 
-   std::string algoname(algo);
-   return IntegOptionsUtil::GetDefault(algoname, IntegOneDim::gExtraOptions);
+IOptions * IntegratorOneDimOptions::FindDefault(const char * algo) { 
+   // find extra options for the given algorithm type 
+   return GenAlgoOptions::FindDefault(algo);
 }
 
 //////////////////////////////////////////////////////
@@ -343,7 +283,7 @@ IntegratorMultiDimOptions::IntegratorMultiDimOptions(IOptions * opts):
 
    // check  the default options if opts = 0
    if (!fExtraOptions) { 
-      IOptions * gopts = GetDefault( DefaultIntegrator().c_str() );
+      IOptions * gopts = FindDefault( DefaultIntegrator().c_str() );
       if (gopts) fExtraOptions = gopts->Clone();
    }
 }
@@ -368,14 +308,7 @@ void IntegratorMultiDimOptions::Print(std::ostream & os) const {
 /// print default  options 
 void IntegratorMultiDimOptions::PrintDefault(const char * name, std::ostream & os) {
    //print default options
-   IntegOptionsUtil::PrintDefault<IntegratorMultiDimOptions>(name,os, IntegMultiDim::gExtraOptions);
-}
-
-/// print all default  options 
-void IntegratorMultiDimOptions::PrintAllDefault(std::ostream & os) {
-   //print default options
-   os << "Default One-Dimensional Numerical Integrator Options" << std::endl;
-   IntegOptionsUtil::PrintAllDefault<IntegratorMultiDimOptions>(os, IntegMultiDim::gExtraOptions);
+   IntegOptionsUtil::PrintDefault<IntegratorMultiDimOptions>(name,os);
 }
 
 
@@ -425,13 +358,12 @@ unsigned int IntegratorMultiDimOptions::DefaultNCalls()        { return IntegMul
 
 IOptions & IntegratorMultiDimOptions::Default(const char * algo) { 
    // create default extra options for the given algorithm type 
-   return IntegOptionsUtil::Default(algo, IntegMultiDim::gExtraOptions);
+   return GenAlgoOptions::Default(algo);
 }
 
-IOptions * IntegratorMultiDimOptions::GetDefault(const char * algo) { 
+IOptions * IntegratorMultiDimOptions::FindDefault(const char * algo) { 
    // create default extra options for the given algorithm type 
-   std::string algoname(algo);
-   return IntegOptionsUtil::GetDefault(algoname, IntegMultiDim::gExtraOptions);
+   return GenAlgoOptions::FindDefault(algo);
 }
 
 

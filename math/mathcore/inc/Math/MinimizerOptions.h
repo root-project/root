@@ -13,10 +13,15 @@
 
 #include <string>
 
+#include <iostream>
+
 namespace ROOT { 
    
 
-   namespace Math { 
+namespace Math { 
+
+
+class IOptions;      
 
 //_______________________________________________________________________________
 /** 
@@ -49,9 +54,28 @@ public:
    static int DefaultStrategy(); 
    static int DefaultPrintLevel(); 
 
+   /// retrieve extra options - if not existing create a IOptions 
+   static ROOT::Math::IOptions & Default(const char * name);
+
+   // find extra options - return 0 if not existing 
+   static ROOT::Math::IOptions * FindDefault(const char * name);
+
+   /// print all the default options for the name given
+   static void PrintDefault(const char * name = 0, std::ostream & os = std::cout); 
+
+public:
 
    // constructor using the default options 
    MinimizerOptions();
+
+   // destructor  
+   ~MinimizerOptions();
+
+   // copy constructor 
+   MinimizerOptions(const MinimizerOptions & opt);
+
+   /// assignment operators 
+   MinimizerOptions & operator=(const MinimizerOptions & opt);
 
    /** non-static methods for  retrivieng options */
 
@@ -76,11 +100,17 @@ public:
    /// error definition 
    double ErrorDef() const { return  fErrorDef; }
 
+   /// return extra options (NULL pointer if they are not present)
+   IOptions * ExtraOptions() const { return fExtraOptions; }
+
    /// type of minimizer
    const std::string & MinimizerType() const { return fMinimType; }
 
    /// type of algorithm
    const std::string & MinimizerAlgorithm() const { return fAlgoType; }
+
+   /// print all the options 
+   void Print(std::ostream & os = std::cout) const; 
 
    /** non-static methods for setting options */
 
@@ -111,6 +141,10 @@ public:
    /// set minimizer algorithm
    void SetMinimizerAlgorithm(const char *type) { fAlgoType = type; }
 
+   /// set extra options (in this case pointer is cloned)
+   void  SetExtraOptions(const IOptions & opt); 
+
+
 private:
 
    int fLevel;               // debug print level 
@@ -119,9 +153,12 @@ private:
    int fStrategy;            // minimizer strategy (used by Minuit)
    double fErrorDef;         // error definition (=1. for getting 1 sigma error for chi2 fits)
    double fTolerance;        // minimize tolerance to reach solution
-   double fPrecision;        // precision of the objective funciton evaluation (value <=0 means left to default)
+   double fPrecision;        // precision of the objective function evaluation (value <=0 means left to default)
    std::string fMinimType;   // Minimizer type (Minuit, Minuit2, etc..
    std::string fAlgoType;    // Minimizer algorithmic specification (Migrad, Minimize, ...)
+
+   // extra options
+   ROOT::Math::IOptions *   fExtraOptions;  // extra options 
      
 };
 

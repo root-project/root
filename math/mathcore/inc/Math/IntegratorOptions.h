@@ -174,15 +174,11 @@ public:
    /// retrieve specific options - if not existing create a IOptions 
    static ROOT::Math::IOptions & Default(const char * name);
 
-   // retrieve specific options - return 0 if not existing 
-   static ROOT::Math::IOptions * GetDefault(const char * name);
+   // find specific options - return 0 if not existing 
+   static ROOT::Math::IOptions * FindDefault(const char * name);
 
    /// print only the specified default options 
    static void PrintDefault(const char * name = 0, std::ostream & os = std::cout); 
-
-   /// print all the default options
-   /// print all the options 
-   static void PrintAllDefault(std::ostream & os = std::cout); 
 
 
 private: 
@@ -257,15 +253,11 @@ public:
    // retrieve specific options 
    static ROOT::Math::IOptions & Default(const char * name);
 
-   // retrieve specific options - return 0 if not existing 
-   static ROOT::Math::IOptions * GetDefault(const char * name);
+   // find specific options - return 0 if not existing 
+   static ROOT::Math::IOptions * FindDefault(const char * name);
 
    /// print only the specified default options 
    static void PrintDefault(const char * name = 0, std::ostream & os = std::cout); 
-
-   /// print all the default options
-   /// print all the options 
-   static void PrintAllDefault(std::ostream & os = std::cout); 
 
 
 private: 
