@@ -88,29 +88,29 @@
 
 # define MATH_INFO_VAL(loc,x)                                           \
    {std::string sl = "ROOT::Math::" + std::string(loc); \
-   std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+    std::string str = std::string(#x) + std::string(" = ") + ::ROOT::Math::Util::ToString(x); \
    ::Info(sl.c_str(),"%s",str.c_str() );} 
 # define MATH_WARN_VAL(loc,x)                                           \
    {std::string sl = "ROOT::Math::" + std::string(loc); \
-   std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+    std::string str = std::string(#x) + std::string(" = ") + ::ROOT::Math::Util::ToString(x); \
    ::Warning(sl.c_str(),"%s",str.c_str() );} 
 # define MATH_ERROR_VAL(loc,x)                                          \
    {std::string sl = "ROOT::Math::" + std::string(loc); \
-   std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+    std::string str = std::string(#x) + std::string(" = ") + ::ROOT::Math::Util::ToString(x); \
    ::Error(sl.c_str(),"%s",str.c_str() );} 
 
 
 # define MATH_INFO_MSGVAL(loc,txt,x)                    \
    {std::string sl = "ROOT::Math::" + std::string(loc); \
-   std::string str = std::string(txt) + std::string("; ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+    std::string str = std::string(txt) + std::string("; ") + std::string(#x) + std::string(" = ") + ::ROOT::Math::Util::ToString(x); \
    ::Info(sl.c_str(),"%s",str.c_str() );} 
 # define MATH_WARN_MSGVAL(loc,txt,x)                      \
    {std::string sl = "ROOT::Math::" + std::string(loc); \
-   std::string str = std::string(txt) + std::string("; ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+    std::string str = std::string(txt) + std::string("; ") + std::string(#x) + std::string(" = ") + ::ROOT::Math::Util::ToString(x); \
    ::Warning(sl.c_str(),"%s",str.c_str() );} 
 # define MATH_ERROR_MSGVAL(loc,txt,x)                     \
    {std::string sl = "ROOT::Math::" + std::string(loc); \
-   std::string str = std::string(txt) + std::string("; ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+    std::string str = std::string(txt) + std::string("; ") + std::string(#x) + std::string(" = ") + ::ROOT::Math::Util::ToString(x); \
    ::Error(sl.c_str(),"%s",str.c_str() );} 
 
 
