@@ -95,21 +95,30 @@ namespace Math {
    class GSLMCIntegrator : public VirtualIntegratorMultiDim {
       
    public:
+
+      typedef MCIntegration::Type Type;
                   
       // constructors
       
-                  
+
+//       /** 
+//           constructor of GSL MCIntegrator using all the default options           
+//       */      
+//       GSLMCIntegrator( );
+
       
-      /** constructor of GSL MCIntegrator. VEGAS MC is set as default integration type 
+       /** constructor of GSL MCIntegrator. VEGAS MC is set as default integration type 
          
-      @param type type of integration. The possible types are defined in the Integration::Type enumeration
-      @param absTol desired absolute Error
+      @param type type of integration. The possible types are defined in the MCIntegration::Type enumeration
+                                        Default is VEGAS 
+      @param absTol desired absolute Error 
       @param relTol desired relative Error
       @param calls maximum number of function calls
-      */
-      
-      explicit 
-      GSLMCIntegrator(MCIntegration::Type type = MCIntegration::kVEGAS, double absTol = 1.E-6, double relTol = 1E-4, unsigned int calls = 500000);
+
+      NOTE: When the default values are used , the options are taken from teh static method of ROOT::Math::IntegratorMultiDimOptions 
+      */      
+      explicit
+      GSLMCIntegrator(MCIntegration::Type type = MCIntegration::kVEGAS, double absTol = 0, double relTol = 0, unsigned int calls = 0 );
 
       /** constructor of GSL MCIntegrator. VEGAS MC is set as default integration type 
          
@@ -117,12 +126,9 @@ namespace Math {
       @param absTol desired absolute Error
       @param relTol desired relative Error
       @param calls maximum number of function calls
-      */
-      
-      explicit 
+      */ 
       GSLMCIntegrator(const char *  type, double absTol, double relTol, unsigned int calls);
-      
-      
+            
 
       /** 
           destructor 
@@ -199,7 +205,14 @@ public:
          return the Error Status of the last Integral calculation
        */
       int Status() const;
-      
+
+
+      /** 
+          return number of function evaluations in calculating the integral 
+          (This is an fixed by the user)
+      */
+      int NEval() const { return fCalls; }      
+
       
       // setter for control Parameters  (getters are not needed so far )
       
@@ -213,15 +226,13 @@ public:
          set the desired absolute Error
        */
       void SetAbsTolerance(double absTolerance);
-      
-      /**
-	 to be added later as options for basic MC methods
-       The possible rules are defined in the Integration::GKRule enumeration.
-       The integration rule can be modified only for ADAPTIVE type integrations
-       */
-      //void SetIntegrationRule(Integration::GKRule );
-      
 
+      /**
+         set the integration options
+       */
+      void SetOptions(const ROOT::Math::IntegratorMultiDimOptions & opt);
+      
+      
       /**
 	 set random number generator
       */
@@ -231,6 +242,12 @@ public:
 	 set integration method
       */
       void SetType(MCIntegration::Type type);
+
+      /**
+	 set integration method using a name instead of an enumeration
+      */
+      void SetTypeName(const char * typeName);
+
 
       /**
 	 set integration mode for VEGAS method
@@ -268,6 +285,28 @@ public:
       */  
       double ChiSqr();
 
+      /** 
+          return the type 
+          (need to be called GetType to avois a conflict with typedef)
+      */
+      MCIntegration::Type GetType() const { return fType; }
+      
+      /** 
+          return the name
+      */
+      const char * GetTypeName() const; 
+
+      /**
+         get the option used for the integration
+      */
+      ROOT::Math::IntegratorMultiDimOptions Options() const; 
+
+      /**
+         get the specific options (for Vegas or Miser) 
+         in term of string-  name 
+      */
+      ROOT::Math::IOptions * ExtraOptions() const; 
+           
 
    protected:
          
@@ -286,10 +325,10 @@ public:
       MCIntegration::Mode fMode;
       GSLRngWrapper * fRng;
 
-      double fAbsTol;
-      double fRelTol;
       unsigned int fDim;
       unsigned int fCalls;
+      double fAbsTol;
+      double fRelTol;
       
       // cache Error, Result and Status of integration
       

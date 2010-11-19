@@ -26,6 +26,13 @@
 // #define MATH_NO_PLUGIN_MANAGER
 // #endif
 
+#include <algorithm>
+#include <functional>
+#include <ctype.h>   // need to use c version of tolower defined here
+
+
+#include <cassert>
+
 #ifndef MATH_NO_PLUGIN_MANAGER
 
 #include "TROOT.h"
@@ -39,10 +46,57 @@
 
 #endif
 
-#include <cassert>
+
 
 namespace ROOT {
 namespace Math {
+
+IntegrationOneDim::Type IntegratorOneDim::GetType(const char *name) { 
+   if (name == 0) return IntegrationOneDim::kDEFAULT;
+   std::string typeName(name);
+   std::transform(typeName.begin(), typeName.end(), typeName.begin(), (int(*)(int)) toupper );  
+   if (typeName == "GAUSS") return IntegrationOneDim::kGAUSS;  
+   if (typeName == "GAUSSLEGENDRE") return IntegrationOneDim::kLEGENDRE;  
+   if (typeName == "ADAPTIVE") return IntegrationOneDim::kADAPTIVE;  
+   if (typeName == "ADAPTIVESINGULAR") return IntegrationOneDim::kADAPTIVESINGULAR;  
+   if (typeName == "NONADAPTIVE") return IntegrationOneDim::kNONADAPTIVE;  
+   MATH_WARN_MSG("IntegratorOneDim::GetType","Invalid type name specified - return default " ); 
+   return IntegrationOneDim::kDEFAULT; 
+}
+
+std::string IntegratorOneDim::GetName(IntegrationOneDim::Type type) { 
+   if (type == IntegrationOneDim::kDEFAULT) type = GetType(IntegratorOneDimOptions::DefaultIntegrator().c_str() );
+   if (type == IntegrationOneDim::kGAUSS) return "Gauss";
+   if (type == IntegrationOneDim::kLEGENDRE) return "GaussLegendre";
+   if (type == IntegrationOneDim::kADAPTIVE) return "Adaptive";
+   if (type == IntegrationOneDim::kADAPTIVESINGULAR) return "AdaptiveSingular";
+   if (type == IntegrationOneDim::kNONADAPTIVE) return "NonAdaptive";
+   MATH_WARN_MSG("IntegratorOneDim::GetType","Invalid type specified " ); 
+   return std::string("undefined");
+}
+   
+
+IntegrationMultiDim::Type IntegratorMultiDim::GetType(const char *name) { 
+   if (name == 0) return IntegrationMultiDim::kDEFAULT;
+   std::string typeName(name); 
+   std::transform(typeName.begin(), typeName.end(), typeName.begin(), (int(*)(int)) toupper );  
+   if (typeName == "ADAPTIVE") return IntegrationMultiDim::kADAPTIVE;  
+   if (typeName == "VEGAS") return IntegrationMultiDim::kVEGAS;  
+   if (typeName == "MISER") return IntegrationMultiDim::kMISER;  
+   if (typeName == "PLAIN") return IntegrationMultiDim::kPLAIN;  
+   MATH_WARN_MSG("IntegratorMultiDim::GetType","Invalid type name specified - return default " ); 
+   return IntegrationMultiDim::kDEFAULT; 
+}
+
+std::string IntegratorMultiDim::GetName(IntegrationMultiDim::Type type) { 
+   if (type == IntegrationMultiDim::kDEFAULT) type = GetType(IntegratorMultiDimOptions::DefaultIntegrator().c_str() );
+   if (type == IntegrationMultiDim::kADAPTIVE) return "ADAPTIVE";
+   if (type == IntegrationMultiDim::kVEGAS) return "VEGAS";
+   if (type == IntegrationMultiDim::kMISER) return "MISER";
+   if (type == IntegrationMultiDim::kPLAIN) return "PLAIN";
+   MATH_WARN_MSG("IntegratorMultiDim::GetType","Invalid type specified " ); 
+   return std::string("Undefined");
+}
 
 void IntegratorOneDim::SetFunction(const IMultiGenFunction &f, unsigned int icoord , const double * x ) { 
    // set function from a multi-dim function 
@@ -61,6 +115,16 @@ void IntegratorOneDim::SetFunction(const IMultiGenFunction &f, unsigned int icoo
 VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::Type type , double absTol, double relTol, unsigned int size, int rule) { 
    // create the concrete class for one-dimensional integration. Use the plug-in manager if needed 
 
+   if (type == IntegrationOneDim::kDEFAULT) type = IntegratorOneDimOptions::DefaultIntegratorType();
+   if (absTol <= 0) absTol = IntegratorOneDimOptions::DefaultAbsTolerance(); 
+   if (relTol <= 0) relTol = IntegratorOneDimOptions::DefaultRelTolerance(); 
+   if (size <= 0)  size = IntegratorOneDimOptions::DefaultWKSize(); 
+   if (rule <= 0)  rule = IntegratorOneDimOptions::DefaultNPoints(); 
+   //if (ncall  <= 0) ncall  = IntegratorOneDimOptions::DefaultNCalls(); 
+
+
+   
+
 #ifndef R__HAS_MATHMORE   
    // default type is GAUSS when Mathmore is not built
    if (type == IntegrationOneDim::kADAPTIVE ||  
@@ -70,9 +134,10 @@ VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::
 #endif
 
    if (type == IntegrationOneDim::kGAUSS)
-      return new GaussIntegrator();
-   if (type == IntegrationOneDim::kLEGENDRE)
-      return new GaussLegendreIntegrator();
+      return new GaussIntegrator(relTol);
+   if (type == IntegrationOneDim::kLEGENDRE) { 
+      return new GaussLegendreIntegrator(rule,relTol);
+   }
 
    VirtualIntegratorOneDim * ig = 0; 
 
@@ -96,16 +161,8 @@ VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::
       }
       
       // plugin manager requires a string
-      std::string typeName = "Undefined";
-      if (type == IntegrationOneDim::kADAPTIVE) 
-         typeName = "ADAPTIVE";
-      if (type == IntegrationOneDim::kADAPTIVESINGULAR) 
-         typeName = "ADAPTIVESINGULAR";
-      if (type == IntegrationOneDim::kNONADAPTIVE) 
-         typeName = "NONADAPTIVE";
-
+      std::string typeName = GetName(type);
             
-
       ig = reinterpret_cast<ROOT::Math::VirtualIntegratorOneDim *>( h->ExecPlugin(5,typeName.c_str(), rule, absTol, relTol, size ) ); 
       assert(ig != 0);
       
@@ -122,6 +179,12 @@ VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::
 
 VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMultiDim::Type type , double absTol, double relTol, unsigned int ncall) { 
    // create concrete class for multidimensional integration 
+   if (type == IntegrationMultiDim::kDEFAULT) type = GetType(IntegratorMultiDimOptions::DefaultIntegrator().c_str());
+   if (absTol <= 0) absTol = IntegratorMultiDimOptions::DefaultAbsTolerance(); 
+   if (relTol <= 0) relTol = IntegratorMultiDimOptions::DefaultRelTolerance(); 
+   if (ncall  <= 0) ncall  = IntegratorMultiDimOptions::DefaultNCalls(); 
+   unsigned int size = IntegratorMultiDimOptions::DefaultWKSize(); 
+
 
 #ifndef R__HAS_MATHMORE   
    // default type is Adaptive when Mathmore is not built
@@ -130,7 +193,7 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
 
    // no need for PM in the adaptive  case using Genz method (class is in MathCore)
    if (type == IntegrationMultiDim::kADAPTIVE)
-      return new AdaptiveIntegratorMultiDim(absTol, relTol, ncall);
+      return new AdaptiveIntegratorMultiDim(absTol, relTol, ncall, size);
       
    VirtualIntegratorMultiDim * ig = 0; 
 
@@ -151,13 +214,7 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
          return new AdaptiveIntegratorMultiDim(absTol, relTol, ncall);
       }
 
-
-      std::string typeName = "VEGAS";
-      if (type == IntegrationMultiDim::kMISER) 
-         typeName = "MISER";
-      if (type == IntegrationMultiDim::kPLAIN) 
-         typeName = "PLAIN";
-
+      std::string typeName = GetName(type);
       
       ig = reinterpret_cast<ROOT::Math::VirtualIntegratorMultiDim *>( h->ExecPlugin(4,typeName.c_str(), absTol, relTol, ncall ) ); 
       assert(ig != 0);

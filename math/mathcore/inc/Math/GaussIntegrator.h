@@ -202,6 +202,12 @@ public:
    /** This method is not implemented. */
    double IntegralCauchy (double a, double b, double c);
 
+   ///  get the option used for the integration 
+   virtual ROOT::Math::IntegratorOneDimOptions Options() const; 
+
+   // set the options 
+   virtual void SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt);
+
 private:
 
    /**

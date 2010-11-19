@@ -12,11 +12,13 @@ namespace Math {
 
 
 
-AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim(double absTol, double relTol, unsigned int size):
+AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim(double absTol, double relTol, unsigned int maxpts, unsigned int size):
    fDim(0), 
+   fMinPts(0), 
+   fMaxPts(maxpts),
+   fSize(size), 
    fAbsTol(absTol),
    fRelTol(relTol),
-   fSize(size), 
    fResult(0), 
    fError(0), fRelError(0),
    fNEval(0),
@@ -26,11 +28,13 @@ AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim(double absTol, double rel
    // constructor - without passing a function
 }
 
-AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim( const IMultiGenFunction &f, double absTol, double relTol, unsigned int size):
+AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim( const IMultiGenFunction &f, double absTol, double relTol, unsigned int maxpts, unsigned int size):
    fDim(f.NDim()), 
+   fMinPts(0), 
+   fMaxPts(maxpts),
+   fSize(size),
    fAbsTol(absTol),
    fRelTol(relTol),
-   fSize(size),
    fResult(0), 
    fError(0), fRelError(0),
    fNEval(0),
@@ -58,7 +62,7 @@ void AdaptiveIntegratorMultiDim::SetRelTolerance(double relTol){ this->fRelTol =
 void AdaptiveIntegratorMultiDim::SetAbsTolerance(double absTol){ this->fAbsTol = absTol; }
 
 
-   double AdaptiveIntegratorMultiDim::DoIntegral(const double* xmin, const double * xmax, bool absValue)
+double AdaptiveIntegratorMultiDim::DoIntegral(const double* xmin, const double * xmax, bool absValue)
 {
    // References:
    //
@@ -73,8 +77,6 @@ void AdaptiveIntegratorMultiDim::SetAbsTolerance(double absTol){ this->fAbsTol =
    bool kFALSE = false;
    bool kTRUE = true;
 
-   unsigned int minpts = 0;
-   unsigned int maxpts = fSize;//specified maximal number of function evaluations
    double eps = fRelTol; //specified relative accuracy
    //output parameters
    fStatus = 0; //report status
@@ -135,12 +137,17 @@ void AdaptiveIntegratorMultiDim::SetAbsTolerance(double absTol){ this->fAbsTol =
 
    double twondm = std::pow(2.0,static_cast<int>(n));
    //unsigned int minpts = Int_t(twondm)+ 2*n*(n+1)+1;
+
    unsigned int ifncls = 0;
    bool  ldv   = kFALSE;
    unsigned int irgnst = 2*n+3;
    unsigned int  irlcls = (unsigned int)(twondm) +2*n*(n+1)+1;//minimal number of nodes in n dim
    unsigned int isbrgn = irgnst;
    unsigned int isbrgs = irgnst;
+
+
+   unsigned int minpts = fMinPts; 
+   unsigned int maxpts = std::max(fMaxPts, irlcls) ;//specified maximal number of function evaluations
 
    if (minpts < 1)      minpts = irlcls;
    if (maxpts < minpts) maxpts = 10*minpts;
@@ -149,7 +156,7 @@ void AdaptiveIntegratorMultiDim::SetAbsTolerance(double absTol){ this->fAbsTol =
    // with IWK Length ( >= (2N + 3) * (1 + MAXPTS/(2**N + 2N(N + 1) + 1))/2).
    // Here, this array is allocated dynamically
 
-   unsigned int iwk = irgnst*(1 +maxpts/irlcls)/2;
+   unsigned int iwk = std::max( fSize, irgnst*(1 +maxpts/irlcls)/2 );
    double *wk = new double[iwk+10];
 
    unsigned int j; 
@@ -352,7 +359,29 @@ double AdaptiveIntegratorMultiDim::Integral(const IMultiGenFunction &f, const do
 
 }
 
+ROOT::Math::IntegratorMultiDimOptions  AdaptiveIntegratorMultiDim::Options() const { 
+   // return the used options
+   ROOT::Math::IntegratorMultiDimOptions opt; 
+   opt.SetAbsTolerance(fAbsTol); 
+   opt.SetRelTolerance(fRelTol); 
+   opt.SetNCalls(fMaxPts); 
+   opt.SetWKSize(fSize); 
+   opt.SetIntegrator("ADAPTIVE");
+   return opt; 
+}
 
+void AdaptiveIntegratorMultiDim::SetOptions(const ROOT::Math::IntegratorMultiDimOptions & opt)
+{
+   //   set integration options
+   if (opt.IntegratorType() != IntegrationMultiDim::kADAPTIVE) {
+      MATH_ERROR_MSG("AdaptiveIntegratorMultiDim::SetOptions","Invalid options");
+      return;
+   }      
+   SetAbsTolerance( opt.AbsTolerance() );
+   SetRelTolerance( opt.RelTolerance() );
+   SetMaxPts( opt.NCalls() );
+   SetSize( opt.WKSize() );
+}
 
 } // namespace Math
 } // namespace ROOT

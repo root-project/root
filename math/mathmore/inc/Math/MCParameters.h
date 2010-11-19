@@ -26,35 +26,43 @@
 #ifndef ROOT_Math_MCParameters
 #define ROOT_Math_MCParameters
 
+#include <cstring>   // for size_t
 
 namespace ROOT {
 namespace Math {
 
 
+class IOptions;
 
 /**
    structures collecting parameters 
    for VEGAS multidimensional integration
+   FOr implementation of default parameters see file 
+   mathmore/src/GSLMCIntegrationWorkspace.h
 
    @ingroup MCIntegration
 */
 struct VegasParameters{
-  double sigma;
-  double chisq;
-  double alpha;
-  size_t iterations;
-  
-  VegasParameters():
-    alpha( 1.5),
-    iterations(5)
-  {} 
- 
+   double alpha;
+   size_t iterations; 
+   int stage; 
+   int mode; 
+   int verbose; 
 
-//int stage;
-  //int mode;
-  //int verbose;
+   // constructor of default parameters
+   VegasParameters(); 
 
+   // construct from GenAlgoOptions
+   // parameter not specified are ignored 
+   VegasParameters(const ROOT::Math::IOptions & opt);
+
+   VegasParameters & operator=(const ROOT::Math::IOptions & opt);
+
+   /// convert to options (return object is managed by the user) 
+   ROOT::Math::IOptions * operator() () const;
 };
+  
+ 
 
 
 /**
@@ -64,21 +72,28 @@ struct VegasParameters{
    @ingroup MCIntegration
 */
 struct MiserParameters{
-  double estimate_frac;
-  size_t min_calls;
-  size_t min_calls_per_bisection;
-  double alpha;
+   double estimate_frac;
+   size_t min_calls;
+   size_t min_calls_per_bisection;
+   double alpha;
+   double dither; 
 
-  MiserParameters(unsigned int dim):
-    estimate_frac(0.1),
-    min_calls(16*dim),
-    min_calls_per_bisection(32*min_calls) ,
-    alpha(2.)
-  {}
+   // constructor of default parameters
+   // needs dimension since min_calls = 16 * dim
+   MiserParameters(size_t dim=10);
+
+   // construct from GenAlgoOptions
+   // parameter not specified are ignored 
+   MiserParameters(const ROOT::Math::IOptions & opt);
+
+   MiserParameters & operator=(const ROOT::Math::IOptions & opt);
+
+   /// convert to options (return object is managed by the user) 
+   ROOT::Math::IOptions * operator() () const;
+
 };
 
 struct PlainParameters{
-
 };
 
 } // namespace Math

@@ -43,19 +43,23 @@ class AdaptiveIntegratorMultiDim : public VirtualIntegratorMultiDim {
 public:
 
    /**
-      construct given optionally tolerance (absolute and relative) and maximum size of working array 
+      construct given optionally tolerance (absolute and relative), maximum number of function evaluation (maxpts)  and 
+      size of the working array. 
       The size of working array represents the number of sub-division used for calculating the integral. 
-      Higher the dimension, larger sizes are required for getting the same accuracy. 
+      Higher the dimension, larger sizes are required for getting the same accuracy.
+      The size must be larger than  >= (2N + 3) * (1 + MAXPTS/(2**N + 2N(N + 1) + 1))/2). For smaller value passed, the 
+      minimum allowed will be used
    */
    explicit 
-   AdaptiveIntegratorMultiDim(double absTol = 1.E-6, double relTol = 1E-6, unsigned int size = 100000);
+   AdaptiveIntegratorMultiDim(double absTol = 1.E-6, double relTol = 1E-6, unsigned int maxpts = 100000, unsigned int size = 0);
 
    /**
-      construct with a reference to the integrand function and given optionally 
-      tolerance (absolute and relative) and maximum size of working array.
+      Construct with a reference to the integrand function and given optionally 
+      tolerance (absolute and relative), maximum number of function evaluation (maxpts)  and 
+      size of the working array. 
    */
    explicit
-   AdaptiveIntegratorMultiDim(const IMultiGenFunction &f, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 100000);
+   AdaptiveIntegratorMultiDim(const IMultiGenFunction &f, double absTol = 1.E-9, double relTol = 1E-6,  unsigned int maxcall = 100000, unsigned int size = 0);
 
    /**
       destructor (no operations)
@@ -90,13 +94,28 @@ public:
    int Status() const { return fStatus; }
 
    /// return number of function evaluations in calculating the integral 
-   unsigned int NEval() const { return fNEval; }
+   int NEval() const { return fNEval; }
  
    /// set relative tolerance 
    void SetRelTolerance(double relTol);
 
    /// set absolute tolerance
    void SetAbsTolerance(double absTol);
+
+   ///set workspace size 
+   void SetSize(double size) { fSize = size; }
+
+   ///set min points
+   void SetMinPts(double n) { fMinPts = n; }
+
+   ///set max points
+   void SetMaxPts(double n) { fMaxPts = n; }
+
+   /// set the options 
+   void SetOptions(const ROOT::Math::IntegratorMultiDimOptions & opt);
+
+   ///  get the option used for the integration 
+   ROOT::Math::IntegratorMultiDimOptions Options() const;
 
 protected: 
 
@@ -106,15 +125,16 @@ protected:
  private:
 
    unsigned int fDim;     // dimentionality of integrand
-
+   unsigned int fMinPts;    // minimum number of function evaluation requested 
+   unsigned int fMaxPts;    // maximum number of function evaluation requested 
+   unsigned int fSize;    // max size of working array (explode with dimension)
    double fAbsTol;        // absolute tolerance
    double fRelTol;        // relative tolerance
-   unsigned int fSize;    // max size of working array (explode with dimension)
 
    double fResult;        // last integration result 
    double fError;         // integration error 
    double fRelError;      // Relative error
-   unsigned int  fNEval;  // number of function evaluation
+   int    fNEval;        // number of function evaluation
    int fStatus;   // status of algorithm (error if not zero)
 
    const IMultiGenFunction* fFun;   // pointer to integrand function 

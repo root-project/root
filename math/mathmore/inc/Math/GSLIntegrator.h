@@ -340,7 +340,11 @@ namespace Math {
          return the Error Status of the last Integral calculation
        */
       int Status() const;
-      
+            
+      /** 
+          return number of function evaluations in calculating the integral 
+      */
+      int NEval() const { return fNEval; }
       
       // setter for control Parameters  (getters are not needed so far )
       
@@ -362,8 +366,21 @@ namespace Math {
        */
       void SetIntegrationRule(Integration::GKRule );
       
+      /// set the options 
+      virtual void SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt);
+
+      ///  get the option used for the integration 
+      virtual ROOT::Math::IntegratorOneDimOptions Options() const;
       
+      /// get type name
+      IntegrationOneDim::Type GetType() const { return fType; }
       
+      /** 
+          return the name
+      */
+      const char * GetTypeName() const; 
+
+
    protected:
          
       // internal method to check validity of GSL function pointer
@@ -384,6 +401,7 @@ namespace Math {
       double fResult;
       double fError;
       int fStatus;
+      int fNEval; 
       
       // GSLIntegrationAlgorithm * fAlgorithm;
       

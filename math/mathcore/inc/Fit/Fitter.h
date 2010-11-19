@@ -164,10 +164,12 @@ public:
       (ROOT::Math::IMultiGenFunction). 
       Give optionally the initial arameter values, data size to have the fit Ndf correctly 
       set in the FitResult and flag specifying if it is a chi2 fit. 
-      Note that if the parameters values are not given (parameter pointers=0) the 
+      Note that if the parameters values are not given (params=0) the 
       current parameter settings are used. The parameter settings can be created before 
       by using the FitConfig::SetParamsSetting. If they have not been created they are created 
-      automatically when the params pointer is not zero
+      automatically when the params pointer is not zero. 
+      Note that passing a params != 0 will set the parameter settings to the new value AND also the 
+      step sizes to some pre-defined value (stepsize = 0.3 * abs(parameter_value) )
     */
    bool FitFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false); 
 

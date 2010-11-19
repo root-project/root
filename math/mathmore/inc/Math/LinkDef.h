@@ -100,6 +100,8 @@
 // #endif
 
 #pragma link C++ class ROOT::Math::GSLMCIntegrator+;
+#pragma link C++ class ROOT::Math::VegasParameters+;
+#pragma link C++ class ROOT::Math::MiserParameters+;
 
 
 

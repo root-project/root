@@ -22,6 +22,11 @@
 #include "Math/Error.h"
 #endif
 
+#ifndef ROOT_Math_IntegratorOptions
+#include "Math/IntegratorOptions.h"
+#endif
+
+
 #include <vector>
 
 
@@ -79,6 +84,15 @@ public:
    */
    virtual int Status() const = 0;
 
+   /**
+      return number of function evaluations in calculating the integral 
+      (if integrator do not implement this function returns -1)
+   */
+   virtual int NEval() const { return -1; }
+
+
+
+
 }; 
 
 //___________________________________________________________________
@@ -122,6 +136,24 @@ public:
    /// evaluate Cauchy integral 
    virtual double IntegralCauchy(double a, double b, double c) = 0; 
 
+   ///  get the option used for the integration 
+   /// must be implemented by derived class 
+   virtual ROOT::Math::IntegratorOneDimOptions Options() const = 0; 
+
+   // return type of integrator 
+   virtual ROOT::Math::IntegrationOneDim::Type Type() const { 
+      return Options().IntegratorType();
+   } 
+
+   /// set the options 
+   /// (should be re-implemented by derived classes -if more options than tolerance exist
+   virtual void SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt) {
+      SetRelTolerance(opt.RelTolerance() );
+      SetAbsTolerance(opt.AbsTolerance() );
+   }
+
+
+
 };
 
 //___________________________________________________________________
@@ -149,6 +181,21 @@ public:
 
    /// setting a multi-dim function
    virtual void SetFunction(const IMultiGenFunction &)  = 0; 
+
+   ///  get the option used for the integration 
+   /// impelement by derived class otherwise return default ones 
+   virtual ROOT::Math::IntegratorMultiDimOptions Options() const = 0;
+
+   // return type of integrator 
+   virtual ROOT::Math::IntegrationMultiDim::Type Type() const { 
+      return Options().IntegratorType();
+   } 
+
+   /// set the options (if needed must be re-implemented by derived classes)
+   virtual void SetOptions(const ROOT::Math::IntegratorMultiDimOptions & opt) {
+      SetRelTolerance(opt.RelTolerance() );
+      SetAbsTolerance(opt.AbsTolerance() );
+   }
 
    
 };

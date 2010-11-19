@@ -69,6 +69,18 @@ public:
 
    int GetNumberPoints() const { return fNum; }
 
+   /** 
+       return number of function evaluations in calculating the integral 
+       This is equivalent to the number of points
+   */
+   int NEval() const { return fNum; }
+
+
+   ///  get the option used for the integration 
+   virtual ROOT::Math::IntegratorOneDimOptions Options() const; 
+   
+   // set the options 
+   virtual void SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt); 
 
 private:
    

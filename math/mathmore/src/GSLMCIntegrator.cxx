@@ -1,3 +1,26 @@
+// @(#)root/mathmore:$Id$
+// Author: Magdalena Slawinska  08/2007
+
+ /**********************************************************************
+  *                                                                    *
+  * Copyright (c) 2007 ROOT Foundation,  CERN/PH-SFT                   *
+  *                                                                    *
+  * This library is free software; you can redistribute it and/or      *
+  * modify it under the terms of the GNU General Public License        *
+  * as published by the Free Software Foundation; either version 2     *
+  * of the License, or (at your option) any later version.             *
+  *                                                                    *
+  * This library is distributed in the hope that it will be useful,    *
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU   *
+  * General Public License for more details.                           *
+  *                                                                    *
+  * You should have received a copy of the GNU General Public License  *
+  * along with this library (see file COPYING); if not, write          *
+  * to the Free Software Foundation, Inc., 59 Temple Place, Suite      *
+  * 330, Boston, MA 02111-1307 USA, or contact the author.             *
+  *                                                                    *
+  **********************************************************************/
 //
 // implementation file for class GSLMCIntegrator
 // Author: Magdalena Slawinska
@@ -6,6 +29,7 @@
 
 #include "Math/IFunctionfwd.h"
 #include "Math/IFunction.h"
+#include "Math/Error.h"
 #include <vector>
 
 #include "GSLMonteFunctionWrapper.h"
@@ -13,6 +37,10 @@
 #include "Math/GSLMCIntegrator.h"
 #include "GSLMCIntegrationWorkspace.h"
 #include "GSLRngWrapper.h"
+
+#include <algorithm>
+#include <functional>
+#include <ctype.h>   // need to use c version of tolower defined here
 
 
 #include "gsl/gsl_monte_vegas.h"
@@ -26,60 +54,78 @@ namespace Math {
 
 
                       
-// constructor
-      
-                   
-      
+// constructors
+
+// GSLMCIntegrator::GSLMCIntegrator():
+//    fResult(0),fError(0),fStatus(-1),
+//    fWorkspace(0),
+//    fFunction(0)
+// {
+//    // constructor of GSL MCIntegrator.Vegas MC is set as default integration type
+//    //set random number generator
+//    fRng = new GSLRngWrapper();      
+//    fRng->Allocate();
+//    // use the default options 
+//    ROOT::Math::IntegratorMultiDimOptions opts;  // this create the default options
+//    SetOptions(opts); 
+// }
+
+    
 GSLMCIntegrator::GSLMCIntegrator(MCIntegration::Type type, double absTol, double relTol, unsigned int calls):
    fType(type),
-   fMode(MCIntegration::kIMPORTANCE),
-   fAbsTol(absTol),
-   fRelTol(relTol),
    fDim(0),
-   //fr(r),
-   fCalls(calls),
+   fCalls((calls > 0)  ? calls : IntegratorMultiDimOptions::DefaultNCalls()),
+   fAbsTol((absTol >0) ? absTol : IntegratorMultiDimOptions::DefaultAbsTolerance() ),
+   fRelTol((relTol >0) ? relTol : IntegratorMultiDimOptions::DefaultRelTolerance() ),
    fResult(0),fError(0),fStatus(-1),
    fWorkspace(0),
    fFunction(0)
 {
-   // constructor of GSL MCIntegrator.Vegas MC is set as default integration type
-   //set Workspace according to type
-   
+   // constructor of GSL MCIntegrator using enumeration as type 
+   SetType(type);
    //set random number generator
    fRng = new GSLRngWrapper();      
    fRng->Allocate();
+   // use the default options for the needed extra parameters 
+   // use the default options for the needed extra parameters 
+   if (fType == MCIntegration::kVEGAS) {    
+      IOptions * opts = IntegratorMultiDimOptions::GetDefault("VEGAS");
+      if (opts != 0) SetParameters( VegasParameters(*opts) );
+   }
+   else  if (fType == MCIntegration::kMISER) { 
+      IOptions * opts = IntegratorMultiDimOptions::GetDefault("MISER");
+      if (opts != 0)  SetParameters( MiserParameters(*opts) );
+   }
    
 }
 
 GSLMCIntegrator::GSLMCIntegrator(const char * type, double absTol, double relTol, unsigned int calls):
-   fMode(MCIntegration::kIMPORTANCE),
+   fDim(0),
+   fCalls(calls),
    fAbsTol(absTol),
    fRelTol(relTol),
-   fDim(0),
-   //fr(r),
-   fCalls(calls),
    fResult(0),fError(0),fStatus(-1),
    fWorkspace(0),
    fFunction(0)
 {
-   // constructor of GSL MCIntegrator. Vegas MC is set as default integration type
-   std::string typeName(type); 
-   if (typeName == "PLAIN")
-      fType =  MCIntegration::kPLAIN;
-   else if (typeName == "MISER")
-      fType =  MCIntegration::kMISER;
-   else 
-      fType =  MCIntegration::kVEGAS;  // default
+   // constructor of GSL MCIntegrator. Vegas MC is set as default integration type if type == 0
+   SetTypeName(type);
    
    //set random number generator
    fRng = new GSLRngWrapper();      
    fRng->Allocate();
-   
+   // use the default options for the needed extra parameters 
+   if (fType == MCIntegration::kVEGAS) {    
+      IOptions * opts = IntegratorMultiDimOptions::GetDefault("VEGAS");
+      if (opts != 0) SetParameters( VegasParameters(*opts) );
+   }
+   else  if (fType == MCIntegration::kMISER) { 
+      IOptions * opts = IntegratorMultiDimOptions::GetDefault("MISER");
+      if (opts != 0)  SetParameters( MiserParameters(*opts) );
+   }
+                             
 }
        
- 
-       //maybe to be added later; for various rules within basic methods
-      //GSLIntegrator(const Integration::Type type, const Integration::GKRule rule, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000);
       
       
 GSLMCIntegrator::~GSLMCIntegrator()
@@ -103,8 +149,7 @@ GSLMCIntegrator::GSLMCIntegrator(const GSLMCIntegrator &) :
 GSLMCIntegrator & GSLMCIntegrator::operator=(const GSLMCIntegrator &) { return *this; }
       
    
-         
-         
+                 
               
          
 void GSLMCIntegrator::SetFunction(const IMultiGenFunction &f)
@@ -142,10 +187,6 @@ double GSLMCIntegrator::Integral(const double* a, const double* b)
    {
       GSLVegasIntegrationWorkspace * ws = dynamic_cast<GSLVegasIntegrationWorkspace *>(fWorkspace); 
       assert(ws != 0);
-      if(fMode == MCIntegration::kIMPORTANCE) ws->GetWS()->mode = GSL_VEGAS_MODE_IMPORTANCE;
-      else if(fMode == MCIntegration::kSTRATIFIED) ws->GetWS()->mode = GSL_VEGAS_MODE_STRATIFIED;
-      else if(fMode == MCIntegration::kIMPORTANCE_ONLY) ws->GetWS()->mode = GSL_VEGAS_MODE_IMPORTANCE_ONLY;
-
       fStatus = gsl_monte_vegas_integrate( fFunction->GetFunc(), (double *) a, (double*) b , fDim, fCalls, fr, ws->GetWS(),  &fResult, &fError);
    }
    else if (fType ==  MCIntegration::kMISER) 
@@ -225,57 +266,96 @@ void GSLMCIntegrator::SetGenerator(GSLRngWrapper* r){ this->fRng = r; }
       
 void GSLMCIntegrator::SetType (MCIntegration::Type type)
 {
-      fType=type;
+   // create workspace according to the type 
+   fType=type;
+   if (fWorkspace != 0) { 
+      if (type == fWorkspace->Type() ) return; 
+      delete fWorkspace;  // delete because is a different type 
+      fWorkspace = 0;
+   }
+   //create Workspace according to type
+   if (type == MCIntegration::kPLAIN) { 
+      fWorkspace = new  GSLPlainIntegrationWorkspace();
+   }
+   else if (type == MCIntegration::kMISER) { 
+      fWorkspace = new  GSLMiserIntegrationWorkspace();
+   }
+   else {
+       // default: use  VEGAS
+      if (type != MCIntegration::kVEGAS) { 
+         MATH_WARN_MSG("GSLMCIntegration","Invalid integration type : use Vegas as default");
+         fType =  MCIntegration::kVEGAS; 
+      }
+      fWorkspace = new  GSLVegasIntegrationWorkspace();
+   }
 }
 
-void GSLMCIntegrator::DoInitialize ( )
+void GSLMCIntegrator::SetTypeName(const char * type)
 {
-   //    initialize by setting  integration type 
+   // set the integration type using a string
+   std::string typeName = (type!=0) ? type : "VEGAS";
+   if (type == 0) MATH_INFO_MSG("GSLMCIntegration::SetTypeName","use default Vegas integrator method");
+   std::transform(typeName.begin(), typeName.end(), typeName.begin(), (int(*)(int)) toupper ); 
 
-   
+   MCIntegration::Type integType =  MCIntegration::kVEGAS;  // default
 
-   if (fWorkspace != 0) { 
-      if (fDim == fWorkspace->NDim() && fType == fWorkspace->Type() ) 
-         return; // can use previously existing ws
-
-      // otherwise delete previously existing ws and create a new one
-      delete fWorkspace; 
+   if (typeName == "PLAIN") { 
+      integType =  MCIntegration::kPLAIN;
    }
- 
-   if(fType  ==  ROOT::Math::MCIntegration::kVEGAS)
-   {
-      
-      fWorkspace = new GSLVegasIntegrationWorkspace(fDim);
-	  
+   else if (typeName == "MISER") { 
+      integType =  MCIntegration::kMISER;
+   }
+   else if (typeName != "VEGAS")  {
+      MATH_WARN_MSG("GSLMCIntegration::SetTypeName","Invalid integration type : use Vegas as default");
    }
 
-   else if (fType ==  ROOT::Math::MCIntegration::kMISER) 
-   {
-
-      fWorkspace = new GSLMiserIntegrationWorkspace(fDim);
-   }
-   else if (fType ==  ROOT::Math::MCIntegration::kPLAIN)   
-   {
-
-      fWorkspace = new GSLPlainIntegrationWorkspace(fDim);
-   }
-   else 
-   {
-      std::cerr << "GSLIntegrator - Error: Unknown integration type" << std::endl;
-      throw std::exception(); 
-   }
-}  
+   // create the fWorkspace object
+   if (integType != fType) SetType(integType);
+}
 
 
 void GSLMCIntegrator::SetMode(MCIntegration::Mode mode)
 {
    //   set integration mode for VEGAS method
    if(fType ==  ROOT::Math::MCIntegration::kVEGAS)
-   {  fMode = mode; }
+   {  
+      GSLVegasIntegrationWorkspace * ws = dynamic_cast<GSLVegasIntegrationWorkspace *>(fWorkspace); 
+      assert(ws != 0);
+      if(mode == MCIntegration::kIMPORTANCE) ws->GetWS()->mode = GSL_VEGAS_MODE_IMPORTANCE;
+      else if(mode == MCIntegration::kSTRATIFIED) ws->GetWS()->mode = GSL_VEGAS_MODE_STRATIFIED;
+      else if(mode == MCIntegration::kIMPORTANCE_ONLY) ws->GetWS()->mode = GSL_VEGAS_MODE_IMPORTANCE_ONLY;
+   }
 
    else std::cerr << "Mode not matching integration type";
 }
 
+void GSLMCIntegrator::SetOptions(const ROOT::Math::IntegratorMultiDimOptions & opt)
+{
+   //   set integration options
+   SetTypeName(opt.Integrator().c_str() );
+   SetAbsTolerance( opt.AbsTolerance() );
+   SetRelTolerance( opt.RelTolerance() );
+   fCalls = opt.NCalls();
+
+   //std::cout << fType << "   " <<  MCIntegration::kVEGAS << std::endl;
+
+   // specific options
+   ROOT::Math::IOptions * extraOpt = opt.ExtraOptions(); 
+   if (extraOpt) { 
+      if (fType ==  MCIntegration::kVEGAS ) { 
+         VegasParameters p(*extraOpt); 
+         SetParameters(p);
+      }
+      else if (fType ==  MCIntegration::kMISER ) { 
+         MiserParameters p(fDim); // if possible pass dimension 
+         p = (*extraOpt); 
+         SetParameters(p);
+      }
+      else {
+         MATH_WARN_MSG("GSLMCIntegrator::SetOptions","Invalid options set for the chosen integration type - ignore them");
+      }
+   }
+}
 
 
 void GSLMCIntegrator::SetParameters(const VegasParameters &p)
@@ -288,7 +368,7 @@ void GSLMCIntegrator::SetParameters(const VegasParameters &p)
       ws->SetParameters(p);
    }
    else 
-      std::cerr << "GSLIntegrator - Error: Parameters not mathing integration type" << std::endl;
+      MATH_ERROR_MSG("GSLIntegrator::SetParameters"," Parameters not matching integration type");
 }
 
 void GSLMCIntegrator::SetParameters(const MiserParameters &p)
@@ -301,10 +381,24 @@ void GSLMCIntegrator::SetParameters(const MiserParameters &p)
       ws->SetParameters(p);
    }
    else
-      std::cerr << "GSLIntegrator - Error: Parameters not mathing integration type" << std::endl;
+      MATH_ERROR_MSG("GSLIntegrator::SetParameters"," Parameters not matching integration type");
 }
 
 	
+void GSLMCIntegrator::DoInitialize ( )
+{
+   //    initialize by setting  integration type 
+  
+   if (fWorkspace != 0) { 
+      if (fDim == fWorkspace->NDim() && fType == fWorkspace->Type() ) 
+         return; // can use previously existing ws
+
+      // otherwise clear workspace and create a new one
+      fWorkspace->Clear(); 
+   }
+   fWorkspace->Init(fDim);
+}  
+
 
 
 //----------- methods specific for VEGAS
@@ -359,8 +453,29 @@ bool GSLMCIntegrator::CheckFunction()
    return false; */
 }
       
- 
-    
+const char * GSLMCIntegrator::GetTypeName() const { 
+   if (fType == MCIntegration::kVEGAS) return "VEGAS";
+   if (fType == MCIntegration::kMISER) return "MISER";
+   if (fType == MCIntegration::kPLAIN) return "PLAIN";
+   return "UNDEFINED";
+}    
+
+ROOT::Math::IntegratorMultiDimOptions  GSLMCIntegrator::Options() const { 
+   IOptions * extraOpts = ExtraOptions(); 
+   ROOT::Math::IntegratorMultiDimOptions opt(extraOpts); 
+   opt.SetAbsTolerance(fAbsTol); 
+   opt.SetRelTolerance(fRelTol); 
+   opt.SetNCalls(fCalls); 
+   opt.SetWKSize(0);
+   opt.SetIntegrator(GetTypeName() );
+   return opt; 
+}
+
+ROOT::Math::IOptions *  GSLMCIntegrator::ExtraOptions() const { 
+   if (!fWorkspace) return 0; 
+   return fWorkspace->Options(); 
+}
+
 
 } // namespace Math
 } // namespace ROOT

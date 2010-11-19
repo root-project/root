@@ -50,90 +50,179 @@ namespace Math {
 
    public :
 
-      GSLMCIntegrationWorkspace(unsigned int dim) : 
-         fDim(dim)
-      {}
+      GSLMCIntegrationWorkspace()  {}
 
-      virtual ~GSLMCIntegrationWorkspace() { }
+      virtual ~GSLMCIntegrationWorkspace() { Clear(); }
 
       virtual MCIntegration::Type Type() const = 0;  
 
-      unsigned int NDim() const { return fDim; } 
+      virtual size_t NDim() const { return 0; } 
 
+      /// initialize the workspace creating the GSL pointer if it is not there 
+      virtual bool Init(size_t dim) = 0; 
+
+      /// re-initialize an existing the workspace
+      virtual bool ReInit() = 0; 
+
+      /// free the workspace deleting the GSL pointer 
+      virtual void Clear() {}
+
+      /// retrieve option pointer corresponding to parameters 
+      /// create a new object to be managed by the user 
+      virtual ROOT::Math::IOptions * Options() const = 0;  
 
    private:
 
-      unsigned int fDim;  // workspace dimension (must be equal o functino dimension)
 
    };
-
+   
+   /**
+      workspace for VEGAS
+    */
    class GSLVegasIntegrationWorkspace : public GSLMCIntegrationWorkspace { 
 
    public :
       
-      GSLVegasIntegrationWorkspace(size_t dim) : 
-         GSLMCIntegrationWorkspace (dim)
+      GSLVegasIntegrationWorkspace(size_t dim = 0) : 
+         fWs(0)
       {
-         fWs = gsl_monte_vegas_alloc( dim);
+         if (dim > 0) Init(dim);
       }
-      ~GSLVegasIntegrationWorkspace() {
-         gsl_monte_vegas_free( fWs);
+
+      bool Init(size_t dim) { 
+         fWs = gsl_monte_vegas_alloc( dim);
+         SetVegasParameters();
+         return (fWs != 0);
+      }
+
+      bool ReInit() { 
+         // according to the code - reinit just reset default GSL values
+         if (!fWs) return false; 
+         int iret = gsl_monte_vegas_init( fWs );
+         SetVegasParameters();
+         return (iret == 0);
+      }
+
+      void Clear() { 
+         if (fWs) gsl_monte_vegas_free( fWs);
+         fWs = 0;
       }
 
       gsl_monte_vegas_state * GetWS() { return fWs; }
-      void SetParameters();
-      void SetParameters(const struct VegasParameters &p);
-      double Sigma() const;
+
+      void SetParameters(const struct VegasParameters &p) { 
+         fParams = p; 
+         if (fWs) SetVegasParameters();
+      }
+
+      size_t NDim() const { return (fWs) ? fWs->dim : 0; } 
+
+      double Result() const {  return (fWs) ? fWs->result : -1;}
+
+      double Sigma() const {  return (fWs) ? fWs->sigma : 0;}
+
+      double Chisq() const {  return (fWs) ? fWs->chisq: -1;}
 
       MCIntegration::Type Type() const { return MCIntegration::kVEGAS; }
+
+      const VegasParameters & Parameters() const { return fParams; }
+      VegasParameters & Parameters()  { return fParams; }
+
+      virtual ROOT::Math::IOptions * Options() const { 
+         return fParams();
+      } 
+
       
    private: 
+
+      void SetVegasParameters() { 
+         fWs->alpha       = fParams.alpha;
+         fWs->iterations  = fParams.iterations;
+         fWs->stage       = fParams.stage; 
+         fWs->mode        = fParams.mode; 
+         fWs->verbose     = fParams.verbose; 
+      }
+
+      
       gsl_monte_vegas_state * fWs; 
+      VegasParameters fParams;
 
    };
 
-   void GSLVegasIntegrationWorkspace::SetParameters(const struct VegasParameters &p)
-   {
-    
-      fWs->alpha = p.alpha;
-      fWs->iterations= p.iterations;
 
-   }
-   double GSLVegasIntegrationWorkspace::Sigma()const {return fWs->sigma;}
-
-
+   /**
+      Workspace for MISER 
+    */
    class GSLMiserIntegrationWorkspace : public GSLMCIntegrationWorkspace { 
 
    public :
       
-      GSLMiserIntegrationWorkspace(size_t dim) : 
-         GSLMCIntegrationWorkspace (dim)
+      GSLMiserIntegrationWorkspace(size_t dim = 0) : 
+         fHaveNewParams(false),
+         fWs(0)
       {
-         fWs = gsl_monte_miser_alloc( dim);
+         if (dim > 0) Init(dim);
       }
-      ~GSLMiserIntegrationWorkspace() {
-         gsl_monte_miser_free( fWs);
+
+
+      bool Init(size_t dim) { 
+         fWs = gsl_monte_miser_alloc( dim);
+         // need this to set parameters according to dimension
+         if (!fHaveNewParams) fParams = MiserParameters(dim);
+         SetMiserParameters();
+         return (fWs != 0);
+      }
+
+      bool ReInit() { 
+         // according to the code - reinit just reset default GSL values
+         if (!fWs) return false; 
+         int iret = gsl_monte_miser_init( fWs );
+         SetMiserParameters();
+         return (iret == 0);
+      }
+
+      void Clear() { 
+         if (fWs) gsl_monte_miser_free( fWs);
+         fWs = 0;
       }
 
       gsl_monte_miser_state * GetWS() { return fWs; }
-      void SetParameters();
-      void SetParameters(const struct MiserParameters &p);
+
+      void SetParameters(const MiserParameters &p) { 
+         fParams = p;
+         fHaveNewParams = true; 
+         if (fWs) SetMiserParameters();
+      }
+
+      size_t NDim() const { return (fWs) ? fWs->dim : 0; } 
 
       MCIntegration::Type Type() const { return MCIntegration::kMISER; }
-    
+
+
+      const MiserParameters & Parameters() const { return fParams; }
+      MiserParameters & Parameters()  { return fParams; }
+
+      virtual ROOT::Math::IOptions * Options() const { 
+         return fParams();
+      } 
+   
    private: 
+
+      void SetMiserParameters()
+      {
+         fWs->estimate_frac           = fParams.estimate_frac;
+         fWs->min_calls               = fParams.min_calls;
+         fWs->min_calls_per_bisection = fParams.min_calls_per_bisection;
+         fWs->alpha                   = fParams.alpha;
+         fWs->dither                  = fParams.dither;
+      }
+
+
+      bool fHaveNewParams; 
       gsl_monte_miser_state * fWs; 
+      MiserParameters fParams;
 
    };
-
-   void GSLMiserIntegrationWorkspace::SetParameters(const struct MiserParameters &p)
-   {
-      fWs->estimate_frac = p.estimate_frac;
-      fWs->min_calls = p.min_calls;
-      fWs->min_calls_per_bisection = p.min_calls_per_bisection;
-      fWs->alpha = p.alpha;
-
-   }
 
 
 
@@ -142,25 +231,45 @@ namespace Math {
 
    public :
       
-      GSLPlainIntegrationWorkspace(size_t dim) : 
-         GSLMCIntegrationWorkspace (dim)
-      {
+      GSLPlainIntegrationWorkspace() : 
+         fWs(0)
+      {  }
+
+      bool Init(size_t dim) { 
          fWs = gsl_monte_plain_alloc( dim);
+         // no parameter exists for plain
+         return (fWs != 0);
       }
-      ~GSLPlainIntegrationWorkspace() {
-         gsl_monte_plain_free( fWs);
+
+      bool ReInit() { 
+         if (!fWs) return false; 
+         int iret = gsl_monte_plain_init( fWs );
+         return (iret == GSL_SUCCESS);
+      }
+
+      void Clear() { 
+         if (fWs) gsl_monte_plain_free( fWs);
+         fWs = 0;
       }
 
       gsl_monte_plain_state * GetWS() { return fWs; }
-      //void SetParameters();
+
       //void SetParameters(const struct PlainParameters &p);
 
       MCIntegration::Type Type() const { return MCIntegration::kPLAIN; }
 
+      size_t NDim() const { return (fWs) ? fWs->dim : 0; }    
+
+      virtual ROOT::Math::IOptions * Options() const { 
+         return 0;
+      } 
+
+
    private: 
+
       gsl_monte_plain_state * fWs; 
 
-   
+
    };
 
 

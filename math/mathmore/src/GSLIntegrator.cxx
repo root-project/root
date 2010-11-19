@@ -37,6 +37,12 @@
 #include "GSLIntegrationWorkspace.h"
 #include "GSLFunctionWrapper.h"
 
+// for toupper
+#include <algorithm>
+#include <functional>
+#include <ctype.h>   // need to use c version of tolower defined here
+
+
 #include <iostream>
 
 
@@ -93,7 +99,7 @@ GSLIntegrator::GSLIntegrator(const Integration::Type type , double absTol, doubl
    fRelTol(relTol),
    fSize(size),
    fMaxIntervals(size),
-   fResult(0),fError(0),fStatus(-1),
+   fResult(0),fError(0),fStatus(-1),fNEval(-1),
    fFunction(0),
    fWorkspace(0)
 {
@@ -111,20 +117,25 @@ GSLIntegrator::GSLIntegrator(const Integration::Type type , double absTol, doubl
    fRelTol(relTol),
    fSize(size),
    fMaxIntervals(size),
-   fResult(0),fError(0),fStatus(-1),
+   fResult(0),fError(0),fStatus(-1),fNEval(-1),
    fFunction(0),
    fWorkspace(0)
 {
    //std::cout << type << std::endl; 
 
-   std::string typeName(type); 
-   if (typeName == "NONADAPTIVE")
-      fType =  Integration::kADAPTIVE;
-   else if (typeName == "ADAPTIVESINGULAR")
-      fType =  Integration::kADAPTIVESINGULAR;
-   else 
-      fType =  Integration::kADAPTIVE;  // default
-
+   fType =  Integration::kADAPTIVESINGULAR;  // default
+   if (type != 0) {  // use this dafault
+      std::string typeName(type); 
+      std::transform(typeName.begin(), typeName.end(), typeName.begin(), (int(*)(int)) toupper );  
+      if (typeName == "NONADAPTIVE")
+         fType =  Integration::kNONADAPTIVE;
+      else if (typeName == "ADAPTIVE")
+         fType =  Integration::kADAPTIVE;
+      else { 
+         if (typeName != "ADAPTIVESINGULAR") 
+            MATH_WARN_MSG("GSLIntegrator","Use default type: AdaptiveSingular");
+      }
+   }
 
 
    // constructor with default rule (gauss31) passing the type
@@ -132,7 +143,7 @@ GSLIntegrator::GSLIntegrator(const Integration::Type type , double absTol, doubl
    if (fType !=  Integration::kNONADAPTIVE)
       fWorkspace = new GSLIntegrationWorkspace( fSize);
 
-   SetIntegrationRule((Integration::GKRule) rule);
+   if (rule >= Integration::kGAUSS15 && rule <= Integration::kGAUSS61) SetIntegrationRule((Integration::GKRule) rule);
    
 }
 
@@ -186,9 +197,13 @@ double  GSLIntegrator::Integral(double a, double b) {
    if ( fType == Integration::kNONADAPTIVE) {
       size_t neval = 0; // need to export  this ?
       fStatus = gsl_integration_qng( fFunction->GetFunc(), a, b , fAbsTol, fRelTol, &fResult, &fError, &neval);
+      fNEval = neval;
    }
    else if (fType ==  Integration::kADAPTIVE) {
       fStatus = gsl_integration_qag( fFunction->GetFunc(), a, b , fAbsTol, fRelTol, fMaxIntervals, fRule, fWorkspace->GetWS(), &fResult, &fError);
+      const int npts[6] = {15,21,31,41,51,61}; 
+      assert(fRule>=1 && fRule <=6);
+      fNEval = (fWorkspace->GetWS()->size)*npts[fRule-1];   // get size of workspace (number of iterations)
    }
    else if (fType ==  Integration::kADAPTIVESINGULAR) {
       
@@ -196,6 +211,7 @@ double  GSLIntegrator::Integral(double a, double b) {
       
       
       fStatus = gsl_integration_qags( fFunction->GetFunc(), a, b , fAbsTol, fRelTol, fMaxIntervals, fWorkspace->GetWS(), &fResult, &fError);
+      fNEval = (fWorkspace->GetWS()->size) * 21; //since 21 point rule is used in qags
    }
    else {
       
@@ -216,7 +232,8 @@ double  GSLIntegrator::IntegralCauchy(double a, double b, double c) {
    if (!CheckFunction()) return 0;  
   
    fStatus = gsl_integration_qawc( fFunction->GetFunc(), a, b , c, fAbsTol, fRelTol, fMaxIntervals, fWorkspace->GetWS(), &fResult, &fError);
-  
+   fNEval = (fWorkspace->GetWS()->size) * 15; // 15 point rule is used ?
+
    return fResult;
    
 }
@@ -241,6 +258,7 @@ double  GSLIntegrator::Integral( const std::vector<double> & pts) {
       // remove constness ( should be const in GSL ? )
       double * p = const_cast<double *>(&pts.front() );
       fStatus = gsl_integration_qagp( fFunction->GetFunc(), p, pts.size() , fAbsTol, fRelTol, fMaxIntervals,  fWorkspace->GetWS(), &fResult, &fError);
+      fNEval = (fWorkspace->GetWS()->size) * 15; // 15 point rule is used ?
    }
    else {
       fResult = 0;
@@ -262,6 +280,7 @@ double  GSLIntegrator::Integral( ) {
    if (!fWorkspace) fWorkspace = new GSLIntegrationWorkspace( fSize);
    
    fStatus = gsl_integration_qagi( fFunction->GetFunc(), fAbsTol, fRelTol, fMaxIntervals, fWorkspace->GetWS(), &fResult, &fError);
+   fNEval = (fWorkspace->GetWS()->size) * 15; // 15 point rule is used ?
    
    return fResult;
 }
@@ -277,6 +296,7 @@ double  GSLIntegrator::IntegralUp( double a ) {
    if (!fWorkspace) fWorkspace = new GSLIntegrationWorkspace( fSize);
    
    fStatus = gsl_integration_qagiu( fFunction->GetFunc(), a, fAbsTol, fRelTol, fMaxIntervals, fWorkspace->GetWS(), &fResult, &fError);
+   fNEval = (fWorkspace->GetWS()->size) * 21; // 21 point rule is used ?
    
    return fResult;
 }
@@ -292,6 +312,7 @@ double  GSLIntegrator::IntegralLow( double b ) {
    if (!fWorkspace) fWorkspace = new GSLIntegrationWorkspace( fSize);
    
    fStatus = gsl_integration_qagil( fFunction->GetFunc(), b, fAbsTol, fRelTol, fMaxIntervals, fWorkspace->GetWS(), &fResult, &fError);
+   fNEval = (fWorkspace->GetWS()->size) * 21; // 21 point rule is used ?
    
    return fResult;
 }
@@ -391,6 +412,56 @@ bool GSLIntegrator::CheckFunction() {
    std::cerr << "GSLIntegrator - Error : Function has not been specified " << std::endl; 
    return false; 
 }
+
+void GSLIntegrator::SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt)
+{
+   //   set integration options
+   fType = opt.IntegratorType();
+   if (fType == IntegrationOneDim::kDEFAULT) fType = IntegrationOneDim::kADAPTIVESINGULAR; 
+   if (fType != IntegrationOneDim::kADAPTIVE && 
+       fType != IntegrationOneDim::kADAPTIVESINGULAR && 
+       fType != IntegrationOneDim::kNONADAPTIVE ) {
+      MATH_WARN_MSG("GSLIntegrator::SetOptions","Invalid rule options - use default ADAPTIVESINGULAR");
+      fType = IntegrationOneDim::kADAPTIVESINGULAR; 
+   }
+   SetAbsTolerance( opt.AbsTolerance() );
+   SetRelTolerance( opt.RelTolerance() );
+   fSize = opt.WKSize();
+   fMaxIntervals = fSize; 
+   if (fType == Integration::kADAPTIVE) { 
+      int npts = opt.NPoints();
+      if  ( npts >= Integration::kGAUSS15 && npts <= Integration::kGAUSS61) 
+         fRule = (Integration::GKRule) npts;
+      else { 
+         MATH_WARN_MSG("GSLIntegrator::SetOptions","Invalid rule options - use default GAUSS31");
+         fRule = Integration::kGAUSS31;
+      }
+   }
+}
+
+ROOT::Math::IntegratorOneDimOptions  GSLIntegrator::Options() const { 
+   ROOT::Math::IntegratorOneDimOptions opt; 
+   opt.SetAbsTolerance(fAbsTol); 
+   opt.SetRelTolerance(fRelTol); 
+   opt.SetWKSize(fSize); 
+   opt.SetIntegrator(GetTypeName() );
+
+   if (fType == IntegrationOneDim::kADAPTIVE) 
+      opt.SetNPoints(fRule);       
+   else if (fType == IntegrationOneDim::kADAPTIVESINGULAR) 
+      opt.SetNPoints( Integration::kGAUSS31 ); // fixed rule for adaptive singular
+   else 
+      opt.SetNPoints( 0 ); // not available for the rest
+
+   return opt; 
+}
+
+const char * GSLIntegrator::GetTypeName() const { 
+   if (fType == IntegrationOneDim::kADAPTIVE) return "Adaptive";
+   if (fType == IntegrationOneDim::kADAPTIVESINGULAR) return "AdaptiveSingular";
+   if (fType == IntegrationOneDim::kNONADAPTIVE) return "NonAdaptive";
+   return "Undefined";
+}    
 
 
 } // namespace Math

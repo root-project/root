@@ -179,6 +179,23 @@ double GaussIntegrator::IntegralCauchy (double /*a*/, double /*b*/, double /*c*/
    return -1.0;  
 }
 
+void GaussIntegrator::SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt) {
+   // set options
+   SetRelTolerance(opt.RelTolerance() );
+}
+
+ROOT::Math::IntegratorOneDimOptions  GaussIntegrator::Options() const { 
+   // retrieve options 
+   ROOT::Math::IntegratorOneDimOptions opt; 
+   opt.SetIntegrator("Gauss");
+   //opt.SetAbsTolerance(fEpsilon); 
+   opt.SetRelTolerance(fEpsilon); 
+   opt.SetWKSize(0); 
+   opt.SetNPoints(0); 
+   return opt; 
+}
+
+
 
 //implementation of IntegrandTransform class 
 

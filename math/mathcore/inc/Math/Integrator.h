@@ -18,6 +18,10 @@
 #include "Math/AllIntegrationTypes.h"
 #endif
 
+#ifndef ROOT_Math_IntegratorOptions
+#include "Math/IntegratorOptions.h"
+#endif
+
 #ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
 #endif
@@ -43,6 +47,7 @@ namespace ROOT {
 namespace Math {
 
 
+   
 
 //____________________________________________________________________________________________
 /**
@@ -81,7 +86,7 @@ class IntegratorOneDim {
 
 public:
 
-
+   typedef IntegrationOneDim::Type Type;   // for the enumerations defining the types 
 
     // constructors
 
@@ -98,9 +103,11 @@ public:
        Possible type values are : kGAUSS (simple Gauss method), kADAPTIVE (from GSL), kADAPTIVESINGULAR (from GSL), kNONADAPTIVE (from GSL)
        Possible rule values are kGAUS15 (rule = 1), kGAUS21( rule = 2), kGAUS31(rule =3), kGAUS41 (rule=4), kGAUS51 (rule =5), kGAUS61(rule =6)
        lower rules are indicated for singular functions while higher for smooth functions to get better accuracies
+
+       NOTE: When the default values are passed, the values used are taken from the default defined in ROOT::Math::IntegratorOneDimOptions 
     */
     explicit
-    IntegratorOneDim(IntegrationOneDim::Type type = IntegrationOneDim::kADAPTIVESINGULAR, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, unsigned int rule = 3) :
+    IntegratorOneDim(IntegrationOneDim::Type type = IntegrationOneDim::kDEFAULT, double absTol = 0, double relTol = 0, unsigned int size = 0, unsigned int rule = 0) :
        fIntegrator(0), fFunc(0)
    { 
       fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule); 
@@ -115,9 +122,11 @@ public:
        @param relTol desired relative Error
        @param size maximum number of sub-intervals
        @param rule Gauss-Kronrod integration rule (only for GSL ADAPTIVE type)  
+
+       NOTE: When the default values are passed, the values used are taken from the default defined in ROOT::Math::IntegratorOneDimOptions 
     */
    explicit 
-   IntegratorOneDim(const IGenFunction &f, IntegrationOneDim::Type type = IntegrationOneDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, int rule = 3) :
+   IntegratorOneDim(const IGenFunction &f, IntegrationOneDim::Type type = IntegrationOneDim::kDEFAULT, double absTol = 0, double relTol = 0, unsigned int size = 0, int rule = 0) :
       fIntegrator(0), fFunc(0)
    { 
       fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule); 
@@ -137,7 +146,7 @@ public:
 
    template<class Function>
    explicit
-   IntegratorOneDim(Function & f, IntegrationOneDim::Type type = IntegrationOneDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, int rule = 3) : 
+   IntegratorOneDim(Function & f, IntegrationOneDim::Type type = IntegrationOneDim::kDEFAULT, double absTol = 0, double relTol = 0, unsigned int size = 0, int rule = 0) : 
       fIntegrator(0), fFunc(0)
    { 
       fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule); 
@@ -393,6 +402,12 @@ public:
    */
    int Status() const { return fIntegrator == 0 ? -1 : fIntegrator->Status(); }
 
+   /**
+      return number of function evaluations in calculating the integral 
+      (if integrator do not implement this function returns -1)
+   */
+   int NEval() const { return fIntegrator == 0 ? -1 : fIntegrator->NEval(); }
+
 
    // setter for control Parameters  (getters are not needed so far )
 
@@ -411,6 +426,25 @@ public:
       return a pointer to integrator object 
    */
    VirtualIntegratorOneDim * GetIntegrator() { return fIntegrator; }  
+
+   /** 
+       set the options 
+   */
+   void SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt) { if (fIntegrator) fIntegrator->SetOptions(opt); }
+
+   /** 
+       retrieve the options 
+   */
+   ROOT::Math::IntegratorOneDimOptions Options() const { return (fIntegrator) ? fIntegrator->Options() : IntegratorOneDimOptions(); }
+
+   /// return name of integrator
+   std::string Name() const { return (fIntegrator) ? Options().Integrator() : std::string(""); }
+
+   /// static function to get the enumeration from a string
+   static IntegrationOneDim::Type GetType(const char * name);  
+
+   /// static function to get a string from the enumeration
+   static std::string GetName(IntegrationOneDim::Type);  
 
 
 protected: 

@@ -19,9 +19,8 @@
 //
 
 #include "TMath.h"
-#ifdef HAVE_ROOTLIBS
 #include "TStopwatch.h"
-#endif
+
 #include <cmath>
 #include <iostream>
 
@@ -95,8 +94,10 @@ double integral_num(unsigned int dim, double* a, double* b, double* p)
   TStopwatch timer; 
   timer.Start();
   ROOT::Math::WrappedParamFunction<> funptr1(&SimpleFun, dim, p, p+1);
-  unsigned int nmax = (unsigned int) 1.E7; // apply cut off to avoid routine to explode
-  ROOT::Math::AdaptiveIntegratorMultiDim ig1(funptr1, 1.E-5, 1.E-5, nmax);
+  unsigned int nmax = (unsigned int) 1.E8; // apply cut off to avoid routine to explode
+  //unsigned int size = (unsigned int) 1.E8; // apply cut off to avoid routine to explode
+  unsigned int size = 0; // use default  value defined by nmax
+  ROOT::Math::AdaptiveIntegratorMultiDim ig1(funptr1, 1.E-5, 1.E-5, nmax,size);
   //  std::cout << "1. integral= " << std::endl; 
   ig1.SetFunction(funptr1); 
   ig1.Integral(a, b);
@@ -128,8 +129,7 @@ double integral_MC(unsigned int dim, double* a, double* b, double* p)
   //timer.Start();
   ROOT::Math::WrappedParamFunction<> funptr(&SimpleFun, dim, p, p+1);
 
-  ROOT::Math::GSLMCIntegrator ig1;
-  ig1.SetType(ROOT::Math::MCIntegration::kVEGAS);
+  ROOT::Math::GSLMCIntegrator ig1(ROOT::Math::MCIntegration::kVEGAS);
   ig1.SetFunction(funptr);
   //ig1.SetMode(ROOT::Math::MCIntegration::kIMPORTANCE_ONLY);
 

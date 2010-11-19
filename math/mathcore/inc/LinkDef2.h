@@ -80,6 +80,10 @@
 
 #pragma link C++ class ROOT::Math::Minimizer+;
 #pragma link C++ class ROOT::Math::MinimizerOptions+;
+#pragma link C++ class ROOT::Math::IntegratorOneDimOptions+;
+#pragma link C++ class ROOT::Math::IntegratorMultiDimOptions+;
+#pragma link C++ class ROOT::Math::BaseIntegratorOptions+;
+#pragma link C++ class ROOT::Math::IOptions+;
 #pragma link C++ class ROOT::Math::IntegratorOneDim+;
 #pragma link C++ class ROOT::Math::IntegratorMultiDim+;
 #pragma link C++ class ROOT::Math::VirtualIntegrator+;
@@ -91,7 +95,8 @@
 #pragma link C++ namespace ROOT::Math::IntegrationOneDim;
 #pragma link C++ enum ROOT::Math::IntegrationOneDim::Type;
 #pragma link C++ namespace ROOT::Math::IntegrationMultiDim;
-#pragma link C++ enum ROOT::Math::IntegrationMultiDim::Type;
+#pragma link C++ typedef ROOT::Math::IntegratorOneDim::Type;
+#pragma link C++ typedef ROOT::Math::IntegratorMultiDim::Type;
 
 
 #pragma link C++ class ROOT::Math::BasicFitMethodFunction<ROOT::Math::IBaseFunctionMultiDim>+;

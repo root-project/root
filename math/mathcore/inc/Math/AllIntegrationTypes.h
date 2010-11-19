@@ -33,6 +33,7 @@ namespace Math {
     /**
 	 enumeration specifying the integration types.
 	 <ul>
+         <li>kDEFAULT: default type specifiend in the static options
          <li>kGAUSS: simple Gauss integration method with fixed rule
          <li>kLEGENDRE: Gauss-Legendre integration
 	 <li>kNONADAPTIVE : to be used for smooth functions
@@ -41,7 +42,7 @@ namespace Math {
 	 </ul>
 	 @ingroup Integration
     */
-     enum Type { kGAUSS, kLEGENDRE, kADAPTIVE, kADAPTIVESINGULAR, kNONADAPTIVE};
+     enum Type { kDEFAULT = -1, kGAUSS, kLEGENDRE, kADAPTIVE, kADAPTIVESINGULAR, kNONADAPTIVE};
 
   }
 
@@ -52,15 +53,16 @@ namespace Math {
     /**
 	 enumeration specifying the integration types.
 	 <ul>
-         <li>ADAPTIVE : adaptive multi-dimensional integration
-	 <li>PLAIN    MC integration
-	 <li>MISER    MC integration 
-	 <li>VEGAS    MC integration
+         <li>kDEFAULT  : default type specified in the static option   
+         <li>kADAPTIVE : adaptive multi-dimensional integration
+	 <li>kPLAIN    MC integration
+	 <li>kMISER    MC integration 
+	 <li>kVEGAS    MC integration
 	 </ul>
 	 @ingroup MCIntegration
     */
 
-     enum Type {kADAPTIVE, kVEGAS, kMISER, kPLAIN};
+     enum Type {kDEFAULT = -1, kADAPTIVE, kVEGAS, kMISER, kPLAIN};
 
   }  
 
