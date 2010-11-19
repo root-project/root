@@ -39,7 +39,7 @@ if [ `uname -s` = "Darwin" ]; then
    GDB=${GDB:-gdb}
 
    # Run GDB, strip out unwanted noise.
-   $GDB -q -batch -n -x $TMPFILE $1 $2 2>&1 |
+   $GDB -q -batch -n -x $TMPFILE $1 $2 2>&1  < /dev/null |
    /usr/bin/sed -n \
     -e 's/^(gdb) //' \
     -e '/^#/p' \
