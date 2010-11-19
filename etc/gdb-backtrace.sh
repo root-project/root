@@ -85,7 +85,7 @@ else
    # Run GDB, strip out unwanted noise.
    have_eval_command=`gdb --help 2>&1 |grep eval-command`
    if ! test "x$have_eval_command" = "x"; then
-      $GDB --batch --eval-command="$backtrace" /proc/$1/exe $1 2>&1 |
+      $GDB --batch --eval-command="$backtrace" /proc/$1/exe $1 2>&1 < /dev/null |
       /bin/sed -n \
          -e 's/^(gdb) //' \
          -e '/^#/p' \
