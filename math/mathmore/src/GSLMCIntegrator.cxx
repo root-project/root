@@ -89,11 +89,11 @@ GSLMCIntegrator::GSLMCIntegrator(MCIntegration::Type type, double absTol, double
    // use the default options for the needed extra parameters 
    // use the default options for the needed extra parameters 
    if (fType == MCIntegration::kVEGAS) {    
-      IOptions * opts = IntegratorMultiDimOptions::GetDefault("VEGAS");
+      IOptions * opts = IntegratorMultiDimOptions::FindDefault("VEGAS");
       if (opts != 0) SetParameters( VegasParameters(*opts) );
    }
    else  if (fType == MCIntegration::kMISER) { 
-      IOptions * opts = IntegratorMultiDimOptions::GetDefault("MISER");
+      IOptions * opts = IntegratorMultiDimOptions::FindDefault("MISER");
       if (opts != 0)  SetParameters( MiserParameters(*opts) );
    }
    
@@ -116,11 +116,11 @@ GSLMCIntegrator::GSLMCIntegrator(const char * type, double absTol, double relTol
    fRng->Allocate();
    // use the default options for the needed extra parameters 
    if (fType == MCIntegration::kVEGAS) {    
-      IOptions * opts = IntegratorMultiDimOptions::GetDefault("VEGAS");
+      IOptions * opts = IntegratorMultiDimOptions::FindDefault("VEGAS");
       if (opts != 0) SetParameters( VegasParameters(*opts) );
    }
    else  if (fType == MCIntegration::kMISER) { 
-      IOptions * opts = IntegratorMultiDimOptions::GetDefault("MISER");
+      IOptions * opts = IntegratorMultiDimOptions::FindDefault("MISER");
       if (opts != 0)  SetParameters( MiserParameters(*opts) );
    }
                              
