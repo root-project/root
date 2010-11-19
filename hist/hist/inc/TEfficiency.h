@@ -41,6 +41,7 @@ public:
 	 kFNormal,                            //normal approximation
 	 kFWilson,                           //Wilson interval
 	 kFAC,                             //Agresti-Coull interval
+	 kFFC,                             //Feldman-Cousins interval
 	 kBJeffrey,                        //Jeffrey interval (Prior ~ Beta(0.5,0.5)
 	 kBUniform,                        //Prior ~ Uniform = Beta(1,1)
 	 kBBayesian                        //user specified Prior ~ Beta(fBeta_alpha,fBeta_beta)
@@ -156,6 +157,8 @@ public:
       static Double_t ClopperPearson(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);
       static Double_t Normal(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);
       static Double_t Wilson(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);
+      static Double_t FeldmanCousins(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);
+      static Bool_t FeldmanCousinsInterval(Int_t total,Int_t passed,Double_t level,Double_t & lower, Double_t & upper);
       // Bayesian functions 
       static Double_t Bayesian(Int_t total,Int_t passed,Double_t level,Double_t alpha,Double_t beta,Bool_t bUpper, Bool_t bShortest = false);
       // helper functions for Bayesian statistics  

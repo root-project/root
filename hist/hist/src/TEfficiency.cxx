@@ -29,6 +29,9 @@
 //custom headers
 #include "TEfficiency.h"
 
+// file with extra class for FC method
+#include "TEfficiencyHelper.h"
+
 //default values
 const Double_t kDefBetaAlpha = 1;
 const Double_t kDefBetaBeta = 1;
@@ -278,6 +281,16 @@ ClassImp(TEfficiency)
 //    <td>Agresti-Coull</td><td>kFAC</td>
 //    <td>
 //     <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:AgrestiCoull">AgrestiCoull</a>
+//    </td>
+//    <td>false</td>
+//    <td>
+//      <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
+//    </td>
+//    </tr>
+//    <tr>
+//    <td>Feldman-Cousins</td><td>kFAC</td>
+//    <td>
+//     <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:FeldmanCousins">FeldmanCousins</a>
 //    </td>
 //    <td>false</td>
 //    <td>
@@ -1093,6 +1106,59 @@ Double_t TEfficiency::AgrestiCoull(Int_t total,Int_t passed,Double_t level,Bool_
       return ((mode + delta) > 1) ? 1.0 : (mode + delta);
    else
       return ((mode - delta) < 0) ? 0.0 : (mode - delta);
+}
+
+//______________________________________________________________________________
+Double_t TEfficiency::FeldmanCousins(Int_t total,Int_t passed,Double_t level,Bool_t bUpper) 
+{ 
+   //calculates the boundaries for the frequentist Feldman-Cousins interval
+   //
+   //Input: - total : number of total events
+   //       - passed: 0 <= number of passed events <= total
+   //       - level : confidence level
+   //       - bUpper: true  - upper boundary is returned
+   //                 false - lower boundary is returned
+   //
+   //
+   Double_t lower = 0; 
+   Double_t upper = 1;
+   if (!FeldmanCousinsInterval(total,passed,level, upper,lower)) { 
+      ::Error("FeldmanCousins","Error running FC method - return 0 or 1");
+   }
+   return (bUpper) ? upper : lower; 
+}
+Bool_t TEfficiency::FeldmanCousinsInterval(Int_t total,Int_t passed,Double_t level,Double_t & upper, Double_t & lower)
+{
+   //calculates the interval boundaries using the frequentist methods of Feldman-Cousins
+   //
+   //Input: - total : number of total events
+   //       - passed: 0 <= number of passed events <= total
+   //       - level : confidence level
+   //Output: 
+   //       - lower :  lower boundary returned on exit
+   //       - upper :  lower boundary returned on exit
+   //
+   //Return a flag with the status of the calculation 
+   // 
+   // Calculation: 
+   // The Feldman-Cousins is a frequentist method where the interval is estimated using a Neyman construction where the ordering 
+   // is based on the likelihood ratio: 
+   //Begin_Latex(separator='=',align='rl')
+   // LR =  #frac{Binomial(k | N, #epsilon)}{Binomial(k | N, #hat{#epsilon} ) }
+   //End_Latex
+   //See G. J. Feldman and R. D. Cousins, Phys. Rev. D57 (1998) 3873 
+   // and   R. D. Cousins, K. E. Hymes, J. Tucker, Nuclear Instruments and Methods in Physics Research A 612 (2010) 388
+   //
+   // Implemented using classes developed by Jordan Tucker and Luca Lista
+   // See File hist/hist/src/TEfficiencyHelper.h
+   //
+   FeldmanCousinsBinomialInterval fc;
+   double alpha = 1.-level;
+   fc.Init(alpha);
+   fc.Calculate(passed, total);
+   lower = fc.Lower();
+   upper = fc.Upper();
+   return true;
 }
 
 //______________________________________________________________________________
@@ -2772,13 +2838,16 @@ void TEfficiency::SetStatisticOption(EStatOption option)
    //- kFAC       (=3)   : using the Agresti-Coull interval
    //                      sets kIsBayesian = false
    //                      see also AgrestiCoull
-   //- kBJeffrey  (=4)   : using the Jeffrey interval
+   //- kFFC       (=4)   : using the Feldman-Cousins frequentist method
+   //                      sets kIsBayesian = false
+   //                      see also FeldmanCousins    
+   //- kBJeffrey  (=5)   : using the Jeffrey interval
    //                      sets kIsBayesian = true, fBeta_alpha = 0.5 and fBeta_beta = 0.5
    //                      see also Bayesian
-   //- kBUniform  (=5)   : using a uniform prior
+   //- kBUniform  (=6)   : using a uniform prior
    //                      sets kIsBayesian = true, fBeta_alpha = 1 and fBeta_beta = 1
    //                      see also Bayesian
-   //- kBBayesian (=6)   : using a custom prior defined by fBeta_alpha and fBeta_beta
+   //- kBBayesian (=7)   : using a custom prior defined by fBeta_alpha and fBeta_beta
    //                      sets kIsBayesian = true
    //                      see also Bayesian
    
@@ -2800,6 +2869,10 @@ void TEfficiency::SetStatisticOption(EStatOption option)
       break;
    case kFAC:
       fBoundary = &AgrestiCoull;
+      SetBit(kIsBayesian,false);
+      break;
+   case kFFC:
+      fBoundary = &FeldmanCousins;
       SetBit(kIsBayesian,false);
       break;
    case kBJeffrey:

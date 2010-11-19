@@ -370,6 +370,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    // - w     : Wilson interval (see TEfficiency::Wilson)
    // - n     : normal approximation propagation (see TEfficiency::Normal)
    // - ac    : Agresti-Coull interval (see TEfficiency::AgrestiCoull)
+   // - fc    : Feldman-Cousins interval (see TEfficiency::FeldmanCousinsInterval)
    // - b(a,b): bayesian interval using a prior probability ~Beta(a,b); a,b > 0
    //           (see TEfficiency::Bayesian)
    // - mode  : use mode of posterior for Bayesian interval (default is mean)
@@ -473,6 +474,11 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    if(option.Contains("ac")) {
       option.ReplaceAll("ac","");
       pBound = &TEfficiency::AgrestiCoull;
+   }
+   // Feldman-Cousins interval
+   if(option.Contains("fc")) {
+      option.ReplaceAll("fc","");
+      pBound = &TEfficiency::FeldmanCousins;
    }
 
    //bayesian with prior
