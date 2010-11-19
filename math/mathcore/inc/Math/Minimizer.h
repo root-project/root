@@ -322,8 +322,8 @@ public:
    bool IsValidError() const { return fValidError; }
 
    /// retrieve the minimizer options (implement derived class if needed)
-   virtual ROOT::Math::MinimizerOptions  Options() const { 
-      ROOT::Math::MinimizerOptions opt; 
+   virtual MinimizerOptions  Options() const { 
+      MinimizerOptions opt; 
       opt.SetPrintLevel(fDebug);
       opt.SetStrategy(fStrategy);
       opt.SetMaxFunctionCalls(fMaxCalls);
@@ -360,7 +360,7 @@ public:
    void SetValidError(bool on) { fValidError = on; } 
 
    /// set all options in one go
-   void SetOptions(const ROOT::Math::MinimizerOptions & opt) { 
+   void SetOptions(const MinimizerOptions & opt) { 
       fDebug = opt.PrintLevel();
       fStrategy = opt.Strategy();
       fMaxCalls = opt.MaxFunctionCalls();
