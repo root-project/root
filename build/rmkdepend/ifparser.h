@@ -29,32 +29,32 @@
  * This module can be used to evaluate string representations of C language
  * if constructs.  It accepts the following grammar:
  *
- *     EXPRESSION	:=	VALUE
- * 			 |	VALUE  BINOP	EXPRESSION
- *			 |	VALUE	'?'	EXPRESSION ':'	EXPRESSION
+ *     EXPRESSION := VALUE
+ *        | VALUE  BINOP EXPRESSION
+ *        | VALUE '?' EXPRESSION ':' EXPRESSION
  *
- *     VALUE		:=	'('  EXPRESSION  ')'
- * 			 |	'!'  VALUE
- * 			 |	'-'  VALUE
- *			 |	'~'  VALUE
- * 			 |	'defined'  '('  variable  ')'
- * 			 |	variable
- * 			 |	number
+ *     VALUE  := '('  EXPRESSION  ')'
+ *        | '!'  VALUE
+ *        | '-'  VALUE
+ *        | '~'  VALUE
+ *        | 'defined'  '('  variable  ')'
+ *        | variable
+ *        | number
  *
- *     BINOP		:=	'*'	|  '/'	|  '%'
- * 			 |	'+'	|  '-'
- * 			 |	'<<'	|  '>>'
- * 			 |	'<'	|  '>'	|  '<='  |  '>='
- * 			 |	'=='	|  '!='
- * 			 |	'&'	|  '^'  |  '|'
- * 			 |	'&&'	|  '||'
+ *     BINOP  := '*' |  '/' |  '%'
+ *        | '+' |  '-'
+ *        | '<<' |  '>>'
+ *        | '<' |  '>' |  '<='  |  '>='
+ *        | '==' |  '!='
+ *        | '&' |  '^'  |  '|'
+ *        | '&&' |  '||'
  *
  * The normal C order of precedence is supported.
  *
  *
  * External Entry Points:
  *
- *     ParseIfExpression		parse a string for #if
+ *     ParseIfExpression  parse a string for #if
  */
 
 /* $XFree86: xc/config/makedepend/ifparser.h,v 3.2 1996/12/30 13:57:56 dawes Exp $ */
@@ -70,20 +70,19 @@ typedef int Bool;
 #define True 1
 
 typedef struct _if_parser {
-    struct {				/* functions */
-	char *(*handle_error) (/* struct _if_parser *, const char *,
-				 const char * */);
-	long (*eval_variable) (/* struct _if_parser *, const char *, int */);
-	int (*eval_defined) (/* struct _if_parser *, const char *, int */);
-    } funcs;
-    char *data;
+   struct {    /* functions */
+      char *(*handle_error)(/* struct _if_parser *, const char *,
+     const char * */);
+      long(*eval_variable)(/* struct _if_parser *, const char *, int */);
+      int (*eval_defined)(/* struct _if_parser *, const char *, int */);
+   } funcs;
+   char *data;
 } IfParser;
 
-char *ParseIfExpression (
+char *ParseIfExpression(
 #ifdef __STDC__
-    IfParser *,
-    const char *,
-    long *
+   IfParser *,
+   const char *,
+   long *
 #endif
 );
-

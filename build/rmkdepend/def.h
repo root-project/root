@@ -41,9 +41,9 @@ in this Software without prior written authorization from the X Consortium.
 #include <fcntl.h>
 #include <sys/stat.h>
 
-#define MAXFILES	4096
+#define MAXFILES  4096
 #define MAXDIRS   4096
-#define SYMTABINC	10	/* must be > 1 for define() to work right */
+#define SYMTABINC 10 /* must be > 1 for define() to work right */
 #define TRUE      1
 #define FALSE     0
 
@@ -71,55 +71,55 @@ in this Software without prior written authorization from the X Consortium.
 #define ELIFGUESSFALSE  20     /* pseudo value --- never matched */
 
 #ifdef DEBUG
-extern int	_debugmask;
+extern int _debugmask;
 /*
  * debug levels are:
  *
- *     0	show ifn*(def)*,endif
- *     1	trace defined/!defined
- *     2	show #include
- *     3	show #include SYMBOL
- *     4-6	unused
+ *     0 show ifn*(def)*,endif
+ *     1 trace defined/!defined
+ *     2 show #include
+ *     3 show #include SYMBOL
+ *     4-6 unused
  */
 #define debug(level,arg) { if (_debugmask & (1 << level)) warning arg; }
 #else
-#define	debug(level,arg) /**/
+#define debug(level,arg) /**/
 #endif /* DEBUG */
 
-typedef	unsigned char boolean;
+typedef unsigned char boolean;
 
 struct symtab {
-	char	*s_name;
-	char	*s_value;
+   char *s_name;
+   char *s_value;
 };
 
 /* possible i_flag */
-#define DEFCHECKED	(1<<0)	/* whether defines have been checked */
-#define NOTIFIED	(1<<1)	/* whether we have revealed includes */
-#define MARKED		(1<<2)	/* whether it's in the makefile */
-#define SEARCHED	(1<<3)	/* whether we have read this */
-#define FINISHED	(1<<4)	/* whether we are done reading this */
-#define INCLUDED_SYM	(1<<5)	/* whether #include SYMBOL was found
-				   Can't use i_list if TRUE */
-struct	inclist {
-	char		*i_incstring;	/* string from #include line */
-	char		*i_file;	/* path name of the include file */
-	struct inclist	**i_list;	/* list of files it itself includes */
-	int		i_listlen;	/* length of i_list */
-	struct symtab	**i_defs;	/* symbol table for this file and its
-					   children when merged */
-	int		i_ndefs;	/* current # defines */
-	boolean		*i_merged;      /* whether we have merged child
-					   defines */
-	unsigned char   i_flags;
+#define DEFCHECKED (1<<0) /* whether defines have been checked */
+#define NOTIFIED (1<<1) /* whether we have revealed includes */
+#define MARKED  (1<<2) /* whether it's in the makefile */
+#define SEARCHED (1<<3) /* whether we have read this */
+#define FINISHED (1<<4) /* whether we are done reading this */
+#define INCLUDED_SYM (1<<5) /* whether #include SYMBOL was found
+Can't use i_list if TRUE */
+struct inclist {
+char  *i_incstring; /* string from #include line */
+char  *i_file; /* path name of the include file */
+struct inclist **i_list; /* list of files it itself includes */
+int  i_listlen; /* length of i_list */
+struct symtab **i_defs; /* symbol table for this file and its
+children when merged */
+int  i_ndefs; /* current # defines */
+boolean  *i_merged;      /* whether we have merged child
+defines */
+unsigned char   i_flags;
 };
 
 struct filepointer {
-	char	*f_p;
-	char	*f_base;
-	char	*f_end;
-	long	f_len;
-	long	f_line;
+char *f_p;
+char *f_base;
+char *f_end;
+long f_len;
+long f_line;
 };
 
 #ifndef X_NOT_STDC_ENV
@@ -128,20 +128,20 @@ struct filepointer {
 char *malloc(), *realloc();
 #endif /* macII */
 #else
-char			*malloc();
-char			*realloc();
+char   *malloc();
+char   *realloc();
 #endif
 
-char			*copy(char*);
-char			*base_name(char*);
-char			*rgetline(struct filepointer*);
-struct symtab		**slookup(char*, struct inclist*);
-struct symtab		**isdefined(char*,struct inclist*, struct inclist**);
-struct symtab		**fdefined();
-struct filepointer	*getfile(char*);
-struct inclist		*newinclude(char*,char*);
-struct inclist		*inc_path(char*, char*, boolean);
-void			undefine_all(struct inclist *);
+char   *copy(char*);
+char   *base_name(char*);
+char   *rgetline(struct filepointer*);
+struct symtab  **slookup(char*, struct inclist*);
+struct symtab  **isdefined(char*,struct inclist*, struct inclist**);
+struct symtab  **fdefined();
+struct filepointer *getfile(char*);
+struct inclist  *newinclude(char*,char*);
+struct inclist  *inc_path(char*, char*, boolean);
+void   undefine_all(struct inclist *);
 
 extern void fatalerr(char *, ...);
 extern void warning(char *, ...);

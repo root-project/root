@@ -198,9 +198,9 @@ register struct inclist *ip, *newfile;
     */
    if (ip->i_list == NULL) {
       ip->i_list = (struct inclist **)
-            malloc(sizeof(struct inclist *) * ++ip->i_listlen);
+                   malloc(sizeof(struct inclist *) * ++ip->i_listlen);
       ip->i_merged = (boolean *)
-            malloc(sizeof(boolean) * ip->i_listlen);
+                     malloc(sizeof(boolean) * ip->i_listlen);
    } else {
       for (i = 0; i < ip->i_listlen; i++)
          if (ip->i_list[ i ] == newfile) {
@@ -223,9 +223,9 @@ register struct inclist *ip, *newfile;
             return;
          }
       ip->i_list = (struct inclist **) realloc(ip->i_list,
-            sizeof(struct inclist *) * ++ip->i_listlen);
+                   sizeof(struct inclist *) * ++ip->i_listlen);
       ip->i_merged = (boolean *)
-            realloc(ip->i_merged, sizeof(boolean) * ip->i_listlen);
+                     realloc(ip->i_merged, sizeof(boolean) * ip->i_listlen);
    }
    ip->i_list[ ip->i_listlen-1 ] = newfile;
    ip->i_merged[ ip->i_listlen-1 ] = FALSE;
@@ -286,7 +286,7 @@ struct inclist *inc_path(char *file, char *include, boolean dot) {
          if (*p == '/')
             break;
       if (p == file) {
-         strncpy(path, include, sizeof(path)-1);
+         strncpy(path, include, sizeof(path) - 1);
          path[sizeof(path)-1] = '\0';
       } else {
          strncpy(path, file, (p - file) + 1);
