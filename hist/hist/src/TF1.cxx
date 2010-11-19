@@ -30,6 +30,7 @@
 #include "Math/BrentRootFinder.h"
 #include "Math/BrentMinimizer1D.h"
 #include "Math/BrentMethods.h"
+#include "Math/Integrator.h"
 #include "Math/GaussIntegrator.h"
 #include "Math/GaussLegendreIntegrator.h"
 #include "Math/AdaptiveIntegratorMultiDim.h"
@@ -2506,8 +2507,10 @@ Double_t TF1::Integral(Double_t a, Double_t b, const Double_t *params, Double_t 
    TF1_EvalWrapper wf1( this, params, fgAbsValue ); 
 
    ROOT::Math::GaussIntegrator giod;
+   //ROOT::Math::Integrator giod;
    giod.SetFunction(wf1);
    giod.SetRelTolerance(epsilon);
+   //giod.SetAbsTolerance(epsilon);
 
    return giod.Integral(a, b);
 }
@@ -2642,7 +2645,7 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Do
 
 
 //______________________________________________________________________________
-Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t /*minpts*/, Int_t maxpts, Double_t eps, Double_t &relerr,Int_t &nfnevl, Int_t &ifail)
+Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t minpts, Int_t maxpts, Double_t eps, Double_t &relerr,Int_t &nfnevl, Int_t &ifail)
 {
    //  Adaptive Quadrature for Multiple Integrals over N-Dimensional
    //  Rectangular Regions
@@ -2710,6 +2713,7 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, In
    ROOT::Math::WrappedMultiFunction<TF1&> wf1(*this, n);
 
    ROOT::Math::AdaptiveIntegratorMultiDim aimd(wf1, eps, eps, maxpts);
+   aimd.SetMinPts(minpts);
    double result = aimd.Integral(a,b);
    relerr = aimd.RelError();
    nfnevl = aimd.NEval();
