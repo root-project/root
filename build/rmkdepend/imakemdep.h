@@ -489,8 +489,8 @@ char *cpp_argv[ARGUMENTS] = {
 	"-DNCR",	/* NCR */
 #endif
 #ifdef linux
-        "-traditional",
-        "-Dlinux",
+	"-traditional",
+	"-Dlinux",
 #endif
 #ifdef __uxp__
 	"-D__uxp__",
@@ -807,10 +807,10 @@ struct symtab	predefs[] = {
 	{"is68k", "1"},
 #endif
 #ifdef m68k
-        {"m68k", "1"},
+	{"m68k", "1"},
 #endif
 #ifdef m88k
-        {"m88k", "1"},
+	{"m88k", "1"},
 #endif
 #ifdef __m88k__
 	{"__m88k__", "1"},
@@ -915,6 +915,13 @@ struct symtab	predefs[] = {
 #ifdef __ppc__
 	{"__ppc__", "1"},
 #endif
+#ifdef __arm__
+	{"__arm__", "1"},
+#endif
+#ifdef __x86_64__
+	{"__x86_64__", "1"},
+#endif
+
 	/* add any additional symbols before this line */
 	{NULL, NULL}
 };
