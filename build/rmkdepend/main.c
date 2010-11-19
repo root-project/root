@@ -499,7 +499,10 @@ sigemptyset(&sig_act.sa_mask);
 
       find_includes(filecontent, ip, ip, 0, FALSE);
       freefile(filecontent);
-      recursive_pr_include(ip, ip->i_file, base_name(*fp), *tp);
+      if (!rootBuild)
+         recursive_pr_include(ip, ip->i_file, base_name(*fp), *tp);
+      else
+         recursive_pr_include(ip, ip->i_file, base_name(makefile), *tp);
       inc_clean();
    }
    if (!rootBuild) {
