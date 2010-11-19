@@ -1001,7 +1001,7 @@ G__value G__calc_internal(const char* exprwithspace)
             }
             break;
          case ';' : /* semi-column */
-            skipchar = true;
+            if (single_quote==0 && double_quote==0) skipchar = true;
             // intentional fall-through:
          case '\n': /* end of line */
          case '\r': /* end of line */
