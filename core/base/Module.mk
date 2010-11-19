@@ -73,8 +73,9 @@ include/%.h:    $(BASEDIRI)/%.h
 
 # Explicitely state this dependency.
 # rmkdepend does not pick it up if $(COMPILEDATA) doesn't exist yet.
-$(BASEDIRS)/TSystem.d $(BASEDIRS)/TSystem.o: $(COMPILEDATA)
-
+$(call stripsrc,$(BASEDIRS)/TSystem.d $(BASEDIRS)/TSystem.o): $(COMPILEDATA)
+$(call stripsrc,$(BASEDIRS)/TROOT.d $(BASEDIRS)/TROOT.o): $(COMPILEDATA)
+ 
 $(BASEDS1):     $(BASEH1) $(BASEL1) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
