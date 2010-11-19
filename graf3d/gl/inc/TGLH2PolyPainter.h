@@ -61,6 +61,7 @@ private:
    //Aux. staff.
    void         FillTemporaryPolygon(const Double_t *xs, const Double_t *ys, Double_t z, Int_t n)const;
    void         MakePolygonCCW()const;
+   Bool_t       ClampZ(Double_t &zVal)const;
 
    TString                            fBinInfo; //Used by GetPlotInfo.
 
@@ -69,7 +70,8 @@ private:
    mutable std::vector<Double_t>      fPolygon; //Temporary array for polygon's vertices.
    std::list<Rgl::Pad::Tesselation_t> fCaps;//Caps for all bins.
 
-
+   Bool_t                             fZLog;//Change in logZ updates only bin heights.
+   Double_t                           fZMin;
 
    ClassDef(TGLH2PolyPainter, 0); //Painter class for TH2Poly.
 };

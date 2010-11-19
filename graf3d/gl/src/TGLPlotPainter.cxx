@@ -830,7 +830,7 @@ Bool_t FindAxisRange(const TH1 *hist, Bool_t logZ, const Rgl::BinRange_t &xBins,
                      const Rgl::BinRange_t &yBins, Rgl::Range_t &zRange,
                      Double_t &factor, Bool_t errors);
 
-Bool_t FindAxisRange(TH2Poly *hist, Rgl::Range_t &zRange);
+Bool_t FindAxisRange(TH2Poly *hist, Bool_t zLog, Rgl::Range_t &zRange);
 
 }
 
@@ -919,7 +919,7 @@ Bool_t TGLPlotCoordinates::SetRanges(TH2Poly *hist)
    Rgl::Range_t zRange;
    Double_t factor = 1.;
 
-   if (!FindAxisRange(hist, zRange))
+   if (!FindAxisRange(hist, fZLog, zRange))
       return kFALSE;
 
    //Finds the maximum dimension and adjust scale coefficients
@@ -941,8 +941,8 @@ Bool_t TGLPlotCoordinates::SetRanges(TH2Poly *hist)
    fXRange = xRange, fXBins = xBins, fYRange = yRange, fYBins = yBins, fZRange = zRange, fZBins = zBins;
    fFactor = factor;
 
-   fXScale = 1.7 / x;
-   fYScale = 1.7 / y;
+   fXScale = Rgl::gH2PolyScaleXY / x;
+   fYScale = Rgl::gH2PolyScaleXY / y;
    fZScale = 1. / z;
 
    fXRangeScaled.first = fXRange.first * fXScale, fXRangeScaled.second = fXRange.second * fXScale;
@@ -1165,184 +1165,182 @@ Bool_t TGLPlotCoordinates::SetRangesSpherical(const TH1 *hist)
 
 namespace {
 
-   //______________________________________________________________________________
-   Double_t FindMinBinWidth(const TAxis *axis)
-   {
-      // Find minimal bin width.
+//______________________________________________________________________________
+Double_t FindMinBinWidth(const TAxis *axis)
+{
+   // Find minimal bin width.
 
-      Int_t currBin = axis->GetFirst();
-      Double_t width = axis->GetBinWidth(currBin);
+   Int_t currBin = axis->GetFirst();
+   Double_t width = axis->GetBinWidth(currBin);
 
-      if (!axis->IsVariableBinSize())//equal bins
-         return width;
-
-      ++currBin;
-      //variable size bins
-      for (const Int_t lastBin = axis->GetLast(); currBin <= lastBin; ++currBin)
-         width = TMath::Min(width, axis->GetBinWidth(currBin));
-
+   if (!axis->IsVariableBinSize())//equal bins
       return width;
-   }
 
-   //______________________________________________________________________________
-   Bool_t FindAxisRange(const TAxis *axis, Bool_t log, Rgl::BinRange_t &bins, Rgl::Range_t &range)
-   {
-      //"Generic" function, can be used for X/Y/Z axis.
-      //[low edge of first ..... up edge of last]
-      //If log is true, at least up edge of last MUST be positive or function fails (1).
-      //If log is true and low edge is negative, try to find bin with positive low edge, bin number
-      //must be less or equal to last (2). If no such bin, function failes.
-      //When looking for a such bin, I'm trying to find value which is 0.01 of
-      //MINIMUM bin width (3) (if bins are equidimensional, first's bin width is OK).
-      //But even such lookup can fail, so, it's a stupid idea to have negative ranges
-      //and logarithmic scale :)
+   ++currBin;
+   //variable size bins
+   for (const Int_t lastBin = axis->GetLast(); currBin <= lastBin; ++currBin)
+      width = TMath::Min(width, axis->GetBinWidth(currBin));
 
-      bins.first = axis->GetFirst(), bins.second = axis->GetLast();
-      range.first = axis->GetBinLowEdge(bins.first), range.second = axis->GetBinUpEdge(bins.second);
+   return width;
+}
 
-      if (log) {
-         if (range.second <= 0.)
-            return kFALSE;//(1)
+//______________________________________________________________________________
+Bool_t FindAxisRange(const TAxis *axis, Bool_t log, Rgl::BinRange_t &bins, Rgl::Range_t &range)
+{
+   //"Generic" function, can be used for X/Y/Z axis.
+   //[low edge of first ..... up edge of last]
+   //If log is true, at least up edge of last MUST be positive or function fails (1).
+   //If log is true and low edge is negative, try to find bin with positive low edge, bin number
+   //must be less or equal to last (2). If no such bin, function failes.
+   //When looking for a such bin, I'm trying to find value which is 0.01 of
+   //MINIMUM bin width (3) (if bins are equidimensional, first's bin width is OK).
+   //But even such lookup can fail, so, it's a stupid idea to have negative ranges
+   //and logarithmic scale :)
 
-         range.second = TMath::Log10(range.second);
+   bins.first = axis->GetFirst(), bins.second = axis->GetLast();
+   range.first = axis->GetBinLowEdge(bins.first), range.second = axis->GetBinUpEdge(bins.second);
 
-         if (range.first <= 0.) {//(2)
-            Int_t bin = axis->FindFixBin(FindMinBinWidth(axis) * 0.01);//(3)
-            //Overflow or something stupid.
-            if (bin > bins.second)
+   if (log) {
+      if (range.second <= 0.)
+         return kFALSE;//(1)
+
+      range.second = TMath::Log10(range.second);
+
+      if (range.first <= 0.) {//(2)
+         Int_t bin = axis->FindFixBin(FindMinBinWidth(axis) * 0.01);//(3)
+         //Overflow or something stupid.
+         if (bin > bins.second)
+            return kFALSE;
+
+         if (axis->GetBinLowEdge(bin) <= 0.) {
+            ++bin;
+            if (bin > bins.second)//Again, something stupid.
                return kFALSE;
-
-            if (axis->GetBinLowEdge(bin) <= 0.) {
-               ++bin;
-               if (bin > bins.second)//Again, something stupid.
-                  return kFALSE;
-            }
-
-            bins.first = bin;
-            range.first = axis->GetBinLowEdge(bin);
          }
 
-         range.first = TMath::Log10(range.first);
+         bins.first = bin;
+         range.first = axis->GetBinLowEdge(bin);
       }
 
-      return kTRUE;
+      range.first = TMath::Log10(range.first);
    }
 
-   //______________________________________________________________________________
-   Bool_t FindAxisRange(const TH1 *hist, Bool_t logZ, const Rgl::BinRange_t &xBins,
-                        const Rgl::BinRange_t &yBins, Rgl::Range_t &zRange,
-                        Double_t &factor, Bool_t errors)
-   {
-      //First, look through hist to find minimum and maximum values.
-      const Bool_t minimum = hist->GetMinimumStored() != -1111;
-      const Bool_t maximum = hist->GetMaximumStored() != -1111;
-      const Double_t margin = gStyle->GetHistTopMargin();
+   return kTRUE;
+}
 
-      zRange.second = hist->GetCellContent(xBins.first, yBins.first), zRange.first = zRange.second;
-      Double_t summ = 0.;
+//______________________________________________________________________________
+Bool_t FindAxisRange(const TH1 *hist, Bool_t logZ, const Rgl::BinRange_t &xBins,
+                     const Rgl::BinRange_t &yBins, Rgl::Range_t &zRange,
+                     Double_t &factor, Bool_t errors)
+{
+   //First, look through hist to find minimum and maximum values.
+   const Bool_t minimum = hist->GetMinimumStored() != -1111;
+   const Bool_t maximum = hist->GetMaximumStored() != -1111;
+   const Double_t margin = gStyle->GetHistTopMargin();
 
-      for (Int_t i = xBins.first; i <= xBins.second; ++i) {
-         for (Int_t j = yBins.first; j <= yBins.second; ++j) {
-            Double_t val = hist->GetCellContent(i, j);
-            if (val > 0. && errors)
-               val = TMath::Max(val, val + hist->GetCellError(i, j));
-            zRange.second = TMath::Max(val, zRange.second);
-            zRange.first = TMath::Min(val, zRange.first);
-            summ += val;
-         }
+   zRange.second = hist->GetCellContent(xBins.first, yBins.first), zRange.first = zRange.second;
+   Double_t summ = 0.;
+
+   for (Int_t i = xBins.first; i <= xBins.second; ++i) {
+      for (Int_t j = yBins.first; j <= yBins.second; ++j) {
+         Double_t val = hist->GetCellContent(i, j);
+         if (val > 0. && errors)
+            val = TMath::Max(val, val + hist->GetCellError(i, j));
+         zRange.second = TMath::Max(val, zRange.second);
+         zRange.first = TMath::Min(val, zRange.first);
+         summ += val;
       }
+   }
 
-      if (hist->GetMaximumStored() != -1111)
-         zRange.second = hist->GetMaximumStored();
-      if (hist->GetMinimumStored() != -1111)
-         zRange.first = hist->GetMinimumStored();
+   if (hist->GetMaximumStored() != -1111)
+      zRange.second = hist->GetMaximumStored();
+   if (hist->GetMinimumStored() != -1111)
+      zRange.first = hist->GetMinimumStored();
 
-      if (logZ && zRange.second <= 0.)
-         return kFALSE;//cannot setup logarithmic scale
+   if (logZ && zRange.second <= 0.)
+      return kFALSE;//cannot setup logarithmic scale
 
-      if (zRange.first >= zRange.second)
-         zRange.first = 0.001 * zRange.second;
+   if (zRange.first >= zRange.second)
+      zRange.first = 0.001 * zRange.second;
 
-      factor = hist->GetNormFactor() > 0. ? hist->GetNormFactor() : summ;
-      if (summ) factor /= summ;
-      if (!factor) factor = 1.;
-      if (factor < 0.)
-         Warning("TGLPlotPainter::ExtractAxisZInfo",
-               "Negative factor, negative ranges - possible incorrect behavior");
+   factor = hist->GetNormFactor() > 0. ? hist->GetNormFactor() : summ;
+   if (summ) factor /= summ;
+   if (!factor) factor = 1.;
+   if (factor < 0.)
+      Warning("TGLPlotPainter::ExtractAxisZInfo",
+              "Negative factor, negative ranges - possible incorrect behavior");
 
-      zRange.second *= factor;
-      zRange.first  *= factor;
+   zRange.second *= factor;
+   zRange.first  *= factor;
 
-      if (logZ) {
-         if (zRange.first <= 0.)
-            zRange.first = TMath::Min(1., 0.001 * zRange.second);
-         zRange.first = TMath::Log10(zRange.first);
-         if (!minimum)
-            zRange.first += TMath::Log10(0.5);
-         zRange.second = TMath::Log10(zRange.second);
-         if (!maximum)
-            zRange.second += TMath::Log10(2*(0.9/0.95));//This magic numbers are from THistPainter.
-         return kTRUE;
-      }
-
+   if (logZ) {
+      if (zRange.first <= 0.)
+         zRange.first = TMath::Min(1., 0.001 * zRange.second);
+      zRange.first = TMath::Log10(zRange.first);
+      if (!minimum)
+         zRange.first += TMath::Log10(0.5);
+      zRange.second = TMath::Log10(zRange.second);
       if (!maximum)
-         zRange.second += margin * (zRange.second - zRange.first);
-      if (!minimum) {
-         if (gStyle->GetHistMinimumZero())
-            zRange.first >= 0 ? zRange.first = 0. : zRange.first -= margin * (zRange.second - zRange.first);
-         else
-            zRange.first >= 0 && zRange.first - margin * (zRange.second - zRange.first) <= 0 ?
-               zRange.first = 0 : zRange.first -= margin * (zRange.second - zRange.first);
-      }
-
+         zRange.second += TMath::Log10(2*(0.9/0.95));//This magic numbers are from THistPainter.
       return kTRUE;
    }
 
-   //______________________________________________________________________________
-   Bool_t FindAxisRange(TH2Poly *hist, Rgl::Range_t &zRange)
-   {
-      //First, look through hist to find minimum and maximum values.
-      TList *bins = hist->GetBins();
-      if (!bins || !bins->GetEntries()) {
-         Error("FindAxisRange", "TH2Poly returned empty list of bins");
+   if (!maximum)
+      zRange.second += margin * (zRange.second - zRange.first);
+   if (!minimum) {
+      if (gStyle->GetHistMinimumZero())
+         zRange.first >= 0 ? zRange.first = 0. : zRange.first -= margin * (zRange.second - zRange.first);
+      else
+         zRange.first >= 0 && zRange.first - margin * (zRange.second - zRange.first) <= 0 ?
+               zRange.first = 0 : zRange.first -= margin * (zRange.second - zRange.first);
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t FindAxisRange(TH2Poly *hist, Bool_t logZ, Rgl::Range_t &zRange)
+{
+   //First, look through hist to find minimum and maximum values.
+   TList *bins = hist->GetBins();
+   if (!bins || !bins->GetEntries()) {
+      Error("FindAxisRange", "TH2Poly returned empty list of bins");
+      return kFALSE;
+   }
+
+   zRange.first  = hist->GetMinimum();
+   zRange.second = hist->GetMaximum();
+
+   if (zRange.first >= zRange.second)
+      zRange.first = 0.001 * zRange.second;
+
+   if (logZ) {
+      if (zRange.second < 1e-20) {//OMG! Why is this code sooo bad and ugly? :)
+         Error("FindAxisRange", "Failed to switch Z axis to logarithmic scale");
          return kFALSE;
       }
 
-      TObjLink *link = bins->FirstLink();
-      TH2PolyBin *bin0 = static_cast<TH2PolyBin *>(link->GetObject());
-      zRange.second = bin0->GetContent(), zRange.first = zRange.second;
+      if (zRange.first <= 0.)
+         zRange.first = TMath::Min(1., 0.001 * zRange.second);
 
-      for (Int_t i = 1, e = bins->GetEntries(); i < e; ++i) {
-         const Double_t val = static_cast<TH2PolyBin *>(bins->At(i))->GetContent();
-         zRange.second = TMath::Max(val, zRange.second);
-         zRange.first = TMath::Min(val, zRange.first);
-      }
-
-      const Bool_t minimum = hist->GetMinimumStored() != -1111;
-      const Bool_t maximum = hist->GetMaximumStored() != -1111;
-
-      if (maximum)
-         zRange.second = hist->GetMaximumStored();
-      if (minimum)
-         zRange.first = hist->GetMinimumStored();
-
-      if (zRange.first >= zRange.second)
-         zRange.first = 0.001 * zRange.second;
-
-      const Double_t margin = gStyle->GetHistTopMargin();
-
-      if (!maximum)
-         zRange.second += margin * (zRange.second - zRange.first);
-      if (!minimum) {
-         if (gStyle->GetHistMinimumZero())
-            zRange.first >= 0 ? zRange.first = 0. : zRange.first -= margin * (zRange.second - zRange.first);
-         else
-            zRange.first >= 0 && zRange.first - margin * (zRange.second - zRange.first) <= 0 ?
-               zRange.first = 0 : zRange.first -= margin * (zRange.second - zRange.first);
-      }
+      zRange.first  = TMath::Log10(zRange.first);
+      zRange.first += TMath::Log10(0.5);
+      zRange.second = TMath::Log10(zRange.second);
+      zRange.second += TMath::Log10(2 * (0.9 / 0.95));//These magic numbers come from THistPainter.
 
       return kTRUE;
    }
+
+   const Double_t margin = gStyle->GetHistTopMargin();
+   zRange.second += margin * (zRange.second - zRange.first);
+   if (gStyle->GetHistMinimumZero())
+      zRange.first >= 0 ? zRange.first = 0. : zRange.first -= margin * (zRange.second - zRange.first);
+   else
+      zRange.first >= 0 && zRange.first - margin * (zRange.second - zRange.first) <= 0 ?
+         zRange.first = 0 : zRange.first -= margin * (zRange.second - zRange.first);
+
+   return kTRUE;
+}
 
 }
 
@@ -1929,35 +1927,35 @@ void TGLTH3Slice::DrawSliceTextured(Double_t pos)const
 
 namespace {
 
-   //______________________________________________________________________________
-   void DrawBoxOutline(Double_t xMin, Double_t xMax, Double_t yMin,
-                       Double_t yMax, Double_t zMin, Double_t zMax)
-   {
-      glBegin(GL_LINE_LOOP);
-      glVertex3d(xMin, yMin, zMin);
-      glVertex3d(xMax, yMin, zMin);
-      glVertex3d(xMax, yMax, zMin);
-      glVertex3d(xMin, yMax, zMin);
-      glEnd();
+//______________________________________________________________________________
+void DrawBoxOutline(Double_t xMin, Double_t xMax, Double_t yMin,
+                    Double_t yMax, Double_t zMin, Double_t zMax)
+{
+   glBegin(GL_LINE_LOOP);
+   glVertex3d(xMin, yMin, zMin);
+   glVertex3d(xMax, yMin, zMin);
+   glVertex3d(xMax, yMax, zMin);
+   glVertex3d(xMin, yMax, zMin);
+   glEnd();
 
-      glBegin(GL_LINE_LOOP);
-      glVertex3d(xMin, yMin, zMax);
-      glVertex3d(xMax, yMin, zMax);
-      glVertex3d(xMax, yMax, zMax);
-      glVertex3d(xMin, yMax, zMax);
-      glEnd();
+   glBegin(GL_LINE_LOOP);
+   glVertex3d(xMin, yMin, zMax);
+   glVertex3d(xMax, yMin, zMax);
+   glVertex3d(xMax, yMax, zMax);
+   glVertex3d(xMin, yMax, zMax);
+   glEnd();
 
-      glBegin(GL_LINES);
-      glVertex3d(xMin, yMin, zMin);
-      glVertex3d(xMin, yMin, zMax);
-      glVertex3d(xMax, yMin, zMin);
-      glVertex3d(xMax, yMin, zMax);
-      glVertex3d(xMax, yMax, zMin);
-      glVertex3d(xMax, yMax, zMax);
-      glVertex3d(xMin, yMax, zMin);
-      glVertex3d(xMin, yMax, zMax);
-      glEnd();
-   }
+   glBegin(GL_LINES);
+   glVertex3d(xMin, yMin, zMin);
+   glVertex3d(xMin, yMin, zMax);
+   glVertex3d(xMax, yMin, zMin);
+   glVertex3d(xMax, yMin, zMax);
+   glVertex3d(xMax, yMax, zMin);
+   glVertex3d(xMax, yMax, zMax);
+   glVertex3d(xMin, yMax, zMin);
+   glVertex3d(xMin, yMax, zMax);
+   glEnd();
+}
 
 }
 
@@ -2014,8 +2012,10 @@ PlotTranslation::~PlotTranslation()
 
 namespace
 {
-   const Double_t lr = 0.85;
-   const Double_t rr = 0.9;
+
+const Double_t lr = 0.85;
+const Double_t rr = 0.9;
+
 }
 
 //______________________________________________________________________________
@@ -2096,6 +2096,9 @@ void DrawPaletteAxis(const TGLPlotCamera * camera, const Range_t & minMax, Bool_
    gPad->SetLogx(logX);
    gPad->SetLogy(logY);
 }
+
+//Constant for TGLH2PolyPainter.
+const Double_t gH2PolyScaleXY = 1.2;
 
 }
 

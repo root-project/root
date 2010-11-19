@@ -21,7 +21,9 @@ ClassImp(TGLH2PolyPainter)
 
 //______________________________________________________________________________
 TGLH2PolyPainter::TGLH2PolyPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord)
-                   : TGLPlotPainter(hist, camera, coord, kFALSE, kFALSE, kFALSE)
+                   : TGLPlotPainter(hist, camera, coord, kFALSE, kFALSE, kFALSE),
+                     fZLog(kFALSE),
+                     fZMin(0.)
 {
    //Ctor.
    if(!dynamic_cast<TH2Poly *>(hist)) {
@@ -64,20 +66,26 @@ Bool_t TGLH2PolyPainter::InitGeometry()
    if (!fCoord->SetRanges(hp))
       return kFALSE;
 
-   fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), 1.7,
-                       fCoord->GetYRangeScaled(), 1.7,
+   fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), Rgl::gH2PolyScaleXY,
+                       fCoord->GetYRangeScaled(), Rgl::gH2PolyScaleXY,
                        fCoord->GetZRangeScaled(), 1.);
+
+   //This code is different from lego.
+   //Currently, negative bin contents are not supported.
+   fZMin = fBackBox.Get3DBox()[0].Z();
 
    if (hp->GetNewBinAdded()) {
       if (!CacheGeometry())
          return kFALSE;
       hp->SetNewBinAdded(kFALSE);
       hp->SetBinContentChanged(kFALSE);
-   } else if (hp->GetBinContentChanged()) {
+   } else if (hp->GetBinContentChanged() || fZLog != fCoord->GetZLog()) {
       if (!UpdateGeometry())
          return kFALSE;
       hp->SetBinContentChanged(kFALSE);
    }
+
+   fZLog = fCoord->GetZLog();
 
    return kTRUE;
 }
@@ -195,16 +203,19 @@ void TGLH2PolyPainter::DrawExtrusion()const
    //GL_QUADS, GL_QUAD_STRIP - have the same time on my laptop, so I use
    //GL_QUADS and forgot about vertex arrays (can require more memory BTW).
    TList *bins = static_cast<TH2Poly *>(fHist)->GetBins();
-   const Double_t zMin = fBackBox.Get3DBox()[0].Z();
    Int_t binIndex = 0;
    for(TObjLink * link = bins->FirstLink(); link; link = link->Next(), ++binIndex) {
       TH2PolyBin *bin = static_cast<TH2PolyBin *>(link->GetObject());
-      const Double_t zMax = bin->GetContent() * fCoord->GetZScale();
+      //const Double_t zMax = bin->GetContent() * fCoord->GetZScale();
+      Double_t zMax = bin->GetContent();
+      ClampZ(zMax);
 
       if (const TGraph * poly = dynamic_cast<TGraph*>(bin->GetPolygon())) {
-         DrawExtrusion(poly, zMin, zMax, binIndex);
+         //DrawExtrusion(poly, zMin, zMax, binIndex);
+         DrawExtrusion(poly, fZMin, zMax, binIndex);
       } else if (const TMultiGraph * mg = dynamic_cast<TMultiGraph*>(bin->GetPolygon())) {
-         DrawExtrusion(mg, zMin, zMax, binIndex);
+         //DrawExtrusion(mg, zMin, zMax, binIndex);
+         DrawExtrusion(mg, fZMin, zMax, binIndex);
       }//else is impossible.
    }
 }
@@ -365,11 +376,17 @@ Bool_t TGLH2PolyPainter::CacheGeometry()
          return kFALSE;
       }
 
+      Double_t binZ = bin->GetContent();
+      if (!ClampZ(binZ)) {
+         Error("TGLH2PolyPainter::CacheGeometry", "Negative bin content and log scale");
+         return kFALSE;
+      }
+
       if (const TGraph *g = dynamic_cast<TGraph *>(bin->GetPolygon())) {
-         if (!BuildTesselation(tesselator, g, bin->GetContent() * fCoord->GetZScale()))
+         if (!BuildTesselation(tesselator, g,  binZ))
             return kFALSE;
       } else if (const TMultiGraph *mg = dynamic_cast<TMultiGraph *>(bin->GetPolygon())) {
-         if (!BuildTesselation(tesselator, mg, bin->GetContent() * fCoord->GetZScale()))
+         if (!BuildTesselation(tesselator, mg, binZ))
             return kFALSE;
       } else {
          //Da vy chto, sgovorilis' chto li???
@@ -403,7 +420,6 @@ Bool_t TGLH2PolyPainter::BuildTesselation(Rgl::Pad::Tesselator &tess, const TGra
    }
 
    fCaps.push_back(Rgl::Pad::Tesselation_t());
-
    FillTemporaryPolygon(xs, ys, z, nV);
 
    tess.SetDump(&fCaps.back());
@@ -414,9 +430,9 @@ Bool_t TGLH2PolyPainter::BuildTesselation(Rgl::Pad::Tesselator &tess, const TGra
 
    glNormal3d(0., 0., 1.);
 
-   for (Int_t j = 0; j < nV; ++j)
+   for (Int_t j = 0; j < nV; ++j) {
       gluTessVertex(t, &fPolygon[j * 3], &fPolygon[j * 3]);
-
+   }
    gluEndPolygon(t);
 
    return kTRUE;
@@ -464,7 +480,8 @@ Bool_t TGLH2PolyPainter::UpdateGeometry()
    //to make it clear (not required).
    for (TObjLink *link = bins->FirstLink(); link && cap != fCaps.end(); link = link->Next()) {
       TH2PolyBin *b = static_cast<TH2PolyBin *>(link->GetObject());
-      const Double_t z = b->GetContent() * fCoord->GetZScale();
+      Double_t z = b->GetContent();
+      ClampZ(z);
       //Update z coordinate in all patches.
       if (dynamic_cast<TGraph *>(b->GetPolygon())) {
          //Only one cap.
@@ -574,6 +591,28 @@ void TGLH2PolyPainter::MakePolygonCCW()const
       std::swap(fPolygon[a * 3], fPolygon[b * 3]);
       std::swap(fPolygon[a * 3 + 1], fPolygon[b * 3 + 1]);
    }
+}
+
+//______________________________________________________________________________
+Bool_t TGLH2PolyPainter::ClampZ(Double_t &zVal)const
+{
+   //Clamp z value.
+   if (fCoord->GetZLog()) {
+      if (zVal <= 0.)
+         return kFALSE;
+      else
+         zVal = TMath::Log10(zVal) * fCoord->GetZScale();
+   } else
+      zVal *= fCoord->GetZScale();
+
+   const TGLVertex3 *frame = fBackBox.Get3DBox();
+
+   if (zVal > frame[4].Z())
+      zVal = frame[4].Z();
+   else if (zVal < frame[0].Z())
+      zVal = frame[0].Z();
+
+   return kTRUE;
 }
 
 
