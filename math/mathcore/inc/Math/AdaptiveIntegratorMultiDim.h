@@ -103,13 +103,13 @@ public:
    void SetAbsTolerance(double absTol);
 
    ///set workspace size 
-   void SetSize(double size) { fSize = size; }
+   void SetSize(unsigned int size) { fSize = size; }
 
    ///set min points
-   void SetMinPts(double n) { fMinPts = n; }
+   void SetMinPts(unsigned int n) { fMinPts = n; }
 
    ///set max points
-   void SetMaxPts(double n) { fMaxPts = n; }
+   void SetMaxPts(unsigned int n) { fMaxPts = n; }
 
    /// set the options 
    void SetOptions(const ROOT::Math::IntegratorMultiDimOptions & opt);
