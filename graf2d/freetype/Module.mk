@@ -121,11 +121,13 @@ else
 		fi; \
 		if [ $(ARCH) = "iossim" ]; then \
 			FREECC="$$FREECC -arch i386"; \
-			FREE_CFLAGS="-arch i386"; \
+			FREE_CFLAGS="-arch i386 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
+			FREE_HOST="--host=i686-apple-darwin10"; \
 		fi; \
 		if [ $(ARCH) = "ios" ]; then \
 			FREECC="$$FREECC -arch armv7"; \
-			FREE_CFLAGS="-arch armv7"; \
+			FREE_CFLAGS="-arch armv7 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
+			FREE_HOST="--host=arm-apple-darwin10"; \
 		fi; \
 		if [ $(ARCH) = "solaris64CC5" ]; then \
 			FREECC="$$FREECC -m64"; \
@@ -149,8 +151,8 @@ else
 		if [ $(ARCH) = "aixgcc" ]; then \
 			FREEZLIB="--without-zlib"; \
 		fi; \
-		GNUMAKE=$(MAKE) ./configure --with-pic --disable-shared \
-		 $$FREEZLIB \
+		GNUMAKE=$(MAKE) ./configure $$FREE_HOST --with-pic \
+		--disable-shared $$FREEZLIB \
 		CC=\'$$FREECC\' CFLAGS=\'$$FREE_CFLAGS -O\'; \
 		$(MAKE))
 endif

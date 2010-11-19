@@ -28,7 +28,6 @@ lynxos               for LynxOS with gcc
 macosx               for MacOS X >= 10.4 with gcc
 macosxicc            for MacOS X >= 10.4 with Intel icc (Intel only)
 macosx64             for MacOS X >= 10.5 with gcc 4.0 64 bit mode
-macosxxlc            for MacOS X >= 10.4 with IBM xl compilers (PPC only)
 openbsd              for OpenBSD >= 3.7 with gcc
 sgicc                for SGI IRIX 6.x with CC
 sgicc64              for SGI IRIX 6.x with CC 64 bits

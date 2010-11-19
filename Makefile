@@ -451,7 +451,8 @@ ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 endif
 
 ifneq ($(HOST),)
-BUILDTOOLSDIR := buildtools
+   BUILDTOOLSDIR := buildtools
+   POSTBIN       += static
 endif
 
 MAKEDEP        = $(RMKDEP)
@@ -643,11 +644,7 @@ ifneq ($(findstring map, $(MAKECMDGOALS)),)
 .NOTPARALLEL:
 endif
 
-ifeq ($(HOST),)
 all:            rootexecs postbin
-else
-all:            buildtools rootexecs postbin
-endif
 
 fast:           rootexecs
 
@@ -682,18 +679,21 @@ ifneq ($(HOST),)
 buildtools:     $(BUILDTOOLSDIR)/bin/rootcint
 
 $(BUILDTOOLSDIR)/bin/rootcint:
+		@echo ""; \
+		echo "*** Building build tools in $(BUILDTOOLSDIR)..."; \
+		echo ""; \
 		if [ ! -f $(BUILDTOOLSDIR)/Makefile ]; then \
 		   mkdir -p $(BUILDTOOLSDIR); \
 		   cd $(BUILDTOOLSDIR); \
 		   $(ROOT_SRCDIR)/configure $(HOST) --minimal; \
 		fi; \
-		(make BUILDTOOLS=yes \
+		($(MAKE) BUILDTOOLS=yes \
 		   TARGETFLAGS=-DR__$(shell echo $(ARCH) | tr 'a-z' 'A-Z') \
 		   rootcint \
 		) || exit 1;
 
 distclean::
-		@rm -rf buildtools
+		@rm -rf $(BUILDTOOLSDIR)
 endif
 
 postbin:        $(POSTBIN)
@@ -742,7 +742,11 @@ $(COMPILEDATA): $(ROOT_SRCDIR)/config/Makefile.$(ARCH) config/Makefile.comp \
 	   "$(LIBDIR)" "$(BOOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" \
 	   "$(MAKESHAREDLIB)" "$(MAKEEXE)" "$(ARCH)" "$(ROOTBUILD)" "$(EXPLICITLINK)"
 
+ifeq ($(HOST),)
 build/dummy.d: config Makefile $(ALLHDRS) $(RMKDEP) $(BINDEXP)
+else
+build/dummy.d: config Makefile buildtools $(ALLHDRS) $(RMKDEP) $(BINDEXP)
+endif
 	@(if [ ! -f $@ ] ; then \
 	   touch $@; \
 	fi)
@@ -946,9 +950,9 @@ ifeq ($(PLATFORM),macosx)
 	@rm -f lib/*.dylib
 	@rm -f lib/*.so
 endif
-	-@mv -f tutorials/gallery.root tutorials/gallery.root-
-	-@mv -f tutorials/mlp/mlpHiggs.root tutorials/mlp/mlpHiggs.root-
-	-@mv -f tutorials/quadp/stock.root tutorials/quadp/stock.root-
+	-@(mv -f tutorials/gallery.root tutorials/gallery.root- >/dev/null 2>&1;true)
+	-@(mv -f tutorials/mlp/mlpHiggs.root tutorials/mlp/mlpHiggs.root- >/dev/null 2>&1;true)
+	-@(mv -f tutorials/quadp/stock.root tutorials/quadp/stock.root- >/dev/null 2>&1;true)
 	@(find tutorials -name "files" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "*.root" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "*.ps" -exec rm -rf {} \; >/dev/null 2>&1;true)
@@ -959,9 +963,9 @@ endif
 	@(find tutorials -name "work.pc" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "work.pcl" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@rm -rf tutorials/eve/aliesd
-	-@mv -f tutorials/gallery.root- tutorials/gallery.root
-	-@mv -f tutorials/mlp/mlpHiggs.root- tutorials/mlp/mlpHiggs.root
-	-@mv -f tutorials/quadp/stock.root- tutorials/quadp/stock.root
+	-@(mv -f tutorials/gallery.root- tutorials/gallery.root >/dev/null 2>&1;true)
+	-@(mv -f tutorials/mlp/mlpHiggs.root- tutorials/mlp/mlpHiggs.root >/dev/null 2>&1;true)
+	-@(mv -f tutorials/quadp/stock.root- tutorials/quadp/stock.root >/dev/null 2>&1;true)
 	@rm -f bin/roota bin/proofserva lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/*.so*
 	@rm -f $(CINTDIR)/stl/*.dll $(CINTDIR)/stl/*.so*
@@ -972,7 +976,7 @@ endif
 	@rm -f etc/svninfo.txt
 	@(find . -path '*/daemons' -prune -o -name *.d -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find . -name *.o -exec rm -rf {} \; >/dev/null 2>&1;true)
-	-@cd test && $(MAKE) distclean
+	-@([ -d test ] && (cd test && $(MAKE) distclean); true)
 
 maintainer-clean:: distclean
 	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \

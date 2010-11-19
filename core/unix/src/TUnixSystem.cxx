@@ -261,7 +261,7 @@ extern "C" {
 #endif
 
 #if defined(R__MACOSX) && !defined(__xlC__) && !defined(__i386__) && \
-   !defined(__x86_64__)
+   !defined(__x86_64__) && !defined(__arm__)
 #include <fenv.h>
 #include <signal.h>
 #include <ucontext.h>
@@ -282,7 +282,7 @@ enum {
 };
 #endif
 
-#if defined(R__MACOSX) && (defined(__i386__) || defined(__x86_64__))
+#if defined(R__MACOSX) && (defined(__i386__) || defined(__x86_64__) || defined(__arm__))
 #include <fenv.h>
 #endif
 // End FPE handling includes
@@ -790,11 +790,15 @@ Int_t TUnixSystem::GetFPEMask()
 #endif
 #endif
 
-#if defined(R__MACOSX) && (defined(__i386__) || defined(__x86_64__))
+#if defined(R__MACOSX) && (defined(__i386__) || defined(__x86_64__) || defined(__arm__))
    fenv_t oldenv;
    fegetenv(&oldenv);
    fesetenv(&oldenv);
+#if defined(__arm__)
+   Int_t oldmask = ~oldenv.__fpscr;
+#else
    Int_t oldmask = ~oldenv.__control;
+#endif
 
    if (oldmask & FE_INVALID  )   mask |= kInvalid;
    if (oldmask & FE_DIVBYZERO)   mask |= kDivByZero;
@@ -806,7 +810,7 @@ Int_t TUnixSystem::GetFPEMask()
 #endif
 
 #if defined(R__MACOSX) && !defined(__xlC__) && !defined(__i386__) && \
-   !defined(__x86_64__)
+   !defined(__x86_64__) && !defined(__arm__)
    Long64_t oldmask;
    fegetenvd(oldmask);
 
@@ -863,7 +867,7 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 #endif
 #endif
 
-#if defined(R__MACOSX) && (defined(__i386__) || defined(__x86_64__))
+#if defined(R__MACOSX) && (defined(__i386__) || defined(__x86_64__) || defined(__arm__))
    Int_t newm = 0;
    if (mask & kInvalid  )   newm |= FE_INVALID;
    if (mask & kDivByZero)   newm |= FE_DIVBYZERO;
@@ -873,12 +877,16 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 
    fenv_t cur;
    fegetenv(&cur);
+#if defined(__arm__)
+   cur.__fpscr &= ~newm;
+#else
    cur.__control &= ~newm;
+#endif
    fesetenv(&cur);
 #endif
 
 #if defined(R__MACOSX) && !defined(__xlC__) && !defined(__i386__) && \
-   !defined(__x86_64__)
+   !defined(__x86_64__) && !defined(__arm__)
    Int_t newm = 0;
    if (mask & kInvalid  )   newm |= FE_ENABLE_INVALID;
    if (mask & kDivByZero)   newm |= FE_ENABLE_DIVBYZERO;

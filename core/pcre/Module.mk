@@ -103,10 +103,12 @@ else
 			PCRE_CFLAGS="-m64"; \
 		fi; \
 		if [ $(ARCH) = "iossim" ]; then \
-			PCRE_CFLAGS="-arch i386"; \
+			PCRE_CFLAGS="-arch i386 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
+			PCRE_HOST="--host=i686-apple-darwin10"; \
 		fi; \
 		if [ $(ARCH) = "ios" ]; then \
-			PCRE_CFLAGS="-arch armv7"; \
+			PCRE_CFLAGS="-arch armv7 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
+			PCRE_HOST="--host=arm-apple-darwin10"; \
 		fi; \
 		if [ $(ARCH) = "solaris64CC5" ]; then \
 			PCRE_CFLAGS="-m64"; \
@@ -122,8 +124,8 @@ else
 			PCRECC="cc"; \
 			PCRE_CFLAGS="+DD64 -Ae"; \
 		fi; \
-		GNUMAKE=$(MAKE) ./configure --with-pic --disable-shared \
-		CC=$$PCRECC CFLAGS="$$PCRE_CFLAGS -O"; \
+		GNUMAKE=$(MAKE) ./configure $$PCRE_HOST --with-pic \
+		--disable-shared CC=$$PCRECC CFLAGS="$$PCRE_CFLAGS -O"; \
 		$(MAKE) libpcre.la)
 endif
 

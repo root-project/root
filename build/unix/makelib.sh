@@ -115,9 +115,6 @@ elif [ $PLATFORM = "macosx" ]; then
    export DYLD_LIBRARY_PATH=`pwd`/lib:$DYLD_LIBRARY_PATH
    if [ $macosx_minor -ge 3 ]; then
       unset LD_PREBIND
-      if [ "$MACOSX_DEPLOYMENT_TARGET" = "" ]; then
-         export MACOSX_DEPLOYMENT_TARGET=10.$macosx_minor
-      fi
    fi
    # We need two library files: a .dylib to link to and a .so to load
    BUNDLE=`echo $LIB | sed s/.dylib/.so/`
@@ -156,6 +153,23 @@ elif [ $PLATFORM = "macosx" ]; then
        fi
        echo $cmd
        $cmd
+   fi
+elif [ $PLATFORM = "ios" ]; then
+   export DYLD_LIBRARY_PATH=`pwd`/lib:$DYLD_LIBRARY_PATH
+   # Add versioning information to shared library if available
+   if [ "x$MAJOR" != "x" ]; then
+      VERSION="-compatibility_version ${MAJOR} -current_version ${MAJOR}.${MINOR}.${REVIS}"
+      SONAME=`echo $SONAME | sed "s/\(.*\)\.$soext/\1.${MAJOR}.$soext/"`
+      LIB=`echo $LIB | sed "s/\(\/*.*\/.*\)\.$soext/\1.${MAJOR}.${MINOR}.$soext/"`
+      LIBVERS=$LIB
+   fi
+   cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS \
+        -ldl $EXTRA $EXPLLNKCORE $VERSION"
+   echo $cmd
+   $cmd
+   linkstat=$?
+   if [ $linkstat -ne 0 ]; then
+      exit $linkstat
    fi
 elif [ $LD = "build/unix/wingcc_ld.sh" ]; then
    EXPLLNKCORE=

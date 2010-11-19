@@ -34,8 +34,6 @@ shift
 EXPLICITLINK=$9
 shift
 
-MACOSXTARGET=""
-
 if [ "$INCDIR" = "$ROOTSYS/include" ]; then
    INCDIR=\$ROOTSYS/include
 fi
@@ -58,11 +56,9 @@ if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosxxlc" ] || \
          # If install_name is specified, remove it.
          SOFLAGS="$OPT -dynamiclib -single_module -undefined dynamic_lookup"
       fi
-      MACOSXTARGET="MACOSX_DEPLOYMENT_TARGET=10.$macosx_minor"
    elif [ $macosx_minor -ge 3 ]; then
       SOFLAGS="-bundle $OPT -undefined dynamic_lookup"
       EXPLLINKLIBS=""
-      MACOSXTARGET="MACOSX_DEPLOYMENT_TARGET=10.$macosx_minor"
    else
       SOFLAGS="-bundle $OPT -undefined suppress"
       EXPLLINKLIBS=""
@@ -106,7 +102,7 @@ echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type -path $CXX`"\" " >> __compiledata
 echo "#define COMPILERVERS \"$COMPILERVERS\"" >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then
-      echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $MACOSXTARGET $CXX \$ObjectFiles $SOFLAGS $LDFLAGS $EXPLLINKLIBS -o \$SharedLib\"" >> __compiledata
+      echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS $EXPLLINKLIBS -o \$SharedLib\"" >> __compiledata
 else
    echo "#define MAKESHAREDLIB \"$CUSTOMSHARED\"" >> __compiledata
 fi

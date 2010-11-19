@@ -18,7 +18,7 @@ endif
 ifeq ($(IPHONEOS_DEPLOYMENT_TARGET),)
 IOSVERS       = 4.0
 else
-IOVERS        = $(IPHONEOS_DEPLOYMENT_TARGET)
+IOSVERS       = $(IPHONEOS_DEPLOYMENT_TARGET)
 endif
 IOSSDK        = /Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS$(IOSVERS).sdk
 IOSSDKBIN     = /Developer/Platforms/iPhoneOS.platform/Developer/usr/bin
@@ -48,11 +48,10 @@ COMPILER      = gnu
 
 # Linker:
 LD            = $(IOSSDKBIN)/g++
-LDFLAGS       = $(OPT) -arch armv7
+LDFLAGS       = $(OPT) -arch armv7 -isysroot $(IOSSDK) \
+                -miphoneos-version-min=$(IOSVERS)
 
-IOSTARGET    := IPHONEOS_DEPLOYMENT_TARGET=$(IOSVERS)
-
-# this is set for 64 but not for 32  bit (for iOS too???)
+# this is set for 64 but not for 32 bit (for iOS too???)
 CXXFLAGS     += -D__DARWIN_UNIX03=1
 CFLAGS       += -D__DARWIN_UNIX03=1
 CINTCXXFLAGS += -D__DARWIN_UNIX03=1

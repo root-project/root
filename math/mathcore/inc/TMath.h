@@ -344,7 +344,7 @@ namespace TMath {
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS_CC50) || \
     defined(R__HPUX11) || defined(R__GLIBC) || \
-    (defined(R__MACOSX) && defined(__INTEL_COMPILER))
+    (defined(R__MACOSX) && (defined(__INTEL_COMPILER) || defined(__arm__)))
 // math functions are defined inline so we have to include them here
 #   include <math.h>
 #   ifdef R__SOLARIS_CC50
@@ -465,14 +465,32 @@ inline Double_t TMath::Log10(Double_t x)
    { return log10(x); }
 
 inline Int_t TMath::Finite(Double_t x)
-#ifdef R__HPUX11
+#if defined(R__HPUX11)
    { return isfinite(x); }
+#elif defined(R__MACOSX) && defined(__arm__)
+#ifdef isfinite
+   // from math.h
+   { return isfinite(x); }
+#else
+   // from cmath
+   { return std::isfinite(x); }
+#endif
 #else
    { return finite(x); }
 #endif
 
 inline Int_t TMath::IsNaN(Double_t x)
+#if defined(R__MACOSX) && defined(__arm__)
+#ifdef isnan
+   // from math.h
    { return isnan(x); }
+#else
+   // from cmath
+   { return std::isnan(x); }
+#endif
+#else
+   { return isnan(x); }
+#endif
 
 //-------- Advanced -------------
 
@@ -867,7 +885,7 @@ template <typename T> Double_t TMath::Median(Long64_t n, const T *a,  const Doub
    // when n is even and n < 1000the median is a mean of the elements k = n/2 and k = n/2 + 1.
    //
    // If the weights are supplied (w not 0) all weights must be >= 0
-   // 
+   //
    // If work is supplied, it is used to store the sorting index and assumed to be
    // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
    // or on the heap for n >= kWorkMax .
