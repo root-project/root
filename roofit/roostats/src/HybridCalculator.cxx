@@ -220,15 +220,17 @@ SamplingDistribution* HybridCalculator::GenerateSamplingDistribution(
 
    // Importance Sampling setup
    ToyMCSampler *ts = dynamic_cast<ToyMCSampler*>(fTestStatSampler);
-   if(ts  &&  impDens) {
-      oocoutI((TObject*)0,InputArguments) << "Importance Sampling" << endl;
+   if(ts) { 
+      if (impDens) {
+         oocoutI((TObject*)0,InputArguments) << "Importance Sampling" << endl;
 
-      ts->SetImportanceDensity(impDens);
-      if(impSnapshot)
-         ts->SetImportanceSnapshot(*impSnapshot);
-   }else{
-      // deactivate importance sampling (might be set from previous run)
-      ts->SetImportanceDensity(NULL);
+         ts->SetImportanceDensity(impDens);
+         if(impSnapshot)
+            ts->SetImportanceSnapshot(*impSnapshot);
+      }else{
+         // deactivate importance sampling (might be set from previous run)
+         ts->SetImportanceDensity(NULL);
+      }
    }
 
    SetupSampler(*thisModel);

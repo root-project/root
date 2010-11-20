@@ -100,7 +100,6 @@ class NuisanceParametersSampler {
             TIter it2 = fParams->createIterator();
             RooRealVar *myarg2;
             while ((myarg2 = dynamic_cast<RooRealVar*>(it2.Next()))) {
-              if(!myarg2) continue;
               myarg2->setBins(nBins);
             }
 
