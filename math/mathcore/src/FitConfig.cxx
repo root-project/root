@@ -48,7 +48,7 @@ FitConfig::FitConfig(unsigned int npar) :
 
 FitConfig::~FitConfig() 
 {
-   // destructor implementation. No Op
+   // destructor implementation. No Operations
 }
 
 FitConfig::FitConfig(const FitConfig &rhs) { 
@@ -73,7 +73,8 @@ FitConfig & FitConfig::operator = (const FitConfig &rhs) {
 }
 
 void FitConfig::SetParamsSettings(unsigned int npar, const double *params, const double * vstep ) { 
-   // initialize fit config from parameter values
+   // initialize FitConfig from given parameter values and step sizes
+   // if npar different than existing one - clear old one and create new ones
    if (params == 0) { 
       fSettings =  std::vector<ParameterSettings>(npar); 
       return; 
