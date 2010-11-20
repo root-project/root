@@ -604,7 +604,7 @@ void TEveCaloDataVec::GetCellData(const TEveCaloData::CellId_t &id,
    // Get cell geometry and value from cell ID.
 
    cellData.CellGeom_t::operator=( fGeomVec[id.fTower] );
-   cellData.fValue = fSliceVec[id.fSlice][id.fTower]*id.fFraction;
+   cellData.fValue = fSliceVec[id.fSlice][id.fTower];
 }
 
 //______________________________________________________________________________

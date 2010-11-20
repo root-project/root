@@ -111,7 +111,7 @@ void TEveCalo2DGL::DrawRPhi(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
    Float_t towerH;
 
    UInt_t nPhi = data->GetPhiBins()->GetNbins();
-
+   TAxis* axis = data->GetPhiBins();
    for(UInt_t phiBin = 1; phiBin <= nPhi; ++phiBin)
    {
       if (cellLists[phiBin] )
@@ -126,7 +126,7 @@ void TEveCalo2DGL::DrawRPhi(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
          for (TEveCaloData::vCellId_i it = cids->begin(); it != cids->end(); it++)
          {
             data->GetCellData(*it, cellData);
-            sliceVal[(*it).fSlice] += cellData.Value(fM->fPlotEt);
+            sliceVal[(*it).fSlice] += cellData.Value(fM->fPlotEt)*(*it).fFraction;
          }
 
          if (rnrCtx.SecSelection()) {
@@ -137,7 +137,7 @@ void TEveCalo2DGL::DrawRPhi(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
          {
             if (rnrCtx.SecSelection())  glLoadName(s); // set name-stack slice
             fM->SetupColorHeight(sliceVal[s], s, towerH);
-            MakeRPhiCell(cellData.PhiMin(), cellData.PhiMax(), towerH, off);
+            MakeRPhiCell(axis->GetBinLowEdge(phiBin), axis->GetBinUpEdge(phiBin), towerH, off);
             off += towerH;
          }
          if (rnrCtx.SecSelection()) glPopName(); // slice
@@ -162,6 +162,7 @@ void TEveCalo2DGL::DrawRPhiHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
    Float_t *sliceValRef = new Float_t[nSlices];
    Float_t  towerH, towerHRef;
 
+   TAxis* axis = data->GetPhiBins();
    for(UInt_t phiBin = 1; phiBin <= nPhiBins; ++phiBin)
    {
       if (cellLists[phiBin])
@@ -175,14 +176,14 @@ void TEveCalo2DGL::DrawRPhiHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
          TEveCaloData::vCellId_t& cids = *(cellLists[phiBin]);
          for (TEveCaloData::vCellId_i i=cids.begin(); i!=cids.end(); i++) {
             data->GetCellData((*i), cellData);
-            sliceVal[i->fSlice] += cellData.Value(fM->fPlotEt);
+            sliceVal[i->fSlice] += cellData.Value(fM->fPlotEt)*(*i).fFraction;
          }
          // referenced eta sum
          for (Int_t s=0; s<nSlices; ++s) sliceValRef[s] = 0;
          TEveCaloData::vCellId_t& cidsRef = *(fM->fCellLists[phiBin]);
          for (TEveCaloData::vCellId_i i=cidsRef.begin(); i!=cidsRef.end(); i++) {
             data->GetCellData(*i, cellData);
-            sliceValRef[i->fSlice] += cellData.Value(fM->fPlotEt);
+            sliceValRef[i->fSlice] += cellData.Value(fM->fPlotEt)*(*i).fFraction;
          }
          // draw
          for (Int_t s = 0; s < nSlices; ++s)  {
@@ -190,7 +191,7 @@ void TEveCalo2DGL::DrawRPhiHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
             if (sliceVal[s] > 0)
             {
                fM->SetupColorHeight(sliceVal[s], s, towerH);
-               MakeRPhiCell(cellData.PhiMin(), cellData.PhiMax(), towerH, off);
+               MakeRPhiCell(axis->GetBinLowEdge(phiBin), axis->GetBinUpEdge(phiBin), towerH, off);
             }
             off += towerHRef;
          }
@@ -270,12 +271,18 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
    Float_t  towerH;
    Float_t transEta = fM->GetTransitionEta();
 
-   UInt_t nEta = data->GetEtaBins()->GetNbins();
+   TAxis* axis = data->GetEtaBins();
+   UInt_t nEta = axis->GetNbins();
    for (UInt_t etaBin = 1; etaBin <= nEta; ++etaBin)
    {
       if (cellLists[etaBin] )
       {
          assert(fM->fCellLists[etaBin]);
+         Float_t etaMin = axis->GetBinLowEdge(etaBin);
+         Float_t etaMax = axis->GetBinUpEdge(etaBin);
+         Float_t thetaMin = TEveCaloData::EtaToTheta(etaMax);
+         Float_t thetaMax = TEveCaloData::EtaToTheta(etaMin);
+
          // clear
          Float_t offUp  = 0;
          Float_t offLow = 0;
@@ -289,14 +296,14 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
          {
             data->GetCellData(*it, cellData);
             if (cellData.Phi() > 0)
-               sliceValsUp [it->fSlice] += cellData.Value(fM->fPlotEt);
+               sliceValsUp [it->fSlice] += cellData.Value(fM->fPlotEt)*(*it).fFraction;
             else
-               sliceValsLow[it->fSlice] += cellData.Value(fM->fPlotEt);
+               sliceValsLow[it->fSlice] += cellData.Value(fM->fPlotEt)*(*it).fFraction;
          }
 
          isBarrel = true;
-         if ((cellData.EtaMax() > 0 && cellData.EtaMax() > transEta) ||
-             (cellData.EtaMin() < 0 && cellData.EtaMin() < -transEta))
+         if ((etaMax > 0 && etaMax > transEta) ||
+             (etaMin < 0 && etaMin < -transEta))
          {
             isBarrel = false;
          }
@@ -314,7 +321,7 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
             {
                if (rnrCtx.SecSelection()) glLoadName(1);  // name-stack phi sign
                fM->SetupColorHeight(sliceValsUp[s], s, towerH);
-               MakeRhoZCell(cellData.ThetaMin(), cellData.ThetaMax(), offUp, isBarrel, kTRUE , towerH);
+               MakeRhoZCell(thetaMin, thetaMax, offUp, isBarrel, kTRUE , towerH);
                offUp += towerH;
             }
             // phi -
@@ -322,7 +329,7 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
             {
                if (rnrCtx.SecSelection()) glLoadName(0);  // name-stack phi sign
                fM->SetupColorHeight(sliceValsLow[s], s, towerH);
-               MakeRhoZCell(cellData.ThetaMin(), cellData.ThetaMax(), offLow, isBarrel, kFALSE , towerH);
+               MakeRhoZCell(thetaMin, thetaMax, offLow, isBarrel, kFALSE , towerH);
                offLow += towerH;
             }
             if (rnrCtx.SecSelection())  glPopName(); // phi sign is pos
@@ -344,8 +351,9 @@ void TEveCalo2DGL::DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
    static const TEveException eh("TEveCalo2DGL::DrawRhoZHighlighted ");
 
    TEveCaloData* data = fM->GetData();
+   TAxis* axis        = data->GetEtaBins();
+   UInt_t nEtaBins    = axis->GetNbins();
    Int_t  nSlices     = data->GetNSlices();
-   UInt_t nEtaBins    = data->GetEtaBins()->GetNbins();
 
    Float_t *sliceValsUp     = new Float_t[nSlices];
    Float_t *sliceValsLow    = new Float_t[nSlices];
@@ -372,9 +380,9 @@ void TEveCalo2DGL::DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
          for (TEveCaloData::vCellId_i i=cids.begin(); i!=cids.end(); i++) {
             data->GetCellData(*i, cellData);
             if (cellData.Phi() > 0)
-               sliceValsUp [i->fSlice] += cellData.Value(fM->fPlotEt);
+               sliceValsUp [i->fSlice] += cellData.Value(fM->fPlotEt)*(*i).fFraction;
             else
-               sliceValsLow[i->fSlice] += cellData.Value(fM->fPlotEt);
+               sliceValsLow[i->fSlice] += cellData.Value(fM->fPlotEt)*(*i).fFraction;
          }
 
          // reference phi sum
@@ -385,19 +393,21 @@ void TEveCalo2DGL::DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
          for (TEveCaloData::vCellId_i i=cidsRef.begin(); i!=cidsRef.end(); i++) {
             data->GetCellData(*i, cellData);
             if (cellData.Phi() > 0)
-               sliceValsUpRef [i->fSlice] += cellData.Value(fM->fPlotEt);
+               sliceValsUpRef [i->fSlice] += cellData.Value(fM->fPlotEt)*(*i).fFraction;
             else
-               sliceValsLowRef[i->fSlice] += cellData.Value(fM->fPlotEt);
+               sliceValsLowRef[i->fSlice] += cellData.Value(fM->fPlotEt)*(*i).fFraction;
          }
 
-         isBarrel = TMath::Abs(cellData.EtaMax()) < fM->GetTransitionEta();
+         isBarrel = TMath::Abs(axis->GetBinUpEdge(etaBin)) < fM->GetTransitionEta();
          for (Int_t s = 0; s < nSlices; ++s)
          {
+            Float_t thetaMin = TEveCaloData::EtaToTheta(axis->GetBinUpEdge(etaBin));
+            Float_t thetaMax = TEveCaloData::EtaToTheta(axis->GetBinLowEdge(etaBin));
             //  phi +
             fM->SetupColorHeight(sliceValsUpRef[s], s, towerHRef);
             if (sliceValsUp[s] > 0) {
                fM->SetupColorHeight(sliceValsUp[s], s, towerH);
-               MakeRhoZCell(cellData.ThetaMin(), cellData.ThetaMax(), offUp, isBarrel, kTRUE , towerH);
+               MakeRhoZCell(thetaMin, thetaMax, offUp, isBarrel, kTRUE , towerH);
             }
             offUp += towerHRef;
 
@@ -405,7 +415,7 @@ void TEveCalo2DGL::DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
             fM->SetupColorHeight(sliceValsLowRef[s], s, towerHRef);
             if (sliceValsLow[s] > 0) {
                fM->SetupColorHeight(sliceValsLow[s], s, towerH);
-               MakeRhoZCell(cellData.ThetaMin(), cellData.ThetaMax(), offLow, isBarrel, kFALSE , towerH);
+               MakeRhoZCell(thetaMin, thetaMax, offLow, isBarrel, kFALSE , towerH);
             }
             offLow += towerHRef;
          } // slices

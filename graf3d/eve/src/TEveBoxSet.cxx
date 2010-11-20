@@ -233,9 +233,8 @@ void TEveBoxSet::ComputeBBox()
       {
          while (bi.next()) {
             BFreeBox_t& b = * (BFreeBox_t*) bi();
-            Float_t * p = b.fVertices;
-            for(int i=0; i<8; ++i, p+=3)
-               BBoxCheckPoint(p);
+            for (Int_t i = 0; i < 8; ++i)
+               BBoxCheckPoint(b.fVertices[i]);
          }
          break;
       }

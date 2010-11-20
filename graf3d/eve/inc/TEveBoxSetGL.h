@@ -26,8 +26,9 @@ protected:
    mutable UInt_t  fBoxDL;   // Display-list id for a box atom.
 
    Int_t  PrimitiveType() const;
-   void   MakeOriginBox(Float_t p[24], Float_t dx, Float_t dy, Float_t dz) const;
-   void   RenderBox(const Float_t p[24]) const;
+   void   MakeOriginBox(Float_t p[8][3], Float_t dx, Float_t dy, Float_t dz) const;
+   void   RenderBoxStdNorm(const Float_t p[8][3]) const;
+   void   RenderBoxAutoNorm(const Float_t p[8][3]) const;
    void   MakeDisplayList() const;
 
    void   RenderBoxes(TGLRnrCtx& rnrCtx) const;

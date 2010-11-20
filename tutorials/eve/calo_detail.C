@@ -4,46 +4,55 @@
 // Calorimeter detailed view by using TEveCaloDataVec as data-source.
 // Demonstrantes how to plot calorimiter data with irregular bins.
 
-const char* histFile = "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
-
 void calo_detail()
 {
+   gROOT->LoadMacro("calorimeters.C");
    TEveManager::Create();
 
    // data
-   TEveCaloDataVec* data = MakeVecData(10);
+   TEveCaloDataVec* data = MakeVecData(20);
    data->IncDenyDestroy(); // don't delete if zero parent
 
-   // lego
-   TEveCaloLego* lego = new TEveCaloLego(data);
+   // frames
+   TEveWindowSlot* slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
+   TEveWindowPack* packH = slot->MakePack();
+   packH->SetElementName("Projections");
+   packH->SetHorizontal();
+   packH->SetShowTitleBar(kFALSE);
+
+   slot = packH->NewSlot();
+   TEveWindowPack* pack0 = slot->MakePack();
+   pack0->SetShowTitleBar(kFALSE);
+   TEveWindowSlot*  slotLeftTop   = pack0->NewSlot();
+   TEveWindowSlot* slotLeftBottom = pack0->NewSlot();
+
+   slot = packH->NewSlot();
+   TEveWindowPack* pack1 = slot->MakePack();
+   pack1->SetShowTitleBar(kFALSE);
+   TEveWindowSlot* slotRightTop    = pack1->NewSlot();
+   TEveWindowSlot* slotRightBottom = pack1->NewSlot();
+
+   // viewers ans scenes in second tab
+   Float_t maxH = 300;
+   TEveCalo3D* calo3d = MakeCalo3D(data, slotRightTop);
+   calo3d->SetMaxTowerH(maxH);
+
+   TEveCalo2D* calo2d;
+   calo2d = MakeCalo2D(calo3d, slotLeftTop, TEveProjection::kPT_RPhi);
+   calo2d->SetMaxTowerH(maxH);
+   calo2d = MakeCalo2D(calo3d, slotLeftBottom, TEveProjection::kPT_RhoZ);
+   calo2d->SetMaxTowerH(maxH);
+
+   TEveCaloLego* lego = MakeCaloLego(data, slotRightBottom);
    lego->SetAutoRebin(kFALSE);
-   gEve->AddElement(lego);
-
-   // lego's shortest bbox is (-0.5, 0.5)
-   // have to scale to movein real coordinates
-   lego->InitMainTrans();
-   Float_t sc = TMath::Min(lego->GetEtaRng(), lego->GetPhiRng());
-   lego->RefMainTrans().SetScale(sc, sc, sc);
-   lego->RefMainTrans().Move3PF(lego->GetEta(), lego->GetPhi(), 0);
-
-   // scales and axis on the border of window
-   TEveCaloLegoOverlay* overlay = new TEveCaloLegoOverlay();
-   gEve->GetDefaultGLViewer()->AddOverlayElement(overlay);
-   overlay->SetCaloLego(lego);
-
-   // automatic flip of othographic and perspective camera
-   TGLViewer* v = gEve->GetDefaultGLViewer();
-   v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-   TEveLegoEventHandler* eh = new TEveLegoEventHandler((TGWindow*)v->GetGLWidget(), (TObject*)v, lego);
-   v->SetEventHandler(eh);
-
-   // add annotation
-   const char* txt = Form("Irregular Cells \nMaxVal = %f", data->GetMaxVal(kTRUE));
-   TGLAnnotation* an = new TGLAnnotation(gEve->GetDefaultGLViewer(), txt, 0.02, 0.95); 
-
-
    lego->Set2DMode(TEveCaloLego::kValSizeOutline);
-   gEve->Redraw3D(kTRUE);
+
+   gEve->AddElement(lego);
+   gEve->GetDefaultGLViewer()->SetCurrentCamera(TGLViewer::kCameraPerspXOY);
+
+   gEve->GetBrowser()->GetTabRight()->SetTab(1);
+   gEve->FullRedraw3D(kTRUE);
+
 }
 
 //______________________________________________________________________________
@@ -58,11 +67,9 @@ TEveCaloDataVec* MakeVecData(Int_t ncells=0)
    TH2F* h1 = (TH2F*)hf->Get("ecalLego");
    TH2F* h2 = (TH2F*)hf->Get("hcalLego");
 
-   TEveCaloDataVec* data = new TEveCaloDataVec(3);
-
+   TEveCaloDataVec* data = new TEveCaloDataVec(2);
    data->RefSliceInfo(0).Setup("ECAL", 0.3, kRed);
-   data->RefSliceInfo(1).Setup("HCAL", 0.1, kYellow);
-   data->RefSliceInfo(2).Setup("OTHER", 0, kCyan);
+   data->RefSliceInfo(1).Setup("HCAL", 0.1, kBlue);
 
    TAxis *ax =  h1->GetXaxis();
    TAxis *ay =  h1->GetYaxis();
@@ -79,35 +86,31 @@ TEveCaloDataVec* MakeVecData(Int_t ncells=0)
       yM = TMath::Min(yM, cy+ncells);
    }
 
-   for(Int_t i=xm; i<=xM; i++)
+   // Take every second cell and set a random size.
+   for(Int_t i=xm; i<=xM; i+=2)
    {
-      for(Int_t j=ym; j<=yM; j++)
+      for(Int_t j=ym; j<=yM; j+=2)
       {
-         data->AddTower(ax->GetBinLowEdge(i), ax->GetBinUpEdge(i),
-                        ay->GetBinLowEdge(j), ay->GetBinUpEdge(j));
-
-         data->FillSlice(0, h1->GetBinContent(i, j));
-         data->FillSlice(1, h2->GetBinContent(i, j));
+         if ( (i+j) % 3)
+         {
+            data->AddTower(ax->GetBinLowEdge(i), ax->GetBinUpEdge(i),
+                           ay->GetBinLowEdge(j), ay->GetBinUpEdge(j));
+            data->FillSlice(0, h1->GetBinContent(i, j));
+            data->FillSlice(1, h2->GetBinContent(i, j));
+         }
+         else
+         {
+            data->AddTower(ax->GetBinLowEdge(i), ax->GetBinWidth(i)*2  +ax->GetBinLowEdge(i) ,
+                           ay->GetBinLowEdge(j), ay->GetBinWidth(j)*2  +ay->GetBinLowEdge(j) );
+            data->FillSlice(0, h2->GetBinContent(i, j));
+            data->FillSlice(1, h2->GetBinContent(i, j));
+         }
       }
    }
 
-   // Add irregularities
-   //
-   Float_t off = 0.02;
-   i = cx + 1; j = cy - 2;
-   data->AddTower(ax->GetBinLowEdge(i) -off, ax->GetBinUpEdge(i)+off,
-                  ay->GetBinLowEdge(j) -off, ay->GetBinUpEdge(j)+off);
-   data->FillSlice(2, 2.);
-
-   i = cx - 4; j = cy + 6;
-   data->AddTower(ax->GetBinLowEdge(i) -off, ax->GetBinUpEdge(i)+off,
-                  ay->GetBinLowEdge(j) -off, ay->GetBinUpEdge(j)+off);
-   data->FillSlice(2, 12.);
-
+   data->SetEtaBins(ax);
+   data->SetPhiBins(ay);
    data->DataChanged();
-   data->SetAxisFromBins(0.001, 0.001);
-   data->GetEtaBins()->SetTitle("X[cm]");
-   data->GetPhiBins()->SetTitle("Y[cm]");
    return data;
 }
 

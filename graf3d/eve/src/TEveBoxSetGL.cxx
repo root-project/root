@@ -61,51 +61,110 @@ Int_t TEveBoxSetGL::PrimitiveType() const
 }
 
 //______________________________________________________________________________
-void TEveBoxSetGL::MakeOriginBox(Float_t p[24], Float_t dx, Float_t dy, Float_t dz) const
+void TEveBoxSetGL::MakeOriginBox(Float_t p[8][3], Float_t dx, Float_t dy, Float_t dz) const
 {
    // Fill array p to represent a box (0,0,0) - (dx,dy,dz).
 
    // bottom
-   p[0] = 0;  p[1] = dy; p[2] = 0;  p += 3;
-   p[0] = dx; p[1] = dy; p[2] = 0;  p += 3;
-   p[0] = dx; p[1] = 0;  p[2] = 0;  p += 3;
-   p[0] = 0;  p[1] = 0;  p[2] = 0;  p += 3;
+   p[0][0] = 0;  p[0][1] = dy; p[0][2] = 0;
+   p[1][0] = dx; p[1][1] = dy; p[1][2] = 0;
+   p[2][0] = dx; p[2][1] = 0;  p[2][2] = 0;
+   p[3][0] = 0;  p[3][1] = 0;  p[3][2] = 0;
    // top
-   p[0] = 0;  p[1] = dy; p[2] = dz; p += 3;
-   p[0] = dx; p[1] = dy; p[2] = dz; p += 3;
-   p[0] = dx; p[1] = 0;  p[2] = dz; p += 3;
-   p[0] = 0;  p[1] = 0;  p[2] = dz;
+   p[4][0] = 0;  p[4][1] = dy; p[4][2] = dz;
+   p[5][0] = dx; p[5][1] = dy; p[5][2] = dz;
+   p[6][0] = dx; p[6][1] = 0;  p[6][2] = dz;
+   p[7][0] = 0;  p[7][1] = 0;  p[7][2] = dz;
 }
 
 //______________________________________________________________________________
-inline void TEveBoxSetGL::RenderBox(const Float_t p[24]) const
+inline void TEveBoxSetGL::RenderBoxStdNorm(const Float_t p[8][3]) const
 {
-   // Render a box specified by points in array p.
+   // Render a box specified by points in array p with standard
+   // axis-aligned normals.
 
    // bottom: 0123
    glNormal3f(0, 0, -1);
-   glVertex3fv(p);      glVertex3fv(p + 3);
-   glVertex3fv(p + 6);  glVertex3fv(p + 9);
+   glVertex3fv(p[0]);  glVertex3fv(p[1]);
+   glVertex3fv(p[2]);  glVertex3fv(p[3]);
    // top:    7654
    glNormal3f(0, 0, 1);
-   glVertex3fv(p + 21); glVertex3fv(p + 18);
-   glVertex3fv(p + 15); glVertex3fv(p + 12);
+   glVertex3fv(p[7]); glVertex3fv(p[6]);
+   glVertex3fv(p[5]); glVertex3fv(p[4]);
    // back:  0451
    glNormal3f(0, 1, 0);
-   glVertex3fv(p);      glVertex3fv(p + 12);
-   glVertex3fv(p + 15); glVertex3fv(p + 3);
+   glVertex3fv(p[0]); glVertex3fv(p[4]);
+   glVertex3fv(p[5]); glVertex3fv(p[1]);
    // front:   3267
    glNormal3f(0, -1, 0);
-   glVertex3fv(p + 9);   glVertex3fv(p + 6);
-   glVertex3fv(p + 18);  glVertex3fv(p + 21);
+   glVertex3fv(p[3]);  glVertex3fv(p[2]);
+   glVertex3fv(p[6]);  glVertex3fv(p[7]);
    // left:    0374
    glNormal3f(-1, 0, 0);
-   glVertex3fv(p);       glVertex3fv(p + 9);
-   glVertex3fv(p + 21);  glVertex3fv(p + 12);
+   glVertex3fv(p[0]);  glVertex3fv(p[3]);
+   glVertex3fv(p[7]);  glVertex3fv(p[4]);
    // right:   1562
    glNormal3f(1, 0, 0);
-   glVertex3fv(p + 3);   glVertex3fv(p + 15);
-   glVertex3fv(p + 18);  glVertex3fv(p + 6);
+   glVertex3fv(p[1]);  glVertex3fv(p[5]);
+   glVertex3fv(p[6]);  glVertex3fv(p[2]);
+}
+
+namespace
+{
+   void subtract_and_normalize(const Float_t a[3], const Float_t b[3],
+                               Float_t o[3])
+   {
+      // Calculate a - b and normalize the result.
+      o[0] = a[0] - b[0];
+      o[1] = a[1] - b[1];
+      o[2] = a[2] - b[2];
+      Float_t d = sqrtf(o[0]*o[0] + o[1]*o[1] + o[2]*o[2]);
+      if (d != 0)
+      {
+         d = 1.0f / d;
+         o[0] *= d;
+         o[1] *= d;
+         o[2] *= d;
+      }
+   }
+}
+//______________________________________________________________________________
+void TEveBoxSetGL::RenderBoxAutoNorm(const Float_t p[8][3]) const
+{
+   // Render box, calculate normals on the fly from first three points.
+
+   Float_t e[6][3], n[3];
+   subtract_and_normalize(p[1], p[0], e[0]);
+   subtract_and_normalize(p[3], p[0], e[1]);
+   subtract_and_normalize(p[4], p[0], e[2]);
+   subtract_and_normalize(p[5], p[6], e[3]);
+   subtract_and_normalize(p[7], p[6], e[4]);
+   subtract_and_normalize(p[2], p[6], e[5]);
+
+   // bottom: 0123
+   glNormal3fv(TMath::Cross(e[0], e[1], n));
+   glVertex3fv(p[0]); glVertex3fv(p[1]);
+   glVertex3fv(p[2]); glVertex3fv(p[3]);
+   // top:    7654
+   glNormal3fv(TMath::Cross(e[3], e[4], n));
+   glVertex3fv(p[7]); glVertex3fv(p[6]);
+   glVertex3fv(p[5]); glVertex3fv(p[4]);
+   // back:  0451
+   glNormal3fv(TMath::Cross(e[2], e[0], n));
+   glVertex3fv(p[0]); glVertex3fv(p[4]);
+   glVertex3fv(p[5]); glVertex3fv(p[1]);
+   // front:   3267
+   glNormal3fv(TMath::Cross(e[4], e[5], n));
+   glVertex3fv(p[3]); glVertex3fv(p[2]);
+   glVertex3fv(p[6]); glVertex3fv(p[7]);
+   // left:    0374
+   glNormal3fv(TMath::Cross(e[1], e[2], n));
+   glVertex3fv(p[0]); glVertex3fv(p[3]);
+   glVertex3fv(p[7]); glVertex3fv(p[4]);
+   // right:   1562
+   glNormal3fv(TMath::Cross(e[5], e[3], n));
+   glVertex3fv(p[1]); glVertex3fv(p[5]);
+   glVertex3fv(p[6]); glVertex3fv(p[2]);
 }
 
 //______________________________________________________________________________
@@ -129,12 +188,12 @@ void TEveBoxSetGL::MakeDisplayList() const
       if (fM->fBoxType < TEveBoxSet::kBT_Cone)
       {
          glBegin(PrimitiveType());
-         Float_t p[24];
+         Float_t p[8][3];
          if (fM->fBoxType == TEveBoxSet::kBT_AABox)
             MakeOriginBox(p, 1.0f, 1.0f, 1.0f);
          else
             MakeOriginBox(p, fM->fDefWidth, fM->fDefHeight, fM->fDefDepth);
-         RenderBox(p);
+         RenderBoxStdNorm(p);
          glEnd();
       }
       else
@@ -253,12 +312,12 @@ void TEveBoxSetGL::RenderBoxes(TGLRnrCtx& rnrCtx) const
             {
                if (rnrCtx.SecSelection()) glLoadName(bi.index());
                glBegin(primitiveType);
-               RenderBox(b.fVertices);
+               RenderBoxAutoNorm(b.fVertices);
                glEnd();
                if (fM->fAntiFlick)
-                  AntiFlick(0.5f*(b.fVertices[0] + b.fVertices[18]),
-                            0.5f*(b.fVertices[1] + b.fVertices[19]),
-                            0.5f*(b.fVertices[2] + b.fVertices[20]));
+                  AntiFlick(0.5f*(b.fVertices[0][0] + b.fVertices[6][0]),
+                            0.5f*(b.fVertices[0][1] + b.fVertices[6][1]),
+                            0.5f*(b.fVertices[0][2] + b.fVertices[6][2]));
             }
             if (boxSkip) { Int_t s = boxSkip; while (s--) bi.next(); }
          }

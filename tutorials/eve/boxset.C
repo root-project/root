@@ -103,3 +103,49 @@ TEveBoxSet* boxset_single_color(Float_t x=0, Float_t y=0, Float_t z=0,
 
    return q;
 }
+
+TEveBoxSet* boxset_freebox(Int_t num=100, Bool_t register=kTRUE)
+{
+   TEveManager::Create();
+
+   TRandom r(0);
+   gStyle->SetPalette(1, 0);
+
+   TEveRGBAPalette* pal = new TEveRGBAPalette(0, 130);
+
+   TEveBoxSet* q = new TEveBoxSet("BoxSet");
+   q->SetPalette(pal);
+   q->Reset(TEveBoxSet::kBT_FreeBox, kFALSE, 64);
+   Float_t verts[24];
+   for (Int_t i=0; i<num; ++i) {
+      Float_t x = r.Uniform(-10, 10);
+      Float_t y = r.Uniform(-10, 10);
+      Float_t z = r.Uniform(-10, 10);
+      Float_t a = r.Uniform(0.2, 0.5);
+      Float_t d = 0.05;
+      Float_t verts[24] = {
+         x - a + r.Uniform(-d, d), y - a + r.Uniform(-d, d), z - a + r.Uniform(-d, d),
+         x - a + r.Uniform(-d, d), y + a + r.Uniform(-d, d), z - a + r.Uniform(-d, d),
+         x + a + r.Uniform(-d, d), y + a + r.Uniform(-d, d), z - a + r.Uniform(-d, d),
+         x + a + r.Uniform(-d, d), y - a + r.Uniform(-d, d), z - a + r.Uniform(-d, d),
+         x - a + r.Uniform(-d, d), y - a + r.Uniform(-d, d), z + a + r.Uniform(-d, d),
+         x - a + r.Uniform(-d, d), y + a + r.Uniform(-d, d), z + a + r.Uniform(-d, d),
+         x + a + r.Uniform(-d, d), y + a + r.Uniform(-d, d), z + a + r.Uniform(-d, d),
+         x + a + r.Uniform(-d, d), y - a + r.Uniform(-d, d), z + a + r.Uniform(-d, d) };
+      q->AddBox(verts);
+      q->DigitValue(r.Uniform(0, 130));
+   }
+   q->RefitPlex();
+
+   // Uncomment these two lines to get internal highlight / selection.
+   // q->SetPickable(1);
+   // q->SetAlwaysSecSelect(1);
+
+   if (register)
+   {
+      gEve->AddElement(q);
+      gEve->Redraw3D(kTRUE);
+   }
+
+   return q;
+}

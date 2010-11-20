@@ -91,10 +91,11 @@ TEveCaloLego* MakeCaloLego(TEveCaloData* data, TEveWindowSlot* slot)
    TEveCaloLego* lego = new TEveCaloLego(data);
    s->AddElement(lego);
 
-   // move to real world coordinates
+   // By the default lego extends is (1x1x1). Resize it to put in 'natural' 
+   // coordinates, so that y extend in 2*Pi and set height of lego two times
+   //  smaller than y extend to have better view in 3D perspective.
    lego->InitMainTrans();
-   Float_t sc = TMath::Min(lego->GetEtaRng(), lego->GetPhiRng());
-   lego->RefMainTrans().SetScale(sc, sc, sc);
+   lego->RefMainTrans().SetScale(TMath::TwoPi(), TMath::TwoPi(), TMath::Pi());
 
    // draws scales and axis on borders of window
    TGLViewer* glv = v->GetGLViewer();

@@ -629,12 +629,15 @@ void TEveCalo2D::CellSelectionChanged()
 }
 
 //______________________________________________________________________________
-void TEveCalo2D::CellSelectionChangedInternal(TEveCaloData::vCellId_t& cells, std::vector<TEveCaloData::vCellId_t*>& cellLists)
+void TEveCalo2D::CellSelectionChangedInternal(TEveCaloData::vCellId_t& inputCells, std::vector<TEveCaloData::vCellId_t*>& outputCellLists)
 {
    // Sort slected cells in eta or phi bins.
 
+   Bool_t isRPhi = (fManager->GetProjection()->GetType() == TEveProjection::kPT_RPhi);
+   const TAxis* axis = isRPhi ? fData->GetPhiBins() :  fData->GetEtaBins();
+
    // clear old cache
-   for (vBinCells_i it = cellLists.begin(); it != cellLists.end(); it++)
+   for (vBinCells_i it = outputCellLists.begin(); it != outputCellLists.end(); it++)
    {
       if (*it)
       {
@@ -642,35 +645,29 @@ void TEveCalo2D::CellSelectionChangedInternal(TEveCaloData::vCellId_t& cells, st
          delete *it;
       }
    }
-   cellLists.clear();
+   outputCellLists.clear();
+   UInt_t nBins = axis->GetNbins();
+   outputCellLists.resize(nBins+1);
+   for (UInt_t b = 0; b <= nBins; ++b)
+      outputCellLists[b] = 0;
 
-   TEveCaloData::CellData_t  cellData;
-   if (cells.size())
+   for(UInt_t bin = 1; bin <= nBins; ++bin)
    {
-      Bool_t rPhi  = fManager->GetProjection()->GetType() == TEveProjection::kPT_RPhi;
-      UInt_t nBins = rPhi ? fData->GetPhiBins()->GetNbins() : fData->GetEtaBins()->GetNbins();
+      TEveCaloData::vCellId_t* idsInBin = fCellLists[bin];
+      if (!idsInBin)
+         continue;
 
-      cellLists.resize(nBins+1);
-      for (UInt_t b = 0; b <= nBins; ++b)
-         cellLists[b] = 0;
-
-      Int_t bin;
-      for (TEveCaloData::vCellId_i i=cells.begin(); i!=cells.end(); i++)
-      {
-         fData->GetCellData(*i, cellData);
-         if (CellInEtaPhiRng(cellData))
+      for (TEveCaloData::vCellId_i i = idsInBin->begin(); i != idsInBin->end(); i++)
+      { 
+         for (TEveCaloData::vCellId_i j = inputCells.begin(); j != inputCells.end(); j++)
          {
-            if (rPhi)
+            if( (*i).fTower == (*j).fTower && (*i).fSlice == (*j).fSlice)
             {
-               bin = fData->GetPhiBins()->FindBin(cellData.Phi());
-            }
-            else {
-               bin = fData->GetEtaBins()->FindBin(cellData.Eta());
-            }
-            if (cellLists[bin] == 0)
-               cellLists[bin] = new TEveCaloData::vCellId_t();
+               if (!outputCellLists[bin])
+                  outputCellLists[bin] = new TEveCaloData::vCellId_t();
 
-            cellLists[bin]->push_back(*i);
+               outputCellLists[bin]->push_back(TEveCaloData::CellId_t((*i).fTower, (*i).fSlice, (*i).fFraction));
+            }
          }
       }
    }
@@ -699,13 +696,13 @@ Float_t TEveCalo2D::GetValToHeight() const
    }
    else
    {
-     if (fData->Empty())
-       return 1;
+      if (fData->Empty())
+         return 1;
 
-     if (fPlotEt)
-      return fMaxTowerH/fMaxEtSumBin;
-     else
-      return fMaxTowerH/fMaxESumBin;
+      if (fPlotEt)
+         return fMaxTowerH/fMaxEtSumBin;
+      else
+         return fMaxTowerH/fMaxESumBin;
    }
 }
 
