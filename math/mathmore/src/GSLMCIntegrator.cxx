@@ -389,13 +389,13 @@ void GSLMCIntegrator::DoInitialize ( )
 {
    //    initialize by setting  integration type 
   
-   if (fWorkspace != 0) { 
-      if (fDim == fWorkspace->NDim() && fType == fWorkspace->Type() ) 
-         return; // can use previously existing ws
+   if (fWorkspace != 0) return; 
+   if (fDim == fWorkspace->NDim() && fType == fWorkspace->Type() ) 
+      return; // can use previously existing ws
 
-      // otherwise clear workspace and create a new one
-      fWorkspace->Clear(); 
-   }
+   // otherwise clear workspace 
+   fWorkspace->Clear(); 
+   // and create a new one
    fWorkspace->Init(fDim);
 }  
 

@@ -321,8 +321,6 @@ public:
       //type of intergation method   
       MCIntegration::Type fType;
        
-      //mode for VEGAS integration
-      MCIntegration::Mode fMode;
       GSLRngWrapper * fRng;
 
       unsigned int fDim;

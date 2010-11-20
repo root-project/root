@@ -105,18 +105,27 @@ namespace IntegOptionsUtil {
    template <class OptionType>
    void PrintDefault(const char * name, std::ostream & os) {
       //print default options
-      if (name == 0)  name = OptionType::DefaultIntegrator().c_str();      
-      os << "Default options for numerical integrator "  << name << " : " << std::endl;
+      std::string integName = (name != 0) ? name : OptionType::DefaultIntegrator();      
+      os << "Default options for numerical integrator "  << integName << " : " << std::endl;
       os << std::setw(25) << "Absolute tolerance"     << " : " << std::setw(15) << OptionType::DefaultAbsTolerance() << std::endl;
       os << std::setw(25) << "Relative tolerance"     << " : " <<std::setw(15) << OptionType::DefaultRelTolerance() << std::endl;
       os << std::setw(25) << "Workspace size"         << " : " << std::setw(15) << OptionType::DefaultWKSize() << std::endl;
       typedef  OptionTrait<OptionType> OPT; 
       os << std::setw(25) <<  OPT::DescriptionOfN()   << " : " << std::setw(15) << OPT::N() << std::endl;
-      IOptions * opts = GenAlgoOptions::FindDefault(name);
+      IOptions * opts = GenAlgoOptions::FindDefault(integName.c_str());
       if (opts) opts->Print(os);
    }
 
 }
+
+
+/// constructor (protected) to avoid user creating this class
+BaseIntegratorOptions::BaseIntegratorOptions() :
+   fIntegType(-1),
+   fWKSize(0), fNCalls(0), 
+   fAbsTolerance(0), fRelTolerance(0), 
+   fExtraOptions(0) 
+{} 
 
 BaseIntegratorOptions::BaseIntegratorOptions(const BaseIntegratorOptions & opt) : fExtraOptions(0) {  
    // copy constructor 

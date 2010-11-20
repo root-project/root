@@ -91,7 +91,7 @@ namespace Math {
 
       bool Init(size_t dim) { 
          fWs = gsl_monte_vegas_alloc( dim);
-         SetVegasParameters();
+         if (fWs) SetVegasParameters();
          return (fWs != 0);
       }
 
@@ -169,7 +169,7 @@ namespace Math {
          fWs = gsl_monte_miser_alloc( dim);
          // need this to set parameters according to dimension
          if (!fHaveNewParams) fParams = MiserParameters(dim);
-         SetMiserParameters();
+         if (fWs) SetMiserParameters();
          return (fWs != 0);
       }
 

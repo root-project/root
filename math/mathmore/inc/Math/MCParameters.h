@@ -50,11 +50,13 @@ struct VegasParameters{
    int verbose; 
 
    // constructor of default parameters
-   VegasParameters(); 
+   VegasParameters() { SetDefaultValues(); }
 
    // construct from GenAlgoOptions
    // parameter not specified are ignored 
    VegasParameters(const ROOT::Math::IOptions & opt);
+
+   void SetDefaultValues();
 
    VegasParameters & operator=(const ROOT::Math::IOptions & opt);
 
@@ -80,11 +82,13 @@ struct MiserParameters{
 
    // constructor of default parameters
    // needs dimension since min_calls = 16 * dim
-   MiserParameters(size_t dim=10);
+   MiserParameters(size_t dim=10) { SetDefaultValues(dim); }
+
+   void SetDefaultValues(size_t dim=10);
 
    // construct from GenAlgoOptions
    // parameter not specified are ignored 
-   MiserParameters(const ROOT::Math::IOptions & opt);
+   MiserParameters(const ROOT::Math::IOptions & opt, size_t dim = 10);
 
    MiserParameters & operator=(const ROOT::Math::IOptions & opt);
 

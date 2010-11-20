@@ -35,16 +35,19 @@
 namespace ROOT {
 namespace Math {
 
+
    /// default VEGAS parameters (copied from gsl/monte/vegas.c) 
-   VegasParameters::VegasParameters():
-      alpha( 1.5),
-      iterations(5),
-      stage(0), 
-      mode(GSL_VEGAS_MODE_IMPORTANCE), 
-      verbose(-1)
-   {} 
+   void VegasParameters::SetDefaultValues() {
+      // init default values
+      alpha        =  1.5;
+      iterations   = 5;
+      stage        = 0; 
+      mode         = GSL_VEGAS_MODE_IMPORTANCE;
+      verbose      = -1;
+   }
 
    VegasParameters::VegasParameters(const IOptions & opt) { 
+      SetDefaultValues();
       (*this) = opt;
    }
 
@@ -82,15 +85,19 @@ namespace Math {
 
    /// default MISER parameters (copied from gsl/monte/vegas.c) 
 
-   MiserParameters::MiserParameters(size_t dim):
-      estimate_frac(0.1),
-      min_calls( (dim>0) ? 16*dim : 160), // use default dim = 10
-      min_calls_per_bisection(32*min_calls) ,
-      alpha(2.),
-      dither(0)
-   {  }
 
-   MiserParameters::MiserParameters(const IOptions & opt) { 
+   void MiserParameters::SetDefaultValues(size_t dim) {
+      // init default values
+      estimate_frac           = 0.1;
+      min_calls               = (dim>0) ? 16*dim : 160; // use default dim = 10
+      min_calls_per_bisection = 32*min_calls;
+      dither                  = 0;
+      alpha                   = 2.0;
+   }
+
+
+   MiserParameters::MiserParameters(const IOptions & opt, size_t dim) { 
+      SetDefaultValues(dim);
       (*this) = opt;
    }
 

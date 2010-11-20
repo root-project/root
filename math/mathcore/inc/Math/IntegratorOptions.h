@@ -39,7 +39,7 @@ class BaseIntegratorOptions {
 protected: 
 
    /// protected constructor to avoid user creating this class
-   BaseIntegratorOptions() : fExtraOptions(0) {} 
+   BaseIntegratorOptions(); 
 
 public: 
 
