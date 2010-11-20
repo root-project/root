@@ -699,7 +699,7 @@ void LoadLibraryMap()
    string filename;
    static char *buffer = 0;
    static unsigned int sbuffer = 0;
-   
+
    while ( filelist >> filename ) {
 #ifdef WIN32
       struct _stati64 finfo;
@@ -1062,7 +1062,7 @@ bool NeedShadowClass(G__ClassInfo& cl)
    if (G__ShadowMaker::IsStdPair(cl)) return true;
    if (G__ShadowMaker::IsSTLCont(cl.Name())) return false;
    if (strcmp(cl.Name(),"string") == 0 ) return false;
-   
+
    if (strcmp(cl.Name(),"complex<float>") == 0 || strcmp(cl.Name(),"complex<double>") == 0) return true;
 
    if (cl.FileName() && !strncmp(cl.FileName(),"prec_stl",8)) {
@@ -1446,7 +1446,7 @@ bool NeedDestructor(G__ClassInfo& cl)
 bool HasCustomStreamerMemberFunction(G__ClassInfo &cl)
 {
    // Return true if the class has a custom member function streamer.
-   
+
    long offset;
    static const char *proto = "TBuffer&";
    return (cl.GetMethod("Streamer",proto,&offset).IsValid() && ( (cl.RootFlag() & G__NOSTREAMER) || (!(cl.RootFlag() & G__USEBYTECOUNT)) ) );
@@ -1822,7 +1822,7 @@ void WriteAuxFunctions(G__ClassInfo &cl)
       << "   static void streamer_" << mappedname.c_str() << "(TBuffer &buf, void *obj) {" << std::endl
       << "      ((" << classname.c_str() << "*)obj)->" << classname.c_str() << "::Streamer(buf);" << std::endl
       << "   }" << std::endl;
-   }      
+   }
 
    (*dictSrcOut) << "} // end of namespace ROOT for class " << classname.c_str() << std::endl << std::endl;
 }
@@ -2445,7 +2445,7 @@ void WriteClassInit(G__ClassInfo &cl)
       (*dictSrcOut)<< "   static void directoryAutoAdd_" << mappedname.c_str() << "(void *p, TDirectory *dir);" << std::endl;
    }
    if (HasCustomStreamerMemberFunction(cl)) {
-      (*dictSrcOut)<< "   static void streamer_" << mappedname.c_str() << "(TBuffer &buf, void *obj);" << std::endl;      
+      (*dictSrcOut)<< "   static void streamer_" << mappedname.c_str() << "(TBuffer &buf, void *obj);" << std::endl;
    }
    //--------------------------------------------------------------------------
    // Check if we have any schema evolution rules for this class
@@ -2637,7 +2637,7 @@ void WriteClassInit(G__ClassInfo &cl)
    }
    if (HasCustomStreamerMemberFunction(cl)) {
       // We have a custom member function streamer or an older (not StreamerInfo based) automatic streamer.
-      (*dictSrcOut) << "      instance.SetStreamerFunc(&streamer_" << mappedname.c_str() << ");" << std::endl;      
+      (*dictSrcOut) << "      instance.SetStreamerFunc(&streamer_" << mappedname.c_str() << ");" << std::endl;
    }
    if (bset) {
       (*dictSrcOut) << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::"
@@ -3916,32 +3916,13 @@ const char *CopyArg(const char *original)
         strstr(original,"linkdef")) && strstr(original,".h")) {
       return original;
    }
-   const char *slash = (char *)strchr(original,'\\');
-   if (slash==0) {
-      slash = (char *)strchr(original,'/');
-   }
-   if (slash && strlen(slash+1)>4 && strncmp(slash+1,"inc",3)==0 &&
-       ( slash[4]=='/' || slash[4]=='\\') )
-   {
-      return slash+5;
 
-   } else {
-
-      if (slash) {
-         const char *middle = slash + 1;
-
-         slash = (char *)strchr(middle,'\\');
-         if (slash==0) {
-            slash = (char *)strchr(middle,'/');
-         }
-         if (slash && strlen(slash+1)>4 && strncmp(slash+1,"inc",3)==0 &&
-             ( slash[4]=='/' || slash[4]=='\\') )
-         {
-            return slash+5;
-         }
-      }
-      return original;
-   }
+   const char *inc = strstr(original, "\\inc\\");
+   if (!inc)
+      inc = strstr(original, "/inc/");
+   if (inc && strlen(inc) > 5)
+      return inc + 5;
+   return original;
 #else
    return original;
 #endif
