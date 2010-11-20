@@ -1566,7 +1566,10 @@ win32)
    enable_builtin_ftgl="yes"
    enable_builtin_glew="yes"
    enable_builtin_pcre="yes"
-   enable_builtin_zlib="yes" ;;
+   enable_builtin_zlib="yes"
+   top_builddir=`cygpath -u $top_builddir`
+   top_srcdir=`cygpath -u $top_srcdir`
+   ;;
 esac
 
 # check for which, avoid using which, as it may be a buggy csh script.
