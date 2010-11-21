@@ -235,8 +235,7 @@ $(CINTDLLDIRDLLS)/sys/ipc.dll: $(CINTDLLDIRL)/G__c_ipc.o
 
 ##### dictionaries
 $(CINTDLLDIRDLLSTL)/rootcint_%.cxx: $(ROOT_SRCDIR)/core/metautils/src/%Linkdef.h $(CINTDLLROOTCINTTMPDEP)
-	$(CINTDLLROOTCINTTMP) -f $@ -c \
-	   $(subst multi,,${*:2=}) \
+	$(CINTDLLROOTCINTTMP) -f $@ -c $(subst multi,,${*:2=}) \
 	   $(ROOT_SRCDIR)/core/metautils/src/$*Linkdef.h
 
 $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDLLDIRDLLSTL)/rootcint_%.o,$(CINTDICTDLLS)): CINTCXXFLAGS += -I.
