@@ -437,7 +437,7 @@ endif
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist),)
 ifeq ($(findstring clean-,$(MAKECMDGOALS)),)
 ifeq ($(shell which svn 2>&1 | sed -ne "s@.*/svn@svn@p"),svn)
-SVNREV  := $(shell bash $(ROOT_SRCDIR)/build/unix/svninfo.sh)
+SVNREV  := $(shell bash $(ROOT_SRCDIR)/build/unix/svninfo.sh $(ROOT_SRCDIR))
 endif
 endif
 endif
@@ -1230,6 +1230,7 @@ $(RUNTIMEDIRS):
 		--exclude rootd.rc.d \
 		--exclude rootd.xinetd \
 		--exclude xrootd.rc.d \
+		--exclude svninfo.txt \
 		$(ROOT_SRCDIR)/etc . ; \
 	echo "Rsync'ing $(ROOT_SRCDIR)/macros..."; \
 	$(RSYNC) \
