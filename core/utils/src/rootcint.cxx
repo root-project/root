@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2010, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -173,6 +173,10 @@
 #ifdef __APPLE__
 #include <libgen.h> // Needed for basename
 #include <mach-o/dyld.h>
+#endif
+
+#if defined(R__WIN32)
+#include "cygpath.h"
 #endif
 
 #ifdef fgets // in G__ci.h
@@ -4295,6 +4299,21 @@ int main(int argc, char **argv)
    } else {
       force = 0;
    }
+
+#if defined(R__WIN32) && !defined(R__WINGCC)
+   // cygwin's make is presenting us some cygwin paths even though
+   // we are windows native. Convert them as good as we can.
+   for (int iic = ic; iic < argc; ++iic) {
+      std::string iiarg(argv[iic]);
+      if (FromCygToNativePath(iiarg)) {
+         size_t len = iiarg.length();
+         // yes, we leak.
+         char* argviic = new char[len + 1];
+         strlcpy(argviic, iiarg.c_str(), len + 1);
+         argv[iic] = argviic;
+      }
+   }
+#endif
 
    string header("");
    if (strstr(argv[ic],".C")  || strstr(argv[ic],".cpp") ||

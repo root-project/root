@@ -36,6 +36,7 @@
 #   define ssize_t int
 #   include <io.h>
 #   include <sys/types.h>
+#   include "cygpath.h"
 #endif
 
 #ifdef __APPLE__
@@ -380,9 +381,15 @@ int main(int argc, char **argv)
       }
       if (!strcmp(argv[ic], "-o")) {
          ic++;
+#ifdef WIN32
+         std::string outfile(argv[ic]);
+         FromCygToNativePath(outfile);
+         fp = fopen(outfile.c_str(), "w");
+#else
          fp = fopen(argv[ic], "w");
+#endif
          if (!fp) {
-            fprintf(stderr, "cannot open output file %s\n", argv[ic]);
+            fprintf(stderr, "cannot open output file %s\n", outfile.c_str());
             return 1;
          }
          ic++;
@@ -390,9 +397,15 @@ int main(int argc, char **argv)
       if (!strcmp(argv[ic], "-r")) {
          replace = true;
          ic++;
-         fp = fopen(argv[ic], "a+");
+#ifdef WIN32
+         std::string outfile(argv[ic]);
+         FromCygToNativePath(outfile);
+         fp = fopen(outfile.c_str(), "a+");
+#else
+         fp = fopen(outfile.c_str(), "a+");
+#endif
          if (!fp) {
-            fprintf(stderr, "cannot open output file %s\n", argv[ic]);
+            fprintf(stderr, "cannot open output file %s\n", outfile.c_str());
             return 1;
          }
          ic++;
@@ -400,6 +413,9 @@ int main(int argc, char **argv)
       if (!strcmp(argv[ic], "-l")) {
          ic++;
          solib = argv[ic];
+#ifdef WIN32
+         FromCygToNativePath(solib);
+#endif
 #ifdef __APPLE__
          string::size_type i = solib.find(".dylib");
          if (i != string::npos)
@@ -411,6 +427,9 @@ int main(int argc, char **argv)
          ic++;
          for (int i = ic; i < argc && argv[i][0] != '-'; i++) {
             string dl = argv[i];
+#ifdef WIN32
+            FromCygToNativePath(dl);
+#endif
 #ifdef __APPLE__
             string::size_type j = dl.find(".dylib");
             if (j != string::npos)
@@ -423,7 +442,13 @@ int main(int argc, char **argv)
       if (!strcmp(argv[ic], "-c")) {
          ic++;
          for (int i = ic; i < argc; i++) {
+#ifdef WIN32
+            std::string linkdef(argv[i]);
+            FromCygToNativePath(linkdef);
+            linkdefs.push_back(linkdef);
+#else
             linkdefs.push_back(argv[i]);
+#endif
             ic++;
          }
       }

@@ -38,6 +38,7 @@ extern "C" {
 #include <unistd.h>
 #else
 extern "C" int unlink(const char *FILENAME);
+#include "../../core/utils/src/cygpath.h"
 #endif
 
 extern "C" int main_orig(int argc, char **argv);
@@ -168,6 +169,20 @@ int main(int argc, char **argv)
    }
 
    argv[1] = argv[0]; // keep program name
+
+#ifdef _WIN32
+   for (int i = 2; i < argc; ++i) {
+      std::string arg(argv[i]);
+      if (FromCygToNativePath(arg)) {
+         size_t len = arg.length();
+         // yes, we leak.
+         char* argvi = new char[len + 1];
+         strncpy(argvi, arg.c_str(), len + 1);
+         argv[i] = argvi;
+      }
+   }
+#endif
+
    int ret = main_orig(argc-1, &argv[1]);
    if (ret) {
       // delete output file
