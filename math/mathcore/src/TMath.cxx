@@ -2093,8 +2093,8 @@ Double_t TMath::Binomial(Int_t n,Int_t k)
    Int_t k1=TMath::Min(k,n-k);
    Int_t k2=n-k1;
    Double_t fact=k2+1;
-   for (Int_t i=k1;i>1;i--)
-      fact*=static_cast<Double_t>(k2+i)/i;
+   for (Double_t i=k1;i>1.;--i)
+      fact *= (k2+i)/i;
    return fact;
 }
 
