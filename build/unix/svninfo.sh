@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+
 # Store info about which svn branch, what revision and at what date/time
 # we executed make.
 
