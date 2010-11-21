@@ -35,7 +35,7 @@ static const char *GetCygwinRootDir() {
 static bool FromCygToNativePath(std::string& path) {
    // Convert a cygwin path (/cygdrive/x/...,/home)
    // to a native Windows path. Return whether the path was changed.
-
+   static std::string cygRoot;
    size_t posCygDrive = path.find("/cygdrive/");
    if (posCygDrive != std::string::npos) {
       path[posCygDrive] = path[posCygDrive + 10];
@@ -45,13 +45,14 @@ static bool FromCygToNativePath(std::string& path) {
    } else {
       size_t posHome = path.find("/home/");
       if (posHome != std::string::npos) {
-         std::string fname = GetCygwinRootDir();
-         if (fname[fname.length() - 1] == '/') {
-            fname += posHome + 1;
-         } else {
-            fname += posHome;
+         if (cygRoot.empty()) {
+            cygRoot = GetCygwinRootDir();
+            size_t len = cygRoot.length();
+            if (cygRoot[len - 1] == '/') {
+               cygRoot.erase(len - 1);
+            }
          }
-         path = fname;
+         path.insert(posHome, cygRoot);
          return true;
       }
    }
