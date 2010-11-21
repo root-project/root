@@ -389,7 +389,7 @@ void GSLMCIntegrator::DoInitialize ( )
 {
    //    initialize by setting  integration type 
   
-   if (fWorkspace != 0) return; 
+   if (fWorkspace == 0) return; 
    if (fDim == fWorkspace->NDim() && fType == fWorkspace->Type() ) 
       return; // can use previously existing ws
 
