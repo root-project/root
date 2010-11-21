@@ -381,8 +381,8 @@ int main(int argc, char **argv)
       }
       if (!strcmp(argv[ic], "-o")) {
          ic++;
-#ifdef WIN32
          std::string outfile(argv[ic]);
+#ifdef WIN32
          FromCygToNativePath(outfile);
          fp = fopen(outfile.c_str(), "w");
 #else
@@ -397,8 +397,8 @@ int main(int argc, char **argv)
       if (!strcmp(argv[ic], "-r")) {
          replace = true;
          ic++;
-#ifdef WIN32
          std::string outfile(argv[ic]);
+#ifdef WIN32
          FromCygToNativePath(outfile);
          fp = fopen(outfile.c_str(), "a+");
 #else
