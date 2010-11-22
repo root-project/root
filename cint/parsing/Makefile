@@ -4,7 +4,7 @@
 CLEAN_TARGETS += *.log $(ALL_LIBRARIES) scopeDict.* scopeDict2.*  TTestClass_h_DEBUGTARGET
 
 #Set the list of target to make while testing
-TEST_TARGETS += lessThan operatorLessThanTemplate testTable scopeTest multiScope Readbool ptrconst TTestClass
+TEST_TARGETS += lessThan operatorLessThanTemplate testTable scopeTest multiScope Readbool ptrconst TTestClass semicolon
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -74,4 +74,10 @@ TTestClass_h.$(DllSuf):
 TTestClass.log: TTestClass_h.$(DllSuf)
 
 TTestClass: TTestClass.log
+	$(TestDiff)
+
+semicolon.log: semicolon.C semicolon.ref
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l 'semicolon.C("abc ; xyz")' > semicolon.log 2>&1 || handleError.sh --result=$$? --log=$@ --test=$@
+
+semicolon: semicolon.log
 	$(TestDiff)
