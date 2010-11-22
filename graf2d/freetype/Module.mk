@@ -63,6 +63,9 @@ endif
 $(FREETYPELIBA): $(FREETYPELIBS)
 		$(MAKEDIR)
 ifeq ($(PLATFORM),win32)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@$(RSYNC) --exclude '.svn' --exclude '*.lib' $(ROOT_SRCDIR)/$(FREETYPEDIRS)/win $(FREETYPEDIRS)
+endif
 		@(if [ -d $(FREETYPEDIRS)/$(FREETYPEVERS) ]; then \
 			rm -rf $(FREETYPEDIRS)/$(FREETYPEVERS); \
 		fi; \
@@ -183,6 +186,11 @@ endif
 		@rm -rf $(FREETYPELIB) $(FREETYPEDIRS)/freetype-*
 ifeq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@mv $(FREETYPEDIRS)/-$(FREETYPEVERS).tar.gz $(FREETYPELIBS)
+endif
+ifeq ($(PLATFORM),win32)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@rm -rf $(FREETYPEDIRS)/win
+endif
 endif
 
 distclean::     distclean-$(MODNAME)

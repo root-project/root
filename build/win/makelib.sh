@@ -54,7 +54,7 @@ else
 fi
 
 if [ "$R__PLATFORM" = "win32" ]; then
-   if [ "$R__LD" = "build/win/ld.sh" ]; then
+   if [ "`basename $R__LD`" = "ld.sh" ]; then
       echo "$bindexp $name $R__OBJS > $libdir/${name}.def"
       $bindexp $name $R__OBJS > $libdir/${name}.def
       cmd="lib -ignore:4049,4206,4217,4221 \

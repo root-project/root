@@ -45,7 +45,7 @@ BINDEXPS     := $(wildcard $(BINDEXPDIR)/*.cxx)
 BINDEXPO     := $(call stripsrc,$(BINDEXPS:.cxx=.o))
 BINDEXP      := bin/bindexplib$(EXEEXT)
 
-W32PRAGMA    := build/win/w32pragma.h
+W32PRAGMA    := $(ROOT_SRCDIR)/build/win/w32pragma.h
 ALLHDRS      += include/w32pragma.h
 endif
 
@@ -61,7 +61,7 @@ $(DROP):        $(DROPO)
 		$(LD) $(LDFLAGS) -o $@ $(DROPO)
 
 ifeq ($(PLATFORM),win32)
-include/%.h:    build/win/%.h
+include/%.h:    $(ROOT_SRCDIR)/build/win/%.h
 		cp $< $@
 
 $(BINDEXP):     $(BINDEXPO)

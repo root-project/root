@@ -3,6 +3,7 @@
 # Simple interface to LINK, tansforming -o <exe> to -out:<exe> and unix
 # pathnames to windows pathnames.
 
+dir=`dirname $0`
 args=
 dll=
 debug=
@@ -35,7 +36,7 @@ if [ "$dll" != "bin/rmkdepend.exe" -a \
 fi
 
 if [ "$dll" != "" ]; then
-   build/win/makeresource.sh "$dll" \
+   $dir/makeresource.sh "$dll" \
       && rc $debug -Iinclude /Fo"${dll}.res" "${dll}.rc" > /dev/null 2>&1
    if [ -r "${dll}.res" ]; then
       args="$args ${dll}.res"

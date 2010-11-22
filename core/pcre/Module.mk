@@ -31,7 +31,7 @@ PCREDIRI     := $(PCREDIRS)/$(PCREVERS)
 ##### libpcre #####
 PCRELIBS     := $(MODDIRS)/$(PCREVERS).tar.gz
 ifeq ($(PLATFORM),win32)
-PCRELIBA     := $(call stripsrc,$(MODDIRS)/Win32/libpcre-7.8.lib)
+PCRELIBA     := $(call stripsrc,$(MODDIRS)/win32/libpcre-7.8.lib)
 PCRELIB      := $(LPATH)/libpcre.lib
 ifeq (yes,$(WINRTDEBUG))
 PCREBLD      := "libpcre - Win32 Debug"
@@ -58,6 +58,9 @@ $(PCRELIB): $(PCRELIBA)
 $(PCRELIBA): $(PCRELIBS)
 		$(MAKEDIR)
 ifeq ($(PLATFORM),win32)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@$(RSYNC) --exclude '.svn' --exclude '*.lib' $(ROOT_SRCDIR)/$(PCREDIRS)/win32 $(PCREDIRS)
+endif
 		@(if [ -d $(PCREDIRS)/$(PCREVERS) ]; then \
 			rm -rf $(PCREDIRS)/$(PCREVERS); \
 		fi; \
@@ -69,7 +72,7 @@ ifeq ($(PLATFORM),win32)
 		cd win32; \
 		unset MAKEFLAGS; \
 		nmake -nologo -f Makefile.msc CFG=$(PCREBLD) \
-		NMCXXFLAGS="$(BLDCXXFLAGS) -I../../../../build/win -FIw32pragma.h")
+		NMCXXFLAGS="$(BLDCXXFLAGS) -I../../../../include -FIw32pragma.h")
 else
 		@(if [ -d $(PCREDIRS)/$(PCREVERS) ]; then \
 			rm -rf $(PCREDIRS)/$(PCREVERS); \
@@ -154,6 +157,9 @@ ifeq ($(PLATFORM),win32)
 			unset MAKEFLAGS; \
 			nmake -nologo -f Makefile.msc distclean; \
 		fi)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@rm -rf $(PCREDIRS)/win32
+endif
 endif
 ifeq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@mv $(PCRELIBS) $(PCREDIRS)/-$(PCREVERS).tar.gz

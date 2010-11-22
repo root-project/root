@@ -75,19 +75,19 @@ endif
 NOOPT         =
 
 # Compiler:
-CXX           = build/win/cl.sh
-CC            = build/win/cl.sh
+CXX           = $(ROOT_SRCDIR)/build/win/cl.sh
+CC            = $(ROOT_SRCDIR)/build/win/cl.sh
 CPPPREP       = cl.exe -E -C -nologo
 CXXFLAGS      = -nologo -FIw32pragma.h \
                 $(BLDCXXFLAGS) $(EXTRA_CXXFLAGS) -D_WIN32
 CXXOUT        = -Fo
-CFLAGS        = -nologo -Ibuild/win -FIw32pragma.h -FIsehmap.h \
+CFLAGS        = -nologo -I$(ROOT_SRCDIR)/build/win -FIw32pragma.h -FIsehmap.h \
                 $(BLDCFLAGS) $(EXTRA_CFLAGS) -D_WIN32
 CINTCXXFLAGS := $(CXXFLAGS) $(CINTOPT)
 CINTCFLAGS   := $(CFLAGS) $(CINTOPT)
 
 # Linker:
-LD            = build/win/ld.sh
+LD            = $(ROOT_SRCDIR)/build/win/ld.sh
 LDFLAGS       = -nologo -ignore:4049,4075,4089,4217,4221 -incremental:no \
                 $(LDOPT) $(EXTRA_LDFLAGS) 
 SOFLAGS       = -DLL
@@ -107,10 +107,23 @@ CRYPTLIBS     =
 
 # Fortran:
 ifeq ($(F77),build/win/f77.sh)
-F77           = build/win/f77.sh
+F77           = $(ROOT_SRCDIR)/build/win/f77.sh
 F77FLAGS      = -nologo -4Nportlib $(BLDF77FLAGS) -recursive
 F77LDFLAGS    = $(F77FLAGS) $(F77OPT) -link $(LDFLAGS)
 F77LIBS       =
 endif
 
 # Extras
+ifeq ($(CONFIGURE),yes)
+showcxx:
+	@echo "$(CXX)"
+
+showcc:
+	@echo "$(CC)"
+
+showld:
+	@echo "$(LD)"
+
+showf77:
+	@echo "$(F77)"
+endif

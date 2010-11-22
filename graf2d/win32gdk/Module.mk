@@ -82,10 +82,8 @@ $(GDKDLL):      $(GDKLIBA)
 $(GDKLIBA):     $(GDKSRC)
 		$(MAKEDIR)
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
-		@$(INSTALL) $(GDKDIRS) $(call stripsrc,$(GDKDIRS))
-		@(find $(call stripsrc,$(GDKDIRS)) -name "*.o" -exec rm -f {} \; >/dev/null 2>&1;true)
-		@(find $(call stripsrc,$(GDKDIRS)) -name .svn -exec rm -f {} \; >/dev/null 2>&1;true)
-		@rm -f $(GDKLIBA)
+		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.lib' --exclude '*.dll' $(GDKDIRS) $(dir $(call stripsrc,$(GDKDIRS)))
+		@$(RSYNC) --exclude '.svn' $(WIN32GDKDIR)/gdk/lib $(call stripsrc,$(WIN32GDKDIR)/gdk)
 endif
 		@(echo "*** Building $@..."; \
 		  unset MAKEFLAGS; \
@@ -123,12 +121,11 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(WIN32GDKDEP) $(WIN32GDKDS) $(WIN32GDKDH) \
 		   $(WIN32GDKLIB) $(WIN32GDKMAP) $(GDKLIBS) $(GDKDLLS)
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
-		rm -rf $(call stripsrc,$(GDKDIRS))
+		@rm -rf $(call stripsrc,$(GDKDIRS))
+		@rm -rf $(call stripsrc,$(WIN32GDKDIR)/gdk/lib)
 else
-ifeq ($(PLATFORM),win32)
 		-@(cd $(call stripsrc,$(GDKDIRS)); unset MAKEFLAGS; \
 		nmake -nologo -f makefile.msc clean VC_MAJOR=$(VC_MAJOR))
-endif
 endif
 
 distclean::     distclean-$(MODNAME)

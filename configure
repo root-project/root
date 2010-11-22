@@ -895,8 +895,8 @@ check_comp() {
     case $comptype in
     C)
         if test "x$altcc" = "x" ; then
-            if `make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showcc > /dev/null 2>&1` ; then
-                altcc=`make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showcc`
+            if `make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcc > /dev/null 2>&1` ; then
+                altcc=`make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcc`
             else
                 altcc=`grep '^CC ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             fi
@@ -911,8 +911,8 @@ check_comp() {
         ;;
     C++)
         if test "x$altcxx" = "x" ; then
-            if `make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showcxx > /dev/null 2>&1` ; then
-                altcxx=`make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showcxx`
+            if `make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcxx > /dev/null 2>&1` ; then
+                altcxx=`make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcxx`
             else
                 altcxx=`grep '^CXX ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             fi
@@ -927,20 +927,20 @@ check_comp() {
         ;;
     LD)
         if test "x$altld" = "x" ; then
-            if `make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showld > /dev/null 2>&1` ; then
-                altld=`make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showld`
+            if `make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showld > /dev/null 2>&1` ; then
+                altld=`make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showld`
             else
                 altld=`grep '^LD ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
-                if test "x$arch" = "xwin32" ; then
-                    altldorg="link"
-                    altldtmp="$altld"
-                    altld="$altldorg"
-                fi
-                if test "x$arch" = "xwin32gcc" ; then
-                    altldorg="g++"
-                    altldtmp="$altld"
-                    altld="$altldorg"
-                fi
+            fi
+            if test "x$arch" = "xwin32" ; then
+                altldorg="link"
+                altldtmp="$altld"
+                altld="$altldorg"
+            fi
+            if test "x$arch" = "xwin32gcc" ; then
+                altldorg="g++"
+                altldtmp="$altld"
+                altld="$altldorg"
             fi
         fi
         altld1=`echo "$altld" | awk '{print $1}'`
@@ -957,15 +957,15 @@ check_comp() {
         ;;
     F77)
         if test "x$altf77" = "x" ; then
-            if `make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showf77 > /dev/null 2>&1` ; then
-                altf77=`make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showf77`
+            if `make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showf77 > /dev/null 2>&1` ; then
+                altf77=`make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showf77`
             else
                 altf77=`grep '^F77 ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
-                if test "x$arch" = "xwin32" ; then
-                    altf77org="fl32"
-                    altf77tmp="$altf77"
-                    altf77="$altf77org"
-                fi
+            fi
+            if test "x$arch" = "xwin32" ; then
+                altf77org="fl32"
+                altf77tmp="$altf77"
+                altf77="$altf77org"
             fi
         fi
         altf771=`echo "$altf77" | awk '{print $1}'`
