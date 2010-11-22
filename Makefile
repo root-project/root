@@ -339,6 +339,8 @@ ROOTLIBS     := $(BOOTLIBS) $(LPATH)/libRIO.lib $(LPATH)/libNet.lib \
 RINTLIBS     := $(LPATH)/libRint.lib
 endif
 
+ROOTALIB     := $(LPATH)/libRoot.a
+
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
 BOOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB) $(MATHCORELIB)
 ifneq ($(ROOTDICTTYPE),cint)
@@ -992,7 +994,9 @@ maintainer-clean:: distclean
 version: $(CINTTMP)
 	@$(MAKEVERSION)
 
-static: rootlibs
+static: $(ROOTALIB)
+
+$(ROOTALIB): $(ALLLIBS)
 	@$(MAKESTATIC) $(PLATFORM) "$(CXX)" "$(CC)" "$(LD)" "$(LDFLAGS)" \
 	   "$(XLIBS)" "$(SYSLIBS)" "$(STATICEXTRALIBS)"
 
