@@ -6,7 +6,11 @@
 dir=
 dotsvn=".svn"
 if [ $# = 1 ]; then
-   dir=$1
+   if [ -x /bin/cygpath ]; then
+      dir=`cygpath -u $1`
+   else
+      dir=$1
+   fi
    dotsvn="$dir/.svn"
 fi
 
