@@ -96,7 +96,8 @@ TEveGeoShape::TEveGeoShape(const char* name, const char* title) :
    TNamed        (name, title),
    fColor        (0),
    fNSegments    (0),
-   fShape        (0)
+   fShape        (0),
+   fMiniOutline  (kTRUE)
 {
    // Constructor.
 
@@ -230,6 +231,7 @@ TEveGeoShapeExtract* TEveGeoShape::DumpShapeTree(TEveGeoShape* gsre,
    she->SetRGBA(rgba);
    she->SetRnrSelf(gsre->GetRnrSelf());
    she->SetRnrElements(gsre->GetRnrChildren());
+   she->SetMiniOutline(gsre->GetMiniOutline());
    she->SetShape(gsre->GetShape());
    if (gsre->HasChildren())
    {
@@ -276,6 +278,7 @@ TEveGeoShape* TEveGeoShape::SubImportShapeExtract(TEveGeoShapeExtract* gse,
    gsre->SetMainAlpha(rgba[3]);
    gsre->SetRnrSelf(gse->GetRnrSelf());
    gsre->SetRnrChildren(gse->GetRnrElements());
+   gsre->SetMiniOutline(gse->GetMiniOutline());
    gsre->SetShape(gse->GetShape());
 
    if (parent)
@@ -354,7 +357,8 @@ ClassImp(TEveGeoShapeProjected);
 //______________________________________________________________________________
 TEveGeoShapeProjected::TEveGeoShapeProjected() :
    TEveElementList("TEveGeoShapeProjected", "", kTRUE),
-   fBuff(0)
+   fBuff(0),
+   fMiniOutline(kTRUE)
 {
    // Constructor.
 }
@@ -380,6 +384,7 @@ void TEveGeoShapeProjected::SetProjection(TEveProjectionManager* mng,
 
    TEveGeoShape* gre = dynamic_cast<TEveGeoShape*>(fProjectable);
    SetMainColor(gre->GetMainColor());
+   SetMiniOutline(gre->GetMiniOutline());
    CopyVizParams(gre);
 }
 

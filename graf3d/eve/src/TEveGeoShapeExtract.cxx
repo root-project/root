@@ -34,9 +34,9 @@ ClassImp(TEveGeoShapeExtract);
 //______________________________________________________________________________
 TEveGeoShapeExtract::TEveGeoShapeExtract(const char* n, const char* t) :
    TNamed       (n,t),
-
    fRnrSelf     (kTRUE),
    fRnrElements (kTRUE),
+   fMiniOutline (kTRUE),
    fShape       (0),
    fElements    (0)
 {

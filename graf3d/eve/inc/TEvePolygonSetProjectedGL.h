@@ -14,8 +14,31 @@
 
 #include "TGLObject.h"
 
+class TEvePolygonSetProjected;
+
 class TEvePolygonSetProjectedGL : public TGLObject
 {
+protected:
+   struct Edge_t
+   {
+      Int_t fI, fJ;
+      Edge_t(Int_t i, Int_t j)
+      {
+         if (i <= j) { fI = i; fJ = j; }
+         else        { fI = j; fJ = i; }
+      }
+
+      bool operator<(const Edge_t& e) const
+      {
+         if (fI == e.fI)
+            return fJ < e.fJ;
+         else
+            return fI < e.fI;
+      }
+   };
+
+   TEvePolygonSetProjected *fM;
+
 public:
    TEvePolygonSetProjectedGL();
    virtual  ~TEvePolygonSetProjectedGL() {}

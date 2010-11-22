@@ -54,7 +54,8 @@ TEvePolygonSetProjected::TEvePolygonSetProjected(const char* n, const char* t) :
    TEveShape(n, t),
    fBuff(0),
    fNPnts(0),
-   fPnts(0)
+   fPnts(0),
+   fMiniOutline(kTRUE)
 {
    // Constructor.
 }
@@ -103,6 +104,7 @@ void TEvePolygonSetProjected::SetProjection(TEveProjectionManager* mng,
       SetLineColor(color);
       // SetLineColor((Color_t)TColor::GetColorBright(color));
       SetMainTransparency(gre->GetMainTransparency());
+      SetMiniOutline(gre->GetMiniOutline());
    }
 }
 
@@ -124,7 +126,7 @@ void TEvePolygonSetProjected::UpdateProjection()
 
    if (fBuff == 0) return;
 
-   // drop polygons, and projected/reduced points
+   // drop polygons and projected/reduced points
    fPols.clear();
 
    ProjectBuffer3D();
@@ -205,9 +207,8 @@ Float_t TEvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& p
 
    if (pp.size() <= 2) return 0;
 
-   // dimension of bbox
-   Float_t bbox[] = { 1e6, -1e6, 1e6, -1e6, 1e6, -1e6 };
-   for (std::list<Int_t>::iterator u = pp.begin(); u!= pp.end(); ++u)
+   Float_t bbox[4] = { 1e6, -1e6, 1e6, -1e6 };
+   for (std::list<Int_t>::iterator u = pp.begin(); u != pp.end(); ++u)
    {
       Int_t idx = *u;
       if (fPnts[idx].fX < bbox[0]) bbox[0] = fPnts[idx].fX;
@@ -219,37 +220,58 @@ Float_t TEvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& p
    Float_t eps = 2*TEveProjection::fgEps;
    if ((bbox[1]-bbox[0]) < eps || (bbox[3]-bbox[2]) < eps) return 0;
 
-   // duplication
+   // Duplication
    for (vpPolygon_i poi = pols.begin(); poi != pols.end(); ++poi)
    {
       Polygon_t& refP = *poi;
-      if ((Int_t)pp.size() != refP.fNPnts)
+
+      if ((Int_t) pp.size() != refP.fNPnts)
          continue;
-      std::list<Int_t>::iterator u = pp.begin();
-      Int_t pidx = refP.FindPoint(*u);
-      if (pidx < 0)
-         continue;
-      while (u != pp.end())
+
+      Int_t start_idx = refP.FindPoint(pp.front());
+      if (start_idx < 0)
+            continue;
+      if (++start_idx >= refP.fNPnts) start_idx = 0;
+      
+      // Same orientation duplicate
       {
-         if ((*u) != refP.fPnts[pidx])
-            break;
-         ++u;
-         if (++pidx >= refP.fNPnts) pidx = 0;
+         std::list<Int_t>::iterator u = ++pp.begin();
+         Int_t pidx = start_idx;
+         while (u != pp.end())
+         {
+            if ((*u) != refP.fPnts[pidx])
+               break;
+            ++u;
+            if (++pidx >= refP.fNPnts) pidx = 0;
+         }
+         if (u == pp.end()) return 0;
       }
-      if (u == pp.end()) return 0;
+      // Inverse orientation duplicate
+      {
+         std::list<Int_t>::iterator u = --pp.end();
+         Int_t pidx = start_idx;
+         while (u != pp.begin())
+         {
+            if ((*u) != refP.fPnts[pidx])
+               break;
+            --u;
+            if (++pidx >= refP.fNPnts) pidx = 0;
+         }
+         if (u == pp.begin()) return 0;
+      }
    }
 
-   Int_t* pv = new Int_t[pp.size()];
-   Int_t count=0;
-   for (std::list<Int_t>::iterator u = pp.begin(); u != pp.end(); u++)
+   Int_t *pv    = new Int_t[pp.size()];
+   Int_t  count = 0;
+   for (std::list<Int_t>::iterator u = pp.begin(); u != pp.end(); ++u)
    {
       pv[count] = *u;
-      count++;
+      ++count;
    }
 
    pols.push_back(Polygon_t());
-   pols.back().fNPnts = pp.size();
-   pols.back().fPnts = &pv[0];
+   pols.back().fNPnts =  pp.size();
+   pols.back().fPnts  = &pv[0];
 
    return (bbox[1]-bbox[0]) * (bbox[3]-bbox[2]);
 }
@@ -260,17 +282,17 @@ Float_t TEvePolygonSetProjected::MakePolygonsFromBP(Int_t* idxMap)
    // Build polygons from list of buffer polygons.
 
    TEveProjection* projection = fManager->GetProjection();
-   Int_t* bpols = fBuff->fPols;
-   Float_t surf =0; // surface of projected polygons
-   for (UInt_t pi = 0; pi< fBuff->NbPols(); pi++)
+   Int_t   *bpols = fBuff->fPols;
+   Float_t  surf  = 0; // surface of projected polygons
+   for (UInt_t pi = 0; pi < fBuff->NbPols(); ++pi)
    {
       std::list<Int_t> pp; // points in current polygon
-      UInt_t segN = bpols[1];
-      Int_t* seg =  &bpols[2];
+      UInt_t  segN =  bpols[1];
+      Int_t  *seg  = &bpols[2];
       // start idx in the fist segment depends of second segment
-      Int_t  tail, head;
-      Bool_t h = IsFirstIdxHead(seg[0], seg[1]);
-      if (h) {
+      Int_t   tail, head;
+      if (IsFirstIdxHead(seg[0], seg[1]))
+      {
          head = idxMap[fBuff->fSegs[3*seg[0] + 1]];
          tail = idxMap[fBuff->fSegs[3*seg[0] + 2]];
       }
@@ -285,24 +307,23 @@ Float_t TEvePolygonSetProjected::MakePolygonsFromBP(Int_t* idxMap)
       for (UInt_t s = 1; s < segN; ++s)
          segs.push_back(Seg_t(fBuff->fSegs[3*seg[s] + 1],fBuff->fSegs[3*seg[s] + 2]));
 
-      Bool_t accepted = kFALSE;
       for (LSegIt_t it = segs.begin(); it != segs.end(); ++it)
       {
          Int_t mv1 = idxMap[(*it).fV1];
          Int_t mv2 = idxMap[(*it).fV2];
-         accepted = projection->AcceptSegment(fPnts[mv1], fPnts[mv2], TEveProjection::fgEps);
 
-         if (accepted == kFALSE)
+         if ( ! projection->AcceptSegment(fPnts[mv1], fPnts[mv2], TEveProjection::fgEps))
          {
             pp.clear();
             break;
          }
          if (tail != pp.back()) pp.push_back(tail);
-         tail = (mv1 == tail) ? mv2 :mv1;
+         tail = (mv1 == tail) ? mv2 : mv1;
       }
-      // DirectDraw() implementation: last and first vertices should not be equal
-      if (pp.empty() == kFALSE)
+
+      if ( ! pp.empty())
       {
+      // DirectDraw() implementation: last and first vertices should not be equal
          if (pp.front() == pp.back()) pp.pop_front();
          surf += AddPolygon(pp, fPolsBP);
       }

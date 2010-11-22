@@ -32,6 +32,7 @@ protected:
    Color_t           fColor;
    Int_t             fNSegments;
    TGeoShape*        fShape;
+   Bool_t            fMiniOutline;
 
    static TGeoManager* fgGeoMangeur;
 
@@ -45,11 +46,13 @@ public:
    virtual TObject* GetObject(const TEveException&) const
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
-   Color_t     GetColor()      const { return fColor; }
+   Color_t     GetColor()      const { return fColor;     }
    Int_t       GetNSegments()  const { return fNSegments; }
-   void        SetNSegments(Int_t s) { fNSegments = s; }
-   TGeoShape*  GetShape()            { return fShape; }
+   void        SetNSegments(Int_t s) { fNSegments = s;    }
+   TGeoShape*  GetShape()            { return fShape;     }
    void        SetShape(TGeoShape* s);
+   Bool_t      GetMiniOutline()   const { return fMiniOutline; }
+   void        SetMiniOutline(Bool_t r) { fMiniOutline = r;    }
 
    virtual void Paint(Option_t* option="");
 
@@ -65,7 +68,7 @@ public:
 
    static TGeoManager*  GetGeoMangeur();
 
-   ClassDef(TEveGeoShape, 1); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
+   ClassDef(TEveGeoShape, 2); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
 };
 
 //------------------------------------------------------------------------------
@@ -79,7 +82,8 @@ private:
    TEveGeoShapeProjected& operator=(const TEveGeoShapeProjected&); // Not implemented
 
 protected:
-   TBuffer3D*  fBuff;
+   TBuffer3D   *fBuff;
+   Bool_t       fMiniOutline;
 
    virtual void SetDepthLocal(Float_t d);
 
@@ -87,7 +91,7 @@ public:
    TEveGeoShapeProjected();
    virtual ~TEveGeoShapeProjected() {}
 
-   virtual Bool_t  CanEditMainTransparency() const { return kTRUE; }
+   virtual Bool_t CanEditMainTransparency() const { return kTRUE; }
 
    virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
    virtual void UpdateProjection();
@@ -95,6 +99,9 @@ public:
 
    virtual void ComputeBBox();
    virtual void Paint(Option_t* option = ""); 
+
+   Bool_t GetMiniOutline()   const { return fMiniOutline; }
+   void   SetMiniOutline(Bool_t r) { fMiniOutline = r;    }
 
    ClassDef(TEveGeoShapeProjected, 0);
 };

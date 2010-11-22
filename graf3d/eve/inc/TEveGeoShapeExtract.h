@@ -27,6 +27,7 @@ protected:
    Float_t     fRGBA[4];     // RGBA color.
    Bool_t      fRnrSelf;     // Render this object.
    Bool_t      fRnrElements; // Render children of this object.
+   Bool_t      fMiniOutline; // Minimize shape outline when drawing.
    TGeoShape*  fShape;       // Shape to be drawn for this object.
    TList*      fElements;    // Children elements.
 
@@ -41,6 +42,7 @@ public:
    void SetRGBA (const Float_t  arr[4]);
    void SetRnrSelf(Bool_t r)     { fRnrSelf = r;     }
    void SetRnrElements(Bool_t r) { fRnrElements = r; }
+   void SetMiniOutline(Bool_t r) { fMiniOutline = r; }
    void SetShape(TGeoShape* s)   { fShape = s;       }
    void SetElements(TList* e)    { fElements = e;    }
 
@@ -48,10 +50,11 @@ public:
    Float_t*   GetRGBA()        { return fRGBA;  }
    Bool_t     GetRnrSelf()     { return fRnrSelf;     }
    Bool_t     GetRnrElements() { return fRnrElements; }
+   Bool_t     GetMiniOutline() { return fMiniOutline; }
    TGeoShape* GetShape()       { return fShape;    }
    TList*     GetElements()    { return fElements; }
 
-   ClassDef(TEveGeoShapeExtract, 1); // Globally positioned TGeoShape with rendering attributes and an optional list of daughter shape-extracts.
+   ClassDef(TEveGeoShapeExtract, 2); // Globally positioned TGeoShape with rendering attributes and an optional list of daughter shape-extracts.
 };
 
 #endif

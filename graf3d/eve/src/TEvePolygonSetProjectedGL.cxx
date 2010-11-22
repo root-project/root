@@ -34,7 +34,7 @@ TEvePolygonSetProjectedGL::TEvePolygonSetProjectedGL() : TGLObject()
 {
    // Constructor
 
-   // fDLCache = false; // Disable DL.
+   // fDLCache = kFALSE; // Disable DL.
    fMultiColor = kTRUE; // Potentially false, reset in DirectDraw().
 }
 
@@ -45,7 +45,8 @@ Bool_t TEvePolygonSetProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/
 {
    // Set model object.
 
-   return SetModelCheckClass(obj, TEvePolygonSetProjected::Class());
+   fM = SetModelDynCast<TEvePolygonSetProjected>(obj);
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -53,7 +54,7 @@ void TEvePolygonSetProjectedGL::SetBBox()
 {
    // Setup bounding-box information.
 
-   SetAxisAlignedBBox(((TEvePolygonSetProjected*)fExternalObj)->AssertBBox());
+   SetAxisAlignedBBox(fM->AssertBBox());
 }
 
 /******************************************************************************/
@@ -75,20 +76,45 @@ void TEvePolygonSetProjectedGL::DrawOutline() const
 {
    // Draw polygons outline.
 
-   TEvePolygonSetProjected& refPS = * (TEvePolygonSetProjected*) fExternalObj;
-   if (refPS.fPols.size() == 0) return;
+   if (fM->fPols.size() == 0) return;
 
-   Int_t vi;
-   for (TEvePolygonSetProjected::vpPolygon_ci i = refPS.fPols.begin();
-        i != refPS.fPols.end(); ++i)
+   if (fM->GetMiniOutline())
    {
-      glBegin(GL_LINE_LOOP);
-      for(Int_t k = 0; k < (*i).fNPnts; ++k)
+      std::map<Edge_t, Int_t> edges;
+
+      for (TEvePolygonSetProjected::vpPolygon_ci i = fM->fPols.begin();
+           i != fM->fPols.end(); ++i)
       {
-         vi = (*i).fPnts[k];
-         glVertex3fv(refPS.fPnts[vi].Arr());
+         for(Int_t k = 0; k < i->fNPnts - 1; ++k)
+         {
+            ++edges[Edge_t(i->fPnts[k], i->fPnts[k+1])];
+         }
+         ++edges[Edge_t(i->fPnts[0], i->fPnts[i->fNPnts - 1])];
+      }
+
+      glBegin(GL_LINES);
+      for (std::map<Edge_t, Int_t>::iterator i = edges.begin(); i != edges.end(); ++i)
+      {
+         if (i->second == 1)
+         {
+            glVertex3fv(fM->fPnts[i->first.fI].Arr());
+            glVertex3fv(fM->fPnts[i->first.fJ].Arr());
+         }
       }
       glEnd();
+   }
+   else
+   {
+      for (TEvePolygonSetProjected::vpPolygon_ci i = fM->fPols.begin();
+           i != fM->fPols.end(); ++i)
+      {
+         glBegin(GL_LINE_LOOP);
+         for(Int_t k = 0; k < i->fNPnts; ++k)
+         {
+            glVertex3fv(fM->fPnts[i->fPnts[k]].Arr());
+         }
+         glEnd();
+      }
    }
 }
 
@@ -97,8 +123,7 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 {
    // Do GL rendering.
 
-   TEvePolygonSetProjected& refPS = * (TEvePolygonSetProjected*) fExternalObj;
-   if (refPS.fPols.size() == 0) return;
+   if (fM->fPols.size() == 0) return;
 
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
 
@@ -108,16 +133,16 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    glDisable(GL_CULL_FACE);
 
-   fMultiColor = (refPS.fDrawFrame && refPS.fFillColor != refPS.fLineColor);
+   fMultiColor = (fM->fDrawFrame && fM->fFillColor != fM->fLineColor);
 
    // polygons
    glEnable(GL_POLYGON_OFFSET_FILL);
    glPolygonOffset(1.0f,1.0f);
    GLUtesselator *tessObj = TGLUtil::GetDrawTesselator3fv();
 
-   TEveVector* pnts = refPS.fPnts;
-   for (TEvePolygonSetProjected::vpPolygon_ci i = refPS.fPols.begin();
-        i != refPS.fPols.end(); ++i)
+   TEveVector* pnts = fM->fPnts;
+   for (TEvePolygonSetProjected::vpPolygon_ci i = fM->fPols.begin();
+        i != fM->fPols.end(); ++i)
    {
       Int_t vi; //current vertex index of curent polygon
       Int_t pntsN = (*i).fNPnts; // number of points in current polygon
@@ -151,11 +176,11 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
    glDisable(GL_POLYGON_OFFSET_FILL);
 
    // Outline
-   if (refPS.fDrawFrame)
+   if (fM->fDrawFrame)
    {
-      TGLUtil::Color(refPS.fLineColor);
+      TGLUtil::Color(fM->fLineColor);
       glEnable(GL_LINE_SMOOTH);
-      TGLUtil::LineWidth(refPS.fLineWidth);
+      TGLUtil::LineWidth(fM->fLineWidth);
       DrawOutline();
    }
 
@@ -170,9 +195,7 @@ void TEvePolygonSetProjectedGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysic
    // XXXX to support highlight AND selection ...
    if (lvl < 0) lvl = pshp->GetSelected();
 
-   TEvePolygonSetProjected& refPS = * (TEvePolygonSetProjected*) fExternalObj;
-
-   if (refPS.GetHighlightFrame())
+   if (fM->GetHighlightFrame())
    {
       glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
       glDisable(GL_LIGHTING);
@@ -196,7 +219,7 @@ void TEvePolygonSetProjectedGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysic
       TGLUtil::UnlockColor();
       rnrCtx.SetHighlightOutline(kFALSE);
 
-      TGLUtil::Color(refPS.fLineColor);
+      TGLUtil::Color(fM->fLineColor);
       for (int i = 0; i < 4; ++i)
       {
          glViewport(vp.X() + inner[i][0], vp.Y() + inner[i][1], vp.Width(), vp.Height());

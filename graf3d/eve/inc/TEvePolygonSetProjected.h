@@ -41,7 +41,12 @@ protected:
       { fNPnts = x.fNPnts; fPnts = x.fPnts; return *this; }
 
       Int_t FindPoint(Int_t pi)
-      { for (Int_t i=0; i<fNPnts; ++i) if (fPnts[i] == pi) return i; return -1; }
+      {
+         for (Int_t i=0; i<fNPnts; ++i) {
+            if (fPnts[i] == pi) return i;
+         }
+         return -1;
+      }
    };
 
    typedef std::list<Polygon_t>                    vpPolygon_t;
@@ -66,6 +71,8 @@ protected:
    Int_t        fNPnts;    // number of reduced and projected points
    TEveVector*  fPnts;     // reduced and projected points
 
+   Bool_t       fMiniOutline;
+
    virtual void SetDepthLocal(Float_t d);
 
 public:
@@ -82,6 +89,9 @@ public:
 
    virtual void    DumpPolys() const;
    void            DumpBuffer3D();
+
+   Bool_t          GetMiniOutline()   const { return fMiniOutline; }
+   void            SetMiniOutline(Bool_t r) { fMiniOutline = r;    }
 
    ClassDef(TEvePolygonSetProjected,0); // Set of projected polygons with outline; typically produced from a TBuffer3D.
 
