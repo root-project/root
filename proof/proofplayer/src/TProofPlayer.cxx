@@ -1685,7 +1685,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if (gEnv->Lookup("Proof.UseMergers") && !fInput->FindObject("PROOF_UseMergers")) {
          Int_t smg = gEnv->GetValue("Proof.UseMergers",-1);
          if (smg >= 0) fInput->Add(new TParameter<Int_t>("PROOF_UseMergers", smg));
-   }
+      }
 
       // For a new query clients should make sure that the temporary
       // output list is empty
