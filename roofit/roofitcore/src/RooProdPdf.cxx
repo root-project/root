@@ -759,6 +759,9 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     // We own the reduced version of pdfNSet
     delete pdfNSet ;
     delete pdfIntSet ;
+    if (pdfCSet != pdfNSetOrig) {
+      delete pdfCSet ;
+    }
   }
 
   // Loop over list of terms again to determine 'imported' observables

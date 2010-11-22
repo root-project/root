@@ -84,6 +84,9 @@ Double_t RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
   // range boundaries are not on integer values of x
   Double_t xmin = x.min(rangeName) ;
   Double_t xmax = x.max(rangeName) ;
+
+  // Protect against negative lower boundaries
+  if (xmin<0) xmin=0 ;
   
   Int_t ixmin = Int_t (xmin) ;
   Int_t ixmax = Int_t (xmax)+1 ;
