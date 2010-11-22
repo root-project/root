@@ -106,7 +106,7 @@ CILIBS        =
 CRYPTLIBS     =
 
 # Fortran:
-ifeq ($(F77),build/win/f77.sh)
+ifneq ($(findstring build/win/f77.sh,$(F77)),)
 F77           = $(ROOT_SRCDIR)/build/win/f77.sh
 F77FLAGS      = -nologo -4Nportlib $(BLDF77FLAGS) -recursive
 F77LDFLAGS    = $(F77FLAGS) $(F77OPT) -link $(LDFLAGS)
@@ -125,5 +125,5 @@ showld:
 	@echo "$(LD)"
 
 showf77:
-	@echo "$(F77)"
+	@echo "$(ROOT_SRCDIR)/build/win/f77.sh"
 endif

@@ -900,10 +900,18 @@ check_comp() {
             else
                 altcc=`grep '^CC ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             fi
+            if test "x$arch" = "xwin32" ; then
+                altccorg="cl"
+                altcctmp="$altcc"
+                altcc="$altccorg"
+            fi
         fi
         altcc1=`echo "$altcc" | awk '{print $1}'`
         if `$cwhich $altcc1 > /dev/null 2>&1` ; then
             found_comp=1
+            if test ! "x$altcctmp" = "x" ; then
+                altcc="$altcctmp"
+            fi
             result "$altcc"
         else
             nocomp="$altcc"
@@ -916,10 +924,18 @@ check_comp() {
             else
                 altcxx=`grep '^CXX ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             fi
+            if test "x$arch" = "xwin32" ; then
+                altcxxorg="cl"
+                altcxxtmp="$altcxx"
+                altcxx="$altcxxorg"
+            fi
         fi
         altcxx1=`echo "$altcxx" | awk '{print $1}'`
         if `$cwhich $altcxx1 > /dev/null 2>&1` ; then
             found_comp=1
+            if test ! "x$altcxxtmp" = "x" ; then
+                altcxx="$altcxxtmp"
+            fi
             result "$altcxx"
         else
             nocomp="$altcxx"
@@ -5923,8 +5939,8 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@bindir@|$bindir|"                    \
     -e "s|@buildasimage@|$enable_asimage|"      \
     -e "s|@builtinafterimage@|$enable_builtin_afterimage|"  \
-    -e "s|@buildftgl@|$enable_builtin_ftgl|"      \
-    -e "s|@buildglew@|$enable_builtin_glew|"      \
+    -e "s|@buildftgl@|$enable_builtin_ftgl|"    \
+    -e "s|@buildglew@|$enable_builtin_glew|"    \
     -e "s|@builtinfreetype@|$enable_builtin_freetype|"      \
     -e "s|@builtinpcre@|$enable_builtin_pcre|"  \
     -e "s|@buildxrd@|$buildxrd|"                \
@@ -6287,6 +6303,16 @@ if test "$prefix2" = "\$(ROOTSYS)" ; then
     mandir2=\$ROOTSYS/man/man1
 fi
 
+if test ! "x$altccorg" = "x" ; then
+    altcc2="$altccorg"
+else
+    altcc2="$altcc"
+fi
+if test ! "x$altcxxorg" = "x" ; then
+    altcxx2="$altcxxorg"
+else
+    altcxx2="$altcxx"
+fi
 if test ! "x$altf77org" = "x" ; then
     altf772="$altf77org"
 else
@@ -6312,8 +6338,8 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@pythonvers@|$pythonvers|"       \
     -e "s|@alloclibdir@|$alloclibdir|"     \
     -e "s|@alloclib@|$alloclib|"           \
-    -e "s|@altcc@|$altcc|"                 \
-    -e "s|@altcxx@|$altcxx|"               \
+    -e "s|@altcc@|$altcc2|"                \
+    -e "s|@altcxx@|$altcxx2|"              \
     -e "s|@altf77@|$altf772|"              \
     -e "s|@altld@|$altld2|"                \
    < root-config.tmp > $RCONFOUT

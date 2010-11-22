@@ -392,9 +392,6 @@ hiux)
    ;;
 win32)
    # Win32
-   altcc=cl
-   altcxx=cl
-   altld=link
    auxcflags="-MD"
    if test "x@winrtdebug@" = "xyes"; then
 	  auxcflags="-MDd"
