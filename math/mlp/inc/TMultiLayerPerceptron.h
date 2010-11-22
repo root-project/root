@@ -93,7 +93,7 @@ class TMultiLayerPerceptron : public TObject {
    void SetTestDataSet(const char* test);
    void SetLearningMethod(TMultiLayerPerceptron::ELearningMethod method);
    void SetEventWeight(const char*);
-   void Train(Int_t nEpoch, Option_t* option = "text");
+   void Train(Int_t nEpoch, Option_t* option = "text", Double_t minE=0);
    Double_t Result(Int_t event, Int_t index = 0) const;
    Double_t GetError(Int_t event) const;
    Double_t GetError(TMultiLayerPerceptron::EDataSet set) const;

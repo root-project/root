@@ -707,7 +707,7 @@ void TMultiLayerPerceptron::GetEntry(Int_t entry) const
 }
 
 //______________________________________________________________________________
-void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
+void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option, Double_t minE)
 {
    // Train the network.
    // nEpoch is the number of iterations.
@@ -717,6 +717,8 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
    // - "update=X" (step for the text/graph output update)
    // - "+" will skip the randomisation and start from the previous values.
    // - "current" (draw in the current canvas)
+   // - "minErrorTrain" (stop when NN error on the training sample gets below minE
+   // - "minErrorTest" (stop when NN error on the test sample gets below minE
    // All combinations are available.
 
    Int_t i;
@@ -725,6 +727,8 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
    // Decode options and prepare training.
    Int_t verbosity = 0;
    Bool_t newCanvas = true;
+   Bool_t minE_Train = false;
+   Bool_t minE_Test  = false;
    if (opt.Contains("text"))
       verbosity += 1;
    if (opt.Contains("graph"))
@@ -737,6 +741,10 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
    }
    if (opt.Contains("current"))
       newCanvas = false;
+   if (opt.Contains("minerrortrain"))
+      minE_Train = true;
+   if (opt.Contains("minerrortest"))
+      minE_Test = true;
    TVirtualPad *canvas = 0;
    TMultiGraph *residual_plot = 0;
    TGraph *train_residual_plot = 0;
@@ -784,7 +792,9 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
    TMatrixD gamma(matrix_size, 1);
    TMatrixD delta(matrix_size, 1);
    // Epoch loop. Here is the training itself.
-   for (Int_t iepoch = 0; iepoch < nEpoch; iepoch++) {
+   Double_t training_E = 1e10;
+   Double_t test_E = 1e10;
+   for (Int_t iepoch = 0; (iepoch < nEpoch) && (!minE_Train || training_E>minE) && (!minE_Test || test_E>minE) ; iepoch++) {
       switch (fLearningMethod) {
       case TMultiLayerPerceptron::kStochastic:
          {
@@ -903,24 +913,18 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
       // Process other ROOT events.  Time penalty is less than
       // 1/1000 sec/evt on a mobile AMD Athlon(tm) XP 1500+
       gSystem->ProcessEvents();
+      training_E = TMath::Sqrt(GetError(TMultiLayerPerceptron::kTraining) / fTraining->GetN());
+      test_E = TMath::Sqrt(GetError(TMultiLayerPerceptron::kTest) / fTest->GetN());
       // Intermediate graph and text output
-      if ((verbosity % 2) && ((!(iepoch % displayStepping))
-          || (iepoch == nEpoch - 1)))
+      if ((verbosity % 2) && ((!(iepoch % displayStepping)) || (iepoch == nEpoch - 1))) {
          cout << "Epoch: " << iepoch
-                   << " learn="
-                   << TMath::Sqrt(GetError(TMultiLayerPerceptron::kTraining)
-                      / fTraining->GetN())
-                   << " test="
-                   << TMath::Sqrt(GetError(TMultiLayerPerceptron::kTest)
-                      / fTest->GetN())
-                   << endl;
+              << " learn=" << training_E
+              << " test=" << test_E
+              << endl;
+      }
       if (verbosity / 2) {
-         train_residual_plot->SetPoint(iepoch, iepoch,
-           TMath::Sqrt(GetError(TMultiLayerPerceptron::kTraining)
-                       / fTraining->GetN()));
-         test_residual_plot->SetPoint(iepoch, iepoch,
-           TMath::Sqrt(GetError(TMultiLayerPerceptron::kTest)
-                       / fTest->GetN()));
+         train_residual_plot->SetPoint(iepoch, iepoch,training_E);
+         test_residual_plot->SetPoint(iepoch, iepoch,test_E);
          if (!iepoch) {
             Double_t trp = train_residual_plot->GetY()[iepoch];
             Double_t tep = test_residual_plot->GetY()[iepoch];
