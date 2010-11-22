@@ -87,26 +87,36 @@ Double_t RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
 
   // Protect against negative lower boundaries
   if (xmin<0) xmin=0 ;
-  
+
   Int_t ixmin = Int_t (xmin) ;
   Int_t ixmax = Int_t (xmax)+1 ;
 
   Double_t fracLoBin = 1-(xmin-ixmin) ;
   Double_t fracHiBin = 1-(ixmax-xmax) ;
 
+  if (!x.hasMax()) {
+    if (xmin<1e-6) {
+      return 1 ;
+    } else {
+      
+      // Return 1 minus integral from 0 to x.min() 
+
+      if(ixmin == 0){ // first bin
+	return TMath::Poisson(0, mean)*(xmin-0);
+      }      
+      Double_t sum(0) ;
+      sum += TMath::Poisson(0,mean)*fracLoBin ;
+      sum+= ROOT::Math::poisson_cdf(ixmin-2, mean) - ROOT::Math::poisson_cdf(0,mean) ;
+      sum += TMath::Poisson(ixmin-1,mean)*fracHiBin ;
+      return 1-sum ;
+    }
+  }
   
   if(ixmin == ixmax-1){ // first bin
     return TMath::Poisson(ixmin, mean)*(xmax-xmin);
-  }
-
-  
+  }  
   Double_t sum(0) ;
   sum += TMath::Poisson(ixmin,mean)*fracLoBin ;
-  /*
-  for (int i=ixmin+1 ; i<ixmax-1 ; i++) {
-    sum += TMath::Poisson(i,mean)  ;       
-  }
-  */
   sum+= ROOT::Math::poisson_cdf(ixmax-2, mean) - ROOT::Math::poisson_cdf(ixmin,mean) ;
   sum += TMath::Poisson(ixmax-1,mean)*fracHiBin ;
   

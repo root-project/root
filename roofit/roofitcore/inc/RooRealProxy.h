@@ -50,6 +50,8 @@ public:
   RooRealProxy& operator=(const Double_t& value) { lvptr()->setVal(value) ; return *this ; }
   Double_t min(const char* rname=0) const { return lvptr()->getMin(rname) ; }
   Double_t max(const char* rname=0) const { return lvptr()->getMax(rname) ; }
+  Bool_t hasMin(const char* rname=0) const { return lvptr()->hasMin(rname) ; }
+  Bool_t hasMax(const char* rname=0) const { return lvptr()->hasMax(rname) ; }
 
 
   ClassDef(RooRealProxy,1) // Proxy for a RooAbsReal object

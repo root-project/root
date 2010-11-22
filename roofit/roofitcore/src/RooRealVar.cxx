@@ -85,9 +85,25 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 
   _binning = new RooUniformBinning(minValue,maxValue,100) ;
 
-  _value= 0.5*(minValue + maxValue);
+  if (RooNumber::isInfinite(minValue)) {
+    if (RooNumber::isInfinite(maxValue)) {
+      // [-inf,inf]
+      _value = 0 ;
+    } else {
+      // [-inf,X]
+      _value= maxValue ;
+    }
+  } else {
+    if (RooNumber::isInfinite(maxValue)) {
+      // [X,inf]
+      _value = minValue ;
+    } else {
+      // [X,X]
+      _value= 0.5*(minValue + maxValue);
+    }
+  }
 
-//   setPlotRange(minValue,maxValue) ;
+  //   setPlotRange(minValue,maxValue) ;
   setRange(minValue,maxValue) ;
 }  
 
