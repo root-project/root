@@ -129,7 +129,7 @@ public:
    // and port. It is important to use the resolution by-demand since the list
    // may not contain updated information due to the use of highly dynamical
    // DHCP and APIPA addresses.
-   int ResolveNodeInformation(XrdOucBonjourNode * nodeInfo);
+   int ResolveNodeInformation(XrdOucBonjourResolutionEntry * nodeAndCallback);
 
    // Accessor to get the singleton instance.
    static XrdOucAvahiBonjour &getInstance();

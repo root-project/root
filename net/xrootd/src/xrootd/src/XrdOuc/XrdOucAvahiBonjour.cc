@@ -208,6 +208,7 @@ void XrdOucAvahiBonjour::BrowseReply(AvahiServiceBrowser *b,
    XrdOucBonjourSubscribedEntry * callbackID;
    XrdOucAvahiBonjour *instance;
    XrdOucAvahiBonjourSearchNode predicate(name);
+   XrdOucBonjourResolutionEntry * toResolve;
 
    callbackID = (XrdOucBonjourSubscribedEntry *)userdata;
 
@@ -221,22 +222,20 @@ void XrdOucAvahiBonjour::BrowseReply(AvahiServiceBrowser *b,
 
       case AVAHI_BROWSER_NEW:
 
-         // ADD a new node to the list.
-         callbackID->node = new XrdOucBonjourNode(name, type, domain);
-
-         // Start resolution of the name.
-         if (!(avahi_service_resolver_new(callbackID->client, interface, protocol, name, type, domain, AVAHI_PROTO_INET, (AvahiLookupFlags)0, ResolveReply, callbackID)))
-            XrdLog.Emsg("OucBonjourRESOLVER", avahi_strerror(avahi_client_errno(callbackID->client)));
+        instance->LockNodeList();
+        // ADD a new node to the list.
+        toResolve = (XrdOucBonjourResolutionEntry *)malloc(sizeof(XrdOucBonjourResolutionEntry));
+        toResolve->node = new XrdOucBonjourNode(name, type, domain);
+        toResolve->callbackID = callbackID;
 
          XrdLog.Say("------ XrdOucBonjour: discovered a new node: ", name);
 
-         instance->LockNodeList();
-         instance->ListOfNodes.push_back(callbackID->node);
-         instance->UnLockNodeList();
+         // Start resolution of the name.
+         if (!(avahi_service_resolver_new(callbackID->client, interface, protocol, name, type, domain, AVAHI_PROTO_INET, (AvahiLookupFlags)0, ResolveReply, toResolve)))
+            XrdLog.Emsg("OucBonjour", avahi_strerror(avahi_client_errno(callbackID->client)));
 
-         // We must wait to invoke the callback to the node be resolved his
-         // name and port, at least.
-         //callbackID->callback(callbackID->context);
+        // Wait until the node is rsolved to insert it on the list AND invoke the callback.
+         instance->UnLockNodeList();
 
          break;
 
@@ -286,7 +285,7 @@ void * XrdOucAvahiBonjour::BrowseEventLoopThread(void * context)
    }
 
    // Allocate a new client
-   callbackID->client = avahi_client_new(avahi_simple_poll_get(simple_poll), (AvahiClientFlags)0, ClientReply, NULL, &error);
+   callbackID->client = avahi_client_new(avahi_simple_poll_get(simple_poll), (AvahiClientFlags)0, ClientReply, callbackID, &error);
 
    // Check wether creating the client object succeeded
    if (!callbackID->client) {
@@ -305,6 +304,8 @@ void * XrdOucAvahiBonjour::BrowseEventLoopThread(void * context)
 
    // Run the main loop
    avahi_simple_poll_loop(simple_poll);
+
+   XrdLog.Emsg("OucBonjour", "Event loop thread terminated abnormally");
 
    return NULL; // Thread ends.
 }
@@ -347,12 +348,14 @@ void XrdOucAvahiBonjour::ResolveReply(AvahiServiceResolver *r,
                                       void* userdata)
 {
    XrdOucBonjourSubscribedEntry * callbackID;
-
+   XrdOucBonjourResolutionEntry * toResolve;
+   XrdOucAvahiBonjour *instance;
    AvahiStringList * iterator;
    char * key, * value, address_str[AVAHI_ADDRESS_STR_MAX];
    size_t size;
 
-   callbackID = static_cast<XrdOucBonjourSubscribedEntry *>(userdata);
+   toResolve = static_cast<XrdOucBonjourResolutionEntry *>(userdata);
+   callbackID = toResolve->callbackID;
 
    switch (event) {
       case AVAHI_RESOLVER_FAILURE:
@@ -360,19 +363,21 @@ void XrdOucAvahiBonjour::ResolveReply(AvahiServiceResolver *r,
          break;
 
       case AVAHI_RESOLVER_FOUND:
-			// Check if the resolver gethostbyname() function supports mDNS lookups.
-			if (avahi_nss_support()) {
-         	// Copy the information of resolution results to the node since the
-				// name can be resolved.
-         	callbackID->node->SetHostName(host_name);
-			} else {
-				// Save the address directly to improve name resolving on nodes that
-				// do not have an Avahi-enabled DNS resolver.
-				avahi_address_snprint(address_str, sizeof(address_str), address);
-				callbackID->node->SetHostName(address_str);
-			}
+         instance = &XrdOucAvahiBonjour::getInstance();
+         instance->LockNodeList();
+	 // Check if the resolver gethostbyname() function supports mDNS lookups.
+	 if (avahi_nss_support()) {
+            // Copy the information of resolution results to the node since the
+	    // name can be resolved.
+            toResolve->node->SetHostName(host_name);
+         } else {
+	    // Save the address directly to improve name resolving on nodes that
+            // do not have an Avahi-enabled DNS resolver.
+	    avahi_address_snprint(address_str, sizeof(address_str), address);
+	    toResolve->node->SetHostName(address_str);
+	 }
          // Note that Avahi returns the port in host order.
-         callbackID->node->SetPort(port);
+         toResolve->node->SetPort(port);
 
          // Also, copy the TXT values by iterating through the list of data.
          iterator = txt;
@@ -380,7 +385,7 @@ void XrdOucAvahiBonjour::ResolveReply(AvahiServiceResolver *r,
             // Get data from the TXT record.
             avahi_string_list_get_pair(iterator, &key, &value, &size);
             // Add to the Bonjour record.
-            callbackID->node->GetBonjourRecord().AddTXTRecord(key, value);
+            toResolve->node->GetBonjourRecord().AddTXTRecord(key, value);
             // Free data after copy.
             avahi_free(key);
             if (value)
@@ -388,17 +393,25 @@ void XrdOucAvahiBonjour::ResolveReply(AvahiServiceResolver *r,
             // Go to the next TXT record.
             iterator = avahi_string_list_get_next(iterator);
          }
+
+         // Insert now that the node is completely resolved.
+         instance->ListOfNodes.push_back(toResolve->node);
+         instance->UnLockNodeList();
    }
 
    // We must free the resolver object since it was created just before calling
    // the resolver procedure.
    avahi_service_resolver_free(r);
 
-   // Invoke the callback.
-   callbackID->callback(callbackID->context);
+   // Also, we should free the resolver data wrapper in order to avoid leaks.
+   free(toResolve);
+
+   // Invoke the callback if everything were fine.
+   if (event == AVAHI_RESOLVER_FOUND)
+      callbackID->callback(callbackID->context);
 }
 
-int XrdOucAvahiBonjour::ResolveNodeInformation(XrdOucBonjourNode * nodeInfo)
+int XrdOucAvahiBonjour::ResolveNodeInformation(XrdOucBonjourResolutionEntry * nodeAndCallback)
 {
    // With Avahi, the resolution must be done just after the discovery and
    // on-demand resolution is not supported.

@@ -190,7 +190,7 @@ $(OBJDIR)/XrdOucBonjour.o: XrdOucBonjour.cc XrdOucBonjour.hh XrdSysError.hh \
 
 $(OBJDIR)/XrdOucFactoryBonjour.o: XrdOucBonjour.hh XrdSysError.hh \
                                 XrdSysHeaders.hh XrdOucString.hh XrdSysPthread.hh \
-                                XrdOucFactoryBonjour.hh XrdConfig.hh \
+                                XrdOucFactoryBonjour.hh XrdOucFactoryBonjour.cc XrdConfig.hh \
                                 XrdInet.hh XrdProtLoad.hh
 	@echo Compiling XrdOucFactoryBonjour.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(CFHASLIBDNSSD) $(INCLUDE) XrdOucFactoryBonjour.cc -o $(OBJDIR)/XrdOucFactoryBonjour.o

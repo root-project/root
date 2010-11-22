@@ -217,9 +217,10 @@ void XrdOucAppleBonjour::BrowseReply(DNSServiceRef ref, DNSServiceFlags flags,
       // Start resolution of the name.
       instance->ResolveNodeInformation(node);
 
-      instance->LockNodeList();
-      instance->ListOfNodes.push_back(node);
-      instance->UnLockNodeList();
+      // We are going to wait to add the node until it is completely resolved.
+      //instance->LockNodeList();
+      //instance->ListOfNodes.push_back(node);
+      //instance->UnLockNodeList();
 
       XrdLog.Say("------ XrdOucBonjour: discovered a new node: ", name);
    } else {
@@ -231,11 +232,11 @@ void XrdOucAppleBonjour::BrowseReply(DNSServiceRef ref, DNSServiceFlags flags,
       instance->UnLockNodeList();
 
       XrdLog.Say("------ XrdOucBonjour: the node ", name, " went out the network");
-   }
 
-   // Notify updates if there wont be more updates in a short period of time.
-   if (!(flags & kDNSServiceFlagsMoreComing))
-      callbackID->callback(callbackID->context);
+      // Notify updates if there wont be more updates in a short period of time.
+      if (!(flags & kDNSServiceFlagsMoreComing))
+         callbackID->callback(callbackID->context);
+   }
 }
 
 /******************************************************************************/
@@ -266,24 +267,37 @@ void XrdOucAppleBonjour::ResolveReply(DNSServiceRef ref, DNSServiceFlags flags,
                                       uint16_t port, uint16_t txtLen,
                                       const unsigned char * txtVal, void * context)
 {
-   XrdOucBonjourNode * node;
+   XrdOucAppleBonjour * instance;
+   XrdOucBonjourResolutionEntry * nodeAndCallback;
 
    if (error != kDNSServiceErr_NoError) {
       XrdLog.Emsg("OucBonjour", error, "complete the resolve callback");
       return;
    }
 
-   node = static_cast<XrdOucBonjourNode *>(context);
+   nodeAndCallback = static_cast<XrdOucBonjourResolutionEntry *>(context);
 
    // Copy the information of resolution results to the node.
-   node->SetHostName(hostname);
-   node->SetPort(ntohs(port));
+   nodeAndCallback->node->SetHostName(hostname);
+   nodeAndCallback->node->SetPort(ntohs(port));
 
    // Also, copy the TXT values.
-   node->GetBonjourRecord().AddRawTXTRecord((const char *)txtVal);
+   nodeAndCallback->node->GetBonjourRecord().AddRawTXTRecord((const char *)txtVal);
+
+   // Get the context (the XrdOucBonjour object which holds the lists of nodes).
+   instance = &XrdOucAppleBonjour::getInstance();
+
+   // We are ready to add the node to the list and invoke the callback.
+   instance->LockNodeList();
+   instance->ListOfNodes.push_back(node);
+   instance->UnLockNodeList();
+
+   // Notify updates if there wont be more updates in a short period of time.
+   if (!(flags & kDNSServiceFlagsMoreComing))
+      callbackID->callback(callbackID->context);
 }
 
-int XrdOucAppleBonjour::ResolveNodeInformation(XrdOucBonjourNode * nodeInfo)
+int XrdOucAppleBonjour::ResolveNodeInformation(XrdOucBonjourResolutionEntry * nodeAndCallback)
 {
    DNSServiceErrorType err;
    DNSServiceRef serviceRef;
@@ -295,11 +309,11 @@ int XrdOucAppleBonjour::ResolveNodeInformation(XrdOucBonjourNode * nodeInfo)
    err = DNSServiceResolve(&serviceRef,
                            0,
                            0,
-                           nodeInfo->GetBonjourRecord().GetServiceName(),
-                           nodeInfo->GetBonjourRecord().GetRegisteredType(),
-                           nodeInfo->GetBonjourRecord().GetReplyDomain(),
+                           nodeAndCallback->node->GetBonjourRecord().GetServiceName(),
+                           nodeAndCallback->node->GetBonjourRecord().GetRegisteredType(),
+                           nodeAndCallback->node->GetBonjourRecord().GetReplyDomain(),
                            ResolveReply,
-                           nodeInfo);
+                           nodeAndCallback);
 
    // Check for errors
    if (err != kDNSServiceErr_NoError) {

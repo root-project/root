@@ -58,9 +58,14 @@ typedef struct XrdOucBonjourSubscribedEntry {
    // Used to carry the Avahi browser information.
 #if defined(__linux__)
    AvahiClient * client;
-   XrdOucBonjourNode * node;
 #endif
 } XrdOucBonjourSubscribedEntry;
+
+// Used to make the resolution dinamycally.
+typedef struct XrdOucBonjourResolutionEntry {
+   XrdOucBonjourNode * node;
+   XrdOucBonjourSubscribedEntry * callbackID;
+} XrdOucBonjourResolutionEntry;
 
 /******************************************************************************/
 /*                        B o n j o u r   r e c o r d                         */
@@ -246,7 +251,7 @@ public:
    // and port. It is important to use the resolution by-demand since the list
    // may not contain updated information due to the use of highly dynamical
    // DHCP and APIPA addresses.
-   virtual int ResolveNodeInformation(XrdOucBonjourNode * nodeInfo) = 0;
+   virtual int ResolveNodeInformation(XrdOucBonjourResolutionEntry * nodeAndCallback) = 0;
 
    // Returns the current list of discovered nodes through the Bonjour local
    // mDNS. This list cannot be modified by clients of the class.

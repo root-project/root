@@ -132,6 +132,7 @@ XrdOucBonjourRecord & XrdOucBonjourRecord::operator=(const XrdOucBonjourRecord &
 void XrdOucBonjourRecord::Print() const
 {
    XrdLog.Say("INFO: Bonjour RECORD = ", GetServiceName(), GetRegisteredType(), GetReplyDomain());
+   XrdLog.Say("INFO: Bonjour TXT = ", GetTXTRecordData());
 }
 
 void XrdOucBonjourRecord::AddRawTXTRecord(const char * rawData)
@@ -220,9 +221,10 @@ XrdOucBonjourNode & XrdOucBonjourNode::operator=(const XrdOucBonjourNode &other)
 
 void XrdOucBonjourNode::Print() const
 {
-   char port[6];
-   snprintf(port, 6, "%d", GetPort());
-   XrdLog.Say("INFO: Bonjour NODE = ", GetHostName(), ":", port);
+   char port[36];
+   snprintf(port, 36, "%d (%p)", GetPort(), this);
+   const char *host = GetHostName() ? GetHostName() : "<empty>";
+   XrdLog.Say("INFO: Bonjour NODE = ", host, ":", port);
    GetBonjourRecord().Print();
 }
 
