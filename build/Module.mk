@@ -24,12 +24,7 @@ RMKDEPO1     := $(call stripsrc,$(RMKDEPS1:.c=.o))
 RMKDEPO2     := $(call stripsrc,$(RMKDEPS2:.cxx=.o))
 RMKDEPO      := $(RMKDEPO1) $(RMKDEPO2)
 RMKDEP       := bin/rmkdepend$(EXEEXT)
-ifeq ($(PLATFORM),win32)
-#RMKDEPCFLAGS := -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".obj\"
 RMKDEPCFLAGS := -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".o\"
-else
-RMKDEPCFLAGS := -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".o\"
-endif
 
 ##### drop_from_path #####
 ifneq ($(PLATFORM),win32)
@@ -66,6 +61,8 @@ include/%.h:    $(ROOT_SRCDIR)/build/win/%.h
 
 $(BINDEXP):     $(BINDEXPO)
 		$(LD) $(LDFLAGS) -o $@ $(BINDEXPO)
+
+$(BINDEXPO):    $(ORDER_) $(RMKDEP)
 
 all-$(MODNAME): $(RMKDEP) $(BINDEXP)
 else
