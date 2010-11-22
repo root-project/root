@@ -727,7 +727,7 @@ config/Makefile.config config/Makefile.comp include/RConfigure.h \
 
 ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean debian redhat),)
 Makefile: $(addprefix $(ROOT_SRCDIR)/,configure config/rootrc.in \
-  config/RConfigure.in config/Makefile.in \
+  config/RConfigure.in config/Makefile.in config/Makefile.$(ARCH) \
   config/Makefile-comp.in config/root-config.in config/rootauthrc.in \
   config/rootdaemonrc.in config/mimes.unix.in config/mimes.win32.in \
   config/proofserv.in config/roots.in) config.status
