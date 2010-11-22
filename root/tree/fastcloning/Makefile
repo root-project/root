@@ -101,13 +101,13 @@ merged/$(REFFILE) : merged/Event.new.split9.root copiedEvent$(ExeSuf) merged/lib
 #	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'mtrans.C("Event.new.split9.root")' && touch $@
 
 merged:
-	mkdir -p merged
+	$(CMDECHO) mkdir -p merged ; cp .rootrc merged
 
-merged/libEvent.$(DllSuf) : copiedEvent$(ExeSuf)
-	$(CMDECHO) mkdir -p merged; cp libEvent.* merged	
+merged/libEvent.$(DllSuf) : merged copiedEvent$(ExeSuf)
+	$(CMDECHO) cp libEvent.* merged	
 
-$(MERGEFILES): %: $(ONEFILES) $(TWOFILES) 
-	$(CMDECHO) mkdir -p merged; $(CALLROOTEXE) -q -b -l 'mtrans.C("$(@F)")' > $@.create.log 2>&1
+$(MERGEFILES): %: $(ONEFILES) $(TWOFILES) | merged
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'mtrans.C("$(@F)")' > $@.create.log 2>&1
 
 merge.log: merged/$(REFFILE) $(MERGEFILES) copiedEvent$(ExeSuf) dt_RunDrawTest_C.$(DllSuf)
 	$(CMDECHO) ./dt_RunDrawTest.sh 'merged/' > merge.raw.log 2>&1
@@ -135,10 +135,10 @@ Plot.log: recon-v1r030603p6_700000811_00000-00984_calTuple.root
 
 Plot: Plot.log
 	$(TestDiff)
-	
+
 SplitMismatch.clog: runSplitMismatch_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l runSplitMismatch.C+ 2>&1 | sed -e 's:file .*roottest:file .../roottest:' > SplitMismatch.clog
-	
+
 SplitMismatch: SplitMismatch.clog
 	$(TestDiff)
 
