@@ -82,6 +82,8 @@ public:
    virtual void Draw(TGLRnrCtx& rnrCtx) const;
    virtual void DirectDraw(TGLRnrCtx& rnrCtx) const;
 
+   virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
+
    // To support two-level selection
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    // virtual void ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
