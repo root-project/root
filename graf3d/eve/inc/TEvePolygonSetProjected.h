@@ -14,7 +14,6 @@
 
 #include "TEveVector.h"
 #include "TEveShape.h"
-#include "TEveProjectionBases.h"
 
 class TBuffer3D;
 
@@ -71,8 +70,6 @@ protected:
    Int_t        fNPnts;    // number of reduced and projected points
    TEveVector*  fPnts;     // reduced and projected points
 
-   Bool_t       fMiniOutline;
-
    virtual void SetDepthLocal(Float_t d);
 
 public:
@@ -89,9 +86,6 @@ public:
 
    virtual void    DumpPolys() const;
    void            DumpBuffer3D();
-
-   Bool_t          GetMiniOutline()   const { return fMiniOutline; }
-   void            SetMiniOutline(Bool_t r) { fMiniOutline = r;    }
 
    ClassDef(TEvePolygonSetProjected,0); // Set of projected polygons with outline; typically produced from a TBuffer3D.
 

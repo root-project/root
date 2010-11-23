@@ -54,8 +54,7 @@ TEvePolygonSetProjected::TEvePolygonSetProjected(const char* n, const char* t) :
    TEveShape(n, t),
    fBuff(0),
    fNPnts(0),
-   fPnts(0),
-   fMiniOutline(kTRUE)
+   fPnts(0)
 {
    // Constructor.
 }
@@ -94,18 +93,10 @@ void TEvePolygonSetProjected::SetProjection(TEveProjectionManager* mng,
    // This is virtual method from base-class TEveProjected.
 
    TEveProjected::SetProjection(mng, model);
-   TEveGeoShape* gre = dynamic_cast<TEveGeoShape*>(model);
 
+   TEveGeoShape* gre = dynamic_cast<TEveGeoShape*>(model);
    fBuff = gre->MakeBuffer3D();
-   if (fBuff)
-   {
-      Color_t color = gre->GetMainColor();
-      SetMainColor(color);
-      SetLineColor(color);
-      // SetLineColor((Color_t)TColor::GetColorBright(color));
-      SetMainTransparency(gre->GetMainTransparency());
-      SetMiniOutline(gre->GetMiniOutline());
-   }
+   CopyVizParams(gre);
 }
 
 //______________________________________________________________________________
@@ -128,7 +119,6 @@ void TEvePolygonSetProjected::UpdateProjection()
 
    // drop polygons and projected/reduced points
    fPols.clear();
-
    ProjectBuffer3D();
 }
 
@@ -323,7 +313,7 @@ Float_t TEvePolygonSetProjected::MakePolygonsFromBP(Int_t* idxMap)
 
       if ( ! pp.empty())
       {
-      // DirectDraw() implementation: last and first vertices should not be equal
+         // DirectDraw() implementation: last and first vertices should not be equal
          if (pp.front() == pp.back()) pp.pop_front();
          surf += AddPolygon(pp, fPolsBP);
       }
