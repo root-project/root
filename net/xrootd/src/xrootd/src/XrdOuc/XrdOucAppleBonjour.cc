@@ -198,6 +198,7 @@ void XrdOucAppleBonjour::BrowseReply(DNSServiceRef ref, DNSServiceFlags flags,
    XrdOucAppleBonjour *instance;
    XrdOucBonjourNode *node;
    XrdOucBonjourSubscribedEntry * callbackID;
+   XrdOucBonjourResolutionEntry * nodeAndCallback;
 
    callbackID = (XrdOucBonjourSubscribedEntry *)context;
 
@@ -213,10 +214,12 @@ void XrdOucAppleBonjour::BrowseReply(DNSServiceRef ref, DNSServiceFlags flags,
    if (flags & kDNSServiceFlagsAdd) {
       // ADD a new node to the list.
       node = new XrdOucBonjourNode(name, regtype, domain);
+      nodeAndCallback = (XrdOucBonjourResolutionEntry *)malloc(sizeof(XrdOucBonjourResolutionEntry));
+      nodeAndCallback->node = node;
+      nodeAndCallback->callbackID = callbackID;
 
       // Start resolution of the name.
-      XrdOucBonjourResolutionEntry resentry = {node, callbackID};
-      instance->ResolveNodeInformation(&resentry);
+      instance->ResolveNodeInformation(nodeAndCallback);
 
       // We are going to wait to add the node until it is completely resolved.
       //instance->LockNodeList();
@@ -296,6 +299,8 @@ void XrdOucAppleBonjour::ResolveReply(DNSServiceRef ref, DNSServiceFlags flags,
    // Notify updates if there wont be more updates in a short period of time.
    if (!(flags & kDNSServiceFlagsMoreComing))
       nodeAndCallback->callbackID->callback(nodeAndCallback->callbackID->context);
+
+   free(nodeAndCallback);
 }
 
 int XrdOucAppleBonjour::ResolveNodeInformation(XrdOucBonjourResolutionEntry * nodeAndCallback)
