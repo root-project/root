@@ -3132,6 +3132,9 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
       return f;
    }
 
+   TString expandedUrl(url);
+   gSystem->ExpandPathName(expandedUrl);
+
    // If a timeout has been specified extract the value and try to apply it (it requires
    // support for asynchronous open, though; the following is completely transparent if
    // such support if not available for the required protocol)
@@ -3148,7 +3151,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
          sto.Insert(0, "TIMEOUT=");
          opts.ReplaceAll(sto, "");
          // Asynchrounous open
-         TFileOpenHandle *fh = TFile::AsyncOpen(url, opts, ftitle, compress, netopt);
+         TFileOpenHandle *fh = TFile::AsyncOpen(expandedUrl, opts, ftitle, compress, netopt);
          // Check the result in steps of 1 millisec
          TFile::EAsyncOpenStatus aos = TFile::kAOSNotAsync;
          aos = TFile::GetAsyncOpenStatus(fh);
@@ -3170,7 +3173,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
             }
          } else {
             if (xtms <= 0)
-               ::Error("TFile::Open", "timeout expired while opening '%s'", url);
+               ::Error("TFile::Open", "timeout expired while opening '%s'", expandedUrl.Data());
             // Cleanup the request
             SafeDelete(fh);
          }
@@ -3186,7 +3189,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
    const char *option = opts;
 
    // Many URLs? Redirect output and print errors in case of global failure
-   TString namelist(url);
+   TString namelist(expandedUrl);
    Ssiz_t ip = namelist.Index("|");
    Bool_t rediroutput = (ip != kNPOS &&
                          ip != namelist.Length()-1 && gDebug <= 0) ? kTRUE : kFALSE;
@@ -3355,6 +3358,7 @@ TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
 
    // Many URLs? Redirect output and print errors in case of global failure
    TString namelist(url);
+   gSystem->ExpandPathName(namelist);
    Ssiz_t ip = namelist.Index("|");
    Bool_t rediroutput = (ip != kNPOS &&
                          ip != namelist.Length()-1 && gDebug <= 0) ? kTRUE : kFALSE;
