@@ -289,6 +289,9 @@ DllSuf        = dll
 LibSuf        = lib
 OutPutOpt     = -out:
 CXX          ?= cl
+ifeq ($(CXX),./build/win/cl.sh)
+   CXX        := cl
+endif
 #CXXOPT        = -O2
 CXXOPT        = -Z7
 #CXXFLAGS      = $(CXXOPT) -G5 -GR -MD -DWIN32 -D_WINDOWS -nologo \
