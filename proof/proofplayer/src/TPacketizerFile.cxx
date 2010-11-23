@@ -44,6 +44,9 @@
 #include "TClass.h"
 #include "TMath.h"
 #include "TObjString.h"
+#include "TFileInfo.h"
+#include "TFileCollection.h"
+#include "THashList.h"
 
 //------------------------------------------------------------------------------
 
@@ -97,11 +100,21 @@ TPacketizerFile::TPacketizerFile(TList *workers, Long64_t, TList *input,
    ResetBit(TObject::kInvalidObject);
    fValid = kFALSE;
    fAssigned = 0;
+   fProcNotAssigned = kTRUE;
 
    if (!input || (input && input->GetSize() <= 0)) {
       Error("TPacketizerFile", "input file is undefined or empty!");
       SetBit(TObject::kInvalidObject);
       return;
+   }
+
+   // Check if the files not explicitely assigned have to be processed
+   Int_t procnotass = 1;
+   if (TProof::GetParameter(input, "PROOF_ProcessNotAssigned", procnotass) == 0) {
+      if (procnotass == 0) {
+         Info("TPacketizerFile", "files not assigned to workers will not be processed");
+         fProcNotAssigned = kFALSE;
+      }
    }
 
    // These are the file to be created/processed per node; the information
@@ -121,8 +134,9 @@ TPacketizerFile::TPacketizerFile(TList *workers, Long64_t, TList *input,
    TIter si(workers);
    while ((wrk = (TSlave *) si.Next())) {
       fSlaveStats->Add(wrk, new TSlaveStat(wrk, input));
-      Info("TPacketizerFile","worker: %s", wrk->GetName());
-      if (!nodes.FindObject(wrk->GetName())) nodes.Add(new TObjString(wrk->GetName()));
+      TString wrkname = TUrl(wrk->GetName()).GetHostFQDN();
+      Info("TPacketizerFile", "worker: %s", wrkname.Data());
+      if (!nodes.FindObject(wrkname)) nodes.Add(new TObjString(wrkname));
    }
 
    // The list of iterators
@@ -136,11 +150,16 @@ TPacketizerFile::TPacketizerFile(TList *workers, Long64_t, TList *input,
    TIter nxl(fFiles);
    TObject *key, *o = 0;
    while ((key = nxl()) != 0) {
-      TList *wrklist = (TList *) fFiles->GetValue(key);
+      THashList *wrklist = dynamic_cast<THashList *>(fFiles->GetValue(key));
+      if (!wrklist) {
+         TFileCollection *fc = dynamic_cast<TFileCollection *>(fFiles->GetValue(key));
+         if (fc) wrklist = fc->GetList();
+      }
       if (wrklist) {
-         if (nodes.FindObject(key->GetName())) {
+         TString hname = TUrl(key->GetName()).GetHostFQDN();
+         if (nodes.FindObject(hname)) {
             fTotalEntries += wrklist->GetSize();
-            fIters->Add(new TIterObj(key->GetName(), new TIter(wrklist)));
+            fIters->Add(new TIterObj(hname, new TIter(wrklist)));
          } else {
             // We add all to the not assigned list so that they will be distributed
             // according to the load
@@ -239,7 +258,7 @@ TDSetElement *TPacketizerFile::GetNextPacket(TSlave *wrk, TMessage *r)
    }
 
    PDB(kPacketizer,2)
-      Info("GetNextPacket","worker-%s: fAssigned %lld\t", wrk->GetOrdinal(), fAssigned);
+      Info("GetNextPacket","worker-%s: fAssigned %lld / %lld", wrk->GetOrdinal(), fAssigned, fTotalEntries);
 
    // Update stats & free old element
    Double_t latency = 0., proctime = 0., proccpu = 0.;
@@ -307,35 +326,55 @@ TDSetElement *TPacketizerFile::GetNextPacket(TSlave *wrk, TMessage *r)
       return 0;
    }
 
+   PDB(kPacketizer,2)
+      Info("GetNextPacket", "worker-%s (%s): getting next files ... ", wrk->GetOrdinal(),
+                            wrk->GetName());
+
    // Get next file now
-   TObjString *nextfile = 0;
+   TObject *nextfile = 0;
 
    // Find iterator associated to the worker
    TIterObj *io = dynamic_cast<TIterObj *>(fIters->FindObject(wrk->GetName()));
    if (io) {
       // Get next file to process in the list of the worker
       if (io->GetIter())
-         nextfile = dynamic_cast<TObjString *>(io->GetIter()->Next());
+         nextfile = io->GetIter()->Next();
    }
 
-   // If not found or all files already processed, check if a genric iterator
+   // If not found or all files already processed, check if a generic iterator
    // has still some files to process
-   if (!nextfile) {
+   if (!nextfile && fProcNotAssigned) {
       if ((io = dynamic_cast<TIterObj *>(fIters->FindObject("*")))) {
          // Get next file to process in the list of the worker
          if (io->GetIter())
-            nextfile = dynamic_cast<TObjString *>(io->GetIter()->Next());
+            nextfile = io->GetIter()->Next();
       }
    }
 
    // Return if nothing to process
    if (!nextfile) return elem;
 
+   // The file name: we support TObjString or TFileInfo
+   TString filename;
+   TObjString *os = 0;
+   if ((os = dynamic_cast<TObjString *>(nextfile))) {
+      filename = os->GetName();
+   } else {
+      TFileInfo *fi = 0;
+      if ((fi = dynamic_cast<TFileInfo *>(nextfile)))
+         filename = fi->GetCurrentUrl()->GetUrl();
+   }
+   // Nothing to process
+   if (filename.IsNull()) {
+      Warning("GetNextPacket", "found unsupported object of type '%s' in list: it must"
+                               " be 'TObjString' or 'TFileInfo'", nextfile->GetName());
+      return elem;
+   }
    // Prepare the packet
    PDB(kPacketizer,2)
       Info("GetNextPacket", "worker-%s: assigning: '%s' (remaining %lld files)",
-                            wrk->GetOrdinal(), nextfile->GetName(), (fTotalEntries - fAssigned));
-   elem = new TDSetElement(nextfile->GetName(), "", "", 0, 1);
+                            wrk->GetOrdinal(), filename.Data(), (fTotalEntries - fAssigned));
+   elem = new TDSetElement(filename, "", "", 0, 1);
    elem->SetBit(TDSetElement::kEmpty);
 
    // Update the total counter
