@@ -1340,7 +1340,7 @@ int G__search_typename(const char* typenamein, int typein, int tagnum, int refty
       ispointer = 'A' - 'a';
    }
    const char *atom_tagname = type_name;
-   if ( strstr(type_name,"(*)") == 0 ) {
+   if ( strstr(type_name,"(*)") == 0 && strstr(type_name,"::*)") == 0 ) {
       // Deal with potential scope in the name but only when not a function type
       char *p = (char*) G__find_last_scope_operator(type_name);
       if (p) {
