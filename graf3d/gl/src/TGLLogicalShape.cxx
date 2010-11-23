@@ -11,7 +11,6 @@
 #include "TGLIncludes.h"
 
 #include "TBuffer3D.h"
-#include "TAtt3D.h"
 #include "TClass.h"
 #include "TContextMenu.h"
 

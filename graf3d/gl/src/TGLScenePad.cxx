@@ -154,8 +154,7 @@ void TGLScenePad::ObjectPaint(TObject* obj, Option_t* opt)
    }
    else if (obj->InheritsFrom(TAtt3D::Class()))
    {
-      //Since TH3's derived from TAtt3D, it should be checked here.
-      //printf("normal-painting %s / %s\n", obj->GetName(), obj->ClassName());
+      // Handle 3D primitives here.
       obj->Paint(opt);
    }
    else if (obj->InheritsFrom(TVirtualPad::Class()))
@@ -165,8 +164,6 @@ void TGLScenePad::ObjectPaint(TObject* obj, Option_t* opt)
    else
    {
       // Handle 2D primitives here.
-      // printf("TGLScenePad::ObjectPaint skipping %p, %s, %s.\n",
-      //        obj, obj->GetName(), obj->ClassName());
       obj->Paint(opt);
    }
 }

@@ -30,7 +30,6 @@
 #include "TGLOutput.h"
 
 #include "TVirtualPad.h" // Remove when pad removed - use signal
-#include "TAtt3D.h"      // Remove when PadPaint delegated to PadScene.
 #include "TVirtualX.h"
 
 #include "TMath.h"

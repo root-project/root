@@ -56,7 +56,7 @@ protected:
 
    TGLLogicalShape* AttemptDirectRenderer(TObject* id);
 
-   Bool_t         fSmartRefresh;   //! cache logicals during scene rebuilds, use TAtt3D time-stamp to determine if they are still valid
+   Bool_t         fSmartRefresh;   //! cache logicals during scene rebuilds
 
 public:
    TGLScenePad(TVirtualPad* pad);

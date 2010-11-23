@@ -17,8 +17,6 @@
 #include "TBaseClass.h"
 #include "TList.h"
 #include "TString.h"
-#include "TAtt3D.h"
-#include "TAttBBox.h"
 
 //==============================================================================
 // TGLObject
