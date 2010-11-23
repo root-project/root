@@ -60,7 +60,7 @@ IntegrationOneDim::Type IntegratorOneDim::GetType(const char *name) {
    if (typeName == "ADAPTIVE") return IntegrationOneDim::kADAPTIVE;  
    if (typeName == "ADAPTIVESINGULAR") return IntegrationOneDim::kADAPTIVESINGULAR;  
    if (typeName == "NONADAPTIVE") return IntegrationOneDim::kNONADAPTIVE;  
-   MATH_WARN_MSG("IntegratorOneDim::GetType","Invalid type name specified - return default " ); 
+   if (!typeName.empty()) MATH_WARN_MSG("IntegratorOneDim::GetType","Invalid type name specified - return default " ); 
    return IntegrationOneDim::kDEFAULT; 
 }
 
@@ -84,7 +84,7 @@ IntegrationMultiDim::Type IntegratorMultiDim::GetType(const char *name) {
    if (typeName == "VEGAS") return IntegrationMultiDim::kVEGAS;  
    if (typeName == "MISER") return IntegrationMultiDim::kMISER;  
    if (typeName == "PLAIN") return IntegrationMultiDim::kPLAIN;  
-   MATH_WARN_MSG("IntegratorMultiDim::GetType","Invalid type name specified - return default " ); 
+   if (!typeName.empty()) MATH_WARN_MSG("IntegratorMultiDim::GetType","Invalid type name specified - return default " ); 
    return IntegrationMultiDim::kDEFAULT; 
 }
 
