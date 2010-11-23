@@ -52,7 +52,13 @@ if [ "$HAVEMT" == "1" ]; then
 fi
 
 # Determine the compiler version
-COMPILERVERS="$CXX"
+COMPILERVERS="`cl.exe 2>&1 | grep Version`"
+
+if [ "$CXX" == "./build/win/cl.sh" ] ; then
+   # We are using the wrapper dealing with cygwin path, 
+   # here we want to record cl.exe:
+   CXX=cl.exe
+fi
 
 rm -f __compiledata
 
