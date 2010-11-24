@@ -54,8 +54,8 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 #  should also be reflected in the TEST_TARGETS variable above.
 
 # trigger creation of cintex/test directory if out-of-source
-CINTEXTESTDIR:=$(ROOTSYS)/cint/cintex/test$(shell cd $(ROOTSYS); make cint/cintex/test/dict/CintexTest_rflx.cpp > /dev/null)
--include $(CINTEXTESTDIR)/doesnt-exists.d
+ROOT_SRCDIR:=$(shell grep "ROOT_SRCDIR    :=" $(ROOTSYS)/config/Makefile.config | sed 's/^ROOT_SRCDIR    := $$(call realpath, \([^)]\+\).*$$/\1/')
+CINTEXTESTDIR:=$(ROOT_SRCDIR)/cint/cintex/test
 
 CINTEXCYGDEP=$(1)
 ifeq ($(PLATFORM),win32)
