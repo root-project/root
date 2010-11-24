@@ -78,7 +78,7 @@ CINTEXTESTDICT  = $(subst $(CINTEXTESTDICTD)/,$(CINTEXTESTDICTD)/test_,$(subst _
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) \
-                check-$(MODNAME) clean-check-$(MODNAME)
+                test-$(MODNAME) clean-test-$(MODNAME)
 
 include/Cintex/%.h: $(CINTEXDIRI)/Cintex/%.h
 		@(if [ ! -d "include/Cintex" ]; then    \
@@ -101,10 +101,10 @@ $(CINTEXMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(CINTEXL)
 
 all-$(MODNAME): $(CINTEXLIB) $(CINTEXMAP)
 
-clean-$(MODNAME): clean-check-$(MODNAME)
+clean-$(MODNAME): clean-test-$(MODNAME)
 		@rm -f $(CINTEXO)
 
-clean-check-$(MODNAME):
+clean-test-$(MODNAME):
 		@rm -f $(CINTEXTESTDICTS) $(CINTEXTESTDICTO)
 
 clean::         clean-$(MODNAME)
@@ -116,9 +116,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 
-#### test suite ####
-
-check-$(MODNAME): $(REFLEXLIB) $(CINTEXLIB) $(CINTEXTESTDICT)
+test-$(MODNAME): $(REFLEXLIB) $(CINTEXLIB) $(CINTEXTESTDICT) $(CINTEXTESTD)/test_all$(SHEXT)
 		@echo "Running all Cintex tests"
 		@$(CINTEXTESTD)/test_all$(SHEXT)  $(PYTHONINCDIR)
 
@@ -126,7 +124,10 @@ $(CINTEXTESTDICT): $(CINTEXTESTDICTO)
 		@mkdir -p $(CINTEXTESTDICTL)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ $< "$(REFLEXLL)"
 
-$(CINTEXTESTDICTS): $(CINTEXTESTDICTH) $(CINTEXTESTDICTD)/selection.xml
+$(CINTEXTESTDICTS): $(wildcard $(CINTEXTESTDICTH) $(CINTEXTESTDICTD)/selection.xml)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@$(INSTALL) $(CINTEXDIR)/test $(CINTEXTESTD)
+endif
 		cd $(CINTEXTESTDICTD); $(GENREFLEX_CMD2) CintexTest.h -s selection.xml --rootmap=$(PWD)/$(CINTEXTESTDICT).rootmap --rootmap-lib=$(CINTEXTESTDICT) --comments
 
 ##### extra rules ######
