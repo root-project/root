@@ -130,6 +130,13 @@ namespace Math {
       /** Set the number of point used to bracket root using a grid */
       void SetNpx(int npx) { fNpx = npx; }
 
+      /** 
+          Set a log grid scan (default is equidistant bins) 
+          will work only if xlow > 0
+      */ 
+      void SetLogScan(bool on) { fLogScan = on; }
+          
+
       /** Returns status of last estimate. If = 0 is OK */
       int Status() const { return fStatus; }
 
@@ -148,6 +155,7 @@ namespace Math {
    private:
 
       const IGenFunction* fFunction; // Pointer to the function.
+      bool fLogScan;                 // flag to control usage of a log scan
       int fNIter;                    // Number of iterations needed for the last estimation.
       int fNpx;                      // Number of points to bracket minimum with grid (def is 100)
       int fStatus;                   // Status of code of the last estimate

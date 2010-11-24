@@ -66,7 +66,10 @@ public:
 public:
 
    // constructor using the default options 
-   MinimizerOptions();
+   // pass optionally a pointer to the additional options
+   // otehrwise look if they exist for this default minimizer
+   // and in that case they are copied in the constructed instance
+   MinimizerOptions(IOptions * extraOpts = 0);
 
    // destructor  
    ~MinimizerOptions();

@@ -23,7 +23,7 @@ namespace BrentMethods {
 
 */
 
-   double MinimStep(const IGenFunction* f, int type, double &xmin, double &xmax, double fy, int npx = 100);
+   double MinimStep(const IGenFunction* f, int type, double &xmin, double &xmax, double fy, int npx = 100, bool useLog = false);
 
    /**
       Finds a minimum of a function, if the function is unimodal  between xmin and xmax

@@ -42,10 +42,11 @@ static int gDefaultNpx = 100; // default nunmber of points used in the grid to b
 static int gDefaultNSearch = 10;  // nnumber of time the iteration (bracketing -Brent ) is repeted
 
 
-BrentMinimizer1D::BrentMinimizer1D(): IMinimizer1D(), 
-                                      fFunction(0), fNIter(0), 
-                                      fNpx(0), fStatus(-1), 
-                                      fXMin(0), fXMax(0), fXMinimum(0) 
+   BrentMinimizer1D::BrentMinimizer1D(): IMinimizer1D(),                                          
+                                         fFunction(0), 
+                                         fLogScan(false), fNIter(0), 
+                                         fNpx(0), fStatus(-1), 
+                                         fXMin(0), fXMax(0), fXMinimum(0) 
 {
 // Default Constructor.
    fNpx = gDefaultNpx;
@@ -93,8 +94,13 @@ bool BrentMinimizer1D::Minimize( int maxIter, double absTol , double relTol)
 // maxITer refers to the iterations inside the Brent algorithm
 
    if (!fFunction) { 
-       MATH_ERROR_MSG("BrentRootFinder::Solve", "Function has not been set");
+       MATH_ERROR_MSG("BrentMinimizer1D::Minimize", "Function has not been set");
        return false;
+   }
+
+   if (fLogScan && fXMin <= 0) { 
+      MATH_ERROR_MSG("BrentMinimizer1D::Minimize", "xmin is < 0 and log scan is set - disable it");
+      fLogScan = false; 
    }
 
    fNIter = 0; 
@@ -115,7 +121,7 @@ bool BrentMinimizer1D::Minimize( int maxIter, double absTol , double relTol)
          fStatus = -2; 
          return false;
       }
-      double x = BrentMethods::MinimStep(fFunction, 0, xmin, xmax, 0, fNpx);
+      double x = BrentMethods::MinimStep(fFunction, 0, xmin, xmax, 0, fNpx,fLogScan);
       x = BrentMethods::MinimBrent(fFunction, 0, xmin, xmax, x, 0,  ok, niter2, absTol, relTol, maxIter2 );
       fNIter += niter2;  // count the total number of iterations
       niter1++;

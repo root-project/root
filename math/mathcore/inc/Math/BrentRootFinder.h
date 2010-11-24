@@ -103,6 +103,12 @@ namespace Math {
       /** Set the number of point used to bracket root using a grid */
       void SetNpx(int npx) { fNpx = npx; }
 
+      /** 
+          Set a log grid scan (default is equidistant bins) 
+          will work only if xlow > 0
+      */ 
+      void SetLogScan(bool on) { fLogScan = on; }
+
       /** Returns root value. Need to call first Solve(). */
       double Root() const { return fRoot; }
 
@@ -131,6 +137,7 @@ namespace Math {
    private:
 
       const IGenFunction* fFunction; // Pointer to the function.
+      bool fLogScan;                 // flag to control usage of a log scan      
       int fNIter;                    // Number of iterations needed for the last estimation.
       int fNpx;                      // Number of points to bracket root with initial grid (def is 100)
       int fStatus;                   // Status of code of the last estimate

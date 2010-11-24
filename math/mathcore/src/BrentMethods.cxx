@@ -25,7 +25,7 @@ namespace Math {
 
 namespace BrentMethods { 
 
-double MinimStep(const IGenFunction* function, int type, double &xmin, double &xmax, double fy, int npx)
+   double MinimStep(const IGenFunction* function, int type, double &xmin, double &xmax, double fy, int npx,bool logStep)
 {
    //   Grid search implementation, used to bracket the minimum and later
    //   use Brent's method with the bracketed interval
@@ -36,28 +36,44 @@ double MinimStep(const IGenFunction* function, int type, double &xmin, double &x
    //         3-returns Maximum
    //         4-returns X corresponding to fy
 
-   double x,y, dx;
+   if (logStep) { 
+      xmin = std::log(xmin);
+      xmax = std::log(xmax);
+   }
+
+
    if (npx < 2) return 0.5*(xmax-xmin); // no bracketing - return just mid-point
-   dx = (xmax-xmin)/(npx-1);
-   double xxmin = xmin;
+   double dx = (xmax-xmin)/(npx-1);
+   double xxmin = (logStep) ? std::exp(xmin) : xmin; 
    double yymin;
    if (type < 2)
-      yymin = (*function)(xmin);
+      yymin = (*function)(xxmin);
    else if (type < 4)
-      yymin = -(*function)(xmin);
+      yymin = -(*function)(xxmin);
    else
-      yymin = std::fabs((*function)(xmin)-fy);
+      yymin = std::fabs((*function)(xxmin)-fy);
 
    for (int i=1; i<=npx-1; i++) {
-      x = xmin + i*dx;
+      double x = xmin + i*dx;
+      if (logStep) x = std::exp(x); 
+      double y = 0;
       if (type < 2)
          y = (*function)(x);
       else if (type < 4)
          y = -(*function)(x);
       else
          y = std::fabs((*function)(x)-fy);
-      if (y < yymin) {xxmin = x; yymin = y;}
+      if (y < yymin) {
+         xxmin = x; 
+         yymin = y;
+      }
    }
+
+   if (logStep) {
+      xmin = std::exp(xmin); 
+      xmax = std::exp(xmax); 
+   }
+
 
    xmin = std::max(xmin,xxmin-dx);
    xmax = std::min(xmax,xxmin+dx);

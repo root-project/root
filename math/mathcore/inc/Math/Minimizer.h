@@ -296,10 +296,10 @@ public:
    int PrintLevel() const { return fDebug; }
 
    ///  max number of function calls
-   unsigned int MaxFunctionCalls() { return fMaxCalls; } 
+   unsigned int MaxFunctionCalls() const { return fMaxCalls; } 
 
    /// max iterations
-   unsigned int MaxIterations() { return fMaxIter; } 
+   unsigned int MaxIterations() const { return fMaxIter; } 
 
    /// absolute tolerance 
    double Tolerance() const { return  fTol; }

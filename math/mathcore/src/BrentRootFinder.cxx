@@ -23,7 +23,8 @@ namespace Math {
 static int gDefaultNpx = 100; // default nunmber of points used in the grid to bracked the root
 static int gDefaultNSearch = 10;  // nnumber of time the iteration (bracketing -Brent ) is repeted
 
-   BrentRootFinder::BrentRootFinder() : fFunction(0), fNIter(0), 
+   BrentRootFinder::BrentRootFinder() : fFunction(0),
+                                        fLogScan(false), fNIter(0), 
                                         fNpx(0), fStatus(-1), 
                                         fXMin(0), fXMax(0), fRoot(0) 
 {
@@ -69,6 +70,12 @@ bool BrentRootFinder::Solve(int maxIter, double absTol, double relTol)
        return false;
    }
 
+   if (fLogScan && fXMin <= 0) { 
+      MATH_ERROR_MSG("BrentRootFinder::Solve", "xmin is < 0 and log scan is set - disable it");
+      fLogScan = false; 
+   }
+
+
    const double fy = 0; // To find the root
    fNIter = 0; 
    fStatus = -1; 
@@ -88,7 +95,7 @@ bool BrentRootFinder::Solve(int maxIter, double absTol, double relTol)
          fStatus = -2; 
          return false;
       }
-      double x = BrentMethods::MinimStep(fFunction, 4, xmin, xmax, fy, fNpx);
+      double x = BrentMethods::MinimStep(fFunction, 4, xmin, xmax, fy, fNpx,fLogScan);
       x = BrentMethods::MinimBrent(fFunction, 4, xmin, xmax, x, fy, ok, niter2, absTol, relTol, maxIter2);
       fNIter += niter2;  // count the total number of iterations
       niter1++;

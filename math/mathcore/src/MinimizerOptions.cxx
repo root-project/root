@@ -99,7 +99,7 @@ const std::string & MinimizerOptions::DefaultMinimizerType()
 }
 
 
-MinimizerOptions::MinimizerOptions(): 
+MinimizerOptions::MinimizerOptions(IOptions * extraOpts): 
    fLevel( Minim::gDefaultPrintLevel),
    fMaxCalls( Minim::gDefaultMaxCalls ), 
    fMaxIter( Minim::gDefaultMaxIter ), 
@@ -107,7 +107,7 @@ MinimizerOptions::MinimizerOptions():
    fErrorDef(  Minim::gDefaultErrorDef ), 
    fTolerance( Minim::gDefaultTolerance ),
    fPrecision( Minim::gDefaultPrecision ),
-   fExtraOptions(0)
+   fExtraOptions(extraOpts)
 {
    // constructor using  the default options
 
@@ -123,6 +123,12 @@ MinimizerOptions::MinimizerOptions():
    }   
    else if (fMinimType == "GSLMultiMin" && fAlgoType == "Migrad") 
       fAlgoType = "BFGS2";
+
+   // check if extra options exists (copy them if needed)
+   if (!fExtraOptions) { 
+      IOptions * gopts = FindDefault( fMinimType.c_str() );
+      if (gopts) fExtraOptions = gopts->Clone();
+   }
 }
 
 
@@ -141,6 +147,8 @@ MinimizerOptions & MinimizerOptions::operator=(const MinimizerOptions & opt) {
    fErrorDef = opt.fErrorDef;
    fTolerance = opt.fTolerance;
    fPrecision = opt.fPrecision; 
+   fMinimType = opt.fMinimType; 
+   fAlgoType = opt.fAlgoType; 
 
    if (fExtraOptions) delete fExtraOptions; 
    fExtraOptions = 0; 
