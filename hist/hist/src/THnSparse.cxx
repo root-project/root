@@ -1132,14 +1132,18 @@ TH1D* THnSparse::Projection(Int_t xDim, Option_t* option /*= ""*/) const
 }
 
 //______________________________________________________________________________
-TH2D* THnSparse::Projection(Int_t xDim, Int_t yDim, Option_t* option /*= ""*/) const
+TH2D* THnSparse::Projection(Int_t yDim, Int_t xDim, Option_t* option /*= ""*/) const
 {
    // Project all bins into a 2-dimensional histogram,
    // keeping only axes "xDim" and "yDim".
+   //
+   // WARNING: just like TH3::Project3D("yx") and TTree::Draw("y:x"),
+   // Projection(y,x) uses the first argument to define the y-axis and the
+   // second for the x-axis!
+   //
    // If "option" contains "E" errors will be calculated.
    //                      "A" ranges of the taget axes will be ignored.
 
-   // y, x looks wrong, but it's what TH3::Project3D("xy") does
    const Int_t dim[2] = {yDim, xDim};
    return (TH2D*) ProjectionAny(2, dim, false, option);
 }

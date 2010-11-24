@@ -234,7 +234,7 @@ class THnSparse: public TNamed {
    Double_t GetSumwx2(Int_t dim) const { return fTsumwx2[dim]; }
 
    TH1D*      Projection(Int_t xDim, Option_t* option = "") const;
-   TH2D*      Projection(Int_t xDim, Int_t yDim,
+   TH2D*      Projection(Int_t yDim, Int_t xDim,
                          Option_t* option = "") const;
    TH3D*      Projection(Int_t xDim, Int_t yDim, Int_t zDim,
                          Option_t* option = "") const;
