@@ -53,7 +53,10 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 # The name of this target should be changed according to the test being run.  Any name changes
 #  should also be reflected in the TEST_TARGETS variable above.
 
-CINTEXTESTDIR:=$(ROOTSYS)/cint/cintex/test
+# trigger creation of cintex/test directory if out-of-source
+CINTEXTESTDIR:=$(ROOTSYS)/cint/cintex/test$(shell cd $(ROOTSYS); make cint/cintex/test/dict/CintexTest_rflx.cpp > /dev/null)
+-include $(CINTEXTESTDIR)/doesnt-exists.d
+
 CINTEXCYGDEP=$(1)
 ifeq ($(PLATFORM),win32)
 CINTEXTESTDIR:=$(subst \,/,$(CINTEXTESTDIR))
