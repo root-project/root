@@ -271,7 +271,7 @@ ifeq ($(BUILDEDITLINE),yes)
 MODULES      += core/editline
 endif
 ifeq ($(BUILDTMVA),yes)
-MODULES      += tmva
+MODULES      += tmva math/genetic
 endif
 ifeq ($(BUILDXRD),yes)
 ifeq ($(ARCH),win32)
@@ -293,7 +293,7 @@ MODULES      += core/unix core/winnt core/editline graf2d/x11 graf2d/x11ttf \
                 graf2d/qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac proof/pq2 \
                 sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
-                tmva io/hdfs graf2d/fitsio \
+                tmva math/genetic io/hdfs graf2d/fitsio \
                 roofit/roofitcore roofit/roofit roofit/roostats \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve net/glite misc/memstat \
