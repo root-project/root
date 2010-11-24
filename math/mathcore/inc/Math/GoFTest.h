@@ -43,7 +43,7 @@ public:
       kPDF                  // Default value
    };
    
-   enum ETestType { // Goodness of Fit test types for using with the class's unary funtion as a shorthand for the in-built methods
+   enum ETestType { // Goodness of Fit test types for using with the class's unary funtions as a shorthand for the in-built methods
       kAD,   // Anderson-Darling Test. Default value
       kAD2s, // Anderson-Darling 2-Samples Test
       kKS,   // Kolmogorov-Smirnov Test
@@ -51,7 +51,7 @@ public:
    };
    
    /* Constructor for using only with 2-samples tests */
-   GoFTest( UInt_t sample1Size, const Double_t* sample1, UInt_t sample2Size, const Double_t* sample2 );
+   GoFTest(UInt_t sample1Size, const Double_t* sample1, UInt_t sample2Size, const Double_t* sample2);
   
    /* Constructor for using only with 1-sample tests with a specified distribution */
    GoFTest(UInt_t sampleSize, const Double_t* sample, EDistribution dist = kUndefined);
@@ -65,48 +65,48 @@ public:
       SetUserDistribution<Dist>(dist, userDist, xmin, xmax);
    }
 
-   /* specializetion using IGenFunction interface */
+   /* Specialization using IGenFunction interface */
    GoFTest(UInt_t sampleSize, const Double_t* sample, const IGenFunction& dist, EUserDistribution userDist = kPDF, 
            Double_t xmin = 1, Double_t xmax = 0) 
    {
       Instantiate(sample, sampleSize);
-      SetUserDistribution(dist, userDist,xmin,xmax);
+      SetUserDistribution(dist, userDist, xmin, xmax);
    }
 
    /* Sets the user input distribution function for 1-sample tests. */
    template<class Dist>
    void SetUserDistribution(Dist& dist, EUserDistribution userDist = kPDF, Double_t xmin = 1, Double_t xmax = 0) {
-      WrappedFunction<Dist&> wcdf(dist); 
-      SetDistributionFunction(wcdf, userDist,xmin,xmax);
+      WrappedFunction<Dist&> wdist(dist); 
+      SetDistributionFunction(wdist, userDist, xmin, xmax);
    }
 
    /* Template specialization to set the user input distribution for 1-sample tests */
-   void SetUserDistribution(const IGenFunction& f, GoFTest::EUserDistribution userDist, Double_t xmin = 1, Double_t xmax = 0) {
-      SetDistributionFunction(f, userDist,xmin,xmax); 
+   void SetUserDistribution(const IGenFunction& dist, GoFTest::EUserDistribution userDist = kPDF, Double_t xmin = 1, Double_t xmax = 0) {
+      SetDistributionFunction(dist, userDist, xmin, xmax); 
    }
    
    /* Sets the user input distribution as a probability density function for 1-sample tests */
    template<class Dist>
-   void SetUserPDF(Dist& dist, Double_t xmin = 1, Double_t xmax = 0) {
-      SetUserDistribution<Dist>(dist, kPDF,xmin,xmax);
+   void SetUserPDF(Dist& pdf, Double_t xmin = 1, Double_t xmax = 0) {
+      SetUserDistribution<Dist>(pdf, kPDF, xmin, xmax);
    }
 
    /* Template specialization to set the user input distribution as a probability density function for 1-sample tests */
-   void SetUserPDF(const IGenFunction& f, Double_t xmin = 1, Double_t xmax = 0) {
-      SetUserDistribution(f, kPDF,xmin,xmax);
+   void SetUserPDF(const IGenFunction& pdf, Double_t xmin = 1, Double_t xmax = 0) {
+      SetUserDistribution(pdf, kPDF, xmin, xmax);
    }
 
    /* Sets the user input distribution as a cumulative distribution function for 1-sample tests 
       The CDF must return zero 
     */
    template<class Dist>
-   void SetUserCDF(Dist& dist, Double_t xmin = 1, Double_t xmax = 0) {
-      SetUserDistribution<Dist>(dist, kCDF, xmin, xmax);
+   void SetUserCDF(Dist& cdf, Double_t xmin = 1, Double_t xmax = 0) {
+      SetUserDistribution<Dist>(cdf, kCDF, xmin, xmax);
    }
 
    /* Template specialization to set the user input distribution as a cumulative distribution function for 1-sample tests */
-   void SetUserCDF(const IGenFunction& f, Double_t xmin = 1, Double_t xmax = 0)  {
-      SetUserDistribution(f, kCDF, xmin, xmax);
+   void SetUserCDF(const IGenFunction& cdf, Double_t xmin = 1, Double_t xmax = 0)  {
+      SetUserDistribution(cdf, kCDF, xmin, xmax);
    }
 
    
@@ -121,9 +121,9 @@ public:
   http://www.itl.nist.gov/div898/software/dataplot/refman1/auxillar/andeksam.htm
   and described and taken from (1)
   Scholz F.W., Stephens M.A. (1987), K-sample Anderson-Darling Tests, Journal of the American Statistical Association, 82, 918–924. (2-samples variant implemented)
-*/
+*/ void AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) const;
    Double_t AndersonDarling2SamplesTest(const Char_t* option = "p") const; // Returns default p-value; option "t" returns the test statistic value "A2"
-  
+
 /*
   The Anderson-Darling 1-Sample Test algorithm for a specific distribution is described at 
   http://www.itl.nist.gov/div898/software/dataplot/refman1/auxillar/andedarl.htm
@@ -131,15 +131,15 @@ public:
   Marsaglia J.C.W., Marsaglia G. (2004), Evaluating the Anderson-Darling Distribution, Journal of Statistical Software, Volume 09, Issue i02.
   and described and taken from (3)
   Lewis P.A.W. (1961), The Annals of Mathematical Statistics, Distribution of the Anderson-Darling Statistic, Volume 32, Number 4, 1118-1124. 
-*/
+*/ void AndersonDarlingTest(Double_t& pvalue, Double_t& testStat) const;
    Double_t AndersonDarlingTest(const Char_t* option = "p") const; // Returns default p-value; option "t" returns the test statistic value "A2"
-  
+
 /*
   The Kolmogorov-Smirnov 2-Samples Test algorithm is described at
   http://www.itl.nist.gov/div898/software/dataplot/refman1/auxillar/ks2samp.htm
   and described and taken from
   http://root.cern.ch/root/html/TMath.html#TMath:KolmogorovTest
-*/
+*/ void KolmogorovSmirnov2SamplesTest(Double_t& pvalue, Double_t& testStat) const;
    Double_t KolmogorovSmirnov2SamplesTest(const Char_t* option = "p") const; // Returns default p-value; option "t" returns the test statistic value "Dn"
 
 /*
@@ -147,11 +147,12 @@ public:
   http://www.itl.nist.gov/div898/software/dataplot/refman1/auxillar/kstest.htm
   and described and taken from (4)
   Press W. H., Teukolsky S.A., Vetterling W.T., Flannery B.P. (2007), Numerical Recipes - The Art of Scientific Computing (Third Edition), Cambridge Univerdity Press
-*/
+*/ void KolmogorovSmirnovTest(Double_t& pvalue, Double_t& testStat) const;
    Double_t KolmogorovSmirnovTest(const Char_t* option = "p") const; // Returns default p-value; option "t" returns the test statistic value "Dn"
-  
-   // The class's unary function
-   Double_t operator()(ETestType test = kAD, const Char_t* option = "p") const; // The class's unary function: returns default Anderson Darling 1-Sample Test and default p-value; option "t" returns the test statistic value specific to the test type
+
+   // The class's unary functions
+   void operator()(ETestType test, Double_t& pvalue, Double_t& testStat) const;
+   Double_t operator()(ETestType test = kAD, const Char_t* option = "p") const; // Returns default Anderson Darling 1-Sample Test and default p-value; option "t" returns the test statistic value specific to the test type
 
 private:
   

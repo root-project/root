@@ -76,7 +76,7 @@ namespace Math {
 
       virtual ~PDFIntegral() { if (fPDF) delete fPDF; }
 
-      PDFIntegral(const IGenFunction& pdf, Double_t xmin=0, Double_t xmax=-1) : 
+      PDFIntegral(const IGenFunction& pdf, Double_t xmin = 0, Double_t xmax = -1) : 
          fXmin(xmin), 
          fXmax(xmax),
          fNorm(1),
@@ -88,10 +88,10 @@ namespace Math {
             fXmin = -std::numeric_limits<double>::infinity();
             fXmax = std::numeric_limits<double>::infinity();
          }
-         if (fXmin ==  std::numeric_limits<double>::infinity() && fXmax == std::numeric_limits<double>::infinity() ) { 
+         if (fXmin == -std::numeric_limits<double>::infinity() && fXmax == std::numeric_limits<double>::infinity() ) { 
             fNorm = fIntegral.Integral();
          }
-         else if (fXmin == std::numeric_limits<double>::infinity() )
+         else if (fXmin == -std::numeric_limits<double>::infinity() )
             fNorm = fIntegral.IntegralLow(fXmax);
          else if (fXmax == std::numeric_limits<double>::infinity() )
             fNorm = fIntegral.IntegralUp(fXmin);
@@ -102,20 +102,20 @@ namespace Math {
       Double_t DoEval(Double_t x) const {
          if (x <= fXmin) return 0; 
          if (x >= fXmax) return 1.0; 
-         if (fXmin == std::numeric_limits<double>::infinity() )
+         if (fXmin == -std::numeric_limits<double>::infinity() )
             return fIntegral.IntegralLow(x)/fNorm;
          else 
             return fIntegral.Integral(fXmin,x)/fNorm;
       }
       
       IGenFunction* Clone() const {
-         return new PDFIntegral(*fPDF,fXmin,fXmax);
+         return new PDFIntegral(*fPDF, fXmin, fXmax);
       }
    };
 
    void GoFTest::SetDistribution(EDistribution dist) {
       if (!(kGaussian <= dist && dist <= kExponential)) {
-         std::cerr << "Cannot set distribution type! Distribution type option must be ennabled." << std::endl;
+         MATH_ERROR_MSG("SetDistribution", "Cannot set distribution type! Distribution type option must be ennabled.");
          return;
       }
       fDist = dist;
@@ -131,14 +131,14 @@ namespace Math {
       if (badSampleArg) { 
          std::string msg = "'sample1";
          msg += !sample1Size ? "Size' cannot be zero" : "' cannot be zero-length";
-         MATH_ERROR_MSG("GoFTest::GoFTest", msg.c_str());
+         MATH_ERROR_MSG("GoFTest", msg.c_str());
          assert(!badSampleArg);
       }
       badSampleArg = sample2 == 0 || sample2Size == 0;
       if (badSampleArg) { 
          std::string msg = "'sample2";         
          msg += !sample2Size ? "Size' cannot be zero" : "' cannot be zero-length";
-         MATH_ERROR_MSG("GoFTest::GoFTest", msg.c_str());
+         MATH_ERROR_MSG("GoFTest", msg.c_str());
          assert(!badSampleArg);
       }
       std::vector<const Double_t*> samples(2);
@@ -160,7 +160,7 @@ namespace Math {
       if (badSampleArg) { 
          std::string msg = "'sample";
          msg += !sampleSize ? "Size' cannot be zero" : "' cannot be zero-length";
-         MATH_ERROR_MSG("GoFTest::GoFTest", msg.c_str());
+         MATH_ERROR_MSG("GoFTest", msg.c_str());
          assert(!badSampleArg);
       }
       std::vector<const Double_t*> samples(1, sample);
@@ -190,7 +190,7 @@ namespace Math {
          std::string msg = "Degenerate sample";
          msg += samplesSizes.size() > 1 ? "s!" : "!";
          msg += " Sampling values all identical.";
-         MATH_ERROR_MSG("GoFTest::SetSamples", msg.c_str());
+         MATH_ERROR_MSG("SetSamples", msg.c_str());
          assert(!degenerateSamples);
       }
    }
@@ -198,6 +198,23 @@ namespace Math {
    void GoFTest::SetParameters() {
       fMean = std::accumulate(fSamples[0].begin(), fSamples[0].end(), 0.0) / fSamples[0].size();
       fSigma = TMath::Sqrt(1. / (fSamples[0].size() - 1) * (std::inner_product(fSamples[0].begin(), fSamples[0].end(),     fSamples[0].begin(), 0.0) - fSamples[0].size() * TMath::Power(fMean, 2)));
+   }
+   
+   void GoFTest::operator()(ETestType test, Double_t& pvalue, Double_t& testStat) const {
+      switch (test) {
+         default:
+         case kAD:
+            AndersonDarlingTest(pvalue, testStat);
+            break;
+         case kAD2s:
+            AndersonDarling2SamplesTest(pvalue, testStat);
+            break;
+         case kKS:
+            KolmogorovSmirnovTest(pvalue, testStat);
+            break;
+         case kKS2s:
+            KolmogorovSmirnov2SamplesTest(pvalue, testStat);
+      }
    }
    
    Double_t GoFTest::operator()(ETestType test, const Char_t* option) const {
@@ -219,7 +236,7 @@ namespace Math {
       return result;
    }
 
-   void GoFTest::SetCDF() { //  Setting parameter-free distributions 
+   void GoFTest::SetCDF() { // Setting parameter-free distributions 
       IGenFunction* cdf = 0;
       switch (fDist) {
       case kLogNormal:
@@ -245,9 +262,9 @@ namespace Math {
       fDist = kUserDefined; 
       // function will be cloned inside the wrapper PDFIntegral of CDFWrapper classes
       if (isPDF) 
-         fCDF = std::auto_ptr<IGenFunction>(new PDFIntegral(f,xmin,xmax) ); 
+         fCDF = std::auto_ptr<IGenFunction>(new PDFIntegral(f, xmin, xmax) ); 
       else 
-         fCDF = std::auto_ptr<IGenFunction>(new CDFWrapper(f,xmin,xmax) ); 
+         fCDF = std::auto_ptr<IGenFunction>(new CDFWrapper(f, xmin, xmax) ); 
    }
 
    void GoFTest::Instantiate(const Double_t* sample, UInt_t sampleSize) {
@@ -256,7 +273,7 @@ namespace Math {
       if (badSampleArg) { 
          std::string msg = "'sample";
          msg += !sampleSize ? "Size' cannot be zero" : "' cannot be zero-length";
-         MATH_ERROR_MSG("GoFTest::GoFTest", msg.c_str());
+         MATH_ERROR_MSG("GoFTest", msg.c_str());
          assert(!badSampleArg);
       }
       fCDF = std::auto_ptr<IGenFunction>((IGenFunction*)0);
@@ -283,8 +300,7 @@ namespace Math {
 
 /*
   Taken from (1)
-*/
-   Double_t GoFTest::GetSigmaN(UInt_t N) const {
+*/ Double_t GoFTest::GetSigmaN(UInt_t N) const {
       Double_t sigmaN = 0.0, h = 0.0, H = 0.0, g = 0.0, a, b, c, d, k = fSamples.size();
       for (UInt_t i = 0; i < k; ++i) {
          H += 1.0 / fSamples[i].size();
@@ -384,89 +400,107 @@ namespace Math {
 
 /*
   Taken from (2)
-*/Double_t GoFTest::PValueAD1Sample(Double_t A2) const {
-   Double_t pvalue = 0.0;
-   if (A2 <= 0.0) {
-      return pvalue;
-   } else if (A2 < 2.) {
-      pvalue = std::pow(A2, -0.5) * std::exp(-1.2337141 / A2) * (2.00012 + (0.247105 - (0.0649821 - (0.0347962 - (0.011672 - 0.00168691 * A2) * A2) * A2) * A2) * A2);
-   } else {
-      pvalue = std::exp(-1. * std::exp(1.0776 - (2.30695 - (0.43424 - (.082433 - (0.008056 - 0.0003146 * A2) * A2) * A2) * A2) * A2));
-   }   
-   if (pvalue != pvalue) {
-      std::cerr << "Cannot compute p-value: degenerate distribution. Check input distribution parameter soundness." << std::endl;
-      return -1;
+*/ Double_t GoFTest::PValueAD1Sample(Double_t A2) const {
+      Double_t pvalue = 0.0;
+      if (A2 <= 0.0) {
+         return pvalue;
+      } else if (A2 < 2.) {
+         pvalue = std::pow(A2, -0.5) * std::exp(-1.2337141 / A2) * (2.00012 + (0.247105 - (0.0649821 - (0.0347962 - (0.011672 - 0.00168691 * A2) * A2) * A2) * A2) * A2);
+      } else {
+         pvalue = std::exp(-1. * std::exp(1.0776 - (2.30695 - (0.43424 - (.082433 - (0.008056 - 0.0003146 * A2) * A2) * A2) * A2) * A2));
+      }   
+      return 1. - pvalue;
    }
-   return 1. - pvalue;
-}
 
 /*
   Taken from (1) -- Named for 2 samples but implemented for K. Restricted to K = 2 by the class's constructors 
-*/Double_t GoFTest::AndersonDarling2SamplesTest(const Char_t* option) const { 
-   if (fTestSampleFromH0) {
-      std::cerr << "Only 1-sample tests can be issued!" << std::endl;
-      return -1;
-   }
-   std::vector<Double_t> z(fCombinedSamples); 
-   std::vector<Double_t>::iterator endUnique = std::unique(z.begin(), z.end()); //z_j's in (1)
-   std::vector<UInt_t> h; // h_j's in (1)
-   std::vector<Double_t> H; // H_j's in (1)
-   UInt_t N = fCombinedSamples.size();
-   for (std::vector<Double_t>::iterator data = z.begin(); data != endUnique; ++data) {
-      UInt_t n = std::count(fCombinedSamples.begin(), fCombinedSamples.end(), *data);
-      h.push_back(n);
-      H.push_back(std::count_if(fCombinedSamples.begin(), fCombinedSamples.end(), bind2nd(std::less<Double_t>(), *data)) + n / 2.);
-   }
-   std::vector<std::vector<Double_t> > F(fSamples.size()); // F_ij's in (1)
-   for (UInt_t i = 0; i < fSamples.size(); ++i) {
-      for (std::vector<Double_t>::iterator data = z.begin(); data != endUnique; ++data) {
-         UInt_t n = std::count(fSamples[i].begin(), fSamples[i].end(), *data);
-         F[i].push_back(std::count_if(fSamples[i].begin(), fSamples[i].end(), bind2nd(std::less<Double_t>(), *data)) + n / 2.);
+*/ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) const {
+      pvalue = -1;
+      testStat = -1;
+      if (fTestSampleFromH0) {
+         MATH_ERROR_MSG("AndersonDarling2SamplesTest", "Only 1-sample tests can be issued with a 1-sample constructed GoFTest object!");
+         return;
       }
-   }
-   Double_t A2 = 0.0; // Anderson-Darling A^2 Test Statistic
-   for (UInt_t i = 0; i < fSamples.size(); ++i) {
-      Double_t sum_result = 0.0;
-      UInt_t j = 0;
+      std::vector<Double_t> z(fCombinedSamples); 
+      std::vector<Double_t>::iterator endUnique = std::unique(z.begin(), z.end()); //z_j's in (1)
+      std::vector<UInt_t> h; // h_j's in (1)
+      std::vector<Double_t> H; // H_j's in (1)
+      UInt_t N = fCombinedSamples.size();
       for (std::vector<Double_t>::iterator data = z.begin(); data != endUnique; ++data) {
-         sum_result += h[j] *  TMath::Power(N * F[i][j]- fSamples[i].size() * H[j], 2) / (H[j] * (N - H[j]) - N * h[j] / 4.0); 
-         ++j;
+         UInt_t n = std::count(fCombinedSamples.begin(), fCombinedSamples.end(), *data);
+         h.push_back(n);
+         H.push_back(std::count_if(fCombinedSamples.begin(), fCombinedSamples.end(), bind2nd(std::less<Double_t>(), *data)) + n / 2.);
       }
-      A2 += 1.0 / fSamples[i].size() * sum_result;
+      std::vector<std::vector<Double_t> > F(fSamples.size()); // F_ij's in (1)
+      for (UInt_t i = 0; i < fSamples.size(); ++i) {
+         for (std::vector<Double_t>::iterator data = z.begin(); data != endUnique; ++data) {
+            UInt_t n = std::count(fSamples[i].begin(), fSamples[i].end(), *data);
+            F[i].push_back(std::count_if(fSamples[i].begin(), fSamples[i].end(), bind2nd(std::less<Double_t>(), *data)) + n / 2.);
+         }
+      }
+      Double_t A2 = 0.0; // Anderson-Darling A^2 Test Statistic
+      for (UInt_t i = 0; i < fSamples.size(); ++i) {
+         Double_t sum_result = 0.0;
+         UInt_t j = 0;
+         for (std::vector<Double_t>::iterator data = z.begin(); data != endUnique; ++data) {
+            sum_result += h[j] *  TMath::Power(N * F[i][j]- fSamples[i].size() * H[j], 2) / (H[j] * (N - H[j]) - N * h[j] / 4.0); 
+            ++j;
+         }
+         A2 += 1.0 / fSamples[i].size() * sum_result;
+      }
+      A2 *= (N - 1) / (TMath::Power(N, 2)); // A2_akN in (1)
+      pvalue = PValueAD2Samples(A2, N); // standartized A2
+      testStat = A2;
    }
-   A2 *= (N - 1) / (TMath::Power(N, 2)); // A2_akN in (1)
-   Double_t pvalue = PValueAD2Samples(A2, N); // standartized A2
-   return (strncmp(option, "p", 1) == 0 || strncmp(option, "t", 1) != 0) ? pvalue : A2;
-}
-
+   
+   Double_t GoFTest::AndersonDarling2SamplesTest(const Char_t* option) const {
+      Double_t pvalue, testStat;
+      AndersonDarling2SamplesTest(pvalue, testStat);
+      return (strncmp(option, "p", 1) == 0 || strncmp(option, "t", 1) != 0) ? pvalue : testStat;   
+   }
+   
 /*
   Taken from (3)
-*/Double_t GoFTest::AndersonDarlingTest(const Char_t* option) const {
-   if (!fTestSampleFromH0) {
-      std::cerr << "Only 2-sample tests can be issued!" << std::endl;
-      return -1;
-   } 
-   if (fDist == kUndefined) {
-      std::cerr << "Distribution type is undefined! Please use SetDistribution(GoFTest::EDistribution)." << std::endl;
-      return -1;
+*/ void GoFTest::AndersonDarlingTest(Double_t& pvalue, Double_t& testStat) const {
+      pvalue = -1;
+      testStat = -1;
+      if (!fTestSampleFromH0) {
+         MATH_ERROR_MSG("AndersonDarlingTest", "Only 2-sample tests can be issued with a 2-sample constructed GoFTest object!");
+         return;
+      } 
+      if (fDist == kUndefined) {
+         MATH_ERROR_MSG("AndersonDarlingTest", "Distribution type is undefined! Please use SetDistribution(GoFTest::EDistribution).");
+         return;
+      }
+      Double_t A2 = 0.0;
+      Int_t n = fSamples[0].size();
+      for (Int_t i = 0; i < n ; ++i) {
+         Double_t x1 = fSamples[0][i];
+         Double_t w1 = (*fCDF)(x1);
+         Double_t result = (2 * (i + 1) - 1) * TMath::Log(w1) + (2 * (n - (i + 1)) + 1) * TMath::Log(1 - w1);
+         A2 += result; 
+      }
+      (A2 /= -n) -= n;
+      if (A2 != A2) {
+         MATH_ERROR_MSG("AndersonDarlingTest", "Cannot compute p-value: data below or above the distribution's thresholds. Check sample consistency.");
+         return;
+      }
+      pvalue = PValueAD1Sample(A2);
+      testStat = A2;
    }
-   Double_t A2 = 0.0;
-   Int_t n = fSamples[0].size();
-   for (Int_t i = 0; i < n ; ++i) {
-      Double_t x1 = fSamples[0][i];
-      Double_t w1 = (*fCDF)(x1);
-      Double_t result = (2 * (i + 1) - 1) * TMath::Log(w1) + (2 * (n - (i + 1)) + 1) * TMath::Log(1 - w1);
-      A2 += result; 
+   
+   Double_t GoFTest::AndersonDarlingTest(const Char_t* option) const {
+      Double_t pvalue, testStat;
+      AndersonDarlingTest(pvalue, testStat);
+      return (strncmp(option, "p", 1) == 0 || strncmp(option, "t", 1) != 0) ? pvalue : testStat;
    }
-   (A2 /= -n) -= n;
-   Double_t pvalue = PValueAD1Sample(A2);
-   return (strncmp(option, "p", 1) == 0 || strncmp(option, "t", 1) != 0) ? pvalue : A2;
-}
 
-   Double_t GoFTest::KolmogorovSmirnov2SamplesTest(const Char_t* option) const {
+   void GoFTest::KolmogorovSmirnov2SamplesTest(Double_t& pvalue, Double_t& testStat) const {
+      pvalue = -1;
+      testStat = -1;
       if (fTestSampleFromH0) {
-         std::cerr << "Only 1-sample tests can be issued!" << std::endl;
-         return -1;
+         MATH_ERROR_MSG("KolmogorovSmirnov2SamplesTest", "Only 1-sample tests can be issued with a 1-sample constructed GoFTest object!");
+         return;
       }
       const UInt_t na = fSamples[0].size();
       const UInt_t nb = fSamples[1].size();
@@ -474,33 +508,47 @@ namespace Math {
       Double_t* b = new Double_t[nb]; 
       std::copy(fSamples[0].begin(), fSamples[0].end(), a);
       std::copy(fSamples[1].begin(), fSamples[1].end(), b);
-      Double_t result = TMath::KolmogorovTest(na, a, nb, b, (strncmp(option, "p", 1) == 0 || strncmp(option, "t", 1) != 0 ? 0 : "M"));
-      return result;
+      pvalue = TMath::KolmogorovTest(na, a, nb, b, 0);
+      testStat = TMath::KolmogorovTest(na, a, nb, b, "M");
+   }
+   
+   Double_t GoFTest::KolmogorovSmirnov2SamplesTest(const Char_t* option) const {
+      Double_t pvalue, testStat;
+      KolmogorovSmirnov2SamplesTest(pvalue, testStat);
+      return (strncmp(option, "p", 1) == 0 || strncmp(option, "t", 1) != 0) ? pvalue : testStat;    
    }
 
 /* 
    Algorithm taken from (3) in page 737
-*/Double_t GoFTest::KolmogorovSmirnovTest(const Char_t* option) const {
-   if (!fTestSampleFromH0) {
-      std::cerr << "Only 2-sample tests can be issued!" << std::endl;
-      return -1;
+*/ void GoFTest::KolmogorovSmirnovTest(Double_t& pvalue, Double_t& testStat) const {
+      pvalue = -1;
+      testStat = -1;
+      if (!fTestSampleFromH0) {
+         MATH_ERROR_MSG("KolmogorovSmirnovTest", "Only 2-sample tests can be issued with a 2-sample constructed GoFTest object!");
+         return;
+      }
+      if (fDist == kUndefined) {
+         MATH_ERROR_MSG("KolmogorovSmirnovTest", "Distribution type is undefined! Please use SetDistribution(GoFTest::EDistribution).");
+         return;
+      }
+      Double_t Fo = 0.0, Dn = 0.0;
+      UInt_t n = fSamples[0].size();
+      for (UInt_t i = 0; i < n; ++i) {
+         Double_t Fn = (i + 1.0) / n;
+         Double_t F = (*fCDF)(fSamples[0][i]);
+         Double_t result = std::max(TMath::Abs(Fn - F), TMath::Abs(Fo - Fn));
+         if (result > Dn) Dn = result;
+         Fo = Fn;
+      }
+      pvalue = TMath::KolmogorovProb(Dn * (TMath::Sqrt(n) + 0.12 + 0.11 / TMath::Sqrt(n)));
+      testStat = Dn;
    }
-   if (fDist == kUndefined) {
-      std::cerr << "Distribution type is undefined! Please use SetDistribution(GoFTest::EDistribution)." << std::endl;
-      return -1;
+   
+   Double_t GoFTest::KolmogorovSmirnovTest(const Char_t* option) const {
+      Double_t pvalue, testStat;
+      KolmogorovSmirnovTest(pvalue, testStat);
+      return (strncmp(option, "p", 1) == 0 || strncmp(option, "t", 1) != 0) ? pvalue : testStat;
    }
-   Double_t Fo = 0.0, Dn = 0.0;
-   UInt_t n = fSamples[0].size();
-   for (UInt_t i = 0; i < n; ++i) {
-      Double_t Fn = (i + 1.0) / n;
-      Double_t F = (*fCDF)(fSamples[0][i]);
-      Double_t result = std::max(TMath::Abs(Fn - F), TMath::Abs(Fo - Fn));
-      if (result > Dn) Dn = result;
-      Fo = Fn;
-   }
-   Double_t pvalue = TMath::KolmogorovProb(Dn * (TMath::Sqrt(n) + 0.12 + 0.11 / TMath::Sqrt(n)));
-   return (strncmp(option, "p", 1) == 0 || strncmp(option, "t", 1) != 0) ? pvalue : Dn;
-}
 
 } // ROOT namespace
 } // Math namespace
