@@ -4,28 +4,28 @@
 # Author: David Gonzalez Maline, 21/4/2008
 
 MODNAME      := genetic
-MODDIR       := math/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
 GENETICDIR  := $(MODDIR)
 GENETICDIRS := $(GENETICDIR)/src
 GENETICDIRI := $(GENETICDIR)/inc/Math
+GENETICDIRT := $(call stripsrc,$(GENETICDIR)/test)
 
 ##### libGenetic #####
 GENETICL    := $(MODDIRI)/LinkDef.h
-#GENETICLINC :=
-GENETICDS   := $(MODDIRS)/G__Genetic.cxx
+GENETICDS   := $(call stripsrc,$(MODDIRS)/G__Genetic.cxx)
 GENETICDO   := $(GENETICDS:.cxx=.o)
 GENETICDH   := $(GENETICDS:.cxx=.h)
 
-GENETICDH1  :=  $(MODDIRI)/Math/GeneticMinimizer.h \
+GENETICDH1  :=  $(MODDIRI)/Math/GeneticMinimizer.h
 
-GENETICH   := $(filter-out $(MODDIRI)/Math/LinkDef%, $(wildcard $(MODDIRI)/Math/*.h))
+GENETICH    := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
 GENETICS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GENETICO    := $(GENETICS:.cxx=.o)
+GENETICO    := $(call stripsrc,$(GENETICS:.cxx=.o))
 
-GENETICDEP  := $(GENETICO:.o=.d)  $(GENETICDO:.o=.d)
+GENETICDEP  := $(GENETICO:.o=.d) $(GENETICDO:.o=.d)
 
 GENETICLIB  := $(LPATH)/libGenetic.$(SOEXT)
 GENETICMAP  := $(GENETICLIB:.$(SOEXT)=.rootmap)
@@ -40,7 +40,7 @@ INCLUDEFILES += $(GENETICDEP)
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) \
-                test-$(MODNAME) check-$(MODNAME)
+                test-$(MODNAME)
 
 include/Math/%.h: $(GENETICDIRI)/%.h
 		@(if [ ! -d "include/Math" ]; then     \
@@ -55,20 +55,13 @@ $(GENETICLIB): $(GENETICO) $(GENETICDO) $(ORDER_) $(MAINLIBS) $(GENETICLIBDEP)
 		   "$(GENETICLIBEXTRA)"
 
 $(GENETICDS):  $(GENETICDH1) $(GENETICL) $(GENETICLINC) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		@echo "for files $(GENETICDH1)"
 		$(ROOTCINTTMP) -f $@ -c $(GENETICDH1) $(GENETICL)
 
 $(GENETICMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(GENETICL) $(GENETICLINC)
-		$(RLIBMAP) -o $(GENETICMAP) -l $(GENETICLIB) \
+		$(RLIBMAP) -o $@ -l $(GENETICLIB) \
 		   -d $(GENETICLIBDEPM) -c $(GENETICL) $(GENETICLINC)
-
-ifneq ($(ICC_MAJOR),)
-# silence warning messages about subscripts being out of range
-$(GENETICDO):   CXXFLAGS += -wd175 -I$(GENETICDIRI)
-else
-$(GENETICDO):   CXXFLAGS += -I$(GENETICDIRI)
-endif
 
 all-$(MODNAME): $(GENETICLIB) $(GENETICMAP)
 
@@ -81,12 +74,24 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GENETICDEP) $(GENETICDS) $(GENETICDH) \
 		   $(GENETICLIB) $(GENETICMAP)
 		@rm -rf include/Math
-		-@cd $(GENETICDIR)/test && $(MAKE) distclean
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@rm -rf $(GENETICDIRT)
+else
+		@cd $(GENETICDIRT) && $(MAKE) distclean
+endif
 
 distclean::     distclean-$(MODNAME)
 
 test-$(MODNAME): all-$(MODNAME)
-		@cd $(GENETICDIR)/test && $(MAKE)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@$(INSTALL) $(GENETICDIR)/test $(GENETICDIRT)
+endif
+		@cd $(GENETICDIRT) && $(MAKE)
 
-check-$(MODNAME): test-$(MODNAME)
-		@cd $(GENETICDIR)/test && $(MAKE)
+##### extra rules ######
+ifneq ($(ICC_MAJOR),)
+# silence warning messages about subscripts being out of range
+$(GENETICDO):   CXXFLAGS += -wd175 -I$(GENETICDIRI)
+else
+$(GENETICDO):   CXXFLAGS += -I$(GENETICDIRI)
+endif
