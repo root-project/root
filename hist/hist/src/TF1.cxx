@@ -1611,7 +1611,7 @@ TH1 *TF1::GetHistogram() const
 
 
 //______________________________________________________________________________
-Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter) const
+Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter,Bool_t logx) const
 {
    // Return the maximum value of the function
    // Method:
@@ -1621,17 +1621,24 @@ Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
    //  If the function is unimodal or if its extrema are far apart, setting
    //  the fNpx to a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
-   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) and absolute (if |x| < 1     //  and maxiter (default = 100) controls the maximum number of iteration of the Brent algorithm
+   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) 
+   //  and absolute (if |x| < 1)  and maxiter (default = 100) controls the maximum number 
+   //  of iteration of the Brent algorithm
+   //  If the flag logx is set the grid search is done in log step size
+   //  This is done automatically if the log scale is set in the current Pad
    //
    // NOTE: see also TF1::GetMaximumX and TF1::GetX
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
+
+   if (!logx && gPad != 0) logx = gPad->GetLogx(); 
 
    ROOT::Math::BrentMinimizer1D bm;
    GInverseFunc g(this);
    ROOT::Math::WrappedFunction<GInverseFunc> wf1(g);
    bm.SetFunction( wf1, xmin, xmax );
    bm.SetNpx(fNpx);
+   bm.SetLogScan(logx);
    bm.Minimize(maxiter, epsilon, epsilon );
    Double_t x;
    x = - bm.FValMinimum();
@@ -1641,7 +1648,7 @@ Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
 
 
 //______________________________________________________________________________
-Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter) const
+Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter,Bool_t logx) const
 {
    // Return the X value corresponding to the maximum value of the function
    // Method:
@@ -1651,17 +1658,24 @@ Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t 
    //  If the function is unimodal or if its extrema are far apart, setting
    //  the fNpx to a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
-   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) and absolute (if |x| < 1     //  and maxiter (default = 100) controls the maximum number of iteration of the Brent algorithm
-   //
+   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) 
+   //  and absolute (if |x| < 1)  and maxiter (default = 100) controls the maximum number 
+   //  of iteration of the Brent algorithm
+   //  If the flag logx is set the grid search is done in log step size
+   //  This is done automatically if the log scale is set in the current Pad
+    //
    // NOTE: see also TF1::GetX
    
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
+
+   if (!logx && gPad != 0) logx = gPad->GetLogx(); 
 
    ROOT::Math::BrentMinimizer1D bm;
    GInverseFunc g(this);
    ROOT::Math::WrappedFunction<GInverseFunc> wf1(g);
    bm.SetFunction( wf1, xmin, xmax );
    bm.SetNpx(fNpx);
+   bm.SetLogScan(logx);
    bm.Minimize(maxiter, epsilon, epsilon );
    Double_t x;
    x = bm.XMinimum();
@@ -1671,7 +1685,7 @@ Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t 
 
 
 //______________________________________________________________________________
-Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter) const
+Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter, Bool_t logx) const
 {
    // Returns the minimum value of the function on the (xmin, xmax) interval
    // Method:
@@ -1681,16 +1695,23 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
    //  unimodal or if its extrema are far apart, setting the fNpx to
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
-   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) and absolute (if |x| < 1     //  and maxiter (default = 100) controls the maximum number of iteration of the Brent algorithm
+   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) 
+   //  and absolute (if |x| < 1)  and maxiter (default = 100) controls the maximum number 
+   //  of iteration of the Brent algorithm
+   //  If the flag logx is set the grid search is done in log step size
+   //  This is done automatically if the log scale is set in the current Pad
    //
    // NOTE: see also TF1::GetMaximumX and TF1::GetX
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
 
+   if (!logx && gPad != 0) logx = gPad->GetLogx(); 
+
    ROOT::Math::BrentMinimizer1D bm;
    ROOT::Math::WrappedFunction<const TF1&> wf1(*this);
    bm.SetFunction( wf1, xmin, xmax );
    bm.SetNpx(fNpx);
+   bm.SetLogScan(logx);
    bm.Minimize(maxiter, epsilon, epsilon );
    Double_t x;
    x = bm.FValMinimum();
@@ -1700,7 +1721,7 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
 
 
 //______________________________________________________________________________
-Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter) const
+Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter, Bool_t logx) const
 {
    // Returns the X value corresponding to the minimum value of the function
    // on the (xmin, xmax) interval
@@ -1711,7 +1732,11 @@ Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t 
    //  unimodal or if its extrema are far apart, setting the fNpx to
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
-   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) and absolute (if |x| < 1     //  and maxiter (default = 100) controls the maximum number of iteration of the Brent algorithm
+   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) 
+   //  and absolute (if |x| < 1)  and maxiter (default = 100) controls the maximum number 
+   //  of iteration of the Brent algorithm
+   //  If the flag logx is set the grid search is done in log step size
+   //  This is done automatically if the log scale is set in the current Pad
    //
    // NOTE: see also TF1::GetX
 
@@ -1721,6 +1746,7 @@ Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t 
    ROOT::Math::WrappedFunction<const TF1&> wf1(*this);
    bm.SetFunction( wf1, xmin, xmax );
    bm.SetNpx(fNpx);
+   bm.SetLogScan(logx);
    bm.Minimize(maxiter, epsilon, epsilon );
    Double_t x;
    x = bm.XMinimum();
@@ -1730,7 +1756,7 @@ Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t 
 
 
 //______________________________________________________________________________
-Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter) const
+Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter, Bool_t logx) const
 {
    // Returns the X value corresponding to the function value fy for (xmin<x<xmax).
    // in other words it can find the roots of the function when fy=0 and successive calls
@@ -1742,17 +1768,24 @@ Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax, Double_t epsilon, 
    //  unimodal or if its extrema are far apart, setting the fNpx to
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
-   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) and absolute (if |x| < 1     //  and maxiter (default = 100) controls the maximum number of iteration of the Brent algorithm
+   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) 
+   //  and absolute (if |x| < 1)  and maxiter (default = 100) controls the maximum number 
+   //  of iteration of the Brent algorithm
+   //  If the flag logx is set the grid search is done in log step size
+   //  This is done automatically if the log scale is set in the current Pad
    //
    // NOTE: see also TF1::GetMaximumX, TF1::GetMinimumX
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
-   
+
+   if (!logx && gPad != 0) logx = gPad->GetLogx(); 
+
    GFunc g(this, fy);
    ROOT::Math::WrappedFunction<GFunc> wf1(g);
    ROOT::Math::BrentRootFinder brf;
    brf.SetFunction(wf1,xmin,xmax);
    brf.SetNpx(fNpx);
+   brf.SetLogScan(logx);
    brf.Solve(maxiter, epsilon, epsilon);
    return brf.Root();
 
