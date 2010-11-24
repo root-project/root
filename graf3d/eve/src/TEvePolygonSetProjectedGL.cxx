@@ -78,7 +78,7 @@ void TEvePolygonSetProjectedGL::DrawOutline() const
 
    if (fM->fPols.size() == 0) return;
 
-   if (fM->GetMiniOutline())
+   if (fM->GetMiniFrame())
    {
       std::map<Edge_t, Int_t> edges;
 

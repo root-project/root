@@ -259,7 +259,8 @@ TEveGeoShapeExtract* TEveGeoShape::DumpShapeTree(TEveGeoShape* gsre,
    }
    she->SetRnrSelf(gsre->GetRnrSelf());
    she->SetRnrElements(gsre->GetRnrChildren());
-   she->SetMiniOutline(gsre->GetMiniOutline());
+   she->SetRnrFrame(gsre->GetDrawFrame());
+   she->SetMiniFrame(gsre->GetMiniFrame());
    she->SetShape(gsre->GetShape());
    if (gsre->HasChildren())
    {
@@ -308,7 +309,8 @@ TEveGeoShape* TEveGeoShape::SubImportShapeExtract(TEveGeoShapeExtract* gse,
    gsre->SetLineColor(TColor::GetColor(rgba[0], rgba[1], rgba[2]));
    gsre->SetRnrSelf(gse->GetRnrSelf());
    gsre->SetRnrChildren(gse->GetRnrElements());
-   gsre->SetMiniOutline(gse->GetMiniOutline());
+   gsre->SetDrawFrame(gse->GetRnrFrame());
+   gsre->SetMiniFrame(gse->GetMiniFrame());
    gsre->SetShape(gse->GetShape());
 
    if (parent)

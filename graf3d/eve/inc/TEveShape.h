@@ -40,7 +40,7 @@ protected:
 
    Bool_t       fDrawFrame;      // draw frame
    Bool_t       fHighlightFrame; // highlight frame / all shape
-   Bool_t       fMiniOutline;    // draw minimal outline
+   Bool_t       fMiniFrame;      // draw minimal frame
 
 public:
    TEveShape(const char* n="TEveShape", const char* t="");
@@ -54,14 +54,14 @@ public:
    virtual Float_t GetLineWidth() const { return fLineWidth;}
    virtual Bool_t  GetDrawFrame()      const { return fDrawFrame; }
    virtual Bool_t  GetHighlightFrame() const { return fHighlightFrame; }
-   virtual Bool_t  GetMiniOutline()    const { return fMiniOutline; }
+   virtual Bool_t  GetMiniFrame()      const { return fMiniFrame; }
 
    virtual void    SetFillColor(Color_t c)  { fFillColor = c; }
    virtual void    SetLineColor(Color_t c)  { fLineColor = c; }
    virtual void    SetLineWidth(Float_t lw) { fLineWidth = lw;}
    virtual void    SetDrawFrame(Bool_t f)      { fDrawFrame = f; }
    virtual void    SetHighlightFrame(Bool_t f) { fHighlightFrame = f; }
-   virtual void    SetMiniOutline(Bool_t r)    { fMiniOutline = r; }
+   virtual void    SetMiniFrame(Bool_t r)      { fMiniFrame = r; }
 
    // ----------------------------------------------------------------
 

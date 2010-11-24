@@ -36,7 +36,8 @@ TEveGeoShapeExtract::TEveGeoShapeExtract(const char* n, const char* t) :
    TNamed       (n,t),
    fRnrSelf     (kTRUE),
    fRnrElements (kTRUE),
-   fMiniOutline (kTRUE),
+   fRnrFrame    (kTRUE),
+   fMiniFrame   (kTRUE),
    fShape       (0),
    fElements    (0)
 {

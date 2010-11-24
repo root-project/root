@@ -420,6 +420,15 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode*         geon,
       rgba[2] = c->GetBlue();
    }
    gse->SetRGBA(rgba);
+   rgba[3] = 1;
+   c = gROOT->GetColor(TColor::GetColorDark(ci));
+   if (c) {
+      rgba[0] = c->GetRed();
+      rgba[1] = c->GetGreen();
+      rgba[2] = c->GetBlue();
+   }
+   gse->SetRGBALine(rgba);
+
    // Keep default extract line color --> black.
    Bool_t rnr     = tnode ? tnode->IsVisible()      : geon->GetRnrSelf();
    Bool_t rnr_els = tnode ? tnode->IsVisDaughters() : geon->GetRnrChildren();
@@ -429,6 +438,8 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode*         geon,
    }
    gse->SetRnrSelf    (rnr);
    gse->SetRnrElements(rnr_els);
+   gse->SetRnrFrame   (kTRUE);
+   gse->SetMiniFrame  (kTRUE);
 
    gse->SetShape((leafs_only && geon->HasChildren()) ? 0 : tshape);
 
