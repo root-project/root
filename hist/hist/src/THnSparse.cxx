@@ -667,41 +667,23 @@ TH1* THnSparse::CreateHist(const char* name, const char* title,
 
 //______________________________________________________________________________
 THnSparse* THnSparse::CreateSparse(const char* name, const char* title,
-                                   const TH1* h, Int_t ChunkSize)
+                                   const TH1* h, Int_t chunkSize)
 {
-   //Arrays that will be needed later. Initialized to 0.
+   // Create a THnSparse object from a histogram deriving from TH1.
+
+   // Get the dimension of the TH1
+   int ndim = h->GetDimension();
+
+   // Axis properties
    int nbins[3] = {0,0,0};
    double minRange[3] = {0.,0.,0.};
    double maxRange[3] = {0.,0.,0.};
-
-   // Get the dimension of the TH1
-   int ndim = 1;
-   if      ( dynamic_cast<const TH3*>(h) ) ndim = 3;
-   else if ( dynamic_cast<const TH2*>(h) ) ndim = 2;
-
-   // Start getting the arrays filled, depending on the dimension of
-   // TH1
-   if ( ndim >= 1 )
-   {
-      nbins[0]    = h->GetNbinsX();
-      minRange[0] = h->GetXaxis()->GetXmin();
-      maxRange[0] = h->GetXaxis()->GetXmax();
+   TAxis* axis[3] = { h->GetXaxis(), h->GetYaxis(), h->GetZaxis() };
+   for (int i = 0; i < ndim; ++i) {
+      nbins[i]    = axis[i]->GetNbins();
+      minRange[i] = axis[i]->GetXmin();
+      maxRange[i] = axis[i]->GetXmax();
    }
-
-   if ( ndim >= 2 )
-   {
-      nbins[1]    = h->GetNbinsY();
-      minRange[1] = h->GetYaxis()->GetXmin();
-      maxRange[1] = h->GetYaxis()->GetXmax();
-   }
-
-   if ( ndim >= 3 )
-   {
-      nbins[2]    = h->GetNbinsZ();
-      minRange[2] = h->GetZaxis()->GetXmin();
-      maxRange[2] = h->GetZaxis()->GetXmax();
-   }
-
 
    // Create the corresponding THnSparse, depending on the storage
    // type of the TH1. The class name will be "TH??\0" where the first
@@ -709,36 +691,40 @@ THnSparse* THnSparse::CreateSparse(const char* name, const char* title,
    // I, F or D.
    THnSparse* s = 0;
    const char* cname( h->ClassName() );
-   if      ( cname[3] == 'C' )
-      s = new THnSparseC(name, title, ndim, nbins, minRange, maxRange, ChunkSize);
-   else if ( cname[3] == 'S' )
-      s = new THnSparseS(name, title, ndim, nbins, minRange, maxRange, ChunkSize);
-   else if ( cname[3] == 'I' )
-      s = new THnSparseI(name, title, ndim, nbins, minRange, maxRange, ChunkSize);
-   else if ( cname[3] == 'F' )
-      s = new THnSparseF(name, title, ndim, nbins, minRange, maxRange, ChunkSize);
-   else if ( cname[3] == 'D' )
-      s = new THnSparseD(name, title, ndim, nbins, minRange, maxRange, ChunkSize);
-   else  
-   {
+   if (cname[0] == 'T' && cname[1] == 'H' && cname[2] >= '1' && cname[2] <= '3' && cname[4] == 0) {
+      if (cname[3] == 'F') {
+         s = new THnSparseF(name, title, ndim, nbins, minRange, maxRange, chunkSize);
+      } else if (cname[3] == 'D') {
+         s = new THnSparseD(name, title, ndim, nbins, minRange, maxRange, chunkSize);
+      } else if (cname[3] == 'I') {
+         s = new THnSparseI(name, title, ndim, nbins, minRange, maxRange, chunkSize);
+      } else if (cname[3] == 'S') {
+         s = new THnSparseS(name, title, ndim, nbins, minRange, maxRange, chunkSize);
+      } else if (cname[3] == 'C') {
+         s = new THnSparseC(name, title, ndim, nbins, minRange, maxRange, chunkSize);
+      }
+   }
+   if (!s) {
       ::Warning("THnSparse::CreateSparse", "Unknown Type of Histogram");
       return 0;
    }
 
+   for (int i = 0; i < ndim; ++i) {
+      s->GetAxis(i)->SetTitle(axis[i]->GetTitle());
+   }
+
    // Get the array to know the number of entries of the TH1
    const TArray *array = dynamic_cast<const TArray*>(h);
-   if ( !array ) 
-   {
+   if (!array) {
       ::Warning("THnSparse::CreateSparse", "Unknown Type of Histogram");
       return 0;
    }
 
    // Fill the THnSparse with the bins that have content.
-   for ( int i = 0; i < array->GetSize(); ++i )
-   {
+   for (int i = 0; i < array->GetSize(); ++i) {
       double value = h->GetBinContent(i);
-      if ( !value ) continue;
       double error = h->GetBinError(i);
+      if (!value && !error) continue;
       int x[3] = {0,0,0};
       h->GetBinXYZ(i, x[0], x[1], x[2]);
       s->SetBinContent(x, value);
@@ -1144,7 +1130,7 @@ TH2D* THnSparse::Projection(Int_t yDim, Int_t xDim, Option_t* option /*= ""*/) c
    // If "option" contains "E" errors will be calculated.
    //                      "A" ranges of the taget axes will be ignored.
 
-   const Int_t dim[2] = {yDim, xDim};
+   const Int_t dim[2] = {xDim, yDim};
    return (TH2D*) ProjectionAny(2, dim, false, option);
 }
 
