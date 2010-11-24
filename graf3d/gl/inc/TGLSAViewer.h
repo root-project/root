@@ -45,7 +45,7 @@ public:
       kGLOrthoRotate, kGLOrthoDolly,
       kGLSaveEPS, kGLSavePDF, kGLSavePNG, kGLSaveGIF, kGLSaveAnimGIF,
       kGLSaveJPG, kGLSaveAS, kGLCloseViewer, kGLQuitROOT,
-      kGLEditObject };
+      kGLEditObject, kGLHideMenus };
 
 private:
    // GUI components
