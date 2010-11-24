@@ -11,6 +11,7 @@
 #ifndef ROOT_CygPath
 #include <stdio.h>
 #include <stdlib.h>
+#include <direct.h>
 #include <string>
 
 static const char *GetCygwinRootDir() {
@@ -18,6 +19,10 @@ static const char *GetCygwinRootDir() {
    static char buf[512] = {0};
 
    if (!buf[0]) {
+      if (system("cygpath") == -1) {
+         sprintf(buf, "%c:", _getdrive());
+         return buf;
+      }
       FILE *pipe = _popen( "cygpath -m /", "rt" );
 
       if (!pipe) return 0;
