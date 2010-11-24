@@ -80,7 +80,7 @@ test-$(MODNAME): all-$(MODNAME)
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@$(INSTALL) $(QTGSIDIR)/test $(QTGSIDIRT)
 endif
-		cd $(QTGSIDIRT); $(MAKE) $(QTTESTOPTS)
+		cd $(QTGSIDIRT) && $(MAKE) $(QTTESTOPTS)
 
 clean-$(MODNAME):
 		@rm -f $(QTGSIO) $(QTGSIDO) $(QTGSIMOCO)

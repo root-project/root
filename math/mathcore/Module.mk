@@ -147,8 +147,8 @@ distclean-$(MODNAME): clean-$(MODNAME)
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@rm -rf $(MATHCOREDIRT)
 else
-		@cd $(MATHCOREDIRT); $(MAKE) distclean ROOTCONFIG=../../../bin/root-config
-		@cd $(MATHCOREDIRT)/fit; $(MAKE) distclean ROOTCONFIG=../../../../bin/root-config
+		@cd $(MATHCOREDIRT) && $(MAKE) distclean ROOTCONFIG=../../../bin/root-config
+		@cd $(MATHCOREDIRT)/fit && $(MAKE) distclean ROOTCONFIG=../../../../bin/root-config
 endif
 
 distclean::     distclean-$(MODNAME)

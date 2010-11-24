@@ -59,13 +59,13 @@ GENVECTORDH132:= $(MODDIRI)/Math/Vector2D.h \
                  $(MODDIRI)/Math/Point3D.h \
                  $(MODDIRI)/Math/Vector4D.h \
 
-GENVECTORAH   := $(filter-out $(MODDIRI)/Math/LinkDef%, $(wildcard $(MODDIRI)/Math/*.h))
+GENVECTORAH   := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
 GENVECTORGVH  := $(filter-out $(MODDIRI)/Math/GenVector/LinkDef%, $(wildcard $(MODDIRI)/Math/GenVector/*.h))
 GENVECTORH    := $(GENVECTORAH) $(GENVECTORGVH)
 GENVECTORS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 GENVECTORO    := $(call stripsrc,$(GENVECTORS:.cxx=.o))
 
-GENVECTORDEP  := $(GENVECTORO:.o=.d)  $(GENVECTORDO:.o=.d) $(GENVECTORDO32:.o=.d)
+GENVECTORDEP  := $(GENVECTORO:.o=.d) $(GENVECTORDO:.o=.d) $(GENVECTORDO32:.o=.d)
 
 GENVECTORLIB  := $(LPATH)/libGenVector.$(SOEXT)
 GENVECTORMAP  := $(GENVECTORLIB:.$(SOEXT)=.rootmap)
@@ -88,7 +88,7 @@ include/Math/%.h: $(GENVECTORDIRI)/Math/%.h
 		fi)
 		cp $< $@
 
-# build lib genvector: use also obj  from math and fit directory 
+# build lib genvector: use also obj from math and fit directory 
 $(GENVECTORLIB): $(GENVECTORO) $(GENVECTORDO) $(GENVECTORDO32) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libGenVector.$(SOEXT) $@     \
@@ -98,13 +98,11 @@ $(GENVECTORLIB): $(GENVECTORO) $(GENVECTORDO) $(GENVECTORDO32) $(ORDER_) $(MAINL
 $(GENVECTORDS):  $(GENVECTORDH1) $(GENVECTORL) $(GENVECTORLINC) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(MAKEDIR)
 		$(ROOTCINTTMP) -f $@ -c $(GENVECTORDH1) $(GENVECTORL)
 
 $(GENVECTORDS32): $(GENVECTORDH132) $(GENVECTORL32) $(GENVECTORLINC) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(MAKEDIR)
 		$(ROOTCINTTMP) -f $@ -c $(GENVECTORDH132) $(GENVECTORL32)
 
 $(GENVECTORMAP): $(RLIBMAP) $(MAKEFILEDEP) $(GENVECTORL) $(GENVECTORLINC) $(GENVECTORL32)
@@ -126,7 +124,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@rm -rf $(GENVECTORDIRT)
 else
-		@cd $(GENVECTORDIRT); $(MAKE) distclean ROOTCONFIG=../../../bin/root-config
+		@cd $(GENVECTORDIRT) && $(MAKE) distclean ROOTCONFIG=../../../bin/root-config
 endif
 
 distclean::     distclean-$(MODNAME)
@@ -135,7 +133,7 @@ test-$(MODNAME): all-$(MODNAME)
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@$(INSTALL) $(GENVECTORDIR)/test $(GENVECTORDIRT)
 endif
-		@cd $(GENVECTORDIRT); $(MAKE) ROOTCONFIG=../../../bin/root-config
+		@cd $(GENVECTORDIRT) && $(MAKE) ROOTCONFIG=../../../bin/root-config
 
 ##### extra rules ######
 
