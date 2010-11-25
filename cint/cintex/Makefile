@@ -54,37 +54,35 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 #  should also be reflected in the TEST_TARGETS variable above.
 
 # trigger creation of cintex/test directory if out-of-source
-ROOT_SRCDIR:=$(shell grep "ROOT_SRCDIR    :=" $(ROOTSYS)/config/Makefile.config | sed 's/^ROOT_SRCDIR    := $$(call realpath, \([^)]\+\).*$$/\1/')
-CINTEXTESTDIR:=$(ROOT_SRCDIR)/cint/cintex/test
-
-CINTEXCYGDEP=$(1)
+ROOT_SRCDIR := $(shell grep "ROOT_SRCDIR    :=" $(ROOTSYS)/config/Makefile.config | sed 's/^ROOT_SRCDIR    := $$(call realpath, \([^)]\+\).*$$/\1/')
 ifeq ($(PLATFORM),win32)
-CINTEXTESTDIR:=$(subst \,/,$(CINTEXTESTDIR))
-CINTEXCYGDEP=$(shell echo $(subst \,/,$(1)) | sed 's,\([A-Za-z]\):/,/cygdrive/\1/,g')
-endif
-CINTEXTESTDICTH:=$(CINTEXTESTDIR)/dict/CintexTest.h
-CINTEXTESTSEL:=$(CINTEXTESTDIR)/dict/selection.xml
-CINTEXTESTDICTS:=$(subst $(CINTEXTESTDIR)/dict/,,$(subst .h,_rflx.cpp,$(CINTEXTESTDICTH)))
-CINTEXTESTDICTO = $(subst .cpp,.$(ObjSuf),$(CINTEXTESTDICTS))
-CINTEXTESTDICT  = test_$(subst _rflx.$(ObjSuf),Rflx.$(DllSuf),$(CINTEXTESTDICTO))
-
-$(CINTEXTESTDICTS): $(call CINTEXCYGDEP,$(CINTEXTESTDICTH) $(CINTEXTESTSEL))
-	$(CMDECHO) $(GENREFLEX) $(CINTEXTESTDICTH) -s $(CINTEXTESTSEL) --rootmap=$(CINTEXTESTDICT).rootmap --rootmap-lib=$(CINTEXTESTDICT) --comments $(GENREFLEXFLAGS) -I"$(ROOTSYS)/include" $(GENREFLEXCXXFLAGS) > $@.log 2>&1
-
-ifeq ($(PLATFORM),win32)
-$(CINTEXTESTDICT): $(CINTEXTESTDICTO) $(ROOT_LOC)/bin/libReflex.$(DllSuf)
+  ROOT_SRCDIRDEP := $(shell cygpath -m -- $(ROOT_SRCDIR))
 else
-$(CINTEXTESTDICT): $(call CINTEXCYGDEP,$(CINTEXTESTDICTO))
+  ROOT_SRCDIRDEP := $(ROOT_SRCDIR)
 endif
+
+CINTEXTESTDIR   := $(ROOT_SRCDIR)/cint/cintex/test
+CINTEXTESTDIRDEP:= $(ROOT_SRCDIRDEP)/cint/cintex/test
+
+CINTEXTESTDICTH := dict/CintexTest.h
+CINTEXTESTSEL   := dict//selection.xml
+CINTEXTESTDICTS := $(subst .h,_rflx.cpp,$(notdir $(CINTEXTESTDICTH)))
+CINTEXTESTDICTO  = $(subst .cpp,.$(ObjSuf),$(CINTEXTESTDICTS))
+CINTEXTESTDICT   = test_$(subst _rflx.$(ObjSuf),Rflx.$(DllSuf),$(CINTEXTESTDICTO))
+
+$(CINTEXTESTDICTS): $(CINTEXTESTDIRDEP)/$(CINTEXTESTDICTH) $(CINTEXTESTDIRDEP)/$(CINTEXTESTSEL)
+	$(CMDECHO) $(GENREFLEX) $(CINTEXTESTDIR)/$(CINTEXTESTDICTH) -s $(CINTEXTESTDIR)/$(CINTEXTESTSEL) --rootmap=$(CINTEXTESTDICT).rootmap --rootmap-lib=$(CINTEXTESTDICT) --comments $(GENREFLEXFLAGS) -I"$(ROOTSYS)/include" $(GENREFLEXCXXFLAGS) > $@.log 2>&1
+
+$(CINTEXTESTDICT): $(CINTEXTESTDICTO) $(ROOT_LOC)/lib/libReflex.$(DllSuf)
 	$(BuildFromObj)
 
-test_Cintex.log: $(call CINTEXCYGDEP,$(CINTEXTESTDIR)/test_Cintex.C $(CINTEXTESTDICT))
+test_Cintex.log: $(CINTEXTESTDIRDEP)/test_Cintex.C $(CINTEXTESTDICT)
 	$(CMDECHO)$(CALLROOTEXE) -b -q -l $(CINTEXTESTDIR)/test_Cintex.C 2>&1 | grep -v 'Processing ' > $@ || ( cat $@ && false )
 
-test_Persistency.log: $(call CINTEXCYGDEP,$(CINTEXTESTDIR)/test_Persistency.C $(CINTEXTESTDICT))
+test_Persistency.log: $(CINTEXTESTDIRDEP)/test_Persistency.C $(CINTEXTESTDICT)
 	$(CMDECHO)$(CALLROOTEXE) -b -q -l $(CINTEXTESTDIR)/test_Persistency.C 2>&1 | grep -v 'Processing ' > $@ || ( cat $@ && false )
 
-test_PyCintex_basics.log: $(call CINTEXCYGDEP,$(CINTEXTESTDIR)/test_PyCintex_basics.py $(CINTEXTESTDICT))
+test_PyCintex_basics.log: $(CINTEXTESTDIRDEP)/test_PyCintex_basics.py $(CINTEXTESTDICT)
 	$(CMDECHO)unset DISPLAY; $(PYTHON) $(CINTEXTESTDIR)/test_PyCintex_basics.py - -b 2> /dev/null | grep -v ' tests in ' > $@|| ( cat $@ && false )
 
 # Outputs a message if the FAIL variable is null
