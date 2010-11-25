@@ -1314,9 +1314,9 @@ int XrdProofdManager::DoDirectiveAllowedUsers(char *val, XrdOucStream *cfg, bool
 int XrdProofdManager::DoDirectiveRole(char *val, XrdOucStream *cfg, bool)
 {
    // Process 'role' directive
+#if defined(BUILD_BONJOUR)
    XPDLOC(ALL, "Manager::DoDirectiveRole")
-
-   TRACE(REQ, "enter");
+#endif
 
    if (!val)
       // undefined inputs
