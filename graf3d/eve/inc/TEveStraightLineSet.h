@@ -97,6 +97,9 @@ public:
    Marker_t* AddMarker(const TEveVector& p, Int_t line_id=-1);
    Marker_t* AddMarker(Int_t line_id, Float_t pos);
 
+   void      SetLine(int idx, Float_t x1, Float_t y1, Float_t z1, Float_t x2, Float_t y2, Float_t z2);
+   void      SetLine(int idx, const TEveVector& p1, const TEveVector& p2);
+
    TEveChunkManager& GetLinePlex()   { return fLinePlex;   }
    TEveChunkManager& GetMarkerPlex() { return fMarkerPlex; }
 

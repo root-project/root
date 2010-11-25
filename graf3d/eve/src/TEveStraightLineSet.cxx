@@ -75,6 +75,29 @@ TEveStraightLineSet::AddLine(const TEveVector& p1, const TEveVector& p2)
 }
 
 //______________________________________________________________________________
+void
+TEveStraightLineSet::SetLine(int idx,
+                             Float_t x1, Float_t y1, Float_t z1,
+                             Float_t x2, Float_t y2, Float_t z2)
+{
+   // Set line vertices with given index.
+
+   Line_t* l = (Line_t*) fLinePlex.Atom(idx);
+
+   l->fV1[0] = x1; l->fV1[1] = y1; l->fV1[2] = z1;
+   l->fV2[0] = x2; l->fV2[1] = y2; l->fV2[2] = z2;
+}
+
+//______________________________________________________________________________
+void
+TEveStraightLineSet::SetLine(int idx, const TEveVector& p1, const TEveVector& p2)
+{
+   // Set line vertices with given index.
+
+   SetLine(idx, p1.fX, p1.fY, p1.fZ, p2.fX, p2.fY, p2.fZ);
+}
+
+//______________________________________________________________________________
 TEveStraightLineSet::Marker_t*
 TEveStraightLineSet::AddMarker(Float_t x, Float_t y, Float_t z, Int_t line_id)
 {

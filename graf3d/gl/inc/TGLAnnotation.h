@@ -74,19 +74,28 @@ public:
    TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t posx, Float_t posy);
    TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t posx, Float_t posy, TGLVector3 ref);
    virtual ~TGLAnnotation();
+   
+   void  SetText(const char* x)  { fText = x; }
+   const TString& GetText() const  { return fText; }
 
    void SetTransparency(Char_t x) { fTransparency = x; }
    Char_t GetTransparency() const { return fTransparency; }
+
    void SetUseColorSet(Bool_t x)  { fUseColorSet = x; }
    Bool_t GetUseColorSet() const  { return fUseColorSet; }
+
    void SetBackColor(Color_t x)   { fBackColor = x; }
    Color_t GetBackColor() const   { return fBackColor; }
+
    void SetTextColor(Color_t x)   { fTextColor = x; }
    Color_t GetTextColor() const   { return fTextColor; }
+
    void SetTextSize(Float_t x)    { fTextSize = x; }
    Float_t GetTextSize() const    { return fTextSize; }
+
    void SetAllowClose(Bool_t x)   { fAllowClose = x; }
    Bool_t GetAllowClose() const   { return fAllowClose;}
+
    TGLFont::ETextAlignH_e GetTextAlign() const { return fTextAlign; }
    void SetTextAlign(TGLFont::ETextAlignH_e a) { fTextAlign = a; }
 
