@@ -896,7 +896,7 @@ check_comp() {
     C)
         if test "x$altcc" = "x" ; then
             if `make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcc > /dev/null 2>&1` ; then
-                altcc=`make -s -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcc`
+                altcc=`make -s -j1 -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcc`
             else
                 altcc=`grep '^CC ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             fi
@@ -920,7 +920,7 @@ check_comp() {
     C++)
         if test "x$altcxx" = "x" ; then
             if `make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcxx > /dev/null 2>&1` ; then
-                altcxx=`make -s -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcxx`
+                altcxx=`make -s -j1 -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcxx`
             else
                 altcxx=`grep '^CXX ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             fi
@@ -944,7 +944,7 @@ check_comp() {
     LD)
         if test "x$altld" = "x" ; then
             if `make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showld > /dev/null 2>&1` ; then
-                altld=`make -s -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showld`
+                altld=`make -s -j1 -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showld`
             else
                 altld=`grep '^LD ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             fi
@@ -974,7 +974,7 @@ check_comp() {
     F77)
         if test "x$altf77" = "x" ; then
             if `make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showf77 > /dev/null 2>&1` ; then
-                altf77=`make -s -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showf77`
+                altf77=`make -s -j1 -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showf77`
             else
                 altf77=`grep '^F77 ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             fi
@@ -1572,7 +1572,9 @@ solaris64CC5)
    checksolaris64="yes" ;;
 ios*)
    logmsg "Will check iOS SDK libraries"
-   iossdk=`make -s -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showsdk`
+   message "Checking for iOS SDK"
+   iossdk=`make -s -j1 -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showsdk`
+   result "$iossdk"
    enable_cintex="no"
    enable_reflex="no"
    enable_genvector="no"
@@ -3531,6 +3533,30 @@ check_explicit "$enable_hdfs" "$enable_hdfs_explicit" \
 #
 # Check for libdns_sd
 #
+case $platform in
+    linux|macosx|ios)
+        ;;
+    *)
+        if test "x$enable_bonjour" = "xyes" ; then
+            message "Checking whether Bonjour/Avahi is supported"
+            result "no (currently only for Linux/MacOSX/iOS)"
+        fi
+        enable_bonjour=no
+        ;;
+esac
+if test ! "x$enable_bonjour" = "xno" ; then
+    case $arch in
+        *icc)
+            if test "x$enable_bonjour" = "xyes" ; then
+               message "Checking whether Bonjour/Avahi is supported"
+               result "no (currently not for the icc compiler)"
+            fi
+            enable_bonjour=no
+            ;;
+        *)
+            ;;
+    esac
+fi
 if test ! "x$enable_bonjour" = "xno" ; then
     # Bonjour is built-in on MacOS X / iOS (i.e. available in libSystem)
     if test ! "x$platform" = "xmacosx" && test ! "x$platform" = "xios" ; then
@@ -3548,7 +3574,7 @@ if test ! "x$enable_bonjour" = "xno" ; then
         fi
     fi
 
-    # If we are on Linux, we must check also for the Avahi libraries. 
+    # If we are on Linux, we must check also for the Avahi libraries.
     if test ! "x$enable_bonjour" = "xno" && test "x$platform" = "xlinux"; then
         # The compatibility layer is needed for the Bonjour record management.
         check_header "avahi-client/client.h" "$avahiincdir" $DNSSD \
