@@ -896,7 +896,7 @@ check_comp() {
     C)
         if test "x$altcc" = "x" ; then
             if `make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcc > /dev/null 2>&1` ; then
-                altcc=`make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcc`
+                altcc=`make -s -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcc`
             else
                 altcc=`grep '^CC ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             fi
@@ -920,7 +920,7 @@ check_comp() {
     C++)
         if test "x$altcxx" = "x" ; then
             if `make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcxx > /dev/null 2>&1` ; then
-                altcxx=`make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcxx`
+                altcxx=`make -s -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showcxx`
             else
                 altcxx=`grep '^CXX ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             fi
@@ -944,7 +944,7 @@ check_comp() {
     LD)
         if test "x$altld" = "x" ; then
             if `make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showld > /dev/null 2>&1` ; then
-                altld=`make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showld`
+                altld=`make -s -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showld`
             else
                 altld=`grep '^LD ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             fi
@@ -974,7 +974,7 @@ check_comp() {
     F77)
         if test "x$altf77" = "x" ; then
             if `make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showf77 > /dev/null 2>&1` ; then
-                altf77=`make -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showf77`
+                altf77=`make -s -f ${ac_srcdir}/config/Makefile.$arch ROOT_SRCDIR=${ac_srcdir} CONFIGURE=yes showf77`
             else
                 altf77=`grep '^F77 ' ${ac_srcdir}/config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             fi
@@ -1572,7 +1572,7 @@ solaris64CC5)
    checksolaris64="yes" ;;
 ios*)
    logmsg "Will check iOS SDK libraries"
-   iossdk=`make -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showsdk`
+   iossdk=`make -s -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showsdk`
    enable_cintex="no"
    enable_reflex="no"
    enable_genvector="no"
