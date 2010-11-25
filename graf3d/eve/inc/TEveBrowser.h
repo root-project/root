@@ -156,6 +156,8 @@ public:
    TGMenuBar*         GetMenuBar()      const { return fMenuBar; }
    TGHorizontalFrame* GetTopMenuFrame() const { return fTopMenuFrame; }
 
+   void HideBottomTab();
+
    ClassDef(TEveBrowser, 0); // Specialization of TRootBrowser for Eve.
 };
 

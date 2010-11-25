@@ -788,3 +788,9 @@ void TEveBrowser::ReallyDelete()
 
    delete this;    // will in turn delete this object
 }
+
+void TEveBrowser::HideBottomTab()
+{
+   fV2->HideFrame(fHSplitter);
+   fV2->HideFrame(fH2);
+}
