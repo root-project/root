@@ -29,7 +29,9 @@
 #  include "XrdSys/XrdSysPthread.hh"
 #endif
 
+#if defined(BUILD_BONJOUR)
 #include "XrdOuc/XrdOucBonjour.hh"
+#endif
 #include "XrdOuc/XrdOucHash.hh"
 
 #include "XrdProofConn.h"
@@ -74,7 +76,7 @@ private:
    int                DoDirectiveWorker(char *, XrdOucStream *, bool);
 
    bool               fBonjourEnabled;
-   #if defined(BUILD_BONJOUR)
+#if defined(BUILD_BONJOUR)
    int                fBonjourRequestedSrvType; // Register, Discover or Both.
    XrdOucBonjour     *fBonjourManager; // A reference to the Bonjour manager.
    XrdOucString       fBonjourServiceType;
@@ -83,7 +85,7 @@ private:
    int                fBonjourCores;
    int                LoadBonjourModule(int srvtype);
    static void *      ProcessBonjourUpdate(void * context);
-   #endif
+#endif
 
 public:
    XrdProofdNetMgr(XrdProofdManager *mgr, XrdProtocol_Config *pi, XrdSysError *e);
@@ -119,7 +121,7 @@ public:
    std::list<XrdProofWorker *> *GetActiveWorkers();
    std::list<XrdProofWorker *> *GetNodes();
 
-   #if defined(BUILD_BONJOUR)
+#if defined(BUILD_BONJOUR)
    // Interface of Bonjour services.
    int                GetBonjourRequestedServiceType() const { return fBonjourRequestedSrvType; }
    const char        *GetBonjourServiceType() const { return (fBonjourServiceType.length()) ? fBonjourServiceType.c_str() : "_proof._tcp."; }
@@ -127,7 +129,7 @@ public:
    const char        *GetBonjourDomain() const { return (fBonjourDomain.length()) ? fBonjourDomain.c_str() : NULL; }
    int                GetBonjourCores() const { return fBonjourCores; }
    static bool        CheckBonjourRoleCoherence(int role, int bonjourSrvType);
-   #endif
+#endif
    void               BalanceNodesOrder();
 };
 
