@@ -1573,7 +1573,7 @@ namespace {
          if ( argc == reqNArgs+1 )
             npar = PyInt_AsLong( PyTuple_GET_ITEM( args, reqNArgs ) );
 
-      // registration with CINT (note: CINT style signature for free functions)
+      // registration with CINT
          Long_t fid = Utility::InstallMethod(
             0, pyfunc, name, 0, "D - - 0 - - D - - 0 - -", (void*)TFNPyCallback, 2, npar );
 
@@ -1687,7 +1687,7 @@ namespace {
             Py_DECREF( pyname );
          }
 
-      // registration with CINT (note: CINT style signature for free functions)
+      // registration with CINT
          Long_t fid = Utility::InstallMethod( 0, pyfunc, name, 0,
             "i - - 1 - - D - - 0 - - d - - 1 - - D - - 0 - - i - - 0 - -",
             (void*)TMinuitPyCallback, 5 );
@@ -1699,6 +1699,103 @@ namespace {
       // build new argument array
          PyObject* newArgs = PyTuple_New( 1 );
          PyTuple_SET_ITEM( newArgs, 0, PyCObject_FromVoidPtr( (void*)fid, NULL ) );
+
+      // re-run
+         PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );
+
+      // done, may have worked, if not: 0 is returned
+         Py_DECREF( newArgs );
+         Py_DECREF( method );
+         return result;
+      }
+   };
+
+
+//- Fit::TFitter behavior ------------------------------------------------------
+   PyObject* gFitterPyCallback = 0;
+
+   void FitterPyCallback( int& npar, double* gin, double& f, double* u, int flag )
+   {
+      PyObject* result = 0;
+
+   // prepare arguments
+      PyObject* arg1 = BufFac_t::Instance()->PyBuffer_FromMemory( &npar );
+
+      PyObject* arg2 = BufFac_t::Instance()->PyBuffer_FromMemory( gin );
+
+      PyObject* arg3 = PyList_New( 1 );
+      PyList_SetItem( arg3, 0, PyFloat_FromDouble( f ) );
+
+      PyObject* arg4 = BufFac_t::Instance()->PyBuffer_FromMemory( u, npar );
+
+   // perform actual call
+      result = PyObject_CallFunction(
+         gFitterPyCallback, (char*)"OOOOi", arg1, arg2, arg3, arg4, flag );
+      f = PyFloat_AsDouble( PyList_GetItem( arg3, 0 ) );
+
+      Py_DECREF( arg4 ); Py_DECREF( arg3 ); Py_DECREF( arg2 ); Py_DECREF( arg1 );
+
+      if ( ! result ) {
+         PyErr_Print();
+         throw std::runtime_error( "TMinuit python fit function call failed" );
+      }
+
+      Py_XDECREF( result );
+   }
+
+
+   class TFitterFitFCN : public TPretendInterpreted {
+   public:
+      TFitterFitFCN() : TPretendInterpreted( 2 ) {}
+
+   public:
+      virtual PyObject* GetSignature()
+      {
+         return PyROOT_PyUnicode_FromString(
+            "(PyObject* callable, int npar = 0, const double* params = 0, unsigned int dataSize = 0, bool chi2fit = false)" );
+      }
+
+      virtual PyObject* GetPrototype()
+      {
+         return PyROOT_PyUnicode_FromString(
+            "TMinuit::SetFCN(PyObject* callable, int npar = 0, const double* params = 0, unsigned int dataSize = 0, bool chi2fit = false)" );
+      }
+
+      virtual PyCallable* Clone() { return new TFitterFitFCN( *this ); }
+
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t )
+      {
+      // expected signature: ( self, pyfunc, int npar = 0, const double* params = 0, unsigned int dataSize = 0, bool chi2fit = false )
+           std::cout << "being called .... " << std::endl;
+         int argc = PyTuple_GET_SIZE( args );
+         if ( argc < 1 ) {
+            PyErr_Format( PyExc_TypeError,
+               "TFitter::FitFCN(PyObject* callable, ...) =>\n"
+               "    takes at least 1 argument (%d given)", argc );
+            return 0;              // reported as an overload failure
+         }
+
+         PyObject* pyfunc = PyTuple_GET_ITEM( args, 0 );
+         if ( ! IsCallable( pyfunc ) )
+            return 0;
+
+      // global registration
+         Py_XDECREF( gFitterPyCallback );
+         Py_INCREF( pyfunc );
+         gFitterPyCallback = pyfunc;
+
+      // get function
+         MethodProxy* method =
+            (MethodProxy*)PyObject_GetAttr( (PyObject*)self, PyStrings::gFitFCN );
+
+      // build new argument array
+         PyObject* newArgs = PyTuple_New( argc );
+         PyTuple_SET_ITEM( newArgs, 0, PyCObject_FromVoidPtr( (void*)FitterPyCallback, NULL ) );
+         for ( int iarg = 1; iarg < argc; ++iarg ) {
+            PyObject* pyarg = PyTuple_GET_ITEM( args, iarg );
+            Py_INCREF( pyarg );
+            PyTuple_SET_ITEM( newArgs, iarg, pyarg );
+         }
 
       // re-run
          PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );
@@ -2021,6 +2118,9 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( name == "TMinuit" )   // allow call with python callable
       return Utility::AddToClass( pyclass, "SetFCN", new TMinuitSetFCN );
+
+   if ( name == "Fitter" )    // really Fit::Fitter, allow call with python callable
+      return Utility::AddToClass( pyclass, "FitFCN", new TFitterFitFCN );
 
    if ( name == "TFile" )     // allow member-style access to entries in file
       return Utility::AddToClass( pyclass, "__getattr__", "Get" );

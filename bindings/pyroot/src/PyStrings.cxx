@@ -42,6 +42,7 @@ PyObject* PyROOT::PyStrings::gTemplate = 0;
 PyObject* PyROOT::PyStrings::gVectorAt = 0;
 
 PyObject* PyROOT::PyStrings::gBranch = 0;
+PyObject* PyROOT::PyStrings::gFitFCN = 0;
 PyObject* PyROOT::PyStrings::gROOTns = 0;
 PyObject* PyROOT::PyStrings::gSetBranchAddress = 0;
 PyObject* PyROOT::PyStrings::gSetFCN = 0;
@@ -91,6 +92,7 @@ Bool_t PyROOT::CreatePyStrings() {
    PYROOT_INITIALIZE_STRING( gVectorAt, _vector__at );
 
    PYROOT_INITIALIZE_STRING( gBranch, Branch );
+   PYROOT_INITIALIZE_STRING( gFitFCN, FitFCN );
    PYROOT_INITIALIZE_STRING( gROOTns, ROOT );
    PYROOT_INITIALIZE_STRING( gSetBranchAddress, SetBranchAddress );
    PYROOT_INITIALIZE_STRING( gSetFCN, SetFCN );
@@ -137,6 +139,7 @@ PyObject* PyROOT::DestroyPyStrings() {
    Py_DECREF( PyStrings::gVectorAt ); PyStrings::gVectorAt = 0;
 
    Py_DECREF( PyStrings::gBranch ); PyStrings::gBranch = 0;
+   Py_DECREF( PyStrings::gFitFCN ); PyStrings::gFitFCN = 0;
    Py_DECREF( PyStrings::gROOTns ); PyStrings::gROOTns = 0;
    Py_DECREF( PyStrings::gSetBranchAddress ); PyStrings::gSetBranchAddress = 0;
    Py_DECREF( PyStrings::gSetFCN ); PyStrings::gSetFCN = 0;

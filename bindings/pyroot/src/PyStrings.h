@@ -49,6 +49,7 @@ namespace PyROOT {
       R__EXTERN PyObject* gVectorAt;
 
       R__EXTERN PyObject* gBranch;
+      R__EXTERN PyObject* gFitFCN;
       R__EXTERN PyObject* gROOTns;
       R__EXTERN PyObject* gSetBranchAddress;
       R__EXTERN PyObject* gSetFCN;
