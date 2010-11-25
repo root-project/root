@@ -1845,6 +1845,7 @@ Bool_t TClass::CanSplit() const
    if (fName.BeginsWith("TVectorT<")) return kFALSE;
    if (fName.BeginsWith("TMatrixT<")) return kFALSE;
    if (InheritsFrom("TCollection") && !InheritsFrom("TClonesArray")) return kFALSE;
+   if (InheritsFrom("TTree"))     return kFALSE;
 
    // If we do not have a showMembers and we have a streamer,
    // we are in the case of class that can never be split since it is
