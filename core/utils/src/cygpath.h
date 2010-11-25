@@ -19,7 +19,10 @@ static const char *GetCygwinRootDir() {
    static char buf[512] = {0};
 
    if (!buf[0]) {
-      if (system("cygpath") == -1) {
+      char pathbuffer[_MAX_PATH] = {0};
+      // Search for cygpath in PATH environment variable
+      _searchenv_s( "cygpath.exe", "PATH", pathbuffer );
+      if( *pathbuffer == '\0' ) {
          sprintf(buf, "%c:", _getdrive());
          return buf;
       }
