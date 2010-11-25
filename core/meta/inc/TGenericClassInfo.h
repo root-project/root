@@ -61,8 +61,8 @@ namespace ROOT {
       Int_t                       fSizeof;
       TCollectionProxyInfo       *fCollectionProxyInfo;
       TCollectionProxyInfo       *fCollectionStreamerInfo;
-      std::vector<TSchemaHelper>  fReadRules;
-      std::vector<TSchemaHelper>  fReadRawRules;
+      std::vector<ROOT::TSchemaHelper>  fReadRules;
+      std::vector<ROOT::TSchemaHelper>  fReadRawRules;
 
    public:
       TGenericClassInfo(const char *fullClassname,
@@ -108,8 +108,8 @@ namespace ROOT {
       TVirtualIsAProxy                 *GetIsA() const;
       NewFunc_t                         GetNew() const;
       NewArrFunc_t                      GetNewArray() const;
-      const std::vector<TSchemaHelper> &GetReadRawRules() const;
-      const std::vector<TSchemaHelper> &GetReadRules() const;
+      const std::vector<ROOT::TSchemaHelper> &GetReadRawRules() const;
+      const std::vector<ROOT::TSchemaHelper> &GetReadRules() const;
       ShowMembersFunc_t                 GetShowMembers() const;
       Int_t                             GetVersion() const;
 
@@ -128,15 +128,15 @@ namespace ROOT {
       Int_t                             SetImplFile(const char *file, Int_t line);
       void                              SetNew(NewFunc_t newFunc);
       void                              SetNewArray(NewArrFunc_t newArrayFunc);
-      void                              SetReadRawRules( const std::vector<TSchemaHelper>& rules );
-      void                              SetReadRules( const std::vector<TSchemaHelper>& rules );
+      void                              SetReadRawRules( const std::vector<ROOT::TSchemaHelper>& rules );
+      void                              SetReadRules( const std::vector<ROOT::TSchemaHelper>& rules );
       Short_t                           SetStreamer(ClassStreamerFunc_t);
       void                              SetStreamerFunc(ClassStreamerFunc_t);
       Short_t                           SetVersion(Short_t version);
 
       //   protected:
    private:
-      void CreateRuleSet( std::vector<TSchemaHelper>& vect, Bool_t ProcessReadRules );
+      void CreateRuleSet( std::vector<ROOT::TSchemaHelper>& vect, Bool_t ProcessReadRules );
       TGenericClassInfo(const TGenericClassInfo&); // Not implemented
       TGenericClassInfo& operator=(const TGenericClassInfo&); // Not implemented
 
