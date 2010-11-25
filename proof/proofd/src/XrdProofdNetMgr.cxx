@@ -379,8 +379,8 @@ void XrdProofdNetMgr::BalanceNodesOrder()
       for (map<XrdProofWorker *, BalancerInfo>::iterator i = info.begin(); i != info.end(); i++) {
          if (i->second.added < i->second.available) {
             // Be careful with the remainders (on prime number of nodes).
-            unsigned int to_add = MIN(i->second.per_iteration,
-                                      (i->second.available - i->second.added));
+            unsigned int to_add = xrdmin(i->second.per_iteration,
+                                        (i->second.available - i->second.added));
             // Then add the nodes.
             for (unsigned int j = 0; j < to_add; j++) {
                tempNodes.push_back(i->first);
