@@ -54,7 +54,7 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 #  should also be reflected in the TEST_TARGETS variable above.
 
 # trigger creation of cintex/test directory if out-of-source
-ROOT_SRCDIR := $(shell grep "ROOT_SRCDIR    :=" $(ROOTSYS)/config/Makefile.config | sed 's/^ROOT_SRCDIR    := \$$(call realpath, \([^)]\+\).*$$/\1/')
+ROOT_SRCDIR := $(shell grep "ROOT_SRCDIR    :=" $(ROOTSYS)/config/Makefile.config | sed 's/^ROOT_SRCDIR    := \$$(call realpath, \([^)]*\).*$$/\1/')
 ifeq ($(PLATFORM),win32)
   ROOT_SRCDIRDEP := $(shell cygpath -m -- $(ROOT_SRCDIR))
 else
