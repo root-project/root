@@ -76,13 +76,13 @@ XrdProofdNetMgr::XrdProofdNetMgr(XrdProofdManager *mgr,
    fWorkerUsrCfg = 0;
    fRequestTO = 30;
    fBonjourEnabled = false;
-   #if defined(BUILD_BONJOUR)
+#if defined(BUILD_BONJOUR)
    char *host = XrdNetDNS::getHostName();
    fBonjourName = host ? host : "";
    SafeFree(host);
    fBonjourCores = XrdProofdAux::GetNumCPUs();
    fBonjourRequestedSrvType = kBonjourSrvDisabled;
-   #endif
+#endif
 
    // Configuration directives
    RegisterDirectives();
