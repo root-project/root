@@ -27,8 +27,9 @@ endif
 
 ##### libCint #####
 CINTCONF     := $(call stripsrc,$(CINTDIRI)/configcint.h)
-CINTH        := $(wildcard $(CINTDIRI)/*.h)
-CINTHT       := $(sort $(patsubst $(CINTDIRI)/%.h,include/%.h,$(CINTH) $(CINTCONF)))
+CINTH        := $(filter-out $(CINTDIRI)/configcint.h,$(wildcard $(CINTDIRI)/*.h))
+CINTHT       := $(patsubst $(CINTDIRI)/%.h,include/%.h,$(CINTH))
+CINTHT       += $(patsubst $(call stripsrc,$(CINTDIRI))/%.h,include/%.h,$(CINTCONF))
 CINTS1       := $(wildcard $(MODDIRS)/*.c) \
                 $(MODDIRS)/config/strlcpy.c $(MODDIRS)/config/strlcat.c \
                 $(MODDIRS)/config/snprintf.c
@@ -237,6 +238,9 @@ INCLUDEFILES += $(CINTDEP) $(CINTEXEDEP)
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
+include/%.h: $(call stripsrc,$(CINTDIRI))/%.h
+		cp $< $@
+
 include/%.h: $(CINTDIRI)/%.h
 		cp $< $@
 
@@ -245,7 +249,7 @@ $(CINTDIRL):
 		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.d' --exclude 'rootcint_*' --exclude 'G__cpp_*' --exclude 'G__c_*' $(CINTDIR)/lib $(dir $@)
 		@touch $(CINTDIRL)
 $(CINTDIRDLLS):
-		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.d' --exclude '*.dll' $(CINTDIR)/include $(dir $@)
+		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.d' --exclude '*.dll' --exclude 'systypes.h' --exclude 'types.h' $(CINTDIR)/include $(dir $@)
 		@touch $(CINTDIRDLLS)
 $(CINTDIRSTL):
 		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.d' --exclude '*.dll' $(CINTDIR)/stl $(dir $@)
@@ -316,15 +320,15 @@ endif
 $(MAKECINTO) $(CINTO): $(CINTCONF) $(ORDER_) $(CINTINCLUDES)
 
 $(MAKECINTO): CXXFLAGS := $(CINTCXXFLAGS)
-$(call stripsrc,$(CINTDIRSD)/stdstrct.o):    CINTCXXFLAGS += -I$(CINTDIRL)/stdstrct
-$(call stripsrc,$(CINTDIRS)/loadfile_tmp.o): CINTCXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD
 
 $(call stripsrc,$(CINTDIRS)/loadfile_tmp.cxx): $(CINTDIRS)/loadfile.cxx
 	$(MAKEDIR)
 	cp -f $< $@
-
+$(call stripsrc,$(CINTDIRS)/loadfile_tmp.o): CINTCXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD
 $(call stripsrc,$(CINTDIRS)/loadfile_tmp.o) $(CINTO): OPT := $(filter-out -Wshadow,$(OPT))
 $(call stripsrc,$(CINTDIRS)/loadfile_tmp.o) $(CINTO): CXXFLAGS:=$(filter-out -Wshadow,$(CXXFLAGS))
+
+$(call stripsrc,$(CINTDIRSD)/stdstrct.o):    CINTCXXFLAGS += -I$(CINTDIRL)/stdstrct
 
 ifeq ($(ICC_MAJOR),12)
 ifeq ($(ICC_MINOR),0)

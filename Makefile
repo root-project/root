@@ -567,6 +567,10 @@ G__c_%.o: G__c_%.c
 	   -I$(CINTDIRSTL) -I$(CINTDIR)/inc -- $<
 	$(CC) $(NOOPT) $(CFLAGS) $(DICTFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
 
+cint/cint/%.o: cint/cint/%.cxx
+	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCXXFLAGS) -I. -D__cplusplus -- $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I. $(CXXOUT)$@ -c $<
+
 cint/cint/%.o: $(ROOT_SRCDIR)/cint/cint/%.cxx
 	$(MAKEDIR)
 	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCXXFLAGS) -I. -D__cplusplus -- $<
@@ -576,10 +580,6 @@ cint/cint/%.o: $(ROOT_SRCDIR)/cint/cint/%.c
 	$(MAKEDIR)
 	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCFLAGS) -I. -- $<
 	$(CC) $(OPT) $(CINTCFLAGS) -I. $(CXXOUT)$@ -c $<
-
-cint/cint/%.o: cint/cint/%.cxx
-	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCXXFLAGS) -I. -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I. $(CXXOUT)$@ -c $<
 
 build/rmkdepend/%.o: $(ROOT_SRCDIR)/build/rmkdepend/%.cxx
 	$(MAKEDIR)
