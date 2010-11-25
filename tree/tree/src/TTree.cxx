@@ -3819,27 +3819,27 @@ Int_t TTree::Fill()
             if (gDebug > 0) Info("TTree::Fill","OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
             fFlushedBytes = fZipBytes;
             fAutoFlush    = fEntries;  // Use test on entries rather than bytes
-                                       // subsequently in run
+            // subsequently in run
             if (fAutoSave < 0) {
-      	       // Set fAutoSave to the largest integer multiple of
-      	       // fAutoFlush events such that fAutoSave*fFlushedBytes
-      	       // < (minus the input value of fAutoSave)
-      	       fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/fZipBytes)/fEntries));
+               // Set fAutoSave to the largest integer multiple of
+               // fAutoFlush events such that fAutoSave*fFlushedBytes
+               // < (minus the input value of fAutoSave)
+               fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/fZipBytes)/fEntries));
             } else if(fAutoSave > 0) {
-      	       fAutoSave = fEntries*(fAutoSave/fEntries);
-      	    }
-      	    if (fAutoSave!=0 && fEntries >= fAutoSave) AutoSave();    // FlushBaskets not called in AutoSave
-      	    if (gDebug > 0) Info("TTree::Fill","First AutoFlush.  fAutoFlush = %lld, fAutoSave = %lld\n", fAutoFlush, fAutoSave);
+               fAutoSave = fEntries*(fAutoSave/fEntries);
+            }
+            if (fAutoSave!=0 && fEntries >= fAutoSave) AutoSave();    // FlushBaskets not called in AutoSave
+            if (gDebug > 0) Info("TTree::Fill","First AutoFlush.  fAutoFlush = %lld, fAutoSave = %lld\n", fAutoFlush, fAutoSave);
          }
       } else if (fEntries > 1 && fEntries%fAutoFlush == 0) {
          if (fAutoSave != 0 && fEntries%fAutoSave == 0) {
-       	    //We are at an AutoSave point. AutoSave flushes baskets and saves the Tree header
-      	    AutoSave("flushbaskets");
-      	    if (gDebug > 0) Info("TTree::Fill","AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
+            //We are at an AutoSave point. AutoSave flushes baskets and saves the Tree header
+            AutoSave("flushbaskets");
+            if (gDebug > 0) Info("TTree::Fill","AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
          } else {
-      	    //We only FlushBaskets
+            //We only FlushBaskets
             FlushBaskets();
-      	    if (gDebug > 0) Info("TTree::Fill","FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+            if (gDebug > 0) Info("TTree::Fill","FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
          }
          fFlushedBytes = fZipBytes;
       }
