@@ -3319,6 +3319,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
          Hoption.Text = 1;
       }
       strncpy(l,"    ", 4);
+      l = strstr(chopt,"N");
+      if (l && fH->InheritsFrom(TH2Poly::Class())) Hoption.Text += 3000;
       Hoption.Scat = 0;
    }
    l = strstr(chopt,"POL");  if (l) { Hoption.System = kPOLAR;       strncpy(l,"   ",3); }
@@ -7665,6 +7667,8 @@ void THistPainter::PaintTable(Option_t *option)
 
    if (fH->InheritsFrom(TH2Poly::Class())) {
       if (Hoption.Color)   PaintTH2PolyColorLevels(option);
+      if (Hoption.Scat)    PaintTH2PolyScatterPlot(option);
+      if (Hoption.Text)    PaintTH2PolyText(option);
    } else if (fH->GetEntries() != 0 && Hoption.Axis<=0) {
       if (Hoption.Scat)    PaintScatterPlot(option);
       if (Hoption.Arrow)   PaintArrows(option);
@@ -7702,10 +7706,69 @@ void THistPainter::PaintTable(Option_t *option)
 
 
 //______________________________________________________________________________
+void THistPainter::PaintTH2PolyBins(Option_t *option)
+{
+   /* Begin_html
+    Control function to draw a TH2Poly bins' contours.
+    option = "F" draw the bins as filled areas.
+    option = "L" draw the bins as line.
+    option = "P" draw the bins as markers.
+    End_html */
+
+   TString opt = option;
+   opt.ToLower();
+   Bool_t line = kFALSE;
+   Bool_t fill = kFALSE;
+   Bool_t mark = kFALSE;
+   if (opt.Contains("l")) line = kTRUE;
+   if (opt.Contains("f")) fill = kTRUE;
+   if (opt.Contains("p")) mark = kTRUE;
+
+   TH2PolyBin  *b;
+
+   TIter next(((TH2Poly*)fH)->GetBins());
+   TObject *obj, *poly;
+
+   while ((obj=next())) {
+      b     = (TH2PolyBin*)obj;
+      poly  = b->GetPolygon();
+
+      // Paint the TGraph bins.
+      if (poly->IsA() == TGraph::Class()) {
+         TGraph *g  = (TGraph*)poly;
+         g->TAttLine::Modify();
+         g->TAttMarker::Modify();
+         g->TAttFill::Modify();
+         if (line) g->Paint("L");
+         if (fill) g->Paint("F");
+         if (mark) g->Paint("P");
+      }
+
+      // Paint the TMultiGraph bins.
+      if (poly->IsA() == TMultiGraph::Class()) {
+         TMultiGraph *mg = (TMultiGraph*)poly;
+         TList *gl = mg->GetListOfGraphs();
+         if (!gl) return;
+         TGraph *g;
+         TIter nextg(gl);
+         while ((g = (TGraph*) nextg())) {
+            g->TAttLine::Modify();
+            g->TAttMarker::Modify();
+            g->TAttFill::Modify();
+            if (line) g->Paint("L");
+            if (fill) g->Paint("F");
+            if (mark) g->Paint("P");
+         }
+      }
+   }
+}
+
+
+//______________________________________________________________________________
 void THistPainter::PaintTH2PolyColorLevels(Option_t *)
 {
    /* Begin_html
-    <a href="#HP20a">Control function to draw a TH2Poly.</a>
+    <a href="#HP20a">Control function to draw a TH2Poly as a color plot.</a>
     End_html */
 
    Int_t ncolors, color, theColor;
@@ -7792,6 +7855,176 @@ void THistPainter::PaintTH2PolyColorLevels(Option_t *)
       }
    }
    if (Hoption.Zscale) PaintPalette();
+}
+
+
+//______________________________________________________________________________
+void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
+{
+   /* Begin_html
+    <a href="#HP20a">Control function to draw a TH2Poly as a scatter plot.</a>
+    End_html */
+
+   Int_t k, loop, marker=0;
+   Double_t z, xk,xstep, yk, ystep, xp, yp;
+   Double_t scale = 1;
+   Double_t zmin = fH->GetMinimum();
+   Double_t zmax = fH->GetMaximum();
+   if (Hoption.Logz) {
+      if (zmax > 0) {
+         if (zmin <= 0) zmin = TMath::Min((Double_t)1, (Double_t)0.001*zmax);
+         zmin = TMath::Log10(zmin);
+         zmax = TMath::Log10(zmax);
+      } else {
+         return;
+      }
+   }
+   Double_t dz = zmax - zmin;
+   scale = (kNMAX-1)/dz;
+
+   UInt_t seedsave = gRandom->GetSeed();
+   gRandom->SetSeed();
+
+   TH2PolyBin  *b;
+
+   TIter next(((TH2Poly*)fH)->GetBins());
+   TObject *obj, *poly;
+
+   Double_t maxarea = 0, a;
+   while ((obj=next())) {
+      b     = (TH2PolyBin*)obj;
+      a     = b->GetArea();
+      if (a>maxarea) maxarea = a;
+   }
+
+   next.Reset();
+
+   while ((obj=next())) {
+      b     = (TH2PolyBin*)obj;
+      poly  = b->GetPolygon();
+      z     = b->GetContent();
+      if (z < zmin) z = zmin;
+      if (z > zmax) z = zmax;
+      if (Hoption.Logz) {
+         if (z > 0) z = TMath::Log10(z) - zmin;
+      } else {
+         z    -=  zmin;
+      }
+      k     = Int_t((z*scale)*(b->GetArea()/maxarea));
+      xk    = b->GetXMin();
+      yk    = b->GetYMin();
+      xstep = b->GetXMax()-xk;
+      ystep = b->GetYMax()-yk;
+
+      // Paint the TGraph bins.
+      if (poly->IsA() == TGraph::Class()) {
+         TGraph *g  = (TGraph*)poly;
+         if (k <= 0 || z <= 0) continue;
+         loop = 0;
+         while (loop<k) {
+            if (k+marker >= kNMAX) {
+               gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
+               marker=0;
+            }
+            xp = (gRandom->Rndm(loop)*xstep) + xk;
+            yp = (gRandom->Rndm(loop)*ystep) + yk;
+            if (g->IsInside(xp,yp)) {
+               fXbuf[marker] = xp;
+               fYbuf[marker] = yp;
+               marker++;
+               loop++;
+            }
+         }
+         if (marker > 0) gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
+      }
+
+      // Paint the TMultiGraph bins.
+      if (poly->IsA() == TMultiGraph::Class()) {
+         TMultiGraph *mg = (TMultiGraph*)poly;
+         TList *gl = mg->GetListOfGraphs();
+         if (!gl) return;
+         if (k <= 0 || z <= 0) continue;
+         loop = 0;
+         while (loop<k) {
+            if (k+marker >= kNMAX) {
+               gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
+               marker=0;
+            }
+            xp = (gRandom->Rndm(loop)*xstep) + xk;
+            yp = (gRandom->Rndm(loop)*ystep) + yk;
+            if (mg->IsInside(xp,yp)) {
+               fXbuf[marker] = xp;
+               fYbuf[marker] = yp;
+               marker++;
+               loop++;
+            }
+         }
+         if (marker > 0) gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
+      }
+   }
+   PaintTH2PolyBins("l");
+   gRandom->SetSeed(seedsave);
+}
+
+
+//______________________________________________________________________________
+void THistPainter::PaintTH2PolyText(Option_t *)
+{
+   /* Begin_html
+    <a href="#HP20a">Control function to draw a TH2Poly as a text plot.</a>
+    End_html */
+
+   TLatex text;
+   text.SetTextFont(gStyle->GetTextFont());
+   text.SetTextColor(fH->GetMarkerColor());
+   text.SetTextSize(0.02*fH->GetMarkerSize());
+
+   Double_t x, y, z, e, angle = 0;
+   char value[50];
+   char format[32];
+   snprintf(format,32,"%s%s","%",gStyle->GetPaintTextFormat());
+   if (Hoption.Text >= 1000) angle = Hoption.Text%1000;
+   Int_t opt = (Int_t)Hoption.Text/1000;
+
+   text.SetTextAlign(22);
+   if (Hoption.Text ==  1) angle = 0;
+   text.SetTextAngle(angle);
+   text.TAttText::Modify();
+
+   TH2PolyBin *b;
+
+   TIter next(((TH2Poly*)fH)->GetBins());
+   TObject *obj, *p;
+
+   while ((obj=next())) {
+      b = (TH2PolyBin*)obj;
+      p = b->GetPolygon();
+      x = (b->GetXMin()+b->GetXMax())/2;
+      if (Hoption.Logx) {
+         if (x > 0)  x  = TMath::Log10(x);
+         else continue;
+      }
+      y = (b->GetYMin()+b->GetYMax())/2;
+      if (Hoption.Logy) {
+         if (y > 0)  y  = TMath::Log10(y);
+         else continue;
+      }
+      z = b->GetContent();
+      if (z < Hparam.zmin || (z == 0 && !gStyle->GetHistMinimumZero()) ) continue;
+      if (opt==2) {
+         e = fH->GetBinError(b->GetBinNumber());
+         snprintf(format,32,"#splitline{%s%s}{#pm %s%s}",
+                                    "%",gStyle->GetPaintTextFormat(),
+                                    "%",gStyle->GetPaintTextFormat());
+         snprintf(value,50,format,z,e);
+      } else {
+         snprintf(value,50,format,z);
+      }
+      if (opt==3) text.PaintLatex(x,y,angle,0.02*fH->GetMarkerSize(),p->GetName());
+      else        text.PaintLatex(x,y,angle,0.02*fH->GetMarkerSize(),value);
+   }
+
+   PaintTH2PolyBins("l");
 }
 
 
