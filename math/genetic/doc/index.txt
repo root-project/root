@@ -1,0 +1,30 @@
+This directory contains the ROOT::Math::GeneticMinimizer class
+BEGIN_HTML 
+The GeneticMinimizer class is used to implement a genetic minimizer algorithm. 
+The algorithm is based on an algorithm implemented in the TMVA package
+(TMVA::GeneticAlgorithm class). 
+<p>
+The ROOT::Math:GeneticMinimizer class implements the
+ROOT::Math::Minimizer interface, as a new plugin with name "Genetic". 
+The class can be used when fitting histograms or graph by selecting it
+as default minimizer. This can be done via: 
+<pre>
+ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Genetic");
+</pre>
+Via the MinimizerOptions, one can control the possible options for the
+class. These are described in the TMVA user guide, Option Table 7. 
+A list of the default options can be obtained by doing: 
+<pre>
+ROOT::Math::Minimizer * min =ROOT::Math::Factory::CreateMinimizer("Genetic"); 
+min->Options().Print(); 
+</pre>
+The user can change a default option, like the population size to 500
+and the steps to 60 by doing: 
+<pre>
+ROOT::Math::MinimizerOptions::Default("Genetic").SetValue("PopSize",500);
+ROOT::Math::MinimizerOptions::Default("Genetic").SetValue("Steps",60);
+</pre> 
+
+
+END_HTML
+

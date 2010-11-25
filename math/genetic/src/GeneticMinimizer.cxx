@@ -189,8 +189,8 @@ bool GeneticMinimizer::Minimize()
    TMVA::GeneticAlgorithm mg( *fFitness, fParameters.fPopSize, fRanges );
 
    if (PrintLevel() > 0) { 
-      Info("GeneticMinimizer::Minimize","Start iterating - max iterations = %d max calls = %d conv criteria %10e6 ",
-           fParameters.fNsteps, MaxFunctionCalls(),  fParameters.fConvCrit );
+      Info("GeneticMinimizer::Minimize","Start iterating - max iterations = %d , conv criteria (tolerance) = %10e6 ",
+           MaxIterations() ,  fParameters.fConvCrit );
    }
    
    fStatus = 0;
