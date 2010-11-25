@@ -75,8 +75,8 @@ public:
    TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t posx, Float_t posy, TGLVector3 ref);
    virtual ~TGLAnnotation();
 
-   void  SetText(const TStrin& x) { fText = x; }
-   const TString& GetText() const { return fText; }
+   void  SetText(const TString& x)   { fText = x; }
+   const TString& GetText()    const { return fText; }
 
    void    SetTransparency(Char_t x) { fTransparency = x; }
    Char_t  GetTransparency()   const { return fTransparency; }
