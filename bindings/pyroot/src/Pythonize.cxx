@@ -1766,7 +1766,6 @@ namespace {
       virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t )
       {
       // expected signature: ( self, pyfunc, int npar = 0, const double* params = 0, unsigned int dataSize = 0, bool chi2fit = false )
-           std::cout << "being called .... " << std::endl;
          int argc = PyTuple_GET_SIZE( args );
          if ( argc < 1 ) {
             PyErr_Format( PyExc_TypeError,
