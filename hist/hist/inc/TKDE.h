@@ -12,19 +12,22 @@
 #define ROOT_TKDE
 
 #ifndef ROOT_Math_WrappedFunction
-#include "Math/WrappedFunction.h"
+   #include "Math/WrappedFunction.h"
 #endif
 
-#include "TF1.h"
-#include "TH1D.h"
+#ifndef ROOT_TNamed
+   #include "TNamed.h"
+#endif
+
 #include "Math/Math.h"
+#include "TF1.h"
 
 /*
-   Kernel Density Estimation class. The three main references are (1) "Scott DW, Multivariate Density Estimation. Theory, Practice and Visualization. New York: Wiley", (2) "Jann Ben - ETH Zurich, Switzerland -, Univariate kernel density estimation document for KDENS: Stata module for univariate kernel density estimation." and (3) "Hardle W, Muller M, Sperlich S, Werwatz A, Nonparametric and Semiparametric Models. Springer."
+   Kernel Density Estimation class. The three main references are (1) "Scott DW, Multivariate Density Estimation.
+Theory, Practice and Visualization. New York: Wiley", (2) "Jann Ben - ETH Zurich, Switzerland -, Univariate kernel density estimation document for KDENS: Stata module for univariate kernel density estimation." and (3) "Hardle W, Muller M, Sperlich S, Werwatz A, Nonparametric and Semiparametric Models. Springer."
    The algorithm is briefly described in (4) "Cranmer KS, Kernel Estimation in High-Energy
-   Physics. Computer Physics Communications 136:198-207,2001" - e-Print Archive: hep ex/0011057.
-   A binned version is also implemented to address the performance issue due to its data
-   size dependance.
+Physics. Computer Physics Communications 136:198-207,2001" - e-Print Archive: hep ex/0011057.
+   A binned version is also implemented to address the performance issue due to its data size dependence.
 */
 class TKDE : public TNamed  {
 public:
@@ -61,10 +64,10 @@ public:
       kForcedBinning
    };
 
-   explicit TKDE(UInt_t events=0, const Double_t* data=0, Double_t xMin = 0.0, Double_t xMax = 0.0, Option_t* option = "KernelType:Gaussian;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0);
+   explicit TKDE(UInt_t events = 0, const Double_t* data = 0, Double_t xMin = 0.0, Double_t xMax = 0.0, const Option_t* option = "KernelType:Gaussian;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0);
 
    template<class KernelFunction>
-   TKDE(const char * /*name*/, const KernelFunction& kernfunc, UInt_t events, const Double_t* data, Double_t xMin = 0.0, Double_t xMax = 0.0, Option_t* option = "KernelType:UserDefined;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0)  {
+   TKDE(const Char_t* /*name*/, const KernelFunction& kernfunc, UInt_t events, const Double_t* data, Double_t xMin = 0.0, Double_t xMax = 0.0, const Option_t* option = "KernelType:UserDefined;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0)  {
       Instantiate(new ROOT::Math::WrappedFunction<const KernelFunction&>(kernfunc), events, data, xMin, xMax, option, rho);
    }
 
@@ -77,11 +80,13 @@ public:
    void SetBinning(EBinning);
    void SetNBins(UInt_t nbins);
    void SetUseBinsNEvents(UInt_t nEvents);
-   void SetAdaptiveTuneFactor(Double_t rho);
+   void SetTuneFactor(Double_t rho);
    void SetRange(Double_t xMin, Double_t xMax); // By default computed from the data
 
+   virtual void Draw(const Option_t* option = "Plot:ConfidenceInterval;DrawOptions:L");
+
    Double_t operator()(Double_t x) const;
-   Double_t operator()(const Double_t* x, const Double_t* p=0) const;  // needed for  creating TF1
+   Double_t operator()(const Double_t* x, const Double_t* p=0) const;  // Needed for creating TF1
 
    Double_t GetValue(Double_t x) const { return (*this)(x); }
    Double_t GetError(Double_t x) const;
@@ -89,26 +94,19 @@ public:
    Double_t GetBias(Double_t x) const;
    Double_t GetMean() const;
    Double_t GetSigma() const;
-
+   Double_t GetRAMISE() const;
 
    Double_t GetFixedWeight() const;
 
-   TH1D* GetHistogram(UInt_t nbins = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
-
    TF1* GetFunction(UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
-   TF1* GetUpperFunction(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
-   TF1* GetLowerFunction(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
+//    TF1* GetUpperFunction(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
+//    TF1* GetLowerFunction(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
    TF1* GetApproximateBias(UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
 
    const Double_t * GetAdaptiveWeights() const;
 
 
 private:
-
-   static const Double_t _2_PI_ROOT_INV; // (2*TMath::Pi())**-0.5
-   static const Double_t PI;             // TMath::Pi()
-   static const Double_t PI_OVER2;       // TMath::PiOver2()
-   static const Double_t PI_OVER4;       // TMath::PiOver4()
 
    TKDE(TKDE& kde);           // Disallowed copy constructor
    TKDE operator=(TKDE& kde); // Disallowed assign operator
@@ -128,8 +126,6 @@ private:
    TF1* fUpperPDF;        // Output Kernel Density Estimation upper confidence interval PDF function
    TF1* fLowerPDF;        // Output Kernel Density Estimation lower confidence interval PDF function
    TF1* fApproximateBias; // Output Kernel Density Estimation approximate bias
-
-   TH1D* fHistogram; // Output data histogram
 
    EKernelType fKernelType;
    EIteration fIteration;
@@ -166,11 +162,12 @@ private:
    friend struct KernelIntegrand;
 
    void Instantiate(KernelFunction_Ptr kernfunc, UInt_t events, const Double_t* data,
-                    Double_t xMin, Double_t xMax, Option_t* option, Double_t rho);
+                    Double_t xMin, Double_t xMax, const Option_t* option, Double_t rho);
 
    inline Double_t GaussianKernel(Double_t x) const {
       // Returns the kernel evaluation at x
-      return (x > -9. && x < 9.) ? _2_PI_ROOT_INV * std::exp(-.5 * x * x) : 0.0;
+      Double_t k2_PI_ROOT_INV = 0.398942280401432703; // (2 * M_PI)**-0.5
+      return (x > -9. && x < 9.) ? k2_PI_ROOT_INV * std::exp(-.5 * x * x) : 0.0;
    }
    inline Double_t EpanechnikovKernel(Double_t x) const {
       return (x > -1. &&  x < 1.) ? 3. / 4. * (1. - x * x) : 0.0;
@@ -181,7 +178,7 @@ private:
    }
    inline Double_t CosineArchKernel(Double_t x) const {
       // Returns the kernel evaluation at x
-      return (x > -1. &&  x < 1.) ? PI_OVER4 * std::cos(PI_OVER2 * x) : 0.0;
+      return (x > -1. &&  x < 1.) ? M_PI_4 * std::cos(M_PI_2 * x) : 0.0;
    }
    Double_t UpperConfidenceInterval(const Double_t* x, const Double_t* p) const; // Valid if the bandwidth is small compared to nEvents**1/5
    Double_t LowerConfidenceInterval(const Double_t* x, const Double_t* p) const; // Valid if the bandwidth is small compared to nEvents**1/5
@@ -208,21 +205,22 @@ private:
    void SetSigma(Double_t R);
    void SetKernel();
    void SetKernelFunction(KernelFunction_Ptr kernfunc = 0);
-   void SetOptions(Option_t* option, Double_t rho);
+   void SetOptions(const Option_t* option, Double_t rho);
    void CheckOptions(Bool_t isUserDefinedKernel = kFALSE);
    void GetOptions(std::string optionType, std::string option);
    void AssureOptions();
    void SetData(const Double_t* data);
    void InitFromNewData();
    void SetMirroredEvents();
-
-   TH1D* GetKDEHistogram(UInt_t nbins, Double_t xMin, Double_t xMax, Bool_t reNorm = kFALSE);
+   void SetDrawOptions(const Option_t* option, TString& plotOpt, TString& drawOpt);
+   void DrawErrors(TString& drawOpt);
+   void DrawConfidenceInterval(TString& drawOpt);
 
    TF1* GetKDEFunction(UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
    TF1* GetKDEApproximateBias(UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
    // The density to estimate should be at least twice differentiable.
-   TF1* GetPDFUpperConfidenceInterval(Double_t confidenceLevel, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
-   TF1* GetPDFLowerConfidenceInterval(Double_t confidenceLevel, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
+   TF1* GetPDFUpperConfidenceInterval(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
+   TF1* GetPDFLowerConfidenceInterval(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
 
    ClassDef(TKDE, 1) // One dimensional semi-parametric Kernel Density Estimation
 
