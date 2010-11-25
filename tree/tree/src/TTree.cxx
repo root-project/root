@@ -4881,7 +4881,7 @@ Double_t TTree::GetMaximum(const char* columname)
 //______________________________________________________________________________
 Long64_t TTree::GetMaxTreeSize()
 {
-   // Static function which returns the tree file size limit.
+   // Static function which returns the tree file size limit in bytes.
 
    return fgMaxTreeSize;
 }
@@ -6812,7 +6812,8 @@ void TTree::SetMakeClass(Int_t make)
 //______________________________________________________________________________
 void TTree::SetMaxTreeSize(Long64_t maxsize)
 {
-   // Set the maximum size of a Tree file (static function).
+   // Set the maximum size in bytes of a Tree file (static function).
+   // The default size is 100000000000LL, ie 100 Gigabytes.
    //
    // In TTree::Fill, when the file has a size > fgMaxTreeSize,
    // the function closes the current file and starts writing into
