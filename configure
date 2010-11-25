@@ -137,7 +137,6 @@ enable_gdml=no
 enable_globus=no
 enable_explicitlink=no
 enable_gsl_shared=no
-enable_krb5=no
 enable_qt=no
 enable_qtgsi=no
 enable_roofit=no
@@ -185,6 +184,7 @@ PYTHONDIR        \
 DCACHE           \
 CHIRP            \
 DNSSD            \
+AVAHI            \
 ALIEN            \
 ASIMAGE          \
 LDAP             \
@@ -1310,7 +1310,7 @@ enable/disable options, prefix with either --enable- or --disable-
   alien              AliEn support, requires libgapiUI from ALICE
   asimage            Image processing support, requires libAfterImage
   astiff             Include tiff support in image processing
-  bonjour            Bonjour support, requires libdns_sd
+  bonjour            Bonjour support, requires libdns_sd and/or Avahi
   builtin-afterimage Built included libAfterImage, or use system libAfterImage
   builtin-ftgl       Built included libFTGL, or use system libftgl
   builtin-freetype   Built included libfreetype, or use system libfreetype
@@ -1387,6 +1387,8 @@ with options, prefix with --with-, enables corresponding support
   alien-libdir       AliEn support, location of libapiUI
   alloc-libdir       Alternative memory allocator support, location of allocator lib
   alloc-lib          Alternative memory allocator support, allocator lib
+  avahi-libdir       Bonjour support, location of Avahi libraries
+  avahi-incdir       Bonjour support, location of Avahi headers
   castor-incdir      CASTOR support, location of stager_api.h
   castor-libdir      CASTOR support, location of libshift
   chirp-incdir       Chirp support, location of chirp_client.h
@@ -1689,6 +1691,8 @@ if test $# -gt 0 ; then
       --with-dicttype=*)       dicttype=$optarg      ;;
       --with-dnssd-incdir=*)   dnssdincdir=$optarg   ; enable_bonjour="yes" ;;
       --with-dnssd-libdir=*)   dnssdlibdir=$optarg   ; enable_bonjour="yes" ;;
+      --with-avahi-incdir=*)   avahiincdir=$optarg   ; enable_bonjour="yes" ;;
+      --with-avahi-libdir=*)   avahilibdir=$optarg   ; enable_bonjour="yes" ;;
       --with-ftgl-incdir=*)    ftglincdir=$optarg    ; enable_builtin_ftgl=no;;
       --with-ftgl-libdir=*)    ftgllibdir=$optarg    ; enable_builtin_ftgl=no;;
       --with-fftw3-incdir=*)   fftw3incdir=$optarg   ; enable_fftw3="yes"   ;;
@@ -3543,6 +3547,47 @@ if test ! "x$enable_bonjour" = "xno" ; then
             enable_bonjour="no"
         fi
     fi
+
+    # If we are on Linux, we must check also for the Avahi libraries. 
+    if test ! "x$enable_bonjour" = "xno" && test "x$platform" = "xlinux"; then
+        # The compatibility layer is needed for the Bonjour record management.
+        check_header "avahi-client" "$avahiincdir" $DNSSD $DNSSD/include \
+        /opt/include /usr/include /usr/local/include
+        avahiincdir=$found_dir
+
+        check_header "avahi-common" "$avahiincdir" $DNSSD $DNSSD/include \
+        /opt/include /usr/include /usr/local/include
+        avahiincdir=$found_dir
+
+        check_header "avahi-core" "$avahiincdir" $DNSSD $DNSSD/include \
+        /opt/include /usr/include /usr/local/include
+        avahiincdir=$found_dir
+
+        # Also, the library is needed, as in Mac OS X. When found the compat
+        # layer, also the other libraries must be in the same location.
+        check_library "libavahi-client" "$enable_shared" "$avahilibdir" \
+        $DNSSD $DNSSD/lib /opt/lib /usr/lib /usr/local/lib
+        dnssdlib="$dnssdlib $found_lib"
+        avahilibdir=$found_dir
+
+        check_library "libavahi-common" "$enable_shared" "$avahilibdir" \
+        $DNSSD $DNSSD/lib /opt/lib /usr/lib /usr/local/lib
+        dnssdlib="$dnssdlib $found_lib"
+        avahilibdir=$found_dir
+
+        check_library "libavahi-core" "$enable_shared" "$avahilibdir" \
+        $DNSSD $DNSSD/lib /opt/lib /usr/lib /usr/local/lib
+        dnssdlib="$dnssdlib $found_lib"
+        avahilibdir=$found_dir
+
+        if test "x$dnssdincdir" = "x" || test "x$dnssdlib" = "x"; then
+            enable_bonjour="no"
+        fi
+
+        if test "x$avahiincdir" = "x"; then
+            enable_bonjour="no"
+        fi
+    fi
 fi
 check_explicit "$enable_bonjour" "$enable_bonjour_explicit" \
      "Explicitly required Bonjour dependencies not fulfilled"
@@ -3665,7 +3710,7 @@ if test ! "x$enable_asimage" = "xno" ; then
        for k in $aslibs ; do
            check_library $k "$enable_shared" "" \
              $ASIMAGE $ASIMAGE/lib $ASPNG/lib /usr/local/lib /usr/lib /opt/lib \
-			 $finkdir/lib
+             $finkdir/lib
            if test "x$k" = "xlibz" ; then
                found_libz=$found_lib
                found_dirz=$found_dir
@@ -4077,7 +4122,8 @@ if test "x$enable_xrootd" = "xyes"; then
     buildxrd="yes"
     hasxrd=""
     hasnotxrd="#"
-    echo "Xrootd version $xrdver $vercomm"
+    message "Checking for xrootd version"
+    result "$xrdver $vercomm"
 else
     buildxrd="no"
     hasxrd="#"
@@ -4890,11 +4936,12 @@ if test ! "x$enable_krb5" = "xno" ; then
        #
        # Check if 'krb5heff' is the real one or if it re-directs
        # to <krb5/krb5.h>
+       message "Checking for krb5.h redirect"
        redir=`grep "krb5\/krb5\.h" $krb5heff 2> /dev/null`
        if test ! "x$redir" = "x" ; then
           krb5heff=`dirname $krb5heff`/krb5/krb5.h
        fi
-       echo "Effective krb5.h: $krb5heff"
+       result $krb5heff
 
        #
        # Check for prototypes in krb5.h
@@ -6050,6 +6097,7 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@dnssdincdir@|$dnssdincdir|"          \
     -e "s|@dnssdlib@|$dnssdlib|"                \
     -e "s|@dnssdlibdir@|$dnssdlibdir|"          \
+    -e "s|@avahilibdir@|$avahilibdir|"          \
     -e "s|@mysqlincdir@|$mysqlincdir|"          \
     -e "s|@mysqllib@|$mysqllib|"                \
     -e "s|@mysqllibdir@|$mysqllibdir|"          \

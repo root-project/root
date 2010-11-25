@@ -29,6 +29,7 @@
 #  include "XrdSys/XrdSysPthread.hh"
 #endif
 
+#include "XrdOuc/XrdOucBonjour.hh"
 #include "XrdOuc/XrdOucHash.hh"
 
 #include "XrdProofConn.h"
@@ -67,9 +68,22 @@ private:
 
    int                LocateLocalFile(XrdOucString &file);
 
+   int                DoDirectiveBonjour(char *val, XrdOucStream *cfg, bool);
    int                DoDirectiveAdminReqTO(char *, XrdOucStream *, bool);
    int                DoDirectiveResource(char *, XrdOucStream *, bool);
    int                DoDirectiveWorker(char *, XrdOucStream *, bool);
+
+   bool               fBonjourEnabled;
+   #if defined(BUILD_BONJOUR)
+   int                fBonjourRequestedSrvType; // Register, Discover or Both.
+   XrdOucBonjour     *fBonjourManager; // A reference to the Bonjour manager.
+   XrdOucString       fBonjourServiceType;
+   XrdOucString       fBonjourName;
+   XrdOucString       fBonjourDomain;
+   int                fBonjourCores;
+   int                LoadBonjourModule(int srvtype);
+   static void *      ProcessBonjourUpdate(void * context);
+   #endif
 
 public:
    XrdProofdNetMgr(XrdProofdManager *mgr, XrdProtocol_Config *pi, XrdSysError *e);
@@ -105,6 +119,23 @@ public:
    std::list<XrdProofWorker *> *GetActiveWorkers();
    std::list<XrdProofWorker *> *GetNodes();
 
+   #if defined(BUILD_BONJOUR)
+   // Interface of Bonjour services.
+   int                GetBonjourRequestedServiceType() const { return fBonjourRequestedSrvType; }
+   const char        *GetBonjourServiceType() const { return (fBonjourServiceType.length()) ? fBonjourServiceType.c_str() : "_proof._tcp."; }
+   const char        *GetBonjourName() const { return (fBonjourName.length()) ? fBonjourName.c_str() : NULL; }
+   const char        *GetBonjourDomain() const { return (fBonjourDomain.length()) ? fBonjourDomain.c_str() : NULL; }
+   int                GetBonjourCores() const { return fBonjourCores; }
+   static bool        CheckBonjourRoleCoherence(int role, int bonjourSrvType);
+   #endif
+   void               BalanceNodesOrder();
 };
+
+// Auxiliary structure to store information for the balancer algorithm.
+typedef struct BalancerInfo {
+   unsigned int available;
+   unsigned int per_iteration;
+   unsigned int added;
+} BalancerInfo;
 
 #endif

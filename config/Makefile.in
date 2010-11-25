@@ -166,6 +166,9 @@ BUILDBONJOUR   := @buildbonjour@
 DNSSDLIBDIR    := @dnssdlibdir@
 DNSSDLIB       := @dnssdlib@
 DNSSDINCDIR    := $(filter-out /usr/include, @dnssdincdir@)
+ifeq ($(BUILDBONJOUR), yes)
+BONJOURCPPFLAGS := -DBUILD_BONJOUR
+endif
 
 BUILDCHIRP     := @buildchirp@
 CHIRPLIBDIR    := @chirplibdir@

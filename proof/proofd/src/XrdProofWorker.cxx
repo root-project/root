@@ -35,7 +35,7 @@
 
 //______________________________________________________________________________
 XrdProofWorker::XrdProofWorker(const char *str)
-               : fExport(256), fType('W'), fPort(-1), fPerfIdx(100), fActive(1)
+   : fExport(256), fType('W'), fPort(-1), fPerfIdx(100), fActive(1)
 {
    // Constructor from a config file-like string
 
@@ -101,7 +101,7 @@ void XrdProofWorker::Reset(const char *str)
    char *err;
    char *fullHostName = XrdNetDNS::getHostName((char *)ui.Host.c_str(), &err);
    if (!fullHostName || !strcmp(fullHostName, "0.0.0.0")) {
-      TRACE(XERR, "DNS could not resolve '"<<ui.Host<<"'");
+      TRACE(XERR, "DNS could not resolve '" << ui.Host << "'");
       return;
    }
    fHost = fullHostName;
@@ -113,27 +113,27 @@ void XrdProofWorker::Reset(const char *str)
    while ((from = s.tokenize(tok, from, ' ')) != STR_NPOS) {
       if (tok.beginswith("workdir=")) {
          // Working dir
-         tok.replace("workdir=","");
+         tok.replace("workdir=", "");
          fWorkDir = tok;
       } else if (tok.beginswith("image=")) {
          // Image
-         tok.replace("image=","");
+         tok.replace("image=", "");
          fImage = tok;
       } else if (tok.beginswith("msd=")) {
          // Mass storage domain
-         tok.replace("msd=","");
+         tok.replace("msd=", "");
          fMsd = tok;
       } else if (tok.beginswith("port=")) {
          // Port
-         tok.replace("port=","");
+         tok.replace("port=", "");
          fPort = strtol(tok.c_str(), (char **)0, 10);
       } else if (tok.beginswith("perf=")) {
          // Performance index
-         tok.replace("perf=","");
+         tok.replace("perf=", "");
          fPerfIdx = strtol(tok.c_str(), (char **)0, 10);
-      } else if (!tok.beginswith("repeat=")){
+      } else if (!tok.beginswith("repeat=")) {
          // Unknown
-         TRACE(XERR, "ignoring unknown option '"<<tok<<"'");
+         TRACE(XERR, "ignoring unknown option '" << tok << "'");
       }
    }
 }
@@ -150,6 +150,8 @@ bool XrdProofWorker::Matches(const char *host)
 //______________________________________________________________________________
 bool XrdProofWorker::Matches(XrdProofWorker *wrk)
 {
+   // Set content from a config file-like string
+
    // Check if 'wrk' is on the same node that 'this'; used to find the unique
    // worker nodes.
    // return 1 if the node is the same.
@@ -182,20 +184,23 @@ const char *XrdProofWorker::Export(const char *ord)
    // Add user@host
    fExport += '|' ;
    if (fUser.length() > 0) {
-      fExport += fUser; fExport += "@";
+      fExport += fUser;
+      fExport += "@";
    }
    fExport += fHost;
 
    // Add port
    if (fPort > 0) {
-      fExport += '|' ; fExport += fPort;
+      fExport += '|' ;
+      fExport += fPort;
    } else
       fExport += "|-";
 
    // Ordinal only if passed as argument
    if (ord && strlen(ord) > 0) {
       // Add ordinal
-      fExport += '|' ; fExport += ord;
+      fExport += '|' ;
+      fExport += ord;
    } else {
       // No ordinal at this level
       fExport += "|-";
@@ -204,28 +209,32 @@ const char *XrdProofWorker::Export(const char *ord)
    fExport += "|-";
 
    // Add performance index
-   fExport += '|' ; fExport += fPerfIdx;
+   fExport += '|' ;
+   fExport += fPerfIdx;
 
    // Add image
    if (fImage.length() > 0) {
-      fExport += '|' ; fExport += fImage;
+      fExport += '|' ;
+      fExport += fImage;
    } else
       fExport += "|-";
 
    // Add workdir
    if (fWorkDir.length() > 0) {
-      fExport += '|' ; fExport += fWorkDir;
+      fExport += '|' ;
+      fExport += fWorkDir;
    } else
       fExport += "|-";
 
    // Add mass storage domain
    if (fMsd.length() > 0) {
-      fExport += '|' ; fExport += fMsd;
+      fExport += '|' ;
+      fExport += fMsd;
    } else
       fExport += "|-";
 
    // We are done
-   TRACE(DBG, "sending: "<<fExport);
+   TRACE(DBG, "sending: " << fExport);
    return fExport.c_str();
 }
 
@@ -239,7 +248,7 @@ int XrdProofWorker::GetNActiveSessions()
 
    int myRunning = 0;
    std::list<XrdProofdProofServ *>::iterator iter;
-   XrdSysMutexHelper mhp(fMutex); 
+   XrdSysMutexHelper mhp(fMutex);
    for (iter = fProofServs.begin(); iter != fProofServs.end(); ++iter) {
       if (*iter) {
          if ((*iter)->Status() == kXPD_running)
@@ -247,6 +256,20 @@ int XrdProofWorker::GetNActiveSessions()
       }
    }
    return myRunning;
+}
+
+//______________________________________________________________________________
+void XrdProofWorker::MergeProofServs(const XrdProofWorker &other)
+{
+   // Merge session objects from the other worker object in order to merge all
+   // the objects in only one. This was added to support hybrid satatically and
+   // dinamically Bonjour workers discovery.
+
+   std::list<XrdProofdProofServ *>::const_iterator iter;
+   XrdSysMutexHelper mhp(fMutex);
+   for (iter = other.fProofServs.begin(); iter != other.fProofServs.end(); ++iter) {
+      this->fProofServs.push_back(*iter);
+   }
 }
 
 //______________________________________________________________________________
@@ -271,7 +294,7 @@ void XrdProofWorker::Sort(std::list<XrdProofWorker *> *lst,
    std::list<XrdProofWorker *>::iterator i = lst->begin();
    i++; // skip master
    int n = 0;
-   for ( ; i != lst->end(); ++i)
+   for (; i != lst->end(); ++i)
       ta[n++] = *i;
 
    // Now start the loops

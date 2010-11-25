@@ -72,7 +72,7 @@ void *XrdProofdManagerCron(void *p)
       return (void *)0;
    }
 
-   TRACE(REQ, "started with frequency "<<mgr->CronFrequency()<<" sec");
+   TRACE(REQ, "started with frequency " << mgr->CronFrequency() << " sec");
 
    // Get Midnight time
    int now = time(0);
@@ -80,9 +80,9 @@ void *XrdProofdManagerCron(void *p)
    while (mid < now) {
       mid += 86400;
    }
-   TRACE(REQ, "midnight in  "<<(mid - now)<<" secs");
+   TRACE(REQ, "midnight in  " << (mid - now) << " secs");
 
-   while(1) {
+   while (1) {
       // Do something here
       TRACE(REQ, "running periodical checks");
       // Check the log file ownership
@@ -109,7 +109,7 @@ void *XrdProofdManagerCron(void *p)
 
 //__________________________________________________________________________
 XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
-                : XrdProofdConfig(pi->ConfigFN, edest)
+                 : XrdProofdConfig(pi->ConfigFN, edest)
 {
    // Constructor
 
@@ -130,7 +130,7 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fCronFrequency = 30;
 
    // Data dir
-   fDataDir = "";      // Default <workdir>/<user>/data
+   fDataDir = "";        // Default <workdir>/<user>/data
    fDataDirOpts = "gW";  // Default: user and group can write in it; create directories
                          //          only for workers (or any type)
 
@@ -197,24 +197,24 @@ void XrdProofdManager::CheckLogFileOwnership()
    struct stat st;
    if (fstat(STDERR_FILENO, &st) != 0) {
       if (errno != ENOENT) {
-         TRACE(XERR, "could not stat log file; errno: "<< errno);
+         TRACE(XERR, "could not stat log file; errno: " << errno);
          return;
       }
    }
 
-   TRACE(HDBG,"uid: "<<st.st_uid<<", gid: "<<st.st_gid);
+   TRACE(HDBG, "uid: " << st.st_uid << ", gid: " << st.st_gid);
 
    // Get original effective user identity
    struct passwd *epwd = getpwuid(XrdProofdProtocol::EUidAtStartup());
    if (!epwd) {
-      TRACE(XERR, "could not get effective user identity; errno: "<< errno);
+      TRACE(XERR, "could not get effective user identity; errno: " << errno);
       return;
    }
- 
+
    // Set ownership of the log file to the effective user
    if (st.st_uid != epwd->pw_uid || st.st_gid != epwd->pw_gid) {
       if (fchown(STDERR_FILENO, epwd->pw_uid, epwd->pw_gid) != 0) {
-         TRACE(XERR, "could not set stderr ownership; errno: "<< errno);
+         TRACE(XERR, "could not set stderr ownership; errno: " << errno);
          return;
       }
    }
@@ -244,7 +244,7 @@ bool XrdProofdManager::CheckMaster(const char *m)
 
 //_____________________________________________________________________________
 int XrdProofdManager::CheckUser(const char *usr,
-                                 XrdProofUI &ui, XrdOucString &e, bool &su)
+                                XrdProofUI &ui, XrdOucString &e, bool &su)
 {
    // Check if the user is allowed to use the system
    // Return 0 if OK, -1 if not.
@@ -430,7 +430,7 @@ XrdProofSched *XrdProofdManager::LoadScheduler()
    }
    // Check result
    if (!(sched->IsValid())) {
-      TRACE(XERR, " unable to instantiate the "<<sched->Name()<<" scheduler using "<< cfn);
+      TRACE(XERR, " unable to instantiate the " << sched->Name() << " scheduler using " << cfn);
       delete sched;
       return (XrdProofSched *)0;
    }
@@ -475,7 +475,7 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
       for (iw = wrks.begin(); iw != wrks.end() ; iw++) {
          XrdProofWorker *w = *iw;
          // Count (fActive is increased inside here)
-         if (ii == -1) 
+         if (ii == -1)
             ord = "master";
          else
             XPDFORM(ord, "%d", ii);
@@ -547,7 +547,7 @@ int XrdProofdManager::Config(bool rcf)
    fChangeOwn = (fMultiUser && getuid()) ? 0 : 1;
 
    // Notify port
-   XPDFORM(msg, "listening on port %d",fPort);
+   XPDFORM(msg, "listening on port %d", fPort);
    TRACE(ALL, msg);
 
    XrdProofUI ui;
@@ -568,19 +568,19 @@ int XrdProofdManager::Config(bool rcf)
       SafeFree(host);
 
       // Notify temporary directory
-      TRACE(ALL, "using temp dir: "<<fTMPdir);
+      TRACE(ALL, "using temp dir: " << fTMPdir);
 
       // Notify role
       const char *roles[] = { "any", "worker", "submaster", "master" };
-      TRACE(ALL, "role set to: "<<roles[fSrvType+1]);
+      TRACE(ALL, "role set to: " << roles[fSrvType+1]);
 
       // Admin path
       fAdminPath += fPort;
       if (XrdProofdAux::AssertDir(fAdminPath.c_str(), ui, fChangeOwn) != 0) {
-         XPDERR("unable to assert the admin path: "<<fAdminPath);
+         XPDERR("unable to assert the admin path: " << fAdminPath);
          return -1;
       }
-      TRACE(ALL, "admin path set to: "<<fAdminPath);
+      TRACE(ALL, "admin path set to: " << fAdminPath);
 
       // Path for Unix sockets
       if (fSockPathDir.length() <= 0) {
@@ -588,10 +588,10 @@ int XrdProofdManager::Config(bool rcf)
          XPDFORM(fSockPathDir, "%s/socks", fAdminPath.c_str());
       }
       if (XrdProofdAux::AssertDir(fSockPathDir.c_str(), ui, fChangeOwn) != 0) {
-         XPDERR("unable to assert the admin path: "<<fSockPathDir);
+         XPDERR("unable to assert the admin path: " << fSockPathDir);
          return -1;
       }
-      TRACE(ALL, "unix sockets under: "<<fSockPathDir);
+      TRACE(ALL, "unix sockets under: " << fSockPathDir);
 
       // Create / Update the process ID file under the admin path
       XrdOucString pidfile(fAdminPath);
@@ -615,10 +615,10 @@ int XrdProofdManager::Config(bool rcf)
    if (fWorkDir.length() > 0) {
       // Make sure it exists
       if (XrdProofdAux::AssertDir(fWorkDir.c_str(), ui, fChangeOwn) != 0) {
-         XPDERR("unable to assert working dir: "<<fWorkDir);
+         XPDERR("unable to assert working dir: " << fWorkDir);
          return -1;
       }
-      TRACE(ALL, "working directories under: "<<fWorkDir);
+      TRACE(ALL, "working directories under: " << fWorkDir);
       // Communicate it to the sandbox service
       XrdProofdSandbox::SetWorkdir(fWorkDir.c_str());
    }
@@ -627,20 +627,20 @@ int XrdProofdManager::Config(bool rcf)
    if (fDataDir.length() > 0) {
       // Make sure it exists
       if (XrdProofdAux::AssertDir(fDataDir.c_str(), ui, fChangeOwn) != 0) {
-         XPDERR("unable to assert data dir: "<<fDataDir);
+         XPDERR("unable to assert data dir: " << fDataDir);
          return -1;
       }
       // Get the right privileges now
       XrdSysPrivGuard pGuard((uid_t)ui.fUid, (gid_t)ui.fGid);
       if (XpdBadPGuard(pGuard, ui.fUid)) {
-         TRACE(XERR, "could not get privileges to set/change ownership of "<<fDataDir);
+         TRACE(XERR, "could not get privileges to set/change ownership of " << fDataDir);
          return -1;
       }
       if (chmod(fDataDir.c_str(), 0777) != 0) {
-         XPDERR("problems setting permissions 0777 data dir: "<<fDataDir);
+         XPDERR("problems setting permissions 0777 data dir: " << fDataDir);
          return -1;
       }
-      TRACE(ALL, "data directories under: "<<fDataDir);
+      TRACE(ALL, "data directories under: " << fDataDir);
    }
 
    // Notify allow rules
@@ -648,9 +648,9 @@ int XrdProofdManager::Config(bool rcf)
       if (fMastersAllowed.size() > 0) {
          std::list<XrdOucString *>::iterator i;
          for (i = fMastersAllowed.begin(); i != fMastersAllowed.end(); ++i)
-            TRACE(ALL, "masters allowed to connect: "<<(*i)->c_str());
+            TRACE(ALL, "masters allowed to connect: " << (*i)->c_str());
       } else {
-            TRACE(ALL, "masters allowed to connect: any");
+         TRACE(ALL, "masters allowed to connect: any");
       }
    }
 
@@ -660,8 +660,8 @@ int XrdProofdManager::Config(bool rcf)
       fPoolURL = "root://";
       fPoolURL += fHost;
    }
-   TRACE(ALL, "PROOF pool: "<<fPoolURL);
-   TRACE(ALL, "PROOF pool namespace: "<<fNamespace);
+   TRACE(ALL, "PROOF pool: " << fPoolURL);
+   TRACE(ALL, "PROOF pool namespace: " << fNamespace);
 
    // Initialize resource broker (if not worker)
    if (fSrvType != kXPD_Worker) {
@@ -672,7 +672,7 @@ int XrdProofdManager::Config(bool rcf)
          return 0;
       }
       const char *st[] = { "disabled", "enabled" };
-      TRACE(ALL, "user config files are "<<st[fNetMgr->WorkerUsrCfg()]);
+      TRACE(ALL, "user config files are " << st[fNetMgr->WorkerUsrCfg()]);
    }
 
    // Validate dataset sources (if not worker)
@@ -680,9 +680,9 @@ int XrdProofdManager::Config(bool rcf)
       // If first local, add it in front
       std::list<XrdProofdDSInfo *>::iterator ii = fDataSetSrcs.begin();
       bool goodsrc = 0;
-      for (ii = fDataSetSrcs.begin(); ii != fDataSetSrcs.end(); ) {
+      for (ii = fDataSetSrcs.begin(); ii != fDataSetSrcs.end();) {
          if (!(goodsrc = ValidateLocalDataSetSrc((*ii)->fUrl, (*ii)->fLocal))) {
-            XPDERR("source "<<(*ii)->fUrl<<" could not be validated");
+            XPDERR("source " << (*ii)->fUrl << " could not be validated");
             ii = fDataSetSrcs.erase(ii);
          } else {
             // Check next
@@ -692,7 +692,7 @@ int XrdProofdManager::Config(bool rcf)
       if (fDataSetSrcs.size() > 0) {
          TRACE(ALL, fDataSetSrcs.size() << " dataset sources defined");
          for (ii = fDataSetSrcs.begin(); ii != fDataSetSrcs.end(); ii++) {
-            TRACE(ALL, " url:"<<(*ii)->fUrl<<", local:"<<(*ii)->fLocal<<", rw:"<<(*ii)->fRW);
+            TRACE(ALL, " url:" << (*ii)->fUrl << ", local:" << (*ii)->fLocal << ", rw:" << (*ii)->fRW);
          }
       } else {
          TRACE(ALL, "no dataset sources defined");
@@ -705,12 +705,12 @@ int XrdProofdManager::Config(bool rcf)
    XrdProofUI sui;
    if (XrdProofdAux::GetUserInfo(XrdProofdProtocol::EUidAtStartup(), sui) == 0) {
       if (fSuperUsers.find(sui.fUser.c_str()) == STR_NPOS) {
-        if (fSuperUsers.length() > 0) fSuperUsers += ",";
+         if (fSuperUsers.length() > 0) fSuperUsers += ",";
          fSuperUsers += sui.fUser;
       }
    } else {
       XPDFORM(msg, "could not resolve effective uid %d (errno: %d)",
-                   XrdProofdProtocol::EUidAtStartup(), errno);
+              XrdProofdProtocol::EUidAtStartup(), errno);
       XPDERR(msg);
    }
    XPDFORM(msg, "list of superusers: %s", fSuperUsers.c_str());
@@ -770,7 +770,7 @@ int XrdProofdManager::Config(bool rcf)
             }
          }
       }
-      TRACE(ALL, "bare lib path for proofserv: "<<fBareLibPath);
+      TRACE(ALL, "bare lib path for proofserv: " << fBareLibPath);
    }
 
    // Groups
@@ -830,7 +830,7 @@ int XrdProofdManager::Config(bool rcf)
       // Start cron thread
       pthread_t tid;
       if (XrdSysThread::Run(&tid, XrdProofdManagerCron,
-                           (void *)this, 0, "ProofdManager cron thread") != 0) {
+                            (void *)this, 0, "ProofdManager cron thread") != 0) {
          XPDERR("could not start cron thread");
          return 0;
       }
@@ -849,12 +849,12 @@ bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
    // Return 1 if OK, 0 if any problem arises
    XPDLOC(ALL, "Manager::ValidateLocalDataSetSrc")
 
-   TRACE(ALL,"validating '"<<url<<"' ...");
+   TRACE(ALL, "validating '" << url << "' ...");
    local = 0;
    bool goodsrc = 1;
    if (url.length() > 0) {
       // Check if local source
-      if (url.beginswith("file:")) url.replace("file:","");
+      if (url.beginswith("file:")) url.replace("file:", "");
       if (url.beginswith("/")) {
          local = 1;
          goodsrc = 0;
@@ -864,10 +864,10 @@ bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
          if (XrdProofdAux::AssertDir(url.c_str(), ui, ChangeOwn()) == 0) {
             goodsrc = 1;
             if (XrdProofdAux::ChangeMod(url.c_str(), 0777) != 0) {
-               TRACE(XERR,"Problems setting permissions 0777 on path '"<<url<<"'");
+               TRACE(XERR, "Problems setting permissions 0777 on path '" << url << "'");
             }
          } else {
-            TRACE(XERR,"Cannot assert path '"<<url<<"' - ignoring");   
+            TRACE(XERR, "Cannot assert path '" << url << "' - ignoring");
          }
          if (goodsrc) {
             // Assert the file with dataset summaries
@@ -876,19 +876,19 @@ bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
             if (access(fnpath.c_str(), F_OK) != 0) {
                FILE *flst = fopen(fnpath.c_str(), "w");
                if (!flst) {
-                  TRACE(XERR,"Cannot open file '"<<fnpath<<"' for the dataset list; errno: "<<errno);
+                  TRACE(XERR, "Cannot open file '" << fnpath << "' for the dataset list; errno: " << errno);
                   goodsrc = 0;
                } else {
                   if (fclose(flst) != 0)
-                     TRACE(XERR,"Problems closing file '"<<fnpath<<"'; errno: "<< errno);   
+                     TRACE(XERR, "Problems closing file '" << fnpath << "'; errno: " << errno);
                   if (XrdProofdAux::ChangeOwn(fnpath.c_str(), ui) != 0) {
-                     TRACE(XERR, "Problems asserting ownership of "<<fnpath);
+                     TRACE(XERR, "Problems asserting ownership of " << fnpath);
                   }
                }
             }
             // Make sure that everybody can modify the file for updates
             if (goodsrc && XrdProofdAux::ChangeMod(fnpath.c_str(), 0666) != 0) {
-               TRACE(XERR,"Problems setting permissions to 0666 on file '"<<fnpath<<"'; errno: "<< errno);
+               TRACE(XERR, "Problems setting permissions to 0666 on file '" << fnpath << "'; errno: " << errno);
                goodsrc = 0;
             }
             // Assert the file with lock file path
@@ -897,25 +897,25 @@ bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
                if (access(fnpath.c_str(), F_OK) != 0) {
                   FILE *flck = fopen(fnpath.c_str(), "w");
                   if (!flck) {
-                     TRACE(XERR,"Cannot open file '"<<fnpath<<"' with the lock file path; errno: "<<errno);   
+                     TRACE(XERR, "Cannot open file '" << fnpath << "' with the lock file path; errno: " << errno);
                   } else {
                      // Write the default lock file path
                      XrdOucString fnlock(url);
-                     fnlock.replace("/","%");
-                     fnlock.replace(":","%");
+                     fnlock.replace("/", "%");
+                     fnlock.replace(":", "%");
                      fnlock.insert("/tmp/", 0);
                      fprintf(flck, "%s\n", fnlock.c_str());
                      if (fclose(flck) != 0)
-                        TRACE(XERR,"Problems closing file '"<<fnpath<<"'; errno: "<< errno);   
+                        TRACE(XERR, "Problems closing file '" << fnpath << "'; errno: " << errno);
                      if (XrdProofdAux::ChangeOwn(fnpath.c_str(), ui) != 0) {
-                        TRACE(XERR, "Problems asserting ownership of "<<fnpath);
+                        TRACE(XERR, "Problems asserting ownership of " << fnpath);
                      }
                   }
                }
             }
             // Make sure that everybody can modify the file for updates
             if (goodsrc && XrdProofdAux::ChangeMod(fnpath.c_str(), 0644) != 0) {
-               TRACE(XERR,"Problems setting permissions to 0644 on file '"<<fnpath<<"'; errno: "<< errno);
+               TRACE(XERR, "Problems setting permissions to 0644 on file '" << fnpath << "'; errno: " << errno);
             }
          }
       }
@@ -969,19 +969,19 @@ int XrdProofdManager::ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl)
 
    int nk = 0;
 
-   TRACE(HDBG,"enter: "<<s<<" - WorkDir(): "<<WorkDir());
+   TRACE(HDBG, "enter: " << s << " - WorkDir(): " << WorkDir());
 
    // Parse <workdir>
    if (s.replace("<workdir>", WorkDir()))
       nk++;
 
-   TRACE(HDBG,"after <workdir>: "<<s);
+   TRACE(HDBG, "after <workdir>: " << s);
 
    // Parse <host>
    if (s.replace("<host>", Host()))
       nk++;
 
-   TRACE(HDBG,"after <host>: "<<s);
+   TRACE(HDBG, "after <host>: " << s);
 
    // Parse <user>
    if (pcl)
@@ -1000,19 +1000,21 @@ int XrdProofdManager::ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl)
 
    // Parse <uid>
    if (pcl && (s.find("<uid>") != STR_NPOS)) {
-      XrdOucString suid; suid += pcl->UI().fUid;
+      XrdOucString suid;
+      suid += pcl->UI().fUid;
       if (s.replace("<uid>", suid.c_str()))
          nk++;
    }
 
    // Parse <gid>
    if (pcl && (s.find("<gid>") != STR_NPOS)) {
-      XrdOucString sgid; sgid += pcl->UI().fGid;
+      XrdOucString sgid;
+      sgid += pcl->UI().fGid;
       if (s.replace("<gid>", sgid.c_str()))
          nk++;
    }
 
-   TRACE(HDBG,"exit: "<<s);
+   TRACE(HDBG, "exit: " << s);
 
    // We are done
    return nk;
@@ -1057,7 +1059,7 @@ int XrdProofdManager::DoDirective(XrdProofdDirective *d,
    } else if (d->fName == "xrd.protocol") {
       return DoDirectivePort(val, cfg, rcf);
    }
-   TRACE(XERR, "unknown directive: "<<d->fName);
+   TRACE(XERR, "unknown directive: " << d->fName);
    return -1;
 }
 
@@ -1068,8 +1070,8 @@ int XrdProofdManager::DoDirectiveTrace(char *val, XrdOucStream *cfg, bool)
    XPDLOC(ALL, "Manager::DoDirectiveTrace")
 
    if (!val || !cfg)
-   // undefined inputs
-   return -1;
+      // undefined inputs
+      return -1;
 
    // Specifies tracing options. This works by levels and domains.
    //
@@ -1108,46 +1110,46 @@ int XrdProofdManager::DoDirectiveTrace(char *val, XrdOucStream *cfg, bool)
          on = 0;
          val++;
       }
-      if (!strcmp(val,"err")) {
+      if (!strcmp(val, "err")) {
          TRACESET(XERR, on);
-      } else if (!strcmp(val,"req")) {
+      } else if (!strcmp(val, "req")) {
          TRACESET(REQ, on);
-      } else if (!strcmp(val,"dbg")) {
+      } else if (!strcmp(val, "dbg")) {
          TRACESET(DBG, on);
          TRACESET(LOGIN, on);
          TRACESET(FORK, on);
          TRACESET(MEM, on);
-      } else if (!strcmp(val,"login")) {
+      } else if (!strcmp(val, "login")) {
          TRACESET(LOGIN, on);
-      } else if (!strcmp(val,"fork")) {
+      } else if (!strcmp(val, "fork")) {
          TRACESET(FORK, on);
-      } else if (!strcmp(val,"mem")) {
+      } else if (!strcmp(val, "mem")) {
          TRACESET(MEM, on);
-      } else if (!strcmp(val,"hdbg")) {
+      } else if (!strcmp(val, "hdbg")) {
          TRACESET(HDBG, on);
          TRACESET(DBG, on);
          TRACESET(LOGIN, on);
          TRACESET(FORK, on);
          TRACESET(MEM, on);
-      } else if (!strcmp(val,"rsp")) {
+      } else if (!strcmp(val, "rsp")) {
          TRACESET(RSP, on);
-      } else if (!strcmp(val,"aux")) {
+      } else if (!strcmp(val, "aux")) {
          TRACESET(AUX, on);
-      } else if (!strcmp(val,"cmgr")) {
+      } else if (!strcmp(val, "cmgr")) {
          TRACESET(CMGR, on);
-      } else if (!strcmp(val,"smgr")) {
+      } else if (!strcmp(val, "smgr")) {
          TRACESET(SMGR, on);
-      } else if (!strcmp(val,"nmgr")) {
+      } else if (!strcmp(val, "nmgr")) {
          TRACESET(NMGR, on);
-      } else if (!strcmp(val,"pmgr")) {
+      } else if (!strcmp(val, "pmgr")) {
          TRACESET(PMGR, on);
-      } else if (!strcmp(val,"gmgr")) {
+      } else if (!strcmp(val, "gmgr")) {
          TRACESET(GMGR, on);
-      } else if (!strcmp(val,"sched")) {
+      } else if (!strcmp(val, "sched")) {
          TRACESET(SCHED, on);
-      } else if (!strcmp(val,"all") || !strcmp(val,"dump")) {
+      } else if (!strcmp(val, "all") || !strcmp(val, "dump")) {
          // Everything
-         TRACE(ALL, "Setting trace: "<<on);
+         TRACE(ALL, "Setting trace: " << on);
          XrdProofdTrace->What = (on) ? TRACE_ALL : 0;
       }
 
@@ -1258,7 +1260,7 @@ int XrdProofdManager::DoDirectiveAllowedGroups(char *val, XrdOucStream *cfg, boo
          // Group name is known to the system: add it to the list
          fAllowedGroups.Add(grp.c_str(), new int(st));
       } else {
-         TRACE(XERR, "problems getting info for group: '"<< grp<<"' - errno: "<<-rc);
+         TRACE(XERR, "problems getting info for group: '" << grp << "' - errno: " << -rc);
       }
    }
 
@@ -1300,7 +1302,7 @@ int XrdProofdManager::DoDirectiveAllowedUsers(char *val, XrdOucStream *cfg, bool
          // Username is known to the system: add it to the list
          fAllowedUsers.Add(usr.c_str(), new int(st));
       } else {
-         TRACE(XERR, "problems getting info for user: '"<< usr<<"' - errno: "<<-rc);
+         TRACE(XERR, "problems getting info for user: '" << usr << "' - errno: " << -rc);
       }
    }
 
@@ -1311,7 +1313,8 @@ int XrdProofdManager::DoDirectiveAllowedUsers(char *val, XrdOucStream *cfg, bool
 //______________________________________________________________________________
 int XrdProofdManager::DoDirectiveRole(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'allowedusers' directive
+   // Process 'role' directive
+   XPDLOC(ALL, "Manager::DoDirectiveRole")
 
    if (!val)
       // undefined inputs
@@ -1337,6 +1340,13 @@ int XrdProofdManager::DoDirectiveRole(char *val, XrdOucStream *cfg, bool)
       fSrvType = kXPD_AnyServer;
    }
 
+   #if defined(BUILD_BONJOUR)
+   // Check the compatibility of the roles and give a warning to the user.
+   if (!XrdProofdNetMgr::CheckBonjourRoleCoherence(SrvType(), fNetMgr->GetBonjourRequestedServiceType())) {
+      TRACE(XERR, "Warning: xpd.role directive and xpd.bonjour service selection are not compatible");
+   }
+	#endif
+
    return 0;
 }
 
@@ -1351,7 +1361,7 @@ int XrdProofdManager::DoDirectivePort(char *val, XrdOucStream *, bool)
 
    XrdOucString port(val);
    if (port.beginswith("xproofd:")) {
-      port.replace("xproofd:","");
+      port.replace("xproofd:", "");
    }
    if (port.length() > 0 && port.isdigit()) {
       fPort = strtol(port.c_str(), 0, 10);
@@ -1376,7 +1386,7 @@ int XrdProofdManager::DoDirectiveMultiUser(char *val, XrdOucStream *cfg, bool)
          return 0;
 
    // Multi-user option
-   int mu = strtol(val,0,10);
+   int mu = strtol(val, 0, 10);
    fMultiUser = (mu == 1) ? 1 : fMultiUser;
    return 0;
 }
@@ -1398,9 +1408,9 @@ int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
       if (!strcmp(nxt, "rw=1") || !strcmp(nxt, "rw:1")) {
          rw = 1;
       } else if (!strncmp(nxt, "url:", 4)) {
-         url = nxt+4;
+         url = nxt + 4;
       } else if (!strncmp(nxt, "opt:", 4)) {
-         opts = nxt+4;
+         opts = nxt + 4;
       }
    }
 
@@ -1415,7 +1425,7 @@ int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
             break;
          }
       }
-      // Default options      
+      // Default options
       if (opts.length() <= 0) {
          opts = rw ? "Ar:Av:" : "-Ar:-Av:";
       }
@@ -1460,29 +1470,29 @@ int XrdProofdManager::Process(XrdProofdProtocol *p)
    XPD_SETRESP(p, "Process");
 
    TRACEP(p, REQ, "req id: " << p->Request()->header.requestid << " (" <<
-             XrdProofdAux::ProofRequestTypes(p->Request()->header.requestid) << ")");
+          XrdProofdAux::ProofRequestTypes(p->Request()->header.requestid) << ")");
 
    // If the user is not yet logged in, restrict what the user can do
    if (!p->Status() || !(p->Status() & XPD_LOGGEDIN)) {
-      switch(p->Request()->header.requestid) {
-      case kXP_auth:
-         return fClientMgr->Auth(p);
-      case kXP_login:
-         return fClientMgr->Login(p);
-      default:
-         TRACEP(p, XERR, "invalid request: " <<p->Request()->header.requestid);
-         response->Send(kXR_InvalidRequest,"Invalid request; user not logged in");
-         return p->Link()->setEtext("protocol sequence error 1");
+      switch (p->Request()->header.requestid) {
+         case kXP_auth:
+            return fClientMgr->Auth(p);
+         case kXP_login:
+            return fClientMgr->Login(p);
+         default:
+            TRACEP(p, XERR, "invalid request: " << p->Request()->header.requestid);
+            response->Send(kXR_InvalidRequest, "Invalid request; user not logged in");
+            return p->Link()->setEtext("protocol sequence error 1");
       }
    }
 
    // Once logged-in, the user can request the real actions
    XrdOucString emsg;
-   switch(p->Request()->header.requestid) {
-      case kXP_admin:
-         {  int type = ntohl(p->Request()->proof.int1);
-            return fAdmin->Process(p, type);
-         }
+   switch (p->Request()->header.requestid) {
+      case kXP_admin: {
+         int type = ntohl(p->Request()->proof.int1);
+         return fAdmin->Process(p, type);
+      }
       case kXP_readbuf:
          return fNetMgr->ReadBuffer(p);
       case kXP_create:

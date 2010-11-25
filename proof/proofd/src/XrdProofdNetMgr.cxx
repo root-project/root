@@ -12,7 +12,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// XrdProofdNetMgr                                                     //
+// XrdProofdNetMgr                                                      //
 //                                                                      //
 // Authors: G. Ganis, CERN, 2008                                        //
 //                                                                      //
@@ -40,6 +40,10 @@
 // Tracing utilities
 #include "XrdProofdTrace.h"
 
+#include <algorithm>
+#include <limits>
+#include <math.h>
+
 //______________________________________________________________________________
 int MessageSender(const char *msg, int len, void *arg)
 {
@@ -55,10 +59,9 @@ int MessageSender(const char *msg, int len, void *arg)
 //______________________________________________________________________________
 XrdProofdNetMgr::XrdProofdNetMgr(XrdProofdManager *mgr,
                                  XrdProtocol_Config *pi, XrdSysError *e)
-                : XrdProofdConfig(pi->ConfigFN, e)
+   : XrdProofdConfig(pi->ConfigFN, e)
 {
    // Constructor
-
    fMgr = mgr;
    fResourceType = kRTNone;
    fPROOFcfg.fName = "";
@@ -72,6 +75,14 @@ XrdProofdNetMgr::XrdProofdNetMgr(XrdProofdManager *mgr,
    fNumLocalWrks = XrdProofdAux::GetNumCPUs();
    fWorkerUsrCfg = 0;
    fRequestTO = 30;
+   fBonjourEnabled = false;
+   #if defined(BUILD_BONJOUR)
+   char *host = XrdNetDNS::getHostName();
+   fBonjourName = host ? host : "";
+   SafeFree(host);
+   fBonjourCores = XrdProofdAux::GetNumCPUs();
+   fBonjourRequestedSrvType = kBonjourSrvDisabled;
+   #endif
 
    // Configuration directives
    RegisterDirectives();
@@ -85,6 +96,7 @@ void XrdProofdNetMgr::RegisterDirectives()
    Register("adminreqto", new XrdProofdDirective("adminreqto", this, &DoDirectiveClass));
    Register("resource", new XrdProofdDirective("resource", this, &DoDirectiveClass));
    Register("worker", new XrdProofdDirective("worker", this, &DoDirectiveClass));
+   Register("bonjour", new XrdProofdDirective("bonjour", this, &DoDirectiveClass));
    Register("localwrks", new XrdProofdDirective("localwrks", (void *)&fNumLocalWrks, &DoDirectiveInt));
 }
 
@@ -115,6 +127,9 @@ int XrdProofdNetMgr::Config(bool rcf)
    // Return 0 on success, -1 on error
    XPDLOC(NMGR, "NetMgr::Config")
 
+   // Lock the method to protect the lists.
+   XrdSysMutexHelper mhp(fMutex);
+
    // Cleanup the worker list
    std::list<XrdProofWorker *>::iterator w = fWorkers.begin();
    while (w != fWorkers.end()) {
@@ -122,8 +137,10 @@ int XrdProofdNetMgr::Config(bool rcf)
       w = fWorkers.erase(w);
    }
    // Create a default master line
-   XrdOucString mm("master ",128);
+   XrdOucString mm("master ", 128);
    mm += fMgr->Host();
+   mm += " port=";
+   mm += fMgr->Port();
    fWorkers.push_back(new XrdProofWorker(mm.c_str()));
 
    // Run first the configurator
@@ -137,7 +154,7 @@ int XrdProofdNetMgr::Config(bool rcf)
    TRACE(ALL, msg);
 
    if (fMgr->SrvType() != kXPD_Worker || fMgr->SrvType() == kXPD_AnyServer) {
-      TRACE(ALL, "PROOF config file: " << 
+      TRACE(ALL, "PROOF config file: " <<
             ((fPROOFcfg.fName.length() > 0) ? fPROOFcfg.fName.c_str() : "none"));
       if (fResourceType == kRTStatic) {
          // Initialize the list of workers if a static config has been required
@@ -147,16 +164,16 @@ int XrdProofdNetMgr::Config(bool rcf)
             // Load file content in memory
             if (ReadPROOFcfg() == 0) {
                TRACE(ALL, "PROOF config file will " <<
-                          ((fReloadPROOFcfg) ? "" : "not ") <<"be reloaded upon change");
+                     ((fReloadPROOFcfg) ? "" : "not ") << "be reloaded upon change");
                dodefault = 0;
             } else {
                if (!fDfltFallback) {
-                  XPDERR("unable to find valid information in PROOF config file "<<
-                        fPROOFcfg.fName);
+                  XPDERR("unable to find valid information in PROOF config file " <<
+                         fPROOFcfg.fName);
                   fPROOFcfg.fMtime = -1;
                   return 0;
                } else {
-                  TRACE(ALL, "file "<<fPROOFcfg.fName<<" cannot be parsed: use default configuration to start with");
+                  TRACE(ALL, "file " << fPROOFcfg.fName << " cannot be parsed: use default configuration to start with");
                }
             }
          }
@@ -164,7 +181,7 @@ int XrdProofdNetMgr::Config(bool rcf)
             // Use default
             CreateDefaultPROOFcfg();
          }
-      } else if (fResourceType == kRTNone && fWorkers.size() <= 1) {
+      } else if (fResourceType == kRTNone && fWorkers.size() <= 1 && !fBonjourEnabled) {
          // Nothing defined: use default
          CreateDefaultPROOFcfg();
       }
@@ -188,7 +205,7 @@ int XrdProofdNetMgr::Config(bool rcf)
 
 //______________________________________________________________________________
 int XrdProofdNetMgr::DoDirective(XrdProofdDirective *d,
-                                       char *val, XrdOucStream *cfg, bool rcf)
+                                 char *val, XrdOucStream *cfg, bool rcf)
 {
    // Update the priorities of the active sessions.
    XPDLOC(NMGR, "NetMgr::DoDirective")
@@ -203,10 +220,436 @@ int XrdProofdNetMgr::DoDirective(XrdProofdDirective *d,
       return DoDirectiveAdminReqTO(val, cfg, rcf);
    } else if (d->fName == "worker") {
       return DoDirectiveWorker(val, cfg, rcf);
+   } else if (d->fName == "bonjour") {
+      return DoDirectiveBonjour(val, cfg, rcf);
    }
-   TRACE(XERR,"unknown directive: "<<d->fName);
+
+   TRACE(XERR, "unknown directive: " << d->fName);
+
    return -1;
 }
+
+//______________________________________________________________________________
+int XrdProofdNetMgr::DoDirectiveBonjour(char *val, XrdOucStream *cfg, bool)
+{
+   XPDLOC(NMGR, "NetMgr::DoDirectiveBonjour");
+
+   // Process 'bonjour' directive
+   TRACE(DBG, "processing Bonjour directive");
+
+   if (!val || !cfg)
+      // undefined inputs
+      return -1;
+
+#if defined(BUILD_BONJOUR)
+   const char * cp = NULL;
+
+   // The first directive must be the 'bonjour role'.
+   if (!strcmp("register", val) || !strcmp("publish", val)) {
+      // register and publish are synonyms.
+      fBonjourRequestedSrvType = kBonjourSrvRegister;
+   } else if (!strcmp("discover", val) || !strcmp("browse", val)) {
+      fBonjourRequestedSrvType = kBonjourSrvBrowse;
+   } else if (!strcmp("both", val) || !strcmp("all", val)) {
+      fBonjourRequestedSrvType = kBonjourSrvBoth;
+   } else {
+      TRACE(XERR, "Bonjour directive unknown");
+      return -1;
+   }
+
+   // Continue reading words until the end of the logical line. This a descending
+   // recursive parser (LR). Doing this in that way allows users to use a custom
+   // order of directives and improves xrootd's if/else/fi compatibility.
+   while ((val = cfg->GetWord()) != NULL) {
+      // Construct an XrdString for a more confortable analysis.
+      XrdOucString s(val);
+      // If we have line, parse the directive according to the personal rules of
+      // each one. Note that this method allows. It would be more elegant with
+      // switch statment, but we need to check only the beginning of the words.
+      if (s.beginswith("servicetype=")) {
+         cp = index(val, '=');
+         cp++;
+         fBonjourServiceType.assign(cp, 0);
+         TRACE(DBG, "custom service type is " << cp);
+      } else if (s.beginswith("name=")) {
+         cp = index(val, '=');
+         cp++;
+         fBonjourName.assign(cp, 0);
+         TRACE(DBG, "custom Bonjour name is " << cp);
+      } else if (s.beginswith("domain=")) {
+         cp = index(val, '=');
+         cp++;
+         fBonjourDomain.assign(cp, 0);
+         TRACE(DBG, "custom Bonjour domain is " << cp);
+      } else if (s.beginswith("cores=")) {
+         cp = index(val, '=');
+         cp++;
+         fBonjourCores = strtol(cp, NULL, 10); // atoi() is not thread-safe.
+         if (fBonjourCores <= 0) {
+            TRACE(XERR, "number of cores not valid: " << fBonjourCores);
+            TRACE(XERR, "Bonjour module not loaded!");
+            return -1;
+         }
+         TRACE(DBG, "custom number of cores is " << cp);
+      } else {
+         TRACE(XERR, "Bonjour directive unknown");
+         cfg->RetToken();
+         return -1;
+      }
+   }
+   TRACE(DBG, "custom Bonjour name is '" << fBonjourName <<"'");
+
+   // Check the compatibility of the roles and give a warning to the user.
+   if (!XrdProofdNetMgr::CheckBonjourRoleCoherence(fMgr->SrvType(), GetBonjourRequestedServiceType())) {
+      TRACE(XERR, "Warning: xpd.role directive and xpd.bonjour service selection are not compatible");
+   }
+
+   // Register the service on bonjour.
+   return LoadBonjourModule(fBonjourRequestedSrvType);
+
+#else
+
+   TRACE(XERR, "Bonjour support is disabled");
+   return -1;
+
+#endif
+}
+
+//______________________________________________________________________________
+void XrdProofdNetMgr::BalanceNodesOrder()
+{
+   // Indices (this will be used twice).
+   list<XrdProofWorker *>::const_iterator iter, iter2;
+   list<XrdProofWorker *>::iterator iter3; // Not const, less efficient.
+   // Map to store information of the balancer.
+   map<XrdProofWorker *, BalancerInfo> info;
+   // Node with minimum number of workers distinct to 1.
+   unsigned int min = UINT_MAX;
+   // Total number of nodes and per iteration assignments.
+   unsigned int total = 0, total_perit = 0;
+   // Number of iterations to get every node filled.
+   unsigned int total_added = 0;
+   // Temporary list to store the balanced configuration
+   list<XrdProofWorker *> tempNodes;
+   // Flag for the search and destroy loop.
+   bool deleted;
+
+   // Fill the information store with the first data (number of nodes).
+   for (iter = fNodes.begin(); iter != fNodes.end(); iter++) {
+      // The next code is not the same as this:
+      //info[*iter].available = count(fWorkers.begin(), fWorkers.end(), *iter);
+      // The previous piece of STL code only checks the pointer of the value
+      // stored on the list, altough it is more efficient, it needs that repeated
+      // nodes point to the same object. To allow hybrid configurations, we are
+      // doing a 'manually' matching since statically configured nodes are
+      // created in multiple ways.
+      info[*iter].available = 0;
+      for (iter2 = fWorkers.begin(); iter2 != fWorkers.end(); iter2++) {
+         if ((*iter)->Matches(*iter2)) {
+            info[*iter].available++;
+         }
+      }
+      info[*iter].added = 0;
+      // Calculate the minimum greater than 1.
+      if (info[*iter].available > 1 && info[*iter].available < min)
+         min = info[*iter].available;
+      // Calculate the totals.
+      total += info[*iter].available;
+   }
+
+   // Now, calculate the number of workers to add in each iteration of the
+   // round robin, scaling to the smaller number.
+   for (iter = fNodes.begin(); iter != fNodes.end(); iter++) {
+      if (info[*iter].available > 1) {
+         info[*iter].per_iteration = (unsigned int)floor((double)info[*iter].available / (double)min);
+      } else {
+         info[*iter].per_iteration = 1;
+      }
+      // Calculate the totals.
+      total_perit += info[*iter].per_iteration;
+   }
+
+   // Since we are going to substitute the list, don't forget to recover the
+   // default node at the fist time.
+   tempNodes.push_back(fWorkers.front());
+
+   // Finally, do the round robin assignment of nodes.
+   // Stop when every node has its workers processed.
+   while (total_added < total) {
+      for (map<XrdProofWorker *, BalancerInfo>::iterator i = info.begin(); i != info.end(); i++) {
+         if (i->second.added < i->second.available) {
+            // Be careful with the remainders (on prime number of nodes).
+            unsigned int to_add = MIN(i->second.per_iteration,
+                                      (i->second.available - i->second.added));
+            // Then add the nodes.
+            for (unsigned int j = 0; j < to_add; j++) {
+               tempNodes.push_back(i->first);
+            }
+            i->second.added += to_add;
+            total_added += to_add;
+         }
+      }
+   }
+
+   // Since we are mergin nodes in only one object, we must merge the current
+   // sessions of the static nodes (that can be distinct objects that represent
+   // the same node) and delete the orphaned objects. If, in the future, we can
+   // assure that every worker has only one object in the list, this is not more
+   // necessary. The things needed to change are the DoDirectiveWorker, it must
+   // search for a node before inserting it, and in the repeat directive insert
+   // the same node always. Also the default configuration methods (there are
+   // two in this class) must be updated.
+   iter3 = ++(fWorkers.begin());
+   while (iter3 != fWorkers.end()) {
+      deleted = false;
+      // If the worker is not in the fWorkers list, we must process it. Note that
+      // std::count() uses a plain comparison between values, in this case, we
+      // are comparing pointers (numbers, at the end).
+      if (count(++(tempNodes.begin()), tempNodes.end(), *iter3) == 0) {
+         // Search for an object that matches with this in the temp list.
+         for (iter2 = ++(tempNodes.begin()); iter2 != tempNodes.end(); ++iter2) {
+            if ((*iter2)->Matches(*iter3)) {
+               // Copy data and delete the *iter object.
+               (*iter2)->MergeProofServs(*(*iter3));
+               deleted = true;
+               delete *iter3;
+               fWorkers.erase(iter3++);
+               break;
+            }
+         }
+      }
+      // Do not forget to increase the iterator.
+      if (!deleted)
+         iter3++;
+   }
+
+   // Then, substitute the current fWorkers list with the balanced one.
+   fWorkers = tempNodes;
+}
+
+//______________________________________________________________________________
+#if defined(BUILD_BONJOUR)
+void * XrdProofdNetMgr::ProcessBonjourUpdate(void * context)
+{
+   XrdProofdNetMgr * mgr;
+   std::list<XrdOucBonjourNode *> nodes;
+   std::list<XrdOucBonjourNode *>::const_iterator idx;
+   std::list<XrdProofWorker *>::iterator w, w2;
+   const XrdOucBonjourNode * i;
+   XrdProofWorker * worker;
+   bool haveit;
+   int cores = -1;
+   int recordLength;
+
+   XPDLOC(NMGR, "NetMgr::ProcessBonjourUpdate");
+   TRACE(DBG, "Updating the network topology");
+
+   mgr = static_cast<XrdProofdNetMgr *>(context);
+
+   // Lock the method to protect the lists.
+   XrdSysMutexHelper mhp(mgr->fMutex);
+
+   // If there are no workers registered on the fRegWorkers list, this is the
+   // first time we run this updater, so we must create the default node. If not
+   // we can mark all the nodes as inactive and then look for the Bonjour updates.
+   if (mgr->fRegWorkers.size() < 1) {
+      XrdOucString mm("master ", 128);
+      mm += mgr->fMgr->Host();
+      mm += " port=";
+      mm += mgr->fMgr->Port();
+      mgr->fRegWorkers.push_back(new XrdProofWorker(mm.c_str()));
+   } else {
+      // Deactivate all current active workers
+      w = mgr->fRegWorkers.begin();
+      // Skip the master line
+      w++;
+      for (; w != mgr->fRegWorkers.end(); w++) {
+         (*w)->fActive = false;
+      }
+   }
+
+   // Update the list with the new nodes.
+   // Get the list, and get it locked.
+   mgr->fBonjourManager->LockNodeList();
+   nodes = mgr->fBonjourManager->GetCurrentNodeList();
+
+   for (idx = nodes.begin(); idx != nodes.end(); idx++) {
+      // Get the current node.
+      i = *idx;
+      (*i).Print();
+      // Must be not empty
+      if (!i->GetHostName() || (i->GetHostName() && strlen(i->GetHostName()) <= 0)) {
+         TRACE(ALL,"bonjour list node: empty!");
+         continue;
+      }
+      TRACE(DBG, "parsing info for node: " << i->GetHostName() << ", port: " << i->GetPort());
+      // Filter by service type getting rid of the trailing '.'.
+      if (i->GetBonjourRecord().MatchesRegisteredType(mgr->GetBonjourServiceType())) {
+         // Check if we have already it
+         w = mgr->fRegWorkers.begin();
+         w++;
+         haveit = 0;
+         while (w != mgr->fRegWorkers.end()) {
+            TRACE(HDBG,"registerd node: "<< (*w)->fHost <<", port: "<<(*w)->fPort);
+            if ((*w)->fHost == i->GetHostName() && (*w)->fPort == i->GetPort()) {
+               (*w)->fActive = true;
+               haveit = 1;
+
+               // Check if the node is on the fWorkers list.
+               if (std::find(mgr->fWorkers.begin(), mgr->fWorkers.end(), *w) == mgr->fWorkers.end()) {
+                  // Check for the cores of the node.
+                  if (i->GetBonjourRecord().GetTXTValue("cores", recordLength) != NULL) {
+                     XrdOucString trimmed(i->GetBonjourRecord().GetTXTValue("cores", recordLength), recordLength);
+                     cores = strtol(trimmed.c_str(), NULL, 10);
+                  } else {
+                     cores = 1;
+                  }
+                  // The node is returning from being not available, maybe with
+                  // a different number of cores, so re-check the number of it.
+                  TRACE(HDBG, " adding "<<cores<<" for worker '"<<(*w)->fHost<<"'");
+                  for (int c = 0; c < cores; c++) {
+                     // If we don't have the node on the fRegWorkers list, it will not
+                     // be also on the de fWorkers list.
+                     mgr->fWorkers.push_back(*w);
+                  }
+               } else {
+                  TRACE(DBG, " worker(s) '"<<(*w)->fHost<<"' already in the list");
+               }
+
+               break;
+            }
+            // Go to next
+            w++;
+         }
+         // If we do not have it, build a new worker object
+         if (!haveit) {
+            // Create the new node.
+            worker = new XrdProofWorker();
+            worker->fHost = i->GetHostName();
+            worker->fPort = i->GetPort();
+            worker->fActive = true;
+            if (i->GetBonjourRecord().GetTXTValue("nodetype", recordLength) != NULL) {
+               worker->fType = i->GetBonjourRecord().GetTXTValue("nodetype", recordLength)[0];
+            }
+            // Check for the cores of the node.
+            const char *pbr = i->GetBonjourRecord().GetTXTValue("cores", recordLength);
+            if (recordLength > 0) {
+               char *pc = new char[recordLength + 1];
+               memcpy(pc, pbr, recordLength);
+               pc[recordLength] = 0;
+               cores = strtol(pbr, NULL, 10);
+               delete [] pc;
+            } else {
+               TRACE(ALL, "no information about the cores available ... skip");
+               continue;
+            }
+            // Add the node to the list the times needed.
+            mgr->fRegWorkers.push_back(worker);
+            for (int c = 0; c < cores; c++) {
+               // If we don't have the node on the fRegWorkers list, it will not
+               // be also on the de fWorkers list.
+               mgr->fWorkers.push_back(worker);
+            }
+         }
+      }
+   }
+
+   // Remove the lock on the Bonjour list.
+   mgr->fBonjourManager->UnLockNodeList();
+
+   // Remove nodes not active from fWorkers list.
+   w = mgr->fRegWorkers.begin();
+   w++;
+   while (w != mgr->fRegWorkers.end()) {
+      if (!((*w)->fActive)) {
+         mgr->fWorkers.remove(*w);
+      }
+      w++;
+   }
+
+   // Process list.
+   mgr->FindUniqueNodes();
+
+   // Balance order.
+   mgr->BalanceNodesOrder();
+
+   return NULL;
+}
+#endif
+
+//______________________________________________________________________________
+#if defined(BUILD_BONJOUR)
+int XrdProofdNetMgr::LoadBonjourModule(int srvtype)
+{
+   XPDLOC(NMGR, "NetMgr::LoadBonjourModule");
+
+   // Get the reference to the bonjour manager. Store it to optimze the
+   // getInstance() usage.
+   fBonjourManager = &(XrdOucBonjourFactory::FactoryByPlatform()->GetBonjourManager());
+
+   // Register the service if needed.
+   if (srvtype == kBonjourSrvRegister || srvtype == kBonjourSrvBoth) {
+      // Default service name or a user customized
+      XrdOucBonjourRecord record(GetBonjourName(), GetBonjourServiceType(), GetBonjourDomain());
+
+      // Put the extra information on the record.
+      if (XrdProofdProtocol::Mgr())
+         switch (XrdProofdProtocol::Mgr()->SrvType()) {
+            case kXPD_TopMaster:
+            case kXPD_Master:
+               record.AddTXTRecord("nodetype", "S");
+               break;
+            case kXPD_AnyServer: // Altough we can be master, publish as worker.
+            case kXPD_Worker:
+               record.AddTXTRecord("nodetype", "W");
+               break;
+            default:
+               TRACE(XERR, "TXT node type is not known '" << XrdProofdProtocol::Mgr()->SrvType() << "'");
+         }
+
+      // Put the number of workers desired
+      record.AddTXTRecord("cores", fBonjourCores);
+
+      // Register the service.
+      if (fBonjourManager->RegisterService(record) == 0) {
+         TRACE(ALL, "Bonjour service was published OK");
+      } else {
+         TRACE(XERR, "Bonjour service could not be published");
+         return -1;
+      }
+   }
+
+   // Subscribe to the discoverage thread.
+   if (srvtype == kBonjourSrvBrowse || srvtype == kBonjourSrvBoth) {
+      fBonjourEnabled = true;
+      fBonjourManager->SubscribeForUpdates(GetBonjourServiceType(), ProcessBonjourUpdate, this);
+   }
+
+   return 0;
+}
+#endif
+
+//______________________________________________________________________________
+#if defined(BUILD_BONJOUR)
+bool XrdProofdNetMgr::CheckBonjourRoleCoherence(int xrdRole, int bonjourSrvType)
+{
+   // Bonjour services:       Discover-Publish-Both   ALLOWED COMBINATIONS
+   const bool allowed[4][3] = {{true,  true,  true }, // -1: AnyServer
+                               {false, true,  false}, //  0: Worker
+                               {true,  true,  true }, //  1: Submaster
+                               {true,  false, false}};//  2: Master & Supermaster
+
+   if (xrdRole < -1 || xrdRole > 2 || bonjourSrvType < -1 || bonjourSrvType > 2)
+      return false;
+
+   if (bonjourSrvType == kBonjourSrvDisabled)
+      return true; // Avoids warnings when Bonjour is not enabled.
+
+   // Add 1 to role since the constants defined in XProofProtocol.h are between
+   // -1 and 2.
+   return allowed[xrdRole + 1][bonjourSrvType];
+}
+#endif
 
 //______________________________________________________________________________
 int XrdProofdNetMgr::DoDirectiveAdminReqTO(char *val, XrdOucStream *cfg, bool)
@@ -239,7 +682,7 @@ int XrdProofdNetMgr::DoDirectiveResource(char *val, XrdOucStream *cfg, bool)
       // undefined inputs
       return -1;
 
-   if (!strcmp("static",val)) {
+   if (!strcmp("static", val)) {
       // We just take the path of the config file here; the
       // rest is used by the static scheduler
       fResourceType = kRTStatic;
@@ -257,15 +700,15 @@ int XrdProofdNetMgr::DoDirectiveResource(char *val, XrdOucStream *cfg, bool)
             // Config file
             fPROOFcfg.fName = val;
             if (fPROOFcfg.fName.beginswith("sm:")) {
-               fPROOFcfg.fName.replace("sm:","");
+               fPROOFcfg.fName.replace("sm:", "");
             }
             XrdProofdAux::Expand(fPROOFcfg.fName);
             // Make sure it exists and can be read
             if (access(fPROOFcfg.fName.c_str(), R_OK)) {
                if (errno == ENOENT) {
-                  TRACE(ALL,"WARNING: configuration file does not exists: "<< fPROOFcfg.fName);
+                  TRACE(ALL, "WARNING: configuration file does not exists: " << fPROOFcfg.fName);
                } else {
-                  TRACE(XERR,"configuration file cannot be read: "<< fPROOFcfg.fName);
+                  TRACE(XERR, "configuration file cannot be read: " << fPROOFcfg.fName);
                   fPROOFcfg.fName = "";
                   fPROOFcfg.fMtime = -1;
                }
@@ -286,6 +729,9 @@ int XrdProofdNetMgr::DoDirectiveWorker(char *val, XrdOucStream *cfg, bool)
       // undefined inputs
       return -1;
 
+   // Lock the method to protect the lists.
+   XrdSysMutexHelper mhp(fMutex);
+
    // Get the full line (w/o heading keyword)
    cfg->RetToken();
    XrdOucString wrd(cfg->GetWord());
@@ -299,7 +745,7 @@ int XrdProofdNetMgr::DoDirectiveWorker(char *val, XrdOucStream *cfg, bool)
       if (wrd == "master" || wrd == "node") {
          // Init a master instance
          XrdProofWorker *pw = new XrdProofWorker(line.c_str());
-         if (pw->fHost == "localhost" ||
+         if (pw->fHost.beginswith("localhost") ||
              pw->Matches(fMgr->Host())) {
             // Replace the default line (the first with what found in the file)
             XrdProofWorker *fw = fWorkers.front();
@@ -315,24 +761,31 @@ int XrdProofdNetMgr::DoDirectiveWorker(char *val, XrdOucStream *cfg, bool)
             r.erase(r.find(' '));
             nr = r.atoi();
             if (nr < 0 || !XPD_LONGOK(nr)) nr = 1;
-            TRACE(DBG, "found repeat = "<<nr);
+            TRACE(DBG, "found repeat = " << nr);
          }
          while (nr--) {
             // Build the worker object
             XrdProofdMultiStr mline(line.c_str());
             if (mline.IsValid()) {
-               TRACE(DBG, "found multi-line with: "<<mline.N()<<" tokens");
+               TRACE(DBG, "found multi-line with: " << mline.N() << " tokens");
                for (int i = 0; i < mline.N(); i++) {
-                  TRACE(HDBG, "found token: "<<mline.Get(i));
+                  TRACE(HDBG, "found token: " << mline.Get(i));
                   fWorkers.push_back(new XrdProofWorker(mline.Get(i).c_str()));
                }
             } else {
-               TRACE(DBG, "found line: "<<line);
+               TRACE(DBG, "found line: " << line);
                fWorkers.push_back(new XrdProofWorker(line.c_str()));
             }
          }
       }
    }
+
+   // Necessary for the balancer when Bonjour is enabled. Note that this balancer
+   // can also be enabled with a static configuration. By this time is disabled
+   // due to its experimental status.
+   FindUniqueNodes();
+   //BalanceNodesOrder();
+
    return 0;
 }
 
@@ -352,21 +805,23 @@ int XrdProofdNetMgr::BroadcastCtrlC(const char *usr)
       if ((w = *iw) && w->fType != 'M') {
          // Do not send it to ourselves
          bool us = (((w->fHost.find("localhost") != STR_NPOS ||
-                     XrdOucString(fMgr->Host()).find(w->fHost.c_str()) != STR_NPOS)) &&
+                      XrdOucString(fMgr->Host()).find(w->fHost.c_str()) != STR_NPOS)) &&
                     (w->fPort == -1 || w->fPort == fMgr->Port())) ? 1 : 0;
          if (!us) {
             // Create 'url'
             XrdOucString u = (usr) ? usr : fMgr->EffectiveUser();
-            u += '@'; u += w->fHost;
+            u += '@';
+            u += w->fHost;
             if (w->fPort != -1) {
-               u += ':'; u += w->fPort;
+               u += ':';
+               u += w->fPort;
             }
             // Get a connection to the server
             XrdProofConn *conn = GetProofConn(u.c_str());
             if (conn && conn->IsValid()) {
                // Prepare request
                XPClientRequest reqhdr;
-               memset(&reqhdr, 0, sizeof(reqhdr) );
+               memset(&reqhdr, 0, sizeof(reqhdr));
                conn->SetSID(reqhdr.header.streamid);
                reqhdr.proof.requestid = kXP_ctrlc;
                reqhdr.proof.sid = 0;
@@ -377,7 +832,7 @@ int XrdProofdNetMgr::BroadcastCtrlC(const char *usr)
                   return -1;
                }
                if (conn->LowWrite(&reqhdr, 0, 0) != kOK) {
-                   TRACE(XERR, "problems sending ctrl-c request to server " << u);
+                  TRACE(XERR, "problems sending ctrl-c request to server " << u);
                }
                // Clean it up, to avoid leaving open tcp connection possibly going forever
                // into CLOSE_WAIT
@@ -404,7 +859,7 @@ int XrdProofdNetMgr::Broadcast(int type, const char *msg, const char *usr,
    XPDLOC(NMGR, "NetMgr::Broadcast")
 
    unsigned int nok = 0;
-   TRACE(REQ, "type: "<<type);
+   TRACE(REQ, "type: " << type);
 
    // Loop over unique nodes
    std::list<XrdProofWorker *>::iterator iw = fNodes.begin();
@@ -414,7 +869,7 @@ int XrdProofdNetMgr::Broadcast(int type, const char *msg, const char *usr,
       if ((w = *iw) && w->fType != 'M') {
          // Do not send it to ourselves
          bool us = (((w->fHost.find("localhost") != STR_NPOS ||
-                     XrdOucString(fMgr->Host()).find(w->fHost.c_str()) != STR_NPOS)) &&
+                      XrdOucString(fMgr->Host()).find(w->fHost.c_str()) != STR_NPOS)) &&
                     (w->fPort == -1 || w->fPort == fMgr->Port())) ? 1 : 0;
          if (!us) {
             // Create 'url'
@@ -427,11 +882,11 @@ int XrdProofdNetMgr::Broadcast(int type, const char *msg, const char *usr,
             }
             // Type of server
             int srvtype = (w->fType != 'W') ? (kXR_int32) kXPD_Master
-                                            : (kXR_int32) kXPD_Worker;
-            TRACE(HDBG, "sending request to "<<u);
+                          : (kXR_int32) kXPD_Worker;
+            TRACE(HDBG, "sending request to " << u);
             // Send request
             if (!(xrsp = Send(u.c_str(), type, msg, srvtype, r, notify, subtype))) {
-               TRACE(XERR, "problems sending request to "<<u);
+               TRACE(XERR, "problems sending request to " << u);
             } else {
                nok++;
             }
@@ -462,7 +917,8 @@ XrdProofConn *XrdProofdNetMgr::GetProofConn(const char *url)
    buf += "|ord:000";
    char m = 'A'; // log as admin
 
-   {  XrdSysMutexHelper mhp(fMutex);
+   {
+      XrdSysMutexHelper mhp(fMutex);
       p = new XrdProofConn(url, m, -1, -1, 0, buf.c_str());
    }
    if (p && !(p->IsValid())) SafeDelete(p);
@@ -482,7 +938,7 @@ XrdClientMessage *XrdProofdNetMgr::Send(const char *url, int type,
    XPDLOC(NMGR, "NetMgr::Send")
 
    XrdClientMessage *xrsp = 0;
-   TRACE(REQ, "type: "<<type);
+   TRACE(REQ, "type: " << type);
 
    if (!url || strlen(url) <= 0)
       return xrsp;
@@ -532,7 +988,7 @@ XrdClientMessage *XrdProofdNetMgr::Send(const char *url, int type,
             break;
          default:
             ok = 0;
-            TRACE(XERR, "invalid request type "<<type);
+            TRACE(XERR, "invalid request type " << type);
             break;
       }
 
@@ -562,7 +1018,7 @@ XrdClientMessage *XrdProofdNetMgr::Send(const char *url, int type,
       SafeDelete(conn);
 
    } else {
-      TRACE(XERR, "could not open connection to "<<url);
+      TRACE(XERR, "could not open connection to " << url);
       if (r) {
          XrdOucString cmsg = "failure attempting connection to ";
          cmsg += url;
@@ -588,7 +1044,7 @@ bool XrdProofdNetMgr::IsLocal(const char *host, bool checkport)
       // Fully qualified name
       char *fqn = XrdNetDNS::getHostName(uu.Host.c_str());
       if (fqn && (strstr(fqn, "localhost") || !strcmp(fqn, "127.0.0.1") ||
-                                              !strcmp(fMgr->Host(),fqn))) {
+                  !strcmp(fMgr->Host(), fqn))) {
          if (!checkport || (uu.Port == fMgr->Port()))
             rc = 1;
       }
@@ -649,7 +1105,7 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
          pattern[i] = 0;
          filen = strdup(file);
          filen[blen - len] = 0;
-         TRACEP(p, DBG, "grep operation "<<grep<<", pattern:"<<pattern);
+         TRACEP(p, DBG, "grep operation " << grep << ", pattern:" << pattern);
       }
    } else {
       emsg = "file name not found";
@@ -658,10 +1114,10 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
       return 0;
    }
    if (grep) {
-      TRACEP(p, REQ, "file: "<<filen<<", ofs: "<<ofs<<", len: "<<len<<
-                     ", pattern: "<<pattern);
+      TRACEP(p, REQ, "file: " << filen << ", ofs: " << ofs << ", len: " << len <<
+             ", pattern: " << pattern);
    } else {
-      TRACEP(p, REQ, "file: "<<file<<", ofs: "<<ofs<<", len: "<<len);
+      TRACEP(p, REQ, "file: " << file << ", ofs: " << ofs << ", len: " << len);
    }
 
    // Get the buffer
@@ -694,7 +1150,7 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
             return 0;
          } else {
             XPDFORM(emsg, "could not read buffer from %s %s",
-                          (local) ? "local file " : "remote file ", file);
+                    (local) ? "local file " : "remote file ", file);
             TRACEP(p, XERR, emsg);
             response->Send(kXR_InvalidRequest, emsg.c_str());
             return 0;
@@ -738,7 +1194,7 @@ int XrdProofdNetMgr::LocateLocalFile(XrdOucString &file)
    XrdOucString fn, dn;
    int isl = file.rfind('/');
    if (isl != STR_NPOS) {
-      fn.assign(file, isl+1, -1);
+      fn.assign(file, isl + 1, -1);
       dn.assign(file, 0, isl);
    } else {
       fn = file;
@@ -758,7 +1214,7 @@ int XrdProofdNetMgr::LocateLocalFile(XrdOucString &file)
    while ((ent = readdir(dirp))) {
       if (!strncmp(ent->d_name, ".", 1) || !strncmp(ent->d_name, "..", 2))
          continue;
-      // Check the match 
+      // Check the match
       sent = ent->d_name;
       if (sent.matches(fn.c_str()) > 0) break;
       sent = "";
@@ -767,7 +1223,7 @@ int XrdProofdNetMgr::LocateLocalFile(XrdOucString &file)
 
    // If found fill a new output
    if (sent.length() > 0) {
-      XPDFORM(file,"%s%s", dn.c_str(), sent.c_str());
+      XPDFORM(file, "%s%s", dn.c_str(), sent.c_str());
       return 0;
    }
 
@@ -786,7 +1242,7 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *path, kXR_int64 ofs, int &len
    XPDLOC(NMGR, "NetMgr::ReadBufferLocal")
 
    XrdOucString emsg;
-   TRACE(REQ, "file: "<<path<<", ofs: "<<ofs<<", len: "<<len);
+   TRACE(REQ, "file: " << path << ", ofs: " << ofs << ", len: " << len);
 
    // Check input
    if (!path || strlen(path) <= 0) {
@@ -797,7 +1253,7 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *path, kXR_int64 ofs, int &len
    // Locate the path resolving wild cards
    XrdOucString spath(path);
    if (LocateLocalFile(spath) != 0) {
-      TRACE(XERR, "path cannot be resolved! ("<<path<<")");
+      TRACE(XERR, "path cannot be resolved! (" << path << ")");
       return (char *)0;
    }
    const char *file = spath.c_str();
@@ -830,7 +1286,7 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *path, kXR_int64 ofs, int &len
    // End at ...
    kXR_int64 end = fst + len;
    off_t lst = (end >= ltot) ? ltot : ((end > fst) ? end  : ltot);
-   TRACE(DBG, "file size: "<<ltot<<", read from: "<<fst<<" to "<<lst);
+   TRACE(DBG, "file size: " << ltot << ", read from: " << fst << " to " << lst);
 
    // Number of bytes to be read
    len = lst - fst;
@@ -856,7 +1312,7 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *path, kXR_int64 ofs, int &len
       while ((nr = read(fd, buf + pos, left)) < 0 && errno == EINTR)
          errno = 0;
       if (nr < 0) {
-         TRACE(XERR, "error reading from file: errno: "<< errno);
+         TRACE(XERR, "error reading from file: errno: " << errno);
          break;
       }
 
@@ -868,7 +1324,7 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *path, kXR_int64 ofs, int &len
 
    // Termination
    buf[len] = 0;
-   TRACE(HDBG, "read "<<nr<<" bytes: "<< buf);
+   TRACE(HDBG, "read " << nr << " bytes: " << buf);
 
    // Close file
    close(fd);
@@ -889,7 +1345,7 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *path,
    XPDLOC(NMGR, "NetMgr::ReadBufferLocal")
 
    XrdOucString emsg;
-   TRACE(REQ, "file: "<<path<<", pat: "<<pat<<", len: "<<len);
+   TRACE(REQ, "file: " << path << ", pat: " << pat << ", len: " << len);
 
    // Check input
    if (!path || strlen(path) <= 0) {
@@ -900,7 +1356,7 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *path,
    // Locate the path resolving wild cards
    XrdOucString spath(path);
    if (LocateLocalFile(spath) != 0) {
-      TRACE(XERR, "path cannot be resolved! ("<<path<<")");
+      TRACE(XERR, "path cannot be resolved! (" << path << ")");
       return (char *)0;
    }
    const char *file = spath.c_str();
@@ -931,7 +1387,7 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *path,
       cmd = new char[lcmd];
       sprintf(cmd, "cat %s", file);
    }
-   TRACE(DBG, "cmd: "<<cmd);
+   TRACE(DBG, "cmd: " << cmd);
 
    // Execute the command in a pipe
    FILE *fp = popen(cmd, "r");
@@ -957,7 +1413,7 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *path,
       lines++;
       // (Re-)allocate the buffer
       if (!buf || (llen > left)) {
-         int dsiz = 100 * ((int) ((len + llen) / lines) + 1);
+         int dsiz = 100 * ((int)((len + llen) / lines) + 1);
          dsiz = (dsiz > llen) ? dsiz : llen;
          bufsiz += dsiz;
          buf = (char *)realloc(buf, bufsiz + 1);
@@ -971,7 +1427,7 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *path,
          return (char *)0;
       }
       // Add line to the buffer
-      memcpy(buf+len, line, llen);
+      memcpy(buf + len, line, llen);
       len += llen;
       left -= llen;
       if (TRACING(HDBG))
@@ -997,16 +1453,16 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *path,
 
 //______________________________________________________________________________
 char *XrdProofdNetMgr::ReadBufferRemote(const char *url, const char *file,
-                                          kXR_int64 ofs, int &len, int grep)
+                                        kXR_int64 ofs, int &len, int grep)
 {
    // Send a read buffer request of length 'len' at offset 'ofs' for remote file
    // defined by 'url'; the returned buffer must be freed by the caller.
    // Returns 0 in case of error.
    XPDLOC(NMGR, "NetMgr::ReadBufferRemote")
 
-   TRACE(REQ, "url: "<<(url ? url : "undef")<<
-               ", file: "<<(file ? file : "undef")<<", ofs: "<<ofs<<
-               ", len: "<<len<<", grep: "<<grep);
+   TRACE(REQ, "url: " << (url ? url : "undef") <<
+         ", file: " << (file ? file : "undef") << ", ofs: " << ofs <<
+         ", len: " << len << ", grep: " << grep);
 
    // Check input
    if (!file || strlen(file) <= 0) {
@@ -1068,8 +1524,8 @@ char *XrdProofdNetMgr::ReadLogPaths(const char *url, const char *msg, int isess)
    // Returns 0 in case of error.
    XPDLOC(NMGR, "NetMgr::ReadLogPaths")
 
-   TRACE(REQ, "url: "<<(url ? url : "undef")<<
-              ", msg: "<<(msg ? msg : "undef")<<", isess: "<<isess);
+   TRACE(REQ, "url: " << (url ? url : "undef") <<
+         ", msg: " << (msg ? msg : "undef") << ", isess: " << isess);
 
    // Check input
    if (!url || strlen(url) <= 0) {
@@ -1100,7 +1556,7 @@ char *XrdProofdNetMgr::ReadLogPaths(const char *url, const char *msg, int isess)
       // If positive answer
       if (xrsp && buf && (xrsp->DataLen() > 0)) {
          int len = xrsp->DataLen();
-         buf = (char *) realloc((void *)buf, len+1);
+         buf = (char *) realloc((void *)buf, len + 1);
          if (buf)
             buf[len] = 0;
       } else {
@@ -1125,14 +1581,17 @@ void XrdProofdNetMgr::CreateDefaultPROOFcfg()
    // workers fNumLocalWrks.
    XPDLOC(NMGR, "NetMgr::CreateDefaultPROOFcfg")
 
-   TRACE(DBG, "enter: local workers: "<< fNumLocalWrks);
+   TRACE(DBG, "enter: local workers: " << fNumLocalWrks);
+
+   // Lock the method to protect the lists.
+   XrdSysMutexHelper mhp(fMutex);
 
    // Cleanup the worker list
    fWorkers.clear();
    // The first time we need to create the default workers
    if (fDfltWorkers.size() < 1) {
       // Create a default master line
-      XrdOucString mm("master ",128);
+      XrdOucString mm("master ", 128);
       mm += fMgr->Host();
       fDfltWorkers.push_back(new XrdProofWorker(mm.c_str()));
 
@@ -1150,11 +1609,11 @@ void XrdProofdNetMgr::CreateDefaultPROOFcfg()
 
    // Copy the list
    std::list<XrdProofWorker *>::iterator w = fDfltWorkers.begin();
-   for ( ; w != fDfltWorkers.end(); w++) {
+   for (; w != fDfltWorkers.end(); w++) {
       fWorkers.push_back(*w);
    }
 
-   TRACE(DBG, "done: "<<fWorkers.size()-1<<" workers");
+   TRACE(DBG, "done: " << fWorkers.size() - 1 << " workers");
 
    // Find unique nodes
    FindUniqueNodes();
@@ -1178,14 +1637,14 @@ std::list<XrdProofWorker *> *XrdProofdNetMgr::GetActiveWorkers()
          if (fDfltFallback) {
             // Use default settings
             CreateDefaultPROOFcfg();
-            TRACE(DBG, "parsing of "<<fPROOFcfg.fName<<" failed: use default settings");
+            TRACE(DBG, "parsing of " << fPROOFcfg.fName << " failed: use default settings");
          } else {
             TRACE(XERR, "unable to read the configuration file");
             return (std::list<XrdProofWorker *> *)0;
          }
       }
    }
-   TRACE(DBG,  "returning list with "<<fWorkers.size()<<" entries");
+   TRACE(DBG,  "returning list with " << fWorkers.size() << " entries");
 
    if (TRACING(HDBG)) Dump();
 
@@ -1202,13 +1661,13 @@ void XrdProofdNetMgr::Dump()
 
    XPDPRT("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
    XPDPRT("+ Active workers status");
-   XPDPRT("+ Size: "<<fWorkers.size());
+   XPDPRT("+ Size: " << fWorkers.size());
    XPDPRT("+ ");
 
    std::list<XrdProofWorker *>::iterator iw;
    for (iw = fWorkers.begin(); iw != fWorkers.end(); iw++) {
-      XPDPRT("+ wrk: "<<(*iw)->fHost.c_str()<<":"<<(*iw)->fPort<<" type:"<<(*iw)->fType<<
-             " active sessions:"<<(*iw)->Active());
+      XPDPRT("+ wrk: " << (*iw)->fHost << ":" << (*iw)->fPort << " type:" << (*iw)->fType <<
+             " active sessions:" << (*iw)->Active());
    }
    XPDPRT("+ ");
    XPDPRT("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
@@ -1229,14 +1688,14 @@ std::list<XrdProofWorker *> *XrdProofdNetMgr::GetNodes()
          if (fDfltFallback) {
             // Use default settings
             CreateDefaultPROOFcfg();
-            TRACE(DBG, "parsing of "<<fPROOFcfg.fName<<" failed: use default settings");
+            TRACE(DBG, "parsing of " << fPROOFcfg.fName << " failed: use default settings");
          } else {
             TRACE(XERR, "unable to read the configuration file");
             return (std::list<XrdProofWorker *> *)0;
          }
       }
    }
-   TRACE(DBG, "returning list with "<<fNodes.size()<<" entries");
+   TRACE(DBG, "returning list with " << fNodes.size() << " entries");
 
    return &fNodes;
 }
@@ -1249,7 +1708,10 @@ int XrdProofdNetMgr::ReadPROOFcfg(bool reset)
    //     via the 'xpd.workdir' and 'xpd.image' config directives
    XPDLOC(NMGR, "NetMgr::ReadPROOFcfg")
 
-   TRACE(REQ, "saved time of last modification: " <<fPROOFcfg.fMtime);
+   TRACE(REQ, "saved time of last modification: " << fPROOFcfg.fMtime);
+
+   // Lock the method to protect the lists.
+   XrdSysMutexHelper mhp(fMutex);
 
    // Check inputs
    if (fPROOFcfg.fName.length() <= 0)
@@ -1262,9 +1724,9 @@ int XrdProofdNetMgr::ReadPROOFcfg(bool reset)
       // to reload it if it comes back
       if (errno == ENOENT) fPROOFcfg.fMtime = -1;
       if (!fDfltFallback) {
-         TRACE(XERR, "unable to stat file: "<<fPROOFcfg.fName<<" - errno: "<<errno);
+         TRACE(XERR, "unable to stat file: " << fPROOFcfg.fName << " - errno: " << errno);
       } else {
-         TRACE(ALL, "file "<<fPROOFcfg.fName<<" cannot be parsed: use default configuration");
+         TRACE(ALL, "file " << fPROOFcfg.fName << " cannot be parsed: use default configuration");
       }
       return -1;
    }
@@ -1281,11 +1743,11 @@ int XrdProofdNetMgr::ReadPROOFcfg(bool reset)
    FILE *fin = 0;
    if (!(fin = fopen(fPROOFcfg.fName.c_str(), "r"))) {
       if (fWorkers.size() > 1) {
-        TRACE(XERR, "unable to fopen file: "<<fPROOFcfg.fName<<" - errno: "<<errno);
-        TRACE(XERR, "continuing with existing list of workers.");
-        return 0;
+         TRACE(XERR, "unable to fopen file: " << fPROOFcfg.fName << " - errno: " << errno);
+         TRACE(XERR, "continuing with existing list of workers.");
+         return 0;
       } else {
-        return -1;
+         return -1;
       }
    }
 
@@ -1296,7 +1758,7 @@ int XrdProofdNetMgr::ReadPROOFcfg(bool reset)
 
    // Add default a master line if not yet there
    if (fRegWorkers.size() < 1) {
-      XrdOucString mm("master ",128);
+      XrdOucString mm("master ", 128);
       mm += fMgr->Host();
       fRegWorkers.push_back(new XrdProofWorker(mm.c_str()));
    } else {
@@ -1304,7 +1766,7 @@ int XrdProofdNetMgr::ReadPROOFcfg(bool reset)
       std::list<XrdProofWorker *>::iterator w = fRegWorkers.begin();
       // Skip the master line
       w++;
-      for ( ; w != fRegWorkers.end(); w++) {
+      for (; w != fRegWorkers.end(); w++) {
          (*w)->fActive = 0;
       }
    }
@@ -1312,10 +1774,13 @@ int XrdProofdNetMgr::ReadPROOFcfg(bool reset)
    // Read now the directives
    int nw = 0;
    char lin[2048];
-   while (fgets(lin,sizeof(lin),fin)) {
+   while (fgets(lin, sizeof(lin), fin)) {
       // Skip empty lines
       int p = 0;
-      while (lin[p++] == ' ') { ; } p--;
+      while (lin[p++] == ' ') {
+         ;
+      }
+      p--;
       if (lin[p] == '\0' || lin[p] == '\n')
          continue;
 
@@ -1336,7 +1801,7 @@ int XrdProofdNetMgr::ReadPROOFcfg(bool reset)
       if (!strncmp(lin, pfx[0], strlen(pfx[0])) ||
           !strncmp(lin, pfx[1], strlen(pfx[1]))) {
          // Init a master instance
-         if (pw->fHost == "localhost" ||
+         if (pw->fHost.beginswith("localhost") ||
              pw->Matches(fMgr->Host())) {
             // Replace the default line (the first with what found in the file)
             XrdProofWorker *fw = fRegWorkers.front();
@@ -1345,7 +1810,7 @@ int XrdProofdNetMgr::ReadPROOFcfg(bool reset)
          // Ignore it
          SafeDelete(pw);
       } else {
-         // Check if we have already it 
+         // Check if we have already it
          std::list<XrdProofWorker *>::iterator w = fRegWorkers.begin();
          // Skip the master line
          w++;
@@ -1372,7 +1837,7 @@ int XrdProofdNetMgr::ReadPROOFcfg(bool reset)
       }
    }
 
-   // Copy the active workers 
+   // Copy the active workers
    std::list<XrdProofWorker *>::iterator w = fRegWorkers.begin();
    while (w != fRegWorkers.end()) {
       if ((*w)->fActive) {
@@ -1408,23 +1873,23 @@ int XrdProofdNetMgr::FindUniqueNodes()
    fNodes.clear();
 
    // Build the list of unique nodes (skip the master line);
-   if (fWorkers.size() > 0) {
+   if (fWorkers.size() > 1) {
       std::list<XrdProofWorker *>::iterator w = fWorkers.begin();
       w++;
-      for ( ; w != fWorkers.end(); w++) {
-         bool add = 1;
-         std::list<XrdProofWorker *>::iterator n;
-         for (n = fNodes.begin() ; n != fNodes.end(); n++) {
-            if ((*n)->Matches(*w)) {
-               add = 0;
-               break;
+      for (; w != fWorkers.end(); w++) if ((*w)->fActive) {
+            bool add = 1;
+            std::list<XrdProofWorker *>::iterator n;
+            for (n = fNodes.begin() ; n != fNodes.end(); n++) {
+               if ((*n)->Matches(*w)) {
+                  add = 0;
+                  break;
+               }
             }
+            if (add)
+               fNodes.push_back(*w);
          }
-         if (add)
-            fNodes.push_back(*w);
-      }
    }
-   TRACE(DBG, "found " << fNodes.size() <<" unique nodes");
+   TRACE(REQ, "found " << fNodes.size() << " unique nodes");
 
    // We are done
    return fNodes.size();
