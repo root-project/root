@@ -225,7 +225,7 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
                fDataType = gROOT->GetType(name,kTRUE);
             }
          } else {
-            fDataType = gROOT->GetType("Int_t");
+            fDataType = gROOT->GetType("Int_t", kTRUE); // In rare instance we are called before Int_t has been added to the list of type in TROOT, the kTRUE insures it is there.
          }
 //         if (!fDataType)
 //            Error("TDataMember", "basic data type %s not found in list of basic types",
