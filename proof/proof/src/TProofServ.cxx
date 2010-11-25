@@ -5400,8 +5400,8 @@ void TProofServ::HandleWorkerLists(TMessage *mess)
                   if (nactnew == (nact + 1)) {
                      Info("HandleWorkerList","worker %s (re-)activated", ord.Data());
                   } else {
-                     Info("HandleWorkerList","worker %s could not be (re-)activated:"
-                                             " check the ordinal number", ord.Data());
+                     Info("HandleWorkerList","worker %s could not be (re-)activated;"
+                                             " # of actives: %d --> %d", ord.Data(), nact, nactnew);
                   }
                }
             } else {
@@ -5429,7 +5429,7 @@ void TProofServ::HandleWorkerLists(TMessage *mess)
                      Info("HandleWorkerList","worker %s deactivated", ord.Data());
                   } else {
                      Info("HandleWorkerList","worker %s could not be deactivated:"
-                                             " check the ordinal number", ord.Data());
+                                             " # of actives: %d --> %d", ord.Data(), nact, nactnew);
                   }
                }
             } else {
