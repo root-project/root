@@ -3551,16 +3551,16 @@ if test ! "x$enable_bonjour" = "xno" ; then
     # If we are on Linux, we must check also for the Avahi libraries. 
     if test ! "x$enable_bonjour" = "xno" && test "x$platform" = "xlinux"; then
         # The compatibility layer is needed for the Bonjour record management.
-        check_header "avahi-client" "$avahiincdir" $DNSSD $DNSSD/include \
-        /opt/include /usr/include /usr/local/include
+        check_header "avahi-client/client.h" "$avahiincdir" $DNSSD \
+        $DNSSD/include /opt/include /usr/include /usr/local/include
         avahiincdir=$found_dir
 
-        check_header "avahi-common" "$avahiincdir" $DNSSD $DNSSD/include \
-        /opt/include /usr/include /usr/local/include
+        check_header "avahi-common/strlst.h" "$avahiincdir" $DNSSD \
+        $DNSSD/include /opt/include /usr/include /usr/local/include
         avahiincdir=$found_dir
 
-        check_header "avahi-core" "$avahiincdir" $DNSSD $DNSSD/include \
-        /opt/include /usr/include /usr/local/include
+        check_header "avahi-core/core.h" "$avahiincdir" $DNSSD \
+        $DNSSD/include /opt/include /usr/include /usr/local/include
         avahiincdir=$found_dir
 
         # Also, the library is needed, as in Mac OS X. When found the compat
