@@ -1001,7 +1001,11 @@ void TStreamerBasicType::Streamer(TBuffer &R__b)
          TStreamerElement::Streamer(R__b);
          R__b.CheckByteCount(R__s, R__c, TStreamerBasicType::IsA());
       }
-      switch(fType) {
+      Int_t type = fType;
+      if (TVirtualStreamerInfo::kOffsetL < type && type < TVirtualStreamerInfo::kOffsetP) {
+         type -= TVirtualStreamerInfo::kOffsetL;
+      }
+      switch(type) {
          // basic types
          case kBool_t:     fSize = sizeof(bool);      break;
          case kShort_t:    fSize = sizeof(Short_t);   break;
