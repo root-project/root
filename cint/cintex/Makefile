@@ -14,7 +14,7 @@ endif
 
 # also in Rules.mk, but that needs TEST_TARGETS to be defined first.
 ifneq ($(HAS_PYTHON),) 
-   HAVEPYTHON := $(HAS_PYTHON) 
+   HAVEPYTHON := $(HAS_PYTHON)
 else
    HAVEPYTHON := $(shell root-config --has-python)
 endif
@@ -93,6 +93,7 @@ ifeq ($(FAIL),)
 endif
 
 test_Cintex test_Persistency test_PyCintex_basics: test_%: test_%.log
+	echo DEBUG LCG NIGHTLIES: x$(HAS_PYTHON)x y$(HAVEPYTHON)y z$(TEST_TARGETS)z w$(shell root-config --has-python)w
 	$(TestDiff)
 
 # Remember that sometest.log can be made automatically from
