@@ -452,8 +452,8 @@ void TMVA::DecisionTreeNode::ReadAttributes(void* node, UInt_t /* tmva_Version_C
    gTools().ReadAttr(node, "IVar",  fSelector               );
    gTools().ReadAttr(node, "Cut",   fCutValue               );
    gTools().ReadAttr(node, "cType", fCutType                );               
-   if (gTools().HasAttr(node,"rms")) gTools().ReadAttr(node, "rms",   fResponse);
    if (gTools().HasAttr(node,"res")) gTools().ReadAttr(node, "res",   fResponse);
+   if (gTools().HasAttr(node,"rms")) gTools().ReadAttr(node, "rms",   fResponse);
    //   else { 
    if( gTools().HasAttr(node, "purity") ) {
       gTools().ReadAttr(node, "purity",fPurity );

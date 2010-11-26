@@ -522,11 +522,12 @@ void TMVA::MethodBDT::InitEventSample( void )
          if (!IgnoreEventsWithNegWeightsInTraining() || event->GetWeight() > 0) {
             if (first && event->GetWeight() < 0) {
                first = kFALSE;
-               Log() << kINFO << "Events with negative event weights are ignored during "
-                     << "the BDT training (option IgnoreNegWeightsInTraining is now enabled)" 
+               Log() << kWARNING << "Events with negative event weights are USED during "
+                     << "the BDT training. This might cause problems with small node sizes "
+                     << "or with the boosting. Please remove negative events from training "
+                     << "using the option *IgnoreEventsWithNegWeightsInTraining* in case you "
+                     << "observe problems with the boosting"
                      << Endl;
-               delete event;
-               continue;
             }
             // if fAutomatic == true you need a validation sample to optimize pruning
             if (fAutomatic) {
