@@ -29,20 +29,43 @@ public:
    virtual ~TPyMultiGenFunction();
 
 // Math::IMultiGenFunction implementation
-   virtual TPyMultiGenFunction* Clone() const;
+   virtual TPyMultiGenFunction* Clone() const { return new TPyMultiGenFunction( fPySelf ); }
    virtual unsigned int NDim() const;
-   virtual double DoEval( const double* ) const;
+   virtual double DoEval( const double* x ) const;
 
-   ClassDef( TPyMultiGenFunction, 1 );   //Python base class for Math::IMultiGenFunction
-
-private:
-// private helpers for forwarding to python
-   PyObject* CallSelf( const char* method, PyObject* pyobject = 0 ) const;
+   ClassDef( TPyMultiGenFunction, 1 );   //Python for Math::IMultiGenFunction equivalent
 
 private:
 // to prevent confusion when handing 'self' from python
    TPyMultiGenFunction( const TPyMultiGenFunction& src ) : ROOT::Math::IMultiGenFunction( src ) {}
    TPyMultiGenFunction& operator=( const TPyMultiGenFunction& ) { return *this; }
+
+private:
+   PyObject* fPySelf;              //! actual python object
+};
+
+
+class TPyMultiGradFunction : public ROOT::Math::IMultiGradFunction {
+public:
+// ctor/dtor, and assignment
+   TPyMultiGradFunction( PyObject* self = 0 );
+   virtual ~TPyMultiGradFunction();
+
+// Math::IMultiGenFunction implementation
+   virtual TPyMultiGradFunction* Clone() const { return new TPyMultiGradFunction( fPySelf ); }
+   virtual unsigned int NDim() const;
+   virtual double DoEval( const double* x ) const;
+
+   virtual void Gradient( const double* x, double* grad ) const;
+   virtual void FdF( const double* x, double& f, double* df ) const;
+   virtual double DoDerivative( const double * x, unsigned int icoord ) const;
+
+   ClassDef( TPyMultiGradFunction, 1 );   //Python for Math::IMultiGradFunction equivalent
+
+private:
+// to prevent confusion when handing 'self' from python
+   TPyMultiGradFunction( const TPyMultiGradFunction& src ) : ROOT::Math::IMultiGradFunction( src ) {}
+   TPyMultiGradFunction& operator=( const TPyMultiGradFunction& ) { return *this; }
 
 private:
    PyObject* fPySelf;              //! actual python object

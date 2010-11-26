@@ -1,4 +1,4 @@
-// Author: Wim Lavrijsen   March 2008
+// Author: Wim Lavrijsen   November 2010
 
 // Bindings
 #include "PyROOT.h"
@@ -6,6 +6,9 @@
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
 #include "PyBufferFactory.h"
+
+// Standard
+#include <stdexcept>
 
 //______________________________________________________________________________
 //                       Python wrapper for Fit functions
@@ -15,13 +18,15 @@
 
 //- data ---------------------------------------------------------------------
 ClassImp(TPyMultiGenFunction)
+ClassImp(TPyMultiGradFunction)
 
 
-//____________________________________________________________________________
-PyObject* TPyMultiGenFunction::CallSelf( const char* method, PyObject* pyobject ) const
+//- helper function ----------------------------------------------------------
+static PyObject* DispatchCall( PyObject* pyself, const char* method,
+   PyObject* arg1 = NULL, PyObject* arg2 = NULL, PyObject* arg3 = NULL )
 {
 // Forward <method> to python (need to refactor this with TPySelector).
-   if ( ! fPySelf || fPySelf == Py_None ) {
+   if ( ! pyself || pyself == Py_None ) {
       Py_INCREF( Py_None );
       return Py_None;
    }
@@ -30,18 +35,14 @@ PyObject* TPyMultiGenFunction::CallSelf( const char* method, PyObject* pyobject 
 
 // get the named method and check for python side overload by not accepting the
 // binding's methodproxy
-   PyObject* pymethod = PyObject_GetAttrString( (PyObject*)fPySelf, const_cast< char* >( method ) );
+   PyObject* pymethod = PyObject_GetAttrString( (PyObject*)pyself, const_cast< char* >( method ) );
    if ( ! PyROOT::MethodProxy_CheckExact( pymethod ) ) {
-      if ( pyobject )
-         result = PyObject_CallFunction( pymethod, const_cast< char* >( "O" ), pyobject );
-      else
-         result = PyObject_CallFunction( pymethod, const_cast< char* >( "" ) );
+      result = PyObject_CallFunctionObjArgs( pymethod, arg1, arg2, arg3, NULL );
    } else {
-   // silently ignore if method not overridden (note that the above can't lead
-   // to a python exception, since this (TPyMultiGenFunction) class contains the
-   // method it is always to be found)
-      Py_INCREF( Py_None );
-      result = Py_None;
+   // means the method has not been overridden ... simply accept its not there
+      result = 0; 
+      PyErr_Format( PyExc_AttributeError,
+         "method %s needs implementing in derived class", const_cast< char* >( method ) );
    }
 
    Py_XDECREF( pymethod );
@@ -74,20 +75,15 @@ TPyMultiGenFunction::~TPyMultiGenFunction()
 
 
 //- public functions ---------------------------------------------------------
-TPyMultiGenFunction* TPyMultiGenFunction::Clone() const
-{
-   return new TPyMultiGenFunction( fPySelf );
-}
-
-
-//____________________________________________________________________________
 unsigned int TPyMultiGenFunction::NDim() const
 {
 // Simply forward the call to python self.
-   PyObject* pyresult = CallSelf( "NDim" );
+   PyObject* pyresult = DispatchCall( fPySelf, "NDim" );
 
-   if ( ! pyresult )
-      return 1;    // probably reasonable default
+   if ( ! pyresult ) {
+      PyErr_Print();
+      throw std::runtime_error( "Failure in TPyMultiGenFunction::NDim" );
+   }
 
    unsigned int cppresult = (unsigned int)PyLong_AsLong( pyresult );
    Py_XDECREF( pyresult );
@@ -95,20 +91,146 @@ unsigned int TPyMultiGenFunction::NDim() const
    return cppresult;
 }
 
-
 //____________________________________________________________________________
 double TPyMultiGenFunction::DoEval( const double* x ) const
 {
 // Simply forward the call to python self.
    PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
-   PyObject* pyresult = CallSelf( "DoEval", xbuf );
+   PyObject* pyresult = DispatchCall( fPySelf, "DoEval", xbuf );
    Py_DECREF( xbuf );
 
-   if ( ! pyresult )
-      return 1;    // probably reasonable default
+   if ( ! pyresult ) {
+      PyErr_Print();
+      throw std::runtime_error( "Failure in TPyMultiGenFunction::DoEval" );
+   }
 
    double cppresult = (double)PyFloat_AsDouble( pyresult );
    Py_XDECREF( pyresult );
 
    return cppresult;
 }
+
+
+
+//- constructors/destructor --------------------------------------------------
+TPyMultiGradFunction::TPyMultiGradFunction( PyObject* self )
+{
+// Construct a TPyMultiGradFunction derived with <self> as the underlying
+   if ( self ) {
+   // steal reference as this is us, as seen from python
+      fPySelf = self;
+   } else {
+      Py_INCREF( Py_None );        // using None allows clearer diagnostics
+      fPySelf = Py_None;
+   }
+}
+
+//____________________________________________________________________________
+TPyMultiGradFunction::~TPyMultiGradFunction()
+{
+// Destructor. Only deref if still holding on to Py_None (circular otherwise).
+   if ( fPySelf == Py_None ) {
+      Py_DECREF( fPySelf );
+   }
+}
+
+
+//- public functions ---------------------------------------------------------
+unsigned int TPyMultiGradFunction::NDim() const
+{
+// Simply forward the call to python self.
+   PyObject* pyresult = DispatchCall( fPySelf, "NDim" );
+
+   if ( ! pyresult ) {
+      PyErr_Print();
+      throw std::runtime_error( "Failure in TPyMultiGradFunction::NDim" );
+   }
+
+   unsigned int cppresult = (unsigned int)PyLong_AsLong( pyresult );
+   Py_XDECREF( pyresult );
+
+   return cppresult;
+}
+
+//____________________________________________________________________________
+double TPyMultiGradFunction::DoEval( const double* x ) const
+{
+// Simply forward the call to python self.
+   PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
+   PyObject* pyresult = DispatchCall( fPySelf, "DoEval", xbuf );
+   Py_DECREF( xbuf );
+
+   if ( ! pyresult ) {
+      PyErr_Print();
+      throw std::runtime_error( "Failure in TPyMultiGradFunction::DoEval" );
+   }
+
+   double cppresult = (double)PyFloat_AsDouble( pyresult );
+   Py_XDECREF( pyresult );
+
+   return cppresult;
+}
+
+//____________________________________________________________________________
+void TPyMultiGradFunction::Gradient( const double* x, double* grad ) const {
+// Simply forward the call to python self.
+   PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
+   PyObject* gbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)grad );
+   PyObject* pyresult = DispatchCall( fPySelf, "DoEval", xbuf, gbuf );
+   Py_DECREF( gbuf );
+   Py_DECREF( xbuf );
+
+   if ( ! pyresult ) {
+      PyErr_Print();
+      throw std::runtime_error( "Failure in TPyMultiGradFunction::Gradient" );
+   }
+
+   Py_DECREF( pyresult );
+}
+
+//____________________________________________________________________________
+void TPyMultiGradFunction::FdF( const double* x, double& f, double* df ) const
+{
+// Simply forward the call to python self.
+   PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
+   PyObject* pyf = PyList_New( 1 );
+   PyList_SetItem( pyf, 0, PyFloat_FromDouble( f ) );
+   PyObject* dfbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)df );
+
+   PyObject* pyresult = DispatchCall( fPySelf, "DoEval", xbuf, pyf, dfbuf );
+   f = PyFloat_AsDouble( PyList_GetItem( pyf, 0 ) );
+
+   Py_DECREF( dfbuf );
+   Py_DECREF( pyf );
+   Py_DECREF( xbuf );
+
+   if ( ! pyresult ) {
+      PyErr_Print();
+      throw std::runtime_error( "Failure in TPyMultiGradFunction::FdF" );
+   }
+
+   Py_DECREF( pyresult );
+}
+
+//____________________________________________________________________________
+double TPyMultiGradFunction::DoDerivative( const double * x, unsigned int icoord ) const
+{
+// Simply forward the call to python self.
+   PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
+   PyObject* pycoord = PyLong_FromLong( icoord );
+
+   PyObject* pyresult = DispatchCall( fPySelf, "DoEval", xbuf, pycoord );
+   Py_DECREF( pycoord );
+   Py_DECREF( xbuf );
+
+   if ( ! pyresult ) {
+      PyErr_Print();
+      throw std::runtime_error( "Failure in TPyMultiGradFunction::DoDerivative" );
+   }
+
+   double cppresult = (double)PyFloat_AsDouble( pyresult );
+   Py_XDECREF( pyresult );
+
+   return cppresult;
+}
+

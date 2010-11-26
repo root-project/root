@@ -9,6 +9,7 @@
 #pragma link C++ class TPyDispatcher;
 #pragma link C++ class TPySelector;
 #pragma link C++ class TPyMultiGenFunction;
+#pragma link C++ class TPyMultiGradFunction;
 
 #pragma link C++ namespace PyROOT;
 #pragma link C++ class PyROOT::TPyException;
