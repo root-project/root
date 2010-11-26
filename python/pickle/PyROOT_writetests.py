@@ -1,12 +1,15 @@
 # File: roottest/python/pickle/PyROOT_writetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 04/16/08
-# Last: 09/24/10
+# Last: 10/22/10
 
 """Pickle writing unit tests for PyROOT package."""
 
 import os, sys, unittest
-import pickle, cPickle
+try:
+   import pickle, cPickle
+except ImportError:
+   import pickle as cPickle
 from ROOT import *
 from common import *
 
@@ -19,8 +22,8 @@ gROOT.LoadMacro( "PickleTypes.C+" )
 
 ### Write various objects with the two pickle modules ========================
 class PickleWritingSimpleObjectsTestCase( MyTestCase ):
-   out1 = open( pclfn, 'w' )       # names from common.py
-   out2 = open( cpclfn, 'w' )
+   out1 = open( pclfn, 'wb' )      # names from common.py
+   out2 = open( cpclfn, 'wb' )
 
    def test1WriteTObjectDerived( self ):
       """Test writing of a histogram into a pickle file"""
@@ -55,6 +58,10 @@ class PickleWritingSimpleObjectsTestCase( MyTestCase ):
 
       pickle.dump(  d, self.out1 )
       cPickle.dump( d, self.out2 )
+
+   def tearDown( self ):
+      self.out1.flush()
+      self.out2.flush()
 
 
 ## actual test run

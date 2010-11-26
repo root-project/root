@@ -151,3 +151,7 @@ bool operator!=( const Comparable& c1, const Comparable& c2 )
 #pragma link C++ function operator==( const Comparable&, const Comparable& );
 #pragma link C++ function operator!=( const Comparable&, const Comparable& );
 #endif
+
+// a couple of globals
+double myGlobalDouble = 12.;
+double myGlobalArray[500];

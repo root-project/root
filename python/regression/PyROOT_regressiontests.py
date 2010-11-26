@@ -1,7 +1,7 @@
 # File: roottest/python/regression/PyROOT_regressiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/02/07
-# Last: 09/30/10
+# Last: 11/26/10
 
 """Regression tests, lacking a better place, for PyROOT package."""
 
@@ -28,7 +28,8 @@ __all__ = [
    'Regression10BreakSmartPtrCircularLoop',
    'Regression10TVector3Pythonize',
    'Regression11CoralAttributeListIterators',
-   'Regression12ImportCout'
+   'Regression12ImportCout',
+   'Regression13WriteTGraph'
 ]
 
 
@@ -264,6 +265,7 @@ class Regression11CoralAttributeListIterators( MyTestCase ):
       self.assertEqual( b, e )
       self.assertNotEqual( b, a.begin() )
 
+
 ### importing cout should not result in printed errors =======================
 class Regression12ImportCout( MyTestCase ):
    def test1ImportCout( self ):
@@ -271,6 +273,19 @@ class Regression12ImportCout( MyTestCase ):
 
       import ROOT
       c = ROOT.cout
+
+
+### importing cout should not result in printed errors =======================
+class Regression13WriteTGraph( MyTestCase ):
+   def test1WriteTGraph( self ):
+      """Write a TGraph object and read it back correctly"""
+
+      gr = TGraph()
+      ff = TFile( "test.root", "RECREATE" )
+      ff.WriteObject( gr, "grname", "" )
+      gr2 = TGraph()
+      ff.GetObject( "grname", gr2 )
+      os.remove( "test.root" )
 
 
 ## actual test run

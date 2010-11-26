@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 09/30/10
+# Last: 11/02/10
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -18,7 +18,8 @@ __all__ = [
    'Cpp4HandlingAbstractClassesTestCase',
    'Cpp5AssignToRefArbitraryClassTestCase',
    'Cpp6MathConvertersTestCase',
-   'Cpp7GloballyOverloadedComparatorTestCase'
+   'Cpp7GloballyOverloadedComparatorTestCase',
+   'Cpp8GlobalArraysTestCase'
 ]
 
 gROOT.LoadMacro( "AdvancedCpp.C+" )
@@ -297,6 +298,15 @@ class Cpp7GloballyOverloadedComparatorTestCase( MyTestCase ):
       self.assertEqual( b.__eq__( a ), True )
       self.assertEqual( a.__eq__( a ), False )
       self.assertEqual( b.__eq__( b ), False )
+
+
+### Check access to global array variables ===================================
+class Cpp8GlobalArraysTestCase( MyTestCase ):
+   def test1DoubleArray( self ):
+      """Verify access to array of doubles"""
+
+      self.assertEqual( myGlobalDouble, 12. )
+      self.assertRaises( IndexError, myGlobalArray.__getitem__, 500 )
 
 
 ## actual test run

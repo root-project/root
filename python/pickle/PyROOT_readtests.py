@@ -1,12 +1,15 @@
 # File: roottest/python/pickle/PyROOT_readingtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 04/16/08
-# Last: 09/24/10
+# Last: 10/22/10
 
 """Pickle writing unit tests for PyROOT package."""
 
 import os, sys, unittest
-import pickle, cPickle
+try:
+   import pickle, cPickle
+except ImportError:
+   import pickle as cPickle            # p3
 from ROOT import *
 from common import *
 
@@ -20,8 +23,8 @@ gROOT.LoadMacro( "PickleTypes.C+" )
 
 ### Read various objects with the two pickle modules =========================
 class PickleReadingSimpleObjectsTestCase( MyTestCase ):
-   in1 = open( pclfn, 'r' )        # names from common.py
-   in2 = open( cpclfn, 'r' )
+   in1 = open( pclfn, 'rb' )       # names from common.py
+   in2 = open( cpclfn, 'rb' )
 
  # note that the order of these tests have to match the writing order (for
  # simple indexing, shelve should have been used instead); this also means
