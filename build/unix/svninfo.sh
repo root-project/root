@@ -5,9 +5,11 @@
 
 dir=
 dotsvn=".svn"
+svn=svn
 if [ $# = 1 ]; then
    if [ -x /bin/cygpath ]; then
       dir=`cygpath -u $1`
+      svn=/usr/bin/svn
    else
       dir=$1
    fi
@@ -21,7 +23,7 @@ fi
 
 OUT=etc/svninfo.txt
 
-INFO=`svn info $dir | awk '/Last Changed Rev:/ { print $4 } /URL:/ { print $2 }'`
+INFO=`$svn info $dir | awk '/Last Changed Rev:/ { print $4 } /URL:/ { print $2 }'`
 
 HTTP="http://root.cern.ch/svn/root/"
 HTTPS="https://root.cern.ch/svn/root/"
