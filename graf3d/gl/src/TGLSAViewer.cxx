@@ -570,6 +570,7 @@ void TGLSAViewer::DisableMenuBarHiding()
    fFrame->HideFrame(fMenuBut);
    fFrame->Layout();
 
+   fMenuHidingTimer->TurnOff();
    delete fMenuHidingTimer;
    fMenuHidingTimer = 0;
 
@@ -617,6 +618,10 @@ void TGLSAViewer::HandleMenuBarHiding(Event_t* ev)
 void TGLSAViewer::ResetMenuHidingTimer(Bool_t show_menu)
 {
    // Reset the timer for menu-bar hiding.
+
+   // This happens, mysteriously.
+   if (fMenuHidingTimer == 0)
+      return;
 
    fMenuHidingTimer->TurnOff();
 
