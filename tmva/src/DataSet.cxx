@@ -303,7 +303,7 @@ void TMVA::DataSet::DeleteResults( const TString & resultsName,
    if (UInt_t(type) > fResults.size()){
       Log()<<kFATAL<< "you asked for an Treetype (training/testing/...)"
            << " whose index " << type << " does not exist " << Endl;
-      std::exit(1);
+      //std::exit(1); //We do not need this exit, since we have the FATAL above 
    }
    std::map< TString, Results* >& resultsForType = fResults[UInt_t(type)];
    std::map< TString, Results* >::iterator it = resultsForType.find(resultsName);
