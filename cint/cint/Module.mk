@@ -246,7 +246,7 @@ include/%.h: $(CINTDIRI)/%.h
 
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 $(CINTDIRL):
-		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.d' --exclude 'rootcint_*' --exclude 'G__cpp_*' --exclude 'G__c_*' --exclude '*.dSYM' $(CINTDIR)/lib $(dir $@)
+		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.d' --exclude 'rootcint_*' --exclude 'G__cpp_*' --exclude 'G__c_*' --exclude 'mktypes' --exclude '*.dSYM' $(CINTDIR)/lib $(dir $@)
 		@touch $(CINTDIRL)
 $(CINTDIRDLLS):
 		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.d' --exclude '*.dll' --exclude 'systypes.h' --exclude 'types.h' $(CINTDIR)/include $(dir $@)
