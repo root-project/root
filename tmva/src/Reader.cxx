@@ -127,13 +127,12 @@ TMVA::Reader::Reader( const TString& theOption, Bool_t verbose )
      fCalculateError(kFALSE),
      fMvaEventError( 0 ),
      fMvaEventErrorUpper( 0 ),
-     fLogger (  new MsgLogger(this) )
+     fLogger ( 0 )
 {
    // constructor
-
    fDataSetManager = new DataSetManager( fDataInputHandler ); 
    fDataSetManager->AddDataSetInfo(fDataSetInfo); 
-
+   fLogger = new MsgLogger(this);
    SetConfigName( GetName() );
    DeclareOptions();
    ParseOptions();
@@ -152,13 +151,13 @@ TMVA::Reader::Reader( std::vector<TString>& inputVars, const TString& theOption,
      fCalculateError(kFALSE),
      fMvaEventError( 0 ),
      fMvaEventErrorUpper( 0 ),   //zjh
-     fLogger ( new MsgLogger(this) )
+     fLogger ( 0 )
 {
    // constructor
 
    fDataSetManager = new DataSetManager( fDataInputHandler ); 
    fDataSetManager->AddDataSetInfo(fDataSetInfo); 
-
+   fLogger = new MsgLogger(this);
    SetConfigName( GetName() );
    DeclareOptions();
    ParseOptions();
@@ -183,12 +182,12 @@ TMVA::Reader::Reader( std::vector<std::string>& inputVars, const TString& theOpt
      fCalculateError(kFALSE),
      fMvaEventError( 0 ),
      fMvaEventErrorUpper( 0 ),
-     fLogger ( new MsgLogger(this) )
+     fLogger ( 0 )
 {
    // constructor
    fDataSetManager = new DataSetManager( fDataInputHandler ); 
    fDataSetManager->AddDataSetInfo(fDataSetInfo); 
-
+   fLogger = new MsgLogger(this);
    SetConfigName( GetName() );
    DeclareOptions();
    ParseOptions();
@@ -213,12 +212,12 @@ TMVA::Reader::Reader( const std::string& varNames, const TString& theOption, Boo
      fCalculateError(kFALSE),
      fMvaEventError( 0 ),
      fMvaEventErrorUpper( 0 ),
-     fLogger (  new MsgLogger(this) )
+     fLogger ( 0 )
 {
    // constructor
    fDataSetManager = new DataSetManager( fDataInputHandler ); 
    fDataSetManager->AddDataSetInfo(fDataSetInfo); 
-
+   fLogger = new MsgLogger(this);
    SetConfigName( GetName() );
    DeclareOptions();
    ParseOptions();
@@ -240,12 +239,12 @@ TMVA::Reader::Reader( const TString& varNames, const TString& theOption, Bool_t 
      fCalculateError(kFALSE),
      fMvaEventError( 0 ),
      fMvaEventErrorUpper( 0 ),
-     fLogger ( new MsgLogger(this))
+     fLogger ( 0 )
 {
    // constructor
    fDataSetManager = new DataSetManager( fDataInputHandler ); 
    fDataSetManager->AddDataSetInfo(fDataSetInfo); 
-
+   fLogger = new MsgLogger(this);
    SetConfigName( GetName() );
    DeclareOptions();
    ParseOptions();
