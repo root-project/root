@@ -22,8 +22,6 @@
 
 #include "TMVA/OptimizeConfigParameters.h"
 
-ClassImp(TMVA::OptimizeConfigParameters)
-
 #include <limits>
 #include <cstdlib>
 #include "TMath.h"
@@ -40,6 +38,8 @@ ClassImp(TMVA::OptimizeConfigParameters)
 #include "TMVA/PDF.h"   
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Tools.h"   
+
+ClassImp(TMVA::OptimizeConfigParameters)
    
 //_______________________________________________________________________
 TMVA::OptimizeConfigParameters::OptimizeConfigParameters(MethodBase * const method, std::map<TString,TMVA::Interval> tuneParameters, TString fomType, TString optimizationFitType) 

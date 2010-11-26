@@ -589,6 +589,7 @@ Double_t TMVA::MethodCategory::GetMvaValue( Double_t* err, Double_t* errUpper )
    if(m!=0) {
       mvaValue = m->GetMvaValue(ev,err);
    }
+   if (errUpper) *errUpper=-1; // using same convention as in NoErrorCalc()
    ev->SetVariableArrangement(0);
 
    return mvaValue;
