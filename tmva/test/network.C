@@ -7,6 +7,7 @@
 #include "TString.h"
 #include "TDirectory.h"
 #include "TKey.h"
+#include "TText.h"
 
 #include "tmvaglob.C"
 
@@ -39,11 +40,21 @@ void draw_network( TFile* f, TDirectory* d, const TString& hName = "weights_hist
    Int_t canvasColor = TMVAStyle->GetCanvasColor(); // backup
    TMVAStyle->SetCanvasColor( c_DarkBackground );
 
+   Int_t titleFillColor = TMVAStyle->GetTitleFillColor();
+   Int_t titleTextColor = TMVAStyle->GetTitleTextColor();
+   Int_t borderSize     = TMVAStyle->GetTitleBorderSize();
+
+   TMVAStyle->SetTitleFillColor( c_DarkBackground );
+   TMVAStyle->SetTitleTextColor( TColor::GetColor( "#FFFFFF" ) );
+   TMVAStyle->SetTitleBorderSize( 0 );
+   
    static Int_t icanvas = -1;
    Int_t ixc = 100 + (icanvas)*40;
    Int_t iyc =   0 + (icanvas+1)*20;   
    if (MovieMode) ixc = iyc = 0;
-   TCanvas* c = new TCanvas( Form( "c%i", icanvas ), Form("Neural Network Layout for: %s", d->GetName()), 
+   TString canvasnumber =  Form( "c%i", icanvas );
+   TString canvastitle = Form("Neural Network Layout for: %s", d->GetName());
+   TCanvas* c = new TCanvas( canvasnumber, canvastitle, 
                              ixc, 0 + (icanvas+1)*20, 1000, 650  );
    icanvas++;
    TIter next = d->GetListOfKeys();
@@ -53,7 +64,6 @@ void draw_network( TFile* f, TDirectory* d, const TString& hName = "weights_hist
    // loop over all histograms with hName in name again
    next.Reset();
    Double_t maxWeight = 0;
-
    // find max weight
    while ((key = (TKey*)next())) {
 
@@ -85,22 +95,30 @@ void draw_network( TFile* f, TDirectory* d, const TString& hName = "weights_hist
 
    // draw network
    next.Reset();
+   //cout << "check4a" << endl;
+
    Int_t count = 0;
    while ((key = (TKey*)next())) {
+      //cout << "check4b" << endl;
 
       TClass *cl = gROOT->GetClass(key->GetClassName());
       if (!cl->InheritsFrom("TH2F")) continue;    
+      //cout << "check4c" << endl;
 
       TH2F* h = (TH2F*)key->ReadObj();    
+      //cout << (h->GetName()) << endl;
       if (!h) {
          cout << "Big troubles in \"draw_network\" (2)" << endl;
          exit(1);
       }
+      //cout << (h->GetName()) << endl;
       if (TString(h->GetName()).Contains( hName )) {
+         //cout << (h->GetName()) << endl;
          draw_layer(c, h, count++, numHists+1, maxWeight);
       }
-   }
+      //cout << "check4d" << endl;
 
+   }
    draw_layer_labels(numHists+1);
 
    // add epoch
@@ -118,7 +136,6 @@ void draw_network( TFile* f, TDirectory* d, const TString& hName = "weights_hist
    // ============================================================  
 
    c->Update();
-
    if (MovieMode) {
       // save to file
       TString dirname  = "movieplots";
@@ -137,12 +154,17 @@ void draw_network( TFile* f, TDirectory* d, const TString& hName = "weights_hist
       TMVAGlob::imgconv( c, fname );
    }
 
-   TMVAStyle->SetCanvasColor( canvasColor );
+   // reset global style changes so that it does not affect other plots
+   TMVAStyle->SetCanvasColor    ( canvasColor );
+   TMVAStyle->SetTitleFillColor ( titleFillColor );
+   TMVAStyle->SetTitleTextColor ( titleTextColor );
+   TMVAStyle->SetTitleBorderSize( borderSize );
+
 }
 
 void draw_layer_labels(Int_t nLayers)
 {
-   const Double_t LABEL_HEIGHT = 0.03;
+   const Double_t LABEL_HEIGHT = 0.032;
    const Double_t LABEL_WIDTH  = 0.20;
    Double_t effWidth = 0.8*(1.0-LABEL_WIDTH)/nLayers;
    Double_t height = 0.8*LABEL_HEIGHT;
@@ -150,6 +172,7 @@ void draw_layer_labels(Int_t nLayers)
 
    for (Int_t i = 0; i < nLayers; i++) {
       TString label = Form("Layer %i", i);
+      if (i == nLayers-1) label = "Output layer";
       Double_t cx = i*(1.0-LABEL_WIDTH)/nLayers+1.0/(2.0*nLayers)+LABEL_WIDTH;
       Double_t x1 = cx-0.8*effWidth/2.0;
       Double_t x2 = cx+0.8*effWidth/2.0;
@@ -158,7 +181,9 @@ void draw_layer_labels(Int_t nLayers)
 
       TPaveLabel *p = new TPaveLabel(x1, y1, x2, y2, label+"", "br");
       p->SetFillColor(gStyle->GetTitleFillColor());
+      p->SetTextColor(gStyle->GetTitleTextColor());
       p->SetFillStyle(1001);
+      p->SetBorderSize( 0 );
       p->Draw();
    }
 }
@@ -166,7 +191,7 @@ void draw_layer_labels(Int_t nLayers)
 void draw_input_labels(Int_t nInputs, Double_t* cy, 
                        Double_t rad, Double_t layerWidth)
 {
-   const Double_t LABEL_HEIGHT = 0.03;
+   const Double_t LABEL_HEIGHT = 0.04;
    const Double_t LABEL_WIDTH  = 0.20;
    Double_t width = LABEL_WIDTH + (layerWidth-4*rad);
    Double_t margX = 0.01;
@@ -185,11 +210,12 @@ void draw_input_labels(Int_t nInputs, Double_t* cy,
       Double_t y1 = cy[i] - effHeight;
       Double_t y2 = cy[i] + effHeight;
 
-      TPaveLabel *p = new TPaveLabel(x1, y1, x2, y2, input+"", "br");
-      p->SetFillColor(gStyle->GetTitleFillColor());
-      p->SetFillStyle(1001);
-      p->Draw();
-      if (i == nInputs-1) p->SetTextColor( TMVAGlob::c_NovelBlue );
+      TText* t = new TText();
+      t->SetTextColor(gStyle->GetTitleTextColor());
+      t->SetTextAlign(31);
+      t->SetTextSize(LABEL_HEIGHT);
+      if (i == nInputs-1) t->SetTextColor( TColor::GetColor( "#AFDCEC" ) );
+      t->DrawText( x2, y1+0.018, input + " :");
    }
 
    delete[] varNames;

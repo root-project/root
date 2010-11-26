@@ -261,7 +261,7 @@ void StatDialogBDT::DrawNode( TMVA::DecisionTreeNode *n,
 
    char buffer[25];
    sprintf( buffer, "N=%f", n->GetNEvents() );
-   t->AddText(buffer);
+   if (n->GetNEvents()>0) t->AddText(buffer);
    sprintf( buffer, "S/(S+B)=%4.3f", n->GetPurity() );
    t->AddText(buffer);
 
@@ -310,9 +310,10 @@ TMVA::DecisionTree* StatDialogBDT::ReadTree( TString* &vars, Int_t itree )
       fin >> dummy >> nVars;
       
       // variable mins and maxes
-      vars = new TString[nVars];
+      vars = new TString[nVars+1]; // last one is if "fisher cut criterium"
       for (Int_t i = 0; i < nVars; i++) fin >> vars[i] >> dummy >> dummy >> dummy >> dummy;
-      
+      vars[nVars]="FisherCrit";
+
       char buffer[20];
       char line[256];
       sprintf(buffer,"Tree %d",itree);
@@ -340,12 +341,13 @@ TMVA::DecisionTree* StatDialogBDT::ReadTree( TString* &vars, Int_t itree )
          TString nodeName = TString( TMVA::gTools().xmlengine().GetNodeName(ch) );
          if(nodeName=="Variables"){
             TMVA::gTools().ReadAttr( ch, "NVar", nVars);
-            vars = new TString[nVars]; 
+            vars = new TString[nVars+1]; 
             void* varnode =  TMVA::gTools().xmlengine().GetChild(ch);
             for (Int_t i = 0; i < nVars; i++){
                TMVA::gTools().ReadAttr( varnode, "Expression", vars[i]);
                varnode =  TMVA::gTools().xmlengine().GetNext(varnode);
             }
+            vars[nVars]="FisherCrit";
          }
          if(nodeName=="Weights") break;
          ch = TMVA::gTools().xmlengine().GetNext(ch);

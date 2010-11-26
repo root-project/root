@@ -18,7 +18,6 @@
 #include "TString.h"
 #include "TSystem.h"
 #include "TROOT.h"
-#include "TPluginManager.h"
 #include "TStopwatch.h"
 
 #include "TMVA/Reader.h"
@@ -31,26 +30,32 @@ Bool_t ReadDataFromAsciiIFormat = kFALSE;
 int main( int argc, char** argv ) 
 {
    //---------------------------------------------------------------
-   // default MVA methods to be trained + tested
+   // Default MVA methods to be trained + tested
    std::map<std::string,int> Use;
 
-   Use["PDERS"]           = 1;
-   Use["PDERSkNN"]        = 0; 
+   // --- Mutidimensional likelihood and Nearest-Neighbour methods
+   Use["PDERS"]           = 0;
    Use["PDEFoam"]         = 1; 
-   // ---
-   Use["KNN"]             = 0;
-   // ---
-   Use["LD"]		         = 1;
-   // ---
-   Use["FDA_GA"]          = 0;
+   Use["KNN"]             = 1;
+   // 
+   // --- Linear Discriminant Analysis
+   Use["LD"]		        = 1;
+   // 
+   // --- Function Discriminant analysis
+   Use["FDA_GA"]          = 1;
    Use["FDA_MC"]          = 0;
-   Use["FDA_MT"]          = 1;
+   Use["FDA_MT"]          = 0;
    Use["FDA_GAMT"]        = 0;
-   // ---
+   // 
+   // --- Neural Network
    Use["MLP"]             = 1; 
-   // ---
+   // 
+   // --- Support Vector Machine 
+   Use["SVM"]             = 0;
+   // 
+   // --- Boosted Decision Trees
    Use["BDT"]             = 0;
-   Use["BDTG"]            = 0;
+   Use["BDTG"]            = 1;
    // ---------------------------------------------------------------
 
    std::cout << std::endl;
@@ -71,30 +76,30 @@ int main( int argc, char** argv )
       Use[regMethod] = kTRUE;
    }
 
-   //
-   // create the Reader object
-   //
+
+   // --------------------------------------------------------------------------------------------------
+
+   // --- Create the Reader object
+
    TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );    
 
-   // create a set of variables and declare them to the reader
-   // - the variable names must corresponds in name and type to 
-   // those given in the weight file(s) that you use
+   // Create a set of variables and declare them to the reader
+   // - the variable names MUST corresponds in name and type to those given in the weight file(s) used
    Float_t var1, var2;
    reader->AddVariable( "var1", &var1 );
    reader->AddVariable( "var2", &var2 );
 
-   //Spectator variables declared in the training have to be added to the reader, too
+   // Spectator variables declared in the training have to be added to the reader, too
    Float_t spec1,spec2;
    reader->AddSpectator( "spec1:=var1*2",  &spec1 );
    reader->AddSpectator( "spec2:=var1*3",  &spec2 );
 
-   //
-   // book the MVA methods
-   //
+   // --- Book the MVA methods
+
    TString dir    = "weights/";
    TString prefix = "TMVARegression";
 
-   // book method(s)
+   // Book method(s)
    for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
       if (it->second) {
          TString methodName = it->first + " method";
@@ -103,39 +108,14 @@ int main( int argc, char** argv )
       }
    }
    
-   // example how to use your own method as plugin
-   if (Use["Plugin"]) {
-      // the weight file contains a line 
-      // Method         : MethodName::InstanceName
-
-      // if MethodName is not a known TMVA method, it is assumed to be
-      // a user implemented method which has to be loaded via the
-      // plugin mechanism
-      
-      // for user implemented methods the line in the weight file can be
-      // Method         : PluginName::InstanceName
-      // where PluginName can be anything
-
-      // before usage the plugin has to be defined, which can happen
-      // either through the following line in .rootrc:
-      // # plugin handler          plugin       class            library        constructor format
-      // Plugin.TMVA@@MethodBase:  PluginName   MethodClassName  UserPackage    "MethodName(DataSet&,TString)"
-      //  
-      // or by telling the global plugin manager directly
-      gPluginMgr->AddHandler("TMVA@@MethodBase", "PluginName", "MethodClassName", "UserPackage", "MethodName(DataSet&,TString)");
-      // the class is then looked for in libUserPackage.so
-
-      // now the method can be booked like any other
-      reader->BookMVA( "User method", dir + prefix + "_User.weights.txt" );
-   }
-
-   // book output histograms
-   std::vector<TH1*> hists;
+   // Book output histograms
+   TH1* hists[100];
+   Int_t nhists = -1;
    for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
       TH1* h = new TH1F( it->first.c_str(), TString(it->first) + " method", 100, -100, 600 );
-      std::cout << "booking hist: " << it->first.c_str() << std::endl;
-      if (it->second) hists.push_back( h );
+      if (it->second) hists[++nhists] = h;
    }
+   nhists++;
    
    // Prepare input tree (this must be replaced by your data source)
    // in this example, there is a toy tree with signal and one with background events
@@ -144,23 +124,21 @@ int main( int argc, char** argv )
    TFile *input(0);
    TString fname = "./tmva_reg_example.root";
    if (!gSystem->AccessPathName( fname )) {
-      // first we try to find tmva_example.root in the local directory
-      std::cout << "--- TMVARegressionApp        : Accessing data file \"" << fname << "\"" << std::endl;
-      input = TFile::Open( fname );
+      input = TFile::Open( fname ); // check if file in local directory exists
    } 
    else { 
-      // finally we try accessing the file via the web from
-      // http://root.cern.ch/files/tmva_example.root
-      std::cout << "ERROR: cannot access data file: " << fname << std::endl;
-      exit(1);
+      input = TFile::Open( "http://root.cern.ch/files/tmva_reg_example.root" ); // if not: download from ROOT server
    }
+   
    if (!input) {
-      std::cout << "ERROR: could not open data file: " << fname << std::endl;
+      std::cout << "ERROR: could not open data file" << std::endl;
       exit(1);
    }
+   std::cout << "--- TMVARegressionApp        : Using input file: " << input->GetName() << std::endl;
 
-   //
-   // prepare the tree
+   // --- Event loop
+
+   // Prepare the tree
    // - here the variable names have to corresponds to your tree
    // - you can use the same variables as above which is slightly faster,
    //   but of course you can use different ones and copy the values inside the event loop
@@ -181,22 +159,22 @@ int main( int argc, char** argv )
 
       theTree->GetEntry(ievt);
 
-      // 
-      // retrieve the MVA target values (regression outputs) and fill into histograms
+      // Retrieve the MVA target values (regression outputs) and fill into histograms
       // NOTE: EvaluateRegression(..) returns a vector for multi-target regression
-      // 
-      for (std::vector<TH1*>::iterator it = hists.begin(); it != hists.end(); it++) {
-         (*it)->Fill( reader->EvaluateRegression( (*it)->GetTitle() )[0] );            
+
+      for (Int_t ih=0; ih<nhists; ih++) {
+         TString title = hists[ih]->GetTitle();
+         Float_t val = (reader->EvaluateRegression( title ))[0];
+         hists[ih]->Fill( val );    
       }
    }
    sw.Stop();
    std::cout << "--- End of event loop: "; sw.Print();
 
-   //
-   // write histograms
-   //
+   // --- Write histograms
+
    TFile *target  = new TFile( "TMVARegApp.root","RECREATE" );
-   for (std::vector<TH1*>::iterator it = hists.begin(); it != hists.end(); it++) (*it)->Write();
+   for (Int_t ih=0; ih<nhists; ih++) hists[ih]->Write();
    target->Close();
 
    std::cout << "--- Created root file: \"" << target->GetName() 

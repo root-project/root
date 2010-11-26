@@ -71,12 +71,12 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
          TIter nextInDir(&h1hists);
          TString methodTitle;
          TMVAGlob::GetMethodTitle(methodTitle,instDir);
+         Bool_t found = kFALSE;
          while (hkey = (TKey*)nextInDir()) {
             TH1 *th1 = (TH1*)hkey->ReadObj();
             TString hname= th1->GetName();
             if (hname.Contains( suffixSig ) && !hname.Contains( "Cut") && 
                 !hname.Contains("original") && !hname.Contains("smoothed")) {
-
                // retrieve corresponding signal and background histograms   
                TString hnameS = hname;
                TString hnameB = hname; hnameB.ReplaceAll("_S","_B");
@@ -91,6 +91,7 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
 
                TH1* sigF(0);
                TH1* bkgF(0);
+               
                for (int i=0; i<= 5; i++) {
                   TString hspline = hnameS + Form("_smoothed_hist_from_spline%i",i);
                   sigF = (TH1*)instDir->Get( hspline );
@@ -100,19 +101,27 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
                      break;
                   }
                }
+               if (!sigF){
+                  TString hspline = hnameS + TString("_smoothed_hist_from_KDE");
+                  sigF = (TH1*)instDir->Get( hspline );
+                  
+                  if (sigF) {
+                     bkgF = (TH1*)instDir->Get( hspline.ReplaceAll("_tr_S","_tr_B") );
+                  }
+               }
+              
                if ((sigF == NULL || bkgF == NULL) &&!hname.Contains("hist") ) {
-                  cout << "*** probas.C: big troubles - did not found histogram " << hspline.Data() << " " 
-                       << sigF << " " << bkgF << endl;
+                  cout << "*** probas.C: big troubles - did not find probability histograms" << endl;
                   return;
                }
                else  {
-                  // remove the signal suffix
+                    // remove the signal suffix
 
                   // check that exist
                   if (NULL != sigF && NULL != bkgF && NULL!=sig && NULL!=bgd) {
           
                      TString hname = sig->GetName();
-            
+                     found = kTRUE;
                      // chop off useless stuff
                      sig->SetTitle( TString("TMVA output for classifier: ") + methodTitle );
             
@@ -195,7 +204,11 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
                   }
                }
             }
+            
          }
-      }
+         if(!found){
+            cout << "--- No PDFs found for method " << methodTitle << ". Did you request \"CreateMVAPdfs\" in the option string?" << endl;
+         }
+      }    
    }
 }

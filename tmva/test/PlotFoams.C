@@ -2,6 +2,7 @@
 #include "TControlBar.h"
 #include <sstream>
 #include <string>
+#include <cfloat>
 
 
 typedef enum { kNEV, kDISCR, kMONO, kRMS, kRMSOVMEAN } EPlotType;
@@ -186,7 +187,7 @@ void Plot( TString fin = "weights/TMVAClassification_PDEFoam.weights_foams.root"
 	    proj = foam->Project2(i, k, cellval.c_str(), "kNone");
 	    proj->SetTitle(title_proj1.str().c_str());
 	    if (pt==kDISCR)
-	       proj->GetZaxis()->SetRangeUser(0., 1.);
+	       proj->GetZaxis()->SetRangeUser(-DBL_EPSILON, 1.+DBL_EPSILON);
 	    proj->Draw("COLZ"); // CONT4Z
 	    proj->SetDirectory(0);
 

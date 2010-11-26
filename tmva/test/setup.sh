@@ -1,11 +1,5 @@
 #!/bin/sh
 
-#cd ..
-#mkdir -p include; 
-#cd include;
-#if [ ! -h TMVA ]; then ln -s ../inc TMVA; fi;
-#cd ..
-
 # set symbolic links to data file and to rootmaps
 #cd test;
 if [ ! -h tmva_example.root ]; then ln -s data/toy_sigbkg.root tmva_example.root; fi

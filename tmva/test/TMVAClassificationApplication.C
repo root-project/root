@@ -18,7 +18,6 @@
 #include "TString.h"
 #include "TSystem.h"
 #include "TROOT.h"
-#include "TPluginManager.h"
 #include "TStopwatch.h"
 
 #include "TMVAGui.C"
@@ -33,66 +32,84 @@ using namespace TMVA;
 
 void TMVAClassificationApplication( TString myMethodList = "" ) 
 {   
-   //---------------------------------------------------------------
-   // default MVA methods to be trained + tested
+#ifdef __CINT__
+   gROOT->ProcessLine( ".O0" ); // turn off optimization in CINT
+#endif
 
-   // this loads the library
+   //---------------------------------------------------------------
+
+   // This loads the library
    TMVA::Tools::Instance();
 
+   // Default MVA methods to be trained + tested
    std::map<std::string,int> Use;
 
-   Use["CutsGA"]          = 1; // other "Cuts" methods work identically
-   // ---
+   // --- Cut optimisation
+   Use["Cuts"]            = 1;
+   Use["CutsD"]           = 1;
+   Use["CutsPCA"]         = 0;
+   Use["CutsGA"]          = 0;
+   Use["CutsSA"]          = 0;
+   // 
+   // --- 1-dimensional likelihood ("naive Bayes estimator")
    Use["Likelihood"]      = 1;
-   Use["LikelihoodD"]     = 1; // the "D" extension indicates decorrelated input variables (see option strings)
-   Use["LikelihoodPCA"]   = 0; // the "PCA" extension indicates PCA-transformed input variables (see option strings)
+   Use["LikelihoodD"]     = 0; // the "D" extension indicates decorrelated input variables (see option strings)
+   Use["LikelihoodPCA"]   = 1; // the "PCA" extension indicates PCA-transformed input variables (see option strings)
    Use["LikelihoodKDE"]   = 0;
    Use["LikelihoodMIX"]   = 0;
-   // ---
+   //
+   // --- Mutidimensional likelihood and Nearest-Neighbour methods
    Use["PDERS"]           = 1;
    Use["PDERSD"]          = 0;
    Use["PDERSPCA"]        = 0;
-   Use["PDERSkNN"]        = 0; // depreciated until further notice
    Use["PDEFoam"]         = 1;
-   // --
-   Use["KNN"]             = 1;
-   // ---
-   Use["HMatrix"]         = 0;
-   Use["Fisher"]          = 1;
+   Use["PDEFoamBoost"]    = 0; // uses generalised MVA method boosting
+   Use["KNN"]             = 1; // k-nearest neighbour method
+   //
+   // --- Linear Discriminant Analysis
+   Use["LD"]              = 1; // Linear Discriminant identical to Fisher
+   Use["Fisher"]          = 0;
    Use["FisherG"]         = 0;
-   Use["BoostedFisher"]   = 0;
-   Use["LD"]              = 1;
-   // ---
-   Use["FDA_GA"]          = 0;
+   Use["BoostedFisher"]   = 0; // uses generalised MVA method boosting
+   Use["HMatrix"]         = 0;
+   //
+   // --- Function Discriminant analysis
+   Use["FDA_GA"]          = 1; // minimisation of user-defined function using Genetics Algorithm
    Use["FDA_SA"]          = 0;
    Use["FDA_MC"]          = 0;
-   Use["FDA_MT"]          = 1;
+   Use["FDA_MT"]          = 0;
    Use["FDA_GAMT"]        = 0;
    Use["FDA_MCMT"]        = 0;
-   // ---
-   Use["MLP"]             = 1; // this is the recommended ANN
-   Use["MLPBFGS"]         = 0; // recommended ANN with optional training method
-   Use["MLPBNN"]          = 0;  // 
-   Use["CFMlpANN"]        = 0; // *** missing
-   Use["TMlpANN"]         = 0; 
-   // ---
+   //
+   // --- Neural Networks (all are feed-forward Multilayer Perceptrons)
+   Use["MLP"]             = 0; // Recommended ANN
+   Use["MLPBFGS"]         = 0; // Recommended ANN with optional training method
+   Use["MLPBNN"]          = 1; // Recommended ANN with BFGS training method and bayesian regulator
+   Use["CFMlpANN"]        = 0; // Depreciated ANN from ALEPH
+   Use["TMlpANN"]         = 0; // ROOT's own ANN
+   //
+   // --- Support Vector Machine 
    Use["SVM"]             = 1;
-   // ---
-   Use["BDT"]             = 1;
-   Use["BDTD"]            = 0;
-   Use["BDTG"]            = 1;
-   Use["BDTB"]            = 0;
-   // ---
-   Use["RuleFit"]         = 0;
-   // ---
-   Use["Category"]        = 0;
-   // ---
-   Use["Plugin"]          = 0;
+   // 
+   // --- Boosted Decision Trees
+   Use["BDT"]             = 1; // uses Adaptive Boost
+   Use["BDTG"]            = 0; // uses Gradient Boost
+   Use["BDTB"]            = 0; // uses Bagging
+   Use["BDTD"]            = 0; // decorrelation + Adaptive Boost
+   // 
+   // --- Friedman's RuleFit method, ie, an optimised series of cuts ("rules")
+   Use["RuleFit"]         = 1;
    // ---------------------------------------------------------------
+   Use["Plugin"]          = 0;
+   Use["Category"]        = 0;
+   Use["SVM_Gauss"]       = 0;
+   Use["SVM_Poly"]        = 0;
+   Use["SVM_Lin"]         = 0;
 
    std::cout << std::endl;
    std::cout << "==> Start TMVAClassificationApplication" << std::endl;
 
+   // Select methods (don't look at this code - not of interest)
    if (myMethodList != "") {
       for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) it->second = 0;
 
@@ -101,8 +118,11 @@ void TMVAClassificationApplication( TString myMethodList = "" )
          std::string regMethod(mlist[i]);
 
          if (Use.find(regMethod) == Use.end()) {
-            std::cout << "Method \"" << regMethod << "\" not known in TMVA under this name. Choose among the following:" << std::endl;
-            for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) std::cout << it->first << " ";
+            std::cout << "Method \"" << regMethod 
+                      << "\" not known in TMVA under this name. Choose among the following:" << std::endl;
+            for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
+               std::cout << it->first << " ";
+            }
             std::cout << std::endl;
             return;
          }
@@ -110,14 +130,14 @@ void TMVAClassificationApplication( TString myMethodList = "" )
       }
    }
 
-   //
-   // create the Reader object
-   //
+   // --------------------------------------------------------------------------------------------------
+
+   // --- Create the Reader object
+
    TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );    
 
-   // create a set of variables and declare them to the reader
-   // - the variable names must corresponds in name and type to 
-   // those given in the weight file(s) that you use
+   // Create a set of variables and declare them to the reader
+   // - the variable names MUST corresponds in name and type to those given in the weight file(s) used
    Float_t var1, var2;
    Float_t var3, var4;
    reader->AddVariable( "myvar1 := var1+var2", &var1 );
@@ -125,65 +145,40 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    reader->AddVariable( "var3",                &var3 );
    reader->AddVariable( "var4",                &var4 );
 
-   //Spectator variables declared in the training have to be added to the reader, too
+   // Spectator variables declared in the training have to be added to the reader, too
    Float_t spec1,spec2;
    reader->AddSpectator( "spec1 := var1*2",   &spec1 );
    reader->AddSpectator( "spec2 := var1*3",   &spec2 );
 
    Float_t Category_cat1, Category_cat2, Category_cat3;
    if (Use["Category"]){
-      // add artificial spectators for distinguishing categories
+      // Add artificial spectators for distinguishing categories
       reader->AddSpectator( "Category_cat1 := var3<=0",             &Category_cat1 );
       reader->AddSpectator( "Category_cat2 := (var3>0)&&(var4<0)",  &Category_cat2 );
       reader->AddSpectator( "Category_cat3 := (var3>0)&&(var4>=0)", &Category_cat3 );
    }
-   //
-   // book the MVA methods
-   //
+
+   // --- Book the MVA methods
+
    TString dir    = "weights/";
    TString prefix = "TMVAClassification";
 
-   // book method(s)
+   // Book method(s)
    for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
       if (it->second) {
-         TString methodName = it->first + " method";
-         TString weightfile = dir + prefix + "_" + TString(it->first) + ".weights.xml";
+         TString methodName = TString(it->first) + TString(" method");
+         TString weightfile = dir + prefix + TString("_") + TString(it->first) + TString(".weights.xml");
          reader->BookMVA( methodName, weightfile ); 
       }
    }
    
-   // example how to use your own method as plugin
-   if (Use["Plugin"]) {
-      // the weight file contains a line 
-      // Method         : MethodName::InstanceName
-
-      // if MethodName is not a known TMVA method, it is assumed to be
-      // a user implemented method which has to be loaded via the
-      // plugin mechanism
-      
-      // for user implemented methods the line in the weight file can be
-      // Method         : PluginName::InstanceName
-      // where PluginName can be anything
-
-      // before usage the plugin has to be defined, which can happen
-      // either through the following line in .rootrc:
-      // # plugin handler          plugin       class            library        constructor format
-      // Plugin.TMVA@@MethodBase:  PluginName   MethodClassName  UserPackage    "MethodName(DataSet&,TString)"
-      //  
-      // or by telling the global plugin manager directly
-      gPluginMgr->AddHandler("TMVA@@MethodBase", "PluginName", "MethodClassName", "UserPackage", "MethodName(DataSet&,TString)");
-      // the class is then looked for in libUserPackage.so
-
-      // now the method can be booked like any other
-      reader->BookMVA( "User method", dir + prefix + "_User.weights.txt" );
-   }
-
-   // book output histograms
+   // Book output histograms
    UInt_t nbin = 100;
-   TH1F *histLk(0), *histLkD(0), *histLkPCA(0), *histLkKDE(0), *histLkMIX(0), *histPD(0), *histPDD(0);
-   TH1F *histPDPCA(0), *histPDEFoam(0), *histPDEFoamErr(0), *histPDEFoamSig(0), *histKNN(0), *histHm(0);
-   TH1F *histFi(0), *histFiG(0), *histFiB(0), *histLD(0), *histNn(0),*histNnbfgs(0),*histNnbnn(0), *histNnC(0), *histNnT(0), *histBdt(0), *histBdtG(0), *histBdtD(0);
-   TH1F *histRf(0), *histSVMG(0), *histSVMP(0), *histSVML(0), *histFDAMT(0), *histFDAGA(0), *histCat(0), *histPBdt(0);
+   TH1F   *histLk(0), *histLkD(0), *histLkPCA(0), *histLkKDE(0), *histLkMIX(0), *histPD(0), *histPDD(0);
+   TH1F   *histPDPCA(0), *histPDEFoam(0), *histPDEFoamErr(0), *histPDEFoamSig(0), *histKNN(0), *histHm(0);
+   TH1F   *histFi(0), *histFiG(0), *histFiB(0), *histLD(0), *histNn(0),*histNnbfgs(0),*histNnbnn(0);
+   TH1F   *histNnC(0), *histNnT(0), *histBdt(0), *histBdtG(0), *histBdtD(0), *histRf(0), *histSVMG(0);
+   TH1F   *histSVMP(0), *histSVML(0), *histFDAMT(0), *histFDAGA(0), *histCat(0), *histPBdt(0);
 
    if (Use["Likelihood"])    histLk      = new TH1F( "MVA_Likelihood",    "MVA_Likelihood",    nbin, -1, 1 );
    if (Use["LikelihoodD"])   histLkD     = new TH1F( "MVA_LikelihoodD",   "MVA_LikelihoodD",   nbin, -1, 0.9999 );
@@ -200,8 +195,8 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    if (Use["BoostedFisher"]) histFiB     = new TH1F( "MVA_BoostedFisher", "MVA_BoostedFisher", nbin, -2, 2 );
    if (Use["LD"])            histLD      = new TH1F( "MVA_LD",            "MVA_LD",            nbin, -2, 2 );
    if (Use["MLP"])           histNn      = new TH1F( "MVA_MLP",           "MVA_MLP",           nbin, -1.25, 1.5 );
-   if (Use["MLPBFGS"])       histNnbfgs  = new TH1F( "MVA_MLPBFGS",           "MVA_MLPBFGS",           nbin, -1.25, 1.5 );
-   if (Use["MLPBNN"])        histNnbnn   = new TH1F( "MVA_MLPBNN",           "MVA_MLPBNN",           nbin, -1.25, 1.5 );
+   if (Use["MLPBFGS"])       histNnbfgs  = new TH1F( "MVA_MLPBFGS",       "MVA_MLPBFGS",       nbin, -1.25, 1.5 );
+   if (Use["MLPBNN"])        histNnbnn   = new TH1F( "MVA_MLPBNN",        "MVA_MLPBNN",        nbin, -1.25, 1.5 );
    if (Use["CFMlpANN"])      histNnC     = new TH1F( "MVA_CFMlpANN",      "MVA_CFMlpANN",      nbin,  0, 1 );
    if (Use["TMlpANN"])       histNnT     = new TH1F( "MVA_TMlpANN",       "MVA_TMlpANN",       nbin, -1.3, 1.3 );
    if (Use["BDT"])           histBdt     = new TH1F( "MVA_BDT",           "MVA_BDT",           nbin, -0.8, 0.8 );
@@ -223,7 +218,7 @@ void TMVAClassificationApplication( TString myMethodList = "" )
       histPDEFoamSig = new TH1F( "MVA_PDEFoamSig",    "MVA_PDEFoam significance", nbin,  0, 10 );
    }
 
-   // book example histogram for probability (the other methods are done similarly)
+   // Book example histogram for probability (the other methods are done similarly)
    TH1F *probHistFi(0), *rarityHistFi(0);
    if (Use["Fisher"]) {
       probHistFi   = new TH1F( "MVA_Fisher_Proba",  "MVA_Fisher_Proba",  nbin, 0, 1 );
@@ -236,12 +231,10 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    //   
    TFile *input(0);
    TString fname = "./tmva_example.root";   
-   if (!gSystem->AccessPathName( fname )) {
+   if (!gSystem->AccessPathName( fname )) 
       input = TFile::Open( fname ); // check if file in local directory exists
-   } 
-   else { 
+   else    
       input = TFile::Open( "http://root.cern.ch/files/tmva_class_example.root" ); // if not: download from ROOT server
-   }
    
    if (!input) {
       std::cout << "ERROR: could not open data file" << std::endl;
@@ -249,21 +242,22 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    }
    std::cout << "--- TMVAClassificationApp    : Using input file: " << input->GetName() << std::endl;
    
-   //
-   // prepare the tree
+   // --- Event loop
+
+   // Prepare the event tree
    // - here the variable names have to corresponds to your tree
    // - you can use the same variables as above which is slightly faster,
    //   but of course you can use different ones and copy the values inside the event loop
    //
-   TTree* theTree = (TTree*)input->Get("TreeS");
    std::cout << "--- Select signal sample" << std::endl;
+   TTree* theTree = (TTree*)input->Get("TreeS");
    Float_t userVar1, userVar2;
    theTree->SetBranchAddress( "var1", &userVar1 );
    theTree->SetBranchAddress( "var2", &userVar2 );
    theTree->SetBranchAddress( "var3", &var3 );
    theTree->SetBranchAddress( "var4", &var4 );
 
-   // efficiency calculator for cut method
+   // Efficiency calculator for cut method
    Int_t    nSelCutsGA = 0;
    Double_t effS       = 0.7;
 
@@ -274,52 +268,15 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    sw.Start();
    for (Long64_t ievt=0; ievt<theTree->GetEntries();ievt++) {
 
-      if (ievt%1000 == 0){
-         std::cout << "--- ... Processing event: " << ievt << std::endl;
-      }
+      if (ievt%1000 == 0) std::cout << "--- ... Processing event: " << ievt << std::endl;
 
       theTree->GetEntry(ievt);
 
       var1 = userVar1 + userVar2;
       var2 = userVar1 - userVar2;
 
-      if (ievt <20){
-         // test the twodifferent Reader::EvaluateMVA functions 
-         // access via registered variables compared to access via vector<float>
-         vecVar[0]=var1;
-         vecVar[1]=var2;
-         vecVar[2]=var3;
-         vecVar[3]=var4;      
-         for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
-            if (it->second) {
-               TString mName = it->first + " method";
-               Double_t mva1 = reader->EvaluateMVA( mName); 
-               Double_t mva2 = reader->EvaluateMVA( vecVar, mName); 
-               if (mva1 != mva2) {
-                  std::cout << "++++++++++++++ ERROR in "<< mName <<", comparing different EvaluateMVA results val1=" << mva1 << " val2="<<mva2<<std::endl;
-               }
-            }
-         }
-         // now test that the inputs do matter
-         TRandom3 rand(0);
-         vecVar[0]=rand.Rndm();
-         vecVar[1]=rand.Rndm();
-         vecVar[2]=rand.Rndm();
-         vecVar[3]=rand.Rndm();
-         for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
-            if (it->second) {
-               TString mName = it->first + " method";
-               Double_t mva1 = reader->EvaluateMVA( mName); 
-               Double_t mva2 = reader->EvaluateMVA( vecVar, mName); 
-               if (mva1 == mva2) {
-                  std::cout << "++++++++++++++ ERROR in "<< mName <<", obtaining idnetical output for different inputs" <<std::endl;
-               }
-            }
-         }
-      }
-      // 
-      // return the MVAs and fill to histograms
-      // 
+      // --- Return the MVA outputs and fill into histograms
+
       if (Use["CutsGA"]) {
          // Cuts is a special case: give the desired signal efficienciy
          Bool_t passed = reader->EvaluateMVA( "CutsGA method", effS );
@@ -341,8 +298,8 @@ void TMVAClassificationApplication( TString myMethodList = "" )
       if (Use["BoostedFisher"])   histFiB    ->Fill( reader->EvaluateMVA( "BoostedFisher method" ) );
       if (Use["LD"           ])   histLD     ->Fill( reader->EvaluateMVA( "LD method"            ) );
       if (Use["MLP"          ])   histNn     ->Fill( reader->EvaluateMVA( "MLP method"           ) );
-      if (Use["MLPBFGS"          ])   histNnbfgs ->Fill( reader->EvaluateMVA( "MLPBFGS method"           ) );
-      if (Use["MLPBNN"          ])   histNnbnn ->Fill( reader->EvaluateMVA( "MLPBNN method"           ) );
+      if (Use["MLPBFGS"      ])   histNnbfgs ->Fill( reader->EvaluateMVA( "MLPBFGS method"       ) );
+      if (Use["MLPBNN"       ])   histNnbnn  ->Fill( reader->EvaluateMVA( "MLPBNN method"        ) );
       if (Use["CFMlpANN"     ])   histNnC    ->Fill( reader->EvaluateMVA( "CFMlpANN method"      ) );
       if (Use["TMlpANN"      ])   histNnT    ->Fill( reader->EvaluateMVA( "TMlpANN method"       ) );
       if (Use["BDT"          ])   histBdt    ->Fill( reader->EvaluateMVA( "BDT method"           ) );
@@ -357,26 +314,27 @@ void TMVAClassificationApplication( TString myMethodList = "" )
       if (Use["Category"     ])   histCat    ->Fill( reader->EvaluateMVA( "Category method"      ) );
       if (Use["Plugin"       ])   histPBdt   ->Fill( reader->EvaluateMVA( "P_BDT method"         ) );
 
-      // retrieve also per-event error
+      // Retrieve also per-event error
       if (Use["PDEFoam"]) {
          Double_t val = reader->EvaluateMVA( "PDEFoam method" );
          Double_t err = reader->GetMVAError();
          histPDEFoam   ->Fill( val );
          histPDEFoamErr->Fill( err );         
-         histPDEFoamSig->Fill( val/err );
+         if (err>1.e-50) histPDEFoamSig->Fill( val/err );
       }         
 
-      // retrieve probability instead of MVA output
+      // Retrieve probability instead of MVA output
       if (Use["Fisher"])   {
          probHistFi  ->Fill( reader->GetProba ( "Fisher method" ) );
          rarityHistFi->Fill( reader->GetRarity( "Fisher method" ) );
       }
    }
-   // get elapsed time
+
+   // Get elapsed time
    sw.Stop();
    std::cout << "--- End of event loop: "; sw.Print();
 
-   // get efficiency for cuts classifier
+   // Get efficiency for cuts classifier
    if (Use["CutsGA"]) std::cout << "--- Efficiency for CutsGA method: " << double(nSelCutsGA)/theTree->GetEntries()
                                 << " (for a required signal efficiency of " << effS << ")" << std::endl;
 
@@ -404,9 +362,8 @@ void TMVAClassificationApplication( TString myMethodList = "" )
       }
    }
 
-   //
-   // write histograms
-   //
+   // --- Write histograms
+
    TFile *target  = new TFile( "TMVApp.root","RECREATE" );
    if (Use["Likelihood"   ])   histLk     ->Write();
    if (Use["LikelihoodD"  ])   histLkD    ->Write();
@@ -439,10 +396,10 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    if (Use["Category"     ])   histCat    ->Write();
    if (Use["Plugin"       ])   histPBdt   ->Write();
 
-   // write also error and significance histos
+   // Write also error and significance histos
    if (Use["PDEFoam"]) { histPDEFoam->Write(); histPDEFoamErr->Write(); histPDEFoamSig->Write(); }
 
-   // write also probability hists
+   // Write also probability hists
    if (Use["Fisher"]) { if (probHistFi != 0) probHistFi->Write(); if (rarityHistFi != 0) rarityHistFi->Write(); }
    target->Close();
 

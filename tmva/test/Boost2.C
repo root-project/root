@@ -11,7 +11,6 @@
 #include "TObjString.h"
 #include "TSystem.h"
 #include "TROOT.h"
-#include "TPluginManager.h"
 
 #include "TMVAGui.C"
 

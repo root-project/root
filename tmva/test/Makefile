@@ -11,10 +11,12 @@ LIBS    = -L../lib -lTMVA.1 $(shell root-config --libs) -lMLP -lTreePlayer -lMin
 BINS = TMVAClassification \
 	TMVAClassificationCategory \
 	TMVAClassificationApplication \
-	TMVAClassificationApplication_all \
 	TMVAClassificationCategoryApplication \
 	TMVARegression \
-	TMVARegressionApplication
+	TMVARegressionApplication \
+	TMVAMulticlass \
+	TMVAMulticlassApplication \
+	TMVAMultipleBackgroundExample
 
 UNITTESTS = EVENT CREATE_DATASET 
 

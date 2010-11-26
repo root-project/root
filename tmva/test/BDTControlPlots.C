@@ -46,22 +46,28 @@ void bdtcontrolplots( TDirectory *bdtdir ) {
 
    const TString titName = bdtdir->GetName();
 
-   TString hname[nPlots]={"BoostWeight","BoostWeightVsTree","ErrFractHist","NodesBeforePruning","NodesAfterPruning","alpha"}
+   TString hname[nPlots]={"BoostWeight","BoostWeightVsTree","ErrFractHist","NodesBeforePruning","NodesAfterPruning",titName+"_FOMvsIterFrame"}
 
    for (Int_t i=0; i<nPlots; i++){
       Int_t color = 4; 
       TPad * cPad = (TPad*)c->cd(i+1);
       TH1 *h = (TH1*) bdtdir->Get(hname[i]);
-      TString plotname = h->GetName();
-      h->SetMaximum(h->GetMaximum()*1.3);
-      h->SetMinimum( 0 );
-      h->SetMarkerColor(color);
-      h->SetMarkerSize( 0.7 );
-      h->SetMarkerStyle( 24 );
-      h->SetLineWidth(1);
-      h->SetLineColor(color);
-      h->Draw();
-      c->Update();
+      if (h){
+         TString plotname = h->GetName();
+         h->SetMaximum(h->GetMaximum()*1.3);
+         h->SetMinimum( 0 );
+         h->SetMarkerColor(color);
+         h->SetMarkerSize( 0.7 );
+         h->SetMarkerStyle( 24 );
+         h->SetLineWidth(1);
+         h->SetLineColor(color);
+         h->Draw();
+         if(hname[i]==titName+"_FOMvsIterFrame"){ // a plot only available in case of automatic parameter option tuning
+            TGraph *g = (TGraph*) bdtdir->Get(titName+"_FOMvsIter");
+            g->Draw();
+         }
+         c->Update();
+      }
    }
 
    // write to file

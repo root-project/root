@@ -18,7 +18,6 @@
 #include "TString.h"
 #include "TSystem.h"
 #include "TROOT.h"
-#include "TPluginManager.h"
 #include "TStopwatch.h"
 
 #if not defined(__CINT__) || defined(__MAKECINT__)
@@ -31,35 +30,41 @@ using namespace TMVA;
 void TMVARegressionApplication( TString myMethodList = "" ) 
 {
    //---------------------------------------------------------------
-   // default MVA methods to be trained + tested
-
-   // this loads the library
+   // This loads the library
    TMVA::Tools::Instance();
 
+   // Default MVA methods to be trained + tested
    std::map<std::string,int> Use;
 
-   Use["PDERS"]           = 1;
-   Use["PDERSkNN"]        = 0; 
+   // --- Mutidimensional likelihood and Nearest-Neighbour methods
+   Use["PDERS"]           = 0;
    Use["PDEFoam"]         = 1; 
-   // ---
-   Use["KNN"]             = 0;
-   // ---
+   Use["KNN"]             = 1;
+   // 
+   // --- Linear Discriminant Analysis
    Use["LD"]		        = 1;
-   // ---
-   Use["FDA_GA"]          = 0;
+   // 
+   // --- Function Discriminant analysis
+   Use["FDA_GA"]          = 1;
    Use["FDA_MC"]          = 0;
-   Use["FDA_MT"]          = 1;
+   Use["FDA_MT"]          = 0;
    Use["FDA_GAMT"]        = 0;
-   // ---
+   // 
+   // --- Neural Network
    Use["MLP"]             = 1; 
-   // ---
+   // 
+   // --- Support Vector Machine 
+   Use["SVM"]             = 0;
+   // 
+   // --- Boosted Decision Trees
    Use["BDT"]             = 0;
-   Use["BDTG"]            = 0;
+   Use["BDTG"]            = 1;
    // ---------------------------------------------------------------
 
    std::cout << std::endl;
    std::cout << "==> Start TMVARegressionApplication" << std::endl;
 
+   // Select methods (don't look at this code - not of interest)
    if (myMethodList != "") {
       for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) it->second = 0;
 
@@ -77,30 +82,29 @@ void TMVARegressionApplication( TString myMethodList = "" )
       }
    }
 
-   //
-   // create the Reader object
-   //
+   // --------------------------------------------------------------------------------------------------
+
+   // --- Create the Reader object
+
    TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );    
 
-   // create a set of variables and declare them to the reader
-   // - the variable names must corresponds in name and type to 
-   // those given in the weight file(s) that you use
+   // Create a set of variables and declare them to the reader
+   // - the variable names MUST corresponds in name and type to those given in the weight file(s) used
    Float_t var1, var2;
    reader->AddVariable( "var1", &var1 );
    reader->AddVariable( "var2", &var2 );
 
-   //Spectator variables declared in the training have to be added to the reader, too
+   // Spectator variables declared in the training have to be added to the reader, too
    Float_t spec1,spec2;
    reader->AddSpectator( "spec1:=var1*2",  &spec1 );
    reader->AddSpectator( "spec2:=var1*3",  &spec2 );
 
-   //
-   // book the MVA methods
-   //
+   // --- Book the MVA methods
+
    TString dir    = "weights/";
    TString prefix = "TMVARegression";
 
-   // book method(s)
+   // Book method(s)
    for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
       if (it->second) {
          TString methodName = it->first + " method";
@@ -109,33 +113,7 @@ void TMVARegressionApplication( TString myMethodList = "" )
       }
    }
    
-   // example how to use your own method as plugin
-   if (Use["Plugin"]) {
-      // the weight file contains a line 
-      // Method         : MethodName::InstanceName
-
-      // if MethodName is not a known TMVA method, it is assumed to be
-      // a user implemented method which has to be loaded via the
-      // plugin mechanism
-      
-      // for user implemented methods the line in the weight file can be
-      // Method         : PluginName::InstanceName
-      // where PluginName can be anything
-
-      // before usage the plugin has to be defined, which can happen
-      // either through the following line in .rootrc:
-      // # plugin handler          plugin       class            library        constructor format
-      // Plugin.TMVA@@MethodBase:  PluginName   MethodClassName  UserPackage    "MethodName(DataSet&,TString)"
-      //  
-      // or by telling the global plugin manager directly
-      gPluginMgr->AddHandler("TMVA@@MethodBase", "PluginName", "MethodClassName", "UserPackage", "MethodName(DataSet&,TString)");
-      // the class is then looked for in libUserPackage.so
-
-      // now the method can be booked like any other
-      reader->BookMVA( "User method", dir + prefix + "_User.weights.txt" );
-   }
-
-   // book output histograms
+   // Book output histograms
    TH1* hists[100];
    Int_t nhists = -1;
    for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
@@ -163,8 +141,9 @@ void TMVARegressionApplication( TString myMethodList = "" )
    }
    std::cout << "--- TMVARegressionApp        : Using input file: " << input->GetName() << std::endl;
 
-   //
-   // prepare the tree
+   // --- Event loop
+
+   // Prepare the tree
    // - here the variable names have to corresponds to your tree
    // - you can use the same variables as above which is slightly faster,
    //   but of course you can use different ones and copy the values inside the event loop
@@ -185,10 +164,8 @@ void TMVARegressionApplication( TString myMethodList = "" )
 
       theTree->GetEntry(ievt);
 
-      // 
-      // retrieve the MVA target values (regression outputs) and fill into histograms
+      // Retrieve the MVA target values (regression outputs) and fill into histograms
       // NOTE: EvaluateRegression(..) returns a vector for multi-target regression
-      // 
 
       for (Int_t ih=0; ih<nhists; ih++) {
          TString title = hists[ih]->GetTitle();
@@ -199,9 +176,8 @@ void TMVARegressionApplication( TString myMethodList = "" )
    sw.Stop();
    std::cout << "--- End of event loop: "; sw.Print();
 
-   //
-   // write histograms
-   //
+   // --- Write histograms
+
    TFile *target  = new TFile( "TMVARegApp.root","RECREATE" );
    for (Int_t ih=0; ih<nhists; ih++) hists[ih]->Write();
    target->Close();

@@ -14,6 +14,7 @@ TList* GetKeyList( const TString& pattern )
    TList* list = new TList();
 
    TIter next( TMVAGui_keyContent );
+   TKey* key(0);
    while ((key = (TKey*)next())) {         
       if (TString(key->GetName()).Contains( pattern )) { list->Add( new TObjString( key->GetName() ) ); }
    }
@@ -31,6 +32,7 @@ void ActionButton( TControlBar* cbar,
    if (requiredKey != "") {
       Bool_t found = kFALSE;
       TIter next( TMVAGui_keyContent );
+      TKey* key(0);
       while ((key = (TKey*)next())) {         
          if (TString(key->GetName()).Contains( requiredKey )) { found = kTRUE; break; }
       }
@@ -54,6 +56,11 @@ void TMVARegGui( const char* fName = "TMVAReg.root" )
    // add ../macros to the path (comment out next line for the ROOT version of TMVA)
    // gROOT->SetMacroPath(curMacroPath+":../macros:");
 
+   TString curIncludePath=gSystem->GetIncludePath();
+   //std::cout <<"inc path="<<curIncludePath<<std::endl;
+   TString newIncludePath=TString("-I../ ")+curIncludePath;
+   gSystem->SetIncludePath(newIncludePath);
+  
    cout << "--- Launch TMVA GUI to view input file: " << fName << endl;
 
    // init
@@ -66,7 +73,6 @@ void TMVARegGui( const char* fName = "TMVAReg.root" )
       return;
    }
    // find all references   
-   cout << "--- Reading keys ..." << endl;
    TMVAGui_keyContent = (TList*)file->GetListOfKeys()->Clone();
 
    // close file
@@ -175,15 +181,15 @@ void TMVARegGui( const char* fName = "TMVAReg.root" )
                  buttonType, "PDEFoam" );
 
    ActionButton( cbar,  
-                 Form( "(%i) Decision Trees (BDT)", ++ic ),
+                 Form( "(%i) Regression Trees (BDT)", ++ic ),
                  Form( ".x BDT_Reg.C+(\"%s\")", fName ),
-                 "Plots the Decision Trees trained by BDT algorithms (macro BDT_Reg.C(itree,...))",
+                 "Plots the Regression Trees trained by BDT algorithms (macro BDT_Reg.C(itree,...))",
                  buttonType, "BDT" );
 
    ActionButton( cbar,  
-                 Form( "(%i) Decision Tree Control Plots (BDT)", ++ic ),
+                 Form( "(%i) Regression Tree Control Plots (BDT)", ++ic ),
                  Form( ".x BDTControlPlots.C(\"%s\")", fName ),
-                 "Plots to monitor boosting and pruning of decision trees (macro BDTControlPlots.C)",
+                 "Plots to monitor boosting and pruning of regression trees (macro BDTControlPlots.C)",
                  buttonType, "BDT" );
 
    cbar->AddSeparator();
@@ -200,7 +206,7 @@ void TMVARegGui( const char* fName = "TMVAReg.root" )
    cbar->Show();
 
    // indicate inactive buttons
-   for (Int_t i=0; i<TMVAGui_inactiveButtons.size(); i++) cbar->SetButtonState( TMVAGui_inactiveButtons[i], 3 );
+   for (UInt_t i=0; i<TMVAGui_inactiveButtons.size(); i++) cbar->SetButtonState( TMVAGui_inactiveButtons[i], 3 );
    if (TMVAGui_inactiveButtons.size() > 0) {
       cout << "=== Note: inactive buttons indicate that the corresponding methods were not trained ===" << endl;
    }

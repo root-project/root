@@ -44,7 +44,6 @@
 #include "TObjString.h"
 #include "TSystem.h"
 #include "TROOT.h"
-#include "TPluginManager.h"
 
 #include "TMVA/Factory.h"
 #include "TMVA/Tools.h"
@@ -61,33 +60,38 @@ int main( int argc, char** argv )
    //
 
    //---------------------------------------------------------------
-   // default MVA methods to be trained + tested
+   // Default MVA methods to be trained + tested
    std::map<std::string,int> Use;
 
-   Use["PDERS"]           = 1;
-   Use["PDERSkNN"]        = 0; // depreciated until further notice
-   Use["PDEFoam"]         = 1; // preparation for new TMVA version "reader". This method is not available in this version of TMVA
-   // ---
-   Use["KNN"]             = 0;
-   // ---
+   // --- Mutidimensional likelihood and Nearest-Neighbour methods
+   Use["PDERS"]           = 0;
+   Use["PDEFoam"]         = 1; 
+   Use["KNN"]             = 1;
+   // 
+   // --- Linear Discriminant Analysis
    Use["LD"]		        = 1;
-   // ---
-   Use["FDA_GA"]          = 0;
+   // 
+   // --- Function Discriminant analysis
+   Use["FDA_GA"]          = 1;
    Use["FDA_MC"]          = 0;
-   Use["FDA_MT"]          = 1;
+   Use["FDA_MT"]          = 0;
    Use["FDA_GAMT"]        = 0;
-   // ---
-   Use["MLP"]             = 1; // this is the recommended ANN
-   // ---
+   // 
+   // --- Neural Network
+   Use["MLP"]             = 1; 
+   // 
+   // --- Support Vector Machine 
    Use["SVM"]             = 0;
-   // ---
-   Use["BDT"]             = 0;
+   // 
+   // --- Boosted Decision Trees
+   Use["BDT"]             = 1;
    Use["BDTG"]            = 0;
    // ---------------------------------------------------------------
 
    std::cout << std::endl;
    std::cout << "==> Start TMVARegression" << std::endl;
 
+   // Select methods (don't look at this code - not of interest)
    if (argc>1) for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) it->second = 0;
    for (int i=1; i<argc; i++) {
       std::string regMethod(argv[i]);
@@ -99,6 +103,10 @@ int main( int argc, char** argv )
       }
       Use[regMethod] = 1;
    }
+
+   // --------------------------------------------------------------------------------------------------
+
+   // --- Here the preparation phase begins
 
    // Create a new root output file
    TString outfileName( "TMVAReg.root" );
@@ -135,42 +143,37 @@ int main( int argc, char** argv )
    factory->AddSpectator( "spec2:=var1*3",  "Spectator 2", "units", 'F' );
 
    // Add the variable carrying the regression target
-   factory->AddTarget  ( "fvalue" ); 
+   factory->AddTarget( "fvalue" ); 
 
    // It is also possible to declare additional targets for multi-dimensional regression, ie:
    // -- factory->AddTarget( "fvalue2" );
    // BUT: this is currently ONLY implemented for MLP
 
-   // read training and test data (see TMVAClassification for reading ASCII files)
+   // Read training and test data (see TMVAClassification for reading ASCII files)
    // load the signal and background event samples from ROOT trees
    TFile *input(0);
    TString fname = "./tmva_reg_example.root";
-   if (!gSystem->AccessPathName( fname )) {
-      // first we try to find tmva_example.root in the local directory
-      std::cout << "--- TMVARegression    : Accessing " << fname << std::endl;
-      input = TFile::Open( fname );
-   } 
-   else { 
-      std::cout << "--- TMVARegression    : cannot open file: " << fname << std::endl;
-      exit(1);
-   }
-
+   if (!gSystem->AccessPathName( fname )) 
+      input = TFile::Open( fname ); // check if file in local directory exists
+   else 
+      input = TFile::Open( "http://root.cern.ch/files/tmva_reg_example.root" ); // if not: download from ROOT server
+   
    if (!input) {
       std::cout << "ERROR: could not open data file" << std::endl;
       exit(1);
    }
+   std::cout << "--- TMVARegression           : Using input file: " << input->GetName() << std::endl;
+
+   // --- Register the regression tree
 
    TTree *regTree = (TTree*)input->Get("TreeR");
 
    // global event weights per tree (see below for setting event-wise weights)
    Double_t regWeight  = 1.0;   
 
-   // ====== register trees ====================================================
-   //
-   // the following method is the prefered one:
-   // you can add an arbitrary number of regression trees
+   // You can add an arbitrary number of regression trees
    factory->AddRegressionTree( regTree, regWeight );
-   
+
    // This would set individual event weights (the variables defined in the 
    // expression need to exist in the original TTree)
    factory->SetWeightExpression( "var1", "Regression" );
@@ -182,12 +185,9 @@ int main( int argc, char** argv )
    factory->PrepareTrainingAndTestTree( mycut, 
                                         "nTrain_Regression=0:nTest_Regression=0:SplitMode=Random:NormMode=NumEvents:!V" );
 
-   // If no numbers of events are given, half of the events in the tree are used for training, and 
-   // the other half for testing:
+   // If no numbers of events are given, half of the events in the tree are used 
+   // for training, and the other half for testing:
    //    factory->PrepareTrainingAndTestTree( mycut, "SplitMode=random:!V" );  
-   // To also specify the number of testing events, use:
-   //    factory->PrepareTrainingAndTestTree( mycut, 
-   //                                         "NSigTrain=3000:NBkgTrain=3000:NSigTest=3000:NBkgTest=3000:SplitMode=Random:!V" );  
 
    // ---- Book MVA methods
    //
@@ -204,13 +204,9 @@ int main( int argc, char** argv )
    //      "!H:!V:VolumeRangeMode=MinMax:DeltaFrac=0.2:KernelEstimator=Gauss:GaussSigma=0.3" );   
    //      "!H:!V:VolumeRangeMode=RMS:DeltaFrac=3:KernelEstimator=Gauss:GaussSigma=0.3" );   
 
-   if (Use["PDERSkNN"]) // depreciated until further notice
-      factory->BookMethod( TMVA::Types::kPDERS, "PDERSkNN", 
-                           "!H:!V:VolumeRangeMode=kNN:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" );
-
    if (Use["PDEFoam"])
        factory->BookMethod( TMVA::Types::kPDEFoam, "PDEFoam", 
-			    "!H:!V:MultiTargetRegression=F:TargetSelection=Mpv:TailCut=0.001:VolFrac=0.0333:nActiveCells=500:nSampl=2000:nBin=5:Compress=T:Kernel=None:CutNmin=T:Nmin=10:VarTransform=None" );
+			    "!H:!V:MultiTargetRegression=F:TargetSelection=Mpv:TailCut=0.001:VolFrac=0.0333:nActiveCells=500:nSampl=2000:nBin=5:Compress=T:Kernel=None:Nmin=10:VarTransform=None" );
 
    // K-Nearest Neighbour classifier (KNN)
    if (Use["KNN"])

@@ -3,6 +3,7 @@
 #define TMVA_TMVAGLOB
 
 #include <iostream>
+#include <vector>
 
 #include "TPad.h"
 #include "TCanvas.h"
@@ -15,6 +16,7 @@
 #include "TStyle.h"
 #include "TFile.h"
 #include "TDirectory.h"
+#include "TObjArray.h"
 
 
 #include "RVersion.h"
@@ -35,9 +37,10 @@ namespace TMVAGlob {
                      kGaussDecorr,
                      kNumOfMethods };
 
-   static Int_t c_Canvas         = TColor::GetColor( "#e9e6da" );
+   static Int_t c_Canvas         = TColor::GetColor( "#f0f0f0" );
    static Int_t c_FrameFill      = TColor::GetColor( "#fffffd" );
-   static Int_t c_TitleBox       = TColor::GetColor( "#dae1e6" );
+   static Int_t c_TitleBox       = TColor::GetColor( "#6D7B8D" );
+   static Int_t c_TitleText      = TColor::GetColor( "#FFFFFF" );
    static Int_t c_SignalLine     = TColor::GetColor( "#0000ee" );
    static Int_t c_SignalFill     = TColor::GetColor( "#7d99d1" );
    static Int_t c_BackgroundLine = TColor::GetColor( "#ff0000" );
@@ -81,6 +84,35 @@ namespace TMVAGlob {
          all->SetLineWidth( LineWidth__S );
          all->SetFillStyle( FillStyle__S );
          all->SetFillColor( FillColor__S );
+      }
+   }
+
+   void SetMultiClassStyle( TObjArray* hists ) 
+   {
+      //signal
+      // const Int_t FillColor__S = 38 + 150; // change of Color Scheme in ROOT-5.16.
+      // convince yourself with gROOT->GetListOfColors()->Print()
+      //Int_t FillColor__S = c_SignalFill;
+      //Int_t FillStyle__S = 1001;
+      //Int_t LineColor__S = c_SignalLine;
+      //Int_t LineWidth__S = 2;
+
+      // background
+      //Int_t icolor = UsePaperStyle ? 2 + 100 : 2;
+      //Int_t FillColor__B = c_BackgroundFill;
+      //Int_t FillStyle__B = 3554;
+      //Int_t LineColor__B = c_BackgroundLine;
+      //Int_t LineWidth__B = 2;
+
+      Int_t FillColors[10] = {38,2,3,6,7,8,9,11};
+      Int_t LineColors[10] = {4,2,3,6,7,8,9,11};
+      Int_t FillStyles[5] = {1001,3554,3003,3545,0};
+
+      for(Int_t i=0; i<hists->GetEntriesFast(); ++i){
+         ((TH1*)(*hists)[i])->SetFillColor(FillColors[i%10]);
+         ((TH1*)(*hists)[i])->SetFillStyle(FillStyles[i%5]);
+         ((TH1*)(*hists)[i])->SetLineColor(LineColors[i%10]);
+         ((TH1*)(*hists)[i])->SetLineWidth(2);
       }
    }
 
@@ -140,6 +172,8 @@ namespace TMVAGlob {
       // MVAStyle->SetTitleX(.5);
       // TMVAStyle->SetTitleY(.9);
       TMVAStyle->SetTitleFillColor( c_TitleBox );
+      TMVAStyle->SetTitleTextColor( c_TitleText );
+      TMVAStyle->SetTitleBorderSize( 0 );
       if (!UsePaperStyle) {
          TMVAStyle->SetFrameFillColor( c_FrameFill );
          TMVAStyle->SetCanvasColor( c_Canvas );
@@ -438,6 +472,87 @@ namespace TMVAGlob {
       
       return noVars;
    }
+
+   std::vector<TString> GetInputVariableNames(TDirectory *dir )
+   {
+      TIter next(dir->GetListOfKeys());
+      TKey* key = 0;
+      //set<std::string> varnames;
+      std::vector<TString> names;
+      
+      while ((key = (TKey*)next())) {
+         if (key->GetCycle() != 1) continue;
+         TClass *cl = gROOT->GetClass(key->GetClassName());
+         if (!cl->InheritsFrom("TH1")) continue;
+         TString name(key->GetName());
+         Int_t pos = name.First("__");
+         name.Remove(pos);
+         Bool_t hasname = false;
+         std::vector<TString>::const_iterator iter = names.begin();
+         while(iter != names.end()){
+            if(name.CompareTo(*iter)==0)
+               hasname=true;
+            iter++;
+         }
+         if(!hasname)
+            names.push_back(name);
+      }
+      return names;
+   }
+
+   Int_t GetNumberOfInputVariablesMultiClass( TDirectory *dir ){
+      std::vector<TString> names(GetInputVariableNames(dir));
+      return names.end() - names.begin();
+   }
+   
+   std::vector<TString> GetClassNames(TDirectory *dir )
+   {      
+      
+      TIter next(dir->GetListOfKeys());
+      TKey* key = 0;
+      //set<std::string> varnames;
+      std::vector<TString> names;
+      
+      while ((key = (TKey*)next())) {
+         if (key->GetCycle() != 1) continue;
+         TClass *cl = gROOT->GetClass(key->GetClassName());
+         if (!cl->InheritsFrom("TH1")) continue;
+         TString name(key->GetName());
+         name.ReplaceAll("_Deco","");
+         name.ReplaceAll("_Gauss","");
+         name.ReplaceAll("_PCA","");
+         name.ReplaceAll("_Id","");
+         name.ReplaceAll("_vs_","");
+         char c = '_';
+         Int_t pos = name.Last(c);
+         name.Remove(0,pos+1);
+         
+         /*Int_t pos = name.First("__");
+         name.Remove(0,pos+2);
+         char c = '_';
+         pos = name.Last(c);
+         name.Remove(pos);
+         if(name.Contains("Gauss")){
+            pos = name.Last(c);
+            name.Remove(pos);
+         }
+         pos = name.Last(c);
+         if(pos!=-1)
+            name.Remove(0,pos+1);
+         */
+         Bool_t hasname = false;
+         std::vector<TString>::const_iterator iter = names.begin();
+         while(iter != names.end()){
+            if(name.CompareTo(*iter)==0)
+               hasname=true;
+            iter++;
+         }
+         if(!hasname)
+            names.push_back(name);
+      }
+      return names;
+   }
+
 
    TKey* FindMethod( TString name, TDirectory *dir=0 )
    {
