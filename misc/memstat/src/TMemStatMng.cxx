@@ -135,6 +135,39 @@ void TMemStatMng::Close()
    // TODO: This is a temporary solution until we find a properalgorithm for SaveData
    //fgInstance->fDumpFile->WriteObject(fgInstance->fFAddrsList, "FAddrsList");
 
+/*  ofstream f("mem_stat_debug.txt");
+  int *btids = fgInstance->fHbtids->GetArray();
+   if( !btids )
+      return;
+   int btid(1);
+   int count(0);
+   bool bStop(false);
+   int count_empty(0);
+   for (int i = 0; i < fgInstance->fBTChecksums.size(); ++i)
+   {
+     if (bStop)
+         break;
+     count = btids[btid-1];
+     f << "++++++++++++++++++++++++\n";
+     f << "BTID: " << btid << "\n";
+     if ( count <= 0 )
+        ++count_empty;
+     for (int j = btid+1; j <= (btid+count); ++j )
+         {
+           TNamed *nm = (TNamed*)fgInstance->fFAddrsList->At(btids[j]);
+           if( !nm )
+               {
+                   f << "Bad ID" << endl;
+                   bStop = true;
+                }
+           f << "-------> " << nm->GetTitle() << "\n";
+         }
+     btid = btid + count + 1;
+   }
+   f.close();
+   ::Info("TMemStatMng::Close", "btids without a stack %d\n", count_empty);
+*/
+
    // to be documented
    fgInstance->FillTree();
    fgInstance->Disable();
@@ -163,7 +196,7 @@ TMemStatMng::~TMemStatMng()
 
    Info("~TMemStatMng", ">>> All free/malloc calls count: %d", fBTIDCount);
    Info("~TMemStatMng", ">>> Unique BTIDs count: %zu", fBTChecksums.size());
-
+   
    Disable();
 }
 
@@ -309,7 +342,6 @@ Int_t TMemStatMng::generateBTID(UChar_t *CRCdigest, Int_t stackEntries,
                                 void **stackPointers)
 {
    // An internal function, which returns a bitid for a corresponding CRC digest
-
    // cache variables
    static Int_t old_btid = -1;
    static SCustomDigest old_digest;
@@ -409,7 +441,7 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
    // for Debug. A counter of all (de)allacations.
    ++fBTIDCount;
 
-   Int_t btid(generateBTID(digest, stackentries, stptr));
+   Int_t btid(generateBTID(digest, stackentries, stptr));   
 
    if(btid <= 0)
       Error("AddPointer", "bad BT id");
