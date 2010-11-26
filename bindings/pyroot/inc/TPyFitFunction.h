@@ -41,7 +41,7 @@ private:
 
 private:
 // to prevent confusion when handing 'self' from python
-   TPyMultiGenFunction( const TPyMultiGenFunction& ) {}
+   TPyMultiGenFunction( const TPyMultiGenFunction& src ) : ROOT::Math::IMultiGenFunction( src ) {}
    TPyMultiGenFunction& operator=( const TPyMultiGenFunction& ) { return *this; }
 
 private:
