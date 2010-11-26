@@ -28,7 +28,7 @@ ClassImp(TEveShape);
 TEveShape::TEveShape(const char* n, const char* t) :
    TEveElementList(n, t),
    fFillColor(5),
-   fLineColor(3),
+   fLineColor(5),
    fLineWidth(1),
    fDrawFrame(kTRUE),
    fHighlightFrame(kTRUE),
