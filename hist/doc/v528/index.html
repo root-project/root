@@ -398,15 +398,15 @@ if (TEfficiency::CheckConsistency(h_pass,h_total))
   </ul>
 
 <h4>New TH2Poly class</h4>
-<tt>TH2Poly</tt> is a 2D Histogram class (TH2) that allowing to define polygonal
-bins of arbitary shape.
+<tt>TH2Poly</tt> is a 2D Histogram class, inheriting from <tt>TH2</tt>, 
+allowing to define polygonal bins of arbitary shape.
 <p>
-Each bin in the <tt>TH2Poly</tt> histogram is a <tt>TH2PolyBin</tt> object.
-<tt>TH2PolyBin</tt> is a very simple class that contains the vertices (stored
-as <tt>TGraph</tt>s and <tt>TMultiGraph</tt>s ) and contents of the polygonal
-bin as well as several related functions.
+Each bin, in a <tt>TH2Poly</tt> histogram, is a <tt>TH2PolyBin</tt> object.
+<tt>TH2PolyBin</tt> is a very simple class containing the vertices, stored
+as <tt>TGraph</tt>s and <tt>TMultiGraph</tt>s, and the content of the polygonal
+bin.
 <p>
-Bins are defined using one of the <tt>AddBin()</tt> methods. The bin definition
+Bins are defined using one of the <tt>AddBin()</tt> methods. The bins definition
 should be done before filling.
 <p>
 <tt>TH2Poly</tt> implements a partitioning algorithm to speed up bins' filling.
@@ -433,7 +433,7 @@ The following very simple macro shows how to build and fill a <tt>TH2Poly</tt>:
 }
 </pre>
 
-Examples can bin found in <tt>$ROOTSYS/tutorials/hist/</tt>:
+More examples can be found in <tt>$ROOTSYS/tutorials/hist/</tt>:
 <p>
 <center><img src="th2polyBoxes.gif"     alt="th2polyBoses.C"/></center>
 <center><img src="th2polyEurope.gif"    alt="th2polyEurope.C"/></center>
