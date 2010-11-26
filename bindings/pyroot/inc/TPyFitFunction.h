@@ -64,7 +64,8 @@ public:
 
 private:
 // to prevent confusion when handing 'self' from python
-   TPyMultiGradFunction( const TPyMultiGradFunction& src ) : ROOT::Math::IMultiGradFunction( src ) {}
+   TPyMultiGradFunction( const TPyMultiGradFunction& src ) :
+       ROOT::Math::IMultiGenFunction( src ), ROOT::Math::IMultiGradFunction( src ) {}
    TPyMultiGradFunction& operator=( const TPyMultiGradFunction& ) { return *this; }
 
 private:
