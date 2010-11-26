@@ -370,7 +370,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
          if (DoRegression()) {
             node->SetSeparationIndex(fRegType->GetSeparationIndex(s+b,target,target2));
             node->SetResponse(target/(s+b));
-            node->SetRMS(sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
+            node->SetRMS(TMath::Sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
          }
          else {
             node->SetSeparationIndex(fSepType->GetSeparationIndex(s,b));
@@ -431,7 +431,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
       if (DoRegression()) {
          node->SetSeparationIndex(fRegType->GetSeparationIndex(s+b,target,target2));
          node->SetResponse(target/(s+b));
-         node->SetRMS(sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
+         node->SetRMS(TMath::Sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
       }
       else {
          node->SetSeparationIndex(fSepType->GetSeparationIndex(s,b));
@@ -822,7 +822,7 @@ void TMVA::DecisionTree::GetRandomisedVariables(Bool_t *useVariable, UInt_t *map
    for (UInt_t ivar=0; ivar<fNvars; ivar++) useVariable[ivar]=kFALSE;
    if (fUseNvars==0) { // no number specified ... choose s.th. which hopefully works well 
       // watch out, should never happen as it is initialised automatically in MethodBDT already!!!
-      fUseNvars        =  UInt_t(sqrt(fNvars)+0.6);
+      fUseNvars        =  UInt_t(TMath::Sqrt(fNvars)+0.6);
    }
    if (fUsePoissonNvars) useNvars=TMath::Min(fNvars,TMath::Max(UInt_t(1),(UInt_t) fMyTrandom->Poisson(fUseNvars)));
    else useNvars = fUseNvars;
@@ -1127,7 +1127,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const vector<TMVA::Event*> & eventSa
    if (DoRegression()) {
       node->SetSeparationIndex(fRegType->GetSeparationIndex(nTotS+nTotB,target[0][nBins-1],target2[0][nBins-1]));
       node->SetResponse(target[0][nBins-1]/(nTotS+nTotB));
-      node->SetRMS(sqrt(target2[0][nBins-1]/(nTotS+nTotB) - target[0][nBins-1]/(nTotS+nTotB)*target[0][nBins-1]/(nTotS+nTotB)));
+      node->SetRMS(TMath::Sqrt(target2[0][nBins-1]/(nTotS+nTotB) - target[0][nBins-1]/(nTotS+nTotB)*target[0][nBins-1]/(nTotS+nTotB)));
    }
    else {
       node->SetSeparationIndex(fSepType->GetSeparationIndex(nTotS,nTotB));
@@ -1330,7 +1330,7 @@ std::vector<Double_t>  TMVA::DecisionTree::GetFisherCoefficients(const EventList
    // let InvWith be the inverse matrix of the 'within class' correlation matrix
    //
    // then the array of Fisher coefficients is 
-   // [coeff] =sqrt(fNsig*fNbgd)/fNevt*transpose{Xs-Xb}*InvWith
+   // [coeff] =TMath::Sqrt(fNsig*fNbgd)/fNevt*transpose{Xs-Xb}*InvWith
    TMatrixD* theMat = with; // Fishers original
    //   TMatrixD* theMat = cov; // Mahalanobis
       
@@ -1419,7 +1419,7 @@ Double_t TMVA::DecisionTree::TrainNodeFull( const vector<TMVA::Event*> & eventSa
    if (fRandomisedTree) { // choose for each node splitting a random subset of variables to choose from
       if (fUseNvars ==0 ) { // no number specified ... choose s.th. which hopefully works well 
          // watch out, should never happen as it is initialised automatically in MethodBDT already!!!
-         fUseNvars        =  UInt_t(sqrt(fNvars)+0.6);
+         fUseNvars        =  UInt_t(TMath::Sqrt(fNvars)+0.6);
       }
       Int_t nSelectedVars = 0;
       while (nSelectedVars < fUseNvars) {

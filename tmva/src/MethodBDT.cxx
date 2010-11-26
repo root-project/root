@@ -452,7 +452,7 @@ void TMVA::MethodBDT::Init( void )
    fFValidationEvents = 0.5;
    fRandomisedTrees = kFALSE;
    //   fUseNvars        =  (GetNvar()>12) ? UInt_t(GetNvar()/8) : TMath::Max(UInt_t(2),UInt_t(GetNvar()/3));
-   fUseNvars        =  UInt_t(sqrt(GetNvar())+0.6);
+   fUseNvars        =  UInt_t(TMath::Sqrt(GetNvar())+0.6);
    fUsePoissonNvars = kTRUE;
    if(DataInfo().GetNClasses()!=0) //workaround for multiclass application
       fUseNTrainEvents = Data()->GetNTrainingEvents();
