@@ -8,7 +8,7 @@ MODNAME      := cintdlls
 .PHONY: all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 # no: iterator pair
-# already in libCore (core/base/inc/Linkdef2.h): string 
+# already in libCore (core/base/inc/Linkdef2.h): string
 CINTSTLDLLNAMES = vector vectorbool list deque map map2 set \
                   multimap multimap2 multiset \
                   stack queue exception stdexcept climits complex
@@ -28,7 +28,7 @@ CINTDLLS_SOURCE_FILES = $(addsuffix .cc ,$(addprefix core/metautils/src/stlLoade
 	$(addsuffix .cxx,$(addprefix $(CINTDLLDIRDLLSTL)/G__cpp_,$(CINTSTLDLLNAMES))) \
 	$(addsuffix .cxx,$(addprefix $(CINTDLLDIRDLLSTL)/rootcint_,$(CINTSTLDLLNAMES))) \
 	$(addsuffix .cxx,$(addprefix $(CINTDLLDIRL)/G__cpp_,$(CINTINCDLLNAMES))) \
-	$(addsuffix .c  ,$(addprefix $(CINTDLLDIRL)/G__c_,$(CINTINCDLLNAMES))) 
+	$(addsuffix .c  ,$(addprefix $(CINTDLLDIRL)/G__c_,$(CINTINCDLLNAMES)))
 
 .PRECIOUS: $(CINTDLLS_SOURCE_FILES) \
 	$(addsuffix .o  ,$(addprefix core/metautils/src/stlLoader_,$(CINTSTLDLLNAMES))) \
@@ -152,7 +152,7 @@ endif
 
 $(ALLCINTDLLS): $(ORDER_) $(MAINLIBS)
 
-$(CINTDLLDIRSTL)/%.dll: $(CINTDLLDIRDLLSTL)/G__cpp_%.o 
+$(CINTDLLDIRSTL)/%.dll: $(CINTDLLDIRDLLSTL)/G__cpp_%.o
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $(filter-out $(MAINLIBS),$^)
 	$(CINTDLLSOEXTCMD)
 ifneq ($(subst win,,$(ARCH)),$(ARCH))
@@ -215,13 +215,20 @@ $(CINTDLLDIRL)/posix/exten.o: $(CINTDLLDIRL)/posix/exten.c
 	$(CC) $(OPT) $(CINTCFLAGS) -I. $(CXXOUT)$@ -c $<
 
 $(CINTDLLDIRL)/G__c_posix.c: $(CINTDLLDIRDLLS)/sys/types.h $(CINTDLLDIRL)/posix/exten.h $(CINTDLLDIRL)/posix/posix.h
-
+$(CINTDLLDIRL)/G__c_ipc.c:	  $(CINTDLLDIRDLLS)/sys/types.h $(CINTDLLDIRL)/ipc/ipcif.h
 $(CINTDLLDIRDLLS)/posix.dll: $(CINTDLLDIRL)/G__c_posix.o $(CINTDLLDIRL)/posix/exten.o
 
+ifneq ($(HOST),)
+$(CINTDLLDIRDLLS)/sys/types.h: $(BUILDTOOLSDIR)/$(CINTDLLDIRL)/posix/mktypes$(EXEEXT)
+	(cd $(CINTDLLDIRL)/posix && \
+	$(ROOT_OBJDIR)/$<)
+	cp -f $(@:/sys/types.h=/systypes.h) $@
+else
 $(CINTDLLDIRDLLS)/sys/types.h: $(CINTDLLDIRL)/posix/mktypes$(EXEEXT)
 	(cd $(dir $<) && \
 	./$(notdir $<))
 	cp -f $(@:/sys/types.h=/systypes.h) $@
+endif
 
 $(CINTDLLDIRL)/posix/mktypes$(EXEEXT): $(CINTDLLDIRL)/posix/mktypes.c
 	$(MAKEDEP) -R -f$(patsubst %.c,%.d,$<) -Y -w 1000 -- $(CINTCFLAGS) -- $<

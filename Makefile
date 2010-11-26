@@ -691,7 +691,7 @@ $(BUILDTOOLSDIR)/bin/rootcint:
 		fi; \
 		($(MAKE) BUILDTOOLS=yes \
 		   TARGETFLAGS=-DR__$(shell echo $(ARCH) | tr 'a-z' 'A-Z') \
-		   rootcint \
+		   rootcint cint/cint/lib/posix/mktypes \
 		) || exit 1;
 
 distclean::
@@ -731,7 +731,7 @@ Makefile: $(addprefix $(ROOT_SRCDIR)/,configure config/rootrc.in \
   config/Makefile-comp.in config/root-config.in config/rootauthrc.in \
   config/rootdaemonrc.in config/mimes.unix.in config/mimes.win32.in \
   config/proofserv.in config/roots.in) config.status
-	@( $(RECONFIGURE) "$?" "$(ROOT_SRCDIR)" || ( \
+	+@( $(RECONFIGURE) "$?" "$(ROOT_SRCDIR)" || ( \
 	   echo ""; echo "Please, run $(ROOT_SRCDIR)/configure again as config option files ($?) have changed."; \
 	   echo ""; exit 1; \
 	 ) )
