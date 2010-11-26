@@ -26,6 +26,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <cstdlib>
 #include <stdexcept>
 #include <algorithm>
 
