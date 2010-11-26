@@ -304,8 +304,10 @@ $(XRDEXECSA): $(XROOTDBUILD)
 endif
 
 ### Rules for xrootd plugins
+
 $(LPATH)/libXrd%.$(XRDSOEXT): $(XROOTDDIRL)/libXrd%.$(XRDSOEXT)
-		cp -rp $< $@
+		$(INSTALL) $< $@
+		touch $@
 
 ### Rules for single components
 $(XROOTDDIRL)/libXrdClient.$(XRDSOEXT): $(XROOTDBUILD)
