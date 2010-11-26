@@ -1682,15 +1682,14 @@ namespace {
       // use callable name (if available) as identifier
          PyObject* pyname = PyObject_GetAttr( pyfunc, PyStrings::gName );
          const char* name = "dummy";
-         if ( pyname != 0 ) {
+         if ( pyname != 0 )
             name = PyROOT_PyUnicode_AsString( pyname );
-            Py_DECREF( pyname );
-         }
 
       // registration with CINT
          Long_t fid = Utility::InstallMethod( 0, pyfunc, name, 0,
             "i - - 1 - - D - - 0 - - d - - 1 - - D - - 0 - - i - - 0 - -",
             (void*)TMinuitPyCallback, 5 );
+         Py_XDECREF( pyname );
 
       // get function
          MethodProxy* method =
@@ -1758,7 +1757,7 @@ namespace {
       virtual PyObject* GetPrototype()
       {
          return PyROOT_PyUnicode_FromString(
-            "TMinuit::SetFCN(PyObject* callable, int npar = 0, const double* params = 0, unsigned int dataSize = 0, bool chi2fit = false)" );
+            "TFitter::FitFCN(PyObject* callable, int npar = 0, const double* params = 0, unsigned int dataSize = 0, bool chi2fit = false)" );
       }
 
       virtual PyCallable* Clone() { return new TFitterFitFCN( *this ); }

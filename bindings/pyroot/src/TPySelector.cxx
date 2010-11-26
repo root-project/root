@@ -3,7 +3,6 @@
 // Bindings
 #include "PyROOT.h"
 #include "TPySelector.h"
-#include "TPyReturn.h"
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
 #include "RootWrapper.h"
