@@ -1051,9 +1051,10 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
    PyObject* TDirectoryWriteObject( ObjectProxy* self, PyObject* args )
    {
       ObjectProxy *wrt = 0; PyObject *name = 0, *option = 0;
-      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!OO|O!:TDirectory::WriteObject" ),
+      Int_t bufsize = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!|O!i:TDirectory::WriteObject" ),
                &ObjectProxy_Type, &wrt, &PyROOT_PyUnicode_Type, &name,
-               &PyROOT_PyUnicode_Type, &option ) )
+               &PyROOT_PyUnicode_Type, &option, &bufsize ) )
          return 0;
 
       TDirectory* dir =
@@ -1068,7 +1069,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
       Int_t result = 0;
       if ( option != 0 ) {
          result = dir->WriteObjectAny( wrt->GetObject(), wrt->ObjectIsA(),
-            PyROOT_PyUnicode_AsString( name ), PyROOT_PyUnicode_AsString( option ) );
+            PyROOT_PyUnicode_AsString( name ), PyROOT_PyUnicode_AsString( option ), bufsize );
       } else {
          result = dir->WriteObjectAny(
             wrt->GetObject(), wrt->ObjectIsA(), PyROOT_PyUnicode_AsString( name ) );
