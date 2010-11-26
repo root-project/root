@@ -3019,6 +3019,12 @@ void TRootBrowserLite::BrowseTextFile(const char *file)
    char buffer[bufferSize];
 
    FILE *fd = fopen(file, "rb");
+   if (fd == 0) {
+      if (loaded) {
+         HistoryBackward();
+      }
+      return;
+   }
    int sz = fread(buffer, 1, bufferSize, fd);
    fclose(fd);
 
