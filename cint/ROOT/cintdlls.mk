@@ -183,17 +183,20 @@ $(CINTDLLDIRDLLSTL)/G__cpp_%.cxx:
 	   -D__MAKECINT__ -DG__MAKECINT \
            $(addprefix $(patsubst %lib/dll_stl/,-I%,$(dir $@)),lib/dll_stl lib) \
 	   -c-1 -A -Z0 $(filter-out $(CINTDLLDIRDLLSTL)/G__cpp_%, $(filter-out $(IOSENUM),$(filter $(CINTDLLDIRDLLSTL)/%,$(filter %.h,$^))))
+	touch $@
 
 $(CINTDLLDIRL)/G__cpp_%.cxx:
 	$(CINTDLLCINTTMP) \
 	   -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
 	   -D__MAKECINT__ -DG__MAKECINT -I$(dir $@) \
 	   -c-1 -A -Z0 $(filter-out $(CINTDLLDIRL)/G__cpp%, $(filter-out $(IOSENUM),$(filter $(CINTDLLDIRL)/%,$(filter %.h,$^))))
+	touch $@
 
 $(CINTDLLDIRL)/G__c_%.c:
 	$(CINTDLLCINTTMP) \
 	   -K -w1 -z$(notdir $*) -n$@ -D__MAKECINT__ -DG__MAKECINT \
 	   $(MACOSX_UNIX03) -c-2 -Z0 $(filter-out $(CINTDLLDIRL)/G__c_%, $(filter-out $(IOSENUM),$(filter $(CINTDLLDIRL)/%,$(filter %.h,$^))))
+	touch $@
 
 $(CINTDLLDIRDLLSTL)/G__cpp_complex.cxx: $(CINTDLLDIRL)/dll_stl/cmplx.h $(CINTCPPDEP)
 	$(CINTDLLCINTTMP) \
@@ -201,6 +204,7 @@ $(CINTDLLDIRDLLSTL)/G__cpp_complex.cxx: $(CINTDLLDIRL)/dll_stl/cmplx.h $(CINTCPP
 	   -D__MAKECINT__ -DG__MAKECINT \
            $(addprefix $(patsubst %lib/dll_stl/,-I%,$(dir $@)),lib/dll_stl lib) \
 	   -V -c-1 -A -Z0 $(CINTDLLDIRL)/dll_stl/cmplx.h
+	touch $@
 
 ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 # MACOSX_MINOR > 4
