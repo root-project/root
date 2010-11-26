@@ -156,10 +156,8 @@ namespace memstat {
       if(NULL != info.dli_sname) {
          int status(0);
          char *ch = abi::__cxa_demangle(info.dli_sname, 0, 0, &status);
-         if(status < 0 || !ch)
-            return -1;
 
-         _strSymbol = (!status) ? ch : info.dli_sname;
+         _strSymbol = (0 == status) ? ch : info.dli_sname;
 
          // it's our responsibility to free that pointer
          free(ch);

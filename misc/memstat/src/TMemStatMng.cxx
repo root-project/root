@@ -344,7 +344,7 @@ Int_t TMemStatMng::generateBTID(UChar_t *CRCdigest, Int_t stackEntries,
       }
 
       int *btids = fHbtids->GetArray();
-      // A first value is a number of entries in a given stack
+      // the first value is a number of entries in a given stack
       btids[fBTCount++] = stackEntries;
       ret_val = fBTCount;
       if(stackEntries <= 0) {
