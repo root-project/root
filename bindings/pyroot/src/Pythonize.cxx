@@ -1051,7 +1051,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
    PyObject* TDirectoryWriteObject( ObjectProxy* self, PyObject* args )
    {
       ObjectProxy *wrt = 0; PyObject *name = 0, *option = 0;
-      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!OO!|O!:TDirectory::WriteObject" ),
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!OO|O!:TDirectory::WriteObject" ),
                &ObjectProxy_Type, &wrt, &PyROOT_PyUnicode_Type, &name,
                &PyROOT_PyUnicode_Type, &option ) )
          return 0;
