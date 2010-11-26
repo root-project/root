@@ -24,17 +24,18 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+#include <iostream>
 #include <iomanip>
 
 #ifndef ROOT_TMVA_PDEFoamVect
 #include "TMVA/PDEFoamVect.h"
 #endif
 
+using namespace std;
+
 #define SW2 std::setprecision(7) << std::setw(12)
 
 ClassImp(TMVA::PDEFoamVect)
-
-TMVA::MsgLogger* TMVA::PDEFoamVect::fgLogger = 0;
 
 //_____________________________________________________________________
 TMVA::PDEFoamVect::PDEFoamVect()
@@ -43,7 +44,6 @@ TMVA::PDEFoamVect::PDEFoamVect()
      fCoords(0)
 {
    // Default constructor for streamer
-   if (!fgLogger) fgLogger = new MsgLogger("PDEFoamVect");
 }
 
 //_____________________________________________________________________
@@ -59,9 +59,6 @@ TMVA::PDEFoamVect::PDEFoamVect(Int_t n)
       fCoords = new Double_t[fDim];
       for (Int_t i=0; i<n; i++) *(fCoords+i)=0.0;
    }
-
-   if (!fgLogger) fgLogger = new MsgLogger("PDEFoamVect");
-
 }
 
 //_____________________________________________________________________
@@ -201,10 +198,11 @@ TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator =(Double_t x)
 //_____________________________________________________________________
 void TMVA::PDEFoamVect::Print(Option_t *option) const
 {
-   // Printout of all vector components on "Log()"
+   // Printout of all vector components
    if(!option) Error( "Print ", "No option set \n");
-   Log() << "(";
-   for(Int_t i=0; i<fDim-1; i++) Log() << SW2 << *(fCoords+i) << ",";
-   Log() << SW2 << *(fCoords+fDim-1);
-   Log() << ")";
+   cout << "(";
+   for(Int_t i=0; i<fDim-1; i++) 
+      cout << SW2 << *(fCoords+i) << ",";
+   cout << SW2 << *(fCoords+fDim-1);
+   cout << ")";
 }

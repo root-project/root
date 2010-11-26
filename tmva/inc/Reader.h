@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$ 
-// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -19,9 +19,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -70,7 +70,7 @@ namespace TMVA {
    class Reader : public Configurable {
 
    public:
-      
+
       // without prior specification of variables
       Reader( const TString& theOption="", Bool_t verbose = 0 );
 
@@ -83,26 +83,27 @@ namespace TMVA {
       Reader( const TString& varNames, const TString& theOption, Bool_t verbose = 0 );  // format: "var1:var2:..."
 
       virtual ~Reader( void );
-  
+
       // book MVA method via weight file
       IMethod* BookMVA( const TString& methodTag, const TString& weightfile );
       IMethod* BookMVA( TMVA::Types::EMVA methodType, const char* xmlstr );
       IMethod* FindMVA( const TString& methodTag );
-      // special function for Cuts to avoid dynamic_casts in ROOT macros, 
+      // special function for Cuts to avoid dynamic_casts in ROOT macros,
       // which are not properly handled by CINT
-      MethodCuts* FindCutsMVA( const TString& methodTag ); 
-      
+      MethodCuts* FindCutsMVA( const TString& methodTag );
+
 
       // returns the MVA response for given event
-      Double_t EvaluateMVA( const std::vector<Float_t> &, const TString& methodTag, Double_t aux = 0 );    
+      Double_t EvaluateMVA( const std::vector<Float_t> &, const TString& methodTag, Double_t aux = 0 );
       Double_t EvaluateMVA( const std::vector<Double_t>&, const TString& methodTag, Double_t aux = 0 );
-      Double_t EvaluateMVA( MethodBase* method,           Double_t aux = 0 );    
-      Double_t EvaluateMVA( const TString& methodTag,     Double_t aux = 0 );    
+      Double_t EvaluateMVA( MethodBase* method,           Double_t aux = 0 );
+      Double_t EvaluateMVA( const TString& methodTag,     Double_t aux = 0 );
 
       // returns error on MVA response for given event
       // NOTE: must be called AFTER "EvaluateMVA(...)" call !
       Double_t GetMVAError() const { return fMvaEventError; }
-      Double_t GetMVAError2() const { return fMvaEventError2; }	//zjh
+      Double_t GetMVAErrorLower() const { return fMvaEventError; }
+      Double_t GetMVAErrorUpper() const { return fMvaEventErrorUpper; }
 
       // regression response
       const std::vector< Float_t >& EvaluateRegression( const TString& methodTag, Double_t aux = 0 );
@@ -115,25 +116,23 @@ namespace TMVA {
       Float_t  EvaluateMulticlass( UInt_t clsNumber, const TString& methodTag, Double_t aux = 0 );
 
       // probability and rarity accessors (see Users Guide for definition of Rarity)
-      Double_t GetProba ( const TString& methodTag, Double_t ap_sig=0.5, Double_t mvaVal=-9999999 ); 
+      Double_t GetProba ( const TString& methodTag, Double_t ap_sig=0.5, Double_t mvaVal=-9999999 );
       Double_t GetRarity( const TString& methodTag, Double_t mvaVal=-9999999 );
 
-      // accessors 
+      // accessors
       virtual const char* GetName() const { return "Reader"; }
       Bool_t   Verbose( void ) const  { return fVerbose; }
       void     SetVerbose( Bool_t v ) { fVerbose = v; }
 
       const DataSetInfo& DataInfo() const { return fDataSetInfo; }
       DataSetInfo&       DataInfo()       { return fDataSetInfo; }
-      
+
       void     AddVariable( const TString& expression, Float_t* );
       void     AddVariable( const TString& expression, Int_t* );
 
       void     AddSpectator( const TString& expression, Float_t* );
       void     AddSpectator( const TString& expression, Int_t* );
 
-
-  
    private:
 
       DataSetManager* fDataSetManager; // DSMTEST
@@ -157,19 +156,20 @@ namespace TMVA {
 
       void DeclareOptions();
 
-      Bool_t    fVerbose;    // verbosity
-      Bool_t    fSilent;     // silent mode
-      Bool_t    fColor;      // color mode
+      Bool_t    fVerbose;            // verbosity
+      Bool_t    fSilent;             // silent mode
+      Bool_t    fColor;              // color mode
+      Bool_t    fCalculateError;     // error calculation mode
 
-      Double_t  fMvaEventError; // per-event error returned by MVA (unless: -1)
-      Double_t  fMvaEventError2; // per-event error returned by MVA (unless: -1)  //zjh
+      Double_t  fMvaEventError;      // per-event error returned by MVA
+      Double_t  fMvaEventErrorUpper; // per-event error returned by MVA
 
       std::map<TString, IMethod*> fMethodMap; // map of methods
 
-      std::vector<Float_t>        fTmpEvalVec; // temporary evaluation vector (if user input is v<double>)
+      std::vector<Float_t> fTmpEvalVec; // temporary evaluation vector (if user input is v<double>)
 
       mutable MsgLogger* fLogger;   // message logger
-      MsgLogger& Log() const { return *fLogger; }    
+      MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(Reader,0) // Interpret the trained MVAs in an analysis context
    };

@@ -110,13 +110,13 @@ void  TMVA::MethodBayesClassifier::ReadWeightsFromStream( istream & )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBayesClassifier::GetMvaValue( Double_t* err )
+Double_t TMVA::MethodBayesClassifier::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    // returns MVA value for given event
    Double_t myMVA = 0;
 
    // cannot determine error
-   if (err != 0) *err = -1;
+   NoErrorCalc(err, errUpper);
 
    return myMVA;
 }

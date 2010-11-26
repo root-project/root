@@ -114,7 +114,12 @@ const TMVA::Event* TMVA::VariablePCATransform::Transform( const Event* const ev,
    // if we have more than one class, take the last PCA analysis where all classes are combined if
    // the cls parameter is outside the defined classes
    // If there is only one class, then no extra class for all events of all classes has to be created
-   if (cls < 0 || cls > GetNClasses()) cls = (fMeanValues.size()==1?0:2);//( GetNClasses() == 1 ? 0 : 1 );  ;
+
+   //if (cls < 0 || cls > GetNClasses()) cls = (fMeanValues.size()==1?0:2);//( GetNClasses() == 1 ? 0 : 1 );  ;
+   // EVT this is a workaround to address the reader problem with transforma and EvaluateMVA(std::vector<float/double> ,...) 
+   if (cls < 0 || cls >= (int) fMeanValues.size()) cls = fMeanValues.size()-1;
+   // EVT workaround end
+
    // Perform PCA and put it into PCAed events tree
 
    if (fTransformedEvent==0 || fTransformedEvent->GetNVariables()!=ev->GetNVariables()) {

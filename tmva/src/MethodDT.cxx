@@ -121,10 +121,13 @@ TMVA::MethodDT::MethodDT( const TString& jobName,
                           const TString& theOption,
                           TDirectory* theTargetDir ) :
    TMVA::MethodBase( jobName, Types::kDT, methodTitle, theData, theOption, theTargetDir )
+   , fTree(0)
    , fNodeMinEvents(0)
    , fNCuts(0)
    , fUseYesNoLeaf(kFALSE)
    , fNodePurityLimit(0)
+   , fNNodesMax(0)
+   , fMaxDepth(0)
    , fErrorFraction(0)
    , fPruneStrength(0)
    , fPruneMethod(DecisionTree::kNoPruning)
@@ -142,10 +145,13 @@ TMVA::MethodDT::MethodDT( DataSetInfo& dsi,
                           const TString& theWeightFile,
                           TDirectory* theTargetDir ) :
    TMVA::MethodBase( Types::kDT, dsi, theWeightFile, theTargetDir )
+   , fTree(0)
    , fNodeMinEvents(0)
    , fNCuts(0)
    , fUseYesNoLeaf(kFALSE)
    , fNodePurityLimit(0)
+   , fNNodesMax(0)
+   , fMaxDepth(0)
    , fErrorFraction(0)
    , fPruneStrength(0)
    , fPruneMethod(DecisionTree::kNoPruning)
@@ -212,6 +218,12 @@ void TMVA::MethodDT::DeclareOptions()
    AddPreDefVal(TString("ExpectedError"));
    AddPreDefVal(TString("CostComplexity"));
 
+   DeclareOptionRef(fNNodesMax=100000,"NNodesMax","Max number of nodes in tree");
+   if (DoRegression()) {
+      DeclareOptionRef(fMaxDepth=50,"MaxDepth","Max depth of the decision tree allowed");
+   }else{
+      DeclareOptionRef(fMaxDepth=3,"MaxDepth","Max depth of the decision tree allowed");
+   }
 }
 
 //_______________________________________________________________________
@@ -273,7 +285,7 @@ void TMVA::MethodDT::Init( void )
    // common initialisation with defaults for the DT-Method
    fNodeMinEvents  = TMath::Max( 20, int( Data()->GetNTrainingEvents() / (10*GetNvar()*GetNvar())) );
    fNCuts          = 20; 
-   fPruneMethod    = DecisionTree::kCostComplexityPruning;
+   fPruneMethod    = DecisionTree::kNoPruning;
    fPruneStrength  = 5;     // means automatic determination of the prune strength using a validation sample  
    fDeltaPruneStrength=0.1;
    fRandomisedTrees= kFALSE;
@@ -281,6 +293,11 @@ void TMVA::MethodDT::Init( void )
 
    // reference cut value to distingiush signal-like from background-like events   
    SetSignalReferenceCut( 0 );
+   if (fAnalysisType == Types::kClassification || fAnalysisType == Types::kMulticlass ) {
+      fMaxDepth        = 3;
+   }else {
+      fMaxDepth = 50;
+   }
 }
 
 //_______________________________________________________________________
@@ -294,9 +311,8 @@ TMVA::MethodDT::~MethodDT( void )
 void TMVA::MethodDT::Train( void )
 {
    TMVA::DecisionTreeNode::fgIsTraining=true;
-   //SeparationBase *qualitySepType = new GiniIndex();
-   fTree = new DecisionTree( fSepType, fNodeMinEvents, fNCuts, 0, /*qualitySepType,*/
-                             fRandomisedTrees, fUseNvars, 0 );
+   fTree = new DecisionTree( fSepType, fNodeMinEvents, fNCuts, 0, 
+                             fRandomisedTrees, fUseNvars, fNNodesMax, fMaxDepth,0 );
    if (fRandomisedTrees) Log()<<kWARNING<<" randomised Trees do not work yet in this framework," 
                                 << " as I do not know how to give each tree a new random seed, now they"
                                 << " will be all the same and that is not good " << Endl;
@@ -487,9 +503,19 @@ Double_t TMVA::MethodDT::TestTreeQuality( DecisionTree *dt )
 }
 
 //_______________________________________________________________________
-void TMVA::MethodDT::AddWeightsXMLTo( void* /*parent*/ ) const 
+void TMVA::MethodDT::AddWeightsXMLTo( void* parent ) const 
 {
-   Log() << kFATAL << "Please implement writing of weights as XML" << Endl;
+   fTree->AddXMLTo(parent);
+   //Log() << kFATAL << "Please implement writing of weights as XML" << Endl;
+}
+
+//_______________________________________________________________________
+void TMVA::MethodDT::ReadWeightsFromXML( void* wghtnode)
+{
+   if(fTree)
+      delete fTree;
+   fTree = new DecisionTree();
+   fTree->ReadXML(wghtnode,GetTrainingTMVAVersionCode());
 }
 
 //_______________________________________________________________________
@@ -501,12 +527,12 @@ void  TMVA::MethodDT::ReadWeightsFromStream( istream& istr )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodDT::GetMvaValue( Double_t* err )
+Double_t TMVA::MethodDT::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    // returns MVA value
 
    // cannot determine error
-   if (err != 0) *err = -1;
+   NoErrorCalc(err, errUpper);
 
    return fTree->CheckEvent(*GetEvent(),fUseYesNoLeaf);
 }

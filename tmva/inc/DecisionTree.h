@@ -83,8 +83,8 @@ namespace TMVA {
       DecisionTree( SeparationBase *sepType, Int_t minSize,
                     Int_t nCuts,
                     UInt_t cls =0,
-                    Bool_t randomisedTree=kFALSE, Int_t useNvars=0,
-                    UInt_t nNodesMax=999999, UInt_t nMaxDepth=9999999,
+                    Bool_t randomisedTree=kFALSE, Int_t useNvars=0, Bool_t usePoissonNvars=kFALSE, 
+                    UInt_t nNodesMax=999999, UInt_t nMaxDepth=9999999, 
                     Int_t iSeed=fgRandomSeed, Float_t purityLimit=0.5,
                     Int_t treeID = 0);
 
@@ -93,8 +93,11 @@ namespace TMVA {
 
       virtual ~DecisionTree( void );
 
-      virtual Node * CreateNode(UInt_t) const { return new DecisionTreeNode(); }
+      // Retrieves the address of the root node
+      virtual DecisionTreeNode* GetRoot() const { return dynamic_cast<TMVA::DecisionTreeNode*>(fRoot); }
+      virtual DecisionTreeNode * CreateNode(UInt_t) const { return new DecisionTreeNode(); }
       virtual BinaryTree* CreateTree() const { return new DecisionTree(); }
+      static  DecisionTree* CreateFromXML(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE);
       virtual const char* ClassName() const { return "DecisionTree"; }
 
       // building of a tree by recursivly splitting the nodes
@@ -106,7 +109,9 @@ namespace TMVA {
       Double_t TrainNode( const EventList & eventSample,  DecisionTreeNode *node ) { return TrainNodeFast( eventSample, node ); }
       Double_t TrainNodeFast( const EventList & eventSample,  DecisionTreeNode *node );
       Double_t TrainNodeFull( const EventList & eventSample,  DecisionTreeNode *node );
-
+      void    GetRandomisedVariables(Bool_t *useVariable, UInt_t *variableMap, UInt_t & nVars);
+      std::vector<Double_t>  GetFisherCoefficients(const EventList &eventSample, UInt_t nFisherVars, UInt_t *mapVarInFisher);
+    
       // fill at tree with a given structure already (just see how many signa/bkgr
       // events end up in each node
 
@@ -157,17 +162,13 @@ namespace TMVA {
       void SetNodePurityLimit( Double_t p ) { fNodePurityLimit = p; }
       Double_t GetNodePurityLimit( ) const { return fNodePurityLimit; }
 
-      void DescendTree( DecisionTreeNode *n = NULL );
-      void SetParentTreeInNodes( DecisionTreeNode *n = NULL );
-    
-      DecisionTreeNode* GetLeftDaughter( DecisionTreeNode *n );
-    
-      DecisionTreeNode* GetRightDaughter( DecisionTreeNode *n );
-    
+      void DescendTree( Node *n = NULL );
+      void SetParentTreeInNodes( Node *n = NULL );
+        
       // retrieve node from the tree. Its position (up to a maximal tree depth of 64)
       // is coded as a sequence of left-right moves starting from the root, coded as
       // 0-1 bit patterns stored in the "long-integer" together with the depth
-      DecisionTreeNode* GetNode( ULong_t sequence, UInt_t depth );
+      Node* GetNode( ULong_t sequence, UInt_t depth );
     
       UInt_t CleanTree(DecisionTreeNode *node=NULL);
      
@@ -178,7 +179,7 @@ namespace TMVA {
       void PruneNodeInPlace( TMVA::DecisionTreeNode* node );
     
 
-      UInt_t CountLeafNodes(TMVA::DecisionTreeNode *n = NULL);
+      UInt_t CountLeafNodes(TMVA::Node *n = NULL);
 
       void  SetTreeID(Int_t treeID){fTreeID = treeID;};
       Int_t GetTreeID(){return fTreeID;};
@@ -186,6 +187,9 @@ namespace TMVA {
       Bool_t DoRegression() const { return fAnalysisType == Types::kRegression; }
       void SetAnalysisType (Types::EAnalysisType t) { fAnalysisType = t;}
       Types::EAnalysisType GetAnalysisType ( void ) { return fAnalysisType;}
+      inline void SetUseFisherCuts(Bool_t t=kTRUE)  { fUseFisherCuts = t;}
+      inline void SetMinLinCorrForFisher(Double_t min){fMinLinCorrForFisher = min;}
+      inline void SetUseExclusiveVars(Bool_t t=kTRUE){fUseExclusiveVars = t;}
 
    private:
       // utility functions
@@ -198,6 +202,10 @@ namespace TMVA {
 
       UInt_t    fNvars;          // number of variables used to separate S and B
       Int_t     fNCuts;          // number of grid point in variable cut scans
+      Bool_t    fUseFisherCuts;  // use multivariate splits using the Fisher criterium
+      Double_t  fMinLinCorrForFisher; // the minimum linear correlation between two variables demanded for use in fisher criterium in node splitting
+      Bool_t    fUseExclusiveVars; // individual variables already used in fisher criterium are not anymore analysed individually for node splitting
+
       SeparationBase *fSepType;  // the separation crition
       RegressionVariance *fRegType;  // the separation crition used in Regression
     
@@ -213,6 +221,7 @@ namespace TMVA {
     
       Bool_t    fRandomisedTree; // choose at each node splitting a random set of variables 
       Int_t     fUseNvars;       // the number of variables used in randomised trees;
+      Bool_t    fUsePoissonNvars; // use "fUseNvars" not as fixed number but as mean of a possion distr. in each split
     
       TRandom3  *fMyTrandom;     // random number generator for randomised trees
     

@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$   
-// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -41,7 +41,12 @@
 
 #include <iosfwd>
 #include <vector>
+#include <map>
 #include "assert.h"
+
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
 
 #ifndef ROOT_TMVA_IMethod
 #include "TMVA/IMethod.h"
@@ -60,6 +65,9 @@
 #endif
 #ifndef ROOT_TMVA_TransformationHandler
 #include "TMVA/TransformationHandler.h"
+#endif
+#ifndef ROOT_TMVA_OptimizeConfigParameters
+#include "TMVA/OptimizeConfigParameters.h"
 #endif
 
 class TGraph;
@@ -113,6 +121,11 @@ namespace TMVA {
       // performs classifier training
       // calls methods Train() implemented by derived classes
       void             TrainMethod();
+
+      // optimize tuning parameters
+      virtual std::map<TString,Double_t> OptimizeTuningParameters(TString fomType="ROCIntegral", TString fitType="FitGA");
+      virtual void SetTuneParameters(std::map<TString,Double_t> tuneParameters);
+
       virtual void     Train() = 0;
 
       // store and retrieve time used for training
@@ -122,7 +135,7 @@ namespace TMVA {
       // store and retrieve time used for testing
       void             SetTestTime ( Double_t testTime ) { fTestTime = testTime; }
       Double_t         GetTestTime () const { return fTestTime; }
-      
+
       // performs classifier testing
       virtual void     TestClassification();
 
@@ -130,11 +143,11 @@ namespace TMVA {
       virtual void     TestMulticlass();
 
       // performs regression testing
-      virtual void     TestRegression( Double_t& bias, Double_t& biasT, 
-                                       Double_t& dev,  Double_t& devT, 
-                                       Double_t& rms,  Double_t& rmsT, 
+      virtual void     TestRegression( Double_t& bias, Double_t& biasT,
+                                       Double_t& dev,  Double_t& devT,
+                                       Double_t& rms,  Double_t& rmsT,
                                        Double_t& mInf, Double_t& mInfT, // mutual information
-                                       Double_t& corr, 
+                                       Double_t& corr,
                                        Types::ETreeType type );
 
       // options treatment
@@ -143,17 +156,25 @@ namespace TMVA {
       virtual void     ProcessOptions() = 0;
       virtual void     DeclareCompatibilityOptions(); // declaration of past options
 
-      // classifier response - some methods may return a per-event error estimate (unless: *err = -1)
-      virtual Double_t GetMvaValue( Double_t* err = 0 ) = 0;
+      // reset the Method --> As if it was not yet trained, just instantiated
+      //      virtual void     Reset()          = 0;
+      //for the moment, I provide a dummy (that would not work) default, just to make
+      // compilation/running w/o parameter optimisation still possible
+      virtual void     Reset(){return;}
 
-      //zjh=>
-      virtual Double_t GetMvaValues( Double_t& errUpper, Double_t& errLower)
-		  {Double_t mva=GetMvaValue(&errUpper); errLower=errUpper;return mva;}
-      //<=zjh
+      // classifier response:
+      // some methods may return a per-event error estimate
+      // error calculation is skipped if err==0
+      virtual Double_t GetMvaValue( Double_t* errLower = 0, Double_t* errUpper = 0) = 0;
 
       // signal/background classification response
-      Double_t GetMvaValue( const TMVA::Event* const ev, Double_t* err = 0 );
+      Double_t GetMvaValue( const TMVA::Event* const ev, Double_t* err = 0, Double_t* errUpper = 0 );
 
+   protected:
+      // helper function to set errors to -1
+      void NoErrorCalc(Double_t* const err, Double_t* const errUpper);
+
+   public:
       // regression response
       virtual const std::vector<Float_t>& GetRegressionValues() {
          std::vector<Float_t>* ptr = new std::vector<Float_t>(0);
@@ -218,9 +239,11 @@ namespace TMVA {
       void AddVarsXMLTo         ( void* parent  ) const;
       void AddSpectatorsXMLTo   ( void* parent  ) const;
       void AddTargetsXMLTo      ( void* parent  ) const;
+      void AddClassesXMLTo      ( void* parent  ) const;
       void ReadVariablesFromXML ( void* varnode );
       void ReadSpectatorsFromXML( void* specnode);
       void ReadTargetsFromXML   ( void* tarnode );
+      void ReadClassesFromXML   ( void* clsnode );
       void ReadVarsFromStream   ( std::istream& istr );       // backward compatibility
 
    public:
@@ -244,6 +267,8 @@ namespace TMVA {
       // in the TString argument. (Watch the string format)
       virtual Double_t GetEfficiency( const TString&, Types::ETreeType, Double_t& err );
       virtual Double_t GetTrainingEfficiency(const TString& );
+      virtual std::vector<Float_t> GetMulticlassEfficiency( std::vector<std::vector<Float_t> >& purity );
+      virtual std::vector<Float_t> GetMulticlassTrainingEfficiency(std::vector<std::vector<Float_t> >& purity );
       virtual Double_t GetSignificance() const;
       virtual Double_t GetROCIntegral(PDF *pdfS=0, PDF *pdfB=0) const;
       virtual Double_t GetMaximumSignificance( Double_t SignalEvents, Double_t BackgroundEvents, 
@@ -251,6 +276,7 @@ namespace TMVA {
       virtual Double_t GetSeparation( TH1*, TH1* ) const;
       virtual Double_t GetSeparation( PDF* pdfS = 0, PDF* pdfB = 0 ) const;
 
+      virtual void GetRegressionDeviation(UInt_t tgtNum, Types::ETreeType type, Double_t& stddev,Double_t& stddev90Percent ) const;
       // ---------- public accessors -----------------------------------------------
 
       // classifier naming (a lot of names ... aren't they ;-)
@@ -303,7 +329,7 @@ namespace TMVA {
       UInt_t           GetTrainingTMVAVersionCode()   const { return fTMVATrainingVersion; }
       UInt_t           GetTrainingROOTVersionCode()   const { return fROOTTrainingVersion; }
       TString          GetTrainingTMVAVersionString() const;
-      TString          GetTrainingROOTVersionString() const;      
+      TString          GetTrainingROOTVersionString() const;
 
       TransformationHandler&        GetTransformationHandler() { return fTransformation; }
       const TransformationHandler&  GetTransformationHandler() const { return fTransformation; }
@@ -328,9 +354,9 @@ namespace TMVA {
       // ---------- public auxiliary methods ---------------------------------------
 
       // this method is used to decide whether an event is signal- or background-like
-      // the reference cut "xC" is taken to be where 
+      // the reference cut "xC" is taken to be where
       // Int_[-oo,xC] { PDF_S(x) dx } = Int_[xC,+oo] { PDF_B(x) dx }
-      virtual Bool_t        IsSignalLike() { return GetMvaValue() > GetSignalReferenceCut() ? kTRUE : kFALSE; }     
+      virtual Bool_t        IsSignalLike() { return GetMvaValue() > GetSignalReferenceCut() ? kTRUE : kFALSE; }
 
       DataSet* Data() const { return DataInfo().GetDataSet(); }
 

@@ -96,12 +96,12 @@ namespace TMVA {
       void InitANNBase();
       
       // setters for subclasses
-      void SetActivation(TActivation* activation) { 
-         if (fActivation != NULL) delete fActivation; fActivation = activation; 
+      void SetActivation(TActivation* activation) {
+         if (fActivation != NULL) delete fActivation; fActivation = activation;
       }
-      void SetNeuronInputCalculator(TNeuronInput* inputCalculator) { 
-         if (fInputCalculator != NULL) delete fInputCalculator; 
-         fInputCalculator = inputCalculator; 
+      void SetNeuronInputCalculator(TNeuronInput* inputCalculator) {
+         if (fInputCalculator != NULL) delete fInputCalculator;
+         fInputCalculator = inputCalculator;
       }
       
       // this will have to be overridden by every subclass
@@ -120,7 +120,7 @@ namespace TMVA {
       virtual void ReadWeightsFromStream( istream& istr );
       
       // calculate the MVA value
-      virtual Double_t GetMvaValue( Double_t* err = 0 );
+      virtual Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
 
       virtual const std::vector<Float_t> &GetRegressionValues();
 
@@ -138,14 +138,14 @@ namespace TMVA {
       
       Bool_t Debug() const;
 
-      enum EEstimator      { kMSE=0,kCE};        
+      enum EEstimator      { kMSE=0,kCE};
 
    protected:
 
       virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
       
       std::vector<Int_t>* ParseLayoutString( TString layerSpec );
-      virtual void        BuildNetwork( std::vector<Int_t>* layout, std::vector<Double_t>* weights=NULL, 
+      virtual void        BuildNetwork( std::vector<Int_t>* layout, std::vector<Double_t>* weights=NULL,
                                         Bool_t fromFile = kFALSE );
       void     ForceNetworkInputs( const Event* ev, Int_t ignoreIndex = -1 );
       Double_t GetNetworkOutput() { return GetOutputNeuron()->GetActivationValue(); }
@@ -169,9 +169,9 @@ namespace TMVA {
       TRandom3*     frgen;            // random number generator for various uses
       TNeuronInput* fInputCalculator; // input calculator for all neurons
 
-      std::vector<Int_t>        fRegulatorIdx;  //index to different priors from every synapses 
-      std::vector<Double_t>     fRegulators;    //the priors as regulator        
-      EEstimator                fEstimator; 
+      std::vector<Int_t>        fRegulatorIdx;  //index to different priors from every synapses
+      std::vector<Double_t>     fRegulators;    //the priors as regulator
+      EEstimator                fEstimator;
       TString                   fEstimatorS;
 
       // monitoring histograms
@@ -189,6 +189,8 @@ namespace TMVA {
       TMatrixD           fInvHessian;           // zjh
       bool               fUseRegulator;         // zjh
 
+   protected:
+      Int_t                   fRandomSeed;      // random seed for initial synapse weights
 
    private:
       
@@ -217,7 +219,6 @@ namespace TMVA {
       TObjArray*              fInputLayer;      // cache this for fast access
       std::vector<TNeuron*>   fOutputNeurons;   // cache this for fast access
       TString                 fLayerSpec;       // layout specification option
-      Int_t                   fRandomSeed;      // random seed for initial synapse weights
 
       // some static flags
       static const Bool_t fgDEBUG      = kTRUE;  // debug flag

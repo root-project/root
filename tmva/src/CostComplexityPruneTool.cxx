@@ -163,22 +163,22 @@ void CostComplexityPruneTool::InitTreePruningMetaData( DecisionTreeNode* n ) {
    if(n->GetLeft() != NULL && n->GetRight() != NULL) { // n is an interior (non-leaf) node
       n->SetTerminal(kFALSE);
       // traverse the tree
-      InitTreePruningMetaData(n->GetLeftDaughter());
-      InitTreePruningMetaData(n->GetRightDaughter());
+      InitTreePruningMetaData(n->GetLeft());
+      InitTreePruningMetaData(n->GetRight());
       // set |~T_t|
-      n->SetNTerminal( n->GetLeftDaughter()->GetNTerminal() +
-                       n->GetRightDaughter()->GetNTerminal());
+      n->SetNTerminal( n->GetLeft()->GetNTerminal() +
+                       n->GetRight()->GetNTerminal());
       // set R(T) = sum[n' in ~T]{ R(n') }
-      n->SetSubTreeR( (n->GetLeftDaughter()->GetSubTreeR() +
-                       n->GetRightDaughter()->GetSubTreeR()));
+      n->SetSubTreeR( (n->GetLeft()->GetSubTreeR() +
+                       n->GetRight()->GetSubTreeR()));
       // set alpha_c, the alpha value at which it becomes advantageaus to prune at node n
       n->SetAlpha( ((n->GetNodeR() - n->GetSubTreeR()) /
                     (n->GetNTerminal() - 1)));
 
       // G(t) = min( alpha_c, G(l(n)), G(r(n)) )
       // the minimum alpha in subtree rooted at this node
-      n->SetAlphaMinSubtree( std::min(n->GetAlpha(), std::min(n->GetLeftDaughter()->GetAlphaMinSubtree(),
-                                                              n->GetRightDaughter()->GetAlphaMinSubtree())));
+      n->SetAlphaMinSubtree( std::min(n->GetAlpha(), std::min(n->GetLeft()->GetAlphaMinSubtree(),
+                                                              n->GetRight()->GetAlphaMinSubtree())));
       n->SetCC(n->GetAlpha());
 
    } else { // n is a terminal node
@@ -249,11 +249,11 @@ void CostComplexityPruneTool::Optimize( DecisionTree* dt, Double_t weights ) {
 //          std::cout << t->GetAlphaMinSubtree() << "  " << t->GetAlpha()<< "  "
 //                    << t->GetAlphaMinSubtree()- t->GetAlpha()<<  " t==R?" << int(t == R) << std::endl;
          //      while(  (t->GetAlphaMinSubtree() - t->GetAlpha()) < epsilon)  {
-         //         if(TMath::Abs(t->GetAlphaMinSubtree() - t->GetLeftDaughter()->GetAlphaMinSubtree())/TMath::Abs(t->GetAlphaMinSubtree()) < epsilon) {
-         if(TMath::Abs(t->GetAlphaMinSubtree() - t->GetLeftDaughter()->GetAlphaMinSubtree()) < epsilon) {
-            t = t->GetLeftDaughter();
+         //         if(TMath::Abs(t->GetAlphaMinSubtree() - t->GetLeft()->GetAlphaMinSubtree())/TMath::Abs(t->GetAlphaMinSubtree()) < epsilon) {
+         if(TMath::Abs(t->GetAlphaMinSubtree() - t->GetLeft()->GetAlphaMinSubtree()) < epsilon) {
+            t = t->GetLeft();
          } else {
-            t = t->GetRightDaughter();
+            t = t->GetRight();
          }
       }
 
@@ -274,12 +274,12 @@ void CostComplexityPruneTool::Optimize( DecisionTree* dt, Double_t weights ) {
       dt->PruneNodeInPlace(t); // prune the branch rooted at node t
 
       while(t != R) { // go back up the (pruned) tree and recalculate R(T), alpha_c
-         t = t->GetMother();
-         t->SetNTerminal(t->GetLeftDaughter()->GetNTerminal() + t->GetRightDaughter()->GetNTerminal());
-         t->SetSubTreeR(t->GetLeftDaughter()->GetSubTreeR() + t->GetRightDaughter()->GetSubTreeR());
+         t = t->GetParent();
+         t->SetNTerminal(t->GetLeft()->GetNTerminal() + t->GetRight()->GetNTerminal());
+         t->SetSubTreeR(t->GetLeft()->GetSubTreeR() + t->GetRight()->GetSubTreeR());
          t->SetAlpha((t->GetNodeR() - t->GetSubTreeR())/(t->GetNTerminal() - 1));
-         t->SetAlphaMinSubtree(std::min(t->GetAlpha(), std::min(t->GetLeftDaughter()->GetAlphaMinSubtree(),
-                                                                t->GetRightDaughter()->GetAlphaMinSubtree())));
+         t->SetAlphaMinSubtree(std::min(t->GetAlpha(), std::min(t->GetLeft()->GetAlphaMinSubtree(),
+                                                                t->GetRight()->GetAlphaMinSubtree())));
          t->SetCC(t->GetAlpha());
       }
       k += 1;

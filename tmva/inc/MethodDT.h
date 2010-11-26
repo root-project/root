@@ -83,10 +83,10 @@ namespace TMVA {
 
       // read weights from file
       void ReadWeightsFromStream( istream& istr );
-      void ReadWeightsFromXML   ( void* /*wghtnode*/ ) {}
+      void ReadWeightsFromXML   ( void* wghtnode );
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = 0 );
+      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
 
       // the option handling methods
       void DeclareOptions();
@@ -122,6 +122,8 @@ namespace TMVA {
       Int_t                           fNCuts;           // grid used in cut applied in node splitting
       Bool_t                          fUseYesNoLeaf;    // use sig or bkg classification in leave nodes or sig/bkg
       Double_t                        fNodePurityLimit; // purity limit for sig/bkg nodes
+      UInt_t                          fNNodesMax;       // max # of nodes
+      UInt_t                          fMaxDepth;        // max depth
 
 
       Double_t                         fErrorFraction;   // ntuple var: misclassification error fraction 

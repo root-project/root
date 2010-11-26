@@ -87,19 +87,15 @@ namespace TMVA {
       virtual Bool_t GoesLeft ( const Event& ) const = 0;
       // test event if it is equal to the event that "makes the node" (just for the "search tree"  
 
-      // return pointer to the left daughter node
-      inline Node* GetLeft  () const { return fLeft;   }
-      // return pointer to the right daughter node
-      inline Node* GetRight () const { return fRight;  }
-      // return pointer to the parent node
-      inline Node* GetParent() const { return fParent; }
+      // return pointer to the left/right daughter or parent node
+      inline virtual Node* GetLeft  () const { return fLeft;   }
+      inline virtual Node* GetRight () const { return fRight;  }
+      inline virtual Node* GetParent() const { return fParent; }
     
-      // set pointer to the left daughter node
-      inline void SetLeft  (Node* l) { fLeft   = l;} 
-      // set pointer to the right daughter node
-      inline void SetRight (Node* r) { fRight  = r;} 
-      // set pointer to the parent node
-      inline void SetParent(Node* p) { fParent = p;} 
+      // set pointer to the left/right daughter or parent node
+      inline virtual void SetLeft  (Node* l) { fLeft   = l;} 
+      inline virtual void SetRight (Node* r) { fRight  = r;} 
+      inline virtual void SetParent(Node* p) { fParent = p;} 
     
       //recursively go through the part of the tree below this node and count all daughters
       Int_t  CountMeAndAllDaughters() const;
@@ -128,10 +124,10 @@ namespace TMVA {
       char GetPos() const {return fPos;}
 
       // Return the pointer to the Parent tree to which the Node belongs 
-      TMVA::BinaryTree* GetParentTree() const {return fParentTree;}
+      virtual TMVA::BinaryTree* GetParentTree() const {return fParentTree;}
 
       // set the pointer to the Parent Tree to which the Node belongs 
-      void SetParentTree(TMVA::BinaryTree* t) {fParentTree = t;} 
+      virtual void SetParentTree(TMVA::BinaryTree* t) {fParentTree = t;} 
 
       int GetCount();
 
@@ -139,7 +135,7 @@ namespace TMVA {
       virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE  ) = 0;
       virtual void ReadContent(std::stringstream& s) =0;
 
-   private: 
+   protected: 
 
       Node*   fParent;              // the previous (parent) node
       Node*   fLeft;                // pointers to the two "daughter" nodes
@@ -149,6 +145,7 @@ namespace TMVA {
       UInt_t  fDepth;               // depth of the node within the tree (seen from root node)
 
       BinaryTree*  fParentTree;     // pointer to the parent tree to which the Node belongs 
+   private: 
 
       static Int_t fgCount;         // counter of all nodes present.. for debug.. to spot memory leaks...
 

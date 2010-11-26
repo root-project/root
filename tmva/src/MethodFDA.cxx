@@ -68,10 +68,10 @@ ClassImp(TMVA::MethodFDA)
 //_______________________________________________________________________
 TMVA::MethodFDA::MethodFDA( const TString& jobName,
                             const TString& methodTitle,
-                            DataSetInfo& theData, 
+                            DataSetInfo& theData,
                             const TString& theOption,
                             TDirectory* theTargetDir )
-   : MethodBase( jobName, Types::kFDA, methodTitle, theData, theOption, theTargetDir ), 
+   : MethodBase( jobName, Types::kFDA, methodTitle, theData, theOption, theTargetDir ),
      IFitterTarget   (),
      fFormula        ( 0 ),
      fNPars          ( 0 ),
@@ -86,10 +86,10 @@ TMVA::MethodFDA::MethodFDA( const TString& jobName,
 }
 
 //_______________________________________________________________________
-TMVA::MethodFDA::MethodFDA( DataSetInfo& theData, 
-                            const TString& theWeightFile,  
+TMVA::MethodFDA::MethodFDA( DataSetInfo& theData,
+                            const TString& theWeightFile,
                             TDirectory* theTargetDir )
-   : MethodBase( Types::kFDA, theData, theWeightFile, theTargetDir ), 
+   : MethodBase( Types::kFDA, theData, theWeightFile, theTargetDir ),
      IFitterTarget   (),
      fFormula        ( 0 ),
      fNPars          ( 0 ),
@@ -129,9 +129,9 @@ void TMVA::MethodFDA::Init( void )
 }
 
 //_______________________________________________________________________
-void TMVA::MethodFDA::DeclareOptions() 
+void TMVA::MethodFDA::DeclareOptions()
 {
-   // define the options (their key words) that can be set in the option string 
+   // define the options (their key words) that can be set in the option string
    //
    // format of function string:
    //    "x0*(0)+((1)/x1)**(2)..."
@@ -493,13 +493,13 @@ Double_t TMVA::MethodFDA::InterpretFormula( const Event* event, std::vector<Doub
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodFDA::GetMvaValue( Double_t* err )
+Double_t TMVA::MethodFDA::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    // returns MVA value for given event
    const Event* ev = GetEvent();
 
    // cannot determine error
-   if (err != 0) *err = -1;
+   NoErrorCalc(err, errUpper);
    
    return InterpretFormula( ev, fBestPars.begin(), fBestPars.end() );
 }
@@ -532,11 +532,22 @@ const std::vector<Float_t>& TMVA::MethodFDA::GetMulticlassValues()
 {
    if (fMulticlassReturnVal == NULL) fMulticlassReturnVal = new std::vector<Float_t>();
    fMulticlassReturnVal->clear();
+   std::vector<Float_t> temp;
 
    // returns MVA value for given event
    const TMVA::Event* evt = GetEvent();
 
-   CalculateMulticlassValues( evt, fBestPars, *fMulticlassReturnVal );
+   CalculateMulticlassValues( evt, fBestPars, temp );
+
+   UInt_t nClasses = DataInfo().GetNClasses();
+   for(UInt_t iClass=0; iClass<nClasses; iClass++){
+      Double_t norm = 0.0;
+      for(UInt_t j=0;j<nClasses;j++){
+         if(iClass!=j)
+            norm+=exp(temp[j]-temp[iClass]);
+      }
+      (*fMulticlassReturnVal).push_back(1.0/(1.0+norm));
+   }
 
    return (*fMulticlassReturnVal);
 }

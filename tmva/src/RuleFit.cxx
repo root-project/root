@@ -203,7 +203,7 @@ void TMVA::RuleFit::MakeForest()
    // Weights are modifed by the boosting.
    // Those weights we do not want for the later fitting.
    //
-   Bool_t useBoost = fMethodRuleFit->UseBoost();
+   Bool_t useBoost = fMethodRuleFit->UseBoost(); // (AdaBoost (True) or RandomForest/Tree (False)
 
    if (useBoost) SaveEventWeights();
 
@@ -217,8 +217,6 @@ void TMVA::RuleFit::MakeForest()
          else nbkg++;
       }
       fsig = Double_t(nsig)/Double_t(nsig+nbkg);
-      //SeparationBase *qualitySepType = new GiniIndex();
-      // generate random number of events
       // do not implement the above in this release...just set it to default
       //      nminRnd = fNodeMinEvents;
       DecisionTree *dt;
@@ -228,8 +226,10 @@ void TMVA::RuleFit::MakeForest()
       while (tryAgain) {
          Double_t frnd = rndGen.Uniform( fMethodRuleFit->GetMinFracNEve(), fMethodRuleFit->GetMaxFracNEve() );
          nminRnd = Int_t(frnd*static_cast<Double_t>(fNTreeSample));
-         // TODO: make sure the DT constructor call is updated. This still assumes a 2-year old version
-         dt = new DecisionTree( fMethodRuleFit->GetSeparationBase(), nminRnd, fMethodRuleFit->GetNCuts(), 0, true /*qualitySepType*/ );
+         Int_t     iclass = 0; // event class being treated as signal during training
+         Bool_t    useRandomisedTree = !useBoost;  
+         dt = new DecisionTree( fMethodRuleFit->GetSeparationBase(), nminRnd, fMethodRuleFit->GetNCuts(), iclass, useRandomisedTree);
+
          BuildTree(dt); // reads fNTreeSample events from fTrainingEventsRndm
          if (dt->GetNNodes()<3) {
             delete dt;

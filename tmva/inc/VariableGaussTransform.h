@@ -87,7 +87,7 @@ namespace TMVA {
 
    public:
   
-      VariableGaussTransform( DataSetInfo& dsi );
+      VariableGaussTransform( DataSetInfo& dsi, TString strcor=""  );
       virtual ~VariableGaussTransform( void );
 
       void   Initialize();
@@ -109,7 +109,7 @@ namespace TMVA {
     
    private:
 
-      Bool_t           fFlatNotGaussD;
+      Bool_t           fFlatNotGauss;
       Int_t            fPdfMinSmooth;
       Int_t            fPdfMaxSmooth;
       //      mutable Event*   fTransformedEvent;

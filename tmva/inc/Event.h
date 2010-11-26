@@ -60,12 +60,12 @@ namespace TMVA {
       explicit Event( const std::vector<Float_t>& values, 
                       const std::vector<Float_t>& targetValues, 
                       const std::vector<Float_t>& spectatorValues, 
-                      UInt_t theClass = 0, Float_t weight = 1.0, Float_t boostweight = 1.0 );
+                      UInt_t theClass = 0, Double_t weight = 1.0, Double_t boostweight = 1.0 );
       explicit Event( const std::vector<Float_t>& values, 
                       const std::vector<Float_t>& targetValues, 
-                      UInt_t theClass = 0, Float_t weight = 1.0, Float_t boostweight = 1.0 );
+                      UInt_t theClass = 0, Double_t weight = 1.0, Double_t boostweight = 1.0 );
       explicit Event( const std::vector<Float_t>&, 
-                      UInt_t theClass, Float_t weight = 1.0, Float_t boostweight = 1.0 );
+                      UInt_t theClass, Double_t weight = 1.0, Double_t boostweight = 1.0 );
       explicit Event( const std::vector<Float_t*>*&, UInt_t nvar );
 
       ~Event();
@@ -73,9 +73,9 @@ namespace TMVA {
       // accessors
       Bool_t  IsDynamic()         const {return fDynamic; }
 
-      Float_t GetWeight()         const { return fWeight*fBoostWeight; }
-      Float_t GetOriginalWeight() const { return fWeight; }
-      Float_t GetBoostWeight()    const { return TMath::Max(Float_t(0.0001),fBoostWeight); }
+      Double_t GetWeight()         const { return fWeight*fBoostWeight; }
+      Double_t GetOriginalWeight() const { return fWeight; }
+      Double_t GetBoostWeight()    const { return TMath::Max(Double_t(0.0001),fBoostWeight); }
       UInt_t  GetClass()          const { return fClass; }  
 
       UInt_t  GetNVariables()        const;
@@ -93,10 +93,10 @@ namespace TMVA {
       Float_t GetSpectator( UInt_t ivar) const;
       std::vector<Float_t>& GetSpectators() const { return fSpectators; }
 
-      void    ScaleWeight           ( Float_t s ) { fWeight*=s; }
-      void    SetWeight             ( Float_t w ) { fWeight=w; }
-      void    SetBoostWeight        ( Float_t w ) { fBoostWeight=w; }
-      void    ScaleBoostWeight      ( Float_t s ) { fBoostWeight *= s; }
+      void    ScaleWeight           ( Double_t s ) { fWeight*=s; }
+      void    SetWeight             ( Double_t w ) { fWeight=w; }
+      void    SetBoostWeight        ( Double_t w ) { fBoostWeight=w; }
+      void    ScaleBoostWeight      ( Double_t s ) { fBoostWeight *= s; }
       void    SetClass              ( UInt_t t )  { fClass=t; }
       void    SetVal                ( UInt_t ivar, Float_t val );
       void    SetTarget             ( UInt_t itgt, Float_t value );
@@ -117,8 +117,8 @@ namespace TMVA {
       mutable std::vector<UInt_t>*   fVariableArrangement;  // needed for MethodCategories, where we can train on other than the main variables
 
       UInt_t                         fClass;           // signal or background type: signal=1, background=0
-      Float_t                        fWeight;          // event weight (product of global and individual weights)
-      Float_t                        fBoostWeight;     // internal weight to be set by boosting algorithm
+      Double_t                       fWeight;          // event weight (product of global and individual weights)
+      Double_t                       fBoostWeight;     // internal weight to be set by boosting algorithm
       Bool_t                         fDynamic;         // is set when the dynamic values are taken
       
       static Int_t                   fgCount;          // count instances of Event

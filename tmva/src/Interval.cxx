@@ -24,10 +24,48 @@
  * File and Version Information:                                                  *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//                                                                      
-// Interval definition, continuous and discrete                          
-//_______________________________________________________________________
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+// Interval                                                                 //
+//                                                                          //
+// Interval definition, continuous and discrete                             //
+//                                                                          //
+// Interval(min,max)  : a continous interval [min,max]                      //
+// Interval(min,max,n): a "discrete interval" [min,max], i.e the n numbers: //
+//          min, min+step, min+2*step,...., min+(n-1)*step, min+n*step=max  //
+//   e.g.: Interval(1,5,5)=1,2,3,4,5                                        //
+//         Interval(.5,1.,6)= .5, .6., .7, .8, .9, 1.0                      //
+//                                                                          //
+//  Note: **bin** counting starts from ZERO unlike in ROOT histograms       //
+//////////////////////////////////////////////////////////////////////////////
+/* Begin_Html
+<center><h2>the TMVA::Interval Class</h2></center>
+
+<ul>
+  <li> Interval definition, continuous and discrete    
+   <ul>
+         <li>  Interval(min,max)  : a continous interval [min,max]
+         <li>  Interval(min,max,n): a "discrete interval" [min,max], i.e the n numbers:<br>
+         min, min+step, min+2*step,...., min+(n-1)*step, min+n*step=max <br> 
+                 e.g.: Interval(1,5,5)=1,2,3,4,5                        <br> 
+         Interval(.5,1.,6)= .5, .6., .7, .8, .9, 1.0                    <br> 
+
+   </ul>
+</ul>
+<pre>
+
+    Example:   Interval(.5,1.,6) 
+
+             [ min                           max ]                       
+         ------------------------------------------------------------
+                |     |     |     |     |     |
+               .5    .6    .7    .8    .9    1.0            
+ 
+         bin    0     1     2     3     4     5  
+
+
+</pre>
+End_Html */
 
 #include "TMath.h"
 #include "TRandom3.h"
@@ -64,7 +102,7 @@ TMVA::Interval::Interval( Double_t min, Double_t max, Int_t nbins ) :
 
 TMVA::Interval::Interval( const Interval& other ) :
    fMin  ( other.fMin ),
-   fMax  ( other.fMin ),
+   fMax  ( other.fMax ),
    fNbins( other.fNbins )
 {
    if (!fgLogger) fgLogger = new MsgLogger("Interval");
@@ -84,15 +122,28 @@ Double_t TMVA::Interval::GetElement( Int_t bin ) const
    //        Double_t position 
    //
    if (fNbins <= 0) {
-      Log() << kFATAL << "GetElement only possible for discrete values" << Endl;
+      Log() << kFATAL << "GetElement only defined for discrete value Intervals" << Endl;
       return 0.0;
    }
    else if (bin < 0 || bin >= fNbins) {
-      Log() << kFATAL << "bin " << bin << " out of interval [0," << fNbins << ")" << Endl;
+      Log() << kFATAL << "bin " << bin << " out of range: interval *bins* count from 0 to " << fNbins-1  << Endl;
       return 0.0;
    }
+      return fMin + ( (Double_t(bin)/(fNbins-1)) *(fMax - fMin) );
+}
+
+//_______________________________________________________________________
+Double_t TMVA::Interval::GetStepSize( )  const
+{
+   // retuns the step size between the numbers of a "discrete Interval" 
+   if (fNbins <= 0) {
+      Log() << kFATAL << "GetElement only defined for discrete value Intervals" << Endl;
+      return 0.0;
+   }
+   else { 
+      return (fMax-fMin)/(Double_t)(fNbins-1);
+   }
    
-   return fMin + ( (Double_t(bin)/(fNbins-1)) *(fMax - fMin) );
 }
 
 //_______________________________________________________________________

@@ -169,7 +169,7 @@ Bool_t TMVA::DataSetInfo::HasCuts() const
 {
    Bool_t hasCuts = kFALSE;
    for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); it++) {
-      if( (*it)->GetCut() != "" ) hasCuts = kTRUE;
+      if( TString((*it)->GetCut()) != TString("") ) hasCuts = kTRUE;
    }
    return hasCuts;
 }

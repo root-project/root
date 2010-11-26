@@ -414,12 +414,12 @@ void TMVA::MethodCuts::ProcessOptions()
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodCuts::GetMvaValue( Double_t* err )
+Double_t TMVA::MethodCuts::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    // cut evaluation: returns 1.0 if event passed, 0.0 otherwise
 
    // cannot determine error
-   if (err != 0) *err = -1;
+   NoErrorCalc(err, errUpper);
 
    // sanity check
    if (fCutMin == NULL || fCutMax == NULL || fNbins == 0) {
@@ -677,6 +677,8 @@ void  TMVA::MethodCuts::Train( void )
 
       // clean up
       for (UInt_t ivar=0; ivar<ranges.size(); ivar++) delete ranges[ivar];
+      delete fitter;
+      
    }
    // --------------------------------------------------------------------------
    else if (fFitMethod == kUseEventScan) {
@@ -786,8 +788,8 @@ void  TMVA::MethodCuts::Train( void )
    }
 
    // some output
-   // the efficiency which is asked for has to be slightly higher than the bin-borders. 
-   // if not, then the wrong bin is taken in some cases. 
+   // the efficiency which is asked for has to be slightly higher than the bin-borders.
+   // if not, then the wrong bin is taken in some cases.
    Double_t epsilon = 0.0001;
    for (Double_t eff=0.1; eff<0.95; eff += 0.1) PrintCuts( eff+epsilon );
 }
@@ -804,6 +806,7 @@ Double_t TMVA::MethodCuts::EstimatorFunction( Int_t ievt1, Int_t ievt2 )
    // for full event scan
    const Event *ev1 = GetEvent(ievt1);
    if (!DataInfo().IsSignal(ev1)) return -1;
+
    const Event *ev2 = GetEvent(ievt2);
    if (!DataInfo().IsSignal(ev2)) return -1;
 

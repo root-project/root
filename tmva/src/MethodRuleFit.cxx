@@ -191,7 +191,7 @@ void TMVA::MethodRuleFit::DeclareOptions()
    // fEventsMax     <float>      maximum fraction of events in a splittable node
    // nTrees         <float>      number of trees in forest.
    // ForestType     <string>
-   //    available values are:    Random    - create forest using random subsample
+   //    available values are:    Random    - create forest using random subsample and only random variables subset at each node
    //                             AdaBoost  - create forest with boosted events
    //
    //-----------------
@@ -224,7 +224,7 @@ void TMVA::MethodRuleFit::DeclareOptions()
    DeclareOptionRef(fMaxFracNEve=0.9,      "fEventsMax",     "Maximum fraction of events in a splittable node");
    DeclareOptionRef(fNTrees=20,            "nTrees",         "Number of trees in forest.");
    
-   DeclareOptionRef(fForestTypeS="AdaBoost",  "ForestType",   "Method to use for forest generation");
+   DeclareOptionRef(fForestTypeS="AdaBoost",  "ForestType",   "Method to use for forest generation (AdaBoost or RandomForest)");
    AddPreDefVal(TString("AdaBoost"));
    AddPreDefVal(TString("Random"));
    // rule cleanup options
@@ -580,12 +580,12 @@ void TMVA::MethodRuleFit::ReadWeightsFromXML( void* wghtnode )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodRuleFit::GetMvaValue( Double_t* err )
+Double_t TMVA::MethodRuleFit::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    // returns MVA value for given event
 
    // cannot determine error
-   if (err != 0) *err = -1;
+   NoErrorCalc(err, errUpper);
 
    return fRuleFit.EvalEvent( *GetEvent() );
 }

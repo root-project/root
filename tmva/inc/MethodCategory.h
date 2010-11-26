@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss,Or Cohen 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss,Or Cohen
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -18,9 +18,9 @@
  *      Eckhard v. Toerne  <evt@uni-bonn.de>        - U of Bonn, Germany          *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -67,11 +67,11 @@ namespace TMVA {
                       DataSetInfo& theData,
                       const TString& theOption = "",
                       TDirectory* theTargetDir = NULL );
-      
-      MethodCategory( DataSetInfo& dsi, 
-                      const TString& theWeightFile,  
-                      TDirectory* theTargetDir = NULL );      
-      
+
+      MethodCategory( DataSetInfo& dsi,
+                      const TString& theWeightFile,
+                      TDirectory* theTargetDir = NULL );
+
       virtual ~MethodCategory( void );
 
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ );
@@ -80,7 +80,7 @@ namespace TMVA {
 
       // ranking of input variables
       const Ranking* CreateRanking();
-         
+
       // saves the name and options string of the boosted classifier
       TMVA::IMethod* AddMethod(const TCut&,
                                const TString& theVariables,
@@ -88,10 +88,10 @@ namespace TMVA {
                                const TString& theTitle,
                                const TString& theOptions);
 
-      void AddWeightsXMLTo( void* parent ) const; 
+      void AddWeightsXMLTo( void* parent ) const;
       void ReadWeightsFromXML( void* wghtnode );
 
-      Double_t GetMvaValue( Double_t* err );
+      Double_t GetMvaValue( Double_t* err=0, Double_t* errUpper = 0 );
 
       virtual void MakeClass( const TString& = TString("") ) const {};
 

@@ -277,12 +277,12 @@ void TMVA::MethodKNN::Train()
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err )
+Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    // Compute classifier response
 
    // cannot determine error
-   if (err != 0) *err = -1;
+   NoErrorCalc(err, errUpper);
 
    //
    // Define local variables
@@ -296,7 +296,7 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err )
    
    for (Int_t ivar = 0; ivar < nvar; ++ivar) {
       vvec[ivar] = ev->GetValue(ivar);
-   }   
+   }
 
    // search for fnkNN+2 nearest neighbors, pad with two 
    // events to avoid Monte-Carlo events with zero distance

@@ -46,13 +46,17 @@
 #ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
 #endif
+#ifndef ROOT_TMVA_PDEFoam
+#include "TMVA/PDEFoam.h"
+#endif
 #ifndef ROOT_TMVA_PDEFoamCell
 #include "TMVA/PDEFoamCell.h"
 #endif
+#ifndef ROOT_TMVA_MsgLogger
+#include "TMVA/MsgLogger.h"
+#endif
 
 namespace TMVA {
-   enum EFoamType { kSeparate, kDiscr, kMonoTarget, kMultiTarget };
-
    // options for filling density (used in Density() to build up foam)
    // kEVENT_DENSITY : use event density for foam buildup
    // kDISCRIMINATOR : use N_sig/(N_sig + N_bg) for foam buildup
@@ -66,17 +70,11 @@ namespace TMVA {
    class PDEFoamDistr : public ::TObject  {
 
    private:
-      Int_t fDim;               // number of dimensions
-      Float_t *fXmin;           //[fDim] minimal value of phase space in all dimension
-      Float_t *fXmax;           //[fDim] maximal value of phase space in all dimension
-      Float_t fVolFrac;         // volume fraction (with respect to total phase space
+      const PDEFoam *fPDEFoam;  // PDEFoam to refer to
       BinarySearchTree *fBst;   // Binary tree to find events within a volume
       TDensityCalc fDensityCalc;// method of density calculation
 
    protected:
-      UInt_t fSignalClass;      // TODO: intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
-      Int_t fBackgroundClass;  // TODO: intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
-
       mutable MsgLogger* fLogger;                     //! message logger
       MsgLogger& Log() const { return *fLogger; }
 
@@ -85,35 +83,21 @@ namespace TMVA {
       PDEFoamDistr(const PDEFoamDistr&);
       virtual ~PDEFoamDistr();
 
-      // Getter and setter for VolFrac option
-      void SetVolumeFraction(Float_t vfr){fVolFrac=vfr; return;}
-      Float_t GetVolumeFraction(){return fVolFrac;}
-
-      // set foam dimension (mandatory before foam build-up!)
-      void SetDim(Int_t idim);
-
-      // set foam boundaries
-      void SetXmin(Int_t idim,Float_t wmin){fXmin[idim]=wmin; return;}
-      void SetXmax(Int_t idim,Float_t wmax){fXmax[idim]=wmax; return;}
-
-      // transformation functions for event variable into foam boundaries
-      // reason: foam allways has boundaries [0, 1]
-      Float_t VarTransform(Int_t idim, Float_t x){        // transform [xmin, xmax] --> [0, 1]
-         Float_t b=fXmax[idim]-fXmin[idim];
-         return (x-fXmin[idim])/b;
-      }
-      Float_t VarTransformInvers(Int_t idim, Float_t x){  // transform [0, 1] --> [xmin, xmax]
-         Float_t b=fXmax[idim]-fXmin[idim];
-         return x*b + fXmin[idim];
-      }
-
       // density build-up functions
-      void Initialize(Int_t ndim = 2);
+      void Initialize(); // create and initialize binary search tree
       void FillBinarySearchTree( const Event* ev, EFoamType ft, Bool_t NoNegWeights=kFALSE );
 
       // main function used by PDEFoam
       // returns density at a given point by range searching in BST
       Double_t Density(Double_t *Xarg, Double_t &event_density);
+
+      // Return fDim histograms with signal and bg events
+      void FillHist(PDEFoamCell* cell, std::vector<TH1F*>&, std::vector<TH1F*>&, 
+		    std::vector<TH1F*>&, std::vector<TH1F*>&);
+
+      // Getter and setter for the fPDEFoam pointer
+      void SetPDEFoam(const PDEFoam *foam){ fPDEFoam = foam; }
+      const PDEFoam* GetPDEFoam() const { return fPDEFoam; };
 
       // Getters and setters for foam filling method
       void SetDensityCalc( TDensityCalc dc ){ fDensityCalc = dc; };
@@ -121,10 +105,7 @@ namespace TMVA {
       Bool_t FillTarget0()      { return fDensityCalc == kTARGET;        }
       Bool_t FillEventDensity() { return fDensityCalc == kEVENT_DENSITY; }
 
-      void SetSignalClass( Int_t cls )     { fSignalClass = cls;  } // TODO: intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
-      void SetBackgroundClass( Int_t cls ) { fBackgroundClass = cls;  } // TODO: intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
-
-      ClassDef(PDEFoamDistr,2) //Class for Event density
+      ClassDef(PDEFoamDistr,3) //Class for Event density
    };  //end of PDEFoamDistr
 
 }  // namespace TMVA

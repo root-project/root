@@ -108,8 +108,9 @@ std::vector<TString>* TMVA::VariableDecorrTransform::GetTransformationStrings( I
    Int_t whichMatrix = cls;
    // if cls (the class chosen by the user) not existing, assume that user wants to 
    // have the matrix for all classes together. 
+   
    if (cls < 0 || cls > GetNClasses()) whichMatrix = GetNClasses();
-
+   
    TMatrixD* m = fDecorrMatrices.at(whichMatrix);
    if (m == 0) {
       if (whichMatrix == GetNClasses() )
@@ -146,10 +147,13 @@ const TMVA::Event* TMVA::VariableDecorrTransform::Transform( const TMVA::Event* 
 
    Int_t whichMatrix = cls;
    // if cls (the class chosen by the user) not existing, assume that he wants to have the matrix for all classes together. 
-   if (cls < 0 || cls > GetNClasses()) {
-      whichMatrix = GetNClasses();
-      if (GetNClasses() == 1 ) whichMatrix = (fDecorrMatrices.size()==1?0:2);
-   }
+   // EVT this is a workaround to address the reader problem with transforma and EvaluateMVA(std::vector<float/double> ,...) 
+   if (cls < 0 || cls >= (int) fDecorrMatrices.size()) whichMatrix = fDecorrMatrices.size()-1;
+   //EVT workaround end
+   //if (cls < 0 || cls > GetNClasses()) {
+   //   whichMatrix = GetNClasses();
+   //   if (GetNClasses() == 1 ) whichMatrix = (fDecorrMatrices.size()==1?0:2);
+   //}
 
    TMatrixD* m = fDecorrMatrices.at(whichMatrix);
    if (m == 0) {
@@ -246,7 +250,7 @@ void TMVA::VariableDecorrTransform::CalcSQRMats( const std::vector<Event*>& even
    const UInt_t matNum = (maxCls<=1)?maxCls:maxCls+1;
    fDecorrMatrices.resize( matNum, (TMatrixD*) 0 );
       
-   std::vector<TMatrixDSym*>* covMat = CalcCovarianceMatrices( events, maxCls );
+   std::vector<TMatrixDSym*>* covMat = gTools().CalcCovarianceMatrices( events, maxCls );
    
    
    for (UInt_t cls=0; cls<matNum; cls++) {
@@ -257,107 +261,6 @@ void TMVA::VariableDecorrTransform::CalcSQRMats( const std::vector<Event*>& even
       delete (*covMat)[cls];
    }
    delete covMat;
-}
-
-//_______________________________________________________________________
-std::vector<TMatrixDSym*>*
-TMVA::VariableDecorrTransform::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls )
-{
-   // compute covariance matrices
-
-   UInt_t nvar = GetNVariables(), ivar = 0, jvar = 0;
-
-   // init matrices
-   Int_t matNum = maxCls;
-   if (maxCls > 1 ) matNum++; // if more than one classes, then produce one matrix for all events as well (beside the matrices for each class)
-
-   std::vector<TVectorD*>* vec = new std::vector<TVectorD*>(matNum);
-   std::vector<TMatrixD*>* mat2 = new std::vector<TMatrixD*>(matNum);
-   std::vector<Double_t> count(matNum);
-   count.assign(matNum,0);
-
-   Int_t cls = 0;
-   TVectorD* v;
-   TMatrixD* m;
-   for (cls = 0; cls < matNum ; cls++) {
-      vec->at(cls) = new TVectorD(nvar);
-      mat2->at(cls) = new TMatrixD(nvar,nvar);
-      v = vec->at(cls);
-      m = mat2->at(cls);
-
-      for (ivar=0; ivar<nvar; ivar++) {
-         (*v)(ivar) = 0;
-         for (jvar=0; jvar<nvar; jvar++) {
-            (*m)(ivar, jvar) = 0;
-         }
-      }
-   }
-
-   // perform event loop
-   for (UInt_t i=0; i<events.size(); i++) {
-
-      // fill the event
-      Event * ev = events[i];
-      cls = ev->GetClass();
-      Double_t weight = ev->GetWeight();
-       
-      if (maxCls > 1) {
-         v = vec->at(matNum-1);
-         m = mat2->at(matNum-1);
-
-         count.at(matNum-1)+=weight; // count used events
-         for (ivar=0; ivar<nvar; ivar++) {
-
-            Double_t xi = ev->GetValue(ivar);
-            (*v)(ivar) += xi*weight;
-            (*m)(ivar, ivar) += (xi*xi*weight);
-
-            for (jvar=ivar+1; jvar<nvar; jvar++) {
-               Double_t xj = ev->GetValue(jvar);
-               (*m)(ivar, jvar) += (xi*xj*weight);
-               (*m)(jvar, ivar) = (*m)(ivar, jvar); // symmetric matrix
-            }
-         }
-      }
-
-      count.at(cls)+=weight; // count used events
-      v = vec->at(cls);
-      m = mat2->at(cls);
-      for (ivar=0; ivar<nvar; ivar++) {
-         Double_t xi = ev->GetValue(ivar);
-         (*v)(ivar) += xi*weight;
-         (*m)(ivar, ivar) += (xi*xi*weight);
-
-         for (jvar=ivar+1; jvar<nvar; jvar++) {
-            Double_t xj = ev->GetValue(jvar);
-            (*m)(ivar, jvar) += (xi*xj*weight);
-            (*m)(jvar, ivar) = (*m)(ivar, jvar); // symmetric matrix
-         }
-      }
-   }
-
-   // variance-covariance
-   std::vector<TMatrixDSym*>* mat = new std::vector<TMatrixDSym*>(matNum);
-   for (cls = 0; cls < matNum; cls++) {
-      v = vec->at(cls);
-      m = mat2->at(cls);
-
-      mat->at(cls) = new TMatrixDSym(nvar);
-
-      Double_t n = count.at(cls);
-      for (ivar=0; ivar<nvar; ivar++) {
-         for (jvar=0; jvar<nvar; jvar++) {
-            (*(mat->at(cls)))(ivar, jvar) = (*m)(ivar, jvar)/n - (*v)(ivar)*(*v)(jvar)/(n*n);
-         }
-      }
-      delete v;
-      delete m;
-   }
-
-   delete mat2;
-   delete vec;
-
-   return mat;
 }
 
 //_______________________________________________________________________

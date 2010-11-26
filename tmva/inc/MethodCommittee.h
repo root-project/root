@@ -91,7 +91,7 @@ namespace TMVA {
       void WriteMonitoringHistosToFile( void ) const;
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = 0 );
+      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
 
       // apply the boost algorithm to a member in the committee
       Double_t Boost(  TMVA::MethodBase*, UInt_t imember );

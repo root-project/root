@@ -31,10 +31,6 @@
 #include "TObject.h"
 #endif
 
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
-
 namespace TMVA {
 
    class PDEFoamVect : public TObject {
@@ -42,10 +38,6 @@ namespace TMVA {
    private:
       Int_t       fDim;                     // Dimension
       Double_t   *fCoords;                  // [fDim] Coordinates
-
-   protected:
-      static MsgLogger* fgLogger;                     //! message logger, static because there is a huge number of vectors...
-      MsgLogger& Log() const { return *fgLogger; }
 
    public:
       // constructor

@@ -52,12 +52,15 @@
 #ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
 #endif
+#ifndef ROOT_IFitterTarget
+#include "IFitterTarget.h"
+#endif
 
 namespace TMVA {
 
    class MsgLogger;
    
-   class ResultsMulticlass : public Results {
+   class ResultsMulticlass : public Results, public IFitterTarget {
 
    public:
 
@@ -75,17 +78,27 @@ namespace TMVA {
       std::vector<std::vector< Float_t> >* GetValueVector()  { return &fMultiClassValues; }
 
       Types::EAnalysisType  GetAnalysisType() { return Types::kMulticlass; }
-
+      Float_t GetAchievableEff(UInt_t cls){return fAchievableEff.at(cls);}
+      Float_t GetAchievablePur(UInt_t cls){return fAchievablePur.at(cls);}
+      std::vector<Float_t>& GetAchievableEff(){return fAchievableEff;}
+      std::vector<Float_t>& GetAchievablePur(){return fAchievablePur;}
       // histogramming
-      void     MakeHistograms();
+      void     CreateMulticlassHistos( TString prefix, Int_t nbins, Int_t nbins_high);
 
+      Double_t EstimatorFunction( std::vector<Double_t> & );
+      std::vector<Double_t> GetBestMultiClassCuts(UInt_t targetClass);
 
    private:
 
       mutable std::vector<std::vector< Float_t> >  fMultiClassValues;        //! mva values (Results)
       mutable MsgLogger* fLogger;                     //! message logger
       MsgLogger& Log() const { return *fLogger; }
-   };
+      UInt_t fClassToOptimize;
+      std::vector<Float_t> fAchievableEff;
+      std::vector<Float_t> fAchievablePur;
+      std::vector<std::vector<Double_t> > fBestCuts;
+   }; 
+
 }
 
 #endif

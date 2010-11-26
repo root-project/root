@@ -77,14 +77,14 @@ namespace TMVA {
 
       virtual Node* CreateNode(UInt_t size=0) const = 0;
       virtual BinaryTree* CreateTree() const = 0;
-      static  BinaryTree* CreateFromXML(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE);
+      //      virtual BinaryTree* CreateFromXML(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE) = 0;
       virtual const char* ClassName() const = 0;
 
       // set the root node of the tree
       void SetRoot( Node* r ) { fRoot = r; }
     
       // Retrieves the address of the root node
-      Node* GetRoot() const { return fRoot; }
+      virtual Node* GetRoot() const { return fRoot; }
     
       // get number of Nodes in the Tree as counted while booking the nodes;
       UInt_t GetNNodes() const { return fNNodes; }
@@ -109,11 +109,11 @@ namespace TMVA {
 
    private:
   
+  
+   protected:
       Node*      fRoot;                //the root node of the tree
       // the tree only has it's root node, the "daughters" are taken car 
       // of by the "node" properties of the "root"
-  
-   protected:
 
       // delete a node (and the corresponding event if owned by the tree)
       void       DeleteNode( Node* );

@@ -82,7 +82,7 @@ namespace TMVA {
       // - here it is just a dummy, as it is done in the overwritten
       // - PrepareEvaluationtree... ugly but necessary due to the strucure 
       //   of TMultiLayerPercepton in ROOT grr... :-(
-      Double_t GetMvaValue( Double_t* err = 0 );
+      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
 
       void SetHiddenLayer(TString hiddenlayer = "" ) { fHiddenLayer=hiddenlayer; }
 

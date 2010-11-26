@@ -20,11 +20,11 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
-   
+
 //_______________________________________________________________________
-//                                                                      
-// Neuron class used by TMVA artificial neural network methods      
-//                                                                      
+//
+// Neuron class used by TMVA artificial neural network methods
+//
 //_______________________________________________________________________
 
 #include "TH1D.h"
@@ -207,7 +207,7 @@ void TMVA::TNeuron::DeleteLinksArray(TObjArray*& links)
 void TMVA::TNeuron::SetError(Double_t error)
 {
    // set error, this should only be done for an output neuron
-   if (!IsOutputNeuron()) 
+   if (!IsOutputNeuron())
       PrintMessage( kWARNING, "Warning! Setting an error on a non-output neuron is probably not what you want to do." );
 
    fError = error;

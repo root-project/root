@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$ 
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -22,9 +22,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -37,6 +37,9 @@
 
 #ifndef ROOT_TMVA_MethodCFMlpANN_def
 #include "TMVA/MethodCFMlpANN_def.h"
+#endif
+#ifndef ROOT_TMVA_MsgLogger
+#include "TMVA/MsgLogger.h"
 #endif
 
 #ifndef ROOT_Rtypes
@@ -157,7 +160,7 @@ namespace TMVA {
             delete[] fxx;
             fxx=0;
          }
-  
+
          Double_t** fxx;
          Int_t fNevt;
          Int_t fNvar;
@@ -166,22 +169,22 @@ namespace TMVA {
       // ANN weights
       struct {
          Double_t x[max_nLayers_*max_nNodes_];
-         Double_t y[max_nLayers_*max_nNodes_];             
+         Double_t y[max_nLayers_*max_nNodes_];
          Double_t o[max_nNodes_];
-         Double_t w[max_nLayers_*max_nNodes_*max_nNodes_]; 
-         Double_t ww[max_nLayers_*max_nNodes_];            
+         Double_t w[max_nLayers_*max_nNodes_*max_nNodes_];
+         Double_t ww[max_nLayers_*max_nNodes_];
          Double_t cut[max_nNodes_];
-         Double_t deltaww[max_nLayers_*max_nNodes_]; 
+         Double_t deltaww[max_nLayers_*max_nNodes_];
          Int_t neuron[max_nLayers_];
       } fNeur_1;
 
       // ANN weights
       struct {
          Double_t coef[max_nNodes_], temp[max_nLayers_], demin, demax;
-         Double_t del[max_nLayers_*max_nNodes_];                
-         Double_t delw[max_nLayers_*max_nNodes_*max_nNodes_];  
-         Double_t delta[max_nLayers_*max_nNodes_*max_nNodes_]; 
-         Double_t delww[max_nLayers_*max_nNodes_];                
+         Double_t del[max_nLayers_*max_nNodes_];
+         Double_t delw[max_nLayers_*max_nNodes_*max_nNodes_];
+         Double_t delta[max_nLayers_*max_nNodes_*max_nNodes_];
+         Double_t delww[max_nLayers_*max_nNodes_];
          Int_t idde;
       } fDel_1;
 
@@ -190,6 +193,14 @@ namespace TMVA {
          Double_t ancout, tolcou;
          Int_t ieps;
       } fCost_1;
+
+      void SetLogger(MsgLogger *l) { fLogger = l; }
+
+   private:
+      MsgLogger * fLogger;
+      MsgLogger& ULog() const { return *fLogger; }
+
+   public:
 
       ClassDef(MethodCFMlpANN_Utils,0)  // Implementation of Clermond-Ferrand artificial neural network
    };

@@ -48,7 +48,7 @@ namespace TMVA {
    public:
 
       //constructor for the "statistical significance" index
-      SdivSqrtSplusB() { fName = "StatSig"; }
+      SdivSqrtSplusB(): SeparationBase()  { fName = "StatSig"; }
 
       // copy constructor
       SdivSqrtSplusB( const SdivSqrtSplusB& g): SeparationBase(g) {}

@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$ 
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -35,9 +35,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -47,14 +47,14 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-//                                                                      
-// Implementation of Clermond-Ferrand artificial neural network 
 //
-// Reference for the original FORTRAN version "mlpl3.F":              
+// Implementation of Clermond-Ferrand artificial neural network
+//
+// Reference for the original FORTRAN version "mlpl3.F":
 //      Authors  : J. Proriol and contributions from ALEPH-Clermont-Ferrand
-//                 Team members                               
-//      Copyright: Laboratoire Physique Corpusculaire         
-//                 Universite de Blaise Pascal, IN2P3/CNRS    
+//                 Team members
+//      Copyright: Laboratoire Physique Corpusculaire
+//                 Universite de Blaise Pascal, IN2P3/CNRS
 //_______________________________________________________________________
 
 #include <string>
@@ -79,7 +79,7 @@ Int_t       TMVA::MethodCFMlpANN_Utils::fg_max_nNodes_ = max_nNodes_;
 Int_t       TMVA::MethodCFMlpANN_Utils::fg_999         = 999;
 const char* TMVA::MethodCFMlpANN_Utils::fg_MethodName  = "--- CFMlpANN                 ";
 
-TMVA::MethodCFMlpANN_Utils::MethodCFMlpANN_Utils()  
+TMVA::MethodCFMlpANN_Utils::MethodCFMlpANN_Utils()
 {
    // default constructor
    Int_t i(0);
@@ -220,7 +220,7 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
    }
    fParam_1.layerm = *numlayer;
    if (fParam_1.layerm > max_nLayers_) {
-      printf("Error: number of layers exceeds maximum: %i, %i ==> abort", 
+      printf("Error: number of layers exceeds maximum: %i, %i ==> abort",
              fParam_1.layerm, max_nLayers_ );
       Arret("modification of mlpl3_param_lim.inc is needed ");
    }
@@ -238,15 +238,15 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
    fParam_1.nunishort = 48;
    fParam_1.nunap = 40;
    
-   printf("%s: Total number of events for training: %i\n", fg_MethodName, fParam_1.nevl);
-   printf("%s: Total number of training cycles    : %i\n", fg_MethodName, fParam_1.nblearn);
+   ULog() << kINFO << "Total number of events for training: " << fParam_1.nevl << Endl;
+   ULog() << kINFO << "Total number of training cycles    : " << fParam_1.nblearn << Endl;
    if (fParam_1.nevl > max_Events_) {
-      printf("Error: number of learning events exceeds maximum: %i, %i ==> abort", 
+      printf("Error: number of learning events exceeds maximum: %i, %i ==> abort",
              fParam_1.nevl, max_Events_ );
       Arret("modification of mlpl3_param_lim.inc is needed ");
    }
    if (fParam_1.nevt > max_Events_) {
-      printf("Error: number of testing events exceeds maximum: %i, %i ==> abort", 
+      printf("Error: number of testing events exceeds maximum: %i, %i ==> abort",
              fParam_1.nevt, max_Events_ );
       Arret("modification of mlpl3_param_lim.inc is needed ");
    }
@@ -263,7 +263,7 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
    }
    i__1 = fParam_1.layerm;
    for (j = 1; j <= i__1; ++j) {
-      printf("%s: Number of layers for neuron(%2i): %i\n",fg_MethodName, j, fNeur_1.neuron[j - 1]);
+      ULog() << kINFO << "Number of layers for neuron(" << j << "): " << fNeur_1.neuron[j - 1] << Endl;
    }
    if (fNeur_1.neuron[fParam_1.layerm - 1] != 2) {
       printf("Error: wrong number of classes at ouput layer: %i != 2 ==> abort\n",
@@ -286,8 +286,8 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
       Arret("new training or continued one !");
    }
    if (fParam_1.ichoi == 0) {
-      printf("%s: New training will be performed\n", fg_MethodName);
-   } 
+      ULog() << kINFO << "New training will be performed" << Endl;
+   }
    else {
       printf("%s: New training will be continued from a weight file\n", fg_MethodName);
    }

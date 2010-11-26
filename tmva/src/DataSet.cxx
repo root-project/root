@@ -287,7 +287,35 @@ TMVA::Results* TMVA::DataSet::GetResults( const TString & resultsName,
    //Log() << kINFO << " GetResults("<<info<<") builds new result." << Endl;
    return newresults;
 }
+//_______________________________________________________________________
+void TMVA::DataSet::DeleteResults( const TString & resultsName,
+                                   Types::ETreeType type,
+                                   Types::EAnalysisType /* analysistype */ ) 
+{
+   // delete the results stored for this particulary 
+   //      Method instance  (here appareantly called resultsName instead of MethodTitle
+   //      Tree type (Training, testing etc..)
+   //      Analysis Type (Classification, Multiclass, Regression etc..)
 
+   if (fResults.size() == 0) return;
+
+   if (UInt_t(type) > fResults.size()){
+      Log()<<kFATAL<< "you asked for an Treetype (training/testing/...)"
+           << " whose index " << type << " does not exist " << Endl;
+      exit(1);
+   }
+   std::map< TString, Results* >& resultsForType = fResults[UInt_t(type)];
+   std::map< TString, Results* >::iterator it = resultsForType.find(resultsName);
+   if (it!=resultsForType.end()) {
+      Log() << kDEBUG << " Delete Results previous existing result:" << resultsName 
+            << " of type " << type << Endl;
+      delete it->second;
+      resultsForType.erase(it->first);
+   }else{
+      Log() << kINFO << "could not fine Result class of " << resultsName 
+            << " of type " << type << " which I should have deleted" << Endl;
+   }
+}
 //_______________________________________________________________________
 void TMVA::DataSet::DivideTrainingSet( UInt_t blockNum )
 {
@@ -393,7 +421,7 @@ void TMVA::DataSet::InitSampling( Float_t fraction, Float_t weight, UInt_t seed 
    if (fSamplingNEvents.size() < UInt_t(treeIdx+1) ) fSamplingNEvents.resize(treeIdx+1);
    if (fSamplingWeight.size() < UInt_t(treeIdx+1) )   fSamplingWeight.resize(treeIdx+1);
       
-   if (fraction > 0.99 || fraction < 0.01) {
+   if (fraction > 0.999999 || fraction < 0.0000001) {
       fSampling.at( treeIdx ) = false;
       fSamplingNEvents.at( treeIdx ) = 0;
       fSamplingWeight.at( treeIdx ) = 1.0;
@@ -597,10 +625,9 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
         itMethod != fResults.at(t).end(); itMethod++) {
 
 
-      Log() << kDEBUG << "analysis type " << (itMethod->second->GetAnalysisType()==Types::kRegression ? "Regression" :
-				     (itMethod->second->GetAnalysisType()==Types::kMulticlass ? "multiclass" : "classification" )) << Endl;
-
-
+      Log() << kDEBUG << "analysis type: " << (itMethod->second->GetAnalysisType()==Types::kRegression ? "Regression" :
+                                               (itMethod->second->GetAnalysisType()==Types::kMulticlass ? "Multiclass" : "Classification" )) << Endl;
+      
       if (itMethod->second->GetAnalysisType() == Types::kClassification) {
          // classification
          tree->Branch( itMethod->first, &(metVals[n][0]), itMethod->first + "/F" );

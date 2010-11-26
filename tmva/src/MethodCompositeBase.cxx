@@ -149,7 +149,6 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
       Double_t methodWeight, methodSigCut;
       gTools().ReadAttr( ch, "Weight",   methodWeight   );
       gTools().ReadAttr( ch, "MethodSigCut", methodSigCut);
-      fMethodWeight.push_back(methodWeight);
       gTools().ReadAttr( ch, "MethodTypeName",  methodTypeName );
       gTools().ReadAttr( ch, "MethodName",  methodName );
       gTools().ReadAttr( ch, "JobName",  jobName );
@@ -224,14 +223,14 @@ void  TMVA::MethodCompositeBase::ReadWeightsFromStream( istream& istr )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodCompositeBase::GetMvaValue( Double_t* err )
+Double_t TMVA::MethodCompositeBase::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    // return composite MVA response
    Double_t mvaValue = 0;
    for (UInt_t i=0;i< fMethods.size(); i++) mvaValue+=fMethods[i]->GetMvaValue()*fMethodWeight[i];
 
    // cannot determine error
-   if (err != 0) *err = -1;
+   NoErrorCalc(err, errUpper);
 
    return mvaValue;
 }

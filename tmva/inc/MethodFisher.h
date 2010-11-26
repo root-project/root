@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
+// Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -21,9 +21,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -58,22 +58,22 @@ namespace TMVA {
    class MethodFisher : public MethodBase {
 
    public:
-      
-      MethodFisher( const TString& jobName, 
-                    const TString& methodTitle, 
+
+      MethodFisher( const TString& jobName,
+                    const TString& methodTitle,
                     DataSetInfo& dsi,
                     const TString& theOption = "Fisher",
                     TDirectory* theTargetDir = 0 );
 
-      MethodFisher( DataSetInfo& dsi, 
-                    const TString& theWeightFile,  
+      MethodFisher( DataSetInfo& dsi,
+                    const TString& theWeightFile,
                     TDirectory* theTargetDir = NULL );
 
       virtual ~MethodFisher( void );
 
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
-    
+
       // training method
       void Train( void );
 
@@ -87,7 +87,7 @@ namespace TMVA {
       void ReadWeightsFromXML   ( void* wghtnode );
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = 0 );
+      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
 
       enum EFisherMethod { kFisher, kMahalanobis };
       EFisherMethod GetFisherMethod( void ) { return fFisherMethod; }
@@ -108,7 +108,7 @@ namespace TMVA {
       // the option handling methods
       void DeclareOptions();
       void ProcessOptions();
-  
+
       // Initialization and allocation of matrices
       void InitMatrices( void );
 
@@ -135,7 +135,7 @@ namespace TMVA {
 
       // matrix of variables means: S, B, S+B vs. variables
       TMatrixD *fMeanMatx;
-      
+
       // method to be used
       TString       fTheMethod;       // Fisher or Mahalanobis
       EFisherMethod fFisherMethod;    // Fisher or Mahalanobis 

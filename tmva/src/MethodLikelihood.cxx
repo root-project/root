@@ -411,14 +411,14 @@ void TMVA::MethodLikelihood::Train( void )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodLikelihood::GetMvaValue( Double_t* err )
+Double_t TMVA::MethodLikelihood::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    // returns the likelihood estimator for signal
    // fill a new Likelihood branch into the testTree
    UInt_t ivar;
 
    // cannot determine error
-   if (err != 0) *err = -1;
+   NoErrorCalc(err, errUpper);
 
    // retrieve variables, and transform, if required
    TVector vs( GetNvar() );

@@ -84,6 +84,7 @@ namespace TMVA {
     
       virtual Node * CreateNode( UInt_t ) const { return new BinarySearchTreeNode(); }
       virtual BinaryTree* CreateTree() const { return new BinarySearchTree(); }
+      static BinarySearchTree* CreateFromXML(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE);
       virtual const char* ClassName() const { return "BinarySearchTree"; }
 
       // Searches for a node with the specified data 

@@ -249,7 +249,7 @@ void TMVA::MethodFisher::Train( void )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodFisher::GetMvaValue( Double_t* err )
+Double_t TMVA::MethodFisher::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    // returns the Fisher value (no fixed range)
 
@@ -259,7 +259,7 @@ Double_t TMVA::MethodFisher::GetMvaValue( Double_t* err )
       result += (*fFisherCoeff)[ivar]*ev->GetValue(ivar);
 
    // cannot determine error
-   if (err != 0) *err = -1;
+   NoErrorCalc(err, errUpper);
 
    return result;
 

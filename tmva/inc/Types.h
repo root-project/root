@@ -103,6 +103,8 @@ namespace TMVA {
          kNormalized,
          kPCA,
          kGaussDecorr,
+         kGauss,
+         kUniform,
          kMaxVariableTransform
       };
 

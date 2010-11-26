@@ -145,9 +145,9 @@ void* TMVA::Node::AddXMLTo( void* parent ) const
    void* node = gTools().AddChild(parent, "Node", s.str().c_str());
    gTools().AddAttr( node, "pos",   fPos );
    gTools().AddAttr( node, "depth", fDepth );
-   AddAttributesToNode(node);
-   if (fLeft)  fLeft->AddXMLTo(node);
-   if (fRight) fRight->AddXMLTo(node);
+   this->AddAttributesToNode(node);
+   if (this->GetLeft())  this->GetLeft()->AddXMLTo(node);
+   if (this->GetRight()) this->GetRight()->AddXMLTo(node);
    return node;
 }
 
@@ -168,8 +168,8 @@ void TMVA::Node::ReadXML( void* node,  UInt_t tmva_Version_Code )
    while (ch) {
       Node* n = CreateNode();
       n->ReadXML(ch, tmva_Version_Code);
-      if (n->GetPos()=='l') { fLeft  = n; }
-      else if(n->GetPos()=='r') { fRight = n; }
+      if (n->GetPos()=='l')     { this->SetLeft(n);  }
+      else if(n->GetPos()=='r') { this->SetRight(n); }
       else { 
 	 std::cout << "neither left nor right" << std::endl;
       }

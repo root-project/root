@@ -24,7 +24,6 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-
 #include <iostream>
 
 #include "TMVA/VariableIdentityTransform.h"
@@ -66,7 +65,7 @@ Bool_t TMVA::VariableIdentityTransform::PrepareTransformation( const std::vector
 }
 
 //_______________________________________________________________________
-void TMVA::VariableIdentityTransform::AttachXMLTo(void* ) 
+void TMVA::VariableIdentityTransform::AttachXMLTo( void* ) 
 {
    // identity transformation to write to XML
    //Log() << kFATAL << "Please implement writing of transformation as XML" << Endl;
@@ -80,14 +79,15 @@ void TMVA::VariableIdentityTransform::ReadFromXML( void* )
 }
 
 //_______________________________________________________________________
-const TMVA::Event* TMVA::VariableIdentityTransform::Transform(const TMVA::Event* const ev, Int_t) const 
+const TMVA::Event* TMVA::VariableIdentityTransform::Transform (const TMVA::Event* const ev, Int_t ) const 
 {
    // identity transform returns same event
    return ev;
 }
 
 //_______________________________________________________________________
-void TMVA::VariableIdentityTransform::MakeFunction(std::ostream& fout, const TString& fncName, Int_t , UInt_t trCounter, Int_t ) 
+void TMVA::VariableIdentityTransform::MakeFunction( std::ostream& fout, const TString& fncName, 
+                                                    Int_t , UInt_t trCounter, Int_t ) 
 {
    // creates C++ code fragment of the indentity transform for inclusion in standalone C++ class
 

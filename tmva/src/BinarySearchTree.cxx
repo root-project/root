@@ -114,6 +114,16 @@ TMVA::BinarySearchTree::~BinarySearchTree( void )
 }
 
 //_______________________________________________________________________
+TMVA::BinarySearchTree* TMVA::BinarySearchTree::CreateFromXML(void* node, UInt_t tmva_Version_Code ) {
+   // re-create a new tree (decision tree or search tree) from XML
+   std::string type("");
+   gTools().ReadAttr(node,"type", type);
+   BinarySearchTree* bt = new BinarySearchTree();
+   bt->ReadXML( node, tmva_Version_Code );
+   return bt;
+}
+
+//_______________________________________________________________________
 void TMVA::BinarySearchTree::Insert( const Event* event ) 
 {
    // insert a new "event" in the binary tree

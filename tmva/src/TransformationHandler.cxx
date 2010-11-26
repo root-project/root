@@ -867,7 +867,8 @@ void TMVA::TransformationHandler::ReadFromXML( void* trfsnode )
 void TMVA::TransformationHandler::PrintVariableRanking() const
 {
    // prints ranking of input variables
-   Log() << kINFO << "Ranking input variables..." << Endl;
+   Log() << kINFO << " " << Endl;
+   Log() << kINFO << "Ranking input variables (method unspecific)..." << Endl;
    std::vector<Ranking*>::const_iterator it = fRanking.begin();
    for (; it != fRanking.end(); it++) (*it)->Print();
 }

@@ -47,7 +47,7 @@ namespace TMVA {
    public:
     
      // default constructor
-      CrossEntropy() { fName = "CE"; }
+      CrossEntropy(): SeparationBase()  { fName = "CE"; }
 
       // copy constructor
       CrossEntropy( const CrossEntropy& g): SeparationBase(g) {}

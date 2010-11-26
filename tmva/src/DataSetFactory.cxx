@@ -150,9 +150,11 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildDynamicDataSet( TMVA::DataSetInfo& dsi
    DataSet* ds = new DataSet(dsi);
 
    // create a DataSet with one Event which uses dynamic variables (pointers to variables)
-   dsi.AddClass( "data" );
-   dsi.GetClassInfo( "data" )->SetNumber(0);
-
+   if(dsi.GetNClasses()==0){
+      dsi.AddClass( "data" );
+      dsi.GetClassInfo( "data" )->SetNumber(0);
+   }
+   
    std::vector<Float_t*>* evdyn = new std::vector<Float_t*>(0);
 
    std::vector<VariableInfo>& varinfos = dsi.GetVariableInfos();
@@ -182,13 +184,13 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildInitialDataSet( DataSetInfo& dsi, Data
    if (dataInput.GetEntries()==0) return BuildDynamicDataSet( dsi );
    // ------------------------------------------------------------------------------------
 
-   // register the classes in the datasetinfo-object. Information comes from the trees in the dataInputHandler-object
+   // register the classes in the datasetinfo-object
+   // information comes from the trees in the dataInputHandler-object
    std::vector< TString >* classList = dataInput.GetClassList();
    for (std::vector<TString>::iterator it = classList->begin(); it< classList->end(); it++) {
       dsi.AddClass( (*it) );
    }
    delete classList;
-
 
    TString normMode;
    TString splitMode;
@@ -198,25 +200,26 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildInitialDataSet( DataSetInfo& dsi, Data
    // ======= build event-vector tentative new ordering =================================
    
    TMVA::EventVectorOfClassesOfTreeType tmpEventVector;
-   TMVA::NumberPerClassOfTreeType nTrainTestEvents;
+   TMVA::NumberPerClassOfTreeType       nTrainTestEvents;
 
-   InitOptions            ( dsi, nTrainTestEvents, normMode, splitSeed, splitMode , mixMode );
-
-   BuildEventVector       ( dsi, dataInput, tmpEventVector );
+   InitOptions     ( dsi, nTrainTestEvents, normMode, splitSeed, splitMode , mixMode );
+   BuildEventVector( dsi, dataInput, tmpEventVector );
       
    DataSet* ds = MixEvents( dsi, tmpEventVector, nTrainTestEvents, splitMode, mixMode, normMode, splitSeed);
 
-
-  
-   Int_t maxL = dsi.GetClassNameMaxLength();
-   Log() << kINFO << "Collected:" << Endl;
-   for (UInt_t cl = 0; cl < dsi.GetNClasses(); cl++) {
-      Log() << kINFO << "    " 
-            << setiosflags(ios::left) << std::setw(maxL) << dsi.GetClassInfo(cl)->GetName() 
-            << " training entries: " << ds->GetNClassEvents( 0, cl ) << Endl;
-      Log() << kINFO << "    " 
-            << setiosflags(ios::left) << std::setw(maxL) << dsi.GetClassInfo(cl)->GetName() 
-            << " testing  entries: " << ds->GetNClassEvents( 1, cl ) << Endl;      
+   const Bool_t showCollectedOutput = kFALSE;
+   if (showCollectedOutput) {
+      Int_t maxL = dsi.GetClassNameMaxLength();
+      Log() << kINFO << "Collected:" << Endl;
+      for (UInt_t cl = 0; cl < dsi.GetNClasses(); cl++) {
+         Log() << kINFO << "    " 
+               << setiosflags(ios::left) << std::setw(maxL) << dsi.GetClassInfo(cl)->GetName() 
+               << " training entries: " << ds->GetNClassEvents( 0, cl ) << Endl;
+         Log() << kINFO << "    " 
+               << setiosflags(ios::left) << std::setw(maxL) << dsi.GetClassInfo(cl)->GetName() 
+               << " testing  entries: " << ds->GetNClassEvents( 1, cl ) << Endl;      
+      }
+      Log() << kINFO << " " << Endl;
    }
 
    return ds;
@@ -266,8 +269,8 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
 
    // 1) the input variable formulas
    Log() << kDEBUG << "transform input variables" << Endl;
-   std::vector<TTreeFormula*>::const_iterator formIt;
-   for (formIt = fInputFormulas.begin(); formIt!=fInputFormulas.end(); formIt++) if (*formIt) delete *formIt;
+   std::vector<TTreeFormula*>::const_iterator formIt, formItEnd;
+   for (formIt = fInputFormulas.begin(), formItEnd=fInputFormulas.end(); formIt!=formItEnd; formIt++) if (*formIt) delete *formIt;
    fInputFormulas.clear();
    TTreeFormula* ttf = 0;
 
@@ -282,7 +285,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    // targets
    //
    Log() << kDEBUG << "transform regression targets" << Endl;
-   for (formIt = fTargetFormulas.begin(); formIt!=fTargetFormulas.end(); formIt++) if (*formIt) delete *formIt;
+   for (formIt = fTargetFormulas.begin(), formItEnd = fTargetFormulas.end(); formIt!=formItEnd; formIt++) if (*formIt) delete *formIt;
    fTargetFormulas.clear();
    for (UInt_t i=0; i<dsi.GetNTargets(); i++) {
       ttf = new TTreeFormula( Form( "Formula%s", dsi.GetTargetInfo(i).GetInternalName().Data() ),
@@ -295,7 +298,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    // spectators
    //
    Log() << kDEBUG << "transform spectator variables" << Endl;
-   for (formIt = fSpectatorFormulas.begin(); formIt!=fSpectatorFormulas.end(); formIt++) if (*formIt) delete *formIt;
+   for (formIt = fSpectatorFormulas.begin(), formItEnd = fSpectatorFormulas.end(); formIt!=formItEnd; formIt++) if (*formIt) delete *formIt;
    fSpectatorFormulas.clear();
    for (UInt_t i=0; i<dsi.GetNSpectators(); i++) {
       ttf = new TTreeFormula( Form( "Formula%s", dsi.GetSpectatorInfo(i).GetInternalName().Data() ),
@@ -308,7 +311,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    // the cuts (one per class, if non-existent: formula pointer = 0)
    //
    Log() << kDEBUG << "transform cuts" << Endl;
-   for (formIt = fCutFormulas.begin(); formIt!=fCutFormulas.end(); formIt++) if (*formIt) delete *formIt;
+   for (formIt = fCutFormulas.begin(), formItEnd = fCutFormulas.end(); formIt!=formItEnd; formIt++) if (*formIt) delete *formIt;
    fCutFormulas.clear();
    for (UInt_t clIdx=0; clIdx<dsi.GetNClasses(); clIdx++) {
       const TCut& tmpCut = dsi.GetClassInfo(clIdx)->GetCut();
@@ -329,7 +332,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    // the weights (one per class, if non-existent: formula pointer = 0)
    //
    Log() << kDEBUG << "transform weights" << Endl;
-   for (formIt = fWeightFormula.begin(); formIt!=fWeightFormula.end(); formIt++) if (*formIt) delete *formIt;
+   for (formIt = fWeightFormula.begin(), formItEnd = fWeightFormula.end(); formIt!=formItEnd; formIt++) if (*formIt) delete *formIt;
    fWeightFormula.clear();
    for (UInt_t clIdx=0; clIdx<dsi.GetNClasses(); clIdx++) {
       const TString tmpWeight = dsi.GetClassInfo(clIdx)->GetWeight();
@@ -556,28 +559,7 @@ TMatrixD* TMVA::DataSetFactory::CalcCovarianceMatrix( DataSet * ds, const UInt_t
    return mat;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // --------------------------------------- new versions
-
-
 
 //_______________________________________________________________________
 void TMVA::DataSetFactory::InitOptions( TMVA::DataSetInfo& dsi, 
@@ -655,6 +637,7 @@ void TMVA::DataSetFactory::InitOptions( TMVA::DataSetInfo& dsi,
    // put all to upper case
    splitMode.ToUpper(); mixMode.ToUpper(); normMode.ToUpper();
    // adjust mixmode if same as splitmode option has been set
+   Log() << kINFO << "Splitmode is: \"" << splitMode << "\" the mixmode is: \"" << mixMode << "\"" << Endl;
    if (mixMode=="SAMEASSPLITMODE") mixMode = splitMode;
    else if (mixMode!=splitMode) 
       Log() << kINFO << "DataSet splitmode="<<splitMode
@@ -705,8 +688,8 @@ void  TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
    // if the chain jumps to a new tree we have to reset the formulas
    for (UInt_t cl=0; cl<dsi.GetNClasses(); cl++) {
 
-      Log() << kINFO << "Create training and testing trees: looping over class " << dsi.GetClassInfo(cl)->GetName() 
-            << "..." << Endl;
+      Log() << kINFO << "Create training and testing trees -- looping over class \"" 
+            << dsi.GetClassInfo(cl)->GetName() << "\" ..." << Endl;
 
       // info output for weights
       const TString tmpWeight = dsi.GetClassInfo(cl)->GetWeight();
@@ -1091,16 +1074,22 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
       // associate undefined events 
       if( splitMode == "ALTERNATE" ){
          Log() << kDEBUG << "split 'ALTERNATE'" << Endl;
+	 Int_t nTraining = alreadyAvailableTraining;
+	 Int_t nTesting  = alreadyAvailableTesting;
          for( EventVector::iterator it = eventVectorUndefined.begin(), itEnd = eventVectorUndefined.end(); it != itEnd; ){
-            eventVectorTraining.insert( eventVectorTraining.end(), (*it) );
-            ++it;
+	    ++nTraining;
+	    if( nTraining <= requestedTraining ){
+	       eventVectorTraining.insert( eventVectorTraining.end(), (*it) );
+	       ++it;
+	    }
             if( it != itEnd ){
+	       ++nTesting;
                eventVectorTesting.insert( eventVectorTesting.end(), (*it) );
                ++it;
             }
          }
       }else{
-         Log() << kDEBUG << "split 'RANDOM'" << Endl;
+         Log() << kDEBUG << "split '" << splitMode << "'" << Endl;
 
 	 // test if enough events are available
 	 Log() << kDEBUG << "availableundefined : " << availableUndefined << Endl;
@@ -1129,7 +1118,7 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
       if (splitMode.Contains( "RANDOM" )){
          UInt_t sizeTraining  = eventVectorTraining.size();
          if( sizeTraining > UInt_t(requestedTraining) ){
-            std::vector<UInt_t> indicesTraining( sizeTraining );
+           std::vector<UInt_t> indicesTraining( sizeTraining );
             // make indices
             std::generate( indicesTraining.begin(), indicesTraining.end(), TMVA::Increment<UInt_t>(0) );
             // shuffle indices
@@ -1164,9 +1153,15 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
          }
       }
       else { // erase at end
+	 if( eventVectorTraining.size() < UInt_t(requestedTraining) )
+	    Log() << kWARNING << "DataSetFactory/requested number of training samples larger than size of eventVectorTraining.\n"
+		  << "There is probably an issue. Please contact the TMVA developers." << Endl;
          std::for_each( eventVectorTraining.begin()+requestedTraining, eventVectorTraining.end(), DeleteFunctor<Event>() );
          eventVectorTraining.erase(eventVectorTraining.begin()+requestedTraining,eventVectorTraining.end());
 
+	 if( eventVectorTesting.size() < UInt_t(requestedTesting) )
+	    Log() << kWARNING << "DataSetFactory/requested number of testing samples larger than size of eventVectorTesting.\n"
+		  << "There is probably an issue. Please contact the TMVA developers." << Endl;
          std::for_each( eventVectorTesting.begin()+requestedTesting, eventVectorTesting.end(), DeleteFunctor<Event>() );
          eventVectorTesting.erase(eventVectorTesting.begin()+requestedTesting,eventVectorTesting.end());
       }
@@ -1386,21 +1381,19 @@ void  TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
    ValuePerClass renormFactor( dsi.GetNClasses() );
 
    if (normMode == "NUMEVENTS") {
-      Log() << kINFO << "Weight renormalisation mode: \"NumEvents\": renormalise the different classes" << Endl;
-      Log() << kINFO << "... weights independently so that Sum[i=1..N_j]{w_i} = N_j, j=0,1,2..." << Endl;
+      Log() << kINFO << "Weight renormalisation mode: \"NumEvents\": renormalise independently the ..." << Endl;
+      Log() << kINFO << "... class weights so that Sum[i=1..N_j]{w_i} = N_j, j=0,1,2..." << Endl;
       Log() << kINFO << "... (note that N_j is the sum of training and test events)" << Endl;
 
-
       for( UInt_t cls = 0, clsEnd = dsi.GetNClasses(); cls < clsEnd; ++cls ){
-         renormFactor.at(cls) = (trainingSizePerClass.at(cls)+testingSizePerClass.at(cls) )/
-            (trainingSumWeightsPerClass.at(cls)+testingSumWeightsPerClass.at(cls) );
-
+         renormFactor.at(cls) = ( (trainingSizePerClass.at(cls) + testingSizePerClass.at(cls))/
+                                  (trainingSumWeightsPerClass.at(cls) + testingSumWeightsPerClass.at(cls)) );
       }
    }
    else if (normMode == "EQUALNUMEVENTS") {
-      Log() << kINFO << "Weight renormalisation mode: \"EqualNumEvents\": renormalise weights of events of classes" << Endl;
-      Log() << kINFO << "   so that Sum[i=1..N_j]{w_i} = N_classA, j=classA, classB, ..." << Endl;
-      Log() << kINFO << "   (note that N_j is the sum of training and test events)" << Endl;
+      Log() << kINFO << "Weight renormalisation mode: \"EqualNumEvents\": renormalise class weights ..." << Endl;
+      Log() << kINFO << "... so that Sum[i=1..N_j]{w_i} = N_classA, j=classA, classB, ..." << Endl;
+      Log() << kINFO << "... (note that N_j is the sum of training and test events)" << Endl;
 
       for (UInt_t cls = 0, clsEnd = dsi.GetNClasses(); cls < clsEnd; ++cls ) {
          renormFactor.at(cls) = Float_t(trainingSizePerClass.at(cls)+testingSizePerClass.at(cls))/
@@ -1420,8 +1413,10 @@ void  TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
 
    // ---------------------------------
    // now apply the normalization factors
+   Int_t maxL = dsi.GetClassNameMaxLength();
    for (UInt_t cls = 0, clsEnd = dsi.GetNClasses(); cls<clsEnd; ++cls) { 
-      Log() << kINFO << "Rescale " << dsi.GetClassInfo(cls)->GetName() << " event weights by factor: " << renormFactor.at(cls) << Endl;
+      Log() << kINFO << "--> Rescale " << setiosflags(ios::left) << std::setw(maxL) 
+            << dsi.GetClassInfo(cls)->GetName() << " event weights by factor: " << renormFactor.at(cls) << Endl;
       std::for_each( tmpEventVector[Types::kTraining].at(cls).begin(), 
                      tmpEventVector[Types::kTraining].at(cls).end(),
                      std::bind2nd(std::mem_fun(&TMVA::Event::ScaleWeight),renormFactor.at(cls)) );
@@ -1442,8 +1437,8 @@ void  TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
    // (same code as before --> this can be done nicer )
    //
 
-   Log() << kINFO << "Training and testing events after rescaling" << Endl;
-   Log() << kINFO << "-------------------------------------------" << Endl;
+   Log() << kINFO << "Number of training and testing events after rescaling:" << Endl;
+   Log() << kINFO << "------------------------------------------------------" << Endl;
    trainingSumWeights = 0;
    testingSumWeights  = 0;
    for( UInt_t cls = 0, clsEnd = dsi.GetNClasses(); cls < clsEnd; ++cls ){
@@ -1463,17 +1458,24 @@ void  TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
                                                                             std::mem_fun(&TMVA::Event::GetOriginalWeight) ) );
 
 
-
-
       trainingSumWeights += trainingSumWeightsPerClass.at(cls);
       testingSumWeights  += testingSumWeightsPerClass.at(cls);
 
-      Log() << kINFO << dsi.GetClassInfo(cls)->GetName() << " - " << "training events             : number of events : " << trainingSizePerClass.at(cls) 
-            <<  " / " << "sum of weights : " << trainingSumWeightsPerClass.at(cls) << Endl;
-      Log() << kINFO << dsi.GetClassInfo(cls)->GetName() << " - " << "testing events              : number of events : " << testingSizePerClass.at(cls) 
-            <<  " / " << "sum of weights : " << testingSumWeightsPerClass.at(cls) << Endl;
-      Log() << kINFO << dsi.GetClassInfo(cls)->GetName() << " - " << "training and testing events : number of events : " << (trainingSizePerClass.at(cls)+testingSizePerClass.at(cls)) 
-            << " / " << "sum of weights : " << (trainingSumWeightsPerClass.at(cls)+testingSumWeightsPerClass.at(cls)) << Endl;
+      // output statistics
+      Log() << kINFO << setiosflags(ios::left) << std::setw(maxL) 
+            << dsi.GetClassInfo(cls)->GetName() << " -- " 
+            << "training entries            : " << trainingSizePerClass.at(cls) 
+            <<  " (" << "sum of weights: " << trainingSumWeightsPerClass.at(cls) << ")" << Endl;
+      Log() << kINFO << setiosflags(ios::left) << std::setw(maxL) 
+            << dsi.GetClassInfo(cls)->GetName() << " -- " 
+            << "testing entries             : " << testingSizePerClass.at(cls) 
+            <<  " (" << "sum of weights: " << testingSumWeightsPerClass.at(cls) << ")" << Endl;
+      Log() << kINFO << setiosflags(ios::left) << std::setw(maxL) 
+            << dsi.GetClassInfo(cls)->GetName() << " -- " 
+            << "training and testing entries: " 
+            << (trainingSizePerClass.at(cls)+testingSizePerClass.at(cls)) 
+            << " (" << "sum of weights: " 
+            << (trainingSumWeightsPerClass.at(cls)+testingSumWeightsPerClass.at(cls)) << ")" << Endl;
    }
 
 }

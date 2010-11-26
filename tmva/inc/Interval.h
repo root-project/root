@@ -25,15 +25,32 @@
 #ifndef ROOT_TMVA_Interval
 #define ROOT_TMVA_Interval
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Interval                                                             //
-//                                                                      //
-// Interval definition, continuous and discrete                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_Rtypes
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+// Interval                                                                 //
+//                                                                          //
+// Interval definition, continuous and discrete                             //
+//                                                                          //
+// Interval(min,max)  : a continous interval [min,max]                      //
+// Interval(min,max,n): a "discrete interval" [min,max], i.e the n numbers: //
+//          min, min+step, min+2*step,...., min+(n-1)*step, min+n*step=max  //
+//   e.g.: Interval(1,5,5)=1,2,3,4,5                                        //
+//         Interval(.5,1.,6)= .5, .6., .7, .8, .9, 1.0                      //
+//                                                                          //
+//  Note: **bin** counting starts from ZERO unlike in ROOT histograms       //
+//                                                                          //
+//    Example:   Interval(.5,1.,6)                                          //
+//                                                                          //
+//             [ min                           max ]                        //
+//         ------------------------------------------------------------     //
+//                |     |     |     |     |     |                           //
+//               .5    .6    .7    .8    .9    1.0                          //
+//                                                                          //
+//         bin    0     1     2     3     4     5                           //
+//                                                                          //
+//                                                                          //
+//////////////////////////////////////////////////////////////////////////////
+#ifndef ROOT_Rtypes                                                         
 #include "Rtypes.h"
 #endif
 
@@ -59,6 +76,7 @@ namespace TMVA {
       Double_t GetMean()  const { return (fMax + fMin)/2; }
       Double_t GetRndm( TRandom3& )  const;
       Double_t GetElement( Int_t position ) const;      
+      Double_t GetStepSize() const;
 
       void SetMax( Double_t m ) { fMax = m; }
       void SetMin( Double_t m ) { fMin = m; }

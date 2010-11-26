@@ -83,8 +83,15 @@ namespace TMVA {
       // more easily manipulated
       void InitEventSample();
 
+      // optimize tuning parameters
+      virtual std::map<TString,Double_t> OptimizeTuningParameters(TString fomType="ROCIntegral", TString fitType="FitGA");
+      virtual void SetTuneParameters(std::map<TString,Double_t> tuneParameters);
+
       // training method
       void Train( void );
+
+      // revoke training
+      void Reset( void );
 
       using MethodBase::ReadWeightsFromStream;
 
@@ -99,8 +106,12 @@ namespace TMVA {
       void WriteMonitoringHistosToFile( void ) const;
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = 0);
-      Double_t GetMvaValue( Double_t* err , UInt_t useNTrees );
+      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0);
+
+   private:
+      Double_t GetMvaValue( Double_t* err, Double_t* errUpper, UInt_t useNTrees );
+
+   public:
       const std::vector<Float_t>& GetMulticlassValues();
 
       // regression response
@@ -115,6 +126,12 @@ namespace TMVA {
       // the option handling methods
       void DeclareOptions();
       void ProcessOptions();
+      void SetMaxDepth(Int_t d){fMaxDepth = d;}
+      void SetNodeMinEvents(Int_t d){fNodeMinEvents = d;}
+      void SetNTrees(Int_t d){fNTrees = d;}
+      void SetAdaBoostBeta(Double_t b){fAdaBoostBeta = b;}
+      void SetNodePurityLimit(Double_t l){fNodePurityLimit = l;}
+
 
       // get the forest
       inline const std::vector<TMVA::DecisionTree*> & GetForest() const;
@@ -141,6 +158,7 @@ namespace TMVA {
 
       void GetHelpMessage() const;
 
+      virtual Bool_t        IsSignalLike() { return GetMvaValue() > 0;}
    protected:
       void DeclareCompatibilityOptions();
 
@@ -178,6 +196,7 @@ namespace TMVA {
       Int_t                           fNTrees;          // number of decision trees requested
       std::vector<DecisionTree*>      fForest;          // the collection of decision trees
       std::vector<double>             fBoostWeights;    // the weights applied in the individual boosts
+      Bool_t                          fRenormByClass;   // individually re-normalize each event class to the original size after boosting
       TString                         fBoostType;       // string specifying the boost type
       Double_t                        fAdaBoostBeta;    // beta parameter for AdaBoost algorithm
       TString                         fAdaBoostR2Loss;  // loss type used in AdaBoostR2 (Linear,Quadratic or Exponential)
@@ -195,11 +214,29 @@ namespace TMVA {
       Int_t                           fNodeMinEvents;   // min number of events in node
 
       Int_t                           fNCuts;           // grid used in cut applied in node splitting
+      Bool_t                          fUseFisherCuts;   // use multivariate splits using the Fisher criterium
+      Double_t                        fMinLinCorrForFisher; // the minimum linear correlation between two variables demanded for use in fisher criterium in node splitting
+      Bool_t                          fUseExclusiveVars; // individual variables already used in fisher criterium are not anymore analysed individually for node splitting
       Bool_t                          fUseYesNoLeaf;    // use sig or bkg classification in leave nodes or sig/bkg
       Double_t                        fNodePurityLimit; // purity limit for sig/bkg nodes
       Bool_t                          fUseWeightedTrees;// use average classification from the trees, or have the individual trees trees in the forest weighted (e.g. log(boostweight) from AdaBoost
       UInt_t                          fNNodesMax;       // max # of nodes
       UInt_t                          fMaxDepth;        // max depth
+
+      DecisionTree::EPruneMethod       fPruneMethod;     // method used for prunig
+      TString                          fPruneMethodS;    // prune method option String
+      Double_t                         fPruneStrength;   // a parameter to set the "amount" of pruning..needs to be adjusted
+      Bool_t                           fPruneBeforeBoost;// flag to prune before boosting
+      Double_t                         fFValidationEvents;    // fraction of events to use for pruning
+      Bool_t                           fAutomatic;       // use user given prune strength or automatically determined one using a validation sample
+      Bool_t                           fRandomisedTrees; // choose a random subset of possible cut variables at each node during training
+      UInt_t                           fUseNvars;        // the number of variables used in the randomised tree splitting
+      Bool_t                           fUsePoissonNvars; // use "fUseNvars" not as fixed number but as mean of a possion distr. in each split
+      UInt_t                           fUseNTrainEvents; // number of randomly picked training events used in randomised (and bagged) trees
+
+      Double_t                         fSampleSizeFraction; // relative size of bagged event sample to original sample size
+      Bool_t                           fNoNegWeightsInTraining; // ignore negative event weights in the training
+
 
 
       //some histograms for monitoring
@@ -207,15 +244,6 @@ namespace TMVA {
       Int_t                            fITree;           // ntuple var: ith tree
       Double_t                         fBoostWeight;     // ntuple var: boost weight
       Double_t                         fErrorFraction;   // ntuple var: misclassification error fraction
-      Double_t                         fPruneStrength;   // a parameter to set the "amount" of pruning..needs to be adjusted
-      DecisionTree::EPruneMethod       fPruneMethod;     // method used for prunig
-      TString                          fPruneMethodS;    // prune method option String
-      Bool_t                           fPruneBeforeBoost;// flag to prune before boosting
-      Double_t                         fFValidationEvents;    // fraction of events to use for pruning
-      Bool_t                           fAutomatic;       // use user given prune strength or automatically determined one using a validation sample
-      Bool_t                           fRandomisedTrees; // choose a random subset of possible cut variables at each node during training
-      UInt_t                           fUseNvars;        // the number of variables used in the randomised tree splitting
-      UInt_t                           fUseNTrainEvents; // number of randomly picked training events used in randomised (and bagged) trees
 
       std::vector<Double_t>            fVariableImportance; // the relative importance of the different variables
 
@@ -223,10 +251,6 @@ namespace TMVA {
       static const Int_t               fgDebugLevel;     // debug level determining some printout/control plots etc.
 
       // for backward compatibility
-
-      Double_t                         fSampleSizeFraction; // relative size of bagged event sample to original sample size
-      Bool_t                           fNoNegWeightsInTraining; // ignore negative event weights in the training
-
 
       ClassDef(MethodBDT,0)  // Analysis of Boosted Decision Trees
    };

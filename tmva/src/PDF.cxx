@@ -34,6 +34,7 @@
 #include "TF1.h"
 #include "TH1F.h"
 #include "TVectorD.h"
+#include "Riostream.h"
 
 #include "TMVA/Tools.h"
 #include "TMVA/PDF.h"
@@ -580,7 +581,7 @@ void TMVA::PDF::ValidatePDF( TH1* originalHist ) const
       Double_t ey = originalHist->GetBinError( bin );
 
       Int_t binPdfHist = fPDFHist->FindBin( x );
-      if(binPdfHist<0) continue; // happens only if hist-dim>3
+      if (binPdfHist<0) continue; // happens only if hist-dim>3
 
       Double_t yref = GetVal( x );
       Double_t rref = ( originalHist->GetSumOfWeights()/fPDFHist->GetSumOfWeights() *
@@ -589,6 +590,8 @@ void TMVA::PDF::ValidatePDF( TH1* originalHist ) const
       if (y > 0) {
          ndof++;
          Double_t d = TMath::Abs( (y - yref*rref)/ey );
+         //         cout << "bin: " << bin << "  val: " << x << "  data(err): " << y << "(" << ey << ")   pdf: " 
+         //              << yref << "  dev(chi2): " << d << "(" << chi2 << ")  rref: " << rref << endl;
          chi2 += d*d;
          if (d > 1) { nc1++; if (d > 2) { nc2++; if (d > 3) { nc3++; if (d > 6) nc6++; } } }
       }
@@ -896,7 +899,7 @@ void TMVA::PDF::ReadXML( void* pdfnode )
          newhist->SetBinContent(i+1,val);
       }
    }
-   else{
+   else {
       const char* content = gTools().GetContent(histch);
       std::stringstream s(content);
       Double_t val;
@@ -927,10 +930,8 @@ void TMVA::PDF::ReadXML( void* pdfnode )
    fHist->SetTitle( hnameSmooth );
    fHist->SetDirectory(0);
 
-   if (fMinNsmooth > 0) BuildSplinePDF();
-   else if (fMinNsmooth == 0 &&  fKDEtype == KDEKernel::kNone) BuildSplinePDF();
-   else if (fMinNsmooth == 0 &&  fKDEtype != KDEKernel::kNone) BuildKDEPDF();
-   else                 BuildKDEPDF();
+   if (fInterpolMethod == PDF::kKDE) BuildKDEPDF();
+   else                              BuildSplinePDF();
 }
 
 //_______________________________________________________________________

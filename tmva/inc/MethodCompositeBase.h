@@ -62,7 +62,7 @@ namespace TMVA {
 
       MethodCompositeBase( Types::EMVA methodType,
                            DataSetInfo& dsi,
-                           const TString& weightFile, 
+                           const TString& weightFile,
                            TDirectory* theBaseDir = 0 );
 
       using MethodBase::ReadWeightsFromStream;
@@ -72,7 +72,9 @@ namespace TMVA {
       void ReadWeightsFromXML( void* wghtnode );
 
       // calculate the MVA value combining all classifiers according to thier fMethodWeight
-      Double_t GetMvaValue( Double_t* err = 0 );
+      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
+
+      using MethodBase::GetMvaValue;
 
       // read weights from file
       void ReadWeightsFromStream( istream& istr );
@@ -91,7 +93,7 @@ namespace TMVA {
 
       IMethod* GetPreviousMethod() { return (fMethodIndex>0)?fMethods[fMethodIndex-1]:0; }
 
-      IMethod* GetCurrentMethod() 
+      IMethod* GetCurrentMethod()
       { return (fMethodIndex>0)?fMethods[fMethodIndex]:0; }
 
    protected:

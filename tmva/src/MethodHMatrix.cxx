@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$    
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
@@ -16,9 +16,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -37,23 +37,23 @@ REGISTER_METHOD(HMatrix)
 ClassImp(TMVA::MethodHMatrix)
 
 //_______________________________________________________________________
-//Begin_Html                                                                      
+//Begin_Html
 /*
-  H-Matrix method, which is implemented as a simple comparison of      
-  chi-squared estimators for signal and background, taking into        
-  account the linear correlations between the input variables          
+  H-Matrix method, which is implemented as a simple comparison of
+  chi-squared estimators for signal and background, taking into
+  account the linear correlations between the input variables
 
-  This MVA approach is used by the D&#216; collaboration (FNAL) for the 
-  purpose of electron identification (see, eg., 
-  <a href="http://arxiv.org/abs/hep-ex/9507007">hep-ex/9507007</a>). 
+  This MVA approach is used by the D&#216; collaboration (FNAL) for the
+  purpose of electron identification (see, eg.,
+  <a href="http://arxiv.org/abs/hep-ex/9507007">hep-ex/9507007</a>).
   As it is implemented in TMVA, it is usually equivalent or worse than
-  the Fisher-Mahalanobis discriminant, and it has only been added for 
+  the Fisher-Mahalanobis discriminant, and it has only been added for
   the purpose of completeness.
   Two &chi;<sup>2</sup> estimators are computed for an event, each one
-  for signal and background, using the estimates for the means and 
+  for signal and background, using the estimates for the means and
   covariance matrices obtained from the training sample:<br>
   <center>
-  <img vspace=6 src="gif/tmva_chi2.gif" align="bottom" > 
+  <img vspace=6 src="gif/tmva_chi2.gif" align="bottom" >
   </center>
   TMVA then uses as normalised analyser for event (<i>i</i>) the ratio:
   (<i>&chi;<sub>S</sub>(i)<sup>2</sup> &minus; &chi;<sub>B</sub><sup>2</sup>(i)</i>)
@@ -61,12 +61,12 @@ ClassImp(TMVA::MethodHMatrix)
 */
 //End_Html
 //_______________________________________________________________________
- 
+
 
 //_______________________________________________________________________
 TMVA::MethodHMatrix::MethodHMatrix( const TString& jobName,
                                     const TString& methodTitle,
-                                    DataSetInfo& theData, 
+                                    DataSetInfo& theData,
                                     const TString& theOption,
                                     TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, Types::kHMatrix, methodTitle, theData, theOption, theTargetDir )
@@ -75,10 +75,10 @@ TMVA::MethodHMatrix::MethodHMatrix( const TString& jobName,
 }
 
 //_______________________________________________________________________
-TMVA::MethodHMatrix::MethodHMatrix( DataSetInfo& theData, 
-                                    const TString& theWeightFile,  
+TMVA::MethodHMatrix::MethodHMatrix( DataSetInfo& theData,
+                                    const TString& theWeightFile,
                                     TDirectory* theTargetDir )
-   : TMVA::MethodBase( Types::kHMatrix, theData, theWeightFile, theTargetDir ) 
+   : TMVA::MethodBase( Types::kHMatrix, theData, theWeightFile, theTargetDir )
 {
    // constructor from weight file
 }
@@ -119,13 +119,13 @@ Bool_t TMVA::MethodHMatrix::HasAnalysisType( Types::EAnalysisType type, UInt_t n
 
 
 //_______________________________________________________________________
-void TMVA::MethodHMatrix::DeclareOptions() 
+void TMVA::MethodHMatrix::DeclareOptions()
 {
    // MethodHMatrix options: none (apart from those implemented in MethodBase)
 }
 
 //_______________________________________________________________________
-void TMVA::MethodHMatrix::ProcessOptions() 
+void TMVA::MethodHMatrix::ProcessOptions()
 {
    // process user options
 }
@@ -142,28 +142,28 @@ void TMVA::MethodHMatrix::Train( void )
    // sanity checks
    if (TMath::Abs(fInvHMatrixS->Determinant()) < 10E-24) {
       Log() << kWARNING << "<Train> H-matrix  S is almost singular with deterinant= "
-              << TMath::Abs(fInvHMatrixS->Determinant())
-              << " did you use the variables that are linear combinations or highly correlated ???" 
-              << Endl;
+            << TMath::Abs(fInvHMatrixS->Determinant())
+            << " did you use the variables that are linear combinations or highly correlated ???"
+            << Endl;
    }
    if (TMath::Abs(fInvHMatrixB->Determinant()) < 10E-24) {
       Log() << kWARNING << "<Train> H-matrix  B is almost singular with deterinant= "
-              << TMath::Abs(fInvHMatrixB->Determinant())
-              << " did you use the variables that are linear combinations or highly correlated ???" 
-              << Endl;
+            << TMath::Abs(fInvHMatrixB->Determinant())
+            << " did you use the variables that are linear combinations or highly correlated ???"
+            << Endl;
    }
 
     if (TMath::Abs(fInvHMatrixS->Determinant()) < 10E-120) {
        Log() << kFATAL << "<Train> H-matrix  S is singular with deterinant= "
-               << TMath::Abs(fInvHMatrixS->Determinant())
-               << " did you use the variables that are linear combinations ???" 
-               << Endl;
+             << TMath::Abs(fInvHMatrixS->Determinant())
+             << " did you use the variables that are linear combinations ???"
+             << Endl;
     }
     if (TMath::Abs(fInvHMatrixB->Determinant()) < 10E-120) {
        Log() << kFATAL << "<Train> H-matrix  B is singular with deterinant= "
-               << TMath::Abs(fInvHMatrixB->Determinant())
-               << " did you use the variables that are linear combinations ???" 
-               << Endl;
+             << TMath::Abs(fInvHMatrixB->Determinant())
+             << " did you use the variables that are linear combinations ???"
+             << Endl;
     }
 
    // invert matrix
@@ -175,7 +175,7 @@ void TMVA::MethodHMatrix::Train( void )
 void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
 {
    // compute covariance matrix
-   
+
    Data()->SetCurrentType(Types::kTraining);
 
    const UInt_t nvar = DataInfo().GetNVariables();
@@ -193,7 +193,7 @@ void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
    for (Int_t i=0; i<Data()->GetNEvents(); i++) {
 
       // retrieve the event
-      const Event* ev = GetEvent(i);      
+      const Event* ev = GetEvent(i);
       Double_t weight = ev->GetWeight();
 
       // in case event with neg weights are to be ignored
@@ -207,17 +207,17 @@ void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
       // mean values
       for (ivar=0; ivar<nvar; ivar++) xval[ivar] = ev->GetValue(ivar);
 
-      // covariance matrix         
+      // covariance matrix
       for (ivar=0; ivar<nvar; ivar++) {
 
          vec(ivar)        += xval[ivar]*weight;
          mat2(ivar, ivar) += (xval[ivar]*xval[ivar])*weight;
-         
+
          for (jvar=ivar+1; jvar<nvar; jvar++) {
             mat2(ivar, jvar) += (xval[ivar]*xval[jvar])*weight;
             mat2(jvar, ivar) = mat2(ivar, jvar); // symmetric matrix
          }
-      }         
+      }
    }
 
    // variance-covariance
@@ -235,7 +235,7 @@ void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodHMatrix::GetMvaValue( Double_t* err )
+Double_t TMVA::MethodHMatrix::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    // returns the H-matrix signal estimator
    Double_t s = GetChi2( Types::kSignal     );
@@ -244,7 +244,7 @@ Double_t TMVA::MethodHMatrix::GetMvaValue( Double_t* err )
    if (s+b < 0) Log() << kFATAL << "big trouble: s+b: " << s+b << Endl;
 
    // cannot determine error
-   if (err != 0) *err = -1;
+   NoErrorCalc(err, errUpper);
 
    return (b - s)/(s + b);
 }
@@ -259,7 +259,7 @@ Double_t TMVA::MethodHMatrix::GetChi2( TMVA::Event* e,  Types::ESBType type ) co
    vector<Double_t> val( GetNvar() );
    for (ivar=0; ivar<GetNvar(); ivar++) {
       val[ivar] = e->GetValue(ivar);
-      if (IsNormalised()) val[ivar] = gTools().NormVariable( val[ivar], GetXmin( ivar ), GetXmax( ivar ) );    
+      if (IsNormalised()) val[ivar] = gTools().NormVariable( val[ivar], GetXmin( ivar ), GetXmax( ivar ) );
    }
 
    Double_t chi2 = 0;

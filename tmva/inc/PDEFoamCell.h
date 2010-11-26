@@ -102,6 +102,7 @@ namespace TMVA {
       void      SetPare(PDEFoamCell* Pare){ fParent  = Pare;}  // Set pointer to parent
       void      SetSerial(Int_t Serial){ fSerial=Serial;}    // Set serial number
       Int_t     GetSerial() const { return fSerial;}         // Get serial number
+      UInt_t    GetDepth();                                  // Get depth in binary tree
       //--- other ---
       void Print(Option_t *option) const ;                   // Prints cell content
       //--- getter and setter for user variable ---

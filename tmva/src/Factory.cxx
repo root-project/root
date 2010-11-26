@@ -125,7 +125,7 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    Bool_t drawProgressBar = kTRUE;
    DeclareOptionRef( fVerbose, "V", "Verbose flag" );
    DeclareOptionRef( color,    "Color", "Flag for coloured screen output (default: True, if in batch mode: False)" );
-   DeclareOptionRef( fTransformations, "Transformations", "List of transformations to test; formatting example: \"Transformations=I;D;P;G,D\", for identity, decorrelation, PCA, and Gaussianisation followed by decorrelation transformations" );
+   DeclareOptionRef( fTransformations, "Transformations", "List of transformations to test; formatting example: \"Transformations=I;D;P;U;G,D\", for identity, decorrelation, PCA, Uniform and Gaussianisation followed by decorrelation transformations" );
    DeclareOptionRef( silent,   "Silent", "Batch mode: boolean silent flag inhibiting any output from TMVA after the creation of the factory class object (default: False)" );
    DeclareOptionRef( drawProgressBar,
                      "DrawProgressBar", "Draw progress bar to display training, testing and evaluation schedule (default: True)" );
@@ -385,6 +385,9 @@ void TMVA::Factory::AddTree( TTree* tree, const TString& className, Double_t wei
 void TMVA::Factory::AddTree( TTree* tree, const TString& className, Double_t weight, 
                              const TCut& cut, Types::ETreeType tt )
 {
+   if(!tree)
+      Log() << kFATAL << "Tree does not exist (empty pointer)." << Endl;
+
    DefaultDataSetInfo().AddClass( className );
 
    // set analysistype to "kMulticlass" if more than two classes and analysistype == kNoAnalysisType
@@ -679,7 +682,8 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TString theMethodName, TString meth
               << Endl;
    }
 
-   Log() << kINFO << "Booking method: " << methodTitle << Endl;
+   Log() << kINFO << "Booking method: " << gTools().Color("bold") << methodTitle 
+         << gTools().Color("reset") << Endl;
 
    // interpret option string with respect to a request for boosting (i.e., BostNum > 0)
    Int_t    boostNum = 0;
@@ -792,30 +796,44 @@ void TMVA::Factory::WriteDataInformation()
    // correlation matrix of the default DS
    const TMatrixD* m(0);
    const TH2* h(0);
-   m = DefaultDataSetInfo().CorrelationMatrix( "Signal" );
-   h = DefaultDataSetInfo().CreateCorrelationMatrixHist(m, "CorrelationMatrixS", "Correlation Matrix (signal)");
-   if (h!=0) {
-      h->Write();
-      delete h;
+   
+   if(fAnalysisType == Types::kMulticlass){
+      for (UInt_t cls = 0; cls < DefaultDataSetInfo().GetNClasses() ; cls++) {
+         m = DefaultDataSetInfo().CorrelationMatrix(DefaultDataSetInfo().GetClassInfo(cls)->GetName());
+         h = DefaultDataSetInfo().CreateCorrelationMatrixHist(m, TString("CorrelationMatrix")+DefaultDataSetInfo().GetClassInfo(cls)->GetName(),
+                                                              "Correlation Matrix ("+ DefaultDataSetInfo().GetClassInfo(cls)->GetName() +TString(")"));
+         if (h!=0) {
+            h->Write();
+            delete h;
+         }
+      }
    }
-
-   m = DefaultDataSetInfo().CorrelationMatrix( "Background" );
-   h = DefaultDataSetInfo().CreateCorrelationMatrixHist(m, "CorrelationMatrixB", "Correlation Matrix (background)");
-   if (h!=0) {
-      h->Write();
-      delete h;
-   }
-
-   m = DefaultDataSetInfo().CorrelationMatrix( "Regression" );
-   h = DefaultDataSetInfo().CreateCorrelationMatrixHist(m, "CorrelationMatrix", "Correlation Matrix");
-   if (h!=0) { 
-      h->Write();
-      delete h;
+   else{
+      m = DefaultDataSetInfo().CorrelationMatrix( "Signal" );
+      h = DefaultDataSetInfo().CreateCorrelationMatrixHist(m, "CorrelationMatrixS", "Correlation Matrix (signal)");
+      if (h!=0) {
+         h->Write();
+         delete h;
+      }
+      
+      m = DefaultDataSetInfo().CorrelationMatrix( "Background" );
+      h = DefaultDataSetInfo().CreateCorrelationMatrixHist(m, "CorrelationMatrixB", "Correlation Matrix (background)");
+      if (h!=0) {
+         h->Write();
+         delete h;
+      }
+      
+      m = DefaultDataSetInfo().CorrelationMatrix( "Regression" );
+      h = DefaultDataSetInfo().CreateCorrelationMatrixHist(m, "CorrelationMatrix", "Correlation Matrix");
+      if (h!=0) { 
+         h->Write();
+         delete h;
+      }
    }
    
    // some default transformations to evaluate
    // NOTE: all transformations are destroyed after this test
-   TString processTrfs = ""; //"I;N;D;P;G,D;"
+   TString processTrfs = ""; //"I;N;D;P;U;G,D;"
 
    // plus some user defined transformations
    processTrfs = fTransformations;
@@ -878,6 +896,9 @@ void TMVA::Factory::WriteDataInformation()
          else if (trName=='P') {
             trfs.back()->AddTransformation( new VariablePCATransform      ( DefaultDataSetInfo() ), idxCls );
          } 
+         else if (trName=='U') {
+           trfs.back()->AddTransformation( new VariableGaussTransform    ( DefaultDataSetInfo(), "Uniform" ), idxCls );
+         }
          else if (trName=='G') {
             trfs.back()->AddTransformation( new VariableGaussTransform    ( DefaultDataSetInfo() ), idxCls );
          } 
@@ -908,6 +929,39 @@ void TMVA::Factory::WriteDataInformation()
 }
 
 //_______________________________________________________________________
+void TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType) 
+{
+  // iterates through all booked methods and sees if they use parameter tuning and if so..
+  // does just that  i.e. calls "Method::Train()" for different parameter setttings and
+  // keeps in mind the "optimal one"... and that's the one that will later on be used
+  // in the main training loop.
+
+ 
+   MVector::iterator itrMethod;
+
+   // iterate over methods and optimize
+   for( itrMethod = fMethods.begin(); itrMethod != fMethods.end(); ++itrMethod ) {
+
+      MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
+
+      if (mva->Data()->GetNTrainingEvents() < MinNoTrainingEvents) {
+         Log() << kWARNING << "Method " << mva->GetMethodName() 
+               << " not trained (training tree has less entries ["
+               << mva->Data()->GetNTrainingEvents() 
+               << "] than required [" << MinNoTrainingEvents << "]" << Endl; 
+         continue;
+      }
+
+      Log() << kINFO << "Optimize method: " << mva->GetMethodName() << " for " 
+            << (fAnalysisType == Types::kRegression ? "Regression" : 
+		(fAnalysisType == Types::kMulticlass ? "Multiclass classification" : "Classification")) << Endl;
+      
+      mva->OptimizeTuningParameters(fomType,fitType);
+      Log() << kINFO << "Optimization of tuning paremters finished for Method:"<<mva->GetName() << Endl;
+   }
+}
+
+//_______________________________________________________________________
 void TMVA::Factory::TrainAllMethods() 
 {     
    // iterates through all booked methods and calls training
@@ -930,6 +984,7 @@ void TMVA::Factory::TrainAllMethods()
    }
 
    // here the training starts
+   Log() << kINFO << " " << Endl;
    Log() << kINFO << "Train all methods for " 
          << (fAnalysisType == Types::kRegression ? "Regression" : 
 	     (fAnalysisType == Types::kMulticlass ? "Multiclass" : "Classification") ) << " ..." << Endl;
@@ -961,7 +1016,7 @@ void TMVA::Factory::TrainAllMethods()
 
       // variable ranking
       Log() << Endl;
-      Log() << kINFO << "Begin ranking of input variables..." << Endl;
+      Log() << kINFO << "Ranking input variables (method specific)..." << Endl;
       for (itrMethod = fMethods.begin(); itrMethod != fMethods.end(); itrMethod++) {
          MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
          if (mva && mva->Data()->GetNTrainingEvents() >= MinNoTrainingEvents) {
@@ -1012,6 +1067,7 @@ void TMVA::Factory::TrainAllMethods()
          }
          //ToDo, Do we need to fill the DataSetManager of MethodBoost here too?
 
+         m->SetAnalysisType(fAnalysisType);
          m->SetupMethod();
          m->ReadStateFromFile();
          m->SetTestvarName(testvarName);
@@ -1143,6 +1199,11 @@ void TMVA::Factory::EvaluateAllMethods( void )
    std::vector<std::vector<Double_t> > eff01err(2), eff10err(2), eff30err(2);
    std::vector<std::vector<Double_t> > trainEff01(2), trainEff10(2), trainEff30(2);
 
+   std::vector<std::vector<Float_t> > multiclass_testEff;
+   std::vector<std::vector<Float_t> > multiclass_trainEff;
+   std::vector<std::vector<Float_t> > multiclass_testPur;
+   std::vector<std::vector<Float_t> > multiclass_trainPur;
+
    std::vector<std::vector<Double_t> > biastrain(1);  // "bias" of the regression on the training data
    std::vector<std::vector<Double_t> > biastest(1);   // "bias" of the regression on test data
    std::vector<std::vector<Double_t> > devtrain(1);   // "dev" of the regression on the training data
@@ -1216,8 +1277,16 @@ void TMVA::Factory::EvaluateAllMethods( void )
          theMethod->WriteEvaluationHistosToFile(Types::kTraining);
       } else if (theMethod->DoMulticlass()) {
          doMulticlass = kTRUE;
-         Log() << kINFO << "Evaluate multiclass classification method: " << theMethod->GetMethodName() << Endl;         
+         Log() << kINFO << "Evaluate multiclass classification method: " << theMethod->GetMethodName() << Endl;
+         Log() << kINFO << "Write evaluation histograms to file" << Endl;
+         theMethod->WriteEvaluationHistosToFile(Types::kTesting);
+         theMethod->WriteEvaluationHistosToFile(Types::kTraining);
+         
          theMethod->TestMulticlass();
+         multiclass_testEff.push_back(theMethod->GetMulticlassEfficiency(multiclass_testPur));
+         //theMethod->GetMulticlassTrainingEfficiency();
+         nmeth_used[0]++;
+         mname[0].push_back( theMethod->GetMethodName() );
       } else {
          
          Log() << kINFO << "Evaluate classifier: " << theMethod->GetMethodName() << Endl;
@@ -1295,8 +1364,8 @@ void TMVA::Factory::EvaluateAllMethods( void )
       minftestT[0]  = vtmp[16];
       minftrainT[0] = vtmp[17];
    } else if( doMulticlass ) {
-      // do nothing for the moment
       // TODO: fill in something meaningfull
+      
    }  else {
       // now sort the variables according to the best 'eff at Beff=0.10'
       for (Int_t k=0; k<2; k++) {
@@ -1546,7 +1615,26 @@ void TMVA::Factory::EvaluateAllMethods( void )
       Log() << kINFO << Endl;
    }
    else if( doMulticlass ){
-      // do whatever necessary  TODO
+      Log() << Endl;
+      TString hLine = "--------------------------------------------------------------------------------";
+      Log() << kINFO << "Evaluation results ranked by best signal efficiency times signal purity " << Endl;
+      Log() << kINFO << hLine << Endl;
+      TString header= "MVA Method     "; 
+      for(UInt_t icls = 0; icls<DefaultDataSetInfo().GetNClasses(); ++icls){
+         header += Form("%-12s ",DefaultDataSetInfo().GetClassInfo(icls)->GetName().Data());
+      }
+      Log() << kINFO << header << Endl;
+      Log() << kINFO << hLine << Endl;
+      for (Int_t i=0; i<nmeth_used[0]; i++) {
+         TString res =  Form("%-15s",(const char*)mname[0][i]);
+         for(UInt_t icls = 0; icls<DefaultDataSetInfo().GetNClasses(); ++icls){
+            res += Form("%#1.3f        ",(multiclass_testEff[i][icls])*(multiclass_testPur[i][icls]));
+         }
+         Log() << kINFO << res << Endl;
+      }
+      Log() << kINFO << hLine << Endl;
+      Log() << kINFO << Endl;
+
    } else {
       Log() << Endl;
       TString hLine = "--------------------------------------------------------------------------------";
@@ -1611,5 +1699,8 @@ void TMVA::Factory::EvaluateAllMethods( void )
    RootBaseDir()->cd();
    DefaultDataSetInfo().GetDataSet()->GetTree(Types::kTesting)->Write( "", TObject::kOverwrite );
    DefaultDataSetInfo().GetDataSet()->GetTree(Types::kTraining)->Write( "", TObject::kOverwrite );
+
+   // references for citation
+   gTools().TMVACitation( Log(), Tools::kHtmlLink );
 }
 

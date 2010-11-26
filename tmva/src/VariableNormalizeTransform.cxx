@@ -105,10 +105,14 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Even
 
    // if cls (the class chosen by the user) not existing, 
    // assume that he wants to have the matrix for all classes together. 
-   if (cls < 0 || cls > GetNClasses()) {
-      if (GetNClasses() > 1 ) cls = GetNClasses();
-      else cls = (fMin.size()==1?0:2);
-   }
+   // if (cls < 0 || cls > GetNClasses()) {
+   //       if (GetNClasses() > 1 ) cls = GetNClasses();
+   //       else cls = (fMin.size()==1?0:2);
+   //    }
+   // EVT this is a workaround to address the reader problem with transforma and EvaluateMVA(std::vector<float/double> ,...) 
+   if (cls < 0 || cls >= (int) fMin.size()) cls = fMin.size()-1;
+   // EVT workaround end
+
    const UInt_t nvars = GetNVariables();
    const UInt_t ntgts = ev->GetNTargets();
    if (nvars != ev->GetNVariables()) {

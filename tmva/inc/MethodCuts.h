@@ -104,7 +104,7 @@ namespace TMVA {
       void ReadWeightsFromXML   ( void* wghtnode );
 
       // calculate the MVA value (for CUTs this is just a dummy)
-      Double_t GetMvaValue( Double_t* err = 0 );
+      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
 
       // write method specific histos to target file
       void WriteMonitoringHistosToFile( void ) const;

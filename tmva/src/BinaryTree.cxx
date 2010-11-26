@@ -42,8 +42,6 @@
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Event.h"
 #include "TMVA/Tools.h"
-#include "TMVA/DecisionTree.h"
-#include "TMVA/BinarySearchTree.h"
 
 ClassImp(TMVA::BinaryTree)
 
@@ -136,29 +134,16 @@ void* TMVA::BinaryTree::AddXMLTo(void* parent) const {
 //_______________________________________________________________________
 void TMVA::BinaryTree::ReadXML(void* node, UInt_t tmva_Version_Code ) {
    // read attributes from XML
+
    this->DeleteNode( fRoot );
    fRoot= CreateNode();
+
    void* trnode = gTools().GetChild(node);
    fRoot->ReadXML(trnode, tmva_Version_Code);
+
    this->SetTotalTreeDepth();
 }
 
-//_______________________________________________________________________
-TMVA::BinaryTree* TMVA::BinaryTree::CreateFromXML(void* node, UInt_t tmva_Version_Code ) {
-   // re-create a new tree (decision tree or search tree) from XML
-   std::string type("");
-   gTools().ReadAttr(node,"type", type);
-   BinaryTree* bt = 0;
-   if(type == "DecisionTree") {
-      bt = new DecisionTree();
-   } else if(type == "BinarySearchTree") {
-      bt = new BinarySearchTree();
-   } else {
-      gTools().Log() << kFATAL << "Can't read binary tree of type '" << type << "'" << Endl;
-   }
-   bt->ReadXML( node, tmva_Version_Code );
-   return bt;
-}
 
 //_______________________________________________________________________
 ostream& TMVA::operator<< (ostream& os, const TMVA::BinaryTree& tree)
