@@ -4186,6 +4186,21 @@ void CleanupOnExit(int code)
    }
 }
 
+// cross-compiling for iOS and iOS simulator (assumes host is Intel Mac OS X)
+#if defined(R__IOSSIM) || defined(R__IOS)
+#ifdef __x86_64__
+#undef __x86_64__
+#endif
+#ifdef __i386__
+#undef __i386__
+#endif
+#ifdef R__IOSSIM
+#define __i386__ 1
+#endif
+#ifdef R__IOS
+#define __arm__ 1
+#endif
+#endif
 
 //______________________________________________________________________________
 int main(int argc, char **argv)
@@ -4556,6 +4571,14 @@ int main(int argc, char **argv)
 #ifdef __x86_64__
             argvv[argcc] = (char *)calloc(64, 1);
             snprintf(argvv[argcc],64, "-D__x86_64__=%ld", (long)__x86_64__); argcc++;
+#endif
+#ifdef __i386__
+            argvv[argcc] = (char *)calloc(64, 1);
+            snprintf(argvv[argcc],64, "-D__i386__=%ld", (long)__i386__); argcc++;
+#endif
+#ifdef __arm__
+            argvv[argcc] = (char *)calloc(64, 1);
+            snprintf(argvv[argcc],64, "-D__arm__=%ld", (long)__arm__); argcc++;
 #endif
 #ifdef R__B64
             argvv[argcc] = (char *)calloc(64, 1);

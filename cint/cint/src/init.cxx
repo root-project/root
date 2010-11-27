@@ -56,7 +56,7 @@ struct G__setup_func_struct {
 
    G__setup_func_struct() : libname(), func(), inited(false), registered(false) {}
    G__setup_func_struct(const char *name, G__incsetup functions, bool isregistered) : libname(name), func(functions), inited(false), registered(isregistered) {}
-   
+
 };
 
 //______________________________________________________________________________
@@ -89,9 +89,9 @@ void G__add_setup_func(const char* libname, G__incsetup func)
       if ( j->libname == libname ) {
          return;
       }
-   }   
+   }
    G__setup_func_list->push_back( G__setup_func_struct( libname, func, true ) );
-   
+
    ++G__nlibs;
 
    G__RegisterLibrary(func);
@@ -152,7 +152,7 @@ int G__call_setup_funcs()
             i->registered = true;
          }
       }
-      
+
       int count = 0;
       for (i = begin ; i != end; ++i, ++count) {
          if (count < G__nlibs_highwatermark) continue;
@@ -186,7 +186,7 @@ void G__reset_setup_funcs()
       std::list<G__setup_func_struct>::iterator begin = G__setup_func_list->begin();
       std::list<G__setup_func_struct>::iterator end = G__setup_func_list->end();
       std::list<G__setup_func_struct>::iterator i;
-      
+
       for (i = begin ; i != end; ++i) {
          i->inited = false;
          i->registered = false;
@@ -723,7 +723,7 @@ int G__main(int argc, char** argv)
             // 09-07-07 new option to separate the dictionaries
             // If G__dicttype==0 write everything (like in the old times)
             // If G__dicttype==1 the write the ShowMembers
-            // If G__dicttype==2 write only the pointer to inline functions      
+            // If G__dicttype==2 write only the pointer to inline functions
             // If G__dicttype==3 write all the memfunc_setup rubbish
             // do we still need to fill up the structures and all that?
             G__dicttype = (G__dictgenmode) atoi(optarg);
@@ -1182,7 +1182,7 @@ int G__main(int argc, char** argv)
   // 15-01-08
   // Translate an ifdef into a normal global variable..
   // sligthly more convenient.
-  // This is the variable used to check if the stubs must be 
+  // This is the variable used to check if the stubs must be
   // written in the dictionary (can only be changed in conf. time)
 #ifdef G__NOSTUBS
   G__nostubs = 1;
@@ -1968,7 +1968,7 @@ int G__init_globals()
    G__precomp_private = 0;
 
    /* The first entry in the const string is a blank string */
-   static char clnull[1] = ""; 
+   static char clnull[1] = "";
    G__conststringlist.string = clnull;
    G__conststringlist.hash = 0;
    G__conststringlist.prev = 0;
@@ -2089,6 +2089,22 @@ static void G__defineMacro(const char* name, long value, const char* cintname = 
   preventing capitalization of the CINT macro name */
 #define G__DEFINE_MACRO_S_C(macro) \
    G__defineMacro(#macro, (long)macro, 0, false, true)
+
+// cross-compiling for iOS and iOS simulator (assumes host is Intel Mac OS X)
+#if defined(R__IOSSIM) || defined(R__IOS)
+#ifdef __x86_64__
+#undef __x86_64__
+#endif
+#ifdef __i386__
+#undef __i386__
+#endif
+#ifdef R__IOSSIM
+#define __i386__ 1
+#endif
+#ifdef R__IOS
+#define __arm__ 1
+#endif
+#endif
 
 //______________________________________________________________________________
 void G__platformMacro()
@@ -2263,6 +2279,9 @@ void G__platformMacro()
 #ifdef __x86_64__ /* Intel / AMD 64 */
    G__DEFINE_MACRO_S(__x86_64__);
 #endif
+#ifdef __arm__ /* ARM iOS */
+   G__DEFINE_MACRO_S(__arm__);
+#endif
 #ifdef __amd64 /* Intel / AMD 64 */
    G__DEFINE_MACRO_S(__amd64);
 #endif
@@ -2313,7 +2332,7 @@ void G__platformMacro()
 #ifdef __s390__ /* IBM S390 */
    G__DEFINE_MACRO_S(__s390__);
 #endif
-   
+
    // Avoid any problem with __attribute__ and __asm
    G__value (*store__GetSpecialObject) (G__CONST char *name,void **ptr,void** ppdict) = G__GetSpecialObject;
    G__GetSpecialObject = 0;
@@ -2359,9 +2378,9 @@ void G__platformMacro()
 
    G__search_typename2("ssize_t", size_t_type, -1, 0, -1);
    G__setnewtype(-1, NULL, 0);
-   
+
 #if  defined(__APPLE__) && defined(__GNUC__)
-   // Apple MacOS X gcc header use directly __builtin_va_list, let's 
+   // Apple MacOS X gcc header use directly __builtin_va_list, let's
    // make sure that rootcint does not complain about not knowing what it is.
    G__linked_taginfo G__a_cxx_ACLiC_dictLN_va_list = { "va_list" , 115 , -1 };
    // G__a_cxx_ACLiC_dictLN_va_list.tagnum = -1 ;
