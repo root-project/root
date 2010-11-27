@@ -2142,6 +2142,8 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
       return 0;
    }
 
+   // prevent the system dialog box to pop-up if a drive is empty
+   UINT nOldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
    TList *drives = new TList();
    drives->SetOwner();
    // Save current drive
@@ -2176,7 +2178,6 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
       drives->Add(new TNamed(sDrive.Data(), sType.Data()));
    }
    else if (strstr(opt, "all")) {
-      UINT nOldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
       TCHAR szTemp[512];
       szTemp[0] = '\0';
       if (::GetLogicalDriveStrings(511, szTemp)) {
@@ -2221,8 +2222,9 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
             while (*p++);
          } while (*p); // end of string
       }
-      ::SetErrorMode(nOldErrorMode);
    }
+   // restore previous error mode
+   ::SetErrorMode(nOldErrorMode);
    return drives;
 }
 
@@ -2518,12 +2520,16 @@ int TWinNTSystem::GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
    char  fileSystemNameBuffer[512];
    DWORD nFileSystemNameSize = sizeof(fileSystemNameBuffer);
 
+   // prevent the system dialog box to pop-up if the drive is empty
+   UINT nOldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
    if (!::GetVolumeInformation(lpRootPathName,
                                lpVolumeNameBuffer, nVolumeNameSize,
                                &volumeSerialNumber,
                                &maximumComponentLength,
                                &fileSystemFlags,
                                fileSystemNameBuffer, nFileSystemNameSize)) {
+      // restore previous error mode
+      ::SetErrorMode(nOldErrorMode);
       return 1;
    }
 
@@ -2545,8 +2551,12 @@ int TWinNTSystem::GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
                            &bytesPerSector,
                            &numberOfFreeClusters,
                            &totalNumberOfClusters)) {
+      // restore previous error mode
+      ::SetErrorMode(nOldErrorMode);
       return 1;
    }
+   // restore previous error mode
+   ::SetErrorMode(nOldErrorMode);
 
    *bsize  = sectorsPerCluster * bytesPerSector;
    *blocks = totalNumberOfClusters;
