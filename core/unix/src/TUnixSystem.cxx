@@ -3594,7 +3594,8 @@ void TUnixSystem::UnixResetSignal(ESignals sig)
 
    if (gSignalMap[sig].fOldHandler) {
       // restore old signal handler
-      sigaction(gSignalMap[sig].fCode, gSignalMap[sig].fOldHandler, 0);
+      if (sigaction(gSignalMap[sig].fCode, gSignalMap[sig].fOldHandler, 0) < 0)
+         ::SysError("TUnixSystem::UnixSignal", "sigaction");
       delete gSignalMap[sig].fOldHandler;
       gSignalMap[sig].fOldHandler = 0;
       gSignalMap[sig].fHandler    = 0;
