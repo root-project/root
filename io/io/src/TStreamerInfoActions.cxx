@@ -1124,6 +1124,7 @@ void TStreamerInfo::Compile()
                && (element->GetXmax() == previous->GetXmax())
                )
               )
+          && (element->TestBit(TStreamerElement::kCache) == previous->TestBit(TStreamerElement::kCache))
           ) 
       {
          if (fLength[keep] == 0) {
