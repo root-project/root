@@ -1471,6 +1471,9 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
    if (fRegressionReturnVal == NULL) fRegressionReturnVal = new std::vector<Float_t>();
    fRegressionReturnVal->clear();
 
+   const Event * ev = GetEvent();
+   Event * evT = new Event(*ev);
+
    Double_t myMVA = 0;
    Double_t norm  = 0;
    if (fBoostType=="AdaBoostR2") {
@@ -1489,7 +1492,7 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
       Double_t           totalSumOfWeights = 0;
 
       for (UInt_t itree=0; itree<fForest.size(); itree++) {
-         response[itree]    = fForest[itree]->CheckEvent(*GetEvent(),kFALSE);
+         response[itree]    = fForest[itree]->CheckEvent(*ev,kFALSE);
          weight[itree]      = fBoostWeights[itree];
          totalSumOfWeights += fBoostWeights[itree];
       }
@@ -1513,28 +1516,40 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
          count++;
          rVal+=vtemp[0][i];
       }
-      fRegressionReturnVal->push_back( rVal/Double_t(count));
+//      fRegressionReturnVal->push_back( rVal/Double_t(count));
+      evT->SetTarget(0, rVal/Double_t(count) );
    }
    else if(fBoostType=="Grad"){
       for (UInt_t itree=0; itree<fForest.size(); itree++) {
-         myMVA += fForest[itree]->CheckEvent(*GetEvent(),kFALSE);
+         myMVA += fForest[itree]->CheckEvent(*ev,kFALSE);
       }
-      fRegressionReturnVal->push_back( myMVA+fBoostWeights[0]);
+//      fRegressionReturnVal->push_back( myMVA+fBoostWeights[0]);
+      evT->SetTarget(0, myMVA+fBoostWeights[0] );
    }
    else{
       for (UInt_t itree=0; itree<fForest.size(); itree++) {
          //
          if (fUseWeightedTrees) {
-            myMVA += fBoostWeights[itree] * fForest[itree]->CheckEvent(*GetEvent(),kFALSE);
+            myMVA += fBoostWeights[itree] * fForest[itree]->CheckEvent(*ev,kFALSE);
             norm  += fBoostWeights[itree];
          }
          else {
-            myMVA += fForest[itree]->CheckEvent(*GetEvent(),kFALSE);
+            myMVA += fForest[itree]->CheckEvent(*ev,kFALSE);
             norm  += 1;
          }
       }
-      fRegressionReturnVal->push_back( ( norm > std::numeric_limits<double>::epsilon() ) ? myMVA /= norm : 0 );
+//      fRegressionReturnVal->push_back( ( norm > std::numeric_limits<double>::epsilon() ) ? myMVA /= norm : 0 );
+      evT->SetTarget(0, ( norm > std::numeric_limits<double>::epsilon() ) ? myMVA /= norm : 0 );
    }
+
+
+
+   const Event* evT2 = GetTransformationHandler().InverseTransform( evT );
+   fRegressionReturnVal->push_back( evT2->GetTarget(0) );
+
+   delete evT;
+
+
    return *fRegressionReturnVal;
 }
 
