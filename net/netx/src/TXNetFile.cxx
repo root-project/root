@@ -794,7 +794,7 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
          Info("ReadBuffers", "%lld bytes of data read from a list of %d buffers",
               nr, nbuf);
 
-      if (GetCacheRead()->GetBufferSize() < nr)
+      if (GetCacheRead() && GetCacheRead()->GetBufferSize() < nr)
          Info("ReadBuffers", "%lld bytes of data read with a smaller (%d) TFileCacheRead buffer size?",
               nr, GetCacheRead()->GetBufferSize());
 
