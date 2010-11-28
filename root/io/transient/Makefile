@@ -32,6 +32,8 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
+execNew.clog: execOld.clog
+
 ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
 missingdict.log: missingdict_rflx_cpp.$(DllSuf)
 
