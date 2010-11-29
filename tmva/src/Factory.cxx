@@ -965,6 +965,10 @@ void TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType)
 void TMVA::Factory::TrainAllMethods() 
 {     
    // iterates through all booked methods and calls training
+
+   if(fDataInputHandler->GetEntries() <=1) { // 0 entries --> 0 events, 1 entry --> dynamical dataset (or one entry)
+      Log() << kFATAL << "No input data for the training provided!" << Endl;
+   }
    
    if(fAnalysisType == Types::kRegression && DefaultDataSetInfo().GetNTargets() < 1 )
       Log() << kFATAL << "You want to do regression training without specifying a target." << Endl;

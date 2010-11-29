@@ -139,12 +139,12 @@ void TMVA::MethodANNBase::DeclareOptions()
 void TMVA::MethodANNBase::ProcessOptions()
 {
    // do nothing specific at this moment
-  if      ( DoRegression())  fEstimatorS = "MSE";    //zjh
-  if      (fEstimatorS == "MSE" )  fEstimator = kMSE;    //zjh  (to test all others)
-  else if (fEstimatorS == "CE")    fEstimator = kCE;      //zjh
-  vector<Int_t>* layout = ParseLayoutString(fLayerSpec);
-  BuildNetwork(layout);
-  delete layout;
+   if      ( DoRegression() || DoMulticlass())  fEstimatorS = "MSE";    //zjh
+   if      (fEstimatorS == "MSE" )  fEstimator = kMSE;   
+   else if (fEstimatorS == "CE")    fEstimator = kCE;      //zjh
+   vector<Int_t>* layout = ParseLayoutString(fLayerSpec);
+   BuildNetwork(layout);
+   delete layout;
 }
 
 //______________________________________________________________________________
@@ -644,31 +644,25 @@ const std::vector<Float_t> &TMVA::MethodANNBase::GetMulticlassValues()
    ForceNetworkCalculations();
 
    // check the output of the network
-   TObjArray* outputLayer = (TObjArray*)fNetwork->At( fNetwork->GetEntriesFast()-1 );
-
+ 
    if (fMulticlassReturnVal == NULL) fMulticlassReturnVal = new std::vector<Float_t>();
    fMulticlassReturnVal->clear();
    std::vector<Float_t> temp;
 
    UInt_t nClasses = DataInfo().GetNClasses();
-   for (UInt_t itgt = 0, itgtEnd = nClasses; itgt < itgtEnd; itgt++) {
-      temp.push_back( ((TNeuron*)outputLayer->At(itgt))->GetActivationValue() );
+   for (UInt_t icls = 0; icls < nClasses; icls++) {
+      temp.push_back(GetOutputNeuron( icls )->GetActivationValue() );
    }
-
-   if(fEstimator==kCE)
-      *fMulticlassReturnVal = temp;
-   else{
-      for(UInt_t iClass=0; iClass<nClasses; iClass++){
-         Double_t norm = 0.0;
-         for(UInt_t j=0;j<nClasses;j++){
-            if(iClass!=j)
-               norm+=exp(temp[j]-temp[iClass]);
-            //norm+=temp[j]; //because NN output is already between 0 and 1
+   
+   for(UInt_t iClass=0; iClass<nClasses; iClass++){
+      Double_t norm = 0.0;
+      for(UInt_t j=0;j<nClasses;j++){
+         if(iClass!=j)
+            norm+=exp(temp[j]-temp[iClass]);
          }
-         (*fMulticlassReturnVal).push_back(1.0/(1.0+norm));
-         //(*fMulticlassReturnVal).push_back(temp[iClass]/(temp[iClass]+norm));//because NN output is already between 0 and 1
-      }
+      (*fMulticlassReturnVal).push_back(1.0/(1.0+norm));
    }
+   
    return *fMulticlassReturnVal;
 }
 
