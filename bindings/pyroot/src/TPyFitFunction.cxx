@@ -176,7 +176,7 @@ void TPyMultiGradFunction::Gradient( const double* x, double* grad ) const {
 // Simply forward the call to python self.
    PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
    PyObject* gbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)grad );
-   PyObject* pyresult = DispatchCall( fPySelf, "DoEval", xbuf, gbuf );
+   PyObject* pyresult = DispatchCall( fPySelf, "Gradient", xbuf, gbuf );
    Py_DECREF( gbuf );
    Py_DECREF( xbuf );
 
@@ -197,7 +197,7 @@ void TPyMultiGradFunction::FdF( const double* x, double& f, double* df ) const
    PyList_SetItem( pyf, 0, PyFloat_FromDouble( f ) );
    PyObject* dfbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)df );
 
-   PyObject* pyresult = DispatchCall( fPySelf, "DoEval", xbuf, pyf, dfbuf );
+   PyObject* pyresult = DispatchCall( fPySelf, "FdF", xbuf, pyf, dfbuf );
    f = PyFloat_AsDouble( PyList_GetItem( pyf, 0 ) );
 
    Py_DECREF( dfbuf );
@@ -219,7 +219,7 @@ double TPyMultiGradFunction::DoDerivative( const double * x, unsigned int icoord
    PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
    PyObject* pycoord = PyLong_FromLong( icoord );
 
-   PyObject* pyresult = DispatchCall( fPySelf, "DoEval", xbuf, pycoord );
+   PyObject* pyresult = DispatchCall( fPySelf, "DoDerivative", xbuf, pycoord );
    Py_DECREF( pycoord );
    Py_DECREF( xbuf );
 
