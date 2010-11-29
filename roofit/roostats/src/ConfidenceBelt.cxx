@@ -46,8 +46,7 @@ ClassImp(RooStats::ConfidenceBelt) ;
 using namespace RooStats;
 
 //____________________________________________________________________
-ConfidenceBelt::ConfidenceBelt() :
-   fParameterPoints(0)
+ConfidenceBelt::ConfidenceBelt() 
 {
    // Default constructor
 }
@@ -233,6 +232,21 @@ AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint,
     // need a way to get index for given point
     //    RooStats::SetParameters(&parameterPoint, tree->get()); // set tree's parameters to desired values
     Int_t index = 0; //need something like tree->calcTreeIndex(); 
+    const RooArgSet* thisPoint = 0;
+    for(index=0; index<tree->numEntries(); ++index){
+      thisPoint = tree->get(index); 
+      bool samePoint = true;
+      TIter it = parameterPoint.createIterator();
+      RooRealVar *myarg; 
+      while ( samePoint && (myarg = (RooRealVar *)it.Next())) { 
+	if(!myarg) continue;
+	if(myarg->getVal() != thisPoint->getRealValue(myarg->GetName()))
+	  samePoint = false;
+      }
+      if(samePoint) 
+	break;
+    }
+
     return &(fSamplingSummaries.at(index).GetAcceptanceRegion());
   }
   else {

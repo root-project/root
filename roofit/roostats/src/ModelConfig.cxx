@@ -1,5 +1,5 @@
 // @(#)root/roostats:$Id$
-// Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
+// Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke, Sven Kreiss
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -27,14 +27,6 @@ ClassImp(RooStats::ModelConfig)
 
 
 namespace RooStats {
-
-ModelConfig::~ModelConfig() { 
-   // destructor.
-//    if( fOwnsWorkspace && fWS) { 
-//       std::cout << "ModelConfig : delete own workspace " << std::endl;
-//       delete fWS;
-//    }
-}
 
 void ModelConfig::GuessObsAndNuisance(const RooAbsData& data) {
    // Makes sensible guesses of observables, parameters of interest
@@ -83,131 +75,160 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData& data) {
 	SetNuisanceParameters(p);
    }
 
-   ostream& oldstream = RooPrintable::defaultPrintStream(&ccoutI(InputArguments));
+   Print();
+}
+
+void ModelConfig::Print(Option_t*) const {
+   // print contents
    ccoutI(InputArguments) << endl << "=== Using the following for " << GetName() << " ===" << endl;
+
+   // args
    if(GetObservables()){
-     ccoutI(InputArguments) << "Observables:             ";
-     GetObservables()->Print("");
+      ccoutI(InputArguments) << "Observables:             ";
+      GetObservables()->Print("");
    }
    if(GetParametersOfInterest()) {
-     ccoutI(InputArguments) << "Parameters of Interest:  ";
-     GetParametersOfInterest()->Print("");
+      ccoutI(InputArguments) << "Parameters of Interest:  ";
+      GetParametersOfInterest()->Print("");
    }
    if(GetNuisanceParameters()){
-     ccoutI(InputArguments) << "Nuisance Parameters:     ";
-     GetNuisanceParameters()->Print("");
+      ccoutI(InputArguments) << "Nuisance Parameters:     ";
+      GetNuisanceParameters()->Print("");
    }
    if(GetGlobalObservables()){
-     ccoutI(InputArguments) << "Global Observables:      ";
-     GetGlobalObservables()->Print("");
+      ccoutI(InputArguments) << "Global Observables:      ";
+      GetGlobalObservables()->Print("");
    }
+   if(GetConstraintParameters()){
+      ccoutI(InputArguments) << "Constraint Parameters:   ";
+      GetConstraintParameters()->Print("");
+   }
+   if(GetConditionalObservables()){
+      ccoutI(InputArguments) << "Conditional Observables: ";
+      GetConditionalObservables()->Print("");
+   }
+   if(GetProtoData()){
+      ccoutI(InputArguments) << "Proto Data:              ";
+      GetProtoData()->Print("");
+   }
+
+   // pdfs
+   if(GetPdf()) {
+      ccoutI(InputArguments) << "PDF:                     ";
+      GetPdf()->Print("");
+   }
+   if(GetPriorPdf()) {
+      ccoutI(InputArguments) << "Prior PDF:               ";
+      GetPriorPdf()->Print("");
+   }
+
+   // snapshot
+   if(GetSnapshot()) {
+      ccoutI(InputArguments) << "Snapshot:                " << endl;
+      GetSnapshot()->Print("v");
+   }
+
    ccoutI(InputArguments) << endl;
-   RooPrintable::defaultPrintStream(&oldstream);
 }
 
 
-void ModelConfig::SetWorkspace(RooWorkspace & ws) {
+void ModelConfig::SetWS(RooWorkspace & ws) {
    // set a workspace that owns all the necessary components for the analysis
-   if (!fWS) { 
-      fWS = &ws;
-      fWSName = ws.GetName();
+   if( !fRefWS.GetObject() ) {
       fRefWS = &ws; 
+      fWSName = ws.GetName();
    }   
    else{
+      RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
       RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
-      fWS->merge(ws);
-      RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
+      GetWS()->merge(ws);
+      RooMsgService::instance().setGlobalKillBelow(level) ;
    }
-   
 }
 
 RooWorkspace * ModelConfig::GetWS() const {
-   // get workspace if pointer is null get from the TRef 
-   if (fWS) return fWS; 
    // get from TRef
-   fWS = dynamic_cast<RooWorkspace *>(fRefWS.GetObject() );
-   if (fWS) return fWS; 
-   coutE(ObjectHandling) << "workspace not set" << endl;
-   return 0;
+   RooWorkspace *ws = dynamic_cast<RooWorkspace *>(fRefWS.GetObject() );
+   if(!ws) {
+      coutE(ObjectHandling) << "workspace not set" << endl;
+      return NULL;
+   }
+   return ws;
 }
 
 void ModelConfig::SetSnapshot(const RooArgSet& set) {
    // save snaphot in the workspace 
    // and use values passed with the set
-   if (!fWS) {
-      coutE(ObjectHandling) << "workspace not set" << endl;
-      return;
-   }
+   if ( !GetWS() ) return;
+
    fSnapshotName = GetName();
    if (fSnapshotName.size()  > 0) fSnapshotName += "_";
    fSnapshotName += set.GetName();
    if (fSnapshotName.size()  > 0) fSnapshotName += "_";
    fSnapshotName += "snapshot";
-   fWS->saveSnapshot(fSnapshotName.c_str(), set, true);  // import also the given parameter values
+   GetWS()->saveSnapshot(fSnapshotName.c_str(), set, true);  // import also the given parameter values
    DefineSetInWS(fSnapshotName.c_str(), set);
 }    
 
 const RooArgSet * ModelConfig::GetSnapshot() const{
    // Load the snapshot from ws and return the corresponding set with the snapshot values.
    // User must delete returned RooArgSet.
-   if (!fWS) return 0; 
-   if (!(fWS->loadSnapshot(fSnapshotName.c_str())) ) return 0;
+   if ( !GetWS() ) return 0;
+   if (!fSnapshotName.length()) return 0;
+   if (!(GetWS()->loadSnapshot(fSnapshotName.c_str())) ) return 0;
 
-   return dynamic_cast<const RooArgSet*>(fWS->set(fSnapshotName.c_str() )->snapshot());
+   return dynamic_cast<const RooArgSet*>(GetWS()->set(fSnapshotName.c_str() )->snapshot());
 }
 
 void ModelConfig::LoadSnapshot() const{
    // load the snapshot from ws if it exists
-   if (!fWS) return;
+   if ( !GetWS() ) return;
 
    // kill output
    RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
-   fWS->loadSnapshot(fSnapshotName.c_str());
+   GetWS()->loadSnapshot(fSnapshotName.c_str());
    RooMsgService::instance().setGlobalKillBelow(level);
 }
 
 void ModelConfig::DefineSetInWS(const char* name, const RooArgSet& set) {
    // helper functions to avoid code duplication
-   if (!fWS) {
-      coutE(ObjectHandling) << "workspace not set" << endl;
-      return;
-   }
-   if (! fWS->set( name )){
+   if ( !GetWS() ) return;
+
+   if ( ! GetWS()->set(name) ) {
+      RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
       RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
       // use option to import missing constituents
       // TODO IS THIS A BUG? if content with same name exist they will not be imported ?
       // See ModelConfig::GuessObsAndNuissance(...) for example of the problem.
 
-      fWS->defineSet(name, set,true);  
+      GetWS()->defineSet(name, set,true);
 
-      RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
+      RooMsgService::instance().setGlobalKillBelow(level) ;
    }
 }
    
 void ModelConfig::ImportPdfInWS(const RooAbsPdf & pdf) { 
-   // internal function to import Pdf in WS
-   if (!fWS) { 
-      coutE(ObjectHandling) << "workspace not set" << endl;
-      return;
-   }
-   if (! fWS->pdf( pdf.GetName() ) ){
+   // internal function to import Pdf in WS 
+   if ( !GetWS() ) return;
+
+   if (! GetWS()->pdf( pdf.GetName() ) ){
+      RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
       RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
-      fWS->import(pdf, RooFit::RecycleConflictNodes());
-      RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
+      GetWS()->import(pdf, RooFit::RecycleConflictNodes());
+      RooMsgService::instance().setGlobalKillBelow(level) ;
    }
 }
    
 void ModelConfig::ImportDataInWS(RooAbsData & data) { 
    // internal function to import data in WS
-   if (!fWS) {
-      coutE(ObjectHandling) << "workspace not set" << endl;
-      return;
-   }
-   if (! fWS->data( data.GetName() ) ){
+   if ( !GetWS() ) return;
+
+   if (! GetWS()->data( data.GetName() ) ){
+      RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
       RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
-      fWS->import(data);
-      RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
+      GetWS()->import(data);
+      RooMsgService::instance().setGlobalKillBelow(level) ;
    }
 }
 

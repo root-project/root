@@ -1,5 +1,5 @@
 // @(#)root/roostats:$Id$
-// Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
+// Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke, Sven Kreiss
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -41,7 +41,7 @@ BEGIN_HTML
 ModelConfig is a simple class that holds configuration information specifying how a model
 should be used in the context of various RooStats tools.  A single model can be used
 in different ways, and this class should carry all that is needed to specify how it should be used.
-ModelConfig requires a workspace to be set 
+ModelConfig requires a workspace to be set.
 </p>
 END_HTML
 */
@@ -55,42 +55,38 @@ class ModelConfig : public TNamed {
 public:
 
    ModelConfig(RooWorkspace * ws = 0) : 
-      TNamed(), 
-      fWS(ws)
-      //fOwnsWorkspace(false) 
+      TNamed()
    {
-      if (ws) fWSName = ws->GetName();
+      if(ws) SetWS(*ws);
    }
     
    ModelConfig(const char* name, RooWorkspace *ws = 0) : 
-      TNamed(name, name), 
-      fWS(ws) 
-      //fOwnsWorkspace(false) 
+      TNamed(name, name)
    {
-      if (ws) fWSName = ws->GetName();
+      if(ws) SetWS(*ws);
    }
     
    ModelConfig(const char* name, const char* title, RooWorkspace *ws = 0) : 
-      TNamed(name, title), 
-      fWS(ws) 
-      //fOwnsWorkspace(false)
+      TNamed(name, title)
    {
-      if (ws) fWSName = ws->GetName();
+      if(ws) SetWS(*ws);
    }
 
     
-   // destructor.
-   virtual ~ModelConfig(); 
-
    // clone
-   virtual ModelConfig * Clone(const char * name = "ModelConfig") const {
+   virtual ModelConfig * Clone(const char * name = "") const {
       ModelConfig * mc =  new ModelConfig(*this);
-      mc->SetName(name); 
+      if(strcmp(name,"")==0)
+	mc->SetName(this->GetName());
+      else
+	mc->SetName(name); 
       return mc; 
    }
 
    // set a workspace that owns all the necessary components for the analysis
-   virtual void SetWorkspace(RooWorkspace & ws);
+   virtual void SetWS(RooWorkspace & ws);
+   /// alias for SetWS(...)
+   virtual void SetWorkspace(RooWorkspace & ws) { SetWS(ws); }
 
    // Set the proto DataSet, add to the the workspace if not already there
    virtual void SetProtoData(RooAbsData & data) {      
@@ -155,11 +151,9 @@ public:
     
    // specify the name of the PDF in the workspace to be used
    virtual void SetPdf(const char* name) {
-      if(!fWS){
-         coutE(ObjectHandling) << "workspace not set" << endl;
-         return;
-      }
-      if(fWS->pdf(name))
+      if (! GetWS() ) return;
+
+      if(GetWS()->pdf(name))
          fPdfName = name;
       else
          coutE(ObjectHandling) << "pdf "<<name<< " does not exist in workspace"<<endl;
@@ -167,11 +161,9 @@ public:
 
    // specify the name of the PDF in the workspace to be used
    virtual void SetPriorPdf(const char* name) {
-      if(!fWS){
-         coutE(ObjectHandling) << "workspace not set" << endl;
-         return;
-      }
-      if(fWS->pdf(name))
+      if (! GetWS() ) return;
+
+      if(GetWS()->pdf(name))
          fPriorPdfName = name;
       else
          coutE(ObjectHandling) << "pdf "<<name<< " does not exist in workspace"<<endl;
@@ -180,11 +172,9 @@ public:
 
    // specify the name of the dataset in the workspace to be used
    virtual void SetProtoData(const char* name){
-      if(!fWS){
-         coutE(ObjectHandling) << "workspace not set" << endl;
-         return;
-      }
-      if(fWS->data(name))
+      if (! GetWS() ) return;
+
+      if(GetWS()->data(name))
          fProtoDataName = name;
       else
          coutE(ObjectHandling) << "dataset "<<name<< " does not exist in workspace"<<endl;
@@ -195,31 +185,31 @@ public:
 
 
    /// get model PDF (return NULL if pdf has not been specified or does not exist)
-   RooAbsPdf * GetPdf() const { return (fWS) ? fWS->pdf(fPdfName.c_str()) : 0;   }
+   RooAbsPdf * GetPdf() const { return (GetWS()) ? GetWS()->pdf(fPdfName.c_str()) : 0;   }
 
    /// get RooArgSet containing the parameter of interest (return NULL if not existing) 
-   const RooArgSet * GetParametersOfInterest() const { return (fWS) ? fWS->set(fPOIName.c_str()) : 0; } 
+   const RooArgSet * GetParametersOfInterest() const { return (GetWS()) ? GetWS()->set(fPOIName.c_str()) : 0; }
 
    /// get RooArgSet containing the nuisance parameters (return NULL if not existing) 
-   const RooArgSet * GetNuisanceParameters() const { return (fWS) ? fWS->set(fNuisParamsName.c_str()) : 0; } 
+   const RooArgSet * GetNuisanceParameters() const { return (GetWS()) ? GetWS()->set(fNuisParamsName.c_str()) : 0; }
 
    /// get RooArgSet containing the constraint parameters (return NULL if not existing) 
-   const RooArgSet * GetConstraintParameters() const { return (fWS) ? fWS->set(fConstrParamsName.c_str()) : 0; } 
+   const RooArgSet * GetConstraintParameters() const { return (GetWS()) ? GetWS()->set(fConstrParamsName.c_str()) : 0; }
 
    /// get parameters prior pdf  (return NULL if not existing) 
-   RooAbsPdf * GetPriorPdf() const { return (fWS) ? fWS->pdf(fPriorPdfName.c_str()) : 0; } 
+   RooAbsPdf * GetPriorPdf() const { return (GetWS()) ? GetWS()->pdf(fPriorPdfName.c_str()) : 0; }
 
    /// get RooArgSet for observables  (return NULL if not existing)
-   const RooArgSet * GetObservables() const { return (fWS) ? fWS->set(fObservablesName.c_str()) : 0; } 
+   const RooArgSet * GetObservables() const { return (GetWS()) ? GetWS()->set(fObservablesName.c_str()) : 0; }
 
    /// get RooArgSet for conditional observables  (return NULL if not existing)
-   const RooArgSet * GetConditionalObservables() const { return (fWS) ? fWS->set(fConditionalObsName.c_str()) : 0; } 
+   const RooArgSet * GetConditionalObservables() const { return (GetWS()) ? GetWS()->set(fConditionalObsName.c_str()) : 0; }
 
    /// get RooArgSet for global observables  (return NULL if not existing)
-   const RooArgSet * GetGlobalObservables() const { return (fWS) ? fWS->set(fGlobalObsName.c_str()) : 0; }
+   const RooArgSet * GetGlobalObservables() const { return (GetWS()) ? GetWS()->set(fGlobalObsName.c_str()) : 0; }
 
    /// get Proto data set (return NULL if not existing) 
-   RooAbsData * GetProtoData()  const {  return (fWS) ? fWS->data(fProtoDataName.c_str()) : 0; } 
+   RooAbsData * GetProtoData()  const {  return (GetWS()) ? GetWS()->data(fProtoDataName.c_str()) : 0; }
 
    /// get RooArgSet for parameters for a particular hypothesis  (return NULL if not existing) 
    const RooArgSet * GetSnapshot() const;
@@ -227,9 +217,14 @@ public:
    void LoadSnapshot() const;
  
    RooWorkspace * GetWS() const;
+   /// alias for GetWS()
+   RooWorkspace * GetWorkspace() const { return GetWS(); }
 
    /// guesses Observables and ParametersOfInterest if not already set
    void GuessObsAndNuisance(const RooAbsData& data);
+
+   // overload the print method
+   virtual void Print(Option_t* option = "") const;
 
 protected:
    // helper functions to define a set in the WS
@@ -241,10 +236,7 @@ protected:
    // internal function to import data in WS
    void ImportDataInWS(RooAbsData & data); 
     
-   mutable RooWorkspace* fWS;    //!  a workspace that owns all the components to be used by the calculator (transient member)
    TRef fRefWS;  // WS reference used in the file
-
-   //Bool_t fOwnsWorkspace;
 
    std::string fWSName;  // name of the WS
 
@@ -264,7 +256,7 @@ protected:
     
    std::string fObservablesName; // name for RooArgSet specifying observable parameters. 
     
-   ClassDef(ModelConfig,3) // A class that holds configuration information for a model using a workspace as a store
+   ClassDef(ModelConfig,4) // A class that holds configuration information for a model using a workspace as a store
       
 };
 

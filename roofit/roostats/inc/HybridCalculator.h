@@ -1,5 +1,5 @@
 // @(#)root/roostats:$Id$
-// Author: Kyle Cranmer, Sven Kreiss   23/05/10
+// Author: Sven Kreiss, Kyle Cranmer   Nov 2010
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -11,112 +11,100 @@
 #ifndef ROOSTATS_HybridCalculator
 #define ROOSTATS_HybridCalculator
 
+//_________________________________________________
+/*
+BEGIN_HTML
+<p>
+This class extends the HybridCalculator with Importance Sampling. The use
+of ToyMCSampler as the TestStatSampler is assumed.
+</p>
+END_HTML
+*/
+//
 
-#ifndef ROOT_Rtypes
-#include "Rtypes.h" // necessary for TNamed
+
+
+#ifndef ROOSTATS_HybridCalculatorGeneric
+#include "RooStats/HybridCalculatorGeneric.h"
 #endif
 
-#ifndef ROOSTATS_HypoTestCalculator
-#include "RooStats/HypoTestCalculator.h"
-#endif
-
-#ifndef ROOSTATS_ModelConfig
-#include "RooStats/ModelConfig.h"
-#endif
-
-#ifndef ROOSTATS_TestStatistic
-#include "RooStats/TestStatistic.h"
-#endif
-
-#ifndef ROOSTATS_TestStatSampler
-#include "RooStats/TestStatSampler.h"
-#endif
-
-#ifndef ROOSTATS_SamplingDistribution
-#include "RooStats/SamplingDistribution.h"
-#endif
-
-#ifndef ROOSTATS_HypoTestResult
-#include "RooStats/HypoTestResult.h"
+#ifndef ROOSTATS_ToyMCSampler
+#include "RooStats/ToyMCSampler.h"
 #endif
 
 namespace RooStats {
 
-   class HybridCalculator: public HypoTestCalculator {
+   class HybridCalculator: public HybridCalculatorGeneric {
 
    public:
       HybridCalculator(
-			RooAbsData &data,
-			ModelConfig &altModel,
-			ModelConfig &nullModel,
-			TestStatSampler* sampler=0
-      );
-
-
-      ~HybridCalculator();
-
-
-   public:
-
-      /// inherited methods from HypoTestCalculator interface
-      virtual HypoTestResult* GetHypoTest() const;
-
-      // set the model for the null hypothesis (only B)
-      virtual void SetNullModel(const ModelConfig &nullModel) { fNullModel = nullModel; }
-      // set the model for the alternate hypothesis  (S+B)
-      virtual void SetAlternateModel(const ModelConfig &altModel) { fAltModel = altModel; }
-      // Set the DataSet
-      virtual void SetData(RooAbsData &data) { fData = data; }
-
-      // Override the distribution used for marginalizing nuisance parameters that is infered from ModelConfig
-      virtual void ForcePriorNuisanceNull(RooAbsPdf& priorNuisance) { fPriorNuisanceNull = &priorNuisance; }
-      virtual void ForcePriorNuisanceAlt(RooAbsPdf& priorNuisance) { fPriorNuisanceAlt = &priorNuisance; }
-
-      // Returns instance of TestStatSampler. Use to change properties of
-      // TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
-      TestStatSampler* GetTestStatSampler(void) { return fTestStatSampler; }
-
-      // Enable adaptive sampling (for use with toymcsampler).
-      // A value different from 0.0 enables adaptive sampling.
-      void SetAdaptiveSampling(Double_t toysInTails = 0.0) { fToysInTails = toysInTails; }
-
-      // Wrapper for ToyMCSampler function when adaptive sampling is used.
-      // See doc in toymcsampler.
-      void SetMaxToys(Double_t t);
-
-      // sets importance density and snapshot (optional)
-      void SetNullImportanceDensity(RooAbsPdf *p, RooArgSet *s = NULL) {
-         fNullImportanceDensity = p;
-         fNullImportanceSnapshot = s;
+                        const RooAbsData &data,
+                        const ModelConfig &altModel,
+                        const ModelConfig &nullModel,
+                        TestStatSampler* sampler=0
+      ) :
+         HybridCalculatorGeneric(data, altModel, nullModel, sampler),
+         fNullImportanceDensity(NULL),
+         fNullImportanceSnapshot(NULL),
+         fAltImportanceDensity(NULL),
+         fAltImportanceSnapshot(NULL),
+         fNToysNull(0),
+         fNToysAlt(0),
+         fNToysNullTail(0),
+         fNToysAltTail(0)
+      {
       }
 
-   private:
-      void SetupSampler(ModelConfig& model) const;
-      void SetAdaptiveLimits(Double_t obsTestStat, Bool_t forNull) const;
-      SamplingDistribution* GenerateSamplingDistribution(
-         ModelConfig *thisModel,
-         double obsTestStat,
-         RooAbsPdf *impDens=NULL,
-         RooArgSet *impSnapshot=NULL
-      ) const;
+      ~HybridCalculator() {
+         if(fNullImportanceSnapshot) delete fNullImportanceSnapshot;
+         if(fAltImportanceSnapshot) delete fAltImportanceSnapshot;
+      }
 
-      ModelConfig &fAltModel;
-      ModelConfig &fNullModel;
-      RooAbsData &fData;
-      RooAbsPdf *fPriorNuisanceNull;
-      RooAbsPdf *fPriorNuisanceAlt;
-      TestStatSampler* fTestStatSampler;
-      TestStatSampler* fDefaultSampler;
-      TestStatistic* fDefaultTestStat;
+      // sets importance density and snapshot (optional)
+      void SetNullImportanceDensity(RooAbsPdf *p, const RooArgSet *s = NULL) {
+         fNullImportanceDensity = p;
+         if(s) fNullImportanceSnapshot = (RooArgSet*)s->snapshot();
+         else fNullImportanceSnapshot = NULL;
+      }
 
-      Double_t fToysInTails; // a value different from 0.0 enables adaptive sampling
+      // sets importance density and snapshot (optional)
+      void SetAltImportanceDensity(RooAbsPdf *p, const RooArgSet *s = NULL) {
+         fAltImportanceDensity = p;
+         if(s) fAltImportanceSnapshot = (RooArgSet*)s->snapshot();
+         else fAltImportanceSnapshot = NULL;
+      }
 
-      RooAbsPdf *fNullImportanceDensity;
-      RooArgSet *fNullImportanceSnapshot;
+      // set number of toys
+      void SetToys(int toysNull, int toysAlt) { fNToysNull = toysNull; fNToysAlt = toysAlt; }
+
+      // set least number of toys in tails
+      void SetNToysInTails(int toysNull, int toysAlt) { fNToysNullTail = toysNull; fNToysAltTail = toysAlt; }
 
    protected:
-   ClassDef(HybridCalculator,1)
-};
+      // configure TestStatSampler for the Null run
+      int PreNullHook(double obsTestStat) const;
+
+      // configure TestStatSampler for the Alt run
+      int PreAltHook(double obsTestStat) const;
+
+
+   private:
+      RooAbsPdf *fNullImportanceDensity;
+      const RooArgSet *fNullImportanceSnapshot;
+      RooAbsPdf *fAltImportanceDensity;
+      const RooArgSet *fAltImportanceSnapshot;
+
+      // different number of toys for null and alt
+      int fNToysNull;
+      int fNToysAlt;
+
+      // adaptive sampling
+      int fNToysNullTail;
+      int fNToysAltTail;
+
+      protected:
+      ClassDef(HybridCalculator,1)
+   };
 }
 
 #endif

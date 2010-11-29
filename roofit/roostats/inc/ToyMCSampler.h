@@ -80,6 +80,7 @@ class ToyMCSampler: public TestStatSampler {
 
          fImportanceDensity = NULL;
          fImportanceSnapshot = NULL;
+         fProtoData = NULL;
 
          fProofConfig = NULL;
       }
@@ -105,6 +106,7 @@ class ToyMCSampler: public TestStatSampler {
 
          fImportanceDensity = NULL;
          fImportanceSnapshot = NULL;
+         fProtoData = NULL;
 
          fProofConfig = NULL;
       }
@@ -228,6 +230,8 @@ class ToyMCSampler: public TestStatSampler {
       // calling with argument or NULL deactivates proof
       void SetProofConfig(ProofConfig *pc = NULL) { fProofConfig = pc; }
 
+      void SetProtoData(const RooDataSet* d) { fProtoData = d; }
+
    protected:
 
       // helper for GenerateToyData
@@ -262,6 +266,8 @@ class ToyMCSampler: public TestStatSampler {
 
       RooAbsPdf *fImportanceDensity; // in dev
       const RooArgSet *fImportanceSnapshot; // in dev
+
+      const RooDataSet *fProtoData; // in dev
 
       ProofConfig *fProofConfig;   //!
 

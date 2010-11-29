@@ -55,7 +55,7 @@ class ProofConfig {
 
    protected:
       RooWorkspace& fWorkspace;   // workspace that is to be used with the RooStudyManager
-      Int_t fNExperiments;        // number of experiments. This is sometimes called "events" in proof.
+      Int_t fNExperiments;        // number of experiments. This is sometimes called "events" in proof; "experiments" in RooStudyManager.
       const char* fHost;          // Proof hostname. Use empty string (ie "") for proof-lite. Can also handle options like "workers=2" to run on two nodes.
 
    protected:

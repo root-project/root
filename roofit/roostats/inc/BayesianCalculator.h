@@ -113,6 +113,7 @@ namespace RooStats {
       // set the integration type (possible type are) 
       // 1D: adaptive, gauss, nonadaptive
       // multidim: adaptive, vegas, miser, plain. These last 3 are based on MC integration
+      // if type = 0 use default specified via class IntegratorMultiDimOptions::SetDefaultIntegrator
       void SetIntegrationType(const char * type); 
 
       // return the mode (most probable value of the posterior function) 

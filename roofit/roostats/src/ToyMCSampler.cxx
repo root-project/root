@@ -180,11 +180,13 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistribution(RooArgSet& paramPoin
    if(fToysInTails) {
       fToysInTails = 0;
       oocoutW((TObject*)NULL, InputArguments)
-         << "Adaptive sampling in ToyMCSampler is not supported for parallel runs. "
-         << "When run with HybridCalculator, adaptive sampling will still be done using "
-         << "the HybridCalculator's fall-back method."
+         << "Adaptive sampling in ToyMCSampler is not supported for parallel runs."
          << endl;
    }
+
+   // adjust number of toys on the slaves to keep the total number of toys constant
+   Double_t totToys = fNToys;
+   fNToys /= fProofConfig->GetNExperiments();
 
    // create the study instance for parallel processing
    ToyMCStudy toymcstudy;
@@ -196,6 +198,10 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistribution(RooArgSet& paramPoin
 
    SamplingDistribution *result = new SamplingDistribution(GetSamplingDistName().c_str(), GetSamplingDistName().c_str());
    toymcstudy.merge(*result);
+
+   // reset the number of toys
+   fNToys = totToys;
+
    return result;
 }
 
@@ -281,6 +287,12 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistributionSingleWorker(RooArgSe
          value = fTestStat->Evaluate(*toydata, *fNullPOI);
          weight = -1.;
          delete toydata;
+      }
+
+      // check for nan
+      if(value != value) {
+         oocoutW((TObject*)NULL, Generation) << "skip: " << value << ", " << weight << endl;
+         continue;
       }
 
       // add results
@@ -385,6 +397,11 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
    // It takes into account whether the number of events is given explicitly
    // or whether it should use the expected number of events. It also takes
    // into account the option to generate a binned data set (ie RooDataHist).
+
+   if(fProtoData) {
+      protoData = fProtoData;
+      forceEvents = protoData->numEntries();
+   }
 
    RooAbsData *data = NULL;
    int events = forceEvents;

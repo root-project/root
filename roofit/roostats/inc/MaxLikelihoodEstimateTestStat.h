@@ -40,16 +40,22 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
 
    public:
 
-    //__________________________________
-  MaxLikelihoodEstimateTestStat(RooAbsPdf& pdf, RooRealVar& parameter) :
-    fPdf(pdf),fParameter(parameter), fUpperLimit(true)
-
-    {
+   //__________________________________
+   MaxLikelihoodEstimateTestStat() :
+   fPdf(NULL),fParameter(NULL), fUpperLimit(true)
+   {
+     // constructor
+     //      fPdf = pdf;
+     //      fParameter = parameter;
+   }
+   //__________________________________
+   MaxLikelihoodEstimateTestStat(RooAbsPdf& pdf, RooRealVar& parameter) :
+   fPdf(&pdf),fParameter(&parameter), fUpperLimit(true)
+   {
       // constructor
       //      fPdf = pdf;
       //      fParameter = parameter;
-
-    }
+   }
 
   //______________________________
   virtual Double_t Evaluate(RooAbsData& data, RooArgSet& /*nullPOI*/) {
@@ -67,12 +73,12 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
     return ret;
     */
 
-    RooAbsReal* nll = fPdf.createNLL(data, RooFit::CloneData(false));
+    RooAbsReal* nll = fPdf->createNLL(data, RooFit::CloneData(false));
     RooAbsReal* profile = nll->createProfile(RooArgSet());
     profile->getVal();
     RooArgSet* vars = profile->getVariables();
     RooMsgService::instance().setGlobalKillBelow(msglevel);
-    double ret = vars->getRealValue(fParameter.GetName());
+    double ret = vars->getRealValue(fParameter->GetName());
     delete vars;
     delete nll;
     delete profile;
@@ -81,7 +87,7 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
   }
   
   virtual const TString GetVarName() const { 
-    TString varName = Form("Maximum Likelihood Estimate of %s",fParameter.GetName());
+    TString varName = Form("Maximum Likelihood Estimate of %s",fParameter->GetName());
     return varName;
   }
 
@@ -91,8 +97,8 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
 
 
    private:
-      RooAbsPdf& fPdf;
-      RooRealVar& fParameter;
+      RooAbsPdf *fPdf;
+      RooRealVar *fParameter;
       bool fUpperLimit;
 
    protected:

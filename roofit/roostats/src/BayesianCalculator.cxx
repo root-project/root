@@ -65,26 +65,6 @@ namespace RooStats {
 #endif
 
 
-ROOT::Math::IntegrationMultiDim::Type GetMultiDimIntegrationType(const char * type) { 
-   // function to return the type of multi-dim integrator from the given string
-   
-   ROOT::Math::IntegrationMultiDim::Type integType = ROOT::Math::IntegrationMultiDim::kADAPTIVE; 
-   if (type != 0) { 
-      TString integrationType(type);  integrationType.ToUpper(); 
-      if (integrationType.Contains("VEGAS"))   integType =  ROOT::Math::IntegrationMultiDim::kVEGAS; 
-      if (integrationType.Contains("MISER"))   integType =  ROOT::Math::IntegrationMultiDim::kMISER; 
-      if (integrationType.Contains("PLAIN"))   integType =  ROOT::Math::IntegrationMultiDim::kPLAIN; 
-   }
-#ifndef R__HAS_MATHMORE
-   if (integType != ROOT::Math::IntegrationMultiDim::kADAPTIVE) { 
-      oocoutI((TObject*)0,InputArguments) << "BayesianCalculator:  MathMore is not present - can use only adaptive multi-dim integration " << std::endl;
-      integType =  ROOT::Math::IntegrationMultiDim::kADAPTIVE;
-   }
-#endif
-   return integType; 
-}
-   
-
 
 
 struct  LikelihoodFunction { 
@@ -219,14 +199,16 @@ public:
          fXmax[i] = var.getMax();
       }
       if (fXmin.size() == 1) { // 1D case  
-         fIntegratorOneDim = std::auto_ptr<ROOT::Math::Integrator>(new ROOT::Math::Integrator() );
+         fIntegratorOneDim = std::auto_ptr<ROOT::Math::Integrator>(
+            new ROOT::Math::Integrator(ROOT::Math::IntegratorOneDim::GetType(integType) ) );
          fIntegratorOneDim->SetFunction(fLikelihood);
          // interested only in relative tolerance
          fIntegratorOneDim->SetAbsTolerance(1.E-300);
       }
       else if (fXmin.size() > 1) { // multiDim case          
          fIntegratorMultiDim = 
-            std::auto_ptr<ROOT::Math::IntegratorMultiDim>(new ROOT::Math::IntegratorMultiDim(GetMultiDimIntegrationType(integType) ) );
+            std::auto_ptr<ROOT::Math::IntegratorMultiDim>(
+               new ROOT::Math::IntegratorMultiDim(ROOT::Math::IntegratorMultiDim::GetType(integType) ) );
          fIntegratorMultiDim->SetFunction(fLikelihood, fXmin.size());
          fIntegratorMultiDim->SetAbsTolerance(1.E-300);
       }
@@ -684,7 +666,7 @@ void BayesianCalculator::ComputeIntervalFromCdf(double lowerCutOff, double upper
    // compute the integral of the exp(-nll) function
    LikelihoodFunction fll(functor_nll, fNLLMin);
       
-   ROOT::Math::IntegratorMultiDim ig(GetMultiDimIntegrationType(fIntegrationType)); 
+   ROOT::Math::IntegratorMultiDim ig(ROOT::Math::IntegratorMultiDim::GetType(fIntegrationType)); 
    ig.SetFunction(fll,bindParams.getSize()); 
    
    std::vector<double> pmin(bindParams.getSize());

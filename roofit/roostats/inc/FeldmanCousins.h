@@ -100,6 +100,10 @@ namespace RooStats {
       }
       void CreateConfBelt(bool flag=true){fCreateBelt = flag;}
 
+      // Returns instance of TestStatSampler. Use to change properties of
+      // TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
+      TestStatSampler* GetTestStatSampler() const;
+
       
    private:
 

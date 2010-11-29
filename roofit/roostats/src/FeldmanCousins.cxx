@@ -119,6 +119,13 @@ void FeldmanCousins::SetModel(const ModelConfig & model) {
 }
 
 //_______________________________________________________
+TestStatSampler*  FeldmanCousins::GetTestStatSampler() const{
+  if(!fTestStatSampler)
+    this->CreateTestStatSampler();
+  return fTestStatSampler; 
+}
+
+//_______________________________________________________
 void FeldmanCousins::CreateTestStatSampler() const{
   // specify the Test Statistic and create a ToyMC test statistic sampler
 
@@ -235,7 +242,8 @@ ConfInterval* FeldmanCousins::GetInterval() const {
   fModel.GuessObsAndNuisance(fData);
   
   // create the test statistic sampler (private data member fTestStatSampler)
-  this->CreateTestStatSampler();
+  if(!fTestStatSampler)
+    this->CreateTestStatSampler();
 
   fTestStatSampler->SetObservables(*fModel.GetObservables());
 
