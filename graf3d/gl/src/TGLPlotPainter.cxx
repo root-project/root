@@ -142,7 +142,7 @@ void TGLPlotPainter::Paint()
 
    int vp[4] = {};
    glGetIntegerv(GL_VIEWPORT, vp);
-      
+
    //GL pad painter does not use depth test,
    //so, switch it on now.
    glDepthMask(GL_TRUE);//[0
@@ -154,7 +154,7 @@ void TGLPlotPainter::Paint()
    //Save projection and modelview matrix, used by glpad.
    SaveProjectionMatrix();
    SaveModelviewMatrix();
-      
+
    //glOrtho etc.
    fCamera->SetCamera();
    //
@@ -170,7 +170,7 @@ void TGLPlotPainter::Paint()
    //Set transformation - shift and rotate the scene.
    fCamera->Apply(fPadPhi, fPadTheta);
    fBackBox.FindFrontPoint();
-   
+
    if (gVirtualPS)
       PrintPlot();
 
@@ -190,9 +190,9 @@ void TGLPlotPainter::Paint()
    //GL pad painter does not use depth test, so,
    //switch it off now.
    glDepthMask(GL_FALSE);//0]
-   
+
    if (fCoord && fCoord->GetCoordType() == kGLCartesian) {
-   
+
       Bool_t old = gPad->TestBit(TGraph::kClipFrame);
       if (!old)
          gPad->SetBit(TGraph::kClipFrame);
@@ -200,7 +200,7 @@ void TGLPlotPainter::Paint()
       Rgl::DrawAxes(fBackBox.GetFrontPoint(), viewport, fBackBox.Get2DBox(), fCoord, fXAxis, fYAxis, fZAxis);
       if (fDrawPalette)
          DrawPaletteAxis();
-         
+
       if (!old)
          gPad->ResetBit(TGraph::kClipFrame);
    } else if(fDrawPalette)
@@ -213,14 +213,22 @@ void TGLPlotPainter::PrintPlot()const
 {
    // Generate PS using gl2ps
    using namespace std;
-   
+
    TGLOutput::StartEmbeddedPS();
+
    FILE *output = fopen(gVirtualPS->GetName(), "a");
+   if (!output) {
+      Error("TGLPlotPainter::PrintPlot", "Could not (re)open ps file for GL output");
+      //As soon as we started embedded ps, we have to close it before exiting.
+      TGLOutput::CloseEmbeddedPS();
+      return;
+   }
+
    Int_t gl2psFormat = GL2PS_EPS;
    Int_t gl2psSort   = GL2PS_BSP_SORT;
    Int_t buffsize    = 0;
    Int_t state       = GL2PS_OVERFLOW;
-   GLint gl2psoption = GL2PS_USE_CURRENT_VIEWPORT | 
+   GLint gl2psoption = GL2PS_USE_CURRENT_VIEWPORT |
                        GL2PS_SILENT               |
                        GL2PS_BEST_ROOT            |
                        GL2PS_OCCLUSION_CULL       |
@@ -251,33 +259,33 @@ Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
       glPushMatrix();
       glMatrixMode(GL_MODELVIEW);//[2
       glPushMatrix();
-   
+
       fSelectionPass = kTRUE;
       fCamera->SetCamera();
-      
+
       glDepthMask(GL_TRUE);
       glClearColor(0.f, 0.f, 0.f, 0.f);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      
+
       fCamera->Apply(fPadPhi, fPadTheta);
       DrawPlot();
-      
+
       glFinish();
       //fSelection.ReadColorBuffer(fCamera->GetWidth(), fCamera->GetHeight());
       fSelection.ReadColorBuffer(fCamera->GetX(), fCamera->GetY(), fCamera->GetWidth(), fCamera->GetHeight());
       fSelectionPass   = kFALSE;
       fUpdateSelection = kFALSE;
-      
+
       glDepthMask(GL_FALSE);
       glDisable(GL_DEPTH_TEST);
-      
+
       //Restore projection and modelview matrices.
       glMatrixMode(GL_PROJECTION);//1]
       glPopMatrix();
       glMatrixMode(GL_MODELVIEW);//2]
       glPopMatrix();
    }
-   
+
    //Convert from window top-bottom into gl bottom-top.
    px -= Int_t(gPad->GetXlowNDC() * gPad->GetWw());
    py -= Int_t(gPad->GetWh() - gPad->YtoAbsPixel(gPad->GetY1()));
