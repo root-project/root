@@ -651,7 +651,7 @@ static TStreamerInfo *R__GenerateTClassForPair(const string &fname, const string
    // Generate a TStreamerInfo for a pair<fname,sname>
    // This TStreamerInfo is then used as if it was read from a file to generate
    // and emulated TClass.
-
+   
    TStreamerInfo *i = (TStreamerInfo*)TClass::GetClass("pair<const int,int>")->GetStreamerInfo()->Clone();
    std::string pname = "pair<"+fname+","+sname;
    pname += (pname[pname.length()-1]=='>') ? " >" : ">";
@@ -659,9 +659,10 @@ static TStreamerInfo *R__GenerateTClassForPair(const string &fname, const string
    i->SetClass(0);
    i->GetElements()->Delete();
    TStreamerElement *fel = R__CreateEmulatedElement("first", fname.c_str(), 0);
-   i->GetElements()->Add( fel );
    Int_t size = 0;
    if (fel) {
+      i->GetElements()->Add( fel );
+      
       size = fel->GetSize();
       Int_t sp = sizeof(void *);
 #if defined(R__SGI64)
@@ -669,8 +670,17 @@ static TStreamerInfo *R__GenerateTClassForPair(const string &fname, const string
 #endif
       //align the non-basic data types (required on alpha and IRIX!!)
       if (size%sp != 0) size = size - size%sp + sp;
+   } else {
+      delete i;
+      return 0;
    }
-   i->GetElements()->Add( R__CreateEmulatedElement("second", sname.c_str(), size) );
+   TStreamerElement *second = R__CreateEmulatedElement("second", sname.c_str(), size);
+   if (second) {
+      i->GetElements()->Add( second );
+   } else {
+      delete i;
+      return 0;
+   }
    Int_t oldlevel = gErrorIgnoreLevel;
    // Hide the warning about the missing pair dictionary.
    gErrorIgnoreLevel = kError;
