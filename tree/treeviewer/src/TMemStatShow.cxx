@@ -195,7 +195,10 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    printf("TMemStat::Show info: you are running on a machine with %d free MBytes of memory\n",nfree);
    Long64_t nfreebytes = 100000*Long64_t(nfree); //use only 10% of the memory available
    if (fgAddressN <=0) fgAddressN = nfreebytes;
-   printf("TMemStatShow::Show will analyze only the first %lld bytes in its first pass\n",nfreebytes);
+   Long64_t ivmin = (Long64_t)gT->GetMinimum("pos");
+   Long64_t ivmax = (Long64_t)gT->GetMaximum("pos");
+   if (ivmax-ivmin > fgAddressN) ivmax = ivmin+fgAddressN;
+   printf("TMemStatShow::Show will analyze only %lld bytes in its first pass\n",ivmax);
    
    
    //initialize statics
@@ -204,15 +207,14 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
       
    Long64_t nentries = gT->GetEntries();
    if (fgEntryN > 0 && nentries > fgEntryN) nentries = fgEntryN;
+   Long64_t ne = nfreebytes/32;
+   if (ne < nentries) nentries = ne;
    gT->SetEstimate(nentries+10);
-   Long64_t nsel;
-   if (fgAddressN <= 0) {
-      nsel = gT->Draw("pos:nbytes:time:btid","pos>0","goff",nentries,fgEntryFirst);
-   } else {
-      nsel = gT->Draw("pos:nbytes:time:btid",
-         TString::Format("pos>%g && pos<%g",Double_t(fgAddressFirst),Double_t(fgAddressFirst+fgAddressN)),
-         "goff",nentries,fgEntryFirst);
-   }
+   printf("sel: ivmin=%lld, ivmax=%lld, nentries=%lld\n",ivmin,ivmax,nentries);
+   Long64_t nsel = gT->Draw("pos:nbytes:time:btid",
+      TString::Format("pos>%g && pos<%g",Double_t(ivmin),Double_t(ivmax)),
+      "goff",nentries,fgEntryFirst);
+
    //now we compute the best binning for the histogram
    Int_t nbytes;
    Double_t pos;
@@ -220,8 +222,8 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    gV2 = gT->GetV2();
    gV3 = gT->GetV3();
    gV4 = gT->GetV4();
-   Long64_t ivmin = (Long64_t)TMath::MinElement(nsel,gV1);
-   Long64_t ivmax = (Long64_t)TMath::MaxElement(nsel,gV1);
+   ivmin = (Long64_t)TMath::MinElement(nsel,gV1);
+   ivmax = (Long64_t)TMath::MaxElement(nsel,gV1);
    Long64_t bw = 1000;
    Double_t dvv = (Double_t(ivmax) - Double_t(ivmin))/Double_t(bw);
    Long64_t nbins = Long64_t(dvv);
@@ -229,7 +231,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    ivmax = ivmin+bw*nbins;
    Long64_t nvm = Long64_t(ivmax-ivmin+1);
    printf("==>The data Tree contains %lld entries with addresses in range[%lld,%lld]\n",nsel,ivmin,ivmax);
-   Long64_t ne = (1000000*nfree-nvm*12)/32;
+   ne = (1000000*nfree-nvm*12)/32;
    if (ne < 0) return;    
    if (ne < nentries) {
       //we take only the first side of the allocations
