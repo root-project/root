@@ -33,16 +33,16 @@ ClassImp(TH2Poly)
 <center><h2>TH2Poly: 2D Histogram with Polygonal Bins</h2></center>
 
 <h3>Overview</h3>
-<tt>TH2Poly</tt> is a 2D Histogram class (TH2) that allowing to define polygonal
+<tt>TH2Poly</tt> is a 2D Histogram class (TH2) allowing to define polygonal
 bins of arbitary shape.
 <p>
 Each bin in the <tt>TH2Poly</tt> histogram is a <tt>TH2PolyBin</tt> object.
-<tt>TH2PolyBin</tt> is a very simple class that contains the vertices (stored
-as <tt>TGraph</tt>s and <tt>TMultiGraph</tt>s ) and contents of the polygonal
+<tt>TH2PolyBin</tt> is a very simple class containing the vertices (stored
+as <tt>TGraph</tt>s or <tt>TMultiGraph</tt>s ) and contents of the polygonal
 bin as well as several related functions.
 <p>
-Essentially, <tt>TH2Poly</tt> is a TList of <tt>TH2PolyBin</tt> objects
-together with methods to manipulate them.
+Essentially, a <tt>TH2Poly</tt> is a TList of <tt>TH2PolyBin</tt> objects
+with methods to manipulate them.
 <p>
 Bins are defined using one of the <tt>AddBin()</tt> methods. The bin definition
 should be done before filling.
@@ -60,13 +60,13 @@ not reconsidered when that location is binned later.
 If there are two overlapping bins, the first one in the list will be incremented
 by <tt>Fill()</tt>.
 <p>
-The histogram automatically extends its limits if a bin outside the
-histogram limits is added. For example, the default constructor (with no
-arguments) generates a histogram with zero width and height; but adding bins
-to it will extend it up to a proper size.
+The histogram may automatically extends its limits if a bin outside the
+histogram limits is added. This is done when the default constructor (with no
+arguments) is used. It generates a histogram with no limits along the X and Y
+axis. Adding bins to it will extend it up to a proper size.
 <p>
 <tt>TH2Poly</tt> implements a partitioning algorithm to speed up bins' filling.
-The partitioning algorithm divides the histogram into regions called‘cells.
+The partitioning algorithm divides the histogram into regions called cells.
 The bins that each cell intersects are recorded in an array of <tt>TList</tt>s.
 When a coordinate in the histogram is to be filled; the method (quickly) finds
 which cell the coordinate belongs.  It then only loops over the bins
@@ -110,14 +110,13 @@ class. It is implemented to speed up the filling of bins.
 <p>
 With the brute force approach, the filling is done in the following way:  An
 iterator loops over all bins in the <tt>TH2Poly</tt> and invokes the 
-method <tt>IsInside(),/t>.
-This method checks to see if the input location is in that bin. If the filling
-coordinate is inside, it increments the bin. Looping over all the bin is
+method <tt>IsInside()</tt> for each of them.
+This method checks if the input location is in that bin. If the filling
+coordinate is inside, the bin is filled. Looping over all the bin is
 very slow. 
 <p>
 The alternative is to divide the histogram into virtual rectangular regions
-called "cells". Each cell stores the pointers of the bins
-intersecting it. 
+called "cells". Each cell stores the pointers of the bins intersecting it. 
 When a coordinate is to be filled, the method finds which cell the coordinate
 falls into. Since the cells are rectangular, this can be done very quickly.
 It then only loops over the bins associated with that cell.
@@ -131,7 +130,7 @@ The number of partition cells per axis can be specified in the constructor.
 If it is not specified, the default value of 25 along each axis will be
 assigned. This value was chosen because it is small enough to avoid slowing
 down AddBin(), while being large enough to enhance Fill() by a considerable
-amount. Regardless of how it is initialized at the constructor, it can be
+amount. Regardless of how it is initialized at construction time, it can be
 changed later with the <tt>ChangePartition()</tt> method.
 <tt>ChangePartition()</tt> deletes the
 old partition matrix and generates a new one with the specified number of cells
