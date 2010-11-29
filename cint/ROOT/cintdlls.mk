@@ -234,6 +234,8 @@ $(CINTDLLDIRDLLS)/sys/types.h: $(CINTDLLDIRL)/posix/mktypes$(EXEEXT)
 	cp -f $(@:/sys/types.h=/systypes.h) $@
 endif
 
+$(CINTDLLDIRL)/posix/mktypes.c: $(ORDER_) $(CINTINCLUDES)
+
 $(CINTDLLDIRL)/posix/mktypes$(EXEEXT): $(CINTDLLDIRL)/posix/mktypes.c
 	$(MAKEDEP) -R -f$(patsubst %.c,%.d,$<) -Y -w 1000 -- $(CINTCFLAGS) -- $<
 	$(CC) $(OPT) $(CXXOUT)$@ $<
