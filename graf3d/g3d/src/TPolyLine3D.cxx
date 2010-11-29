@@ -221,7 +221,7 @@ TPolyLine3D& TPolyLine3D::operator=(const TPolyLine3D& pl)
       fP=pl.fP;
       fOption=pl.fOption;
       fLastPoint=pl.fLastPoint;
-   } 
+   }
    return *this;
 }
 
@@ -367,31 +367,39 @@ void TPolyLine3D::DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax
 
    pl3d = (TPolyLine3D *)outline->First();
 
-   pl3d->SetPoint(0, xmin, ymin, zmin);
-   pl3d->SetPoint(1, xmax, ymin, zmin);
-   pl3d->SetPoint(2, xmax, ymax, zmin);
-   pl3d->SetPoint(3, xmin, ymax, zmin);
+   if (pl3d) {
+      pl3d->SetPoint(0, xmin, ymin, zmin);
+      pl3d->SetPoint(1, xmax, ymin, zmin);
+      pl3d->SetPoint(2, xmax, ymax, zmin);
+      pl3d->SetPoint(3, xmin, ymax, zmin);
+   }
 
    pl3d = (TPolyLine3D *)outline->After(pl3d);
 
-   pl3d->SetPoint(0, xmax, ymin, zmin);
-   pl3d->SetPoint(1, xmax, ymin, zmax);
-   pl3d->SetPoint(2, xmax, ymax, zmax);
-   pl3d->SetPoint(3, xmax, ymax, zmin);
+   if (pl3d) {
+      pl3d->SetPoint(0, xmax, ymin, zmin);
+      pl3d->SetPoint(1, xmax, ymin, zmax);
+      pl3d->SetPoint(2, xmax, ymax, zmax);
+      pl3d->SetPoint(3, xmax, ymax, zmin);
+   }
 
    pl3d = (TPolyLine3D *)outline->After(pl3d);
 
-   pl3d->SetPoint(0, xmax, ymin, zmax);
-   pl3d->SetPoint(1, xmin, ymin, zmax);
-   pl3d->SetPoint(2, xmin, ymax, zmax);
-   pl3d->SetPoint(3, xmax, ymax, zmax);
+   if (pl3d) {
+      pl3d->SetPoint(0, xmax, ymin, zmax);
+      pl3d->SetPoint(1, xmin, ymin, zmax);
+      pl3d->SetPoint(2, xmin, ymax, zmax);
+      pl3d->SetPoint(3, xmax, ymax, zmax);
+   }
 
    pl3d = (TPolyLine3D *)outline->After(pl3d);
 
-   pl3d->SetPoint(0, xmin, ymin, zmax);
-   pl3d->SetPoint(1, xmin, ymin, zmin);
-   pl3d->SetPoint(2, xmin, ymax, zmin);
-   pl3d->SetPoint(3, xmin, ymax, zmax);
+   if (pl3d) {
+      pl3d->SetPoint(0, xmin, ymin, zmax);
+      pl3d->SetPoint(1, xmin, ymin, zmin);
+      pl3d->SetPoint(2, xmin, ymax, zmin);
+      pl3d->SetPoint(3, xmin, ymax, zmax);
+   }
 }
 
 
@@ -474,7 +482,7 @@ Int_t TPolyLine3D::Merge(TCollection *li)
 //______________________________________________________________________________
 void TPolyLine3D::Paint(Option_t * /* option */ )
 {
-   // Paint a TPolyLine3D. 
+   // Paint a TPolyLine3D.
 
    UInt_t i;
 
@@ -482,25 +490,25 @@ void TPolyLine3D::Paint(Option_t * /* option */ )
    if (Size() <= 0) return;
 
    static TBuffer3D buffer(TBuffer3DTypes::kLine);
-   
+
    // TPolyLine3D can only be described by filling the TBuffer3D 'tesselation'
    // parts - so there are no 'optional' sections - we just fill everything.
-   
+
    buffer.ClearSectionsValid();
 
    // Section kCore
    buffer.fID           = this;
-   buffer.fColor        = GetLineColor();   
-   buffer.fTransparency = 0;    
-   buffer.fLocalFrame   = kFALSE; 
+   buffer.fColor        = GetLineColor();
+   buffer.fTransparency = 0;
+   buffer.fLocalFrame   = kFALSE;
    buffer.SetSectionsValid(TBuffer3D::kCore);
-   
+
    // We fill kCore and kRawSizes on first pass and try with viewer
    Int_t reqSections = gPad->GetViewer3D()->AddObject(buffer);
    if (reqSections == TBuffer3D::kNone) {
       return;
    }
-   
+
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t nbPnts = Size();
       Int_t nbSegs = nbPnts-1;
@@ -517,7 +525,7 @@ void TPolyLine3D::Paint(Option_t * /* option */ )
       }
 
       // Transform points
-      if (gGeometry && !buffer.fLocalFrame) {   
+      if (gGeometry && !buffer.fLocalFrame) {
          Double_t dlocal[3];
          Double_t dmaster[3];
          for (UInt_t j=0; j<buffer.NbPnts(); j++) {
@@ -543,10 +551,10 @@ void TPolyLine3D::Paint(Option_t * /* option */ )
       }
 
       TAttLine::Modify();
-      
+
       buffer.SetSectionsValid(TBuffer3D::kRaw);
    }
-   
+
    gPad->GetViewer3D()->AddObject(buffer);
 }
 
