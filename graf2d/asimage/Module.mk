@@ -197,7 +197,7 @@ ifeq ($(PLATFORM),win32)
 		unset MAKEFLAGS; \
 		nmake FREETYPEDIRI=-I../../../../$(FREETYPEDIRI) \
                 -nologo -f libAfterImage.mak \
-		CFG=$(ASTEPBLD) NMAKECXXFLAGS="$(BLDCXXFLAGS) -I../../../../build/win -FIw32pragma.h /wd4244")
+		CFG=$(ASTEPBLD) NMAKECXXFLAGS="$(BLDCXXFLAGS) -I$(shell cygpath -w $(ROOT_SRCDIR))/build/win -FIw32pragma.h /wd4244")
 else
 		@(cd $(ASTEPDIRS); \
 		echo "*** Building libAfterImage ..." ; \
