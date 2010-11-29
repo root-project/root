@@ -5938,6 +5938,8 @@ void TPad::RecordLatex(const TObject *obj)
 //______________________________________________________________________________
 TVirtualPadPainter *TPad::GetPainter()
 {
-   //Get pad painter from TCanvas.
+   // Get pad painter from TCanvas.
+
+   if (!fCanvas) return 0;
    return fCanvas->GetCanvasPainter();
 }
