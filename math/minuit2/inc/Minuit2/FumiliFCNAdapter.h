@@ -116,7 +116,7 @@ void FumiliFCNAdapter<Function>::EvaluateAll( const std::vector<double> & v) {
  
    //loop on the data points
 
-
+   
    // assume for now least-square
    if (fFunc.Type() == Function::kLeastSquare) { 
 
@@ -158,7 +158,7 @@ void FumiliFCNAdapter<Function>::EvaluateAll( const std::vector<double> & v) {
       }
    }
    else { 
-      MN_ERROR_MSG("FumiliFCNAdapter: fit method is not supported");
+      MN_ERROR_MSG("FumiliFCNAdapter: type of fit method is not supported, it must be chi2 or log-likelihood");
    }
 }
       

@@ -375,7 +375,7 @@ double TFumiliMinimizer::EvaluateFCN(const double * x, double * grad) {
       }
    }
    else { 
-      Error("EvaluateFCN"," unsupported fit method type");
+      Error("EvaluateFCN"," type of fit method is not supported, it must be chi2 or log-likelihood");
    }
 
    // now TFumili excludes fixed prameter in second-derivative matrix
