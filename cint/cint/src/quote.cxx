@@ -388,8 +388,10 @@ G__value G__strip_singlequotation(char *string)
         G__CheckDBCS2ndByte(string[2]);
         result.obj.i=result.obj.i*0x100+string[2];
         result.typenum = G__defined_typename("wchar_t");
-        result.tagnum = G__newtype.tagnum[result.typenum];
-        result.type = G__newtype.type[result.typenum];
+        if (result.typenum>=0) {
+          result.tagnum = G__newtype.tagnum[result.typenum];
+          result.type = G__newtype.type[result.typenum];
+        }
       }
 #endif      
       break;
