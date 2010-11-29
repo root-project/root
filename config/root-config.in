@@ -67,10 +67,12 @@ fi
 if test "$platform" = "ios"; then
    newlib=
    rootglibs=
+   rootevelibs=
    rootlibs="-lRoota"
 else
    newlib="-lNew"
    rootglibs="-lGui"
+   rootevelibs="-lEG -lTreePlayer -lGeom -lGed -lRGL -lEve"
    rootlibs="-lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree \
 -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread"
    if test "$dicttype" = "reflex" || test "$dicttype" = "gccxml"; then
@@ -92,6 +94,12 @@ if test "$platform" = "win32"; then
               -include:_G__cpp_setupG__Matrix     \
               -include:_G__cpp_setupG__Physics"
    rootuglibs="-include:_G__cpp_setupG__Gui1"
+   rootuevelibs="-include:_G__cpp_setupG__EG         \
+                 -include:_G__cpp_setupG__TreePlayer \
+                 -include:_G__cpp_setupG__Geom1      \
+                 -include:_G__cpp_setupG__Ged        \
+                 -include:_G__cpp_setupG__GL         \
+                 -include:_G__cpp_setupG__Eve1"
 elif test "$platform" = "aix5"; then
    rootulibs="-Wl,-u,.G__cpp_setupG__Net        \
               -Wl,-u,.G__cpp_setupG__IO         \
@@ -106,6 +114,12 @@ elif test "$platform" = "aix5"; then
               -Wl,-u,.G__cpp_setupG__Matrix     \
               -Wl,-u,.G__cpp_setupG__Physics"
    rootuglibs="-Wl,-u,.G__cpp_setupG__Gui1"
+   rootuevelibs="-Wl,-u,.G__cpp_setupG__EG         \
+                 -Wl,-u,.G__cpp_setupG__TreePlayer \
+                 -Wl,-u,.G__cpp_setupG__Geom1      \
+                 -Wl,-u,.G__cpp_setupG__Ged        \
+                 -Wl,-u,.G__cpp_setupG__GL         \
+                 -Wl,-u,.G__cpp_setupG__Eve1"
 else
    rootulibs="-Wl,-u,_G__cpp_setupG__Net        \
               -Wl,-u,_G__cpp_setupG__IO         \
@@ -120,6 +134,12 @@ else
               -Wl,-u,_G__cpp_setupG__Matrix     \
               -Wl,-u,_G__cpp_setupG__Physics"
    rootuglibs="-Wl,-u,_G__cpp_setupG__Gui1"
+   rootuevelibs="-Wl,-u,_G__cpp_setupG__EG         \
+                 -Wl,-u,_G__cpp_setupG__TreePlayer \
+                 -Wl,-u,_G__cpp_setupG__Geom1      \
+                 -Wl,-u,_G__cpp_setupG__Ged        \
+                 -Wl,-u,_G__cpp_setupG__GL         \
+                 -Wl,-u,_G__cpp_setupG__Eve1"
 fi
 
 ### machine dependent settings ###
@@ -151,6 +171,7 @@ aix | aix5)
    auxlibs=
    forcelibs=$rootulibs
    forceglibs=$rootuglibs
+   forceevelibs=$rootuevelibs
    ;;
 aixgcc)
    # IBM AIX with g++
@@ -158,6 +179,7 @@ aixgcc)
    auxlibs=
    forcelibs=$rootulibs
    forceglibs=$rootuglibs
+   forceevelibs=$rootuevelibs
    ;;
 solaris)
    # Solaris
@@ -335,6 +357,7 @@ macosx)
       auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
       forcelibs=$rootulibs
       forceglibs=$rootuglibs
+      forceevelibs=$rootuevelibs
    else
       auxcflags="-m32"
       auxldflags="-m32"
@@ -362,24 +385,6 @@ macosx64)
    auxldflags="-m64"
    auxlibs="-lm -ldl"
    ;;
-macosxxlc)
-   # MacOS X with IBM xl compiler and possible fink (fink.sf.net)
-   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
-   # cannot find the one linked to libGraf if relocated after built
-   if [ $macosx_minor -le 4 ]; then
-      rootlibs="$rootlibs -lfreetype"
-   fi
-   if [ $macosx_minor -le 3 ]; then
-      finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
-      auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
-      auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
-      forcelibs=$rootulibs
-      forceglibs=$rootuglibs
-   else
-      auxcflags=
-      auxlibs="-lm -ldl"
-   fi
-   ;;
 ios*)
    auxcflags="-m32"
    auxldflags="-m32"
@@ -394,7 +399,7 @@ win32)
    # Win32
    auxcflags="-MD"
    if test "x@winrtdebug@" = "xyes"; then
-	  auxcflags="-MDd"
+      auxcflags="-MDd"
    fi
    VC_MAJOR=`unset VS_UNICODE_OUTPUT; cl.exe 2>&1 | awk '{ if (NR==1) print $(NF-2) }' | cut -d'.' -f1`
    if test "$VC_MAJOR" != "" && test $VC_MAJOR -gt 13; then
@@ -405,6 +410,7 @@ win32)
    auxlibs=
    forcelibs=$rootulibs
    forceglibs=$rootuglibs
+   forceevelibs=$rootuevelibs
    ;;
 win32gcc)
    # Win32 with cygwin gcc
@@ -412,6 +418,7 @@ win32gcc)
    auxlibs=
    forcelibs=$rootulibs
    forceglibs=$rootuglibs
+   forceevelibs=$rootuevelibs
    ;;
 *)
    echo "root-config: \"$arch\" invalid architecture"
@@ -442,8 +449,8 @@ macosx*)
             auxcflags="-D_REENTRANT -pthread $auxcflags"
             auxlibs="-pthread $auxlibs"
          else
-	    auxcflags="-D_REENTRANT $auxcflags"
-	    auxlibs="-lpthread $auxlibs"
+            auxcflags="-D_REENTRANT $auxcflags"
+            auxlibs="-lpthread $auxlibs"
          fi
       fi
       if test "x$f" = "xrpath" ; then
@@ -466,8 +473,8 @@ win32)
 *)
    for f in $features ; do
       if test "x$f" = "xthread" ; then
-	 auxcflags="-D_REENTRANT $auxcflags"
-	 auxlibs="-lpthread $auxlibs"
+         auxcflags="-D_REENTRANT $auxcflags"
+         auxlibs="-lpthread $auxlibs"
       fi
    done
    ;;
@@ -490,6 +497,7 @@ exec_prefix=${prefix}
 exec_prefix_set=no
 new_set=no
 libsout=no
+glibsout=no
 noauxlibs=no
 noauxcflags=no
 noldflags=no
@@ -497,10 +505,10 @@ noldflags=no
 usage="\
 Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version]\
  [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs]\
- [--glibs] [--bindir] [--libdir] [--incdir] [--etcdir] [--noauxcflags]\
- [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--platform]\
- [--dicttype] [--config] [--features] [--svn-revision] [--python-version]\
- [--cc] [--cxx] [--f77] [--ld ] [--help]"
+ [--glibs] [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir]\
+ [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch]\
+ [--platform] [--dicttype] [--config] [--features] [--svn-revision]\
+ [--python-version] [--cc] [--cxx] [--f77] [--ld ] [--help]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
@@ -636,10 +644,10 @@ while test $# -gt 0; do
       ;;
     --libs)
       ### Output regular ROOT libraries.  If the user said --glibs --libs,
-      ### We've already output the libraries, so we skip this section
+      ### we've already output the libraries, so we skip this section
       if test "x$libsout" = "xyes" ; then
-	 shift
-	 continue
+         shift
+         continue
       fi
       ### Set the flag
       libsout="yes"
@@ -660,17 +668,25 @@ while test $# -gt 0; do
          done
       else
          if test "x$noldflags" = "xno" ; then
-	    out="$out -L${libdir}"
-	 fi
+            out="$out -L${libdir}"
+         fi
       fi
       if test "x$noauxlibs" = "xyes" ; then
-	 out="$out $forcelibs $libs"
+         out="$out $forcelibs $libs"
       else
-	 out="$out $forcelibs $libs ${auxlibs}"
+         out="$out $forcelibs $libs ${auxlibs}"
       fi
       ;;
     --glibs)
-      ### Output graphics and normal libraries
+      ### Output graphics and normal libraries.
+      ### If the user said --evelibs --glibs,
+      ### we've already output the libraries, so we skip this section
+      if test "x$glibsout" = "xyes" ; then
+         shift
+         continue
+      fi
+      ### Set the flag
+      glibsout="yes"
       ### If the user said --libs --glibs, we don't need to add the
       ### regular ROOT libraries.
       glibsonly="no"
@@ -707,6 +723,62 @@ while test $# -gt 0; do
             out="$out $forcelibs $forceglibs $glibs"
          else
             out="$out $forcelibs $forceglibs $glibs ${auxlibs}"
+         fi
+      fi
+      ;;
+    --evelibs)
+      ### Output eve, graphics and normal libraries.
+      ### we've already output the libraries, so we skip this section
+      if test "x$evelibsout" = "xyes" ; then
+         shift
+         continue
+      fi
+      ### Set the flag
+      evelibsout="yes"
+      ### If the user said --libs --glibs --evelibs, we don't need to add the
+      ### regular and glib ROOT libraries.
+      evelibsonly="no"
+      eveandglibsonly="no"
+      if test "x$libsout" = "xno" ; then
+         ### Set the flag
+         libsout="yes"
+         if test "x$new_set" = "xyes" ; then
+            evelibs="${newlib} ${rootlibs} ${rootglibs} ${rootevelibs}"
+         else
+            evelibs="${rootlibs} ${rootglibs} ${rootevelibs}"
+         fi
+      elif test "x$glibsout" = "xno" ; then
+         ### Set the flag
+         glibsout="yes"
+         evelibs="${rootglibs} ${rootevelibs}"
+         eveandglibsonly="yes"
+      else
+         evelibs="${rootevelibs}"
+         evelibsonly="yes"
+      fi
+      ### If we're on a win32 system, we need to change the -l prefix
+      ### into a .lib suffix, and expand the paths to a backslash
+      ### separated path.
+      if test "$platform" = "win32"; then
+         nlibs=`echo $evelibs | sed "s@-l\([a-zA-Z0-9]*\)@${libdir}/lib\1.lib@g"`
+         evelibs=
+         for i in $nlibs; do
+            evelibs="$evelibs '`cygpath -w $i`'"
+         done
+      else
+        if test "x$noldflags" = "xno" ; then
+           out="$out -L${libdir}"
+        fi
+      fi
+      if test "x$evelibsonly" = "xyes" ; then
+         out="$out $forceevelibs $evelibs"
+      elif test "x$eveandglibsonly" = "xyes" ; then
+         out="$out $forceglibs $forceevelibs $evelibs"
+      else
+         if test "x$noauxlibs" = "xyes" ; then
+            out="$out $forcelibs $forceglibs $forceevelibs $evelibs"
+         else
+            out="$out $forcelibs $forceglibs $forceevelibs $evelibs ${auxlibs}"
          fi
       fi
       ;;
@@ -768,6 +840,7 @@ while test $# -gt 0; do
       echo "  --exec-prefix[=dir]   Print or set execution prefix"
       echo "  --libs                Print regular ROOT libraries"
       echo "  --glibs               Print regular + GUI ROOT libraries"
+      echo "  --evelibs             Print regular + GUI + Eve libraries"
       echo "  --cflags              Print compiler flags and header path"
       echo "  --ldflags             Print linker flags"
       echo "  --bindir              Print the executable directory"
