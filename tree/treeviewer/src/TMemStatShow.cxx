@@ -195,8 +195,10 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    printf("TMemStat::Show info: you are running on a machine with %d free MBytes of memory\n",nfree);
    Long64_t nfreebytes = 100000*Long64_t(nfree); //use only 10% of the memory available
    if (fgAddressN <=0) fgAddressN = nfreebytes;
-   Long64_t ivmin = (Long64_t)gT->GetMinimum("pos");
-   Long64_t ivmax = (Long64_t)gT->GetMaximum("pos");
+   Long64_t nsel = gT->Draw("pos","pos>0");
+   gV1 = gT->GetV1();
+   Long64_t ivmin = (Long64_t)TMath::MinElement(nsel,gV1);
+   Long64_t ivmax = (Long64_t)TMath::MaxElement(nsel,gV1);
    if (ivmax-ivmin > fgAddressN) ivmax = ivmin+fgAddressN;
    printf("TMemStatShow::Show will analyze only %lld bytes in its first pass\n",ivmax);
    
@@ -211,7 +213,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    if (ne < nentries) nentries = ne;
    gT->SetEstimate(nentries+10);
    printf("sel: ivmin=%lld, ivmax=%lld, nentries=%lld\n",ivmin,ivmax,nentries);
-   Long64_t nsel = gT->Draw("pos:nbytes:time:btid",
+   nsel = gT->Draw("pos:nbytes:time:btid",
       TString::Format("pos>%g && pos<%g",Double_t(ivmin),Double_t(ivmax)),
       "goff",nentries,fgEntryFirst);
 
