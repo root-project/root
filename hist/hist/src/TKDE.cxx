@@ -144,9 +144,12 @@ void TKDE::SetOptions(const Option_t* option, Double_t rho) {
    std::vector<std::string> voption(numOpt, "");
    for (std::vector<std::string>::iterator it = voption.begin(); it != voption.end() && !options.empty(); ++it) {
       size_t pos = options.find_last_of(';');
+      if (pos == std::string::npos) {
+         *it = options;
+         break;
+      }
       *it = options.substr(pos + 1);
       options = options.substr(0, pos);
-      if (pos == std::string::npos) break;
    }
    for (std::vector<std::string>::iterator it = voption.begin(); it != voption.end(); ++it) {
       size_t pos = (*it).find(':');
@@ -165,9 +168,12 @@ void TKDE::SetDrawOptions(const Option_t* option, TString& plotOpt, TString& dra
    std::vector<std::string> voption(numOpt, "");
    for (std::vector<std::string>::iterator it = voption.begin(); it != voption.end() && !options.empty(); ++it) {
       size_t pos = options.find_last_of(';');
+      if (pos == std::string::npos) {
+         *it = options;
+         break;
+      }
       *it = options.substr(pos + 1);
       options = options.substr(0, pos);
-      if (pos == std::string::npos) break;
    }
    Bool_t foundPlotOPt = kFALSE;
    Bool_t foundDrawOPt = kFALSE;
@@ -704,6 +710,10 @@ void TKDE::DrawErrors(TString& drawOpt) {
    TGraphErrors* ge = new TGraphErrors(n, &x[0], &y[0], &ex[0], &ey[0]);
    ge->SetTitle("Errors");
    ge->Draw(drawOpt.Data());
+   delete [] x;
+   delete [] ex;
+   delete [] y;
+   delete [] ey;
 }
 
 void TKDE::DrawConfidenceInterval(TString& drawOpt) {
