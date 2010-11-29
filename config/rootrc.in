@@ -47,11 +47,14 @@ Root.ShowPath:           false
 # are eliminated and not written to the final Tree. The default value 100000
 # is such that between 50 and 90% of the calls are eliminated depending on the application.
 # the parameter TMemStat.maxcalls is the maximum number of new/delete calls to be monitored
-# 5 million calls is a reasonable number
+# 5 million calls is a reasonable number.
+# if your code has been compiled with -fno-omit-frame-pointer you can specify
+# gnubuiltin for Root.TMemStat.system. In this case the backtrace is much faster.
 Root.TMemStat:           0
 Root.TMemStat.buffersize 100000
 Root.TMemStat.maxcalls   5000000
-Root.TMemStat.system     gnubuiltin
+#Root.TMemStat.system     gnubuiltin
+Root.TMemStat.system    
 
 # Activate memory statistics (size and cnt is used to trap allocation of
 # blocks of a certain size after cnt times).
