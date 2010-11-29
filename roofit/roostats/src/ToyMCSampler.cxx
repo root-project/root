@@ -185,7 +185,7 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistribution(RooArgSet& paramPoin
    }
 
    // adjust number of toys on the slaves to keep the total number of toys constant
-   Double_t totToys = fNToys;
+   Int_t totToys = fNToys;
    fNToys /= fProofConfig->GetNExperiments();
 
    // create the study instance for parallel processing
