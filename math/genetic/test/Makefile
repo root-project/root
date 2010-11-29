@@ -13,9 +13,9 @@ include $(ROOTSYS)/test/Makefile.arch
 
 
 ifeq ($(PLATFORM),win32)
-LIBS        += "$(ROOTSYS)/lib/libGenetic.lib" "$(ROOTSYS)/lib/libTMVA.lib" 
-	"$(ROOTSYS)/lib/libMLP.lib" "$(ROOTSYS)/lib/libTreePlayer.lib" \
-	"$(ROOTSYS)/lib/libMinuit.lib" "$(ROOTSYS)/lib/libMinuit2.lib"
+LIBS        += "$(ROOTSYS)/lib/libGenetic.lib" "$(ROOTSYS)/lib/libTMVA.lib" \
+               "$(ROOTSYS)/lib/libMLP.lib" "$(ROOTSYS)/lib/libTreePlayer.lib" \
+               "$(ROOTSYS)/lib/libMinuit.lib" "$(ROOTSYS)/lib/libMinuit2.lib"
 else
 LIBS        += -lGenetic -lTMVA -lMLP -lTreePlayer -lMinuit -lMinuit2 -lThread -lXMLIO
 CXXFLAGS += -g
