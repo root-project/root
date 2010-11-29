@@ -21,22 +21,36 @@ ClassImp(TPyMultiGenFunction)
 ClassImp(TPyMultiGradFunction)
 
 
-//- helper function ----------------------------------------------------------
-static PyObject* DispatchCall( PyObject* pyself, const char* method,
+//- helper functions ---------------------------------------------------------
+static PyObject* GetOverriddenPyMethod( PyObject* pyself, const char* method )
+{
+// Retrieve an overriden method on pyself
+   PyObject* pymethod = 0;
+
+   if ( pyself && pyself != Py_None ) {
+      pymethod = PyObject_GetAttrString( (PyObject*)pyself, const_cast< char* >( method ) );
+      if ( ! PyROOT::MethodProxy_CheckExact( pymethod ) )
+         return pymethod;
+
+      Py_XDECREF( pymethod );
+      pymethod = 0;
+   }
+
+   return pymethod;
+}
+
+static PyObject* DispatchCall( PyObject* pyself, const char* method, PyObject* pymethod = NULL,
    PyObject* arg1 = NULL, PyObject* arg2 = NULL, PyObject* arg3 = NULL )
 {
 // Forward <method> to python (need to refactor this with TPySelector).
-   if ( ! pyself || pyself == Py_None ) {
-      Py_INCREF( Py_None );
-      return Py_None;
-   }
-
    PyObject* result = 0;
 
 // get the named method and check for python side overload by not accepting the
 // binding's methodproxy
-   PyObject* pymethod = PyObject_GetAttrString( (PyObject*)pyself, const_cast< char* >( method ) );
-   if ( ! PyROOT::MethodProxy_CheckExact( pymethod ) ) {
+   if ( ! pymethod )
+       pymethod = GetOverriddenPyMethod( pyself, method );
+
+   if ( pymethod ) {
       result = PyObject_CallFunctionObjArgs( pymethod, arg1, arg2, arg3, NULL );
    } else {
    // means the method has not been overridden ... simply accept its not there
@@ -96,7 +110,7 @@ double TPyMultiGenFunction::DoEval( const double* x ) const
 {
 // Simply forward the call to python self.
    PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
-   PyObject* pyresult = DispatchCall( fPySelf, "DoEval", xbuf );
+   PyObject* pyresult = DispatchCall( fPySelf, "DoEval", NULL, xbuf );
    Py_DECREF( xbuf );
 
    if ( ! pyresult ) {
@@ -157,7 +171,7 @@ double TPyMultiGradFunction::DoEval( const double* x ) const
 {
 // Simply forward the call to python self.
    PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
-   PyObject* pyresult = DispatchCall( fPySelf, "DoEval", xbuf );
+   PyObject* pyresult = DispatchCall( fPySelf, "DoEval", NULL, xbuf );
    Py_DECREF( xbuf );
 
    if ( ! pyresult ) {
@@ -174,42 +188,54 @@ double TPyMultiGradFunction::DoEval( const double* x ) const
 //____________________________________________________________________________
 void TPyMultiGradFunction::Gradient( const double* x, double* grad ) const {
 // Simply forward the call to python self.
-   PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
-   PyObject* gbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)grad );
-   PyObject* pyresult = DispatchCall( fPySelf, "Gradient", xbuf, gbuf );
-   Py_DECREF( gbuf );
-   Py_DECREF( xbuf );
+   PyObject* pymethod = GetOverriddenPyMethod( fPySelf, "Gradient" );
 
-   if ( ! pyresult ) {
-      PyErr_Print();
-      throw std::runtime_error( "Failure in TPyMultiGradFunction::Gradient" );
-   }
+   if ( pymethod ) {
+      PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
+      PyObject* gbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)grad );
+      PyObject* pyresult = DispatchCall( fPySelf, "Gradient", pymethod, xbuf, gbuf );
+      Py_DECREF( gbuf );
+      Py_DECREF( xbuf );
 
-   Py_DECREF( pyresult );
+      if ( ! pyresult ) {
+         PyErr_Print();
+         throw std::runtime_error( "Failure in TPyMultiGradFunction::Gradient" );
+      }
+
+      Py_DECREF( pyresult );
+
+   } else
+      return ROOT::Math::IMultiGradFunction::Gradient( x, grad );
 }
 
 //____________________________________________________________________________
 void TPyMultiGradFunction::FdF( const double* x, double& f, double* df ) const
 {
 // Simply forward the call to python self.
-   PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
-   PyObject* pyf = PyList_New( 1 );
-   PyList_SetItem( pyf, 0, PyFloat_FromDouble( f ) );
-   PyObject* dfbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)df );
+   PyObject* pymethod = GetOverriddenPyMethod( fPySelf, "FdF" );
 
-   PyObject* pyresult = DispatchCall( fPySelf, "FdF", xbuf, pyf, dfbuf );
-   f = PyFloat_AsDouble( PyList_GetItem( pyf, 0 ) );
+   if ( pymethod ) {
+      PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
+      PyObject* pyf = PyList_New( 1 );
+      PyList_SetItem( pyf, 0, PyFloat_FromDouble( f ) );
+      PyObject* dfbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)df );
 
-   Py_DECREF( dfbuf );
-   Py_DECREF( pyf );
-   Py_DECREF( xbuf );
+      PyObject* pyresult = DispatchCall( fPySelf, "FdF", pymethod, xbuf, pyf, dfbuf );
+      f = PyFloat_AsDouble( PyList_GetItem( pyf, 0 ) );
 
-   if ( ! pyresult ) {
-      PyErr_Print();
-      throw std::runtime_error( "Failure in TPyMultiGradFunction::FdF" );
-   }
+      Py_DECREF( dfbuf );
+      Py_DECREF( pyf );
+      Py_DECREF( xbuf );
 
-   Py_DECREF( pyresult );
+      if ( ! pyresult ) {
+         PyErr_Print();
+         throw std::runtime_error( "Failure in TPyMultiGradFunction::FdF" );
+      }
+
+      Py_DECREF( pyresult );
+
+   } else
+      return ROOT::Math::IMultiGradFunction::FdF( x, f, df );
 }
 
 //____________________________________________________________________________
@@ -219,7 +245,7 @@ double TPyMultiGradFunction::DoDerivative( const double * x, unsigned int icoord
    PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
    PyObject* pycoord = PyLong_FromLong( icoord );
 
-   PyObject* pyresult = DispatchCall( fPySelf, "DoDerivative", xbuf, pycoord );
+   PyObject* pyresult = DispatchCall( fPySelf, "DoDerivative", NULL, xbuf, pycoord );
    Py_DECREF( pycoord );
    Py_DECREF( xbuf );
 
