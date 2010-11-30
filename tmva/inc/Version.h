@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$   
-// Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Jan Therhaag, Eckhard von Toerne, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -12,19 +12,22 @@
  *      by python script development/tmvaTag.py                                   *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Andreas Hoecker    <Andreas.Hocker@cern.ch>     - CERN, Switzerland       *
- *      Joerg Stelzer      <Joerg.Stelzer@cern.ch>      - CERN, Switzerland       *
- *      Fredrik Tegenfeldt <Fredrik.Tegenfeldt@cern.ch> - Iowa State U., USA      *
- *      Helge Voss         <Helge.Voss@cern.ch>         - MPI-K Heidelberg, GER   *
+ *      Andreas Hoecker    <Andreas.Hocker@cern.ch>      - CERN, Switzerland      *
+ *      Peter Speckmayer   <Peter.Speckmayer@cern.ch>    - CERN, Switzerland      *
+ *      Joerg Stelzer      <Joerg.Stelzer@cern.ch>       - CERN, Switzerland      *
+ *      Jan Therhaag       <therhaag@physik.uni-bonn.de> - U of Bonn, Germany     *
+ *      Eckhard v. Toerne  <evt@uni-bonn.de>             - U of Bonn, Germany     *
+ *      Helge Voss         <Helge.Voss@cern.ch>          - MPI-K Heidelberg, GER  *
  *                                                                                *
- * Copyright (c) 2007:                                                            *
- *      CERN, Switzerland                                                         *
- *      Iowa State U., USA                                                        *
- *      MPI-K Heidelberg, Germany                                                 *
+ * Copyright (c) 2005-2010,                                                       *
+ * Regents of CERN (Switzerland),                                                 *
+ * University of Bonn (Germany),                                                  *
+ * University of Heidelberg (Germany),                                            *
+ * University of Victoria (Canada)                                                *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
+ *(http://tmva.sourceforge.net/LICENSE)                                           *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Version
@@ -38,10 +41,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#define TMVA_RELEASE      "4.0.7"
-#define TMVA_RELEASE_DATE "Jun 14, 2010"
-#define TMVA_RELEASE_TIME "17:20:00"
-#define TMVA_VERSION_CODE 262151
+#define TMVA_RELEASE      "4.1.0"
+#define TMVA_RELEASE_DATE "Nov 30, 2010"
+#define TMVA_RELEASE_TIME "14:15:00"
+#define TMVA_VERSION_CODE 262400
 #define TMVA_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 #endif
