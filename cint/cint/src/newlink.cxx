@@ -8346,7 +8346,7 @@ void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, int k)
       case 'E':
       case 'Y':
       case 'U':
-         fprintf(fp, "(%s) G__int(libp->para[%d])", G__type2string(type, tagnum, typenum, reftype, isconst), k);
+         fprintf(fp, "(%s) G__int(libp->para[%d])", G__type2string(type, tagnum, typenum, reftype, isupper(type) ? (isconst & ~(G__PCONSTVAR | G__PCONSTCONSTVAR)) : isconst), k);
          break;
       case 'a':
          // Pointer to member , THIS IS BAD , WON'T WORK
