@@ -466,6 +466,7 @@ public:
    virtual void            ShowOutput(RedirectHandle_t *h);
 
    //---- Dynamic Loading
+   virtual void            AddDynamicPath(const char *pathname);
    virtual const char     *GetDynamicPath();
    virtual void            SetDynamicPath(const char *pathname);
    virtual char           *DynamicPathName(const char *lib, Bool_t quiet = kFALSE);

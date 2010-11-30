@@ -1654,6 +1654,14 @@ void TSystem::ShowOutput(RedirectHandle_t *h)
 //---- Dynamic Loading ---------------------------------------------------------
 
 //______________________________________________________________________________
+void TSystem::AddDynamicPath(const char *)
+{
+   // Add a new directory to the dynamic path.
+   
+   AbstractMethod("AddDynamicPath");
+}
+
+//______________________________________________________________________________
 const char* TSystem::GetDynamicPath()
 {
    // Return the dynamic path (used to find shared libraries).

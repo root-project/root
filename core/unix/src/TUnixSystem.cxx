@@ -4314,6 +4314,19 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
 }
 
 //______________________________________________________________________________
+void TUnixSystem::AddDynamicPath(const char *path)
+{
+   // Add a new directory to the dynamic path.
+   
+   if (path) {
+      TString oldpath = DynamicPath(0, kFALSE);
+      oldpath.Append(":");
+      oldpath.Append(path);
+      DynamicPath(oldpath);
+   }
+}
+
+//______________________________________________________________________________
 const char *TUnixSystem::GetDynamicPath()
 {
    // Return the dynamic path (used to find shared libraries).

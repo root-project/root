@@ -183,6 +183,7 @@ public:
                                     RedirectHandle_t *h = 0);
 
    //---- Dynamic Loading --------------------------------------
+   void              AddDynamicPath(const char *lib);
    const char       *GetDynamicPath();
    void              SetDynamicPath(const char *lib);
    Func_t            DynFindSymbol(const char *module, const char *entry);

@@ -205,8 +205,9 @@ public:
    Int_t             RedirectOutput(const char *name, const char *mode = "a", RedirectHandle_t *h = 0);
 
    //---- Dynamic Loading --------------------------------------
-   const char      *GetDynamicPath();
-   void             SetDynamicPath(const char *lib);
+   void              AddDynamicPath(const char *dir);
+   const char       *GetDynamicPath();
+   void              SetDynamicPath(const char *path);
    char             *DynamicPathName(const char *lib, Bool_t quiet = kFALSE);
    int               Load(const char *module, const char *entry = "", Bool_t system = kFALSE);
    const char       *GetLibraries(const char *regexp = "",

@@ -3780,6 +3780,19 @@ Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
 //---- dynamic loading and linking ---------------------------------------------
 
 //______________________________________________________________________________
+void TWinNTSystem::AddDynamicPath(const char *dir)
+{
+   // Add a new directory to the dynamic path.
+   
+   if (path) {
+      TString oldpath = DynamicPath(0, kFALSE);
+      oldpath.Append(";");
+      oldpath.Append(dir);
+      DynamicPath(oldpath);
+   }
+}
+
+//______________________________________________________________________________
 const char* TWinNTSystem::GetDynamicPath()
 {
    // Return the dynamic path (used to find shared libraries).
