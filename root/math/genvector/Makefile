@@ -66,22 +66,22 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 ##endif
 
 #this suppress check in log file
-coordinates3D.elog: $(ROOT_LOC)/math/genvector/test/coordinates3D_cxx.$(DllSuf)
+coordinates3D.elog: $(ROOT_SRCDIRDEP)/math/genvector/test/coordinates3D_cxx.$(DllSuf)
 
 coordinates3D: coordinates3D.elog
 	$(TestDiff)
 
-coordinates4D.elog: $(ROOT_LOC)/math/genvector/test/coordinates4D_cxx.$(DllSuf)
+coordinates4D.elog: $(ROOT_SRCDIRDEP)/math/genvector/test/coordinates4D_cxx.$(DllSuf)
 
 coordinates4D: coordinates4D.elog
 	$(TestDiff)
 
-rotationApplication.elog: $(ROOT_LOC)/math/genvector/test/rotationApplication_cxx.$(DllSuf)
+rotationApplication.elog: $(ROOT_SRCDIRDEP)/math/genvector/test/rotationApplication_cxx.$(DllSuf)
 
 rotationApplication: rotationApplication.elog
 	$(TestDiff)
 
-testGenVector.log: $(ROOT_LOC)/math/genvector/test/testGenVector_cxx.$(DllSuf)
+testGenVector.log: $(ROOT_SRCDIRDEP)/math/genvector/test/testGenVector_cxx.$(DllSuf)
 
 testGenVector: testGenVector.log
 	$(TestDiff)
