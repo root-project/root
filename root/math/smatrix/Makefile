@@ -56,27 +56,32 @@ endif
 # By default the TestDiff variable is set to compare the .log and .ref files
 # To run a diff and ignore whitespacing use $(TestDiffW)
 
+TESTDIR:=$(ROOT_SRCDIRDEP)/math/smatrix/test
+
+test%.cxx: $(TESTDIR)/test%.cxx
+	cp $< $@
+
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 #skip tests on Windows 
-testSMatrix.elog: $(ROOT_LOC)/math/smatrix/test/testSMatrix_cxx.$(DllSuf)
+testSMatrix.elog: $(TESTDIR)/testSMatrix_cxx.$(DllSuf)
 
 
 testSMatrix: testSMatrix.elog
 	$(TestDiff)
 
-testKalman.elog: $(ROOT_LOC)/math/smatrix/test/testKalman_cxx.$(DllSuf)
+testKalman.elog: $(TESTDIR)/testKalman_cxx.$(DllSuf)
 
 testKalman: testKalman.elog
 	$(TestDiff)
 
-testOperations.elog: $(ROOT_LOC)/math/smatrix/test/testOperations_cxx.$(DllSuf)
+testOperations.elog: $(TESTDIR)/testOperations_cxx.$(DllSuf)
 
 testOperations: testOperations.elog
 	$(TestDiff)
 
-testInversion.elog: $(ROOT_LOC)/math/smatrix/test/testInversion_cxx.$(DllSuf)
+testInversion.elog: $(TESTDIR)/testInversion_cxx.$(DllSuf)
 
 testInversion: testInversion.elog
 	$(TestDiff)

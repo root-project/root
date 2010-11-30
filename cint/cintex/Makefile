@@ -49,18 +49,10 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
-
 # The name of this target should be changed according to the test being run.  Any name changes
 #  should also be reflected in the TEST_TARGETS variable above.
 
 # trigger creation of cintex/test directory if out-of-source
-ROOT_SRCDIR := $(shell grep "ROOT_SRCDIR    :=" $(ROOT_LOC)/config/Makefile.config | sed 's/^ROOT_SRCDIR    := \$$(call realpath, \([^)]*\).*$$/\1/')
-ifeq ($(PLATFORM),win32)
-  ROOT_SRCDIRDEP := $(shell cygpath -u -- $(ROOT_SRCDIR))
-else
-  ROOT_SRCDIRDEP := $(ROOT_SRCDIR)
-endif
-
 CINTEXTESTDIR   := $(ROOT_SRCDIR)/cint/cintex/test
 CINTEXTESTDIRDEP:= $(ROOT_SRCDIRDEP)/cint/cintex/test
 
