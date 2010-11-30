@@ -120,6 +120,12 @@ TMVA::ClassInfo* TMVA::DataSetInfo::AddClass( const TString& className )
 }
 
 //_______________________________________________________________________
+void TMVA::DataSetInfo::SetMsgType( EMsgType t ) const 
+{  
+    fLogger->SetMinType(t);  
+} 
+
+//_______________________________________________________________________
 TMVA::ClassInfo* TMVA::DataSetInfo::GetClassInfo( const TString& name ) const 
 {
    for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); it++) {

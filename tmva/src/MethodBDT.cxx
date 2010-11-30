@@ -175,6 +175,7 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
 {
    // the standard constructor for the "boosted decision trees"
    fMonitorNtuple = NULL;
+   fSepType = NULL;
 }
 
 //_______________________________________________________________________
@@ -210,6 +211,8 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    , fBoostWeight(0)
    , fErrorFraction(0)
 {
+   fMonitorNtuple = NULL;
+   fSepType = NULL;
    // constructor for calculating BDT-MVA using previously generated decision trees
    // the result of the previous training (the decision trees) are read in via the
    // weight file. Make sure the the variables correspond to the ones used in
@@ -523,7 +526,7 @@ void TMVA::MethodBDT::InitEventSample( void )
             if (first && event->GetWeight() < 0) {
                first = kFALSE;
                Log() << kWARNING << "Events with negative event weights are USED during "
-                     << "the BDT training. This might cause problems with small node sizes "
+                     << "the BDT training. This might cause problems with small node sizes " 
                      << "or with the boosting. Please remove negative events from training "
                      << "using the option *IgnoreEventsWithNegWeightsInTraining* in case you "
                      << "observe problems with the boosting"
@@ -1104,20 +1107,20 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
       // something odd with the assignement of the leaf nodes (rem: you use the training
       // events for this determination of the error rate)
       if (dt->GetNNodes() == 1){
-         Log() << kWARNING << " YOUR tree has only 1 Node... kind of a funny *tree*. I cannot " 
+         Log() << kERROR << " YOUR tree has only 1 Node... kind of a funny *tree*. I cannot " 
                << "boost such a thing... if after 1 step the error rate is == 0.5"
                << Endl
                << "please check why this happens, maybe too many events per node requested ?"
                << Endl;
          
       }else{
-         Log() << kWARNING << " The error rate in the BDT boosting is > 0.5. ("<< err
+         Log() << kERROR << " The error rate in the BDT boosting is > 0.5. ("<< err
                << ") That should not happen, please check your code (i.e... the BDT code), I "
                << " set it to 0.5.. just to continue.." <<  Endl;
       }
       err = 0.5;
    } else if (err < 0) {
-      Log() << kWARNING << " The error rate in the BDT boosting is < 0. That can happen"
+      Log() << kERROR << " The error rate in the BDT boosting is < 0. That can happen"
             << " due to improper treatment of negative weights in a Monte Carlo.. (if you have"
             << " an idea on how to do it in a better way, please let me know (Helge.Voss@cern.ch)"
             << " for the time being I set it to its absolute value.. just to continue.." <<  Endl;
@@ -1141,7 +1144,6 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
             (*e)->SetBoostWeight( (*e)->GetBoostWeight() * boostfactor);
             // Helge change back            (*e)->ScaleBoostWeight(boostfactor);
             if (DoRegression()) results->GetHist("BoostWeights")->Fill(boostfactor);
-            //            cout << "  " << boostfactor << endl;
          } else {
             (*e)->ScaleBoostWeight( 1. / boostfactor); // if the original event weight is negative, and you want to "increase" the events "positive" influence, you'd reather make the event weight "smaller" in terms of it's absolute value while still keeping it something "negative"
          }
@@ -1244,13 +1246,25 @@ Double_t TMVA::MethodBDT::AdaBoostR2( vector<TMVA::Event*> eventSample, Decision
    }
 
 
-
-   if (err >= 0.5) {
-      Log() << kFATAL << " The error rate in the BDT boosting is > 0.5. "
-            << " i.e. " << err 
-            << " That should induce a stop condition of the boosting " << Endl;
+   if (err >= 0.5) { // sanity check ... should never happen as otherwise there is apparently
+      // something odd with the assignement of the leaf nodes (rem: you use the training
+      // events for this determination of the error rate)
+      if (dt->GetNNodes() == 1){
+         Log() << kERROR << " YOUR tree has only 1 Node... kind of a funny *tree*. I cannot " 
+               << "boost such a thing... if after 1 step the error rate is == 0.5"
+               << Endl
+               << "please check why this happens, maybe too many events per node requested ?"
+               << Endl;
+         
+      }else{
+         Log() << kERROR << " The error rate in the BDT boosting is > 0.5. ("<< err
+               << ") That should not happen, but is possible for regression trees, and"
+	       << " should trigger a stop for the boosting. please check your code (i.e... the BDT code), I "
+               << " set it to 0.5.. just to continue.." <<  Endl;
+      }
+      err = 0.5;
    } else if (err < 0) {
-      Log() << kWARNING << " The error rate in the BDT boosting is < 0. That can happen"
+      Log() << kERROR << " The error rate in the BDT boosting is < 0. That can happen"
             << " due to improper treatment of negative weights in a Monte Carlo.. (if you have"
             << " an idea on how to do it in a better way, please let me know (Helge.Voss@cern.ch)"
             << " for the time being I set it to its absolute value.. just to continue.." <<  Endl;

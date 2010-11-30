@@ -173,16 +173,13 @@ namespace TMVA {
       void               SetRootDir(TDirectory* d) { fOwnRootDir = d; }
       TDirectory*        GetRootDir() const { return fOwnRootDir; }
 
+      void               SetMsgType( EMsgType t ) const;
+
    private:
-
-
 
       TMVA::DataSetManager*            fDataSetManager; // DSMTEST
       void                       SetDataSetManager( DataSetManager* dsm ) { fDataSetManager = dsm; } // DSMTEST
       friend class DataSetManager;  // DSMTEST (datasetmanager test)
-
-
-
 
       DataSetInfo( const DataSetInfo& ) : TObject() {}
 

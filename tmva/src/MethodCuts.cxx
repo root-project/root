@@ -149,6 +149,7 @@ TMVA::MethodCuts::MethodCuts( const TString& jobName,
    fMeanB      ( 0 ),
    fRmsS       ( 0 ),
    fRmsB       ( 0 ),
+   fEffBvsSLocal( 0 ),
    fVarHistS   ( 0 ),
    fVarHistB   ( 0 ),
    fVarHistS_smooth( 0 ),
@@ -187,6 +188,7 @@ TMVA::MethodCuts::MethodCuts( DataSetInfo& theData,
    fMeanB      ( 0 ),
    fRmsS       ( 0 ),
    fRmsB       ( 0 ),
+   fEffBvsSLocal( 0 ),
    fVarHistS   ( 0 ),
    fVarHistB   ( 0 ),
    fVarHistS_smooth( 0 ),
@@ -214,7 +216,6 @@ void TMVA::MethodCuts::Init( void )
    fVarHistS_smooth   = fVarHistB_smooth = 0;
    fVarPdfS           = fVarPdfB = 0; 
    fFitParams         = 0;
-   fEffBvsSLocal      = 0;
    fBinaryTreeS       = fBinaryTreeB = 0;
    fEffSMin           = 0;
    fEffSMax           = 0; 
@@ -266,6 +267,7 @@ TMVA::MethodCuts::~MethodCuts( void )
    delete fRmsS;
    delete fRmsB;
    delete fFitParams;
+   delete fEffBvsSLocal;
 
    if (NULL != fCutRangeMin) delete [] fCutRangeMin;
    if (NULL != fCutRangeMax) delete [] fCutRangeMax;
@@ -607,6 +609,7 @@ void  TMVA::MethodCuts::Train( void )
    vector<TH1F*> signalDist, bkgDist;
 
    // this is important: reset the branch addresses of the training tree to the current event
+   delete fEffBvsSLocal;
    fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal", 
                              TString(GetName()) + " efficiency of B vs S", fNbins, 0.0, 1.0 );
    fEffBvsSLocal->SetDirectory(0); // it's local
@@ -1227,6 +1230,7 @@ void  TMVA::MethodCuts::ReadWeightsFromStream( istream& istr )
    if (fEffBvsSLocal != 0) delete fEffBvsSLocal;
    fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal", 
                              TString(GetName()) + " efficiency of B vs S", fNbins, 0.0, 1.0 );
+   fEffBvsSLocal->SetDirectory(0); // it's local
 
    for (Int_t ibin=0; ibin<fNbins; ibin++) {
       istr >> tmpbin >> tmpeffS >> tmpeffB;
@@ -1324,9 +1328,10 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
    }
    Log() << kINFO << "Reading " << fNbins << " signal efficiency bins for " << GetNvar() << " variables" << Endl;
 
-   if (fEffBvsSLocal != 0) delete fEffBvsSLocal;
+   delete fEffBvsSLocal;
    fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal", 
                              TString(GetName()) + " efficiency of B vs S", fNbins, 0.0, 1.0 );
+   fEffBvsSLocal->SetDirectory(0); // it's local
    for (Int_t ibin=1; ibin<=fNbins; ibin++) fEffBvsSLocal->SetBinContent( ibin, -0.1 ); // Init
 
    fCutMin = new Double_t*[GetNvar()];
