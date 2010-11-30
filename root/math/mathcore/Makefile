@@ -61,7 +61,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 
 
 
-testRootFinder.elog: $(ROOT_LOC)/math/mathcore/test/testRootFinder_cxx.$(DllSuf)
+testRootFinder.elog: $(ROOT_SRCDIRDEP)/math/mathcore/test/testRootFinder_cxx.$(DllSuf)
 
 testRootFinder: testRootFinder.elog
 	$(TestDiff)
@@ -69,4 +69,4 @@ testRootFinder: testRootFinder.elog
 testSpecFuncSiCi: testSpecFuncSiCi.elog
 	$(TestDiff)
 
-testSpecFuncSiCi.elog: $(ROOT_LOC)/math/mathcore/test/testSpecFuncSiCi_cxx.$(DllSuf)
+testSpecFuncSiCi.elog: $(ROOT_SRCDIRDEP)/math/mathcore/test/testSpecFuncSiCi_cxx.$(DllSuf)
