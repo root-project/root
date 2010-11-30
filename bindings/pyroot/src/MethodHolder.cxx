@@ -397,6 +397,12 @@ Int_t PyROOT::TMethodHolder< T, M >::GetPriority()
             priority -= 30;   // double preferred over float (no float in python)
          else if ( aname == "double" )
             priority -= 10;   // char, int, long preferred over double
+
+      // resolve a few special cases
+         else if ( aname == "IBaseFunctionMultiDim")
+            priority -= 1;
+         else if ( aname == "RooAbsReal" )
+            priority -= 1;
       }
 
    }
