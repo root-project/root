@@ -9,6 +9,8 @@
 *.lib
 *.pdb
 *.log
+*.elog
+*.clog
 *.d
 *.ilk 
 *.clog
