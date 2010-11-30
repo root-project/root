@@ -655,7 +655,9 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
       RooCmdArg* subArg = static_cast<RooCmdArg*>(arg._argList.At(ia)) ;
       if (strlen(subArg->GetName())>0) {
 	RooCmdArg subArgCopy(*subArg) ;
-	subArgCopy.SetName(Form("%s::%s",arg.GetName(),subArg->GetName())) ;
+	if (arg._prefixSubArgs) {
+	  subArgCopy.SetName(Form("%s::%s",arg.GetName(),subArg->GetName())) ;
+	}
 	depRet |= process(subArgCopy) ;
       }
     }

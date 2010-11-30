@@ -81,6 +81,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 
   _extended = pc.getInt("extended") ;
   _weightSq = kFALSE ;
+
 }
 
 
@@ -176,7 +177,22 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
   
   // include the extended maximum likelihood term, if requested
   if(_extended && firstEvent==0) {
-    result+= pdfClone->extendedTerm((Int_t)_dataClone->sumEntries(),_dataClone->get());
+    if (_weightSq) {
+      // Calculate sum of weights-squared here for extended term
+
+      Double_t sumW2(0) ;
+      for (i=0 ; i<_dataClone->numEntries() ; i++) {
+	_dataClone->get(i) ;
+	Double_t eventWeight = _dataClone->weight() ;
+	//cout << "sumW2 += " << eventWeight << " ^2" << endl ; 
+	sumW2 += eventWeight * eventWeight ;	
+      }
+      //cout << "weight squared extended mode: sumW2 = " << sumW2 << " sumentries = " << _dataClone->sumEntries() << endl ;
+
+      result+= pdfClone->extendedTerm((Int_t)sumW2,_dataClone->get());
+    } else {
+      result+= pdfClone->extendedTerm((Int_t)_dataClone->sumEntries(),_dataClone->get());
+    }
   }    
 
   // If part of simultaneous PDF normalize probability over 

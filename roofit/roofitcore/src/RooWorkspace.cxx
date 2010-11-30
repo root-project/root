@@ -1385,13 +1385,13 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 
   // Check if header filename is found in ROOT distribution, if so, do not import class
   TString rootsys = gSystem->Getenv("ROOTSYS") ;
-  char* implpath = gSystem->ConcatFileName(rootsys.Data(),implfile.c_str()) ;
-  if (!gSystem->AccessPathName(implpath)) {
+  const char* implpath = implfile.c_str() ; //gSystem->ConcatFileName(rootsys.Data(),implfile.c_str()) ;
+  if (TString(implfile.c_str()).Index(rootsys)>=0) {
     oocxcoutD(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo(" << _wspace->GetName() << ") code of class " << tc->GetName() << " is in ROOT distribution, skipping " << endl ;
-    delete[] implpath ;
+  //delete[] implpath ;
     return kTRUE ;
   }
-  delete[] implpath ;
+  //delete[] implpath ;
   implpath=0 ;
 
   // Require that class meets technical criteria to be persistable (i.e it has a default ctor)
@@ -1798,6 +1798,9 @@ TObject* RooWorkspace::genobj(const char* name)  const
 
   // Find object by name
   TObject* gobj = _genObjects.FindObject(name) ;
+
+  // Exit here if not found
+  if (!gobj) return 0 ;
 
   // If found object is wrapper, return payload
   if (gobj->IsA()==RooTObjWrap::Class()) return ((RooTObjWrap*)gobj)->obj() ;

@@ -17,6 +17,8 @@
 #define ROO_GLOBAL_FUNC
 
 #include "RooCmdArg.h"
+#include <map>
+#include <string>
 //#include "RooDataHist.h"
 //#include "RooAbsPdf.h"
 //#include "RooRealConstant.h"
@@ -111,14 +113,18 @@ RooCmdArg Rescale(Double_t factor) ;
 RooCmdArg Weight(Double_t wgt) ;
 RooCmdArg Index(RooCategory& icat) ;
 RooCmdArg Import(const char* state, TH1& histo) ;
+RooCmdArg Import(const std::map<std::string,TH1*>&) ;
 RooCmdArg Import(const char* state, RooDataHist& dhist) ;
+RooCmdArg Import(const std::map<std::string,RooDataHist*>&) ;
 RooCmdArg Import(TH1& histo, Bool_t importDensity=kTRUE) ;
 
 // RooDataSet::ctor arguments
 RooCmdArg WeightVar(const char* name) ;
 RooCmdArg WeightVar(const RooRealVar& arg) ;
 RooCmdArg Import(const char* state, RooDataSet& data) ;
+RooCmdArg Import(const std::map<std::string,RooDataSet*>& ) ;
 RooCmdArg Link(const char* state, RooAbsData& data) ;
+RooCmdArg Link(const std::map<std::string,RooAbsData*>&) ;
 RooCmdArg Import(RooDataSet& data) ;
 RooCmdArg Import(TTree& tree) ;
 RooCmdArg ImportFromFile(const char* fname, const char* tname) ;

@@ -251,6 +251,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   //                              specified in Index(). If the given state name is not yet defined in the index
   //                              category it will be added on the fly. The import command can be specified
   //                              multiple times. 
+  // Import(map<string,TH1*>&) -- As above, but allows specification of many imports in a single operation
   //                              
 
   // Initialize datastore
@@ -266,6 +267,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   pc.defineObject("impSliceDHist","ImportDataHistSlice",0,0,kTRUE) ; // array
   pc.defineString("impSliceDState","ImportDataHistSlice",0,"",kTRUE) ; // array
   pc.defineDouble("weight","Weight",0,1) ; 
+  pc.defineObject("dummy1","ImportDataHistSliceMany",0) ;
+  pc.defineObject("dummy2","ImportHistoSliceMany",0) ;
   pc.defineMutex("ImportHisto","ImportHistoSlice","ImportDataHistSlice") ;
   pc.defineDependency("ImportHistoSlice","IndexCat") ;
   pc.defineDependency("ImportDataHistSlice","IndexCat") ;

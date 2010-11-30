@@ -57,7 +57,7 @@ public:
   // Accessors to client-server relation information 
   virtual Bool_t isDerived() const { 
     // Does value or shape of this arg depend on any other arg?
-    return _serverList.GetSize()?kTRUE:kFALSE; 
+    return (_serverList.GetSize()>0 || _proxyList.GetSize()>0)?kTRUE:kFALSE; 
   }
   Bool_t isCloneOf(const RooAbsArg& other) const ; 
   Bool_t dependsOnValue(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=0) const { 

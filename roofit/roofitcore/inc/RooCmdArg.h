@@ -37,9 +37,10 @@ public:
   RooCmdArg(const RooCmdArg& other) ;
   RooCmdArg& operator=(const RooCmdArg& other) ;
   void addArg(const RooCmdArg& arg) ;
-  void setProcessRecArgs(Bool_t flag) { 
+  void setProcessRecArgs(Bool_t flag, Bool_t prefix=kTRUE) { 
     // If true flag this object as containing recursive arguments
     _procSubArgs = flag ; 
+    _prefixSubArgs = prefix ;
   }
 
   RooLinkedList& subArgs() { 
@@ -112,8 +113,9 @@ private:
   Bool_t _procSubArgs ;  // If true argument requires recursive processing
   RooArgSet* _c ;        // Payload RooArgSets 
   RooLinkedList _argList ; // Payload sub-arguments
-	
-  ClassDef(RooCmdArg,1) // Generic named argument container
+  Bool_t _prefixSubArgs ; // Prefix subarguments with container name?
+  
+  ClassDef(RooCmdArg,2) // Generic named argument container
 };
 
 #endif

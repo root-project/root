@@ -54,6 +54,7 @@ RooCmdArg::RooCmdArg() : TNamed("","")
 {
   // Default constructor
   _procSubArgs = kFALSE ;
+  _prefixSubArgs = kTRUE ;
   _c = 0 ;
   _o[0] = 0 ;
   _o[1] = 0 ; 
@@ -89,6 +90,7 @@ RooCmdArg::RooCmdArg(const char* name, Int_t i1, Int_t i2, Double_t d1, Double_t
   if (c2) _c[1].add(*c2) ;
 
   _procSubArgs = kTRUE ;
+  _prefixSubArgs = kTRUE ;
   if (ca) {
     _argList.Add(new RooCmdArg(*ca)) ;
   }
@@ -120,6 +122,7 @@ RooCmdArg::RooCmdArg(const RooCmdArg& other) :
   }
   
   _procSubArgs = other._procSubArgs ;
+  _prefixSubArgs = other._prefixSubArgs ;
   for (Int_t i=0 ; i<other._argList.GetSize() ; i++) {
     _argList.Add(new RooCmdArg((RooCmdArg&)*other._argList.At(i))) ;
   }
@@ -152,6 +155,7 @@ RooCmdArg& RooCmdArg::operator=(const RooCmdArg& other)
   }
   
   _procSubArgs = other._procSubArgs ;
+  _prefixSubArgs = other._prefixSubArgs ;
 
   for (Int_t i=0 ; i<other._argList.GetSize() ; i++) {
     _argList.Add(new RooCmdArg((RooCmdArg&)*other._argList.At(i))) ;

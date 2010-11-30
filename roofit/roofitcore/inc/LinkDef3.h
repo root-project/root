@@ -114,6 +114,9 @@
 #pragma link C++ class RooGenFitStudy+ ;
 #pragma link C++ class RooProofDriverSelector+ ;
 #pragma link C++ class list<RooAbsStudy*>+ ;
+#pragma link C++ class map<string,RooDataSet*>+ ;
+#pragma link C++ class map<string,RooDataHist*>+ ;
+#pragma link C++ class map<string,TH1*>+ ;
 #pragma link C++ namespace RooCintUtils+ ;
 #pragma link off class RooErrorHandler+ ;
 #pragma link off class RooNag+ ;

@@ -99,6 +99,9 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
   //                                   of this dataset. Note that link is active for both reading and writing, so modifications
   //                                   to the aggregate dataset will also modify its components. Link() and Import() are mutually exclusive.
   //
+  // Import(map<string,RooDataSet*>&) -- As above, but allows specification of many imports in a single operation
+  // Link(map<string,RooDataSet*>&)   -- As above, but allows specification of many links in a single operation
+  //
   //                              
   // Cut(const char*)            -- Apply the given cut specification when importing data
   // Cut(RooFormulaVar&)         
@@ -128,6 +131,8 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
   pc.defineString("fname","ImportFromFile",0,"") ;
   pc.defineString("tname","ImportFromFile",1,"") ;
   pc.defineObject("wgtVar","WeightVar",0) ;
+  pc.defineObject("dummy1","ImportDataSliceMany",0) ;
+  pc.defineObject("dummy2","LinkDataSliceMany",0) ;
   pc.defineSet("errorSet","StoreError",0) ;
   pc.defineSet("asymErrSet","StoreAsymError",0) ;
   pc.defineMutex("ImportTree","ImportData","ImportDataSlice","LinkDataSlice","ImportFromFile") ;
@@ -167,7 +172,6 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
   RooArgSet* asymErrorSet = pc.getSet("asymErrSet") ;
   const char* fname = pc.getString("fname") ;
   const char* tname = pc.getString("tname") ;
-
 
   // Case 1 --- Link multiple dataset as slices
   if (lnkSliceNames) {
