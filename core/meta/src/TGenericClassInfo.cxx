@@ -192,7 +192,7 @@ namespace ROOT {
       delete fStreamer;
       if (!fClass) delete fIsA; // fIsA is adopted by the class if any.
       fIsA = 0;
-      if (!gROOT) return;
+      if (!gROOT || !gROOT->GetListOfClasses()) return;
       if (fAction) GetAction().Unregister(GetClassName());
    }
 
@@ -253,7 +253,7 @@ namespace ROOT {
       if ( vect.empty() ) {
          return;
       }
-      
+
       //------------------------------------------------------------------------
       // Get the rules set
       //------------------------------------------------------------------------
@@ -325,7 +325,7 @@ namespace ROOT {
    const std::vector<TSchemaHelper>& TGenericClassInfo::GetReadRawRules() const
    {
       // Return the list of rule give raw access to the TBuffer.
-      
+
       return fReadRawRules;
    }
 
@@ -449,14 +449,14 @@ namespace ROOT {
       }
       return 0;
    }
-   
+
    void TGenericClassInfo::SetStreamerFunc(ClassStreamerFunc_t streamer)
    {
       // Set a wrapper around the Streamer memger function.
-      
+
       fStreamerFunc = streamer;
       if (fClass) fClass->SetStreamerFunc(streamer);
-   }      
+   }
 
    const char *TGenericClassInfo::GetDeclFileName() const
    {
