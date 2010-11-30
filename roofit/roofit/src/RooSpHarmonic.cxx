@@ -58,8 +58,8 @@ ClassImp(RooSpHarmonic)
 //_____________________________________________________________________________
 namespace {
     inline double N(int l, int m=0) { 
-        double n = sqrt( double(2*l+1)/(4*M_PI)*TMath::Factorial(l-m)/TMath::Factorial(l+m) );
-        return m==0 ? n : M_SQRT2 * n;
+        double n = sqrt( double(2*l+1)/(4*TMath::Pi())*TMath::Factorial(l-m)/TMath::Factorial(l+m) );
+        return m==0 ? n : TMath::Sqrt2() * n;
     }
 }
 
@@ -72,7 +72,7 @@ RooSpHarmonic::RooSpHarmonic()
 RooSpHarmonic::RooSpHarmonic(const char* name, const char* title, RooAbsReal& ctheta, RooAbsReal& phi, int l, int m) 
  : RooLegendre(name, title,ctheta,l,m<0?-m:m)
  , _phi("phi", "phi", this, phi)
- , _n( double(4)/M_2_SQRTPI )
+ , _n( double(4)/(2*sqrt(TMath::Pi())) )
  , _sgn1( m==0 ? 0 : m<0 ? -1 : +1 )
  , _sgn2( 0 )
 {
@@ -125,7 +125,7 @@ Double_t RooSpHarmonic::analyticalIntegral(Int_t code, const char* range) const
     return (_l1==_l2 && _sgn1*_m1==_sgn2*_m2 ) ? _n : 0 ;  
   } else if (code == 2) {
     if (_m1!=0 || _m2!=0) return 0;
-    return _n*N(_l1)*N(_l2)*2*M_PI*RooLegendre::evaluate();
+    return _n*N(_l1)*N(_l2)*2*TMath::Pi()*RooLegendre::evaluate();
   } else {
     double n = _n*N(_l1,_m1)*N(_l2,_m2)*RooLegendre::analyticalIntegral(code,range);
     if (_sgn1!=0) n *= (_sgn1<0 ? sin(_m1*_phi) : cos(_m1*_phi) );
