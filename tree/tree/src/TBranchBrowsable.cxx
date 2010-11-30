@@ -167,6 +167,7 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
          ULong_t *elems=0;
          TStreamerElement *element=0;
          if (be->GetID()>=0 && be->GetInfo() 
+            && (be->GetID() < be->GetInfo()->GetNdata())
             && ((elems=be->GetInfo()->GetElems()))
             && ((element=(TStreamerElement *)elems[be->GetID()]))) {
             // if contained is set (i.e. GetClonesName was successful),

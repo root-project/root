@@ -1725,6 +1725,11 @@ void TBranchElement::InitInfo()
                      break;
                   }
                }
+            } else {
+               // We have not even found the element .. this is strange :(
+               fIDs.clear();
+               fID = -3;
+               SetBit(kDoNotProcess);
             }
             if (fOnfileObject==0 && (fType==31 || fType==41 || (0 <= fType && fType <=2) ) && fInfo->GetNdata()
                 && ((TStreamerElement*) fInfo->GetElems()[0])->GetType() == TStreamerInfo::kCacheNew)
@@ -1810,7 +1815,7 @@ TClass* TBranchElement::GetCurrentClass()
       return cl;
    }
 
-   TVirtualStreamerInfo* brInfo = GetInfo();
+   TStreamerInfo* brInfo = (TStreamerInfo*)GetInfo();
    if (!brInfo) {
       cl = TClass::GetClass(GetClassName());
       R__ASSERT(cl && cl->GetCollectionProxy());
@@ -1824,6 +1829,9 @@ TClass* TBranchElement::GetCurrentClass()
          fCurrentClass = cl;
       }
       return cl;
+   }
+   if (GetID() < 0 || GetID()>=brInfo->GetNdata()) {
+      return 0;
    }
    TStreamerElement* currentStreamerElement = ((TStreamerElement*) brInfo->GetElems()[GetID()]);
    TDataMember* dm = (TDataMember*) motherCl->GetListOfDataMembers()->FindObject(currentStreamerElement->GetName());
@@ -2371,7 +2379,7 @@ void TBranchElement::InitializeOffsets()
          }
 
          Bool_t isBaseSubBranch = kFALSE;
-         if ((subBranch->fType == 1) || (subBranchElement->IsBase())) {
+         if ((subBranch->fType == 1) || (subBranchElement && subBranchElement->IsBase())) {
             // -- Base class sub-branch (1).
             //
             // Note: Our type will not be 1, even though we are
