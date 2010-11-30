@@ -1220,15 +1220,15 @@ void TSVG::MovePS(Int_t ix, Int_t iy)
 
    if (ix != 0 && iy != 0)  {
       PrintFast(1,"l");
-      WriteInteger(ix, 0);
+      WriteInteger(ix);
       PrintFast(1,",");
-      WriteInteger(iy, 0);
+      WriteInteger(iy);
    } else if (ix != 0)  {
       PrintFast(1,"h");
-      WriteInteger(ix, 0);
+      WriteInteger(ix);
    } else if (iy != 0)  {
       PrintFast(1,"v");
-      WriteInteger(iy, 0);
+      WriteInteger(iy);
    }
 }
 
