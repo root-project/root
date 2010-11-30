@@ -3784,7 +3784,7 @@ void TWinNTSystem::AddDynamicPath(const char *dir)
 {
    // Add a new directory to the dynamic path.
    
-   if (path) {
+   if (dir) {
       TString oldpath = DynamicPath(0, kFALSE);
       oldpath.Append(";");
       oldpath.Append(dir);
