@@ -1133,7 +1133,7 @@ int G__fgetvarname(G__FastAllocString& string, size_t offset, const char *endmar
       ignoreflag = 0;
       c = G__fgetc() ;
 
-      if ((nest <= 0) && (!single_quote) && (!double_quote)) {
+      if ((nest <= 0) && !tmpltlevel && (!single_quote) && (!double_quote)) {
          l = 0;
          int prev;
          while ((prev = endmark[l++]) != '\0') {
