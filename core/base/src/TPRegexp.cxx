@@ -106,6 +106,31 @@ TPRegexp &TPRegexp::operator=(const TPRegexp &p)
 UInt_t TPRegexp::ParseMods(const TString &modStr) const
 {
    // Translate Perl modifier flags into pcre flags.
+   // The supported modStr characters are: g, i, m, o, s, x, and the
+   // special d for debug. The meaning of the letters is:
+   // - m
+   //   Treat string as multiple lines. That is, change "^" and "$" from
+   //   matching the start or end of the string to matching the start or
+   //   end of any line anywhere within the string.
+   // - s
+   //   Treat string as single line. That is, change "." to match any
+   //   character whatsoever, even a newline, which normally it would not match.
+   //   Used together, as /ms, they let the "." match any character whatsoever,
+   //   while still allowing "^" and "$" to match, respectively, just after and
+   //   just before newlines within the string.
+   // - i
+   //   Do case-insensitive pattern matching.
+   // - x
+   //   Extend your pattern's legibility by permitting whitespace and comments.
+   // - p
+   //   Preserve the string matched such that ${^PREMATCH}, ${^MATCH},
+   //   and ${^POSTMATCH} are available for use after matching.
+   // - g and c
+   //   Global matching, and keep the Current position after failed matching.
+   //   Unlike i, m, s and x, these two flags affect the way the regex is used
+   //   rather than the regex itself. See Using regular expressions in Perl in
+   //   perlretut for further explanation of the g and c modifiers.
+   // For more detail see: http://perldoc.perl.org/perlre.html#Modifiers.
 
    UInt_t opts = 0;
 
@@ -150,6 +175,7 @@ UInt_t TPRegexp::ParseMods(const TString &modStr) const
 TString TPRegexp::GetModifiers() const
 {
    // Return PCRE modifier options as string.
+   // For meaning of mods see ParseMods().
 
    TString ret;
 
@@ -302,6 +328,7 @@ Int_t TPRegexp::Match(const TString &s, const TString &mods, Int_t start,
    // nMaxMatch is the maximum allowed number of matches.
    // pos contains the string indices of the matches. Its usage is
    // shown in the routine MatchS.
+   // For meaning of mods see ParseMods().
 
    UInt_t opts = ParseMods(mods);
 
@@ -331,6 +358,7 @@ TObjArray *TPRegexp::MatchS(const TString &s, const TString &mods,
    // cout << subStr << endl;
    //
    // produces:  "abc" "a" "" "bc"
+   // For meaning of mods see ParseMods().
 
    TArrayI pos;
    Int_t nrMatch = Match(s, mods, start, nMaxMatch, &pos);
@@ -431,6 +459,7 @@ Int_t TPRegexp::Substitute(TString &s, const TString &replacePattern,
    // cout << nrSub << " \"" << s << "\"" <<endl;
    //
    // produces: 2 "mies noot aap"
+   // For meaning of mods see ParseMods().
 
    UInt_t opts = ParseMods(mods);
 
@@ -600,7 +629,7 @@ void TPMERegexp::Reset(const TString& s, UInt_t opts, Int_t nMatchMax)
    if (nMatchMax != -1)
       fNMatches = nMatchMax;
    fNMatches = 0;
-   fLastGlobalPosition = 0;   
+   fLastGlobalPosition = 0;
 }
 
 //______________________________________________________________________________
