@@ -394,7 +394,8 @@ static int G__fgetstream_newtemplate_internal(G__FastAllocString& string,
 {
    // Work horse for G__fgetstream_newtemplate() and G__fgetstream_new().
    // See G__fgetstream_newtemplate() for emaning of parameters.
-   size_t i = offset, l;
+   size_t i = offset;
+   size_t l = 0;
    int c;
    int nest = 0;
    bool single_quote = false;
@@ -408,7 +409,7 @@ static int G__fgetstream_newtemplate_internal(G__FastAllocString& string,
       ignoreflag = false;
       c = G__fgetc() ;
 
-      if ((nest <= 0) && (single_quote == 0) && (double_quote == 0)) {
+      if (nest <= 0 && !single_quote && !double_quote) {
          l = 0;
          int prev;
          while ((prev = endmark[l++]) != '\0') {
@@ -482,7 +483,7 @@ static int G__fgetstream_newtemplate_internal(G__FastAllocString& string,
             break;
          case '\'':
             if (!double_quote) {
-               next_single_quote ^= 1;
+               next_single_quote = !single_quote;
             }
             break;
 
@@ -1113,29 +1114,38 @@ int G__fgetspace_peek()
 int G__fgetvarname(G__FastAllocString& string, size_t offset, const char *endmark)
 {
    size_t i = offset;
-   int l;
-   int c, prev;
-   short nest = 0, single_quote = 0, double_quote = 0, flag = 0, spaceflag = 0, ignoreflag;
+   size_t l = 0;
+   int c;
+   int nest = 0;
+   bool single_quote = false;
+   bool double_quote = false;
+   bool breakflag = false;
+   bool ignoreflag = false;
+   bool commentflag = false;
+   bool haveid = false;
 #ifdef G__TEMPLATEMEMFUNC
-   int tmpltflag = 0;
-   int notmpltflag = 0;
+   int tmpltlevel = 0;
+   bool operGt = false;
 #endif
-   char* pp = (char*)string + offset;
    int start_line = G__ifile.line_number;
 
    do {
       ignoreflag = 0;
       c = G__fgetc() ;
 
-      if ((nest == 0) && (single_quote == 0) && (double_quote == 0)) {
+      if ((nest <= 0) && (!single_quote) && (!double_quote)) {
          l = 0;
+         int prev;
          while ((prev = endmark[l++]) != '\0') {
             if (c == prev) {
-               flag = 1;
-               ignoreflag = 1;
+               breakflag = true;
+               ignoreflag = true;
             }
          }
       }
+
+      bool next_single_quote = single_quote;
+      bool next_double_quote = double_quote;
 
       switch (c) {
          case ' ':
@@ -1143,119 +1153,103 @@ int G__fgetvarname(G__FastAllocString& string, size_t offset, const char *endmar
          case '\n':
          case '\r':
          case '\f':
-            if ((single_quote == 0) && (double_quote == 0)) {
-               string.Set(i, 0);
-               if (tmpltflag && G__isstoragekeyword(pp)) {
-                  c = ' ';
-                  pp = string + i + 1;
-                  break;
+            commentflag = false;
+            if (!single_quote && !double_quote) {
+               c = ' ';
+               if (!nest && !tmpltlevel && haveid) {
+                  breakflag = true;
                }
-               ignoreflag = 1;
-               if (nest == 0 && spaceflag != 0) {
-                  flag = 1;
-               }
-            }
-            break;
-         case '"':
-            if (nest == 0 && single_quote == 0) {
-               spaceflag = 1;
-               double_quote ^= 1;
-            }
-            break;
-         case '\'':
-            if (nest == 0 && double_quote == 0) {
-               spaceflag = 1;
-               single_quote ^= 1;
             }
             break;
 #ifdef G__TEMPLATEMEMFUNC
          case '<':
-            if ((single_quote == 0) && (double_quote == 0)) {
-               pp = string + i + 1;
+            if (!single_quote && !double_quote) {
+               if (operGt || (8 == i - offset && strncmp("operator", string() + offset, 8) == 0)
+                   || (9 == i - offset && (strncmp("&operator", string() + offset, 9) == 0 ||
+                                           strncmp("*operator", string() + offset, 9) == 0))
+                   ) {
+                  operGt = true;
+                  break;
+               } else {
+                  string.Set(i, 0);
+                  char* prevIdentifier = i ? G__get_previous_name(string, i - 1, offset) : 0;
+                  if (prevIdentifier && prevIdentifier[0]
+                      && G__defined_templateclass(prevIdentifier)){
+                     ++tmpltlevel;
+                  }
+               }
             }
-            if (notmpltflag || (8 == i - offset && strncmp("operator", string() + offset, 8) == 0)
-                || (9 == i - offset && (strncmp("&operator", string() + offset, 9) == 0 ||
-                                        strncmp("*operator", string() + offset, 9) == 0))
-               ) {
-               notmpltflag = 1;
-               break;
-            }
-            else {
-               tmpltflag = 1;
-            }
+            break;
 #endif
          case '{':
          case '(':
          case '[':
-            if ((single_quote == 0) && (double_quote == 0)) {
-               nest++;
+            if (!single_quote && !double_quote) {
+               ++nest;
             }
             break;
 #ifdef G__TEMPLATEMEMFUNC
          case '>':
-            if (!tmpltflag) break;
-            else if (nest && i && '>' == string[i-1])
-               string.Set(i++, ' ');
-#endif
-         case '}':
-         case ')':
-         case ']':
-            if ((single_quote == 0) && (double_quote == 0)) {
-               nest--;
-               if (nest < 0) {
-                  flag = 1;
+            if (!single_quote && !double_quote) {
+               if (!tmpltlevel) {
+                  break;
+               } else if (nest && i && '>' == string[i - 1]) {
+                  string.Set(i++, ' ');
+               }
+               --tmpltlevel;
+               if (tmpltlevel < 0) {
+                  breakflag = 1;
                   ignoreflag = 1;
                }
             }
             break;
+#endif
+         case '}':
+         case ')':
+         case ']':
+            if (!single_quote && !double_quote) {
+               nest--;
+               if (nest < 0) {
+                  breakflag = 1;
+                  ignoreflag = 1;
+               }
+            }
+            break;
+         case '"':
+            if (!single_quote) {
+               next_double_quote = !double_quote;
+            }
+            break;
+         case '\'':
+            if (!double_quote) {
+               next_single_quote = !single_quote;
+            }
+            break;
          case '/':
-            if ((single_quote == 0) && (double_quote == 0)) {
-               /* comment */
-               string.Set(i++, c);
-
-               c = G__fgetc();
-               switch (c) {
-                  case '*':
-                     G__skip_comment();
-                     --i;
-                     ignoreflag = 1;
-                     break;
-                  case '/':
-                     G__fignoreline();
-                     --i;
-                     ignoreflag = 1;
-                     break;
-                  case ' ':
-                  case '\t':
-                  case '\n':
-                  case '\r':
-                  case '\f':
-                     if ((single_quote == 0) && (double_quote == 0)) {
-                        ignoreflag = 1;
-                        if (nest == 0 && spaceflag != 0) {
-                           flag = 1;
-                        }
-                     }
-                     break;
-                  case EOF:
-                     G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
-                     G__unexpectedEOF("G__fgetvarname():1");
-                     string.Set(i, 0);
-                     return(c);
-                  default:
-                     fseek(G__ifile.fp, -1, SEEK_CUR);
-                     if (G__dispsource) G__disp_mask = 1;
-                     spaceflag = 1;
-                     ignoreflag = 1;
-                     break;
+            if (!single_quote && !double_quote && i > offset && string[i-1] == '/' &&
+                  commentflag) {
+               --i;
+               G__fignoreline();
+               ignoreflag = true;
+            } else {
+               commentflag = true;
+            }
+            break;
+         case '*':
+             /* comment */
+            if (!double_quote && !single_quote) {
+               if (i > offset && string[i-1] == '/' && commentflag) {
+                  G__skip_comment();
+                  --i;
+                  ignoreflag = true;
                }
             }
             break;
 
          case '#':
-            if (single_quote == 0 && double_quote == 0 && (i == offset || string[i-1] != '$')) {
+            if (!single_quote && !double_quote && (i == offset || string[i-1] != '$')) {
                G__pp_command();
-               ignoreflag = 1;
+               ignoreflag = true;
 #ifdef G__TEMPLATECLASS
                c = ' ';
 #endif
@@ -1269,11 +1263,10 @@ int G__fgetvarname(G__FastAllocString& string, size_t offset, const char *endmar
             return(c);
 
          case ',':
-            pp = string + i + 1;
             /* fall through... */
 
          default:
-            spaceflag = 1;
+            haveid = true;
 #ifdef G__MULTIBYTE
             if (G__IsDBCSLeadByte(c) && !ignoreflag) {
                string.Set(i++, c);
@@ -1284,14 +1277,34 @@ int G__fgetvarname(G__FastAllocString& string, size_t offset, const char *endmar
             break;
       }
 
-      if (ignoreflag == 0) {
+      if (!ignoreflag) {
+         // i > 0, not i > offset: we care even about previous call's content of string
+         if (i > 0 && !single_quote && !double_quote && string[i - 1] == ' ') {
+            // We want to append c, but the trailing char is a space.
+            if (c == ' ') --i; // replace ' ' by ' '
+            else if (i == 1) {
+               // string is " " - remove leading space.
+               --i;
+            } else {
+               char prev = string[i - 2];
+               // We only keep spaces between "identifiers" like "new const long long"
+               // and between '> >'
+               if ((G__IsIdentifier(prev) && G__IsIdentifier(c)) || (prev == '>' && c == '>')) {
+               } else {
+                  // replace previous ' '
+                  --i;
+               }
+            }
+         }
          string.Set(i++, c);
-         G__CHECK(G__SECURE_BUFFER_SIZE, i >= G__LONGLINE, return(EOF));
       }
 
+      single_quote = next_single_quote;
+      double_quote = next_double_quote;
    }
-   while (flag == 0) ;
+   while (!breakflag) ;
 
+   if (i > 0 && string[i - 1] == ' ') --i;
    string.Set(i, 0);
 
    return(c);
