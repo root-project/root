@@ -18,6 +18,7 @@
 
 #include "RooAbsReal.h"
 #include "RooListProxy.h"
+#include "RooObjCacheManager.h"
 
 class RooRealVar;
 class RooArgList ;
@@ -37,20 +38,38 @@ public:
 
   void printMetaArgs(ostream& os) const ;
 
-  const RooArgList& list1() const { return _set1 ; }
-  const RooArgList& list2() const { return _set2 ; }
+  const RooArgList& list1() const { return _set ; }
+  const RooArgList& list() const { return _set ; }
+
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const {
+      // Force RooRealIntegral to offer all observables for internal integration
+      return kTRUE ;
+  }
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const char* rangeName=0) const;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+
+
+
+     
 
 protected:
 
-  RooArgList   _ownedList ;       // List of owned components
-  RooListProxy _set1 ;            // First set of terms to be summed
-  RooListProxy _set2 ;            // Second set of terms to be summed
-  mutable TIterator* _setIter1 ;  //! Iterator over set1
-  mutable TIterator* _setIter2 ;  //! Iterator over set2
+  RooArgList   _ownedList ;      // List of owned components
+  RooListProxy _set ;            // set of terms to be summed
+  mutable TIterator* _setIter ;  //! Iterator over set
+
+  class CacheElem : public RooAbsCacheElement {
+  public:
+      virtual ~CacheElem();
+      // Payload
+      RooArgList _I ;
+      virtual RooArgList containedArgs(Action) ;
+  };
+  mutable RooObjCacheManager _cacheMgr ; // The cache manager
 
   Double_t evaluate() const;
 
-  ClassDef(RooAddition,1) // Sum of RooAbsReal objects
+  ClassDef(RooAddition,2) // Sum of RooAbsReal objects
 };
 
 #endif
