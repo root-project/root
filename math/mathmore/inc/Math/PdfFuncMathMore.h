@@ -22,23 +22,34 @@
   *                                                                    *
   **********************************************************************/
 
-#ifndef ROOT_Math_DistFuncMathMore
-#define ROOT_Math_DistFuncMathMore
 
 #ifndef ROOT_Math_PdfFuncMathMore
-#include "Math/PdfFuncMathMore.h"
-#endif
+#define ROOT_Math_PdfFuncMathMore
+
+namespace ROOT { 
+   namespace Math { 
 
 
-// #ifndef ROOT_Math_ProbFuncMathMore
-// #include "Math/ProbFuncMathMore.h"
-// #endif
+  /**
 
-// quantile functions from mathmore
-#ifndef ROOT_Math_QuantFuncMathMore
-#include "Math/QuantFuncMathMore.h"
-#endif
+  Probability density function of the non central \f$\chi^2\f$ distribution with \f$r\f$ 
+  degrees of freedom and the noon-central parameter \f$\lambda\f$ 
+
+  \f[ p_r(x) = \frac{1}{\Gamma(r/2) 2^{r/2}} x^{r/2-1} e^{-x/2} \f]
+
+  for \f$x \geq 0\f$. 
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/NoncentralChi-SquaredDistribution.html">
+  Mathworld</A>. 
+  
+  @ingroup PdfFunc
+
+  */
+
+  double noncentral_chisquared_pdf(double x, double r, double lambda);
+
+   }  //end namespace Math
+} // end namespace ROOT
 
 
-
-#endif  // ROOT_Math_DistFuncMathMore
+#endif  // ROOT_Math_PdfFuncMathMore

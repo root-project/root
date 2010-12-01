@@ -40,8 +40,15 @@
 #pragma link C++ function ROOT::Math::airy_zero_Bi(unsigned int);
 #pragma link C++ function ROOT::Math::airy_zero_Ai_deriv(unsigned int)
 #pragma link C++ function ROOT::Math::airy_zero_Bi_deriv(unsigned int);
+#pragma link C++ function ROOT::Math::wigner_3j(int,int,int,int,int,int);
+#pragma link C++ function ROOT::Math::wigner_6j(int,int,int,int,int,int);
+#pragma link C++ function ROOT::Math::wigner_9j(int,int,int,int,int,int,int,int,int);
 
 // statistical functions: 
+
+//pdf 
+#pragma link C++ function ROOT::Math::noncentral_chisquared_pdf(double,double,double);
+
 
 // quantiles: inverses of cdf
 

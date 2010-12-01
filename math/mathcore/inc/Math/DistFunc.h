@@ -44,9 +44,9 @@
 #ifdef R__HAS_MATHMORE  
 
 // // extra pdf functions from MathMore
-// #ifndef ROOT_Math_PdfFuncMathMore
-// #include "Math/PdfFuncMathMore.h"
-// #endif
+#ifndef ROOT_Math_PdfFuncMathMore
+#include "Math/PdfFuncMathMore.h"
+#endif
 
 // no -more extra cdf in MathMore
 // #ifndef ROOT_Math_ProbFuncMathMore

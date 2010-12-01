@@ -765,6 +765,56 @@ namespace Math {
 
   double airy_zero_Bi_deriv(unsigned int s);
 
+  /**
+  
+  Calculates the Wigner 3j coupling coefficients
+
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/Wigner3j-Symbol.html.html">
+  Mathworld</A>.
+  The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/3_002dj-Symbols.html#g_t3_002dj-Symbols">GSL</A>.
+
+  @ingroup SpecFunc
+
+  */
+
+  double wigner_3j(int ja, int jb, int jc, int ma, int mb, int mc);
+
+  /**
+  
+  Calculates the Wigner 6j coupling coefficients
+
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/Wigner6j-Symbol.html">
+  Mathworld</A>.
+  The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/6_002dj-Symbols.html#g_t6_002dj-Symbols">GSL</A>.
+
+  @ingroup SpecFunc
+
+  */
+
+  double wigner_6j(int ja, int jb, int jc, int jd, int je, int jf);
+
+  /**
+  
+  Calculates the Wigner 9j coupling coefficients
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/Wigner9j-Symbol.html">
+  Mathworld</A>.
+  The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/9_002dj-Symbols.html#g_t9_002dj-Symbols">GSL</A>.
+
+  @ingroup SpecFunc
+
+  */
+
+   double wigner_9j(int ja, int jb, int jc, int jd, int je, int jf, int jg, int jh, int ji);
+
 
 
 } // namespace Math

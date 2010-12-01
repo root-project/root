@@ -26,7 +26,7 @@
 #include "gsl/gsl_sf_expint.h"
 #include "gsl/gsl_sf_zeta.h"
 #include "gsl/gsl_sf_airy.h"
-
+#include "gsl/gsl_sf_coupling.h"
 
 
 namespace ROOT {
@@ -423,7 +423,19 @@ double airy_zero_Bi_deriv(unsigned int s) {
    
 }
 
+// wigner coefficient 
 
+double wigner_3j(int ja, int jb, int jc, int ma, int mb, int mc) {
+   return gsl_sf_coupling_3j(ja,jb,jc,ma,mb,mc);
+}
+
+double wigner_6j(int ja, int jb, int jc, int jd, int je, int jf) { 
+   return gsl_sf_coupling_6j(ja,jb,jc,jd,je,jf);
+}
+
+double wigner_9j(int ja, int jb, int jc, int jd, int je, int jf, int jg, int jh, int ji) { 
+   return gsl_sf_coupling_9j(ja,jb,jc,jd,je,jf,jg,jh,ji);
+}
 
 } // namespace Math
 } // namespace ROOT

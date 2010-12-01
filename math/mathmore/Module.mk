@@ -27,6 +27,7 @@ MATHMOREDO   := $(MATHMOREDS:.cxx=.o)
 MATHMOREDH   := $(MATHMOREDS:.cxx=.h)
 MATHMOREDH1  := $(MODDIRI)/Math/DistFuncMathMore.h \
                 $(MODDIRI)/Math/SpecFuncMathMore.h \
+                $(MODDIRI)/Math/PdfFuncMathMore.h \
                 $(MODDIRI)/Math/Polynomial.h \
                 $(MODDIRI)/Math/Derivator.h \
                 $(MODDIRI)/Math/Interpolator.h \

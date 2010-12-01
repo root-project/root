@@ -64,10 +64,10 @@ class Polynomial : public ParamFunction<IParamGradFunction>,
                    public IGradientOneDim  
 {
 
-   typedef  ParamFunction<IParamGradFunction> ParFunc; 
-
-public: 
   
+public: 
+ 
+ typedef  ParamFunction<IParamGradFunction> ParFunc;  
    /**
       Construct a Polynomial function of order n. 
       The number of Parameters is n+1. 
