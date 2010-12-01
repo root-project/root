@@ -304,6 +304,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 
   // Install argument in static data member to be accessed below through static CINT interface functions  
   _of = this ;
+
   
   try {
     Int_t i(0) ;
@@ -354,7 +355,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
       } else if ((*ti)=="const char*") {
 	RooFactoryWSTool::as_STRING(i) ;
 	cintExpr += Form(",RooFactoryWSTool::as_STRING(%d)",i) ;	
-      } else if ((*ti)=="Int_t") {
+      } else if ((*ti)=="Int_t" || (*ti)=="int") {
 	RooFactoryWSTool::as_INT(i) ;
 	cintExpr += Form(",RooFactoryWSTool::as_INT(%d)",i) ;	
       } else if ((*ti)=="Double_t") {
@@ -390,8 +391,6 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 	// If btype if a typedef, substitute it by the true type name
 	btype = RooCintUtils::trueName(btype.c_str()) ;
 
-	cout << "btype = " << btype << endl ;
-	
 	if (obj.InheritsFrom(btype.c_str())) {
 	  cintExpr += Form(",(%s&)RooFactoryWSTool::as_OBJ(%d)",ti->c_str(),i) ;
 	} else {
