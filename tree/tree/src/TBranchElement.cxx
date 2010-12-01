@@ -1727,9 +1727,9 @@ void TBranchElement::InitInfo()
                }
             } else {
                // We have not even found the element .. this is strange :(
-               fIDs.clear();
-               fID = -3;
-               SetBit(kDoNotProcess);
+               // fIDs.clear();
+               // fID = -3;
+               // SetBit(kDoNotProcess);
             }
             if (fOnfileObject==0 && (fType==31 || fType==41 || (0 <= fType && fType <=2) ) && fInfo->GetNdata()
                 && ((TStreamerElement*) fInfo->GetElems()[0])->GetType() == TStreamerInfo::kCacheNew)
