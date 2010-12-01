@@ -9,7 +9,7 @@
     NormalizedByTheory should be "True" (not "TRUE" or "true") for all non-data-driven background
 -->
 
-<!DOCTYPE Combination  SYSTEM 'Config.dtd'>
+<!DOCTYPE Combination  SYSTEM 'HistFactorySchema.dtd'>
 
 <Combination OutputFilePrefix="./results/example" Mode="comb" >
 

@@ -1,4 +1,4 @@
-<!DOCTYPE Channel  SYSTEM 'Config.dtd'>
+<!DOCTYPE Channel  SYSTEM 'HistFactorySchema.dtd'>
 
   <Channel Name="channel1" InputFile="./data/example.root" HistoName="" >
     <!--<Data Name="data" InputFile="" HistoPath="" HistoName=""/>-->
