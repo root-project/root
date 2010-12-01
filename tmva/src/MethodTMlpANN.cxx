@@ -453,7 +453,7 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromStream( istream& istr )
    fMLP->LoadWeights( "./TMlp.nn.weights.temp" );
    // here we can delete the temporary file
    // how?
-   delete d;
+   delete [] d;
 }
 
 //_______________________________________________________________________
