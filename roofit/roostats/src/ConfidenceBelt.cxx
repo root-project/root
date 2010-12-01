@@ -239,7 +239,6 @@ AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint,
       TIter it = parameterPoint.createIterator();
       RooRealVar *myarg; 
       while ( samePoint && (myarg = (RooRealVar *)it.Next())) { 
-	if(!myarg) continue;
 	if(myarg->getVal() != thisPoint->getRealValue(myarg->GetName()))
 	  samePoint = false;
       }
