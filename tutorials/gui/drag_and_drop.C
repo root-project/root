@@ -194,20 +194,22 @@ DNDMainFrame::DNDMainFrame(const TGWindow *p, int w, int h) :
       rootsys.Remove(0, 3);
 #endif
    TString link = TString::Format("/%s/tutorials/image/rose512.jpg", rootsys.Data());
-   TImage *img = TImage::Open(link.Data());
-   if (img) {
-      // create a 16x16 icon from the original picture
-      img->Scale(16, 16);
-      pic = gClient->GetPicturePool()->GetPicture("rose512", img->GetPixmap(),
+   if (!gSystem->AccessPathName(link.Data(), kReadPermission)) {
+      TImage *img = TImage::Open(link.Data());
+      if (img) {
+         // create a 16x16 icon from the original picture
+         img->Scale(16, 16);
+         pic = gClient->GetPicturePool()->GetPicture("rose512", img->GetPixmap(),
                                                   img->GetMask());
-      delete img;
+         delete img;
+      }
+      else pic = gClient->GetPicture("psp_t.xpm");
+      link.Prepend("file://");
+      TObjString *ostr = new TObjString(link.Data());
+      item = fListTree->AddItem(fBaseLTI, "Rose", ostr, pic, pic);
+      fListTree->SetToolTipItem(item, link.Data());
+      item->SetDNDSource(kTRUE);
    }
-   else pic = gClient->GetPicture("psp_t.xpm");
-   link.Prepend("file://");
-   TObjString *ostr = new TObjString(link.Data());
-   item = fListTree->AddItem(fBaseLTI, "Rose", ostr, pic, pic);
-   fListTree->SetToolTipItem(item, link.Data());
-   item->SetDNDSource(kTRUE);
 
    // open the base list tree item and allow to drop into it
    fListTree->OpenItem(fBaseLTI);
