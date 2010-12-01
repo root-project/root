@@ -282,6 +282,7 @@ include $(ROOT_LOC)/config/Makefile.comp
 ifeq ($(ROOT_SRCDIR),)
 export ROOT_SRCDIR := $(shell grep "ROOT_SRCDIR    :=" $(ROOT_LOC)/config/Makefile.config | sed 's/^ROOT_SRCDIR    := \$$(call realpath, \([^)]*\).*$$/\1/')
 ifeq ($(PLATFORM),win32)
+  export ROOT_SRCDIR    := $(shell cygpath -m -- $(ROOT_SRCDIR))
   export ROOT_SRCDIRDEP := $(shell cygpath -u -- $(ROOT_SRCDIR))
 else
   export ROOT_SRCDIRDEP := $(ROOT_SRCDIR)
