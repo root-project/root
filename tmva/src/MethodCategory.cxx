@@ -325,8 +325,6 @@ void TMVA::MethodCategory::InitCircularTree(const DataSetInfo& dsi)
    }
 }
 
-
-
 //_______________________________________________________________________
 void TMVA::MethodCategory::Train()
 {
@@ -523,6 +521,7 @@ void TMVA::MethodCategory::GetHelpMessage() const
 //_______________________________________________________________________
 const TMVA::Ranking* TMVA::MethodCategory::CreateRanking()
 { 
+   // no ranking 
    return 0;
 }
 
@@ -530,14 +529,15 @@ const TMVA::Ranking* TMVA::MethodCategory::CreateRanking()
 Bool_t TMVA::MethodCategory::PassesCut( const Event* ev, UInt_t methodIdx )
 {
 
-   if(fCatTree) {
+   if (fCatTree) {
       if (methodIdx>=fCatFormulas.size()) {
          Log() << kFATAL << "Large method index " << methodIdx << ", number of category formulas = "
                << fCatFormulas.size() << Endl;
       }
       TTreeFormula* f = fCatFormulas[methodIdx];
       return f->EvalInstance(0) > 0.5;
-   } else {
+   } 
+   else {
 
       // checks whether an event lies within a cut
       if (methodIdx>=fCategorySpecIdx.size()) {
@@ -550,7 +550,6 @@ Bool_t TMVA::MethodCategory::PassesCut( const Event* ev, UInt_t methodIdx )
       return pass;
    }
 }
-
 
 //_______________________________________________________________________
 Double_t TMVA::MethodCategory::GetMvaValue( Double_t* err, Double_t* errUpper )

@@ -118,7 +118,7 @@ std::vector<Double_t> TMVA::ResultsMulticlass::GetBestMultiClassCuts(UInt_t targ
    fClassToOptimize = targetClass;
    std::vector<Interval*> ranges(dsi->GetNClasses(), new Interval(-1,1));
    
-   const TString name( "multiclassGA" );
+   const TString name( "MulticlassGA" );
    const TString opts( "PopSize=100:Steps=30" );
    GeneticFitter mg( *this, name, ranges, opts);
    
