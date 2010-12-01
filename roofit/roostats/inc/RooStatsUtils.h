@@ -16,8 +16,8 @@
 #include "TMath.h"
 #endif
 
-#ifndef ROOT_Math_DistFunc
-#include"Math/DistFunc.h"
+#ifndef ROOT_Math_DistFuncMathCore
+#include"Math/DistFuncMathCore.h"
 #endif
 
 #include "RooArgSet.h"
