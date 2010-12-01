@@ -4,7 +4,7 @@
 # Author: Kyle Cranmer
 
 MODNAME      := histfactory
-MODDIR       := roofit/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/roofit/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 MODDIRC      := $(MODDIR)/config
@@ -50,13 +50,13 @@ HF_LIBSDEP := $(HISTFACTORYLIBDEP)
 
 ##### libHistFactory #####
 HISTFACTORYL    := $(MODDIRI)/LinkDef.h
-HISTFACTORYDS   := $(MODDIRS)/G__HistFactory.cxx
+HISTFACTORYDS   := $(call stripsrc,$(MODDIRS)/G__HistFactory.cxx)
 HISTFACTORYDO   := $(HISTFACTORYDS:.cxx=.o)
 HISTFACTORYDH   := $(HISTFACTORYDS:.cxx=.h)
 
 HISTFACTORYH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 HISTFACTORYS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-HISTFACTORYO    := $(HISTFACTORYS:.cxx=.o)
+HISTFACTORYO    := $(call stripsrc,$(HISTFACTORYS:.cxx=.o))
 
 HISTFACTORYDEP  := $(HISTFACTORYO:.o=.d) $(HISTFACTORYDO:.o=.d)
 
@@ -91,11 +91,12 @@ $(HISTFACTORYLIB): $(HISTFACTORYO) $(HISTFACTORYDO) $(ORDER_) $(MAINLIBS) \
 		   "$(HISTFACTORYLIBEXTRA)"
 
 $(HISTFACTORYDS):  $(HISTFACTORYH_DIC) $(HISTFACTORYL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(HISTFACTORYH_DIC) $(HISTFACTORYL)
 
 $(HISTFACTORYMAP): $(RLIBMAP) $(MAKEFILEDEP) $(HISTFACTORYL)
-		$(RLIBMAP) -o $(HISTFACTORYMAP) -l $(HISTFACTORYLIB) \
+		$(RLIBMAP) -o  $@ -l $(HISTFACTORYLIB) \
 		   -d $(HISTFACTORYLIBDEPM) -c $(HISTFACTORYL)
 
 
