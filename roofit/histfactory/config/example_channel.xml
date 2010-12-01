@@ -1,0 +1,16 @@
+<!DOCTYPE Channel  SYSTEM 'Config.dtd'>
+
+  <Channel Name="channel1" InputFile="./data/example.root" HistoName="" >
+    <!--<Data Name="data" InputFile="" HistoPath="" HistoName=""/>-->
+    <Sample Name="signal" HistoPath="" HistoName="signal">
+      <OverallSys Name="syst1" High="1.05" Low="0.95"/>
+      <NormFactor Name="SigXsecOverSM" Val="1" Low="0.5" High="1.8" Const="True" />
+    </Sample>
+    <Sample Name="background1" HistoPath="" NormalizeByTheory="True" HistoName="background1">
+      <OverallSys Name="syst2" Low="0.95" High="1.05"/>
+    </Sample>
+    <Sample Name="background2" HistoPath="" NormalizeByTheory="True" HistoName="background2">
+      <OverallSys Name="syst3" Low="0.95" High="1.05"/>
+      <!-- <HistoSys Name="syst4" HistoPathHigh="" HistoPathLow="histForSyst4"/>-->
+    </Sample>
+  </Channel>

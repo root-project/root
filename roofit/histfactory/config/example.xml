@@ -1,0 +1,23 @@
+<!--
+//============================================================================
+// Name        : example.xml
+//============================================================================
+-->
+
+<!--
+    Configuration for the ee channel. Should be mainly self-explanatory.
+    NormalizedByTheory should be "True" (not "TRUE" or "true") for all non-data-driven background
+-->
+
+<!DOCTYPE Combination  SYSTEM 'Config.dtd'>
+
+<Combination OutputFilePrefix="./results/example" Mode="comb" >
+
+  <Input>./config/example_channel.xml</Input>
+
+  <Measurement Name="Example" Lumi="10" LumiRelErr="0.05" BinLow="0" BinHigh="2" Mode="comb">
+    <POI>SigXsecOverSM</POI>
+    <ParamSetting Const="True">Lumi alpha_syst1</ParamSetting>
+  </Measurement>
+
+</Combination>

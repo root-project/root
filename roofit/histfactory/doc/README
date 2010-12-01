@@ -1,0 +1,118 @@
+
+
+This package was written by 
+     Kyle Cranmer (cranmer@cern.ch)
+     Akira Shibata (akira.shibata@cern.ch)
+ 
+     Date: Original version in Spring 2009
+     Modified version using XML in Jan 2010
+
+This is a package that creates a RooFit probability density function from ROOT histograms 
+of expected distributions and histograms that represent the +/- 1 sigma variations 
+from systematic effects. The resulting probability density function can then be used
+with any of the statistical tools provided within RooStats, such as the profile 
+likelihood ratio, Feldman-Cousins, etc.
+
+The user needs to provide histograms (in picobarns per bin) and configure the job
+with XML.  The configuration XML is defined in the file config/Config.dtd, but essentially
+it is organized as follows (see config/example.xml and config/example_channel.xml for examples)
+ - a top level 'Combination' that is composed of:
+    - several 'Channels', which are composed of:
+      - several 'Samples' (eg. signal, bkg1, bkg2, ...), each of which has:
+      	- a name
+	- if the sample is normalized by theory (eg N = L*sigma) or not (eg. data driven)
+	- a nominal expectation histogram
+	- a named 'Normalization Factor' (which can be fixed or allowed to float in a fit)
+	- several 'Overall Systematics' in normalization with:
+	  - a name
+	  - +/- 1 sigma variations (eg. 1.05 and 0.95 for a 5% uncertainty)
+	- several 'Histogram Systematics' in shape with:
+	  - a name (which can be shared with the OverallSyst if correlated)
+	  - +/- 1 sigma variational histograms
+    - several 'Measurements' (corresponding to a full fit of the model) each of which specifies
+      - a name for this fit to be used in tables and files
+      - what is the luminosity associated to the measurement in picobarns
+      - which bins of the histogram should be used
+      - what is the relative uncertainty on the luminosity 
+      - what is (are) the parameter(s) of interest that will be measured
+      - which parameters should be fixed/floating (eg. nuisance parameters)
+
+Status:
+* Emphasis has been placed on being able to make changes to histograms and basic settings via 
+  configuration without recompiling. 
+* The construction of the model is now factorized from the statistical test, though it still 
+  defaults to running the likelihood fit.  This should be further factorized so that it's obvious
+  how to use different statistical tests.
+* The fundamental model uses a Poisson pdf for each bin.  This gives maximal flexibility, but 
+  it probably won't scale well 1-d histograms with many bins.  Also, the code that converts 
+  the histogram contents does not yet support 2D histograms.  So the underlying factory should 
+  be extended for those cases.
+* The output is very verbose currently.  Could be logged in a nicer way.
+* HistogramFactory is going to be incorprated into RooStats. Need to change namespace and some
+  coding conventions.
+
+//
+// How to
+//
+
+STEP 0: preliminaries to setup example (make .root file, hack for makefile)
+     $ cd data; root.exe makeExample.C
+     $ mkdir RooStats; cd RooStats; ln -s ../inc HistFactory; cd ..
+STEP 1: setup a ROOT 5.26 or greater.  
+     On lxplus:
+     $ export ROOTSYS=/afs/cern.ch/sw/lcg/app/releases/ROOT/5.26.00/slc4_amd64_gcc34/root
+     $ export PATH=$ROOTSYS/bin:$PATH
+     $ export LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH
+STEP 2: make the package and add location of libraries to your path
+     $ make 
+     $ export LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH
+STEP 3: run the executable (takes several minutes, output is very verbose)
+     $ bin/MakeModelAndMeasurements config/example.xml
+STEP 4: inspect the results
+     $ less results/results_*.table
+     $ less results/results_*.dot
+     $ gv combined_*_profileLR.eps
+
+//
+// The package directory structure
+//
+
+Makefile : Specifies the make directives. Just type "make" to compile the whole package
+ChangeLog : Development notes
+
+/* code */
+include/ : Header files
+src/ : Source code
+
+     ConfigParser.cxx : Class that knows how to parse configuration xml for a given channel.
+     EstimateSummary.cxx : Class to hold in memory information extracted from the configuration xml files
+     Helper.cxx : A helper for the filling of EstimateSummaries
+     HistoToWorkspaceFactory.cxx : The main tool that assembles the model based on info in the EstimateSummaries
+     MakeModelAndMeasurements.cxx : The top level tool that calls the parser, passes info to factory, and then calls fit
+     LinInterpVar.cxx : A custom RooFit class for piece-wise linear interpolation
+
+/* binary */
+dep/ : Internal step for package making to keep track of the dependencies
+obj/ : Intermediate object files
+lib/ : Where the compiled libraries go
+bin/ : Stores the executable called MakeModelAndMeasurements
+
+/* configuration */
+config/ : Where all the configuration xml files are
+  Config.dtd : The schema for the xml configuration. More documentation there
+  Combination.xml : The top combination config file which specifies the measurement 
+                    and channels
+  ee.xml, emu.xml etc : Configuration of each channel including the systematics
+
+/* results */
+results/ : Empty at first. All tex, eps and root files are written out here
+
+/* data */
+data/ : The input data, collection of nominal and variation histograms
+        All histogram needed for the example analysis is included in one file
+        but the configuration can be set so every histogram can be taken from
+        separate files.
+
+/* tools */
+tools/ : Some utilities for plotting and managing the results
+  Table.py : subtracts stat only error (in quadrature) from results_<info of run>.table
