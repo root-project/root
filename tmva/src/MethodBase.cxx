@@ -680,7 +680,8 @@ void TMVA::MethodBase::AddMulticlassOutput(Types::ETreeType type)
 
    Log() << kINFO << "Create results for " << (type==Types::kTraining?"training":"testing") << Endl;
 
-   ResultsMulticlass* resMulticlass = (ResultsMulticlass*)Data()->GetResults(GetMethodName(), type, Types::kMulticlass);
+   ResultsMulticlass* resMulticlass = dynamic_cast<ResultsMulticlass*>(Data()->GetResults(GetMethodName(), type, Types::kMulticlass));
+   if (!resMulticlass) Log() << kFATAL<< "unable to create pointer in AddMulticlassOutput, exiting."<<Endl;
 
    Long64_t nEvents = Data()->GetNEvents();
 
@@ -912,7 +913,8 @@ void TMVA::MethodBase::TestMulticlass()
 {
    // test multiclass classification 
 
-   ResultsMulticlass* resMulticlass = (ResultsMulticlass*)Data()->GetResults(GetMethodName(), Types::kTesting, Types::kMulticlass);
+   ResultsMulticlass* resMulticlass = dynamic_cast<ResultsMulticlass*>(Data()->GetResults(GetMethodName(), Types::kTesting, Types::kMulticlass));
+   if (!resMulticlass) Log() << kFATAL<< "unable to create pointer in TestMulticlass, exiting."<<Endl;
    Log() << kINFO << "Determine optimal multiclass cuts for test data..." << Endl;
    for(UInt_t icls = 0; icls<DataInfo().GetNClasses(); ++icls){
       resMulticlass->GetBestMultiClassCuts(icls);
@@ -1674,6 +1676,7 @@ void TMVA::MethodBase::ReadClassesFromXML( void* clsnode )
 {
    // read number of classes from XML
    UInt_t readNCls;
+   // coverity[tainted_data_argument]
    gTools().ReadAttr( clsnode, "NClass", readNCls);
 
    for(UInt_t icls = 0; icls<readNCls;++icls){
@@ -2377,7 +2380,8 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
 std::vector<Float_t> TMVA::MethodBase::GetMulticlassEfficiency(std::vector<std::vector<Float_t> >& purity)
 {
    Data()->SetCurrentType(Types::kTesting);
-   ResultsMulticlass* resMulticlass = (ResultsMulticlass*)Data()->GetResults(GetMethodName(), Types::kTesting, Types::kMulticlass);
+   ResultsMulticlass* resMulticlass = dynamic_cast<ResultsMulticlass*>(Data()->GetResults(GetMethodName(), Types::kTesting, Types::kMulticlass));
+   if (!resMulticlass) Log() << kFATAL<< "unable to create pointer in GetMulticlassEfficiency, exiting."<<Endl;
 
    purity.push_back(resMulticlass->GetAchievablePur()); 
    return resMulticlass->GetAchievableEff(); 
@@ -2388,7 +2392,8 @@ std::vector<Float_t> TMVA::MethodBase::GetMulticlassEfficiency(std::vector<std::
 std::vector<Float_t> TMVA::MethodBase::GetMulticlassTrainingEfficiency(std::vector<std::vector<Float_t> >& purity)
 {
    Data()->SetCurrentType(Types::kTraining);
-   ResultsMulticlass* resMulticlass = (ResultsMulticlass*)Data()->GetResults(GetMethodName(), Types::kTraining, Types::kMulticlass);
+   ResultsMulticlass* resMulticlass = dynamic_cast<ResultsMulticlass*>(Data()->GetResults(GetMethodName(), Types::kTraining, Types::kMulticlass));
+   if (!resMulticlass) Log() << kFATAL<< "unable to create pointer in GetMulticlassTrainingEfficiency, exiting."<<Endl;
    
    Log() << kINFO << "Determine optimal multiclass cuts for training data..." << Endl;
    for(UInt_t icls = 0; icls<DataInfo().GetNClasses(); ++icls){

@@ -325,7 +325,7 @@ void TMVA::MethodTMlpANN::Train( void )
    // write weights to File;
    // this is not nice, but fMLP gets deleted at the end of Train()
    delete localTrainingTree;
-   delete vArr;
+   delete [] vArr;
 }
 
 

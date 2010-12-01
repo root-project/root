@@ -943,6 +943,10 @@ void TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType)
    for( itrMethod = fMethods.begin(); itrMethod != fMethods.end(); ++itrMethod ) {
 
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
+      if (!mva) {
+         Log() << kFATAL << "Dynamic cast to MethodBase failed" <<Endl;
+         return;
+      }
 
       if (mva->Data()->GetNTrainingEvents() < MinNoTrainingEvents) {
          Log() << kWARNING << "Method " << mva->GetMethodName() 

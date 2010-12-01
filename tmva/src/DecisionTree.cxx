@@ -1186,6 +1186,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const vector<TMVA::Event*> & eventSa
    delete [] xmax;
 
    delete [] useVariable;
+   delete [] mapVariable;
 
    return separationGain;
 
