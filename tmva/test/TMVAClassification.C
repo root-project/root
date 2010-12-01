@@ -362,7 +362,7 @@ void TMVAClassification( TString myMethodList = "" )
 
    // Linear discriminant (same as Fisher discriminant)
    if (Use["LD"])
-      factory->BookMethod( TMVA::Types::kLD, "LD", "H:!V:VarTransform=None" );
+      factory->BookMethod( TMVA::Types::kLD, "LD", "H:!V:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" );
 
    // Fisher discriminant (same as LD)
    if (Use["Fisher"])

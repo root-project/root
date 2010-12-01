@@ -106,7 +106,7 @@ void TMVAMulticlass( TString myMethodList = "" )
    if (Use["BDTG"]) // gradient boosted decision trees
       factory->BookMethod( TMVA::Types::kBDT, "BDTG", "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.30:UseBaggedGrad:GradBaggingFraction=0.50:SeparationType=GiniIndex:nCuts=20:NNodesMax=5");
    if (Use["MLP"]) // neural network
-      factory->BookMethod( TMVA::Types::kMLP, "MLP", "!H:!V:NeuronType=tanh:VarTransform=D:NCycles=300:HiddenLayers=N+5,5:TestRate=5:EstimatorType=MSE");
+      factory->BookMethod( TMVA::Types::kMLP, "MLP", "!H:!V:NeuronType=tanh:NCycles=1000:HiddenLayers=N+5,5:TestRate=5:EstimatorType=MSE");
    if (Use["FDA_GA"]) // functional discriminant with GA minimizer
       factory->BookMethod( TMVA::Types::kFDA, "FDA_GA", "H:!V:Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):FitMethod=GA:PopSize=300:Cycles=3:Steps=20:Trim=True:SaveBestGen=1" );
    

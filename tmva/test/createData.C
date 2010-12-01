@@ -810,10 +810,10 @@ void create_lin_Nvar_Arr(Int_t N = 1000)
             xvar[ivar]->reserve(aSize);
          }
          for(Int_t iA = 0; iA<aSize; iA++) {
-            for (Int_t ivar=0; ivar<nvar; ivar++) {
+            //for (Int_t ivar=0; ivar<nvar; ivar++) {
                getGaussRnd( *v, *m, R );
                for (Int_t ivar=0; ivar<nvar; ivar++) xvar[ivar]->push_back((*v)[ivar] + x[ivar]);
-            }
+               //}
          }
          tree->Fill();
       }

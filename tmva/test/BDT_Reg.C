@@ -237,7 +237,7 @@ void StatDialogBDT::DrawNode( TMVA::DecisionTreeNode *n,
    //
    Float_t xsize=xscale*1.5;
    Float_t ysize=yscale/3;
-   if (xsize>0.15) xsize=xscale/2;
+   if (xsize>0.15) xsize=0.1;
    if (n->GetLeft() != NULL){
       TLine *a1 = new TLine(x-xscale/4,y-ysize,x-xscale,y-ysize*2);
       a1->SetLineWidth(2);
@@ -274,10 +274,6 @@ void StatDialogBDT::DrawNode( TMVA::DecisionTreeNode *n,
          t->AddText(TString(vars[n->GetSelector()]+"<"+=::Form("%5.3g",n->GetCutValue())));
       }
    }
-
-   if      (n->GetNodeType() ==  1) { t->SetFillColor( kSigColorF ); t->SetTextColor( kSigColorT ); }
-   else if (n->GetNodeType() == -1) { t->SetFillColor( kBkgColorF ); t->SetTextColor( kBkgColorT ); }
-   else if (n->GetNodeType() ==  0) { t->SetFillColor( kIntColorF ); t->SetTextColor( kIntColorT ); }
 
    t->Draw();
 

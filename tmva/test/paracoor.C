@@ -24,7 +24,8 @@ void paracoor( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
       if (leaf != 0) {
          TString leafName = leaf->GetName();
          if (leafName != "type" && leafName != "weight"  && leafName != "boostweight" &&
-             leafName != "class" && leafName != "className" && !leafName.Contains("prob_")) {
+             leafName != "class" && leafName != "className" && leafName != "classID" && 
+             !leafName.Contains("prob_")) {
             // is MVA ?
             if (TMVAGlob::ExistMethodName( leafName )) {
                mvas.push_back( leafName );
@@ -61,7 +62,7 @@ void paracoor( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
                            Form( "Parallel coordinate representation for %s and input variables (%s events)", 
                                  mvashort.Data(), type[itype].Data() ), 
                            50*(itype), 50*(itype), 750, 500 );      
-         tree->Draw( varstr.Data(), Form("class==%i",1-itype) , "para" );
+         tree->Draw( varstr.Data(), Form("classID==%i",1-itype) , "para" );
          c1->ToggleEditor();
          gStyle->SetOptTitle(0);
 

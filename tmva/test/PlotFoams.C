@@ -8,7 +8,7 @@
 typedef enum { kNEV, kDISCR, kMONO, kRMS, kRMSOVMEAN } EPlotType;
 typedef enum { kSEPARATE, kUNIFIED, kMONOTARGET, kMULTITARGET } EFoamType;
 
-void PlotFoams(	TString fin = "weights/TMVAClassification_PDEFoam.weights_foams.root", 
+void PlotFoams( TString fin = "weights/TMVAClassification_PDEFoam.weights_foams.root", 
                 bool useTMVAStyle=kTRUE )
 {
    cout << "read file: " << fin << endl;

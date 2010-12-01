@@ -62,7 +62,6 @@ void TMVAGui( const char* fName = "TMVA.root" )
    // gROOT->SetMacroPath(curMacroPath+":../macros:");
 
    TString curIncludePath=gSystem->GetIncludePath();
-   //std::cout <<"inc path="<<curIncludePath<<std::endl;
    TString newIncludePath=TString("-I../ ")+curIncludePath;
    gSystem->SetIncludePath(newIncludePath);
   
@@ -250,7 +249,7 @@ void TMVAGui( const char* fName = "TMVA.root" )
    title = Form( "(%i) Plot Foams (PDEFoam)", ++ic );
    ActionButton( cbar,  
                  title,
-                 Form( ".x PlotFoams.C", fName ),
+                 ".x PlotFoams.C",
                  "Plot Foams (macro PlotFoams.C)",
                  buttonType, "PDEFoam" );
 
