@@ -95,7 +95,7 @@ public:
       ~TEfficiency();
       
       void          Add(const TEfficiency& rEff) {*this += rEff;}
-      void          Draw(const Option_t* opt="AP");
+      void          Draw(Option_t* opt);
       void          Fill(Bool_t bPassed,Double_t x,Double_t y=0,Double_t z=0);
       Int_t         FindFixBin(Double_t x,Double_t y=0,Double_t z=0) const;
       Int_t         Fit(TF1* f1,Option_t* opt="");
@@ -119,7 +119,7 @@ public:
       void          Merge(TCollection* list);      
       TEfficiency&  operator+=(const TEfficiency& rhs);
       TEfficiency&  operator=(const TEfficiency& rhs);
-      void          Paint(const Option_t* opt);
+      void          Paint(Option_t* opt);
       void          SavePrimitive(ostream& out,Option_t* opt="");
       void          SetBetaAlpha(Double_t alpha);
       void          SetBetaBeta(Double_t beta);    

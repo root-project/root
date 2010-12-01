@@ -1938,7 +1938,7 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
 }
 
 //______________________________________________________________________________
-void TEfficiency::Draw(const Option_t* opt)
+void TEfficiency::Draw(Option_t* opt)
 {
    //draws the current TEfficiency object
    //
@@ -1955,6 +1955,8 @@ void TEfficiency::Draw(const Option_t* opt)
    //check options
    TString option = opt;
    option.ToLower();
+   // use by default "AP"
+   if (option.IsNull() ) option = "ap"; 
 
    if(gPad && !option.Contains("same"))
       gPad->Clear();
