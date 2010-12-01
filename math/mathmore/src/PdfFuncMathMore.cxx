@@ -45,8 +45,12 @@ double noncentral_chisquared_pdf(double x, double k, double lambda) {
       // where I_v(z) is modified bessel of the first kind
       // bessel defined only for nu > 0
       
-      ret = 0.5 * std::exp(-0.5 * (x+lambda)/2.) * std::pow(x/lambda, 0.25*k-0.5) 
+      ret = 0.5 * std::exp(-0.5 * (x+lambda) ) * std::pow(x/lambda, 0.25*k-0.5) 
          * ROOT::Math::cyl_bessel_i (0.5*k-1., std::sqrt(lambda*x));
+
+//       ret = 0.5 * exp(-(_x+lambda)/2.) * pow(_x/lambda, k/4.-0.5) 
+//      * ROOT::Math::cyl_bessel_i (k/2.-1., sqrt(lambda*_x));
+
    }
 
    return ret; 
