@@ -114,7 +114,6 @@ namespace TMVA {
       TString fName;  // name of the concrete Separation Index impementation
 
       Double_t fPrecisionCut;
-      Bool_t   fInit;
 
       ClassDef(SeparationBase,0) // Interface to different separation critiera used in training algorithms
    };
