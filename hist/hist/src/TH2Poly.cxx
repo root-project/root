@@ -1207,6 +1207,7 @@ Double_t TH2PolyBin::GetAreaPolygon(Int_t n, Double_t *x, Double_t *y)
    for (int i = 0; i<(n-1); i++) {
       signedArea += (x[i]*y[i+1] - y[i]*x[i+1]);
    }
+   signedArea += (x[n-1]*y[0] - y[n-1]*x[0]);
 
    area = TMath::Abs(signedArea/2.0);
    return area;
