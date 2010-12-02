@@ -35,6 +35,9 @@ HF_LIBS =
 
 ifeq ($(PLATFORM),win32)
 HF_LIBS = $(HISTFACTORYLIBEXTRA) "$(ROOTSYS)/lib/libHistFactory.lib" 
+ifeq ($(BUILDMATHMORE),yes)
+HF_LIBS += "$(ROOTSYS)/lib/libMathMore.lib" 
+endif
 else
 #for other platforms HISTFACTORYLIBEXTRA is not defined 
 #need to copy from config/Makefile.depend
@@ -42,6 +45,9 @@ HF_LIBS = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lMatrix \
           -lHist -lMathCore -lGraf -lGpad -lMinuit -lFoam \
           -lRooStats -lXMLParser
 HF_LIBS += -lHistFactory 
+ifeq ($(BUILDMATHMORE),yes)
+HF_LIBS += -lMathMore
+endif
 endif
 
 
