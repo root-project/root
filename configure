@@ -4062,8 +4062,20 @@ if test ! "x$enable_xrootd" = "xno" ; then
       xrdver="unknown"
    fi
    if test ! "x$xrdver" = "xunknown"; then
-      tmpver=`echo $xrdver | sed 's|v||' | cut -c2-9`
-      decver=`expr 1 \* 0"$tmpver"`
+      tmpver=`echo $xrdver | sed -e 's|"\(.*\)"|\1|' -e 's|^v||' -e 's|-.*||'`
+      if test "x$tmpver" = "xuntagged" ; then
+         decver=9999999999
+      else
+         echo $tmpver | grep -q '\.'
+         if test $? -eq 0 ; then
+            ver1=`echo $tmpver | cut -d . -f 1`
+            ver2=`echo $tmpver | cut -d . -f 2`
+            ver3=`echo $tmpver | cut -d . -f 3`
+            decver=`expr $ver1 \* 100000000 + $ver2 \* 10000 + $ver3`
+         else
+            decver=`echo $tmpver | sed 's|[^0-9]||g'`
+	 fi
+      fi
    fi
 fi
 if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
