@@ -333,7 +333,7 @@ void TMVA::MethodBDT::DeclareOptions()
    DeclareOptionRef(fNodeMinEvents, "nEventsMin", "Minimum number of events required in a leaf node (default Classification: max(40, N_train/(Nvar^2)/10) ) Regression: 10");
    DeclareOptionRef(fNCuts, "nCuts", "Number of steps during node cut optimisation");
    DeclareOptionRef(fUseFisherCuts=kFALSE, "UseFisherCuts", "use multivariate splits using the Fisher criterium");
-   DeclareOptionRef(fMinLinCorrForFisher=1,"MinLinCorrForFisher", "the minimum linear correlation between two variables demanded for use in fisher criterium in node splitting");
+   DeclareOptionRef(fMinLinCorrForFisher=0.6,"MinLinCorrForFisher", "the minimum linear correlation between two variables demanded for use in fisher criterium in node splitting");
    DeclareOptionRef(fUseExclusiveVars=kFALSE,"UseExclusiveVars","individual variables already used in fisher criterium are not anymore analysed individually for node splitting");
 
    DeclareOptionRef(fPruneStrength, "PruneStrength", "Pruning strength");
