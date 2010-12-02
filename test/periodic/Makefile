@@ -44,7 +44,7 @@ $(TARGETLIB): $(DBOBJS) $(DICTO)
 ifeq ($(PLATFORM),macosx)
 	$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@
 else
-	$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
+	$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(GLIBS) $(OutPutOpt)$@
 endif
 
 distclean: clean

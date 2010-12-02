@@ -3,13 +3,12 @@
  * $Log$
  */
 
-#include <dirent.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
 #include <Riostream.h>
+#include <TSystem.h>
 #include <TGTab.h>
 #include <TGFrame.h>
 #include <TGButton.h>
@@ -119,7 +118,7 @@ XSReactionDlg::XSReactionDlg( const TGWindow *p,
 	frm1 = new TGHorizontalFrame(
 					materialGroup, w, 36,
 					kChildFrame|kFitWidth );
-frm1->ChangeBackground(0xFF00);
+	frm1->ChangeBackground(0xFF00);
 
 	elementLbl = new TGLabel(frm1,"Element:");
 	elementLbl->SetTextJustify(kTextRight | kTextCenterY);
@@ -658,36 +657,36 @@ XSReactionDlg::CreatePath( int option )
 int
 XSReactionDlg::UpdateContainer( TGListBox *lb, char *path, int option)
 {
-	DIR	*dirp;
-	struct	dirent	*entry;
-	struct	stat	st;
+   const char *entry;
+   FileStat_t st;
 
 	// --- First Remove everything ---
 	lb->RemoveEntries(0,1000);
 
 	// Scan directory to update the combo box
-	dirp = opendir(path);
+   void *dirp = gSystem->OpenDirectory(path);
 	if (dirp==NULL) {
 		lb->AddEntry("-",0);
 		return kTRUE;	// Ooops not found
 	}
 
 	int	i=0;
-	while ((entry=readdir(dirp)) != NULL) {
+	while ((entry = gSystem->GetDirEntry(dirp))) {
 		// Skip the . and .* directory entries
-		if (entry->d_name[0] == '.') continue;
+		if (entry[0] == '.') continue;
 
 		char	fn[256];
 		strlcpy(fn,path,256);
-		strlcat(fn,entry->d_name,256);
-		stat(fn,&st);
-		if (((option == DIROnlyFiles) && !S_ISDIR(st.st_mode)) ||
-		    ((option == DIROnlyDirectories) && S_ISDIR(st.st_mode)) ||
+		strlcat(fn,entry,256);
+
+		gSystem->GetPathInfo(fn, st);
+		if (((option == DIROnlyFiles) && !R_ISDIR(st.fMode)) ||
+		    ((option == DIROnlyDirectories) && R_ISDIR(st.fMode)) ||
 		    (option == DIRBoth)) {
-			lb->AddEntry(entry->d_name,i++);
+			lb->AddEntry(entry,i++);
 		}
 	}
-	(void) closedir(dirp);
+   gSystem->FreeDirectory(dirp);
 	if (i==0) {
 		lb->AddEntry("None",0);
 		return kTRUE;	// Ooops not found

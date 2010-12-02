@@ -337,9 +337,9 @@ HistAction::HistAction(const TGWindow *p, UInt_t w, UInt_t h) :
 
    fFileView = new TGListView(fC2, 540, 180);
    fFileCont = new TGFileContainer(fFileView->GetViewPort(), 100, 100,
-                                   kVerticalFrame, fgWhitePixel);
+                                   kVerticalFrame, GetWhitePixel());
    fFileCont->Associate(this);
-   fFileView->GetViewPort()->SetBackgroundColor(fgWhitePixel);
+   fFileView->GetViewPort()->SetBackgroundColor(GetWhitePixel());
    fFileView->SetContainer(fFileCont);
    fFileCont->SetFilter("*.root");
    fFileCont->ChangeDirectory(".");
@@ -1013,7 +1013,7 @@ Bool_t HistAction::toDefault(Window_t id)
 
    SetWindowAttributes_t wattr;
    wattr.fMask = kWABackPixel;
-   wattr.fBackgroundPixel = fgDefaultFrameBackground;
+   wattr.fBackgroundPixel = GetDefaultFrameBackground();
    gVirtualX->ChangeWindowAttributes(id, &wattr);
    return kTRUE;
 
