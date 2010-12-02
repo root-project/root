@@ -5456,8 +5456,8 @@ void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option)
       return;
    }
    Double_t aveSize = treeSize/nleaves;
-   Int_t bmin = 512;
-   Int_t bmax = 256000;
+   UInt_t bmin = 512;
+   UInt_t bmax = 256000;
    Double_t memFactor = 1;
    Int_t i, oldMemsize,newMemsize,oldBaskets,newBaskets;
    //we make two passes
@@ -5484,7 +5484,7 @@ void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option)
          Double_t bsize = oldBsize*idealFactor*memFactor; //bsize can be very large !
          if (bsize < 0) bsize = bmax;
          if (bsize > bmax) bsize = bmax;
-         Int_t newBsize = Int_t(bsize);
+         UInt_t newBsize = UInt_t(bsize);
          newBsize = newBsize - newBsize%512;
          if (newBsize < bmin) newBsize = bmin;
          if (newBsize > 10000000) newBsize = bmax;
@@ -5505,9 +5505,11 @@ void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option)
       }
       memFactor = Double_t(maxMemory)/Double_t(newMemsize);
       if (memFactor > 100) memFactor = 100;
-      bmin = Int_t(bmin*memFactor);
-      bmax = Int_t(bmax*memFactor);
-      if (bmax < bmin) bmax = bmin;  //this may happen when bmax is above 2 billions      
+      Double_t bmin_new = bmin*memFactor;
+      Double_t bmax_new = bmax*memFactor;
+      static const UInt_t hardmax = 1*1024*1024*1024; // Really, really never give more than 1Gb to a single buffer.
+      bmin = (bmin_new > hardmax) ? hardmax : (UInt_t)bmin_new;
+      bmax = (bmax_new > hardmax) ? bmin : (UInt_t)bmax_new;         
    }
    if (pDebug) {
       printf("oldMemsize = %d,  newMemsize = %d\n",oldMemsize, newMemsize);
