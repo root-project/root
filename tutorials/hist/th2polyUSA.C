@@ -47,6 +47,7 @@ void th2polyUSA()
    TFile *f;
    f = TFile::Open("http://root.cern.ch/files/usa.root");
 
+   // Define the TH2Poly bins.
    TMultiGraph *mg;
    TKey *key;
    TIter nextkey(gDirectory->GetListOfKeys());
@@ -55,13 +56,11 @@ void th2polyUSA()
       if (obj->InheritsFrom("TMultiGraph")) {
          mg = (TMultiGraph*)obj;
          bin = p->AddBin(mg);
-	 for (i=0; i<nx; i++) {
-            if (strstr(states[i],mg->GetName())) {
-               p->SetBinContent(bin, pop[i]);
-            }
-         }
       }
    }
+
+   // Fill TH2Poly.
+   for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
 
    gStyle->SetOptStat(11);
    gStyle->SetPalette(1);
