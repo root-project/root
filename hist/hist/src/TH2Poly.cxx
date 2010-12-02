@@ -84,12 +84,12 @@ The following very simple macro shows how to build and fill a <tt>TH2Poly</tt>:
 {
    TH2Poly *h2p = new TH2Poly();
 
-   Double_t x1[] = {0, 5, 5};  
-   Double_t y1[] = {0, 0, 5};  
-   Double_t x2[] = {0, -1, -1, 0}; 
-   Double_t y2[] = {0, 0, -1, -1}; 
-   Double_t x3[] = {4, 3, 0, 1, 2.4}; 
-   Double_t y3[] = {4, 3.7, 1, 4.7, 3.5}; 
+   Double_t x1[] = {0, 5, 5};
+   Double_t y1[] = {0, 0, 5};
+   Double_t x2[] = {0, -1, -1, 0};
+   Double_t y2[] = {0, 0, -1, -1};
+   Double_t x3[] = {4, 3, 0, 1, 2.4};
+   Double_t y3[] = {4, 3.7, 1, 4.7, 3.5};
 
    h2p->AddBin(3, x1, y1);
    h2p->AddBin(3, x2, y2);
@@ -109,20 +109,20 @@ The partitioning algorithm forms an essential part of the <tt>TH2Poly</tt>
 class. It is implemented to speed up the filling of bins.
 <p>
 With the brute force approach, the filling is done in the following way:  An
-iterator loops over all bins in the <tt>TH2Poly</tt> and invokes the 
+iterator loops over all bins in the <tt>TH2Poly</tt> and invokes the
 method <tt>IsInside()</tt> for each of them.
 This method checks if the input location is in that bin. If the filling
 coordinate is inside, the bin is filled. Looping over all the bin is
-very slow. 
+very slow.
 <p>
 The alternative is to divide the histogram into virtual rectangular regions
-called "cells". Each cell stores the pointers of the bins intersecting it. 
+called "cells". Each cell stores the pointers of the bins intersecting it.
 When a coordinate is to be filled, the method finds which cell the coordinate
 falls into. Since the cells are rectangular, this can be done very quickly.
 It then only loops over the bins associated with that cell.
 <p>
 The addition of bins to the appropriate cells is done when the bin is added
-to the histogram. To do this, <tt>AddBin()</tt> calls the 
+to the histogram. To do this, <tt>AddBin()</tt> calls the
 <tt>AddBinToPartition()</tt> method.
 This method adds the input bin to the partitioning matrix.
 <p>
@@ -546,11 +546,36 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
 
          SetBinContentChanged(kTRUE);
 
-         return 0;
+         return bin->GetBinNumber();
       }
    }
 
    fOverflow[4]++;  // Increments the "sea".
+   return 0;
+}
+
+
+//______________________________________________________________________________
+Int_t TH2Poly::Fill(const char* name, Double_t w)
+{
+   // Increment the bin named "name" by w.
+
+   TString sname(name);
+
+   TIter    next(fBins);
+   TObject  *obj;
+   TH2PolyBin *bin;
+
+   while ((obj = next())) {
+      bin = (TH2PolyBin*) obj;
+      if (!sname.CompareTo(bin->GetPolygon()->GetName())) {
+         bin->Fill(w);
+         fEntries++;
+         SetBinContentChanged(kTRUE);
+         return bin->GetBinNumber();
+      }
+   }
+
    return 0;
 }
 

@@ -84,14 +84,14 @@ public:
    void        Draw(Option_t *option="");
    Int_t       Fill(Double_t x,Double_t y);
    Int_t       Fill(Double_t x,Double_t y, Double_t w);
+   Int_t       Fill(const char* name, Double_t w);
    void        FillN(Int_t ntimes, const Double_t* x, const Double_t* y, const Double_t* w, Int_t stride = 1);
-   Int_t       FindBin(Double_t x, Double_t y, Double_t z = 0);
    Int_t       Fill(Double_t){return -1;}                              //MayNotUse
-   Int_t       Fill(const char*, Double_t){return -1;}                 //MayNotUse
    Int_t       Fill(Double_t , const char *, Double_t){return -1;}     //MayNotUse
    Int_t       Fill(const char *, Double_t , Double_t ){return -1;}    //MayNotUse
    Int_t       Fill(const char *, const char *, Double_t ){return -1;} //MayNotUse
    void        FillN(Int_t, const Double_t*, const Double_t*, Int_t){return;}  //MayNotUse
+   Int_t       FindBin(Double_t x, Double_t y, Double_t z = 0);
    TList      *GetBins(){return fBins;}                                // Returns the TList of all bins in the histogram
    Double_t    GetBinContent(Int_t bin) const;
    Double_t    GetBinContent(Int_t, Int_t) const {return 0;}           //MayNotUse
@@ -127,7 +127,7 @@ protected:
    Double_t fOverflow[9];       //Overflow bins
    Int_t    fCellX;             //Number of partition cells in the x-direction of the histogram
    Int_t    fCellY;             //Number of partition cells in the y-direction of the histogram
-   Int_t    fNCells;            //Number of partition cells: fCellX*fCellY 
+   Int_t    fNCells;            //Number of partition cells: fCellX*fCellY
    TList   *fCells;             //[fNCells] The array of TLists that store the bins that intersect with each cell
    Double_t fStepX, fStepY;     //Dimensions of a partition cell
    Bool_t  *fIsEmpty;           //[fNCells] The array that returns true if the cell at the given coordinate is empty
