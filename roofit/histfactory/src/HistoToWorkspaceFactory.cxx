@@ -419,7 +419,7 @@ namespace HistFactory{
   }
 
   //_____________________________________________________________
-  void HistoToWorkspaceFactory::EditSyst(RooWorkspace* proto, const char* pdfNameChar, map<string,double> gammaSyst, map<string,double> uniformSyst) {
+  void HistoToWorkspaceFactory::EditSyst(RooWorkspace* proto, const char* pdfNameChar, map<string,double> gammaSyst, map<string,double> uniformSyst,map<string,double> logNormSyst) {
     //    cout << "in edit, gammamap.size = " << gammaSyst.size() << ", unimap.size = " << uniformSyst.size() << endl;
     string pdfName(pdfNameChar);
 
@@ -459,8 +459,7 @@ namespace HistFactory{
 			  it->first.c_str())) ;
 
       /*
-      // this has some problems because N in poisson is rounded to nearest integer
-      
+      // this has some problems because N in poisson is rounded to nearest integer     
       proto->factory(Form("Poisson::beta_%sConstraint(y_%s[%f],prod::taub_%s(taus_%s[%f],beta_%s[1,0,5]))",
 			  it->first.c_str(),
 			  it->first.c_str(),
@@ -475,13 +474,6 @@ namespace HistFactory{
       //	combined->factory(Form("expr::alphaOfBeta_%s('(beta_%s-1)/%f',beta_%s)",it->first.c_str(),it->first.c_str(),scale,it->first.c_str()));
       proto->factory(Form("PolyVar::alphaOfBeta_%s(beta_%s,{%f,%f})",it->first.c_str(),it->first.c_str(),-1./scale,1./scale));
 	
-      // clean up constraints
-      //      cout << "got here, about to remove" << endl;
-      //      temp.remove(*proto->var(Form("alpha_%s",it->first.c_str())));
-      //      temp.add(*proto->var(Form("beta_%s",it->first.c_str())));
-      //      cout << "KC CHECK 2" << endl;
-      //      temp.Print();
-
       // set beta const status to be same as alpha
       if(proto->var(Form("alpha_%s",it->first.c_str()))->isConstant())
 	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(true);
@@ -534,13 +526,6 @@ namespace HistFactory{
       proto->factory(Form("Uniform::beta_%sConstraint(beta_%s)",it->first.c_str(),it->first.c_str()));
       proto->factory(Form("PolyVar::alphaOfBeta_%s(beta_%s,{-1,1})",it->first.c_str(),it->first.c_str()));
       
-      // clean up constraints
-      cout << "got here, about to remove" << endl;
-      //      temp.remove(*proto->var(Form("alpha_%s",it->first.c_str())));
-      //      temp.add(*proto->var(Form("beta_%s",it->first.c_str())));
-      //      cout << "KC CHECK 2" << endl;
-      //      temp.Print();
-
       // set beta const status to be same as alpha
       if(proto->var(Form("alpha_%s",it->first.c_str()))->isConstant())
 	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(true);
@@ -575,6 +560,76 @@ namespace HistFactory{
 	
       }
     }
+
+    /////////////////////////////////////////
+    ////////////////////////////////////
+
+
+    // add lognormal terms and their constraints
+    for(it=logNormSyst.begin(); it!=logNormSyst.end(); ++it) {
+      cout << "edit for " << it->first << "with rel uncert = " << it->second << endl;
+      if(! proto->var(("alpha_"+it->first).c_str())){
+	cout << "systematic not there" << endl;
+	nskipped++; 
+	continue;
+      }
+      numReplacements++;      
+
+      double relativeUncertainty = it->second;
+      double kappa = 1+relativeUncertainty;
+      // when transforming beta -> alpha, need alpha=1 to be +1sigma value.
+      // the P(beta>kappa*\hat(beta)) = 16%
+      // and \hat(beta) is 1, thus
+      double scale = relativeUncertainty;
+      //double scale = kappa; 
+
+      // this is the LogNormal
+      proto->factory(Form("beta_%s[1,0,10]",it->first.c_str()));
+      proto->factory(Form("kappa_%s[%f]",it->first.c_str(),kappa));
+      proto->factory(Form("Lognormal::beta_%sConstraint(beta_%s,one[1],kappa_%s)",
+			  it->first.c_str(),
+			  it->first.c_str(),
+			  it->first.c_str())) ;
+      proto->factory(Form("PolyVar::alphaOfBeta_%s(beta_%s,{%f,%f})",it->first.c_str(),it->first.c_str(),-1./scale,1./scale));
+      //      proto->factory(Form("PolyVar::alphaOfBeta_%s(beta_%s,{%f,%f})",it->first.c_str(),it->first.c_str(),-1.,1./scale));
+      
+      // set beta const status to be same as alpha
+      if(proto->var(Form("alpha_%s",it->first.c_str()))->isConstant())
+	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(true);
+      else
+	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(false);
+      // set alpha const status to true
+      //      proto->var(Form("alpha_%s",it->first.c_str()))->setConstant(true);
+
+      // replace alphas with alphaOfBeta and replace constraints
+      cout <<         "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint" << endl;
+      editList+=preceed + "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint";
+      preceed=",";
+      cout <<         "alpha_"+it->first+"=alphaOfBeta_"+ it->first << endl;
+      editList+=preceed + "alpha_"+it->first+"=alphaOfBeta_"+ it->first;
+
+      if( proto->pdf(("alpha_"+it->first+"Constraint").c_str()) && proto->var(("alpha_"+it->first).c_str()) )
+	cout << " checked they are there" << proto->pdf(("alpha_"+it->first+"Constraint").c_str()) << " " << proto->var(("alpha_"+it->first).c_str()) << endl;
+      else
+	cout << "NOT THERE" << endl;
+
+      // EDIT seems to die if the list of edits is too long.  So chunck them up.
+      if(numReplacements%10 == 0 && numReplacements+nskipped!=gammaSyst.size()){
+	edit="EDIT::"+lastPdf+"_("+lastPdf+","+editList+")";
+	lastPdf+="_"; // append an underscore for the edit
+	editList=""; // reset edit list
+	preceed="";
+	cout << edit<< endl;
+	proto->factory( edit.c_str() );
+	RooAbsPdf* newOne = proto->pdf(lastPdf.c_str());
+	if(!newOne)
+	  cout << "\n\n ---------------------\n WARNING: failed to make EDIT\n\n" << endl;
+	
+      }
+    }
+
+    /////////////////////////////////////////
+    ////////////////////////////////////
 
     // commit last bunch of edits
     edit="EDIT::newSimPdf("+lastPdf+","+editList+")";

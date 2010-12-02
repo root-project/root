@@ -159,6 +159,7 @@ void topDriver(string input ){
         vector<string> systToFix;
         map<string,double> gammaSyst;
         map<string,double> uniformSyst;
+        map<string,double> logNormSyst;
 	bool exportOnly = false;
 
 	//        TListIter attribIt = node->GetAttributes();
@@ -233,6 +234,9 @@ void topDriver(string input ){
             if (type=="Uniform" && rel!=0) {
               for (vector<string>::const_iterator it=syst.begin(); it!=syst.end(); it++) uniformSyst[(*it).c_str()] = rel;
             }
+            if (type=="LogNormal" && rel!=0) {
+              for (vector<string>::const_iterator it=syst.begin(); it!=syst.end(); it++) logNormSyst[(*it).c_str()] = rel;
+            }
           }
           mnode = mnode->GetNextNode();
         }
@@ -288,9 +292,9 @@ void topDriver(string input ){
 
 
           // Gamma/Uniform Constraints:
-          // turn some Gaussian constraints into Gamma/Uniform constraints, rename model newSimPdf
-	  if(gammaSyst.size()>0 || uniformSyst.size()>0) {
-	    factory.EditSyst(ws,("model_"+oneChannel[0].channel).c_str(),gammaSyst,uniformSyst);
+          // turn some Gaussian constraints into Gamma/Uniform/LogNorm constraints, rename model newSimPdf
+	  if(gammaSyst.size()>0 || uniformSyst.size()>0 || logNormSyst.size()>0) {
+	    factory.EditSyst(ws,("model_"+oneChannel[0].channel).c_str(),gammaSyst,uniformSyst,logNormSyst);
 	    proto_config->SetPdf(*ws->pdf("newSimPdf"));
           }
 
@@ -317,9 +321,9 @@ void topDriver(string input ){
         if(mode.find("comb")!=string::npos){ 
           RooWorkspace* ws=factory.MakeCombinedModel(ch_names,chs);
           // Gamma/Uniform Constraints:
-          // turn some Gaussian constraints into Gamma/Uniform constraints, rename model newSimPdf
-	  if(gammaSyst.size()>0 || uniformSyst.size()>0) 
-	    factory.EditSyst(ws,"simPdf",gammaSyst,uniformSyst);
+          // turn some Gaussian constraints into Gamma/Uniform/logNormal constraints, rename model newSimPdf
+	  if(gammaSyst.size()>0 || uniformSyst.size()>0 || logNormSyst.size()>0) 
+	    factory.EditSyst(ws,"simPdf",gammaSyst,uniformSyst,logNormSyst);
           //
           // set parameter of interest according to the configuration
           //
@@ -334,7 +338,7 @@ void topDriver(string input ){
           ws->Print();
 
           // Set new PDF if there are gamma/uniform constraint terms
-          if(gammaSyst.size()>0 || uniformSyst.size()>0) 
+          if(gammaSyst.size()>0 || uniformSyst.size()>0 || logNormSyst.size()>0) 
 	    combined_config->SetPdf(*ws->pdf("newSimPdf"));
 
           RooAbsData* simData = ws->data("simData");

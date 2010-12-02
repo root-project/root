@@ -59,7 +59,7 @@ namespace HistFactory{
 
       void Customize(RooWorkspace* proto, const char* pdfNameChar, map<string,string> renameMap);
 
-      void EditSyst(RooWorkspace* proto, const char* pdfNameChar, map<string,double> gammaSyst, map<string,double> uniformSyst);
+      void EditSyst(RooWorkspace* proto, const char* pdfNameChar, map<string,double> gammaSyst, map<string,double> uniformSyst, map<string,double> logNormSyst);
 
       void FormatFrameForLikelihood(RooPlot* frame, string XTitle=string("#sigma / #sigma_{SM}"), string YTitle=string("-log likelihood"));
 
