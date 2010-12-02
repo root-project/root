@@ -1235,16 +1235,6 @@ int G__fgetvarname(G__FastAllocString& string, size_t offset, const char *endmar
                commentflag = true;
             }
             break;
-         case '*':
-             /* comment */
-            if (!double_quote && !single_quote) {
-               if (i > offset && string[i-1] == '/' && commentflag) {
-                  G__skip_comment();
-                  --i;
-                  ignoreflag = true;
-               }
-            }
-            break;
 
          case '#':
             if (!single_quote && !double_quote && (i == offset || string[i-1] != '$')) {
@@ -1261,6 +1251,18 @@ int G__fgetvarname(G__FastAllocString& string, size_t offset, const char *endmar
             G__unexpectedEOF("G__fgetvarname():2");
             string.Set(i, 0);
             return(c);
+
+         case '*':
+             /* comment */
+            if (!double_quote && !single_quote) {
+               if (commentflag && i > offset && string[i-1] == '/') {
+                  G__skip_comment();
+                  --i;
+                  ignoreflag = true;
+                  break;
+               }
+            }
+            // intentional fall-through to default
 
          case ',':
             /* fall through... */
