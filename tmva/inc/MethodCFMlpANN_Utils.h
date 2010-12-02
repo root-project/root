@@ -198,7 +198,7 @@ namespace TMVA {
 
    private:
       MsgLogger * fLogger;
-      MsgLogger& ULog() const { return *fLogger; }
+      MsgLogger& ULog()  { if (fLogger) return *fLogger; return *(fLogger = new MsgLogger("CFMLP_Utils")); } // avoiding control reaches end of non-void function warning
 
    public:
 

@@ -131,6 +131,7 @@ TMVA::MethodCFMlpANN_Utils::MethodCFMlpANN_Utils()
    for(i=0; i<max_Events_;++i) fVarn_1.nclass[i] = 0;
    for(i=0; i<max_nVar_;++i) fVarn_1.xmax[i] = 0;
 
+   fLogger = 0;
 }
 
 TMVA::MethodCFMlpANN_Utils::~MethodCFMlpANN_Utils() 
