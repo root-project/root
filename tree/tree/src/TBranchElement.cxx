@@ -4726,6 +4726,12 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
    for (Int_t elemID = 0; elemID < ndata; ++elemID) {
       // -- Loop over all the streamer elements and create sub-branches as needed.
       TStreamerElement* elem = (TStreamerElement*) elems[elemID];
+      if (elem->IsA() == TStreamerArtificial::Class()) {
+         continue;
+      }
+      if (elem->TestBit(TStreamerElement::kRepeat)) {
+         continue;
+      }
       Int_t offset = elem->GetOffset();
       // FIXME: An STL container as a base class gets TStreamerSTL as its class, so this test is not enough.
       // See InitializeOffsets() for the proper test.
