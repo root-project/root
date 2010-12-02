@@ -646,8 +646,16 @@ namespace HistFactory{
     string prefix, range;
 
     /////////////////////////////
-    // observed data
-    if (summary.at(0).name=="Data") ProcessExpectedHisto(summary.at(0).nominal,proto,"obsN","","",0,100000,fLowBin,fHighBin);
+    // Make observables, set values to observed data if data is specified,
+    // otherwise use expected "Asimov" data
+    if (summary.at(0).name=="Data") {
+      ProcessExpectedHisto(summary.at(0).nominal,proto,"obsN","","",0,100000,fLowBin,fHighBin);
+    } else {
+      cout << "Will use expected (\"Asimov\") data set" << endl;
+      ProcessExpectedHisto(NULL,proto,"obsN","","",0,100000,fLowBin,fHighBin);
+    }
+
+
 
     /////////////////////////////
     // shared parameters
