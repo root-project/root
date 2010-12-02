@@ -355,7 +355,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
       } else if ((*ti)=="const char*") {
 	RooFactoryWSTool::as_STRING(i) ;
 	cintExpr += Form(",RooFactoryWSTool::as_STRING(%d)",i) ;	
-      } else if ((*ti)=="Int_t" || (*ti)=="int") {
+      } else if ((*ti)=="Int_t" || (*ti)=="int" || (*ti)=="Bool_t" || (*ti)=="bool") {
 	RooFactoryWSTool::as_INT(i) ;
 	cintExpr += Form(",RooFactoryWSTool::as_INT(%d)",i) ;	
       } else if ((*ti)=="Double_t") {
