@@ -52,6 +52,7 @@ public:
    virtual void        SetAddress(void *addobj);
    virtual void        SetAutoDelete(Bool_t autodel=kTRUE);
    virtual void        SetBasketSize(Int_t buffsize);
+   virtual void        SetupAddresses();
    virtual void        UpdateAddress();
    
    ClassDef(TBranchObject,1);  //Branch in case of an object

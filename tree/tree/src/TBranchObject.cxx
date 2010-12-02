@@ -211,18 +211,7 @@ Int_t TBranchObject::GetEntry(Long64_t entry, Int_t getall)
 
    if (nbranches) {
       if (fAddress == 0) {
-         // try to create object
-         if (!TestBit(kWarn)) {
-            TClass* cl = TClass::GetClass(fClassName);
-            if (cl) {
-               TObject** voidobj = (TObject**) new Long_t[1];
-               *voidobj = (TObject*) cl->New();
-               SetAddress(voidobj);
-            } else {
-               Warning("GetEntry", "Cannot get class: %s", fClassName.Data());
-               SetBit(kWarn);
-            }
-         }
+         SetupAddresses();
       }
       nbytes = 0;
       Int_t nb;
@@ -559,6 +548,29 @@ void TBranchObject::Streamer(TBuffer& R__b)
       }
       fDirectory = dirsav;
    }
+}
+
+//______________________________________________________________________________
+void TBranchObject::SetupAddresses()
+{
+   // -- If the branch address is not set,  we set all addresses starting with
+   // the top level parent branch.  This is required to be done in order for
+   // GetOffset to be correct and for GetEntry to run.
+ 
+   if (fAddress == 0) {
+      // try to create object
+      if (!TestBit(kWarn)) {
+         TClass* cl = TClass::GetClass(fClassName);
+         if (cl) {
+            TObject** voidobj = (TObject**) new Long_t[1];
+            *voidobj = (TObject*) cl->New();
+            SetAddress(voidobj);
+         } else {
+            Warning("GetEntry", "Cannot get class: %s", fClassName.Data());
+            SetBit(kWarn);
+         }
+      }
+   }   
 }
 
 //______________________________________________________________________________

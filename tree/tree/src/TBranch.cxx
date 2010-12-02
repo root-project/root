@@ -1043,15 +1043,19 @@ Int_t TBranch::FlushOneBasket(UInt_t ibasket)
             if (basket->GetBufferRef()->IsReading()) {
                basket->SetWriteMode();
             }
-            nbytes = WriteBasket(basket,ibasket); // WriteBasket will delete the existing basket.
+            nbytes = WriteBasket(basket,ibasket);
 
          } else {
             // If the basket is empty or has already been written.
-            basket->DropBuffers();
-            delete basket;
-            --fNBaskets;
-            fBaskets[ibasket] = 0;
-         }
+            if ((Int_t)ibasket==fWriteBasket) {
+               // Nothing to do.
+            } else {
+               basket->DropBuffers();
+               delete basket;
+               --fNBaskets;
+               fBaskets[ibasket] = 0;
+            }
+          }
       }
    }
    return nbytes;
@@ -2291,6 +2295,9 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
       }
       fBaskets.AddAtAndExpand(reusebasket,fWriteBasket);
       fBasketEntry[fWriteBasket] = fEntryNumber;
+   } else {
+      basket->DropBuffers();
+      delete basket;
    }
 
    return nout;
@@ -2307,6 +2314,15 @@ void TBranch::SetFirstEntry(Long64_t entry)
       fBasketEntry[0] = entry;
    for( Int_t i = 0; i < fBranches.GetEntriesFast(); ++i )
       ((TBranch*)fBranches[i])->SetFirstEntry( entry );
+}
+
+//______________________________________________________________________________
+void TBranch::SetupAddresses()
+{
+   // -- If the branch address is not set,  we set all addresses starting with
+   // the top level parent branch.  
+   
+   // Nothing to do for regular branch, the TLeaf already did it.
 }
 
 //______________________________________________________________________________

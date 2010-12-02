@@ -2760,7 +2760,7 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
             //but for now we go the simpliest route:
             //
             // Note: This may result in the allocation of an object.
-            branch->GetEntry(0);
+            branch->SetupAddresses();
          }
          if (branch->GetAddress()) {
             tree->SetBranchAddress(branch->GetName(), (void*) branch->GetAddress());
