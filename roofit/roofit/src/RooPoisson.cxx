@@ -31,10 +31,12 @@ ClassImp(RooPoisson)
 //_____________________________________________________________________________
 RooPoisson::RooPoisson(const char *name, const char *title, 
 		       RooAbsReal& _x,
-		       RooAbsReal& _mean) :
+		       RooAbsReal& _mean,
+		       Bool_t noRounding) :
   RooAbsPdf(name,title), 
   x("x","x",this,_x),
-  mean("mean","mean",this,_mean)
+  mean("mean","mean",this,_mean),
+  _noRounding(noRounding)
 { 
   // Constructor
 } 
@@ -45,7 +47,8 @@ RooPoisson::RooPoisson(const char *name, const char *title,
  RooPoisson::RooPoisson(const RooPoisson& other, const char* name) :  
    RooAbsPdf(other,name), 
    x("x",this,other.x),
-   mean("mean",this,other.mean)
+   mean("mean",this,other.mean),
+   _noRounding(other._noRounding)
 { 
    // Copy constructor
 } 
@@ -58,7 +61,7 @@ Double_t RooPoisson::evaluate() const
 { 
   // Implementation in terms of the TMath Poisson function
 
-  Double_t k = floor(x);  
+  Double_t k = _noRounding ? x : floor(x);  
   return TMath::Poisson(k,mean) ;
 } 
 
