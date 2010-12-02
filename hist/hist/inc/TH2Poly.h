@@ -36,7 +36,6 @@ public:
    void      ClearContent(){fContent = 0;}
    void      Fill(Double_t w) {fContent = fContent+w; SetChanged(true);}
    Double_t  GetArea();
-   Double_t  GetAreaPolygon(Int_t n, Double_t *x, Double_t *y);
    Double_t  GetContent() const{return fContent;}
    Bool_t    GetChanged() const{return fChanged;}
    Int_t     GetBinNumber() const {return fNumber;}

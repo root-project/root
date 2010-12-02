@@ -1166,16 +1166,12 @@ Double_t TH2PolyBin::GetArea()
    // Returns the area of the bin.
 
    Int_t     bn;
-   Double_t *bx;
-   Double_t *by;
 
    if (fArea == 0) {
       if (fPoly->IsA() == TGraph::Class()) {
          TGraph *g = (TGraph*)fPoly;
-         bx    = g->GetX();
-         by    = g->GetY();
          bn    = g->GetN();
-         fArea = GetAreaPolygon(bn, bx, by);
+         fArea = g->Integral(0,bn-1);
       }
 
       if (fPoly->IsA() == TMultiGraph::Class()) {
@@ -1185,32 +1181,13 @@ Double_t TH2PolyBin::GetArea()
          TGraph *g;
          TIter next(gl);
          while ((g = (TGraph*) next())) {
-            bx = g->GetX();
-            by = g->GetY();
-            bn = g->GetN();
-            fArea = fArea + GetAreaPolygon(bn, bx, by);
+            bn    = g->GetN();
+            fArea = fArea + g->Integral(0,bn-1);
          }
       }
    }
 
    return fArea;
-}
-
-
-//______________________________________________________________________________
-Double_t TH2PolyBin::GetAreaPolygon(Int_t n, Double_t *x, Double_t *y)
-{
-   // Returns the area of a polygon.
-
-   Double_t area, signedArea = 0;
-
-   for (int i = 0; i<(n-1); i++) {
-      signedArea += (x[i]*y[i+1] - y[i]*x[i+1]);
-   }
-   signedArea += (x[n-1]*y[0] - y[n-1]*x[0]);
-
-   area = TMath::Abs(signedArea/2.0);
-   return area;
 }
 
 
