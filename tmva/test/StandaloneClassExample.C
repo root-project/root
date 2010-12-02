@@ -1,15 +1,14 @@
 #include <vector>;
 
-void StandaloneClassExample(){
-   // a simple example of how the "standalone classes" may be used:
-   
-   
-   // load the stand alone "trained Fisher class" 
+void StandaloneClassExample()
+{
+   // A simple example of how the "standalone classes" can be used
+      
+   // Load the stand alone "trained LD class" 
    // if the example were not a ROOT macro but a stand alone program, you
    // would simplye "include" this file"
 
-   gROOT->LoadMacro("weights/TMVAClassification_Fisher.class.C++");
-
+   gROOT->LoadMacro("weights/TMVAClassification_LD.class.C++");
 
    std::vector<string> inputVariableNames;
    // you need to use the same names as during traiing. Meant as a "consistency" check, that
@@ -21,13 +20,10 @@ void StandaloneClassExample(){
    inputVariableNames.push_back("var1-var2");
    inputVariableNames.push_back("var3");
    inputVariableNames.push_back("var4");
-   // instanticat the Fisher class and tell it about the variable names
+   // instanticat the LD class and tell it about the variable names
    // to allow it to check internally that it has actually been trained with
    // THESE variables
-   IClassifierReader* classReader = new ReadFisher(inputVariableNames);
-
-   
-
+   IClassifierReader* classReader = new ReadLD(inputVariableNames);
    
    // put your input variables into a std::vector 
    // (this would typically be inside an "event loop" of course..
@@ -42,7 +38,7 @@ void StandaloneClassExample(){
    cout << endl;
 
    // get the MVA output value for this particular event variables.
-   cout << "The Fisher MVA value is: " << classReader->GetMvaValue(inputVariableValues) << endl;
+   cout << "The LD MVA value is: " << classReader->GetMvaValue(inputVariableValues) << endl;
 
 
 }

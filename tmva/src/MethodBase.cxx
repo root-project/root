@@ -2658,11 +2658,11 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << "   virtual double GetMvaValue( const std::vector<double>& inputValues ) const = 0;" << endl;
    fout << endl;
    fout << "   // returns classifier status" << endl;
-   fout << "   Bool_t IsStatusClean() const { return fStatusIsClean; }" << endl;
+   fout << "   bool IsStatusClean() const { return fStatusIsClean; }" << endl;
    fout << endl;
    fout << " protected:" << endl;
    fout << endl;
-   fout << "   Bool_t fStatusIsClean;" << endl;
+   fout << "   bool fStatusIsClean;" << endl;
    fout << "};" << endl;
    fout << endl;
    fout << "#endif" << endl;
@@ -2757,8 +2757,8 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << "   char   GetType( int ivar ) const { return fType[ivar]; }" << endl;
    fout << endl;
    fout << "   // normalisation of input variables" << endl;
-   fout << "   const Bool_t fIsNormalised;" << endl;
-   fout << "   Bool_t IsNormalised() const { return fIsNormalised; }" << endl;
+   fout << "   const bool fIsNormalised;" << endl;
+   fout << "   bool IsNormalised() const { return fIsNormalised; }" << endl;
    fout << "   double fVmin[" << GetNvar() << "];" << endl;
    fout << "   double fVmax[" << GetNvar() << "];" << endl;
    fout << "   double NormVariable( double x, double xmin, double xmax ) const {" << endl;
