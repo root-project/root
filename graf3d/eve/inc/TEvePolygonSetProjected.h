@@ -72,6 +72,8 @@ protected:
 
    virtual void SetDepthLocal(Float_t d);
 
+   Float_t PolygonSurfaceXY(const Polygon_t& poly) const;
+
 public:
    TEvePolygonSetProjected(const char* n="TEvePolygonSetProjected", const char* t="");
    virtual ~TEvePolygonSetProjected();

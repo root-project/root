@@ -20,19 +20,19 @@
 
 namespace
 {
-struct Seg_t
-{
-   // Helper class for building 2D polygons from TBuffer3D.
-   Int_t fV1;
-   Int_t fV2;
+   struct Seg_t
+   {
+      // Helper class for building 2D polygons from TBuffer3D.
+      Int_t fV1;
+      Int_t fV2;
 
-   Seg_t(Int_t i1=-1, Int_t i2=-1) : fV1(i1), fV2(i2) {}
-};
+      Seg_t(Int_t i1=-1, Int_t i2=-1) : fV1(i1), fV2(i2) {}
+   };
 
-typedef std::list<Seg_t>           LSeg_t;
-typedef std::list<Seg_t>::iterator LSegIt_t;
-
+   typedef std::list<Seg_t>           LSeg_t;
+   typedef std::list<Seg_t>::iterator LSegIt_t;
 }
+
 
 //==============================================================================
 //==============================================================================
@@ -440,6 +440,22 @@ void  TEvePolygonSetProjected::ProjectBuffer3D()
 }
 
 //______________________________________________________________________________
+Float_t TEvePolygonSetProjected::PolygonSurfaceXY(const TEvePolygonSetProjected::Polygon_t& p) const
+{
+   // Calculate XY surface of a polygon.
+
+   Float_t surf = 0;
+   Int_t nPnts = p.fNPnts;
+   for (Int_t i = 0; i < nPnts - 1; ++i)
+   {
+      Int_t a = p.fPnts[i];
+      Int_t b = p.fPnts[i+1];
+      surf += fPnts[a].fX * fPnts[b].fY - fPnts[a].fY * fPnts[b].fX;
+   }
+   return 0.5f * TMath::Abs(surf);
+}
+
+//______________________________________________________________________________
 void TEvePolygonSetProjected::DumpPolys() const
 {
    // Dump information about built polygons.
@@ -452,9 +468,9 @@ void TEvePolygonSetProjected::DumpPolys() const
       printf("Points of polygon %d [Np = %d]:\n", ++cnt, nPnts);
       for (Int_t vi = 0; vi<nPnts; ++vi) {
          Int_t pi = (*i).fPnts[vi];
-         printf("(%f, %f, %f)", fPnts[pi].fX, fPnts[pi].fY, fPnts[pi].fZ);
+         printf("  (%f, %f, %f)", fPnts[pi].fX, fPnts[pi].fY, fPnts[pi].fZ);
       }
-      printf("\n");
+      printf(", surf=%f\n", PolygonSurfaceXY(*i));
    }
 }
 

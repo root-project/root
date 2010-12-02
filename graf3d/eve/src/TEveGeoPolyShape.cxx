@@ -10,11 +10,20 @@
  *************************************************************************/
 
 #include "TEveGeoPolyShape.h"
-#include "TGLFaceSet.h"
+#include "TEveGeoShape.h"
+#include "TEvePad.h"
+#include "TEveUtil.h"
 
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TGLScenePad.h"
+#include "TGLFaceSet.h"
+
+#include "TList.h"
+#include "TGeoBoolNode.h"
+#include "TGeoCompositeShape.h"
+#include "TGeoMatrix.h"
 
 //______________________________________________________________________________
 // Description of TEveGeoPolyShape
@@ -28,6 +37,69 @@ TEveGeoPolyShape::TEveGeoPolyShape() :
    fNbPols(0)
 {
    // Constructor.
+}
+
+//______________________________________________________________________________
+TEveGeoPolyShape* TEveGeoPolyShape::Construct(TGeoCompositeShape *cshape, Int_t n_seg)
+{
+   // Static constructor from a composite shape.
+
+   TEvePad       pad;
+   TEvePadHolder gpad(kFALSE, &pad);
+   TGLScenePad   scene_pad(&pad);
+   pad.GetListOfPrimitives()->Add(cshape);
+   pad.SetViewer3D(&scene_pad);
+
+   TEveGeoManagerHolder gmgr(TEveGeoShape::GetGeoMangeur(), n_seg);
+
+   scene_pad.BeginScene();
+   {
+      Double_t halfLengths[3] = { cshape->GetDX(), cshape->GetDY(), cshape->GetDZ() };
+
+      TBuffer3D buff(TBuffer3DTypes::kComposite);
+      buff.fID           = cshape;
+      buff.fLocalFrame   = kTRUE;
+      buff.SetLocalMasterIdentity();
+      buff.SetAABoundingBox(cshape->GetOrigin(), halfLengths);
+      buff.SetSectionsValid(TBuffer3D::kCore|TBuffer3D::kBoundingBox);
+
+      Bool_t paintComponents = kTRUE;
+
+      // Start a composite shape, identified by this buffer
+      if (TBuffer3D::GetCSLevel() == 0)
+         paintComponents = gPad->GetViewer3D()->OpenComposite(buff);
+
+      TBuffer3D::IncCSLevel();
+
+      // Paint the boolean node - will add more buffers to viewer
+      TGeoHMatrix xxx;
+      TGeoMatrix *gst = TGeoShape::GetTransform();
+      TGeoShape::SetTransform(&xxx);
+      if (paintComponents) cshape->GetBoolNode()->Paint("");
+      TGeoShape::SetTransform(gst);
+      // Close the composite shape
+      if (TBuffer3D::DecCSLevel() == 0)
+         gPad->GetViewer3D()->CloseComposite();
+   }
+   scene_pad.EndScene();
+   pad.SetViewer3D(0);
+
+   TGLFaceSet* fs = dynamic_cast<TGLFaceSet*>(scene_pad.FindLogical(cshape));
+   if (!fs) {
+      ::Warning("TEveGeoPolyShape::Construct", "Failed extracting CSG tesselation for shape '%s'.", cshape->GetName());
+      return 0;
+   }
+
+   TEveGeoPolyShape *egps = new TEveGeoPolyShape;
+   egps->SetFromFaceSet(fs);
+   egps->fOrigin[0] = cshape->GetOrigin()[0];
+   egps->fOrigin[1] = cshape->GetOrigin()[1];
+   egps->fOrigin[2] = cshape->GetOrigin()[2];
+   egps->fDX = cshape->GetDX();
+   egps->fDY = cshape->GetDY();
+   egps->fDZ = cshape->GetDZ();
+
+   return egps;
 }
 
 //______________________________________________________________________________
@@ -64,19 +136,38 @@ void TEveGeoPolyShape::FillBuffer3D(TBuffer3D& b, Int_t reqSections, Bool_t) con
       UInt_t nvrt = fVertices.size() / 3;
       UInt_t nseg = 0;
 
+      std::map<Edge_t, Int_t> edges;
+
       const Int_t *pd = &fPolyDesc[0];
       for (UInt_t i = 0; i < fNbPols; ++i)
       {
-         nseg += pd[0];
-         pd   += pd[0] + 1;
+         UInt_t nv = pd[0]; ++pd;
+         for (UInt_t j = 0; j < nv; ++j)
+         {
+            Edge_t e(pd[j], (j != nv - 1) ? pd[j+1] : pd[0]);
+            if (edges.find(e) == edges.end())
+            {
+               edges.insert(std::make_pair(e, 0));
+               ++nseg;
+            }
+         }
+         pd += nv;
       }
 
       b.SetRawSizes(nvrt, 3*nvrt, nseg, 3*nseg, fNbPols, fNbPols+fPolyDesc.size());
 
       memcpy(b.fPnts, &fVertices[0], sizeof(Double_t)*fVertices.size());
 
-      Int_t si = 0, pi = 0, ns = 0;
+      Int_t si = 0, scnt = 0;
+      for (std::map<Edge_t, Int_t>::iterator i = edges.begin(); i != edges.end(); ++i)
+      {
+         b.fSegs[si++] = 0;
+         b.fSegs[si++] = i->first.fI;
+         b.fSegs[si++] = i->first.fJ;
+         i->second = scnt++;
+      }
 
+      Int_t pi = 0;
       pd = &fPolyDesc[0];
       for (UInt_t i = 0; i < fNbPols; ++i)
       {
@@ -85,14 +176,12 @@ void TEveGeoPolyShape::FillBuffer3D(TBuffer3D& b, Int_t reqSections, Bool_t) con
          b.fPols[pi++] = nv;
          for (UInt_t j = 0; j < nv; ++j)
          {
-            b.fSegs[si++] = 0;
-            b.fSegs[si++] = pd[j];
-            b.fSegs[si++] = (j != nv - 1) ? pd[j+1] : pd[0];
-
-            b.fPols[pi++] = ns++;
+            b.fPols[pi++] = edges[Edge_t(pd[j], (j != nv - 1) ? pd[j+1] : pd[0])];
          }
          pd += nv;
       }
+
+      
 
       b.SetSectionsValid(TBuffer3D::kRawSizes | TBuffer3D::kRaw);
    }

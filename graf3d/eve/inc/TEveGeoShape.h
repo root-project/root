@@ -15,6 +15,7 @@
 #include "TEveShape.h"
 
 class TGeoShape;
+class TGeoCompositeShape;
 class TEveGeoShapeExtract;
 class TBuffer3D;
 
@@ -25,13 +26,16 @@ private:
    TEveGeoShape& operator=(const TEveGeoShape&); // Not implemented
 
 protected:
-   Int_t             fNSegments;
-   TGeoShape*        fShape;
+   Int_t               fNSegments;
+   TGeoShape          *fShape;
+   TGeoCompositeShape *fCompositeShape; //! Temporary holder (if passed shape is composite shape).
 
    static TGeoManager *fgGeoMangeur;
 
    static TEveGeoShape* SubImportShapeExtract(TEveGeoShapeExtract* gse, TEveElement* parent);
    TEveGeoShapeExtract* DumpShapeTree(TEveGeoShape* geon, TEveGeoShapeExtract* parent=0);
+
+   TGeoShape* MakePolyShape();
 
 public:
    TEveGeoShape(const char* name="TEveGeoShape", const char* title=0);
@@ -41,8 +45,8 @@ public:
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
    Int_t       GetNSegments()  const { return fNSegments; }
-   void        SetNSegments(Int_t s) { fNSegments = s;    }
-   TGeoShape*  GetShape()            { return fShape;     }
+   TGeoShape*  GetShape()      const { return fShape;     }
+   void        SetNSegments(Int_t s);
    void        SetShape(TGeoShape* s);
 
    virtual void ComputeBBox();

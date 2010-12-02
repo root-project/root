@@ -38,6 +38,7 @@ public:
    virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    void SetFromMesh(const RootCsg::TBaseMesh *m);
+   void CalculateNormals();
    void EnforceTriangles();
 
    std::vector<Double_t>& GetVertices() { return fVertices; }
@@ -49,10 +50,10 @@ public:
    static void   SetEnforceTriangles(Bool_t e);
 
 private:
-   void GLDrawPolys()const;
-   Int_t CheckPoints(const Int_t *source, Int_t *dest)const;
+   void  GLDrawPolys() const;
+   Int_t CheckPoints(const Int_t *source, Int_t *dest) const;
+
    static Bool_t Eq(const Double_t *p1, const Double_t *p2);
-   void CalculateNormals();
 
    ClassDef(TGLFaceSet,0) // a faceset logical shape
 };

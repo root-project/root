@@ -21,6 +21,7 @@
 
 #include "TROOT.h"
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
 #include "TColor.h"
 #include "TFile.h"
@@ -30,6 +31,7 @@
 #include "TGeoNode.h"
 #include "TGeoShapeAssembly.h"
 #include "TGeoCompositeShape.h"
+#include "TGeoBoolNode.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 #include "TVirtualGeoPainter.h"
@@ -92,9 +94,10 @@ TGeoManager* TEveGeoShape::GetGeoMangeur()
 
 //______________________________________________________________________________
 TEveGeoShape::TEveGeoShape(const char* name, const char* title) :
-   TEveShape     (name, title),
-   fNSegments    (0),
-   fShape        (0)
+   TEveShape       (name, title),
+   fNSegments      (0),
+   fShape          (0),
+   fCompositeShape (0)
 {
    // Constructor.
 
@@ -110,20 +113,62 @@ TEveGeoShape::~TEveGeoShape()
 }
 
 //______________________________________________________________________________
+TGeoShape* TEveGeoShape::MakePolyShape()
+{
+   // Create derived TEveGeoShape form a TGeoCompositeShape.
+
+   return TEveGeoPolyShape::Construct(fCompositeShape, fNSegments);
+}
+
+//______________________________________________________________________________
+void TEveGeoShape::SetNSegments(Int_t s)
+{
+   // Set number of segments.
+
+   if (s != fNSegments && fCompositeShape != 0)
+   {
+      delete fShape;
+      fShape = MakePolyShape();
+   }
+   fNSegments = s;
+}
+
+//______________________________________________________________________________
 void TEveGeoShape::SetShape(TGeoShape* s)
 {
    // Set TGeoShape shown by this object.
+   //
+   // The shape is owned by TEveGeoShape but TGeoShape::fUniqueID is
+   // used for reference counting so you can pass the same shape to
+   // several TEveGeoShapes.
+   //
+   // If it if is taken from an existing TGeoManager, manually
+   // increase the fUniqueID before passing it to TEveGeoShape.
 
    TEveGeoManagerHolder gmgr(fgGeoMangeur);
 
-   if (fShape) {
+   if (fCompositeShape)
+   {
+      delete fShape;
+      fShape = fCompositeShape;
+   }
+   if (fShape)
+   {
       fShape->SetUniqueID(fShape->GetUniqueID() - 1);
       if (fShape->GetUniqueID() == 0)
+      {
          delete fShape;
+      }
    }
    fShape = s;
-   if (fShape) {
+   if (fShape)
+   {
       fShape->SetUniqueID(fShape->GetUniqueID() + 1);
+      fCompositeShape = dynamic_cast<TGeoCompositeShape*>(fShape);
+      if (fCompositeShape)
+      {
+         fShape = MakePolyShape();
+      }
    }
 }
 
@@ -160,32 +205,66 @@ void TEveGeoShape::Paint(Option_t* /*option*/)
 
    TEveGeoManagerHolder gmgr(fgGeoMangeur, fNSegments);
 
-   TBuffer3D& buff = (TBuffer3D&) fShape->GetBuffer3D
-      (TBuffer3D::kCore, kFALSE);
+   if (fCompositeShape)
+   {
+      Double_t halfLengths[3] = { fCompositeShape->GetDX(), fCompositeShape->GetDY(), fCompositeShape->GetDZ() };
 
-   buff.fID           = this;
-   buff.fColor        = GetMainColor();
-   buff.fTransparency = GetMainTransparency();
-   RefMainTrans().SetBuffer3D(buff);
-   buff.fLocalFrame   = kTRUE; // Always enforce local frame (no geo manager).
+      TBuffer3D buff(TBuffer3DTypes::kComposite);
+      buff.fID           = this;
+      buff.fColor        = GetMainColor();
+      buff.fTransparency = GetMainTransparency();
+      RefMainTrans().SetBuffer3D(buff);
+      buff.fLocalFrame   = kTRUE; // Always enforce local frame (no geo manager).
+      buff.SetAABoundingBox(fCompositeShape->GetOrigin(), halfLengths);
+      buff.SetSectionsValid(TBuffer3D::kCore|TBuffer3D::kBoundingBox);
 
-   Int_t sections = TBuffer3D::kBoundingBox | TBuffer3D::kShapeSpecific;
-   if (fNSegments > 2)
-      sections |= TBuffer3D::kRawSizes | TBuffer3D::kRaw;
-   fShape->GetBuffer3D(sections, kTRUE);
+      Bool_t paintComponents = kTRUE;
 
-   Int_t reqSec = gPad->GetViewer3D()->AddObject(buff);
+      // Start a composite shape, identified by this buffer
+      if (TBuffer3D::GetCSLevel() == 0)
+         paintComponents = gPad->GetViewer3D()->OpenComposite(buff);
 
-   if (reqSec != TBuffer3D::kNone) {
-      // This shouldn't happen, but I suspect it does sometimes.
-      if (reqSec & TBuffer3D::kCore)
-         Warning(eh, "Core section required again for shape='%s'. This shouldn't happen.", GetName());
-      fShape->GetBuffer3D(reqSec, kTRUE);
-      reqSec = gPad->GetViewer3D()->AddObject(buff);
+      TBuffer3D::IncCSLevel();
+
+      // Paint the boolean node - will add more buffers to viewer
+      TGeoHMatrix xxx;
+      TGeoMatrix *gst = TGeoShape::GetTransform();
+      TGeoShape::SetTransform(&xxx);
+      if (paintComponents) fCompositeShape->GetBoolNode()->Paint("");
+      TGeoShape::SetTransform(gst);
+      // Close the composite shape
+      if (TBuffer3D::DecCSLevel() == 0)
+         gPad->GetViewer3D()->CloseComposite();
    }
+   else
+   {
+      TBuffer3D& buff = (TBuffer3D&) fShape->GetBuffer3D
+         (TBuffer3D::kCore, kFALSE);
 
-   if (reqSec != TBuffer3D::kNone)
-      Warning(eh, "Extra section required: reqSec=%d, shape=%s.", reqSec, GetName());
+      buff.fID           = this;
+      buff.fColor        = GetMainColor();
+      buff.fTransparency = GetMainTransparency();
+      RefMainTrans().SetBuffer3D(buff);
+      buff.fLocalFrame   = kTRUE; // Always enforce local frame (no geo manager).
+
+      Int_t sections = TBuffer3D::kBoundingBox | TBuffer3D::kShapeSpecific;
+      if (fNSegments > 2)
+         sections |= TBuffer3D::kRawSizes | TBuffer3D::kRaw;
+      fShape->GetBuffer3D(sections, kTRUE);
+
+      Int_t reqSec = gPad->GetViewer3D()->AddObject(buff);
+
+      if (reqSec != TBuffer3D::kNone) {
+         // This shouldn't happen, but I suspect it does sometimes.
+         if (reqSec & TBuffer3D::kCore)
+            Warning(eh, "Core section required again for shape='%s'. This shouldn't happen.", GetName());
+         fShape->GetBuffer3D(reqSec, kTRUE);
+         reqSec = gPad->GetViewer3D()->AddObject(buff);
+      }
+
+      if (reqSec != TBuffer3D::kNone)
+         Warning(eh, "Extra section required: reqSec=%d, shape=%s.", reqSec, GetName());
+   }
 }
 
 //==============================================================================
@@ -354,7 +433,7 @@ TBuffer3D* TEveGeoShape::MakeBuffer3D()
    if (fShape == 0) return 0;
 
    if (dynamic_cast<TGeoShapeAssembly*>(fShape)) {
-      // !!!! TGeoShapeAssembly makes a bad TBuffer3D
+      // TGeoShapeAssembly makes a bad TBuffer3D.
       return 0;
    }
 

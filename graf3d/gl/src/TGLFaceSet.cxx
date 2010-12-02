@@ -75,8 +75,9 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buffer) :
    }
 
    fPolyDesc.resize(descSize);
-   {//fix for scope
-   for (UInt_t numPol = 0, currInd = 0, j = 1; numPol < fNbPols; ++numPol) {
+
+   for (UInt_t numPol = 0, currInd = 0, j = 1; numPol < fNbPols; ++numPol)
+   {
       Int_t segmentInd = pols[j] + j;
       Int_t segmentCol = pols[j];
       Int_t s1 = pols[segmentInd];
@@ -119,12 +120,11 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buffer) :
       }
       j += segmentCol + 2;
    }
+
+   if (fgEnforceTriangles) {
+      EnforceTriangles();
    }
-   //if (fgEnforceTriangles) {
-   //   EnforceTriangles();
-   //} else {
-      CalculateNormals();
-      //}
+   CalculateNormals();
 }
 
 //______________________________________________________________________________
@@ -135,7 +135,6 @@ void TGLFaceSet::SetFromMesh(const RootCsg::TBaseMesh *mesh)
 
    UInt_t nv = mesh->NumberOfVertices();
    fVertices.reserve(3 * nv);
-   fNormals.resize(mesh->NumberOfPolys() * 3);
    UInt_t i;
 
    for (i = 0; i < nv; ++i) {
@@ -161,9 +160,8 @@ void TGLFaceSet::SetFromMesh(const RootCsg::TBaseMesh *mesh)
 
    if (fgEnforceTriangles) {
       EnforceTriangles();
-   } else {
-      CalculateNormals();
    }
+   CalculateNormals();
 }
 
 //______________________________________________________________________________
@@ -172,9 +170,8 @@ void TGLFaceSet::EnforceTriangles()
    // Use GLU tesselator to replace all polygons with N > 3 with triangles.
    // After this call polygon descriptions are changed.
    // New vertices are not expected -- exception is thrown if this is
-   // requested by the triangulator. Support for addin of new vertices can be
+   // requested by the triangulator. Support for adding of new vertices can be
    // provided.
-   // Normals are automatically recalculated at the end.
 
    class TriangleCollector
    {
@@ -305,8 +302,6 @@ void TGLFaceSet::EnforceTriangles()
 
    fPolyDesc.swap(tc.RefPolyDesc());
    fNbPols = tc.GetNTrianlges();
-
-   CalculateNormals();
 }
 
 //______________________________________________________________________________
