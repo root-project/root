@@ -223,6 +223,9 @@ MODULES      += cint/cling
 endif
 ifeq ($(BUILDROOFIT),yes)
 MODULES      += roofit/roofitcore roofit/roofit roofit/roostats
+ifeq ($(BUILDXML),yes)
+MODULES      += roofit/histfactory
+endif
 endif
 ifeq ($(BUILDGDML),yes)
 MODULES      += geom/gdml
@@ -293,8 +296,8 @@ MODULES      += core/unix core/winnt core/editline graf2d/x11 graf2d/x11ttf \
                 graf2d/qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac proof/pq2 \
                 sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
-                tmva math/genetic io/hdfs graf2d/fitsio \
-                roofit/roofitcore roofit/roofit roofit/roostats \
+                tmva math/genetic io/hdfs graf2d/fitsio roofit/roofitcore \
+                roofit/roofit roofit/roostats roofit/histfactory \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz

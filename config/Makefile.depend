@@ -82,8 +82,12 @@ ROOFITCORELIBDEPM      = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
 ROOFITLIBDEPM          = $(ROOFITCORELIB) $(TREELIB) $(IOLIB) $(MATRIXLIB) \
                          $(MATHCORELIB)
 ROOSTATSLIBDEPM        = $(ROOFITLIB) $(ROOFITCORELIB) $(TREELIB) $(IOLIB) \
-                         $(MATRIXLIB) $(HISTLIB) $(MATHCORELIB) $(GRAFLIB) \
-                         $(GPADLIB)
+                         $(HISTLIB) $(MATRIXLIB) $(MATHCORELIB) $(MINUITLIB) \
+                         $(FOAMLIB) $(GRAFLIB) $(GPADLIB)
+HISTFACTORYLIBDEPM     = $(ROOFITLIB) $(ROOFITCORELIB) $(TREELIB) $(IOLIB) \
+                         $(HISTLIB) $(MATRIXLIB) $(MATHCORELIB) $(MINUITLIB) \
+                         $(FOAMLIB) $(GRAFLIB) $(GPADLIB) $(ROOSTATSLIB) \
+                         $(XMLPARSERLIB) 
 CINTEXLIBDEPM          = $(REFLEXLIB)
 REFLEXDICTLIBDEPM      = $(REFLEXLIB)
 RAUTHLIBDEPM           = $(NETLIB) $(IOLIB)
@@ -183,6 +187,7 @@ ALIENLIBDEP            = $(ALIENLIBDEPM)
 ROOFITCORELIBDEP       = $(ROOFITCORELIBDEPM)
 ROOFITLIBDEP           = $(ROOFITLIBDEPM)
 ROOSTATSLIBDEP         = $(ROOSTATSLIBDEPM)
+HISTFACTORYLIBDEP      = $(HISTFACTORYLIBDEPM)
 CINTEXLIBDEP           = $(CINTEXLIBDEPM)
 REFEXDICTLIBDEP        = $(REFLEXDICTLIBDEPM)
 RAUTHLIBDEP            = $(RAUTHLIBDEPM)
@@ -329,7 +334,14 @@ ROOFITLIBEXTRA          = lib/libRooFitCore.lib lib/libTree.lib lib/libRIO.lib \
 ROOSTATSLIBEXTRA        = lib/libRooFit.lib lib/libRooFitCore.lib \
                           lib/libTree.lib lib/libRIO.lib lib/libHist.lib \
                           lib/libMatrix.lib lib/libMathCore.lib \
+                          lib/libMinuit.lib lib/libFoam.lib \
                           lib/libGraf.lib lib/libGpad.lib
+HISTFACTORYLIBEXTRA     = lib/libRooFit.lib lib/libRooFitCore.lib \
+                          lib/libTree.lib lib/libRIO.lib lib/libHist.lib \
+                          lib/libMatrix.lib lib/libMathCore.lib \
+                          lib/libMinuit.lib lib/libFoam.lib \
+                          lib/libGraf.lib lib/libGpad.lib lib/libRooStats.lib \
+                          lib/libXMLParser.lib
 CINTEXLIBEXTRA          = lib/libReflex.lib
 REFLEXDICTLIBEXTRA      = lib/libReflex.lib
 RAUTHLIBEXTRA           = lib/libNet.lib lib/libRIO.lib
@@ -449,8 +461,11 @@ ALIENLIBEXTRA           = -Llib -lXMLIO -lNetx -lTree -lProofPlayer -lNet -lRIO
 ROOFITCORELIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lRIO \
                           -lMathCore -lFoam
 ROOFITLIBEXTRA          = -Llib -lRooFitCore -lTree -lRIO -lMatrix -lMathCore
-ROOSTATSLIBEXTRA        = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lMatrix \
-                          -lHist -lMathCore -lGraf -lGpad
+ROOSTATSLIBEXTRA        = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lHist \
+                          -lMatrix -lMathCore -lMinuit -lFoam -lGraf -lGpad
+HISTFACTORYLIBEXTRA     = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lHist \
+                          -lMatrix -lMathCore -lMinuit -lFoam -lGraf -lGpad \
+                          -lRooStats -lXMLParser
 CINTEXLIBEXTRA          = -Llib -lReflex
 REFLEXDICTLIBEXTRA      = -Llib -lReflex
 RAUTHLIBEXTRA           = -Llib -lNet -lRIO
