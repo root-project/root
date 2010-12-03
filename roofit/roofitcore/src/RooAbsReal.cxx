@@ -2914,8 +2914,10 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
       setAttribute("UNSIGNED_INTEGER_TREE_BRANCH",kTRUE) ;
       _treeVar = kTRUE ;
       t.SetBranchAddress(cleanName,&_uintValue) ;
-    } else {
+    } else if (!typeName.CompareTo("Double_t")) {
       t.SetBranchAddress(cleanName,&_value) ;
+    } else {
+      coutE(InputArguments) << "RooAbsReal::attachToTree(" << GetName() << ") data type " << typeName << " is not supported" << endl ;
     }   
     
     if (branch->GetCompressionLevel()<0) {
