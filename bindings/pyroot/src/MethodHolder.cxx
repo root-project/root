@@ -141,7 +141,7 @@ Bool_t TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::InitCallFunc_
 // setup the dispatch cache
    for ( size_t iarg = 0; iarg < nArgs; ++iarg ) {
       std::string fullType =
-         fMethod.TypeOf().FunctionParameterAt( iarg ).Name( ROOT::Reflex::QUALIFIED );
+         fMethod.TypeOf().FunctionParameterAt( iarg ).Name( ROOT::Reflex::QUALIFIED | ROOT::Reflex::SCOPED );
       fConverters[ iarg ] = CreateConverter( fullType );
 
       if ( ! fConverters[ iarg ] ) {
@@ -170,7 +170,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
    std::string callString = "";
    for ( size_t iarg = 0; iarg < nArgs; ++iarg ) {
       std::string fullType =
-         fMethod.TypeOf().FunctionParameterAt( iarg ).Name( ROOT::Reflex::QUALIFIED );
+         fMethod.TypeOf().FunctionParameterAt( iarg ).Name( ROOT::Reflex::QUALIFIED | ROOT::Reflex::SCOPED );
       fConverters[ iarg ] = CreateConverter( fullType );
 
       if ( ! fConverters[ iarg ] ) {
