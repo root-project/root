@@ -178,7 +178,7 @@ Double_t RooNonCentralChiSquare::evaluate() const
 
    // SECOND FORM (use MathMore function based on Bessel function (if k>2) or 
    // or  regularized confluent hypergeometric limit function.
-#ifdef R__HAS_MATHMORE__DISABLEFORNOW
+#ifdef R__HAS_MATHMORE
    return  ROOT::Math::noncentral_chisquared_pdf(_x,k,lambda);
 #else 
    coutF(Eval) << "RooNonCentralChisquare: ForceSum must be set" << endl;

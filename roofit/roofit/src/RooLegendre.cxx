@@ -81,7 +81,7 @@ Double_t RooLegendre::evaluate() const
 {
   // TODO: check that 0<=m_i<=l_i; on the other hand, assoc_legendre already does that ;-)
   // Note: P_0^0 = 1, so P_l^m = P_l^m P_0^0
-#ifdef MATHMORE
+#ifdef R__HAS_MATHMORE  
   double r = 1;
   if (_l1!=0||_m1!=0) r *= ROOT::Math::assoc_legendre(_l1,_m1,_ctheta);
   if (_l2!=0||_m2!=0) r *= ROOT::Math::assoc_legendre(_l2,_m2,_ctheta);
