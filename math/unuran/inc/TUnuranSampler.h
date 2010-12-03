@@ -74,6 +74,9 @@ public:
       initialize the generators with the given algorithm
       If no algorithm is passed used the default one for the type of distribution
    */
+
+   using ROOT::Math::DistSampler::Init;
+
    bool Init(const char * algo =0);
 
    /** 
