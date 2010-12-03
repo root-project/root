@@ -16,10 +16,10 @@
 
 ///////////////////////////////////////////////////////////////////////////
 //  RooExtendPdf is a wrappper around an existing PDF that adds a 
-//  parameteric extended likelihood term to the PDF, optionally multiplied by a 
+//  parameteric extended likelihood term to the PDF, optionally divided by a 
 //  fractional term from a partial normalization of the PDF:
 //
-//  nExpected = N   _or Expected = N * frac 
+//  nExpected = N   _or Expected = N / frac 
 //
 //  where N is supplied as a RooAbsReal to RooExtendPdf.
 //  The fractional term is defined as
