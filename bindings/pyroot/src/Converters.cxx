@@ -22,6 +22,7 @@
 #include <limits.h>
 #include <string.h>
 #include <utility>
+#include <sstream>
 
 
 //- data ______________________________________________________________________
@@ -1044,9 +1045,12 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
    // converter factory available, use it to create converter
       result = (h->second)( user );
    else if ( ! result ) {
-      if ( cpd != "" )
+      if ( cpd != "" ) {
+         std::stringstream s;
+         s << "creating converter for unknown type \"" << fullType << "\"" << std::ends;
+         PyErr_Warn( PyExc_RuntimeWarning, (char*)s.str().c_str() );
          result = new TVoidArrayConverter();       // "user knows best"
-      else
+      } else
          result = new TVoidConverter();            // fails on use
    }
 

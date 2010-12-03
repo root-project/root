@@ -20,6 +20,7 @@
 
 // Standard
 #include <utility>
+#include <sstream>
 #include <Riostream.h>
 
 
@@ -330,7 +331,9 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
       if ( ti.Property() & G__BIT_ISENUM )
          h = gExecFactories.find( "UInt_t" );
       else {
-         std::cerr << "return type not handled (using void): " << fullType << std::endl;
+         std::stringstream s;
+         s << "return type not handled (using void): " << fullType << std::ends;
+         PyErr_Warn( PyExc_RuntimeWarning, (char*)s.str().c_str() );
          h = gExecFactories.find( "void" );
       }
    }
