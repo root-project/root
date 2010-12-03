@@ -18,20 +18,14 @@ HF_PREPAREHISTFACTORY := bin/prepareHistFactory
 
 
 ##### tf_makeworkspace.exe #####
+
 HF_MAKEWORKSPACEEXES   := $(MODDIRS)/MakeModelAndMeasurements.cxx
-HF_MAKEWORKSPACEEXEO   := $(HF_MAKEWORKSPACEEXES:.cxx=.o)
+HF_MAKEWORKSPACEEXEO   := $(call stripsrc,$(HF_MAKEWORKSPACEEXES:.cxx=.o))
 HF_MAKEWORKSPACEEXEDEP := $(HF_MAKEWORKSPACEEXEO:.o=.d)
-ifeq ($(ARCH),win32gcc)
-HF_MAKEWORKSPACEEXE    := bin/hist2workspace.exe
-else
-HF_MAKEWORKSPACEEXE    := bin/hist2workspace
-endif
-ifeq ($(PLATFORM),win32)
-HF_MAKEWORKSPACEEXE    := bin/hist2workspace.exe
-endif
+
+HF_MAKEWORKSPACEEXE    := bin/hist2workspace$(EXEEXT)
 
 
-HF_LIBS = 
 
 ifeq ($(PLATFORM),win32)
 HF_LIBS = $(HISTFACTORYLIBEXTRA) "$(ROOTSYS)/lib/libHistFactory.lib" 
