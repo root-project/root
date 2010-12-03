@@ -115,10 +115,10 @@ XPROOFDEXE     :=
 ifeq ($(BUILDXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
-XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdNetUtil -lXrdSys \
+XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdSys \
                   -lXrdClient -lXrdSut $(DNSSDLIB)
 XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
-                  $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdNetUtil.a \
+                  $(XROOTDDIRL)/libXrdNet.a \
                   $(XROOTDDIRL)/libXrdOuc.a \
                   $(XROOTDDIRL)/libXrdSys.a $(XROOTDDIRL)/libXrdSut.a
 # Starting from Jul 2010 XrdNet has been split in two libs: XrdNet and XrdNetUtil;
