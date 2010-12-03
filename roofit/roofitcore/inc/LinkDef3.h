@@ -82,6 +82,8 @@
 #pragma link C++ class std::map<std::string,RooAbsPdf*>+ ;
 #pragma link C++ class std::map<std::string,TH1*>+ ;
 #pragma link C++ class std::map<std::string,RooAbsDataStore*>+ ;
+#pragma link C++ class std::list<RooAbsData*>+ ;
+#pragma link C++ class std::list<TObject*>+ ;
 #pragma link C++ class RooFactoryWSTool+ ;
 #pragma link C++ class RooBinningCategory+ ;
 #pragma link C++ class RooDerivative+ ;
