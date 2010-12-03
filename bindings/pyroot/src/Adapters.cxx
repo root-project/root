@@ -6,6 +6,7 @@
 #include "TBaseClass.h"
 #include "TClass.h"
 #include "TClassEdit.h"
+#include "TDataType.h"
 #include "TDataMember.h"
 #include "TMethod.h"
 #include "TFunction.h"
@@ -366,7 +367,10 @@ Bool_t PyROOT::TScopeAdapter::IsClass() const
       return (fClass->Property() & kIsClass) || ! (fClass->Property() & kIsFundamental);
    }
 
-   return kFALSE;
+// no class can mean either is no class (i.e. builtin), or no dict but coming in
+// through PyCintex/Reflex ... as a workaround, use TDataTypes that has a full
+// enumeration of builtin types
+   return TDataType( Name( ROOT::Reflex::F | ROOT::Reflex::S ).c_str() ).GetType() == kOther_t;
 }
 
 //____________________________________________________________________________
@@ -378,7 +382,8 @@ Bool_t PyROOT::TScopeAdapter::IsStruct() const
       return (fClass->Property() & kIsStruct) || ! (fClass->Property() & kIsFundamental);
    }
 
-   return kFALSE;
+// same logic as for IsClass() above ...
+   return TDataType( Name( ROOT::Reflex::F | ROOT::Reflex::S ).c_str() ).GetType() == kOther_t;
 }
 
 //____________________________________________________________________________
