@@ -202,6 +202,7 @@ void ErrorHandler(Int_t level, const char *location, const char *fmt, va_list ap
    static Int_t buf_size = 2048;
    static char *buf = 0;
 
+   int vc = 0;
    va_list sap;
    R__VA_COPY(sap, ap);
 
@@ -224,9 +225,12 @@ again:
       buf = 0;
       va_end(ap);
       R__VA_COPY(ap, sap);
+      vc = 1;
       goto again;
    }
    va_end(sap);
+   if (vc)
+      va_end(ap);
 
    char *bp;
    if (level >= kSysError && level < kFatal)

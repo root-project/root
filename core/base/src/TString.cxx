@@ -1872,7 +1872,7 @@ void TString::FormImp(const char *fmt, va_list ap)
    va_list sap;
    R__VA_COPY(sap, ap);
 
-   int n;
+   int n, vc = 0;
 again:
    n = vsnprintf(fData, buflen, fmt, ap);
    // old vsnprintf's return -1 if string is truncated new ones return
@@ -1885,9 +1885,12 @@ again:
       Clobber(buflen);
       va_end(ap);
       R__VA_COPY(ap, sap);
+      vc = 1;
       goto again;
    }
    va_end(sap);
+   if (vc)
+      va_end(ap);
 
    Pref()->fNchars = strlen(fData);
 }
@@ -1969,6 +1972,7 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
       R__VA_COPY(ap, sap);
       char *buf = SlowFormat(format, ap, n);
       va_end(sap);
+      va_end(ap);
       return buf;
    }
 
@@ -2001,6 +2005,7 @@ static char *Format(const char *format, va_list ap)
       R__VA_COPY(ap, sap);
       buf = SlowFormat(format, ap, n);
       va_end(sap);
+      va_end(ap);
       return buf;
    }
 
