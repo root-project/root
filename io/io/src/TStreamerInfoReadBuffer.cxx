@@ -549,7 +549,11 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
       case TStreamerInfo::kConv + TStreamerInfo::kChar:    ConvCBasicType(Char_t,b >> u);
       case TStreamerInfo::kConv + TStreamerInfo::kShort:   ConvCBasicType(Short_t,b >> u);
       case TStreamerInfo::kConv + TStreamerInfo::kInt:     ConvCBasicType(Int_t,b >> u);
-      case TStreamerInfo::kConv + TStreamerInfo::kLong:    ConvCBasicType(Long_t,b >> u);
+      case TStreamerInfo::kConv + TStreamerInfo::kLong:    if (fNewType[i]==TStreamerInfo::kLong64 || fNewType[i]==TStreamerInfo::kULong64) {
+                                                              ConvCBasicType(Long64_t,b >> u);
+                                                           } else {
+                                                              ConvCBasicType(Long_t,b >> u);
+                                                           }
       case TStreamerInfo::kConv + TStreamerInfo::kLong64:  ConvCBasicType(Long64_t,b >> u);
       case TStreamerInfo::kConv + TStreamerInfo::kFloat:   ConvCBasicType(Float_t,b >> u);
       case TStreamerInfo::kConv + TStreamerInfo::kFloat16: ConvCBasicType(Float_t,b.ReadFloat16(&u,aElement));
@@ -558,7 +562,15 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
       case TStreamerInfo::kConv + TStreamerInfo::kUChar:   ConvCBasicType(UChar_t,b >> u);
       case TStreamerInfo::kConv + TStreamerInfo::kUShort:  ConvCBasicType(UShort_t,b >> u);
       case TStreamerInfo::kConv + TStreamerInfo::kUInt:    ConvCBasicType(UInt_t,b >> u);
-      case TStreamerInfo::kConv + TStreamerInfo::kULong:   ConvCBasicType(ULong_t,b >> u);
+      case TStreamerInfo::kConv + TStreamerInfo::kULong:   if (fNewType[i]==TStreamerInfo::kLong64 || fNewType[i]==TStreamerInfo::kULong64) {
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+                                                              ConvCBasicType(Long64_t,b >> u);
+#else
+                                                              ConvCBasicType(ULong64_t,b >> u);         
+#endif
+                                                           } else {
+                                                              ConvCBasicType(ULong_t,b >> u);
+                                                           }
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
       case TStreamerInfo::kConv + TStreamerInfo::kULong64: ConvCBasicType(Long64_t,b >> u)
 #else
@@ -571,7 +583,12 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
       case TStreamerInfo::kConvL + TStreamerInfo::kChar:    ConvCBasicArray(Char_t,ReadFastArray);
       case TStreamerInfo::kConvL + TStreamerInfo::kShort:   ConvCBasicArray(Short_t,ReadFastArray);
       case TStreamerInfo::kConvL + TStreamerInfo::kInt:     ConvCBasicArray(Int_t,ReadFastArray);
-      case TStreamerInfo::kConvL + TStreamerInfo::kLong:    ConvCBasicArray(Long_t,ReadFastArray);
+      case TStreamerInfo::kConvL + TStreamerInfo::kLong:    
+         if (fNewType[i]==TStreamerInfo::kLong64 || fNewType[i]==TStreamerInfo::kULong64) {
+            ConvCBasicArray(Long64_t,ReadFastArray);
+         } else {
+            ConvCBasicArray(Long_t,ReadFastArray);
+         }
       case TStreamerInfo::kConvL + TStreamerInfo::kLong64:  ConvCBasicArray(Long64_t,ReadFastArray);
       case TStreamerInfo::kConvL + TStreamerInfo::kFloat:   ConvCBasicArray(Float_t,ReadFastArray);
       case TStreamerInfo::kConvL + TStreamerInfo::kFloat16: ConvCBasicArray(Float_t,ReadFastArrayFloat16);
@@ -580,7 +597,16 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
       case TStreamerInfo::kConvL + TStreamerInfo::kUChar:   ConvCBasicArray(UChar_t,ReadFastArray);
       case TStreamerInfo::kConvL + TStreamerInfo::kUShort:  ConvCBasicArray(UShort_t,ReadFastArray);
       case TStreamerInfo::kConvL + TStreamerInfo::kUInt:    ConvCBasicArray(UInt_t,ReadFastArray);
-      case TStreamerInfo::kConvL + TStreamerInfo::kULong:   ConvCBasicArray(ULong_t,ReadFastArray);
+      case TStreamerInfo::kConvL + TStreamerInfo::kULong:   
+         if (fNewType[i]==TStreamerInfo::kLong64 || fNewType[i]==TStreamerInfo::kULong64) {
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+            ConvCBasicArray(Long64_t,ReadFastArray)
+#else
+            ConvCBasicArray(ULong64_t,ReadFastArray)
+#endif
+         } else {
+            ConvCBasicArray(ULong_t,ReadFastArray);
+         }
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
       case TStreamerInfo::kConvL + TStreamerInfo::kULong64: ConvCBasicArray(Long64_t,ReadFastArray)
 #else
@@ -592,7 +618,12 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
       case TStreamerInfo::kConvP + TStreamerInfo::kChar:    ConvCBasicPointer(Char_t,ReadFastArray);
       case TStreamerInfo::kConvP + TStreamerInfo::kShort:   ConvCBasicPointer(Short_t,ReadFastArray);
       case TStreamerInfo::kConvP + TStreamerInfo::kInt:     ConvCBasicPointer(Int_t,ReadFastArray);
-      case TStreamerInfo::kConvP + TStreamerInfo::kLong:    ConvCBasicPointer(Long_t,ReadFastArray);
+      case TStreamerInfo::kConvP + TStreamerInfo::kLong:    
+         if (fNewType[i]==TStreamerInfo::kLong64 || fNewType[i]==TStreamerInfo::kULong64) {
+            ConvCBasicPointer(Long64_t,ReadFastArray);
+         } else {
+            ConvCBasicPointer(Long_t,ReadFastArray);
+         }
       case TStreamerInfo::kConvP + TStreamerInfo::kLong64:  ConvCBasicPointer(Long64_t,ReadFastArray);
       case TStreamerInfo::kConvP + TStreamerInfo::kFloat:   ConvCBasicPointer(Float_t,ReadFastArray);
       case TStreamerInfo::kConvP + TStreamerInfo::kFloat16: ConvCBasicPointer(Float_t,ReadFastArrayFloat16);
@@ -601,7 +632,16 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
       case TStreamerInfo::kConvP + TStreamerInfo::kUChar:   ConvCBasicPointer(UChar_t,ReadFastArray);
       case TStreamerInfo::kConvP + TStreamerInfo::kUShort:  ConvCBasicPointer(UShort_t,ReadFastArray);
       case TStreamerInfo::kConvP + TStreamerInfo::kUInt:    ConvCBasicPointer(UInt_t,ReadFastArray);
-      case TStreamerInfo::kConvP + TStreamerInfo::kULong:   ConvCBasicPointer(ULong_t,ReadFastArray);
+      case TStreamerInfo::kConvP + TStreamerInfo::kULong:   
+         if (fNewType[i]==TStreamerInfo::kLong64 || fNewType[i]==TStreamerInfo::kULong64) {
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+            ConvCBasicPointer(Long64_t,ReadFastArray)
+#else
+            ConvCBasicPointer(ULong64_t,ReadFastArray)
+#endif
+         } else {
+            ConvCBasicPointer(ULong_t,ReadFastArray);
+         }
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
       case TStreamerInfo::kConvP + TStreamerInfo::kULong64: ConvCBasicPointer(Long64_t,ReadFastArray)
 #else
