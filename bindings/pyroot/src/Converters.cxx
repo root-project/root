@@ -1001,7 +1001,7 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
       return (h->second)( user );
 
 //-- nothing? collect qualifier information
-   Bool_t isConst = resolvedType.find( "const" ) != std::string::npos;
+   Bool_t isConst = ti.Property() & G__BIT_ISCONSTANT;
 
 // accept const <type>& as converter by value (as python copies most types)
    if ( isConst && cpd == "&" ) {
