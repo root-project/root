@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_overloadtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 04/15/05
-# Last: 09/30/10
+# Last: 12/04/10
 
 """Overload unit tests for PyROOT package."""
 
@@ -30,6 +30,12 @@ class Overloads1ClassArrayTestCase( MyTestCase ):
       self.assertEqual( MyD().GetInt( MyA() ), 42 )
       self.assertEqual( MyD().GetInt( MyB() ), 13 )
 
+      self.assertEqual( MyC().GetInt( MyNSa.MyA() ),  88 )
+      self.assertEqual( MyC().GetInt( MyNSb.MyA() ), -33 )
+
+      self.assertEqual( MyD().GetInt( MyNSa.MyA() ),  88 )
+      self.assertEqual( MyD().GetInt( MyNSb.MyA() ), -33 )
+
       c = MyC()
       self.assertRaises( TypeError, c.GetInt.disp, 12 )
       self.assertEqual( c.GetInt.disp( 'MyA* a' )( MyA() ), 42 )
@@ -41,6 +47,9 @@ class Overloads1ClassArrayTestCase( MyTestCase ):
       d = MyD()
       self.assertEqual( d.GetInt.disp( 'MyA* a' )( MyA() ), 42 )
       self.assertEqual( d.GetInt.disp( 'MyB* b' )( MyB() ), 13 )
+
+      nb = MyNSa.MyB()
+      self.assertRaises( TypeError, nb.f, MyC() )
 
    def test2ClassOverloads( self ):
       """Test functions overloaded on void* and non-existing classes"""

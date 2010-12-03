@@ -2,16 +2,38 @@
   File: roottest/python/basic/Overloads.C
   Author: WLavrijsen@lbl.gov
   Created: 04/15/05
-  Last: 05/02/08
+  Last: 12/04/10
 */
 
 #include <string>
+#include <vector>
 
 class MyA {
 public:
    MyA() { i1 = 42; i2 = -1; }
    int i1, i2;
 };
+
+namespace MyNSa {
+   class MyA {
+   public:
+      MyA() { i1 = 88; i2 = -34; }
+      int i1, i2;
+   };
+
+   class MyB {
+   public:
+      int f( const std::vector<int>* v ) { return (*v)[0]; }
+   };
+}
+
+namespace MyNSb {
+   class MyA {
+   public:
+      MyA() { i1 = -33; i2 = 89; }
+      int i1, i2;
+   };
+}
 
 class MyB {
 public:
@@ -23,6 +45,8 @@ class MyC {
 public:
    MyC() {}
    int GetInt( MyA* a )   { return a->i1; }
+   int GetInt( MyNSa::MyA* a ) { return a->i1; }
+   int GetInt( MyNSb::MyA* a ) { return a->i1; }
    int GetInt( short* p ) { return *p; }
    int GetInt( MyB* b )   { return b->i2; }
    int GetInt( int* p )   { return *p; }
@@ -35,6 +59,8 @@ public:
    int GetInt( int* p )   { return *p; }
    int GetInt( MyB* b )   { return b->i2; }
    int GetInt( short* p ) { return *p; }
+   int GetInt( MyNSb::MyA* a ) { return a->i1; }
+   int GetInt( MyNSa::MyA* a ) { return a->i1; }
    int GetInt( MyA* a )   { return a->i1; }
 };
 
