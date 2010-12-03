@@ -26,17 +26,14 @@ class TEveBoxSet: public TEveDigitSet
    TEveBoxSet& operator=(const TEveBoxSet&); // Not implemented
 
 public:
-   enum EBoxType_e
-      {
-         kBT_Undef,           // unknown-ignored
-         kBT_FreeBox,         // arbitrary box: specify 8*(x,y,z) box corners
-         kBT_AABox,           // axis-aligned box: specify (x,y,z) and (w, h, d)
-         kBT_AABoxFixedDim,   // axis-aligned box w/ fixed dimensions: specify (x,y,z)
-         kBT_Cone,
-         kBT_EllipticCone
-      };
-
-protected:
+   enum EBoxType_e {
+      kBT_Undef,           // unknown-ignored
+      kBT_FreeBox,         // arbitrary box: specify 8*(x,y,z) box corners
+      kBT_AABox,           // axis-aligned box: specify (x,y,z) and (w, h, d)
+      kBT_AABoxFixedDim,   // axis-aligned box w/ fixed dimensions: specify (x,y,z)
+      kBT_Cone,
+      kBT_EllipticCone
+   };
 
    struct BFreeBox_t       : public DigitBase_t { Float_t fVertices[8][3]; };
 

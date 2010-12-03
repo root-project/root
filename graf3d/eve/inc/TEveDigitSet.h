@@ -44,7 +44,6 @@ public:
    typedef void (*Callback_foo)(TEveDigitSet*, Int_t, TObject*);
    typedef TString (*TooltipCB_foo)(TEveDigitSet*, Int_t);
 
-protected:
    struct DigitBase_t
    {
       // Base-class for digit representation classes.
@@ -55,6 +54,7 @@ protected:
       DigitBase_t(Int_t v=0) : fValue(v), fUserData(0) {}
    };
 
+protected:
    TRefArray        *fDigitIds;       //  Array holding references to external objects.
 
    Int_t             fDefaultValue;   //  Default signal value.

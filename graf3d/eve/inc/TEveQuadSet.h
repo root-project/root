@@ -24,36 +24,33 @@ class TEveQuadSet : public TEveDigitSet
    TEveQuadSet& operator=(const TEveQuadSet&); // Not implemented
 
 public:
-   enum EQuadType_e
-      {
-         kQT_Undef,                // unknown-ignored
-         kQT_FreeQuad,             // arbitrary quad: specify 4*(x,y,z) quad corners
-         kQT_RectangleXY,          // rectangle in x-y plane: specify x, y, z, w, h
-         kQT_RectangleXZ,          // rectangle in x-z plane: specify x, y, z, w, h
-         kQT_RectangleYZ,          // rectangle in y-z plane: specify x, y, z, w, h
-         kQT_RectangleXYFixedDim,  // rectangle in x-y plane: specify x, y, z; w, h taken from fDefWidth/Height
-         kQT_RectangleXYFixedZ,    // rectangle in x-y plane: specify x, y, w, h; z taken from fDefCoord
-         kQT_RectangleXZFixedY,    // rectangle in x-z plane: specify x, z, w, h; y taken from fDefCoord
-         kQT_RectangleYZFixedX,    // rectangle in y-z plane: specify y, z, w, h; x taken from fDefWidth/Height/Coord
-         kQT_RectangleXYFixedDimZ, // rectangle in x-y plane: specify x, y; w, h, z taken from fDefWidth/Height/Coord
-         kQT_RectangleXZFixedDimY, // rectangle in x-z plane: specify x, z; w, h, y taken from fDefWidth/Height/Coord
-         kQT_RectangleYZFixedDimX, // rectangle in y-z plane: specify y, z; w, h, x taken from fDefWidth/Height/Coord
-         kQT_Rectangle_End,
-         // line modes (needed for uniform handling of silicon-strip digits)
-         kQT_LineXYFixedZ,         // line in x-y plane: specify x, y, w(dx), h(dy); z taken from fDefCoord
-         kQT_LineXZFixedY,         // line in x-z plane: specify x, z, w(dx), h(dz); y taken from fDefCoord
-         kQT_Line_End,
-         // hexagon modes
-         kQT_HexagonXY,            // horizontal hexagon: specify x, y, z, r
-         kQT_HexagonYX,            // vertical   hexagon: specify x, y, z, r
-         kQT_Hexagon_End
-         // circle modes:
-         // QT_CircleXY,          // specify r, z
-         // QT_CircleXYFixedZ,    // specify r
-         // QT_CircleXYFixedR,    // specify z
-      };
-
-protected:
+   enum EQuadType_e {
+      kQT_Undef,                // unknown-ignored
+      kQT_FreeQuad,             // arbitrary quad: specify 4*(x,y,z) quad corners
+      kQT_RectangleXY,          // rectangle in x-y plane: specify x, y, z, w, h
+      kQT_RectangleXZ,          // rectangle in x-z plane: specify x, y, z, w, h
+      kQT_RectangleYZ,          // rectangle in y-z plane: specify x, y, z, w, h
+      kQT_RectangleXYFixedDim,  // rectangle in x-y plane: specify x, y, z; w, h taken from fDefWidth/Height
+      kQT_RectangleXYFixedZ,    // rectangle in x-y plane: specify x, y, w, h; z taken from fDefCoord
+      kQT_RectangleXZFixedY,    // rectangle in x-z plane: specify x, z, w, h; y taken from fDefCoord
+      kQT_RectangleYZFixedX,    // rectangle in y-z plane: specify y, z, w, h; x taken from fDefWidth/Height/Coord
+      kQT_RectangleXYFixedDimZ, // rectangle in x-y plane: specify x, y; w, h, z taken from fDefWidth/Height/Coord
+      kQT_RectangleXZFixedDimY, // rectangle in x-z plane: specify x, z; w, h, y taken from fDefWidth/Height/Coord
+      kQT_RectangleYZFixedDimX, // rectangle in y-z plane: specify y, z; w, h, x taken from fDefWidth/Height/Coord
+      kQT_Rectangle_End,
+      // line modes (needed for uniform handling of silicon-strip digits)
+      kQT_LineXYFixedZ,         // line in x-y plane: specify x, y, w(dx), h(dy); z taken from fDefCoord
+      kQT_LineXZFixedY,         // line in x-z plane: specify x, z, w(dx), h(dz); y taken from fDefCoord
+      kQT_Line_End,
+      // hexagon modes
+      kQT_HexagonXY,            // horizontal hexagon: specify x, y, z, r
+      kQT_HexagonYX,            // vertical   hexagon: specify x, y, z, r
+      kQT_Hexagon_End
+      // circle modes:
+      // QT_CircleXY,          // specify r, z
+      // QT_CircleXYFixedZ,    // specify r
+      // QT_CircleXYFixedR,    // specify z
+   };
 
    struct QFreeQuad_t     : public DigitBase_t     { Float_t fVertices[12]; };
 
