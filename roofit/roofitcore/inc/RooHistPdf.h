@@ -82,6 +82,8 @@ public:
 
 protected:
 
+  Bool_t importWorkspaceHook(RooWorkspace& ws) ;
+  
   Double_t evaluate() const;
   Double_t totalVolume() const ;
   friend class RooAbsCachedPdf ;

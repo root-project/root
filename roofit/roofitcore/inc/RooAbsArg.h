@@ -38,6 +38,7 @@ class RooArgProxy ;
 class RooSetProxy ;
 class RooListProxy ;
 class RooExpensiveObjectCache ;
+class RooWorkspace ;
 /* class TGraphStruct ; */
 
 class RooAbsArg : public TNamed, public RooPrintable {
@@ -393,6 +394,8 @@ public:
 
   RooExpensiveObjectCache& expensiveObjectCache() const ;
   void setExpensiveObjectCache(RooExpensiveObjectCache& cache) { _eocache = &cache ; }  
+
+  virtual Bool_t importWorkspaceHook(RooWorkspace&) { return kFALSE ; } ;
 
  protected:
 

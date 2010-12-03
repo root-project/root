@@ -563,7 +563,18 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
     
   // Print a message for each imported node
   iter = cloneSet2->createIterator() ;
+  
+  // Perform any auxiliary imports at this point
   RooAbsArg* node ;
+  while((node=(RooAbsArg*)iter->Next())) {
+    if (node->importWorkspaceHook(*this)) {
+      coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << node->GetName() 
+			    << " has an error in importing in one or more of its auxiliary objects, aborting" << endl ;
+      return kTRUE ;
+    }
+  }
+  iter->Reset() ;
+
   RooArgSet recycledNodes ;
   RooArgSet nodesToBeDeleted ;
   while((node=(RooAbsArg*)iter->Next())) {
