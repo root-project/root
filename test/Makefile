@@ -558,12 +558,20 @@ $(STRESSHEPIX): $(STRESSHEPIXO) $(STRESSGEOMETRY) $(STRESSFIT) $(STRESSL) \
 
 $(STRESSROOFITO): stressRooFit_tests.cxx
 
+ifeq ($(shell $(ROOTCONFIG) --has-mathmore),yes)
+ifeq ($(PLATFORM),win32)
+EXTRAROOFITLIBS = '$(ROOTSYS)/lib/libMathMore.lib'
+else
+EXTRAROOFITLIBS = -lMathMore
+endif
+endif
+
 $(STRESSROOFIT): $(STRESSROOFITO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) '$(ROOTSYS)/lib/libRooFit.lib' '$(ROOTSYS)/lib/libRooFitCore.lib' '$(ROOTSYS)/lib/libHtml.lib' '$(ROOTSYS)/lib/libThread.lib' '$(ROOTSYS)/lib/libMinuit.lib' '$(ROOTSYS)/lib/libFoam.lib' '$(ROOTSYS)/lib/libProof.lib' $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) '$(ROOTSYS)/lib/libRooFit.lib' '$(ROOTSYS)/lib/libRooFitCore.lib' '$(ROOTSYS)/lib/libHtml.lib' '$(ROOTSYS)/lib/libThread.lib' '$(ROOTSYS)/lib/libMinuit.lib' '$(ROOTSYS)/lib/libFoam.lib' '$(ROOTSYS)/lib/libProof.lib' $(EXTRAROOFITLIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 else
-		$(LD) $(LDFLAGS) $^ $(LIBS) -lRooFit -lRooFitCore -lHtml -lThread -lMinuit -lFoam $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) -lRooFit -lRooFitCore -lHtml -lThread -lMinuit -lFoam $(EXTRAROOFITLIBS) $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 
