@@ -2848,6 +2848,8 @@ void RooAbsReal::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/)
       _value = other->_intValue ;
     } else if (source->getAttribute("BYTE_TREE_BRANCH")) {
       _value = other->_byteValue ;
+    } else if (source->getAttribute("SIGNEDBYTE_TREE_BRANCH")) {
+      _value = other->_sbyteValue ;
     } else if (source->getAttribute("UNSIGNED_INTEGER_TREE_BRANCH")) {
       _value = other->_uintValue ;
     } 
@@ -2908,6 +2910,12 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
       setAttribute("BYTE_TREE_BRANCH",kTRUE) ;
       _treeVar = kTRUE ;
       t.SetBranchAddress(cleanName,&_byteValue) ;
+    } else if (!typeName.CompareTo("Char_t")) {
+      coutI(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") TTree Char_t branch " << GetName() 
+		  << " will be converted to double precision" << endl ;
+      setAttribute("SIGNEDBYTE_TREE_BRANCH",kTRUE) ;
+      _treeVar = kTRUE ;
+      t.SetBranchAddress(cleanName,&_sbyteValue) ;
     }  else if (!typeName.CompareTo("UInt_t")) { 
       coutI(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") TTree UInt_t branch " << GetName() 
 		  << " will be converted to double precision" << endl ;
