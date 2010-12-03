@@ -212,3 +212,62 @@ Int_t TEveShape::FindConvexHull(const vVector2_t& pin, vVector2_t& pout, TEveEle
 
    return N;
 }
+
+//==============================================================================
+
+//______________________________________________________________________________
+Bool_t TEveShape::IsBoxOrientationConsistentEv(const TEveVector box[8])
+{
+   // Checks if the first face normal is pointing into the other
+   // direction as the vector pointing towards the opposite face.
+   // This assumes standard box vertex arrangement.
+
+   TEveVector f1 = box[1] - box[0];
+   TEveVector f2 = box[3] - box[0];
+   TEveVector up = box[4] - box[0];
+
+   return up.Dot(f1.Cross(f2)) < 0;
+}
+
+//______________________________________________________________________________
+Bool_t TEveShape::IsBoxOrientationConsistentFv(const Float_t box[8][3])
+{
+   // Checks if the first face normal is pointing into the other
+   // direction as the vector pointing towards the opposite face.
+   // This assumes standard box vertex arrangement.
+
+   TEveVector b0(box[0]);
+   TEveVector f1(box[1]); f1 -= b0;
+   TEveVector f2(box[3]); f2 -= b0;
+   TEveVector up(box[4]); up -= b0;
+
+   return up.Dot(f1.Cross(f2)) < 0;
+}
+
+//______________________________________________________________________________
+void TEveShape::CheckAndFixBoxOrientationEv(TEveVector box[8])
+{
+   // Make sure box orientation is consistent with standard arrangement.
+
+   if ( ! IsBoxOrientationConsistentEv(box))
+   {
+      std::swap(box[1], box[3]);
+      std::swap(box[5], box[7]);
+   }
+}
+
+//______________________________________________________________________________
+void TEveShape::CheckAndFixBoxOrientationFv(Float_t box[8][3])
+{
+   // Make sure box orientation is consistent with standard arrangement.
+
+   if ( ! IsBoxOrientationConsistentFv(box))
+   {
+      std::swap(box[1][0], box[3][0]);
+      std::swap(box[1][1], box[3][1]);
+      std::swap(box[1][2], box[3][2]);
+      std::swap(box[5][0], box[7][0]);
+      std::swap(box[5][1], box[7][1]);
+      std::swap(box[5][2], box[7][2]);
+   }
+}

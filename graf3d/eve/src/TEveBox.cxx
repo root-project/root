@@ -51,6 +51,7 @@ void TEveBox::SetVertex(Int_t i, Float_t x, Float_t y, Float_t z)
    fVertices[i][0] = x;
    fVertices[i][1] = y;
    fVertices[i][2] = z;
+   ResetBBox();
 }
 
 //______________________________________________________________________________
@@ -61,6 +62,7 @@ void TEveBox::SetVertex(Int_t i, const Float_t* v)
    fVertices[i][0] = v[0];
    fVertices[i][1] = v[1];
    fVertices[i][2] = v[2];
+   ResetBBox();
 }
 
 //______________________________________________________________________________
@@ -69,6 +71,7 @@ void TEveBox::SetVertices(const Float_t* vs)
    // Set vertices.
 
    memcpy(fVertices, vs, sizeof(fVertices));
+   ResetBBox();
 }
 
 //==============================================================================
@@ -77,6 +80,8 @@ void TEveBox::SetVertices(const Float_t* vs)
 void TEveBox::ComputeBBox()
 {
    // Compute bounding-box of the data.
+
+   TEveShape::CheckAndFixBoxOrientationFv(fVertices);
 
    BBoxInit();
    for (Int_t i=0; i<8; ++i)

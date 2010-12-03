@@ -10,11 +10,9 @@
  *************************************************************************/
 
 #include "TEveBoxSet.h"
+#include "TEveShape.h"
+
 #include "TRandom.h"
-#include "TBuffer3D.h"
-#include "TBuffer3DTypes.h"
-#include "TVirtualPad.h"
-#include "TVirtualViewer3D.h"
 
 //==============================================================================
 // TEveBoxSet
@@ -126,6 +124,7 @@ void TEveBoxSet::AddBox(const Float_t* verts)
 
    BFreeBox_t* b = (BFreeBox_t*) NewDigit();
    memcpy(b->fVertices, verts, sizeof(b->fVertices));
+   TEveShape::IsBoxOrientationConsistentFv(b->fVertices);
 }
 
 //______________________________________________________________________________

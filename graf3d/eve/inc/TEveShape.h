@@ -81,7 +81,13 @@ public:
 
    // ----------------------------------------------------------------
 
-   static Int_t FindConvexHull(const vVector2_t& pin, vVector2_t& pout, TEveElement* caller=0);
+   static Int_t  FindConvexHull(const vVector2_t& pin, vVector2_t& pout, TEveElement* caller=0);
+
+   static Bool_t IsBoxOrientationConsistentEv(const TEveVector box[8]);
+   static Bool_t IsBoxOrientationConsistentFv(const Float_t    box[8][3]);
+
+   static void   CheckAndFixBoxOrientationEv(TEveVector box[8]);
+   static void   CheckAndFixBoxOrientationFv(Float_t    box[8][3]);
 
    ClassDef(TEveShape, 0); // Abstract base-class for 2D/3D shapes.
 };
