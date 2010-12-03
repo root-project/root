@@ -37,6 +37,7 @@ namespace ROOT {
 
    namespace Math { 
 
+      class DistSamplerOptions;
 
 /**
    @defgroup Random Random number generators and generation of random number distributions
@@ -98,6 +99,16 @@ public:
       (like UnuranSampler)
    */
    virtual bool Init(const char * /* algorithm */) { return true;}
+
+   /**
+      initialize the generators with the given option
+      which my include the algorithm but also more if 
+      the method is re-impelmented by derived class
+      The default implementation calls the above method 
+      passing just the algorithm name
+   */
+   virtual bool Init(const DistSamplerOptions & opt );
+
 
    /** 
        Set the random engine to be used 

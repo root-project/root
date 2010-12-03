@@ -9,5 +9,6 @@
 #pragma link C++ class TFoamVect+;
 #pragma link C++ class TFoamCell+;
 #pragma link C++ class TFoam+;
+#pragma link C++ class TFoamSampler+;
 
 #endif

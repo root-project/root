@@ -105,6 +105,7 @@ public:
 
    /// i-th likelihood contribution and its gradient
    virtual double DataElement(const double * x, unsigned int i, double * g) const { 
+      if (i==0) this->UpdateNCalls();
       return FitUtil::EvaluatePdf(fFunc, fData, x, i, g); 
    }
 

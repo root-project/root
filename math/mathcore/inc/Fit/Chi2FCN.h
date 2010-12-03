@@ -134,6 +134,7 @@ public:
 
    /// i-th chi-square residual  
    virtual double DataElement(const double * x, unsigned int i, double * g) const { 
+      if (i==0) this->UpdateNCalls();
       return FitUtil::EvaluateChi2Residual(fFunc, fData, x, i, g); 
    }
 

@@ -11,6 +11,7 @@
 // implementation file for class DistSampler
 
 #include "Math/DistSampler.h"
+#include "Math/DistSamplerOptions.h"
 #include "Math/Error.h"
 
 #include "Math/IFunction.h"
@@ -28,6 +29,11 @@ DistSampler::~DistSampler() {
    // destructor 
    if (fOwnFunc && fFunc != 0) delete fFunc; 
    if (fRange) delete fRange;
+}
+
+bool DistSampler::Init(const DistSamplerOptions & opt ) { 
+   // default initialization with algorithm name
+   return Init(opt.Algorithm().c_str() );
 }
 
 void DistSampler::SetRange(double xmin, double xmax, int icoord) {
