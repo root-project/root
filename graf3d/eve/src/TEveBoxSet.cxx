@@ -124,7 +124,7 @@ void TEveBoxSet::AddBox(const Float_t* verts)
 
    BFreeBox_t* b = (BFreeBox_t*) NewDigit();
    memcpy(b->fVertices, verts, sizeof(b->fVertices));
-   TEveShape::IsBoxOrientationConsistentFv(b->fVertices);
+   TEveShape::CheckAndFixBoxOrientationFv(b->fVertices);
 }
 
 //______________________________________________________________________________
