@@ -27,11 +27,11 @@
 #include <TH1F.h>
 #include <TDirectory.h>
 
-//#include "RooStats/HistFactory/EstimateSummary.h"
-
 
 namespace RooStats{
 namespace HistFactory{
+  class EstimateSummary;
+   
   class HistoToWorkspaceFactory: public TObject {
 
     public:
