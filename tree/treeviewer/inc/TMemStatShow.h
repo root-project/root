@@ -37,7 +37,8 @@ protected:
 public:
    TMemStatShow() {;}
    virtual   ~TMemStatShow() {;}
-   static void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
+   static void EventInfo1(Int_t event, Int_t px, Int_t py, TObject *selected);
+   static void EventInfo2(Int_t event, Int_t px, Int_t py, TObject *selected);
    static void FillBTString(Int_t bin, Int_t mode, TString &btstring);
    
    static void SetAddressRange(Long64_t nbytes=0, Long64_t first=0);
