@@ -1715,7 +1715,7 @@ void TMVA::MethodBDT::MakeClassSpecific( std::ostream& fout, const TString& clas
    fout << "double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << endl;
    fout << "{" << endl;
    fout << "   double myMVA = 0;" << endl;
-   fout << "   double norm  = 0;" << endl;
+   if (fBoostType!="Grad") fout << "   double norm  = 0;" << endl;
    fout << "   for (unsigned int itree=0; itree<fForest.size(); itree++){" << endl;
    fout << "      BDT_DecisionTreeNode *current = fForest[itree];" << endl;
    fout << "      while (current->GetNodeType() == 0) { //intermediate node" << endl;

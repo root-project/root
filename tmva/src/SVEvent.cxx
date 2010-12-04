@@ -49,7 +49,7 @@ TMVA::SVEvent::SVEvent()
 }
 
 //_______________________________________________________________________
-TMVA::SVEvent::SVEvent( const Event* event, const Float_t C_par )
+TMVA::SVEvent::SVEvent( const Event* event, Float_t C_par )
    : fDataVector(event->GetValues()),
      fCweight(C_par*event->GetWeight()),
      fAlpha(0),
@@ -67,7 +67,7 @@ TMVA::SVEvent::SVEvent( const Event* event, const Float_t C_par )
 }
 
 //_______________________________________________________________________
-TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, const Int_t typeFlag, const UInt_t ns )
+TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Int_t typeFlag, UInt_t ns )
    : fDataVector(*svector),
      fCweight(-1.),
      fAlpha(alpha),
@@ -85,7 +85,7 @@ TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, cons
 }
 
 //_______________________________________________________________________
-TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Float_t alpha_p,const Int_t typeFlag)
+TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Float_t alpha_p,Int_t typeFlag)
    : fDataVector(*svector),
      fCweight(-1.),
      fAlpha(alpha),
