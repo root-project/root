@@ -346,7 +346,7 @@ void TRefTable::Reset(Option_t * /*option*/ )
 }
 
 //______________________________________________________________________________
-Int_t TRefTable::SetParent(const TObject* parent, const Int_t branchID)
+Int_t TRefTable::SetParent(const TObject* parent, Int_t branchID)
 {
    // -- Set current parent object, typically a branch of a tree.
    //
