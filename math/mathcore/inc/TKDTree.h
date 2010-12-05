@@ -49,7 +49,7 @@ public:
    Index*  GetIndPoints() {return fIndPoints;}
    Index   GetBucketSize() {return fBucketSize;}
 
-   void    FindNearestNeighbors(const Value *point, const Int_t k, Index *ind, Value *dist);
+   void    FindNearestNeighbors(const Value *point, Int_t k, Index *ind, Value *dist);
    Index   FindNode(const Value * point) const;
    void    FindPoint(Value * point, Index &index, Int_t &iter);
    void    FindInRange(Value *point, Value range, std::vector<Index> &res);
