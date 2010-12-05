@@ -34,7 +34,7 @@ namespace RooStats {
 
    public:
     // Constructors for SamplingDistribution
-    SamplingDistPlot(const Int_t nbins = 100);
+    SamplingDistPlot(Int_t nbins = 100);
 //    SamplingDistPlot(const char* name, const char* title, Int_t nbins, Double_t xmin, Double_t xmax);
 
     // Destructor of SamplingDistribution
@@ -54,21 +54,21 @@ namespace RooStats {
     // Applies a predefined style if fApplyStyle is kTRUE (default).
     void ApplyDefaultStyle(void);
 
-    void SetLineColor(const Color_t color, const SamplingDistribution *samplDist = 0);
-    void SetLineWidth(const Width_t lwidth, const SamplingDistribution *samplDist = 0);
-    void SetLineStyle(const Style_t style, const SamplingDistribution *samplDist = 0);
+    void SetLineColor(Color_t color, const SamplingDistribution *samplDist = 0);
+    void SetLineWidth(Width_t lwidth, const SamplingDistribution *samplDist = 0);
+    void SetLineStyle(Style_t style, const SamplingDistribution *samplDist = 0);
 
-    void SetMarkerColor(const Color_t color, const SamplingDistribution *samplDist = 0);
-    void SetMarkerStyle(const Style_t style, const SamplingDistribution *samplDist = 0);
-    void SetMarkerSize(const Size_t size, const SamplingDistribution *samplDist = 0);
+    void SetMarkerColor(Color_t color, const SamplingDistribution *samplDist = 0);
+    void SetMarkerStyle(Style_t style, const SamplingDistribution *samplDist = 0);
+    void SetMarkerSize(Size_t size, const SamplingDistribution *samplDist = 0);
 
-    void RebinDistribution(const Int_t rebinFactor, const SamplingDistribution *samplDist = 0);
+    void RebinDistribution(Int_t rebinFactor, const SamplingDistribution *samplDist = 0);
 
     void SetAxisTitle(char *varName) { fVarName = TString(varName); }
 
     // If you do not want SamplingDistPlot to interfere with your style settings, call this
     // function with "false" before Draw().
-    void SetApplyStyle(const Bool_t s) { fApplyStyle = s; }
+    void SetApplyStyle(Bool_t s) { fApplyStyle = s; }
 
     // Returns the TH1F associated with the give SamplingDistribution.
     // Intended use: Access to member functions of TH1F like GetMean(),
@@ -76,9 +76,9 @@ namespace RooStats {
     TH1F* GetTH1F(const SamplingDistribution *samplDist);
 
     // changes plot to log scale on x axis
-    void SetLogXaxis(const Bool_t lx) { fLogXaxis = lx; }
+    void SetLogXaxis(Bool_t lx) { fLogXaxis = lx; }
     // changes plot to log scale on y axis
-    void SetLogYaxis(const Bool_t ly) { fLogYaxis = ly; }
+    void SetLogYaxis(Bool_t ly) { fLogYaxis = ly; }
 
     // write to Root file
     void DumpToFile(const char* RootFileName, Option_t *option="", const char *ftitle="", Int_t compress=1);
