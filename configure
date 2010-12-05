@@ -3533,6 +3533,7 @@ check_explicit "$enable_hdfs" "$enable_hdfs_explicit" \
 #
 # Check for libdns_sd
 #
+bonjourcppflags=
 case $platform in
     linux|macosx|ios)
         ;;
@@ -3614,9 +3615,13 @@ if test ! "x$enable_bonjour" = "xno" ; then
             enable_bonjour="no"
         fi
     fi
+    if test ! "x$enable_bonjour" = "xno" ; then
+       bonjourcppflags="-DBUILD_BONJOUR"
+    fi
 fi
 check_explicit "$enable_bonjour" "$enable_bonjour_explicit" \
      "Explicitly required Bonjour dependencies not fulfilled"
+
 
 ######################################################################
 #
@@ -4023,6 +4028,7 @@ extraxrdflags="-DUSENEWHDRS"
 externalxrd="no"
 if test ! "x$xrdlibdir" = "x" && test ! "x$xrdincdir" = "x"; then
    externalxrd="yes"
+   xrdcomm="no, using xrootd at $xrdlibdir, $xrdincdir"
 elif test ! "x$xrootddir" = "x"; then
    externalxrd="yes"
    if test ! "x$xrdlibdir" = "x" && test ! "x$xrdincdir" = "x"; then
@@ -4066,18 +4072,34 @@ if test ! "x$enable_xrootd" = "xno" ; then
       if test "x$tmpver" = "xuntagged" ; then
          decver=9999999999
       else
+         oldver="no"
+         echo $tmpver | grep -q '-'
+         hasdash="$?"
          echo $tmpver | grep -q '\.'
-         if test $? -eq 0 ; then
-            ver1=`echo $tmpver | cut -d . -f 1`
-            ver2=`echo $tmpver | cut -d . -f 2`
-            ver3=`echo $tmpver | cut -d . -f 3`
-            decver=`expr $ver1 \* 100000000 + $ver2 \* 10000 + $ver3`
-         else
-            decver=`echo $tmpver | sed 's|[^0-9]||g'`
+         hasdot="$?"
+         if test $hasdash -eq 0 || test ! $hasdot -eq 0; then
+            oldver="yes"
+         fi
+         if test "x$oldver" = "xno" ; then
+            echo $tmpver | grep -q '\.'
+            if test $hasdot -eq 0 ; then
+               ver1=`echo $tmpver | cut -d . -f 1`
+               ver2=`echo $tmpver | cut -d . -f 2`
+               if test "x$ver1.$ver2" = "x$tmpver" ; then
+                  oldver="yes"
+               else
+                  ver3=`echo $tmpver | cut -d . -f 3`
+                  decver=`expr $ver1 \* 100000000 + $ver2 \* 10000 + $ver3`
+               fi
+            fi
+         fi
+         if test "x$oldver" = "xyes" ; then
+            decver=`echo $tmpver | sed 's|[^0-9]||g' | cut -c1-8`
 	 fi
       fi
    fi
 fi
+bjrcomm=
 if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
 
    if test "x$enable_xrootd" = "xyes" ; then
@@ -4100,6 +4122,13 @@ if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
       else
          vercomm=" (<= $decrefone: setting -DOLDXRDLOCATE -DOLDXRDOUC -DOLDXRCPHYCONN)"
          extraxrdflags="-DOLDXRCPHYCONN -DOLDXRDOUC -DOLDXRDLOCATE $extraxrdflags"
+      fi
+   fi
+
+   if test "x$enable_bonjour" = "xyes"; then
+      if test ! -f $xrdincdir/XrdOucBonjour.hh ; then
+         bjrcomm="External xrootd has no bonjour support: disabling bonjour in XrdProofd"
+         bonjourcppflags= 
       fi
    fi
 
@@ -4166,6 +4195,9 @@ else
     buildxrd="no"
     hasxrd="#"
     hasnotxrd=""
+fi
+if test ! "x$bjrcomm" = "x"; then
+   echo "$bjrcomm"
 fi
 check_explicit "$enable_xrootd" "$enable_xrootd_explicit" \
      "Explicitly required Xrootd dependencies not fulfilled"
@@ -6025,6 +6057,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@asimagelib@|$asimagelib|"            \
     -e "s|@asimagelibdir@|$asimagelibdir|"      \
     -e "s|@bindir@|$bindir|"                    \
+    -e "s|@bonjourcppflags@|$bonjourcppflags|"  \
     -e "s|@buildasimage@|$enable_asimage|"      \
     -e "s|@builtinafterimage@|$enable_builtin_afterimage|"  \
     -e "s|@buildftgl@|$enable_builtin_ftgl|"    \
