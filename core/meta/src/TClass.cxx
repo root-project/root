@@ -714,7 +714,7 @@ TClass::TClass() :
    fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fVersionUsed(kFALSE), fProperty(0),
-   fInterStreamer(0), fOffsetStreamer(0), fStreamerType(kNone),
+   fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
@@ -738,7 +738,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fVersionUsed(kFALSE), fProperty(0),
-   fInterStreamer(0), fOffsetStreamer(0), fStreamerType(kNone),
+   fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
@@ -788,7 +788,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fVersionUsed(kFALSE), fProperty(0),
-   fInterStreamer(0), fOffsetStreamer(0), fStreamerType(kNone),
+   fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
@@ -817,7 +817,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fSizeof(-1),
    fVersionUsed(kFALSE), fProperty(0),
-   fInterStreamer(0), fOffsetStreamer(0), fStreamerType(kNone),
+   fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
@@ -1075,7 +1075,7 @@ TClass::TClass(const TClass& cl) :
   fSizeof(cl.fSizeof),
   fVersionUsed(cl.fVersionUsed),
   fProperty(cl.fProperty),
-  fInterStreamer(cl.fInterStreamer),
+  fIsOffsetStreamerSet(cl.fIsOffsetStreamerSet),
   fOffsetStreamer(cl.fOffsetStreamer),
   fStreamerType(cl.fStreamerType),
   fCurrentInfo(cl.fCurrentInfo),
@@ -1177,8 +1177,7 @@ TClass::~TClass()
       fClassMenuList->Delete();
    delete fClassMenuList; fClassMenuList=0;
 
-   if ( fInterStreamer ) gCint->CallFunc_Delete((CallFunc_t*)fInterStreamer);
-   fInterStreamer=0;
+   fIsOffsetStreamerSet=kFALSE;
 
    if (fInterShowMembers) gCint->CallFunc_Delete(fInterShowMembers);
 
@@ -1454,7 +1453,7 @@ Int_t TClass::Browse(void *obj, TBrowser *b) const
    if (IsTObject()) {
       // Call TObject::Browse.
 
-      if (!fInterStreamer) {
+      if (!fIsOffsetStreamerSet) {
          CalculateStreamerOffset();
       }
       TObject* realTObject = (TObject*)((size_t)obj + fOffsetStreamer);
@@ -1666,13 +1665,11 @@ void TClass::CalculateStreamerOffset() const
    // that offset to access any virtual method of TObject like
    // Streamer() and ShowMembers().
    R__LOCKGUARD(gCINTMutex);
-   if (!fInterStreamer && fClassInfo) {
+   if (!fIsOffsetStreamerSet && fClassInfo) {
       // When called via TMapFile (e.g. Update()) make sure that the dictionary
       // gets allocated on the heap and not in the mapped file.
       TMmallocDescTemp setreset;
-      CallFunc_t *f  = gCint->CallFunc_Factory();
-      gCint->CallFunc_SetFuncProto(f,fClassInfo,"Streamer","TBuffer&",&fOffsetStreamer);
-      fInterStreamer = f;
+      fIsOffsetStreamerSet = kTRUE;
       fOffsetStreamer = const_cast<TClass*>(this)->GetBaseClassOffset(TObject::Class());
       if (fStreamerType == kTObject) {
          fStreamerImpl = &TClass::StreamerTObjectInitialized;
@@ -1705,7 +1702,7 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp,
 
       if (isATObject == 1) {
          // We have access to the TObject interface, so let's use it.
-         if (!fInterStreamer) {
+         if (!fIsOffsetStreamerSet) {
             CalculateStreamerOffset();
          }
          TObject* realTObject = (TObject*)((size_t)obj + fOffsetStreamer);
@@ -1728,7 +1725,7 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp,
             
             R__LOCKGUARD2(gCINTMutex);
             gCint->CallFunc_SetFuncProto(ism,fClassInfo,"ShowMembers", "TMemberInspector&", &offset);
-            if (fInterStreamer && offset != fOffsetStreamer) {
+            if (fIsOffsetStreamerSet && offset != fOffsetStreamer) {
                Error("CallShowMembers", "Logic Error: offset for Streamer() and ShowMembers() differ!");
                fInterShowMembers = 0;
                return kFALSE;
@@ -4918,7 +4915,7 @@ void TClass::StreamerTObject(void *object, TBuffer &b, const TClass * /* onfile_
 
    // case kTObject:
 
-   if (!fInterStreamer) {
+   if (!fIsOffsetStreamerSet) {
       CalculateStreamerOffset();
    }
    TObject *tobj = (TObject*)((Long_t)object + fOffsetStreamer);
@@ -4928,10 +4925,8 @@ void TClass::StreamerTObject(void *object, TBuffer &b, const TClass * /* onfile_
 //______________________________________________________________________________
 void TClass::StreamerTObjectInitialized(void *object, TBuffer &b, const TClass * /* onfile_class */) const
 {
-   // Case of TObjects when fInterStreamer is known to have been set.
+   // Case of TObjects when fIsOffsetStreamerSet is known to have been set.
 
-   //     case kTObject: if (fInterStreamer)
-   
    TObject *tobj = (TObject*)((Long_t)object + fOffsetStreamer);
    tobj->Streamer(b);   
 }

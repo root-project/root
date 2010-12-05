@@ -121,10 +121,10 @@ private:
    ClassStreamerFunc_t fStreamerFunc;   //Wrapper around this class custom Streamer member function.
    Int_t               fSizeof;         //Sizeof the class.
 
-   mutable Bool_t     fVersionUsed;     //!Indicates whether GetClassVersion has been called
    mutable Long_t     fProperty;        //!Property
+   mutable Bool_t     fVersionUsed;     //!Indicates whether GetClassVersion has been called
 
-   mutable void      *fInterStreamer;   //!saved info to call Streamer
+   mutable Bool_t     fIsOffsetStreamerSet; //!saved remember if fOffsetStreamer has been set.
    mutable Long_t     fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
    mutable TVirtualStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
