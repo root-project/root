@@ -59,7 +59,6 @@ $(CINTCONF): $(ROOT_SRCDIR)/config/Makefile.$(ARCH) config/Makefile.comp \
 	echo '#define G__CFG_SOEXT ".$(SOEXT)"' >> $@__ && \
 	echo '#define G__CFG_DEBUG "$(DEBUG)"' >> $@__ && \
 	echo '#define G__CFG_DEFAULTLIBS "$(SYSLIBS)"' >> $@__ && \
-	echo '#define G__CFG_DEFAULTLIBS "$(SYSLIBS)"' >> $@__ && \
 	echo '#define G__CFG_STREAMDIR "$(patsubst $(MODDIRS)/%strm.cxx,%,$(filter $(MODDIRS)/%strm.cxx, $(CINTS2)))"' >> $@__ && \
 	echo '#define G__CFG_EXPLLINK "$(EXPLICITLINK)"' >> $@__ && \
 	echo '#define G__CFG_BUILDREADLINE ""' >> $@__ && \
