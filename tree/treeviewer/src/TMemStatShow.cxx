@@ -98,31 +98,32 @@
 #include "TGClient.h"
 #include "TGToolTip.h"
 #include "TRootCanvas.h"
-MemInfo_t minfo;
 
-   TTree     *gT;        //TMemStat Tree
-   TH1D      *gHalloc;   //histogram with allocations
-   TH1D      *gHfree;    //histogram with frees
-   TH1D      *gH;        //histogram with allocations - frees
-   TH1I      *gHleaks;   //histogram with leaks
-   TH1I      *gHentry;   //histogram with entry numbers in the TObjArray
-   TH1I      *gHdiff;    //histogram with diff of entry number between alloc/free
+   static MemInfo_t minfo;
+
+   TTree     *TMemStatShow::fgT = 0;         //TMemStat Tree
+   TH1D      *TMemStatShow::fgHalloc = 0;    //histogram with allocations
+   TH1D      *TMemStatShow::fgHfree = 0;     //histogram with frees
+   TH1D      *TMemStatShow::fgH = 0;         //histogram with allocations - frees
+   TH1I      *TMemStatShow::fgHleaks = 0;    //histogram with leaks
+   TH1I      *TMemStatShow::fgHentry = 0;    //histogram with entry numbers in the TObjArray
+   TH1I      *TMemStatShow::fgHdiff = 0;     //histogram with diff of entry number between alloc/free
    
-   TGToolTip *gTip1;      //pointer to tool tip for canvas 1
-   TGToolTip *gTip2;      //pointer to tool tip for canvas 2
-   TObjArray *gBtidlist; //list of back trace ids
-   Double_t  *gV1;       //pointer to V1 array of TTree::Draw (pos)
-   Double_t  *gV2;       //pointer to V2 array of TTree::Draw (nbytes)
-   Double_t  *gV3;       //pointer to V3 array of TTree::Draw (time)
-   Double_t  *gV4;       //pointer to V4 array of TTree::Draw (btid)
-   TCanvas   *gC1;       //pointer to canvas showing allocs/deallocs vs time
-   TCanvas   *gC2;       //pointer to canvas with leaks in decreasing order
-   TCanvas   *gC3;       //pointer to canvas showing the main leaks
+   TGToolTip *TMemStatShow::fgTip1 = 0;      //pointer to tool tip for canvas 1
+   TGToolTip *TMemStatShow::fgTip2 = 0;      //pointer to tool tip for canvas 2
+   TObjArray *TMemStatShow::fgBtidlist = 0;  //list of back trace ids
+   Double_t  *TMemStatShow::fgV1 = 0;        //pointer to V1 array of TTree::Draw (pos)
+   Double_t  *TMemStatShow::fgV2 = 0;        //pointer to V2 array of TTree::Draw (nbytes)
+   Double_t  *TMemStatShow::fgV3 = 0;        //pointer to V3 array of TTree::Draw (time)
+   Double_t  *TMemStatShow::fgV4 = 0;        //pointer to V4 array of TTree::Draw (btid)
+   TCanvas   *TMemStatShow::fgC1 = 0;        //pointer to canvas showing allocs/deallocs vs time
+   TCanvas   *TMemStatShow::fgC2 = 0;        //pointer to canvas with leaks in decreasing order
+   TCanvas   *TMemStatShow::fgC3 = 0;        //pointer to canvas showing the main leaks
 
-   Long64_t TMemStatShow::fgEntryFirst   = 0;
-   Long64_t TMemStatShow::fgEntryN       = 0;
-   Long64_t TMemStatShow::fgAddressFirst = 0;
-   Long64_t TMemStatShow::fgAddressN     = 0;
+   Long64_t TMemStatShow::fgEntryFirst   = 0; //first address to process
+   Long64_t TMemStatShow::fgEntryN       = 0; //number of addresses in bytes to process
+   Long64_t TMemStatShow::fgAddressFirst = 0; //first entry to process
+   Long64_t TMemStatShow::fgAddressN     = 0; //number of entries to process
    
 //___________________________________________________________________________
 void TMemStatShow::SetAddressRange(Long64_t nbytes, Long64_t first)
@@ -182,8 +183,8 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
       printf("Cannot open file %s\n",fname);
       return;
    }
-   gT = (TTree*)f->Get("T");
-   if (!gT) {
+   fgT = (TTree*)f->Get("T");
+   if (!fgT) {
       printf("cannot find the TMemStat TTree named T in file %s\n",fname);
       return;
    }
@@ -199,38 +200,43 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    printf("TMemStat::Show info: you are running on a machine with %d free MBytes of memory\n",nfree);
    Long64_t nfreebytes = 100000*Long64_t(nfree); //use only 10% of the memory available
    if (fgAddressN <=0) fgAddressN = nfreebytes;
-   Long64_t nsel = gT->Draw("pos","pos>0");
-   gV1 = gT->GetV1();
-   Long64_t ivmin = (Long64_t)TMath::MinElement(nsel,gV1);
-   Long64_t ivmax = (Long64_t)TMath::MaxElement(nsel,gV1);
+   Long64_t nentries = fgT->GetEntries();
+   if (fgEntryN > 0 && nentries > fgEntryN) nentries = fgEntryN;
+   if (2*8*nentries > 4*nfreebytes) {
+      nentries = 4*nfreebytes/16;
+      printf("not enough memory, restricting analysis to %lld entries\n",nentries);
+   }
+   fgT->SetEstimate(nentries);
+   Long64_t nsel = fgT->Draw("pos","pos>0","goff",nentries);
+   fgV1 = fgT->GetV1();
+   Long64_t ivmin = (Long64_t)TMath::MinElement(nsel,fgV1);
+   Long64_t ivmax = (Long64_t)TMath::MaxElement(nsel,fgV1);
    if (ivmax-ivmin > fgAddressN) ivmax = ivmin+fgAddressN;
    printf("TMemStatShow::Show will analyze only %lld bytes in its first pass\n",ivmax);
    
    
    //initialize statics
-   gTip1 = 0;
-   gTip2 = 0;
-   gBtidlist = 0;
+   fgTip1 = 0;
+   fgTip2 = 0;
+   fgBtidlist = 0;
       
-   Long64_t nentries = gT->GetEntries();
-   if (fgEntryN > 0 && nentries > fgEntryN) nentries = fgEntryN;
    Long64_t ne = nfreebytes/32;
    if (ne < nentries) nentries = ne;
-   gT->SetEstimate(nentries+10);
+   fgT->SetEstimate(nentries+10);
    printf("sel: ivmin=%lld, ivmax=%lld, nentries=%lld\n",ivmin,ivmax,nentries);
-   nsel = gT->Draw("pos:nbytes:time:btid",
+   nsel = fgT->Draw("pos:nbytes:time:btid",
       TString::Format("pos>%g && pos<%g",Double_t(ivmin),Double_t(ivmax)),
       "goff",nentries,fgEntryFirst);
 
    //now we compute the best binning for the histogram
    Int_t nbytes;
    Double_t pos;
-   gV1 = gT->GetV1();
-   gV2 = gT->GetV2();
-   gV3 = gT->GetV3();
-   gV4 = gT->GetV4();
-   ivmin = (Long64_t)TMath::MinElement(nsel,gV1);
-   ivmax = (Long64_t)TMath::MaxElement(nsel,gV1);
+   fgV1 = fgT->GetV1();
+   fgV2 = fgT->GetV2();
+   fgV3 = fgT->GetV3();
+   fgV4 = fgT->GetV4();
+   ivmin = (Long64_t)TMath::MinElement(nsel,fgV1);
+   ivmax = (Long64_t)TMath::MaxElement(nsel,fgV1);
    Long64_t bw = 1000;
    Double_t dvv = (Double_t(ivmax) - Double_t(ivmin))/Double_t(bw);
    Long64_t nbins = Long64_t(dvv);
@@ -244,14 +250,14 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
       //we take only the first side of the allocations
       //we are mostly interested by the small allocations, so we select
       //only values in the first gigabyte
-      nsel = gT->Draw("pos:nbytes:time:btid",
+      nsel = fgT->Draw("pos:nbytes:time:btid",
          TString::Format("pos>=%g && pos<%g",Double_t(ivmin),Double_t(ivmax)),"goff",ne,fgEntryFirst);
-      gV1 = gT->GetV1();
-      gV2 = gT->GetV2();
-      gV3 = gT->GetV3();
-      gV4 = gT->GetV4();
-      ivmin = (Long64_t)TMath::MinElement(nsel,gV1);
-      ivmax = (Long64_t)TMath::MaxElement(nsel,gV1);
+      fgV1 = fgT->GetV1();
+      fgV2 = fgT->GetV2();
+      fgV3 = fgT->GetV3();
+      fgV4 = fgT->GetV4();
+      ivmin = (Long64_t)TMath::MinElement(nsel,fgV1);
+      ivmax = (Long64_t)TMath::MaxElement(nsel,fgV1);
       bw = 10000;
       dvv = (Double_t(ivmax) - Double_t(ivmin))/Double_t(bw);
       nbins = Long64_t(dvv+0.5);
@@ -262,7 +268,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
       printf("==>you can restrict the address range with TMemStatShow::SetAddressRange\n");
       printf("==>you can restrict the entries range with TMemStatShow::SetEntryRange\n");
    } 
-   update *= 0.0001*gV3[nsel-1]; //convert time per cent in seconds
+   update *= 0.0001*fgV3[nsel-1]; //convert time per cent in seconds
    nvm = Long64_t(ivmax-ivmin);
    Long64_t *nbold = new Long64_t[nvm];
    Int_t *ientry  = new Int_t[nvm];
@@ -274,20 +280,20 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    memset(ientry,0,nvm*4);
    Double_t dv = (ivmax-ivmin)/nbins;
    TH1D *h = new TH1D("h",Form("%s;pos;per cent of pages used",fname),nbins,ivmin,ivmax);
-   gH = h;
+   fgH = h;
    TAxis *axis = h->GetXaxis();
    gStyle->SetOptStat("ie");
    h->SetFillColor(kRed);
    h->SetMinimum(0);
    h->SetMaximum(100);
-   gHalloc = new TH1D("gHalloc",Form("%s;pos;number of mallocs",fname),nbins,ivmin,ivmax);
-   gHfree  = new TH1D("gHfree", Form("%s;pos;number of frees",fname),nbins,ivmin,ivmax);
-   gHdiff = new TH1I("gHdiff","",1000,0,1e5);
+   fgHalloc = new TH1D("fgHalloc",Form("%s;pos;number of mallocs",fname),nbins,ivmin,ivmax);
+   fgHfree  = new TH1D("fgHfree", Form("%s;pos;number of frees",fname),nbins,ivmin,ivmax);
+   fgHdiff = new TH1I("fgHdiff","",1000,0,1e5);
    //open a canvas and draw the empty histogram
-   gC1 = new TCanvas("gC1","c1",1200,600);
-   gC1->SetFrameFillColor(kYellow-3);
-   gC1->SetGridx();
-   gC1->SetGridy();
+   fgC1 = new TCanvas("fgC1","c1",1200,600);
+   fgC1->SetFrameFillColor(kYellow-3);
+   fgC1->SetGridx();
+   fgC1->SetGridy();
    h->Draw();
    //create a TPaveText to show the summary results
    TPaveText *pvt = new TPaveText(.5,.9,.75,.99,"brNDC");
@@ -297,7 +303,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    ptime->SetFillColor(kYellow-3);
    ptime->Draw();
    //draw producer identifier
-   TNamed *named = (TNamed*)gT->GetUserInfo()->FindObject("SysInfo");
+   TNamed *named = (TNamed*)fgT->GetUserInfo()->FindObject("SysInfo");
    TText tmachine;
    tmachine.SetTextSize(0.02);
    tmachine.SetNDC();
@@ -311,16 +317,16 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    Int_t nleaks = 0;
    Int_t i;
    for (i=0;i<nsel;i++) {
-      pos    = gV1[i];
+      pos    = fgV1[i];
       ipos = (Long64_t)(pos-ivmin);
-      nbytes = (Int_t)gV2[i];
-      time = 0.0001*gV3[i];
+      nbytes = (Int_t)fgV2[i];
+      time = 0.0001*fgV3[i];
       bin = axis->FindBin(pos);
       if (bin<1 || bin>nbins) continue;
       dbin = axis->GetBinUpEdge(bin)-pos;
       if (nbytes > 0) {
          ientry[ipos] = i;
-         gHalloc->Fill(pos);
+         fgHalloc->Fill(pos);
          if (dbin > nbytes) dbin = nbytes;
          //fill bytes in the first page
          h->AddBinContent(bin,100*dbin/dv);
@@ -340,11 +346,11 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
          }
          nbold[ipos] = nbytes;
       } else {
-         gHfree->Fill(pos);
+         fgHfree->Fill(pos);
          nbytes = nbold[ipos];
 	 if (bin+nb >nbins) nb = nbins-bin;
 	 nbold[ipos] = 0; nleaks--;
-         gHdiff->Fill(i-ientry[ipos]);
+         fgHdiff->Fill(i-ientry[ipos]);
 	 if (nbytes <= 0) continue;
          //fill bytes free in the first page
          if (dbin > nbytes) dbin = nbytes;
@@ -362,7 +368,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
          //update canvas at regular intervals
 	 updateLast = time;
          h->SetEntries(i);
-	 gC1->Modified();
+	 fgC1->Modified();
          pvt->GetListOfLines()->Delete();
          Double_t mbytes = 0;
          Int_t nonEmpty = 0;
@@ -380,7 +386,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
          pvt->AddText("(for non empty pages only)");
          ptime->SetLabel(Form("%g sec",time));
          
-	 gC1->Update();
+	 fgC1->Update();
          gSystem->ProcessEvents();
       }
    }
@@ -402,62 +408,64 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
       }
    }
    TMath::Sort(nleaks,ileaks,lindex);
-   gHentry = new TH1I("fHentry","leak entry index",nleaks,0,nleaks);
-   gHleaks = new TH1I("fHleaks","leaks;leak number;nbytes in leak",nleaks,0,nleaks);
+   fgHentry = new TH1I("fgHentry","leak entry index",nleaks,0,nleaks);
+   fgHleaks = new TH1I("fgHleaks","leaks;leak number;nbytes in leak",nleaks,0,nleaks);
    for (Int_t k=0;k<nleaks;k++) {
       Int_t kk = lindex[k];
       i = entry[kk];
-      gHentry->SetBinContent(k+1,i);
-      gHleaks->SetBinContent(k+1,ileaks[kk]);
+      fgHentry->SetBinContent(k+1,i);
+      fgHleaks->SetBinContent(k+1,ileaks[kk]);
    }
    delete [] ileaks;
    delete [] entry;
    delete [] lindex;
    delete [] nbold;
    delete [] ientry;
-   gHentry->SetEntries(nleaks);
-   gHleaks->SetEntries(nleaks);
+   fgHentry->SetEntries(nleaks);
+   fgHleaks->SetEntries(nleaks);
    
    
-   //construct the second tooltip
-   gC1->Modified();
-   gC1->Update();
-   TRootCanvas *rc1 = (TRootCanvas *)gC1->GetCanvasImp();
+   //construct the first tooltip
+   fgC1->Modified();
+   fgC1->Update();
+   TRootCanvas *rc1 = (TRootCanvas *)fgC1->GetCanvasImp();
    TGMainFrame *frm1 = dynamic_cast<TGMainFrame *>(rc1);
    // create the tooltip with a timeout of 250 ms
-   if (!gTip1) gTip1 = new TGToolTip(gClient->GetDefaultRoot(), frm1, "", 250);
-   gC1->Connect("ProcessedEvent(Int_t, Int_t, Int_t, TObject*)",
+   if (!fgTip1) fgTip1 = new TGToolTip(gClient->GetDefaultRoot(), frm1, "", 250);
+   fgC1->Connect("ProcessedEvent(Int_t, Int_t, Int_t, TObject*)",
                 "TMemStatShow", 0, "EventInfo1(Int_t, Int_t, Int_t, TObject*)");
    if (nbigleaks <= 0) return;
-   
+
+   //---------------------------------------------------------------------------
    //open a second canvas and draw the histogram with leaks in decreasing order
-   gC2 = new TCanvas("gC2","c2",1200,600);
-   gC2->SetFrameFillColor(kCyan-6);
-   gC2->SetGridx();
-   gC2->SetGridy();
-   gC2->SetLogy();
-   gHleaks->SetFillColor(kRed-3);
-   if (nleaks > 1000) gHleaks->GetXaxis()->SetRange(1,1000);
-   gHleaks->Draw();
+   fgC2 = new TCanvas("fgC2","c2",1200,600);
+   fgC2->SetFrameFillColor(kCyan-6);
+   fgC2->SetGridx();
+   fgC2->SetGridy();
+   fgC2->SetLogy();
+   fgHleaks->SetFillColor(kRed-3);
+   if (nleaks > 1000) fgHleaks->GetXaxis()->SetRange(1,1000);
+   fgHleaks->Draw();
    //draw producer identifier
    if (named) tmachine.DrawText(0.01,0.01,named->GetTitle());
    
    //construct the second tooltip
-   TRootCanvas *rc2 = (TRootCanvas *)gC2->GetCanvasImp();
+   TRootCanvas *rc2 = (TRootCanvas *)fgC2->GetCanvasImp();
    TGMainFrame *frm2 = dynamic_cast<TGMainFrame *>(rc2);
    // create the tooltip with a timeout of 250 ms
-   if (!gTip2) gTip2 = new TGToolTip(gClient->GetDefaultRoot(), frm2, "", 250);
-   gC2->Connect("ProcessedEvent(Int_t, Int_t, Int_t, TObject*)",
+   if (!fgTip2) fgTip2 = new TGToolTip(gClient->GetDefaultRoot(), frm2, "", 250);
+   fgC2->Connect("ProcessedEvent(Int_t, Int_t, Int_t, TObject*)",
                "TMemStatShow", 0, "EventInfo2(Int_t, Int_t, Int_t, TObject*)");
    
+   //---------------------------------------------------------------------------
    //open a third canvas and draw the histogram with the nbigleaks largest leaks
-   gC3 = new TCanvas("gC3","c3",1200,600);
-   gC3->SetFrameFillColor(kCyan-6);
-   gC3->SetGridx();
-   gC3->SetGridy();
-   gC3->SetLogx();
-   gC3->SetLeftMargin(0.05);
-   gC3->SetRightMargin(0.7);
+   fgC3 = new TCanvas("fgC3","c3",1200,600);
+   fgC3->SetFrameFillColor(kCyan-6);
+   fgC3->SetGridx();
+   fgC3->SetGridy();
+   fgC3->SetLogx();
+   fgC3->SetLeftMargin(0.05);
+   fgC3->SetRightMargin(0.7);
    
    //fill histogram htotleaks accumulating in the same bin all leaks
    //from btids having identical nchar first characters   
@@ -466,7 +474,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    for (l=1;l<=nleaks;l++) {
       TString btstring = "";
       TMemStatShow::FillBTString(l,1,btstring);
-      htotleaks->Fill(btstring.Data()+2,gHleaks->GetBinContent(l));
+      htotleaks->Fill(btstring.Data()+2,fgHleaks->GetBinContent(l));
    }
    Double_t tsize = 0.03;
    if (nbigleaks > 30) tsize = 0.02;
@@ -478,10 +486,10 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    htotleaks->Draw("hbar2 y+");
    
    //now loop on all the sorted bins and count the number of leaks
-   Double_t xr = 0.96*gC3->GetLeftMargin();
-   Double_t xr2 = 1.04*gC3->GetLeftMargin();
-   Double_t ytop = 1-gC3->GetTopMargin();
-   Double_t ylow = gC3->GetBottomMargin();
+   Double_t xr = 0.96*fgC3->GetLeftMargin();
+   Double_t xr2 = 1.04*fgC3->GetLeftMargin();
+   Double_t ytop = 1-fgC3->GetTopMargin();
+   Double_t ylow = fgC3->GetBottomMargin();
    Double_t dy = (ytop-ylow)/nbigleaks;
    TString btstring;
    TText tnl;
@@ -515,7 +523,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
       else         tnl2.DrawText(xr2,yr,Form("%d",nbmean));
    }
    tnl.DrawText(xr,ytop+0.015,"nallocs");
-   tnl.DrawText(1-gC3->GetRightMargin(),0.5*ylow,"nbytes");
+   tnl.DrawText(1-fgC3->GetRightMargin(),0.5*ylow,"nbytes");
    //draw producer identifier
    if (named) tmachine.DrawText(0.01,0.01,named->GetTitle());
    
@@ -525,47 +533,47 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
 void TMemStatShow::EventInfo1(Int_t event, Int_t px, Int_t , TObject *selected)
 {
    // static: draw the tooltip showing the backtrace for the allocatios histogram
-   if (!gTip1) return;
-   gTip1->Hide();
+   if (!fgTip1) return;
+   fgTip1->Hide();
    if (event == kMouseLeave)
       return;
-   Double_t xpx  = gC1->AbsPixeltoX(px);
-   Double_t xpx1 = gC1->AbsPixeltoX(px+1);
-   Int_t bin  = gH->GetXaxis()->FindBin(xpx);
-   Int_t bin1 = gH->GetXaxis()->FindBin(xpx1);
+   Double_t xpx  = fgC1->AbsPixeltoX(px);
+   Double_t xpx1 = fgC1->AbsPixeltoX(px+1);
+   Int_t bin  = fgH->GetXaxis()->FindBin(xpx);
+   Int_t bin1 = fgH->GetXaxis()->FindBin(xpx1);
    //to take into account consecutive bins on the same pixel
    while (bin <= bin1) {
-      if (gH->GetBinContent(bin) > 0) break;
+      if (fgH->GetBinContent(bin) > 0) break;
       bin++;
    }
-   if (gH->GetBinContent(bin) <= 0) return;
-   if (bin <=0 || bin > gH->GetXaxis()->GetNbins()) return;
-   Double_t posmin = gH->GetXaxis()->GetBinLowEdge(bin);
-   Double_t posmax = gH->GetXaxis()->GetBinUpEdge(bin);
-   Int_t nsel   = (Int_t)gT->GetSelectedRows();
+   if (fgH->GetBinContent(bin) <= 0) return;
+   if (bin <=0 || bin > fgH->GetXaxis()->GetNbins()) return;
+   Double_t posmin = fgH->GetXaxis()->GetBinLowEdge(bin);
+   Double_t posmax = fgH->GetXaxis()->GetBinUpEdge(bin);
+   Int_t nsel   = (Int_t)fgT->GetSelectedRows();
    Int_t entry  = 0;
    Int_t nhits  = 0;
    Int_t nbytes = 0;
    //search for all allocations in this bin and select last one only
    for (Int_t i=0;i<nsel;i++) {
-      if (gV2[i] < 0) continue;
-      if (gV1[i] < posmax && gV1[i]+gV2[i] >posmin) {
+      if (fgV2[i] < 0) continue;
+      if (fgV1[i] < posmax && fgV1[i]+fgV2[i] >posmin) {
          entry = i;
-         nbytes = (Int_t)gV2[i];
+         nbytes = (Int_t)fgV2[i];
          nhits++;
       }
    }
    if (!nhits) return;
       
-   Double_t time = 0.0001*gV3[entry];
+   Double_t time = 0.0001*fgV3[entry];
    TString ttip;
    TMemStatShow::FillBTString(entry,0,ttip);
    
    if (selected) {
-      TString form1 = TString::Format("  Alloc(%d) at %lld of %d bytes, time=%gseconds\n\n",nhits,Long64_t(gV1[entry]),nbytes,time);
-      gTip1->SetText(TString::Format("%s%s",form1.Data(),ttip.Data() ));
-      gTip1->SetPosition(px+15, 100);
-      gTip1->Reset();
+      TString form1 = TString::Format("  Alloc(%d) at %lld of %d bytes, time=%gseconds\n\n",nhits,Long64_t(fgV1[entry]),nbytes,time);
+      fgTip1->SetText(TString::Format("%s%s",form1.Data(),ttip.Data() ));
+      fgTip1->SetPosition(px+15, 100);
+      fgTip1->Reset();
    }
 }
 
@@ -573,24 +581,24 @@ void TMemStatShow::EventInfo1(Int_t event, Int_t px, Int_t , TObject *selected)
 void TMemStatShow::EventInfo2(Int_t event, Int_t px, Int_t , TObject *selected)
 {
    // static: draw the tooltip showing the backtrace for the histogram of leaks
-   if (!gTip2) return;
-   gTip2->Hide();
+   if (!fgTip2) return;
+   fgTip2->Hide();
    if (event == kMouseLeave)
       return;
-   Double_t xpx  = gC2->AbsPixeltoX(px);
-   Int_t bin = gHleaks->GetXaxis()->FindBin(xpx);
-   if (bin <=0 || bin > gHleaks->GetXaxis()->GetNbins()) return;
-   Int_t nbytes  = (Int_t)gHleaks->GetBinContent(bin);
-   Int_t entry   = (Int_t)gHentry->GetBinContent(bin);
-   Double_t time = 0.0001*gV3[entry];
+   Double_t xpx  = fgC2->AbsPixeltoX(px);
+   Int_t bin = fgHleaks->GetXaxis()->FindBin(xpx);
+   if (bin <=0 || bin > fgHleaks->GetXaxis()->GetNbins()) return;
+   Int_t nbytes  = (Int_t)fgHleaks->GetBinContent(bin);
+   Int_t entry   = (Int_t)fgHentry->GetBinContent(bin);
+   Double_t time = 0.0001*fgV3[entry];
    TString ttip;
    TMemStatShow::FillBTString(entry,0,ttip);
       
    if (selected) {
       TString form1 = TString::Format("  Leak number=%d, leaking %d bytes at entry=%d    time=%gseconds\n\n",bin,nbytes,entry,time);
-      gTip2->SetText(TString::Format("%s%s",form1.Data(),ttip.Data() ));
-      gTip2->SetPosition(px+15, 100);
-      gTip2->Reset();
+      fgTip2->SetText(TString::Format("%s%s",form1.Data(),ttip.Data() ));
+      fgTip2->SetPosition(px+15, 100);
+      fgTip2->Reset();
    }
 }
 
@@ -600,16 +608,16 @@ void TMemStatShow::FillBTString(Int_t entry,Int_t mode,TString &btstring)
    // static: fill btstring with the traceback corresponding to entry in T
    //          btstring must be initialized in calling function
    
-   Int_t btid   = (Int_t)gV4[entry];
-   TH1I *hbtids = (TH1I*)gT->GetUserInfo()->FindObject("btids");
+   Int_t btid   = (Int_t)fgV4[entry];
+   TH1I *hbtids = (TH1I*)fgT->GetUserInfo()->FindObject("btids");
    if (!hbtids) return;
-   if (!gBtidlist) gBtidlist = (TObjArray*)gT->GetUserInfo()->FindObject("FAddrsList");
-   if (!gBtidlist) gBtidlist = (TObjArray*)gFile->Get("FAddrsList"); //old memstat files
-   if (!gBtidlist) return;
+   if (!fgBtidlist) fgBtidlist = (TObjArray*)fgT->GetUserInfo()->FindObject("FAddrsList");
+   if (!fgBtidlist) fgBtidlist = (TObjArray*)gFile->Get("FAddrsList"); //old memstat files
+   if (!fgBtidlist) return;
    Int_t nbt = (Int_t)hbtids->GetBinContent(btid-1);
    for (Int_t i=0;i<nbt;i++) {
       Int_t j = (Int_t)hbtids->GetBinContent(btid+i);
-      TNamed *nm = (TNamed*)gBtidlist->At(j);
+      TNamed *nm = (TNamed*)fgBtidlist->At(j);
       if (nm==0) break;
       char *title = (char*)nm->GetTitle();
       Int_t nch = strlen(title);
