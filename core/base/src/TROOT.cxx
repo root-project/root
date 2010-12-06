@@ -1581,6 +1581,10 @@ void TROOT::ReadSvnInfo()
 #else
    etc += "/etc";
 #endif
+#if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+   // on iOS etc does not exist and svninfo resides in $ROOTSYS
+   etc = gRootDir;
+#endif
    filename = gSystem->ConcatFileName(etc, svninfo);
 #endif
 
