@@ -3,12 +3,14 @@
 <a name="cint"></a> 
 <h3>CINT</h3>
 <ul>
+  <li>Fix many reports from Coverity.</li>
   <li>Implement new selection #pragma for nested classes. <tt>#pragma link C++ nestedclasses</tt> is needed for CINT to <em>not ignore</em> <tt>#pragma link C++ class A::B</tt>.
   Unlike <tt>#pragma link C++ nestedtypedefs</tt> it does not by itself request dictionaries for nested classes!
   To not break old dictionaries, the latter is now implemented with the following syntax:
   <tt>#pragma link C++ class A::*</tt> will select all classes defined in <tt>A</tt>; CINT does not complain if no nested class is found.
   The selection pragma supports ROOT's flags (trailing '+' etc).
   This feature is now used by the automatic dictionary generator of ROOT, to not only request <tt>vector&lt;T&gt;</tt> but also vector&lt;T&gt;::iterator etc.</li>
+  <li>Try in even more cases to automatically generate a dictionary for templates.</li>
   <li>Change the dictionary code generated for static const class data members
   of integral type so that we access these data members only by value and
   never attempt to take their address.
@@ -43,4 +45,6 @@
   <li>Teach CINT's preprocessor to handle <tt>#TOKEN</tt> (i.e. string conversion of CPP tokens).</li>
 
   <li>Fix parsing of spacing (<tt>long long</tt> stays <tt>long long</tt>, no more <tt>Unknown type TH1Ghist</tt> instead of <tt>Unknown type TH1G</tt>.)</li>
+
+  <li>Allow creation of dictionaries for auto_ptr.</li>
 </ul>
