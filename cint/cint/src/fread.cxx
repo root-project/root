@@ -1173,8 +1173,7 @@ int G__fgetvarname(G__FastAllocString& string, size_t offset, const char *endmar
                } else {
                   string.Set(i, 0);
                   char* prevIdentifier = i ? G__get_previous_name(string, i - 1, offset) : 0;
-                  if (prevIdentifier && prevIdentifier[0]
-                      && G__defined_templateclass(prevIdentifier)){
+                  if (prevIdentifier && prevIdentifier[0]){
                      ++tmpltlevel;
                   }
                }
