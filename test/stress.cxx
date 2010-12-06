@@ -620,6 +620,7 @@ void stress7()
    Int_t npxpyGood = 27918;
    hpxpy->Write();
    cutg->Write();
+   delete cutg;
 
    // Fill a TEventList using the standard cut
    ntuple->Draw(">>elist","py<0 && pz>4 && random<0.5","goff");
