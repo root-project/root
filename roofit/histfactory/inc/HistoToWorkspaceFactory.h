@@ -30,7 +30,8 @@
 
 namespace RooStats{
 namespace HistFactory{
-  class EstimateSummary;
+
+  struct EstimateSummary;
    
   class HistoToWorkspaceFactory: public TObject {
 
