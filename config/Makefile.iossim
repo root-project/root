@@ -27,23 +27,21 @@ IOSSDKBIN     = /Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin
 CXX           = $(IOSSDKBIN)/g++
 CC            = $(IOSSDKBIN)/gcc
 CXXFLAGS      = -arch i386 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
-                -fsigned-char -fno-common $(EXTRA_CXXFLAGS) \
-                -isysroot $(IOSSDK)
+                -fsigned-char -fno-common -fvisibility-inlines-hidden \
+                $(EXTRA_CXXFLAGS) -isysroot $(IOSSDK)
 CFLAGS        = -arch i386 -pipe -Wshadow -W -Wall -fsigned-char -fno-common \
-                $(EXTRA_CFLAGS) \
-                -isysroot $(IOSSDK)
+                $(EXTRA_CFLAGS) -isysroot $(IOSSDK)
 CINTCXXFLAGS  = -arch i386 -pipe -W -Wall -Woverloaded-virtual \
-                -fsigned-char -fno-common $(EXTRA_CXXFLAGS) \
+                -fsigned-char -fno-common -fvisibility-inlines-hidden \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
                 -DG__STD_EXCEPTION \
-                -isysroot $(IOSSDK)
+                $(EXTRA_CXXFLAGS) -isysroot $(IOSSDK)
 CINTCFLAGS    = -arch i386 -pipe -W -Wall -fsigned-char -fno-common \
-                $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
                 -DG__STD_EXCEPTION \
-                -isysroot $(IOSSDK)
+                $(EXTRA_CFLAGS) -isysroot $(IOSSDK)
 COMPILER      = gnu
 
 # Linker:
