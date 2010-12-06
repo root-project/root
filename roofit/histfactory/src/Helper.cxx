@@ -45,19 +45,21 @@ namespace HistFactory{
     TIter next(gDirectory->GetListOfKeys()); 
     EstimateSummary* summary; 
     while ((summary=(EstimateSummary*) next())) { 
-      if(summary){
+//      if(summary){
         summary->Print();
         cout << "was able to read summary with name " << summary->name << endl;
         cout << " nominal hist = " << summary->nominal << endl;
         if(summary->nominal)
-    cout << " hist name = " << summary->nominal->GetName() <<endl;
+           cout << " hist name = " << summary->nominal->GetName() <<endl;
         cout << "still ok" << endl;
-        
+       
         summaries->push_back(*summary);
-      }
-      else{
-        cout << "was not able to read summary" << endl;
-      }
+
+//L.M. This code cannot be reached- remove it 
+//       }
+//       else{
+//         cout << "was not able to read summary" << endl;
+//       }
     } 
     return summaries;
   }
@@ -101,10 +103,11 @@ namespace HistFactory{
 
   TH1F * GetHisto( TFile * inFile, const string name ){
 
-  if(!inFile && name.empty()){
+  if(!inFile || name.empty()){
     cerr << "Not all necessary info are set to access the input file. Check your config" << endl;
     cerr << "fileptr: " << inFile
          << "path/obj: " << name << endl;
+    return 0;
   }
   #ifdef DEBUG
     cout << "Retrieving " << name ;
@@ -113,7 +116,7 @@ namespace HistFactory{
   #ifdef DEBUG
     cout << " found at " << ptr << " with integral " << ptr->Integral() << " and mean " << ptr->GetMean() << endl;
   #endif
-    ptr->SetDirectory(0); //         for the current histogram h
+    if (ptr) ptr->SetDirectory(0); //         for the current histogram h
     //TH1::AddDirectory(kFALSE);
     return ptr;
 
@@ -136,7 +139,9 @@ namespace HistFactory{
            << "path: " << path
            << "obj: " << obj << endl;
     }
-    ptr->SetDirectory(0); //         for the current histogram h
+    else 
+       ptr->SetDirectory(0); //         for the current histogram h
+
     return ptr;
 
   }

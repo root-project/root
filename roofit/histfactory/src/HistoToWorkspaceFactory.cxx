@@ -89,7 +89,11 @@ ClassImp(RooStats::HistFactory::HistoToWorkspaceFactory)
 namespace RooStats{
 namespace HistFactory{
 
-  HistoToWorkspaceFactory::HistoToWorkspaceFactory(){}
+   HistoToWorkspaceFactory::HistoToWorkspaceFactory() : 
+      fNomLumi(0), fLumiError(0), 
+      fLowBin(0), fHighBin(0), 
+      fOut_f(0), pFile(0)
+   {}
   HistoToWorkspaceFactory::~HistoToWorkspaceFactory(){
     fclose(pFile);
   }
@@ -107,8 +111,8 @@ namespace HistFactory{
     //    fResultsPrefixStr<<"results" << "_" << fNomLumi<< "_" << fLumiError<< "_" << fLowBin<< "_" << fHighBin;
     fResultsPrefixStr<< "_" << fRowTitle;
     while(fRowTitle.find("\\ ")!=string::npos){
-      int pos=fRowTitle.find("\\ ");
-      fRowTitle.replace(pos, 1, "");
+       size_t pos=fRowTitle.find("\\ ");
+       fRowTitle.replace(pos, 1, "");
     }
     pFile = fopen ((filePrefix+"_results.table").c_str(),"a"); 
     //RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
@@ -263,7 +267,7 @@ namespace HistFactory{
         else {
           varname=itr->name;
         }
-        var = (RooRealVar*) proto->factory((varname+range.str()).c_str());
+        proto->factory((varname+range.str()).c_str());
         prodNames+=varname;
       }
       overallNorm_times_sigmaEpsilon = es.name+"_"+channel+"_overallNorm_x_sigma_epsilon";

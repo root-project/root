@@ -105,7 +105,13 @@ int main(int argc, char** argv) {
   }
 
   string input(argv[1]);
-  topDriver(input);
+  try { 
+     topDriver(input);
+  }
+  catch (...) { 
+     cerr << "Error... exiting " << endl;
+     exit(1);
+  }
 
   return 0;
 }
