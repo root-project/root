@@ -179,6 +179,7 @@ void TKDE::SetDrawOptions(const Option_t* option, TString& plotOpt, TString& dra
    Bool_t foundDrawOPt = kFALSE;
    for (std::vector<std::string>::iterator it = voption.begin(); it != voption.end() && !options.empty(); ++it) {
       size_t pos = (*it).find(':');
+      if (pos == std::string::npos) break;
       TString optionType = (*it).substr(0, pos);
       TString optionInstance = (*it).substr(pos + 1);
       optionType.ToLower();
