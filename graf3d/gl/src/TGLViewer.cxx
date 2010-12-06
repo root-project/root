@@ -1782,6 +1782,15 @@ TGLAutoRotator* TGLViewer::GetAutoRotator()
    return fAutoRotator;
 }
 
+//______________________________________________________________________________
+void TGLViewer::SetAutoRotator(TGLAutoRotator* ar)
+{
+   // Set the auto-rotator for this viewer. The old rotator is deleted.
+
+   delete fAutoRotator;
+   fAutoRotator = ar;
+}
+
 
 /**************************************************************************/
 // Guide methods

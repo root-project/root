@@ -277,6 +277,7 @@ public:
    TGLCameraOverlay* GetCameraOverlay() const { return fCameraOverlay; }
    void SetCameraOverlay(TGLCameraOverlay* m) { fCameraOverlay = m; }
    TGLAutoRotator* GetAutoRotator();
+   void SetAutoRotator(TGLAutoRotator* ar);
 
    // Stereo
    Bool_t  GetStereo()               const { return fStereo; }
