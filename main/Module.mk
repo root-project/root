@@ -4,18 +4,17 @@
 # Author: Fons Rademakers, 29/2/2000
 
 MODNAME      := main
-MODDIR       := $(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
 MAINDIR      := $(MODDIR)
 MAINDIRS     := $(MAINDIR)/src
 MAINDIRI     := $(MAINDIR)/inc
-MAINDIRW     := $(MAINDIR)/win32
 
 ##### root.exe #####
 ROOTEXES     := $(MODDIRS)/rmain.cxx
-ROOTEXEO     := $(ROOTEXES:.cxx=.o)
+ROOTEXEO     := $(call stripsrc,$(ROOTEXES:.cxx=.o))
 ROOTEXEDEP   := $(ROOTEXEO:.o=.d)
 ifeq ($(ARCH),win32gcc)
 ROOTEXE      := bin/root_exe.exe
@@ -28,7 +27,7 @@ endif
 
 ##### proofserv #####
 PROOFSERVS   := $(MODDIRS)/pmain.cxx
-PROOFSERVO   := $(PROOFSERVS:.cxx=.o)
+PROOFSERVO   := $(call stripsrc,$(PROOFSERVS:.cxx=.o))
 PROOFSERVDEP := $(PROOFSERVO:.o=.d)
 ifneq ($(findstring win32,$(ARCH)),)
 PROOFSERVEXE := bin/proofserv_exe.exe
@@ -48,7 +47,7 @@ endif
 
 ##### roots.exe #####
 ROOTSEXES   := $(MODDIRS)/roots.cxx
-ROOTSEXEO   := $(ROOTSEXES:.cxx=.o)
+ROOTSEXEO   := $(call stripsrc,$(ROOTSEXES:.cxx=.o))
 ROOTSEXEDEP := $(ROOTSEXEO:.o=.d)
 ifeq ($(ARCH),win32gcc)
 ROOTSEXE    := bin/roots_exe.exe
@@ -63,29 +62,25 @@ endif
 
 ##### hadd #####
 HADDS        := $(MODDIRS)/hadd.cxx
-HADDO        := $(HADDS:.cxx=.o)
+HADDO        := $(call stripsrc,$(HADDS:.cxx=.o))
 HADDDEP      := $(HADDO:.o=.d)
 HADD         := bin/hadd$(EXEEXT)
 
 ##### h2root #####
 H2ROOTS1     := $(MODDIRS)/h2root.cxx
-H2ROOTS2     := $(HBOOKS2)
-# Symbols in cfopei.obj is already provided in packmd.lib,
-#H2ROOTS3    := $(wildcard $(MAINDIRW)/*.c)
-H2ROOTS3     := $(filter-out $(MAINDIRW)/cfopei.c, $(wildcard $(MAINDIRW)/*.c))
-#H2ROOTS4     := $(MAINDIRW)/tzvers.f
-H2ROOTO      := $(H2ROOTS1:.cxx=.o) $(H2ROOTS2:.f=.o)
+H2ROOTS2     := $(wildcard $(MODDIRS)/*.c))
+H2ROOTO      := $(call stripsrc,$(H2ROOTS1:.cxx=.o))
 ifeq ($(PLATFORM),win32)
-H2ROOTO      += $(H2ROOTS3:.c=.o)
+H2ROOTO      += $(call stripsrc,$(H2ROOTS2:.c=.o))
 endif
-H2ROOTDEP    := $(H2ROOTS1:.cxx=.d)
+H2ROOTDEP    := $(H2ROOTO:.o=.d)
 H2ROOT       := bin/h2root$(EXEEXT)
 
 ##### g2root #####
 G2ROOTS      := $(MODDIRS)/g2root.f
-G2ROOTO      := $(G2ROOTS:.f=.o)
+G2ROOTO      := $(call stripsrc,$(G2ROOTS:.f=.o))
 ifeq ($(PLATFORM),win32)
-G2ROOTO      += $(H2ROOTS3:.c=.o)
+G2ROOTO      += $(call stripsrc,$(H2ROOTS2:.c=.o))
 endif
 G2ROOT       := bin/g2root$(EXEEXT)
 ifeq ($(PLATFORM),win32)
@@ -94,7 +89,7 @@ endif
 
 ##### ssh2rpd #####
 SSH2RPDS        := $(MODDIRS)/ssh2rpd.cxx
-SSH2RPDO        := $(SSH2RPDS:.cxx=.o)
+SSH2RPDO        := $(call stripsrc,$(SSH2RPDS:.cxx=.o))
 SSH2RPDDEP      := $(SSH2RPDO:.o=.d)
 SSH2RPD         := bin/ssh2rpd$(EXEEXT)
 ifeq ($(PLATFORM),win32)
