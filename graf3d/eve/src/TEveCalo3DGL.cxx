@@ -638,7 +638,7 @@ void TEveCalo3DGL::DrawSelectedCells(TEveCaloData::vCellId_t cells) const
 
       if (fM->CellInEtaPhiRng(cellData)) 
       {
-         if (TMath::Abs(cellData.EtaMax()) < fM->GetTransitionEta())
+         if (TMath::Abs(cellData.Eta()) < fM->GetTransitionEta())
             RenderBarrelCell(cellData, towerH, offset);
          else
             RenderEndCapCell(cellData, towerH, offset);

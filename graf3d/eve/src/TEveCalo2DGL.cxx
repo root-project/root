@@ -398,7 +398,7 @@ void TEveCalo2DGL::DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
                sliceValsLowRef[i->fSlice] += cellData.Value(fM->fPlotEt)*(*i).fFraction;
          }
 
-         isBarrel = TMath::Abs(axis->GetBinUpEdge(etaBin)) < fM->GetTransitionEta();
+         isBarrel = TMath::Abs(axis->GetBinCenter(etaBin)) < fM->GetTransitionEta();
          for (Int_t s = 0; s < nSlices; ++s)
          {
             Float_t thetaMin = TEveCaloData::EtaToTheta(axis->GetBinUpEdge(etaBin));
