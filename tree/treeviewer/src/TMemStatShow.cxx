@@ -198,7 +198,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    gSystem->GetMemInfo(&minfo);
    Int_t nfree = minfo.fMemTotal - minfo.fMemUsed;  //in Mbytes
    printf("TMemStat::Show info: you are running on a machine with %d free MBytes of memory\n",nfree);
-   Long64_t nfreebytes = 100000*Long64_t(nfree); //use only 10% of the memory available
+   Long64_t nfreebytes = 200000*Long64_t(nfree); //use only 20% of the memory available
    if (fgAddressN <=0) fgAddressN = nfreebytes;
    Long64_t nentries = fgT->GetEntries();
    if (fgEntryN > 0 && nentries > fgEntryN) nentries = fgEntryN;
@@ -244,7 +244,8 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    ivmax = ivmin+bw*nbins;
    Long64_t nvm = Long64_t(ivmax-ivmin+1);
    printf("==>The data Tree contains %lld entries with addresses in range[%lld,%lld]\n",nsel,ivmin,ivmax);
-   ne = (1000000*nfree-nvm*12)/32;
+   //ne = (1000000*nfree-nvm*12)/32;
+   ne = 1000000*nfree/32;
    if (ne < 0) return;    
    if (ne < nentries) {
       //we take only the first side of the allocations
