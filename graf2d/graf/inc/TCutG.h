@@ -49,8 +49,8 @@ public:
    const char      *GetVarY() const {return fVarY.Data();}
    virtual Double_t IntegralHist(TH2 *h, Option_t *option="") const;
    virtual void     SavePrimitive(ostream &out, Option_t *option = "");
-   virtual void     SetObjectX(TObject *obj) {fObjectX = obj;}
-   virtual void     SetObjectY(TObject *obj) {fObjectY = obj;}
+   virtual void     SetObjectX(TObject *obj);
+   virtual void     SetObjectY(TObject *obj);
    virtual void     SetVarX(const char *varx); // *MENU*
    virtual void     SetVarY(const char *vary); // *MENU*
 

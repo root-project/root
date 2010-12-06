@@ -370,6 +370,23 @@ void TCutG::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       <<quote<<option<<quote<<");"<<endl;
 }
 
+//______________________________________________________________________________
+void TCutG::SetObjectX(TObject *obj) 
+{
+   // Set the X object (and delete the previous one if any).
+
+   delete fObjectX;
+   fObjectX = obj;
+}
+
+//______________________________________________________________________________
+void TCutG::SetObjectY(TObject *obj)
+{
+   // Set the Y object (and delete the previous one if any).
+   
+   delete fObjectY;
+   fObjectY = obj;
+}
 
 //______________________________________________________________________________
 void TCutG::SetVarX(const char *varx)
