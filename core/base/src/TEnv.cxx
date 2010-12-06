@@ -397,6 +397,10 @@ TEnv::TEnv(const char *name)
 #else
       etc += "/etc";
 #endif
+#if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+      // on iOS etc does not exist and system<name> resides in $ROOTSYS
+      etc = gRootDir;
+#endif
       char *s = gSystem->ConcatFileName(etc, sname);
 #endif
       ReadFile(s, kEnvGlobal);
