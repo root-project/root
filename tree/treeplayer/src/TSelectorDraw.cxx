@@ -108,6 +108,7 @@ void TSelectorDraw::Begin(TTree *tree)
    fSelectedRows   = 0;
    fTree = tree;
    fDimension = 0;
+   fAction = 0;
 
    const char *varexp0   = fInput->FindObject("varexp")->GetTitle();
    const char *selection = fInput->FindObject("selection")->GetTitle();
