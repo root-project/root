@@ -421,6 +421,18 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
    TString lib = _dyld_get_image_name(i++);
 
 #ifndef ROOTPREFIX
+#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+   // first loaded is the app so set ROOTSYS to app bundle
+   if (i == 1) {
+      char respath[kMAXPATHLEN];
+      if (!realpath(lib, respath)) {
+         if (!gSystem->Getenv("ROOTSYS"))
+            ::SysError("TUnixSystem::DylibAdded", "error getting realpath of %s", gSystem->BaseName(lib));
+      } else {
+         gSystem->Setenv("ROOTSYS", gSystem->DirName(respath));
+      }
+   }
+#else
    if (lib.EndsWith("libCore.dylib") || lib.EndsWith("libCore.so")) {
       char respath[kMAXPATHLEN];
       if (!realpath(lib, respath)) {
@@ -431,6 +443,7 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
          gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
       }
    }
+#endif
 #endif
 
    // when libSystem.B.dylib is loaded we have finished loading all dylibs
@@ -1178,7 +1191,7 @@ void TUnixSystem::CheckChilds()
    while ((pid = UnixWaitchild()) > 0) {
       TIter next(zombieHandler);
       register UnixPtty *pty;
-      while (pty = (UnixPtty*) next())
+      while ((pty = (UnixPtty*) next()))
          if (pty->GetPid() == pid) {
             zombieHandler->RemovePtr(pty);
             pty->DiedNotify();
@@ -4317,7 +4330,7 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
 void TUnixSystem::AddDynamicPath(const char *path)
 {
    // Add a new directory to the dynamic path.
-   
+
    if (path) {
       TString oldpath = DynamicPath(0, kFALSE);
       oldpath.Append(":");
