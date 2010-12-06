@@ -1167,7 +1167,8 @@ namespace {
       NFp_t( "void*&",             &CreateVoidPtrRefConverter         ),
       NFp_t( "void**",             &CreateVoidPtrPtrConverter         ),
       NFp_t( "PyObject*",          &CreatePyObjectConverter           ),
-      NFp_t( "_object*",           &CreatePyObjectConverter           )
+      NFp_t( "_object*",           &CreatePyObjectConverter           ),
+      NFp_t( "FILE*",              &CreateVoidArrayConverter          )
    };
 
    struct InitConvFactories_t {

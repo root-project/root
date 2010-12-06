@@ -440,7 +440,8 @@ namespace {
       NFp_t( "TGlobal*",           &CreateTGlobalExecutor             ),
       NFp_t( "__init__",           &CreateConstructorExecutor         ),
       NFp_t( "PyObject*",          &CreatePyObjectExecutor            ),
-      NFp_t( "_object*",           &CreatePyObjectExecutor            )
+      NFp_t( "_object*",           &CreatePyObjectExecutor            ),
+      NFp_t( "FILE*",              &CreateVoidArrayExecutor           )
    };
 
    struct InitExecFactories_t {
