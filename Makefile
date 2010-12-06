@@ -681,16 +681,15 @@ rootexecs:      rootlibs $(ALLEXECS)
 ifneq ($(HOST),)
 .PHONY:         buildtools
 
-buildtools:     $(BUILDTOOLSDIR)/bin/rootcint
-
-$(BUILDTOOLSDIR)/bin/rootcint:
-		@echo ""; \
-		echo "*** Building build tools in $(BUILDTOOLSDIR)..."; \
-		echo ""; \
-		if [ ! -f $(BUILDTOOLSDIR)/Makefile ]; then \
+buildtools:
+		@if [ ! -f $(BUILDTOOLSDIR)/Makefile ]; then \
+		   echo "*** Building build tools in $(BUILDTOOLSDIR)..."; \
 		   mkdir -p $(BUILDTOOLSDIR); \
 		   cd $(BUILDTOOLSDIR); \
 		   $(ROOT_SRCDIR)/configure $(HOST) --minimal; \
+		else \
+		   echo "*** Running make in $(BUILDTOOLSDIR)..."; \
+		   cd $(BUILDTOOLSDIR); \
 		fi; \
 		($(MAKE) BUILDTOOLS=yes \
 		   TARGETFLAGS=-DR__$(shell echo $(ARCH) | tr 'a-z' 'A-Z') \
