@@ -62,7 +62,6 @@ private:
    typedef std::map<Int_t, UInt_t>::iterator SliceDLMap_i;
 
    // histogram base
-   mutable Float_t                   fDataMax;
    mutable Color_t                   fGridColor;
    mutable Color_t                   fFontColor;
 
@@ -95,7 +94,8 @@ private:
    TEveCaloLegoGL(const TEveCaloLegoGL&);            // Stop default
    TEveCaloLegoGL& operator=(const TEveCaloLegoGL&); // Stop default
 
-protected:
+private:
+   void    GetScaleForMatrix(Float_t& sx, Float_t& sy, Float_t& sz) const;
    Int_t   GetGridStep(TGLRnrCtx &rnrCtx) const;
    void    RebinAxis(TAxis *orig, TAxis *curr) const;
 

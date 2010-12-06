@@ -161,10 +161,7 @@ Float_t TEveCaloViz::GetMaxVal() const
 
    // Get maximum plotted value.
 
-   if (fScaleAbs)
-      return fMaxValAbs;
-   else
-      return fData->GetMaxVal(fPlotEt);
+   return fData->GetMaxVal(fPlotEt);
 
 }
 
@@ -816,7 +813,7 @@ void TEveCaloLego::ComputeBBox()
 
    BBoxZero();
 
-   Float_t ex = 1.2*fMaxTowerH;
+   Float_t ex = 1.2; // 20% offset for axis labels
 
    Float_t a = 0.5*ex;
 
@@ -842,8 +839,8 @@ void TEveCaloLego::ComputeBBox()
    }
 
    fBBox[4] =  0;
-   if (fScaleAbs)
-      fBBox[5] = fMaxTowerH;
+   if (fScaleAbs && !fData->Empty())
+      fBBox[5] = GetMaxVal()*GetValToHeight();
    else
-      fBBox[5] = 1;
+      fBBox[5] = fMaxTowerH;
 }
