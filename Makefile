@@ -998,7 +998,7 @@ version: $(CINTTMP)
 
 static: $(ROOTALIB)
 
-$(ROOTALIB): $(ALLLIBS)
+$(ROOTALIB): $(ALLLIBS) $(MAKESTATIC)
 	@$(MAKESTATIC) $(PLATFORM) "$(CXX)" "$(CC)" "$(LD)" "$(LDFLAGS)" \
 	   "$(XLIBS)" "$(SYSLIBS)" "$(STATICEXTRALIBS)"
 
