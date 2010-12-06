@@ -1453,7 +1453,8 @@ bool HasCustomStreamerMemberFunction(G__ClassInfo &cl)
 
    long offset;
    static const char *proto = "TBuffer&";
-   return (cl.GetMethod("Streamer",proto,&offset).IsValid() && ( (cl.RootFlag() & G__NOSTREAMER) || (!(cl.RootFlag() & G__USEBYTECOUNT)) ) );
+   G__MethodInfo info(cl.GetMethod("Streamer",proto,&offset));
+   return (info.IsValid() && info.MemberOf()->Tagnum() == cl.Tagnum() && ( (cl.RootFlag() & G__NOSTREAMER) || (!(cl.RootFlag() & G__USEBYTECOUNT)) ) );
 }
 
 //______________________________________________________________________________

@@ -35,19 +35,19 @@ G__EXPORT
 G__MethodInfo {
   friend class G__MethodArgInfo;
  public:
-  ~G__MethodInfo() {}
+  ~G__MethodInfo() { if (memberOf != belongingclass) delete memberOf; }
   G__MethodInfo() 
-    : handle(0), index(0), usingIndex(0), belongingclass(NULL), type() 
+    : handle(0), index(0), usingIndex(0), belongingclass(NULL), memberOf(0), type() 
     { Init(); }
   G__MethodInfo(G__ClassInfo &a)
-    : handle(0), index(0), usingIndex(0), belongingclass(NULL), type() 
+    : handle(0), index(0), usingIndex(0), belongingclass(NULL), memberOf(0), type() 
     { Init(a); } 
   G__MethodInfo(const G__MethodInfo& mi)
     : handle(mi.handle), index(mi.index), usingIndex(mi.usingIndex), 
-    belongingclass(mi.belongingclass), type(mi.type) {}
+     belongingclass(mi.belongingclass), memberOf(0), type(mi.type) {}
   G__MethodInfo& operator=(const G__MethodInfo& mi) {
     handle=mi.handle; index=mi.index; usingIndex=mi.usingIndex; 
-    belongingclass=mi.belongingclass; type=mi.type; return *this;}
+    belongingclass=mi.belongingclass; memberOf=NULL; type=mi.type; return *this;}
 
   void Init();
   void Init(G__ClassInfo &a);
@@ -75,7 +75,8 @@ G__MethodInfo {
 #ifdef G__TRUEP2F
   void* PointerToFunc();
 #endif
-  G__ClassInfo* MemberOf() { return(belongingclass); }
+  G__ClassInfo* CreatedBy() { return(belongingclass); }
+  G__ClassInfo* MemberOf();
   int GetDefiningScopeTagnum();
   struct G__friendtag* GetFriendInfo();
   void SetGlobalcomp(int globalcomp);
@@ -110,6 +111,7 @@ G__MethodInfo {
   long usingIndex;
 #endif
   G__ClassInfo* belongingclass;
+  G__ClassInfo* memberOf;
   G__TypeInfo type;
   
 };
