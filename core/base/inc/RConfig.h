@@ -370,6 +370,9 @@
 
 #if defined(__APPLE__)       /* MacOS X support, initially following FreeBSD */
 #   include <AvailabilityMacros.h>
+#   ifndef __CINT__
+#   include <TargetConditionals.h>
+#   endif
 #   define R__MACOSX
 #   define R__UNIX
 #   if defined(__xlC__) || defined(__xlc__)
