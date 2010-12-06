@@ -49,7 +49,7 @@ namespace RooStats {
     // add a line
     void AddLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char* title = NULL);
 
-    void Draw(const Option_t *options=0);
+    void Draw(Option_t *options=0);
 
     // Applies a predefined style if fApplyStyle is kTRUE (default).
     void ApplyDefaultStyle(void);

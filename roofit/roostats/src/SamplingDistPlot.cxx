@@ -38,7 +38,7 @@ ClassImp(RooStats::SamplingDistPlot);
 using namespace RooStats;
 
 //_______________________________________________________
-SamplingDistPlot::SamplingDistPlot(const Int_t nbins) :
+SamplingDistPlot::SamplingDistPlot(Int_t nbins) :
    fHist(0),
    fLegend(NULL),
    fItems(),
@@ -221,7 +221,7 @@ void SamplingDistPlot::addOtherObject(TObject *obj, Option_t *drawOptions)
 }
 
 //_____________________________________________________________________________
-void SamplingDistPlot::Draw(const Option_t * /*options */) {
+void SamplingDistPlot::Draw(Option_t * /*options */) {
    // Draw this plot and all of the elements it contains. The specified options
    // only apply to the drawing of our frame. The options specified in our add...()
    // methods will be used to draw each object we contain.
@@ -312,7 +312,7 @@ void SamplingDistPlot::GetAbsoluteInterval(Float_t &theMin, Float_t &theMax, Flo
 }
 
 //_____________________________________________________________________________
-void SamplingDistPlot::SetLineColor(const Color_t color, const SamplingDistribution *samplDist) {
+void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *samplDist) {
    // Sets line color for given sampling distribution and
    // fill color for the associated shaded TH1F.
 
@@ -342,7 +342,7 @@ void SamplingDistPlot::SetLineColor(const Color_t color, const SamplingDistribut
 }
 
 //_____________________________________________________________________________
-void SamplingDistPlot::SetLineWidth(const Width_t lwidth, const SamplingDistribution *samplDist)
+void SamplingDistPlot::SetLineWidth(Width_t lwidth, const SamplingDistribution *samplDist)
 {
   if(samplDist == 0){
     fHist->SetLineWidth(lwidth);
@@ -362,7 +362,7 @@ void SamplingDistPlot::SetLineWidth(const Width_t lwidth, const SamplingDistribu
 }
 
 //_____________________________________________________________________________
-void SamplingDistPlot::SetLineStyle(const Style_t style, const SamplingDistribution *samplDist)
+void SamplingDistPlot::SetLineStyle(Style_t style, const SamplingDistribution *samplDist)
 {
   if(samplDist == 0){
     fHist->SetLineStyle(style);
@@ -382,7 +382,7 @@ void SamplingDistPlot::SetLineStyle(const Style_t style, const SamplingDistribut
 }
 
 //_____________________________________________________________________________
-void SamplingDistPlot::SetMarkerStyle(const Style_t style, const SamplingDistribution *samplDist)
+void SamplingDistPlot::SetMarkerStyle(Style_t style, const SamplingDistribution *samplDist)
 {
   if(samplDist == 0){
     fHist->SetMarkerStyle(style);
@@ -402,7 +402,7 @@ void SamplingDistPlot::SetMarkerStyle(const Style_t style, const SamplingDistrib
 }
 
 //_____________________________________________________________________________
-void SamplingDistPlot::SetMarkerColor(const Color_t color, const SamplingDistribution *samplDist)
+void SamplingDistPlot::SetMarkerColor(Color_t color, const SamplingDistribution *samplDist)
 {
   if(samplDist == 0){
     fHist->SetMarkerColor(color);
@@ -422,7 +422,7 @@ void SamplingDistPlot::SetMarkerColor(const Color_t color, const SamplingDistrib
 }
 
 //_____________________________________________________________________________
-void SamplingDistPlot::SetMarkerSize(const Size_t size, const SamplingDistribution *samplDist)
+void SamplingDistPlot::SetMarkerSize(Size_t size, const SamplingDistribution *samplDist)
 {
   if(samplDist == 0){
     fHist->SetMarkerSize(size);
@@ -461,7 +461,7 @@ TH1F* SamplingDistPlot::GetTH1F(const SamplingDistribution *samplDist)
 
 
 //_____________________________________________________________________________
-void SamplingDistPlot::RebinDistribution(const Int_t rebinFactor, const SamplingDistribution *samplDist)
+void SamplingDistPlot::RebinDistribution(Int_t rebinFactor, const SamplingDistribution *samplDist)
 {
   if(samplDist == 0){
     fHist->Rebin(rebinFactor);
