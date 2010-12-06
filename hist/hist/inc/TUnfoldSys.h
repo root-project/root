@@ -53,13 +53,13 @@ class TUnfoldSys : public TUnfold {
    TUnfoldSys(TH2 const *hist_A, EHistMap histmap, ERegMode regmode = kRegModeSize,
              EConstraint constraint=kEConstraintNone);      // constructor
    virtual ~ TUnfoldSys(void);    // delete data members
-   void AddSysError(TH2 const *sysError,char const *name, EHistMap histmap,
+   void AddSysError(const TH2 *sysError,char const *name, EHistMap histmap,
                     ESysErrMode mode); // add a systematic error source
    void GetDeltaSysSource(TH1 *hist_delta,char const *source,
-                          Int_t const *binMap=0); // get systematic shifts from one systematic source
-   void SubtractBackground(TH1 const *hist_bgr,char const *name,
-                           Double_t const &scale=1.0,
-                           Double_t const &scale_error=0.0); // subtract background prior to unfolding
+                          const Int_t  *binMap=0); // get systematic shifts from one systematic source
+   void SubtractBackground(const TH1 *hist_bgr,char const *name,
+                           const Double_t &scale=1.0,
+                           const Double_t &scale_error=0.0); // subtract background prior to unfolding
    virtual Int_t SetInput(TH1 const *hist_y, Double_t const &scaleBias=0.0,Double_t oneOverZeroError=0.0); // define input consistently in case of background subtraction
    void GetDeltaSysBackgroundScale(TH1 *delta,char const *source,
                                 Int_t const *binMap=0); // get correlated uncertainty induced by the scale uncertainty of a background source
