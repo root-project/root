@@ -68,7 +68,7 @@ HADD         := bin/hadd$(EXEEXT)
 
 ##### h2root #####
 H2ROOTS1     := $(MODDIRS)/h2root.cxx
-H2ROOTS2     := $(wildcard $(MODDIRS)/*.c))
+H2ROOTS2     := $(wildcard $(MODDIRS)/*.c)
 H2ROOTO      := $(call stripsrc,$(H2ROOTS1:.cxx=.o))
 ifeq ($(PLATFORM),win32)
 H2ROOTO      += $(call stripsrc,$(H2ROOTS2:.c=.o))
