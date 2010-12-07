@@ -243,7 +243,7 @@ Int_t TH2Poly::AddBin(TObject *poly)
 
 
 //______________________________________________________________________________
-Int_t TH2Poly::AddBin(Int_t n, Double_t *x, Double_t *y)
+Int_t TH2Poly::AddBin(Int_t n, const Double_t *x, const Double_t *y)
 {
    // Adds a new bin to the histogram. The number of vertices and their (x,y)
    // coordinates are required as input. It returns the bin number in the

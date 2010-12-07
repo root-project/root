@@ -76,7 +76,7 @@ public:
    virtual ~TH2Poly();
 
    Int_t       AddBin(TObject *poly);
-   Int_t       AddBin(Int_t n, Double_t *x, Double_t *y);
+   Int_t       AddBin(Int_t n, const Double_t *x, const Double_t *y);
    Int_t       AddBin(Double_t x1, Double_t y1, Double_t x2, Double_t  y2);
    void        ClearBinContents();                 // Clears the content of all bins
    void        ChangePartition(Int_t n, Int_t m);  // Sets the number of partition cells to another value
