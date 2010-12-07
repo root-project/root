@@ -444,7 +444,7 @@ void TGFSComboBox::Update(const char *path)
                strlcpy(dirname, tailpath, 1024);
                picname = "ofolder_t.xpm";
             } else {
-               strlcpy(dirname, tailpath, semi-tailpath);
+               strlcpy(dirname, tailpath, (semi-tailpath)+1);
                picname = "folder_t.xpm";
             }
             if (mpath[strlen(mpath)-1] != '/') 

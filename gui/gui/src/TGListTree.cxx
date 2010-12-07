@@ -2306,7 +2306,7 @@ start:
       if (!s) {
          strlcpy(dirname, p, 1024);
       } else {
-         strlcpy(dirname, p, s-p);
+         strlcpy(dirname, p, (s-p)+1);
       }
 
       item = FindChildByName(item, dirname);
