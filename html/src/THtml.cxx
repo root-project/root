@@ -289,6 +289,8 @@ void THtml::TFileDefinition::NormalizePath(TString& filename) const
       TPRegexp reg(TString::Format("%s[^%s]+%s\\.\\.%s", d, d, d, d));
       while (reg.Substitute(filename, TString(d[0]), "", 0, 1)) {}
    }
+   if (filename.BeginsWith("./") || filename.BeginsWith(".\\"))
+      filename.Remove(0,2);
 }
 
 
