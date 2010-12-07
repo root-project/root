@@ -112,9 +112,8 @@ namespace HistFactory{
     fResultsPrefixStr<< "_" << fRowTitle;
     while(fRowTitle.find("\\ ")!=string::npos){
        size_t pos=fRowTitle.find("\\ ");
-       if (pos>=0) {
-	 fRowTitle.replace(pos, 1, "");
-       }
+       // coverity[NEGATIVE_RETURNS]
+       fRowTitle.replace(pos, 1, "");
     }
     pFile = fopen ((filePrefix+"_results.table").c_str(),"a"); 
     //RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
