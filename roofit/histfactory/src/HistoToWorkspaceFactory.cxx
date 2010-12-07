@@ -110,9 +110,9 @@ namespace HistFactory{
 
     //    fResultsPrefixStr<<"results" << "_" << fNomLumi<< "_" << fLumiError<< "_" << fLowBin<< "_" << fHighBin;
     fResultsPrefixStr<< "_" << fRowTitle;
-    while(fRowTitle.find("\\ ")!=string::npos){
-       size_t pos=fRowTitle.find("\\ ");
-       // coverity[NEGATIVE_RETURNS]
+    size_t pos; 
+    while((pos = fRowTitle.find("\\ ") )!=string::npos){
+       // warning: coverity[NEGATIVE_RETURNS]
        fRowTitle.replace(pos, 1, "");
     }
     pFile = fopen ((filePrefix+"_results.table").c_str(),"a"); 
