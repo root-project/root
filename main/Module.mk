@@ -124,7 +124,7 @@ $(PROOFSERVEXE): $(PROOFSERVO) $(BOOTLIBSDEP)
 		$(LD) $(LDFLAGS) -o $@ $(PROOFSERVO) $(BOOTULIBS) \
 		   $(RPATH) $(BOOTLIBS) $(SYSLIBS)
 
-$(PROOFSERVSH): $(MAINDIRS)/proofserv.sh
+$(PROOFSERVSH): $(call stripsrc,$(MAINDIRS)/proofserv.sh)
 		@echo "Install proofserv wrapper."
 		@cp $< $@
 		@chmod 0755 $@
@@ -133,7 +133,7 @@ $(ROOTSEXE):    $(ROOTSEXEO) $(BOOTLIBSDEP)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTSEXEO) $(BOOTULIBS) \
 		   $(RPATH) $(BOOTLIBS) $(SYSLIBS)
 
-$(ROOTSSH):     $(MAINDIRS)/roots.sh
+$(ROOTSSH):     $(call stripsrc,$(MAINDIRS)/roots.sh)
 		@echo "Install roots wrapper."
 		@cp $< $@
 		@chmod 0755 $@
