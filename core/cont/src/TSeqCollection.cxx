@@ -58,6 +58,8 @@ Int_t TSeqCollection::ObjCompare(TObject *a, TObject *b)
 void TSeqCollection::QSort(TObject **a, Int_t first, Int_t last)
 {
    // Sort array of TObject pointers using a quicksort algorithm.
+   // The algorithm used is a non stable sort (i.e. already sorted
+   // elements might switch/change places).
    // Uses ObjCompare() to compare objects.
 
    R__LOCKGUARD2(gCollectionMutex);
@@ -101,52 +103,54 @@ void TSeqCollection::QSort(TObject **a, Int_t first, Int_t last)
 //______________________________________________________________________________
 void TSeqCollection::QSort(TObject **a, Int_t nBs, TObject ***b, Int_t first, Int_t last)
 {
-  // Sort array a of TObject pointers using a quicksort algorithm.
-  // Arrays b will be sorted just like a (a determines the sort).
-  // nBs is the number of TObject** arrays in b.
-  // Uses ObjCompare() to compare objects.
+   // Sort array a of TObject pointers using a quicksort algorithm.
+   // Arrays b will be sorted just like a (a determines the sort).
+   // Argument nBs is the number of TObject** arrays in b.
+   // The algorithm used is a non stable sort (i.e. already sorted
+   // elements might switch/change places).
+   // Uses ObjCompare() to compare objects.
 
-  R__LOCKGUARD2(gCollectionMutex);
-  static TObject *tmp1, **tmp2;
-  static int i; // "static" to save stack space
-  int j,k;
+   R__LOCKGUARD2(gCollectionMutex);
 
-  static int depth = 0;
-  if(depth == 0 && nBs > 0) tmp2 = new TObject*[nBs];
-  depth++;
+   static TObject *tmp1, **tmp2;
+   static int i; // "static" to save stack space
+   int j,k;
 
-  while (last - first > 1) {
-     i = first;
-     j = last;
-     for (;;) {
-        while (++i < last && ObjCompare(a[i], a[first]) < 0) {}
-        while (--j > first && ObjCompare(a[j], a[first]) > 0) {}
-        if (i >= j) break;
+   static int depth = 0;
+   if (depth == 0 && nBs > 0) tmp2 = new TObject*[nBs];
+   depth++;
 
-        tmp1 = a[i]; for(k=0;k<nBs;k++) tmp2[k] = b[k][i];
-        a[i] = a[j]; for(k=0;k<nBs;k++) b[k][i] = b[k][j];
-        a[j] = tmp1; for(k=0;k<nBs;k++) b[k][j] = tmp2[k];
-     }
-     if (j == first) {
-        ++first;
-        continue;
-     }
-     tmp1 = a[first]; for(k=0;k<nBs;k++) tmp2[k] = b[k][first];
-     a[first] = a[j]; for(k=0;k<nBs;k++) b[k][first] = b[k][j];
-     a[j] = tmp1; for(k=0;k<nBs;k++) b[k][j] = tmp2[k];
-     if (j - first < last - (j + 1)) {
-        QSort(a, nBs, b, first, j);
-        first = j + 1; // QSort(j + 1, last);
-     } else {
-        QSort(a, nBs, b, j + 1, last);
-        last = j; // QSort(first, j);
-     }
-  }
-  depth--;
+   while (last - first > 1) {
+      i = first;
+      j = last;
+      for (;;) {
+         while (++i < last && ObjCompare(a[i], a[first]) < 0) {}
+         while (--j > first && ObjCompare(a[j], a[first]) > 0) {}
+         if (i >= j) break;
 
-  if(depth == 0 && nBs > 0) delete [] tmp2;
+         tmp1 = a[i]; for(k=0;k<nBs;k++) tmp2[k] = b[k][i];
+         a[i] = a[j]; for(k=0;k<nBs;k++) b[k][i] = b[k][j];
+         a[j] = tmp1; for(k=0;k<nBs;k++) b[k][j] = tmp2[k];
+      }
+      if (j == first) {
+         ++first;
+         continue;
+      }
+      tmp1 = a[first]; for(k=0;k<nBs;k++) tmp2[k] = b[k][first];
+      a[first] = a[j]; for(k=0;k<nBs;k++) b[k][first] = b[k][j];
+      a[j] = tmp1; for(k=0;k<nBs;k++) b[k][j] = tmp2[k];
+      if (j - first < last - (j + 1)) {
+         QSort(a, nBs, b, first, j);
+         first = j + 1; // QSort(j + 1, last);
+      } else {
+         QSort(a, nBs, b, j + 1, last);
+         last = j; // QSort(first, j);
+      }
+   }
+   depth--;
+
+   if (depth == 0 && nBs > 0) delete [] tmp2;
 }
-
 
 //______________________________________________________________________________
 Long64_t TSeqCollection::Merge(TCollection *list)
@@ -214,10 +218,10 @@ Long64_t TSeqCollection::Merge(TCollection *list)
             Warning("Merge", "Object of type %s (position %d in list) not found in list %d. Continuing...", object->ClassName(), indobj, indcoll);
             continue;
          }
-/* 
+/*
          // Dangerous - may try to merge non-corresponding histograms (A.G)
          while (objtomerge == 0
-                && indobj < ((TSeqCollection*)collcrt)->LastIndex() 
+                && indobj < ((TSeqCollection*)collcrt)->LastIndex()
                ) {
             ++indobj;
             objtomerge = ((TSeqCollection*)collcrt)->At(indobj);
