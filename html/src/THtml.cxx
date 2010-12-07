@@ -622,7 +622,13 @@ bool THtml::TPathDefinition::GetFileNameFromInclude(const char* included, TStrin
       out_fsname.Prepend("tmva/inc");
       return true;
    }
-   // special treatment for roostats (same as in TMVA)
+   // special treatment for nested histfactory
+   if (!strncmp(included, "RooStats/HistFactory/", 21)) {
+      out_fsname.Remove(0, 20);
+      out_fsname.Prepend("roofit/histfactory/inc");
+      return true;
+   }
+   // special treatment for roostats
    if (!strncmp(included, "RooStats/", 9)) {
       out_fsname.Remove(0, 8);
       out_fsname.Prepend("roofit/roostats/inc");
