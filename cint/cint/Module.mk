@@ -29,7 +29,6 @@ endif
 CINTCONF     := $(call stripsrc,$(CINTDIRI)/configcint.h)
 CINTH        := $(filter-out $(CINTDIRI)/configcint.h,$(wildcard $(CINTDIRI)/*.h))
 CINTHT       := $(patsubst $(CINTDIRI)/%.h,include/%.h,$(CINTH))
-CINTHT       += $(patsubst $(call stripsrc,$(CINTDIRI))/%.h,include/%.h,$(CINTCONF))
 CINTS1       := $(wildcard $(MODDIRS)/*.c) \
                 $(MODDIRS)/config/strlcpy.c $(MODDIRS)/config/strlcat.c \
                 $(MODDIRS)/config/snprintf.c
