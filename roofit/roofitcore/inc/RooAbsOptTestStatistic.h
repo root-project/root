@@ -20,6 +20,7 @@
 #include "RooAbsTestStatistic.h"
 #include "RooSetProxy.h"
 #include "RooCategoryProxy.h"
+#include "TString.h"
 
 class RooArgSet ;
 class RooAbsData ;
@@ -41,15 +42,20 @@ public:
 
   RooAbsReal& function() { return *_funcClone ; }
   const RooAbsReal& function() const { return *_funcClone ; }
-  RooAbsData& data() { return *_dataClone ; }
-  const RooAbsData& data() const { return *_dataClone ; }
 
+  RooAbsData& data() ;
+  const RooAbsData& data() const ;
   Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) ;
+
 
   virtual const char* cacheUniqueSuffix() const { return Form("_%lx", (ULong_t)_dataClone) ; }
 
   // Override this to be always true to force calculation of likelihood without parameters
   virtual Bool_t isDerived() const { return kTRUE ; }
+
+  void seal(const char* notice="") { _sealed = kTRUE ; _sealNotice = notice ; }
+  Bool_t isSealed() const { return _sealed ; }
+  const char* sealNotice() const { return _sealNotice.Data() ; }
 
 protected:
 
@@ -70,8 +76,9 @@ protected:
   RooAbsReal* _funcClone ; // Pointer to internal clone of input function
   RooArgSet*  _projDeps ; // Set of projected observable
   Bool_t      _ownData  ; // Do we own the dataset
-
-  ClassDef(RooAbsOptTestStatistic,2) // Abstract base class for optimized test statistics
+  Bool_t      _sealed ; // Is test statistic sealed -- i.e. no access to data 
+  TString     _sealNotice ; // User-defined notice shown when reading a sealed likelihood 
+  ClassDef(RooAbsOptTestStatistic,3) // Abstract base class for optimized test statistics
 };
 
 #endif

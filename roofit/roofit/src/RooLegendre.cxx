@@ -94,11 +94,16 @@ Double_t RooLegendre::evaluate() const
 }
 
 //_____________________________________________________________________________
+namespace {
+    bool fullRange(const RooRealProxy& x ,const char* range) 
+    { return range==0 || strlen(range)==0 
+          || ( x.min(range) == x.min() && x.max(range) == x.max() ) ; 
+    }
+}
 Int_t RooLegendre::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   // don't support indefinite integrals...
-  if (rangeName && strlen(rangeName) ) return 0;
-  if (matchArgs(allVars, analVars, _ctheta)) return 1;
+  if (fullRange(_ctheta,rangeName) && matchArgs(allVars, analVars, _ctheta)) return 1;
   return 0;
 }
 
@@ -112,8 +117,12 @@ Double_t RooLegendre::analyticalIntegral(Int_t code, const char* ) const
   if ( (_l1+_l2-_m1-_m2)%2 != 0 ) return 0; // these combinations are odd under x -> -x
 
   // from B.R. Wong, "On the overlap integral of associated Legendre Polynomials" 1998 J. Phys. A: Math. Gen. 31 1101
-  // Note: this paper gets the sign wrong if _m1+_m2 is odd..
-  // TODO: update to the result of http://iopscience.iop.org/0305-4470/32/13/011/pdf/0305-4470_32_13_011.pdf
+  // TODO: update to the result of 
+  //       H. A. Mavromatis
+  //       "A single-sum expression for the overlap integral of two associated Legendre polynomials"
+  //       1999 J. Phys. A: Math. Gen. 32 2601
+  //       http://iopscience.iop.org/0305-4470/32/13/011/pdf/0305-4470_32_13_011.pdf
+  //       For that we need Wigner 3-j, which Lorenzo has added for Root 5.28... (note: check Condon-Shortly convention in this paper!)
   double r=0;
   for (int p1=0; 2*p1 <= _l1-_m1 ;++p1) {
     double a1 = a(p1,_l1,_m1);

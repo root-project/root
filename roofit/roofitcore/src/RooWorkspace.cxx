@@ -52,6 +52,7 @@
 #include "RooFactoryWSTool.h"
 #include "RooAbsStudy.h"
 #include "RooTObjWrap.h"
+#include "RooAbsOptTestStatistic.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TH1.h"
@@ -2233,6 +2234,12 @@ void RooWorkspace::Streamer(TBuffer &R__b)
       RooAbsArg* node ;
       while((node=(RooAbsArg*)iter->Next())) {
 	node->setExpensiveObjectCache(_eocache) ;
+	if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
+	  RooAbsOptTestStatistic* tmp = (RooAbsOptTestStatistic*) node ;
+	  if (tmp->isSealed() && tmp->sealNotice() && strlen(tmp->sealNotice())>0) {
+	    cout << "RooWorkspace::Streamer(" << GetName() << ") " << node->IsA()->GetName() << "::" << node->GetName() << " : " << tmp->sealNotice() << endl ;
+	  }
+	}
       }
       delete iter ;
 

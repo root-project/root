@@ -60,8 +60,12 @@ Int_t RooRealIntegral::_cacheAllNDim(2) ;
 //_____________________________________________________________________________
 RooRealIntegral::RooRealIntegral() : 
   _valid(kFALSE),
+  _funcNormSet(0),
+  _iconfig(0),
+  _sumCatIter(0),
   _numIntEngine(0),
   _numIntegrand(0),
+  _rangeName(0),
   _params(0),
   _cacheNum(kFALSE)
 {

@@ -53,6 +53,7 @@
 #include "RooBinning.h"
 #include "RooAbsDataStore.h"
 #include "RooCategory.h"
+#include "RooDataSet.h"
 
 ClassImp(RooAbsOptTestStatistic)
 ;
@@ -79,7 +80,8 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 					       const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
 					       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange, Bool_t cloneInputData) : 
   RooAbsTestStatistic(name,title,real,indata,projDeps,rangeName, addCoefRangeName, nCPU, interleave, verbose, splitCutRange),
-  _projDeps(0)
+  _projDeps(0),
+  _sealed(kFALSE)
 {
   // Constructor taking function (real), a dataset (data), a set of projected observables (projSet). If 
   // rangeName is not null, only events in the dataset inside the range will be used in the test
@@ -351,7 +353,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 
 //_____________________________________________________________________________
 RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name) : 
-  RooAbsTestStatistic(other,name)
+  RooAbsTestStatistic(other,name), _sealed(other._sealed), _sealNotice(other._sealNotice)
 {
   // Copy constructor
 //   cout << "RooAbsOptTestStatistic::cctor(" << GetName() << "," << this << endl ;
@@ -684,3 +686,32 @@ Bool_t RooAbsOptTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
 
 
 
+
+//_____________________________________________________________________________
+RooAbsData& RooAbsOptTestStatistic::data() 
+{ 
+  if (_sealed) {
+    Bool_t notice = (sealNotice() && strlen(sealNotice())) ;
+    coutW(ObjectHandling) << "RooAbsOptTestStatistic::data(" << GetName() 
+			  << ") WARNING: object sealed by creator - access to data is not permitted: " 
+			  << (notice?sealNotice():"<no user notice>") << endl ;
+    static RooDataSet dummy ("dummy","dummy",RooArgSet()) ;
+    return dummy ;
+  }
+  return *_dataClone ; 
+}
+
+
+//_____________________________________________________________________________
+const RooAbsData& RooAbsOptTestStatistic::data() const 
+{ 
+  if (_sealed) {
+    Bool_t notice = (sealNotice() && strlen(sealNotice())) ;
+    coutW(ObjectHandling) << "RooAbsOptTestStatistic::data(" << GetName() 
+			  << ") WARNING: object sealed by creator - access to data is not permitted: " 
+			  << (notice?sealNotice():"<no user notice>") << endl ;
+    static RooDataSet dummy ("dummy","dummy",RooArgSet()) ;
+    return dummy ;
+  }
+  return *_dataClone ; 
+}

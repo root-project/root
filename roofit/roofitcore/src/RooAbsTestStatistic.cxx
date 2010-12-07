@@ -58,7 +58,9 @@ ClassImp(RooAbsTestStatistic)
 RooAbsTestStatistic::RooAbsTestStatistic()
 {
   // Default constructor
-
+  _func = 0 ;
+  _data = 0 ;
+  _projDeps = 0 ;
   _init = kFALSE ;
   _gofArray = 0 ;
   _mpfeArray = 0 ;
