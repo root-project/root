@@ -1396,14 +1396,11 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 
   // Check if header filename is found in ROOT distribution, if so, do not import class
   TString rootsys = gSystem->Getenv("ROOTSYS") ;
-  const char* implpath = implfile.c_str() ; //gSystem->ConcatFileName(rootsys.Data(),implfile.c_str()) ;
   if (TString(implfile.c_str()).Index(rootsys)>=0) {
     oocxcoutD(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo(" << _wspace->GetName() << ") code of class " << tc->GetName() << " is in ROOT distribution, skipping " << endl ;
-  //delete[] implpath ;
     return kTRUE ;
   }
-  //delete[] implpath ;
-  implpath=0 ;
+  const char* implpath=0 ;
 
   // Require that class meets technical criteria to be persistable (i.e it has a default ctor)
   // (We also need a default ctor of abstract classes, but cannot check that through is interface

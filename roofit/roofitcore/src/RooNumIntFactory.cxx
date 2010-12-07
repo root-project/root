@@ -198,7 +198,7 @@ RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const Roo
   // preference stated in 'config'
 
   // First determine dimensionality and domain of integrand  
-  Int_t ndim = ndimPreset>0 ? ndimPreset : func.getDimension() ;
+  Int_t ndim = ndimPreset>0 ? ndimPreset : ((Int_t)func.getDimension()) ;
 
   Bool_t openEnded = kFALSE ;
   Int_t i ;
