@@ -16,6 +16,7 @@
 #include "TUnuranMultiContDist.h"
 #include "TUnuran.h"
 #include "Math/OneDimFunctionAdapter.h"
+#include "Math/DistSamplerOptions.h"
 #include "Fit/DataRange.h"
 //#include "Math/WrappedTF1.h"
 
@@ -35,7 +36,9 @@ TUnuranSampler::TUnuranSampler() : ROOT::Math::DistSampler(),
    fMode(0), fArea(0),
    fFunc1D(0),
    fUnuran(new TUnuran()  )
-{}
+{
+   fUnuran->SetLogLevel(ROOT::Math::DistSamplerOptions::DefaultPrintLevel());
+}
 
 TUnuranSampler::~TUnuranSampler() {
    assert(fUnuran != 0);
@@ -49,17 +52,37 @@ bool TUnuranSampler::Init(const char * algo) {
       Error("TUnuranSampler::Init","Distribution function has not been set ! Need to call SetFunction first.");
       return false;
    }
+
    TString method(algo); 
+   if (method.IsNull() ) { 
+      if (NDim() == 1) method = ROOT::Math::DistSamplerOptions::DefaultAlgorithm1D();
+      else  method = ROOT::Math::DistSamplerOptions::DefaultAlgorithmND();
+   }
    method.ToUpper();
 
    if (NDim() == 1) { 
-      // check if distribution is discrete by 
+       // check if distribution is discrete by 
       // using first string in the method name is "D"
-      if (method.First("D") == 0) return DoInitDiscrete1D(algo);
-      return DoInit1D(algo); 
+      if (method.First("D") == 0) return DoInitDiscrete1D(method);
+      return DoInit1D(method); 
    }
-   else return DoInitND(algo); 
+   else { 
+      return DoInitND(method); 
+   }
 }
+
+void TUnuranSampler::SetPrintLevel(int level ) {
+   // set print level 
+   if (level < 0) level =  ROOT::Math::DistSamplerOptions::DefaultPrintLevel();
+   fUnuran->SetLogLevel(level);
+} 
+
+bool TUnuranSampler::Init(const ROOT::Math::DistSamplerOptions & opt ) { 
+   // default initialization with algorithm name
+   SetPrintLevel(opt.PrintLevel() );
+   return Init(opt.Algorithm().c_str() );
+}
+
 
 bool TUnuranSampler::DoInit1D(const char * method) { 
    // initilize for 1D sampling
@@ -135,7 +158,12 @@ bool TUnuranSampler::DoInitND(const char * method) {
       std::vector<double> xmin(range.NDim() ); 
       std::vector<double> xmax(range.NDim() ); 
       range.GetRange(&xmin[0],&xmax[0]); 
-      dist.SetDomain(&xmin.front(),&xmax.front()); 
+      dist.SetDomain(&xmin.front(),&xmax.front());
+//       std::cout << " range is min = "; 
+//       for (int j = 0; j < NDim(); ++j) std::cout << xmin[j] << "   "; 
+//       std::cout << " max = "; 
+//       for (int j = 0; j < NDim(); ++j) std::cout << xmax[j] << "   "; 
+//       std::cout << std::endl;
    }
    fOneDim = false; 
    if (method) return fUnuran->Init(dist, method); 

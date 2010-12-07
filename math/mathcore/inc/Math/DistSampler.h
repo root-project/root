@@ -97,8 +97,10 @@ public:
       initialize the generators with the given algorithm
       Implemented by derived classes who needs it 
       (like UnuranSampler)
+      If nothing is specified use default algorithm
+      from DistSamplerOptions::SetDefaultAlgorithm
    */
-   virtual bool Init(const char * /* algorithm */) { return true;}
+   virtual bool Init(const char * =""/* algorithm */) { return true;}
 
    /**
       initialize the generators with the given option

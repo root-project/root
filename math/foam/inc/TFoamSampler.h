@@ -33,6 +33,12 @@ namespace ROOT {
 
 class TFoamIntegrand; 
 
+
+class TRandom; 
+class TF1; 
+class TFoam; 
+
+
 //_______________________________________________________________________________
 /**
    TFoamSampler class
@@ -41,11 +47,6 @@ class TFoamIntegrand;
 
 
 */
-
-class TRandom; 
-class TF1; 
-class TFoam; 
-
 class TFoamSampler : public ROOT::Math::DistSampler { 
 
 public: 
@@ -93,34 +94,12 @@ public:
    */ 
    void SetSeed(unsigned int seed);
 
-//    /* 
-//       set the mode
-//     */
-//    void SetMode(double mode) { 
-//       fMode = mode; 
-//       fHasMode = true; 
-//    }
-
-//    /*
-//      set the area 
-//     */
-//    void SetArea(double area) { 
-//       fArea = area;
-//       fHasArea = true; 
-//    }
 
    /**
       Get the random engine used by the sampler
     */
    TRandom * GetRandom();
 
-   /**
-      sample one event in one dimension
-      better implementation could be provided by the derived classes   
-   */
-//    double Sample1D();//  { 
-// //       return fFoam->Sample();
-// //    }
 
    /**
       sample one event in multi-dimension by filling the given array
@@ -153,7 +132,7 @@ private:
    TFoam *                           fFoam;        // foam engine class
    TFoamIntegrand *                  fFoamDist;    // foam distribution interface  
 
-   //ClassDef(TFoamSampler,1)  //Distribution sampler class based on UNU.RAN
+   //ClassDef(TFoamSampler,1)  //Distribution sampler class based on FOAM
 
 };
 

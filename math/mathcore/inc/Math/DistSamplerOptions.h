@@ -25,7 +25,7 @@ class IOptions;
 
 //_______________________________________________________________________________
 /** 
-    DistSampler options 
+    DistSampler options class
 
     @ingroup NumAlgo
 */
@@ -35,12 +35,14 @@ public:
 
    // static methods for setting and retrieving the default options 
 
-   static void SetDefaultSampler(const char * type, const char * algo = 0);
-   static void SetDefaultAlgorithm(const char * algo );
+   static void SetDefaultSampler(const char * type);
+   static void SetDefaultAlgorithm1D(const char * algo );
+   static void SetDefaultAlgorithmND(const char * algo );
    static void SetDefaultPrintLevel(int level);
 
    static const std::string & DefaultSampler();
-   static const std::string & DefaultAlgorithm(); 
+   static const std::string & DefaultAlgorithm1D(); 
+   static const std::string & DefaultAlgorithmND(); 
    static int DefaultPrintLevel(); 
 
    /// retrieve extra options - if not existing create a IOptions 
@@ -58,7 +60,9 @@ public:
    // pass optionally a pointer to the additional options
    // otehrwise look if they exist for this default minimizer
    // and in that case they are copied in the constructed instance
-   DistSamplerOptions(IOptions * extraOpts = 0);
+   // constructor takes dimension since a different default algorithm
+   // is used if the dimension is 1 or greater than 1 
+   DistSamplerOptions(int dim = 0, IOptions * extraOpts = 0);
 
    // destructor  
    ~DistSamplerOptions();
@@ -104,8 +108,8 @@ public:
 private:
 
    int fLevel;               // debug print level 
-   std::string fSamplerType;   // DistSampler type (Minuit, Minuit2, etc..
-   std::string fAlgoType;    // DistSampler algorithmic specification (Migrad, Minimize, ...)
+   std::string fSamplerType;   // DistSampler type (Unuran, Foam, etc...)xs
+   std::string fAlgoType;    // DistSampler algorithmic specification (for Unuran only)
 
    // extra options
    ROOT::Math::IOptions *   fExtraOptions;  // extra options 

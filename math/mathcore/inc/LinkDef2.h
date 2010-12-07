@@ -50,7 +50,7 @@
 #pragma link C++ class TKDTree<Int_t, Float_t>+;
 #pragma link C++ typedef TKDTreeID;
 #pragma link C++ typedef TKDTreeIF;
-
+#pragma link C++ class TKDTreeBinning+;
 
 // ROOT::Math namespace
 #pragma link C++ typedef ROOT::Math::IGenFunction;

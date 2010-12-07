@@ -74,10 +74,14 @@ public:
       initialize the generators with the given algorithm
       If no algorithm is passed used the default one for the type of distribution
    */
+   bool Init(const char * algo ="");
 
-   using ROOT::Math::DistSampler::Init;
 
-   bool Init(const char * algo =0);
+   /**
+      initialize the generators with the given algorithm
+      If no algorithm is passed used the default one for the type of distribution
+   */
+   bool Init(const ROOT::Math::DistSamplerOptions & opt );
 
    /** 
        Set the random engine to be used 
@@ -91,6 +95,12 @@ public:
        Needs to be called before Init to have effect      
    */ 
    void SetSeed(unsigned int seed);
+
+   /**
+      Set the print level 
+      (if level=-1 use default)
+    */
+   void SetPrintLevel(int level);
 
    /* 
       set the mode

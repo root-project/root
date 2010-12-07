@@ -12,10 +12,6 @@
 
 #include "Math/GenAlgoOptions.h"
 
-// case of using ROOT plug-in manager
-#ifndef MATH_NO_PLUGIN_MANAGER
-#include "TEnv.h"
-#endif 
 
 #include <iomanip>
 
@@ -25,27 +21,32 @@ namespace ROOT {
 namespace Math { 
 
    namespace Sampler { 
-      static std::string gDefaultSampler = "Unuran"; // take from /etc/system.rootrc in ROOT Fitter
-      static std::string gDefaultAlgorithm = "";
+      static std::string gDefaultSampler = "Unuran";
+      static std::string gDefaultAlgorithm1D = "auto";
+      static std::string gDefaultAlgorithmND = "vnrou";
       static int  gDefaultPrintLevel  = 0; 
    }
 
 
-void DistSamplerOptions::SetDefaultSampler(const char * type, const char * algo ) {   
+void DistSamplerOptions::SetDefaultSampler(const char * type ) {   
    // set the default minimizer type and algorithm
    if (type) Sampler::gDefaultSampler = std::string(type); 
-   if (algo) Sampler::gDefaultAlgorithm = std::string(algo);
 }
-void DistSamplerOptions::SetDefaultAlgorithm(const char * algo ) {   
+void DistSamplerOptions::SetDefaultAlgorithm1D(const char * algo ) {   
    // set the default minimizer type and algorithm
-   if (algo) Sampler::gDefaultAlgorithm = std::string(algo);
+   if (algo) Sampler::gDefaultAlgorithm1D = std::string(algo);
+}
+void DistSamplerOptions::SetDefaultAlgorithmND(const char * algo ) {   
+   // set the default minimizer type and algorithm
+   if (algo) Sampler::gDefaultAlgorithmND = std::string(algo);
 }
 void DistSamplerOptions::SetDefaultPrintLevel(int level) {
    // set the default printing level 
    Sampler::gDefaultPrintLevel = level; 
 }
 
-const std::string & DistSamplerOptions::DefaultAlgorithm() { return Sampler::gDefaultAlgorithm; }
+const std::string & DistSamplerOptions::DefaultAlgorithm1D() { return Sampler::gDefaultAlgorithm1D; }
+const std::string & DistSamplerOptions::DefaultAlgorithmND() { return Sampler::gDefaultAlgorithmND; }
 int    DistSamplerOptions::DefaultPrintLevel()       { return Sampler::gDefaultPrintLevel; }
 
 const std::string & DistSamplerOptions::DefaultSampler() 
@@ -58,7 +59,7 @@ const std::string & DistSamplerOptions::DefaultSampler()
 }
 
 
-DistSamplerOptions::DistSamplerOptions(IOptions * extraOpts): 
+DistSamplerOptions::DistSamplerOptions(int dim, IOptions * extraOpts): 
    fLevel( Sampler::gDefaultPrintLevel),
    fExtraOptions(extraOpts)
 {
@@ -66,8 +67,13 @@ DistSamplerOptions::DistSamplerOptions(IOptions * extraOpts):
 
    fSamplerType = DistSamplerOptions::DefaultSampler();
 
-   fAlgoType =  DistSamplerOptions::DefaultAlgorithm();
-
+   if (dim == 1) 
+      fAlgoType =  DistSamplerOptions::DefaultAlgorithm1D();
+   else if (dim >1) 
+      fAlgoType =  DistSamplerOptions::DefaultAlgorithmND();
+   else 
+      // not specified - keep null string
+      fAlgoType = std::string();
 
    // check if extra options exists (copy them if needed)
    if (!fExtraOptions) { 
@@ -129,12 +135,15 @@ IOptions * DistSamplerOptions::FindDefault(const char * name) {
 
 void DistSamplerOptions::PrintDefault(const char * name, std::ostream & os) {
    //print default options
-   DistSamplerOptions tmp;
-   tmp.Print(os);
-   if (!tmp.ExtraOptions() ) {
-      IOptions * opt = FindDefault(name);
-      os << "Specific options for "  << name << std::endl;
-      if (opt) opt->Print(os);
+   os << "Default DistSampler options " << std::endl;
+   os << std::setw(25) << "Default  Type"        << " : " << std::setw(15) << DistSamplerOptions::DefaultSampler() << std::endl;
+   os << std::setw(25) << "Default Algorithm 1D"   << " : " << std::setw(15) << DistSamplerOptions::DefaultAlgorithm1D() << std::endl;
+   os << std::setw(25) << "Default Algorithm ND"   << " : " << std::setw(15) << DistSamplerOptions::DefaultAlgorithmND() << std::endl;
+   os << std::setw(25) << "Default Print Level"    << " : " << std::setw(15) << DistSamplerOptions::DefaultPrintLevel() << std::endl;
+   IOptions * opt = FindDefault(name);
+   if (opt) { 
+      os << "Specific default options for "  << name << std::endl;
+      opt->Print(os);
    }
 }
 
