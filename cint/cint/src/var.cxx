@@ -2281,7 +2281,7 @@ void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig1
          }
          else if (G__funcheader && !paran && isupper(result->type)) {
             // FIXME: Remove special case for unspecified length array.
-            if (var->p[ig15] && (var->statictype[ig15] != G__COMPILEDGLOBAL)) {
+            if (var->p[ig15] && (var->statictype[ig15] != G__COMPILEDGLOBAL) && (var->statictype[ig15] != G__USING_VARIABLE)) {
                free((void*)var->p[ig15]);
             }
             var->p[ig15] = result->obj.i;
@@ -3439,6 +3439,9 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
       }
       else {
          // -- Otherwise leave as auto, even though it is not stack allocated.
+         if (G__using_alloc) {
+            var->statictype[var->allvar] = G__USING_VARIABLE;
+         }
       }
    }
    else if (G__static_alloc) {
@@ -3521,9 +3524,16 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
    else if ((G__globalvarpointer != G__PVOID) && !G__cppconstruct) {
       // -- We have preallocated memory and we are not in a constructor call.
       // Note: Marking it this way means we will not free it during a scratch.
-      var->statictype[var->allvar] = G__COMPILEDGLOBAL;
+      if (G__using_alloc) {
+         var->statictype[var->allvar] = G__USING_VARIABLE;
+      } else {
+         var->statictype[var->allvar] = G__COMPILEDGLOBAL;
+      }
       //--
+   } else if (G__using_alloc) {
+      var->statictype[var->allvar] = G__USING_VARIABLE;
    }
+   
    //
    //  Determine class member access control.
    //

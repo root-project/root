@@ -10810,6 +10810,9 @@ int G__memvar_setup(void* p, int type, int reftype, int constvar, int tagnum, in
    G__typenum = typenum;
    if ((statictype == G__AUTO) || (statictype == G__AUTOARYDISCRETEOBJ)) {
       G__static_alloc = 0;
+   } 
+   else if (statictype == G__USING_VARIABLE) {
+      G__using_alloc = 1;
    }
    else if (statictype == G__LOCALSTATIC) {
       G__static_alloc = 1;
@@ -10839,6 +10842,10 @@ int G__memvar_setup(void* p, int type, int reftype, int constvar, int tagnum, in
    G__prerun = 1;
    // Do the actual variable creation.
    G__getexpr((char*)expr);
+   if (statictype == G__USING_VARIABLE) {
+      G__getexpr((char*)expr);
+      
+   }
    if ((type == 'p') && store_def_struct_member) {
       // -- Special case of an enumerator in a static enum.
       // Restore state.
@@ -10851,6 +10858,7 @@ int G__memvar_setup(void* p, int type, int reftype, int constvar, int tagnum, in
    G__asm_wholefunction = store_asm_wholefunction;
    G__prerun = store_prerun;
    G__asm_noverflow = store_asm_noverflow;
+   G__using_alloc = 0;
    //
    //  Force some state.
    //

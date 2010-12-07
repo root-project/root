@@ -117,6 +117,7 @@ short G__longjump;
 short G__coredump;
 short G__definemacro;
 short G__noerr_defined;
+short G__using_alloc;
 short G__static_alloc;
 int G__func_now;
 int G__func_page;

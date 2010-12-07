@@ -348,6 +348,7 @@ extern short G__definemacro;
 
 extern short G__noerr_defined;
 
+extern short G__using_alloc;
 extern short G__static_alloc;
 extern int G__func_now ;
 extern int G__func_page;

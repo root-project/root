@@ -829,6 +829,7 @@ typedef int (*G__IgnoreInclude)();
 #define G__LOCALSTATICBODY (-3)
 #define G__COMPILEDGLOBAL  (-4)
 #define G__AUTOARYDISCRETEOBJ (-5)
+#define G__USING_VARIABLE (-6)
 
 #define G__LOCAL    0
 #ifdef G__MEMBERFUNC

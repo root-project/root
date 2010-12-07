@@ -1809,28 +1809,32 @@ int G__varmonitor(FILE *fout,G__var_array *var,const char *index,const char *add
       break;
     }
     switch(var->statictype[imon1]) {
-    case G__COMPILEDGLOBAL : /* compiled global variable */
-    case G__AUTO : /* auto */
-      break;
-    case G__LOCALSTATIC : /* static for function */
-      msg.Format("static ");
-      if(G__more(fout,msg)) return(1);
-      break;
-    case G__LOCALSTATICBODY : /* body for function static */
-      msg.Format("body of static ");
-      if(G__more(fout,msg)) return(1);
-      break;
-    default : /* static for file 0,1,2,... */
-      if(var->statictype[imon1]>=0) { /* bug fix */
-        msg.Format("file=%s static "
-                ,G__srcfile[var->statictype[imon1]].filename);
-        if(G__more(fout,msg)) return(1);
-      }
-      else {
-        msg.Format("static ");
-        if(G__more(fout,msg)) return(1);
-      }
-      break;
+       case G__USING_VARIABLE : /* variable brought in by a using statement */
+          msg.Format("[using] ");
+          if(G__more(fout,msg)) return(1);
+          break;
+       case G__COMPILEDGLOBAL : /* compiled global variable */
+       case G__AUTO : /* auto */
+          break;
+       case G__LOCALSTATIC : /* static for function */
+          msg.Format("static ");
+          if(G__more(fout,msg)) return(1);
+          break;
+       case G__LOCALSTATICBODY : /* body for function static */
+          msg.Format("body of static ");
+          if(G__more(fout,msg)) return(1);
+          break;
+       default : /* static for file 0,1,2,... */
+          if(var->statictype[imon1]>=0) { /* bug fix */
+             msg.Format("file=%s static "
+                        ,G__srcfile[var->statictype[imon1]].filename);
+             if(G__more(fout,msg)) return(1);
+          }
+          else {
+             msg.Format("static ");
+             if(G__more(fout,msg)) return(1);
+          }
+          break;
     }
     
     msg.Format("%s"

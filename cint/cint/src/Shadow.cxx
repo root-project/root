@@ -726,6 +726,9 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
             if (d.Property() & G__BIT_ISSTATIC) { // a static member
                continue;
             }
+            if (d.Property() & G__BIT_ISUSINGVARIABLE) { // a member brought in via a using statement
+               continue;
+            }
             if (strcmp("G__virtualinfo", d.Name()) == 0) continue;
 
             std::string type_name = GetNonConstTypeName(d, true); // .Type()->Name();

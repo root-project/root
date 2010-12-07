@@ -1709,6 +1709,7 @@ int G__init_globals()
 
    G__noerr_defined = 0;
 
+   G__using_alloc = 0;
    G__static_alloc = 0;
    G__func_now = -1;
    G__func_page = 0;
