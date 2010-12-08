@@ -74,6 +74,7 @@ enum EProperty {
    kIsPointer      = G__BIT_ISPOINTER,
    kIsArray        = G__BIT_ISARRAY,
    kIsStatic       = G__BIT_ISSTATIC,
+   kIsUsingVariable= G__BIT_ISUSINGVARIABLE,
    kIsDefault      = G__BIT_ISDEFAULT,
    kIsReference    = G__BIT_ISREFERENCE,
    kIsConstant     = G__BIT_ISCONSTANT,
