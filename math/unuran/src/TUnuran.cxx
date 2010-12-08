@@ -44,9 +44,9 @@ TUnuran::TUnuran(TRandom * r, unsigned int debugLevel) :
    if (fRng == 0) fRng = gRandom; 
    // set debug level at global level 
    // (should be in a static  initialization function of the library ? )
-   if ( debugLevel > 2) 
+   if ( debugLevel > 1) 
       unur_set_default_debug(UNUR_DEBUG_ALL);
-   else if (debugLevel > 1) 
+   else if (debugLevel == 1) 
       unur_set_default_debug(UNUR_DEBUG_INIT);
    else
       unur_set_default_debug(UNUR_DEBUG_OFF);
@@ -409,9 +409,9 @@ bool  TUnuran::SetLogLevel(unsigned int debugLevel)
 {
    if (fGen == 0) return false; 
    int ret = 0; 
-   if ( debugLevel > 2) 
+   if ( debugLevel > 1) 
       ret |= unur_chg_debug(fGen, UNUR_DEBUG_ALL);
-   else if (debugLevel > 1) 
+   else if (debugLevel == 1) 
       ret |= unur_chg_debug(fGen, UNUR_DEBUG_ALL);
    else
       ret |= unur_chg_debug(fGen, UNUR_DEBUG_OFF);

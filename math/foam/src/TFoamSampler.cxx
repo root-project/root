@@ -103,7 +103,9 @@ TFoamSampler::~TFoamSampler() {
 bool TFoamSampler::Init(const char *) { 
 
    // initialize using default options
-   ROOT::Math::DistSamplerOptions opt; 
+   ROOT::Math::DistSamplerOptions opt(0);
+   ROOT::Math::IOptions * foamOpt  = ROOT::Math::DistSamplerOptions::FindDefault("Foam"); 
+   if (foamOpt) opt.SetExtraOptions(*foamOpt); 
    return Init(opt);
 }
 
@@ -126,18 +128,26 @@ bool TFoamSampler::Init(const ROOT::Math::DistSamplerOptions & opt) {
    fFoamDist = new FoamDistribution(ParentPdf(),PdfRange());
 
    fFoam->SetRho(fFoamDist);
+   // set print level
+   fFoam->SetChat(opt.PrintLevel());
 
    // get extra options 
    ROOT::Math::IOptions * fopt = opt.ExtraOptions(); 
    if (fopt) { 
       int nval = 0; 
+      double fval = 0;
       if (fopt->GetIntValue("nCells", nval) ) fFoam->SetnCells(nval);
-      if (fopt->GetIntValue("nCell1D", nval) ) fFoam->SetnCells(nval);
-      if (fopt->GetIntValue("nCell2D", nval) ) fFoam->SetnCells(nval);
-      if (fopt->GetIntValue("nCell3D", nval) ) fFoam->SetnCells(nval);
-      if (fopt->GetIntValue("nCellND", nval) ) fFoam->SetnCells(nval);
+      if (fopt->GetIntValue("nCell1D", nval) && NDim() ==1) fFoam->SetnCells(nval);
+      if (fopt->GetIntValue("nCellND", nval) && NDim()  >1) fFoam->SetnCells(nval);
+      if (fopt->GetIntValue("nCell2D", nval) && NDim() ==2) fFoam->SetnCells(nval);
+      if (fopt->GetIntValue("nCell3D", nval) && NDim() ==3) fFoam->SetnCells(nval);
 
       if (fopt->GetIntValue("nSample", nval) ) fFoam->SetnSampl(nval);
+      if (fopt->GetIntValue("nBin", nval) ) fFoam->SetnBin(nval);
+      if (fopt->GetIntValue("OptDrive",nval) ) fFoam->SetOptDrive(nval);
+      if (fopt->GetIntValue("OptRej",nval) ) fFoam->SetOptRej(nval);
+      if (fopt->GetRealValue("MaxWtRej",fval) ) fFoam->SetMaxWtRej(fval);
+
 
       if (fopt->GetIntValue("chatLevel", nval) ) fFoam->SetChat(nval);
    }

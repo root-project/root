@@ -74,7 +74,7 @@ public:
    /**
       initialize the generators with the default options
    */
-   bool Init(const char * ); 
+   bool Init(const char * = ""); 
 
    /**
       initialize the generators with the fiven options

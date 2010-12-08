@@ -59,9 +59,9 @@ const std::string & DistSamplerOptions::DefaultSampler()
 }
 
 
-DistSamplerOptions::DistSamplerOptions(int dim, IOptions * extraOpts): 
+DistSamplerOptions::DistSamplerOptions(int dim): 
    fLevel( Sampler::gDefaultPrintLevel),
-   fExtraOptions(extraOpts)
+   fExtraOptions(0)
 {
    // constructor using  the default options
 

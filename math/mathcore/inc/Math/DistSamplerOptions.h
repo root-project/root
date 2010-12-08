@@ -58,11 +58,11 @@ public:
 
    // constructor using the default options 
    // pass optionally a pointer to the additional options
-   // otehrwise look if they exist for this default minimizer
+   // otherwise look if they exist for this default minimizer
    // and in that case they are copied in the constructed instance
    // constructor takes dimension since a different default algorithm
    // is used if the dimension is 1 or greater than 1 
-   DistSamplerOptions(int dim = 0, IOptions * extraOpts = 0);
+   DistSamplerOptions(int dim = 0);
 
    // destructor  
    ~DistSamplerOptions();

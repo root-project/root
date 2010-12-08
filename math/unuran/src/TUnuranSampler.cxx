@@ -37,7 +37,7 @@ TUnuranSampler::TUnuranSampler() : ROOT::Math::DistSampler(),
    fFunc1D(0),
    fUnuran(new TUnuran()  )
 {
-   fUnuran->SetLogLevel(ROOT::Math::DistSamplerOptions::DefaultPrintLevel());
+   fLevel = ROOT::Math::DistSamplerOptions::DefaultPrintLevel();
 }
 
 TUnuranSampler::~TUnuranSampler() {
@@ -53,6 +53,8 @@ bool TUnuranSampler::Init(const char * algo) {
       return false;
    }
 
+   if (fLevel < 0) fLevel =  ROOT::Math::DistSamplerOptions::DefaultPrintLevel();
+
    TString method(algo); 
    if (method.IsNull() ) { 
       if (NDim() == 1) method = ROOT::Math::DistSamplerOptions::DefaultAlgorithm1D();
@@ -60,22 +62,33 @@ bool TUnuranSampler::Init(const char * algo) {
    }
    method.ToUpper();
 
+   bool ret = false; 
    if (NDim() == 1) { 
        // check if distribution is discrete by 
       // using first string in the method name is "D"
-      if (method.First("D") == 0) return DoInitDiscrete1D(method);
-      return DoInit1D(method); 
+      if (method.First("D") == 0) { 
+         if (fLevel>1) Info("TUnuranSampler::Init","Initialize one-dim discrete distribution with method %s",method.Data());
+         ret =  DoInitDiscrete1D(method);
+      }
+      else {
+         if (fLevel>1) Info("TUnuranSampler::Init","Initialize one-dim continous distribution with method %s",method.Data());
+         ret =  DoInit1D(method); 
+      }
    }
    else { 
-      return DoInitND(method); 
+      if (fLevel>1) Info("TUnuranSampler::Init","Initialize multi-dim continous distribution with method %s",method.Data());
+      ret = DoInitND(method); 
    }
+   // set print level in UNURAN (must be done after having initialized) -
+   if (fLevel>0) { 
+      //fUnuran->SetLogLevel(fLevel); ( seems not to work  disable for the time being) 
+      if (ret) Info("TUnuranSampler::Init","Successfully initailized Unuran with method %s",method.Data() );
+      else Error("TUnuranSampler::Init","Failed to  initailize Unuran with method %s",method.Data() );
+      // seems not to work in UNURAN (cll only when level > 0 )
+   }
+   return ret; 
 }
 
-void TUnuranSampler::SetPrintLevel(int level ) {
-   // set print level 
-   if (level < 0) level =  ROOT::Math::DistSamplerOptions::DefaultPrintLevel();
-   fUnuran->SetLogLevel(level);
-} 
 
 bool TUnuranSampler::Init(const ROOT::Math::DistSamplerOptions & opt ) { 
    // default initialization with algorithm name
