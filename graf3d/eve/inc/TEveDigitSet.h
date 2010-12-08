@@ -70,7 +70,7 @@ protected:
    TEveFrameBox*     fFrame;          //  Pointer to frame structure.
    TEveRGBAPalette*  fPalette;        //  Pointer to signal-color palette.
    ERenderMode_e     fRenderMode;     //  Render mode: as-is / line / filled.
-   Bool_t            fDisableLigting; //  Disable lighting for rendering.
+   Bool_t            fDisableLighting;//  Disable lighting for rendering.
    Bool_t            fHistoButtons;   //  Show histogram buttons in object editor.
 
    Bool_t            fEmitSignals;    //  Emit signals on secondary-select.
@@ -154,6 +154,9 @@ public:
 
    ERenderMode_e  GetRenderMode()           const { return fRenderMode; }
    void           SetRenderMode(ERenderMode_e rm) { fRenderMode = rm; }
+
+   Bool_t GetDisableLighting() const   { return fDisableLighting; }
+   void   SetDisableLighting(Bool_t l) { fDisableLighting = l; }
 
    Bool_t GetHistoButtons() const   { return fHistoButtons; }
    void   SetHistoButtons(Bool_t f) { fHistoButtons = f; }

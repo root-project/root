@@ -75,7 +75,7 @@ TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
    fFrame          (0),
    fPalette        (0),
    fRenderMode     (kRM_AsIs),
-   fDisableLigting (kTRUE),
+   fDisableLighting(kTRUE),
    fHistoButtons   (kTRUE),
    fEmitSignals    (kFALSE),
    fCallbackFoo    (0),

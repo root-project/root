@@ -58,7 +58,7 @@ TEveBoxSet::TEveBoxSet(const char* n, const char* t) :
    // Constructor.
 
    // Override from TEveDigitSet.
-   fDisableLigting = kFALSE;
+   fDisableLighting = kFALSE;
 }
 
 /******************************************************************************/

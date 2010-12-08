@@ -90,7 +90,7 @@ void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       else if (mQ.fRenderMode == TEveDigitSet::kRM_Line)
          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-      if (mQ.fDisableLigting)  glDisable(GL_LIGHTING);
+      if (mQ.fDisableLighting)  glDisable(GL_LIGHTING);
 
       if (mQ.fQuadType < TEveQuadSet::kQT_Rectangle_End)    RenderQuads(rnrCtx);
       else if (mQ.fQuadType < TEveQuadSet::kQT_Line_End)    RenderLines(rnrCtx);

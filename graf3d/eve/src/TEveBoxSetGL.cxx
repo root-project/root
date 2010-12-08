@@ -465,7 +465,7 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
          glDisable(GL_CULL_FACE);
       }
 
-      if (mB.fDisableLigting) glDisable(GL_LIGHTING);
+      if (mB.fDisableLighting) glDisable(GL_LIGHTING);
 
       RenderBoxes(rnrCtx);
 
