@@ -1922,7 +1922,7 @@ Int_t TUnfold::SetInput(const TH1 *input, Double_t scaleBias,
      } else {
         if(nError>1) {
            Warning("SetInput","%d input bins have zero error,"
-                   " and are ignored.",nError,oneOverZeroError);
+                   " and are ignored.",nError);
         } else {
            Warning("SetInput","One input bin has zero error,"
                    " and is ignored.");
@@ -1954,7 +1954,7 @@ Int_t TUnfold::SetInput(const TH1 *input, Double_t scaleBias,
                     binlist +=row;
                  }
               }
-              Warning("SetInput",binlist);
+              Warning("SetInput","%s",binlist.Data());
            }
         }
      }
