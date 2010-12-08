@@ -126,6 +126,18 @@ void TCollection::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
+TObject *TCollection::Clone(const char *newname) const
+{
+   // Make a clone of an collection using the Streamer facility.
+   // If newname is specified, this will be the name of the new collection.
+   
+   TCollection *new_collection = (TCollection*)TObject::Clone(newname);
+   if (newname && strlen(newname)) new_collection->SetName(newname);
+   return new_collection;
+}
+
+
+//______________________________________________________________________________
 Int_t TCollection::Compare(const TObject *obj) const
 {
    // Compare two TCollection objects. Returns 0 when equal, -1 when this is

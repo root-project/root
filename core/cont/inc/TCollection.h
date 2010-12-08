@@ -78,6 +78,7 @@ public:
    void               Browse(TBrowser *b);
    Int_t              Capacity() const { return fSize; }
    virtual void       Clear(Option_t *option="") = 0;
+   virtual TObject   *Clone(const char *newname="") const;
    Int_t              Compare(const TObject *obj) const;
    Bool_t             Contains(const char *name) const { return FindObject(name) != 0; }
    Bool_t             Contains(const TObject *obj) const { return FindObject(obj) != 0; }
