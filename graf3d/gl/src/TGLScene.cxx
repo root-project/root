@@ -926,7 +926,7 @@ void TGLScene::CalcBoundingBox() const
          assert(kFALSE);
          continue;
       }
-      TGLBoundingBox box = physicalShape->BoundingBox();
+      const TGLBoundingBox& box = physicalShape->BoundingBox();
       if (physicalShapeIt == fPhysicalShapes.begin()) {
          xMin = box.XMin(); xMax = box.XMax();
          yMin = box.YMin(); yMax = box.YMax();

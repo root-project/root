@@ -28,40 +28,35 @@
 ClassImp(TGLBoundingBox)
 
 //______________________________________________________________________________
-TGLBoundingBox::TGLBoundingBox() :
-   fVertex(8)
+TGLBoundingBox::TGLBoundingBox()
 {
    // Construct an empty bounding box
    SetEmpty();
 }
 
 //______________________________________________________________________________
-TGLBoundingBox::TGLBoundingBox(const TGLVertex3 vertex[8]) :
-   fVertex(8)
+TGLBoundingBox::TGLBoundingBox(const TGLVertex3 vertex[8])
 {
    // Construct a bounding box from provided 8 vertices
    Set(vertex);
 }
 
 //______________________________________________________________________________
-TGLBoundingBox::TGLBoundingBox(const Double_t vertex[8][3]) :
-   fVertex(8)
+TGLBoundingBox::TGLBoundingBox(const Double_t vertex[8][3])
 {
    // Construct a bounding box from provided 8 vertices
    Set(vertex);
 }
 
 //______________________________________________________________________________
-TGLBoundingBox::TGLBoundingBox(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex) :
-   fVertex(8)
+TGLBoundingBox::TGLBoundingBox(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex)
 {
    // Construct an global axis ALIGNED bounding box from provided low/high vertex pair
    SetAligned(lowVertex, highVertex);
 }
 
 //______________________________________________________________________________
-TGLBoundingBox::TGLBoundingBox(const TGLBoundingBox & other) :
-   fVertex(8)
+TGLBoundingBox::TGLBoundingBox(const TGLBoundingBox & other)
 {
    // Construct a bounding box as copy of existing one
    Set(other);

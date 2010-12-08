@@ -359,13 +359,13 @@ TGLRect TGLCamera::ViewportRect(const TGLBoundingBox & box,
    if (face) {
       vertexCount = box.FaceVertices(*face).size();
    } else {
-      vertexCount = box.Vertices().size();
+      vertexCount = box.NumVertices();
    }
 
    for (UInt_t i = 0; i < vertexCount; i++)
    {
-      const TGLVertex3 & vertex = face ? box.Vertices().at(box.FaceVertices(*face).at(i)) :
-                                      box.Vertices().at(i);
+      const TGLVertex3 & vertex = face ? box.Vertex(box.FaceVertices(*face).at(i)) :
+                                         box.Vertex(i);
 
       gluProject(vertex.X(), vertex.Y(), vertex.Z(),
                  fModVM.CArr(), fProjM.CArr(), fViewport.CArr(),

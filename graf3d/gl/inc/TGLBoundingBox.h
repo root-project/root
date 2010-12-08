@@ -55,7 +55,7 @@ private:
    // For axis aligned 2 verticies would suffice.
    // Rest could be calculated on demand - however speed more important
    // than memory considerations
-   std::vector<TGLVertex3> fVertex;     //! the 8 bounding box vertices
+   TGLVertex3              fVertex[8];  //! the 8 bounding box vertices
    Double_t                fVolume;     //! box volume - cached for speed
    Double_t                fDiagonal;   //! max box diagonal - cached for speed
    TGLVector3              fAxes[3];    //! box axes in global frame - cached for speed
@@ -107,7 +107,9 @@ public:
    TGLVertex3 MaxAAVertex() const;
 
    // Multiple vertices accessors
-   const std::vector<TGLVertex3> & Vertices() const;           // All 8 box vertices
+   const TGLVertex3* Vertices() const;           // All 8 box vertices
+   Int_t             NumVertices() const { return 8; }
+
    enum EFace { kFaceLowX, kFaceHighX, kFaceLowY, kFaceHighY, kFaceLowZ, kFaceHighZ, kFaceCount };
    const std::vector<UInt_t> & FaceVertices(EFace face) const; // 4 box face vertices
 
@@ -154,7 +156,7 @@ inline const TGLVertex3 & TGLBoundingBox::Vertex(UInt_t index) const
 }
 
 //______________________________________________________________________________
-inline const std::vector<TGLVertex3> & TGLBoundingBox::Vertices() const
+inline const TGLVertex3* TGLBoundingBox::Vertices() const
 {
    return fVertex;
 }
