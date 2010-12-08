@@ -55,6 +55,13 @@ class TKDTreeBinning : public TObject {
    void ReadjustMaxBinEdges(Double_t* binEdges);
 
 public:
+
+   // flag bits
+   enum {
+      kAdjustBinEdges     = BIT(14),  // adjust bin edges to avoid overlapping with data
+   };
+
+
    TKDTreeBinning(UInt_t dataSize, UInt_t dataDim, Double_t* data, UInt_t nBins = 100);
    ~TKDTreeBinning();
    void SetNBins(UInt_t bins);

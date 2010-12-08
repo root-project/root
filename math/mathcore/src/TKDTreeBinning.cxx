@@ -138,7 +138,7 @@ void TKDTreeBinning::SortBinsByDensity(Bool_t sortAsc) {
          fBinsContent[fNBins - 1] = fDataBins->GetBucketSize();
          fBinsContent[k] = fDataSize % fNBins-1;
       }
-      delete indices;
+      delete [] indices;
       fIsSorted = kTRUE;
     }
 }
@@ -173,8 +173,10 @@ void TKDTreeBinning::SetBinsEdges() {
    fCheckedBinEdges = std::vector<std::vector<std::pair<Bool_t, Bool_t> > >(fDim, std::vector<std::pair<Bool_t, Bool_t> >(fNBins, std::make_pair(kFALSE, kFALSE)));
    fCommonBinEdges = std::vector<std::map<Double_t, std::vector<UInt_t> > >(fDim, std::map<Double_t, std::vector<UInt_t> >());
    SetCommonBinEdges(rawBinEdges);
-   ReadjustMinBinEdges(rawBinEdges);
-   ReadjustMaxBinEdges(rawBinEdges);
+   if (TestBit(kAdjustBinEdges) ) { 
+      ReadjustMinBinEdges(rawBinEdges);
+      ReadjustMaxBinEdges(rawBinEdges);
+   }
    SetBinMinMaxEdges(rawBinEdges);
    fCommonBinEdges.clear();
    fCheckedBinEdges.clear();
@@ -225,7 +227,6 @@ void TKDTreeBinning::ReadjustMinBinEdges(Double_t* binEdges) {
             Bool_t foundDataOnBinEdges = dataOnBinEdges != data.end();
             do {
                adjustedBinEdge -= 1.5 * std::numeric_limits<Double_t>::epsilon();
-               data.erase(dataOnBinEdges);
                foundDataOnBinEdges = std::find(data.begin(), data.end(), adjustedBinEdge) != data.end();
             } while(foundDataOnBinEdges);
             for (UInt_t k = 0; k < fCommonBinEdges[i][binEdge].size(); ++k) {
@@ -471,7 +472,7 @@ UInt_t TKDTreeBinning::GetBinMaxDensity() const {
    for (UInt_t i = 0; i < fNBins; ++i)
       indices[i] = i;
    UInt_t result = *std::max_element(indices, indices + fNBins, CompareAsc(this));
-   delete indices;
+   delete [] indices;
    return  result;
 }
 
@@ -486,7 +487,7 @@ UInt_t TKDTreeBinning::GetBinMinDensity() const {
    for (UInt_t i = 0; i < fNBins; ++i)
       indices[i] = i;
    UInt_t result = *std::min_element(indices, indices + fNBins, CompareAsc(this));
-   delete indices;
+   delete [] indices;
    return result;
 }
 
