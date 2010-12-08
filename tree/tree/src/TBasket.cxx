@@ -204,7 +204,16 @@ Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // This function is called by TTreeCloner.
    // The function returns 0 in case of success, 1 in case of error.
 
-   fBufferRef = new TBufferFile(TBuffer::kRead, len);
+   if (fBufferRef) {
+      // Reuse the buffer if it exist.
+      fBufferRef->SetReadMode();
+      fBufferRef->Reset();
+      if (fBufferRef->BufferSize() < len) {
+         fBufferRef->Expand(len);
+      }
+   } else {
+      fBufferRef = new TBufferFile(TBuffer::kRead, len);
+   }
    fBufferRef->SetParent(file);
    char *buffer = fBufferRef->Buffer();
    file->Seek(pos);
