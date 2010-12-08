@@ -11,9 +11,6 @@
 // implementation file for class TKDTreeBinning
 //
 
-// #include <iostream>
-// #include <iterator>
-#include <cassert>
 #include <algorithm>
 #include <limits>
 #include <cmath>
@@ -21,11 +18,26 @@
 #include "TKDTreeBinning.h"
 
 #include "Fit/BinData.h"
-// std::ostream_iterator<UInt_t>   out_it1(std::cout, ", ");
 
 ClassImp(TKDTreeBinning)
 
+//________________________________________________________________________________________________
+// Begin_Html 
+// <center><h2>TKDTreeBinning - A class providing multidimensional binning</h2></center>
+// The class implements multidimensional binning by constructing a TKDTree inner structure from the
+// data which is used as the bins. The bins are retrieved as two double*, one for the minimum bin edges,
+// the other as the maximum bin edges. For one dimension one of these is enough to correctly define the bins.
+// For the multidimensional case both minimum and maximum ones are necessary for the bins to be well defined.
+// The bin edges of d-dimensional data is a d-tet of the bin's thresholds. For example if d=3 the minimum bin
+// edges of bin b is of the form of the following array: {xbmin, ybmin, zbmin}.
+// You also have the possibility to sort the bins by their density.
+// Details of usage can be found in $ROOTSYS/tutorials/Math/tkdtreebinning_tutorial.C and more information on
+// the embedded TKDTree can be found in http://root.cern.ch/lxr/source/math/mathcore/src/TKDTree.cxx or
+// http://root.cern.ch/lxr/source/math/mathcore/inc/TKDTree.h.
+// End_Html
+
 struct TKDTreeBinning::CompareAsc {
+   // Boolean functor whose predicate depends on the bin's density. Used for ascending sort.
    CompareAsc(const TKDTreeBinning* treebins) : bins(treebins) {}
    Bool_t operator()(UInt_t bin1, UInt_t bin2) {
       return bins->GetBinDensity(bin1) < bins->GetBinDensity(bin2);
@@ -34,6 +46,7 @@ struct TKDTreeBinning::CompareAsc {
 };
 
 struct TKDTreeBinning::CompareDesc {
+   // Boolean functor whose predicate depends on the bin's density. Used for descending sort.
    CompareDesc(const TKDTreeBinning* treebins) : bins(treebins) {}
    Bool_t operator()(UInt_t bin1, UInt_t bin2) {
       return bins->GetBinDensity(bin1) > bins->GetBinDensity(bin2);
@@ -62,6 +75,7 @@ TKDTreeBinning::~TKDTreeBinning() {
 }
 
 void TKDTreeBinning::SetNBins(UInt_t bins) {
+   // Sets binning inner structure
    fNBins = bins;
    if (fDim && fNBins && fDataSize) {
       if (fDataSize / fNBins) {
@@ -70,7 +84,7 @@ void TKDTreeBinning::SetNBins(UInt_t bins) {
             fNBins += 1;
             this->Info("SetNBins", "Number of bins is not enough to hold the data. Extra bin added.");
          }
-         fDataBins = new TKDTreeID(fDataSize, fDim, fDataSize / (fNBins - remainingData));
+         fDataBins = new TKDTreeID(fDataSize, fDim, fDataSize / (fNBins - remainingData)); // TKDTree input is data size, data dimension and the content size of bins ("bucket" size)
          SetTreeData();
          fDataBins->Build();
          SetBinsEdges();
@@ -91,6 +105,7 @@ void TKDTreeBinning::SetNBins(UInt_t bins) {
 }
 
 void TKDTreeBinning::SortBinsByDensity(Bool_t sortAsc) {
+   // Sorts bins by their density
    if (fDim == 1) {
       fIsSortedAsc = kTRUE;
       std::sort(fBinMinEdges.begin(), fBinMinEdges.end());
@@ -104,7 +119,7 @@ void TKDTreeBinning::SortBinsByDensity(Bool_t sortAsc) {
       }
    } else {
       UInt_t* indices = new UInt_t[fNBins];
-      for (UInt_t i = 0; i < fNBins; ++i) 
+      for (UInt_t i = 0; i < fNBins; ++i)
          indices[i] = i;
       if (sortAsc) {
          std::sort(indices, indices + fNBins, CompareAsc(this));
@@ -125,7 +140,7 @@ void TKDTreeBinning::SortBinsByDensity(Bool_t sortAsc) {
       fBinMaxEdges.swap(binMaxEdges);
       // re-adjust content of extra bins if exists
       // since it is different than the others
-      if ( fDataSize % fNBins != 0) { 
+      if ( fDataSize % fNBins != 0) {
          UInt_t k = 0;
          Bool_t found = kFALSE;
          while (!found) {
@@ -163,7 +178,7 @@ void TKDTreeBinning::SetBinsContent() {
    fBinsContent.reserve(fNBins);
    for (UInt_t i = 0; i < fNBins; ++i)
       fBinsContent[i] = fDataBins->GetBucketSize();
-   if ( fDataSize % fNBins != 0 ) 
+   if ( fDataSize % fNBins != 0 )
       fBinsContent[fNBins - 1] = fDataSize % (fNBins-1);
 }
 
@@ -173,7 +188,7 @@ void TKDTreeBinning::SetBinsEdges() {
    fCheckedBinEdges = std::vector<std::vector<std::pair<Bool_t, Bool_t> > >(fDim, std::vector<std::pair<Bool_t, Bool_t> >(fNBins, std::make_pair(kFALSE, kFALSE)));
    fCommonBinEdges = std::vector<std::map<Double_t, std::vector<UInt_t> > >(fDim, std::map<Double_t, std::vector<UInt_t> >());
    SetCommonBinEdges(rawBinEdges);
-   if (TestBit(kAdjustBinEdges) ) { 
+   if (TestBit(kAdjustBinEdges) ) {
       ReadjustMinBinEdges(rawBinEdges);
       ReadjustMaxBinEdges(rawBinEdges);
    }
@@ -222,13 +237,7 @@ void TKDTreeBinning::ReadjustMinBinEdges(Double_t* binEdges) {
          if (!fCheckedBinEdges[i][j].first) {
             Double_t binEdge = binEdges[(j * fDim + i) * 2];
             Double_t adjustedBinEdge = binEdge;
-            std::vector<Double_t> data(fData[i], fData[i] + fDataSize);
-            std::vector<Double_t>::iterator dataOnBinEdges = std::find(data.begin(), data.end(), binEdge);
-            Bool_t foundDataOnBinEdges = dataOnBinEdges != data.end();
-            do {
-               adjustedBinEdge -= 1.5 * std::numeric_limits<Double_t>::epsilon();
-               foundDataOnBinEdges = std::find(data.begin(), data.end(), adjustedBinEdge) != data.end();
-            } while(foundDataOnBinEdges);
+            adjustedBinEdge -= 1.5 * std::numeric_limits<Double_t>::epsilon();
             for (UInt_t k = 0; k < fCommonBinEdges[i][binEdge].size(); ++k) {
                UInt_t binEdgePos = fCommonBinEdges[i][binEdge][k];
                Bool_t isMinBinEdge = binEdgePos % 2 == 0;
@@ -340,21 +349,6 @@ UInt_t TKDTreeBinning::GetBinContent(UInt_t bin) const {
    this->Info("GetBinContent", "'bin' is between 0 and %d.", fNBins - 1);
    return 0;
 }
-
-
-// } else {
-//    UInt_t* indices = new UInt_t[fNBins];
-//    for (UInt_t i = 0; i < fNBins; ++i)
-//       indices[i] = i;
-//    if (fIsSortedAsc)
-//       std::sort(indices, indices + fNBins, CompareAsc(this));
-//    else
-//       std::sort(indices, indices + fNBins, CompareDesc(this));
-//    if (indices[bin] = fNBins - 1)
-//       return fDataSize % fNBins;
-//    else
-//       return fDataBins->GetBucketSize();
-// }
 
 TKDTreeID* TKDTreeBinning::GetTree() const {
    // Returns the kD-Tree structure of the binning
@@ -492,7 +486,7 @@ UInt_t TKDTreeBinning::GetBinMinDensity() const {
 }
 
 void TKDTreeBinning::FillBinData(ROOT::Fit::BinData & data) const {
-   // fill the bin data set with the result of the TKDTree binning
+   // Fill the bin data set with the result of the TKDTree binning
    data.Initialize(fNBins, fDim);
    for (unsigned int i = 0; i < fNBins; ++i) {
       data.Add( GetBinMinEdges(i), GetBinDensity(i), std::sqrt(double(GetBinContent(i) ))/ GetBinVolume(i) );
