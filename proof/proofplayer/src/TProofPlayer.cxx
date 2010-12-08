@@ -1980,6 +1980,22 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
             TObject *o = 0;
             while ((o = nxo())) fOutput->Add(o);
          }
+         
+         // If other invalid elements were found during processing, add them to the
+         // list of missing elements
+         TDSetElement *elem = 0;
+         if (fPacketizer->GetFailedPackets()) {
+            TString type = (fPacketizer->TestBit(TVirtualPacketizer::kIsTree)) ? "TTree" : "";
+            TList *listOfMissingFiles = (TList *) fOutput->FindObject("MissingFiles");
+            if (!listOfMissingFiles) {
+               listOfMissingFiles = new TList;
+               listOfMissingFiles->SetName("MissingFiles");
+            }
+            TIter nxe(fPacketizer->GetFailedPackets());
+            while ((elem = (TDSetElement *)nxe()))
+               listOfMissingFiles->Add(elem->GetFileInfo(type));
+            if (!fOutput->FindObject(listOfMissingFiles)) fOutput->Add(listOfMissingFiles);
+         }
       }
 
       SafeDelete(fSelector);

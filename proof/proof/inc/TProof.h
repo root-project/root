@@ -919,6 +919,9 @@ public:
    TObject    *GetOutput(const char *name);
    TList      *GetOutputList();
 
+   void        ShowMissingFiles(TQueryResult *qr = 0);
+   TFileCollection *GetMissingFiles(TQueryResult *qr = 0);
+
    void        AddInputData(TObject *obj, Bool_t push = kFALSE);
    void        SetInputDataFile(const char *datafile);
    void        ClearInputData(TObject *obj = 0);

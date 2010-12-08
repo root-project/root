@@ -118,7 +118,7 @@ protected:
    virtual Bool_t HandleTimer(TTimer *timer);
 
 public:
-   enum EStatusBits { kIsInitializing = BIT(16), kIsDone = BIT(17) };
+   enum EStatusBits { kIsInitializing = BIT(16), kIsDone = BIT(17), kIsTree = BIT(18) };
    virtual ~TVirtualPacketizer();
 
    Bool_t                  IsValid() const { return fValid; }

@@ -81,6 +81,7 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
            maxPacketTime);
       fMaxPacketTime = (Int_t) maxPacketTime;
    }
+   ResetBit(TVirtualPacketizer::kIsTree);
 
    // Create the list to save them in the query result (each derived packetizer is
    // responsible to update this coherently)

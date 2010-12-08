@@ -753,7 +753,7 @@ Long64_t TEventIterTree::GetNextEvent()
          TTree *newTree = GetTrees(fElem);
          if (newTree) {
             if (newTree != fTree) {
-               // The old tree is wonwd by TFileTree and will be deleted there
+               // The old tree is owned by TFileTree and will be deleted there
                fTree = newTree;
                attach = kTRUE;
                fOldBytesRead = fTree->GetCurrentFile()->GetBytesRead();
@@ -811,7 +811,7 @@ Long64_t TEventIterTree::GetNextEvent()
    }
 
    if ( attach ) {
-      PDB(kLoop,1) Info("GetNextEvent","Call Init(%p) and Notify()",fTree);
+      PDB(kLoop,1) Info("GetNextEvent", "call Init(%p) and Notify()",fTree);
       fSel->Init(fTree);
       fSel->Notify();
       TIter next(fSel->GetOutputList());

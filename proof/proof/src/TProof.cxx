@@ -2933,7 +2933,11 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
                            // In PROOFLite this has to be done once only in TProofLite::Process
                            TQueryResult *pq = fPlayer->GetCurrentQuery();
                            pq->SetOutputList(fPlayer->GetOutputList(), kFALSE);
-                           pq->SetInputList(fPlayer->GetInputList(), kFALSE);
+                           // Add input objects (do not override remote settings, if any)
+                           TObject *xo = 0;
+                           TIter nxin(fPlayer->GetInputList());
+                           while ((xo = nxin()))
+                              if (!pq->GetInputList()->FindObject(o->GetName())) pq->AddInput(o->Clone());                             
                            // If the last object, notify the GUI that the result arrived
                            QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
                            // Processing is over
@@ -11041,4 +11045,94 @@ void TProof::SetProgressDialog(Bool_t on)
       SetBit(kUseProgressDialog);
    else
       ResetBit(kUseProgressDialog);
+}
+
+//______________________________________________________________________________
+void TProof::ShowMissingFiles(TQueryResult *qr)
+{
+   // Show information about missing files during query described by 'qr' or the
+   // last query if qr is null (default).
+   // A short summary is printed in the end.
+
+   TQueryResult *xqr = (qr) ? qr : GetQueryResult();
+   if (!xqr) {
+      Warning("ShowMissingFiles", "no (last) query found: do nothing");
+      return;
+   }
+   
+   // Get the list, if any
+   TList *missing = (xqr->GetOutputList()) ? (TList *) xqr->GetOutputList()->FindObject("MissingFiles") : 0;
+   if (!missing) {
+      Info("ShowMissingFiles", "no files missing in query %s:%s", xqr->GetTitle(), xqr->GetName());
+      return;
+   }
+
+   Int_t nmf = 0;
+   Long64_t msz = 0, mszzip = 0, mev = 0;
+   // Scan the list
+   TFileInfo *fi = 0;
+   TIter nxf(missing);
+   while ((fi = (TFileInfo *) nxf())) {
+      fi->Print();
+      nmf++;
+      TFileInfoMeta *im = fi->GetMetaData();
+      if (im) {
+         if (im->GetTotBytes() > 0) msz += im->GetTotBytes(); 
+         if (im->GetZipBytes() > 0) mszzip += im->GetZipBytes(); 
+         mev += im->GetEntries();
+      }
+   }
+
+   // Final notification
+   if (msz <= 0) msz = -1;
+   if (mszzip <= 0) mszzip = -1;
+   Double_t xf = (Double_t)mev / (mev + xqr->GetEntries()) ; 
+   Printf(" +++ %d files missing, i.e. %lld events (%lld bytes, %lld zipped) --> about %.2f%%  of the total events",
+          nmf, mev, msz, mszzip, xf * 100.);
+}
+
+//______________________________________________________________________________
+TFileCollection *TProof::GetMissingFiles(TQueryResult *qr)
+{
+   // Get a TFileCollection with the files missing in the query described by 'qr'
+   // or the last query if qr is null (default).
+   // Return a null pointer if none were found, for whatever reason.
+   // The caller is responsible for the returned object.
+
+   TFileCollection *fc = 0;
+
+   TQueryResult *xqr = (qr) ? qr : GetQueryResult();
+   if (!xqr) {
+      Warning("GetMissingFiles", "no (last) query found: do nothing");
+      return fc;
+   }
+   
+   // Get the list, if any
+   TList *missing = (xqr->GetOutputList()) ? (TList *) xqr->GetOutputList()->FindObject("MissingFiles") : 0;
+   if (!missing) {
+      if (gDebug > 0)
+         Info("ShowMissingFiles", "no files missing in query %s:%s", xqr->GetTitle(), xqr->GetName());
+      return fc;
+   }
+
+   // Create collection: name is <dsname>.m<j>, where 'j' is the first giving a non existing name
+   TString fcname("unknown");
+   TDSet *ds = (TDSet *) xqr->GetInputObject("TDSet");
+   if (ds) {
+      fcname.Form("%s.m0", ds->GetName());
+      Int_t j = 1;
+      while (gDirectory->FindObject(fcname) && j < 1000)
+         fcname.Form("%s.m%d", ds->GetName(), j++);
+   }
+   fc = new TFileCollection(fcname, "Missing Files");
+   if (ds) fc->SetDefaultTreeName(ds->GetObjName());
+   // Scan the list
+   TFileInfo *fi = 0;
+   TIter nxf(missing);
+   while ((fi = (TFileInfo *) nxf())) {
+      fc->Add((TFileInfo *) fi->Clone());
+   }
+   fc->Update();
+   // Done
+   return fc;
 }

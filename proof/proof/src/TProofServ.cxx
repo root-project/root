@@ -1119,7 +1119,7 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
       if (fPlayer)
          status = fPlayer->GetProgressStatus();
       else {
-         Error("GetNextPacket", "No progress status object");
+         Error("GetNextPacket", "no progress status object");
          return 0;
       }
       // the CPU and wallclock proc times are kept in the TProofServ and here
@@ -1134,6 +1134,11 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
       Long64_t cacheSize = (fPlayer) ? fPlayer->GetCacheSize() : -1;
       Int_t learnent = (fPlayer) ? fPlayer->GetLearnEntries() : -1;
       req << cacheSize << learnent;
+
+      // Sent over the number of entries in the file, used by packetizer do not relying
+      // on initial validation. Also, -1 means that the file could not be open, which is
+      // used to flag files as missing
+      req << totalEntries;
 
       PDB(kLoop, 1) {
          PDB(kLoop, 2) status->Print();
@@ -4121,6 +4126,14 @@ void TProofServ::ProcessNext(TString *slb)
 
    // Send back the results
    TQueryResult *pqr = pq->CloneInfo();
+   // At least the TDSet name in the light object
+   if (dset) {
+      Info("ProcessNext", "adding info about dataset '%s' in the light query result", dset->GetName());
+      TList rin;
+      TDSet *ds = new TDSet(dset->GetName(), dset->GetObjName());
+      rin.Add(ds);
+      pqr->SetInputList(&rin, kTRUE);
+   }
    if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted && fPlayer->GetOutputList()) {
       PDB(kGlobal, 2)
          Info("ProcessNext", "sending results");
