@@ -53,11 +53,11 @@ class TUnfoldSys : public TUnfold {
    TUnfoldSys(TH2 const *hist_A, EHistMap histmap, ERegMode regmode = kRegModeSize,
              EConstraint constraint=kEConstraintNone);      // constructor
    virtual ~ TUnfoldSys(void);    // delete data members
-   void AddSysError(const TH2 *sysError,char const *name, EHistMap histmap,
+   void AddSysError(const TH2 *sysError,const char *name, EHistMap histmap,
                     ESysErrMode mode); // add a systematic error source
-   void GetDeltaSysSource(TH1 *hist_delta,char const *source,
+   void GetDeltaSysSource(TH1 *hist_delta,const char *source,
                           const Int_t  *binMap=0); // get systematic shifts from one systematic source
-   void SubtractBackground(const TH1 *hist_bgr,char const *name,
+   void SubtractBackground(const TH1 *hist_bgr,const char*name,
                            const Double_t &scale=1.0,
                            const Double_t &scale_error=0.0); // subtract background prior to unfolding
    virtual Int_t SetInput(TH1 const *hist_y, Double_t const &scaleBias=0.0,Double_t oneOverZeroError=0.0); // define input consistently in case of background subtraction
