@@ -25,9 +25,10 @@
 // and clear corresponding selection-set from there.
 //
 // To support tooltips for sub-elements, implement:
-//    virtual TString GetHighlightTooltip();
+//    virtual TString TEveElement::GetHighlightTooltip();
 // and return tooltip for the entry in the fHighlightedSet.
 // There should always be a single entry there.
+// See TEveDigitSet for an example.
 
 
 ClassImp(TEveSecondarySelectable);
