@@ -1582,16 +1582,16 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          }
          if (bre->GetStreamerType() < 0) {
             if (branch->GetListOfBranches()->GetEntriesFast()) {
-               fprintf(fp,"%s%-15s *%s;\n",headcom,bre->GetClassName(), bre->GetName());
+               fprintf(fp,"%s%-15s *%s;\n",headcom,bre->GetClassName(), branchname);
             } else {
-               fprintf(fp,"%s%-15s *%s;\n",head,bre->GetClassName(), bre->GetName());
+               fprintf(fp,"%s%-15s *%s;\n",head,bre->GetClassName(), branchname);
                mustInit.Add(bre);
             }
             continue;
          }
          if (bre->GetStreamerType() == 0) {
             if (!TClass::GetClass(bre->GetClassName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
-            fprintf(fp,"%s%-15s *%s;\n",head,bre->GetClassName(), bre->GetName());
+            fprintf(fp,"%s%-15s *%s;\n",head,bre->GetClassName(), branchname);
             if (leafStatus[l] == 0) mustInit.Add(bre);
             continue;
          }
