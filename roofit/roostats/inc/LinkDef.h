@@ -91,6 +91,9 @@
 
 #pragma link C++ class RooStats::BernsteinCorrection+;
 
+//#pragma link C++ class NonCentralChiSquare+;
+#pragma link C++ class RooStats::ProfileInspector+;
+
 #pragma link C++ class RooStats::SamplingDistPlot+;
 #pragma link C++ class RooStats::LikelihoodIntervalPlot+;
 

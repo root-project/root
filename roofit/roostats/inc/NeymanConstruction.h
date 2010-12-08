@@ -23,6 +23,7 @@
 #include "RooStats/TestStatSampler.h"
 #include "RooStats/ModelConfig.h"
 #include "RooStats/ConfidenceBelt.h"
+#include "RooStats/PointSetInterval.h"
 
 #include "RooAbsData.h"
 #include "RooAbsPdf.h"
@@ -45,7 +46,7 @@ namespace RooStats {
      virtual ~NeymanConstruction();
     
       // Main interface to get a ConfInterval (will be a PointSetInterval)
-      virtual ConfInterval* GetInterval() const;
+     virtual PointSetInterval* GetInterval() const;
 
       // in addition to interface we also need:
       // Set the TestStatSampler (eg. ToyMC or FFT, includes choice of TestStatistic)

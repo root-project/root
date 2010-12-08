@@ -21,8 +21,8 @@
 #endif
 
 #include "RooStats/ToyMCSampler.h"
-//#include "RooStats/ToyMCSampler2.h"
 #include "RooStats/ConfidenceBelt.h"
+#include "RooStats/PointSetInterval.h"
 
 #include "RooAbsData.h"
 #include "RooAbsPdf.h"
@@ -47,7 +47,7 @@ namespace RooStats {
      virtual ~FeldmanCousins();
     
       // Main interface to get a ConfInterval (will be a PointSetInterval)
-      virtual ConfInterval* GetInterval() const;
+      virtual PointSetInterval* GetInterval() const;
 
       // Get the size of the test (eg. rate of Type I error)
       virtual Double_t Size() const {return fSize;}

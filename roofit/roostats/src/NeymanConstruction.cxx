@@ -105,7 +105,7 @@ NeymanConstruction::~NeymanConstruction() {
 }
 
 //_______________________________________________________
-ConfInterval* NeymanConstruction::GetInterval() const {
+PointSetInterval* NeymanConstruction::GetInterval() const {
   // Main interface to get a RooStats::ConfInterval.  
   // It constructs a RooStats::SetInterval.
 

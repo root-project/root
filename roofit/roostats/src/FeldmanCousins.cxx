@@ -231,7 +231,7 @@ void FeldmanCousins::CreateParameterPoints() const{
 
 
 //_______________________________________________________
-ConfInterval* FeldmanCousins::GetInterval() const {
+PointSetInterval* FeldmanCousins::GetInterval() const {
   // Main interface to get a RooStats::ConfInterval.  
   // It constructs a RooStats::PointSetInterval.
 
