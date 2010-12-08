@@ -737,7 +737,13 @@ void TFile::Init(Bool_t create)
       Int_t lenIndex = gROOT->GetListOfStreamerInfo()->GetSize()+1;
       if (lenIndex < 5000) lenIndex = 5000;
       fClassIndex = new TArrayC(lenIndex);
-      if (fgReadInfo && fSeekInfo > fBEGIN) ReadStreamerInfo();
+      if (fgReadInfo) {
+         if (fSeekInfo > fBEGIN) {
+            ReadStreamerInfo();
+         } else if (fVersion != gROOT->GetVersionInt()) {
+            Warning("Init","no StreamerInfo found in %s therefore preventing schema evolution when reading this file.",GetName());
+         }
+      }
    }
 
    // Count number of TProcessIDs in this file
