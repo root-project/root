@@ -8,44 +8,44 @@ Processing runtemplateName.C...
 *Branch  :my_c                                                               *
 *Entries :      100 : BranchElement (see below)                              *
 *............................................................................*
-*Br    0 :i         :                                                        *
+*Br    0 :i         : Int_t                                                  *
 *Entries :      100 : Total  Size=       1018 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    1 :j         :                                                        *
+*Br    1 :j         : Int_t                                                  *
 *Entries :      100 : Total  Size=       1018 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Branch  :my_c2                                                              *
 *Entries :      100 : BranchElement (see below)                              *
 *............................................................................*
-*Br    2 :i         :                                                        *
+*Br    2 :i         : Int_t                                                  *
 *Entries :      100 : Total  Size=       1018 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    3 :j         :                                                        *
+*Br    3 :j         : Int_t                                                  *
 *Entries :      100 : Total  Size=       1018 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Branch  :plot_my_i.                                                         *
 *Entries :      100 : BranchElement (see below)                              *
 *............................................................................*
-*Br    4 :plot_my_i.B<void>.i :                                              *
+*Br    4 :plot_my_i.B<void>.i : Int_t                                        *
 *Entries :      100 : Total  Size=       1126 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    5 :plot_my_i.j :                                                      *
+*Br    5 :plot_my_i.j : Int_t                                                *
 *Entries :      100 : Total  Size=       1078 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Branch  :against_my_i.                                                      *
 *Entries :      100 : BranchElement (see below)                              *
 *............................................................................*
-*Br    6 :against_my_i.B<void>.i :                                           *
+*Br    6 :against_my_i.B<void>.i : Int_t                                     *
 *Entries :      100 : Total  Size=       1144 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    7 :against_my_i.j :                                                   *
+*Br    7 :against_my_i.j : Int_t                                             *
 *Entries :      100 : Total  Size=       1096 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
@@ -92,14 +92,14 @@ Info in <TTreePlayer::DrawScript>: Will process tree/chain using generatedSel.h+
 *Branch  :my_c                                                               *
 *Entries :        1 : BranchElement (see below)                              *
 *............................................................................*
-*Br    0 :i         :                                                        *
+*Br    0 :i         : Int_t                                                  *
 *Entries :        1 : Total  Size=        626 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Branch  :other_c.                                                           *
 *Entries :        1 : BranchElement (see below)                              *
 *............................................................................*
-*Br    1 :other_c.i :                                                        *
+*Br    1 :other_c.i : Int_t                                                  *
 *Entries :        1 : Total  Size=        674 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
