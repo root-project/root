@@ -190,13 +190,6 @@ void PyROOT::PropertyProxy::Set( TDataMember* dm )
    }
    fProperty  = (Long_t)dm->Property();
 
-// workaround for bug affecting "using" declared data members:
-   if ( (fProperty & kIsStatic) && (fProperty & (kIsClass|kIsStruct))
-        && fOffset < ((G__ClassInfo*)dm->GetClass()->GetClassInfo())->Size() ) {
-   // with offset smaller than class size, can't be static!
-      fProperty &= ~kIsStatic;
-   }
-
    fConverter = CreateConverter( fullType, dm->GetMaxIndex( 0 ) );
    fName      = dm->GetName();
 
