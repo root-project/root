@@ -58,7 +58,7 @@ public:
 
    // flag bits
    enum {
-      kAdjustBinEdges     = BIT(14),  // adjust bin edges to avoid overlapping with data
+      kAdjustBinEdges     = BIT(14)  // adjust bin edges to avoid overlapping with data
    };
 
 
