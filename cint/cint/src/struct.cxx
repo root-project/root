@@ -309,7 +309,16 @@ int G__using_namespace()
             avar->p_tagtable[aig15] = var->p_tagtable[ig15];
             avar->p_typetable[aig15] = var->p_typetable[ig15];
             // Prevent double deletion during exit.
-            avar->statictype[aig15] = G__USING_VARIABLE;
+            switch (var->statictype[ig15]) {
+               case G__LOCALSTATIC:
+               case G__LOCALSTATICBODY:
+               case G__COMPILEDGLOBAL:
+                  avar->statictype[aig15] = G__USING_STATIC_VARIABLE;
+                  break;
+               default:
+                  avar->statictype[aig15] = G__USING_VARIABLE;
+                  break;
+            }
             avar->reftype[aig15] = var->reftype[ig15];
             avar->globalcomp[aig15] = var->globalcomp[ig15];
             avar->comment[aig15] = var->comment[ig15];

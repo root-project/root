@@ -1813,6 +1813,10 @@ int G__varmonitor(FILE *fout,G__var_array *var,const char *index,const char *add
           msg.Format("[using] ");
           if(G__more(fout,msg)) return(1);
           break;
+       case G__USING_STATIC_VARIABLE : /* variable brought in by a using statement */
+          msg.Format("[using] static ");
+          if(G__more(fout,msg)) return(1);
+          break;
        case G__COMPILEDGLOBAL : /* compiled global variable */
        case G__AUTO : /* auto */
           break;

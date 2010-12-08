@@ -416,7 +416,7 @@ static int G__free_struct_upto(int tagnum)
                      (var->statictype[i] == G__LOCALSTATIC) || // data member is static, or
                      (
                         (G__struct.type[ialltag] == 'n') && // is a namespace member, and
-                        (var->statictype[i] != G__COMPILEDGLOBAL && var->statictype[i] != G__USING_VARIABLE) // not precompiled
+                        (var->statictype[i] != G__COMPILEDGLOBAL && var->statictype[i] != G__USING_VARIABLE && var->statictype[i] != G__USING_STATIC_VARIABLE) // not precompiled or from 'using'
                      )
                   ) && // and,
                   (var->reftype[i] == G__PARANORMAL) // not a pointer or reference

@@ -10814,6 +10814,10 @@ int G__memvar_setup(void* p, int type, int reftype, int constvar, int tagnum, in
    else if (statictype == G__USING_VARIABLE) {
       G__using_alloc = 1;
    }
+   else if (statictype == G__USING_STATIC_VARIABLE) {
+      G__using_alloc = 1;
+      G__static_alloc = 1;
+   }
    else if (statictype == G__LOCALSTATIC) {
       G__static_alloc = 1;
    }

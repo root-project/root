@@ -149,7 +149,8 @@ long Cint::G__DataMemberInfo::Property()
     case G__PRIVATE: property|=G__BIT_ISPRIVATE; break;
     }
     if(G__LOCALSTATIC==var->statictype[index]) property|=G__BIT_ISSTATIC;
-     if(G__USING_VARIABLE==var->statictype[index]) property|=G__BIT_ISUSINGVARIABLE;
+    if(G__USING_STATIC_VARIABLE==var->statictype[index]) property|=G__BIT_ISUSINGVARIABLE|G__BIT_ISSTATIC;
+    if(G__USING_VARIABLE==var->statictype[index]) property|=G__BIT_ISUSINGVARIABLE;
     if(G__PARAREFERENCE==var->reftype[index]) property|=G__BIT_ISREFERENCE;
     if(isupper(var->type[index])) property|=G__BIT_ISPOINTER;
     if(var->constvar[index]&G__CONSTVAR) property|=G__BIT_ISCONSTANT;

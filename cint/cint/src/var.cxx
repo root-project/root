@@ -2281,7 +2281,7 @@ void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig1
          }
          else if (G__funcheader && !paran && isupper(result->type)) {
             // FIXME: Remove special case for unspecified length array.
-            if (var->p[ig15] && (var->statictype[ig15] != G__COMPILEDGLOBAL) && (var->statictype[ig15] != G__USING_VARIABLE)) {
+            if (var->p[ig15] && (var->statictype[ig15] != G__COMPILEDGLOBAL) && (var->statictype[ig15] != G__USING_VARIABLE) && (var->statictype[ig15] != G__USING_STATIC_VARIABLE)) {
                free((void*)var->p[ig15]);
             }
             var->p[ig15] = result->obj.i;
@@ -3435,7 +3435,11 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
       }
       else if (G__static_alloc) {
          // -- Static namespace member (affects visibility, not storage duration!).
-         var->statictype[var->allvar] = G__LOCALSTATIC;
+         if (G__using_alloc) {
+            var->statictype[var->allvar] = G__USING_STATIC_VARIABLE;
+         } else {
+            var->statictype[var->allvar] = G__LOCALSTATIC;
+         }
       }
       else {
          // -- Otherwise leave as auto, even though it is not stack allocated.
@@ -3456,7 +3460,11 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
          // global variable array which is suffixed
          // as varname\funcname.
          // Also, static class/struct member.
-         var->statictype[var->allvar] = G__LOCALSTATIC;
+         if (G__using_alloc) {
+            var->statictype[var->allvar] = G__USING_STATIC_VARIABLE;
+         } else {
+            var->statictype[var->allvar] = G__LOCALSTATIC;
+         }
       }
       else {
          // equal to G__prerun == 1
@@ -3489,7 +3497,11 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
             std::strcpy(varname, ttt);
             int junk;
             G__hash(ttt, varhash, junk);
-            var->statictype[var->allvar] = G__LOCALSTATIC;
+            if (G__using_alloc) {
+               var->statictype[var->allvar] = G__USING_STATIC_VARIABLE;
+            } else {
+               var->statictype[var->allvar] = G__LOCALSTATIC;
+            }
          }
          else if (G__nfile < G__ifile.filenum) {
             // -- Semantic error, we are in a '{ }' style macro.
@@ -3503,7 +3515,11 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
                !G__cppconstruct // Not in a constructor call (memory is object), and
             ) {
                // -- We have preallocated memory and we are not in a constructor call, and we are not a static, const, or enum.
-               var->statictype[var->allvar] = G__COMPILEDGLOBAL;
+               if (G__using_alloc) {
+                  var->statictype[var->allvar] = G__USING_STATIC_VARIABLE;
+               } else {
+                  var->statictype[var->allvar] = G__COMPILEDGLOBAL;
+               }
                //--
             }
          }
@@ -3515,7 +3531,11 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
                !G__cppconstruct // Not in a constructor call (memory is object), and
             ) {
                // -- We have preallocated memory and we are not in a constructor call.
-               var->statictype[var->allvar] = G__COMPILEDGLOBAL;
+               if (G__using_alloc) {
+                  var->statictype[var->allvar] = G__USING_STATIC_VARIABLE;
+               } else {
+                  var->statictype[var->allvar] = G__COMPILEDGLOBAL;
+               }
                //--
             }
          }
@@ -3525,7 +3545,11 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
       // -- We have preallocated memory and we are not in a constructor call.
       // Note: Marking it this way means we will not free it during a scratch.
       if (G__using_alloc) {
-         var->statictype[var->allvar] = G__USING_VARIABLE;
+         if (G__static_alloc) {
+            var->statictype[var->allvar] = G__USING_STATIC_VARIABLE;
+         } else {
+            var->statictype[var->allvar] = G__USING_VARIABLE;            
+         }
       } else {
          var->statictype[var->allvar] = G__COMPILEDGLOBAL;
       }
