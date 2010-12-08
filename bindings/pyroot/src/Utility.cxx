@@ -608,10 +608,11 @@ const std::string PyROOT::Utility::Compound( const std::string& name )
 
    std::string compound = "";
    for ( int ipos = (int)cleanName.size()-1; 0 <= ipos; --ipos ) {
-      if ( isspace( cleanName[ipos] ) ) continue;
-      if ( isalnum( cleanName[ipos] ) || cleanName[ipos] == '>' ) break;
+      char c = cleanName[ipos];
+      if ( isspace( c ) ) continue;
+      if ( isalnum( c ) || c == '_' || c == '>' ) break;
 
-      compound = cleanName[ipos] + compound;
+      compound = c + compound;
    }
 
    return compound;
