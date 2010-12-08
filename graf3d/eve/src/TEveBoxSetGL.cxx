@@ -454,10 +454,13 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
       glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
 
-      if (mB.fRenderMode == TEveDigitSet::kRM_Fill)
-         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-      else if (mB.fRenderMode == TEveDigitSet::kRM_Line)
-         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      if ( ! rnrCtx.IsDrawPassOutlineLine())
+      {
+         if (mB.fRenderMode == TEveDigitSet::kRM_Fill)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+         else if (mB.fRenderMode == TEveDigitSet::kRM_Line)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      }
 
       if (mB.fBoxType == TEveBoxSet::kBT_Cone ||
           mB.fBoxType == TEveBoxSet::kBT_EllipticCone)
