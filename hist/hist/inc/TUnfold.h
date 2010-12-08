@@ -1,9 +1,10 @@
 // Author: Stefan Schmitt
 // DESY, 13/10/08
 
-// Version 15, simplified L-curve scan, new tau definition, new eror calc.
+//  Version 16, some cleanup, more getter functions, query version number
 //
 //  History:
+//    Version 15, simplified L-curve scan, new tau definition, new eror calc.
 //    Version 14, with changes in TUnfoldSys.cxx
 //    Version 13, new methods for derived classes
 //    Version 12, with support for preconditioned matrix inversion
@@ -64,6 +65,7 @@
 #include <TMatrixD.h>
 #include <TObjArray.h>
 
+#define TUnfold_VERSION "V16.0"
 
 class TUnfold : public TObject {
  private:
@@ -96,6 +98,7 @@ class TUnfold : public TObject {
  private:
    TMatrixD *fX;                // Result: x
    TMatrixDSparse *fVxx;        // Result: covariance matrix on x
+   TMatrixDSparse *fVxxInv;     // Result: inverse of covariance matrix on x
    TMatrixDSparse *fAx;         // Result: Ax
    Double_t fChi2A;             // Result: chi**2 contribution from (y-Ax)V(y-Ax)
    Double_t fLXsquared;         // Result: chi**2 contribution from (x-s*x0)Lsquared(x-s*x0)
@@ -106,20 +109,22 @@ class TUnfold : public TObject {
    TMatrixDSparse *fDXDAZ[2];   // Result: part of derivative dx_k/dA_ij
    TMatrixDSparse *fDXDtauSquared;     // Result: derivative dx/dtau
    TMatrixDSparse *fDXDY;       // Result: derivative dx/dy
+   TMatrixDSparse *fEinv;       // Result: matrix E^(-1)
+   TMatrixDSparse *fE;          // Result: matrix E
  protected:
    TUnfold(void);              // for derived classes
    virtual Double_t DoUnfold(void);     // the unfolding algorithm
    virtual void ClearResults(void);     // clear all results
 
-   TMatrixDSparse *MultiplyMSparseM(TMatrixDSparse const *a,TMatrixD const *b) const; // multiply sparse and non-sparse matrix
-   TMatrixDSparse *MultiplyMSparseMSparse(TMatrixDSparse const *a,TMatrixDSparse const *b) const; // multiply sparse and sparse matrix
-   TMatrixDSparse *MultiplyMSparseTranspMSparse(TMatrixDSparse const *a,TMatrixDSparse const *b) const; // multiply transposed sparse and sparse matrix
+   TMatrixDSparse *MultiplyMSparseM(const TMatrixDSparse *a,const TMatrixD *b) const; // multiply sparse and non-sparse matrix
+   TMatrixDSparse *MultiplyMSparseMSparse(const TMatrixDSparse *a,const TMatrixDSparse *b) const; // multiply sparse and sparse matrix
+   TMatrixDSparse *MultiplyMSparseTranspMSparse(const TMatrixDSparse *a,const TMatrixDSparse *b) const; // multiply transposed sparse and sparse matrix
    TMatrixDSparse *MultiplyMSparseMSparseTranspVector
-      (TMatrixDSparse const *m1,TMatrixDSparse const *m2,
-       TMatrixTBase<Double_t> const *v) const; // calculate M_ij = sum_k [m1_ik*m2_jk*v[k] ]. the pointer v may be zero (means no scaling).
-   TMatrixD *InvertMSparse(TMatrixDSparse const *A) const; // invert sparse matrix
+      (const TMatrixDSparse *m1,const TMatrixDSparse *m2,
+       const TMatrixTBase<Double_t> *v) const; // calculate M_ij = sum_k [m1_ik*m2_jk*v[k] ]. the pointer v may be zero (means no scaling).
+   TMatrixD *InvertMSparse(const TMatrixDSparse *A) const; // invert sparse matrix
    static Bool_t InvertMConditioned(TMatrixD *A); // invert matrix including preconditioning
-   void AddMSparse(TMatrixDSparse *dest,Double_t const &f,TMatrixDSparse const *src); // replacement for dest += f*src
+   void AddMSparse(TMatrixDSparse *dest,Double_t f,const TMatrixDSparse *src); // replacement for dest += f*src
    TMatrixDSparse *CreateSparseMatrix(Int_t nrow,Int_t ncol,Int_t nele,Int_t *row,Int_t *col,Double_t *data) const; // create a TMatrixDSparse from an array
    inline Int_t GetNx(void) const {
       return fA->GetNcols();
@@ -127,60 +132,66 @@ class TUnfold : public TObject {
    inline Int_t GetNy(void) const {
       return fA->GetNrows();
    } // number of input bins
-   void ErrorMatrixToHist(TH2 *ematrix,TMatrixDSparse const *emat,Int_t const *binMap,
+   void ErrorMatrixToHist(TH2 *ematrix,const TMatrixDSparse *emat,const Int_t *binMap,
                           Bool_t doClear) const; // return an error matrix as histogram
-   inline TMatrixDSparse const *GetDXDY(void) { return fDXDY; } // access derivative dx/dy
-   inline TMatrixDSparse const *GetDXDAM(int i) { return fDXDAM[i]; } // access matrix parts of the derivative dx/dA
-   inline TMatrixDSparse const *GetDXDAZ(int i) { return fDXDAZ[i]; } // access vector parts of the derivative dx/dA
-   inline TMatrixDSparse const *GetDXDtauSquared(void) { return fDXDtauSquared; } // get derivative dx/dtauSquared
-   inline TMatrixDSparse const *GetAx(void) { return fAx; } // get vector Ax
+   inline const TMatrixDSparse *GetDXDY(void) const { return fDXDY; } // access derivative dx/dy
+   inline const TMatrixDSparse *GetDXDAM(int i) const { return fDXDAM[i]; } // access matrix parts of the derivative dx/dA
+   inline const TMatrixDSparse *GetDXDAZ(int i) const { return fDXDAZ[i]; } // access vector parts of the derivative dx/dA
+   inline const TMatrixDSparse *GetDXDtauSquared(void) const { return fDXDtauSquared; } // get derivative dx/dtauSquared
+   inline const TMatrixDSparse *GetAx(void) const { return fAx; } // get vector Ax
+   inline const TMatrixDSparse *GetEinv(void) const { return fEinv; } // get matrix E^-1
+   inline const TMatrixDSparse *GetE(void) const { return fE; } // get matrix E
+   inline const TMatrixDSparse *GetVxx(void) const { return fVxx; } // get covariance matrix of x
+   inline const TMatrixDSparse *GetVxxInv(void) const { return fVxxInv; } // get inverse of covariance matrix of x
+   inline const TMatrixD *GetX(void) const { return fX; } // get result vector x
+   static void DeleteMatrix(TMatrixD **m); // delete and invalidate pointer
+   static void DeleteMatrix(TMatrixDSparse **m); // delete and invalidate pointer
 public:
    enum EHistMap {              // mapping between unfolding matrix and TH2 axes
       kHistMapOutputHoriz = 0,  // map unfolding output to x-axis of TH2 matrix
       kHistMapOutputVert = 1    // map unfolding output to y-axis of TH2 matrix
    };
 
-   TUnfold(TH2 const *hist_A, EHistMap histmap,
+   TUnfold(const TH2 *hist_A, EHistMap histmap,
            ERegMode regmode = kRegModeSize,
            EConstraint constraint=kEConstraintArea);      // constructor
    virtual ~ TUnfold(void);    // delete data members
-   static void DeleteMatrix(TMatrixD **m); // delete and invalidate pointer
-   static void DeleteMatrix(TMatrixDSparse **m); // delete and invalidate pointer
-   void SetBias(TH1 const *bias);       // set alternative bias
+   static const char*GetTUnfoldVersion(void);
+   void SetBias(const TH1 *bias);       // set alternative bias
    void SetConstraint(EConstraint constraint); // set type of constraint for the next unfolding
-   Int_t RegularizeSize(int bin, Double_t const &scale = 1.0);   // regularise the size of one output bin
-   Int_t RegularizeDerivative(int left_bin, int right_bin, Double_t const &scale = 1.0); // regularize difference of two output bins (1st derivative)
-   Int_t RegularizeCurvature(int left_bin, int center_bin, int right_bin, Double_t const &scale_left = 1.0, Double_t const &scale_right = 1.0);  // regularize curvature of three output bins (2nd derivative)
+   Int_t RegularizeSize(int bin, Double_t scale = 1.0);   // regularise the size of one output bin
+   Int_t RegularizeDerivative(int left_bin, int right_bin, Double_t scale = 1.0); // regularize difference of two output bins (1st derivative)
+   Int_t RegularizeCurvature(int left_bin, int center_bin, int right_bin, Double_t scale_left = 1.0, Double_t scale_right = 1.0);  // regularize curvature of three output bins (2nd derivative)
    Int_t RegularizeBins(int start, int step, int nbin, ERegMode regmode);        // regularize a 1-dimensional curve
    Int_t RegularizeBins2D(int start_bin, int step1, int nbin1, int step2, int nbin2, ERegMode regmode);  // regularize a 2-dimensional grid
-   Double_t DoUnfold(Double_t const &tau,
-                     TH1 const *hist_y, Double_t const &scaleBias=0.0);  // do the unfolding
-   virtual Int_t SetInput(TH1 const *hist_y, Double_t const &scaleBias=0.0,Double_t oneOverZeroError=0.0); // define input distribution for ScanLCurve
-   virtual Double_t DoUnfold(Double_t const &tau); // Unfold with given choice of tau
-   virtual Int_t ScanLcurve(Int_t nPoint,Double_t const &tauMin,
-                            Double_t const &tauMax,TGraph **lCurve,
+   Double_t DoUnfold(Double_t tau,
+                     const TH1 *hist_y, Double_t scaleBias=0.0);  // do the unfolding
+   virtual Int_t SetInput(const TH1 *hist_y, Double_t scaleBias=0.0,Double_t oneOverZeroError=0.0); // define input distribution for ScanLCurve
+   virtual Double_t DoUnfold(Double_t tau); // Unfold with given choice of tau
+   virtual Int_t ScanLcurve(Int_t nPoint,Double_t tauMin,
+                            Double_t tauMax,TGraph **lCurve,
 			    TSpline **logTauX=0,TSpline **logTauY=0); // scan the L curve using successive calls to DoUnfold(Double_t)
-   TH1D *GetOutput(char const *name, char const *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;    // get unfolding result
-   TH1D *GetBias(char const *name, char const *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;      // get bias
-   TH1D *GetFoldedOutput(char const *name, char const *title, Double_t y0 = 0.0, Double_t y1 = 0.0) const; // get folded unfolding result
-   TH1D *GetInput(char const *name, char const *title, Double_t y0 = 0.0, Double_t y1 = 0.0) const;     // get unfolding input
-   TH2D *GetRhoIJ(char const *name, char const *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;     // get correlation coefficients
-   TH2D *GetEmatrix(char const *name, char const *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;   // get error matrix
-   TH1D *GetRhoI(char const *name, char const *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;      // get global correlation coefficients
-   TH2D *GetLsquared(char const *name, char const *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;  // get regularisation conditions squared
+   TH1D *GetOutput(const char *name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;    // get unfolding result
+   TH1D *GetBias(const char *name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;      // get bias
+   TH1D *GetFoldedOutput(const char *name,const char *title, Double_t y0 = 0.0, Double_t y1 = 0.0) const; // get folded unfolding result
+   TH1D *GetInput(const char *name,const char *title, Double_t y0 = 0.0, Double_t y1 = 0.0) const;     // get unfolding input
+   TH2D *GetRhoIJ(const char *name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;     // get correlation coefficients
+   TH2D *GetEmatrix(char const *name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;   // get error matrix
+   TH1D *GetRhoI(char const *name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;      // get global correlation coefficients
+   TH2D *GetLsquared(char const *name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;  // get regularisation conditions squared
 
-   void GetOutput(TH1 *output,Int_t const *binMap=0) const; // get output distribution, averaged over bins
-   void GetEmatrix(TH2 *ematrix,Int_t const *binMap=0) const; // get error matrix, averaged over bins
-   Double_t GetRhoI(TH1 *rhoi,TH2 *ematrixinv=0,Int_t const *binMap=0) const; // get global correlation coefficients and inverse of error matrix, averaged over bins
-   void GetRhoIJ(TH2 *rhoij,Int_t const *binMap=0) const; // get correlation coefficients, averaged over bins
+   void GetOutput(TH1 *output,const Int_t *binMap=0) const; // get output distribution, averaged over bins
+   void GetEmatrix(TH2 *ematrix,const Int_t *binMap=0) const; // get error matrix, averaged over bins
+   Double_t GetRhoI(TH1 *rhoi,TH2 *ematrixinv=0,const Int_t *binMap=0) const; // get global correlation coefficients and inverse of error matrix, averaged over bins
+   void GetRhoIJ(TH2 *rhoij,const Int_t *binMap=0) const; // get correlation coefficients, averaged over bins
    Double_t GetTau(void) const;  // regularisation parameter
-   Double_t GetRhoMax(void) const;       // maximum global correlation
-   Double_t GetRhoAvg(void) const;       // average global correlation
-   Double_t GetChi2A(void) const;        // chi**2 contribution from A
+   inline Double_t GetRhoMax(void) const { return fRhoMax; } // maximum global correlation
+   inline Double_t GetRhoAvg(void) const { return fRhoAvg; }  // average global correlation
+   inline Double_t GetChi2A(void) const { return fChi2A; }  // chi**2 contribution from A
    Double_t GetChi2L(void) const;        // chi**2 contribution from L
    virtual Double_t GetLcurveX(void) const;        // x axis of L curve
    virtual Double_t GetLcurveY(void) const;        // y axis of L curve
-   Int_t GetNdf(void) const;   // number of degrees of freedom
+   inline Int_t GetNdf(void) const { return fNdf; }   // number of degrees of freedom
    Int_t GetNpar(void) const;  // number of parameters
 
    ClassDef(TUnfold, 0) //Unfolding with support for L-curve analysis

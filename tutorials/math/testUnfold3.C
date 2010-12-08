@@ -1,7 +1,10 @@
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 
-// Version 15, simple example including background subtraction
+//  Version 16, parallel to changes in TUnfold
+//
+//  History:
+//     Version 15, simple example including background subtraction
 
 #include <TMath.h>
 #include <TCanvas.h>
@@ -12,7 +15,7 @@
 #include <TVector.h>
 #include <TGraph.h>
 
-#include "TUnfoldSys.h"
+#include <TUnfoldSys.h>
 
 using namespace std;
 
@@ -40,8 +43,8 @@ using namespace std;
 
 TRandom *rnd=0;
 
-Double_t GenerateEvent(Double_t const *parm,
-                       Double_t const *triggerParm,
+Double_t GenerateEvent(const Double_t *parm,
+                       const Double_t *triggerParm,
                        Double_t *intLumi,
                        Bool_t *triggerFlag,
                        Double_t *ptGen,Int_t *iType)

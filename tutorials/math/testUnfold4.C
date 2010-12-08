@@ -1,7 +1,10 @@
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 
-// Version 15, use L-curve scan to scan the average correlation
+//  Version 16, parallel to changes in TUnfold
+//
+//  History:
+//    Version 15, use L-curve scan to scan the average correlation
 
 #include <TMath.h>
 #include <TCanvas.h>
@@ -12,7 +15,7 @@
 #include <TVector.h>
 #include <TGraph.h>
 
-#include "TUnfoldSys.h"
+#include <TUnfoldSys.h>
 
 using namespace std;
 
@@ -33,7 +36,7 @@ using namespace std;
 
 TRandom *rnd=0;
 
-Int_t GenerateGenEvent(Int_t nmax,Double_t const *probability) {
+Int_t GenerateGenEvent(Int_t nmax,const Double_t *probability) {
    // choose an integer random number in the range [0,nmax]
    //    (the generator level bin)
    // depending on the probabilities
@@ -47,7 +50,7 @@ Int_t GenerateGenEvent(Int_t nmax,Double_t const *probability) {
    return r;
 }
 
-Double_t GenerateRecEvent(Double_t const *shapeParm) {
+Double_t GenerateRecEvent(const Double_t *shapeParm) {
    // return a coordinate (the reconstructed variable)
    // depending on shapeParm[]
    //  shapeParm[0]: fraction of events with Gaussian distribution
@@ -75,7 +78,7 @@ void testUnfold4()
   rnd=new TRandom3();
 
   // data and MC number of events
-  Double_t const nData0=    5000.0;
+  Double_t const nData0=    1000.0;
   Double_t const nMC0  =  50000.0;
 
   // Binning
@@ -86,15 +89,15 @@ void testUnfold4()
 
   // signal binning (three shapes: 0,1,2)
   Int_t const nGen=3;
-  Double_t const xminGen= -0.5;
+  Double_t const xminGen=-0.5;
   Double_t const xmaxGen= 2.5;
 
   // parameters
   // fraction of events per signal shape
-  static Double_t const genFrac[]={0.4,0.4,0.2};
+  static const Double_t genFrac[]={0.4,0.4,0.2};
 
   // signal shapes
-  static Double_t const genShape[][5]=
+  static const Double_t genShape[][5]=
      {{1.0,2.0,1.5,0.,15.},
       {1.0,7.0,2.5,0.,15.},
       {0.0,0.0,0.0,0.,15.}};
@@ -117,7 +120,10 @@ void testUnfold4()
      histPullArea[i]=new TH1D(TString::Format("PullArea%d",i),"pull",15,-3.,3.);
   }
 
-  for(int itoy=0;itoy<100;itoy++) {
+  // this method is new in version 16 of TUnfold
+  cout<<"TUnfold version is "<<TUnfold::GetTUnfoldVersion()<<"\n";
+
+  for(int itoy=0;itoy<1000;itoy++) {
      histDetDATA->Reset();
      histGenDetMC->Reset();
 
@@ -134,6 +140,11 @@ void testUnfold4()
         Double_t yObs=GenerateRecEvent(genShape[iGen]);
         histGenDetMC->Fill(iGen,yObs);
      }
+     /* for(Int_t ix=0;ix<=histGenDetMC->GetNbinsX()+1;ix++) {
+        for(Int_t iy=0;iy<=histGenDetMC->GetNbinsY()+1;iy++) {
+           cout<<ix<<iy<<" : "<<histGenDetMC->GetBinContent(ix,iy)<<"\n";
+        }
+        } */
      //========================
      // unfolding
 
@@ -159,7 +170,7 @@ void testUnfold4()
      // run the unfolding
      unfold.ScanLcurve(50,0.,0.,0,0,0);
 
-     // fill pull distributions without constraint
+     // fill pull distributions with constraint
      unfold.GetOutput(histUnfold);
 
      for(int i=0;i<nGen;i++) {

@@ -1,9 +1,10 @@
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 
-// Version 15, with automatic L-curve scan, simplified example
+//  Version 16, parallel to changes in TUnfold
 //
 //  History:
+//    Version 15, with automatic L-curve scan, simplified example
 //    Version 14, with changes in TUnfoldSys.cxx
 //    Version 13,  with changes to TUnfold.C
 //    Version 12,  with improvements to TUnfold.cxx
@@ -29,7 +30,7 @@
 #include <TStyle.h>
 #include <TVector.h>
 #include <TGraph.h>
-#include "TUnfold.h"
+#include <TUnfold.h>
 
 using namespace std;
 
@@ -62,9 +63,9 @@ TRandom *rnd=0;
 // output:
 //  negative mass: background event
 //  positive mass: signal event
-Double_t GenerateEvent(Double_t const &bgr, // relative fraction of background
-                       Double_t const &mass, // peak position
-                       Double_t const &gamma) // peak width
+Double_t GenerateEvent(Double_t bgr, // relative fraction of background
+                       Double_t mass, // peak position
+                       Double_t gamma) // peak width
 {
   Double_t t;
   if(rnd->Rndm()>bgr) {
@@ -100,7 +101,7 @@ Double_t GenerateEvent(Double_t const &bgr, // relative fraction of background
 //   mass on generator level (mTrue>0 !)
 // output:
 //   mass on detector level
-Double_t DetectorEvent(Double_t const &mTrue) {
+Double_t DetectorEvent(Double_t mTrue) {
   // smear by double-gaussian
   static Double_t frac=0.1;
   static Double_t wideBias=0.03;

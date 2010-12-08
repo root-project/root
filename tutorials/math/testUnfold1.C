@@ -1,9 +1,10 @@
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 
-// Version 15, with automated L-curve scan
+//  Version 16, parallel to changes in TUnfold
 //
 //  History:
+//    Version 15, with automated L-curve scan
 //    Version 14, with changes in TUnfoldSys.cxx
 //    Version 13, include test of systematic errors
 //    Version 12, catch error when defining the input
@@ -32,7 +33,7 @@
 #include <TVector.h>
 #include <TGraph.h>
 
-#include "TUnfoldSys.h"
+#include <TUnfoldSys.h>
 
 // #define VERBOSE_LCURVE_SCAN
 
@@ -127,9 +128,9 @@ Double_t bw_func(Double_t *x,Double_t *par) {
 // output:
 //  negative mass: background event
 //  positive mass: signal event
-Double_t GenerateEvent(Double_t const &bgr, // relative fraction of background
-                       Double_t const &mass, // peak position
-                       Double_t const &gamma) // peak width
+Double_t GenerateEvent(Double_t bgr, // relative fraction of background
+                       Double_t mass, // peak position
+                       Double_t gamma) // peak width
 {
   Double_t t;
   if(rnd->Rndm()>bgr) {
@@ -165,7 +166,7 @@ Double_t GenerateEvent(Double_t const &bgr, // relative fraction of background
 //   mass on generator level (mTrue>0 !)
 // output:
 //   mass on detector level
-Double_t DetectorEvent(Double_t const &mTrue) {
+Double_t DetectorEvent(Double_t mTrue) {
   // smear by double-gaussian
   static Double_t frac=0.1;
   static Double_t wideBias=0.03;
