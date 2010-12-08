@@ -8,11 +8,11 @@ Processing runtreeBranch.C...
 *Branch  :one                                                                *
 *Entries :        0 : BranchElement (see below)                              *
 *............................................................................*
-*Br    0 :t         :                                                        *
+*Br    0 :t         : Int_t                                                  *
 *Entries :        0 : Total  Size=        462 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    1 :b         :                                                        *
+*Br    1 :b         : Int_t                                                  *
 *Entries :        0 : Total  Size=        462 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
@@ -26,18 +26,18 @@ Warning in <TTree::Branch>: The actual TClass corresponding to the object provid
 *Branch  :one                                                                *
 *Entries :        0 : BranchElement (see below)                              *
 *............................................................................*
-*Br    0 :t         :                                                        *
+*Br    0 :t         : Int_t                                                  *
 *Entries :        0 : Total  Size=        462 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    1 :b         :                                                        *
+*Br    1 :b         : Int_t                                                  *
 *Entries :        0 : Total  Size=        462 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Branch  :missing                                                            *
 *Entries :        0 : BranchElement (see below)                              *
 *............................................................................*
-*Br    2 :t         :                                                        *
+*Br    2 :t         : Int_t                                                  *
 *Entries :        0 : Total  Size=        462 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*

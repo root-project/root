@@ -9,23 +9,23 @@ Warning in <TClass::TClass>: no dictionary for class MyClass is available
 *Branch  :obj                                                                *
 *Entries :        2 : BranchElement (see below)                              *
 *............................................................................*
-*Br    0 :myvar     :                                                        *
+*Br    0 :myvar     : Int_t                                                  *
 *Entries :        2 : Total  Size=        555 bytes  File Size  =         77 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    1 :arr       : arr_                                                   *
+*Br    1 :arr       : Int_t arr_                                             *
 *Entries :        2 : Total  Size=       2707 bytes  File Size  =         91 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    2 :arr.fUniqueID : fUniqueID[arr_]                                    *
+*Br    2 :arr.fUniqueID : UInt_t fUniqueID[arr_]                             *
 *Entries :        2 : Total  Size=        691 bytes  File Size  =        106 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.03     *
 *............................................................................*
-*Br    3 :arr.fBits : fBits[arr_]                                            *
+*Br    3 :arr.fBits : UInt_t fBits[arr_]                                     *
 *Entries :        2 : Total  Size=        671 bytes  File Size  =        104 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.01     *
 *............................................................................*
-*Br    4 :arr.chunk : chunk[arr_]                                            *
+*Br    4 :arr.chunk : MyClass* chunk[arr_]                                   *
 *Entries :        2 : Total  Size=        759 bytes  File Size  =        147 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.31     *
 *............................................................................*

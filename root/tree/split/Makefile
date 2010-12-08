@@ -18,7 +18,7 @@ CollectionSplit.log: tobj_cxx.$(DllSuf) $(ROOTCORELIBS)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l tobj.cxx+ | grep Br > CollectionSplit.log
 
 CollectionSplit: CollectionSplit.log
-	$(CMDECHO) diff -b CollectionSplit.ref CollectionSplit.log 
+	$(CMDECHO) diff -bu CollectionSplit.ref CollectionSplit.log 
 
 testWithFailure:
 ifeq ($(FAIL),)

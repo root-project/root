@@ -33,55 +33,57 @@ values written for entry #9: 90, 9.000000, 198, 66.000000, 396, 132.000000
 *Entries :       10 : Total  Size=        631 bytes  File Size  =        222 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    1 :m_direct.m_entries : m_direct.m_entries_                           *
+*Br    1 :m_direct.m_entries : Int_t m_direct.m_entries_                     *
 *Entries :       10 : Total  Size=       2536 bytes  File Size  =        170 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    2 :m_direct.m_entries.first : first[m_direct.m_entries_]              *
+*Br    2 :m_direct.m_entries.first : Int_t first[m_direct.m_entries_]        *
 *Entries :       10 : Total  Size=        840 bytes  File Size  =        176 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    3 :m_direct.m_entries.second : second[m_direct.m_entries_]            *
+*Br    3 :m_direct.m_entries.second : Float_t second[m_direct.m_entries_]    *
 *Entries :       10 : Total  Size=        845 bytes  File Size  =        177 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    4 :m_direct.m_tentries : m_direct.m_tentries_                         *
+*Br    4 :m_direct.m_tentries : Int_t m_direct.m_tentries_                   *
 *Entries :       10 : Total  Size=       3719 bytes  File Size  =        123 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    5 :m_direct.m_tentries.fUniqueID : fUniqueID[m_direct.m_tentries_]    *
+*Br    5 :m_direct.m_tentries.fUniqueID :                                    *
+*         | UInt_t fUniqueID[m_direct.m_tentries_]                           *
 *Entries :       10 : Total  Size=        867 bytes  File Size  =        181 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    6 :m_direct.m_tentries.fBits : fBits[m_direct.m_tentries_]            *
+*Br    6 :m_direct.m_tentries.fBits : UInt_t fBits[m_direct.m_tentries_]     *
 *Entries :       10 : Total  Size=        847 bytes  File Size  =        177 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    7 :m_direct.m_tentries.i : i[m_direct.m_tentries_]                    *
+*Br    7 :m_direct.m_tentries.i : Int_t i[m_direct.m_tentries_]              *
 *Entries :       10 : Total  Size=        827 bytes  File Size  =        173 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    8 :m_direct.m_tentries.j : j[m_direct.m_tentries_]                    *
+*Br    8 :m_direct.m_tentries.j : Float_t j[m_direct.m_tentries_]            *
 *Entries :       10 : Total  Size=        827 bytes  File Size  =        173 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br    9 :m_direct.m_ptentries : m_direct.m_ptentries_                       *
+*Br    9 :m_direct.m_ptentries : Int_t m_direct.m_ptentries_                 *
 *Entries :       10 : Total  Size=       3742 bytes  File Size  =        124 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br   10 :m_direct.m_ptentries.fUniqueID : fUniqueID[m_direct.m_ptentries_]  *
+*Br   10 :m_direct.m_ptentries.fUniqueID :                                   *
+*         | UInt_t fUniqueID[m_direct.m_ptentries_]                          *
 *Entries :       10 : Total  Size=        874 bytes  File Size  =        182 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br   11 :m_direct.m_ptentries.fBits : fBits[m_direct.m_ptentries_]          *
+*Br   11 :m_direct.m_ptentries.fBits : UInt_t fBits[m_direct.m_ptentries_]   *
 *Entries :       10 : Total  Size=        854 bytes  File Size  =        178 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br   12 :m_direct.m_ptentries.i : i[m_direct.m_ptentries_]                  *
+*Br   12 :m_direct.m_ptentries.i : Int_t i[m_direct.m_ptentries_]            *
 *Entries :       10 : Total  Size=        834 bytes  File Size  =        174 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-*Br   13 :m_direct.m_ptentries.j : j[m_direct.m_ptentries_]                  *
+*Br   13 :m_direct.m_ptentries.j : Float_t j[m_direct.m_ptentries_]          *
 *Entries :       10 : Total  Size=        834 bytes  File Size  =        174 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
