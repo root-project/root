@@ -2011,7 +2011,12 @@ const char* TBranchElement::GetTypeName() const
    // FIXME: Use symbolic constants here.
    if ((fStreamerType < 1) || (fStreamerType > 59)) {
       if (fBranchClass.GetClass()) {
-         return fBranchClass.GetClass()->GetName();
+         if (fID>=0) {
+            ULong_t* elems = GetInfo()->GetElems();
+            return ((TStreamerElement*) elems[fID])->GetTypeName();
+         } else {
+            return fBranchClass.GetClass()->GetName();
+         }
       } else {
          return 0;
       }
@@ -2024,7 +2029,7 @@ const char* TBranchElement::GetTypeName() const
       "Long_t",
       "Float_t",
       "Int_t",
-      "",
+      "char*",
       "Double_t",
       "Double32_t",
       "",
