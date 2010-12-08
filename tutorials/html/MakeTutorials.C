@@ -176,6 +176,7 @@ void writeTutorials(THtml& html) {
       {"graphs",   "TGraph, TGraphErrors, etc"}, 
       {"gui",      "Graphics User Interface"}, 
       {"fit",      "Fitting tutorials"}, 
+      {"fitsio",   "CFITSIO interface"}, 
       {"io",       "Input/Output"}, 
       {"tree",     "Trees I/O, Queries, Graphics"}, 
       {"math",     "Math tutorials"}, 
@@ -302,25 +303,14 @@ Bool_t CreateOutput_Dir(const char* dir) {
    // Whether THtml::Convert() should run the tutorials in the
    // directory "dir" and store their output
 
-     if (strstr(dir,"net")) return kFALSE;
-     if (strstr(dir,"xml")) return kFALSE;
-     if (strstr(dir,"sql")) return kFALSE;
-     if (strstr(dir,"proof")) return kFALSE;
-     if (strstr(dir,"foam"))  return kFALSE;
-     if (strstr(dir,"unuran"))  return kFALSE;
-     if (strstr(dir,"roofit"))  return kFALSE;
-     if (strstr(dir,"thread"))  return kFALSE;
-
-   /* They should all work now:
-
-     if (strstr(dir,"image") && gROOT->IsBatch()) return kFALSE;
-     if (strstr(dir,"geom")) return kFALSE;
-     if (strstr(dir,"gl")) return kFALSE;
-     if (strstr(dir,"eve")) return kFALSE;
-     if (strstr(dir,"tree")) return kFALSE;
-     if (strstr(dir,"gui")) return kFALSE;
-     if (strstr(dir,"io"))  return kFALSE;
-   */
+   if (strstr(dir,"net")) return kFALSE;
+   if (strstr(dir,"xml")) return kFALSE;
+   if (strstr(dir,"sql")) return kFALSE;
+   if (strstr(dir,"proof")) return kFALSE;
+   if (strstr(dir,"foam"))  return kFALSE;
+   if (strstr(dir,"unuran"))  return kFALSE;
+   if (strstr(dir,"roofit"))  return kFALSE;
+   if (strstr(dir,"thread"))  return kFALSE;
    return kTRUE;
 }
 Bool_t CreateOutput_Tutorial(const char* tut) {
@@ -328,59 +318,24 @@ Bool_t CreateOutput_Tutorial(const char* tut) {
    // and store its output
 
    static const char* vetoed[] = {
-      "rf208_convolution",
       "geodemo",
       "peaks2",
-      "img2pad",
-      "pad2png",
-      "trans_graph",
-      "mathcore",
-      "permute",
       "testrandom",
-      "psview",
+      "testUnfold",
       "readCode",
       "importCode",
       "hadd",
-      "Legendre",
-      "solveLinear",
-      "threadsh1",
-      "threadsh2",
       "line3Dfit",
       "gtime",
-      "event",
-      "exec1",
-      "exec2",
-      "exec3",
       "games",
       "guiWithCINT",
-      "statusBar",
-      "shapesAnim",
-      "glVierExercise",
-      "viewer3DMaster.C",
-      "anim",
-      "pack",
-      "htest",
-      "h1chain",
-      "jets",
-      "bill",
-      "tcl",
-      "tree",
-      "tree3",
-      "copytree",
-      "clones",
-      "copyFiles",
-      //"geom_",
-      //"test_compound",
-      //"test_paramlist",
-      //"test_windows",
-      "text_test",
-      //"FFT",
-      "foam",
       "Qt",
-      "TableTest",
-      "rs401c_FeldmanCousins",
       "rs401d_FeldmanCousins",
       "graph_edit_playback",
+      "fitpanel_playback",
+      "guitest_playback",
+      "geom_cms_playback",
+      "gviz3d.C",
       0
    };
 
@@ -431,14 +386,14 @@ void scandir(THtml& html, const char *dir, const char *title, TObjLink* toplnk) 
       // must end on ".C"
       if (!CC || *(CC+2)) continue;
       // do not even document these; they are part of another tutorial:
-      if(strstr(direntry,"h1analysisProxyCut")) continue;
+      if(strstr(direntry,"h1anal")) continue;
       if(strstr(direntry,"hsimpleProxy")) continue;
       if(strstr(direntry,"tv3")) continue;
       if(strstr(direntry,"tvdemo")) continue;
       if(strstr(direntry,"na49")) continue;
       if(strstr(direntry,"fit1_C")) continue;
+      if(strstr(direntry,"c1.C")) continue;
       if(strstr(direntry,"MDF.C")) continue;
-      if(strstr(direntry,"threadsh2")) continue;
       if(strstr(direntry,"cms_calo_detail")) continue;
       TString atut(inpath + direntry);
       TString comment;
@@ -466,11 +421,7 @@ void scandir(THtml& html, const char *dir, const char *title, TObjLink* toplnk) 
             includeOutput = THtml::kCompiledOutput;
          else
             includeOutput = THtml::kInterpretedOutput;
-         if (!strcmp(dir,"gui")
-             || !strcmp(dir,"eve")
-             || !strcmp(dir,"geom")
-             || !strcmp(dir,"image"))
-            includeOutput |= THtml::kSeparateProcessOutput;
+         includeOutput |= THtml::kSeparateProcessOutput;
       }
       if (!CreateOutput_Dir(dir) || !CreateOutput_Tutorial(direntry))
          includeOutput = THtml::kNoOutput;
