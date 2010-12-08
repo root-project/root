@@ -39,7 +39,8 @@ namespace TMVAGlob {
 
    static Int_t c_Canvas         = TColor::GetColor( "#f0f0f0" );
    static Int_t c_FrameFill      = TColor::GetColor( "#fffffd" );
-   static Int_t c_TitleBox       = TColor::GetColor( "#6D7B8D" );
+   static Int_t c_TitleBox       = TColor::GetColor( "#5D6B7D" );
+   static Int_t c_TitleBorder    = TColor::GetColor( "#7D8B9D" );
    static Int_t c_TitleText      = TColor::GetColor( "#FFFFFF" );
    static Int_t c_SignalLine     = TColor::GetColor( "#0000ee" );
    static Int_t c_SignalFill     = TColor::GetColor( "#7d99d1" );
@@ -173,7 +174,8 @@ namespace TMVAGlob {
       // TMVAStyle->SetTitleY(.9);
       TMVAStyle->SetTitleFillColor( c_TitleBox );
       TMVAStyle->SetTitleTextColor( c_TitleText );
-      TMVAStyle->SetTitleBorderSize( 0 );
+      TMVAStyle->SetTitleBorderSize( 1 );
+      TMVAStyle->SetLineColor( c_TitleBorder );
       if (!UsePaperStyle) {
          TMVAStyle->SetFrameFillColor( c_FrameFill );
          TMVAStyle->SetCanvasColor( c_Canvas );

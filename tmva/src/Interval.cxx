@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -42,13 +42,13 @@
 <center><h2>the TMVA::Interval Class</h2></center>
 
 <ul>
-  <li> Interval definition, continuous and discrete    
+   <li> Interval definition, continuous and discrete
    <ul>
          <li>  Interval(min,max)  : a continous interval [min,max]
          <li>  Interval(min,max,n): a "discrete interval" [min,max], i.e the n numbers:<br>
-         min, min+step, min+2*step,...., min+(n-1)*step, min+n*step=max <br> 
-                 e.g.: Interval(1,5,5)=1,2,3,4,5                        <br> 
-         Interval(.5,1.,6)= .5, .6., .7, .8, .9, 1.0                    <br> 
+         min, min+step, min+2*step,...., min+(n-1)*step=max <br>
+         e.g.: Interval(1,5,5)=1,2,3,4,5                    <br>
+         Interval(.5,1.,6)= .5, .6., .7, .8, .9, 1.0        <br>
 
    </ul>
 </ul>

@@ -205,7 +205,7 @@ namespace TMVA {
       Bool_t                          fBaggedGradBoost; // turn bagging in combination with grad boost on/off
       Double_t                        fSampleFraction;  // fraction of events used for bagged grad boost
       Double_t                        fSumOfWeights;    // sum of all event weights
-      std::vector<std::pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals
+      std::map< TMVA::Event*, std::pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals
       std::map< TMVA::Event*,std::vector<double> > fResiduals; // individual event residuals for gradient boost
 
       //options for the decision Tree
