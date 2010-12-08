@@ -123,17 +123,21 @@ void TKDTreeBinning::SortBinsByDensity(Bool_t sortAsc) {
       }
       fBinMinEdges.swap(binMinEdges);
       fBinMaxEdges.swap(binMaxEdges);
-      UInt_t k = 0;
-      Bool_t found = kFALSE;
-      while (!found) {
-         if (indices[k] == fNBins - 1) {
-            found = kTRUE;
-            break;
+      // re-adjust content of extra bins if exists
+      // since it is different than the others
+      if ( fDataSize % fNBins != 0) { 
+         UInt_t k = 0;
+         Bool_t found = kFALSE;
+         while (!found) {
+            if (indices[k] == fNBins - 1) {
+               found = kTRUE;
+               break;
+            }
+            ++k;
          }
-         ++k;
+         fBinsContent[fNBins - 1] = fDataBins->GetBucketSize();
+         fBinsContent[k] = fDataSize % fNBins-1;
       }
-      fBinsContent[fNBins - 1] = fDataBins->GetBucketSize();
-      fBinsContent[k] = fDataSize % fNBins;
       delete indices;
       fIsSorted = kTRUE;
     }
@@ -157,9 +161,10 @@ void TKDTreeBinning::SetTreeData() {
 void TKDTreeBinning::SetBinsContent() {
    // Sets the bins' content
    fBinsContent.reserve(fNBins);
-   for (UInt_t i = 0; i < fNBins - 1; ++i)
+   for (UInt_t i = 0; i < fNBins; ++i)
       fBinsContent[i] = fDataBins->GetBucketSize();
-   fBinsContent[fNBins - 1] = fDataSize % fNBins;
+   if ( fDataSize % fNBins != 0 ) 
+      fBinsContent[fNBins - 1] = fDataSize % (fNBins-1);
 }
 
 void TKDTreeBinning::SetBinsEdges() {
