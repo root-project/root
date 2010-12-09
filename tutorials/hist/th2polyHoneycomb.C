@@ -4,6 +4,7 @@
 //Author: Olivier Couet
 
 void th2polyHoneycomb(){
+   gStyle->SetCanvasPreferGL(true);
    TH2Poly *hc = new TH2Poly();
    hc->Honeycomb(0,0,.1,25,25);
    gStyle->SetPalette(1);

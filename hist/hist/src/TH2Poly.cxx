@@ -402,29 +402,18 @@ void TH2Poly::ClearBinContents()
 
 
 //______________________________________________________________________________
-void TH2Poly::Draw(Option_t * option)
+TH1 *TH2Poly::DrawCopy(Option_t *option) const
 {
-   // Draws the histogram on the canvas.
-   // Options:
-   //    ""     2D Color
-   //    "gllego" Lego plot using OpenGL
-
-   if (fNcells==0) return;
+   // Draw copy.
 
    TString opt = option;
    opt.ToLower();
-
-   fZaxis.Set(100, GetMinimum(), GetMaximum());
-
-   if (opt.Contains("gllego")) {
-      gStyle->SetCanvasPreferGL(kTRUE);
-   }
-
-   if (gPad) {
-      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
-      if (opt.Contains("a")) gPad->Clear();
-   }
-   AppendPad(opt);
+   if (gPad && !opt.Contains("same")) gPad->Clear();
+   TH2Poly *newth2 = (TH2Poly*)Clone();
+   newth2->SetDirectory(0);
+   newth2->SetBit(kCanDelete);
+   newth2->AppendPad(option);
+   return newth2;
 }
 
 
