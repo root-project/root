@@ -385,7 +385,7 @@ public:
    virtual Long64_t        Merge(TCollection* list, Option_t* option = "");
    static  TTree          *MergeTrees(TList* list, Option_t* option = "");
    virtual Bool_t          Notify();
-   virtual void            OptimizeBaskets(Int_t maxMemory=10000000, Float_t minComp=1.1, Option_t *option=""); 
+   virtual void            OptimizeBaskets(ULong64_t maxMemory=10000000, Float_t minComp=1.1, Option_t *option=""); 
    TPrincipal             *Principal(const char* varexp = "", const char* selection = "", Option_t* option = "np", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    virtual void            Print(Option_t* option = "") const; // *MENU*
    virtual void            PrintCacheStats(Option_t* option = "") const;

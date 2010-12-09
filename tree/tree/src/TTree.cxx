@@ -5427,7 +5427,7 @@ Bool_t TTree::Notify()
 }
 
 //______________________________________________________________________________
-void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option)
+void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *option)
 {
    //This function may be called after having filled some entries in a Tree
    //Using the information in the existing branch buffers, it will reassign
