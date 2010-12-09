@@ -2,6 +2,36 @@
 <hr/>
 <a name="core"></a> 
 <h3>Core</h3>
+<h4>Build system and Platform support</h4>
+<ul>
+<li>The build system has been extended to support out-of-source builds.
+This means you can build different sets of binaries from one source tree, like:
+<pre>
+      mkdir root-debug
+      cd root-debug
+      ../root/configure --build=debug
+</pre>
+</li>
+<li>
+The build system now supports cross compilation, where typically you need tools
+like rootcint, rootmap, etc, to be compiled on the build platform to be able
+to generate dictionaries for the target platform.
+</li>
+<li>ROOT has been ported to iOS. This port required the above mentioned
+changes in the build system. To build ROOT for the iPhone/iPad sumilator do:
+<pre>
+    ./configure iossim
+    make
+</pre>
+To build a native iOS armv7 version do:
+<pre>
+    ./configure ios
+    make
+</pre>
+Both builds create a libRoot.a that can be used to create ROOT based iOS apps
+(iOS does not allow apps to load non-system dynamic libraries at run time).
+Some sample Xcode projects using ROOT will soon be made available.
+</ul>
 <h4>Base</h4>
 <ul>
 <li>Change TTime data member from Long_t to Long64_t. On 32-bit systems the
@@ -69,17 +99,20 @@ given one (or more) class name(s) and the name(s) of its header files.
 <h4>Cont</h4>
 <ul>
 <li>New functions for TClonesArray:
-
+<ul>
+<li>
 AbsorbObjects(TClonesArray* otherTCA):
 Allows one to directly move the object pointers from otherTCA to the calling
 TCA without cloning (copying). The calling TCA takes over ownership of all of
 the moved objects. otherTCA is left empty upon return.
-
+</li>
+<li>
 MultiSort(Int_t nTCs, TClonesArray** tcs):
 Sorts multiple TClonesArrays simultaneously using the calling TCA's objects
 as the sorting key.
 </li>
-
+</ul>
+</li>
 
 <li>New function for TSeqCollection:
 
