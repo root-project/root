@@ -516,6 +516,9 @@ Int_t TUnfoldSys::SetInput(const TH1 *hist_y,Double_t scaleBias,
    // and those modified by DoBackgroundSubtraction()
 
    Int_t r=TUnfold::SetInput(hist_y,scaleBias,oneOverZeroError);
+   //LM: WARNING: Coverity detects here a false USE_AFTER_FREE for fY and fVyy
+   // the objects are deleted but then re-created immediatly afterwards in 
+   //  TUnfold::SetInput
    fYData=fY;
    fY=0;
    fVyyData=fVyy;
