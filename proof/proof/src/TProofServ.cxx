@@ -4127,13 +4127,11 @@ void TProofServ::ProcessNext(TString *slb)
    // Send back the results
    TQueryResult *pqr = pq->CloneInfo();
    // At least the TDSet name in the light object
-   if (dset) {
-      Info("ProcessNext", "adding info about dataset '%s' in the light query result", dset->GetName());
-      TList rin;
-      TDSet *ds = new TDSet(dset->GetName(), dset->GetObjName());
-      rin.Add(ds);
-      pqr->SetInputList(&rin, kTRUE);
-   }
+   Info("ProcessNext", "adding info about dataset '%s' in the light query result", dset->GetName());
+   TList rin;
+   TDSet *ds = new TDSet(dset->GetName(), dset->GetObjName());
+   rin.Add(ds);
+   pqr->SetInputList(&rin, kTRUE);
    if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted && fPlayer->GetOutputList()) {
       PDB(kGlobal, 2)
          Info("ProcessNext", "sending results");

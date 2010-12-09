@@ -2937,7 +2937,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
                            TObject *xo = 0;
                            TIter nxin(fPlayer->GetInputList());
                            while ((xo = nxin()))
-                              if (!pq->GetInputList()->FindObject(o->GetName())) pq->AddInput(o->Clone());                             
+                              if (!pq->GetInputList()->FindObject(xo->GetName())) pq->AddInput(xo->Clone());                             
                            // If the last object, notify the GUI that the result arrived
                            QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
                            // Processing is over
