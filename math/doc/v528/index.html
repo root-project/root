@@ -72,6 +72,52 @@
     </ul>
     </li>
 
+    <br>
+
+     <li>
+  <b>New class <tt>TKDTreeBinning</tt></b> for binning multidimensional data.
+  <ul>
+  <li>The class implements multidimensional binning by constructing a
+    TKDTree inner structure form the data which is used as the bins.
+  <li>The bins are retrieved as two double*, one for the minimum bin edges,
+    the other as the maximum bin edges. For one dimension one of these is enough
+    to correctly define the bins. The bin edges of d-dimensional data is a d-tet
+    of the bin's thresholds. For example if d=3 the minimum bin edges of bin b is
+    of the form of the following array: {xbmin, ybmin, zbmin}.
+  <li>Example 1: constructing a TKDTreeBinning object with
+    <tt>sample[dataSize]</tt> containing the data and <tt>dataDim</tt> and <tt>nBins</tt>,
+    multidimension and bin number parameters.
+    <pre>
+    TKDTreeBinning* fBins = new TKDTreeBinning(dataSize, dataDim, sample, nBins);
+    </pre>
+  </li>
+    <li>Example 2: retrieving the bin edges. For the multidimensional case both minimum
+      and maximum ones are necessary for the bins to be well defined
+    <pre>
+       Double_t* binsMinEdges = fBins->GetBinsMinEdges();
+       Double_t* binsMaxEdges = fBins->GetBinsMaxEdges();
+    </pre>
+      If you wish to retrieve them sorted by their density issue before the earlier getters
+      fBins->SortBinsByDensity();
+    </li>
+    <li>Example 3: retrieving the bin edges of bin <tt>b</tt>. For the multidimensional
+      case both minimum and maximum ones are necessary for the bins to be well defined
+    <pre>
+      std::pair<const Double_t*, const Double_t*> binEdges = fBins->GetBinEdges(b);
+   </pre>
+    </li>
+        <li>Example 4: perform queries on bin <tt>b</tt> information
+    <pre>
+      Double_t density = GetBinDensity(b);
+      Double_t volume  = GetBinVolume(b);
+      Double_t* center = GetBinCenter(b);
+   </pre>
+    </li>
+  </ul>
+ </li>  
+
+    <br>
+
  <li>New statistical functions <tt>ROOT::Math::landau_quantile</tt> (inverse of landau cumulative distribution) 
    translated from RANLAN and
    <tt>ROOT::Math::landau_quantile_c</tt>.
@@ -130,7 +176,8 @@
   M. Use now the same implementation in ROOT::Math and TMath</li>
   <li>Fix the returned value of the incomplete gamma functions for
   a=0 or a is a negative integer number.</li>
- 
+
+
 </ul>
 
 <h4>Mathmore</h4>
@@ -168,6 +215,19 @@
   <tt>ROOT::Math::DistSampler</tt> interface for one dimensional
   continous and discrete distributions and for mult-dimensional ones
   </li>
+</ul>
+
+<h4>Foam</h4>
+<ul>
+<li>Add new class TFoamSampler implementing the
+  <tt>ROOT::Math::DistSampler</tt> interface for genereting random
+  numbers according to any one or multi-dim distributions using Foam.
+  </li>
+  <li>All the TFoam options can be controlled via the
+  <tt>ROOT::Math::DistSamplerOptions</tt> class, which can be passed
+  as input to the virtual <tt>ROOT::Math::DistSampler::Init(..)</tt>
+  function. 
+ </li>
 </ul>
 
   
