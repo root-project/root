@@ -1,10 +1,12 @@
-// tutorial showing how to use the Minimizer class in ROOT
-//  and all the possible minimizer 
+// Example on how to use the new Minimizer class in ROOT
+//  Show usage with all the possible minimizers. 
 // Minimize the Rosenbrock function (a 2D -function)
 // This example is described also in 
 // http://root.cern.ch/drupal/content/numerical-minimization#multidim_minim
 // input : minimizer name + algorithm name
 // randomSeed: = <0 : fixed value: 0 random with seed 0; >0 random with given seed 
+//
+//Author: L. Moneta Dec 2010
 
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"
@@ -22,19 +24,24 @@ double RosenBrock(const double *xx )
   return 100*tmp1*tmp1+tmp2*tmp2;
 }
  
-int NumericalMinimization(const char * minName = "Minuit2",const char *algoName = "" , int randomSeed = -1)
+int NumericalMinimization(const char * minName = "Minuit2",
+                          const char *algoName = "" , 
+                          int randomSeed = -1)
 {
-   // create minimizer giving a name and a name (optionally) for the specific algorithm
+   // create minimizer giving a name and a name (optionally) for the specific
+   // algorithm
    // possible choices are: 
    //     minName                  algoName
    // Minuit /Minuit2             Migrad, Simplex,Combined,Scan  (default is Migrad)
    //  Minuit2                     Fumili2
    //  Fumili
-   //  GSLMultiMin                ConjugateFR, ConjugatePR, BFGS, BFGS2, SteepestDescent
+   //  GSLMultiMin                ConjugateFR, ConjugatePR, BFGS, 
+   //                              BFGS2, SteepestDescent
    //  GSLMultiFit
    //   GSLSimAn
    //   Genetic
-   ROOT::Math::Minimizer* min = ROOT::Math::Factory::CreateMinimizer(minName, algoName);
+   ROOT::Math::Minimizer* min = 
+      ROOT::Math::Factory::CreateMinimizer(minName, algoName);
 
    // set tolerance , etc...
    min->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2 
@@ -70,9 +77,11 @@ int NumericalMinimization(const char * minName = "Minuit2",const char *algoName 
 
    // expected minimum is 0
    if ( min->MinValue()  < 1.E-4  && f(xs) < 1.E-4) 
-      std::cout << "Minimizer " << minName << " - " << algoName << "   converged to the right minimum" << std::endl;
+      std::cout << "Minimizer " << minName << " - " << algoName 
+                << "   converged to the right minimum" << std::endl;
    else {
-      std::cout << "Minimizer " << minName << " - " << algoName << "   failed to converge !!!" << std::endl;
+      std::cout << "Minimizer " << minName << " - " << algoName 
+                << "   failed to converge !!!" << std::endl;
       Error("NumericalMinimization","fail to converge");
    }
  
