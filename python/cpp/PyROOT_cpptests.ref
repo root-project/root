@@ -9,6 +9,7 @@ Test passing of variants of void pointer arguments ... ok
 Test access to cpp macro's ... ok
 Test passing around of opaque pointers ... ok
 Verify object and pointer comparisons ... ok
+Test recognition of '_' as part of a valid class name ... ok
 
 ----------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 # File: roottest/python/regression/PyROOT_regressiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/02/07
-# Last: 11/26/10
+# Last: 12/07/10
 
 """Regression tests, lacking a better place, for PyROOT package."""
 
@@ -29,7 +29,8 @@ __all__ = [
    'Regression10TVector3Pythonize',
    'Regression11CoralAttributeListIterators',
    'Regression12ImportCout',
-   'Regression13WriteTGraph'
+   'Regression13WriteTGraph',
+   'Regression14BaseClassUsing'
 ]
 
 
@@ -286,6 +287,15 @@ class Regression13WriteTGraph( MyTestCase ):
       gr2 = TGraph()
       ff.GetObject( "grname", gr2 )
       os.remove( "test.root" )
+
+
+### 'using' base class data members should make them accessible ==============
+class Regression14BaseClassUsing( MyTestCase ):
+   def test1AccessUsingBaseClassDataMember( self ):
+      """Access a base class data member made availabe by 'using'"""
+
+      p = TPySelector()
+      str( p.fInput )        # segfaults in case of failure
 
 
 ## actual test run

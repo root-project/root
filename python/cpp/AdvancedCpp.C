@@ -2,7 +2,7 @@
   File: roottest/python/cpp/AdvancedCpp.C
   Author: WLavrijsen@lbl.gov
   Created: 06/04/05
-  Last: 07/19/10
+  Last: 12/08/10
 */
 
 #include <vector>
@@ -155,3 +155,24 @@ bool operator!=( const Comparable& c1, const Comparable& c2 )
 // a couple of globals
 double myGlobalDouble = 12.;
 double myGlobalArray[500];
+
+
+class SomeClassWithData {
+public:
+   class SomeData {
+   public:
+      SomeData()                  { ++s_numData; }
+      SomeData( const SomeData& ) { ++s_numData; }
+      ~SomeData()                 { --s_numData; }
+
+      static int s_numData;
+   };
+
+   SomeClassWithData GimeData() {
+      return *this;
+   }
+
+   SomeData m_data;
+};
+
+int SomeClassWithData::SomeData::s_numData = 0;

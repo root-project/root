@@ -15,6 +15,7 @@ Verify TVector3 pythonization ... ok
 Verify that the correct base class iterators is picked up ... ok
 Test that ROOT.cout does not cause error messages ... ok
 Write a TGraph object and read it back correctly ... ok
+Access a base class data member made availabe by 'using' ... ok
 
 ----------------------------------------------------------------------
 

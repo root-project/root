@@ -12,7 +12,8 @@ from ROOT import *
 from common import *
 
 __all__ = [
-   'Cpp1LanguageFeatureTestCase'
+   'Cpp1LanguageFeatureTestCase',
+   'Cpp2ClassNamingTestCase'
 ]
 
 
@@ -197,6 +198,17 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assert_( None != l3 )        # id.
       self.assertNotEqual( l3, l5 )
       self.assertNotEqual( l5, l3 )
+
+
+### C++ language naming of classes ===========================================
+class Cpp2ClassNamingTestCase( MyTestCase ):
+   def test01Underscore( self ):
+      """Test recognition of '_' as part of a valid class name"""
+
+      z = Z_()
+
+      self.assert_( hasattr( z, 'myint' ) )
+      self.assert_( z.GimeZ_( z ) )
 
 
 ## actual test run

@@ -26,3 +26,11 @@ public:
       return reinterpret_cast< long >( obj );
    }
 };
+
+class Z_ {
+public:
+   Z_& GimeZ_( Z_& z ) { return z; }
+
+public:
+   int myint;
+};
