@@ -4126,7 +4126,7 @@ if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
    fi
 
    if test "x$enable_bonjour" = "xyes"; then
-      if test ! -f $xrdincdir/XrdOucBonjour.hh ; then
+      if test ! -f $xrdincdir/XrdOuc/XrdOucBonjour.hh ; then
          bjrcomm="External xrootd has no bonjour support: disabling bonjour in XrdProofd"
          bonjourcppflags= 
       fi
