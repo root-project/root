@@ -27,6 +27,7 @@
 // statistical functions : pdf
 #pragma link C++ function ROOT::Math::beta_pdf( double , double, double);
 #pragma link C++ function ROOT::Math::binomial_pdf( unsigned int , double, unsigned int);
+#pragma link C++ function ROOT::Math::negative_binomial_pdf( unsigned int , double, double);
 #pragma link C++ function ROOT::Math::breitwigner_pdf( double , double, double);
 #pragma link C++ function ROOT::Math::cauchy_pdf( double , double, double);
 #pragma link C++ function ROOT::Math::chisquared_pdf( double , double, double);
@@ -69,6 +70,14 @@
 #pragma link C++ function ROOT::Math::tdistribution_cdf( double , double, double);
 #pragma link C++ function ROOT::Math::landau_cdf_c( double , double, double);
 #pragma link C++ function ROOT::Math::landau_cdf( double , double, double);
+
+#pragma link C++ function ROOT::Math::binomial_cdf( unsigned int , double, unsigned int);
+#pragma link C++ function ROOT::Math::binomial_cdf_c( unsigned int , double, unsigned int);
+#pragma link C++ function ROOT::Math::negative_binomial_cdf( unsigned int , double, double);
+#pragma link C++ function ROOT::Math::negative_binomial_cdf_c( unsigned int , double, double);
+#pragma link C++ function ROOT::Math::poisson_cdf( unsigned int , double);
+#pragma link C++ function ROOT::Math::poisson_cdf_c( unsigned int , double);
+
 
 // statitsical functions: quantiles
 #pragma link C++ function ROOT::Math::breitwigner_quantile_c(double,double);

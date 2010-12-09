@@ -271,6 +271,15 @@ namespace Math {
     }
 
     /**
+       Negative Binomial distribution
+       First parameter is n, second is probability
+       To be consistent with Random::Binomial
+     */
+     unsigned int NegativeBinomial(double n, double prob) { 
+      return fEngine.NegativeBinomial(prob,n);
+    }
+
+    /**
        Multinomial distribution
      */
     std::vector<unsigned int> Multinomial( unsigned int ntot, const std::vector<double> & p ) { 
