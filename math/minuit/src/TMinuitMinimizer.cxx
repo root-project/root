@@ -456,16 +456,21 @@ bool TMinuitMinimizer::Minimize() {
    fStatus = ierr; 
    int minErrStatus = ierr;
 
+   if (printlevel>2) Info("Minimize","Finished to run MIGRAD - status %d",ierr);
+
    // run improved if needed
    if (ierr == 0 && fType == ROOT::Minuit::kMigradImproved) {
       fMinuit->mnexcm("IMPROVE",arglist,1,ierr);
       fStatus += 1000*ierr; 
+      if (printlevel>2) Info("Minimize","Finished to run IMPROVE - status %d",ierr);
    }
+
 
    // check if Hesse needs to be run 
    if (ierr == 0 && IsValidError() ) { 
       fMinuit->mnexcm("HESSE",arglist,1,ierr);
       fStatus += 100*ierr; 
+      if (printlevel>2) Info("Minimize","Finished to run HESSE - status %d",ierr);
    }
 
    // retrieve parameters and errors  from TMinuit
