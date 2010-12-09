@@ -2063,7 +2063,7 @@ void TUnixSystem::StackTrace()
    if (!gEnv->GetValue("Root.Stacktrace", 1))
       return;
 
-#if defined(R__MACOSX)
+#if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
    if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR) {
       fprintf(stderr, "Info in <TUnixSystem::StackTrace> function not supported on iOS\n");
       return;
