@@ -168,8 +168,12 @@ public:
       static int s_numData;
    };
 
-   SomeClassWithData GimeData() {
+   SomeClassWithData GimeCopy() {
       return *this;
+   }
+
+   const SomeData& GimeData() const {
+      return m_data;
    }
 
    SomeData m_data;

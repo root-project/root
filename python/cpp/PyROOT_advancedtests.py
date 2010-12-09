@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 11/02/10
+# Last: 12/09/10
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -19,7 +19,8 @@ __all__ = [
    'Cpp5AssignToRefArbitraryClassTestCase',
    'Cpp6MathConvertersTestCase',
    'Cpp7GloballyOverloadedComparatorTestCase',
-   'Cpp8GlobalArraysTestCase'
+   'Cpp8GlobalArraysTestCase',
+   'Cpp9LongExpressionsTestCase'
 ]
 
 gROOT.LoadMacro( "AdvancedCpp.C+" )
@@ -307,6 +308,24 @@ class Cpp8GlobalArraysTestCase( MyTestCase ):
 
       self.assertEqual( myGlobalDouble, 12. )
       self.assertRaises( IndexError, myGlobalArray.__getitem__, 500 )
+
+
+
+### Verify temporary handling for long expressions ===========================
+class Cpp9LongExpressionsTestCase( MyTestCase ):
+   def test1LongExpressionWithTemporary( self ):
+      """Test life time of temporary in long expression"""
+
+      self.assertEqual( SomeClassWithData.SomeData.s_numData, 0 )
+      r = SomeClassWithData()
+      self.assertEqual( SomeClassWithData.SomeData.s_numData, 1 )
+
+    # in this, GimeData() returns a datamember of the temporary result
+    # from GimeCopy(); normal ref-counting would let it go too early
+      self.assertEqual( r.GimeCopy().GimeData().s_numData, 2 )
+
+      del r
+      self.assertEqual( SomeClassWithData.SomeData.s_numData, 0 )
 
 
 ## actual test run

@@ -14,6 +14,7 @@ Test assignment to an instance returned by reference ... ok
 Test operator int/long/double incl. typedef ... ok
 Check that the global operator!=/== is picked up ... ok
 Verify access to array of doubles ... ok
+Test life time of temporary in long expression ... ok
 
 ----------------------------------------------------------------------
 
