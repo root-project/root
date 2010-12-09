@@ -429,7 +429,9 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
          if (!gSystem->Getenv("ROOTSYS"))
             ::SysError("TUnixSystem::DylibAdded", "error getting realpath of %s", gSystem->BaseName(lib));
       } else {
-         gSystem->Setenv("ROOTSYS", gSystem->DirName(respath));
+         TString rs = gSystem->DirName(respath);
+         rs.ReplaceAll(" ", "\\ ");
+         gSystem->Setenv("ROOTSYS", rs);
       }
    }
 #else
@@ -2061,6 +2063,13 @@ void TUnixSystem::StackTrace()
    if (!gEnv->GetValue("Root.Stacktrace", 1))
       return;
 
+#if defined(R__MACOSX)
+   if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR) {
+      fprintf(stderr, "Info in <TUnixSystem::StackTrace> function not supported on iOS\n");
+      return;
+   }
+#endif
+
    TString gdbscript = gEnv->GetValue("Root.StacktraceScript", "");
    gdbscript = gdbscript.Strip();
    if (gdbscript != "") {
@@ -2073,10 +2082,15 @@ void TUnixSystem::StackTrace()
    }
    if (gdbscript == "") {
 #ifdef ROOTETCDIR
-      gdbscript.Form("%s/gdb-backtrace.sh ", ROOTETCDIR);
+      gdbscript.Form("%s/gdb-backtrace.sh", ROOTETCDIR);
 #else
-      gdbscript.Form("%s/etc/gdb-backtrace.sh ", gSystem->Getenv("ROOTSYS"));
+      gdbscript.Form("%s/etc/gdb-backtrace.sh", gSystem->Getenv("ROOTSYS"));
 #endif
+      if (AccessPathName(gdbscript, kReadPermission)) {
+         fprintf(stderr, "Error in <TUnixSystem::StackTrace> script %s is missing\n", gdbscript.Data());
+         return;
+      }
+      gdbscript += " ";
    }
 
    TString gdbmess = gEnv->GetValue("Root.StacktraceMessage", "");
