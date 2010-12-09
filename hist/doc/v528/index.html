@@ -397,6 +397,30 @@ if (TEfficiency::CheckConsistency(h_pass,h_total))
 
   </ul>
 
+<h4>New TSVDUnfold class</h4>
+
+<tt>TSVDUnfold</tt> implements the singular value decomposition based 
+unfolding method proposed in <a 
+href="http://arXiv.org/abs/hep-ph/9509307">NIM A372, 469 (1996) 
+[hep-ph/9509307]</a>. The regularisation is implemented as 
+a discrete minimum curvature condition. This minimal implementation of 
+<tt>TSVDUnfold</tt> provides unfolding of one-dimensional histograms with 
+equal number of, not necessarily equidistant, bins in the measured and 
+unfolded distributions. In addition to the unfolding itself, 
+<tt>TSVDUnfold</tt> provides
+<ul>
+<li>Propagation of covariance matrices from the measured to the unfolded 
+spectrum via <tt>GetUnfoldCovMatrix</tt></li>
+<li>Evaluation of covariance matrix due to finite statistics in detector 
+response via <tt>GetAdetCovMatrix</tt></li>
+<li>Access to distribution of |d_i| useful for determining the proper 
+regularisation via <tt>GetD</tt></li>
+<li>Access to singular values via <tt>GetSV</tt></li>
+</ul>
+A toy example for the use of <tt>TSVDUnfold</tt> is included in the math 
+tutorials (<tt>TSVDUnfoldExample.C</tt>).
+
+
 <h4>New TH2Poly class</h4>
 <tt>TH2Poly</tt> is a 2D Histogram class, inheriting from <tt>TH2</tt>, 
 allowing to define polygonal bins of arbitary shape.
@@ -439,3 +463,6 @@ More examples can be found in <tt>$ROOTSYS/tutorials/hist/</tt>:
 <center><img src="th2polyEurope.gif"    alt="th2polyEurope.C"/></center>
 <center><img src="th2polyHoneycomb.gif" alt="th2polyHonecomb.C"/></center>
 <center><img src="th2polyUSA.gif"       alt="th2polyUSA.C"/></center>
+
+
+  
