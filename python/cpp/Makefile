@@ -23,13 +23,3 @@ PyROOT_cpptests: PyROOT_cpptests.log
 	$(TestDiff)
 
 PyROOT_advancedtests.log: AdvancedCpp_C.$(DllSuf) Template_C.$(DllSuf)
-
-ifeq ($(shell root-config --arch),win32)
-# don't run the advanced tests as there is an issue with the dictionary
-# generation (sizeof(::B) != sizeof(::ROOT::Shadow::B)
-PyROOT_advancedtests:
-	$(WarnFailTest)
-else
-        PyROOT_advancedtests: PyROOT_advancedtests.log
-	$(TestDiff)
-endif
