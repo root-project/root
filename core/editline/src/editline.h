@@ -137,7 +137,9 @@ R_EL__LOCAL int history_search_prefix(const char*, int);
 R_EL__LOCAL int history_search_pos(const char*, int, int);
 R_EL__LOCAL int read_history(const char*);
 R_EL__LOCAL int write_history(const char*);
+#ifdef EL_HISTORY_EXPAND
 R_EL__LOCAL int history_expand(char*, char**);
+#endif
 R_EL__LOCAL char** history_tokenize(const char*);
 
 R_EL__LOCAL char* tilde_expand(char*);

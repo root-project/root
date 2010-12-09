@@ -140,9 +140,11 @@ static unsigned char _el_rl_complete(EditLine_t*, int);
 static char* _get_prompt(EditLine_t*);
 static HIST_ENTRY* _move_history(int);
 static int _history_search_gen(const char*, int, int);
+#ifdef EL_HISTORY_EXPAND
 static int _history_expand_command(const char*, size_t, char**);
 static char* _rl_compat_sub(const char*, const char*,
                             const char*, int);
+#endif
 static int rl_complete_internal(int);
 static int _rl_qsort_string_compare(const void*, const void*);
 
@@ -419,6 +421,7 @@ using_history(void) {
 }
 
 
+#ifdef EL_HISTORY_EXPAND
 /*
  * substitute ``what'' with ``with'', returning resulting string; if
  * globally == 1, substitutes all occurences of what, otherwise only the
@@ -472,8 +475,10 @@ _rl_compat_sub(const char* str, const char* what, const char* with,
 
    return result;
 } // _rl_compat_sub
+#endif
 
 
+#ifdef EL_HISTORY_EXPAND
 /*
  * the real function doing history expansion - takes as argument command
  * to do and data upon which the command should be executed
@@ -814,11 +819,12 @@ _history_expand_command(const char* command, size_t cmdlen, char** result) {
    free(arr), arr = (char**) NULL;
    return (p_on) ? 2 : 1;
 } // _history_expand_command
-
+#endif
 
 /*
  * csh-style history expansion
  */
+#ifdef EL_HISTORY_EXPAND
 int
 history_expand(char* str, char** output) {
    int i, retval = 0, idx;
@@ -940,7 +946,7 @@ loop:
 
    return retval;
 } // history_expand
-
+#endif
 
 /*
  * Parse the string into individual tokens, similarily to how shell would do it.
