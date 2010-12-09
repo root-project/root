@@ -60,7 +60,8 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
     // To do this, you can do the following after the plot has been made:
 
   // profile, RooRealVar * poi, RooCurve * curve ){
-  RooCurve * curve = 0;
+  //RooCurve * curve = 0;
+
   const RooArgSet* poi_set = config->GetParametersOfInterest();
   const RooArgSet* nuis_params=config->GetNuisanceParameters();
   RooAbsPdf* pdf =  config->GetPdf();
@@ -94,20 +95,20 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
   TList * list = new TList;
   Int_t curve_N=100;
   Double_t* curve_x=0;
-  if(curve){
-    curve_N=curve->GetN();
-    curve_x=curve->GetX();
-    } else {
-    Double_t max = dynamic_cast<RooAbsRealLValue*>(poi)->getMax();
-    Double_t min = dynamic_cast<RooAbsRealLValue*>(poi)->getMin();
-    Double_t step = (max-min)/(curve_N-1);
-    curve_x=new Double_t[curve_N];
-    for(int i=0; i<curve_N; ++i){
-      curve_x[i]=min+step*i;
-    }
+//   if(curve){
+//     curve_N=curve->GetN();
+//     curve_x=curve->GetX();
+//     } else {
+  Double_t max = dynamic_cast<RooAbsRealLValue*>(poi)->getMax();
+  Double_t min = dynamic_cast<RooAbsRealLValue*>(poi)->getMin();
+  Double_t step = (max-min)/(curve_N-1);
+  curve_x=new Double_t[curve_N];
+  for(int i=0; i<curve_N; ++i){
+     curve_x[i]=min+step*i;
   }
+//   }
   
-  map<string, Double_t *> name_val;
+  map<string, std::vector<Double_t> > name_val;
   for(int i=0; i<curve_N; i++){
     poi->setVal(curve_x[i]);
     profile->getVal();
@@ -115,24 +116,29 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
     TIterator* nuis_params_itr=nuis_params->createIterator();
     TObject* nuis_params_obj;
     while((nuis_params_obj=nuis_params_itr->Next())){
-      RooRealVar* nuis_param = (RooRealVar*) nuis_params_obj; 
-      string name = nuis_param->GetName();
-      if(nuis_params->getSize()==0) continue;
-      if(nuis_param && (! nuis_param->isConstant())){
-	if(name_val.find(name)==name_val.end()) name_val[name]=new Double_t[curve_N];
-	name_val[name][i]=nuis_param->getVal();
-	
-	if(i==curve_N-1){
-	  TGraph* g = new TGraph(curve_N, curve_x, name_val[name]);
-	  g->SetName((name+"_"+string(poi->GetName())+"_profile").c_str());
-	  g->GetXaxis()->SetTitle(poi->GetName());
-	  g->GetYaxis()->SetTitle(nuis_param->GetName());
-	  g->SetTitle("");
-	  list->Add(g);
-	}
-      }
+       RooRealVar* nuis_param = dynamic_cast<RooRealVar*>(nuis_params_obj); 
+       if(nuis_param) { 
+          string name = nuis_param->GetName();
+          if(nuis_params->getSize()==0) continue;
+          if(nuis_param && (! nuis_param->isConstant())){
+             if(name_val.find(name)==name_val.end()) name_val[name]=std::vector<Double_t>(curve_N);
+             name_val[name][i]=nuis_param->getVal();
+             
+             if(i==curve_N-1){
+                TGraph* g = new TGraph(curve_N, curve_x, &(name_val[name].front()));
+                g->SetName((name+"_"+string(poi->GetName())+"_profile").c_str());
+                g->GetXaxis()->SetTitle(poi->GetName());
+                g->GetYaxis()->SetTitle(nuis_param->GetName());
+                g->SetTitle("");
+                list->Add(g);
+             }
+          }
+       }
     }
   }
+
+  delete [] curve_x;
+  
 
   delete nll;
   delete profile;
