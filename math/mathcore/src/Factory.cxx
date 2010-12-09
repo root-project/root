@@ -19,6 +19,7 @@
 #include "Math/MinimizerOptions.h"
 
 #include "Math/DistSampler.h"
+#include "Math/DistSamplerOptions.h"
 
 #ifndef MATH_NO_PLUGIN_MANAGER
 // use ROOT Plug-in manager
@@ -73,6 +74,7 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
       minim = s1.c_str();
    }
 
+   if (minimizerType.empty() ) minim = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str(); 
 
    // create Minimizer using the PM
    TPluginHandler *h; 
@@ -159,10 +161,12 @@ ROOT::Math::DistSampler * ROOT::Math::Factory::CreateDistSampler(const std::stri
    return 0; 
 #else 
    // create a DistSampler class using the ROOT plug-in manager 
+   const char * typeName = type.c_str();
+   if (type.empty() )  typeName = ROOT::Math::DistSamplerOptions::DefaultSampler().c_str();
 
    TPluginManager *pm = gROOT->GetPluginManager(); 
    assert(pm != 0);
-   TPluginHandler *h = pm->FindHandler("ROOT::Math::DistSampler", type.c_str() );
+   TPluginHandler *h = pm->FindHandler("ROOT::Math::DistSampler", typeName );
    if (h != 0) {
       if (h->LoadPlugin() == -1) {
          MATH_ERROR_MSG("Factory::CreateDistSampler","Error loading DistSampler plug-in");
@@ -173,7 +177,7 @@ ROOT::Math::DistSampler * ROOT::Math::Factory::CreateDistSampler(const std::stri
       assert(smp != 0);
       return smp; 
    }
-   MATH_ERROR_MSGVAL("Factory::CreateDistSampler","Error finding DistSampler plug-in",type);
+   MATH_ERROR_MSGVAL("Factory::CreateDistSampler","Error finding DistSampler plug-in",typeName);
    return 0;
 #endif
 }

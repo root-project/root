@@ -35,15 +35,17 @@ class Factory {
       static method to create the corrisponding Minimizer given the string
       Supported Minimizers types are: 
       Minuit (TMinuit), Minuit2, GSLMultiMin, GSLMultiFit, GSLSimAn, Linear, Fumili, Genetic
+      If no name is given use default values defined in  MinimizerOptions
     */
-   static ROOT::Math::Minimizer * CreateMinimizer(const std::string & minimizerType = "Minuit2", const std::string & algoType = "Migrad");
+   static ROOT::Math::Minimizer * CreateMinimizer(const std::string & minimizerType = "", const std::string & algoType = "");
 
    /**
       static method to create the distribution sampler class given a string specifying the type
       Supported sampler types are: 
-      Unuran
+      Unuran, Foam
+      If no name is given use default values defined in  DistSamplerOptions
     */
-   static ROOT::Math::DistSampler * CreateDistSampler(const std::string & samplerType ="Unuran");
+   static ROOT::Math::DistSampler * CreateDistSampler(const std::string & samplerType ="");
    
 
 }; 

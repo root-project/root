@@ -61,6 +61,7 @@ public:
    MultiNumGradFunction (const IMultiGenFunction & f) : 
       fFunc(&f), 
       fDim(f.NDim() ),
+      fNCalls(0),
       fOwner(false)
    {}
 
@@ -72,6 +73,7 @@ public:
    template<class FuncType> 
    MultiNumGradFunction (FuncType f, int n) : 
       fDim( n ), 
+      fNCalls(0),
       fOwner(true)
    {
       // create a wrapped function
@@ -89,6 +91,8 @@ public:
    // method inheritaed from IFunction interface 
 
    unsigned int NDim() const { return fDim; } 
+
+   unsigned int NCalls() const { return fNCalls; }
 
    IMultiGenFunction * Clone() const { 
       if (!fOwner) 
@@ -114,6 +118,7 @@ private:
 
 
    double DoEval(const double * x) const { 
+      fNCalls++;
       return (*fFunc)(x); 
    }
 
@@ -123,6 +128,7 @@ private:
    // adapat internal function type to IMultiGenFunction needed by derivative calculation
    const IMultiGenFunction * fFunc;  
    unsigned int fDim; 
+   mutable unsigned int fNCalls;
    bool fOwner; 
 
    static double fgEps;          // epsilon used in derivative calculation h ~ eps |x|
