@@ -287,7 +287,7 @@ bool GSLNLSMinimizer::Minimize() {
       startValues.resize( fNFree );
    }
 
-
+   if (debugLevel >=1 ) std::cout <<"Minimize using GSLNLSMinimizer " << fGSLMultiFit->Name() << std::endl; 
 
 //    // use a global step size = min (step vectors) 
 //    double stepSize = 1; 
@@ -297,16 +297,11 @@ bool GSLNLSMinimizer::Minimize() {
 
    int iret = fGSLMultiFit->Set( fResiduals, &startValues.front() );  
    if (iret) { 
-      std::cout << "GSLNLSMinimizer : Error setting residual functions, iret = " << iret << std::endl;
+      MATH_ERROR_MSGVAL("GSLNLSMinimizer::Minimize","Error setting the residual functions ",iret);
       return false; 
    }
 
-
-   if (debugLevel >=1 ) std::cout <<"Minimize using GSLNLSMinimizer " << fGSLMultiFit->Name() << std::endl; 
-
-
-   //std::cout <<"print Level " << debugLevel << std::endl; 
-   //debugLevel = 3; 
+   if (debugLevel >=1 ) std::cout <<"GSLNLSMinimizer: Start iterating......... "  << std::endl; 
 
    // start iteration 
    unsigned  int iter = 0; 

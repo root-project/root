@@ -230,7 +230,7 @@ public:
    virtual const double *  MinGradient() const; 
 
    /// number of function calls to reach the minimum 
-   virtual unsigned int NCalls() const { return 0; } // not yet ipl.  
+   virtual unsigned int NCalls() const { return (fObjFunc) ? fObjFunc->NCalls() : 0; } 
 
    /// this is <= Function().NDim() which is the total 
    /// number of variables (free+ constrained ones) 
