@@ -230,6 +230,11 @@ namespace Math {
       unsigned int Binomial(double p, unsigned int n) const;
 
       /**
+         Negative Binomial distribution
+      */
+      unsigned int NegativeBinomial(double p, double n) const;
+
+      /**
          Multinomial distribution
       */
       std::vector<unsigned int> Multinomial( unsigned int ntot, const std::vector<double> & p ) const; 

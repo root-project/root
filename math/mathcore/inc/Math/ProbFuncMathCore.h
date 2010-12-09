@@ -581,6 +581,27 @@ namespace Math {
    double binomial_cdf(unsigned int k, double p, unsigned int n); 
 
 
+   /**
+
+   Complement of the cumulative distribution function of the Negative Binomial distribution. 
+   Upper tail of the integral of the #negative_binomial_pdf
+  
+   @ingroup ProbFunc
+
+   */
+
+   double negative_binomial_cdf_c(unsigned int k, double p, double n); 
+
+   /**
+
+   Cumulative distribution function of the Negative Binomial distribution 
+   Lower tail of the integral of the #negative_binomial_pdf
+  
+   @ingroup ProbFunc
+
+   */
+
+   double negative_binomial_cdf(unsigned int k, double p, double n); 
 
 
 

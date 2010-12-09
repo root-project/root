@@ -47,6 +47,17 @@ namespace Math {
          return std::exp(coeff + k * std::log(p) + (n - k) * ROOT::Math::log1p(-p));
       }
    }
+
+   double negative_binomial_pdf(unsigned int k, double p, double n) {
+      // impelment in term of gamma function 
+      
+      if (n < 0)  return 0.0;
+      if (p < 0 || p > 1.0) return 0.0;
+
+      double coeff = ROOT::Math::lgamma(k+n) - ROOT::Math::lgamma(k+1.0) - ROOT::Math::lgamma(n);
+      return std::exp(coeff + n * std::log(p) + double(k) * ROOT::Math::log1p(-p));
+
+   }
    
    
    double breitwigner_pdf(double x, double gamma, double x0) {

@@ -107,6 +107,25 @@ namespace Math {
   double binomial_pdf(unsigned int k, double p, unsigned int n);
 
 
+  /**
+    
+  Probability density function of the negative binomial distribution.
+
+  \f[ p(k) = \frac{(k+n-1)!}{k! (n-1)!} p^{n} (1-p)^{k} \f]
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/NegativeBinomialDistribution.html">
+  Mathworld</A> (where $k \to x$ and $n \to r$).
+  The distribution in <A HREF="http://en.wikipedia.org/wiki/Negative_binomial_distribution">
+  Wikipedia</A> is defined with a $p$ corresponding to $1-p$ in this case.
+
+  
+  @ingroup PdfFunc
+
+  */
+
+  double negative_binomial_pdf(unsigned int k, double p, double n);
+
 
 
   /**

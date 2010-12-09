@@ -268,6 +268,12 @@ namespace Math {
       return gsl_ran_binomial(  fRng->Rng(), p, n);
    }
 
+   unsigned int GSLRandomEngine::NegativeBinomial(double p, double n) const
+   { 
+      // Negative Binomial distribution
+      return gsl_ran_negative_binomial(  fRng->Rng(), p, n);
+   }
+
 
    std::vector<unsigned int>  GSLRandomEngine::Multinomial( unsigned int ntot, const std::vector<double> & p ) const
    { 
