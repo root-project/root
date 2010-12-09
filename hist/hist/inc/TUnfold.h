@@ -1,3 +1,4 @@
+// @(#)root/hist:$Id$
 // Author: Stefan Schmitt
 // DESY, 13/10/08
 
@@ -176,9 +177,9 @@ public:
    TH1D *GetFoldedOutput(const char *name,const char *title, Double_t y0 = 0.0, Double_t y1 = 0.0) const; // get folded unfolding result
    TH1D *GetInput(const char *name,const char *title, Double_t y0 = 0.0, Double_t y1 = 0.0) const;     // get unfolding input
    TH2D *GetRhoIJ(const char *name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;     // get correlation coefficients
-   TH2D *GetEmatrix(char const *name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;   // get error matrix
-   TH1D *GetRhoI(char const *name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;      // get global correlation coefficients
-   TH2D *GetLsquared(char const *name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;  // get regularisation conditions squared
+   TH2D *GetEmatrix(const char*name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;   // get error matrix
+   TH1D *GetRhoI(const char*name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;      // get global correlation coefficients
+   TH2D *GetLsquared(const char*name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;  // get regularisation conditions squared
 
    void GetOutput(TH1 *output,const Int_t *binMap=0) const; // get output distribution, averaged over bins
    void GetEmatrix(TH2 *ematrix,const Int_t *binMap=0) const; // get error matrix, averaged over bins

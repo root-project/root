@@ -1,3 +1,4 @@
+// @(#)root/hist:$Id$
 // Author: Stefan Schmitt
 // DESY, 23/01/09
 
