@@ -1,5 +1,5 @@
 /*
-FourBin Tutorial:
+FourBin Instructional Tutorial:
  authors: 
  Kyle Cranmer <cranmer@cern.ch>
  Tanja Rommerskirchen <tanja.rommerskirchen@cern.ch>
@@ -138,7 +138,7 @@ June 2010.  It proceeds as follows:
 using namespace RooFit;
 using namespace RooStats;
 
-void FourBin(bool doBayesian=false, bool doFeldmanCousins=false, bool doMCMC=false){
+void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bool doMCMC=false){
   
   // let's time this challenging example
   TStopwatch t;
