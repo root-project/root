@@ -113,6 +113,10 @@ void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost)
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") aggregating results data" << endl ;
   TList* olist = (TList*) gROOT->ProcessLineFast(Form("((TProof*)%p)->GetOutputList()",p)) ;
   aggregateData(olist) ;
+
+  // close proof session
+  gROOT->ProcessLineFast(Form("((TProof*)%p)->Close(\"s\") ;",p)) ;
+  gROOT->ProcessLineFast(Form("delete ((TProof*)%p) ;",p)) ;
 }
 
 
