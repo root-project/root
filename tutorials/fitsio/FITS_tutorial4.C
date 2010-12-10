@@ -14,7 +14,7 @@ void FITS_tutorial4()
    printf("Data copyright: NASA\n\n");
    
    if (!gROOT->IsBatch()) {
-      printf("Press ENTER to start..."); getchar();
+      //printf("Press ENTER to start..."); getchar();
    }
     
    //Open the table extension number 1)
@@ -22,16 +22,16 @@ void FITS_tutorial4()
    if (hdu == 0) {
       printf("ERROR: could not access the HDU\n"); return;
    }
-   printf("Press ENTER to see information about the table's columns..."); getchar();
+   //printf("Press ENTER to see information about the table's columns..."); getchar();
    hdu->Print("T");
    
    printf("\n\n........................................\n");
    printf("Press ENTER to see full table contents (maybe you should resize\n");
-   printf("this window as large as possible before)..."); getchar();   
+   //printf("this window as large as possible before)..."); getchar();   
    hdu->Print("T+");
    
    printf("\n\n........................................\n");
-   printf("Press ENTER to get only the DATAMAX value of the matched row..."); getchar();
+   //printf("Press ENTER to get only the DATAMAX value of the matched row..."); getchar();
    TVectorD *v = hdu->GetTabRealVectorColumn("DATAMAX");
    printf("%lg\n", (*v)[0]);
    

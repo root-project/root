@@ -10,11 +10,11 @@ void FITS_tutorial3()
    printf("Data copyright: NASA\n\n");
    
    if (!gROOT->IsBatch()) {
-      printf("Press ENTER to start..."); getchar();
+      //printf("Press ENTER to start..."); getchar();
    }
    
    // Open extensions 1 to 5 from file
-   printf("Press ENTER to see a canvas with all images within the file:"); getchar();
+   //printf("Press ENTER to see a canvas with all images within the file:"); getchar();
    
    TCanvas *c = new TCanvas("c1", "FITS tutorial #1", 800, 700);
    c->Divide(2,3);

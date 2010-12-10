@@ -11,7 +11,7 @@ void FITS_tutorial1()
    printf("which was taken by the author on November 2009 in Barcelona (CATALONIA).\n\n");
       
    if (!gROOT->IsBatch()) {
-      printf("Press ENTER to start..."); getchar();
+      //printf("Press ENTER to start..."); getchar();
    }
    
    // Open primary HDU from file
@@ -23,13 +23,13 @@ void FITS_tutorial1()
    
    // Dump the HDUs within the FITS file
    // and also their metadata
-   printf("Press ENTER to see summary of all data stored in the file:"); getchar();
+   //printf("Press ENTER to see summary of all data stored in the file:"); getchar();
    
    hdu->Print("F+");
    
    printf("....................................\n");
    // Here we get the exposure time.
-   printf("Press ENTER to retrieve the exposure time from the HDU metadata..."); getchar();
+   //printf("Press ENTER to retrieve the exposure time from the HDU metadata..."); getchar();
    printf("Exposure time = %s\n", hdu->GetKeywordValue("EXPTIME").Data());
 
    
@@ -41,7 +41,7 @@ void FITS_tutorial1()
    printf("We can read the image as a matrix of values.\n");
    printf("This feature is useful to do image processing, e.g:\n");
    printf("histogram equalization, custom filtering, ...\n");
-   printf("Press ENTER to continue..."); getchar();
+   //printf("Press ENTER to continue..."); getchar();
    
    TMatrixD *mat = hdu->ReadAsMatrix(0);
    mat->Print();
@@ -52,7 +52,7 @@ void FITS_tutorial1()
    printf("....................................\n");
    printf("Now the primary array will be read both as an image and as a histogram,\n");
    printf("and they will be shown in a canvas.\n");
-   printf("Press ENTER to continue..."); getchar();
+   //printf("Press ENTER to continue..."); getchar();
    
    TASImage *im = hdu->ReadAsImage(0);
    

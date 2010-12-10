@@ -13,7 +13,7 @@ void FITS_tutorial2()
    printf("Data copyright: NASA\n\n");
    
    if (!gROOT->IsBatch()) {
-      printf("Press ENTER to start..."); getchar();
+      //printf("Press ENTER to start..."); getchar();
    }
 
    // Open primary HDU from file
@@ -26,12 +26,12 @@ void FITS_tutorial2()
    
    // Dump the HDUs within the FITS file
    // and also their metadata
-   printf("Press ENTER to see summary of all data stored in the file:"); getchar();
+   //printf("Press ENTER to see summary of all data stored in the file:"); getchar();
    hdu->Print("F+");
    
    printf("....................................\n");
    printf("We are going to generate a TGraph from vectors\n");
-   printf("within the primary array. Press ENTER to continue.."); getchar();
+   //printf("within the primary array. Press ENTER to continue.."); getchar();
    
    TVectorD *Y = hdu->GetArrayRow(0);
    TVectorD *X = hdu->GetArrayRow(1);
