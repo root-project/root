@@ -599,7 +599,7 @@ std::map<TString,Double_t>  TMVA::MethodBDT::OptimizeTuningParameters(TString fo
    tuneParameters.insert(std::pair<TString,Interval>("NodeMinEvents",  Interval(min,max,10))); // 
    tuneParameters.insert(std::pair<TString,Interval>("NTrees",         Interval(50,1000,20))); //  stepsize 50
    // tuneParameters.insert(std::pair<TString,Interval>("NodePurityLimit",Interval(.4,.6,3)));   // stepsize .1
-   tuneParameters.insert(std::pair<TString,Interval>("AdaBoostBeta",   Interval(.5,1.50,10)));   //== stepsize .1
+   // tuneParameters.insert(std::pair<TString,Interval>("AdaBoostBeta",   Interval(.5,1.50,10)));   //== stepsize .1
 
    Log() << kINFO << "Automatic optimisation of tuning parameters in BDT uses:" << Endl;
    
