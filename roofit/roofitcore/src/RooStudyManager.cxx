@@ -94,11 +94,16 @@ void RooStudyManager::run(Int_t nExperiments)
 
 
 //_____________________________________________________________________________
-void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost) 
+void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, Bool_t showGui) 
 {
   // Open PROOF-Lite session
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") opening PROOF session" << endl ;
   void* p = (void*) gROOT->ProcessLineFast(Form("TProof::Open(\"%s\")",proofHost)) ;
+
+  // Suppress GUI if so requested
+  if (!showGui) {
+    gROOT->ProcessLineFast(Form("((TProof*)%p)->SetProgressDialog(0) ;",p)) ;
+  }
 
   // Propagate workspace to proof nodes
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") sending work package to PROOF servers" << endl ;
@@ -114,9 +119,12 @@ void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost)
   TList* olist = (TList*) gROOT->ProcessLineFast(Form("((TProof*)%p)->GetOutputList()",p)) ;
   aggregateData(olist) ;
 
-  // close proof session
+
   gROOT->ProcessLineFast(Form("((TProof*)%p)->Close(\"s\") ;",p)) ;
-  gROOT->ProcessLineFast(Form("delete ((TProof*)%p) ;",p)) ;
+  // close proof session
+  if (!showGui) {
+    gROOT->ProcessLineFast(Form("delete ((TProof*)%p) ;",p)) ;
+  }
 }
 
 

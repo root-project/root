@@ -42,7 +42,7 @@ public:
   void run(Int_t nExperiments) ;
 
   // PROOF-based paralllel running
-  void runProof(Int_t nExperiments, const char* proofHost="") ;
+  void runProof(Int_t nExperiments, const char* proofHost="", Bool_t showGui=kTRUE) ;
 
   // Batch running
   void prepareBatchInput(const char* studyName, Int_t nExpPerJob, Bool_t unifiedInput) ;
