@@ -20,7 +20,7 @@ TSchemaRuleSet::TSchemaRuleSet(): fPersistentRules( 0 ), fRemainingRules( 0 ),
    fPersistentRules = new TObjArray();
    fRemainingRules  = new TObjArray();
    fAllRules        = new TObjArray();
-   fAllRules->SetOwner( kFALSE );
+   fAllRules->SetOwner( kTRUE );
 }
 
 //------------------------------------------------------------------------------

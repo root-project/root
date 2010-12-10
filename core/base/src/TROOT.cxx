@@ -323,6 +323,8 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fTypes       = 0;
    fGlobals     = 0;
    fGlobalFunctions = 0;
+   // fList was created in TDirectory::Build but with different sizing.
+   delete fList;
    fList        = new THashList(1000,3);
    fFiles       = new TList; fFiles->SetName("Files");
    fMappedFiles = new TList; fMappedFiles->SetName("MappedFiles");
@@ -462,7 +464,11 @@ TROOT::~TROOT()
 
       // ATTENTION!!! Order is important!
 
-//      fSpecials->Delete();   SafeDelete(fSpecials);    // delete special objects : PostScript, Minuit, Html
+#ifdef R__COMPLETE_MEM_TERMINATION
+      SafeDelete(fBrowsables);
+      SafeDelete(fRootFolder);
+      fSpecials->Delete();   SafeDelete(fSpecials);    // delete special objects : PostScript, Minuit, Html
+#endif
       fFiles->Delete("slow"); SafeDelete(fFiles);       // and files
       fSecContexts->Delete("slow"); SafeDelete(fSecContexts); // and security contexts
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets
@@ -476,19 +482,38 @@ TROOT::~TROOT()
       fStyles->Delete();     SafeDelete(fStyles);
       fGeometries->Delete(); SafeDelete(fGeometries);
       fBrowsers->Delete();   SafeDelete(fBrowsers);
-      //fBrowsables->Delete(); SafeDelete(fBrowsables);
-
+      
+#ifdef R__COMPLETE_MEM_TERMINATION
+      if (gGuiFactory != gBatchGuiFactory) SafeDelete(gGuiFactory);
+      SafeDelete(gBatchGuiFactory);
+      if (gGXBatch != gVirtualX) SafeDelete(gGXBatch);
+      SafeDelete(gVirtualX);
+#endif
+      
       // Stop emitting signals
       TQObject::BlockAllSignals(kTRUE);
 
       fMessageHandlers->Delete(); SafeDelete(fMessageHandlers);
-//      if (fTypes) fTypes->Delete();
-//      SafeDelete(fTypes);
-//      if (fGlobals) fGlobals->Delete();
-//      SafeDelete(fGlobals);
-//      if (fGlobalFunctions) fGlobalFunctions->Delete();
-//      SafeDelete(fGlobalFunctions);
-//      fClasses->Delete();    SafeDelete(fClasses);     // TClass'es must be deleted last
+
+#ifdef R__COMPLETE_MEM_TERMINATION
+      SafeDelete(fCanvases);
+      SafeDelete(fTasks);
+      SafeDelete(fProofs);
+      SafeDelete(fDataSets);
+      SafeDelete(fClipboard);
+      fCleanups->Clear();
+      delete fPluginManager; gPluginMgr = fPluginManager = 0;
+      delete gClassTable;  gClassTable = 0;
+      delete gEnv; gEnv = 0;
+
+      if (fTypes) fTypes->Delete();
+      SafeDelete(fTypes);
+      if (fGlobals) fGlobals->Delete();
+      SafeDelete(fGlobals);
+      if (fGlobalFunctions) fGlobalFunctions->Delete();
+      SafeDelete(fGlobalFunctions);
+      fClasses->Delete();    SafeDelete(fClasses);     // TClass'es must be deleted last
+#endif
 
       // Remove shared libraries produced by the TSystem::CompileMacro() call
       gSystem->CleanCompiledMacros();
@@ -500,6 +525,10 @@ TROOT::~TROOT()
       // deleted in the dtor's above. Crash.
       // It should only close the files and NOT delete.
       SafeDelete(fInterpreter);
+
+#ifdef R__COMPLETE_MEM_TERMINATION
+      SafeDelete(fCleanups);
+#endif
 
       // Prints memory stats
       TStorage::PrintStatistics();

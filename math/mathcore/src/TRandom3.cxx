@@ -48,6 +48,14 @@
 #include "TUUID.h"
 
 TRandom *gRandom = new TRandom3();
+#ifdef R__COMPLETE_MEM_TERMINATION
+namespace {
+   struct TRandomCleanup { 
+      ~TRandomCleanup() { delete gRandom; gRandom = 0; }
+   };
+   static TRandomCleanup gCleanupRandom;
+}
+#endif
 
 ClassImp(TRandom3)
 

@@ -75,6 +75,7 @@ TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
          if (idnext->GetFirst() > last+1) return idcur;
          idcur->SetLast( idnext->GetLast() );
          lfree->Remove(idnext);
+         delete idnext;
          return idcur;
       }
       if (curfirst == last+1) {

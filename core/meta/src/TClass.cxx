@@ -187,6 +187,15 @@ namespace ROOT {
       TMap fMap;
 
    public:
+#ifdef R__COMPLETE_MEM_TERMINATION
+      TMapTypeToTClass() {
+         TIter next(&fMap);
+         TObjString *key;
+         while((key = (TObjString*)next())) {
+            delete key;
+         }         
+      }
+#endif
       void Add(const char *key, TClass *&obj) {
          TObjString *realkey = new TObjString(key);
          fMap.Add(realkey, obj);
@@ -204,8 +213,12 @@ namespace ROOT {
 #endif
    };
 }
+#ifdef R__COMPLETE_MEM_TERMINATION
+static IdMap_t gIdMapObject;
+IdMap_t *TClass::fgIdMap = &gIdMapObject;
+#else
 IdMap_t *TClass::fgIdMap = new IdMap_t;
-
+#endif
 //______________________________________________________________________________
 void TClass::AddClass(TClass *cl)
 {
@@ -1099,6 +1112,7 @@ TClass& TClass::operator=(const TClass& cl)
    return *this;
 }
 
+
 //______________________________________________________________________________
 TClass::~TClass()
 {
@@ -1540,6 +1554,25 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
          realDataObject = gVirtualX;
       } else {
          realDataObject = New();
+         // The creation of the object might recursively end up calling BuildRealData
+         // with a pointer and thus we do not have an infinite recursion but the 
+         // inner call, set everything up correctly, so let's test again.
+         // This happens for example with $ROOTSYS/test/Event.cxx where the call
+         // to ' fWebHistogram.SetAction(this); ' requires the RealData for Event
+         // to set correctly.
+         if (fRealData) {
+            Int_t delta = GetBaseClassOffset(TObject::Class());
+            if (delta >= 0) {
+               TObject* tobj = (TObject*) (((char*) realDataObject) + delta);
+               tobj->SetBit(kZombie); //this info useful in object destructor
+               delete tobj;
+               tobj = 0;
+            } else {
+               Destructor(realDataObject);
+               realDataObject = 0;
+            }
+            return;
+         }
       }
    }
 
@@ -1547,7 +1580,6 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
    // all the subclasses of this class.
    if (realDataObject) {
       fRealData = new TList;
-
       TBuildRealData brd(realDataObject, this);
 
       // CallShowMember will force a call to InheritsFrom, which indirectly

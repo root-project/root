@@ -1134,7 +1134,10 @@ void TDirectoryFile::Purge(Short_t)
       TKey *keyprev = (TKey*)GetListOfKeys()->Before(key);
       if (!keyprev) break;
       if (key->GetKeep() == 0) {
-         if (strcmp(key->GetName(), keyprev->GetName()) == 0) key->Delete();
+         if (strcmp(key->GetName(), keyprev->GetName()) == 0) {
+            key->Delete(); // Remove from the file.
+            delete key;    // Remove from memory.
+         }
       }
    }
    TFile* f = GetFile();

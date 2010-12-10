@@ -1043,15 +1043,16 @@ void TStreamerInfo::Compile()
    delete[] fComp;
    fComp = 0;
 
-   if (fReadObjectWise) fReadObjectWise->fActions.clear();
-
+   if (fReadObjectWise) {
+      fReadObjectWise->fActions.clear();
+   }
    Int_t ndata = fElements->GetEntries();
 
    fOffset = new Int_t[ndata+1];
    fType   = new Int_t[ndata+1];
 
    SetBit(kIsCompiled);
-   fReadObjectWise = new TStreamerInfoActions::TActionSequence(this,ndata);
+   if (!fReadObjectWise) fReadObjectWise = new TStreamerInfoActions::TActionSequence(this,ndata);
 
    if (!ndata) {
       // This may be the case for empty classes (e.g., TAtt3D).
@@ -1156,7 +1157,8 @@ void TStreamerInfo::Compile()
    }
 
    if ( ! isOptimized ) {
-      fReadMemberWise = new TStreamerInfoActions::TActionSequence(this,ndata);
+      if (fReadMemberWise) fReadMemberWise->fActions.clear();
+      else fReadMemberWise = new TStreamerInfoActions::TActionSequence(this,ndata);
    }
 
    for (i = 0; i < fNdata; ++i) {

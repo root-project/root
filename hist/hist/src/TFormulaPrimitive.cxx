@@ -50,7 +50,19 @@ ClassImp(TFormulaPrimitive)
 // TFormula primitive
 //
 TObjArray * TFormulaPrimitive::fgListOfFunction = 0;
+#ifdef R__COMPLETE_MEM_TERMINATION
+namespace {
+   class TFormulaPrimitiveCleanup {
+      TObjArray **fListOfFunctions;
+   public:
+      TFormulaPrimitiveCleanup(TObjArray **functions) : fListOfFunctions(functions) {}
+      ~TFormulaPrimitiveCleanup() {
+         delete *fListOfFunctions;
+      }
+   };
 
+}
+#endif
 
 //______________________________________________________________________________
 TFormulaPrimitive::TFormulaPrimitive() : TNamed(),
@@ -398,7 +410,14 @@ Int_t TFormulaPrimitive::BuildBasicFormulas()
 {
    // Built-in functions.
 
-   if (fgListOfFunction==0) fgListOfFunction = new TObjArray(1000);
+   if (fgListOfFunction==0) {
+      fgListOfFunction = new TObjArray(1000);
+      fgListOfFunction->SetOwner(kTRUE);
+   }
+#ifdef R__COMPLETE_MEM_TERMINATION
+   static TFormulaPrimitiveCleanup gCleanup(&fgListOfFunction);
+#endif
+   
    //
    // logical
    //

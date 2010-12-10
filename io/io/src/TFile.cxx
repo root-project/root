@@ -2744,6 +2744,7 @@ void TFile::ReadStreamerInfo()
                } else {
                   Warning("ReadStreamerInfo","%s has a %s in the list of TStreamerInfo.", GetName(), info->IsA()->GetName());
                }
+               info->SetBit(kCanDelete);
             }
             lnk = lnk->Next();
             continue;
@@ -2851,6 +2852,7 @@ void TFile::WriteStreamerInfo()
    TStreamerInfo *info;
    TList list;
    TList listOfRules;
+   listOfRules.SetOwner(kTRUE);
    listOfRules.SetName("listOfRules");
    std::set<TClass*> classSet;
 
@@ -2905,7 +2907,6 @@ void TFile::WriteStreamerInfo()
    fClassIndex->fArray[0] = 0;
    fCompress = compress;
 
-   listOfRules.Delete();
    list.RemoveLast(); // remove the listOfRules.
 }
 

@@ -99,6 +99,16 @@ namespace ROOT {
    private:
       TMap fMap;
    public:
+#ifdef R__COMPLETE_MEM_TERMINATION
+      ~TMapTypeToClassRec() {
+         TIter next(&fMap);
+         TObjString *key;
+         while((key = (TObjString*)next())) {
+            delete key;
+         }         
+      }
+#endif
+
       void Add(const char *key, TClassRec *&obj) {
          TObjString *realkey = new TObjString(key);
          fMap.Add(realkey, (TObject*)obj);
@@ -597,6 +607,11 @@ TNamed *ROOT::RegisterClassTemplate(const char *name, const char *file,
    // a class template (i.e. NOT a concrete class).
 
    static TList table;
+   static Bool_t isInit = kFALSE;
+   if (!isInit) {
+      table.SetOwner(kTRUE);
+      isInit = kTRUE;
+   }
 
    TString classname(name);
    Ssiz_t loc = classname.Index("<");

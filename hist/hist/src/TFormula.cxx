@@ -287,7 +287,7 @@ TFormula::~TFormula()
 //*-*-*-*-*-*-*-*-*-*-*Formula default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===========================
 
-   gROOT->GetListOfFunctions()->Remove(this);
+   if (gROOT) gROOT->GetListOfFunctions()->Remove(this);
 
    ClearFormula();
 }

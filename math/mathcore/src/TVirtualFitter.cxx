@@ -31,6 +31,16 @@ TString         TVirtualFitter::fgDefault   = "";
 
 ClassImp(TVirtualFitter)
 
+#ifdef R__COMPLETE_MEM_TERMINATION
+namespace {
+   struct TVirtualFitterCleanup {
+      ~TVirtualFitterCleanup() {
+         delete TVirtualFitter::GetFitter();
+      }
+   };
+   TVirtualFitterCleanup cleanup;
+}
+#endif
 
 //______________________________________________________________________________
 TVirtualFitter::TVirtualFitter() : 

@@ -94,6 +94,7 @@ TDirectory::~TDirectory()
    // -- Destructor.
 
    if (!gROOT) {
+      delete fList;
       return; //when called by TROOT destructor
    }
 

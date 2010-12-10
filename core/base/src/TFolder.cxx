@@ -90,6 +90,8 @@ static const char *gFolderD[64];
 static Int_t gFolderLevel = -1;
 static char  gFolderPath[512];
 
+enum { kOwnFolderList = BIT(15) };
+
 ClassImp(TFolder)
 
 //______________________________________________________________________________
@@ -111,6 +113,7 @@ TFolder::TFolder(const char *name, const char *title) : TNamed(name,title)
    // Use Add or AddFolder to add objects or folders to this folder.
 
    fFolders = new TList();
+   SetBit(kOwnFolderList);
    fIsOwner = kFALSE;
 }
 
@@ -129,14 +132,29 @@ TFolder::~TFolder()
    // all its sub folders.
 
    TCollection::StartGarbageCollection();
-
+   
    if (fFolders) {
-      fFolders->Clear();
-      SafeDelete(fFolders);
+      if (fFolders->IsOwner()) {
+         fFolders->Delete();
+      }
+      if (TestBit(kOwnFolderList)) {
+         TObjLink *iter = ((TList*)fFolders)->FirstLink();
+         while (iter) {
+            TObject *obj = iter->GetObject();
+            TObjLink *next = iter->Next();
+            if (obj && obj->IsA() == TFolder::Class()) {
+               ((TList*)fFolders)->Remove(iter);
+               delete obj;
+            }
+            iter = next;
+         }
+         fFolders->Clear("nodelete");
+         SafeDelete(fFolders);
+      }
    }
 
    TCollection::EmptyGarbageCollection();
-
+   
    if (gDebug)
       cerr << "TFolder dtor called for "<< GetName() << endl;
 }
@@ -173,11 +191,18 @@ TFolder *TFolder::AddFolder(const char *name, const char *title, TCollection *co
    TFolder *folder = new TFolder();
    folder->SetName(name);
    folder->SetTitle(title);
-   if (!fFolders) fFolders = new TList(); //only true when gROOT creates its 1st folder
+   if (!fFolders) {
+      fFolders = new TList(); //only true when gROOT creates its 1st folder
+      SetBit(kOwnFolderList);
+   }
    fFolders->Add(folder);
 
-   if (collection) folder->fFolders = collection;
-   else            folder->fFolders = new TList();
+   if (collection) {
+      folder->fFolders = collection;
+   } else {
+      folder->fFolders = new TList();
+      folder->SetBit(kOwnFolderList);
+   }
    return folder;
 }
 

@@ -192,12 +192,12 @@ TStreamerInfo::~TStreamerInfo()
    delete [] fComp;    fComp   =0;
    delete [] fVirtualInfoLoc; fVirtualInfoLoc =0;
 
+   delete fReadObjectWise;
+   delete fReadMemberWise;
+
    if (!fElements) return;
    fElements->Delete();
    delete fElements; fElements=0;
-   
-   delete fReadObjectWise;
-   delete fReadMemberWise;
 }
 
 //______________________________________________________________________________

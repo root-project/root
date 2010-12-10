@@ -299,7 +299,11 @@ Int_t TRef::AddExec(const char *name)
    // If Exec with name does not exist in the list of Execs, it is created.
    // returns the index of the Exec in the list.
 
+#ifdef R__COMPLETE_MEM_TERMINATION
+   if (!fgExecs) GetListOfExecs();
+#else
    if (!fgExecs) fgExecs = new TObjArray(10);
+#endif
 
    TExec *exec = (TExec*)fgExecs->FindObject(name);
    if (!exec) {
@@ -315,9 +319,17 @@ TObjArray *TRef::GetListOfExecs()
 {
    // Return a pointer to the static TObjArray holding the list of Execs.
 
+#ifdef R__COMPLETE_MEM_TERMINATION
+   static TObjArray listOfExecs(10);
+   if (!fgExecs) {
+      listOfExecs.SetOwner(kTRUE);
+      fgExecs = &listOfExecs;
+   }
+#else
    if (!fgExecs) fgExecs = new TObjArray(10);
-
+#endif
    return fgExecs;
+   
 }
 
 

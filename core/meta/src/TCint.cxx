@@ -337,6 +337,9 @@ TCint::~TCint()
    delete fMapfile;
    delete fRootmapFiles;
    gCint = 0;
+#ifdef R__COMPLETE_MEM_TERMINATION
+   G__scratch_all();
+#endif
 }
 
 //______________________________________________________________________________

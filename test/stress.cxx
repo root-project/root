@@ -229,6 +229,8 @@ void stress(Int_t nevent, Int_t style = 1,
    printf("******************************************************************\n");
    printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),gROOT->GetVersionDate(),gROOT->GetVersionTime());
    printf("******************************************************************\n");
+   
+   delete gBenchmark;
 }
 
 //_______________________________________________________________
@@ -328,6 +330,9 @@ void stress1()
    h1int->Write();
    ntotout += local.GetBytesWritten();
    //do not close the file. should be done by the destructor automatically
+   delete h1int;
+   delete h1form;
+   delete h1diff;
 }
 
 //_______________________________________________________________
@@ -487,7 +492,9 @@ void stress5()
       printf("failed\n");
       printf("%-8s nlines in stress.ps file = %d\n"," ",nlines);
    }
+   delete c1;
    if (gPrintSubBench) { printf("Test  5 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
+   
 }
 
 //_______________________________________________________________
@@ -1168,6 +1175,11 @@ void stress10()
    Bprint(10,"Create 10 files starting from Event.root");
 
    TFile *hfile = new TFile("Event.root");
+   if (hfile==0 || hfile->IsZombie()) {
+      delete hfile;
+      printf("failed\n");
+      return;
+   }
    TTree *tree; hfile->GetObject("T",tree);
 
    Event *event = 0;
@@ -1182,7 +1194,6 @@ void stress10()
       sprintf(filename,"Event_%d.root",file);
       chfile[file] = new TFile(filename,"recreate");
       chTree[file] = (TTree*)tree->CloneTree(0);
-      chTree[file]->SetBranchAddress("event",&event);
    }
 
    // Fill the small trees
@@ -1190,7 +1201,7 @@ void stress10()
    Int_t evmod, nbin=0, nbout=0;
    EventHeader *head;
    for (Int_t ev=0;ev<nev;ev++) {
-      nbin +=tree->GetEntry(ev);
+      nbin += tree->GetEntry(ev);
       head = event->GetHeader();
       evmod = head->GetEvtNum()%10;
       nbout += chTree[evmod]->Fill();
@@ -1203,7 +1214,6 @@ void stress10()
       chfile[file]->Write();
       delete chfile[file];
    }
-   event->ResetHistogramPointer(); // fH was deleted above!!
    delete event;
    delete hfile;
    Event::Reset();
@@ -1351,6 +1361,10 @@ void stress15()
    //Get old file, old tree and set top branch address
    //We want to copy only a few branches.
    TFile *oldfile = new TFile("Event.root");
+   if (oldfile->IsZombie()) {
+      printf("failed\n");
+      return;
+   }   
    TTree *oldtree; oldfile->GetObject("T",oldtree);
    Event *event   = 0;
    oldtree->SetBranchAddress("event",&event);
@@ -1389,12 +1403,17 @@ void stress15()
 
    // Open old reference file of stress9
    oldfile = new TFile("stress_test9.root");
+   if (oldfile->IsZombie()) {
+      printf("failed\n");
+      return;
+   }
    TH1F *bNtrack; oldfile->GetObject("bNtrack",bNtrack);
    TH1F *bHmean;  oldfile->GetObject("bHmean",bHmean);
    Int_t cNtrack = HistCompare(hNtrack,bNtrack);
    Int_t cHmean  = HistCompare(hHmean, bHmean);
    delete newfile;
    delete oldfile;
+   Event::Reset();
    gROOT->GetList()->Delete();
 
    Bool_t OK = kTRUE;
