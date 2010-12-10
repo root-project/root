@@ -69,8 +69,8 @@ void rf604_constraints()
   // Multiply constraint with p.d.f
   RooProdPdf modelc("modelc","model with constraint",RooArgSet(model,fconstraint)) ;
   
-  // Fit modelc without use of constraint term
-  RooFitResult* r1 = modelc.fitTo(*d,Save()) ;
+  // Fit model (without use of constraint term)
+  RooFitResult* r1 = model.fitTo(*d,Save()) ;
 
   // Fit modelc with constraint term on parameter f
   RooFitResult* r2 = modelc.fitTo(*d,Constrain(f),Save()) ;
