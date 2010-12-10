@@ -1,4 +1,4 @@
-//______________________________________________________________________________
+//+______________________________________________________________________________
 // Performance test of all the ROOT random generator (TRandom, TRandom1, TRandom2 and TRandom3)  
 // Tests the generator TRandom3 against some ref values
 // and creates a timing table against TRandom, TRandom1 and TRandom2.
@@ -45,7 +45,7 @@
 
 
 void testAll() {
-  int i, N = 10000000;
+  int i, N = 5000000;
   float cpn = 1000000000./N;
   double x,y;
   TRandom *rsave = gRandom;
