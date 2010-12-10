@@ -1224,6 +1224,7 @@ Double_t TGeoIntersection::DistFromOutside(Double_t *point, Double_t *dir, Int_t
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point outside to the shape.
+   Double_t tol = TGeoShape::Tolerance();
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point,kFALSE);
@@ -1264,6 +1265,8 @@ Double_t TGeoIntersection::DistFromOutside(Double_t *point, Double_t *dir, Int_t
          inleft = kTRUE;
          for (i=0; i<3; i++) master[i] += d1*dir[i];
          fRightMat->MasterToLocal(master,rpt);
+         // Push rpt to avoid a bad boundary condition
+         for (i=0; i<3; i++) rpt[i] += tol*rdir[i];
          // check if propagated point is inside right shape
          inright = fRight->Contains(rpt);
          if (inright) return snext;
@@ -1275,6 +1278,8 @@ Double_t TGeoIntersection::DistFromOutside(Double_t *point, Double_t *dir, Int_t
          inright = kTRUE;
          for (i=0; i<3; i++) master[i] += d2*dir[i];
          fLeftMat->MasterToLocal(master,lpt);
+         // Push lpt to avoid a bad boundary condition
+         for (i=0; i<3; i++) lpt[i] += tol*ldir[i];
          // check if propagated point is inside left shape
          inleft = fLeft->Contains(lpt);
          if (inleft) return snext;
