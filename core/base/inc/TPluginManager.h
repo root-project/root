@@ -175,6 +175,7 @@ public:
 
    void   Print(Option_t *opt = "") const;
    Int_t  WritePluginMacros(const char *dir, const char *plugin = 0) const;
+   Int_t  WritePluginRecords(const char *envFile, const char *plugin = 0) const;
 
    ClassDef(TPluginManager,1)  // Manager for plugin handlers
 };

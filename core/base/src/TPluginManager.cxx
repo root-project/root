@@ -705,3 +705,76 @@ Int_t TPluginManager::WritePluginMacros(const char *dir, const char *plugin) con
    }
    return 0;
 }
+
+//______________________________________________________________________________
+Int_t TPluginManager::WritePluginRecords(const char *envFile, const char *plugin) const
+{
+   // Write in the specified environment config file the plugin records. If
+   // plugin is specified and if it is a base class all records for that
+   // base will be written. If it is a plugin class name, only that one
+   // record will be written. If plugin is 0 all macros are written.
+   // If envFile is 0 or "" the records are written to stdout.
+   // Returns -1 if envFile cannot be created or opened, 0 otherwise.
+
+   const_cast<TPluginManager*>(this)->LoadHandlersFromPluginDirs();
+
+   if (!fHandlers) return 0;
+
+   FILE *fd;
+   if (!envFile || !envFile[0])
+      fd = stdout;
+   else
+      fd = fopen(envFile, "w+");
+
+   if (!fd) {
+      Error("WritePluginRecords", "error opening file %s", envFile);
+      return -1;
+   }
+
+   TString base, base2;
+   Int_t   idx = 0;
+
+   TObjLink *lnk = fHandlers->FirstLink();
+   while (lnk) {
+      TPluginHandler *h = (TPluginHandler *) lnk->GetObject();
+      if (plugin && strcmp(plugin, h->fBase) && strcmp(plugin, h->fClass)) {
+         lnk = lnk->Next();
+         continue;
+      }
+      if (base != h->fBase) {
+         idx = 1;
+         base = h->fBase;
+         base2 = base;
+         base2.ReplaceAll("::", "@@");
+      } else
+         idx += 1;
+
+      if (idx == 1)
+         fprintf(fd, "Plugin.%s: %s %s %s \"%s\"\n", base2.Data(), h->fRegexp.Data(),
+                 h->fClass.Data(), h->fPlugin.Data(), h->fCtor.Data());
+      else
+         fprintf(fd, "+Plugin.%s: %s %s %s \"%s\"\n", base2.Data(), h->fRegexp.Data(),
+                 h->fClass.Data(), h->fPlugin.Data(), h->fCtor.Data());
+
+      // check for different regexps cases for the same base + class and
+      // put them all in the same macro
+      TObjLink *lnk2 = lnk->Next();
+      while (lnk2) {
+         TPluginHandler *h2 = (TPluginHandler *) lnk2->GetObject();
+         if (h->fBase != h2->fBase || h->fClass != h2->fClass)
+            break;
+
+         fprintf(fd, "+Plugin.%s: %s %s %s \"%s\"\n", base2.Data(), h2->fRegexp.Data(),
+                 h2->fClass.Data(), h2->fPlugin.Data(), h2->fCtor.Data());
+
+         lnk  = lnk2;
+         lnk2 = lnk2->Next();
+      }
+      lnk = lnk->Next();
+   }
+
+   if (envFile && envFile[0])
+      fclose(fd);
+
+   return 0;
+}
