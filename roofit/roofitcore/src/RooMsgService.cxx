@@ -276,7 +276,10 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
 	cout << "RooMsgService::addReportingStream ERROR: cannot open output log file " << outFile << " reverting stream to stdout" << endl ;
 	delete os2 ;
 	newStream.os = &cout ;
+      } else {
+	newStream.os = os2 ;
       }
+
     } else {
       _files["outFile"] = os2 ;
       newStream.os = os2 ;
@@ -485,6 +488,7 @@ ostream& RooMsgService::log(const RooAbsArg* self, RooFit::MsgLevel level, RooFi
 
   // Return C++ ostream associated with given message configuration
   Int_t as = activeStream(self,topic,level) ;
+
   if (as==-1) {
     return *_devnull ;
   }
