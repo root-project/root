@@ -131,7 +131,11 @@ TMVA::MethodBoost::~MethodBoost( void )
    fMethodWeight.clear();
 
    // the histogram themselves are deleted when the file is closed
-   if (fMonitorHist != 0) delete fMonitorHist;
+
+   if(fMonitorHist) {
+      for ( std::vector<TH1*>::iterator it = fMonitorHist->begin(); it != fMonitorHist->end(); ++it) delete *it;
+      delete fMonitorHist;
+   }
    fTrainSigMVAHist.clear();
    fTrainBgdMVAHist.clear();
    fBTrainSigMVAHist.clear();
@@ -215,6 +219,10 @@ void TMVA::MethodBoost::Init()
 void TMVA::MethodBoost::InitHistos()
 {
    // initialisation routine
+   if(fMonitorHist) {
+      for ( std::vector<TH1*>::iterator it = fMonitorHist->begin(); it != fMonitorHist->end(); ++it) delete *it;
+      delete fMonitorHist;
+   }
    fMonitorHist = new std::vector<TH1*>();
    fMonitorHist->push_back(new TH1F("MethodWeight","Normalized Classifier Weight",fBoostNum,0,fBoostNum));
    fMonitorHist->push_back(new TH1F("BoostWeight","Boost Weight",fBoostNum,0,fBoostNum));
@@ -225,6 +233,7 @@ void TMVA::MethodBoost::InitHistos()
    fMonitorHist->push_back(new TH1F("ROCIntegral_train","ROC integral of single classifier (training sample)",fBoostNum,0,fBoostNum));
    fMonitorHist->push_back(new TH1F("ROCIntegralBoosted_train","ROC integral of boosted method (training sample)",fBoostNum,0,fBoostNum));
    fMonitorHist->push_back(new TH1F("OverlapIntegal_train","Overlap integral (training sample)",fBoostNum,0,fBoostNum));
+   for ( std::vector<TH1*>::iterator it = fMonitorHist->begin(); it != fMonitorHist->end(); ++it ) (*it)->SetDirectory(0);
    fDefaultHistNum = fMonitorHist->size();
    (*fMonitorHist)[0]->GetXaxis()->SetTitle("Index of boosted classifier");
    (*fMonitorHist)[0]->GetYaxis()->SetTitle("Classifier Weight");
@@ -512,8 +521,7 @@ void TMVA::MethodBoost::WriteMonitoringHistosToFile( void ) const
    // going back to the original folder
    BaseDir()->cd();
    for (UInt_t i=0;i<fMonitorHist->size();i++) {
-      ((*fMonitorHist)[i])->SetName(Form("Booster_%s",((*fMonitorHist)[i])->GetName()));
-      ((*fMonitorHist)[i])->Write();
+      ((*fMonitorHist)[i])->Write(Form("Booster_%s",((*fMonitorHist)[i])->GetName()));
    }
 
    fMonitorTree->Write();
@@ -869,9 +877,9 @@ Double_t TMVA::MethodBoost::GetMvaValue( Double_t* err, Double_t* errUpper )
    Double_t epsilon = TMath::Exp(-1.);
    //Double_t fact    = TMath::Exp(-1.)+TMath::Exp(1.);
    for (UInt_t i=0;i< fMethods.size(); i++){
-      Double_t val = fMethods[i]->GetMvaValue();
       MethodBase* m = dynamic_cast<MethodBase*>(fMethods[i]);
       if(m==0) continue;
+      Double_t val = fTmpEvent ? m->GetMvaValue(fTmpEvent) : m->GetMvaValue();
       Double_t sigcut = m->GetSignalReferenceCut();
       // default is no transform
       if (fTransformString == "linear"){

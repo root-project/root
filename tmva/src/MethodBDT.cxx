@@ -438,6 +438,13 @@ void TMVA::MethodBDT::ProcessOptions()
    //             << " that is larger than 1/2 the total number of events in the training sample."
    //             << " Hence I cannot make any split at all... this will not work!" << Endl;
    //    }
+   
+   if (fNTrees==0){
+     Log() << kERROR << " Zero Decision Trees demanded... that does not work !! "
+           << " I set it to 1 .. just so that the program does not crash"
+           << Endl;
+     fNTrees = 1;
+   }
 
 }
 //_______________________________________________________________________
@@ -621,6 +628,13 @@ void TMVA::MethodBDT::Train()
    // (needs to be done here and cannot be done in "init" as the options need to be 
    // known). 
    InitEventSample();
+
+   if (fNTrees==0){
+     Log() << kERROR << " Zero Decision Trees demanded... that does not work !! "
+           << " I set it to 1 .. just so that the program does not crash"
+           << Endl;
+     fNTrees = 1;
+   }
 
    // HHV (it's been here since looong but I really don't know why we cannot handle
    // normalized variables in BDTs...  todo
