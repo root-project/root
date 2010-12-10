@@ -4150,13 +4150,13 @@ void TProofServ::ProcessNext(TString *slb)
 
    // Remove aborted queries from the list
    if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
+      delete pqr;
       if (fQMgr) fQMgr->RemoveQuery(pq);
    } else {
       // Keep in memory only light infor about a query
       if (!(pq->IsDraw())) {
          if (fQMgr && fQMgr->Queries()) {
-            if (pqr)
-               fQMgr->Queries()->Add(pqr);
+            fQMgr->Queries()->Add(pqr);
             // Remove from the fQueries list
             fQMgr->Queries()->Remove(pq);
          }
