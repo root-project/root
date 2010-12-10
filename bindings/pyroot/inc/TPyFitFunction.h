@@ -29,7 +29,8 @@ public:
    virtual ~TPyMultiGenFunction();
 
 // Math::IMultiGenFunction implementation
-   virtual TPyMultiGenFunction* Clone() const { return new TPyMultiGenFunction( fPySelf ); }
+   virtual ROOT::Math::IBaseFunctionMultiDim* Clone() const
+      { return new TPyMultiGenFunction( fPySelf ); }
    virtual unsigned int NDim() const;
    virtual double DoEval( const double* x ) const;
 
@@ -52,7 +53,8 @@ public:
    virtual ~TPyMultiGradFunction();
 
 // Math::IMultiGenFunction implementation
-   virtual TPyMultiGradFunction* Clone() const { return new TPyMultiGradFunction( fPySelf ); }
+   virtual ROOT::Math::IBaseFunctionMultiDim* Clone() const
+      { return new TPyMultiGradFunction( fPySelf ); }
    virtual unsigned int NDim() const;
    virtual double DoEval( const double* x ) const;
 
