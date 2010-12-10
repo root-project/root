@@ -18,14 +18,14 @@
     <li>Derived classes
   implementing this interface are not provided by MathCore but by
   other libraries and they can be instantiated using the plugin
-  manager. Currently only one implementation based on Unuran exists.</li>
+  manager. Implementations based on Unuran and Foam exist.</li>
   </ul>
   </li>
   <br>
  <li><b>New class <tt>ROOT::Math::GoFTest</tt></b> for goodness of fit
   tests of unbinned data
   <ul>
-  <li>The class implements the Kolmogorov-Smmirnov and
+  <li>The class implements the Kolmogorov-Smirnov and
   Anderson-Darling tests for two samples (data vs data ) and
   one sample (data vs distribution)
   <li>For the data vs distribution test, the user can compare using a
@@ -58,8 +58,8 @@
     </li>
         <li>Example 4: perform a 1 sample test with a user-defined
     distribution provided as pdf. Note that in this case to avoid
-    integration problems is sometimes reccomended to give some
-    reasanable xmin and xmax values. xmin (and xmax) should however be
+    integration problems is sometimes recommended to give some
+    reasonable xmin and xmax values. xmin (and xmax) should however be
     smaller (larger) than the minimum (maximum) data value.
     <pre>
          ROOT::Math::Functor1D pdf_func(&ROOT::Math::landau_pdf);
@@ -122,11 +122,24 @@
    translated from RANLAN and
    <tt>ROOT::Math::landau_quantile_c</tt>.
   </li>
-  <li>New special functions: sine and cosine integral, translated by
+ <li>New statistical functions
+   <tt>ROOT::Math::negative_binomial_pdf</tt> and the cumulative distributions
+  <tt>ROOT::Math::negative_binomial_cdf</tt> and <tt>ROOT::Math::negative_binomial_cdf_c</tt>. 
+  </li>
+ <li>New special functions: sine and cosine integral, translated by
    B. List from CERNLIB:
   <tt>ROOT::Math::sinint</tt> and <tt>ROOT::Math::cosint</tt>
   </li>
-  
+
+  <li>New classes <tt>ROOT::Math::IOptions</tt> and
+  <tt>ROOT::Math::GenAlgoOptions</tt> for dealing in general with the
+  options for the numerical algorithm. The first one is the interface
+  for the second and defines the setting and retrieval of generic pair
+  of (name,value) options.
+  <li>They are used for defining possible extra
+  options for the minimizer, integration and sampler options.
+  </li>
+ 
   <li>Integration classes:
   <ul>
    <li>Fix a bug in the templated method setting  the integrand
@@ -139,6 +152,13 @@
   GaussLegendreIntegrator the undefined and semi-undefined integral
   using  a function transformation as it is done in the GSLIntegrator
     <li>Fix a bug in <tt>IntegratorOneDim::SetAbsTolerance</tt>
+    <li>New class <tt>ROOT::Math::IntegratorOptions</tt> which can be passed to
+  all integrator allowing the user to give options to the class and in
+  particular default value. Via the support for extra options (with
+  the class <tt>ROOT::Math::IOptions</tt> generic (string,value)
+  options can be used in the base class to define specific options for
+  the implementations. For example for the MCIntegrator class,
+  specific options can now be passed to VEGAS or MISER.  
   </ul>
 </li>
     <li>Improve the root finder and 1D minimization classes (<tt>BrentRootFinder</tt>
@@ -183,9 +203,11 @@
 <h4>Mathmore</h4>
 <ul>
   <li>Fix a bug in <tt>ROOT::Math::Random::Multinomial</tt>. </li>
-  <li>Fix some bugs in  <tt>GSLInterpolator</tt></li>
-  <li>New Airy functions in the <tt>ROOT::Math</tt> namespace
-  implmeneted using GSL:
+ <li>Fix some bugs in  <tt>GSLInterpolator</tt></li>
+  <li>New mathematical special functions in the <tt>ROOT::Math</tt> namespace
+  implemented using GSL:
+  <ul>
+    <li>Airy functions: 
   <pre>
    double airy_Ai(double x);
    double airy_Bi(double x);
@@ -195,7 +217,21 @@
    double airy_zero_Bi(unsigned int s);
    double airy_zero_Ai_deriv(unsigned int s);
    double airy_zero_Bi_deriv(unsigned int s);
-</pre></li>
+  </pre></li>
+  <li>Wigner coefficient functions:
+  <pre>
+   double wigner_3j(int ja, int jb, int jc, int ma, int mb, int mc);
+   double wigner_6j(int ja, int jb, int jc, int jd, int je, int jf);
+   double wigner_9j(int ja, int jb, int jc, int jd, int je, int jf, int jg, int jh, int ji);
+   </pre></li>
+   </ul>
+   <li>New statistical function: non-central chisquare probability
+   density function 
+   <pre>
+   double noncentral_chisquared_pdf(double x, double r, double lambda);
+   </pre> 
+   It is implemented using Bessel functions or hypergeometric function
+   </li>
     <li>New classes <tt>VavilovAccurate</tt> and <tt>VavilovFast</tt>,
  derived from the abstract base class <tt>Vavilov</tt>,
  provide pdf, cdf and quantile functions for the Vavilov distribution,
@@ -213,14 +249,14 @@
   <li> Use new version 1.7.2 </li>
 <li>Add new class TUnuranSampler implementing the
   <tt>ROOT::Math::DistSampler</tt> interface for one dimensional
-  continous and discrete distributions and for mult-dimensional ones
+  continuous and discrete distributions and for mult-dimensional ones
   </li>
 </ul>
 
 <h4>Foam</h4>
 <ul>
 <li>Add new class TFoamSampler implementing the
-  <tt>ROOT::Math::DistSampler</tt> interface for genereting random
+  <tt>ROOT::Math::DistSampler</tt> interface for generating random
   numbers according to any one or multi-dim distributions using Foam.
   </li>
   <li>All the TFoam options can be controlled via the
@@ -248,11 +284,17 @@
 <h4>Minuit2</h4>
 <ul>
   <li>Fix the returned error from the Minimizer class for fixed and
- constant parameters. Now is set explicity to zero.
+ constant parameters. Now is set explicitly to zero.
   </li>
   <li>Fix a problem in re-defining fixed parameters as variable
   ones. Before it was not possible to release them.
   </li>
 </ul>
 
+<h4>Genetic</h4>
+<ul>
+  <li>Add a new Minimizer implementation based on the genetic
+  algorithm used in TMVA (plugin name "Genetic"). See example programs in
+  math/genetic/test.
+  </li>
 
