@@ -4,6 +4,62 @@
 //
 // Eckhard von Toerne, Dec 2010
 //
+/* if working, it creates output like this:
+
+******************************************************************                                                                            
+* TMVA - S T R E S S and U N I T test suite (FAST)                                                                                            
+******************************************************************                                                                            
+Event [107/107]..................................................OK     
+VariableInfo [31/31].............................................OK 
+DataSetInfo [20/20]..............................................OK   
+DataSet [15/15]..................................................OK 
+Factory [11/11]..................................................OK
+Reader [2/2].....................................................OK
+CutsGA [3/3].....................................................OK
+LikelihoodD [4/4]................................................OK
+PDERS [4/4]......................................................OK
+PDEFoam [4/4]....................................................OK
+KNN [4/4]........................................................OK
+Fisher [4/4].....................................................OK
+BoostedFisher [4/4]..............................................OK
+LD [4/4].........................................................OK
+MLP [4/4]........................................................OK
+MLPBFGS [4/4]....................................................OK
+SVM [4/4]........................................................OK
+BDTG [4/4].......................................................OK
+BDT [4/4]........................................................OK
+Regression_LD [4/4]..............................................OK
+Regression_MLPBFGSN [4/4]........................................OK
+Regression_BDTG2 [4/4]...........................................OK
+Event [107/107]..................................................OK
+VariableInfo [31/31].............................................OK
+DataSetInfo [20/20]..............................................OK
+DataSet [15/15]..................................................OK
+Factory [11/11]..................................................OK
+Reader [2/2].....................................................OK
+CutsGA [3/3].....................................................OK
+LikelihoodD [4/4]................................................OK
+PDERS [4/4]......................................................OK
+PDEFoam [4/4]....................................................OK
+KNN [4/4]........................................................OK
+Fisher [4/4].....................................................OK
+BoostedFisher [4/4]..............................................OK
+LD [4/4].........................................................OK
+MLP [4/4]........................................................OK
+MLPBFGS [4/4]....................................................OK
+SVM [4/4]........................................................OK
+BDTG [4/4].......................................................OK
+BDT [4/4]........................................................OK
+Regression_LD [4/4]..............................................OK
+Regression_MLPBFGSN [4/4]........................................OK
+Regression_BDTG2 [4/4]...........................................OK
+******************************************************************
+*  SYS: Linux linux-7p93 2.6.27.7-9-default #1 SMP 2008-12-04 18:10:
+*  SYS: "openSUSE 11.1 (x86_64)"
+******************************************************************
+*  CPUTIME   =  90.2   *  Root5.27/07   20100929/1318
+******************************************************************
+*/
 // including file tmvaut/UnitTest.h
 #ifndef UNITTEST_H
 #define UNITTEST_H
@@ -151,7 +207,7 @@ long UnitTest::report() const
 
          *osptr << name() << counts;
 
-         UInt_t ndots = 82-name().size() - counts.size();
+         UInt_t ndots = 82-19-name().size() - counts.size();
 
          for (UInt_t i=0; i<ndots; ++i) *osptr << '.';
 
@@ -282,21 +338,25 @@ void UnitTestSuite::run()
          assert(tests[i]);
          tests[i]->intro();
          tests[i]->run();
+#ifndef FULL
+         tests[i]->report();
+#endif
       }
 }
 
 void UnitTestSuite::intro() const
 {
    if (osptr) {
-      *osptr << "************************************************************************************************" << endl;
+      *osptr << "******************************************************************" << endl;
       *osptr << "* TMVA - S T R E S S and U N I T test suite ";
 #ifdef FULL
-      *osptr << "(FULL)";
+      *osptr << "(FULL)"<< endl;
 #else
-      *osptr << "(FAST)";
+      *osptr << "(FAST)"<< endl;
 #endif
-      *osptr << "                                             *" << endl;
-      *osptr << "************************************************************************************************" << endl;
+      //*osptr << "                                             *" << endl;
+      *osptr << "******************************************************************" << endl;
+
    }
 }
 
@@ -304,14 +364,18 @@ long UnitTestSuite::report() const
 {
    if (osptr) {
       long totFail = 0;
+#ifdef FULL
       *osptr << "************************************************************************************************" << endl;
       *osptr << "* TMVA - U N I T test : Summary                                                                *" << endl;
       *osptr << "************************************************************************************************" << endl;
+#endif
       size_t i;
       for (i = 0; i < tests.size(); ++i)
          {
             assert(tests[i]);
+#ifdef FULL
             *osptr << "Test " << setw(2) << i << " : ";
+#endif
             totFail += tests[i]->report();
          }
       return totFail;
@@ -1921,12 +1985,6 @@ void MethodUnitTestWithROCLimits::run()
   std::vector< TMVA::Reader* > reader(nTest);
   for (int iTest=0;iTest<nTest;iTest++){
      //std::cout << "iTest="<<iTest<<std::endl;
-     if (iTest >0 && _methodTitle == "BoostedFisher") {
-#ifdef COUTDEBUG
-        std::cout << "Warning: some reader tests of BoostedFisher give a segfault, skipping reader iTest="<<iTest<<std::endl;
-#endif
-        continue;
-     }
      if (iTest==0){
         reader[iTest] = new TMVA::Reader( readerOption );
         for (UInt_t i=0;i<_VariableNames->size();i++)
@@ -2084,7 +2142,8 @@ void MethodUnitTestWithROCLimits::run()
      TString methodTypeName = Types::Instance().GetMethodName(_methodType);
      FileStat_t stat2;
      if(!gSystem->GetPathInfo(macroFileName.Data(),stat2)) {
-        gSystem->Exec(Form("rm %s",macroFileName.Data()));
+        gSystem->Unlink(macroFileName.Data());
+        //gSystem->Exec(Form("rm %s",macroFileName.Data()));
      }
      ofstream fout( macroFileName );
      fout << "// generic macro file to test TMVA reader and standalone C code " << std::endl;
@@ -2630,8 +2689,11 @@ bool MethodUnitTestWithComplexData::create_data(const char* filename, int nmax)
 // Authors: Christoph Rosemann, Eckhard von Toerne   July 2010
 // TMVA unit tests
 
-#include <iostream>
-#include <cstdlib>
+#include "Riostream.h"
+#include "TSystem.h"
+#include "TROOT.h"
+#include "TBenchmark.h"
+#include "TApplication.h"
 
 
 
@@ -2787,8 +2849,12 @@ void addComplexClassificationTests( UnitTestSuite& TMVA_test, bool full=true )
 }
 
 
-int main()
+int main(int argc, char **argv)
 {
+
+   TApplication theApp("App", &argc, argv);
+   gBenchmark = new TBenchmark();
+   gBenchmark->Start("stress");
    bool full=false;
 #ifdef FULL
    full=true;
@@ -2825,7 +2891,38 @@ int main()
 #ifndef NOCLEANUP
    //FileStat_t stat;
    //if(!gSystem->GetPathInfo("./weights",stat)) {
-   gSystem->Exec("rm -rf weights/*"); 
+#ifdef WIN32
+   gSystem->Exec("erase /f /q weights\\*.*");
+#else
+   gSystem->Exec("rm -rf weights/*");
 #endif
+#endif
+   gBenchmark->Stop("stress");
+   Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
+   printf("******************************************************************\n");
+   if (UNIX) {
+      TString sp = gSystem->GetFromPipe("uname -a");
+      sp.Resize(60);
+      printf("*  SYS: %s\n",sp.Data());
+      if (strstr(gSystem->GetBuildNode(),"Linux")) {
+         sp = gSystem->GetFromPipe("lsb_release -d -s");
+         printf("*  SYS: %s\n",sp.Data());
+      }
+      if (strstr(gSystem->GetBuildNode(),"Darwin")) {
+         sp  = gSystem->GetFromPipe("sw_vers -productVersion");
+         sp += " Mac OS X ";
+         printf("*  SYS: %s\n",sp.Data());
+      }
+   } else {
+      const char *os = gSystem->Getenv("OS");
+      if (!os) printf("*  SYS: Windows 95\n");
+      else     printf("*  SYS: %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
+   }
 
+   //printf("******************************************************************\n");
+   //gBenchmark->Print("stress");
+   Float_t ct = gBenchmark->GetCpuTime("stress");
+   printf("******************************************************************\n");
+   printf("*  CPUTIME   =%6.1f   *  Root%-8s  %d/%d\n",ct       ,gROOT->GetVersion(),gROOT->GetVersionDate(),gROOT->GetVersionTime());
+   printf("******************************************************************\n");
 }
