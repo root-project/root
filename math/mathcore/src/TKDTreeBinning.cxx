@@ -25,13 +25,15 @@ ClassImp(TKDTreeBinning)
 // Begin_Html 
 // <center><h2>TKDTreeBinning - A class providing multidimensional binning</h2></center>
 // The class implements multidimensional binning by constructing a TKDTree inner structure from the
-// data which is used as the bins. The bins are retrieved as two double*, one for the minimum bin edges,
+// data which is used as the bins. 
+// The bins are retrieved as two double*, one for the minimum bin edges,
 // the other as the maximum bin edges. For one dimension one of these is enough to correctly define the bins.
 // For the multidimensional case both minimum and maximum ones are necessary for the bins to be well defined.
 // The bin edges of d-dimensional data is a d-tet of the bin's thresholds. For example if d=3 the minimum bin
 // edges of bin b is of the form of the following array: {xbmin, ybmin, zbmin}.
 // You also have the possibility to sort the bins by their density.
-// Details of usage can be found in $ROOTSYS/tutorials/Math/tkdtreebinning_tutorial.C and more information on
+// <br>
+// Details of usage can be found in $ROOTSYS/tutorials/math/kdTreeBinning.C and more information on
 // the embedded TKDTree can be found in http://root.cern.ch/lxr/source/math/mathcore/src/TKDTree.cxx or
 // http://root.cern.ch/lxr/source/math/mathcore/inc/TKDTree.h.
 // End_Html
@@ -55,7 +57,16 @@ struct TKDTreeBinning::CompareDesc {
 };
 
 TKDTreeBinning::TKDTreeBinning(UInt_t dataSize, UInt_t dataDim, Double_t* data, UInt_t nBins)
-// Class's constructor
+// Class's constructor taking the size of the data points, dimension, a data array and the number 
+// of bins (default = 100). It is reccomended to have the number of bins as an exact divider of 
+// the data size.  
+// The data array must be organized with a stride=1 for the points and = N (the dataSize) for the dimension.
+// 
+// Thus data[] = x1,x2,x3,......xN, y1,y2,y3......yN, z1,z2,...........zN,....
+//
+// Note that the passed dataSize is not the size of the array but is the number of points (N)
+// The size of the array must be at least  dataDim*dataSize 
+// 
 : fData(0), fBinMinEdges(std::vector<Double_t>()), fBinMaxEdges(std::vector<Double_t>()), fDataBins((TKDTreeID*)0), fDim(dataDim),
 fDataSize(dataSize), fDataThresholds(std::vector<std::pair<Double_t, Double_t> >(fDim, std::make_pair(0., 0.))),
 fIsSorted(kFALSE), fIsSortedAsc(kFALSE), fBinsContent(std::vector<UInt_t>()) {
