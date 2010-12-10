@@ -95,7 +95,7 @@ TMVA::OptimizeConfigParameters::~OptimizeConfigParameters()
 std::map<TString,Double_t> TMVA::OptimizeConfigParameters::optimize()
 {
    if      (fOptimizationFitType == "Scan"    ) this->optimizeScan();
-   else if (fOptimizationFitType == "GA" || fOptimizationFitType == "Minuit" ) this->optimizeFit();
+   else if (fOptimizationFitType == "FitGA" || fOptimizationFitType == "Minuit" ) this->optimizeFit();
    else {
       Log() << kFATAL << "You have chosen as optimization type " << fOptimizationFitType
                 << " that is not (yet) coded --> exit()" << Endl;
@@ -179,14 +179,14 @@ void TMVA::OptimizeConfigParameters::optimizeFit()
      fitter = new MinuitFitter(  *this, 
                                  "FitterMinuit_BDTOptimize", 
                                  ranges, opt );
-   }else if ( fOptimizationFitType == "GA"  ) {
+   }else if ( fOptimizationFitType == "FitGA"  ) {
      TString opt="PopSize=20:Steps=30:Cycles=3:ConvCrit=0.01:SaveBestCycle=5";
      fitter = new GeneticFitter( *this, 
                                  "FitterGA_BDTOptimize", 
                                  ranges, opt );
    } else {
       Log() << kWARNING << " you did not specify a valid OptimizationFitType " 
-            << " will use the default (GA) " << Endl;
+            << " will use the default (FitGA) " << Endl;
       TString opt="PopSize=20:Steps=30:Cycles=3:ConvCrit=0.01:SaveBestCycle=5";
       fitter = new GeneticFitter( *this, 
                                   "FitterGA_BDTOptimize", 

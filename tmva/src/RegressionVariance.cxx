@@ -34,6 +34,7 @@
  * (http://ttmva.sourceforge.net/LICENSE)                                         *
  **********************************************************************************/
 #include <iostream>
+#include "TMath.h"
 #include "TMVA/RegressionVariance.h"
 
 ClassImp(TMVA::RegressionVariance)
@@ -53,13 +54,14 @@ Double_t TMVA::RegressionVariance::GetSeparationGain(const Double_t &nLeft,
    // for the Regression: as the "Gain is maximised", the RMS (sqrt(variance))
    // which is used as a "separation" index should be as small as possible.
    // the "figure of merit" here has to be -(rms left+rms-right) or 1/rms...
-       
+
 
    if  ( nTot==nLeft || nLeft==0 ) return 0.;
 
    Double_t parentIndex = nTot * this->GetSeparationIndex(nTot,targetTot,target2Tot);
    Double_t leftIndex   = ( (nTot - nLeft) * this->GetSeparationIndex(nTot-nLeft,targetTot-targetLeft,target2Tot-target2Left) );
    Double_t rightIndex  =    nLeft * this->GetSeparationIndex(nLeft,targetLeft,target2Left);
+
    //  return 1/ (leftIndex + rightIndex);   
    return (parentIndex - leftIndex - rightIndex)/(parentIndex);   
 }
