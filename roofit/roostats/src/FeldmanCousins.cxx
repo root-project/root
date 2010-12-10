@@ -140,7 +140,7 @@ void FeldmanCousins::CreateTestStatSampler() const{
   fTestStatSampler->SetPdf(*fModel.GetPdf());
   
   if(!fAdaptiveSampling){
-    ooccoutP(&fModel,Generation) << "FeldmanCousins: ntoys per point = " << (int) fAdditionalNToysFactor*50./fSize << endl;
+     ooccoutP(&fModel,Generation) << "FeldmanCousins: ntoys per point = " << int (fAdditionalNToysFactor*50./fSize )<< endl;
   } else{
     ooccoutP(&fModel,Generation) << "FeldmanCousins: ntoys per point: adaptive" << endl;
   }
