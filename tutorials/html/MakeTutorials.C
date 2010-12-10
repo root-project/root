@@ -320,7 +320,6 @@ Bool_t CreateOutput_Tutorial(const char* tut) {
    static const char* vetoed[] = {
       "geodemo",
       "peaks2",
-      "testrandom",
       "testUnfold",
       "readCode",
       "importCode",
