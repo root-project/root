@@ -439,6 +439,9 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl,
             // TComplex and TRandom, TRandom1,...
             if (strcmp(cl->GetName(), "TComplex")
                 && strcmp(cl->GetName(), "TMath")
+                && strcmp(cl->GetName(), "TKDTree")
+                && strcmp(cl->GetName(), "TKDTreeBinning")
+                && strcmp(cl->GetName(), "TVirtualFitter")
                 && strncmp(cl->GetName(), "TRandom", 7)) {
                out_filename = "";
                return false;
