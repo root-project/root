@@ -186,14 +186,16 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistribution(RooArgSet& paramPoin
 
    // adjust number of toys on the slaves to keep the total number of toys constant
    Int_t totToys = fNToys;
-   fNToys /= fProofConfig->GetNExperiments();
+   fNToys = (int)ceil((double)fNToys / (double)fProofConfig->GetNExperiments()); // round up
 
    // create the study instance for parallel processing
    ToyMCStudy toymcstudy;
    toymcstudy.SetToyMCSampler(*this);
    toymcstudy.SetParamPointOfInterest(paramPointIn);
 
-   RooStudyManager studymanager(fProofConfig->GetWorkspace(), toymcstudy);
+   // temporary workspace for proof to avoid messing with TRef
+   RooWorkspace w(fProofConfig->GetWorkspace());
+   RooStudyManager studymanager(w, toymcstudy);
    studymanager.runProof(fProofConfig->GetNExperiments(), fProofConfig->GetHost());
 
    SamplingDistribution *result = new SamplingDistribution(GetSamplingDistName().c_str(), GetSamplingDistName().c_str());

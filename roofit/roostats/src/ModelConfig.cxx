@@ -82,6 +82,10 @@ void ModelConfig::Print(Option_t*) const {
    // print contents
    ccoutI(InputArguments) << endl << "=== Using the following for " << GetName() << " ===" << endl;
 
+   // necessary so that GetObservables()->Print("") gets piped to the
+   // ccoutI(InputArguments) stream
+   ostream& oldstream = RooPrintable::defaultPrintStream(&ccoutI(InputArguments));
+
    // args
    if(GetObservables()){
       ccoutI(InputArguments) << "Observables:             ";
@@ -129,6 +133,7 @@ void ModelConfig::Print(Option_t*) const {
    }
 
    ccoutI(InputArguments) << endl;
+   RooPrintable::defaultPrintStream(&oldstream);
 }
 
 
