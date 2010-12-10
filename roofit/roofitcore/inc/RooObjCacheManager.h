@@ -54,7 +54,7 @@ protected:
   std::list<RooArgSet*> _optCacheObsList ; //! list of all optCacheObservables owned
   RooArgSet* _optCacheObservables ;        //! current optCacheObservables 
   
-  ClassDef(RooObjCacheManager,1) // Cache manager for generic caches that contain RooAbsArg objects
+  ClassDef(RooObjCacheManager,2) // Cache manager for generic caches that contain RooAbsArg objects
 } ;
 
 

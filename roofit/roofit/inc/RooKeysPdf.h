@@ -48,8 +48,10 @@ private:
   Double_t evaluateFull(Double_t x) const;
 
   Int_t _nEvents;
-  Double_t *_dataPts; //[_nEvents]
-  Double_t *_weights; //[_nEvents]
+  Double_t *_dataPts;  //[_nEvents]
+  Double_t *_dataWgts; //[_nEvents]
+  Double_t *_weights;  //[_nEvents]
+  Double_t _sumWgt ;
   
   enum { _nPoints = 1000 };
   Double_t _lookupTable[_nPoints+1];
@@ -64,7 +66,7 @@ private:
   Double_t _lo, _hi, _binWidth;
   Double_t _rho;
   
-  ClassDef(RooKeysPdf,1) // One-dimensional non-parametric kernel estimation p.d.f.
+  ClassDef(RooKeysPdf,2) // One-dimensional non-parametric kernel estimation p.d.f.
 };
 
 #endif

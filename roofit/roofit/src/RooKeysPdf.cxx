@@ -49,8 +49,10 @@ ClassImp(RooKeysPdf)
 
 
 //_____________________________________________________________________________
-RooKeysPdf::RooKeysPdf() : _dataPts(0), _weights(0)
-{
+  RooKeysPdf::RooKeysPdf() : _nEvents(0), _dataPts(0), _dataWgts(0), _weights(0), _sumWgt(0),
+			     _mirrorLeft(kFALSE), _mirrorRight(kFALSE), 
+			     _asymLeft(kFALSE), _asymRight(kFALSE)
+{ 
   // coverity[UNINIT_CTOR]
 }
 
@@ -63,6 +65,7 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
   _x("x","Dependent",this,x),
   _nEvents(0),
   _dataPts(0),
+  _dataWgts(0),
   _weights(0),
   _mirrorLeft(mirror==MirrorLeft || mirror==MirrorBoth || mirror==MirrorLeftAsymRight),
   _mirrorRight(mirror==MirrorRight || mirror==MirrorBoth || mirror==MirrorAsymLeftRight),
@@ -86,7 +89,7 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
 //_____________________________________________________________________________
 RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
   RooAbsPdf(other,name), _x("x",this,other._x), _nEvents(other._nEvents),
-  _dataPts(0), _weights(0),
+  _dataPts(0), _dataWgts(0), _weights(0), _sumWgt(0),
   _mirrorLeft( other._mirrorLeft ), _mirrorRight( other._mirrorRight ),
   _asymLeft(other._asymLeft), _asymRight(other._asymRight),
   _rho( other._rho ) {
@@ -115,6 +118,7 @@ RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
 //_____________________________________________________________________________
 RooKeysPdf::~RooKeysPdf() {
   delete[] _dataPts;
+  delete[] _dataWgts;
   delete[] _weights;
 }
 
@@ -124,6 +128,7 @@ void
 //_____________________________________________________________________________
 RooKeysPdf::LoadDataSet( RooDataSet& data) {
   delete[] _dataPts;
+  delete[] _dataWgts;
   delete[] _weights;
 
   // make new arrays for data and weights to fill
@@ -131,8 +136,10 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
   if (_mirrorLeft) _nEvents += data.numEntries();
   if (_mirrorRight) _nEvents += data.numEntries();
 
-  _dataPts = new Double_t[_nEvents];
-  _weights = new Double_t[_nEvents];
+  _dataPts  = new Double_t[_nEvents];
+  _dataWgts = new Double_t[_nEvents];
+  _weights  = new Double_t[_nEvents];
+  _sumWgt = 0 ;
 
   Double_t x0(0);
   Double_t x1(0);
@@ -144,16 +151,22 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
     RooRealVar real= (RooRealVar&)(values->operator[](_varName));
 
     _dataPts[idata]= real.getVal();
-    x0++; x1+=_dataPts[idata]; x2+=_dataPts[idata]*_dataPts[idata];
+    _dataWgts[idata] = data.weight() ;
+    x0 += _dataWgts[idata] ; x1+=_dataWgts[idata]*_dataPts[idata]; x2+=_dataWgts[idata]*_dataPts[idata]*_dataPts[idata];
     idata++;
+    _sumWgt+= data.weight() ;
 
     if (_mirrorLeft) {
       _dataPts[idata]= 2*_lo - real.getVal();
+      _dataWgts[idata]= data.weight() ;
+      _sumWgt+= data.weight() ;
       idata++;
     }
 
     if (_mirrorRight) {
-      _dataPts[idata]= 2*_hi - real.getVal();
+      _dataPts[idata]  = 2*_hi - real.getVal();
+      _dataWgts[idata] = data.weight() ;
+      _sumWgt+= data.weight() ;
       idata++;
     }
   }
@@ -207,7 +220,7 @@ Double_t RooKeysPdf::evaluateFull( Double_t x ) const {
 
   for (Int_t i=0;i<_nEvents;++i) {
     Double_t chi=(x-_dataPts[i])/_weights[i];
-    y+=exp(-0.5*chi*chi)/_weights[i];
+    y+=_dataWgts[i]*exp(-0.5*chi*chi)/_weights[i];
 
     // if mirroring the distribution across either edge of
     // the range ("Boundary Kernels"), pick up the additional
@@ -218,7 +231,7 @@ Double_t RooKeysPdf::evaluateFull( Double_t x ) const {
 //      }
     if (_asymLeft) {
       chi=(x-(2*_lo-_dataPts[i]))/_weights[i];
-      y-=exp(-0.5*chi*chi)/_weights[i];
+      y-=_dataWgts[i]*exp(-0.5*chi*chi)/_weights[i];
     }
 //      if (_mirrorRight) {
 //        chi=(x-(2*_hi-_dataPts[i]))/_weights[i];
@@ -226,12 +239,12 @@ Double_t RooKeysPdf::evaluateFull( Double_t x ) const {
 //      }
     if (_asymRight) {
       chi=(x-(2*_hi-_dataPts[i]))/_weights[i];
-      y-=exp(-0.5*chi*chi)/_weights[i];
+      y-=_dataWgts[i]*exp(-0.5*chi*chi)/_weights[i];
     }
   }
   
   static const Double_t sqrt2pi(sqrt(2*TMath::Pi()));  
-  return y/(sqrt2pi*_nEvents);
+  return y/(sqrt2pi*_sumWgt);
 }
 
 
