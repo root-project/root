@@ -1,4 +1,4 @@
-//+  
+//+  example demostrating usage of HybridCalcultor 
 /*
 HybridInstructional
 

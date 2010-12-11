@@ -1,5 +1,7 @@
+// Standard demo of the numerical Bayesian calculator
+
 /*
-StandardProfileLikelihoodDemo 
+
 
 Author: Kyle Cranmer
 date: Dec. 2010

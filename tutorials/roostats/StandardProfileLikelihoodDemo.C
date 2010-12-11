@@ -1,3 +1,4 @@
+// Standard demo of the Profile Likelihood calculcator
 /*
 StandardProfileLikelihoodDemo 
 
@@ -26,6 +27,7 @@ and the asymptotic properties of the profile likeihood ratio
 #include "TROOT.h"
 #include "RooWorkspace.h"
 #include "RooAbsData.h"
+#include "RooRealVar.h"
 
 #include "RooStats/ModelConfig.h"
 #include "RooStats/ProfileLikelihoodCalculator.h"

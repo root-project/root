@@ -1,3 +1,5 @@
+// tutorial demonstrating and validates the RooJeffreysPrior class
+
 /*
 JeffreysPriorDemo.C
 

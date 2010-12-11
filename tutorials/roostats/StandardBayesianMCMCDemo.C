@@ -1,5 +1,6 @@
+// Standard demo of the Bayesian MCMC calculator
+ 
 /*
-StandardProfileLikelihoodDemo 
 
 Author: Kyle Cranmer
 date: Dec. 2010

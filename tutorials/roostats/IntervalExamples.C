@@ -1,3 +1,4 @@
+// Example showing confidence intervals with four techniques.
 /*
 IntervalExamples
 

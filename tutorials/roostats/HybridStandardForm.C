@@ -1,3 +1,6 @@
+// A hypothesis testing example based on number counting  with background uncertainty.
+
+
 /*
 HybridStandardForm
 

@@ -1,3 +1,5 @@
+// comparison of MCMC and PLC in a multi-variate gaussian problem
+
 #include "RooGlobalFunc.h"
 #include <stdlib.h>
 #include "TMatrixDSym.h"

@@ -1,3 +1,4 @@
+// Standard demo of the Feldman-Cousins calculator
 /*
 StandardFeldmanCousinsDemo 
 

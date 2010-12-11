@@ -1,3 +1,5 @@
+//  This example is a generalization of the on/off problem.  
+
 /*
 FourBin Instructional Tutorial:
  authors: 
