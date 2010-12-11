@@ -8,8 +8,6 @@
 
 #include <limits>
 
-#include <math.h>
-
 namespace ROOT {
 namespace Math {
 
