@@ -19,8 +19,13 @@
    #include "TNamed.h"
 #endif
 
+#ifndef ROOT_Math_Math
 #include "Math/Math.h"
-#include "TF1.h"
+#endif
+
+//#include "TF1.h"
+class TGraphErrors;
+class TF1;
 
 /*
    Kernel Density Estimation class. The three main references are (1) "Scott DW, Multivariate Density Estimation.
@@ -83,7 +88,7 @@ public:
    void SetTuneFactor(Double_t rho);
    void SetRange(Double_t xMin, Double_t xMax); // By default computed from the data
 
-   virtual void Draw(const Option_t* option = "Plot:ConfidenceInterval;DrawOptions:L");
+   virtual void Draw(const Option_t* option = "");
 
    Double_t operator()(Double_t x) const;
    Double_t operator()(const Double_t* x, const Double_t* p=0) const;  // Needed for creating TF1
@@ -99,9 +104,17 @@ public:
    Double_t GetFixedWeight() const;
 
    TF1* GetFunction(UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
-//    TF1* GetUpperFunction(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
-//    TF1* GetLowerFunction(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
+   TF1* GetUpperFunction(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
+   TF1* GetLowerFunction(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
    TF1* GetApproximateBias(UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
+   TGraphErrors * GetGraphWithErrors(UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
+
+   // get the drawn object to chanage settings
+   // These objects are managed by TKDE and should not be deleted by the user
+   TF1 * GetDrawnFunction() { return fPDF;}  
+   TF1 * GetDrawnUpperFunction() { return fUpperPDF;}  
+   TF1 * GetDrawnLowerFunction() { return fLowerPDF;}  
+   TGraphErrors * GetDrawnGraph() { return fGraph;}  
 
    const Double_t * GetAdaptiveWeights() const;
 
@@ -126,6 +139,7 @@ private:
    TF1* fUpperPDF;        // Output Kernel Density Estimation upper confidence interval PDF function
    TF1* fLowerPDF;        // Output Kernel Density Estimation lower confidence interval PDF function
    TF1* fApproximateBias; // Output Kernel Density Estimation approximate bias
+   TGraphErrors* fGraph;  // Graph with the errors
 
    EKernelType fKernelType;
    EIteration fIteration;
@@ -214,7 +228,7 @@ private:
    void SetMirroredEvents();
    void SetDrawOptions(const Option_t* option, TString& plotOpt, TString& drawOpt);
    void DrawErrors(TString& drawOpt);
-   void DrawConfidenceInterval(TString& drawOpt);
+   void DrawConfidenceInterval(TString& drawOpt, double cl=0.95);
 
    TF1* GetKDEFunction(UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
    TF1* GetKDEApproximateBias(UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);

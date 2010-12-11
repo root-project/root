@@ -33,6 +33,7 @@
 #include "Math/QuantFuncMathCore.h"
 #include "Math/RichardsonDerivator.h"
 #include "TGraphErrors.h"
+#include "TF1.h"
 #include "TCanvas.h"
 #include "TKDE.h"
 
@@ -68,6 +69,7 @@ TKDE::TKDE(UInt_t events, const Double_t* data, Double_t xMin, Double_t xMax, co
    fUpperPDF(0),
    fLowerPDF(0),
    fApproximateBias(0),
+   fGraph(0),
    fNewData(false),
    fUseMinMaxFromData((xMin >= xMax)),
    fNBins(events < 10000 ? 100: events / 10),
@@ -99,6 +101,7 @@ TKDE::~TKDE() {
    if (fPDF)              delete fPDF;
    if (fUpperPDF)         delete fUpperPDF;
    if (fLowerPDF)         delete fLowerPDF;
+   if (fGraph)         delete fGraph;
    if (fApproximateBias)  delete fApproximateBias;
    delete fKernelFunction;
    delete fKernel;
@@ -579,15 +582,15 @@ TF1* TKDE::GetFunction(UInt_t npx, Double_t xMin, Double_t xMax) {
    return GetKDEFunction(npx,xMin,xMax);
 }
 
-// TF1* TKDE::GetUpperFunction(Double_t confidenceLevel, UInt_t npx, Double_t xMin, Double_t xMax) {
-//    // Returns the PDF upper estimate (upper confidence interval limit)
-//    return GetPDFUpperConfidenceInterval(confidenceLevel,npx,xMin,xMax);
-// }
+TF1* TKDE::GetUpperFunction(Double_t confidenceLevel, UInt_t npx, Double_t xMin, Double_t xMax) {
+    // Returns the PDF upper estimate (upper confidence interval limit)
+    return GetPDFUpperConfidenceInterval(confidenceLevel,npx,xMin,xMax);
+}
 
-// TF1* TKDE::GetLowerFunction(Double_t confidenceLevel, UInt_t npx, Double_t xMin, Double_t xMax) {
-//    // Returns the PDF lower estimate (lower confidence interval limit)
-//    return GetPDFLowerConfidenceInterval(confidenceLevel,npx,xMin,xMax);
-// }
+TF1* TKDE::GetLowerFunction(Double_t confidenceLevel, UInt_t npx, Double_t xMin, Double_t xMax) {
+    // Returns the PDF lower estimate (lower confidence interval limit)
+    return GetPDFLowerConfidenceInterval(confidenceLevel,npx,xMin,xMax);
+}
 
 TF1* TKDE::GetApproximateBias(UInt_t npx, Double_t xMin, Double_t xMax) {
    // Returns the PDF estimate bias
@@ -683,49 +686,97 @@ void TKDE::SetBinCountData() {
 
 void TKDE::Draw(const Option_t* opt) {
    // Draws either the KDE functions or its errors
-   TString plotOpt = "";
-   TString drawOpt = "";
-   SetDrawOptions(opt, plotOpt, drawOpt);
-   if(gPad && !drawOpt.Contains("same"))
+   // Possible options: 
+   //                    ""  (default) - draw just the kde
+   //                    "same" draw on top of existing pad
+   //                    "Errors" draw a TGraphErrors with the point and errors
+   //                    "confidenceinterval" draw KDE + conf interval functions (default is 95%)
+   //                    "confidenceinterval@0.90" draw KDE + conf interval functions at 90%
+   //                      Extra options can be passed in opt for drawing the TF1 or the TGraph 
+   //
+   //NOTE:  The functions GetDrawnFunction(), GetDrawnUpperFunction(), GetDrawnLowerFunction() 
+   //  and GetGraphWithErrors() return the corresponding drawn objects (which are maneged by the TKDE) 
+   // They can be used to changes style, color, etc...
+
+   // TString plotOpt = "";
+   // TString drawOpt = "";
+   // LM : this is too complicates - skip it - not needed for just 
+   // three options
+   // SetDrawOptions(opt, plotOpt, drawOpt);
+   TString plotOpt = opt; 
+   plotOpt.ToLower();
+   TString drawOpt = plotOpt;
+   if(gPad && !plotOpt.Contains("same")) {
       gPad->Clear();
-   if (plotOpt.Contains("errors"))
+   }
+   if (plotOpt.Contains("errors"))  {
+      drawOpt.ReplaceAll("errors","");
       DrawErrors(drawOpt);
-   else if (plotOpt.Contains("confidenceinterval"))
-      DrawConfidenceInterval(drawOpt);
-   else
-      GetKDEFunction()->Draw(drawOpt);
+   }
+   else if (plotOpt.Contains("confidenceinterval") || 
+            plotOpt.Contains("confinterval")) {
+      // parse level option
+      drawOpt.ReplaceAll("confidenceinterval","");
+      drawOpt.ReplaceAll("confinterval","");
+      Double_t level = 0.95;
+      const char * s = strstr(plotOpt.Data(),"interval@");
+      if (s != 0) sscanf(s,"interval@%lf",&level);
+      if((level <= 0) || (level >= 1)) {
+	 Warning("Draw","given confidence level %.3lf is invalid - use default 0.95",level);
+         level = 0.95;
+      }
+      DrawConfidenceInterval(drawOpt,level);
+   }
+   else {
+      if (fPDF) delete fPDF; 
+      fPDF = GetKDEFunction();
+      fPDF->Draw(drawOpt);
+   }
 }
 
 void TKDE::DrawErrors(TString& drawOpt) {
    // Draws a TGraphErrors for the KDE errors
-   UInt_t n = 100;
+   if (fGraph) delete fGraph;
+   fGraph = GetGraphWithErrors();
+   fGraph->Draw(drawOpt.Data());
+}
+
+TGraphErrors* TKDE::GetGraphWithErrors(UInt_t npx, double xmin, double xmax) {
+   if (xmin>= xmax) { xmin = fXMin; xmax = fXMax; }
+   // return a TGraphErrors for the KDE errors
+   UInt_t n = npx;
    Double_t* x = new Double_t[n + 1];
    Double_t* ex = new Double_t[n + 1];
    Double_t* y = new Double_t[n + 1];
    Double_t* ey = new Double_t[n + 1];
    for (UInt_t i = 0; i <= n; ++i) {
-      x[i] = this->fXMin + i * (this->fXMax - this->fXMin) / n;
+      x[i] = xmin + i * (xmax - xmin) / n;
       y[i] = (*this)(x[i]);
       ey[i] = this->GetError(x[i]);
    }
    TGraphErrors* ge = new TGraphErrors(n, &x[0], &y[0], &ex[0], &ey[0]);
+   ge->SetName("kde_graph_error");
    ge->SetTitle("Errors");
-   ge->Draw(drawOpt.Data());
    delete [] x;
    delete [] ex;
    delete [] y;
    delete [] ey;
+   return ge;
 }
 
-void TKDE::DrawConfidenceInterval(TString& drawOpt) {
-   // Draws the KDE ant its confidence interval
+void TKDE::DrawConfidenceInterval(TString& drawOpt,double cl) {
+   // Draws the KDE and its confidence interval
    GetKDEFunction()->Draw(drawOpt.Data());
-   TF1* upper = GetPDFUpperConfidenceInterval();
+   TF1* upper = GetPDFUpperConfidenceInterval(cl);
    upper->SetLineColor(kBlue);
    upper->Draw(("same" + drawOpt).Data());
-   TF1* lower = GetPDFLowerConfidenceInterval();
+   TF1* lower = GetPDFLowerConfidenceInterval(cl);
    lower->SetLineColor(kRed);
    lower->Draw(("same" + drawOpt).Data());
+   if (fUpperPDF) delete fUpperPDF;
+   if (fLowerPDF) delete fLowerPDF;
+   fUpperPDF = upper;
+   fLowerPDF = lower;
 }
 
 Double_t TKDE::GetFixedWeight() const {
@@ -742,7 +793,7 @@ Double_t TKDE::GetFixedWeight() const {
 const Double_t *  TKDE::GetAdaptiveWeights() const {
    // Returns the bandwidths for the adaptive KDE
    if (fIteration != TKDE::kAdaptive) {
-      this->Warning("GetFixedWeight()", "Adaptive iteration option not enabled. Returning a NULL pointer");
+      this->Warning("GetFixedWeight()", "Adaptive iteration option not enabled. Returning a NULL pointer<");
       return 0;
    }
    if (fNewData) (const_cast<TKDE*>(this))->InitFromNewData();
@@ -934,10 +985,12 @@ TF1* TKDE::GetKDEFunction(UInt_t npx, Double_t xMin , Double_t xMax) {
    TString name = "KDEFunc_"; name+= GetName();
    TString title = "KDE "; title+= GetTitle();
    if (xMin >= xMax) { xMin = fXMin; xMax = fXMax; }
-   fPDF = new TF1(name.Data(), this, xMin, xMax, 0);
-   if (npx > 0) fPDF->SetNpx(npx);
-   fPDF->SetTitle(title);
-   return (TF1*)fPDF->Clone();
+   TF1 * pdf = new TF1(name.Data(), this, xMin, xMax, 0);
+   if (npx > 0) pdf->SetNpx(npx);
+   pdf->SetTitle(title);
+   TF1 * f =  (TF1*)pdf->Clone();
+   delete pdf; 
+   return f;
 }
 
 TF1* TKDE::GetPDFUpperConfidenceInterval(Double_t confidenceLevel, UInt_t npx, Double_t xMin , Double_t xMax) {
@@ -945,10 +998,12 @@ TF1* TKDE::GetPDFUpperConfidenceInterval(Double_t confidenceLevel, UInt_t npx, D
    TString name;
    name.Form("KDE_UpperCL%f5.3_%s",confidenceLevel,GetName());
    if (xMin >= xMax) { xMin = fXMin; xMax = fXMax; }
-   fUpperPDF = new TF1(name, this, &TKDE::UpperConfidenceInterval, xMin, xMax, 1, "TKDE", "UpperConfidenceInterval");
-   fUpperPDF->SetParameter(0, confidenceLevel);
-   if (npx > 0) fUpperPDF->SetNpx(npx);
-   return (TF1*)fUpperPDF->Clone();
+   TF1 * upperPDF = new TF1(name, this, &TKDE::UpperConfidenceInterval, xMin, xMax, 1, "TKDE", "UpperConfidenceInterval");
+   upperPDF->SetParameter(0, confidenceLevel);
+   if (npx > 0) upperPDF->SetNpx(npx);
+   TF1 * f =  (TF1*)upperPDF->Clone();
+   delete upperPDF;
+   return f;
    }
 
 TF1* TKDE::GetPDFLowerConfidenceInterval(Double_t confidenceLevel, UInt_t npx, Double_t xMin , Double_t xMax) {
@@ -956,17 +1011,21 @@ TF1* TKDE::GetPDFLowerConfidenceInterval(Double_t confidenceLevel, UInt_t npx, D
    TString name;
    name.Form("KDE_LowerCL%f5.3_%s",confidenceLevel,GetName());
    if (xMin >= xMax) { xMin = fXMin; xMax = fXMax; }
-   fLowerPDF = new TF1(name, this, &TKDE::LowerConfidenceInterval, xMin, xMax, 1);
-   fLowerPDF->SetParameter(0, confidenceLevel);
-   if (npx > 0) fLowerPDF->SetNpx(npx);
-   return (TF1*)fLowerPDF->Clone();
+   TF1 * lowerPDF = new TF1(name, this, &TKDE::LowerConfidenceInterval, xMin, xMax, 1);
+   lowerPDF->SetParameter(0, confidenceLevel);
+   if (npx > 0) lowerPDF->SetNpx(npx);
+   TF1 * f = (TF1*)lowerPDF->Clone();
+   delete lowerPDF;
+   return f;
 }
 
 TF1* TKDE::GetKDEApproximateBias(UInt_t npx, Double_t xMin , Double_t xMax) {
    // Returns the approximate bias
    TString name = "KDE_Bias_"; name += GetName();
    if (xMin >= xMax) { xMin = fXMin; xMax = fXMax; }
-   fApproximateBias = new TF1(name, this, &TKDE::ApproximateBias, xMin, xMax, 0);
-   if (npx > 0) fApproximateBias->SetNpx(npx);
-   return (TF1*)fApproximateBias->Clone();
+   TF1 * approximateBias = new TF1(name, this, &TKDE::ApproximateBias, xMin, xMax, 0);
+   if (npx > 0) approximateBias->SetNpx(npx);
+   TF1 * f =  (TF1*)approximateBias->Clone();
+   delete approximateBias;
+   return f;
 }
