@@ -4408,6 +4408,14 @@ void THistPainter::PaintColorLevels(Option_t *)
 
    Double_t zmin = fH->GetMinimum();
    Double_t zmax = fH->GetMaximum();
+
+   Double_t dz = zmax - zmin;
+   if (dz <= 0) { // Histogram filled with a constant value
+      zmax += 0.1*TMath::Abs(zmax);
+      zmin -= 0.1*TMath::Abs(zmin);
+      dz = zmax - zmin;
+   }
+
    if (Hoption.Logz) {
       if (zmin > 0) {
          zmin = TMath::Log10(zmin);
@@ -4416,10 +4424,6 @@ void THistPainter::PaintColorLevels(Option_t *)
          return;
       }
    }
-
-   Double_t dz = zmax - zmin;
-
-   if (dz <= 0) return;
 
    Style_t fillsav   = fH->GetFillStyle();
    Style_t colsav    = fH->GetFillColor();
@@ -6526,8 +6530,8 @@ void THistPainter::PaintScatterPlot(Option_t *option)
    Double_t zmin  = fH->GetMinimum();
    if (zmin == 0 && zmax == 0) return;
    if (zmin == zmax) {
-      zmax += 0.01*TMath::Abs(zmax);
-      zmin -= 0.01*TMath::Abs(zmin);
+      zmax += 0.1*TMath::Abs(zmax);
+      zmin -= 0.1*TMath::Abs(zmin);
    }
    Int_t ncells = (Hparam.ylast-Hparam.yfirst)*(Hparam.xlast-Hparam.xfirst);
    if (Hoption.Logz) {

@@ -359,6 +359,15 @@ void TPaletteAxis::Paint(Option_t *)
    Double_t wlmin = wmin;
    Double_t wlmax = wmax;
    Double_t y1,y2,w1,w2,zc;
+
+   if ((wlmax - wlmin) <= 0) { 
+      Double_t mz = wlmin*0.1;
+      wlmin = wlmin-mz;
+      wlmax = wlmax+mz;
+      wmin = wlmin;
+      wmax = wlmax;
+   }
+
    if (gPad->GetLogz()) {
       if (wmin <= 0 && wmax > 0) wmin = TMath::Min((Double_t)1,
                                                    (Double_t)0.001*wmax);
