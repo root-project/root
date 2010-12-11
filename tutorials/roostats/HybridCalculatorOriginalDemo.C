@@ -1,3 +1,5 @@
+// This macro show an example on how to use RooStats HybridCalculatorOriginal 
+// Author: Gregory Schott
 #include "RooRandom.h"
 #include "RooRealVar.h"
 #include "RooGaussian.h"
@@ -16,7 +18,7 @@
 #include "RooStats/HybridResult.h"
 #include "RooStats/HybridPlot.h"
 
-void rs201_hybridcalculator(int ntoys = 1000)
+void HybridCalculatorOriginalDemo(int ntoys = 1000)
 {
   //***********************************************************************//
   // This macro show an example on how to use RooStats/HybridCalculatorOriginal //
