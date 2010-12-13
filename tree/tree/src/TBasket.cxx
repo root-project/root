@@ -208,8 +208,12 @@ Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       // Reuse the buffer if it exist.
       fBufferRef->SetReadMode();
       fBufferRef->Reset();
+      // We use this buffer both for reading and writing, we need to
+      // make sure it is properly sized for writing.
       if (fBufferRef->BufferSize() < len) {
+         fBufferRef->SetWriteMode();
          fBufferRef->Expand(len);
+         fBufferRef->SetReadMode();
       }
    } else {
       fBufferRef = new TBufferFile(TBuffer::kRead, len);
