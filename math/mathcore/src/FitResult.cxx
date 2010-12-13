@@ -237,8 +237,8 @@ bool FitResult::Update(const ROOT::Math::Minimizer & min, bool isValid, unsigned
    fCovStatus = min.CovMatrixStatus();
 
    // update number of function calls
-   if ( min.NCalls() > 0)   fNCalls += min.NCalls();
-   else fNCalls += ncalls;
+   if ( min.NCalls() > 0)   fNCalls = min.NCalls();
+   else fNCalls = ncalls;
 
    // copy parameter value and errors 
    std::copy(min.X(), min.X() + npar, fParams.begin());
