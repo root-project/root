@@ -50,8 +50,8 @@ The default is to trap the signal and continue with the event loop,
 using this method one can specify to exit with the signal number to the
 shell, or to abort() which in addition generates a core dump.
 </li>
-<li>New command line argument -x which forces ROOT to exit on an exception.
-</li>
+<li>New command line argument -x which forces ROOT to exit on an exception.</li>
+<li>Add TSystem::AddDynamicPath.</li>
 </ul>
 <h4>Build</h4>
 <ul>
@@ -91,9 +91,17 @@ the object and hence run the proper emulated destructor.</li>
 <li>Add a new function GenerateDictionary to TInterpreter which allows for the quick and easy creation of a dictionary
 given one (or more) class name(s) and the name(s) of its header files.
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
-   gInterpreter->GenerateDictionary("vector<vector<float> >;list<vector<float> >","list;vector");
+   gInterpreter->GenerateDictionary("vector&lt;vector&lt;float&gt; &gt;;list&lt;vector&lt;float&gt; &gt;","list;vector");
    gInterpreter->GenerateDictionary("myclass","myclass.h;myhelper.h");
-</pre>This replaces the recommandation of creating a small 'loader.C' script to create the dictionaries.
+</pre>This replaces the recommendation of creating a small 'loader.C' script to create the dictionaries.
+</li>
+<li>Implement a ShowMembers function for interpreted classes, by querying the interpreter for the data member 
+information.</li>
+<li>In order to fix possible buffer overflow of parent string buffer in TMemberInspector,
+the signature of ShowMember() was changed to no longer require (nor request) the 
+caller to provide a buffer (of length unknown to the callee.)</li>
+<li>Improve the uniqueness of globally visible symbols to allow for the mixing of
+dictionaries with very similar layout.</li>
 </ul>
 
 <h4>Cont</h4>
@@ -122,6 +130,10 @@ be sorted just like a (a determines the sort; nBs is the number of TObject**
 arrays in b). Uses ObjCompare() to compare objects. This function is used by
 the new function TClonesArray::MultiSort().
 </li>
+<li>Add a new option "+" in TClonesArray::Clear.   When the option starts with "C+", 
+eg "C+xyz" the objects in the array are in turn cleared with the option "xyz".</li>
+<li>Since the Collection objects do have a name and the Clone method does allow 
+for the name to change, TCollection::Clone was added to implement the name change properly.</li>
 </ul>
 <h4>Thread</h4>
 <ul>

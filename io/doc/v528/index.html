@@ -20,7 +20,7 @@ In the table below the read time is the CPU time to completion including loading
 When reading the file where always in the os cache (since we are focusing evaluating cpu time). 
 <p/>
 The number of event actually read varies from file set to file set but was calibrated to result 
-in about 10s of cpu time.  The files are read using a library generated with TFile::MakeProject. 
+in about 10s of cpu time.  The files are read using a library generated with <tt>TFile::MakeProject</tt>. 
 <p/>
 The object-wise files are between 2% and 10% larger compared to their member-wise counterpart.
 <p/>
@@ -75,49 +75,49 @@ using an older version of ROOT you will need the following patches:
      or v5.26/00c</li>
    </ul>
 Additionally, we no longer allow the member wise streaming of a class which
-has a custom streamer nor of any data members marked with //||
+has a custom streamer nor of any data members marked with <tt>//||</tt>
 </li>
 </ul>
 
 <h4>Run time performance</h4>
 
-We introduced an optimized infrastructure for reading objects using a StreamerInfo.  Rather than driving the streaming using a switch statement inside TStreamerInfo::ReadBuffer,
+We introduced an optimized infrastructure for reading objects using a StreamerInfo.  Rather than driving the streaming using a switch statement inside <tt>TStreamerInfo::ReadBuffer</tt>,
 the streaming is now driven using a simple loop over a sequence of configured StreamerInfo actions.  This improves run-time performance by allowing a dramatic reduction in function calls and code
-branches at the expense of some code duplication.  There are 3 versions of this loop implemented in TBufferFile and overloaded in TBufferXML and TBufferSQL:
+branches at the expense of some code duplication.  There are 3 versions of this loop implemented in <tt>TBufferFile</tt> and overloaded in <tt>TBufferXML</tt> and <tt>TBufferSQL</tt>:
 <ol>
-<li>virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &amp;sequence, void *object);</li>
-<li>virtual Int_t ReadSequenceVecPtr(const TStreamerInfoActions::TActionSequence &amp;sequence, void *start_collection, void *end_collection);</li>
-<li>virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &amp;sequence, void *start_collection, void *end_collection);</li>
+<li><tt style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &amp;sequence, void *object);</tt><p/></li>
+<li><tt style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">virtual Int_t ReadSequenceVecPtr(const TStreamerInfoActions::TActionSequence &amp;sequence, void *start_collection, void *end_collection);</tt><p/></li>
+<li><tt style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &amp;sequence, void *start_collection, void *end_collection);</tt><p/></li>
 </ol>
-The 1st version is optimized to read a single object.  The 2nd version is optimized to read the content of TClonesArrays and vectors of pointers to objects.  The 3rd version is used to streamed any collections.
+The 1st version is optimized to read a single object.  The 2nd version is optimized to read the content of <tt>TClonesArrays</tt> and vectors of pointers to objects.  The 3rd version is used to streamed any collections.
 <br/><br/>
-TBufferXML and TBufferSQL overload the loops to introduce extra code to help the buffer keep track of which streamer element is being streamed (this functionality is not used by TBufferFile.)
+<tt>TBufferXML</tt> and <tt>TBufferSQL</tt> overload the loops to introduce extra code to help the buffer keep track of which streamer element is being streamed (this functionality is not used by <tt>TBufferFile</tt>.)
 <br/><br/>
-A TStreamerInfoActions::TActionSequence is an ordered sequence of configured actions.   
+A <tt>TStreamerInfoActions::TActionSequence is</tt> an ordered sequence of configured actions.   
 <br/><br/>
 A configured action has both an action which is a free standing function and a configuration object deriving 
-from TStreamerInfoActions::TConfiguration. The configuration contains information that is specific to the action
+from <tt>TStreamerInfoActions::TConfiguration</tt>. The configuration contains information that is specific to the action
 but varies from use to use, including the offset from the beginning of the object that needs to be updated.   
 Other examples of configuration include the number of bits requested for storing a Double32_t or its factor and minimum.   
 <br/><br/>
 When the sequence is intended for a collection, the sequence has a configuration object deriving
-from TStreamerInfoActions::TLoopConfiguration which contains for example the size of the element of
+from <tt>TStreamerInfoActions::TLoopConfiguration</tt> which contains for example the size of the element of
 a vector or the pointers to the iterators functions (see below).
 <br/><br/>
-Each TStreamerInfo has 2 reading sequences, one for object-wise reading (GetReadObjectWiseActions)
-and one for member-wise reading (GetReadMemberWiseActions) which is used when streaming a TClonesArray
-of a vector of pointer to the type of objects described by the TClass.
+Each <tt>TStreamerInfo</tt> has 2 reading sequences, one for object-wise reading (<tt>GetReadObjectWiseActions</tt>)
+and one for member-wise reading (<tt>GetReadMemberWiseActions</tt>) which is used when streaming a <tt>TClonesArray</tt>
+of a vector of pointer to the type of objects described by the <tt>TClass</tt>.
 <br/><br/>
 Each collection proxy has at least one reading sequences, one for the reading each version of the
 contained class layout.
 <br/><br/>
-Each case of the TStreamerInfo::ReadBuffer switch statement is replaced by 4 new action functions,
-one for the object wise reading, one for the member wise reading for TClonesArray and vector of pointers,
+Each case of the <tt>TStreamerInfo::ReadBuffer</tt> switch statement is replaced by 4 new action functions,
+one for the object wise reading, one for the member wise reading for <tt>TClonesArray</tt> and vector of pointers,
 one for the member wise reading for a vector of object and one for all other collections.
 <br/><br/>
 Each collection (proxy) needs to provide 5 new free standing functions:
 <br/>
-<pre style="border:gray 1px solid;padding:0.5em 2em;">
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
    // Set of functions to iterate easily throught the collection
    static const Int_t fgIteratorArenaSize = 16; // greater than sizeof(void*) + sizeof(UInt_t)
 
@@ -151,41 +151,64 @@ Each collection (proxy) needs to provide 5 new free standing functions:
 </pre>
 
 <h4>TFile::MakeProject</h4>
-Extend TFile::MakeProject to support genreflex, cases of user's data model where
+<ul>
+<li>
+Extend <tt>TFile::MakeProject</tt> to support genreflex, cases of user's data model where
 the 2 distincts pointers point to a single object and more cases where we are 
 missing the StreamerInfo and need to guess whether the symbol represent an enum,
 a class or a namespace.
 
-To use genreflex, call MakeProject with the "genreflex" option, for example:
+To use genreflex, call <tt>MakeProject</tt> with the "genreflex" option, for example:
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
    file->MakeProject(libdir,"*","NEW+genreflex");
 </pre>
-To make sure the library created by MakeProject does not double delete an object,
+
+</li>
+<li>
+To make sure the library created by <tt>MakeProject</tt> does not double delete an object,
 tell the StreamerElement representing one of the pointers pointing to the object
 to never delete the object.  For example:
 
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
    TClass::AddRule("HepMC::GenVertex m_event attributes=NotOwner");
 </pre>
-
-MakeProject now implements a move constructor for each classes.   For the implementation, we 'use' the 'copy constructor' until the C++ compilers properly support the official move constructor notation.   Implementing a move constructor avoid having to delete and reconstruct resource during a std::vector resize and avoid the double delete induced by using the default copy constructor.
-
+</li>
+<li>
+<tt>MakeProject</tt> now implements a move constructor for each classes.   For the implementation, we 'use' the 'copy constructor' until the C++ compilers properly support the official move constructor notation.   Implementing a move constructor avoid having to delete and reconstruct resource during a <tt>std::vector</tt> resize and avoid the double delete induced by using the default copy constructor.
+</li>
+<li><tt>MakeProject</tt> now adds dictionaries for auto_ptr.
+</li>
+<li><tt>MakeProject</tt> no longer request the dictionary for std::pair instances that already have been loaded.
+</li>
+</ul>
 <h4>Misc.</h4>
 <ul>
+<li><tt>TFile::Open</tt> now does variable expansion so that you can include the protocol in the variable (for example: <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">export H1="http://root.cern.ch/files/h1"
+...
+ TFile::Open("$H1/dstarmb.root");</pre></li>
+<li>Added warning if the file does contain any StreamerInfo objects and was written with a different version of ROOT.</li>
+<li>Implemented polymorphism for Emulated object (still not supporting polymorphism of Emulated Object inheriting from compiled class).  See the Core/Meta section for details.</li>
 <li>Add support for streaming auto_ptr when generating their dictionary via rootcint</li>
 <li>Enable the use of the I/O customization rules on data members that are either a variable size array or a fixed size array.  For example:
-<pre lang="cxx">
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
 #pragma read sourceClass = "ACache" targetClass = "ACache" version     = "[8]" \
    source      = "Int_t *fArray; Int_t fN;" \
    target      = "fArray" \
-   code        = "{ fArray = new Char_t[onfile.fN]; Char_t* gtc=fArray; Int_t* gti=onfile.fArray; for(Int_t i=0; i<onfile.fN; i++) *(gtc+i) = *(gti+i)+10; }"
+   code        = "{ fArray = new Char_t[onfile.fN]; Char_t* gtc=fArray; Int_t* gti=onfile.fArray; for(Int_t i=0; i&lt;onfile.fN; i++) *(gtc+i) = *(gti+i)+10; }"
 #pragma read sourceClass = "ACache" targetClass = "ACache" version     = "[8]" \
    source      = "float fValues[3]" \
    target      = "fValues" \
-   code        = "{ for(Int_t i=0; i<3; i++) fValues[i] = 1+onfile.fValues[i]; }"
+   code        = "{ for(Int_t i=0; i&lt;3; i++) fValues[i] = 1+onfile.fValues[i]; }"
 </pre>
 </li>
-<li>New option to hadd, -O requesting the (re)optimization of the basket size (by avoid the fast merge technique).  The equivalent in TFileMerger is to call
+<li>Allow the seamless schema evolution from <tt>map&lt;a,b&gt;</tt> to <tt>vector&lt;pair&lt;a,b&gt; &gt;.</tt></li>
+<li>Avoid dropping information when reading a long written on a 64 bits platforms
+and being read into a long long on a 32 bits platform (previously the higher
+bits were lost due to passing through a 32 bits temporary long).</li>
+<li>Migrate the functionality of <tt>TStreamerInfo::TagFile</tt> to a new interface <tt>TBuffer::TagStreamerInfo</tt>
+so that <tt>TMessage</tt> can customize the behavior.  <tt>TMessage</tt> now relies on this new interface
+instead of <tt>TBuffer::IncrementLevel</tt>.</li>
+<li>New option to hadd, -O requesting the (re)optimization of the basket size (by avoid the fast merge technique).  The equivalent in <tt>TFileMerger</tt> is to call
 merger->SetFastMethod(kFALSE)</li>
 <li>To make sure that the class emulation layer of ROOT does not double delete an object,
 tell the StreamerElement representing one of the pointers pointing to the object
@@ -204,14 +227,20 @@ of memory leaks), the container of pointers are <em>still</em> not owning their 
 object).<p/>
 To make a container of pointers become owner of its content do something like:
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
-      TClass::AddRule("ObjectVector&lt;LHCb::MCRichDigitSummary&gt; m_vector options=Owner");
+   TClass::AddRule("ObjectVector&lt;LHCb::MCRichDigitSummary&gt; m_vector options=Owner");
 </pre>
 </li>
-<li>TH1::Streamer and TGraph2D::Streamer no longer reset the kCanDelete bit directly so that the user can give
+<li>Added <tt>TKey::Reset</tt> and <tt>TKey::WriteFileKeepBuffer</tt> to allow derived classes (<tt>TBasket</tt>) to be re-use as key rather than always recreated.</li>
+
+<li><tt>TH1::Streamer</tt> and <tt>TGraph2D::Streamer</tt> no longer reset the kCanDelete bit directly so that the user can give
 ownership of the object to the canvas they are stored with.  However, if they are saved on their own, the mechanism
-that associates them to the current directory (DirectoryAutoAdd) will now reset the bit to avoid any possible
+that associates them to the current directory (<tt>DirectoryAutoAdd</tt>) will now reset the bit to avoid any possible
 ownsership confusion.</li>
 <li>Added <tt>TFile::SetOffset</tt> and <tt>TFile::ReadBuffer(char *buf, Long64_t pos, Int_t len);</tt> to drastically reduce
-    the number of fseek done on the physical file when using the TTreeCache.</li>
+    the number of fseek done on the physical file when using the <tt>TTreeCache</tt>.</li>
+<li>To support future changes in the API of the CollectionProxy, we added the new <tt>#define</tt>:<tt>
+   ROOT_COLLECTIONPROXY_VERSION and REFLEX_COLLECTIONPROXY_VERSION</tt>
+</li>
+<li>Reduce possible confusions and conflicts by always using in <tt>TClass</tt> and <tt>TStreamerInfo</tt> the version of template instance names with <tt>ULong64_t</tt> and <tt>Long64_t</tt> rather than <tt>[unsigned] long long.</tt></li>
+<li>new <tt>Hadoop TFile</tt> plugin.</li>
 </ul>
-

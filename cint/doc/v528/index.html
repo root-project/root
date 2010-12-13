@@ -47,4 +47,13 @@
   <li>Fix parsing of spacing (<tt>long long</tt> stays <tt>long long</tt>, no more <tt>Unknown type TH1Ghist</tt> instead of <tt>Unknown type TH1G</tt>.)</li>
 
   <li>Allow creation of dictionaries for auto_ptr.</li>
+  
+  <li>Mark explicitly that a member was brought into the class list of member via a using statement (Property <tt>G__BIT_ISUSINGVARIABLE</tt>).  Use this information to avoid adding it to the <i>Shadow<i> classes. 
+
+  <li><tt>G__MethodInfo</li> now properly distinguish between the 'creator/owner' of the <tt>G__MethodInfo</li> object and the class in which the method is declared.</li>
+  
+  <li>Fix the registration and lookup of typedef to any nested types.</li>
+  <li>Do not 'ignore' the semi-colons inside a string (passed as a argument to a .x command).</li>
+  
+
 </ul>
