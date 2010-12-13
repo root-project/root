@@ -62,7 +62,8 @@ ButtonWindow::ButtonWindow() : TGMainFrame(gClient->GetRoot(), 10, 10, kHorizont
 
    // Controls on right
    TGVerticalFrame *controls = new TGVerticalFrame(this);
-   AddFrame(controls, new TGLayoutHints(kLHintsRight | kLHintsExpandY, 5, 5, 5, 5));
+   AddFrame(controls, new TGLayoutHints(kLHintsRight | kLHintsExpandY, 
+                                        5, 5, 5, 5));
 
    // Separator
    TGVertical3DLine *separator = new TGVertical3DLine(this);
@@ -70,15 +71,17 @@ ButtonWindow::ButtonWindow() : TGMainFrame(gClient->GetRoot(), 10, 10, kHorizont
 
    // Contents
    TGHorizontalFrame *contents = new TGHorizontalFrame(this);
-   AddFrame(contents, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 5, 5));
+   AddFrame(contents, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,5,5));
 
    // The button for test
    fButton = new TGTextButton(contents,
-                      "&This button has a multi-line label\nand shows features\navailable in the button classes");
+      "&This button has a multi-line label\nand shows features\n"
+      "available in the button classes");
    fButton->Resize(300, 200);
    fButton->ChangeOptions(fButton->GetOptions() | kFixedSize);
-   fButton->SetToolTipText("The assigned tooltip\ncan be multi-line also", 200);
-   contents->AddFrame(fButton, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 20, 20, 20, 20));
+   fButton->SetToolTipText("The assigned tooltip\ncan be multi-line also",200);
+   contents->AddFrame(fButton, new TGLayoutHints(kLHintsCenterX|kLHintsCenterY,
+                      20, 20, 20, 20));
 
    TGGroupFrame *group = new TGGroupFrame(controls, "Enable/Disable");
    group->SetTitlePos(TGGroupFrame::kCenter);
@@ -96,7 +99,8 @@ ButtonWindow::ButtonWindow() : TGMainFrame(gClient->GetRoot(), 10, 10, kHorizont
    new TGRadioButton(horizontal, "Left", kTextLeft);
    new TGRadioButton(horizontal, "Right", kTextRight);
    horizontal->SetButton(kTextCenterX);
-   horizontal->Connect("Pressed(Int_t)", "ButtonWindow", this, "DoHPosition(Int_t)");
+   horizontal->Connect("Pressed(Int_t)", "ButtonWindow", this, 
+                       "DoHPosition(Int_t)");
    controls->AddFrame(horizontal, new TGLayoutHints(kLHintsExpandX));
 
 
@@ -107,7 +111,8 @@ ButtonWindow::ButtonWindow() : TGMainFrame(gClient->GetRoot(), 10, 10, kHorizont
    new TGRadioButton(vertical, "Top", kTextTop);
    new TGRadioButton(vertical, "Bottom", kTextBottom);
    vertical->SetButton(kTextCenterY);
-   vertical->Connect("Pressed(Int_t)", "ButtonWindow", this, "DoVPosition(Int_t)");
+   vertical->Connect("Pressed(Int_t)", "ButtonWindow", this, 
+                     "DoVPosition(Int_t)");
    controls->AddFrame(vertical, new TGLayoutHints(kLHintsExpandX));
 
 
@@ -138,7 +143,8 @@ ButtonWindow::ButtonWindow() : TGMainFrame(gClient->GetRoot(), 10, 10, kHorizont
    controls->AddFrame(margins, new TGLayoutHints(kLHintsExpandX));
 
    TGTextButton *quit = new TGTextButton(controls, "Quit");
-   controls->AddFrame(quit, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 0, 0, 5));
+   controls->AddFrame(quit, new TGLayoutHints(kLHintsBottom | kLHintsExpandX,
+                                              0, 0, 0, 5));
    quit->Connect("Pressed()", "TApplication", gApplication, "Terminate()");
 
    Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");

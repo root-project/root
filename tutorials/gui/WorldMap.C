@@ -2,7 +2,7 @@
 //
 // A TGImageMap provides the functionality like a clickable image in    
 // with sensitive regions (similar to MAP HTML tag).                 
-//Author: Valeriy Onuchin                                                                    
+//Author: Valeriy Onuchin
 
 #include <TGPicture.h>
 #include <TGMenu.h>
@@ -26,8 +26,10 @@ protected:
    virtual void InitUK();
 
 public:
-   // the name corresponds to TLD code (http://www.iana.org/cctld/cctld-whois.htm)
-   // the value to "country phone code" (http://www.att.com/traveler/tools/codes.html)
+   // the name corresponds to TLD code 
+   // (http://www.iana.org/cctld/cctld-whois.htm)
+   // the value to "country phone code" 
+   // (http://www.att.com/traveler/tools/codes.html)
    enum ECountryCode {
       kRU = 7, kUS = 1, kFR = 33, kDE = 49, kCH = 41, kCN = 86, kAU = 61,
       kUK = 44, kUA = 380, kBR = 55
@@ -62,7 +64,8 @@ WorldMap::WorldMap(const char* picName)
    fMain->MapSubwindows();
    InitMap();
 
-   fImageMap->Connect("RegionClicked(Int_t)", "WorldMap", this, "PrintCode(Int_t)");
+   fImageMap->Connect("RegionClicked(Int_t)", "WorldMap", this,
+                      "PrintCode(Int_t)");
 }
 
 //__________________________________________________________________________

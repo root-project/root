@@ -72,11 +72,13 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
    gClient->GetColorByName("blue", bcolor);
 
    // Create a main frame
-   fLbl1 = new TGLabel(this, "OwnFont & Bck/ForgrColor", fTextGC->GetGC(), labelfont, kChildFrame, bcolor);
+   fLbl1 = new TGLabel(this, "OwnFont & Bck/ForgrColor", fTextGC->GetGC(),
+                       labelfont, kChildFrame, bcolor);
    AddFrame(fLbl1, new TGLayoutHints(kLHintsNormal, 5, 5, 3, 4));
    fLbl1->SetTextColor(ycolor);
 
-   fLbl2 = new TGLabel(this, "Own Font & ForegroundColor", fTextGC->GetGC(), labelfont);
+   fLbl2 = new TGLabel(this, "Own Font & ForegroundColor", fTextGC->GetGC(),
+                       labelfont);
    AddFrame(fLbl2,  new TGLayoutHints(kLHintsCenterX, 5, 5, 3, 4));
    fLbl2->SetTextColor(ycolor);
    

@@ -119,21 +119,27 @@ DNDMainFrame::DNDMainFrame(const TGWindow *p, int w, int h) :
    fMenuBar = new TGMenuBar(this, 35, 50, kHorizontalFrame);
 
    fMenuFile = new TGPopupMenu(gClient->GetRoot());
-   fMenuFile->AddEntry(" &Open...\tCtrl+O", M_FILE_OPEN, 0,  gClient->GetPicture("bld_open.png"));
+   fMenuFile->AddEntry(" &Open...\tCtrl+O", M_FILE_OPEN, 0,
+                       gClient->GetPicture("bld_open.png"));
    fMenuFile->AddEntry(" &Browse...\tCtrl+B", M_FILE_BROWSE);
    fMenuFile->AddEntry(" &New Canvas\tCtrl+N", M_FILE_NEWCANVAS);
    fMenuFile->AddEntry(" &Close Window\tCtrl+W", M_FILE_CLOSEWIN);
    fMenuFile->AddSeparator();
-   fMenuFile->AddEntry(" E&xit\tCtrl+Q", M_FILE_EXIT, 0, gClient->GetPicture("bld_exit.png"));
-   fMenuFile->Connect("Activated(Int_t)", "DNDMainFrame", this, "HandleMenu(Int_t)");
+   fMenuFile->AddEntry(" E&xit\tCtrl+Q", M_FILE_EXIT, 0,
+                       gClient->GetPicture("bld_exit.png"));
+   fMenuFile->Connect("Activated(Int_t)", "DNDMainFrame", this,
+                      "HandleMenu(Int_t)");
 
    fMenuHelp = new TGPopupMenu(gClient->GetRoot());
-   fMenuHelp->AddEntry(" &About...", M_HELP_ABOUT, 0, gClient->GetPicture("about.xpm"));
-   fMenuHelp->Connect("Activated(Int_t)", "DNDMainFrame", this, "HandleMenu(Int_t)");
+   fMenuHelp->AddEntry(" &About...", M_HELP_ABOUT, 0,
+                       gClient->GetPicture("about.xpm"));
+   fMenuHelp->Connect("Activated(Int_t)", "DNDMainFrame", this,
+                      "HandleMenu(Int_t)");
 
-   fMenuBar->AddPopup("&File", fMenuFile, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
+   fMenuBar->AddPopup("&File", fMenuFile, new TGLayoutHints(kLHintsTop|kLHintsLeft,
+                                                            0, 4, 0, 0));
 
-   fMenuBar->AddPopup("&Help", fMenuHelp, new TGLayoutHints(kLHintsTop | kLHintsRight));
+   fMenuBar->AddPopup("&Help", fMenuHelp, new TGLayoutHints(kLHintsTop|kLHintsRight));
 
    AddFrame(fMenuBar, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 5));
 
@@ -162,10 +168,12 @@ DNDMainFrame::DNDMainFrame(const TGWindow *p, int w, int h) :
    fButtonExit = new TGTextButton(hf, "        &Exit...        ", 3);
    fButtonExit->Resize(fButtonExit->GetDefaultSize());
    fButtonExit->SetToolTipText("Exit Application (ROOT)");
-   fButtonExit->Connect("Clicked()" , "TApplication", gApplication, "Terminate()");
-   hf->AddFrame(fButtonExit, new TGLayoutHints(kLHintsCenterY | kLHintsRight, 10, 10, 10, 10));
+   fButtonExit->Connect("Clicked()" , "TApplication", gApplication,
+                        "Terminate()");
+   hf->AddFrame(fButtonExit, new TGLayoutHints(kLHintsCenterY | kLHintsRight,
+                                               10, 10, 10, 10));
 
-   AddFrame(hf, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 5, 5, 5, 5));
+   AddFrame(hf, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 5, 5, 5, 5));
 
    gRootObj  = gVirtualX->InternAtom("application/root", kFALSE);
 
@@ -193,14 +201,15 @@ DNDMainFrame::DNDMainFrame(const TGWindow *p, int w, int h) :
    if (rootsys[1] == ':' && rootsys[2] == '/')
       rootsys.Remove(0, 3);
 #endif
-   TString link = TString::Format("/%s/tutorials/image/rose512.jpg", rootsys.Data());
+   TString link = TString::Format("/%s/tutorials/image/rose512.jpg", 
+                                  rootsys.Data());
    if (!gSystem->AccessPathName(link.Data(), kReadPermission)) {
       TImage *img = TImage::Open(link.Data());
       if (img) {
          // create a 16x16 icon from the original picture
          img->Scale(16, 16);
          pic = gClient->GetPicturePool()->GetPicture("rose512", img->GetPixmap(),
-                                                  img->GetMask());
+                                                     img->GetMask());
          delete img;
       }
       else pic = gClient->GetPicture("psp_t.xpm");
@@ -332,9 +341,11 @@ TObject *DNDMainFrame::GetObject(const char *obj)
          Double_t params[] = {
             130,-1.4,1.8,1.5,1, 150,2,0.5,-2,0.5, 3600,-2,0.7,-3,0.3
          };
-         TF2 *f2 = new TF2("f2","xygaus + xygaus(5) + xylandau(10)",-4,4,-4,4);
+         TF2 *f2 = new TF2("f2","xygaus + xygaus(5) + xylandau(10)",
+                           -4, 4, -4, 4);
          f2->SetParameters(params);
-         fHist2D = new TH2F("2D Hist","xygaus+xygaus(5)+xylandau(10)",20,-4,4,20,-4,4);
+         fHist2D = new TH2F("2D Hist","xygaus+xygaus(5)+xylandau(10)",
+                            20, -4, 4, 20, -4, 4);
          fHist2D->FillRandom("f2",40000);
       }
       return fHist2D;

@@ -46,7 +46,7 @@ TGShapedMain::TGShapedMain(const TGWindow *p, int w, int h) :
    fSpeedo->Connect("OdoClicked()", "TGShapedMain", this, "ToggleInfos()");
    fSpeedo->Connect("LedClicked()", "TGShapedMain", this, "CloseWindow()");
    Connect("CloseWindow()", "TGShapedMain", this, "CloseWindow()");
-   AddFrame(fSpeedo, new TGLayoutHints(kLHintsCenterX | kLHintsCenterX, 0, 0, 0, 0));
+   AddFrame(fSpeedo, new TGLayoutHints(kLHintsCenterX | kLHintsCenterX));
    fSpeedo->SetDisplayText("Used RAM", "[MB]");
    fTimer = new TTimer(100);
    fTimer->SetCommand("Update()");
@@ -64,7 +64,8 @@ TGShapedMain::TGShapedMain(const TGWindow *p, int w, int h) :
    // To avoid closing the window while TGSpeedo is drawing
    Resize(GetDefaultSize());
    // Set fixed size
-   SetWMSizeHints(GetDefaultWidth(), GetDefaultHeight(), GetDefaultWidth(), GetDefaultHeight(), 1, 1);
+   SetWMSizeHints(GetDefaultWidth(), GetDefaultHeight(), GetDefaultWidth(), 
+                  GetDefaultHeight(), 1, 1);
    SetWindowName("ROOT CPU Load Meter");
    fTimer->TurnOn();   
 }
@@ -150,7 +151,8 @@ void CPUMeter()
    // set threshold values
    gSpeedo->SetThresholds(12.5, 50.0, 87.5);
    // set threshold colors
-   gSpeedo->SetThresholdColors(TGSpeedo::kGreen, TGSpeedo::kOrange, TGSpeedo::kRed);
+   gSpeedo->SetThresholdColors(TGSpeedo::kGreen, TGSpeedo::kOrange, 
+                               TGSpeedo::kRed);
    // enable threshold
    gSpeedo->EnableThreshold();
    gSpeedo->SetScaleValue(0.0, 5);

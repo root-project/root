@@ -55,7 +55,7 @@ TTripleSliderDemo::TTripleSliderDemo() : TGMainFrame(gClient->GetRoot(), 100, 10
    // Create an embedded canvas and add to the main frame, centered in x and y
    // and with 30 pixel margins all around
    fCanvas = new TRootEmbeddedCanvas("Canvas", this, 600, 400);
-   fLcan = new TGLayoutHints(kLHintsCenterX|kLHintsCenterY|kLHintsExpandX|kLHintsExpandY,10,10,10,10);
+   fLcan = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 10, 10, 10, 10);
    AddFrame(fCanvas, fLcan);
    fCanvas->GetCanvas()->SetFillColor(33);
    fCanvas->GetCanvas()->SetFrameFillColor(41);
@@ -77,10 +77,13 @@ TTripleSliderDemo::TTripleSliderDemo() : TGMainFrame(gClient->GetRoot(), 100, 10
    fHframe1 = new TGHorizontalFrame(this, 0, 0, 0);
 
    fHslider1 = new TGTripleHSlider(fHframe1, 190, kDoubleScaleBoth, HSId1,
-                                   kHorizontalFrame, GetDefaultFrameBackground(),
+                                   kHorizontalFrame,
+                                   GetDefaultFrameBackground(),
                                    kFALSE, kFALSE, kFALSE, kFALSE);
-   fHslider1->Connect("PointerPositionChanged()", "TTripleSliderDemo", this, "DoSlider()");
-   fHslider1->Connect("PositionChanged()", "TTripleSliderDemo", this, "DoSlider()");
+   fHslider1->Connect("PointerPositionChanged()", "TTripleSliderDemo", 
+                      this, "DoSlider()");
+   fHslider1->Connect("PositionChanged()", "TTripleSliderDemo", 
+                      this, "DoSlider()");
    fHslider1->SetRange(0.05,5.0);
 
    fHframe1->Resize(200, 25);
@@ -99,17 +102,22 @@ TTripleSliderDemo::TTripleSliderDemo() : TGMainFrame(gClient->GetRoot(), 100, 10
    fTbh2->AddText(0, "0.0");
    fTbh3->AddText(0, "0.0");
 
-   fTeh1->Connect("TextChanged(char*)", "TTripleSliderDemo", this, "DoText(char*)");
-   fTeh2->Connect("TextChanged(char*)", "TTripleSliderDemo", this, "DoText(char*)");
-   fTeh3->Connect("TextChanged(char*)", "TTripleSliderDemo", this, "DoText(char*)");
+   fTeh1->Connect("TextChanged(char*)", "TTripleSliderDemo", this,
+                  "DoText(char*)");
+   fTeh2->Connect("TextChanged(char*)", "TTripleSliderDemo", this,
+                  "DoText(char*)");
+   fTeh3->Connect("TextChanged(char*)", "TTripleSliderDemo", this,
+                  "DoText(char*)");
 
-   fCheck1->Connect("Clicked()", "TTripleSliderDemo", this, "HandleButtons()");
-   fCheck2->Connect("Clicked()", "TTripleSliderDemo", this, "HandleButtons()");
+   fCheck1->Connect("Clicked()", "TTripleSliderDemo", this,
+                    "HandleButtons()");
+   fCheck2->Connect("Clicked()", "TTripleSliderDemo", this,
+                    "HandleButtons()");
 
    fHframe2->Resize(100, 25);
 
    //--- layout for buttons: top align, equally expand horizontally
-   fBly = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 5, 5, 5, 5);
+   fBly = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 5, 5, 5, 5);
 
    //--- layout for the frame: place at bottom, right aligned
    fBfly1 = new TGLayoutHints(kLHintsTop | kLHintsCenterX, 5, 5, 5, 5);
@@ -197,7 +205,8 @@ void TTripleSliderDemo::DoText(const char * /*text*/)
          break;
    }
    fFitFcn->SetParameters(fHslider1->GetPointerPosition(), 0, 1);
-   fFitFcn->SetRange(fHslider1->GetMinPosition()-0.05, fHslider1->GetMaxPosition());
+   fFitFcn->SetRange(fHslider1->GetMinPosition()-0.05,
+                     fHslider1->GetMaxPosition());
    fFitFcn->Draw();
    fCanvas->GetCanvas()->Modified();
    fCanvas->GetCanvas()->Update();
@@ -232,7 +241,8 @@ void TTripleSliderDemo::DoSlider()
    gClient->NeedRedraw(fTeh3);
 
    fFitFcn->SetParameters(fHslider1->GetPointerPosition(), 0, 1);
-   fFitFcn->SetRange(fHslider1->GetMinPosition()-0.05, fHslider1->GetMaxPosition());
+   fFitFcn->SetRange(fHslider1->GetMinPosition()-0.05,
+                     fHslider1->GetMaxPosition());
    fFitFcn->Draw();
    fCanvas->GetCanvas()->Modified();
    fCanvas->GetCanvas()->Update();

@@ -92,9 +92,9 @@ public:
 };
 
 //______________________________________________________________________________
-HtmlMonthTable::HtmlMonthTable(Int_t year, Int_t month) : fYear(year), fMonth(month),
-   fBorder("2"), fBgColor("#aaaaaa"), fCellpadding("5"), fCellFontSize("3"),
-   fCellBgcolor("#eeeeee"), fTodayColor("#ffff00")
+HtmlMonthTable::HtmlMonthTable(Int_t year, Int_t month) : fYear(year),
+   fMonth(month), fBorder("2"), fBgColor("#aaaaaa"), fCellpadding("5"),
+   fCellFontSize("3"), fCellBgcolor("#eeeeee"), fTodayColor("#ffff00")
 {
    // Constructor.
 
@@ -265,8 +265,9 @@ void HtmlCalendar::MakeFooter()
 {
    // Make HTML footer.
 
-   fFooter = "<br><p><br><center><strong><font size=2 color=#2222ee>Example of using ";
-   fFooter += "Html widget to display tabular data.</font></strong></center></body></html>";  
+   fFooter = "<br><p><br><center><strong><font size=2 color=#2222ee>";
+   fFooter += "Example of using Html widget to display tabular data.";
+   fFooter += "</font></strong></center></body></html>";
 }
 
 //////////////////////// end of HTML calendar //////////////////////////////////
@@ -321,13 +322,15 @@ CalendarWindow::CalendarWindow()
 
    // create HTML widget
    fHtml = new TGHtml(fMain, 1, 1);
-   fMain->AddFrame(fHtml, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 5, 5, 2, 2));
+   fMain->AddFrame(fHtml, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
+                                            5, 5, 2, 2));
 
    // parse HTML context of HTML calendar table
    fHtml->ParseText((char*)fHtmlText->Html().Data());
 
    TGLabel *dateLabel = new TGLabel(controls, "Date:");
-   controls->AddFrame(dateLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 5, 2, 2, 2));
+   controls->AddFrame(dateLabel, new TGLayoutHints(kLHintsLeft|kLHintsCenterY,
+                                                   5, 2, 2, 2));
 
    // 
    fMonthBox = new TGComboBox(controls);
@@ -338,45 +341,55 @@ CalendarWindow::CalendarWindow()
    controls->AddFrame(fMonthBox, new TGLayoutHints(kLHintsLeft, 5, 5, 2, 2));
 
    fYearEntry = new TGNumberEntry(controls, today.GetYear(), 5, -1, 
-                                                 TGNumberFormat::kNESInteger, 
-                                                 TGNumberFormat::kNEAPositive,
-                                                 TGNumberFormat::kNELLimitMin, 1995);
+                                  TGNumberFormat::kNESInteger, 
+                                  TGNumberFormat::kNEAPositive,
+                                  TGNumberFormat::kNELLimitMin, 1995);
    controls->AddFrame(fYearEntry, new TGLayoutHints(kLHintsLeft, 5, 5, 2, 2));
 
    fMonthBox->Resize(100, fYearEntry->GetHeight());
 
    TGLabel *fontLabel = new TGLabel(controls, "Font Size:");
-   controls->AddFrame(fontLabel, new TGLayoutHints(kLHintsLeft| kLHintsCenterY, 30, 2, 2, 2));  
+   controls->AddFrame(fontLabel, new TGLayoutHints(kLHintsLeft|kLHintsCenterY,
+                                                   30, 2, 2, 2));  
 
    Int_t fontsize = atoi(fHtmlText->fMonthTable.fCellFontSize.Data());
    fFontEntry = new TGNumberEntry(controls, fontsize, 2, -1,
-                                                 TGNumberFormat::kNESInteger, 
-                                                 TGNumberFormat::kNEAPositive,
-                                                 TGNumberFormat::kNELLimitMax, 0, 7);
+                                  TGNumberFormat::kNESInteger, 
+                                  TGNumberFormat::kNEAPositive,
+                                  TGNumberFormat::kNELLimitMax, 0, 7);
    controls->AddFrame(fFontEntry, new TGLayoutHints(kLHintsLeft, 5, 5, 2, 2));
 
    TGLabel *tableLabel = new TGLabel(controls, "Table:");
-   controls->AddFrame(tableLabel, new TGLayoutHints(kLHintsLeft| kLHintsCenterY, 5, 2, 2, 2));
+   controls->AddFrame(tableLabel, new TGLayoutHints(kLHintsLeft|kLHintsCenterY,
+                                                    5, 2, 2, 2));
 
    Pixel_t color;
 
    gClient->GetColorByName(fHtmlText->fMonthTable.fBgColor.Data(), color);
    fTableColor = new TGColorSelect(controls, color);
-   controls->AddFrame(fTableColor, new TGLayoutHints(kLHintsLeft| kLHintsCenterY, 5, 2, 2, 2));
+   controls->AddFrame(fTableColor, new TGLayoutHints(kLHintsLeft|kLHintsCenterY,
+                                                     5, 2, 2, 2));
 
    TGLabel *cellLabel = new TGLabel(controls, "Cell:");
-   controls->AddFrame(cellLabel, new TGLayoutHints(kLHintsLeft| kLHintsCenterY, 5, 2, 2, 2));
+   controls->AddFrame(cellLabel, new TGLayoutHints(kLHintsLeft|kLHintsCenterY,
+                                                   5, 2, 2, 2));
 
    gClient->GetColorByName(fHtmlText->fMonthTable.fCellBgcolor.Data(), color);
    fCellColor = new TGColorSelect(controls, color);
-   controls->AddFrame(fCellColor, new TGLayoutHints(kLHintsLeft| kLHintsCenterY, 5, 2, 2, 2));
+   controls->AddFrame(fCellColor, new TGLayoutHints(kLHintsLeft|kLHintsCenterY,
+                                                    5, 2, 2, 2));
 
    // connect signals
-   fMonthBox->Connect("Selected(Int_t)", "CalendarWindow", this, "UpdateHTML()");
-   fYearEntry->GetNumberEntry()->Connect("TextChanged(char*)", "CalendarWindow", this, "UpdateHTML()");
-   fFontEntry->GetNumberEntry()->Connect("TextChanged(char*)", "CalendarWindow", this, "UpdateHTML()");
-   fTableColor->Connect("ColorSelected(Pixel_t)", "CalendarWindow", this, "UpdateHTML()");
-   fCellColor->Connect("ColorSelected(Pixel_t)", "CalendarWindow", this, "UpdateHTML()");
+   fMonthBox->Connect("Selected(Int_t)", "CalendarWindow", this, 
+                      "UpdateHTML()");
+   fYearEntry->GetNumberEntry()->Connect("TextChanged(char*)", "CalendarWindow",
+                                         this, "UpdateHTML()");
+   fFontEntry->GetNumberEntry()->Connect("TextChanged(char*)", "CalendarWindow",
+                                         this, "UpdateHTML()");
+   fTableColor->Connect("ColorSelected(Pixel_t)", "CalendarWindow", this,
+                        "UpdateHTML()");
+   fCellColor->Connect("ColorSelected(Pixel_t)", "CalendarWindow", this,
+                       "UpdateHTML()");
 
    // terminate ROOT session when window is closed
    fMain->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");

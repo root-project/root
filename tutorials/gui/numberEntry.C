@@ -50,11 +50,13 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
                                                TGNumberFormat::kNELLimitMinMax,
                                                0, 99999);
    fNumber->Connect("ValueSet(Long_t)", "MyMainFrame", this, "DoSetlabel()");
-   (fNumber->GetNumberEntry())->Connect("ReturnPressed()", "MyMainFrame", this, "DoSetlabel()");
+   (fNumber->GetNumberEntry())->Connect("ReturnPressed()", "MyMainFrame", this,
+                                        "DoSetlabel()");
    AddFrame(fNumber, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
    fGframe = new TGGroupFrame(this, "Value");
    fLabel = new TGLabel(fGframe, "No input.");
-   fGframe->AddFrame(fLabel, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
+   fGframe->AddFrame(fLabel, new TGLayoutHints(kLHintsTop | kLHintsLeft,
+                                               5, 5, 5, 5));
    AddFrame(fGframe, new TGLayoutHints(kLHintsExpandX, 2, 2, 1, 1));
    
    SetCleanup(kDeepCleanup);

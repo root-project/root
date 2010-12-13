@@ -1,4 +1,5 @@
-// A simple example of entering  CINT commands and having the CINT output in a ROOT GUI application window. 
+// A simple example of entering  CINT commands and having the CINT output in a 
+// ROOT GUI application window. 
 // An editable combo box is used as a CINT prompt, a text view widget displays 
 // the comand output.
 // Author: Ilka Antcheva   06/07/2007
