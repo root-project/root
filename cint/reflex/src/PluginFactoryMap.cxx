@@ -122,10 +122,11 @@ Reflex::PluginFactoryMap::PluginFactoryMap(const std::string& pathenv) {
    struct stat buf;
    dirent* e = 0;
    DIR* dir = 0;
-   const char* path = ::getenv(pathenv.empty() ? PATHENV : pathenv.c_str());
-   if (!path) return; // no path, no rootmap files.
+   const char* envpath = ::getenv(pathenv.empty() ? PATHENV : pathenv.c_str());
+   if (!envpath) return; // no path, no rootmap files.
+   string path(envpath);
 
-   for (char* t = strtok(const_cast<char*>(path), PATHSEP); t; t = strtok(0, PATHSEP)) {
+   for (char* t = strtok(const_cast<char*>(path.c_str()), PATHSEP); t; t = strtok(0, PATHSEP)) {
       if (0 == ::stat(t, &buf) && S_ISDIR(buf.st_mode)) {
          tokens.push_back(t);
       }
