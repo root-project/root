@@ -1122,12 +1122,12 @@ Double_t TEfficiency::FeldmanCousins(Int_t total,Int_t passed,Double_t level,Boo
    //
    Double_t lower = 0; 
    Double_t upper = 1;
-   if (!FeldmanCousinsInterval(total,passed,level, upper,lower)) { 
+   if (!FeldmanCousinsInterval(total,passed,level, lower, upper)) { 
       ::Error("FeldmanCousins","Error running FC method - return 0 or 1");
    }
    return (bUpper) ? upper : lower; 
 }
-Bool_t TEfficiency::FeldmanCousinsInterval(Int_t total,Int_t passed,Double_t level,Double_t & upper, Double_t & lower)
+Bool_t TEfficiency::FeldmanCousinsInterval(Int_t total,Int_t passed,Double_t level,Double_t & lower, Double_t & upper)
 {
    //calculates the interval boundaries using the frequentist methods of Feldman-Cousins
    //
