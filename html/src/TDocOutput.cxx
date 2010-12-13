@@ -479,6 +479,7 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
             gInterpreter->SaveGlobalsContext();
             Int_t err;
             gROOT->ProcessLine(cmd, &err);
+            gSystem->ProcessEvents();
             gSystem->cd(pwd);
 
             if (err == TInterpreter::kNoError) {
