@@ -4,9 +4,9 @@
     <h3>TMVA</h3>
 
     TMVA version 4.1.0 is included in this root release. The most
-    important new feature is the support for simulataneous
-    classification for multiple classes for a number of multi-variate
-    methods. A lot of effort went into consolidation of the software,
+    important new feature is the support for simulataneous classification 
+    of multiple output classes for several multi-variate methods. 
+    A lot of effort went into consolidation of the software,
     i.e. method performance and robustness, and framework
     stability. The changes with respect to ROOT 5.27 / TMVA 4.0.7 are
     in detail:
@@ -93,12 +93,14 @@
     <h4>Bug fixes</h4>
 
     <ul>
-      <li>A problem in the BDTG has been fix, leading to a much
+      <li>A problem in the BDTG has been fixed, leading to a much
       improved regression performance.</li>
 
+      <li>A problem in the TMVA::Reader has been fixed.</li>
+
       <li>With the new test framework and the coverity checks of ROOT
-      a number of bugs were discovered and fixed. The mainly concerned
-      memory leaks, and did not really affect performance.</li>
+      a number of bugs were discovered and fixed. They mainly concerned
+      memory leaks, and did not affect the performance.</li>
 
     </ul>
 
