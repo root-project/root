@@ -1,5 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html><head><!-- DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<!-- DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head></head>
 <body>
 <br --></head><body><hr>
@@ -8,9 +9,9 @@
 <ul>
 <li>New functionality
 <ul>
-<li>Add support for <span style="font-style: italic;">processing
-many datasets in one go</span> in <span style="font-style: italic;">TProof::Process(const char
-*dataset, ...)</span>.<br>
+<li>Add support for processing
+many datasets in one go in TProof::Process(const char
+*dataset, ...).<br>
 Two options are provided:<br>
 &nbsp;- <span style="font-style: italic;">'grand
 dataset'</span>:&nbsp; &nbsp;the datasets are added up
@@ -173,9 +174,14 @@ logs for possible stacktrace<br>
 The patch also fixes a problem with submergers observed when a worker
 was stopped because above the memory limits: this worker was
 established as merger but could not do the work, for obvious reasons,
-freezing the session.<br>
+freezing the session.</li>
+      <li>Add two new methods to TProof: ShowMissingFiles() to facilitate
+the display of the list of missing files; and GetMissingFiles() to get
+a TFileCollection (dataset) with the missing files for further
+processing.<br>
         <br>
       </li>
+
 
 </ul></li>
 <li>Fixes
@@ -250,10 +256,14 @@ active during worker setup.</li>
       <li>Fix an old issue with DeactivateWorker("*") (the session is
 was terminated because no worker was active; this call coudl not be
 used as intermediate step to select a small number of workers).</li>
-      <li>Consistently check both Proof.Sandbox and ProofLite.Sandbox for sandbox non-default location as done in TProofLite<br>
+      <li>Consistently check both Proof.Sandbox and ProofLite.Sandbox for sandbox non-default location as done in TProofLite</li>
+      <li>Fix a problem with the registration of missing files in the
+'MissingFiles' list (files which could not be open on the workers were
+not always added to the list).<br>
         <br>
         <br>
       </li>
+
 
 </ul></li>
 </ul>
