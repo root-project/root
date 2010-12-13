@@ -276,6 +276,7 @@ D: Reimplementation of TH1::Chi2Test
 N: Gerardo Ganis
 E: Gerardo.Ganis@cern.ch
 D: all matters related to client/server authentication
+D: PROOF developments
 
 N: Nerses Gevorgyan
 E: nerses@crdlx5.yerphi.am
@@ -529,6 +530,10 @@ N: Marco Meoni
 E: marco.meoni@cern.ch
 D: PROOF CPU quota, CAF and AliEn contributions
 
+N: Ramon Medrano Llamas
+E: m3drano@gmail.com
+D: PROOF worker autodiscovery via Bonjour
+
 N: Akiya Miyamoto
 E: akiya.miyamoto@kek.jp
 D: port to IBM AIX with xlC v5.x
@@ -676,6 +681,10 @@ D: Reflex and Cintex
 N: Paul Russo
 E: russo@fnal.gov
 D: Improvements in I/O
+
+N: Sangsu Ryu
+E: sangsuryu@kisti.re.kr
+D: PROOF contributions
 
 N: Pawel Sawicki
 E: Pawel.Sawicki@ifj.edu.pl
