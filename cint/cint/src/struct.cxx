@@ -1969,7 +1969,8 @@ int G__search_tagname(const char* tagname, int type)
       if (G__struct.type[i] != 'a'
           && G__struct.type[i] != 0
           && G__UserSpecificUpdateClassInfo) {
-         (*G__UserSpecificUpdateClassInfo)(G__struct.name[i],i);
+         G__FastAllocString fullname(G__fulltagname(i,0));
+         (*G__UserSpecificUpdateClassInfo)(fullname,i);
       }
    }
    else if (G__struct.type[i]==0 || (G__struct.type[i] == 'a')) {
@@ -1978,7 +1979,8 @@ int G__search_tagname(const char* tagname, int type)
          if (G__struct.type[i] != 'a'
              && G__struct.type[i] != 0
              && G__UserSpecificUpdateClassInfo) {
-            (*G__UserSpecificUpdateClassInfo)(G__struct.name[i],i);
+            G__FastAllocString fullname(G__fulltagname(i,0));
+            (*G__UserSpecificUpdateClassInfo)(fullname,i);
          }
       }
       ++G__struct.nactives;
