@@ -19,7 +19,9 @@
   implementing this interface are not provided by MathCore but by
   other libraries and they can be instantiated using the plugin
   manager. Implementations based on Unuran and Foam exist.</li>
-  </ul>
+  <li>The tutorial <tt>math/multidimSampling.C</tt> is an example on
+  how to use this class</li>
+ </ul>
   </li>
   <br>
  <li><b>New class <tt>ROOT::Math::GoFTest</tt></b> for goodness of fit
@@ -69,6 +71,8 @@
          double pValueAD = goftest.AndersonDarlingTest();
    </pre>
     </li>
+   <li>The tutorial <tt>math/goftest.C</tt> is an example on
+  how to use the <tt>ROOT::Math::GofTest</tt> class</li>
     </ul>
     </li>
 
@@ -113,6 +117,8 @@
       Double_t* center = GetBinCenter(b);
    </pre>
     </li>
+      <li>The tutorial <tt>math/kdTreeBinning.C</tt> is an example on
+  how to use this class</li>
   </ul>
  </li>  
 
@@ -289,6 +295,10 @@
   <li>Fix a problem in re-defining fixed parameters as variable
   ones. Before it was not possible to release them.
   </li>
+  <li>Fix a problem in the number of function calls when running MnHesse
+  after minimizing. Now the number is incremented instead of being
+  reset. 
+ </li>
 </ul>
 
 <h4>Genetic</h4>
@@ -297,4 +307,4 @@
   algorithm used in TMVA (plugin name "Genetic"). See example programs in
   math/genetic/test.
   </li>
-
+</ul>
