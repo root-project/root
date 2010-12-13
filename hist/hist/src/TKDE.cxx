@@ -720,6 +720,7 @@ void TKDE::Draw(const Option_t* opt) {
       drawOpt.ReplaceAll("confinterval","");
       Double_t level = 0.95;
       const char * s = strstr(plotOpt.Data(),"interval@");
+      // coverity [secure_coding : FALSE]
       if (s != 0) sscanf(s,"interval@%lf",&level);
       if((level <= 0) || (level >= 1)) {
 	 Warning("Draw","given confidence level %.3lf is invalid - use default 0.95",level);

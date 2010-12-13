@@ -444,6 +444,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    //confidence level
    if(option.Contains("cl=")) {
       Double_t level = -1;
+      // coverity [secure_coding : FALSE]
       sscanf(strstr(option.Data(),"cl="),"cl=%lf",&level);
       if((level > 0) && (level < 1))
 	 conf = level;
