@@ -90,7 +90,7 @@ templateClassImp(TKDTree)
 //         return node;
 //     }
 // }
-
+//
 // Our construction method is optimized to save memory, and differs a bit from the constraints above.
 // In particular, the division axis is chosen as the one with the biggest spread, and the point to create the
 // splitting plane is chosen so, that one of the two subtrees contains exactly 2^k terminal nodes and is a
@@ -202,7 +202,7 @@ templateClassImp(TKDTree)
 //
 // Non ideal case:
 // Number of _terminal_ nodes = 2^N+k,  N=3  k=1
-
+//
 //           INode
 // irow 0     0                                                                   - 1 inode
 // irow 1     1                              2                                    - 2 inodes
