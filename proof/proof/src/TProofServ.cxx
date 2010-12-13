@@ -1119,7 +1119,7 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
       if (fPlayer)
          status = fPlayer->GetProgressStatus();
       else {
-         Error("GetNextPacket", "No progress status object");
+         Error("GetNextPacket", "no progress status object");
          return 0;
       }
       // the CPU and wallclock proc times are kept in the TProofServ and here
@@ -1134,6 +1134,11 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
       Long64_t cacheSize = (fPlayer) ? fPlayer->GetCacheSize() : -1;
       Int_t learnent = (fPlayer) ? fPlayer->GetLearnEntries() : -1;
       req << cacheSize << learnent;
+
+      // Sent over the number of entries in the file, used by packetizer do not relying
+      // on initial validation. Also, -1 means that the file could not be open, which is
+      // used to flag files as missing
+      req << totalEntries;
 
       PDB(kLoop, 1) {
          PDB(kLoop, 2) status->Print();
@@ -4111,6 +4116,12 @@ void TProofServ::ProcessNext(TString *slb)
 
    // Send back the results
    TQueryResult *pqr = pq->CloneInfo();
+   // At least the TDSet name in the light object
+   Info("ProcessNext", "adding info about dataset '%s' in the light query result", dset->GetName());
+   TList rin;
+   TDSet *ds = new TDSet(dset->GetName(), dset->GetObjName());
+   rin.Add(ds);
+   pqr->SetInputList(&rin, kTRUE);
    if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted && fPlayer->GetOutputList()) {
       PDB(kGlobal, 2)
          Info("ProcessNext", "sending results");
@@ -4129,13 +4140,13 @@ void TProofServ::ProcessNext(TString *slb)
 
    // Remove aborted queries from the list
    if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
+      delete pqr;
       if (fQMgr) fQMgr->RemoveQuery(pq);
    } else {
       // Keep in memory only light infor about a query
       if (!(pq->IsDraw())) {
          if (fQMgr && fQMgr->Queries()) {
-            if (pqr)
-               fQMgr->Queries()->Add(pqr);
+            fQMgr->Queries()->Add(pqr);
             // Remove from the fQueries list
             fQMgr->Queries()->Remove(pq);
          }
@@ -5386,8 +5397,8 @@ void TProofServ::HandleWorkerLists(TMessage *mess)
                   if (nactnew == (nact + 1)) {
                      Info("HandleWorkerList","worker %s (re-)activated", ord.Data());
                   } else {
-                     Info("HandleWorkerList","worker %s could not be (re-)activated:"
-                                             " check the ordinal number", ord.Data());
+                     Info("HandleWorkerList","worker %s could not be (re-)activated;"
+                                             " # of actives: %d --> %d", ord.Data(), nact, nactnew);
                   }
                }
             } else {
@@ -5415,7 +5426,7 @@ void TProofServ::HandleWorkerLists(TMessage *mess)
                      Info("HandleWorkerList","worker %s deactivated", ord.Data());
                   } else {
                      Info("HandleWorkerList","worker %s could not be deactivated:"
-                                             " check the ordinal number", ord.Data());
+                                             " # of actives: %d --> %d", ord.Data(), nact, nactnew);
                   }
                }
             } else {

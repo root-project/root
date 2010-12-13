@@ -1125,6 +1125,9 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves,
    // Some monitoring systems (TXSocketHandler) need to know this
    ((TProof*)gProof)->fCurrentMonitor = &mon;
 
+   // Identify the type
+   if (!strcmp(dset->GetType(), "TTree")) SetBit(TVirtualPacketizer::kIsTree);
+
    // Preparing for client notification
    TString msg("Validating files");
    UInt_t n = 0;
@@ -1614,11 +1617,16 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
                             (sl ? sl->GetName() : "**undef**"));
       return 0;
    }
-   // update stats & free old element
+
+   // Attach to current file
+   TFileStat *file = slstat->fCurFile;
+
+   // Update stats & free old element
 
    Bool_t firstPacket = kFALSE;
    Long64_t cachesz = -1;
    Int_t learnent = -1;
+   Long64_t totalEntries = 0;
    if ( slstat->fCurElem != 0 ) {
 
       Double_t latency, proctime, proccpu;
@@ -1629,12 +1637,14 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
          (*r) >> latency;
          (*r) >> status;
 
-         if (sl->GetProtocol() > 25) (*r) >> cachesz >> learnent;
+         if (sl->GetProtocol() > 25) {
+            (*r) >> cachesz >> learnent;
+            if (r->BufferSize() > r->Length()) (*r) >> totalEntries;
+         }
 
       } else {
 
          Long64_t bytesRead = -1;
-         Long64_t totalEntries = -1;
 
          (*r) >> latency >> proctime >> proccpu;
          // only read new info if available
@@ -1646,14 +1656,24 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
          status = new TProofProgressStatus(totev, bytesRead, -1, proctime, proccpu);
       }
 
-      if (AddProcessed(sl, status, latency))
-         Error("GetNextPacket", "the worker processed a different # of entries");
-      if (fProgressStatus->GetEntries() >= fTotalEntries) {
-         if (fProgressStatus->GetEntries() > fTotalEntries)
-            Error("GetNextPacket", "Processed too many entries! (%lld, %lld)", fProgressStatus->GetEntries(), fTotalEntries);
-         // Send last timer message and stop the timer
-         HandleTimer(0);
-         SafeDelete(fProgress);
+      if (totalEntries >= 0) {
+         if (AddProcessed(sl, status, latency))
+            Error("GetNextPacket", "the worker processed a different # of entries");
+         if (fProgressStatus->GetEntries() >= fTotalEntries) {
+            if (fProgressStatus->GetEntries() > fTotalEntries)
+               Error("GetNextPacket", "Processed too many entries! (%lld, %lld)", fProgressStatus->GetEntries(), fTotalEntries);
+            // Send last timer message and stop the timer
+            HandleTimer(0);
+            SafeDelete(fProgress);
+         }
+      } else if (file && file->GetElement()) {
+         Info("GetNextPacket", "file '%s' could not be open: invalidating related element",
+                               file->GetElement()->GetName()); 
+         file->GetElement()->Invalidate();
+         file->SetDone();
+         // Add it to the failed packets list.
+         if (!fFailedPackets) fFailedPackets = new TList();
+         fFailedPackets->Add(file->GetElement());
       }
    } else {
       firstPacket = kTRUE;
@@ -1664,7 +1684,6 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
       return 0;
    }
 
-   TFileStat *file = slstat->fCurFile;
    TString nodeName;
    if (file != 0) nodeName = file->GetNode()->GetName();
    TString nodeHostName(slstat->GetName());

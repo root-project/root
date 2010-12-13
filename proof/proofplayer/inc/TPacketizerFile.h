@@ -44,7 +44,8 @@ private:
    TMap       *fFiles;           // Files to be produced/processed per node
    TList      *fNotAssigned;     // List of files not assigned to a specific node
    TList      *fIters;           // Iterators on the file lists per node
-   Long64_t    fAssigned;        // no. files processed or being processed.
+   Long64_t    fAssigned;        // No.files processed or being processed.
+   Bool_t      fProcNotAssigned; // Whether to process files not asdigned to a worker
 
    TStopwatch *fStopwatch;       // For measuring the start time of each packet
 
