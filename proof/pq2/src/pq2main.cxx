@@ -221,7 +221,7 @@ int main(int argc,const char *argv[])
    const char *tag = 0;
    Int_t iact = -1;
    for (i = 0; i < nact; i++) {
-      if (!strcmp(action, actions[i])) {
+      if (action && !strcmp(action, actions[i])) {
          iact = i;
          tag = tags[i];
       }
@@ -314,7 +314,7 @@ int main(int argc,const char *argv[])
 
       } else if (iact == 8) {
          // cache
-         bool clear = (!strcmp(options, "clear")) ? 1 : 0;
+         bool clear = (options && !strcmp(options, "clear")) ? 1 : 0;
          do_cache(clear, dataset);
 
       } else {
