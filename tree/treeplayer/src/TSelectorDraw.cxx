@@ -37,6 +37,7 @@
 #include "THLimitsFinder.h"
 #include "TStyle.h"
 #include "TClass.h"
+#include "TColor.h"
 
 ClassImp(TSelectorDraw)
 
@@ -1369,6 +1370,10 @@ void TSelectorDraw::TakeAction()
       TakeEstimate();
       TH3 *h3 =(TH3*)fObject;
       Int_t ncolors  = gStyle->GetNumberOfColors();
+      if (ncolors == 0) {
+         TColor::InitializeColors();
+         ncolors  = gStyle->GetNumberOfColors();
+      }
       TObjArray *pms = (TObjArray*)h3->GetListOfFunctions()->FindObject("polymarkers");
       Int_t col;
       TPolyMarker3D *pm3d;
@@ -1390,8 +1395,8 @@ void TSelectorDraw::TakeAction()
       h3->SetMaximum(fVmax[3]);
       for (i=0;i<fNfill;i++) {
          col = Int_t(ncolors*((fVal[3][i]-fVmin[3])/(fVmax[3]-fVmin[3])));
-         if (col < 0) col = 0;
          if (col > ncolors-1) col = ncolors-1;
+         if (col < 0) col = 0;
          pm3d = (TPolyMarker3D*)pms->UncheckedAt(col);
          pm3d->SetPoint(pm3d->GetLastPoint()+1,fVal[2][i],fVal[1][i],fVal[0][i]);
       }
