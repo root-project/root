@@ -26,7 +26,8 @@ void AnimateCamera()
    static Double_t fovStep = randGen.Rndm()*3.0 - 0.5;
    static Double_t zoomStep = (20 - randGen.Rndm())/1000.;
    static Double_t dollyStep = randGen.Rndm()*5.0 - 1.0;
-   static Double_t centerStep[3] = {randGen.Rndm()*4, randGen.Rndm()*4, randGen.Rndm()*4 };
+   static Double_t centerStep[3] = {randGen.Rndm()*4, randGen.Rndm()*4,
+                                    randGen.Rndm()*4 };
    static Double_t hRotateStep = randGen.Rndm()*0.025;
    static Double_t vRotateStep = randGen.Rndm()*0.05;
 
@@ -34,7 +35,8 @@ void AnimateCamera()
    center[0] += centerStep[0];
    center[1] += centerStep[1];
    center[2] += centerStep[2];
-   Double_t mag = TMath::Sqrt(center[0]*center[0] + center[1]*center[1] + center[2]*center[2]);
+   Double_t mag = TMath::Sqrt(center[0]*center[0] + center[1]*center[1] +
+                              center[2]*center[2]);
    if(mag > 500)
    {
       centerStep[0] = -centerStep[0];
@@ -48,8 +50,10 @@ void AnimateCamera()
    if (vRotate >= TMath::TwoPi() || vRotate <= 0.0)
       vRotateStep = -vRotateStep;
 
-   if (hRotate >= (TMath::PiOver2()- 0.02f)|| hRotate <= (0.07f -TMath::PiOver2()))
+   if (hRotate >= (TMath::PiOver2()- 0.02f) ||
+       hRotate <= (0.07f -TMath::PiOver2())) {
       hRotateStep = -hRotateStep;
+   }
 
    // dolly
    dolly += dollyStep;
@@ -72,9 +76,11 @@ void AnimateCamera()
 
    // apply
    if(camera < 3)
-      v->SetPerspectiveCamera(camera, fov, dollyStep, center, hRotateStep, vRotateStep);
+      v->SetPerspectiveCamera(camera, fov, dollyStep, center, hRotateStep,
+                              vRotateStep);
    else
-      v->SetOrthoCamera(camera, zoom, dollyStep, center, hRotateStep, vRotateStep);
+      v->SetOrthoCamera(camera, zoom, dollyStep, center, hRotateStep,
+                        vRotateStep);
 
    if (++moveCount % 10 == 0)
       v->RefreshPadEditor(v);

@@ -22,7 +22,8 @@ void glh3c()
 
   comp->Draw();
 
-  TPaveLabel *title = new TPaveLabel(0.04, 0.86, 0.96, 0.98, "TH3 composition.");
+  TPaveLabel *title = new TPaveLabel(0.04, 0.86, 0.96, 0.98,
+                                     "TH3 composition.");
   title->SetFillColor(32);
   title->Draw();
 }
