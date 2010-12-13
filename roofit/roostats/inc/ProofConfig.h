@@ -36,10 +36,11 @@ namespace RooStats {
 class ProofConfig {
 
    public:
-      ProofConfig(RooWorkspace &w, Int_t nExperiments = 8, const char *host = "") :
+      ProofConfig(RooWorkspace &w, Int_t nExperiments = 8, const char *host = "", Bool_t showGui = kTRUE) :
          fWorkspace(w),
          fNExperiments(nExperiments),
-         fHost(host)
+         fHost(host),
+         fShowGui(showGui)
       {
       }
 
@@ -52,11 +53,14 @@ class ProofConfig {
       const char* GetHost(void) { return fHost; }
       // return fNExperiments
       Int_t GetNExperiments(void) { return fNExperiments; }
+      // return fShowGui
+      Bool_t GetShowGui(void) { return fShowGui; }
 
    protected:
       RooWorkspace& fWorkspace;   // workspace that is to be used with the RooStudyManager
       Int_t fNExperiments;        // number of experiments. This is sometimes called "events" in proof; "experiments" in RooStudyManager.
       const char* fHost;          // Proof hostname. Use empty string (ie "") for proof-lite. Can also handle options like "workers=2" to run on two nodes.
+      Bool_t fShowGui;            // Whether to show the Proof Progress window.
 
    protected:
    ClassDef(ProofConfig,1) // Configuration options for proof.

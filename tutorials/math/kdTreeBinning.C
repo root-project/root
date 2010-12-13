@@ -104,7 +104,7 @@ void kdTreeBinning() {
    // R e b i n  t h e  K D T r e e B i n n i n g  o b j e c t
    // ---------------------------------------------------------
 
-   fBins->SetNBins(150);
+   fBins->SetNBins(200);
 
    TH2Poly* h2polrebin = new TH2Poly("h2PolyBinTest", "KDTree binning", fBins->GetDataMin(0), fBins->GetDataMax(0), fBins->GetDataMin(1), fBins->GetDataMax(1));
    h2polrebin->SetFloat();
@@ -127,13 +127,13 @@ void kdTreeBinning() {
    std::cout << "Bin with maximum density: " << fBins->GetBinMaxDensity() << std::endl;
 
    for (UInt_t i = 0; i < DATASZ; ++i)
-      z[i] = (Double_t) h2polrebin->GetBinContent(h2polrebin->FindBin(smp[i], smp[DATASZ + i]));
+      z[i] = (Double_t) h2polrebin->GetBin(h2polrebin->FindBin(smp[i], smp[DATASZ + i]));
 
    TCanvas* c4 = new TCanvas("glc4", "TH2Poly with kd-tree bin data",10,10,700,700);
    c4->Update();
    c4->Divide(1,2);
    c4->cd(1);
-   h2polrebin->Draw("");  // draw as scatter plot
+   h2polrebin->Draw("COLZ");  // draw as scatter plot
 
    c4->cd(2);
    h2polrebin->Draw("gllego");  // draw as lego

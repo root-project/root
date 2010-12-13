@@ -1,3 +1,4 @@
+// TUnfold test program as an example for a more complex regularisation scheme
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 

@@ -136,8 +136,8 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
   }
 
   // We can use PROOF to speed things along in parallel
-  //  ProofConfig pc(*w, 1, "workers=4"); 
-  //  ToyMCSampler*  toymcsampler = (ToyMCSampler*) fc.GetTestStatSampler(); 
+  //  ProofConfig pc(*w, 1, "workers=4", kFALSE);
+  //  ToyMCSampler*  toymcsampler = (ToyMCSampler*) fc.GetTestStatSampler();
   //  toymcsampler->SetProofConfig(&pc);	// enable proof
 
 

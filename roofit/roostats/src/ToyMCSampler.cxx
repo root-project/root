@@ -196,7 +196,7 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistribution(RooArgSet& paramPoin
    // temporary workspace for proof to avoid messing with TRef
    RooWorkspace w(fProofConfig->GetWorkspace());
    RooStudyManager studymanager(w, toymcstudy);
-   studymanager.runProof(fProofConfig->GetNExperiments(), fProofConfig->GetHost());
+   studymanager.runProof(fProofConfig->GetNExperiments(), fProofConfig->GetHost(), fProofConfig->GetShowGui());
 
    SamplingDistribution *result = new SamplingDistribution(GetSamplingDistName().c_str(), GetSamplingDistName().c_str());
    toymcstudy.merge(*result);

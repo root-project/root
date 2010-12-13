@@ -163,8 +163,8 @@ void HybridInstructional() {
   // Use PROOF-lite on multi-core machines
   ProofConfig* pc = NULL;
   // uncomment below if you want to use PROOF
-  // pc = new ProofConfig(*w, 4, "workers=4"); // machine with 4 cores
-  // pc = new ProofConfig(*w, 2, "workers=2"); // machine with 2 cores
+  // pc = new ProofConfig(*w, 4, "workers=4", kFALSE); // machine with 4 cores
+  // pc = new ProofConfig(*w, 2, "workers=2", kFALSE); // machine with 2 cores
 
   ///////////////////////////////////////////////////////
   // P A R T   2  :  D I R E C T   I N T E G R A T I O N 
