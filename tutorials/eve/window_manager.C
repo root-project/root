@@ -69,7 +69,8 @@ void PackTest()
 
 void DetailTest()
 {
-   TEveWindowSlot* slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
+   TEveWindowSlot* slot =
+      TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
    pack1 = slot->MakePack();
    pack1->SetShowTitleBar(kFALSE);
    pack1->SetElementName("Detail");
@@ -89,10 +90,12 @@ void DetailTest()
       hf->AddFrame(guiFrame, new TGLayoutHints(kLHintsExpandX));
       guiFrame->SetCleanup(kDeepCleanup);
 
-      guiFrame->AddFrame(new TGLabel(guiFrame, "Press Button:"), new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
+      guiFrame->AddFrame(new TGLabel(guiFrame, "Press Button:"),
+                         new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
       TGTextButton *b = new TGTextButton(guiFrame, "TestButton");
       guiFrame->AddFrame(b, new TGLayoutHints(kLHintsExpandX));     
-      TRootEmbeddedCanvas* ec = new TRootEmbeddedCanvas("Embeddedcanvas", hf, 220);
+      TRootEmbeddedCanvas* ec =
+         new TRootEmbeddedCanvas("Embeddedcanvas", hf, 220);
       hf->AddFrame(ec, new TGLayoutHints(kLHintsExpandY|kLHintsExpandX));
       double fontsize = 0.07;
       double x = 0.02;
@@ -154,8 +157,10 @@ void TabsTest()
       frame = slot->MakeFrame();
       frame->SetElementName(Form("FrameInPack %d", i));
       TGCompositeFrame* cf = frame->GetGUICompositeFrame();
-      TGTextView* text_view =  new TGTextView(cf, 200, 400);
-      cf->AddFrame(text_view,  new TGLayoutHints(kLHintsLeft|kLHintsExpandX|kLHintsExpandY));
+      TGTextView* text_view = new TGTextView(cf, 200, 400);
+      cf->AddFrame(text_view, new TGLayoutHints(kLHintsLeft    |
+                                                kLHintsExpandX |
+                                                kLHintsExpandY));
 
       for(Int_t l =0; l<weight; l++)
       {

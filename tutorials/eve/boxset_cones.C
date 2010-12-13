@@ -92,7 +92,8 @@ elliptic_boxset_cones(Float_t x=0, Float_t y=0, Float_t z=0,
     pos.Set(r.Uniform(-a,a), r.Uniform(-a, a), r.Uniform(-a, a));
 
     cones->AddEllipticCone(pos, dir, rad, 0.5*rad, r.Uniform(0,360));
-    cones->DigitColor(r.Uniform(20, 255), r.Uniform(20, 255), r.Uniform(20, 255), r.Uniform(20, 255));
+    cones->DigitColor(r.Uniform(20, 255), r.Uniform(20, 255),
+                      r.Uniform(20, 255), r.Uniform(20, 255));
 
     // draw axis line 30% longer than cone height
     TEveVector end = pos + dir*1.3;

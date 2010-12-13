@@ -13,16 +13,20 @@ void arrow_standalone()
 
    // ----------------------------------------------------------------------
 
-   TGMainFrame* mf = new TGMainFrame(gClient->GetRoot(), 800, 400, kHorizontalFrame);
+   TGMainFrame* mf = new TGMainFrame(gClient->GetRoot(), 800, 400,
+                                     kHorizontalFrame);
    mf->SetWindowName("Arrow Foo");
 
    // ----------------------------------------------------------------------
 
    TGCompositeFrame* evf = new TGCompositeFrame(mf, 400, 400);
-   mf->AddFrame(evf, new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY));
+   mf->AddFrame(evf, new TGLayoutHints(kLHintsNormal  |
+                                       kLHintsExpandX | kLHintsExpandY));
 
    TGLEmbeddedViewer* ev = new TGLEmbeddedViewer(evf);
-   evf->AddFrame(ev->GetFrame(), new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY));
+   evf->AddFrame(ev->GetFrame(),
+                 new TGLayoutHints(kLHintsNormal  |
+                                   kLHintsExpandX | kLHintsExpandY));
 
    TEveViewer* eve_v = new TEveViewer("YourViewer");
    eve_v->SetGLViewer(ev, ev->GetFrame());
@@ -34,12 +38,14 @@ void arrow_standalone()
 
    // To create embedded canvas ... no menus on top.
 
-   // TRootEmbeddedCanvas* ec = new TRootEmbeddedCanvas("EmbeddedCanvas", mf, 400, 400);
-   // mf->AddFrame(ec, new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY));
+   // TRootEmbeddedCanvas* ec =
+   //    new TRootEmbeddedCanvas("EmbeddedCanvas", mf, 400, 400);
+   // mf->AddFrame(ec, new TGLayoutHints(kLHintsNormal  |
+   //                                    kLHintsExpandX | kLHintsExpandY));
 
    // --------------------------------
 
-   // This one is tricky - must be after embedded canvas but before std canvas!@
+   // This one is tricky - must be after embedded canvas but before std canvas!
    mf->MapSubwindows();
 
    // --------------------------------

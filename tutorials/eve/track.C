@@ -20,7 +20,8 @@
 
 #if defined(__CINT__) && !defined(__MAKECINT__)
 {
-   Info("track.C", "Has to be run in compiled mode, esp. if you want to pass parameters.");
+   Info("track.C",
+        "Has to be run in compiled mode, esp. if you want to pass parameters.");
    gSystem->CompileMacro("track.C");
    track();
 }
@@ -72,8 +73,11 @@ public:
       m_simpleModel(true){}
 
    virtual ~CmsMagField(){}
-   virtual Float_t    GetMaxFieldMag() const { return m_magnetIsOn ? 3.8 : 0.0; }
-   void               setMagnetState( bool state )
+
+   virtual Float_t GetMaxFieldMag() const
+   { return m_magnetIsOn ? 3.8 : 0.0; }
+
+   void setMagnetState( bool state )
    {
       if (state != m_magnetIsOn)
       {
@@ -85,11 +89,11 @@ public:
       m_magnetIsOn = state;
    }
 
-   bool               isMagnetOn() const { return m_magnetIsOn;}
-   void               setReverseState( bool state ){ m_reverse = state; }
-   bool               isReverse() const { return m_reverse;}
-   void               setSimpleModel( bool simpleModel ){ m_simpleModel = simpleModel; }
-   bool               isSimpleModel() const { return m_simpleModel;}
+   bool isMagnetOn() const               { return m_magnetIsOn;}
+   void setReverseState(bool state)      { m_reverse = state; }
+   bool isReverse() const                { return m_reverse;}
+   void setSimpleModel(bool simpleModel) { m_simpleModel = simpleModel; }
+   bool isSimpleModel() const            { return m_simpleModel;}
 
    using   TEveMagField::GetField;
 
@@ -262,11 +266,16 @@ void track(Int_t mode = 5, Bool_t isRungeKutta = kTRUE)
          rc->fSign = -1;
          track = new TEveTrack(rc, prop);
 
-         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(3.576755e+00, 2.080579e+00, -2.507230e+00)));
-         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(8.440379e+01, 6.548286e+01, -8.788129e+01)));
-         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(1.841321e+02, 3.915693e+02, -3.843072e+02)));
-         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(1.946167e+02, 4.793932e+02, -4.615060e+02)));
-         track->AddPathMark(TEvePathMark(TEvePathMark::kDecay,    TEveVector(2.249656e+02, 5.835767e+02, -5.565275e+02)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter,
+                  TEveVector(3.576755e+00, 2.080579e+00, -2.507230e+00)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter,
+                  TEveVector(8.440379e+01, 6.548286e+01, -8.788129e+01)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter,
+                  TEveVector(1.841321e+02, 3.915693e+02, -3.843072e+02)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter,
+                  TEveVector(1.946167e+02, 4.793932e+02, -4.615060e+02)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDecay,
+                  TEveVector(2.249656e+02, 5.835767e+02, -5.565275e+02)));
 
 	 track->SetRnrPoints(kTRUE);
 	 track->SetMarkerStyle(4);
@@ -296,13 +305,23 @@ void track(Int_t mode = 5, Bool_t isRungeKutta = kTRUE)
          rc->fSign = -1;
          track = new TEveTrack(rc, prop);
 
-         track->AddPathMark(TEvePathMark(TEvePathMark::kReference, TEveVector(-1.642659e+01, 1.640318e+01, -1.978269e+01), TEveVector(3.631100, 3.643450, 0.682254)));
-         track->AddPathMark(TEvePathMark(TEvePathMark::kReference, TEveVector(-1.859987e+00, 3.172243e+01, -1.697866e+01), TEveVector(3.456056, 3.809894, 0.682254)));
-         track->AddPathMark(TEvePathMark(TEvePathMark::kReference, TEveVector(4.847579e+01, 9.871711e+01, -5.835719e+00), TEveVector(2.711614, 4.409945, 0.687656)));
-         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(1.342045e+02, 4.203950e+02, 3.846268e+01)));
-         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(1.483827e+02, 5.124750e+02, 5.064311e+01)));
-         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(1.674676e+02, 6.167731e+02, 6.517403e+01)));
-         track->AddPathMark(TEvePathMark(TEvePathMark::kDecay,    TEveVector(1.884976e+02, 7.202000e+02, 7.919290e+01)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kReference,
+                  TEveVector(-1.642659e+01, 1.640318e+01, -1.978269e+01),
+                  TEveVector(3.631100, 3.643450, 0.682254)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kReference,
+                  TEveVector(-1.859987e+00, 3.172243e+01, -1.697866e+01),
+                  TEveVector(3.456056, 3.809894, 0.682254)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kReference,
+                  TEveVector(4.847579e+01, 9.871711e+01, -5.835719e+00),
+                  TEveVector(2.711614, 4.409945, 0.687656)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter,
+                  TEveVector(1.342045e+02, 4.203950e+02, 3.846268e+01)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter,
+                  TEveVector(1.483827e+02, 5.124750e+02, 5.064311e+01)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter,
+                  TEveVector(1.674676e+02, 6.167731e+02, 6.517403e+01)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDecay,
+                  TEveVector(1.884976e+02, 7.202000e+02, 7.919290e+01)));
 
 	 track->SetRnrPoints(kTRUE);
 	 track->SetMarkerStyle(4);
@@ -320,7 +339,8 @@ void track(Int_t mode = 5, Bool_t isRungeKutta = kTRUE)
 	 prop->SetRnrDaughters(kTRUE);
 	 prop->SetRnrDecay(kTRUE);
 	 prop->RefPMAtt().SetMarkerStyle(4);
-         list->SetElementName(Form("%s, Some ILC Detector field", list->GetElementName()));
+         list->SetElementName(Form("%s, Some ILC Detector field",
+                                   list->GetElementName()));
 
          TEveRecTrack *rc = new TEveRecTrack();
          rc->fV.Set(57.1068, 31.2401, -7.07629);
@@ -328,9 +348,12 @@ void track(Int_t mode = 5, Bool_t isRungeKutta = kTRUE)
          rc->fSign = 1;
          track = new TEveTrack(rc, prop);
 
-         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(1.692235e+02, 7.047929e+01, -2.064785e+01), TEveVector()));
-         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(5.806180e+02, 6.990633e+01, -6.450000e+01), TEveVector()));
-         track->AddPathMark(TEvePathMark(TEvePathMark::kDecay,    TEveVector(6.527213e+02, 1.473249e+02, -8.348498e+01)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter,
+                  TEveVector(1.692235e+02, 7.047929e+01, -2.064785e+01)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter,
+                  TEveVector(5.806180e+02, 6.990633e+01, -6.450000e+01)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDecay,
+                  TEveVector(6.527213e+02, 1.473249e+02, -8.348498e+01)));
 
 	 track->SetRnrPoints(kTRUE);
 	 track->SetMarkerStyle(4);

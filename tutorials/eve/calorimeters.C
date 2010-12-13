@@ -5,7 +5,8 @@
 
 #include "TEveProjections.h"
 
-const char* histFile = "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
+const char* histFile =
+   "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
 
 void add_jet(TEveElement*, const char*, Float_t, Float_t, Float_t, Float_t);
 
@@ -40,7 +41,8 @@ void calorimeters()
    //
 
    // frames
-   TEveWindowSlot* slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
+   TEveWindowSlot* slot =
+      TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
    TEveWindowPack* packH = slot->MakePack();
    packH->SetElementName("Projections");
    packH->SetHorizontal();
@@ -105,7 +107,8 @@ TEveCaloLego* MakeCaloLego(TEveCaloData* data, TEveWindowSlot* slot)
 
    // set event handler to move from perspective to orthographic view.
    glv->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-   glv->SetEventHandler(new TEveLegoEventHandler(glv->GetGLWidget(), glv, lego));
+   glv->SetEventHandler
+      (new TEveLegoEventHandler(glv->GetGLWidget(), glv, lego));
    gEve->AddToListTree(lego, kTRUE);
 
    return lego;
@@ -133,7 +136,8 @@ TEveCalo3D* MakeCalo3D(TEveCaloData* data, TEveWindowSlot* slot)
 }
 
 //______________________________________________________________________________
-TEveCalo2D* MakeCalo2D(TEveCalo3D* calo3d, TEveWindowSlot* slot, TEveProjection::EPType_e t)
+TEveCalo2D* MakeCalo2D(TEveCalo3D* calo3d, TEveWindowSlot* slot,
+                       TEveProjection::EPType_e t)
 {
    // Projected calorimeter.
 

@@ -3,7 +3,8 @@
 
 // Demonstates usage pre-scaling for automatic 2D projections.
 
-const char* esd_geom_file_name = "http://root.cern.ch/files/alice_ESDgeometry.root";
+const char* esd_geom_file_name =
+   "http://root.cern.ch/files/alice_ESDgeometry.root";
 
 void projection_prescale()
 {
@@ -74,12 +75,13 @@ void projection_prescale()
    line->SetRnrSelf(kFALSE);
 
 
-   //---------------------------------------------------------------------------
+   //-------------------------------------------------------------------------
    // Scaled 3D "projection"
-   //---------------------------------------------------------------------------
+   //-------------------------------------------------------------------------
 
    TEveViewer *sev = gEve->SpawnNewViewer("Scaled 3D");
-   TEveProjectionManager* smng = new TEveProjectionManager(TEveProjection::kPT_3D);
+   TEveProjectionManager* smng =
+      new TEveProjectionManager(TEveProjection::kPT_3D);
    TEveProjection* sp = smng->GetProjection();
    sp->SetUsePreScale(kTRUE);
    sp->AddPreScaleEntry(2,   0,  1);
@@ -91,7 +93,7 @@ void projection_prescale()
 
    smng->ImportElements(gsre);
 
-   //---------------------------------------------------------------------------
+   //-------------------------------------------------------------------------
 
    gEve->GetBrowser()->GetTabRight()->SetTab(1);
 

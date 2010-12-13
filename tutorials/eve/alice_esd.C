@@ -93,7 +93,8 @@ void       make_gui();
 void       load_event();
 
 void       alice_esd_read();
-TEveTrack* esd_make_track(TEveTrackPropagator* trkProp, Int_t index, AliESDtrack* at,
+TEveTrack* esd_make_track(TEveTrackPropagator* trkProp, Int_t index,
+                          AliESDtrack* at,
 			  AliExternalTrackParam* tp=0);
 Bool_t     trackIsOn(AliESDtrack* t, Int_t mask);
 void       trackGetPos(AliExternalTrackParam* tp, Double_t r[3]);
@@ -103,13 +104,15 @@ Double_t   trackGetP(AliExternalTrackParam* tp);
 
 // Configuration and global variables.
 
-const char* esd_file_name         = "http://root.cern.ch/files/alice_ESDs.root";
+const char* esd_file_name = "http://root.cern.ch/files/alice_ESDs.root";
 // Temporarily disable reading of ESD friend.
 // There seems to be no way to get it working without AliRoot.
-// const char* esd_friends_file_name = "http://root.cern.ch/files/alice_ESDfriends.root";
+// const char* esd_friends_file_name =
+//       "http://root.cern.ch/files/alice_ESDfriends.root";
 const char* esd_friends_file_name = 0;
 
-const char* esd_geom_file_name    = "http://root.cern.ch/files/alice_ESDgeometry.root";
+const char* esd_geom_file_name =
+   "http://root.cern.ch/files/alice_ESDgeometry.root";
 
 // For testing
 // const char* esd_file_name         = "AliESDs.root";
@@ -143,7 +146,8 @@ void alice_esd()
 {
    // Main function, initializes the application.
    //
-   // 1. Load the auto-generated library holding ESD classes and ESD dictionaries.
+   // 1. Load the auto-generated library holding ESD classes and
+   //    ESD dictionaries.
    // 2. Open ESD data-files.
    // 3. Load cartoon geometry.
    // 4. Spawn simple GUI.
@@ -213,7 +217,8 @@ void alice_esd()
                }
                else
                {
-                  Warning("AliESDEvent::ReadFromTree() No Branch found with Name '%s' or '%s.'.",
+                  Warning("AliESDEvent::ReadFromTree() "
+                          "No Branch found with Name '%s' or '%s.'.",
                           bname.Data(),bname.Data());
                }
             }
@@ -373,11 +378,11 @@ void make_gui()
       TGPictureButton* b = 0;
       EvNavHandler    *fh = new EvNavHandler;
 
-      b = new TGPictureButton(hf, gClient->GetPicture(icondir + "GoBack.gif"));
+      b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoBack.gif"));
       hf->AddFrame(b);
       b->Connect("Clicked()", "EvNavHandler", fh, "Bck()");
 
-      b = new TGPictureButton(hf, gClient->GetPicture(icondir + "GoForward.gif"));
+      b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoForward.gif"));
       hf->AddFrame(b);
       b->Connect("Clicked()", "EvNavHandler", fh, "Fwd()");
    }
@@ -419,7 +424,9 @@ void alice_esd_read()
 
    // This needs further investigation. Clusters not shown.
    // esd_friend = (AliESDfriend*) esd_objs->FindObject("AliESDfriend");
-   // printf("Friend %p, n_tracks:%d\n", esd_friend, esd_friend->fTracks.GetEntries());
+   // printf("Friend %p, n_tracks:%d\n",
+   //        esd_friend,
+   //        esd_friend->fTracks.GetEntries());
 
    if (gTrackList == 0)
    {

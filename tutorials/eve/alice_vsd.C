@@ -23,7 +23,8 @@
 
 #if defined(__CINT__) && !defined(__MAKECINT__)
 {
-   Info("alice_vsd.C", "Has to be run in compiled mode ... doing this for you.");
+   Info("alice_vsd.C",
+        "Has to be run in compiled mode ... doing this for you.");
    gSystem->CompileMacro("alice_vsd.C");
    alice_vsd();
 }
@@ -93,7 +94,8 @@ public:
       fFile = TFile::Open(file_name);
       if (!fFile)
       {
-         Error("VSD_Reader", "Can not open file '%s' ... terminating.", file_name);
+         Error("VSD_Reader", "Can not open file '%s' ... terminating.",
+               file_name);
          gSystem->Exit(1);
       }
 
@@ -318,11 +320,13 @@ TVSDReader* gVSDReader = 0;
 void make_gui();
 
 //______________________________________________________________________________
-void alice_vsd(const char* vsd_file_name = "http://mtadel.home.cern.ch/mtadel/root/AliVSD.root")
+void alice_vsd(const char* vsd_file_name=
+               "http://mtadel.home.cern.ch/mtadel/root/AliVSD.root")
 {
    // Main function, initializes the application.
    //
-   // 1. Load the auto-generated library holding ESD classes and ESD dictionaries.
+   // 1. Load the auto-generated library holding ESD classes and
+   //    ESD dictionaries.
    // 2. Open ESD data-files.
    // 3. Load cartoon geometry.
    // 4. Spawn simple GUI.
@@ -339,7 +343,9 @@ void alice_vsd(const char* vsd_file_name = "http://mtadel.home.cern.ch/mtadel/ro
    TEveGeoShape *gentle_geom = 0;
 
    { // Simple geometry
-      TFile* geom = TFile::Open("http://mtadel.home.cern.ch/mtadel/root/alice_mini_geom.root", "CACHEREAD");
+      TFile* geom =
+      TFile::Open("http://mtadel.home.cern.ch/mtadel/root/alice_mini_geom.root",
+                  "CACHEREAD");
       if (!geom)
          return;
       TEveGeoShapeExtract* gse = (TEveGeoShapeExtract*) geom->Get("Gentle");
@@ -394,14 +400,14 @@ void make_gui()
 
    TGHorizontalFrame* hf = new TGHorizontalFrame(frmMain);
    {
-      TString icondir(TString::Format("%s/icons/", gSystem->Getenv("ROOTSYS")) );
+      TString icondir(TString::Format("%s/icons/", gSystem->Getenv("ROOTSYS")));
       TGPictureButton* b = 0;
 
-      b = new TGPictureButton(hf, gClient->GetPicture(icondir + "GoBack.gif"));
+      b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoBack.gif"));
       hf->AddFrame(b);
       b->Connect("Clicked()", "TVSDReader", gVSDReader, "PrevEvent()");
 
-      b = new TGPictureButton(hf, gClient->GetPicture(icondir + "GoForward.gif"));
+      b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoForward.gif"));
       hf->AddFrame(b);
       b->Connect("Clicked()", "TVSDReader", gVSDReader, "NextEvent()");
    }

@@ -1,7 +1,8 @@
 // Demonstrates usage of TEveJetCone class.
 // Author: Jochen Thaeder
 
-const char* esd_geom_file_name = "http://root.cern.ch/files/alice_ESDgeometry.root";
+const char* esd_geom_file_name =
+   "http://root.cern.ch/files/alice_ESDgeometry.root";
 
 void jetcone()
 {
@@ -22,9 +23,9 @@ void jetcone()
    gStyle->SetPalette(1, 0);
    TEveRGBAPalette* pal = new TEveRGBAPalette(0, 500);
 
-   // -----------------------------------------------------------------------------------
+   // -----------------------------------------------------------------------
    // -- Line sets
-   // -----------------------------------------------------------------------------------
+   // -----------------------------------------------------------------------
 
    // -- Define cone center
    TEveStraightLineSet* axis = new TEveStraightLineSet("Cone Axis");
@@ -43,31 +44,25 @@ void jetcone()
    tracksSeedEtaPhi->SetLineColor(kBlue);
    tracksSeedEtaPhi->SetLineWidth(2);
 
-   // -----------------------------------------------------------------------------------
-   // -- Draw track distribution in XYZ ( in TPC Volume ) ( +/-250, +/-250, +/-250 )
-   // -----------------------------------------------------------------------------------
+   // -----------------------------------------------------------------------
+   // -- Draw track distribution in XYZ in TPC Volume +/-250, +/-250, +/-250
+   // -----------------------------------------------------------------------
 
    for ( Int_t track=0; track < nTracks ; track++ ) {
 
       Float_t trackX = r.Uniform(-250.0, 250.0);
       Float_t trackY = r.Uniform(-250.0, 250.0);
       Float_t trackZ = r.Uniform(-250.0, 250.0);
-      Float_t trackR = (Float_t) Sqrt ( trackX*trackX + trackY*trackY + trackZ*trackZ );
-
-      /*
-        Float_t trackEta =  0.5 * (Float_t) Log( (Double_t)(( trackR+trackZ )/( trackR-trackZ )) );
-        Float_t trackPhi = (Float_t) ATan2( (Double_t) trackY, (Double_t) trackX );
-        if ( trackPhi < 0. ) trackPhi += (Float_t) TwoPi();
-      */
+      Float_t trackR = Sqrt(trackX*trackX + trackY*trackY + trackZ*trackZ);
 
       TEveVector trackDir(trackX/trackR, trackY/trackR ,trackZ/trackR);
       TEveVector trackEnd = trackDir * length;
       tracksXYZ->AddLine(0., 0., 0., trackEnd.fX, trackEnd.fY, trackEnd.fZ );
    }
 
-   // -----------------------------------------------------------------------------------
-   // -- Draw track distribution in eta phi ( in TPC Volume ) ( +/-0.9, {0, 2Pi} )
-   // -----------------------------------------------------------------------------------
+   // -----------------------------------------------------------------------
+   // -- Draw track distribution in eta phi in TPC Volume +/-0.9, {0, 2Pi}
+   // -----------------------------------------------------------------------
 
    for ( Int_t track=0; track < nTracks ; track++ ) {
 
@@ -78,14 +73,16 @@ void jetcone()
       TEveVector trackEnd = trackDir * length;
 
       if ( trackEta > coneRadius || trackEta < -coneRadius )
-         tracksEtaPhi->AddLine(0., 0., 0., trackEnd.fX, trackEnd.fY, trackEnd.fZ );
+         tracksEtaPhi->AddLine(0., 0., 0.,
+                               trackEnd.fX, trackEnd.fY, trackEnd.fZ);
       else
-         tracksSeedEtaPhi->AddLine(0., 0., 0., trackEnd.fX, trackEnd.fY, trackEnd.fZ );
+         tracksSeedEtaPhi->AddLine(0., 0., 0.,
+                                   trackEnd.fX, trackEnd.fY, trackEnd.fZ);
    }
 
-   // -----------------------------------------------------------------------------------
+   // -----------------------------------------------------------------------
    // -- Draw cones
-   // -----------------------------------------------------------------------------------
+   // -----------------------------------------------------------------------
 
    for ( Int_t iter = 0; iter < nCones; ++iter ) {
 
@@ -110,7 +107,7 @@ void jetcone()
          gEve->AddElement( jetCone );
    }
 
-   // -----------------------------------------------------------------------------------
+   // -----------------------------------------------------------------------
 
    // -- Add cone axis
    gEve->AddElement(axis);
@@ -128,10 +125,7 @@ void jetcone()
    return;
 }
 
-// ################################################################################
-// ################################################################################
-
-// ################################################################################
+//___________________________________________________________________________
 TEveVector GetTEveVector( Float_t& eta, Float_t& phi )
 {
   TEveVector vec( (Float_t) Cos ( (Double_t) phi)/ CosH( (Double_t) eta ),
@@ -140,7 +134,7 @@ TEveVector GetTEveVector( Float_t& eta, Float_t& phi )
   return vec;
 }
 
-// ################################################################################
+//__________________________________________________________________________
 void geomGentleTPC()
 {
    // Simple geometry

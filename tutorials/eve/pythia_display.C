@@ -50,7 +50,8 @@ void pythia_display()
 #ifndef G__WIN32 // libPythia6 is a static library on Windoze
    if (gSystem->Load("libPythia6") < 0)
    {
-      Error("pythia_display()", "Could not load 'libPythia6', make sure it is available!");
+      Error("pythia_display()",
+            "Could not load 'libPythia6', make sure it is available!");
       return;
    }
 #endif
@@ -252,13 +253,13 @@ void pythia_make_gui()
       TGPictureButton* b = 0;
       EvNavHandler    *fh = new EvNavHandler;
 
-      b = new TGPictureButton(hf, gClient->GetPicture(icondir + "GoBack.gif"));
+      b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoBack.gif"));
       b->SetEnabled(kFALSE);
       b->SetToolTipText("Go to previous event - not supported.");
       hf->AddFrame(b);
       b->Connect("Clicked()", "EvNavHandler", fh, "Bck()");
 
-      b = new TGPictureButton(hf, gClient->GetPicture(icondir + "GoForward.gif"));
+      b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoForward.gif"));
       b->SetToolTipText("Generate new event.");
       hf->AddFrame(b);
       b->Connect("Clicked()", "EvNavHandler", fh, "Fwd()");

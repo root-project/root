@@ -7,7 +7,7 @@
 // 2. Display the assebly as:
 //    root show_extract.C("csg.root")
 
-//______________________________________________________________________________
+//____________________________________________________________________________
 void csgdemo ()
 {
    gSystem->Load("libGeom");
@@ -43,7 +43,8 @@ void csgdemo ()
    tr2->RegisterYourself();
    tr3->RegisterYourself();
 
-   TGeoCompositeShape *cs = new TGeoCompositeShape("mir", "(sph * box) + (sph1:tr - box1:tr1)");
+   TGeoCompositeShape *cs = new TGeoCompositeShape
+      ("mir", "(sph * box) + (sph1:tr - box1:tr1)");
 
    TGeoVolume *vol = new TGeoVolume("COMP4", cs);
    vol->SetLineColor(kMagenta);

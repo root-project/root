@@ -14,7 +14,8 @@ void calo_detail()
    data->IncDenyDestroy(); // don't delete if zero parent
 
    // frames
-   TEveWindowSlot* slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
+   TEveWindowSlot* slot =
+      TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
    TEveWindowPack* packH = slot->MakePack();
    packH->SetElementName("Projections");
    packH->SetHorizontal();
@@ -100,8 +101,10 @@ TEveCaloDataVec* MakeVecData(Int_t ncells=0)
          }
          else
          {
-            data->AddTower(ax->GetBinLowEdge(i), ax->GetBinWidth(i)*2  +ax->GetBinLowEdge(i) ,
-                           ay->GetBinLowEdge(j), ay->GetBinWidth(j)*2  +ay->GetBinLowEdge(j) );
+            data->AddTower(ax->GetBinLowEdge(i),
+                           2 * ax->GetBinWidth(i) + ax->GetBinLowEdge(i),
+                           ay->GetBinLowEdge(j),
+                           2 * ay->GetBinWidth(j) + ay->GetBinLowEdge(j));
             data->FillSlice(0, h2->GetBinContent(i, j));
             data->FillSlice(1, h2->GetBinContent(i, j));
          }
@@ -113,4 +116,3 @@ TEveCaloDataVec* MakeVecData(Int_t ncells=0)
    data->DataChanged();
    return data;
 }
-

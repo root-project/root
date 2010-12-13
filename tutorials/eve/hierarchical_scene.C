@@ -13,7 +13,8 @@ void add_blobs(TEveElement* p, Float_t rad, Float_t height, Float_t size,
     x->RefMainTrans().SetPos(rad*TMath::Cos(phi),
 			     rad*TMath::Sin(phi),
 			     height);
-    x->SetMainColor(TColor::GetColorPalette(gRandom->Integer(TColor::GetNumberOfColors())));
+    x->SetMainColor(TColor::GetColorPalette
+                    (gRandom->Integer(TColor::GetNumberOfColors())));
     p->AddElement(x);
 
     add_blobs(x, 0.8 * rad, 0.8 * height, 0.8 * size, level - 1);

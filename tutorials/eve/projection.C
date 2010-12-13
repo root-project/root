@@ -3,7 +3,8 @@
 
 // Demonstates usage of automatic 2D projections - class TEveProjectionManager.
 
-const char* esd_geom_file_name = "http://root.cern.ch/files/alice_ESDgeometry.root";
+const char* esd_geom_file_name =
+   "http://root.cern.ch/files/alice_ESDgeometry.root";
 
 void projection()
 {
@@ -19,7 +20,8 @@ void projection()
    cam->SetZoomMinMax(0.2, 20);
 
    // projections
-   TEveProjectionManager* mng = new TEveProjectionManager(TEveProjection::kPT_RPhi);
+   TEveProjectionManager* mng =
+      new TEveProjectionManager(TEveProjection::kPT_RPhi);
    s->AddElement(mng);
    TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
    axes->SetTitle("TEveProjections demo");
