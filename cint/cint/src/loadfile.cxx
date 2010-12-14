@@ -1746,8 +1746,8 @@ int G__loadfile(const char *filenamein)
       /**********************************************
        * try ./filename
        **********************************************/
-      if(G__USERHEADER==G__kindofheader) {
-         G__snprintf(G__ifile.name,G__MAXFILENAME,"./%s%s",filename(),addpost[i2]);
+      if(G__USERHEADER==G__kindofheader && filename()[0]!='/' && filename()[0]!='\\') {
+        G__snprintf(G__ifile.name,G__MAXFILENAME,"./%s%s",filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
