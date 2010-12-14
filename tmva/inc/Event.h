@@ -111,7 +111,7 @@ namespace TMVA {
    private:
 
       mutable std::vector<Float_t>   fValues;               // the event values
-      static  std::vector<Float_t*>* fgValuesDynamic;       // the event values
+      mutable std::vector<Float_t*>* fValuesDynamic;       // the event values
       mutable std::vector<Float_t>   fTargets;              // target values for regression
       mutable std::vector<Float_t>   fSpectators;           // "visisting" variables which are never used for any calculation
       mutable std::vector<UInt_t>*   fVariableArrangement;  // needed for MethodCategories, where we can train on other than the main variables
@@ -120,8 +120,6 @@ namespace TMVA {
       Float_t                        fWeight;          // event weight (product of global and individual weights)
       Float_t                        fBoostWeight;     // internal weight to be set by boosting algorithm
       Bool_t                         fDynamic;         // is set when the dynamic values are taken
-      
-      static Int_t                   fgCount;          // count instances of Event
    };
 }
 

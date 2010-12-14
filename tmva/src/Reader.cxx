@@ -129,15 +129,9 @@ TMVA::Reader::Reader( const TString& theOption, Bool_t verbose )
      fLogger ( 0 )
 {
    // constructor
-
-   fLogger = new MsgLogger(this);
-
-//    DataSetManager::CreateInstance(fDataInputHandler); // DSMTEST removed
-//    DataSetManager::Instance().AddDataSetInfo(fDataSetInfo); // DSMTEST removed
-   fDataSetManager = new DataSetManager( fDataInputHandler ); // DSMTEST 
+   fDataSetManager = new DataSetManager( fDataInputHandler ); // DSMTEST
    fDataSetManager->AddDataSetInfo(fDataSetInfo); // DSMTEST
-   
-
+   fLogger = new MsgLogger(this);
 
    SetConfigName( GetName() );
    DeclareOptions();
@@ -158,6 +152,9 @@ TMVA::Reader::Reader( std::vector<TString>& inputVars, const TString& theOption,
      fLogger ( 0 )
 {
    // constructor
+   fDataSetManager = new DataSetManager( fDataInputHandler );
+   fDataSetManager->AddDataSetInfo(fDataSetInfo);
+
    fLogger = new MsgLogger(this);
    SetConfigName( GetName() );
    DeclareOptions();
@@ -184,8 +181,10 @@ TMVA::Reader::Reader( std::vector<std::string>& inputVars, const TString& theOpt
      fLogger ( 0 )
 {
    // constructor
+   fDataSetManager = new DataSetManager( fDataInputHandler );
+   fDataSetManager->AddDataSetInfo(fDataSetInfo);
    fLogger = new MsgLogger(this);
-   SetConfigName( GetName() );   
+   SetConfigName( GetName() );
    DeclareOptions();
    ParseOptions();
 
@@ -210,6 +209,8 @@ TMVA::Reader::Reader( const std::string& varNames, const TString& theOption, Boo
      fLogger ( 0 )
 {
    // constructor
+   fDataSetManager = new DataSetManager( fDataInputHandler );
+   fDataSetManager->AddDataSetInfo(fDataSetInfo);
    fLogger = new MsgLogger(this);
    SetConfigName( GetName() );
    DeclareOptions();
@@ -233,6 +234,8 @@ TMVA::Reader::Reader( const TString& varNames, const TString& theOption, Bool_t 
      fLogger ( 0 )
 {
    // constructor
+   fDataSetManager = new DataSetManager( fDataInputHandler );
+   fDataSetManager->AddDataSetInfo(fDataSetInfo);
    fLogger = new MsgLogger(this);
    SetConfigName( GetName() );
    DeclareOptions();
@@ -252,7 +255,7 @@ void TMVA::Reader::DeclareOptions()
 
    DeclareOptionRef( fVerbose, "V",      "Verbose flag" );
    DeclareOptionRef( fColor,   "Color",  "Color flag (default True)" );
-   DeclareOptionRef( fSilent,  "Silent", "Boolean silent flag (default False)" );   
+   DeclareOptionRef( fSilent,  "Silent", "Boolean silent flag (default False)" );
 }
 
 //_______________________________________________________________________
@@ -353,11 +356,11 @@ TMVA::IMethod* TMVA::Reader::BookMVA( const TString& methodTag, const TString& w
 
    MethodBase* method = dynamic_cast<MethodBase*>(this->BookMVA( Types::Instance().GetMethodType(methodType),
                                                                  weightfile ) );
-   if( method->GetMethodType() == Types::kCategory ){ 
-      MethodCategory *methCat = (dynamic_cast<MethodCategory*>(method)); 
-      if( !methCat ) 
-	 Log() << kERROR << "Method with type kCategory cannot be casted to MethodCategory. /Reader" << Endl; 
-      methCat->fDataSetManager = fDataSetManager; 
+   if( method->GetMethodType() == Types::kCategory ){
+      MethodCategory *methCat = (dynamic_cast<MethodCategory*>(method));
+      if( !methCat )
+         Log() << kERROR << "Method with type kCategory cannot be casted to MethodCategory. /Reader" << Endl;
+      methCat->fDataSetManager = fDataSetManager;
    }
 
    return fMethodMap[methodTag] = method;
@@ -374,11 +377,11 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const TStrin
 
    if (method==0) return im;
 
-   if( method->GetMethodType() == Types::kCategory ){ 
-      MethodCategory *methCat = (dynamic_cast<MethodCategory*>(method)); 
-      if( !methCat ) 
-         Log() << kERROR << "Method with type kCategory cannot be casted to MethodCategory. /Reader" << Endl; 
-      methCat->fDataSetManager = fDataSetManager; 
+   if( method->GetMethodType() == Types::kCategory ){
+      MethodCategory *methCat = (dynamic_cast<MethodCategory*>(method));
+      if( !methCat )
+         Log() << kERROR << "Method with type kCategory cannot be casted to MethodCategory. /Reader" << Endl;
+      methCat->fDataSetManager = fDataSetManager;
    }
 
    method->SetupMethod();

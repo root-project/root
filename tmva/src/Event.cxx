@@ -34,13 +34,11 @@
 #include <iomanip>
 #include <cassert>
 #include "TCut.h"
- 
-Int_t TMVA::Event::fgCount = 0;
-std::vector<Float_t*>* TMVA::Event::fgValuesDynamic = 0;
 
 //____________________________________________________________
 TMVA::Event::Event() 
    : fValues(),
+     fValuesDynamic(0),
      fTargets(),
      fSpectators(),
      fVariableArrangement(0),
@@ -50,7 +48,6 @@ TMVA::Event::Event()
      fDynamic(kFALSE)
 {
    // copy constructor
-   fgCount++; 
 }
 
 //____________________________________________________________
@@ -60,6 +57,7 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
                     Float_t weight,
                     Float_t boostweight )
    : fValues(ev),
+     fValuesDynamic(0),
      fTargets(tg),
      fSpectators(0),
      fVariableArrangement(0),
@@ -69,7 +67,6 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
      fDynamic(kFALSE)
 {
    // constructor
-   fgCount++;
 }
 
 //____________________________________________________________
@@ -80,6 +77,7 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
                     Float_t weight,
                     Float_t boostweight )
    : fValues(ev),
+     fValuesDynamic(0),
      fTargets(tg),
      fSpectators(vi),
      fVariableArrangement(0),
@@ -89,7 +87,6 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
      fDynamic(kFALSE)
 {
    // constructor
-   fgCount++;
 }
 
 //____________________________________________________________
@@ -98,6 +95,7 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
                     Float_t weight,
                     Float_t boostweight )
    : fValues(ev),
+     fValuesDynamic(0),
      fTargets(0),
      fSpectators(0),
      fVariableArrangement(0),
@@ -107,12 +105,12 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
      fDynamic(kFALSE)
 {
    // constructor
-   fgCount++;
 }
 
 //____________________________________________________________
 TMVA::Event::Event( const std::vector<Float_t*>*& evdyn, UInt_t nvar )
    : fValues(nvar),
+     fValuesDynamic( (std::vector<Float_t*>*) evdyn ),
      fTargets(0),
      fSpectators(evdyn->size()-nvar),
      fVariableArrangement(0),
@@ -122,8 +120,7 @@ TMVA::Event::Event( const std::vector<Float_t*>*& evdyn, UInt_t nvar )
      fDynamic(true)
 {
    // constructor for single events
-   fgValuesDynamic = (std::vector<Float_t*>*) evdyn;
-   fgCount++;
+   fValuesDynamic = (std::vector<Float_t*>*) evdyn;
 }
 
 //____________________________________________________________
@@ -138,26 +135,23 @@ TMVA::Event::Event( const Event& event )
      fDynamic(event.fDynamic)
 {
    // copy constructor
-   fgCount++; 
 }
 
 //____________________________________________________________
 TMVA::Event::~Event() 
 {
    // Event destructor
-   fgCount--;;
-   if (fDynamic && fgCount==0) TMVA::Event::ClearDynamicVariables();
 }
  
 //____________________________________________________________
 void TMVA::Event::ClearDynamicVariables() 
 { 
    // clear global variable
-   if (fgValuesDynamic != 0) { 
-      fgValuesDynamic->clear();
-      delete fgValuesDynamic;
-      fgValuesDynamic = 0;
-   }
+//    if (fValuesDynamic != 0) { 
+//       fValuesDynamic->clear();
+//       delete fValuesDynamic;
+//       fValuesDynamic = 0;
+//    }
 }
 
 //____________________________________________________________
@@ -188,12 +182,12 @@ Float_t TMVA::Event::GetValue( UInt_t ivar ) const
    // return value of i'th variable
    Float_t retval;
    if (fVariableArrangement==0) {
-      retval = fDynamic ?( *(*fgValuesDynamic)[ivar] ) : fValues[ivar]; 
+      retval = fDynamic ?( *(*fValuesDynamic)[ivar] ) : fValues[ivar]; 
    } 
    else {
       UInt_t mapIdx = (*fVariableArrangement)[ivar];
       if (fDynamic) {
-         retval = *(*fgValuesDynamic)[mapIdx];
+         retval = *(*fValuesDynamic)[mapIdx];
       } 
       else {
          retval = ( mapIdx<fValues.size() ) ? fValues[mapIdx] : fSpectators[mapIdx-fValues.size()];
@@ -206,7 +200,7 @@ Float_t TMVA::Event::GetValue( UInt_t ivar ) const
 Float_t TMVA::Event::GetSpectator( UInt_t ivar) const 
 {
    // return spectator content
-   if (fDynamic) return *(fgValuesDynamic->at(GetNVariables()+ivar));
+   if (fDynamic) return *(fValuesDynamic->at(GetNVariables()+ivar));
    else          return fSpectators.at(ivar);
 }
 
@@ -218,13 +212,13 @@ const std::vector<Float_t>& TMVA::Event::GetValues() const
       assert(0);
    }
    if (fDynamic) {
-//       if (fgValuesDynamic->size()-GetNSpectators() != fValues.size()) {
+//       if (fValuesDynamic->size()-GetNSpectators() != fValues.size()) {
 //          std::cout << "ERROR Event::GetValues() is trying to change the size of the variable vector, exiting ..." << std::endl;
 //          assert(0);
 //       }
       fValues.clear();
-      for (std::vector<Float_t*>::const_iterator it = fgValuesDynamic->begin(); 
-           it != fgValuesDynamic->end()-GetNSpectators(); it++) { 
+      for (std::vector<Float_t*>::const_iterator it = fValuesDynamic->begin(); 
+           it != fValuesDynamic->end()-GetNSpectators(); it++) { 
          Float_t val = *(*it); 
          fValues.push_back( val ); 
       }
@@ -268,10 +262,10 @@ UInt_t TMVA::Event::GetNSpectators() const
 void TMVA::Event::SetVal( UInt_t ivar, Float_t val ) 
 {
    // set variable ivar to val
-   if ((fDynamic ?( (*fgValuesDynamic).size() ) : fValues.size())<=ivar)
-      (fDynamic ?( (*fgValuesDynamic).resize(ivar+1) ) : fValues.resize(ivar+1));
+   if ((fDynamic ?( (*fValuesDynamic).size() ) : fValues.size())<=ivar)
+      (fDynamic ?( (*fValuesDynamic).resize(ivar+1) ) : fValues.resize(ivar+1));
 
-   (fDynamic ?( *(*fgValuesDynamic)[ivar] ) : fValues[ivar])=val;
+   (fDynamic ?( *(*fValuesDynamic)[ivar] ) : fValues[ivar])=val;
 }
 
 //____________________________________________________________
