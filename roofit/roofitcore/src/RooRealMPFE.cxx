@@ -58,6 +58,7 @@
 #include "RooRealVar.h"
 #include "RooCategory.h"
 #include "RooMPSentinel.h"
+#include "RooMsgService.h"
 
 #include "TSystem.h"
 
@@ -188,21 +189,21 @@ void RooRealMPFE::initialize()
     serverLoop() ;
    
     // Kill server at end of service
-    cout << "RooRealMPFE::initialize(" << GetName() 
-	 << ") server process terminating" << endl ;
+    coutI(Minimization) << "RooRealMPFE::initialize(" << GetName() 
+			<< ") server process terminating" << endl ;
     _exit(0) ;
 
   } else if (_pid>0) {
  
     // Client process - fork successul
-    cout << "RooRealMPFE::initialize(" << GetName() 
-	 << ") successfully forked server process " << _pid << endl ;
+    coutI(Minimization) << "RooRealMPFE::initialize(" << GetName() 
+			<< ") successfully forked server process " << _pid << endl ;
     _state = Client ;
     _calcInProgress = kFALSE ;
 
   } else {
     // Client process - fork failed    
-    cout << "RooRealMPFE::initialize(" << GetName() << ") ERROR fork() failed" << endl ; 
+    coutE(Minimization) << "RooRealMPFE::initialize(" << GetName() << ") ERROR fork() failed" << endl ; 
     _state = Inline ;
   }
 #endif // _WIN32
