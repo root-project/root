@@ -725,12 +725,13 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
 
          // If this element contains the end of the global range
          // adjust its number of entries
-         if (num != -1 && (first+num < cur+eNum)) {
+         if (num != -1 && (first+num <= cur+eNum)) {
             e->SetNum( first + num - cur );
-            eNum = e->GetNum();
             PDB(kPacketizer,2)
                Info("TPacketizerAdaptive",
                     "processing element: adjust end %lld", first + num - cur);
+            cur += eNum;
+            eNum = e->GetNum();
          }
 
          // If this element contains the start of the global range
@@ -738,14 +739,13 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
          if (cur < first) {
             e->SetFirst( eFirst + (first - cur) );
             e->SetNum( e->GetNum() - (first - cur) );
-            eNum = e->GetNum();
             PDB(kPacketizer,2)
                Info("TPacketizerAdaptive",
                     "processing element: adjust start %lld and end %lld",
                     eFirst + (first - cur), first + num - cur);
+            cur += eNum;
+            eNum = e->GetNum();
          }
-
-         cur += eNum;
       } else {
          TEntryList *enl = dynamic_cast<TEntryList *>(e->GetEntryList());
          if (enl) {
@@ -814,7 +814,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
       node->IncEvents(eNum);
       PDB(kPacketizer,2) e->Print("a");
    }
-   PDB(kGlobal,1)
+   PDB(kPacketizer,1)
       Info("TPacketizerAdaptive", "processing %lld entries in %d files on %d hosts",
                                   fTotalEntries, files, fFileNodes->GetSize());
 
