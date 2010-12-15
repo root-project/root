@@ -44,7 +44,8 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
 
 TUTORIALSTESTS_NEEDS_MIUNIT2 := fit/fit2dHist fit/fit2dHist \
 fit/fitCircle fit/minuit2FitBench2D fit/minuit2FitBench2D \
-fit/minuit2FitBench fit/minuit2FitBench fit/minuit2GausFit fit/minuit2GausFit
+fit/minuit2FitBench fit/minuit2FitBench fit/minuit2GausFit fit/minuit2GausFit \
+fit/NumericalMinimization
 
 ifeq (,$(wildcard $(ROOTSYS)/lib/libMinuit2.*))
 TUTORIALSTESTS_VETO += $(TUTORIALSTESTS_NEEDS_MIUNIT2)
