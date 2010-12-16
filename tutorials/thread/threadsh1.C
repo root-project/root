@@ -16,8 +16,8 @@ Bool_t finished;
 void *handle(void *ptr)
 {
    long nr = (long) ptr;
-   int nfills = 2500000;
-   int upd = 5000;
+   Long64_t nfills = 25000000;
+   int upd = 50000;
 
    char name[32];
    sprintf(name,"hpx%ld",nr);
