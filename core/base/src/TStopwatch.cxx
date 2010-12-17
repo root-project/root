@@ -108,8 +108,8 @@ void TStopwatch::Continue()
 //______________________________________________________________________________
 Double_t TStopwatch::RealTime()
 {
-   // Return the realtime passed between the start and stop events. If the
-   // stopwatch was still running stop it first.
+   // Stop the stopwatch (if it is running) and return the realtime (in
+   // seconds) passed between the start and stop events.
 
    if (fState == kUndefined)
       Error("RealTime", "stopwatch not started");
@@ -123,8 +123,8 @@ Double_t TStopwatch::RealTime()
 //______________________________________________________________________________
 Double_t TStopwatch::CpuTime()
 {
-   // Return the cputime passed between the start and stop events. If the
-   // stopwatch was still running stop it first.
+   // Stop the stopwatch (if it is running) and return the cputime (in
+   // seconds) passed between the start and stop events.
 
    if (fState == kUndefined)
       Error("CpuTime", "stopwatch not started");
