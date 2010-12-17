@@ -59,9 +59,9 @@ tsvdunf->Init( bdat, bini, xini, Adet );
 TH1D* unfresult = tsvdunf->Unfold(kreg);
 </pre>
 </ul>
-where <tt>kreg</tt> determines the regularisation of the unfolding. In general, overregularisation (too small <tt>kreg</tt>) will bias the unfolded spectrum towards the Monte Carlo input, while underregularisation (too large <tt>kreg</tt>) will lead to large fluctuations in the unfolded spectrum. The optimal regularisation can be determined following guidelines in <a href="http://arXiv.org/abs/hep-ph/9509307">Nucl. Instrum. Meth. A372, 469 (1996) [hep-ph/9509307]</a> using the distribution of the <tt>|d_i|<\tt> that can be obtained by <tt>tsvdunf->GetD()</tt> and/or using pseudo-experiments.
+where <tt>kreg</tt> determines the regularisation of the unfolding. In general, overregularisation (too small <tt>kreg</tt>) will bias the unfolded spectrum towards the Monte Carlo input, while underregularisation (too large <tt>kreg</tt>) will lead to large fluctuations in the unfolded spectrum. The optimal regularisation can be determined following guidelines in <a href="http://arXiv.org/abs/hep-ph/9509307">Nucl. Instrum. Meth. A372, 469 (1996) [hep-ph/9509307]</a> using the distribution of the <tt>|d_i|</tt> that can be obtained by <tt>tsvdunf->GetD()</tt> and/or using pseudo-experiments.
 <p>
-Covariance matrices on the measured spectrum can be propagated to covariance matrices using the <tt>GetUnfoldCovMatrix</tt> method, which uses pseudo experiments for the propagation. In addition, <tt>GetAdetCovMatrix</tt> allows for the propagation of the statistical uncertainties on the response matrix using pseudo experiments. In addition, the distribution of singular values can be retrieved using <tt>tsvdunf->GetSV()<\tt>.
+Covariance matrices on the measured spectrum can be propagated to covariance matrices using the <tt>GetUnfoldCovMatrix</tt> method, which uses pseudo experiments for the propagation. In addition, <tt>GetAdetCovMatrix</tt> allows for the propagation of the statistical uncertainties on the response matrix using pseudo experiments. In addition, the distribution of singular values can be retrieved using <tt>tsvdunf->GetSV()</tt>.
 End_Html */
 //_______________________________________________________________________
 
