@@ -4420,6 +4420,7 @@ void THistPainter::PaintColorLevels(Option_t *)
       if (zmin > 0) {
          zmin = TMath::Log10(zmin);
          zmax = TMath::Log10(zmax);
+         dz = zmax - zmin;
       } else {
          return;
       }
