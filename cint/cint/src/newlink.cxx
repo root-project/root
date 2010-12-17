@@ -5942,295 +5942,101 @@ static int G__isprotecteddestructoronelevel(int tagnum)
 *
 **************************************************************************/
 static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table_internal *ifunc,
-                            const char *fn, int tagnum, const char *cls)
+                            const char *fn, int tagnum, const char * /*cls*/)
 {
-   const int umax = 20;   // maximum number of extra vararg stack arguments
-   int i;
+   //const int dmax = 8;    // number of floating point xmm registers
+   const int imax = 6;    // number of integer registers
+   const int umax = 50;   // maximum number of extra vararg stack arguments
 
-   int type    = ifunc->type[ifn];
-   int ptagnum = ifunc->p_tagtable[ifn];
-   int typenum = ifunc->p_typetable[ifn];
-   int reftype = ifunc->reftype[ifn];
-   int isconst = ifunc->isconst[ifn];
-   
-   fprintf(fp, "  const int imax = 6, dmax = 8, umax = 20;\n");
-   fprintf(fp, "  int objsize, type, i, icnt = 0, dcnt = 0, ucnt = 0;\n");
-   fprintf(fp, "  G__value *pval;\n");
-   fprintf(fp, "  G__int64 lval[imax];\n");
-   fprintf(fp, "  double dval[dmax];\n");
-   fprintf(fp, "  union { G__int64 lval; double dval; } u[umax];\n");
-
-   if (type == 'u' && reftype==0) {
-      // The function returns an object by value, so we need to reserve space
-      // for it and pass it to the function.
-      fprintf(fp, "  char returnValue[sizeof(%s)];\n", G__type2string(type, tagnum, typenum, reftype, isconst));
-      fprintf(fp, "  lval[icnt] = (G__int64)returnValue; icnt++; // Object returned by value\n");
-   }
+   fprintf(fp, "   const int imax = 6, dmax = 8, umax = 50;\n");
+   fprintf(fp, "   int objsize, type, i, icnt = 0, dcnt = 0, ucnt = 0;\n");
+   fprintf(fp, "   G__value *pval;\n");
+   fprintf(fp, "   G__int64 lval[imax];\n");
+   fprintf(fp, "   double dval[dmax];\n");
+   fprintf(fp, "   union { G__int64 lval; double dval; } u[umax];\n");
               
    if (tagnum != -1 && !ifunc->staticalloc[ifn])
-      fprintf(fp, "  lval[icnt] = G__getstructoffset(); icnt++;  // this pointer\n");
+      fprintf(fp, "   lval[icnt] = G__getstructoffset(); icnt++; // this pointer\n");
 
-   fprintf(fp, "  for (i = 0; i < libp->paran; i++) {\n");
-   fprintf(fp, "    type = G__value_get_type(&libp->para[i]);\n");
-   fprintf(fp, "    pval = &libp->para[i];\n");
-   fprintf(fp, "    if (isupper(type))\n");
-   fprintf(fp, "      objsize = G__LONGALLOC;\n");
-   fprintf(fp, "    else\n");
-   fprintf(fp, "      objsize = G__sizeof(pval);\n");
+   fprintf(fp, "   for (i = 0; i < libp->paran; i++) {\n");
+   fprintf(fp, "      type = G__value_get_type(&libp->para[i]);\n");
+   fprintf(fp, "      pval = &libp->para[i];\n");
+   fprintf(fp, "      if (isupper(type))\n");
+   fprintf(fp, "         objsize = G__LONGALLOC;\n");
+   fprintf(fp, "      else\n");
+   fprintf(fp, "         objsize = G__sizeof(pval);\n");
 
-   fprintf(fp, "    switch (type) {\n");
-   fprintf(fp, "      case 'c': case 'b': case 's': case 'r': objsize = sizeof(int); break;\n");
-   fprintf(fp, "      case 'f': objsize = sizeof(double); break;\n");
-   fprintf(fp, "    }\n");
+   fprintf(fp, "      switch (type) {\n");
+   fprintf(fp, "         case 'c': case 'b': case 's': case 'r': objsize = sizeof(int); break;\n");
+   fprintf(fp, "         case 'f': objsize = sizeof(double); break;\n");
+   fprintf(fp, "      }\n");
 
    fprintf(fp, "#ifdef G__VAARG_PASS_BY_REFERENCE\n");
-   fprintf(fp, "    if (objsize > G__VAARG_PASS_BY_REFERENCE) {\n");
-   fprintf(fp, "      if (pval->ref > 0x1000) {\n");
-   fprintf(fp, "        if (icnt < imax) {\n");
-   fprintf(fp, "          lval[icnt] = pval->ref; icnt++;\n");
-   fprintf(fp, "        } else {\n");
-   fprintf(fp, "          u[ucnt].lval = pval->ref; ucnt++;\n");
-   fprintf(fp, "        }\n");
-   fprintf(fp, "      } else {\n");
-   fprintf(fp, "        if (icnt < imax) {\n");
-   fprintf(fp, "          lval[icnt] = G__int(*pval); icnt++;\n");
-   fprintf(fp, "        } else {\n");
-   fprintf(fp, "          u[ucnt].lval = G__int(*pval); ucnt++;\n");
-   fprintf(fp, "        }\n");
+   fprintf(fp, "      if (objsize > G__VAARG_PASS_BY_REFERENCE) {\n");
+   fprintf(fp, "         if (pval->ref > 0x1000) {\n");
+   fprintf(fp, "            if (icnt < imax) {\n");
+   fprintf(fp, "               lval[icnt] = pval->ref; icnt++;\n");
+   fprintf(fp, "            } else {\n");
+   fprintf(fp, "               u[ucnt].lval = pval->ref; ucnt++;\n");
+   fprintf(fp, "            }\n");
+   fprintf(fp, "         } else {\n");
+   fprintf(fp, "            if (icnt < imax) {\n");
+   fprintf(fp, "               lval[icnt] = G__int(*pval); icnt++;\n");
+   fprintf(fp, "            } else {\n");
+   fprintf(fp, "               u[ucnt].lval = G__int(*pval); ucnt++;\n");
+   fprintf(fp, "            }\n");
+   fprintf(fp, "         }\n");
+   fprintf(fp, "         type = 'z';\n");
    fprintf(fp, "      }\n");
-   fprintf(fp, "      type = 'z';\n");
-   fprintf(fp, "    }\n");
    fprintf(fp, "#endif\n");
 
-   fprintf(fp, "    switch (type) {\n");
-   fprintf(fp, "      case 'n': case 'm':\n");
-   fprintf(fp, "        if (icnt < imax) {\n");
-   fprintf(fp, "          lval[icnt] = (G__int64)G__Longlong(*pval); icnt++;\n");
-   fprintf(fp, "        } else {\n");
-   fprintf(fp, "          u[ucnt].lval = (G__int64)G__Longlong(*pval); ucnt++;\n");
-   fprintf(fp, "        } break;\n");
-   fprintf(fp, "      case 'f': case 'd':\n");
-   fprintf(fp, "        if (dcnt < dmax) {\n");
-   fprintf(fp, "          dval[dcnt] = G__double(*pval); dcnt++;\n");
-   fprintf(fp, "        } else {\n");
-   fprintf(fp, "          u[ucnt].dval = G__double(*pval); ucnt++;\n");
-   fprintf(fp, "        } break;\n");
-   fprintf(fp, "      case 'z': break;\n");
-   fprintf(fp, "      case 'u':\n");
-   fprintf(fp, "        if (objsize >= 16) {\n");
-   fprintf(fp, "          memcpy(&u[ucnt].lval, (void*)pval->obj.i, objsize);\n");
-   fprintf(fp, "          ucnt += objsize/8;\n");
-   fprintf(fp, "          break;\n");
-   fprintf(fp, "        }\n");
-   fprintf(fp, "        // objsize < 16 -> fall through\n");
-   fprintf(fp, "      case 'g': case 'c': case 'b': case 'r': case 's': case 'h': case 'i':\n");
-   fprintf(fp, "      case 'k': case 'l':\n");
-   fprintf(fp, "      default:\n");
-   fprintf(fp, "        if (icnt < imax) {\n");
-   fprintf(fp, "          lval[icnt] = G__int(*pval); icnt++;\n");
-   fprintf(fp, "        } else {\n");
-   fprintf(fp, "          u[ucnt].lval = G__int(*pval); ucnt++;\n");
-   fprintf(fp, "        } break;\n");
-   fprintf(fp, "    }\n");
-   fprintf(fp, "    if (ucnt >= %d) printf(\"%s: more than %d var args\\n\");\n", umax, fn, umax);
-   fprintf(fp, "  }\n");
-
-   // example of what we try to generate:
-   //    void (TQObject::*fptr)(const char *, Int_t, ...) = &TQObject::EmitVA;
-
-   int m = ifunc->para_nu[ifn];
-   if (tagnum != -1) {
-      if (!strcmp(fn, cls)) {
-         // variadic constructor case, not yet supported
-         printf("G__x8664_vararg: variadic constructors not yet supported\n");
-         return;
-      } else {
-         // write return type
-         char *typestring = G__type2string(type, ptagnum, typenum, reftype, isconst);
-         if (ifunc->staticalloc[ifn] || G__struct.type[ifunc->tagnum] == 'n') {
-            // static method or function in namespace
-            fprintf(fp, "  %s (*fptr)(", typestring);
-         } else {
-            // class method
-            fprintf(fp, "  %s (%s::*fptr)(", typestring, cls);
-         }
-
-         // write arguments
-         for (int k = 0; k < m; k++) {
-            type    = ifunc->param[ifn][k]->type;
-            ptagnum = ifunc->param[ifn][k]->p_tagtable;
-            typenum = ifunc->param[ifn][k]->p_typetable;
-            reftype = ifunc->param[ifn][k]->reftype;
-            isconst = ifunc->param[ifn][k]->isconst;
-
-            char *typestring = G__type2string(type, ptagnum, typenum, reftype, isconst);
-            if (k)
-               fprintf(fp, ", ");
-            fprintf(fp, "%s", typestring);
-         }
-         fprintf(fp, ", ...) %s = &%s::%s;\n",
-                 (ifunc->isconst[ifn] & G__CONSTFUNC) ? "const" : "", cls, fn);
-      }
-   } else {
-      fprintf(fp, "  long fptr = (long)&%s;\n", fn);
-   }
-
-   if (tagnum != -1 && ifunc->isvirtual[ifn]) {
-      fprintf(fp, "  // special prologue since virtual member function pointers contain\n");
-      fprintf(fp, "  // only an offset into the virtual table and not a function address\n");
-      fprintf(fp, "  long faddr;\n");
-
-      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rax\"  :: \"m\" (lval[0]) : \"%%rax\");\n");
-      fprintf(fp, "  __asm__ __volatile__(\"movq %%rax, %%rdx\");\n");
-      fprintf(fp, "  __asm__ __volatile__(\"leaq %%0, %%%%rax\" :: \"m\" (fptr) : \"%%rax\");\n");
-      fprintf(fp, "  __asm__ __volatile__(\"movq 8(%%rax), %%rax\");  //multiple inheritance offset\n");
-#if defined(__GNUC__) && __GNUC__ > 3
-      fprintf(fp, "  __asm__ __volatile__(\"leaq (%%rdx,%%rax), %%rax\");\n");
-      fprintf(fp, "  __asm__ __volatile__(\"movq (%%rax), %%rdx\");\n");
-      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rax\"  :: \"m\" (fptr) : \"%%rax\");  //virtual member function offset\n");
-      fprintf(fp, "  __asm__ __volatile__(\"leaq (%%rdx,%%rax), %%rax\");\n");
-#else
-      fprintf(fp, "  __asm__ __volatile__(\"addq %%rax, %%rdx\");\n");
-      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rax\"  :: \"m\" (fptr));  //virtual member function offset\n");
-      fprintf(fp, "  __asm__ __volatile__(\"addq (%%rdx), %%rax\");\n");
-#endif
-      fprintf(fp, "  __asm__ __volatile__(\"decq %%rax\");\n");
-      fprintf(fp, "  __asm__ __volatile__(\"movq (%%rax), %%rax\");\n");
-      fprintf(fp, "  __asm__ __volatile__(\"movq %%%%rax, %%0\"  : \"=m\" (faddr) :: \"memory\");\n\n");
-   }
-
-#ifdef G__LOCALS_REFERENCED_FROM_RSP
-   fprintf(fp, "  long savr15;\n");
-   fprintf(fp, "  __asm__ __volatile__(\"movq %%%%r15, %%0\" : \"=m\" (savr15) :: \"memory\");  // save r15\n");
-   // reference u from r15 and not rsp, as rsp will be decreased to put
-   // the args for the var arg call on the stack
-   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r15\" :: \"r\" (u) : \"%%r15\");\n");
-#endif
-
-   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm0\"  :: \"m\" (dval[0]) : \"%%xmm0\");\n");
-   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm1\"  :: \"m\" (dval[1]) : \"%%xmm1\");\n");
-   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm2\"  :: \"m\" (dval[2]) : \"%%xmm2\");\n");
-   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm3\"  :: \"m\" (dval[3]) : \"%%xmm3\");\n");
-   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm4\"  :: \"m\" (dval[4]) : \"%%xmm4\");\n");
-   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm5\"  :: \"m\" (dval[5]) : \"%%xmm5\");\n");
-   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm6\"  :: \"m\" (dval[6]) : \"%%xmm6\");\n");
-   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm7\"  :: \"m\" (dval[7]) : \"%%xmm7\");\n");
-
-   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rdi\" :: \"m\" (lval[0]) : \"%%rdi\");\n");
-#if defined(__GNUC__) && __GNUC__ < 4
-   if (tagnum != -1 && ifunc->isvirtual[ifn]) {
-      fprintf(fp, "  __asm__ __volatile__(\"leaq %%0, %%%%rax\" :: \"m\" (fptr) : \"%%rax\");\n");
-      fprintf(fp, "  __asm__ __volatile__(\"movq 8(%%rax), %%rax\");  //multiple inheritance offset\n");
-      fprintf(fp, "  __asm__ __volatile__(\"addq %%rax, %%rdi\");\n");
-   }
-#endif
-   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rsi\" :: \"m\" (lval[1]) : \"%%rsi\");\n");
-   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rdx\" :: \"m\" (lval[2]) : \"%%rdx\");\n");
-   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rcx\" :: \"m\" (lval[3]) : \"%%rcx\");\n");
-   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r8\"  :: \"m\" (lval[4]) : \"%%r8\");\n");
-   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r9\"  :: \"m\" (lval[5]) : \"%%r9\");\n");
-   if (tagnum != -1 && ifunc->isvirtual[ifn])
-      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r10\" :: \"m\" (faddr) : \"%%r10\");\n");
-   else
-      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r10\" :: \"m\" (fptr) : \"%%r10\");\n");
-
-   int istck = 0;
-   fprintf(fp, "  // (umax+2)*8 = 176\n");
-   fprintf(fp, "  __asm__ __volatile__(\"subq $176, %%rsp\");\n");
-   for (i = 0; i < umax; i++) {
-#ifdef G__LOCALS_REFERENCED_FROM_RSP
-     fprintf(fp, "  __asm__ __volatile__(\"movq %d(%%r15), %%rax \\n\\t\"\n", istck);
-     fprintf(fp, "                       \"movq %%rax, %d(%%rsp)\");\n", istck);
-#else
-     fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rax \\n\\t\"\n");
-     fprintf(fp, "                       \"movq %%%%rax, %d(%%%%rsp)\" :: \"m\" (u[%d].lval) : \"%%rax\");\n", istck, i);
-#endif
-     istck += 8;
-   }
-   fprintf(fp, "  __asm__ __volatile__(\"movl $8, %%eax\");  // number of used xmm registers\n");
-   fprintf(fp, "  __asm__ __volatile__(\"call *%%r10\");\n");
-   fprintf(fp, "  __asm__ __volatile__(\"addq $176, %%rsp\");\n");
-   fprintf(fp, "  __asm__ __volatile__(\"movq %%%%rax, %%0\" : \"=m\" (u[0].lval) :: \"memory\");  // get return value\n");
-   fprintf(fp, "  __asm__ __volatile__(\"movq %%%%rdi, %%0\" : \"=m\" (u[1].lval) :: \"memory\");  // get return value (icc C++ object)\n");
-#ifdef G__LOCALS_REFERENCED_FROM_RSP
-   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r15\" :: \"m\" (savr15) : \"%%r15\");\n");
-#endif
+   fprintf(fp, "      switch (type) {\n");
+   fprintf(fp, "         case 'n': case 'm':\n");
+   fprintf(fp, "            if (icnt < imax) {\n");
+   fprintf(fp, "               lval[icnt] = (G__int64)G__Longlong(*pval); icnt++;\n");
+   fprintf(fp, "            } else {\n");
+   fprintf(fp, "               u[ucnt].lval = (G__int64)G__Longlong(*pval); ucnt++;\n");
+   fprintf(fp, "            } break;\n");
+   fprintf(fp, "         case 'f': case 'd':\n");
+   fprintf(fp, "            if (dcnt < dmax) {\n");
+   fprintf(fp, "               dval[dcnt] = G__double(*pval); dcnt++;\n");
+   fprintf(fp, "            } else {\n");
+   fprintf(fp, "               u[ucnt].dval = G__double(*pval); ucnt++;\n");
+   fprintf(fp, "            } break;\n");
+   fprintf(fp, "         case 'z': break;\n");
+   fprintf(fp, "         case 'u':\n");
+   fprintf(fp, "            if (objsize >= 16) {\n");
+   fprintf(fp, "               memcpy(&u[ucnt].lval, (void*)pval->obj.i, objsize);\n");
+   fprintf(fp, "               ucnt += objsize/8;\n");
+   fprintf(fp, "               break;\n");
+   fprintf(fp, "            }\n");
+   fprintf(fp, "            // objsize < 16 -> fall through\n");
+   fprintf(fp, "         case 'g': case 'c': case 'b': case 'r': case 's': case 'h': case 'i':\n");
+   fprintf(fp, "         case 'k': case 'l':\n");
+   fprintf(fp, "         default:\n");
+   fprintf(fp, "            if (icnt < imax) {\n");
+   fprintf(fp, "               lval[icnt] = G__int(*pval); icnt++;\n");
+   fprintf(fp, "            } else {\n");
+   fprintf(fp, "               u[ucnt].lval = G__int(*pval); ucnt++;\n");
+   fprintf(fp, "            } break;\n");
+   fprintf(fp, "      }\n");
+   fprintf(fp, "      if (ucnt >= %d) printf(\"%s: more than %d var args\\n\");\n", umax, fn, umax+imax);
+   fprintf(fp, "   }\n");
 }
 
-static void G__x8664_vararg_epilog(FILE *fp, int ifn, G__ifunc_table_internal *ifunc)
+static void G__x8664_vararg_write(FILE *fp, int xmm, int reg)
 {
-   char *typestring;
-
-   int type    = ifunc->type[ifn];
-   int tagnum  = ifunc->p_tagtable[ifn];
-   int typenum = ifunc->p_typetable[ifn];
-   int reftype = ifunc->reftype[ifn];
-   int isconst = ifunc->isconst[ifn];
-
-   // Function return type is a reference, handle and return.
-   if (reftype == G__PARAREFERENCE) {
-      if (isconst & G__CONSTFUNC) {
-         if (isupper(type)) {
-            isconst |= G__PCONSTVAR;
-         } else {
-            isconst |= G__CONSTVAR;
-         }
-      }
-      typestring = G__type2string(type, tagnum, typenum, reftype, isconst);
-      fprintf(fp, "(%s) u[0].lval", typestring);
-      return;
-   }
-
-   // Function return type is a pointer, handle and return.
-   if (isupper(type)) {
-      fprintf(fp, "u[0].lval");
-      return;
-   }
-
-   // Function returns an object or a fundamental type.
-   switch (type) {
-      case 'y':
-         break;
-      case '1':
-      case 'e':
-      case 'c':
-      case 's':
-      case 'i':
-      case 'l':
-      case 'b':
-      case 'r':
-      case 'h':
-      case 'k':
-      case 'g':
-      case 'n':
-      case 'm':
-         fprintf(fp, "u[0].lval");
-         break;
-      case 'q':
-      case 'f':
-      case 'd':
-         fprintf(fp, "u[0].dval");
-         break;
-      case 'u':
-         switch (G__struct.type[tagnum]) {
-           case 'c':
-           case 's':
-           case 'u':
-               typestring = G__type2string(type, tagnum, typenum, 0, 0);
-               if (reftype) {
-                  fprintf(fp, "(%s&) u[0].lval", typestring);
-               } else {
-                  fprintf(fp, "*(%s*) returnValue", typestring);
-               }
-               break;
-            default:
-               fprintf(fp, "u[0].lval");
-               break;
-         }
-         break;
-      default:
-         break;
-   }
+   // Write out explicit argument list in vararg function/method.
+   // See also G__x8664_vararg().
+   
+   const int imax = 6, dmax = 8, umax = 50;
+   int i;
+   for (i = xmm; i < dmax; i++)
+      fprintf(fp, ", dval[%d]", i);
+   for (i = reg; i < imax; i++)
+      fprintf(fp, ", lval[%d]", i);
+   for (i = 0; i < umax; i++)
+      fprintf(fp, ", u[%d].lval", i);
 }
 #endif
 
@@ -6245,7 +6051,7 @@ static void G__x8664_vararg_epilog(FILE *fp, int ifn, G__ifunc_table_internal *i
 void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_table_internal *ifunc)
 {
 #ifndef G__SMALLOBJECT
-  int k, m;
+  int k, m, ret, reg = 0, xmm = 0;
   int isprotecteddtor = G__isprotecteddestructoronelevel(tagnum);
   G__FastAllocString buf(G__LONGLINE);
 
@@ -6286,13 +6092,13 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
 #ifndef G__VAARG_COPYFUNC
   if (ifunc->ansi[ifn] == 2) {
     // Handle a variadic function (variable number of arguments).
-    fprintf(fp,             "   G__va_arg_buf G__va_arg_bufobj;\n");
-    fprintf(fp,             "   G__va_arg_put(&G__va_arg_bufobj, libp, %d);\n", ifunc->para_nu[ifn]);
-  }
-#endif
 #if defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
-  if (ifunc->ansi[ifn] == 2)
     G__x8664_vararg(fp, ifn, ifunc, buf, tagnum, buf);
+#else
+    fprintf(fp, "   G__va_arg_buf G__va_arg_bufobj;\n");
+    fprintf(fp, "   G__va_arg_put(&G__va_arg_bufobj, libp, %d);\n", ifunc->para_nu[ifn]);
+#endif
+  }
 #endif
 
   G__if_ary_union(fp, ifn, ifunc);
@@ -6401,7 +6207,9 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
         }
         // Copy in the arguments the caller gave us.
         for (k = 0; k < m; ++k) {
-          G__cppif_paratype(fp, ifn, ifunc, k);
+          ret = G__cppif_paratype(fp, ifn, ifunc, k);
+          if (ret == 0) reg++;
+          if (ret == 1) xmm++;
         }
         if (ifunc->ansi[ifn] == 2 && m==ifunc->para_nu[ifn]) {
           // Handle a variadic constructor (varying number of arguments).
@@ -6420,7 +6228,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
             fprintf(fp,     ", G__va_arg_bufobj.x.i[%d]", i);
           }
 #elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
-          // see G__x8664_vararg()
+          G__x8664_vararg_write(fp, xmm, reg);
 #else
           fprintf(fp,       ", G__va_arg_bufobj");
 #endif
@@ -6439,7 +6247,9 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
         }
         // Copy in the arguments the caller gave us.
         for (k = 0; k < m; ++k) {
-          G__cppif_paratype(fp, ifn, ifunc, k);
+          ret = G__cppif_paratype(fp, ifn, ifunc, k);
+          if (ret == 0) reg++;
+          if (ret == 1) xmm++;
         }
         if (ifunc->ansi[ifn] == 2 && m==ifunc->para_nu[ifn]) {
           // Handle a variadic constructor (varying number of arguments).
@@ -6458,7 +6268,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
             fprintf(fp,     ", G__va_arg_bufobj.x.i[%d]", i);
           }
 #elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
-          // see G__x8664_vararg()
+          G__x8664_vararg_write(fp, xmm, reg);
 #else
           fprintf(fp,       ", G__va_arg_bufobj");
 #endif
@@ -6488,7 +6298,9 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
       fprintf(fp,           "\n");
     }
     for (k = 0; k < m; ++k) {
-      G__cppif_paratype(fp, ifn, ifunc, k);
+      ret = G__cppif_paratype(fp, ifn, ifunc, k);
+      if (ret == 0) reg++;
+      if (ret == 1) xmm++;
     }
     if (ifunc->ansi[ifn] == 2 && m==ifunc->para_nu[ifn]) {
       // handle a varadic constructor (varying number of arguments)
@@ -6507,7 +6319,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
         fprintf(fp,         ", G__va_arg_bufobj.x.i[%d]", i);
       }
 #elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
-          // see G__x8664_vararg()
+      G__x8664_vararg_write(fp, xmm, reg);
 #else
       fprintf(fp,           ", G__va_arg_bufobj");
 #endif
@@ -6525,7 +6337,9 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
       fprintf(fp,           "\n");
     }
     for (k = 0; k < m; ++k) {
-      G__cppif_paratype(fp, ifn, ifunc, k);
+      ret = G__cppif_paratype(fp, ifn, ifunc, k);
+      if (ret == 0) reg++;
+      if (ret == 1) xmm++;
     }
     if (ifunc->ansi[ifn] == 2 && m==ifunc->para_nu[ifn]) {
       // handle a varadic constructor (varying number of arguments)
@@ -6544,7 +6358,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
         fprintf(fp,         ", G__va_arg_bufobj.x.i[%d]", i);
       }
 #elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
-          // see G__x8664_vararg()
+      G__x8664_vararg_write(fp, xmm, reg);
 #else
       fprintf(fp,           ", G__va_arg_bufobj");
 #endif
@@ -7657,7 +7471,7 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
     return;
 
 #ifndef G__SMALLOBJECT
-  int k, m;
+  int k, m, ret, xmm = 0, reg = 0;
 
   G__FastAllocString endoffunc(G__LONGLINE);
   G__FastAllocString castname(G__ONELINE);
@@ -7717,13 +7531,13 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
 
 #ifndef G__VAARG_COPYFUNC
   if (ifunc->ansi[ifn] == 2) {
+#if defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
+    G__x8664_vararg(fp, ifn, ifunc, ifunc->funcname[ifn], tagnum, castname);
+#else
     fprintf(fp, "   G__va_arg_buf G__va_arg_bufobj;\n");
     fprintf(fp, "   G__va_arg_put(&G__va_arg_bufobj, libp, %d);\n", ifunc->para_nu[ifn]);
-  }
 #endif
-#if defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
-  if (ifunc->ansi[ifn] == 2)
-    G__x8664_vararg(fp, ifn, ifunc, ifunc->funcname[ifn], tagnum, castname);
+  }
 #endif
 
   /*************************************************************
@@ -7748,6 +7562,7 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
           if (ifunc->staticalloc[ifn]) {
              fprintf(fp, "%s::", castname());
           } else {
+            reg++;
             if (ifunc->isconst[ifn] & G__CONSTFUNC) {
                fprintf(fp, "((const %s*) G__getstructoffset())->", castname());
             } else {
@@ -7767,7 +7582,9 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
         fprintf(fp, "\n");
       }
       for (k = 0; k < m; ++k) {
-        G__cppif_paratype(fp, ifn, ifunc, k);
+         ret = G__cppif_paratype(fp, ifn, ifunc, k);
+         if (ret == 0) reg++;
+         if (ret == 1) xmm++;
       }
       if (ifunc->ansi[ifn] == 2 && m==ifunc->para_nu[ifn]) {
 #if defined(G__VAARG_COPYFUNC)
@@ -7782,7 +7599,7 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
         int i;
         for (i = 0; i < 100; i++) fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
 #elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
-        // see G__x8664_vararg()
+        G__x8664_vararg_write(fp, xmm, reg);
 #else
         fprintf(fp, ", G__va_arg_bufobj");
 #endif
@@ -7804,13 +7621,6 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
     // Output the return type.
     G__cppif_returntype(fp, ifn, ifunc, endoffunc);
 
-#if defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
-    if (ifunc->ansi[ifn] == 2 && m==ifunc->para_nu[ifn]) {
-       // all code is already generated by G__x8664_vararg()
-       G__x8664_vararg_epilog(fp, ifn, ifunc);
-       fprintf(fp, "%s\n", endoffunc());
-    } else {
-#endif
     //
     // Output the function name.
     if (-1 != tagnum) {
@@ -7820,6 +7630,7 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
         if (ifunc->staticalloc[ifn]) {
            fprintf(fp, "%s::", castname());
         } else {
+          reg++;
           if (ifunc->isconst[ifn] & G__CONSTFUNC) {
              fprintf(fp, "((const %s*) G__getstructoffset())->", castname());
           } else {
@@ -7849,7 +7660,9 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
       fprintf(fp, "\n");
     }
     for (k = 0; k < m; k++) {
-      G__cppif_paratype(fp, ifn, ifunc, k);
+      ret = G__cppif_paratype(fp, ifn, ifunc, k);
+      if (ret == 0) reg++;
+      if (ret == 1) xmm++;
     }
     if (ifunc->ansi[ifn] == 2 && m==ifunc->para_nu[ifn]) {
 #if defined(G__VAARG_COPYFUNC)
@@ -7863,7 +7676,7 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
       int i;
       for (i = 0; i < 100; i++) fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
 #elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
-      // see G__x8664_vararg()
+      G__x8664_vararg_write(fp, xmm, reg);
 #else
       fprintf(fp, ", G__va_arg_bufobj");
 #endif
@@ -7871,9 +7684,6 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
     //
     // Output the function body.
     fprintf(fp, ")%s\n", endoffunc());
-#if defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
-    }  // end G__x8664_vararg_epilog
-#endif
   }
 
   G__if_ary_union_reset(ifn, ifunc);
@@ -8030,53 +7840,53 @@ int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, G__Fa
         case 'a':
            G__class_autoloading(&tagnum);
            // After attempting the autoloading, processing as a class.
-	case 'c':
-	case 's':
-	case 'u':
-	  deftyp = typenum;
-	  if (reftype) {
-	    fprintf(fp, "%s{\n", indent);
-	    typestring = G__type2string('u', tagnum, deftyp, 0, 0);
+        case 'c':
+        case 's':
+        case 'u':
+           deftyp = typenum;
+           if (reftype) {
+              fprintf(fp, "%s{\n", indent);
+              typestring = G__type2string('u', tagnum, deftyp, 0, 0);
     #if defined(_MSC_VER) && (_MSC_VER < 1310) /*vc6 and v7.0*/
-	    // For old Microsoft compilers, replace "long long" by " __int64 ".
-	    ptr = strstr(typestring, "long long");
-	    if (ptr) {
-	      memcpy(ptr, " __int64 ", 9);
-	    }
+              // For old Microsoft compilers, replace "long long" by " __int64 ".
+              ptr = strstr(typestring, "long long");
+              if (ptr) {
+                 memcpy(ptr, " __int64 ", 9);
+              }
     #endif
-	    fprintf(fp, "%sconst %s& obj = ", indent, typestring);
-	    endoffunc.Format(";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.i = (long) (&obj);\n%s}", indent, indent, indent);
-	  } else {
-	    if (G__globalcomp == G__CPPLINK) {
-	      fprintf(fp, "%s{\n", indent);
-	      if (isconst & G__CONSTFUNC) {
-		fprintf(fp, "%s   const %s* pobj;\n", indent, G__type2string('u', tagnum, deftyp, 0, 0));
-		fprintf(fp, "%s   const %s xobj = ", indent, G__type2string('u', tagnum, deftyp, 0, 0));
-	      } else {
-		fprintf(fp, "%s   %s* pobj;\n", indent, G__type2string('u', tagnum, deftyp, 0, 0));
-		fprintf(fp, "%s   %s xobj = ", indent, G__type2string('u', tagnum, deftyp, 0, 0));
-	      }
-	      endoffunc.Format(";\n"
-				 "%s   pobj = new %s(xobj);\n"
-				 "%s   result7->obj.i = (long) ((void*) pobj);\n"
-				 "%s   result7->ref = result7->obj.i;\n"
-				 "%s   G__store_tempobject(*result7);\n"
-				 "%s}", indent, G__type2string('u', tagnum, deftyp, 0, 0), indent, indent, indent, indent);
-	    } else {
-	      fprintf(fp, "%sG__alloc_tempobject_val(result7);\n", indent);
-	      fprintf(fp, "%sresult7->obj.i = G__gettempbufpointer();\n", indent);
-	      fprintf(fp, "%sresult7->ref = G__gettempbufpointer();\n", indent);
-	      fprintf(fp, "%s*((%s *) result7->obj.i) = ", indent, G__type2string(type, tagnum, typenum, reftype, 0));
-	      endoffunc = ";";
-	    }
-	  }
-	  break;
-	default:
-	  fprintf(fp, "%sG__letint(result7, %d, (long) ", indent, type);
-	  endoffunc = ");";
-	  break;
-      }
-      return 0;
+              fprintf(fp, "%sconst %s& obj = ", indent, typestring);
+              endoffunc.Format(";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.i = (long) (&obj);\n%s}", indent, indent, indent);
+           } else {
+              if (G__globalcomp == G__CPPLINK) {
+                 fprintf(fp, "%s{\n", indent);
+                 if (isconst & G__CONSTFUNC) {
+                    fprintf(fp, "%s   const %s* pobj;\n", indent, G__type2string('u', tagnum, deftyp, 0, 0));
+                    fprintf(fp, "%s   const %s xobj = ", indent, G__type2string('u', tagnum, deftyp, 0, 0));
+                 } else {
+                    fprintf(fp, "%s   %s* pobj;\n", indent, G__type2string('u', tagnum, deftyp, 0, 0));
+                    fprintf(fp, "%s   %s xobj = ", indent, G__type2string('u', tagnum, deftyp, 0, 0));
+                 }
+                 endoffunc.Format(";\n"
+                                  "%s   pobj = new %s(xobj);\n"
+                                  "%s   result7->obj.i = (long) ((void*) pobj);\n"
+                                  "%s   result7->ref = result7->obj.i;\n"
+                                  "%s   G__store_tempobject(*result7);\n"
+                                  "%s}", indent, G__type2string('u', tagnum, deftyp, 0, 0), indent, indent, indent, indent);
+              } else {
+                 fprintf(fp, "%sG__alloc_tempobject_val(result7);\n", indent);
+                 fprintf(fp, "%sresult7->obj.i = G__gettempbufpointer();\n", indent);
+                 fprintf(fp, "%sresult7->ref = G__gettempbufpointer();\n", indent);
+                 fprintf(fp, "%s*((%s *) result7->obj.i) = ", indent, G__type2string(type, tagnum, typenum, reftype, 0));
+                 endoffunc = ";";
+              }
+           }
+           break;
+	 default:
+      fprintf(fp, "%sG__letint(result7, %d, (long) ", indent, type);
+      endoffunc = ");";
+      break;
+    }
+    return 0;
   } // switch(type)
   return 1; /* never happen, avoiding lint error */
 #endif // G__SMALLOBJECT
@@ -8088,9 +7898,12 @@ extern "C" {
 * G__cppif_paratype()
 *
 **************************************************************************/
-void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, int k)
+int G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, int k)
 {
 #ifndef G__SMALLOBJECT
+   // returns 1 when paratype was double (will go in X8664 xmm register)
+   // 0 otherwise
+   int retval = 0;
    char type = ifunc->param[ifn][k]->type;
    int tagnum = ifunc->param[ifn][k]->p_tagtable;
    int typenum = ifunc->param[ifn][k]->p_typetable;
@@ -8114,7 +7927,7 @@ void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, int k)
       char* p = strchr(ifunc->param[ifn][k]->name, '[');
       if (p) {
          fprintf(fp, "G__Ap%d->a", k);
-         return;
+         return 0;
       }
    }
    if (
@@ -8296,7 +8109,7 @@ void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, int k)
                    * identical */
                }
             }
-            return;
+            return 0;
          case G__PARAREFP2P:
          case G__PARAREFP2P2P:
             reftype = G__PLVL(reftype);
@@ -8310,15 +8123,15 @@ void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, int k)
                        , k, G__type2string(type, tagnum, typenum, reftype, isconst)
                        , k, G__type2string(type, tagnum, typenum, reftype, isconst), k);
             }
-            return;
+            return 0;
          case G__PARAP2P:
             G__ASSERT(isupper(type));
             fprintf(fp, "(%s) G__int(libp->para[%d])", G__type2string(type, tagnum, typenum, reftype, isconst), k);
-            return;
+            return 0;
          case G__PARAP2P2P:
             G__ASSERT(isupper(type));
             fprintf(fp, "(%s) G__int(libp->para[%d])", G__type2string(type, tagnum, typenum, reftype, isconst), k);
-            return;
+            return 0;
       }
    }
    switch (type) {
@@ -8364,6 +8177,7 @@ void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, int k)
       case 'f':
       case 'd':
          fprintf(fp, "(%s) G__double(libp->para[%d])", G__type2string(type, tagnum, typenum, 0, isconst), k);
+         retval = 1;
          break;
       case 'u':
          if (G__struct.type[tagnum] == 'e') {
@@ -8377,6 +8191,7 @@ void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, int k)
          fprintf(fp, "(%s) G__int(libp->para[%d])", G__type2string(type, tagnum, typenum, 0, isconst), k);
          break;
    }
+   return retval;
 #endif // G__SMALLOBJECT
    // --
 }
