@@ -1357,7 +1357,9 @@ static G__value G__exec_if()
    //
    //  Test the if condition.
    //
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__fprinterr(
            G__serr
          , "\n!!!G__exec_if: Before condition evaluation, increment G__templevel %d --> %d  %s:%d\n"
@@ -1367,6 +1369,8 @@ static G__value G__exec_if()
          , __LINE__
       );
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
    ++G__templevel;
    int condval = G__test(condition);
    if (largestep) {
@@ -1375,7 +1379,9 @@ static G__value G__exec_if()
    //
    //  Destroy all temporaries created during expression evaluation.
    //
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__fprinterr(
            G__serr
          , "\n!!!G__exec_if: Destroy temp objects after condition evaluation, currently at G__templevel %d  %s:%d\n"
@@ -1384,8 +1390,12 @@ static G__value G__exec_if()
          , __LINE__
       );
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
    G__free_tempobject();
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__fprinterr(
            G__serr
          , "\n!!!G__exec_if: After condition evaluation, decrement G__templevel %d --> %d  %s:%d\n"
@@ -1395,6 +1405,8 @@ static G__value G__exec_if()
          , __LINE__
       );
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
    --G__templevel;
 #ifdef G__ASM
    //
@@ -2338,7 +2350,9 @@ static G__value G__exec_do()
    //
    //  Test the loop condition.
    //
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__fprinterr(
            G__serr
          , "\n!!!G__exec_do: Before condition evaluation, increment G__templevel %d --> %d  %s:%d\n"
@@ -2348,6 +2362,8 @@ static G__value G__exec_do()
          , __LINE__
       );
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
    ++G__templevel;
    //fprintf(stderr, "G__exec_do: Testing condition '%s' nec: %d\n", condition, G__no_exec_compile);
    int cond = G__test(condition);
@@ -2355,7 +2371,9 @@ static G__value G__exec_do()
    //
    //  Destroy all temporaries created during expression evaluation.
    //
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__fprinterr(
            G__serr
          , "\n!!!G__exec_do: Destroy temp objects after condition evaluation, currently at G__templevel %d  %s:%d\n"
@@ -2364,8 +2382,12 @@ static G__value G__exec_do()
          , __LINE__
       );
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
    G__free_tempobject();
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__fprinterr(
            G__serr
          , "\n!!!G__exec_do: After condition evaluation, decrement G__templevel %d --> %d  %s:%d\n"
@@ -2375,6 +2397,8 @@ static G__value G__exec_do()
          , __LINE__
       );
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
    --G__templevel;
    //
    //  If we have already terminated with a break,
@@ -2909,7 +2933,9 @@ static G__value G__exec_loop(const char* forinit, char* condition,
    //
    //  Make our first test of the loop condition.
    //
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__fprinterr(
            G__serr
          , "\n!!!G__exec_loop: Before first condition evaluation, increment G__templevel %d --> %d  %s:%d\n"
@@ -2919,6 +2945,8 @@ static G__value G__exec_loop(const char* forinit, char* condition,
          , __LINE__
       );
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
    ++G__templevel;
    //fprintf(stderr, "G__exec_loop: begin first test of loop condition ...\n");
    int cond = G__test(condition);
@@ -2926,7 +2954,9 @@ static G__value G__exec_loop(const char* forinit, char* condition,
    //
    //  Destroy all temporaries created during expression evaluation.
    //
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__fprinterr(
            G__serr
          , "\n!!!G__exec_loop: Destroy temp objects after first condition evaluation, currently at G__templevel %d  %s:%d\n"
@@ -2935,8 +2965,12 @@ static G__value G__exec_loop(const char* forinit, char* condition,
          , __LINE__
       );
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
    G__free_tempobject();
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__fprinterr(
            G__serr
          , "\n!!!G__exec_loop: After first condition evaluation, decrement G__templevel %d --> %d  %s:%d\n"
@@ -2946,6 +2980,8 @@ static G__value G__exec_loop(const char* forinit, char* condition,
          , __LINE__
       );
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
    --G__templevel;
    //
    //  If we are just trying to bytecode compile,
@@ -3339,7 +3375,9 @@ static G__value G__exec_loop(const char* forinit, char* condition,
          }
          else {
             // Test the loop condition.
-            if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+            if (G__asm_dbg) {
                G__fprinterr(
                     G__serr
                   , "\n!!!G__exec_loop: Before condition evaluation, increment G__templevel %d --> %d  %s:%d\n"
@@ -3349,6 +3387,8 @@ static G__value G__exec_loop(const char* forinit, char* condition,
                   , __LINE__
                );
             }
+#endif // G__ASM_DBG
+#endif // G__ASM
             ++G__templevel;
             //fprintf(stderr, "G__exec_loop: Testing condition '%s'.\n", condition);
             cond = G__test(condition);
@@ -3356,7 +3396,9 @@ static G__value G__exec_loop(const char* forinit, char* condition,
             //
             //  Destroy all temporaries created during expression evaluation.
             //
-            if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+            if (G__asm_dbg) {
                G__fprinterr(
                     G__serr
                   , "\n!!!G__exec_loop: Destroy temp objects after condition evaluation, currently at G__templevel %d  %s:%d\n"
@@ -3365,8 +3407,12 @@ static G__value G__exec_loop(const char* forinit, char* condition,
                   , __LINE__
                );
             }
+#endif // G__ASM_DBG
+#endif // G__ASM
             G__free_tempobject();
-            if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+            if (G__asm_dbg) {
                G__fprinterr(
                     G__serr
                   , "\n!!!G__exec_loop: After condition evaluation, decrement G__templevel %d --> %d  %s:%d\n"
@@ -3376,6 +3422,8 @@ static G__value G__exec_loop(const char* forinit, char* condition,
                   , __LINE__
                );
             }
+#endif // G__ASM_DBG
+#endif // G__ASM
             --G__templevel;
          }
       }
@@ -6822,7 +6870,9 @@ G__value G__exec_statement(int* mparen)
                         G__asm_clear();
                      }
 #endif // G__ASM
-                     if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+                     if (G__asm_dbg) {
                         G__fprinterr(
                              G__serr
                            , "\n!!!G__exec_statement: Before expression stmt, increment G__templevel %d --> %d  %s:%d\n"
@@ -6832,12 +6882,16 @@ G__value G__exec_statement(int* mparen)
                            , __LINE__
                         );
                      }
+#endif // G__ASM_DBG
+#endif // G__ASM
                      ++G__templevel;
                      result = G__getexpr(statement);
                      //
                      //  Destroy all temporaries created during expression evaluation.
                      //
-                     if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+                     if (G__asm_dbg) {
                         G__fprinterr(
                              G__serr
                            , "\n!!!G__exec_statement: Destroy temp objects after expression stmt, currently at G__templevel %d  %s:%d\n"
@@ -6846,8 +6900,12 @@ G__value G__exec_statement(int* mparen)
                            , __LINE__
                         );
                      }
+#endif // G__ASM_DBG
+#endif // G__ASM
                      G__free_tempobject();
-                     if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+                     if (G__asm_dbg) {
                         G__fprinterr(
                              G__serr
                            , "\n!!!G__exec_statement: After expression stmt, decrement G__templevel %d --> %d  %s:%d\n"
@@ -6857,6 +6915,8 @@ G__value G__exec_statement(int* mparen)
                            , __LINE__
                         );
                      }
+#endif // G__ASM_DBG
+#endif // G__ASM
                      --G__templevel;
                   }
                }
@@ -6903,7 +6963,9 @@ G__value G__exec_statement(int* mparen)
                   G__asm_clear();
                }
 #endif // G__ASM
-               if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+               if (G__asm_dbg) {
                   G__fprinterr(
                        G__serr
                      , "\n!!!G__exec_statement: Before assignment expression, increment G__templevel %d --> %d  %s:%d\n"
@@ -6913,6 +6975,8 @@ G__value G__exec_statement(int* mparen)
                      , __LINE__
                   );
                }
+#endif // G__ASM_DBG
+#endif // G__ASM
                ++G__templevel;
                result = G__getexpr(statement);
                if (c != ',') {
@@ -6921,7 +6985,9 @@ G__value G__exec_statement(int* mparen)
                   //
                   //  Destroy all temporaries created during assignment expression evaluation.
                   //
-                  if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+                  if (G__asm_dbg) {
                      G__fprinterr(
                           G__serr
                         , "\n!!!G__exec_statement: Destroy temp objects after assignment expression, currently at G__templevel %d  %s:%d\n"
@@ -6930,9 +6996,13 @@ G__value G__exec_statement(int* mparen)
                         , __LINE__
                      );
                   }
+#endif // G__ASM_DBG
+#endif // G__ASM
                   G__free_tempobject();
                }
-               if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+               if (G__asm_dbg) {
                   G__fprinterr(
                        G__serr
                      , "\n!!!G__exec_statement: After assignment expression, decrement G__templevel %d --> %d  %s:%d\n"
@@ -6942,6 +7012,8 @@ G__value G__exec_statement(int* mparen)
                      , __LINE__
                   );
                }
+#endif // G__ASM_DBG
+#endif // G__ASM
                --G__templevel;
                if (largestep) {
                   G__afterlargestep(&largestep);
@@ -7821,7 +7893,9 @@ void G__alloc_tempobject(int tagnum, int typenum)
    G__p_tempbuf->obj.isconst = 0;
    G__p_tempbuf->obj.obj.i = (long) malloc(G__struct.size[tagnum]);
    G__p_tempbuf->obj.ref = G__p_tempbuf->obj.obj.i;
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__fprinterr(
            G__serr
          , "\nG__alloc_tempobject: no_exec: %d cpplink: %d (%s,%d,%d) 0x%lx level: %d  %s:%d\n"
@@ -7837,6 +7911,9 @@ void G__alloc_tempobject(int tagnum, int typenum)
       );
       G__display_tempobject("After G__alloc_tempobject: ");
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
+   // --
 }
 
 //______________________________________________________________________________
@@ -7863,7 +7940,9 @@ void G__store_tempobject(G__value reg)
    G__p_tempbuf->level = G__templevel;
    // Moved passed value into new temporary.
    G__p_tempbuf->obj = reg;
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__fprinterr(
            G__serr
          , "\nG__store_tempobject: no_exec: %d cpplink: %d (%s,%d,%d) 0x%lx level: %d  %s:%d\n"
@@ -7879,6 +7958,9 @@ void G__store_tempobject(G__value reg)
       );
       G__display_tempobject("After G__store_tempobject: ");
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
+   // --
 }
 
 //______________________________________________________________________________
@@ -7894,7 +7976,9 @@ static int G__pop_tempobject_imp(bool delobj)
    if (G__xrefflag) {
       return 0;
    }
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__fprinterr(
            G__serr
          , "\nG__pop_tempobject_imp: delobj: %d no_exec: %d cpplink: %d (%s,%d,%d) 0x%lx level: %d  %s:%d\n"
@@ -7910,6 +7994,8 @@ static int G__pop_tempobject_imp(bool delobj)
          , __LINE__
       );
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
    if (delobj) {
       if (!G__p_tempbuf->cpplink && G__p_tempbuf->obj.obj.i) {
          free((void*) G__p_tempbuf->obj.obj.i);
@@ -7957,11 +8043,15 @@ void G__free_tempobject()
       // Nothing to do.
       return;
    }
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__FastAllocString msg(G__ONELINE);
       msg.Format("Before G__free_tempobject: cur_level: %d ", G__templevel);
       G__display_tempobject(msg());
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
    struct G__tempobject_list* cur = G__p_tempbuf;
    struct G__tempobject_list* previous = 0;
    while (cur->prev) {
@@ -7971,7 +8061,9 @@ void G__free_tempobject()
          cur = cur->prev;
          continue;
       }
-      if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+      if (G__asm_dbg) {
          G__fprinterr(
               G__serr
             , "\nG__free_tempobject: no_exec: %d cpplink: %d (%s,%d,%d) 0x%lx level: %d  %s:%d\n"
@@ -7986,6 +8078,8 @@ void G__free_tempobject()
             , __LINE__
          );
       }
+#endif // G__ASM_DBG
+#endif // G__ASM
       //
       //  Call the destructor.
       //
@@ -8015,7 +8109,10 @@ void G__free_tempobject()
       store_return = G__return;
       G__return = G__RETURN_NON;
       if (!cur->no_exec || G__no_exec_compile) {
-         if (G__dispsource) {
+         // --
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+         if (G__asm_dbg) {
             G__fprinterr(
                  G__serr
                , "\n!!!Call temp object destructor: no_exec: %d cpplink: %d "
@@ -8030,6 +8127,8 @@ void G__free_tempobject()
                , G__templevel
             );
          }
+#endif // G__ASM_DBG
+#endif // G__ASM
          G__FastAllocString statement;
          statement.Format("~%s()", G__struct.name[G__tagnum]);
          int found = 0;
@@ -8062,7 +8161,10 @@ void G__free_tempobject()
       G__tagnum = store_tagnum;
       G__return = store_return;
       if (!cur->cpplink && cur->obj.obj.i) {
-         if (G__dispsource) {
+         // --
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+         if (G__asm_dbg) {
             G__fprinterr(
                  G__serr
                , "\n!!!Free temp object: no_exec: %d cpplink: %d "
@@ -8077,6 +8179,8 @@ void G__free_tempobject()
                , G__templevel
             );
          }
+#endif // G__ASM_DBG
+#endif // G__ASM
          free((void*) cur->obj.obj.i);
          cur->obj.obj.i = 0;
       }
@@ -8098,11 +8202,16 @@ void G__free_tempobject()
          cur = store_prev;
       }
    }
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__FastAllocString msg(G__ONELINE);
       msg.Format("After G__free_tempobject: cur_level: %d ", G__templevel);
       G__display_tempobject(msg());
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
+   // --
 }
 
 //______________________________________________________________________________

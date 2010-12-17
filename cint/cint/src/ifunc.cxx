@@ -255,7 +255,9 @@ int G__compile_bytecode(G__ifunc_table* iref, int iexist)
       G__asm_noverflow = 0;
       store_ifile = G__ifile;
       G__asm_index = iexist;
-      if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+      if (G__asm_dbg) {
          G__fprinterr(
               G__serr
             , "\n!!!G__compile_bytecode: Increment G__templevel %d --> %d  %s:%d\n"
@@ -265,6 +267,8 @@ int G__compile_bytecode(G__ifunc_table* iref, int iexist)
             , __LINE__
          );
       }
+#endif // G__ASM_DBG
+#endif // G__ASM
       ++G__templevel;
       ++G__calldepth;
       funcname = ifunc->funcname[iexist];
@@ -295,7 +299,9 @@ int G__compile_bytecode(G__ifunc_table* iref, int iexist)
 #endif // G__ASM
       G__init_jumptable_bytecode();
       --G__calldepth;
-      if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+      if (G__asm_dbg) {
          G__fprinterr(
               G__serr
             , "\n!!!G__compile_bytecode: Destroy temp objects now at G__templevel %d --> %d  %s:%d\n"
@@ -304,8 +310,12 @@ int G__compile_bytecode(G__ifunc_table* iref, int iexist)
             , __LINE__
          );
       }
+#endif // G__ASM_DBG
+#endif // G__ASM
       G__free_tempobject();
-      if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+      if (G__asm_dbg) {
          G__fprinterr(
               G__serr
             , "\n!!!G__compile_bytecode: Decrement G__templevel %d --> %d  %s:%d\n"
@@ -315,6 +325,8 @@ int G__compile_bytecode(G__ifunc_table* iref, int iexist)
             , __LINE__
          );
       }
+#endif // G__ASM_DBG
+#endif // G__ASM
       --G__templevel;
       G__tagdefining = store_tagdefining;
       G__asm_exec = store_asm_exec;
@@ -326,6 +338,8 @@ int G__compile_bytecode(G__ifunc_table* iref, int iexist)
       G__asm_noverflow = store_asm_noverflow;
       G__globalvarpointer = store_globalvarpointer;
    }
+#ifdef G__ASM
+#ifdef G__ASM_DBG
    else if (G__asm_dbg) {
       G__fprinterr(G__serr, "!!!bytecode compilation %s not tried either because\n", ifunc->funcname[iexist]);
       G__fprinterr(G__serr, "    function is longer than %d lines\n", G__ASM_BYTECODE_FUNC_LIMIT);
@@ -333,6 +347,8 @@ int G__compile_bytecode(G__ifunc_table* iref, int iexist)
       G__fprinterr(G__serr, "    function is K&R style\n");
       G__printlinenum();
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
    if (ifunc->pentry[iexist]->bytecode) {
       if (!G__xrefflag) {
          ifunc->pentry[iexist]->bytecodestatus = G__BYTECODE_SUCCESS;
@@ -3074,7 +3090,10 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
             // --
          }
          else {
-            if (G__dispsource) {
+            // --
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+            if (G__asm_dbg) {
                G__fprinterr(
                     G__serr
                   , "!!!Create temp object (%s,%d,%d) 0x%lx %d for "
@@ -3089,6 +3108,8 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
                   , __LINE__
                );
             }
+#endif // G__ASM_DBG
+#endif // G__ASM
 #ifdef G__ASM
             if (G__asm_noverflow && rewind_arg) {
                rewindflag = 1;
@@ -4277,7 +4298,9 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
             }
             else {
                // Conversion successful.
-               if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+               if (G__asm_dbg) {
                   G__fprinterr(
                        G__serr
                      , "!!!Created temp object (%s) 0x%lx %d for "
@@ -4289,6 +4312,8 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
                      , __LINE__
                   );
                }
+#endif // G__ASM_DBG
+#endif // G__ASM
 #ifdef G__ASM
                if (G__asm_noverflow && rewind_arg) {
                   rewindflag = 1;
@@ -6159,10 +6184,12 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
    //
    if (G__asm_wholefunction & G__ASM_FUNC_COMPILE) {
       // -- We are doing Whole function compilation.
+#ifdef G__ASM_DBG
       if (G__asm_dbg) {
          G__fprinterr(G__serr, "!!!bytecode compilation of '%s' started at ", p_ifunc->funcname[ifn]);
          G__printlinenum();
       }
+#endif // G__ASM_DBG
       G__asm_name = (char*) malloc(G__ASM_FUNCNAMEBUF);
       // Turn on bytecode generation.
       G__asm_noverflow = 1;
@@ -6247,7 +6274,9 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
       (p_ifunc->reftype[ifn] == G__PARANORMAL) // not reference
    ) {
       // Create temporary object buffer.
-      if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+      if (G__asm_dbg) {
          G__fprinterr(
               G__serr
             , "\n!!!Create temp object (%s) for %s() return value "
@@ -6259,6 +6288,8 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
             , __LINE__
          );
       }
+#endif // G__ASM_DBG
+#endif // G__ASM
       G__alloc_tempobject(p_ifunc->p_tagtable[ifn], p_ifunc->p_typetable[ifn]);
       store_p_tempobject = G__p_tempbuf;
    }
@@ -6632,7 +6663,9 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
    //
    store_iscpp = G__iscpp;
    G__iscpp = p_ifunc->iscpp[ifn];
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__fprinterr(
            G__serr
          , "\n!!!G__interpret_func: Increment G__templevel %d --> %d  %s:%d\n"
@@ -6642,6 +6675,8 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
          , __LINE__
       );
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
    ++G__templevel;
    ++G__calldepth;
 #ifdef G__ASM_DBG
@@ -6938,7 +6973,9 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
                      G__store_tempobject(buf);
                      ++G__templevel;
                   }
-                  if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+                  if (G__asm_dbg) {
                      G__fprinterr(
                           G__serr
                         , "!!!Created temp object (%s) 0x%lx at "
@@ -6952,6 +6989,9 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
                         , __LINE__
                      );
                   }
+#endif // G__ASM_DBG
+#endif // G__ASM
+                  // --
                }
                //
                //  Cleanup after the constructor call.
@@ -7255,7 +7295,9 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
    //
    //  Destroy all temporaries created during function call.
    //
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__fprinterr(
            G__serr
          , "\n!!!G__interpret_func: Destroy temp objects now at G__templevel %d  %s:%d\n"
@@ -7264,8 +7306,12 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
          , __LINE__
       );
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
    G__free_tempobject();
-   if (G__dispsource) {
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
       G__fprinterr(
            G__serr
          , "\n!!!G__interpret_func: Decrement G__templevel %d --> %d  %s:%d\n"
@@ -7275,6 +7321,8 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
          , __LINE__
       );
    }
+#endif // G__ASM_DBG
+#endif // G__ASM
    --G__templevel;
    //
    //  Recover previous local variable chain.
