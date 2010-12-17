@@ -2036,10 +2036,57 @@ Begin_Html
 
 <a name="HP20a"></a><h3>TH2Poly Drawing</h3>
 
-<tt>TH2Poly</tt> can be drawn as a color plot (option COL).
-<tt>TH2Poly</tt> bins can have any shapes. The bins are defined as graphs. The
-following macro is a very simple example showing how to book a TH2Poly and draw
-it.
+
+The following options are supported:
+
+<table border=0>
+
+<tr><th valign=top>"SCAT"</th><td>
+Draw a scatter plot (default).
+</td></tr>
+
+<tr><th valign=top>"COL"</th><td>
+Draw a color plot. All the none empty bins are painted. Empty bins are not
+painted.
+</td></tr>
+
+<tr><th valign=top>"COLZ"</th><td>
+Same as "COL". In addition the color palette is also drawn.
+</td></tr>
+
+<tr><th valign=top>"TEXT"</th><td>
+Draw bin contents as text (format set via <tt>gStyle->SetPaintTextFormat</tt>).
+</td></tr>
+
+<tr><th valign=top>"TEXTN"</th><td>
+Draw bin names as text.
+</td></tr>
+
+<tr><th valign=top>"TEXTnn"</th><td>
+Draw bin contents as text at angle nn (0 < nn < 90).
+</td></tr>
+
+<tr><th valign=top>"L"</th><td>
+Draw the bins boundaries as lines.
+The lines attibutes are the TGraphs ones.
+</td></tr>
+
+<tr><th valign=top>"P"</th><td>
+Draw the bins boundaries as markers.
+The markers attibutes are the TGraphs ones.
+</td></tr>
+
+<tr><th valign=top>"F"</th><td>
+Draw the bins boundaries as filled polygons.
+The filled polygons attibutes are the TGraphs ones.
+</td></tr>
+
+</table>
+
+<a href="http://root.cern.ch/root/html/TH2Poly.html"><tt>TH2Poly</tt></a> can
+be drawn as a color plot (option COL). <tt>TH2Poly</tt> bins can have any
+shapes. The bins are defined as graphs. The following macro is a very simple
+example showing how to book a TH2Poly and draw it.
 End_Html
 Begin_Macro(source)
 {
@@ -2137,7 +2184,7 @@ Begin_Macro(source)
 
    gStyle->SetOptStat(11);
    gStyle->SetPalette(1);
-   p->Draw("COLZ");
+   p->Draw("COLZ L");
    return ch2p2;
 }
 End_Macro
@@ -3436,6 +3483,10 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (strstr(chopt,"*"))   Hoption.Star =1;
    if (strstr(chopt,"H"))   Hoption.Hist =2;
    if (strstr(chopt,"P0"))  Hoption.Mark =10;
+
+   if (fH->InheritsFrom(TH2Poly::Class())) {
+      if (Hoption.Fill+Hoption.Line+Hoption.Mark != 0 ) Hoption.Scat = 0;
+   }
 
    if (strstr(chopt,"E")) {
       if (fH->GetDimension() == 1) {
@@ -5539,6 +5590,7 @@ void THistPainter::PaintH3(Option_t *option)
    char *cmd;
    TString opt = fH->GetDrawOption();
    opt.ToLower();
+   Int_t irep;
 
    if (fH->GetDrawOption() && (strstr(opt,"box") ||  strstr(opt,"lego"))) {
       cmd = Form("TMarker3DBox::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
@@ -5551,12 +5603,20 @@ void THistPainter::PaintH3(Option_t *option)
    } else {
       cmd = Form("TPolyMarker3D::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
    }
+
+   if (Hoption.Same) return;
+   
+   TView *view = gPad->GetView();
+   if (!view) return;
+   Double_t thedeg =  90 - gPad->GetTheta();
+   Double_t phideg = -90 - gPad->GetPhi();
+   Double_t psideg = view->GetPsi();
+   view->SetView(phideg, thedeg, psideg, irep);
+
+   // Paint the data
    gROOT->ProcessLine(cmd);
 
    // Draw axis
-   if (Hoption.Same) return;
-   TView *view = gPad->GetView();
-   if (!view) return;
    view->SetOutlineToCube();
    view->GetOutline()->Paint(option);
    Hoption.System = kCARTESIAN;
@@ -7736,9 +7796,12 @@ void THistPainter::PaintTable(Option_t *option)
    }
 
    if (fH->InheritsFrom(TH2Poly::Class())) {
+      if (Hoption.Fill)    PaintTH2PolyBins("f");
       if (Hoption.Color)   PaintTH2PolyColorLevels(option);
       if (Hoption.Scat)    PaintTH2PolyScatterPlot(option);
       if (Hoption.Text)    PaintTH2PolyText(option);
+      if (Hoption.Line)    PaintTH2PolyBins("l");
+      if (Hoption.Mark)    PaintTH2PolyBins("P");
    } else if (fH->GetEntries() != 0 && Hoption.Axis<=0) {
       if (Hoption.Scat)    PaintScatterPlot(option);
       if (Hoption.Arrow)   PaintArrows(option);
