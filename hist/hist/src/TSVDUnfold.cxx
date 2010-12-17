@@ -23,17 +23,16 @@
  *                                                                                *
  **********************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSVDUnfold                                                           //
-//                                                                      //
-// Data unfolding using Singular Value Decomposition (hep-ph/9509307)   //
-// Authors: Kerstin Tackmann, Andreas Hoecker, Heiko Lacker             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
-//_______________________________________________________________________
-/* Begin_Html
+//______________________________________________________________________________
+/*
+
+ TSVDUnfold                                                           
+                                                                      
+  Data unfolding using Singular Value Decomposition (hep-ph/9509307)  
+  Authors: Kerstin Tackmann, Andreas Hoecker, Heiko Lacker            
+
+Begin_Html
 <center><h2>SVD Approach to Data Unfolding</h2></center>
 <p>
 Reference: <a href="http://arXiv.org/abs/hep-ph/9509307">Nucl. Instrum. Meth. A372, 469 (1996) [hep-ph/9509307]</a>
