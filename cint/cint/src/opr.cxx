@@ -2574,12 +2574,11 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
       G__oprovld = 0;
    }
    else {
-      // -- Binary operator.
+      // Binary operator.
       G__oprovld = 1;
 #ifdef G__ASM
       if (G__asm_noverflow) {
-         // -- We are generating bytecode.
-#ifdef G__ASM_IFUNC
+         // We are generating bytecode.
          store_asm_cp = G__asm_cp;
 #ifdef G__ASM_DBG
          if (G__asm_dbg) {
@@ -2588,16 +2587,20 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
 #endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__SWAP;
          G__inc_cp_asm(1, 0);
-#endif // G__ASM_IFUNC
 #ifdef G__ASM_DBG
          if (G__asm_dbg) {
-            G__fprinterr(G__serr, "%3x,%3x: PUSHSTROS  %s:%d\n", G__asm_cp - 2, G__asm_dt, __FILE__, __LINE__);
-            G__fprinterr(G__serr, "%3x,%3x: SETSTROS  %s:%d\n", G__asm_cp - 1, G__asm_dt, __FILE__, __LINE__);
+            G__fprinterr(G__serr, "%3x,%3x: PUSHSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
          }
 #endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__PUSHSTROS;
-         G__asm_inst[G__asm_cp+1] = G__SETSTROS;
-         G__inc_cp_asm(2, 0);
+         G__inc_cp_asm(1, 0);
+#ifdef G__ASM_DBG
+         if (G__asm_dbg) {
+            G__fprinterr(G__serr, "%3x,%3x: SETSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+         }
+#endif // G__ASM_DBG
+         G__asm_inst[G__asm_cp] = G__SETSTROS;
+         G__inc_cp_asm(1, 0);
       }
 #endif // G__ASM
       //
@@ -2645,13 +2648,13 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
          G__tagnum = store_tagnum;
       }
       if (!ig2) {
-         // -- Search for global function.
+         // No member function, search for global function.
 #ifdef G__ASM
          if (G__asm_noverflow) {
             G__bc_cancel_VIRTUALADDSTROS();
             G__inc_cp_asm(store_asm_cp - G__asm_cp, 0);
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "PUSHSTROS,SETSTROS cancelled\n");
+            if (G__asm_dbg) G__fprinterr(G__serr, "SWAP,PUSHSTROS,SETSTROS cancelled\n");
 #endif // G__ASM_DBG
          }
 #endif // G__ASM
@@ -2752,15 +2755,15 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
             ig2 = 1;
          }
 
-         if (0 == ig2) {
-            if (-1 != defined->tagnum) {
+         if (!ig2) {
+            if (defined->tagnum != -1) {
                G__fprinterr(G__serr, "Error: %s not defined for %s"
                             , opr(), G__fulltagname(defined->tagnum, 1));
             }
             else {
                G__fprinterr(G__serr, "Error: %s not defined", expr());
             }
-            G__genericerror((char*)NULL);
+            G__genericerror(0);
          }
       }
 #ifdef G__ASM

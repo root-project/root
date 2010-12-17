@@ -2205,7 +2205,16 @@ void G__define_var(int tagnum, int typenum)
                G__store_struct_offset = G__PVOID;
             }
             if (G__dispsource) {
-               G__fprinterr(G__serr, "\n!!!Calling constructor 0x%lx.%s for declaration of %s  %s:%d", G__store_struct_offset, temp1(), new_name(), __FILE__, __LINE__);
+               G__fprinterr(
+                    G__serr
+                  , "\n!!!Calling constructor (%s) 0x%lx for declaration "
+                    "of %s  %s:%d\n"
+                  , temp1()
+                  , G__store_struct_offset
+                  , new_name()
+                  , __FILE__
+                  , __LINE__
+               );
             }
             // call constructor, error if no constructor.
             G__decl = 0;
@@ -2223,6 +2232,20 @@ void G__define_var(int tagnum, int typenum)
                G__typenum = bc_typenum;
                G__var_type = var_type;
                G__globalvarpointer = G__int(reg);
+               if (G__dispsource) {
+                  if (known) {
+                     G__fprinterr(
+                          G__serr
+                        , "\n!!!Constructor returned (%s) 0x%lx for "
+                          "declaration of %s  %s:%d\n"
+                        , temp1()
+                        , G__globalvarpointer
+                        , new_name()
+                        , __FILE__
+                        , __LINE__
+                     );
+                  }
+               }
                G__static_alloc = store_static_alloc;
                G__prerun = store_prerun;
                G__cppconstruct = 1;
@@ -2498,7 +2521,6 @@ void G__define_var(int tagnum, int typenum)
                G__constvar = 0;
                G__static_alloc = 0;
             }
-            --G__templevel;
             G__reftype = G__PARANORMAL;
             if (store_prerun || !store_static_alloc || G__IsInMacro()) {
                reg = G__getexpr(temp);
@@ -2506,7 +2528,6 @@ void G__define_var(int tagnum, int typenum)
             else {
                reg = G__null;
             }
-            ++G__templevel;
             G__prerun = store_prerun;
             G__decl = store_decl;
             G__constvar = store_constvar;
@@ -2748,7 +2769,16 @@ void G__define_var(int tagnum, int typenum)
                   //
                   temp.Format("%s()", G__struct.name[tagnum]);
                   if (G__dispsource) {
-                     G__fprinterr(G__serr, "\n!!!Calling default constructor 0x%lx.%s for declaration of %s", G__store_struct_offset, temp(), new_name());
+                     G__fprinterr(
+                          G__serr
+                        , "\n!!!Calling default constructor (%s) 0x%lx for "
+                          "declaration of %s  %s:%d\n"
+                        , temp()
+                        , G__store_struct_offset
+                        , new_name()
+                        , __FILE__
+                        , __LINE__
+                     );
                   }
                   G__decl = 0;
                   if ((index = strchr(new_name, '['))) {
@@ -3026,7 +3056,16 @@ void G__define_var(int tagnum, int typenum)
                   if (flag) {
                      // -- Call explicit constructor, error if no constructor.
                      if (G__dispsource) {
-                        G__fprinterr(G__serr, "\n!!!Calling constructor 0x%lx.%s for declaration of %s", G__store_struct_offset, temp(), new_name());
+                        G__fprinterr(
+                             G__serr
+                           , "\n!!!Calling constructor (%s) 0x%lx for "
+                             "declaration of %s  %s:%d\n"
+                           , temp()
+                           , G__store_struct_offset
+                           , new_name()
+                           , __FILE__
+                           , __LINE__
+                        );
                      }
                      if (G__struct.iscpplink[tagnum] == G__CPPLINK) {
                         reg = G__getfunction(temp, &known, G__CALLCONSTRUCTOR);

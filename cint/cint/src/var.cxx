@@ -106,7 +106,15 @@ static void G__class_2nd_decl(G__var_array* var, int ig15)
    G__FastAllocString temp(G__ONELINE);
    temp.Format("~%s()", G__struct.name[tagnum]);
    if (G__dispsource) {
-      G__fprinterr(G__serr, "\n!!!Calling destructor 0x%lx.%s for declaration of %s", G__store_struct_offset, temp(), var->varnamebuf[ig15]);
+      G__fprinterr(
+           G__serr
+         , "\n!!!Calling destructor 0x%lx.%s for declaration of %s  %s:%d\n"
+         , G__store_struct_offset
+         , temp()
+         , var->varnamebuf[ig15]
+         , __FILE__
+         , __LINE__
+      );
    }
    if (G__struct.iscpplink[tagnum] == G__CPPLINK) {
       // Delete current object.
@@ -1978,7 +1986,7 @@ extern "C" {
 //______________________________________________________________________________
 void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig15, const char* item, int paran, long G__struct_offset)
 {
-   // -- FIXME: Describe me!
+   // Perform assignment from passed struct to passed result.
    // Note:
    // G__letstruct and G__classassign in struct.c have special handling
    // of operator=(). When interpretation, overloaded assignment operator
@@ -2000,16 +2008,17 @@ void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig1
    long store_asm_inst = 0L;
    long addr = 0L;
    if (G__asm_exec) {
-      void* p1 = (void*) (G__struct_offset + var->p[ig15] + linear_index * G__struct.size[var->p_tagtable[ig15]]);
+      void* p1 = (void*)
+         (G__struct_offset + var->p[ig15] + linear_index * G__struct.size[var->p_tagtable[ig15]]);
       void* p2 = (void*) result->obj.i;
       size_t size = (size_t) G__struct.size[var->p_tagtable[ig15]];
       memcpy(p1, p2, size);
       return;
    }
    switch (G__var_type) {
-      case 'p': /* return value */
+      case 'p': // return by pointer, normal case, used for intermediate results as well
          if (var->paran[ig15] <= paran) {
-            // -- value, struct,union
+            // Argument count is in range.
             store_prerun = G__prerun;
             G__prerun = 0;
             if (store_prerun) {
@@ -2037,32 +2046,39 @@ void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig1
                }
             }
             if (
-               (result->tagnum != -1) &&
+               (result->tagnum != -1) && // has tagnum, and
                (
-                  (result->type == 'u') ||
-                  (result->type == 'i')
+                  (result->type == 'u') || // is class, struct, union, or
+                  (result->type == 'i') // enum
                )
             ) {
-               if (result->obj.i) {
-                  tmp.Format("(%s)(%ld)", G__fulltagname(result->tagnum, 1), result->obj.i);
-               }
-               else {
-                  tmp.Format("(%s)%ld", G__fulltagname(result->tagnum, 1), result->obj.i);
-               }
+               tmp.Format(
+                    "(%s)0x%lx"
+                  , G__fulltagname(result->tagnum, 1)
+                  , result->obj.i
+               );
             }
             else {
+               // Result is of fundamental type.
                G__valuemonitor(*result, tmp);
             }
-            G__ASSERT(!G__decl || (G__decl == 1));
             if (G__decl) {
-               // -- Copy constructor.
+               // Assignment in a declaration, use a constructor.
                result7.Format("%s(%s)", G__struct.name[var->p_tagtable[ig15]], tmp());
                store_tagnum = G__tagnum;
                G__tagnum = var->p_tagtable[ig15];
                store_struct_offset = G__store_struct_offset;
                G__store_struct_offset = (G__struct_offset + var->p[ig15] + (linear_index * G__struct.size[var->p_tagtable[ig15]]));
                if (G__dispsource) {
-                  G__fprinterr(G__serr, "\n!!!Calling constructor 0x%lx.%s for declaration", G__store_struct_offset , result7());
+                  G__fprinterr(
+                       G__serr
+                     , "\n!!!Calling constructor (%s) 0x%lx for "
+                       "declaration  %s:%d\n"
+                     , result7()
+                     , G__store_struct_offset
+                     , __FILE__
+                     , __LINE__
+                  );
                }
 #ifdef G__SECURITY
                G__castcheckoff = 1;
@@ -2070,7 +2086,7 @@ void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig1
                ig2 = 0;
                G__decl = 0;
 #ifndef G__OLDIMPLEMENTATION1073
-               G__oprovld = 1;
+               G__oprovld = 1; // Tell G__getfunction() to not stack the args.
 #endif // G__OLDIMPLEMENTATION1073
                {
                   int store_cp = G__asm_cp;
@@ -2093,14 +2109,15 @@ void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig1
                      }
                   }
                   else if (!ig2 && (result->type == 'U')) {
-                     G__fprinterr(G__serr, "Error: Constructor %s not found", result7());
+                     G__fprinterr(G__serr, "\nError: Constructor %s not found!", result7());
                      G__genericerror(0);
                   }
                }
 #ifndef G__OLDIMPLEMENTATION1073
-               G__oprovld = 0;
+               G__oprovld = 0; // And allow G__getfunction() to stack args again.
                if (G__asm_wholefunction && !ig2) {
-                  G__asm_gen_stvar(G__struct_offset, ig15, paran, var, item, G__ASM_VARLOCAL, G__var_type, result);
+                  G__asm_gen_stvar(G__struct_offset, ig15, paran, var, item,
+                     G__ASM_VARLOCAL, G__var_type, result);
                }
 #endif // G__OLDIMPLEMENTATION1073
                G__decl = 1;
@@ -2108,13 +2125,19 @@ void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig1
                G__tagnum = store_tagnum;
             }
             else {
-               // --
+               // Use operator= to do the assignment..
 #ifdef G__ASM
                if (G__asm_noverflow) {
-                  // --
+                  // We are generating code.
 #ifdef G__ASM_DBG
                   if (G__asm_dbg) {
-                     G__fprinterr(G__serr, "ST_VAR or ST_MSTR replaced with LD_VAR or LD_MSTR(2)  %s:%d\n", __FILE__, __LINE__);
+                     G__fprinterr(
+                          G__serr
+                        , "ST_VAR or ST_MSTR replaced with "
+                          "LD_VAR or LD_MSTR(2)  %s:%d\n"
+                        , __FILE__
+                        , __LINE__
+                     );
                   }
 #endif // G__ASM_DBG
                   store_asm_inst = G__asm_inst[G__asm_cp-5];
@@ -2226,11 +2249,11 @@ void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig1
             }
             G__prerun = store_prerun;
             if (ig2) {
-               // In case overloaded = or constructor is found.
+               // Success.
                *result = para;
             }
             else {
-               // -- In case no overloaded = or constructor, memberwise copy.
+               // There was no operator= or constructor available.
                // Try conversion operator for class object.
                if ((result->type == 'u') && (result->tagnum != -1)) {
                   int tagnum = var->p_tagtable[ig15];
@@ -2289,27 +2312,38 @@ void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig1
             break;
          }
       default:
-         if (G__var_type == 'u') {
+         if (G__var_type == 'u') { // return by struct offset
             G__letint(result, 'u', G__struct_offset + var->p[ig15]);
             result->tagnum = var->p_tagtable[ig15];
             result->typenum = var->p_typetable[ig15];
             break;
          }
-         if (G__var_type == 'v') {
+         if (G__var_type == 'v') { // return by value, we will have to call operator*() to get it.
             G__FastAllocString refopr(G__MAXNAME);
             long store_struct_offsetX = G__store_struct_offset;
             int store_tagnumX = G__tagnum;
             int done = 0;
             int store_var_type = G__var_type;
             G__var_type = 'p';
-            G__store_struct_offset = (long) (G__struct_offset + var->p[ig15] + (linear_index * G__struct.size[var->p_tagtable[ig15]]));
+            G__store_struct_offset = (long) (G__struct_offset + var->p[ig15] +
+               (linear_index * G__struct.size[var->p_tagtable[ig15]]));
             G__tagnum = var->p_tagtable[ig15];
 #ifdef G__ASM
             if (G__asm_noverflow) {
-               // --
+               // We are generating bytecode.
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
-                  G__fprinterr(G__serr, "%3x,%3x: LD_VAR  %s index=%d paran=%d  %s:%d\n", G__asm_cp, G__asm_dt, var->varnamebuf[ig15], ig15, 0, __FILE__, __LINE__);
+                  G__fprinterr(
+                       G__serr
+                     , "%3x,%3x: LD_VAR  name: %s index: %d paran: %d  %s:%d\n"
+                     , G__asm_cp
+                     , G__asm_dt
+                     , var->varnamebuf[ig15]
+                     , ig15
+                     , 0
+                     , __FILE__
+                     , __LINE__
+                  );
                }
 #endif // G__ASM_DBG
                if (G__struct_offset) {
@@ -2361,8 +2395,9 @@ void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig1
             }
             G__letVvalue(&para, *result);
          }
-         else
+         else {
             G__assign_error(item, result);
+         }
          break;
    }
 }

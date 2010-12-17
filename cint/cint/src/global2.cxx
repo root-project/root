@@ -162,8 +162,9 @@ char G__def_parameter[G__MAXNAME];
 //
 //  Temporary object buffer
 //
-struct G__tempobject_list *G__p_tempbuf, G__tempbuf;
-int G__templevel;
+struct G__tempobject_list G__tempbuf; // temp list anchor
+struct G__tempobject_list* G__p_tempbuf; // temp list head
+int G__templevel; // current temp nesting level
 //
 //  Reference type buffer.
 //

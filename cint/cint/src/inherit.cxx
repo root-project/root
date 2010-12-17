@@ -363,18 +363,31 @@ int G__baseconstructor(int n, G__baseparam *pbaseparamin)
           pbaseparam=pbaseparam->next;
         }
       }
-      if(flag) construct.Format("%s(%s)" ,tagname,pbaseparam->param);
-      else construct.Format("%s()",tagname);
-      if(G__dispsource) {
-         G__fprinterr(G__serr,"\n!!!Calling base class constructor %s",construct());
+      if (flag) {
+         construct.Format("%s(%s)", tagname, pbaseparam->param);
       }
-      if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) { /* C++ compiled class */
-        G__globalvarpointer=G__store_struct_offset;
+      else {
+         construct.Format("%s()", tagname);
       }
-      else G__globalvarpointer=G__PVOID;
-      { 
-        int tmp=0;
-        G__getfunction(construct,&tmp ,G__TRYCONSTRUCTOR);
+      if (G__dispsource) {
+         G__fprinterr(
+              G__serr
+            , "\n!!!Calling base class constructor %s  %s:%d\n"
+            , construct()
+            , __FILE__
+            , __LINE__
+         );
+      }
+      if (G__struct.iscpplink[G__tagnum] == G__CPPLINK) {
+         // c++ compiled class
+         G__globalvarpointer = G__store_struct_offset;
+      }
+      else {
+         G__globalvarpointer = G__PVOID;
+      }
+      {
+         int tmp = 0;
+         G__getfunction(construct, &tmp , G__TRYCONSTRUCTOR);
       }
       /* Set virtual_offset to every base classes for possible multiple
        * inheritance. */
@@ -470,8 +483,14 @@ int G__baseconstructor(int n, G__baseparam *pbaseparamin)
             continue;
           }
         }
-        if(G__dispsource) {
-           G__fprinterr(G__serr,"\n!!!Calling class member constructor %s",construct());
+        if (G__dispsource) {
+           G__fprinterr(
+                G__serr
+              , "\n!!!Calling class member constructor %s  %s:%d\n"
+              , construct()
+              , __FILE__
+              , __LINE__
+           );
         }
         int linear_index = mem->varlabel[i][1] /* number of elements */;
         if (linear_index) {
@@ -688,8 +707,15 @@ int G__basedestructor()
         *(long*)(G__store_struct_offset+G__struct.virtual_offset[G__tagnum])
           = G__tagnum;
       destruct.Format("~%s()",G__struct.name[G__tagnum]);
-      if(G__dispsource) 
-         G__fprinterr(G__serr,"\n!!!Calling base class destructor %s",destruct());
+      if (G__dispsource) {
+         G__fprinterr(
+              G__serr
+            , "\n!!!Calling base class destructor %s  %s:%d\n"
+            , destruct()
+            , __FILE__
+            , __LINE__
+         );
+      }
       j=0;
       if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) {
         G__globalvarpointer = G__store_struct_offset;
@@ -758,7 +784,13 @@ int G__basedestructrc(G__var_array *mem)
         if (G__struct.virtual_offset[G__tagnum] != -1) 
           *((long*) (G__store_struct_offset + G__struct.virtual_offset[G__tagnum])) = G__tagnum;
         if (G__dispsource) {
-           G__fprinterr(G__serr, "\n!!!Calling class member destructor %s", destruct());
+           G__fprinterr(
+                G__serr
+              , "\n!!!Calling class member destructor %s  %s:%d\n"
+              , destruct()
+              , __FILE__
+              , __LINE__
+           );
         }
         G__getfunction(destruct, &known, G__TRYDESTRUCTOR);
         G__store_struct_offset -= size;

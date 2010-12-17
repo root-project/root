@@ -473,31 +473,58 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             // --
 
          case G__CL:
-            /***************************************
-            * 0 CL
-            *  clear stack pointer
-            ***************************************/
-            // --
+            //
+            // 0 CL
+            // clear stack pointer
+            //
+            // Take a possible breakpoint, and then clear the data stack,
+            // and the structure offset stack.
+            // 
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
                short filenum = (short)(G__asm_inst[pc+1] / G__CL_FILESHIFT);
-               if (filenum >= 0) {
-                  G__fprinterr(G__serr, "%3x,%3x: CL %s:%d  %s:%d\n", pc, sp, G__srcfile[filenum].filename, G__asm_inst[pc+1] & G__CL_LINEMASK, __FILE__, __LINE__);
+               if (filenum > -1) {
+                  G__fprinterr(
+                       G__serr
+                     , "%3x,%3x: CL %s:%d  %s:%d\n"
+                     , pc
+                     , sp
+                     , G__srcfile[filenum].filename
+                     , G__asm_inst[pc+1] & G__CL_LINEMASK
+                     , __FILE__
+                     , __LINE__
+                  );
                }
             }
 #endif // G__ASM_DBG
             {
                G__ifile.line_number = G__asm_inst[pc+1] & G__CL_LINEMASK;
                G__ifile.filenum = (short)(G__asm_inst[pc+1] / G__CL_FILESHIFT);
-               if ((G__ifile.filenum >= 0 && G__srcfile[G__ifile.filenum].maxline > G__ifile.line_number &&
-                     G__TESTBREAK&G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number]) ||
-                     G__step) {
-                  if (G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number]&G__CONTUNTIL)
-                     G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number] &= G__NOCONTUNTIL;
+               if (
+                  G__step || // single-stepping, or
+                  (
+                     (G__ifile.filenum > -1) && // valid src file
+                     (G__srcfile[G__ifile.filenum].maxline >
+                         G__ifile.line_number) && // line num in range
+                     (G__srcfile[G__ifile.filenum].breakpoint[
+                         G__ifile.line_number] & G__TESTBREAK) // break set
+                                                               // on line
+                  )
+               ) {
+                  if (
+                     G__srcfile[G__ifile.filenum].breakpoint[
+                        G__ifile.line_number] & G__CONTUNTIL
+                  ) {
+                     G__srcfile[G__ifile.filenum].breakpoint[
+                        G__ifile.line_number] &= G__NOCONTUNTIL;
+                  }
                   struct G__input_file store_ifile = G__ifile;
-                  if (G__ifile.filenum >= 0) {
-                     strncpy(G__ifile.name, G__srcfile[G__ifile.filenum].filename,
-                             sizeof(G__ifile.name) - 1);
+                  if (G__ifile.filenum > -1) {
+                     strncpy(
+                          G__ifile.name
+                        , G__srcfile[G__ifile.filenum].filename
+                        , sizeof(G__ifile.name) - 1
+                     );
                      G__bc_setlinenum(G__ifile.line_number);
                   }
                   //if (1 || G__istrace) {
@@ -1691,16 +1718,32 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             /***************************************
             * 0 SETTEMP
             ***************************************/
-            store_p_tempbuf = G__p_tempbuf->prev;
             if (G__p_tempbuf) {
+               // --
 #ifdef G__ASM_DBG
-               if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: SETTEMP 0x%lx\n", pc, sp , G__p_tempbuf->obj.obj.i);
-#endif
+               if (G__asm_dbg) {
+                  G__fprinterr(
+                       G__serr
+                     , "%3x,%3x: SETTEMP %d %d (%s,%d,%d)0x%lx %d  %s:%d\n"
+                     , pc
+                     , sp
+                     , G__p_tempbuf->no_exec
+                     , G__p_tempbuf->cpplink
+                     , G__struct.name[G__p_tempbuf->obj.tagnum]
+                     , G__p_tempbuf->obj.tagnum
+                     , G__p_tempbuf->obj.typenum
+                     , G__p_tempbuf->obj.obj.i
+                     , G__p_tempbuf->level
+                     , __FILE__
+                     , __LINE__
+                  );
+               }
+#endif // G__ASM_DBG
                store_struct_offset = G__store_struct_offset;
-               store_tagnum = G__tagnum;
-               store_return = G__return;
                G__store_struct_offset = G__p_tempbuf->obj.obj.i;
+               store_tagnum = G__tagnum;
                G__tagnum = G__p_tempbuf->obj.tagnum;
+               store_return = G__return;
                G__return = G__RETURN_NON;
             }
             ++pc;
@@ -1715,20 +1758,44 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             /***************************************
             * 0 FREETEMP
             ***************************************/
+            if (G__p_tempbuf) {
+               // --
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: FREETEMP 0x%lx\n", pc, sp , store_p_tempbuf);
-#endif
-            G__store_struct_offset = store_struct_offset;
-            G__tagnum = store_tagnum;
-            G__return = store_return;
-            if (G__p_tempbuf && store_p_tempbuf) {
-#ifdef G__ASM_IFUNC
-               if ((G__p_tempbuf->obj.tagnum == -1) || (G__struct.iscpplink[G__p_tempbuf->obj.tagnum] != -1)) {
+               if (G__asm_dbg) {
+                  G__fprinterr(
+                       G__serr
+                     , "%3x,%3x: FREETEMP %d %d (%s,%d,%d)0x%lx %d  %s:%d\n"
+                     , pc
+                     , sp
+                     , G__p_tempbuf->no_exec
+                     , G__p_tempbuf->cpplink
+                     , G__struct.name[G__p_tempbuf->obj.tagnum]
+                     , G__p_tempbuf->obj.tagnum
+                     , G__p_tempbuf->obj.typenum
+                     , G__p_tempbuf->obj.obj.i
+                     , G__p_tempbuf->level
+                     , __FILE__
+                     , __LINE__
+                  );
+               }
+#endif // G__ASM_DBG
+               G__store_struct_offset = store_struct_offset;
+               G__tagnum = store_tagnum;
+               G__return = store_return;
+               //
+               //  Free the object storage.
+               //
+               if (!G__p_tempbuf->cpplink && G__p_tempbuf->obj.obj.i) {
                   free((void*) G__p_tempbuf->obj.obj.i);
                }
-#endif
-               free((void*) G__p_tempbuf);
-               G__p_tempbuf = store_p_tempbuf;
+               //
+               //  If this is not the last node, then free it.
+               //
+               if (G__p_tempbuf->prev) {
+                  store_p_tempbuf = G__p_tempbuf->prev;
+                  free((void*) G__p_tempbuf);
+                  G__p_tempbuf = store_p_tempbuf;
+               }
             }
             ++pc;
 #ifdef G__ASM_DBG
@@ -1770,9 +1837,15 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             ***************************************/
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%d: REWINDSTACK %d\n" , pc, sp, G__asm_inst[pc+1]);
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: REWINDSTACK %d\n"
+                  , pc
+                  , sp
+                  , G__asm_inst[pc+1]
+               );
             }
-#endif
+#endif // G__ASM_DBG
             sp -= G__asm_inst[pc+1];
             pc += 2;
 #ifdef G__ASM_DBG
@@ -2081,17 +2154,26 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             * sp       <-   sp
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: BASECONV %d %d\n", pc, sp
-                                            , G__asm_inst[pc+1], G__asm_inst[pc+2]);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: BASECONV %d %d\n"
+                  , pc
+                  , sp
+                  , G__asm_inst[pc+1]
+                  , G__asm_inst[pc+2]
+               );
+            }
+#endif // G__ASM_DBG
             G__asm_stack[sp-1].typenum = -1;
             G__asm_stack[sp-1].tagnum = G__asm_inst[pc+1];
-            if (G__asm_stack[sp-1].ref == G__asm_stack[sp-1].obj.i)
+            if (G__asm_stack[sp-1].ref == G__asm_stack[sp-1].obj.i) {
                G__asm_stack[sp-1].ref += G__asm_inst[pc+2];
+            }
             G__asm_stack[sp-1].obj.i += G__asm_inst[pc+2];
-            /* #define G__OLDIMPLEMENTATION2077 */
-            if (0 == G__asm_stack[sp-1].ref && 'u' == G__asm_stack[sp-1].type)
+            if (!G__asm_stack[sp-1].ref && (G__asm_stack[sp-1].type == 'u')) {
                G__asm_stack[sp-1].ref += G__asm_stack[sp-1].obj.i;
+            }
             pc += 3;
 #ifdef G__ASM_DBG
             break;
@@ -2108,9 +2190,16 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             * sp       <-  sp
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: STORETEMP 0x%lx\n"
-                                            , pc, sp , G__p_tempbuf->obj.obj.i);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: STORETEMP 0x%lx\n"
+                  , pc
+                  , sp
+                  , G__p_tempbuf->obj.obj.i
+               );
+            }
+#endif // G__ASM_DBG
             G__store_tempobject(G__asm_stack[sp-1]);
             ++pc;
 #ifdef G__ASM_DBG
@@ -2129,9 +2218,17 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             * sp       <-  sp
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: ALLOCTEMP %s\n"
-                                            , pc, sp, G__struct.name[G__asm_inst[pc+1]]);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: ALLOCTEMP %d %s\n"
+                  , pc
+                  , sp
+                  , G__asm_inst[pc+1]
+                  , G__struct.name[G__asm_inst[pc+1]]
+               );
+            }
+#endif // G__ASM_DBG
             G__alloc_tempobject(G__asm_inst[pc+1], -1);
             pc += 2;
 #ifdef G__ASM_DBG
@@ -2150,10 +2247,18 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             * sp      <-  sp
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: POPTEMP 0x%lx %d\n"
-                                            , pc, sp , store_p_tempbuf, G__asm_inst[pc+1]);
-#endif
-            if (-1 != G__asm_inst[pc+1]) {
+            if (G__asm_dbg) {
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: POPTEMP 0x%lx %d\n"
+                  , pc
+                  , sp
+                  , G__store_struct_offset
+                  , G__asm_inst[pc+1]
+               );
+            }
+#endif // G__ASM_DBG
+            if (G__asm_inst[pc+1] != -1) {
                G__asm_stack[sp-1].tagnum = G__asm_inst[pc+1];
                G__asm_stack[sp-1].typenum = -1;
                G__asm_stack[sp-1].type = 'u';
@@ -3076,8 +3181,17 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             * 0 ROOTOBJALLOCBEGIN
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: ROOTOBJALLOCBEGIN", pc, sp);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: ROOTOBJALLOCBEGIN  %s:%d\n"
+                  , pc
+                  , sp
+                  , __FILE__
+                  , __LINE__
+               );
+            }
+#endif // G__ASM_DBG
             G__exec_alloc_lock();
             ++pc;
 #ifdef G__ASM_DBG
@@ -3092,8 +3206,17 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             * 0 ROOTOBJALLOCEND
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: ROOTOBJALLOCEND", pc, sp);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: ROOTOBJALLOCEND  %s:%d\n"
+                  , pc
+                  , sp
+                  , __FILE__
+                  , __LINE__
+               );
+            }
+#endif // G__ASM_DBG
             G__exec_alloc_unlock();
             ++pc;
 #ifdef G__ASM_DBG

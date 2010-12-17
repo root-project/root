@@ -361,7 +361,6 @@ G__value G__calc(const char* exprwithspace);
          ppointer_and[pp_and] = G__asm_cp+2; \
          G__inc_cp_asm(3,0); \
       } \
-      ++G__templevel; /* 1516 */ \
       ++pp_and; \
    }
 
@@ -388,7 +387,6 @@ G__value G__calc(const char* exprwithspace);
          ppointer_or[pp_or] = G__asm_cp+3; \
          G__inc_cp_asm(4,0); \
       } \
-      ++G__templevel; /* 1516 */ \
       ++pp_or; \
    }
 
@@ -403,13 +401,12 @@ G__value G__calc(const char* exprwithspace);
 
 //______________________________________________________________________________
 #define DBGCOM \
-   G__fprinterr(G__serr,"pp_and=%d  G__templevel=%d  G__p_tepbuf->level=%d G__decl=%d\n",pp_and,G__templevel,G__p_tempbuf->level,G__decl);
+   G__fprinterr(G__serr,"pp_and=%d G__decl=%d\n",pp_and,G__decl);
 
 //______________________________________________________________________________
 #define G__RESTORE_ANDOPR \
    if(G__asm_noverflow) { \
       while(pp_and) { \
-         G__free_tempobject(); --G__templevel; /* 1516 */ \
          if(G__asm_dbg) \
             G__fprinterr(G__serr,"   %3x: CNDJMP assigned for AND %3x  %s:%d\n", ppointer_and[pp_and-1] - 1, G__asm_cp, __FILE__, __LINE__); \
          if(G__PVOID==G__asm_inst[ppointer_and[pp_and-1]]) /* 1575 */ \
@@ -417,7 +414,7 @@ G__value G__calc(const char* exprwithspace);
          else --pp_and; /* 1575 */ \
       } \
    } \
-   else while(pp_and) {G__free_tempobject();--G__templevel; --pp_and;/*1524*/}
+   else while(pp_and) {--pp_and;/*1524*/}
 
 //______________________________________________________________________________
 #define G__RESTORE_NOEXEC_OROPR \
@@ -432,13 +429,12 @@ G__value G__calc(const char* exprwithspace);
 #define G__RESTORE_OROPR \
    if(G__asm_noverflow) { \
       while(pp_or) { \
-         G__free_tempobject(); --G__templevel; \
          if(G__asm_dbg) \
             G__fprinterr(G__serr,"   %3x: CND1JMP assigned for OR %3x  %s:%d\n", ppointer_or[pp_or-1] - 1, G__asm_cp, __FILE__, __LINE__); \
          G__asm_inst[ppointer_or[--pp_or]] = G__asm_cp; \
       } \
    } \
-   else while(pp_or) {G__free_tempobject();--G__templevel; --pp_or;/*1524*/}
+   else while(pp_or) {--pp_or;/*1524*/}
 
 //
 #else // G__ASM_DBG
@@ -459,7 +455,6 @@ G__value G__calc(const char* exprwithspace);
          ppointer_and[pp_and] = G__asm_cp+2; \
          G__inc_cp_asm(3,0); \
       } \
-      ++G__templevel; \
       ++pp_and; \
    }
 
@@ -480,7 +475,6 @@ G__value G__calc(const char* exprwithspace);
          ppointer_or[pp_or] = G__asm_cp+3; \
          G__inc_cp_asm(4,0); \
       } \
-      ++G__templevel; /* 1516 */ \
       ++pp_or; \
    }
 
@@ -496,13 +490,12 @@ G__value G__calc(const char* exprwithspace);
 #define G__RESTORE_ANDOPR \
    if(G__asm_noverflow) { \
       while(pp_and) { \
-         G__free_tempobject();--G__templevel; \
          if(G__PVOID==G__asm_inst[ppointer_and[pp_and-1]]) \
             G__asm_inst[ppointer_and[--pp_and]] = G__asm_cp; \
          else --pp_and; \
       } \
    } \
-   else while(pp_and) {G__free_tempobject();--G__templevel; --pp_and;}
+   else while(pp_and) {--pp_and;}
 
 //______________________________________________________________________________
 #define G__RESTORE_NOEXEC_OROPR \
@@ -516,11 +509,10 @@ G__value G__calc(const char* exprwithspace);
 #define G__RESTORE_OROPR \
    if(G__asm_noverflow) { \
       while(pp_or) { \
-         G__free_tempobject();--G__templevel; \
          G__asm_inst[ppointer_or[--pp_or]] = G__asm_cp; \
       } \
    } \
-   else while(pp_or) {G__free_tempobject();--G__templevel; --pp_or;}
+   else while(pp_or) {--pp_or;}
 
 //
 #endif // G__ASM_DBG

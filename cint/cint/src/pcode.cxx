@@ -6228,7 +6228,7 @@ int G__asm_optimize3(int *start)
       * 0 ROOTOBJALLOCBEGIN
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ROOTOBJALLOCBEGIN",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ROOTOBJALLOCBEGIN\n",pc);
 #endif
       /* no optimization */
       ++pc;
@@ -6239,7 +6239,7 @@ int G__asm_optimize3(int *start)
       * 0 ROOTOBJALLOCEND
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ROOTOBJALLOCEND",pc);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ROOTOBJALLOCEND\n",pc);
 #endif
       /* no optimization */
       ++pc;

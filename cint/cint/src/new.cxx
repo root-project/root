@@ -379,7 +379,15 @@ G__value G__new_operator(const char* expression)
          G__display_purevirtualfunc(G__tagnum);
       }
       if (G__dispsource) {
-         G__fprinterr(G__serr, "\n!!!Calling constructor 0x%lx.'%s' for new '%s'  %s:%d", G__store_struct_offset, type, type, __FILE__, __LINE__);
+         G__fprinterr(
+              G__serr
+            , "\n!!!Calling constructor 0x%lx.'%s' for new '%s'  %s:%d\n"
+            , G__store_struct_offset
+            , type
+            , type
+            , __FILE__
+            , __LINE__
+         );
       }
       if (G__struct.iscpplink[G__tagnum] == G__CPPLINK) {
          // -- This is a pre-compiled class.
@@ -789,7 +797,15 @@ void G__delete_operator(char* expression, int isarray)
       G__tagnum = buf.tagnum;
       destruct.Format("~%s()", G__struct.name[G__tagnum]);
       if (G__dispsource) {
-         G__fprinterr(G__serr, "\n!!!Calling destructor 0x%lx.%s for '%s'\n", G__store_struct_offset, destruct(), expression);
+         G__fprinterr(
+              G__serr
+            , "\n!!!Calling destructor 0x%lx.%s for '%s'  %s:%d\n"
+            , G__store_struct_offset
+            , destruct()
+            , expression
+            , __FILE__
+            , __LINE__
+         );
       }
       done = 0;
       if (

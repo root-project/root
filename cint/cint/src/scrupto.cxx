@@ -100,7 +100,7 @@ static int G__free_ifunc_table_upto_ifunc(G__ifunc_table_internal* ifunc, G__ifu
 #ifdef G__MEMTEST
       fprintf(G__memhist, "func %s\n", ifunc->funcname[i]);
 #endif // G__MEMTEST
-      //fprintf(stderr, "Calling destructor for param '%s'", ifunc->funcname[i]);
+      //fprintf(stderr, "\nCalling destructor for param '%s'\n", ifunc->funcname[i]);
       ifunc->param[i].~G__params();
       if (ifunc->funcname[i]) {
          free((void*) ifunc->funcname[i]);
@@ -615,7 +615,18 @@ static int G__destroy_upto_vararray(G__var_array* var, int global, int ig15)
             G__return = G__RETURN_NON;
             temp.Format("~%s()", G__struct.name[G__tagnum]);
             if (G__dispsource) {
-               G__fprinterr(G__serr, "\n!!!Calling destructor 0x%lx.%s for %s ary%d:link%d", G__store_struct_offset, temp(), var->varnamebuf[idx], var->varlabel[idx][1] /* number of elements */, G__struct.iscpplink[G__tagnum]);
+               G__fprinterr(
+                    G__serr
+                  , "\n!!!Calling destructor (%s) 0x%lx for %s "
+                    "len: %d iscpplink: %d  %s:%d\n"
+                  , temp()
+                  , G__store_struct_offset
+                  , var->varnamebuf[idx]
+                  , var->varlabel[idx][1] /* number of elements */
+                  , G__struct.iscpplink[G__tagnum]
+                  , __FILE__
+                  , __LINE__
+               );
             }
             int store_prerun = G__prerun;
             G__prerun = 0;
