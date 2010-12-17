@@ -289,11 +289,11 @@ TView3D::~TView3D()
 //______________________________________________________________________________
 void TView3D::AxisVertex(Double_t ang, Double_t *av, Int_t &ix1, Int_t &ix2, Int_t &iy1, Int_t &iy2, Int_t &iz1, Int_t &iz2)
 {
-   // Define axis vertices*.
+   // Define axis vertices.
    //
    //    Input  ANG     - angle between X and Y axis
    //
-   //    Output: AV(3,8) - axis vertixes
+   //    Output: AV(3,8) - axis vertices
    //            IX1     - 1st point of X-axis
    //            IX2     - 2nd point of X-axis
    //            IY1     - 1st point of Y-axis
@@ -675,7 +675,7 @@ void TView3D::DefineViewDirection(const Double_t *s, const Double_t *c,
 //______________________________________________________________________________
 void TView3D::DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax)
 {
-   // Draw the outline of a cube while rotaing a 3-d object in the pad.
+   // Draw the outline of a cube while rotating a 3-d object in the pad.
 
    TPolyLine3D::DrawOutlineCube(outline,rmin,rmax);
 }
@@ -990,7 +990,7 @@ Int_t TView3D::GetDistancetoAxis(Int_t axis, Int_t px, Int_t py, Double_t &ratio
    //  Algorithm:
    /*
        A(x1,y1)         P                             B(x2,y2)
-       ------------------------------------------------ 
+       ------------------------------------------------
                         I
                         I
                         I
@@ -1135,7 +1135,7 @@ void TView3D::NDCtoWC(const Double_t* pn, Double_t* pw)
 //______________________________________________________________________________
 void TView3D::NormalWCtoNDC(const Float_t *pw, Float_t *pn)
 {
-   // Transfer vector of NORMAL from word to normalized coodinates.
+   // Transfer vector of NORMAL from word to normalized coordinates.
    //
    //    Input: PW(3) - vector of NORMAL in word coordinate system
    //           PN(3) - vector of NORMAL in normalized coordinate system
@@ -1163,7 +1163,7 @@ void TView3D::NormalWCtoNDC(const Float_t *pw, Float_t *pn)
 //______________________________________________________________________________
 void TView3D::NormalWCtoNDC(const Double_t *pw, Double_t *pn)
 {
-   // Transfer vector of NORMAL from word to normalized coodinates.
+   // Transfer vector of NORMAL from word to normalized coordinates.
    //
    //    Input: PW(3) - vector of NORMAL in word coordinate system
    //           PN(3) - vector of NORMAL in normalized coordinate system
@@ -1323,7 +1323,7 @@ void TView3D::SetOutlineToCube()
    //      y = fRmin[1]        Y = fRmax[1]
    //      z = fRmin[2]        Z = fRmax[2]
    /*
-   
+
                (x,Y,Z) +---------+ (X,Y,Z)
                       /         /|
                      /         / |
@@ -1445,7 +1445,7 @@ void TView3D::SetWindow(Double_t u0, Double_t v0, Double_t du, Double_t dv)
 //______________________________________________________________________________
 void TView3D::SetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep)
 {
-   //set view parameters
+   // Set view parameters.
 
    ResetView(longitude, latitude, psi, irep);
 }
@@ -1454,7 +1454,7 @@ void TView3D::SetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t
 //______________________________________________________________________________
 void TView3D::ResizePad()
 {
-   // Recompute window for perspective view
+   // Recompute window for perspective view.
 
    if (!IsPerspective()) return;
    Double_t upix = fUpix;
@@ -1581,7 +1581,7 @@ void TView3D::WCtoNDC(const Double_t *pw, Double_t *pn)
 //______________________________________________________________________________
 void TView3D::AdjustPad(TVirtualPad *pad)
 {
-   // Force the current pad to be updated
+   // Force the current pad to be updated.
 
    TVirtualPad *thisPad = pad;
    if (!thisPad) thisPad = gPad;
@@ -1644,7 +1644,7 @@ void TView3D::TopView(TVirtualPad *pad)
 //______________________________________________________________________________
 void TView3D::ToggleRulers(TVirtualPad *pad)
 {
-   // Turn on /off 3D axis
+   // Turn on /off 3D axis.
 
    TAxis3D::ToggleRulers(pad);
 }
@@ -1654,7 +1654,7 @@ void TView3D::ToggleRulers(TVirtualPad *pad)
 void TView3D::ToggleZoom(TVirtualPad *pad)
 {
    // Turn on /off the interactive option to
-   //  Zoom / Move / Change attributes of 3D axis correspond this view
+   //  Zoom / Move / Change attributes of 3D axis correspond this view.
 
    TAxis3D::ToggleZoom(pad);
 }
@@ -1663,7 +1663,7 @@ void TView3D::ToggleZoom(TVirtualPad *pad)
 //______________________________________________________________________________
 void TView3D::AdjustScales(TVirtualPad *pad)
 {
-   // Adjust all sides of view in respect of the biggest one
+   // Adjust all sides of view in respect of the biggest one.
 
    Double_t min[3],max[3];
    GetRange(min,max);
@@ -1682,7 +1682,7 @@ void TView3D::AdjustScales(TVirtualPad *pad)
 //______________________________________________________________________________
 void TView3D::Centered3DImages(TVirtualPad *pad)
 {
-   // Move view into the center of the scene
+   // Move view into the center of the scene.
 
    Double_t min[3],max[3];
    GetRange(min,max);
@@ -1699,7 +1699,7 @@ void TView3D::Centered3DImages(TVirtualPad *pad)
 //______________________________________________________________________________
 void TView3D::UnzoomView(TVirtualPad *pad,Double_t unZoomFactor )
 {
-   // unZOOM this view
+   // unZOOM this view.
 
    if (TMath::Abs(unZoomFactor) < 0.001) return;
    ZoomView(pad,1./unZoomFactor);
@@ -1709,7 +1709,7 @@ void TView3D::UnzoomView(TVirtualPad *pad,Double_t unZoomFactor )
 //______________________________________________________________________________
 void TView3D::ZoomView(TVirtualPad *pad,Double_t zoomFactor)
 {
-   // ZOOM this view
+   // ZOOM this view.
 
    if (TMath::Abs(zoomFactor) < 0.001) return;
    Double_t min[3],max[3];
@@ -1733,8 +1733,8 @@ void TView3D::ZoomView(TVirtualPad *pad,Double_t zoomFactor)
 void TView3D::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, Int_t nsteps,
                       Double_t dlong, Double_t dlat, Double_t dpsi)
 {
-   // Move focus to a different box position and extent in nsteps. Perform rotation
-   // with dlat,dlong,dpsi at each step.
+   // Move focus to a different box position and extent in nsteps. Perform
+   // rotation with dlat,dlong,dpsi at each step.
 
    if (!IsPerspective()) return;
    if (nsteps<1) return;
@@ -1789,8 +1789,8 @@ void TView3D::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, In
 //______________________________________________________________________________
 void TView3D::MoveViewCommand(Char_t option, Int_t count)
 {
-   // 'a' increase  scale factor (clip cube borders)
-   // 's' decrease  scale factor (clip cube borders)
+   // 'a' increase scale factor (clip cube borders)
+   // 's' decrease scale factor (clip cube borders)
 
    if (count <= 0) count = 1;
    switch (option) {
