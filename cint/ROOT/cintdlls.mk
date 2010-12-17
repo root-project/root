@@ -146,8 +146,8 @@ endif # need to mv to .dll
 ##### all cintdlls end on .dll - END
 
 # Filter out the explicit link flag
-ifneq ($(subst $(ROOT_SRCDIR)/build/unix/makelib.sh,,$(MAKELIB)),$(MAKELIB))
-  $(CINTDLLS): MAKELIB := $(subst -x,,$(MAKELIB))
+ifneq ($(subst $(ROOT_SRCDIR)/build/unix/makelib.sh,,$(MAKELIB)),)
+  $(CINTDLLS): MAKELIB := $(subst ' -x',,$(MAKELIB))
 endif
 
 $(ALLCINTDLLS): $(ORDER_) $(MAINLIBS)
