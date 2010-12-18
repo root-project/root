@@ -321,12 +321,7 @@ Int_t TAxis::FindBin(const char *label)
    //Not yet in the list. Can we rebin the histogram ?
    if (!fParent->TestBit(TH1::kCanRebin)) return -1;
 
-   // count number of labels in the list
-   Int_t n = 0;
-   TIter next(fLabels);
-   while (next()) {
-      n++;
-   }
+   Int_t n = fLabels->GetEntries();
    TH1 *h = (TH1*)fParent;
 
    //may be we have to resize the histogram (doubling number of channels)
