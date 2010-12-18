@@ -86,8 +86,10 @@ the streaming is now driven using a simple loop over a sequence of configured St
 branches at the expense of some code duplication.  There are 3 versions of this loop implemented in <tt>TBufferFile</tt> and overloaded in <tt>TBufferXML</tt> and <tt>TBufferSQL</tt>:
 <ol>
 <li><tt style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &amp;sequence, void *object);</tt><p/></li>
-<li><tt style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">virtual Int_t ReadSequenceVecPtr(const TStreamerInfoActions::TActionSequence &amp;sequence, void *start_collection, void *end_collection);</tt><p/></li>
-<li><tt style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &amp;sequence, void *start_collection, void *end_collection);</tt><p/></li>
+<li><div style="border:gray 1px solid;padding:0.5em 2em;background:#ffe"><tt>virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &amp;sequence,<br/>
+                                 void *start_collection, void *end_collection);</tt></div><p/></li>
+<li><div><tt style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &amp;sequence,<br>
+                                 void *start_collection, void *end_collection);</tt></div><p/></li>
 </ol>
 The 1st version is optimized to read a single object.  The 2nd version is optimized to read the content of <tt>TClonesArrays</tt> and vectors of pointers to objects.  The 3rd version is used to streamed any collections.
 <br/><br/>
@@ -124,14 +126,16 @@ Each collection (proxy) needs to provide 5 new free standing functions:
    typedef void (*CreateIterators_t)(void *collection, void **begin_arena, void **end_arena);
    virtual CreateIterators_t GetFunctionCreateIterators(Bool_t read = kTRUE) = 0; 
    // begin_arena and end_arena should contain the location of a memory arena of size fgIteratorSize. 
-   // If the collection iterator are of that size or less, the iterators will be constructed in place in those location (new with placement)
-   // Otherwise the iterators will be allocated via a regular new and their address returned by modifying the value of begin_arena and end_arena.
+   // If the collection iterator are of that size or less, the iterators will be constructed in place in those location 
+   // (new with placement.) Otherwise the iterators will be allocated via a regular new and their address returned by 
+   // modifying the value of begin_arena and end_arena.
    
    typedef void* (*CopyIterator_t)(void *dest, const void *source);
    virtual CopyIterator_t GetFunctionCopyIterator(Bool_t read = kTRUE) = 0;
    // Copy the iterator source, into dest.   dest should contain the location of a memory arena of size fgIteratorSize.
-   // If the collection iterator is of that size or less, the iterator will be constructed in place in this location (new with placement)
-   // Otherwise the iterator will be allocated via a regular new and its address returned by modifying the value of dest.
+   // If the collection iterator is of that size or less, the iterator will be constructed in place in this location
+   // (new with placement.) Otherwise the iterator will be allocated via a regular new and its address returned by 
+   // modifying the value of dest.
    
    typedef void* (*Next_t)(void *iter, const void *end);
    virtual Next_t GetFunctionNext(Bool_t read = kTRUE) = 0;
@@ -194,7 +198,8 @@ to never delete the object.  For example:
 #pragma read sourceClass = "ACache" targetClass = "ACache" version     = "[8]" \
    source      = "Int_t *fArray; Int_t fN;" \
    target      = "fArray" \
-   code        = "{ fArray = new Char_t[onfile.fN]; Char_t* gtc=fArray; Int_t* gti=onfile.fArray; for(Int_t i=0; i&lt;onfile.fN; i++) *(gtc+i) = *(gti+i)+10; }"
+   code        = "{ fArray = new Char_t[onfile.fN]; Char_t* gtc=fArray; Int_t* gti=onfile.fArray; \
+                  for(Int_t i=0; i&lt;onfile.fN; i++) *(gtc+i) = *(gti+i)+10; }"
 #pragma read sourceClass = "ACache" targetClass = "ACache" version     = "[8]" \
    source      = "float fValues[3]" \
    target      = "fValues" \
