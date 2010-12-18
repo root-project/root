@@ -24,6 +24,8 @@
 #include "CINTSourceFile.h"
 #include <iostream>
 
+#include "TROOT.h"
+
 using namespace ROOT::Reflex;
 using namespace ROOT::Cintex;
 using namespace std;
@@ -47,6 +49,9 @@ namespace {
           
          //--CINT class builder
          Type t = Type::ByName("Cintex");
+
+         // Before loading in CINT, let's make sure that CINT (and ROOT) are initialized
+         ROOT::GetROOT();
          ROOT::Cintex::CINTClassBuilder::Get(t).Setup();
       }
       static void Enable(void*, void*, const std::vector<void*>&, void*) {
