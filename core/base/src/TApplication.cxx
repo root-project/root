@@ -862,7 +862,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
          Ssiz_t posSpace = cmd.Index(' ');
          if (posSpace == -1) cmd.Remove(1);
          else cmd.Remove(posSpace);
-         static TString tempbuf;
+         TString tempbuf;
          if (sync) {
             tempbuf.Form(".%s %s%s%s", cmd.Data(), mac, aclicMode.Data(),io.Data());
             retval = gInterpreter->ProcessLineSynch(tempbuf,
@@ -1027,7 +1027,7 @@ again:
       exname += arguments;
       exname += io;
 
-      static TString tempbuf;
+      TString tempbuf;
       if (tempfile) {
          tempbuf.Form(".x %s", exname.Data());
       } else {
