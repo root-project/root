@@ -310,7 +310,7 @@ void G__cppif_genconstructor(FILE *fp,FILE *hfp,int tagnum,int ifn,struct G__ifu
 int G__isprivateconstructor(int tagnum,int iscopy);
 void G__cppif_gendefault(FILE *fp,FILE *hfp,int tagnum,int ifn,struct G__ifunc_table_internal *ifunc,int isconstructor,int iscopyconstructor,int isdestructor,int isassignmentoperator,int isnonpublicnew);
 void G__cppif_genfunc(FILE *fp,FILE *hfp,int tagnum,int ifn,struct G__ifunc_table_internal *ifunc);
-void G__cppif_paratype(FILE *fp,int ifn,struct G__ifunc_table_internal *ifunc,int k);
+int G__cppif_paratype(FILE *fp,int ifn,struct G__ifunc_table_internal *ifunc,int k);
 void G__cpplink_tagtable(FILE *pfp,FILE *hfp);
 #ifdef G__VIRTUALBASE
 int G__iosrdstate(G__value *pios);
