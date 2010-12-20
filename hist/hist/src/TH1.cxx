@@ -2835,12 +2835,15 @@ Int_t TH1::Fill(const char *namex, Double_t w)
    AddBinContent(bin, w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    if (bin == 0 || bin > fXaxis.GetNbins()) return -1;
-   Double_t x = fXaxis.GetBinCenter(bin);
    Double_t z= (w > 0 ? w : -w);
    fTsumw   += z;
    fTsumw2  += z*z;
-   fTsumwx  += z*x;
-   fTsumwx2 += z*x*x;
+   // this make sense if the histogram is not expanding (kCanRebin is not set)
+   if (!TestBit(TH1::kCanRebin)) {
+      Double_t x = fXaxis.GetBinCenter(bin);
+      fTsumwx  += z*x;
+      fTsumwx2 += z*x*x;
+   }
    return bin;
 }
 
@@ -4844,17 +4847,19 @@ Long64_t TH1::Merge(TCollection *li)
    inlist.AddAll(li);
 
    THashList allLabels;
-   THashList* labels=GetXaxis()->GetLabels();
-   Bool_t haveOneLabel=kFALSE;
-   if (labels) {
-      TIter iL(labels);
-      TObjString* lb;
-      while ((lb=(TObjString*)iL())) {
-         haveOneLabel |= (lb && lb->String().Length());
-         if (!allLabels.FindObject(lb))
-            allLabels.Add(lb);
-      }
-   }
+   THashList* labels=GetXaxis()->GetLabels();   
+   //LM is this needed ???? - yoush be enough to do  do: 
+   Bool_t haveOneLabel = (labels != 0);
+   // Bool_t haveOneLabel=kFALSE;
+   // if (labels) {
+   //    TIter iL(labels);
+   //    TObjString* lb;
+   //    while ((lb=(TObjString*)iL())) {
+   //       haveOneLabel |= (lb && lb->String().Length());
+   //       if (!allLabels.FindObject(lb))
+   //          allLabels.Add(lb);
+   //    }
+   // }
 
    TAxis newXAxis;
    Bool_t initialLimitsFound = kFALSE;
@@ -4892,22 +4897,47 @@ Long64_t TH1::Merge(TCollection *li)
       }
       if (allHaveLabels) {
          THashList* hlabels=h->GetXaxis()->GetLabels();
-         Bool_t hasOneLabel=kFALSE;
-         if (hlabels) {
-            TIter iL(hlabels);
-            TObjString* lb;
-            while ((lb=(TObjString*)iL())) {
-               hasOneLabel |= (lb && lb->String().Length());
-               if (!allLabels.FindObject(lb)) {
-                  allLabels.Add(lb);
-                  same = kFALSE;
-               }
-            }
-         }
-         allHaveLabels&=(labels && hasOneLabel);
-         if (!allHaveLabels)
+         // LM: as before we can skipp all this
+         // In case of labels we don't care of the same
+         // Bool_t hasOneLabel=kFALSE;
+         // if (hlabels) {
+         //    TIter iL(hlabels);
+         //    TObjString* lb;
+         //    while ((lb=(TObjString*)iL())) {
+         //       hasOneLabel |= (lb && lb->String().Length());
+         //       if (!allLabels.FindObject(lb)) {
+         //          allLabels.Add(lb);
+         //          same = kFALSE;
+         //       }
+         //    }
+         // }
+         //allHaveLabels&=(labels && hasOneLabel);
+         // do here to print message only one time 
+         if (allHaveLabels && hlabels == 0) {
             Warning("Merge","Not all histograms have labels. I will ignore labels,"
             " falling back to bin numbering mode.");
+         } 
+         allHaveLabels &= (labels && hlabels);
+         // I could add a check if histogram contains bins without a label 
+         // and with non-zero bin content
+         // Do we want to support this ???
+         // only in case the kCanRebin bit is not set
+         if (allHaveLabels && !h->TestBit(TH1::kCanRebin) ) { 
+            // count number of bins with non-null content
+            Int_t non_zero_bins = 0; 
+            Int_t nbins = h->GetXaxis()->GetNbins(); 
+            if (nbins > hlabels->GetEntries() ) {  
+               for (Int_t i = 1; i <= nbins; i++) {
+                  if (h->GetBinContent(i) != 0 || (fSumw2.fN && h->GetBinError(i) != 0) ) { 
+                     non_zero_bins++;
+                  } 
+               }
+               if (non_zero_bins > hlabels->GetEntries() ) { 
+                  Warning("Merge","Histogram %s contains non-empty bins without labels - falling back to bin numbering mode",h->GetName() );
+                  allHaveLabels = kFALSE;
+               } 
+            }
+         }         
       }
    }
    next.Reset();
@@ -4916,7 +4946,7 @@ Long64_t TH1::Merge(TCollection *li)
    if (!same && initialLimitsFound)
       SetBins(newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax());
 
-   if (!allHaveLimits) {
+   if (!allHaveLimits && !allHaveLabels) {
       // fill this histogram with all the data from buffers of histograms without limits
       while (TH1* h = (TH1*)next()) {
          if (h->GetXaxis()->GetXmin() >= h->GetXaxis()->GetXmax() && h->fBuffer) {
@@ -4938,46 +4968,82 @@ Long64_t TH1::Merge(TCollection *li)
    for (Int_t i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
    GetStats(totstats);
    Double_t nentries = GetEntries();
-   Int_t binx, ix, nx;
-   Double_t cu;
    Bool_t canRebin=TestBit(kCanRebin);
-   if (!allHaveLabels) ResetBit(kCanRebin); // reset, otherwise setting the under/overflow will rebin
+   // reset, otherwise setting the under/overflow will rebin and make a mess
+   if (!allHaveLabels) ResetBit(kCanRebin); 
    while (TH1* h=(TH1*)next()) {
       // process only if the histogram has limits; otherwise it was processed before
-      if (h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax()) {
+      // in the case of an existing buffer (see if statement just before) 
+      if (allHaveLabels || (h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax()) ) {
          // import statistics
          h->GetStats(stats);
          for (Int_t i=0;i<kNstat;i++)
             totstats[i] += stats[i];
          nentries += h->GetEntries();
 
-         nx = h->GetXaxis()->GetNbins();
-         for (binx = 0; binx <= nx + 1; binx++) {
-            cu = h->GetBinContent(binx);
-            if (!allHaveLabels || binx==0 || binx== nx+1) {
-               if ((!same)    && (binx==0 || binx== nx+1)) {
-                  if (cu != 0) {
+         
+         Int_t nx = h->GetXaxis()->GetNbins();
+         // loop on bins of the histogram and do the merge 
+         for (Int_t binx = 0; binx <= nx + 1; binx++) {
+            Double_t cu = h->GetBinContent(binx);
+            Double_t error1 = 0; 
+            Int_t ix = -1; 
+            if (fSumw2.fN) error1= h->GetBinError(binx);
+            // do only for bins with non null bin content or non-null errors (if Sumw2)
+            if (TMath::Abs(cu) > 0 || (fSumw2.fN && error1 > 0 ) ) {             
+               // case  of overflow bins 
+               // they do not make sense also in the case of labels
+               if (!allHaveLabels) { 
+                  // case of bins without labels 
+                  if (!same && ( binx==0 || binx== nx+1)) {
                      Error("Merge", "Cannot merge histograms - the histograms have"
                         " different limits and undeflows/overflows are present."
                         " The initial histogram is now broken!");
                      return -1;
                   }
-               }
-               ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
-            } else {
-               const char* label=h->GetXaxis()->GetBinLabel(binx);
-               if (!label || label[0]==0) {
+                  // NOTE: in the case of one of the histogram  as labels - it is treated as 
+                  // an error and it has been flagged before 
+                  // since calling FindBin(x) for histo with labels does not make sense
+                  // and the result is unpredictable 
                   ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
                } else {
-                  ix = fXaxis.FindBin(label);
-                  if (ix==-1) ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
+                  // here only in the case of bins with labels 
+                  const char* label=h->GetXaxis()->GetBinLabel(binx);
+                  // do we need to support case when there are bins with labels and bins without them ??
+                  // NO -then return an error
+                  if (label == 0 ) { 
+                     Fatal("Merge","Histogram %s with labels has NULL label pointer for bin %d",
+                           h->GetName(),binx );
+                     return -1;
+                  }
+                  if (label[0] == 0 ) { // case label is "" , i.e. is not set 
+                     // exclude underflow which could contain the non-existing labels
+                     // thsi we could merge in all underflow
+                     if ( binx > 0 && binx <= nx) {                         
+                        Error("Merge","Cannot merge ! Label histogram %s contains a bin %d which has not a label and has non-zero content ",h->GetName(),binx );
+                        return -1;
+                     }
+                     else
+                        // case of underflow/overflow
+                        ix = binx; 
+                  }
+                  else { 
+                     // if bin does not exists FindBin will add it automatically 
+                     // by calling LabelsInflate() if the bit is set
+                     // otherwise it will return zero and bin will be merged in underflow/overflow
+                     // Do we want to keep this case ??
+                     ix = fXaxis.FindBin(label);
+                  }
+                  // ix cannot be -1 . Can be 0 in case label is not found and bit is not set 
+                  if (ix <0) {
+                     Fatal("Merge","Error return from TAxis::FindBin for label %s",label);
+                     return -1;
+                  }
                }
-            }
-            if (ix >= 0) {
-               AddBinContent(ix,cu);
-               if (fSumw2.fN) {
-                  Double_t error1 = h->GetBinError(binx);
-                  fSumw2.fArray[ix] += error1*error1;
+               if (ix >= 0) {               
+                  // MERGE here the bin contents
+                  AddBinContent(ix,cu);               
+                  if (fSumw2.fN)  fSumw2.fArray[ix] += error1*error1;                  
                }
             }
          }
@@ -6613,7 +6679,15 @@ void TH1::GetStats(Double_t *stats) const
    Int_t bin, binx;
    Double_t w,err;
    Double_t x;
-   if ((fTsumw == 0 && fEntries > 0) || fXaxis.TestBit(TAxis::kAxisRange)) {
+   // case of labels with rebin of axis set 
+   // statistics in x does not make any sense - set to zero 
+   if ((const_cast<TAxis&>(fXaxis)).GetLabels() && TestBit(TH1::kCanRebin) ) { 
+      stats[0] = fTsumw;
+      stats[1] = fTsumw2;
+      stats[2] = 0; 
+      stats[3] = 0;
+   }
+   else if ((fTsumw == 0 && fEntries > 0) || fXaxis.TestBit(TAxis::kAxisRange)) {
       for (bin=0;bin<4;bin++) stats[bin] = 0;
 
       Int_t firstBinX = fXaxis.GetFirst();

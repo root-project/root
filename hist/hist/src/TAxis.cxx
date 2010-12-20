@@ -273,6 +273,7 @@ Int_t TAxis::FindBin(Double_t x)
    // Find bin number corresponding to abscissa x
    //
    // If x is underflow or overflow, attempt to rebin histogram
+   // if the TH1::kCanRebin bit is set otherwise return 0 or fNbins+1
 
    Int_t bin;
    if (x < fXmin) {              //*-* underflow
@@ -302,16 +303,25 @@ Int_t TAxis::FindBin(Double_t x)
 Int_t TAxis::FindBin(const char *label)
 {
    // Find bin number with label.
-   // If label is not in the list of labels, add it.
-   // If the number of labels exceeds the number of bins, double the number
-   // of bins via TH1::LabelsInflate (if the histogram can be rebinned).
+   // If the List of labels does not exist create it
+   // If label is not in the list of labels do the following depending on the 
+   // bit TH1::kCanRebin of the parent histogram. 
+   //   - if the bit is set add the new label and if the number of labels exceeds 
+   //      the number of bins, double the number of bins via TH1::LabelsInflate 
+   //   - if the bit is not set return 0 (underflow bin) 
+   //
+   // -1 is returned only when the Axis has no parent histogram
 
    //create list of labels if it does not exist yet
    if (!fLabels) {
       if (!fParent) return -1;
       fLabels = new THashList(1,1);
       fParent->SetBit(TH1::kCanRebin);
-      if (fXmax <= fXmin) fXmax = fXmin+1;
+      if (fXmax <= fXmin) { 
+         //L.M. Dec 2010 in case of no min and max specified use 0 ->NBINS 
+         fXmin = 0; 
+         fXmax = fNbins;
+      }
    }
 
    // search for label in the existing list
@@ -319,7 +329,12 @@ Int_t TAxis::FindBin(const char *label)
    if (obj) return (Int_t)obj->GetUniqueID();
 
    //Not yet in the list. Can we rebin the histogram ?
-   if (!fParent->TestBit(TH1::kCanRebin)) return -1;
+   // if we cannot re-bin put label in the underflow bins
+   if (!fParent->TestBit(TH1::kCanRebin)) { 
+      if (gDebug>0) 
+         Info("FindBin","Label %s is not in the list and the axis cannot be rebinned - the entry will be added in the underflow bin",label);
+      return 0;
+   }
 
    Int_t n = fLabels->GetEntries();
    TH1 *h = (TH1*)fParent;
@@ -738,8 +753,13 @@ void TAxis::SetDecimals(Bool_t dot)
 void TAxis::SetBinLabel(Int_t bin, const char *label)
 {
    // Set label for bin
+   // In this case we create a label list in the axis but we do not 
+   // set the kCanRebin bit. 
+   // New labels will not be added with the Fill method but will end-up in the 
+   // underflow bin. See documentation of TAxis::FindBin(const char*)
 
    if (!fLabels) fLabels = new THashList(fNbins,3);
+
    if (bin <= 0 || bin > fNbins) {
       Error("SetBinLabel","Illegal bin number: %d",bin);
       return;
