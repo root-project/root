@@ -343,6 +343,8 @@ RINTLIBS     := $(LPATH)/libRint.lib
 endif
 
 ROOTALIB     := $(LPATH)/libRoot.a
+ROOTA        := bin/roota
+PROOFSERVA   := bin/proofserva
 
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
 BOOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB) $(MATHCORELIB)
@@ -452,12 +454,15 @@ endif
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
    MAKEDIR      = +@[ -d $(dir $@) ] || mkdir -p $(dir $@)
    RUNTIMEDIRS := etc macros icons fonts README tutorials test man
-   POSTBIN     += $(RUNTIMEDIRS)
+   POSTBIN     += runtimedirs
 endif
 
 ifneq ($(HOST),)
    BUILDTOOLSDIR := buildtools
-   POSTBIN       += static
+endif
+
+ifeq ($(PLATFORM),ios)
+   POSTBIN       += staticlib
 endif
 
 MAKEDEP        = $(RMKDEP)
@@ -471,6 +476,8 @@ MAKECHANGELOG := $(ROOT_SRCDIR)/build/unix/makechangelog.sh
 MAKEHTML      := $(ROOT_SRCDIR)/build/unix/makehtml.sh
 MAKELOGHTML   := $(ROOT_SRCDIR)/build/unix/makeloghtml.sh
 MAKERELNOTES  := $(ROOT_SRCDIR)/build/unix/makereleasenotes.sh
+STATICOBJLIST := $(ROOT_SRCDIR)/build/unix/staticobjectlist.sh
+MAKESTATICLIB := $(ROOT_SRCDIR)/build/unix/makestaticlib.sh
 MAKESTATIC    := $(ROOT_SRCDIR)/build/unix/makestatic.sh
 RECONFIGURE   := $(ROOT_SRCDIR)/build/unix/reconfigure.sh
 ifeq ($(PLATFORM),win32)
@@ -642,8 +649,8 @@ endif
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean maintainer-clean compiledata \
                 version html changelog install uninstall showbuild \
-                releasenotes static map debian redhat skip postbin \
-                showit help
+                releasenotes staticlib static map debian redhat skip postbin \
+                showit help runtimedirs
 
 ifneq ($(findstring map, $(MAKECMDGOALS)),)
 .NOTPARALLEL:
@@ -970,7 +977,7 @@ endif
 	-@(mv -f tutorials/gallery.root- tutorials/gallery.root >/dev/null 2>&1;true)
 	-@(mv -f tutorials/mlp/mlpHiggs.root- tutorials/mlp/mlpHiggs.root >/dev/null 2>&1;true)
 	-@(mv -f tutorials/quadp/stock.root- tutorials/quadp/stock.root >/dev/null 2>&1;true)
-	@rm -f bin/roota bin/proofserva lib/libRoot.a
+	@rm -f $(ROOTA) $(PROOFSERVA) $(ROOTALIB)
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/*.so*
 	@rm -f $(CINTDIR)/stl/*.dll $(CINTDIR)/stl/*.so*
 	@rm -f $(CINTDIR)/include/sys/*.dll $(CINTDIR)/include/sys/*.so.*
@@ -996,11 +1003,16 @@ maintainer-clean:: distclean
 version: $(CINTTMP)
 	@$(MAKEVERSION)
 
-static: $(ROOTALIB)
+staticlib: $(ROOTALIB)
 
-$(ROOTALIB): $(ALLLIBS) $(MAKESTATIC)
+static: $(ROOTA)
+
+$(ROOTA) $(PROOFSERVA): $(ROOTALIB) $(MAKESTATIC) $(STATICOBJLIST)
 	@$(MAKESTATIC) $(PLATFORM) "$(CXX)" "$(CC)" "$(LD)" "$(LDFLAGS)" \
-	   "$(XLIBS)" "$(SYSLIBS)" "$(STATICEXTRALIBS)"
+	   "$(XLIBS)" "$(SYSLIBS)" "$(STATICEXTRALIBS)" $(STATICOBJLIST)
+
+$(ROOTALIB): $(ALLLIBS) $(MAKESTATICLIB) $(STATICOBJLIST)
+	@$(MAKESTATICLIB) $(STATICOBJLIST)
 
 changelog:
 	@$(MAKECHANGELOG)
@@ -1221,7 +1233,7 @@ uninstall:
 
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 # install directrories needed at run-time
-$(RUNTIMEDIRS):
+runtimedirs:
 	@echo "Rsync'ing $(ROOT_SRCDIR)/etc..."; \
 	$(RSYNC) \
 		--exclude '.svn' \

@@ -71,9 +71,13 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(call stripsrc,$(UTILSDIRS)%_tmp.cxx): $(UTILSDIRS)%.cxx
+$(call stripsrc,$(UTILSDIRS)/%_tmp.cxx): $(UTILSDIRS)/%.cxx
 	$(MAKEDIR)
 	cp $< $@
+
+$(call stripsrc,$(UTILSDIRS)/rootcint_tmp.o): $(call stripsrc,$(UTILSDIRS)/rootcint_tmp.cxx)
+
+$(call stripsrc,$(UTILSDIRS)/RStl_tmp.o): $(call stripsrc,$(UTILSDIRS)/RStl_tmp.cxx)
 
 $(ROOTCINTTMPO):  CXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD -I$(UTILSDIRS)
 
