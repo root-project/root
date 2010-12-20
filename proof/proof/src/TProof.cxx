@@ -659,6 +659,7 @@ TProof::~TProof()
 
    // For those interested in our destruction ...
    Emit("~TProof()");
+   Emit("CloseWindow()");
 }
 
 //______________________________________________________________________________
@@ -6493,17 +6494,31 @@ Int_t TProof::DisablePackages()
    // Nothing more to do if we are a Lite-session
    if (IsLite()) return 0;
 
-   TMessage mess(kPROOF_CACHE);
-   mess << Int_t(kDisablePackages);
-   Broadcast(mess, kUnique);
+   Int_t st = -1;
+   Bool_t done = kFALSE;
+   if (fManager) {
+      // Try to do it via XROOTD (new way)
+      if (fManager->Rm("~/packages/*", "-rf", "all") != -1) {
+         done = kTRUE;
+         st = 0;
+      }
+   }
+   if (!done) {
 
-   TMessage mess2(kPROOF_CACHE);
-   mess2 << Int_t(kDisableSubPackages);
-   Broadcast(mess2, fNonUniqueMasters);
+      TMessage mess(kPROOF_CACHE);
+      mess << Int_t(kDisablePackages);
+      Broadcast(mess, kUnique);
 
-   Collect(kAllUnique);
+      TMessage mess2(kPROOF_CACHE);
+      mess2 << Int_t(kDisableSubPackages);
+      Broadcast(mess2, fNonUniqueMasters);
 
-   return fStatus;
+      Collect(kAllUnique);
+      st = fStatus;
+   }
+
+   // Done
+   return st;
 }
 
 //______________________________________________________________________________
