@@ -2937,6 +2937,8 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
                            // Add input objects (do not override remote settings, if any)
                            TObject *xo = 0;
                            TIter nxin(fPlayer->GetInputList());
+                           // Servers prior to 5.28/00 do not create the input list in the TQueryResult
+                           if (!pq->GetInputList()) pq->SetInputList(new TList());
                            while ((xo = nxin()))
                               if (!pq->GetInputList()->FindObject(xo->GetName())) pq->AddInput(xo->Clone());                             
                            // If the last object, notify the GUI that the result arrived
