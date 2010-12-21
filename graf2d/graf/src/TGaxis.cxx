@@ -1642,7 +1642,7 @@ L110:
 //*-*-              Log axis
 
    if (optionLog && ndiv) {
-      UInt_t xi1=0,xi2,wi,yi1=0,yi2,hi;
+      UInt_t xi1=0,xi2,wi,yi1=0,yi2,hi,xl,xh;
       Bool_t firstintlab = kTRUE, overlap = kFALSE;
       if ((wmin == wmax) || (ndiv == 0))  {
          Error(where, "wmin (%f) == wmax (%f), or ndiv == 0", wmin, wmax);
@@ -1852,7 +1852,9 @@ L160:
                   } else {
                      xi2 = gPad->XtoAbsPixel(u);
                      yi2 = gPad->YtoAbsPixel(v);
-                     if ((x0 == x1 && yi1-hi <= yi2) || (y0 == y1 && xi1+wi >= xi2)){
+                     xl = TMath::Min(xi1,xi2);
+                     xh = TMath::Max(xi1,xi2);
+                     if ((x0 == x1 && yi1-hi <= yi2) || (y0 == y1 && xl+wi >= xh)){
                         overlap = kTRUE;
                      } else {
                         xi1 = xi2;
