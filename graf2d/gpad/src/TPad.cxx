@@ -1677,9 +1677,6 @@ again:
 
    case kButton1Down:
 
-#ifdef WIN32
-      Pop(); //this should be for cases where mouse has only two buttons
-#endif
       GetPainter()->SetLineColor(-1);
       TAttLine::Modify();  //Change line attributes only if necessary
       if (GetFillColor())
