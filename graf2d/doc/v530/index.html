@@ -1,4 +1,17 @@
 <br/> 
 <hr/> 
 <a name="graf2d"></a> 
-<h3>xxx</h3>
+<h3>TGaxis</h3>
+<ul>
+<li> The following macro produced two different labelling. Label "3" was missing
+     on the axis "b".
+     <pre>
+     {
+        TGaxis *a = new TGaxis(0.2,0.5,0.8,0.5,0.2,3.5,510,"G");
+        a->SetMoreLogLabels(1); a->Draw();
+        TGaxis *b = new TGaxis(0.8,0.7,0.2,0.7,0.2,3.5,510,"G");
+        b->SetMoreLogLabels(1); b->Draw();
+     }
+     </pre>
+</li>
+</ul>
