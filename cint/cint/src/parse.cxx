@@ -4735,8 +4735,9 @@ void G__display_tempobject(const char* action)
       if (ptempbuf->obj.type) {
          G__fprinterr(
               G__serr
-            , "%d:(%s)0x%lx "
+            , "%d:0x%lx:(%s)0x%lx "
             , ptempbuf->level
+            , (long) ptempbuf
             , G__type2string(
                    ptempbuf->obj.type
                  , ptempbuf->obj.tagnum
@@ -4750,8 +4751,9 @@ void G__display_tempobject(const char* action)
       else {
          G__fprinterr(
               G__serr
-            , "%d:(%s)0x%lx "
+            , "%d:0x%lx:(%s)0x%lx "
             , ptempbuf->level
+            , (long) ptempbuf
             , "NULL"
             , 0L
          );
@@ -8055,12 +8057,20 @@ void G__free_tempobject()
    struct G__tempobject_list* cur = G__p_tempbuf;
    struct G__tempobject_list* previous = 0;
    while (cur->prev) {
+      //fflush(stdout);
+      //fprintf(stderr, "\nG__free_tempobject: previous: "
+      //   "0x%lx\n", (long) previous);
+      //fprintf(stderr,   "G__free_tempobject:      cur: "
+      //   "0x%lx\n", (long) cur);
       if (cur->level < G__templevel) {
          // Keep this one.
          previous = cur;
          cur = cur->prev;
          continue;
       }
+      //
+      //  We found a temp object to delete.
+      //
 #ifdef G__ASM
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
@@ -8081,7 +8091,28 @@ void G__free_tempobject()
 #endif // G__ASM_DBG
 #endif // G__ASM
       //
+      //  Remove this node from the list before calling
+      //  the destructor, it may recursively call us again!
+      //
+      // If we are about to release head of the chain, update it.
+      if (G__p_tempbuf == cur) {
+         G__p_tempbuf = cur->prev;
+         //fflush(stdout);
+         //fprintf(stderr, "\nG__free_tempobject: new "
+         //   "G__p_tempbuf: 0x%lx\n", (long) G__p_tempbuf);
+      }
+      // If we are removing from the middle of the list,
+      // update the previous node's pointer.
+      if (previous) {
+         previous->prev = cur->prev;
+      }
+      //
       //  Call the destructor.
+      //
+      //  Note: This may result in this routine getting
+      //        re-entered.  That is why we removed the
+      //        node we are working on before making this
+      //        call!
       //
 #ifdef G__ASM
       if (G__asm_noverflow) {
@@ -8181,32 +8212,33 @@ void G__free_tempobject()
          }
 #endif // G__ASM_DBG
 #endif // G__ASM
+         //fflush(stdout);
+         //fprintf(stderr, "\nG__free_tempobject: Freeing "
+         //   "object at: 0x%lx\n", (long) cur->obj.obj.i);
          free((void*) cur->obj.obj.i);
          cur->obj.obj.i = 0;
       }
       //
-      //  If this is not the last node, then free it.
+      //  Now free the list node.
       //
-      if (cur->prev) {
-         // If we are about to release head of the chain, update it.
-         if (G__p_tempbuf == cur) {
-            G__p_tempbuf = cur->prev;
-         }
-         // If we are removing from the middle of the list,
-         // update the previous node's pointer.
-         if (previous) {
-            previous->prev = cur->prev;
-         }
-         struct G__tempobject_list* store_prev = cur->prev;
-         free((void*) cur);
-         cur = store_prev;
-      }
+      //fflush(stdout);
+      //fprintf(stderr, "\nG__free_tempobject: Freeing "
+      //   "G__tempobject_list*: 0x%lx\n", (long) cur);
+      free((void*) cur);
+      //
+      //  Restart the scan from the beginning, the temp list
+      //  may have been modified by the destructor call and
+      //  we have no other way to recover our iterator.
+      //
+      cur = G__p_tempbuf;
+      previous = 0;
    }
 #ifdef G__ASM
 #ifdef G__ASM_DBG
    if (G__asm_dbg) {
       G__FastAllocString msg(G__ONELINE);
-      msg.Format("After G__free_tempobject: cur_level: %d ", G__templevel);
+      msg.Format("After G__free_tempobject: cur_level: %d  "
+         "G__p_tempbuf: 0x%lx", G__templevel, (long) G__p_tempbuf);
       G__display_tempobject(msg());
    }
 #endif // G__ASM_DBG
