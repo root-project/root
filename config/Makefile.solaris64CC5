@@ -43,7 +43,6 @@ CINTCXXFLAGS  = -m64 -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
                 $(CCSTL) $(CCPTR) $(MTOPT)
 CINTCFLAGS    = -m64 -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL $(EXTRA_CFLAGS) \
                 -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(MTOPT)
-DICTFLAGS     = -D__asm__=asm -D__volatile__=
 CPPPREP       = /usr/ccs/lib/cpp -E -C -B -D__sun -D__sparc -D__unix
 
 # Linker:

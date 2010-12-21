@@ -127,7 +127,7 @@ endif
 		macosx64:*)      xopt="--ccflavour=macos64";; \
 		macosxicc:*)     xopt="--ccflavour=icc";; \
 		macosx*:*)       xopt="--ccflavour=macos";; \
-		solaris64*:*:i86pc:*) xopt="--ccflavour=sunCCamd --use-xrd-strlcpy";; \
+		solaris64*:*:i86pc:*) xopt="--ccflavour=sunCCamd64 --use-xrd-strlcpy";; \
                 solaris*:5.11:i86pc:*) xopt="--ccflavour=sunCCi86pc --use-xrd-strlcpy";; \
                 solaris*:5.1*:i86pc:*) xopt="--use-xrd-strlcpy";; \
                 solaris*:*:i86pc:*) xopt="--ccflavour=sunCCi86pc --use-xrd-strlcpy";; \

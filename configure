@@ -1084,13 +1084,11 @@ guess_architecture() {
           fi
        fi
     fi
-    # CC in 64-bit fails on the asm in the dictionaries, disable
-    # automatic detection for now (rdm)
-    #if [ "$arch" = "solarisCC5" -a "$chip" = "i86pc" ]; then
-    #   if `isainfo -b | grep "64" > /dev/null  2>&1` ; then
-    #      arch=solaris64CC5
-    #   fi
-    #fi
+    if [ "$arch" = "solarisCC5" -a "$chip" = "i86pc" ]; then
+       if `isainfo -b | grep "64" > /dev/null  2>&1` ; then
+          arch=solaris64CC5
+       fi
+    fi
     logmsg "$arch"
 }
 

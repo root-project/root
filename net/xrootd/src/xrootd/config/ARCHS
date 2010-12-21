@@ -76,3 +76,4 @@ sunx86_510      sunCCamd510 all  for Solaris 5.10 on x86-64 platform
 sunx86_510      sunCCamd    all  for Solaris 5.10 on x86-64 platform CC >= 5.10
 sunx86_510      sunCCamd64  all  for Solaris 5.10 on x86-64 platform CC <  5.10
 sunx86_511      sunCCi86pc  all  for Solaris 5.x > 5.10 on x86 platform
+sunx86_511      sunCCamd64  all  for Solaris 5.x > 5.10 on x86-64 platform

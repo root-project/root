@@ -543,39 +543,39 @@ INCLUDEFILES :=
 # special rules (need to be defined before generic ones)
 cint/cint/lib/dll_stl/G__%.o: cint/cint/lib/dll_stl/G__%.cxx
 	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
-	   $(CXXFLAGS) $(DICTFLAGS) -D__cplusplus -I$(CINTDIRL)/prec_stl \
+	   $(CXXFLAGS) -D__cplusplus -I$(CINTDIRL)/prec_stl \
 	   -I$(CINTDIRSTL) -I$(CINTDIR)/inc -- $<
-	$(CXX) $(NOOPT) $(CXXFLAGS) $(DICTFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
+	$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
 
 cint/cint/lib/dll_stl/G__c_%.o: cint/cint/lib/dll_stl/G__c_%.c
 	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
-	   $(CFLAGS) $(DICTFLAGS) -I$(CINTDIRL)/prec_stl \
+	   $(CFLAGS) -I$(CINTDIRL)/prec_stl \
 	   -I$(CINTDIRSTL) -I$(CINTDIR)/inc -- $<
-	$(CC) $(NOOPT) $(CFLAGS) $(DICTFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
+	$(CC) $(NOOPT) $(CFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
 
 cint/cint/lib/G__%.o: cint/cint/lib/G__%.cxx
 	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
-	   $(CXXFLAGS) $(DICTFLAGS) -D__cplusplus -I$(CINTDIRL)/prec_stl \
+	   $(CXXFLAGS) -D__cplusplus -I$(CINTDIRL)/prec_stl \
 	   -I$(CINTDIRSTL) -I$(CINTDIR)/inc -- $<
-	$(CXX) $(NOOPT) $(CXXFLAGS) $(DICTFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
+	$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
 
 cint/cint/lib/G__c_%.o: cint/cint/lib/G__c_%.c
 	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
-	   $(CFLAGS) $(DICTFLAGS) -I$(CINTDIRL)/prec_stl \
+	   $(CFLAGS) -I$(CINTDIRL)/prec_stl \
 	   -I$(CINTDIRSTL) -I$(CINTDIR)/inc -- $<
-	$(CC) $(NOOPT) $(CFLAGS) $(DICTFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
+	$(CC) $(NOOPT) $(CFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
 
 G__%.o: G__%.cxx
 	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
-	   $(CXXFLAGS) $(DICTFLAGS) -D__cplusplus -I$(CINTDIRL)/prec_stl \
+	   $(CXXFLAGS) -D__cplusplus -I$(CINTDIRL)/prec_stl \
 	   -I$(CINTDIRSTL) -I$(CINTDIR)/inc -- $<
-	$(CXX) $(NOOPT) $(CXXFLAGS) $(DICTFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
+	$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
 
 G__c_%.o: G__c_%.c
 	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
-	   $(CFLAGS) $(DICTFLAGS) -I$(CINTDIRL)/prec_stl \
+	   $(CFLAGS) -I$(CINTDIRL)/prec_stl \
 	   -I$(CINTDIRSTL) -I$(CINTDIR)/inc -- $<
-	$(CC) $(NOOPT) $(CFLAGS) $(DICTFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
+	$(CC) $(NOOPT) $(CFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
 
 cint/cint/%.o: cint/cint/%.cxx
 	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCXXFLAGS) -I. -D__cplusplus -- $<
