@@ -6168,9 +6168,15 @@ GLboolean glewGetExtension (const char* name)
 
 /* ------------------------------------------------------------------------- */
 
-#ifndef GLEW_MX
-static
-#endif
+/*
+ * MT 2010-12-22: Always export this symbol so that AGL can be used on mac
+ * by calling this function instead of glewInit() wrapper -- which would also
+ * invoke GLX init -- and fail for pure AGL programs.
+
+ * #ifndef GLEW_MX
+ * static
+ * #endif
+*/
 GLenum glewContextInit (GLEW_CONTEXT_ARG_DEF_LIST)
 {
   const GLubyte* s;
