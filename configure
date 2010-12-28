@@ -2066,6 +2066,7 @@ fi
 #
 if test ! "x$enable_x11" = "xno" ; then
     check_library "libX11" "yes" "$x11libdir" \
+        ${finkdir:+$finkdir/lib} \
         /usr/lib /usr/X11R6/lib /usr/lib/X11 /usr/openwin/lib \
         /usr/local/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
         /usr/X11/lib /usr/lib/X11R5
@@ -2078,6 +2079,7 @@ if test ! "x$enable_x11" = "xno" ; then
     fi
 
     check_header "X11/Xlib.h" "" \
+        ${finkdir:+$finkdir/include} \
         /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
         /usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
         /usr/X11/include /usr/include/X11R5
@@ -2089,6 +2091,7 @@ if test ! "x$enable_x11" = "xno" ; then
     fi
 
     check_header "X11/xpm.h" "" \
+        ${finkdir:+$finkdir/include} \
         /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
         /usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
         /usr/X11/include /usr/include/X11R5
@@ -2100,6 +2103,7 @@ if test ! "x$enable_x11" = "xno" ; then
     fi
 
     check_header "X11/Xft/Xft.h" "" \
+        ${finkdir:+$finkdir/include} \
         /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
         /usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
         /usr/X11/include /usr/include/X11R5
@@ -2111,6 +2115,7 @@ if test ! "x$enable_x11" = "xno" ; then
     fi
 
     check_header "X11/extensions/shape.h" "" \
+        ${finkdir:+$finkdir/include} \
         /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
         /usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
         /usr/X11/include /usr/include/X11R5
@@ -2122,7 +2127,9 @@ if test ! "x$enable_x11" = "xno" ; then
     fi
 
     check_library "libXpm" "$enable_shared" "$xpmlibdir" \
-        $XPM $XPM/lib /usr/local/lib /usr/lib /usr/lib/X11 \
+        $XPM ${XPM:+$XPM/lib} \
+        ${finkdir:+$finkdir/lib} \
+        /usr/local/lib /usr/lib /usr/lib/X11 \
         /usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
         /usr/X11/lib
     xpmlib=$found_lib
@@ -2135,6 +2142,7 @@ if test ! "x$enable_x11" = "xno" ; then
     fi
 
     check_library "libXft" "$enable_shared" "$xftlibdir" \
+        ${finkdir:+$finkdir/lib} \
         /usr/local/lib /usr/lib /usr/lib/X11 \
         /usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
         /usr/X11/lib
@@ -2146,6 +2154,7 @@ if test ! "x$enable_x11" = "xno" ; then
     fi
 
     check_library "libXext" "$enable_shared" "$xextlibdir" \
+        ${finkdir:+$finkdir/lib} \
         /usr/local/lib /usr/lib /usr/lib/X11 \
         /usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
         /usr/X11/lib
@@ -2252,7 +2261,8 @@ if test "x$enable_thread" = "xyes" && \
    test ! "x$platform" = "xwin32"  && \
    test "x$threadlib" = "x" ; then
     check_library "libpthread" "$enable_shared" "$threadlibdir" \
-        $THREAD $THREAD/lib /usr/lib /usr/local/lib /usr/lib/X11 \
+        $THREAD ${THREAD:+$THREAD/lib} \
+        /usr/lib /usr/local/lib /usr/lib/X11 \
         /usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
         /usr/X11/lib /usr/shlib
     threadlib=$found_lib
@@ -2342,7 +2352,9 @@ result "$enable_builtin_pcre"
 ### echo %%% Use included ZLib or use systems
 #
 if test "x$enable_builtin_zlib" = "xno" ; then
-    check_header "zlib.h" ""  $ZLIB $ZLIB/include \
+    check_header "zlib.h" "" \
+        $ZLIB ${ZLIB:+$ZLIB/include} \
+        ${finkdir:+$finkdir/include} \
         /usr/local/include /usr/include/zlib /usr/local/include/zlib \
         /opt/zlib/include /usr/include
     if test "x$found_dir" = "x" ; then
@@ -2353,7 +2365,8 @@ if test "x$enable_builtin_zlib" = "xno" ; then
     fi
 
     check_library "libz" "$enable_shared" "" \
-        $ZLIB $ZLIB/lib /usr/local/zlib/lib /usr/local/lib \
+        $ZLIB ${ZLIB:+$ZLIB/lib} \
+        /usr/local/zlib/lib /usr/local/lib \
         /usr/lib/zlib /usr/local/lib/zlib /usr/zlib/lib /usr/lib \
         /usr/zlib /usr/local/zlib /opt/zlib /opt/zlib/lib
     if test "x$found_lib" = "x" ; then
@@ -2381,6 +2394,7 @@ result "$enable_builtin_zlib"
 if test ! "x$enable_editline" = "xno" ; then
     lookforcurseslib="libncurses"
     check_header "ncurses.h" "$cursesincdir" \
+        ${finkdir:+$finkdir/include} \
         /usr/include/ncurses /usr/local/include/ncurses \
         /usr/include /usr/local/include
     cursesincdir=$found_dir
@@ -2388,6 +2402,7 @@ if test ! "x$enable_editline" = "xno" ; then
     if test "x$cursesincdir" = "x"; then
         lookforcurseslib="libcurses"
         check_header "curses.h" "$cursesincdir" \
+            ${finkdir:+$finkdir/include} \
             /usr/include/curses /usr/local/include/curses \
             /usr/include /usr/local/include
         cursesincdir=$found_dir
@@ -2414,7 +2429,8 @@ check_explicit "$enable_editline" "$enable_editline_explicit" \
 #
 if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
     # Check for OpenGL compatible include and library
-    openglincdirs="$OPENGL $OPENGL/include \
+    openglincdirs="$OPENGL ${OPENGL:+$OPENGL/include} \
+        ${finkdir:+$finkdir/include} \
         /usr/include /usr/include/X11 /usr/X11/include \
         /usr/X11R6/include /usr/local/include/X11 \
         /usr/local/X11R6/include /usr/local/include \
@@ -2425,7 +2441,9 @@ if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
     openglinc=$found_hdr
     openglincdir=$found_dir
 
-    opengllibdirs="$OPENGL $OPENGL/lib /usr/lib /usr/local/lib /usr/lib/X11 \
+    opengllibdirs="$OPENGL ${OPENGL:+$OPENGL/lib} \
+        ${finkdir:+$finkdir/lib} \
+        /usr/lib /usr/local/lib /usr/lib/X11 \
         /usr/X11R6/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
         /usr/X11/lib /usr/lib/Mesa /usr/local/lib/Mesa /usr/Mesa/lib \
         /usr/local/Mesa/lib /usr/Mesa /usr/local/Mesa /opt/Mesa \
@@ -2613,11 +2631,13 @@ if test ! "x$enable_mysql" = "xno"; then
        result "not found"
        # fall back in case mysql_config is not found
        check_header "mysql.h" "$mysqlincdir" \
-           $MYSQL $MYSQL/include $MYSQL/include/mysql /usr/local/include \
+           $MYSQL ${MYSQL:+$MYSQL/include} \
+           ${MYSQL:+$MYSQL/include/mysql} \
+           ${finkdir:+$finkdir/include/mysql} \
+           /usr/local/include \
            /usr/local/include/mysql /usr/local/mysql /usr/local/mysql/include \
            /opt/mysql /opt/mysql/include \
-           /usr/include /usr/include/mysql /usr/mysql /usr/mysql/include \
-           $finkdir/include/mysql
+           /usr/include /usr/include/mysql /usr/mysql /usr/mysql/include
        mysqlinc=$found_hdr
        mysqlincdir=$found_dir
 
@@ -2627,11 +2647,12 @@ if test ! "x$enable_mysql" = "xno"; then
        fi
 
        check_library "$mysqlclientlibs" "$enable_shared" "$mysqllibdir" \
-           $MYSQL $MYSQL/lib $MYSQL/lib/mysql /usr/local/lib \
+           $MYSQL ${MYSQL:+$MYSQL/lib} ${MYSQL:+$MYSQL/lib/mysql} \
+           ${finkdir:+$finkdir/lib/mysql} \
+           /usr/local/lib \
            /usr/local/lib/mysql /usr/local/mysql /usr/local/mysql/lib \
            /opt/mysql /opt/mysql/lib \
-           /usr/lib /usr/lib/mysql /usr/mysql /usr/mysql/lib \
-           $finkdir/lib/mysql
+           /usr/lib /usr/lib/mysql /usr/mysql /usr/mysql/lib
        mysqllib=$found_lib
        mysqllibdir=$found_dir
 
@@ -2664,21 +2685,22 @@ check_explicit "$enable_mysql" "$enable_mysql_explicit" \
 if test ! "x$enable_oracle" = "xno"; then
     # Check for oracle include and library
     check_header "occi.h" "$oracleincdir" \
-        $ORACLE $ORACLE/include $ORACLE/sdk/include $ORACLEINCDIR \
+        $ORACLE ${ORACLE:+ORACLE/include} \
+        ${ORACLE:+$ORACLE/sdk/include} $ORACLEINCDIR \
         /usr/local/include /usr/include /usr/include/oracle/*/client
     oracleinc=$found_hdr
     oracleincdir=$found_dir
 
     keeplibdir=$oraclelibdir
     check_library "libclntsh oci" "$enable_shared" "$oraclelibdir" \
-       $ORACLE $ORACLE/lib $ORACLELIBDIR /usr/local/lib /usr/lib \
-       /usr/lib/oracle/*/client/lib
+       $ORACLE ${ORACLE:+$ORACLE/lib} $ORACLELIBDIR \
+       /usr/local/lib /usr/lib /usr/lib/oracle/*/client/lib
     oraclelib=$found_lib
     oraclelibdir=$found_dir
 
     check_library "libocci oraocci10" "$enable_shared" "$keeplibdir" \
-       $ORACLE $ORACLE/lib $ORACLELIBDIR /usr/local/lib /usr/lib \
-       /usr/lib/oracle/*/client/lib
+       $ORACLE ${ORACLE:+$ORACLE/lib} $ORACLELIBDIR \
+       /usr/local/lib /usr/lib /usr/lib/oracle/*/client/lib
     oraclelib="$oraclelib $found_lib"
 
     # space in "x " is intentional
@@ -2700,7 +2722,9 @@ check_explicit "$enable_oracle" "$enable_oracle_explicit" \
 #
 if test ! "x$enable_pgsql" = "xno"; then
     # Check for PgSQL include and library
-    check_header "libpq-fe.h" "$pgsqlincdir" $PGSQL $PGSQL/include \
+    check_header "libpq-fe.h" "$pgsqlincdir" \
+        $PGSQL ${PGSQL:+$PGSQL/include} \
+        ${finkdir:+$finkdir/include} \
         /usr/include /usr/local/include /usr/local/pgsql/include \
         /usr/include/pgsql /usr/include/postgresql \
         /usr/include/postgresql/8.0 /usr/pgsql/include \
@@ -2711,7 +2735,9 @@ if test ! "x$enable_pgsql" = "xno"; then
     pgsqlincdir=$found_dir
 
     check_library "libpq" "$enable_shared" "$pgsqllibdir" \
-        $PGSQL $PGSQL/lib /usr/local/pgsql/lib /usr/local/lib \
+        $PGSQL ${PGSQL:+$PGSQL/lib} \
+        ${finkdir:+$finkdir/lib} \
+        /usr/local/pgsql/lib /usr/local/lib \
         /usr/lib/pgsql /usr/local/lib/pgsql /usr/pgsql/lib /usr/lib \
         /usr/pgsql /usr/local/pgsql /opt/pgsql /opt/pgsql/lib
     pgsqllib=$found_lib
@@ -2735,7 +2761,9 @@ check_explicit "$enable_pgsql" "$enable_pgsql_explicit" \
 #
 if test ! "x$enable_sapdb" = "xno"; then
     # Check for SapDB include and library
-    check_header "sql.h" "$sapdbincdir" $SAPDB $SAPDB/include \
+    check_header "sql.h" "$sapdbincdir" \
+        $SAPDB ${SAPDB:+$SAPDB/include} \
+        ${finkdir:+$finkdir/include} \
         /opt/sapdb/interfaces/odbc/incl /usr/sapdb/interfaces/odbc/incl \
         /usr/sapdb/include /usr/local/sapdb/interfaces/odbc/incl \
         /usr/sapdb/web/incl /usr/include/sapdb /usr/include/maxdb \
@@ -2746,7 +2774,9 @@ if test ! "x$enable_sapdb" = "xno"; then
     sapdbincdir=$found_dir
 
     check_library "libsqlod" "$enable_shared" "$sapdblibdir" \
-        $SAPDB $SAPDB/lib /opt/sapdb/interfaces/odbc/lib \
+        $SAPDB ${SAPDB:+$SAPDB/lib} \
+        ${finkdir:+$finkdir/lib} \
+        /opt/sapdb/interfaces/odbc/lib \
         /usr/sapdb/interfaces/odbc/lib /usr/sapdb/lib \
         /usr/local/sapdb/interfaces/odbc/lib /usr/local/sapdb/lib \
         /usr/lib/sapdb /usr/local/lib/sapdb /usr/sapdb/lib \
@@ -2783,14 +2813,16 @@ if test ! "x$enable_odbc" = "xno"; then
         enable_odbc="yes"
     else
         check_header "sqlext.h" "$odbcincdir" \
-            $ODBC $ODBC/include $ODBCINCDIR /usr/local/include \
-            /usr/include $finkdir/include
+            $ODBC ${ODBC:+$ODBC/include} $ODBCINCDIR \
+            ${finkdir:+$finkdir/include} \
+            /usr/local/include /usr/include
         odbcinc=$found_hdr
         odbcincdir=$found_dir
 
         check_library "libiodbc libodbc odbc32" "$enable_shared" "$odbclibdir" \
-            $ODBC $ODBC/lib $ODBCLIBDIR /usr/local/lib /usr/lib \
-            $finkdir/lib
+            $ODBC ${ODBC:+$ODBC/lib} $ODBCLIBDIR \
+            ${finkdir:+$finkdir/lib} \
+            /usr/local/lib /usr/lib
         odbclib=$found_lib
         odbclibdir=$found_dir
 
@@ -2851,7 +2883,7 @@ if test ! "x$enable_qt" = "xno" || \
     # Check for Qt include and library
     if test ! "x$QTDIR" = "x"; then
         # The user asked for a specific "QTDIR" ... search ONLY in there
-        check_header "Qt/qglobal.h" "$qtincdir" $QTDIR $QTDIR/include
+        check_header "Qt/qglobal.h" "$qtincdir" $QTDIR ${QTDIR:+$QTDIR/include}
     else
         check_header "Qt/qglobal.h" "$qtincdir" \
             /usr/local/include/ /usr/local/qt/include  \
@@ -2883,7 +2915,7 @@ if test ! "x$enable_qt" = "xno" || \
             fi
             check_library "libQtCore QtCore QtCore$qt4suffix QtCore4" \
                 "$enable_shared" \
-                "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib \
+                "$qtlibdir" $QTDIR ${QTDIR:+$QTDIR/lib} /usr/local/lib \
                 /usr/local/qt/lib /usr/lib /usr/qt/lib /usr/lib/qt4
             qtlib=$found_lib
             qtlibdir=$found_dir
@@ -2974,8 +3006,9 @@ shiftold=""
 if test ! "x$enable_rfio" = "xno" ; then
     # Check for RFIO include and library
     keepincdir=$shiftincdir
-    check_header "rfio_api.h" "$shiftincdir" $RFIO $RFIO/include \
-        $RFIO/include/shift $RFIO/h \
+    check_header "rfio_api.h" "$shiftincdir" \
+        $RFIO ${RFIO:+$RFIO/include} \
+        ${RFIO:+$RFIO/include/shift} ${RFIO:+$RFIO/h} \
         /cern/pro/include /cern/new/include /cern/old/include \
         /opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
         /usr/local/include/shift /usr/include /usr/local/include
@@ -2997,7 +3030,7 @@ if test ! "x$enable_rfio" = "xno" ; then
 
     check_library "librfio libdpm libshift shiftmd shift" "$enable_shared" \
         "$shiftlibdir" \
-        $RFIO $RFIO/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
+        $RFIO ${RFIO:+$RFIO/lib} /cern/pro/lib /cern/new/lib /cern/old/lib \
         /opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
         /usr/local/lib/shift /usr/lib /usr/local/lib
     shiftlib=$found_lib
@@ -3037,8 +3070,9 @@ castorold=""
 if test ! "x$enable_castor" = "xno" ; then
     # Check for Castor include and library
     keepincdir=$castorincdir
-    check_header "rfio_api.h" "$castorincdir" $CASTOR $CASTOR/include \
-        $CASTOR/include/shift $CASTOR/h \
+    check_header "rfio_api.h" "$castorincdir" \
+        $CASTOR ${CASTOR:+$CASTOR/include} \
+        ${CASTOR:+$CASTOR/include/shift} ${CASTOR:+$CASTOR/h} \
         /cern/pro/include /cern/new/include /cern/old/include \
         /opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
         /usr/local/include/shift /usr/include /usr/local/include
@@ -3058,8 +3092,9 @@ if test ! "x$enable_castor" = "xno" ; then
         fi
     fi
 
-    check_header "stager_api.h" "$keepincdir" $CASTOR $CASTOR/include \
-        $CASTOR/include/shift $CASTOR/h \
+    check_header "stager_api.h" "$keepincdir" \
+        $CASTOR ${CASTOR:+$CASTOR/include} \
+        ${CASTOR:+$CASTOR/include/shift} ${CASTOR:+$CASTOR/h} \
         /cern/pro/include /cern/new/include /cern/old/include \
         /opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
         /usr/local/include/shift /usr/include /usr/local/include
@@ -3081,8 +3116,8 @@ if test ! "x$enable_castor" = "xno" ; then
     fi
 
     check_library "libshift shiftmd shift" "$enable_shared" "$castorlibdir" \
-        $CASTOR $CASTOR/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
-        /opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
+        $CASTOR ${CASTOR:+$CASTOR/lib} /cern/pro/lib /cern/new/lib \
+        /cern/old/lib /opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
         /usr/local/lib/shift /usr/lib /usr/local/lib
     castorlib=$found_lib
     castorlibdir=$found_dir
@@ -3120,14 +3155,16 @@ check_explicit "$enable_castor" "$enable_castor_explicit" \
 #
 if test ! "x$enable_gfal" = "xno"; then
     # Check for GFAL include and library
-    check_header "gfal_api.h" "$gfalincdir" $GFAL $GFAL/include \
+    check_header "gfal_api.h" "$gfalincdir" \
+        $GFAL ${GFAL:+$GFAL/include} \
         /opt/lcg/include /opt/gfal/include /usr/local/lcg/include \
         /usr/local/gfal/include
     gfalinc=$found_hdr
     gfalincdir=$found_dir
 
     check_library "libgfal" "$enable_shared" "$gfallibdir" \
-        $GFAL $GFAL/lib /opt/lcg/lib /opt/gfal/lib /usr/local/lcg/lib \
+        $GFAL ${GFAL:+$GFAL/lib} \
+        /opt/lcg/lib /opt/gfal/lib /usr/local/lcg/lib \
         /usr/local/gfal/lib
     gfallib=$found_lib
     gfallibdir=$found_dir
@@ -3150,15 +3187,16 @@ check_explicit "$enable_gfal" "$enable_gfal_explicit" \
 #
 if test ! "x$enable_monalisa" = "xno"; then
     # Check for Monalisa include and library
-    check_header "ApMon.h" "$monalisaincdir" $MONALISA $MONALISA/include \
+    check_header "ApMon.h" "$monalisaincdir" \
+        $MONALISA ${MONALISA:+$MONALISA/include} \
         /usr/local/include /opt/alien/api/include /opt/monalisa/include \
         /usr/include
     monalisainc=$found_hdr
     monalisaincdir=$found_dir
 
     check_library "libapmoncpp" "$enable_shared" "$monalisalibdir" \
-        $MONALISA $MONALISA/lib $MONALISA/.libs /usr/local/lib \
-        /opt/alien/api/lib /opt/monalisa/lib /usr/lib
+        $MONALISA ${MONALISA:+$MONALISA/lib} ${MONALISA:+$MONALISA/.libs} \
+        /usr/local/lib /opt/alien/api/lib /opt/monalisa/lib /usr/lib
     monalisalib=$found_lib
     monalisalibdir=$found_dir
 
@@ -3180,17 +3218,19 @@ check_explicit "$enable_monalisa" "$enable_monalisa_explicit" \
 #
 if test ! "x$enable_fftw3" = "xno"; then
     # Check for FFTW3 include and library
-    check_header "fftw3.h" "$fftw3incdir" $FFTW3 $FFTW3/include \
-        $FFTW3/api /usr/local/include /usr/include /opt/fftw3/include \
-        $finkdir/include
+    check_header "fftw3.h" "$fftw3incdir" \
+        $FFTW3 ${FFTW3:+$FFTW3/include} ${FFTW3:+$FFTW3/api} \
+        ${finkdir:+$finkdir/include} \
+        /usr/local/include /usr/include /opt/fftw3/include
     fftw3inc=$found_hdr
     fftw3incdir=$found_dir
 
     # At this time, libfftw3.a should always be prefered over .so,
     # to avoid forcing users to install fftw3.
     check_library "libfftw3 libfftw3-3" "no" "$fftw3libdir" \
-        $FFTW3 $FFTW3/lib $FFTW3/.libs /usr/local/lib /usr/lib \
-        /opt/fftw3/lib $finkdir/lib
+        $FFTW3 ${FFTW3:+$FFTW3/lib} ${FFTW3:+$FFTW3/.libs} \
+        ${finkdir:+$finkdir/lib} \
+        /usr/local/lib /usr/lib /opt/fftw3/lib
     fftw3lib=$found_lib
     fftw3libdir=$found_dir
 
@@ -3212,17 +3252,20 @@ check_explicit "$enable_fftw3" "$enable_fftw3_explicit" \
 #
 if test ! "x$enable_fitsio" = "xno"; then
     # Check for cfitsio include and library
-    check_header "fitsio.h" "$cfitsioincdir" $CFITSIO $CFITSIO/include \
+    check_header "fitsio.h" "$cfitsioincdir" \
+        $CFITSIO ${CFITSIO:+$CFITSIO/include} \
+        ${finkdir:+$finkdir/include} \
         /usr/local/include /usr/include /usr/include/cfitsio \
-        /opt/cfitsio/include $finkdir/include
+        /opt/cfitsio/include
     cfitsioinc=$found_hdr
     cfitsioincdir=$found_dir
 
     # At this time, libcfitsio.a should always be prefered over .so,
     # to avoid forcing users to install cfitsio.
     check_library "libcfitsio cfitsio" "no" "$cfitsiolibdir" \
-        $CFITSIO $CFITSIO/lib $CFITSIO/.libs /usr/local/lib /usr/lib \
-        /opt/cfitsio/lib $finkdir/lib
+        $CFITSIO ${CFITSIO:+$CFITSIO/lib} ${CFITSIO:+$CFITSIO/.libs} \
+        ${finkdir:+$finkdir/lib} \
+        /usr/local/lib /usr/lib /opt/cfitsio/lib
     cfitsiolib=$found_lib
     cfitsiolibdir=$found_dir
 
@@ -3244,27 +3287,36 @@ check_explicit "$enable_fitsio" "$enable_fitsio_explicit" \
 #
 if test ! "x$enable_gviz" = "xno"; then
     # Check for graphviz include and library
-    check_header "gvc.h" "$gvizincdir" $GVIZ $GVIZ/include \
-                  /usr/local/include/graphviz /usr/include/graphviz \
-                  $finkdir/include/graphviz
+    check_header "gvc.h" "$gvizincdir" \
+        $GVIZ ${GVIZ:+$GVIZ/include} \
+        ${finkdir:+$finkdir/include/graphviz} \
+        /usr/local/include/graphviz /usr/include/graphviz
     gvizinc=$found_hdr
     gvizincdir=$found_dir
 
     # At this time, libgvplugin_core.a should always be prefered over .so,
     # to avoid forcing users to install graphviz.
-    check_library "libgvc gvc" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
-                  $GVIZ/.libs /usr/local/lib /usr/lib $finkdir/lib
+    check_library "libgvc gvc" "no" "$gvizlibdir" \
+        $GVIZ ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
+        ${finkdir:+$finkdir/lib} \
+        /usr/local/lib /usr/lib
     gvizlib1=$found_lib
     gvizlib1raw=$found_raw_lib
     gvizlibir=$found_dir
-    check_library "libgraph graph" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
-                  $GVIZ/.libs /usr/local/lib /usr/lib $finkdir/lib
+    check_library "libgraph graph" "no" "$gvizlibdir" \
+        $GVIZ ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
+        ${finkdir:+$finkdir/lib} \
+        /usr/local/lib /usr/lib
     gvizlib2=$found_lib
-    check_library "libcdt cdt" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
-                  $GVIZ/.libs /usr/local/lib /usr/lib $finkdir/lib
+    check_library "libcdt cdt" "no" "$gvizlibdir" \
+        $GVIZ ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
+        ${finkdir:+$finkdir/lib} \
+        /usr/local/lib /usr/lib
     gvizlib3=$found_lib
-    check_library "libpathplan pathplan" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
-                  $GVIZ/.libs /usr/local/lib /usr/lib $finkdir/lib
+    check_library "libpathplan pathplan" "no" "$gvizlibdir" \
+        $GVIZ ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
+        ${finkdir:+$finkdir/lib} \
+        /usr/local/lib /usr/lib
     gvizlib4=$found_lib
 
     # the plugin libraries are in the directory "$gvizlibdir"/graphviz
@@ -3275,9 +3327,10 @@ if test ! "x$enable_gviz" = "xno"; then
     if test "x$platform" = "xwin32"; then
         gvizlibpdir="$gvizlibdir"
     fi
-    check_library "libgvplugin_dot_layout gvplugin_dot_layout" "no" "$gvizlibpdir" $GVIZ $GVIZ/lib \
-                  $GVIZ/.libs /usr/local/lib/graphviz /usr/lib/graphviz \
-                  $finkdir/lib/graphviz
+    check_library "libgvplugin_dot_layout gvplugin_dot_layout" "no" "$gvizlibpdir" \
+        $GVIZ ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
+        ${finkdir:+$finkdir/lib/graphviz} \
+        /usr/local/lib/graphviz /usr/lib/graphviz
     gvizlibp1=$found_lib
     gvizlibpir=$found_dir
 
@@ -3326,7 +3379,8 @@ if test ! "x$enable_pythia6" = "xno" ; then
         result "Using custom pythia6 library with $pythia6uscore underscore"
     else
         check_library "libPythia6" "$enable_shared" "$pythia6libdir" \
-            $PYTHIA6 $PYTHIA6/lib /cern/pro/lib /opt/pythia /opt/pythia6 \
+            $PYTHIA6 ${PYTHIA6:+$PYTHIA6/lib} \
+            /cern/pro/lib /opt/pythia /opt/pythia6 \
             /usr/lib/pythia /usr/local/lib/pythia /usr/lib/pythia6 \
             /usr/local/lib/pythia6 /usr/lib /usr/local/lib
         pythia6lib=$found_lib
@@ -3377,12 +3431,14 @@ check_explicit "$enable_pythia6" "$enable_pythia6_explicit" \
 #
 if test ! "x$enable_pythia8" = "xno" ; then
     # Check for PYTHIA8 include and library
-    check_header "Pythia.h" "$pythia8incdir" $PYTHIA8 $PYTHIA8/include \
+    check_header "Pythia.h" "$pythia8incdir" \
+        $PYTHIA8 ${PYTHIA8:+$PYTHIA8/include} \
         /opt/pythia8/include /usr/local/include /usr/include /usr/include/pythia
     pythia8incdir=$found_dir
 
     check_library "libpythia8" "$enable_shared" "$pythia8libdir" \
-       $PYTHIA8 $PYTHIA8/lib /opt/pythia8/lib /usr/local/lib /usr/lib
+       $PYTHIA8 ${PYTHIA8:+$PYTHIA8/lib} \
+       /opt/pythia8/lib /usr/local/lib /usr/lib
     pythia8lib=$found_lib
     pythia8libdir=$found_dir
 
@@ -3402,12 +3458,14 @@ check_explicit "$enable_pythia8" "$enable_pythia8_explicit" \
 # Check for libdcap
 #
 if test ! "x$enable_dcache" = "xno" ; then
-    check_header "dcap.h" "$dcapincdir" $DCACHE $DCACHE/include \
+    check_header "dcap.h" "$dcapincdir" \
+        $DCACHE ${DCACHE:+$DCACHE/include} \
         /opt/d-cache/dcap/include /products/dcache/include \
         /opt/dcache/include /usr/include /usr/local/include
     dcapincdir=$found_dir
 
-    check_library "libdcap" "$enable_shared" "$dcaplibdir" $DCACHE $DCACHE/lib \
+    check_library "libdcap" "$enable_shared" "$dcaplibdir" \
+        $DCACHE ${DCACHE:+$DCACHE/lib} \
         /opt/d-cache/dcap/lib /products/dcache/lib /opt/dcache/lib \
         /usr/lib /usr/local/lib
     dcaplib=$found_lib
@@ -3439,14 +3497,16 @@ check_explicit "$enable_dcache" "$enable_dcache_explicit" \
 # Check for libchirp_client
 #
 if test ! "x$enable_chirp" = "xno" ; then
-    check_header "chirp_client.h" "$chirpincdir" $CHIRP $CHIRP/include \
+    check_header "chirp_client.h" "$chirpincdir" \
+        $CHIRP ${CHIRP:+$CHIRP/include} \
         /opt/chirp/include /usr/include /usr/local/include
     chirpincdir=$found_dir
 
     #At this time, libchirp_client.a should always be prefered over .so,
     #to avoid problems with linkage on grid execute machines.
 
-    check_library "libchirp_client" "no" "$chirplibdir" $CHIRP $CHIRP/lib \
+    check_library "libchirp_client" "no" "$chirplibdir" \
+        $CHIRP ${CHIRP:+$CHIRP/lib} \
         /opt/chirp/lib /usr/lib /usr/local/lib
     chirplib=$found_lib
     chirplibdir=$found_dir
@@ -3469,9 +3529,10 @@ check_explicit "$enable_chirp" "$enable_chirp_explicit" \
 if test ! "x$enable_hdfs" = "xno" ; then
     # Check for hdfs include and library
     keepincdir=$hdfsincdir
-    check_header "hdfs.h" "$hdfsincdir" $HDFS $HDFS/include $HDFS/src/c++/libhdfs \
-        $HADOOP_HOME $HADOOP_HOME/src/c++/libhdfs /usr/include \
-        /usr/local/include
+    check_header "hdfs.h" "$hdfsincdir" \
+        $HDFS ${HDFS:+$HDFS/include} ${HDFS:+$HDFS/src/c++/libhdfs} \
+        $HADOOP_HOME ${HADOOP_HOME:+$HADOOP_HOME/src/c++/libhdfs} \
+        /usr/include /usr/local/include
     hdfsinc=$found_hdr
     hdfsincdir=$found_dir
 
@@ -3480,20 +3541,23 @@ if test ! "x$enable_hdfs" = "xno" ; then
     fi
 
     keepincdir=$jniincdir
-    check_header "jni.h" "$jniincdir" $JAVA_HOME/include \
+    check_header "jni.h" "$jniincdir" \
+        ${JAVA_HOME:+$JAVA_HOME/include} \
         /usr/java/default/include /usr/include /usr/local/include
     jniinc=$found_hdr
     jniincdir=$found_dir
 
     check_library "libhdfs" "$enable_shared" "$hdfslibdir" \
-        $HDFS $HDFS/lib $HDFS/build/libhdfs $HADOOP_HOME $HADOOP_HOME/build/libhdfs \
+        $HDFS ${HDFS:+$HDFS/lib} ${HDFS:+$HDFS/build/libhdfs} \
+        $HADOOP_HOME ${HADOOP_HOME:+$HADOOP_HOME/build/libhdfs} \
         /usr/lib /usr/local/lib
     hdfslib=$found_lib
     hdfslibdir=$found_dir
 
     check_library "libjvm" "$enable_shared" "$jvmlibdir" \
-        $JAVA_HOME/jre/lib/amd64/server $JAVA_HOME/jre/lib/i386/server \
-        $JAVA_HOME/../Libraries \
+        ${JAVA_HOME:+$JAVA_HOME/jre/lib/amd64/server} \
+        ${JAVA_HOME:+$JAVA_HOME/jre/lib/i386/server} \
+        ${JAVA_HOME:+$JAVA_HOME/../Libraries} \
         /usr/java/default/jre/lib/amd64/server \
         /usr/java/default/jre/lib/i386/server /usr/lib /usr/local/lib
     jvmlib=$found_lib
@@ -3559,12 +3623,13 @@ fi
 if test ! "x$enable_bonjour" = "xno" ; then
     # Bonjour is built-in on MacOS X / iOS (i.e. available in libSystem)
     if test ! "x$platform" = "xmacosx" && test ! "x$platform" = "xios" ; then
-        check_header "dns_sd.h" "$dnssdincdir" $DNSSD $DNSSD/include \
-        /opt/dnssd/include /usr/include /usr/local/include
+        check_header "dns_sd.h" "$dnssdincdir" \
+            $DNSSD ${DNSSD:+$DNSSD/include} \
+            /opt/dnssd/include /usr/include /usr/local/include
         dnssdincdir=$found_dir
 
         check_library "libdns_sd" "$enable_shared" "$dnssdlibdir" \
-        $DNSSD $DNSSD/lib /opt/dnssd/lib /usr/lib /usr/local/lib
+            $DNSSD ${DNSSD:+$DNSSD/lib} /opt/dnssd/lib /usr/lib /usr/local/lib
         dnssdlib=$found_lib
         dnssdlibdir=$found_dir
 
@@ -3576,32 +3641,35 @@ if test ! "x$enable_bonjour" = "xno" ; then
     # If we are on Linux, we must check also for the Avahi libraries.
     if test ! "x$enable_bonjour" = "xno" && test "x$platform" = "xlinux"; then
         # The compatibility layer is needed for the Bonjour record management.
-        check_header "avahi-client/client.h" "$avahiincdir" $DNSSD \
-        $DNSSD/include /opt/include /usr/include /usr/local/include
+        check_header "avahi-client/client.h" "$avahiincdir" \
+            $DNSSD ${DNSSD:+$DNSSD/include} \
+            /opt/include /usr/include /usr/local/include
         avahiincdir=$found_dir
 
-        check_header "avahi-common/strlst.h" "$avahiincdir" $DNSSD \
-        $DNSSD/include /opt/include /usr/include /usr/local/include
+        check_header "avahi-common/strlst.h" "$avahiincdir" \
+            $DNSSD ${DNSSD:+$DNSSD/include} \
+            /opt/include /usr/include /usr/local/include
         avahiincdir=$found_dir
 
-        check_header "avahi-core/core.h" "$avahiincdir" $DNSSD \
-        $DNSSD/include /opt/include /usr/include /usr/local/include
+        check_header "avahi-core/core.h" "$avahiincdir" \
+            $DNSSD ${DNSSD:+$DNSSD/include} \
+            /opt/include /usr/include /usr/local/include
         avahiincdir=$found_dir
 
         # Also, the library is needed, as in Mac OS X. When found the compat
         # layer, also the other libraries must be in the same location.
         check_library "libavahi-client" "$enable_shared" "$avahilibdir" \
-        $DNSSD $DNSSD/lib /opt/lib /usr/lib /usr/local/lib
+            $DNSSD ${DNSSD:+$DNSSD/lib} /opt/lib /usr/lib /usr/local/lib
         dnssdlib="$dnssdlib $found_lib"
         avahilibdir=$found_dir
 
         check_library "libavahi-common" "$enable_shared" "$avahilibdir" \
-        $DNSSD $DNSSD/lib /opt/lib /usr/lib /usr/local/lib
+            $DNSSD ${DNSSD:+$DNSSD/lib} /opt/lib /usr/lib /usr/local/lib
         dnssdlib="$dnssdlib $found_lib"
         avahilibdir=$found_dir
 
         check_library "libavahi-core" "$enable_shared" "$avahilibdir" \
-        $DNSSD $DNSSD/lib /opt/lib /usr/lib /usr/local/lib
+            $DNSSD ${DNSSD:+$DNSSD/lib} /opt/lib /usr/lib /usr/local/lib
         dnssdlib="$dnssdlib $found_lib"
         avahilibdir=$found_dir
 
@@ -3631,7 +3699,8 @@ check_explicit "$enable_bonjour" "$enable_bonjour_explicit" \
 #
 if test ! "x$enable_glite" = "xno" ; then
     check_library "libglite-api-wrapper" "$enable_shared" "$glitelibdir" \
-      $GAW_LOCATION $GLITE $GLITE/lib ~/GAW/lib /usr/local/lib /usr/lib
+      $GAW_LOCATION $GLITE ${GLITE:+$GLITE/lib} \
+      ~/GAW/lib /usr/local/lib /usr/lib
     glitelib=$found_lib
     glitelibdir=$found_dir
     gaw_cppflags="${GAW_CPPFLAGS}"
@@ -3652,13 +3721,15 @@ check_explicit "$enable_glite" "$enable_glite_explicit" \
 # Check for libgliteUI
 #
 if test ! "x$enable_alien" = "xno" ; then
-    check_header "gapiUI.h" "$alienincdir" $ALIEN $ALIEN/include \
+    check_header "gapiUI.h" "$alienincdir" \
+        $ALIEN ${ALIEN:+$ALIEN/include} \
         /opt/alien/api/include /usr/local/alien/api/include /usr/include \
         /usr/local/include
     alienincdir=$found_dir
 
     check_library "libgapiUI" "$enable_shared" "$alienlibdir" \
-        $ALIEN $ALIEN/lib /opt/alien/api/lib /usr/local/alien/api/lib /usr/lib \
+        $ALIEN ${ALIEN:+$ALIEN/lib} \
+        /opt/alien/api/lib /usr/local/alien/api/lib /usr/lib \
         /usr/local/lib
     alienlib=$found_lib
     alienlibdir=$found_dir
@@ -3705,22 +3776,31 @@ if test ! "x$enable_asimage" = "xno" ; then
     # If we didn't find the system libAfterImage, or the user didn't ask
     # for a system library, then see if we have various headers needed.
     if test "x$enable_builtin_afterimage" = "xyes" ; then
-       check_header "jpeglib.h" "" $ASIMAGE $ASIMAGE/include \
-          /usr/local/include /usr/include /opt/include $finkdir/include
+       check_header "jpeglib.h" "" \
+          $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
+          ${finkdir:+$finkdir/include} \
+          /usr/local/include /usr/include /opt/include
        asjpegincdir=$found_dir
-       check_header "png.h" "" $ASIMAGE $ASIMAGE/include $ASPNG/include \
+       check_header "png.h" "" \
+          $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
+          ${ASPNG:+$ASPNG/include} \
+          ${finkdir:+$finkdir/include} \
           /usr/local/include /usr/include /usr/local/include/libpng \
-          /opt/include $finkdir/include
+          /opt/include
        aspngincdir=$found_dir
        if test ! "x$enable_astiff" = "xno" ; then
-           check_header "tiffio.h" "" $ASIMAGE $ASIMAGE/include \
-               /usr/local/include /usr/include /opt/include $finkdir/include
+           check_header "tiffio.h" "" \
+               $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
+               ${finkdir:+$finkdir/include} \
+               /usr/local/include /usr/include /opt/include
            astiffincdir=$found_dir
        else
            astiffincdir="--with-tiff=no"
        fi
-       check_header "gif_lib.h" "" $ASIMAGE $ASIMAGE/include \
-          /usr/local/include /usr/include /opt/include $finkdir/include
+       check_header "gif_lib.h" "" \
+          $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
+          ${finkdir:+$finkdir/include} \
+          /usr/local/include /usr/include /opt/include
        asgifincdir=$found_dir
 
        asextralib=""
@@ -3738,8 +3818,9 @@ if test ! "x$enable_asimage" = "xno" ; then
        fi
        for k in $aslibs ; do
            check_library $k "$enable_shared" "" \
-             $ASIMAGE $ASIMAGE/lib $ASPNG/lib /usr/local/lib /usr/lib /opt/lib \
-             $finkdir/lib
+               $ASIMAGE ${ASIMAGE:+$ASIMAGE/lib} ${ASPNG:+$ASPNG/lib} \
+               ${finkdir:+$finkdir/lib} \
+               /usr/local/lib /usr/lib /opt/lib
            if test "x$k" = "xlibz" ; then
                found_libz=$found_lib
                found_dirz=$found_dir
@@ -3788,7 +3869,9 @@ check_explicit "$enable_asimage" "$enable_asimage_explicit" \
 #
 if test ! "x$enable_ldap" = "xno"; then
     # Check for ldap include and library
-    check_header "ldap.h" "$ldapincdir" $LDAP $LDAP/include \
+    check_header "ldap.h" "$ldapincdir" \
+        $LDAP ${LDAP:+$LDAP/include} \
+        ${finkdir:+$finkdir/include} \
         /usr/include /usr/local/include /usr/local/ldap/include \
         /usr/include/ldap /usr/include/openldap /usr/ldap/include \
         /usr/local/include/ldap /usr/local/include/openldap \
@@ -3802,7 +3885,9 @@ if test ! "x$enable_ldap" = "xno"; then
 
     for i in libldap liblber ; do
         check_library $i "$enable_shared" "$ldaplibdir1" \
-            $LDAP $LDAP/lib /usr/local/ldap/lib /usr/local/lib \
+            $LDAP ${LDAP:+$LDAP/lib} \
+            ${finkdir:+$finkdir/lib} \
+            /usr/local/ldap/lib /usr/local/lib \
             /usr/lib/ldap /usr/local/lib/ldap /usr/ldap/lib /usr/lib \
             /usr/ldap /usr/local/ldap /opt/ldap /opt/ldap/lib
         if test "x$found_lib" = "x" ; then
@@ -3840,8 +3925,9 @@ if test ! "x$enable_python" = "xno" ; then
           pythonsyslibdir2=`python -c 'import sys; sys.stdout.write(sys.prefix)'`
        fi
     fi
-    check_header "Python.h" "$pythonincdir" $PYTHONDIR $PYTHONDIR/include \
-       $PYTHONDIR/include/python $pythonsysincdir
+    check_header "Python.h" "$pythonincdir" \
+        $PYTHONDIR ${PYTHONDIR:+$PYTHONDIR/include} \
+        ${PYTHONDIR:+$PYTHONDIR/include/python} $pythonsysincdir
     pythoninc=$found_hdr
     pythonincdir=$found_dir
     pysuffix=""
@@ -3859,9 +3945,10 @@ if test ! "x$enable_python" = "xno" ; then
 
     check_library "python${pythonvers}${pysuffix} libpython${pythonvers}${pysuffix} \
                    libpython${pysuffix} python${pysuffix} Python${pysuffix}" \
-        "$enable_shared" "$pythonlibdir" $PYTHONDIR/libs $PYTHONDIR/lib \
-        $PYTHONDIR $pythonsyslibdir $pythonsyslibdir2 /usr/local/lib /usr/lib \
-        $pythonsyslibdir/config
+        "$enable_shared" "$pythonlibdir" \
+        ${PYTHONDIR:+$PYTHONDIR/libs} ${PYTHONDIR:+$PYTHONDIR/lib} \
+        $PYTHONDIR $pythonsyslibdir $pythonsyslibdir2 \
+        /usr/local/lib /usr/lib $pythonsyslibdir/config
     pythonlib=$found_lib
     pythonlibdir=$found_dir
 
@@ -3900,7 +3987,8 @@ if test ! "x$enable_ruby" = "xno" ; then
     if test "x$platform" = "xmacosx" ; then
        rubysysincdir2=`echo $rubysysincdir | sed -e 's/powerpc/universal/'`
     fi
-    check_header "ruby.h" "$rubyincdir" $RUBYDIR $RUBYDIR/include \
+    check_header "ruby.h" "$rubyincdir" \
+        $RUBYDIR ${RUBYDIR:+$RUBYDIR/include} \
         $rubysysincdir $rubysysincdir2
     rubyinc=$found_hdr
     rubyincdir=$found_dir
@@ -3912,7 +4000,8 @@ if test ! "x$enable_ruby" = "xno" ; then
         check_library_options="libruby libruby1.8 libruby18 libruby1.9 libruby19"
     fi
     check_library "$check_library_options" \
-        "$enable_shared" "$rubylibdir" $RUBYDIR $RUBYDIR/lib \
+        "$enable_shared" "$rubylibdir" \
+        $RUBYDIR ${RUBYDIR:+$RUBYDIR/lib} \
         $rubysyslibdir
     rubylib=$found_lib
     rubylibdir=$found_dir
@@ -3964,24 +4053,30 @@ if test ! "x$enable_xml" = "xno" ; then
        result "not found"
        # fall back in case xml2-config is not found
        keepincdir=$xmlincdir
-       check_header "libxml/tree.h" "$xmlincdir" $XMLDIR $XMLDIR/include \
-           /opt/include/libxml2 /usr/local/include/libxml2 /usr/include/libxml2 $finkdir/include/libxml2
+       check_header "libxml/tree.h" "$xmlincdir" \
+           $XMLDIR ${XMLDIR:+$XMLDIR/include} \
+           ${finkdir:+$finkdir/include/libxml2} \
+           /opt/include/libxml2 /usr/local/include/libxml2 /usr/include/libxml2
        xmlincdir=$found_dir
 
        keeplibdir=$xmllibdir
-       check_library "libxml2_a libxml2" "$enable_shared" "$xmllibdir" $XMLDIR \
-           $XMLDIR/lib $XMLDIR/.libs /opt/libxml2/lib /usr/local/lib /usr/lib
+       check_library "libxml2_a libxml2" "$enable_shared" "$xmllibdir" \
+           $XMLDIR ${XMLDIR:+$XMLDIR/lib} ${XMLDIR:+$XMLDIR/.libs} \
+           ${finkdir:+$finkdir/lib} \
+           /opt/libxml2/lib /usr/local/lib /usr/lib
        xmllib=$found_lib
        xmllibdir=$found_dir
 
        if test "x$platform" = "xwin32"; then
-          check_header "iconv.h" "$keepincdir" $ICONVDIR $ICONVDIR/include \
-              $XMLDIR $XMLDIR/include \
+          check_header "iconv.h" "$keepincdir" \
+              $ICONVDIR ${ICONVDIR:+$ICONVDIR/include} \
+              $XMLDIR ${XMLDIR:+$XMLDIR/include} \
               /opt/libxml2/include /usr/local/include/libxml2 /usr/include/libxml2
           iconvincdir=$found_dir
 
-          check_library "iconv_a" "$enable_shared" "$keeplibdir" $ICONVDIR \
-              $ICONVDIR/lib $XMLDIR $XMLDIR/lib $XMLDIR/.libs \
+          check_library "iconv_a" "$enable_shared" "$keeplibdir" \
+              $ICONVDIR ${ICONVDIR:+$ICONVDIR/lib} \
+              $XMLDIR ${XMLDIR:+$XMLDIR/lib} ${XMLDIR:+$XMLDIR/.libs} \
               /opt/libxml2/lib /usr/local/lib /usr/lib
           iconvlib=$found_lib
           iconvlibdir=$found_dir
@@ -4126,7 +4221,7 @@ if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
    if test "x$enable_bonjour" = "xyes"; then
       if test ! -f $xrdincdir/XrdOuc/XrdOucBonjour.hh ; then
          bjrcomm="External xrootd has no bonjour support: disabling bonjour in XrdProofd"
-         bonjourcppflags= 
+         bonjourcppflags=
       fi
    fi
 
@@ -4348,8 +4443,8 @@ if test "x$enable_globus" = "xyes"; then
               libcrypto${flavour_suf}"
 
    for i in $globuslibs ; do
-      check_library $i "$enable_shared" "$searchlibdir" /opt/globus /usr/lib \
-      /usr/local/lib
+      check_library $i "$enable_shared" "$searchlibdir" \
+          /opt/globus /usr/lib /usr/local/lib
       if test "x$found_lib" = "x" ; then
          globuslib=""
          globuslibdir=""
@@ -4615,7 +4710,9 @@ if test "x$enable_ssl" = "xyes" ; then
      libssl="libssl"
      tmpssllibdir=""
      check_library "$libssl" "$sslshared" "$ssllibdir" \
-         $SSL $SSL/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib
+         $SSL ${SSL:+$SSL/lib} \
+         ${finkdir:+$finkdir/lib} \
+         /usr/lib /usr/local/lib /opt/lib
      if test "x$found_lib" != "x" ; then
          ssllib="$found_lib"
          if test ! "x$found_lib" = "x-lssl" ; then
@@ -4637,7 +4734,9 @@ if test "x$enable_ssl" = "xyes" ; then
          #
          libcrypto="libcrypto"
          check_library "$libcrypto" "$sslshared" "$tmpssllibdir" \
-                      $SSL $SSL/lib /usr/lib /opt/lib /usr/local/lib $finkdir/lib
+             $SSL ${SSL:+$SSL/lib} \
+             ${finkdir:+$finkdir/lib} \
+             /usr/lib /opt/lib /usr/local/lib
          if test "x$found_lib" != "x" ; then
              ssllib="$ssllib $found_lib"
              ssllibdir="$found_dir"
@@ -4662,8 +4761,10 @@ if test "x$enable_ssl" = "xyes" ; then
     incssl="bio.h blowfish.h err.h pem.h rand.h rsa.h"
     ssl_incdir=""
     for i in $incssl ; do
-        check_header "openssl/$i" "$sslincdir" $SSL $SSL/include \
-           /usr/include /usr/local/include /opt/include $finkdir/include
+        check_header "openssl/$i" "$sslincdir" \
+           $SSL ${SSL:+$SSL/include} \
+           ${finkdir:+$finkdir/include} \
+           /usr/include /usr/local/include /opt/include
         if test "x$found_hdr" = "x" ; then
             ssl_incdir=""
             enable_ssl="no"
@@ -4713,7 +4814,8 @@ if test ! "x$enable_srp" = "xno" ; then
         fi
     fi
 
-    check_header "t_server.h" "$srpincdir" $SRP/include $SRP/libsrp \
+    check_header "t_server.h" "$srpincdir" \
+        ${SRP:+$SRP/include} ${SRP:+$SRP/libsrp} \
         /usr/srp/include /usr/include /usr/include/srp /usr/local/include \
         /usr/local/srp/include /usr/local/include/srp
     srpinc=$found_hdr
@@ -4730,7 +4832,8 @@ if test ! "x$enable_srp" = "xno" ; then
         fi
     fi
 
-    srplibdirs="$SRP $SRP/lib $SRP/libsrp /usr/srp/lib /usr/local/srp/lib \
+    srplibdirs="$SRP ${SRP:+$SRP/lib} ${SRP:+$SRP/libsrp} \
+        /usr/srp/lib /usr/local/srp/lib \
         /usr/lib/srp /usr/local/lib/srp /usr/lib /usr/local/lib"
 
     check_library "libsrp" "no" "$srplibdir" $srplibdirs
@@ -4787,7 +4890,8 @@ if test ! "x$enable_srp" = "xno" ; then
     if test ! "x$srpdir" = "x" ; then
         srputilincdir=$srpdir/base/lib
     fi
-    check_header "pwauth.h" "$srputilincdir" $SRP $SRP/base/lib \
+    check_header "pwauth.h" "$srputilincdir" \
+        $SRP ${SRP:+$SRP/base/lib} \
         /usr/local/srp/base/lib /usr/srp/base/lib
     srputilincdir=$found_dir
 
@@ -4837,7 +4941,9 @@ if test ! "x$enable_afs" = "xno" ; then
     fi
 
     hasafserrormessage="no"
-    afssearchlibdirs="$afsdir/afs $AFS/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib"
+    afssearchlibdirs="${afsdir:+$afsdir/afs} ${AFS:+$AFS/lib} \
+                      ${finkdir:+$finkdir/lib} \
+                      /usr/lib /usr/local/lib /opt/lib"
     afslibs="libafsrpc libafsauthent"
     if test "x$afsshared" = "xyes" ; then
 
@@ -4933,7 +5039,8 @@ if test ! "x$enable_afs" = "xno" ; then
     if test "x$enable_afs" = "xyes" ; then
 
        check_header "afs/kautils.h" "$afsincdir" \
-          /usr/include /usr/local/include /opt/include $finkdir/include
+          ${finkdir:+$finkdir/include} \
+          /usr/include /usr/local/include /opt/include
        if test ! "x$found_hdr" = "x" ; then
           afsincdir="-I$found_dir"
           tmpincdir=$found_dir
@@ -5038,7 +5145,7 @@ if test ! "x$enable_krb5" = "xno" ; then
           krb5libdirorg=$krb5dir/lib
        fi
        krb5libdirs="/usr/kerberos/lib \
-                   /usr/krb5/lib /usr/local/kerberos/lib /usr/lib /usr/local/lib"
+                    /usr/krb5/lib /usr/local/kerberos/lib /usr/lib /usr/local/lib"
 
        # check whether using MIT krb5
        krb5mit=no
@@ -5160,7 +5267,7 @@ if test "x$enable_afs" = "xyes" || test "x$enable_krb5" = "xyes" ; then
         fi
     fi
     check_library libcom_err "$enable_shared" "$comerrlibdir" \
-                                              "$afssearchlibdirs $krb5libdirs"
+        "$afssearchlibdirs $krb5libdirs"
     if test "x$found_lib" = "x" ; then
         enable_krb5=no
         krb5incdir=""
@@ -5219,9 +5326,10 @@ if test ! "x$enable_mathmore" = "xno"; then
     # before the global --enable-shared was used:
     # enable_gsl_shared=$enable_shared"
 
-    check_header "gsl/gsl_version.h" "$gslincdir" $GSL $GSL/include \
-        $GSL/api /usr/local/include /usr/include /opt/gsl/include \
-        $finkdir/include
+    check_header "gsl/gsl_version.h" "$gslincdir" \
+        $GSL ${GSL:+$GSL/include} ${GSL:+$GSL/api} \
+        ${finkdir:+$finkdir/include} \
+        /usr/local/include /usr/include /opt/gsl/include
 
     # check for gsl version >= 1.8
     if test ! "x$found_dir" = "x"; then
@@ -5244,8 +5352,9 @@ if test ! "x$enable_mathmore" = "xno"; then
         #check for the library now
         gsllibdir0=$gsllibdir
         check_library "libgsl gslML gsl" "$enable_gsl_shared" "$gsllibdir" \
-            $GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
-            $finkdir/lib
+            $GSL ${GSL:+$GSL/lib} ${GSL:+$GSL/.libs} \
+            ${finkdir:+$finkdir/lib} \
+            /usr/local/lib /usr/lib /opt/gsl/lib
 
         if test ! "x$found_lib" = "x"; then
             gsllibs=$found_lib
@@ -5258,9 +5367,12 @@ if test ! "x$enable_mathmore" = "xno"; then
                 fi
                 check_library "libgslcblas gslcblasML gslcblas cblas" \
                     "$enable_gsl_shared" "" \
-                    $gsllibdir0 $gsllibdir1 $GSL $GSL/lib \
-                    $GSL/.libs $GSL/cblas/.libs /usr/local/lib \
-                    /usr/lib /opt/gsl/lib $finkdir/lib
+                    $gsllibdir0 $gsllibdir1 \
+                    $GSL ${GSL:+$GSL/lib} ${GSL:+$GSL/.libs} \
+                    ${GSL:+$GSL/cblas/.libs} \
+                    ${finkdir:+$finkdir/lib} \
+                    /usr/local/lib \
+                    /usr/lib /opt/gsl/lib
                 if test ! "x$found_lib" = "x"; then
                     gsllibs="$gsllibs $found_lib"
                     gsllibdir=$found_dir
