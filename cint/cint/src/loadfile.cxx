@@ -908,8 +908,10 @@ static void G__checkIfOnlyFunction(int fentry)
   struct G__Definedtemplateclass *definedtemplateclass;
   struct G__Definetemplatefunc *definedtemplatefunc;
   struct G__dictposition* dictpos = G__srcfile[fentry].dictpos;
+  if (!dictpos) return;
+
   int varflag = 1;
-  int tagflag ;
+  int tagflag;
 
   // Sum the number of G__struct slot used by any of the file
   // we enclosed:
