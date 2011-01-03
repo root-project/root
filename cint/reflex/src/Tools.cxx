@@ -937,7 +937,7 @@ Tools::Demangle(const std::type_info& ti) {
    if (mangled[0] == 'F') {
       mangled.insert(0, "P");
 #undef RFLX_REMOVE_ADDITIONAL_POINTER
-#define RFLX_REMOVE_ADDITIONAL_POINTER true;
+#define RFLX_REMOVE_ADDITIONAL_POINTER true
    }
 # elif __GNUC__ >= 4
 
