@@ -28,7 +28,7 @@
 #include "TVirtualCollectionProxy.h"
 
 #if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA) || \
-    (defined(R__MACOSX) && defined(R__GNU) && __GNUC__==3 && __GNUC_MINOR<=3) || \
+    (defined(R__MACOSX) && defined(R__GNU) && __GNUC__==3 && __GNUC_MINOR__<=3) || \
     (defined(R__MACOSX) && defined(__xlC__))
 #define R__BROKEN_FUNCTION_TEMPLATES
 #endif
@@ -108,7 +108,7 @@ private:
 
    TStreamerInfoActions::TActionSequence *fReadObjectWise;      //! List of action resulting from the compilation.
    TStreamerInfoActions::TActionSequence *fReadMemberWise;      //! List of action resulting from the compilation for use in member wise streaming.
-   
+
    static  Int_t     fgCount;            //Number of TStreamerInfo instances
    static TStreamerElement *fgElement;   //Pointer to current TStreamerElement
    static Double_t   GetValueAux(Int_t type, void *ladd, int k, Int_t len);
@@ -147,7 +147,7 @@ public:
       kSTL         = 300, kSTLstring = 365,
       kStreamer    = 500, kStreamLoop = 501,
       kCache       = 600,  // Cache the value in memory than is not part of the object but is accessible via a SchemaRule
-      kArtificial  = 1000, 
+      kArtificial  = 1000,
       kCacheNew    = 1001,
       kCacheDelete = 1002,
       kMissing     = 99999
