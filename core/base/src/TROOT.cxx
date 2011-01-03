@@ -907,16 +907,6 @@ TDataType *TROOT::GetType(const char *name, Bool_t load) const
 {
    // Return pointer to type with name.
 
-   const char *tname = name + strspn(name," ");
-   if (!strncmp(tname,"virtual",7)) {
-      tname += 7; tname += strspn(tname," ");
-   }
-   if (!strncmp(tname,"const",5)) {
-      tname += 5; tname += strspn(tname," ");
-   }
-   size_t nch = strlen(tname);
-   while (tname[nch-1] == ' ') nch--;
-
    // First try without loading.  We can do that because nothing is
    // ever removed from the list of types. (See TCint::UpdateListOfTypes).
    TDataType* type = (TDataType*)gROOT->GetListOfTypes(kFALSE)->FindObject(name);
