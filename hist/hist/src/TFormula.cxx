@@ -3096,14 +3096,21 @@ TString TFormula::GetExpFormula(Option_t *option) const
             Ssiz_t ind = funcname.First('(');
             funcname.Remove(ind);
          }
-         if (offset<=0 && (spos+offset>=0)) {
+         if (offset > 0) {
+            Error("GetExpFormula","Internal error, number of argument found is %d",-offset);
+         } else if (offset == 0) {
+            tab[spos]=funcname+"()";
+            ismulti[spos]=kFALSE;
+            spos += 1;
+            continue;            
+         } else if (offset<=0 && (spos+offset>=0)) {
             tab[spos+offset]=funcname+("("+tab[spos+offset]);
             for (j=offset+1; j<0; j++){
                tab[spos+offset]+=","+tab[spos+j];
             }
             tab[spos+offset]+=")";
             ismulti[spos+offset]=kFALSE;
-            spos+=offset+1;
+            spos += offset+1;
             continue;
          }
       }
