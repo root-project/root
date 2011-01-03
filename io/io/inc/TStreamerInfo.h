@@ -28,7 +28,7 @@
 #include "TVirtualCollectionProxy.h"
 
 #if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA) || \
-    (defined(R__MACOSX) && defined(R__GNU) && __GNUC__==3 && __GNUC_MINOR<=3) || \
+    (defined(R__MACOSX) && defined(R__GNU) && __GNUC__==3 && __GNUC_MINOR__<=3) || \
     (defined(R__MACOSX) && defined(__xlC__))
 #define R__BROKEN_FUNCTION_TEMPLATES
 #endif
