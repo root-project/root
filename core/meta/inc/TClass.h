@@ -157,7 +157,7 @@ private:
    void StreamerStreamerInfo(void *object, TBuffer &b, const TClass *onfile_class) const;
    void StreamerDefault(void *object, TBuffer &b, const TClass *onfile_class) const;
    
-   static IdMap_t    *fgIdMap;          //Map from typeid to TClass pointer
+   static IdMap_t    *GetIdMap();       //Map from typeid to TClass pointer
    static ENewType    fgCallingNew;     //Intent of why/how TClass::New() is called
    static Int_t       fgClassCount;     //provides unique id for a each class
                                         //stored in TObject::fUniqueID

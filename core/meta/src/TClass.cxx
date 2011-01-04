@@ -213,12 +213,18 @@ namespace ROOT {
 #endif
    };
 }
+
+IdMap_t *TClass::GetIdMap() {
+   
 #ifdef R__COMPLETE_MEM_TERMINATION
-static IdMap_t gIdMapObject;
-IdMap_t *TClass::fgIdMap = &gIdMapObject;
+   static IdMap_t gIdMapObject;
+   return &gIdMap;
 #else
-IdMap_t *TClass::fgIdMap = new IdMap_t;
+   static IdMap_t *gIdMap = new IdMap_t;
+   return gIdMap;
 #endif
+}
+
 //______________________________________________________________________________
 void TClass::AddClass(TClass *cl)
 {
@@ -227,7 +233,7 @@ void TClass::AddClass(TClass *cl)
    if (!cl) return;
    gROOT->GetListOfClasses()->Add(cl);
    if (cl->GetTypeInfo()) {
-      fgIdMap->Add(cl->GetTypeInfo()->name(),cl);
+      GetIdMap()->Add(cl->GetTypeInfo()->name(),cl);
    }
 }
 
@@ -240,7 +246,7 @@ void TClass::RemoveClass(TClass *oldcl)
    if (!oldcl) return;
    gROOT->GetListOfClasses()->Remove(oldcl);
    if (oldcl->GetTypeInfo()) {
-      fgIdMap->Remove(oldcl->GetTypeInfo()->name());
+      GetIdMap()->Remove(oldcl->GetTypeInfo()->name());
    }
 }
 
@@ -2567,7 +2573,7 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
    if (!gROOT->GetListOfClasses())    return 0;
 
 //printf("TClass::GetClass called, typeinfo.name=%s\n",typeinfo.name());
-   TClass* cl = fgIdMap->Find(typeinfo.name());
+   TClass* cl = GetIdMap()->Find(typeinfo.name());
 
    if (cl) {
       if (cl->IsLoaded()) return cl;
