@@ -107,7 +107,7 @@ public:
    double StepSize() const { return fStepSize; } 
    /// return lower limit value
    double LowerLimit() const {return fLowerLimit;}
-   /// return lower limit value
+   /// return upper limit value
    double UpperLimit() const {return fUpperLimit;}
    /// check if is fixed 
    bool IsFixed() const { return fFix; }
