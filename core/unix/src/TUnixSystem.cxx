@@ -383,7 +383,7 @@ static const char *GetExePath()
    return exepath;
 }
 
-#if defined(HAVE_DLADDR)
+#if defined(HAVE_DLADDR) && !defined(R__MACOSX)
 //______________________________________________________________________________
 static void SetRootSys()
 {
