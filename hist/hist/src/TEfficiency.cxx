@@ -2459,9 +2459,24 @@ void TEfficiency::Paint(const Option_t* opt)
    if(GetDimension() == 2) {
       Int_t nbinsx = fTotalHistogram->GetNbinsX();
       Int_t nbinsy = fTotalHistogram->GetNbinsY();
+      TAxis * xaxis = fTotalHistogram->GetXaxis();
+      TAxis * yaxis = fTotalHistogram->GetYaxis();
       if(!fPaintHisto) {
-	 fPaintHisto = new TH2F("eff_histo",GetTitle(),nbinsx,fTotalHistogram->GetXaxis()->GetXbins()->GetArray(),
-				nbinsy,fTotalHistogram->GetYaxis()->GetXbins()->GetArray());
+         if (xaxis->IsVariableBinSize() && yaxis->IsVariableBinSize() ) 
+            fPaintHisto = new TH2F("eff_histo",GetTitle(),nbinsx,xaxis->GetXbins()->GetArray(),
+                                   nbinsy,yaxis->GetXbins()->GetArray());
+         else if (xaxis->IsVariableBinSize() && ! yaxis->IsVariableBinSize() )
+            fPaintHisto = new TH2F("eff_histo",GetTitle(),nbinsx,xaxis->GetXbins()->GetArray(),
+                                   nbinsy,yaxis->GetXmin(), yaxis->GetXmax());
+         else if (!xaxis->IsVariableBinSize() &&  yaxis->IsVariableBinSize() )
+            fPaintHisto = new TH2F("eff_histo",GetTitle(),nbinsx,xaxis->GetXmin(), xaxis->GetXmax(),
+                                   nbinsy,yaxis->GetXbins()->GetArray());
+         else 
+            fPaintHisto = new TH2F("eff_histo",GetTitle(),nbinsx,xaxis->GetXmin(), xaxis->GetXmax(),
+                                   nbinsy,yaxis->GetXmin(), yaxis->GetXmax());
+         
+
+
 	 fPaintHisto->SetDirectory(0);
       }
       //refresh title before each painting
