@@ -45,6 +45,7 @@
 #include "TGResourcePool.h"
 #include "TSystem.h"
 #include "Riostream.h"
+#include "TMath.h"
 #include <stdlib.h>
 
 
@@ -1492,7 +1493,8 @@ void TGListBox::Layout()
       fVScrollbar->SetPosition(0);
    }
 
-   fVScrollbar->SetRange(container->GetHeight()/fItemVsize, fVport->GetHeight()/fItemVsize);
+   fVScrollbar->SetRange(TMath::Ceil((Double_t)container->GetHeight()/(Double_t)fItemVsize),
+                         fVport->GetHeight()/fItemVsize);
    //fClient->NeedRedraw(container);
    ((TGContainer *)container)->ClearViewPort();
 }
