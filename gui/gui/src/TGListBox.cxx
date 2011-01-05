@@ -1493,7 +1493,7 @@ void TGListBox::Layout()
       fVScrollbar->SetPosition(0);
    }
 
-   fVScrollbar->SetRange(TMath::Ceil((Double_t)container->GetHeight()/(Double_t)fItemVsize),
+   fVScrollbar->SetRange((Int_t)TMath::Ceil((Double_t)container->GetHeight()/(Double_t)fItemVsize),
                          fVport->GetHeight()/fItemVsize);
    //fClient->NeedRedraw(container);
    ((TGContainer *)container)->ClearViewPort();
