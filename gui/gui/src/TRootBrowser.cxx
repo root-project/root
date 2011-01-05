@@ -299,7 +299,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    SetClassHints("Browser", "Browser");
 
    if (!strcmp(gROOT->GetDefCanvasName(), "c1"))
-      gROOT->SetDefCanvasName("Canvas 1");
+      gROOT->SetDefCanvasName("Canvas_1");
 
    SetWMSizeHints(600, 350, 10000, 10000, 2, 2);
    MapSubwindows();
