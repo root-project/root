@@ -227,7 +227,12 @@ extern "C" {
 #   define HAVE_DLADDR
 #endif
 #if defined(R__MACOSX)
-#   define USE_GDB_STACK_TRACE
+#   if defined(MAC_OS_X_VERSION_10_5)
+#      define HAVE_BACKTRACE_SYMBOLS_FD
+#      define HAVE_DLADDR
+#   else
+#      define USE_GDB_STACK_TRACE
+#   endif
 #endif
 
 #ifdef HAVE_U_STACK_TRACE
@@ -2063,13 +2068,6 @@ void TUnixSystem::StackTrace()
    if (!gEnv->GetValue("Root.Stacktrace", 1))
       return;
 
-#if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-   if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR) {
-      fprintf(stderr, "Info in <TUnixSystem::StackTrace> function not supported on iOS\n");
-      return;
-   }
-#endif
-
    TString gdbscript = gEnv->GetValue("Root.StacktraceScript", "");
    gdbscript = gdbscript.Strip();
    if (gdbscript != "") {
@@ -2162,7 +2160,7 @@ void TUnixSystem::StackTrace()
    dup2(stderrfd, STDERR_FILENO);
    close(newfd);
 */
-#elif defined(HAVE_BACKTRACE_SYMBOLS_FD) && defined(HAVE_DLADDR)  // linux
+#elif defined(HAVE_BACKTRACE_SYMBOLS_FD) && defined(HAVE_DLADDR)  // linux + MacOS X >= 10.5
    // we could have used backtrace_symbols_fd, except its output
    // format is pretty bad, so recode that here :-(
 
@@ -2174,12 +2172,20 @@ void TUnixSystem::StackTrace()
    const char *cppfiltarg = "";
 #ifdef R__B64
    const char *format1 = " 0x%016lx in %.200s %s 0x%lx from %.200s\n";
+#ifdef R__MACOSX
+   const char *format2 = " 0x%016lx in %.200s\n";
+#else
    const char *format2 = " 0x%016lx in %.200s at %.200s from %.200s\n";
+#endif
    const char *format3 = " 0x%016lx in %.200s from %.200s\n";
    const char *format4 = " 0x%016lx in <unknown function>\n";
 #else
    const char *format1 = " 0x%08lx in %.200s %s 0x%lx from %.200s\n";
+#ifdef R__MACOSX
+   const char *format2 = " 0x%08lx in %.200s\n";
+#else
    const char *format2 = " 0x%08lx in %.200s at %.200s from %.200s\n";
+#endif
    const char *format3 = " 0x%08lx in %.200s from %.200s\n";
    const char *format4 = " 0x%08lx in <unknown function>\n";
 #endif
@@ -2218,6 +2224,10 @@ void TUnixSystem::StackTrace()
       }
 
       // use gdb to get stack trace
+#ifdef R__MACOSX
+      gdbscript += GetExePath();
+      gdbscript += " ";
+#endif
       gdbscript += GetPid();
       if (gdbmess != "") {
          gdbscript += " ";
@@ -2229,7 +2239,11 @@ void TUnixSystem::StackTrace()
    } else {
       // addr2line uses debug info to convert addresses into file names
       // and line numbers
+#ifdef R__MACOSX
+      char *addr2line = Which(Getenv("PATH"), "atos", kExecutePermission);
+#else
       char *addr2line = Which(Getenv("PATH"), "addr2line", kExecutePermission);
+#endif
       if (addr2line) {
          // might take some time so tell what we are doing...
          if (write(fd, message, strlen(message)) < 0)
@@ -2250,6 +2264,11 @@ void TUnixSystem::StackTrace()
          }
       }
 
+#ifdef R__MACOSX
+      if (addr2line)
+         demangle = kFALSE;  // atos always demangles
+#endif
+
       char buffer[4096];
       void *trace[kMAX_BACKTRACE_DEPTH];
       int  depth = backtrace(trace, kMAX_BACKTRACE_DEPTH);
@@ -2266,6 +2285,11 @@ void TUnixSystem::StackTrace()
             Bool_t  gte = (addr >= symaddr);
             ULong_t diff = (gte) ? addr - symaddr : symaddr - addr;
             if (addr2line && symaddr) {
+               Bool_t nodebug = kTRUE;
+#ifdef R__MACOSX
+               if (libaddr) { }  // use libaddr
+               snprintf(buffer, sizeof(buffer), "%s -p %d 0x%016lx", addr2line, GetPid(), addr);
+#else
                ULong_t offset = (addr >= libaddr) ? addr - libaddr :
                                                     libaddr - addr;
                TString name   = TString(libname);
@@ -2276,13 +2300,17 @@ void TUnixSystem::StackTrace()
                if (noShare) offset = addr;
                if (noPath)  name = "`which " + name + "`";
                snprintf(buffer, sizeof(buffer), "%s -e %s 0x%016lx", addr2line, name.Data(), offset);
-               Bool_t nodebug = kTRUE;
+#endif
                if (FILE *pf = ::popen(buffer, "r")) {
                   char buf[2048];
                   if (fgets(buf, 2048, pf)) {
                      buf[strlen(buf)-1] = 0;  // remove trailing \n
                      if (strncmp(buf, "??", 2)) {
+#ifdef R__MACOSX
+                        snprintf(buffer, sizeof(buffer), format2, addr, buf);
+#else
                         snprintf(buffer, sizeof(buffer), format2, addr, symname, buf, libname);
+#endif
                         nodebug = kFALSE;
                      }
                   }
