@@ -51,7 +51,7 @@ ClassImp(TGraph)
 <center><h2>Graph class</h2></center>
 A Graph is a graphics object made of two arrays X and Y with npoints each.
 <p>
-The TGraph painting is permofed thanks to the
+The TGraph painting is performed thanks to the
 <a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
 class. All details about the various painting options are given in
 <a href="http://root.cern.ch/root/html/TGraphPainter.html">this class</a>.
