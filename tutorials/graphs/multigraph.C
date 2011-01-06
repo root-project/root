@@ -1,9 +1,8 @@
-//Create and Draw a TmultiGraph
+//Create and Draw a TMultiGraph
 //Author:: Rene Brun
-   
-void multigraph() {
+{
    gStyle->SetOptFit();
-   TCanvas *c1 = new TCanvas("c1","multigraph",200,10,700,500);
+   TCanvas *c1 = new TCanvas("c1","multigraph",700,500);
    c1->SetGrid();
 
       // draw a frame to define the range
@@ -45,4 +44,5 @@ void multigraph() {
    stats1->SetX1NDC(0.12); stats1->SetX2NDC(0.32); stats1->SetY1NDC(0.75);
    stats2->SetX1NDC(0.72); stats2->SetX2NDC(0.92); stats2->SetY1NDC(0.78);
    c1->Modified();
+   return c1;
 }
