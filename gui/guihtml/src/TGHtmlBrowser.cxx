@@ -163,27 +163,27 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
 
    fHorizontalFrame = new TGHorizontalFrame(fVerticalFrame,727,600);
 
-   fBack = new TGToolButton(fHorizontalFrame,gClient->GetPicture("GoBack.gif"));
+   fBack = new TGPictureButton(fHorizontalFrame,gClient->GetPicture("GoBack.gif"));
    fBack->SetToolTipText("Go Back");
    fHorizontalFrame->AddFrame(fBack, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
    fBack->Connect("Clicked()", "TGHtmlBrowser", this, "Back()");
 
-   fForward = new TGToolButton(fHorizontalFrame,gClient->GetPicture("GoForward.gif"));
+   fForward = new TGPictureButton(fHorizontalFrame,gClient->GetPicture("GoForward.gif"));
    fForward->SetToolTipText("Go Forward");
    fHorizontalFrame->AddFrame(fForward, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
    fForward->Connect("Clicked()", "TGHtmlBrowser", this, "Forward()");
 
-   fReload = new TGToolButton(fHorizontalFrame,gClient->GetPicture("ReloadPage.gif"));
+   fReload = new TGPictureButton(fHorizontalFrame,gClient->GetPicture("ReloadPage.gif"));
    fReload->SetToolTipText("Reload Page");
    fHorizontalFrame->AddFrame(fReload, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
    fReload->Connect("Clicked()", "TGHtmlBrowser", this, "Reload()");
 
-   fStop = new TGToolButton(fHorizontalFrame,gClient->GetPicture("StopLoading.gif"));
+   fStop = new TGPictureButton(fHorizontalFrame,gClient->GetPicture("StopLoading.gif"));
    fStop->SetToolTipText("Stop Loading");
    fHorizontalFrame->AddFrame(fStop, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
    fStop->Connect("Clicked()", "TGHtmlBrowser", this, "Stop()");
 
-   fHome = new TGToolButton(fHorizontalFrame,gClient->GetPicture("GoHome.gif"));
+   fHome = new TGPictureButton(fHorizontalFrame,gClient->GetPicture("GoHome.gif"));
    fHome->SetToolTipText("Go to ROOT HomePage\n  (http://root.cern.ch)");
    fHorizontalFrame->AddFrame(fHome, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
    fHome->Connect("Clicked()", "TGHtmlBrowser", this, "Selected(=\"http://root.cern.ch\")");
