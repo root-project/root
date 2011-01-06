@@ -27,6 +27,16 @@
 
 #if CINTEX_USE_MMAP
 #include <sys/mman.h>
+#elif defined(_WIN32)
+typedef unsigned long WIN_DWORD;
+typedef void *WIN_LPVOID;
+extern "C" {
+__declspec(dllimport) WIN_LPVOID __stdcall
+VirtualAlloc(WIN_LPVOID, size_t, WIN_DWORD, WIN_DWORD);
+
+__declspec(dllimport) int __stdcall
+VirtualFree(WIN_LPVOID, size_t, WIN_DWORD);
+}
 #endif
 
 
@@ -437,6 +447,11 @@ namespace ROOT { namespace Cintex {
       // it for munmap.
       *((size_t*)code) = len + sizeof(size_t);
       code += sizeof(size_t);
+#elif defined(_WIN32)
+      char* code = (char*)VirtualAlloc(NULL, len + sizeof(size_t),
+      /*MEM_COMMIT*/ 0x1000 | /*MEM_RESERVE*/ 0x2000,
+      /*PAGE_EXECUTE_READWRITE*/0x40);
+      if (!code || code == ((void *) -1)) return 0;
 #else
       char* code = new char[len+1];
       if ( !code ) return 0;
@@ -532,6 +547,9 @@ namespace ROOT { namespace Cintex {
       if (!code) return;
       scode -= sizeof(size_t);
       munmap(scode, *((size_t*)scode));
+#elif defined(_WIN32)
+      if (!code) return;
+      VirtualFree(scode, 0, /*MEM_RELEASE*/ 0x8000);
 #else
       delete [] scode;
 #endif
