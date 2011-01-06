@@ -121,8 +121,11 @@ extern void seekdir(DIR *, long);
 #endif  
 
 #elif defined(__CYGWIN__) || defined(G__CYGWIN)
+# if CYGWIN_VERSION_API_MAJOR > 0 || CYGWIN_VERSION_API_MINOR > 229
+extern void seekdir (DIR*, long);
+# else
 extern void seekdir (DIR*, off_t);
-
+# endif
 #else
 extern void seekdir(DIR* dir,long loc);
 #endif
