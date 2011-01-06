@@ -51,7 +51,6 @@ Like for TGraph, the painting is performed thanks to the
 <a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
 class. All details about the various painting options are given in
 <a href="http://root.cern.ch/root/html/TGraphPainter.html">this class</a>.
-<p>
 Example:
 <pre>
      TGraph *gr1 = new TGraph(...
@@ -61,7 +60,12 @@ Example:
      mg->Add(gr2,"cp");
      mg->Draw("a");
 </pre>
-<br>
+<p>
+The number of graphs in a multigraph can be retrieve with:
+<pre>
+mg->GetListOfGraphs()->GetSize();
+</pre>
+<p>
 The drawing option for each TGraph may be specified as an optional
 second argument of the <tt>Add</tt> function.
 <p>
@@ -117,6 +121,116 @@ The axis titles can be modified the following way:
    mg->Add(g2);
    mg->Draw("apl");
 </pre>
+<p>
+When the graphs in a TMultiGraph are fitted, the fit parameters boxes
+overlap. The following example shows how to make them all visible.
+
+End_Html
+Begin_Macro(source)
+../../../tutorials/graphs/multigraph.C
+End_Macro
+Begin_Html
+
+<p>
+The axis limits can be changed the like for TGraph. The same methods apply on
+the multigraph.
+Note the two differents ways to change limits on X and Y axis.
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c2 = new TCanvas("c2","c2",600,400);
+
+   TGraph *g[3];
+   Double_t x[10] = {0,1,2,3,4,5,6,7,8,9};
+   Double_t y[10] = {1,2,3,4,5,5,4,3,2,1};
+   TMultiGraph *mg = new TMultiGraph();
+   for (int i=0; i<3; i++) {
+      g[i] = new TGraph(10, x, y);
+      g[i]->SetMarkerStyle(20);
+      g[i]->SetMarkerColor(i+2);
+      for (int j=0; j<10; j++) y[j] = y[j]-1;
+      mg->Add(g[i]);
+   }
+   mg->Draw("APL");
+   mg->GetXaxis()->SetTitle("E_{#gamma} (GeV)");
+   mg->GetYaxis()->SetTitle("Coefficients");
+
+   // Change the axis limits
+   gPad->Modified();
+   mg->GetXaxis()->SetLimits(1.5,7.5);
+   mg->SetMinimum(0.);
+   mg->SetMaximum(10.);
+
+   return c2;
+}
+End_Macro
+Begin_Html
+<p>
+The method <a href="http://root.cern.ch/root/html/TPad.html#TPad:BuildLegend">
+<tt>TPad::BuildLegend</tt></a> is able to extract the graphs inside a
+multigraph. The following example demonstrate this.
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c3 = new TCanvas("c3","c3",600, 400);
+
+   TMultiGraph * mg = new TMultiGraph("mg","mg");
+
+   const Int_t size = 10;
+
+   double x[size];
+   double y1[size];
+   double y2[size];
+   double y3[size];
+
+   for ( int i = 0; i <  size ; ++i ) {
+      x[i] = i;
+      y1[i] = size - i;
+      y2[i] = size - 0.5 * i;
+      y3[i] = size - 0.6 * i;
+   }
+
+   TGraph * gr1 = new TGraph( size, x, y1 );
+   gr1->SetName("gr1");
+   gr1->SetTitle("graph 1");
+   gr1->SetMarkerStyle(21);
+   gr1->SetDrawOption("AP");
+   gr1->SetLineColor(2);
+   gr1->SetLineWidth(4);
+   gr1->SetFillStyle(0);
+
+   TGraph * gr2 = new TGraph( size, x, y2 );
+   gr2->SetName("gr2");
+   gr2->SetTitle("graph 2");
+   gr2->SetMarkerStyle(22);
+   gr2->SetMarkerColor(2);
+   gr2->SetDrawOption("P");
+   gr2->SetLineColor(3);
+   gr2->SetLineWidth(4);
+   gr2->SetFillStyle(0);
+
+   TGraph * gr3 = new TGraph( size, x, y3 );
+   gr3->SetName("gr3");
+   gr3->SetTitle("graph 3");
+   gr3->SetMarkerStyle(23);
+   gr3->SetLineColor(4);
+   gr3->SetLineWidth(4);
+   gr3->SetFillStyle(0);
+
+   mg->Add( gr1 );
+   mg->Add( gr2 );
+
+   gr3->Draw("ALP");
+   mg->Draw("LP");
+   c3->BuildLegend();
+
+   return c3;
+}
+End_Macro
+Begin_Html
+
 
 End_Html */
 
