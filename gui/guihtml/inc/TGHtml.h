@@ -57,10 +57,8 @@ class TTimer;
 
 //#define TABLE_TRIM_BLANK 1
 
-
 // Debug must be turned on for testing to work.
-
-#define DEBUG
+//#define DEBUG
 
 #define CANT_HAPPEN  \
   fprintf(stderr, \
@@ -71,7 +69,6 @@ class TTimer;
   fprintf(stderr, \
           "Untested code executed in the HTML Widget in file %s line %d\n", \
           __FILE__, __LINE__)
-
 
 // Sanity checking macros.
 
