@@ -32,16 +32,16 @@ class RooArgSet;
 
 using namespace std;
 
-#ifndef __CINT__
+//#ifndef __CINT__
 class VecVecDouble : public std::vector<std::vector<Double_t> >  { } ;
 class VecTVecDouble : public std::vector<TVectorD> { } ;
 typedef std::pair<Int_t, VecVecDouble::iterator > iiPair; 
 typedef std::vector< iiPair > iiVec; 
 typedef std::pair<Int_t, VecTVecDouble::iterator > itPair;
 typedef std::vector< itPair > itVec;
-#else
-class itPair ;
-#endif
+//#else
+//class itPair ;
+//#endif
 
 class RooNDKeysPdf : public RooAbsPdf {
 
@@ -139,10 +139,10 @@ protected:
   mutable vector<vector<Double_t> > _weights1;
   mutable vector<vector<Double_t> >* _weights; //!
 
-#ifndef __CINT__
+   //#ifndef __CINT__
   mutable vector<iiVec> _sortIdcs;
   mutable vector<itVec> _sortTVIdcs;
-#endif
+   //#endif
 
   mutable vector<string> _varName;
   mutable vector<Double_t> _rho;
