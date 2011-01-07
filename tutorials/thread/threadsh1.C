@@ -38,7 +38,7 @@ void *handle(void *ptr)
             hpx[nr]->Draw();
             TThread::UnLock();
          }
-         c[nr]->Modified();
+         if (c[nr]) c[nr]->Modified();
          gSystem->Sleep(10);
       }
    }
@@ -55,6 +55,14 @@ void *joiner(void *)
    finished = kTRUE;
 
    return 0;
+}
+
+void closed(Int_t id)
+{
+   // kill the thread matching the canvas being closed 
+   t[id]->Kill();
+   // and set the canvas pointer to 0
+   c[id] = 0;
 }
 
 void threadsh1()
@@ -88,6 +96,12 @@ void threadsh1()
    c[3]->GetFrame()->SetBorderSize(6);
    c[3]->GetFrame()->SetBorderMode(-1);
 
+   // connect to the Closed() signal to kill the thread when a canvas is closed
+   c[0]->Connect("Closed()", 0, 0, "closed(Int_t=0)");
+   c[1]->Connect("Closed()", 0, 0, "closed(Int_t=1)");
+   c[2]->Connect("Closed()", 0, 0, "closed(Int_t=2)");
+   c[3]->Connect("Closed()", 0, 0, "closed(Int_t=3)");
+
    printf("Starting Thread 0\n");
    t[0] = new TThread("t0", handle, (void*) 0);
    t[0]->Run();
@@ -108,7 +122,7 @@ void threadsh1()
 
    while (!finished) {
       for (int i = 0; i < 4; i++) {
-         if (c[i]->IsModified()) {
+         if (c[i] && c[i]->IsModified()) {
             //printf("Update canvas %d\n", i);
             c[i]->Update();
          }
