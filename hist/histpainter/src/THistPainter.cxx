@@ -1026,6 +1026,12 @@ drawn. A maximum of <tt>kNMAX</tt> points per cell is drawn. If the maximum is a
 If option is of the form <tt>"scat=ff"</tt>, (eg <tt>scat=1.8</tt>,
 <tt>scat=1e-3</tt>), then <tt>ff</tt> is used as a scale factor to compute the
 number of dots. <tt>"scat=1"</tt> is the default.
+<p>
+By default the scatter plot is painted with a "dot marker" which not scalable
+(see the <a href="http://root.cern.ch/root/html/TAttMarker.html#M3">TAttMarker
+documentation</a>). To change the marker size, a scalable marker type should be 
+used. For instance a circle (marker style 20).
+
 
 End_Html
 Begin_Macro(source)

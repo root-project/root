@@ -40,8 +40,8 @@ The marker attributes are:
 <a name="M1"></a><h3>Marker color</h3>
 The marker color is a color index (integer) pointing in the ROOT color
 table.
-The marker color of any class inheriting from <tt>TAttMarker</tt> can 
-be changed using the method <tt>SetMarkerColor</tt> and retrieved using the 
+The marker color of any class inheriting from <tt>TAttMarker</tt> can
+be changed using the method <tt>SetMarkerColor</tt> and retrieved using the
 method <tt>GetMarkerColor</tt>.
 The following table shows the first 50 default colors.
 End_Html
@@ -56,13 +56,14 @@ End_Macro
 Begin_Html
 <a name="M2"></a><h3>Marker style</h3>
 The Marker style defines the markers' shape.
-The marker style of any class inheriting from <tt>TAttMarker</tt> can 
-be changed using the method <tt>SetMarkerStyle</tt> and retrieved using the 
+The marker style of any class inheriting from <tt>TAttMarker</tt> can
+be changed using the method <tt>SetMarkerStyle</tt> and retrieved using the
 method <tt>GetMarkerStyle</tt>.
-The following list gives the currently supported markers (screen 
-and PostScript) style. Each marker style is identified by an integer number 
+The following list gives the currently supported markers (screen
+and PostScript) style. Each marker style is identified by an integer number
 (first column) corresponding to a marker shape (second column) and can be also
 accessed via a global name (third column).
+<p>
 <pre>
    Marker number         Marker shape          Marker name
         1                    dot                  kDot
@@ -73,7 +74,7 @@ accessed via a global name (third column).
         6                    small dot            kFullDotSmall
         7                    medium dot           kFullDotMedium
         8                    large scalable dot   kFullDotLarge
-        9 -->19              dot
+        9 -->19              large scalable dot
        20                    full circle          kFullCircle
        21                    full square          kFullSquare
        22                    full triangle up     kFullTriangleUp
@@ -83,8 +84,12 @@ accessed via a global name (third column).
        26                    open triangle up     kOpenTriangleUp
        27                    open diamond         kOpenDiamond
        28                    open cross           kOpenCross
-       29                    open star            kOpenStar
-       30                    full star            kFullStar
+       29                    full star            kOpenStar
+       30                    open star            kFullStar
+       31                    *
+       32                    open triangle down
+       33                    full diamond
+       34                    full cross
 </pre>
 End_Html
 Begin_Macro(source)
@@ -101,12 +106,12 @@ Begin_Html
 Various marker sizes are shown in the figure below. The default marker size=1
 is shown in the top left corner. Marker sizes smaller than 1 can be
 specified. The marker size does not refer to any coordinate systems, it is an
-absolute value. Therefore the marker size is not affected by any change 
+absolute value. Therefore the marker size is not affected by any change
 in TPad's scale. A marker size equl to 1 correspond to 8 pixels.
 That is, a square marker with size 1 will be drawn with a side equal to 8
 pixels on the screen.
-The marker size of any class inheriting from <tt>TAttMarker</tt> can 
-be changed using the method <tt>SetMarkerSize</tt> and retrieved using the 
+The marker size of any class inheriting from <tt>TAttMarker</tt> can
+be changed using the method <tt>SetMarkerSize</tt> and retrieved using the
 method <tt>GetMarkerSize</tt>.
 End_Html
 Begin_Macro(source)
@@ -127,11 +132,11 @@ Begin_Macro(source)
 End_Macro
 
 Begin_Html
-Note that the marker styles number 1 6 and 7 (the dots), cannot be scaled. They 
+Note that the marker styles number 1 6 and 7 (the dots), cannot be scaled. They
 are meant to be very fast to draw and are always drawn with the same number of
-pixels; therefore <tt>SetMarkerSize</tt> does not apply on them. To have a 
+pixels; therefore <tt>SetMarkerSize</tt> does not apply on them. To have a
 "scalable dot" a filled circle should be used instead, i.e. the marker style
-number 20. By default (if <tt>SetMarkerStyle</tt> is not specified), the marker 
+number 20. By default (if <tt>SetMarkerStyle</tt> is not specified), the marker
 style used is 1. That's the most common one to draw scatter plots.
 End_Html */
 
