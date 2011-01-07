@@ -33,7 +33,7 @@
 
 #include <tree.h>
 
-template <class Key, class Compare>
+template <class Key, class Compare = less<Key> >
 class set {
 public:
 // typedefs:
