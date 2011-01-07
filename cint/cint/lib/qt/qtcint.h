@@ -48,8 +48,9 @@ static unsigned long ULONG_MAX;
 template <typename T> class QVector;
 
 #define QHASH_H
-// originally it's not templated but hey who cares
+// originally qHash is not templated but hey who cares
  template <typename T> uint qHash(T);
+template <typename A, typename B> class QHash<A,B>;
 
 #define QMATRIX4X4_H
 class QMatrix4x4;
@@ -123,6 +124,9 @@ class Data { int d; };
 
 //#define QT_NO_SYSTEMLOCALE
 // #define QT_NO_INPUTMETHOD
+
+#define QT_NO_MEMBER_TEMPLATES
+class RestrictedBool;
 
 // ---- may be removed above 
 #include <QtCore/QtCore>
