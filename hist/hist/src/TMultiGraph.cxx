@@ -398,7 +398,7 @@ void TMultiGraph::Draw(Option_t *option)
 {
    // Draw this multigraph with its current attributes.
    //
-   //   Options to draw a graph are described in TGraph::PainGraph
+   //   Options to draw a graph are described in TGraph::PaintGraph
    //
    //  The drawing option for each TGraph may be specified as an optional
    //  second argument of the Add function. You can use GetGraphDrawOption
@@ -406,7 +406,7 @@ void TMultiGraph::Draw(Option_t *option)
    //  If a draw option is specified, it will be used to draw the graph,
    //  otherwise the graph will be drawn with the option specified in
    //  TMultiGraph::Draw. Use GetDrawOption to return the option specified
-   //  when drawin the TMultiGraph.
+   //  when drawing the TMultiGraph.
 
    AppendPad(option);
 }
