@@ -4,12 +4,14 @@
 
 #include "TROOT.h"
 #include "TCanvas.h"
+#include "TRootCanvas.h"
 #include "TFrame.h"
 #include "TH1F.h"
 #include "TRandom.h"
 #include "TThread.h"
 #include "TMethodCall.h"
 
+TCanvas *c1, *c2;
 TH1F    *hpx, *total, *hmain, *s1, *s2;
 TThread *thread1, *thread2, *threadj;
 Bool_t   finished;
@@ -18,12 +20,6 @@ void *handle1(void *)
 {
    int nfills = 10000;
    int upd = 500;
-
-   TCanvas *c0 = new TCanvas("c0","Dynamic Filling Example", 100, 30, 400, 300);
-   c0->SetFillColor(42);
-   c0->GetFrame()->SetFillColor(21);
-   c0->GetFrame()->SetBorderSize(6);
-   c0->GetFrame()->SetBorderMode(-1);
 
    TThread::Lock();
    hpx = new TH1F("hpx", "This is the px distribution", 100, -4, 4);
@@ -37,26 +33,26 @@ void *handle1(void *)
       hpx->Fill(px);
       if (i && (i%upd) == 0) {
          if (i == upd) {
-            c0->cd();
+            c1->cd();
             hpx->Draw();
          }
-         c0->Modified();
-         c0->Update();
+         c1->Modified();
+         c1->Update();
          gSystem->Sleep(10);
-         TMethodCall c(c0->IsA(), "Print", "");
+         TMethodCall c(c1->IsA(), "Print", "");
          void *arr[4];
          arr[1] = &c;
-         arr[2] = (void *)c0;
+         arr[2] = (void *)c1;
          arr[3] = (void*)"\"hpxanim.gif+50\"";
          (*gThreadXAR)("METH", 4, arr, NULL);
       }
    }
-   c0->Modified();
-   c0->Update();
-   TMethodCall c(c0->IsA(), "Print", "");
+   c1->Modified();
+   c1->Update();
+   TMethodCall c(c1->IsA(), "Print", "");
    void *arr[4];
    arr[1] = &c;
-   arr[2] = (void *)c0;
+   arr[2] = (void *)c1;
    arr[3] = (void*)"\"hpxanim.gif++\"";
    (*gThreadXAR)("METH", 4, arr, NULL);
    return 0;
@@ -66,9 +62,6 @@ void *handle2(void *)
 {
    int nfills = 10000;
    int upd = 500;
-
-   TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example", 515, 30, 400, 300);
-   c1->SetGrid();
 
    TThread::Lock();
    total  = new TH1F("total","This is the total distribution",100,-4,4);
@@ -96,31 +89,31 @@ void *handle2(void *)
       total->Fill(xs2,0.2);
       if (i && (i%upd) == 0) {
          if (i == upd) {
-            c1->cd();
+            c2->cd();
             total->Draw("e1p");
             hmain->Draw("same");
             s1->Draw("same");
             s2->Draw("same");
          }
-         c1->Modified();
-         c1->Update();
+         c2->Modified();
+         c2->Update();
          gSystem->Sleep(10);
-         TMethodCall c(c1->IsA(), "Print", "");
+         TMethodCall c(c2->IsA(), "Print", "");
          void *arr[4];
          arr[1] = &c;
-         arr[2] = (void *)c1;
+         arr[2] = (void *)c2;
          arr[3] = (void*)"\"hsumanim.gif+50\"";
          (*gThreadXAR)("METH", 4, arr, NULL);
       }
    }
    total->Draw("sameaxis"); // to redraw axis hidden by the fill area
-   c1->Modified();
-   c1->Update();
+   c2->Modified();
+   c2->Update();
    // make infinite animation by adding "++" to the file name
-   TMethodCall c(c1->IsA(), "Print", "");
+   TMethodCall c(c2->IsA(), "Print", "");
    void *arr[4];
    arr[1] = &c;
-   arr[2] = (void *)c1;
+   arr[2] = (void *)c2;
    arr[3] = (void*)"\"hsumanim.gif++\"";
    (*gThreadXAR)("METH", 4, arr, NULL);
    return 0;
@@ -136,12 +129,39 @@ void *joiner(void *)
    return 0;
 }
 
+void tryclosing(Int_t id)
+{
+   // allow to close the canvas only after the threads are done
+   if (!finished) return;
+   if (id == 1) ((TRootCanvas *)c1->GetCanvasImp())->CloseWindow();
+   else if (id == 2) ((TRootCanvas *)c2->GetCanvasImp())->CloseWindow();
+}
+
 void threadsh2()
 {
 #ifdef __CINT__
    printf("This script can only be executed via ACliC: .x threadsh2.C++\n");
    return;
 #endif
+
+   c1 = new TCanvas("c1","Dynamic Filling Example", 100, 30, 400, 300);
+   c1->SetFillColor(42);
+   c1->GetFrame()->SetFillColor(21);
+   c1->GetFrame()->SetBorderSize(6);
+   c1->GetFrame()->SetBorderMode(-1);
+   // connect to the CloseWindow() signal and prevent to close the canvas 
+   // while the thread is running
+   ((TRootCanvas *)c1->GetCanvasImp())->Connect("CloseWindow()", 0, 0, 
+                                                "tryclosing(Int_t=1)");
+   ((TRootCanvas *)c1->GetCanvasImp())->DontCallClose();
+
+   c2 = new TCanvas("c2","Dynamic Filling Example", 515, 30, 400, 300);
+   c2->SetGrid();
+   // connect to the CloseWindow() signal and prevent to close the canvas 
+   // while the thread is running
+   ((TRootCanvas *)c2->GetCanvasImp())->Connect("CloseWindow()", 0, 0, 
+                                                "tryclosing(Int_t=2)");
+   ((TRootCanvas *)c2->GetCanvasImp())->DontCallClose();
 
    finished = kFALSE;
    //gDebug = 1;
