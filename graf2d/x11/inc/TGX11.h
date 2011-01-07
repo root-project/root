@@ -35,6 +35,20 @@
 #include <X11/keysym.h>
 #include <X11/xpm.h>
 
+#ifdef Status
+// Convert Status from a CPP macro to a typedef:
+typedef Status X11Status_t;
+#undef Status
+typedef X11Status_t Status;
+#endif
+
+#ifdef None
+// Convert None from a CPP macro to a static const int:
+static const unsigned long gX11None = None;
+#undef None
+static const unsigned long None = gX11None;
+#endif
+
 #else
 
 typedef unsigned long XID;
