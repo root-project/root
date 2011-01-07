@@ -1076,7 +1076,7 @@ void G__define_struct(char type)
             do {
                int store_decl = 0;
                G__FastAllocString memname(G__ONELINE);
-               c = G__fgetstream(memname, 0, "=,}");
+               c = G__fgetstream_new(memname, 0, "=,}");
                if (c == '=') {
                   char store_var_typeX = G__var_type;
                   int store_tagnumX = G__tagnum;
@@ -1087,7 +1087,7 @@ void G__define_struct(char type)
                   G__def_tagnum = store_tagnum;
                   G__tagdefining = store_tagnum;
                   G__FastAllocString val(G__ONELINE);
-                  c = G__fgetstream(val, 0, ",}");
+                  c = G__fgetstream_new(val, 0, ",}");
                   int store_prerun = G__prerun;
                   G__prerun = 0;
                   enumval = G__getexpr(val);

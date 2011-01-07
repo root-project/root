@@ -152,16 +152,19 @@ int G__Lsizeof(const char *type_name)
   }
 
   /* searching for struct/union tagtable */
-  if((strncmp(type_name,"struct",6)==0)
-     || strncmp(type_name,"signed",6)==0
+  if((strncmp(type_name,"struct ",7)==0)
+     || strncmp(type_name,"signed ",7)==0
      ) {
+    type_name = type_name+7;
+    while (isspace(type_name[0])) ++type_name;
+  }
+  else if((strncmp(type_name,"class ",6)==0)) {
     type_name = type_name+6;
+    while (isspace(type_name[0])) ++type_name;
   }
-  else if((strncmp(type_name,"class",5)==0)) {
-    type_name = type_name+5;
-  }
-  else if((strncmp(type_name,"union",5)==0)) {
-    type_name = type_name+5;
+  else if((strncmp(type_name,"union ",6)==0)) {
+    type_name = type_name+6;
+    while (isspace(type_name[0])) ++type_name;
   }
 
   tagnum = G__defined_tagname(type_name,1); /* case 8) */
@@ -239,12 +242,12 @@ int G__Lsizeof(const char *type_name)
      (strcmp(type_name,"unsigned long int")==0))
     return(sizeof(long));
   if((strcmp(type_name,"short")==0)||
-     (strcmp(type_name,"shortint")==0)||
+     (strcmp(type_name,"short int")==0)||
      (strcmp(type_name,"unsigned short")==0)||
-     (strcmp(type_name,"unsigned shortint")==0))
+     (strcmp(type_name,"unsigned short int")==0))
     return(sizeof(short));
   if((strcmp(type_name,"char")==0)||
-     (strcmp(type_name,"unsignedchar")==0))
+     (strcmp(type_name,"unsigned char")==0))
     return(sizeof(char));
   if((strcmp(type_name,"float")==0)||
      (strcmp(type_name,"float")==0))
@@ -554,21 +557,21 @@ long *G__typeid(const char *typenamein)
         size = G__LONGLONGALLOC;
       }
       if((strcmp(type_name,"short")==0)||
-         (strcmp(type_name,"shortint")==0)) {
+         (strcmp(type_name,"short int")==0)) {
         type = 's';
         size = G__SHORTALLOC;
       }
       if((strcmp(type_name,"unsigned short")==0)||
-         (strcmp(type_name,"unsigned shortint")==0)) {
+         (strcmp(type_name,"unsigned short int")==0)) {
         type = 'r';
         size = G__SHORTALLOC;
       }
       if((strcmp(type_name,"char")==0)||
-         (strcmp(type_name,"signedchar")==0)) {
+         (strcmp(type_name,"signed char")==0)) {
         type = 'c';
         size = G__CHARALLOC;
       }
-      if(strcmp(type_name,"unsignedchar")==0) {
+      if(strcmp(type_name,"unsigned char")==0) {
         type = 'b';
         size = G__CHARALLOC;
       }
