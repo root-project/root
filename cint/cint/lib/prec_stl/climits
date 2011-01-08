@@ -31,7 +31,7 @@ enum float_round_style {
 enum float_denorm_style {
   denorm_indeterminate = -1,
   denorm_absent = 0,
-  denorm present = 1
+  denorm_present = 1
 };
 
 template<class T> class numeric_limits {
