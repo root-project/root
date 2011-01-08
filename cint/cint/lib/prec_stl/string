@@ -272,6 +272,10 @@ class string {
   //int compare(size_type pos1,size_type n1,const char* s,size_type n2=npos)const;
   //operator char*() ;
 
+  string& erase(size_t pos=0, size_t n=npos);
+  iterator erase(iterator pos);
+  iterator erase(iterator first, iterator last);
+
 #if defined(G__TMPLTIOS) && !(defined(G__VISUAL) && (G__MSC_VER==1300))
   iterator begin();
   const_iterator begin() const;
