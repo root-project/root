@@ -140,6 +140,7 @@ TPolyMarker::TPolyMarker(const TPolyMarker &polymarker) : TObject(polymarker), T
    // Copy constructor.
 
    fN = 0;
+   fX = fY = 0;
    fLastPoint = -1;
    ((TPolyMarker&)polymarker).Copy(*this);
 }
