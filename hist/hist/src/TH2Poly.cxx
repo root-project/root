@@ -270,6 +270,73 @@ Int_t TH2Poly::AddBin(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 
 
 //______________________________________________________________________________
+void TH2Poly::Add(const TH1 *h1, Double_t c1)
+{
+   // Performs the operation: this = this + c1*h1.
+
+   Int_t bin;
+
+   TH2Poly *h1p = (TH2Poly *)h1;
+
+   // Check if number of bins is the same.
+   if (h1p->GetNumberOfBins() != fNcells) {
+      Error("Add","Attempt to add histograms with different number of bins");
+      return;
+   }
+
+   // Check if the bins are the same.
+   TList *h1pBins = h1p->GetBins();
+   TH2PolyBin *thisBin, *h1pBin;
+   for (bin=1;bin<=fNcells;bin++) {
+      thisBin = (TH2PolyBin*)fBins->At(bin-1);
+      h1pBin  = (TH2PolyBin*)h1pBins->At(bin-1);
+      if(thisBin->GetXMin() != h1pBin->GetXMin() ||
+         thisBin->GetXMax() != h1pBin->GetXMax() ||
+         thisBin->GetYMin() != h1pBin->GetYMin() ||
+         thisBin->GetYMax() != h1pBin->GetYMax()) {
+         Error("Add","Attempt to add histograms with different bin limits");
+         return;
+      }
+   }
+
+   // Create Sumw2 if h1p has Sumw2 set
+   if (fSumw2.fN == 0 && h1p->GetSumw2N() != 0) Sumw2();
+
+   // Perform the Add.
+   Double_t factor =1;
+   if (h1p->GetNormFactor() != 0)
+      factor = h1p->GetNormFactor()/h1p->GetSumOfWeights();
+   for (bin=1;bin<=fNcells;bin++) {
+      thisBin = (TH2PolyBin*)fBins->At(bin-1);
+      h1pBin  = (TH2PolyBin*)h1pBins->At(bin-1);
+      thisBin->SetContent(thisBin->GetContent()+c1*h1pBin->GetContent());
+      if (fSumw2.fN) {
+         Double_t e1 = factor*h1p->GetBinError(bin);
+         fSumw2.fArray[bin] += c1*c1*e1*e1;
+      }
+   }
+}
+
+
+//______________________________________________________________________________
+void TH2Poly::Add(TF1 *, Double_t, Option_t *)
+{
+   // Performs the operation: this = this + c1*f1.
+
+   Warning("Add","Not implement for TH2Poly");
+}
+
+
+//______________________________________________________________________________
+void TH2Poly::Add(const TH1 *, const TH1 *, Double_t, Double_t)
+{
+   // Replace contents of this histogram by the addition of h1 and h2.
+
+   Warning("Add","Not implement for TH2Poly");
+}
+
+
+//______________________________________________________________________________
 void TH2Poly::AddBinToPartition(TH2PolyBin *bin)
 {
    // Adds the input bin into the partition cell matrix. This method is called
@@ -314,13 +381,15 @@ void TH2Poly::AddBinToPartition(TH2PolyBin *bin)
             return;
          }
 
-         // If any of the sides of the cell intersect with any side of the bin, add that bin then continue
+         // If any of the sides of the cell intersect with any side of the bin,
+         // add that bin then continue
          if (IsIntersecting(bin, xclipl, xclipr, yclipb, yclipt)) {
             fCells[i + j*fCellX].Add((TObject*) bin);
             fIsEmpty[i + j*fCellX] = kFALSE;  // Makes the cell non-empty
             continue;
          }
-         // If a corner of the cell is inside the bin and since there is no intersection, then that cell completely inside the bin.
+         // If a corner of the cell is inside the bin and since there is no
+         // intersection, then that cell completely inside the bin.
          if((bin->IsInside(xclipl,yclipb)) || (bin->IsInside(xclipl,yclipt))){
             fCells[i + j*fCellX].Add((TObject*) bin);
             fIsEmpty[i + j*fCellX] = kFALSE;  // Makes the cell non-empty
@@ -352,8 +421,8 @@ void TH2Poly::ChangePartition(Int_t n, Int_t m)
    fNCells = fCellX*fCellY;
    fCells  = new TList [fNCells];  // Sets an empty partition
 
-   fStepX = (fXaxis.GetXmax() - fXaxis.GetXmin())/fCellX;      // Calculate cell width
-   fStepY = (fYaxis.GetXmax() - fYaxis.GetXmin())/fCellY;      // Calculate cell height
+   fStepX = (fXaxis.GetXmax() - fXaxis.GetXmin())/fCellX;
+   fStepY = (fYaxis.GetXmax() - fYaxis.GetXmin())/fCellY;
 
    delete [] fIsEmpty;
    delete [] fCompletelyInside;
@@ -420,8 +489,8 @@ TH1 *TH2Poly::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Int_t TH2Poly::FindBin(Double_t x, Double_t y, Double_t)
 {
-   // Returns the bin number of the bin at the given coordinate. -1 to -9 are the
-   // overflow and underflow bins.  overflow bin -5 is the unbinned areas in
+   // Returns the bin number of the bin at the given coordinate. -1 to -9 are
+   // the overflow and underflow bins.  overflow bin -5 is the unbinned areas in
    // the histogram (also called "the sea"). The third parameter can be left
    // blank.
    // The overflow/underflow bins are:
@@ -442,7 +511,7 @@ Int_t TH2Poly::FindBin(Double_t x, Double_t y, Double_t)
    else                           overflow += -7;
    if      (x > fXaxis.GetXmax()) overflow += -2;
    else if (x > fXaxis.GetXmin()) overflow += -1;
-   if (overflow != -5) return overflow;  // If there is an overflow/undeflow, returns that value
+   if (overflow != -5) return overflow;
 
    // Finds the cell (x,y) coordinates belong to
    Int_t n = (Int_t)(floor((x-fXaxis.GetXmin())/fStepX));
@@ -454,7 +523,7 @@ Int_t TH2Poly::FindBin(Double_t x, Double_t y, Double_t)
    if (n<0)       n = 0;
    if (m<0)       m = 0;
 
-   if (fIsEmpty[n+fCellX*m]) return -5;  // If the cell is empty, then the point must be on "the sea"
+   if (fIsEmpty[n+fCellX*m]) return -5;
 
    TH2PolyBin *bin;
 
@@ -488,7 +557,7 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
    // Increment the bin containing (x,y) by w.
    // Uses the partitioning algorithm.
 
-   if (fNcells==0) return 0;  // If there are no bins in the histogram, does nothing
+   if (fNcells==0) return 0;
    Int_t overflow = 0;
    if      (y > fYaxis.GetXmax()) overflow += -1;
    else if (y > fYaxis.GetXmin()) overflow += -4;
@@ -510,7 +579,7 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
    if (n<0)       n = 0;
    if (m<0)       m = 0;
 
-   if (fIsEmpty[n+fCellX*m]) return 0;  // If the cell is empty, then does not do anything
+   if (fIsEmpty[n+fCellX*m]) return 0;
 
    TH2PolyBin *bin;
    Int_t bi;
@@ -525,13 +594,13 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
          bin->Fill(w);
 
          // Statistics
-         fTsumw   = fTsumw + w;       // Increments the total number of content
-         fTsumwx  = fTsumwx + w*x;    // Increments the weighted sum of x coordinates
-         fTsumwx2 = fTsumwx2 + w*x*x; // Increments the weighted sum of squares of x coordinates
-         fTsumwy  = fTsumwy + w*y;    // Increments the weighted sum of y coordinates
-         fTsumwy2 = fTsumwy2 + w*y*y; // Increments the weighted sum of squares of y coordinates
+         fTsumw   = fTsumw + w;
+         fTsumwx  = fTsumwx + w*x;
+         fTsumwx2 = fTsumwx2 + w*x*x;
+         fTsumwy  = fTsumwy + w*y;
+         fTsumwy2 = fTsumwy2 + w*y*y;
          if (fSumw2.fN) fSumw2.fArray[bi] += w*w;
-         fEntries++;                  // Increments the total number of times Fill() was called
+         fEntries++;
 
          SetBinContentChanged(kTRUE);
 
@@ -539,7 +608,7 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
       }
    }
 
-   fOverflow[4]++;  // Increments the "sea".
+   fOverflow[4]++;
    return 0;
 }
 
@@ -600,7 +669,7 @@ Double_t TH2Poly::Integral(Option_t* option) const
    opt.ToLower();
 
    if ((opt.Contains("width")) || (opt.Contains("area"))) {
-      Double_t w;  // Weight of each bin.  Equals to the area of the bin if options "width" or "area" are specified.
+      Double_t w;
       Double_t integral = 0.;
 
       TIter    next(fBins);
@@ -857,11 +926,11 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
 
    fNCells = fCellX*fCellY;
    fCells  = new TList [fNCells];  // Sets an empty partition
-   fStepX  = (fXaxis.GetXmax() - fXaxis.GetXmin())/fCellX;     // Calculate cell width
-   fStepY  = (fYaxis.GetXmax() - fYaxis.GetXmin())/fCellY;     // Calculate cell height
+   fStepX  = (fXaxis.GetXmax() - fXaxis.GetXmin())/fCellX; // Cell width
+   fStepY  = (fYaxis.GetXmax() - fYaxis.GetXmin())/fCellY; // Cell height
 
-   fIsEmpty = new Bool_t [fNCells];                            // Declares the 'empty partition' flag
-   fCompletelyInside = new Bool_t [fNCells];                   // Declares the 'cell is completely inside bin' flag
+   fIsEmpty = new Bool_t [fNCells]; // Empty partition
+   fCompletelyInside = new Bool_t [fNCells]; // Cell is completely inside bin
 
    for (i = 0; i<fNCells; i++) {   // Initializes the flags
       fIsEmpty[i] = kTRUE;
@@ -906,7 +975,8 @@ Bool_t TH2Poly::IsIntersecting(TH2PolyBin *bin,
          gx = g->GetX();
          gy = g->GetY();
          gn = g->GetN();
-         inter = IsIntersectingPolygon(gn, gx, gy, xclipl, xclipr, yclipb, yclipt);
+         inter = IsIntersectingPolygon(gn, gx, gy, xclipl, xclipr,
+                                                   yclipb, yclipt);
          if (inter) return inter;
       }
    }
@@ -922,7 +992,8 @@ Bool_t TH2Poly::IsIntersectingPolygon(Int_t bn, Double_t *x, Double_t *y,
    // Returns kTRUE if the input polygon (bn, x, y) is intersecting with the
    // input rectangle (xclipl, xclipr, yclipb, yclipt)
 
-   Bool_t p0R, p0L, p0T, p0B, p0xM, p0yM, p1R, p1L, p1T, p1B, p1xM, p1yM, p0In, p1In;
+   Bool_t p0R, p0L, p0T, p0B, p0xM, p0yM, p1R, p1L, p1T;
+   Bool_t p1B, p1xM, p1yM, p0In, p1In;
 
    for (int counter = 0; counter < (bn-1); counter++) {
       // If both are on the same side, return kFALSE
@@ -1037,7 +1108,8 @@ void TH2Poly::SavePrimitive(ostream &out, Option_t *option)
    out <<"   "<< ClassName() <<" *";
 
    //histogram pointer has by default the histogram name.
-   //however, in case histogram has no directory, it is safer to add a incremental suffix
+   //however, in case histogram has no directory, it is safer to add a
+   //incremental suffix
    static Int_t hcounter = 0;
    TString histName = GetName();
    if (!fDirectory && !histName.Contains("Graph")) {
@@ -1049,8 +1121,10 @@ void TH2Poly::SavePrimitive(ostream &out, Option_t *option)
 
    //Construct the class initialization
    out << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
-       << GetTitle() << "\", " << fCellX << ", " << fXaxis.GetXmin() << ", " << fXaxis.GetXmax()
-       << ", " << fCellY << ", " << fYaxis.GetXmin() << ", " << fYaxis.GetXmax() << ");" << endl;
+       << GetTitle() << "\", " << fCellX << ", " << fXaxis.GetXmin()
+       << ", " << fXaxis.GetXmax()
+       << ", " << fCellY << ", " << fYaxis.GetXmin() << ", "
+       << fYaxis.GetXmax() << ");" << endl;
 
    // Save Bins
    TIter       next(fBins);
@@ -1059,7 +1133,8 @@ void TH2Poly::SavePrimitive(ostream &out, Option_t *option)
 
    while((obj = next())){
       th2pBin = (TH2PolyBin*) obj;
-      th2pBin->GetPolygon()->SavePrimitive(out, Form("th2poly%s",histName.Data()));
+      th2pBin->GetPolygon()->SavePrimitive(out,
+                                           Form("th2poly%s",histName.Data()));
    }
 
    // save bin contents
