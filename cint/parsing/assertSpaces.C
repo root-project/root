@@ -13,6 +13,21 @@ public:
    const T c;
    T* p;
    const T* cp;
+
+   unsigned int f() {
+      return 12;
+   }
+   int g(unsigned long p = sizeof(double)) {
+      return (int)p;
+   }
+
+   int h(long p = sizeof(unsigned short int)) {
+      return (int)p;
+   }
+
+   int i(long p = sizeof(double)) {
+      return (unsigned short)p;
+   }
 };
 
 int core() {
@@ -30,6 +45,11 @@ int core() {
    if (xld.s[9] != 87465876ll) return 1;
 
    xcx.s[2] = 0;
+
+   xll.f();
+   xll.g();
+   xll.h();
+   xll.i();
 
    return 0;
 };
