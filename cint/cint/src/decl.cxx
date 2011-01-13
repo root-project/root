@@ -699,7 +699,7 @@ static int G__initstruct(G__FastAllocString& new_name)
    int linear_index = -1;
    while (mparen) {
       // -- Read the next initializer value.
-      int c = G__fgetstream(expr, 0, ",{}");
+      int c = G__fgetstream_new(expr, 0, ",{}");
       if (expr[0]) {
          // -- We have an initializer expression.
          // FIXME: Do we handle a string literal correctly here?  See similar code in G__initary().
@@ -778,7 +778,7 @@ static int G__initstruct(G__FastAllocString& new_name)
                break;
             }
             // Get next initializer expression.
-            c = G__fgetstream(expr, 0, ",{}");
+            c = G__fgetstream_new(expr, 0, ",{}");
          } while (memvar);
          // Reset back to the beginning of the data member list.
          memvar = G__initmemvar(var->p_tagtable[varid], &memindex, &buf);
@@ -1024,7 +1024,7 @@ static int G__initary(G__FastAllocString& new_name)
    int linear_index = 0;
    while (brace_level) {
       // -- Read the next initializer value.
-      int c = G__fgetstream(expr, 0, ",{}");
+      int c = G__fgetstream_new(expr, 0, ",{}");
       if (expr[0]) {
          // -- Found one.
          //printf("%d: '%s', ", linear_index, expr);
@@ -1374,7 +1374,7 @@ static void G__initstructary(G__FastAllocString& new_name, int tagnum)
       // FIXME: This does not allow nested curly braces.
       p_inc = 0;
       do {
-         cin = G__fgetstream(buf, 0, ",}");
+         cin = G__fgetstream_new(buf, 0, ",}");
          ++p_inc;
       } while (cin != '}');
       // Now modify the name by adding the calculated dimensionality.
@@ -1402,7 +1402,7 @@ static void G__initstructary(G__FastAllocString& new_name, int tagnum)
    long len = strlen(buf);
    int i = 0;
    do {
-      cin = G__fgetstream(buf, len, ",}");
+      cin = G__fgetstream_new(buf, len, ",}");
       buf += ")";
       if (G__struct.iscpplink[tagnum] != G__CPPLINK) {
          G__store_struct_offset = adr + (i * G__struct.size[tagnum]);
@@ -1491,9 +1491,9 @@ static int G__readpointer2function(G__FastAllocString& new_name, char* pvar_type
       G__FastAllocString temp(G__ONELINE);
       int n = 0;
       while (c == '[') {
-         c = G__fgetstream(temp, 0, "]");
+         c = G__fgetstream_new(temp, 0, "]");
          G__p2arylabel[n++] = G__int(G__getexpr(temp));
-         c = G__fgetstream(temp, 0, "[;,)=");
+         c = G__fgetstream_new(temp, 0, "[;,)=");
       }
       G__p2arylabel[n] = 0;
       fseek(G__ifile.fp, -1, SEEK_CUR);
@@ -1754,7 +1754,7 @@ void G__define_var(int tagnum, int typenum)
             temp[0] = '\0';
          }
          else {
-            cin = G__fgetstream(temp, 0, ",)");
+            cin = G__fgetstream_new(temp, 0, ",)");
             store_var_type = G__var_type;
             G__var_type = 'p';
             if (G__def_tagnum != -1) {
@@ -2388,7 +2388,7 @@ void G__define_var(int tagnum, int typenum)
             switch (cin) {
                case '=':
                   if (strncmp(new_name + i, "operator", 8) == 0) {
-                     cin = G__fgetstream(new_name, strlen(new_name) + 1, "(");
+                     cin = G__fgetstream_new(new_name, strlen(new_name) + 1, "(");
                      new_name.Resize(strlen(new_name) + 1);
                      new_name[strlen(new_name)] = '=';
                      break;
