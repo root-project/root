@@ -153,6 +153,7 @@ int TCint_GenerateDictionary(const std::vector<std::string> &classes,
             TString header(gSystem->BaseName(cl->GetDeclFileName()));
             TString dir(gSystem->DirName(cl->GetDeclFileName()));
             while (dir.Length() && dir != "."
+                   && dir != "include" && dir != "inc"
                    && !dir.EndsWith("/include") && !dir.EndsWith("\\include")
                    && !dir.EndsWith("/inc") && !dir.EndsWith("\\inc")) {
                gSystem->PrependPathName(gSystem->BaseName(dir), header);
