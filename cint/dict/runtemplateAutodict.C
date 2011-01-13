@@ -19,5 +19,8 @@ int runtemplateAutodict()
 
   gROOT->ProcessLine(".x templateClassTest.C");
   //gROOT->ProcessLine(".U templateClassTest.C");
+
+  gROOT->ProcessLine(".x ROOTClassTest.C");
+  //gROOT->ProcessLine(".U ROOTClassTest.C");
   return 0;
 }
