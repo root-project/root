@@ -2177,37 +2177,44 @@ int G__getstream(const char* source, int* isrc, char* string, const char* endmar
    //    char *source="abcdefg * hijklmn) ;   "
    //                  -----------------^       *string="abcdefg*hijklmn"
    //  
-   short i = 0;
-   short l = 0;
+   size_t i = 0;
+   size_t l = 0;
    int c = 0;
-   int prev = 0;
-   short nest = 0;
-   short single_quote = 0;
-   short double_quote = 0;
-   short flag = 0;
-   short ignoreflag = 0;
+   int nest = 0;
+   bool single_quote = false;
+   bool double_quote = false;
+   bool breakflag = false;
+   bool ignoreflag = false;
+   bool commentflag = false;
    int start_line = G__ifile.line_number;
+
    do {
-      ignoreflag = 0;
+      ignoreflag = false;
       c = source[(*isrc)++];
-      if (!nest && !single_quote && !double_quote) {
+
+      if (nest <= 0 && !single_quote && !double_quote) {
          l = 0;
+         int prev;
          while ((prev = endmark[l++]) != '\0') {
             if (c == prev) {
-               flag = 1;
-               ignoreflag = 1;
+               breakflag = true;
+               ignoreflag = true;
             }
          }
       }
+
+      bool next_single_quote = single_quote;
+      bool next_double_quote = double_quote;
+
       switch (c) {
-         case '"':
-            if (!single_quote) {
-               double_quote ^= 1;
-            }
-            break;
-         case '\'':
-            if (!double_quote) {
-               single_quote ^= 1;
+         case '\f':
+         case '\n':
+         case '\r':
+         case '\t':
+         case ' ':
+            commentflag = false;
+            if (!single_quote && !double_quote) {
+               c = ' ';
             }
             break;
          case '{':
@@ -2223,22 +2230,51 @@ int G__getstream(const char* source, int* isrc, char* string, const char* endmar
             if (!single_quote && !double_quote) {
                --nest;
                if (nest < 0) {
-                  flag = 1;
-                  ignoreflag = 1;
+                  breakflag = true;
+                  ignoreflag = true;
                }
             }
             break;
-         case '\f':
-         case '\n':
-         case '\r':
-         case '\t':
-         case ' ':
-            if (!single_quote && !double_quote) {
-               ignoreflag = 1;
+         case '"':
+            if (!single_quote) {
+               next_double_quote = !double_quote;
+            }
+            break;
+         case '\'':
+            if (!double_quote) {
+               next_single_quote = !single_quote;
+            }
+            break;
+         case '\\':
+            if (!ignoreflag) {
+               string[i++] = c;
+               c = source[(*isrc)++];
+            }
+            break;
+         case '/':
+            if (!double_quote && !single_quote && i > 0 && string[i-1] == '/' &&
+                  commentflag) {
+               --i;
+               G__fignoreline();
+               ignoreflag = true;
+            }
+            else {
+               commentflag = true;
+            }
+            break;
+
+         case '*':
+            /* comment */
+            if (!double_quote && !single_quote) {
+               if (i > 0 && string[i-1] == '/' && commentflag) {
+                  while ((c = source[(*isrc)++]) && c != '*' && source[*isrc] != '/') {}
+                  --i;
+                  ignoreflag = true;
+               }
             }
             break;
          case '\0':
-            flag = 1;
+            breakflag = 1;
             ignoreflag = 1;
             break;
          case EOF:
@@ -2251,7 +2287,7 @@ int G__getstream(const char* source, int* isrc, char* string, const char* endmar
          default:
             if (G__IsDBCSLeadByte(c) && !ignoreflag) {
                string[i++] = c;
-               c = G__fgetc();
+               c = source[(*isrc)++];
                G__CheckDBCS2ndByte(c);
             }
             break;
@@ -2259,12 +2295,35 @@ int G__getstream(const char* source, int* isrc, char* string, const char* endmar
          // --
       }
       if (!ignoreflag) {
+         // i > 0, not i > offset: we care even about previous call's content of string
+         if (i > 0 && !single_quote && !double_quote && string[i - 1] == ' ') {
+            // We want to append c, but the trailing char is a space.
+            if (c == ' ') --i; // replace ' ' by ' '
+            else if (i == 1) {
+               // string is " " - remove leading space.
+               --i;
+            } else {
+               char prev = string[i - 2];
+               // We only keep spaces between "identifiers" like "new const long long"
+               // and between '> >'
+               if ((G__IsIdentifier(prev) && G__IsIdentifier(c)) || (prev == '>' && c == '>')) {
+               } else {
+                  // replace previous ' '
+                  --i;
+               }
+            }
+         }
          string[i++] = c;
-         G__CHECK(G__SECURE_BUFFER_SIZE, i >= G__LONGLINE, {string[i] = '\0'; return EOF;});
       }
+
+      single_quote = next_single_quote;
+      double_quote = next_double_quote;
    }
-   while (!flag);
-   string[i] = '\0';
+   while (!breakflag);
+
+   if (i > 0 && string[i - 1] == ' ') --i;
+   string[i] = 0;
+
    return c;
 }
 
