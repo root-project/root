@@ -2073,6 +2073,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                         tmplong = "long ";
                         tmplong += buf;
                         buf.Swap(tmplong);
+                        i += 5;
                      }
                      // Add ptr level: CINT cannot handle that many anyway
                      buf.Resize(i + ptrcnt * 2 + 10 + 5 /*possibly "long "*/);
