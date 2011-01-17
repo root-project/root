@@ -2067,7 +2067,15 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                      // Handle any ref part of the return type.
                      // FIXME: This is wrong, cannot have a pointer to a reference!
                      int i = strlen(buf);
-                     buf.Resize(i + ptrcnt * 2 + 10); // CINT cannot handle that many anyway
+                     if (type == 'm' || type == 'n' || type == 'q') {
+                        // prepend "long":
+                        G__FastAllocString tmplong(i + 5 /*long*/);
+                        tmplong = "long ";
+                        tmplong += buf;
+                        buf.Swap(tmplong);
+                     }
+                     // Add ptr level: CINT cannot handle that many anyway
+                     buf.Resize(i + ptrcnt * 2 + 10 + 5 /*possibly "long "*/);
                      if (is_a_reference) {
                         buf[i++] = '&';
                      }
