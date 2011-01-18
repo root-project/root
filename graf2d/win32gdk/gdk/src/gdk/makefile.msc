@@ -20,7 +20,7 @@ OPTIMIZE = -O2 -MD
 #LINKDEBUG = /nodefaultlib:libc.lib
 !ELSE
 # Debugging:
-OPTIMIZE = -Zi -MDd
+OPTIMIZE = -Z7 -MDd
 LINKDEBUG = /debug
 !ENDIF
 

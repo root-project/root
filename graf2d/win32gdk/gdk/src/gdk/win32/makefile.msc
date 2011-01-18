@@ -12,7 +12,7 @@
 OPTIMIZE = -O2 -MD
 !ELSE
 # Debugging:
-OPTIMIZE = -Zi -MDd
+OPTIMIZE = -Z7 -MDd
 LINKDEBUG = /debug /profile
 !ENDIF
 
