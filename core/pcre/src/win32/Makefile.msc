@@ -24,7 +24,7 @@ LDFLAGS = /nologo /machine:I386 /out:$(LIBLIB)
 
 !ELSEIF  "$(CFG)" == "libpcre - Win32 Debug"
 
-CFLAGS = /nologo /W3 /Gm /Zi /Od /I "./" /I "Win32" /D "HAVE_CONFIG_H" /D "_WIN32" /D "WIN32" /D "_LIB" /D "_DEBUG" /D "_WINDOWS" /D "SUPPORT_UTF8" /D "SUPPORT_UCP" /D POSIX_MALLOC_THRESHOLD=10 /D "NO_RECURSE" /Fo"../$(SRCDIR)/" /FD $(NMCXXFLAGS) /c
+CFLAGS = /nologo /W3 /Gm /Z7 /Od /I "./" /I "Win32" /D "HAVE_CONFIG_H" /D "_WIN32" /D "WIN32" /D "_LIB" /D "_DEBUG" /D "_WINDOWS" /D "SUPPORT_UTF8" /D "SUPPORT_UCP" /D POSIX_MALLOC_THRESHOLD=10 /D "NO_RECURSE" /Fo"../$(SRCDIR)/" /FD $(NMCXXFLAGS) /c
 ALL_CFLAGS = $(CFLAGS)
 LDFLAGS = /nologo /machine:I386 /out:$(LIBLIB)
 !ENDIF 
