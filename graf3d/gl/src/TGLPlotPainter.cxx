@@ -2075,6 +2075,63 @@ void DrawPalette(const TGLPlotCamera * camera, const TGLLevelPalette & palette)
 }
 
 //______________________________________________________________________________
+void DrawPalette(const TGLPlotCamera * camera, const TGLLevelPalette & palette,
+                 const std::vector<Double_t> & levels)
+{
+   //Draw. Palette.
+   const TGLDisableGuard light(GL_LIGHTING);
+   const TGLDisableGuard depth(GL_DEPTH_TEST);
+   const TGLEnableGuard blend(GL_BLEND);
+
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   glOrtho(0, camera->GetWidth(), 0, camera->GetHeight(), -1., 1.);
+
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+
+   const Double_t leftX = camera->GetWidth() * lr;
+   const Double_t rightX = camera->GetWidth() * rr;
+   const Double_t margin = 0.1 * camera->GetHeight();
+   const Double_t h = (camera->GetHeight() * 0.8);
+   const Double_t range = levels.back() - levels.front();
+
+   const UChar_t opacity = 200;
+
+   for (Int_t i = 0, e = palette.GetPaletteSize(); i < e; ++i) {
+      const Double_t yMin = margin + (levels[i] - levels.front()) / range * h;
+      const Double_t yMax = margin + (levels[i + 1] - levels.front()) / range * h;
+      glBegin(GL_POLYGON);
+      const UChar_t * color = palette.GetColour(i);
+      glColor4ub(color[0], color[1], color[2], opacity);
+      glVertex2d(leftX, yMin);
+      glVertex2d(rightX, yMin);
+      glVertex2d(rightX, yMax);
+      glVertex2d(leftX, yMax);
+      glEnd();
+   }
+
+   const TGLEnableGuard  smoothGuard(GL_LINE_SMOOTH);
+   glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+   glColor4d(0., 0., 0., 0.5);
+
+   for (Int_t i = 0, e = palette.GetPaletteSize(); i < e; ++i) {
+      const Double_t yMin = (levels[i] - levels.front()) / range * h;
+      const Double_t yMax = (levels[i + 1] - levels.front()) / range * h;
+
+      glBegin(GL_LINE_LOOP);
+      glVertex2d(leftX, margin + yMin);
+      glVertex2d(rightX, margin + yMin);
+      glVertex2d(rightX, margin + yMax);
+      glVertex2d(leftX, margin + yMax);
+      glEnd();
+   }
+
+}
+
+//______________________________________________________________________________
 void DrawPaletteAxis(const TGLPlotCamera * camera, const Range_t & minMax, Bool_t logZ)
 {
    const Double_t x = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw() + rr * camera->GetWidth()));

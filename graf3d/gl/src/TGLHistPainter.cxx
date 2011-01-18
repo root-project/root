@@ -27,6 +27,7 @@
 #include "TGLSurfacePainter.h"
 #include "TGLTH3Composition.h"
 #include "TGLH2PolyPainter.h"
+#include "TGLVoxelPainter.h"
 #include "TGLHistPainter.h"
 #include "TGLLegoPainter.h"
 #include "TGLBoxPainter.h"
@@ -96,6 +97,12 @@ The following types of plots are provided:
   <li> <tt>"GLISO" :</tt> TH3 is drawn using iso-surfaces.
   </ul>
 
+<p><li><b><tt>TH3</tt> as color boxes - (<tt>TGLVoxelPainter</tt>)</b>
+  <br> The supported option is:
+  <ul>
+  <li> <tt>"GLCOL" :</tt> TH3 is drawn using semi-transparent colored boxes.
+  <br>See <tt>$ROOTSYS/tutorials/gl/glvox1.C</tt>.
+  </ul>
 
 <p><li><b><tt>TF3</tt> (implicit function) - (<tt>TGLTF3Painter</tt>)</b>
   <br> The supported option is:
@@ -609,6 +616,8 @@ TGLHistPainter::ParsePaintOption(const TString &option)const
       parsedOption.fPlotType = kGLBoxPlot;
    if (option.Index("iso") != kNPOS)
       parsedOption.fPlotType = kGLIsoPlot;
+   if (option.Index("col") != kNPOS)
+      parsedOption.fPlotType = kGLVoxel;
 
    return parsedOption;
 }
@@ -641,6 +650,9 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
    } else if (option.fPlotType == kGLIsoPlot) {
       if (!fGLPainter.get())
          fGLPainter.reset(new TGLIsoPainter(fHist, &fCamera, &fCoord));
+   } else if (option.fPlotType == kGLVoxel) {
+      if (!fGLPainter.get())
+         fGLPainter.reset(new TGLVoxelPainter(fHist, &fCamera, &fCoord));
    }
 
    if (fGLPainter.get()) {

@@ -112,6 +112,7 @@
 #pragma link C++ class TGLSelectionBuffer;
 #pragma link C++ class TGLPlotCoordinates;
 #pragma link C++ class TGLSurfacePainter;
+#pragma link C++ class TGLVoxelPainter;
 #pragma link C++ class TGLHistPainter;
 #pragma link C++ class TGLLegoPainter;
 #pragma link C++ class TGLPlotPainter;

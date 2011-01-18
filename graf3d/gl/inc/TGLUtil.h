@@ -79,6 +79,7 @@ enum EGLPlotType {
    kGLIsoPlot,
    kGL5D,
    kGLTH3Composition,
+   kGLVoxel,
    kGLDefaultPlot
 };
 
@@ -1206,6 +1207,10 @@ void DrawSmoothFace(const TGLVertex3 &v1, const TGLVertex3 &v2,
                      const TGLVector3 &norm2, const TGLVector3 &norm3);
 void DrawBoxFront(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
                   Double_t zMin, Double_t zMax, Int_t fp);
+
+void DrawTransparentBox(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
+                        Double_t zMin, Double_t zMax, Int_t fp);
+
 
 void DrawBoxFrontTextured(Double_t xMin, Double_t xMax, Double_t yMin,
                           Double_t yMax, Double_t zMin, Double_t zMax,

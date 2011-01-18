@@ -2679,6 +2679,10 @@ const Int_t    gBoxFrontQuads[][4] = {{0, 1, 2, 3}, {4, 0, 3, 5}, {4, 5, 6, 7}, 
 const Double_t gBoxFrontNormals[][3] = {{-1., 0., 0.}, {0., -1., 0.}, {1., 0., 0.}, {0., 1., 0.}};
 const Int_t    gBoxFrontPlanes[][2] = {{0, 1}, {1, 2}, {2, 3}, {3, 0}};
 
+const Int_t    gBoxBackQuads[][4] = {{7, 1, 2, 6}, {4, 7, 6, 5}, {0, 4, 5, 3}, {0, 3, 2, 1}};
+const Double_t gBoxBackNormals[][3] = {{0., -1., 0.}, {-1., 0., 0.}, {0., 1., 0.}, {1., 0., 0.}};
+const Int_t    gBoxBackPlanes[][2] = {{0, 1}, {3, 0}, {2, 3}, {1, 2}};
+
 //______________________________________________________________________________
 void DrawBoxFront(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
                   Double_t zMin, Double_t zMax, Int_t fp)
@@ -2699,6 +2703,81 @@ void DrawBoxFront(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
    const Double_t box[][3] = {{xMin, yMin, zMax}, {xMin, yMax, zMax}, {xMin, yMax, zMin}, {xMin, yMin, zMin},
                               {xMax, yMin, zMax}, {xMax, yMin, zMin}, {xMax, yMax, zMin}, {xMax, yMax, zMax}};
    const Int_t *verts = gBoxFrontQuads[gBoxFrontPlanes[fp][0]];
+
+   glBegin(GL_POLYGON);
+   glNormal3dv(gBoxFrontNormals[gBoxFrontPlanes[fp][0]]);
+   glVertex3dv(box[verts[0]]);
+   glVertex3dv(box[verts[1]]);
+   glVertex3dv(box[verts[2]]);
+   glVertex3dv(box[verts[3]]);
+   glEnd();
+
+   verts = gBoxFrontQuads[gBoxFrontPlanes[fp][1]];
+
+   glBegin(GL_POLYGON);
+   glNormal3dv(gBoxFrontNormals[gBoxFrontPlanes[fp][1]]);
+   glVertex3dv(box[verts[0]]);
+   glVertex3dv(box[verts[1]]);
+   glVertex3dv(box[verts[2]]);
+   glVertex3dv(box[verts[3]]);
+   glEnd();
+
+   //Top is always drawn.
+   glBegin(GL_POLYGON);
+   glNormal3d(0., 0., 1.);
+   glVertex3d(xMax, yMin, zMax);
+   glVertex3d(xMax, yMax, zMax);
+   glVertex3d(xMin, yMax, zMax);
+   glVertex3d(xMin, yMin, zMax);
+   glEnd();
+}
+
+//______________________________________________________________________________
+void DrawTransparentBox(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
+                        Double_t zMin, Double_t zMax, Int_t fp)
+{
+   //Draws lego's bar as a 3d box
+   if (zMax < zMin)
+      std::swap(zMax, zMin);
+
+   //The order is: 1) two back planes, 2) bottom plane, 3) two front planes,
+   //4) top.
+
+   //Bottom is always drawn.
+   glBegin(GL_POLYGON);
+   glNormal3d(0., 0., -1.);
+   glVertex3d(xMax, yMin, zMin);
+   glVertex3d(xMin, yMin, zMin);
+   glVertex3d(xMin, yMax, zMin);
+   glVertex3d(xMax, yMax, zMin);
+   glEnd();
+
+   const Double_t box[][3] = {{xMin, yMin, zMax}, {xMin, yMax, zMax}, {xMin, yMax, zMin}, {xMin, yMin, zMin},
+                              {xMax, yMin, zMax}, {xMax, yMin, zMin}, {xMax, yMax, zMin}, {xMax, yMax, zMax}};
+
+   //Draw two back planes.
+   const Int_t *verts = gBoxBackQuads[gBoxBackPlanes[fp][0]];
+
+   glBegin(GL_POLYGON);
+   glNormal3dv(gBoxBackNormals[gBoxBackPlanes[fp][0]]);
+   glVertex3dv(box[verts[0]]);
+   glVertex3dv(box[verts[1]]);
+   glVertex3dv(box[verts[2]]);
+   glVertex3dv(box[verts[3]]);
+   glEnd();
+
+   verts = gBoxBackQuads[gBoxBackPlanes[fp][1]];
+
+   glBegin(GL_POLYGON);
+   glNormal3dv(gBoxBackNormals[gBoxBackPlanes[fp][1]]);
+   glVertex3dv(box[verts[0]]);
+   glVertex3dv(box[verts[1]]);
+   glVertex3dv(box[verts[2]]);
+   glVertex3dv(box[verts[3]]);
+   glEnd();
+
+   //Draw two visible front planes.
+   verts = gBoxFrontQuads[gBoxFrontPlanes[fp][0]];
 
    glBegin(GL_POLYGON);
    glNormal3dv(gBoxFrontNormals[gBoxFrontPlanes[fp][0]]);

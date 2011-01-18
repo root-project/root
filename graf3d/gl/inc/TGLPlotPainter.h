@@ -406,8 +406,10 @@ class TGLLevelPalette;
 
 namespace Rgl {
 
-void DrawPalette(const TGLPlotCamera * camera, const TGLLevelPalette & palette);
-void DrawPaletteAxis(const TGLPlotCamera * camera, const Range_t & minMax, Bool_t logZ);
+void DrawPalette(const TGLPlotCamera *camera, const TGLLevelPalette &palette);
+void DrawPalette(const TGLPlotCamera *camera, const TGLLevelPalette &palette,
+                 const std::vector<Double_t> &levels);
+void DrawPaletteAxis(const TGLPlotCamera *camera, const Range_t &minMax, Bool_t logZ);
 
 //Polygonal histogram (TH2Poly) is slightly stretched along x and y.
 extern const Double_t gH2PolyScaleXY;
