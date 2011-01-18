@@ -14,7 +14,7 @@ LD            = link
 
 ifdef is_debug
 # Debugging:
-OPTIMIZE  := -Zi
+OPTIMIZE  := -Z7
 LINKDEBUG := -debug
 else
 # Full optimization:
