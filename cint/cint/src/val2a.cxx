@@ -882,7 +882,7 @@ char* G__type2string(int type, int tagnum, int typenum, int reftype, int isconst
    //
    //  Handle pointer and reference parts of type.
    //
-   if ((type != 'q') && (type != 'a')) {
+   if (type != 'a') {
       // Take care of the first pointer level.
       if (isupper(type)) {
          if ((isconst & G__PCONSTVAR) && (reftype == G__PARANORMAL)) {
