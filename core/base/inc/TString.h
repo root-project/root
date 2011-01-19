@@ -486,7 +486,12 @@ inline TString &TString::operator+=(UInt_t i)
 { return operator+=((ULong_t) i); }
 
 inline TString &TString::operator+=(Double_t f)
-{ char s[32]; sprintf(s, "%.17g", f); return operator+=(s); }
+{
+   char s[32];
+   // coverity[secure_coding] Buffer is large enough: width specified in format
+   sprintf(s, "%.17g", f);
+   return operator+=(s);
+}
 
 inline TString &TString::operator+=(Float_t f)
 { return operator+=((Double_t) f); }
@@ -495,7 +500,12 @@ inline TString &TString::operator+=(Long64_t l)
 { char s[32]; sprintf(s, "%lld", l); return operator+=(s); }
 
 inline TString &TString::operator+=(ULong64_t ul)
-{ char s[32]; sprintf(s, "%llu", ul); return operator+=(s); }
+{
+   char s[32];
+   // coverity[secure_coding] Buffer is large enough (2^64 = 20 digits).
+   sprintf(s, "%llu", ul);
+   return operator+=(s);
+}
 
 inline Bool_t TString::BeginsWith(const char *s, ECaseCompare cmp) const
 { return Index(s, s ? strlen(s) : (Ssiz_t)0, (Ssiz_t)0, cmp) == 0; }
