@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog AutoDict_* *.shortlog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += defaultargs templateAutodict operators
+TEST_TARGETS += defaultargs templateAutodict operators algebra
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -74,3 +74,5 @@ operators.log: operators_dict_h.$(DllSuf)
 operators: operators.log
 	$(TestDiff)
 
+algebra: algebra.clog
+	$(TestDiff)
