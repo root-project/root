@@ -70,10 +70,11 @@ LDOPT         = -debug
 
 # Check if nmake version is 8.xx or 9.xx
 !if ([nmake /? 2>&1 | findstr /c:"Version 8\." > nul ] == 0) || \
-    ([nmake /? 2>&1 | findstr /c:"Version 9\." > nul ] == 0) || \
-    ([nmake /? 2>&1 | findstr /c:"Version 10\." > nul ] == 0)
+    ([nmake /? 2>&1 | findstr /c:"Version 9\." > nul ] == 0)
 MT_EXE        = mt -nologo -manifest $@.manifest -outputresource:$@;1
 MT_DLL        = mt -nologo -manifest $@.manifest -outputresource:$@;2
+EXTRAFLAGS    = -D_CRT_SECURE_NO_DEPRECATE
+!else if ([nmake /? 2>&1 | findstr /c:"Version 10\." > nul ] == 0)
 EXTRAFLAGS    = -D_CRT_SECURE_NO_DEPRECATE
 !else
 MT_EXE        = 
