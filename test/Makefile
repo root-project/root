@@ -236,6 +236,10 @@ THREADSO      = threads.$(ObjSuf)
 THREADSS      = threads.$(SrcSuf)
 THREADS       = threads$(ExeSuf)
 
+STRESSINTERPO = stressInterpreter.$(ObjSuf)
+STRESSINTERPS = stressInterpreter.$(SrcSuf)
+STRESSINTERP  = stressInterpreter$(ExeSuf)
+
 STRESSITERO    = stressIterators.$(ObjSuf)
 STRESSITERS    = stressIterators.$(SrcSuf)
 STRESSITER     = stressIterators$(ExeSuf)
@@ -253,8 +257,8 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(EVENTMTO) $(HWORLDO) $(HSIMPLEO) $(MIN
                 $(CTORTUREO) $(QPRANDOMO) $(THREADSO) $(STRESSVECO) \
                 $(STRESSMATHO) $(STRESSFITO) $(STRESSHISTOFITO) $(STRESSHEPIXO) \
                 $(STRESSENTRYLISTO) $(STRESSROOFITO) $(STRESSPROOFO) \
-                $(STRESSMATHMOREO) $(STRESSTMVAO) $(STRESSITERO) $(STRESSHISTO) \
-                $(STRESSGUIO)
+                $(STRESSMATHMOREO) $(STRESSTMVAO) $(STRESSINTERPO) $(STRESSITERO) \
+                $(STRESSHISTO) $(STRESSGUIO)
 
 PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
@@ -263,8 +267,8 @@ PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING)
                 $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
                 $(STRESSVEC) $(STRESSFIT) $(STRESSHISTOFIT) $(STRESSHEPIX) \
                 $(STRESSENTRYLIST) $(STRESSROOFIT) $(STRESSPROOF) $(STRESSMATH) \
-                $(STRESSMATHMORE) $(STRESSTMVA) $(STRESSITER) $(STRESSHIST) \
-                $(STRESSGUI)
+                $(STRESSMATHMORE) $(STRESSTMVA) $(STRESSINTERP)  $(STRESSITER) \
+                $(STRESSHIST) $(STRESSGUI)
 
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
@@ -712,6 +716,11 @@ else
 endif
 endif
 endif
+
+$(STRESSINTERP): $(STRESSINTERPO) 
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
+		@echo "$@ done"
 
 $(STRESSITER):	$(STRESSITERO) 
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
