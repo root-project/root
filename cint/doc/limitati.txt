@@ -168,6 +168,10 @@ Limitation of CINT
         int scanf(char *format ...);               //         "
         int sscanf(char *string,char *format ...); //         "
 
+   Note that null characters can not be inserted in a file or string using
+   the scanf/printf routine from the interpreter for example with
+        fprintf(f, "%c%c%c%c", 44, 0, 44, 0);
+   the resulting file will only containg the comma characters.
 
 # switch statement and default: label
    Cint requires default: label to appear at the end of switch statement.
