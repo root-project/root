@@ -2091,6 +2091,7 @@ if test ! "x$enable_x11" = "xno" ; then
     fi
 
     check_header "X11/xpm.h" "" \
+        $XPM ${XPM:+$XPM/include} \
         ${finkdir:+$finkdir/include} \
         /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
         /usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
