@@ -5609,8 +5609,6 @@ void THistPainter::PaintH3(Option_t *option)
    } else {
       cmd = Form("TPolyMarker3D::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
    }
-
-   if (Hoption.Same) return;
    
    TView *view = gPad->GetView();
    if (!view) return;
@@ -5621,6 +5619,8 @@ void THistPainter::PaintH3(Option_t *option)
 
    // Paint the data
    gROOT->ProcessLine(cmd);
+
+   if (Hoption.Same) return;
 
    // Draw axis
    view->SetOutlineToCube();
