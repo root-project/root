@@ -4848,6 +4848,11 @@ static void GetDarwinMemInfo(MemInfo_t *meminfo)
 static void GetDarwinProcInfo(ProcInfo_t *procinfo)
 {
    // Get process info for this process on Mac OS X.
+   // Code largely taken from:
+   // http://www.opensource.apple.com/source/top/top-15/libtop.c
+   // The virtual memory usage is slightly over estimated as we don't
+   // subtract shared regions, but the value makes more sense
+   // then pure vsize, which is useless on 64-bit machines.
 
 #ifdef _LP64
 #define vm_region vm_region_64
@@ -4886,9 +4891,10 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
    	mach_port_t object_name;
    	vm_address_t address;
    	vm_region_top_info_data_t info;
-   	vm_size_t vsize, rsize, size;
+   	vm_size_t vsize, vprvt, rsize, size;
    	rsize = ti.resident_size;
    	vsize = ti.virtual_size;
+      vprvt = 0;
       for (address = 0; ; address += size) {
          // get memory region
          count = VM_REGION_TOP_INFO_COUNT;
@@ -4917,14 +4923,37 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
 
                if (b_info.reserved) {
                   vsize -= (SHARED_TEXT_REGION_SIZE + SHARED_DATA_REGION_SIZE);
-                  break;
+                  //break;  // only for vsize
                }
             }
+            // Short circuit the loop if this isn't a shared
+            // private region, since that's the only region
+            // type we care about within the current address range.
+            if (info.share_mode != SM_PRIVATE) {
+               continue;
+            }
+         }
+         switch (info.share_mode) {
+            case SM_COW: {
+               if (info.ref_count == 1) {
+                  vprvt += size;
+               } else {
+                  vprvt += info.private_pages_resident * getpagesize();
+               }
+               break;
+            }
+            case SM_PRIVATE: {
+               vprvt += size;
+               break;
+            }
+            default:
+               break;
          }
       }
 
       procinfo->fMemResident = (Long_t)(rsize / 1024);
-      procinfo->fMemVirtual  = (Long_t)(vsize / 1024);
+      //procinfo->fMemVirtual  = (Long_t)(vsize / 1024);
+      procinfo->fMemVirtual  = (Long_t)(vprvt / 1024);
    }
 }
 #endif
