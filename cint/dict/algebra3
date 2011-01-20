@@ -1386,7 +1386,7 @@ namespace aux {
     _Tp c = ((_Tp)cos(angleRad)),
       s = ((_Tp)sin(angleRad));
     _Tp eip, emip;
-    ALGEBRA3_eip_emip<typename aux::rtti<_Tp>::value_type>(phaseDeg, eip, emip); // calculate e^(i*phaseDeg), e^(-i*phaseDeg)
+    ALGEBRA3_eip_emip<_Tp>(phaseDeg, eip, emip); // calculate e^(i*phaseDeg), e^(-i*phaseDeg)
 
     return mat2<_Tp>(c, s * emip, -s * eip, c);
   }
@@ -1579,7 +1579,7 @@ namespace aux {
     _Tp c = ((_Tp)cos(angleRad)),
       s = ((_Tp)sin(angleRad));
     _Tp eip, emip;
-    ALGEBRA3_eip_emip<typename aux::rtti<_Tp>::value_type>(phaseDeg, eip, emip); // calculate e^(i*phaseDeg), e^(-i*phaseDeg)
+    ALGEBRA3_eip_emip<_Tp>(phaseDeg, eip, emip); // calculate e^(i*phaseDeg), e^(-i*phaseDeg)
 
     if ((Axis1 == VY) && (Axis2 == VZ))
       return mat3<_Tp>(((_Tp)1), ((_Tp)0), ((_Tp)0),
@@ -1803,7 +1803,7 @@ namespace aux {
     _Tp c = ((_Tp)cos(angleRad)),
       s = ((_Tp)sin(angleRad));
     _Tp eip, emip;
-    ALGEBRA3_eip_emip<typename aux::rtti<_Tp>::value_type>(phaseDeg, eip, emip); // calculate e^(i*phaseDeg), e^(-i*phaseDeg)
+    ALGEBRA3_eip_emip<_Tp>(phaseDeg, eip, emip); // calculate e^(i*phaseDeg), e^(-i*phaseDeg)
 
     if ((Axis1 == VZ) && (Axis2 == VW))
       return mat4<_Tp>(((_Tp)1), ((_Tp)0), ((_Tp)0), ((_Tp)0),
