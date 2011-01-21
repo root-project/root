@@ -2040,6 +2040,10 @@ void TChain::ResetBranchAddress(TBranch *branch)
 {
    // -- Reset the addresses of the branch.
 
+   TChainElement* element = (TChainElement*) fStatus->FindObject(branch->GetName());
+   if (element) {
+      element->SetBaddress(0);
+   }   
    if (fTree) {
       fTree->ResetBranchAddress(branch);
    }
