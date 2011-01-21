@@ -1673,7 +1673,15 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       }
 
       fHeaderFileName = fPrefix;
-      fHeaderFileName.Append(".h");
+      TString classname = gSystem->BaseName(fPrefix);
+      
+      // Check if there is already an extension and extract it.
+      Ssiz_t pos = classname.Last('.');
+      if (pos != kNPOS) {
+         classname.Remove(pos);
+      } else {
+         fHeaderFileName.Append(".h");
+      }
 
       // Check to see if the target file exist.
       // If they do we will generate the proxy in temporary file and modify the original
@@ -1685,7 +1693,6 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
          updating = kTRUE;
       }
 
-      TString classname = gSystem->BaseName(fPrefix);
 
       TString treefile;
       Bool_t ischain = fTree->InheritsFrom(TChain::Class());
