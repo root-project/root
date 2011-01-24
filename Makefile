@@ -4,20 +4,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 
-##### Include path/location macros (result of ./configure) #####
-##### However, if we are building packages or cleaning,    #####
-##### config/Makefile.config isn't made yet - the package  #####
-##### scripts want's to make it them selves - so we don't  #####
-
-ifeq ($(findstring $(MAKECMDGOALS), debian redhat),)
-include config/Makefile.config
-endif
-ifeq ($(MAKECMDGOALS),maintainer-clean)
--include config/Makefile.config
-endif
-ifeq ($(MAKECMDGOALS),clean)
-include config/Makefile.config
-endif
+##### Check version of GNU make #####
 
 MAKE_VERSION_MAJOR := $(word 1,$(subst ., ,$(MAKE_VERSION)))
 MAKE_VERSION_MINOR := $(shell echo $(word 2,$(subst ., ,$(MAKE_VERSION))) | \
@@ -27,6 +14,10 @@ MAKE_VERSION_MINOR ?= 0
 ORDER_ := $(shell test $(MAKE_VERSION_MAJOR) -gt 3 || \
                   test $(MAKE_VERSION_MAJOR) -eq 3 && \
                   test $(MAKE_VERSION_MINOR) -ge 80 && echo '|')
+
+##### Include path/location macros (result of ./configure) #####
+
+include config/Makefile.config
 
 ##### Include compiler overrides specified via ./configure #####
 ##### However, if we are building packages or cleaning, we #####
@@ -46,7 +37,7 @@ endif
 ##### don't include this file since it may screw up things #####
 
 ifndef ROOT_SRCDIR
-$(error Please run ./configure again, the build system has been updated)
+$(error Please run ./configure first)
 endif
 
 ifeq ($(findstring $(MAKECMDGOALS), maintainer-clean debian redhat),)
