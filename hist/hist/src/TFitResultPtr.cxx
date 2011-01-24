@@ -49,7 +49,7 @@ TFitResultPtr::~TFitResultPtr()
 
 TFitResult& TFitResultPtr::operator*() const
 {
-   // impelment the de-reference operator to make the class acts as a pointer to a TFitResult
+   // implement the de-reference operator to make the class acts as a pointer to a TFitResult
    // assert in case the class does not contain a pointer to TFitResult
    if  (fPointer == 0) { 
       Error("TFitResultPtr","TFitResult is empty - use the fit option S");
