@@ -31,107 +31,107 @@ public:
    Klass* get() const { return fKlass; }
    static const int first_klf = 30;
    static const int last_klf = 130;
-   int f30(double d) const {return d + 30;}
-   int f31(double d) const {return d + 31;}
-   int f32(double d) const {return d + 32;}
-   int f33(double d) const {return d + 33;}
-   int f34(double d) const {return d + 34;}
-   int f35(double d) const {return d + 35;}
-   int f36(double d) const {return d + 36;}
-   int f37(double d) const {return d + 37;}
-   int f38(double d) const {return d + 38;}
-   int f39(double d) const {return d + 39;}
-   int f40(double d) const {return d + 40;}
-   int f41(double d) const {return d + 41;}
-   int f42(double d) const {return d + 42;}
-   int f43(double d) const {return d + 43;}
-   int f44(double d) const {return d + 44;}
-   int f45(double d) const {return d + 45;}
-   int f46(double d) const {return d + 46;}
-   int f47(double d) const {return d + 47;}
-   int f48(double d) const {return d + 48;}
-   int f49(double d) const {return d + 49;}
-   int f50(double d) const {return d + 50;}
-   int f51(double d) const {return d + 51;}
-   int f52(double d) const {return d + 52;}
-   int f53(double d) const {return d + 53;}
-   int f54(double d) const {return d + 54;}
-   int f55(double d) const {return d + 55;}
-   int f56(double d) const {return d + 56;}
-   int f57(double d) const {return d + 57;}
-   int f58(double d) const {return d + 58;}
-   int f59(double d) const {return d + 59;}
-   int f60(double d) const {return d + 60;}
-   int f61(double d) const {return d + 61;}
-   int f62(double d) const {return d + 62;}
-   int f63(double d) const {return d + 63;}
-   int f64(double d) const {return d + 64;}
-   int f65(double d) const {return d + 65;}
-   int f66(double d) const {return d + 66;}
-   int f67(double d) const {return d + 67;}
-   int f68(double d) const {return d + 68;}
-   int f69(double d) const {return d + 69;}
-   int f70(double d) const {return d + 70;}
-   int f71(double d) const {return d + 71;}
-   int f72(double d) const {return d + 72;}
-   int f73(double d) const {return d + 73;}
-   int f74(double d) const {return d + 74;}
-   int f75(double d) const {return d + 75;}
-   int f76(double d) const {return d + 76;}
-   int f77(double d) const {return d + 77;}
-   int f78(double d) const {return d + 78;}
-   int f79(double d) const {return d + 79;}
-   int f80(double d) const {return d + 80;}
-   int f81(double d) const {return d + 81;}
-   int f82(double d) const {return d + 82;}
-   int f83(double d) const {return d + 83;}
-   int f84(double d) const {return d + 84;}
-   int f85(double d) const {return d + 85;}
-   int f86(double d) const {return d + 86;}
-   int f87(double d) const {return d + 87;}
-   int f88(double d) const {return d + 88;}
-   int f89(double d) const {return d + 89;}
-   int f90(double d) const {return d + 90;}
-   int f91(double d) const {return d + 91;}
-   int f92(double d) const {return d + 92;}
-   int f93(double d) const {return d + 93;}
-   int f94(double d) const {return d + 94;}
-   int f95(double d) const {return d + 95;}
-   int f96(double d) const {return d + 96;}
-   int f97(double d) const {return d + 97;}
-   int f98(double d) const {return d + 98;}
-   int f99(double d) const {return d + 99;}
-   int f100(double d) const {return d + 100;}
-   int f101(double d) const {return d + 101;}
-   int f102(double d) const {return d + 102;}
-   int f103(double d) const {return d + 103;}
-   int f104(double d) const {return d + 104;}
-   int f105(double d) const {return d + 105;}
-   int f106(double d) const {return d + 106;}
-   int f107(double d) const {return d + 107;}
-   int f108(double d) const {return d + 108;}
-   int f109(double d) const {return d + 109;}
-   int f110(double d) const {return d + 110;}
-   int f111(double d) const {return d + 111;}
-   int f112(double d) const {return d + 112;}
-   int f113(double d) const {return d + 113;}
-   int f114(double d) const {return d + 114;}
-   int f115(double d) const {return d + 115;}
-   int f116(double d) const {return d + 116;}
-   int f117(double d) const {return d + 117;}
-   int f118(double d) const {return d + 118;}
-   int f119(double d) const {return d + 119;}
-   int f120(double d) const {return d + 120;}
-   int f121(double d) const {return d + 121;}
-   int f122(double d) const {return d + 122;}
-   int f123(double d) const {return d + 123;}
-   int f124(double d) const {return d + 124;}
-   int f125(double d) const {return d + 125;}
-   int f126(double d) const {return d + 126;}
-   int f127(double d) const {return d + 127;}
-   int f128(double d) const {return d + 128;}
-   int f129(double d) const {return d + 129;}
-   int f130(double d) const {return d + 130;}
+   long f30(double d) const {return (long)(d + 30);}
+   long f31(double d) const {return (long)(d + 31);}
+   long f32(double d) const {return (long)(d + 32);}
+   long f33(double d) const {return (long)(d + 33);}
+   long f34(double d) const {return (long)(d + 34);}
+   long f35(double d) const {return (long)(d + 35);}
+   long f36(double d) const {return (long)(d + 36);}
+   long f37(double d) const {return (long)(d + 37);}
+   long f38(double d) const {return (long)(d + 38);}
+   long f39(double d) const {return (long)(d + 39);}
+   long f40(double d) const {return (long)(d + 40);}
+   long f41(double d) const {return (long)(d + 41);}
+   long f42(double d) const {return (long)(d + 42);}
+   long f43(double d) const {return (long)(d + 43);}
+   long f44(double d) const {return (long)(d + 44);}
+   long f45(double d) const {return (long)(d + 45);}
+   long f46(double d) const {return (long)(d + 46);}
+   long f47(double d) const {return (long)(d + 47);}
+   long f48(double d) const {return (long)(d + 48);}
+   long f49(double d) const {return (long)(d + 49);}
+   long f50(double d) const {return (long)(d + 50);}
+   long f51(double d) const {return (long)(d + 51);}
+   long f52(double d) const {return (long)(d + 52);}
+   long f53(double d) const {return (long)(d + 53);}
+   long f54(double d) const {return (long)(d + 54);}
+   long f55(double d) const {return (long)(d + 55);}
+   long f56(double d) const {return (long)(d + 56);}
+   long f57(double d) const {return (long)(d + 57);}
+   long f58(double d) const {return (long)(d + 58);}
+   long f59(double d) const {return (long)(d + 59);}
+   long f60(double d) const {return (long)(d + 60);}
+   long f61(double d) const {return (long)(d + 61);}
+   long f62(double d) const {return (long)(d + 62);}
+   long f63(double d) const {return (long)(d + 63);}
+   long f64(double d) const {return (long)(d + 64);}
+   long f65(double d) const {return (long)(d + 65);}
+   long f66(double d) const {return (long)(d + 66);}
+   long f67(double d) const {return (long)(d + 67);}
+   long f68(double d) const {return (long)(d + 68);}
+   long f69(double d) const {return (long)(d + 69);}
+   long f70(double d) const {return (long)(d + 70);}
+   long f71(double d) const {return (long)(d + 71);}
+   long f72(double d) const {return (long)(d + 72);}
+   long f73(double d) const {return (long)(d + 73);}
+   long f74(double d) const {return (long)(d + 74);}
+   long f75(double d) const {return (long)(d + 75);}
+   long f76(double d) const {return (long)(d + 76);}
+   long f77(double d) const {return (long)(d + 77);}
+   long f78(double d) const {return (long)(d + 78);}
+   long f79(double d) const {return (long)(d + 79);}
+   long f80(double d) const {return (long)(d + 80);}
+   long f81(double d) const {return (long)(d + 81);}
+   long f82(double d) const {return (long)(d + 82);}
+   long f83(double d) const {return (long)(d + 83);}
+   long f84(double d) const {return (long)(d + 84);}
+   long f85(double d) const {return (long)(d + 85);}
+   long f86(double d) const {return (long)(d + 86);}
+   long f87(double d) const {return (long)(d + 87);}
+   long f88(double d) const {return (long)(d + 88);}
+   long f89(double d) const {return (long)(d + 89);}
+   long f90(double d) const {return (long)(d + 90);}
+   long f91(double d) const {return (long)(d + 91);}
+   long f92(double d) const {return (long)(d + 92);}
+   long f93(double d) const {return (long)(d + 93);}
+   long f94(double d) const {return (long)(d + 94);}
+   long f95(double d) const {return (long)(d + 95);}
+   long f96(double d) const {return (long)(d + 96);}
+   long f97(double d) const {return (long)(d + 97);}
+   long f98(double d) const {return (long)(d + 98);}
+   long f99(double d) const {return (long)(d + 99);}
+   long f100(double d) const {return (long)(d + 100);}
+   long f101(double d) const {return (long)(d + 101);}
+   long f102(double d) const {return (long)(d + 102);}
+   long f103(double d) const {return (long)(d + 103);}
+   long f104(double d) const {return (long)(d + 104);}
+   long f105(double d) const {return (long)(d + 105);}
+   long f106(double d) const {return (long)(d + 106);}
+   long f107(double d) const {return (long)(d + 107);}
+   long f108(double d) const {return (long)(d + 108);}
+   long f109(double d) const {return (long)(d + 109);}
+   long f110(double d) const {return (long)(d + 110);}
+   long f111(double d) const {return (long)(d + 111);}
+   long f112(double d) const {return (long)(d + 112);}
+   long f113(double d) const {return (long)(d + 113);}
+   long f114(double d) const {return (long)(d + 114);}
+   long f115(double d) const {return (long)(d + 115);}
+   long f116(double d) const {return (long)(d + 116);}
+   long f117(double d) const {return (long)(d + 117);}
+   long f118(double d) const {return (long)(d + 118);}
+   long f119(double d) const {return (long)(d + 119);}
+   long f120(double d) const {return (long)(d + 120);}
+   long f121(double d) const {return (long)(d + 121);}
+   long f122(double d) const {return (long)(d + 122);}
+   long f123(double d) const {return (long)(d + 123);}
+   long f124(double d) const {return (long)(d + 124);}
+   long f125(double d) const {return (long)(d + 125);}
+   long f126(double d) const {return (long)(d + 126);}
+   long f127(double d) const {return (long)(d + 127);}
+   long f128(double d) const {return (long)(d + 128);}
+   long f129(double d) const {return (long)(d + 129);}
+   long f130(double d) const {return (long)(d + 130);}
    
 private:
    Klass* fKlass;
@@ -310,8 +310,8 @@ bool InterpreterStress::stressNestedStatements() {
    bool success = true;
    int ntimes = fNtimes * 4;
    for (int i = 0; i < ntimes; ++i) {
-      for (int pattern = 0; pattern < 0xff; ++pattern) {
-         for (int bit = 0; bit < sizeof(Long64_t)*7; ++bit) {
+      for (unsigned int pattern = 0; pattern < 0xff; ++pattern) {
+         for (unsigned int bit = 0; bit < sizeof(Long64_t)*7; ++bit) {
             ULong64_t v = 1; // always > 0
             switch (pattern & 0xf) {
             case 1: v += 1;
@@ -366,7 +366,7 @@ bool InterpreterStress::run(Int_t ntimes /*= 10*/, const char* runTests /*= 0*/)
    cout << "*  Starting  stress INTERPRETER                                            *" <<endl;
    cout << "****************************************************************************" <<endl;
    bool success = true;
-   for (int itest = 0; itest < fNames.size(); ++itest) {
+   for (unsigned int itest = 0; itest < fNames.size(); ++itest) {
       if (runTests && runTests[0]) {
          // only run test if it was selected
          if (!strstr(fNames[itest].c_str(), runTests)) continue;
@@ -422,7 +422,7 @@ int main(int argc, char **argv)
             printf("  -c: run compiled\n");
             TString alltests;
             InterpreterStress tmp("");
-            for (int i = 0; i < tmp.fNames.size(); ++i) alltests += TString(" ") + tmp.fNames[i];
+            for (unsigned int i = 0; i < tmp.fNames.size(); ++i) alltests += TString(" ") + tmp.fNames[i];
             printf("  --test=...: run only given test, one of%s\n", alltests.Data());
             printf("  num: run for num iterations (default: %d)\n", ntimes);
             return 0;
