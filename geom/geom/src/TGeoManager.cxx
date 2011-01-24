@@ -3245,7 +3245,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
       gROOT->ProcessLine("TPython::Exec(\"topV = geomgr.GetTopVolume()\")");
 
       // instanciate writer
-      const char *cmd=TString::Format("TPython::Exec(\"gdmlwriter = writer.writer('%s')\")",filename);
+      TString cmd=TString::Format("TPython::Exec(\"gdmlwriter = writer.writer('%s')\")",filename);
       gROOT->ProcessLine(cmd);
       gROOT->ProcessLine("TPython::Exec(\"binding = ROOTwriter.ROOTwriter(gdmlwriter)\")");
 
