@@ -319,7 +319,7 @@ build-arch-stamp:  configure-stamp
 	touch build-arch-stamp
 
 build-arch-cint-stamp:build-arch-stamp
-	$(MAKE) cintdlls
+	$(MAKE) all-cintdlls
 	touch build-arch-cint-stamp
 
 build-indep: build-indep-stamp

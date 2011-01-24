@@ -83,7 +83,7 @@ test "x$QTINC" = "x" || unset QTINC
 #	    --disable-builtin-afterimage		\
 
 make 
-make cintdlls
+make all-cintdlls
 make static 
 # cat > html.C <<EOF
 # {
