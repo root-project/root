@@ -2056,8 +2056,7 @@ void TGaxis::SetFunction(const char *funcname)
 //______________________________________________________________________________
 void TGaxis::SetMaxDigits(Int_t maxd)
 {
-   // Static function to set fgMaxDigits for axis with the bin content
-   // (y axis for 1-d histogram, z axis for 2-d histogram)
+   // Static function to set fgMaxDigits for axis.
    // fgMaxDigits is the maximum number of digits permitted for the axis
    // labels above which the notation with 10^N is used.
    // For example, to accept 6 digits number like 900000 on an axis
