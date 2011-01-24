@@ -183,6 +183,8 @@ bool InterpreterStress::stressFuncCall() {
 
    Klass c;
    unsigned long res[2];
+   res[0] = res[1] = 0;
+
    int depth = 6; // That's all that Windows can handle...
    for (int i = 0; i < ntimes / depth; ++i) {
       // Call recursively:
