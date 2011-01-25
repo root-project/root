@@ -289,8 +289,8 @@ bool InterpreterStress::stressReflection() {
          continue;
       }
 
-      double ret = gInterpreter->CallFunc_ExecDouble(mk, obj);
-      if (ret != funcnum + (-funcnum * 2 + 0.2)) {
+      long ret = gInterpreter->CallFunc_ExecInt(mk, obj);
+      if (ret != (long) (funcnum + (-funcnum * 2 + 0.2))) {
          success = false;
          gInterpreter->CallFunc_Delete(mk);
          gInterpreter->ClassInfo_Delete(k);
