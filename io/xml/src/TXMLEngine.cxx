@@ -55,9 +55,6 @@ struct SXmlNode_t {
    static inline char* Name(void* arg) { return (char*)arg + sizeof(SXmlNode_t); }
 };
 
-#define XML_NODE_NAME(arg) (
-
-
 struct SXmlDoc_t {
    SXmlNode_t  *fRootNode;
    char        *fDtdName;
@@ -1633,7 +1630,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
 //______________________________________________________________________________
 void TXMLEngine::DisplayError(Int_t error, Int_t linenumber)
 {
-   // Dsiplays error, occured during parsing of xml file
+   // Displays xml parsing error
    switch(error) {
       case -11: Error("ParseFile", "Node cannot be closed with > symbol at line %d, for instance <?xml ... ?> node", linenumber); break;
       case -10: Error("ParseFile", "Error in xml comments definition at line %d, must be <!-- comments -->", linenumber); break;
@@ -1641,7 +1638,7 @@ void TXMLEngine::DisplayError(Int_t error, Int_t linenumber)
       case -8: Error("ParseFile", "Invalid namespace specification, line %d", linenumber); break;
       case -7: Error("ParseFile", "Invalid attribute value, line %d", linenumber); break;
       case -6: Error("ParseFile", "Invalid identifier for node attribute, line %d", linenumber); break;
-      case -5: Error("ParseFile", "Missmatch between open and close nodes, line %d", linenumber); break;
+      case -5: Error("ParseFile", "Mismatch between open and close nodes, line %d", linenumber); break;
       case -4: Error("ParseFile", "Unexpected close node, line %d", linenumber); break;
       case -3: Error("ParseFile", "Valid identifier for close node is missing, line %d", linenumber); break;
       case -2: Error("ParseFile", "No multiple content entries allowed, line %d", linenumber); break;
