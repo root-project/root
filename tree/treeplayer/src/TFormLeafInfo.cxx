@@ -2216,7 +2216,11 @@ Int_t TFormLeafInfoMultiVarDim::GetPrimaryIndex()
 Int_t TFormLeafInfoMultiVarDim::GetSize(Int_t index)
 {
    // Return the size of the requested sub-array.
-   return fSizes.At(index);
+   if (index >= fSizes.GetSize()) {
+      return -1;
+   } else {
+      return fSizes.At(index);
+   }
 }
 
 //______________________________________________________________________________
