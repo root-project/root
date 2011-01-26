@@ -7,6 +7,10 @@
 <ul>
 <li><tt>TPad::SetTheta()</tt> and <tt>TPad::SetPhi()</tt> did not cause the
 canvas redrawing.</li>
+<li> Protection added in case two histograms were plotted in the same pad
+using the option BOX (the 2nd one with option SAME).
+The clipping was not correct when an interactive zoom was performed.
+</li>
 </ul>
 
 <h4>TH2Poly</h4>
