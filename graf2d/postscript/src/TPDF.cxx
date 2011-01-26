@@ -517,9 +517,9 @@ void TPDF::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 {
    // Draw a PolyLine in NDC space
    //
-   //  Draw a polyline through  the points  xy.
+   //  Draw a polyline through the points xy.
    //  If NN=1 moves only to point x,y.
-   //  If NN=0 the x,y are  written  in the PDF        file
+   //  If NN=0 the x,y are  written in the PDF file
    //     according to the current transformation.
    //  If NN>0 the line is clipped as a line.
    //  If NN<0 the line is clipped as a fill area.
@@ -1247,6 +1247,11 @@ void TPDF::NewPage()
 
    // Force the line width definition next time TPDF::SetLineWidth will be called.
    fLineWidth = -1;
+
+   // Force the color definition next time TPDF::SetColor will be called.
+   fRed   = -1;
+   fGreen = -1;
+   fBlue  = -1;
 
    PrintStr("1 0 0 1");
    if (fPageOrientation == 2) {
