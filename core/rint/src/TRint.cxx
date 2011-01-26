@@ -272,7 +272,7 @@ TRint::~TRint()
    fInputHandler->Remove();
    delete fInputHandler;
    // We can't know where the signal handler was changed since we started ...
-   // so for now let's now delete it.
+   // so for now let's not delete it.
 //   TSignalHandler *ih  = GetSignalHandler();
 //   ih->Remove();
 //   SetSignalHandler(0);
