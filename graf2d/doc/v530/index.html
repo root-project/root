@@ -1,6 +1,27 @@
 <br/> 
 <hr/> 
 <a name="graf2d"></a> 
+<h3>TPDF</h3>
+<ul>
+<li> The following macro produed a wrong PDF file. The second page had a black
+     background.
+     <pre>
+     {
+        gROOT->SetStyle("Plain");
+        TCanvas*  canvas = new TCanvas("canvas", "canvas", 600, 700);
+        TH1F* h = new TH1F("h","ht", 100, -5, 5);
+        h->FillRandom("gaus",10000);
+        canvas->Divide(2,1);
+        canvas->cd(1); h->Draw();
+        canvas->Update();
+        canvas->Print("test.pdf(");
+        canvas->Print("test.pdf");
+        canvas->Print("test.pdf)");
+     }
+     </pre>
+</li>
+</ul>
+
 <h3>TGaxis</h3>
 <ul>
 <li> The following macro produced two different labelling. Label "3" was missing
