@@ -5991,7 +5991,7 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  lib/libSQL.* bin/libSQL.* \
  lib/libASPluginGS.* bin/g2rootold* \
  math/mathcore/src/G__MathCore32.* \
- tmva/src/G__TMVA.* \
+ tmva/src/G__TMVA.* graf3d/eve/src/G__Eve.* \
  xrootd/src/headers.d include/Xpm.h \
  asimage/src/headers.d asimage/src/G__ASImageGS.* \
  core/utils/src/rootcint7.cxx core/utils/src/RStl7.cxx \
