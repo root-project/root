@@ -1029,7 +1029,7 @@ number of dots. <tt>"scat=1"</tt> is the default.
 <p>
 By default the scatter plot is painted with a "dot marker" which not scalable
 (see the <a href="http://root.cern.ch/root/html/TAttMarker.html#M3">TAttMarker
-documentation</a>). To change the marker size, a scalable marker type should be 
+documentation</a>). To change the marker size, a scalable marker type should be
 used. For instance a circle (marker style 20).
 
 
@@ -4326,25 +4326,6 @@ void THistPainter::PaintBoxes(Option_t *)
    if (Hoption.Box == 11) {
       light = TColor::GetColorBright(color);
       dark  = TColor::GetColorDark(color);
-/*
-      if (color == 0) {
-         light = 0;
-         dark  = 0;
-      } else if (color <= 50 && color != 0) {
-         light = color + 150;
-         dark  = color + 100;
-      } else {
-         Float_t r, g, b, h, l, s;
-         TColor *c = gROOT->GetColor(color);
-         if (c) c->GetRGB(r, g, b);
-         else {r = 0.5; g=0.5; b=0.5;}
-         TColor::RGBtoHLS(r, g, b, h, l, s);
-         TColor::HLStoRGB(h, 0.7*l, s, r, g, b);
-         dark = TColor::GetColor(r, g, b);
-         TColor::HLStoRGB(h, 1.2*l, s, r, g, b);
-         light = TColor::GetColor(r, g, b);
-      }
-*/
    }
 
    // Loop over all the bins and draw the boxes
@@ -4370,7 +4351,7 @@ void THistPainter::PaintBoxes(Option_t *)
             else        z = zmin;
          }
 
-         if (z <  zmin) continue; //   Can be the case with
+         if (z <  zmin) continue; // Can be the case with
          if (z >  zmax) z = zmax; // option Same
 
          if (dz == 0) continue;
@@ -4401,6 +4382,9 @@ void THistPainter::PaintBoxes(Option_t *)
          ylow = TMath::Max(ylow, gPad->GetUymin());
          xup  = TMath::Min(xup , gPad->GetUxmax());
          yup  = TMath::Min(yup , gPad->GetUymax());
+
+	 if (xlow >= xup) continue;
+	 if (ylow >= yup) continue;
 
          if (Hoption.Box == 1) {
             fH->SetFillColor(color);
@@ -5609,7 +5593,7 @@ void THistPainter::PaintH3(Option_t *option)
    } else {
       cmd = Form("TPolyMarker3D::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
    }
-   
+
    TView *view = gPad->GetView();
    if (!view) return;
    Double_t thedeg =  90 - gPad->GetTheta();
