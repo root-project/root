@@ -36,6 +36,5 @@ sgin32gcc            for SGI IRIX 6.4 with gcc using n32 ABI
 solaris              for Solaris with CC
 solarisCC5           for Solaris with CC 5.0
 solaris64CC5         for Solaris with CC 5.0 64 bits
-solarisgcc           for Solaris with gcc
 win32                for Win32 with VC++ and gdk based GUI
 win32gcc             for Win32 with cygwin/gcc

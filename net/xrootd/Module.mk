@@ -131,11 +131,8 @@ endif
                 solaris*:5.11:i86pc:*) xopt="--ccflavour=sunCCi86pc --use-xrd-strlcpy";; \
                 solaris*:5.1*:i86pc:*) xopt="--use-xrd-strlcpy";; \
                 solaris*:*:i86pc:*) xopt="--ccflavour=sunCCi86pc --use-xrd-strlcpy";; \
-		solarisgcc:5.8)  xopt="--ccflavour=gcc";; \
 		solaris*:5.8)    xopt="--ccflavour=sunCC";; \
-		solarisgcc:5.9)  xopt="--ccflavour=gcc";; \
 		solaris*:5.9)    xopt="--ccflavour=sunCC";; \
-		solarisgcc:*)    xopt="--ccflavour=gcc --use-xrd-strlcpy";; \
 		solaris*:*)      xopt="--ccflavour=sunCC --use-xrd-strlcpy";; \
 		win32gcc:*)      xopt="win32gcc";; \
 		*)               xopt="";; \

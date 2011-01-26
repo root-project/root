@@ -146,15 +146,6 @@ LDFLAGS       = $(OPT)
 SOFLAGS       = -G
 endif
 
-ifeq ($(ARCH),solarisgcc)
-# Solaris gcc
-CXX           = g++
-CXXFLAGS      = $(OPT) -fPIC
-LD            = g++
-LDFLAGS       = $(OPT)
-SOFLAGS       = -shared
-endif
-
 ifeq ($(ARCH),sgicc)
 # SGI
 CXX           = CC -n32  -I/usr/include/CC.sgi
