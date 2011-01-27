@@ -396,13 +396,15 @@ bool InterpreterStress::run(Int_t ntimes /*= 10*/, const char* runTests /*= 0*/)
    printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),
          gROOT->GetVersionDate(),gROOT->GetVersionTime());
    printf("****************************************************************************\n");
-
+   printf("success is %d\n",success);
    return success;
 }
 
 bool stressInterpreter(Int_t ntimes = 10, const char* runTests = 0, const char* binary = "") {
+   // Since this routine can be called (almost) directly from the command line and is used
+   // in automated test, it must return 0 in case of success
    InterpreterStress stress(binary);
-   return stress.run(ntimes, runTests);
+   return !stress.run(ntimes, runTests);
 }
 
 #if !defined(__CINT__) && !defined(__CLING__)
@@ -455,9 +457,9 @@ int main(int argc, char **argv)
       gInterpreter->ProcessLine(cmd);
       exe = gSystem->BaseName(exe);
       cmd = TString::Format("%s(%d, \"%s\", \"%s\")", exe.Data(), ntimes, runTests.Data(), exe.Data());
-      if (!gInterpreter->ProcessLine(cmd)) return 1;
+      if (0 != gInterpreter->ProcessLine(cmd)) return 1;
    } else {
-      if (!stressInterpreter(ntimes, runTests, exe)) return 1;
+      if (0 != stressInterpreter(ntimes, runTests, exe)) return 1;
    }
    return 0;
 }
