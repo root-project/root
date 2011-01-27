@@ -9836,20 +9836,26 @@ Int_t TProof::SetDataSetTreeName(const char *dataset, const char *treename)
 }
 
 //______________________________________________________________________________
-TMap *TProof::GetDataSets(const char *uri, const char* optStr)
+TMap *TProof::GetDataSets(const char *uri, const char *optStr)
 {
    // Lists all datasets that match given uri.
-
+   // The 'optStr' can contain a comma-separated list of servers for which the
+   // information is wanted. If ':lite:' (case insensitive) is specified in 'optStr'
+   // only the global information in the TFileCollection is retrieved; useful to only
+   // get the list of available datasets.
+   
    if (fProtocol < 15) {
       Info("GetDataSets",
            "functionality not available: the server does not have dataset support");
       return 0;
    }
+   if (fProtocol < 31 && strstr(optStr, ":lite:"))
+      Warning("GetDataSets", "'lite' option not supported by the server");
 
    TMessage mess(kPROOF_DATASETS);
    mess << Int_t(kGetDataSets);
-   mess << TString(uri?uri:"");
-   mess << TString(optStr?optStr:"");
+   mess << TString(uri ? uri : "");
+   mess << TString(optStr ? optStr : "");
    Broadcast(mess);
    Collect(kActive, fCollectTimeout);
 
