@@ -6134,7 +6134,13 @@ Int_t TProofServ::HandleDataSets(TMessage *mess, TString *slb)
             (*mess) >> uri >> opt;
             if (slb) slb->Form("%d %s %s", type, uri.Data(), opt.Data());
             // Get the datasets and fill a map
-            TMap *returnMap = fDataSetManager->GetDataSets(uri, (UInt_t)TDataSetManager::kExport);
+            UInt_t omsk = (UInt_t)TDataSetManager::kExport;
+            Ssiz_t kLite = opt.Index(":lite:", 0, TString::kIgnoreCase);
+            if (kLite != kNPOS) {
+               omsk |= (UInt_t)TDataSetManager::kReadShort;
+               opt.Remove(kLite, strlen(":lite:"));
+            }
+            TMap *returnMap = fDataSetManager->GetDataSets(uri, omsk);
             // If defines, option gives the name of a server for which to extract the information
             if (returnMap && !opt.IsNull()) {
                // The return map will be in the form   </group/user/datasetname> --> <dataset>
