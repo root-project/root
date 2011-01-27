@@ -206,15 +206,16 @@ void TSlaveInfo::Print(Option_t *opt) const
    if (oo == "bad" && fStatus != kBad) return;
 
    if (newfmt) {
-      TString msd, si;
+      TString msd, si, datadir;
       if (!(fMsd.IsNull())) msd.Form("| msd: %s ", fMsd.Data());
+      if (!(fDataDir.IsNull())) datadir.Form("| datadir: %s ", fDataDir.Data());
       if (fSysInfo.fCpus > 0) {
          si.Form("| %s, %d cores, %d MB ram", fHostName.Data(),
                fSysInfo.fCpus, fSysInfo.fPhysRam);
       } else {
          si.Form("| %s", fHostName.Data());
       }
-      Printf("Worker: %9s %s %s| %s", fOrdinal.Data(), si.Data(), msd.Data(), stat.Data());
+      Printf("Worker: %9s %s %s%s| %s", fOrdinal.Data(), si.Data(), msd.Data(), datadir.Data(), stat.Data());
 
    } else {
       TString msd  = fMsd.IsNull() ? "<null>" : fMsd.Data();
@@ -3367,6 +3368,8 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
                         if (!strcmp(ourwi->GetOrdinal(), slinfo->GetOrdinal())) {
                            ourwi->SetSysInfo(slinfo->GetSysInfo());
                            ourwi->fHostName = slinfo->GetName();
+                           if (slinfo->GetDataDir() && (strlen(slinfo->GetDataDir()) > 0))
+                           ourwi->fDataDir = slinfo->GetDataDir();
                            break;
                         }
                      }
@@ -9810,20 +9813,26 @@ Int_t TProof::SetDataSetTreeName(const char *dataset, const char *treename)
 }
 
 //______________________________________________________________________________
-TMap *TProof::GetDataSets(const char *uri, const char* optStr)
+TMap *TProof::GetDataSets(const char *uri, const char *optStr)
 {
    // Lists all datasets that match given uri.
-
+   // The 'optStr' can contain a comma-separated list of servers for which the
+   // information is wanted. If ':lite:' (case insensitive) is specified in 'optStr'
+   // only the global information in the TFileCollection is retrieved; useful to only
+   // get the list of available datasets.
+   
    if (fProtocol < 15) {
       Info("GetDataSets",
            "functionality not available: the server does not have dataset support");
       return 0;
    }
+   if (fProtocol < 31 && strstr(optStr, ":lite:"))
+      Warning("GetDataSets", "'lite' option not supported by the server");
 
    TMessage mess(kPROOF_DATASETS);
    mess << Int_t(kGetDataSets);
-   mess << TString(uri?uri:"");
-   mess << TString(optStr?optStr:"");
+   mess << TString(uri ? uri : "");
+   mess << TString(optStr ? optStr : "");
    Broadcast(mess);
    Collect(kActive, fCollectTimeout);
 
