@@ -396,7 +396,6 @@ bool InterpreterStress::run(Int_t ntimes /*= 10*/, const char* runTests /*= 0*/)
    printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),
          gROOT->GetVersionDate(),gROOT->GetVersionTime());
    printf("****************************************************************************\n");
-   printf("success is %d\n",success);
    return success;
 }
 
