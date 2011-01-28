@@ -4149,17 +4149,30 @@ xrdver=
 decver=0
 if test ! "x$enable_xrootd" = "xno" ; then
 
+   newver="no"
    if test "x$externalxrd" = "xyes"; then
       verh=$xrdincdir/XrdVersion.hh
    else
-      verh=$top_srcdir/net/xrootd/src/xrootd/src/XrdVersion.hh
+      newver="yes"
+      verh=$top_srcdir/net/xrootd/src/xrootd/VERSION_INFO
+      if test ! -f $verh ; then
+         newver="no"
+         verh=$top_srcdir/net/xrootd/src/xrootd/src/XrdVersion.hh
+      fi
    fi
-   xrdver=`grep XrdVERSION $verh`
-   if test $? -eq 0 ; then
-      set $xrdver
-      xrdver=$3
+   xrdver="unknown"
+   if test "x$newver" = "xyes" ; then
+      xrdver=`grep RefNames $verh`
+      if test $? -eq 0 ; then
+         set $xrdver
+         xrdver=`echo $4 | sed -e 's|,||'`
+      fi
    else
-      xrdver="unknown"
+      xrdver=`grep XrdVERSION $verh`
+      if test $? -eq 0 ; then
+         set $xrdver
+         xrdver=$3
+      fi
    fi
    if test ! "x$xrdver" = "xunknown"; then
       tmpver=`echo $xrdver | sed -e 's|"\(.*\)"|\1|' -e 's|^v||' -e 's|-.*||'`
@@ -4167,16 +4180,13 @@ if test ! "x$enable_xrootd" = "xno" ; then
          decver=9999999999
       else
          oldver="no"
-         echo $tmpver | grep -q '-'
-         hasdash="$?"
-         echo $tmpver | grep -q '\.'
-         hasdot="$?"
-         if test $hasdash -eq 0 || test ! $hasdot -eq 0; then
+         hasdash=`echo $tmpver | grep '-'`
+         hasdot=`echo $tmpver | grep '\.'`
+         if test ! "x$hasdash" = "x" || test "x$hasdot" = "x"; then
             oldver="yes"
          fi
          if test "x$oldver" = "xno" ; then
-            echo $tmpver | grep -q '\.'
-            if test $hasdot -eq 0 ; then
+            if test ! "x$hasdot" = "x" ; then
                ver1=`echo $tmpver | cut -d . -f 1`
                ver2=`echo $tmpver | cut -d . -f 2`
                if test "x$ver1.$ver2" = "x$tmpver" ; then
