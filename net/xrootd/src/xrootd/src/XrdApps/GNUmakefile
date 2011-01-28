@@ -1,25 +1,16 @@
-#              $Id$
+#              $Id: GNUmakefile,v 1.7 2010/07/29 01:24:03 abh Exp $
 
 #-----------------------------------------------------------------------------#
 #                            E n v i r o n m e n t                            #
 #-----------------------------------------------------------------------------#
 include ../GNUmake.env
 
-XRDADLERDEPS = $(LIBDIR)/libXrdPosix.a   $(LIBDIR)/libXrdClient.a
-XRDADLERDEPT = $(LIBDIR)/libXrdNet.a     $(LIBDIR)/libXrdOuc.a \
-               $(LIBDIR)/libXrdNetUtil.a $(LIBDIR)/libXrdSys.a \
-               $(XRDADLERDEPS)
-               
-XRDADLERLIBS = -L$(LIBDIR) -lXrdNet -lXrdOuc -lXrdNetUtil -lXrdSys \
+XRDADLERDEPS = $(LIBDIR)/libXrdPosix.a $(LIBDIR)/libXrdClient.a \
+               $(LIBDIR)/libXrdOuc.a
+XRDADLERLIBS = -L$(LIBDIR) -lXrdPosix -lXrdClient -lXrdOuc \
                $(PTHREAD) $(LIBS) $(LIBZ)
 XRDADLER32_OBJ = $(OBJDIR)/Xrdadler32.o
 XRDADLER32 = $(BINDIR)/xrdadler32
-
-XrdCCODEPS = $(LIBDIR)/libXrdNet.a $(LIBDIR)/libXrdNetUtil.a \
-             $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a
-XRDCCOLIBS = -L$(LIBDIR) -lXrdNet -lXrdOuc -lXrdNetUtil -lXrdSys
-XRDCCOOBJ  = $(OBJDIR)/XrdAppsCconfig.o
-XRDCCOBIN  = $(BINDIR)/cconfig
 
 XrdMPXDEPS = $(LIBDIR)/libXrdNet.a $(LIBDIR)/libXrdNetUtil.a \
              $(LIBDIR)/libXrdOuc.a
@@ -32,7 +23,7 @@ XRDW41LIBS = $(LIBS) -L$(LIBDIR) -lXrdOuc -lXrdSys
 XRDW41_OBJ = $(OBJDIR)/XrdWait41.o
 XRDW41     = $(BINDIR)/wait41
 
-TARGETS = $(XRDADLER32) $(XRDCCOBIN) $(XRDMPXBIN) $(XRDW41)
+TARGETS = $(XRDADLER32) $(XRDMPXBIN) $(XRDW41)
 
 #------------------------------------------------------------------------------#
 #                           S e a r c h   P a t h s                            #
@@ -57,9 +48,9 @@ anything: $(TARGETS)
 #                             x r d a d l e r 3 2                              #
 #------------------------------------------------------------------------------#
   
-$(XRDADLER32): $(XRDADLER32_OBJ) $(XRDADLERDEPT)
+$(XRDADLER32): $(XRDADLER32_OBJ) $(XRDADLERDEPS)
 	@echo Creating executable $(XRDADLER32)
-	$(ECHO)$(LD) $(LDOP) $(XRDADLER32_OBJ) $(XRDADLERDEPS) $(XRDADLERLIBS) -o $(XRDADLER32)
+	$(ECHO)$(LD) $(LDOP) $(XRDADLER32_OBJ) $(XRDADLERLIBS) -o $(XRDADLER32)
 
 $(XRDADLER32_OBJ): Xrdadler32.cc \
                    XrdPosixExtern.hh    XrdPosixXrootd.hh \
@@ -71,24 +62,10 @@ $(XRDADLER32_OBJ): Xrdadler32.cc \
 	$(ECHO)$(CC) -g -c $(CFLAGS) $(CFNOSTRICTALIAS) $(INCLUDE) -o $(XRDADLER32_OBJ) Xrdadler32.cc
 
 #------------------------------------------------------------------------------#
-#                              l s c c o n f i g                               #
-#------------------------------------------------------------------------------#
-
-$(XRDCCOBIN): $(XRDCCOOBJ) $(XrdCCODEPS)
-	@echo Creating executable $(XRDCCOBIN)
-	$(ECHO)$(LD) $(LDOP) $(XRDCCOOBJ) $(XRDCCOLIBS) $(LIBS) -o $(XRDCCOBIN)
- 
-$(XRDCCOOBJ): XrdAppsCconfig.cc XrdNetDNS.hh \
-              XrdOucEnv.hh  XrdOucNList.hh XrdOucStream.hh XrdOucUtils.hh \
-              XrdSysError.hh XrdSysLogger.hh XrdSysHeaders.hh XrdSysPthread.hh
-	@echo Compiling XrdAppsCconfig.cc
-	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(XRDCCOOBJ) XrdAppsCconfig.cc
-
-#------------------------------------------------------------------------------#
 #                               m p x s t a t s                                #
 #------------------------------------------------------------------------------#
 
-$(XRDMPXBIN): $(XRDMPXOBJ) $(XrdMPXDEPS)
+$(XRDMPXBIN): $(XRDMPXOBJ)
 	@echo Creating executable $(XRDMPXBIN)
 	$(ECHO)$(LD) $(LDOP) $(XRDMPXOBJ) $(XRDMPXLIBS) $(LIBS) -o $(XRDMPXBIN)
  

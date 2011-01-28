@@ -56,14 +56,11 @@ XRDNETLIB    = $(LIBDIR)/libXrdNet.lib
 XRDCLIENTLIB = $(LIBDIR)/libXrdClient.lib
 XRDCP        = $(BINDIR)/xrdcp.exe
 
-LIBS : src\XrdVersion.hh $(LIBDIR) $(XRDSYSLIB) $(XRDOUCLIB) $(XRDNETLIB) $(XRDCLIENTLIB) $(BINDIR) $(XRDCP)
+LIBS : $(LIBDIR) $(XRDSYSLIB) $(XRDOUCLIB) $(XRDNETLIB) $(XRDCLIENTLIB) $(BINDIR) $(XRDCP)
 
 .PHONY: $(LIBS) all
 
 all: $(LIBS)
-
-src\XrdVersion.hh:
-   if not exist src\XrdVersion.hh genversion.bat
 
 "$(LIBDIR)" :
     if not exist "$(LIBDIR)/$(NULL)" mkdir "$(LIBDIR)"
@@ -89,7 +86,7 @@ $(XRDNETLIB):
    cd..
    cd..
 
-$(XRDCLIENTLIB): src\XrdVersion.hh $(XRDNETLIB) $(XRDOUCLIB) $(XRDSYSLIB)
+$(XRDCLIENTLIB): $(XRDNETLIB) $(XRDOUCLIB) $(XRDSYSLIB)
    cd ./src/XrdClient
    $(MAKE) -f Makefile.msc CFG=$(MODCFG)
    cd..
@@ -103,7 +100,7 @@ CXXFLAGS = /nologo /MD /W3 /EHsc /O2 /D "_WIN32" /D "WIN32" /D "NDEBUG" /D "_WIN
 LDFLAGS = 
 !ELSEIF  "$(CFG)" == "Win32 Debug"
 OUTDIR = /Debug
-CXXFLAGS = /nologo /MDd /W3 /EHsc /Z7 /Od /D "_WIN32" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "WINDOWS" /Fo"./src/XrdClient$(OUTDIR)/" /FD /RTC1 /c
+CXXFLAGS = /nologo /MDd /W3 /Gm /EHsc /Zi /Od /D "_WIN32" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "WINDOWS" /Fo"./src/XrdClient$(OUTDIR)/" /FD /RTC1 /c
 LDFLAGS = -debug
 !ENDIF 
 
@@ -112,8 +109,6 @@ LDFLAGS = -debug
     ([nmake /? 2>&1 | findstr /c:"Version 9\." > nul ] == 0)
 MT_EXE        = mt -nologo -manifest $@.manifest -outputresource:$@;1
 MT_DLL        = mt -nologo -manifest $@.manifest -outputresource:$@;2
-EXTRAFLAGS    = /wd4244 /wd4996 /wd4273 /wd4355 /wd4800 /D_CRT_SECURE_NO_DEPRECATE
-!else if ([nmake /? 2>&1 | findstr /c:"Version 10\." > nul ] == 0)
 EXTRAFLAGS    = /wd4244 /wd4996 /wd4273 /wd4355 /wd4800 /D_CRT_SECURE_NO_DEPRECATE
 !else
 MT_EXE        = 
@@ -139,7 +134,6 @@ clean :
 	-@erase /q /s *.idb
 	-@erase /q /s *.exp
 	-@erase /q /s *.manifest
-	-@erase /q src\XrdVersion.hh
 
 distclean:: clean
 	-@erase /q /s *.pdb

@@ -1,11 +1,7 @@
-// this file is automatically updated by the genversion.sh script
-// if you touch anything make sure that it still works
-
+// $Id$
 #ifndef __XRD_VERSION_H__
 #define __XRD_VERSION_H__
-
-#define XrdVERSION  "unknown"
-
+#define XrdVERSION  "v20100913-0630-root-5"
 #if XrdDEBUG
 #define XrdVSTRING XrdVERSION "_dbg"
 #else
@@ -13,5 +9,4 @@
 #endif
 
 #define XrdDEFAULTPORT 1094;
-
 #endif

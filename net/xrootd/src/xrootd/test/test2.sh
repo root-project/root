@@ -7,7 +7,7 @@
 ## by Derek Feichtinger <derek.feichtinger@cern.ch>
 ##
 ## Version info: $Id$
-## Checked in by $Author$
+## Checked in by $Author: dfeich $
 ################################################################################
 
 #############################

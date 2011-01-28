@@ -39,6 +39,7 @@ const char         *myFrmid;
 const char         *myFrmID;
 const char         *lockFN;
 char               *AdminPath;
+char               *APath;
 char               *QPath;
 char               *PidPath;
 char               *myInstance;

@@ -10,6 +10,8 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
+//       $Id$ 
+
 #include <errno.h>
 #ifndef WIN32
 #include <netdb.h>
@@ -202,7 +204,7 @@ virtual int     setKey(char * /*buff*/, int /*size*/) {return -ENOTSUP;}
 //
 virtual void    Delete()=0; // Normally does "delete this"
 
-              XrdSecProtocol(const char *pName) : Entity(pName) {}
+              XrdSecProtocol() {}
 protected:
 
 virtual      ~XrdSecProtocol() {}

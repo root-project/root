@@ -145,7 +145,7 @@ char *Gtab[NGROUPS_MAX];
 
 // Check if we have any referenced groups
 //
-   if (!HaveGroups) return (XrdAccGroupList *)0;
+   if (!HaveGroups) return (struct XrdAccGroupList *)0;
 
 
 // Check if we already have this user in the group cache. Since we may be
@@ -168,7 +168,7 @@ char *Gtab[NGROUPS_MAX];
    Group_Build_Context.Lock();
    if ( (pw = getpwnam(user)) == NULL)
       {Group_Build_Context.UnLock();
-       return (XrdAccGroupList *)0;
+       return (struct XrdAccGroupList *)0;
       }
 
 // Build first entry for the primary group. We will ignore the primary group
@@ -229,7 +229,7 @@ int XrdAccCheckNetGroup(const char *netgroup, char *key, void *Arg);
 
 // Check if we have any Netgroups
 //
-   if (!HaveNetGroups) return (XrdAccGroupList *)0;
+   if (!HaveNetGroups) return (struct XrdAccGroupList *)0;
 
 // Construct the key for this user
 //

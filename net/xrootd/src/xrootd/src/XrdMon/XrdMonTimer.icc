@@ -8,7 +8,7 @@
 /*              DE-AC02-76SF00515 with the Department of Energy              */
 /*****************************************************************************/
 
-// $Id$
+// $Id: XrdMonTimer.icc,v 1.1.1.1 2005/01/25 06:12:16 becla Exp $
 
 #include <iostream>
 using std::cerr;

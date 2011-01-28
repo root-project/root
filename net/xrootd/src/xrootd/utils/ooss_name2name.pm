@@ -6,7 +6,7 @@
 #            DE-AC03-76-SFO0515 with the Department of Energy                 *
 #******************************************************************************
 
-#  $Id$
+#  $Id: ooss_name2name.pm,v 1.5 2008/10/22 14:13:42 furano Exp $
 
 # Generate file name for local and mss systems
 

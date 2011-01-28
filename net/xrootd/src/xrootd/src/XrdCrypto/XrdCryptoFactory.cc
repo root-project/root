@@ -26,10 +26,6 @@ const char *XrdCryptoFactoryCVSID = "$Id$";
 #include <XrdCrypto/XrdCryptoFactory.hh>
 #include <XrdCrypto/XrdCryptolocalFactory.hh>
 
-#ifndef LT_MODULE_EXT
-#define LT_MODULE_EXT ".so"
-#endif
-
 // We have always an instance of the simple RSA implementation
 static XrdCryptolocalFactory localCryptoFactory;
 
@@ -378,7 +374,7 @@ XrdCryptoFactory *XrdCryptoFactory::GetCryptoFactory(const char *factoryid)
 
    //
    // Form library name
-   snprintf(libfn, sizeof(libfn)-1, "libXrdCrypto%s", LT_MODULE_EXT);
+   snprintf(libfn, sizeof(libfn)-1, "libXrdCrypto.so");
    libfn[sizeof(libfn)-1] = '\0';
 
    //
@@ -400,7 +396,7 @@ XrdCryptoFactory *XrdCryptoFactory::GetCryptoFactory(const char *factoryid)
 
       //
       // Try also specific library name
-      snprintf(libfn, sizeof(libfn)-1, "libXrdCrypto%s%s", factoryid, LT_MODULE_EXT);
+      snprintf(libfn, sizeof(libfn)-1, "libXrdCrypto%s.so", factoryid);
       libfn[sizeof(libfn)-1] = '\0';
       
       //

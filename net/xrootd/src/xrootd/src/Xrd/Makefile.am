@@ -4,11 +4,11 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id$
-## Checked in by $Author$
+## Version info: $Id: Makefile.am,v 1.8 2010/08/05 15:27:07 feichtinger Exp $
+## Checked in by $Author: feichtinger $
 #######################################################################
 
-AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_builddir)/src
+AM_CPPFLAGS = -I$(top_srcdir)/src
 
 #############################################################################
 ## extra directory definitions for install area

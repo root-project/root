@@ -7,6 +7,10 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
+  
+//       $Id$
+
+const char *XrdSecsssIDCVSID = "$Id$";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -172,7 +176,7 @@ int XrdSecsssID::Register(const char *lid, XrdSecEntity *eP, int doRep)
   
 XrdSecsssID::sssID *XrdSecsssID::genID(int Secure)
 {
-   XrdSecEntity   myID("sss");
+   XrdSecEntity   myID;
    struct passwd *pEnt;
    struct group  *pGrp;
 

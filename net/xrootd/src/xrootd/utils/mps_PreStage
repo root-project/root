@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-#  $Id$
+#  $Id: mps_PreStage,v 1.10 2008/10/14 09:24:48 furano Exp $
 #
 # mps_PreStage
 #	-b basedir		base directory for local filesystem

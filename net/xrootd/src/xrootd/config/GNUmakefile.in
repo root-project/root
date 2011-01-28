@@ -1,4 +1,4 @@
-#              $Id$
+#              $Id: GNUmakefile.in,v 1.40 2010/07/30 03:18:25 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -22,7 +22,7 @@ XRDCLIENT = XrdClient
 
 XRDMON    = XrdMon
 
-XRDPOSIX  = XrdPosix XrdFfs XrdPss XrdCns XrdApps
+XRDPOSIX  = XrdPosix XrdPss XrdCns XrdApps
 
 TARGETS = @targets@
 
@@ -49,7 +49,7 @@ export INCPATH = @inst_incdir@
 #                                  R u l e s                                   #
 #------------------------------------------------------------------------------#
 
-all: version
+all:
 	@$(MAKE) $(TARGETS) MAKEXEQ=all XMSG=Making XDBG=@dbgmsg@ --no-print-directory
 	@if [ "x$(ARCHDIR)" != "x" ]; then \
 	    $(RM) -fr bin/arch@dbgsfx@ lib/arch@dbgsfx@ obj/arch@dbgsfx@;\
@@ -95,12 +95,6 @@ distclean: FORCE
 	$(ECHO)$(RM) -f config.log
 	$(ECHO)$(RM) -f test-comp.*
 	$(ECHO)$(RM) -f src/XrdOuc/XrdOucFactoryBonjour.*
-	$(ECHO)$(RM) -f src/XrdVersion.hh src/XrdVersion.hh.new
-	$(ECHO)$(RM) -f config/GNUmake.rules.sunCC
-	$(ECHO)$(RM) -f config/GNUmake.rules.sunCCamd
-	$(ECHO)$(RM) -f config/GNUmake.rules.sunCCamd510
-	$(ECHO)$(RM) -f config/GNUmake.rules.sunCCamd64
-	$(ECHO)$(RM) -f config/GNUmake.rules.sunCCi86pc
 
 install: FORCE
 	@echo Installing...
@@ -149,11 +143,6 @@ XrdCrypto: FORCE
 XrdNet: FORCE
 	@echo $(XMSG) net $(XDBG) component...
 	@cd src/XrdNet;\
-	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
-
-XrdFfs: FORCE
-	@echo $(XMSG) ffs $(XDBG) component...
-	@cd src/XrdFfs;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 XrdFrm: FORCE
@@ -260,10 +249,5 @@ XrdXrootd: FORCE
 	@echo $(XMSG) xrootd $(XDBG) component...
 	$(ECHO)cd src/XrdXrootd;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
-
-version: FORCE
-	@echo Creatiing version header...
-	@./genversion.sh
-
 
 FORCE: ;

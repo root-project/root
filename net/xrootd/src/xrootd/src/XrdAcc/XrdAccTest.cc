@@ -2,11 +2,15 @@
 /*                                                                            */
 /*                         X r d A c c T e s t . c c                          */
 /*                                                                            */
-/* (c) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/* (c) 2003 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*                            All Rights Reserved                             */
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
-/*              DE-AC02-76-SFO0515 with the Department of Energy              */
+/*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
+
+//         $Id$
+
+const char *XrdAccTestCVSID = "$Id$";
 
 /* Syntax: testaccess [=c cfn] [d] [-t] [user host op path]
 
@@ -86,9 +90,6 @@ int opcnt = sizeof(optab)/sizeof(optab[0]);
   
 int main(int argc, char **argv)
 {
-extern XrdAccAuthorize *XrdAccDefaultAuthorizeObject(XrdSysLogger *lp,
-                                                     const char   *cfn,
-                                                     const char   *parm);
 void Usage(const char *);
 char *p2l(XrdAccPrivs priv, char *buff, int blen);
 int rc = 0, argnum, DebugON = 0;
@@ -111,7 +112,7 @@ char *ConfigFN = (char *)"./acc.cf";
 
 // Obtain the authorization object
 //
-if (!(Authorize = XrdAccDefaultAuthorizeObject(&myLogger, ConfigFN, 0)))
+if (!(Authorize = XrdAccAuthorizeObject(&myLogger, ConfigFN, 0)))
    {cerr << "testaccess: Initialization failed." <<endl;
     exit(2);
    }
@@ -145,7 +146,7 @@ void Usage(const char *);
 Access_Operation optype;
 XrdAccPrivCaps pargs;
 XrdAccPrivs auth;
-XrdSecEntity Entity("");
+XrdSecEntity Entity;
 
 // Make sure user specified
 //

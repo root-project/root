@@ -11,8 +11,8 @@
 ## Makefile/configure Author: Derek Feichtinger <derek.feichtinger@cern.ch>
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id$
-## Checked in by $Author$
+## Version info: $Id: Makefile.am,v 1.13 2009/03/06 18:02:42 dfeich Exp $
+## Checked in by $Author: dfeich $
 ################################################################################
 
 # Tell GNU make >=3.79 not to run the top level in parallel since
@@ -31,7 +31,7 @@ if NEED_MACOS_DEPLOYMENT_TARGET
 export MACOSX_DEPLOYMENT_TARGET = 10.3
 endif
 
-.PHONY: doc silent version
+.PHONY: doc silent
 
 silent:
 	@cd src; $(MAKE) | sed -n -e '/libtool/d' \
@@ -55,7 +55,7 @@ doc: Doxyfile
         fi
 endif
 
-BUILT_SOURCES = version
+
 
 ################################################################
 ## Here we define general includes (not specific to any module)
@@ -107,7 +107,9 @@ utils/mps_monStage.pm
 # Extra files/directories to go into the distribution tarball
 EXTRA_DIST = Doxyfile README.Maintainer bootstrap.sh config pthreads-win32 \
              test/test1.sh test/test2.sh test/testconfig.sh.in \
-             getAutotools.sh LICENSE src/XrdVersion.hh.in genversion.sh VERSION_INFO
+             getAutotools.sh
+
+
 TESTS = test/test1.sh test/test2.sh
 
 
@@ -120,7 +122,3 @@ TESTS = test/test1.sh test/test2.sh
 rpm:    dist
 	cp $(DIST_ARCHIVES) /usr/src/redhat/SOURCES/
 	rpmbuild -bb xrootd.spec
-
-version:
-	@echo "Generating version header"
-	@$(top_srcdir)/genversion.sh $(top_srcdir)/

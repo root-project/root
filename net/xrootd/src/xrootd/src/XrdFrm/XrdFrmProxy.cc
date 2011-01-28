@@ -215,10 +215,9 @@ int XrdFrmProxy::Init(int opX, const char *aPath, int aMode, const char *qPath)
    const char *configFN = getenv("XRDCONFIGFN"), *iName = 0;
    int i;
 
-// If a qPath was specified, and the "Queues" component will be added later.
-// Otherwise, we check the config file to see if there is a qpath there.
-// If not we use the aPath which must be unqualified with a component name
-// which we will add here). All paths must have the instance name if so needed.
+// If there is a config file then we need to see if a specific qpath is there.
+// Otherwise, we will use the adminpath as the queue path. Note that we qualify
+// the queue path with the instance name unless there is no config file.
 //
         if (qPath) QPath = strdup(qPath);
    else if (!configFN) iName = insName;
@@ -226,7 +225,7 @@ int XrdFrmProxy::Init(int opX, const char *aPath, int aMode, const char *qPath)
 
 // Create the queue path directory if it does not exists
 //
-   if (!QPath && !(QPath = XrdFrmUtils::makePath(iName, aPath, aMode)))
+   if (!(QPath = XrdFrmUtils::makePath(iName, (QPath ? QPath : aPath), aMode)))
       return 0;
 
 // Now create and start an agent for each wanted service

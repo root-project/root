@@ -8,9 +8,9 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//          $Id$
+//          $Id: XrdOucHash.icc,v 1.12 2010/07/03 03:26:24 abh Exp $
 
-//const char *XrdOucHashCVSID = "$Id$";
+//const char *XrdOucHashCVSID = "$Id: XrdOucHash.icc,v 1.12 2010/07/03 03:26:24 abh Exp $";
 
 #include <errno.h>
 #include <string.h>

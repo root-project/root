@@ -2,11 +2,15 @@
 /*                                                                            */
 /*                       X r d O f s C o n f i g . c c                        */
 /*                                                                            */
-/* (C) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/* (C) 2003 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*                            All Rights Reserved                             */
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
-/*               DE-AC02-76-SFO0515 with the Deprtment of Energy              */
+/*               DE-AC03-76-SFO0515 with the Deprtment of Energy              */
 /******************************************************************************/
+
+//         $Id$
+
+const char *XrdOfsConfigCVSID = "$Id$";
 
 /*
    The routines in this file handle ofs() initialization. They get the
@@ -162,8 +166,8 @@ int XrdOfs::Configure(XrdSysError &Eroute) {
 // Set the redirect option for other layers
 //
    if (Options & isManager)
-           XrdOucEnv::Export("XRDREDIRECT", (Options & isMeta ? "M" : "R"));
-      else XrdOucEnv::Export("XRDREDIRECT", "0");
+           putenv((char *)"XRDREDIRECT=R");  // XrdOucEnv::Export()
+      else putenv((char *)"XRDREDIRECT=0");  // XrdOucEnv::Export()
 
 // Configure the storage system at this point. This must be done prior to
 // configuring cluster processing. First check if we will be proxying.
@@ -272,20 +276,12 @@ void XrdOfs::Config_Display(XrdSysError &Eroute)
      Eroute.Say(buff);
 
      if (Options & Forwarding)
-        {*fwbuff = 0;
-         if (ConfigDispFwd(buff, fwdCHMOD))
-            {Eroute.Say(buff); strcat(fwbuff, " ch");}
-         if (ConfigDispFwd(buff, fwdMKDIR))
-            {Eroute.Say(buff); strcat(fwbuff, " mk");}
-         if (ConfigDispFwd(buff, fwdMV))
-            {Eroute.Say(buff); strcat(fwbuff, " mv");}
-         if (ConfigDispFwd(buff, fwdRM))
-            {Eroute.Say(buff); strcat(fwbuff, " rm");}
-         if (ConfigDispFwd(buff, fwdRMDIR))
-            {Eroute.Say(buff); strcat(fwbuff, " rd");}
-         if (ConfigDispFwd(buff, fwdTRUNC))
-            {Eroute.Say(buff); strcat(fwbuff, " tr");}
-         if (*fwbuff) XrdOucEnv::Export("XRDOFS_FWD", fwbuff);
+        {if (ConfigDispFwd(buff, fwdCHMOD)) Eroute.Say(buff);
+         if (ConfigDispFwd(buff, fwdMKDIR)) Eroute.Say(buff);
+         if (ConfigDispFwd(buff, fwdMV))    Eroute.Say(buff);
+         if (ConfigDispFwd(buff, fwdRM))    Eroute.Say(buff);
+         if (ConfigDispFwd(buff, fwdRMDIR)) Eroute.Say(buff);
+         if (ConfigDispFwd(buff, fwdTRUNC)) Eroute.Say(buff);
         }
 
      if (evsObject)
@@ -1208,16 +1204,13 @@ int XrdOfs::xtrace(XrdOucStream &Config, XrdSysError &Eroute)
 
 int XrdOfs::setupAuth(XrdSysError &Eroute)
 {
-   extern XrdAccAuthorize *XrdAccDefaultAuthorizeObject(XrdSysLogger *lp,
-                                                        const char   *cfn,
-                                                        const char   *parm);
    XrdSysPlugin    *myLib;
    XrdAccAuthorize *(*ep)(XrdSysLogger *, const char *, const char *);
 
 // Authorization comes from the library or we use the default
 //
-   if (!AuthLib) return 0 == (Authorization = XrdAccDefaultAuthorizeObject
-                              (Eroute.logger(),ConfigFN,AuthParm));
+   if (!AuthLib) return 0 == (Authorization =
+                 XrdAccAuthorizeObject(Eroute.logger(),ConfigFN,AuthParm));
 
 // Create a pluin object (we will throw this away without deletion because
 // the library must stay open but we never want to reference it again).

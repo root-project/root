@@ -1,4 +1,4 @@
-#              $Id$
+#              $Id: GNUmakefile,v 1.4 2010/07/29 01:24:52 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -40,9 +40,7 @@ OBJSLIB = \
 
 TARGBIN = $(BINDIR)/xrdsssadmin
 
-TARGLSO = $(LIBDIR)/libXrdSecsss.$(TYPESHLIB)
-TARGARK = $(LIBDIR)/libXrdSecsss.a
-TARGLIB = $(TARGARK) $(TARGLSO)
+TARGLIB = $(LIBDIR)/libXrdSecsss.$(TYPESHLIB)
 
 TARGETS = $(TARGLIB) $(TARGBIN)
 
@@ -69,15 +67,9 @@ anything: $(TARGETS)
 #                           D e p e n d e n c i e s                            #
 #------------------------------------------------------------------------------#
 
-$(TARGARK): $(OBJSLIB) $(LIBDEPS)
-	@echo Creating archive $(TARGARK)
-	$(ECHO)rm -f $(TARGARK)
-	$(ECHO)ar -rc $(TARGARK) $(OBJSLIB)
-	$(ECHO)ranlib $(TARGARK)
-
-$(TARGLSO): $(OBJSLIB) $(LIBDEPS)
-	@echo Creating shared library $(TARGLSO)
-	$(ECHO)$(CC) $(OBJSLIB) $(LDSO) $(MORELIBS) $(LIBSSL) $(LIBS) -o $(TARGLSO);
+$(TARGLIB): $(OBJSLIB) $(LIBDEPS)
+	@echo Creating shared library $(TARGLIB)
+	$(ECHO)$(CC) $(OBJSLIB) $(LDSO) $(MORELIBS) $(LIBSSL) $(LIBS) -o $(TARGLIB);
 
 $(TARGBIN): $(OBJSBIN)
 	@echo Creating executable $(TARGBIN)

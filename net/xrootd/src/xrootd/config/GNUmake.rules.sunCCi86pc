@@ -1,4 +1,4 @@
-#              $Id$
+#              $Id: GNUmake.rules.sunCCi86pc,v 1.5 2010/07/29 01:23:11 abh Exp $
 
 #------------------------------------------------------------------------------#
 #              R u l e s   f o r   s u n C C   x 8 6                           #
@@ -7,7 +7,7 @@
 TYPECC     = CC
 TYPELD     = CC
 
-TYPEMISC   = -KPIC -DSUNCC -D__solaris__ -DSUNX86 $(CFTRACE) @sunstlport@
+TYPEMISC   = -KPIC -DSUNCC -D__solaris__ -DSUNX86 $(CFTRACE) -library=stlport4
 SUNMT      = -D_REENTRANT -mt -D_POSIX_PTHREAD_SEMANTICS
 TYPECF32   =
 TYPECF64   = -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
@@ -16,6 +16,6 @@ TYPEDBG    = $(TYPEMISC) $(SUNMT) -g -xs
 TYPELDSO   = -G
 TYPESHLIB  = so
 
-TYPELIBS   =  -lposix4 -lsocket -lnsl $(PTHREAD) -ldl @suncstd@
+TYPELIBS   =  -lposix4 -lsocket -lnsl $(PTHREAD) -ldl
 TYPELIBMT  =  -lumem
 TYPELIBSF  =  -lsendfile

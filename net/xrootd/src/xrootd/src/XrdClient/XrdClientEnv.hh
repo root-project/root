@@ -24,29 +24,21 @@
 using namespace std;
 
 
-#define EnvGetLong(x) XrdClientEnv::Instance()->ShellGetInt(x)
-#define EnvGetString(x) XrdClientEnv::Instance()->ShellGet(x)
+#define EnvGetLong(x) XrdClientEnv::Instance()->GetInt(x)
+#define EnvGetString(x) XrdClientEnv::Instance()->Get(x)
 #define EnvPutString(name, val) XrdClientEnv::Instance()->Put(name, val)
 #define EnvPutInt(name, val) XrdClientEnv::Instance()->PutInt(name, val)
 
 class XrdClientEnv {
  private:
 
-   XrdOucEnv           *fOucEnv;
-   XrdSysRecMutex       fMutex;
+   XrdOucEnv      *fOucEnv;
+   XrdSysRecMutex    fMutex;
    static XrdClientEnv *fgInstance;
-   XrdOucEnv           *fShellEnv;
 
  protected:
    XrdClientEnv();
    ~XrdClientEnv();
-
-   //---------------------------------------------------------------------------
-   //! Import the variables from the shell environment, the variable names
-   //! are capitalized and prefixed with "XRD_"
-   //---------------------------------------------------------------------------
-   bool ImportStr( const char *varname );
-   bool ImportInt( const char *varname );
 
  public:
 
@@ -65,19 +57,6 @@ class XrdClientEnv {
       res = fOucEnv->GetInt(varname);
       return res;
    }
-
-   //---------------------------------------------------------------------------
-   //! Get a string variable from the environment, the same as Get, but
-   //! checks the shell environment first
-   //---------------------------------------------------------------------------
-   const char *ShellGet( const char *varname );
-
-   //---------------------------------------------------------------------------
-   //! Get an integet variable from the environment, the same as GetInt, but
-   //! checks the shell environment first
-   //---------------------------------------------------------------------------
-   long        ShellGetInt( const char *varname );
-
 
    void                   Put(const char *varname, const char *value) {
       XrdSysMutexHelper m(fMutex);

@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id$
-## Checked in by $Author$
+## Version info: $Id: Makefile.am,v 1.12 2010/08/05 15:24:30 feichtinger Exp $
+## Checked in by $Author: feichtinger $
 #######################################################################
 
 #       Note: since libXrdOfs needs to resolve symbols from xrootd's binary
@@ -14,7 +14,7 @@
 
 bin_PROGRAMS = xrootd
 
-INCLUDES = -I$(top_srcdir)/src -I$(top_builddir)/src
+INCLUDES = -I$(top_srcdir)/src
 
 EXTRA_DIST = XrdXrootdStat.icc
 

@@ -320,9 +320,6 @@ int XrdLink::Close(int defer)
 // the connection or an event occurs that causes an operation restart. We
 // accomplish this in Linux by stopping and then starting the thread that may
 // be bound to this link (see Bind()). Ugly, but that's what happens in Linux.
-// We also add a bit of portability by issuing a shutdown() on the socket prior
-// closing it. On most platforms, this informs readers that the connection is
-// gone (though not on Linux, sigh).
 //
    opMutex.Lock();
    if (defer)
@@ -330,8 +327,7 @@ int XrdLink::Close(int defer)
        if (FD > 1)
           {fd = FD; FD = -FD; csec = Instance; Instance = 0;
            if (!KeepFD)
-              {shutdown(fd, SHUT_RDWR);
-               if (dup2(devNull, fd) < 0)
+              {if (dup2(devNull, fd) < 0)
                   {FD = fd; Instance = csec;
                    XrdLog.Emsg("Link",errno,"close FD for",ID);
                   } else Bind();

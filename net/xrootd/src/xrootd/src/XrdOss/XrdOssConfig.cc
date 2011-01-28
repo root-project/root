@@ -632,8 +632,7 @@ int XrdOssSys::ConfigStage(XrdSysError &Eroute)
 // Determine if we are a manager/supervisor. These never stage files so we
 // really don't need (nor want) a stagecmd or an msscmd.
 //
-   noMSS = ((tp = getenv("XRDREDIRECT"))
-            && (!strcmp(tp, "R") || !strcmp(tp, "M"))) | Solitary;
+   noMSS = ((tp = getenv("XRDREDIRECT")) && !strcmp(tp, "R")) | Solitary;
 
 // A rsscmd implies check+dread. Note that nostage is now always the default.
 //

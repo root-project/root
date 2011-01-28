@@ -1,5 +1,5 @@
 
-   $Id$
+   $Id: README_perlmodule,v 1.2 2004/11/09 21:32:10 elmer Exp $
 
 XrdClientAdmin can be used from inside perl 5.8.x
 

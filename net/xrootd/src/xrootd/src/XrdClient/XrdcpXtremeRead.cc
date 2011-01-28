@@ -151,7 +151,7 @@ int XrdXtRdFile::GetListOfSources(XrdClient *ref, XrdOucString xtrememgr, XrdCli
    XrdClientAdmin adm(xtrememgr.c_str());
    if (!adm.Connect()) return 0;
 
-   int locateok = adm.Locate((kXR_char *)ref->GetCurrentUrl().File.c_str(), hosts, kXR_nowait);
+   int locateok = adm.Locate((kXR_char *)ref->GetCurrentUrl().File.c_str(), hosts);
    if (!locateok || !hosts.GetSize()) return 0;
 
    // Here we have at least a result... hopefully
@@ -174,8 +174,13 @@ int XrdXtRdFile::GetListOfSources(XrdClient *ref, XrdOucString xtrememgr, XrdCli
 
       XrdClient *cli = new XrdClient(loc.c_str());
       if (cli) {
+         if (cli->Open(0, 0, true)) {
             clients.Push_back(cli);
-
+         }
+         else {
+            delete cli;
+            cli = 0;
+         }
       }
 
    }

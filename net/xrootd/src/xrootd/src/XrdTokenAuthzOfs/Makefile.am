@@ -6,8 +6,8 @@
 ##         Derek Feichtinger <derek.feichtinger@cern.ch>
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id$
-## Checked in by $Author$
+## Version info: $Id: Makefile.am,v 1.8 2010/07/28 02:07:14 abh Exp $
+## Checked in by $Author: abh $
 #######################################################################
 
 lib_LTLIBRARIES = libXrdTokenAuthzOfs.la

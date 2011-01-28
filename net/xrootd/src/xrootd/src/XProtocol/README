@@ -1,5 +1,5 @@
 
-   $Id$
+   $Id: README,v 1.1 2004/08/12 11:28:20 elmer Exp $
 
    To insure that changes to the protocol are backward-consistent with 
 pre-existing servers/clients, the following rules should be followed:

@@ -4,27 +4,23 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id$
-## Checked in by $Author$
+## Version info: $Id: Makefile.am,v 1.2 2007/06/01 10:29:53 dfeich Exp $
+## Checked in by $Author: dfeich $
 #######################################################################
 
-lib_LTLIBRARIES = libXrdPss.la
+lib_LTLIBRARIES = libXrdProxy.la
 
 xrootdpssincdir = $(includedir)/xrootd/XrdPss
 xrootdpssinc_HEADERS = XrdPss.hh
 
-INCLUDES = -I$(top_srcdir)/src -I$(top_builddir)/src
+INCLUDES = -I$(top_srcdir)/src
 
-libXrdPss_la_SOURCES = \
+libXrdProxy_la_SOURCES = \
         XrdPss.cc  XrdPss.hh \
         XrdPssAio.cc \
         XrdPssConfig.cc
 
-libXrdPss_la_LIBADD =   ../XrdFfs/libXrdFfs.la  \
-                        ../XrdClient/libXrdClient.la \
-                        ../XrdSecsss//libXrdSecsss.la \
-                        ../XrdSec//libXrdSec.la \
+libXrdProxy_la_LIBADD = ../XrdClient/libXrdClient.la \
                         ../XrdNet/libXrdNet.la \
-                        ../XrdNet/libXrdNetUtil.la \
                         ../XrdOuc/libXrdOuc.la \
                         ../XrdSys/libXrdSys.la

@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id$
-## Checked in by $Author$
+## Version info: $Id: Makefile.am,v 1.9 2010/08/05 15:25:29 feichtinger Exp $
+## Checked in by $Author: feichtinger $
 #######################################################################
 
 AM_CPPFLAGS = -I$(top_srcdir)/src

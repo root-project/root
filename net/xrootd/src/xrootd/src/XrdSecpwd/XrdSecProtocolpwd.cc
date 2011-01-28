@@ -1,3 +1,6 @@
+// $Id$
+
+const char *XrdSecProtocolpwdCVSID = "$Id$";
 /******************************************************************************/
 /*                                                                            */
 /*                 X r d S e c P r o t o c o l p w d . c c                    */
@@ -239,7 +242,7 @@ static const char *ServerStepStr(int ksrv)
 //_____________________________________________________________________________
 XrdSecProtocolpwd::XrdSecProtocolpwd(int opts, const char *hname,
                                      const struct sockaddr *ipadd,
-                                     const char *parms) : XrdSecProtocol("pwd")
+                                     const char *parms)
 {
    // Default constructor
    EPNAME("XrdSecProtocolpwd");
@@ -271,6 +274,9 @@ XrdSecProtocolpwd::XrdSecProtocolpwd(int opts, const char *hname,
 
    // Used by servers to store forwarded credentials
    clientCreds = 0;
+
+   // Protocol ID
+   strncpy(Entity.prot, XrdSecPROTOIDENT, sizeof(Entity.prot));
 
    // Save host name
    if (hname) {

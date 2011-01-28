@@ -1,5 +1,5 @@
 
-  $Id$
+  $Id: README,v 1.5 2008/01/07 08:41:15 abh Exp $
 
 This directory contains start and stop scripts for the cmsd, olbd (deprecated)
 and xrootd, as well as a monitoring script for the cmsd when you wish to use

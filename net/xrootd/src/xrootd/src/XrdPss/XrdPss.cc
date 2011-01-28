@@ -8,6 +8,10 @@
 /*                DE-AC03-76-SFO0515 with the Deprtment of Energy             */
 /******************************************************************************/
 
+//         $Id$
+
+const char *XrdPssCVSID = "$Id$";
+
 /******************************************************************************/
 /*                             I n c l u d e s                                */
 /******************************************************************************/
@@ -27,13 +31,11 @@
 
 #include "XrdVersion.hh"
 
-#include "XrdFfs/XrdFfsPosix.hh"
 #include "XrdPss/XrdPss.hh"
 #include "XrdPosix/XrdPosixXrootd.hh"
 
 #include "XrdOss/XrdOssError.hh"
 #include "XrdOuc/XrdOucEnv.hh"
-#include "XrdSec/XrdSecEntity.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlatform.hh"
@@ -48,7 +50,7 @@ static XrdPssSys   XrdProxySS;
   
        XrdSysError eDest(0, "proxy_");
 
-static const int   PBsz = 4096;
+static const int   PBsz = 3072;
 }
 
 using namespace XrdProxy;
@@ -171,7 +173,6 @@ int XrdPssSys::Create(const char *tident, const char *path, mode_t Mode,
   Output:   Returns XrdOssOK upon success and -errno upon failure.
 
   Notes:    Directories are only created in the local disk cache.
-            Currently, we do not propogate the mkpath option.
 */
 
 int XrdPssSys::Mkdir(const char *path, mode_t mode, int mkpath)
@@ -182,7 +183,7 @@ int XrdPssSys::Mkdir(const char *path, mode_t mode, int mkpath)
 //
    if (!P2URL(pbuff, PBsz, path)) return -ENAMETOOLONG;
 
-// Simply return the proxied result here
+// Simply return the proxied result here (note we do not properly handle mkparh)
 //
    return (XrdPosixXrootd::Mkdir(pbuff, mode) ? -errno : XrdOssOK);
 }
@@ -200,26 +201,10 @@ int XrdPssSys::Mkdir(const char *path, mode_t mode, int mkpath)
 */
 int XrdPssSys::Remdir(const char *path, int Opts)
 {
-   const char *Cgi = (Opts & XRDOSS_Online ? "ofs.lcl=1" : "");
-   char pbuff[PBsz], *subPath;
-   int rc;
 
-// Convert path to URL
+// We currently do not support remdir()
 //
-   if (!(subPath = P2URL(pbuff, PBsz, path, allRmdir, Cgi, strlen(Cgi))))
-      return -ENAMETOOLONG;
-
-// If unlinks are being forwarded, just execute this on a single node.
-// Otherwise, make sure it it's not the base dir and execute everywhere.
-//
-   if (!allRm) rc = XrdPosixXrootd::Rmdir(pbuff);
-      else {if (!(*subPath)) return -EPERM;
-            rc = XrdFfsPosix_rmdirall(pbuff, subPath, myUid);
-           }
-
-// Return the result
-//
-   return (rc ? -errno : XrdOssOK);
+   return -ENOTSUP;
 }
 
 /******************************************************************************/
@@ -236,21 +221,10 @@ int XrdPssSys::Remdir(const char *path, int Opts)
 */
 int XrdPssSys::Rename(const char *oldname, const char *newname)
 {
-   char oldName[PBsz], *oldSubP, newName[PBsz], *newSubP;
 
-// If we are not forwarding the request, manually execute it everywhere.
+// We currently do not support rename()
 //
-   if (allMv) return (XrdFfsPosix_renameall(urlPlain, oldname, newname, myUid)
-                    ? -errno : XrdOssOK);
-
-// Convert path to URL
-//
-   if (!(oldSubP = P2URL(oldName, PBsz, oldname))
-   ||  !(newSubP = P2URL(newName, PBsz, newname))) return -ENAMETOOLONG;
-
-// Execute the rename and return result
-//
-   return (XrdPosixXrootd::Rename(oldName, newName) ? -errno : XrdOssOK);
+   return -ENOTSUP;
 }
 
 /******************************************************************************/
@@ -263,14 +237,11 @@ int XrdPssSys::Rename(const char *oldname, const char *newname)
   Input:    path        - Is the fully qualified name of the file to be tested.
             buff        - pointer to a 'stat' structure to hold the attributes
                           of the file.
-            Opts        - stat() options.
 
   Output:   Returns XrdOssOK upon success and -errno upon failure.
-
-  Notes:    The XRDOSS_resonly flag in Opts is not supported.
 */
 
-int XrdPssSys::Stat(const char *path, struct stat *buff, int Opts)
+int XrdPssSys::Stat(const char *path, struct stat *buff, int resonly)
 {
    char pbuff[PBsz];
 
@@ -278,7 +249,7 @@ int XrdPssSys::Stat(const char *path, struct stat *buff, int Opts)
 //
    if (!P2URL(pbuff, PBsz, path)) return -ENAMETOOLONG;
 
-// Return proxied stat
+// Return proxied stat (note we do not properly handle the resonly flag!)
 //
    return (XrdPosixXrootd::Stat(pbuff, buff) ? -errno : XrdOssOK);
 }
@@ -293,6 +264,8 @@ int XrdPssSys::Stat(const char *path, struct stat *buff, int Opts)
             flen        - The new size that the file is to have.
 
   Output:   Returns XrdOssOK upon success and -errno upon failure.
+
+  Notes:    This function is currently unsupported.
 */
 
 int XrdPssSys::Truncate(const char *path, unsigned long long flen)
@@ -303,8 +276,7 @@ int XrdPssSys::Truncate(const char *path, unsigned long long flen)
 //
    if (!P2URL(pbuff, PBsz, path)) return -ENAMETOOLONG;
 
-// Return proxied truncate. We only do this on a single machine because the
-// redirector will forbid the trunc() if multiple copies exist.
+// Return proxied truncate
 //
    return (XrdPosixXrootd::Truncate(pbuff, flen) ? -errno : XrdOssOK);
 }
@@ -322,26 +294,15 @@ int XrdPssSys::Truncate(const char *path, unsigned long long flen)
 */
 int XrdPssSys::Unlink(const char *path, int Opts)
 {
-   const char *Cgi = (Opts & XRDOSS_Online ? "ofs.lcl=1" : "");
-   char pbuff[PBsz], *subPath;
-   int rc;
+   char pbuff[PBsz];
 
 // Convert path to URL
 //
-   if (!(subPath = P2URL(pbuff, PBsz, path, allRm, Cgi, strlen(Cgi))))
-      return -ENAMETOOLONG;
+   if (!P2URL(pbuff, PBsz, path)) return -ENAMETOOLONG;
 
-// If unlinks are being forwarded, just execute this on a single node.
-// Otherwise, make sure it may be a file and execute everywhere.
+// Return proxied unlink
 //
-   if (!allRm) rc = XrdPosixXrootd::Unlink(pbuff);
-      else {if (!(*subPath)) return -EISDIR;
-            rc = XrdFfsPosix_unlinkall(pbuff, subPath, myUid);
-           }
-
-// Return the result
-//
-   return (rc ? -errno : XrdOssOK);
+   return (XrdPosixXrootd::Unlink(pbuff) ? -errno : XrdOssOK);
 }
 
 /******************************************************************************/
@@ -360,25 +321,19 @@ int XrdPssSys::Unlink(const char *path, int Opts)
 */
 int XrdPssDir::Opendir(const char *dir_path) 
 {
-   char pbuff[PBsz], *subPath;
-   int theUid = XrdPssSys::T2UID(tident);
-
-// Return an error if this object is already open
-//
-   if (dirVec) return -XRDOSS_E8001;
+   char pbuff[PBsz];
 
 // Convert path to URL
 //
-   if (!(subPath = XrdPssSys::P2URL(pbuff,PBsz,dir_path))) return -ENAMETOOLONG;
+   if (!XrdPssSys::P2URL(pbuff, PBsz, dir_path)) return -ENAMETOOLONG;
+
+// Return an error if this object is already open
+//
+   if (lclfd) return -XRDOSS_E8001;
 
 // Return proxied result
 //
-   if ((numEnt = XrdFfsPosix_readdirall(pbuff, "", &dirVec, theUid)) < 0)
-       {int rc = -errno;
-        if (dirVec) {free(dirVec); dirVec = 0;}
-        return rc;
-        } else curEnt = 0;
-
+   if (!(lclfd = XrdPosixXrootd::Opendir(pbuff))) return -errno;
    return XrdOssOK;
 }
 
@@ -403,19 +358,21 @@ int XrdPssDir::Opendir(const char *dir_path)
 */
 int XrdPssDir::Readdir(char *buff, int blen)
 {
+   struct dirent *rp;
 
 // Check if this object is actually open
 //
-   if (!dirVec) return -XRDOSS_E8002;
+   if (!lclfd) return -XRDOSS_E8002;
 
-// Return a single entry
+// Perform proxied result
 //
-   if (curEnt >= numEnt) *buff = 0;
-      else {strlcpy(buff, dirVec[curEnt], blen);
-            free(dirVec[curEnt]);
-            curEnt++;
-           }
-   return XrdOssOK;
+   errno = 0;
+   if ((rp = XrdPosixXrootd::Readdir(lclfd)))
+      {strlcpy(buff, rp->d_name, blen);
+       return XrdOssOK;
+      }
+   *buff = '\0'; ateof = 1;
+   return -errno;
 }
 
 /******************************************************************************/
@@ -431,17 +388,15 @@ int XrdPssDir::Readdir(char *buff, int blen)
 */
 int XrdPssDir::Close(long long *retsz)
 {
-   int i;
 
 // Make sure this object is open
 //
-   if (!dirVec) return -XRDOSS_E8002;
+   if (!lclfd) return -XRDOSS_E8002;
 
-// Free up remaining storage
+// Close whichever handle is open
 //
-   for (i = curEnt; i < numEnt; i++) free(dirVec[i]);
-   free(dirVec);
-   dirVec = 0;
+   if (XrdPosixXrootd::Closedir(lclfd)) return -errno;
+   lclfd = 0;
    return XrdOssOK;
 }
 
@@ -464,22 +419,19 @@ int XrdPssDir::Close(long long *retsz)
 */
 int XrdPssFile::Open(const char *path, int Oflag, mode_t Mode, XrdOucEnv &Env)
 {
-   const char *Cgi = "";
    char pbuff[PBsz];
-   int CgiLen;
-
-// Return an error if the object is already open
-//
-   if (fd >= 0) return -XRDOSS_E8003;
-
-// Obtain the cgi info
-//
-   Cgi   = Env.Env(CgiLen);
 
 // Convert path to URL
 //
-   if (!XrdPssSys::P2URL(pbuff, PBsz, path, 0, Cgi, CgiLen, tident))
-      return -ENAMETOOLONG;
+   if (!XrdPssSys::P2URL(pbuff, PBsz, path, &Env)) return -ENAMETOOLONG;
+
+// Return an error if this object is already open unless the preceeding call
+// was to create the file. For now we ignore the special create flags.
+//
+   if (fd >= 0)
+      {if (fd != 17 || crPath != path) return -XRDOSS_E8003;
+          else {fd = 0; crPath = 0; Oflag = crOpts >> 8 | (Oflag & ~O_TRUNC);}
+      }
 
 // Return the result of this open
 //
@@ -703,76 +655,33 @@ int XrdPssFile::isCompressed(char *cxidp)  // Not supported for proxies
 }
 
 /******************************************************************************/
+/*                     P r i v a t e    S e c t i o n                         */
+/******************************************************************************/
+/******************************************************************************/
 /*                                 P 2 U R L                                  */
 /******************************************************************************/
   
-char *XrdPssSys::P2URL(char *pbuff, int pblen, const char *path, int Split,
-                 const char *Cgi,   int CgiLn, const char *Ident)
+int XrdPssSys::P2URL(char *pbuff,int pblen,const char *path,XrdOucEnv *env)
 {
-   int   pfxLen, pathln = strlen(path);
-   const char *theID = 0, *subPath;
-   char  idBuff[8], *idP, *retPath;
+     int   theLen, envLen, pathln = strlen(path);
+     char *theEnv = 0;
 
-// If we have an Ident then usethe fd number as the userid. This allows us to
-// have one stream per open connection.
+// Calculate the lengths here (include strlen("xrootd://<host>:port/"))
 //
-   if (Ident && (Ident = index(Ident, ':')))
-      {strncpy(idBuff, Ident+1, 7); idBuff[7] = 0;
-       if ((idP = index(idBuff, '@'))) {*(idP+1) = 0; theID = idBuff;}
-      }
+   if (env) theEnv = env->Env(envLen);
+      else envLen = 0;
 
-// Format the header into the buffer and check if we overflowed. Note that there
-// can be a maximum of 8 substitutions, so that's how many we provide.
-//
-   if (theID) pfxLen = snprintf(pbuff,pblen,hdrData,theID,theID,theID,theID,
-                                                    theID,theID,theID,theID);
-      else if ((pfxLen = urlPlen) < pblen) strcpy(pbuff, urlPlain);
+   if ((theLen = hdrLen+pathln+(envLen ? envLen+1 : 0)) >= pblen) return 0;
 
-// Calculate if the rest of the data will actually fit (we overestimate by 1)
+// Copy the data to form complete URL
 //
-   if ((pfxLen + pathln + CgiLn + 1 + (Split ? 1 : 0)) >= pblen) return 0;
-   retPath = (pbuff += pfxLen);
-
-// If we need to return a split path, then compute where to split it. Note
-// that Split assumes that all redundant slashes have been removed. We do
-// not add any cgi information if the split fails.
-//
-   if (Split)
-      {if ((subPath = rindex(path+1, '/')) && *(subPath+1))
-          {int n = subPath-path;
-           strncpy(pbuff, path, n); retPath = pbuff+n; *retPath++ = 0;
-           strcpy(retPath, subPath);
-           pathln++;
-          } else {
-           strcpy(pbuff, path);
-           return pbuff+pathln;
-          }
-       } else strcpy(pbuff, path);
-
-// Add any cgi information
-//
-   if (CgiLn)
-      {pbuff += pathln;
+   strcpy(pbuff,        hdrData);
+   strcpy(pbuff+hdrLen, path);
+   if (envLen)
+      {pbuff += (hdrLen + pathln);
        *pbuff++ = '?';
-       strcpy(pbuff, Cgi);
+       strcpy(pbuff, theEnv);
       }
 
-   return retPath;
-}
-
-/******************************************************************************/
-/*                                 T 2 U I D                                  */
-/******************************************************************************/
-  
-int XrdPssSys::T2UID(const char *Ident)
-{
-   char *Eol;
-
-// We will use the FD number as the userid. If we fail, use ours
-//
-   if (Ident && (Ident = index(Ident, ':')))
-      {int theUid = strtol(Ident+1, &Eol, 10);
-       if (*Eol == '@') return theUid;
-      }
-   return myUid;
+   return theLen;
 }

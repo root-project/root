@@ -21,7 +21,7 @@ server:
 -gridmapfile:<file>     : Grid Mapfile (default /etc/grid-security/grid-mapfile)
 -vomsmapfile:<file>     : VOMS Mapfile (default /etc/grid-security/voms-mapfile)
 -mapuser:1|0            : apply grid map file for user mapping (default 0)
--mapgroup:1|0           : apply voms map file for group mapping (default 0) or cross user mapping (if map value starts with uid:)
+-mapgroup:1|0           : apply voms map file for group mapping (default 0)
 -mapcernuser:1|0        : apply automatic mapping of CERN users to AFS accounts
 -mapnobody:1|0          : if a user cannot be mapped this would map him to nobody if set, otherwise authentication failure
 -selecttimeout:<time>   : timeout for the full non-blocking SSL handshake (default 10)
@@ -37,7 +37,7 @@ XrdSecSSLUSERCERT	: client certificate (default proxy /tmp/x509up_u$UID)
 XrdSecSSLUSERKEY	: client key         (default proxy /tmp/x509up_u$UID)
 XrdSecSSLPROXYFORWARD   : foward the proxy certificate to the remote service
 XrdSecSSLVERIFYDEPTH    : verification level depth (default 10)
-XrdSecSSLSESSION        : enable/disable ssl session reuse (default 0 [no])
+XrdSecSSLSESSION        : enable/disable ssl session reuse (default 1 [yes])
 XrdSecSSLSELECTTIMEOUT  : timeout for the full non-blocking SSL handshake (default 10)
 
 # for Globus compatibility

@@ -5,7 +5,7 @@
 ## Initial version: 17.3.2009
 ##
 ## Version info: $Id$
-## Checked in by $Author$
+## Checked in by $Author: feichtinger $
 #######################################################################
 
 #Note: xrdadler32 unfortunately has a dependency on the XrdPosix library
@@ -18,13 +18,13 @@
 #############################################################################
 ## deliverables
 
-bin_PROGRAMS = xrdadler32 cconfig mpxstats wait41
+bin_PROGRAMS = xrdadler32 mpxstats wait41
 
 
 #############################################################################
 ## Build rules
 
-AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_builddir)/src
+AM_CPPFLAGS = -I$(top_srcdir)/src
 
 xrdadler32_SOURCES = Xrdadler32.cc
 
@@ -35,16 +35,6 @@ xrdadler32_LDADD = \
                        ../XrdSys/libXrdSys.la
 
 xrdadler32_LDFLAGS = -static -export-dynamic -ldl -lz
-
-cconfig_SOURCES = XrdAppsCconfig.cc
-
-cconfig_LDADD = \
-                       ../XrdNet/libXrdNet.la   \
-                       ../XrdOuc/libXrdOuc.la     \
-                       ../XrdSys/libXrdSys.la \
-                       ../XrdNet/libXrdNetUtil.la
-
-cconfig_LDFLAGS = -static -export-dynamic
 
 mpxstats_SOURCES = XrdMpxStats.cc
 

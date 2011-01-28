@@ -8,6 +8,10 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
+//       $Id$
+
+const char *XrdSecClientCVSID = "$Id$";
+
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
@@ -51,7 +55,7 @@ XrdSecCredentials *getCredentials(XrdSecParameters  *parm=0,       // In
 
 void               Delete() {}  // Never deleted because it's static!
 
-              XrdSecProtNone() : XrdSecProtocol("") {}
+              XrdSecProtNone() {}
              ~XrdSecProtNone() {}
 };
   

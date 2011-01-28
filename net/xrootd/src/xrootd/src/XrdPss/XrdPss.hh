@@ -4,15 +4,16 @@
 /*                                                                            */
 /*                             X r d P s s . h h                              */
 /*                                                                            */
-/* (c) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/* (c) 2007 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*                            All Rights Reserved                             */
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
-/*              DE-AC02-76-SFO0515 with the Department of Energy              */
+/*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-#include <errno.h>
-#include <unistd.h>
+//         $Id$
+
 #include <sys/types.h>
+#include <errno.h>
 #include "XrdSys/XrdSysHeaders.hh"
 
 #include "XrdOss/XrdOss.hh"
@@ -29,13 +30,13 @@ int     Opendir(const char *);
 int     Readdir(char *buff, int blen);
 
         // Constructor and destructor
-        XrdPssDir(const char *tid) : tident(tid), dirVec(0) {}
-       ~XrdPssDir() {if (dirVec) Close();}
+        XrdPssDir(const char *tid) 
+                 {lclfd=0; ateof=0; tident=tid;}
+       ~XrdPssDir() {if (lclfd) Close();}
 private:
+         DIR       *lclfd;
 const    char      *tident;
-         char     **dirVec;
-         int        curEnt;
-         int        numEnt;
+         int        ateof;
 };
   
 /******************************************************************************/
@@ -107,29 +108,18 @@ int       Stat(const char *, struct stat *, int resonly=0);
 int       Truncate(const char *, unsigned long long);
 int       Unlink(const char *, int Opts=0);
 
-static char *P2URL(char *pbuff, int pblen,   const char *path, int Split=0,
-             const char *Cgi=0, int CgiLn=0, const char *tIdent=0);
-static int   T2UID(const char *Ident);
+static int P2URL(char *pbuff,int pblen,const char *path,XrdOucEnv *env=0);
 
 static const char  *ConfigFN;       // -> Pointer to the config file name
 static const char  *myHost;
 static const char  *myName;
-static uid_t        myUid;
-static gid_t        myGid;
-static XrdOucTList *ManList;
-static const char  *urlPlain;
-static int          urlPlen;
-static int          hdrLen;
-static const char  *hdrData;
-static int          Workers;
-
-static char         allChmod;
-static char         allMkdir;
-static char         allMv;
-static char         allRmdir;
-static char         allRm;
-static char         allTrunc;
-
+static XrdOucTList *PanList;
+static char        *hdrData;
+static char         hdrLen;
+static long         rdAheadSz;
+static long         rdCacheSz;
+static long         numStream;
+   
          XrdPssSys() {}
 virtual ~XrdPssSys() {}
 
@@ -139,8 +129,7 @@ int    buildHdr();
 int    Configure(const char *);
 int    ConfigProc(const char *ConfigFN);
 int    ConfigXeq(char*, XrdOucStream&);
-int    xconf(XrdSysError *Eroute, XrdOucStream &Config);
-int    xorig(XrdSysError *errp,   XrdOucStream &Config);
+int    xmang(XrdSysError *errp,   XrdOucStream &Config);
 int    xsopt(XrdSysError *Eroute, XrdOucStream &Config);
 int    xtrac(XrdSysError *Eroute, XrdOucStream &Config);
 };

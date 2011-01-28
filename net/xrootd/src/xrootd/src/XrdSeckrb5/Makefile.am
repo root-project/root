@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id$
-## Checked in by $Author$
+## Version info: $Id: Makefile.am,v 1.10 2009/01/15 10:39:33 dfeich Exp $
+## Checked in by $Author: dfeich $
 #######################################################################
 
 

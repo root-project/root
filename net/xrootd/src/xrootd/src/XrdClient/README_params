@@ -1,5 +1,5 @@
 
-$Id$
+$Id: README_params,v 1.1 2005/02/08 12:48:59 furano Exp $
 
 Here is the list of the internal parameters of XrdClient, with their meaning.
 The parameters names are case sensitive.

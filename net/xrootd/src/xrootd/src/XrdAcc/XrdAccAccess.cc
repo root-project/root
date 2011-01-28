@@ -35,11 +35,11 @@ extern unsigned long XrdOucHashVal2(const char *KeyVal, int KeyLen);
 extern XrdAccConfig XrdAccConfiguration;
 
 /******************************************************************************/
-/*       Autorization Object Creation via XrdAccDefaultAuthorizeObject        */
+/*                 Object Creation via XrdAccAuthorize Object                 */
 /******************************************************************************/
   
-XrdAccAuthorize *XrdAccDefaultAuthorizeObject(XrdSysLogger *lp, const char *cfn,
-                                              const char *parm)
+XrdAccAuthorize *XrdAccAuthorizeObject(XrdSysLogger *lp, 
+                                       const char *cfn, const char *parm)
 {
    static XrdSysError Eroute(lp, "acc_");
 

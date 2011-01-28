@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# $Id$
+# $Id: fs_stat,v 1.5 2008/10/14 09:24:42 furano Exp $
 
 $CMDuname    = '/bin/uname';
 chop($systyp = `$CMDuname`);  # used for processing df command

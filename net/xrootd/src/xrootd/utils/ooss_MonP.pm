@@ -10,7 +10,7 @@
 #            DE-AC03-76-SFO0515 with the Department of Energy                 *
 #******************************************************************************
 
-# $Id$
+# $Id: ooss_MonP.pm,v 1.4 2008/10/14 09:25:04 furano Exp $
 
 # Monitor the parent process. If it stalls, optionally restart it.
 

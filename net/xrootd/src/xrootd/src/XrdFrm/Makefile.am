@@ -5,7 +5,7 @@
 ## Initial version: 17.5.2008
 ##
 ## Version info: $Id$
-## Checked in by $Author$
+## Checked in by $Author: feichtinger $
 #######################################################################
 
 #
@@ -16,7 +16,7 @@
 #
 
 
-AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_builddir)/src $(READLINE_INCDIR)
+AM_CPPFLAGS = -I$(top_srcdir)/src $(READLINE_INCDIR)
 
 #############################################################################
 ## extra directory definitions

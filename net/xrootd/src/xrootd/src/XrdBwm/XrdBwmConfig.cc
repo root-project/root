@@ -2,11 +2,15 @@
 /*                                                                            */
 /*                       X r d B w m C o n f i g . c c                        */
 /*                                                                            */
-/* (C) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/* (C) 2008 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*                            All Rights Reserved                             */
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*               DE-AC02-76-SFO0515 with the Deprtment of Energy              */
 /******************************************************************************/
+
+//         $Id$
+
+const char *XrdBwmConfigCVSID = "$Id$";
   
 #include <unistd.h>
 #include <ctype.h>
@@ -354,16 +358,13 @@ int XrdBwm::xtrace(XrdOucStream &Config, XrdSysError &Eroute)
 
 int XrdBwm::setupAuth(XrdSysError &Eroute)
 {
-   extern XrdAccAuthorize *XrdAccDefaultAuthorizeObject(XrdSysLogger *lp,
-                                                        const char   *cfn,
-                                                        const char   *parm);
    XrdSysPlugin    *myLib;
    XrdAccAuthorize *(*ep)(XrdSysLogger *, const char *, const char *);
 
 // Authorization comes from the library or we use the default
 //
-   if (!AuthLib) return 0 == (Authorization = XrdAccDefaultAuthorizeObject
-                              (Eroute.logger(),ConfigFN,AuthParm));
+   if (!AuthLib) return 0 == (Authorization =
+                 XrdAccAuthorizeObject(Eroute.logger(),ConfigFN,AuthParm));
 
 // Create a pluin object (we will throw this away without deletion because
 // the library must stay open but we never want to reference it again).

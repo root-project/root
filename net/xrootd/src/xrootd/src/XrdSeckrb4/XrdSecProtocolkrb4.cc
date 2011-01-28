@@ -8,6 +8,10 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
+//       $Id$
+
+const char *XrdSecProtocolkrb4CVSID = "$Id$";
+
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
@@ -63,7 +67,6 @@ static  void               setOpts(int opts) {options = opts;}
         XrdSecProtocolkrb4(const char                *KP,
                            const char                *hname,
                            const struct sockaddr     *ipadd)
-                          : XrdSecProtocol(XrdSecPROTOIDENT)
                           {Service = (KP ? strdup(KP) : 0);
                            Entity.host = strdup(hname);
                            memcpy(&hostaddr, ipadd, sizeof(hostaddr));

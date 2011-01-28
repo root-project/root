@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  $Id$
+#  $Id: StartOLB.cf.example,v 1.4 2007/11/16 01:03:38 abh Exp $
 #
 
 # Set 'time' to be number of seconds to wait for a required file to appear

@@ -1,17 +1,20 @@
 /******************************************************************************/
-/*                                                                            */
-/*            X r d S f s G e t D e f a u l t F i l e S y s t e m             */
-/*                                                                            */
-/* (c) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/* (c) 2008 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*                            All Rights Reserved                             */
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
+//           $Id$
+
+const char *XrdOfsFSCVSID = "$Id$";
+
 #include "XrdOfs/XrdOfs.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysPthread.hh"
 
+#include "XrdVersion.hh"
+  
 // If you are replacing the standard definition of the file system interface,
 // with a derived class to perform additional or enhanced functions, you MUST
 // define XrdOfsFS to be an instance of your derived class definition. You
@@ -24,16 +27,21 @@
 
 XrdOfs XrdOfsFS;
   
-XrdSfsFileSystem *XrdSfsGetDefaultFileSystem(XrdSfsFileSystem *native_fs,
-                                             XrdSysLogger     *lp,
-                                             const char       *configfn)
+/******************************************************************************/
+/*                         G e t F i l e S y s t e m                          */
+/******************************************************************************/
+  
+XrdSfsFileSystem *XrdSfsGetFileSystem(XrdSfsFileSystem *native_fs, 
+                                      XrdSysLogger     *lp,
+                                      const char       *configfn)
 {
    extern XrdSysError OfsEroute;
 
-// No need to herald this as it's now the default filesystem
+// Do the herald thing
 //
    OfsEroute.SetPrefix("ofs_");
    OfsEroute.logger(lp);
+   OfsEroute.Say("Copr.  2010 Stanford University, Ofs Version " XrdVSTRING);
 
 // Initialize the subsystems
 //

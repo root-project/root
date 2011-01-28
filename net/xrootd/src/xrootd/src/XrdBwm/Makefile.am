@@ -5,7 +5,7 @@
 ## Initial version: 17.5.2008
 ##
 ## Version info: $Id$
-## Checked in by $Author$
+## Checked in by $Author: dfeich $
 #######################################################################
 
 #############################################################################
@@ -25,7 +25,7 @@ xrootdbwminc_HEADERS = XrdBwm.hh \
 
 #############################################################################
 ## Build rules
-AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_builddir)/src
+AM_CPPFLAGS = -I$(top_srcdir)/src
 
 libXrdBwm_la_SOURCES = \
                        XrdBwm.cc \

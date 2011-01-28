@@ -1,5 +1,5 @@
 
-   $Id$
+   $Id: README_Xrdcp,v 1.4 2005/02/08 12:48:59 furano Exp $
 
 Xrdcp is a cp-like tool to copy files:
 - FROM an xrootd system TO a local file system

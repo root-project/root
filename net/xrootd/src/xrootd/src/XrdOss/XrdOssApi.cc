@@ -7,6 +7,10 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*                DE-AC03-76-SFO0515 with the Deprtment of Energy             */
 /******************************************************************************/
+
+//         $Id$
+
+const char *XrdOssApiCVSID = "$Id$";
  
 /* These routines are thread-safe if compiled with:
    AIX: -D_THREAD_SAFE
@@ -133,9 +137,10 @@ int XrdOssSys::Init(XrdSysLogger *lp, const char *configfn)
 {
      int retc;
 
-// No need to do the herald thing as we are the default storage system
+// Do the herald thing
 //
    OssEroute.logger(lp);
+   OssEroute.Say("Copr.  2008, Stanford University, oss Version " XrdVSTRING);
 
 // Initialize the subsystems
 //

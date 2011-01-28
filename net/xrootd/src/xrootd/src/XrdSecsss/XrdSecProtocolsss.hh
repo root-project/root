@@ -9,6 +9,8 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
+  
+//       $Id$
 
 #include "XrdCrypto/XrdCryptoLite.hh"
 #include "XrdSec/XrdSecInterface.hh"
@@ -52,8 +54,7 @@ static  void  setOpts(int opts) {options = opts;}
 
         XrdSecProtocolsss(const char                *hname,
                           const struct sockaddr     *ipadd)
-                         : XrdSecProtocol("sss"),
-                           keyTab(0), Crypto(0), idBuff(0), Sequence(0)
+                         : keyTab(0), Crypto(0), idBuff(0), Sequence(0)
                          {urName = strdup(hname);}
 
 struct Crypto {const char *cName; char cType;};

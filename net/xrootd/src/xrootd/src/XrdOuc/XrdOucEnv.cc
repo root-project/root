@@ -14,7 +14,6 @@ const char *XrdOucEnvCVSID = "$Id$";
 
 #include "string.h"
 #include "stdio.h"
-#include <stdlib.h>
 
 #include "XrdOuc/XrdOucEnv.hh"
   
@@ -105,37 +104,6 @@ int XrdOucEnv::Export(const char *Var, int Val)
    char buff[32];
    sprintf(buff, "%d", Val);
    return Export(Var, buff);
-}
-
-
-/******************************************************************************/
-/*                                I m p o r t                                 */
-/******************************************************************************/
-bool XrdOucEnv::Import( const char *var, char *&val )
-{
-  char *value = getenv( var );
-  if( !value || !*value )
-     return false;
-
-  val = value;
-  return true;
-}
-
-/******************************************************************************/
-/*                                I m p o r t                                 */
-/******************************************************************************/
-bool XrdOucEnv::Import( const char *var, long  &val )
-{
-  char *value;
-  if( !Import( var, value ) )
-    return false;
-
-  char *status;
-  val = strtol( value, &status, 0 );
-
-  if( *status != 0 )
-    return false;
-  return true;
 }
 
 /******************************************************************************/

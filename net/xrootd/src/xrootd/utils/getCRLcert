@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# $Id$
+# $Id: getCRLcert,v 1.1 2009/05/06 15:31:45 ganis Exp $
 # G. Ganis, May 2009
 
 # This script downloads and installs the CRL certificate for the CA of the

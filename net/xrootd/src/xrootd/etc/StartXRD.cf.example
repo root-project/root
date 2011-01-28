@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  $Id$
+#  $Id: StartXRD.cf.example,v 1.6 2010/04/14 02:04:57 abh Exp $
 #
 
 # Set 'time' to be number of seconds to wait for a required file to appear

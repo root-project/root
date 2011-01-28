@@ -8,9 +8,9 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
   
-//         $Id$
+//         $Id: XrdXrootdStat.icc,v 1.3 2009/10/14 18:04:18 abh Exp $
 
-//const char *XrdXrootdStatCVSID = "$Id$";
+//const char *XrdXrootdStatCVSID = "$Id: XrdXrootdStat.icc,v 1.3 2009/10/14 18:04:18 abh Exp $";
 
 // This method has been extracted from this file so that it can be easily
 // included in other parts of the system that need to generate a protocol

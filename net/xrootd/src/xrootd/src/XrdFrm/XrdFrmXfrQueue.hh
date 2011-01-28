@@ -54,9 +54,9 @@ static XrdSysSemaphore           qReady;
 
 struct theQueue
       {XrdSysSemaphore           Avail;
-       XrdFrmXfrJob             *Free;
-       XrdFrmXfrJob             *First;
-       XrdFrmXfrJob             *Last;
+       struct XrdFrmXfrJob      *Free;
+       struct XrdFrmXfrJob      *First;
+       struct XrdFrmXfrJob      *Last;
               XrdSysSemaphore    Alert;
               const char        *File;
               const char        *Name;

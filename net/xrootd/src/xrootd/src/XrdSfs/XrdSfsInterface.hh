@@ -4,11 +4,13 @@
 /*                                                                            */
 /*                    X r d S f s I n t e r f a c e . h h                     */
 /*                                                                            */
-/* (c) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/* (c) 2004 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*       All Rights Reserved. See XrdInfo.cc for complete License Terms       */
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
-/*              DE-AC02-76-SFO0515 with the Department of Energy              */
+/*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
+
+//        $Id$
 
 #include <string.h>      // For strlcpy()
 #include <sys/types.h>
@@ -30,7 +32,6 @@
 #define SFS_O_NOWAIT  0x01000000         // do not impose operational delays
 #define SFS_O_RAWIO   0x02000000         // allow client-side decompression
 #define SFS_O_RESET   0x04000000         // Reset any cached information
-#define SFS_O_REPLICA 0x08000000         // Open for replication
 
 // The following flag may be set in the access mode arg for open() & mkdir()
 // Note that on some systems mode_t is 16-bits so we use a careful value!
@@ -228,19 +229,14 @@ protected:
 /*              F i l e   S y s t e m   I n s t a n t i a t o r               */
 /******************************************************************************/
 
-/* When building a shared library plugin, the following "C" entry point must
-   exist in the library:
+class XrdSysLogger;
 
-   extern "C"
-         {XrdSfsFileSystem *XrdSfsGetFileSystem(XrdSfsFileSystem *nativeFS,
-                                                XrdSysLogger     *Logger,
-                                                const char       *configFn);
-         }
-
-   This entry is called to get an instance of the file system. Return 0 if upon
-   failure to properly create such an object. For statically linked file systems
-   the non-extern C XrdSfsGetDefaultFileSystem() is used instead.
-*/
+extern "C"
+{
+XrdSfsFileSystem *XrdSfsGetFileSystem(XrdSfsFileSystem *native_fs,
+                                      XrdSysLogger     *Logger,
+                                      const char       *config_fn);
+}
 
 /******************************************************************************/
 /*                            X r d S f s F i l e                             */

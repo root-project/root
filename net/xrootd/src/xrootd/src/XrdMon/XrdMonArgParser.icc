@@ -8,7 +8,7 @@
 /*              DE-AC02-76SF00515 with the Department of Energy              */
 /*****************************************************************************/
 
-// $Id$
+// $Id: XrdMonArgParser.icc,v 1.3 2005/03/10 21:32:28 becla Exp $
 
 #include "XrdMon/XrdMonErrors.hh"
 #include "XrdMon/XrdMonException.hh"

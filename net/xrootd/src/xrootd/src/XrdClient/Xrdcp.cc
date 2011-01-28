@@ -88,7 +88,7 @@ struct XrdCpInfo {
 
 #define XRDCP_BLOCKSIZE          (8*1024*1024)
 #define XRDCP_XRDRASIZE          (30*XRDCP_BLOCKSIZE)
-#define XRDCP_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision$ - Xrootd version: "XrdVSTRING
+#define XRDCP_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.103 $ - Xrootd version: "XrdVSTRING
 
 ///////////////////////////////////////////////////////////////////////
 // Coming from parameters on the cmd line
@@ -308,8 +308,6 @@ void *ReaderThread_xrd_xtreme(void *parm)
    // Block to prefetch
    int lastprefetched = thrnfo->startfromblk;
    int lastread = lastprefetched;
-
-   thrnfo->cli->Open(0, 0, true);
 
    thrnfo->cli->SetCacheParameters(XRDCP_BLOCKSIZE*4*thrnfo->maxoutstanding*2, 0, XrdClientReadCache::kRmBlk_FIFO);
    if (thrnfo->cli->IsOpen_wait())
@@ -734,7 +732,6 @@ int doCp_xrd2xrd(XrdClient **xrddest, const char *src, const char *dst) {
    }
 
    delete *xrddest;
-   *xrddest = 0;
 
    return retvalue;
 }

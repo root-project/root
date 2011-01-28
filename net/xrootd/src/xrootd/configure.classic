@@ -1,7 +1,7 @@
 #! /bin/sh
 ################################################################################
 #
-#          $Id$
+#          $Id: configure.classic,v 1.109 2010/09/13 13:26:49 ganis Exp $
 #                                                                              #
 #                     c o n f i g u r e . c l a s s i c                        #
 #                       (previously called configure)                          #
@@ -65,20 +65,19 @@ options="                 \
    enable_bonjour         \
    enable_echo            \
    enable_gsi             \
-   enable_javaint         \
    enable_secssl          \
    enable_krb4            \
    enable_krb5            \
    enable_mon             \
-   enable_oldhdrs         \
    enable_perlint         \
-   enable_posix           \
    enable_pwd             \
    enable_shadowpw        \
    enable_shared          \
    enable_ssl             \
    enable_trace           \
-   enable_xrootdfs
+   enable_posix           \
+   enable_javaint         \
+   enable_oldhdrs
 "
 
 #
@@ -100,7 +99,6 @@ enable_ssl=
 enable_thread=yes
 enable_javaint=no
 enable_oldhdrs=no
-enable_xrootdfs=no
 
 #
 # ./configure arguments and defaults set via supported env vars
@@ -706,7 +704,6 @@ enable/disable options, prefix with either --enable- or --disable-
    trace           Support for trace statements via the "-d" flag
    oldhdrs         Enable/disable usage of std headers in form of <name.h>
                    instead of <name>, e.g. <iostream.h>
-   xrootdfs        Build xrootdfs as a loadable fuse module
 
 with options, prefix with --with-, enables corresponding support
 
@@ -717,8 +714,6 @@ with options, prefix with --with-, enables corresponding support
    bonjour         Bonjour support, location of Bonjour distribution
    bonjour-incdir  Bonjour support, location of headers of mDNS or Avahi
    bonjour-libdir  Bonjour support, location of libraries of mDNS or Avahi
-   fuse-incdir     xrootdfs support,location of fuse application headers
-   fuse-libdir     xrootdfs support,location of fuse application library
    java            Path to the Java SDK to be used for the java interface
    krb4            KerberosIV support, location of Kerberos distribution
    krb4-incdir     KerberosIV support, location of kerberosIV/krb.h
@@ -756,7 +751,6 @@ Advanced options:
    --has-readline      Do not check for readline
    --syslibs           Base directory where to look for system libraries to link with
    --incpfx            Base directory where to look for include files
-   --use-sun-stl4port  Use STL4 port on Solaris
 
 Install-related options:
 
@@ -830,7 +824,6 @@ hasgethbyxr=""
 hasnameinfo=""
 hassigwti=""
 hasfstatat=""
-hasfuse=""
 hasreadline=""
 afslibdir=""
 afsincdir=""
@@ -849,9 +842,6 @@ inst_etcdir=""
 inst_bindir=""
 inst_utilsdir=""
 inst_incdir=""
-
-sunstlport=""
-suncstd="-lCstd"
 
 if test $# -gt 0 ; then
    while test ! "x$1" = "x" ; do
@@ -880,7 +870,6 @@ if test $# -gt 0 ; then
       --has-fstatat)           hasfstatat="yes"      ;;
       --has-readline)          hasreadline="yes"     ;;
       --use-libtcmalloc)       enable_libtcmalloc="yes"  ;;
-      --use-sun-stl4port)      sunstlport="-library=stlport4" ; suncstd="" ;;
       --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
       --with-afs-incdir=*)     afsincdir=$optarg     ; enable_afs="yes"    ;;
       --with-afs-libdir=*)     afslibdir=$optarg     ; enable_afs="yes"    ;;
@@ -888,8 +877,6 @@ if test $# -gt 0 ; then
       --with-bonjour=*)        bonjourdir=$optarg        ; enable_bonjour="yes"     ;;
       --with-bonjour-incdir=*) bonjourincdir=$optarg     ; enable_bonjour="yes"    ;;
       --with-bonjour-libdir=*) bonjourlibdir=$optarg     ; enable_bonjour="yes"    ;;
-      --with-fuse-incdir=*)    fuseincdir=$optarg    ; enable_fuse="yes"    ;;
-      --with-fuse-libdir=*)    fuselibdir=$optarg    ; enable_fuse="yes"    ;;
       --with-java=*)           javadir=$optarg       ; enable_javaint="yes" ;;
       --with-krb4=*)           krb4dir=$optarg       ; enable_krb4="yes"    ;;
       --with-krb4-incdir=*)    krb4incdir=$optarg    ; enable_krb4="yes"    ;;
@@ -1100,13 +1087,8 @@ echo "Configuring for $arch and compiler $ccflv"
 
 # Grep out the real compiler program name
 ccbin=""
-if   test -f config/GNUmake.rules.$ccflv ; then
+if test -f config/GNUmake.rules.$ccflv ; then
    ll=`grep TYPECC config/GNUmake.rules.$ccflv`
-   for i in $ll ; do
-      ccbin=$i
-   done
-elif test -f config/GNUmake.rules.$ccflv.in ; then
-   ll=`grep TYPECC config/GNUmake.rules.$ccflv.in`
    for i in $ll ; do
       ccbin=$i
    done
@@ -1197,33 +1179,6 @@ if test ! "x$strlcpy" = "xlocal"; then
    fi
 else
    echo "Using xrd implementation of strlcpy"
-fi
-
-######################################################################
-#
-### echo %%% Check for fuse
-#
-hasfuse=""
-libfuse=""
-if test "x$enable_xrootdfs" = "xyes" ; then
-   if test "x$fuseincdir" = "x" ; then
-      fuseincdir=/usr/include
-   fi
-   what2look4="$fuseincdir/fuse.h"
-   if test -f $what2look4 ; then
-      what2look4="$fuselibdir /usr/lib /usr/lib64 /usr/local/lib /opt/lib"
-      check_library "libfuse" "$enable_shared" "" $what2look4
-      if test "x$found_lib" != "x" ; then
-         hasfuse=" -DHAVE_FUSE -I$fuseincdir"
-         libfuse="LIBFUSE = $found_dir $found_lib"
-      fi
-   fi
-   message "Checking for fuse"
-   if test "x$hasfuse" != "x" ; then
-      echo "yes"
-   else
-      echo "no"
-   fi
 fi
 
 ######################################################################
@@ -2359,7 +2314,7 @@ case $platform in
     linux) 
         if test "x$nccflv" = "xicc" ; then
            if test "x$enable_bonjour" = "xyes" ; then
-              echo "Sorry, the Bonjour/Avahi interface is not currently supported for Linux-ICC - disabling ... (platform: $platform)"
+              echo "Sorry, the Bonjour/Avahi interface currently supported for Linux-ICC - disabling ... (platform: $platform)"
            fi
            enable_bonjour=no
         fi
@@ -2442,6 +2397,7 @@ if test "x$enable_bonjour" = "xyes" && test "x$platform" != "xmacosx" ; then
          libavahi="-lavahi-common"         
     else
          echo "no"
+         enable_bonjour="no"
          haslibavahi=""
     fi
 
@@ -2459,6 +2415,7 @@ if test "x$enable_bonjour" = "xyes" && test "x$platform" != "xmacosx" ; then
           echo "no"
           haslibavahi=""
           libavahi=""
+          enable_bonjour="no"
        fi
     fi
 
@@ -2476,6 +2433,7 @@ if test "x$enable_bonjour" = "xyes" && test "x$platform" != "xmacosx" ; then
           echo "no"
           haslibavahi=""
           libavahi=""
+          enable_bonjour="no"
        fi
     fi
 
@@ -2495,6 +2453,7 @@ if test "x$enable_bonjour" = "xyes" && test "x$platform" != "xmacosx" ; then
         if test "x$found_lib" = "x" ; then
             haslibavahi=""
             libavahi=""
+            enable_bonjour="no"
         else
             libavahi="$found_dir $found_lib"
         fi
@@ -2505,6 +2464,7 @@ if test "x$enable_bonjour" = "xyes" && test "x$platform" != "xmacosx" ; then
         if test "x$found_lib" = "x" ; then
             haslibavahi=""
             libavahi=""
+            enable_bonjour="no"
         else
             libavahi="$libavahi $found_dir $found_lib"
         fi
@@ -2515,6 +2475,7 @@ if test "x$enable_bonjour" = "xyes" && test "x$platform" != "xmacosx" ; then
         if test "x$found_lib" = "x" ; then
             haslibavahi=""
             libavahi=""
+            enable_bonjour="no"
         else
             libavahi="$libavahi $found_dir $found_lib"
         fi
@@ -3136,8 +3097,6 @@ sed -e "s|@arch@|$arch|"                 \
     -e "s|@hasstrlcpy@|$hasstrlcpy|" \
     -e "s|@hasprotor@|$hasprotor|" \
     -e "s|@hasfstatat@|$hasfstatat|" \
-    -e "s|@hasfuse@|$hasfuse|" \
-    -e "s|@libfuse@|$libfuse|" \
     -e "s|@hasreadline@|$hasreadline|" \
     -e "s|@libreadline@|$libreadline|" \
     -e "s|@tracedbg@|$tracedbg|" \
@@ -3180,20 +3139,6 @@ sed -e "s|@dbgsfx@|$dbgsfx|g"   \
 rm -f GNUmake.options.tmp
 
 echo "done"
-
-#---------------------------------------------------------------------
-# Solaris GNUmake.rules.xxx
-#
-sunccrules="sunCC sunCCamd sunCCamd510 sunCCamd64 sunCCi86pc"
-for f in $sunccrules; do
-   message "Writing config/$f "
-   cp -rp config/GNUmake.rules.$f.in GNUmake.rules.$f.tmp
-   sed -e "s|@sunstlport@|$sunstlport|"   \
-       -e "s|@suncstd@|$suncstd|"   \
-       < GNUmake.rules.$f.tmp > config/GNUmake.rules.$f
-   rm -f GNUmake.rules.$f.tmp
-   echo "done"
-done
 
 #---------------------------------------------------------------------
 # Cleanup the temp directory

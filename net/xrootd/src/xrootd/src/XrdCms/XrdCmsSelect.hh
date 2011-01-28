@@ -43,7 +43,6 @@ enum {Write   = 0x0001, // File will be open in write mode     (select & cache)
       noBind  = 0x0100, // Do not new bind file to a server    (select   only)
       isMeta  = 0x0200, // Only inode information being changed(select   only)
       Freshen = 0x0400, // Freshen access times                (prep     only)
-      Replica = 0x0800, // File will be replicated (w/ Create) (select   only)
       Advisory= 0x4000, // Cache A/D is advisory (no delay)    (have   & cache)
       Pending = 0x8000  // File being staged                   (have   & cache)
      };

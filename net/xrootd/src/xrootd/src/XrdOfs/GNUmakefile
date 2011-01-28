@@ -1,3 +1,5 @@
+#              $Id: GNUmakefile,v 1.39 2010/08/30 23:54:29 abh Exp $
+
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
 #------------------------------------------------------------------------------#
@@ -76,7 +78,8 @@ $(OBJDIR)/XrdOfs.o:  XrdOfs.cc             XrdOfs.hh \
                      XrdNetDNS.hh     XrdSecEntity.hh       XrdSecInterface.hh \
                      XrdSfsNative.hh  XrdSfsAio.hh          XrdSfsInterface.hh \
                      XrdOss.hh        XrdSysHeaders.hh      XrdSysPlatform.hh \
-                     XrdOucTList.hh   XrdCmsClient.hh       XrdAccAuthorize.hh
+                     XrdOucTList.hh   XrdCmsClient.hh  XrdAccAuthorize.hh      \
+                  ../XrdVersion.hh
 	@echo Compiling XrdOfs.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOfs.o XrdOfs.cc
 
