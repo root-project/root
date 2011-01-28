@@ -8,10 +8,6 @@
 /*              DE-AC03-76-SFO0515 with the Deprtment of Energy               */
 /******************************************************************************/
 
-//        $Id$ 
-
-const char *XrdOucStreamCVSID = "$Id$";
-
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -522,6 +518,7 @@ char *XrdOucStream::GetMyFirstWord(int lowcase)
                         Eroute->Emsg("Stream", "No preceeding 'if' for 'fi'.");
                      ecode = EINVAL;
                     }
+            continue;
            }
         if (var && (!myEnv || !isSet(var))) return add2llB(var, 1);
        } while (1);
@@ -540,7 +537,10 @@ char *XrdOucStream::GetWord(int lowcase)
      // If we have a token, return it
      //
      xline = 1;
-     if ((wp = GetToken(lowcase))) return add2llB((myEnv ? vSubs(wp) : wp));
+     while((wp = GetToken(lowcase)))
+          {if (!myEnv) return add2llB(wp);
+           if ((wp = vSubs(wp)) && *wp) return add2llB(wp);
+          }
 
      // If no continuation allowed, return a null (but only once)
      //
@@ -833,14 +833,26 @@ char *XrdOucStream::doif()
   
 int XrdOucStream::isSet(char *var)
 {
-   char *tp, *vp, *pv, Vname[64];
-   int sawEQ;
+   static const char *Mtxt1[2] = {"setenv", "set"};
+   static const char *Mtxt2[2] = {"Setenv variable", "Set variable"};
+   static const char *Mtxt3[2] = {"Variable", "Environmental variable"};
+   char *tp, *vn, *vp, *pv, Vname[64], ec, Nil = 0;
+   int sawEQ, Set = 1;
 
-// Process set var = value | set -v
+// Process set var = value | set -v | setenv = value
 //
-   if (strcmp("set", var)) return 0;
-   if (!(tp = GetToken())) return xMsg("Missing variable name after 'set'.");
-   if (!strcmp(tp, "-q")) {if (llBuff) {free(llBuff); llBuff = 0;}; return 1;}
+   if (!strcmp("setenv", var)) Set = 0;
+      else if (strcmp("set", var)) return 0;
+
+// Now get the operand
+//
+   if (!(tp = GetToken()))
+      return xMsg("Missing variable name after '",Mtxt1[Set],"'.");
+
+// Option flags only apply to set not setenv
+//
+   if (Set)
+  {if (!strcmp(tp, "-q")) {if (llBuff) {free(llBuff); llBuff = 0;}; return 1;}
    if (!strcmp(tp, "-v") || !strcmp(tp, "-V"))
       {if (Eroute)
           {if (!llBuff) llBuff = (char *)malloc(llBsz);
@@ -849,48 +861,71 @@ int XrdOucStream::isSet(char *var)
           }
        return 1;
       }
+  }
 
 // Next may be var= | var | var=val
 //
    if ((vp = index(tp, '='))) {sawEQ = 1; *vp = '\0'; vp++;}
       else sawEQ = 0;
    if (strlcpy(Vname, tp, sizeof(Vname)) >= sizeof(Vname))
-      return xMsg("Set variable",tp,"is too long.");
+      return xMsg(Mtxt2[Set],tp,"is too long.");
+   if (!Set && !strncmp("XRD", Vname, 3))
+      return xMsg("Setenv variable",tp,"may not start with 'XRD'.");
 
 // Verify that variable is only an alphanum
 //
    tp = Vname;
    while (*tp && isalnum(*tp)) tp++;
-   if (*tp) return xMsg("Set variable name", Vname, "is non-alphanumeric");
+   if (*tp) return xMsg(Mtxt2[Set], Vname, "is non-alphanumeric");
 
 // Now look for the value
 //
    if (sawEQ) tp = vp;
       else if (!(tp = GetToken()) || *tp != '=')
-              return xMsg("Missing '=' after set",Vname);
+              return xMsg("Missing '=' after", Mtxt1[Set], Vname);
               else tp++;
    if (!*tp && !(tp = GetToken())) tp = (char *)"";
 
-// The value may be '$var', in which case we need to get it out of the env
+// The value may be '$var', in which case we need to get it out of the env if
+// this is a set or from our environment if this is a setenv
 //
    if (*tp != '$') vp = tp;
-      else if (!(vp = getenv(tp+1)))
-              return xMsg("Environmental variable", tp+1, "has not been set.");
+      else {pv = tp+1;
+                 if (*pv == '(') ec = ')';
+            else if (*pv == '{') ec = '}';
+            else if (*pv == '[') ec = ']';
+            else                 ec = 0;
+            if (!ec) vn = tp+1;
+               else {while(*pv && *pv != ec) pv++;
+                     if (*pv) *pv = '\0';
+                        else   ec = 0;
+                     vn = tp+2;
+                    }
+            if (!*vn) {*pv = ec; return xMsg("Variable", tp, "is malformed.");}
+            if (!(vp = (Set ? getenv(vn) : myEnv->Get(vn))))
+               {if (ec != ']')
+                   {xMsg(Mtxt3[Set],vn,"is undefined."); *pv = ec; return 1;}
+                vp = &Nil;
+               }
+            *pv = ec;
+           }
 
 // Make sure the value is not too long
 //
    if ((int)strlen(vp) > maxVLen)
-      return xMsg("Variable", Vname, "value is too long.");
+      return xMsg(Mtxt3[Set], Vname, "value is too long.");
 
 // Set the value
 //
    if (Verbose == 2 && Eroute)
-      if (!(pv = myEnv->Get(Vname)) || strcmp(vp, pv))
+      if (!(pv = (Set ? myEnv->Get(Vname) : getenv(Vname))) || strcmp(vp, pv))
          {char vbuff[1024];
-          strcpy(vbuff, "set "); strcat(vbuff, Vname);
+          strcpy(vbuff, Mtxt1[Set]); strcat(vbuff, " "); strcat(vbuff, Vname);
           Eroute->Say(vbuff, " = ", vp);
          }
-   myEnv->Put(Vname, vp);
+   if (Set) myEnv->Put(Vname, vp);
+      else if (!(pv = getenv(Vname)) || strcmp(vp,pv))
+              XrdOucEnv::Export(Vname, vp);
    return 1;
 }
 
@@ -900,7 +935,7 @@ int XrdOucStream::isSet(char *var)
   
 char *XrdOucStream::vSubs(char *Var)
 {
-   char *vp, *sp, *dp, *vnp, ec, bkp, valbuff[maxVLen];
+   char *vp, *sp, *dp, *vnp, ec, bkp, valbuff[maxVLen], Nil = 0;
    int n;
 
 // Check for substitution
@@ -910,12 +945,13 @@ char *XrdOucStream::vSubs(char *Var)
 
    while(*sp && n > 0)
         {if (*sp == '\\') {*dp++ = *(sp+1); sp +=2; n--; continue;}
-         if ((*sp != '$' 
-         || (!isalnum(*(sp+1)) && *(sp+1) != '(' && *(sp+1) != '{')))
+         if (*sp != '$'
+         || (!isalnum(*(sp+1)) && !index("({[", *(sp+1))))
                 {*dp++ = *sp++;         n--; continue;}
          sp++; vnp = sp;
               if (*sp == '(') ec = ')';
          else if (*sp == '{') ec = '}';
+         else if (*sp == '[') ec = ']';
          else                 ec = 0;
          if (ec) {sp++; vnp++;}
          while(isalnum(*sp)) sp++;
@@ -923,7 +959,9 @@ char *XrdOucStream::vSubs(char *Var)
             {xMsg("Variable", vnp-2, "is malformed."); return varVal;}
          bkp = *sp; *sp = '\0';
          if (!(vp = myEnv->Get(vnp)))
-            {xMsg("Variable", vnp, "is undefined."); return varVal;}
+            {if (ec != ']') xMsg("Variable", vnp, "is undefined.");
+             vp = &Nil;
+            }
          while(n && *vp) {*dp++ = *vp++; n--;}
          if (*vp) break;
          if (ec) sp++;

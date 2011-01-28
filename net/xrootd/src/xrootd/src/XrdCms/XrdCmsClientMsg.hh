@@ -31,6 +31,8 @@ inline int       ID() {return id;}
 
 static int       Init();
 
+static int       inQ() {return numinQ;}
+
        void      Lock() {Hold.Lock();}
 
        void      Recycle();
@@ -52,6 +54,7 @@ static const int          IncMask = 0x3ffffc00;
 static XrdCmsClientMsg   *RemFromWaitQ(int msgid);
 
 static int                nextid;
+static int                numinQ;
 
 static XrdCmsClientMsg   *msgTab;
 static XrdCmsClientMsg   *nextfree;

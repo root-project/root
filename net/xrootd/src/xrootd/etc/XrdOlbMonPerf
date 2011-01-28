@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-## $Id: XrdOlbMonPerf,v 1.13 2009/05/20 13:09:14 furano Exp $
+## $Id$
 ## this script collects the informations on the server activity like:
 ## CPU, network I/O, memory usage ...
 ## modified to get rid of rperf.

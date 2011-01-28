@@ -10,8 +10,6 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//       $Id$
-
 #include <stdlib.h>
 #include <strings.h>
 
@@ -34,7 +32,8 @@ public:
 
 void                       Delete() {delete this;}
 
-              XrdSecProtocolhost(const char *host) {theHost = strdup(host);}
+              XrdSecProtocolhost(const char *host) : XrdSecProtocol("host")
+                                   {theHost = strdup(host);}
              ~XrdSecProtocolhost() {if (theHost) free(theHost);}
 private:
 

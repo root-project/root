@@ -12,8 +12,8 @@
 ## Author: Derek Feichtinger <derek.feichtinger@cern.ch>
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: configure.ac,v 1.58 2010/08/06 15:13:41 feichtinger Exp $
-## Checked in by $Author: feichtinger $
+## Version info: $Id$
+## Checked in by $Author$
 #######################################################################
 
 # Note: All macros with the prefix ACX_ are custom macros. Their usage
@@ -21,8 +21,8 @@
 
 
 AC_PREREQ(2.57)
-AC_INIT(xrootd,v20100805-1700,xrootd-l@slac.stanford.edu)
-AC_CONFIG_SRCDIR([src/XrdVersion.hh])
+AC_INIT(xrootd,3.0.0,xrootd-l@slac.stanford.edu)
+AC_CONFIG_SRCDIR([src/XrdVersion.hh.in])
 
 # use C++ for the compilation of tests
 dnl currently commented out, since older versions of libtool (<1.5) contain
@@ -442,6 +442,55 @@ fi
 AM_CONDITIONAL(ENABLE_OPENSSL,test x"$activate_openssl" = xyes -o x"$activate_openssl" = xdefault_yes)
 AM_CONDITIONAL(ENABLE_GSI,test x"$activate_gsi" = xyes -o x"$activate_gsi" = xdefault_yes)
 
+#################################################################
+# Optional building of FUSE bindings for XrdFfs
+
+ACX_LIBOPTION(fuse,[Build FUSE support for XrdFfs],yes)
+
+if test x"$activate_fuse" = xyes -o x"$activate_fuse" = xdefault_yes ; then
+  fusetests=ok
+
+  if test x"$acx_fuse_incdir" != x; then
+     searchpath=$acx_fuse_incdir
+  else
+     searchpath="$std_inc_path"
+  fi
+
+  ACX_LOCATEFILE([fuse.h],[$searchpath],
+                 [FUSE_INCDIR="-I$acx_founddir"
+                  AC_MSG_NOTICE([fuse header dir set to: $dir ]) ],
+                 [if test  x"$activate_fuse" = xyes ; then
+                    AC_MSG_ERROR([Could not locate fuse.h])
+                  else
+                    activate_fuse=disabled
+                  fi
+                 ]
+                )
+
+  CPPFLAGS="$FUSE_INCDIR $CPPFLAGS"
+  AC_CHECK_HEADER([fuse.h],
+                [],[fusetests=failed]
+                )
+
+
+  LDFLAGS="$FUSE_LIBDIR $LDFLAGS"
+  AC_CHECK_LIB([fuse],[fuse_version],
+               [:],[fusetests=failed],[-lfuse]
+              )
+
+  if test x"$fusetests" != xok ; then
+    if test x"$activate_fuse" = xyes ; then
+      AC_MSG_ERROR([tests for fuse failed. Change configure options])
+    fi
+    AC_MSG_WARN([disabling fuse support])
+    activate_fuse=disabled
+  fi
+
+  CPPFLAGS="$CPPFLAGS_BUP"
+  LDFLAGS="$LDFLAGS_BUP"
+
+fi
+AM_CONDITIONAL(ENABLE_FUSE,test x"$activate_fuse" = xyes -o x"$activate_fuse" = xdefault_yes)
 
 #################################################################
 # optional building of APPS
@@ -474,8 +523,19 @@ AC_ARG_ENABLE(posix,
               [],[enable_posix=$activate_posix]
              )
 ACX_COLLECT_OPTION(posix,$enable_posix)
+
 AM_CONDITIONAL(ENABLE_POSIX,test x"$activate_posix" = xyes -o x"$activate_posix" = xdefault_yes)
 
+#################################################################
+# Build XrdFfs
+ACX_LIBOPTION(ffs,[Build XrdFfs], yes)
+AM_CONDITIONAL(ENABLE_FFS,test x"$activate_ffs" = xyes -o x"$activate_ffs" = xdefault_yes)
+# Ffs is required by Pss.
+if test x"$activate_posix" = xyes -o x"$activate_posix" = xdefault_yes ; then
+   if test x"$activate_ffs" = xno ; then
+     AC_MSG_ERROR([posix module requires enabling of XrdFfs module - please re-run configure with ffs enabled.])
+   fi
+fi
 
 ####################################################################
 # monitoring
@@ -535,32 +595,17 @@ if test x"$activate_perlint" = xyes -o x"$activate_perlint" = xdefault_yes ; the
   PERL_CCOPTS=`${PERL} -MExtUtils::Embed -e ccopts`
 
   # since MacOS now allows packing several archs into one file and
-  # this results in link errors for the unwanted arch, we need to filter
-  # the wrong flags out. This present solution is not nice!
-  twoarchsld=`expr "$PERL_LDOPTS" : '.*\(-arch  *[[a-z0-9]]*.*-arch  *[[a-z0-9]]*\)'`
-  if test x"$twoarchsld" != x; then
-    AC_MSG_WARN([perl says it was linked with multiple -arch flags ($twoarchsld)! Will try to remove one])
-    if test x"$target_cpu" = xi386 -o x"$target_cpu" = xi686; then
-      PERL_LDOPTS=`echo $PERL_LDOPTS | sed -e 's/-arch  *ppc//'` 
-    fi
-    twoarchsld=`expr "$PERL_LDOPTS" : '.*\(-arch  *[[a-z0-9]]*.*-arch  *[[a-z0-9]]*\)'`
-  fi
-
-  twoarchscc=`expr "$PERL_CCOPTS" : '.*\(-arch  *[[a-z0-9]]*.*-arch  *[[a-z0-9]]*\)'`
-  if test x"$twoarchscc" != x; then
-    AC_MSG_WARN([perl says it was compiled with multiple -arch flags ($twoarchscc)! Will try to remove one])
-    if test x"$target_cpu" = xi386 -o x"$target_cpu" = xi686; then
-      PERL_CCOPTS=`echo $PERL_CCOPTS | sed -e 's/-arch  *ppc//'` 
-    fi
-    twoarchscc=`expr "$PERL_CCOPTS" : '.*\(-arch  *[[a-z0-9]]*.*-arch  *[[a-z0-9]]*\)'`
-  fi
-
-  if test x"$twoarchsld" != x -o x"$twoarchscc" != x; then
-     AC_MSG_ERROR([Failed to remove extra -arch flags
-                     LD: $PERL_LDOPTS
-                     CC: $PERL_CCOPTS
-!!!!!!  Please notify maintainers at $PACKAGE_BUGREPORT !!!!!!])
-  fi
+  # this results in link errors for the unwanted arch
+  # we remove all the arch flags and let the toolchain use the
+  # platform defaults
+  PERL_LDOPTS=`echo $PERL_LDOPTS | sed -e 's/-arch  *ppc//'`
+  PERL_LDOPTS=`echo $PERL_LDOPTS | sed -e 's/-arch  *i386//'`
+  PERL_LDOPTS=`echo $PERL_LDOPTS | sed -e 's/-arch  *x86_64//'`
+  PERL_LDOPTS=`echo $PERL_LDOPTS | sed -e 's/-arch  *ppc64//'`
+  PERL_CCOPTS=`echo $PERL_CCOPTS | sed -e 's/-arch  *ppc//'`
+  PERL_CCOPTS=`echo $PERL_CCOPTS | sed -e 's/-arch  *i386//'`
+  PERL_CCOPTS=`echo $PERL_CCOPTS | sed -e 's/-arch  *x86_64//'`
+  PERL_CCOPTS=`echo $PERL_CCOPTS | sed -e 's/-arch  *ppc64//'`
 
   AC_MSG_NOTICE([perlembed libraries to link: $PERL_LIBS])
   AC_MSG_NOTICE([perlembed link flags: $PERL_LDOPTS])
@@ -580,18 +625,19 @@ if test x"$activate_perlint" = xyes -o x"$activate_perlint" = xdefault_yes ; the
   if test $enable_swig = "no"; then activate_swig=no; fi
 	
   AC_PATH_PROG(SWIG,swig,[no],[$SWIG_DIR:$PATH])
+  AC_MSG_NOTICE([Using SWIG: $SWIG])
   if test x"$SWIG" = xno; then activate_swig=disabled; fi
 
   if test $activate_swig = "yes" -o $activate_swig = "default_yes"; then
      AC_MSG_CHECKING([for swig version])
-     verstr=`$SWIG -version 2>/dev/null`
-     vermajor=`expr x"$verstr" : '.*\([[0-9]][[0-9]]*\).[[0-9]][[0-9]]*.[[0-9]][[0-9]]*'`
+     verstr=`$SWIG -version | grep Version 2>/dev/null`
+     vermajor=`expr x"$verstr" : '.*\([[0-9]][[0-9]]*\)\.[[0-9]][[0-9]]*\.[[0-9]][[0-9]]*'`
      verminor=`expr x"$verstr" : '.*[[0-9]][[0-9]]*\.\([[0-9]][[0-9]]*\)\.[[0-9]][[0-9]]*'`
      verrelease=`expr x"$verstr" : '.*[[0-9]][[0-9]]*\.[[0-9]][[0-9]]*\.\([[0-9]][[0-9]]*\)'`
      vernum=`expr 10000 \* 0"$vermajor" + 100 \* 0"$verminor" + 0"$verrelease"`
      ##AC_MSG_NOTICE([SWIG version $vermajor.$verminor.$verrelease])
-     if test 0"$vernum" -lt 10322; then
-	AC_MSG_RESULT([$vermajor.$verminor.$verrelease; NOT OK! need at least 1.3.22])
+     if test 0"$vernum" -lt 10333; then
+	AC_MSG_RESULT([$vermajor.$verminor.$verrelease; NOT OK! need at least 1.3.33])
 	activate_swig=disabled					
      else
 	AC_MSG_RESULT([$vermajor.$verminor.$verrelease; OK!])
@@ -753,7 +799,16 @@ case "$target_os" in
    solaris*)
       # note: this is for the SunCC compiler
       if test x"$GCC" != xyes ; then
-         CXXFLAGS="-DSUNCC -D_POSIX_PTHREAD_SEMANTICS -xarch=v8plus"
+         CXXFLAGS="-DSUNCC -D_POSIX_PTHREAD_SEMANTICS"
+         CFLAGS="-DSUNCC -D_POSIX_PTHREAD_SEMANTICS"
+         if test x$target_cpu != x"i386"; then
+             CXXFLAGS="$CXXFLAGS -xarch=v8plus"
+             CFLAGS="$CFLAGS -xarch=v8plus"
+         else
+	     # workaround to a bug in swig
+             PERL_CCOPTS="$PERL_CCOPTS -include sys/vnode.h"
+         fi
+
          LDFLAGS="$LDFLAGS -mt"
          AC_SUBST(LIBSUNMATH,[-lsunmath])
       fi
@@ -978,6 +1033,60 @@ CPPFLAGS="$CPPFLAGS_BUP"
 AM_CONDITIONAL(ENABLE_KRB5,test x"$activate_krb5" = xyes -o x"$activate_krb5" = xdefault_yes)
 
 
+###########################################
+# libxml2 checks
+ACX_LIBOPTION(secssl,[SecSSL support], yes)
+ACX_LIBOPTION(xml2,[xml library],yes)
+
+if test x"$activate_xml2" = xyes -o x"$activate_xml2" = xdefault_yes; then
+ if test x"$acx_xml2_incdir" != x; then
+   searchpath=$acx_xml2_incdir
+ else
+   searchpath="/usr/include/libxml2"
+  fi
+
+  ACX_LOCATEFILE([libxml/xmlmemory.h],[$searchpath],
+                 [XML2_INCDIR="-I$acx_founddir"
+                  AC_MSG_NOTICE([xml2 header dir set to: $dir ]) ],
+                 [activate_xml2=no]
+                )
+
+  CPPFLAGS_BUP="$CPPFLAGS"
+  LDFLAGS_BUP=$LDFLAGS
+
+  CPPFLAGS="$XML2_INCDIR $CPPFLAGS"
+
+  AC_CHECK_HEADER([libxml/xmlmemory.h],
+                  [],[activate_xml2=no]
+                  )
+
+  LDFLAGS="$XML2_LIBDIR $LDFLAGS"
+  AC_CHECK_LIB([xml2],[xmlReaderForMemory],
+               [:],[activate_xml2=no],[]
+              )
+
+  CPPFLAGS="$CPPFLAGS_BUP"
+  LDFLAGS=$LDFLAGS_BUP
+
+  AC_SUBST(XML2_INCDIR)
+  AC_SUBST(XML2_LIBDIR)
+fi
+
+if test x"$activate_secssl" = xyes -o x"$activate_secssl" = xdefault_yes; then
+   if test x"$ssltests" != xok; then
+     activate_secssl=no
+     AC_MSG_WARN([Cannot build SecSSL plugin without SSL support])
+   fi
+   if test x"$activate_xml2" = xno; then
+     activate_secssl=no
+     AC_MSG_WARN([Cannot build SecSSL plugin without XML2 support])
+   fi
+fi
+
+AM_CONDITIONAL(ENABLE_SECSSL,test x"$activate_secssl" = xyes -o x"$activate_secssl" = xdefault_yes)
+
+# Record the extension of dynamic libraries on this platform
+LT_SYS_MODULE_EXT
 
 ###########################################
 # tkauthz checks
@@ -1022,6 +1131,8 @@ AC_OUTPUT(Makefile
 	  src/XrdSeckrb5/Makefile
 	  src/XrdSecgsi/Makefile
           src/XrdSecsss/Makefile
+	  src/XrdSecssl/Makefile
+	  src/XrdSecssl/libsslGridSite/Makefile
 	  src/XrdSecunix/Makefile
 	  src/XrdSfs/Makefile
           src/XrdAcc/Makefile
@@ -1039,6 +1150,7 @@ AC_OUTPUT(Makefile
           src/XrdMon/Makefile
           src/XrdCns/Makefile
           src/XrdApps/Makefile
+          src/XrdFfs/Makefile
           test/testconfig.sh
           xrootd.spec)
 

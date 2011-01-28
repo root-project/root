@@ -7,8 +7,8 @@
 ##              DE-AC03-76-SFO0515 with the Department of Energy
 ##
 ##
-## Version info: $Id: Makefile.am,v 1.20 2010/08/05 15:26:29 feichtinger Exp $
-## Checked in by $Author: feichtinger $
+## Version info: $Id$
+## Checked in by $Author$
 ################################################################################
 
 
@@ -29,6 +29,10 @@ endif
 if ENABLE_OPENSSL
 XRDSECPWD = XrdSecpwd
 XRDSECSSS = XrdSecsss
+endif
+
+if ENABLE_SECSSL
+XRDSECSSL = XrdSecssl
 endif
 
 if ENABLE_KRB4
@@ -58,6 +62,9 @@ if ENABLE_APPS
 XRDAPPS=XrdApps
 endif
 
+if ENABLE_FFS
+XRDFFS=XrdFfs
+endif
 
 #######################################################################
 
@@ -86,9 +93,12 @@ SUBDIRS = XrdSys \
           XrdClient \
           $(XRDPOSIX) \
           $(XRDAPPS) \
+          $(XRDFFS) \
           $(XRDPSS) \
           $(XRDCNS) \
-          $(XRDMON)
+          $(XRDMON) \
+          $(XRDSECSSL)
+
 
 
 

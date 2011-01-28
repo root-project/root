@@ -8,9 +8,9 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id: XrdPollDev.icc,v 1.16 2009/07/15 01:55:07 abh Exp $
+//         $Id$
 
-const char *XrdPollDevCVSID = "cvsid: $Id: XrdPollDev.icc,v 1.16 2009/07/15 01:55:07 abh Exp $";
+const char *XrdPollDevCVSID = "cvsid: $Id$";
 
 #include <unistd.h>
 #include <stdlib.h>

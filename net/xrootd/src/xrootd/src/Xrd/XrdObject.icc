@@ -8,9 +8,9 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//          $Id: XrdObject.icc,v 1.7 2009/10/14 18:02:54 abh Exp $
+//          $Id$
 
-//const char *XrdObjectCVSID = "$Id: XrdObject.icc,v 1.7 2009/10/14 18:02:54 abh Exp $";
+//const char *XrdObjectCVSID = "$Id$";
 
 #include "Xrd/XrdScheduler.hh"
 #include "XrdOuc/XrdOucTrace.hh"

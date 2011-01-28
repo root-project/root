@@ -5,7 +5,7 @@
 ## Initial version: 10.6.2008
 ##
 ## Version info: $Id$
-## Checked in by $Author: feichtinger $
+## Checked in by $Author$
 #######################################################################
 
 # preprocessor flags
@@ -34,9 +34,9 @@ libXrdSecsss_la_LIBADD = ../XrdCrypto/libXrdCryptoLite.la \
                       ../XrdOuc/libXrdOuc.la \
                       ../XrdNet/libXrdNet.la \
                       ../XrdSys/libXrdSys.la \
-                     ../XrdNet/libXrdNetUtil.la
+                      ../XrdNet/libXrdNetUtil.la
 
-libXrdSecsss_la_LDFLAGS = -module $(CRYPTLIB) $(OPENSSL_LIBDIR) -lcrypto
+libXrdSecsss_la_LDFLAGS = -module $(CRYPTLIB) $(OPENSSL_LIBDIR)
 
 xrdsssadmin_SOURCES = XrdSecsssAdmin.cc
 xrdsssadmin_LDFLAGS = -static

@@ -4,12 +4,12 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.35 2010/08/06 15:12:35 feichtinger Exp $
-## Checked in by $Author: feichtinger $
+## Version info: $Id$
+## Checked in by $Author$
 #######################################################################
 
 
-AM_CPPFLAGS = -I$(top_srcdir)/src $(READLINE_INCDIR) $(JAVA_INCDIR) 
+AM_CPPFLAGS = -I$(top_srcdir)/src $(READLINE_INCDIR) $(JAVA_INCDIR)  -I$(top_builddir)/src
 
 #############################################################################
 ## extra directory definitions for install area
@@ -147,6 +147,7 @@ clean-local:
 # This needs to be done outside the ENABLE_PERLINT clause, to get a working
 # "make dist" target
 SWIG_TARGETS = XrdClientAdmin_c_wrap.cc XrdClientAdmin.pm
+.PHONY: FORCE
 if REBUILD_SWIGFILE
 # This creates both the .cc file and the .pm perl module
 $(SWIG_TARGETS): XrdClientAdmin_c.hh
@@ -154,16 +155,17 @@ $(SWIG_TARGETS): XrdClientAdmin_c.hh
 	$(SWIG) -perl -o $@ $(srcdir)/XrdClientAdmin_c.hh
 CLEANFILES = $(SWIG_TARGETS)
 else
-XrdClientAdmin_c_wrap.cc: XrdClientAdmin_c_wrap.c
+XrdClientAdmin_c_wrap.cc: XrdClientAdmin.pm
 	cp $(srcdir)/XrdClientAdmin_c_wrap.c XrdClientAdmin_c_wrap.cc
-XrdClientAdmin.pm:
-	@if test -e $(srcdir)/XrdClientAdmin.pm; then \
-           cp $(srcdir)/XrdClientAdmin.pm XrdClientAdmin.pm; \
-        else \
-           echo "ERROR: You lost distribution's original $@. Refetch it."; \
-           exit 1; \
-        fi         
+XrdClientAdmin.pm: FORCE
+	if diff $(srcdir)/XrdClientAdmin.pm XrdClientAdmin.pm >/dev/null 2>&1; then \
+	  echo "Identical - nothing to do";                                         \
+	else                                                                        \
+	  cp $(srcdir)/XrdClientAdmin.pm XrdClientAdmin.pm;                         \
+	fi
 endif
+
+FORCE:
 
 if ENABLE_PERLINT
 

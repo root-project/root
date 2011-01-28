@@ -70,7 +70,7 @@ extern "C" {
 //////////////////////////////////////////////////////////////////////
 
 
-#define XRDSTAGETOOL_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.9 $ - Xrootd version: "XrdVSTRING
+#define XRDSTAGETOOL_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision$ - Xrootd version: "XrdVSTRING
 
 
 ///////////////////////////////////////////////////////////////////////

@@ -80,7 +80,7 @@ XrdClient::XrdClient(const char *url,
    if (!ConnectionManager)
       Info(XrdClientDebug::kUSERDEBUG,
            "Create",
-           "(C) 2004-2010 by the Xrootd group. XrdClient $Revision: 1.157 $ - Xrootd version: " << XrdVSTRING);
+           "(C) 2004-2010 by the Xrootd group. XrdClient $Revision$ - Xrootd version: " << XrdVSTRING);
    
 #ifndef WIN32
    signal(SIGPIPE, SIG_IGN);
@@ -769,6 +769,7 @@ kXR_int64 XrdClient::ReadV(char *buf, kXR_int64 *offsets, int *lens, int nbuf)
             fCounters.ReadVAsyncSubChunks++;
             fCounters.ReadVAsyncBytes += reqvect[startitem].len;
             Read_Async(reqvect[startitem].offset, reqvect[startitem].len, false);
+            res = reqvect[startitem].len;
          }
       } else {
          if (buf) {

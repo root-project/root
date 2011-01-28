@@ -8,8 +8,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//       $Id$
-
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
@@ -133,6 +131,7 @@ public:
     Entity.name = 0;
     Entity.grps = 0;
     Entity.endorsements = 0;
+    strncpy(Entity.prot,"ssl", sizeof(Entity.prot));
     host        = hostname;
     if (ipaddr)
       Entity.host = (XrdNetDNS::getHostName((sockaddr&)*ipaddr));
@@ -153,7 +152,31 @@ public:
   static  int    dummy(const char* key, XrdSecProtocolssl *ssl, void* Arg) { return 0;}
 
   // delayed garbage collection
-  virtual void              Delete() { terminate = true; if (secTid) XrdSysThread::Join(secTid,NULL); secTid=0; delete this; }
+  virtual void              Delete() {
+    terminate = true;
+    if (secTid) XrdSysThread::Join(secTid,NULL);
+    secTid=0;
+    SSLMutex.Lock();
+    if (credBuff)    free(credBuff);
+    if (Entity.name) free(Entity.name);
+    if (Entity.grps) free(Entity.grps);
+    if (Entity.role) free(Entity.role);
+    if (Entity.host) free(Entity.host);
+    if (ssl) SSL_free(ssl);
+    if (client_cert) X509_free(client_cert);
+    if (server_cert) X509_free(server_cert);
+    credBuff = 0;
+    Entity.name = 0;
+    Entity.grps = 0;
+    Entity.role = 0;
+    Entity.host = 0;
+    client_cert = 0;
+    server_cert = 0;
+    ssl=0;
+    secTid=0;
+    SSLMutex.UnLock();
+    delete this;
+  }
 
 
   static int GenerateSession(const SSL* ssl, unsigned char *id, unsigned int *id_len);
@@ -237,16 +260,6 @@ public:
   XrdSysMutex SSLMutex;
   bool terminate;
   ~XrdSecProtocolssl() {
-    if (credBuff)    free(credBuff);
-    if (Entity.name) free(Entity.name);
-    if (Entity.grps) free(Entity.grps);
-    if (Entity.role) free(Entity.role);
-    if (Entity.host) free(Entity.host);
-    SSLMutex.Lock();
-    if (ssl) SSL_free(ssl);ssl=0;
-    if (client_cert) X509_free(client_cert);
-    if (server_cert) X509_free(server_cert);
-    SSLMutex.UnLock();    
   }
 
   static int Fatal(XrdOucErrInfo *erp, const char* msg, int rc);

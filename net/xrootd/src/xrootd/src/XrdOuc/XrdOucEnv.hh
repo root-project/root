@@ -35,6 +35,11 @@ inline char *Env(int &envlen) {envlen = global_len; return global_env;}
 static int   Export(const char *Var, const char *Val);
 static int   Export(const char *Var, int         Val);
 
+// Import() gets a variable from the extended environment and stores
+//          it in this object
+static bool  Import( const char *var, char *&val );
+static bool  Import( const char *var, long  &val );
+
 // Get() returns the address of the string associated with the variable
 //       name. If no association exists, zero is returned.
 //

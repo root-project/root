@@ -1,4 +1,4 @@
-    $Id: README,v 1.6 2007/06/06 23:34:39 abh Exp $
+    $Id$
 
 The XrdPosix package allows standard POSIX I/O calls to either vector the I/O 
 to local files or to xrootd served files. In order to use this package you must 

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: xrdcksum,v 1.1 2004/11/13 15:18:43 elmer Exp $
+# $Id$
 #
 #  Simple wrapper script to calculate the 'cksum' of a file and print 
 #  only the checksum value for use by xrootd

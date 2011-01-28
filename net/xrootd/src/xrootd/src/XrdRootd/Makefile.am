@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.1 2005/10/06 15:30:22 ganis Exp $
-## Checked in by $Author: ganis $
+## Version info: $Id$
+## Checked in by $Author$
 #######################################################################
 
 lib_LTLIBRARIES = libXrdRootd.la

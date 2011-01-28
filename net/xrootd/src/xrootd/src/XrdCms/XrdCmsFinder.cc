@@ -288,7 +288,11 @@ int XrdCmsFinderRMT::Locate(XrdOucErrInfo &Resp, const char *path, int flags,
       } else
   {     Data.Request.rrCode = kYR_select;
         if (flags & SFS_O_TRUNC) Data.Opts = CmsSelectRequest::kYR_trunc;
-   else if (flags & SFS_O_CREAT) Data.Opts = CmsSelectRequest::kYR_create;
+   else if (flags & SFS_O_CREAT)
+           {   Data.Opts = CmsSelectRequest::kYR_create;
+            if (flags & SFS_O_REPLICA)
+               Data.Opts|= CmsSelectRequest::kYR_replica;
+           }
    else if (flags & SFS_O_STAT)  Data.Opts = CmsSelectRequest::kYR_stat;
    else                          Data.Opts = 0;
 
@@ -496,7 +500,7 @@ void XrdCmsFinderRMT::SelectManFail(XrdOucErrInfo &Resp)
    if (nextMsg < now)
       {nextMsg = now + 60;
        myData.UnLock();
-       Say.Emsg("Finder", "All managers are disfunctional.");
+       Say.Emsg("Finder", "All managers are dysfunctional.");
       } else myData.UnLock();
    Resp.setErrInfo(ConWait, "");
    TRACE(Redirect, "user=" <<Resp.getErrUser() <<" No managers available; wait " <<ConWait);
