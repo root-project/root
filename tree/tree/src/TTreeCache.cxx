@@ -446,9 +446,11 @@ Bool_t TTreeCache::FillBuffer()
       Int_t averageEntrySize = tree->GetZipBytes()/tree->GetEntries();
       Int_t nauto = fBufferSizeMin/(averageEntrySize*autoFlush);
       if (nauto < 1) nauto = 1;
+      fEntryCurrent = entry - entry%autoFlush;
       fEntryNext = entry - entry%autoFlush + nauto*autoFlush;
    } else { 
       //case of old files before November 9 2009
+      fEntryCurrent = entry;
       if (fZipBytes==0) {
          fEntryNext = entry + tree->GetEntries();;    
       } else {
@@ -458,7 +460,6 @@ Bool_t TTreeCache::FillBuffer()
    if (fEntryMax <= 0) fEntryMax = tree->GetEntries();
    if (fEntryNext > fEntryMax) fEntryNext = fEntryMax+1;
 
-   fEntryCurrent = entry;
    
    // Check if owner has a TEventList set. If yes we optimize for this
    // Special case reading only the baskets containing entries in the
@@ -496,7 +497,7 @@ Bool_t TTreeCache::FillBuffer()
          if (pos <= 0 || len <= 0) continue;
          //important: do not try to read fEntryNext, otherwise you jump to the next autoflush
          if (entries[j] >= fEntryNext) continue;
-         if (entries[j] < entry && (j<nb-1 && entries[j+1] <= entry)) continue;
+         if (entries[j] < fEntryCurrent && (j<nb-1 && entries[j+1] <= fEntryCurrent)) continue;
          if (elist) {
             Long64_t emax = fEntryMax;
             if (j<nb-1) emax = entries[j+1]-1;
@@ -506,7 +507,7 @@ Bool_t TTreeCache::FillBuffer()
 
          TFileCacheRead::Prefetch(pos,len);
       }
-      if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtot);
+      if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryCurrent=%lld, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryCurrent,fEntryNext,fNseek,fNtot);
    }
    fIsLearning = kFALSE;
    return kTRUE;
