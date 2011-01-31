@@ -3167,17 +3167,19 @@ void TF1::SetNpx(Int_t npx)
    // The default number of points along x is 100 for 1-d functions and 30 for 2-d/3-d functions
    // You can increase this value to get a better resolution when drawing
    // pictures with sharp peaks or to get a better result when using TF1::GetRandom
-   // the minimum number of points is 4, the maximum is 100000 for 1-d and 10000 for 2-d/3-d functions
+   // the minimum number of points is 4, the maximum is 10000000 for 1-d and 10000 for 2-d/3-d functions
 
-   if (npx < 4) {
-      Warning("SetNpx","Number of points must be >4 && < 100000, fNpx set to 4");
-      fNpx = 4;
-   } else if(npx > 100000) {
-      Warning("SetNpx","Number of points must be >4 && < 100000, fNpx set to 100000");
-      fNpx = 100000;
-   } else {
+   const Int_t minPx = 4;
+   Int_t maxPx = 10000000;
+   if (GetNdim() > 1) maxPx = 10000;
+   if (npx >= minPx && npx <= maxPx) {
       fNpx = npx;
-   }
+   } 
+   else { 
+      if(npx < minPx) fNpx = minPx; 
+      if(npx > maxPx) fNpx = maxPx; 
+      Warning("SetNpx","Number of points must be >=%d && <= %d, fNpx set to %d",minPx,maxPx,fNpx);
+   } 
    Update();
 }
 

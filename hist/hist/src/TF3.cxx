@@ -728,10 +728,10 @@ void TF3::SetNpz(Int_t npz)
 // the minimum number of points is 4, the maximum is 10000 for 2-d/3-d functions
 
    if (npz < 4) {
-      Warning("SetNpz","Number of points must be >4 && < 10000, fNpz set to 4");
+      Warning("SetNpz","Number of points must be >=4 && <= 10000, fNpz set to 4");
       fNpz = 4;
-   } else if(npz > 100000) {
-      Warning("SetNpz","Number of points must be >4 && < 10000, fNpz set to 10000");
+   } else if(npz > 10000) {
+      Warning("SetNpz","Number of points must be >=4 && <= 10000, fNpz set to 10000");
       fNpz = 10000;
    } else {
       fNpz = npz;

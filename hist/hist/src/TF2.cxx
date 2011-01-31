@@ -945,10 +945,10 @@ void TF2::SetNpy(Int_t npy)
    // the minimum number of points is 4, the maximum is 10000 for 2-d/3-d functions
 
    if (npy < 4) {
-      Warning("SetNpy","Number of points must be >4 && < 10000, fNpy set to 4");
+      Warning("SetNpy","Number of points must be >=4 && <= 10000, fNpy set to 4");
       fNpy = 4;
-   } else if(npy > 100000) {
-      Warning("SetNpy","Number of points must be >4 && < 10000, fNpy set to 10000");
+   } else if(npy > 10000) {
+      Warning("SetNpy","Number of points must be >=4 && <= 10000, fNpy set to 10000");
       fNpy = 10000;
    } else {
       fNpy = npy;
