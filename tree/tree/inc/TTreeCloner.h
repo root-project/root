@@ -88,7 +88,8 @@ class TTreeCloner {
 public:
    enum EClonerOptions {
       kNone       = 0,
-      kNoWarnings = BIT(1)
+      kNoWarnings = BIT(1),
+      kIgnoreMissingTopLevel = BIT(2)
    };
 
    TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t options = kNone);
