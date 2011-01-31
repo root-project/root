@@ -836,6 +836,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    TGeoMixture* mix = 0; 
    TGeoMaterial* mat = 0;
    TString tempconst = "";
+   Bool_t composite = kFALSE;
    
    if (z == 1){
       Double_t a = 0;
@@ -890,7 +891,6 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    else if (z == 0){
       while (child!=0) {
          attr = gdml->GetFirstAttr(child);
-         
          if((strcmp(gdml->GetNodeName(child), "fraction")) == 0){
             Double_t n = 0;
             TString ref = ""; 
@@ -918,6 +918,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
          }
          
          else if((strcmp(gdml->GetNodeName(child), "composite")) == 0){
+            composite = kTRUE;
             Double_t n = 0;
             TString ref = ""; 
             ncompo = ncompo + 1;
@@ -963,18 +964,22 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       }
       mix = new TGeoMixture(NameShort(name), ncompo, density);
       mixflag = 1;
-      Int_t i = 0;
+      Int_t natoms;
+      Double_t weight;
       
       for(fractions f = fracmap.begin(); f != fracmap.end(); f++){
          if(felemap.find(f->first) != felemap.end()){
-            mix->DefineElement(i, felemap[f->first], f->second);
+            if (composite) {
+               natoms = (Int_t)f->second;
+               mix->AddElement(felemap[f->first], natoms);
+            } else {
+               weight = f->second;  
+               mix->AddElement(felemap[f->first], weight); 
+            }   
          } 
          else {
        // mix->DefineElement(i, fmixmap[f->first], f->second); BUG IN PYTHON???
          }
-         
-         i = i + 1;
-         
       }
       
    }//end of not Z else
