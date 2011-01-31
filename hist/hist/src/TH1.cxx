@@ -4346,20 +4346,30 @@ Bool_t TH1::IsBinUnderflow(Int_t bin) const
 //___________________________________________________________________________
 void TH1::LabelsDeflate(Option_t *ax)
 {
-   // Reduce the number of bins for this axis to the number of bins having a label.
+   // Reduce the number of bins for the axis passed in the option to the number of bins having a label.
+   // The method will remove only the extra bins existing after the last "labeled" bin.
+   // Note that if there are "un-labeled" bins present between "labeled" bins they will not be removed 
 
    Int_t iaxis = AxisChoice(ax);
    TAxis *axis = 0;
    if (iaxis == 1) axis = GetXaxis();
    if (iaxis == 2) axis = GetYaxis();
    if (iaxis == 3) axis = GetZaxis();
-   if (!axis) return;
+   if (!axis) { 
+      Error("LabelsDeflate","Invalid axis option %s",ax);
+      return;
+   }
    if (!axis->GetLabels()) return;
+   
+   // find bin with last labels 
+   // bin number is object ID in list of labels 
+   // therefore max bin number is number of bins of the deflated histograms
    TIter next(axis->GetLabels());
    TObject *obj;
    Int_t nbins = 0;
    while ((obj = next())) {
-      if (obj->GetUniqueID()) nbins++;
+      Int_t ibin = obj->GetUniqueID();
+      if (ibin > nbins) nbins = ibin; 
    }
    if (nbins < 1) nbins = 1;
    TH1 *hold = (TH1*)Clone();
@@ -4371,36 +4381,26 @@ void TH1::LabelsDeflate(Option_t *ax)
    if (xmax <= xmin) xmax = xmin +nbins;
    axis->SetRange(0,0);
    axis->Set(nbins,xmin,xmax);
-   //Int_t  nbinsx = fXaxis.GetNbins();
-   //Int_t  nbinsy = fYaxis.GetNbins();
-   //Int_t  nbinsz = fZaxis.GetNbins();
-   Int_t  nbinsx = hold->GetXaxis()->GetNbins();
-   Int_t  nbinsy = hold->GetYaxis()->GetNbins();
-   Int_t  nbinsz = hold->GetZaxis()->GetNbins();
-   Int_t ncells = nbinsx+2;
-   if (GetDimension() > 1) ncells *= nbinsy+2;
-   if (GetDimension() > 2) ncells *= nbinsz+2;
-   SetBinsLength(ncells);
+   SetBinsLength(-1);  // reset the number of cells
    Int_t errors = fSumw2.fN;
-   if (errors) fSumw2.Set(ncells);
+   if (errors) fSumw2.Set(fNcells);
    axis->SetTimeDisplay(timedisp);
+   // reset histogram content
+   Reset("ICE");
 
    //now loop on all bins and refill
-   Double_t err,cu;
-   Int_t bin,ibin,binx,biny,binz;
+   // NOTE that if the bins without labels have content
+   // it will be put in the underflow/overflow. 
+   // For this reason we use AddBinContent method
    Double_t oldEntries = fEntries;
-   for (binz=1;binz<=nbinsz;binz++) {
-      for (biny=1;biny<=nbinsy;biny++) {
-         for (binx=1;binx<=nbinsx;binx++) {
-            bin = hold->GetBin(binx,biny,binz);
-            ibin= GetBin(binx,biny,binz);
-            cu  = hold->GetBinContent(bin);
-            SetBinContent(ibin,cu);
-            if (errors) {
-               err = hold->GetBinError(bin);
-               SetBinError(ibin,err);
-            }
-         }
+   Int_t bin,binx,biny,binz;
+   for (bin=0; bin < hold->fNcells; ++bin) { 
+      hold->GetBinXYZ(bin,binx,biny,binz);
+      Int_t ibin = GetBin(binx,biny,binz);
+      Double_t cu = hold->GetBinContent(bin);
+      AddBinContent(ibin,cu);
+      if (errors) { 
+         fSumw2.fArray[ibin] += hold->fSumw2.fArray[bin];
       }
    }
    fEntries = oldEntries;
@@ -4433,40 +4433,28 @@ void TH1::LabelsInflate(Option_t *ax)
    Double_t xmax = axis->GetXmax();
    xmax = xmin + 2*(xmax-xmin);
    axis->SetRange(0,0);
+   // double the bins and recompute ncells 
    axis->Set(2*nbins,xmin,xmax);
-   Int_t  nbinsx = fXaxis.GetNbins();
-   Int_t  nbinsy = fYaxis.GetNbins();
-   Int_t  nbinsz = fZaxis.GetNbins();
-   Int_t ncells = nbinsx+2;
-   if (GetDimension() > 1) ncells *= nbinsy+2;
-   if (GetDimension() > 2) ncells *= nbinsz+2;
-   SetBinsLength(ncells);
+   SetBinsLength(-1);
    Int_t errors = fSumw2.fN;
-   if (errors) fSumw2.Set(ncells);
+   if (errors) fSumw2.Set(fNcells);
    axis->SetTimeDisplay(timedisp);
 
    //now loop on all bins and refill
    Double_t err,cu;
    Double_t oldEntries = fEntries;
    Int_t bin,ibin,binx,biny,binz;
-   Int_t binxmin = 1;
-   Int_t binxmax = nbinsx;
-   if (fDimension > 1) {binxmin--; binxmax++;}
-   for (binz=1;binz<=nbinsz;binz++) {
-      for (biny=1;biny<=nbinsy;biny++) {
-         for (binx=binxmin;binx<=binxmax;binx++) {
-            bin = hold->GetBin(binx,biny,binz);
-            ibin= GetBin(binx,biny,binz);
-            if (binx > nbxold+1 || biny > nbyold || binz > nbzold) bin = -1;
-            if (bin > 0) cu  = hold->GetBinContent(bin);
-            else         cu = 0;
-            SetBinContent(ibin,cu);
-            if (errors) {
-               if (bin > 0) err = hold->GetBinError(bin);
-               else         err = 0;
-               SetBinError(ibin,err);
-            }
-         }
+   for (ibin =0; ibin < fNcells; ibin++) { 
+      GetBinXYZ(ibin,binx,biny,binz);
+      bin = hold->GetBin(binx,biny,binz);
+      if (binx > nbxold || biny > nbyold || binz > nbzold) bin = -1;
+      if (bin > 0)  cu  = hold->GetBinContent(bin);
+      else         cu = 0;
+      SetBinContent(ibin,cu);
+      if (errors) {
+         if (bin > 0) err = hold->GetBinError(bin);
+         else         err = 0;
+         SetBinError(ibin,err);
       }
    }
    fEntries = oldEntries;
