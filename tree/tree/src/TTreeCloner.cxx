@@ -316,12 +316,24 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
            fi = 0;
          }
       } else {
-         fWarningMsg.Form("One of the export branches (%s) is not present in the import TTree.",
-                          tb->GetName());
-         if (!(fOptions & kNoWarnings)) {
-            Error("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
+         if (tb->GetMother()==tb) {
+            // Top level branch.
+            if (!(fOptions & kIgnoreMissingTopLevel)) {
+               fWarningMsg.Form("One of the export top level branches (%s) is not present in the import TTree.",
+                                tb->GetName());
+               if (!(fOptions & kNoWarnings)) {
+                  Error("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
+               }
+               fIsValid = kFALSE;
+            }
+         } else {
+            fWarningMsg.Form("One of the export sub-branches (%s) is not present in the import TTree.",
+                             tb->GetName());
+            if (!(fOptions & kNoWarnings)) {
+               Error("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
+            }
+            fIsValid = kFALSE;
          }
-         fIsValid = kFALSE;
       }
       ++ti;
    }
