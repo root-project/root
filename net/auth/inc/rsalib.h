@@ -34,6 +34,10 @@ MA  02110-1301  USA
 #ifndef	_RSALIB_H
 #define	_RSALIB_H
 
+#ifndef _RSADEF_H
+#include "rsadef.h"
+#endif
+
 rsa_NUMBER rsa_genprim(int, int);
 int    rsa_genrsa(rsa_NUMBER, rsa_NUMBER, rsa_NUMBER *, rsa_NUMBER *, rsa_NUMBER *);
 int    rsa_encode(char *, int, rsa_NUMBER, rsa_NUMBER);
