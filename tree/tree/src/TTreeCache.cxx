@@ -416,7 +416,10 @@ void TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
       return;
    }
    //if all branches are selected stop the learning phase
-   if (*bname == '*') StopLearningPhase();
+   if (*bname == '*') {
+      fEntryNext = -1; // We are likely to have change the set of branches, so for the [re-]reading of the cluster.
+      StopLearningPhase();
+   }
 }
 
 //_____________________________________________________________________________
@@ -458,6 +461,7 @@ Bool_t TTreeCache::FillBuffer()
          fEntryNext = entry + tree->GetEntries()*fBufferSizeMin/fZipBytes;
       }
    }
+   if (fEntryCurrent < fEntryMin) fEntryCurrent = fEntryMin;
    if (fEntryMax <= 0) fEntryMax = tree->GetEntries();
    if (fEntryNext > fEntryMax) fEntryNext = fEntryMax+1;
 
@@ -664,6 +668,7 @@ void TTreeCache::SetEntryRange(Long64_t emin, Long64_t emax)
       fNbranches  = 0;
       fZipBytes   = 0;
       if (fBrNames) fBrNames->Delete();
+      fEntryCurrent = -1;
    }
 }
 
@@ -690,6 +695,7 @@ void TTreeCache::StartLearningPhase()
    fZipBytes   = 0;
    if (fBrNames) fBrNames->Delete();
    fIsTransferred = kFALSE;
+   fEntryCurrent = -1;
 }
 
 //_____________________________________________________________________________
