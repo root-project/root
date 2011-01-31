@@ -663,12 +663,7 @@ void TTreeCache::SetEntryRange(Long64_t emin, Long64_t emax)
 
    if (needLearningStart) {
       // Restart learning
-      fIsLearning = kTRUE;
-      fIsManual = kFALSE;
-      fNbranches  = 0;
-      fZipBytes   = 0;
-      if (fBrNames) fBrNames->Delete();
-      fEntryCurrent = -1;
+      StartLearningPhase();
    }
 }
 
