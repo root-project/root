@@ -444,6 +444,7 @@ Bool_t TTreeCache::FillBuffer()
    if (autoFlush > 0) {
       //case when the tree autoflush has been set
       Int_t averageEntrySize = tree->GetZipBytes()/tree->GetEntries();
+      if (averageEntrySize < 1) averageEntrySize = 1;
       Int_t nauto = fBufferSizeMin/(averageEntrySize*autoFlush);
       if (nauto < 1) nauto = 1;
       fEntryCurrent = entry - entry%autoFlush;
