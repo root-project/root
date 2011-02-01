@@ -1,8 +1,10 @@
 /* The -*- C++ -*- 2D, 3D, 4D Vector and 2x2, 3x3, 4x4 Matrix classes.
-   (Based on the Graphics Gems IV, Edited by Paul S. Heckbert, Academic
+   (Based on the "Graphics Gems IV", Edited by Paul S. Heckbert, Academic
    Press, 1994, ISBN 0-12-336156-9, original source code files algebra3.h
    and algebra3aux.h by Jean-Francois Doue and John Nagle.
-   Modified by Jacek M. Holeczek, 05.2001, 01.2005.) */
+   Modified by Jacek M. Holeczek, 05.2001, 01.2011.)
+   You are free to use and modify this code in any way you like.
+   No warranty of any kind. No liability for any defects or damages. */
 
 #ifndef __ALGEBRA3_CXX__
 #define __ALGEBRA3_CXX__
@@ -59,6 +61,456 @@ static int algebra3_lib_init = ( G__loadfile("complex"), 0 ); // load the CINT's
 #pragma link C++ enum aux::EPhongADSS;
 
 #endif /* __MAKECINT__ */
+
+
+
+/* RTTI class of < long double > */
+
+
+
+namespace aux {
+
+  template class rtti< long double >; // RTTI of < long double >
+
+} /* namespace aux */
+
+#ifdef __MAKECINT__
+
+#pragma link C++ class aux::rtti< long double >+;
+
+#endif /* __MAKECINT__ */
+
+
+
+/* RTTI class of < vec2< long double > > */
+
+
+
+namespace aux {
+
+  template class rtti< vec2< long double > >; // RTTI of < vec2< long double > >
+
+} /* namespace aux */
+
+#ifdef __MAKECINT__
+
+#pragma link C++ class aux::rtti< vec2< long double > >+;
+
+#endif /* __MAKECINT__ */
+
+
+
+/* 2D Vector class and friends of < long double > */
+
+
+
+namespace aux {
+
+  template class vec2< long double >; // 2D Vector of < long double >
+
+} /* namespace aux */
+
+#ifdef __MAKECINT__
+
+#pragma link C++ class aux::vec2< long double >+;
+
+#endif /* __MAKECINT__ */
+
+namespace aux {
+
+  template vec2< long double > operator - (const vec2< long double >& v); // -v1
+  template vec2< long double > operator + (const vec2< long double >& a, const vec2< long double >& b); // v1 + v2
+  template vec2< long double > operator - (const vec2< long double >& a, const vec2< long double >& b); // v1 - v2
+  template vec2< long double > operator * (const vec2< long double >& a, const long double d); // v1 * 3.0
+  template vec2< long double > operator * (const long double d, const vec2< long double >& a); // 3.0 * v1
+  template vec2< long double > operator / (const vec2< long double >& a, const long double d); // v1 / 3.0
+  template vec2< long double > operator * (const mat2< long double >& a, const vec2< long double >& v); // linear transform
+  template vec2< long double > operator * (const mat3< long double >& a, const vec2< long double >& v); // M . v
+  template vec2< long double > operator * (const vec2< long double >& v, const mat3< long double >& a); // v . M
+  template vec3< long double > operator ^ (const vec2< long double >& a, const vec2< long double >& b); // cross product
+  template long double operator * (const vec2< long double >& a, const vec2< long double >& b); // dot product
+  template bool operator == (const vec2< long double >& a, const vec2< long double >& b); // v1 == v2 ?
+  template bool operator != (const vec2< long double >& a, const vec2< long double >& b); // v1 != v2 ?
+
+  template ostream& operator << (ostream& s, const vec2< long double >& v); // output to stream
+  template istream& operator >> (istream& s, vec2< long double >& v); // input from stream
+
+  template void swap(vec2< long double >& a, vec2< long double >& b); // swap v1 & v2
+  template vec2< long double > min(const vec2< long double >& a, const vec2< long double >& b); // min(v1, v2)
+  template vec2< long double > max(const vec2< long double >& a, const vec2< long double >& b); // max(v1, v2)
+  template vec2< long double > prod(const vec2< long double >& a, const vec2< long double >& b); // term by term *
+  template vec2< long double > conj(const vec2< long double >& a);
+
+} /* namespace aux */
+
+
+
+/* RTTI class of < vec3< long double > > */
+
+
+
+namespace aux {
+
+  template class rtti< vec3< long double > >; // RTTI of < vec3< long double > >
+
+} /* namespace aux */
+
+#ifdef __MAKECINT__
+
+#pragma link C++ class aux::rtti< vec3< long double > >+;
+
+#endif /* __MAKECINT__ */
+
+
+
+/* 3D Vector class and friends of < long double > */
+
+
+
+namespace aux {
+
+  template class vec3< long double >; // 3D Vector of < long double >
+
+} /* namespace aux */
+
+#ifdef __MAKECINT__
+
+#pragma link C++ class aux::vec3< long double >+;
+
+#endif /* __MAKECINT__ */
+
+namespace aux {
+
+  template vec3< long double > operator - (const vec3< long double >& v); // -v1
+  template vec3< long double > operator + (const vec3< long double >& a, const vec3< long double >& b); // v1 + v2
+  template vec3< long double > operator - (const vec3< long double >& a, const vec3< long double >& b); // v1 - v2
+  template vec3< long double > operator * (const vec3< long double >& a, const long double d); // v1 * 3.0
+  template vec3< long double > operator * (const long double d, const vec3< long double >& a); // 3.0 * v1
+  template vec3< long double > operator / (const vec3< long double >& a, const long double d); // v1 / 3.0
+  template vec3< long double > operator * (const mat3< long double >& a, const vec3< long double >& v); // linear transform
+  template vec3< long double > operator * (const mat4< long double >& a, const vec3< long double >& v); // M . v
+  template vec3< long double > operator * (const vec3< long double >& v, const mat4< long double >& a); // v . M
+  template vec3< long double > operator ^ (const vec3< long double >& a, const vec3< long double >& b); // cross product
+  template long double operator * (const vec3< long double >& a, const vec3< long double >& b); // dot product
+  template bool operator == (const vec3< long double >& a, const vec3< long double >& b); // v1 == v2 ?
+  template bool operator != (const vec3< long double >& a, const vec3< long double >& b); // v1 != v2 ?
+
+  template ostream& operator << (ostream& s, const vec3< long double >& v); // output to stream
+  template istream& operator >> (istream& s, vec3< long double >& v); // input from stream
+
+  template void swap(vec3< long double >& a, vec3< long double >& b); // swap v1 & v2
+  template vec3< long double > min(const vec3< long double >& a, const vec3< long double >& b); // min(v1, v2)
+  template vec3< long double > max(const vec3< long double >& a, const vec3< long double >& b); // max(v1, v2)
+  template vec3< long double > prod(const vec3< long double >& a, const vec3< long double >& b); // term by term *
+  template vec3< long double > conj(const vec3< long double >& a);
+
+} /* namespace aux */
+
+
+
+/* RTTI class of < vec4< long double > > */
+
+
+
+namespace aux {
+
+  template class rtti< vec4< long double > >; // RTTI of < vec4< long double > >
+
+} /* namespace aux */
+
+#ifdef __MAKECINT__
+
+#pragma link C++ class aux::rtti< vec4< long double > >+;
+
+#endif /* __MAKECINT__ */
+
+
+
+/* 4D Vector class and friends of < long double > */
+
+
+
+namespace aux {
+
+  template class vec4< long double >; // 4D Vector of < long double >
+
+} /* namespace aux */
+
+#ifdef __MAKECINT__
+
+#pragma link C++ class aux::vec4< long double >+;
+
+#endif /* __MAKECINT__ */
+
+namespace aux {
+
+  template vec4< long double > operator - (const vec4< long double >& v); // -v1
+  template vec4< long double > operator + (const vec4< long double >& a, const vec4< long double >& b); // v1 + v2
+  template vec4< long double > operator - (const vec4< long double >& a, const vec4< long double >& b); // v1 - v2
+  template vec4< long double > operator * (const vec4< long double >& a, const long double d); // v1 * 3.0
+  template vec4< long double > operator * (const long double d, const vec4< long double >& a); // 3.0 * v1
+  template vec4< long double > operator / (const vec4< long double >& a, const long double d); // v1 / 3.0
+  template vec4< long double > operator * (const mat4< long double >& a, const vec4< long double >& v); // M . v
+  template vec4< long double > operator * (const vec4< long double >& v, const mat4< long double >& a); // v . M
+  template long double operator * (const vec4< long double >& a, const vec4< long double >& b); // dot product
+  template bool operator == (const vec4< long double >& a, const vec4< long double >& b); // v1 == v2 ?
+  template bool operator != (const vec4< long double >& a, const vec4< long double >& b); // v1 != v2 ?
+
+  template ostream& operator << (ostream& s, const vec4< long double >& v); // output to stream
+  template istream& operator >> (istream& s, vec4< long double >& v); // input from stream
+
+  template void swap(vec4< long double >& a, vec4< long double >& b); // swap v1 & v2
+  template vec4< long double > min(const vec4< long double >& a, const vec4< long double >& b); // min(v1, v2)
+  template vec4< long double > max(const vec4< long double >& a, const vec4< long double >& b); // max(v1, v2)
+  template vec4< long double > prod(const vec4< long double >& a, const vec4< long double >& b); // term by term *
+  template vec4< long double > conj(const vec4< long double >& a);
+
+} /* namespace aux */
+
+
+
+/* RTTI class of < mat2< long double > > */
+
+
+
+namespace aux {
+
+  template class rtti< mat2< long double > >; // RTTI of < mat2< long double > >
+
+} /* namespace aux */
+
+#ifdef __MAKECINT__
+
+#pragma link C++ class aux::rtti< mat2< long double > >+;
+
+#endif /* __MAKECINT__ */
+
+
+
+/* 2x2 Matrix class and friends of < long double > */
+
+
+
+namespace aux {
+
+  template class mat2< long double >; // 2x2 Matrix of < long double >
+
+} /* namespace aux */
+
+#ifdef __MAKECINT__
+
+#pragma link C++ class aux::mat2< long double >+;
+
+#endif /* __MAKECINT__ */
+
+namespace aux {
+
+  template mat2< long double > operator - (const mat2< long double >& a); // -m1
+  template mat2< long double > operator + (const mat2< long double >& a, const mat2< long double >& b); // m1 + m2
+  template mat2< long double > operator - (const mat2< long double >& a, const mat2< long double >& b); // m1 - m2
+  template mat2< long double > operator * (const mat2< long double >& a, const mat2< long double >& b); // m1 * m2
+  template mat2< long double > operator * (const mat2< long double >& a, const long double d); // m1 * 3.0
+  template mat2< long double > operator * (const long double d, const mat2< long double >& a); // 3.0 * m1
+  template mat2< long double > operator / (const mat2< long double >& a, const long double d); // m1 / 3.0
+  template bool operator == (const mat2< long double >& a, const mat2< long double >& b); // m1 == m2 ?
+  template bool operator != (const mat2< long double >& a, const mat2< long double >& b); // m1 != m2 ?
+
+  template ostream& operator << (ostream& s, const mat2< long double >& m); // output to stream
+  template istream& operator >> (istream& s, mat2< long double >& m); // input from stream
+
+  template void swap(mat2< long double >& a, mat2< long double >& b); // swap m1 & m2
+  template mat2< long double > conj(const mat2< long double >& a);
+  template mat2< long double > diagonal(const vec2< long double >& v);
+  template mat2< long double > diagonal(const long double x0, const long double y1);
+  template long double trace(const mat2< long double >& a);
+
+} /* namespace aux */
+
+
+
+/* RTTI class of < mat3< long double > > */
+
+
+
+namespace aux {
+
+  template class rtti< mat3< long double > >; // RTTI of < mat3< long double > >
+
+} /* namespace aux */
+
+#ifdef __MAKECINT__
+
+#pragma link C++ class aux::rtti< mat3< long double > >+;
+
+#endif /* __MAKECINT__ */
+
+
+
+/* 3x3 Matrix class and friends of < long double > */
+
+
+
+namespace aux {
+
+  template class mat3< long double >; // 3x3 Matrix of < long double >
+
+} /* namespace aux */
+
+#ifdef __MAKECINT__
+
+#pragma link C++ class aux::mat3< long double >+;
+
+#endif /* __MAKECINT__ */
+
+namespace aux {
+
+  template mat3< long double > operator - (const mat3< long double >& a); // -m1
+  template mat3< long double > operator + (const mat3< long double >& a, const mat3< long double >& b); // m1 + m2
+  template mat3< long double > operator - (const mat3< long double >& a, const mat3< long double >& b); // m1 - m2
+  template mat3< long double > operator * (const mat3< long double >& a, const mat3< long double >& b); // m1 * m2
+  template mat3< long double > operator * (const mat3< long double >& a, const long double d); // m1 * 3.0
+  template mat3< long double > operator * (const long double d, const mat3< long double >& a); // 3.0 * m1
+  template mat3< long double > operator / (const mat3< long double >& a, const long double d); // m1 / 3.0
+  template bool operator == (const mat3< long double >& a, const mat3< long double >& b); // m1 == m2 ?
+  template bool operator != (const mat3< long double >& a, const mat3< long double >& b); // m1 != m2 ?
+
+  template ostream& operator << (ostream& s, const mat3< long double >& m); // output to stream
+  template istream& operator >> (istream& s, mat3< long double >& m); // input from stream
+
+  template void swap(mat3< long double >& a, mat3< long double >& b); // swap m1 & m2
+  template mat3< long double > conj(const mat3< long double >& a);
+  template mat3< long double > diagonal(const vec3< long double >& v);
+  template mat3< long double > diagonal(const long double x0, const long double y1, const long double z2);
+  template long double trace(const mat3< long double >& a);
+
+} /* namespace aux */
+
+
+
+/* RTTI class of < mat4< long double > > */
+
+
+
+namespace aux {
+
+  template class rtti< mat4< long double > >; // RTTI of < mat4< long double > >
+
+} /* namespace aux */
+
+#ifdef __MAKECINT__
+
+#pragma link C++ class aux::rtti< mat4< long double > >+;
+
+#endif /* __MAKECINT__ */
+
+
+
+/* 4x4 Matrix class and friends of < long double > */
+
+
+
+namespace aux {
+
+  template class mat4< long double >; // 4x4 Matrix of < long double >
+
+} /* namespace aux */
+
+#ifdef __MAKECINT__
+
+#pragma link C++ class aux::mat4< long double >+;
+
+#endif /* __MAKECINT__ */
+
+namespace aux {
+
+  template mat4< long double > operator - (const mat4< long double >& a); // -m1
+  template mat4< long double > operator + (const mat4< long double >& a, const mat4< long double >& b); // m1 + m2
+  template mat4< long double > operator - (const mat4< long double >& a, const mat4< long double >& b); // m1 - m2
+  template mat4< long double > operator * (const mat4< long double >& a, const mat4< long double >& b); // m1 * m2
+  template mat4< long double > operator * (const mat4< long double >& a, const long double d); // m1 * 3.0
+  template mat4< long double > operator * (const long double d, const mat4< long double >& a); // 3.0 * m1
+  template mat4< long double > operator / (const mat4< long double >& a, const long double d); // m1 / 3.0
+  template bool operator == (const mat4< long double >& a, const mat4< long double >& b); // m1 == m2 ?
+  template bool operator != (const mat4< long double >& a, const mat4< long double >& b); // m1 != m2 ?
+
+  template ostream& operator << (ostream& s, const mat4< long double >& m); // output to stream
+  template istream& operator >> (istream& s, mat4< long double >& m); // input from stream
+
+  template void swap(mat4< long double >& a, mat4< long double >& b); // swap m1 & m2
+  template mat4< long double > conj(const mat4< long double >& a);
+  template mat4< long double > diagonal(const vec4< long double >& v);
+  template mat4< long double > diagonal(const long double x0, const long double y1, const long double z2, const long double w3);
+  template long double trace(const mat4< long double >& a);
+
+} /* namespace aux */
+
+
+
+/* 2D functions and 3D functions of < long double > */
+
+
+
+namespace aux {
+
+  template mat2< long double > identity1D< long double >(void); // identity 1D
+  template mat2< long double > translation1D(const long double & v); // translation 1D
+  template mat2< long double > scaling1D(const long double & scaleVal); // scaling 1D
+  template mat3< long double > identity2D< long double >(void); // identity 2D
+  template mat3< long double > translation2D(const vec2< long double >& v); // translation 2D
+#if __FIX_MAKROSCHROTT__ == 0
+  template mat3< long double > rotation2D(const vec2< long double >& Center, const rtti< long double >::value_type angleDeg); // rotation 2D
+#endif /* __FIX_MAKROSCHROTT__ */
+  template mat3< long double > scaling2D(const vec2< long double >& scaleVec); // scaling 2D
+  template mat4< long double > identity3D< long double >(void); // identity 3D
+  template mat4< long double > translation3D(const vec3< long double >& v); // translation 3D
+#if __FIX_MAKROSCHROTT__ == 0
+  template mat4< long double > rotation3D(vec3< long double > Axis, const rtti< long double >::value_type angleDeg); // rotation 3D
+#endif /* __FIX_MAKROSCHROTT__ */
+  template mat4< long double > scaling3D(const vec3< long double >& scaleVec); // scaling 3D
+  template mat4< long double > perspective3D(const long double d); // perspective 3D
+
+} /* namespace aux */
+
+
+
+/* AUX functions of < long double > */
+
+
+
+namespace aux {
+
+  template vec2< long double > MultiplyElementwise(const vec2< long double >& v1, const vec2< long double >& v2); // element by element multiplication
+  template vec3< long double > MultiplyElementwise(const vec3< long double >& v1, const vec3< long double >& v2); // element by element multiplication
+  template vec4< long double > MultiplyElementwise(const vec4< long double >& v1, const vec4< long double >& v2); // element by element multiplication
+
+  template mat3< long double > rotation2D(const mat2< long double >& m); // convert 2x2 rotation matrix to 3x3
+  template vec2< long double > ExtractTranslation(const mat3< long double >& pose); // extract translation vector
+  template vec2< long double > ExtractScaling(const mat3< long double >& mat);
+  template mat2< long double > ExtractRotation(const mat3< long double >& pose); // extract rotation matrix from transformation matrix
+#if __FIX_MAKROSCHROTT__ == 0
+  template rtti< long double >::value_type PointToLine(const vec2< long double >& point, const vec3< long double >& line); // unsigned distance from a point to a line (2D)
+#endif /* __FIX_MAKROSCHROTT__ */
+  template mat4< long double > rotation3D(const mat3< long double >& m); // convert 3x3 rotation matrix to 4x4
+  template vec3< long double > ExtractTranslation(const mat4< long double >& pose); // extract translation vector
+  template vec3< long double > ExtractScaling(const mat4< long double >& mat);
+  template mat3< long double > ExtractRotation(const mat4< long double >& pose); // extract rotation matrix from transformation matrix
+#if __FIX_MAKROSCHROTT__ == 0
+  template rtti< long double >::value_type PointToPlane(const vec3< long double >& point, const vec4< long double >& plane); // unsigned distance from a point to a plane (3D)
+#endif /* __FIX_MAKROSCHROTT__ */
+
+  template long double fmin(long double x, long double y);
+  template long double fmax(long double x, long double y);
+
+  template vec2< long double > fmin(const vec2< long double >& v1, const vec2< long double >& v2);
+  template vec2< long double > fmax(const vec2< long double >& v1, const vec2< long double >& v2);
+
+  template vec3< long double > fmin(const vec3< long double >& v1, const vec3< long double >& v2);
+  template vec3< long double > fmax(const vec3< long double >& v1, const vec3< long double >& v2);
+
+  template vec4< long double > fmin(const vec4< long double >& v1, const vec4< long double >& v2);
+  template vec4< long double > fmax(const vec4< long double >& v1, const vec4< long double >& v2);
+
+} /* namespace aux */
 
 
 
@@ -957,456 +1409,6 @@ namespace aux {
 
   template vec4< double > fmin(const vec4< double >& v1, const vec4< double >& v2);
   template vec4< double > fmax(const vec4< double >& v1, const vec4< double >& v2);
-
-} /* namespace aux */
-
-
-
-/* RTTI class of < long double > */
-
-
-
-namespace aux {
-
-  template class rtti< long double >; // RTTI of < long double >
-
-} /* namespace aux */
-
-#ifdef __MAKECINT__
-
-#pragma link C++ class aux::rtti< long double >+;
-
-#endif /* __MAKECINT__ */
-
-
-
-/* RTTI class of < vec2< long double > > */
-
-
-
-namespace aux {
-
-  template class rtti< vec2< long double > >; // RTTI of < vec2< long double > >
-
-} /* namespace aux */
-
-#ifdef __MAKECINT__
-
-#pragma link C++ class aux::rtti< vec2< long double > >+;
-
-#endif /* __MAKECINT__ */
-
-
-
-/* 2D Vector class and friends of < long double > */
-
-
-
-namespace aux {
-
-  template class vec2< long double >; // 2D Vector of < long double >
-
-} /* namespace aux */
-
-#ifdef __MAKECINT__
-
-#pragma link C++ class aux::vec2< long double >+;
-
-#endif /* __MAKECINT__ */
-
-namespace aux {
-
-  template vec2< long double > operator - (const vec2< long double >& v); // -v1
-  template vec2< long double > operator + (const vec2< long double >& a, const vec2< long double >& b); // v1 + v2
-  template vec2< long double > operator - (const vec2< long double >& a, const vec2< long double >& b); // v1 - v2
-  template vec2< long double > operator * (const vec2< long double >& a, const long double d); // v1 * 3.0
-  template vec2< long double > operator * (const long double d, const vec2< long double >& a); // 3.0 * v1
-  template vec2< long double > operator / (const vec2< long double >& a, const long double d); // v1 / 3.0
-  template vec2< long double > operator * (const mat2< long double >& a, const vec2< long double >& v); // linear transform
-  template vec2< long double > operator * (const mat3< long double >& a, const vec2< long double >& v); // M . v
-  template vec2< long double > operator * (const vec2< long double >& v, const mat3< long double >& a); // v . M
-  template vec3< long double > operator ^ (const vec2< long double >& a, const vec2< long double >& b); // cross product
-  template long double operator * (const vec2< long double >& a, const vec2< long double >& b); // dot product
-  template bool operator == (const vec2< long double >& a, const vec2< long double >& b); // v1 == v2 ?
-  template bool operator != (const vec2< long double >& a, const vec2< long double >& b); // v1 != v2 ?
-
-  template ostream& operator << (ostream& s, const vec2< long double >& v); // output to stream
-  template istream& operator >> (istream& s, vec2< long double >& v); // input from stream
-
-  template void swap(vec2< long double >& a, vec2< long double >& b); // swap v1 & v2
-  template vec2< long double > min(const vec2< long double >& a, const vec2< long double >& b); // min(v1, v2)
-  template vec2< long double > max(const vec2< long double >& a, const vec2< long double >& b); // max(v1, v2)
-  template vec2< long double > prod(const vec2< long double >& a, const vec2< long double >& b); // term by term *
-  template vec2< long double > conj(const vec2< long double >& a);
-
-} /* namespace aux */
-
-
-
-/* RTTI class of < vec3< long double > > */
-
-
-
-namespace aux {
-
-  template class rtti< vec3< long double > >; // RTTI of < vec3< long double > >
-
-} /* namespace aux */
-
-#ifdef __MAKECINT__
-
-#pragma link C++ class aux::rtti< vec3< long double > >+;
-
-#endif /* __MAKECINT__ */
-
-
-
-/* 3D Vector class and friends of < long double > */
-
-
-
-namespace aux {
-
-  template class vec3< long double >; // 3D Vector of < long double >
-
-} /* namespace aux */
-
-#ifdef __MAKECINT__
-
-#pragma link C++ class aux::vec3< long double >+;
-
-#endif /* __MAKECINT__ */
-
-namespace aux {
-
-  template vec3< long double > operator - (const vec3< long double >& v); // -v1
-  template vec3< long double > operator + (const vec3< long double >& a, const vec3< long double >& b); // v1 + v2
-  template vec3< long double > operator - (const vec3< long double >& a, const vec3< long double >& b); // v1 - v2
-  template vec3< long double > operator * (const vec3< long double >& a, const long double d); // v1 * 3.0
-  template vec3< long double > operator * (const long double d, const vec3< long double >& a); // 3.0 * v1
-  template vec3< long double > operator / (const vec3< long double >& a, const long double d); // v1 / 3.0
-  template vec3< long double > operator * (const mat3< long double >& a, const vec3< long double >& v); // linear transform
-  template vec3< long double > operator * (const mat4< long double >& a, const vec3< long double >& v); // M . v
-  template vec3< long double > operator * (const vec3< long double >& v, const mat4< long double >& a); // v . M
-  template vec3< long double > operator ^ (const vec3< long double >& a, const vec3< long double >& b); // cross product
-  template long double operator * (const vec3< long double >& a, const vec3< long double >& b); // dot product
-  template bool operator == (const vec3< long double >& a, const vec3< long double >& b); // v1 == v2 ?
-  template bool operator != (const vec3< long double >& a, const vec3< long double >& b); // v1 != v2 ?
-
-  template ostream& operator << (ostream& s, const vec3< long double >& v); // output to stream
-  template istream& operator >> (istream& s, vec3< long double >& v); // input from stream
-
-  template void swap(vec3< long double >& a, vec3< long double >& b); // swap v1 & v2
-  template vec3< long double > min(const vec3< long double >& a, const vec3< long double >& b); // min(v1, v2)
-  template vec3< long double > max(const vec3< long double >& a, const vec3< long double >& b); // max(v1, v2)
-  template vec3< long double > prod(const vec3< long double >& a, const vec3< long double >& b); // term by term *
-  template vec3< long double > conj(const vec3< long double >& a);
-
-} /* namespace aux */
-
-
-
-/* RTTI class of < vec4< long double > > */
-
-
-
-namespace aux {
-
-  template class rtti< vec4< long double > >; // RTTI of < vec4< long double > >
-
-} /* namespace aux */
-
-#ifdef __MAKECINT__
-
-#pragma link C++ class aux::rtti< vec4< long double > >+;
-
-#endif /* __MAKECINT__ */
-
-
-
-/* 4D Vector class and friends of < long double > */
-
-
-
-namespace aux {
-
-  template class vec4< long double >; // 4D Vector of < long double >
-
-} /* namespace aux */
-
-#ifdef __MAKECINT__
-
-#pragma link C++ class aux::vec4< long double >+;
-
-#endif /* __MAKECINT__ */
-
-namespace aux {
-
-  template vec4< long double > operator - (const vec4< long double >& v); // -v1
-  template vec4< long double > operator + (const vec4< long double >& a, const vec4< long double >& b); // v1 + v2
-  template vec4< long double > operator - (const vec4< long double >& a, const vec4< long double >& b); // v1 - v2
-  template vec4< long double > operator * (const vec4< long double >& a, const long double d); // v1 * 3.0
-  template vec4< long double > operator * (const long double d, const vec4< long double >& a); // 3.0 * v1
-  template vec4< long double > operator / (const vec4< long double >& a, const long double d); // v1 / 3.0
-  template vec4< long double > operator * (const mat4< long double >& a, const vec4< long double >& v); // M . v
-  template vec4< long double > operator * (const vec4< long double >& v, const mat4< long double >& a); // v . M
-  template long double operator * (const vec4< long double >& a, const vec4< long double >& b); // dot product
-  template bool operator == (const vec4< long double >& a, const vec4< long double >& b); // v1 == v2 ?
-  template bool operator != (const vec4< long double >& a, const vec4< long double >& b); // v1 != v2 ?
-
-  template ostream& operator << (ostream& s, const vec4< long double >& v); // output to stream
-  template istream& operator >> (istream& s, vec4< long double >& v); // input from stream
-
-  template void swap(vec4< long double >& a, vec4< long double >& b); // swap v1 & v2
-  template vec4< long double > min(const vec4< long double >& a, const vec4< long double >& b); // min(v1, v2)
-  template vec4< long double > max(const vec4< long double >& a, const vec4< long double >& b); // max(v1, v2)
-  template vec4< long double > prod(const vec4< long double >& a, const vec4< long double >& b); // term by term *
-  template vec4< long double > conj(const vec4< long double >& a);
-
-} /* namespace aux */
-
-
-
-/* RTTI class of < mat2< long double > > */
-
-
-
-namespace aux {
-
-  template class rtti< mat2< long double > >; // RTTI of < mat2< long double > >
-
-} /* namespace aux */
-
-#ifdef __MAKECINT__
-
-#pragma link C++ class aux::rtti< mat2< long double > >+;
-
-#endif /* __MAKECINT__ */
-
-
-
-/* 2x2 Matrix class and friends of < long double > */
-
-
-
-namespace aux {
-
-  template class mat2< long double >; // 2x2 Matrix of < long double >
-
-} /* namespace aux */
-
-#ifdef __MAKECINT__
-
-#pragma link C++ class aux::mat2< long double >+;
-
-#endif /* __MAKECINT__ */
-
-namespace aux {
-
-  template mat2< long double > operator - (const mat2< long double >& a); // -m1
-  template mat2< long double > operator + (const mat2< long double >& a, const mat2< long double >& b); // m1 + m2
-  template mat2< long double > operator - (const mat2< long double >& a, const mat2< long double >& b); // m1 - m2
-  template mat2< long double > operator * (const mat2< long double >& a, const mat2< long double >& b); // m1 * m2
-  template mat2< long double > operator * (const mat2< long double >& a, const long double d); // m1 * 3.0
-  template mat2< long double > operator * (const long double d, const mat2< long double >& a); // 3.0 * m1
-  template mat2< long double > operator / (const mat2< long double >& a, const long double d); // m1 / 3.0
-  template bool operator == (const mat2< long double >& a, const mat2< long double >& b); // m1 == m2 ?
-  template bool operator != (const mat2< long double >& a, const mat2< long double >& b); // m1 != m2 ?
-
-  template ostream& operator << (ostream& s, const mat2< long double >& m); // output to stream
-  template istream& operator >> (istream& s, mat2< long double >& m); // input from stream
-
-  template void swap(mat2< long double >& a, mat2< long double >& b); // swap m1 & m2
-  template mat2< long double > conj(const mat2< long double >& a);
-  template mat2< long double > diagonal(const vec2< long double >& v);
-  template mat2< long double > diagonal(const long double x0, const long double y1);
-  template long double trace(const mat2< long double >& a);
-
-} /* namespace aux */
-
-
-
-/* RTTI class of < mat3< long double > > */
-
-
-
-namespace aux {
-
-  template class rtti< mat3< long double > >; // RTTI of < mat3< long double > >
-
-} /* namespace aux */
-
-#ifdef __MAKECINT__
-
-#pragma link C++ class aux::rtti< mat3< long double > >+;
-
-#endif /* __MAKECINT__ */
-
-
-
-/* 3x3 Matrix class and friends of < long double > */
-
-
-
-namespace aux {
-
-  template class mat3< long double >; // 3x3 Matrix of < long double >
-
-} /* namespace aux */
-
-#ifdef __MAKECINT__
-
-#pragma link C++ class aux::mat3< long double >+;
-
-#endif /* __MAKECINT__ */
-
-namespace aux {
-
-  template mat3< long double > operator - (const mat3< long double >& a); // -m1
-  template mat3< long double > operator + (const mat3< long double >& a, const mat3< long double >& b); // m1 + m2
-  template mat3< long double > operator - (const mat3< long double >& a, const mat3< long double >& b); // m1 - m2
-  template mat3< long double > operator * (const mat3< long double >& a, const mat3< long double >& b); // m1 * m2
-  template mat3< long double > operator * (const mat3< long double >& a, const long double d); // m1 * 3.0
-  template mat3< long double > operator * (const long double d, const mat3< long double >& a); // 3.0 * m1
-  template mat3< long double > operator / (const mat3< long double >& a, const long double d); // m1 / 3.0
-  template bool operator == (const mat3< long double >& a, const mat3< long double >& b); // m1 == m2 ?
-  template bool operator != (const mat3< long double >& a, const mat3< long double >& b); // m1 != m2 ?
-
-  template ostream& operator << (ostream& s, const mat3< long double >& m); // output to stream
-  template istream& operator >> (istream& s, mat3< long double >& m); // input from stream
-
-  template void swap(mat3< long double >& a, mat3< long double >& b); // swap m1 & m2
-  template mat3< long double > conj(const mat3< long double >& a);
-  template mat3< long double > diagonal(const vec3< long double >& v);
-  template mat3< long double > diagonal(const long double x0, const long double y1, const long double z2);
-  template long double trace(const mat3< long double >& a);
-
-} /* namespace aux */
-
-
-
-/* RTTI class of < mat4< long double > > */
-
-
-
-namespace aux {
-
-  template class rtti< mat4< long double > >; // RTTI of < mat4< long double > >
-
-} /* namespace aux */
-
-#ifdef __MAKECINT__
-
-#pragma link C++ class aux::rtti< mat4< long double > >+;
-
-#endif /* __MAKECINT__ */
-
-
-
-/* 4x4 Matrix class and friends of < long double > */
-
-
-
-namespace aux {
-
-  template class mat4< long double >; // 4x4 Matrix of < long double >
-
-} /* namespace aux */
-
-#ifdef __MAKECINT__
-
-#pragma link C++ class aux::mat4< long double >+;
-
-#endif /* __MAKECINT__ */
-
-namespace aux {
-
-  template mat4< long double > operator - (const mat4< long double >& a); // -m1
-  template mat4< long double > operator + (const mat4< long double >& a, const mat4< long double >& b); // m1 + m2
-  template mat4< long double > operator - (const mat4< long double >& a, const mat4< long double >& b); // m1 - m2
-  template mat4< long double > operator * (const mat4< long double >& a, const mat4< long double >& b); // m1 * m2
-  template mat4< long double > operator * (const mat4< long double >& a, const long double d); // m1 * 3.0
-  template mat4< long double > operator * (const long double d, const mat4< long double >& a); // 3.0 * m1
-  template mat4< long double > operator / (const mat4< long double >& a, const long double d); // m1 / 3.0
-  template bool operator == (const mat4< long double >& a, const mat4< long double >& b); // m1 == m2 ?
-  template bool operator != (const mat4< long double >& a, const mat4< long double >& b); // m1 != m2 ?
-
-  template ostream& operator << (ostream& s, const mat4< long double >& m); // output to stream
-  template istream& operator >> (istream& s, mat4< long double >& m); // input from stream
-
-  template void swap(mat4< long double >& a, mat4< long double >& b); // swap m1 & m2
-  template mat4< long double > conj(const mat4< long double >& a);
-  template mat4< long double > diagonal(const vec4< long double >& v);
-  template mat4< long double > diagonal(const long double x0, const long double y1, const long double z2, const long double w3);
-  template long double trace(const mat4< long double >& a);
-
-} /* namespace aux */
-
-
-
-/* 2D functions and 3D functions of < long double > */
-
-
-
-namespace aux {
-
-  template mat2< long double > identity1D< long double >(void); // identity 1D
-  template mat2< long double > translation1D(const long double & v); // translation 1D
-  template mat2< long double > scaling1D(const long double & scaleVal); // scaling 1D
-  template mat3< long double > identity2D< long double >(void); // identity 2D
-  template mat3< long double > translation2D(const vec2< long double >& v); // translation 2D
-#if __FIX_MAKROSCHROTT__ == 0
-  template mat3< long double > rotation2D(const vec2< long double >& Center, const rtti< long double >::value_type angleDeg); // rotation 2D
-#endif /* __FIX_MAKROSCHROTT__ */
-  template mat3< long double > scaling2D(const vec2< long double >& scaleVec); // scaling 2D
-  template mat4< long double > identity3D< long double >(void); // identity 3D
-  template mat4< long double > translation3D(const vec3< long double >& v); // translation 3D
-#if __FIX_MAKROSCHROTT__ == 0
-  template mat4< long double > rotation3D(vec3< long double > Axis, const rtti< long double >::value_type angleDeg); // rotation 3D
-#endif /* __FIX_MAKROSCHROTT__ */
-  template mat4< long double > scaling3D(const vec3< long double >& scaleVec); // scaling 3D
-  template mat4< long double > perspective3D(const long double d); // perspective 3D
-
-} /* namespace aux */
-
-
-
-/* AUX functions of < long double > */
-
-
-
-namespace aux {
-
-  template vec2< long double > MultiplyElementwise(const vec2< long double >& v1, const vec2< long double >& v2); // element by element multiplication
-  template vec3< long double > MultiplyElementwise(const vec3< long double >& v1, const vec3< long double >& v2); // element by element multiplication
-  template vec4< long double > MultiplyElementwise(const vec4< long double >& v1, const vec4< long double >& v2); // element by element multiplication
-
-  template mat3< long double > rotation2D(const mat2< long double >& m); // convert 2x2 rotation matrix to 3x3
-  template vec2< long double > ExtractTranslation(const mat3< long double >& pose); // extract translation vector
-  template vec2< long double > ExtractScaling(const mat3< long double >& mat);
-  template mat2< long double > ExtractRotation(const mat3< long double >& pose); // extract rotation matrix from transformation matrix
-#if __FIX_MAKROSCHROTT__ == 0
-  template rtti< long double >::value_type PointToLine(const vec2< long double >& point, const vec3< long double >& line); // unsigned distance from a point to a line (2D)
-#endif /* __FIX_MAKROSCHROTT__ */
-  template mat4< long double > rotation3D(const mat3< long double >& m); // convert 3x3 rotation matrix to 4x4
-  template vec3< long double > ExtractTranslation(const mat4< long double >& pose); // extract translation vector
-  template vec3< long double > ExtractScaling(const mat4< long double >& mat);
-  template mat3< long double > ExtractRotation(const mat4< long double >& pose); // extract rotation matrix from transformation matrix
-#if __FIX_MAKROSCHROTT__ == 0
-  template rtti< long double >::value_type PointToPlane(const vec3< long double >& point, const vec4< long double >& plane); // unsigned distance from a point to a plane (3D)
-#endif /* __FIX_MAKROSCHROTT__ */
-
-  template long double fmin(long double x, long double y);
-  template long double fmax(long double x, long double y);
-
-  template vec2< long double > fmin(const vec2< long double >& v1, const vec2< long double >& v2);
-  template vec2< long double > fmax(const vec2< long double >& v1, const vec2< long double >& v2);
-
-  template vec3< long double > fmin(const vec3< long double >& v1, const vec3< long double >& v2);
-  template vec3< long double > fmax(const vec3< long double >& v1, const vec3< long double >& v2);
-
-  template vec4< long double > fmin(const vec4< long double >& v1, const vec4< long double >& v2);
-  template vec4< long double > fmax(const vec4< long double >& v1, const vec4< long double >& v2);
 
 } /* namespace aux */
 

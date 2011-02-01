@@ -2,7 +2,9 @@
    (Based on the "Graphics Gems IV", Edited by Paul S. Heckbert, Academic
    Press, 1994, ISBN 0-12-336156-9, original source code files algebra3.h
    and algebra3aux.h by Jean-Francois Doue and John Nagle.
-   Modified by Jacek M. Holeczek, 05.2001, 01.2005.) */
+   Modified by Jacek M. Holeczek, 05.2001, 01.2011.)
+   You are free to use and modify this code in any way you like.
+   No warranty of any kind. No liability for any defects or damages. */
 
 #ifndef __ALGEBRA3__
 #define __ALGEBRA3__
@@ -42,7 +44,7 @@ namespace aux {
    *                                                               *
    ****************************************************************/
   //
-  //  From "Graphics Gems IV / Edited by Paul S. Heckbert
+  //  From "Graphics Gems IV" / Edited by Paul S. Heckbert
   //  Academic Press, 1994, ISBN 0-12-336156-9
   //  "You are free to use and modify this code in any way
   //  you like." (p. xv)
@@ -901,7 +903,7 @@ namespace aux {
   { return s << "[ " << v.n[VX] << ' ' << v.n[VY] << " ]"; }
 
   template<typename _Tp> inline istream& operator >> (istream& s, vec2<_Tp>& v) {
-    vec2<_Tp>    v_tmp;
+    vec2<_Tp>    v_tmp(((_Tp)0));
     char    c = ' ';
 
     while (isspace(c))
@@ -1074,7 +1076,7 @@ namespace aux {
   { return s << "[ " << v.n[VX] << ' ' << v.n[VY] << ' ' << v.n[VZ] << " ]"; }
 
   template<typename _Tp> inline istream& operator >> (istream& s, vec3<_Tp>& v) {
-    vec3<_Tp>    v_tmp;
+    vec3<_Tp>    v_tmp(((_Tp)0));
     char    c = ' ';
 
     while (isspace(c))
@@ -1234,7 +1236,7 @@ namespace aux {
 	     << v.n[VW] << " ]"; }
 
   template<typename _Tp> inline istream& operator >> (istream& s, vec4<_Tp>& v) {
-    vec4<_Tp>    v_tmp;
+    vec4<_Tp>    v_tmp(((_Tp)0));
     char    c = ' ';
 
     while (isspace(c))
@@ -1386,7 +1388,7 @@ namespace aux {
     _Tp c = ((_Tp)cos(angleRad)),
       s = ((_Tp)sin(angleRad));
     _Tp eip, emip;
-    ALGEBRA3_eip_emip<typename aux::rtti<_Tp>::value_type>(phaseDeg, eip, emip); // calculate e^(i*phaseDeg), e^(-i*phaseDeg)
+    ALGEBRA3_eip_emip<typename rtti<_Tp>::value_type>(phaseDeg, eip, emip); // calculate e^(i*phaseDeg), e^(-i*phaseDeg)
 
     return mat2<_Tp>(c, s * emip, -s * eip, c);
   }
@@ -1433,7 +1435,7 @@ namespace aux {
   { return s << m.v[VX] << '\n' << m.v[VY]; }
 
   template<typename _Tp> inline istream& operator >> (istream& s, mat2<_Tp>& m) {
-    mat2<_Tp>    m_tmp;
+    mat2<_Tp>    m_tmp(((_Tp)0));
 
     s >> m_tmp[VX] >> m_tmp[VY];
     if (s)
@@ -1579,7 +1581,7 @@ namespace aux {
     _Tp c = ((_Tp)cos(angleRad)),
       s = ((_Tp)sin(angleRad));
     _Tp eip, emip;
-    ALGEBRA3_eip_emip<typename aux::rtti<_Tp>::value_type>(phaseDeg, eip, emip); // calculate e^(i*phaseDeg), e^(-i*phaseDeg)
+    ALGEBRA3_eip_emip<typename rtti<_Tp>::value_type>(phaseDeg, eip, emip); // calculate e^(i*phaseDeg), e^(-i*phaseDeg)
 
     if ((Axis1 == VY) && (Axis2 == VZ))
       return mat3<_Tp>(((_Tp)1), ((_Tp)0), ((_Tp)0),
@@ -1649,7 +1651,7 @@ namespace aux {
   { return s << m.v[VX] << '\n' << m.v[VY] << '\n' << m.v[VZ]; }
 
   template<typename _Tp> inline istream& operator >> (istream& s, mat3<_Tp>& m) {
-    mat3<_Tp>    m_tmp;
+    mat3<_Tp>    m_tmp(((_Tp)0));
 
     s >> m_tmp[VX] >> m_tmp[VY] >> m_tmp[VZ];
     if (s)
@@ -1803,7 +1805,7 @@ namespace aux {
     _Tp c = ((_Tp)cos(angleRad)),
       s = ((_Tp)sin(angleRad));
     _Tp eip, emip;
-    ALGEBRA3_eip_emip<typename aux::rtti<_Tp>::value_type>(phaseDeg, eip, emip); // calculate e^(i*phaseDeg), e^(-i*phaseDeg)
+    ALGEBRA3_eip_emip<typename rtti<_Tp>::value_type>(phaseDeg, eip, emip); // calculate e^(i*phaseDeg), e^(-i*phaseDeg)
 
     if ((Axis1 == VZ) && (Axis2 == VW))
       return mat4<_Tp>(((_Tp)1), ((_Tp)0), ((_Tp)0), ((_Tp)0),
@@ -1886,9 +1888,8 @@ namespace aux {
   template<typename _Tp> inline ostream& operator << (ostream& s, const mat4<_Tp>& m)
   { return s << m.v[VX] << '\n' << m.v[VY] << '\n' << m.v[VZ] << '\n' << m.v[VW]; }
 
-  template<typename _Tp> inline istream& operator >> (istream& s, mat4<_Tp>& m)
-  {
-    mat4<_Tp>    m_tmp;
+  template<typename _Tp> inline istream& operator >> (istream& s, mat4<_Tp>& m) {
+    mat4<_Tp>    m_tmp(((_Tp)0));
 
     s >> m_tmp[VX] >> m_tmp[VY] >> m_tmp[VZ] >> m_tmp[VW];
     if (s)
