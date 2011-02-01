@@ -390,7 +390,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
 
    Int_t selfobjpos;
 
-   if (!function || !object) return;
+   if (!function) return;
 
    // Position, if it exists, of the argument that correspond to the object itself
    if (fContextMenu->GetSelectedMenuItem())
@@ -453,7 +453,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
          }
 
          TDataMember *m = argument->GetDataMember();
-         if (m && m->GetterMethod(object->IsA())) {
+         if (m && object && m->GetterMethod(object->IsA())) {
 
             // Get the current value and form it as a text:
 
