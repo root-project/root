@@ -4389,6 +4389,9 @@ void TGWin32::DestroyWindow(Window_t id)
 
    if (!id) return;
 
+   // we need to unmap the window before to destroy it, in order to properly 
+   // receive kUnmapNotify needed by gClient->WaitForUnmap()...
+   gdk_window_hide((GdkWindow *) id);
    gdk_window_destroy((GdkDrawable *) id, kTRUE);
 }
 
