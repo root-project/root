@@ -2717,33 +2717,41 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
          frombuf(this->fBufCur,&version);
       }
    }
-   if (version<=1 && cl && cl->GetClassVersion() != 0) {
+   if (version<=1) {
       if (version <= 0)  {
-         UInt_t checksum = 0;
-         //*this >> checksum;
-         frombuf(this->fBufCur,&checksum);
-         TStreamerInfo *vinfo = (TStreamerInfo*)cl->FindStreamerInfo(checksum);
-         if (vinfo) {
-            return vinfo->TStreamerInfo::GetClassVersion(); // Try to get inlining.
-         } else {
-            // There are some cases (for example when the buffer was stored outside of
-            // a ROOT file) where we do not have a TStreamerInfo.  If the checksum is
-            // the one from the current class, we can still assume that we can read
-            // the data so let use it.
-            if (checksum==cl->GetCheckSum() || checksum==cl->GetCheckSum(1)) {
-               version = cl->GetClassVersion();
-            } else {
-               if (fParent) {
-                  Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.",
-                  checksum, cl->GetName(), ((TFile*)fParent)->GetName());
+         if (cl) {
+            if (cl->GetClassVersion() != 0) {
+               UInt_t checksum = 0;
+               //*this >> checksum;
+               frombuf(this->fBufCur,&checksum);
+               TStreamerInfo *vinfo = (TStreamerInfo*)cl->FindStreamerInfo(checksum);
+               if (vinfo) {
+                  return vinfo->TStreamerInfo::GetClassVersion(); // Try to get inlining.
                } else {
-                  Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\"( buffer with no parent)",
-                  checksum, cl->GetName());
+                  // There are some cases (for example when the buffer was stored outside of
+                  // a ROOT file) where we do not have a TStreamerInfo.  If the checksum is
+                  // the one from the current class, we can still assume that we can read
+                  // the data so let use it.
+                  if (checksum==cl->GetCheckSum() || checksum==cl->GetCheckSum(1)) {
+                     version = cl->GetClassVersion();
+                  } else {
+                     if (fParent) {
+                        Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.",
+                              checksum, cl->GetName(), ((TFile*)fParent)->GetName());
+                     } else {
+                        Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\"( buffer with no parent)",
+                              checksum, cl->GetName());
+                     }
+                     return 0;
+                  }
                }
-               return 0;
             }
+         } else { // of if (cl) {
+            UInt_t checksum = 0;
+            //*this >> checksum;
+            frombuf(this->fBufCur,&checksum);            
          }
-      }  else if (version == 1 && fParent && ((TFile*)fParent)->GetVersion()<40000 ) {
+      }  else if (version == 1 && fParent && ((TFile*)fParent)->GetVersion()<40000 && cl && cl->GetClassVersion() != 0) {
          // We could have a file created using a Foreign class before
          // the introduction of the CheckSum.  We need to check
          if ((!cl->IsLoaded() || cl->IsForeign()) &&

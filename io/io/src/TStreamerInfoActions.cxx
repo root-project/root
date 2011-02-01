@@ -1361,6 +1361,10 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 {
    // Create the bundle of the actions necessary for the streaming memberwise of the content described by 'info' into the collection described by 'proxy'
 
+   if (info == 0) {
+      return new TStreamerInfoActions::TActionSequence(0,0);
+   }
+
    if (info->IsOptimized()) {
       // For now insures that the StreamerInfo is not optimized
       info->SetBit(TVirtualStreamerInfo::kCannotOptimize);
