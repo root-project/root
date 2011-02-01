@@ -1,4 +1,4 @@
-local_clean = Event$(ExeSuf) libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.log *.$(ObjSuf) $(ALL_LIBRARIES) *.root
+local_clean = Event$(ExeSuf) libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.log *.$(ObjSuf) $(ALL_LIBRARIES) *.root *.lock lock
 
 CLEAN_TARGETS += $(local_clean)
 TEST_TARGETS += bigeventTest
@@ -18,7 +18,7 @@ LDOPT:=-debug
 #all: bigeventTest
 
 bigeventTest.write.log: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
-	$(CMDECHO)./Event 10 1 1 1 > Event.write.log 2>bigeventTest.write.log && echo "write success" > bigeventTest.write.log
+	$(CMDECHO) $(call locked_execution,bigeventTest.write, sleep 10; (./Event 10 1 1 1;) > Event.write.log 2>&1 && echo "write success" > bigeventTest.write.log,test)
 
 bigeventTest.read.log: ./Event$(ExeSuf) ./libEvent.$(DllSuf) bigeventTest.write.log
 	$(CMDECHO)./Event 10 1 1 20 > Event.write.log 2>bigeventTest.read.log && echo "read success" > bigeventTest.read.log

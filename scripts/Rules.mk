@@ -153,9 +153,50 @@ valgrind-summary: $(ROOTTEST_LOC)scripts/analyze_valgrind
 	&& $(ROOTTEST_HOME)/scripts/analyze_valgrind.sh $$valgrindlogfile > $$valgrindlogfile.summary.txt \
 	)
 
+# Use this function to insure than only one execution can happen at one time.
+# This will create a directory named after the first argument ( $(1).lock )
+# and create a file name lockfile inside.   The file lockfile will contain the
+# pid of the shell that created the file.   If the directory already exist,
+# this will wait for up to 90s (and exit 1 if waiting more than 90s) and check
+# every second whether the directory __and__ the shell that created it still
+# exist.  If one of the 2 is false, then this proceeds.
+# If the 3rd parameter is 'test', it checks whether the previous run succeeded or not and only exeucuted the
+# command in case of failure, otherwise it always run the command.
+locked_execution = \
+   rm -f $(1).log ; \
+	mkdir $(1).lock  >/dev/null 2>&1; result=$$?; try=0; \
+	while [ $$result -gt 0 -a -e $(1).lock/lockfile ] ; do \
+		oldpid=`cat $(1).lock/lockfile`; \
+	   if [ `ps h --pid $$oldpid | wc -l` -lt 1 ] ; then \
+			rm -r $(1).lock; \
+	   else echo "waiting for $(1).lock ... try number $$try" ; sleep 1; fi ; \
+		try=`expr $${try} + 1`; \
+		if [ $${try} -gt 90 ] ; then \
+		   echo "Waited more than 90 seconds for lock acquisition, so let's give up." 1>&2; \
+		   exit 1; \
+		fi; \
+   	mkdir $(1).lock  >/dev/null 2>&1; result=$$?; \
+	done; \
+   echo $$$$ > $(1).lock/lockfile ; \
+   previous_status=`if [ -e $(1).locked.log ] ; then cat $(1).locked.log; else echo nothing; fi` ; \
+	if [ $(3) != "test" -o "$$previous_status" != "success" ] ; then \
+   	$(2) ; command_result=$$?; \
+      if [ $$command_result -eq 0 ] ; then \
+         echo "success" > $(1).locked.log; \
+      else \
+         echo "failed" > $(1).locked.log; \
+      fi \
+   else \
+      command_result=0; \
+   fi; \
+	rm -r $(1).lock; \
+   exit $$command_result
+
 EVENTDIR = $(ROOTTEST_LOC)/root/io/event
 $(EVENTDIR)/$(SUCCESS_FILE): $(ROOTCORELIBS)  
-	$(CMDECHO) (cd $(EVENTDIR); $(MAKE) CURRENTDIR=$(EVENTDIR) --no-print-directory $(TESTGOAL); )
+	$(CMDECHO) (cd $(EVENTDIR); $(call locked_execution,globalrun,$(MAKE) CURRENTDIR=$(EVENTDIR) --no-print-directory $(TESTGOAL),notest);)
+$(EVENTDIR)/bigeventTest.success: $(ROOTCORELIBS)  
+	$(CMDECHO) (cd $(EVENTDIR); $(call locked_execution,globalrun,$(MAKE) CURRENTDIR=$(EVENTDIR) --no-print-directory bigeventTest.success,notest);)
 
 $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
 	@(echo Running test in $(CALLDIR)/$*)
