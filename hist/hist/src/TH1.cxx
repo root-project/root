@@ -4440,21 +4440,20 @@ void TH1::LabelsInflate(Option_t *ax)
    if (errors) fSumw2.Set(fNcells);
    axis->SetTimeDisplay(timedisp);
 
+   Reset("ICE");  // reset content and error
+
    //now loop on all bins and refill
-   Double_t err,cu;
    Double_t oldEntries = fEntries;
    Int_t bin,ibin,binx,biny,binz;
    for (ibin =0; ibin < fNcells; ibin++) { 
       GetBinXYZ(ibin,binx,biny,binz);
       bin = hold->GetBin(binx,biny,binz);
-      if (binx > nbxold || biny > nbyold || binz > nbzold) bin = -1;
-      if (bin > 0)  cu  = hold->GetBinContent(bin);
-      else         cu = 0;
-      SetBinContent(ibin,cu);
-      if (errors) {
-         if (bin > 0) err = hold->GetBinError(bin);
-         else         err = 0;
-         SetBinError(ibin,err);
+      // NOTE that overflow in hold will be not considered
+      if (binx > nbxold  || biny > nbyold || binz > nbzold) bin = -1;
+      if (bin > 0)  { 
+         Double_t cu  = hold->GetBinContent(bin);
+         AddBinContent(ibin,cu);
+         if (errors) fSumw2.fArray[ibin] += hold->fSumw2.fArray[bin];
       }
    }
    fEntries = oldEntries;
