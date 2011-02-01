@@ -1486,12 +1486,9 @@ TStreamerInfoActions::TActionSequence *TGenCollectionProxy::GetReadMemberWiseAct
    if (result == 0) {
       // Need to create it.
       TClass *valueClass = GetValueClass();
-      if (valueClass == 0) {
-         return 0;
-      }
-      TVirtualStreamerInfo *info = valueClass->GetStreamerInfo(version);
-      if (info == 0) {
-         return 0;
+      TVirtualStreamerInfo *info = 0;
+      if (valueClass) {
+         info = valueClass->GetStreamerInfo(version);
       }
       result = TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(info,*this);
       fReadMemberWise->AddAtAndExpand(result,version);
