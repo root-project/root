@@ -4,13 +4,13 @@
 // Do NOT change. Changes will be lost next time file is generated
 //
 
+#include "RConfig.h" //rootcint 4834
 #define R__DICTIONARY_FILENAME treedItreedIsrcdIManualTree2
 #if !defined(R__ACCESS_IN_SYMBOL)
 //Break the privacy of classes -- Disabled for the moment
 #define private public
 #define protected public
 #endif
-#include "RConfig.h" //rootcint 4834
 
 // Since CINT ignores the std namespace, we need to do so in this file.
 namespace std {} using namespace std;
