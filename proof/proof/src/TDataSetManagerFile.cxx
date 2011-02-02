@@ -367,13 +367,17 @@ Int_t TDataSetManagerFile::NotifyUpdate(const char *group, const char *user,
 
    {  TLockFile lock(fDataSetLockFile, fLockFileTimeLimit);
       TString dspath = TString::Format("/%s/%s/%s", group, user, dsName);
+      // Check if the global file exists
+      Bool_t hasListFile = gSystem->AccessPathName(fListFile) ? kFALSE : kTRUE;
       // Load the info in form of TMacro
       TMD5 *oldMd5 = 0, *newMd5 = 0;
-      if (!(oldMd5 = TMD5::FileChecksum(fListFile.Data()))) {
+      if (hasListFile && !(oldMd5 = TMD5::FileChecksum(fListFile.Data()))) {
          Error("NotifyUpdate", "problems calculating old checksum of %s", fListFile.Data());
          return -1;
       }
-      TMacro mac(fListFile.Data());
+      // Create the TMacro object, filling it with the existing file, if any
+      TMacro mac;
+      if (hasListFile) mac.ReadFile(fListFile.Data());
       // Locate the line to change or delete
       TObjString *os = mac.GetLineWith(dspath);
       if (os) {
@@ -418,7 +422,7 @@ Int_t TDataSetManagerFile::NotifyUpdate(const char *group, const char *user,
          SafeDelete(oldMd5);
          return -1;
       }
-      if (*newMd5 == *oldMd5)
+      if (oldMd5 && (*newMd5 == *oldMd5))
          Warning("NotifyUpdate", "checksum for %s did not change!", fListFile.Data());
       // Cleanup
       SafeDelete(oldMd5);
