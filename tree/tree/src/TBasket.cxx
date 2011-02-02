@@ -125,9 +125,12 @@ void TBasket::AdjustSize(Int_t newsize)
 {
    // Increase the size of the current fBuffer up to newsize.
    
-   Long_t len = fBufferRef->Length();
-   char *newbuf = len ? TStorage::ReAllocChar(fBuffer,newsize,len) : new char[newsize];
-   fBuffer      = newbuf;
+   if (fBuffer == fBufferRef->Buffer()) {
+      fBufferRef->Expand(newsize);
+      fBuffer = fBufferRef->Buffer();
+   } else {
+      fBufferRef->Expand(newsize);
+   }      
    fBranch->GetTree()->IncrementTotalBuffers(newsize-fBufferSize);
    fBufferSize  = newsize;
 }
@@ -452,7 +455,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
 
    // read offsets table
-   if (!fBranch->GetEntryOffsetLen()) {
+   if (badread || !fBranch->GetEntryOffsetLen()) {
       return badread;
    }
    delete [] fEntryOffset;
@@ -796,7 +799,7 @@ Int_t TBasket::WriteBuffer()
          if (nout == 0 || nout >= fObjlen) {
             nout = fObjlen;
             // We use do delete fBuffer here, we no longer want to since
-            // the buffer (help by fCompressedBuffer) might be re-use later.
+            // the buffer (held by fCompressedBuffer) might be re-used later.
             // delete [] fBuffer;
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen,file);
