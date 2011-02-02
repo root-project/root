@@ -189,6 +189,11 @@ TH2Poly::TH2Poly(const char *name,const char *title,
 TH2Poly::~TH2Poly()
 {
    // Destructor.
+
+   delete fBins;
+   delete[] fCells;
+   delete[] fIsEmpty;
+   delete[] fCompletelyInside;
 }
 
 
@@ -202,7 +207,10 @@ Int_t TH2Poly::AddBin(TObject *poly)
 
    if (!poly) return 0;
 
-   if (fBins == 0) {fBins = new TList();}
+   if (fBins == 0) {
+      fBins = new TList();
+      fBins->SetOwner();
+   }
 
    fNcells++;
    TH2PolyBin *bin = new TH2PolyBin(poly, fNcells);
@@ -467,6 +475,25 @@ void TH2Poly::ClearBinContents()
    fTsumwy  = 0;
    fTsumwy2 = 0;
    fEntries = 0;
+}
+
+
+//______________________________________________________________________________
+void TH2Poly::Reset(Option_t *opt)
+{
+   // Reset this histogram: contents, errors, etc.
+
+   TIter next(fBins);
+   TObject *obj;
+   TH2PolyBin *bin;
+
+   // Clears the bin contents
+   while ((obj = next())) {
+      bin = (TH2PolyBin*) obj;
+      bin->ClearContent();
+   }
+
+   TH2::Reset(opt);
 }
 
 
