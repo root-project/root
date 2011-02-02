@@ -48,10 +48,6 @@ namespace ROOT {
 #undef free
 #endif
 
-#if defined(__GNUC__) && __GNUC__ >= 4 && ((__GNUC_MINOR__ == 2 && __GNUC_PATCHLEVEL__ >= 1) || (__GNUC_MINOR__ >= 3))
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-#endif
-
 extern "C" void G__cpp_reset_tagtableManualTree2();
 
 extern "C" void G__set_cpp_environmentManualTree2() {
