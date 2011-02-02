@@ -456,9 +456,12 @@ Bool_t TTreeCache::FillBuffer()
       //case of old files before November 9 2009
       fEntryCurrent = entry;
       if (fZipBytes==0) {
-         fEntryNext = entry + tree->GetEntries();;    
+         fEntryNext = entry + tree->GetEntries();
       } else {
-         fEntryNext = entry + tree->GetEntries()*fBufferSizeMin/fZipBytes;
+         Long64_t clusterEstimate = tree->GetEntries()*fBufferSizeMin/fZipBytes;
+         if (clusterEstimate == 0)
+            clusterEstimate = 1;
+         fEntryNext = entry + clusterEstimate;         
       }
    }
    if (fEntryCurrent < fEntryMin) fEntryCurrent = fEntryMin;
