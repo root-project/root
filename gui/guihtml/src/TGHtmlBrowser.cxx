@@ -196,9 +196,10 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fComboBox->Resize(200, fURL->GetDefaultHeight());
    fURL->Connect("ReturnPressed()", "TGHtmlBrowser", this, "URLChanged()");
 
-   fComboBox->AddEntry(filename,1);
-   fURL->SetText(filename);
-
+   if (filename) {
+      fComboBox->AddEntry(filename, 1);
+      fURL->SetText(filename);
+   }
    fComboBox->Select(0);
    fComboBox->Connect("Selected(char *)", "TGHtmlBrowser", this, "Selected(char *)");
 
