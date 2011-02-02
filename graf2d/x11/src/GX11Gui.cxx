@@ -1386,7 +1386,8 @@ void TGX11::FreeColor(Colormap_t cmap, ULong_t pixel)
 {
    // Free color cell with specified pixel value.
 
-   XFreeColors(fDisplay, (Colormap)cmap, &pixel, 1, 0);
+   if (fRedDiv == -1)
+      XFreeColors(fDisplay, (Colormap)cmap, &pixel, 1, 0);
 }
 
 //______________________________________________________________________________
