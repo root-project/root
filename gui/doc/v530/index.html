@@ -2,3 +2,17 @@
 <hr/> 
 <a name="gui"></a> 
 <h3>GUI</h3>
+
+
+<h4>TRootBrowser</h4>
+<ul>
+<li> Change the default canvas name from "Canvas 1" to "Canvas_1", solving the following issue: When saving the canvas as C++ script, it uses the canvas name as object name, creating a non-working C++ script.
+</li>
+</ul>
+
+<h4>TGListBox</h4>
+<ul>
+<li> Fix a rounding problem in TGListBox when the entries have different height. This solves a problem with TGFontTypeComboBox, the last item (the one that reads "13. times") was barely visible. Only the top 2 or 3 pixels could be seen when the vertical scrollbar is at its lowest possible position.
+</li>
+</ul>
+
