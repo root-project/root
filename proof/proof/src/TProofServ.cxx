@@ -3872,7 +3872,7 @@ Int_t TProofServ::SendResults(TSocket *sock, TList *outlist, TQueryResult *pq)
       }
       if (IsTopMaster()) {
          // Send total size
-         msg.Form("%s: grand total: sent %d objects, size: %d bytes       ",
+         msg.Form("%s: grand total: sent %d objects, size: %d bytes                            ",
                                         fPrefix.Data(), olsz, totsz);
          SendAsynMessage(msg.Data());
       }
