@@ -28,9 +28,13 @@
 //       #include "base/inc/TDataMember.h"
 //     from tree/inc/ManualTree2.h
 //     and replace the string "SetBranchAddress<void>" by "SetBranchAddress"
+//
+//     Remove from tree/inc/ManualTree2.h
+//       #define G__PRIVATE_GVALUE
 
 #pragma link C++ function TTree::Branch(const char *, const char *, void **, Int_t, Int_t);
 #pragma link C++ function TTree::Branch(const char *, void **, Int_t, Int_t);
 #pragma link C++ function TTree::SetBranchAddress(const char*, void**);
 #pragma link C++ function TTree::Process(void*, Option_t*, Long64_t, Long64_t);
+#pragma link C++ function TChain::Process(void*, Option_t*, Long64_t, Long64_t);
 #endif

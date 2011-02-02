@@ -8,7 +8,7 @@ TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass
    return tree->BranchImpRef(branchname,ptrClass,datatype,addobj,bufsize,splitlevel);
 }
 
-static int G__ManualTree2_126_0_132(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__ManualTree2_119_0_147(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    // We need to emulate TTree::Process and properly capture the fact that we go an intepreted TSelector object.
 
@@ -47,7 +47,7 @@ static int G__ManualTree2_126_0_132(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__ManualTree2_126_0_187(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__ManualTree2_119_0_211(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
   // We need to emulate
   // return BranchImp(name,classname,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
@@ -153,7 +153,7 @@ static int G__ManualTree2_126_0_187(G__value* result7, G__CONST char* funcname, 
 
 #include "TDataType.h"
 
-static int G__ManualTree2_126_0_188(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__ManualTree2_119_0_214(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    // We need to emulate 
    // return BranchImp(name,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
@@ -247,7 +247,7 @@ static int G__ManualTree2_126_0_188(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__ManualTree2_126_0_190(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__ManualTree2_119_0_216(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    // Emulate:
    // template <class T> void SetBranchAddress(const char *bname, T **add, TBranch **ptr);

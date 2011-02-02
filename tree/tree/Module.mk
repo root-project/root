@@ -23,7 +23,7 @@ TREEDH       := $(TREEDS:.cxx=.h)
 TREEL2       := $(MODDIRI)/LinkDef2.h
 TREEDS2      := $(call stripsrc,$(MODDIRS)/ManualTree2.cxx)
 TREEDO2      := $(TREEDS2:.cxx=.o)
-TREEDH2      := TTree.h
+TREEDH2      := TTree.h TChain.h
 
 TREEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 TREES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
@@ -63,7 +63,7 @@ $(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMPDEP)
 $(TREEDS2):
 		@echo "Generating dictionary $@..."
 		$(MAKEDIR)
-		$(ROOTCINTTMP) -f $@ -c $(TREEDH2) $(TREEL2)
+		$(ROOTCINTTMP) -f $@ -c -DR__MANUAL_DICT $(TREEDH2) $(TREEL2)
 
 $(TREEMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TREEL)
 		$(RLIBMAP) -o $@ -l $(TREELIB) \

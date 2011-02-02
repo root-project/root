@@ -122,8 +122,12 @@ public:
    virtual Long64_t  Merge(TFile *file, Int_t basketsize, Option_t *option="");
    virtual void      Print(Option_t *option="") const;
    virtual Long64_t  Process(const char *filename, Option_t *option="", Long64_t nentries=kBigNumber, Long64_t firstentry=0); // *MENU*
-#ifndef __CINT__
-   virtual Long64_t  Process(TSelector *selector, Option_t *option="",  Long64_t nentries=kBigNumber, Long64_t firstentry=0);
+#if defined(__CINT__)
+#if defined(R__MANUAL_DICT)
+   virtual Long64_t  Process(void* selector, Option_t* option = "", Long64_t nentries = kBigNumber, Long64_t firstentry = 0);
+#endif
+#else
+   virtual Long64_t  Process(TSelector* selector, Option_t* option = "", Long64_t nentries = kBigNumber, Long64_t firstentry = 0);
 #endif
    virtual void      RecursiveRemove(TObject *obj);
    virtual void      Reset(Option_t *option="");
