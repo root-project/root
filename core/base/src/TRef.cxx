@@ -394,7 +394,7 @@ void TRef::SetAction(const char *name)
       return;
    }
    Int_t execid = 1 + fgExecs->IndexOf(exec);
-   SetBit(execid << 8);
+   SetBit(execid << 16);
 }
 
 //______________________________________________________________________________
