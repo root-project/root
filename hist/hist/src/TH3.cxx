@@ -2837,6 +2837,553 @@ void TH3::PutStats(Double_t *stats)
 }
 
 //______________________________________________________________________________
+TH3 *TH3::RebinX(Int_t ngroup, const char *newname)
+{
+  // Rebin only the X axis
+  // see Rebin3D
+  return Rebin3D(ngroup, 1, 1, newname);
+}
+
+//______________________________________________________________________________
+TH3 *TH3::RebinY(Int_t ngroup, const char *newname)
+{
+  // Rebin only the Y axis
+  // see Rebin3D
+  return Rebin3D(1, ngroup, 1, newname);
+}
+
+//______________________________________________________________________________
+TH3 *TH3::RebinZ(Int_t ngroup, const char *newname)
+{
+  // Rebin only the Z axis
+  // see Rebin3D
+  return Rebin3D(1, 1, ngroup, newname);
+  
+}
+
+//______________________________________________________________________________
+TH3 *TH3::Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newname)
+{
+   //   -*-*-*Rebin this histogram grouping nxgroup/nygroup/nzgroup bins along the xaxis/yaxis/zaxis together*-*-*-*-
+   //         =================================================================================
+   //   if newname is not blank a new temporary histogram hnew is created.
+   //   else the current histogram is modified (default)
+   //   The parameter nxgroup/nygroup indicate how many bins along the xaxis/yaxis of this
+   //   have to me merged into one bin of hnew
+   //   If the original histogram has errors stored (via Sumw2), the resulting
+   //   histograms has new errors correctly calculated.
+   //
+   //   examples: if hpxpy is an existing TH3 histogram with 40 x 40 x 40 bins
+   //     hpxpypz->Rebin3D();  // merges two bins along the xaxis and yaxis in one in hpxpypz
+   //                          // Carefull: previous contents of hpxpy are lost
+   //     hpxpypz->RebinX(5);  //merges five bins along the xaxis in one in hpxpypz
+   //     TH3 *hnew = hpxpypz->RebinY(5,"hnew"); // creates a new histogram hnew
+   //                                          // merging 5 bins of h1 along the yaxis in one bin
+   //
+   //   NOTE : If nxgroup/nygroup is not an exact divider of the number of bins,
+   //          along the xaxis/yaxis the top limit(s) of the rebinned histogram
+   //          is changed to the upper edge of the xbin=newxbins*nxgroup resp.
+   //          ybin=newybins*nygroup and the corresponding bins are added to
+   //          the overflow bin.
+   //          Statistics will be recomputed from the new bin contents.
+
+   Int_t i,j,k,xbin,ybin,zbin;
+   Int_t nxbins  = fXaxis.GetNbins();
+   Int_t nybins  = fYaxis.GetNbins();
+   Int_t nzbins  = fZaxis.GetNbins();
+   Double_t xmin  = fXaxis.GetXmin();
+   Double_t xmax  = fXaxis.GetXmax();
+   Double_t ymin  = fYaxis.GetXmin();
+   Double_t ymax  = fYaxis.GetXmax();
+   Double_t zmin  = fZaxis.GetXmin();
+   Double_t zmax  = fZaxis.GetXmax();
+   if ((nxgroup <= 0) || (nxgroup > nxbins)) {
+      Error("Rebin", "Illegal value of nxgroup=%d",nxgroup);
+      return 0;
+   }
+   if ((nygroup <= 0) || (nygroup > nybins)) {
+      Error("Rebin", "Illegal value of nygroup=%d",nygroup);
+      return 0;
+   }
+   if ((nzgroup <= 0) || (nzgroup > nzbins)) {
+      Error("Rebin", "Illegal value of nzgroup=%d",nzgroup);
+      return 0;
+   }
+
+   Int_t newxbins = nxbins/nxgroup;
+   Int_t newybins = nybins/nygroup;
+   Int_t newzbins = nzbins/nzgroup;
+
+   // Save old bin contents into a new array
+   Double_t entries = fEntries;
+   Double_t *oldBins = new Double_t[fNcells];
+   for (Int_t ibin = 0; ibin < fNcells; ibin++) {
+      oldBins[ibin] = GetBinContent(ibin);
+   }
+   Double_t *oldSumw2 = 0;
+   if (fSumw2.fN != 0) { 
+      oldSumw2 = new Double_t[fNcells];
+      for (Int_t ibin = 0; ibin < fNcells; ibin++) {
+         oldSumw2[ibin] = fSumw2.fArray[ibin];
+      }   
+   }
+
+   // create a clone of the old histogram if newname is specified
+   TH3 *hnew = this;
+   if (newname && strlen(newname)) {
+      hnew = (TH3*)Clone();
+      hnew->SetName(newname);
+   }
+
+   // save original statistics
+   Double_t stat[kNstat];
+   GetStats(stat);
+   bool resetStat = false;
+
+
+   // change axis specs and rebuild bin contents array
+   if(newxbins*nxgroup != nxbins) {
+      xmax = fXaxis.GetBinUpEdge(newxbins*nxgroup);
+      resetStat = true; //stats must be reset because top bins will be moved to overflow bin
+   }
+   if(newybins*nygroup != nybins) {
+      ymax = fYaxis.GetBinUpEdge(newybins*nygroup);
+      resetStat = true; //stats must be reset because top bins will be moved to overflow bin
+   }
+   if(newzbins*nzgroup != nzbins) {
+      zmax = fZaxis.GetBinUpEdge(newzbins*nzgroup);
+      resetStat = true; //stats must be reset because top bins will be moved to overflow bin
+   }
+   // save the TAttAxis members (reset by SetBins) for x axis
+   Int_t    nXdivisions  = fXaxis.GetNdivisions();
+   Color_t  xAxisColor   = fXaxis.GetAxisColor();
+   Color_t  xLabelColor  = fXaxis.GetLabelColor();
+   Style_t  xLabelFont   = fXaxis.GetLabelFont();
+   Float_t  xLabelOffset = fXaxis.GetLabelOffset();
+   Float_t  xLabelSize   = fXaxis.GetLabelSize();
+   Float_t  xTickLength  = fXaxis.GetTickLength();
+   Float_t  xTitleOffset = fXaxis.GetTitleOffset();
+   Float_t  xTitleSize   = fXaxis.GetTitleSize();
+   Color_t  xTitleColor  = fXaxis.GetTitleColor();
+   Style_t  xTitleFont   = fXaxis.GetTitleFont();
+   // save the TAttAxis members (reset by SetBins) for y axis
+   Int_t    nYdivisions  = fYaxis.GetNdivisions();
+   Color_t  yAxisColor   = fYaxis.GetAxisColor();
+   Color_t  yLabelColor  = fYaxis.GetLabelColor();
+   Style_t  yLabelFont   = fYaxis.GetLabelFont();
+   Float_t  yLabelOffset = fYaxis.GetLabelOffset();
+   Float_t  yLabelSize   = fYaxis.GetLabelSize();
+   Float_t  yTickLength  = fYaxis.GetTickLength();
+   Float_t  yTitleOffset = fYaxis.GetTitleOffset();
+   Float_t  yTitleSize   = fYaxis.GetTitleSize();
+   Color_t  yTitleColor  = fYaxis.GetTitleColor();
+   Style_t  yTitleFont   = fYaxis.GetTitleFont();
+   // save the TAttAxis members (reset by SetBins) for z axis
+   Int_t    nZdivisions  = fZaxis.GetNdivisions();
+   Color_t  zAxisColor   = fZaxis.GetAxisColor();
+   Color_t  zLabelColor  = fZaxis.GetLabelColor();
+   Style_t  zLabelFont   = fZaxis.GetLabelFont();
+   Float_t  zLabelOffset = fZaxis.GetLabelOffset();
+   Float_t  zLabelSize   = fZaxis.GetLabelSize();
+   Float_t  zTickLength  = fZaxis.GetTickLength();
+   Float_t  zTitleOffset = fZaxis.GetTitleOffset();
+   Float_t  zTitleSize   = fZaxis.GetTitleSize();
+   Color_t  zTitleColor  = fZaxis.GetTitleColor();
+   Style_t  zTitleFont   = fZaxis.GetTitleFont();
+
+   // copy merged bin contents (ignore under/overflows)
+   if (nxgroup != 1 || nygroup != 1 || nzgroup != 1) {
+      if(fXaxis.GetXbins()->GetSize() > 0 || fYaxis.GetXbins()->GetSize() > 0 || fZaxis.GetXbins()->GetSize() > 0){
+    	 // variable bin sizes in x or y, don't treat both cases separately
+         Double_t *xbins = new Double_t[newxbins+1];
+         for(i = 0; i <= newxbins; ++i) xbins[i] = fXaxis.GetBinLowEdge(1+i*nxgroup);
+         Double_t *ybins = new Double_t[newybins+1];
+         for(i = 0; i <= newybins; ++i) ybins[i] = fYaxis.GetBinLowEdge(1+i*nygroup);
+         Double_t *zbins = new Double_t[newzbins+1];
+         for(i = 0; i <= newzbins; ++i) zbins[i] = fZaxis.GetBinLowEdge(1+i*nzgroup);
+         hnew->SetBins(newxbins,xbins, newybins, ybins, newzbins, zbins);//changes also errors array (if any)
+         delete [] xbins;
+         delete [] ybins;
+         delete [] zbins;
+      } else {
+	hnew->SetBins(newxbins, xmin, xmax, newybins, ymin, ymax, newzbins, zmin, zmax);//changes also errors array
+      }
+
+      Double_t binContent, binSumw2;
+      Int_t oldxbin = 1;
+      Int_t oldybin = 1;
+      Int_t oldzbin = 1;
+      Int_t bin;
+      for (xbin = 1; xbin <= newxbins; xbin++) {
+	oldybin=1;
+	oldzbin=1;
+	for (ybin = 1; ybin <= newybins; ybin++) {
+	  oldzbin=1;
+	  for (zbin = 1; zbin <= newzbins; zbin++) {
+	    binContent = 0;
+	    binSumw2   = 0;
+	    for (i = 0; i < nxgroup; i++) {
+	      if (oldxbin+i > nxbins) break;
+	      for (j =0; j < nygroup; j++) {
+		if (oldybin+j > nybins) break;
+		for (k =0; k < nzgroup; k++) {
+		  if (oldzbin+k > nzbins) break;
+		  //get global bin (same conventions as in TH1::GetBin(xbin,ybin)
+		  bin = oldxbin + i + (oldybin + j)*(nxbins + 2) + (oldzbin + k)*(nxbins + 2)*(nybins + 2);
+		  binContent += oldBins[bin];
+		  if (oldSumw2) binSumw2 += oldSumw2[bin];
+		}
+	      }
+	    }
+            Int_t ibin = hnew->GetBin(xbin,ybin,zbin);  // new bin number 
+	    hnew->SetBinContent(ibin, binContent);
+	    if (oldSumw2) hnew->fSumw2.fArray[ibin] = binSumw2;
+	    oldzbin += nzgroup;
+	  }
+	  oldybin += nygroup;
+	}
+	oldxbin += nxgroup;
+      }
+
+      // compute new underflow/overflows for the 8 vertices 
+      for (Int_t xover = 0; xover <= 1; xover++) { 
+         for (Int_t yover = 0; yover <= 1; yover++) { 
+            for (Int_t zover = 0; zover <= 1; zover++) { 
+               binContent = 0;
+               binSumw2 = 0;
+               // make loop in case of only underflow/overflow
+               for(xbin = xover*oldxbin; xbin <= xover*(nxbins+1); xbin++) {
+                  for(ybin = yover*oldybin; ybin <= yover*(nybins+1); ybin++){
+                     for(zbin = zover*oldzbin; zbin <= zover*(nzbins+1); zbin++){
+                        bin = GetBin(xbin,ybin,zbin);
+                        binContent += oldBins[bin];
+                        if(oldSumw2) binSumw2 += oldSumw2[bin];
+                     }
+                  }
+               }
+               Int_t binNew = hnew->GetBin( xover *(newxbins+1),
+                                            yover*(newybins+1), zover*(newzbins+1) );
+               hnew->SetBinContent(binNew,binContent);                     
+               if (oldSumw2) hnew->fSumw2.fArray[binNew] = binSumw2;
+            }
+         }
+      }         
+
+      Double_t binContent0, binContent2, binContent3, binContent4;
+      Double_t binError0, binError2, binError3, binError4;
+      Int_t oldxbin2, oldybin2, oldzbin2;
+      Int_t ufbin, ofbin, ofbin2, ofbin3, ofbin4;
+
+      //  recompute under/overflow contents in y for the new  x and z bins
+      oldxbin2 = 1;
+      oldybin2 = 1;
+      oldzbin2 = 1;
+      for (xbin = 1; xbin<=newxbins; xbin++) {
+	oldzbin2 = 1;
+	for (zbin = 1; zbin<=newzbins; zbin++) {
+	  binContent0 = binContent2 = 0;
+	  binError0 = binError2 = 0;
+	  for (i=0; i<nxgroup; i++) {
+            if (oldxbin2+i > nxbins) break;
+	    for (k=0; k<nzgroup; k++) {
+	      if (oldzbin2+k > nzbins) break;
+	      
+	      //old underflow bin (in y)
+	      ufbin = oldxbin2 + i + (nxbins+2)*(nybins+2)*(oldzbin2+k);
+	      binContent0 += oldBins[ufbin];
+	      if(oldSumw2) binError0 += oldSumw2[ufbin];
+	      for(ybin = oldybin; ybin <= nybins + 1; ybin++){
+		//old overflow bin (in y)
+		ofbin = ufbin + ybin*(nxbins+2);
+		binContent2 += oldBins[ofbin];
+		if(oldSumw2) binError2 += oldSumw2[ofbin];
+	      }
+	    }
+	  }
+	  hnew->SetBinContent(xbin,0,zbin,binContent0);
+	  hnew->SetBinContent(xbin,newybins+1,zbin,binContent2);
+	  if (oldSumw2) {
+            hnew->SetBinError(xbin,0,zbin,TMath::Sqrt(binError0));
+            hnew->SetBinError(xbin,newybins+1,zbin,TMath::Sqrt(binError2) );
+	  }
+	  oldzbin2 += nzgroup;
+	}
+	oldxbin2 += nxgroup;
+      }
+
+      //  recompute under/overflow contents in x for the new  y and z bins
+      oldxbin2 = 1;
+      oldybin2 = 1;
+      oldzbin2 = 1;
+      for (ybin = 1; ybin<=newybins; ybin++) {
+	oldzbin2 = 1;
+	for (zbin = 1; zbin<=newzbins; zbin++) {
+	  binContent0 = binContent2 = 0;
+	  binError0 = binError2 = 0;
+	  for (j=0; j<nygroup; j++) {
+            if (oldybin2+j > nybins) break;
+	    for (k=0; k<nzgroup; k++) {
+	      if (oldzbin2+k > nzbins) break;
+	      
+	      //old underflow bin (in y)
+	      ufbin = (oldybin2 + j)*(nxbins+2) + (nxbins+2)*(nybins+2)*(oldzbin2+k);
+	      binContent0 += oldBins[ufbin];
+	      if(oldSumw2) binError0 += oldSumw2[ufbin];
+	      for(xbin = oldxbin; xbin <= nxbins + 1; xbin++){
+		//old overflow bin (in x)
+		ofbin = ufbin + xbin;
+		binContent2 += oldBins[ofbin];
+		if(oldSumw2) binError2 += oldSumw2[ofbin];
+	      }
+	    }
+	  }
+	  hnew->SetBinContent(0,ybin,zbin,binContent0);
+	  hnew->SetBinContent(newxbins+1,ybin,zbin,binContent2);
+	  if (oldSumw2) {
+            hnew->SetBinError(0,ybin,zbin,TMath::Sqrt(binError0));
+            hnew->SetBinError(newxbins+1,ybin,zbin,TMath::Sqrt(binError2) );
+	  }
+	  oldzbin2 += nzgroup;
+	}
+	oldybin2 += nygroup;
+      }
+
+      //  recompute under/overflow contents in z for the new  x and y bins
+      oldxbin2 = 1;
+      oldybin2 = 1;
+      oldzbin2 = 1;
+      for (xbin = 1; xbin<=newxbins; xbin++) {
+	oldybin2 = 1;
+	for (ybin = 1; ybin<=newybins; ybin++) {
+	  binContent0 = binContent2 = 0;
+	  binError0 = binError2 = 0;
+	  for (i=0; i<nxgroup; i++) {
+            if (oldxbin2+i > nxbins) break;
+	    for (j=0; j<nygroup; j++) {
+	      if (oldybin2+j > nybins) break;
+	      
+	      //old underflow bin (in z)
+	      ufbin = oldxbin2 + i + (nxbins+2)*(oldybin2+j);
+	      binContent0 += oldBins[ufbin];
+	      if(oldSumw2) binError0 += oldSumw2[ufbin];
+	      for(zbin = oldzbin; zbin <= nzbins + 1; zbin++){
+		//old overflow bin (in z)
+		ofbin = ufbin + (nxbins+2)*(nybins+2)*zbin;
+		binContent2 += oldBins[ofbin];
+		if(oldSumw2) binError2 += oldSumw2[ofbin];
+	      }
+	    }
+	  }
+	  hnew->SetBinContent(xbin,ybin,0,binContent0);
+	  hnew->SetBinContent(xbin,ybin,newzbins+1,binContent2);
+	  if (oldSumw2) {
+            hnew->SetBinError(xbin,ybin,0,TMath::Sqrt(binError0));
+            hnew->SetBinError(xbin,ybin,newzbins+1,TMath::Sqrt(binError2) );
+	  }
+	  oldybin2 += nygroup;
+	}
+	oldxbin2 += nxgroup;
+      }
+
+      //  recompute under/overflow contents in y, z for the new  x
+      oldxbin2 = 1;
+      oldybin2 = 1;
+      oldzbin2 = 1;
+      for (xbin = 1; xbin<=newxbins; xbin++) {
+	  binContent0 = 0;
+	  binContent2 = 0;
+	  binContent3 = 0;
+	  binContent4 = 0;
+	  binError0 = 0;
+	  binError2 = 0;
+	  binError3 = 0;
+	  binError4 = 0;
+	  for (i=0; i<nxgroup; i++) {
+              if (oldxbin2+i > nxbins) break;	      
+	      ufbin = oldxbin2 + i; //
+	      binContent0 += oldBins[ufbin];
+	      if(oldSumw2) binError0 += oldSumw2[ufbin];
+	      
+	      for(ybin = oldybin; ybin <= nybins + 1; ybin++){
+		ofbin3 =  ufbin+ybin*(nxbins+2);
+		binContent3 += oldBins[ ofbin3 ];
+		if (oldSumw2)  binError3 += oldSumw2[ofbin3];
+		for(zbin = oldzbin; zbin <= nzbins + 1; zbin++){
+		  //old overflow bin (in z)
+		  ofbin4 =   oldxbin2 + i + ybin*(nxbins+2) + (nxbins+2)*(nybins+2)*zbin;
+		  binContent4 += oldBins[ofbin4];
+		  if(oldSumw2) binError4 += oldSumw2[ofbin4];
+		}
+	      }
+	      for(zbin = oldzbin; zbin <= nzbins + 1; zbin++){
+		ofbin2 =  ufbin+zbin*(nxbins+2)*(nybins+2);
+		binContent2 += oldBins[ ofbin2 ];
+		if (oldSumw2)  binError2 += oldSumw2[ofbin2];
+	      }
+	  }
+	  hnew->SetBinContent(xbin,0,0,binContent0);
+	  hnew->SetBinContent(xbin,0,newzbins+1,binContent2);
+	  hnew->SetBinContent(xbin,newybins+1,0,binContent3);
+	  hnew->SetBinContent(xbin,newybins+1,newzbins+1,binContent4);
+	  if (oldSumw2) {
+            hnew->SetBinError(xbin,0,0,TMath::Sqrt(binError0));	    
+            hnew->SetBinError(xbin,0,newzbins+1,TMath::Sqrt(binError2) );
+            hnew->SetBinError(xbin,newybins+1,0,TMath::Sqrt(binError3) );
+            hnew->SetBinError(xbin,newybins+1,newzbins+1,TMath::Sqrt(binError4) );
+	  }
+	  oldxbin2 += nxgroup;
+      }
+   
+
+      //  recompute under/overflow contents in x, y for the new z
+      oldxbin2 = 1;
+      oldybin2 = 1;
+      oldzbin2 = 1;
+      for (zbin = 1; zbin<=newzbins; zbin++) {
+	  binContent0 = 0;
+	  binContent2 = 0;
+	  binContent3 = 0;
+	  binContent4 = 0;
+	  binError0 = 0;
+	  binError2 = 0;
+	  binError3 = 0;
+	  binError4 = 0;
+	  for (i=0; i<nzgroup; i++) {
+              if (oldzbin2+i > nzbins) break;	      
+	      ufbin = (oldzbin2 + i)*(nxbins+2)*(nybins+2); //
+	      binContent0 += oldBins[ufbin];
+	      if(oldSumw2) binError0 += oldSumw2[ufbin];
+	      for(ybin = oldybin; ybin <= nybins + 1; ybin++){
+		ofbin3 =  ufbin+ybin*(nxbins+2);
+		binContent3 += oldBins[ ofbin3 ];
+		if (oldSumw2)  binError3 += oldSumw2[ofbin3];
+		for(xbin = oldxbin; xbin <= nxbins + 1; xbin++){
+		  //old overflow bin (in z)
+		  ofbin4 = ufbin + xbin + ybin*(nxbins+2);
+		  binContent4 += oldBins[ofbin4];
+		  if(oldSumw2) binError4 += oldSumw2[ofbin4];
+		}
+	      }
+	      for(xbin = oldxbin; xbin <= nxbins + 1; xbin++){
+		ofbin2 =  xbin +(oldzbin2+i)*(nxbins+2)*(nybins+2);
+		binContent2 += oldBins[ ofbin2 ];
+		if (oldSumw2)  binError2 += oldSumw2[ofbin2];
+	      }
+	  }
+	  hnew->SetBinContent(0,0,zbin,binContent0);
+	  hnew->SetBinContent(0,newybins+1,zbin,binContent3);
+	  hnew->SetBinContent(newxbins+1,0,zbin,binContent2);
+	  hnew->SetBinContent(newxbins+1,newybins+1,zbin,binContent4);
+	  if (oldSumw2) {
+            hnew->SetBinError(0,0,zbin,TMath::Sqrt(binError0));	    
+            hnew->SetBinError(0,newybins+1,zbin,TMath::Sqrt(binError3) );
+            hnew->SetBinError(newxbins+1,0,zbin,TMath::Sqrt(binError2) );
+            hnew->SetBinError(newxbins+1,newybins+1,zbin,TMath::Sqrt(binError4) );
+	  }
+	  oldzbin2 += nzgroup;
+      }
+   
+
+      //  recompute under/overflow contents in x, z for the new  y
+      oldxbin2 = 1;
+      oldybin2 = 1;
+      oldzbin2 = 1;
+      for (ybin = 1; ybin<=newybins; ybin++) {
+	  binContent0 = 0;
+	  binContent2 = 0;
+	  binContent3 = 0;
+	  binContent4 = 0;
+	  binError0 = 0;
+	  binError2 = 0;
+	  binError3 = 0;
+	  binError4 = 0;
+	  for (i=0; i<nygroup; i++) {
+              if (oldybin2+i > nybins) break;	      
+	      ufbin = (oldybin2 + i)*(nxbins+2); //
+	      binContent0 += oldBins[ufbin];
+	      if(oldSumw2) binError0 += oldSumw2[ufbin];
+	      for(xbin = oldxbin; xbin <= nxbins + 1; xbin++){
+		ofbin3 =  ufbin+xbin;
+		binContent3 += oldBins[ ofbin3 ];
+		if (oldSumw2)  binError3 += oldSumw2[ofbin3];
+		for(zbin = oldzbin; zbin <= nzbins + 1; zbin++){
+		  //old overflow bin (in z)
+		  ofbin4 = xbin + (nxbins+2)*(nybins+2)*zbin+(oldybin2+i)*(nxbins+2);
+		  binContent4 += oldBins[ofbin4];
+		  if(oldSumw2) binError4 += oldSumw2[ofbin4];
+		}
+	      }
+	      for(zbin = oldzbin; zbin <= nzbins + 1; zbin++){
+		ofbin2 =  (oldybin2+i)*(nxbins+2)+zbin*(nxbins+2)*(nybins+2);
+		binContent2 += oldBins[ ofbin2 ];
+		if (oldSumw2)  binError2 += oldSumw2[ofbin2];
+	      }
+	  }
+	  hnew->SetBinContent(0,ybin,0,binContent0);
+	  hnew->SetBinContent(0,ybin,newzbins+1,binContent2);
+	  hnew->SetBinContent(newxbins+1,ybin,0,binContent3);
+	  hnew->SetBinContent(newxbins+1,ybin,newzbins+1,binContent4);
+	  if (oldSumw2) {
+            hnew->SetBinError(0,ybin,0,TMath::Sqrt(binError0));	    
+            hnew->SetBinError(0,ybin,newzbins+1,TMath::Sqrt(binError2) );
+            hnew->SetBinError(newxbins+1,ybin,0,TMath::Sqrt(binError3) );
+            hnew->SetBinError(newxbins+1,ybin,newzbins+1,TMath::Sqrt(binError4) );
+	  }
+	  oldybin2 += nygroup;
+      }
+   }
+
+   // Restore x axis attributes
+   fXaxis.SetNdivisions(nXdivisions);
+   fXaxis.SetAxisColor(xAxisColor);
+   fXaxis.SetLabelColor(xLabelColor);
+   fXaxis.SetLabelFont(xLabelFont);
+   fXaxis.SetLabelOffset(xLabelOffset);
+   fXaxis.SetLabelSize(xLabelSize);
+   fXaxis.SetTickLength(xTickLength);
+   fXaxis.SetTitleOffset(xTitleOffset);
+   fXaxis.SetTitleSize(xTitleSize);
+   fXaxis.SetTitleColor(xTitleColor);
+   fXaxis.SetTitleFont(xTitleFont);
+   // Restore y axis attributes
+   fYaxis.SetNdivisions(nYdivisions);
+   fYaxis.SetAxisColor(yAxisColor);
+   fYaxis.SetLabelColor(yLabelColor);
+   fYaxis.SetLabelFont(yLabelFont);
+   fYaxis.SetLabelOffset(yLabelOffset);
+   fYaxis.SetLabelSize(yLabelSize);
+   fYaxis.SetTickLength(yTickLength);
+   fYaxis.SetTitleOffset(yTitleOffset);
+   fYaxis.SetTitleSize(yTitleSize);
+   fYaxis.SetTitleColor(yTitleColor);
+   fYaxis.SetTitleFont(yTitleFont);
+   // Restore z axis attributes
+   fZaxis.SetNdivisions(nZdivisions);
+   fZaxis.SetAxisColor(zAxisColor);
+   fZaxis.SetLabelColor(zLabelColor);
+   fZaxis.SetLabelFont(zLabelFont);
+   fZaxis.SetLabelOffset(zLabelOffset);
+   fZaxis.SetLabelSize(zLabelSize);
+   fZaxis.SetTickLength(zTickLength);
+   fZaxis.SetTitleOffset(zTitleOffset);
+   fZaxis.SetTitleSize(zTitleSize);
+   fZaxis.SetTitleColor(zTitleColor);
+   fZaxis.SetTitleFont(zTitleFont);
+
+   //restore statistics and entries  modified by SetBinContent
+   hnew->SetEntries(entries);
+   if (!resetStat) hnew->PutStats(stat);
+
+   delete [] oldBins;
+   if (oldSumw2) delete [] oldSumw2;
+   return hnew;
+}
+
+
+
+
+
+//______________________________________________________________________________
 void TH3::Reset(Option_t *option)
 {
    //*-*-*-*-*-*-*-*Reset this histogram: contents, errors, etc*-*-*-*-*-*-*-*
