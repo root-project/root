@@ -2312,6 +2312,8 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
       fBaskets.AddAtAndExpand(reusebasket,fWriteBasket);
       fBasketEntry[fWriteBasket] = fEntryNumber;
    } else {
+      --fNBaskets;
+      fBaskets[where] = 0;
       basket->DropBuffers();
       delete basket;
    }
