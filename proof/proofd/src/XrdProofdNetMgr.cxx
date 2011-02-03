@@ -611,7 +611,7 @@ int XrdProofdNetMgr::LoadBonjourModule(int srvtype)
       record.AddTXTRecord("cores", fBonjourCores);
 
       // Register the service.
-      if (fBonjourManager->RegisterService(record) == 0) {
+      if (fBonjourManager->RegisterService(record, fMgr->Port()) == 0) {
          TRACE(ALL, "Bonjour service was published OK");
       } else {
          TRACE(XERR, "Bonjour service could not be published");
