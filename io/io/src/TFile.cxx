@@ -2279,12 +2279,14 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       return;
    }
 
+   TString subdirname( gSystem->BaseName(dirname) );
+
    // Start the source file
-   TString spath; spath.Form("%s/%sProjectSource.cxx",dirname,dirname);
+   TString spath; spath.Form("%s/%sProjectSource.cxx",dirname,subdirname.Data());
    FILE *sfp = fopen(spath.Data(),"w");
-   fprintf(sfp, "#include \"%sProjectHeaders.h\"\n\n",dirname );
-   if (!genreflex) fprintf(sfp, "#include \"%sLinkDef.h\"\n\n",dirname );
-   fprintf(sfp, "#include \"%sProjectDict.cxx\"\n\n",dirname );
+   fprintf(sfp, "#include \"%sProjectHeaders.h\"\n\n",subdirname.Data() );
+   if (!genreflex) fprintf(sfp, "#include \"%sLinkDef.h\"\n\n",subdirname.Data() );
+   fprintf(sfp, "#include \"%sProjectDict.cxx\"\n\n",subdirname.Data() );
    fprintf(sfp, "struct DeleteObjectFunctor {\n");
    fprintf(sfp, "   template <typename T>\n");
    fprintf(sfp, "   void operator()(const T *ptr) const {\n");
@@ -2406,12 +2408,12 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       subClasses.Clear("nodelete");
    }
    TString path;
-   path.Form("%s/%sProjectHeaders.h",dirname,dirname);
+   path.Form("%s/%sProjectHeaders.h",dirname,subdirname.Data());
    FILE *allfp = fopen(path,"a");
    if (!allfp) {
       Error("MakeProject","Cannot open output file:%s\n",path.Data());
    } else {
-      fprintf(allfp,"#include \"%sProjectInstances.h\"\n", dirname);
+      fprintf(allfp,"#include \"%sProjectInstances.h\"\n", subdirname.Data());
       fclose(allfp);
    }
 
@@ -2447,7 +2449,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 
    // Add rootcint/genreflex statement generating ProjectDict.cxx
    FILE *ifp = 0;
-   path.Form("%s/%sProjectInstances.h",dirname,dirname);
+   path.Form("%s/%sProjectInstances.h",dirname,subdirname.Data());
 #ifdef R__WINGCC
    ifp = fopen(path,"wb");
 #else
@@ -2463,11 +2465,11 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    }
 
    if (genreflex) {
-      fprintf(fpMAKE,"genreflex %sProjectHeaders.h -o %sProjectDict.cxx --comments --iocomments %s ",dirname,dirname,gSystem->GetIncludePath());
-      path.Form("%s/%sSelection.xml",dirname,dirname);
+      fprintf(fpMAKE,"genreflex %sProjectHeaders.h -o %sProjectDict.cxx --comments --iocomments %s ",subdirname.Data(),subdirname.Data(),gSystem->GetIncludePath());
+      path.Form("%s/%sSelection.xml",dirname,subdirname.Data());
    } else {
-      fprintf(fpMAKE,"rootcint -f %sProjectDict.cxx -c %s ",dirname,gSystem->GetIncludePath());
-      path.Form("%s/%sLinkDef.h",dirname,dirname);
+      fprintf(fpMAKE,"rootcint -f %sProjectDict.cxx -c %s ",subdirname.Data(),gSystem->GetIncludePath());
+      path.Form("%s/%sLinkDef.h",dirname,subdirname.Data());
    }
    // Create the LinkDef.h or xml selection file by looping on all *.h files
    // replace any existing file.
@@ -2638,14 +2640,14 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    fclose(fp);
    fclose(ifp);
    if (genreflex) {
-      fprintf(fpMAKE,"-s %sSelection.xml \n",dirname);
+      fprintf(fpMAKE,"-s %sSelection.xml \n",subdirname.Data());
    } else {
-      fprintf(fpMAKE,"%sProjectHeaders.h ",dirname);
-      fprintf(fpMAKE,"%sLinkDef.h \n",dirname);
+      fprintf(fpMAKE,"%sProjectHeaders.h ",subdirname.Data());
+      fprintf(fpMAKE,"%sLinkDef.h \n",subdirname.Data());
    }
 
    // add compilation line
-   TString sdirname(dirname);
+   TString sdirname(subdirname);
 
    TString cmd = gSystem->GetMakeSharedLib();
    TString sources( sdirname+"ProjectSource.cxx ");
@@ -2685,7 +2687,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       int res = !gSystem->Exec("MAKEP");
 #endif
       gSystem->ChangeDirectory(path);
-      path.Form("%s/%s.%s",dirname,dirname,gSystem->GetSoExt());
+      path.Form("%s/%s.%s",dirname,subdirname.Data(),gSystem->GetSoExt());
       if (res) printf("Shared lib %s has been generated\n",path.Data());
 
       //dynamically link the generated shared lib

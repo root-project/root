@@ -53,6 +53,7 @@
 #include "TError.h"
 #include "TRef.h"
 #include "TProcessID.h"
+#include "TSystem.h"
 
 #include "TStreamer.h"
 #include "TContainerConverters.h"
@@ -2811,7 +2812,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
       return 0;
    }
 
-   filename.Form("%s/%sProjectHeaders.h",dirname,dirname);
+   filename.Form("%s/%sProjectHeaders.h",dirname,gSystem->BaseName(dirname));
    FILE *allfp = fopen(filename.Data(),"a");
    if (!allfp) {
       Error("MakeProject","Cannot open output file:%s\n",filename.Data());
@@ -2849,7 +2850,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
    }   
    fprintf(fp,"\n");
 
-   TString sourcename; sourcename.Form( "%s/%sProjectSource.cxx", dirname, dirname );
+   TString sourcename; sourcename.Form( "%s/%sProjectSource.cxx", dirname, gSystem->BaseName(dirname) );
    FILE *sfp = fopen( sourcename.Data(), "a" );
    GenerateDeclaration(fp, sfp, subClasses);
    
