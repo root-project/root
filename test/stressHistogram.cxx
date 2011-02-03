@@ -6997,16 +6997,18 @@ bool testIntegerRebin()
    UInt_t seed = r.GetSeed();
    TH1D* h1 = new TH1D("h1","Original Histogram", TMath::Nint( r.Uniform(1, 5) ) * rebin, minRange, maxRange);
    r.SetSeed(seed);
+   h1->Sumw2();
    for ( Int_t i = 0; i < nEvents; ++i )
-      h1->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ) );
+      h1->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ) , r.Uniform(0,10) );
 
    TH1D* h2 = static_cast<TH1D*>( h1->Rebin(rebin, "testIntegerRebin") );
 
    TH1D* h3 = new TH1D("testIntegerRebin2", "testIntegerRebin2", 
                        h1->GetNbinsX() / rebin, minRange, maxRange);
    r.SetSeed(seed);
+   h3->Sumw2();
    for ( Int_t i = 0; i < nEvents; ++i )
-      h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ) );
+      h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ) , r.Uniform(0,10) );
 
    bool ret = equals("TestIntegerRebinHist", h2, h3, cmpOptStats  );
    delete h1;
@@ -7192,27 +7194,78 @@ bool test2DRebin()
    Int_t yrebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
    // make the bins of the orginal histo not an exact divider to leave an extra bin
    TH2D* h2d = new TH2D("h2d","Original Histogram", 
-                       xrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange, 
-                       yrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange);
+                        xrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange, 
+                        yrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange);
 
+   h2d->Sumw2();
    UInt_t seed = r.GetSeed();
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i )
-      h2d->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform( minRange * .9 , maxRange * 1.1 ));
+      h2d->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform( minRange * .9 , maxRange * 1.1 ),
+                 r.Uniform(0,10.) );
+
 
    TH2D* h2d2 = (TH2D*) h2d->Rebin2D(xrebin,yrebin, "p2d2");
 
    // range of rebinned histogram may be different than original one
    TH2D* h3 = new TH2D("test2DRebin", "test2DRebin", 
                        h2d->GetNbinsX() / xrebin, h2d2->GetXaxis()->GetXmin(), h2d2->GetXaxis()->GetXmax(),
-                       h2d->GetNbinsY() / yrebin, h2d2->GetYaxis()->GetXmin(), h2d2->GetYaxis()->GetXmax() );
+                       h2d->GetNbinsY() / yrebin, h2d2->GetYaxis()->GetXmin(), h2d2->GetYaxis()->GetXmax());
+
+   h3->Sumw2();
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i )
-      h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform( minRange * .9 , maxRange * 1.1 ) );
+      h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform( minRange * .9 , maxRange * 1.1 ),
+                r.Uniform(0,10.) );
+   
 
    bool ret = equals("TestIntRebin2D", h2d2, h3, cmpOptStats); // | cmpOptDebug);
    delete h2d;
    delete h2d2;
+   return ret;
+}
+
+bool test3DRebin()
+{
+   // Tests rebin method for 2D Histogram
+
+   Int_t xrebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
+   Int_t yrebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
+   Int_t zrebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
+
+   // make the bins of the orginal histo not an exact divider to leave an extra bin
+   TH3D* h3d = new TH3D("h3d","Original Histogram", 
+                        xrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange, 
+                        yrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange,
+                        zrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange);
+   h3d->Sumw2();
+
+   UInt_t seed = r.GetSeed();
+   r.SetSeed(seed);
+   for ( Int_t i = 0; i < 10*nEvents; ++i )
+      h3d->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), 
+                 r.Uniform( minRange * .9 , maxRange * 1.1 ),
+                 r.Uniform( minRange * .9 , maxRange * 1.1 ), 
+                 r.Uniform(0,10.) );
+
+   TH3D* h3d2 = (TH3D*) h3d->Rebin3D(xrebin,yrebin, zrebin, "h3-rebin");
+
+   // range of rebinned histogram may be different than original one
+   TH3D* h3 = new TH3D("test3DRebin", "test3DRebin", 
+                       h3d->GetNbinsX() / xrebin, h3d2->GetXaxis()->GetXmin(), h3d2->GetXaxis()->GetXmax(),
+                       h3d->GetNbinsY() / yrebin, h3d2->GetYaxis()->GetXmin(), h3d2->GetYaxis()->GetXmax(),
+                       h3d->GetNbinsZ() / zrebin, h3d2->GetZaxis()->GetXmin(), h3d2->GetZaxis()->GetXmax() );
+   h3->Sumw2();
+   r.SetSeed(seed);
+   for ( Int_t i = 0; i < 10*nEvents; ++i )
+      h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ),
+                r.Uniform( minRange * .9 , maxRange * 1.1 ), 
+                r.Uniform( minRange * .9 , maxRange * 1.1 ),
+                r.Uniform(0,10.) );
+
+   bool ret = equals("TestIntRebin3D", h3d2, h3, cmpOptStats); // | cmpOptDebug);
+   delete h3d;
+   delete h3d2;
    return ret;
 }
 
@@ -8732,11 +8785,11 @@ int stressHistogram()
                                         rangeTestPointer };
 
   // Test 4
-   const unsigned int numberOfRebin = 9;
+   const unsigned int numberOfRebin = 10;
    pointer2Test rebinTestPointer[numberOfRebin] = { testIntegerRebin,       testIntegerRebinProfile,
                                                     testIntegerRebinNoName, testIntegerRebinNoNameProfile,
                                                     testArrayRebin,         testArrayRebinProfile,
-                                                    test2DRebin, test2DRebinProfile,
+                                                    test2DRebin, test3DRebin, test2DRebinProfile,
                                                     testSparseRebin1};
    struct TTestSuite rebinTestSuite = { numberOfRebin, 
                                         "Histogram Rebinning..............................................",
@@ -9196,7 +9249,7 @@ int equals(const char* msg, TH3D* h1, TH3D* h2, int options, double ERRORLIMIT)
    
    for ( int i = 0; i <= h1->GetNbinsX() + 1; ++i )
       for ( int j = 0; j <= h1->GetNbinsY() + 1; ++j )
-         for ( int h = 0; h <= h1->GetNbinsY() + 1; ++h )
+         for ( int h = 0; h <= h1->GetNbinsZ() + 1; ++h )
       {
          Double_t x = h1->GetXaxis()->GetBinCenter(i);
          Double_t y = h1->GetYaxis()->GetBinCenter(j);
