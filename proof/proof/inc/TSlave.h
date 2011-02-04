@@ -97,6 +97,7 @@ protected:
    Int_t         fStatus;    //remote return status
    Int_t         fParallel;  //number of active slaves
    TString       fMsd;       //mass storage domain of slave
+   TString       fSessionTag;//unique tag for ths worker process
 
    TString       fROOTVers;  //ROOT version run by worker
    TString       fArchComp;  //Build architecture, compiler on worker (e.g. linux-gcc345)
@@ -140,6 +141,7 @@ public:
    Int_t          GetStatus() const { return fStatus; }
    Int_t          GetParallel() const { return fParallel; }
    const char    *GetMsd() const { return fMsd; }
+   const char    *GetSessionTag() const { return fSessionTag; }
    TFileHandler  *GetInputHandler() const { return fInput; }
    void           SetInputHandler(TFileHandler *ih);
 
@@ -156,6 +158,8 @@ public:
 
    void           SetArchCompiler(const char *ac) { fArchComp = ac; }
    void           SetROOTVersion(const char *rv) { fROOTVers = rv; }
+
+   void           SetSessionTag(const char *st) { fSessionTag = st; }
 
    static void    SetTXSlaveHook(TSlave_t xslavehook);
 
