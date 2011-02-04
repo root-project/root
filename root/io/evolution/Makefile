@@ -1,4 +1,4 @@
-CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.clog *.log *.tmp *.xml arr.root FixedArray*.root boolUpdate.root  data.root  skiptestfile.root $(FILES) $(FILESFAIL) *.rootmap *.success $(STL_FILES)
+CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.clog *.log *.tmp *.xml arr.root FixedArray*.root boolUpdate.root  data.root  skiptestfile.root $(FILES) $(FILESFAIL) *.rootmap *.success $(STL_FILES) atlas32
 TEST_TARGETS += foreign310 boolUpdate skip ClassConv ConvArray typedef Missing FixedArrayLengthChange ClonesArrayEvo NumericalTypeEvolution
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -178,5 +178,8 @@ $(STL_LOGS) : check.%.log: %.root $(STL_FILES) read.C
 $(STL_SUCCESSES) : check%.success: check.%.log
 	$(CMDECHO) diff -b check.stl.ref $< && touch $@
 
+atlas32: assertMakeAtlas32.elog
+	$(CMDECHO) diff -w assertMakeAtlas32.elog  assertMakeAtlas32.ref
 
+assertLongLong64.elog: atlas32
 
