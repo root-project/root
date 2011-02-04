@@ -20,6 +20,7 @@
 
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
+extern "C" int R__unzip_header(Int_t *nin, UChar_t *bufin, Int_t *lout);
 
 const Int_t  kMAXBUF = 0xFFFFFF;
 const UInt_t kDisplacementMask = 0xFF000000;  // In the streamer the two highest bytes of
@@ -407,7 +408,16 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
             fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
             return badread;
          }
+
          if ((fObjlen+fKeylen) > fCompressedSize) {
+            /* early consistency check before potentially large memory is being allocated */
+            Int_t nin, nbuf;
+            UChar_t *bufcur = (UChar_t *)&buffer[fKeylen];
+            if (R__unzip_header(&nin, bufcur, &nbuf)!=0) {
+               Error("ReadBasketBuffers", "Inconsistency found in header (nin=%d, nbuf=%d)", nin, nbuf);
+               badread = 1;
+               return badread;
+            }
             if (fCompressedSize) delete [] fCompressedBuffer;
             fCompressedSize = fObjlen+fKeylen;
             fCompressedBuffer = new char[fCompressedSize];
@@ -419,8 +429,8 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          Int_t nin, nout, nbuf;
          Int_t noutot = 0;
          while (1) {
-            nin  = 9 + ((Int_t)bufcur[3] | ((Int_t)bufcur[4] << 8) | ((Int_t)bufcur[5] << 16));
-            nbuf = (Int_t)bufcur[6] | ((Int_t)bufcur[7] << 8) | ((Int_t)bufcur[8] << 16);
+            Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
+            if (hc!=0) break;
             if (oldCase && (nin > fObjlen || nbuf > fObjlen)) {
                //buffer was very likely not compressed in an old version
                delete [] fBuffer;

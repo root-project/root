@@ -60,9 +60,7 @@
 
 #define THREADCNT 2
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
-
-
-
+extern "C" int R__unzip_header(Int_t *nin, UChar_t *bufin, Int_t *lout);
 
 TTreeCacheUnzip::EParUnzipMode TTreeCacheUnzip::fgParallel = TTreeCacheUnzip::kDisable;
 
@@ -960,10 +958,16 @@ Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
    Int_t nbytes=0, objlen=0, keylen=0;
    GetRecordHeader(src, hlen, nbytes, objlen, keylen);
 
-
    if (!(*dest)) {
+      /* early consistency check */
+      UChar_t *bufcur = (UChar_t *) (src + keylen);
+      Int_t nin, nbuf;
+      if(R__unzip_header(&nin, bufcur, &nbuf)!=0) {
+         Error("UnzipBuffer", "Inconsistency found in header (nin=%d, nbuf=%d)", nin, nbuf);
+         uzlen = -1;
+         return uzlen;
+      }
       Int_t l = keylen+objlen;
-
       *dest = new char[l];
       alloc = kTRUE;
    }
@@ -989,13 +993,11 @@ Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
       Int_t noutot = 0;
 
       while (1) {
-         nin  = 9 + ((Int_t)bufcur[3] | ((Int_t)bufcur[4] << 8) | ((Int_t)bufcur[5] << 16));
-         nbuf = (Int_t)bufcur[6] | ((Int_t)bufcur[7] << 8) | ((Int_t)bufcur[8] << 16);
-
+         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
+         if (hc!=0) break;
          if (gDebug > 2)
             Info("UnzipBuffer", " nin:%d, nbuf:%d, bufcur[3] :%d, bufcur[4] :%d, bufcur[5] :%d ",
                  nin, nbuf, bufcur[3], bufcur[4], bufcur[5]);
-
          if (oldCase && (nin > objlen || nbuf > objlen)) {
             if (gDebug > 2)
                Info("UnzipBuffer", "oldcase objlen :%d ", objlen);
