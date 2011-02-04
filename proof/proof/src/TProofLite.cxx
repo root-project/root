@@ -1353,8 +1353,11 @@ Int_t TProofLite::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueOnly,
       return -1;
    }
 
-   if (CopyMacroToCache(macro) < 0)
-      return -1;
+   TString macs(macro), mac;
+   Int_t from = 0;
+   while (macs.Tokenize(mac, from, ",")) {
+      if (CopyMacroToCache(mac) < 0) return -1;
+   }
 
    return TProof::Load(macro, notOnClient, uniqueOnly, wrks);
 }

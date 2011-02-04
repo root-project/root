@@ -55,7 +55,7 @@ TSlaveLite::TSlaveLite(const char *ord, Int_t perf,
                const char *workdir, const char *msd) : TSlave()
 {
    // Create a PROOF slave object. Called via the TProof ctor.
-   fName = ord;
+   fName = ord;  // Need this during the setup phase; see end of SetupServ
    fImage = image;
    fProofWorkDir = workdir;
    fWorkDir = workdir;
@@ -129,8 +129,11 @@ Int_t TSlaveLite::SetupServ(Int_t, const char *)
       return -1;
    }
    // Extract the unique tag
-   (*msg) >> fName;
-
+   (*msg) >> fSessionTag;
+   
+   // Set the real name (temporarly set to ordinal for the setup)
+   fName = gSystem->HostName();
+   
    // We are done
    return 0;
 }
@@ -165,7 +168,7 @@ void TSlaveLite::Print(Option_t *) const
    Int_t st = fSocket ? ((fStatus == kInactive) ? 2 : 1) : 0;
 
    Printf("*** Worker %s  (%s)", fOrdinal.Data(), sst[st]);
-   Printf("    Worker session tag:      %s", GetName());
+   Printf("    Worker session tag:      %s", GetSessionTag());
    Printf("    ROOT version|rev|tag:    %s", GetROOTVersion());
    Printf("    Architecture-Compiler:   %s", GetArchCompiler());
    if (fSocket) {

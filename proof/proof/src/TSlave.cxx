@@ -352,6 +352,7 @@ void TSlave::Print(Option_t *) const
    Printf("*** Worker %s  (%s)", fOrdinal.Data(), sst[st]);
    Printf("    Host name:               %s", GetName());
    Printf("    Port number:             %d", GetPort());
+   Printf("    Worker session tag:      %s", GetSessionTag());
    Printf("    ROOT version|rev|tag:    %s", GetROOTVersion());
    Printf("    Architecture-Compiler:   %s", GetArchCompiler());
    if (fSocket) {
