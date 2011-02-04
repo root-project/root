@@ -378,10 +378,9 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    // Setup file & filenode structure
    Reset();
    // Optimize the number of files to be open when running on subsample
-   Bool_t byfile = kFALSE;
    Int_t validateMode = 0;
-   if (TProof::GetParameter(input, "PROOF_ValidateByFile", validateMode) == 0)
-      byfile = (validateMode > 0 && num > -1) ? kTRUE : kFALSE;
+   Int_t gprc = TProof::GetParameter(input, "PROOF_ValidateByFile", validateMode);
+   Bool_t byfile = (gprc == 0 && validateMode > 0 && num > -1) ? kTRUE : kFALSE;
    ValidateFiles(dset, slaves, num, byfile);
 
    if (!fValid) return;
@@ -394,7 +393,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    fUnAllocated->Clear();  // avoid dangling pointers
    fActive->Clear();
    fFileNodes->Clear();    // then delete all objects
-   PDB(kPacketizer,2) Info("TPacketizer","Processing Range: First %lld, Num %lld", first, num);
+   PDB(kPacketizer,2) Info("TPacketizer", "processing range: first %lld, num %lld", first, num);
 
    dset->Reset();
    Long64_t cur = 0;
@@ -412,14 +411,14 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       Long64_t eFirst = e->GetFirst();
       Long64_t eNum = e->GetNum();
       PDB(kPacketizer,2)
-         Info("TPacketizer","Processing element: First %lld, Num %lld (cur %lld)", eFirst, eNum, cur);
+         Info("TPacketizer", "processing element: first %lld, num %lld (cur %lld)", eFirst, eNum, cur);
 
       if (!e->GetEntryList()){
          // this element is before the start of the global range, skip it
          if (cur + eNum < first) {
             cur += eNum;
             PDB(kPacketizer,2)
-               Info("TPacketizer","Processing element: skip element cur %lld", cur);
+               Info("TPacketizer", "processing element: skip element cur %lld", cur);
             continue;
          }
 
@@ -427,17 +426,18 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
          if (num != -1 && (first+num <= cur)) {
             cur += eNum;
             PDB(kPacketizer,2)
-               Info("TPacketizer","Processing element: drop element cur %lld", cur);
+               Info("TPacketizer", "processing element: drop element cur %lld", cur);
             continue; // break ??
          }
 
          // If this element contains the end of the global range
          // adjust its number of entries
-         if (num != -1 && (first+num < cur+eNum)) {
+         if (num != -1 && (first+num <= cur+eNum)) {
             e->SetNum(first + num - cur);
-            eNum = e->GetNum();
             PDB(kPacketizer,2)
-               Info("TPacketizer","Processing element: Adjust end %lld", first + num - cur);
+               Info("TPacketizer", "processing element: adjust end %lld", first + num - cur);
+            cur += eNum;
+            eNum = e->GetNum();
          }
 
          // If this element contains the start of the global range
@@ -445,13 +445,13 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
          if (cur < first) {
             e->SetFirst(eFirst + (first - cur));
             e->SetNum(e->GetNum() - (first - cur));
-            eNum = e->GetNum();
             PDB(kPacketizer,2)
-               Info("TPacketizer","Processing element: Adjust start %lld and end %lld",
+               Info("TPacketizer", "processing element: adjust start %lld and end %lld",
                                   eFirst + (first - cur), first + num - cur);
+            cur += eNum;
+            eNum = e->GetNum();
          }
 
-         cur += eNum;
       } else {
          TEntryList *enl = dynamic_cast<TEntryList *>(e->GetEntryList());
          if (enl) {
@@ -464,7 +464,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
             continue;
       }
       PDB(kPacketizer,2)
-         Info("TPacketizer","Processing element: next cur %lld", cur);
+         Info("TPacketizer", "processing element: next cur %lld", cur);
 
       // Map non URL filenames to dummy host
       TString host;
@@ -489,8 +489,8 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       PDB(kPacketizer,2) e->Print("a");
    }
 
-   PDB(kGlobal,1)
-      Info("TPacketizer","Processing %lld entries in %d files on %d hosts",
+   PDB(kPacketizer,1)
+      Info("TPacketizer", "processing %lld entries in %d files on %d hosts",
                          fTotalEntries, files, fFileNodes->GetSize());
 
    // Set the total number for monitoring
