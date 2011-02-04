@@ -26,6 +26,7 @@ class TCollection;
 class TF1;
 class TGraphAsymmErrors;
 class TH1;
+class TH2;
 class TList;
 
 //|TEfficiency
@@ -58,7 +59,7 @@ protected:
       TDirectory*   fDirectory;              //!pointer to directory holding this TEfficiency object
       TList*        fFunctions;              //->pointer to list of functions
       TGraphAsymmErrors* fPaintGraph;        //!temporary graph for painting
-      TH1*          fPaintHisto;             //!temporary histogram for painting      
+      TH2*          fPaintHisto;             //!temporary histogram for painting      
       TH1*          fPassedHistogram;        //histogram for events which passed certain criteria
       EStatOption   fStatisticOption;        //defines how the confidence intervals are determined
       TH1*          fTotalHistogram;         //histogram for total number of events
@@ -95,7 +96,9 @@ public:
       ~TEfficiency();
       
       void          Add(const TEfficiency& rEff) {*this += rEff;}
+      virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
       void          Draw(Option_t* opt);
+      virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
       void          Fill(Bool_t bPassed,Double_t x,Double_t y=0,Double_t z=0);
       Int_t         FindFixBin(Double_t x,Double_t y=0,Double_t z=0) const;
       Int_t         Fit(TF1* f1,Option_t* opt="");
@@ -111,6 +114,8 @@ public:
       Double_t      GetEfficiencyErrorLow(Int_t bin) const;
       Double_t      GetEfficiencyErrorUp(Int_t bin) const;
       Int_t         GetGlobalBin(Int_t binx,Int_t biny=0,Int_t binz=0) const;
+      TGraphAsymmErrors*   GetPaintedGraph() const { return fPaintGraph; }     
+      TH2*          GetPaintedHistogram() const { return fPaintHisto; }     
       TList*        GetListOfFunctions() const {return fFunctions;}
       const TH1*    GetPassedHistogram() const {return fPassedHistogram;}
       EStatOption   GetStatisticOption() const {return fStatisticOption;}
