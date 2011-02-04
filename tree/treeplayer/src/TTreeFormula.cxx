@@ -3539,7 +3539,7 @@ TClass* TTreeFormula::EvalClass(Int_t oper) const
                   // we probably do not have a way to know the class of the object.
                   return 0;
                } else {
-                  return TClass::GetClass( elem->GetTypeName() );
+                  return elem->GetClass();
                }
             } else return TClass::GetClass( branch->GetClassName() );
          } else {
