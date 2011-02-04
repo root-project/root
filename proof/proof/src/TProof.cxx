@@ -3224,6 +3224,8 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
             TString stag;
             (*mess) >> stag;
             SetName(stag);
+            // In the TSlave object
+            sl->SetSessionTag(stag);
             // New servers send also the group
             if ((mess->BufferSize() > mess->Length()))
                (*mess) >> fGroup;
