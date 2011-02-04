@@ -831,7 +831,7 @@ void TGraphAsymmErrors::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       frameNumber++;
       TString hname = fHistogram->GetName();
       hname += frameNumber;
-      fHistogram->SetName(hname.Data());
+      fHistogram->SetName(Form("Graph_%s",hname.Data()));
       fHistogram->SavePrimitive(out,"nodraw");
       out<<"   grae->SetHistogram("<<fHistogram->GetName()<<");"<<endl;
       out<<"   "<<endl;

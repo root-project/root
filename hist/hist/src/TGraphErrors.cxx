@@ -554,7 +554,7 @@ void TGraphErrors::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       frameNumber++;
       TString hname = fHistogram->GetName();
       hname += frameNumber;
-      fHistogram->SetName(hname.Data());
+      fHistogram->SetName(Form("Graph_%s",hname.Data()));
       fHistogram->SavePrimitive(out,"nodraw");
       out<<"   gre->SetHistogram("<<fHistogram->GetName()<<");"<<endl;
       out<<"   "<<endl;
