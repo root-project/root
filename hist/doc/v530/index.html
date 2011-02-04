@@ -19,3 +19,19 @@ The clipping was not correct when an interactive zoom was performed.
 <li> <tt>Reset()</tt> has been implemented.</li>
 <li> The destructor has been completed.</li>
 </ul>
+
+<h4>TGraphErrors</h4>
+<ul>
+<li>The following macro generated wrong C++ code.
+<pre>
+{
+   TGraphErrors *ge = new TGraphErrors(2);
+   ge->SetName("aaa");    // <<< without this it works
+   ge->SetPoint(1, 1, 1); ge->SetPoint(2, 2, 1);
+   ge->Draw("ap*");
+   gPad->Update();
+   ge->SavePrimitive(cout);
+}
+</pre>
+</li>
+</ul>
