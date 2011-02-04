@@ -63,6 +63,7 @@
 
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
+extern "C" int R__unzip_header(Int_t *nin, UChar_t *bufin, Int_t *lout);
 const Int_t kMAXBUF = 0xffffff;
 const Int_t kTitleMax = 32000;
 #if 0
@@ -704,8 +705,8 @@ TObject *TKey::ReadObj()
       Int_t nin, nout, nbuf;
       Int_t noutot = 0;
       while (1) {
-         nin  = 9 + ((Int_t)bufcur[3] | ((Int_t)bufcur[4] << 8) | ((Int_t)bufcur[5] << 16));
-         nbuf = (Int_t)bufcur[6] | ((Int_t)bufcur[7] << 8) | ((Int_t)bufcur[8] << 16);
+         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
+         if (hc!=0) break;
          R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
          if (!nout) break;
          noutot += nout;
@@ -831,8 +832,8 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
       Int_t nin, nout, nbuf;
       Int_t noutot = 0;
       while (1) {
-         nin  = 9 + ((Int_t)bufcur[3] | ((Int_t)bufcur[4] << 8) | ((Int_t)bufcur[5] << 16));
-         nbuf = (Int_t)bufcur[6] | ((Int_t)bufcur[7] << 8) | ((Int_t)bufcur[8] << 16);
+         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
+         if (hc!=0) break;
          R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
          if (!nout) break;
          noutot += nout;
@@ -976,8 +977,8 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
       Int_t nin, nout, nbuf;
       Int_t noutot = 0;
       while (1) {
-         nin  = 9 + ((Int_t)bufcur[3] | ((Int_t)bufcur[4] << 8) | ((Int_t)bufcur[5] << 16));
-         nbuf = (Int_t)bufcur[6] | ((Int_t)bufcur[7] << 8) | ((Int_t)bufcur[8] << 16);
+         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
+         if (hc!=0) break;
          R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
          if (!nout) break;
          noutot += nout;
@@ -1066,8 +1067,8 @@ Int_t TKey::Read(TObject *obj)
       Int_t nin, nout, nbuf;
       Int_t noutot = 0;
       while (1) {
-         nin  = 9 + ((Int_t)bufcur[3] | ((Int_t)bufcur[4] << 8) | ((Int_t)bufcur[5] << 16));
-         nbuf = (Int_t)bufcur[6] | ((Int_t)bufcur[7] << 8) | ((Int_t)bufcur[8] << 16);
+         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
+         if (hc!=0) break;
          R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
          if (!nout) break;
          noutot += nout;

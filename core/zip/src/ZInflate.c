@@ -1116,6 +1116,29 @@ int R__Inflate_free()
  ***********************************************************************/
 #define HDRSIZE 9
 
+int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
+{ 
+  // Reads header envelope, and determines target size.
+  // Returns 0 in case of success.
+
+  *srcsize = 0;
+  *tgtsize = 0;
+
+  /*   C H E C K   H E A D E R   */
+
+  if ((src[0] != 'C' && src[0] != 'Z') ||
+      (src[1] != 'S' && src[1] != 'L') ||
+      src[2] != Z_DEFLATED) {
+    fprintf(stderr,"R__unzip: error in header\n");
+    return 1;
+  }
+
+  *srcsize = HDRSIZE + ((long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16));
+  *tgtsize = (long)src[6] | ((long)src[7] << 8) | ((long)src[8] << 16);
+
+  return 0;
+}
+
 void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 {
   long isize;
