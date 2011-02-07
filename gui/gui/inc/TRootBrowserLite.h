@@ -137,6 +137,7 @@ public:
    virtual void ExecuteDefaultAction(TObject *obj);  //*SIGNAL*
    virtual void DoubleClicked(TObject *obj);         //*SIGNAL*
    virtual void Checked(TObject *obj, Bool_t check); //*SIGNAL*
+   virtual void CloseTabs() { }
    virtual void Iconify() { }
    virtual void RecursiveRemove(TObject *obj);
    virtual void Refresh(Bool_t force = kFALSE);

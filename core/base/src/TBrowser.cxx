@@ -243,6 +243,7 @@ TBrowser::~TBrowser()
 {
    // Delete the browser.
 
+   fImp->CloseTabs();
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfBrowsers()->Remove(this);
    delete fContextMenu;

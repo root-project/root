@@ -112,6 +112,7 @@ public:
    void              CloneBrowser();
    void              CloseWindow();
    void              CloseTab(Int_t id);
+   virtual void      CloseTabs();
    void              DoTab(Int_t id);
    TGFrame          *GetActFrame() const { return (TGFrame *)fEditFrame; }
    TGFrame          *GetToolbarFrame() const { return (TGFrame *)fToolbarFrame; }
@@ -152,7 +153,7 @@ public:
 
    virtual void      ShowCloseTab(Bool_t show) { fShowCloseTab = show; }
    virtual Bool_t    IsCloseTabShown() const { return fShowCloseTab; }
-   
+
    // overridden from TGMainFrame
    virtual void      ReallyDelete();
 

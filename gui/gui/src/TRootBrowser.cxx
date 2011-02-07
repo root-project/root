@@ -397,14 +397,15 @@ void TRootBrowser::CloseTab(Int_t id)
 }
 
 //______________________________________________________________________________
-void TRootBrowser::CloseWindow()
+void TRootBrowser::CloseTabs()
 {
-   // Called when window is closed via the window manager.
+   // Properly close the mainframes embedded in the different tabs
 
    TGFrameElement *el;
    Int_t i;
    Disconnect(fMenuFile, "Activated(Int_t)", this, "HandleMenu(Int_t)");
    Disconnect(fTabRight, "Selected(Int_t)", this, "DoTab(Int_t)");
+   if (fPlugins.IsEmpty()) return;
    fActBrowser = 0;
    for (i=0;i<fTabLeft->GetNumberOfTabs();i++) {
       el = (TGFrameElement *)fTabLeft->GetTabContainer(i)->GetList()->First();
@@ -477,6 +478,14 @@ void TRootBrowser::CloseWindow()
    }
    fPlugins.Delete();
    Emit("CloseWindow()");
+}
+
+//______________________________________________________________________________
+void TRootBrowser::CloseWindow()
+{
+   // Called when window is closed via the window manager.
+
+   CloseTabs();
    DeleteWindow();
 }
 
@@ -1119,6 +1128,7 @@ void TRootBrowser::SwitchMenus(TGCompositeFrame  *from)
                }
             }
             ((TGCompositeFrame *)menu->GetParent())->HideFrame(menu);
+            ((TGCompositeFrame *)menu->GetParent())->SetCleanup(kNoCleanup);
             menu->ReparentWindow(fMenuFrame);
             fMenuFrame->AddFrame(menu, fLH2);
             TGFrameElement *mel;

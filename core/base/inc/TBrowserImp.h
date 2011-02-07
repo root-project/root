@@ -52,6 +52,7 @@ public:
    virtual void      RemoveCheckBox(TObject *) { }
    virtual void      BrowseObj(TObject *) { }
    TBrowser         *Browser() const { return fBrowser; }
+   virtual void      CloseTabs() { }
    virtual void      ExecuteDefaultAction(TObject *) { }
    virtual void      Iconify() { }
    virtual void      RecursiveRemove(TObject *) { }
