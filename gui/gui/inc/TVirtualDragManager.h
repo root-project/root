@@ -47,7 +47,7 @@ public:
    TVirtualDragManager();
    virtual          ~TVirtualDragManager() {}
 
-   EDragType         GetDragType() const { return fDragType; }
+   EDragType         GetEDragType() const { return fDragType; }
    Bool_t            IsMoveWaiting() const { return fMoveWaiting; }
    Bool_t            IsDragging() const { return fDragging; }
    Bool_t            IsDropping() const { return fDropping; }
