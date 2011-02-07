@@ -139,16 +139,20 @@ XrdPosixFile     *Next;
 int               FD;
 int               cbResult;
 
+static const int realFD = 1;
+static const int isSync = 2;
+
            XrdPosixFile(int fd, const char *path,
-                        XrdPosixCallBack *cbP=0, int cbsync=0);
+                        XrdPosixCallBack *cbP=0, int Opts=realFD);
           ~XrdPosixFile();
 
 private:
 
 XrdSysMutex myMutex;
 long long   currOffset;
-int         doClose;
-int         cbDone;
+short       doClose;
+short       cbDone;
+short       fdClose;
 };
 
 
@@ -171,14 +175,15 @@ XrdPosixFile **XrdPosixXrootd::myFiles  =  0;
 XrdPosixDir  **XrdPosixXrootd::myDirs   =  0;
 int            XrdPosixXrootd::highFD   = -1;
 int            XrdPosixXrootd::lastFD   = -1;
+int            XrdPosixXrootd::baseFD   =  0;
+int            XrdPosixXrootd::freeFD   =  0;
 int            XrdPosixXrootd::highDir  = -1;
 int            XrdPosixXrootd::lastDir  = -1;
 int            XrdPosixXrootd::devNull  = -1;
 int            XrdPosixXrootd::pllOpen  =  0;
 int            XrdPosixXrootd::maxThreads= 0;
+int            XrdPosixXrootd::initDone  = 0;
 int            XrdPosixXrootd::Debug    = -2;
-
-XrdPosixXrootd XrdPosixXrootd;
   
 /******************************************************************************/
 /*                     T h r e a d   I n t e r f a c e s                      */
@@ -317,18 +322,19 @@ dirent64 *XrdPosixDir::nextEntry(dirent64 *dp)
 /******************************************************************************/
 
 XrdPosixFile::XrdPosixFile(int fd, const char *path, XrdPosixCallBack *cbP,
-                           int isSync)
+                           int Opts)
              : theCB(cbP),
                Next(0),
                FD(fd),
                cbResult(0),
                currOffset(0),
                doClose(0),
-               cbDone(0)
+               cbDone(0),
+               fdClose(Opts & realFD)
 {
    static int OneVal = 1;
    XrdClientCallback *myCB = (cbP ? (XrdClientCallback *)this : 0);
-   void *cbArg = (isSync ? (void *)&OneVal : 0);
+   void *cbArg = (Opts & isSync ? (void *)&OneVal : 0);
 
 // Allocate a new client object
 //
@@ -347,7 +353,7 @@ XrdPosixFile::~XrdPosixFile()
        if (doClose) {doClose = 0; cP->Close();}
        delete cP;
       }
-   if (FD >= 0) close(FD);
+   if (FD >= 0 && fdClose) close(FD);
 }
 
 /******************************************************************************/
@@ -360,14 +366,15 @@ XrdPosixFile::~XrdPosixFile()
 XrdPosixXrootd::XrdPosixXrootd(int fdnum, int dirnum, int thrnum)
 {
    extern XrdPosixLinkage Xunix;
-   static int initDone = 0;
    struct rlimit rlim;
    long isize;
 
 // Only static fields are initialized here. We need to do this only once!
-//
-   if (initDone) return;
+//                                                                             c
+   myMutex.Lock();
+   if (initDone) {myMutex.UnLock(); return;}
    initDone = 1;
+   myMutex.UnLock();
 
 // Initialize the linkage table first before any C calls!
 //
@@ -380,16 +387,23 @@ XrdPosixXrootd::XrdPosixXrootd(int fdnum, int dirnum, int thrnum)
    initEnv();
    maxThreads = thrnum;
 
-// Compute size of table
+// Compute size of table. if the passed fdnum is negative then the caller does
+// not want us to shadow fd's (ther caller promises to be honest). Otherwise,
+// the actual fdnum limit will be based on the current limit.
 //
-   if (!getrlimit(RLIMIT_NOFILE, &rlim)) fdnum = (int)rlim.rlim_cur;
-   if (fdnum > 32768) fdnum = 32768;
+   if (fdnum < 0)
+      {fdnum = -fdnum;
+       baseFD = ( getrlimit(RLIMIT_NOFILE, &rlim) ? 32768 : (int)rlim.rlim_cur);
+      } else {
+       if (!getrlimit(RLIMIT_NOFILE, &rlim))  fdnum = (int)rlim.rlim_cur;
+       if (fdnum > 65536) fdnum = 65536;
+      }
    isize = fdnum * sizeof(XrdPosixFile *);
 
-// Allocate an initial table of 64 fd-type pointers
+// Allocate the table for fd-type pointers
 //
    if (!(myFiles = (XrdPosixFile **)malloc(isize))) lastFD = -1;
-      else {memset((void *)myFiles, 0, isize); lastFD = fdnum;}
+      else {memset((void *)myFiles, 0, isize); lastFD = fdnum+baseFD;}
 
 // Allocate table for DIR descriptors
 //
@@ -413,6 +427,7 @@ XrdPosixXrootd::~XrdPosixXrootd()
    XrdPosixFile *fP;
    int i;
 
+   myMutex.Lock();
    if (myFiles)
       {for (i = 0; i <= highFD; i++) 
            if ((fP = myFiles[i])) {myFiles[i] = 0; delete fP;};
@@ -424,6 +439,9 @@ XrdPosixXrootd::~XrdPosixXrootd()
        if ((dP = myDirs[i])) {myDirs[i] = 0; delete dP;}
      free(myDirs); myDirs = 0;
    }
+
+   initDone = 0;
+   myMutex.UnLock();
 }
  
 /******************************************************************************/
@@ -479,7 +497,11 @@ int     XrdPosixXrootd::Close(int fildes, int Stream)
 // Find the file object. We tell findFP() to leave the global lock on
 //
    if (!(fp = findFP(fildes, 1))) return -1;
-   myFiles[fp->FD] = 0;
+   if (baseFD)
+      {int myFD = fp->FD - baseFD;
+       if (myFD < freeFD) freeFD = myFD;
+       myFiles[myFD] = 0;
+      } else myFiles[fp->FD] = 0;
    if (Stream) fp->FD = -1;
 
 // Deallocate the file. We have the global lock.
@@ -706,7 +728,10 @@ int XrdPosixXrootd::Open(const char *path, int oflags, mode_t mode,
                          XrdPosixCallBack *cbP)
 {
    XrdPosixFile *fp;
-   int isSync, retc = 0, fd, XOflags, XMode;
+   int Opts  = ((maxThreads==0) || (oflags & O_SYNC) ? XrdPosixFile::isSync : 0)
+             | (baseFD ? 0 : XrdPosixFile::realFD);
+   int XMode = (mode && (oflags & O_CREAT) ? mapMode(mode) : 0);
+   int retc = 0, fd, XOflags;
 
 // Translate option bits to the appropraite values. Always 
 // make directory path for new file.
@@ -721,33 +746,28 @@ int XrdPosixXrootd::Open(const char *path, int oflags, mode_t mode,
 
 // Obtain a new filedscriptor from the system. Use the fd to track the file.
 //
-do{if ((fd = dup(devNull)) < 0) return -1;
-   if (oflags & isStream && fd > 255) {close(fd); errno = EMFILE; return -1;}
-   isSync = (maxThreads == 0) || (oflags & O_SYNC);
-
-// Make sure we are not getting an in-use fd which may happen if the fd
-// is closed outside the content of this framework, sigh.
-//
-   myMutex.Lock();
-   if (fd <= lastFD && myFiles[fd])
-      {cerr <<"XrdPosix: FD " <<fd <<" closed outside of XrdPosix!" <<endl;
-       myMutex.UnLock();
-       continue;
-      }
+   if (baseFD)
+      {myMutex.Lock();
+       for (fd = freeFD; fd < baseFD && myFiles[fd]; fd++);
+       if (fd >= baseFD || oflags & isStream) fd = lastFD;
+          else freeFD = fd+1;
+      } else
+        do{if ((fd = dup(devNull)) < 0) return -1;
+           if (oflags & isStream && fd > 255)
+              {close(fd); errno = EMFILE; return -1;}
+           myMutex.Lock();
+           if (fd >= lastFD || !myFiles[fd]) break;
+           cerr <<"XrdPosix: FD " <<fd <<" closed outside of XrdPosix!" <<endl;
+           myMutex.UnLock();
+          } while(1);
 
 // Allocate the new file object
 //
-   if (fd > lastFD || !(fp = new XrdPosixFile(fd, path, cbP, isSync)))
-      {errno = EMFILE; myMutex.UnLock(); return -1;}
+   if (fd >= lastFD || !(fp = new XrdPosixFile(fd+baseFD, path, cbP, Opts)))
+      {myMutex.UnLock(); errno = EMFILE; return -1;}
    myFiles[fd] = fp;
    if (fd > highFD) highFD = fd;
    myMutex.UnLock();
-   break;
-  } while(1);
-
-// Translate the mode, if need be
-//
-   XMode = (mode && (oflags & O_CREAT) ? mapMode(mode) : 0);
 
 // Open the file
 //
@@ -757,6 +777,7 @@ do{if ((fd = dup(devNull)) < 0) return -1;
        myMutex.Lock();
        myFiles[fd] = 0;
        delete fp;
+       if (baseFD && fd < freeFD) freeFD = fd;
        myMutex.UnLock();
        errno = retc;
        return -1;
@@ -776,7 +797,7 @@ do{if ((fd = dup(devNull)) < 0) return -1;
 
 // Return the fd number
 //
-   return fd;
+   return fd + baseFD;
 }
 
 /******************************************************************************/
@@ -815,7 +836,7 @@ void XrdPosixXrootd::OpenCB(XrdPosixFile *fp, void *cbArg, int res)
    if (!res || (fp->XClient->LastServerResp()->status) != kXR_ok)
       {fp->cbResult = -Fault(fp, 0);
        myMutex.Lock();
-       myFiles[fp->FD] = 0;
+       myFiles[fp->FD - baseFD] = 0;
        myMutex.UnLock();
       } else {
        fp->isOpen();
@@ -1554,13 +1575,13 @@ XrdPosixFile *XrdPosixXrootd::findFP(int fd, int glk)
 
 // Validate the fildes
 //
-   if (fd >= lastFD || fd < 0)
+   if (fd >= lastFD || fd < baseFD)
       {errno = EBADF; return (XrdPosixFile *)0;}
 
 // Obtain the file object, if any
 //
    myMutex.Lock();
-   if (!(fp = myFiles[fd]) || !(fp->Active()))
+   if (!(fp = myFiles[fd - baseFD]) || !(fp->Active()))
       {myMutex.UnLock(); errno = EBADF; return (XrdPosixFile *)0;}
 
 // Lock the object and unlock the global lock unless it is to be held

@@ -9,7 +9,7 @@
 #            DE-AC03-76-SFO0515 with the Department of Energy                 *
 #******************************************************************************
 
-#  $Id: ooss_Lock.pm,v 1.6 2008/10/14 09:25:01 furano Exp $
+#  $Id$
 
 # Perform cache lock management. This package of routines is usable by
 # ooss_Stage as well as ooss_CacheMgr.

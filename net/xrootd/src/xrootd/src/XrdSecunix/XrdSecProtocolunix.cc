@@ -8,10 +8,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//       $Id$
-
-const char *XrdSecProtocolunixCVSID = "$Id$";
-
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
@@ -45,6 +41,7 @@ friend class XrdSecProtocolDummy; // Avoid stupid gcc warnings about destructor
 
         XrdSecProtocolunix(const char                *hname,
                            const struct sockaddr     *ipadd)
+                          : XrdSecProtocol("unix")
                           {Entity.host = strdup(hname);
                            Entity.name = (char *)"?";
                            credBuff    = 0;
@@ -134,10 +131,6 @@ int XrdSecProtocolunix::Authenticate(XrdSecCredentials *cred,
           else cerr <<msg <<endl;
        return -1;
       }
-
-// Set protocol ID
-//
-   strncpy(Entity.prot, "unix", sizeof(Entity.prot));
 
 // Skip over the protocol ID and copy the buffer
 //

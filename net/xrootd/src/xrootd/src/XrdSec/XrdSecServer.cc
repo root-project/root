@@ -487,7 +487,7 @@ int XrdSecServer::xpbind(XrdOucStream &Config, XrdSysError &Eroute)
 {
     EPNAME("xpbind")
     char *val, *thost;
-    struct XrdSecProtBind *bnow;
+    XrdSecProtBind *bnow;
     char sectoken[4096], *secbuff = sectoken;
     int isdflt = 0, only = 0, anyprot = 0, noprot = 0, phost = 0;
     int sectlen = sizeof(sectoken)-1;

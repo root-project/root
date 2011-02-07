@@ -4,13 +4,13 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.16 2010/05/26 01:24:09 abh Exp $
-## Checked in by $Author: abh $
+## Version info: $Id$
+## Checked in by $Author$
 #######################################################################
 
 lib_LTLIBRARIES = libXrdOfs.la
 
-INCLUDES = -I$(top_srcdir)/src
+INCLUDES = -I$(top_srcdir)/src -I$(top_builddir)/src
 
 xrootdofsincdir = $(includedir)/xrootd/XrdOfs
 
@@ -33,6 +33,6 @@ libXrdOfs_la_SOURCES = \
         XrdOfsPoscq.cc  XrdOfsStats.cc
 
 libXrdOfs_la_LIBTOOLFLAGS = --tag=disable-static
-libXrdOfs_la_LDFLAGS = -module
+libXrdOfs_la_LDFLAGS =
 
 libXrdOfs_la_LIBADD =

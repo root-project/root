@@ -7,8 +7,8 @@ dnl    the path-list is available as acx_searchpath
 dnl
 dnl    Author: Derek Feichtinger <derek.feichtinger@cern.ch>
 dnl    
-dnl    Version info: $Id: acinclude.m4,v 1.6 2008/05/19 11:36:17 dfeich Exp $
-dnl    Checked in by $Author: dfeich $
+dnl    Version info: $Id$
+dnl    Checked in by $Author$
 dnl ========================================================================
 AC_DEFUN([ACX_LOCATEFILE],[
   acx_searchpath="$2"

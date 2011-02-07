@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.9 2010/08/06 15:11:50 feichtinger Exp $
-## Checked in by $Author: feichtinger $
+## Version info: $Id$
+## Checked in by $Author$
 #######################################################################
 
 AM_CPPFLAGS = -I$(top_srcdir)/src $(OPENSSL_INCDIR) $(KRB5_INCDIR)
@@ -70,13 +70,15 @@ libXrdCrypto_la_LIBADD = libXrdSSLutil.la \
                          ../XrdSys/libXrdSys.la \
                          ../XrdNet/libXrdNet.la \
                          ../XrdNet/libXrdNetUtil.la
+libXrdCrypto_la_LDFLAGS = -module
 
 libXrdCryptoLite_la_SOURCES = \
         XrdCryptoLite.hh \
         XrdCryptoLite.cc \
         XrdCryptoLite_bf32.cc
-libXrdCrytoLite_la_CXXFLAGS = $(SSLCXXFLAGS)
-
+libXrdCryptoLite_la_LDFLAGS = -module
+libXrdCryptoLite_la_CXXFLAGS = $(SSLCXXFLAGS)
+libXrdCryptoLite_la_LIBADD = $(OPENSSL_LIBDIR) -lcrypto
 
 libXrdCryptossl_la_SOURCES = \
         XrdCryptosslAux.cc         \
@@ -91,6 +93,7 @@ libXrdCryptossl_la_SOURCES = \
         XrdCryptosslgsiX509Chain.cc
 libXrdCryptossl_la_LIBADD = ../XrdSut/libXrdSut.la \
                             $(OPENSSL_LIBDIR) -lssl -lcrypto
+libXrdCryptossl_la_LDFLAGS = -module
 libXrdCryptossl_la_CXXFLAGS = $(SSLCXXFLAGS)
 
 

@@ -722,11 +722,16 @@ int XrdCmsCluster::Select(XrdCmsSelect &Sel)
 // have servers that we can query regarding the file. Note that for files being
 // opened in write mode, only one writable copy may exist unless this is a
 // meta-operation (e.g., remove) in which case the file itself remain unmodified
+// or a replica request, in which case we select a new target server.
 //
    if (!(Sel.Opts & XrdCmsSelect::Refresh)
    &&   (retc = Cache.GetFile(Sel, pinfo.rovec)))
       {if (isRW)
-          {     if (Sel.Vec.bf) pmask = smask = 0;
+          {     if (Sel.Opts & XrdCmsSelect::Replica)
+                   {pmask = amask & ~(Sel.Vec.hf | Sel.Vec.bf); smask = 0;
+                    if (!pmask && !Sel.Vec.bf) return SelFail(Sel,eNoRep);
+                   }
+           else if (Sel.Vec.bf) pmask = smask = 0;
            else if (Sel.Vec.hf)
                    {if (Sel.Opts & XrdCmsSelect::NewFile) return SelFail(Sel,eExists);
                     if (!(Sel.Opts & XrdCmsSelect::isMeta)
@@ -849,7 +854,9 @@ int XrdCmsCluster::SelFail(XrdCmsSelect &Sel, int rc)
                       ? "Unable to create new file; file already exists."
                       : (rc == eROfs)
                       ? "Unable to write file; r/o file already exists."
-                      : "Unable to write file; multiple files exist.");
+                      : (rc == eDups)
+                      ? "Unable to write file; multiple files exist."
+                      : "Unable to replicate file; no new sites available.");
 
     Sel.Resp.DLen = strlcpy(Sel.Resp.Data, etext, sizeof(Sel.Resp.Data))+1;
     return -1;

@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.9 2008/10/12 10:25:51 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id$
+## Checked in by $Author$
 #######################################################################
 
 lib_LTLIBRARIES = libXrdSecgsi.la libXrdSecgsiGMAPLADP.la

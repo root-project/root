@@ -11,13 +11,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//       $Id$
-
-const char *XrdClientEnvCVSID = "$Id$";
-
 #include "XrdSys/XrdSysHeaders.hh"
 #include "XrdClient/XrdClientConst.hh"
 #include "XrdClient/XrdClientEnv.hh"
+#include <string>
+#include <algorithm>
+#include <ctype.h>
 
 XrdClientEnv *XrdClientEnv::fgInstance = 0;
 
@@ -37,7 +36,8 @@ XrdClientEnv *XrdClientEnv::Instance() {
 //_____________________________________________________________________________
 XrdClientEnv::XrdClientEnv() {
    // Constructor
-   fOucEnv = new XrdOucEnv();
+   fOucEnv   = new XrdOucEnv();
+   fShellEnv = new XrdOucEnv();
 
    PutInt(NAME_CONNECTTIMEOUT, DFLT_CONNECTTIMEOUT);
    PutInt(NAME_REQUESTTIMEOUT, DFLT_REQUESTTIMEOUT);
@@ -58,12 +58,96 @@ XrdClientEnv::XrdClientEnv() {
    PutInt(NAME_READTRIMBLKSZ, DFLT_READTRIMBLKSZ);
    PutInt(NAME_TRANSACTIONTIMEOUT, DFLT_TRANSACTIONTIMEOUT);
    PutInt(NAME_REMUSEDCACHEBLKS, DFLT_REMUSEDCACHEBLKS);
+
+   ImportInt( NAME_CONNECTTIMEOUT );
+   ImportInt( NAME_REQUESTTIMEOUT );
+   ImportInt( NAME_MAXREDIRECTCOUNT );
+   ImportInt( NAME_DEBUG );
+   ImportInt( NAME_RECONNECTWAIT );
+   ImportInt( NAME_REDIRCNTTIMEOUT );
+   ImportInt( NAME_FIRSTCONNECTMAXCNT );
+   ImportInt( NAME_READCACHESIZE );
+   ImportInt( NAME_READCACHEBLKREMPOLICY );
+   ImportInt( NAME_READAHEADSIZE );
+   ImportInt( NAME_MULTISTREAMCNT );
+   ImportInt( NAME_DFLTTCPWINDOWSIZE );
+   ImportInt( NAME_DATASERVERCONN_TTL );
+   ImportInt( NAME_LBSERVERCONN_TTL );
+   ImportInt( NAME_PURGEWRITTENBLOCKS );
+   ImportInt( NAME_READAHEADSTRATEGY );
+   ImportInt( NAME_READTRIMBLKSZ );
+   ImportInt( NAME_TRANSACTIONTIMEOUT );
+   ImportInt( NAME_REMUSEDCACHEBLKS );
 }
+
+//------------------------------------------------------------------------------
+// Import a string variable from the shell environment
+//------------------------------------------------------------------------------
+bool XrdClientEnv::ImportStr( const char *varname )
+{
+  std::string name = "XRD_";
+  name += varname;
+  std::transform( name.begin(), name.end(), name.begin(), ::toupper );
+
+  char *value;
+  if( !XrdOucEnv::Import( name.c_str(), value ) )
+     return false;
+
+  fShellEnv->Put( varname, value );
+  return true;
+}
+
+//------------------------------------------------------------------------------
+// Import an int variable from the shell environment
+//------------------------------------------------------------------------------
+bool XrdClientEnv::ImportInt( const char *varname )
+{
+  std::string name = "XRD_";
+  name += varname;
+  std::transform( name.begin(), name.end(), name.begin(), ::toupper );
+
+  long value;
+  if( !XrdOucEnv::Import( name.c_str(), value ) )
+     return false;
+
+  fShellEnv->PutInt( varname, value );
+  return true;
+}
+
+//------------------------------------------------------------------------------
+// Get a string from the shell environment
+//------------------------------------------------------------------------------
+const char *XrdClientEnv::ShellGet(const char *varname)
+{
+  XrdSysMutexHelper m( fMutex );
+  const char *res = fShellEnv->Get( varname );
+  if( res )
+    return res;
+
+  res = fOucEnv->Get( varname );
+  return res;
+}
+
+//------------------------------------------------------------------------------
+// Get an integer from the shell environment
+//------------------------------------------------------------------------------
+long XrdClientEnv::ShellGetInt(const char *varname)
+{
+  XrdSysMutexHelper m( fMutex );
+  const char *res = fShellEnv->Get( varname );
+
+  if( res )
+    return fShellEnv->GetInt( varname );
+
+  return fOucEnv->GetInt( varname );
+}
+
 
 //_____________________________________________________________________________
 XrdClientEnv::~XrdClientEnv() {
    // Destructor
    delete fOucEnv;
+   delete fShellEnv;
    delete fgInstance;
 
    fgInstance = 0;

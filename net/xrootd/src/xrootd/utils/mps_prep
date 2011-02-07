@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-#   $Id: mps_prep,v 1.16 2008/10/14 09:24:56 furano Exp $
+#   $Id$
 
 #
 # mps_prep [add|del|list|ll] [reqid [usrid prty func fn [fn...]]]

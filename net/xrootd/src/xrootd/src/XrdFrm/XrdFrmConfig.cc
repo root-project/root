@@ -137,7 +137,6 @@ XrdFrmConfig::XrdFrmConfig(SubSys ss, const char *vopts, const char *uinfo)
    uInfo    = uinfo;
    ssID     = ss;
    AdminPath= 0;
-   APath    = 0;
    QPath    = 0;
    AdminMode= 0740;
    xfrMax   = 2;
@@ -775,10 +774,9 @@ int XrdFrmConfig::ConfigPaths()
 // Set the directory where the meta information is to go
 // XRDADMINPATH already contains the instance name
 
-   if ( (!AdminPath) && (xPath = getenv("XRDADMINPATH"))) insName = 0;
-      else {if (!(xPath = AdminPath)) xPath = (char *)"/tmp/";
-            insName = myInst;
-           }
+        if ((xPath = AdminPath))              insName = myInst;
+   else if ((xPath = getenv("XRDADMINPATH"))) insName = 0;
+   else     {xPath = (char *)"/tmp/";         insName = myInst;}
    
 // Establish the cmsd notification object. We need to do this using an
 // unqualified admin path that we determined above.
@@ -786,15 +784,11 @@ int XrdFrmConfig::ConfigPaths()
    if (haveCMS)
       cmsPath = new XrdNetCmsNotify(&Say,xPath,insName,XrdNetCmsNotify::isServ);
 
-// If there is no QPath then make it the unqualified admin path
-//
-   APath = strdup(xPath);
-   if (!QPath) QPath = APath;
-
-// Create the admin directory if it does not exists
+// Create the admin directory if it does not exists and set QPath
 //
    if (!(xPath = XrdFrmUtils::makePath(insName, xPath, AdminMode))) return 1;
    if (AdminPath) free(AdminPath); AdminPath = xPath;
+   if (!QPath) QPath = AdminPath;
 
 // Create the purge stop file name
 //

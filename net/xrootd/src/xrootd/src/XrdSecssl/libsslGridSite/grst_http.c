@@ -43,6 +43,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <errno.h>

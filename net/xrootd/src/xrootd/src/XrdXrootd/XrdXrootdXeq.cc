@@ -7,10 +7,6 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
-const char *XrdXrootdXeqCVSID = "$Id$";
-
 #include <stdio.h>
 
 #include "XrdSfs/XrdSfsInterface.hh"
@@ -105,11 +101,20 @@ int XrdXrootdProtocol::do_Auth()
    cred.size   = Request.header.dlen;
    cred.buffer = argp->buff;
 
-// If we have no auth protocol, try to get it. Track number of times we got a
-// protocol object as the read count (we will zero it out later).
+// If we have no auth protocol or the current protocol is being changed by the
+// client (the client can do so at any time), try to get it. Track number of
+// times we got a protocol object as the read count (we will zero it out later).
+// The credtype change check is always done. While the credtype is consistent,
+// not all protocols provided this information in the past. So, old clients will
+// not necessarily be able to switch protocols mid-stream.
 //
-   if (!AuthProt)
-      {Link->Name(&netaddr);
+   if (!AuthProt
+   ||  strncmp(Entity.prot, (const char *)Request.auth.credtype,
+                                   sizeof(Request.auth.credtype)))
+      {if (AuthProt) AuthProt->Delete();
+       strncpy(Entity.prot, (const char *)Request.auth.credtype,
+                                   sizeof(Request.auth.credtype));
+       Link->Name(&netaddr);
        if (!(AuthProt = CIA->getProtocol(Link->Host(),netaddr,&cred,&eMsg)))
           {eText = eMsg.getErrText(rc);
            eDest.Emsg("Xeq", "User authentication failed;", eText);
@@ -124,7 +129,7 @@ int XrdXrootdProtocol::do_Auth()
       {const char *msg = (Status & XRD_ADMINUSER ? "admin login as"
                                                  : "login as");
        rc = Response.Send(); Status &= ~XRD_NEED_AUTH;
-       Client = &AuthProt->Entity; numReads = 0;
+       Client = &AuthProt->Entity; numReads = 0; strcpy(Entity.prot, "host");
        if (Client->name) 
           eDest.Log(SYS_LOG_01, "Xeq", Link->ID, msg, Client->name);
           else
@@ -911,6 +916,9 @@ int XrdXrootdProtocol::do_Open()
 
         if (opts & kXR_new)
            {openopts |= SFS_O_CREAT;   *op++ = 'n';
+            if (opts & kXR_replica)   {*op++ = '+';
+                                       openopts |= SFS_O_REPLICA;
+                                      }
             if (opts & kXR_mkdir)     {*op++ = 'm'; mkpath = 1;
                                        mode |= SFS_O_MKPTH;
                                       }

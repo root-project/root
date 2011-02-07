@@ -894,7 +894,7 @@ int XrdConfig::xbuf(XrdSysError *eDest, XrdOucStream &Config)
 int XrdConfig::xnet(XrdSysError *eDest, XrdOucStream &Config)
 {
     char *val;
-    int  i, V_keep = 0, V_nodnr = 1, V_iswan = 0, V_blen = -1;
+    int  i, V_keep = 0, V_nodnr = 0, V_iswan = 0, V_blen = -1;
     long long llp;
     static struct netopts {const char *opname; int hasarg; int opval;
                            int  *oploc;  const char *etxt;}

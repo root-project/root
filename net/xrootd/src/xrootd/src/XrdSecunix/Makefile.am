@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.2 2009/09/30 09:37:41 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id$
+## Checked in by $Author$
 #######################################################################
 
 lib_LTLIBRARIES = libXrdSecunix.la

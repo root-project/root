@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.14 2010/08/06 15:12:23 feichtinger Exp $
-## Checked in by $Author: feichtinger $
+## Version info: $Id$
+## Checked in by $Author$
 #######################################################################
 
 # TODO: solve libXrdPosixPreload build problem. The classic build "solves" the
@@ -17,7 +17,7 @@
 include $(top_srcdir)/src/Makefile_include
 
 # preprocessor flags
-AM_CPPFLAGS = -I$(top_srcdir)/src
+AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_builddir)/src
 
 #############################################################################
 ## extra directory definitions for install area

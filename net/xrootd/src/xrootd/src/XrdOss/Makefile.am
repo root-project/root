@@ -4,15 +4,15 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.5 2009/05/22 01:04:24 abh Exp $
-## Checked in by $Author: abh $
+## Version info: $Id$
+## Checked in by $Author$
 #######################################################################
 
 noinst_HEADERS = XrdOss.hh
 
 lib_LTLIBRARIES = libXrdOss.la
 
-INCLUDES = -I$(top_srcdir)/src
+INCLUDES = -I$(top_srcdir)/src -I$(top_builddir)/src
 
 xrootdossincdir = $(includedir)/xrootd/XrdOss
 
