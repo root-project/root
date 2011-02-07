@@ -4134,13 +4134,15 @@ Double_t TH1::GetRandom() const
       return 0;
    }
    Int_t nbinsx = GetNbinsX();
-   Double_t integral;
+   Double_t integral = 0;
    if (fIntegral) {
-      if (fIntegral[nbinsx+1] != fEntries) integral = ((TH1*)this)->ComputeIntegral();
+      if (fIntegral[nbinsx+1] != fEntries) integral = ((TH1*)this)->ComputeIntegral();      
+      else  integral = fIntegral[nbinsx];
    } else {
       integral = ((TH1*)this)->ComputeIntegral();
-      if (integral == 0 || fIntegral == 0) return 0;
    }
+   if (integral == 0) return 0;
+
    Double_t r1 = gRandom->Rndm();
    Int_t ibin = TMath::BinarySearch(nbinsx,fIntegral,r1);
    Double_t x = GetBinLowEdge(ibin+1);
