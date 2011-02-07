@@ -831,7 +831,7 @@ void TProfile3D::GetStats(Double_t *stats) const
             for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
                bin = GetBin(binx,biny,binz);
                w         = fBinEntries.fArray[bin];
-               w2        = (fBinSumw2.fN ? fBinSumw2.fArray[bin] : w*w );
+               w2        = (fBinSumw2.fN ? fBinSumw2.fArray[bin] : w );
                x         = fXaxis.GetBinCenter(binx);
                stats[0]  += w;
                stats[1]  += w2;
