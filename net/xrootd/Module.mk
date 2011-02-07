@@ -160,7 +160,7 @@ endif
 		if [ "x$(BUILDXRDGSI)" = "x" ] ; then \
 		   xopt="$$xopt --disable-gsi"; \
 		fi; \
-		if [ ! "x$(BUILDBONJOUR)" = "x" ] ; then \
+		if [ "x$(BUILDBONJOUR)" = "xyes" ] ; then \
 		   xopt="$$xopt --enable-bonjour"; \
 		fi; \
 		if [ ! "x$(SSLLIBDIR)" = "x" ] ; then \
