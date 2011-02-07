@@ -43,6 +43,9 @@
 
 #include "TError.h"
 
+#if defined(R__MACOSX)
+#include "fcntl.h"
+#endif
 
 ClassImp(TEventIter)
 
@@ -458,6 +461,7 @@ TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long
    } else {
       TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kDisable);
    }
+   fDontCacheFiles = gEnv->GetValue("ProofPlayer.DontCacheFiles", 0);
 }
 
 //______________________________________________________________________________
@@ -632,6 +636,13 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile)
          Error("Load","file '%s' ('%s') could not be open", fn, fname.Data());
          return (TTree *)0;
       }
+
+#if defined(R__MACOSX)
+      // If requested set the no cache mode
+      if (fDontCacheFiles && localfile) {
+         fcntl(f->GetFd(), F_NOCACHE, 1);
+      }
+#endif
 
       // Create TFileTree instance in the list
       ft = new TFileTree(TUrl(f->GetName()).GetFileAndOptions(), f, localfile);

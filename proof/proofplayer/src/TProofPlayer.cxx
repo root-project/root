@@ -800,6 +800,12 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          if (useParallelUnzip > -1 && useParallelUnzip < 2)
             gEnv->SetValue("ProofPlayer.UseParallelUnzip", useParallelUnzip);
       }
+      // OS file caching (Mac Os X only)
+      Int_t dontCacheFiles = 0;
+      if (TProof::GetParameter(fInput, "PROOF_DontCacheFiles", dontCacheFiles) == 0) {
+         if (dontCacheFiles == 1)
+            gEnv->SetValue("ProofPlayer.DontCacheFiles", 1);
+      }
       fEvIter = TEventIter::Create(dset, fSelector, first, nentries);
 
       if (version == 0) {
