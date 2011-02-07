@@ -73,7 +73,7 @@ $(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) $(GL
 $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GLH2) $(GLL)
+		$(ROOTCINTTMP) -f $@ -c $(CINTFLAGS) $(GLH2) $(GLL)
 
 $(GLMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(GLL)
 		$(RLIBMAP) -o $@ -l $(GLLIB) \
@@ -95,8 +95,11 @@ distclean::     distclean-$(MODNAME)
 ifeq ($(ARCH),win32)
 $(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
                             $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
+$(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
+                             $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
 else
 $(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%)
+$(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%)
 endif
 
 $(call stripsrc,$(GLDIRS)/TGLText.o): $(FREETYPEDEP)

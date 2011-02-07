@@ -50,7 +50,7 @@ $(GRAFLIB):     $(GRAFO) $(GRAFDO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) $(GRAFLI
 $(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GRAFH) $(GRAFL)
+		$(ROOTCINTTMP) -f $@ -c $(CINTFLAGS) $(GRAFH) $(GRAFL)
 
 $(GRAFMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GRAFL)
 		$(RLIBMAP) -o $@ -l $(GRAFLIB) \
@@ -72,6 +72,7 @@ distclean::     distclean-$(MODNAME)
 $(GRAFDO):     $(FREETYPEDEP)
 $(GRAFDO):     OPT = $(NOOPT)
 $(GRAFDO):     CXXFLAGS += $(FREETYPEINC)
+$(GRAFDS):     CINTFLAGS += $(FREETYPEINC)
 
 $(call stripsrc,$(GRAFDIRS)/TTF.o $(GRAFDIRS)/TText.o $(GRAFDIRS)/TLatex.o): \
                 $(FREETYPEDEP)
