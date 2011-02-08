@@ -87,11 +87,12 @@ int main( int argc, char **argv )
 {
 
    if ( argc < 3 || "-h" == string(argv[1]) || "--help" == string(argv[1]) ) {
-      cout << "Usage: " << argv[0] << " [-f[0-9]] [-T] [-O] targetfile source1 [source2 source3 ...]" << endl;
+      cout << "Usage: " << argv[0] << " [-f[0-9]] [-k] [-T] [-O] targetfile source1 [source2 source3 ...]" << endl;
       cout << "This program will add histograms from a list of root files and write them" << endl;
       cout << "to a target root file. The target file is newly created and must not " << endl;
       cout << "exist, or if -f (\"force\") is given, must not be one of the source files." << endl;
       cout << "Supply at least two source files for this to make sense... ;-)" << endl;
+      cout << "If the option -k is used, hadd will not exit on corrupt or non-existant input files but skip the offending files instead." << endl;
       cout << "If the option -T is used, Trees are not merged" <<endl;
       cout << "If the option -O is used, when merging TTree, the basket size is re-optimized" <<endl;
       cout << "When -the -f option is specified, one can also specify the compression" <<endl;
@@ -105,6 +106,7 @@ int main( int argc, char **argv )
    FileList = new TList();
 
    Bool_t force = kFALSE;
+   Bool_t skip_errors = kFALSE;
    reoptimize = kFALSE;
 
    int ffirst = 2;
@@ -115,6 +117,9 @@ int main( int argc, char **argv )
          ++ffirst;
       } else if ( strcmp(argv[a],"-f") == 0 ) {
          force = kTRUE;
+         ++ffirst;
+      } else if ( strcmp(argv[a],"-k") == 0 ) {
+         skip_errors = kTRUE;
          ++ffirst;
       } else if ( strcmp(argv[a],"-O") == 0 ) {
          reoptimize = kTRUE;
@@ -153,7 +158,14 @@ int main( int argc, char **argv )
 
    fastMethod = kTRUE;
    for ( int i = ffirst; i < argc; i++ ) {
-      if( AddFile(FileList, argv[i], newcomp) !=0 ) return 1;
+      if( AddFile(FileList, argv[i], newcomp) !=0 ) {
+         if ( skip_errors ) {
+            cerr << "Skipping file with error: " << argv[i] << endl;
+         } else {
+	    cerr << "Exiting due to error in " << argv[i] << endl;
+	    return 1;
+         }
+      }
    }
    if (!fastMethod && !reoptimize) {
       // Don't warn if the user any request re-optimization.
@@ -195,6 +207,10 @@ int AddFile(TList* sourcelist, std::string entry, int newcomp)
 
    TFile* source = TFile::Open( entry.c_str());
    if( source==0 ){
+      cerr << "Could not open file " << entry << endl;
+      return 1;
+   } else if ( source->IsZombie() ) {
+      cerr << "Could not properly read file " << entry << endl;
       return 1;
    }
    sourcelist->Add(source);
