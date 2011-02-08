@@ -345,7 +345,7 @@ public:
    virtual void     SetNameTitle(const char *name, const char *title);
    virtual void     SetNdivisions(Int_t n=510, Option_t *axis="X");
    virtual void     SetNormFactor(Double_t factor=1) {fNormFactor = factor;}
-   virtual void     SetStats(Bool_t stats=kTRUE);
+   virtual void     SetStats(Bool_t stats=kTRUE); // *MENU*
    virtual void     SetOption(Option_t *option=" ") {fOption = option;}
    virtual void     SetTickLength(Float_t length=0.02, Option_t *axis="X");
    virtual void     SetTitleFont(Style_t font=62, Option_t *axis="X");
