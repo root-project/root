@@ -97,7 +97,7 @@ public:
       
       void          Add(const TEfficiency& rEff) {*this += rEff;}
       virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
-      void          Draw(Option_t* opt);
+      void          Draw(Option_t* opt = "");
       virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
       void          Fill(Bool_t bPassed,Double_t x,Double_t y=0,Double_t z=0);
       Int_t         FindFixBin(Double_t x,Double_t y=0,Double_t z=0) const;
