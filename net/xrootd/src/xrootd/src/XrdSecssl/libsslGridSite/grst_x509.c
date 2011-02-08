@@ -45,6 +45,7 @@
 #include <stdarg.h>
 #include <dirent.h>
 #include <string.h>
+#include <strings.h>
 #include <pwd.h>
 #include <errno.h>
 #include <getopt.h>

@@ -19,6 +19,7 @@ class XrdSysPlugin
 public:
 
 void *getPlugin(const char *pname, int errok=0);
+void *getPlugin(const char *pname, int errok, bool global);
 
       XrdSysPlugin(XrdSysError *erp, const char *path)
                   {eDest = erp; libPath = path; libHandle = 0;}

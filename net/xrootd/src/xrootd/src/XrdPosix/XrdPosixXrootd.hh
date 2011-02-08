@@ -114,7 +114,9 @@ static bool    isXrootdDir(DIR *dirp);
 static int     mapError(int rc);
 
 static
-inline bool    myFD(int fd) {return fd <= highFD && myFiles && myFiles[fd];}
+inline bool    myFD(int fd) {return fd >= baseFD && fd <= (highFD+baseFD)
+                                      && myFiles && myFiles[fd-baseFD];
+                            }
 
 static void    OpenCB(XrdPosixFile *fp, void *cbArg, int res);
 
@@ -128,6 +130,18 @@ static void    setEnv(const char *var, long val);
 
 static int     Debug;
 
+/* There must be one instance of this object per executable image. Typically,
+   this object is declared in main() or at file level. This is necessary to
+   properly do one-time initialization of the static members. When declaring
+   this object, you can pass the following information:
+   maxfd  - maximum number of simultaneous files to support (i.e. fdlimit).
+            The value returned by getrlimit() over-rides the passed value
+            unless maxfd is negative. When negative, abs(maxfd) becomes the
+            absolute maximum and shadow file descriptors are not used.
+   maxdir - maximum number of open directories that can be supported. This
+            is independent of maxfd.
+   maxthr - maximum number of threads to use for the callback function.
+*/
                XrdPosixXrootd(int maxfd=255, int maxdir=255, int maxthr=255);
               ~XrdPosixXrootd();
 
@@ -147,10 +161,13 @@ static XrdPosixFile **myFiles;
 static XrdPosixDir  **myDirs;
 static int            lastFD;
 static int            highFD;
+static int            baseFD;
+static int            freeFD;
 static int            lastDir;
 static int            highDir;
 static int            devNull;
 static int            pllOpen;
 static int            maxThreads;
+static int            initDone;
 };
 #endif

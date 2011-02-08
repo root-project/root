@@ -33,7 +33,7 @@ int    XrdSecProtocolssl::debug=0;
 time_t XrdSecProtocolssl::sslsessionlifetime=86400;
 bool   XrdSecProtocolssl::isServer=0;
 bool   XrdSecProtocolssl::forwardProxy=0;
-bool   XrdSecProtocolssl::allowSessions=1;
+bool   XrdSecProtocolssl::allowSessions=0;
 char*  XrdSecProtocolssl::SessionIdContext = (char*)"xrootdssl"; 
 char*  XrdSecProtocolssl::gridmapfile = (char*) "/etc/grid-security/grid-mapfile";
 bool   XrdSecProtocolssl::mapuser  = false;
@@ -1105,8 +1105,28 @@ XrdSecProtocolssl::secServer(int theFD, XrdOucErrInfo      *error) {
     // map groups & role from VOMS mapfile
     XrdOucString defaultgroup="";                                     
     XrdOucString allgroups="";  
+
+    // map the group from the passwd/group file at first place
+    struct passwd* pwd;
+    struct group*  grp;
+    StoreMutex.Lock();
+    if ( (pwd = getpwnam(Entity.name)) && (grp = getgrgid(pwd->pw_gid))) {
+      Entity.grps   = strdup(grp->gr_name);
+      Entity.role   = strdup(grp->gr_name);
+    }
+    StoreMutex.UnLock();
+
     if (vomsroles.length()) {
       if (VomsMapGroups(vomsroles.c_str(), allgroups,defaultgroup)) {
+	// allow mapping from VOMS role to uid
+	if (defaultgroup.beginswith("uid:")) {
+	  defaultgroup.erase(0,4);
+	  if (Entity.name) {
+	    free(Entity.name);
+	  }
+	  Entity.name = strdup(defaultgroup.c_str());
+	  allgroups=":";
+	}
 	if (!strcmp(allgroups.c_str(),":")) {
 	  // map the group from the passwd/group file
 	  struct passwd* pwd;
@@ -1120,21 +1140,10 @@ XrdSecProtocolssl::secServer(int theFD, XrdOucErrInfo      *error) {
 	}
 	Entity.grps   = strdup(allgroups.c_str());
 	Entity.role   = strdup(defaultgroup.c_str());
-      } else {
-	Fatal(error,"incomplete VOMS mapping",-1);
       }
-    } else {
-      // map the group from the passwd/group file
-      struct passwd* pwd;
-      struct group*  grp;
-      StoreMutex.Lock();
-      if ( (pwd = getpwnam(Entity.name)) && (grp = getgrgid(pwd->pw_gid))) {
-        Entity.grps   = strdup(grp->gr_name);
-        Entity.role   = strdup(grp->gr_name);
-      }
-      StoreMutex.UnLock();
     }
   }
+
 
   /*----------------------------------------------------------------------------*/
   /* proxy forwarding                                                           */
@@ -1396,6 +1405,7 @@ bool
 XrdSecProtocolssl::VomsMapGroups(const char* groups, XrdOucString& allgroups, XrdOucString& defaultgroup) 
 {
   EPNAME("VomsMapGroups");
+  ReloadVomsMapFile();
   // loop over all VOMS groups and replace them according to the mapping
   XrdOucString vomsline = groups;
   allgroups = ":";
@@ -1414,9 +1424,33 @@ XrdSecProtocolssl::VomsMapGroups(const char* groups, XrdOucString& allgroups, Xr
       }
       ntoken++;
     } else {
-      TRACE(Authen,"No VOMS mapping found for " << XrdOucString(stoken));
-      return false;
+      // scan for a wildcard rule
+      XrdOucString vomsattribute = stoken;
+      int rpos=STR_NPOS;
+      while ((rpos = vomsattribute.rfind("/",rpos))!=STR_NPOS) {
+	rpos--;
+	XrdOucString wildcardattribute = vomsattribute;
+	wildcardattribute.erase(rpos+2);
+	wildcardattribute += "*";
+	if ((vomsmaprole = XrdSecProtocolssl::vomsmapstore.Find(wildcardattribute.c_str()))) {
+	  allgroups += vomsmaprole->c_str();
+	  allgroups += ":";
+	  if (ntoken == 0) {
+	    defaultgroup = vomsmaprole->c_str();
+	  }
+	  ntoken++;
+	  break; // leave the wildcard loop
+	}
+	if ( rpos < 0) {
+	  break;
+	}
+      }
     }
+  }
+
+  if (allgroups == ":") {
+    TRACE(Authen,"No VOMS mapping found for " << XrdOucString(stoken) << " using default group");
+    return false;
   }
   return true;
 }

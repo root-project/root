@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.2 2007/02/26 09:40:00 ganis Exp $
-## Checked in by $Author: ganis $
+## Version info: $Id$
+## Checked in by $Author$
 #######################################################################
 
 xrootdsutincdir = $(includedir)/xrootd/XrdSut

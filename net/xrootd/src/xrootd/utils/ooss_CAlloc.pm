@@ -9,7 +9,7 @@
 #            DE-AC03-76-SFO0515 with the Department of Energy                 *
 #******************************************************************************
 
-#  $Id: ooss_CAlloc.pm,v 1.6 2008/10/14 09:24:59 furano Exp $
+#  $Id$
 
 # Perform cache allocation management. This package of routines is usable by
 # ooss_Stage as well as ooss_CacheMgr.

@@ -928,7 +928,10 @@ const char *XrdCmsNode::do_Select(XrdCmsRRData &Arg)
          if (Arg.Opts & CmsSelectRequest::kYR_metaop)
            {Sel.Opts |= XrdCmsSelect::Write|XrdCmsSelect::isMeta;  *toP++='m';}
          if (Arg.Opts & CmsSelectRequest::kYR_create)  
-           {Sel.Opts |= XrdCmsSelect::Write|XrdCmsSelect::NewFile; *toP++='c';}
+           {Sel.Opts |= XrdCmsSelect::Write|XrdCmsSelect::NewFile; *toP++='c';
+            if (Arg.Opts & CmsSelectRequest::kYR_replica)
+               {Sel.Opts |= XrdCmsSelect::Replica;                 *toP++='+';}
+           }
         }
    *toP = '\0';
 

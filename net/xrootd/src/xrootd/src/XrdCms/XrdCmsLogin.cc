@@ -101,8 +101,8 @@ int XrdCmsLogin::Login(XrdLink *Link, CmsLoginData &Data, int timeout)
 
 // Get the response.
 //
-   if (Link->RecvAll((char *)&LIHdr, sizeof(LIHdr), timeout) < 0)
-      return Emsg(Link, "login rejected");
+   if ((n = Link->RecvAll((char *)&LIHdr, sizeof(LIHdr), timeout)) < 0)
+      return Emsg(Link, (n == -ETIMEDOUT ? "timed out" : "rejected"));
 
 // Receive and decode the response. We apparently have protocol version 2.
 //

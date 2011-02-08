@@ -266,7 +266,7 @@ int  XrdCmsClientMan::whatsUp(const char *user, const char *path)
 // Calclulate how long to delay the client. This will be based on the number
 // of outstanding requests bounded by the config delay value.
 //
-   inQ = SendCnt - RecvCnt;
+   inQ = XrdCmsClientMsg::inQ();
    theDelay = inQ * qTime;
    myData.UnLock();
    theDelay = theDelay/1000 + (theDelay % 1000 ? 1 : 0);
@@ -300,7 +300,8 @@ int XrdCmsClientMan::Hookup()
    doDebug    &= ~manMask;
    manMutex.UnLock();
 
-// Keep trying to connect to the manager
+// Keep trying to connect to the manager. Note that we bind the link to this
+// thread to make sure we get notified should another thread close the socket.
 //
    do {while(!(lp = XrdXrootdNetwork->Connect(Host, Port, opts)))
             {XrdSysTimer::Snooze(dally);
@@ -308,6 +309,7 @@ int XrdCmsClientMan::Hookup()
                 else     {opts = 0; tries = 12;}
              continue;
             }
+       lp->Bind(XrdSysThread::ID());
        memset(&Data, 0, sizeof(Data));
        Data.Mode = CmsLoginData::kYR_director;
        Data.HoldTime = static_cast<int>(getpid());

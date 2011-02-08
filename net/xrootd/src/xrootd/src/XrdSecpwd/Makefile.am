@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.6 2007/06/07 10:45:03 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id$
+## Checked in by $Author$
 #######################################################################
 
 lib_LTLIBRARIES = libXrdSecpwd.la

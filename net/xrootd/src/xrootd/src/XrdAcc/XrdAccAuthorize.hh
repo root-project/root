@@ -10,8 +10,6 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
 #include "XrdAcc/XrdAccPrivs.hh"
 
 /******************************************************************************/
@@ -37,7 +35,7 @@ enum Access_Operation  {AOP_Any      = 0,  // Special for getting privs
                        };
 
 /******************************************************************************/
-/*                 o o a c c _ A u t h o r i z e   C l a s s                  */
+/*                       X r d A c c A u t h o r i z e                        */
 /******************************************************************************/
   
 class XrdOucEnv;
@@ -101,21 +99,28 @@ virtual                  ~XrdAccAuthorize() {}
 };
   
 /******************************************************************************/
-/*                   o o a c c _ A c c e s s _ O b j e c t                    */
+/*                 X r d A c c A u t h o r i z e O b j e c t                  */
 /******************************************************************************/
-
-class XrdSysLogger;
   
 /* XrdAccAuthorizeObject() is called to obtain an instance of the auth object
    that will be used for all subsequent authorization decisions. If it returns
-   a null pointer; initialization fails and the program exits. The args are:
+   a null pointer; initialization fails and the program exits. It must be
+   declared as follows:
 
+   extern "C" XrdAccAuthorize *XrdAccAuthorizeObject(XrdSysLogger *lp,
+                                                     const char   *cfn,
+                                                     const char   *parm);
+
+   where:
    lp    -> XrdSysLogger to be tied to an XrdSysError object for messages
    cfn   -> The name of the configuration file
    parm  -> Parameters specified on the authlib directive. If none it is zero.
-*/
 
-extern "C" XrdAccAuthorize *XrdAccAuthorizeObject(XrdSysLogger *lp,
-                                                  const char   *cfn,
-                                                  const char   *parm);
+   For the default statically linked authorization framework, the non-extern C
+   XrdAccDefaultAuthorizeObject() is called instead so as to not conflict with
+   that symbol in a shared library plug-in, otherwise (depending on the loader)
+   we might not be able to get its address in the shared segment. Normally,
+   the difference between extern C and not should be all that matters. This
+   mechanism here just makes sure we don't rely on that assumption.
+*/
 #endif

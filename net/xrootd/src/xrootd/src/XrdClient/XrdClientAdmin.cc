@@ -1111,7 +1111,7 @@ long XrdClientAdmin::GetChecksum(kXR_char *path, kXR_char **chksum)
 }
 
 int XrdClientAdmin::LocalLocate(kXR_char *path, XrdClientVector<XrdClientLocate_Info> &res,
-                                bool writable, bool nowait, bool all) {
+                                bool writable, int opts, bool all) {
   // Fires a locate req towards the currently connected server, and pushes the
   // results into the res vector
   //
@@ -1128,7 +1128,7 @@ int XrdClientAdmin::LocalLocate(kXR_char *path, XrdClientVector<XrdClientLocate_
    fConnModule->SetSID(locateRequest.header.streamid);
 
    locateRequest.locate.requestid = kXR_locate;
-   if (nowait) locateRequest.locate.options = kXR_nowait;
+   locateRequest.locate.options   = opts;
    locateRequest.locate.dlen = strlen((char *) path);
 
    // Resp is allocated inside the call
@@ -1288,7 +1288,7 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientLocate_Info &resp, bool wri
      if (firsthost) firsthost = false;
      
      // We are connected, do the locate
-     int posds = LocalLocate(path, hosts, writable, true);
+     int posds = LocalLocate(path, hosts, writable, kXR_nowait);
      
      found = (posds > -1) ? 1 : 0;
      
@@ -1330,7 +1330,9 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientLocate_Info &resp, bool wri
 
 
 //_____________________________________________________________________________
-bool XrdClientAdmin::Locate(kXR_char *path, XrdClientVector<XrdClientLocate_Info> &hosts)
+bool XrdClientAdmin::Locate( kXR_char *path,
+                             XrdClientVector<XrdClientLocate_Info> &hosts,
+                             int opts )
 {
    // Find out any exact location of file 'path' and save the corresponding
    // URL in resp.
@@ -1411,7 +1413,7 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientVector<XrdClientLocate_Info
      if (firsthost) firsthost = false;
      
      // We are connected, do the locate
-     LocalLocate(path, hosts, true, false, true);
+     LocalLocate(path, hosts, true, opts, true);
      
      // We did not finish, take the next
      hosts.Erase(pos);

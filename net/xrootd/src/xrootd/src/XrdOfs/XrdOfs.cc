@@ -352,6 +352,7 @@ int XrdOfsFile::open(const char          *path,      // In
                         SFS_O_RDONLY - Open file for reading.
                         SFS_O_WRONLY - Open file for writing.
                         SFS_O_RDWR   - Open file for update
+                        SFS_O_REPLICA- Open file for replication
                         SFS_O_CREAT  - Create the file open in RW mode
                         SFS_O_TRUNC  - Trunc  the file open in RW mode
                         SFS_O_POSC   - Presist    file on successful close
@@ -417,7 +418,7 @@ int XrdOfsFile::open(const char          *path,      // In
           else isRW = XrdOfsHandle::opRW;
        if (open_mode & SFS_O_CREAT)
           {open_flag   = O_RDWR     | O_CREAT  | O_EXCL;
-           find_flag  |= SFS_O_RDWR | SFS_O_CREAT;
+           find_flag  |= SFS_O_RDWR | SFS_O_CREAT | (open_mode & SFS_O_REPLICA);
            crOpts     |= XRDOSS_new;
           } else {
            open_flag  |= O_RDWR     | O_CREAT  | O_TRUNC;

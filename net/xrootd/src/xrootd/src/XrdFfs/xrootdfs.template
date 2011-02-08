@@ -1,0 +1,71 @@
+#!/bin/sh
+ 
+# chkconfig: 345 99 10
+# chkconfig(sun): S3 99 K0 10 
+# description: start and stop XrootdFS
+
+xrdDir="/opt/xrootd"
+MOUNT_POINT1="/atlas"
+
+status() {
+    df 
+}
+
+start() {
+    if [ X$LD_LIBRARY_PATH != X ]; then
+        LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${xrdDir}/lib
+    else
+        LD_LIBRARY_PATH=${xrdDir}/lib
+    fi
+    export LD_LIBRARY_PATH
+
+    # we need to load the fuse kernel module
+    /sbin/modprobe fuse
+    ulimit -c unlimited
+    cd /tmp
+
+    # Please repeat the following lines for each additional mount point.
+
+    # XROOTDFS_RDRURL is a ROOT URL to tell XrootdFS which base path should be mounted.
+    export XROOTDFS_RDRURL="root://your_redirectr.edu:1094//atlas"
+
+    # After XrootdFS starts but before it takes any user request, XrootdFS will try to switch its effective 
+    # user ID to XROOTDFS_USER if it is defined.
+    export XROOTDFS_USER='daemon'
+
+    # if you are ready to use 'sss' security module. See README for detail
+    # export XROOTDFS_SECMOD='sss'
+
+    ${xrdDir}/bin/xrootdfsd $MOUNT_POINT1 -o allow_other,fsname=xrootdfs,max_write=131072,attr_timeout=10,entry_timeout=10
+    # undefine them so that the next mount point won't be affected by the setting for the previous mount point.
+    unset XROOTDFS_RDRURL
+    unset XROOTDFS_USER
+    unset XROOTDFS_SECMOD
+}
+stop() {
+    # repeat the following lines for each additional mount point
+    umount $MOUNT_POINT1
+}
+
+case "$1" in
+start)
+    start
+    ;;
+
+stop)
+    stop
+    ;;
+
+restart)
+    stop
+    start
+    ;;
+
+status)
+    status
+    ;;
+
+*)
+    echo "Usage: $0 {start|stop|restart|status}"
+    exit 1
+esac

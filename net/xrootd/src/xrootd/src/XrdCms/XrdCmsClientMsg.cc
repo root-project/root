@@ -30,6 +30,7 @@ using namespace XrdCms;
 /******************************************************************************/
   
 int               XrdCmsClientMsg::nextid   =  0;
+int               XrdCmsClientMsg::numinQ   =  0;
 
 XrdCmsClientMsg  *XrdCmsClientMsg::msgTab   =  0;
 XrdCmsClientMsg  *XrdCmsClientMsg::nextfree =  0;
@@ -53,6 +54,7 @@ XrdCmsClientMsg *XrdCmsClientMsg::Alloc(XrdOucErrInfo *erp)
    if (nextfree) {mp = nextfree; nextfree = mp->next;}
       else {FreeMsgQ.UnLock(); return (XrdCmsClientMsg *)0;}
    lclid = nextid = (nextid + MidIncr) & IncMask;
+   numinQ++;
    FreeMsgQ.UnLock();
 
 // Initialize it
@@ -115,6 +117,7 @@ void XrdCmsClientMsg::Recycle()
    FreeMsgQ.Lock();
    next = nextfree; 
    nextfree = this; 
+   if (numinQ >= 0) numinQ--;
    FreeMsgQ.UnLock();
 }
 

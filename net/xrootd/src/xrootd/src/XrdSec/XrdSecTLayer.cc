@@ -8,8 +8,6 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
-  
-//       $Id$
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -37,7 +35,8 @@ const char  XrdSecTLayer::TLayerRR::xfrData;
 /******************************************************************************/
 
 XrdSecTLayer::XrdSecTLayer(const char *pName, Initiator who1st)
-             : secTid(0), mySem(0), Starter(who1st), myFD(-1), urFD(-1),
+             : XrdSecProtocol(pName),
+               secTid(0), mySem(0), Starter(who1st), myFD(-1), urFD(-1),
                Tmax(275), Tcur(0), eCode(0), eText(0)
 {
 

@@ -1729,7 +1729,8 @@ XrdSecProtocol *XrdClientConn::DoAuthentication(char *plist, int plsiz)
       // We fill the header struct containing the request for login
       ClientRequest reqhdr;
       memset(reqhdr.auth.reserved, 0, 12);
-      memcpy(reqhdr.auth.credtype, protname.c_str(), protname.length());
+      memset(reqhdr.auth.credtype, 0, 4 );
+      memcpy(reqhdr.auth.credtype, protname.c_str(), protname.length() > 4 ? 4 : protname.length() );
 
       LastServerResp.status = kXR_authmore;
       char *srvans = 0;

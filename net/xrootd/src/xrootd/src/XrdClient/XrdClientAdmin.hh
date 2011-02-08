@@ -48,7 +48,7 @@ class XrdClientAdmin : public XrdClientAbs {
    bool                            DirList_low(const char *dir, vecString &entries);
    int                             LocalLocate(kXR_char *path,
 					       XrdClientVector<XrdClientLocate_Info> &res,
-					       bool writable, bool nowait, bool all = false);
+					       bool writable, int opts, bool all = false);
  protected:
 
    bool                            CanRedirOnError() {
@@ -158,7 +158,14 @@ class XrdClientAdmin : public XrdClientAbs {
 
    // Gives ALL the locations of a particular file... if present
    bool                            Locate(kXR_char *path,
-					  XrdClientVector<XrdClientLocate_Info> &hosts);
+					  XrdClientVector<XrdClientLocate_Info> &hosts)
+   {
+      return Locate( path, hosts, 0 );
+   }
+
+   bool                            Locate(kXR_char *path,
+                                          XrdClientVector<XrdClientLocate_Info> &hosts,
+                                          int opts );
 
 
    bool                            Truncate(const char *path, long long newsize);

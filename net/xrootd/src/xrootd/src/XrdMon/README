@@ -1,5 +1,5 @@
 
-   $Id: README,v 1.2 2005/06/20 12:55:42 elmer Exp $
+   $Id$
 
 XrdMonCtr - classes related to collector. 
 XrdMonSnd - classes related to sender (simulates xrootd)

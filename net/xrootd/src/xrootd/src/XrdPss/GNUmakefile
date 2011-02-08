@@ -1,5 +1,3 @@
-#              $Id: GNUmakefile,v 1.6 2010/07/29 01:24:31 abh Exp $
-
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
 #------------------------------------------------------------------------------#
@@ -24,17 +22,21 @@ OBJECTT  = \
         $(OBJDIR)/XrdPosixLinkage.o \
         $(OBJDIR)/XrdPosixXrootd.o
 
-OBJECTU  = $(LIBDIR)/libXrdClient.a
+OBJECTU  = $(LIBDIR)/libXrdFfs.a    $(LIBDIR)/libXrdClient.a \
+           $(LIBDIR)/libXrdSecsss.a $(LIBDIR)/libXrdSec.a
 
 MORELIBS = -L$(LIBDIR) -lXrdNet -lXrdOuc -lXrdNetUtil -lXrdSys
 
 LIBDEP   = $(LIBDIR)/libXrdClient.a \
+           $(LIBDIR)/libXrdFfs.a \
            $(LIBDIR)/libXrdNet.a \
            $(LIBDIR)/libXrdNetUtil.a \
            $(LIBDIR)/libXrdOuc.a \
+           $(LIBDIR)/libXrdSec.a \
+           $(LIBDIR)/libXrdSecsss.a \
            $(LIBDIR)/libXrdSys.a
 
-LIBRARY  = $(LIBDIR)/libXrdProxy.$(TYPESHLIB)
+LIBRARY  = $(LIBDIR)/libXrdPss.$(TYPESHLIB)
 
 TARGETS  = $(LIBRARY)
 
@@ -43,11 +45,13 @@ TARGETS  = $(LIBRARY)
 #------------------------------------------------------------------------------#
 
 vpath XrdClient% ../XrdClient
-vpath XrdPosix%  ../XrdPosix
+vpath XrdFfs%    ../XrdFfs
 vpath XrdNet%    ../XrdNet
 vpath XrdOss%    ../XrdOss
 vpath XrdOuc%    ../XrdOuc
+vpath XrdPosix%  ../XrdPosix
 vpath XrdPss%    ../XrdPss
+vpath XrdSec%    ../XrdSec
 vpath XrdSfs%    ../XrdSfs
 vpath XrdSys%    ../XrdSys
 
@@ -68,8 +72,10 @@ $(TARGETS): $(OBJECTS) $(OBJECTT) $(LIBDEP)
 	@echo Creating shared library $(LIBRARY) 
 	$(ECHO)$(CC) $(CFLAGS) $(OBJECTT) $(OBJECTS) $(OBJECTU) $(LDSO) $(MORELIBS) $(LIBS) -o $(LIBRARY)
 
-$(OBJDIR)/XrdPss.o:  XrdPss.cc         XrdPss.hh      XrdPosixXrootd.hh \
-                     XrdOss.hh         XrdOssError.hh XrdOucEnv.hh \
+$(OBJDIR)/XrdPss.o:  XrdPss.cc         XrdPss.hh \
+                     XrdFfsPosix.hh    XrdPosixXrootd.hh \
+                     XrdOss.hh         XrdOssError.hh \
+                     XrdOucEnv.hh      XrdSecEntity.hh \
                      XrdSysError.hh    XrdSysHeaders.hh \
                      XrdSysPlatform.hh \
                      ../XrdVersion.hh
@@ -81,7 +87,8 @@ $(OBJDIR)/XrdPssAio.o:  XrdPssAio.cc   XrdPss.hh \
 	@echo Compiling XrdPssAio.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdPssAio.o XrdPssAio.cc
 
-$(OBJDIR)/XrdPssConfig.o:  XrdPssConfig.cc   XrdPss.hh \
+$(OBJDIR)/XrdPssConfig.o:  XrdPssConfig.cc   XrdPss.hh         XrdFfsDent.hh \
+                           XrdFfsMisc.hh     XrdFfsWcache.hh   XrdFfsQueue.hh \
                            XrdOuca2x.hh      XrdOucEnv.hh      XrdSysError.hh \
                            XrdOucStream.hh   XrdOucTList.hh    XrdOucUtils.hh \
                            XrdNetDNS.hh      XrdSysPlatform.hh XrdSysHeaders.hh \
