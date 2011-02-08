@@ -77,9 +77,12 @@ XRDHDRS    := $(wildcard $(XROOTDDIRI)/Xrd/*.hh) $(wildcard $(XROOTDDIRI)/XrdCli
 XROOTDDEPS := $(wildcard $(XROOTDDIRI)/*/*.hh) $(wildcard $(XROOTDDIRI)/*/*.cc) \
               $(wildcard $(XROOTDDIRI)/*/*.h) $(wildcard $(XROOTDDIRI)/*/*.c) \
               $(wildcard $(XROOTDDIRI)/*/*/*.h) $(wildcard $(XROOTDDIRI)/*/*/*.c)
-XROOTDCFGD := $(wildcard $(XROOTDDIRS)/xrootd/config/*) \
+XROOTDCFGD := $(filter-out $(XROOTDDIRS)/xrootd/config/GNUmake.rules.sunCC%,$(wildcard $(XROOTDDIRS)/xrootd/config/*)) \
               $(wildcard $(XROOTDDIRS)/xrootd/config/test/*) \
               $(XROOTDDIRS)/xrootd/configure.classic
+ifeq ($(PLATFORM),solaris)
+XROOTDCFGD += $(wildcard $(XROOTDDIRS)/xrootd/config/GNUmake.rules.*.in)
+endif
 
 # used in the main Makefile
 ALLLIBS    += $(XRDLIBS)
