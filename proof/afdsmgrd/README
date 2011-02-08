@@ -1,0 +1,27 @@
+
+
+  1. General information
+
+     The 'afdsmgrd' is created under $ROOTSYS/bin .
+     The configuration files are copied under $ROOTSYS/etc/proof/ .
+
+  2. Configuration information
+
+     This daemon may be configured to use MonALISA, either from a standalone build or from AliEn.
+     However, MonALISA is not mandatory for the build.
+     To enable MonALISA monitoing from a standlone build use
+
+       ./configure --enable-afdsmgrd --with-monalisa-include=... --with-monalisa-lib=... <other options>
+
+     To use MonALISA from the AliEn build:
+
+       ./configure --enable-afdsmgrd --with-alien-include=... --with-alien-lib=... <other options>
+
+  3. Other information
+
+     CMake is required to build.
+     The daemon has been developed and tested under Linux and MacOsX.
+     It should work on other Unix systems.
+     Not supported on Windows.
+
+  (Feb 8th, 2011)
