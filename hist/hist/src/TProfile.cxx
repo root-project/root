@@ -927,7 +927,7 @@ void TProfile::GetStats(Double_t *stats) const
       }
       for (binx = firstBinX; binx <= lastBinX; binx++) {
          Double_t w   = fBinEntries.fArray[binx];
-         Double_t w2  = (fBinSumw2.fN ? fBinSumw2.fArray[binx] : w*w );  
+         Double_t w2  = (fBinSumw2.fN ? fBinSumw2.fArray[binx] : w);  
          Double_t x   = fXaxis.GetBinCenter(binx);
          stats[0] += w;
          stats[1] += w2;
