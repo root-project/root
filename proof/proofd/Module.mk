@@ -189,7 +189,7 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 $(PROOFDEXEO): CXXFLAGS += $(AUTHFLAGS)
 
-$(XPDO): $(XRDHDRS)
+$(XPDO): $(XROOTDMAKE) $(XRDHDRS)
 $(XPDO): CXXFLAGS += $(BONJOURCPPFLAGS)
 
 ifneq ($(ICC_GE_9),)
