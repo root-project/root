@@ -288,7 +288,7 @@ ClassImp(TEfficiency)
 //    </td>
 //    </tr>
 //    <tr>
-//    <td>Feldman-Cousins</td><td>kFAC</td>
+//    <td>Feldman-Cousins</td><td>kFFC</td>
 //    <td>
 //     <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:FeldmanCousins">FeldmanCousins</a>
 //    </td>
