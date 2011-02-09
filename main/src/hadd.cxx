@@ -108,6 +108,7 @@ int main( int argc, char **argv )
    Bool_t force = kFALSE;
    Bool_t skip_errors = kFALSE;
    reoptimize = kFALSE;
+   noTrees = kFALSE;
 
    int ffirst = 2;
    Int_t newcomp = 1;
