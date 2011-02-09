@@ -262,7 +262,7 @@ XrdXrootd: FORCE
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 version: FORCE
-	@echo Creatiing version header...
+	@echo Creating version header...
 	@./genversion.sh
 
 
