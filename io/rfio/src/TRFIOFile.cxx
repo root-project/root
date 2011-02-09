@@ -262,7 +262,7 @@ Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 
    // prefetch the stuff
    if (rfio_preseek64(fD, iov, nbuf) < 0) {
-      Error("TRFIOFile", "error doing rfio_preseek");
+      Error("TRFIOFile", "error doing rfio_preseek64");
       return kTRUE;
    }
 
@@ -271,7 +271,7 @@ Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 
    for (n = 0; n < nbuf; n++) {
       if (rfio_lseek64(fD, iov[n].iov_base, SEEK_SET) < 0) {
-         Error("TRFIOFile", "error doing rfio_lseek");
+         Error("TRFIOFile", "error doing rfio_lseek64");
          return kTRUE;
       }
       if (rfio_read(fD, buf+k, iov[n].iov_len) < 0) {
