@@ -1191,6 +1191,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
    TGeoShape::SetTransform(fGlobal);
    Bool_t drawDaughters = kTRUE;
    Bool_t vis = (top->IsVisible() && !top->IsAssembly());
+   Char_t transparency;
 
    // Update pad attributes in case we need to paint VOL
    if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
@@ -1199,7 +1200,6 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
    if (top->IsVisBranch()) {
       fGeoManager->PushPath();
       fGeoManager->cd(fVisBranch.Data());
-      Int_t transparency;
       while (fGeoManager->GetLevel()) {
          vol = fGeoManager->GetCurrentVolume();
          if (!fVisLock) {
@@ -1263,6 +1263,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
                line_color = vol->GetLineColor();
                line_width = vol->GetLineWidth();
                line_style = vol->GetLineStyle();
+               transparency = vol->GetTransparency();
                fPlugin->ProcessNode();
             }   
             if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
@@ -1278,6 +1279,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
                vol->SetLineColor(line_color);
                vol->SetLineWidth(line_width);
                vol->SetLineStyle(line_style);
+               vol->SetTransparency(transparency);
             }   
             if (!fVisLock && !daughter->IsOnScreen()) {
                fVisVolumes->Add(vol);
@@ -1296,6 +1298,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
                line_color = vol->GetLineColor();
                line_width = vol->GetLineWidth();
                line_style = vol->GetLineStyle();
+               transparency = vol->GetTransparency();
                fPlugin->ProcessNode();
             }   
             if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
@@ -1311,6 +1314,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
                vol->SetLineColor(line_color);
                vol->SetLineWidth(line_width);
                vol->SetLineStyle(line_style);
+               vol->SetTransparency(transparency);
             }   
             if (!fVisLock && !daughter->IsOnScreen()) {
                fVisVolumes->Add(vol);
