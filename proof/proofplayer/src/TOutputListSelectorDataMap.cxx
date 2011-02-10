@@ -31,6 +31,7 @@
 #include "TSelector.h"
 #include "TSelectorCint.h"
 
+#include <cstddef>
 
 namespace {
 
