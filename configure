@@ -3762,9 +3762,8 @@ if test ! "x$enable_asimage" = "xno" ; then
           $cwhich afterimage-config
           # we found afterimage-config - now check the version number
           asimage_version=`afterimage-config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
-          #if test $asimage_version -gt 1003 ; then
-          if test $asimage_version -gt 0 ; then
-             result "WARNING: System libAfterImage is too new, using built-in"
+          if test $asimage_version -lt 1020 ; then
+             result "WARNING: System libAfterImage is too old, using built-in"
           else
              enable_builtin_afterimage="no"
              asextralib=`afterimage-config --libs`
