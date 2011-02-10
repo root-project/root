@@ -4011,6 +4011,9 @@ if test ! "x$enable_ruby" = "xno" ; then
     else
         # Ruby support requires the explicitlink option
         enable_explicitlink="yes"
+        if test ! "x$platform" = "xwin32"; then
+            issue_explicitlink_warning="yes"
+        fi
     fi
 fi
 check_explicit "$enable_ruby" "$enable_ruby_explicit" \
@@ -6893,8 +6896,14 @@ result "To build ROOT type:"
 result ""
 result "   $gnumake"
 if test ! "x$haveconfig" = "x" ; then
-result "   $gnumake install"
+    result "   $gnumake install"
 fi
 result ""
+if test "x$issue_explicitlink_warning" = "xyes"; then
+    result "*** Explicit linking is required ror Ruby support."
+    result "*** If lib/*.so's exsist created without explicit linking,"
+    result "*** please remove them first using: rm -f lib/*.so."
+    result ""
+fi
 
 exit 0
