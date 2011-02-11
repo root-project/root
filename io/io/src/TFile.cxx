@@ -2565,7 +2565,10 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
                      }
                   } else {
                      what.ReplaceAll("std::","");
-                     fprintf(fp,"#pragma link C++ class %s+;\n",what.Data());
+                     TClass *paircl = TClass::GetClass(what.Data());
+                     if (paircl == 0 || paircl->GetClassInfo() == 0) {
+                        fprintf(fp,"#pragma link C++ class %s+;\n",what.Data());
+                     }
                   }
                   break;
                }

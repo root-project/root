@@ -601,7 +601,11 @@ void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo 
             }
          }
          if (what.Length()) {
-            AddUniqueStatement(fp, Form("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n",what.Data()), inclist);               
+            // Only ask for it if needed.
+            TClass *paircl = TClass::GetClass(what.Data());
+            if (paircl == 0 || paircl->GetClassInfo() == 0) {
+               AddUniqueStatement(fp, Form("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n",what.Data()), inclist);
+            }
          }
       }
    }
