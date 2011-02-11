@@ -114,7 +114,7 @@ TTree *getTree(TFile *file, const char *treename) {
       return tree;
    }
    // Try the known names :)
-   const char *names [] = { "E","Events","CollectionTree" };
+   const char *names [] = { "E","Events","CollectionTree","ntuple","T" };
    
    for (unsigned int i = 0; i < sizeof(names)/sizeof(names[0]); ++i) {
       file->GetObject(names[i],tree);
@@ -123,14 +123,14 @@ TTree *getTree(TFile *file, const char *treename) {
    return 0;
 }
 
-void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesize=-1, Long64_t i_nentries = -1, Float_t percententries = 1.00, Float_t percentbranches = 1.00);
+void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesize=-1, Long64_t i_nentries = -1, Int_t freq = 1000, Float_t percententries = 1.00, Float_t percentbranches = 1.00);
 
 void readfile(const char *filename = "lhcb2.root", Int_t cachesize=-1) {
    readfile(filename,0,cachesize);
 }
 
 void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesize /* =-1 */,
-              Long64_t i_nentries /* = -1 */, Float_t percententries /* = 1.00 */, Float_t percentbranches /* = 1.00 */) 
+              Long64_t i_nentries /* = -1 */, Int_t freq /* = 1000 */, Float_t percententries /* = 1.00 */, Float_t percentbranches /* = 1.00 */) 
 {
    // The support options are:
    //   nolib : do not load any library.
@@ -181,7 +181,7 @@ void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesi
    
    TRandom r;
    for (Long64_t i=efirst;i<elast;i++) {
-      if (i%10 == 0) printf("i = %lld\n",i);
+      if (i%freq == 0) printf("i = %lld\n",i);
       if (r.Rndm() > percententries) continue; 
       T->LoadTree(i);
       if (percentbranches < 1.00) {
@@ -199,9 +199,9 @@ void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesi
    TString pssuffix("_ioperf.root");
    if (options && options[0]) { pssuffix.Prepend(options); pssuffix.Prepend("_"); } 
    psfilename.ReplaceAll(".root", pssuffix );
-   //ps->SaveAs(psfilename);
+   ps->SaveAs(psfilename);
    //ps->Draw();
-   if (ps) ps->Print();
+   if (ps) ps->Print("unzip");
    T->PrintCacheStats();
    printf("Real Time = %7.3f s, CPUtime = %7.3f s\n",sw.RealTime(),sw.CpuTime());
 }
