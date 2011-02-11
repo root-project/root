@@ -1200,7 +1200,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                      continue;
                   }
                   TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
-                  TClass *valueClass = oldClass->GetCollectionProxy()->GetValueClass();
+                  TClass *valueClass = oldProxy ? oldProxy->GetValueClass() : 0;
                   UInt_t startDummy, countDummy;
                   Version_t vClVersion = 0; // For vers less than 8, we have to use the current version.
                   if( vers >= 8 ) {
