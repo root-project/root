@@ -58,6 +58,45 @@
 #include <shlobj.h>
 #include <conio.h>
 
+#if defined (_MSC_VER) && (_MSC_VER >= 1400)
+   #include <intrin.h>
+#elif defined (_M_IX86)
+   static void __cpuid(int* cpuid_data, int info_type)
+   {
+      __asm {
+         push ebx
+         push edi
+         mov edi, cpuid_data
+         mov eax, info_type
+         cpuid
+         mov [edi], eax
+         mov [edi + 4], ebx
+         mov [edi + 8], ecx
+         mov [edi + 12], edx
+         pop edi
+         pop ebx
+      }
+   }
+   __int64 __rdtsc()
+   {
+      LARGE_INTEGER li;
+      __asm {
+         rdtsc
+         mov li.LowPart, eax
+         mov li.HighPart, edx
+      }
+      return li.QuadPart;
+   }
+#else
+   static void __cpuid(int* cpuid_data, int) {
+      cpuid_data[0] = 0x00000000;
+      cpuid_data[1] = 0x00000000;
+      cpuid_data[2] = 0x00000000;
+      cpuid_data[3] = 0x00000000;
+   }
+   __int64 __rdtsc() { return (__int64)0; }
+#endif
+
 extern "C" {
    extern void Gl_setwidth(int width);
    extern int G__get_security_error();
@@ -5122,7 +5161,7 @@ static DWORD GetCPUSpeed()
    // Calculate the CPU clock speed using the 'rdtsc' instruction.
    // RDTSC: Read Time Stamp Counter.
 
-   LARGE_INTEGER ulFreq, ulTicks, ulValue, ulStartCounter, ulEAX_EDX;
+   LARGE_INTEGER ulFreq, ulTicks, ulValue, ulStartCounter;
 
    // Query for high-resolution counter frequency
    // (this is not the CPU frequency):
@@ -5132,28 +5171,18 @@ static DWORD GetCPUSpeed()
       // Calculate end value (one second interval);
       // this is (current + frequency)
       ulValue.QuadPart = ulTicks.QuadPart + ulFreq.QuadPart/10;
-      // Read CPU time-stamp counter:
-      __asm RDTSC
-      // And save in ulEAX_EDX:
-      __asm mov ulEAX_EDX.LowPart, EAX
-      __asm mov ulEAX_EDX.HighPart, EDX
-      // Store starting counter value:
-      ulStartCounter.QuadPart = ulEAX_EDX.QuadPart;
+      ulStartCounter.QuadPart = __rdtsc();
+
       // Loop for one second (measured with the high-resolution counter):
       do {
- 	      QueryPerformanceCounter(&ulTicks);
+         QueryPerformanceCounter(&ulTicks);
       } while (ulTicks.QuadPart <= ulValue.QuadPart);
       // Now again read CPU time-stamp counter:
-      __asm RDTSC
-      // And save:
-      __asm mov ulEAX_EDX.LowPart, EAX
-      __asm mov ulEAX_EDX.HighPart, EDX
-      // Calculate number of cycles done in interval; 1000000 Hz = 1 MHz
-      return (DWORD)((ulEAX_EDX.QuadPart - ulStartCounter.QuadPart)/100000);
-	} else {
+      return (DWORD)((__rdtsc() - ulStartCounter.QuadPart)/100000);
+   } else {
       // No high-resolution counter present:
       return 0;
-	}
+   }
 }
 
 #define BUFSIZE 80
@@ -5388,32 +5417,17 @@ static int GetL2CacheSize()
 {
    // Use assembly to retrieve the L2 cache information ...
 
-   unsigned long eaxreg, ebxreg, ecxreg, edxreg;;
+   unsigned nHighestFeatureEx;
+   int nBuff[4];
 
-   __try {
-      _asm {
-         push eax
-         push ebx
-         push ecx
-         push edx
-         ; eax = 0x80000006 --> eax: L2 cache information.
-         mov eax, 0x80000006
-         cpuid
-         mov eaxreg, eax
-         mov ebxreg, ebx
-         mov ecxreg, ecx
-         mov edxreg, edx
-         pop edx
-         pop ecx
-         pop ebx
-         pop eax
-      }
+   __cpuid(nBuff, 0x80000000);
+   nHighestFeatureEx = (unsigned)nBuff[0];
+   // Get cache size
+   if (nHighestFeatureEx >= 0x80000006) {
+      __cpuid(nBuff, 0x80000006);
+      return (((unsigned)nBuff[2])>>16);
    }
-   __except (1) {
-      return 0;
-   }
-   // Return the L2 cache size (in KB) from ecxreg
-   return ((ecxreg & 0xFFFF0000) >> 16);
+   else return 0;
 }
 
 //______________________________________________________________________________
