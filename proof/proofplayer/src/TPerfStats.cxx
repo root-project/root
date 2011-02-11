@@ -432,6 +432,18 @@ void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
 }
 
 //______________________________________________________________________________
+void TPerfStats::FileUnzipEvent(TFile * /* file */, Long64_t /* pos */, Double_t /* start */, Int_t /* complen */, Int_t /* objlen */)
+{
+   // Record TTree file unzip event.
+   // start is the TimeStamp before unzip
+   // pos is where in the file the compressed buffer came from
+   // complen is the length of the compressed buffer
+   // objlen is the length of the de-compressed buffer
+
+   // Do nothing for now.
+}
+
+//______________________________________________________________________________
 void TPerfStats::RateEvent(Double_t proctime, Double_t deltatime,
                            Long64_t eventsprocessed, Long64_t bytesRead)
 {

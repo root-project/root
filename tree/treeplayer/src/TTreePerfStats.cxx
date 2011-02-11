@@ -123,6 +123,7 @@ TTreePerfStats::TTreePerfStats() : TVirtualPerfStats()
    fRealTime      = 0;
    fCpuTime       = 0;
    fDiskTime      = 0;
+   fUnzipTime     = 0;
    fCompress      = 0;
    fRealTimeAxis  = 0;
    fHostInfoText  = 0;
@@ -157,6 +158,7 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    fRealTime      = 0;
    fCpuTime       = 0;
    fDiskTime      = 0;
+   fUnzipTime     = 0;
    fRealTimeAxis  = 0;
    fCompress      = (T->GetTotBytes()+0.00001)/T->GetZipBytes();
    
@@ -287,6 +289,21 @@ void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
    fGraphTime->SetPointError(np,0.001,dtime);
 }
 
+
+//______________________________________________________________________________
+void TTreePerfStats::FileUnzipEvent(TFile * /* file */, Long64_t /* pos */, Double_t start, Int_t /* complen */, Int_t /* objlen */)
+{
+   // Record TTree file unzip event.
+   // start is the TimeStamp before unzip
+   // pos is where in the file the compressed buffer came from
+   // complen is the length of the compressed buffer
+   // objlen is the length of the de-compressed buffer
+   
+   Double_t tnow = TTimeStamp();
+   Double_t dtime = tnow-start;
+   fUnzipTime += dtime;
+}
+
 //______________________________________________________________________________
 void TTreePerfStats::Finish()
 {
@@ -334,6 +351,10 @@ void TTreePerfStats::Paint(Option_t *option)
    fGraphIO->GetYaxis()->SetLabelSize(0.03);
    fGraphIO->Paint(option);
    
+   TString opts(option);
+   opts.ToLower();
+   Bool_t unzip = opts.Contains("unzip");
+   
    //superimpose the time info (max 10 points)
    if (fGraphTime) {
       fGraphTime->Paint("l");
@@ -376,6 +397,9 @@ void TTreePerfStats::Paint(Option_t *option)
       fPave->AddText(Form("Real Time = %7.3f s",fRealTime));
       fPave->AddText(Form("CPU  Time = %7.3f s",fCpuTime));
       fPave->AddText(Form("Disk Time = %7.3f s",fDiskTime));
+      if (unzip) { 
+         fPave->AddText(Form("UnzipTime = %7.3f s",fUnzipTime));
+      }
       fPave->AddText(Form("Disk IO   = %7.3f MB/s",1e-6*fBytesRead/fDiskTime));
       fPave->AddText(Form("ReadUZRT  = %7.3f MB/s",1e-6*fCompress*fBytesRead/fRealTime));
       fPave->AddText(Form("ReadUZCP  = %7.3f MB/s",1e-6*fCompress*fBytesRead/fCpuTime));
@@ -393,10 +417,13 @@ void TTreePerfStats::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TTreePerfStats::Print(Option_t * /*option*/) const
+void TTreePerfStats::Print(Option_t * option) const
 {
    // Print the TTree I/O perf stats.
 
+   TString opts(option);
+   opts.ToLower();
+   Bool_t unzip = opts.Contains("unzip");
    TTreePerfStats *ps = (TTreePerfStats*)this;
    ps->Finish();
       
@@ -412,11 +439,19 @@ void TTreePerfStats::Print(Option_t * /*option*/) const
    printf("Real Time = %7.3f seconds\n",fRealTime);
    printf("CPU  Time = %7.3f seconds\n",fCpuTime);
    printf("Disk Time = %7.3f seconds\n",fDiskTime);
+   if (unzip) {
+      printf("Strm Time = %7.3f seconds\n",fCpuTime-fUnzipTime);
+      printf("UnzipTime = %7.3f seconds\n",fUnzipTime);
+   }      
    printf("Disk IO   = %7.3f MBytes/s\n",1e-6*fBytesRead/fDiskTime);
    printf("ReadUZRT  = %7.3f MBytes/s\n",1e-6*fCompress*fBytesRead/fRealTime);
    printf("ReadUZCP  = %7.3f MBytes/s\n",1e-6*fCompress*fBytesRead/fCpuTime);
    printf("ReadRT    = %7.3f MBytes/s\n",1e-6*fBytesRead/fRealTime);
    printf("ReadCP    = %7.3f MBytes/s\n",1e-6*fBytesRead/fCpuTime);
+   if (unzip) {
+      printf("ReadStrCP = %7.3f MBytes/s\n",1e-6*fCompress*fBytesRead/(fCpuTime-fUnzipTime));
+      printf("ReadZipCP = %7.3f MBytes/s\n",1e-6*fCompress*fBytesRead/fUnzipTime);
+   }      
 }
 
 //______________________________________________________________________________
@@ -454,6 +489,7 @@ void TTreePerfStats::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out<<"   ps->SetRealTime("<<fRealTime<<");"<<endl;
    out<<"   ps->SetCpuTime("<<fCpuTime<<");"<<endl;
    out<<"   ps->SetDiskTime("<<fDiskTime<<");"<<endl;
+   out<<"   ps->SetUnzipTime("<<fUnzipTime<<");"<<endl;
    out<<"   ps->SetCompress("<<fCompress<<");"<<endl;
 
    Int_t i, npoints = fGraphIO->GetN();

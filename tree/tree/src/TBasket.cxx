@@ -17,6 +17,8 @@
 #include "TMath.h"
 #include "TTreeCache.h"
 #include "TTreeCacheUnzip.h"
+#include "TVirtualPerfStats.h"
+#include "TTimeStamp.h"
 
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
@@ -409,6 +411,10 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
             return badread;
          }
 
+         // For monitoring the cost of the unzipping.
+         Double_t start = 0;
+         if (gPerfStats != 0) start = TTimeStamp();
+
          if ((fObjlen+fKeylen) > fCompressedSize) {
             /* early consistency check before potentially large memory is being allocated */
             Int_t nin, nbuf;
@@ -456,6 +462,9 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          fCompressedBuffer = temp;
          fCompressedSize = templen;
          len = fObjlen+fKeylen;
+         if (gPerfStats != 0) {
+            gPerfStats->FileUnzipEvent(file,pos,start,fCompressedSize,fObjlen);
+         }
       } else {
          fBuffer = fBufferRef->Buffer();
       }
