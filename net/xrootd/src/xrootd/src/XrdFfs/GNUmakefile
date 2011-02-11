@@ -123,3 +123,7 @@ $(OBJDIR)/XrdFfsXrootdfs.o: XrdFfsXrootdfs.cc \
                             XrdPosixXrootd.hh
 	@echo Compiling XrdFfsXrootdfs.cc
 	$(ECHO)$(CC) -c  $(CFLAGS) $(INCLUDE) $(CFHASFUSE) XrdFfsXrootdfs.cc -o $(OBJDIR)/XrdFfsXrootdfs.o
+
+ifneq ($(findstring g++, $(CC)),)
+$(OBJDIR)/XrdFfsPosix.o: CFLAGS += -fno-strict-aliasing
+endif
