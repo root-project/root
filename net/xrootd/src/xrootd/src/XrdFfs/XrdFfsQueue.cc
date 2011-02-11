@@ -111,11 +111,12 @@ unsigned int XrdFfsQueue_count_tasks()
 {
     unsigned int que_len = 0;
     pthread_mutex_lock(&XrdFfsQueueTaskque_mutex);
-    if (XrdFfsQueueTaskque_head != NULL && XrdFfsQueueTaskque_tail != NULL)
+    if (XrdFfsQueueTaskque_head != NULL && XrdFfsQueueTaskque_tail != NULL) {
         if (XrdFfsQueueTaskque_tail->id > XrdFfsQueueTaskque_head->id)
             que_len = XrdFfsQueueTaskque_tail->id - XrdFfsQueueTaskque_head->id;
         else
             que_len = (unsigned int)2147483647 - (XrdFfsQueueTaskque_head->id - XrdFfsQueueTaskque_tail->id) + 1;
+    }
     pthread_mutex_unlock(&XrdFfsQueueTaskque_mutex);
     return que_len;
 }
