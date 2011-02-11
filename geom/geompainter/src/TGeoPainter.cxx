@@ -1191,7 +1191,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
    TGeoShape::SetTransform(fGlobal);
    Bool_t drawDaughters = kTRUE;
    Bool_t vis = (top->IsVisible() && !top->IsAssembly());
-   Char_t transparency;
+   Int_t transparency = 0;
 
    // Update pad attributes in case we need to paint VOL
    if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
