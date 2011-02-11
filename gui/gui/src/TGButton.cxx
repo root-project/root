@@ -1281,7 +1281,7 @@ void TGCheckButton::DoRedraw()
    y0 = !fTHeight ? 0 : y + 1;
    if (fOn && fOff) {
       Int_t smax = TMath::Max(fOn->GetHeight(), fOff->GetHeight());
-      y0 = ((Int_t)fHeight <= smax) ? 0 : 1 + ((Int_t)fHeight - smax) >> 1;
+      y0 = ((Int_t)fHeight <= smax) ? 0 : 1 + (((Int_t)fHeight - smax) >> 1);
    }
 
    if (fStateOn) {
@@ -1643,7 +1643,7 @@ void TGRadioButton::DoRedraw()
    y0 = !fTHeight ? 0 : ty + 1;
    if (fOn && fOff) {
       Int_t smax = TMath::Max(fOn->GetHeight(), fOff->GetHeight());
-      y0 = ((Int_t)fHeight <= smax) ? 0 : 1 + ((Int_t)fHeight - smax) >> 1;
+      y0 = ((Int_t)fHeight <= smax) ? 0 : 1 + (((Int_t)fHeight - smax) >> 1);
    }
 
    if (fStateOn) {
