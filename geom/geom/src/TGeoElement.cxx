@@ -1032,9 +1032,9 @@ void TGeoElementTable::ImportElementsRN()
    TGeoElementRN *elem;
    TString rnf;
 #ifdef ROOTETCDIR
-   rnf.TString::Format("%s/RadioNuclides.txt", ROOTETCDIR);
+   rnf.Form("%s/RadioNuclides.txt", ROOTETCDIR);
 #else
-   rnf.TString::Format("%s/etc/RadioNuclides.txt", gSystem->Getenv("ROOTSYS"));
+   rnf.Form("%s/etc/RadioNuclides.txt", gSystem->Getenv("ROOTSYS"));
 #endif
    FILE *fp = fopen(rnf, "r");
    if (!fp) {
@@ -1404,7 +1404,8 @@ void TGeoBatemanSol::Normalize(Double_t factor)
 void TGeoBatemanSol::Print(Option_t * /*option*/) const
 {
 // Print concentration evolution.
-   TString formula = TString::Format("N[%s]/N[%s] = ", fElem->GetName(), fElemTop->GetName());
+   TString formula;
+   formula.Form("N[%s]/N[%s] = ", fElem->GetName(), fElemTop->GetName());
    for (Int_t i=0; i<fNcoeff; i++) {
       if (i == fNcoeff-1) formula += TString::Format("%g*exp(-%g*t)", fCoeff[i].cn, fCoeff[i].lambda);
       else                formula += TString::Format("%g*exp(-%g*t) + ", fCoeff[i].cn, fCoeff[i].lambda);
