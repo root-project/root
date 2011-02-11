@@ -28,7 +28,7 @@ public:
    TGenPhaseSpace(const TGenPhaseSpace &gen);
    virtual ~TGenPhaseSpace() {}
 
-   Bool_t          SetDecay(TLorentzVector &P, Int_t nt, Double_t *mass, Option_t *opt="");
+   Bool_t          SetDecay(TLorentzVector &P, Int_t nt, const Double_t *mass, Option_t *opt="");
    Double_t        Generate();
    TLorentzVector *GetDecay(Int_t n); 
 

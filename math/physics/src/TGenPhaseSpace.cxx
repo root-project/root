@@ -154,7 +154,7 @@ TLorentzVector *TGenPhaseSpace::GetDecay(Int_t n)
 
 //_____________________________________________________________________________________
 Bool_t TGenPhaseSpace::SetDecay(TLorentzVector &P, Int_t nt, 
-   Double_t *mass, Option_t *opt) 
+   const Double_t *mass, Option_t *opt) 
 {
    // input:
    // TLorentzVector &P:    decay particle (Momentum, Energy units are Gev/C, GeV)
