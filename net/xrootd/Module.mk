@@ -223,7 +223,8 @@ endif
 		   echo "*** Error condition reported by Xrootd-configure (rc = $$rc):"; \
 		   rm -f $(XROOTDMAKE); \
 	 	   exit 1; \
-		fi)
+		fi; \
+		$(MAKE) version)
 else
 $(XROOTDMAKE):
 		$(MAKEDIR)
