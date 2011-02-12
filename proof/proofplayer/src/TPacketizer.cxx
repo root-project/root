@@ -164,7 +164,10 @@ public:
       // Must return -1 if this is smaller than obj, 0 if objects are equal
       // and 1 if this is larger than obj.
       const TFileNode *obj = dynamic_cast<const TFileNode*>(other);
-      R__ASSERT(obj != 0);
+      if (!obj) {
+         Error("Compare", "input is not a TPacketizer::TFileNode object");
+         return 0;
+      }
 
       Int_t myVal = GetSlaveCnt();
       Int_t otherVal = obj->GetSlaveCnt();
@@ -376,8 +379,8 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    Reset();
    // Optimize the number of files to be open when running on subsample
    Int_t validateMode = 0;
-   TProof::GetParameter(input, "PROOF_ValidateByFile", validateMode);
-   Bool_t byfile = (validateMode > 0 && num > -1) ? kTRUE : kFALSE;
+   Int_t gprc = TProof::GetParameter(input, "PROOF_ValidateByFile", validateMode);
+   Bool_t byfile = (gprc == 0 && validateMode > 0 && num > -1) ? kTRUE : kFALSE;
    ValidateFiles(dset, slaves, num, byfile);
 
    if (!fValid) return;
@@ -390,7 +393,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    fUnAllocated->Clear();  // avoid dangling pointers
    fActive->Clear();
    fFileNodes->Clear();    // then delete all objects
-   PDB(kPacketizer,2) Info("TPacketizer", "processing Range: First %lld, Num %lld", first, num);
+   PDB(kPacketizer,2) Info("TPacketizer", "processing range: first %lld, num %lld", first, num);
 
    dset->Reset();
    Long64_t cur = 0;
@@ -408,7 +411,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       Long64_t eFirst = e->GetFirst();
       Long64_t eNum = e->GetNum();
       PDB(kPacketizer,2)
-         Info("TPacketizer", "processing element: First %lld, Num %lld (cur %lld)", eFirst, eNum, cur);
+         Info("TPacketizer", "processing element: first %lld, num %lld (cur %lld)", eFirst, eNum, cur);
 
       if (!e->GetEntryList()){
          // this element is before the start of the global range, skip it
@@ -432,7 +435,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
          if (num != -1 && (first+num <= cur+eNum)) {
             e->SetNum(first + num - cur);
             PDB(kPacketizer,2)
-               Info("TPacketizer", "processing element: Adjust end %lld", first + num - cur);
+               Info("TPacketizer", "processing element: adjust end %lld", first + num - cur);
             cur += eNum;
             eNum = e->GetNum();
          }
@@ -443,7 +446,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
             e->SetFirst(eFirst + (first - cur));
             e->SetNum(e->GetNum() - (first - cur));
             PDB(kPacketizer,2)
-               Info("TPacketizer", "processing element: Adjust start %lld and end %lld",
+               Info("TPacketizer", "processing element: adjust start %lld and end %lld",
                                   eFirst + (first - cur), first + num - cur);
             cur += eNum;
             eNum = e->GetNum();

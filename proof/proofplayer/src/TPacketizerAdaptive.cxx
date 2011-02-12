@@ -269,8 +269,11 @@ public:
       // relation between harddrive speed and network bandwidth.
 
       const TFileNode *obj = dynamic_cast<const TFileNode*>(other);
-      R__ASSERT(obj != 0);
-
+      if (!obj) {
+         Error("Compare", "input is not a TPacketizer::TFileNode object");
+         return 0;
+      }
+      
       // how many more events it has than obj
 
       if (fStrategy == 1) {
@@ -670,8 +673,8 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    Reset();
    // Optimize the number of files to be open when running on subsample
    Int_t validateMode = 0;
-   TProof::GetParameter(input, "PROOF_ValidateByFile", validateMode);
-   Bool_t byfile = (validateMode > 0 && num > -1) ? kTRUE : kFALSE;
+   Int_t gprc = TProof::GetParameter(input, "PROOF_ValidateByFile", validateMode);
+   Bool_t byfile = (gprc == 0 && validateMode > 0 && num > -1) ? kTRUE : kFALSE;
    ValidateFiles(dset, slaves, num, byfile);
 
 
@@ -687,7 +690,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    fFileNodes->Clear();    // then delete all objects
    PDB(kPacketizer,2)
       Info("TPacketizerAdaptive",
-           "processing Range: First %lld, Num %lld", first, num);
+           "processing range: first %lld, num %lld", first, num);
 
    dset->Reset();
    Long64_t cur = 0;

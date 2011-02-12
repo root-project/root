@@ -157,15 +157,23 @@ TPacketizerFile::TPacketizerFile(TList *workers, Long64_t, TList *input,
       }
       if (wrklist) {
          TString hname = TUrl(key->GetName()).GetHostFQDN();
-         if (nodes.FindObject(hname)) {
+         if ((o = nodes.FindObject(hname))) {
             fTotalEntries += wrklist->GetSize();
             fIters->Add(new TIterObj(hname, new TIter(wrklist)));
+            // Notify
+            PDB(kPacketizer,2)
+               Info("TPacketizerFile", "%d files of '%s' (fqdn: '%s') assigned to '%s'",
+                                       wrklist->GetSize(), key->GetName(), hname.Data(), o->GetName());
          } else {
             // We add all to the not assigned list so that they will be distributed
             // according to the load
             TIter nxf(wrklist);
             while ((o = nxf()))
                fNotAssigned->Add(o);
+            // Notify
+            PDB(kPacketizer,2)
+               Info("TPacketizerFile", "%d files of '%s' (fqdn: '%s') not assigned",
+                                       wrklist->GetSize(), key->GetName(), hname.Data());
          }
       }
    }
