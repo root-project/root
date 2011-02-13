@@ -105,6 +105,7 @@ protected:
    Bool_t                   IsMissingCollection() const;
    TClass                  *GetCurrentClass(); // Class referenced by transient description
    TClass                  *GetParentClass(); // Class referenced by fParentName
+   TStreamerInfo           *GetInfoImp() const;
    void                     ReleaseObject();
    void                     SetBranchCount(TBranchElement* bre);
    void                     SetBranchCount2(TBranchElement* bre) { fBranchCount2 = bre; }
