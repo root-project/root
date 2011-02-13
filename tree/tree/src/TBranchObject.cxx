@@ -232,6 +232,25 @@ Int_t TBranchObject::GetEntry(Long64_t entry, Int_t getall)
 }
 
 //______________________________________________________________________________
+Int_t TBranchObject::GetExpectedType(TClass *&expectedClass,EDataType &expectedType)
+{
+   // Fill expectedClass and expectedType with information on the data type of the 
+   // object/values contained in this branch (and thus the type of pointers
+   // expected to be passed to Set[Branch]Address
+   // return 0 in case of success and > 0 in case of failure.
+   
+   expectedClass = 0;
+   expectedType = kOther_t;
+   TLeafObject* lobj = (TLeafObject*) GetListOfLeaves()->At(0);
+   if (!lobj) {
+      Error("GetExpectedType", "Did not find any leaves in %s",GetName());
+      return 1;
+   }
+   expectedClass = lobj->GetClass();
+   return 0;
+}
+
+//______________________________________________________________________________
 Bool_t TBranchObject::IsFolder() const
 {
    // Return TRUE if more than one leaf or if fBrowsables, FALSE otherwise.

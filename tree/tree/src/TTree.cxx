@@ -2332,7 +2332,7 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
    // is involved, reset the fInfo of the branch.
    // The return values are:
    //  kMissingBranch (-5) : Missing branch
-   //  kInternalError (-4) : Internal error (could not find the type corresponding to a data type number
+   //  kInternalError (-4) : Internal error (could not find the type corresponding to a data type number)
    //  kMissingCompiledCollectionProxy (-3) : Missing compiled collection proxy for a compiled collection
    //  kMismatch (-2) : Non-Class Pointer type given does not match the type expected by the branch
    //  kClassMismatch (-1) : Class Pointer type given does not match the type expected by the branch
@@ -2351,45 +2351,14 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
    // Let's determine what we need!
    TClass* expectedClass = 0;
    EDataType expectedType = kOther_t;
-   if (branch->InheritsFrom(TBranchObject::Class())) {
-      TLeafObject* lobj = (TLeafObject*) branch->GetListOfLeaves()->At(0);
-      expectedClass = lobj->GetClass();
-   } else if (branch->InheritsFrom(TBranchElement::Class())) {
-      TBranchElement* branchEl = (TBranchElement*) branch;
-
-      Int_t type = branchEl->GetStreamerType();
-      if ((type == -1) || (branchEl->GetID() == -1)) {
-           expectedClass = TClass::GetClass( branchEl->GetClassName() );
-      } else {
-         // Case of an object data member.  Here we allow for the
-         // variable name to be ommitted.  Eg, for Event.root with split
-         // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
-         TStreamerElement* element = (TStreamerElement*) branchEl->GetInfo()->GetElems()[branchEl->GetID()];
-         if (element) {
-            expectedClass = element->GetClassPointer();
-            if (!expectedClass) {
-               TDataType* data = gROOT->GetType(element->GetTypeNameBasic());
-               if (!data) {
-                  Error("CheckBranchAddress", "Did not find the type number for %s", element->GetTypeNameBasic());
-                  return kInternalError;
-               } else {
-                  expectedType = (EDataType) data->GetType();
-               }
-            }
-         } else {
-            Error("CheckBranchAddress", "Did not find the type for %s",branchEl->GetName());
-         }
-      }
-      if (ptrClass && (branch->GetMother() == branch)) {
-         // Top Level branch
-         if (!isptr) {
-            Error("SetBranchAddress", "The address for \"%s\" should be the address of a pointer!", branch->GetName());
-         }
-      }
-   } else {
-      TLeaf* l = (TLeaf*) branch->GetListOfLeaves()->At(0);
-      if (l) {
-         expectedType = (EDataType) gROOT->GetType(l->GetTypeName())->GetType();
+   if (0 != branch->GetExpectedType(expectedClass,expectedType) ) {
+      // Something went wrong, the warning message has already be issued.
+      return kInternalError;
+   }
+   if (expectedClass && ptrClass && (branch->GetMother() == branch)) {
+      // Top Level branch
+      if (!isptr) {
+         Error("SetBranchAddress", "The address for \"%s\" should be the address of a pointer!", branch->GetName());
       }
    }
    if (expectedType == kFloat16_t) {
@@ -2412,7 +2381,7 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
        expectedClass != ptrClass &&
        branch->InheritsFrom( TBranchElement::Class() ) &&
        ptrClass->GetSchemaRules() &&
-       ptrClass->GetSchemaRules()->HasRuleWithSourceClass(expectedClass->GetName() ) ) {
+       ptrClass->GetSchemaRules()->HasRuleWithSourceClass( expectedClass->GetName() ) ) {
 
       TBranchElement* bEl = (TBranchElement*)branch;
 
@@ -2423,7 +2392,7 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       }
       else {
 
-         bEl->SetTargetClassName( ptrClass->GetName() );
+         bEl->SetTargetClass( ptrClass->GetName() );
          return kMatchConversion;
       }
 
@@ -2444,7 +2413,7 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
              inmemValueClass->GetSchemaRules()->HasRuleWithSourceClass(onfileValueClass->GetName() ) )
          {
             TBranchElement* bEl = (TBranchElement*)branch;
-            bEl->SetTargetClassName( ptrClass->GetName() );
+            bEl->SetTargetClass( ptrClass->GetName() );
             return kMatchConversionCollection;
          }
       }
@@ -6244,24 +6213,9 @@ Int_t TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr)
    TBranch* branch = GetBranch(bname);
    if (!branch) {
       Error("SetBranchAddress", "unknown branch -> %s", bname);
-      return kNoCheck;
+      return kMissingBranch;
    }
-   if (ptr) {
-      *ptr = branch;
-   }
-   if (fClones) {
-      void* oldAddr = branch->GetAddress();
-      TIter next(fClones);
-      TTree* clone = 0;
-      while ((clone = (TTree*) next())) {
-         TBranch* cloneBr = clone->GetBranch(bname);
-         if (cloneBr && (cloneBr->GetAddress() == oldAddr)) {
-            cloneBr->SetAddress(addr);
-         }
-      }
-   }
-   branch->SetAddress(addr);
-   return kVoidPtr;
+   return SetBranchAddressImp(branch,addr,ptr);
 }
 
 //_______________________________________________________________________
@@ -6297,9 +6251,39 @@ Int_t TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr, TCla
    }
 
    Int_t res = CheckBranchAddressType(branch, ptrClass, datatype, isptr);
-   SetBranchAddress(bname, addr);
+   SetBranchAddressImp(branch,addr,ptr);
    return res;
 }
+
+//_______________________________________________________________________
+Int_t TTree::SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr)
+{
+   // Change branch address, dealing with clone trees properly.
+   // See TTree::CheckBranchAddressType for the semantic of the return value.
+   //
+   // Note: See the comments in TBranchElement::SetAddress() for the
+   //       meaning of the addr parameter.
+   //
+
+   if (ptr) {
+      *ptr = branch;
+   }
+   if (fClones) {
+      void* oldAddr = branch->GetAddress();
+      TIter next(fClones);
+      TTree* clone = 0;
+      const char *bname = branch->GetName();
+      while ((clone = (TTree*) next())) {
+         TBranch* cloneBr = clone->GetBranch(bname);
+         if (cloneBr && (cloneBr->GetAddress() == oldAddr)) {
+            cloneBr->SetAddress(addr);
+         }
+      }
+   }
+   branch->SetAddress(addr);
+   return kVoidPtr;
+}
+
 
 //_______________________________________________________________________
 void TTree::SetBranchStatus(const char* bname, Bool_t status, UInt_t* found)
