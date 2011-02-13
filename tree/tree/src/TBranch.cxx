@@ -1308,6 +1308,26 @@ Int_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/, TClonesArray* li
 }
 
 //______________________________________________________________________________
+Int_t TBranch::GetExpectedType(TClass *&expectedClass,EDataType &expectedType)
+{
+   // Fill expectedClass and expectedType with information on the data type of the 
+   // object/values contained in this branch (and thus the type of pointers
+   // expected to be passed to Set[Branch]Address
+   // return 0 in case of success and > 0 in case of failure.
+   
+   expectedClass = 0;
+   expectedType = kOther_t;
+   TLeaf* l = (TLeaf*) GetListOfLeaves()->At(0);
+   if (l) {
+      expectedType = (EDataType) gROOT->GetType(l->GetTypeName())->GetType();
+      return 0;
+   } else {
+      Error("GetExpectedType", "Did not find any leaves in %s",GetName());
+      return 1;
+   }
+}
+
+//______________________________________________________________________________
 TFile* TBranch::GetFile(Int_t mode)
 {
    // Return pointer to the file where branch buffers reside, returns 0

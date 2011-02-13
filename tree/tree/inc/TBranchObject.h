@@ -46,6 +46,7 @@ public:
    virtual const char* GetClassName() const { return fClassName.Data(); };
    virtual const char* GetObjClassName() { return fClassName.Data(); };
    virtual Int_t       GetEntry(Long64_t entry=0, Int_t getall = 0);
+   virtual Int_t       GetExpectedType(TClass *&clptr,EDataType &type);
    Bool_t              IsFolder() const;
    virtual void        Print(Option_t *option="") const;
    virtual void        Reset(Option_t *option="");

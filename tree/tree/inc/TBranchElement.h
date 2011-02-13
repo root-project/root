@@ -61,7 +61,6 @@ protected:
 // Data Members
 protected:
    TString                  fClassName;     //  Class name of referenced object
-   TString                  fTargetClassName; //! Name of the target in-memory class
    TString                  fParentName;    //  Name of parent class
    TString                  fClonesName;    //  Name of class in TClonesArray (if any)
    TVirtualCollectionProxy *fCollProxy;     //! collection interface (if any)
@@ -80,6 +79,7 @@ protected:
    TVirtualArray           *fOnfileObject;  //! Place holder for the onfile representation of data members.
    Bool_t                   fInit;          //! Initialization flag for branch assignment
    Bool_t                   fInitOffsets;   //! Initialization flag to not endlessly recalculate offsets
+   TClassRef                fTargetClass;   //! Reference to the target in-memory class
    TClassRef                fCurrentClass;  //! Reference to current (transient) class definition
    TClassRef                fParentClass;   //! Reference to class definition in fParentName
    TClassRef                fBranchClass;   //! Reference to class definition in fClassName
@@ -153,9 +153,11 @@ public:
            Int_t           *GetBranchOffset() const { return fBranchOffset; }
            UInt_t           GetCheckSum() { return fCheckSum; }
    virtual const char      *GetClassName() const { return fClassName.Data(); }
+   virtual TClass          *GetClass() const { return fBranchClass; }
    virtual const char      *GetClonesName() const { return fClonesName.Data(); }
    TVirtualCollectionProxy *GetCollectionProxy();
    virtual Int_t            GetEntry(Long64_t entry = 0, Int_t getall = 0);
+   virtual Int_t            GetExpectedType(TClass *&clptr,EDataType &type);
            const char      *GetIconName() const;
            Int_t            GetID() const { return fID; }
            TStreamerInfo   *GetInfo() const;
@@ -166,7 +168,7 @@ public:
            Int_t            GetNdata() const { return fNdata; }
            Int_t            GetType() const { return fType; }
            Int_t            GetStreamerType() const { return fStreamerType; }
-   virtual TString          GetTargetClassName() { return fTargetClassName; }
+   virtual TClass          *GetTargetClass() { return fTargetClass; }
    virtual const char      *GetTypeName() const;
            Double_t         GetValue(Int_t i, Int_t len, Bool_t subarr = kFALSE) const;
    virtual void            *GetValuePointer() const;
@@ -189,7 +191,7 @@ public:
    virtual void             SetOffset(Int_t offset);
    inline  void             SetParentClass(TClass* clparent);
    virtual void             SetParentName(const char* name) { fParentName = name; }
-   virtual void             SetTargetClassName(const char *name);
+   virtual void             SetTargetClass(const char *name);
    virtual void             SetupAddresses();
    virtual void             SetType(Int_t btype) { fType = btype; }
    virtual void             UpdateFile();
