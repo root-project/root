@@ -536,6 +536,7 @@ public:
    virtual Bool_t HandleSelectionRequest(Event_t *event);
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
+   virtual Bool_t SaveFrameAsCodeOrImage();
    virtual void   SendCloseMessage();
    virtual void   CloseWindow();   //*SIGNAL*
 

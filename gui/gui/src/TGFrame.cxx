@@ -1471,9 +1471,88 @@ TGMainFrame::~TGMainFrame()
 }
 
 //______________________________________________________________________________
+Bool_t TGMainFrame::SaveFrameAsCodeOrImage()
+{
+   // Opens dialog window allowing user to save the frame contents
+   // as a ROOT macro or as an image.
+   // Returns kTRUE if something was saved.
+   //
+   // This is bound to Ctrl-S by default.
+
+   static TString dir(".");
+   static Bool_t overwr = kFALSE;
+
+   Bool_t repeat_save;
+   do {
+      repeat_save = kFALSE;
+
+      TGFileInfo fi;
+      TGMainFrame *main = (TGMainFrame*)GetMainFrame();
+      fi.fFileTypes = gSaveMacroTypes;
+      fi.fIniDir    = StrDup(dir);
+      fi.fOverwrite = overwr;
+      new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
+      if (!fi.fFilename) return kFALSE;
+      dir = fi.fIniDir;
+      overwr = fi.fOverwrite;
+      TString fname = gSystem->UnixPathName(fi.fFilename);
+      if (fname.EndsWith(".C"))
+         main->SaveSource(fname.Data(), "");
+      else {
+         TImage::EImageFileTypes gtype = TImage::kUnknown;
+         if (fname.EndsWith("gif")) {
+            gtype = TImage::kGif;
+         } else if (fname.EndsWith(".png")) {
+            gtype = TImage::kPng;
+         } else if (fname.EndsWith(".jpg")) {
+            gtype = TImage::kJpeg;
+         } else if (fname.EndsWith(".tiff")) {
+            gtype = TImage::kTiff;
+         } else if (fname.EndsWith(".xpm")) {
+            gtype = TImage::kXpm;
+         }
+         if (gtype != TImage::kUnknown) {
+            Int_t saver = gErrorIgnoreLevel;
+            gErrorIgnoreLevel = kFatal;
+            TImage *img = TImage::Create();
+            RaiseWindow();
+            img->FromWindow(GetId());
+            img->WriteImage(fname, gtype);
+            gErrorIgnoreLevel = saver;
+            delete img;
+         }
+         else {
+            Int_t retval;
+            new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
+                         TString::Format("file (%s) cannot be saved with this extension",
+                                         fname.Data()), kMBIconExclamation,
+                         kMBRetry | kMBCancel, &retval);
+            repeat_save = (retval == kMBRetry);
+         }
+      }
+   } while (repeat_save);
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 Bool_t TGMainFrame::HandleKey(Event_t *event)
 {
    // Handle keyboard events.
+
+   if (fBindList) {
+
+      TIter next(fBindList);
+      TGMapKey *m;
+      TGFrame  *w = 0;
+
+      while ((m = (TGMapKey *) next())) {
+         if (m->fKeyCode == event->fCode) {
+            w = (TGFrame *) m->fWindow;
+            if (w->HandleKey(event)) return kTRUE;
+         }
+      }
+   }
 
    if ((event->fType == kGKeyPress) && (event->fState & kKeyControlMask)) {
       UInt_t keysym;
@@ -1481,67 +1560,7 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
       gVirtualX->LookupString(event, str, sizeof(str), keysym);
 
       if ((keysym & ~0x20) == kKey_S) { // case insensitive ctrl-s
-         static TString dir(".");
-         static Bool_t overwr = kFALSE;
-         TGFileInfo fi;
-         TGMainFrame *main = (TGMainFrame*)GetMainFrame();
-         fi.fFileTypes = gSaveMacroTypes;
-         fi.fIniDir    = StrDup(dir);
-         fi.fOverwrite = overwr;
-         new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
-         if (!fi.fFilename) return kTRUE;
-         dir = fi.fIniDir;
-         overwr = fi.fOverwrite;
-         TString fname = gSystem->UnixPathName(fi.fFilename);
-         if (fname.EndsWith(".C"))
-            main->SaveSource(fname.Data(), "");
-         else {
-            TImage::EImageFileTypes gtype = TImage::kUnknown;
-            if (fname.EndsWith("gif")) {
-               gtype = TImage::kGif;
-            } else if (fname.EndsWith(".png")) {
-               gtype = TImage::kPng;
-            } else if (fname.EndsWith(".jpg")) {
-               gtype = TImage::kJpeg;
-            } else if (fname.EndsWith(".tiff")) {
-               gtype = TImage::kTiff;
-            } else if (fname.EndsWith(".xpm")) {
-               gtype = TImage::kXpm;
-            }
-            if (gtype != TImage::kUnknown) {
-               Int_t saver = gErrorIgnoreLevel;
-               gErrorIgnoreLevel = kFatal;
-               TImage *img = TImage::Create();
-               RaiseWindow();
-               img->FromWindow(GetId());
-               img->WriteImage(fname, gtype);
-               gErrorIgnoreLevel = saver;
-               delete img;
-            }
-            else {
-               Int_t retval;
-               new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
-                            TString::Format("file (%s) cannot be saved with this extension",
-                            fname.Data()), kMBIconExclamation,
-                            kMBRetry | kMBCancel, &retval);
-               if (retval == kMBRetry)
-                  HandleKey(event);
-            }
-         }
-         return kTRUE;
-      }
-   }
-
-   if (!fBindList) return kFALSE;
-
-   TIter next(fBindList);
-   TGMapKey *m;
-   TGFrame  *w = 0;
-
-   while ((m = (TGMapKey *) next())) {
-      if (m->fKeyCode == event->fCode) {
-         w = (TGFrame *) m->fWindow;
-         if (w->HandleKey(event)) return kTRUE;
+         return SaveFrameAsCodeOrImage();
       }
    }
    return kFALSE;
