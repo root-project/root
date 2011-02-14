@@ -781,6 +781,7 @@ void TRootBrowser::HandleMenu(Int_t id)
          CloseWindow();
          break;
       case kQuitRoot:
+         CloseWindow();
          gApplication->Terminate(0);
          break;
       default:
