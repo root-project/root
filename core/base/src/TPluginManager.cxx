@@ -124,7 +124,7 @@ TPluginHandler::TPluginHandler(const char *base, const char *regexp,
 {
    // Create a plugin handler. Called by TPluginManager.
 
-   if (gROOT->LoadMacro(pluginName, 0, kTRUE) == 0)
+   if (fPlugin.EndsWith(".C") && gROOT->LoadMacro(fPlugin, 0, kTRUE) == 0)
       fIsMacro = kTRUE;
 
    if (fCtor.Contains("::")) {
