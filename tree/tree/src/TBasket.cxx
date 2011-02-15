@@ -521,6 +521,7 @@ void TBasket::Reset()
 {
    // Reset the basket to the starting state. i.e. as it was after calling
    // the constructor (and potentially attaching a TBuffer.)
+   // Reduce memory used by fEntryOffset and the TBuffer if needed ..
    
    // Name, Title, fClassName, fBranch 
    // stay the same.
@@ -531,13 +532,11 @@ void TBasket::Reset()
    if (newNevBufSize==0) {
       delete [] fEntryOffset;
       fEntryOffset = 0;
-   } else if (newNevBufSize > fNevBufSize) {
+   } else if (newNevBufSize != fNevBufSize) {
       delete [] fEntryOffset;
       fEntryOffset = new Int_t[newNevBufSize];
-   } else {
-      if (!fEntryOffset) {
-         fEntryOffset = new Int_t[newNevBufSize];
-      }         
+   } else if (!fEntryOffset) {
+      fEntryOffset = new Int_t[newNevBufSize];
    }
    fNevBufSize = newNevBufSize;
 
@@ -778,7 +777,6 @@ Int_t TBasket::WriteBuffer()
    fLast      = fBufferRef->Length();
    if (fEntryOffset) {
       fBufferRef->WriteArray(fEntryOffset,fNevBuf+1);
-      delete [] fEntryOffset; fEntryOffset = 0;
       if (fDisplacement) {
          fBufferRef->WriteArray(fDisplacement,fNevBuf+1);
          delete [] fDisplacement; fDisplacement = 0;
