@@ -13,12 +13,14 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_ADDITION
-#define ROO_ADDITION
+#ifndef ROO_PIECEWISEINTERPOLATION
+#define ROO_PIECEWISEINTERPOLATION
 
 #include "RooAbsReal.h"
 #include "RooRealProxy.h"
 #include "RooListProxy.h"
+
+#include "RooObjCacheManager.h"
 
 class RooRealVar;
 class RooArgList ;
@@ -41,7 +43,30 @@ public:
   const RooArgList& highList() const { return _highSet ; }
   const RooArgList& paramList() const { return _paramSet ; }
 
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
+
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const ;
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
+
+  void setPositiveDefinite(bool flag=true){_positiveDefinite=flag;}
 protected:
+
+  class CacheElem : public RooAbsCacheElement {
+  public:
+    CacheElem()  {} ;
+    virtual ~CacheElem() {} ; 
+    virtual RooArgList containedArgs(Action) { 
+      RooArgList ret(_funcIntList) ; 
+      ret.add(_lowIntList); 
+      ret.add(_highIntList);
+      return ret ; 
+    }
+    RooArgList _funcIntList ;
+    RooArgList _lowIntList ;
+    RooArgList _highIntList ;
+    // will want vector<RooRealVar*> for low and high also
+  } ;
+  mutable RooObjCacheManager _normIntMgr ; // The integration cache manager
 
   RooRealProxy _nominal;           // The nominal value
   RooArgList   _ownedList ;       // List of owned components
@@ -51,10 +76,11 @@ protected:
   mutable TIterator* _paramIter ;  //! Iterator over paramSet
   mutable TIterator* _lowIter ;  //! Iterator over lowSet
   mutable TIterator* _highIter ;  //! Iterator over highSet
+  Bool_t _positiveDefinite; // protect against negative and 0 bins.
 
   Double_t evaluate() const;
 
-  ClassDef(PiecewiseInterpolation,1) // Sum of RooAbsReal objects
+  ClassDef(PiecewiseInterpolation,2) // Sum of RooAbsReal objects
 };
 
 #endif

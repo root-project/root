@@ -36,9 +36,10 @@ RooPoisson::RooPoisson(const char *name, const char *title,
   RooAbsPdf(name,title), 
   x("x","x",this,_x),
   mean("mean","mean",this,_mean),
-  _noRounding(noRounding)
+  _noRounding(noRounding),
+  _protectNegative(false)
 { 
-  // Constructor
+  // Constructor  
 } 
 
 
@@ -48,7 +49,8 @@ RooPoisson::RooPoisson(const char *name, const char *title,
    RooAbsPdf(other,name), 
    x("x",this,other.x),
    mean("mean",this,other.mean),
-   _noRounding(other._noRounding)
+   _noRounding(other._noRounding),
+   _protectNegative(other._protectNegative)
 { 
    // Copy constructor
 } 
@@ -62,6 +64,8 @@ Double_t RooPoisson::evaluate() const
   // Implementation in terms of the TMath Poisson function
 
   Double_t k = _noRounding ? x : floor(x);  
+  if(_protectNegative && mean<0) 
+    return 1e-3;
   return TMath::Poisson(k,mean) ;
 } 
 
@@ -82,6 +86,9 @@ Int_t RooPoisson::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 Double_t RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   assert(code==1) ;
+
+  if(_protectNegative && mean<0) 
+    return exp(-2*mean); // make it fall quickly
 
   // Implement integral over x as summation. Add special handling in case
   // range boundaries are not on integer values of x

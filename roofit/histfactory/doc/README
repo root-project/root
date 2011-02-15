@@ -7,6 +7,37 @@ This package was written by
      Date: Original version in Spring 2009
      Modified version using XML in Jan 2010
 
+V2 Update (Feb. 2011)
+
+The original HistFactory made models that consisted of a Poisson term for each bin.  
+In this "number counting form" the dataset has one row and the collumns corresponded to the number of 
+events for each bin. This led to severe performance problems in statistical tools that generated 
+pseudo-experiments and evaluated likelihood ratio test statistics.  Now the HistFactory can produce the equivalent
+model as an ExtendedPdf, with a histogram shape and an overall Poisson for the total number of events.  
+This type of model is in the "standard form" and the dataset has one row for each event, and the column corresponds
+to the value of the observable in the histogram.  A new class has been introduced to provide the same piece-wise
+linear interpolation of the histograms.  Another benefit of this approach is that one can combine multiple
+channels with different numbers of bins in the histograms and no additional script or modification is needed
+to make it so that the combined model can be sent to tools that generate pseudo-experiments with ToyMC.
+
+In problems with >20 bins and few systematics this can lead to a 15x speed increase and dramatic improvements
+in memory consuption.  For problems with many systematics (where the fit takes a substantial portion of the time)
+the reduction in overhead can still lead to a ~4x speed increase.
+
+The hist2workspace executable now takes a flag to switch between the two forms:
+    hist2workspace -standard_form input.xml   (the new approach)
+    hist2workspace -number_counting_form input.xml (original approach)
+Without the flag, the new default is the -standard_form
+    hist2workspace input.xml  (defaults to -standard_form, the new approach)
+
+NOTE: the BinLow and BinHigh are ignored when the new -standard_form approach.  All bins of the histogram will be taken (excluding under/overflow bins)
+
+In addition, this version of HistFactory fills the list of GlobalObservables in the ModelConfig, which
+is needed for the unconditional ensemble associated with auxiliary measurements for constraints on nuisance parameters.
+
+Description:
+------------
+
 This is a package that creates a RooFit probability density function from ROOT histograms 
 of expected distributions and histograms that represent the +/- 1 sigma variations 
 from systematic effects. The resulting probability density function can then be used
