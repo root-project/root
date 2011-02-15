@@ -221,7 +221,7 @@ void TSelectorDraw::Begin(TTree *tree)
       }
 
       if (i) {
-         strlcpy(varexp,varexp0,i+1); 
+         strlcpy(varexp,varexp0,i+1);
 
          Int_t mustdelete=0;
          SetBit(kCustomHistogram);
@@ -457,7 +457,7 @@ void TSelectorDraw::Begin(TTree *tree)
 
    // Decode varexp and selection
    if (!CompileVariables(varexp, realSelection.GetTitle())) {
-      SetStatus(-1); 
+      SetStatus(-1);
       delete [] varexp;
       return;
    }
@@ -645,6 +645,8 @@ void TSelectorDraw::Begin(TTree *tree)
          } else {
             h2 = new TH2F(hname,htitle.Data(),fNbins[1],fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
             h2->SetLineColor(fTree->GetLineColor());
+            h2->SetLineWidth(fTree->GetLineWidth());
+            h2->SetLineStyle(fTree->GetLineStyle());
             h2->SetFillColor(fTree->GetFillColor());
             h2->SetFillStyle(fTree->GetFillStyle());
             h2->SetMarkerStyle(fTree->GetMarkerStyle());
@@ -777,6 +779,8 @@ void TSelectorDraw::Begin(TTree *tree)
          } else {
             h2 = new TH2F(hname,htitle.Data(),fNbins[1],fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
             h2->SetLineColor(fTree->GetLineColor());
+            h2->SetLineWidth(fTree->GetLineWidth());
+            h2->SetLineStyle(fTree->GetLineStyle());
             h2->SetFillColor(fTree->GetFillColor());
             h2->SetFillStyle(fTree->GetFillStyle());
             h2->SetMarkerStyle(fTree->GetMarkerStyle());
@@ -802,6 +806,8 @@ void TSelectorDraw::Begin(TTree *tree)
          } else {
             h3 = new TH3F(hname,htitle.Data(),fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
             h3->SetLineColor(fTree->GetLineColor());
+            h3->SetLineWidth(fTree->GetLineWidth());
+            h3->SetLineStyle(fTree->GetLineStyle());
             h3->SetFillColor(fTree->GetFillColor());
             h3->SetFillStyle(fTree->GetFillStyle());
             h3->SetMarkerStyle(fTree->GetMarkerStyle());
@@ -1295,6 +1301,7 @@ void TSelectorDraw::TakeAction()
       pm->SetMarkerColor(fTree->GetMarkerColor());
       pm->SetMarkerSize(fTree->GetMarkerSize());
       pm->SetLineColor(fTree->GetLineColor());
+      pm->SetLineWidth(fTree->GetLineWidth());
       pm->SetLineStyle(fTree->GetLineStyle());
       pm->SetFillColor(fTree->GetFillColor());
       pm->SetFillStyle(fTree->GetFillStyle());
@@ -1518,13 +1525,14 @@ void TSelectorDraw::TakeEstimate()
       pm->SetMarkerColor(fTree->GetMarkerColor());
       pm->SetMarkerSize(fTree->GetMarkerSize());
       pm->SetLineColor(fTree->GetLineColor());
+      pm->SetLineWidth(fTree->GetLineWidth());
       pm->SetLineStyle(fTree->GetLineStyle());
       pm->SetFillColor(fTree->GetFillColor());
       pm->SetFillStyle(fTree->GetFillStyle());
       if (!fDraw && !strstr(fOption.Data(),"goff")) {
          if (fOption.Length() == 0 || strcasecmp(fOption.Data(),"same")==0) {
             pm->Draw("p");
-         } 
+         }
          else {
             if (fOption.Contains("a")) {
                TString temp(fOption);
