@@ -82,9 +82,15 @@ namespace ROOT { namespace Cintex {
       Type t = dm.TypeOf();
       while ( t.IsTypedef() ) t = t.ToType();
       if ( !t && dm.IsTransient() )  {
-         if( Cintex::Debug() ) cout << "Cintex: Ignore transient member: " 
-                                    << dm.Name(SCOPED) << " [No valid reflection class]" << endl;
-         return;
+         // Before giving up, let's ask CINT:
+         int tagnum = G__defined_tagname(t.Name().c_str(), 2);
+         
+         if (tagnum < 0) {
+            if( Cintex::Debug() ) cout << "Cintex: Ignore transient member: " 
+               << dm.Name(SCOPED) << " [No valid reflection class]"
+               << " " << t.Name() << endl;
+            return;
+         }
       }
       else if ( !t )  {
          if( Cintex::Debug() > 0 )  {
