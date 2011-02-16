@@ -96,6 +96,7 @@ TMVA::DecisionTree::DecisionTree():
    fMinLinCorrForFisher (1),
    fUseExclusiveVars (kTRUE),
    fSepType        (NULL),
+   fRegType        (NULL),
    fMinSize        (0),
    fMinSepGain (0),
    fUseSearchTree(kFALSE),
@@ -128,6 +129,7 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Int_t minSize, 
    fMinLinCorrForFisher (1),
    fUseExclusiveVars (kTRUE),
    fSepType        (sepType),
+   fRegType        (NULL),
    fMinSize        (minSize),
    fMinSepGain     (0),
    fUseSearchTree  (kFALSE),
@@ -174,6 +176,7 @@ TMVA::DecisionTree::DecisionTree( const DecisionTree &d ):
    fMinLinCorrForFisher (d.fMinLinCorrForFisher),
    fUseExclusiveVars (d.fUseExclusiveVars),
    fSepType    (d.fSepType),
+   fRegType    (d.fRegType),
    fMinSize    (d.fMinSize),
    fMinSepGain (d.fMinSepGain),
    fUseSearchTree  (d.fUseSearchTree),
@@ -203,7 +206,7 @@ TMVA::DecisionTree::~DecisionTree()
 {
    // destructor
 
-   // desctruction of the tree nodes done in the "base class" BinaryTree
+   // destruction of the tree nodes done in the "base class" BinaryTree
 
    if (fMyTrandom) delete fMyTrandom;
 }
