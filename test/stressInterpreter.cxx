@@ -26,7 +26,7 @@ class Base {};
 
 class Klass: public Base {
 public:
-   Klass(): fKlass(this) {}
+   Klass() { fKlass = this; }
    ~Klass() { fKlass = 0; }
    Klass* get() const { return fKlass; }
    static const int first_klf = 30;
