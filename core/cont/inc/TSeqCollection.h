@@ -55,6 +55,7 @@ public:
    virtual TObject  *First() const = 0;
    virtual TObject  *Last() const = 0;
    Int_t             LastIndex() const { return GetSize() - 1; }
+   virtual Int_t     GetLast() const;
    virtual Int_t     IndexOf(const TObject *obj) const;
    virtual Bool_t    IsSorted() const { return fSorted; }
    void              UnSort() { fSorted = kFALSE; }

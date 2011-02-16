@@ -44,6 +44,16 @@ Int_t TSeqCollection::IndexOf(const TObject *obj) const
 }
 
 //______________________________________________________________________________
+Int_t TSeqCollection::GetLast() const
+{
+   // Returns index of last object in collection. Returns -1 when no
+   // objects in collection.
+
+   TObject *tmp = Last();
+   return tmp ? IndexOf(tmp) : -1;
+}
+
+//______________________________________________________________________________
 Int_t TSeqCollection::ObjCompare(TObject *a, TObject *b)
 {
    // Compare to objects in the collection. Use member Compare() of object a.
