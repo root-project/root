@@ -637,9 +637,12 @@ return (int)num;
 }
 
 void __cfortran__notused_dummy()
-{  /* to prevent not used warnings in gcc (added by ROOT) */
-   c2fstrv(0, 0, 0, 0); f2cstrv(0, 0, 0, 0); kill_trailing(0, 0);
-   vkill_trailing(0, 0, 0, 0); num_elem(0, 0, 0, 0);
+{
+   /* to prevent not used warnings in gcc (added by ROOT) */
+   if (0) {
+      c2fstrv(0, 0, 0, 0); f2cstrv(0, 0, 0, 0); kill_trailing(0, 0);
+      vkill_trailing(0, 0, 0, 0); num_elem(0, 0, 0, 0);
+   }
 }
 
 /* #endif removed 2/10/98 (CFITSIO) */
