@@ -454,10 +454,10 @@ void TProofBenchRunCPU::FillPerfStatPerfPlots(TTree* t, Int_t nactive)
       if (pe.fEvtNode.Contains(".")) continue;
 
       if (pe.fType == TVirtualPerfStats::kPacket){
-
-         event_rate_packet = pe.fEventsProcessed / pe.fProcTime;
-
-         fHist_perfstat_event->Fill(Double_t(nactive), event_rate_packet);
+         if (pe.fProcTime != 0.0) {
+            event_rate_packet = pe.fEventsProcessed / pe.fProcTime;
+            fHist_perfstat_event->Fill(Double_t(nactive), event_rate_packet);
+         }
       }
    }
      

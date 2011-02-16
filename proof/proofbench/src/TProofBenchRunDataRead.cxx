@@ -551,10 +551,12 @@ void TProofBenchRunDataRead::FillPerfStatProfiles(TTree *t, Int_t nactive)
       if (pe.fEvtNode.Contains(".")) continue;
 
       if (pe.fType==TVirtualPerfStats::kPacket){
-         event_rate_packet = pe.fEventsProcessed / pe.fProcTime;
-         fHist_perfstat_event->Fill(Double_t(nactive), event_rate_packet);
-         IO_rate_packet = pe.fBytesRead / Dmegabytes / pe.fProcTime;
-         fHist_perfstat_IO->Fill(Double_t(nactive), IO_rate_packet);
+         if (pe.fProcTime != 0.0) {
+            event_rate_packet = pe.fEventsProcessed / pe.fProcTime;
+            fHist_perfstat_event->Fill(Double_t(nactive), event_rate_packet);
+            IO_rate_packet = pe.fBytesRead / Dmegabytes / pe.fProcTime;
+            fHist_perfstat_IO->Fill(Double_t(nactive), IO_rate_packet);
+         }
       }
    }
 

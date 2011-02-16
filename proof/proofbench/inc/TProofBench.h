@@ -1,5 +1,5 @@
 // @(#)root/proofx:$Id$
-// Author: Sangsu Ryu 22/06/2010
+// Author: G.Ganis, S.Ryu Feb 2011
 
 /*************************************************************************
  * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
@@ -45,6 +45,7 @@ private:
 protected:
 
    TProof* fProof;               // Proof
+   TProof* fProofDS;             // Proof to be used for dataset actions
    TFile  *fOutFile;             // Output file
    TString fOutFileName;         // Name of the output file
    Int_t   fNtries;              // Number of times a measurement is repeated
@@ -96,6 +97,8 @@ public:
    void  SetDataPar(const char *par) { fDataPar = par; }
    void  SetDataGetSel(const char *sel) { fDataGenSel = sel; }
    void  SetDataGetPar(const char *par) { fDataGenPar = par; }
+
+   void  SetProofDS(TProof *p);
 
    static void DrawCPU(const char *outfile, const char *opt = "std:");
    static void DrawDataSet(const char *outfile, const char *opt = "std:", const char *type = "mbs");

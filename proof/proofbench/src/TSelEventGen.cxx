@@ -215,11 +215,12 @@ void TSelEventGen::SlaveBegin(TTree *tree)
                             " default: %d", fRegenerate);
    }
 
-   fFilesGenerated=new TList();
+   fFilesGenerated = new TList();
 
    TString hostname(TUrl(gSystem->HostName()).GetHostFQDN());
    TString thisordinal = gProofServ ? gProofServ->GetOrdinal() : "n.d";
-   TString sfilegenerated="PROOF_FilesGenerated" "_"+hostname+"_"+thisordinal;
+   TString sfilegenerated =
+      TString::Format("PROOF_FilesGenerated_%s_%s", hostname.Data(), thisordinal.Data());
    fFilesGenerated->SetName(sfilegenerated);
    fFilesGenerated->SetOwner(kTRUE);
 }
@@ -331,16 +332,22 @@ Bool_t TSelEventGen::Process(Long64_t entry)
    }
 
    // Generate
-
-   TString filename=fCurrent->GetName();
-   filename=fBaseDir+"/"+filename;
-
-   TString hostfqdn=TUrl(gSystem->HostName()).GetHostFQDN();
-   TFileInfo* fi=new TFileInfo("root://"+hostfqdn+"/"+filename);
-   TString seed = hostfqdn+"/"+filename;
+   TString filename =
+      TString::Format("%s/%s", fBaseDir.Data(), fCurrent->GetName());
+      
+   // Set the Url for remote access
+   TString dsrv, seed;
+   seed = TString::Format("%s/%s", gSystem->HostName(), filename.Data());
+   if (gSystem->Getenv("LOCALDATASERVER")) {
+      dsrv = gSystem->Getenv("LOCALDATASERVER");
+      if (!dsrv.EndsWith("/")) dsrv += "/";
+   } else {
+      dsrv.Form("root://%s/", TUrl(gSystem->HostName()).GetHostFQDN());
+   }
+   TFileInfo *fi = new TFileInfo(TString::Format("%s%s", dsrv.Data(), filename.Data()));
 
    //generate files
-   Long64_t neventstogenerate=fNEvents;
+   Long64_t neventstogenerate = fNEvents;
 
    Bool_t filefound=kFALSE;
    FileStat_t filestat;
@@ -350,7 +357,7 @@ Bool_t TSelEventGen::Process(Long64_t entry)
          TTree* t=(TTree*)f.Get("EventTree");
          if (t){
             Long64_t entries_file=t->GetEntries();
-            if ( entries_file==neventstogenerate ){
+            if (entries_file == neventstogenerate){
                //file size seems to be correct, skip generation
                Info("Process", "Bench file (%s, entries=%lld) exists."
                      " Skipping generation", fi->GetFirstUrl()->GetFile(),

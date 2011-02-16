@@ -1,5 +1,5 @@
 // @(#)root/proof:$Id$
-// Author: Sangsu Ryu 22/06/2010
+// Author: G.Ganis, S.Ryu Feb 2011
 
 /*************************************************************************
  * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
@@ -44,7 +44,7 @@ ClassImp(TProofBench)
 
 //______________________________________________________________________________
 TProofBench::TProofBench(const char *url, const char *outfile, const char *proofopt)
-            : fUnlinkOutfile(kFALSE), fOutFile(0),
+            : fUnlinkOutfile(kFALSE), fProofDS(0), fOutFile(0),
               fNtries(4), fHistType(0), fNHist(16), fReadType(0),
               fDataSet("BenchDataSet"), fDataGenSel(kPROOF_BenchSelDataGenDef),
               fRunCPU(0), fRunDS(0), fDS(0)
@@ -60,6 +60,9 @@ TProofBench::TProofBench(const char *url, const char *outfile, const char *proof
       Error("TProofBench", "could not open a valid PROOF session - cannot continue");
       return;
    }
+   // By default we use the same instance for dataset actions
+   fProofDS = fProof;
+   // The object is now valid
    ResetBit(kInvalidObject);
 
    // Set output file
@@ -485,7 +488,7 @@ Int_t TProofBench::ReleaseCache(const char *dset)
    // Return 0 on success, -1 on error
 
    // Do it via the dataset handler
-   if (!fDS) fDS = new TProofBenchDataSet(fProof);
+   if (!fDS) fDS = new TProofBenchDataSet(fProofDS);
    return fDS ? fDS->ReleaseCache(dset) : -1;
 }
 
@@ -497,7 +500,7 @@ Int_t TProofBench::RemoveDataSet(const char *dset)
    // Return 0 on success, -1 on error
 
    // Do it via the dataset handler
-   if (!fDS) fDS = new TProofBenchDataSet(fProof);
+   if (!fDS) fDS = new TProofBenchDataSet(fProofDS);
    return fDS ? fDS->RemoveFiles(dset) : -1;
 }
 
@@ -620,7 +623,7 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
    filesmap->SetOwner(kTRUE);
    delete filesmap;
 
-   // The dataset to be registered in the end
+   // The dataset to be registered in the end with proper port
    TFileCollection *fc = new TFileCollection("dum", "dum");
 
    fProof->GetOutputList()->Print();
@@ -697,7 +700,7 @@ Int_t TProofBench::CopyDataSet(const char *dset, const char *dsetdst, const char
    delete fc;
       
    // Do it via the dataset handler
-   if (!fDS) fDS = new TProofBenchDataSet(fProof);
+   if (!fDS) fDS = new TProofBenchDataSet(fProofDS);
    if (fDS->CopyFiles(dset, destdir) != 0) {
       Error("CopyDataSet", "problems copying files of dataset '%s' to dest dir '%s'", dset, destdir);
       delete fcn;
@@ -715,3 +718,24 @@ Int_t TProofBench::CopyDataSet(const char *dset, const char *dsetdst, const char
    // Done
    return rc;
 }
+
+//______________________________________________________________________________
+void TProofBench::SetProofDS(TProof *pds)
+{
+   // Set the PROOF instance to be used for dataset operations, like releasing
+   // cache ...
+   // Use SetProofDS(0) to reset and using the default PROOF
+   
+   if (pds && !pds->IsValid()) {
+      Error("SetProofDS", "trying to set an invalid PROOF instance");
+      return;
+   }
+   fProofDS = pds ? pds : fProof;
+   if (fProofDS) {
+      SafeDelete(fDS);
+      fDS = new TProofBenchDataSet(fProofDS);
+   }
+   // Done
+   return;
+}
+
