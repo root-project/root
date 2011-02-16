@@ -3892,10 +3892,10 @@ if test ! "x$enable_xrootd" = "xno" ; then
       verh=$xrdincdir/XrdVersion.hh
    else
       newver="yes"
-      verh=$top_srcdir/net/xrootd/src/xrootd/VERSION_INFO
+      verh=net/xrootd/src/xrootd/VERSION_INFO
       if test ! -f $verh ; then
          newver="no"
-         verh=$top_srcdir/net/xrootd/src/xrootd/src/XrdVersion.hh
+         verh=net/xrootd/src/xrootd/src/XrdVersion.hh
       fi
    fi
    xrdver="unknown"
