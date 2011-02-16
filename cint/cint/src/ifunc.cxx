@@ -304,7 +304,7 @@ int G__compile_bytecode(G__ifunc_table* iref, int iexist)
       if (G__asm_dbg) {
          G__fprinterr(
               G__serr
-            , "\n!!!G__compile_bytecode: Destroy temp objects now at G__templevel %d --> %d  %s:%d\n"
+            , "\n!!!G__compile_bytecode: Destroy temp objects now at G__templevel %d  %s:%d\n"
             , G__templevel
             , __FILE__
             , __LINE__
