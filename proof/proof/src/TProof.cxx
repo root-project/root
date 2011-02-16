@@ -6554,7 +6554,7 @@ Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt)
       }
    }
 
-   if (opt <= kBuildAll && !IsLite()) {
+   if (opt <= kBuildAll && (!IsLite() || !buildOnClient)) {
       TMessage mess(kPROOF_CACHE);
       mess << Int_t(kBuildPackage) << pac;
       Broadcast(mess, kUnique);
@@ -6573,7 +6573,7 @@ Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt)
       }
 
       fStatus = 0;
-      if (!IsLite())
+      if (!IsLite() || !buildOnClient)
          Collect(kAllUnique);
 
       if (fStatus < 0 || st < 0)

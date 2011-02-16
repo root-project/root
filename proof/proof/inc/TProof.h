@@ -640,7 +640,7 @@ private:
 
    void     ReleaseMonitor(TMonitor *mon);
 
-   void     FindUniqueSlaves();
+   virtual  void FindUniqueSlaves();
    TSlave  *FindSlave(TSocket *s) const;
    TList   *GetListOfSlaves() const { return fSlaves; }
    TList   *GetListOfInactiveSlaves() const { return fInactiveSlaves; }

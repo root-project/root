@@ -2071,3 +2071,37 @@ TTree *TProofLite::GetTreeHeader(TDSet *dset)
    // Done
    return t;
 }
+
+//______________________________________________________________________________
+void TProofLite::FindUniqueSlaves()
+{
+   // Add to the fUniqueSlave list the active slaves that have a unique
+   // (user) file system image. This information is used to transfer files
+   // only once to nodes that share a file system (an image). Submasters
+   // which are not in fUniqueSlaves are put in the fNonUniqueMasters
+   // list. That list is used to trigger the transferring of files to
+   // the submaster's unique slaves without the need to transfer the file
+   // to the submaster.
+
+   fUniqueSlaves->Clear();
+   fUniqueMonitor->RemoveAll();
+   fAllUniqueSlaves->Clear();
+   fAllUniqueMonitor->RemoveAll();
+   fNonUniqueMasters->Clear();
+
+   if (fActiveSlaves->GetSize() <= 0) return;
+
+   TSlave *wrk = dynamic_cast<TSlave*>(fActiveSlaves->First());
+   if (!wrk) {
+      Error("FindUniqueSlaves", "first object in fActiveSlaves not a TSlave: embarrasing!");
+      return;
+   }
+   fUniqueSlaves->Add(wrk);
+   fAllUniqueSlaves->Add(wrk);
+   fUniqueMonitor->Add(wrk->GetSocket());
+   fAllUniqueMonitor->Add(wrk->GetSocket());
+
+   // will be actiavted in Collect()
+   fUniqueMonitor->DeActivateAll();
+   fAllUniqueMonitor->DeActivateAll();
+}
