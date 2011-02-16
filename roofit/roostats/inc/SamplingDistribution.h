@@ -66,14 +66,14 @@ namespace RooStats {
     Int_t GetSize() const{return fSamplingDist.size();}
 
     // Get test statistics values
-    std::vector<Double_t> GetSamplingDistribution() const {return fSamplingDist;}
+    const std::vector<Double_t> & GetSamplingDistribution() const {return fSamplingDist;}
     // Get the sampling weights 
-    std::vector<Double_t> GetSampleWeights() const {return fSampleWeights;}
+    const std::vector<Double_t> & GetSampleWeights() const {return fSampleWeights;}
 
     const TString GetVarName() const {return fVarName;}
     
     // numerical integral in these limits
-    Double_t Integral(Double_t low, Double_t high, Bool_t normalize = kTRUE) const;
+    Double_t Integral(Double_t low, Double_t high, Bool_t normalize = kTRUE, Bool_t lowClosed = kTRUE, Bool_t highClosed = kFALSE) const;
 
     // calculate CDF as a special case of Integral(...) with lower limit equal to -inf
     Double_t CDF(Double_t x) const;

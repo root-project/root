@@ -157,28 +157,23 @@ void SamplingDistribution::Add(const SamplingDistribution* other)
 
 }
 
-//_______________________________________________________
-Double_t SamplingDistribution::InverseCDF(Double_t pvalue)
-{
-   // returns the inverse of the cumulative distribution function
-
-  Double_t dummy=0;
-  return InverseCDF(pvalue,0,dummy);
-}
-
 
 
 //_______________________________________________________
-Double_t SamplingDistribution::Integral(Double_t low, Double_t high, Bool_t normalize) const
+Double_t SamplingDistribution::Integral(Double_t low, Double_t high, Bool_t normalize, Bool_t lowClosed, Bool_t highClosed) const
 {
-   // Returns the integral (including lower limit and excluding upper limit)
-   // in the given limits. Normalization can be turned off.
+   // Returns the integral in the open/closed/mixed interval. Default is [low,high) interval.
+   // Normalization can be turned off.
 
    Double_t sum = 0;
    for(unsigned int i=0; i<fSamplingDist.size(); i++) {
       double value = fSamplingDist[i];
-      if(value >= low  &&  value < high) sum += fSampleWeights[i];
-      //if(fSampleWeights[i] != 1.0) cout << "WARNING" << endl;
+
+      if((lowClosed  ? value >= low  : value > low)  &&
+         (highClosed ? value <= high : value < high))
+      {
+         sum += fSampleWeights[i];
+      }
    }
 
    if(normalize) {
@@ -194,10 +189,20 @@ Double_t SamplingDistribution::Integral(Double_t low, Double_t high, Bool_t norm
 
 //_______________________________________________________
 Double_t SamplingDistribution::CDF(Double_t x) const {
-   return Integral(-RooNumber::infinity(), x);
+   // returns the closed integral [-inf,x]
+   return Integral(-RooNumber::infinity(), x, kTRUE, kTRUE, kTRUE);
 }
 
 
+
+//_______________________________________________________
+Double_t SamplingDistribution::InverseCDF(Double_t pvalue)
+{
+   // returns the inverse of the cumulative distribution function
+
+  Double_t dummy=0;
+  return InverseCDF(pvalue,0,dummy);
+}
 //_______________________________________________________
 Double_t SamplingDistribution::InverseCDF(Double_t pvalue, 
 					  Double_t sigmaVariation, 
