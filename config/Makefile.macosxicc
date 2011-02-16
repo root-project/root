@@ -131,6 +131,15 @@ CILIBS        = -lm $(EXTRA_LDFLAGS) -ldl
 ifeq ($(F77),ifort)
 F77           = ifort
 F77FLAGS      = -fPIC
+ifeq ($(ICC_MAJOR),12)
+ifneq ($(subst ia32,,$(shell which ifort)),$(shell which ifort))
+F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ia32/ifort|compiler/lib|') \
+                -lifcore
+else
+F77LIBS      := -L$(shell which ifort | sed -e 's|bin/intel64/ifort|compiler/lib|') \
+                -lifcore
+endif
+else
 ifeq ($(ICC_MAJOR),11)
 ifneq ($(subst ia32,,$(shell which ifort)),$(shell which ifort))
 F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ia32/ifort|lib/ia32|') \
@@ -142,6 +151,7 @@ endif
 else
 F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
                 -lifcore
+endif
 endif
 endif
 

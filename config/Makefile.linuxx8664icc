@@ -90,6 +90,10 @@ CRYPTLIBS     = -lcrypt
 ifeq ($(F77),ifort)
 F77           = ifort
 F77FLAGS      = -fPIC
+ifeq ($(ICC_MAJOR),12)
+F77LIBS      := -L$(shell which ifort | sed -e 's|bin/intel64/ifort|compiler/lib|') \
+                -lifcore
+F77FLAGS     += -m64
 ifeq ($(ICC_MAJOR),11)
 F77LIBS      := -L$(shell which ifort | sed -e 's|bin/intel64/ifort|lib/intel64|') \
                 -lifcore
@@ -97,6 +101,7 @@ F77FLAGS     += -m64
 else
 F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
                 -lifcore
+endif
 endif
 endif
 
