@@ -526,6 +526,29 @@ void TBasket::Reset()
    // Name, Title, fClassName, fBranch 
    // stay the same.
    
+   // Downsize the buffer if needed.
+   Int_t curSize = fBufferRef->BufferSize();
+   // fBufferLen at this point is already reset, so use indirect measurements
+   Int_t curLen = (GetObjlen() + GetKeylen());
+   if (curSize > 2*curLen)
+   {
+      Int_t curBsize = fBranch->GetBasketSize();      
+      if (curSize > 2*curBsize ) {
+         Int_t avgSize = (fBranch->GetTotBytes() / (1+fBranch->GetWriteBasket())); // Average number of bytes per basket so far
+         if (curSize > 2*avgSize) {
+            Int_t newSize = curBsize;
+            if (curLen > newSize) {
+               newSize = curLen;
+            }
+            if (avgSize > newSize) {
+               newSize = avgSize;
+            }
+            newSize = newSize + 512 - newSize%512;  // Wiggle room and alignment (512 is same as in OptimizeBaskets)
+            fBufferRef->Expand(newSize);
+         }
+      }
+   }
+
    TKey::Reset();
 
    Int_t newNevBufSize = fBranch->GetEntryOffsetLen();
