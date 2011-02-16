@@ -1430,7 +1430,10 @@ TStreamerInfoActions::TActionSequence *TGenCollectionProxy::GetConversionReadMem
 {
    // Return the set of action necessary to stream in this collection member-wise coming from
    // the old value class layout refered to by 'version'.
-   
+
+   if (oldClass == 0) { 
+      return 0;
+   }   
    TObjArray* arr = 0;
    TStreamerInfoActions::TActionSequence *result = 0;
    if (fConversionReadMemberWise) {
