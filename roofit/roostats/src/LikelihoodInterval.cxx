@@ -235,6 +235,9 @@ bool LikelihoodInterval::CreateMinimizer() {
    // as a function of only the parameters (poi + nuisance parameters) 
 
    RooArgSet * partmp = profilell->getVariables();
+   // need to remove constant parameters
+   RemoveConstantParameters(partmp);
+
    RooArgList params(*partmp);
    delete partmp;
 
@@ -305,6 +308,7 @@ bool LikelihoodInterval::FindLimits(const RooRealVar & param, double &lower, dou
       
 
    RooArgSet * partmp = fLikelihoodRatio->getVariables();
+   RemoveConstantParameters(partmp);
    RooArgList params(*partmp);
    delete partmp;
    int ix = params.index(&param); 
@@ -368,6 +372,7 @@ Int_t LikelihoodInterval::GetContourPoints(const RooRealVar & paramX, const RooR
    // variable index in minimizer
    // is index in the RooArgList obtained from the profileLL variables
    RooArgSet * partmp = fLikelihoodRatio->getVariables();
+   RemoveConstantParameters(partmp);
    RooArgList params(*partmp);
    delete partmp;
    int ix = params.index(&paramX); 

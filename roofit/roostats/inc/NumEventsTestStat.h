@@ -39,6 +39,7 @@ namespace RooStats {
   class NumEventsTestStat : public TestStatistic{
 
    public:
+     NumEventsTestStat() : fPdf(0) { }
      NumEventsTestStat(RooAbsPdf& pdf) {
        fPdf = &pdf;
      }
