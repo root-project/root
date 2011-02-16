@@ -72,6 +72,16 @@ namespace RooStats {
 	cout << "DEPRECATED, use ModelConfig" << endl;
       }
 
+      // User-defined set of points to test
+      void SetParameterPointsToTest(RooAbsData& pointsToTest) {
+	fPointsToTest = &pointsToTest;
+      }
+
+      // User-defined set of points to test
+      void SetPOIPointsToTest(RooAbsData& poiToTest) {
+	fPOIToTest = &poiToTest;
+      }
+
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize(Double_t size) {fSize = size;}
       // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
@@ -126,6 +136,7 @@ namespace RooStats {
 
       mutable ToyMCSampler* fTestStatSampler; // the test statistic sampler
       mutable RooAbsData* fPointsToTest; // points to perform the construction
+      mutable RooAbsData* fPOIToTest; // value of POI points to perform the construction
       mutable ConfidenceBelt* fConfBelt;
       Bool_t fAdaptiveSampling; // controls use of adaptive sampling algorithm
       Double_t fAdditionalNToysFactor; // give user ability to ask for more toys
@@ -136,7 +147,7 @@ namespace RooStats {
       Bool_t fCreateBelt; // controls use if ConfidenceBelt should be saved to a TFile
 
    protected:
-      ClassDef(FeldmanCousins,1)   // Interface for tools setting limits (producing confidence intervals)
+      ClassDef(FeldmanCousins,2)   // Interface for tools setting limits (producing confidence intervals)
    };
 }
 
