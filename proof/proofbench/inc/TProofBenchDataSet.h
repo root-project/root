@@ -40,6 +40,8 @@ public:
    TProofBenchDataSet(TProof *proof = 0);
    virtual ~TProofBenchDataSet() { }
 
+   Bool_t IsProof(TProof *p) { return (p == fProof) ? kTRUE : kFALSE; } 
+
    Int_t CopyFiles(const char *dset, const char *destdir);
    Int_t ReleaseCache(const char *dset);
    Int_t RemoveFiles(const char *dset);

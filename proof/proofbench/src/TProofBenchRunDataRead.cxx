@@ -143,7 +143,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
    }
    
    // Load the selector, if needed
-   if (!TClass::GetClass(fSelName)) {
+   if (!TClass::GetClass(fSelName) || !fDS->IsProof(fProof)) {
       // Is it the default selector?
       if (fSelName == kPROOF_BenchSelDataDef) {
          // Load the parfile
@@ -248,7 +248,8 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
          }
 
          // Cleanup run
-         fDS->ReleaseCache(dsn);
+         const char *dsnr = (fDS->IsProof(fProof)) ? dsn.Data() : dsname.Data();
+         fDS->ReleaseCache(dsnr);
 
          DeleteParameters();
          SetParameters();

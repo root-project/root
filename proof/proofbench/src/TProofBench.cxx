@@ -328,7 +328,6 @@ Int_t TProofBench::RunDataSet(const char *dset,
    if (!fDataSel.IsNull()) fRunDS->SetSelName(fDataSel);
    if (!fDataPar.IsNull()) fRunDS->SetParList(fDataPar);
    fRunDS->Run(dset, start, stop, step, fNtries, -1, -1);
-   SafeDelete(fRunDS);
    if (!fReadType) SafeDelete(readType);
    
    // Close the file
@@ -355,11 +354,13 @@ Int_t TProofBench::RunDataSetx(const char *dset, Int_t start, Int_t stop)
 
    ReleaseCache(dset);
    SafeDelete(fRunDS);
-   if (!fReadType) fReadType = new TPBReadType(TPBReadType::kReadOpt);
-   fRunDS = new TProofBenchRunDataRead(fDS, fReadType, fOutFile); 
+   TPBReadType *readType = fReadType;
+   if (!readType) readType = new TPBReadType(TPBReadType::kReadOpt);
+   fRunDS = new TProofBenchRunDataRead(fDS, readType, fOutFile); 
    if (!fDataSel.IsNull()) fRunDS->SetSelName(fDataSel);
    if (!fDataPar.IsNull()) fRunDS->SetParList(fDataPar);
    fRunDS->Run(dset, start, stop, -2, fNtries, -1, -1);
+   if (!fReadType) SafeDelete(readType);
 
    // Close the file
    if (SetOutFile(0) != 0)
