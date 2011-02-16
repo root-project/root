@@ -65,6 +65,7 @@ private:
 
    Int_t CleanupSandbox();
    Int_t CreateSandbox();
+   void FindUniqueSlaves();
    void  NotifyStartUp(const char *action, Int_t done, Int_t tot);
    Int_t SetProofServEnv(const char *ord);
    Int_t InitDataSetManager();
