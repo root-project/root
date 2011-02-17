@@ -691,7 +691,8 @@ TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
       if ((xu = fi->FindByUrl(srv.Data()))) {
          // Create a new TFileInfo object
          TFileInfo *nfi = new TFileInfo(xu->GetUrl(), fi->GetSize(),
-                                        fi->GetUUID()->AsString(), fi->GetMD5()->AsString());
+                                        fi->GetUUID() ? fi->GetUUID()->AsString() : 0,
+                                        fi->GetMD5() ? fi->GetMD5()->AsString() : 0);
          if (fi->GetMetaDataList()) {
             TIter nxm(fi->GetMetaDataList());
             TFileInfoMeta *md = 0;
@@ -813,7 +814,8 @@ TMap *TFileCollection::GetFilesPerServer(const char *exclude)
          }
          // Create a new TFileInfo object
          TFileInfo *nfi = new TFileInfo(xurl->GetUrl(kTRUE), fi->GetSize(),
-                                        fi->GetUUID()->AsString(), fi->GetMD5()->AsString());
+                                        fi->GetUUID() ? fi->GetUUID()->AsString() : 0,
+                                        fi->GetMD5() ? fi->GetMD5()->AsString() : 0);
          if (fi->GetMetaDataList()) {
             TIter nxm(fi->GetMetaDataList());
             TFileInfoMeta *md = 0;
