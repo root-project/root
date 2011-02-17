@@ -259,7 +259,7 @@ ifeq ($(BUILDPEAC),yes)
 MODULES      += proof/peac
 endif
 ifneq ($(ARCH),win32)
-MODULES      += net/rpdutils net/rootd proof/proofd proof/pq2
+MODULES      += net/rpdutils net/rootd proof/proofd proof/pq2 proof/proofbench
 endif
 ifeq ($(BUILDEDITLINE),yes)
 MODULES      += core/editline
@@ -291,7 +291,8 @@ MODULES      += core/unix core/winnt core/editline graf2d/x11 graf2d/x11ttf \
                 roofit/roofit roofit/roostats roofit/histfactory \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve net/glite misc/memstat \
-                math/genvector net/bonjour graf3d/gviz3d graf2d/gviz
+                math/genvector net/bonjour graf3d/gviz3d graf2d/gviz \
+                proof/proofbench
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 

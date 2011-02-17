@@ -1,93 +1,95 @@
 # Module.mk for the bench module
 # Copyright (c) 2005 Rene Brun and Fons Rademakers
 #
-# Author: 
+# Author: Fons Rademakers, 17/2/2011
 
 MODNAME      := proofbench
-MODDIR       := proof/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
-BENCHDIR    := $(MODDIR)
-BENCHDIRS   := $(BENCHDIR)/src
-BENCHDIRI   := $(BENCHDIR)/inc
+PROOFBENCHDIR  := $(MODDIR)
+PROOFBENCHDIRS := $(PROOFBENCHDIR)/src
+PROOFBENCHDIRI := $(PROOFBENCHDIR)/inc
 
 ##### libProofBench #####
-BENCHL      := $(MODDIRI)/LinkDef.h
-BENCHDS     := $(MODDIRS)/G__Bench.cxx
-BENCHDO     := $(BENCHDS:.cxx=.o)
-BENCHDH     := $(BENCHDS:.cxx=.h)
+PROOFBENCHL  := $(MODDIRI)/LinkDef.h
+PROOFBENCHDS := $(call stripsrc,$(MODDIRS)/G__ProofBench.cxx)
+PROOFBENCHDO := $(PROOFBENCHDS:.cxx=.o)
+PROOFBENCHDH := $(PROOFBENCHDS:.cxx=.h)
 
-BENCHH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-BENCHH      := $(filter-out $(MODDIRI)/TSel%,$(BENCHH))
+PROOFBENCHH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+PROOFBENCHH  := $(filter-out $(MODDIRI)/TSel%,$(PROOFBENCHH))
+PROOFBENCHS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+PROOFBENCHS  := $(filter-out $(MODDIRS)/TSel%,$(PROOFBENCHS))
+PROOFBENCHO  := $(PROOFBENCHS:.cxx=.o)
 
-BENCHS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-BENCHS      := $(filter-out $(MODDIRS)/TSel%,$(BENCHS))
+PROOFBENCHDEP := $(PROOFBENCHO:.o=.d) $(PROOFBENCHDO:.o=.d)
 
-BENCHO      := $(BENCHS:.cxx=.o)
-BENCHDEP    := $(BENCHO:.o=.d) $(BENCHDO:.o=.d)
-BENCHLIB    := $(LPATH)/libProofBench.$(SOEXT)
-BENCHMAP    := $(BENCHLIB:.$(SOEXT)=.rootmap)
+PROOFBENCHLIB := $(LPATH)/libProofBench.$(SOEXT)
+PROOFBENCHMAP := $(PROOFBENCHLIB:.$(SOEXT)=.rootmap)
 
 ##### ProofBenchDataSel PAR file #####
-PBDPARDIR   := $(BENCHDIRS)/ProofBenchDataSel
+PBDPARDIR   := $(call stripsrc,$(PROOFBENCHDIRS)/ProofBenchDataSel)
 PBDPARINF   := $(PBDPARDIR)/PROOF-INF
-PBDPARH     := test/Event.h $(MODDIRI)/TProofBenchTypes.h
-PBDPARS     := test/Event.cxx
+PBDPARH     := $(ROOT_SRCDIR)/test/Event.h $(MODDIRI)/TProofBenchTypes.h
+PBDPARS     := $(ROOT_SRCDIR)/test/Event.cxx
 PBDPARH     += $(wildcard $(MODDIRI)/TSel*.h)
 PBDPARS     += $(wildcard $(MODDIRS)/TSel*.cxx)
 PBDPARH     := $(filter-out $(MODDIRI)/TSelHist%, $(PBDPARH))
 PBDPARS     := $(filter-out $(MODDIRS)/TSelHist%, $(PBDPARS))
 
-PBDPAR      := $(MODDIRS)/ProofBenchDataSel.par
+PBDPAR      := $(call stripsrc,$(MODDIRS)/ProofBenchDataSel.par)
 
 ##### ProofBenchCPUSel PAR file #####
-PBCPARDIR   := $(BENCHDIRS)/ProofBenchCPUSel
+PBCPARDIR   := $(call stripsrc,$(PROOFBENCHDIRS)/ProofBenchCPUSel)
 PBCPARINF   := $(PBCPARDIR)/PROOF-INF
 PBCPARH     := $(MODDIRI)/TProofBenchTypes.h $(MODDIRI)/TSelHist.h
 PBCPARS     := $(MODDIRS)/TSelHist.cxx
 
-PBCPAR      := $(MODDIRS)/ProofBenchCPUSel.par
+PBCPAR      := $(call stripsrc,$(MODDIRS)/ProofBenchCPUSel.par)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(BENCHH))
-ALLLIBS      += $(BENCHLIB) $(PBDPAR) $(PBCPAR)
-ALLMAPS      += $(BENCHMAP)
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFBENCHH))
+ALLLIBS      += $(PROOFBENCHLIB) $(PBDPAR) $(PBCPAR)
+ALLMAPS      += $(PROOFBENCHMAP)
 
 # include all dependency files
-INCLUDEFILES += $(BENCHDEP)
+INCLUDEFILES += $(PROOFBENCHDEP)
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-include/%.h:    $(BENCHDIRI)/%.h
+include/%.h:    $(PROOFBENCHDIRI)/%.h
 		cp $< $@
 
-$(BENCHLIB):   $(BENCHO) $(BENCHDO) $(ORDER_) $(MAINLIBS) \
-                $(BENCHLIBDEP)
+$(PROOFBENCHLIB): $(PROOFBENCHO) $(PROOFBENCHDO) $(ORDER_) $(MAINLIBS) \
+                  $(PROOFBENCHLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libProofBench.$(SOEXT) $@ \
-		   "$(BENCHO) $(BENCHDO)"
+		   "$(PROOFBENCHO) $(PROOFBENCHDO)" \
+         "$(PROOFBENCHLIBEXTRA)"
 
-$(BENCHDS):    $(BENCHH) $(BENCHL) $(ROOTCINTTMPDEP)
+$(PROOFBENCHDS): $(PROOFBENCHH) $(PROOFBENCHL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(BENCHH) $(BENCHL)
+		$(ROOTCINTTMP) -f $@ -c $(PROOFBENCHH) $(PROOFBENCHL)
 
-$(BENCHMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(BENCHL)
-		$(RLIBMAP) -o $(BENCHMAP) -l $(BENCHLIB) \
-		   -d $(PROOFBENCHLIBDEPM) -c $(BENCHL)
+$(PROOFBENCHMAP): $(RLIBMAP) $(MAKEFILEDEP) $(PROOFBENCHL)
+		$(RLIBMAP) -o $@ -l $(PROOFBENCHLIB) \
+		   -d $(PROOFBENCHLIBDEPM) -c $(PROOFBENCHL)
 
 $(PBDPAR):   $(PBDPARH) $(PBDPARS)
 		@echo "Generating PAR file $@..."
-		@(if test -d $(PBDPARDIR); then\
+		@(if test -d $(PBDPARDIR); then \
 		   rm -fr $(PBDPARDIR); \
-		fi;\
+		fi; \
 		mkdir -p $(PBDPARINF); \
 		for f in $(PBDPARH) $(PBDPARS); do \
-		   cp -rp $$f $(PBDPARDIR); \
+		   $(INSTALL) $$f $(PBDPARDIR); \
 		done; \
 		echo "#include \"TClass.h\"" > $(PBDPARINF)/SETUP.C ; \
-		echo "#include \"TROOT.h\"" > $(PBDPARINF)/SETUP.C ; \
+		echo "#include \"TROOT.h\"" >> $(PBDPARINF)/SETUP.C ; \
 		echo "Int_t SETUP() {" >> $(PBDPARINF)/SETUP.C ; \
 		echo "   if (!TClass::GetClass(\"TPBReadType\")) {" >> $(PBDPARINF)/SETUP.C ; \
 		echo "      gROOT->ProcessLine(\".L TProofBenchTypes.h+\");" >> $(PBDPARINF)/SETUP.C ; \
@@ -99,24 +101,24 @@ $(PBDPAR):   $(PBDPARH) $(PBDPARS)
 		echo "   return 0;" >> $(PBDPARINF)/SETUP.C ; \
 		echo "}" >> $(PBDPARINF)/SETUP.C ; \
 		builddir=$(PWD); \
-		cd $(BENCHDIRS); \
-		par=`basename $(PBDPAR)`;\
-		pardir=`basename $(PBDPARDIR)`;\
-		tar czvf $$par $$pardir; \
+		cd $(PROOFBENCHDIRS); \
+		par=`basename $(PBDPAR)`; \
+		pardir=`basename $(PBDPARDIR)`; \
+		tar czf $$par $$pardir; \
 		cd $$builddir; \
 		rm -fr $(PBDPARDIR))
 
 $(PBCPAR):   $(PBCPARH) $(PBCPARS)
 		@echo "Generating PAR file $@..."
-		@(if test -d $(PBCPARDIR); then\
+		@(if test -d $(PBCPARDIR); then \
 		   rm -fr $(PBCPARDIR); \
-		fi;\
+		fi; \
 		mkdir -p $(PBCPARINF); \
 		for f in $(PBCPARH) $(PBCPARS); do \
-		   cp -rp $$f $(PBCPARDIR); \
+		   $(INSTALL) $$f $(PBCPARDIR); \
 		done; \
 		echo "#include \"TClass.h\"" > $(PBCPARINF)/SETUP.C ; \
-		echo "#include \"TROOT.h\"" > $(PBCPARINF)/SETUP.C ; \
+		echo "#include \"TROOT.h\"" >> $(PBCPARINF)/SETUP.C ; \
 		echo "Int_t SETUP() {" >> $(PBCPARINF)/SETUP.C ; \
 		echo "   if (!TClass::GetClass(\"TPBReadType\")) {" >> $(PBCPARINF)/SETUP.C ; \
 		echo "      gROOT->ProcessLine(\".L TProofBenchTypes.h+\");" >> $(PBCPARINF)/SETUP.C ; \
@@ -128,30 +130,32 @@ $(PBCPAR):   $(PBCPARH) $(PBCPARS)
 		echo "   return 0;" >> $(PBCPARINF)/SETUP.C ; \
 		echo "}" >> $(PBCPARINF)/SETUP.C ; \
 		builddir=$(PWD); \
-		cd $(BENCHDIRS); \
-		par=`basename $(PBCPAR)`;\
-		pardir=`basename $(PBCPARDIR)`;\
-		tar czvf $$par $$pardir; \
+		cd $(PROOFBENCHDIRS); \
+		par=`basename $(PBCPAR)`; \
+		pardir=`basename $(PBCPARDIR)`; \
+		tar czf $$par $$pardir; \
 		cd $$builddir; \
 		rm -fr $(PBCPARDIR))
 
-all-$(MODNAME): $(BENCHLIB) $(BENCHMAP) $(PBDPAR) $(PBCPAR)
+all-$(MODNAME): $(PROOFBENCHLIB) $(PROOFBENCHMAP) $(PBDPAR) $(PBCPAR)
 
 clean-$(MODNAME):
-		@rm -f $(BENCHO) $(BENCHDO)
+		@rm -f $(PROOFBENCHO) $(PROOFBENCHDO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(BENCHDEP) $(BENCHDS) $(BENCHDH) $(BENCHLIB) $(BENCHMAP) $(PBDPAR) $(PBCPAR); \
-		if test -d $(PBDPARDIR); then\
+		@rm -f $(PROOFBENCHDEP) $(PROOFBENCHDS) $(PROOFBENCHDH) \
+		   $(PROOFBENCHLIB) $(PROOFBENCHMAP) $(PBDPAR) $(PBCPAR); \
+		if test -d $(PBDPARDIR); then \
 		   rm -fr $(PBDPARDIR); \
 		fi; \
-		if test -d $(PBCPARDIR); then\
+		if test -d $(PBCPARDIR); then \
 		   rm -fr $(PBCPARDIR); \
 		fi
 
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(BENCHO) $(BENCHDO): CXXFLAGS += -I.
+
+####$(PROOFBENCHO) $(PROOFBENCHDO): CXXFLAGS += -I.
