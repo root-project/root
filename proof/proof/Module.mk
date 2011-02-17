@@ -67,5 +67,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean::     distclean-$(MODNAME)
 
+##### extra rules ######
+
 # Optimize dictionary with stl containers.
 $(PROOFDO): NOOPT = $(OPT)
