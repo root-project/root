@@ -101,7 +101,7 @@ $(PBDPAR):   $(PBDPARH) $(PBDPARS)
 		echo "   return 0;" >> $(PBDPARINF)/SETUP.C ; \
 		echo "}" >> $(PBDPARINF)/SETUP.C ; \
 		builddir=$(PWD); \
-		cd $(PROOFBENCHDIRS); \
+		cd $(call stripsrc,$(PROOFBENCHDIRS)); \
 		par=`basename $(PBDPAR)`; \
 		pardir=`basename $(PBDPARDIR)`; \
 		tar czf $$par $$pardir; \
@@ -130,7 +130,7 @@ $(PBCPAR):   $(PBCPARH) $(PBCPARS)
 		echo "   return 0;" >> $(PBCPARINF)/SETUP.C ; \
 		echo "}" >> $(PBCPARINF)/SETUP.C ; \
 		builddir=$(PWD); \
-		cd $(PROOFBENCHDIRS); \
+		cd $(call stripsrc,$(PROOFBENCHDIRS)); \
 		par=`basename $(PBCPAR)`; \
 		pardir=`basename $(PBCPARDIR)`; \
 		tar czf $$par $$pardir; \
