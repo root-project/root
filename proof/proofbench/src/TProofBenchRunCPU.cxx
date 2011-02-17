@@ -70,7 +70,7 @@ TProofBenchRunCPU::TProofBenchRunCPU(TPBHistType *histtype, Int_t nhists,
    fName = "CPU";
 
    if (!fNodes) fNodes = new TProofNodes(fProof);
-   
+
    if (stop == -1) fStop = fNodes->GetNWorkersCluster();
 
    fListPerfPlots = new TList;
@@ -89,7 +89,7 @@ TProofBenchRunCPU::~TProofBenchRunCPU()
    SafeDelete(fListPerfPlots);
    SafeDelete(fCanvas);
    SafeDelete(fNodes);
-} 
+}
 
 //______________________________________________________________________________
 void TProofBenchRunCPU::BuildHistos(Int_t start, Int_t stop, Int_t step, Bool_t nx)
@@ -209,7 +209,7 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
       Int_t minnworkersanode = fNodes->GetMinWrksPerNode();
       if (stop > minnworkersanode) stop = minnworkersanode;
    }
-   
+
    // Load the selector, if needed
    if (!TClass::GetClass(fSelName)) {
       // Is it the default selector?
@@ -256,7 +256,7 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
 
    // Build histograms, profiles and graphs needed for this run
    BuildHistos(start, stop, step, nx);
-  
+
    // Get pad
    if (!fCanvas) fCanvas = new TCanvas("Canvas");
    // Cleanup up the canvas
@@ -343,14 +343,14 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
          } else {
             Error("RunBenchmark", "tree %s not found", perfstats_name.Data());
          }
-         
+
          // Performance measures from TQueryResult
 
-         TQueryResult *queryresult = fProof->GetQueryResult();  
-         TDatime qr_start = queryresult->GetStartTime(); 
-         TDatime qr_end = queryresult->GetEndTime(); 
-         Float_t qr_proc = queryresult->GetProcTime(); 
-    
+         TQueryResult *queryresult = fProof->GetQueryResult();
+         TDatime qr_start = queryresult->GetStartTime();
+         TDatime qr_end = queryresult->GetEndTime();
+         Float_t qr_proc = queryresult->GetProcTime();
+
          Long64_t qr_entries = queryresult->GetEntries();
 
          // Calculate event rate
@@ -439,13 +439,6 @@ void TProofBenchRunCPU::FillPerfStatPerfPlots(TTree* t, Int_t nactive)
 
    Double_t event_rate_packet = 0;
 
-   Double_t proctime_kPacket_worker[nactive];
-   Long64_t nevents_kPacket_worker[nactive];
-   for (Int_t i=0; i<nactive; i++){
-      proctime_kPacket_worker[i]=0;
-      nevents_kPacket_worker[i]=0;
-   }
-
    for (Long64_t k=0; k<entries; k++) {
 
       t->GetEntry(k);
@@ -460,7 +453,7 @@ void TProofBenchRunCPU::FillPerfStatPerfPlots(TTree* t, Int_t nactive)
          }
       }
    }
-     
+
    return;
 }
 
@@ -519,14 +512,14 @@ void TProofBenchRunCPU::DrawPerfPlots()
       profile->Draw();
       gPad->Update();
    }
-   return; 
+   return;
 }
 
 //______________________________________________________________________________
 void TProofBenchRunCPU::SetHistType(TPBHistType *histtype)
 {
    // Set histogram type
-   
+
    fHistType = histtype;
    fName.Form("%sCPU", GetNameStem().Data());
 }
@@ -535,7 +528,7 @@ void TProofBenchRunCPU::SetHistType(TPBHistType *histtype)
 TString TProofBenchRunCPU::GetNameStem() const
 {
    // Get name for this run
-   
+
    TString namestem("+++undef+++");
    if (fHistType) {
       switch (fHistType->GetType()) {
@@ -562,7 +555,7 @@ TString TProofBenchRunCPU::GetNameStem() const
 Int_t TProofBenchRunCPU::SetParameters()
 {
    // Set parameters
-   
+
    if (!fProof) {
       Error("SetParameters", "proof not set; Doing nothing");
       return 1;
@@ -591,5 +584,4 @@ Int_t TProofBenchRunCPU::DeleteParameters()
    fProof->DeleteParameters("PROOF_BenchmarkDraw");
    return 0;
 }
-
 
