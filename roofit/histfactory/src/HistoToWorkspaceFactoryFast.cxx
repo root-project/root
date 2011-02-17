@@ -126,7 +126,9 @@ namespace HistFactory{
     return ss.str();
   }
 
-  void HistoToWorkspaceFactoryFast::ProcessExpectedHisto(TH1F* hist,RooWorkspace* proto, string prefix, string productPrefix, string systTerm, double low, double high, int lowBin, int highBin){
+  void HistoToWorkspaceFactoryFast::ProcessExpectedHisto(TH1F* hist,RooWorkspace* proto, string prefix, string
+                                                         productPrefix, string systTerm, double /*low*/ , double
+                                                         /*high*/, int /*lowBin*/, int /*highBin*/ ){
     if(hist)
       cout << "processing hist " << hist->GetName() << endl;
     else
@@ -181,7 +183,7 @@ namespace HistFactory{
 
   void HistoToWorkspaceFactoryFast::LinInterpWithConstraint(RooWorkspace* proto, TH1F* nominal, vector<TH1F*> lowHist, vector<TH1F*> highHist, 
              vector<string> sourceName, string prefix, string productPrefix, string systTerm, 
-             int lowBin, int highBin, vector<string>& likelihoodTermNames){
+                                                            int /*lowBin*/, int /*highBin */, vector<string>& likelihoodTermNames){
     // these are the nominal predictions: eg. the mean of some space of variations
     // later fill these in a loop over histogram bins
 
@@ -333,8 +335,8 @@ namespace HistFactory{
 
 
   void  HistoToWorkspaceFactoryFast::MakeTotalExpected(RooWorkspace* proto, string totName, string /**/, string /**/, 
-        int lowBin, int highBin, vector<string>& syst_x_expectedPrefixNames, 
-        vector<string>& normByNames){
+                                                       int /*lowBin*/, int /*highBin */, vector<string>& syst_x_expectedPrefixNames, 
+                                                       vector<string>& normByNames){
 
     // for ith bin calculate totN_i =  lumi * sum_j expected_j * syst_j 
     string command;
