@@ -39,7 +39,7 @@ public:
       kReadNotSpecified = 0,                    //read type not specified
       kReadFull = 1,                            //read in a full event
       kReadOpt = 2,                             //read in part of an event
-      kReadNo = 4,                              //do not read in event
+      kReadNo = 4                               //do not read in event
    };
 private:
    EReadType fType;
@@ -47,7 +47,7 @@ private:
 public:
    TPBReadType(EReadType type = kReadOpt) : fType(type), fName("PROOF_Benchmark_ReadType") { }
    virtual ~TPBReadType() { }
-   
+
    EReadType GetType() const { return fType; }
    Bool_t IsReadFull() const { return (fType == kReadFull) ? kTRUE : kFALSE; }
    Bool_t IsReadOpt() const { return (fType == kReadOpt) ? kTRUE : kFALSE; }
@@ -72,7 +72,7 @@ private:
 public:
    TPBHistType(EHistType type = kHist1D) : fType(type), fName("PROOF_Benchmark_HistType") { }
    virtual ~TPBHistType() { }
-   
+
    EHistType GetType() const { return fType; }
    Bool_t IsHist1D() const { return (fType == kHist1D) ? kTRUE : kFALSE; }
    Bool_t IsHist2D() const { return (fType == kHist2D) ? kTRUE : kFALSE; }
@@ -86,7 +86,7 @@ public:
 class TPBHandleDSType : public TObject {
 public:
    enum EHandleDSType {
-      kReleaseCache   = 0,               // Release memory cache for the given file 
+      kReleaseCache   = 0,               // Release memory cache for the given file
       kCheckCache     = 1,               // Check memory cache for the given files
       kRemoveFiles    = 2,               // Remove (physically) the given files
       kCopyFiles      = 3                // Copy the given files to a destination dir
@@ -97,7 +97,7 @@ private:
 public:
    TPBHandleDSType(EHandleDSType type = kReleaseCache) : fType(type), fName("PROOF_Benchmark_HandleDSType") { }
    virtual ~TPBHandleDSType() { }
-   
+
    EHandleDSType GetType() const { return fType; }
    Bool_t IsReleaseCache() const { return (fType == kReleaseCache) ? kTRUE : kFALSE; }
    Bool_t IsCheckCache() const { return (fType == kCheckCache) ? kTRUE : kFALSE; }
