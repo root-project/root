@@ -194,11 +194,11 @@ const char *ed_filetypes[] = {
 };
 
 enum ETextEditorCommands {
-   kM_FILE_NEW, kM_FILE_OPEN, kM_FILE_SAVE, kM_FILE_SAVEAS, kM_FILE_PRINT,
-   kM_FILE_EXIT, kM_EDIT_CUT, kM_EDIT_COPY, kM_EDIT_PASTE, kM_EDIT_DELETE,
-   kM_EDIT_SELECTALL, kM_SEARCH_FIND, kM_SEARCH_FINDNEXT, kM_SEARCH_GOTO,
-   kM_TOOLS_COMPILE, kM_TOOLS_EXECUTE, kM_TOOLS_INTERRUPT, kM_HELP_CONTENTS,
-   kM_HELP_ABOUT, kM_EDIT_SELFONT
+   kM_FILE_NEW, kM_FILE_OPEN, kM_FILE_SAVE, kM_FILE_SAVEAS, kM_FILE_CLOSE,
+   kM_FILE_PRINT, kM_FILE_EXIT, kM_EDIT_CUT, kM_EDIT_COPY, kM_EDIT_PASTE,
+   kM_EDIT_DELETE, kM_EDIT_SELECTALL, kM_SEARCH_FIND, kM_SEARCH_FINDNEXT,
+   kM_SEARCH_GOTO, kM_TOOLS_COMPILE, kM_TOOLS_EXECUTE, kM_TOOLS_INTERRUPT,
+   kM_HELP_CONTENTS, kM_HELP_ABOUT, kM_EDIT_SELFONT
 };
 
 ToolBarData_t fTbData[] = {
@@ -331,6 +331,7 @@ void TGTextEditor::Build()
    fMenuFile->AddEntry("&New", kM_FILE_NEW);
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry("&Open...", kM_FILE_OPEN);
+   fMenuFile->AddEntry("&Close", kM_FILE_CLOSE);
    fMenuFile->AddEntry("&Save", kM_FILE_SAVE);
    fMenuFile->AddEntry("Save &As...", kM_FILE_SAVEAS);
    fMenuFile->AddSeparator();
@@ -442,7 +443,11 @@ void TGTextEditor::Build()
    fStatusBar->SetText(fFilename.Data(), 0);
 
    fTextEdit->SetFocus();
+   fTextEdit->GetMenu()->DisableEntry(TGTextEdit::kM_FILE_NEW);
+   fTextEdit->GetMenu()->DisableEntry(TGTextEdit::kM_FILE_OPEN);
    fTextEdit->Connect("DataChanged()", "TGTextEditor", this, "DataChanged()");
+   fTextEdit->Connect("Closed()", "TGTextEditor", this, "ClearText()");
+   fTextEdit->Connect("Opened()", "TGTextEditor", this, "ClearText()");
    fTextEdit->Connect("DataDropped(char *)", "TGTextEditor", this, "DataDropped(char *)");
    fTextEdit->MapWindow();
 
@@ -485,6 +490,23 @@ void TGTextEditor::LoadFile(char *fname)
    TString tmp;
    TGFileInfo fi;
    fi.fFileTypes = ed_filetypes;
+   switch (IsSaved()) {
+      case kMBCancel:
+         return;
+      case kMBYes:
+         if (!fFilename.CompareTo("Untitled"))
+            SaveFileAs();
+         else
+            SaveFile(fFilename.Data());
+         if (fTextChanged) {
+            return;
+         }
+         break;
+      case kMBNo:
+         break;
+      default:
+         return;
+   }
    if (fname == 0) {
       new TGFileDialog(fClient->GetDefaultRoot(), this, kFDOpen, &fi);
       if (fi.fFilename && strlen(fi.fFilename)) {
@@ -502,10 +524,10 @@ void TGTextEditor::LoadFile(char *fname)
          fStatusBar->SetText(tmp.Data(), 0);
          tmp.Form("%s - TGTextEditor", fname);
          SetWindowName(tmp.Data());
+         fTextChanged = kFALSE;
       }
    }
    fTextEdit->Layout();
-   fTextChanged = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -890,20 +912,10 @@ Bool_t TGTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      new TGTextEditor();
                      break;
                   case kM_FILE_OPEN:
-                     switch (IsSaved()) {
-                        case kMBCancel:
-                           break;
-                        case kMBYes:
-                           if (!fFilename.CompareTo("Untitled"))
-                              SaveFileAs();
-                           else
-                              SaveFile(fFilename.Data());
-                           if (fTextChanged)
-                              break;
-                        case kMBNo:
-                           LoadFile();
-                           break;
-                     }
+                     LoadFile();
+                     break;
+                  case kM_FILE_CLOSE:
+                     ClearText();
                      break;
                   case kM_FILE_SAVE:
                      if (!fFilename.CompareTo("Untitled"))
