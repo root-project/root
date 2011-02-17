@@ -52,8 +52,6 @@ TFileInfo::TFileInfo(const char *in, Long64_t size, const char *uuid,
    if (md5) {
       SafeDelete(fMD5);
       fMD5 = new TMD5((const UChar_t*)md5);
-   } else if (!fMD5) {
-      fMD5 = new TMD5;
    }
    // The meta information
    if (meta) {
