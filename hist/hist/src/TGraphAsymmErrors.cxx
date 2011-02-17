@@ -25,6 +25,7 @@
 #include "TVector.h"
 #include "TVectorD.h"
 #include "TClass.h"
+#include "Math/QuantFuncMathCore.h"
 
 ClassImp(TGraphAsymmErrors)
 
@@ -420,6 +421,11 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    if (TMath::Abs(stats[0] -stats[1]) > 1e-6)
       bEffective = true;
 
+   if (bEffective && (pass->GetSumw2()->fN == 0 || total->GetSumw2()->fN == 0) ) {
+      Warning("Divide","histogram have been computed with weights but the sum of weight squares are not stored in the histogram. Error calculation is performed ignoring the weights");
+      bEffective = false;
+   }
+
    //parse option
    TString option = opt;
    option.ToLower();
@@ -517,6 +523,10 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       useShortestInterval = true; 
    }
 
+   // weights works only in case of Normal approximation or Bayesian 
+   if (!bIsBayesian && pBound != &TEfficiency::Normal ) 
+      Warning("Divide","Histogram have weights - only normal error calculation is supported and it will be used");
+
    
    //Set the graph to have a number of points equal to the number of histogram
    //bins
@@ -532,33 +542,52 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    //this keeps track of the number of points added to the graph
    int npoint=0;
    //number of total and passed events
-   Int_t t,p;
+   Int_t t = 0 , p = 0;
+   Double_t tw = 0, tw2 = 0, pw = 0, pw2 = 0; // for the case of weights
    //loop over all bins and fill the graph
    for (Int_t b=1; b<=nbins; ++b) {
 
-      //shall we use number of effective entries = (sum weights)^2 / sum (weights^2)
-      //" + 0.5" ensures correct rounding
-      if(bEffective) {
-	 t =(Int_t)( total->GetBinContent(b) * total->GetBinContent(b) / total->GetSumw2()->At(b-1) + 0.5);
-	 p =(Int_t)(pass->GetBinContent(b) * pass->GetBinContent(b) / pass->GetSumw2()->At(b-1) + 0.5);
-	 if (p>t) {
-	    Warning("Divide","histogram bin %d in pass has more effective entries than corresponding bin in total! (%d>%d)",b,p,t);
-	    continue; //we may as well go on...
-	 }
-      }
-      //use bin contents
-      else {
-	 t = int( total->GetBinContent(b) + 0.5);
-	 p = int(pass->GetBinContent(b) + 0.5);
-      }
+      // default value when total =0;
+      eff = 0;
+      low = 0; 
+      upper = 0; 
 
-      if (!t && !plot0Bins) continue; // skip bins with total = 0
-      eff = 0; // default value when total =0;
+      // special case in case of weights we have to consider the sum of weights and the sum of weight squares
+       if(bEffective) {
+          tw =  total->GetBinContent(b);
+          tw2 = total->GetSumw2()->At(b);
+          pw =  pass->GetBinContent(b);
+          pw2 = pass->GetSumw2()->At(b);
+
+          if (tw <= 0 && !plot0Bins) continue; // skip bins with total <= 0
+
+          // in the case of weights have the formula only for 
+          // the normal and  bayesian statistics (see below)
+
+       }
+       
+       //use bin contents
+       else {
+          t = int( total->GetBinContent(b) + 0.5);
+          p = int(pass->GetBinContent(b) + 0.5);
+          
+          if (!t && !plot0Bins) continue; // skip bins with total = 0
+       }
+
 
       //using bayesian statistics
       if(bIsBayesian) {
-         double aa = double(p) + alpha; 
-         double bb = double(t-p) + beta; 
+         double aa,bb;
+         if (bEffective) { 
+            // tw/tw2 renormalize the weights
+            double norm = (tw2 > 0) ? tw/tw2 : 0.; 
+            aa =  pw * norm + alpha; 
+            bb =  (tw - pw) * norm + beta; 
+         }
+         else { 
+            aa = double(p) + alpha; 
+            bb = double(t-p) + beta; 
+         }
          if (usePosteriorMode) 
             eff = TEfficiency::BetaMode(aa,bb);
          else 
@@ -574,11 +603,35 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       }
       // case of non-bayesian statistics
       else {
-	 if(t)
-	    eff = ((Double_t)p)/t;
+         if (bEffective) { 
+                     
+            if (tw > 0) { 
+
+               eff = pw/tw;
+
+               // use normal error calculation using variance of MLE with weights (F.James 8.5.2) 
+               // this is the same formula used in ROOT for TH1::Divide("B")
+               
+               double variance = ( pw2 * (1. - 2 * eff) + tw2 * eff *eff ) / ( tw * tw) ;
+               double sigma = sqrt(variance); 
+
+               double prob = 0.5 * (1.-conf);
+               double delta = ROOT::Math::normal_quantile_c(prob, sigma);   
+               low = eff - delta; 
+               upper = eff + delta; 
+               if (low < 0) low = 0; 
+               if (upper > 1) upper = 1.;
+            }
+         }
+
+         else { 
+            // when not using weights
+            if(t)
+               eff = ((Double_t)p)/t;
 	 
-	 low = pBound(t,p,conf,false);
-	 upper = pBound(t,p,conf,true);
+            low = pBound(t,p,conf,false);
+            upper = pBound(t,p,conf,true);
+         }
       }
       //Set the point center and its errors
       SetPoint(npoint,pass->GetBinCenter(b),eff);
