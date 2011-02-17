@@ -2247,6 +2247,8 @@ Double_t TF1::GetSave(const Double_t *xx)
    xmax = Double_t(fSave[np+2]);
    dx   = (xmax-xmin)/np;
    if (x < xmin || x > xmax) return 0;
+   // return a Nan in case of x=nan, otherwise will crash later
+   if (TMath::IsNaN(x) ) return x; 
    if (dx <= 0) return 0;
 
    Int_t bin     = Int_t((x-xmin)/dx);
