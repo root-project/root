@@ -426,6 +426,9 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
       fMasterServ = kTRUE;
       SetBit(TProof::kIsMaster);
    }
+   // Flag that we are a client
+   if (TestBit(TProof::kIsClient))
+      if (!gSystem->Getenv("ROOTPROOFCLIENT")) gSystem->Setenv("ROOTPROOFCLIENT","");
 
    Init(masterurl, conffile, confdir, loglevel, alias);
 
@@ -6767,7 +6770,7 @@ Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path)
                }
             }
 
-            if (gSystem->Exec("PROOF-INF/BUILD.sh")) {
+            if (gSystem->Exec("export ROOTPROOFCLIENT=\"1\" ; PROOF-INF/BUILD.sh")) {
                Error("BuildPackageOnClient", "building package %s on the client failed", pack);
                status = -1;
             }
