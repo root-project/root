@@ -287,6 +287,9 @@ Int_t TProofServLite::CreateServer()
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();
 
+   // Avoid spurious messages at first action
+   FlushLogFile();
+
    // Done
    return 0;
 }
