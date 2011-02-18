@@ -499,7 +499,10 @@ void TGraph2D::Clear(Option_t * /*option = "" */)
    delete [] fX; fX = 0;
    delete [] fY; fY = 0;
    delete [] fZ; fZ = 0;
-   delete fHistogram; fHistogram = 0;
+   if (fFunctions) {
+      delete fHistogram;
+      fHistogram = 0;
+   }
    if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
       fFunctions->Delete();
@@ -510,8 +513,6 @@ void TGraph2D::Clear(Option_t * /*option = "" */)
       fDirectory->Remove(this);
       fDirectory = 0;
    }
-   delete fPainter;
-   fPainter   = 0;
 }
 
 
