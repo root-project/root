@@ -770,6 +770,12 @@ namespace TStreamerInfoActions
    }
 
    // Support for collections.
+   
+   Int_t ReadLoopInvalid(TBuffer &, void *, const void *, const TConfiguration *config)
+   {
+      Fatal("ReadSequence","The sequence of actions to read %s:%d member-wise was not initialized.",config->fInfo->GetName(),config->fInfo->GetClassVersion());
+      return 0;
+   }
 
    Int_t GenericVectorPtrAction(TBuffer &buf, void *iter, const void *end, const TConfiguration *config) 
    {
@@ -1159,6 +1165,10 @@ void TStreamerInfo::Compile()
    if ( ! isOptimized ) {
       if (fReadMemberWise) fReadMemberWise->fActions.clear();
       else fReadMemberWise = new TStreamerInfoActions::TActionSequence(this,ndata);
+   } else {
+      if (fReadMemberWise) fReadMemberWise->fActions.clear();
+      else fReadMemberWise = new TStreamerInfoActions::TActionSequence(this,ndata);
+      fReadMemberWise->AddAction( ReadLoopInvalid, new TConfiguration(this,0,0) );
    }
 
    for (i = 0; i < fNdata; ++i) {
