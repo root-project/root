@@ -85,6 +85,9 @@ TProofLite::TProofLite(const char *url, const char *conffile, const char *confdi
    SetBit(TProof::kIsClient);
    SetBit(TProof::kIsMaster);
 
+   // Flag that we are a client
+   if (!gSystem->Getenv("ROOTPROOFCLIENT")) gSystem->Setenv("ROOTPROOFCLIENT","");
+   
    // Protocol and Host
    fUrl.SetProtocol("proof");
    fUrl.SetHost("__lite__");
@@ -724,6 +727,8 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
    fprintf(fenv, "export ROOTRCFILE=%s\n", rcfile.Data());
    // ROOT version tag (needed in building packages)
    fprintf(fenv, "export ROOTVERSIONTAG=%s\n", gROOT->GetVersion());
+   // This flag can be used to identify the type of worker; for example, in BUILD.sh or SETUP.C ...
+   fprintf(fenv, "export ROOTPROOFLITE=%d\n", fNWorkers);
    // Set the user envs
    if (fgProofEnvList) {
       TString namelist;
