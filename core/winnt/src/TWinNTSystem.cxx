@@ -435,12 +435,17 @@ namespace {
 
       switch (sig) {
          case CTRL_C_EVENT:
-            if (!G__get_security_error()) {
-               G__genericerror("\n *** Break *** keyboard interrupt");
-            } else {
-               Break("TInterruptHandler::Notify", "keyboard interrupt");
-               if (TROOT::Initialized()) {
-                  gInterpreter->RewindDictionary();
+            if (gSystem) {
+               ((TWinNTSystem*)gSystem)->DispatchSignals(kSigInterrupt);
+            }
+            else {
+               if (!G__get_security_error()) {
+                  G__genericerror("\n *** Break *** keyboard interrupt");
+               } else {
+                  Break("TInterruptHandler::Notify", "keyboard interrupt");
+                  if (TROOT::Initialized()) {
+                     gInterpreter->RewindDictionary();
+                  }
                }
             }
             return kTRUE;
@@ -459,13 +464,8 @@ namespace {
    //______________________________________________________________________________
    static void SigHandler(ESignals sig)
    {
-      if (gSystem) {
-         gSystem->StackTrace();
-         if (TROOT::Initialized()) {
-            ::Throw(sig);
-         }
-         gSystem->Abort(-1);
-      }
+      if (gSystem)
+         ((TWinNTSystem*)gSystem)->DispatchSignals(sig);
    }
 
    //______________________________________________________________________________
@@ -1366,14 +1366,26 @@ void TWinNTSystem::AddSignalHandler(TSignalHandler *h)
    // Add a signal handler to list of system signal handlers. Only adds
    // the handler if it is not already in the list of signal handlers.
 
-   TSystem::AddSignalHandler(h);
+   Bool_t set_console = kFALSE;
    ESignals  sig = h->GetSignal();
 
-   // Add a new handler to the list of the console handlers
    if (sig == kSigInterrupt) {
+      set_console = kTRUE;
+      TSignalHandler *hs;
+      TIter next(fSignalHandler);
+
+      while ((hs = (TSignalHandler*) next())) {
+         if (hs->GetSignal() == kSigInterrupt)
+            set_console = kFALSE;
+      }
+   }
+   TSystem::AddSignalHandler(h);
+
+   // Add our handler to the list of the console handlers
+   if (set_console)
       ::SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleSigHandler, TRUE);
-   } else
-   WinNTSignal(h->GetSignal(), SigHandler);
+   else
+      WinNTSignal(h->GetSignal(), SigHandler);
 }
 
 //______________________________________________________________________________
@@ -1387,8 +1399,17 @@ TSignalHandler *TWinNTSystem::RemoveSignalHandler(TSignalHandler *h)
    int sig = h->GetSignal();
 
    if (sig = kSigInterrupt) {
-      // Remove a  handler to the list of the console handlers
-      ::SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleSigHandler, FALSE);
+      Bool_t last = kTRUE;
+      TSignalHandler *hs;
+      TIter next(fSignalHandler);
+
+      while ((hs = (TSignalHandler*) next())) {
+         if (hs->GetSignal() == kSigInterrupt)
+            last = kFALSE;
+      }
+      // Remove our handler from the list of the console handlers
+      if (last)
+         ::SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleSigHandler, FALSE);
    }
    return TSystem::RemoveSignalHandler(h);
 }
@@ -1731,6 +1752,28 @@ void TWinNTSystem::ExitLoop()
 }
 
 //---- handling of system events -----------------------------------------------
+//______________________________________________________________________________
+void TWinNTSystem::DispatchSignals(ESignals sig)
+{
+   // Handle and dispatch signals.
+
+   if (sig == kSigInterrupt) {
+      fSignals->Set(sig);
+      fSigcnt++;
+   }
+   else {
+      StackTrace();
+      if (TROOT::Initialized()) {
+         ::Throw(sig);
+      }
+      Abort(-1);
+   }
+
+   // check a-synchronous signals
+   if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
+      CheckSignals(kFALSE);
+}
+
 //______________________________________________________________________________
 Bool_t TWinNTSystem::CheckSignals(Bool_t sync)
 {

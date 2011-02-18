@@ -129,6 +129,7 @@ public:
    Int_t             Select(TFileHandler *fh, Long_t timeout);
 
    //---- Handling of system events ----------------------------
+   void              DispatchSignals(ESignals sig);
    void              AddSignalHandler(TSignalHandler *sh);
    TSignalHandler   *RemoveSignalHandler(TSignalHandler *sh);
    void              ResetSignal(ESignals sig, Bool_t reset = kTRUE);

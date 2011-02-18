@@ -104,7 +104,9 @@ Bool_t TInterruptHandler::Notify()
       if (TROOT::Initialized()) {
          Getlinem(kInit, "Root > ");
          gCint->RewindDictionary();
+#ifndef WIN32
          Throw(GetSignal());
+#endif
       }
    }
    return kTRUE;
