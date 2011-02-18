@@ -5,6 +5,8 @@
 #include "PyROOT.h"
 #include "PyRootType.h"
 #include "RootWrapper.h"
+#include "ClassMethodHolder.h"
+#include "MethodProxy.h"
 #include "Adapters.h"
 
 // Standard
@@ -88,9 +90,35 @@ namespace {
 
             attr = MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( name, pyclass );
 
+         // namespaces may have seen updates in their list of global functions, which
+         // are available as "methods" even though they're not really that
+            if ( ! attr && PyType_Check( pyclass ) ) {
+               PyErr_Clear();
+ 
+               TScopeAdapter klass = TScopeAdapter::ByName( ((PyTypeObject*)pyclass)->tp_name );
+               if ( klass.IsNamespace() ) {
+
+                  for ( size_t i = 0; i < klass.FunctionMemberSize(); ++i ) {
+                     TMemberAdapter m = klass.FunctionMemberAt( i );
+                     if ( m.Name() == name ) {
+                     // Note: can't re-use Utility::AddClass here, as there's the risk of
+                     // a recursive call. Simply add method directly, as we're guaranteed
+                     // that it doesn't exist yet.
+                        PyCallable* pyfunc = new TClassMethodHolder< TScopeAdapter, TMemberAdapter >( klass, m );
+                        attr = (PyObject*)MethodProxy_New( name.c_str(), pyfunc );
+                        PyObject_SetAttr( pyclass, pyname, attr );
+                        Py_DECREF( attr );
+                        attr = PyType_Type.tp_getattro( pyclass, pyname );
+                        break;
+                     }
+                  }
+
+               }
+            }
+
             if ( ! attr ) {
                PyErr_Clear();
-            // get class name to look up CINT tag info ... 
+            // get class name to look up CINT tag info ...
                attr = GetRootGlobalFromString( name /*, tag */ );
                if ( attr )
                   PyObject_SetAttr( pyclass, pyname, attr );

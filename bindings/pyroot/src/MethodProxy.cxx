@@ -92,6 +92,7 @@ namespace {
             ((ObjectProxy*)result)->HoldOn();
       }
 
+#if 0
    // if this new object falls inside self, make sure its lifetime is proper
       if ( pymeth->fSelf && ObjectProxy_Check( result ) ) {
          Long_t ptrdiff = (Long_t)((ObjectProxy*)result)->GetObject() - (Long_t)pymeth->fSelf->GetObject();
@@ -100,6 +101,7 @@ namespace {
                PyErr_Clear();     // ignored
          }
       }
+#endif
 
       return result;
    }
