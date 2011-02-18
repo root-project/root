@@ -569,6 +569,18 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
 #ifndef G__OLDIMPLEMENTATION1259
   result7->isconst = bytecode->ifunc->isconst[bytecode->ifn];
 #endif
+  if (
+    ( // direct ptr into whole-func compiled local var block
+      (result7->ref >= (long) localmem) &&
+      (result7->ref < (long)(localmem + bytecode->varsize))
+    ) ||
+    (result7->ref < 1000000L) // offset into whole-func local var blk
+  ) {
+    // Returned value has a ptr into the local vars, kill the
+    // ptr, we are about to (conceptually anyway) destroy the
+    // local var stack.
+    result7->ref = 0;
+  }
 #ifdef G__ASM_DBG
   if(G__asm_dbg) {
     G__FastAllocString temp(G__ONELINE);
