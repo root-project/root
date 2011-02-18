@@ -263,6 +263,7 @@ namespace ROOT {
       // Process the rules
       //------------------------------------------------------------------------
       TSchemaRule* rule;
+      TString errmsg;
       std::vector<TSchemaHelper>::iterator it;
       for( it = vect.begin(); it != vect.end(); ++it ) {
          rule = new TSchemaRule();
@@ -285,9 +286,9 @@ namespace ROOT {
             rule->SetRuleType( TSchemaRule::kReadRawRule );
             rule->SetReadRawFunctionPointer( (TSchemaRule::ReadRawFuncPtr_t)it->fFunctionPtr );
          }
-         if( !rset->AddRule( rule ) ) {
-            ::Warning( "TGenericClassInfo", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because it conflicts with one of the other rules.",
-                        GetClassName(), it->fVersion.c_str(), it->fTarget.c_str() );
+         if( !rset->AddRule( rule, TSchemaRuleSet::kCheckAll, &errmsg ) ) {
+            ::Warning( "TGenericClassInfo", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because %s.",
+                        GetClassName(), it->fVersion.c_str(), it->fTarget.c_str(), errmsg.Data() );
             delete rule;
          }
       }

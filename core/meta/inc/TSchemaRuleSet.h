@@ -40,8 +40,8 @@ namespace ROOT {
          TSchemaRuleSet();
          virtual ~TSchemaRuleSet();
 
-         Bool_t              AddRule( TSchemaRule* rule, EConsistencyCheck checkConsistency = kCheckAll );
-         Bool_t              AddRules( TSchemaRuleSet* rules, EConsistencyCheck checkConsistency = kCheckAll );
+         Bool_t              AddRule( TSchemaRule* rule, EConsistencyCheck checkConsistency = kCheckAll, TString *errmsg = 0 );
+         Bool_t              AddRules( TSchemaRuleSet* rules, EConsistencyCheck checkConsistency = kCheckAll, TString *errmsg = 0);
          Bool_t              HasRuleWithSourceClass( const TString &source) const;
          const TObjArray*    FindRules( const TString &source ) const;
          const TSchemaMatch* FindRules( const TString &source, Int_t version ) const;

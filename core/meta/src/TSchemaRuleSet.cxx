@@ -49,13 +49,13 @@ void TSchemaRuleSet::ls(Option_t *) const
 }
 
 //------------------------------------------------------------------------------
-Bool_t TSchemaRuleSet::AddRules( TSchemaRuleSet* /* rules */, EConsistencyCheck /* checkConsistency */ )
+Bool_t TSchemaRuleSet::AddRules( TSchemaRuleSet* /* rules */, EConsistencyCheck /* checkConsistency */, TString * /* errmsg */ )
 {
    return kFALSE;
 }
 
 //------------------------------------------------------------------------------
-Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsistency )
+Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsistency, TString *errmsg )
 {
    // The consistency check always fails if the TClass object was not set!
    // if checkConsistency is:
@@ -100,6 +100,9 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
          TObjString* str = (TObjString*)obj;
          if( !fClass->GetDataMember( str->GetString() ) && !fClass->GetBaseClass( str->GetString() ) ) {
             if (checkConsistency == kCheckAll) {
+               if (errmsg) {
+                  errmsg->Form("the target member (%s) is unknown",str->GetString().Data());
+               }
                return kFALSE;
             } else {
                // We ignore the rules that do not apply ...
@@ -124,6 +127,9 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
          if ( *r == *rule) {
             // The rules are duplicate from each other,
             // just ignore the new ones.
+            if (errmsg) {
+               *errmsg = "it conflicts with one of the other rules";
+            }
             delete rule;
             return kTRUE;
          }
