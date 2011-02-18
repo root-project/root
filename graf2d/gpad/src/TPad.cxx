@@ -523,7 +523,10 @@ void TPad::Clear(Option_t *option)
    if (!fPadPaint) {
       SafeDelete(fView);
       if (fPrimitives) fPrimitives->Clear(option);
-      delete fFrame; fFrame = 0;
+      if (fFrame) {
+         if (fFrame->TestBit(kNotDeleted)) delete fFrame;
+         fFrame = 0;
+      }
    }
    if (fCanvas) fCanvas->Cleared(this);
 
@@ -5417,7 +5420,7 @@ void TPad::Streamer(TBuffer &b)
 
          b.ReadClassBuffer(TPad::Class(), this, v, R__s, R__c);
 
-         //Set the kCanDelete bit in all objects in the pad such that when the pad 
+         //Set the kCanDelete bit in all objects in the pad such that when the pad
          //is deleted all objects in the pad are deleted too.
          TIter next(fPrimitives);
          while ((obj = next())) {
