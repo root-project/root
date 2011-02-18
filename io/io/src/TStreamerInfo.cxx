@@ -716,12 +716,14 @@ void TStreamerInfo::BuildCheck()
                }
             }
             
-            if (TestBit(kCannotOptimize) && info->IsOptimized()) 
-            {
-               // Optimizing does not work with splitting.
+            if (TestBit(kCannotOptimize)) {
                info->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-               info->Compile();
-            }
+               if (info->IsOptimized()) 
+               {
+                  // Optimizing does not work with splitting.
+                  info->Compile();
+               }
+            } 
             done = kTRUE;
          } else {
             array->RemoveAt(fClassVersion);
