@@ -48,6 +48,7 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
 
    UInt_t type = wtype;
    fId = 0;
+   fParent = 0;
 
    if (!p && gClient) {
       p = gClient->GetRoot();
@@ -129,7 +130,7 @@ const TGWindow *TGWindow::GetMainFrame() const
 {
    // Returns top level main frame.
 
-   return (fParent == fClient->GetDefaultRoot()) ? this : fParent->GetMainFrame();
+   return ((fParent == 0) || (fParent == fClient->GetDefaultRoot())) ? this : fParent->GetMainFrame();
 }
 
 //______________________________________________________________________________
