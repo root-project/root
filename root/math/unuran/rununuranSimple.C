@@ -1,6 +1,6 @@
 {
    // Compile and run the code of math/unuran/test directory 
-   gROOT->ProcessLine(".L $ROOTSYS/math/unuran/test/unuranSimple.cxx+");
+   gROOT->ProcessLine(".L unuranSimple.cxx+");
    int ret = unuranSimple();
    if (ret == 0)
        std::cout << "unuranSimple: OK" << std::endl;

@@ -63,29 +63,30 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-
+unuran%.cxx: $(ROOT_SRCDIRDEP)/math/unuran/test/unuran%.cxx
+	cp $(ROOT_SRCDIR)/math/unuran/test/unuran$*.cxx .
 
 unuranSimple: unuranSimple.elog
 	$(TestDiff)
 
-unuranSimple.elog: $(ROOT_LOC)/math/unuran/test/unuranSimple_cxx.$(DllSuf)
+unuranSimple.elog: unuranSimple_cxx.$(DllSuf)
 
 unuranDistr: unuranDistr.elog
 	$(TestDiff)
 
-unuranDistr.elog: $(ROOT_LOC)/math/unuran/test/unuranDistr_cxx.$(DllSuf)
+unuranDistr.elog: unuranDistr_cxx.$(DllSuf)
 
 unuranDiscrete: unuranDiscrete.elog
 	$(TestDiff)
 
-unuranDiscrete.elog: $(ROOT_LOC)/math/unuran/test/unuranDiscrete_cxx.$(DllSuf)
+unuranDiscrete.elog: unuranDiscrete_cxx.$(DllSuf)
 
 unuranMulti2D: unuranMulti2D.elog
 	$(TestDiff)
 
-unuranMulti2D.elog: $(ROOT_LOC)/math/unuran/test/unuranMulti2D_cxx.$(DllSuf)
+unuranMulti2D.elog: unuranMulti2D_cxx.$(DllSuf)
 
 unuranMultiDim: unuranMultiDim.elog
 	$(TestDiff)
 
-unuranMultiDim.elog: $(ROOT_LOC)/math/unuran/test/unuranMultiDim_cxx.$(DllSuf)
+unuranMultiDim.elog: unuranMultiDim_cxx.$(DllSuf)

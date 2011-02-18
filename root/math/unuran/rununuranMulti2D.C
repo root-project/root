@@ -1,6 +1,6 @@
 {
    // Compile and run the code of math/unuran/test directory 
-   gROOT->ProcessLine(".L $ROOTSYS/math/unuran/test/unuranMulti2D.cxx+");
+   gROOT->ProcessLine(".L unuranMulti2D.cxx+");
    int ret = unuranMulti2D();
    if (ret == 0)
        std::cout << "unuranMulti2D: OK" << std::endl;
