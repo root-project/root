@@ -22,6 +22,7 @@ namespace PyROOT {
    class TFunctionHolder : public TMethodHolder< T, M > {
    public:
       TFunctionHolder( const M& function );
+      TFunctionHolder( const T& scope, const M& function );
 
       virtual PyCallable* Clone() { return new TFunctionHolder( *this ); }
 

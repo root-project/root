@@ -41,6 +41,12 @@ PyROOT::TFunctionHolder< T, M >::TFunctionHolder( const M& function ) :
 {
 }
 
+template< class T, class M >
+PyROOT::TFunctionHolder< T, M >::TFunctionHolder( const T& scope, const M& function ) :
+      TMethodHolder< T, M >( scope, function )
+{
+}
+
 //- public members --------------------------------------------------------------
 template< class T, class M >
 PyObject* PyROOT::TFunctionHolder< T, M >::FilterArgs(
