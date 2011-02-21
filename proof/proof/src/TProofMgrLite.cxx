@@ -56,13 +56,19 @@ TProof *TProofMgrLite::CreateSession(const char *cfg,
    if (nwrk == 0) return (TProof *)0;
 
    // Check if we have already a running session
-   if (gProof && gProof->IsValid() && gProof->IsLite()) {
-      if (nwrk > 0 && gProof->GetParallel() != nwrk) {
+   if (gProof && gProof->IsLite()) {
+      if (gProof->IsValid()) {
+         if (nwrk > 0 && gProof->GetParallel() != nwrk) {
+            delete gProof;
+            gProof = 0;
+         } else {
+            // We have already a running session
+            return gProof;
+         }
+      } else {
+         // Remove existing instance
          delete gProof;
          gProof = 0;
-      } else {
-         // We have already a running session
-         return gProof;
       }
    }
 
