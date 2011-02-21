@@ -54,8 +54,10 @@ int main(int argc, char *argv[])
    fprintf(fp, "*/\n\n");
 
    int xx, yy, zz, rev;
-   sscanf(vers, "%d.%d/%d", &xx, &yy, &zz);
+   char patch = '\0';
+   sscanf(vers, "%d.%d/%d%c", &xx, &yy, &zz, &patch);
    int vers_code = (xx << 16) + (yy << 8) + zz;
+   int full_vers_code = (xx << 24) + (yy << 16) + (zz << 8) + patch;
    sscanf(revs, "%d", &rev);
 
    fprintf(fp, "#define ROOT_RELEASE \"%s\"\n", vers);
@@ -65,6 +67,8 @@ int main(int argc, char *argv[])
    fprintf(fp, "#define ROOT_SVN_BRANCH \"%s\"\n", branch);
    fprintf(fp, "#define ROOT_VERSION_CODE %d\n", vers_code);
    fprintf(fp, "#define ROOT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))\n");
+   fprintf(fp, "#define ROOT_FULL_VERSION_CODE %d\n", full_vers_code);
+   fprintf(fp, "#define ROOT_FULL_VERSION(a,b,c,p) (((a) << 24) + ((b) << 16) + ((c) << 8) + (p))\n");
    fprintf(fp, "\n#endif\n");
 
    fclose(fp);
