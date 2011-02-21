@@ -392,7 +392,7 @@ void TList::Delete(Option_t *option)
          // delete only heap objects
          if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
             TCollection::GarbageCollect(tlk->GetObject());
-         else if (tlk->GetObject()->IsA()->GetDirectoryAutoAdd())
+         else if (tlk->GetObject() && tlk->GetObject()->IsA()->GetDirectoryAutoAdd())
             removeDirectory.Add(tlk->GetObject());
 
          delete tlk;
@@ -411,7 +411,7 @@ void TList::Delete(Option_t *option)
          // delete only heap objects
          if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
             TCollection::GarbageCollect(tlk->GetObject());
-         else if (tlk->GetObject()->IsA()->GetDirectoryAutoAdd())
+         else if (tlk->GetObject() && tlk->GetObject()->IsA()->GetDirectoryAutoAdd())
             removeDirectory.Add(tlk->GetObject());
 
          delete tlk;
@@ -700,7 +700,7 @@ void TList::RemoveLast()
 
    TObjLink *lnk = fLast;
    if (!lnk) return;
-   
+
    if (lnk == fFirst) {
       fFirst = 0;
       fLast = 0;
@@ -709,12 +709,12 @@ void TList::RemoveLast()
       fLast->fNext = 0;
    }
    DeleteLink(lnk);
-   
+
    fSize--;
    fCache = 0;
-   Changed();   
+   Changed();
 }
-   
+
 //______________________________________________________________________________
 void TList::Sort(Bool_t order)
 {
