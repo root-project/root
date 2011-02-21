@@ -69,7 +69,7 @@ Bool_t TSQLMonitoringWriter::SendParameters(TList *values, const char *)
    TIter nxi(values);
 
    // now prepare the strings
-   TString sql = Form("INSERT INTO %s", fTable.Data());
+   TString sql = TString::Format("INSERT INTO %s", fTable.Data());
 
    // the column and values strings
    TObject *o = 0;
@@ -77,23 +77,23 @@ Bool_t TSQLMonitoringWriter::SendParameters(TList *values, const char *)
    TString cols, vals;
    while ((o = nxi())) {
       if (!strncmp(o->ClassName(), "TNamed", 6)) {
-         cols += Form("%c'%s'", c, ((TNamed *)o)->GetName());
-         vals += Form("%c'%s'", c, ((TNamed *)o)->GetTitle());
+         cols += TString::Format("%c%s", c, ((TNamed *)o)->GetName());
+         vals += TString::Format("%c'%s'", c, ((TNamed *)o)->GetTitle());
       } else if (!strcmp(o->ClassName(), "TParameter<Long64_t>")) {
-         cols += Form("%c'%s'", c, ((TParameter<Long64_t> *)o)->GetName());
-         vals += Form("%c%lld", c, ((TParameter<Long64_t> *)o)->GetVal());
+         cols += TString::Format("%c%s", c, ((TParameter<Long64_t> *)o)->GetName());
+         vals += TString::Format("%c%lld", c, ((TParameter<Long64_t> *)o)->GetVal());
       } else if (!strcmp(o->ClassName(), "TParameter<double>")) {
-         cols += Form("%c'%s'", c, ((TParameter<double> *)o)->GetName());
-         vals += Form("%c%f", c, ((TParameter<double> *)o)->GetVal());
+         cols += TString::Format("%c%s", c, ((TParameter<double> *)o)->GetName());
+         vals += TString::Format("%c%f", c, ((TParameter<double> *)o)->GetVal());
       } else if (!strcmp(o->ClassName(), "TParameter<float>")) {
-         cols += Form("%c'%s'", c, ((TParameter<float> *)o)->GetName());
-         vals += Form("%c%f", c, ((TParameter<float> *)o)->GetVal());
+         cols += TString::Format("%c%s", c, ((TParameter<float> *)o)->GetName());
+         vals += TString::Format("%c%f", c, ((TParameter<float> *)o)->GetVal());
       } else if (!strcmp(o->ClassName(), "TParameter<int>")) {
-         cols += Form("%c'%s'", c, ((TParameter<int> *)o)->GetName());
-         vals += Form("%c%d", c, ((TParameter<int> *)o)->GetVal());
+         cols += TString::Format("%c%s", c, ((TParameter<int> *)o)->GetName());
+         vals += TString::Format("%c%d", c, ((TParameter<int> *)o)->GetVal());
       } else if (!strcmp(o->ClassName(), "TParameter<long>")) {
-         cols += Form("%c'%s'", c, ((TParameter<long> *)o)->GetName());
-         vals += Form("%c%ld", c, ((TParameter<long> *)o)->GetVal());
+         cols += TString::Format("%c%s", c, ((TParameter<long> *)o)->GetName());
+         vals += TString::Format("%c%ld", c, ((TParameter<long> *)o)->GetVal());
       }
       c = ',';
    }
@@ -101,7 +101,7 @@ Bool_t TSQLMonitoringWriter::SendParameters(TList *values, const char *)
    vals += ")";
 
    // Put everything together
-   sql += Form(" %s VALUES %s", cols.Data(), vals.Data());
+   sql += TString::Format(" %s VALUES %s", cols.Data(), vals.Data());
 
    // Post query
    TSQLResult *res = fDB->Query(sql);
