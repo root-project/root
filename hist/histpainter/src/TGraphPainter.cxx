@@ -245,6 +245,12 @@ end of the vertical/horizonthal lines. This makes less ambiguous plots
 in case several graphs are drawn on the same picture.
 </td></tr>
 
+<tr><th valign=top>"0"</th><td>
+By default, when a data point is outside the visible range along the Y axis the error
+bars are not drawn. Combined with other options, this option forces error bars'
+drawing for the data points outside the visible range along the Y axis.
+</td></tr>
+
 <tr><th valign=top>"2"</th><td>
 Error rectangles are drawn.
 </td></tr>
@@ -285,7 +291,8 @@ Begin_Macro(source)
 }
 End_Macro
 Begin_Html
-The option "3" allows to shows the error as band.
+
+<p>The option "3" allows to shows the error as band.
 
 End_Html
 Begin_Macro(source)
@@ -304,7 +311,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The option "4" is similar to the option "3" except that the band is smoothed.
+<p>The option "4" is similar to the option "3" except that the band is smoothed.
 As the following picture shows, this option should be used carefuly because
 the smoothing algorithm may show some (huge) "bouncing" effects. In some case
 looks nicer than the option "3" (because it is smooth) but it can be
@@ -327,7 +334,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows how the option "[]" can be used to superimpose
+<p>The following example shows how the option "[]" can be used to superimpose
 systematic errors on top of a graph with statistical errors.
 
 End_Html
@@ -2271,9 +2278,11 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    if (strchr(option,'A')) axis = kTRUE;
    if (axis) PaintGraphSimple(theGraph, option);
 
+   Bool_t option0 = kFALSE;
    Bool_t option2 = kFALSE;
    Bool_t option3 = kFALSE;
    Bool_t option4 = kFALSE;
+   if (strchr(option,'0')) option0 = kTRUE;
    if (strchr(option,'2')) option2 = kTRUE;
    if (strchr(option,'3')) option3 = kTRUE;
    if (strchr(option,'4')) {option3 = kTRUE; option4 = kTRUE;}
@@ -2325,16 +2334,18 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    for (Int_t i=0;i<theNpoints;i++) {
       x  = gPad->XtoPad(theX[i]);
       y  = gPad->YtoPad(theY[i]);
-      if (option3) {
-         if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
-         if (x > gPad->GetUxmax()) x = gPad->GetUxmax();
-         if (y < gPad->GetUymin()) y = gPad->GetUymin();
-         if (y > gPad->GetUymax()) y = gPad->GetUymax();
-      } else {
-         if (x < gPad->GetUxmin()) continue;
-         if (x > gPad->GetUxmax()) continue;
-         if (y < gPad->GetUymin()) continue;
-         if (y > gPad->GetUymax()) continue;
+      if (!option0) {
+         if (option3) {
+            if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
+            if (x > gPad->GetUxmax()) x = gPad->GetUxmax();
+            if (y < gPad->GetUymin()) y = gPad->GetUymin();
+            if (y > gPad->GetUymax()) y = gPad->GetUymax();
+         } else {
+            if (x < gPad->GetUxmin()) continue;
+            if (x > gPad->GetUxmax()) continue;
+            if (y < gPad->GetUymin()) continue;
+            if (y > gPad->GetUymax()) continue;
+         }
       }
       xl1 = x - s2x*cx;
       xl2 = gPad->XtoPad(theX[i] - theEXlow[i]);
@@ -2500,9 +2511,11 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    if (strchr(option,'A')) axis = kTRUE;
    if (axis) PaintGraphSimple(theGraph,option);
 
+   Bool_t option0 = kFALSE;
    Bool_t option2 = kFALSE;
    Bool_t option3 = kFALSE;
    Bool_t option4 = kFALSE;
+   if (strchr(option,'0')) option0 = kTRUE;
    if (strchr(option,'2')) option2 = kTRUE;
    if (strchr(option,'3')) option3 = kTRUE;
    if (strchr(option,'4')) {option3 = kTRUE; option4 = kTRUE;}
@@ -2558,16 +2571,18 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
       bxh = gPad->YtoPad(theY[i]+theEXhighd[i]);
       byl = gPad->XtoPad(theX[i]+theEYlowd[i]);
       byh = gPad->XtoPad(theX[i]+theEYhighd[i]);
-      if (option3) {
-         if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
-         if (x > gPad->GetUxmax()) x = gPad->GetUxmax();
-         if (y < gPad->GetUymin()) y = gPad->GetUymin();
-         if (y > gPad->GetUymax()) y = gPad->GetUymax();
-      } else {
-         if (x < gPad->GetUxmin()) continue;
-         if (x > gPad->GetUxmax()) continue;
-         if (y < gPad->GetUymin()) continue;
-         if (y > gPad->GetUymax()) continue;
+      if (!option0) {
+         if (option3) {
+            if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
+            if (x > gPad->GetUxmax()) x = gPad->GetUxmax();
+            if (y < gPad->GetUymin()) y = gPad->GetUymin();
+            if (y > gPad->GetUymax()) y = gPad->GetUymax();
+         } else {
+            if (x < gPad->GetUxmin()) continue;
+            if (x > gPad->GetUxmax()) continue;
+            if (y < gPad->GetUymin()) continue;
+            if (y > gPad->GetUymax()) continue;
+         }
       }
 
       //  draw the error rectangles
@@ -2726,9 +2741,11 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    if (strchr(option,'A')) axis = kTRUE;
    if (axis) PaintGraphSimple(theGraph, option);
 
+   Bool_t option0 = kFALSE;
    Bool_t option2 = kFALSE;
    Bool_t option3 = kFALSE;
    Bool_t option4 = kFALSE;
+   if (strchr(option,'0')) option0 = kTRUE;
    if (strchr(option,'2')) option2 = kTRUE;
    if (strchr(option,'3')) option3 = kTRUE;
    if (strchr(option,'4')) {option3 = kTRUE; option4 = kTRUE;}
@@ -2780,16 +2797,18 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    for (Int_t i=0;i<theNpoints;i++) {
       x  = gPad->XtoPad(theX[i]);
       y  = gPad->YtoPad(theY[i]);
-      if (option3) {
-         if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
-         if (x > gPad->GetUxmax()) x = gPad->GetUxmax();
-         if (y < gPad->GetUymin()) y = gPad->GetUymin();
-         if (y > gPad->GetUymax()) y = gPad->GetUymax();
-      } else {
-         if (x < gPad->GetUxmin()) continue;
-         if (x > gPad->GetUxmax()) continue;
-         if (y < gPad->GetUymin()) continue;
-         if (y > gPad->GetUymax()) continue;
+      if (!option0) {
+         if (option3) {
+            if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
+            if (x > gPad->GetUxmax()) x = gPad->GetUxmax();
+            if (y < gPad->GetUymin()) y = gPad->GetUymin();
+            if (y > gPad->GetUymax()) y = gPad->GetUymax();
+         } else {
+            if (x < gPad->GetUxmin()) continue;
+            if (x > gPad->GetUxmax()) continue;
+            if (y < gPad->GetUymin()) continue;
+            if (y > gPad->GetUymax()) continue;
+         }
       }
       ex = theEX[i];
       ey = theEY[i];
