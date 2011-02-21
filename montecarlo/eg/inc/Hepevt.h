@@ -22,14 +22,14 @@ extern "C" {
 #endif
 
 typedef struct {
-	Int_t	 nevhep;
-        Int_t    nhep;
-        Int_t    isthep[4000];
-        Int_t    idhep[4000];
-        Int_t    jmohep[4000][2];
-        Int_t    jdahep[4000][2];
-        Double_t phep[4000][5];
-        Double_t vhep[4000][4];
+   Int_t    nevhep;
+   Int_t    nhep;
+   Int_t    isthep[4000];
+   Int_t    idhep[4000];
+   Int_t    jmohep[4000][2];
+   Int_t    jdahep[4000][2];
+   Double_t phep[4000][5];
+   Double_t vhep[4000][4];
 } HEPEVT_DEF;
 
 #define HEPEVT COMMON_BLOCK(HEPEVT,hepevt)
