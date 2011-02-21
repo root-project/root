@@ -335,6 +335,7 @@ check_lib64() {
     # will be overwritten at next invocation of this function.
 
     is_lib64=0
+    ret=0
 
     # Assert that we got enough arguments
     if test $# -ne 1 ; then
