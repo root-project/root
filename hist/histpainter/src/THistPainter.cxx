@@ -898,7 +898,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The options "E3" and "E4" draw an error band through the end points of the
+<p>The options "E3" and "E4" draw an error band through the end points of the
 vertical error bars. With "E4" the error band is smoothed. Because of the
 smoothing algorithm used some artefacts may appear at the end of the band
 like in the following example. In such cases "E3" should be used instead
@@ -1007,7 +1007,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-To control the bar width (default is the bin width) <tt>TH1::SetBarWidth()</tt>
+<p>To control the bar width (default is the bin width) <tt>TH1::SetBarWidth()</tt>
 should be used.
 <br>
 To control the bar offset (default is 0) <tt>TH1::SetBarOffset()</tt> should
@@ -1103,7 +1103,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-With option <tt>"BOX1"</tt> a button is drawn for each cell with surface
+<p>With option <tt>"BOX1"</tt> a button is drawn for each cell with surface
 proportional to content's absolute value. A sunken button is drawn for
 negative values a raised one for positive.
 
@@ -1128,7 +1128,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-When the option <tt>"SAME"</tt> (or "SAMES") is used with the option <tt>"BOX"</tt>,
+<p>When the option <tt>"SAME"</tt> (or "SAMES") is used with the option <tt>"BOX"</tt>,
 the boxes' sizes are computing taking the previous plots into account. The range
 along the Z axis is imposed by the first plot (the one without option
 <tt>"SAME"</tt>); therefore the order in which the plots are done is relevant.
@@ -1210,7 +1210,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-In the following example, the histogram has some negative bins; the empty
+<p>In the following example, the histogram has some negative bins; the empty
 bins (containing 0) <u>are drawn</u>.
 
 End_Html
@@ -1373,7 +1373,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows a 2D histogram plotted with the option
+<p>The following example shows a 2D histogram plotted with the option
 <tt>"CONT1Z"</tt>. The option <tt>"CONT1"</tt> draws a contour plot using the
 line colors to distinguish contours. Combined with the option <tt>"CONT1"</tt>,
 the option <tt>"Z"</tt> allows to display the color palette defined by
@@ -1397,7 +1397,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows a 2D histogram plotted with the option
+<p>The following example shows a 2D histogram plotted with the option
 <tt>"CONT2"</tt>. The option <tt>"CONT2"</tt> draws a contour plot using the
 line styles to distinguish contours.
 
@@ -1418,7 +1418,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows a 2D histogram plotted with the option
+<p>The following example shows a 2D histogram plotted with the option
 <tt>"CONT3"</tt>. The option <tt>"CONT3"</tt> draws contour plot solid lines for
 all contours.
 
@@ -1439,7 +1439,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows a 2D histogram plotted with the option
+<p>The following example shows a 2D histogram plotted with the option
 <tt>"CONT4"</tt>. The option <tt>"CONT4"</tt> draws a contour plot using surface
 colors to distinguish contours (<tt>"SURF"</tt> option at theta = 0). Combined
 with the option <tt>"CONT"</tt> (or <tt>"CONT0"</tt>), the option <tt>"Z"</tt>
@@ -1463,7 +1463,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The default number of contour levels is 20 equidistant levels and can be changed
+<p>The default number of contour levels is 20 equidistant levels and can be changed
 with <tt>TH1::SetContour()</tt> or <tt>TStyle::SetNumberContours()</tt>.
 
 <a name="HP16a"></a><h4><u>The LIST option</u></h4>
@@ -1504,7 +1504,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following options select the <tt>"CONT4"</tt> option and are useful for
+<p>The following options select the <tt>"CONT4"</tt> option and are useful for
 sky maps or exposure maps.
 
 <table border=0>
@@ -1561,8 +1561,8 @@ When used with any LEGO option, the empty bins are not drawn.
 
 </table>
 See the limitations with <a href="#HP060a">the option "SAME"</a>.
-<p>
-The following example shows a 2D histogram plotted with the option
+
+<p>The following example shows a 2D histogram plotted with the option
 <tt>"LEGO"</tt>. The option <tt>"LEGO"</tt> draws a lego plot using the hidden
 lines removal technique.
 
@@ -1583,7 +1583,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows a 2D histogram plotted with the option
+<p>The following example shows a 2D histogram plotted with the option
 <tt>"LEGO1"</tt>. The option <tt>"LEGO1"</tt> draws a lego plot using the
 hidden surface removal technique. Combined with any <tt>"LEGOn"</tt> option, the
 option <tt>"0"</tt> allows to not drawn the empty bins.
@@ -1607,7 +1607,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows a 2D histogram plotted with the option
+<p>The following example shows a 2D histogram plotted with the option
 <tt>"LEGO2"</tt>. The option <tt>"LEGO2"</tt> draws a lego plot using colors to
 show the cell contents.  Combined with the option <tt>"LEGO2"</tt>, the option
 <tt>"Z"</tt> allows to display the color palette defined by
@@ -1700,7 +1700,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows a 2D histogram plotted with the option
+<p>The following example shows a 2D histogram plotted with the option
 <tt>"SURF1"</tt>. The option <tt>"SURF1"</tt> draws a surface plot using the
 hidden surface removal technique.  Combined with the option <tt>"SURF1"</tt>,
 the option <tt>"Z"</tt> allows to display the color palette defined by
@@ -1723,7 +1723,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows a 2D histogram plotted with the option
+<p>The following example shows a 2D histogram plotted with the option
 <tt>"SURF2"</tt>. The option <tt>"SURF2"</tt> draws a surface plot using colors
 to show the cell contents. Combined with the option <tt>"SURF2"</tt>, the option
 <tt>"Z"</tt> allows to display the color palette defined by
@@ -1746,7 +1746,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows a 2D histogram plotted with the option
+<p>The following example shows a 2D histogram plotted with the option
 <tt>"SURF3"</tt>. The option <tt>"SURF3"</tt> draws a surface plot using the
 hidden line removal technique with, in addition, a filled contour view drawn on the
 top.  Combined with the option <tt>"SURF3"</tt>, the option <tt>"Z"</tt> allows
@@ -1769,7 +1769,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows a 2D histogram plotted with the option
+<p>The following example shows a 2D histogram plotted with the option
 <tt>"SURF4"</tt>. The option <tt>"SURF4"</tt> draws a surface using the Gouraud
 shading technique.
 
@@ -1791,7 +1791,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows a 2D histogram plotted with the option
+<p>The following example shows a 2D histogram plotted with the option
 <tt>"SURF5 CYL"</tt>.  Combined with the option <tt>"SURF5"</tt>, the option
 <tt>"Z"</tt> allows to display the color palette defined by <tt>gStyle->SetPalette()</tt>.
 
@@ -1813,7 +1813,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows a 2D histogram plotted with the option
+<p>The following example shows a 2D histogram plotted with the option
 <tt>"SURF7"</tt>. The option <tt>"SURF7"</tt> draws a surface plot using the
 hidden surfaces removal technique with, in addition, a line contour view drawn on the
 top.  Combined with the option <tt>"SURF7"</tt>, the option <tt>"Z"</tt> allows
@@ -1836,7 +1836,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-As shown in the following example, when a contour plot is painted on top of a
+<p>As shown in the following example, when a contour plot is painted on top of a
 surface plot using the option <tt>SAME</tt>, the contours appear in 3D on the
 surface.
 
@@ -1923,7 +1923,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows the same histogram as a surface plot is the four
+<p>The following example shows the same histogram as a surface plot is the four
 different coordinates systems.
 
 End_Html
@@ -1992,7 +1992,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-This option also works for horizontal plots. The example given in the section
+<p>This option also works for horizontal plots. The example given in the section
 <a href="http://root.cern.ch/root/html/THistPainter.html#HP100">
 "The bar chart option"</a> appears as follow:
 
@@ -2089,7 +2089,7 @@ The filled polygons attibutes are the TGraphs ones.
 
 </table>
 
-<a href="http://root.cern.ch/root/html/TH2Poly.html"><tt>TH2Poly</tt></a> can
+<p><a href="http://root.cern.ch/root/html/TH2Poly.html"><tt>TH2Poly</tt></a> can
 be drawn as a color plot (option COL). <tt>TH2Poly</tt> bins can have any
 shapes. The bins are defined as graphs. The following macro is a very simple
 example showing how to book a TH2Poly and draw it.
@@ -2124,8 +2124,9 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-<p>Rectangular bins are a frequent case. The method <tt>AddBinBox</tt> allows
-to define them more easily like shown in the following example.
+<p>Rectangular bins are a frequent case. The special version of
+the <tt>AddBin</tt> method allows to define them more easily like
+shown in the following example.
 
 End_Html
 Begin_Macro(source)
@@ -2327,7 +2328,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows a 3D histogram plotted with the option <tt>"BOX"</tt>.
+<p>The following example shows a 3D histogram plotted with the option <tt>"BOX"</tt>.
 
 End_Html
 Begin_Macro(source)
@@ -2347,7 +2348,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows a 3D histogram plotted with the option <tt>"ISO"</tt>.
+<p>The following example shows a 3D histogram plotted with the option <tt>"ISO"</tt>.
 
 End_Html
 Begin_Macro(source)
@@ -2399,7 +2400,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-If at least one of the histograms in the stack has errors, the whole stack is
+<p>If at least one of the histograms in the stack has errors, the whole stack is
 visualized by default with error bars. To visualize it without errors the
 option <tt>"HIST"</tt> should be used.
 
