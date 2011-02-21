@@ -392,7 +392,7 @@ void TList::Delete(Option_t *option)
          // delete only heap objects
          if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
             TCollection::GarbageCollect(tlk->GetObject());
-         else if (tlk->GetObject()->IsA()->GetDirectoryAutoAdd())
+         else if (tlk->GetObject() && tlk->GetObject()->IsA()->GetDirectoryAutoAdd())
             removeDirectory.Add(tlk->GetObject());
 
          delete tlk;
@@ -411,7 +411,7 @@ void TList::Delete(Option_t *option)
          // delete only heap objects
          if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
             TCollection::GarbageCollect(tlk->GetObject());
-         else if (tlk->GetObject()->IsA()->GetDirectoryAutoAdd())
+         else if (tlk->GetObject() && tlk->GetObject()->IsA()->GetDirectoryAutoAdd())
             removeDirectory.Add(tlk->GetObject());
 
          delete tlk;
