@@ -98,6 +98,8 @@ private:
    Bool_t         fDoTraceRate;  //!Trace processing rate in master
    Bool_t         fDoSlaveTrace; //!Full tracing in workers
    Bool_t         fDoQuota;      //!Save stats on SQL server for quota management
+   
+   Bool_t         fMonitorPerPacket; //!Whether to send the full entry per each packet 
 
    TVirtualMonitoringWriter *fMonitoringWriter; //!Monitoring engine
 

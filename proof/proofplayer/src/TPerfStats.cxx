@@ -139,6 +139,16 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    fDoTraceRate = (input->FindObject("PROOF_RateTrace") != 0);
    fDoSlaveTrace = (input->FindObject("PROOF_SlaveStatsTrace") != 0);
 
+   // Check per packet monitoring
+   Int_t perpacket = -1;
+   if (TProof::GetParameter(input, "PROOF_MonitorPerPacket", perpacket) != 0) {
+      // Check if there is a global monitor-per-packet setting
+      perpacket = gEnv->GetValue("Proof.MonitorPerPacket", 0);
+   }
+   fMonitorPerPacket = (perpacket == 1) ? kTRUE : kFALSE;
+   if (fMonitorPerPacket)
+      Info("TPerfStats", "sending full information after each packet");
+   
    if ((isMaster && (fDoTrace || fDoTraceRate)) || (!isMaster && fDoSlaveTrace)) {
       // Construct tree
       gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_PerfStats"));
@@ -330,7 +340,7 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
    }
 
    // Write to monitoring system, if requested
-   if (fMonitoringWriter) {
+   if (fMonitoringWriter && fMonitorPerPacket) {
       if (!gProofServ || !gProofServ->GetSessionTag() || !gProofServ->GetProof() ||
           !gProofServ->GetProof()->GetQueryResult()) {
          Error("PacketEvent", "some required object are undefined (%p %p %p %p)",
@@ -340,23 +350,25 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
                 gProofServ->GetProof()->GetQueryResult() : 0));
          return;
       }
-
+      
       TTimeStamp stop;
       TString identifier;
-      identifier.Form("Progress-%s-%d", gProofServ->GetSessionTag(),
+      identifier.Form("%s-q%d", gProofServ->GetSessionTag(),
                       gProofServ->GetProof()->GetQueryResult()->GetSeqNum());
 
       TList values;
       values.SetOwner();
       values.Add(new TParameter<int>("id", 0));
       values.Add(new TNamed("user", gProofServ->GetUser()));
-      values.Add(new TNamed("group", gProofServ->GetGroup()));
+      values.Add(new TNamed("proofgroup", gProofServ->GetGroup()));
       values.Add(new TNamed("begin", fTzero.AsString("s")));
+      values.Add(new TNamed("end", stop.AsString("s")));
       values.Add(new TParameter<int>("walltime", stop.GetSec()-fTzero.GetSec()));
       values.Add(new TParameter<Long64_t>("bytesread", fTotBytesRead));
       values.Add(new TParameter<Long64_t>("events", fTotEvents));
       values.Add(new TParameter<Long64_t>("totevents", fNumEvents));
       values.Add(new TParameter<int>("workers", fSlaves));
+      values.Add(new TNamed("querytag", identifier.Data()));
       if (!fMonitoringWriter->SendParameters(&values, identifier))
          Error("PacketEvent", "sending of monitoring info failed");
    }
@@ -489,7 +501,7 @@ void TPerfStats::WriteQueryLog()
    // CREATE TABLE proofquerylog (
    //   id            INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
    //   user          VARCHAR(32) NOT NULL,
-   //   group         VARCHAR(32),
+   //   proofgroup    VARCHAR(32),
    //   begin         DATETIME,
    //   end           DATETIME,
    //   walltime      INT,
@@ -497,6 +509,7 @@ void TPerfStats::WriteQueryLog()
    //   bytesread     BIGINT,
    //   events        BIGINT,
    //   workers       INT
+   //   querytag      VARCHAR(64) NOT NULL,
    //)
    // The same info is send to Monalisa (or other monitoring systems) in the
    // form of a list of name,value pairs.
@@ -549,21 +562,23 @@ void TPerfStats::WriteQueryLog()
       }
 
       TString identifier;
-      identifier.Form("%s-%d", gProofServ->GetSessionTag(),
+      identifier.Form("%s-q%d", gProofServ->GetSessionTag(),
                       gProofServ->GetProof()->GetQueryResult()->GetSeqNum());
 
       TList values;
       values.SetOwner();
       values.Add(new TParameter<int>("id", 0));
       values.Add(new TNamed("user", gProofServ->GetUser()));
-      values.Add(new TNamed("group", gProofServ->GetGroup()));
+      values.Add(new TNamed("proofgroup", gProofServ->GetGroup()));
       values.Add(new TNamed("begin", fTzero.AsString("s")));
       values.Add(new TNamed("end", stop.AsString("s")));
       values.Add(new TParameter<int>("walltime", stop.GetSec()-fTzero.GetSec()));
       values.Add(new TParameter<float>("cputime", fTotCpuTime));
       values.Add(new TParameter<Long64_t>("bytesread", fTotBytesRead));
       values.Add(new TParameter<Long64_t>("events", fTotEvents));
+      values.Add(new TParameter<Long64_t>("totevents", fTotEvents));
       values.Add(new TParameter<int>("workers", fSlaves));
+      values.Add(new TNamed("querytag", identifier.Data()));
       if (!fMonitoringWriter->SendParameters(&values, identifier))
          Error("WriteQueryLog", "sending of monitoring info failed");
    }
