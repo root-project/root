@@ -29,6 +29,14 @@
 #include "TClassRef.h"
 #endif
 
+#ifndef ROOT_TTree
+#include "TTree.h"
+#endif
+
+#ifndef ROOT_TError
+#include "TError.h"
+#endif
+
 #include <vector>
 
 class TFolder;
@@ -85,7 +93,7 @@ protected:
    TClassRef                fBranchClass;   //! Reference to class definition in fClassName
    Int_t                   *fBranchOffset;  //! Sub-Branch offsets with respect to current transient class
    Int_t                    fBranchID;      //! ID number assigned by a TRefTable.
-   std::vector<Int_t>       fIDs;           //! List of the serial number of all the StreamerInfo to be used.   
+   std::vector<Int_t>       fIDs;           //! List of the serial number of all the StreamerInfo to be used.
    TStreamerInfoActions::TActionSequence *fReadActionSequence;  //! Set of actions to be executed to extract the data from the basket.
    TVirtualCollectionIterators           *fIterators;     //! holds the iterators when the branch is of fType==4.
    TVirtualCollectionPtrIterators        *fPtrIterators;  //! holds the iterators when the branch is of fType==4 and it is a split collection of pointers.
@@ -95,7 +103,7 @@ private:
    TBranchElement(const TBranchElement&);            // not implemented
    TBranchElement& operator=(const TBranchElement&); // not implemented
 
-   static void SwitchContainer(TObjArray *); 
+   static void SwitchContainer(TObjArray *);
 
 // Implementation use only functions.
 protected:
@@ -110,7 +118,7 @@ protected:
    void                     SetBranchCount(TBranchElement* bre);
    void                     SetBranchCount2(TBranchElement* bre) { fBranchCount2 = bre; }
    Int_t                    Unroll(const char* name, TClass* cltop, TClass* cl, char* ptr, Int_t basketsize, Int_t splitlevel, Int_t btype);
-   void                     ValidateAddress() const;
+   inline void              ValidateAddress() const;
 
    void Init(TTree *tree, TBranch *parent, const char* name, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t btype = 0);
    void Init(TTree *tree, TBranch *parent, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
@@ -204,6 +212,29 @@ inline void TBranchElement::SetParentClass(TClass* clparent)
 {
    fParentClass = clparent;
    fParentName = clparent ? clparent->GetName() : "";
+}
+
+inline void TBranchElement::ValidateAddress() const
+{
+   // Check to see if the user changed the object pointer without telling us.
+
+   if (fID < 0) {
+      // We are a top-level branch.
+      if (!fTree->GetMakeClass() && fAddress && (*((char**) fAddress) != fObject)) {
+         // The semantics of fAddress and fObject are violated.
+         // Assume the user changed the pointer on us.
+         // Note: The cast is here because we want to be able to
+         //       be called from the constant get functions.
+
+         // FIXME: Disable the check/warning TTree until we add a missing interface.
+         if (TestBit(kDeleteObject)) {
+            // This should never happen!
+            Error("ValidateAddress", "We owned an object whose address changed!  our ptr: %p  new ptr: %p", fObject, *((char**) fAddress));
+            const_cast<TBranchElement*>(this)->ResetBit(kDeleteObject);
+         }
+         const_cast<TBranchElement*>(this)->SetAddress(fAddress);
+      }
+   }
 }
 
 #endif // ROOT_TBranchElement
