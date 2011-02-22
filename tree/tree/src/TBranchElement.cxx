@@ -4939,31 +4939,6 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
 }
 
 //______________________________________________________________________________
-inline void TBranchElement::ValidateAddress() const
-{
-   // -- Check to see if the user changed the object pointer without telling us.
-   
-   if (fID < 0) {
-      // -- We are a top-level branch.
-      if (!fTree->GetMakeClass() && fAddress && (*((char**) fAddress) != fObject)) {
-         // -- The semantics of fAddress and fObject are violated.
-         // Assume the user changed the pointer on us.
-         // Note: The cast is here because we want to be able to
-         //       be called from the constant get functions.
-         
-         
-         // FIXME: Disable the check/warning TTree until we add a missing interface.
-         if (TestBit(kDeleteObject)) {
-            // This should never happen!
-            Error("ValidateAddress", "We owned an object whose address changed!  our ptr: %p  new ptr: %p", fObject, *((char**) fAddress));
-            const_cast<TBranchElement*>(this)->ResetBit(kDeleteObject);
-         }
-         const_cast<TBranchElement*>(this)->SetAddress(fAddress);
-      }
-   }
-}
-
-//______________________________________________________________________________
 void TBranchElement::UpdateFile()
 {
    // Refresh the value of fDirectory (i.e. where this branch writes/reads its buffers)
