@@ -27,7 +27,7 @@
 #include <TH1F.h>
 #include <TDirectory.h>
 
-//#include "RooStats/HistFactory/EstimateSummary.h"
+#include "RooStats/HistFactory/EstimateSummary.h"
 
 
 namespace RooStats{
