@@ -170,7 +170,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Double_t lambda, x2,y2;
    Double_t dpx,dpy,xp1,yp1;
    Int_t cBoxX[4], cBoxY[4], part;
-
+   Double_t div = 0;
    if (!gPad->IsEditable()) return;
    switch (event) {
 
@@ -194,8 +194,9 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       resize = kFALSE;
       turn   = kFALSE;
       GetControlBox(px1, py1, -theta, cBoxX, cBoxY);
-      part   = (Int_t)(3*((px-cBoxX[0])*co-(py-cBoxY[0])*si)/
-                      ((cBoxX[3]-cBoxX[0])*co-(cBoxY[3]-cBoxY[0])*si));
+      div    = ((cBoxX[3]-cBoxX[0])*co-(cBoxY[3]-cBoxY[0])*si);
+      if (TMath::Abs(div) > 1e-8) part = (Int_t)(3*((px-cBoxX[0])*co-(py-cBoxY[0])*si)/ div);
+      else part = 0;
       switch (part) {
       case 0:
          if (halign == 3) {
