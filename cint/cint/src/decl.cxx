@@ -2477,7 +2477,7 @@ void G__define_var(int tagnum, int typenum)
          int store_tagnumB = G__tagnum;
          G__tagnum = G__get_envtagnum();
          // Scan the initializer into temp.
-         if ((var_type == 'u')) {
+         if (var_type == 'u') {
             cin = G__fgetstream_newtemplate(temp, 0, ",;{}");
          }
          else {

@@ -74,9 +74,9 @@ static void G__castclass(G__value* result3, int tagnum, int castflag, int* ptype
    }
    if (-1 != result3->tagnum) {
 #ifdef G__VIRTUALBASE
-      if (-1 != (offset = G__isanybase(tagnum, result3->tagnum, result3->obj.i)))
-         offset = offset;
-      else if (0 == castflag && 0 == G__oprovld &&
+      if (-1 != (offset = G__isanybase(tagnum, result3->tagnum, result3->obj.i))) {
+         (void)offset /* = offset*/;
+      } else if (0 == castflag && 0 == G__oprovld &&
                (G__SECURE_MARGINAL_CAST&G__security) &&
                (islower(*ptype) || islower(result3->type)) &&
                0 == reftype &&

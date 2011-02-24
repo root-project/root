@@ -5543,7 +5543,7 @@ void G__cppif_memfunc(FILE *fp, FILE *hfp)
             else if('~'==ifunc->funcname[j][0]) { // Destructor?
               /* destructor is created in gendefault later */
               if(G__PUBLIC==ifunc->access[j]){
-                if((G__dicttype==kNoWrappersDictionary)){
+                if(G__dicttype==kNoWrappersDictionary){
                   if(G__is_tagnum_safe(i)) {
                     if( !ifunc->mangled_name[j] /*|| ifunc->funcptr[j]>0*/ || !G__nostubs ) /* if there no is a symbol or the no stubs flag is not activated */
                       G__cppif_gendefault(fp,hfp,i,j,ifunc,1,1,isdestructor,1,1);
@@ -11969,7 +11969,7 @@ void G__specify_link(int link_stub)
     p = strrchr(buf,'*');
     if(len&&p&&(p2||'*'==buf[len-1]||('>'!=buf[len-1]&&'-'!=buf[len-1]))) {
       if(*(p+1)=='>') p=(char*)NULL;
-      else p=p;
+      //else p=p;
     }
     else p=(char*)NULL;
     if(p) {

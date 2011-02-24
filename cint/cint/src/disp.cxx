@@ -2456,7 +2456,7 @@ FILE* G__tmpfile() {
 **************************************************************************/
 void G__setautoconsole(int autoconsole)
 {
-  autoconsole=autoconsole; /* no effect */
+  (void)autoconsole; /* no effect */
 }
 
 /**************************************************************************

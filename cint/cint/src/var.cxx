@@ -606,7 +606,7 @@ G__value G__letvariable(G__FastAllocString &item, G__value expression, G__var_ar
             if (isupper(G__var_type)) {
                ++pointlevel;
             }
-            while ((item[i++] == '*')) {
+            while (item[i++] == '*') {
                ++pointlevel;
             }
             switch (pointlevel) {
