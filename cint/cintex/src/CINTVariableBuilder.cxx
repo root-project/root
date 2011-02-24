@@ -79,20 +79,23 @@ namespace ROOT { namespace Cintex {
       std::string cm = dm.Properties().HasProperty("comment") ? 
          dm.Properties().PropertyAsString("comment") : std::string("");
 
-      Type t = dm.TypeOf();
-      while ( t.IsTypedef() ) t = t.ToType();
-      if ( !t && dm.IsTransient() )  {
+      Type dmType = dm.TypeOf();
+      if (dm.Properties().HasProperty("iotype")) {
+         dmType = Reflex::Type::ByName(dm.Properties().PropertyAsString("iotype"));
+      }
+      while ( dmType.IsTypedef() ) dmType = dmType.ToType();
+      if ( !dmType && dm.IsTransient() )  {
          // Before giving up, let's ask CINT:
-         int tagnum = G__defined_tagname(t.Name().c_str(), 2);
+         int tagnum = G__defined_tagname(dmType.Name().c_str(), 2);
          
          if (tagnum < 0) {
             if( Cintex::Debug() ) cout << "Cintex: Ignore transient member: " 
                << dm.Name(SCOPED) << " [No valid reflection class]"
-               << " " << t.Name() << endl;
+               << " " << dmType.Name() << endl;
             return;
          }
       }
-      else if ( !t )  {
+      else if ( !dmType )  {
          if( Cintex::Debug() > 0 )  {
             cout << "Cintex: WARNING: Member: " 
                  << dm.Name(SCOPED) << " [No valid reflection class]" << endl;
@@ -109,8 +112,8 @@ namespace ROOT { namespace Cintex {
          comment = com;
          CommentBuffer::Instance().Add(comment);
       }
-      else if ( (t.IsClass() || t.IsStruct()) && 
-                (IsTypeOf(t,ref_t) || IsTypeOf(t,tok_t)) )  {
+      else if ( (dmType.IsClass() || dmType.IsStruct()) && 
+                (IsTypeOf(dmType,ref_t) || IsTypeOf(dmType,tok_t)) )  {
          char* com = new char[cm.length()+4];
          ::sprintf(com,"|| %s",cm.c_str());
          comment = com;
@@ -122,12 +125,13 @@ namespace ROOT { namespace Cintex {
          comment = com;
          CommentBuffer::Instance().Add(comment);
       }
-      Indirection  indir = IndirectionGet(dm.TypeOf());
+
+      Indirection  indir = IndirectionGet(dmType);
       CintTypeDesc type = CintType(indir.second);
       string dname = dm.Properties().HasProperty("ioname") ? dm.Properties().PropertyAsString("ioname") : dm.Name();
       ostringstream ost;
-      if ( t.IsArray() ) ost << dname << "[" << t.ArrayLength() << "]=";
-      else               ost << dname << "=";
+      if ( dmType.IsArray() ) ost << dname << "[" << dmType.ArrayLength() << "]=";
+      else                    ost << dname << "=";
       string expr = ost.str();
       int member_type     = type.first;
       int member_indir    = 0;
@@ -181,7 +185,7 @@ namespace ROOT { namespace Cintex {
             << "," << std::right << std::setw(2) << member_indir 
             << "," << std::right << std::setw(3) << member_tagnum
             << "] " 
-            << (dm.TypeOf().IsConst() ? "const " : "")
+            << (dmType.IsConst() ? "const " : "")
             << std::left << std::setw(7)
             << (G__AUTO==member_isstatic ? "auto " : "static ")
             << std::left << std::setw(24) << dname
@@ -189,14 +193,14 @@ namespace ROOT { namespace Cintex {
             << std::endl
             << std::setw(24) << std::left << "Cintex: declareField>"
             << "  Type:" 
-            << std::left << std::setw(24) << ("[" + dm.Properties().HasProperty("iotype") ? dm.Properties().PropertyAsString("iotype") : t.Name(SCOPED) + "]")
+            << std::left << std::setw(24) << ("[" + dm.Properties().HasProperty("iotype") ? dm.Properties().PropertyAsString("iotype") : dmType.Name(SCOPED) + "]")
             << " DeclBy:" << fClass.Name(SCOPED)
             << std::endl;
       }
       ::G__memvar_setup((void*)dm.Offset(),                         // p
                         member_type,                                // type
                         member_indir,                               // indirection
-                        dm.TypeOf().IsConst(),                        // const
+                        dmType.IsConst(),                        // const
                         member_tagnum,                              // tagnum
                         member_typnum,                              // typenum
                         member_isstatic,                            // statictype
