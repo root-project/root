@@ -613,6 +613,7 @@ typedef DSC$DESCRIPTOR_A(1) fstringvector;
 #define NUM_ELEMS(A)    A,_NUM_ELEMS
 #define NUM_ELEM_ARG(B) *_2(A,B),_NUM_ELEM_ARG
 #define TERM_CHARS(A,B) A,B
+static void __cfortran__notused_dummy();
 #ifndef __CF__KnR
 static int num_elem(char *strv, unsigned elem_len, int term_char, int num_term)
 #else
@@ -633,10 +634,11 @@ for (num=0; ; num++) {
   if (i==(unsigned)num_term) break;
   else strv += elem_len-i;
 }
+if (num==0) __cfortran__notused_dummy();
 return (int)num;
 }
 
-void __cfortran__notused_dummy()
+static void __cfortran__notused_dummy()
 {
    /* to prevent not used warnings in gcc (added by ROOT) */
    if (0) {
