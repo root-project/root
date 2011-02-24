@@ -800,19 +800,6 @@ void TStreamerInfo::BuildCheck()
          if (done) {
             return;
          }
-      } else if (searchOnChecksum && TestBit(kCannotOptimize) ) {
-         // If we are searching using the checksum and we did not find it
-         // we might still match the current one and we must make sure that it
-         // has the proper optimization level
-         TStreamerInfo *currentInfo = (TStreamerInfo*)fClass->GetStreamerInfo();
-         if (currentInfo) {
-            currentInfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-            if (currentInfo->IsOptimized())
-            {
-               // Optimizing does not work with splitting.
-               currentInfo->Compile();
-            }
-         }
       }
       // The slot was free, however it might still be reserved for the current 
       // loaded version of the class
