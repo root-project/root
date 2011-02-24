@@ -1322,7 +1322,12 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
             } else {
                // FIXME: what is that?
                Int_t clversion = ((TStreamerBase*)aElement)->GetBaseVersion();
-               ((TStreamerInfo*)cle->GetStreamerInfo(clversion))->ReadBuffer(b,arr,-1,narr,ioffset,arrayMode);
+               TStreamerInfo *binfo = ((TStreamerInfo*)cle->GetStreamerInfo(clversion));
+               if (!binfo->TestBit(kCannotOptimize) && binfo->IsCompiled()) { 
+                  binfo->SetBit(kCannotOptimize);
+                  binfo->Compile();
+               }
+               binfo->ReadBuffer(b,arr,-1,narr,ioffset,arrayMode);
             }
             continue;
 

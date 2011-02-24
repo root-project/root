@@ -1103,6 +1103,20 @@ void TStreamerInfo::Compile()
          // when it is making branches for a split object.
          continue;
       }
+      if (TestBit(kCannotOptimize) && element->IsBase()) 
+      {
+         // Make sure the StreamerInfo for the base class is also
+         // not optimized.
+         TClass *bclass = element->GetClassPointer();
+         Int_t clversion = ((TStreamerBase*)element)->GetBaseVersion();
+         TStreamerInfo *binfo = ((TStreamerInfo*)bclass->GetStreamerInfo(clversion));
+         binfo->SetBit(kCannotOptimize);
+         if (binfo->IsOptimized())
+         {
+            // Optimizing does not work with splitting.
+            binfo->Compile();
+         }      
+      }
       Int_t asize = element->GetSize();
       if (element->GetArrayLength()) {
          asize /= element->GetArrayLength();
