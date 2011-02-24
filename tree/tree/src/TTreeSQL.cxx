@@ -263,6 +263,15 @@ Bool_t TTreeSQL::CheckTable(const TString &table) const
          return kTRUE;
       }
    }
+   // The table is a not a permanent table, let's see if it is a 'temporary' table
+   Int_t before = gErrorIgnoreLevel;
+   gErrorIgnoreLevel = kFatal;
+   TSQLResult *res = fServer->GetColumns(fDB.Data(),table);
+   if (res) {
+      delete res;
+      return kTRUE;
+   }
+   gErrorIgnoreLevel = before;
 
    return kFALSE;
 }
@@ -463,6 +472,7 @@ TString TTreeSQL::CreateBranches(TSQLResult * rs)
       (br->GetBasketEntry())[0] = 0;
       (br->GetBasketEntry())[1] = fEntries;
       br->SetEntries(fEntries);
+      br->GetListOfBaskets()->AddAtAndExpand(CreateBasket(br),0);
    }
 
    if(!res.IsNull()) res.Resize(res.Length()-1);   // cut off last ":"
@@ -642,6 +652,15 @@ vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
             col = i;
             break;
          }
+      }
+      if (col<0) {
+         str = leafName;
+         for (Int_t i=0;i<rows;++i) {
+            if (str.CompareTo(names[i],TString::kIgnoreCase)==0) {
+               col = i;
+               break;
+            }
+         }         
       }
       if(col>=0){
          columns->push_back(col);
