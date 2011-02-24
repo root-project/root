@@ -1,13 +1,13 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *_rflx.cpp *_rflxdriver.C
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *_rflx.cpp *_rflxdriver.C *_rflx_tmp1.C *_rflx_tmp2.C iotypes.root
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-RFLXDICTTESTS:= classVersion_rflx properties_rflx updateMembers_rflx
+RFLXDICTTESTS:= classVersion_rflx properties_rflx updateMembers_rflx iotype_rflx
 TEST_TARGETS += $(RFLXDICTTESTS) ReflexCintexOrder CintexReflexOrder Tools
 
 # Search for Rules.mk in roottest/scripts
@@ -43,13 +43,16 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 	$(CMDECHO) echo '#endif' >> $@
 	$(CMDECHO) echo 'void $(@:.C=()){ gSystem->Setenv("LINES","-1"); $*_test();} // forward' >> $@
 
+%_rflx_tmp1.C: %_rflxdriver.C
+	$(CMDECHO) echo '{gSystem->Load("libCintex"); gSystem->Load("libTree"); gROOT->ProcessLine(".L $<+");}' > $@
+
+%_rflx_tmp2.C: %_rflxdriver.C
+	echo '{gSystem->Load("libCintex"); gSystem->Load("libTree"); gROOT->ProcessLine(".x $<+");}' > $@
+
 # and the actual test, building and "running" the library
-%_rflx.log: %_rflxdriver.C
-	$(CMDECHO) echo '{gSystem->Load("libCintex"); gROOT->ProcessLine(".L $<+");}' > $@_tmp.C \
-	&& root -l -b -q $@_tmp.C > /dev/null 2>&1 \
-	&& echo '{gSystem->Load("libCintex"); gROOT->ProcessLine(".x $<+");}' > $@_tmp.C \
-	&& root -l -b -q $@_tmp.C | grep -v 'Processing ' > $@ \
-	&& rm -f $@_tmp.C
+%_rflx.log: %_rflx_tmp1.C %_rflx_tmp2.C
+	(root -l -b -q $*_rflx_tmp1.C > /dev/null 2>&1 \
+	&& root -l -b -q $*_rflx_tmp2.C | grep -v 'Processing ' > $@ )|| cat $@
 
 ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
 $(RFLXDICTTESTS): %_rflx: %_rflx.log %_rflx.ref
