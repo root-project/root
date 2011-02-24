@@ -263,6 +263,15 @@ Bool_t TTreeSQL::CheckTable(const TString &table) const
          return kTRUE;
       }
    }
+   // The table is a not a permanent table, let's see if it is a 'temporary' table
+   Int_t before = gErrorIgnoreLevel;
+   gErrorIgnoreLevel = kFatal;
+   TSQLResult *res = fServer->GetColumns(fDB.Data(),table);
+   if (res) {
+      delete res;
+      return kTRUE;
+   }
+   gErrorIgnoreLevel = before;
 
    return kFALSE;
 }
