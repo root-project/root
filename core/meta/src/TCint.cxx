@@ -1821,6 +1821,16 @@ Int_t TCint::UnloadLibraryMap(const char *library)
       }
    }
 
+   if (ret >= 0) {
+      TString library_rootmap(library);
+      library_rootmap.Append(".rootmap");
+      TNamed *mfile = 0;
+      while( mfile = (TNamed*)fRootmapFiles->FindObject(library_rootmap) ) {
+         fRootmapFiles->Remove(mfile);
+         delete mfile;
+      }
+      fRootmapFiles->Compress();
+   }
    return ret;
 }
 
