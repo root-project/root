@@ -148,6 +148,7 @@ endif # need to mv to .dll
 # Filter out the explicit link flag
 ifneq ($(subst $(ROOT_SRCDIR)/build/unix/makelib.sh,,$(MAKELIB)),)
   SPACE:= # a space.
+  SPACE+= # Actually create the space by appending 'nothing'
   $(CINTDLLS): MAKELIB := $(subst $(SPACE)-x,,$(MAKELIB))
 endif
 
