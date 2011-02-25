@@ -3227,8 +3227,12 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
    TRACE(DBG, ev);
 
    // Local data server
-   XrdOucString locdatasrv("root://");
-   locdatasrv += fMgr->Host();
+   XrdOucString locdatasrv;
+   if (strlen(fMgr->RootdExe()) <= 0) {
+      XPDFORM(locdatasrv, "root://%s", fMgr->Host());
+   } else { 
+      XPDFORM(locdatasrv, "rootd://%s:%d", fMgr->Host(), fMgr->Port());
+   }
    ev = new char[strlen("LOCALDATASERVER=") + locdatasrv.length() + 2];
    sprintf(ev, "LOCALDATASERVER=%s", locdatasrv.c_str());
    putenv(ev);

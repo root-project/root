@@ -182,7 +182,7 @@ XrdProtocol *XrdgetProtocol(const char *, char *parms, XrdProtocol_Config *pi)
    // Return the protocol object to be used if static init succeeds
    if (XrdProofdProtocol::Configure(parms, pi)) {
 
-      return (XrdProtocol *) new XrdProofdProtocol();
+      return (XrdProtocol *) new XrdProofdProtocol(pi);
    }
    return (XrdProtocol *)0;
 }
@@ -211,7 +211,7 @@ int XrdgetProtocolPort(const char * /*pname*/, char * /*parms*/, XrdProtocol_Con
 }}
 
 //__________________________________________________________________________________
-XrdProofdProtocol::XrdProofdProtocol()
+XrdProofdProtocol::XrdProofdProtocol(XrdProtocol_Config *pi)
    : XrdProtocol("xproofd protocol handler"), fProtLink(this)
 {
    // Protocol constructor
@@ -221,6 +221,8 @@ XrdProofdProtocol::XrdProofdProtocol()
    fSecClient = 0;
    fAuthProt = 0;
    fResponses.reserve(10);
+
+   fStdErrFD = (pi && pi->eDest) ? pi->eDest->baseFD() : fileno(stderr);
 
    // Instantiate a Proofd protocol object
    Reset();
@@ -282,6 +284,7 @@ XrdProofdResponse *XrdProofdProtocol::GetNewResponse(kXR_unt16 sid)
 XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
 {
    // Check whether the request matches this protocol
+   XPDLOC(ALL, "Protocol::Match")
 
    struct ClientInitHandShake hsdata;
    char  *hsbuff = (char *)&hsdata;
@@ -294,6 +297,50 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
    // Peek at the first 20 bytes of data
    if ((dlen = lp->Peek(hsbuff,sizeof(hsdata),fgReadWait)) != sizeof(hsdata)) {
       if (dlen <= 0) lp->setEtext("Match: handshake not received");
+      if (dlen == 12) {
+         // Check if it is a request to open a file via 'rootd'
+         hsdata.first = ntohl(hsdata.first);
+         if (hsdata.first == 8) {
+            if (strlen(fgMgr->RootdExe()) > 0) {
+               if (fgMgr->IsRootdAllowed((const char *)lp->Host())) {
+
+                  const char *prog = fgMgr->RootdExe();
+                  const char **progArg = fgMgr->RootdArgs();
+
+                  TRACE(ALL, "matched rootd protocol on link: executing "<<prog);
+
+                  // Fork a process to handle this protocol
+                  pid_t pid;
+                  if ((pid = fgMgr->Sched()->Fork(lp->Name()))) {
+                     if (pid < 0) {
+                        lp->setEtext("rootd fork failed");
+                     } else {
+                        lp->setEtext("link transfered");
+                     }
+                     return (XrdProtocol *)0;
+                  }
+
+                  // Restablish standard error for the program we will exec
+                  dup2(fStdErrFD, STDERR_FILENO);
+                  close(fStdErrFD);
+
+                  // Force stdin/out to point to the socket FD (this will also bypass the
+                  // close on exec setting for the socket)
+                  dup2(lp->FDnum(), STDIN_FILENO);
+                  dup2(lp->FDnum(), STDOUT_FILENO);
+
+                  // Do the exec
+                  execv((const char *)prog, (char * const *)progArg);
+                  cerr <<"Xrdrootd: Oops! Exec(" <<prog <<") failed; errno=" <<errno <<endl;
+                  _exit(17);
+               } else {
+                  TRACE(ALL, "rootd-file serving not authorized for host '"<<lp->Host()<<"'");
+               }
+            } else {
+               TRACE(ALL, "rootd-file serving not enabled");
+            }
+         }
+      }
       return (XrdProtocol *)0;
    }
 

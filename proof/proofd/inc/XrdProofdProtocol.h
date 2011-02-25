@@ -57,7 +57,7 @@ class XrdSrvBuffer;
 class XrdProofdProtocol : XrdProtocol {
 
 public:
-   XrdProofdProtocol();
+   XrdProofdProtocol(XrdProtocol_Config *pi = 0);
    virtual ~XrdProofdProtocol() {} // Never gets destroyed
 
    void          DoIt() {}
@@ -159,6 +159,8 @@ public:
    XrdSysRecMutex                fCtrlcMutex;      // CtrlC mutex
 
    bool                          fIsCtrlC;         // True is CtrlC was raised;
+
+   int                           fStdErrFD;
 
    //
    // These depend on the logical connection
