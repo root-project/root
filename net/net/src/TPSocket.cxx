@@ -389,12 +389,13 @@ void TPSocket::Init(Int_t tcpwindowsize, TSocket *sock)
 
       // if yes, communicate this to server
       // (size = 0 for backward compatibility)
-      if (sock)
+      if (sock) {
          if (sock->Send((Int_t)0, (Int_t)0) < 0)
             Warning("Init", "%p: problems sending (0,0)", sock);
-      else
+      } else {
          if (TSocket::Send((Int_t)0, (Int_t)0) < 0)
             Warning("Init", "problems sending (0,0)");
+      }
 
       // needs to fill additional private members
       fSockets = new TSocket*[1];
@@ -408,12 +409,13 @@ void TPSocket::Init(Int_t tcpwindowsize, TSocket *sock)
 
       // send the local port number of the just created server socket and the
       // number of desired parallel sockets
-      if (sock)
+      if (sock) {
          if (sock->Send(ss.GetLocalPort(), fSize) < 0)
             Warning("Init", "%p: problems sending size", sock);
-      else
+      } else {
          if (TSocket::Send(ss.GetLocalPort(), fSize) < 0)
             Warning("Init", "problems sending size");
+      }
 
       fSockets = new TSocket*[fSize];
 
