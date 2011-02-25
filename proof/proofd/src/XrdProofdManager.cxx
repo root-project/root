@@ -342,7 +342,7 @@ int XrdProofdManager::CheckUser(const char *usr,
          // Look into the hash
          int *st = fAllowedUsers.Find(usr);
          if (st) {
-            if ((*st == 1)) {
+            if (*st == 1) {
                usrok = 1;
             } else {
                e = "CheckUser: user '";
