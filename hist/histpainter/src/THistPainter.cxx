@@ -8937,14 +8937,16 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 
    // Draw slice corresponding to mouse position
    TH1D *hp = ((TH2*)fH)->ProjectionX("_px", biny1, biny2);
-   hp->SetFillColor(38);
-   if (biny1 == biny2) hp->SetTitle(Form("ProjectionX of biny=%d", biny1));
-   else hp->SetTitle(Form("ProjectionX of biny=[%d,%d]", biny1,biny2));
-   hp->SetXTitle(fH->GetXaxis()->GetTitle());
-   hp->SetYTitle("Number of Entries");
-   hp->Draw();
-   c->Update();
-   padsav->cd();
+   if (hp) {
+      hp->SetFillColor(38);
+      if (biny1 == biny2) hp->SetTitle(Form("ProjectionX of biny=%d", biny1));
+      else hp->SetTitle(Form("ProjectionX of biny=[%d,%d]", biny1,biny2));
+      hp->SetXTitle(fH->GetXaxis()->GetTitle());
+      hp->SetYTitle("Number of Entries");
+      hp->Draw();
+      c->Update();
+      padsav->cd();
+   }
 }
 
 
@@ -8996,14 +8998,16 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 
    // Draw slice corresponding to mouse position
    TH1D *hp = ((TH2*)fH)->ProjectionY("_py", binx1, binx2);
-   hp->SetFillColor(38);
-   if (binx1 == binx2) hp->SetTitle(Form("ProjectionY of binx=%d", binx1));
-   else hp->SetTitle(Form("ProjectionY of binx=[%d,%d]", binx1,binx2));
-   hp->SetXTitle(fH->GetYaxis()->GetTitle());
-   hp->SetYTitle("Number of Entries");
-   hp->Draw();
-   c->Update();
-   padsav->cd();
+   if (hp) {
+      hp->SetFillColor(38);
+      if (binx1 == binx2) hp->SetTitle(Form("ProjectionY of binx=%d", binx1));
+      else hp->SetTitle(Form("ProjectionY of binx=[%d,%d]", binx1,binx2));
+      hp->SetXTitle(fH->GetYaxis()->GetTitle());
+      hp->SetYTitle("Number of Entries");
+      hp->Draw();
+      c->Update();
+      padsav->cd();
+   }
 }
 
 
