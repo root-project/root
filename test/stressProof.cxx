@@ -749,9 +749,13 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
 
    // If not PROOF-Lite, stop the daemon used for the test
    if (gProof && !gProof->IsLite() && !extcluster) {
+      // Get the manager
+      TProofMgr *mgr = gProof->GetManager();
       // Close the instance
       gProof->Close("S");
       delete gProof;
+      // Delete the manager
+      SafeDelete(mgr);
       // The daemon runs on a port shifted by 1
       if (killXrootdAt(uu.GetPort()+1, "xpdtut") != 0) {
          printf("+++ Warning: test daemon probably still running!\n");
