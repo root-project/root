@@ -1825,7 +1825,7 @@ Int_t TCint::UnloadLibraryMap(const char *library)
       TString library_rootmap(library);
       library_rootmap.Append(".rootmap");
       TNamed *mfile = 0;
-      while( mfile = (TNamed*)fRootmapFiles->FindObject(library_rootmap) ) {
+      while( (mfile = (TNamed*)fRootmapFiles->FindObject(library_rootmap)) ) {
          fRootmapFiles->Remove(mfile);
          delete mfile;
       }
