@@ -257,6 +257,7 @@
 #pragma link C++ class std::pair<const double,char*>+;
 
 #pragma extra_include "Rtypes.h";
+#pragma link C++ class TParameter<Bool_t>+;
 #pragma link C++ class TParameter<Float_t>+;
 #pragma link C++ class TParameter<Double_t>+;
 #pragma link C++ class TParameter<Int_t>+;
