@@ -5403,6 +5403,8 @@ int main(int argc, char **argv)
       } else {
          const size_t endStr = gLibsNeeded.find_last_not_of(" \t");
          outputfile << gLibsNeeded.substr(0, endStr+1) << endl;
+         // Add explicit delimiter
+         outputfile << "# Now the list of classes\n";
          G__ClassInfo clFile;
          clFile.Init();
          while (clFile.Next()) {
