@@ -80,7 +80,9 @@ friend class TProofServ;   // to be able to call SetDescriptor(), RecvHostAuth()
 friend class TSlave;       // to be able to call SendHostAuth()
 
 public:
-   enum EStatusBits { kIsUnix = BIT(16) };   // set if unix socket
+   enum EStatusBits { kIsUnix = BIT(16),    // set if unix socket
+                      kBrokenConn = BIT(17) // set if conn reset by peer or broken 
+                    };
    enum EInterest { kRead = 1, kWrite = 2 };
    enum EServiceType { kSOCKD, kROOTD, kPROOFD };
 
@@ -113,7 +115,7 @@ protected:
    TSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(0),
                fLocalAddress(), fRemoteProtocol(), fSecContext(0), fService(),
                fServType(kSOCKD), fSocket(-1), fTcpWindowSize(0), fUrl(),
-     fBitsInfo(), fUUIDs(0), fLastUsageMtx(0), fLastUsage() { }
+               fBitsInfo(), fUUIDs(0), fLastUsageMtx(0), fLastUsage() { }
 
    Bool_t       Authenticate(const char *user);
    void         SetDescriptor(Int_t desc) { fSocket = desc; }
@@ -188,9 +190,9 @@ public:
 
    static TSocket       *CreateAuthSocket(const char *user, const char *host,
                                           Int_t port, Int_t size = 0,
-                                          Int_t tcpwindowsize = -1, TSocket *s = 0);
+                                          Int_t tcpwindowsize = -1, TSocket *s = 0, Int_t *err = 0);
    static TSocket       *CreateAuthSocket(const char *url, Int_t size = 0,
-                                          Int_t tcpwindowsize = -1, TSocket *s = 0);
+                                          Int_t tcpwindowsize = -1, TSocket *s = 0, Int_t *err = 0);
    static void           NetError(const char *where, Int_t error);
 
    ClassDef(TSocket,0)  //This class implements client sockets
