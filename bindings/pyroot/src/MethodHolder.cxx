@@ -188,16 +188,23 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
 // setup call func
    assert( fMethodCall == 0 );
 
-   fMethodCall = new G__CallFunc();
-   fMethodCall->Init();
-
    G__ClassInfo* gcl = (G__ClassInfo*)((TClass*)fClass.Id())->GetClassInfo();
    if ( ! gcl )
       gcl = GetGlobalNamespaceInfo();
 
-   fMethodCall->SetFunc( gcl->GetMethod(
+   G__MethodInfo gmi = gcl->GetMethod(
       (bool)fMethod == true ? fMethod.Name().c_str() : fClass.Name().c_str(), callString.c_str(),
-      &fOffset, G__ClassInfo::ExactMatch ) );
+      &fOffset, G__ClassInfo::ExactMatch );
+
+   if ( ! gmi.IsValid() && (bool)fMethod == true ) {
+      PyErr_Format( PyExc_RuntimeError, "could not resolve %s::%s(%s)",
+         fClass.Name().c_str(), fMethod.Name().c_str(), callString.c_str() );
+      return kFALSE;
+   }
+
+   fMethodCall = new G__CallFunc();
+   fMethodCall->Init();
+   fMethodCall->SetFunc( gmi );
 
    return kTRUE;
 }
