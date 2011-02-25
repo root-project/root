@@ -71,10 +71,6 @@ TBasketSQL::TBasketSQL(const char *name, const char *title, TBranch *branch,
    fBuffer      = 0;
    fBranch      = branch;
    fHeaderOnly  = kFALSE;
-   if (fNevBufSize) {
-      fEntryOffset = new Int_t[fNevBufSize];
-      for (Int_t i=0;i<fNevBufSize;i++) fEntryOffset[i] = 0;
-   }
    branch->GetTree()->IncrementTotalBuffers(fBufferSize);
 }
 
@@ -114,10 +110,6 @@ void TBasketSQL::CreateBuffer(const char *name, TString title,
    fBuffer      = 0;
    fBranch      = branch;
    fHeaderOnly  = kFALSE;
-   if (fNevBufSize) {
-      fEntryOffset = new Int_t[fNevBufSize];
-      for (Int_t i=0;i<fNevBufSize;i++) fEntryOffset[i] = 0;
-   }
    branch->GetTree()->IncrementTotalBuffers(fBufferSize);
 }
 
