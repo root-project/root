@@ -425,11 +425,13 @@ void TFileInfo::Print(Option_t *option) const
    // the default tree name is passed via the option ("T:<default_tree>") by the
    // owning TFileCollection.
 
-   GetMD5()->Final();
+   if (GetMD5()) GetMD5()->Final();
    TString opt(option);
    if (opt.Contains("L", TString::kIgnoreCase)) {
 
-      Printf("UUID: %s\nMD5:  %s\nSize: %lld", GetUUID()->AsString(), GetMD5()->AsString(), GetSize());
+      Printf("UUID: %s\nMD5:  %s\nSize: %lld", GetUUID() ? GetUUID()->AsString() : "undef",
+                                               GetMD5() ? GetMD5()->AsString() : "undef",
+                                               GetSize());
 
       TIter next(fUrlList);
       TUrl *u;
