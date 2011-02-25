@@ -10,8 +10,9 @@ dolink=no
 link=
 
 while [ "$1" != "" ]; do
-   arg=`cygpath -w -- $1`
+   arg=$1
    case "$arg" in
+   -optimize:*) args="$args $arg" ;;
    -link) link="$arg"; dolink=yes ;;
    -o) if [ "$dolink" = "yes" ]; then
           link="$link -out:"
@@ -22,11 +23,11 @@ while [ "$1" != "" ]; do
        fi ;;
    -c) args="$args -c "; shift; args="$args`cygpath -w -- $1`" ;;
    -*) if [ "$dolink" = "yes" ]; then
-          link="$link $arg"
+          link="$link `cygpath -w -- $1`"
        else
-          args="$args $arg"
+          args="$args `cygpath -w -- $1`"
        fi ;;
-   *) args="$args $arg" ;;
+   *) args="$args `cygpath -w -- $1`" ;;
    esac
    shift
 done
