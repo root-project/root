@@ -124,37 +124,36 @@ else
 			ACFLAGS="$$ACFLAGS -erroff=E_WHITE_SPACE_IN_DIRECTIVE"; \
 		fi; \
 		if [ "$(ARCH)" = "solaris64CC5" ]; then \
-			ACC="cc -m64"; \
+			ACC="$$ACC -m64"; \
 			ACFLAGS="$$ACFLAGS -KPIC -erroff=E_WHITE_SPACE_IN_DIRECTIVE"; \
 		fi; \
 		if [ "$(ARCH)" = "sgicc64" ]; then \
-			ACC="gcc -mabi=64"; \
+			ACC="$$ACC -mabi=64"; \
 		fi; \
 		if [ "$(ARCH)" = "hpuxia64acc" ]; then \
-			ACC="cc +DD64 -Ae +W863"; \
-			ACCALT="gcc -mlp64"; \
+			ACC="$$ACC +DD64 -Ae +W863"; \
 		fi; \
 		if [ "$(ARCH)" = "macosx" ]; then \
-			ACC="gcc -m32"; \
+			ACC="$$ACC -m32"; \
 		fi; \
 		if [ "$(ARCH)" = "macosx64" ]; then \
-			ACC="gcc -m64"; \
+			ACC="$$ACC -m64"; \
 		fi; \
 		if [ "$(ARCH)" = "linuxppc64gcc" ]; then \
-			ACC="gcc -m64"; \
+			ACC="$$ACC -m64"; \
 		fi; \
 		if [ "$(ARCH)" = "linux" ]; then \
-			ACC="gcc -m32"; \
+			ACC="$$ACC -m32"; \
 		fi; \
 		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
-			ACC="gcc -m64"; \
+			ACC="$$ACC -m64"; \
 			MMX="--enable-mmx-optimization=no"; \
 		fi; \
 		if [ "$(ARCH)" = "linuxicc" ]; then \
-			ACC="icc -m32"; \
+			ACC="$$ACC -m32"; \
 		fi; \
 		if [ "$(ARCH)" = "linuxx8664icc" ]; then \
-			ACC="icc -m64"; \
+			ACC="$$ACC -m64"; \
 		fi; \
 		if [ "$(ASJPEGINCDIR)" != "" ]; then \
 			JPEGINCDIR="--with-jpeg-includes=$(ASJPEGINCDIR)"; \
