@@ -434,27 +434,12 @@ LDFLAGS       = -O2 -bind_at_load
 # The SOFLAGS will be used to create the .dylib,
 # the .so will be created separately
 DllSuf        = dylib
-ifeq ($(MACOSX_MINOR),6)
+ifeq ($(subst $(MACOSX_MINOR),,12),12)
 UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.6 c++
-else
-ifeq ($(MACOSX_MINOR),5)
-UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.5 c++
-else
-ifeq ($(MACOSX_MINOR),4)
-UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.4 c++
-else
-ifeq ($(MACOSX_MINOR),3)
-UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.3 c++
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
 else
 UNDEFOPT      = suppress
 LD            = c++
-endif
-endif
-endif
 endif
 SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
 endif
@@ -468,22 +453,12 @@ LDFLAGS       = -O2 -bind_at_load
 # The SOFLAGS will be used to create the .dylib,
 # the .so will be created separately
 DllSuf        = dylib
-ifeq ($(MACOSX_MINOR),5)
+ifeq ($(subst $(MACOSX_MINOR),,12),12)
 UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.5 c++
-else
-ifeq ($(MACOSX_MINOR),4)
-UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.4 c++
-else
-ifeq ($(MACOSX_MINOR),3)
-UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.3 c++
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
 else
 UNDEFOPT      = suppress
 LD            = c++
-endif
-endif
 endif
 SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
 endif
@@ -497,7 +472,8 @@ LDFLAGS       = -m64 -O2 -bind_at_load
 # The SOFLAGS will be used to create the .dylib,
 # the .so will be created separately
 DllSuf        = dylib
-LD            = MACOSX_DEPLOYMENT_TARGET=10.4 c++
+ifeq ($(subst $(MACOSX_MINOR),,12),12)
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
 SOFLAGS       = -m64 -dynamiclib -single_module -undefined dynamic_lookup
 endif
 

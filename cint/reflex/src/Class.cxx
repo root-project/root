@@ -30,6 +30,19 @@
 #if defined(__linux) || defined(__APPLE__)
 # include <cxxabi.h>
 #endif
+#if defined(__APPLE__)
+# include <AvailabilityMacros.h>
+#endif
+
+#if defined(__APPLE__) && defined(MAC_OS_X_VERSION_10_7)
+namespace __cxxabiv1 {
+extern "C" void*
+__dynamic_cast(const void* __src_ptr, // Starting object.
+               const __class_type_info* __src_type, // Static type of object.
+               const __class_type_info* __dst_type, // Desired target type.
+               ptrdiff_t __src2dst); // How src and dst are related.
+}
+#endif
 
 
 //-------------------------------------------------------------------------------
@@ -95,6 +108,7 @@ Reflex::Class::CastObject(const Type& to,
       // use the internal dynamic casting of the compiler (e.g. libstdc++.so)
       void* obj3 = 0;
 #if defined(__linux) || defined(__APPLE__)
+
       obj3 = abi::__dynamic_cast(obj.Address(),
                                  (const abi::__class_type_info*) &this->TypeInfo(),
                                  (const abi::__class_type_info*) &to.TypeInfo(),
