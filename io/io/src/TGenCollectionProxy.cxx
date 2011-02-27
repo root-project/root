@@ -1483,7 +1483,7 @@ TStreamerInfoActions::TActionSequence *TGenCollectionProxy::GetReadMemberWiseAct
    // the old value class layout refered to by 'version'.
    
    TStreamerInfoActions::TActionSequence *result = 0;
-   if (version <= fReadMemberWise->GetSize()) {
+   if (version < (fReadMemberWise->GetSize()-1)) { // -1 because the 'index' starts at -1
       result = (TStreamerInfoActions::TActionSequence *)fReadMemberWise->At(version);
    }
    if (result == 0) {
