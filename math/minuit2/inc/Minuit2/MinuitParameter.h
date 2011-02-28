@@ -33,13 +33,20 @@ namespace ROOT {
 class MinuitParameter {
 
 public:
+
+   //default constructor standard with value/error = 0
+   MinuitParameter() : 
+      fNum(0), fValue(0), fError(0.), fConst(false), fFix(false), 
+      fLoLimit(0.), fUpLimit(0.), fLoLimValid(false), fUpLimValid(false),
+      fName("")
+   {}
   
    //constructor for constant Parameter
    MinuitParameter(unsigned int num, const std::string & name, double val) : 
-      fNum(num), fValue(val), fError(0.), fConst(true), fFix(false), 
+      fNum(num), fValue(val), fError(0.), fConst(true), fFix(false),  
       fLoLimit(0.), fUpLimit(0.), fLoLimValid(false), fUpLimValid(false),
       fName(name)
-   {}
+  {}
   
    //constructor for standard Parameter
    MinuitParameter(unsigned int num, const std::string & name, double val, double err) :

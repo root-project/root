@@ -55,5 +55,6 @@
 #pragma link C++ class ROOT::Minuit2::ScanMinimizer; 
 #pragma link C++ class ROOT::Minuit2::FumiliMinimizer; 
 
+#pragma link C++ class vector<ROOT::Minuit2::MinuitParameter >;
 
 #endif
