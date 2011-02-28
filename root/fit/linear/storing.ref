@@ -1,12 +1,12 @@
 
 Processing runstoring.C...
 res=3.000000
-                 x[0] : x[0] Ndim= 1, Npar= 1, Noper= 1
+        f_linear_x[0] : x[0] Ndim= 1, Npar= 1, Noper= 1
  fExpr[0] = x[0]  action = 144 action param = 0 
 Optimized expression
  fExpr[0] = x[0]		  action = 146 action param = 0 
  Par  0                    p0 = 0
-                 x[1] : x[1] Ndim= 2, Npar= 2, Noper= 1
+        f_linear_x[1] : x[1] Ndim= 2, Npar= 2, Noper= 1
  fExpr[0] = x[1]  action = 144 action param = 1 
 Optimized expression
  fExpr[0] = x[1]		  action = 146 action param = 1 
