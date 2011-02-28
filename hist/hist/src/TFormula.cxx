@@ -3296,9 +3296,12 @@ void TFormula::ProcessLinear(TString &formula)
    TString replaceformula;
    formula2 = formula2.ReplaceAll("++", 2, "|", 1);
    TObjArray *oa = formula2.Tokenize("|");
+   TString replaceformula_name;
    for (Int_t i=0; i<nf; i++) {
       replaceformula = ((TObjString *)oa->UncheckedAt(i))->GetString();
-      TFormula *f = new TFormula(replaceformula.Data(), replaceformula.Data());
+      replaceformula_name = "f_linear_";
+      replaceformula_name.Append(replaceformula);
+      TFormula *f = new TFormula(replaceformula_name.Data(), replaceformula.Data());
       if (!f) {
          Error("TFormula", "f_linear not allocated");
          return;
