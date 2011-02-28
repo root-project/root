@@ -162,34 +162,37 @@ valgrind-summary: $(ROOTTEST_LOC)scripts/analyze_valgrind
 # exist.  If one of the 2 is false, then this proceeds.
 # If the 3rd parameter is 'test', it checks whether the previous run succeeded or not and only exeucuted the
 # command in case of failure, otherwise it always run the command.
+# The 4th parameter is executed in case the execution was skipped.
 locked_execution = \
    rm -f $(1).log ; \
-	mkdir $(1).lock  >/dev/null 2>&1; result=$$?; try=0; \
-	while [ $$result -gt 0 -a -e $(1).lock/lockfile ] ; do \
-		oldpid=`cat $(1).lock/lockfile`; \
-	   if [ `ps h --pid $$oldpid | wc -l` -lt 1 ] ; then \
-			rm -r $(1).lock; \
-	   else echo "waiting for $(1).lock ... try number $$try" ; sleep 1; fi ; \
-		try=`expr $${try} + 1`; \
-		if [ $${try} -gt 90 ] ; then \
-		   echo "Waited more than 90 seconds for lock acquisition, so let's give up." 1>&2; \
-		   exit 1; \
-		fi; \
-   	mkdir $(1).lock  >/dev/null 2>&1; result=$$?; \
-	done; \
+   mkdir $(1).lock  >/dev/null 2>&1; result=$$?; try=0; \
+   while [ $$result -gt 0 -a -e $(1).lock/lockfile ] ; do \
+      oldpid=`cat $(1).lock/lockfile`; \
+      if [ `ps h --pid $$oldpid | wc -l` -lt 1 ] ; then \
+         rm -r $(1).lock; \
+      else echo "waiting for $(1).lock ... try number $$try" ; sleep 1; \
+      fi ; \
+      try=`expr $${try} + 1`; \
+      if [ $${try} -gt 90 ] ; then \
+         echo "Waited more than 90 seconds for lock acquisition, so let's give up." 1>&2; \
+         exit 1; \
+      fi; \
+      mkdir $(1).lock  >/dev/null 2>&1; result=$$?; \
+   done; \
    echo $$$$ > $(1).lock/lockfile ; \
    previous_status=`if [ -e $(1).locked.log ] ; then cat $(1).locked.log; else echo nothing; fi` ; \
-	if [ $(3) != "test" -o "$$previous_status" != "success" ] ; then \
-   	$(2) ; command_result=$$?; \
+      if [ $(3) != "test" -o "$$previous_status" != "success" ] ; then \
+         $(2) ; command_result=$$?; \
       if [ $$command_result -eq 0 ] ; then \
          echo "success" > $(1).locked.log; \
       else \
          echo "failed" > $(1).locked.log; \
       fi \
    else \
+      eval $(4); \
       command_result=0; \
    fi; \
-	rm -r $(1).lock; \
+   rm -r $(1).lock; \
    exit $$command_result
 
 EVENTDIR = $(ROOTTEST_LOC)/root/io/event
