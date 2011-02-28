@@ -1655,7 +1655,7 @@ TGeoVolume *TGeoVolume::MakeReflectedVolume(const char *newname) const
    CloneNodesAndConnect(vol);
    // The volume is now properly cloned, but with the same shape.
    // Reflect the shape (if any) and connect it.
-   if (fShape) {
+   if (fShape && !fShape->IsAssembly()) {
       TGeoShape *reflected_shape = 
          TGeoScaledShape::MakeScaledShape("", fShape, new TGeoScale(1.,1.,-1.));
       vol->SetShape(reflected_shape);
