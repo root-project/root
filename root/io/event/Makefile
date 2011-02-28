@@ -18,7 +18,7 @@ LDOPT:=-debug
 #all: bigeventTest
 
 bigeventTest.write.log: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
-	$(CMDECHO) $(call locked_execution,bigeventTest.write, sleep 10; (./Event 10 1 1 1;) > Event.write.log 2>&1 && echo "write success" > bigeventTest.write.log,test)
+	$(CMDECHO) $(call locked_execution,bigeventTest.write, sleep 10; (./Event 10 1 1 1;) > Event.write.log 2>&1 && echo "write success" > bigeventTest.write.log,test, echo "write success" > bigeventTest.write.log)
 
 bigeventTest.read.log: ./Event$(ExeSuf) ./libEvent.$(DllSuf) bigeventTest.write.log
 	$(CMDECHO)./Event 10 1 1 20 > Event.write.log 2>bigeventTest.read.log && echo "read success" > bigeventTest.read.log
