@@ -1735,17 +1735,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    if (!inside_current && downwards) {
    // we are looking downwards
       if (fCurrentNode == fForcedNode) inside_current = kTRUE;
-      else {
-         inside_current = vol->Contains(point);
-         // Volume may be an assembly and the component containing the point skipped
-         TGeoNode *component = fCurrentNode;
-         Int_t index_node = component->GetVolume()->GetCurrentNodeIndex();
-         while (index_node>=0) {
-            component = component->GetVolume()->GetNode(index_node);
-            index_node = component->GetVolume()->GetCurrentNodeIndex();
-         }
-         if (component == skipnode) inside_current = kFALSE;
-      }   
+      else inside_current = vol->Contains(point);
       if (!inside_current) {
          fIsSameLocation = kFALSE;
          return 0;
@@ -1811,7 +1801,6 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    TGeoVoxelFinder *voxels = vol->GetVoxels();
    Int_t *check_list = 0;
    Int_t id;
-   Int_t current_level = fLevel;
    if (voxels) {
       // get the list of nodes passing thorough the current voxel
       check_list = voxels->GetCheckList(&point[0], ncheck);
@@ -1850,13 +1839,12 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
          }
          CdDown(check_list[id]);
          fForcedNode = 0;
-         node = SearchNode(kTRUE, skipnode);
-         if (node && node != skipnode) {
+         node = SearchNode(kTRUE);
+         if (node) {
             fIsSameLocation = kFALSE;
             return node;
          }
-         // Go back up to backup level
-         while (fLevel > current_level) CdUp();
+         CdUp();
       }
       if (!fCurrentNode->GetVolume()->IsAssembly()) return fCurrentNode;
       node = fCurrentNode;
@@ -1874,13 +1862,12 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       if (fGeometry->IsActivityEnabled() && !node->GetVolume()->IsActive()) continue;
       CdDown(id);
       fForcedNode = 0;
-      node = SearchNode(kTRUE, skipnode);
-      if (node && node != skipnode) {
+      node = SearchNode(kTRUE);
+      if (node) {
          fIsSameLocation = kFALSE;
          return node;
       }
-      // Go back up to backup level
-      while (fLevel > current_level) CdUp();
+      CdUp();
    }      
    // point is not inside one of the daughters, so it is in the current vol
    if (fCurrentNode->GetVolume()->IsAssembly()) {
