@@ -41,6 +41,7 @@
 #include "gsl/gsl_errno.h"
 
 #include <iostream> 
+#include <cmath>
 
 namespace ROOT { 
 
