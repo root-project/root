@@ -576,6 +576,11 @@ class genDictionary(object) :
     #------------------------------------------------------------------------------
     classDefImpl = ClassDefImplementation(selclasses, self)
 
+    #------------------------------------------------------------------------------
+    # Process Class_Version implementation before writing: sets 'extra' properties
+    #------------------------------------------------------------------------------
+    Class_VersionImplementation(selclasses,self)
+
     f_buffer = ''
     # Need to specialize templated class's functions (e.g. A<T>::Class())
     # before first instantiation (stubs), so classDefImpl before stubs.
@@ -2756,3 +2761,31 @@ def ClassDefImplementation(selclasses, self) :
   if haveClassDef == 1 :
     return "} // unnamed namespace\n\n" + returnValue + "\nnamespace {\n"
   return ""
+
+#--------------------------------------------------------------------------------------
+# If Class_Version is a member function of the class, use it to set ClassVersion
+def Class_VersionImplementation(selclasses, self):
+  for attrs in selclasses :
+    #if ClassVersion was already set, do not change
+    if attrs.has_key('extra') and 'ClassVersion' in attrs['extra']:
+        continue
+    
+    members = attrs.get('members','')
+    membersList = members.split()
+
+    hasClass_Version = False
+    for ml in membersList:
+      memAttrs = self.xref[ml]['attrs']
+      if ml[1].isdigit() and memAttrs['name'] == "Class_Version":
+        if memAttrs.get('access') not in ('protected', 'private') and 'static' in memAttrs:         
+            hasClass_Version = True
+        else:
+            print "--->> genreflex: ERROR: class %s's method Class_Version() must be both 'static' and 'public'." % attrs['fullname']
+        break
+
+    if hasClass_Version:
+      clname = '::' + attrs['fullname']
+      if attrs.has_key('extra'):
+        attrs['extra']['ClassVersion'] = '!RAW!' + clname + '::Class_Version()'
+      else:
+        attrs['extra']={'ClassVersion' : '!RAW!' + clname + '::Class_Version()'}
