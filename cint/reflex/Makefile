@@ -66,6 +66,8 @@ CintexReflexOrder: CintexReflexOrder.log
 Tools: Tools.log
 	$(TestDiff)
 
+exechepmc.log: libhepmc_dictrflx.$(DllSuf)
+
 else
 
 $(RFLXDICTTESTS): %_rflx:

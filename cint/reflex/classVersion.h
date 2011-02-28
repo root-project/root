@@ -41,3 +41,12 @@ template <class T> class MyTemp {
 template class std::vector<std::string>;
 template class std::vector<WithClassVersion>;
 template class MyTemp<std::vector<std::string> >;
+
+template <class T> class TemplateWithVersion {
+   T value;
+   public: static Int_t Class_Version() { return 10; }
+};
+
+template class TemplateWithVersion<int>;
+template class TemplateWithVersion<double>;
+

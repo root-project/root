@@ -23,3 +23,13 @@ inhFromTObj == cl->InheritsFrom(TObject::Class()): ok.
 !TClass::GetClass("NoDictionary"): ok.
 !TClass::GetClass("NoDictionaryTObj"): ok.
 TClass::GetClass("MyTemp<std::vector<std::string> >"): ok.
+
+CLASS TemplateWithVersion<int>, version 10, isATObject=0
+cl: ok.
+cl->GetClassVersion() == version: ok.
+inhFromTObj == cl->InheritsFrom(TObject::Class()): ok.
+
+CLASS TemplateWithVersion<double>, version 10, isATObject=0
+cl: ok.
+cl->GetClassVersion() == version: ok.
+inhFromTObj == cl->InheritsFrom(TObject::Class()): ok.

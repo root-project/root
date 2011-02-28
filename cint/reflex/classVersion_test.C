@@ -26,4 +26,7 @@ void classVersion_test() {
    RflxAssert(!TClass::GetClass("NoDictionaryTObj"));
 
    RflxAssert(TClass::GetClass("MyTemp<std::vector<std::string> >"));
+
+   checkVersion("TemplateWithVersion<int>",10);
+   checkVersion("TemplateWithVersion<double>",10);
 }

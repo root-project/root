@@ -16,4 +16,8 @@
 <class name="WithClassDef"/>
 <class name="NoIO"/>
 <class name="FromTObject"/>
+
+<class name="TemplateWithVersion<int>" />
+<class name="TemplateWithVersion<double>" />
+
 </lcgdict>
