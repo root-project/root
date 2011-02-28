@@ -503,7 +503,6 @@ void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, uns
          ROOT::Math::OneDimParamFunctionAdapter<const ROOT::Math::IParamMultiFunction &> fadapter(*fFitFunc,&xpoint.front(),&fParams.front(),ipar);
          d.SetFunction(fadapter); 
          grad[ipar] = d(fParams[ipar] ); // evaluate df/dp
-         std::cout << "gradient of function par " << ipar << "  " << grad[ipar] << std::endl;
       }
 
       // multiply covariance matrix with gradient
@@ -512,14 +511,12 @@ void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, uns
          for (unsigned int jpar = 0; jpar < npar; ++jpar) {
              vsum[ipar] += CovMatrix(ipar,jpar) * grad[jpar]; 
          }
-         std::cout << " vsum " << vsum[ipar] << std::endl;
       }
       // multiply gradient by vsum
       double r2 = 0; 
       for (unsigned int ipar = 0; ipar < npar; ++ipar) { 
          r2 += grad[ipar] * vsum[ipar]; 
       }
-      std::cout << " r2 = " << r2 << std::endl;
       double r = std::sqrt(r2); 
       ci[ipoint] = r * corrFactor;  
    }
