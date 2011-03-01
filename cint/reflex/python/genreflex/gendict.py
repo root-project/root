@@ -2129,7 +2129,12 @@ class genDictionary(object) :
     if sys.platform != 'win32':
         static = 'static '
         dtorscope = '::' + cl + '::'
-    return '%svoid destructor%s(void*, void * o, const std::vector<void*>&, void *) {\n  (((::%s*)o)->%s~%s)();\n}' % ( static, attrs['id'], cl, dtorscope, attrs['name'] )
+    dtorimpl = '%svoid destructor%s(void*, void * o, const std::vector<void*>&, void *) {\n' % ( static, attrs['id'])
+    if (attrs['name'][0] != '.'):
+      return dtorimpl + '(((::%s*)o)->%s~%s)();\n}' % ( cl, dtorscope, attrs['name'] )
+    else:
+      # unnamed; can't call.
+      return dtorimpl + '  // unnamed, cannot call destructor\n}'
 #----------------------------------------------------------------------------------
   def genDestructorBuild(self, attrs, childs):
     if self.isUnnamedType(self.xref[attrs['context']]['attrs'].get('demangled')) or \
