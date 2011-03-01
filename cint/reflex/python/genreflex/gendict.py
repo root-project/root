@@ -900,7 +900,7 @@ class genDictionary(object) :
         sc += '  rule->fSource      = "%s";\n' % (attrs['source'],)
         
       if rule.has_key( 'funcname' ):
-        sc += '  rule->fFunctionPtr = (void *)%s;\n' % (rule['funcname'],)
+        sc += '  rule->fFunctionPtr = Reflex::BuilderFunc2Void(%s);\n' % (rule['funcname'],)
         sc += '  rule->fCode        = "%s";\n' % (rule['code'].replace( '\n', '\\n' ), )
 
       if attrs.has_key( 'version' ):
@@ -980,6 +980,7 @@ class genDictionary(object) :
       # Initialize the structure - to  be changed later
       #---------------------------------------------------------------------------
       for member in source:
+        if member[0] == '': continue;
         sc += '  static Long_t offset_Onfile_' + mappedName
         sc += '_' + member[1] + ' = oldObj->GetClass()->GetDataMemberOffset("'
         sc += member[1] +'");\n';

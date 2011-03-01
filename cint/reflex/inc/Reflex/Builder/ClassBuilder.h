@@ -23,6 +23,34 @@
 namespace Cint { namespace Internal {} }
 
 namespace Reflex {
+
+/* Helper class to avoid compiler warning about casting function pointer
+** to void pointer.
+*/
+class BuilderFunc2Void {
+   typedef void (*funcptr_t)();
+
+   union funcptr_and_voidptr {
+      typedef void (*funcptr_t)();
+
+      funcptr_and_voidptr(void *val) : _read(val) {}
+
+      void *_read;
+      funcptr_t _write;
+   };
+
+   funcptr_and_voidptr _tmp;
+public:
+   template <typename T>
+   BuilderFunc2Void( T vfp ) : _tmp(0) {
+      _tmp._write = ( funcptr_t )vfp;
+   }
+
+   operator void*() const {
+      return _tmp._read;
+   }
+};
+
 // forward declarations
 class Class;
 class ClassBuilder;
