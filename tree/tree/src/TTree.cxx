@@ -3784,11 +3784,8 @@ Int_t TTree::Fill()
              (fAutoSave >0 && fEntries%TMath::Max((Long64_t)1,fAutoSave)  == 0) ) {
 
             //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
-            int myfactor = fTotBytes / (2* -fAutoFlush) + 1;
-            Long64_t requested = fTotBytes / ( myfactor );
-            Info("Fill","AutoFlush would call OptimizeBaskset with %lld %d when %lld %lld %lld\n",requested,myfactor,fZipBytes,fTotBytes,(2* -fAutoFlush));
-            OptimizeBaskets((2* -fAutoFlush),1,"");
-            if (gDebug > 0) Info("Fill","OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+            OptimizeBaskets(fTotBytes,1,"");
+            if (gDebug > 0) Info("TTree::Fill","OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
             fFlushedBytes = fZipBytes;
             fAutoFlush    = fEntries;  // Use test on entries rather than bytes
             // subsequently in run
@@ -6158,10 +6155,6 @@ void TTree::SetAutoFlush(Long64_t autof)
    // consecutive entries on the disk.
 
    fAutoFlush = autof;
-   if (fAutoFlush < 0) {
-      // Re-enable the first pass though the auto flush mechanism
-      fFlushedBytes = 0;
-   }
 }
 
 //_______________________________________________________________________
