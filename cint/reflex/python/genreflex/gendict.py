@@ -1039,7 +1039,9 @@ class genDictionary(object) :
         sc += 'void %s( char *target, TVirtualObject *oldObj )\n' % (funcname,)
         sc += '{\n'
         sc += self.processIOAutoVariables( cl, clt, sourceMembersSpl, targetMembers, memTypes )
-        sc += '  %s* newObj = (%s*)target;\n' % (cl, cl)
+        #to avoid compiler warnings about unused variables only declare newObj if user actually uses it
+        if -1 != rule['code'].find('newObj'):
+           sc += '  %s* newObj = (%s*)target;\n' % (cl, cl)
         sc += '  //--- User\'s code ---\n'
         sc += rule['code'].strip('\n')
         sc += '\n}\n\n'
