@@ -2781,7 +2781,7 @@ def Class_VersionImplementation(selclasses, self):
     hasClass_Version = False
     for ml in membersList:
       memAttrs = self.xref[ml]['attrs']
-      if ml[1].isdigit() and memAttrs['name'] == "Class_Version":
+      if ml[1].isdigit() and attrs.has_key('name') and memAttrs['name'] == "Class_Version":
         if memAttrs.get('access') not in ('protected', 'private') and 'static' in memAttrs:         
             hasClass_Version = True
         else:
