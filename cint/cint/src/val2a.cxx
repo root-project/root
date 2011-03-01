@@ -1882,15 +1882,34 @@ G__value G__string2type_body(const char* typenamin, int noerror)
          }
       }
       else {
-         if (0 == noerror) {
-            result.tagnum = G__defined_tagname(typenam, 0);
-            if (result.tagnum == -1) result.type = 'Y'; /* checked */
-            else                   result.type = 'u';
-         }
-         else {
-            result.tagnum = G__defined_tagname(typenam, noerror);
-            if (result.tagnum == -1) result.type = 0; /* checked */
-            else                   result.type = 'u';
+         result.tagnum = G__defined_tagname(typenam, noerror);
+         if (result.tagnum == -1) {
+            // try function pointer type
+            const char* start = strchr(typenam, '(');
+            if (start) {
+               ++start;
+               while (isspace(*start)) ++start;
+               if (*start == '*') {
+                  ++start;
+                  while (isspace(*start)) ++start;
+                  if (*start == ')') {
+                     ++start;
+                     while (isspace(*start)) ++start;
+                     if (*start == '(' && strchr(start + 1, ')')) {
+                        result.type = '1';
+                     }
+                  }
+               }
+            }
+            if (result.type == 0) {
+               if (0 == noerror) {
+                  result.type = 'Y'; /* checked */
+               } else {
+                  result.type = 0; /* checked */
+               }
+            }
+         } else {
+            result.type = 'u';
          }
       }
    }
