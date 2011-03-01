@@ -3199,6 +3199,9 @@ void TBranchElement::ReadLeavesMakeClass(TBuffer& b)
             } else {
                GetInfoImp()->ReadBuffer(b, (char**) &fObject, fID);
             }
+            if (fStreamerType == TVirtualStreamerInfo::kCounter) {
+               fNdata = (Int_t) GetValue(0, 0);
+            }
          } else {
             fNdata = 0;
          }
