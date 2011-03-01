@@ -3527,12 +3527,14 @@ void TClass::IgnoreTObjectStreamer(Bool_t ignore)
    //  This option saves the TObject space overhead on the file.
    //  However, the information (fBits, fUniqueID) of TObject is lost.
    //
-   //  Note that this function must be called for the class deriving
-   //  directly from TObject, eg, assuming that BigTrack derives from Track
-   //  and Track derives from TObject, one must do:
+   //  Note that to be effective for objects streamed object-wise this function 
+   //  must be called for the class deriving directly from TObject, eg, assuming
+   //  that BigTrack derives from Track and Track derives from TObject, one must do:
    //     Track::Class()->IgnoreTObjectStreamer();
    //  and not:
    //     BigTrack::Class()->IgnoreTObjectStreamer();
+   //  To be effective for object streamed member-wise or split in a TTree,
+   //  this function must be called for the most derived class (i.e. BigTrack).
 
    if ( ignore &&  TestBit(kIgnoreTObjectStreamer)) return;
    if (!ignore && !TestBit(kIgnoreTObjectStreamer)) return;
