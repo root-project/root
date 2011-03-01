@@ -5246,8 +5246,9 @@ if test ! "x$enable_krb5" = "xno" ; then
          else
             echo "Checking for kinit ... $krb5init"
          fi
-
        fi
+    else
+       enable_krb5=no
     fi
 
     if test ! "x$enable_krb5" = "xyes" ; then
