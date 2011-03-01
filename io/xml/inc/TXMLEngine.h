@@ -106,7 +106,7 @@ public:
    void              SaveDoc(XMLDocPointer_t xmldoc, const char* filename, Int_t layout = 1);
    void              DocSetRootElement(XMLDocPointer_t xmldoc, XMLNodePointer_t xmlnode);
    XMLNodePointer_t  DocGetRootElement(XMLDocPointer_t xmldoc);
-   XMLDocPointer_t   ParseFile(const char* filename);
+   XMLDocPointer_t   ParseFile(const char* filename, Int_t maxbuf = 100000);
    XMLDocPointer_t   ParseString(const char* xmlstring);
    Bool_t            ValidateVersion(XMLDocPointer_t doc, const char* version = 0);
    Bool_t            ValidateDocument(XMLDocPointer_t, Bool_t = kFALSE) { return kFALSE; } // obsolete
