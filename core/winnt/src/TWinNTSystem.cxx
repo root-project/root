@@ -2453,13 +2453,20 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
    if (helper)
       return helper->AccessPathName(path, mode);
 
+   // prevent the system dialog box to pop-up if a drive is empty
+   UINT nOldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
    if (mode==kExecutePermission)
       // cannot test on exe - use read instead
       mode=kReadPermission;
    const char *proto = (strstr(path, "file:///")) ? "file://" : "file:";
-   if (::_access(StripOffProto(path, proto), mode) == 0)
+   if (::_access(StripOffProto(path, proto), mode) == 0) {
+      // restore previous error mode
+      ::SetErrorMode(nOldErrorMode);
       return kFALSE;
+   }
    fLastErrorString = GetError();
+   // restore previous error mode
+   ::SetErrorMode(nOldErrorMode);
    return kTRUE;
 }
 
