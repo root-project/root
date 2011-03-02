@@ -126,6 +126,7 @@
 #pragma link C++ class ROOT::Math::DistSampler+;
 #pragma link C++ class ROOT::Math::DistSamplerOptions+;
 #pragma link C++ class ROOT::Math::GoFTest+;
+#pragma link C++ class vector<vector<double> >+;
 
 #include "LinkDef_Func.h"
 
