@@ -22,6 +22,15 @@
 </li>
 </ul>
 
+<h3>TPostscript</h3>
+<ul>
+<li> Fix a precision problem in the text positionning. When the pad limits along
+     X or Y were very close the text position might be wrong. This was found 
+     thanks to the test #15 in stressGraphics. The text position is now computed
+     using double precision variables only.
+</li>
+</ul>
+
 <h3>TGaxis</h3>
 <ul>
 <li> The following macro produced two different labelling. Label "3" was missing
