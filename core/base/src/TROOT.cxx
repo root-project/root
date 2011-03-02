@@ -593,6 +593,18 @@ Bool_t TROOT::ClassSaved(TClass *cl)
 }
 
 //______________________________________________________________________________
+void TROOT::CloseFiles()
+{
+   // Close any files and sockets that gROOT knows about.
+   // Delete the corresponding TFile and TSockets objects.
+   // This can be used to insures that the files and sockets are closed before any library is unloaded!
+
+   if (fFiles) fFiles->Delete("slow");
+   if (fSockets) fSockets->Delete();
+   if (fMappedFiles) fMappedFiles->Delete("slow");
+}
+
+//______________________________________________________________________________
 TObject *TROOT::FindObject(const TObject *) const
 {
 // Find an object in one Root folder

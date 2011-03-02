@@ -432,7 +432,7 @@ void scandir(THtml& html, const char *dir, const char *title, TObjLink* toplnk) 
       MakeTopLinks(links,named->GetName(),tutTitle,"index",title,lnk, dir);
       html.Convert(atut,named->GetTitle(),outpath,"../../",includeOutput,links);
       gROOT->GetListOfCanvases()->Delete();
-      gROOT->GetListOfFiles()->Delete();
+      gROOT->CloseFiles();
       gROOT->GetListOfFunctions()->Delete();
       gROOT->GetListOfBrowsers()->Delete();
       gROOT->GetListOfGeometries()->Delete();

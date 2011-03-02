@@ -575,12 +575,7 @@ def cleanup():
  # order of static object destruction; so far it only seemed needed for
  # sockets with PROOF, whereas files should not be touched this early ...
    gROOT = sys.modules[ 'libPyROOT' ].gROOT
-   if gROOT.GetListOfFiles():
-      gROOT.GetListOfFiles().Delete( 'slow' )
-   if gROOT.GetListOfSockets():
-      gROOT.GetListOfSockets().Delete()
-   if gROOT.GetListOfMappedFiles():
-      gROOT.GetListOfMappedFiles().Delete( 'slow' )
+   gROOT.CloseFiles()
    del gROOT
 
  # cleanup cached python strings

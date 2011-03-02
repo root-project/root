@@ -3777,9 +3777,7 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
 
    // Insures that the files and sockets are closed before any library is unloaded!
    if (gROOT) {
-      if (gROOT->GetListOfFiles()) gROOT->GetListOfFiles()->Delete("slow");
-      if (gROOT->GetListOfSockets()) gROOT->GetListOfSockets()->Delete();
-      if (gROOT->GetListOfMappedFiles()) gROOT->GetListOfMappedFiles()->Delete("slow");
+      gROOT->CloseFiles();
       if (gROOT->GetListOfBrowsers()) gROOT->GetListOfBrowsers()->Delete();
    }
    gVirtualX->CloseDisplay();

@@ -802,6 +802,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       Info("ProcessLine", "Bye... (try '.qqqqqqq' if still running)");
       gSystem->Exit(1);
    } else if (!strncasecmp(line, ".exit", 4) || !strncasecmp(line, ".quit", 2)) {
+      gROOT->CloseFiles(); // Close any files or sockets before emptying CINT.
       gInterpreter->ResetGlobals();
       Terminate(0);
       return 0;
