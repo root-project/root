@@ -951,12 +951,7 @@ char* G__rename_templatefunc(G__FastAllocString& funcname)
       }
       else {
          *ptmplt = '<';
-         if (G__defined_typename_noerror(funcname, 0) >= 0
-             || G__defined_tagname(funcname, 1) >= 0) {
-            *ptmplt = 0;
-         } else {
-            ptmplt = (char*)0;
-         }
+         ptmplt = (char*)0;
       }
    }
    if (ptmplt) {
