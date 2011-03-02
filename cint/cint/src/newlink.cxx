@@ -12012,7 +12012,6 @@ void G__specify_link(int link_stub)
                       }
 #endif
                    } // enum or not
-                   break;
                 } // is within linked parent
              }
           } else {
