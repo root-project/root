@@ -1718,26 +1718,55 @@ try_again:
       }
    }
    // If tagname not found, try instantiating class template.
-   len = strlen(tagname);
-   if ((tagname[len-1] == '>') && (noerror < 2) && ((len < 2) || (tagname[len-2] != '-'))) {
-      if (G__loadingDLL) {
-         G__fprinterr(G__serr, "Error: '%s' Incomplete template resolution in shared library", tagname);
-         G__genericerror(0);
-         G__fprinterr(G__serr, "Add following line in header for making dictionary\n");
-         G__fprinterr(G__serr, "   #pragma link C++ class %s;\n", tagname);
-         return -1;
+   if (noerror < 2) {
+      len = strlen(tagname);
+      bool tryInstantiation = false;
+      if ((tagname[len-1] == '>') && ((len < 2) || (tagname[len-2] != '-'))) {
+         if (G__loadingDLL) {
+            G__fprinterr(G__serr, "Error: '%s' Incomplete template resolution in shared library", tagname);
+            G__genericerror(0);
+            G__fprinterr(G__serr, "Add following line in header for making dictionary\n");
+            G__fprinterr(G__serr, "   #pragma link C++ class %s;\n", tagname);
+            return -1;
+         }
+         tryInstantiation = true;
+      } else {
+         G__Definedtemplateclass* deftmplt =G__defined_templateclass((char*) tagname);
+         tryInstantiation = (deftmplt && deftmplt->def_para && deftmplt->def_para->default_parameter);
       }
-      // CAUTION: tagname may be modified in following function.
-      i = G__instantiate_templateclass((char*) tagname, noerror);
-      return i;
-   }
-   else if (noerror < 2) {
-      G__Definedtemplateclass* deftmplt = G__defined_templateclass((char*) tagname);
-      if (deftmplt && deftmplt->def_para && deftmplt->def_para->default_parameter) {
+      if (tryInstantiation) {
+         // remove all std:: and try recursively.
+         G__FastAllocString noStd(tagname);
+         char* posstd = strstr((char*)noStd, "std::");
+         if (posstd) {
+            while (posstd) {
+               // shift right of std:: to left (aka remove "std::")
+               do {
+                  *posstd = posstd[5];
+               } while (*(posstd++));
+               posstd = strstr(posstd, "std::");
+            }
+            int nostdTy = G__defined_typename_noerror(noStd, 1);
+            if (nostdTy >= 0) {
+               i = G__newtype.tagnum[nostdTy];
+               if (i >= 0) {
+                  return i;
+               }
+            } else {
+               int subnoerr = noerror;
+               if (subnoerr == 4) subnoerr = 3;
+               if (enclosing) subnoerr |= 0x1000;
+               i = G__defined_tagname(noStd, subnoerr);
+               if (i >= 0) {
+                  return i;
+               }
+            }
+         }
+         // CAUTION: tagname may be modified in following function.
          i = G__instantiate_templateclass((char*) tagname, noerror);
          return i;
       }
-   }
+   } // if noerror < 2
 
    if (noerror == 4)
       return -1;

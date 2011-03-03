@@ -950,8 +950,12 @@ char* G__rename_templatefunc(G__FastAllocString& funcname)
          *ptmplt = 0;
       }
       else {
-         *ptmplt = '<';
-         ptmplt = (char*)0;
+         if (G__defined_templateclass(funcname)) {
+            *ptmplt = 0;
+         } else {
+            *ptmplt = '<';
+            ptmplt = (char*)0;
+         }
       }
    }
    if (ptmplt) {
@@ -1000,6 +1004,7 @@ char* G__rename_templatefunc(G__FastAllocString& funcname)
          funcname2 += buf2;
       }
       while (c != '>');
+      funcname2 += ptmplt + ip;
       funcname = funcname2;
    }
    return funcname;
