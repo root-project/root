@@ -268,6 +268,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    else
       fTbfname->Clear();
 
+   fTypes->GetListBox()->Resize(230, 120);
    fHftype->AddFrame(fLftypes, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 2, 5, 2, 2));
    fHftype->AddFrame(fTypes, new TGLayoutHints(kLHintsRight | kLHintsCenterY, 0, 20, 2, 2));
 
