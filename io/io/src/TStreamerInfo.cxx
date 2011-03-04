@@ -1751,7 +1751,7 @@ namespace {
          fName = name;
       }
       void SetClassName(const char *name) {
-         fClassName = TClassEdit::ShortType( name, TClassEdit::kDropStlDefault );
+         fClassName = TClassEdit::ShortType( name, TClassEdit::kDropStlDefault | TClassEdit::kDropStd );
       }
       void SetComment(const char *title) {
          const char *left = strstr(title,"[");

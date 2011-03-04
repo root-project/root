@@ -41,7 +41,8 @@ namespace TClassEdit {
       kDropStlDefault   = 1<<5, /* implies kDropDefaultAlloc */
       kDropComparator   = 1<<6, /* if the class has a comparator, drops BOTH the comparator and the Allocator */
       kDropAllDefault   = 1<<7, /* Drop default template parameter even in non STL classes */
-      kLong64           = 1<<8  /* replace all 'long long' with Long64_t. */
+      kLong64           = 1<<8, /* replace all 'long long' with Long64_t. */
+      kDropStd          = 1<<9  /* Drop any std:: */
    };
 
    enum ESTLType {
