@@ -45,6 +45,10 @@ Warning in <TStreamerInfo::BuildCheck>:
    Do not try to write objects with the current class definition,
    the files will not be readable.
 
+Warning in <TStreamerInfo::CompareContent>: The following data member of
+the in-memory layout version 1 of class 'Tdata' is missing from 
+the on-file layout version 1:
+   int myvar_one; //
 
 StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
   int            myvar_one       offset=99999 type= 3                     
@@ -185,6 +189,10 @@ Warning in <TStreamerInfo::BuildCheck>:
    Do not try to write objects with the current class definition,
    the files will not be readable.
 
+Warning in <TStreamerInfo::CompareContent>: The following data member of
+the in-memory layout version 1 of class 'Tdata' is missing from 
+the on-file layout version 1:
+   int myvar_one; //
 
 StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
   int            myvar_one       offset=99999 type= 3                     
@@ -217,6 +225,10 @@ Warning in <TStreamerInfo::BuildCheck>:
    Do not try to write objects with the current class definition,
    the files will not be readable.
 
+Warning in <TStreamerInfo::CompareContent>: The following data member of
+the in-memory layout version 1 of class 'Tdata' is missing from 
+the on-file layout version 1:
+   int myvar_one; //
 
 StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
   int            myvar_one       offset=99999 type= 3                     
