@@ -410,6 +410,22 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
                 << " pdf x priors = " <<  fProductPdf->getVal() 
                 << " neglogLikelihood = " << fLogLike->getVal() << std::endl;
 
+   // check that likelihood evaluation is not inifinity 
+   if ( fLogLike->getVal() > std::numeric_limits<double>::max() ) {
+      coutE(Eval) <<  "BayesianCalculator::GetPosteriorFunction : " 
+                  << " Negative log likelihood evaluates to infinity " << std::endl 
+                  << " Non-const Parameter values : ";
+      RooArgList p(*constrainedParams);
+      for (int i = 0; i < p.getSize(); ++i) {
+         RooRealVar * v = dynamic_cast<RooRealVar *>(&p[i] );
+         if (v!=0) ccoutE(Eval) << v->GetName() << " = " << v->getVal() << "   ";
+      }
+      ccoutE(Eval) << std::endl;
+      ccoutE(Eval) << "--  Perform a full likelihood fit of the model before or set more reasanable parameter values"  
+                   << std::endl; 
+      coutE(Eval) << "BayesianCalculator::GetPosteriorFunction : " << " cannot compute posterior function "  << std::endl; 
+      return 0;
+   }
 
    // if pdf evaluates to zero, should be fixed, but this will
    // stop error messages.
@@ -469,10 +485,10 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
 
    }
 
-   fIntegratedLikelihood->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
+   //fIntegratedLikelihood->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
 
-   ccoutD(Eval) << "BayesianCalculator::GetPosteriorFunction : use ROOT numerical integration algorithm. "; 
-   ccoutD(Eval) << " Integrated log-likelihood = " << fIntegratedLikelihood->getVal() << std::endl;
+   // ccoutD(Eval) << "BayesianCalculator::GetPosteriorFunction : use ROOT numerical integration algorithm. "; 
+   // ccoutD(Eval) << " Integrated log-likelihood = " << fIntegratedLikelihood->getVal() << std::endl;
 
 
    return fIntegratedLikelihood; 
@@ -483,7 +499,9 @@ RooAbsPdf* BayesianCalculator::GetPosteriorPdf() const
    /// build and return the posterior pdf (i.e posterior function normalized to all range of poi
    ///NOTE: user must delete the returned object 
    
-   RooAbsReal * plike = GetPosteriorFunction(); 
+   RooAbsReal * plike = GetPosteriorFunction();
+   if (!plike) return 0;
+
    
    // create a unique name on the posterior from the names of the components
    TString posteriorName = this->GetName() + TString("_posteriorPdf_") + plike->GetName(); 
@@ -563,6 +581,7 @@ SimpleInterval* BayesianCalculator::GetInterval() const
       return 0; 
    } 
 
+
    if (fLeftSideFraction < 0 ) { 
       // compute short intervals
       ComputeShortestInterval(); 
@@ -590,9 +609,15 @@ SimpleInterval* BayesianCalculator::GetInterval() const
       }
    }
 
-   fValidInterval = true; 
-   coutI(Eval) << "BayesianCalculator::GetInterval - found a valid interval : [" << fLower << " , " 
+   if (!fValidInterval) { 
+      fLower = 1; fUpper = 0;
+      coutE(Eval) << "BayesianCalculator::GetInterval - cannot compute a valid interval - return a dummy [1,0] interval"
+      <<  std::endl;
+   }
+   else {
+      coutI(Eval) << "BayesianCalculator::GetInterval - found a valid interval : [" << fLower << " , " 
                 << fUpper << " ]" << std::endl;
+   }
    
    TString interval_name = TString("BayesianInterval_a") + TString(this->GetName());
    SimpleInterval * interval = new SimpleInterval(interval_name,*poi,fLower,fUpper,ConfidenceLevel());
@@ -623,6 +648,7 @@ void BayesianCalculator::ComputeIntervalUsingRooFit(double lowerCutOff, double u
    assert(poi);
 
    if (!fPosteriorPdf) fPosteriorPdf = (RooAbsPdf*) GetPosteriorPdf();
+   if (!fPosteriorPdf) return;
          
    RooAbsReal* cdf = fPosteriorPdf->createCdf(fPOI,RooFit::ScanNoCdf());
          
@@ -654,6 +680,7 @@ void BayesianCalculator::ComputeIntervalUsingRooFit(double lowerCutOff, double u
    
    delete cdf_bind;
    delete cdf;
+   fValidInterval = true; 
 }
 
 void BayesianCalculator::ComputeIntervalFromCdf(double lowerCutOff, double upperCutOff ) const { 
@@ -663,7 +690,7 @@ void BayesianCalculator::ComputeIntervalFromCdf(double lowerCutOff, double upper
 
    RooRealVar* poi = dynamic_cast<RooRealVar*>( fPOI.first() ); 
    assert(poi);
-   GetPosteriorFunction();
+   if (GetPosteriorFunction() == 0) return; 
 
    // need to remove the constant parameters
    RooArgList bindParams; 
@@ -727,6 +754,7 @@ void BayesianCalculator::ComputeIntervalFromCdf(double lowerCutOff, double upper
    else { 
       fUpper = poi->getMax(); 
    }
+   fValidInterval = true; 
 }
 
 void BayesianCalculator::ApproximatePosterior() const { 
@@ -742,6 +770,7 @@ void BayesianCalculator::ApproximatePosterior() const {
    }      
 
    RooAbsReal * posterior = GetPosteriorFunction();
+   if (!posterior) return; 
 
    // try to reduce some error messages
    posterior->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
@@ -779,6 +808,7 @@ void BayesianCalculator::ComputeIntervalFromApproxPosterior(double lowerCutOff, 
    ccoutD(Eval) <<  "BayesianCalculator: Compute interval from the approximate posterior " << std::endl;
 
    ApproximatePosterior();
+   if (!fApproxPosterior) return;
 
    double prob[2]; 
    double limits[2];
@@ -787,6 +817,7 @@ void BayesianCalculator::ComputeIntervalFromApproxPosterior(double lowerCutOff, 
    fApproxPosterior->GetQuantiles(2,limits,prob);
    fLower = limits[0]; 
    fUpper = limits[1];
+   fValidInterval = true; 
 }
 
 void BayesianCalculator::ComputeShortestInterval( ) const { 
@@ -795,6 +826,8 @@ void BayesianCalculator::ComputeShortestInterval( ) const {
 
    // compute via the approx posterior function
    ApproximatePosterior(); 
+   if (!fApproxPosterior) return;
+
    TH1D * h1 = dynamic_cast<TH1D*>(fApproxPosterior->GetHistogram() );
    assert(h1 != 0);
    h1->SetName(fApproxPosterior->GetName());
@@ -844,6 +877,7 @@ void BayesianCalculator::ComputeShortestInterval( ) const {
    else 
       coutE(Eval) << "BayesianCalculator::ComputeShortestInterval " << n << " bins are not sufficient " << std::endl;
 
+   fValidInterval = true; 
 
 }
 
