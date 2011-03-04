@@ -985,7 +985,7 @@ char* G__rename_templatefunc(G__FastAllocString& funcname)
             buf = G__fulltypename(typenum);
          }
          else {
-            tagnum = G__defined_tagname(buf, 1);
+            tagnum = G__defined_tagname(buf, 4);
             if (-1 != tagnum) {
                buf = G__fulltagname(tagnum, 1);
             }
