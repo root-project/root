@@ -819,6 +819,9 @@ void TStreamerInfo::BuildCheck()
          if (fCheckSum != fClass->GetCheckSum(1) && fCheckSum != fClass->GetCheckSum(2)) {
 
             Bool_t warn = !fClass->TestBit(TClass::kWarned);
+            if (warn) {
+               warn = !CompareContent(fClass,0,kFALSE,kFALSE);
+            }
             if (warn && (fOldVersion <= 2)) {
                // Names of STL base classes was modified in vers==3. Allocators removed
                //
@@ -846,6 +849,7 @@ void TStreamerInfo::BuildCheck()
    Do not try to write objects with the current class definition,\n\
    the files will not be readable.\n", GetName(), fClassVersion, GetName(), fClassVersion + 1);
                }
+               CompareContent(fClass,0,kTRUE,kTRUE);
                fClass->SetBit(TClass::kWarned);
             }
          } else {
