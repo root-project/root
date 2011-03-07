@@ -4384,8 +4384,8 @@ void THistPainter::PaintBoxes(Option_t *)
          xup  = TMath::Min(xup , gPad->GetUxmax());
          yup  = TMath::Min(yup , gPad->GetUymax());
 
-	 if (xlow >= xup) continue;
-	 if (ylow >= yup) continue;
+         if (xlow >= xup) continue;
+         if (ylow >= yup) continue;
 
          if (Hoption.Box == 1) {
             fH->SetFillColor(color);
@@ -5420,7 +5420,15 @@ void THistPainter::PaintFunction(Option_t *)
    while (lnk) {
       obj = lnk->GetObject();
       TVirtualPad *padsave = gPad;
-      if (obj->InheritsFrom(TF1::Class())) {
+      if (obj->InheritsFrom(TF2::Class())) {
+         if (obj->TestBit(TF2::kNotDraw) == 0) {
+            if (Hoption.Lego || Hoption.Surf) {
+               obj->Paint("surf same");
+            } else {
+               obj->Paint("cont3 same");
+            }
+         }
+      } else if (obj->InheritsFrom(TF1::Class())) {
          if (obj->TestBit(TF1::kNotDraw) == 0) obj->Paint("lsame");
       } else  {
          obj->Paint(lnk->GetOption());
