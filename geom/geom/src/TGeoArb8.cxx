@@ -1430,7 +1430,10 @@ Double_t TGeoTrap::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
             else exiting = kFALSE;
          }   
       }   
-   }   
+   } 
+   // Check also Z boundaries (point may be inside and close to Z) - Christian Hammann  
+   saf = fDz - TMath::Abs(point[2]);
+   if (saf>0 && saf<safmin) exiting = (point[2]*dir[2] > 0)?kTRUE:kFALSE;
    if (!in) return TGeoShape::Big();
    if (exiting) return TGeoShape::Big();
    return 0.0;
