@@ -494,7 +494,7 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
       Py_ssize_t buflen = bufinfo.len;
 #endif
 
-      if ( check == kTRUE ) {
+      if ( buf && check == kTRUE ) {
       // determine buffer compatibility (use "buf" as a status flag)
          PyObject* pytc = PyObject_GetAttr( pyobject, PyStrings::gTypeCode );
          if ( pytc != 0 ) {     // for array objects

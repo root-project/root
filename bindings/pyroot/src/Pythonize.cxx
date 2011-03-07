@@ -1474,14 +1474,14 @@ namespace {
 
    // prepare arguments
       PyObject* arg1 = BufFac_t::Instance()->PyBuffer_FromMemory(
-         (Int_t*)G__int(libp->para[0]), 1 );
-      int npar = G__int(libp->para[0]);
+         G__Intref(&libp->para[0]), 1 );
+      int npar = *G__Intref(&libp->para[0]);
  
       PyObject* arg2 = BufFac_t::Instance()->PyBuffer_FromMemory(
          (Double_t*)G__int(libp->para[1]), npar );
 
-      PyObject* arg3 = PyList_New( 1 );
-      PyList_SetItem( arg3, 0, PyFloat_FromDouble( G__double(libp->para[2]) ) );
+      PyObject* arg3 = BufFac_t::Instance()->PyBuffer_FromMemory(
+         G__Doubleref(&libp->para[2]), 1 );
 
       PyObject* arg4 = BufFac_t::Instance()->PyBuffer_FromMemory(
          (Double_t*)G__int(libp->para[3]), npar );
@@ -1489,8 +1489,6 @@ namespace {
    // perform actual call
       result = PyObject_CallFunction( pyfunc, (char*)"OOOOi",
          arg1, arg2, arg3, arg4, (int)G__int(libp->para[4]) );
-      *(Double_t*)G__Doubleref(&libp->para[2]) = PyFloat_AsDouble( PyList_GetItem( arg3, 0 ) );
-
       Py_DECREF( arg4 ); Py_DECREF( arg3 ); Py_DECREF( arg2 ); Py_DECREF( arg1 );
 
       if ( ! result ) {
