@@ -78,8 +78,8 @@ p_t p;
 const Int_t NG = 33;
 const char *exps[NG] = {"aleph",  
                         "barres",
-			"felix",
-			"phenix",
+                        "felix",
+                        "phenix",
                         "chambers",
                         "p326",
                         "bes",
@@ -110,6 +110,39 @@ const char *exps[NG] = {"aleph",
                         "belle",
                         "atlas" 
 };
+const Int_t versions[NG] =  {4, //aleph
+                             3, //barres
+                             3, //felix
+                             3, //phenix
+                             3, //chambers
+                             3, //p326
+                             3, //bes
+                             3, //dubna
+                             3, //ganil
+                             3, //e907
+                             3, //phobos2
+                             3, //hermes
+                             3, //na35
+                             3, //na47
+                             3, //na49
+                             3, //wa91
+                             3, //sdc
+                             3, //integral
+                             3, //ams
+                             3, //brahms
+                             3, //gem
+                             3, //tesla
+                             3, //btev
+                             4, //cdf
+                             4, //hades2
+                             3, //lhcbfull
+                             3, //star
+                             3, //sld
+                             3, //cms
+                             3, //alice2
+                             3, //babar2
+                             3, //belle
+                             3}; //atlas
 // The timings below are on my machine PIV 3GHz
 const Double_t cp_brun[NG] = {1.9,  //aleph
                               0.1,  //barres
@@ -189,7 +222,7 @@ Bool_t gen_ref=kFALSE;
 void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, Int_t &nbound, Float_t &length, Float_t &safe, Float_t &rad, Bool_t verbose=kFALSE);
 void ReadRef(Int_t kexp);
 void WriteRef(Int_t kexp);
-void InspectRef(const char *exp="alice");
+void InspectRef(const char *exp="alice", Int_t vers=3);
 
 void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
    gen_ref = generate_ref;
@@ -221,9 +254,9 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
       }   
       TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname.Data()));
          
-      fname = TString::Format("files/%s_ref_3.root", exps[i]);
+      fname = TString::Format("files/%s_ref_%d.root", exps[i],versions[i]);
       
-      if (gen_ref || !TFile::Open(Form("http://root.cern.ch/files/%s_ref_3.root",exps[i]),"CACHEREAD")) {
+      if (gen_ref || !TFile::Open(Form("http://root.cern.ch/files/%s_ref_%d.root",exps[i],versions[i]),"CACHEREAD")) {
          if (!gen_ref) fprintf(stderr,"File: %s does not exist, generating it\n", fname.Data());
          else               fprintf(stderr,"Generating reference file %s\n", fname.Data());
          WriteRef(i);
@@ -266,11 +299,11 @@ void ReadRef(Int_t kexp) {
    TStopwatch sw;
    TString fname;
    TFile *f = 0;
-   //use ref_3 files from version 5.23/01
+   //use ref_[version[i]] files
    if (!gen_ref)
-      fname = TString::Format("http://root.cern.ch/files/%s_ref_3.root", exps[kexp]);
+      fname = TString::Format("http://root.cern.ch/files/%s_ref_%d.root", exps[kexp],versions[kexp]);
    else
-      fname.Format("files/%s_ref_3.root", exps[kexp]);
+      fname.Format("files/%s_ref_%d.root", exps[kexp],versions[kexp]);
    
    f = TFile::Open(fname,"CACHEREAD");
    if (!f) {
@@ -365,7 +398,7 @@ void WriteRef(Int_t kexp) {
    Double_t xmax = boxes[kexp][0]; //box->GetDX(); // 300;
    Double_t ymax = boxes[kexp][1]; //box->GetDY(); // 300;
    Double_t zmax = boxes[kexp][2]; //box->GetDZ(); // 500;
-   TString fname(TString::Format("files/%s_ref_3.root", exps[kexp]));
+   TString fname(TString::Format("files/%s_ref_%d.root", exps[kexp], versions[kexp]));
    TFile f(fname,"recreate");
    TTree *T = new TTree("T","TGeo stress");
    T->Branch("p",&p.x,"x/D:y/D:z/D:theta/D:phi/D:nbound/I:length/F:safe/F:rad/F");
@@ -525,9 +558,9 @@ void InspectDiff(const char* exp="alice",Long64_t ientry=-1) {
    }
 }   
 
-void InspectRef(const char *exp) {
+void InspectRef(const char *exp, Int_t vers) {
 // Inspect current reference.
-   TString fname(TString::Format("%s_ref_3.root", exp));
+   TString fname(TString::Format("%s_ref_%d.root", exp, vers));
    if (gSystem->AccessPathName(fname)) {
       fprintf(stderr,"ERROR: file %s does not exist\n", fname.Data());
       return;
