@@ -392,9 +392,7 @@ Limitation of CINT
 
 # Templates
 
-   Template works probably better than most of UNIX based C++ compilers, 
-  but not as good as Windows based ones. Cint can run simple STL programs.
-   Following limitations applies.
+   Cint can run simple STL programs. Following limitations apply.
 
  + Explicit type conversion
    Explicit type conversion for template class can not be used because of 
@@ -466,6 +464,12 @@ Limitation of CINT
   But this is not recommended. It is very slow and has many troubles.
   Interpreted STL implementation is based on old 1994 HP reference 
   implementation.
+
+ + Qualified template paremeters and default arguments
+   Cint is unable to handle template parameters of STL types that have
+   "std::" prepended. I.e. MyTemplate<complex<double> > works, but
+   MyTemplate<std::complex<double> > doesn't.
+
 
 
 # Reference member
