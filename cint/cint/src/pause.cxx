@@ -2243,8 +2243,6 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
        *******************************************************/
       struct G__store_env store;
       G__SET_TEMPENV;
-      int store_no_exec = G__no_exec;
-      G__no_exec = 0;
 
       char *com1;
       temp = 0;
@@ -2340,7 +2338,6 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       else {
          fprintf(G__sout, "Expecting . in filename\n");
       }
-      G__no_exec = store_no_exec;
       G__RESET_TEMPENV;
    }
    else if (
