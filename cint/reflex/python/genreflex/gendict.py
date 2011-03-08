@@ -2651,7 +2651,7 @@ def ClassDefImplementation(selclasses, self) :
       if clname.find('<') != -1:
         template = 'template<> '
         # specialization of A::B::f() needs namespace A { template<> B<...>::f(){} }
-        specclname = None
+        specclname = attrs['name']
         enclattrs = attrs
         while 'context' in enclattrs:
           if self.xref[enclattrs['id']]['elem'] == 'Namespace' :
@@ -2664,11 +2664,7 @@ def ClassDefImplementation(selclasses, self) :
             returnValue += 'namespace ' + namespname.replace('::', ' { namespace ')
             returnValue += ' { \n'
             break
-          if specclname:
-            specclname = enclattrs['name'] + '::' + specclname
-          else:
-            #this is the first time through so we want the class name
-            specclname = enclattrs['name']
+          specclname = enclattrs['name'] + '::' + specclname
           enclattrs = self.xref[enclattrs['context']]['attrs']
       else :
         specclname = clname
