@@ -123,7 +123,7 @@ CXX           = KCC --one_instantiation_per_object
 CXXFLAGS      = -O4 -KPIC
 LD            = KCC
 LDFLAGS       = -O4
-SOFLAGS       =
+SOFLAGS       = 
 endif
 
 ifeq ($(ARCH),solarisx86)
@@ -475,6 +475,7 @@ DllSuf        = dylib
 ifeq ($(subst $(MACOSX_MINOR),,12),12)
 LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
 SOFLAGS       = -m64 -dynamiclib -single_module -undefined dynamic_lookup
+endif
 endif
 
 ifeq ($(ARCH),macosxxlc)
