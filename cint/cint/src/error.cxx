@@ -37,6 +37,7 @@ void G__arrayindexerror(int varid, struct G__var_array* var, const char* name, i
 #ifdef G__ASM
 int G__asm_execerr(const char* message, int num);
 #endif // G__ASM
+int G__assign_using_null_pointer_error(const char* item);
 int G__assign_error(const char* item, G__value* pbuf);
 int G__reference_error(const char* item);
 int G__warnundefined(const char* item);
@@ -217,6 +218,24 @@ int G__asm_execerr(const char* message, int num)
    return 0;
 }
 #endif // G__ASM
+
+//______________________________________________________________________________
+int G__assign_using_null_pointer_error(const char* item)
+{
+   if (!G__prerun) {
+      G__fprinterr(
+           G__serr
+         , "Error: Attempted assignment using %s, but the value of %s is NULL."
+         , item
+         , item
+      );
+      G__genericerror(0);
+   }
+#ifdef G__SECURITY
+   G__security_error = G__RECOVERABLE;
+#endif // G__SECURITY
+   return 0;
+}
 
 //______________________________________________________________________________
 int G__assign_error(const char* item, G__value* pbuf)

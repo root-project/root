@@ -118,6 +118,7 @@ void G__arrayindexerror(int varid, struct G__var_array* var, const char* name, i
 #ifdef G__ASM
 int G__asm_execerr(const char* message, int num);
 #endif // G__ASM
+int G__assign_using_null_pointer_error(const char* item);
 int G__assign_error(const char* item, G__value* pbuf);
 int G__reference_error(const char* item);
 int G__warnundefined(const char* item);

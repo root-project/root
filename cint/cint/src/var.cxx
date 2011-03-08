@@ -1364,14 +1364,15 @@ G__value G__letvariable(G__FastAllocString &item, G__value expression, G__var_ar
       }
 #ifdef G__SECURITY
       if (
-         !G__no_exec_compile &&
-         (G__var_type == 'v') &&
-         std::isupper(var->type[ig15]) &&
-         (var->reftype[ig15] == G__PARANORMAL) &&
-         !var->varlabel[ig15][1] /* number of elements */ &&
-         ((*((long*)(G__struct_offset + var->p[ig15]))) == 0)
+         !G__no_exec_compile && // we are not just bytecode compiling, and
+         (G__var_type == 'v') && // we are to dereference the var as a ptr, and
+         std::isupper(var->type[ig15]) && // the var is of ptr type, and
+         (var->reftype[ig15] == G__PARANORMAL) && // is single-level, and
+         !var->varlabel[ig15][1] /* number of elements */ && // not an array,
+         ((*((long*)(G__struct_offset + var->p[ig15]))) == 0) // has val zero
       ) {
-         G__assign_error(item, &result);
+         // Error, attempt to assign using a null pointer.
+         G__assign_using_null_pointer_error(item);
          return G__null;
       }
 #endif // G__SECURITY
