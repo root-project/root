@@ -965,7 +965,7 @@ Long64_t TProofLite::DrawSelect(TDSet *dset, const char *varexp,
 
    // Prepare the description string
    TString q;
-   q.Form("draw|%s|%s", varexp, selection);
+   q.Form("draw:\"%s\"%s\"", varexp, selection);
 
    return Process(dset, q.Data(), opt, nentries, first);
 }
@@ -1031,20 +1031,20 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
 
    TString selec(selector), varexp, selection, objname;
    // If a draw query, extract the relevant info
-   if (selec.BeginsWith("draw|")) {
+   if (selec.BeginsWith("draw:")) {
       TString ss(selector), s;
       Ssiz_t from = 0;
-      ss.Tokenize(s, from, "|");
+      ss.Tokenize(s, from, ":\"");
       // The expression is mandatory
-      if (!ss.Tokenize(varexp, from, "|")) {
+      if (!ss.Tokenize(varexp, from, "\"")) {
          Error("Process", "draw query: badly formed expression: %s", selector);
          return -1;
       }
       // Check if a section is present
-      ss.Tokenize(selection, from, "|");
-      // Decode not the expression
+      ss.Tokenize(selection, from, "\"");
+      // Decode now the expression
       if (fPlayer->GetDrawArgs(varexp, selection, option, selec, objname) != 0) {
-         Error("Process", "draw query: error parsing arguments %s, %s, %s",
+         Error("Process", "draw query: error parsing arguments '%s', '%s', '%s'",
                           varexp.Data(), selection.Data(), option);
          return -1;
       }
@@ -1166,6 +1166,17 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
          pq->GetInputList()->Add(dset);
          if (dset->GetEntryList())
             pq->GetInputList()->Add(dset->GetEntryList());
+      }
+
+      // Register any dataset produced during this processing, if required
+      if (fDataSetManager && fPlayer->GetOutputList()) {
+         TNamed *psr = (TNamed *) fPlayer->GetOutputList()->FindObject("PROOFSERV_RegisterDataSet");
+         if (psr) {
+            if (RegisterDataSets(fPlayer->GetInputList(), fPlayer->GetOutputList()) != 0)
+               Warning("ProcessNext", "problems registering produced datasets");
+            fPlayer->GetOutputList()->Remove(psr);
+            delete psr;
+         }
       }
 
       // Complete filling of the TQueryResult instance
@@ -2109,4 +2120,78 @@ void TProofLite::FindUniqueSlaves()
    // will be actiavted in Collect()
    fUniqueMonitor->DeActivateAll();
    fAllUniqueMonitor->DeActivateAll();
+}
+
+//______________________________________________________________________________
+Int_t TProofLite::RegisterDataSets(TList *in, TList *out)
+{
+   // Register TFileCollections in 'out' as datasets according to the rules in 'in'
+
+   PDB(kDataset, 1) Info("RegisterDataSets", "enter");
+
+   if (!in || !out) return 0;
+
+   TString msg;
+   TIter nxo(out);
+   TObject *o = 0;
+   while ((o = nxo())) {
+      // Only file collections TFileCollection
+      TFileCollection *ds = dynamic_cast<TFileCollection*> (o);
+      if (ds) {
+         // The tag and register option
+         TNamed *fcn = 0;
+         TString tag = TString::Format("DATASET_%s", ds->GetName());
+         if (!(fcn = (TNamed *) out->FindObject(tag))) continue;
+         // Register option
+         TString regopt(fcn->GetTitle());
+         // Register this dataset
+         if (fDataSetManager) {
+            if (fDataSetManager->TestBit(TDataSetManager::kAllowRegister)) {
+               // Extract the list
+               if (ds->GetList()->GetSize() > 0) {
+                  // Register the dataset (quota checks are done inside here)
+                  msg.Form("Registering and verifying dataset '%s' ... ", ds->GetName());
+                  Info("RegisterDataSets", "%s", msg.Data());
+                  // Always allow verification for this action
+                  Bool_t allowVerify = fDataSetManager->TestBit(TDataSetManager::kAllowVerify) ? kTRUE : kFALSE;
+                  if (regopt.Contains("V") && !allowVerify)
+                     fDataSetManager->SetBit(TDataSetManager::kAllowVerify);
+                  Int_t rc = fDataSetManager->RegisterDataSet(ds->GetName(), ds, regopt);
+                  // Reset to the previous state if needed
+                  if (regopt.Contains("V") && !allowVerify)
+                     fDataSetManager->ResetBit(TDataSetManager::kAllowVerify);
+                  if (rc != 0) {
+                     Warning("RegisterDataSets",
+                              "failure registering dataset '%s'", ds->GetName());
+                     msg.Form("Registering and verifying dataset '%s' ... failed! See log for more details", ds->GetName());
+                  } else {
+                     Info("RegisterDataSets", "dataset '%s' successfully registered", ds->GetName());
+                     msg.Form("Registering and verifying dataset '%s' ... OK", ds->GetName());
+                  }
+                  Info("RegisterDataSets", "%s", msg.Data());
+                  // Notify
+                  PDB(kDataset, 2) {
+                     Info("RegisterDataSets","printing collection");
+                     ds->Print("F");
+                  }
+               } else {
+                  Warning("RegisterDataSets", "collection '%s' is empty", o->GetName());
+               }
+            } else {
+               Info("RegisterDataSets", "dataset registration not allowed");
+               return -1;
+            }
+         } else {
+            Error("RegisterDataSets", "dataset manager is undefined!");
+            return -1;
+         }
+         // Cleanup temporary stuff
+         out->Remove(fcn);
+         SafeDelete(fcn);
+      }
+   }
+
+   PDB(kDataset, 1) Info("RegisterDataSets", "exit");
+   // Done
+   return 0;
 }
