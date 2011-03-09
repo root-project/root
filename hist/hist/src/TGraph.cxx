@@ -452,6 +452,7 @@ void TGraph::Browse(TBrowser *b)
    TString opt = gEnv->GetValue("TGraph.BrowseOption","");
    if (opt.IsNull()) {
       opt = b ? b->GetDrawOption() : "alp";
+      opt = (opt == "") ? "alp" : opt;
    }
    Draw(opt.Data());
    gPad->Update();
