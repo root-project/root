@@ -71,17 +71,20 @@ public:
    //
 
    // Return parameters for material specified by material number imat
+   // Deprecated - replaced with GetMaterial()
    virtual void  Gfmate(Int_t imat, char *name, Float_t &a, Float_t &z,
                         Float_t &dens, Float_t &radl, Float_t &absl,
                         Float_t* ubuf, Int_t& nbuf) = 0;
 
    //  Return parameters for material specified by material number imat
    // (in double precision)
+   // Deprecated - replaced with GetMaterial()
    virtual void  Gfmate(Int_t imat, char *name, Double_t &a, Double_t &z,
                         Double_t &dens, Double_t &radl, Double_t &absl,
                         Double_t* ubuf, Int_t& nbuf) = 0;
 
    // Check the parameters of a tracking medium
+   // Deprecated
    virtual void  Gckmat(Int_t imed, char* name) = 0;
 
 
@@ -378,6 +381,12 @@ public:
    virtual Bool_t GetShape(const TString& volumePath,
                          TString& shapeType, TArrayD& par) = 0;
 
+   // Return the material parameters for the material specified by 
+   // the material Id - NEW
+   virtual Bool_t GetMaterial(Int_t imat, TString& name,
+                               Double_t& a, Double_t& z, Double_t& density,
+                               Double_t& radl, Double_t& inter, TArrayD& par);
+
    // Return the material parameters for the volume specified by
    // the volumeName.
    virtual Bool_t GetMaterial(const TString& volumeName,
@@ -394,21 +403,6 @@ public:
                              Double_t& deemax, Double_t& epsil, Double_t& stmin,
                              TArrayD& par) = 0;
 
-   //
-   // functions for drawing
-   // to be removed with complete move to TGeo
-   // ------------------------------------------------
-   //
-
-   // Deprecated - Geant3
-   virtual void  DrawOneSpec(const char* name) = 0;
-   // Deprecated - Geant3
-   virtual void  Gsatt(const char* name, const char* att, Int_t val) = 0;
-   // Deprecated - Geant3
-   virtual void  Gdraw(const char*,Double_t theta = 30, Double_t phi = 30,
-                        Double_t psi = 0, Double_t u0 = 10, Double_t v0 = 10,
-                        Double_t ul = 0.01, Double_t vl = 0.01) = 0;
-
    // Write out the geometry of the detector in EUCLID file format
    // filnam  file name - will be with the extension .euc                 *
    // topvol  volume name of the starting node
@@ -416,6 +410,7 @@ public:
    // nlevel  number of  levels in the tree structure
    //                to be written out, starting from topvol
    // (Geant3 only)
+   // Deprecated
    virtual void  WriteEuclid(const char* filnam, const char* topvol,
                              Int_t number, Int_t nlevel) = 0;
 
@@ -560,6 +555,7 @@ public:
 
    // Calculate X-sections
    // (Geant3 only)
+   // Deprecated
    virtual Double_t Xsec(char*, Double_t, Int_t, Int_t) = 0;
 
    //
@@ -653,9 +649,10 @@ public:
    // Return the path in geometry tree for the current volume
    virtual const char* CurrentVolPath() = 0;
    
-   // If track is on a geometry boundary, fill the normal vector of the crossing volume
-   // surface and return true, return false otherwise
-   virtual Bool_t CurrentBoundaryNormal(Double_t &x, Double_t &y, Double_t &z) const;
+   // If track is on a geometry boundary, fill the normal vector of the crossing
+   // volume surface and return true, return false otherwise - NEW
+   virtual Bool_t   CurrentBoundaryNormal(
+                       Double_t &x, Double_t &y, Double_t &z) const;
 
    // Return the parameters of the current material during transport
    virtual Int_t    CurrentMaterial(Float_t &a, Float_t &z,
@@ -808,31 +805,6 @@ public:
    // Return the information about the transport order needed by the stack
    virtual Bool_t   SecondariesAreOrdered() const = 0;
 
-   //
-   // ------------------------------------------------
-   // Geant3 specific methods
-   // !!! to be removed with move to TGeo
-   // ------------------------------------------------
-   //
-
-   // Set/modify the drawing options.
-   // Deprecated - G3 only
-   virtual void Gdopt(const char*,const char*) = 0;
-
-   // This function allows subtractions (via boolean operation) of BOX shape
-   // from any part of the detector, therefore showing its inner contents
-   // Deprecated - G3 only
-   virtual void SetClipBox(const char*,Double_t=-9999,Double_t=0, Double_t=-9999,
-   			   Double_t=0,Double_t=-9999,Double_t=0) = 0;
-
-   // Deprecated - G3 only
-   virtual void DefaultRange() = 0;
-
-   // Deprecated - G3 only
-   virtual void Gdhead(Int_t, const char*, Double_t=0) = 0;
-
-   // Deprecated - G3 only
-   virtual void Gdman(Double_t, Double_t, const char*) = 0;
 
    //
    // ------------------------------------------------
@@ -847,6 +819,7 @@ public:
    virtual void BuildPhysics() = 0;
 
    // Process one event
+   // Deprecated
    virtual void ProcessEvent() = 0;
 
    // Process one  run and return true if run has finished successfully,
@@ -857,10 +830,10 @@ public:
    virtual void InitLego() = 0;
    
    // (In)Activate collecting TGeo tracks 
-   virtual void SetCollectTracks(Bool_t collectTracks);
+   virtual void SetCollectTracks(Bool_t collectTracks) = 0;
 
    // Return the info if collecting tracks is activated
-   virtual Bool_t IsCollectTracks() const;
+   virtual Bool_t IsCollectTracks() const = 0;
 
    //
    // ------------------------------------------------
@@ -917,24 +890,21 @@ private:
 
 // new functions
 
-inline Bool_t TVirtualMC::CurrentBoundaryNormal(Double_t& /*x*/, Double_t& /*y*/, Double_t& /*z*/) const {
-   // If track is on a geometry boundary, fill the normal vector of the crossing volume
-   // surface and return true, return false otherwise
+inline Bool_t TVirtualMC::CurrentBoundaryNormal(
+                     Double_t& /*x*/, Double_t& /*y*/, Double_t& /*z*/) const {
+   // If track is on a geometry boundary, fill the normal vector of the crossing 
+   // volume surface and return true, return false otherwise
    Warning("CurrentBoundaryNormal", "New function - not yet implemented.");
    return kFALSE;
 }
 
-
-inline void TVirtualMC::SetCollectTracks(Bool_t /*collectTracks*/) {   
-   // Activate collecting tracks 
-   // Currently working only with TGeant3TGeo
-   Warning("SetCollectTracks", "New function - not yet implemented.");
-}
-
-inline Bool_t TVirtualMC::IsCollectTracks() const {
-    // Return the info if collecting tracks is activated
-   Warning("IsCollectTracks", "New function - not yet implemented.");
-   return kFALSE;
+inline Bool_t TVirtualMC::GetMaterial(Int_t /*imat*/, TString& /*name*/,
+                      Double_t& /*a*/, Double_t& /*z*/, Double_t& /*density*/,
+                      Double_t& /*radl*/, Double_t& /*inter*/, TArrayD& /*par*/) {
+   // Return the material parameters for the material specified by 
+   // the material Id
+   Warning("GetMaterial(Int_t imat, ...)", "New function - not yet implemented.");
+   return kFALSE;           
 }
 
 R__EXTERN TVirtualMC *gMC;
