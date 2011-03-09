@@ -667,11 +667,23 @@ TObject *TKey::ReadObj()
 
    if (fObjlen > fNbytes-fKeylen) {
       fBuffer = new char[fNbytes];
-      ReadFile();                    //Read object structure from file
+      if( !ReadFile() )                    //Read object structure from file
+      {
+        delete fBufferRef;
+        delete [] fBuffer;
+        fBufferRef = 0;
+        fBuffer = 0;
+        return 0;
+      }
       memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
    } else {
       fBuffer = fBufferRef->Buffer();
-      ReadFile();                    //Read object structure from file
+      if( !ReadFile() ) {                   //Read object structure from file
+         delete fBufferRef;
+         fBufferRef = 0;
+         fBuffer = 0;
+         return 0;
+      }
    }
 
    // get version of key
@@ -1141,12 +1153,12 @@ void TKey::ReadKeyBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-void TKey::ReadFile()
+Bool_t TKey::ReadFile()
 {
    // Read the key structure from the file
 
    TFile* f = GetFile();
-   if (f==0) return;
+   if (f==0) return kFALSE;
 
    Int_t nsize = fNbytes;
    f->Seek(fSeekKey);
@@ -1157,11 +1169,16 @@ void TKey::ReadFile()
       f->ReadBuffer(fBuffer+i,nb);
    }
 #else
-   f->ReadBuffer(fBuffer,nsize);
+   if( f->ReadBuffer(fBuffer,nsize) )
+   {
+      Error("ReadFile", "Failed to read data.");
+      return kFALSE;
+   }
 #endif
    if (gDebug) {
       cout << "TKey Reading "<<nsize<< " bytes at address "<<fSeekKey<<endl;
    }
+   return kTRUE;
 }
 
 //______________________________________________________________________________
