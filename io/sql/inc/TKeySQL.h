@@ -72,7 +72,7 @@ public:
    virtual void     *ReadObjectAny(const TClass *expectedClass);
   
    virtual void      ReadBuffer(char *&) {}
-   virtual void      ReadFile() {}
+   virtual Bool_t    ReadFile() { return kTRUE; }
    virtual void      SetBuffer() { fBuffer = 0; }
    virtual Int_t     WriteFile(Int_t =1, TFile* = 0) { return 0; }
 
