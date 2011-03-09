@@ -52,6 +52,9 @@ private:
    TServerSocket *fServSock; // Server socket to accept call backs
    Bool_t   fForkStartup; // Startup N-1 workers forking the first worker
 
+   TString  fVarExp;      // Internal variable to pass drawing options
+   TString  fSelection;   // Internal variable to pass drawing options
+
    TProofLockPath *fCacheLock; // Cache dir locker
    TProofLockPath *fQueryLock; // Query dir locker
    TQueryResultManager *fQMgr; // Query-result manager

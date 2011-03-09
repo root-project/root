@@ -963,11 +963,11 @@ Long64_t TProofLite::DrawSelect(TDSet *dset, const char *varexp,
    if (idx != kNPOS)
       opt.Replace(idx,4,"");
 
-   // Prepare the description string
-   TString q;
-   q.Form("draw:\"%s\"%s\"", varexp, selection);
-
-   return Process(dset, q.Data(), opt, nentries, first);
+   // Fill the internal variables
+   fVarExp = varexp;
+   fSelection = selection;
+   
+   return Process(dset, "draw:", opt, nentries, first);
 }
 
 //______________________________________________________________________________
@@ -1032,16 +1032,8 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    TString selec(selector), varexp, selection, objname;
    // If a draw query, extract the relevant info
    if (selec.BeginsWith("draw:")) {
-      TString ss(selector), s;
-      Ssiz_t from = 0;
-      ss.Tokenize(s, from, ":\"");
-      // The expression is mandatory
-      if (!ss.Tokenize(varexp, from, "\"")) {
-         Error("Process", "draw query: badly formed expression: %s", selector);
-         return -1;
-      }
-      // Check if a section is present
-      ss.Tokenize(selection, from, "\"");
+      varexp = fVarExp;
+      selection = fSelection;
       // Decode now the expression
       if (fPlayer->GetDrawArgs(varexp, selection, option, selec, objname) != 0) {
          Error("Process", "draw query: error parsing arguments '%s', '%s', '%s'",
