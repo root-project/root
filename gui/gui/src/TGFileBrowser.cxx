@@ -127,7 +127,6 @@ void TGFileBrowser::CreateBrowser()
    lb->Resize(lb->GetWidth(), 120);
    Int_t dropt = 1;
    fDrawOption->AddEntry("", dropt++);
-   fDrawOption->AddEntry(" alp", dropt++);
    fDrawOption->AddEntry(" box", dropt++);
    fDrawOption->AddEntry(" colz", dropt++);
    fDrawOption->AddEntry(" lego", dropt++);

@@ -1808,14 +1808,14 @@ Bool_t TRootCanvas::HandleDNDDrop(TDNDData *data)
          TObject *object = (TObject *)gROOT->ProcessLine(Form("((TKey *)0x%lx)->ReadObj();", (ULong_t)obj));
          if (!object) return kTRUE;
          if (object->InheritsFrom("TGraph"))
-            object->Draw("ACP");
+            object->Draw("ALP");
          else if (object->InheritsFrom("TImage"))
             object->Draw("x");
          else if (object->IsA()->GetMethodAllAny("Draw"))
             object->Draw();
       }
       else if (obj->InheritsFrom("TGraph"))
-         obj->Draw("ACP");
+         obj->Draw("ALP");
       else if (obj->IsA()->GetMethodAllAny("Draw"))
          obj->Draw();
       gPad->Modified();
