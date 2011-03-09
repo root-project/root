@@ -4082,26 +4082,24 @@ void TASImage::DrawDashHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t nDash,
    x1 = x2 < x1 ? x2 : x1;
    x2 = x2 < tmp ? tmp : x2;
 
-   int yy = y*fImage->width;
-   for (UInt_t w = 0; w < thick; w++) {
-      for (UInt_t x = x1; x <= x2; x++) {
+   for (UInt_t x = x1; x <= x2; x++) {
+      for (UInt_t w = 0; w < thick; w++) {
          if (y + w < fImage->height) {
             if ((iDash%2)==0) {
-               _alphaBlend(&fImage->alt.argb32[yy + x], &color);
+               _alphaBlend(&fImage->alt.argb32[(y + w)*fImage->width + x], &color);
             }
          }
-         i++;
-
-         if (i >= pDash[iDash]) {
-            iDash++;
-            i = 0;
-         }
-         if (iDash >= nDash) {
-            iDash = 0;
-            i = 0;
-         }
       }
-      yy += fImage->width;
+      i++;
+
+      if (i >= pDash[iDash]) {
+         iDash++;
+         i = 0;
+      }
+      if (iDash >= nDash) {
+         iDash = 0;
+         i = 0;
+      }
    }
 }
 
@@ -5212,7 +5210,7 @@ Bool_t TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
       // in case of non-convex polygon
       if (i < 0) {
          delete [] firstWidth;
-	 delete [] firstPoint;
+         delete [] firstPoint;
          return kTRUE;
       }
 
