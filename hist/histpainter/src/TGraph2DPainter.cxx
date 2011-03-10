@@ -913,7 +913,7 @@ void TGraph2DPainter::PaintTriangles(Option_t *option)
    if (!tri1 && !tri2 && !wire) {
       Int_t ndivz = gCurrentHist->GetZaxis()->GetNdivisions()%100;
       Int_t nbins;
-      Double_t binLow, binHigh, binWidth;
+      Double_t binLow = 0, binHigh = 0, binWidth = 0;
 
       // Find the main tick marks positions.
       Double_t *r0 = view->GetRmin();
