@@ -333,10 +333,12 @@ int G__unexpectedEOF(const char* message)
 int G__shl_load_error(const char* shlname, const char* message)
 {
    G__fprinterr(G__serr, "%s: Failed to load Dynamic link library %s\n", message, shlname);
-   G__CHECK(G__SECURE_EXIT_AT_ERROR, 1, G__return = G__RETURN_EXIT1);
-#ifdef G__SECURITY
-   G__security_error = G__RECOVERABLE;
-#endif // G__SECURITY
+   // No: not being able to load a library is not generally an interpreter error.
+   //G__CHECK(G__SECURE_EXIT_AT_ERROR, 1, G__return = G__RETURN_EXIT1);
+   // #ifdef G__SECURITY
+   // G__security_error = G__RECOVERABLE;
+   // #endif // G__SECURITY
+   G__return = G__RETURN_EXIT1;
    return 0;
 }
 
