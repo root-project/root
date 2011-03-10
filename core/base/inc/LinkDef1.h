@@ -91,8 +91,8 @@
 #pragma link C++ function operator==(const TString&,const TString&);
 #pragma link C++ function operator==(const TString&,const char*);
 #pragma link C++ function operator==(const char*,const TString&);
-#pragma link C++ function operator!=(const TString&,const TString&)
-#pragma link C++ function operator!=(const TString&,const char*)
+#pragma link C++ function operator!=(const TString&,const TString&);
+#pragma link C++ function operator!=(const TString&,const char*);
 #pragma link C++ function operator!=(const char*,const TString&);
 #pragma link C++ function operator>>(istream&,TString&);
 #pragma link C++ function operator<<(ostream&,const TString&);
