@@ -1677,7 +1677,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
          if (DispatchTimers(kTRUE)) {
             // prevent timers from blocking the rest types of events
             nextto = NextTimeOut(kTRUE);
-            if (nextto > kItimerResolution || nextto == -1) {
+            if (nextto > (kItimerResolution>>1) || nextto == -1) {
                return;
             }
          }
