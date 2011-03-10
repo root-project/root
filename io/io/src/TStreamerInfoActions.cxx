@@ -38,14 +38,9 @@ namespace TStreamerInfoActions
    void TConfiguration::AddToOffset(Int_t delta)
    {
       // Add the (potentially negative) delta to all the configuration's offset.  This is used by
-      // TTBranchElement in the case of split sub-object.
-      // However, do not add it to the base element which already contain it.
+      // TBranchElement in the case of split sub-object.
 
-      TStreamerInfo *info = (TStreamerInfo*)fInfo;
-      TStreamerElement *aElement = (TStreamerElement*)info->GetElems()[fElemId];
-      if (! aElement->IsBase() ) {
-         fOffset += delta;
-      }
+      fOffset += delta;
    }
 
    void TConfiguredAction::PrintDebug(TBuffer &buf, void *addr) const
