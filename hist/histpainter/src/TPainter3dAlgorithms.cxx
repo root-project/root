@@ -369,7 +369,7 @@ void TPainter3dAlgorithms::DefineGridLevels(Int_t ndivz)
    // The grid levels are aligned on the  Z axis' main tick marks.
 
    Int_t i, nbins=0;
-   Double_t binLow, binHigh, binWidth;
+   Double_t binLow = 0, binHigh = 0, binWidth = 0;
    TView *view = 0;
 
    if (gPad) view = gPad->GetView();
