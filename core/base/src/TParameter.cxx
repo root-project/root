@@ -35,9 +35,9 @@ Int_t TParameter<Bool_t>::Merge(TCollection *in)
       TParameter<Bool_t> *c = dynamic_cast<TParameter<Bool_t> *>(o);
       if (c) {
          if (TestBit(TParameter::kMultiply))
-            fVal *= c->GetVal();
+            fVal &= (Bool_t) c->GetVal();
          else
-            fVal += c->GetVal();
+            fVal |= (Bool_t) c->GetVal();
          n++;
       }
    }
