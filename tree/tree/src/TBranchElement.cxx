@@ -2698,14 +2698,6 @@ void TBranchElement::InitializeOffsets()
          //
 
          if (isContDataMember) {
-            if (isBaseSubBranch) {
-               TClass* pClass = subBranch->GetParentClass();
-               TClass* thisclass = subBranchElement->GetClassPointer();
-               if (pClass && thisclass) {
-                  Int_t boffs = pClass->GetBaseClassOffset (thisclass);
-                  if (boffs >= 0) offset += boffs;
-               }
-            }
             // -- Container data members set fOffset instead of fBranchOffset.
             // The fOffset is what should be added to the start of the entry
             // in the collection (i.e., its current absolute address) to find
@@ -2715,16 +2707,24 @@ void TBranchElement::InitializeOffsets()
             if (subBranch->fObject == 0 && localOffset == TStreamerInfo::kMissing) {
                subBranch->SetOffset(TStreamerInfo::kMissing);
             } else {
-               subBranch->SetOffset(offset - localOffset);
+               if (isBaseSubBranch) {
+                  // The value of 'offset' for a base class does not include its
+                  // 'localOffset'.
+                  subBranch->SetOffset(offset);
+               } else {
+                  // The value of 'offset' for a regular data member does include its
+                  // 'localOffset', we need to remove it explicitly.
+                  subBranch->SetOffset(offset - localOffset);
+               }
             }
          } else {
             // -- Set fBranchOffset for sub-branch.
-            Int_t numOfSubSubBranches = subBranch->GetListOfBranches()->GetEntriesFast();
+            Int_t isSplit = 0 != subBranch->GetListOfBranches()->GetEntriesFast();
             if (subBranch->fObject == 0 && localOffset == TStreamerInfo::kMissing) {
                // The branch is missing
                fBranchOffset[subBranchIdx] = TStreamerInfo::kMissing;
 
-            } else if (numOfSubSubBranches) {
+            } else if (isSplit) {
                if (isBaseSubBranch) {
                   // We are split, so we need to add in our local offset
                   // to get our absolute address for our children.
