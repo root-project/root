@@ -187,7 +187,10 @@ void TGFileBrowser::CreateBrowser()
    fFileType->Resize(200, 20);
    fBotFrame->AddFrame(fFileType, new TGLayoutHints(kLHintsLeft | kLHintsTop |
                 kLHintsExpandX, 2, 2, 2, 2));
-   fFileType->Connect("Selected(Int_t)", "TGFileBrowser", this, "ApplyFilter(Int_t)");
+   fFileType->Connect("Selected(Int_t)", "TGFileBrowser", this,
+                      "ApplyFilter(Int_t)");
+   fFileType->GetTextEntry()->Connect("ReturnPressed()", "TGFileBrowser", 
+                                      this, "ApplyFilter(Int_t = -1)");
    AddFrame(fBotFrame, new TGLayoutHints(kLHintsLeft | kLHintsTop |
             kLHintsExpandX, 2, 2, 2, 2));
 
@@ -786,8 +789,15 @@ void TGFileBrowser::ApplyFilter(Int_t id)
 
    if (fFilter) delete fFilter;
    fFilter = 0;
-   if (id > 1)
+   if ((id > 1) && (id < 5))
       fFilter = new TRegexp(filters[id], kTRUE);
+   else if ((id < 0) || (id > 4)) {
+      TGTextLBEntry *lbe = (TGTextLBEntry *)fFileType->GetSelectedEntry();
+      if (lbe) {
+         const char *text = lbe->GetTitle();
+         fFilter = new TRegexp(text, kTRUE);
+      }
+   }
    TGListTreeItem *item = fCurrentDir;
    if (!item)
       item = fRootDir;
