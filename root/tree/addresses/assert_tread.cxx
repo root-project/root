@@ -52,6 +52,9 @@ void test1 (TFile& f)
 int assert_tread()
 {
   TFile f ("tcls.root");
+  if (f.IsZombie()) {
+     return 1;
+  }
   test1 (f);
   return 0;
 }
