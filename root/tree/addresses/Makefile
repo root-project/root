@@ -4,7 +4,7 @@
 CLEAN_TARGETS += *.clog *.log $(ALL_LIBRARIES) *.d 
 CLEAN_TARGETS += Embedded.root RootRelations.root clonesA_Event.root 
 CLEAN_TARGETS += data.root dummy*.root problem.root tree.root merge.root
-CLEAN_TARGETS += configtest.root tcf.root
+CLEAN_TARGETS += configtest.root tcls.root
 
 #Set the list of target to make while testing 
 TEST_TARGETS += ursula inheritAndOwn BadBaseAddresses treeBranch iobug \
@@ -146,5 +146,5 @@ longlong: longlong.neutral.clog
 memleak: memleak.clog
 	$(TestDiff)
 
-tcf.root: assert_twrite.success
-assert_tread.eclog: tcf.root 
+tcls.root: assert_twrite.success
+assert_tread.eclog: tcls.root 
