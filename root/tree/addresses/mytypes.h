@@ -1,7 +1,18 @@
 #include <vector>
 
 namespace mytypes {
-   struct Trajectory : public std::vector<int> {};
+   struct FirstBase {
+      FirstBase() : fA(-1),fB(-1) {}
+      double fA;
+      double fB;
+   };
+   struct OtherBase {
+      OtherBase() : fPx(-1),fPy(-1) {}
+      double fPx;
+      double fPy;
+   };
+
+   struct Trajectory : public FirstBase,std::vector<int>,OtherBase {};
 
    struct MyEntry {
       MyEntry()
@@ -12,7 +23,8 @@ namespace mytypes {
       Trajectory m_trajectory;
    };
 
-   struct Collection {
+   struct Collection : std::vector<mytypes::MyEntry> 
+   {
       std::vector<mytypes::MyEntry> m_entries;
    };
 }

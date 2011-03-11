@@ -7,6 +7,8 @@
 #include <cassert>
 
 #ifdef __MAKECINT__
+#pragma link C++ class mytypes::FirstBase+;
+#pragma link C++ class mytypes::OtherBase+;
 #pragma link C++ class mytypes::Trajectory+;
 #pragma link C++ class mytypes::MyEntry+;
 #pragma link C++ class mytypes::Collection+;
@@ -22,6 +24,10 @@ void check (const mytypes::MyEntry& e,
     assert (e.foo[k] == i*10+j*5+k);
   }
 
+  assert (e.m_trajectory.fA == 10000+i);
+  assert (e.m_trajectory.fB == 10000+j); 
+  assert (e.m_trajectory.fPx == 1000+i);
+  assert (e.m_trajectory.fPy == 1000+j);
   assert (e.m_trajectory.size() == j+1);
   for (unsigned int k=0; k < j+1; k++) {
      assert (e.m_trajectory[k] == (int)(i*100+j*10+k));
@@ -40,6 +46,11 @@ void test1 (TFile& f)
   Long64_t n = t->GetEntries();
   for (Long64_t i=0; i < n; i++) {
     b->GetEntry(i);
+
+    assert (c->size() == (unsigned int)(2*i+1));
+    for (unsigned int j=0; j < c->size(); j++)
+       check (c->at(j), j, i);
+
     assert (c->m_entries.size() == (unsigned int)i+1);
     for (unsigned int j=0; j < c->m_entries.size(); j++)
       check (c->m_entries[j], i, j);
