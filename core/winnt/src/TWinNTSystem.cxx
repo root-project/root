@@ -3870,11 +3870,13 @@ Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
       // Restore stdout & stderr
       fflush(stdout);
       if (fd1) {
-         if (_dup2(fd1, fileno(stdout))) {
-            SysError("RedirectOutput", "could not restore stdout");
-            rc = -1;
+         if (fd1 > 0) {
+            if (_dup2(fd1, fileno(stdout))) {
+               SysError("RedirectOutput", "could not restore stdout");
+               rc = -1;
+            }
+            close(fd1);
          }
-         close(fd1);
          clearerr(stdout);
          fsetpos(stdout, &pos1);
          fd1 = 0;
@@ -3882,11 +3884,13 @@ Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
 
       fflush(stderr);
       if (fd2) {
-         if (_dup2(fd2, fileno(stderr))) {
-            SysError("RedirectOutput", "could not restore stderr");
-            rc = -1;
+         if (fd2 > 0) {
+            if (_dup2(fd2, fileno(stderr))) {
+               SysError("RedirectOutput", "could not restore stderr");
+               rc = -1;
+            }
+            close(fd2);
          }
-         close(fd2);
          clearerr(stderr);
          fsetpos(stderr, &pos2);
          fd2 = 0;
