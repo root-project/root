@@ -39,8 +39,8 @@ Double_t Reconstruct( Double_t xt, TRandom3& R )
    Double_t x    = R.Rndm();
    if (x > xeff) return cutdummy;
    else {
-      Double_t xsmear= R.Gaus(-2.5,0.2); // bias and smear
-      return xt+xsmear;
+     Double_t xsmear= R.Gaus(-2.5,0.2); // bias and smear
+     return xt+xsmear;
    }
 }
 
@@ -85,7 +85,8 @@ void TSVDUnfoldExample()
       Double_t xt = R.Gaus(0.0, 2.0);
       datatrue->Fill(xt);
       Double_t x = Reconstruct( xt, R );
-      if (x != cutdummy) data->Fill(x);
+      if (x != cutdummy) 
+	data->Fill(x);
    }
 
    cout << "Created toy distributions and errors for: " << endl;
@@ -95,13 +96,13 @@ void TSVDUnfoldExample()
 
    // Fill the data covariance matrix
    for (int i=1; i<=data->GetNbinsX(); i++) {
-      statcov->SetBinContent(i,i,data->GetBinError(i)*data->GetBinError(i)); 
+       statcov->SetBinContent(i,i,data->GetBinError(i)*data->GetBinError(i)); 
    }
 
    // --- Here starts the actual unfolding -------------------------
 
    // Create TSVDUnfold object and initialise
-   TSVDUnfold *tsvdunf = new TSVDUnfold( data, bini, xini, Adet );
+   TSVDUnfold *tsvdunf = new TSVDUnfold( data, statcov, bini, xini, Adet );
 
    // It is possible to normalise unfolded spectrum to unit area
    tsvdunf->SetNormalize( kFALSE ); // no normalisation here
@@ -120,22 +121,32 @@ void TSVDUnfoldExample()
 
    // Compute the error matrix for the unfolded spectrum using toy MC
    // using the measured covariance matrix as input to generate the toys
-   // 1000 toys is usually reasonable
-   TH2D* ustatcov = tsvdunf->GetUnfoldCovMatrix( statcov, 1000 );   
+   // 100 toys should usually be enough
+   // The same method can be used for different covariance matrices separately.
+   TH2D* ustatcov = tsvdunf->GetUnfoldCovMatrix( statcov, 100 );   
 
    // Now compute the error matrix on the unfolded distribution originating
    // from the finite detector matrix statistics
-   TH2D* uadetcov = tsvdunf->GetAdetCovMatrix( 1000 );   
+   TH2D* uadetcov = tsvdunf->GetAdetCovMatrix( 100 );   
 
    // Sum up the two (they are uncorrelated)
    ustatcov->Add( uadetcov );
+
+   //Get the computed regularized covariance matrix (always corresponding to total uncertainty passed in constructor) and add uncertainties from finite MC statistics. 
+   TH2D* utaucov = tsvdunf->GetXtau();
+   utaucov->Add( uadetcov );
+
+   //Get the computed inverse of the covariance matrix
+   TH2D* uinvcov = tsvdunf->GetXinv();
+
    
    // --- Only plotting stuff below ------------------------------
 
    for (int i=1; i<=unfres->GetNbinsX(); i++) {
-      unfres->SetBinError(i, TMath::Sqrt(ustatcov->GetBinContent(i,i)));
+      unfres->SetBinError(i, TMath::Sqrt(utaucov->GetBinContent(i,i)));
    }
 
+   // Renormalize just to be able to plot on the same scale
    xini->Scale(0.7*datatrue->Integral()/xini->Integral());
 
    TLegend *leg = new TLegend(0.58,0.68,0.99,0.88);
@@ -158,8 +169,9 @@ void TSVDUnfoldExample()
    c1->SetFrameFillColor( c_FrameFill );
    c1->SetFillColor     ( c_Canvas    );
    c1->Divide(1,2);
-   c1->cd(1);
-   
+   TVirtualPad * c11 = c1->cd(1);
+   c11->SetFrameFillColor( c_FrameFill );
+   c11->SetFillColor     ( c_Canvas    );
 
    gStyle->SetTitleFillColor( c_TitleBox  );
    gStyle->SetTitleTextColor( c_TitleText );
@@ -196,20 +208,37 @@ void TSVDUnfoldExample()
 
    leg->Draw();
 
-
-   // distribution of the d quantity
-   gStyle->SetOptLogy();
+   // covariance matrix
+   gStyle->SetPalette(1,0);
    TVirtualPad * c12 = c1->cd(2);
    c12->Divide(2,1);
    TVirtualPad * c2 = c12->cd(1);
    c2->SetFrameFillColor( c_FrameFill );
    c2->SetFillColor     ( c_Canvas    );
+   c2->SetRightMargin   ( 0.15         );
+
+   TH2D* covframe = new TH2D( *ustatcov );
+   covframe->SetTitle( "TSVDUnfold covariance matrix" );
+   covframe->GetXaxis()->SetTitle( "x variable" );
+   covframe->GetYaxis()->SetTitle( "x variable" );
+   covframe->GetXaxis()->SetTitleOffset( 1.25 );
+   covframe->GetYaxis()->SetTitleOffset( 1.29 );
+   covframe->Draw();
+
+   ustatcov->SetLineWidth( 2 );
+   ustatcov->Draw( "colzsame" );
+
+   // distribution of the d quantity
+   TVirtualPad * c3 = c12->cd(2);
+   c3->SetFrameFillColor( c_FrameFill );
+   c3->SetFillColor     ( c_Canvas    );
+   c3->SetLogy();
 
    TLine *line = new TLine( 0.,1.,40.,1. );
    line->SetLineStyle(2);
 
    TH1D* dframe = new TH1D( *ddist );
-   dframe->SetTitle( "TSVDUnfold |d_{i}| for toy example" );
+   dframe->SetTitle( "TSVDUnfold |d_{i}|" );
    dframe->GetXaxis()->SetTitle( "i" );
    dframe->GetYaxis()->SetTitle( "|d_{i}|" );
    dframe->GetXaxis()->SetTitleOffset( 1.25 );
@@ -220,23 +249,4 @@ void TSVDUnfoldExample()
    ddist->SetLineWidth( 2 );
    ddist->Draw( "same" );
    line->Draw();
-
-   // distribution of the singular values
-   gStyle->SetOptLogy();
-   TVirtualPad * c3 = c12->cd(2);
-   c3->SetFrameFillColor( c_FrameFill );
-   c3->SetFillColor     ( c_Canvas    );
-
-   TH1D* svframe = new TH1D( *svdist );
-   svframe->SetTitle( "TSVDUnfold singular values for toy example" );
-   svframe->GetXaxis()->SetTitle( "i" );
-   svframe->GetYaxis()->SetTitle( "|s_{i}|" );
-   svframe->GetXaxis()->SetTitleOffset( 1.25 );
-   svframe->GetYaxis()->SetTitleOffset( 1.29 );
-   svframe->SetMinimum( 0.001 );
-   svframe->Draw();
-
-   svdist->SetLineWidth( 2 );
-   svdist->Draw( "same" );
-   //c1->Print("TSVDUnfoldExample.pdf");
 }

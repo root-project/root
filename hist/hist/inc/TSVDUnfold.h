@@ -58,10 +58,12 @@ public:
    // Constructor
    // Initialisation of unfolding
    // "bdat" - measured data distribution (number of events)
+   // "Bcov" - covariance matrix for measured data distribution
    // "bini" - reconstructed MC distribution (number of events)
    // "xini" - truth MC distribution (number of events)
    // "Adet" - detector response matrix (number of events)
    TSVDUnfold( const TH1D* bdat, const TH1D* bini, const TH1D* xini, const TH2D* Adet );
+   TSVDUnfold( const TH1D* bdat, TH2D* Bcov, const TH1D* bini, const TH1D* xini, const TH2D* Adet );
    TSVDUnfold( const TSVDUnfold& other );
 
    // Destructor
@@ -96,9 +98,15 @@ public:
 
    // Obtain the distribution of singular values
    TH1D*    GetSV() const;
+
+   // Obtain the computed regularized covariance matrix
+   TH2D*    GetXtau() const;
+
+   // Obtain the computed inverse of the covariance matrix
+   TH2D*    GetXinv() const;
    
    // Helper functions
-   static Double_t ComputeChiSquared( const TH1D& truspec, const TH1D& unfspec, const TH2D& covmat, Double_t regpar = 0.01 );
+   Double_t ComputeChiSquared( const TH1D& truspec, const TH1D& unfspec );
 
 private: 
    
@@ -113,6 +121,7 @@ private:
    static void     H2Verr   ( const TH1D* histo, TVectorD& vec   );
    static void     V2H      ( const TVectorD& vec, TH1D& histo   );
    static void     H2M      ( const TH2D* histo, TMatrixD& mat   );
+   static void     M2H      ( const TMatrixD& mat, TH2D& histo   );
    static TMatrixD MatDivVec( const TMatrixD& mat, const TVectorD& vec, Int_t zero=0 );
    static TVectorD CompProd ( const TVectorD& vec1, const TVectorD& vec2 );
 
@@ -124,11 +133,14 @@ private:
    Int_t       fDdim;        //! Derivative for curvature matrix
    Bool_t      fNormalize;   //! Normalize unfolded spectrum to 1
    Int_t       fKReg;        //! Regularisation parameter
-   TH1D*       fDHist;       // Distribution of d (for checking regularization)
-   TH1D*       fSVHist;      // Distribution of singular values
+   TH1D*       fDHist;       //! Distribution of d (for checking regularization)
+   TH1D*       fSVHist;      //! Distribution of singular values
+   TH2D*       fXtau;        //! Computed regularized covariance matrix
+   TH2D*       fXinv;        //! Computed inverse of covariance matrix
 
    // Input histos
    const TH1D* fBdat;        // measured distribution (data)
+   TH2D* fBcov;        // covariance matrix of measured distribution (data)
    const TH1D* fBini;        // reconstructed distribution (MC)
    const TH1D* fXini;        // truth distribution (MC)
    const TH2D* fAdet;        // Detector response matrix
