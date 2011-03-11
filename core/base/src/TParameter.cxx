@@ -23,7 +23,7 @@
 
 templateClassImp(TParameter)
 
-// Specialization of Merge for Bool_t to make windows happy  
+// Specialization of Merge for Bool_t  
 template <>
 Int_t TParameter<Bool_t>::Merge(TCollection *in)
 {

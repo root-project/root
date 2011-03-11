@@ -102,4 +102,8 @@ public:
    ClassDef(TParameter,2)  //Named templated parameter type
 };
 
+// Specialization of Merge for Bool_t
+template <>
+Int_t TParameter<Bool_t>::Merge(TCollection *in);
+
 #endif
