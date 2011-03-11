@@ -198,9 +198,9 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
          if (gSystem->mkdir(existsPath, kTRUE) != 0)
             Error("Init", "problems creating path '%s'", existsPath.Data());
       }
-      // Remove prefix, if any
+      // Remove prefix, if any and if included
       TString pfx  = gEnv->GetValue("Path.Localroot","");
-      if (!pfx.IsNull()) dirPath.Remove(0, pfx.Length());
+      if (!pfx.IsNull() && dirPath.BeginsWith(pfx)) dirPath.Remove(0, pfx.Length());
       // Check if a local data server has been specified
       if (gSystem->Getenv("LOCALDATASERVER")) {
          fDir = gSystem->Getenv("LOCALDATASERVER");
