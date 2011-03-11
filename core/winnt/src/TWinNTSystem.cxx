@@ -3843,8 +3843,10 @@ Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
       // redirect stdout & stderr
       if (freopen(file, m, stdout) == 0) {
          SysError("RedirectOutput", "could not freopen stdout");
-         _dup2(fd1, fileno(stdout));
-         close(fd1);
+         if (fd1 > 0) {
+            _dup2(fd1, fileno(stdout));
+            close(fd1);
+         }
          clearerr(stdout);
          fsetpos(stdout, &pos1);
          fd1 = fd2 = 0;
@@ -3855,12 +3857,16 @@ Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
       fd2 = _dup(fileno(stderr));
       if (freopen(file, m, stderr) == 0) {
          SysError("RedirectOutput", "could not freopen stderr");
-         _dup2(fd1, fileno(stdout));
-         close(fd1);
+         if (fd1 > 0) {
+            _dup2(fd1, fileno(stdout));
+            close(fd1);
+         }
          clearerr(stdout);
          fsetpos(stdout, &pos1);
-         _dup2(fd2, fileno(stderr));
-         close(fd2);
+         if (fd2 > 0) {
+            _dup2(fd2, fileno(stderr));
+            close(fd2);
+         }
          clearerr(stderr);
          fsetpos(stderr, &pos2);
          fd1 = fd2 = 0;
