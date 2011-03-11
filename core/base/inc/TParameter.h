@@ -103,7 +103,10 @@ public:
 };
 
 // Specialization of Merge for Bool_t
+#ifndef WIN32  // Otherwise Windows will find something unresolved ... 
 template <>
 Int_t TParameter<Bool_t>::Merge(TCollection *in);
+
+#endif
 
 #endif
