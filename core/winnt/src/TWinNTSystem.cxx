@@ -3814,6 +3814,8 @@ Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
    // included ShowOutput, to display the redirected output.
    // Returns 0 on success, -1 in case of error.
 
+   static int fd1=0, fd2=0;
+   static fpos_t pos1=0, pos2=0;
    // Instance to be used if the caller does not passes 'h'
    static RedirectHandle_t loch;
    Int_t rc = 0;
@@ -3835,28 +3837,61 @@ Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
       }
       xh->fFile = file;
 
+      fflush(stdout);
+      fgetpos(stdout, &pos1);
+      fd1 = _dup(fileno(stdout));
       // redirect stdout & stderr
       if (freopen(file, m, stdout) == 0) {
          SysError("RedirectOutput", "could not freopen stdout");
+         _dup2(fd1, fileno(stdout));
+         close(fd1);
+         clearerr(stdout);
+         fsetpos(stdout, &pos1);
+         fd1 = fd2 = 0;
          return -1;
       }
+      fflush(stderr);
+      fgetpos(stderr, &pos2);
+      fd2 = _dup(fileno(stderr));
       if (freopen(file, m, stderr) == 0) {
          SysError("RedirectOutput", "could not freopen stderr");
-         freopen("CONOUT$", "a", stdout);
+         _dup2(fd1, fileno(stdout));
+         close(fd1);
+         clearerr(stdout);
+         fsetpos(stdout, &pos1);
+         _dup2(fd2, fileno(stderr));
+         close(fd2);
+         clearerr(stderr);
+         fsetpos(stderr, &pos2);
+         fd1 = fd2 = 0;
          return -1;
       }
    } else {
       // Restore stdout & stderr
       fflush(stdout);
-      if (freopen("CONOUT$", "a", stdout) == 0) {
-         SysError("RedirectOutput", "could not restore stdout");
-         rc = -1;
+      if (fd1) {
+         if (_dup2(fd1, fileno(stdout))) {
+            SysError("RedirectOutput", "could not restore stdout");
+            rc = -1;
+         }
+         close(fd1);
+         clearerr(stdout);
+         fsetpos(stdout, &pos1);
+         fd1 = 0;
       }
+
       fflush(stderr);
-      if (freopen("CONOUT$", "a", stderr) == 0) {
-         SysError("RedirectOutput", "could not restore stderr");
-         rc = -1;
+      if (fd2) {
+         if (_dup2(fd2, fileno(stderr))) {
+            SysError("RedirectOutput", "could not restore stderr");
+            rc = -1;
+         }
+         close(fd2);
+         clearerr(stderr);
+         fsetpos(stderr, &pos2);
+         fd2 = 0;
       }
+
       // Reset the static instance, if using that
       if (xh == &loch)
          xh->Reset();
