@@ -22,25 +22,3 @@
 
 
 templateClassImp(TParameter)
-
-// Specialization of Merge for Bool_t  
-template <>
-Int_t TParameter<Bool_t>::Merge(TCollection *in)
-{
-   // Merge objects in the list.
-   // Returns the number of objects that were in the list.
-   TIter nxo(in);
-   Int_t n = 0;
-   while (TObject *o = nxo()) {
-      TParameter<Bool_t> *c = dynamic_cast<TParameter<Bool_t> *>(o);
-      if (c) {
-         if (TestBit(TParameter::kMultiply))
-            fVal &= (Bool_t) c->GetVal();
-         else
-            fVal |= (Bool_t) c->GetVal();
-         n++;
-      }
-   }
-
-   return n;
-}
