@@ -534,7 +534,7 @@ void TBasket::Reset()
    {
       Int_t curBsize = fBranch->GetBasketSize();      
       if (curSize > 2*curBsize ) {
-         Int_t avgSize = (fBranch->GetTotBytes() / (1+fBranch->GetWriteBasket())); // Average number of bytes per basket so far
+         Long64_t avgSize = (fBranch->GetTotBytes() / (1+fBranch->GetWriteBasket())); // Average number of bytes per basket so far
          if (curSize > 2*avgSize) {
             Int_t newSize = curBsize;
             if (curLen > newSize) {
