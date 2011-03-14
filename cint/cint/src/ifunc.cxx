@@ -4870,7 +4870,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
    struct G__ifunc_table_internal* store_p_ifunc = p_ifunc;
    int specialflag = 0;
    G__value* store_p_tempobject = 0;
-   int store_memberfunc_struct_offset;
+   long store_memberfunc_struct_offset;
    int store_memberfunc_tagnum;
 #ifndef G__OLDIMPLEMENTATION2038
    G_local.enclosing_scope = 0;
