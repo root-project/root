@@ -1540,7 +1540,7 @@ void G__debugvariable(FILE *fp,G__var_array *var,char *name)
                 );
         i=0;
         while(var->varlabel[ig15][i]) {
-          fprintf(fp,"[%ld]",var->varlabel[ig15][i++]);
+           fprintf(fp,"[%lu]",(unsigned long)var->varlabel[ig15][i++]);
         }
         fprintf(fp,"\n");
       }

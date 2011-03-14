@@ -8976,10 +8976,10 @@ void G__cpplink_memvar(FILE *fp)
                         fprintf(fp, "[]");
                      }
                      else if (var->varlabel[j][1] /* num of elements */) {
-                        fprintf(fp, "[%ld]", var->varlabel[j][1] /* num of elements */ / var->varlabel[j][0] /* stride */);
+                        fprintf(fp, "[%lu]", (unsigned long) ( var->varlabel[j][1] /* num of elements */ / var->varlabel[j][0] /* stride */ ) );
                      }
                      for (int k = 1; k < var->paran[j]; ++k) {
-                        fprintf(fp, "[%ld]", var->varlabel[j][k+1]);
+                        fprintf(fp, "[%lu]", (unsigned long)var->varlabel[j][k+1]);
                      }
                      fprintf(fp, "=\"");
                   }
@@ -10023,10 +10023,10 @@ void G__cpplink_global(FILE *fp)
           fprintf(fp, "[]");
         }
         else if (var->varlabel[j][1] /* num of elements */) {
-          fprintf(fp, "[%ld]", var->varlabel[j][1] /* num of elements */ / var->varlabel[j][0] /* stride */);
+           fprintf(fp, "[%lu]", (unsigned long)(var->varlabel[j][1] /* num of elements */ / var->varlabel[j][0] /* stride */) );
         }
         for (k = 1; k < var->paran[j]; ++k) {
-          fprintf(fp, "[%ld]", var->varlabel[j][k+1]);
+           fprintf(fp, "[%lu]", (unsigned long)var->varlabel[j][k+1]);
         }
         if (pvoidflag) {
           buf = G__getitem(var->varnamebuf[j]);
