@@ -4693,7 +4693,7 @@ int G__free_exceptionbuffer()
 {
    // -- FIXME: Describe this function!
    if (G__exceptionbuffer.ref) {
-      int store_struct_offset = G__store_struct_offset;
+      long store_struct_offset = G__store_struct_offset;
       G__store_struct_offset = G__exceptionbuffer.ref;
       if ('u' == G__exceptionbuffer.type && G__exceptionbuffer.obj.i &&
           -1 != G__exceptionbuffer.tagnum) {

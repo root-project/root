@@ -2802,7 +2802,7 @@ int G__parenthesisovldobj(G__value* result3, G__value* result, const char* realn
    int hash;
    int store_exec_memberfunc;
    int store_memberfunc_tagnum;
-   int store_memberfunc_struct_offset;
+   long store_memberfunc_struct_offset;
    store_exec_memberfunc = G__exec_memberfunc;
    store_memberfunc_tagnum = G__memberfunc_tagnum;
    store_memberfunc_struct_offset = G__memberfunc_struct_offset;
@@ -2883,7 +2883,7 @@ int G__parenthesisovld(G__value* result3, char* funcname, G__param* libp, int fl
    int hash;
    int store_exec_memberfunc;
    int store_memberfunc_tagnum;
-   int store_memberfunc_struct_offset;
+   long store_memberfunc_struct_offset;
 
    if (strncmp(funcname, "operator", 8) == 0 || strcmp(funcname, "G__ateval") == 0)
       return(0);
@@ -2996,7 +2996,7 @@ int G__tryindexopr(G__value* result7, G__value* para, int paran, int ig25)
    char *pos;
    int store_tagnum;
    int store_typenum;
-   int store_struct_offset;
+   long store_struct_offset;
    int known;
    int i;
    int store_asm_exec;
