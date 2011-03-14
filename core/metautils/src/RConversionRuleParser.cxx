@@ -368,9 +368,9 @@ namespace ROOT
             char cdim[24];
             static const int maxsize = sizeof(cdim)/sizeof(cdim[0]);
 #ifdef _MSC_VER
-           int result = _snprintf(cdim,maxsize,"[%d]",member.MaxIndex(dim));
+           int result = _snprintf(cdim,maxsize,"[%ld]",member.MaxIndex(dim));
 #else
-           int result = snprintf(cdim,maxsize,"[%d]",member.MaxIndex(dim));
+           int result = snprintf(cdim,maxsize,"[%ld]",member.MaxIndex(dim));
 #endif
            if (result > maxsize) {
                std::cout << "Error: array size is to large, the size '" << member.MaxIndex(dim) << "' does not fit in " << maxsize << " characters.\n";

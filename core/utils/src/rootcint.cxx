@@ -3521,7 +3521,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                cvar = '*';
                cvar += m.Name();
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
-                  snprintf(cdim,1024, "[%d]", m.MaxIndex(dim));
+                  snprintf(cdim,1024, "[%ld]", m.MaxIndex(dim));
                   cvar += cdim;
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", &"
@@ -3562,7 +3562,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                cvar = '*';
                cvar += m.Name();
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
-                  snprintf(cdim,1024, "[%d]", m.MaxIndex(dim));
+                  snprintf(cdim,1024, "[%ld]", m.MaxIndex(dim));
                   cvar += cdim;
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", &"
@@ -3578,7 +3578,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
             } else if (m.Property() & G__BIT_ISARRAY) {
                cvar = m.Name();
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
-                  snprintf(cdim,1024, "[%d]", m.MaxIndex(dim));
+                  snprintf(cdim,1024, "[%ld]", m.MaxIndex(dim));
                   cvar += cdim;
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", "
