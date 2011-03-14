@@ -53,7 +53,7 @@ G__DataMemberInfo {
   long Offset() ;
   int Bitfield();
   int ArrayDim() ;
-  size_t MaxIndex(int dim) ;
+  long MaxIndex(int dim) ;
   G__ClassInfo* MemberOf();
   void SetGlobalcomp(G__SIGNEDCHAR_T globalcomp);
   int IsValid();

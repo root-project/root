@@ -696,7 +696,7 @@ static int G__initstruct(G__FastAllocString& new_name)
    // Read and process the initializer specification.
    //
    int mparen = 1;
-   size_t linear_index = -1;
+   long linear_index = -1;
    while (mparen) {
       // -- Read the next initializer value.
       int c = G__fgetstream_new(expr, 0, ",{}");
@@ -705,7 +705,7 @@ static int G__initstruct(G__FastAllocString& new_name)
          // FIXME: Do we handle a string literal correctly here?  See similar code in G__initary().
          ++linear_index;
          // If we are an array, make sure we have not gone beyond the end.
-         if ((num_of_elements || isauto) && (linear_index >= num_of_elements)) {
+         if ((num_of_elements || isauto) && (linear_index >= (long)num_of_elements)) {
             // -- We have gone past the end of the array.
             if (isauto) {
                // -- Unspecified length array, make it bigger to fit.
@@ -731,7 +731,7 @@ static int G__initstruct(G__FastAllocString& new_name)
                // -- Fixed-size array, error, array index out of range.
                if (G__asm_wholefunction == G__ASM_FUNC_NOP) {
                   if (!G__const_noerror) {
-                     G__fprinterr(G__serr, "Error: %s: %d: Array initialization out of range *(%s+%d), upto %d ", __FILE__, __LINE__, name(), linear_index, num_of_elements);
+                     G__fprinterr(G__serr, "Error: %s: %d: Array initialization out of range *(%s+%ld), upto %lu ", __FILE__, __LINE__, name(), linear_index, num_of_elements);
                   }
                }
                G__genericerror(0);

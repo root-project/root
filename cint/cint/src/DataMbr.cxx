@@ -224,7 +224,7 @@ int Cint::G__DataMemberInfo::ArrayDim()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-size_t Cint::G__DataMemberInfo::MaxIndex(int dim)
+long Cint::G__DataMemberInfo::MaxIndex(int dim)
 {
   if (IsValid()) {
     struct G__var_array* var = (struct G__var_array*) handle;
