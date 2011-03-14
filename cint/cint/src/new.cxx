@@ -58,7 +58,6 @@ G__value G__new_operator(const char* expression)
    int var_type = 0;
    G__value result = G__null;
    int reftype = G__PARANORMAL;
-   int typelen;
    int ispointer = 0;
    int typenum, tagnum;
    int ld_flag = 0 ;
@@ -112,9 +111,9 @@ G__value G__new_operator(const char* expression)
    }
    basictype = type;
    {
-      unsigned int len = strlen(type);
+      size_t len = strlen(type);
       unsigned int nest = 0;
-      for (unsigned int ind = len - 1; ind > 0; --ind) {
+      for (size_t ind = len - 1; ind > 0; --ind) {
          switch (type[ind]) {
             case '<':
                --nest;
@@ -215,7 +214,7 @@ G__value G__new_operator(const char* expression)
    //
    //  Pointer type identification.
    //
-   typelen = strlen(type);
+   size_t typelen = strlen(type);
    while (type[typelen-1] == '*') {
       if (!ispointer) {
          ispointer = 1;
@@ -579,7 +578,6 @@ G__value G__new_operator(const char* expression)
       struct G__param para;
       int typenum;
       int hash;
-      int store_var_type;
       char *bp = strchr(construct, '(');
       char *ep = strrchr(construct, ')');
       *ep = 0;
@@ -590,8 +588,8 @@ G__value G__new_operator(const char* expression)
       if (typenum != -1) {
          construct = G__type2string(G__newtype.type[typenum], G__newtype.tagnum[typenum], -1, G__newtype.reftype[typenum], 0);
       }
-      hash = strlen(construct);
-      store_var_type = G__var_type;
+      hash = (int)strlen(construct);
+      char store_var_type = G__var_type;
       G__var_type = 'p';
       para.para[0] = G__getexpr(bp); // generates LD or LD_VAR etc...
       G__var_type = store_var_type;
@@ -699,11 +697,11 @@ int G__getarrayindex(const char* indexlist)
 {
    // FIXME: Describe this function!
    // [x][y][z]     get x*y*z
-   int p_inc = 1;
+   long p_inc = 1;
    int p = 1;
    G__FastAllocString index(G__ONELINE);
    int c;
-   int store_var_type = G__var_type;
+   char store_var_type = G__var_type;
    G__var_type = 'p';
 
    c = G__getstream(indexlist, &p, index, "]");
@@ -815,7 +813,7 @@ void G__delete_operator(char* expression, int isarray)
          (G__tagnum != *(long*)(G__store_struct_offset + G__struct.virtual_offset[G__tagnum]))
       ) {
          // --
-         int virtualtag = *(long*)(G__store_struct_offset + G__struct.virtual_offset[G__tagnum]);
+         long virtualtag = *(long*)(G__store_struct_offset + G__struct.virtual_offset[G__tagnum]);
          buf.obj.i -= G__find_virtualoffset(virtualtag, buf.obj.i);
       }
       //

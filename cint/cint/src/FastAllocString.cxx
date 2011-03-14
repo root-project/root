@@ -199,7 +199,7 @@ G__FastAllocString::G__FastAllocString(const char* s)
 {
    // Construct from a character array, using the character array's
    // length plus 32 as the initial buffer capacity.
-   int len = s ? strlen(s) + 1 : 1024;
+   size_t len = s ? strlen(s) + 1 : 1024;
    fCapacity = len + 32;
    fBuf = GetBuf(fCapacity);
    if (s)
@@ -212,7 +212,7 @@ G__FastAllocString::G__FastAllocString(const G__FastAllocString& other)
 {
    // Construct from another G__FastAllocString, using the
    // other string's length plus 32 as the initial buffer capacity.
-   int len = strlen(other) + 1;
+   size_t len = strlen(other) + 1;
    fCapacity = len + 32;
    fBuf = GetBuf(fCapacity);
    memcpy(fBuf, other, len);

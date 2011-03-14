@@ -1372,7 +1372,7 @@ static G__value G__exec_if()
 #endif // G__ASM_DBG
 #endif // G__ASM
    ++G__templevel;
-   int condval = G__test(condition);
+   long condval = G__test(condition);
    if (largestep) {
       G__afterlargestep(&largestep);
    }
@@ -2366,7 +2366,7 @@ static G__value G__exec_do()
 #endif // G__ASM
    ++G__templevel;
    //fprintf(stderr, "G__exec_do: Testing condition '%s' nec: %d\n", condition, G__no_exec_compile);
-   int cond = G__test(condition);
+   long cond = G__test(condition);
    //fprintf(stderr, "G__exec_do: Testing condition result: %d\n", cond);
    //
    //  Destroy all temporaries created during expression evaluation.
@@ -2949,7 +2949,7 @@ static G__value G__exec_loop(const char* forinit, char* condition,
 #endif // G__ASM
    ++G__templevel;
    //fprintf(stderr, "G__exec_loop: begin first test of loop condition ...\n");
-   int cond = G__test(condition);
+   long cond = G__test(condition);
    //fprintf(stderr, "G__exec_loop: end   first test of loop condition.\n");
    //
    //  Destroy all temporaries created during expression evaluation.
@@ -4421,8 +4421,8 @@ static int G__keyword_anytime_8(G__FastAllocString& statement)
          c = G__fgetstream_template(tcname, 0, "0, ;");
       }
       else if (isspace(c)) {
-         int len = strlen(tcname);
-         int store_c;
+         size_t len = strlen(tcname);
+         char store_c;
          while (len && ('&' == tcname[len-1] || '*' == tcname[len-1])) --len;
          store_c = tcname[len];
          tcname[len] = 0;
@@ -4865,7 +4865,7 @@ void G__pp_skip(int elifskip)
    int nest = 1;
    G__FastAllocString condition(G__ONELINE);
    G__FastAllocString temp(G__ONELINE);
-   int i;
+   long i;
 
    fp = G__ifile.fp;
 
@@ -5395,13 +5395,13 @@ G__value G__exec_statement(int* mparen)
             // -- Handle a newline.
             if (*mparen != mparen_old) {
                // -- Update the line numbers of any dangling parentheses.
-               int mparen_lines_size = mparen_lines.size();
-               while (mparen_lines_size < *mparen) {
+               size_t mparen_lines_size = mparen_lines.size();
+               while (mparen_lines_size < (size_t)*mparen) {
                   // The stream has already read the newline, so take line_number minus one.
                   mparen_lines.push(G__ifile.line_number - 1);
                   ++mparen_lines_size;
                }
-               while (mparen_lines_size > *mparen) {
+               while (mparen_lines_size > (size_t)*mparen) {
                   mparen_lines.pop();
                   --mparen_lines_size;
                }
@@ -5493,7 +5493,7 @@ G__value G__exec_statement(int* mparen)
                            c = G__fgetc();
                            while (c == ':') {
                               casepara += "::";
-                              int lenxxx = strlen(casepara);
+                              size_t lenxxx = strlen(casepara);
                               G__fgetstream(casepara, lenxxx, ":");
                               c = G__fgetc();
                            }
@@ -6559,8 +6559,8 @@ G__value G__exec_statement(int* mparen)
                            G__var_type = result.type;
                            G__typenum = result.typenum;
                            G__tagnum = result.tagnum;
-                           int store_constvar = G__constvar;
-                           G__constvar = result.obj.i; // see G__string2type
+                           short store_constvar = G__constvar;
+                           G__constvar = (short)result.obj.i; // see G__string2type
                            int store_reftype = G__reftype;
                            G__reftype = result.obj.reftype.reftype;
                            statement.Set(iout++, '(');
@@ -7222,7 +7222,7 @@ G__value G__exec_statement(int* mparen)
                         G__FastAllocString casepara(G__ONELINE);
                         casepara[0] = '(';
                         {
-                           int lencasepara = 1;
+                           size_t lencasepara = 1;
                            c = G__fgetstream(casepara, lencasepara, ":");
                            if (c==')') {
                               lencasepara = strlen(casepara);
@@ -7412,7 +7412,7 @@ G__value G__exec_statement(int* mparen)
                G__FastAllocString casepara(G__ONELINE);
                casepara[0] = '(';
                {
-                  int lencasepara = 1;
+                  size_t lencasepara = 1;
                   c = G__fgetstream(casepara, lencasepara, ":");
                   if (c==')') {
                      lencasepara = strlen(casepara);

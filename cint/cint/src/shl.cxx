@@ -174,7 +174,7 @@ int G__ispermanentsl = 0;
 int G__loadsystemfile(const char *filename) 
 {
   int result;
-  int len = strlen(filename);
+  size_t len = strlen(filename);
 #if defined(R__FBSD) || defined(R__OBSD)
   char soext[]=SOEXT;
 #endif
@@ -462,12 +462,12 @@ void G__smart_shl_unload(int allsl)
 *  Can replace G__free_shl()
 *
 ***********************************************************************/
-int G__free_shl_upto(int allsl)
+int G__free_shl_upto(short allsl)
 {
   /*************************************************************
    * Unload shared library
    *************************************************************/
-   int index = G__allsl;
+   short index = G__allsl;
 
    while((--index)>=allsl) {
       if (!G__sl_handle[index].ispermanent) {
@@ -480,7 +480,7 @@ int G__free_shl_upto(int allsl)
       }
    }
    // Now remove the holes
-   int offset = 0;
+   short offset = 0;
    for(index=allsl;index<G__allsl;++index) {
       if (G__sl_handle[index].handle==0) {
          ++offset;
@@ -495,7 +495,7 @@ int G__free_shl_upto(int allsl)
          }  
       }
    }
-   int removed = offset;
+   short removed = offset;
    for(index=0;index<removed;++index) {
       G__sl_handle.pop_back();
    }
@@ -1393,7 +1393,8 @@ char *G__search_func(const char *funcname,G__value *buf)
 
 char *G__search_next_member(const char *text,int state)
 {
-  static int list_index,len,index_item  /* ,cbp */;
+  static int list_index,index_item  /* ,cbp */;
+  static size_t len;
   static char completionbuf[G__ONELINE];
   char *name,*result;
   int flag=1;

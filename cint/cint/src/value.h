@@ -13,7 +13,7 @@ inline T G__convertT(const G__value* buf)
    //           ('n'==buf->type) ? (double)(buf->obj.ll) :
    //           (double)(buf->obj.i) );
  
-   const char buftype = buf->type;
+   const int buftype = buf->type;
    // this is by far the most common case; move in front of expensive switch:
    if (buftype == 'i') return (T) buf->obj.in;
 
@@ -53,7 +53,7 @@ template <> inline double &G__value_ref<double>(G__value &buf){ return buf.obj.d
 // This will still fail when we assume it points to the "d" member,
 // but at least the value might be correct.
 template <> inline float &G__value_ref<float>(G__value &buf)
-{ buf.obj.fl = buf.obj.d; return (float&) buf.obj.fl; }
+{ buf.obj.fl = (float)buf.obj.d; return (float&) buf.obj.fl; }
 
 template <> inline unsigned char & G__value_ref<unsigned char>(G__value  & buf){ return buf.obj.uch;}
 template <> inline unsigned short & G__value_ref<unsigned short>(G__value  & buf){ return buf.obj.ush;}

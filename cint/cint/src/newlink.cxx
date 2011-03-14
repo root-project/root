@@ -331,7 +331,7 @@ static int G__privateaccess = 0;
 **************************************************************************/
 static int   s_CurrentCallType = 0;
 static void* s_CurrentCall  = 0;
-static int   s_CurrentIndex = 0;
+static long  s_CurrentIndex = 0;
 void G__CurrentCall(int call_type, void* call_ifunc, long *ifunc_idx)
 {
   switch( call_type )   {
@@ -2797,12 +2797,11 @@ void G__gen_cpplink()
      int algoflag=0;
      int filen;
      char *fname;
-     int lenstl;
      G__getcintsysdir();
      G__FastAllocString sysstl(strlen(G__cintsysdir)+20);
      
      sysstl.Format("%s%s%s%sstl%s",G__cintsysdir,G__psep,G__CFG_COREVERSION,G__psep,G__psep);
-     lenstl=strlen(sysstl);
+     size_t lenstl=strlen(sysstl);
      for(filen=0;filen<G__nfile;filen++) {
         fname = G__srcfile[filen].filename;
         if(strncmp(fname,sysstl,lenstl)==0) fname += lenstl;
@@ -8977,10 +8976,10 @@ void G__cpplink_memvar(FILE *fp)
                         fprintf(fp, "[]");
                      }
                      else if (var->varlabel[j][1] /* num of elements */) {
-                        fprintf(fp, "[%d]", var->varlabel[j][1] /* num of elements */ / var->varlabel[j][0] /* stride */);
+                        fprintf(fp, "[%ld]", var->varlabel[j][1] /* num of elements */ / var->varlabel[j][0] /* stride */);
                      }
                      for (int k = 1; k < var->paran[j]; ++k) {
-                        fprintf(fp, "[%d]", var->varlabel[j][k+1]);
+                        fprintf(fp, "[%ld]", var->varlabel[j][k+1]);
                      }
                      fprintf(fp, "=\"");
                   }
@@ -10024,10 +10023,10 @@ void G__cpplink_global(FILE *fp)
           fprintf(fp, "[]");
         }
         else if (var->varlabel[j][1] /* num of elements */) {
-          fprintf(fp, "[%d]", var->varlabel[j][1] /* num of elements */ / var->varlabel[j][0] /* stride */);
+          fprintf(fp, "[%ld]", var->varlabel[j][1] /* num of elements */ / var->varlabel[j][0] /* stride */);
         }
         for (k = 1; k < var->paran[j]; ++k) {
-          fprintf(fp, "[%d]", var->varlabel[j][k+1]);
+          fprintf(fp, "[%ld]", var->varlabel[j][k+1]);
         }
         if (pvoidflag) {
           buf = G__getitem(var->varnamebuf[j]);
@@ -11645,7 +11644,7 @@ static void G__pragmalinkenum(int tagnum,int globalcomp)
 /**************************************************************************
 * G__linknestedtypedef()
 **************************************************************************/
-static void G__linknestedtypedef(int tagnum,int globalcomp)
+static void G__linknestedtypedef(int tagnum,char globalcomp)
 {
   int i;
   for(i=0;i<G__newtype.alltype;i++) {
@@ -11724,10 +11723,9 @@ static void G__linknestedtypedef(int tagnum,int globalcomp)
 **************************************************************************/
 void G__specify_link(int link_stub)
 {
-  int c;
+  char c;
   G__FastAllocString buf(G__ONELINE);
-  int globalcomp=G__NOLINK;
-  /* int store_globalcomp; */
+  char globalcomp=G__NOLINK;
   int i;
   int hash;
   struct G__ifunc_table_internal *ifunc;
@@ -11933,7 +11931,6 @@ void G__specify_link(int link_stub)
      || strncmp(buf,"namespace",3)==0
 #endif
      ) {
-    int len;
     char* p2;
     int iirf;
 #ifndef G__OLDIKMPLEMENTATION1334
@@ -11964,7 +11961,7 @@ void G__specify_link(int link_stub)
         buf[strlen(buf)-1] = '\0';
       }
     }
-    len = strlen(buf);
+    size_t len = strlen(buf);
     p2 = strchr(buf,'[');
     p = strrchr(buf,'*');
     if(len&&p&&(p2||'*'==buf[len-1]||('>'!=buf[len-1]&&'-'!=buf[len-1]))) {
@@ -12158,7 +12155,7 @@ void G__specify_link(int link_stub)
 
     if(('<'==c || '>'==c)
        &&(strcmp(buf,"operator")==0||strstr(buf,"::operator"))) {
-      int len=strlen(buf);
+      size_t len=strlen(buf);
       buf[len++]=c;
       store_line = G__ifile.line_number;
       fgetpos(G__ifile.fp,&pos);
@@ -12235,7 +12232,7 @@ void G__specify_link(int link_stub)
     if(p) {
 #if defined(G__REGEXP)
 #ifndef G__OLDIKMPLEMENTATION1583
-      int len = strlen(buf);
+      size_t len = strlen(buf);
       if('.'!=buf[len-2]) {
         buf[len-1] = '.';
         buf[len++] = '*';
@@ -12384,7 +12381,7 @@ void G__specify_link(int link_stub)
         // Look for function in the declaring namespace of the class
         // that are name 'operator' and have an argument which is of the
         // requested type.
-        short scope = cltag;
+        int scope = cltag;
         do {
            scope = G__struct.parent_tagnum[scope];
            struct G__ifunc_table_internal *x_ifunc = &G__ifunc;
@@ -12396,7 +12393,7 @@ void G__specify_link(int link_stub)
               for(i=0;i<ifunc->allifunc;i++) {
                  bool opmatch = false;
                  if (strncmp( ifunc->funcname[i], "operator", 8)==0) {
-                    for(short narg=0; narg<ifunc->para_nu[i]; ++narg) {
+                    for(char narg=0; narg<ifunc->para_nu[i]; ++narg) {
                        if ( ifunc->param[i][narg]->p_tagtable == cltag ) {
                           // note we do not test whether the argument is a reference, value or pointer
                           // nor its constness.
@@ -12422,7 +12419,7 @@ void G__specify_link(int link_stub)
     if(p) {
 #if defined(G__REGEXP)
 #ifndef G__OLDIKMPLEMENTATION1583
-      int len = strlen(buf);
+      size_t len = strlen(buf);
       if('.'!=buf[len-2]) {
         buf[len-1] = '.';
         buf[len++] = '*';
@@ -12584,7 +12581,7 @@ void G__specify_link(int link_stub)
     if(p) {
 #if defined(G__REGEXP)
 #ifndef G__OLDIKMPLEMENTATION1583
-      int len = strlen(buf);
+      size_t len = strlen(buf);
       if('.'!=buf[len-2]) {
         buf[len-1] = '.';
         buf[len++] = '*';
@@ -12697,7 +12694,7 @@ void G__specify_link(int link_stub)
     else {
       fsetpos(G__ifile.fp,&pos);
       c = G__fgetstream_template(buf, 0, ";\n\r<>");
-      unsigned int buflen = strlen(buf) - 1;
+      size_t buflen = strlen(buf) - 1;
       if (buf[0]=='"' && buf[buflen]=='"') {
          // Skip the quotes (that allowed us to keep the spaces.
          for(unsigned int bufind = 1; bufind < buflen; ++bufind) {
@@ -12957,8 +12954,8 @@ void G__incsetup_memvar(int tagnum)
 {
   int store_asm_exec;
   char store_var_type;
-  int store_static_alloc = G__static_alloc;
-  int store_constvar = G__constvar;
+  short store_static_alloc = G__static_alloc;
+  short store_constvar = G__constvar;
 
   if (G__struct.incsetup_memvar[tagnum]==0) return;
 
@@ -12968,7 +12965,7 @@ void G__incsetup_memvar(int tagnum)
     store_var_type = G__var_type;
 
     G__input_file store_ifile = G__ifile;
-    int fileno = G__struct.filenum[tagnum];
+    short fileno = G__struct.filenum[tagnum];
     G__ifile.filenum = fileno;
     G__ifile.line_number = -1;
     G__ifile.str = 0;
@@ -13033,7 +13030,7 @@ void G__incsetup_memfunc(int tagnum)
     G__asm_exec=0;
     store_var_type = G__var_type;
     G__input_file store_ifile = G__ifile;
-    int fileno = G__struct.filenum[tagnum];
+    short fileno = G__struct.filenum[tagnum];
     G__ifile.filenum = fileno;
     G__ifile.line_number = -1;
     G__ifile.str = 0;
@@ -13115,7 +13112,7 @@ void G__setnewtype_settypeum(int typenum)
 * G__setnewtype()
 *
 **************************************************************************/
-void G__setnewtype(int globalcomp,const char *comment,int nindex)
+void G__setnewtype(char globalcomp,const char *comment,int nindex)
 {
   int typenum =
     (-1!=G__setnewtype_typenum)? G__setnewtype_typenum:G__newtype.alltype-1;
@@ -13514,8 +13511,7 @@ long double* G__Longdoubleref(G__value *buf) {return G__refT<long double>(buf);}
 * has to be called from the pragma decoding!
 **************************************************************************/
 void G__specify_extra_include() {
-   int i;
-   int c;
+   size_t i;
    G__FastAllocString buf(G__ONELINE);
    char *tobecopied;
    if (!G__extra_include) {
@@ -13523,7 +13519,7 @@ void G__specify_extra_include() {
       for(i=0;i<G__MAXFILE;i++)
          G__extra_include[i]=(char*)malloc(G__MAXFILENAME*sizeof(char));
    };
-   c = G__fgetstream_template(buf, 0, ";\n\r<>");
+   G__fgetstream_template(buf, 0, ";\n\r<>");
    if ( 1 ) { /* should we check if the file exist ? */
       tobecopied = buf;
       if (buf[0]=='\"' || buf[0]=='\'') tobecopied++;

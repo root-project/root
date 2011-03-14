@@ -93,7 +93,7 @@ int G__read_setmode(int *pmode)
   else if(strcmp(command,"all")==0)             *pmode=3;
   else if(strcmp(command,"ALL")==0)             *pmode=3;
 #endif
-  else                              *pmode=G__int(G__getexpr(command));
+  else                              *pmode=(int)G__int(G__getexpr(command));
   return(c);
 }
 
@@ -134,7 +134,7 @@ static void G__do_not_include()
   int c;
   G__FastAllocString fnameorig(G__ONELINE);
   char *fname;
-  int len;
+  size_t len;
   int hash;
   int i;
 
@@ -284,7 +284,7 @@ int G__pragma()
 
   else if(strcmp(command,"mask_newdelete")==0) {
     c = G__fgetstream(command, 0, ";\n\r");
-    G__is_operator_newdelete |= G__int(G__calc_internal(command));
+    G__is_operator_newdelete |= (int)G__int(G__calc_internal(command));
   }
 
 #ifdef G__SECURITY
@@ -766,7 +766,7 @@ G__UINT32 G__getsecuritycode(const char *string)
 {
   G__UINT32 code;
   int level;
-  int len;
+  size_t len;
   if(string[0]) {
     if(isdigit(string[0])) {
       code = G__int(G__calc_internal(string));

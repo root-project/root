@@ -80,8 +80,8 @@ static const char* G__findrpos(const char* s1, const char* s2)
    if (!s1 || !s2) {
       return 0;
    }
-   int i = strlen(s1);
-   int s2len = strlen(s2);
+   size_t i = strlen(s1);
+   size_t s2len = strlen(s2);
    int nest = 0;
    int double_quote = 0;
    int single_quote = 0;
@@ -191,8 +191,8 @@ void G__arrayindexerror(int varid, struct G__var_array* var, const char* name, i
 {
    G__fprinterr(G__serr, "Error: Array index out of range %s -> [%d] ", name, index);
    G__fprinterr(G__serr, " valid upto %s", var->varnamebuf[varid]);
-   const int num_of_elements = var->varlabel[varid][1];
-   const int stride = var->varlabel[varid][0];
+   const size_t num_of_elements = var->varlabel[varid][1];
+   const size_t stride = var->varlabel[varid][0];
    if (num_of_elements) {
       G__fprinterr(G__serr, "[%d]", (num_of_elements / stride) - 1);
    }

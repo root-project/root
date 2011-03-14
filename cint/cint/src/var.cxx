@@ -531,14 +531,14 @@ G__value G__letvariable(G__FastAllocString &item, G__value expression, G__var_ar
    int ig15 = 0;
    int paran = 0;
    int ig25 = 0;
-   int lenitem = 0;
+   size_t lenitem = 0;
    int single_quote = 0;
    int double_quote = 0;
    int paren = 0;
    int done = 0;
-   int linear_index = 0;
-   int secondary_linear_index = 0;
-   int ig2 = 0;
+   size_t linear_index = 0;
+   size_t secondary_linear_index = 0;
+   size_t ig2 = 0;
    int flag = 0;
    int store_var_type = 0;
    long G__struct_offset = 0L;
@@ -747,7 +747,7 @@ G__value G__letvariable(G__FastAllocString &item, G__value expression, G__var_ar
    // a function call or array indexes.
    {
       // Start at the beginning.
-      int item_cursor = 0;
+      size_t item_cursor = 0;
       // Collect the identifier and the hash.
       // Note: We stop at a function parameter list or at array indexes.
       varhash = 0;
@@ -1353,7 +1353,6 @@ G__value G__letvariable(G__FastAllocString &item, G__value expression, G__var_ar
          var->varlabel[ig15][1] /* number of elements */ &&
          (var->reftype[ig15] == G__PARANORMAL) &&
          (
-          (linear_index < 0) ||
           // We intentionally allow the index to go one past the end.
           (linear_index > var->varlabel[ig15][1] /* number of elements */) ||
           ((ig25 < paran) && (std::tolower(var->type[ig15]) != 'u'))
@@ -1502,7 +1501,7 @@ G__value G__letvariable(G__FastAllocString &item, G__value expression, G__var_ar
                      free((void*) var->p[ig15]);
                   }
                   // Allocate enough storage for a copy of the initializer string.
-                  int len = strlen((const char*) result.obj.i);
+                  size_t len = strlen((const char*) result.obj.i);
                   var->p[ig15] = (long) malloc(len + 1);
                   // And copy the initializer into the allocated space.
                   strcpy((char*) var->p[ig15], (const char*) result.obj.i); // Okay, we just allocated enough space
@@ -4451,7 +4450,7 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
                   !G__def_struct_member && // Not defining a member variable (var->p[ig15] is an offset), and
                   !(G__static_alloc && (G__func_now > -1) && !G__prerun) // Not a static variable in function scope at runtime (init was done in prerun).
                ) {
-                  int len = strlen((char*) result.obj.i);
+                  size_t len = strlen((char*) result.obj.i);
                   if (var->varlabel[ig15][1] /* number of elements */ == INT_MAX /* unspecified length flag */) {
                      // -- We are an unspecified length array of char being initialized with a string constant.
                      // FIXME: Can this happen?
@@ -4484,7 +4483,7 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
                   !G__def_struct_member && // Not defining a member variable (var->p[ig15] is an offset), and
                   !(G__static_alloc && (G__func_now > -1) && !G__prerun) // Not a static variable in function scope at runtime (init was done in prerun).
                ) {
-                  int len = strlen((char*) result.obj.i);
+                  size_t len = strlen((char*) result.obj.i);
                   if (var->varlabel[ig15][1] /* number of elements */ == INT_MAX /* unspecified length flag */) {
                      // -- We are an unspecified length array of char being initialized with a string constant.
                      // FIXME: Can this happen?
@@ -4976,7 +4975,7 @@ item
 
 extern "C++" {
 template<class CASTTYPE, class CONVTYPE, class CONVFUNC>
-inline void G__get_pvar(CONVFUNC f, char TYPE, char PTYPE, struct G__var_array* var, int ig15, long G__struct_offset, int paran, G__value para[G__MAXVARDIM], int linear_index, int secondary_linear_index, G__value* result)
+inline void G__get_pvar(CONVFUNC f, char TYPE, char PTYPE, struct G__var_array* var, int ig15, long G__struct_offset, int paran, G__value para[G__MAXVARDIM], size_t linear_index, size_t secondary_linear_index, G__value* result)
 {
    switch (G__var_type) {
       case 'v':
@@ -5217,7 +5216,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
    int ig15 = 0;
    int paran = 0;
    int ig25 = 0;
-   int lenitem = 0;
+   size_t lenitem = 0;
    int done = 0;
    long G__struct_offset = 0L;
    char store_var_type = '\0';
@@ -5300,7 +5299,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
          // remove '*' from expression.
          // char *item is modified.
          //
-         for (int i = 0; i < lenitem; ++i) {
+         for (size_t i = 0; i < lenitem; ++i) {
             item[i] = item[i+1];
          }
          break;
@@ -5310,7 +5309,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
          // this case only happens when '&tag.varname'.
          lenitem = strlen(item);
          G__var_type = 'P'; // FIXME: This special type is set only here.
-         for (int i = 0; i < lenitem; ++i) {
+         for (size_t i = 0; i < lenitem; ++i) {
             item[i] = item[i+1];
          }
          break;
@@ -5351,7 +5350,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
       int double_quote = 0;
       int single_quote = 0;
       int paren = 0;
-      for (int i = 0; i < lenitem; ++i) {
+      for (size_t i = 0; i < lenitem; ++i) {
          switch (item[i]) {
             case '.':
                // -- This is a member of struct or union accessed by member reference.
@@ -5439,7 +5438,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
    {
       // Collect the variable name and hash value,
       // stop at parenthesis or square brackets.
-      int cursor = 0;
+      size_t cursor = 0;
       for (cursor = 0; (item[cursor] != '(') && (item[cursor] != '[') && (cursor < lenitem); ++cursor) {
          varname.Set(cursor, item[cursor]);
          varhash += item[cursor];
@@ -5864,7 +5863,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
        * linear_index = a*(B*C*D) + b*(C*D) + c*D + d
        * secondary_linear_index =
        *************************************************/
-      int linear_index = 0;
+      size_t linear_index = 0;
       {
          int tmp = var->varlabel[ig15][0] /* stride */;
          for (ig25 = 0; (ig25 < paran) && (ig25 < var->paran[ig15]); ++ig25) {
@@ -5872,10 +5871,10 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
             tmp /= var->varlabel[ig15][ig25+2];
          }
       }
-      int secondary_linear_index = 0;
+      size_t secondary_linear_index = 0;
       {
          // -- Calculate secondary_linear_index.
-         int tmp = var->varlabel[ig15][ig25+3];
+         size_t tmp = var->varlabel[ig15][ig25+3];
          if (!tmp) {
             // questionable
             tmp = 1;
@@ -5896,7 +5895,6 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
          var->varlabel[ig15][1] /* number of elements */ &&
          (var->reftype[ig15] == G__PARANORMAL) &&
          (
-            (linear_index < 0) ||
             // We intentionally allow going one beyond the end.
             (linear_index > var->varlabel[ig15][1] /* number of elements */) ||
             ((ig25 < paran) && (std::tolower(var->type[ig15]) != 'u'))

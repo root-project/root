@@ -20,7 +20,7 @@ extern "C" {
 /****************************************************************
 * G__pushdumpinput(fp,exflag)
 ****************************************************************/
-int G__pushdumpinput(FILE *fp,int exflag)
+int G__pushdumpinput(FILE *fp,short int exflag)
 {
   int i;
   for(i=5;i>0;i--) {

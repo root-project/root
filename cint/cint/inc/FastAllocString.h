@@ -52,7 +52,7 @@ G__EXPORT
 #endif
 G__FastAllocString {
 public:
-   G__FastAllocString(int reqsize = 1024): fBuf(0), fCapacity(reqsize) {
+   G__FastAllocString(size_t reqsize = 1024): fBuf(0), fCapacity(reqsize) {
       // GetBuf takes as parameter the size in bytes
       // and modify the parameter (fBucket) to hold the 
       // bucket number.

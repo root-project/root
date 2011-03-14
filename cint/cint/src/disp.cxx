@@ -262,7 +262,7 @@ int G__more_pause(FILE *fp,int len)
       shownline=0;
       G__FastAllocString buf(G__input("-- Press return for more -- (input [number] of lines, Cont,Step,More) "));
       if(isdigit(buf[0])) { /* change display size */
-        dispsize = G__int(G__calc_internal(buf));
+         dispsize = (int)G__int(G__calc_internal(buf));
         if(dispsize>0) store_dispsize = dispsize;
         onemore=0;
       }
@@ -299,10 +299,10 @@ int G__more(FILE *fp,const char *msg)
   fprintf(fp,"%s",msg);
 #endif
   if(strchr(msg,'\n')) {
-    return(G__more_pause(fp,strlen(msg)));
+     return(G__more_pause(fp,(int)strlen(msg)));
   }
   else {
-    G__more_col(strlen(msg));
+     G__more_col((int)strlen(msg));
     return(0);
   }
 }
@@ -662,7 +662,7 @@ int G__display_newtypes(FILE *fout,const char *fname)
 **************************************************************************/
 int G__display_string(FILE *fout)
 {
-  int len;
+  size_t len;
   unsigned long totalsize=0;
   struct G__ConstStringList *pconststring;
   G__FastAllocString msg(G__ONELINE);
@@ -818,7 +818,7 @@ int G__display_class(FILE *fout, char *name,int base,int start)
   G__FastAllocString msg(G__LONGLINE);
   char *p;
   int store_globalcomp;
-  int store_iscpp;
+  short int store_iscpp;
 
   G__browsing=1;
 
@@ -1197,7 +1197,7 @@ int G__display_eachtemplate(FILE *fout,G__Definedtemplateclass *deftmplt,int det
   if(detail) {
     struct G__IntList *ilist = deftmplt->instantiatedtagnum;
     while(ilist) {
-      msg.Format("      %s\n",G__fulltagname(ilist->i,1));
+       msg.Format("      %s\n",G__fulltagname((int)ilist->i,1));
       if(G__more(fout,msg)) return(1);
       ilist=ilist->next;
     }
@@ -1623,7 +1623,7 @@ int G__pr(FILE *fout,const G__input_file &view)
 ***********************************************************************/
 int G__dump_tracecoverage(FILE *fout)
 {
-  int iarg;
+  short int iarg;
   struct G__input_file view;
   for(iarg=0;iarg<G__nfile;iarg++) {
     if(G__srcfile[iarg].fp) {

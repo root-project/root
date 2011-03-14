@@ -289,8 +289,8 @@ void G__set_emergencycallback(void(*p2f)())
 static void G__getindexedvalue(G__value* result3, char* cindex)
 {
    int size;
-   int index;
-   int len;
+   size_t index;
+   size_t len;
    G__FastAllocString sindex(cindex);
    char* p;
    p = strstr(sindex, "][");
@@ -735,7 +735,7 @@ int G__explicit_fundamental_typeconv(char* funcname, int hash, G__param* libp, G
 /******************************************************************
  * void G__gen_addstros()
  ******************************************************************/
-void G__gen_addstros(int addstros)
+void G__gen_addstros(long addstros)
 {
    // --
 #ifdef G__ASM
@@ -958,9 +958,10 @@ char* G__rename_templatefunc(G__FastAllocString& funcname)
       G__FastAllocString funcname2(funcname);
       G__FastAllocString buf(G__ONELINE);
       G__FastAllocString buf2(20);
-      int typenum, tagnum, len;
+      int typenum, tagnum;
+      size_t len;
       int ip = 1;
-      int c;
+      char c;
       funcname2 += "<";
       do {
          c = G__getstream_template(ptmplt, &ip, buf, 0, ",>");
@@ -1015,12 +1016,12 @@ G__value G__operatorfunction(G__value* presult, const char* item, int* known3,
 {
    G__value result3 = G__null;
    struct G__param fpara;
-   int ig15 = 0;
+   size_t ig15 = 0;
    int ig35 = 0;
    int nest = 0;
    int double_quote = 0, single_quote = 0;
-   int lenitem = strlen(item);
-   int base1 = 0;
+   size_t lenitem = strlen(item);
+   size_t base1 = 0;
    int nindex = 0;
    int itmp;
    fpara.paran = 0;
@@ -1282,7 +1283,7 @@ G__value G__getfunction_libp(const char* item, G__FastAllocString& funcname,
                , funcmatch, memfunc_flag) == 1) {
 #ifdef G__DUMPFILE
             if (G__dumpfile != NULL && 0 == G__no_exec_compile) {
-               G__dumpspace -= 3;
+               G__dumpspace -= (short int)3;
                for (ipara = 0; ipara < G__dumpspace; ipara++) {
                   fprintf(G__dumpfile, " ");
                }
@@ -1550,7 +1551,7 @@ G__value G__getfunction_libp(const char* item, G__FastAllocString& funcname,
                   , G__ASM_FUNCNAMEBUF - G__asm_name_p
                ) < (size_t) (G__ASM_FUNCNAMEBUF - G__asm_name_p)
             ) {
-               G__asm_name_p += strlen(funcname) + 1;
+               G__asm_name_p += (int)strlen(funcname) + 1;
                G__inc_cp_asm(8, 0);
             }
             else {
@@ -1624,7 +1625,7 @@ G__value G__getfunction_libp(const char* item, G__FastAllocString& funcname,
                   , G__ASM_FUNCNAMEBUF - G__asm_name_p
                ) < (size_t) G__ASM_FUNCNAMEBUF - G__asm_name_p
             ) {
-               G__asm_name_p += strlen(funcname) + 1;
+               G__asm_name_p += (int)strlen(funcname) + 1;
                G__inc_cp_asm(8, 0);
             }
             else {
@@ -1722,7 +1723,7 @@ G__value G__getfunction_libp(const char* item, G__FastAllocString& funcname,
          }
          G__hash(funcname, hash, i);
       }
-      classhash = strlen(funcname);
+      classhash = (int)strlen(funcname);
       i = 0;
       while (i < G__struct.alltag) {
          if (
@@ -2071,8 +2072,10 @@ G__value G__getfunction_libp(const char* item, G__FastAllocString& funcname,
 G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
 {
    G__value result3 = G__null;
-   int ig15, ig35, ipara;
-   int lenitem, nest = 0;
+   size_t ig15;
+   int ig35, ipara;
+   size_t lenitem;
+   int nest = 0;
    int single_quote = 0, double_quote = 0;
    struct G__param fpara;
    static struct G__param* p2ffpara = (struct G__param*)NULL;
@@ -2094,7 +2097,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
    char* pfparam;
    struct G__var_array* var;
    int nindex = 0;
-   int base1 = 0;
+   size_t base1 = 0;
    int oprp = 0;
    int store_cp_asm = 0;
    int memfuncenvflag = 0;
@@ -2506,19 +2509,19 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
    //
    if (!p2ffpara) {
       // -- Parameter list was not pre-provided.
-      for (ig15 = 0; ig15 < fpara.paran; ++ig15) {
-         if (fpara.parameter[ig15][0] == '[') {
-            fpara.paran = ig15;
+      for (int ig15_p = 0; ig15_p < fpara.paran; ++ig15_p) {
+         if (fpara.parameter[ig15_p][0] == '[') {
+            fpara.paran = ig15_p;
             break;
          }
-         if (!fpara.parameter[ig15][0]) {
+         if (!fpara.parameter[ig15_p][0]) {
             if (G__dispmsg >= G__DISPWARN) {
-               G__fprinterr(G__serr, "Warning: Empty arg%d", ig15 + 1);
+               G__fprinterr(G__serr, "Warning: Empty arg%d", ig15_p + 1);
                G__printlinenum();
             }
          }
-         if (fpara.parameter[ig15][0] != '@') {
-            fpara.para[ig15] = G__getexpr(fpara.parameter[ig15]);
+         if (fpara.parameter[ig15_p][0] != '@') {
+            fpara.para[ig15_p] = G__getexpr(fpara.parameter[ig15_p]);
          }
       }
    }
@@ -2971,7 +2974,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
             G__asm_inst[G__asm_cp+6] = (long) G__p_ifunc;
             G__asm_inst[G__asm_cp+7] = -1;
             if (G__strlcpy(G__asm_name + G__asm_name_p, funcname, G__ASM_FUNCNAMEBUF - G__asm_name_p) < (size_t)(G__ASM_FUNCNAMEBUF - G__asm_name_p)) {
-               G__asm_name_p += strlen(funcname) + 1;
+               G__asm_name_p += (int)strlen(funcname) + 1;
                G__inc_cp_asm(8, 0);
             }
             else {
@@ -3032,7 +3035,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
             G__asm_inst[G__asm_cp+6] = (long) G__p_ifunc;
             G__asm_inst[G__asm_cp+7] = -1;
             if (G__strlcpy(G__asm_name + G__asm_name_p, funcname, G__ASM_FUNCNAMEBUF - G__asm_name_p) < (size_t)(G__ASM_FUNCNAMEBUF - G__asm_name_p)) {
-               G__asm_name_p += strlen(funcname) + 1;
+               G__asm_name_p += (int)strlen(funcname) + 1;
                G__inc_cp_asm(8, 0);
             }
             else {
@@ -3132,7 +3135,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
          }
          G__hash(funcname, hash, i);
       }
-      classhash = strlen(funcname);
+      classhash = (int)strlen(funcname);
       i = 0;
       while (i < G__struct.alltag) {
          if ((G__struct.hash[i] == classhash) &&
@@ -3442,8 +3445,9 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
     * pointer to function described like normal function
     * int (*p2f)(void);  p2f();
     ********************************************************************/
-   var = G__getvarentry(funcname, hash, &ig15, &G__global, G__p_local);
-   if (var && var->type[ig15] == '1') {
+   int var_ig15 = 0;
+   var = G__getvarentry(funcname, hash, &var_ig15, &G__global, G__p_local);
+   if (var && var->type[var_ig15] == '1') {
       result7.Format("*%s", funcname());
       *known3 = 0;
       pfparam = (char*)strchr(item, '(');
@@ -3687,7 +3691,7 @@ int G__special_func(G__value* result7, char* funcname, G__param* libp, int hash)
             printf("Serious trouble func 3519\n");
          }
          if (G__strlcpy(G__asm_name + G__asm_name_p, funcname, G__ASM_FUNCNAMEBUF - G__asm_name_p) < (size_t)(G__ASM_FUNCNAMEBUF - G__asm_name_p)) {
-            G__asm_name_p += strlen(funcname) + 1;
+            G__asm_name_p += (int)strlen(funcname) + 1;
             G__inc_cp_asm(8, 0);
          }
          else {
@@ -4642,7 +4646,7 @@ int G__library_func(G__value* result7, char* funcname, G__param* libp, int hash)
       }
       G__return = G__RETURN_EXIT2;
       G__letint(result7, 'i', G__int(libp->para[0]));
-      G__exitcode = result7->obj.i;
+      G__exitcode = (int)result7->obj.i;
       return 1;
    }
    if (655 == hash && strcmp(funcname, "atexit") == 0) {
@@ -5293,8 +5297,9 @@ static void G__sprintformatld(char* result, size_t result_length, const char* fm
  ******************************************************************/
 char* G__charformatter(int ifmt, G__param* libp, char* result, size_t result_length)
 {
-   int ipara, ichar, lenfmt;
-   int ionefmt = 0, fmtflag = 0;
+   int ipara;
+   size_t ionefmt = 0;
+   int fmtflag = 0;
    G__FastAllocString onefmt(G__LONGLINE);
    G__FastAllocString fmt(G__LONGLINE);
    G__FastAllocString pformat(G__LONGLINE);
@@ -5303,8 +5308,8 @@ char* G__charformatter(int ifmt, G__param* libp, char* result, size_t result_len
    pformat = (char*)G__int(libp->para[ifmt]);
    result[0] = '\0';
    ipara = ifmt + 1;
-   lenfmt = strlen(pformat);
-   for (ichar = 0; ichar <= lenfmt; ichar++) {
+   size_t lenfmt = strlen(pformat);
+   for (size_t ichar = 0; ichar <= lenfmt; ichar++) {
       switch (pformat[ichar]) {
          case '\0': /* end of the format */
             onefmt.Set(ionefmt, 0);
@@ -5519,7 +5524,7 @@ char* G__charformatter(int ifmt, G__param* libp, char* result, size_t result_len
                   usedpara = ipara;
                }
                /* rewind the digit already printed */
-               while (ionefmt >= 0 && isdigit(onefmt[ionefmt-1])) {
+               while (ionefmt > 0 && isdigit(onefmt[ionefmt-1])) {
                   --ionefmt;
                }
                dig = 0;

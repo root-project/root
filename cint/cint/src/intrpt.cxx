@@ -274,7 +274,7 @@ int G__call_interruptfunc(char *func)
 #ifdef G__ASM
    G__ALLOC_ASMENV;
 #endif
-   int store_var_type;
+   char store_var_type;
 
 #ifdef G__ASM
    G__STORE_ASMENV;

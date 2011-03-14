@@ -313,7 +313,7 @@ int G__Lsizeof(const char *type_name)
     if (isupper(buf.type)) {
       buf.obj.reftype.reftype = var->reftype[ig15];
     }
-    int num_of_elements = 0;
+    size_t num_of_elements = 0;
     if (pointlevel > var->paran[ig15] /* array dimensionality */) {
       switch (pointlevel) {
       case 0:
@@ -393,7 +393,6 @@ long *G__typeid(const char *typenamein)
   int c;
   long *type_info;
   int tagnum,typenum,type=0,reftype=G__PARANORMAL,size=0;
-  int len;
   int pointlevel=0,isref=0;
   int tag_type_info;
   G__FastAllocString typenamebuf_sb(G__MAXNAME*2);
@@ -415,7 +414,7 @@ long *G__typeid(const char *typenamein)
   ***********************************************************************/
   typenamebuf_sb = typenamein;
   type_name=typenamebuf;
-  len=strlen(type_name);
+  size_t len=strlen(type_name);
 
   while('*'==(c=type_name[len-1]) || '&'==c) {
     switch(c) {
@@ -615,7 +614,7 @@ long *G__typeid(const char *typenamein)
     if(-1!=tagnum && 'u'==tolower(type) && buf.ref && -1!=G__struct.virtual_offset[tagnum]) {
       /* In case of polymorphic object, get the actual tagnum from the hidden
        * virtual identity field.  */
-      tagnum = *(long*)(buf.obj.i+G__struct.virtual_offset[tagnum]);
+       tagnum = *(long*)(buf.obj.i+G__struct.virtual_offset[tagnum]);
     }
   }
 
@@ -833,7 +832,7 @@ long G__get_classinfo(const char *item,int tagnum)
   char *buf;
   int tag_string_buf;
   struct G__inheritance *baseclass;
-  int p;
+  size_t p;
   int i;
 
   /**********************************************************************
@@ -936,7 +935,7 @@ long G__get_variableinfo(const char *item,long *phandle,long *pindex,int tagnum)
   char *buf;
   int tag_string_buf;
   struct G__var_array *var;
-  int index;
+  long index;
 
   /*******************************************************************
   * new
@@ -1044,9 +1043,9 @@ long G__get_functioninfo(const char *item,long *phandle,long *pindex,int tagnum)
   int tag_string_buf;
   /* char temp[G__MAXNAME]; */
   struct G__ifunc_table_internal *ifunc;
-  int index;
+  long index;
   int i;
-  int p;
+  size_t p;
 
   /*******************************************************************
   * new
@@ -1496,7 +1495,7 @@ void G__typeconversion(G__ifunc_table_internal *ifunc,int ifn
       case 'r':
       case 'h':
       case 'k':
-        libp->para[i].obj.d = libp->para[i].obj.i;
+         libp->para[i].obj.d = (double)libp->para[i].obj.i;
         libp->para[i].type = formal_type;
         libp->para[i].ref = (long)(&libp->para[i].obj.d);
         break;

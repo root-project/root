@@ -18,8 +18,6 @@
 
 #include <ios>
 
-extern "C" {
-
 //______________________________________________________________________________
 static const char* G__getoperatorstring(int operatortag)
 {
@@ -100,6 +98,85 @@ static const char* G__getoperatorstring(int operatortag)
          return("(unknown operator)");
    }
 }
+
+//______________________________________________________________________________
+template <class T> void G__assignbyref(G__value* defined, T val)
+{
+   if (isupper(defined->type)) {
+      *(long*)defined->ref = (long)val;
+      defined->obj.i = (long)val;
+      return;
+   }
+
+   switch (defined->type) {
+      case 'd': /* double */
+         *(double*)defined->ref = (double)val;
+         G__setvalue(defined, val);
+         break;
+      case 'f': /* float */
+         *(float*)defined->ref = (float) val;
+         G__setvalue(defined, val);
+         break;
+      case 'l': /* long */
+         *(long*)defined->ref = (long) val;
+         G__setvalue(defined, (long) val);
+         break;
+      case 'k': /* unsigned long */
+         *(unsigned long*)defined->ref = (unsigned long) val;
+         G__setvalue(defined, (unsigned long) val);
+         break;
+      case 'i': /* int */
+         *(int*)defined->ref = (int) val;
+         G__setvalue(defined, (int) val);
+         break;
+      case 'h': /* unsigned int */
+         *(unsigned int*)defined->ref = (unsigned int)val;
+         G__setvalue(defined, (unsigned int) val);
+         break;
+      case 's': /* short */
+         *(short*)defined->ref = (short) val;
+         G__setvalue(defined, (short) val);
+         break;
+      case 'r': /* unsigned short */
+         *(unsigned short*)defined->ref = (unsigned short) val;
+         G__setvalue(defined, (unsigned short) val);
+         break;
+      case 'c': /* char */
+         *(char*)defined->ref = (char) val;
+         G__setvalue(defined, (char) val);
+         break;
+      case 'b': /* unsigned char */
+         *(unsigned char*)defined->ref = (unsigned char)val;
+         G__setvalue(defined, (unsigned char) val);
+         break;
+      case 'n': /* long long */
+         *(G__int64*)defined->ref = (G__int64) val;
+         defined->obj.ll = (G__int64) val;
+         G__setvalue(defined, (G__int64) val);
+         break;
+      case 'm': /* unsigned long long */
+         *(G__uint64*)defined->ref = (G__uint64) val;
+         G__setvalue(defined, (G__uint64) val);
+         break;
+      case 'q': /* unsigned G__int64 */
+         *(long double*)defined->ref = (long double)val;
+         G__setvalue(defined, (long double)val);
+         break;
+      case 'g': /* bool */
+#ifdef G__BOOL4BYTE
+         *(int*)defined->ref = (int) (val ? 1 : 0);
+#else // G__BOOL4BYTE
+         *(unsigned char*)defined->ref = (unsigned char) (val ? 1 : 0);
+#endif // G__BOOL4BYTE
+         G__setvalue(defined, (bool) val);
+         break;
+      default:
+         G__genericerror("Invalid operation and assignment, G__assignbyref");
+         break;
+   }
+}
+
+extern "C" {
 
 //______________________________________________________________________________
 void G__doubleassignbyref(G__value* defined, double val)
@@ -434,34 +511,34 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
 
          case G__OPR_ADDASSIGN:
             if (!G__no_exec_compile && defined->ref)
-               G__doubleassignbyref(defined, lddefined + ldexpression);
+               G__assignbyref(defined, lddefined + ldexpression);
             break;
          case G__OPR_SUBASSIGN:
             if (!G__no_exec_compile && defined->ref)
-               G__doubleassignbyref(defined, lddefined - ldexpression);
+               G__assignbyref(defined, lddefined - ldexpression);
             break;
          case G__OPR_MODASSIGN:
             if (!G__no_exec_compile && defined->ref)
-               G__doubleassignbyref(defined
-                                    , (double)((long)lddefined % (long)ldexpression));
+               G__assignbyref(defined
+                              , (double)((long)lddefined % (long)ldexpression));
             break;
          case G__OPR_MULASSIGN:
             if (!G__no_exec_compile && defined->ref)
-               G__doubleassignbyref(defined, lddefined*ldexpression);
+               G__assignbyref(defined, lddefined*ldexpression);
             break;
          case G__OPR_DIVASSIGN:
             if (!G__no_exec_compile && defined->ref)
-               G__doubleassignbyref(defined, lddefined / ldexpression);
+               G__assignbyref(defined, lddefined / ldexpression);
             break;
          case G__OPR_ANDASSIGN:
             if (!G__no_exec_compile && defined->ref)
-               G__doubleassignbyref(defined
-                                    , (double)((long)lddefined && (long)ldexpression));
+               G__assignbyref(defined
+                              , (double)((long)lddefined && (long)ldexpression));
             break;
          case G__OPR_ORASSIGN:
             if (!G__no_exec_compile && defined->ref)
-               G__doubleassignbyref(defined
-                                    , (double)((long)lddefined || (long)ldexpression));
+               G__assignbyref(defined
+                              , (double)((long)lddefined || (long)ldexpression));
             break;
       }
 
@@ -1533,7 +1610,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   case 'b':
                   case 'r':
                   case 'h': {
-                     unsigned int uidefined = udefined;
+                     unsigned int uidefined = (unsigned int)udefined;
                      G__letint(defined, 'h', 0);
                      defined->obj.uin = uidefined >> uexpression;
                   }
@@ -1555,7 +1632,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   case 'b':
                   case 'r':
                   case 'h':{
-                     unsigned int uidefined = udefined;
+                     unsigned int uidefined = (unsigned int)udefined;
                      G__letint(defined, 'h', 0);
                      defined->obj.uin = uidefined << uexpression;
                   }
@@ -1578,7 +1655,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   G__printlinenum();
                }
                fdefined = 1.0;
-               for (ig2 = 1;ig2 <= (int)uexpression;ig2++) fdefined *= udefined;
+               for (ig2 = 1;ig2 <= (int)uexpression;ig2++) fdefined *= (double)udefined;
                if (fdefined > (double)LONG_MAX || fdefined < (double)LONG_MIN) {
                   G__genericerror("Error: integer overflow. Use 'double' for power operator");
                }
@@ -1833,7 +1910,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   G__printlinenum();
                }
                fdefined = 1.0;
-               for (ig2 = 1;ig2 <= lexpression;ig2++) fdefined *= ldefined;
+               for (ig2 = 1;ig2 <= lexpression;ig2++) fdefined *= (double)ldefined;
                if (fdefined > (double)LONG_MAX || fdefined < (double)LONG_MIN) {
                   G__genericerror("Error: integer overflow. Use 'double' for power operator");
                }
@@ -2100,7 +2177,7 @@ int G__cmp(G__value buf1, G__value buf2)
 int G__getunaryop(char unaryop, const char* expression, char* buf, G__value* preg)
 {
    int nest = 0;
-   int c = 0;
+   char c = 0;
    int i1 = 1, i2 = 0;
    G__value reg;
    char prodpower = 0;
@@ -2159,7 +2236,7 @@ int G__getunaryop(char unaryop, const char* expression, char* buf, G__value* pre
 
 //______________________________________________________________________________
 #ifdef G__VIRTUALBASE
-int G__iosrdstate(G__value* pios)
+long G__iosrdstate(G__value* pios)
 {
    // -- ios rdstate condition test
    G__value result;
@@ -2336,7 +2413,6 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
    G__FastAllocString arg2(G__LONGLINE);
    long store_struct_offset;
    int store_tagnum;
-   int store_isconst;
    G__value buffer;
    char* pos;
    int postfixflag = 0;
@@ -2640,7 +2716,7 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
          store_tagnum = G__tagnum;
          G__store_struct_offset = defined->obj.i;
          G__tagnum = defined->tagnum;
-         store_isconst = G__isconst;
+         G__SIGNEDCHAR_T store_isconst = G__isconst;
          G__isconst = defined->isconst;
          buffer = G__getfunction(expr, &ig2, G__TRYBINARYOPR);
          G__isconst = store_isconst;
@@ -2692,8 +2768,8 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
          }
 
          if (!ig2 && ((operatortag == 'A') || (operatortag == 'O'))) {
-            int lval = 0;
-            int rval = 0;
+            long lval = 0;
+            long rval = 0;
             if (defined->type == 'u') {
                if (G__asm_noverflow) {
                   // -- We are generating bytecode.

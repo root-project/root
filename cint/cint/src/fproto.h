@@ -103,7 +103,7 @@ int G__pr(FILE *fout,const struct G__input_file &view);
 int G__dump_tracecoverage(FILE *fout);
 int G__objectmonitor(FILE *fout,long pobject,int tagnum,const char *addspace);
 int G__varmonitor(FILE *fout,struct G__var_array *var,const char *index,const char *addspace,long offset);
-int G__pushdumpinput(FILE *fp,int exflag);
+int G__pushdumpinput(FILE *fp,short int exflag);
 int G__popdumpinput(void);
 int G__dumpinput(const char *line);
 char *G__xdumpinput(const char *prompt);
@@ -150,9 +150,9 @@ G__value G__getexpr(const char *expression);
 G__value G__getprod(char *expression1);
 G__value G__getpower(const char *expression2);
 G__value G__getitem(const char *item);
-int G__testandor(int lresult,const char *rexpression,int operator2);
-int G__test(const char *expression2);
-int G__btest(int operator2,G__value lresult,G__value rresult);
+long G__testandor(int lresult,const char *rexpression,int operator2);
+long G__test(const char *expression2);
+long G__btest(int operator2,G__value lresult,G__value rresult);
 int G__fgetspace(void);
 int G__fgetspace_peek(void);
 #ifdef __cplusplus
@@ -194,17 +194,17 @@ int G__baseconstructor(int n,struct G__baseparam *pbaseparam);
 int G__basedestructor(void);
 int G__basedestructrc(struct G__var_array *mem);
 #ifdef G__VIRTUALBASE
-int G__publicinheritance(G__value *val1,G__value *val2);
-int G__ispublicbase(int basetagnum,int derivedtagnum,long pobject);
+long G__publicinheritance(G__value *val1,G__value *val2);
+long G__ispublicbase(int basetagnum,int derivedtagnum,long pobject);
 long G__getvirtualbaseoffset(long pobject,int tagnum,struct G__inheritance *baseclass,int basen);
 #else
-int G__ispublicbase(int basetagnum,int derivedtagnum);
-int G__isanybase(int basetagnum,int derivedtagnum);
+long G__ispublicbase(int basetagnum,int derivedtagnum);
+long G__isanybase(int basetagnum,int derivedtagnum);
 #endif
 #ifdef G__VIRTUALBASE
-int G__find_virtualoffset(int virtualtag, long pobject);
+long G__find_virtualoffset(long virtualtag, long pobject);
 #else
-int G__find_virtualoffset(int virtualtag);
+long G__find_virtualoffset(long virtualtag);
 #endif
   /* int G__main(int argc,char **argv); */
 int G__init_globals(void);
@@ -314,7 +314,7 @@ void G__cppif_genfunc(FILE *fp,FILE *hfp,int tagnum,int ifn,struct G__ifunc_tabl
 int G__cppif_paratype(FILE *fp,int ifn,struct G__ifunc_table_internal *ifunc,int k);
 void G__cpplink_tagtable(FILE *pfp,FILE *hfp);
 #ifdef G__VIRTUALBASE
-int G__iosrdstate(G__value *pios);
+long G__iosrdstate(G__value *pios);
 void G__cppif_inheritance(FILE *pfp);
 #endif
 void G__cpplink_inheritance(FILE *pfp);
@@ -390,7 +390,7 @@ int G__asm_optimize3(int *start);
 int G__inc_cp_asm(int cp_inc,int dt_dec);
 int G__clear_asm(void);
 int G__asm_clear(void);
-void G__gen_addstros(int addstros);
+void G__gen_addstros(long addstros);
 void G__suspendbytecode(void);
 void G__resetbytecode(void);
 void G__resumebytecode(int store_asm_noverflow);
@@ -417,7 +417,7 @@ int G__revprint(FILE *fp);
 int G__dump_header(char *outfile);
 void G__listshlfunc(FILE *fout);
 void G__listshl(FILE *G__temp);
-int G__free_shl_upto(int allsl);
+int G__free_shl_upto(short allsl);
 G__value G__pointer2func(G__value* obj_p2f,char *parameter0,char *parameter1,int *known3);
 char *G__search_func(const char *funcname,G__value *buf);
 char *G__search_next_member(const char *text,int state);

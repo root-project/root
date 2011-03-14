@@ -74,7 +74,7 @@ static int G__get_newname(G__FastAllocString& new_name)
    int store_tagdefining = 0;
    G__FastAllocString temp1(G__ONELINE);
 
-   int cin = G__fgetvarname(new_name, 0, "*&,;=():}");
+   char cin = G__fgetvarname(new_name, 0, "*&,;=():}");
    if (cin == '&') {
       if (!strcmp(new_name, "operator")) {
          new_name[8] = cin;
@@ -328,7 +328,7 @@ static int G__get_newname(G__FastAllocString& new_name)
          }
       }
       if (isspace(cin)) {
-         int store_len;
+         size_t store_len;
          if (
             !strcmp(new_name, "operator") ||
             !strcmp(new_name, "*operator") ||
@@ -520,7 +520,7 @@ static void G__removespacetemplate(G__FastAllocString& name, size_t offset /* = 
    memcpy(buf, name, len);
    int c = 0;
    size_t i = offset;
-   int j = len;
+   long j = len;
    while ((c = name[i])) {
       if (isspace(c) && i > offset) {
          switch (name[i-1]) {
@@ -655,8 +655,8 @@ static int G__initstruct(G__FastAllocString& new_name)
       return c;
    }
    var->is_init_aggregate_array[varid] = 1;
-   int& num_of_elements = var->varlabel[varid][1];
-   const int stride = var->varlabel[varid][0];
+   size_t& num_of_elements = var->varlabel[varid][1];
+   const size_t stride = var->varlabel[varid][0];
    // Check for an unspecified length array.
    int isauto = 0;
    if (num_of_elements == INT_MAX /* unspecified length flag */) {
@@ -696,7 +696,7 @@ static int G__initstruct(G__FastAllocString& new_name)
    // Read and process the initializer specification.
    //
    int mparen = 1;
-   int linear_index = -1;
+   size_t linear_index = -1;
    while (mparen) {
       // -- Read the next initializer value.
       int c = G__fgetstream_new(expr, 0, ",{}");
@@ -759,7 +759,7 @@ static int G__initstruct(G__FastAllocString& new_name)
                   ) {
                // -- Data member is a fixed-size character array.
                // FIXME: We do not handle a data member which is an unspecified length array.
-               if (memvar->varlabel[memindex][1] /* number of elements */ > (int) std::strlen((char*)reg.obj.i)) {
+               if (memvar->varlabel[memindex][1] /* number of elements */ > std::strlen((char*)reg.obj.i)) {
                   std::strcpy((char*) buf.obj.i, (char*) reg.obj.i); // Legacy, we don't know the buffer size.
                }
                else {
@@ -959,8 +959,8 @@ static int G__initary(G__FastAllocString& new_name)
    //--
    // Get number of dimensions.
    const short num_of_dimensions = var->paran[varid];
-   int& num_of_elements = var->varlabel[varid][1];
-   const int stride = var->varlabel[varid][0];
+   size_t& num_of_elements = var->varlabel[varid][1];
+   const size_t stride = var->varlabel[varid][0];
    // Check for an unspecified length array.
    int isauto = 0;
    if (num_of_elements == INT_MAX /* unspecified length flag */) {
@@ -968,7 +968,7 @@ static int G__initary(G__FastAllocString& new_name)
       isauto = 1;
       num_of_elements = 0;
    }
-   std::vector<int> array_bounds(num_of_dimensions + 1);
+   std::vector<size_t> array_bounds(num_of_dimensions + 1);
    if (isauto) {
       array_bounds[1] = 1;
    }
@@ -978,9 +978,9 @@ static int G__initary(G__FastAllocString& new_name)
    for (int i = 2; i <= num_of_dimensions; ++i) {
       array_bounds[i] = var->varlabel[varid][i];
    }
-   std::vector<int> strides(num_of_dimensions + 1);
+   std::vector<size_t> strides(num_of_dimensions + 1);
    {
-      int prev_stride = 1;
+      size_t prev_stride = 1;
       for (int i = num_of_dimensions; i > 0; --i) {
          strides[i] = prev_stride * array_bounds[i];
          prev_stride = strides[i];
@@ -1020,8 +1020,8 @@ static int G__initary(G__FastAllocString& new_name)
    // we need to restore something after scanning
    // the closing brace.
    dimension_stack.push_back(-1);
-   std::vector<int> initializer_count(num_of_dimensions + 1);
-   int linear_index = 0;
+   std::vector<size_t> initializer_count(num_of_dimensions + 1);
+   size_t linear_index = 0;
    while (brace_level) {
       // -- Read the next initializer value.
       int c = G__fgetstream_new(expr, 0, ",{}");
@@ -1148,7 +1148,7 @@ static int G__initary(G__FastAllocString& new_name)
             }
             // Get the length of the initializer.
             // Note: We need to count the zero byte at the end of the string constant.
-            int len = std::strlen((char*) reg.obj.i) + 1;
+            size_t len = std::strlen((char*) reg.obj.i) + 1;
             // Initializer must not be too big for the string subaggregate.
             if (
                (!isauto || (num_of_dimensions > 1)) && // We have a fixed-size to compare against, and
@@ -1225,7 +1225,7 @@ static int G__initary(G__FastAllocString& new_name)
                (len < strides[num_of_dimensions]) // the initializer was too small
             ) {
                // -- Default initialize the omitted array elements.
-               int num_omitted = strides[num_of_dimensions] - len;
+               size_t num_omitted = strides[num_of_dimensions] - len;
                buf.obj.i = var->p[varid] + (linear_index * size);
                std::memset((void*) buf.obj.i, 0, num_omitted);
                // Count initializers seen.
@@ -1299,10 +1299,10 @@ static int G__initary(G__FastAllocString& new_name)
                //      int ary[3][3][3] = { { {1, 2, 3} } };
                //
                //printf("\n} ");
-               int stride = strides[current_dimension];
+               size_t stride = strides[current_dimension];
                //printf("stride: %d\n", stride);
                //printf("linear_index: %d\n", linear_index);
-               int num_given = 0;
+               size_t num_given = 0;
                if (initializer_count[current_dimension]) {
                   // -- There were initializers.
                   if (linear_index) {
@@ -1310,9 +1310,9 @@ static int G__initary(G__FastAllocString& new_name)
                   }
                }
                //printf("num_given: %d\n", num_given);
-               int num_omitted = stride - num_given;
+               size_t num_omitted = stride - num_given;
                //printf("num_omitted: %d\n", num_omitted);
-               for (int i = 0; i < num_omitted; ++i) {
+               for (size_t i = 0; i < num_omitted; ++i) {
                   buf.obj.i = var->p[varid] + (linear_index * size);
                   G__letvalue(&buf, G__null);
                   //printf("%d: 0, ", linear_index);
@@ -1449,7 +1449,7 @@ static int G__readpointer2function(G__FastAllocString& new_name, char* pvar_type
    fpos_t pos2;
    fgetpos(G__ifile.fp, &pos2);
    int line2 = G__ifile.line_number;
-   int c = G__fgetstream(new_name, 0, "()");
+   char c = G__fgetstream(new_name, 0, "()");
    if ((new_name[0] != '*') && !strstr(new_name, "::*")) {
       fsetpos(G__ifile.fp, &pos2);
       G__ifile.line_number = line2;
@@ -1492,7 +1492,7 @@ static int G__readpointer2function(G__FastAllocString& new_name, char* pvar_type
       int n = 0;
       while (c == '[') {
          c = G__fgetstream_new(temp, 0, "]");
-         G__p2arylabel[n++] = G__int(G__getexpr(temp));
+         G__p2arylabel[n++] = (int)G__int(G__getexpr(temp));
          c = G__fgetstream_new(temp, 0, "[;,)=");
       }
       G__p2arylabel[n] = 0;
@@ -1605,16 +1605,16 @@ void G__define_var(int tagnum, int typenum)
    int store_debug = 0;
    int store_step = 0;
    int staticclassobject = 0;
-   int store_var_type = 0;
+   char store_var_type = 0;
    int store_tagnum_default = 0;
    int store_def_struct_member_default = 0;
    int store_exec_memberfunc = 0;
    int store_memberfunc_tagnum = 0;
-   int store_constvar = 0;
-   int store_static_alloc = 0;
+   short int store_constvar = 0;
+   short int store_static_alloc = 0;
    int store_tagdefining = 0;
    int store_line = 0;
-   int store_static_alloc2 = 0;
+   short int store_static_alloc2 = 0;
    static int padn = 0;
    static int bitfieldwarn = 0;
    fpos_t store_fpos;
@@ -2250,7 +2250,7 @@ void G__define_var(int tagnum, int typenum)
                G__prerun = store_prerun;
                G__cppconstruct = 1;
                if (G__globalvarpointer || G__no_exec_compile) {
-                  int store_constvar2 = G__constvar;
+                  short int store_constvar2 = G__constvar;
                   G__constvar = store_constvar;
                   G__letvariable(new_name, G__null, &G__global, G__p_local, member);
                   G__constvar = store_constvar2;
@@ -2358,7 +2358,7 @@ void G__define_var(int tagnum, int typenum)
             i = 0;
             while ('*' == new_name[i]) ++i;
             if (i) {
-               var_type = toupper(var_type);
+               var_type = (char)toupper(var_type);
                /* if(i>1) G__reftype = i+1;  not needed */
             }
             if (strchr(new_name + i, '<')) {
@@ -2457,7 +2457,7 @@ void G__define_var(int tagnum, int typenum)
          }
          else {
             cin = G__fgetstream(temp, 0, ",;=}");
-            G__bitfield = atoi(temp);
+            G__bitfield = (short int)atoi(temp);
             if (!G__bitfield) {
                G__bitfield = -1;
             }
@@ -2510,8 +2510,8 @@ void G__define_var(int tagnum, int typenum)
             int store_reftype = G__reftype;
             int store_prerun = G__prerun;
             int store_decl = G__decl;
-            int store_constvar = G__constvar;
-            int store_static_alloc = G__static_alloc;
+            short int store_constvar = G__constvar;
+            short int store_static_alloc = G__static_alloc;
             if (G__globalcomp == G__NOLINK) {
                G__prerun = 0;
                G__decl = 0;
@@ -2559,8 +2559,8 @@ void G__define_var(int tagnum, int typenum)
                // --
                int store_prerun = G__prerun;
                int store_decl = G__decl;
-               int store_constvar = G__constvar;
-               int store_static_alloc = G__static_alloc;
+               short int store_constvar = G__constvar;
+               short int store_static_alloc = G__static_alloc;
                if (G__globalcomp == G__NOLINK) {
                   G__prerun = 0;
                   G__decl = 0;
@@ -2590,8 +2590,8 @@ void G__define_var(int tagnum, int typenum)
                // --
                int store_prerun = G__prerun;
                int store_decl = G__decl;
-               int store_constvar = G__constvar;
-               int store_static_alloc = G__static_alloc;
+               short int store_constvar = G__constvar;
+               short int store_static_alloc = G__static_alloc;
                if (G__globalcomp == G__NOLINK) {
                   G__prerun = 0;
                   G__decl = 0;
@@ -3081,7 +3081,7 @@ void G__define_var(int tagnum, int typenum)
                      else {
                         // -- There are similar cases above, but they are either
                         // default ctor or precompiled class which should be fine.
-                        int store_static_alloc3 = G__static_alloc;
+                        short int store_static_alloc3 = G__static_alloc;
                         G__static_alloc = 0;
                         G__getfunction(temp, &known, G__CALLCONSTRUCTOR);
                         G__static_alloc = store_static_alloc3;
@@ -3099,7 +3099,8 @@ void G__define_var(int tagnum, int typenum)
                      }
                   }
                   else {
-                     int store_var_typeB, store_tagnumB, store_typenumB;
+                     char store_var_typeB;
+                     int store_tagnumB, store_typenumB;
                      long store_struct_offsetB = G__store_struct_offset;
                      int store_tagdefiningB = G__tagdefining;
                      //
@@ -3390,7 +3391,7 @@ void G__define_var(int tagnum, int typenum)
          return;
       }
       if (G__typepdecl) {
-         var_type = tolower(var_type);
+         var_type = (char)tolower(var_type);
          G__var_type = var_type;
          if (G__asm_dbg) {
             if (G__dispmsg >= G__DISPNOTE) {

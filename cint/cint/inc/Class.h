@@ -60,11 +60,11 @@ G__ClassInfo {
   long IsBase(const char *classname);
   long IsBase(G__ClassInfo& a);
   void* DynamicCast(G__ClassInfo& to, void* obj);
-  long Tagnum() const { return(tagnum); }
+  int Tagnum() const { return(tagnum); }
   G__ClassInfo EnclosingClass() ;
   G__ClassInfo EnclosingSpace() ;
   struct G__friendtag* GetFriendInfo(); 
-  void SetGlobalcomp(int globalcomp);
+  void SetGlobalcomp(G__SIGNEDCHAR_T globalcomp);
   void SetProtectedAccess(int protectedaccess);
 #ifdef G__OLDIMPLEMENTATION1218_YET
   int IsValid() { return 0<=tagnum && tagnum<G__struct.alltag ? 1 : 0; }
@@ -85,7 +85,7 @@ G__ClassInfo {
   
 
  protected:
-  long tagnum;  // class,struct,union,enum key for cint dictionary
+  int tagnum;  // class,struct,union,enum key for cint dictionary
   long class_property;  // cache value (expensive to get)
 
  ///////////////////////////////////////////////////////////////

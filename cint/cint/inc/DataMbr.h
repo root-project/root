@@ -53,9 +53,9 @@ G__DataMemberInfo {
   long Offset() ;
   int Bitfield();
   int ArrayDim() ;
-  int MaxIndex(int dim) ;
+  size_t MaxIndex(int dim) ;
   G__ClassInfo* MemberOf();
-  void SetGlobalcomp(int globalcomp);
+  void SetGlobalcomp(G__SIGNEDCHAR_T globalcomp);
   int IsValid();
   int SetFilePos(const char* fname);
   int Next();

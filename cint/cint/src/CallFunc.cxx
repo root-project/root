@@ -363,7 +363,7 @@ void Cint::G__CallFunc::SetFunc(G__ClassInfo* cls
   int isrc=0;
   char *endmark=(char*)",";
   G__FastAllocString argtype(G__ONELINE);
-  int pos=0;
+  size_t pos=0;
   G__value *buf;
 
   // separate and evaluate argument list

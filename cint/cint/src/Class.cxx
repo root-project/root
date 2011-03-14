@@ -259,7 +259,7 @@ G__ClassInfo Cint::G__ClassInfo::EnclosingSpace()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void Cint::G__ClassInfo::SetGlobalcomp(int globalcomp)
+void Cint::G__ClassInfo::SetGlobalcomp(G__SIGNEDCHAR_T globalcomp)
 {
   if(IsValid()) {
     G__struct.globalcomp[tagnum] = globalcomp;
@@ -286,7 +286,7 @@ int Cint::G__ClassInfo::IsValid()
 #endif
 ///////////////////////////////////////////////////////////////////////////
 unsigned char Cint::G__ClassInfo::FuncFlag() { 
-  return(IsValid()?G__struct.funcs[tagnum]:0); 
+   return (IsValid()? G__struct.funcs[tagnum] : (unsigned char)0); 
 }
 ///////////////////////////////////////////////////////////////////////////
 int Cint::G__ClassInfo::IsLoaded()
@@ -821,7 +821,8 @@ void* Cint::G__ClassInfo::New()
        defaultconstructor
           =(G__InterfaceMethod)G__struct.rootspecial[tagnum]->defaultconstructor;
        if(defaultconstructor) {
-          G__CurrentCall(G__DELETEFREE, this, &tagnum);
+          long ltagnum = tagnum;
+          G__CurrentCall(G__DELETEFREE, this, &ltagnum);
           (*defaultconstructor)(&buf,(char*)NULL,para,0);
           G__CurrentCall(G__NOP, 0, 0);
           p = (void*)G__int(buf);
@@ -832,7 +833,8 @@ void* Cint::G__ClassInfo::New()
           G__ifunc_table_internal* internalifuncconst 
              = G__get_ifunc_internal(G__struct.rootspecial[tagnum]->defaultconstructorifunc);
           if(internalifuncconst && internalifuncconst->funcptr[0]){
-             G__CurrentCall(G__DELETEFREE, this, &tagnum);
+             long ltagnum = tagnum;
+             G__CurrentCall(G__DELETEFREE, this, &ltagnum);
              G__stub_method_calling(&buf, para, internalifuncconst, 0);
              G__CurrentCall(G__NOP, 0, 0);
              p = (void*)G__int(buf);
@@ -887,7 +889,8 @@ void* Cint::G__ClassInfo::New(int n)
       defaultconstructor
           =(G__InterfaceMethod)G__struct.rootspecial[tagnum]->defaultconstructor;
        if(defaultconstructor) {
-          G__CurrentCall(G__DELETEFREE, this, &tagnum);
+          long ltagnum = tagnum;
+          G__CurrentCall(G__DELETEFREE, this, &ltagnum);
           (*defaultconstructor)(&buf,(char*)NULL,para,0);
           G__CurrentCall(G__NOP, 0, 0);
           p = (void*)G__int(buf);
@@ -898,7 +901,8 @@ void* Cint::G__ClassInfo::New(int n)
           G__ifunc_table_internal* internalifuncconst 
              = G__get_ifunc_internal(G__struct.rootspecial[tagnum]->defaultconstructorifunc);
           if(internalifuncconst->funcptr[0]){
-             G__CurrentCall(G__DELETEFREE, this, &tagnum);
+             long ltagnum = tagnum;
+             G__CurrentCall(G__DELETEFREE, this, &ltagnum);
              G__stub_method_calling(&buf, para, internalifuncconst, 0);
              G__CurrentCall(G__NOP, 0, 0);
              p = (void*)G__int(buf);
@@ -973,7 +977,8 @@ void* Cint::G__ClassInfo::New(void *arena)
       defaultconstructor
           =(G__InterfaceMethod)G__struct.rootspecial[tagnum]->defaultconstructor;
        if(defaultconstructor) {
-          G__CurrentCall(G__DELETEFREE, this, &tagnum);
+          long ltagnum = tagnum;
+          G__CurrentCall(G__DELETEFREE, this, &ltagnum);
 #ifdef G__ROOT
          G__exec_alloc_lock();
 #endif
@@ -987,8 +992,8 @@ void* Cint::G__ClassInfo::New(void *arena)
           G__ifunc_table_internal* internalifuncconst 
              = G__get_ifunc_internal(G__struct.rootspecial[tagnum]->defaultconstructorifunc);
           if(internalifuncconst->funcptr[0]){
-
-             G__CurrentCall(G__DELETEFREE, this, &tagnum);
+             long ltagnum = tagnum;
+             G__CurrentCall(G__DELETEFREE, this, &ltagnum);
 #ifdef G__ROOT
          G__exec_alloc_lock();
 #endif
@@ -1049,7 +1054,8 @@ void* Cint::G__ClassInfo::New(int n, void *arena)
        if(defaultconstructor) {
           G__cpp_aryconstruct = n;
           G__setgvp((long)arena);
-          G__CurrentCall(G__DELETEFREE, this, &tagnum);
+          long ltagnum = tagnum;
+          G__CurrentCall(G__DELETEFREE, this, &ltagnum);
           (*defaultconstructor)(&buf,(char*)NULL,para,0);
           G__CurrentCall(G__NOP, 0, 0);
           G__setgvp((long)G__PVOID);
@@ -1348,8 +1354,8 @@ G__MethodInfo Cint::G__ClassInfo::AddMethod(const char* typenam,const char* fnam
   //////////////////////////////////////////////////
   // save type information
   G__TypeInfo type(typenam);
-  ifunc->type[index] =   type.Type();
-  ifunc->p_typetable[index] =   type.Typenum();
+  ifunc->type[index] = type.Type();
+  ifunc->p_typetable[index] = type.Typenum();
   ifunc->p_tagtable[index] = (short)type.Tagnum();
   ifunc->reftype[index] =   type.Reftype();
   ifunc->isconst[index] =   type.Isconst();

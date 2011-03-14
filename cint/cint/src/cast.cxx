@@ -221,11 +221,12 @@ void G__this_adjustment(G__ifunc_table_internal* ifunc, int ifn)
 G__value G__castvalue_bc(char* casttype, G__value result3, int bc)
 {
    // -- FIXME: Describe this function!
-   int lenitem, castflag, type;
+   size_t lenitem;
+   int castflag, type;
    int tagnum;
    long offset;
    int reftype = G__PARANORMAL;
-   int isconst = 0;
+   G__SIGNEDCHAR_T isconst = 0;
    char hasstar = 0;
    G__value store_result;
    store_result = result3;
@@ -578,7 +579,7 @@ G__value G__castvalue_bc(char* casttype, G__value result3, int bc)
          result3.typenum = -1;
       }
       if (type == '\0') {
-         int store_var_type = G__var_type;
+         char store_var_type = G__var_type;
          result3.typenum = G__defined_typename(casttype);
          G__var_type = store_var_type;
          if (result3.typenum == -1) {
@@ -609,7 +610,8 @@ G__value G__castvalue_bc(char* casttype, G__value result3, int bc)
                   type = 'i' + castflag;
                }
                else {
-                  G__castclass(&result3, tagnum, castflag, &lenitem, reftype);
+                  int dummy_type;
+                  G__castclass(&result3, tagnum, castflag, &dummy_type, reftype);
                }
             }
             else if ('u' == store_result.type) {

@@ -224,7 +224,7 @@ int Cint::G__DataMemberInfo::ArrayDim()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int Cint::G__DataMemberInfo::MaxIndex(int dim)
+size_t Cint::G__DataMemberInfo::MaxIndex(int dim)
 {
   if (IsValid()) {
     struct G__var_array* var = (struct G__var_array*) handle;
@@ -243,7 +243,7 @@ int Cint::G__DataMemberInfo::MaxIndex(int dim)
   return -1;
 }
 ///////////////////////////////////////////////////////////////////////////
-void Cint::G__DataMemberInfo::SetGlobalcomp(int globalcomp)
+void Cint::G__DataMemberInfo::SetGlobalcomp(G__SIGNEDCHAR_T globalcomp)
 {
   if(IsValid()) {
     struct G__var_array *var;
@@ -318,7 +318,7 @@ int Cint::G__DataMemberInfo::Prev()
 {
   struct G__var_array *var;
   static vector<void*> prevbuf;
-  static int prevbufindex;
+  static size_t prevbufindex;
   if(handle) {
     if(-1==index) {
       var = (struct G__var_array*)handle;
@@ -512,7 +512,7 @@ const char* Cint::G__DataMemberInfo::ValidArrayIndex(int *errnum, char **errstr)
 
   // First we remove white spaces.
   unsigned int i,j;
-  unsigned int indexvarlen = strlen(indexvar);
+  size_t indexvarlen = strlen(indexvar);
   for ( i=0,j=0; i<=indexvarlen; i++) {
     if (!isspace(indexvar[i])) {
        working.Set(j++, indexvar[i]);

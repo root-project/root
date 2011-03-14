@@ -1463,7 +1463,7 @@ int G__blockscope::read_initialization(G__TypeReader& type
 				       ,struct G__var_array* var,int ig15
 				       ,string& token,int c) {
 
-  int *varlabel = var->varlabel[ig15];
+  size_t *varlabel = var->varlabel[ig15];
 
   stdclear(token);
 
@@ -1812,7 +1812,7 @@ int G__blockscope::initstruct(G__TypeReader& type, struct G__var_array* var, int
     return c1;
   }
   int number_of_dimensions = var->paran[varid];
-  int& num_of_elements = var->varlabel[varid][1];
+  size_t& num_of_elements = var->varlabel[varid][1];
   const int& stride = var->varlabel[varid][0];
   // Check for an unspecified length array.
   int isauto = 0;
@@ -1854,7 +1854,7 @@ int G__blockscope::initstruct(G__TypeReader& type, struct G__var_array* var, int
   // Read and process the initializer specification.
   //
   int mparen = 1;
-  int linear_index = -1;
+  size_t linear_index = -1;
   buf.obj.i = var->p[varid] + memvar->p[memindex];
   G__FastAllocString expr(G__ONELINE);
   while (mparen) {
@@ -1954,7 +1954,7 @@ int G__blockscope::initscalarary(G__TypeReader& /*type*/, struct G__var_array* v
   // int   ary[n] = { 1,2,3 };
   //               ^
   G__FastAllocString expr(G__ONELINE);
-  int& num_of_elements = var->varlabel[ig15][1];
+  size_t& num_of_elements = var->varlabel[ig15][1];
   const int& stride = var->varlabel[ig15][0];
   // Check for an unspecified length array declaration.
   int isauto = 0;
@@ -2026,7 +2026,7 @@ int G__blockscope::initscalarary(G__TypeReader& /*type*/, struct G__var_array* v
   int mparen = 1;
   int inc = 0;
   int pi = num_of_dimensions;
-  int linear_index = 0;
+  size_t linear_index = 0;
   int prev = 0;
   int stringflag = 0;
    while (mparen) {
@@ -2064,7 +2064,7 @@ int G__blockscope::initscalarary(G__TypeReader& /*type*/, struct G__var_array* v
             }
          }
          // Default initialize omitted elements.
-         for (int i = prev + 1; i < linear_index; ++i) {
+         for (size_t i = prev + 1; i < linear_index; ++i) {
             m_bc_inst.LD(&G__null);
             m_bc_inst.LETNEWVAL();
             m_bc_inst.OP1(G__OPR_PREFIXINC);

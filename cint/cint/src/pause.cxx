@@ -567,7 +567,7 @@ void G__rewinddictionary()
    
 static void G__define_limit_var(G__DataMemberHandle &member, const char *name, double up, double down)
 {
-   int store_var_type = G__var_type;
+   char store_var_type = G__var_type;
    G__var_type = 'd';
    G__value value = G__null;
    value.type = 'd';
@@ -1540,7 +1540,7 @@ void G__debugvariable(FILE *fp,G__var_array *var,char *name)
                 );
         i=0;
         while(var->varlabel[ig15][i]) {
-          fprintf(fp,"[%d]",var->varlabel[ig15][i++]);
+          fprintf(fp,"[%ld]",var->varlabel[ig15][i++]);
         }
         fprintf(fp,"\n");
       }
@@ -1585,7 +1585,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
    G__FastAllocString command(G__LONGLINE);
    G__FastAllocString syscom(G__LONGLINE);
    G__FastAllocString editor(64);
-   int temp, temp1 = 0, temp2;
+   size_t temp, temp1 = 0, temp2;
    int index = -1;
    int ignore = G__PAUSE_NORMAL;
    short double_quote, single_quote;
@@ -1610,7 +1610,8 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
    G__value buf;
    FILE *G__temp;
    char *evalbase;
-   int base = 0 /* ,digit */ , num;
+   int base = 0 /* ,digit */;
+   unsigned int num;
    G__FastAllocString evalresult(G__ONELINE);
    FILE* store_stderr = NULL;
    FILE* store_stdout = NULL;
@@ -2243,8 +2244,6 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
        *******************************************************/
       struct G__store_env store;
       G__SET_TEMPENV;
-      int store_no_exec = G__no_exec;
-      G__no_exec = 0;
 
       char *com1;
       temp = 0;
@@ -2340,7 +2339,6 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       else {
          fprintf(G__sout, "Expecting . in filename\n");
       }
-      G__no_exec = store_no_exec;
       G__RESET_TEMPENV;
    }
    else if (
@@ -2862,10 +2860,10 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       /*******************************************************
        * Set view file
        *******************************************************/
-      for (temp = 0;temp < G__nfile;temp++) {
+      for (temp = 0;(long)temp < G__nfile;temp++) {
          if (G__matchfilename(temp, string)) break;
       }
-      if (temp >= G__nfile) {
+      if (temp >= (size_t)G__nfile) {
          G__fprinterr(G__serr, "filename %s not loaded\n", string);
       }
       else {

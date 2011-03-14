@@ -989,7 +989,7 @@ struct G__params {
    {
       reset();
    }
-   struct G__paramfunc* operator[](int idx)
+   struct G__paramfunc* operator[](char idx)
    {
       if (!fparams) {
          fparams = (struct G__paramfunc*) malloc(sizeof (struct G__paramfunc));
@@ -1165,7 +1165,7 @@ struct G__herits {
       }
       fherits = 0;
    }
-   struct G__herit* operator[](int idx)
+   struct G__herit* operator[](char idx)
    {
       if (!fherits) {
          fherits = (struct G__herit*) malloc(sizeof(struct G__herit));
@@ -1209,7 +1209,7 @@ struct G__var_array {
   int allvar;
   char *varnamebuf[G__MEMDEPTH]; /* variable name */
   int hash[G__MEMDEPTH];                    /* hash table of varname */
-  int varlabel[G__MEMDEPTH+1][G__MAXVARDIM];  /* points varpointer */
+  size_t varlabel[G__MEMDEPTH+1][G__MAXVARDIM];  /* points varpointer */
   short paran[G__MEMDEPTH];
   char bitfield[G__MEMDEPTH];
   char is_init_aggregate_array[G__MEMDEPTH];

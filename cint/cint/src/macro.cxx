@@ -507,7 +507,7 @@ static int G__getparameterlist(char* paralist, G__Charlist* charlist)
             strcat(charlist->string, " ");  // Okay we just allocated enough space
       }
       else {
-         int i = strlen(charlist->string);
+         size_t i = strlen(charlist->string);
          while (i > 0 && charlist->string[i-1] == ' ') {
             --i;
          }
@@ -820,8 +820,8 @@ int G__execfuncmacro_noexec(const char* macroname)
    //  Hash the name.
    //
    int hash = 0;
-   int i = 0;
-   G__hash(funcmacro, hash, i)
+   int hash_i = 0;
+   G__hash(funcmacro, hash, hash_i)
    //
    //  Search for macro func name.
    //
@@ -845,8 +845,8 @@ int G__execfuncmacro_noexec(const char* macroname)
    //  Snarf the arg list.
    //
    *p = '(';
-   int c = G__fgetstream_spaces(funcmacro, p - funcmacro.data() + 1, ")");
-   i = strlen(funcmacro);
+   char c = G__fgetstream_spaces(funcmacro, p - funcmacro.data() + 1, ")");
+   size_t i = strlen(funcmacro);
    funcmacro.Resize(i + 2);
    funcmacro[i++] = c;
    funcmacro[i] = '\0';

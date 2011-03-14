@@ -34,8 +34,8 @@ G__value G__getexpr(const char* expression);
 G__value G__getprod(char* expression1);
 G__value G__getpower(const char* expression2);
 G__value G__getitem(const char* item);
-int G__test(const char* expr);
-int G__btest(int operator2, G__value lresult, G__value rresult);
+long G__test(const char* expr);
+long G__btest(int operator2, G__value lresult, G__value rresult);
 long double G__atolf(const char* expr);
 
 // Functions in the C interface.
@@ -536,7 +536,7 @@ static void G__getiparseobject(G__value* result, char* item)
    // assert(xx != 0);
    result->type = item[2];
    result->obj.reftype.reftype = (int)(item[3] - '0');
-   result->isconst = (int)(item[4] - '0');
+   result->isconst = (G__SIGNEDCHAR_T)(item[4] - '0');
    result->typenum = -1;
    *xx = 0;
    result->tagnum = atoi(xtmp);
@@ -550,7 +550,7 @@ static void G__getiparseobject(G__value* result, char* item)
 static G__value G__conditionaloperator(G__value defined, const char* expression, int ig1, char* ebuf)
 {
    // -- Evaluate a?b:c operator.
-   int tempop = 0;
+   long tempop = 0;
    int ppointer = 0;
    int store_no_exec_compile = 0;
    // Evalulate the condition.
@@ -1106,15 +1106,15 @@ G__value G__getexpr(const char* expression)
    int op = 0;               /* operator stack pointer */
    int unaopr[G__STACKDEPTH]; /* unary operator stack */
    int up = 0;                    /* unary operator stack pointer */
-   int c; /* temp char */
+   char c; /* temp char */
    int ig1 = 0;  /* input expression pointer */
    int nest = 0; /* parenthesis nesting state variable */
    int single_quote = 0, double_quote = 0; /* quotation flags */
-   int iscastexpr = 0; /* whether this expression start with a cast */
+   long iscastexpr = 0; /* whether this expression start with a cast */
    G__value defined = G__null;
-   int store_var_type = G__var_type;
+   char store_var_type = G__var_type;
    int explicitdtor = 0;
-   int inew = 0; /* ON994 */
+   size_t inew = 0; /* ON994 */
    int pp_and = 0, pp_or = 0;
    int ppointer_and[G__STACKDEPTH], ppointer_or[G__STACKDEPTH];
    int store_no_exec_compile_and[G__STACKDEPTH];
@@ -1124,18 +1124,18 @@ G__value G__getexpr(const char* expression)
    //
    // Return null for no expression.
    //
-   int length = strlen(expression);
+   size_t length = strlen(expression);
    if (!length) {
       return G__null;
    }
 
    G__FastAllocString ebuf(length);
-   int lenbuf = 0;
+   size_t lenbuf = 0;
 
    //
    // Operator expression.
    //
-   for (ig1 = 0; ig1 < length; ++ig1) {
+   for (ig1 = 0; ig1 < (int)length; ++ig1) {
       c = expression[ig1];
       if (!single_quote && !double_quote) {
          if (lenbuf > 1 && ebuf[lenbuf - 1] == ' ') {
@@ -1501,8 +1501,8 @@ G__value G__getprod(char* expression1)
    G__FastAllocString ebuf1(G__ONELINE);
    int operator1, prodpower = 0;
    int lenbuf1 = 0;
-   int ig11, ig2;
-   int length1;
+   size_t ig11, ig2;
+   size_t length1;
    int nest1 = 0;
    int single_quote = 0, double_quote = 0;
 
@@ -1992,7 +1992,7 @@ G__value G__getitem(const char* item)
 
 //______________________________________________________________________________
 extern "C"
-int G__test(const char* expr)
+long G__test(const char* expr)
 {
    G__value result = G__getexpr(expr);
    if (result.type == 'u') {
@@ -2003,7 +2003,7 @@ int G__test(const char* expr)
 
 //______________________________________________________________________________
 extern "C"
-int G__btest(int operator2, G__value lresult, G__value rresult)
+long G__btest(int operator2, G__value lresult, G__value rresult)
 {
    // --
    if (lresult.type == 'u' || rresult.type == 'u') {

@@ -22,7 +22,7 @@ int G__fgetstream_template(G__FastAllocString& string, size_t offset, const char
 int G__getstream_template(const char* source, int* isrc,G__FastAllocString&  string, size_t offset, const char* endmark);
 int G__fgetname(G__FastAllocString& string, size_t offset, const char *endmark);
 int G__getname(const char* source, int* isrc, char* string, const char* endmark);
-static int G__getfullpath(G__FastAllocString &string, char* pbegin, int i);
+static size_t G__getfullpath(G__FastAllocString &string, char* pbegin, size_t i);
 int G__fdumpstream(G__FastAllocString& string, size_t offset, const char *endmark);
 int G__fgetstream(G__FastAllocString& string, size_t offset, const char *endmark);
 void G__fgetstream_peek(char* string, int nchars);
@@ -1595,7 +1595,7 @@ int G__getname(const char* source, int* isrc, char* string, const char* endmark)
 }
 
 //______________________________________________________________________________
-static int G__getfullpath(G__FastAllocString &string, char* pbegin, int i)
+static size_t G__getfullpath(G__FastAllocString &string, char* pbegin, size_t i)
 {
    int tagnum = -1, typenum;
    string.Set(i, '\0');

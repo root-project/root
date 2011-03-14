@@ -1540,7 +1540,7 @@ int G__main(int argc, char** argv)
        * from G__main() before destroying data.
        *************************************************************/
       if (G__othermain == 2) {
-         return G__int(result);
+         return (int)G__int(result);
       }
       /*************************************
        * atexit()
@@ -1548,7 +1548,7 @@ int G__main(int argc, char** argv)
        * file close
        *************************************/
       G__interpretexit();
-      return G__int(result);
+      return (int)G__int(result);
    }
 #ifdef G__TCLTK
    else if (G__ismain == G__TCLMAIN) {
@@ -2049,7 +2049,7 @@ static void G__defineMacro(const char* name, long value, const char* cintname = 
       snprintf(end + 1, G__ONELINE - (end-temp), "=%ld", value);
       while (cap && end != start) {
          // capitalize the CINT macro name
-         *end = toupper(*end);
+         *end = (char)toupper(*end);
          --end;
       }
    }
@@ -2525,7 +2525,7 @@ G__ConstStringList* G__AddConstStringList(G__ConstStringList* current, char* str
    strcpy(next->string, str); // Okay we allocated enough memory
 
    if (islen) {
-      next->hash = strlen(str);
+      next->hash = (int)strlen(str);
    }
    else {
       G__hash(str, next->hash, itemp);

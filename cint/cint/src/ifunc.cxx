@@ -413,7 +413,7 @@ void G__add_label_bytecode(char* label)
 {
    // -- FIXME: Describe this function!
    if (G__nlabel < G__MAXGOTOLABEL) {
-      int len = strlen(label);
+      size_t len = strlen(label);
       if (len) {
          G__labeltable[G__nlabel].pc = G__asm_cp;
          label[len-1] = 0;
@@ -432,7 +432,7 @@ void G__add_jump_bytecode(char* label)
 {
    // -- FIXME: Describe this function!
    if (G__ngoto < G__MAXGOTOLABEL) {
-      int len = strlen(label);
+      size_t len = strlen(label);
       if (len) {
          G__gototable[G__ngoto].pc = G__asm_cp + 1;
          G__asm_inst[G__asm_cp] = G__JMP;
@@ -652,7 +652,7 @@ void G__make_ifunctable(G__FastAllocString &funcheader)
             }
          }
       }
-      G__var_type = toupper(G__var_type);
+      G__var_type = (char)toupper(G__var_type);
    }
    else {
       if (strncmp(funcheader, "operator ", 9) == 0) {
@@ -1134,7 +1134,7 @@ void G__make_ifunctable(G__FastAllocString &funcheader)
    }
    cin = G__fgetstream_template(paraname, 0, ",;{(");
    if ('(' == cin) {
-      int len = strlen(paraname);
+      size_t len = strlen(paraname);
       paraname.Resize(len + 10);
       paraname[len++] = cin;
       cin = G__fgetstream(paraname, len, ")");
@@ -1461,7 +1461,7 @@ void G__make_ifunctable(G__FastAllocString &funcheader)
             ifunc->isconst[iexist] |= G__p_ifunc->isconst[func_now];
             ifunc->isexplicit[iexist] |= G__p_ifunc->isexplicit[func_now];
 
-            for (iin = 0;iin < paranu;iin++) {
+            for (iin = 0;(long)iin < paranu;iin++) {
                ifunc->param[iexist][iin]->reftype
                = G__p_ifunc->param[func_now][iin]->reftype;
                ifunc->param[iexist][iin]->p_typetable
@@ -1996,7 +1996,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                      )
                   ) {
                      // read 'MyFunc(int [][30])' or 'MyFunc(int [])'
-                     int len = strlen(param_name);
+                     size_t len = strlen(param_name);
                      param_name.Resize(len + 2);
                      param_name[len++] = c;
                      param_name[len++] = ']';
@@ -2066,7 +2066,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                   {
                      // Handle any ref part of the return type.
                      // FIXME: This is wrong, cannot have a pointer to a reference!
-                     int i = strlen(buf);
+                     size_t i = strlen(buf);
                      if (type == 'm' || type == 'n' || type == 'q') {
                         // prepend "long":
                         G__FastAllocString tmplong(i + 5 /*long*/);
@@ -2151,7 +2151,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                            ++arydim;
                            if ((G__globalcomp < G__NOLINK) && (arydim == 2)) { // We are generating dictionaries and this is the second array bound.
                               // -- We are generating dictionaries and have just seen the beginning of the second array bound.
-                              int len = strlen(param_name);
+                              size_t len = strlen(param_name);
                               if (param_name[0] == ']') {
                                  len = 0;
                               }
@@ -2193,14 +2193,14 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
          ifunc->param[func_now][iin]->def = (char*) malloc(strlen(buf) + 1);
          strcpy(ifunc->param[func_now][iin]->def, buf); // Okay we allocated enough sapce
          if (buf[0] == '(') {
-            int len = strlen(buf);
+            size_t len = strlen(buf);
             if (
                (len > 5) &&
                (buf[len-4] != '*') &&
                !strcmp(")()", buf + len - 3) &&
                strchr(buf, '<')
             ) {
-               int i = 1;
+               size_t i = 1;
                for (; i < len - 3; ++i) {
                   buf[i-1] = buf[i];
                }
@@ -4659,7 +4659,7 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
                case 'm':
                   /* std conv */
                   if (G__PARAREFERENCE == formal_reftype) {
-                     param->obj.d = param->obj.i;
+                     param->obj.d = (double)param->obj.i;
                      param->type = formal_type;
                      param->ref = 0;
                   }

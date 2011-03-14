@@ -18,7 +18,7 @@
 
 extern "C" {
 
-static int G__tempfilenum = G__MAXFILE - 1;
+static short G__tempfilenum = G__MAXFILE - 1;
 
 // Static functions.
 static int G__findfuncposition(const char* func, int* pline, int* pfnum);
@@ -160,7 +160,7 @@ static G__value G__exec_tempfile_core(const char* file, FILE* fp)
    int store_asm_dt;
    int store_asm_index; /* maybe unneccessary */
 
-   int len;
+   size_t len;
 
    fpos_t pos;
    char store_var_type;
@@ -398,7 +398,7 @@ int G__display_proto_pretty(FILE* fp, const char* func, const char friendlyStyle
    /* int temp1; */
    int tagnum;
    struct G__ifunc_table_internal *ifunc;
-   int i = 0;
+   size_t i = 0;
 
    while (isspace(func[i])) ++i;
    funcname = func + i;
@@ -531,8 +531,7 @@ void G__BREAKfgetc()
       G__break = 1;
       G__setdebugcond();
       if (G__srcfile[G__ifile.filenum].breakpoint) {
-         G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number]
-         &= G__NOCONTUNTIL;
+         G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number] &= G__NOCONTUNTIL;
       }
    }
 #else
@@ -830,7 +829,7 @@ G__value G__exec_text(const char* unnamedmacro)
    int ccomment = 0, cppcomment = 0;
    G__value buf;
    FILE *fp;
-   int i, len;
+   size_t i, len;
    int addmparen = 0;
    int addsemicolumn = 0;
    int istmpnam = 0;
