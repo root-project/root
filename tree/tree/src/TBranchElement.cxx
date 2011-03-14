@@ -2120,7 +2120,7 @@ Double_t TBranchElement::GetValue(Int_t j, Int_t len, Bool_t subarr) const
    }
 
    if (!j && fBranchCount) {
-      Int_t entry = fTree->GetReadEntry();
+      Long64_t entry = fTree->GetReadEntry();
       // Since reloading the index, will reset the ClonesArray, let's
       // skip the load if we already read this entry.
       if (entry != fBranchCount->GetReadEntry()) {
@@ -2205,7 +2205,7 @@ void* TBranchElement::GetValuePointer() const
    }
 
    if (fBranchCount) {
-      Int_t entry = fTree->GetReadEntry();
+      Long64_t entry = fTree->GetReadEntry();
       fBranchCount->TBranch::GetEntry(entry);
       if (fBranchCount2) fBranchCount2->TBranch::GetEntry(entry);
    }
@@ -2779,9 +2779,9 @@ Bool_t TBranchElement::IsMissingCollection() const
    Bool_t ismissing = kFALSE;
    TBasket* basket = (TBasket*) fBaskets.UncheckedAt(fReadBasket);
    if (basket && fTree) {
-      Int_t entry = fTree->GetReadEntry();
-      Int_t first  = fBasketEntry[fReadBasket];
-      Int_t last;
+      Long64_t entry = fTree->GetReadEntry();
+      Long64_t first  = fBasketEntry[fReadBasket];
+      Long64_t last;
       if (fReadBasket == fWriteBasket) {
          last = fEntryNumber - 1;
       } else {
