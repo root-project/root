@@ -152,6 +152,7 @@ void TGSpeedo::Build()
             for (i=0; i<5; i++) {
                mark[i] /= 10.0;
             }
+            // coverity[loop_condition]: intentionally break the while loop
             if (mark[4] < 1000.0) break;
          }
          // draw multiplier
@@ -166,6 +167,7 @@ void TGSpeedo::Build()
             for (i=0; i<5; i++) {
                mark[i] *= 10.0;
             }
+            // coverity[loop_condition]: intentionally break the while loop
             if (mark[4] > 99.9 ) break;
          }
          // draw multiplier
