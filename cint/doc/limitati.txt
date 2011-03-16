@@ -333,6 +333,10 @@ Limitation of CINT
       static const float a4[n]={1,2,3,4,5};  // not recommended
     }
 
+ + array versus pointer
+   In C++, f(T* p) and f(T p[]) are equivalent. CINT prefers the first
+   form; the second can cause problems for compound types T.
+
 # Preprocessor statements:
 
    Cint has limitations in handling define macros in default mode. Following
