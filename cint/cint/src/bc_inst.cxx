@@ -167,7 +167,7 @@ void G__bc_inst::LD(G__value *pval) {
 * LD
 **************************************************************************/
 void G__bc_inst::LD(int a) {
-  G__value val;
+  G__value val = G__null;
   val.obj.d = 0.0;
   G__letint(&val,'i',(long)a);
   val.isconst=G__CONSTVAR;
