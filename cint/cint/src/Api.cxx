@@ -58,7 +58,7 @@ extern "C" void G__TypeInfo2G__value(G__TypeInfo* type,G__value* pvalue
 extern "C" G__value G__APIGetSpecialValue_layer1(char *item,void **pptr
 	,void **ppdict)
 {
-  G__value result;
+  G__value result = G__null;
   long l;
   double d;
   G__TypeInfo typeinfo;
