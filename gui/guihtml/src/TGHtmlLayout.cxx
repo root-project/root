@@ -236,6 +236,7 @@ TGHtmlElement *TGHtmlLayoutContext::GetLine(TGHtmlElement *p_start,
          p = p->fPNext;
       }
    }
+   // coverity[dead_error_line]
    for (; p && p != p_end; p = p ? p->fPNext : 0) {
       if (p->fStyle.fFlags & STY_Invisible) continue;
       switch (p->fType) {
