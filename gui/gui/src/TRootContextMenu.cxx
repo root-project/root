@@ -481,6 +481,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
             // Find out whether we have options ...
 
             TList *opt;
+            // coverity[returned_pointer]: keep for later use
             if ((opt = m->GetOptions())) {
                Warning("Dialog", "option menu not yet implemented");
 #if 0

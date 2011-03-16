@@ -831,6 +831,7 @@ TGDimension TGTileLayout::GetDefaultSize() const
    x = fSep; y = fSep << 1;
 
    next.Reset();
+   // coverity[returned_pointer]
    while ((ptr = (TGFrameElement *) next())) {
       x += max_osize.fWidth + fSep;
       if (x + max_osize.fWidth > max_size.fWidth) {
@@ -857,6 +858,7 @@ void TGListLayout::Layout()
    fModified = kFALSE;
 
    TIter next(fList);
+   // coverity[returned_pointer]
    while ((ptr = (TGFrameElement *) next())) {
       csize = ptr->fFrame->GetDefaultSize();
       max_osize.fWidth  = TMath::Max(max_osize.fWidth, csize.fWidth);

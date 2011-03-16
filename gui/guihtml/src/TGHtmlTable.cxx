@@ -572,6 +572,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
                   GetTokenName(((TGHtmlCell *)p)->fPEnd)));
 
             if (noWrap) {
+               // coverity[returned_pointer]
                if ((z = p->MarkupArg("rowspan", 0)) == 0) { // Hack ???
                //minW = (requestedW > 0 ? requestedW : maxW);
                } else {
