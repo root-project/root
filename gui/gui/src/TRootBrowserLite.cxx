@@ -2046,6 +2046,7 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          switch (GET_SUBMSG(msg)) {
 
             case kCT_ITEMCLICK:
+               // coverity[mixed_enums]: ignore
                if (parm1 == kButton1 || parm1 == kButton3) {
                   HideTextEdit();
                   TGListTreeItem *item2;

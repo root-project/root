@@ -1983,12 +1983,13 @@ Bool_t TGFontPool::ParseFontName(const char *string, FontAttributes_t *fa)
 
    while ((s = GetToken(0))) {
       n = FindStateNum(gWeightMap, s);
-      if (n != kFontWeightUnknown) {
+      if ((EFontWeight)n != kFontWeightUnknown) {
          fa->fWeight = n;
          continue;
       }
       n = FindStateNum(gSlantMap, s);
-      if (n != kFontSlantUnknown) {
+      // coverity[mixed_enums]: ignore
+      if ((EFontSlant)n != kFontSlantUnknown) {
          fa->fSlant = n;
          continue;
       }
