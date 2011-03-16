@@ -416,7 +416,7 @@ void TAxisEditor::DoDivisions()
    if (fAvoidSignal) return;
    Int_t div = (Int_t)(fDiv1->GetNumber() + fDiv2->GetNumber()  * 100 
                                           + fDiv3->GetNumber() * 10000);
-   fAxis->SetNdivisions(div, fOptimize->GetState());
+   fAxis->SetNdivisions(div, (fOptimize->GetState() != kButtonUp));
    Update();
 }
 
