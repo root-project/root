@@ -1120,7 +1120,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    TGHtmlElement *pEnd1;       // The </table> element
    TGHtmlElement *p;           // For looping thru elements of the table
    TGHtmlElement *fPNext;       // Next element in the loop
-   TGHtmlElement *pCaption;    // Start of the caption text.  The <caption>
+   TGHtmlElement *pCaption=0;  // Start of the caption text.  The <caption>
    TGHtmlElement *pEndCaption; // End of the caption.  The </caption>
    int width;               // Width of the table as drawn
    int cellSpacing;         // Value of cellspacing= parameter to <table>
@@ -1164,6 +1164,8 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    TRACE_PUSH(HtmlTrace_Table2);
    TRACE(HtmlTrace_Table2, ("Starting TableLayout() at %s\n",
                             fHtml->GetTokenName(pTable)));
+
+   for (i=0;i<N;i++) ymax[i]=0;
 
    // Figure how much horizontal space is available for rendering
    // this table.  Store the answer in lineWidth.  left_margin is
