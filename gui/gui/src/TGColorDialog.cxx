@@ -402,6 +402,7 @@ TGColorPick::TGColorPick(const TGWindow *p, Int_t w, Int_t h, Int_t id) :
 
    if (!p) {
       MakeZombie();
+      // coverity[uninit_member]
       return;
    }
    CreateImages();

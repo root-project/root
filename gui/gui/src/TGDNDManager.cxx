@@ -192,6 +192,7 @@ TGDNDManager::TGDNDManager(TGFrame *toplevel, Atom_t * /*typelist*/)
    // TGDNDManager constructor.
 
    if (gDNDManager)
+      // coverity[uninit_member]: already done
       return;
 
    fMain = toplevel;
