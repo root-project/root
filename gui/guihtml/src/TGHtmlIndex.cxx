@@ -362,6 +362,7 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
    switch (*base) {
       case '1': case '2': case '3': case '4': case '5':
       case '6': case '7': case '8': case '9': case '0':
+         // coverity[secure_coding]
          n = sscanf(base, "%d.%d", &x, &y);
          if (n > 0) {
             p = *ppToken = TokenByIndex(x, 0);

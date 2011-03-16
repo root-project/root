@@ -121,6 +121,7 @@ static void GetLetterIndex(char *zBuf, int index, int isUpper)
    int seed;
 
    if (index < 1 || index > 52) {
+      // coverity[secure_coding]: zBuf is large enough for an integer
       sprintf(zBuf, "%d", index);
       return;
    }
@@ -182,6 +183,7 @@ static void GetRomanIndex(char *zBuf, int index, int isUpper)
    };
 
    if (index < 1 || index >= 5000) {
+      // coverity[secure_coding]: zBuf is large enough for an integer
       sprintf(zBuf, "%d", index);
       return;
    }
@@ -384,6 +386,7 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
             y = li->fY;
             switch (li->fLtype) {
                case LI_TYPE_Enum_1:
+                  // coverity[secure_coding]: zBuf is large enough for an int
                   sprintf(zBuf, "%d.", li->fCnt);
                   break;
                case LI_TYPE_Enum_A:

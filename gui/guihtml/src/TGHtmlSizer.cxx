@@ -578,7 +578,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             zUrl = ResolveUri(zUrl);
             if (zUrl == 0) zUrl = StrDup("");
             zMethod = p->MarkupArg("method", "GET");
-            sprintf(zToken, " %d form ", form->fFormId);
+            snprintf(zToken, 50, " %d form ", form->fFormId);
             cmd.Append("Form:");
             cmd.Append(zToken);
             cmd.Append(zUrl);
@@ -1089,6 +1089,7 @@ void TGHtml::Sizer()
       p = fLastSized->fPNext;
    }
 
+   // coverity[dead_error_line]
    for (; !stop && p; p = p ? p->fPNext : 0) {
       if (p->fStyle.fFlags & STY_Invisible) {
          p->fFlags &= ~HTML_Visible;

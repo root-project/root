@@ -299,6 +299,7 @@ const char *TGHtml::GetPctWidth(TGHtmlElement *p, char *opt, char *ret)
 
    z = pElem->MarkupArg(opt, "");
    if (!strchr(z, '%')) return z;
+   // coverity[secure_coding]
    if (!sscanf(z, "%d", &n)) return z;
    if (n < 0 || n > 100) return z;
    if (opt[0] == 'h') {
@@ -312,6 +313,7 @@ const char *TGHtml::GetPctWidth(TGHtmlElement *p, char *opt, char *ret)
       while (pElem && pElem->fType != Html_TD) pElem = pElem->fPPrev;
       if (!pElem) return z;
       tz = pElem->MarkupArg(opt, 0);
+      // coverity[secure_coding]
       if (tz && !strchr(tz, '%') && sscanf(tz, "%d", &m)) {
          snprintf(ret, 15, "%d", m * 100 / n);
          return ret;
@@ -319,6 +321,7 @@ const char *TGHtml::GetPctWidth(TGHtmlElement *p, char *opt, char *ret)
       pElem = ((TGHtmlCell *)pElem)->fPTable;
       if (!pElem) return z;
       tz = pElem->MarkupArg(opt, 0);
+      // coverity[secure_coding]
       if (tz && !strchr(tz, '%') && sscanf(tz, "%d", &m)) {
          snprintf(ret, 15, "%d", m * 100 / n);
          return ret;

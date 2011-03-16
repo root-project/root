@@ -943,6 +943,7 @@ makeMarkupEntry:
                pIsInNoFrames = 1;
             case Html_NOSCRIPT:
                break;
+               // coverity[unreachable]
                if (!fHasScript) break;
                pIsInNoScript = 1;
             case Html_SCRIPT:
@@ -1081,6 +1082,7 @@ void TGHtml::TokenizerAppend(const char *text)
    } else if (fNText + len >= fNAlloc) {
       fNAlloc += len + 100;
       char *tmp = new char[fNAlloc];
+      // coverity[secure_coding]
       strcpy(tmp, fZText);
       delete[] fZText;
       fZText = tmp;
@@ -1092,6 +1094,7 @@ void TGHtml::TokenizerAppend(const char *text)
       return;
    }
 
+   // coverity[secure_coding]
    strcpy(&fZText[fNText], text);
    fNText += len;
    fNComplete = Tokenize();
@@ -1131,6 +1134,7 @@ TGHtmlElement *TGHtml::InsertToken(TGHtmlElement *pToken,
       pElem = new TGHtmlTextElement(zArgs ? strlen(zArgs) : 0);
       if (pElem == 0) return 0;
       if (zArgs) {
+         // coverity[secure_coding]
          strcpy (((TGHtmlTextElement *)pElem)->fZText, zArgs);
          pElem->fCount = strlen(zArgs);
       }
@@ -1331,19 +1335,19 @@ char *TGHtml::DumpToken(TGHtmlElement *p)
    const char *zName;
 
    if (p == 0) {
-      sprintf(zBuf, "NULL");
+      snprintf(zBuf, 200, "NULL");
       return zBuf;
    }
    switch (p->fType) {
       case Html_Text:
-         sprintf(zBuf, "text: \"%.*s\"", p->fCount, ((TGHtmlTextElement *)p)->fZText);
+         snprintf(zBuf, 200, "text: \"%.*s\"", p->fCount, ((TGHtmlTextElement *)p)->fZText);
          break;
 
       case Html_Space:
          if (p->fFlags & HTML_NewLine) {
-            sprintf(zBuf, "space: \"\\n\"");
+            snprintf(zBuf, 200, "space: \"\\n\"");
          } else {
-            sprintf(zBuf, "space: \" \"");
+            snprintf(zBuf, 200, "space: \" \"");
          }
          break;
 
@@ -1352,9 +1356,9 @@ char *TGHtml::DumpToken(TGHtmlElement *p)
          if (block->fN > 0) {
             int n = block->fN;
             if (n > 150) n = 150;
-               sprintf(zBuf, "<Block z=\"%.*s\">", n, block->fZ);
+               snprintf(zBuf, 200, "<Block z=\"%.*s\">", n, block->fZ);
             } else {
-               sprintf(zBuf, "<Block>");
+               snprintf(zBuf, 200, "<Block>");
             }
             break;
       }
@@ -1366,12 +1370,13 @@ char *TGHtml::DumpToken(TGHtmlElement *p)
          } else {
             zName = "Unknown";
          }
-         sprintf(zBuf, "markup (%d) <%s", p->fType, zName);
+         snprintf(zBuf, 200, "markup (%d) <%s", p->fType, zName);
          for (j = 1 ; j < p->fCount; j += 2) {
-            sprintf(&zBuf[strlen(zBuf)], " %s=\"%s\"",
+            snprintf(&zBuf[strlen(zBuf)], 200-strlen(zBuf), " %s=\"%s\"",
                     ((TGHtmlMarkupElement *)p)->fArgv[j-1],
                     ((TGHtmlMarkupElement *)p)->fArgv[j]);
          }
+         // coverity[secure_coding]
          strcat(zBuf, ">");
          break;
    }
@@ -1415,6 +1420,7 @@ char *TGHtml::GetTokenName(TGHtmlElement *p)
 
    zBuf[0] = 0;
    if (p == 0) {
+      // coverity[secure_coding]: zBuf is large enough
       strcpy(zBuf, "NULL");
       return zBuf;
    }
