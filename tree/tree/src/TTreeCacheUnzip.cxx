@@ -1254,6 +1254,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
 
    fUnzipDoneCondition->Signal();
 
+   delete [] ptr;
    return 0;
 }
 

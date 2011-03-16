@@ -1762,6 +1762,8 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       }
       if (hf == 0) {
          Error("WriteProxy","Unable to open the file %s for writing.",fHeaderFileName.Data());
+         delete [] filename;
+         delete [] cutfilename;
          return;
       }
 
