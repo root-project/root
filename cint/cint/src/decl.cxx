@@ -2727,7 +2727,7 @@ void G__define_var(int tagnum, int typenum)
             }
             // Memory allocation and variable creation.
             store_struct_offset = G__store_struct_offset;
-            if (G__struct.iscpplink[tagnum] != G__CPPLINK) {
+            if (tagnum >= 0 && G__struct.iscpplink[tagnum] != G__CPPLINK) {
                // -- Interpreted class, allocate memory now.
                G__var_type = var_type;
                G__decl_obj = 1;
