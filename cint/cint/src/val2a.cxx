@@ -1112,7 +1112,7 @@ int G__getdigit(unsigned int number)
 //______________________________________________________________________________
 G__value G__checkBase(const char* string, int* known4)
 {
-   G__value result4;
+   G__value result4 = G__null;
    int n = 0, nchar, base = 0;
    G__uint64 value = 0, tristate = 0;
    char type;
