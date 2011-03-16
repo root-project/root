@@ -1129,6 +1129,7 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t /*entry*/)
 
    // Calculate the first values
    if (fSelect) {
+      // coverity[var_deref_model] fSelectMultiple==kTRUE => fSelect != 0 
       fW[fNfill] = fWeight*fSelect->EvalInstance(0);
       if (!fW[fNfill] && !fSelectMultiple) return;
    } else fW[fNfill] = fWeight;
@@ -1153,6 +1154,7 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t /*entry*/)
 
    for (Int_t i=1;i<ndata;i++) {
       if (fSelectMultiple) {
+         // coverity[var_deref_model] fSelectMultiple==kTRUE => fSelect != 0 
          ww = fWeight*fSelect->EvalInstance(i);
          if (ww == 0) continue;
          if (fNfill == nfill0) {
