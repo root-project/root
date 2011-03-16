@@ -179,6 +179,7 @@ void TProofProgressLog::Init(Int_t w, Int_t h)
    vlines_buttons->AddFrame(label11, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2));
 
    fLinesFrom = new TGNumberEntry(vlines_buttons, 0, 5, -1, TGNumberFormat::kNESInteger);
+   // coverity[negative_returns]: no problem with -100, the format is kNESInteger
    fLinesFrom->SetIntNumber(-100);
    fLinesFrom->GetNumberEntry()->SetToolTipText("Negative values indicate \"tail\" action");
 

@@ -465,6 +465,7 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
          TGNumberFormat::kNESInteger, TGNumberFormat::kNEAAnyNumber,
          TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 1, 2,
          0, 22, 0, 0, 8));
+   // coverity[negative_returns]: no problem with -1, the format is kNESInteger
    fNumEntries->SetIntNumber(-1);
    // add "First Entry" label and number entry
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "First entry :"),
