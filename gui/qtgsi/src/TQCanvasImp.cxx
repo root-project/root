@@ -55,6 +55,7 @@ TQCanvasImp::TQCanvasImp(TCanvas* /*v*/) : TCanvasImp()
 {
    // TQCanvasImp ctor
 
+   fQCanvas = 0;
 }
 
 //______________________________________________________________________________
