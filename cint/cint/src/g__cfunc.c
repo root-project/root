@@ -1435,7 +1435,11 @@ int hash;
     if(G__no_exec_compile) {
       G__letint(result7,'u',(long)0);
       result7->typenum = G__defined_typename("div_t");
-      result7->tagnum = G__newtype.tagnum[result7->typenum];
+      if (result7->typenum >= 0) {
+         result7->tagnum = G__newtype.tagnum[result7->typenum];
+      } else {
+         result7->tagnum = -1;
+      }
       return(1);
     }
     result7->typenum = G__defined_typename("div_t");
