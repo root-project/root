@@ -499,6 +499,7 @@ static void G__fileerror(char *fname)
    G__FastAllocString buf(G__MAXFILENAME);
    buf.Format("Error opening %s",fname);
    perror(buf);
+   // coverity[exception_thrown]: we don't care.
    throw std::runtime_error(std::string("CINT: error opening ") + fname);
 }
 
