@@ -2359,6 +2359,7 @@ static inline Int_t MapKeySym(int key, bool toQt=true)
            return   UInt_t(gKeyQMap[i].fQKeySym);
         }
       } else {
+        // coverity[mixed_enums]: ignore
         if (key ==  gKeyQMap[i].fQKeySym) {
            return   UInt_t(gKeyQMap[i].fKeySym);
         }
