@@ -1816,7 +1816,7 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
 #ifdef G__ASM_DBG
             if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: GETRSVD $%s 0x%x\n", pc, sp, (char*) G__asm_inst[pc+1], G__int(G__asm_stack[sp-1]));
 #endif
-            G__asm_stack[sp-1] = (*G__GetSpecialObject)((char*) G__asm_inst[pc+1], (void**) G__int(G__asm_stack[sp-1]), (void**) G__int(G__asm_stack[sp-1]) + G__LONGALLOC);
+            G__asm_stack[sp-1] = (*G__GetSpecialObject)((char*) G__asm_inst[pc+1], (void**) G__int(G__asm_stack[sp-1]), (void**) (G__int(G__asm_stack[sp-1]) + G__LONGALLOC));
             pc += 2;
 #ifdef G__ASM_DBG
             break;
