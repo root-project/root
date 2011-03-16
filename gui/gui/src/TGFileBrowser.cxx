@@ -592,6 +592,7 @@ void TGFileBrowser::Refresh(Bool_t /*force*/)
 
    TTimer::SingleShot(200, "TGFileBrowser", this, "Update()");
    return; // disable refresh for the time being...
+   // coverity[unreachable]
    TCursorSwitcher cursorSwitcher(this, fListTree);
    static UInt_t prev = 0;
    UInt_t curr =  gROOT->GetListOfBrowsables()->GetSize();
