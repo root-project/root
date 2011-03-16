@@ -890,6 +890,7 @@ void G__make_ifunctable(G__FastAllocString &funcheader)
     */
    if (
 #ifdef G__NEWINHERIT
+      G__tagdefining >= 0 &&
       G__virtual && -1 == G__struct.virtual_offset[G__tagdefining]
 #else // G__NEWINHERIT
       G__virtual && -1 == G__struct.virtual_offset[G__p_ifunc->basetagnum[func_now]]
