@@ -1349,6 +1349,7 @@ void TGTextLayout::ToPostscript(TString *result) const
             // following this sequence could be interpreted by
             // Postscript as part of this sequence.
 
+               // coverity[secure_coding]
                sprintf(buf + used, "\\%03o", c);
                used += 4;
             } else {

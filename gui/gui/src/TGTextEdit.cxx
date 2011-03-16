@@ -486,6 +486,7 @@ void TGTextEdit::Print(Option_t *) const
                ULong_t j = i+1;
                while (buf2[j] == 16)
                   j++;
+               // coverity[secure_coding]
                strcpy(buf2+i+1, buf2+j);
             }
             i++;

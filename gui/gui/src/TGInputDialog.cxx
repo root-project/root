@@ -146,6 +146,7 @@ Bool_t TGInputDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                switch (parm1) {
                   case 1:
                      // here copy the string from text buffer to return variable
+                     // coverity[secure_coding]
                      strcpy(fRetStr, fTE->GetBuffer()->GetString());
                      delete this;
                      break;

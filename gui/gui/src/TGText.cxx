@@ -157,6 +157,7 @@ void TGTextLine::InsText(ULong_t pos, const char *text)
    char *newstring = new char[strlen(text)+fLength+1];
    if (fString != 0)
       strncpy(newstring, fString, (UInt_t)pos);
+   // coverity[secure_coding]
    strcpy(newstring+pos, text);
    if (fString != 0 && fLength - pos  > 0)
       strncpy(newstring+pos+strlen(text), fString+pos, UInt_t(fLength-pos));
@@ -611,6 +612,7 @@ Bool_t TGText::Save(const char *fn)
             ULong_t j = i+1;
             while (buffer[j] == 16)
                j++;
+            // coverity[secure_coding]
             strcpy(buffer+i+1, buffer+j);
          }
          i++;
@@ -651,6 +653,7 @@ Bool_t TGText::Append(const char *fn)
             ULong_t j = i+1;
             while (buffer[j] == 16 && buffer[j] != '\0')
                j++;
+            // coverity[secure_coding]
             strcpy(buffer+i+1, buffer+j);
          }
          i++;
@@ -1085,6 +1088,7 @@ void TGText::ReTab(Long_t row)
          while (buffer[j] == 16 && buffer[j] != '\0') {
             j++;
          }
+         // coverity[secure_coding]
          strcpy(buffer+i+1, buffer+j);
       }
       i++;

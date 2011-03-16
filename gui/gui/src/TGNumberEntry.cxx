@@ -420,14 +420,17 @@ static char *IntToHexStr(char *text, ULong_t l)
    const char *const digits = "0123456789ABCDEF";
    char buf[64];
    char *p = buf + 62;
+   // coverity[secure_coding]
    strcpy(p, "");
    while (l > 0) {
       *(--p) = digits[l % 16];
       l /= 16;
    }
    if (strlen(p) == 0) {
+      // coverity[secure_coding]
       strcpy(text, "0");
    } else {
+      // coverity[secure_coding]
       strcpy(text, p);
    }
    return text;
@@ -547,6 +550,7 @@ static void AppendFracZero(char *text, Int_t digits)
       }
    }
    while (found < digits) {
+      // coverity[secure_coding]
       strcpy(p + strlen(p), "0");
       found++;
    }
