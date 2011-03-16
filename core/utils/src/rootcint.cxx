@@ -4723,12 +4723,12 @@ int main(int argc, char **argv)
          if (strcmp("-pipe", argv[ic])!=0) {
             // filter out undesirable options
             string argkeep;
-            // [coverity: tainted_data] The OS should already limit the argument size, so we are safe here
+            // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
             StrcpyArg(argkeep, argv[i]);
 	    int ncha = argkeep.length()+1;
-            // [coverity: tainted_data] The OS should already limit the argument size, so we are safe here
+            // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
             argvv[argcc++] = (char*)calloc(ncha,1);
-            // [coverity: tainted_data] The OS should already limit the argument size, so we are safe here
+            // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
             strlcpy(argvv[argcc-1],argkeep.c_str(),ncha);
          }
       }
