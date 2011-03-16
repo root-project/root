@@ -2731,6 +2731,7 @@ G__value G__getrsvd(int i)
   buf.tagnum = -1;
   buf.typenum = -1;
   buf.ref = 0;
+  buf.isconst = 0;
 
   switch(i) {
   case G__RSVD_LINE:
