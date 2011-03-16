@@ -1462,8 +1462,8 @@ void TStreamerInfo::BuildOld()
             Bool_t isArray = element->GetArrayLength() >= 1;
             Bool_t hasCount = element->HasCounter();
             newType = dm->GetDataType()->GetType();
-            if ((newType == kChar) && isPointer && !isArray && !hasCount) {
-               newType = kCharStar;
+            if ((newType == ::kChar_t) && isPointer && !isArray && !hasCount) {
+               newType = ::kCharStar;
             } else if (isPointer) {
                newType += kOffsetP;
             } else if (isArray) {
@@ -3203,7 +3203,8 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
             return 0; // We don't know which member of the class we would want.
          } else {
             TVirtualCollectionProxy *proxy = newClass->GetCollectionProxy();
-            atype = proxy->GetType();
+            // EDataType is a subset of TStreamerInfo::EReadWrite
+            atype = (TStreamerInfo::EReadWrite)proxy->GetType();
             TVirtualCollectionProxy::TPushPop pop(proxy,ladd);
             Int_t nc = proxy->Size();
             if (j >= nc) return 0;

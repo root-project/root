@@ -1007,24 +1007,24 @@ void TStreamerBasicType::Streamer(TBuffer &R__b)
       }
       switch(type) {
          // basic types
-         case kBool_t:     fSize = sizeof(bool);      break;
-         case kShort_t:    fSize = sizeof(Short_t);   break;
-         case kInt_t:      fSize = sizeof(Int_t);     break;
-         case kLong_t:     fSize = sizeof(Long_t);    break; 
-         case kLong64_t:   fSize = sizeof(Long64_t);  break;
-         case kFloat_t:    fSize = sizeof(Float_t);   break;
-         case kFloat16_t:  fSize = sizeof(Float_t);   break;
-         case kDouble_t:   fSize = sizeof(Double_t);  break;
-         case kDouble32_t: fSize = sizeof(Double_t);  break;
-         case kUChar_t:    fSize = sizeof(UChar_t);   break;
-         case kUShort_t:   fSize = sizeof(UShort_t);  break;
-         case kUInt_t:     fSize = sizeof(UInt_t);    break;
-         case kULong_t:    fSize = sizeof(ULong_t);   break;
-         case kULong64_t:  fSize = sizeof(ULong64_t); break;
-         case kBits:       fSize = sizeof(UInt_t);    break;
-         case kCounter:    fSize = sizeof(Int_t);     break;
-         case kChar_t:     fSize = sizeof(Char_t);    break;
-         case kCharStar:   fSize = sizeof(Char_t*);   break;
+         case TVirtualStreamerInfo::kBool:     fSize = sizeof(bool);      break;
+         case TVirtualStreamerInfo::kShort:    fSize = sizeof(Short_t);   break;
+         case TVirtualStreamerInfo::kInt:      fSize = sizeof(Int_t);     break;
+         case TVirtualStreamerInfo::kLong:     fSize = sizeof(Long_t);    break; 
+         case TVirtualStreamerInfo::kLong64:   fSize = sizeof(Long64_t);  break;
+         case TVirtualStreamerInfo::kFloat:    fSize = sizeof(Float_t);   break;
+         case TVirtualStreamerInfo::kFloat16:  fSize = sizeof(Float_t);   break;
+         case TVirtualStreamerInfo::kDouble:   fSize = sizeof(Double_t);  break;
+         case TVirtualStreamerInfo::kDouble32: fSize = sizeof(Double_t);  break;
+         case TVirtualStreamerInfo::kUChar:    fSize = sizeof(UChar_t);   break;
+         case TVirtualStreamerInfo::kUShort:   fSize = sizeof(UShort_t);  break;
+         case TVirtualStreamerInfo::kUInt:     fSize = sizeof(UInt_t);    break;
+         case TVirtualStreamerInfo::kULong:    fSize = sizeof(ULong_t);   break;
+         case TVirtualStreamerInfo::kULong64:  fSize = sizeof(ULong64_t); break;
+         case TVirtualStreamerInfo::kBits:     fSize = sizeof(UInt_t);    break;
+         case TVirtualStreamerInfo::kCounter:  fSize = sizeof(Int_t);     break;
+         case TVirtualStreamerInfo::kChar:     fSize = sizeof(Char_t);    break;
+         case TVirtualStreamerInfo::kCharStar: fSize = sizeof(Char_t*);   break;
          default:          return; // If we don't change the size let's not remultiply it.
       }
       if (fArrayLength) fSize *= GetArrayLength();

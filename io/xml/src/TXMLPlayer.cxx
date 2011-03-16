@@ -960,7 +960,7 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el,
    TString argtname[2];
 
    if (isstr)
-      stltyp = TStreamerElement::kSTLstring;
+      stltyp = TVirtualStreamerInfo::kSTLstring;
    else
       if (TClassEdit::IsSTLCont(contcl->GetName())) {
          string shortTypeName =
