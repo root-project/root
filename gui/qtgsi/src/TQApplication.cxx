@@ -33,7 +33,9 @@ TQApplication::TQApplication()
 {
    // Used by Dictionary()
 
+   fCustomized=kFALSE;
 }
+
 //______________________________________________________________________________
 TQApplication::TQApplication(const char *appClassName,
                              Int_t *argc, char **argv, void *options, Int_t numOptions)
