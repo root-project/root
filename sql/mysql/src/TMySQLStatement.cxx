@@ -934,7 +934,8 @@ Bool_t TMySQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
       fNeedParBind = kTRUE;
    }
 
-   strcpy((char*) addr, value);
+   if (value) strcpy((char*) addr, value);
+   else ((char*)addr)[0]='\0';
 
    fBuffer[npar].fResLength = len;
 
