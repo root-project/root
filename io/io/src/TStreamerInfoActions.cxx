@@ -214,11 +214,11 @@ namespace TStreamerInfoActions
       TVirtualCollectionProxy::DeleteTwoIterators_t fDeleteTwoIterators;
 
       TConfigSTL(TVirtualStreamerInfo *info, UInt_t id, Int_t offset, UInt_t length, TClass *oldClass, const char *type_name, Bool_t isbase) : 
-         TConfiguration(info,id,offset,length), fOldClass(oldClass), fNewClass(oldClass), fTypeName(type_name), fIsSTLBase(isbase),
+         TConfiguration(info,id,offset,length), fOldClass(oldClass), fNewClass(oldClass), fStreamer(0), fTypeName(type_name), fIsSTLBase(isbase),
          fCreateIterators(0), fCopyIterator(0), fDeleteIterator(0), fDeleteTwoIterators(0) { Init(); }
 
       TConfigSTL(TVirtualStreamerInfo *info, UInt_t id, Int_t offset, UInt_t length, TClass *oldClass, TClass *newClass, const char *type_name, Bool_t isbase) : 
-         TConfiguration(info,id,offset,length), fOldClass(oldClass), fNewClass(newClass), fTypeName(type_name), fIsSTLBase(isbase),
+         TConfiguration(info,id,offset,length), fOldClass(oldClass), fNewClass(newClass), fStreamer(0), fTypeName(type_name), fIsSTLBase(isbase),
          fCreateIterators(0), fCopyIterator(0), fDeleteIterator(0), fDeleteTwoIterators(0) { Init(); }
 
       TConfigSTL(TVirtualStreamerInfo *info, UInt_t id, Int_t offset, UInt_t length, TClass *oldClass, TMemberStreamer* streamer, const char *type_name, Bool_t isbase) : 

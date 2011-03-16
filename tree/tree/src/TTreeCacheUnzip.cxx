@@ -989,7 +989,8 @@ Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
 
       char *objbuf = *dest + keylen;
       UChar_t *bufcur = (UChar_t *) (src + keylen);
-      Int_t nin, nout, nbuf;
+      Int_t nin, nbuf;
+      Int_t nout = 0;
       Int_t noutot = 0;
 
       while (1) {

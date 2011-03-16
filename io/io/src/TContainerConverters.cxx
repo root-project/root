@@ -222,7 +222,9 @@ TConvertMapToProxy::TConvertMapToProxy(TClassStreamer *streamer,
                                        Bool_t isPointer, Bool_t isPrealloc) :
    fIsPointer(isPointer),
    fIsPrealloc(isPrealloc),
-   fSizeOf(0)
+   fSizeOf(0),
+   fProxy(0),
+   fCollectionStreamer(0)
 {
    // Constructor.
 

@@ -166,6 +166,19 @@ TFile::TFile() : TDirectoryFile(), fInfoCache(0)
    fAsyncOpenStatus = kAOSNotAsync;
    SetBit(kBinaryFile, kTRUE);
 
+   fBEGIN          = 0;
+   fEND            = 0;
+   fBytesRead      = 0;
+   fBytesReadExtra = 0;
+   fBytesWrite     = 0;
+   fCompress       = 0;
+   fNbytesFree     = 0;
+   fNbytesInfo     = 0;
+   fSeekFree       = 0;
+   fSeekInfo       = 0;
+   fUnits          = 0;
+   fVersion        = 0;
+
    if (gDebug)
       Info("TFile", "default ctor");
 }

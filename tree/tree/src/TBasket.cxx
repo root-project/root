@@ -432,7 +432,8 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          memcpy(fBuffer,buffer,fKeylen);
          char *objbuf = fBuffer + fKeylen;
          UChar_t *bufcur = (UChar_t *)&buffer[fKeylen];
-         Int_t nin, nout, nbuf;
+         Int_t nin, nbuf;
+         Int_t nout = 0;
          Int_t noutot = 0;
          while (1) {
             Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
