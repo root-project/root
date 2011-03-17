@@ -2705,7 +2705,6 @@ int G__fgetc()
    //
    int c = 0;
    while (1) {
-      // Coverity[tainted_data_return]: it's a C++ interpreter...
       c = fgetc(G__ifile.fp);
       switch (c) {
          case '\n':
