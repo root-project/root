@@ -192,28 +192,22 @@ Double_t TGeoEltu::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    } else {
       if (dir[2]<0) snxt=-safz2/dir[2];
    } 
-   // do eliptical surface
    Double_t sz = snxt;
    Double_t xz=point[0]+dir[0]*sz;
    Double_t yz=point[1]+dir[1]*sz;
    if ((xz*xz/a2+yz*yz/b2)<=1) return snxt;
+   // do eliptical surface
+   Double_t tolerance = TGeoShape::Tolerance();
    Double_t u=dir[0]*dir[0]*b2+dir[1]*dir[1]*a2;
    Double_t v=point[0]*dir[0]*b2+point[1]*dir[1]*a2;
    Double_t w=point[0]*point[0]*b2+point[1]*point[1]*a2-a2*b2;
    Double_t d=v*v-u*w;
-   if (d<0) return snxt;
-   if (TGeoShape::IsSameWithinTolerance(u,0)) return snxt;
+   if (d<0 || TGeoShape::IsSameWithinTolerance(u,0)) return tolerance;
    Double_t sd=TMath::Sqrt(d);
-   Double_t tau1=(-v+sd)/u;
-   Double_t tau2=(-v+sd)/u;
+   snxt = (-v+sd)/u;
    
-   if (tau1<0) {
-      if (tau2<0) return snxt;
-   } else {
-      snxt=tau1;
-      if ((tau2>0) && (tau2<tau1)) return tau2;
-   }
-   return snxt;      
+   if (snxt<0) return tolerance;
+   return snxt;
 }
 
 //_____________________________________________________________________________
