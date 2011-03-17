@@ -851,10 +851,12 @@ void G__define_type()
          // handle this as 'typedef void* newtype;'
          val = p + 1;
          p = strchr(val, ')');
-         *p = '\0';
-         type_name = val;
-         type = 'Q';
-         p = strstr(type_name, "::*");
+         if (p) {
+            *p = '\0';
+            type_name = val;
+            type = 'Q';
+            p = strstr(type_name, "::*");
+         }
          if (p) {
             // pointer to member function 'typedef type (A::*p)();
             val = p + 3;
