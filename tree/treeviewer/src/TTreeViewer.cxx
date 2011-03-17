@@ -1752,6 +1752,10 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          switch (GET_SUBMSG(msg)) {
          // handle mouse messages in the list-tree (left panel)
             case kCT_ITEMCLICK :
+               // tell coverity that parm1 is a Long_t, and not an enum (even
+               // if we compare it with an enum value) and the meaning of 
+               // parm1 depends on GET_MSG(msg) and GET_SUBMSG(msg)
+               // coverity[mixed_enums]
                if ((parm1==kButton1) || (parm1==kButton3)) {
                   TGListTreeItem *ltItem = 0;
                   // get item that sent this
