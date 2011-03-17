@@ -307,7 +307,6 @@ extern "C" int G__bc_exec_try_bytecode(int start,
 ***********************************************************************/
 extern "C" int G__bc_exec_throw_bytecode(G__value* pval) {
 #if ENABLE_CPP_EXCEPTIONS
-   // coverity[exception_thrown]: we don't care.
   throw G__bc_exception(*pval);
 #else //ENABLE_CPP_EXCEPTIONS
 	G__fprinterr(G__serr, "G__bc_exe_throw_bytecode has no effect with exceptions disabled! %s, %d\n", __FILE__, __LINE__);
