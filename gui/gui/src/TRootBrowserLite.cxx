@@ -2017,6 +2017,8 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      hd->SetText(gHelpRemote);
                      hd->Popup();
                      break;
+                  default:
+                     break;
                }
                break;
             case kCM_COMBOBOX:
