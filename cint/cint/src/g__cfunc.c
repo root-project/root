@@ -1443,7 +1443,11 @@ int hash;
       return(1);
     }
     result7->typenum = G__defined_typename("div_t");
-    result7->tagnum = G__newtype.tagnum[result7->typenum];
+    if (result7->typenum >= 0) {
+       result7->tagnum = G__newtype.tagnum[result7->typenum];
+    } else {
+       result7->tagnum = -1;
+    }
     result7->type = 'u';
     G__alloc_tempobject(result7->tagnum,result7->typenum);
     *(div_t*)G__p_tempbuf->obj.obj.i = div((int)G__int(libp->para[0])
@@ -1981,11 +1985,19 @@ int hash;
     if(G__no_exec_compile) {
       G__letint(result7,'u',(long)0);
       result7->typenum = G__defined_typename("ldiv_t");
-      result7->tagnum = G__newtype.tagnum[result7->typenum];
+      if (result7->typenum >= 0) {
+         result7->tagnum = G__newtype.tagnum[result7->typenum];
+      } else {
+         result7->tagnum = -1;
+      }
       return(1);
     }
     result7->typenum = G__defined_typename("ldiv_t");
-    result7->tagnum = G__newtype.tagnum[result7->typenum];
+    if (result7->typenum >= 0) {
+       result7->tagnum = G__newtype.tagnum[result7->typenum];
+    } else {
+       result7->tagnum = -1;
+    }
     result7->type = 'u';
     G__alloc_tempobject(result7->tagnum,result7->typenum);
     *(ldiv_t*)G__p_tempbuf->obj.obj.i = ldiv((long)G__int(libp->para[0])
@@ -2209,8 +2221,13 @@ int hash;
 #endif
     if(G__no_exec_compile) {
       result7->typenum = G__defined_typename("time_t");
-      result7->tagnum = G__newtype.tagnum[result7->typenum];
-      result7->type = G__newtype.type[result7->typenum];
+      if (result7->typenum >= 0) {
+         result7->tagnum = G__newtype.tagnum[result7->typenum];
+         result7->type = G__newtype.type[result7->typenum];
+      } else {
+         result7->tagnum = -1;
+         result7->type = 0;
+      }
       result7->obj.i = 0;
       result7->ref = 0;
       return(1);
@@ -2219,8 +2236,13 @@ int hash;
     G__letint(result7,'l',(long)mktime((struct tm *)G__int(libp->para[0])));
 
     result7->typenum = G__defined_typename("time_t");
-    result7->tagnum = G__newtype.tagnum[result7->typenum];
-    result7->type = G__newtype.type[result7->typenum];
+    if (result7->typenum >= 0) {
+       result7->tagnum = G__newtype.tagnum[result7->typenum];
+       result7->type = G__newtype.type[result7->typenum];
+    } else {
+       result7->tagnum = -1;
+       result7->type = 0;
+    }
     result7->ref = 0;
     return(1);
   }
@@ -2624,8 +2646,13 @@ int hash;
     if(G__no_exec_compile) {
       G__letint(result7,'l',(long)0);
       result7->typenum = G__defined_typename("size_t");
-      result7->tagnum = G__newtype.tagnum[result7->typenum];
-      result7->type = G__newtype.type[result7->typenum];
+      if (result7->typenum >= 0) {
+         result7->tagnum = G__newtype.tagnum[result7->typenum];
+         result7->type = G__newtype.type[result7->typenum];
+      } else {
+         result7->tagnum = -1;
+         result7->type = 0;
+      }
       return(1);
     }
     G__CHECKNONULL(0,'C');
@@ -2636,8 +2663,13 @@ int hash;
 					 ,(char*)G__int(libp->para[2])
 					 ,(struct tm*)G__int(libp->para[3])));
     result7->typenum = G__defined_typename("size_t");
-    result7->tagnum = G__newtype.tagnum[result7->typenum];
-    result7->type = G__newtype.type[result7->typenum];
+    if (result7->typenum >= 0) {
+       result7->tagnum = G__newtype.tagnum[result7->typenum];
+       result7->type = G__newtype.type[result7->typenum];
+    } else {
+       result7->tagnum = -1;
+       result7->type = 0;
+    }
     return(1);
   }
 
