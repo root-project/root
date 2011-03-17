@@ -112,7 +112,7 @@ namespace TMVA {
       enum EBPTrainingMode { kSequential=0, kBatch };
 
       bool     HasInverseHessian() { return fCalculateErrors; }
-      Double_t GetMvaValueAsymError( Double_t* errUpper, Double_t* errLower );
+      Double_t GetMvaValue( Double_t* err=0, Double_t* errUpper=0 );
 
    protected:
 
@@ -219,6 +219,11 @@ namespace TMVA {
       Int_t           fGA_SC_steps;    // GA settings: SC_steps
       Int_t           fGA_SC_rate; // GA settings: SC_rate
       Double_t        fGA_SC_factor;   // GA settings: SC_factor
+
+      // regression, storage of deviations
+      std::vector<std::pair<Float_t,Float_t> >* fDeviationsFromTargets; // deviation from the targets, event weight
+
+      Float_t         fWeightRange;    // suppress outliers for the estimator calculation
 
 #ifdef MethodMLP_UseMinuit__
       // minuit variables -- commented out because they rely on a static pointer

@@ -345,7 +345,7 @@ void TMVAClassification( TString myMethodList = "" )
    // Multi-dimensional likelihood estimator using self-adapting phase-space binning
    if (Use["PDEFoam"])
       factory->BookMethod( TMVA::Types::kPDEFoam, "PDEFoam",
-                           "H:!V:SigBgSeparate=F:TailCut=0.001:VolFrac=0.0333:nActiveCells=500:nSampl=2000:nBin=5:Nmin=100:Kernel=None:Compress=T" );
+                           "!H:!V:SigBgSeparate=F:TailCut=0.001:VolFrac=0.0666:nActiveCells=500:nSampl=2000:nBin=5:Nmin=100:Kernel=None:Compress=T" );
 
    if (Use["PDEFoamBoost"])
       factory->BookMethod( TMVA::Types::kPDEFoam, "PDEFoamBoost",
@@ -358,7 +358,7 @@ void TMVAClassification( TString myMethodList = "" )
 
    // H-Matrix (chi2-squared) method
    if (Use["HMatrix"])
-      factory->BookMethod( TMVA::Types::kHMatrix, "HMatrix", "!H:!V" );
+      factory->BookMethod( TMVA::Types::kHMatrix, "HMatrix", "!H:!V:VarTransform=None" );
 
    // Linear discriminant (same as Fisher discriminant)
    if (Use["LD"])
@@ -366,7 +366,7 @@ void TMVAClassification( TString myMethodList = "" )
 
    // Fisher discriminant (same as LD)
    if (Use["Fisher"])
-      factory->BookMethod( TMVA::Types::kFisher, "Fisher", "H:!V:Fisher:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" );
+      factory->BookMethod( TMVA::Types::kFisher, "Fisher", "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" );
 
    // Fisher with Gauss-transformed input variables
    if (Use["FisherG"])
@@ -374,8 +374,8 @@ void TMVAClassification( TString myMethodList = "" )
 
    // Composite classifier: ensemble (tree) of boosted Fisher classifiers
    if (Use["BoostedFisher"])
-      factory->BookMethod( TMVA::Types::kFisher, "BoostedFisher", 
-                           "H:!V:Boost_Num=20:Boost_Transform=log:Boost_Type=AdaBoost:Boost_AdaBoostBeta=0.2" );
+      factory->BookMethod( TMVA::Types::kMLP, "BoostedFisher", 
+                           "H:!V:Boost_Num=20:Boost_Transform=log:Boost_Type=AdaBoost:Boost_AdaBoostBeta=0.2:!Boost_DetailedMonitoring" );
 
    // Function discrimination analysis (FDA) -- test of various fitters - the recommended one is Minuit (or GA or SA)
    if (Use["FDA_MC"])

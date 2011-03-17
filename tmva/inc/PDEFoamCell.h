@@ -1,3 +1,5 @@
+// @(#)root/tmva $Id$
+// Author: S. Jadach, Tancredi Carli, Dominik Dannheim, Alexander Voigt
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -15,7 +17,7 @@
  *      S. Jadach        - Institute of Nuclear Physics, Cracow, Poland           *
  *      Tancredi Carli   - CERN, Switzerland                                      *
  *      Dominik Dannheim - CERN, Switzerland                                      *
- *      Alexander Voigt  - CERN, Switzerland                                      *
+ *      Alexander Voigt  - TU Dresden, Germany                                    *
  *                                                                                *
  * Copyright (c) 2008:                                                            *
  *      CERN, Switzerland                                                         *
@@ -103,13 +105,14 @@ namespace TMVA {
       void      SetSerial(Int_t Serial){ fSerial=Serial;}    // Set serial number
       Int_t     GetSerial() const { return fSerial;}         // Get serial number
       UInt_t    GetDepth();                                  // Get depth in binary tree
+      UInt_t    GetTreeDepth(UInt_t depth=0);                // Get depth of binary tree
       //--- other ---
       void Print(Option_t *option) const ;                   // Prints cell content
       //--- getter and setter for user variable ---
       void SetElement(TObject* fobj){ fElement = fobj; }     // Set user variable
       TObject* GetElement() const { return fElement; }       // Get pointer to user varibale
       ////////////////////////////////////////////////////////////////////////////
-      ClassDef(PDEFoamCell,1)  //Single cell of FOAM
+      ClassDef(PDEFoamCell,2)  //Single cell of FOAM
    }; // end of PDEFoamCell
 } // namespace TMVA
 

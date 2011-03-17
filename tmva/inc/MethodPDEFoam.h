@@ -18,12 +18,12 @@
  *      Tancredi Carli   - CERN, Switzerland                                      *
  *      Dominik Dannheim - CERN, Switzerland                                      *
  *      Peter Speckmayer <peter.speckmayer@cern.ch>  - CERN, Switzerland          *
- *      Alexander Voigt  - CERN, Switzerland                                      *
+ *      Alexander Voigt  - TU Dresden, Germany                                    *
  *                                                                                *
  * Original author of the TFoam implementation:                                   *
  *      S. Jadach - Institute of Nuclear Physics, Cracow, Poland                  *
  *                                                                                *
- * Copyright (c) 2008:                                                            *
+ * Copyright (c) 2008, 2010:                                                      *
  *      CERN, Switzerland                                                         *
  *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
@@ -71,7 +71,55 @@
 #include "TMVA/PDEFoam.h"
 #endif
 
+#ifndef ROOT_TMVA_PDEFoamDecisionTree
+#include "TMVA/PDEFoamDecisionTree.h"
+#endif
+#ifndef ROOT_TMVA_PDEFoamEvent
+#include "TMVA/PDEFoamEvent.h"
+#endif
+#ifndef ROOT_TMVA_PDEFoamDiscriminant
+#include "TMVA/PDEFoamDiscriminant.h"
+#endif
+#ifndef ROOT_TMVA_PDEFoamTarget
+#include "TMVA/PDEFoamTarget.h"
+#endif
+#ifndef ROOT_TMVA_PDEFoamMultiTarget
+#include "TMVA/PDEFoamMultiTarget.h"
+#endif
+
+#ifndef ROOT_TMVA_PDEFoamDensityBase
+#include "TMVA/PDEFoamDensityBase.h"
+#endif
+#ifndef ROOT_TMVA_PDEFoamTargetDensity
+#include "TMVA/PDEFoamTargetDensity.h"
+#endif
+#ifndef ROOT_TMVA_PDEFoamEventDensity
+#include "TMVA/PDEFoamEventDensity.h"
+#endif
+#ifndef ROOT_TMVA_PDEFoamDiscriminantDensity
+#include "TMVA/PDEFoamDiscriminantDensity.h"
+#endif
+#ifndef ROOT_TMVA_PDEFoamDecisionTreeDensity
+#include "TMVA/PDEFoamDecisionTreeDensity.h"
+#endif
+
+#ifndef ROOT_TMVA_PDEFoamKernelBase
+#include "TMVA/PDEFoamKernelBase.h"
+#endif
+#ifndef ROOT_TMVA_PDEFoamKernelTrivial
+#include "TMVA/PDEFoamKernelTrivial.h"
+#endif
+#ifndef ROOT_TMVA_PDEFoamKernelLinN
+#include "TMVA/PDEFoamKernelLinN.h"
+#endif
+#ifndef ROOT_TMVA_PDEFoamKernelGauss
+#include "TMVA/PDEFoamKernelGauss.h"
+#endif
+
 namespace TMVA {
+
+   // kernel types
+   enum EKernel { kNone=0, kGaus=1, kLinN=2 };
 
    class MethodPDEFoam : public MethodBase {
 
@@ -97,6 +145,7 @@ namespace TMVA {
       void TrainMultiTargetRegression( void );   // Regression output: any number of values
       void TrainSeparatedClassification( void ); // Classification: one foam for Sig, one for Bg
       void TrainUnifiedClassification( void );   // Classification: one foam for Signal and Bg
+      void TrainMultiClassification();           // Classification: one foam for every class
 
       using MethodBase::ReadWeightsFromStream;
 
@@ -114,11 +163,20 @@ namespace TMVA {
       // calculate the MVA value
       Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
 
+      // calculate multiclass MVA values
+      const std::vector<Float_t>& GetMulticlassValues();
+
       // regression procedure
       virtual const std::vector<Float_t>& GetRegressionValues();
 
+      // reset the method
+      virtual void Reset();
+
       // ranking of input variables
-      const Ranking* CreateRanking() { return 0; }
+      const Ranking* CreateRanking();
+
+      // get number of cuts in every dimension, starting at cell
+      void GetNCuts(PDEFoamCell *cell, std::vector<UInt_t> &nCuts);
 
       // helper functions to convert enum types to UInt_t and back
       EKernel GetKernel( void ) { return fKernel; }
@@ -141,8 +199,14 @@ namespace TMVA {
       // Set Xmin, Xmax in foam with index 'foam_index'
       void SetXminXmax(TMVA::PDEFoam*);
 
-      // Set foam options
-      void InitFoam(TMVA::PDEFoam*, EFoamType);
+      // create foam and set foam options
+      PDEFoam* InitFoam(TString, EFoamType, UInt_t cls=0);
+
+      // create pdefoam kernel
+      PDEFoamKernelBase* CreatePDEFoamKernel();
+
+      // delete all trained foams
+      void DeleteFoams();
 
       // fill variable names into foam
       void FillVariableNamesToFoam() const;
@@ -162,10 +226,9 @@ namespace TMVA {
 
       // options to be used
       Bool_t        fSigBgSeparated;  // Separate Sig and Bg, or not
-      Double_t      fFrac;            // Fraction used for calc of Xmin, Xmax
-      Double_t      fDiscrErrCut;     // cut on discrimant error
-      Float_t       fVolFrac;         // inverse volume fraction (used for density calculation during buildup)
-      Float_t       fVolFracInv;      // volume fraction (used for density calculation during buildup)
+      Float_t       fFrac;            // Fraction used for calc of Xmin, Xmax
+      Float_t       fDiscrErrCut;     // cut on discrimant error
+      Float_t       fVolFrac;         // volume fraction (used for density calculation during buildup)
       Int_t         fnCells;          // Number of Cells  (1000)
       Int_t         fnActiveCells;    // Number of active cells
       Int_t         fnSampl;          // Number of MC events per cell in build-up (1000)
@@ -180,15 +243,16 @@ namespace TMVA {
 
       TString       fKernelStr;       // Kernel for GetMvaValue() (option string)
       EKernel       fKernel;          // Kernel for GetMvaValue()
+      PDEFoamKernelBase *fKernelEstimator;// Kernel estimator
       TString       fTargetSelectionStr; // method of selecting the target (only mulit target regr.)
       ETargetSelection fTargetSelection; // method of selecting the target (only mulit target regr.)
       Bool_t        fFillFoamWithOrigWeights; // fill the foam with boost weights
       Bool_t        fUseYesNoCell;    // return -1 or 1 for bg or signal like event
       TString       fDTLogic;         // use DT algorithm to split cells
       EDTSeparation fDTSeparation;    // enum which specifies the separation to use for the DT logic
-      Bool_t        fPeekMax;         // peek up cell with max. driver integral for split
+      Bool_t        fPeekMax;         // BACKWARDS COMPATIBILITY: peek up cell with max. driver integral for split
 
-      std::vector<Double_t> fXmin, fXmax; // range for histograms and foams
+      std::vector<Float_t> fXmin, fXmax; // range for histograms and foams
 
       // foams and densities
       // foam[0]=signal, if Sig and BG are Seperated; else foam[0]=signal/bg
@@ -198,7 +262,7 @@ namespace TMVA {
       // default initialisation called by all constructors
       void Init( void );
 
-      ClassDef(MethodPDEFoam,0) // Analysis of PDEFoam discriminant (PDEFoam or Mahalanobis approach)
+      ClassDef(MethodPDEFoam,0) // Multi-dimensional probability density estimator using TFoam (PDE-Foam)
    };
 
 } // namespace TMVA

@@ -74,6 +74,8 @@ class TGraph;
 class TTree;
 class TDirectory;
 class TSpline;
+class TH1F;
+class TH1D;
 
 namespace TMVA {
 
@@ -85,6 +87,8 @@ namespace TMVA {
    class DataSetInfo;
 
    class MethodBase : virtual public IMethod, public Configurable {
+
+      friend class Factory;
 
    public:
 
@@ -270,6 +274,8 @@ namespace TMVA {
       virtual std::vector<Float_t> GetMulticlassEfficiency( std::vector<std::vector<Float_t> >& purity );
       virtual std::vector<Float_t> GetMulticlassTrainingEfficiency(std::vector<std::vector<Float_t> >& purity );
       virtual Double_t GetSignificance() const;
+      virtual Double_t GetROCIntegral(TH1F *histS, TH1F *histB) const;
+      //      virtual Double_t GetROCIntegral(TH1D *histS, TH1D *histB) const;
       virtual Double_t GetROCIntegral(PDF *pdfS=0, PDF *pdfB=0) const;
       virtual Double_t GetMaximumSignificance( Double_t SignalEvents, Double_t BackgroundEvents, 
                                                Double_t& optimal_significance_value  ) const;
@@ -311,9 +317,11 @@ namespace TMVA {
 
       // sets the minimum requirement on the MVA output to declare an event signal-like
       Double_t         GetSignalReferenceCut() const { return fSignalReferenceCut; }
+      Double_t         GetSignalReferenceCutOrientation() const { return fSignalReferenceCutOrientation; }
 
       // sets the minimum requirement on the MVA output to declare an event signal-like
       void             SetSignalReferenceCut( Double_t cut ) { fSignalReferenceCut = cut; }
+      void             SetSignalReferenceCutOrientation( Double_t cutOrientation ) { fSignalReferenceCutOrientation = cutOrientation; }
 
       // pointers to ROOT directories
       TDirectory*      BaseDir()       const;
@@ -331,8 +339,16 @@ namespace TMVA {
       TString          GetTrainingTMVAVersionString() const;
       TString          GetTrainingROOTVersionString() const;
 
-      TransformationHandler&        GetTransformationHandler() { return fTransformation; }
-      const TransformationHandler&  GetTransformationHandler() const { return fTransformation; }
+      TransformationHandler&        GetTransformationHandler(Bool_t takeReroutedIfAvailable=true) 
+          { 
+	     if(fTransformationPointer && takeReroutedIfAvailable) return *fTransformationPointer; else return fTransformation; 
+	  }
+      const TransformationHandler&  GetTransformationHandler(Bool_t takeReroutedIfAvailable=true) const 
+          { 
+	     if(fTransformationPointer && takeReroutedIfAvailable) return *fTransformationPointer; else return fTransformation; 
+	  }
+
+      void             RerouteTransformationHandler (TransformationHandler* fTargetTransformation) { fTransformationPointer=fTargetTransformation; }
 
       // ---------- event accessors ------------------------------------------------
 
@@ -356,7 +372,8 @@ namespace TMVA {
       // this method is used to decide whether an event is signal- or background-like
       // the reference cut "xC" is taken to be where
       // Int_[-oo,xC] { PDF_S(x) dx } = Int_[xC,+oo] { PDF_B(x) dx }
-      virtual Bool_t        IsSignalLike() { return GetMvaValue() > GetSignalReferenceCut() ? kTRUE : kFALSE; }
+      virtual Bool_t        IsSignalLike();
+      virtual Bool_t        IsSignalLike(Double_t mvaVal);
 
       DataSet* Data() const { return DataInfo().GetDataSet(); }
 
@@ -476,7 +493,11 @@ namespace TMVA {
    private:
 
       void             AddInfoItem( void* gi, const TString& name, const TString& value) const;
-      void             CreateVariableTransforms(const TString& trafoDefinition );
+
+      static void      CreateVariableTransforms(const TString& trafoDefinition, 
+						TMVA::DataSetInfo& dataInfo,
+						TMVA::TransformationHandler& transformationHandler,
+						TMVA::MsgLogger& log );
 
 
       // ========== class members ==================================================
@@ -507,6 +528,7 @@ namespace TMVA {
       DataSetInfo&     fDataSetInfo;         //! the data set information (sometimes needed)
 
       Double_t         fSignalReferenceCut;  // minimum requirement on the MVA output to declare an event signal-like
+      Double_t         fSignalReferenceCutOrientation;  // minimum requirement on the MVA output to declare an event signal-like
       Types::ESBType   fVariableTransformType;  // this is the event type (sig or bgd) assumed for variable transform
 
       // naming and versioning
@@ -537,6 +559,8 @@ namespace TMVA {
       PDF*             fMVAPdfS;             // signal MVA PDF
       PDF*             fMVAPdfB;             // background MVA PDF
 
+      TH1F*            fmvaS;                // PDFs of MVA distribution (signal)
+      TH1F*            fmvaB;                // PDFs of MVA distribution (background)
       PDF*             fSplS;                // PDFs of MVA distribution (signal)
       PDF*             fSplB;                // PDFs of MVA distribution (background)
       TSpline*         fSpleffBvsS;          // splines for signal eff. versus background eff.
@@ -558,7 +582,8 @@ namespace TMVA {
       // variable preprocessing
       TString          fVarTransformString;          // labels variable transform method
 
-      TransformationHandler fTransformation;         // the list of transformations
+      TransformationHandler* fTransformationPointer;  // pointer to the rest of transformations
+      TransformationHandler  fTransformation;         // the list of transformations
 
 
       // help and verbosity

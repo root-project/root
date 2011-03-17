@@ -873,13 +873,13 @@ Double_t TMVA::MethodCuts::ComputeEstimator( std::vector<Double_t>& pars )
    // retrieve signal and background efficiencies for given cut
    switch (fEffMethod) {
    case kUsePDFs:
-      this->GetEffsfromPDFs( &fTmpCutMin[0], &fTmpCutMax[0], effS, effB );
+      this->GetEffsfromPDFs      (&fTmpCutMin[0], &fTmpCutMax[0], effS, effB);
       break;
    case kUseEventSelection:
-      this->GetEffsfromSelection( &fTmpCutMin[0], &fTmpCutMax[0], effS, effB);
+      this->GetEffsfromSelection (&fTmpCutMin[0], &fTmpCutMax[0], effS, effB);
       break;
    default:
-      this->GetEffsfromSelection( &fTmpCutMin[0], &fTmpCutMax[0], effS, effB);
+      this->GetEffsfromSelection (&fTmpCutMin[0], &fTmpCutMax[0], effS, effB);
    }
 
    Double_t eta = 0;      
@@ -1767,7 +1767,7 @@ void TMVA::MethodCuts::GetHelpMessage() const
    Log() << "  - Sqrt: InitialTemperature / Sqrt(StepNumber+2) * TemperatureScale" << brk << Endl;
    Log() << "  - Log:  InitialTemperature / Log(StepNumber+2) * TemperatureScale" << brk << Endl;
    Log() << "  - Homo: InitialTemperature / (StepNumber+2) * TemperatureScale" << brk << Endl;
-   Log() << "  - Sin:  ( Sin( StepNumber / TemperatureScale ) + 1 ) / (StepNumber + 1) * InitialTemperature + Eps" << brk << Endl;
+   Log() << "  - Sin:  (Sin(StepNumber / TemperatureScale) + 1) / (StepNumber + 1)*InitialTemperature + Eps" << brk << Endl;
    Log() << "  - Geo:  CurrentTemperature * TemperatureScale" << Endl;
    Log() << "" << Endl;
    Log() << "Their performance can be improved by adjusting initial temperature" << Endl;

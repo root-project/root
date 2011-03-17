@@ -84,7 +84,7 @@ namespace TMVA {
    private:
 
       Double_t fMin, fMax;    // the constraints of the Interval
-      Int_t    fNbins;        // when >0 : number of bins (discrete interval); when =0 continuous interval
+      Int_t    fNbins;        // when >0 : number of bins (discrete interval); when ==0 continuous interval
 
       static MsgLogger* fgLogger;   // message logger
       MsgLogger& Log() const { return *fgLogger; }          

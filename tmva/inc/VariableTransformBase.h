@@ -68,6 +68,10 @@ namespace TMVA {
 
    public:
 
+      typedef std::vector<std::pair<Char_t,UInt_t> > VectorOfCharAndInt;
+      typedef VectorOfCharAndInt::iterator       ItVarTypeIdx;
+      typedef VectorOfCharAndInt::const_iterator ItVarTypeIdxConst;
+
       VariableTransformBase( DataSetInfo& dsi, Types::EVariableTransform tf, const TString& trfName );
       virtual ~VariableTransformBase( void );
 
@@ -82,6 +86,17 @@ namespace TMVA {
       Bool_t IsEnabled()    const { return fEnabled; }
       Bool_t IsCreated()    const { return fCreated; }
       Bool_t IsNormalised() const { return fNormalise; }
+
+      // variable selection
+      virtual void           SelectInput( const TString& inputVariables, Bool_t putIntoVariables = kFALSE );
+      virtual Bool_t         GetInput ( const Event* event, std::vector<Float_t>& input, std::vector<Char_t>& mask, Bool_t backTransform = kFALSE  ) const;
+      virtual void           SetOutput( Event* event, std::vector<Float_t>& output, std::vector<Char_t>& mask, const Event* oldEvent = 0, Bool_t backTransform = kFALSE ) const;
+      virtual void           CountVariableTypes( UInt_t& nvars, UInt_t& ntgts, UInt_t& nspcts ) const;
+
+      void ToggleInputSortOrder( const Bool_t sortOrder ) { fSortGet = sortOrder; }
+      void SetOutputDataSetInfo( DataSetInfo* outputDsi ) { fDsiOutput = outputDsi; }
+
+
 
       void SetUseSignalTransform( Bool_t e=kTRUE) { fUseSignalTransform = e; }
       Bool_t UseSignalTransform() const { return fUseSignalTransform; }
@@ -107,6 +122,7 @@ namespace TMVA {
 
       const std::vector<TMVA::VariableInfo>& Variables() const { return fVariables; }
       const std::vector<TMVA::VariableInfo>& Targets()   const { return fTargets;   }
+      const std::vector<TMVA::VariableInfo>& Spectators()   const { return fSpectators;   }
 
       MsgLogger& Log() const { return *fLogger; }
 
@@ -122,16 +138,23 @@ namespace TMVA {
 
       UInt_t GetNVariables() const { return fDsi.GetNVariables(); }
       UInt_t GetNTargets()   const { return fDsi.GetNTargets(); }
+      UInt_t GetNSpectators() const { return fDsi.GetNSpectators(); }
 
       DataSetInfo& fDsi;
+      DataSetInfo* fDsiOutput;
 
       std::vector<TMVA::VariableInfo>& Variables() { return fVariables; }
       std::vector<TMVA::VariableInfo>& Targets() { return fTargets; }
+      std::vector<TMVA::VariableInfo>& Spectators() { return fSpectators; }
       Int_t GetNClasses() const { return fDsi.GetNClasses(); }
 
 
       mutable Event*           fTransformedEvent;     // holds the current transformed event
       mutable Event*           fBackTransformedEvent; // holds the current back-transformed event
+
+      // variable selection
+      VectorOfCharAndInt               fGet;           // get variables/targets/spectators
+      VectorOfCharAndInt               fPut;           // put variables/targets/spectators
 
    private:
 
@@ -147,6 +170,15 @@ namespace TMVA {
       TString                          fTransformName;      // name of transformation
       std::vector<TMVA::VariableInfo>  fVariables;          // event variables [saved to weight file]
       std::vector<TMVA::VariableInfo>  fTargets;            // event targets [saved to weight file --> TODO ]
+      std::vector<TMVA::VariableInfo>  fSpectators;         // event spectators [saved to weight file --> TODO ]
+
+      mutable Bool_t                   fVariableTypesAreCounted; // true if variable types have been counted already
+      mutable UInt_t                   fNVariables;         // number of variables to be transformed
+      mutable UInt_t                   fNTargets;           // number of targets to be transformed
+      mutable UInt_t                   fNSpectators;        // number of spectators to be transformed
+
+      Bool_t                           fSortGet;            // if true, sort the variables into the order as defined by the user at the var definition
+                                                            // if false, sort the variables according to the order given for the var transformation
 
    protected:
 

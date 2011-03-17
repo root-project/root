@@ -233,13 +233,6 @@ void TMVAGui( const char* fName = "TMVA.root" )
                  Form( ".x BDTControlPlots.C(\"%s\")", fName ),
                  "Plots to monitor boosting and pruning of decision trees (macro BDTControlPlots.C)",
                  buttonType, "BDT" );
-
-   //    ActionButton( cbar,  
-   //                  Form( "(%i) Monitor Decision Tree Boosting", ++ic ),
-   //                  Form( ".x BDTBoostWatch.C+(\"%s\")", fName ),
-   //                  "Plots separation obtained by BDT method as function of boosting steps (macro BDTBoostWatch.C(itree,...))",
-   //                  buttonType, "BDT" );
-
    //    ActionButton( cbar,  
    //                  Form( "(%i) Rule Ensemble Importance Plots (RuleFit)", ++ic ),
    //                  Form( ".x rulevis.C(\"%s\",0)", fName ),
@@ -249,7 +242,7 @@ void TMVAGui( const char* fName = "TMVA.root" )
    title = Form( "(%i) Plot Foams (PDEFoam)", ++ic );
    ActionButton( cbar,  
                  title,
-                 ".x PlotFoams.C",
+                 ".x PlotFoams.C(\"weights/TMVAClassification_PDEFoam.weights_foams.root\")",
                  "Plot Foams (macro PlotFoams.C)",
                  buttonType, "PDEFoam" );
 

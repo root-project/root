@@ -12,6 +12,7 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
+ *      Peter Speckmayer <Peter.Speckmayer@cern.ch> - CERN, Switzerland           *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
@@ -71,9 +72,8 @@ namespace TMVA {
    private:
 
       void CalculatePrincipalComponents( const std::vector<Event*>& );
-      std::vector<Float_t> X2P( const std::vector<Float_t>&, Int_t cls ) const;
-
-      //      mutable Event*     fTransformedEvent;
+      void X2P( std::vector<Float_t>&, const std::vector<Float_t>&, Int_t cls ) const;
+      void P2X( std::vector<Float_t>&, const std::vector<Float_t>&, Int_t cls ) const;
 
       // store relevant parts of PCA locally
       std::vector<TVectorD*> fMeanValues;   // mean values

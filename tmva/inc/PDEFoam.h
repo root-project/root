@@ -1,3 +1,5 @@
+// @(#)root/tmva $Id$
+// Author: S. Jadach, Tancredi Carli, Dominik Dannheim, Alexander Voigt
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -12,9 +14,9 @@
  *      S. Jadach        - Institute of Nuclear Physics, Cracow, Poland           *
  *      Tancredi Carli   - CERN, Switzerland                                      *
  *      Dominik Dannheim - CERN, Switzerland                                      *
- *      Alexander Voigt  - CERN, Switzerland                                      *
+ *      Alexander Voigt  - TU Dresden, Germany                                    *
  *                                                                                *
- * Copyright (c) 2008:                                                            *
+ * Copyright (c) 2008, 2010:                                                      *
  *      CERN, Switzerland                                                         *
  *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
@@ -60,14 +62,31 @@
 namespace TMVA {
    class PDEFoamCell;
    class PDEFoamVect;
-   class PDEFoamDistr;
+   class PDEFoamDensityBase;
+   class PDEFoamKernelBase;
    class PDEFoam;
 
-   enum EFoamType { kSeparate, kDiscr, kMonoTarget, kMultiTarget };
+   // separation types
+   enum EDTSeparation { kFoam, kGiniIndex, kMisClassificationError, 
+			kCrossEntropy, kGiniIndexWithLaplace, kSdivSqrtSplusB };
+
+   // foam types
+   enum EFoamType { kSeparate, kDiscr, kMonoTarget, kMultiTarget, kMultiClass };
+
+   // enum type for possible foam cell values
+   // kValue         : cell value who's rms is minimized
+   // kValueError    : error on kValue
+   // kValueDensity  : volume density of kValue
+   // kMeanValue     : mean sampling value (saved in fIntegral)
+   // kRms           : rms of sampling distribution (saved in fDriver)
+   // kRmsOvMean     : rms/mean of sampling distribution (saved in
+   //                  fDriver and fIntegral)
+   enum ECellValue { kValue, kValueError, kValueDensity, kMeanValue, 
+		     kRms, kRmsOvMean, kCellVolume };
 }
 
-#ifndef ROOT_TMVA_PDEFoamDistr
-#include "TMVA/PDEFoamDistr.h"
+#ifndef ROOT_TMVA_PDEFoamDensityBase
+#include "TMVA/PDEFoamDensityBase.h"
 #endif
 #ifndef ROOT_TMVA_PDEFoamVect
 #include "TMVA/PDEFoamVect.h"
@@ -75,34 +94,11 @@ namespace TMVA {
 #ifndef ROOT_TMVA_PDEFoamCell
 #include "TMVA/PDEFoamCell.h"
 #endif
+#ifndef ROOT_TMVA_PDEFoamKernelBase
+#include "TMVA/PDEFoamKernelBase.h"
+#endif
 
 namespace TMVA {
-   enum EKernel { kNone=0, kGaus=1, kLinN=2 };
-   enum ETargetSelection { kMean=0, kMpv=1 };
-   enum ECellType { kAll, kActive, kInActive };
-
-   // enum type for possible foam cell values
-   // kNev           : number of events (saved in cell element 0)
-   // kDiscriminator : discriminator (saved in cell element 0)
-   // kDiscriminatorError : error on discriminator (saved in cell element 1)
-   // kTarget0       : target 0 (saved in cell element 0)
-   // kTargetError   : error on target 0 (saved in cell element 1)
-   // kMeanValue     : mean sampling value (saved in fIntegral)
-   // kRms           : rms of sampling distribution (saved in fDriver)
-   // kRmsOvMean     : rms/mean of sampling distribution (saved in
-   //                  fDriver and fIntegral)
-   // kDensity       : number of events/cell volume
-   enum ECellValue { kNev, kDiscriminator, kDiscriminatorError, kTarget0,
-                     kTarget0Error, kMeanValue, kRms, kRmsOvMean, kDensity };
-   // separation quantity to use (kFoam: use PDEFoam algorithm)
-   enum EDTSeparation { kFoam, kGiniIndex, kMisClassificationError, 
-			kCrossEntropy };
-}
-
-namespace TMVA {
-
-   std::ostream& operator<< ( std::ostream& os, const PDEFoam& pdefoam );
-   std::istream& operator>> ( std::istream& istr,     PDEFoam& pdefoam );
 
    class PDEFoam : public TObject {
    protected:
@@ -130,17 +126,17 @@ namespace TMVA {
       //----------  working space for CELL exploration -------------
       Double_t *fAlpha;          // [fDim] Internal parameters of the hyperrectangle
       // ---------  PDE-Foam specific variables
-      EFoamType fFoamType;     // type of foam
+      EFoamType fFoamType;     // BACKWARDS COMPATIBILITY: type of foam
       Double_t *fXmin;         // [fDim] minimum for variable transform
       Double_t *fXmax;         // [fDim] maximum for variable transform
-      UInt_t fNElements;       // number of variables in every cell
+      UInt_t fNElements;       // BACKWARDS COMPATIBILITY: number of variables in every cell
       UInt_t fNmin;            // minimal number of events in cell to split cell
       UInt_t fMaxDepth;        // maximum depth of cell tree
-      Float_t fVolFrac;        // volume fraction (with respect to total phase space
-      Bool_t fFillFoamWithOrigWeights; // fill the foam with boost or orig. weights
-      EDTSeparation fDTSeparation; // split cells according to decision tree logic
-      Bool_t fPeekMax;         // peek up cell with max. driver integral for split
-      PDEFoamDistr *fDistr;    //! distribution of training events
+      Float_t fVolFrac;        // BACKWARDS COMPATIBILITY: volume fraction (with respect to total phase space
+      Bool_t fFillFoamWithOrigWeights; // BACKWARDS COMPATIBILITY: fill the foam with boost or orig. weights
+      EDTSeparation fDTSeparation; // BACKWARDS COMPATIBILITY: split cells according to decision tree logic
+      Bool_t fPeekMax;         // BACKWARDS COMPATIBILITY: peek up cell with max. driver integral for split
+      PDEFoamDensityBase *fDistr;  //! distribution of training events
       Timer *fTimer;           // timer for graphical output
       TObjArray *fVariableNames;// collection of all variable names
       mutable MsgLogger* fLogger;                     //! message logger
@@ -148,39 +144,24 @@ namespace TMVA {
       /////////////////////////////////////////////////////////////////
       //                            METHODS                          //
       /////////////////////////////////////////////////////////////////
-   private:
-      // Square function (fastest implementation)
-      template<typename T> T Sqr(T x) const { return x*x; }
-      PDEFoamDistr* GetDistr() const { assert(fDistr); return fDistr; }
 
    protected:
       // ---------- TMVA console output
 
       void OutputGrow(Bool_t finished = false ); // nice TMVA console output
 
-      // ---------- Weighting functions for kernels
-
-      Float_t WeightGaus(PDEFoamCell*, std::vector<Float_t>&, UInt_t dim=0);
-
-      Double_t WeightLinNeighbors( std::vector<Float_t> &txvec, ECellValue cv, 
-                                   Int_t dim1=-1, Int_t dim2=-1, 
-                                   Bool_t TreatEmptyCells=kFALSE );
-      
       // ---------- Foam build-up functions
 
       // Internal foam initialization functions
       void InitCells();                   // Initialisation of all foam cells
       Int_t CellFill(Int_t, PDEFoamCell*);// Allocates new empty cell and return its index
-      void Explore(PDEFoamCell *Cell);    // Exploration of the new cell, determine <wt>, wtMax etc.
-      void DTExplore(PDEFoamCell *Cell);  // Exploration of the new cell according to decision tree logic
+      virtual void Explore(PDEFoamCell *Cell); // Exploration of the new cell, determine <wt>, wtMax etc.
       void Varedu(Double_t [], Int_t&, Double_t&,Double_t&); // Determines the best edge, variace reduction
       void MakeAlpha();             // Provides random point inside hyperrectangle
       void Grow();                  // build up foam
       Long_t PeekMax();             // peek cell with max. driver integral
-      Long_t PeekLast();            // peek last created cell
       Int_t  Divide(PDEFoamCell *); // Divide iCell into two daughters; iCell retained, taged as inactive
       Double_t Eval(Double_t *xRand, Double_t &event_density); // evaluate distribution on point 'xRand'
-      Float_t GetSeparation(Float_t s, Float_t b); // calculate separation
 
       // ---------- Cell value access functions
 
@@ -188,24 +169,20 @@ namespace TMVA {
       Double_t GetCellElement(PDEFoamCell *cell, UInt_t i);  // get Element 'i' in cell 'cell'
       void SetCellElement(PDEFoamCell *cell, UInt_t i, Double_t value); // set Element 'i' in cell 'cell' to value 'value'
 
-      // helper functions to access cell data
-      Double_t GetCellValue(PDEFoamCell*, ECellValue);
-
       // specific function used during evaluation; determines, whether a cell value is undefined
-      Bool_t   CellValueIsUndefined( PDEFoamCell* );
+      virtual Bool_t   CellValueIsUndefined( PDEFoamCell* );
 
       // finds cell according to given event variables
-      PDEFoamCell* FindCell(std::vector<Float_t>&); //!
-      std::vector<TMVA::PDEFoamCell*> FindCells(std::vector<Float_t>&); //!
+      PDEFoamCell* FindCell(std::vector<Float_t>&);
+      std::vector<TMVA::PDEFoamCell*> FindCells(std::vector<Float_t>&);
+      std::vector<TMVA::PDEFoamCell*> FindCells(std::map<Int_t,Float_t>&);
+      void FindCells(std::map<Int_t, Float_t>&, PDEFoamCell*, std::vector<PDEFoamCell*> &);
 
-      // find cells, which fit a given event vector
-      void FindCellsRecursive(std::vector<Float_t>&, PDEFoamCell*, 
-                              std::vector<PDEFoamCell*> &);
-      
-      // calculates the mean/ mpv target values for a given event 'tvals'
-      std::vector<Float_t> GetCellTargets( std::vector<Float_t> &tvals, ETargetSelection ts );
-      // get number of events in cell during foam build-up
-      Double_t GetBuildUpCellEvents(PDEFoamCell* cell);
+      // get internal density
+      PDEFoamDensityBase* GetDistr() const { assert(fDistr); return fDistr; }
+
+      // Square function (fastest implementation)
+      template<typename T> T Sqr(T x) const { return x*x; }
       
       PDEFoam(const PDEFoam&);    // Copy Constructor  NOT USED
 
@@ -217,20 +194,18 @@ namespace TMVA {
 
       // ---------- Foam creation functions
 
-      void Init();                    // initialize PDEFoamDistr
-      void FillBinarySearchTree( const Event* ev, Bool_t NoNegWeights=kFALSE );
+      void Initialize(){};        // initialize the PDEFoam
+      void FillBinarySearchTree( const Event* ev ); // fill event into BST
       void Create();              // build-up foam
 
       // function to fill created cell with given value
-      void FillFoamCells(const Event* ev, Bool_t NoNegWeights=kFALSE);
+      virtual void FillFoamCells(const Event* ev, Float_t wt);
 
-      // functions to calc discriminators/ mean targets for every cell
-      // using filled cell values
-      void CalcCellDiscr();
-      void CalcCellTarget();
+      // remove all cell elements
+      void ResetCellElements();
 
-      // init TObject pointer on cells
-      void ResetCellElements(Bool_t allcells = false);
+      // function to call after foam is grown
+      virtual void Finalize(){};
 
       // ---------- Getters and Setters
 
@@ -240,19 +215,11 @@ namespace TMVA {
       void SetnBin(Int_t nBin){fNBin = nBin;}          // Sets no of bins in histogs in cell exploration
       void SetEvPerBin(Int_t EvPerBin){fEvPerBin =EvPerBin;} // Sets max. no. of effective events per bin
       void SetInhiDiv(Int_t, Int_t ); // Set inhibition of cell division along certain edge
-      void SetNElements(UInt_t numb){fNElements = numb;} // init every cell element (TVectorD*)
-      void SetVolumeFraction(Float_t vfr){fVolFrac = vfr;} // set VolFrac
-      void SetFoamType(EFoamType ft);   // set foam type
-      void SetFillFoamWithOrigWeights(Bool_t new_val){fFillFoamWithOrigWeights=new_val;}
-      void SetDTSeparation(EDTSeparation new_val){fDTSeparation=new_val;}
-      void SetPeekMax(Bool_t new_val){ fPeekMax = new_val; }
+      void SetDensity(PDEFoamDensityBase *dens) { fDistr = dens; }
 
       // coverity[ -tainted_data_return ]
       Int_t    GetTotDim()    const {return fDim;  } // Get total dimension
       TString  GetFoamName()  const {return fName; } // Get name of foam
-      UInt_t   GetNElements() const {return fNElements; } // returns number of elements, saved on every cell
-      Float_t  GetVolumeFraction() const {return fVolFrac;} // get VolFrac from PDEFoam
-      EFoamType GetFoamType()      const {return fFoamType;}; // get foam type
       UInt_t   GetNActiveCells()   const {return fNoAct;}; // returns number of active cells
       UInt_t   GetNInActiveCells() const {return GetNCells()-GetNActiveCells();}; // returns number of not active cells
       UInt_t   GetNCells()         const {return fNCells;};   // returns number of cells
@@ -261,7 +228,6 @@ namespace TMVA {
       // Getters and Setters for user cut options
       void     SetNmin(UInt_t val)     { fNmin=val;      }
       UInt_t   GetNmin()               { return fNmin;   }
-      Bool_t   GetFillFoamWithOrigWeights() const { return fFillFoamWithOrigWeights; }
       void     SetMaxDepth(UInt_t maxdepth) { fMaxDepth = maxdepth; }
       UInt_t   GetMaxDepth() const { return fMaxDepth; }
 
@@ -293,61 +259,42 @@ namespace TMVA {
       void     CheckAll(Int_t);  // Checks correctness of the entire data structure in the FOAM object
       void     PrintCell(Long_t iCell=0); // Print content of cell
       void     PrintCells();     // Prints content of all cells
-      void     CheckCells(Bool_t remove_empty_cells=false);   // check all cells with respect to critical values
-      void     RemoveEmptyCell(Int_t iCell); // removes iCell if its volume is zero
-      void     PrintCellElements();          // print all cells with its elements
 
       // Message logger
       MsgLogger& Log() const { return *fLogger; }
 
-      // ---------- Foam output
-
-      friend std::ostream& operator<< ( std::ostream& os, const PDEFoam& pdefoam );
-      friend std::istream& operator>> ( std::istream& istr,     PDEFoam& pdefoam );
-
-      void ReadStream(istream &);         // read  foam from stream
-      void PrintStream(ostream  &) const; // write foam from stream
-      void ReadXML( void* parent );       // read  foam variables from xml
-      void AddXMLTo( void* parent );      // write foam variables to xml
-
       // ---------- Foam projection methods
 
       // project foam to two-dimensional histogram
-      TH2D* Project2(Int_t idim1, Int_t idim2, const char *opt="cell_value", 
-                     const char *ker="kNone", UInt_t maxbins=50);
-
-      // helper function for Project2()
-      Double_t GetProjectionCellValue( PDEFoamCell* cell,
-                                       Int_t idim1, Int_t idim2, ECellValue cv );
+      virtual TH2D* Project2(Int_t idim1, Int_t idim2, ECellValue cell_value=kValue, 
+			     PDEFoamKernelBase *kernel=NULL, UInt_t maxbins=50);
 
       // Project one-dimensional foam to a 1-dim histogram
-      TH1D* Draw1Dim(const char *opt, Int_t nbin);
+      TH1D* Draw1Dim(ECellValue cell_value, Int_t nbin, PDEFoamKernelBase *kernel=NULL);
 
       // Generates C++ code (root macro) for drawing foam with boxes (only 2-dim!)
       void RootPlot2dim( const TString& filename, TString opt,
-                         Bool_t CreateCanvas = kTRUE, Bool_t colors = kTRUE,
-                         Bool_t log_colors = kFALSE  );
+                         Bool_t CreateCanvas = kTRUE, Bool_t colors = kTRUE );
 
       // ---------- Foam evaluation functions
 
       // get cell value for a given event
-      Double_t GetCellValue(std::vector<Float_t>&, ECellValue);
+      virtual Float_t GetCellValue( std::vector<Float_t>& xvec, ECellValue cv, PDEFoamKernelBase*  );
 
-      // helper functions to access cell data with kernel
-      Double_t GetCellDiscr(std::vector<Float_t> &xvec, EKernel kernel=kNone);
-      Double_t GetCellDensity(std::vector<Float_t> &xvec, EKernel kernel=kNone);
+      // get cell values for a given (incomplete) event vector
+      virtual std::vector<Float_t> GetCellValue( std::map<Int_t,Float_t>& xvec, ECellValue cv );
 
-      // calc mean cell value of neighbor cells
-      Double_t GetAverageNeighborsValue(std::vector<Float_t> &txvec, ECellValue cv);
+      // get cell value stored in a foam cell
+      virtual Float_t GetCellValue( PDEFoamCell* cell, ECellValue cv );
 
-      // returns regression value (mono target regression)
-      Double_t GetCellRegValue0(std::vector<Float_t>&, EKernel kernel=kNone);
-
-      // returns regression value i, given all variables (multi target regression)
-      std::vector<Float_t> GetProjectedRegValue(std::vector<Float_t> &vals, EKernel kernel=kNone, ETargetSelection ts=kMean);
+      // ---------- friend classes
+      friend class PDEFoamKernelBase;
+      friend class PDEFoamKernelTrivial;
+      friend class PDEFoamKernelLinN;
+      friend class PDEFoamKernelGauss;
 
       // ---------- ROOT class definition
-      ClassDef(PDEFoam,5) // Tree of PDEFoamCells
+      ClassDef(PDEFoam,6) // Tree of PDEFoamCells
    }; // end of PDEFoam
 
 }  // namespace TMVA

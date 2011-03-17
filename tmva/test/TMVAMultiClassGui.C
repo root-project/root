@@ -241,14 +241,14 @@ void TMVAMultiClassGui( const char* fName = "TMVAMulticlass.root" )
                  "Plots to monitor boosting and pruning of decision trees (macro BDTControlPlots.C)",
                  buttonType, "BDT" );
 
-   
+   */
    title = Form( "(%i) Plot Foams (PDEFoam)", ++ic );
    ActionButton( cbar,  
                  title,
-                 Form( ".x PlotFoams.C", fName ),
+                 ".x PlotFoams.C(\"weights/TMVAMulticlass_PDEFoam.weights_foams.root\")",
                  "Plot Foams (macro PlotFoams.C)",
                  buttonType, "PDEFoam" );
-
+   /*
    title = Form( "(%i) General Boost Control Plots", ++ic );
    ActionButton( cbar,  
                  title,

@@ -11,10 +11,15 @@
  *      Virtual base class for all MVA method                                     *
  *                                                                                *
  * Authors (alphabetical):                                                        *
+ *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Nadim Sah       <Nadim.Sah@cern.ch>      - Berlin, Germany                *
+ *      Peter Speckmayer <Peter.Speckmazer@cern.ch> - CERN, Switzerland           *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
+ *      Jan Therhaag  <Jan.Therhaag@cern.ch>        - U of Bonn, Germany          *
+ *      Eckhard v. Toerne  <evt@uni-bonn.de>        - U of Bonn, Germany          *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
+ * Copyright (c) 2005-2011:                                                       *
  *      CERN, Switzerland                                                         *
  *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
@@ -57,6 +62,7 @@
 #include "TMVA/Ranking.h"
 #include "TMVA/VariableInfo.h"
 #include "TMVA/DataSetManager.h"
+#include "TMVA/VariableRearrangeTransform.h"
 
 REGISTER_METHOD(Category)
 
@@ -131,8 +137,20 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
 
    Log() << kINFO << "Adding sub-classifier: " << addedMethodName << "::" << theTitle << Endl;
 
+   // add transformation to rearrange the input variables
+   VariableRearrangeTransform* rearrangeTransformation = new VariableRearrangeTransform(DataInfo());
+   TString variables(theVariables);
+   variables.ReplaceAll(":",","); // use ',' as separator between variables
+//   std::cout << "variables " << variables.Data() << std::endl;
+
    DataSetInfo& dsi = CreateCategoryDSI(theCut, theVariables, theTitle);
 
+   rearrangeTransformation->SetOutputDataSetInfo( &dsi );
+   rearrangeTransformation->ToggleInputSortOrder(kFALSE); // kFALSE --> take the order of variables from the option string
+   rearrangeTransformation->SelectInput( variables, kTRUE );
+//   std::cout << "set input done "  << std::endl;
+
+   rearrangeTransformation->SetEnabled(kFALSE);
    IMethod* addedMethod = ClassifierFactory::Instance().Create(addedMethodName,GetJobName(),theTitle,dsi,theOptions);
 
    MethodBase *method = (dynamic_cast<MethodBase*>(addedMethod));
@@ -141,6 +159,7 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
    
    method->SetupMethod();
    method->ParseOptions();
+   method->GetTransformationHandler().AddTransformation( rearrangeTransformation, -1 );
    method->ProcessSetup();
 
    // set or create correct method base dir for added method
@@ -171,6 +190,8 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
    primaryDSI.AddSpectator( Form("%s_cat%i:=%s", GetName(),(int)fMethods.size(),theCut.GetTitle()),
                             Form("%s:%s",GetName(),method->GetName()),
                             "pass", 0, 0, 'C' );
+
+   rearrangeTransformation->SetEnabled(kTRUE);
 
    return method;
 }
@@ -217,7 +238,9 @@ TMVA::DataSetInfo& TMVA::MethodCategory::CreateCategoryDSI(const TCut& theCut,
 
       // check the variables of the old dsi for the variable that we want to add
       for (itrVarInfo = oldDSI.GetVariableInfos().begin(); itrVarInfo != oldDSI.GetVariableInfos().end(); itrVarInfo++) {
-         if((*itrVariables==itrVarInfo->GetLabel()) || (*itrVariables==itrVarInfo->GetExpression())) {
+         if((*itrVariables==itrVarInfo->GetLabel()) ) { // || (*itrVariables==itrVarInfo->GetExpression())) { 
+	    // don't compare the expression, since the user might take two times the same expression, but with different labels
+	    // and apply different transformations to the variables.
             dsi->AddVariable(*itrVarInfo);
             varMap.push_back(counter);
             found = kTRUE;
@@ -227,7 +250,9 @@ TMVA::DataSetInfo& TMVA::MethodCategory::CreateCategoryDSI(const TCut& theCut,
       
       // check the spectators of the old dsi for the variable that we want to add
       for (itrVarInfo = oldDSI.GetSpectatorInfos().begin(); itrVarInfo != oldDSI.GetSpectatorInfos().end(); itrVarInfo++) {
-         if((*itrVariables==itrVarInfo->GetLabel()) || (*itrVariables==itrVarInfo->GetExpression())) {
+         if((*itrVariables==itrVarInfo->GetLabel()) ) { // || (*itrVariables==itrVarInfo->GetExpression())) {
+	    // don't compare the expression, since the user might take two times the same expression, but with different labels
+	    // and apply different transformations to the variables.
             dsi->AddVariable(*itrVarInfo);
             varMap.push_back(counter);
             found = kTRUE;
@@ -334,9 +359,11 @@ void TMVA::MethodCategory::Train()
    const Int_t  MinNoTrainingEvents = 10;
 
    // THIS NEEDS TO BE CHANGED:
-   TString what("Classification");
-   what.ToLower();
-   Types::EAnalysisType analysisType = ( what.CompareTo("regression")==0 ? Types::kRegression : Types::kClassification );
+//    TString what("Classification");
+//    what.ToLower();
+//    Types::EAnalysisType analysisType = ( what.CompareTo("regression")==0 ? Types::kRegression : Types::kClassification );
+
+   Types::EAnalysisType analysisType = GetAnalysisType();
 
    // start the training
    Log() << kINFO << "Train all sub-classifiers for " 
@@ -355,6 +382,7 @@ void TMVA::MethodCategory::Train()
 
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
       if(!mva) continue;
+      mva->SetAnalysisType(GetAnalysisType());
       if (!mva->HasAnalysisType( analysisType, 
                                  mva->DataInfo().GetNClasses(), 
                                  mva->DataInfo().GetNTargets() ) ) {
@@ -582,15 +610,44 @@ Double_t TMVA::MethodCategory::GetMvaValue( Double_t* err, Double_t* errUpper )
    }
 
    // get mva value from the suitable sub-classifier
-   ev->SetVariableArrangement(&fVarMaps[methodToUse]);
-   MethodBase* m = dynamic_cast<MethodBase*>(fMethods[methodToUse]);
-   Double_t mvaValue = 0;
-   if(m!=0) {
-      mvaValue = m->GetMvaValue(ev,err);
-   }
-   if (errUpper) *errUpper=-1; // using same convention as in NoErrorCalc()
-   ev->SetVariableArrangement(0);
+   Double_t mvaValue = dynamic_cast<MethodBase*>(fMethods[methodToUse])->GetMvaValue(ev,err,errUpper);
 
    return mvaValue;
+}
+
+
+
+//_______________________________________________________________________
+const std::vector<Float_t> &TMVA::MethodCategory::GetRegressionValues() 
+{
+   // returns the mva value of the right sub-classifier
+
+   if (fMethods.size()==0) return MethodBase::GetRegressionValues();
+
+   UInt_t methodToUse = 0;
+   const Event* ev = GetEvent();
+
+   // determine which sub-classifier to use for this event
+   Int_t suitableCutsN = 0;
+
+   for (UInt_t i=0; i<fMethods.size(); ++i) {
+      if (PassesCut(ev, i)) {
+         ++suitableCutsN;
+         methodToUse=i;
+      }
+   }
+
+   if (suitableCutsN == 0) {
+      Log() << kWARNING << "Event does not lie within the cut of any sub-classifier." << Endl;
+      return MethodBase::GetRegressionValues();
+   }
+
+   if (suitableCutsN > 1) {
+      Log() << kFATAL << "The defined categories are not disjoint." << Endl;
+      return MethodBase::GetRegressionValues();
+   }
+
+   // get mva value from the suitable sub-classifier
+   return dynamic_cast<MethodBase*>(fMethods[methodToUse])->GetRegressionValues();
 }
 

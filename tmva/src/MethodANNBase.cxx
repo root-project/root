@@ -21,7 +21,7 @@
  *      Joerg Stelzer         <stelzer@cern.ch>        - DESY, Germany            *
  *      Jiahang Zhong         <Jiahang.Zhong@cern.ch>  - Academia Sinica, Taipei  *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
+ * Copyright (c) 2005-2011:                                                       *
  *      CERN, Switzerland                                                         *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -271,13 +271,10 @@ void TMVA::MethodANNBase::BuildNetwork( vector<Int_t>* layout, vector<Double_t>*
    // build network given a layout (number of neurons in each layer)
    // and optional weights array
 
-   if (fEstimator!=kMSE && fEstimator!=kCE) {
-      if (fEstimatorS == "MSE")  fEstimator = kMSE;    //zjh
-      else if (fEstimatorS == "CE")    fEstimator = kCE;      //zjh
-   }
+   if (fEstimatorS == "MSE")  fEstimator = kMSE;    //zjh
+   else if (fEstimatorS == "CE")    fEstimator = kCE;      //zjh
+   else Log()<<kWARNING<<"fEstimator="<<fEstimator<<"\tfEstimatorS="<<fEstimatorS<<Endl;
    if (fEstimator!=kMSE && fEstimator!=kCE) Log()<<kWARNING<<"Estimator type unspecified \t"<<Endl; //zjh
-
-
 
    Log() << kINFO << "Building Network" << Endl;
 

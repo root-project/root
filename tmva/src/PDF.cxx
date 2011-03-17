@@ -248,7 +248,7 @@ void TMVA::PDF::BuildPDF( const TH1* hist )
 
    // histogram should be non empty
    if (hist->GetEntries() <= 0)
-      Log() << kFATAL << "Number of entries <= 0 in histogram: " << hist->GetTitle() << Endl;
+      Log() << kFATAL << "Number of entries <= 0 (" << hist->GetEntries() << " in histogram: " << hist->GetTitle() << Endl;
 
    if (fInterpolMethod == PDF::kKDE) {
       Log() << "Create "

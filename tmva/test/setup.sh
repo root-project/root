@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export HERE=$PWD
+
 # set symbolic links to data file and to rootmaps
 #cd test;
 if [ ! -h tmva_example.root ]; then ln -s data/toy_sigbkg.root tmva_example.root; fi
@@ -53,4 +55,4 @@ fi
 # prepare for PyROOT
 export PYTHONPATH=$PWD/lib:`root-config --libdir`:$PYTHONPATH
 
-cd test
+cd $HERE

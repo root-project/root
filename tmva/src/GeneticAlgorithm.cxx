@@ -212,7 +212,7 @@ Double_t TMVA::GeneticAlgorithm::SpreadControl( Int_t ofSteps, Int_t successStep
    Int_t n = 0;
    Int_t sum = 0;
    std::deque<Int_t>::iterator vec = fSuccessList.begin();
-   for (; vec<fSuccessList.end() ; vec++) {
+   for (; vec != fSuccessList.end() ; vec++) {
       sum += *vec;
       n++;
    }

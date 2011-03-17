@@ -66,7 +66,7 @@ namespace TMVA {
 
       TTree*           GetTree()      const { return fTree; }
       Double_t         GetWeight()    const { return fWeight; }
-      UInt_t           GetEntries()   const { return fTree->GetEntries(); }
+      UInt_t           GetEntries()   const { if( !fTree ) return 0; else return fTree->GetEntries(); }
       Types::ETreeType GetTreeType()  const { return fTreeType; }
       const TString&   GetClassName() const { return fClassName; }
 

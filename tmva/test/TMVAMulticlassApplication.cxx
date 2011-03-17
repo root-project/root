@@ -36,6 +36,7 @@ int main(int argc, char** argv )
    Use["MLP"]             = 1;
    Use["BDTG"]            = 1;
    Use["FDA_GA"]          = 0;
+   Use["PDEFoam"]         = 0;
    //---------------------------------------------------------------
   
    std::cout << std::endl;
@@ -85,13 +86,15 @@ int main(int argc, char** argv )
 
    // book output histograms
    UInt_t nbin = 100;
-   TH1F *histMLP_signal(0), *histBDTG_signal(0), *histFDAGA_signal(0);
+   TH1F *histMLP_signal(0), *histBDTG_signal(0), *histFDAGA_signal(0), *histPDEFoam_signal(0);
    if (Use["MLP"])    
       histMLP_signal    = new TH1F( "MVA_MLP_signal",    "MVA_MLP_signal",    nbin, 0., 1.1 );
    if (Use["BDTG"])
       histBDTG_signal  = new TH1F( "MVA_BDTG_signal",   "MVA_BDTG_signal",   nbin, 0., 1.1 );
    if (Use["FDA_GA"])
       histFDAGA_signal = new TH1F( "MVA_FDA_GA_signal", "MVA_FDA_GA_signal", nbin, 0., 1.1 );
+   if (Use["PDEFoam"])
+      histPDEFoam_signal = new TH1F( "MVA_PDEFoam_signal", "MVA_PDEFoam_signal", nbin, 0., 1.1 );
 
 
    TFile *input(0);
@@ -133,7 +136,8 @@ int main(int argc, char** argv )
          histBDTG_signal->Fill((reader->EvaluateMulticlass( "BDTG method" ))[0]);
       if (Use["FDA_GA"])
          histFDAGA_signal->Fill((reader->EvaluateMulticlass( "FDA_GA method" ))[0]);
-    
+      if (Use["PDEFoam"])
+         histPDEFoam_signal->Fill((reader->EvaluateMulticlass( "PDEFoam method" ))[0]);
       
    }
    
@@ -148,7 +152,8 @@ int main(int argc, char** argv )
       histBDTG_signal->Write(); 
    if (Use["FDA_GA"])
       histFDAGA_signal->Write();
-
+   if (Use["PDEFoam"])
+      histPDEFoam_signal->Write();
 
    target->Close();
    std::cout << "--- Created root file: \"TMVMulticlassApp.root\" containing the MVA output histograms" << std::endl;

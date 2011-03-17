@@ -332,7 +332,7 @@ namespace TMVA {
 
       static MsgLogger* fgLogger;    // static because there is a huge number of nodes...
 
-      std::vector<Double_t>       fFisherCoeff;    // the other fisher coeff (offset at the last element
+      std::vector<Double_t>       fFisherCoeff;    // the fisher coeff (offset at the last element)
 
       Float_t  fCutValue;        // cut value appplied on this node to discriminate bkg against sig
       Bool_t   fCutType;         // true: if event variable > cutValue ==> signal , false otherwise

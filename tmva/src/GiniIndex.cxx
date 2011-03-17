@@ -59,7 +59,8 @@ Double_t TMVA::GiniIndex::GetSeparationIndex( const Double_t &s, const Double_t 
 
    if (s+b <= 0)      return 0;
    if (s<=0 || b <=0) return 0;
-   else               return s*b/(s+b)/(s+b); 
+   //   else               return s*b/(s+b)/(s+b); 
+   else               return 2*s*b/(s+b)/(s+b); 
 }
 
 

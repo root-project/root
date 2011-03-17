@@ -1007,8 +1007,13 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const vector<TMVA::Event*> & eventSa
          //  hence can be safely omitted
          
          Double_t istepSize =( xmax[ivar] - xmin[ivar] ) / Double_t(nBins);
+         // std::cout << "min="<<xmin[ivar]  
+         //           << " max="<<xmax[ivar] 
+         //           << " widht=" << istepSize 
+         //           << std::endl;
          for (Int_t icut=0; icut<fNCuts; icut++) {
             cutValues[ivar][icut]=xmin[ivar]+(Double_t(icut+1))*istepSize;
+            //            std::cout << " cutValues["<<ivar<<"]["<<icut<<"]=" <<  cutValues[ivar][icut] << std::endl;
          }
       }
    }

@@ -89,8 +89,8 @@ namespace TMVA {
       Long64_t  GetNEvents( Types::ETreeType type = Types::kMaxTreeType ) const;
       Long64_t  GetNTrainingEvents()              const { return GetNEvents(Types::kTraining); }
       Long64_t  GetNTestEvents()                  const { return GetNEvents(Types::kTesting); }
-      Event*    GetEvent()                        const;
-      Event*    GetEvent        ( Long64_t ievt ) const { fCurrentEventIdx = ievt; return GetEvent(); }
+      Event*    GetEvent()                        const; // returns event without transformations
+      Event*    GetEvent        ( Long64_t ievt ) const { fCurrentEventIdx = ievt; return GetEvent(); } // returns event without transformations
       Event*    GetTrainingEvent( Long64_t ievt ) const { return GetEvent(ievt, Types::kTraining); }
       Event*    GetTestEvent    ( Long64_t ievt ) const { return GetEvent(ievt, Types::kTesting); }
       Event*    GetEvent        ( Long64_t ievt, Types::ETreeType type ) const {

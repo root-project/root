@@ -469,7 +469,8 @@ void TMVA::MethodTMlpANN::MakeClass( const TString& theClassFileName ) const
    else
       classFileName = theClassFileName;
 
-   Log() << kINFO << "Creating specific (TMultiLayerPerceptron) standalone response class: " << Endl;
+   classFileName.ReplaceAll(".class","");
+   Log() << kINFO << "Creating specific (TMultiLayerPerceptron) standalone response class: " << classFileName << Endl;
    fMLP->Export( classFileName.Data() );
 }
 

@@ -424,8 +424,6 @@ TMVA::DataSet* TMVA::DataSetInfo::GetDataSet() const
 	 Log() << kFATAL << "DataSetManager has not been set in DataSetInfo (GetDataSet() )." << Endl;
       fDataSet = fDataSetManager->CreateDataSet(GetName());
 
-
-
       fNeedsRebuilding = kFALSE;
    }
    return fDataSet;

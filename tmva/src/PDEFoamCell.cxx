@@ -1,3 +1,5 @@
+// @(#)root/tmva $Id$
+// Author: S.Jadach, Tancredi Carli, Dominik Dannheim, Alexander Voigt
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -15,7 +17,7 @@
  *      S. Jadach        - Institute of Nuclear Physics, Cracow, Poland           *
  *      Tancredi Carli   - CERN, Switzerland                                      *
  *      Dominik Dannheim - CERN, Switzerland                                      *
- *      Alexander Voigt  - CERN, Switzerland                                      *
+ *      Alexander Voigt  - TU Dresden, Germany                                    *
  *                                                                                *
  * Copyright (c) 2008:                                                            *
  *      CERN, Switzerland                                                         *
@@ -203,6 +205,23 @@ UInt_t TMVA::PDEFoamCell::GetDepth()
       ++depth;
    }
    return depth;
+}
+
+//_____________________________________________________________________
+UInt_t TMVA::PDEFoamCell::GetTreeDepth(UInt_t depth)
+{
+   // Get depth of cell tree, starting at this cell.
+
+   if (GetStat() == 1)    // this is an active cell
+      return depth + 1;
+
+   UInt_t depth0 = 0, depth1 = 0;
+   if (GetDau0() != NULL)
+      depth0 = GetDau0()->GetTreeDepth(depth+1);
+   if (GetDau1() != NULL)
+      depth1 = GetDau1()->GetTreeDepth(depth+1);
+
+   return (depth0 > depth1 ? depth0 : depth1);
 }
 
 //_____________________________________________________________________

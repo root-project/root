@@ -839,14 +839,14 @@ void TMVA::Factory::WriteDataInformation()
    processTrfs = fTransformations;
 
    // remove any trace of identity transform - if given (avoid to apply it twice)
-   processTrfs.ReplaceAll(" ","");
-   processTrfs.ReplaceAll("I;","");
-   processTrfs.ReplaceAll(";I","");
-   processTrfs.ReplaceAll("I","");
+//    processTrfs.ReplaceAll(" ","");
+//    processTrfs.ReplaceAll("I;","");
+//    processTrfs.ReplaceAll(";I","");
+//    processTrfs.ReplaceAll("I","");
 
    // and re-add identity transform at beginning
-   if (processTrfs.Length() > 0) processTrfs = TString("I;") + processTrfs;
-   else                          processTrfs = TString("I");
+//    if (processTrfs.Length() > 0) processTrfs = TString("I;") + processTrfs;
+//    else                          processTrfs = TString("I");
 
    std::vector<TMVA::TransformationHandler*> trfs;
    TransformationHandler* identityTrHandler = 0;
@@ -855,61 +855,18 @@ void TMVA::Factory::WriteDataInformation()
    std::vector<TString>::iterator trfsDefIt = trfsDef.begin();
    for (; trfsDefIt!=trfsDef.end(); trfsDefIt++) {
       trfs.push_back(new TMVA::TransformationHandler(DefaultDataSetInfo(), "Factory"));
-      std::vector<TString> trfDef = gTools().SplitString(*trfsDefIt,',');
+      TString trfS = (*trfsDefIt);
 
-      std::vector<TString>::iterator trfDefIt = trfDef.begin();
+	 Log() << kINFO << Endl;
+	 Log() << kINFO << "current transformation string: '" << trfS.Data() << "'" << Endl;
+	 TMVA::MethodBase::CreateVariableTransforms( trfS, 
+						     DefaultDataSetInfo(),
+						     *(trfs.back()),
+						     Log() );
 
-      for (; trfDefIt!=trfDef.end(); trfDefIt++) {
-         TString trfS = (*trfDefIt);
-         
-         TList* trClsList = gTools().ParseFormatLine( trfS, "_" ); // split entry to get trf-name and class-name
-         TListIter trClsIt(trClsList);
-
-         const TString& trName = ((TObjString*)trClsList->At(0))->GetString();
-         TString trCls = "AllClasses";
-         ClassInfo *ci = NULL;
-         Int_t idxCls = -1;
-         if (trClsList->GetEntries() > 1) {
-            trCls  = ((TObjString*)trClsList->At(1))->GetString();
-            if (trCls == "AllClasses") {
-               // do nothing, since all necessary parameters are already set
-            }
-            else {
-               ci = DefaultDataSetInfo().GetClassInfo( trCls );
-               if (ci == NULL) {
-                  Log() << kFATAL << "Class " << trCls << " not known for variable transformation " << trName << ", please check." << Endl;
-               }
-               else {
-                  idxCls = ci->GetNumber();
-               }
-            }
-         }
-         delete trClsList;
-
-         if (trName=='I') {
-            trfs.back()->AddTransformation( new VariableIdentityTransform ( DefaultDataSetInfo() ), idxCls );
+         if (trfS.BeginsWith('I')) {
             identityTrHandler = trfs.back();
          } 
-         else if (trName=='D') {
-            trfs.back()->AddTransformation( new VariableDecorrTransform   ( DefaultDataSetInfo() ), idxCls );
-         } 
-         else if (trName=='P') {
-            trfs.back()->AddTransformation( new VariablePCATransform      ( DefaultDataSetInfo() ), idxCls );
-         } 
-         else if (trName=='U') {
-           trfs.back()->AddTransformation( new VariableGaussTransform    ( DefaultDataSetInfo(), "Uniform" ), idxCls );
-         }
-         else if (trName=='G') {
-            trfs.back()->AddTransformation( new VariableGaussTransform    ( DefaultDataSetInfo() ), idxCls );
-         } 
-         else if (trName=='N') {
-            trfs.back()->AddTransformation( new VariableNormalizeTransform( DefaultDataSetInfo() ), idxCls );
-         } 
-         else {
-            Log() << kINFO << "The transformation " << *trfsDefIt << " definition is not valid, the \n"
-                    << "transformation " << trName << " is not known!" << Endl;
-         }
-      }
    }
 
    const std::vector<Event*>& inputEvents = DefaultDataSetInfo().GetDataSet()->GetEventCollection();
@@ -1074,7 +1031,7 @@ void TMVA::Factory::TrainAllMethods()
             else methCat->fDataSetManager = fDataSetManager;
          }
          //ToDo, Do we need to fill the DataSetManager of MethodBoost here too?
-
+	 
          m->SetAnalysisType(fAnalysisType);
          m->SetupMethod();
          m->ReadStateFromFile();

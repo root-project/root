@@ -117,7 +117,7 @@ Float_t TMVA::ConvergenceTest::SpeedControl( UInt_t ofSteps )
    Int_t n = 0;
    Int_t sum = 0;
    std::deque<Short_t>::iterator vec = fSuccessList.begin();
-   for (; vec<fSuccessList.end() ; vec++) {
+   for (; vec != fSuccessList.end() ; vec++) {
       sum += *vec;
       n++;
    }

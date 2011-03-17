@@ -38,6 +38,7 @@ void TMVAMulticlass( TString myMethodList = "" )
    Use["MLP"]             = 1;
    Use["BDTG"]            = 1;
    Use["FDA_GA"]          = 0;
+   Use["PDEFoam"]         = 0;
    //---------------------------------------------------------------
    
    std::cout << std::endl;
@@ -109,6 +110,8 @@ void TMVAMulticlass( TString myMethodList = "" )
       factory->BookMethod( TMVA::Types::kMLP, "MLP", "!H:!V:NeuronType=tanh:NCycles=1000:HiddenLayers=N+5,5:TestRate=5:EstimatorType=MSE");
    if (Use["FDA_GA"]) // functional discriminant with GA minimizer
       factory->BookMethod( TMVA::Types::kFDA, "FDA_GA", "H:!V:Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):FitMethod=GA:PopSize=300:Cycles=3:Steps=20:Trim=True:SaveBestGen=1" );
+   if (Use["PDEFoam"]) // PDE-Foam approach
+      factory->BookMethod( TMVA::Types::kPDEFoam, "PDEFoam", "!H:!V:TailCut=0.001:VolFrac=0.0666:nActiveCells=500:nSampl=2000:nBin=5:Nmin=100:Kernel=None:Compress=T" );
    
   // Train MVAs using the set of training events
    factory->TrainAllMethods();

@@ -12,6 +12,7 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
+ *      Peter Speckmayer <Peter.Speckmayer@cern.ch> - CERN, Switzerland           *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -190,17 +191,21 @@ void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
    Double_t *xval = new Double_t[nvar];
 
    // perform event loop
-   for (Int_t i=0; i<Data()->GetNEvents(); i++) {
+   for (Int_t i=0, iEnd=Data()->GetNEvents(); i<iEnd; ++i) {
 
-      // retrieve the event
-      const Event* ev = GetEvent(i);
-      Double_t weight = ev->GetWeight();
+      // retrieve the original (not transformed) event
+      const Event* origEvt = Data()->GetEvent(i);
+      Double_t weight = origEvt->GetWeight();
 
       // in case event with neg weights are to be ignored
       if (IgnoreEventsWithNegWeightsInTraining() && weight <= 0) continue;
 
-      if (DataInfo().IsSignal(ev) != isSignal) continue;
+      if (DataInfo().IsSignal(origEvt) != isSignal) continue;
 
+      // transform the event
+      GetTransformationHandler().SetTransformationReferenceClass( origEvt->GetClass() );
+      const Event* ev = GetTransformationHandler().Transform( origEvt );
+      
       // event is of good type
       sumOfWeights += weight;
 
@@ -250,21 +255,31 @@ Double_t TMVA::MethodHMatrix::GetMvaValue( Double_t* err, Double_t* errUpper )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodHMatrix::GetChi2( TMVA::Event* e,  Types::ESBType type ) const
+Double_t TMVA::MethodHMatrix::GetChi2( Types::ESBType type ) 
 {
    // compute chi2-estimator for event according to type (signal/background)
 
+   // get original (not transformed) event
+
+   const Event* origEvt = fTmpEvent ? fTmpEvent:Data()->GetEvent();
+
    // loop over variables
-   UInt_t ivar,jvar;
-   vector<Double_t> val( GetNvar() );
-   for (ivar=0; ivar<GetNvar(); ivar++) {
-      val[ivar] = e->GetValue(ivar);
-      if (IsNormalised()) val[ivar] = gTools().NormVariable( val[ivar], GetXmin( ivar ), GetXmax( ivar ) );
-   }
+   UInt_t ivar(0), jvar(0), nvar(GetNvar());
+   vector<Double_t> val( nvar );
+
+   // transform the event according to the given type (signal/background)
+   if (type==Types::kSignal)
+      GetTransformationHandler().SetTransformationReferenceClass( fSignalClass     );
+   else
+      GetTransformationHandler().SetTransformationReferenceClass( fBackgroundClass );
+
+   const Event* ev = GetTransformationHandler().Transform( origEvt );
+
+   for (ivar=0; ivar<nvar; ivar++) val[ivar] = ev->GetValue( ivar );
 
    Double_t chi2 = 0;
-   for (ivar=0; ivar<GetNvar(); ivar++) {
-      for (jvar=0; jvar<GetNvar(); jvar++) {
+   for (ivar=0; ivar<nvar; ivar++) {
+      for (jvar=0; jvar<nvar; jvar++) {
          if (type == Types::kSignal) 
             chi2 += ( (val[ivar] - (*fVecMeanS)(ivar))*(val[jvar] - (*fVecMeanS)(jvar))
                       * (*fInvHMatrixS)(ivar,jvar) );
@@ -281,54 +296,30 @@ Double_t TMVA::MethodHMatrix::GetChi2( TMVA::Event* e,  Types::ESBType type ) co
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodHMatrix::GetChi2( Types::ESBType type ) const
+void TMVA::MethodHMatrix::AddWeightsXMLTo( void* parent ) const 
 {
-   // compute chi2-estimator for event according to type (signal/background)
+   // create XML description for HMatrix classification
 
-   const Event * ev = GetEvent();
-
-   // loop over variables
-   UInt_t ivar,jvar;
-   vector<Double_t> val( GetNvar() );
-   for (ivar=0; ivar<GetNvar(); ivar++) val[ivar] = ev->GetValue( ivar );
-
-   Double_t chi2 = 0;
-   for (ivar=0; ivar<GetNvar(); ivar++) {
-      for (jvar=0; jvar<GetNvar(); jvar++) {
-         if (type == Types::kSignal) 
-            chi2 += ( (val[ivar] - (*fVecMeanS)(ivar))*(val[jvar] - (*fVecMeanS)(jvar))
-                      * (*fInvHMatrixS)(ivar,jvar) );
-         else
-            chi2 += ( (val[ivar] - (*fVecMeanB)(ivar))*(val[jvar] - (*fVecMeanB)(jvar))
-                      * (*fInvHMatrixB)(ivar,jvar) );
-      }
-   }
-
-   // sanity check
-   if (chi2 < 0) Log() << kFATAL << "<GetChi2> negative chi2: " << chi2 << Endl;
-
-   return chi2;
-}
-
-//_______________________________________________________________________
-void TMVA::MethodHMatrix::AddWeightsXMLTo( void* parent ) const {
    void* wght = gTools().AddChild(parent, "Weights");
-   gTools().WriteTVectorDToXML(wght,"VecMeanS",fVecMeanS); 
-   gTools().WriteTVectorDToXML(wght,"VecMeanB", fVecMeanB);
-   gTools().WriteTMatrixDToXML(wght,"InvHMatS",fInvHMatrixS); 
-   gTools().WriteTMatrixDToXML(wght,"InvHMatB",fInvHMatrixB);
-   //Log() << kFATAL << "Please implement writing of weights as XML" << Endl;
+   gTools().WriteTVectorDToXML( wght, "VecMeanS", fVecMeanS    ); 
+   gTools().WriteTVectorDToXML( wght, "VecMeanB", fVecMeanB    );
+   gTools().WriteTMatrixDToXML( wght, "InvHMatS", fInvHMatrixS ); 
+   gTools().WriteTMatrixDToXML( wght, "InvHMatB", fInvHMatrixB );
 }
 
-void TMVA::MethodHMatrix::ReadWeightsFromXML( void* wghtnode ){
+//_______________________________________________________________________
+void TMVA::MethodHMatrix::ReadWeightsFromXML( void* wghtnode )
+{
+   // read weights from XML file
+
    void* descnode = gTools().GetChild(wghtnode);
-   gTools().ReadTVectorDFromXML(descnode,"VecMeanS",fVecMeanS);
+   gTools().ReadTVectorDFromXML( descnode, "VecMeanS", fVecMeanS    );
    descnode = gTools().GetNextChild(descnode);
-   gTools().ReadTVectorDFromXML(descnode,"VecMeanB", fVecMeanB);
+   gTools().ReadTVectorDFromXML( descnode, "VecMeanB", fVecMeanB    );
    descnode = gTools().GetNextChild(descnode);
-   gTools().ReadTMatrixDFromXML(descnode,"InvHMatS",fInvHMatrixS); 
+   gTools().ReadTMatrixDFromXML( descnode, "InvHMatS", fInvHMatrixS ); 
    descnode = gTools().GetNextChild(descnode);
-   gTools().ReadTMatrixDFromXML(descnode,"InvHMatB",fInvHMatrixB);
+   gTools().ReadTMatrixDFromXML( descnode, "InvHMatB", fInvHMatrixB );
 }
 
 //_______________________________________________________________________
@@ -392,8 +383,24 @@ void TMVA::MethodHMatrix::MakeClassSpecific( std::ostream& fout, const TString& 
    fout << "inline double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << endl;
    fout << "{" << endl;
    fout << "   // returns the H-matrix signal estimator" << endl;
-   fout << "   double s = GetChi2( inputValues, " << Types::kSignal << " );" << endl;
-   fout << "   double b = GetChi2( inputValues, " << Types::kBackground << " );" << endl;
+   fout << "   std::vector<double> inputValuesSig = inputValues;" << endl;
+   fout << "   std::vector<double> inputValuesBgd = inputValues;" << endl;
+   if (GetTransformationHandler().GetTransformationList().GetSize() != 0) {
+
+      UInt_t signalClass    =DataInfo().GetClassInfo("Signal")->GetNumber();
+      UInt_t backgroundClass=DataInfo().GetClassInfo("Background")->GetNumber();
+
+      fout << "   Transform(inputValuesSig," << signalClass << ");" << endl;
+      fout << "   Transform(inputValuesBgd," << backgroundClass << ");" << endl;
+   }
+
+//   fout << "   for(uint i=0; i<GetNvar(); ++i) std::cout << inputValuesSig.at(i) << \"  \" << inputValuesBgd.at(i) << std::endl; " << endl;
+
+   fout << "   double s = GetChi2( inputValuesSig, " << Types::kSignal << " );" << endl;
+   fout << "   double b = GetChi2( inputValuesBgd, " << Types::kBackground << " );" << endl;
+
+//   fout << "   std::cout << s << \"  \" << b << std::endl; " << endl;
+
    fout << "   " << endl;
    fout << "   if (s+b <= 0) std::cout << \"Problem in class " << className << "::GetMvaValue__: s+b = \"" << endl;
    fout << "                           << s+b << \" <= 0 \"  << std::endl;" << endl;

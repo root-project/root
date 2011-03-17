@@ -308,9 +308,12 @@ void TMVA::MethodLikelihood::Train( void )
    // the reference histograms require the correct boundaries. Since in Likelihood classification
    // the transformations are applied using both classes, also the corresponding boundaries
    // need to take this into account
-   vector<Double_t> xmin(GetNvar()), xmax(GetNvar());
-   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {xmin[ivar]=1e30; xmax[ivar]=-1e30;}
-   for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
+   UInt_t nvar=GetNvar();
+   vector<Double_t> xmin(nvar), xmax(nvar);
+   for (UInt_t ivar=0; ivar<nvar; ivar++) {xmin[ivar]=1e30; xmax[ivar]=-1e30;}
+
+   UInt_t nevents=Data()->GetNEvents();
+   for (UInt_t ievt=0; ievt<nevents; ievt++) {
       // use the true-event-type's transformation
       // set the event true event types transformation
       const Event* origEv = Data()->GetEvent(ievt);
@@ -319,7 +322,7 @@ void TMVA::MethodLikelihood::Train( void )
       for (int cls=0;cls<2;cls++){
          GetTransformationHandler().SetTransformationReferenceClass(cls);
          const Event* ev = GetTransformationHandler().Transform( origEv );
-         for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
+         for (UInt_t ivar=0; ivar<nvar; ivar++) {
             Float_t value  = ev->GetValue(ivar);
             if (value < xmin[ivar]) xmin[ivar] = value;
             if (value > xmax[ivar]) xmax[ivar] = value;
@@ -432,15 +435,15 @@ Double_t TMVA::MethodLikelihood::GetMvaValue( Double_t* err, Double_t* errUpper 
    // need to distinguish signal and background in case of variable transformation
    // signal first
 
-   //GetTransformationHandler().SetTransformationReferenceClass( DataInfo().GetClassInfo("Signal")->GetNumber() );
+   GetTransformationHandler().SetTransformationReferenceClass( fSignalClass );
    // temporary: JS  --> FIX
-   GetTransformationHandler().SetTransformationReferenceClass( 0 );
+   //GetTransformationHandler().SetTransformationReferenceClass( 0 );
    const Event* ev = GetEvent();
    for (ivar=0; ivar<GetNvar(); ivar++) vs(ivar) = ev->GetValue(ivar);
 
-   //GetTransformationHandler().SetTransformationReferenceClass( DataInfo().GetClassInfo("Background")->GetNumber() );
+   GetTransformationHandler().SetTransformationReferenceClass( fBackgroundClass );
    // temporary: JS  --> FIX
-   GetTransformationHandler().SetTransformationReferenceClass( 1 );
+   //GetTransformationHandler().SetTransformationReferenceClass( 1 );
    ev = GetEvent();
    for (ivar=0; ivar<GetNvar(); ivar++) vb(ivar) = ev->GetValue(ivar);
 
@@ -457,7 +460,7 @@ Double_t TMVA::MethodLikelihood::GetMvaValue( Double_t* err, Double_t* errUpper 
 
          // verify limits
          if      (x[itype] >= (*fPDFSig)[ivar]->GetXmax()) x[itype] = (*fPDFSig)[ivar]->GetXmax() - 1.0e-10;
-         else if (x[itype] < (*fPDFSig)[ivar]->GetXmin()) x[itype] = (*fPDFSig)[ivar]->GetXmin();
+         else if (x[itype] <  (*fPDFSig)[ivar]->GetXmin()) x[itype] = (*fPDFSig)[ivar]->GetXmin();
 
          // find corresponding histogram from cached indices
          PDF* pdf = (itype == 0) ? (*fPDFSig)[ivar] : (*fPDFBgd)[ivar];

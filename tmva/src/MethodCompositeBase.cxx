@@ -113,10 +113,15 @@ void TMVA::MethodCompositeBase::AddWeightsXMLTo( void* parent ) const
       gTools().AddAttr(methxml,"Index",          i ); 
       gTools().AddAttr(methxml,"Weight",         fMethodWeight[i]); 
       gTools().AddAttr(methxml,"MethodSigCut",   method->GetSignalReferenceCut());
+      gTools().AddAttr(methxml,"MethodSigCutOrientation", method->GetSignalReferenceCutOrientation());
       gTools().AddAttr(methxml,"MethodTypeName", method->GetMethodTypeName());
       gTools().AddAttr(methxml,"MethodName",     method->GetMethodName()   ); 
       gTools().AddAttr(methxml,"JobName",        method->GetJobName());
       gTools().AddAttr(methxml,"Options",        method->GetOptions()); 
+      if (method->fTransformationPointer)
+	 gTools().AddAttr(methxml,"UseMainMethodTransformation",  TString("true")); 
+      else
+	 gTools().AddAttr(methxml,"UseMainMethodTransformation",  TString("false")); 
       method->AddWeightsXMLTo(methxml);
    }
 }
@@ -146,13 +151,29 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
    gTools().ReadAttr( wghtnode, "NMethods",  nMethods );
    void* ch = gTools().GetChild(wghtnode);
    for (UInt_t i=0; i< nMethods; i++) {
-      Double_t methodWeight, methodSigCut;
+      Double_t methodWeight, methodSigCut, methodSigCutOrientation;
       gTools().ReadAttr( ch, "Weight",   methodWeight   );
       gTools().ReadAttr( ch, "MethodSigCut", methodSigCut);
+      gTools().ReadAttr( ch, "MethodSigCutOrientation", methodSigCutOrientation);
       gTools().ReadAttr( ch, "MethodTypeName",  methodTypeName );
       gTools().ReadAttr( ch, "MethodName",  methodName );
       gTools().ReadAttr( ch, "JobName",  jobName );
       gTools().ReadAttr( ch, "Options",  optionString );
+
+      Bool_t rerouteTransformation = kFALSE;
+      if (gTools().HasAttr( ch, "UseMainMethodTransformation")) {
+	 TString rerouteString("");
+	 gTools().ReadAttr( ch, "UseMainMethodTransformation",  rerouteString );
+	 rerouteString.ToLower();
+	 if (rerouteString=="true")
+	    rerouteTransformation=kTRUE;
+      }
+      
+      //remove trailing "~" to signal that options have to be reused
+      optionString.ReplaceAll("~","");
+      //ignore meta-options for method Boost
+      optionString.ReplaceAll("Boost_","~Boost_");
+      optionString.ReplaceAll("!~","~!");
 
       if (i==0){
          // the cast on MethodBoost is ugly, but a similar line is also in ReadWeightsFromFile --> needs to be fixed later
@@ -169,12 +190,15 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
 
       void* methXML = gTools().GetChild(ch);
       meth->SetupMethod();
-      meth->ReadWeightsFromXML(methXML);
       meth->SetMsgType(kWARNING);
       meth->ParseOptions();
       meth->ProcessSetup();
       meth->CheckSetup();
+      meth->ReadWeightsFromXML(methXML);
       meth->SetSignalReferenceCut(methodSigCut);
+      meth->SetSignalReferenceCutOrientation(methodSigCutOrientation);
+
+      meth->RerouteTransformationHandler (&(this->GetTransformationHandler()));
 
       ch = gTools().GetNextChild(ch);
    }

@@ -158,8 +158,17 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildDynamicDataSet( TMVA::DataSetInfo& dsi
    std::vector<Float_t*>* evdyn = new std::vector<Float_t*>(0);
 
    std::vector<VariableInfo>& varinfos = dsi.GetVariableInfos();
-   std::vector<VariableInfo>::iterator it = varinfos.begin();
-   for (;it!=varinfos.end();it++) evdyn->push_back( (Float_t*)(*it).GetExternalLink() );
+
+   if (varinfos.empty())
+      Log() << kFATAL << "Dynamic data set cannot be built, since no variable informations are present. Apparently no variables have been set. This should not happen, please contact the TMVA authors." << Endl;
+
+   std::vector<VariableInfo>::iterator it = varinfos.begin(), itEnd=varinfos.end();
+   for (;it!=itEnd;++it) {
+      Float_t* external=(Float_t*)(*it).GetExternalLink();
+      if (external==0)
+	 Log() << kDEBUG << "The link to the external variable is NULL while I am trying to build a dynamic data set. In this case fTmpEvent from MethodBase HAS TO BE USED in the method to get useful values in variables." << Endl;
+      evdyn->push_back (external);
+   }
 
    std::vector<VariableInfo>& spectatorinfos = dsi.GetSpectatorInfos();
    it = spectatorinfos.begin();

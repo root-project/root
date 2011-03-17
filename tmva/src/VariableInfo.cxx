@@ -143,6 +143,7 @@ void TMVA::VariableInfo::WriteToStream( std::ostream& o ) const
 //_______________________________________________________________________
 void TMVA::VariableInfo::ReadFromStream( std::istream& istr )
 {
+
    // read VariableInfo from stream
 
    // PLEASE do not modify this, it does not have to correspond to WriteToStream

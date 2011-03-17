@@ -7,6 +7,20 @@
  **********************************************************************************/
 
 #include <vector>
+class ReadLikelihoodPCA;
+class ReadLikelihoodMIX;
+class ReadHMatrix;
+class ReadFisherG;
+class ReadLD;
+class ReadFDA_MT;
+class ReadFDA_MC;
+class ReadFDA_GA;
+class ReadMLP;
+class ReadMLPBFGS;
+class ReadBDT;
+class ReadBDTD;
+class ReadBDTG;
+class ReadBDTB;
 
 void ClassApplication( TString myMethodList = "Fisher" ) 
 {

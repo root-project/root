@@ -72,7 +72,7 @@ namespace TMVA {
       TString GetVariableAxisTitle( const VariableInfo& info ) const;
 
       const Event* Transform(const Event*) const;
-      const Event* InverseTransform(const Event*) const;
+      const Event* InverseTransform(const Event*, Bool_t suppressIfNoTargets=true  ) const;
 
       // overrides the reference classes of all added transformations. Handle with care!!!
       void         SetTransformationReferenceClass( Int_t cls ); 

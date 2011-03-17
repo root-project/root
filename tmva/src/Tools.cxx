@@ -188,7 +188,7 @@ void TMVA::Tools::ComputeStat( const std::vector<TMVA::Event*>& events, std::vec
       Log() << kFATAL << "<Tools::ComputeStat> value vector is zero pointer" << Endl;
    
    if ( events.size() != valVec->size() ) 
-      Log() << kFATAL << "<Tools::ComputeStat> event and value vector have different lengths " 
+      Log() << kWARNING << "<Tools::ComputeStat> event and value vector have different lengths " 
             << events.size() << "!=" << valVec->size() << Endl;
 
    Long64_t entries = valVec->size();
@@ -1031,7 +1031,7 @@ Bool_t TMVA::Tools::HasAttr( void* node, const char* attrname )
 void TMVA::Tools::ReadAttr( void* node, const char* attrname, TString& value )
 {
    // add attribute from xml
-   if(!HasAttr(node, attrname)) {
+   if (!HasAttr(node, attrname)) {
       const char * nodename = xmlengine().GetNodeName(node);
       Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'" << Endl;
    }
@@ -1048,7 +1048,9 @@ void TMVA::Tools::AddAttr( void* node, const char* attrname, const char* value )
 }
 
 //_______________________________________________________________________
-void* TMVA::Tools::AddChild( void* parent, const char* childname, const char* content, bool isRootNode ) {
+void* TMVA::Tools::AddChild( void* parent, const char* childname, const char* content, bool isRootNode ) 
+{
+   // add child node
    if( !isRootNode && parent == 0 ) return 0;
    return gTools().xmlengine().NewChild(parent, 0, childname, content);
 }
@@ -1061,6 +1063,7 @@ Bool_t TMVA::Tools::AddComment( void* node, const char* comment ) {
  //_______________________________________________________________________
 void* TMVA::Tools::GetParent( void* child)
 {
+   // get parent node
    void* par = xmlengine().GetParent(child);
    
    return par;
@@ -1068,6 +1071,7 @@ void* TMVA::Tools::GetParent( void* child)
 //_______________________________________________________________________
 void* TMVA::Tools::GetChild( void* parent, const char* childname )
 {
+   // get child node
    void* ch = xmlengine().GetChild(parent);
    if (childname != 0) {
       while (ch!=0 && strcmp(xmlengine().GetNodeName(ch),childname) != 0) ch = xmlengine().GetNext(ch);
@@ -1145,12 +1149,12 @@ TString TMVA::Tools::StringFromDouble( Double_t d )
 {
    // string tools
    std::stringstream s;
-   s << d;
+   s << Form( "%5.10e", d );
    return TString(s.str().c_str());
 }
 
 //_______________________________________________________________________
-void TMVA::Tools::WriteTMatrixDToXML(void* node, const char* name, TMatrixD* mat)
+void TMVA::Tools::WriteTMatrixDToXML( void* node, const char* name, TMatrixD* mat )
 {
    // XML helpers
    void* matnode = xmlengine().NewChild(node, 0, name);
@@ -1159,39 +1163,37 @@ void TMVA::Tools::WriteTMatrixDToXML(void* node, const char* name, TMatrixD* mat
    std::stringstream s;
    for (Int_t row = 0; row<mat->GetNrows(); row++) {
       for (Int_t col = 0; col<mat->GetNcols(); col++) {
-         s << (*mat)[row][col] << " ";
+         s << Form( "%5.15e ", (*mat)[row][col] );
       }
    }
    xmlengine().AddRawLine( matnode, s.str().c_str() );
 }
 
 //_______________________________________________________________________
-void TMVA::Tools::WriteTVectorDToXML(void* node, const char* name, TVectorD* vec)
+void TMVA::Tools::WriteTVectorDToXML( void* node, const char* name, TVectorD* vec )
 {
    TMatrixD mat(1,vec->GetNoElements(),&((*vec)[0]));
-   WriteTMatrixDToXML(node, name, &mat);
+   WriteTMatrixDToXML( node, name, &mat );
 }
 
 //_______________________________________________________________________
-void TMVA::Tools::ReadTVectorDFromXML(void* node, const char* name, TVectorD* vec)
+void TMVA::Tools::ReadTVectorDFromXML( void* node, const char* name, TVectorD* vec )
 {
    TMatrixD mat(1,vec->GetNoElements(),&((*vec)[0]));
-   ReadTMatrixDFromXML(node,name,&mat);
-   for (int i=0;i<vec->GetNoElements();++i){
-      (*vec)[i]=mat[0][i];
-   }
+   ReadTMatrixDFromXML( node, name, &mat );
+   for (int i=0;i<vec->GetNoElements();++i) (*vec)[i] = mat[0][i];
 }
 
 //_______________________________________________________________________
-void TMVA::Tools::ReadTMatrixDFromXML(void* node, const char* name, TMatrixD* mat)
+void TMVA::Tools::ReadTMatrixDFromXML( void* node, const char* name, TMatrixD* mat )
 {
    if (strcmp(xmlengine().GetNodeName(node),name)!=0){
       Log() << kWARNING << "Possible Error: Name of matrix in weight file"
             << " does not match name of matrix passed as argument!" << Endl;
    }
    Int_t nrows, ncols;
-   ReadAttr(node, "Rows", nrows);
-   ReadAttr(node, "Columns", ncols);
+   ReadAttr( node, "Rows",    nrows );
+   ReadAttr( node, "Columns", ncols );
    if (mat->GetNrows() != nrows || mat->GetNcols() != ncols){
       Log() << kWARNING << "Possible Error: Dimension of matrix in weight file"
             << " does not match dimension of matrix passed as argument!" << Endl;
@@ -1370,7 +1372,7 @@ void TMVA::Tools::TMVACitation( MsgLogger& logger, ECitation citType )
 
    case kLaTeX:
       logger << "%\\cite{TMVA2007}" << Endl;
-      logger << "\bibitem{TMVA2007}" << Endl;
+      logger << "\\bibitem{TMVA2007}" << Endl;
       logger << "  A.~Hoecker, P.~Speckmayer, J.~Stelzer, J.~Therhaag, E.~von Toerne, H.~Voss" << Endl;
       logger << "  %``TMVA: Toolkit for multivariate data analysis,''" << Endl;
       logger << "  PoS A {\\bf CAT} (2007) 040" << Endl;
@@ -1396,14 +1398,14 @@ Bool_t TMVA::Tools::HistoHasEquidistantBins(const TH1& h)
 
 //_______________________________________________________________________
 std::vector<TMatrixDSym*>*
-TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls )
+TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls, Int_t maxNumberVar )
 {
    // compute covariance matrices
 
    if (events.size() == 0) return 0;
 
 
-   UInt_t nvar = events.at(0)->GetNVariables(), ivar = 0, jvar = 0;
+   UInt_t nvar = (maxNumberVar == -1 ? events.at(0)->GetNVariables():maxNumberVar), ivar = 0, jvar = 0;
 
    // init matrices
    Int_t matNum = maxCls;

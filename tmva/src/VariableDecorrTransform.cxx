@@ -27,6 +27,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
 
 #include "TVectorF.h"
 #include "TVectorD.h"
@@ -80,9 +81,10 @@ Bool_t TMVA::VariableDecorrTransform::PrepareTransformation( const std::vector<E
 
    Log() << kINFO << "Preparing the Decorrelation transformation..." << Endl;
 
-   SetNVariables(events[0]->GetNVariables());
+   Int_t inputSize = fGet.size();
+   SetNVariables(inputSize);
 
-   if (GetNVariables() > 200) { 
+   if (inputSize > 200) { 
       Log() << kINFO << "----------------------------------------------------------------------------" 
             << Endl;
       Log() << kINFO 
@@ -121,7 +123,7 @@ std::vector<TString>* TMVA::VariableDecorrTransform::GetTransformationStrings( I
                << Endl;
    }
 
-   const Int_t nvar = GetNVariables();
+   const Int_t nvar = fGet.size();
    std::vector<TString>* strVec = new std::vector<TString>;
 
    // fill vector
@@ -129,7 +131,23 @@ std::vector<TString>* TMVA::VariableDecorrTransform::GetTransformationStrings( I
       TString str( "" );
       for (Int_t jvar=0; jvar<nvar; jvar++) {
          str += ((*m)(ivar,jvar) > 0) ? " + " : " - ";
-         str += Form( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Variables()[jvar].GetLabel().Data() );
+
+         Char_t type = fGet.at(jvar).first;
+         Int_t  idx  = fGet.at(jvar).second;
+
+         switch( type ) {
+         case 'v':
+            str += Form( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Variables()[idx].GetLabel().Data() );
+            break;
+         case 't':
+            str += Form( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Targets()[idx].GetLabel().Data() );
+            break;
+         case 's':
+            str += Form( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Spectators()[idx].GetLabel().Data() );
+            break;
+         default:
+            Log() << kFATAL << "VariableDecorrTransform::GetTransformationStrings : unknown type '" << type << "'." << Endl;
+         }
       }
       strVec->push_back( str );
    }      
@@ -165,71 +183,49 @@ const TMVA::Event* TMVA::VariableDecorrTransform::Transform( const TMVA::Event* 
                << Endl;
    }
 
-   // transformation to decorrelate the variables
-   const Int_t nvar = GetNVariables();
-   TVectorD vec( nvar );
-   for (Int_t ivar=0; ivar<nvar; ivar++) vec(ivar) = ev->GetValue(ivar);
-   // diagonalise variable vectors
-   vec *= *m;
-
    if (fTransformedEvent==0 || fTransformedEvent->GetNVariables()!=ev->GetNVariables()) {
       if (fTransformedEvent!=0) { delete fTransformedEvent; fTransformedEvent = 0; }
       fTransformedEvent = new Event();
    }
 
-   for (UInt_t itgt=0; itgt<ev->GetNTargets(); itgt++) fTransformedEvent->SetTarget( itgt, ev->GetTarget(itgt) );
-   for (Int_t  ivar=0; ivar<nvar;              ivar++) fTransformedEvent->SetVal   ( ivar,vec(ivar) );
-
-   fTransformedEvent->SetWeight     ( ev->GetWeight() );
-   fTransformedEvent->SetBoostWeight( ev->GetBoostWeight() );
-   fTransformedEvent->SetClass      ( ev->GetClass() );
-   return fTransformedEvent;
-}
-
-//_______________________________________________________________________
-const TMVA::Event* TMVA::VariableDecorrTransform::InverseTransform( const TMVA::Event* const ev, Int_t cls ) const
-{
-   // apply the inverse decorrelation transformation ... 
-   // TODO : this is only a copy of the transform method... build the inverse transformation
-   Log() << kFATAL << "Inverse transformation for decorrelation transformation not yet implemented. Hence, this transformation cannot be applied together with regression. Please contact the authors if necessary." << Endl;
-
-   if (!IsCreated())
-      Log() << kFATAL << "Transformation matrix not yet created" 
-            << Endl;
-
-   Int_t whichMatrix = cls;
-   // if cls (the class chosen by the user) not existing, assume that he wants to have the matrix for all classes together. 
-   if (cls < 0 || cls > GetNClasses()) {
-      whichMatrix = GetNClasses();
-   }
-
-   TMatrixD* m = fDecorrMatrices.at(whichMatrix);
-   if (m == 0) {
-      if (whichMatrix == GetNClasses() )
-         Log() << kFATAL << "Transformation matrix all classes is not defined" 
-               << Endl;
-      else
-         Log() << kFATAL << "Transformation matrix for class " << whichMatrix << " is not defined" 
-               << Endl;
-   }
-
    // transformation to decorrelate the variables
-   const Int_t nvar = GetNVariables();
+   const Int_t nvar = fGet.size();
+
+   std::vector<Float_t> input;
+   std::vector<Char_t> mask; // entries with kTRUE must not be transformed
+   Bool_t hasMaskedEntries = GetInput( ev, input, mask );
+
+   if( hasMaskedEntries ){ // targets might be masked (for events where the targets have not been computed yet)
+      UInt_t numMasked = std::count(mask.begin(), mask.end(), kTRUE);
+      UInt_t numOK     = std::count(mask.begin(), mask.end(), kFALSE);
+      if( numMasked>0 && numOK>0 ){
+	 Log() << kFATAL << "You mixed variables and targets in the decorrelation transformation. This is not possible." << Endl;
+      }
+      SetOutput( fTransformedEvent, input, mask, ev );
+      return fTransformedEvent;
+   }
+
    TVectorD vec( nvar );
-   for (Int_t ivar=0; ivar<nvar; ivar++) vec(ivar) = ev->GetValue(ivar);
+  for (Int_t ivar=0; ivar<nvar; ivar++) vec(ivar) = input.at(ivar);
 
    // diagonalise variable vectors
    vec *= *m;
 
-   if (fBackTransformedEvent==0 || fBackTransformedEvent->GetNVariables()!=ev->GetNVariables()) {
-      if (fBackTransformedEvent!=0) { delete fBackTransformedEvent; fBackTransformedEvent = 0; }
-      fBackTransformedEvent = new Event( *ev );
-   }
-   for (UInt_t itgt = 0; itgt < ev->GetNTargets(); itgt++ ) fBackTransformedEvent->SetTarget( itgt, ev->GetTarget(itgt) );
-   for ( Int_t ivar=0; ivar<nvar; ivar++) fBackTransformedEvent->SetVal(ivar,vec(ivar));
-   fBackTransformedEvent->SetWeight     ( ev->GetWeight() );
-   fBackTransformedEvent->SetBoostWeight( ev->GetBoostWeight() );
-   fBackTransformedEvent->SetClass      ( ev->GetClass() );
+   input.clear();
+   for (Int_t ivar=0; ivar<nvar; ivar++) input.push_back( vec(ivar) );
+
+   SetOutput( fTransformedEvent, input, mask, ev );
+
+   return fTransformedEvent;
+}
+
+//_______________________________________________________________________
+const TMVA::Event* TMVA::VariableDecorrTransform::InverseTransform( const TMVA::Event* const /*ev*/, Int_t /*cls*/ ) const
+{
+   // apply the inverse decorrelation transformation ... 
+   // TODO : ... build the inverse transformation
+   Log() << kFATAL << "Inverse transformation for decorrelation transformation not yet implemented. Hence, this transformation cannot be applied together with regression if targets should be transformed. Please contact the authors if necessary." << Endl;
+
 
    return fBackTransformedEvent;
 }
@@ -250,7 +246,7 @@ void TMVA::VariableDecorrTransform::CalcSQRMats( const std::vector<Event*>& even
    const UInt_t matNum = (maxCls<=1)?maxCls:maxCls+1;
    fDecorrMatrices.resize( matNum, (TMatrixD*) 0 );
       
-   std::vector<TMatrixDSym*>* covMat = gTools().CalcCovarianceMatrices( events, maxCls );
+   std::vector<TMatrixDSym*>* covMat = gTools().CalcCovarianceMatrices( events, maxCls, fGet.size() );
    
    
    for (UInt_t cls=0; cls<matNum; cls++) {
@@ -292,6 +288,8 @@ void TMVA::VariableDecorrTransform::AttachXMLTo(void* parent)
    void* trf = gTools().AddChild(parent, "Transform");
    gTools().AddAttr(trf,"Name", "Decorrelation");
 
+   VariableTransformBase::AttachXMLTo( trf );
+
    for (std::vector<TMatrixD*>::const_iterator itm = fDecorrMatrices.begin(); itm != fDecorrMatrices.end(); itm++) {
       TMatrixD* mat = (*itm);
       /*void* decmat = gTools().xmlengine().NewChild(trf, 0, "Matrix");
@@ -319,7 +317,25 @@ void TMVA::VariableDecorrTransform::ReadFromXML( void* trfnode )
       if( (*it) != 0 ) delete (*it);
    fDecorrMatrices.clear();
 
-   void* ch = gTools().GetChild(trfnode);
+   Bool_t newFormat = kFALSE;
+
+   void* inpnode = NULL;
+   
+   inpnode = gTools().GetChild(trfnode, "Selection"); // new xml format
+   if( inpnode!=NULL )
+      newFormat = kTRUE; // new xml format
+
+   void* ch = NULL;
+   if( newFormat ){
+      // ------------- new format --------------------
+      // read input
+      VariableTransformBase::ReadFromXML( inpnode );
+
+      ch = gTools().GetNextChild(inpnode);
+   }else
+      ch = gTools().GetChild(trfnode);
+
+   // Read the transformation matrices from the xml node
    while(ch!=0) {
       Int_t nrows, ncols;
       gTools().ReadAttr(ch, "Rows", nrows);
@@ -414,6 +430,7 @@ void TMVA::VariableDecorrTransform::MakeFunction( std::ostream& fout, const TStr
       fout << "//_______________________________________________________________________" << std::endl;
       fout << "inline void " << fcncName << "::InitTransform_"<<trCounter<<"()" << std::endl;
       fout << "{" << std::endl;
+      fout << "   // Decorrelation transformation, initialisation" << std::endl;
       for (UInt_t icls = 0; icls < numC; icls++){
          TMatrixD* matx = fDecorrMatrices.at(icls); 
          for (int i=0; i<matx->GetNrows(); i++) {
@@ -428,18 +445,22 @@ void TMVA::VariableDecorrTransform::MakeFunction( std::ostream& fout, const TStr
       fout << "//_______________________________________________________________________" << std::endl;
       fout << "inline void " << fcncName << "::Transform_"<<trCounter<<"( std::vector<double>& iv, int cls) const" << std::endl;
       fout << "{" << std::endl;
+      fout << "   // Decorrelation transformation" << std::endl;
       fout << "   if (cls < 0 || cls > "<<GetNClasses()<<") {"<< std::endl;
       fout << "       if ("<<GetNClasses()<<" > 1 ) cls = "<<GetNClasses()<<";"<< std::endl;
       fout << "       else cls = "<<(fDecorrMatrices.size()==1?0:2)<<";"<< std::endl;
       fout << "   }"<< std::endl;
+
+      VariableTransformBase::MakeFunction(fout, fcncName, 0, trCounter, 0 );
+
       fout << "   std::vector<double> tv;" << std::endl;
       fout << "   for (int i=0; i<"<<matx->GetNrows()<<";i++) {" << std::endl;
       fout << "      double v = 0;" << std::endl;
       fout << "      for (int j=0; j<"<<matx->GetNcols()<<"; j++)" << std::endl;
-      fout << "         v += iv[j] * fDecTF_"<<trCounter<<"[cls][i][j];" << std::endl;
+      fout << "         v += iv[indicesGet.at(j)] * fDecTF_"<<trCounter<<"[cls][i][j];" << std::endl;
       fout << "      tv.push_back(v);" << std::endl;
       fout << "   }" << std::endl;
-      fout << "   for (int i=0; i<"<<matx->GetNrows()<<";i++) iv[i] = tv[i];" << std::endl;
+      fout << "   for (int i=0; i<"<<matx->GetNrows()<<";i++) iv[indicesPut.at(i)] = tv[i];" << std::endl;
       fout << "}" << std::endl;
    }
 

@@ -86,8 +86,8 @@ TMVA::Interval::Interval( Double_t min, Double_t max, Int_t nbins ) :
    if (!fgLogger) fgLogger = new MsgLogger("Interval");
 
    // defines minimum and maximum of an interval
-   // when nbins == 0, interval describes a discrete distribution (equally distributed in the interval)
-   // when nbins > 0, interval describes a continous interval
+   // when nbins > 0, interval describes a discrete distribution (equally distributed in the interval)
+   // when nbins == 0, interval describes a continous interval
    //
    if (fMax - fMin < 0) Log() << kFATAL << "maximum lower than minimum" << Endl;
    if (nbins < 0) {

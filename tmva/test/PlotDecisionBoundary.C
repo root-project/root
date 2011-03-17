@@ -9,7 +9,6 @@
 #include <cstdlib>
 #include <vector>
 #include <iostream>
-#include <map>
 #include <string>
 
 #include "TFile.h"
@@ -27,32 +26,43 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Reader.h"
 #include "TMVA/MethodCuts.h"
+#include "TMVA/SeparationBase.h"
+#include "TMVA/GiniIndex.h"
+#include "TMVA/MisClassificationErrror.h"
 #endif
 
 using namespace TMVA;
 
 
-void plot(TH2D *sig, TH2D *bkg, TH2F *MVA, TString v0="var0", TString v1="var1"){
+void plot(TH2D *sig, TH2D *bkg, TH2F *MVA, TString v0="var0", TString v1="var1",Float_t mvaCut){
 
    TCanvas *c = new TCanvas(Form("DecisionBoundary%s",MVA->GetTitle()),MVA->GetTitle(),800,800);
 
+   cout <<  "MVACut = "<<mvaCut << endl;
    gStyle->SetPalette(1);
    MVA->SetXTitle(v0);
    MVA->SetYTitle(v1);
    MVA->SetStats(0);
-   MVA->Draw("cont1");
-   sig->SetMarkerColor(2);
-   bkg->SetMarkerColor(4);
+   Double_t contours[1];
+   contours[0]=mvaCut;
+   MVA->SetLineWidth(7);
+   MVA->SetLineStyle(1);
+   MVA->SetMarkerColor(1);
+   MVA->SetLineColor(1);
+   MVA->SetContour(1, contours);
+   sig->SetMarkerColor(4);
+   bkg->SetMarkerColor(2);
    sig->SetMarkerStyle(20);
    bkg->SetMarkerStyle(20);
-   sig->SetMarkerSize(.5);
-   bkg->SetMarkerSize(.5);
-   sig->Draw("same");
+   sig->SetMarkerSize(.2);
+   bkg->SetMarkerSize(.2);
+   sig->Draw();
    bkg->Draw("same");
+   MVA->Draw("CONT2 same");
 }
 
 
-void PlotDecisionBoundary( TString myMethodList = "",TString v0="var0", TString v1="var1", TString dataFileName = "/home/hvoss/TMVA/TMVA_data/data/data_3Bumps.root", TString weightFilePrefix="TMVA") 
+void PlotDecisionBoundary( TString weightFile = "weights/TMVAClassification_BDT.weights.xml",TString v0="var0", TString v1="var1", TString dataFileName = "/home/hvoss/TMVA/TMVA_data/data/data_circ.root") 
 {   
    //---------------------------------------------------------------
    // default MVA methods to be trained + tested
@@ -60,75 +70,9 @@ void PlotDecisionBoundary( TString myMethodList = "",TString v0="var0", TString 
    // this loads the library
    TMVA::Tools::Instance();
 
-   std::map<std::string,int> Use;
-
-   Use["CutsGA"]          = 0; // other "Cuts" methods work identically
-   // ---
-   Use["Likelihood"]      = 0;
-   Use["LikelihoodD"]     = 0; // the "D" extension indicates decorrelated input variables (see option strings)
-   Use["LikelihoodPCA"]   = 0; // the "PCA" extension indicates PCA-transformed input variables (see option strings)
-   Use["LikelihoodKDE"]   = 0;
-   Use["LikelihoodMIX"]   = 0;
-   // ---
-   Use["PDERS"]           = 0;
-   Use["PDERSD"]          = 0;
-   Use["PDERSPCA"]        = 0;
-   Use["PDERSkNN"]        = 0; // depreciated until further notice
-   Use["PDEFoam"]         = 0;
-   // --
-   Use["KNN"]             = 0;
-   // ---
-   Use["HMatrix"]         = 0;
-   Use["Fisher"]          = 0;
-   Use["FisherG"]         = 0;
-   Use["BoostedFisher"]   = 0;
-   Use["LD"]              = 0;
-   // ---
-   Use["FDA_GA"]          = 0;
-   Use["FDA_SA"]          = 0;
-   Use["FDA_MC"]          = 0;
-   Use["FDA_MT"]          = 0;
-   Use["FDA_GAMT"]        = 0;
-   Use["FDA_MCMT"]        = 0;
-   // ---
-   Use["MLP"]             = 0; // this is the recommended ANN
-   Use["MLPBFGS"]         = 0; // recommended ANN with optional training method
-   Use["CFMlpANN"]        = 0; // *** missing
-   Use["TMlpANN"]         = 0; 
-   // ---
-   Use["SVM"]             = 0;
-   // ---
-   Use["BDT"]             = 0;
-   Use["BDTD"]            = 0;
-   Use["BDTG"]            = 0;
-   Use["BDTB"]            = 0;
-   // ---
-   Use["RuleFit"]         = 0;
-   // ---
-   Use["Category"]        = 0;
-   // ---
-   Use["Plugin"]          = 0;
-   // ---------------------------------------------------------------
-
    std::cout << std::endl;
    std::cout << "==> Start TMVAClassificationApplication" << std::endl;
 
-   if (myMethodList != "") {
-      for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) it->second = 0;
-
-      std::vector<TString> mlist = gTools().SplitString( myMethodList, ',' );
-      for (UInt_t i=0; i<mlist.size(); i++) {
-         std::string regMethod(mlist[i]);
-
-         if (Use.find(regMethod) == Use.end()) {
-            std::cout << "Method \"" << regMethod << "\" not known in TMVA under this name. Choose among the following:" << std::endl;
-            for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) std::cout << it->first << " ";
-            std::cout << std::endl;
-            return;
-         }
-         Use[regMethod] = 1;
-      }
-   }
 
    //
    // create the Reader object
@@ -143,32 +87,22 @@ void PlotDecisionBoundary( TString myMethodList = "",TString v0="var0", TString 
    reader->AddVariable( v1,                &var1 );
 
    //
-   // book the MVA methods
+   // book the MVA method
    //
-   TString dir    = "weights/";
-   TString prefix = weightFilePrefix;
-
-   // book method(s)
-   for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
-      if (it->second) {
-         TString methodName = it->first + " method";
-         TString weightfile = dir + prefix + "_" + TString(it->first) + ".weights.xml";
-         reader->BookMVA( methodName, weightfile ); 
-      }
-   }
+   reader->BookMVA( "M1", weightFile ); 
    
    TFile *f = new TFile(dataFileName);
    TTree *signal     = (TTree*)f->Get("TreeS");
    TTree *background = (TTree*)f->Get("TreeB");
 
 
-   
-
 //Declaration of leaves types
    Float_t         svar0;
    Float_t         svar1;
    Float_t         bvar0;
    Float_t         bvar1;
+   Float_t         sWeight=1.0; // just in case you have weight defined, also set these branchaddresses
+   Float_t         bWeight=1.0*signal->GetEntries()/background->GetEntries(); // just in case you have weight defined, also set these branchaddresses
 
    // Set branch addresses.
    signal->SetBranchAddress(v0,&svar0);
@@ -182,188 +116,150 @@ void PlotDecisionBoundary( TString myMethodList = "",TString v0="var0", TString 
    Float_t xmin = signal->GetMinimum(v0.Data());
    Float_t ymax = signal->GetMaximum(v1.Data());
    Float_t ymin = signal->GetMinimum(v1.Data());
+ 
+   xmax = TMath::Max(xmax,background->GetMaximum(v0.Data()));  
+   xmin = TMath::Min(xmin,background->GetMinimum(v0.Data()));
+   ymax = TMath::Max(ymax,background->GetMaximum(v1.Data()));
+   ymin = TMath::Min(ymin,background->GetMinimum(v1.Data()));
+
 
    TH2D *hs=new TH2D("hs","",nbin,xmin,xmax,nbin,ymin,ymax);   
    TH2D *hb=new TH2D("hb","",nbin,xmin,xmax,nbin,ymin,ymax);   
+   hs->SetXTitle(v0);
+   hs->SetYTitle(v1);
+   hb->SetXTitle(v0);
+   hb->SetYTitle(v1);
+   hs->SetMarkerColor(4);
+   hb->SetMarkerColor(2);
 
 
-   Long64_t nentries;
-   nentries = TreeS->GetEntries();
-   for (Long64_t is=0; is<nentries;is++) {
-      signal->GetEntry(is);
-      hs->Fill(svar0,svar1);
-   }
-   nentries = TreeB->GetEntries();
-   for (Long64_t ib=0; ib<nentries;ib++) {
-      background->GetEntry(ib);
-      hb->Fill(bvar0,bvar1);
-   }
-
-
-   hb->SetMarkerColor(4);
-   hs->SetMarkerColor(2);
-
-
-   // book output histograms
-   TH2F *histLk(0), *histLkD(0), *histLkPCA(0), *histLkKDE(0), *histLkMIX(0), *histPD(0), *histPDD(0);
-   TH2F *histPDPCA(0), *histPDEFoam(0), *histPDEFoamErr(0), *histPDEFoamSig(0), *histKNN(0), *histHm(0);
-   TH2F *histFi(0), *histFiG(0), *histFiB(0), *histLD(0), *histNn(0), *histNnC(0), *histNnT(0), *histBdt(0), *histBdtG(0), *histBdtD(0);
-   TH2F *histRf(0), *histSVMG(0), *histSVMP(0), *histSVML(0), *histFDAMT(0), *histFDAGA(0), *histCat(0), *histPBdt(0);
-
-   if (Use["Likelihood"])    histLk      = new TH2F( "MVA_Likelihood",    "MVA_Likelihood",    nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["LikelihoodD"])   histLkD     = new TH2F( "MVA_LikelihoodD",   "MVA_LikelihoodD",   nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["LikelihoodPCA"]) histLkPCA   = new TH2F( "MVA_LikelihoodPCA", "MVA_LikelihoodPCA", nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["LikelihoodKDE"]) histLkKDE   = new TH2F( "MVA_LikelihoodKDE", "MVA_LikelihoodKDE", nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["LikelihoodMIX"]) histLkMIX   = new TH2F( "MVA_LikelihoodMIX", "MVA_LikelihoodMIX", nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["PDERS"])         histPD      = new TH2F( "MVA_PDERS",         "MVA_PDERS",         nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["PDERSD"])        histPDD     = new TH2F( "MVA_PDERSD",        "MVA_PDERSD",        nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["PDERSPCA"])      histPDPCA   = new TH2F( "MVA_PDERSPCA",      "MVA_PDERSPCA",      nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["KNN"])           histKNN     = new TH2F( "MVA_KNN",           "MVA_KNN",           nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["HMatrix"])       histHm      = new TH2F( "MVA_HMatrix",       "MVA_HMatrix",       nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["Fisher"])        histFi      = new TH2F( "MVA_Fisher",        "MVA_Fisher",        nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["FisherG"])        histFiG    = new TH2F( "MVA_FisherG",       "MVA_FisherG",       nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["BoostedFisher"])  histFiB    = new TH2F( "MVA_BoostedFisher", "MVA_BoostedFisher", nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["LD"])            histLD      = new TH2F( "MVA_LD",            "MVA_LD",            nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["MLP"])           histNn      = new TH2F( "MVA_MLP",           "MVA_MLP",           nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["CFMlpANN"])      histNnC     = new TH2F( "MVA_CFMlpANN",      "MVA_CFMlpANN",      nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["TMlpANN"])       histNnT     = new TH2F( "MVA_TMlpANN",       "MVA_TMlpANN",       nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["BDT"])           histBdt     = new TH2F( "MVA_BDT",           "MVA_BDT",           nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["BDTD"])          histBdtD    = new TH2F( "MVA_BDTD",          "MVA_BDTD",          nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["BDTG"])          histBdtG    = new TH2F( "MVA_BDTG",          "MVA_BDTG",          nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["RuleFit"])       histRf      = new TH2F( "MVA_RuleFit",       "MVA_RuleFit",       nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["SVM_Gauss"])     histSVMG    = new TH2F( "MVA_SVM_Gauss",     "MVA_SVM_Gauss",     nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["SVM_Poly"])      histSVMP    = new TH2F( "MVA_SVM_Poly",      "MVA_SVM_Poly",      nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["SVM_Lin"])       histSVML    = new TH2F( "MVA_SVM_Lin",       "MVA_SVM_Lin",       nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["FDA_MT"])        histFDAMT   = new TH2F( "MVA_FDA_MT",        "MVA_FDA_MT",        nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["FDA_GA"])        histFDAGA   = new TH2F( "MVA_FDA_GA",        "MVA_FDA_GA",        nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["Category"])      histCat     = new TH2F( "MVA_Category",      "MVA_Category",      nbin,xmin,xmax,nbin,ymin,ymax);
-   if (Use["Plugin"])        histPBdt    = new TH2F( "MVA_PBDT",          "MVA_BDT",           nbin,xmin,xmax,nbin,ymin,ymax); 
-
-
+   TH2F * hist = new TH2F( "MVA",    "MVA",    nbin,xmin,xmax,nbin,ymin,ymax);
 
    // Prepare input tree (this must be replaced by your data source)
    // in this example, there is a toy tree with signal and one with background events
    // we'll later on use only the "signal" events for the test in this example.
 
-
-
+   Float_t MinMVA=10000, MaxMVA=-100000;
    for (Int_t ibin=1; ibin<nbin+1; ibin++){
       for (Int_t jbin=1; jbin<nbin+1; jbin++){
          var0 = hs->GetXaxis()->GetBinCenter(ibin);
          var1 = hs->GetYaxis()->GetBinCenter(jbin);
-         
-         
-         if (Use["Likelihood"   ])   histLk     ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "Likelihood method"    ) );
-         if (Use["LikelihoodD"  ])   histLkD    ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "LikelihoodD method"   ) );
-         if (Use["LikelihoodPCA"])   histLkPCA  ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "LikelihoodPCA method" ) );
-         if (Use["LikelihoodKDE"])   histLkKDE  ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "LikelihoodKDE method" ) );
-         if (Use["LikelihoodMIX"])   histLkMIX  ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "LikelihoodMIX method" ) );
-         if (Use["PDERS"        ])   histPD     ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "PDERS method"         ) );
-         if (Use["PDERSD"       ])   histPDD    ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "PDERSD method"        ) );
-         if (Use["PDERSPCA"     ])   histPDPCA  ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "PDERSPCA method"      ) );
-         if (Use["KNN"          ])   histKNN    ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "KNN method"           ) );
-         if (Use["HMatrix"      ])   histHm     ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "HMatrix method"       ) );
-         if (Use["Fisher"       ])   histFi     ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "Fisher method"        ) );
-         if (Use["FisherG"      ])   histFiG    ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "FisherG method"        ) );
-         if (Use["BoostedFisher"])   histFiB    ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "BoostedFisher method"        ) );
-         if (Use["LD"           ])   histLD     ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "LD method"            ) );
-         if (Use["MLP"          ])   histNn     ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "MLP method"           ) );
-         if (Use["CFMlpANN"     ])   histNnC    ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "CFMlpANN method"      ) );
-         if (Use["TMlpANN"      ])   histNnT    ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "TMlpANN method"       ) );
-         if (Use["BDT"          ])   histBdt    ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "BDT method"           ) );
-         if (Use["BDTD"         ])   histBdtD   ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "BDTD method"          ) );
-         if (Use["BDTG"         ])   histBdtG   ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "BDTG method"          ) );
-         if (Use["RuleFit"      ])   histRf     ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "RuleFit method"       ) );
-         if (Use["SVM_Gauss"    ])   histSVMG   ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "SVM_Gauss method"     ) );
-         if (Use["SVM_Poly"     ])   histSVMP   ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "SVM_Poly method"      ) );
-         if (Use["SVM_Lin"      ])   histSVML   ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "SVM_Lin method"       ) );
-         if (Use["FDA_MT"       ])   histFDAMT  ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "FDA_MT method"        ) );
-         if (Use["FDA_GA"       ])   histFDAGA  ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "FDA_GA method"        ) );
-         if (Use["Category"     ])   histCat    ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "Category method"         ) );
-         if (Use["Plugin"       ])   histPBdt   ->SetBinContent(ibin,jbin, reader->EvaluateMVA( "P_BDT method"         ) );
+         Float_t mvaVal=reader->EvaluateMVA( "M1" ) ;
+         if (MinMVA>mvaVal) MinMVA=mvaVal;
+         if (MaxMVA<mvaVal) MaxMVA=mvaVal;
+         hist->SetBinContent(ibin,jbin, mvaVal);
       }
    }
 
+   // creating a fine histograms containing the error rate
+   const Int_t nValBins=100;
+   Double_t    sum = 0.;
 
-   std::cout << "--- Created root file: \"TMVApp.root\" containing the MVA output histograms" << std::endl;
-  
-   delete reader;
+   TH1F *mvaS= new TH1F("mvaS","",nValBins,MinMVA,MaxMVA);
+   TH1F *mvaB= new TH1F("mvaB","",nValBins,MinMVA,MaxMVA);
+   TH1F *mvaSC= new TH1F("mvaSC","",nValBins,MinMVA,MaxMVA);
+   TH1F *mvaBC= new TH1F("mvaBC","",nValBins,MinMVA,MaxMVA);
 
+   Long64_t nentries;
+   nentries = TreeS->GetEntries();
+   for (Long64_t is=0; is<nentries;is++) {
+      signal->GetEntry(is);
+      sum +=sWeight;
+      var0 = svar0;
+      var1 = svar1;
+      Float_t mvaVal=reader->EvaluateMVA( "M1" ) ;
+      hs->Fill(svar0,svar1);
+      mvaS->Fill(mvaVal,sWeight);
+   }
+   nentries = TreeB->GetEntries();
+   for (Long64_t ib=0; ib<nentries;ib++) {
+      background->GetEntry(ib);
+      sum +=bWeight;
+      var0 = bvar0;
+      var1 = bvar1;
+      Float_t mvaVal=reader->EvaluateMVA( "M1" ) ;
+      hb->Fill(bvar0,bvar1);
+      mvaB->Fill(mvaVal,bWeight);
+   }
 
+   //SeparationBase *sepGain = new MisClassificationError();
+   //SeparationBase *sepGain = new GiniIndex();
+   SeparationBase *sepGain = new CrossEntropy();
 
+   Double_t sTot = mvaS->GetSum();
+   Double_t bTot = mvaB->GetSum();
+
+   mvaSC->SetBinContent(1,mvaS->GetBinContent(1));
+   mvaBC->SetBinContent(1,mvaB->GetBinContent(1));
+   Double_t sSel=mvaSC->GetBinContent(1);
+   Double_t bSel=mvaBC->GetBinContent(1);
+   Double_t separationGain=sepGain->GetSeparationGain(sSel,bSel,sTot,bTot);
+   Double_t mvaCut=mvaSC->GetBinCenter(1);
+   Double_t mvaCutOrientation=1; // 1 if mva > mvaCut --> Signal and -1 if mva < mvaCut (i.e. mva*-1 > mvaCut*-1) --> Signal
+   for (Int_t ibin=2;ibin<nValBins;ibin++){ 
+      mvaSC->SetBinContent(ibin,mvaS->GetBinContent(ibin)+mvaSC->GetBinContent(ibin-1));
+      mvaBC->SetBinContent(ibin,mvaB->GetBinContent(ibin)+mvaBC->GetBinContent(ibin-1));
     
-   std::cout << "==> TMVAClassificationApplication is done!" << endl << std::endl;
+      sSel=mvaSC->GetBinContent(ibin);
+      bSel=mvaBC->GetBinContent(ibin);
+
+      if (separationGain < sepGain->GetSeparationGain(sSel,bSel,sTot,bTot) && mvaSC->GetBinCenter(ibin)<0){
+         separationGain = sepGain->GetSeparationGain(sSel,bSel,sTot,bTot);
+         mvaCut=mvaSC->GetBinCenter(ibin);
+         if (sSel/bSel > (sTot-sSel)/(bTot-bSel)) mvaCutOrientation=-1;
+         else                                     mvaCutOrientation=1;
+     }
+   }
+   
+
+   cout << "Min="<<MinMVA << " Max=" << MaxMVA 
+        << " sTot=" << sTot
+        << " bTot=" << bTot
+        << " sepGain="<<separationGain
+        << " cut=" << mvaCut
+        << " cutOrientation="<<mvaCutOrientation
+        << endl;
 
 
+   delete reader;
 
    gStyle->SetPalette(1);
 
-   if (Use["Likelihood"   ]) plot(hs,hb,histLk     ,v0,v1);
-   if (Use["LikelihoodD"  ]) plot(hs,hb,histLkD    ,v0,v1);
-   if (Use["LikelihoodPCA"]) plot(hs,hb,histLkPCA  ,v0,v1);
-   if (Use["LikelihoodKDE"]) plot(hs,hb,histLkKDE  ,v0,v1);
-   if (Use["LikelihoodMIX"]) plot(hs,hb,histLkMIX  ,v0,v1);
-   if (Use["PDERS"        ]) plot(hs,hb,histPD     ,v0,v1);
-   if (Use["PDERSD"       ]) plot(hs,hb,histPDD    ,v0,v1);
-   if (Use["PDERSPCA"     ]) plot(hs,hb,histPDPCA  ,v0,v1);
-   if (Use["KNN"          ]) plot(hs,hb,histKNN    ,v0,v1);
-   if (Use["HMatrix"      ]) plot(hs,hb,histHm     ,v0,v1);
-   if (Use["Fisher"       ]) plot(hs,hb,histFi     ,v0,v1);
-   if (Use["FisherG"      ]) plot(hs,hb,histFiG    ,v0,v1);
-   if (Use["BoostedFisher"]) plot(hs,hb,histFiB    ,v0,v1);
-   if (Use["LD"           ]) plot(hs,hb,histLD     ,v0,v1);
-   if (Use["MLP"          ]) plot(hs,hb,histNn     ,v0,v1);
-   if (Use["CFMlpANN"     ]) plot(hs,hb,histNnC    ,v0,v1);
-   if (Use["TMlpANN"      ]) plot(hs,hb,histNnT    ,v0,v1);
-   if (Use["BDT"          ]) plot(hs,hb,histBdt    ,v0,v1);
-   if (Use["BDTD"         ]) plot(hs,hb,histBdtD   ,v0,v1);
-   if (Use["BDTG"         ]) plot(hs,hb,histBdtG   ,v0,v1); 
-   if (Use["RuleFit"      ]) plot(hs,hb,histRf     ,v0,v1);
-   if (Use["SVM_Gauss"    ]) plot(hs,hb,histSVMG   ,v0,v1);
-   if (Use["SVM_Poly"     ]) plot(hs,hb,histSVMP   ,v0,v1);
-   if (Use["SVM_Lin"      ]) plot(hs,hb,histSVML   ,v0,v1);
-   if (Use["FDA_MT"       ]) plot(hs,hb,histFDAMT  ,v0,v1);
-   if (Use["FDA_GA"       ]) plot(hs,hb,histFDAGA  ,v0,v1);
-   if (Use["Category"     ]) plot(hs,hb,histCat    ,v0,v1);
-   if (Use["Plugin"       ]) plot(hs,hb,histPBdt   ,v0,v1);
+  
+   plot(hs,hb,hist     ,v0,v1,mvaCut);
 
-   
+
+   TCanvas *cm=new TCanvas ("cm","",900,1200);
+   cm->cd();
+   cm->Divide(1,2);
+   cm->cd(1);
+   mvaS->SetLineColor(4);
+   mvaB->SetLineColor(2);
+   mvaS->Draw();
+   mvaB->Draw("same");
+
+   cm->cd(2);
+   mvaSC->SetLineColor(4);
+   mvaBC->SetLineColor(2);
+   mvaBC->Draw();
+   mvaSC->Draw("same");
+
+   // TH1F *add=(TH1F*)mvaBC->Clone("add");
+   // add->Add(mvaSC);
+
+   // add->Draw();
+
+   // errh->Draw("same");
+
    //
    // write histograms
    //
-   TFile *target  = new TFile( "TMVApp.root","RECREATE" );
+   TFile *target  = new TFile( "TMVAPlotDecisionBoundary.root","RECREATE" );
 
    hs->Write();
    hb->Write();
 
-   if (Use["Likelihood"   ])   histLk     ->Write();
-   if (Use["LikelihoodD"  ])   histLkD    ->Write();
-   if (Use["LikelihoodPCA"])   histLkPCA  ->Write();
-   if (Use["LikelihoodKDE"])   histLkKDE  ->Write();
-   if (Use["LikelihoodMIX"])   histLkMIX  ->Write();
-   if (Use["PDERS"        ])   histPD     ->Write();
-   if (Use["PDERSD"       ])   histPDD    ->Write();
-   if (Use["PDERSPCA"     ])   histPDPCA  ->Write();
-   if (Use["KNN"          ])   histKNN    ->Write();
-   if (Use["HMatrix"      ])   histHm     ->Write();
-   if (Use["Fisher"       ])   histFi     ->Write();
-   if (Use["FisherG"      ])   histFiG    ->Write();
-   if (Use["BoostedFisher"])   histFiB    ->Write();
-   if (Use["LD"           ])   histLD     ->Write();
-   if (Use["MLP"          ])   histNn     ->Write();
-   if (Use["CFMlpANN"     ])   histNnC    ->Write();
-   if (Use["TMlpANN"      ])   histNnT    ->Write();
-   if (Use["BDT"          ])   histBdt    ->Write();
-   if (Use["BDTD"         ])   histBdtD   ->Write();
-   if (Use["BDTG"         ])   histBdtG   ->Write(); 
-   if (Use["RuleFit"      ])   histRf     ->Write();
-   if (Use["SVM_Gauss"    ])   histSVMG   ->Write();
-   if (Use["SVM_Poly"     ])   histSVMP   ->Write();
-   if (Use["SVM_Lin"      ])   histSVML   ->Write();
-   if (Use["FDA_MT"       ])   histFDAMT  ->Write();
-   if (Use["FDA_GA"       ])   histFDAGA  ->Write();
-   if (Use["Category"     ])   histCat    ->Write();
-   if (Use["Plugin"       ])   histPBdt   ->Write();
+   hist->Write();
 
    target->Close();
 

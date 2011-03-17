@@ -12,6 +12,7 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
+ *      Peter Speckmayer <Peter.Speckmayer@cern.ch>  - CERN, Switzerland          *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
@@ -50,6 +51,8 @@ namespace TMVA {
 
    public:
   
+      typedef std::vector<Float_t>       FloatVector;
+      typedef std::vector< FloatVector > VectorOfFloatVectors;
       VariableNormalizeTransform( DataSetInfo& dsi );
       virtual ~VariableNormalizeTransform( void );
 
@@ -80,8 +83,8 @@ namespace TMVA {
 
       //      mutable Event*           fTransformedEvent;
 
-      std::vector< std::vector<Float_t> >    fMin;       //! Min of source range
-      std::vector< std::vector<Float_t> >    fMax;       //! Max of source range
+      VectorOfFloatVectors                   fMin;       //! Min of source range
+      VectorOfFloatVectors                   fMax;       //! Max of source range
 
       ClassDef(VariableNormalizeTransform,0) // Variable transformation: normalization
    };

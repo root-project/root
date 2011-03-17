@@ -93,6 +93,9 @@ namespace TMVA {
 
       Double_t GetMvaValue( Double_t* err=0, Double_t* errUpper = 0 );
 
+      // regression response
+      virtual const std::vector<Float_t>& GetRegressionValues();
+
       virtual void MakeClass( const TString& = TString("") ) const {};
 
    private :

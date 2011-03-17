@@ -57,13 +57,18 @@ void Boost(){
                                         "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" );
 
    TString fisher="H:!V";
+   TString mlp = "H:!V:NeuronType=tanh:NCycles=100:HiddenLayers=N:TestRate=5:!UseRegulator";
    factory->BookMethod( TMVA::Types::kFisher, "Fisher", fisher );
-   factory->BookMethod( TMVA::Types::kFisher, "FisherBoost", fisher+":Boost_Num=100:Boost_Type=AdaBoost" );
-   factory->BookMethod( TMVA::Types::kFisher, "FisherBoostLog", fisher+":Boost_Num=100:Boost_Transform=log:Boost_Type=AdaBoost:Boost_AdaBoostBeta=1.0" );
-   factory->BookMethod( TMVA::Types::kFisher, "FisherBoostLog2", fisher+":Boost_Num=100:Boost_Transform=log:Boost_Type=AdaBoost:Boost_AdaBoostBeta=2.0" );
-   factory->BookMethod( TMVA::Types::kFisher, "FisherBoostStep", fisher+":Boost_Num=100:Boost_Transform=step:Boost_Type=AdaBoost:Boost_AdaBoostBeta=1.0" );
-   factory->BookMethod( TMVA::Types::kFisher, "FisherBoostStep2", fisher+":Boost_Num=100:Boost_Transform=step:Boost_Type=AdaBoost:Boost_AdaBoostBeta=1.2" );
-   factory->BookMethod( TMVA::Types::kFisher, "FisherBoostStep3", fisher+":Boost_Num=100:Boost_Transform=step:Boost_Type=AdaBoost:Boost_AdaBoostBeta=1.5" );
+   factory->BookMethod( TMVA::Types::kFisher, "FisherBoost", fisher+":Boost_Num=10:Boost_Type=AdaBoost" );
+   factory->BookMethod(TMVA::Types::kMLP, "MLP", mlp);
+
+   factory->BookMethod(TMVA::Types::kMLP, "BoostedMLP", mlp+":Boost_Num=3:Boost_Type=AdaBoost:Boost_Transform=linear:" );
+   
+   //factory->BookMethod( TMVA::Types::kFisher, "FisherBoostLog", fisher+":Boost_Num=100:Boost_Transform=log:Boost_Type=AdaBoost:Boost_AdaBoostBeta=1.0" );
+   //factory->BookMethod( TMVA::Types::kFisher, "FisherBoostLog2", fisher+":Boost_Num=100:Boost_Transform=log:Boost_Type=AdaBoost:Boost_AdaBoostBeta=2.0" );
+   //factory->BookMethod( TMVA::Types::kFisher, "FisherBoostStep", fisher+":Boost_Num=100:Boost_Transform=step:Boost_Type=AdaBoost:Boost_AdaBoostBeta=1.0" );
+   //factory->BookMethod( TMVA::Types::kFisher, "FisherBoostStep2", fisher+":Boost_Num=100:Boost_Transform=step:Boost_Type=AdaBoost:Boost_AdaBoostBeta=1.2" );
+   //factory->BookMethod( TMVA::Types::kFisher, "FisherBoostStep3", fisher+":Boost_Num=100:Boost_Transform=step:Boost_Type=AdaBoost:Boost_AdaBoostBeta=1.5" );
 
   // Train MVAs using the set of training events
    factory->TrainAllMethods();

@@ -52,6 +52,7 @@
 #endif
 
 class TH1;
+class TGraph;
 
 namespace TMVA {
 
@@ -76,6 +77,7 @@ namespace TMVA {
       TList*              GetStorage()     const { return fStorage; }
       TObject*            GetObject(const TString & alias) const;
       TH1*                GetHist(const TString & alias) const;
+      TGraph*             GetGraph(const TString & alias) const;
       virtual Types::EAnalysisType  GetAnalysisType() { return Types::kNoAnalysisType; }
 
       // delete all stored data

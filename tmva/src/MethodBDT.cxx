@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$
+
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -113,6 +113,7 @@
 #include "TRandom3.h"
 #include "TMath.h"
 #include "TObjString.h"
+#include "TGraph.h"
 
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/MethodBDT.h"
@@ -129,6 +130,7 @@
 #include "TMVA/Results.h"
 #include "TMVA/ResultsMulticlass.h"
 #include "TMVA/Interval.h"
+#include "TMVA/PDF.h"
 
 using std::vector;
 
@@ -349,6 +351,8 @@ void TMVA::MethodBDT::DeclareOptions()
    }else{
       DeclareOptionRef(fMaxDepth=3,"MaxDepth","Max depth of the decision tree allowed");
    }
+   DeclareOptionRef(fDoBoostMonitor=kFALSE,"DoBoostMonitor","create control plot with ROC integral vs tree number");
+
 }
 
 void TMVA::MethodBDT::DeclareCompatibilityOptions() {
@@ -692,12 +696,27 @@ void TMVA::MethodBDT::Train()
    TH1* nodesBeforePruningVsTree = new TH1I("NodesBeforePruning","nodes before pruning",fNTrees,0,fNTrees);
    TH1* nodesAfterPruningVsTree = new TH1I("NodesAfterPruning","nodes after pruning",fNTrees,0,fNTrees);
 
+      
+
    if(!DoMulticlass()){
       Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, GetAnalysisType());
 
       h->SetXTitle("boost weight");
       results->Store(h, "BoostWeights");
-      
+  
+
+      // Monitor the performance (on TEST sample) versus number of trees
+      if (fDoBoostMonitor){
+         TH2* boostMonitor = new TH2F("BoostMonitor","ROC Integral Vs iTree",2,0,fNTrees,2,0,1.05);
+         boostMonitor->SetXTitle("#tree");
+         boostMonitor->SetYTitle("ROC Integral");
+         results->Store(boostMonitor, "BoostMonitor");
+         TGraph *boostMonitorGraph = new TGraph();
+         boostMonitorGraph->SetName("BoostMonitorGraph");
+         boostMonitorGraph->SetTitle("ROCIntegralVsNTrees");
+         results->Store(boostMonitorGraph, "BoostMonitorGraph");
+      }
+
       // weights applied in boosting vs tree number
       h = new TH1F("BoostWeightVsTree","Boost weights vs tree",fNTrees,0,fNTrees);
       h->SetXTitle("#tree");
@@ -783,7 +802,7 @@ void TMVA::MethodBDT::Train()
          
          if (fBoostType!="Grad")
             if (fUseYesNoLeaf && !DoRegression() ){ // remove leaf nodes where both daughter nodes are of same type
-               nNodesBeforePruning = fForest.back()->CleanTree();
+              nNodesBeforePruning = fForest.back()->CleanTree();
             }
          nNodesBeforePruningCount += nNodesBeforePruning;
          nodesBeforePruningVsTree->SetBinContent(itree+1,nNodesBeforePruning);
@@ -814,7 +833,7 @@ void TMVA::MethodBDT::Train()
             }
             
             if (fUseYesNoLeaf && !DoRegression() ){ // remove leaf nodes where both daughter nodes are of same type
-               fForest.back()->CleanTree();
+              fForest.back()->CleanTree();
             }
          }
          nNodesAfterPruning = fForest.back()->GetNNodes();
@@ -823,6 +842,18 @@ void TMVA::MethodBDT::Train()
          
          fITree = itree;
          fMonitorNtuple->Fill();
+         if (fDoBoostMonitor){
+            if (! DoRegression() ){
+               if (  itree==fNTrees-1 ||  (!(itree%500)) ||
+                     (!(itree%250) && itree <1000)||
+                     (!(itree%100) && itree < 500)||
+                     (!(itree%50)  && itree < 250)||
+                     (!(itree%25)  && itree < 150)||
+                     (!(itree%10)  && itree <  50)||
+                     (!(itree%5)   && itree <  20)
+                     ) BoostMonitor(itree);
+            }
+         }
       }
    }
 
@@ -1089,24 +1120,64 @@ Double_t TMVA::MethodBDT::Boost( vector<TMVA::Event*> eventSample, DecisionTree 
    // apply the boosting alogrithim (the algorithm is selecte via the the "option" given
    // in the constructor. The return value is the boosting weight
 
-   if      (fBoostType=="AdaBoost")    return this->AdaBoost  (eventSample, dt);
-   else if (fBoostType=="Bagging")     return this->Bagging   (eventSample, iTree);
-   else if (fBoostType=="RegBoost")    return this->RegBoost  (eventSample, dt);
-   else if (fBoostType=="AdaBoostR2")  return this->AdaBoostR2(eventSample, dt);
+   Double_t returnVal=-1;
+
+   if      (fBoostType=="AdaBoost")    returnVal = this->AdaBoost  (eventSample, dt);
+   else if (fBoostType=="Bagging")     returnVal = this->Bagging   (eventSample, iTree);
+   else if (fBoostType=="RegBoost")    returnVal = this->RegBoost  (eventSample, dt);
+   else if (fBoostType=="AdaBoostR2")  returnVal = this->AdaBoostR2(eventSample, dt);
    else if (fBoostType=="Grad"){
       if(DoRegression())
-         return this->GradBoostRegression(eventSample, dt);
+         returnVal = this->GradBoostRegression(eventSample, dt);
       else if(DoMulticlass())
-         return this->GradBoost (eventSample, dt, cls);
+         returnVal = this->GradBoost (eventSample, dt, cls);
       else
-         return this->GradBoost (eventSample, dt);
+         returnVal = this->GradBoost (eventSample, dt);
    }
    else {
       Log() << kINFO << GetOptions() << Endl;
       Log() << kFATAL << "<Boost> unknown boost option " << fBoostType<< " called" << Endl;
    }
 
-   return -1;
+   return returnVal;
+}
+
+//_______________________________________________________________________
+void TMVA::MethodBDT::BoostMonitor(Int_t iTree)
+{
+   // fills the ROCIntegral vs Itree from the testSample for the monitoring plots
+   // during the training .. but using the testing events 
+
+   TH1F *tmpS = new TH1F( "tmpS", "",     100 , -1., 1.00001 );
+   TH1F *tmpB = new TH1F( "tmpB", "",     100 , -1., 1.00001 );
+   TH1F *tmp;
+
+   const std::vector<Event*> events=Data()->GetEventCollection(Types::kTesting);
+   UInt_t signalClassNr = DataInfo().GetClassInfo("Signal")->GetNumber();
+ 
+   //   fMethod->GetTransformationHandler().CalcTransformations(fMethod->Data()->GetEventCollection(Types::kTesting));
+   for (UInt_t iev=0; iev < events.size() ; iev++){
+      if (events[iev]->GetClass() == signalClassNr) tmp=tmpS;
+      else                                          tmp=tmpB;
+      tmp->Fill(PrivateGetMvaValue(*(events[iev])),events[iev]->GetWeight());
+   }
+   
+   TMVA::PDF *sig = new TMVA::PDF( " PDF Sig", tmpS, TMVA::PDF::kSpline3 );
+   TMVA::PDF *bkg = new TMVA::PDF( " PDF Bkg", tmpB, TMVA::PDF::kSpline3 );
+   
+   Results* results = Data()->GetResults(GetMethodName(),Types::kTraining, Types::kMaxAnalysisType);
+   TGraph*  gr=results->GetGraph("BoostMonitorGraph");
+   Int_t nPoints = gr->GetN();
+   gr->Set(nPoints+1);
+   gr->SetPoint(nPoints,(Double_t)iTree+1,GetROCIntegral(sig,bkg));
+
+   tmpS->Delete();
+   tmpB->Delete();
+   
+   delete sig;
+   delete bkg;
+
+   return;
 }
 
 //_______________________________________________________________________
@@ -1171,6 +1242,10 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
                << "and this is not implemented... a typo in the options ??" <<Endl;
       }
    }
+
+   Log() << kDEBUG << "BDT AdaBoos  wrong/all: " << sumGlobalwfalse << "/" << sumGlobalw << Endl;
+
+
    Double_t newSumGlobalw=0;
    vector<Double_t> newSumw(sumw.size(),0);
 
@@ -1204,8 +1279,10 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
    else {
       boostWeight =  TMath::Power((1.0 - err)/err, fAdaBoostBeta);
    }
+   Log() << kDEBUG << "BDT AdaBoos  wrong/all: " << sumGlobalwfalse << "/" << sumGlobalw << " 1-err/err="<<boostWeight<< " log.."<<TMath::Log(boostWeight)<<Endl;
 
    Results* results = Data()->GetResults(GetMethodName(),Types::kTraining, Types::kMaxAnalysisType);
+
 
    for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
  
@@ -1224,10 +1301,14 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
       newSumw[(*e)->GetClass()] += (*e)->GetWeight();
    }
 
+
    // re-normalise the weights (independent for Signal and Background)
    Double_t globalNormWeight=sumGlobalw/newSumGlobalw;
    vector<Double_t>  normWeightByClass;
    for (UInt_t i=0; i<sumw.size(); i++) normWeightByClass.push_back(sumw[i]/newSumw[i]);
+
+   Log() << kDEBUG << "new Nsig="<<newSumw[0]*globalNormWeight << " new Nbkg="<<newSumw[1]*globalNormWeight << Endl;
+
 
    for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       if (fRenormByClass) (*e)->ScaleBoostWeight( normWeightByClass[(*e)->GetClass()] );
@@ -1486,6 +1567,16 @@ Double_t TMVA::MethodBDT::GetMvaValue( Double_t* err, Double_t* errUpper, UInt_t
    // Return the MVA value (range [-1;1]) that classifies the
    // event according to the majority vote from the total number of
    // decision trees.
+   const Event* ev = GetEvent();
+   return PrivateGetMvaValue(const_cast<TMVA::Event&>(*ev), err, errUpper, useNTrees);
+
+}
+//_______________________________________________________________________
+   Double_t TMVA::MethodBDT::PrivateGetMvaValue(TMVA::Event& ev, Double_t* err, Double_t* errUpper, UInt_t useNTrees )
+{
+   // Return the MVA value (range [-1;1]) that classifies the
+   // event according to the majority vote from the total number of
+   // decision trees.
 
    // cannot determine error
    NoErrorCalc(err, errUpper);
@@ -1493,20 +1584,21 @@ Double_t TMVA::MethodBDT::GetMvaValue( Double_t* err, Double_t* errUpper, UInt_t
    // allow for the possibility to use less trees in the actual MVA calculation
    // than have been originally trained.
    UInt_t nTrees = fForest.size();
+
    if (useNTrees > 0 ) nTrees = useNTrees;
 
-   if (fBoostType=="Grad") return GetGradBoostMVA(const_cast<TMVA::Event&>(*GetEvent()),nTrees);
+   if (fBoostType=="Grad") return GetGradBoostMVA(ev,nTrees);
    
    Double_t myMVA = 0;
    Double_t norm  = 0;
    for (UInt_t itree=0; itree<nTrees; itree++) {
       //
       if (fUseWeightedTrees) {
-         myMVA += fBoostWeights[itree] * fForest[itree]->CheckEvent(*GetEvent(),fUseYesNoLeaf);
+         myMVA += fBoostWeights[itree] * fForest[itree]->CheckEvent(ev,fUseYesNoLeaf);
          norm  += fBoostWeights[itree];
       }
       else {
-         myMVA += fForest[itree]->CheckEvent(*GetEvent(),fUseYesNoLeaf);
+         myMVA += fForest[itree]->CheckEvent(ev,fUseYesNoLeaf);
          norm  += 1;
       }
    }
@@ -1843,16 +1935,29 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
    fout << "   // constructor of an essentially \"empty\" node floating in space" << endl;
    fout << "   BDT_DecisionTreeNode ( BDT_DecisionTreeNode* left," << endl;
    fout << "                          BDT_DecisionTreeNode* right," << endl;
-   fout << "                          double cutValue, bool cutType, int selector," << endl;
+   if (fUseFisherCuts){
+     fout << "                          int nFisherCoeff," << endl;
+     for (UInt_t i=0;i<GetNVariables()+1;i++){
+       fout << "                          double fisherCoeff"<<i<<"," << endl;
+     }
+   }
+   fout << "                          int selector, double cutValue, bool cutType, " << endl;
    fout << "                          int nodeType, double purity, double response ) :" << endl;
-   fout << "   fLeft    ( left     )," << endl;
-   fout << "   fRight   ( right    )," << endl;
-   fout << "   fCutValue( cutValue )," << endl;
-   fout << "   fCutType ( cutType  )," << endl;
-   fout << "   fSelector( selector )," << endl;
-   fout << "   fNodeType( nodeType )," << endl;
-   fout << "   fPurity  ( purity   )," << endl;
-   fout << "   fResponse( response ){}" << endl << endl;
+   fout << "   fLeft         ( left         )," << endl;
+   fout << "   fRight        ( right        )," << endl;
+   if (fUseFisherCuts) fout << "   fNFisherCoeff ( nFisherCoeff )," << endl;
+   fout << "   fSelector     ( selector     )," << endl;
+   fout << "   fCutValue     ( cutValue     )," << endl;
+   fout << "   fCutType      ( cutType      )," << endl;
+   fout << "   fNodeType     ( nodeType     )," << endl;
+   fout << "   fPurity       ( purity       )," << endl;
+   fout << "   fResponse     ( response     ){" << endl;
+   if (fUseFisherCuts){
+     for (UInt_t i=0;i<GetNVariables()+1;i++){
+       fout << "     fFisherCoeff.push_back(fisherCoeff"<<i<<");" << endl;
+     }
+   }
+   fout << "   }" << endl << endl;
    fout << "   virtual ~BDT_DecisionTreeNode();" << endl << endl;
    fout << "   // test event if it decends the tree at this node to the right" << endl;
    fout << "   virtual bool GoesRight( const std::vector<double>& inputValues ) const;" << endl;
@@ -1868,9 +1973,13 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
    fout << "private:" << endl << endl;
    fout << "   BDT_DecisionTreeNode*   fLeft;     // pointer to the left daughter node" << endl;
    fout << "   BDT_DecisionTreeNode*   fRight;    // pointer to the right daughter node" << endl;
+   if (fUseFisherCuts){
+     fout << "   int                     fNFisherCoeff; // =0 if this node doesn use fisher, else =nvar+1 " << endl;
+     fout << "   std::vector<double>     fFisherCoeff;  // the fisher coeff (offset at the last element)" << endl;
+   }
+   fout << "   int                     fSelector; // index of variable used in node selection (decision tree)   " << endl;
    fout << "   double                  fCutValue; // cut value appplied on this node to discriminate bkg against sig" << endl;
    fout << "   bool                    fCutType;  // true: if event variable > cutValue ==> signal , false otherwise" << endl;
-   fout << "   int                     fSelector; // index of variable used in node selection (decision tree)   " << endl;
    fout << "   int                     fNodeType; // Type of node: -1 == Bkg-leaf, 1 == Signal-leaf, 0 = internal " << endl;
    fout << "   double                  fPurity;   // Purity of node from training"<< endl;
    fout << "   double                  fResponse; // Regression response value of node" << endl;
@@ -1887,7 +1996,19 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
    fout << "bool BDT_DecisionTreeNode::GoesRight( const std::vector<double>& inputValues ) const" << endl;
    fout << "{" << endl;
    fout << "   // test event if it decends the tree at this node to the right" << endl;
-   fout << "   bool result = (inputValues[fSelector] > fCutValue );" << endl;
+   fout << "   bool result;" << endl;
+   if (fUseFisherCuts){
+     fout << "   if (fNFisherCoeff == 0){" << endl;
+     fout << "     result = (inputValues[fSelector] > fCutValue );" << endl;
+     fout << "   }else{" << endl;
+     fout << "     double fisher = fFisherCoeff.at(fFisherCoeff.size()-1);" << endl;
+     fout << "     for (unsigned int ivar=0; ivar<fFisherCoeff.size()-1; ivar++)" << endl;
+     fout << "       fisher += fFisherCoeff.at(ivar)*inputValues.at(ivar);" << endl;
+     fout << "     result = fisher > fCutValue;" << endl;
+     fout << "   }" << endl;
+   }else{
+     fout << "     result = (inputValues[fSelector] > fCutValue );" << endl;
+   }
    fout << "   if (fCutType == true) return result; //the cuts are selecting Signal ;" << endl;
    fout << "   else return !result;" << endl;
    fout << "}" << endl;
@@ -1927,12 +2048,21 @@ void TMVA::MethodBDT::MakeClassInstantiateNode( DecisionTreeNode *n, std::ostrea
       fout << "0";
    }
    fout << ", " <<  endl
-        << setprecision(6)
+        << setprecision(6);
+   if (fUseFisherCuts){
+     fout << n->GetNFisherCoeff() << ", ";
+     for (UInt_t i=0; i< GetNVariables()+1; i++) {
+       if (n->GetNFisherCoeff() == 0 ){
+         fout <<  "0, ";
+       }else{
+         fout << n->GetFisherCoeff(i) << ", ";
+       }
+     }
+   }
+   fout << n->GetSelector() << ", "
         << n->GetCutValue() << ", "
         << n->GetCutType() << ", "
-        << n->GetSelector() << ", "
         << n->GetNodeType() << ", "
         << n->GetPurity() << ","
         << n->GetResponse() << ") ";
-
 }

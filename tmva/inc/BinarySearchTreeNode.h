@@ -89,6 +89,7 @@ namespace TMVA {
 
       const std::vector<Float_t> & GetEventV() const { return fEventV; }
       Float_t                      GetWeight() const { return fWeight; }
+      UInt_t                       GetClass()  const { return fClass; }
       Bool_t                       IsSignal()  const { return (fClass == 0); }
 
       const std::vector<Float_t> & GetTargets() const { return fTargets; }

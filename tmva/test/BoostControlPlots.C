@@ -1,5 +1,7 @@
 #include <vector>
 #include <string>
+#include "TLegend.h"
+#include "TText.h"
 #include "tmvaglob.C"
 
 
@@ -76,6 +78,10 @@ void boostcontrolplots( TDirectory *boostdir ) {
       TPad * cPad = (TPad*)c->cd(nPlots+i+1);
       TH1 *htest  = (TH1*) boostdir->Get(hname_roctest[i]);
       TH1 *htrain = (TH1*) boostdir->Get(hname_roctrain[i]);
+
+      // check if filled 
+      Bool_t histFilled = (htest->GetMaximum() > 0 || htrain->GetMaximum() > 0);
+
       htest->SetTitle(htitle[i]);
       htest->SetMaximum(1.0);
       htest->SetMinimum(0.0);
@@ -94,16 +100,25 @@ void boostcontrolplots( TDirectory *boostdir ) {
       htrain->SetLineColor(color-2);
       htrain->Draw("same");
 
-      TLegend *legend= new TLegend( cPad->GetLeftMargin(), 
-				    0.2 + cPad->GetBottomMargin(),
-				    cPad->GetLeftMargin() + 0.6, 
-				    cPad->GetBottomMargin() );
-      legend->AddEntry(htest,  TString("testing sample"),  "L");
-      legend->AddEntry(htrain, TString("training sample (orig. weights)"), "L");
-      legend->SetFillStyle( 1 );
-      legend->SetBorderSize(1);
-      legend->SetMargin( 0.3 );
-      legend->Draw("same");
+      if (histFilled) {
+         TLegend *legend= new TLegend( cPad->GetLeftMargin(), 
+                                       0.2 + cPad->GetBottomMargin(),
+                                       cPad->GetLeftMargin() + 0.6, 
+                                       cPad->GetBottomMargin() );
+         legend->AddEntry(htest,  TString("testing sample"),  "L");
+         legend->AddEntry(htrain, TString("training sample (orig. weights)"), "L");
+         legend->SetFillStyle( 1 );
+         legend->SetBorderSize(1);
+         legend->SetMargin( 0.3 );
+         legend->Draw("same");
+      }
+      else {
+         TText* t = new TText();
+         t->SetTextSize( 0.056 );
+         t->SetTextColor( 2 );
+         t->DrawText( 1, 0.6, "Use MethodBoost option: \"DetailedMonitoring\" " );        
+         t->DrawText( 1, 0.51, "to fill this histograms" );        
+      }
 
       c->Update();
    }

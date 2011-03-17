@@ -164,9 +164,8 @@ TMVA::Reader::Reader( std::vector<TString>& inputVars, const TString& theOption,
 
    // arguments: names of input variables (vector)
    //            verbose flag
-   for (std::vector<TString>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ivar++) {
+   for (std::vector<TString>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ivar++) 
       DataInfo().AddVariable( *ivar );
-   }
 
    Init();
 }
@@ -194,9 +193,8 @@ TMVA::Reader::Reader( std::vector<std::string>& inputVars, const TString& theOpt
 
    // arguments: names of input variables (vector)
    //            verbose flag
-   for (std::vector<std::string>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ivar++) {
+   for (std::vector<std::string>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ivar++) 
       DataInfo().AddVariable( ivar->c_str() );
-   }
 
    Init();
 }
@@ -465,7 +463,10 @@ Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, const 
    IMethod* imeth = FindMVA( methodTag );
    MethodBase* meth = dynamic_cast<TMVA::MethodBase*>(imeth);
    if(meth==0) return 0;
-   Event* tmpEvent=new Event(inputVec, 2); // ToDo resolve magic 2 issue
+
+//   Event* tmpEvent=new Event(inputVec, 2); // ToDo resolve magic 2 issue
+   Event* tmpEvent=new Event(inputVec, DataInfo().GetNVariables()); // is this the solution?
+
    if (meth->GetMethodType() == TMVA::Types::kCuts) {
       TMVA::MethodCuts* mc = dynamic_cast<TMVA::MethodCuts*>(meth);
       if(mc)
