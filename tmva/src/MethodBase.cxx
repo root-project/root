@@ -469,7 +469,7 @@ void TMVA::MethodBase::CreateVariableTransforms(const TString& trafoDefinitionIn
    if (trafoDefinition == "None") // no transformations
       return;
 
-   // workaround for transformations to complicated to be handled by makeclass/Reader, ToDo fix this in a later release
+   // workaround for transformations to complicated to be handled by makeclass
    // count number of transformations with incomplete set of variables
    TString trafoDefinitionCheck(trafoDefinitionIn);
    int npartial = 0, ntrafo=0;
@@ -478,7 +478,13 @@ void TMVA::MethodBase::CreateVariableTransforms(const TString& trafoDefinitionIn
       if( ch == "(" ) npartial++;
       if( ch == "+" || ch == ",") ntrafo++;
    }
-   if (npartial>1) log << kFATAL << "sorry, the booking of multiple partial variable transformations is not yet implemented, please book a less complicated variable transform than: "<<trafoDefinitionIn<< Endl; //ToDo make kFATAL
+   if (npartial>1){
+      log << kFATAL << "The booking of multiple partial variable transformations is not yet implemented in makeclass, the creation of a standalone class file is suppressed. The transformation in question is: "<<trafoDefinitionIn<< Endl; // ToDo make info and do not write the standalone class
+      //
+      // this does not work since this function is static
+      // fDisableWriting=true; // disable creation of stand-alone class
+      // ToDo we need to tell the transformation that it cannot write itself
+   }
    // workaround end
 
    Int_t parenthesisCount = 0;
