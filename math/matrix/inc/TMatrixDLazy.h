@@ -28,6 +28,12 @@
 #ifndef ROOT_TMatrixTLazy
 #include "TMatrixTLazy.h"
 #endif
+#ifndef ROOT_TMatrixDfwd
+#include "TMatrixDfwd.h"
+#endif
+#ifndef ROOT_TMatrixDSymfwd
+#include "TMatrixDSymfwd.h"
+#endif
 
 typedef TMatrixTLazy      <Double_t> TMatrixDLazy;
 typedef TMatrixTSymLazy   <Double_t> TMatrixDSymLazy;
