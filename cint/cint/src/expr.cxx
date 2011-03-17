@@ -1145,7 +1145,8 @@ G__value G__getexpr(const char* expression)
                 || (c == '>' && beforeSpaceChar == '>')) {}
             else {
                // not two identifiers / template "> >" - replace the space
-               ebuf[--lenbuf] = 0;
+               lenbuf--;
+               ebuf[lenbuf] = 0;
             }
          }
       }
