@@ -4165,10 +4165,19 @@ if test ! "x$enable_xrootd" = "xno" ; then
    fi
    xrdver="unknown"
    if test "x$newver" = "xyes" ; then
-      xrdver=`grep RefNames $verh`
-      if test $? -eq 0 ; then
-         set $xrdver
-         xrdver=`echo $4 | sed -e 's|,||'`
+      xrdtag=`grep RefNames $verh | grep tag:`
+      if ! test $? -eq 0 ; then
+         xrdver=`grep Date $verh`
+         if test $? -eq 0 ; then
+            set $xrdver
+            xrdver=`echo $2 | sed -e 's|-||g'`
+         fi
+      else
+         xrdver=`grep RefNames $verh`
+         if test $? -eq 0 ; then
+            set $xrdver
+           xrdver=`echo $4 | sed -e 's|,||'`
+         fi
       fi
    else
       xrdver=`grep XrdVERSION $verh`
@@ -4215,20 +4224,24 @@ if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
       decrefone=20070628
       decreftwo=20070723
       decrefthree=20071004
+      decreffour=20110311
       if [ $decver -gt $decrefone ] ; then
-         if [ $decver -gt $decrefthree ] ; then
+         if [ $decver -gt $decreffour ] ; then
             xrdcomm="$xrdcomm"
             extraxrdflags="$extraxrdflags"
+         elif [ $decver -gt $decrefthree ] ; then
+            vercomm=" (>$decrefthree, <=$decreffour: setting -DXRCPHYCNOREUSE)"
+            extraxrdflags="-DXRCPHYCNOREUSE $extraxrdflags"
          elif [ $decver -gt $decreftwo ] ; then
-            vercomm=" (>$decreftwo, <=$decrefthree: setting -DOLDXRDLOCATE)"
-            extraxrdflags="-DOLDXRDLOCATE $extraxrdflags"
+            vercomm=" (>$decreftwo, <=$decrefthree: setting -DOLDXRDLOCATE -DXRCPHYCNOREUSE)"
+            extraxrdflags="-DOLDXRDLOCATE  -DXRCPHYCNOREUSE $extraxrdflags"
          else
-            vercomm=" (>$decrefone, <=$decreftwo: setting -DOLDXRDLOCATE -DOLDXRDOUC)"
-            extraxrdflags="-DOLDXRDOUC -DOLDXRDLOCATE $extraxrdflags"
+            vercomm=" (>$decrefone, <=$decreftwo: setting -DOLDXRDLOCATE -DOLDXRDOUC -DXRCPHYCNOREUSE)"
+            extraxrdflags="-DOLDXRDOUC -DOLDXRDLOCATE  -DXRCPHYCNOREUSE $extraxrdflags"
          fi
       else
-         vercomm=" (<= $decrefone: setting -DOLDXRDLOCATE -DOLDXRDOUC -DOLDXRCPHYCONN)"
-         extraxrdflags="-DOLDXRCPHYCONN -DOLDXRDOUC -DOLDXRDLOCATE $extraxrdflags"
+         vercomm=" (<= $decrefone: setting -DOLDXRDLOCATE -DOLDXRDOUC -DOLDXRCPHYCONN -DXRCPHYCNOREUSE)"
+         extraxrdflags="-DOLDXRCPHYCONN -DOLDXRDOUC -DOLDXRDLOCATE -DXRCPHYCNOREUSE $extraxrdflags"
       fi
    fi
 
