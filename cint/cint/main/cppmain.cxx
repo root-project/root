@@ -22,6 +22,7 @@ extern int G__main(int argc,char **argv);
 int main(int argc,char **argv)
 {
   G__setothermain(0);
+  // coverity[fun_call_w_exception]: we don't care.
   return(G__main(argc,argv));
 }
 
