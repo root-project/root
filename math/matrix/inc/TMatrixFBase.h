@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TMatrixFBasefwd
-#define ROOT_TMatrixFBasefwd
+#ifndef ROOT_TMatrixFBase
+#define ROOT_TMatrixFBase
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
