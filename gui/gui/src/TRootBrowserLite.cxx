@@ -1785,7 +1785,7 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                // fallthrough
             case kCM_MENU:
 
-               switch (parm1) {
+               switch ((ERootBrowserCommands)parm1) {
                   // Handle File menu items...
                   case kFileNewBrowserLite:
                      new TBrowser("Browser", "ROOT Object Browser");
@@ -2050,7 +2050,8 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                // if we compare it with an enum value) and the meaning of 
                // parm1 depends on GET_MSG(msg) and GET_SUBMSG(msg)
                // coverity[mixed_enums]
-               if (parm1 == kButton1 || parm1 == kButton3) {
+               if (((EMouseButton)parm1 == kButton1) || 
+                   ((EMouseButton)parm1 == kButton3)) {
                   HideTextEdit();
                   TGListTreeItem *item2;
                   TObject *obj2 = 0;

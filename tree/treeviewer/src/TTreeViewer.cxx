@@ -1733,11 +1733,11 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          switch (GET_SUBMSG(msg)) {
          // handle enter posted by the Command text entry
             case kTE_ENTER:
-               if ((Int_t)parm1 == kBarCommand) {
+               if ((ERootTreeViewerCommands)parm1 == kBarCommand) {
                   ExecuteCommand(fBarCommand->GetText());
                   fBarCommand->Clear();
                }
-               if ((Int_t)parm1 == kBarOption) {
+               if ((ERootTreeViewerCommands)parm1 == kBarOption) {
                   fVarDraw = kFALSE;
                   fBarH->SetState(kButtonDown);
                   ExecuteDraw();
@@ -1756,7 +1756,8 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                // if we compare it with an enum value) and the meaning of 
                // parm1 depends on GET_MSG(msg) and GET_SUBMSG(msg)
                // coverity[mixed_enums]
-               if ((parm1==kButton1) || (parm1==kButton3)) {
+               if (((EMouseButton)parm1==kButton1) || 
+                   ((EMouseButton)parm1==kButton3)) {
                   TGListTreeItem *ltItem = 0;
                   // get item that sent this
                   if ((ltItem = fLt->GetSelected()) != 0) {
