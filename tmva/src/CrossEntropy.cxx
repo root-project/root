@@ -33,7 +33,7 @@
 //_______________________________________________________________________
 
 //#include <math.h>
-#include <TMath.h>
+#include "TMath.h"
 #include "TMVA/CrossEntropy.h"
 
 ClassImp(TMVA::CrossEntropy)
