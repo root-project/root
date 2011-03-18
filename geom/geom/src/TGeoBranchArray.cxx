@@ -34,7 +34,8 @@ ClassImp(TGeoBranchArray)
 TGeoBranchArray::TGeoBranchArray(UShort_t level)
                 :fLevel(level),
                  fArray(NULL),
-                 fMatrix(NULL)
+                 fMatrix(NULL),
+                 fClient(NULL)
 {
 // Constructor. Alocates the array with a size given by level.
    fArray = new UShort_t[level];
