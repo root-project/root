@@ -49,4 +49,5 @@ int execMissingParentValue()
    one->SetScanField(-1);
    cout << "With setting the aliases, we see the entries properly correlated\n";
    one->Scan("val:two.val2","","",100);
+   return 0;
 }
