@@ -80,7 +80,9 @@ private:
    Color_t       fGridColor;         //grid line color (if 0 use axis line color)
    Style_t       fGridStyle;         //grid line style
    Width_t       fGridWidth;         //grid line width
-   Width_t       fLegendBorderSize;  //TLegend box border size
+   Width_t       fLegendBorderSize;  //legend box border size
+   Color_t       fLegendFillColor;   //legend fill color
+   Style_t       fLegendFont;        //legend font style
    Int_t         fHatchesLineWidth;  //hatches line width for hatch styles > 3100
    Double_t      fHatchesSpacing;    //hatches spacing for hatch styles > 3100
    Color_t       fFrameFillColor;    //pad frame fill color
@@ -199,6 +201,8 @@ public:
    Int_t            GetHatchesLineWidth() const {return fHatchesLineWidth;}
    Double_t         GetHatchesSpacing() const  {return fHatchesSpacing;}
    Width_t          GetLegendBorderSize() const   {return fLegendBorderSize;}
+   Color_t          GetLegendFillColor() const {return fLegendFillColor;}
+   Style_t          GetLegendFont() const {return fLegendFont;}
    Int_t            GetNumberOfColors() const;
    Color_t          GetPadColor() const        {return fPadColor;}
    Width_t          GetPadBorderSize() const   {return fPadBorderSize;}
@@ -330,6 +334,8 @@ public:
    void             SetCanvasDefX(Int_t topx=10) {fCanvasDefX = topx;}
    void             SetCanvasDefY(Int_t topy=10) {fCanvasDefY = topy;}
    void             SetLegendBorderSize(Width_t size=4) {fLegendBorderSize = size;}
+   void             SetLegendFillColor(Color_t color=0) {fLegendFillColor = color;}
+   void             SetLegendFont(Style_t font=62) {fLegendFont = font;}
    void             SetPadColor(Color_t color=19) {fPadColor = color;}
    void             SetPadBorderSize(Width_t size=1) {fPadBorderSize = size;}
    void             SetPadBorderMode(Int_t mode=1) {fPadBorderMode = mode;}
@@ -399,7 +405,7 @@ public:
    void             SavePrimitive(ostream &out, Option_t * = "");
    void             SaveSource(const char *filename, Option_t *option=0);
 
-   ClassDef(TStyle, 13);  //A collection of all graphics attributes
+   ClassDef(TStyle, 14);  //A collection of all graphics attributes
 };
 
 
