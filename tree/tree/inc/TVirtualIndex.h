@@ -37,7 +37,7 @@ public:
    TVirtualIndex();
    virtual               ~TVirtualIndex();
    virtual void           Append(const TVirtualIndex *,Bool_t delaySort = kFALSE) = 0;
-   virtual Int_t          GetEntryNumberFriend(const TTree * /*T*/) = 0;
+   virtual Long64_t       GetEntryNumberFriend(const TTree * /*parent*/) = 0;
    virtual Long64_t       GetEntryNumberWithIndex(Int_t major, Int_t minor) const = 0;
    virtual Long64_t       GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const = 0;
    virtual const char    *GetMajorName()    const = 0;

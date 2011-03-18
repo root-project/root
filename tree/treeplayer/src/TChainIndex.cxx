@@ -232,7 +232,7 @@ void TChainIndex::ReleaseSubTreeIndex(TVirtualIndex* index, int treeNo) const
 }
 
 //______________________________________________________________________________
-Int_t TChainIndex::GetEntryNumberFriend(const TTree *parent)
+Long64_t TChainIndex::GetEntryNumberFriend(const TTree *parent)
 {
    // see TTreeIndex::GetEntryNumberFriend for description
 
@@ -244,8 +244,8 @@ Int_t TChainIndex::GetEntryNumberFriend(const TTree *parent)
       // The Tree Index in the friend has a pair majorname,minorname
       // not available in the parent Tree T.
       // if the friend Tree has less entries than the parent, this is an error
-      Int_t pentry = parent->GetReadEntry();
-      if (pentry >= (Int_t)fTree->GetEntries()) return -2;
+      Long64_t pentry = parent->GetReadEntry();
+      if (pentry >= fTree->GetEntries()) return -2;
       // otherwise we ignore the Tree Index and return the entry number
       // in the parent Tree.
       return pentry;

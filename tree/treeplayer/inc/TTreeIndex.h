@@ -47,7 +47,7 @@ public:
    TTreeIndex(const TTree *T, const char *majorname, const char *minorname);
    virtual               ~TTreeIndex();
    virtual void           Append(const TVirtualIndex *,Bool_t delaySort = kFALSE);
-   virtual Int_t          GetEntryNumberFriend(const TTree *T);
+   virtual Long64_t       GetEntryNumberFriend(const TTree *parent);
    virtual Long64_t       GetEntryNumberWithIndex(Int_t major, Int_t minor) const;
    virtual Long64_t       GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const;
    virtual Long64_t      *GetIndexValues()  const {return fIndexValues;}
@@ -57,8 +57,8 @@ public:
    virtual Long64_t       GetN()            const {return fN;}
    virtual TTreeFormula  *GetMajorFormula();
    virtual TTreeFormula  *GetMinorFormula();
-   virtual TTreeFormula  *GetMajorFormulaParent(const TTree *T);
-   virtual TTreeFormula  *GetMinorFormulaParent(const TTree *T);
+   virtual TTreeFormula  *GetMajorFormulaParent(const TTree *parent);
+   virtual TTreeFormula  *GetMinorFormulaParent(const TTree *parent);
    virtual void           Print(Option_t *option="") const;
    virtual void           UpdateFormulaLeaves(const TTree *parent);
    virtual void           SetTree(const TTree *T);
