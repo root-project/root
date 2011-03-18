@@ -252,7 +252,7 @@ void Bprint(Int_t id, const char *title)
   // Print test program number and its title
    const Int_t kMAX = 65;
    char header[80];
-   sprintf(header,"Test %2d : %s",id,title);
+   snprintf(header,80,"Test %2d : %s",id,title);
    Int_t nch = strlen(header);
    for (Int_t i=nch;i<kMAX;i++) header[i] = '.';
    header[kMAX] = 0;
@@ -519,17 +519,17 @@ void stress6()
    TH1F *hsumPlanes = new TH1F("hsumPlanes","Sum of all planes",100,0,100);
    //Create a subdirectory per detector plane
    for (i=0;i<nplanes;i++) {
-      sprintf(dirname,"plane%d",i);
+      snprintf(dirname,50,"plane%d",i);
       TDirectory *cdplane = f.mkdir(dirname);
       if (cdplane == 0) continue;
       cdplane->cd();
       // create counter histograms
       for (j=0;j<ncounters;j++) {
-         sprintf(hname,"h%d_%dN",i,j);
-         sprintf(htitle,"hist for counter:%d in plane:%d North",j,i);
+         snprintf(hname,20,"h%d_%dN",i,j);
+         snprintf(htitle,80,"hist for counter:%d in plane:%d North",j,i);
          hn[j] = new TH1S(hname,htitle,100,0,100);
-         sprintf(hname,"h%d_%dS",i,j);
-         sprintf(htitle,"hist for counter:%d in plane:%d South",j,i);
+         snprintf(hname,20,"h%d_%dS",i,j);
+         snprintf(htitle,80,"hist for counter:%d in plane:%d South",j,i);
          hs[j] = new TH1S(hname,htitle,100,0,100);
       }
       // fill counter histograms randomly
@@ -547,12 +547,12 @@ void stress6()
    // Now read back all objects from all subdirectories
    // Add North and south histograms in hsumPlanes
    for (i=0;i<nplanes;i++) {
-      sprintf(dirname,"plane%d",i);
+      snprintf(dirname,50,"plane%d",i);
       f.cd(dirname);
       for (j=0;j<ncounters;j++) {
-         sprintf(hname,"h%d_%dN",i,j);
+         snprintf(hname,20,"h%d_%dN",i,j);
          TH1S *hnorth; gDirectory->GetObject(hname,hnorth);
-         sprintf(hname,"h%d_%dS",i,j);
+         snprintf(hname,20,"h%d_%dS",i,j);
          TH1S *hsouth; gDirectory->GetObject(hname,hsouth);
          if (hnorth == 0 || hsouth == 0) continue;
          hsumPlanes->Add(hnorth);
@@ -679,8 +679,8 @@ void stress7()
    TEventList *el[10];
    TEventList *elistall = new TEventList("elistall","Sum of all cuts");
    for (i=0;i<10;i++) {
-      sprintf(elistname,">>elist%d",i);
-      sprintf(cutname,"i 10 == %d",i); cutname[1] ='%';
+      snprintf(elistname,20,">>elist%d",i);
+      snprintf(cutname,20,"i 10 == %d",i); cutname[1] ='%';
       ntuple->Draw(elistname,cutname,"goff");
       gDirectory->GetObject(&elistname[2],el[i]);
       el[i]->Write();
@@ -1191,7 +1191,7 @@ void stress10()
    TFile *chfile[10];
    Int_t file;
    for (file=0;file<10;file++) {
-      sprintf(filename,"Event_%d.root",file);
+      snprintf(filename,20,"Event_%d.root",file);
       chfile[file] = new TFile(filename,"recreate");
       chTree[file] = (TTree*)tree->CloneTree(0);
    }
@@ -1249,7 +1249,7 @@ void stress11()
    char filename[20];
    Int_t file;
    for (file=0;file<10;file++) {
-      sprintf(filename,"Event_%d.root",file);
+      snprintf(filename,20,"Event_%d.root",file);
       chain->Add(filename);
    }
 
@@ -1315,7 +1315,7 @@ void stress13()
    char filename[20];
    Int_t file;
    for (file=0;file<10;file++) {
-      sprintf(filename,"Event_%d.root",file);
+      snprintf(filename,20,"Event_%d.root",file);
       chain->Add(filename);
    }
 
@@ -1461,7 +1461,7 @@ void stress16()
    TProfile::Approximate();
    for (i = 0; i <= nlev; i++) {
       char s[64];
-      sprintf(s, "buf%d", i);
+      snprintf(s,64, "buf%d", i);
       hp[i] = new TProfile(s, "in buffers", 1000, 0,nstep, -1., 1000.);
       hp[i]->SetLineColor(2);
    }

@@ -61,7 +61,7 @@ void HitNames::InitNames() {        // Create and fill names
   fNames = new char* [fSize];
   for (int i=0;i<fSize;i++) {
     fNames[i] = new char [20];
-    sprintf(fNames[i],"W%d",i+1);
+    snprintf(fNames[i],20,"W%d",i+1);
   }
 }
 void HitNames::DeleteNames() {      // Clean up

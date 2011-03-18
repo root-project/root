@@ -385,7 +385,7 @@ Bool_t VerifySize(const char *filename, const char *title)
       else
          success = kTRUE;
 
-      sprintf(gLine,"Test %2d: %s", gTestNum, title);
+      snprintf(gLine,80,"Test %2d: %s", gTestNum, title);
       const Int_t nch = strlen(gLine);
       if (success) {
          cout << gLine;
@@ -417,9 +417,9 @@ void ProcessFrame(TGFrame *f, const char *title)
    gErrorIgnoreLevel = 9999;
 
    if (gOptionRef)
-      sprintf(outfile, "sgui_%02d_ref.png", gTestNum);
+      snprintf(outfile,80, "sgui_%02d_ref.png", gTestNum);
    else
-      sprintf(outfile, "sgui_%02d.png", gTestNum);
+      snprintf(outfile,80, "sgui_%02d.png", gTestNum);
 
    TImage *img = TImage::Create();
    f->RaiseWindow();

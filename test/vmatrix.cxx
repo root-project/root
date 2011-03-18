@@ -130,7 +130,7 @@ void StatusPrint(Int_t id,const Char_t *title,Bool_t status)
   // Print test program number and its title
    const Int_t kMAX = 65;
    char header[80];
-   sprintf(header,"Test %2d : %s",id,title);
+   snprintf(header,80,"Test %2d : %s",id,title);
    Int_t nch = strlen(header);
    for (Int_t i=nch;i<kMAX;i++) header[i] = '.';
    header[kMAX] = 0;

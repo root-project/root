@@ -167,9 +167,9 @@ void stress1(Int_t ntimes) {
 
    char sok[20];
    if (TMath::Abs(p1ref-p1) < 2*ep1 && TMath::Abs(p2ref-p2) < 2*ep2  && TMath::Abs(p3ref-p3) < 2*ep3 ) {
-      sprintf(sok,"OK");
+      snprintf(sok,20,"OK");
    } else {
-      sprintf(sok,"failed");
+      snprintf(sok,20,"failed");
    }
    printf("Peak1 : found =%6.2f/%6.2f, good =%6.2f/%6.2f, ghost =%5.2f/%5.2f,--- %s\n",
           p1,p1ref,p2,p2ref,p3,p3ref,sok);
@@ -240,9 +240,9 @@ void stress2(Int_t np2) {
    if (  TMath::Abs(nfound - nfoundRef) < 5
       && TMath::Abs(ngood - ngoodRef) < 5
       && TMath::Abs(nghost - nghostRef) < 5)  {
-      sprintf(sok,"OK");
+      snprintf(sok,20,"OK");
    } else {
-      sprintf(sok,"failed");
+      snprintf(sok,20,"failed");
    }
    printf("Peak2 : found =%d/%d, good =%d, ghost =%2d,---------------------------- %s\n",
           nfound,npeaks,ngood,nghost,sok);
