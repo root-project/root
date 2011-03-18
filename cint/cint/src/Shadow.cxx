@@ -408,7 +408,7 @@ std::string Cint::G__ShadowMaker::GetNonConstTypeName(G__DataMemberInfo &m, bool
          if (*s == '>') lev--;
          if (lev == 0 && strncmp(constwd, s, strlen(constwd)) == 0) {
             const char *after = s + strlen(constwd);
-            if (strspn(after, "&* ") >= 1 || *after == 0) {
+            if (*after == 0 || strspn(after, "&* ") >= 1) {
                s += strlen(constwd) - 1;
                continue;
             }
