@@ -495,8 +495,14 @@ TFile::~TFile()
    gROOT->GetListOfFiles()->Remove(this);
    gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
 
+   if (IsOnHeap()) {
+      // Delete object from CINT symbol table so it can not be used anymore.
+      // CINT object are always on the heap.
+      gInterpreter->DeleteGlobal(this);
+   }
+      
    if (gDebug)
-      Info("~TFile", "dtor called for %s [%lx]", GetName(),(Long_t)this);
+      Info("~TFile", "dtor called for %s [%lx]", GetName(),(Long_t)this);  
 }
 
 //______________________________________________________________________________
