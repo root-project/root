@@ -1093,6 +1093,15 @@ Int_t TKey::Read(TObject *obj)
    } else {
       obj->Streamer(*fBufferRef);
    }
+
+   // Append the object to the directory if requested:
+   { 
+      ROOT::DirAutoAdd_t addfunc = obj->IsA()->GetDirectoryAutoAdd();
+      if (addfunc) {
+         addfunc(obj, fMotherDir);
+      }
+   }
+
    delete fBufferRef;
    fBufferRef = 0;
    fBuffer    = 0;
