@@ -4256,15 +4256,17 @@ int main(int argc, char **argv)
       gErrorIgnoreLevel = kInfo; // Display all information (same as -v)
       ic++;
    }
-   if (!strcmp(argv[ic], "-cint")) {
-      dict_type = kDictTypeCint;
-      ic++;
-   } else if (!strcmp(argv[ic], "-reflex")) {
-      dict_type = kDictTypeReflex;
-      ic++;
-   } else if (!strcmp(argv[ic], "-gccxml")) {
-      dict_type = kDictTypeGCCXML;
-      ic++;
+   if (ic < argc) {
+      if (!strcmp(argv[ic], "-cint")) {
+         dict_type = kDictTypeCint;
+         ic++;
+      } else if (!strcmp(argv[ic], "-reflex")) {
+         dict_type = kDictTypeReflex;
+         ic++;
+      } else if (!strcmp(argv[ic], "-gccxml")) {
+         dict_type = kDictTypeGCCXML;
+         ic++;
+      }
    }
 
    if (dict_type==kDictTypeGCCXML) {
@@ -4275,7 +4277,7 @@ int main(int argc, char **argv)
    const char* libprefix = "--lib-list-prefix=";
 
    ifl = 0;
-   while (strncmp(argv[ic], "-",1)==0
+   while (ic < argc && strncmp(argv[ic], "-",1)==0
           && strcmp(argv[ic], "-f")!=0 ) {
       if (!strcmp(argv[ic], "-l")) {
 
@@ -4299,13 +4301,13 @@ int main(int argc, char **argv)
       }
    }
 
-   if (!strcmp(argv[ic], "-f")) {
+   if (ic < argc && !strcmp(argv[ic], "-f")) {
       force = 1;
       ic++;
-   } else if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h")) {
+   } else if (argc > 1 && (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h"))) {
       fprintf(stderr, "%s\n", help);
       return 1;
-   } else if (!strncmp(argv[ic], "-",1)) {
+   } else if (ic < argc && !strncmp(argv[ic], "-",1)) {
       fprintf(stderr,"Usage: %s [-v][-v0-4] [-reflex] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
               argv[0]);
       fprintf(stderr,"Only one verbose flag is authorized (one of -v, -v0, -v1, -v2, -v3, -v4)\n"
@@ -4332,9 +4334,9 @@ int main(int argc, char **argv)
 #endif
 
    string header("");
-   if (strstr(argv[ic],".C")  || strstr(argv[ic],".cpp") ||
+   if (ic < argc && (strstr(argv[ic],".C")  || strstr(argv[ic],".cpp") ||
        strstr(argv[ic],".cp") || strstr(argv[ic],".cxx") ||
-       strstr(argv[ic],".cc") || strstr(argv[ic],".c++")) {
+       strstr(argv[ic],".cc") || strstr(argv[ic],".c++"))) {
       FILE *fp;
       if ((fp = fopen(argv[ic], "r")) != 0) {
          fclose(fp);
@@ -4444,14 +4446,14 @@ int main(int argc, char **argv)
    argvv[0] = argv[0];
    argcc = 1;
 
-   if (!strcmp(argv[ic], "-c")) {
+   if (ic < argc && !strcmp(argv[ic], "-c")) {
       icc++;
       if (ifl) {
          char *s;
          ic++;
          argvv[argcc++] = (char *)"-q0";
          argvv[argcc++] = (char *)"-n";
-	 int ncha = strlen(argv[ifl])+1;
+         int ncha = strlen(argv[ifl])+1;
          argvv[argcc] = (char *)calloc(ncha, 1);
          strlcpy(argvv[argcc], argv[ifl],ncha); argcc++;
          argvv[argcc++] = (char *)"-N";
@@ -4637,7 +4639,7 @@ int main(int argc, char **argv)
       //
       // If we see the parameter -S then we want the ShowMembers
       // part, if not we only want the dict (without ShowMembers)
-      if (!strcmp(argv[ic], "-.")) {
+      if (ic < argc && !strcmp(argv[ic], "-.")) {
          ++ic;
          argvv[argcc++] = (char*)"-.";
          dicttype = atoi(argv[ic]);
@@ -4648,7 +4650,7 @@ int main(int argc, char **argv)
       // 03-07-07
       // We need the library path in the dictionary generation
       // the easiest way is to get it as a parameter
-      if (!strcmp(argv[ic], "-L") || !strcmp(argv[ic], "--symbols-file")) {
+      if (ic < argc && (!strcmp(argv[ic], "-L") || !strcmp(argv[ic], "--symbols-file"))) {
 
          FILE *fpsym = fopen(argv[ic],"r");
          if (fpsym) // File exists
