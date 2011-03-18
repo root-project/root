@@ -1,20 +1,26 @@
 Package: libroot-graf3d-eve@libvers@
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Conflicts: root-plugin-gl (<= 5.19.01-1)
 Replaces: root-plugin-gl (<= 5.19.01-1)
-Homepage: http://root.cern.ch
 Description: Event display library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains a library for defining event displays in ROOT.
 
 Package: libroot-graf3d-eve-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-graf3d-eve@libvers@ (= ${binary:Version}), libroot-geom-dev, libroot-gui-ged-dev, libroot-montecarlo-eg-dev, libroot-tree-treeplayer-dev
+Depends: libroot-graf3d-eve@libvers@ (= ${binary:Version}), libroot-geom-dev, libroot-gui-ged-dev, libroot-montecarlo-eg-dev, libroot-tree-treeplayer-dev, ${misc:Depends}
 Replaces: root-plugin-gl
 Conflicts: root-plugin-gl (<= 5.19.01-1)
-Homepage: http://root.cern.ch
 Description: Event display library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains a library for defining event displays in ROOT.
 

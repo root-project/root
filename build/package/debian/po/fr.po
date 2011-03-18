@@ -1,0 +1,125 @@
+# Translation of root-system debconf templates to French
+# Copyright (C) 2007-2009 Debian French l10n team <debian-l10n-french@lists.debian.org>
+# This file is distributed under the same license as the root-system package.
+#
+# Christian Perrier <bubulle@debian.org>, 2007-2009.
+# Translators:
+msgid ""
+msgstr ""
+"Project-Id-Version: fr\n"
+"Report-Msgid-Bugs-To: root-system@packages.debian.org\n"
+"POT-Creation-Date: 2009-02-15 12:03+0100\n"
+"PO-Revision-Date: 2009-02-15 14:30+0100\n"
+"Last-Translator: Christian Perrier <bubulle@debian.org>\n"
+"Language-Team: French <debian-l10n-french@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+
+#. Type: note
+#. Description
+#: ../ttf-root-installer.templates:2001
+msgid "Non-free fonts"
+msgstr "Polices non libres"
+
+#. Type: note
+#. Description
+#: ../ttf-root-installer.templates:2001
+msgid ""
+"The fonts provided in this package were provided by Microsoft \"in the "
+"interest of cross-platform compatibility\". This is no longer the case, but "
+"they are still available from third parties."
+msgstr ""
+"Les polices fournies dans ce paquet étaient distribuées par Microsoft « pour "
+"la compatibilité entre les plate-formes ». Ce n'est désormais plus le cas "
+"mais elles restent disponibles depuis des sites tiers."
+
+#. Type: note
+#. Description
+#: ../ttf-root-installer.templates:2001
+msgid ""
+"You are free to download these fonts and use them for your own purposes, but "
+"you  have no permission to redistribute them in modified form, including "
+"changes to the file name or packaging format."
+msgstr ""
+"Vous pouvez librement télécharger et utiliser à titre personnel ces polices, "
+"mais pas les redistribuer sous une forme modifiée (y compris les noms de "
+"fichiers et le format de l'archive)."
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:3001
+msgid "Directory holding Microsoft fonts (if already downloaded):"
+msgstr "Répertoire contenant les polices Microsoft (si déjà téléchargées) :"
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:3001
+msgid ""
+"If you have already downloaded Microsoft's TrueType Core Fonts from the ROOT "
+"FTP server (ftp://root.cern.ch/root/ttf/ttf_fonts.tar.gz), please enter the "
+"name of the directory which contains the archive."
+msgstr ""
+"Si vous avez déjà téléchargé les polices TrueType de base de Microsoft "
+"depuis le serveur FTP de ROOT (ftp://root.cern.ch/root/ttf/ttf_fonts.tar."
+"gz), veuillez indiquer le nom du répertoire qui contient cette archive."
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:3001
+msgid ""
+"If you haven't yet downloaded these fonts, leave this blank and the fonts "
+"will be downloaded automatically. The download size is approximately 1.6 MB."
+msgstr ""
+"Si vous n'avez pas encore téléchargé ces polices, veuillez laisser ce champ "
+"vide et elles seront téléchargées automatiquement (le téléchargement "
+"représente environ 1,6 Mo)."
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:3001
+msgid ""
+"If you are not connected to the Internet or do not wish to download these "
+"fonts now, enter \"none\" to abort."
+msgstr ""
+"Si aucune connexion Internet n'est disponible ou que vous ne souhaitez pas "
+"télécharger les polices maintenant, veuillez indiquer « none » pour annuler."
+
+#. Type: error
+#. Description
+#: ../ttf-root-installer.templates:4001
+msgid "Font files not found"
+msgstr "Fichiers de polices non trouvés"
+
+#. Type: error
+#. Description
+#: ../ttf-root-installer.templates:4001
+msgid ""
+"The directory you entered either does not exist, or does not contain the "
+"Microsoft TrueType Core Fonts for ROOT."
+msgstr ""
+"Le répertoire indiqué n'existe pas ou ne contient pas les polices de base "
+"TrueType de Microsoft pour ROOT."
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:5001
+msgid "Archive files to (optional):"
+msgstr "Archiver ces fichiers dans (paramètre optionnel) :"
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:5001
+msgid ""
+"If you would like to keep a permanent archive of the compressed Microsoft "
+"Core fonts, please enter the directory where you'd like them stored. If you "
+"leave this blank, the files will be deleted after installation."
+msgstr ""
+"Si vous souhaitez conserver une archive des polices Microsoft sous forme "
+"compressée, veuillez indiquer le répertoire où vous souhaitez l'enregistrer. "
+"Si ce champ est laissé vide, les fichiers seront supprimés après "
+"l'installation."
+
+#~ msgid "These fonts are not free"
+#~ msgstr "Polices non libres"

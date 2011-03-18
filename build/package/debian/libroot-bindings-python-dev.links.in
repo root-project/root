@@ -1,2 +1,1 @@
-@prefix@/lib/root/@libvers@/libPyROOT.so    @pythondir@/libPyROOT.so
 @prefix@/lib/root/@libvers@/ROOT.py         /usr/share/python-support/root/ROOT.py

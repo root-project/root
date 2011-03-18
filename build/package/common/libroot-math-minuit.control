@@ -1,21 +1,29 @@
 Package: libroot-math-minuit@libvers@
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Replaces: root-plugin-minuit (<< 5.09.01-7)
 Provides: libroot-math-minuit
 Description: Minuit plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains the MINUIT plug-in for ROOT.  This provides a
  fitting algorithm for ROOT.
 
 Package: libroot-math-minuit-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-math-minuit@libvers@ (= ${binary:Version}), libroot-graf2d-graf-dev
+Depends: libroot-math-minuit@libvers@ (= ${binary:Version}), libroot-graf2d-graf-dev, ${misc:Depends}
 Provides: root-fitter
 Replaces: root-plugin-minuit (<< 5.09.01-7), libroot-minuit-dev
 Conflicts: libroot-minuit-dev (<< 5.19.01-1)
 Description: Minuit plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains the MINUIT plug-in for ROOT.  This provides a
  fitting algorithm for ROOT.
 

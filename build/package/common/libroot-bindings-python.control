@@ -1,20 +1,28 @@
 Package: libroot-bindings-python@libvers@
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, ${python:Depends}
+Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends} 
 Replaces: root-plugin-python  (<< 5.09.01-1)
 Description: Python extension for ROOT - runtime libraries 
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains the Python plug-in for ROOT.  This package
  provide a Python interface to ROOT, and a ROOT interface to Python.
 
 Package: libroot-bindings-python-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-bindings-python@libvers@ (= ${binary:Version}), libroot-core-dev, python-dev (>= 2.1), ${python:Depends}
+Depends: libroot-bindings-python@libvers@ (= ${binary:Version}), libroot-core-dev, python-dev (>= 2.1), ${python:Depends}, ${misc:Depends} 
 Provides: ${python:Provides}
 Replaces: libroot-python-dev
 Conflicts: libroot-python-dev (<< 5.19.01-1)
 Description: Python extension for ROOT - development files 
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains the Python plug-in for ROOT.  This package
  provide a Python interface to ROOT, and a ROOT interface to Python.
 

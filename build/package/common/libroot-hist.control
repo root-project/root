@@ -1,19 +1,25 @@
 Package: libroot-hist@libvers@
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Recommends: root-plugin-hist-histpainter
-Homepage: http://root.cern.ch
 Description: Histogram library for ROOT - run-time library
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains a library for histogrammin
 
 Package: libroot-hist-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-hist@libvers@ (= ${binary:Version}), libroot-core-dev, libroot-math-matrix-dev
+Depends: libroot-hist@libvers@ (= ${binary:Version}), libroot-core-dev, libroot-math-matrix-dev, ${misc:Depends}
 Replaces: libroot-dev
 Conflicts: libroot-dev (<< 5.19.01-1)
-Homepage: http://root.cern.ch
 Description: Histogram library for ROOT - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains a library for histogrammin
 

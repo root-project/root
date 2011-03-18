@@ -1,0 +1,120 @@
+# Italian (it) translation of debconf templates for root-system
+# Copyright (C) 2008 Software in the Public Interest
+# This file is distributed under the same license as the root-system package.
+# Luca Monducci <luca.mo@tiscali.it>, 2008, 2009.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: root-system root-system 5.18.00-2.2\n"
+"Report-Msgid-Bugs-To: root-system@packages.debian.org\n"
+"POT-Creation-Date: 2009-02-15 12:03+0100\n"
+"PO-Revision-Date: 2009-02-21 14:42+0100\n"
+"Last-Translator: Luca Monducci <luca.mo@tiscali.it>\n"
+"Language-Team: Italian <debian-l10n-italian@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: note
+#. Description
+#: ../ttf-root-installer.templates:2001
+msgid "Non-free fonts"
+msgstr "Caratteri non-liberi"
+
+#. Type: note
+#. Description
+#: ../ttf-root-installer.templates:2001
+msgid ""
+"The fonts provided in this package were provided by Microsoft \"in the "
+"interest of cross-platform compatibility\". This is no longer the case, but "
+"they are still available from third parties."
+msgstr ""
+"In passato i caratteri distribuiti con questo pacchetto erano forniti da "
+"Microsoft \"nell'interesse della compatibilità fra piattaforme diverse\". "
+"Anche se questo non è più vero, i caratteri continuano a essere disponibili "
+"da terze parti."
+
+#. Type: note
+#. Description
+#: ../ttf-root-installer.templates:2001
+msgid ""
+"You are free to download these fonts and use them for your own purposes, but "
+"you  have no permission to redistribute them in modified form, including "
+"changes to the file name or packaging format."
+msgstr ""
+"Ognuno è libero di scaricare questi caratteri e di usarli per le proprie "
+"attività, non è permesso redistribuirli se modificati in qualsiasi modo, "
+"comprese le modifiche al nome del file o al formato di distribuzione."
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:3001
+msgid "Directory holding Microsoft fonts (if already downloaded):"
+msgstr "Directory contenente i caratteri Microsoft (se già scaricati):"
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:3001
+msgid ""
+"If you have already downloaded Microsoft's TrueType Core Fonts from the ROOT "
+"FTP server (ftp://root.cern.ch/root/ttf/ttf_fonts.tar.gz), please enter the "
+"name of the directory which contains the archive."
+msgstr ""
+"Se i Microsoft TrueType Core Fonts sono già stati scaricati dal server FTP "
+"ROOT (ftp://root.cern.ch/root/ttf/ttf_fonts.tar.gz), inserire il nome della "
+"directory in cui è stato salvato l'archivio."
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:3001
+msgid ""
+"If you haven't yet downloaded these fonts, leave this blank and the fonts "
+"will be downloaded automatically. The download size is approximately 1.6 MB."
+msgstr ""
+"Se i caratteri non sono stati ancora scaricati, lasciare vuoto questo campo "
+"per recuperarli automaticamente. Saranno scaricati circa 1,6 MB di dati."
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:3001
+msgid ""
+"If you are not connected to the Internet or do not wish to download these "
+"fonts now, enter \"none\" to abort."
+msgstr ""
+"Se non si è connessi a Internet oppure se non si vuole scaricare i caratteri "
+"adesso, inserire \"none\" per interrompere l'installazione."
+
+#. Type: error
+#. Description
+#: ../ttf-root-installer.templates:4001
+msgid "Font files not found"
+msgstr "I file con i caratteri non sono stati trovati"
+
+#. Type: error
+#. Description
+#: ../ttf-root-installer.templates:4001
+msgid ""
+"The directory you entered either does not exist, or does not contain the "
+"Microsoft TrueType Core Fonts for ROOT."
+msgstr ""
+"La directory inserita non esiste oppure non contiene i Microsoft TrueType "
+"Core Fonts di ROOT."
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:5001
+msgid "Archive files to (optional):"
+msgstr "Archiviare i file in (opzionale):"
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:5001
+msgid ""
+"If you would like to keep a permanent archive of the compressed Microsoft "
+"Core fonts, please enter the directory where you'd like them stored. If you "
+"leave this blank, the files will be deleted after installation."
+msgstr ""
+"Se si desidera conservare in un archivio permanente i caratteri Microsoft "
+"Core, inserire la directory in cui si vogliono salvare. Altrimenti, "
+"lasciando vuoto questo campo, i file saranno eliminati al termine "
+"dell'installazione."

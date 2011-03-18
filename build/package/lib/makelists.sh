@@ -69,7 +69,7 @@ for d in $l ; do
     #
     # Deal with some special directories.  For each directory, check
     # if it's libraries and such should go into some special package. 
-    # 
+    #
     case $d in 		
 	bindings/pyroot)set_lib_names    $base python 	;;
 	bindings/*)     set_lib_names    $base $sub 	;;
@@ -88,31 +88,32 @@ for d in $l ; do
 	cint/reflex)	set_lib_names    core  "" libroot-core-dev
 	    	        extra="REFLEXLIB=${prefix}/lib/root/libReflex.so" ;;   
 	cint/*)	        set_lib_names    core  "" root-system-bin	;;
-	geom/geom)	set_lib_names	 $base 		;;
-	geom/*)	        set_plugin_names $base $sub	;;
+	geom/geom)	set_lib_names	 $base ""	;;
+	geom/*) 	set_plugin_names $base $sub	;;
 	graf2d/gpad)    set_lib_names    $base $sub	;;
 	graf2d/graf)    set_lib_names    $base $sub	;;
 	graf2d/postscript) set_lib_names    $base $sub	;;
+	graf2d/gviz)	set_plugin_names $base $sub	;;
 	graf2d/asimage) set_plugin_names $base $sub	;;
 	graf2d/freetype)continue;;
 	graf2d/win32gdk)continue;;
 	graf2d/x11*)    set_plugin_names $base x11	;;
 	graf2d/*)       set_plugin_names $base $sub	;;
-	graf3d/ftgl)    set_lib_names    $base gl       ;;
+	graf3d/ftgl)    continue;;
 	graf3d/gl)      set_lib_names    $base $sub	;;
 	graf3d/g3d)     set_lib_names    $base $sub	;;
 	graf3d/eve)     set_lib_names    $base $sub	;;
 	graf3d/*)       set_plugin_names $base $sub	;;
-	gui/gui)        set_lib_names    $base 		;;
-	gui/guihtml)    set_lib_names    $base 		;;
+	gui/gui)        set_lib_names    $base ""	;;
+	gui/guihtml)    set_lib_names    $base ""	;;
 	gui/ged)        set_lib_names    $base $sub	;;
 	gui/qt*)        set_plugin_names $base qt	;;
 	gui/*)          set_plugin_names $base $sub	;;
-	hist/hist)      set_lib_names    $base		;;
+	hist/hist)      set_lib_names    $base ""	;;
 	hist/spectrum)  set_lib_names    $base $sub	;;
 	hist/*)         set_plugin_names $base $sub	;;
-        html)           set_lib_names    $sub 		;;
-	io/io)          set_lib_names    $base 		;;
+        html)           set_lib_names    $sub  ""	;;
+	io/io)          set_lib_names    $base ""	;;
 	io/xmlparser)   set_lib_names    $base $sub	;;
 	io/rfio)	continue;;
 	io/*)           set_plugin_names $base $sub	;;
@@ -126,11 +127,12 @@ for d in $l ; do
 	                set_plugin_names $base $sub	;;
         montecarlo/*)   set_lib_names    $base $sub	;;
         net/auth)       set_lib_names    $base $sub	;;
-	net/net)        set_lib_names    $base 		;;
+	net/net)        set_lib_names    $base ""	;;
 	net/ldap)       set_lib_names    $base $sub	;;
 	net/rootd)      lib=root-system-$sub    ; dev=$lib       ; bin=$lib ;;
 	net/xrootd)     set_plugin_names $base $sub	;;
         net/globusauth) set_plugin_names $base globus	;;
+	net/bonjour) 	set_plugin_names $base $sub 	;;
         net/krb5auth)   set_plugin_names $base krb5	;;
         net/srputils)   set_plugin_names $base srp	;;
         net/rpdutils)   set_lib_names    core  ""	root-system-bin	;;
@@ -138,14 +140,14 @@ for d in $l ; do
 	proof/proofd)   set_plugin_names $base xproof   root-system-${base}d ;;
 	proof/proofx)   set_plugin_names $base xproof   ;;
         proof/clarens)  set_lib_names    $base $sub	;;
-        proof/proof)    set_lib_names    $base 		;;
+        proof/proof)    set_lib_names    $base ""	;;
         proof/*)        set_plugin_names $base $sub	;;
-        roofit/*)       set_lib_names    $base  	;; 
+        roofit/*)       set_lib_names    $base ""	;; 
 	rootx)	        set_lib_names    core  ""	root-system-bin ;;
 	sql/sapdb)      set_plugin_names $base maxdb	;;
 	sql/*)          set_plugin_names $base $sub	;;
-        tmva)           set_lib_names    $sub 		;;
-        tree/tree)      set_lib_names    $base 		;;
+        tmva)           set_lib_names    $sub  ""	;;
+        tree/tree)      set_lib_names    $base ""	;;
         tree/treeplayer)set_lib_names    $base $sub	;;
 	tree/*)         set_plugin_names $base $sub	;;
 	*)              set_plugin_names $base $sub	;;  

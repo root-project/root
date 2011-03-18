@@ -1,1 +1,2 @@
 @prefix@/lib/root/@version@/cint
+/etc/ld.so.conf.d

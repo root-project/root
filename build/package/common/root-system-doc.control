@@ -2,7 +2,12 @@ Package: root-system-doc
 Section: doc
 Architecture: all
 Suggests: root-system-bin
+Depends:  ${misc:Depends}
 Description: Tutorial and test suit for the ROOT system
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains the tutorial scripts and test suit for the ROOT
  system, as well as the automatically generated HTML class documentation.
 

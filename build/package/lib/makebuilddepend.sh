@@ -1,7 +1,7 @@
 #!/bin/sh 
 #
 
-need_krb=0
+need_krb5=0
 need_qt=0
 if test "x$1" = "xrpm" ; then 
     shift
@@ -43,15 +43,18 @@ if test "x$1" = "xrpm" ; then
 	    libroot-math-splot) 					;;
 	    libroot-math-unuran)					;;
 	    libroot-misc-table) 					;;
+	    libroot-misc-memstat) 					;;
 	    libroot-misc-minicern) 				        
 		echo "BuildRequires: gcc-gfortran"		 	;;
 	    libroot-montecarlo-eg) 					;;
 	    libroot-montecarlo-vmc) 					;;
 	    libroot-net-ldap)		
 		echo "BuildRequires: openldap-devel"			;;
+	    libroot-net-bonjour)					;;	
 	    libroot-proof)						;;
 	    libroot-proof-clarens)  
 		echo "BuildRequires: xmlrpc-c-devel"			;;
+	    libroot-proof-proofplayer)					;;
 	    libroot-roofit)						;;
 	    libroot-static)						;;
             libroot-tmva)						;;
@@ -78,6 +81,7 @@ if test "x$1" = "xrpm" ; then
 		echo "BuildRequires:  libSM-devel"		
 		echo "BuildRequires:  gawk"				;;
 	    root-plugin-graf2d-qt)	  	need_qt=1 		;;
+	    root-plugin-graf2d-gviz)					;;
 	    root-plugin-graf3d-x3d)        				;;
 	    root-plugin-gui-fitpanel)   				;;
 	    root-plugin-gui-guibuilder) 				;;
@@ -113,6 +117,8 @@ if test "x$1" = "xrpm" ; then
 	    root-plugin-net-srp)	   				
 		echo "BuildRequires: srp-devel"				;;
 	    root-plugin-net-xrootd)					;;
+	    root-plugin-net-bonjour)
+		echo -n ", libavahi-core-dev"				;;	
 	    root-plugin-proof-peac)					;;
 	    root-plugin-proof-proofplayer)  				;;
 	    root-plugin-proof-xproof)	  				;;
@@ -167,7 +173,7 @@ BuildRequires: qt4-devel >= 4.3.0
 %endif
 EOF
     fi
-    if test $need_krb -gt 0 ; then 
+    if test $need_krb5 -gt 0 ; then 
 	echo "BuildRequires: krb5-devel"
     fi
     exit 0
@@ -175,8 +181,6 @@ fi
 
 ### echo %%% Making build dependencies
 bd=
-have_krb=0
-have_qt=0
 for i in $* ; do 
     case $i in 
 	*-dev)							        ;;
@@ -193,7 +197,8 @@ for i in $* ; do
 	libroot-graf3d-g3d)						;;
 	libroot-graf3d-gl)					        
 	    echo -n ", libglu1-mesa-dev | libglu1-xorg-dev "
-	    echo -n "| xlibmesa-glu-dev |  libglu-dev"			
+	    echo -n "| xlibmesa-glu-dev |  libglu-dev"
+	    echo -n ", libglew1.5-dev | libglew-dev"	
 	    echo -n ", libftgl-dev | ftgl-dev"				;;
 	libroot-gui)  							;;
 	libroot-gui-ged)        					;;
@@ -214,6 +219,7 @@ for i in $* ; do
 	libroot-math-splot) 						;;
 	libroot-math-unuran)						;;
 	libroot-misc-table) 						;;
+	libroot-misc-memstat) 						;;
 	libroot-misc-minicern) 						
 	    echo -n ", gfortran|fortran-compiler" 			;;
 	libroot-montecarlo-eg) 						;;
@@ -222,15 +228,18 @@ for i in $* ; do
 	    echo -n ", libldap2-dev | libldap-dev"			;;
 	libroot-proof)							;;
 	libroot-proof-clarens)  
-	    echo -n ", libxmlrpc-c3-dev | libxmlrpc-c-dev"
+	    echo -n ", libxmlrpc-c3-dev | libxmlrpc-c-dev | libxmlrpc-core-c3-dev"
 	    echo -n ", libcurl4-gnutls-dev | libcurl4-openssl-dev | libcurl-dev"	
 	    								;;
+	libroot-proof-proofplayer)					;;
 	libroot-roofit)							;;
         libroot-tmva)							;;
 	libroot-tree)  							;;
 	libroot-tree-treeplayer)   					;;
 	libroot-net)   							;;
 	libroot-net-auth)   						;;
+	libroot-net-bonjour)			
+	    echo -n ", libavahi-compat-libdnssd-dev"			;;
 	root-plugin-geom-geompainter)					;;
 	root-plugin-geom-geombuilder)					;;
 	root-plugin-geom-gdml)						;;
@@ -243,6 +252,7 @@ for i in $* ; do
 	    echo -n ", libjpeg62-dev, libpng12-dev, libtiff4-dev"
             echo -n ", libgif-dev | libungif4-dev, libxinerama-dev";;
 	root-plugin-graf2d-qt)	      need_qt=1		  	        ;;
+	root-plugin-graf2d-gviz)					;;
 	root-plugin-graf3d-x3d)        					;;
 	root-plugin-gui-fitpanel)   					;;
 	root-plugin-gui-guibuilder) 					;;
@@ -271,22 +281,22 @@ for i in $* ; do
             echo -n ", libglobus-gsi-credential-dev"
             echo -n ", libglobus-common-dev"
             echo -n ", libglobus-gsi-callback-dev"
-            echo -n ", libglobus-proxy-ssl-dev"
             echo -n ", libglobus-gsi-sysconfig-dev"
-            echo -n ", libglobus-openssl-error-dev"
             echo -n ", libglobus-gssapi-gsi-dev"
             echo -n ", libglobus-gsi-callback-dev"
-            echo -n ", libglobus-oldgaa-dev"
             echo -n ", libglobus-gsi-cert-utils-dev"
             echo -n ", libglobus-openssl-dev"
             echo -n ", libglobus-gsi-proxy-core-dev"
 	    echo -n ", libglobus-callout-dev"
+	    echo -n ", globus-proxy-utils"
  	    ;;
 	root-plugin-net-krb5)		 need_krb5=1			
 	    echo -n ",krb5-user|heimdal-clients"		        ;;
 	root-plugin-net-netx)						;;
 	root-plugin-net-srp)	   	echo -n ", libsrputil-dev"	;;
 	root-plugin-net-xrootd)						;;
+	root-plugin-net-bonjour)
+		echo -n ", libavahi-core-dev"				;;
 	root-plugin-proof-peac)						;;
 	root-plugin-proof-proofplayer)  				;;
 	root-plugin-proof-xproof) 	 				;;

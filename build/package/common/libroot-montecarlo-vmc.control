@@ -1,19 +1,25 @@
 Package: libroot-montecarlo-vmc@libvers@
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Recommends: root-vmc
-Homepage: http://root.cern.ch
 Description: Virtual Monte-Carlo (simulation) library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains the Vmc library for ROOT. 
 
 Package: libroot-montecarlo-vmc-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-montecarlo-vmc@libvers@ (= ${binary:Version}), libroot-geom-dev, libroot-montecarlo-eg-dev
+Depends: libroot-montecarlo-vmc@libvers@ (= ${binary:Version}), libroot-geom-dev, libroot-montecarlo-eg-dev, ${misc:Depends}
 Replaces: libroot-dev
 Conflicts: libroot-dev (<< 5.19.01-1)
-Homepage: http://root.cern.ch
 Description: Virtual Monte-Carlo (simulation) library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains the Vmc library for ROOT. 
 

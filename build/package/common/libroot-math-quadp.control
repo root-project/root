@@ -1,9 +1,13 @@
 Package: libroot-math-quadp@libvers@
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Replaces: root-plugin-quadp  (<< 5.09.01-1)
 Description: QuadP extension for ROOT - run-time libraries
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains the QuadP plug-in for ROOT.  This provides the
  user a framework in which to do Quadratic Programming.  The quadratic
  programming problem involves minimization of a quadratic function
@@ -12,10 +16,14 @@ Description: QuadP extension for ROOT - run-time libraries
 Package: libroot-math-quadp-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-math-quadp@libvers@ (= ${binary:Version}), libroot-math-matrix-dev
+Depends: libroot-math-quadp@libvers@ (= ${binary:Version}), libroot-math-matrix-dev, ${misc:Depends}
 Replaces: libroot-quadp
 Conflicts: libroot-quadp (<< 5.19.01-1)
 Description: QuadP extension for ROOT - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains the QuadP plug-in for ROOT.  This provides the
  user a framework in which to do Quadratic Programming.  The quadratic
  programming problem involves minimization of a quadratic function

@@ -1,0 +1,124 @@
+# translation of eu.po to Basque
+# translation of root-system debconf template to Euskara
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Xabier Bilbao <xabidu@gmail.com>, 2008.
+# Iñaki Larrañaga Murgoitio <dooteo@euskalgnu.org>, 2008, 2009.
+msgid ""
+msgstr ""
+"Project-Id-Version: eu\n"
+"Report-Msgid-Bugs-To: root-system@packages.debian.org\n"
+"POT-Creation-Date: 2009-02-15 12:03+0100\n"
+"PO-Revision-Date: 2009-02-18 21:43+0100\n"
+"Last-Translator: Iñaki Larrañaga Murgoitio <dooteo@euskalgnu.org>\n"
+"Language-Team: Basque <itzulpena@euskalgnu.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+"Plural-Forms:  nplurals=2; plural=(n != 1);\n"
+
+#. Type: note
+#. Description
+#: ../ttf-root-installer.templates:2001
+msgid "Non-free fonts"
+msgstr "Letra-tipo ez libreak"
+
+#. Type: note
+#. Description
+#: ../ttf-root-installer.templates:2001
+msgid ""
+"The fonts provided in this package were provided by Microsoft \"in the "
+"interest of cross-platform compatibility\". This is no longer the case, but "
+"they are still available from third parties."
+msgstr ""
+"Letra-tipo hauek Microsoft-ek hornitu zituen \"plataformen arteko "
+"bateragarritasuna errazte aldera\". Gaur egun hau horrela izan ez arren "
+"letra-tipoak eskuragarri daude oraindik beste iturri batzuetatik."
+
+#. Type: note
+#. Description
+#: ../ttf-root-installer.templates:2001
+msgid ""
+"You are free to download these fonts and use them for your own purposes, but "
+"you  have no permission to redistribute them in modified form, including "
+"changes to the file name or packaging format."
+msgstr ""
+"Aske zara letra-tipo hauek deskargatzeko eta zure gauzetarako erabiltzeko, "
+"baina ezin dituzu aldaketekin berriro banatu, barne direla fitxategiaren "
+"izen-aldaketak edo paketatze-formatoaren aldaketak."
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:3001
+msgid "Directory holding Microsoft fonts (if already downloaded):"
+msgstr ""
+"Microsoft letra-tipoak dituen direktorioa (dagoeneko deskargatu badituzu):"
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:3001
+msgid ""
+"If you have already downloaded Microsoft's TrueType Core Fonts from the ROOT "
+"FTP server (ftp://root.cern.ch/root/ttf/ttf_fonts.tar.gz), please enter the "
+"name of the directory which contains the archive."
+msgstr ""
+"Microsoft-en 'TrueType Core Fonts' letra-tipoak dagoeneko deskargatu "
+"badituzu ROOT ftp zerbitzaritik (ftp://root.cern.ch/root/ttf/ttf_fonts.tar."
+"gz), idatz ezazu artxiboa kokatua dagoen direktorioaren izena."
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:3001
+msgid ""
+"If you haven't yet downloaded these fonts, leave this blank and the fonts "
+"will be downloaded automatically. The download size is approximately 1.6 MB."
+msgstr ""
+"Ez badituzu deskargatu, bete gabe utzi eremu hau eta letra-tipoak "
+"automatikoki deskargatuko dira. Gutxi gorabehera 1.6 MB deskargatu behar "
+"dira."
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:3001
+msgid ""
+"If you are not connected to the Internet or do not wish to download these "
+"fonts now, enter \"none\" to abort."
+msgstr ""
+"Ez bazaude internetera konektatuta edo geroago deskargatu nahi badituzu, "
+"idatzi \"none\" konfigurazioa bertan behera uzteko."
+
+#. Type: error
+#. Description
+#: ../ttf-root-installer.templates:4001
+msgid "Font files not found"
+msgstr "Ez dira letra-tipoen fitxategiak aurkitu"
+
+#. Type: error
+#. Description
+#: ../ttf-root-installer.templates:4001
+msgid ""
+"The directory you entered either does not exist, or does not contain the "
+"Microsoft TrueType Core Fonts for ROOT."
+msgstr ""
+"Zuk emandako direktorioa edo ez da zuzena edo ez ditu bere baitan "
+"ROOTentzako \"Microsoft TrueType Core\" letra-tipoak."
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:5001
+msgid "Archive files to (optional):"
+msgstr "Fitxategi hauek hemen gorde (aukerakoa):"
+
+#. Type: string
+#. Description
+#: ../ttf-root-installer.templates:5001
+msgid ""
+"If you would like to keep a permanent archive of the compressed Microsoft "
+"Core fonts, please enter the directory where you'd like them stored. If you "
+"leave this blank, the files will be deleted after installation."
+msgstr ""
+"Konprimitutako Microsoft Core letra-tipoen kopia bat gorde nahi baduzu,"
+"idatzi hauek gordetzea nahi duzun direktorioaren bide-izena. Eremu hau bete "
+"gabe uzten baduzu fitxategiak ezabatu egingo dira instalazioaren ondoren."

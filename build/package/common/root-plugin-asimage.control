@@ -1,10 +1,12 @@
 Package: root-plugin-asimage
 Architecture: any
-Depends: ${shlibs:Depends}
-Description: AfterImage plugin for ROOT
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: AfterImage plug-in for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains the AfterImage plug-in for ROOT, which allows
  you to store output graphics in many formats, including JPEG, PNG,
  SVG, etc.
- .
- ROOT web-site: http://root.cern.ch
 

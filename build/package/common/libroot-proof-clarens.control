@@ -1,10 +1,14 @@
 Package: libroot-proof-clarens@libvers@
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Replaces: root-plugin-clarens (<< 5.09.01-1)
 Homepage: http://clarens.sourceforge.net
 Description: Clarens extension for ROOT - run-time libraries
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains the Clarens plug-in for ROOT, for use in a GRID
  enabled analysis environment.
  .
@@ -15,11 +19,15 @@ Description: Clarens extension for ROOT - run-time libraries
 Package: libroot-proof-clarens-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-proof-clarens@libvers@ (= ${binary:Version}), libroot-core-dev, libxmlrpc-c3-dev | libxmlrpc-c-dev
+Depends: libroot-proof-clarens@libvers@ (= ${binary:Version}), libroot-core-dev, libxmlrpc-c3-dev | libxmlrpc-c-dev, ${misc:Depends}
 Conflicts: libroot-clarens-dev (<< 5.19.01-1)
 Replaces: libroot-clarens-dev
 Homepage: http://clarens.sourceforge.net
 Description: Clarens extension for ROOT - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains the Clarens plug-in for ROOT, for use in a GRID
  enabled analysis environment.
  .

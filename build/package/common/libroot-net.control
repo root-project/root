@@ -1,18 +1,24 @@
 Package: libroot-net@libvers@
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}
-Homepage: http://root.cern.ch
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Net library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains the Net library for ROOT. 
 
 Package: libroot-net-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-net@libvers@ (= ${binary:Version}), libroot-math-mathcore-dev
+Depends: libroot-net@libvers@ (= ${binary:Version}), libroot-math-mathcore-dev, ${misc:Depends}
 Replaces: libroot-dev
 Conflicts: libroot-dev (<< 5.19.01-1)
-Homepage: http://root.cern.ch
 Description: Net library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains the Net library for ROOT. 
 

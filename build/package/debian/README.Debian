@@ -374,7 +374,7 @@ Globus lib, include and bin. For compilation purposes you can pass
 this directory to the configure script with the option
 --with-globus-dir=<globus_dir>. An experimental path is available for
 versions 2.2.3 and 2.2.4 of the Globus Tool Kit to fix a small bug
-preventing full functionallity of the root implementation; this is
+preventing full fonctionallity of the root implementation; this is
 activated by setting --with-globus-patch-dir=<globus_src_dir> where
 <globus_src_dir> is the globus tool kit source directory. 
 

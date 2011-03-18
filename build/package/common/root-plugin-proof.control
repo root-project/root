@@ -1,10 +1,12 @@
 Package: root-plugin-proof
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Suggests: root-plugin-netx, root-plugin-xproof
 Description: PROOF plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains the proof plug-in for ROOT.  This provides a
  client to use in a PROOF environment.
- .
- ROOT web-site: http://root.cern.ch
 

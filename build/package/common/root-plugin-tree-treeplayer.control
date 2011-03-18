@@ -2,7 +2,11 @@ Package: root-plugin-tree-treeplayer
 Architecture: any
 Conflicts: libroot-dev (<< 5.19.01-1)
 Replaces: libroot-dev
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Plug-in to loop over a ROOT tree 
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  Plug-in to loop over a ROOT tree.
 

@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: cholm@nbi.dk\n"
-"POT-Creation-Date: 2006-08-20 19:19+0200\n"
+"Report-Msgid-Bugs-To: root-system@packages.debian.org\n"
+"POT-Creation-Date: 2009-02-15 12:03+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,85 +18,84 @@ msgstr ""
 
 #. Type: note
 #. Description
-#: ../ttf-root-installer.templates:1001
-msgid "These fonts are not free"
+#: ../ttf-root-installer.templates:2001
+msgid "Non-free fonts"
 msgstr ""
 
 #. Type: note
 #. Description
-#: ../ttf-root-installer.templates:1001
+#: ../ttf-root-installer.templates:2001
 msgid ""
-"These fonts were provided by Microsoft \"in the interest of cross-platform "
-"compatibility\". This is no longer the case, but they are still available "
-"from third parties."
+"The fonts provided in this package were provided by Microsoft \"in the "
+"interest of cross-platform compatibility\". This is no longer the case, but "
+"they are still available from third parties."
 msgstr ""
 
 #. Type: note
 #. Description
-#: ../ttf-root-installer.templates:1001
+#: ../ttf-root-installer.templates:2001
 msgid ""
-"You are free to download these fonts and use them for your own use, but you "
-"may not redistribute them in modified form, including changes to the file "
-"name or packaging format."
+"You are free to download these fonts and use them for your own purposes, but "
+"you  have no permission to redistribute them in modified form, including "
+"changes to the file name or packaging format."
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../ttf-root-installer.templates:2001
-msgid "Directory holding MS fonts (if already downloaded):"
+#: ../ttf-root-installer.templates:3001
+msgid "Directory holding Microsoft fonts (if already downloaded):"
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../ttf-root-installer.templates:2001
+#: ../ttf-root-installer.templates:3001
 msgid ""
 "If you have already downloaded Microsoft's TrueType Core Fonts from the ROOT "
-"FTP server (ftp://root.cern.ch/root/ttf/ttf_fonts.tar.gz), type the name of "
-"the directory which contains the archive."
+"FTP server (ftp://root.cern.ch/root/ttf/ttf_fonts.tar.gz), please enter the "
+"name of the directory which contains the archive."
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../ttf-root-installer.templates:2001
+#: ../ttf-root-installer.templates:3001
 msgid ""
 "If you haven't yet downloaded these fonts, leave this blank and the fonts "
-"will be downloaded for you. Approximately 1.6 MB will need to be downloaded."
+"will be downloaded automatically. The download size is approximately 1.6 MB."
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../ttf-root-installer.templates:2001
+#: ../ttf-root-installer.templates:3001
 msgid ""
-"If you are not connected to the internet or do not wish to download these "
+"If you are not connected to the Internet or do not wish to download these "
 "fonts now, enter \"none\" to abort."
 msgstr ""
 
-#. Type: note
+#. Type: error
 #. Description
-#: ../ttf-root-installer.templates:3001
+#: ../ttf-root-installer.templates:4001
 msgid "Font files not found"
 msgstr ""
 
-#. Type: note
+#. Type: error
 #. Description
-#: ../ttf-root-installer.templates:3001
+#: ../ttf-root-installer.templates:4001
 msgid ""
-"The directory you entered either did not exist, or did not contain the "
-"Microsoft TrueType Core Fonts for ROOT. Please re-enter the directory "
-"containing the Microsoft font files or enter \"none\" to abort."
+"The directory you entered either does not exist, or does not contain the "
+"Microsoft TrueType Core Fonts for ROOT."
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../ttf-root-installer.templates:4001
-msgid "Archive these files to (optional):"
+#: ../ttf-root-installer.templates:5001
+msgid "Archive files to (optional):"
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../ttf-root-installer.templates:4001
+#: ../ttf-root-installer.templates:5001
 msgid ""
 "If you would like to keep a permanent archive of the compressed Microsoft "
-"Core fonts, enter the directory where you'd like them stored.  If you leave "
-"this blank, the files will be deleted after installation."
+"Core fonts, please enter the directory where you'd like them stored. If you "
+"leave this blank, the files will be deleted after installation."
 msgstr ""

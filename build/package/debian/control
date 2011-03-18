@@ -1,0 +1,1897 @@
+Source: root-system
+Section: science
+Priority: optional
+Maintainer: Antonio Salvucci <s4lb04@gmail.com>
+Homepage: http://root.cern.ch
+Build-Depends: debhelper (>= 5.0.37.2), po-debconf, libssl-dev, comerr-dev, libxpm-dev, x11proto-xext-dev, libxext-dev, libfreetype6-dev, libpcre3-dev, zlib1g-dev | libz-dev, python-dev (>= 2.1), graphviz, ttf-freefont, libncurses5-dev | libcurses-dev, libgraphviz-dev, libxft-dev, python-support (>= 0.3), ruby (>= 1.8), ruby1.8-dev | ruby-dev (>= 1.8), libglu1-mesa-dev | libglu1-xorg-dev | xlibmesa-glu-dev |  libglu-dev, libglew1.5-dev | libglew-dev, libftgl-dev | ftgl-dev, libxml2-dev, libgsl0-dev, libldap2-dev | libldap-dev, libavahi-compat-libdnssd-dev, libxmlrpc-c3-dev | libxmlrpc-c-dev, libcurl4-gnutls-dev | libcurl4-openssl-dev | libcurl-dev, libjpeg62-dev, libpng12-dev, libtiff4-dev, libgif-dev | libungif4-dev, libxinerama-dev, libfftw3-dev | fftw3-dev, libglobus-gss-assist-dev, libglobus-gssapi-gsi-dev, libglobus-gsi-credential-dev, libglobus-common-dev, libglobus-gsi-callback-dev, libglobus-gsi-sysconfig-dev, libglobus-gssapi-gsi-dev, libglobus-gsi-callback-dev, libglobus-gsi-cert-utils-dev, libglobus-openssl-dev, libglobus-gsi-proxy-core-dev, libglobus-callout-dev, globus-proxy-utils,krb5-user|heimdal-clients, libmysqlclient15-dev | libmysqlclient14-dev| libmysqlclient12-dev| libmysqlclient-dev, libiodbc2-dev | unixodbc-dev,  libpq-dev | postgresql-dev, gfortran|fortran-compiler, libqt4-dev (>= 4.3.0) | libqt3-mt-dev (>= 3.3.0), qt4-dev-tools (>= 4.3.0) | qt3-dev-tools (>= 3.3.0), libqt4-opengl-dev, libkrb5-dev|heimdal-dev
+Standards-Version: 3.8.3
+
+Package: root-system
+Architecture: all
+Depends: root-system-bin, libroot-core-dev, ${misc:Depends}
+Recommends: libroot-graf3d-gl-dev (>= ${binary:Version}), libroot-io-xmlparser-dev (>= ${binary:Version}), libroot-math-mathmore-dev (>= ${binary:Version}), libroot-math-unuran-dev (>= ${binary:Version}), libroot-misc-table-dev (>= ${binary:Version}), libroot-net-ldap-dev (>= ${binary:Version}), libroot-net-bonjour-dev (>= ${binary:Version}), root-plugin-graf2d-asimage (>= ${binary:Version}), root-plugin-gui-qt (>= ${binary:Version}), root-plugin-graf2d-qt (>= ${binary:Version}), root-plugin-math-fftw3 (>= ${binary:Version}), root-plugin-math-minuit2 (>= ${binary:Version}), root-plugin-net-krb5 (>= ${binary:Version}), root-plugin-sql-odbc (>= ${binary:Version}), root-system-xrootd (>= ${binary:Version}), root-plugin-net-netx (>= ${binary:Version}), root-plugin-net-xrootd (>= ${binary:Version}), libroot-geom-dev (>= ${binary:Version}), libroot-graf2d-gpad-dev (>= ${binary:Version}), libroot-graf2d-graf-dev (>= ${binary:Version}), libroot-graf2d-postscript-dev (>= ${binary:Version}), libroot-graf3d-eve-dev (>= ${binary:Version}), libroot-graf3d-g3d-dev (>= ${binary:Version}), libroot-gui-dev (>= ${binary:Version}), libroot-gui-ged-dev (>= ${binary:Version}), libroot-hist-dev (>= ${binary:Version}), libroot-hist-spectrum-dev (>= ${binary:Version}), libroot-io-dev (>= ${binary:Version}), libroot-math-foam-dev (>= ${binary:Version}), libroot-math-genvector-dev (>= ${binary:Version}), libroot-math-mathcore-dev (>= ${binary:Version}), libroot-math-matrix-dev (>= ${binary:Version}), libroot-math-minuit-dev (>= ${binary:Version}), libroot-math-mlp-dev (>= ${binary:Version}), libroot-math-physics-dev (>= ${binary:Version}), libroot-math-quadp-dev (>= ${binary:Version}), libroot-math-smatrix-dev (>= ${binary:Version}), libroot-math-splot-dev (>= ${binary:Version}), libroot-misc-minicern-dev (>= ${binary:Version}), libroot-misc-memstat-dev (>= ${binary:Version}), libroot-montecarlo-eg-dev (>= ${binary:Version}), libroot-montecarlo-vmc-dev (>= ${binary:Version}), libroot-net-dev (>= ${binary:Version}), libroot-net-auth-dev (>= ${binary:Version}), libroot-proof-dev (>= ${binary:Version}), libroot-proof-proofplayer-dev (>= ${binary:Version}), libroot-tmva-dev (>= ${binary:Version}), libroot-tree-dev (>= ${binary:Version}), libroot-tree-treeplayer-dev (>= ${binary:Version}), root-plugin-geom-geombuilder (>= ${binary:Version}), root-plugin-geom-geompainter (>= ${binary:Version}), root-plugin-graf2d-x11 (>= ${binary:Version}), root-plugin-graf3d-x3d (>= ${binary:Version}), root-plugin-gui-fitpanel (>= ${binary:Version}), root-plugin-gui-guibuilder (>= ${binary:Version}), root-plugin-gui-sessionviewer (>= ${binary:Version}), root-plugin-hist-hbook (>= ${binary:Version}), root-plugin-hist-histpainter (>= ${binary:Version}), root-plugin-hist-spectrumpainter (>= ${binary:Version}), root-plugin-io-sql (>= ${binary:Version}), root-plugin-io-xml (>= ${binary:Version}), root-plugin-math-fumili (>= ${binary:Version}), root-plugin-proof-xproof (>= ${binary:Version}), root-plugin-tree-treeviewer (>= ${binary:Version}), root-system-proofd (>= ${binary:Version}), root-system-rootd (>= ${binary:Version}), root-system-doc  (>= ${binary:Version})
+Suggests: libroot-bindings-python-dev (>= ${binary:Version}), libroot-bindings-ruby-dev (>= ${binary:Version}), libroot-proof-clarens-dev (>= ${binary:Version}), libroot-roofit-dev (>= ${binary:Version}), root-plugin-geom-gdml (>= ${binary:Version}), root-plugin-net-globus (>= ${binary:Version}), root-plugin-proof-peac (>= ${binary:Version}), root-plugin-sql-mysql (>= ${binary:Version}), root-plugin-sql-pgsql (>= ${binary:Version})
+Description: metapackage to install all ROOT packages
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently.
+ .
+ With the data defined as a set of objects, specialized storage methods
+ can give direct access to the separate attributes of the selected
+ objects, without having to touch the bulk of the data. Included are
+ histogramming methods in 1, 2 and 3 dimensions, curve fitting, function
+ evaluation, minimization, graphics and visualization classes to allow the
+ easy creation of an analysis system that can query and process the data
+ interactively or in batch mode.
+ .
+ The command language, the scripting (or macro) language, and the   
+ programming language are all C++, thanks to the built-in CINT C++    
+ interpreter. This interpreter removes the time consuming compile/link
+ cycle, allowing for fast prototyping of the macros, and providing a
+ good environment to learn C++. If more performance is needed, the
+ interactively developed macros can be compiled using a C++ compiler.
+ .
+ The system has been designed in such a way that it can query its
+ databases in parallel on MPP machines or on clusters of workstations
+ or high-end PCs. ROOT is an open system that can be dynamically
+ extended by linking external libraries. This makes ROOT a premier
+ platform on which to build data acquisition, simulation and data
+ analysis systems.
+ .
+ This package is a metapackage to ensure the installation of all
+ possible ROOT packages on a system. 
+ 
+
+Package: libroot-bindings-python5.24
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends} 
+Replaces: root-plugin-python  (<< 5.09.01-1)
+Description: Python extension for ROOT - runtime libraries 
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Python plug-in for ROOT.  This package
+ provide a Python interface to ROOT, and a ROOT interface to Python.
+
+Package: libroot-bindings-python-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-bindings-python5.24 (= ${binary:Version}), libroot-core-dev, python-dev (>= 2.1), ${python:Depends}, ${misc:Depends} 
+Provides: ${python:Provides}
+Replaces: libroot-python-dev
+Conflicts: libroot-python-dev (<< 5.19.01-1)
+Description: Python extension for ROOT - development files 
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Python plug-in for ROOT.  This package
+ provide a Python interface to ROOT, and a ROOT interface to Python.
+
+Package: libroot-bindings-ruby5.24
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, ${misc:Depends} 
+Replaces: root-plugin-ruby  (<< 5.09.01-1)
+Description: Ruby extension for ROOT - run-time library
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Ruby extension for ROOT.  The interface
+ goes both ways - that is, you can call ROOT functions from Ruby, and
+ invoke the Ruby interpreter from ROOT. 
+
+Package: libroot-bindings-ruby-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-bindings-ruby5.24 (= ${binary:Version}), libroot-core-dev, ruby1.8-dev | ruby-dev (>= 1.8), ${misc:Depends} 
+Conflicts: libroot-ruby (<< 5.19.01-1)
+Replaces: libroot-ruby
+Description: Ruby extension for ROOT - development headers
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Ruby extension for ROOT.
+
+Package: libroot-graf3d-gl5.24
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Conflicts: root-plugin-graf3d-gl (<< 5.19.00-1)
+Replaces: root-plugin-graf3d-gl (<< 5.19.00-1)
+Provides: root-plugin-graf3d-gl
+Description: GL plugin for ROOT - runtime library
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the GL plug-in for ROOT.  This plugin provides
+ 3D rendering of volumes and shapes defined in ROOT, as well as 3D 
+ rendering of histograms, and similar.  Included is also a high quality 
+ 3D viewer for ROOT defined geometries.
+
+Package: libroot-graf3d-gl-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-graf3d-gl5.24 (= ${binary:Version}), ${misc:Depends}
+Conflicts: root-plugin-graf3d-gl (<< 5.19.00-1)
+Replaces: root-plugin-graf3d-gl
+Description: GL plugin for ROOT - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the GL plug-in for ROOT.  This plugin provides
+ 3D rendering of volumes and shapes defined in ROOT.  Included is also
+ a high quality 3D viewer for ROOT defined geometries.
+
+Package: libroot-io-xmlparser5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Input/output of ROOT objects - runtime library
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package provides I/O routines for ROOT objects. 
+
+Package: libroot-io-xmlparser-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-io-xmlparser5.24 (= ${binary:Version}), libroot-core-dev, ${misc:Depends}
+Replaces: libroot-dev, root-plugin-xml
+Conflicts: libroot-dev (<< 5.19.01-1), root-plugin-xml (<< 5.19.01-1)
+Description: Input/output of ROOT objects - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package provides I/O routines for ROOT objects. 
+
+Package: libroot-math-mathmore5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: GSL interface library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the MathMore library for ROOT.  This provides 
+ a partial GNU Scientific Library interface for ROOT.
+
+Package: libroot-math-mathmore-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-mathmore5.24 (= ${binary:Version}), libroot-core-dev, libgsl0-dev, ${misc:Depends}
+Conflicts: libroot-mathmore-dev (<< 5.19.01-1)
+Replaces: libroot-mathmore-dev
+Description: Mathmore plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the MathMore library for ROOT.  This provides 
+ a partial GNU Scientific Library interface for ROOT.
+
+Package: libroot-math-unuran5.24
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Homepage: http://statistik.wu-wien.ac.at/unuran/
+Description: Random number generator library
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ It contains universal (also called automatic or black-box) algorithms
+ that can generate random numbers from large classes of continuous or
+ discrete distributions, and also from practically all standard
+ distributions.
+ .
+ To generate random numbers the user must supply some information
+ about the desired distribution, especially a C-function that computes
+ the density and - depending on the chosen methods - some additional
+ information (like the borders of the domain, the mode, the derivative
+ of the density ...). After a user has given this information an
+ init-program computes all tables and constants necessary for the
+ random variate generation. The sample program can then generate
+ variates from the desired distribution.  
+ .
+ This package contains the runtime library.
+
+Package: libroot-math-unuran-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-unuran5.24 (= ${binary:Version}), libroot-hist-dev, ${misc:Depends}
+Replaces: libroot-unuran-dev
+Conflicts: libroot-unuran-dev (<< 5.19.01-1)
+Homepage: http://statistik.wu-wien.ac.at/unuran/
+Description: Random number generator library - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ It contains universal (also called automatic or black-box) algorithms
+ that can generate random numbers from large classes of continuous or
+ discrete distributions, and also from practically all standard
+ distributions.
+ .
+ To generate random numbers the user must supply some information
+ about the desired distribution, especially a C-function that computes
+ the density and - depending on the chosen methods - some additional
+ information (like the borders of the domain, the mode, the derivative
+ of the density ...). After a user has given this information an
+ init-program computes all tables and constants necessary for the
+ random variate generation. The sample program can then generate
+ variates from the desired distribution.  
+ .
+ This package contains the development files
+
+Package: libroot-misc-table5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Table library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Table library for ROOT. 
+
+Package: libroot-misc-table-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-misc-table5.24 (= ${binary:Version}), libroot-graf3d-g3d-dev, libroot-graf2d-gpad-dev, libroot-tree-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Table library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Table library for ROOT. 
+
+Package: libroot-net-ldap5.24
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Replaces: root-plugin-ldap (<< 5.09.01-1)
+Description: Ldap extension for ROOT - run-time libraries
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Ldap plug-in for ROOT.  This gives you
+ access to Ldap directories via ROOT.
+
+Package: libroot-net-ldap-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-net-ldap5.24 (= ${binary:Version}), libroot-core-dev, libldap2-dev | libldap-dev, ${misc:Depends}
+Conflicts: libroot-ldap-dev (<< 5.19.01-1)
+Replaces: libroot-ldap-dev (<< 5.19.01-1)
+Description: Ldap extension for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Ldap plug-in for ROOT.  This gives you
+ access to Ldap directories via ROOT.
+
+
+Package: libroot-net-bonjour5.24
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Zeroconf extension for ROOT - run-time libraries
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains classes for declaring zeroconf services, as well
+ as browsing for such services.  This package contains the run-time 
+ libraries
+
+Package: libroot-net-bonjour-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-net-bonjour5.24 (= ${binary:Version}), libroot-core-dev, libavahi-compat-libdnssd-dev , ${misc:Depends}
+Description: Zeroconf extension for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains classes for declaring zeroconf services, as well
+ as browsing for such services.  This package contains the development
+ libraries and headers. 
+
+
+Package: libroot-proof-clarens5.24
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Replaces: root-plugin-clarens (<< 5.09.01-1)
+Homepage: http://clarens.sourceforge.net
+Description: Clarens extension for ROOT - run-time libraries
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Clarens plug-in for ROOT, for use in a GRID
+ enabled analysis environment.
+ .
+ The Clarens Grid-Enabled Web Services Framework is an open source,
+ secure, high-performance  "portal" for ubiquitous access to data and
+ computational resources provided by computing grids.
+
+Package: libroot-proof-clarens-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-proof-clarens5.24 (= ${binary:Version}), libroot-core-dev, libxmlrpc-c3-dev | libxmlrpc-c-dev, ${misc:Depends}
+Conflicts: libroot-clarens-dev (<< 5.19.01-1)
+Replaces: libroot-clarens-dev
+Homepage: http://clarens.sourceforge.net
+Description: Clarens extension for ROOT - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Clarens plug-in for ROOT, for use in a GRID
+ enabled analysis environment.
+ .
+ The Clarens Grid-Enabled Web Services Framework is an open source,
+ secure, high-performance  "portal" for ubiquitous access to data and
+ computational resources provided by computing grids.
+
+Package: libroot-roofit5.24
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, libroot-math-minuit5.24 | root-fitter, ${misc:Depends}
+Homepage: http://roofit.sourceforge.net/
+Replaces: root-plugin-roofit  (<< 5.09.01-1)
+Description: ROOT extension for modeling expected distribtions - libraries
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The RooFit packages provide a toolkit for modeling the expected
+ distribution of events in a physics analysis. Models can be used to
+ perform likelihood fits, produce plots, and generate "toy Monte
+ Carlo" samples for various studies. The RooFit tools are integrated
+ with the object-oriented and interactive ROOT graphical environment.
+ .
+ RooFit has been developed for the BaBar collaboration, a high energy
+ physics experiment at the Stanford Linear Accelerator Center, and is
+ primarily targeted to the high-energy physicists using the ROOT
+ analysis environment, but the general nature of the package make it
+ suitable for adoption in different disciplines as well.
+
+Package: libroot-roofit-dev
+Architecture: any
+Section: libdevel
+Homepage: http://roofit.sourceforge.net/
+Depends: libroot-roofit5.24 (= ${binary:Version}), libroot-graf2d-graf-dev, libroot-tree-dev, ${misc:Depends}
+Description: ROOT extension for modeling expected distribtions - development
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The RooFit packages provide a toolkit for modeling the expected
+ distribution of events in a physics analysis. Models can be used to
+ perform likelihood fits, produce plots, and generate "toy Monte
+ Carlo" samples for various studies. The RooFit tools are integrated
+ with the object-oriented and interactive ROOT graphical environment.
+ .
+ RooFit has been developed for the BaBar collaboration, a high energy
+ physics experiment at the Stanford Linear Accelerator Center, and is
+ primarily targeted to the high-energy physicists using the ROOT
+ analysis environment, but the general nature of the package make it
+ suitable for adoption in different disciplines as well.
+
+Package: root-plugin-graf2d-asimage
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: AfterImage plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the AfterImage plug-in for ROOT, which allows
+ you to store output graphics in many formats, including JPEG, PNG,
+ SVG, etc.
+
+
+Package: root-plugin-geom-gdml
+Architecture: any
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: ${shlibs:Depends}, ${python:Depends}, libroot-geom-dev, ${misc:Depends}
+Description: GDML import/export module for ROOT geometries
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains an import/export module for the ROOT geometry.
+
+Package: root-plugin-gui-qt
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Qt plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Qt plug-in for ROOT.  This plugin
+ provides an abstraction over a display.  Windows are created via Qt.
+
+Package: root-plugin-graf2d-qt
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Qt plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Qt plug-in for ROOT.  This plugin
+ provides an abstraction over a display.  Windows are created via Qt.
+
+
+Package: root-plugin-math-fftw3
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Homepage: http://fftw.org/
+Description: FFTw plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Fast Fourier Transform extension for ROOT.
+ It uses the very fast fftw (version 3) library.
+
+Package: root-plugin-math-minuit2
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Provides: root-fitter
+Description: Minuit version 2 plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the MINUIT version 2 plug-in for ROOT.  This 
+ provides an fitting algorithm for ROOT.
+
+
+Package: root-plugin-net-globus
+Architecture: any
+Depends: globus-proxy-utils, ${shlibs:Depends}, ${misc:Depends}
+Homepage: http://www.globus.org
+Description: Globus plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Globus plug-in for ROOT, that allows
+ authentication and authorization against globus.
+
+Package: root-plugin-net-krb5
+Architecture: any
+Depends: ${shlibs:Depends}, krb5-user | heimdal-clients, ${misc:Depends}
+Description: Kerberos (version 5) plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Kerberos (version 5) plug-in for ROOT, that
+ allows authentication and authorisation using Kerberos tokens.
+
+
+Package: root-plugin-proof-peac
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Homepage: http://physics.ucsd.edu/~schsu/project/peac.html
+Description: PEAC plugin for ROOT - run-time libraries
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the PEAC (Proof Enabled Analysis Center)
+ plug-in for ROOT.
+ .
+ PEAC is an interactive distributed analysis framework that uses
+ Clarens as a "glue" protocol to advertise and communicate amongst
+ SAM, Global Manager (GM), Local Manager (LM), DCache, and PROOF
+ services.
+
+Package: root-plugin-sql-mysql
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Provides: root-db-client
+Description: MySQL client plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the MySQL plug-in for ROOT.  This plugin
+ provides a thin client (interface) to MySQL servers. Using this
+ client, one can obtain information from a MySQL database into the
+ ROOT environment.
+
+
+Package: root-plugin-sql-odbc
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Provides: root-db-client
+Homepage: http://unixodbc.org or http://iodbc.org
+Description: ODBC plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the ODBC (Open DataBase Connectivity) plug-in
+ for ROOT, that allows transparent access to any kind of database that
+ supports the ODBC protocol. 
+
+Package: root-plugin-sql-pgsql
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Provides: root-db-client
+Description: PostgreSQL client plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the PostGreSQL plug-in for ROOT.  This plugin
+ provides a thin client (interface) to PostGreSQL servers. Using this
+ client, one can obtain information from a PostGreSQL database into the
+ ROOT environment.
+
+
+Package: root-plugin-net-xrootd
+Section: science
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Replaces: root-system-xrootd
+Conflicts: root-system-xrootd (<< 5.19.03-1)
+Homepage: http://xrootd.slac.stanford.edu
+Description: Plugins for xrootd protocol 
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the plug-ins for xrootd protocol.
+
+Package: root-system-xrootd
+Architecture: any
+Depends: root-system-common, lsb-base (>= 3.0-6), ${shlibs:Depends}, ${misc:Depends}
+Recommends: root-plugin-net-xrootd
+Provides: root-file-server
+Homepage: http://xrootd.slac.stanford.edu
+Description: Extented ROOT file server
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the xrootd server for ROOT, the eXtended
+ Request Daemon (xrd) and associated software.
+
+Package: root-plugin-net-netx
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: root-plugin-net-xrootd
+Description: NetX plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the NetX plug-in for ROOT.  Client for the
+ XRootd server.
+
+
+Package: libroot-geom5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: libroot-graf3d-gl5.24 (>= ${binary:Version}), root-plugin-geom-gdml, root-plugin-geom-geombuilder, root-plugin-geom-geompainter
+Description: Geometry library  for ROOT - run-time library
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a library for defining geometries in ROOT.
+
+Package: libroot-geom-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-geom5.24 (= ${binary:Version}), libroot-math-mathcore-dev, ${misc:Depends}
+Recommends: libroot-graf3d-gl-dev
+Replaces: libroot-dev
+Conflicts: libroot-dev (<= 5.19.01-1)
+Description: Geometry library  for ROOT - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a library for defining geometries in ROOT.
+
+Package: libroot-graf2d-gpad5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Canvas and pad library for ROOT - run-time library
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a library for canvas and pad manipulations.
+
+Package: libroot-graf2d-gpad-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-graf2d-gpad5.24 (= ${binary:Version}), libroot-graf2d-graf-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<= 5.19.01-1)
+Description: Canvas and pad library for ROOT - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a library for canvas and pad manipulations.
+
+Package: libroot-graf2d-graf5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Graph library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Graf library for ROOT. 
+
+Package: libroot-graf2d-graf-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-graf2d-graf5.24 (= ${binary:Version}), libroot-hist-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Graph library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Graf library for ROOT. 
+
+Package: libroot-graf2d-postscript5.24
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Postscript/PDF renderer library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a library for ROOT, which allows rendering 
+ postscript and PDF output. 
+
+Package: libroot-graf2d-postscript-dev
+Architecture: any
+Section: libdevel
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Depends: libroot-graf2d-postscript5.24 (= ${binary:Version}), libroot-graf2d-graf-dev, ${shlibs:Depends}, ${misc:Depends}
+Description: Postscript/PDF renderer library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a library for ROOT, which allows rendering 
+ postscript and PDF output. 
+
+Package: libroot-graf3d-eve5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Conflicts: root-plugin-gl (<= 5.19.01-1)
+Replaces: root-plugin-gl (<= 5.19.01-1)
+Description: Event display library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a library for defining event displays in ROOT.
+
+Package: libroot-graf3d-eve-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-graf3d-eve5.24 (= ${binary:Version}), libroot-geom-dev, libroot-gui-ged-dev, libroot-montecarlo-eg-dev, libroot-tree-treeplayer-dev, ${misc:Depends}
+Replaces: root-plugin-gl
+Conflicts: root-plugin-gl (<= 5.19.01-1)
+Description: Event display library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a library for defining event displays in ROOT.
+
+Package: libroot-graf3d-g3d5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: libroot-graf3d-gl5.24 (>= ${binary:Version})
+Suggests: libroot-geom5.24
+Description: Basic 3D shapes for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This library contains the basic 3D shapes and classes for ROOT.  For
+ a more full-blown geometry library, see libroot-geom-dev.
+
+Package: libroot-graf3d-g3d-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-graf3d-g3d5.24 (= ${binary:Version}), libroot-graf2d-gpad-dev, ${misc:Depends}
+Recommends: libroot-graf3d-gl-dev
+Replaces: libroot-dev
+Conflicts: libroot-dev (<= 5.19.01-1)
+Suggests: libroot-geom-dev
+Description: Basic 3D shapes for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This library contains the basic 3D shapes and classes for ROOT.  For
+ a more full-blown geometry library, see libroot-geom-dev.
+
+
+Package: libroot-gui5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Conflicts: libroot (<< 5.19.01-1)
+Recommends: root-plugin-gui-guibuilder
+Description: GUI library for ROOT - run-time library
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a library for defining graphical user interfaces.
+
+Package: libroot-gui-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-gui5.24 (= ${binary:Version}), libroot-graf2d-gpad-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: GUI library for ROOT - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a library for defining graphical user interfaces.
+
+Package: libroot-gui-ged5.24
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: GUI element for editing various ROOT objecs
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a library to show a pop-up window for editing 
+ various ROOT objects.
+
+Package: libroot-gui-ged-dev
+Architecture: any
+Section: libdevel
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: libroot-gui-ged5.24 (= ${binary:Version}), libroot-gui-dev, libroot-tree-treeplayer-dev, ${misc:Depends}
+Description: GUI element for editing various ROOT objecs
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a library to show a pop-up window for editing 
+ various ROOT objects.
+
+Package: libroot-hist5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: root-plugin-hist-histpainter
+Description: Histogram library for ROOT - run-time library
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a library for histogrammin
+
+Package: libroot-hist-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-hist5.24 (= ${binary:Version}), libroot-core-dev, libroot-math-matrix-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Histogram library for ROOT - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a library for histogrammin
+
+Package: libroot-hist-spectrum5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Spectra analysis library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Spectrum library for ROOT. 
+
+Package: libroot-hist-spectrum-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-hist-spectrum5.24 (= ${binary:Version}), libroot-hist-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Spectra analysis library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Spectrum library for ROOT. 
+
+Package: libroot-io5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Input/output of ROOT objects - runtime library
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package provides I/O routines for ROOT objects. 
+
+Package: libroot-io-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-io5.24 (= ${binary:Version}), libroot-core-dev, ${misc:Depends}
+Replaces: libroot-dev, root-plugin-proof
+Conflicts: libroot-dev (<< 5.19.01-1), root-plugin-proof (<< 5.19.01-1)
+Description: Input/output of ROOT objects - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package provides I/O routines for ROOT objects. 
+
+Package: libroot-math-foam5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: A Compact Version of the Cellular Event Generator
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The general-purpose self-adapting Monte Carlo (MC) event
+ generator/simulator mFOAM (standing for mini-FOAM) is a new compact
+ version of the FOAM program, with a slightly limited functionality
+ with respect to its parent version. On the other hand, mFOAM is
+ easier to use for the average user. 
+
+Package: libroot-math-foam-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-foam5.24 (= ${binary:Version}), libroot-hist-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<= 5.19.01-1)
+Description: A Compact Version of the Cellular Event Generator
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The general-purpose self-adapting Monte Carlo (MC) event
+ generator/simulator mFOAM (standing for mini-FOAM) is a new compact
+ version of the FOAM program, with a slightly limited functionality
+ with respect to its parent version. On the other hand, mFOAM is
+ easier to use for the average user. 
+
+Package: libroot-math-genvector5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Generalized vector library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Genvector library for ROOT.  This provides 
+ a generalized vector library.
+
+Package: libroot-math-genvector-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-genvector5.24 (= ${binary:Version}), libroot-core-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<= 5.19.01-1)
+Description: Generalized vector library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Genvector library for ROOT.  This provides 
+ a generalized vector library.
+
+Package: libroot-math-mathcore5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Core mathemathics library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the MathCore library for ROOT. 
+
+Package: libroot-math-mathcore-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-mathcore5.24 (= ${binary:Version}), libroot-core-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Core mathemathics library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the MathCore library for ROOT. 
+
+Package: libroot-math-matrix5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Matrix library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Matrix library for ROOT. 
+
+Package: libroot-math-matrix-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-matrix5.24 (= ${binary:Version}), libroot-core-dev, libroot-math-mathcore-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Matrix library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Matrix library for ROOT. 
+
+Package: libroot-math-minuit5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Replaces: root-plugin-minuit (<< 5.09.01-7)
+Provides: libroot-math-minuit
+Description: Minuit plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the MINUIT plug-in for ROOT.  This provides a
+ fitting algorithm for ROOT.
+
+Package: libroot-math-minuit-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-minuit5.24 (= ${binary:Version}), libroot-graf2d-graf-dev, ${misc:Depends}
+Provides: root-fitter
+Replaces: root-plugin-minuit (<< 5.09.01-7), libroot-minuit-dev
+Conflicts: libroot-minuit-dev (<< 5.19.01-1)
+Description: Minuit plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the MINUIT plug-in for ROOT.  This provides a
+ fitting algorithm for ROOT.
+
+Package: libroot-math-mlp5.24
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Replaces: root-plugin-mlp (<< 5.09.01-1)
+Description: Multi layer perceptron extension for ROOT - run-time libraries
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the mlp plug-in for ROOT.  This plugin provides
+ a Multi Layer Perceptron Neural Network package for ROOT.
+
+Package: libroot-math-mlp-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-mlp5.24 (= ${binary:Version}), libroot-graf2d-gpad-dev, libroot-tree-treeplayer-dev, ${misc:Depends}
+Conflicts: libroot-mlp-dev
+Replaces: libroot-mlp-dev (<< 5.19.01-1)
+Description: Multi layer perceptron extension for ROOT - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the mlp plug-in for ROOT.  This plugin provides
+ a Multi Layer Perceptron Neural Network package for ROOT.
+
+Package: libroot-math-physics5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Physics library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Physics library for ROOT. 
+
+Package: libroot-math-physics-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-physics5.24 (= ${binary:Version}), libroot-math-matrix-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Physics library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Physics library for ROOT. 
+
+Package: libroot-math-quadp5.24
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Replaces: root-plugin-quadp  (<< 5.09.01-1)
+Description: QuadP extension for ROOT - run-time libraries
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the QuadP plug-in for ROOT.  This provides the
+ user a framework in which to do Quadratic Programming.  The quadratic
+ programming problem involves minimization of a quadratic function
+ subject to linear constraints.
+
+Package: libroot-math-quadp-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-quadp5.24 (= ${binary:Version}), libroot-math-matrix-dev, ${misc:Depends}
+Replaces: libroot-quadp
+Conflicts: libroot-quadp (<< 5.19.01-1)
+Description: QuadP extension for ROOT - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the QuadP plug-in for ROOT.  This provides the
+ user a framework in which to do Quadratic Programming.  The quadratic
+ programming problem involves minimization of a quadratic function
+ subject to linear constraints.
+
+Package: libroot-math-smatrix5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Sparse matrix library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Smatrix library for ROOT. 
+
+Package: libroot-math-smatrix-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-smatrix5.24 (= ${binary:Version}), libroot-core-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Sparse matrix library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Smatrix library for ROOT. 
+
+Package: libroot-math-splot5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Splot library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ A common method used in High Energy Physics to perform measurements
+ is the maximum Likelihood method, exploiting discriminating variables
+ to disentangle signal from background. The crucial point for such an
+ analysis to be reliable is to use an exhaustive list of sources of
+ events combined with an accurate description of all the Probability
+ Density Functions (PDF).  
+ .
+ To assess the validity of the fit, a convincing quality check is to
+ explore further the data sample by examining the distributions of
+ control variables. A control variable can be obtained for instance by
+ removing one of the discriminating variables before performing again
+ the maximum Likelihood fit: this removed variable is a control
+ variable. The expected distribution of this control variable, for
+ signal, is to be compared to the one extracted, for signal, from the
+ data sample. In order to be able to do so, one must be able to unfold
+ from the distribution of the whole data sample.
+ .
+ The SPlot method allows to reconstruct the distributions for the
+ control variable, independently for each of the various sources of
+ events, without making use of any a priori knowledge on this
+ variable. The aim is thus to use the knowledge available for the
+ discriminating variables to infer the behaviour of the individual
+ sources of events with respect to the control variable.
+ .
+ SPlot is optimal if the control variable is uncorrelated with the
+ discriminating variables.
+
+Package: libroot-math-splot-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-splot5.24 (= ${binary:Version}), libroot-graf2d-graf-dev, libroot-graf3d-g3d-dev, libroot-tree-treeplayer-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Splot library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ A common method used in High Energy Physics to perform measurements
+ is the maximum Likelihood method, exploiting discriminating variables
+ to disentangle signal from background. The crucial point for such an
+ analysis to be reliable is to use an exhaustive list of sources of
+ events combined with an accurate description of all the Probability
+ Density Functions (PDF).  
+ .
+ To assess the validity of the fit, a convincing quality check is to
+ explore further the data sample by examining the distributions of
+ control variables. A control variable can be obtained for instance by
+ removing one of the discriminating variables before performing again
+ the maximum Likelihood fit: this removed variable is a control
+ variable. The expected distribution of this control variable, for
+ signal, is to be compared to the one extracted, for signal, from the
+ data sample. In order to be able to do so, one must be able to unfold
+ from the distribution of the whole data sample.
+ .
+ The SPlot method allows to reconstruct the distributions for the
+ control variable, independently for each of the various sources of
+ events, without making use of any a priori knowledge on this
+ variable. The aim is thus to use the knowledge available for the
+ discriminating variables to infer the behaviour of the individual
+ sources of events with respect to the control variable.
+ .
+ SPlot is optimal if the control variable is uncorrelated with the
+ discriminating variables.
+
+Package: libroot-misc-minicern5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Small version of CERNLIB for use with ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the mini CERNLIB library for ROOT. 
+
+Package: libroot-misc-minicern-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-misc-minicern5.24 (= ${binary:Version}), libroot-core-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Small version of CERNLIB for use with ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the mini CERNLIB library for ROOT. 
+
+Package: libroot-misc-memstat5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Memory statistics tool for use with ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the memory statistics tool for debugging memory
+ leaks and such. 
+
+Package: libroot-misc-memstat-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-misc-memstat5.24 (= ${binary:Version}), libroot-core-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Memory statistics tool for use with ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the memory statistics tool for debugging memory
+ leaks and such. 
+
+Package: libroot-montecarlo-eg5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Event generator library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Eg library for ROOT. 
+
+Package: libroot-montecarlo-eg-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-montecarlo-eg5.24 (= ${binary:Version}), libroot-graf2d-gpad-dev, libroot-graf3d-g3d-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Event generator library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Eg library for ROOT. 
+
+Package: libroot-montecarlo-vmc5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: root-vmc
+Description: Virtual Monte-Carlo (simulation) library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Vmc library for ROOT. 
+
+Package: libroot-montecarlo-vmc-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-montecarlo-vmc5.24 (= ${binary:Version}), libroot-geom-dev, libroot-montecarlo-eg-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Virtual Monte-Carlo (simulation) library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Vmc library for ROOT. 
+
+Package: libroot-net5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Net library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Net library for ROOT. 
+
+Package: libroot-net-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-net5.24 (= ${binary:Version}), libroot-math-mathcore-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Net library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Net library for ROOT. 
+
+Package: libroot-net-auth5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Provides: root-authentication
+Description: Authentication extension for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the basic authentication algorithms used by ROOT.
+
+Package: libroot-net-auth-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-net-auth5.24 (= ${binary:Version}), libroot-core-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<= 5.19.01-1)
+Description: Authentication extension for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the basic authentication algorithms used by ROOT.
+
+Package: libroot-proof5.24
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Suggests: root-plugin-net-netx, root-plugin-proof-xproof
+Description: PROOF library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the PROOF library for ROOT.  This provides a
+ client to use in a PROOF environment.
+
+Package: libroot-proof-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-proof5.24 (= ${binary:Version}), libroot-math-mathcore-dev, libroot-tree-dev, ${misc:Depends}
+Replaces: root-plugin-proof
+Conflicts: root-plugin-proof (<< 5.19.01-1)
+Description: PROOF library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the PROOF library for ROOT.  This provides a
+ client to use in a PROOF environment.
+
+Package: libroot-proof-proofplayer5.24
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Suggests: root-plugin-net-netx, root-plugin-proof-xproof
+Replaces: root-plugin-proof-proofplayer (< 5.23.05-1)
+Conflicts: root-plugin-proof-proofplayer (< 5.23.05-1)
+Description: PROOF plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the PROOF extension ROOT.  This provides a
+ client to use in a PROOF environment.
+
+
+Package: libroot-proof-proofplayer-dev
+Section: libdevel
+Architecture: any
+Depends: libroot-proof-proofplayer5.24 (= ${binary:Version}), libroot-proof-dev, ${misc:Depends}
+Suggests: root-plugin-net-netx, root-plugin-proof-xproof
+Replaces: root-plugin-proof-proofplayer (< 5.23.05-1)
+Conflicts: root-plugin-proof-proofplayer (< 5.23.05-1)
+Description: PROOF plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the PROOF callable extension for ROOT.  This
+ provides a client to use in a PROOF environment.
+
+
+Package: libroot-tmva5.24
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Homepage: http://tmva.sourceforge.net
+Description: Toolkit for multivariate data analysis
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The Toolkit for Multivariate Analysis (TMVA) provides a
+ ROOT-integrated environment for the parallel processing and
+ evaluation of MVA techniques to discriminate signal from background
+ samples. It presently includes (ranked by complexity):
+ .
+   * Rectangular cut optimisation
+   * Correlated likelihood estimator (PDE approach)
+   * Multi-dimensional likelihood estimator (PDE - range-search approach)
+   * Fisher (and Mahalanobis) discriminant
+   * H-Matrix (chi-squared) estimator
+   * Artificial Neural Network (two different implementations)
+   * Boosted Decision Trees
+ .
+ The TMVA package includes an implementation for each of these
+ discrimination techniques, their training and testing (performance
+ evaluation). In addition all these methods can be tested in parallel,
+ and hence their performance on a particular data set may easily be
+ compared.
+
+
+Package: libroot-tmva-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-tmva5.24 (= ${binary:Version}), libroot-math-mlp-dev, ${misc:Depends}
+Homepage: http://tmva.sourceforge.net
+Description: Toolkit for multivariate data analysis - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The Toolkit for Multivariate Analysis (TMVA) provides a
+ ROOT-integrated environment for the parallel processing and
+ evaluation of MVA techniques to discriminate signal from background
+ samples. It presently includes (ranked by complexity):
+ .
+   * Rectangular cut optimisation
+   * Correlated likelihood estimator (PDE approach)
+   * Multi-dimensional likelihood estimator (PDE - range-search approach)
+   * Fisher (and Mahalanobis) discriminant
+   * H-Matrix (chi-squared) estimator
+   * Artificial Neural Network (two different implementations)
+   * Boosted Decision Trees
+ .
+ The TMVA package includes an implementation for each of these
+ discrimination techniques, their training and testing (performance
+ evaluation). In addition all these methods can be tested in parallel,
+ and hence their performance on a particular data set may easily be
+ compared.
+
+Package: libroot-tree5.24
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: libroot-tree-treeplayer5.24 | root-plugin-tree-treeviewer
+Description: Tree library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Tree library for ROOT. 
+
+Package: libroot-tree-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-tree5.24 (= ${binary:Version}), libroot-core-dev, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Tree library for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Tree library for ROOT. 
+
+Package: libroot-tree-treeplayer5.24
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Library to loop over a ROOT tree 
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ Plug-in to loop over a ROOT tree.
+
+Package: libroot-tree-treeplayer-dev
+Architecture: any
+Section: libdevel
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: libroot-tree-treeplayer5.24 (= ${binary:Version}), libroot-tree-dev, libroot-graf2d-gpad-dev, libroot-graf3d-g3d-dev, ${misc:Depends}
+Description: Library to loop over a ROOT tree 
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ Plug-in to loop over a ROOT tree.
+
+Package: root-plugin-geom-geombuilder
+Architecture: any
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Geometry builder plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a geometry builder plugin for ROOT.
+
+Package: root-plugin-geom-geompainter
+Architecture: any
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: ${shlibs:Depends}, ${misc:Depends} , ${misc:Depends}
+Description: Geometry painter plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a geometry painter plugin for ROOT.
+
+Package: root-plugin-graf2d-x11
+Architecture: any
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Provides: root-system-display
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: X window system plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the X11 plug-in for ROOT, which allows using an 
+ X display for showing graphics. 
+
+Package: root-plugin-graf3d-x3d
+Architecture: any
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: root-plugin-graf3d-gl
+Description: X 3D plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the X 3D plug-in for ROOT.  This plugin provides
+ 3D rendering of volumes and shapes defined in ROOT.  Included is also
+ a low quality 3D viewer for ROOT defined geometries.
+
+Package: root-plugin-gui-fitpanel
+Architecture: any
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: GUI element for fits plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a plug-in to show a pop-up dialog when fitting
+ various kinds of data.
+
+Package: root-plugin-gui-guibuilder
+Architecture: any
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: GUI editor plug-in for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a plug-in for editing graphical user interfaces
+ in ROOT.
+
+Package: root-plugin-gui-sessionviewer
+Architecture: any
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: GUI to browse an interactive PROOF session
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a plug-in browsing an interactive PROOF session
+ in ROOT.
+
+Package: root-plugin-hist-hbook
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Conflicts: root-plugin-hbook
+Replaces: root-plugin-hbook (<< 5.19.01-1)
+Description: Hbook plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the Hbook plug-in for ROOT, allowing you to
+ access legacy Hbook files (NTuples and Histograms from PAW).
+
+Package: root-plugin-hist-histpainter
+Architecture: any
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Histogram painter plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package a painter of histograms for ROOT.
+
+Package: root-plugin-hist-spectrumpainter
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Spectrum painter plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package a painter of spectra for ROOT.
+
+Package: root-plugin-io-sql
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: root-db-client | root-plugin-io-mysql
+Description: SQL plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the SQL plug-in for ROOT, that allows
+ transparent access to files data via an SQL database, using ROOT's
+ TFile interface.
+
+Package: root-plugin-io-xml
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: XML reader plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the XML reader plug-in for ROOT.   This package
+ provide a plug-in to parse XML files with ROOT.
+
+Package: root-plugin-math-fumili
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Provides: root-fitter
+Description: Fumili plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the fumili plug-in for ROOT.  This provides an
+ alternative fitting algorithm for ROOT.
+
+
+Package: root-plugin-proof-xproof
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Suggests: root-plugin-net-netx
+Replaces: root-proofd
+Conflicts: root-proofd (<= 5.13.05-4)
+Description: XPROOF plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the xproof plug-in for ROOT.  This provides a
+ client to be used in a PROOF environment.
+
+
+Package: root-plugin-tree-treeviewer
+Architecture: any
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: GUI to browse an a ROOT tree
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains a plug-in for browsing a ROOT tree.
+ in ROOT.
+
+Package: root-system-proofd
+Architecture: any
+Depends: root-system-common, lsb-base (>= 3.0-6), openbsd-inetd | inet-superserver, ${shlibs:Depends}, ${misc:Depends}
+Recommends: root-system-bin, libroot-dev, root-file-server | root-system-rootd
+Description: Parallel ROOt Facility - distributed, parallel computing
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the PROOF server.  proofd is the core daemon of
+ the PROOF (Parallel ROOt Facility) system for distributed parallel
+ computing. Installing this package on a machine, makes it possible
+ for the machine to participate in a parallel computing farm (cluster
+ or via the Internet), either as a master or a slave, using a
+ transparent interface.
+
+
+Package: root-system-rootd
+Architecture: any
+Depends: root-system-common, lsb-base (>= 3.0-6), adduser, openbsd-inetd | inet-superserver, ${shlibs:Depends}, ${misc:Depends}
+Recommends: root-system-bin, libroot-dev
+Provides: root-file-server
+Description: ROOT remote file server 
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains ROOT file server.  rootd is a server for ROOT
+ files, serving files over the Internet. Using this daemon, you can
+ access files on the machine from anywhere on the Internet, using a
+ transparent interface.
+
+
+Package: root-system-doc
+Section: doc
+Architecture: all
+Suggests: root-system-bin
+Depends:  ${misc:Depends}
+Description: Tutorial and test suit for the ROOT system
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the tutorial scripts and test suit for the ROOT
+ system, as well as the automatically generated HTML class documentation.
+
+
+Package: root-system-bin
+Architecture: any
+Depends: ${shlibs:Depends}, root-plugin-graf2d-asimage, ${misc:Depends}
+Recommends: root-plugin-graf3d-gl, libroot-math-minuit | root-fitter, libroot-core-dev, root-plugin-graf2d-x11 | root-system-display
+Description: Numerical data analysis framework - general applications
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ With the data defined as a set of objects, specialized storage methods
+ can give direct access to the separate attributes of the selected
+ objects, without having to touch the bulk of the data. Included are
+ histogramming methods in 1, 2 and 3 dimensions, curve fitting, function
+ evaluation, minimization, graphics and visualization classes to allow the
+ easy creation of an analysis system that can query and process the data
+ interactively or in batch mode.
+ .
+ The command language, the scripting (or macro) language, and the   
+ programming language are all C++, thanks to the built-in CINT C++    
+ interpreter. This interpreter removes the time consuming compile/link
+ cycle, allowing for fast prototyping of the macros, and providing a
+ good environment to learn C++. If more performance is needed, the
+ interactively developed macros can be compiled using a C++ compiler.
+ .
+ The system has been designed in such a way that it can query its
+ databases in parallel on MPP machines or on clusters of workstations
+ or high-end PCs. ROOT is an open system that can be dynamically
+ extended by linking external libraries. This makes ROOT a premier
+ platform on which to build data acquisition, simulation and data
+ analysis systems.
+
+Package: libroot-core5.24
+Section: libs
+Architecture: any
+Depends: root-system-common, ${shlibs:Depends}, ${misc:Depends}
+Recommends: root-system-bin, libroot-core-dev 
+Provides: libroot-core
+Description: Numerical data analysis framework - shared runtime libraries
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains the shared libraries used by the ROOT
+ system. The libraries contain numerous C++ class definitions for
+ various purposes, some of which are:
+    * System abstraction
+    * Thin Thread API
+    * Histograming
+    * Persistent objects
+    * GUI API
+ and many others. Refer also to the package description of
+ root-bin.
+
+Package: libroot-core-dev
+Section: libdevel
+Architecture: any
+Depends: ${shlibs:Depends}, zlib1g-dev, libssl-dev, comerr-dev, libkrb5-dev, libx11-dev, libfreetype6-dev, libpcre3-dev, libxpm-dev, g++ | c++-compiler, ${python:Depends}, cfortran, libroot-io-dev, libroot-net-dev, ${misc:Depends}
+Suggests: root-system-bin, gccxml
+Recommends: libroot-geom-dev, libroot-gui-dev, libroot-hist-dev, libroot-proof-dev, libroot-tree-dev
+Provides: libroot-dev
+Replaces: libroot-dev (<< 5.19.01-1)
+Conflicts: libroot-dev (<< 5.19.01-1)
+Description: Header files for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains header files (Class declarations) for the ROOT
+ class libraries. Please refer the package documentation for libroot
+ and root-bin.
+
+Package: libroot-static
+Section: libdevel
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: libroot-core-dev
+Description: Static archive of ROOT libraries 
+ This package contains static archive of the ROOT classes. 
+
+Package: root-system-common
+Architecture: all
+Depends: ttf-freefont | root-ttf, ttf-opensymbol | root-ttf, ${misc:Depends}
+Description: Common files for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package contains some common infrastructure files for ROOT.
+
+ 
+Package: ttf-root-installer
+Architecture: all
+Section: contrib/fonts
+Depends: ${misc:Depends}, wget (>= 1.9.1-4), xfonts-utils | xutils (>= 4.0.2), debconf (>= 1.2.0), ${misc:Depends}
+Provides: root-ttf
+Conflicts: ttf-root
+Description: True type fonts for ROOT - installer package
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ This package will install the True Type Fonts (TTF) used by ROOT.
+ These fonts are provided by Microsoft.  Note, that you may not
+ redistribute this font files.   This package will download the fonts
+ from the ROOT FTP server,  or alternatively use an already downloaded
+ tar-file.

@@ -1,20 +1,34 @@
 Package: libroot-html@libvers@
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}
-Homepage: http://root.cern.ch
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Html documentation generator for ROOT - runtime library
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains classes to automatically extract documentation 
  from marked up sources. 
 
 Package: libroot-html-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-html@libvers@ (= ${binary:Version}), libroot-core-dev
+Depends: libroot-html@libvers@ (= ${binary:Version}), libroot-core-dev, ${misc:Depends}
 Replaces: libroot-dev
 Conflicts: libroot-dev (<< 5.19.01-1)
-Homepage: http://root.cern.ch
 Description: Html documentation generator for ROOT - development files
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  This package contains classes to automatically extract documentation 
  from marked up sources. 
 

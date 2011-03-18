@@ -1,10 +1,14 @@
 Package: libroot-roofit@libvers@
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, root-fitter
+Depends: ${shlibs:Depends}, libroot-math-minuit@libvers@ | root-fitter, ${misc:Depends}
 Homepage: http://roofit.sourceforge.net/
 Replaces: root-plugin-roofit  (<< 5.09.01-1)
 Description: ROOT extension for modeling expected distribtions - libraries
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  The RooFit packages provide a toolkit for modeling the expected
  distribution of events in a physics analysis. Models can be used to
  perform likelihood fits, produce plots, and generate "toy Monte
@@ -21,8 +25,12 @@ Package: libroot-roofit-dev
 Architecture: any
 Section: libdevel
 Homepage: http://roofit.sourceforge.net/
-Depends: libroot-roofit@libvers@ (= ${binary:Version}), libroot-graf2d-graf-dev, libroot-tree-dev
+Depends: libroot-roofit@libvers@ (= ${binary:Version}), libroot-graf2d-graf-dev, libroot-tree-dev, ${misc:Depends}
 Description: ROOT extension for modeling expected distribtions - development
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently. 
+ .
  The RooFit packages provide a toolkit for modeling the expected
  distribution of events in a physics analysis. Models can be used to
  perform likelihood fits, produce plots, and generate "toy Monte
