@@ -11,7 +11,8 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// A TLeaf for a general object derived from TObject.                   //
+// A TLeaf for the general case when using the branches created via     //
+// a TStreamerInfo (i.e. using TBranchElement).                         //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TLeafElement.h"
