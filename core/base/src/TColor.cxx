@@ -443,7 +443,7 @@ void TColor::InitializeColors()
    // If fgPalette.fN !=0 SetPalette has been called already
    // (from rootlogon.C for instance)
 
-   if (!fgPalette.fN) SetPalette(0,0);
+   if (!fgPalette.fN) SetPalette(1,0);
 }
 
 

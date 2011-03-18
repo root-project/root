@@ -109,8 +109,48 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       gROOT->GetListOfStyles()->Add(this);
    }
 
-   //may be a standard style to be initialized
+   if (strcmp(name,"Clean") == 0) {
+      // Clean style
+      SetFrameBorderMode(0);
+      SetFrameFillColor(0);
+      SetCanvasBorderMode(0);
+      SetCanvasColor(0);
+      SetPadBorderMode(0);
+      SetPadColor(0);
+      SetStatColor(0);
+      SetTitleFont(42,"");
+      SetLabelFont(42,"x");
+      SetTitleFont(42,"x");
+      SetLabelFont(42,"y");
+      SetTitleFont(42,"y");
+      SetLabelFont(42,"z");
+      SetTitleFont(42,"z");
+      SetStatFont(42);
+      SetLabelSize(0.035,"x");
+      SetTitleSize(0.035,"x");
+      SetLabelSize(0.035,"y");
+      SetTitleSize(0.035,"y");
+      SetLabelSize(0.035,"z");
+      SetTitleSize(0.035,"z");
+      SetTitleSize(0.050,"");
+      SetTitleAlign(23);
+      SetTitleX(0.5);
+      SetTitleBorderSize(0);
+      SetTitleFillColor(0);
+      SetStatBorderSize(1);
+      SetOptStat(1110);
+      SetOptFit(111);
+      SetHistFillColor(38);
+      SetHistLineColor(kBlue+2);
+      SetLegendBorderSize(1);
+      SetLegendFillColor(0);
+      SetLegendFont(42);
+      SetFuncWidth(2);
+      SetFuncColor(2);
+   }
+
    if (strcmp(name,"Plain") == 0) {
+      // May be a standard style to be initialized
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
       SetCanvasBorderMode(0);
@@ -125,7 +165,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       return;
    }
    if (strcmp(name,"Bold") == 0) {
-   // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
+      // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
       SetPalette(1,0);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
@@ -152,7 +192,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       return;
    }
    if (strcmp(name,"Video") == 0) {
-     // Author: Art Poskanzer, LBNL, Oct. 1999
+      // Author: Art Poskanzer, LBNL, Oct. 1999
       SetPalette(1,0);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
@@ -177,7 +217,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       return;
    }
    if (strcmp(name,"Pub") == 0) {
-   // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
+      // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
       SetOptTitle(0);
       SetOptStat(0);
       SetPalette(8,0);
@@ -248,6 +288,7 @@ void TStyle::BuildStyles()
    new TStyle("Video",  "Style for video presentation histograms");
    new TStyle("Pub",    "Style for Publications");
    new TStyle("Default","Default Style");
+   new TStyle("Clean",  "Clean Style");
    delete col;
 }
 
@@ -514,6 +555,46 @@ void TStyle::Reset(Option_t *opt)
    SetPalette();
 
    fTimeOffset = 788918400; // UTC time at 01/01/95
+
+   if (strcmp(opt,"Clean") == 0) {
+      // Clean style
+      SetFrameBorderMode(0);
+      SetFrameFillColor(0);
+      SetCanvasBorderMode(0);
+      SetCanvasColor(0);
+      SetPadBorderMode(0);
+      SetPadColor(0);
+      SetStatColor(0);
+      SetTitleFont(42,"");
+      SetLabelFont(42,"x");
+      SetTitleFont(42,"x");
+      SetLabelFont(42,"y");
+      SetTitleFont(42,"y");
+      SetLabelFont(42,"z");
+      SetTitleFont(42,"z");
+      SetStatFont(42);
+      SetLabelSize(0.035,"x");
+      SetTitleSize(0.035,"x");
+      SetLabelSize(0.035,"y");
+      SetTitleSize(0.035,"y");
+      SetLabelSize(0.035,"z");
+      SetTitleSize(0.035,"z");
+      SetTitleSize(0.050,"");
+      SetTitleAlign(23);
+      SetTitleX(0.5);
+      SetTitleBorderSize(0);
+      SetTitleFillColor(0);
+      SetStatBorderSize(1);
+      SetOptStat(1110);
+      SetOptFit(111);
+      SetHistFillColor(38);
+      SetHistLineColor(kBlue+2);
+      SetLegendBorderSize(1);
+      SetLegendFillColor(0);
+      SetLegendFont(42);
+      SetFuncWidth(2);
+      SetFuncColor(2);
+   }
 
    if (strcmp(opt,"Plain") == 0) {
       SetFrameBorderMode(0);
@@ -1567,6 +1648,8 @@ void TStyle::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out<<"   "<<"tmpStyle->SetGridStyle("       <<GetGridStyle()       <<");"<<endl;
    out<<"   "<<"tmpStyle->SetGridWidth("       <<GetGridWidth()       <<");"<<endl;
    out<<"   "<<"tmpStyle->SetLegendBorderSize("<<GetLegendBorderSize()<<");"<<endl;
+   out<<"   "<<"tmpStyle->SetLegendFillColor(" <<GetLegendFillColor() <<");"<<endl;
+   out<<"   "<<"tmpStyle->SetLegendFont("      <<GetLegendFont()      <<");"<<endl;
    out<<"   "<<"tmpStyle->SetHatchesLineWidth("<<GetHatchesLineWidth()<<");"<<endl;
    out<<"   "<<"tmpStyle->SetHatchesSpacing("  <<GetHatchesSpacing()  <<");"<<endl;
    out<<"   "<<"tmpStyle->SetFrameFillColor("  <<GetFrameFillColor()  <<");"<<endl;
