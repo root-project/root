@@ -7873,6 +7873,32 @@ int G__deleteglobal(void* pin)
    return 0;
 }
 
+//______________________________________________________________________________
+int G__resetglobalvar(void* pin)
+{
+   // Delete variable from global variable table if they are 'objects' and reset
+   // to zero if they are pointers.
+   // return 1 if successful.
+   long p = (long) pin;
+   G__LockCriticalSection();
+   struct G__var_array* var = &G__global;
+   for (; var; var = var->next) {
+      for (int ig15 = 0; ig15 < var->allvar; ++ig15) {
+         if (p == var->p[ig15]) {
+            var->p[ig15] = 0;
+            var->varnamebuf[ig15][0] = '\0';
+            var->hash[ig15] = 0;
+         }
+         if (isupper(var->type[ig15]) && var->p[ig15] && (p == (*(long*)var->p[ig15]))) {
+            // Only zero-out pointer, do not deleted the content nor wipe the definition.
+            (*(long*)var->p[ig15]) = 0;
+         }
+      }
+   }
+   G__UnlockCriticalSection();
+   return 0;
+}
+
 } // extern "C"
 
 /*

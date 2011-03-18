@@ -706,6 +706,17 @@ void TCint::ResetGlobals()
 }
 
 //______________________________________________________________________________
+void TCint::ResetGlobalVar(void *obj)
+{
+   // Reset the CINT global object state to the state saved by the last
+   // call to TCint::SaveGlobalsContext().
+
+   R__LOCKGUARD(gCINTMutex);
+
+   G__resetglobalvar(obj);
+}
+
+//______________________________________________________________________________
 void TCint::RewindDictionary()
 {
    // Rewind CINT dictionary to the point where it was before executing

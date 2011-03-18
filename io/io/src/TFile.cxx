@@ -498,7 +498,7 @@ TFile::~TFile()
    if (IsOnHeap()) {
       // Delete object from CINT symbol table so it can not be used anymore.
       // CINT object are always on the heap.
-      gInterpreter->DeleteGlobal(this);
+      gInterpreter->ResetGlobalVar(this);
    }
       
    if (gDebug)

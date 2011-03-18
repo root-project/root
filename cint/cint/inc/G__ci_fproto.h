@@ -78,6 +78,7 @@ G__DECL_API(25, int, G__defined_tagname, (G__CONST char* tagname,int noerror))
 G__DECL_API(26, struct G__Definedtemplateclass *,G__defined_templateclass, (G__CONST char *name))
 
 G__DECL_API(27, int, G__deleteglobal, (void* p))
+G__DECL_API(269, int, G__resetglobalvar, (void* p))
 G__DECL_API(28, int, G__deletevariable, (G__CONST char* varname))
 G__DECL_API(29, int, G__optimizemode, (int optimizemode))
 G__DECL_API(30, int, G__getoptimizemode, (void))
@@ -404,5 +405,5 @@ G__DECL_API(267, int, G__memfunc_para_setup, (int ifn,int type,int tagnum,int ty
 
 G__DECL_API(268, struct G__ifunc_table_internal*, G__get_ifunc_internal, (struct G__ifunc_table* iref))
 
-#define G__NUMBER_OF_API_FUNCTIONS 269
+#define G__NUMBER_OF_API_FUNCTIONS 270
 G__DUMMYTOCHECKFORDUPLICATES(G__NUMBER_OF_API_FUNCTIONS)
