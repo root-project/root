@@ -303,12 +303,12 @@ void TTreeFormula::Init(const char*name, const char* expression)
       Int_t treenumber = fTree->GetTreeNumber();
       fTree->GetEntries();
       if (treenumber != fTree->GetTreeNumber()) {
-         if (readentry != -1) {
+         if (readentry >= 0) {
             fTree->LoadTree(readentry);
          }
          UpdateFormulaLeaves();
       } else {
-         if (readentry != -1) {
+         if (readentry >= 0) {
             fTree->LoadTree(readentry);
          }
       }
@@ -771,7 +771,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
 
    TBranch *branch = leaf ? leaf->GetBranch() : 0;
    Long64_t readentry = fTree->GetTree()->GetReadEntry();
-   if (readentry==-1) readentry=0;
+   if (readentry < 0) readentry=0;
 
    Bool_t useLeafReferenceObject = false;
    Int_t code = fNcodes-1;
@@ -2137,7 +2137,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
       if (fTree->GetTree()==0) return -1;
    }
    Long64_t readentry = fTree->GetTree()->GetReadEntry();
-   if (readentry==-1) readentry=0;
+   if (readentry < 0) readentry=0;
    const char *cname = expression;
    char    first[kMaxLen];  first[0] = '\0';
    char   second[kMaxLen]; second[0] = '\0';
@@ -5223,7 +5223,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
       TTree *realtree = fTree->GetTree();
       TTree *tleaf = leaf->GetBranch()->GetTree();
       if (tleaf && tleaf != realtree && tleaf->GetTreeIndex()) {
-         if (tleaf->GetReadEntry()==-1) {
+         if (tleaf->GetReadEntry() < 0) {
             fNdata[i] = 0;
             outofbounds = kTRUE;
             continue;
@@ -5240,7 +5240,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             //if branchcount address not yet set, GetEntry will set the address
             // read branchcount value
             Long64_t readentry = leaf->GetBranch()->GetTree()->GetReadEntry();
-            if (readentry==-1) readentry=0;
+            if (readentry < 0) readentry=0;
             if (!branchcount->GetAddress()) {
                R__LoadBranch(branchcount, readentry, fQuickLoad);
             } else {
@@ -5289,7 +5289,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             }
          } else {
             Long64_t readentry = leaf->GetBranch()->GetTree()->GetReadEntry();
-            if (readentry==-1) readentry=0;
+            if (readentry < 0) readentry=0;
             R__LoadBranch(branchcount,readentry,fQuickLoad);
             size = leaf->GetLen() / leaf->GetLenStatic();
          }
@@ -5338,7 +5338,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
          if (leafinfo->HasCounter()) {
             TBranch *branch = leaf->GetBranch();
             Long64_t readentry = branch->GetTree()->GetReadEntry();
-            if (readentry==-1) readentry=0;
+            if (readentry < 0) readentry=0;
             R__LoadBranch(branch,readentry,fQuickLoad);
             size = (Int_t) leafinfo->GetCounterValue(leaf);
             if (fIndexes[i][0]==-1) {
@@ -5389,7 +5389,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
          } else if (leafinfo->GetMultiplicity()==-1) {
             TBranch *branch = leaf->GetBranch();
             Long64_t readentry = branch->GetTree()->GetReadEntry();
-            if (readentry==-1) readentry=0;
+            if (readentry < 0) readentry=0;
             R__LoadBranch(branch,readentry,fQuickLoad);
             if (leafinfo->GetNdata(leaf)==0) {
                outofbounds = kTRUE;
