@@ -362,6 +362,9 @@ TTreeFormula *TTreeIndex::GetMajorFormulaParent(const TTree *parent)
    // Return a pointer to the TreeFormula corresponding to the majorname in parent tree.
 
    if (!fMajorFormulaParent) {
+      // Prevent TTreeFormula from finding any of the branches in our TTree even if it
+      // is a friend of the parent TTree.
+      TTree::TFriendLock friendlock(fTree, TTree::kFindLeaf | TTree::kFindBranch | TTree::kGetBranch | TTree::kGetLeaf);
       fMajorFormulaParent = new TTreeFormula("MajorP",fMajorName.Data(),const_cast<TTree*>(parent));
       fMajorFormulaParent->SetQuickLoad(kTRUE);
    }
@@ -378,6 +381,9 @@ TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *parent)
    // Return a pointer to the TreeFormula corresponding to the minorname in parent tree.
 
    if (!fMinorFormulaParent) {
+      // Prevent TTreeFormula from finding any of the branches in our TTree even if it
+      // is a friend of the parent TTree.
+      TTree::TFriendLock friendlock(fTree, TTree::kFindLeaf | TTree::kFindBranch | TTree::kGetBranch | TTree::kGetLeaf);
       fMinorFormulaParent = new TTreeFormula("MinorP",fMinorName.Data(),const_cast<TTree*>(parent));
       fMinorFormulaParent->SetQuickLoad(kTRUE);
    }
@@ -385,7 +391,6 @@ TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *parent)
       fMinorFormulaParent->SetTree(const_cast<TTree*>(parent));
       fMinorFormulaParent->UpdateFormulaLeaves();
    }
-
    return fMinorFormulaParent;
 }
 
@@ -474,11 +479,11 @@ void TTreeIndex::UpdateFormulaLeaves(const TTree *parent)
    if (fMajorFormula)       { fMajorFormula->UpdateFormulaLeaves();}
    if (fMinorFormula)       { fMinorFormula->UpdateFormulaLeaves();}
    if (fMajorFormulaParent) { 
-      if (parent) fMajorFormulaParent->SetTree((TTree*)parent);
+      if (parent) fMajorFormulaParent->SetTree(const_cast<TTree*>(parent));
       fMajorFormulaParent->UpdateFormulaLeaves();
    }
    if (fMinorFormulaParent) { 
-      if (parent) fMinorFormulaParent->SetTree((TTree*)parent);
+      if (parent) fMinorFormulaParent->SetTree(const_cast<TTree*>(parent));
       fMinorFormulaParent->UpdateFormulaLeaves();
    }
 }

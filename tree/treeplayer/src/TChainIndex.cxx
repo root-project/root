@@ -308,6 +308,7 @@ TTreeFormula *TChainIndex::GetMajorFormulaParent(const TTree *parent)
    // return a pointer to the TreeFormula corresponding to the majorname in parent tree T
 
    if (!fMajorFormulaParent) {
+      TTree::TFriendLock friendlock(fTree, TTree::kFindLeaf | TTree::kFindBranch | TTree::kGetBranch | TTree::kGetLeaf);
       fMajorFormulaParent = new TTreeFormula("MajorP",fMajorName.Data(),const_cast<TTree*>(parent));
       fMajorFormulaParent->SetQuickLoad(kTRUE);
    }
@@ -324,6 +325,9 @@ TTreeFormula *TChainIndex::GetMinorFormulaParent(const TTree *parent)
    // return a pointer to the TreeFormula corresponding to the minorname in parent tree T
 
    if (!fMinorFormulaParent) {
+      // Prevent TTreeFormula from finding any of the branches in our TTree even if it
+      // is a friend of the parent TTree.
+      TTree::TFriendLock friendlock(fTree, TTree::kFindLeaf | TTree::kFindBranch | TTree::kGetBranch | TTree::kGetLeaf);
       fMinorFormulaParent = new TTreeFormula("MinorP",fMinorName.Data(),const_cast<TTree*>(parent));
       fMinorFormulaParent->SetQuickLoad(kTRUE);
    }
@@ -341,6 +345,9 @@ void TChainIndex::UpdateFormulaLeaves(const TTree *parent)
    // Updates the parent formulae.
    // Called by TChain::LoadTree when the parent chain changes it's tree.
    if (fMajorFormulaParent) { 
+      // Prevent TTreeFormula from finding any of the branches in our TTree even if it
+      // is a friend of the parent TTree.
+      TTree::TFriendLock friendlock(fTree, TTree::kFindLeaf | TTree::kFindBranch | TTree::kGetBranch | TTree::kGetLeaf);
       if (parent) fMajorFormulaParent->SetTree((TTree*)parent);
       fMajorFormulaParent->UpdateFormulaLeaves();
    }

@@ -170,6 +170,9 @@ protected:
       ~TFriendLock();
    };
    friend class TFriendLock;
+   // So that the index class can use TFriendLock:
+   friend class TTreeIndex;
+   friend class TChainIndex;
 
    // use to update fFriendLockStatus
    enum ELockStatusBits {
