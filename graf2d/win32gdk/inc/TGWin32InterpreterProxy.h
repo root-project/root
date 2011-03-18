@@ -64,7 +64,7 @@ public:
    void     Reset();
    void     ResetAll();
    void     ResetGlobals();
-   void     ResetGlobalVar();
+   void     ResetGlobalVar(void *obj);
    void     RewindDictionary();
    Int_t    DeleteGlobal(void *obj);
    void     SaveContext();

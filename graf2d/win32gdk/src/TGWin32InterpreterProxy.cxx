@@ -65,7 +65,7 @@ VOID_METHOD_ARG2(Interpreter,SetGetline,GetlineFunc_t, getlineFunc,\
 VOID_METHOD_ARG0(Interpreter,Reset,1)
 VOID_METHOD_ARG0(Interpreter,ResetAll,1)
 VOID_METHOD_ARG0(Interpreter,ResetGlobals,1)
-VOID_METHOD_ARG0(Interpreter,ResetGlobalVar,1)
+VOID_METHOD_ARG1(Interpreter,ResetGlobalVar,void*,obj)
 VOID_METHOD_ARG0(Interpreter,RewindDictionary,1)
 RETURN_METHOD_ARG1(Interpreter,Int_t,DeleteGlobal,void*,obj)
 VOID_METHOD_ARG0(Interpreter,SaveContext,1)
