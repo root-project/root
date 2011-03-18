@@ -140,8 +140,8 @@ const TMVA::Event* TMVA::VariablePCATransform::Transform( const Event* const ev,
    Bool_t hasMaskedEntries = GetInput( ev, input, mask );
 
    if( hasMaskedEntries ){ // targets might be masked (for events where the targets have not been computed yet)
-      UInt_t numMasked = std::count(mask.begin(), mask.end(), kTRUE);
-      UInt_t numOK     = std::count(mask.begin(), mask.end(), kFALSE);
+      UInt_t numMasked = std::count(mask.begin(), mask.end(), (Char_t)kTRUE);
+      UInt_t numOK     = std::count(mask.begin(), mask.end(), (Char_t)kFALSE);
       if( numMasked>0 && numOK>0 ){
 	 Log() << kFATAL << "You mixed variables and targets in the decorrelation transformation. This is not possible." << Endl;
       }

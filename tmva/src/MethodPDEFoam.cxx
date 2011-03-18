@@ -299,8 +299,8 @@ void TMVA::MethodPDEFoam::CalcXminXmax()
 
    // set default values
    for (UInt_t dim=0; dim<kDim; dim++) {
-      xmin[dim] =  1.e100;
-      xmax[dim] = -1.e100;
+      xmin[dim] = FLT_MAX;
+      xmax[dim] = FLT_MIN;
    }
 
    Log() << kDEBUG << "Number of training events: " << Data()->GetNTrainingEvents() << Endl;

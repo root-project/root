@@ -341,7 +341,7 @@ Bool_t TMVA::VariableTransformBase::GetInput( const Event* event, std::vector<Fl
 	 }
 	 mask.push_back(kFALSE);
       }
-      catch(std::out_of_range& excpt){ // happens when an event is transformed which does not yet have the targets calculated (in the application phase)
+      catch(std::out_of_range& /* excpt */ ){ // happens when an event is transformed which does not yet have the targets calculated (in the application phase)
 	 input.push_back(0.f);
 	 mask.push_back(kTRUE);
 	 hasMaskedEntries = kTRUE;
