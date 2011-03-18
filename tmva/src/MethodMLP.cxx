@@ -74,9 +74,17 @@ TMVA::MethodMLP::MethodMLP( const TString& jobName,
                             const TString& theOption,
                             TDirectory* theTargetDir )
    : MethodANNBase( jobName, Types::kMLP, methodTitle, theData, theOption, theTargetDir ),
-     fPrior(0.0),//zjh
-     fSamplingFraction(1.0),
-     fSamplingEpoch   (0.0),
+     fUseRegulator(false), fCalculateErrors(false),
+     fPrior(0.0), fPriorDev(0), fUpdateLimit(0),
+     fTrainingMethod(kBFGS), fTrainMethodS("BFGS"),
+     fSamplingFraction(1.0), fSamplingEpoch(0.0), fSamplingWeight(0.0),
+     fSamplingTraining(false), fSamplingTesting(false),
+     fLastAlpha(0.0), fTau(0.),
+     fResetStep(0), fLearnRate(0.0), fDecayRate(0.0),     
+     fBPMode(kSequential), fBpModeS("None"),
+     fBatchSize(0), fTestRate(0), fEpochMon(false),
+     fGA_nsteps(0), fGA_preCalc(0), fGA_SC_steps(0), 
+     fGA_SC_rate(0), fGA_SC_factor(0.0),
      fDeviationsFromTargets(0),
      fWeightRange     (1.0)
 {
@@ -88,11 +96,19 @@ TMVA::MethodMLP::MethodMLP( DataSetInfo& theData,
                             const TString& theWeightFile,
                             TDirectory* theTargetDir )
    : MethodANNBase( Types::kMLP, theData, theWeightFile, theTargetDir ),
-     fPrior(0.0),//zjh
-     fSamplingFraction(1.0),
-     fSamplingEpoch(0.0),
+     fUseRegulator(false), fCalculateErrors(false),
+     fPrior(0.0), fPriorDev(0), fUpdateLimit(0),
+     fTrainingMethod(kBFGS), fTrainMethodS("BFGS"),
+     fSamplingFraction(1.0), fSamplingEpoch(0.0), fSamplingWeight(0.0),
+     fSamplingTraining(false), fSamplingTesting(false),
+     fLastAlpha(0.0), fTau(0.),
+     fResetStep(0), fLearnRate(0.0), fDecayRate(0.0),     
+     fBPMode(kSequential), fBpModeS("None"),
+     fBatchSize(0), fTestRate(0), fEpochMon(false),
+     fGA_nsteps(0), fGA_preCalc(0), fGA_SC_steps(0), 
+     fGA_SC_rate(0), fGA_SC_factor(0.0),
      fDeviationsFromTargets(0),
-     fWeightRange(1.0)
+     fWeightRange     (1.0)
 {
    // constructor from a weight file
 }
