@@ -247,23 +247,23 @@ void TTreeIndex::Append(const TVirtualIndex *add, Bool_t delaySort )
 }
 
 //______________________________________________________________________________
-Int_t TTreeIndex::GetEntryNumberFriend(const TTree *T)
+Int_t TTreeIndex::GetEntryNumberFriend(const TTree *parent)
 {
-// returns the entry number in this friend Tree corresponding to entry in
-// the master Tree T.
-// In case this friend Tree and T do not share an index with the same
-// major and minor name, the entry serial number in the friend tree
-// and in the master Tree are assumed to be the same
+   // Returns the entry number in this (friend) Tree corresponding to entry in
+   // the master Tree 'parent'.
+   // In case this (friend) Tree and 'master' do not share an index with the same
+   // major and minor name, the entry serial number in the (friend) tree
+   // and in the master Tree are assumed to be the same
 
-   if (!T) return -3;
-   GetMajorFormulaParent(T);
-   GetMinorFormulaParent(T);
+   if (!parent) return -3;
+   GetMajorFormulaParent(parent);
+   GetMinorFormulaParent(parent);
    if (!fMajorFormulaParent || !fMinorFormulaParent) return -1;
    if (!fMajorFormulaParent->GetNdim() || !fMinorFormulaParent->GetNdim()) {
       // The Tree Index in the friend has a pair majorname,minorname
       // not available in the parent Tree T.
       // if the friend Tree has less entries than the parent, this is an error
-      Int_t pentry = T->GetReadEntry();
+      Int_t pentry = parent->GetReadEntry();
       if (pentry >= (Int_t)fTree->GetEntries()) return -2;
       // otherwise we ignore the Tree Index and return the entry number
       // in the parent Tree.
@@ -285,20 +285,20 @@ Int_t TTreeIndex::GetEntryNumberFriend(const TTree *T)
 //______________________________________________________________________________
 Long64_t TTreeIndex::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const
 {
-// Return entry number corresponding to major and minor number
-// Note that this function returns only the entry number, not the data
-// To read the data corresponding to an entry number, use TTree::GetEntryWithIndex
-// the BuildIndex function has created a table of Double_t* of sorted values
-// corresponding to val = major<<31 + minor;
-// The function performs binary search in this sorted table.
-// If it finds a pair that maches val, it returns directly the
-// index in the table.
-// If an entry corresponding to major and minor is not found, the function
-// returns the index of the major,minor pair immediatly lower than the
-// requested value, ie it will return -1 if the pair is lower than
-// the first entry in the index.
-//
-// See also GetEntryNumberWithIndex
+   // Return entry number corresponding to major and minor number.
+   // Note that this function returns only the entry number, not the data
+   // To read the data corresponding to an entry number, use TTree::GetEntryWithIndex
+   // the BuildIndex function has created a table of Double_t* of sorted values
+   // corresponding to val = major<<31 + minor;
+   // The function performs binary search in this sorted table.
+   // If it finds a pair that maches val, it returns directly the
+   // index in the table.
+   // If an entry corresponding to major and minor is not found, the function
+   // returns the index of the major,minor pair immediatly lower than the
+   // requested value, ie it will return -1 if the pair is lower than
+   // the first entry in the index.
+   //
+   // See also GetEntryNumberWithIndex
 
    if (fN == 0) return -1;
    Long64_t value = Long64_t(major)<<31;
@@ -312,16 +312,16 @@ Long64_t TTreeIndex::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const
 //______________________________________________________________________________
 Long64_t TTreeIndex::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
 {
-// Return entry number corresponding to major and minor number
-// Note that this function returns only the entry number, not the data
-// To read the data corresponding to an entry number, use TTree::GetEntryWithIndex
-// the BuildIndex function has created a table of Double_t* of sorted values
-// corresponding to val = major<<31 + minor;
-// The function performs binary search in this sorted table.
-// If it finds a pair that maches val, it returns directly the
-// index in the table, otherwise it returns -1.
-//
-// See also GetEntryNumberWithBestIndex
+   // Return entry number corresponding to major and minor number.
+   // Note that this function returns only the entry number, not the data
+   // To read the data corresponding to an entry number, use TTree::GetEntryWithIndex
+   // the BuildIndex function has created a table of Double_t* of sorted values
+   // corresponding to val = major<<31 + minor;
+   // The function performs binary search in this sorted table.
+   // If it finds a pair that maches val, it returns directly the
+   // index in the table, otherwise it returns -1.
+   //
+   // See also GetEntryNumberWithBestIndex
 
    if (fN == 0) return -1;
    Long64_t value = Long64_t(major)<<31;
@@ -335,7 +335,7 @@ Long64_t TTreeIndex::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
 //______________________________________________________________________________
 TTreeFormula *TTreeIndex::GetMajorFormula()
 {
-   // return a pointer to the TreeFormula corresponding to the majorname
+   // Return a pointer to the TreeFormula corresponding to the majorname.
 
    if (!fMajorFormula) {
       fMajorFormula = new TTreeFormula("Major",fMajorName.Data(),fTree);
@@ -347,7 +347,7 @@ TTreeFormula *TTreeIndex::GetMajorFormula()
 //______________________________________________________________________________
 TTreeFormula *TTreeIndex::GetMinorFormula()
 {
-   // return a pointer to the TreeFormula corresponding to the minorname
+   // Return a pointer to the TreeFormula corresponding to the minorname.
 
    if (!fMinorFormula) {
       fMinorFormula = new TTreeFormula("Minor",fMinorName.Data(),fTree);
@@ -357,32 +357,32 @@ TTreeFormula *TTreeIndex::GetMinorFormula()
 }
 
 //______________________________________________________________________________
-TTreeFormula *TTreeIndex::GetMajorFormulaParent(const TTree *T)
+TTreeFormula *TTreeIndex::GetMajorFormulaParent(const TTree *parent)
 {
-   // return a pointer to the TreeFormula corresponding to the majorname in parent tree T
+   // Return a pointer to the TreeFormula corresponding to the majorname in parent tree.
 
    if (!fMajorFormulaParent) {
-      fMajorFormulaParent = new TTreeFormula("MajorP",fMajorName.Data(),(TTree*)T);
+      fMajorFormulaParent = new TTreeFormula("MajorP",fMajorName.Data(),const_cast<TTree*>(parent));
       fMajorFormulaParent->SetQuickLoad(kTRUE);
    }
-   if (fMajorFormulaParent->GetTree() != T) {
-      fMajorFormulaParent->SetTree((TTree*)T);
+   if (fMajorFormulaParent->GetTree() != parent) {
+      fMajorFormulaParent->SetTree(const_cast<TTree*>(parent));
       fMajorFormulaParent->UpdateFormulaLeaves();
    }
    return fMajorFormulaParent;
 }
 
 //______________________________________________________________________________
-TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *T)
+TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *parent)
 {
-   // return a pointer to the TreeFormula corresponding to the minorname in parent tree T
+   // Return a pointer to the TreeFormula corresponding to the minorname in parent tree.
 
    if (!fMinorFormulaParent) {
-      fMinorFormulaParent = new TTreeFormula("MinorP",fMinorName.Data(),(TTree*)T);
+      fMinorFormulaParent = new TTreeFormula("MinorP",fMinorName.Data(),const_cast<TTree*>(parent));
       fMinorFormulaParent->SetQuickLoad(kTRUE);
    }
-   if (fMinorFormulaParent->GetTree() != T) {
-      fMinorFormulaParent->SetTree((TTree*)T);
+   if (fMinorFormulaParent->GetTree() != parent) {
+      fMinorFormulaParent->SetTree(const_cast<TTree*>(parent));
       fMinorFormulaParent->UpdateFormulaLeaves();
    }
 
@@ -392,7 +392,7 @@ TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *T)
 //______________________________________________________________________________
 void TTreeIndex::Print(Option_t * option) const
 {
-   // print the table with : serial number, majorname, minorname
+   // Print the table with : serial number, majorname, minorname.
    // if option = "10" print only the first 10 entries
    // if option = "100" print only the first 100 entries
    // if option = "1000" print only the first 1000 entries

@@ -173,7 +173,7 @@ TChainIndex::~TChainIndex()
 //______________________________________________________________________________
 std::pair<TVirtualIndex*, Int_t> TChainIndex::GetSubTreeIndex(Int_t major, Int_t minor) const
 {
-   // returns a TVirtualIndex for a tree which holds the entry with the specified
+   // Returns a TVirtualIndex for a tree which holds the entry with the specified
    // major and minor values and the number of that tree.
    // If the index for that tree was created by this object it's set to the tree.
    // The tree index should be later released using ReleaseSubTreeIndex();
@@ -232,19 +232,19 @@ void TChainIndex::ReleaseSubTreeIndex(TVirtualIndex* index, int treeNo) const
 }
 
 //______________________________________________________________________________
-Int_t TChainIndex::GetEntryNumberFriend(const TTree *T)
+Int_t TChainIndex::GetEntryNumberFriend(const TTree *parent)
 {
    // see TTreeIndex::GetEntryNumberFriend for description
 
-   if (!T) return -3;
-   GetMajorFormulaParent(T);
-   GetMinorFormulaParent(T);
+   if (!parent) return -3;
+   GetMajorFormulaParent(parent);
+   GetMinorFormulaParent(parent);
    if (!fMajorFormulaParent || !fMinorFormulaParent) return -1;
    if (!fMajorFormulaParent->GetNdim() || !fMinorFormulaParent->GetNdim()) {
       // The Tree Index in the friend has a pair majorname,minorname
       // not available in the parent Tree T.
       // if the friend Tree has less entries than the parent, this is an error
-      Int_t pentry = T->GetReadEntry();
+      Int_t pentry = parent->GetReadEntry();
       if (pentry >= (Int_t)fTree->GetEntries()) return -2;
       // otherwise we ignore the Tree Index and return the entry number
       // in the parent Tree.
@@ -303,32 +303,32 @@ Long64_t TChainIndex::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
 }
 
 //______________________________________________________________________________
-TTreeFormula *TChainIndex::GetMajorFormulaParent(const TTree *T)
+TTreeFormula *TChainIndex::GetMajorFormulaParent(const TTree *parent)
 {
    // return a pointer to the TreeFormula corresponding to the majorname in parent tree T
 
    if (!fMajorFormulaParent) {
-      fMajorFormulaParent = new TTreeFormula("MajorP",fMajorName.Data(),(TTree*)T);
+      fMajorFormulaParent = new TTreeFormula("MajorP",fMajorName.Data(),const_cast<TTree*>(parent));
       fMajorFormulaParent->SetQuickLoad(kTRUE);
    }
-   if (fMajorFormulaParent->GetTree() != T) {
-      fMajorFormulaParent->SetTree((TTree*)T);
+   if (fMajorFormulaParent->GetTree() != parent) {
+      fMajorFormulaParent->SetTree(const_cast<TTree*>(parent));
       fMajorFormulaParent->UpdateFormulaLeaves();
    }
    return fMajorFormulaParent;
 }
 
 //______________________________________________________________________________
-TTreeFormula *TChainIndex::GetMinorFormulaParent(const TTree *T)
+TTreeFormula *TChainIndex::GetMinorFormulaParent(const TTree *parent)
 {
    // return a pointer to the TreeFormula corresponding to the minorname in parent tree T
 
    if (!fMinorFormulaParent) {
-      fMinorFormulaParent = new TTreeFormula("MinorP",fMinorName.Data(),(TTree*)T);
+      fMinorFormulaParent = new TTreeFormula("MinorP",fMinorName.Data(),const_cast<TTree*>(parent));
       fMinorFormulaParent->SetQuickLoad(kTRUE);
    }
-   if (fMinorFormulaParent->GetTree() != T) {
-      fMinorFormulaParent->SetTree((TTree*)T);
+   if (fMinorFormulaParent->GetTree() != parent) {
+      fMinorFormulaParent->SetTree(const_cast<TTree*>(parent));
       fMinorFormulaParent->UpdateFormulaLeaves();
    }
 
