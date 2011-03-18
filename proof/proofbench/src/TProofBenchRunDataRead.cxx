@@ -439,7 +439,7 @@ TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
    TFileCollection *fcsub = 0;
 
    // Dataset must exists
-   if (fProof && !fProof->ExistsDataSet(dset)) {
+   if (!fProof || (fProof && !fProof->ExistsDataSet(dset))) {
       Error("GetDataSet", "dataset '%s' does not exist", dset);
       return fcsub;
    }

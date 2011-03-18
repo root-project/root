@@ -1074,7 +1074,7 @@ Bool_t TDSet::Add(TCollection *filelist, const char *meta, Bool_t availableOnly,
             Int_t nf = fElements->GetSize();
             if (!Add(fi, meta)) return kFALSE;
             // Duplications count as bad files
-            if (fElements->GetSize() <= nf) badlist->Add(fi);
+            if (fElements->GetSize() <= nf && badlist) badlist->Add(fi);
          } else if (badlist) {
             // Return list of non-usable files
             badlist->Add(fi);

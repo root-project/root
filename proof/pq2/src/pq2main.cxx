@@ -40,7 +40,7 @@ TString fres;
 Int_t gverbose = 0;
 
 //_____________________________batch only_____________________
-int main(int argc,const char *argv[])
+int main(int argc, char **argv)
 {
 
    // Request for help?
