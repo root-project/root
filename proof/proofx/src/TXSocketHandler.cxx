@@ -43,8 +43,8 @@ Bool_t TXSocketHandler::Notify()
    // Get the socket
    TXSocket *s = TXSocket::fgPipe.GetLastReady();
    if (gDebug > 2)
-      Info("Notify", "ready socket %p (%s) (input socket: %p)",
-                     s, (s ? s->GetTitle() : "***undef***"), fInputSock);
+      Info("Notify", "ready socket %p (%s) (input socket: %p) (fFileNum: %d)",
+                     s, (s ? s->GetTitle() : "***undef***"), fInputSock, fFileNum);
 
    // If empty, nothing to do
    if (!s) {
