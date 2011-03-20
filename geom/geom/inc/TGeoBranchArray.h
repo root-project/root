@@ -42,6 +42,12 @@ public:
 
    TGeoBranchArray(const TGeoBranchArray&);
    TGeoBranchArray& operator=(const TGeoBranchArray&);
+   Bool_t operator ==(const TGeoBranchArray& other) const;
+   Bool_t operator !=(const TGeoBranchArray& other) const;
+   Bool_t operator >(const TGeoBranchArray& other) const;
+   Bool_t operator <(const TGeoBranchArray& other) const;
+   Bool_t operator >=(const TGeoBranchArray& other) const;
+   Bool_t operator <=(const TGeoBranchArray& other) const;
    
    void              AddLevel(UShort_t dindex);
    virtual Int_t     Compare(const TObject *obj) const;
@@ -56,8 +62,23 @@ public:
    virtual Bool_t    Notify() {return (fClient)?fClient->Notify():kFALSE;}
    virtual void      Print(Option_t *option="") const;
    void              SetClient(TObject *client) {fClient = client;}
+   static void       Sort(Int_t n, TGeoBranchArray **array, Int_t *index, Bool_t down=kTRUE);
+   static Long64_t   BinarySearch(Long64_t n, const TGeoBranchArray **array, TGeoBranchArray *value);
    void              UpdateNavigator(TGeoNavigator *nav) const;
    
    ClassDef(TGeoBranchArray, 2)
 };
+
+struct compareBAasc {
+   compareBAasc(TGeoBranchArray **d) : fData(d) {}
+   bool operator ()(Int_t i1, Int_t i2) {return **(fData+i1) < **(fData+i2);}
+   TGeoBranchArray **fData;
+};
+
+struct compareBAdesc {
+   compareBAdesc(TGeoBranchArray **d) : fData(d) {}
+   bool operator ()(Int_t i1, Int_t i2) {return **(fData+i1) > **(fData+i2);}
+   TGeoBranchArray **fData;
+};
+
 #endif

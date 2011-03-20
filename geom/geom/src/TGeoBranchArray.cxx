@@ -23,6 +23,7 @@
 
 #include "TGeoBranchArray.h"
 
+#include "TMath.h"
 #include "TString.h"
 #include "TGeoMatrix.h"
 #include "TGeoNavigator.h"
@@ -89,6 +90,79 @@ void TGeoBranchArray::AddLevel(UShort_t dindex)
    array[fLevel-1] = dindex;
    delete [] fArray;
    fArray = array;
+}   
+
+//______________________________________________________________________________
+Bool_t TGeoBranchArray::operator ==(const TGeoBranchArray& other) const
+{
+// Is equal operator.
+   Int_t value = Compare(&other);
+   if (value==0) return kTRUE;
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGeoBranchArray::operator !=(const TGeoBranchArray& other) const
+{
+// Not equal operator.
+   Int_t value = Compare(&other);
+   if (value!=0) return kTRUE;
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGeoBranchArray::operator >(const TGeoBranchArray& other) const
+{
+// Is equal operator.
+   Int_t value = Compare(&other);
+   if (value>0) return kTRUE;
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGeoBranchArray::operator <(const TGeoBranchArray& other) const
+{
+// Is equal operator.
+   Int_t value = Compare(&other);
+   if (value<0) return kTRUE;
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGeoBranchArray::operator >=(const TGeoBranchArray& other) const
+{
+// Is equal operator.
+   Int_t value = Compare(&other);
+   if (value>=0) return kTRUE;
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGeoBranchArray::operator <=(const TGeoBranchArray& other) const
+{
+// Is equal operator.
+   Int_t value = Compare(&other);
+   if (value<=0) return kTRUE;
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Long64_t TGeoBranchArray::BinarySearch(Long64_t n, const TGeoBranchArray **array, TGeoBranchArray *value)
+{
+// Binary search in an array of n pointers to branch arrays, to locate value.
+// Returns element index or index of nearest element smaller than value
+   Long64_t nabove, nbelow, middle;
+   const TGeoBranchArray *pind;
+   nabove = n+1;
+   nbelow = 0;
+   while(nabove-nbelow > 1) {
+      middle = (nabove+nbelow)/2;
+      pind = array[middle-1];
+      if (*value == *pind) return middle-1;
+      if (*value  < *pind) nabove = middle;
+      else                          nbelow = middle;
+   }
+   return nbelow-1;
 }   
 
 //______________________________________________________________________________
@@ -168,6 +242,17 @@ void TGeoBranchArray::Print(Option_t *) const
       path += node->GetName();
    }
    printf("branch:    %s\n", path.Data());
+}      
+
+//______________________________________________________________________________
+void TGeoBranchArray::Sort(Int_t n, TGeoBranchArray **array, Int_t *index, Bool_t down)
+{
+// Sorting of an array of branch array pointers.
+   for (Int_t i=0; i<n; i++) index[i] = i;
+   if (down)
+      std::sort(index, index + n, compareBAdesc(array));
+   else   
+      std::sort(index, index + n, compareBAasc(array));
 }      
 
 //______________________________________________________________________________
