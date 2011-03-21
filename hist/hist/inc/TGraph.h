@@ -173,7 +173,7 @@ public:
    virtual Int_t         RemovePoint(Int_t ipoint);
    virtual void          SavePrimitive(ostream &out, Option_t *option = "");
    virtual void          SetEditable(Bool_t editable=kTRUE); // *TOGGLE* *GETTER=GetEditable
-   virtual void          SetHistogram(TH1 *h) {fHistogram = (TH1F*)h;}
+   virtual void          SetHistogram(TH1F *h) {fHistogram = h;}
    virtual void          SetMaximum(Double_t maximum=-1111); // *MENU*
    virtual void          SetMinimum(Double_t minimum=-1111); // *MENU*
    virtual void          Set(Int_t n);

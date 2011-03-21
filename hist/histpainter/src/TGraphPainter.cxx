@@ -1047,7 +1047,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
          rwxmax = uxmax;
          npt = 100;
          if (theNpoints > npt) npt = theNpoints;
-         TH1 *h = new TH1F(Form("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
+         TH1F *h = new TH1F(Form("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
          theGraph->SetHistogram(h);
          if (!theGraph->GetHistogram()) return;
          theGraph->GetHistogram()->SetMinimum(rwymin);
