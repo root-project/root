@@ -9,9 +9,8 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.root *.dat *.ps test files \
 STRESSSRC := $(wildcard $(ROOTSYS)/test/stress*.cxx)
 STRESSTESTS  := $(filter-out stressHepix-test,\
 	$(filter-out stressProof-test,\
-	$(filter-out stressTMVA-test,\
 	$(filter-out stressRooFit_tests-test,\
-	$(notdir $(STRESSSRC:.cxx=-test))))))
+	$(notdir $(STRESSSRC:.cxx=-test)))))
 ifeq ($(findstring roofit,$(shell root-config --features)),)
 STRESSTESTS  := $(filter-out stressRooFit-test,$(STRESSTESTS))
 endif
@@ -66,17 +65,19 @@ STRESSTESTSCOMP := $(STRESSTESTS:-test=-ctest)
 # Run all tests in interpreted mode except for those that CINT
 # cannot interpret - these are run in compiled mode instead.
 STRESSTESTSINTERP_VETO := stressMathCore-itest stressMathMore-itest stressRooFit-itest \
-  stressLinear-itest stressVector-itest stressGeometry-itest stressIterators-itest stressHistogram-itest stressHistoFit-itest
+  stressLinear-itest stressVector-itest stressGeometry-itest stressIterators-itest stressHistogram-itest stressHistoFit-itest \
+  stressTMVA-itest
 STRESSTESTSINTERP := $(filter-out $(STRESSTESTSINTERP_VETO),$(STRESSTESTS:-test=-itest))
 
 ifneq ($(FAST),)
-# Fast means all compiled
+# Fast means all compiled and skipping the 'long' test like TMVA
 STRESSTESTSINTERP_VETO += $(STRESSTESTSINTERP)
 STRESSTESTSINTERP :=
+STRESSTESTSCOMP_VETO := $(STRESSTESTSCOMP_VETO) stressTMVA-ctest
 endif
 
 # run all compiled except for those that are run interpreted:
-STRESSTESTSCOMP_VETO := $(STRESSTESTSINTERP:-itest=-ctest)
+STRESSTESTSCOMP_VETO :=  $(STRESSTESTSCOMP_VETO) $(STRESSTESTSINTERP:-itest=-ctest)
 # ...and those that are known to fail: none!
 # STRESSTESTSCOMP_VETO := 
 STRESSTESTSCOMP := $(filter-out $(STRESSTESTSCOMP_VETO),$(STRESSTESTS:-test=-ctest))
