@@ -1887,13 +1887,17 @@ void MethodUnitTestWithROCLimits::run()
   FileStat_t stat;
   
   TString fname = "../tmva/test/data/toy_sigbkg.root"; //tmva_example.root"; 
+  const char *fcname = gSystem->ExpandPathName("$ROOTSYS/tmva/test/data/toy_sigbkg.root");
   if(!gSystem->GetPathInfo(fname,stat)) {
      input = TFile::Open( fname );
   } else if(!gSystem->GetPathInfo("../"+fname,stat)) {
      input = TFile::Open( "../"+fname );
+  } else if(fcname && !gSystem->GetPathInfo(fcname,stat)) {
+     input = TFile::Open( fcname );
   } else {
      input = TFile::Open( "http://root.cern.ch/files/tmva_class_example.root" );
   }
+  delete [] fcname;
   if (input == NULL) {
      cerr << "broken/inaccessible input file" << endl;
   }
