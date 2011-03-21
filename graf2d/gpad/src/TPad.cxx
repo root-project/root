@@ -2407,7 +2407,7 @@ Int_t TPad::GetEvent() const
 {
    // Get Event.
 
-   return fCanvas->GetEvent();
+   return  fCanvas ? fCanvas->GetEvent() : 0;
 }
 
 
@@ -2416,7 +2416,7 @@ Int_t TPad::GetEventX() const
 {
    // Get X event.
 
-   return fCanvas->GetEventX();
+   return  fCanvas ? fCanvas->GetEventX() : 0;
 }
 
 
@@ -2425,7 +2425,7 @@ Int_t TPad::GetEventY() const
 {
    // Get Y event.
 
-   return fCanvas->GetEventY();
+   return  fCanvas ? fCanvas->GetEventY() : 0;
 }
 
 
@@ -2434,7 +2434,7 @@ TVirtualPad *TPad::GetVirtCanvas() const
 {
    // Get virtual canvas.
 
-   return (TVirtualPad*) fCanvas;
+   return  fCanvas ? (TVirtualPad*) fCanvas : 0;
 }
 
 
@@ -2443,7 +2443,7 @@ Color_t TPad::GetHighLightColor() const
 {
    // Get highlight color.
 
-   return fCanvas->GetHighLightColor();
+   return  fCanvas ? fCanvas->GetHighLightColor() : 0;
 }
 
 
@@ -2461,7 +2461,7 @@ TObject *TPad::GetSelected() const
 {
    // Get selected.
 
-   return fCanvas->GetSelected();
+   return  fCanvas ? fCanvas->GetSelected() : 0;
 }
 
 
@@ -2470,7 +2470,7 @@ TVirtualPad *TPad::GetSelectedPad() const
 {
    // Get selected pad.
 
-   return fCanvas->GetSelectedPad();
+   return  fCanvas ? fCanvas->GetSelectedPad() : 0;
 }
 
 
@@ -2479,7 +2479,7 @@ TVirtualPad *TPad::GetPadSave() const
 {
    // Get save pad.
 
-   return fCanvas->GetPadSave();
+   return  fCanvas ? fCanvas->GetPadSave() : 0;
 }
 
 
@@ -2488,7 +2488,7 @@ UInt_t TPad::GetWh() const
 {
    // Get Wh.
 
-   return fCanvas->GetWh();
+   return  fCanvas ? fCanvas->GetWh() : 0;
 }
 
 
@@ -2497,7 +2497,7 @@ UInt_t TPad::GetWw() const
 {
    // Get Ww.
 
-   return fCanvas->GetWw();
+   return  fCanvas ? fCanvas->GetWw() : 0;
 }
 
 
@@ -2518,7 +2518,7 @@ Bool_t TPad::IsBatch() const
 {
    // Is pad in batch mode ?
 
-   return fCanvas->IsBatch();
+   return  fCanvas ? fCanvas->IsBatch() : 0;
 }
 
 
@@ -2527,7 +2527,7 @@ Bool_t TPad::IsRetained() const
 {
    // Is pad retained ?
 
-   return fCanvas->IsRetained();
+   return  fCanvas ? fCanvas->IsRetained() : 0;
 }
 
 
@@ -2536,7 +2536,7 @@ Bool_t TPad::OpaqueMoving() const
 {
    // Is pad moving in opaque mode ?
 
-   return fCanvas->OpaqueMoving();
+   return  fCanvas ? fCanvas->OpaqueMoving() : 0;
 }
 
 
@@ -2545,7 +2545,7 @@ Bool_t TPad::OpaqueResizing() const
 {
    // Is pad resizing in opaque mode ?
 
-   return fCanvas->OpaqueResizing();
+   return  fCanvas ? fCanvas->OpaqueResizing() : 0;
 }
 
 
@@ -2554,7 +2554,7 @@ void TPad::SetBatch(Bool_t batch)
 {
    // Set pad in batch mode.
 
-   fCanvas->SetBatch(batch);
+   if (fCanvas) fCanvas->SetBatch(batch);
 }
 
 
@@ -2563,7 +2563,7 @@ void TPad::SetCanvasSize(UInt_t ww, UInt_t wh)
 {
    // Set canvas size.
 
-   fCanvas->SetCanvasSize(ww,wh);
+   if (fCanvas) fCanvas->SetCanvasSize(ww,wh);
 }
 
 
@@ -2572,7 +2572,7 @@ void TPad::SetCursor(ECursor cursor)
 {
    // Set cursor type.
 
-   fCanvas->SetCursor(cursor);
+   if (fCanvas) fCanvas->SetCursor(cursor);
 }
 
 
@@ -2581,7 +2581,7 @@ void TPad::SetDoubleBuffer(Int_t mode)
 {
    // Set double buffer mode ON or OFF.
 
-   fCanvas->SetDoubleBuffer(mode);
+   if (fCanvas) fCanvas->SetDoubleBuffer(mode);
 }
 
 
@@ -2590,7 +2590,7 @@ void TPad::SetSelected(TObject *obj)
 {
    // Set selected.
 
-   fCanvas->SetSelected(obj);
+   if (fCanvas) fCanvas->SetSelected(obj);
 }
 
 
@@ -2599,7 +2599,7 @@ void TPad::Update()
 {
    // Update pad.
 
-   fCanvas->Update();
+   if (fCanvas) fCanvas->Update();
 }
 
 
