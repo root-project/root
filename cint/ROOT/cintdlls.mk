@@ -102,6 +102,14 @@ all-$(MODNAME): $(ALLCINTDLLS) $(CINTDICTMAPS)
 
 CINTCPPDEP := $(CINTDLLDICTVER) $(ORDER_) $(CINTDLLCINTTMP) $(CINTDLLIOSENUM)
 
+ifeq ($(EXPLICITLINK),yes)
+ifeq ($(PLATFORM),win32)
+CINTDLLLIBLINK := lib/libCint.lib
+else
+CINTDLLLIBLINK := -Llib -lCint
+endif
+endif
+
 $(CINTDLLDIRDLLSTL)/G__cpp_string.cxx:	$(CINTDLLDIRL)/dll_stl/str.h $(CINTCPPDEP)
 $(CINTDLLDIRDLLSTL)/G__cpp_vector.cxx:	$(CINTDLLDIRL)/dll_stl/vec.h $(CINTCPPDEP)
 $(CINTDLLDIRDLLSTL)/G__cpp_vectorbool.cxx: $(CINTDLLDIRL)/dll_stl/vecbool.h $(CINTCPPDEP)
@@ -155,21 +163,21 @@ endif
 $(ALLCINTDLLS): $(ORDER_) $(MAINLIBS)
 
 $(CINTDLLDIRSTL)/%.dll: $(CINTDLLDIRDLLSTL)/G__cpp_%.o
-	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $(filter-out $(MAINLIBS),$^)
+	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $(filter-out $(MAINLIBS),$^) $(CINTDLLLIBLINK)
 	$(CINTDLLSOEXTCMD)
 ifneq ($(subst win,,$(ARCH)),$(ARCH))
 	@rm -f $(@:.dll=.lib) $(@:.dll=.exp) # remove import libs
 endif
 
 $(CINTDLLDIRDLLS)/stdcxxfunc.dll: $(CINTDLLDIRL)/G__cpp_stdcxxfunc.o
-	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $(filter-out $(MAINLIBS),$^)
+	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $(filter-out $(MAINLIBS),$^) $(CINTDLLLIBLINK)
 	$(CINTDLLSOEXTCMD)
 ifneq ($(subst win,,$(ARCH)),$(ARCH))
 	@rm -f $(@:.dll=.lib) $(@:.dll=.exp) # remove import libs
 endif
 
 $(CINTDLLDIRDLLS)/%.dll: $(CINTDLLDIRL)/G__c_%.o
-	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $(filter-out $(MAINLIBS),$^)
+	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $(filter-out $(MAINLIBS),$^) $(CINTDLLLIBLINK)
 	$(CINTDLLSOEXTCMD)
 
 core/metautils/src/stlLoader_%.cc: $(ROOT_SRCDIR)/core/metautils/src/stlLoader.cc
