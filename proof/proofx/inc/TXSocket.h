@@ -99,6 +99,7 @@ private:
    // Asynchronous messages
    TSemaphore          fASem;          // Control access to conn async msg queue
    TMutex             *fAMtx;          // To protect async msg queue
+   Bool_t              fAWait;         // kTRUE if waiting at the async msg queue
    std::list<TXSockBuf *> fAQue;          // list of asynchronous messages
    Int_t               fByteLeft;      // bytes left in the first buffer
    Int_t               fByteCur;       // current position in the first buffer
@@ -212,8 +213,14 @@ public:
    void                SendUrgent(Int_t type, Int_t int1, Int_t int2);
 
    // Interrupt the low level socket
-   void                SetInterrupt() { fRDInterrupt = kTRUE;
-                                        if (fConn) fConn->SetInterrupt(); }
+   inline void         SetInterrupt(Bool_t i = kTRUE) { R__LOCKGUARD(fAMtx);
+                                        fRDInterrupt = i;
+                                        if (i && fConn) fConn->SetInterrupt();
+                                        if (i && fAWait) fASem.Post(); }
+   inline Bool_t       IsInterrupt()  { R__LOCKGUARD(fAMtx); return fRDInterrupt; }
+   // Set / Check async msg queue waiting status
+   inline void         SetAWait(Bool_t w = kTRUE) { R__LOCKGUARD(fAMtx); fAWait = w; }
+   inline Bool_t       IsAWait()  { R__LOCKGUARD(fAMtx); return fAWait; }
 
    // Flush the asynchronous queue
    Int_t               Flush();
