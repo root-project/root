@@ -2457,9 +2457,14 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    WriteInteger(yc1);
    PrintStr(" C");
 
-   // Output text position and angle.
-   WriteReal(((XtoPS(x * scale) - XtoPS(0)) / scale) + XtoPS(0));
-   WriteReal(((YtoPS(y * scale) - YtoPS(0)) / scale) + YtoPS(0));
+   // Output text position and angle. The text position is computed
+   // using Double_t to avoid precision problems.
+   Double_t vx  = (x - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1());
+   Double_t cmx = fXsize*(gPad->GetAbsXlowNDC()+vx*gPad->GetAbsWNDC());
+   WriteReal((288.*cmx)/2.54);
+   Double_t vy  = (y - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1());
+   Double_t cmy = fYsize*(gPad->GetAbsYlowNDC()+vy*gPad->GetAbsHNDC());
+   WriteReal((288.*cmy)/2.54);
    PrintStr(Form(" t %d r ", psangle));
    if(txalh == 2) PrintStr(Form(" %d 0 t ", -psCharsLength/2));
    if(txalh == 3) PrintStr(Form(" %d 0 t ", -psCharsLength));
