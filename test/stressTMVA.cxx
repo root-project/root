@@ -1892,7 +1892,7 @@ void MethodUnitTestWithROCLimits::run()
   } else if(!gSystem->GetPathInfo("../"+fname,stat)) {
      input = TFile::Open( "../"+fname );
   } else {
-     input = TFile::Open( "http://root.cern.ch/files/tmva_example.root" );
+     input = TFile::Open( "http://root.cern.ch/files/tmva_class_example.root" );
   }
   if (input == NULL) {
      cerr << "broken/inaccessible input file" << endl;
