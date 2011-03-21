@@ -737,9 +737,10 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
       case kXPD_errmsg:
          //
          // Error condition with message
-         Printf(" ");
+         Printf("\n\n");
          Printf("| Error condition occured: message from server:");
-         Printf("| %.*s", len, (char *)pdata);
+         Printf("|    %.*s", len, (char *)pdata);
+         Printf("\n");
          // Handle error
          if (fHandler)
             fHandler->HandleError();
@@ -1384,7 +1385,9 @@ Int_t TXSocket::PickUpReady()
       static Int_t timeout = gEnv->GetValue("XProof.ReadTimeout", 300) * 1000;
       static Int_t dt = 2000;
       Int_t to = timeout;
-      while (to && !fRDInterrupt) {
+      SetInterrupt(kFALSE);
+      while (to && !IsInterrupt()) {
+         SetAWait(kTRUE);
          if (fASem.Wait(dt) != 0) {
             to -= dt;
             if (to <= 0) {
@@ -1397,19 +1400,25 @@ Int_t TXSocket::PickUpReady()
             }
          } else
             break;
+         SetAWait(kFALSE);
       }
       // We wait forever
-      if (fRDInterrupt) {
-         Error("PickUpReady","interrupted");
-         fRDInterrupt = kFALSE;
+      if (IsInterrupt()) {
+         if (gDebug > 2)
+            Info("PickUpReady","interrupted");
+         SetInterrupt(kFALSE);
+         SetAWait(kFALSE);
          return -1;
       }
    } else {
       // We wait forever
+      SetAWait(kTRUE);
       if (fASem.Wait() != 0) {
          Error("PickUpReady","error waiting at semaphore");
+         SetAWait(kFALSE);
          return -1;
       }
+      SetAWait(kFALSE);
    }
    if (gDebug > 2)
       Info("PickUpReady", "%p: %s: waken up", this, GetTitle());
@@ -2216,8 +2225,8 @@ Int_t TXSockPipe::Post(TSocket *s)
    }
 
    if (gDebug > 2)
-      Printf("TXSockPipe::Post: %s: %p: pipe posted (pending %d)",
-                               fLoc.Data(), s, sz);
+      Printf("TXSockPipe::Post: %s: %p: pipe posted (pending %d) (descriptor: %d)",
+                               fLoc.Data(), s, sz, fPipe[1]);
    // We are done
    return 0;
 }
@@ -2245,8 +2254,8 @@ Int_t TXSockPipe::Clean(TSocket *s)
    }
 
    if (gDebug > 2)
-      Printf("TXSockPipe::Clean: %s: %p: pipe cleaned (pending %d)",
-                               fLoc.Data(), s, sz);
+      Printf("TXSockPipe::Clean: %s: %p: pipe cleaned (pending %d) (descriptor: %d)",
+                               fLoc.Data(), s, sz, fPipe[0]);
 
    // We are done
    return 0;

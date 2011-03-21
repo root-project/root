@@ -567,6 +567,8 @@ Bool_t TXSlave::HandleError(const void *in)
       if (fSocket) {
          // This is need to skip contacting the remote server upon close
          ((TXSocket *)fSocket)->SetSessionID(-1);
+         // This is need to interrupt possible pickup waiting status
+         ((TXSocket *)fSocket)->SetInterrupt();
          // Synchronous collection in TProof: post fatal message; this will
          // mark the worker as bad and update the internal lists accordingly
          ((TXSocket *)fSocket)->PostMsg(kPROOF_FATAL);
