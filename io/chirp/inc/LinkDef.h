@@ -5,5 +5,6 @@
 #pragma link off all functions;
 
 #pragma link C++ class TChirpFile;
+#pragma link C++ class TChirpSystem;
 
 #endif

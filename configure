@@ -1317,7 +1317,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-pcre       Built included libpcre, or use system libpcre
   builtin-zlib       Built included libz, or use system libz
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
-  chirp              Chirp support (Condor remote I/O), requires libchirp_client
+  chirp              Chirp filesystem support, requires cctools >= 3.2.2
   cintex             Build the libCintex Reflex interface library
   clarens            Clarens RPC support, optionally used by PROOF
   editline           Color-enabled prompt, requires (n)curses library
@@ -1390,7 +1390,7 @@ with options, prefix with --with-, enables corresponding support
   avahi-incdir       Bonjour support, location of Avahi headers
   castor-incdir      CASTOR support, location of stager_api.h
   castor-libdir      CASTOR support, location of libshift
-  chirp-incdir       Chirp support, location of chirp_client.h
+  chirp-incdir       Chirp support, location of chirp_reli.h
   chirp-libdir       Chirp support, location of libchirp_client
   cppunit            Cppunit testing, directory of the cppunit installation
   curses-incdir      (n)Curses support for editline, location of (n)curses.h
@@ -3494,22 +3494,21 @@ check_explicit "$enable_dcache" "$enable_dcache_explicit" \
 #
 ### echo %%% Chirp Support - Third party libraries
 #
-# (See http://www.cs.wisc.edu/condor/chirp)
+# (See http://www.cse.nd.edu/~ccl/software/chirp)
 #
-# Check for libchirp_client
+# Check for libchirp
 #
 if test ! "x$enable_chirp" = "xno" ; then
-    check_header "chirp_client.h" "$chirpincdir" \
-        $CHIRP ${CHIRP:+$CHIRP/include} \
-        /opt/chirp/include /usr/include /usr/local/include
+    check_header "chirp_reli.h" "$chirpincdir" \
+        $CHIRP ${CHIRP:+$CHIRP/include} ${CHIRP:+$CHIRP/include/cctools} \
+        /opt/cctools/include /opt/cctools/include/cctools \
+        /usr/include /usr/include/cctools \
+        /usr/local/cctools/include /usr/local/cctools/include/cctools
     chirpincdir=$found_dir
-
-    #At this time, libchirp_client.a should always be prefered over .so,
-    #to avoid problems with linkage on grid execute machines.
 
     check_library "libchirp_client" "no" "$chirplibdir" \
         $CHIRP ${CHIRP:+$CHIRP/lib} \
-        /opt/chirp/lib /usr/lib /usr/local/lib
+        /opt/cctools/lib /usr/local/lib /usr/lib
     chirplib=$found_lib
     chirplibdir=$found_dir
 

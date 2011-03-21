@@ -1,5 +1,5 @@
 // @(#)root/chirp:$Id$
-// Author: Dan Bradley   17/12/2002
+// Authors: Dan Bradley, Michael Albrecht, Douglas Thain
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -14,8 +14,32 @@
 // TChirpFile                                                           //
 //                                                                      //
 // A TChirpFile is like a normal TFile except that it may read and      //
-// write its data via a Chirp server (for more on the Chirp protocol    //
-// see http://www.cs.wisc.edu/condor/chirp).                            //
+// write its data via a Chirp server. The primary API for accessing     //
+// Chirp is through the chirp_reli interface, which corresponds closely //
+// to Unix.  Most operations return an integer where >=0 indicates      //
+// success and <0 indicates failure, setting the global errno.          //
+// This allows most TFile methods to be implemented with a single       //
+// line or two of Chirp (for more on the Chirp filesystem.              //
+//
+// Note that this class overrides ReadBuffers so as to take advantage   //
+// of the Chirp "bulk I/O" feature which does multiple remote ops       //
+// in a single call.                                                    //
+//                                                                      //
+// Most users of Chirp will access a named remote server url:           //
+//     chirp://host.somewhere.edu/path                                  //
+//                                                                      //
+// The special host CONDOR is used to indicate a connection to the      //
+// Chirp I/O proxy service when running inside of Condor:               //
+//     chirp://CONDOR/path                                              //
+//                                                                      //
+// This module recognizes the following environment variables:          //
+//    CHIRP_DEBUG_FILE  - Send debugging output to this file.           //
+//    CHIRP_DEBUG_FLAGS - Turn on select debugging flags (e.g. 'all')   //
+//    CHIRP_AUTH        - Select a specific auth type (e.g. 'globus')   //
+//    CHIRP_TIMEOUT     - Specify how long to attempt each op, in secs  //
+//                                                                      //
+// For more information about the Chirp fileystem and protocol:         //
+//    http://www.cse.nd.edu/~ccl/software/chirp                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -27,24 +51,54 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <sys/types.h>
 
-#include "chirp_client.h"
+extern "C" {
+#include "chirp_reli.h"
+#include "auth_all.h"
+#include "debug.h"
+}
 
+// If the path component of a url is a blank string,
+// then convert it to the root directory of that server.
+#define FIXPATH(x) ( x[0]==0 ? "/" : x )
 
-static const char* const CHIRP_PREFIX = "chirp:";
-static const size_t CHIRP_PREFIX_LEN = 6;
+static int chirp_root_timeout = 3600;
 
+static void chirp_root_global_setup()
+{
+   static int did_setup = 0;
+   if (did_setup) return;
+
+   debug_config("chirp_root");
+
+   const char *debug_file = getenv("CHIRP_DEBUG_FILE");
+   if (debug_file) debug_config_file(debug_file);
+
+   const char *debug_flags = getenv("CHIRP_DEBUG_FLAGS");
+   if (debug_flags) debug_flags_set(debug_flags);
+
+   const char *auth_flags = getenv("CHIRP_AUTH");
+   if (auth_flags) {
+      auth_register_byname(auth_flags);
+   } else {
+      auth_register_all();
+   }
+
+   const char *timeout_string = getenv("CHIRP_TIMEOUT");
+   if (timeout_string) chirp_root_timeout = atoi(timeout_string);
+
+   did_setup = 1;
+}
 
 ClassImp(TChirpFile)
 
-//______________________________________________________________________________
-TChirpFile::TChirpFile(const char *path, Option_t *option,
-                       const char *ftitle, Int_t compress):
-   TFile(path, "NET", ftitle, compress)
+//_____________________________________________________________________________
+TChirpFile::TChirpFile(const char *path, Option_t * option, const char *ftitle, Int_t compress):TFile(path, "NET", ftitle, compress)
 {
-   //Passing option "NET" to prevent base-class from doing any local access.
+   chirp_root_global_setup();
 
-   chirp_client = 0;
+   chirp_file_ptr = 0;
 
    fOption = option;
    fOption.ToUpper();
@@ -52,49 +106,41 @@ TChirpFile::TChirpFile(const char *path, Option_t *option,
    if (fOption == "NEW")
       fOption = "CREATE";
 
-   Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
+   Bool_t create = (fOption == "CREATE") ? kTRUE : kFALSE;
    Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
-   Bool_t update   = (fOption == "UPDATE") ? kTRUE : kFALSE;
-   Bool_t read     = (fOption == "READ") ? kTRUE : kFALSE;
+   Bool_t update = (fOption == "UPDATE") ? kTRUE : kFALSE;
+   Bool_t read = (fOption == "READ") ? kTRUE : kFALSE;
+
    if (!create && !recreate && !update && !read) {
-      read    = kTRUE;
+      read = kTRUE;
       fOption = "READ";
    }
 
-   char const *path_part;
-   const char *fname;
-
-   if (OpenChirpClient(path, &path_part)) {
-      SysError("TChirpFile", "chirp client for %s can not be opened", path);
-      goto zombie;
-   }
-
-   fname = path_part;
-
-   fRealName = fname;
+   fRealName = path;
 
    if (create || update || recreate) {
       Int_t mode = O_RDWR | O_CREAT;
-      if (recreate) mode |= O_TRUNC;
+      if (recreate)
+         mode |= O_TRUNC;
 
 #ifndef WIN32
-      fD = SysOpen(fname, mode, 0644);
+      fD = SysOpen(path, mode, 0644);
 #else
-      fD = SysOpen(fname, mode | O_BINARY, S_IREAD | S_IWRITE);
+      fD = SysOpen(path, mode | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fD == -1) {
-         SysError("TChirpFile", "file %s can not be opened", fname);
+         SysError("TChirpFile", "file %s can not be created", path);
          goto zombie;
       }
       fWritable = kTRUE;
    } else {
 #ifndef WIN32
-      fD = SysOpen(fname, O_RDONLY, 0644);
+      fD = SysOpen(path, O_RDONLY, 0644);
 #else
-      fD = SysOpen(fname, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
+      fD = SysOpen(path, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fD == -1) {
-         SysError("TFile", "file %s can not be opened for reading", fname);
+         SysError("TChirpFile", "file %s can not be opened for reading", path);
          goto zombie;
       }
       fWritable = kFALSE;
@@ -105,206 +151,288 @@ TChirpFile::TChirpFile(const char *path, Option_t *option,
    return;
 
 zombie:
-   // error in file opening occured, make this object a zombie
    MakeZombie();
    gDirectory = gROOT;
 }
 
-//______________________________________________________________________________
+//_____________________________________________________________________________
 TChirpFile::~TChirpFile()
 {
-   // Close and cleanup Chirp file.
-
    Close();
-   CloseChirpClient();
 }
 
-//______________________________________________________________________________
-Bool_t TChirpFile::ReadBuffer(char *buf, Int_t len)
+//_____________________________________________________________________________
+Bool_t TChirpFile::ReadBuffers(char *buf, Long64_t * pos, Int_t * len, Int_t nbuf)
 {
-   // Read specified byte range from remote file via Chirp daemon.
-   // Returns kTRUE in case of error.
+   struct chirp_bulkio bulkio[nbuf];
+   int i;
 
-   Int_t st;
-   if ((st = ReadBufferViaCache(buf, len))) {
-      if (st == 2)
-         return kTRUE;
+   char *nextbuf = buf;
+
+   for (i = 0; i < nbuf; i++) {
+      bulkio[i].type = CHIRP_BULKIO_PREAD;
+      bulkio[i].file = chirp_file_ptr;
+      bulkio[i].offset = pos[i];
+      bulkio[i].length = len[i];
+      bulkio[i].buffer = nextbuf;
+      nextbuf += len[i];
+   }
+
+   INT64_T result = chirp_reli_bulkio(bulkio, nbuf, time(0) + chirp_root_timeout);
+
+   if (result >= 0) {
       return kFALSE;
+   } else {
+      return kTRUE;
    }
-
-   return TFile::ReadBuffer(buf, len);
 }
 
-//______________________________________________________________________________
-Bool_t TChirpFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
-{
-   // Read specified byte range from remote file via Chirp daemon.
-   // Returns kTRUE in case of error.
-
-   SetOffset(pos);
-   Int_t st;
-   if ((st = ReadBufferViaCache(buf, len))) {
-      if (st == 2)
-         return kTRUE;
-      return kFALSE;
-   }
-
-   return TFile::ReadBuffer(buf, pos, len);
-}
-
-//______________________________________________________________________________
-Bool_t TChirpFile::WriteBuffer(const char *buf, Int_t len)
-{
-   // Write specified byte range to remote file via Chirp daemon.
-   // Returns kTRUE in case of error.
-
-   if (!IsOpen() || !fWritable) return kTRUE;
-
-   Int_t st;
-   if ((st = WriteBufferViaCache(buf, len))) {
-      if (st == 2)
-         return kTRUE;
-      return kFALSE;
-   }
-
-   return TFile::WriteBuffer(buf, len);
-}
-
-//______________________________________________________________________________
-Int_t TChirpFile::OpenChirpClient(char const *URL, char const **path_part)
-{
-   // Caller should delete [] path when finished.
-   // URL format: chirp:machine.name:port/path
-   // or:         chirp:path      (use default connection to Condor job manager)
-
-   *path_part = 0;
-
-   CloseChirpClient();
-
-   chirp_client = chirp_client_connect_url(URL, path_part);
-
-   if (!chirp_client) {
-      gSystem->SetErrorStr(strerror(errno));
-      return -1;
-   }
-   return 0;
-}
-
-//______________________________________________________________________________
-Int_t TChirpFile::CloseChirpClient()
-{
-   if (chirp_client) {
-      struct chirp_client *c = chirp_client;
-      chirp_client = 0;
-
-      chirp_client_disconnect(c);
-   }
-
-   return 0;
-}
-
-//______________________________________________________________________________
+//_____________________________________________________________________________
 Int_t TChirpFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
-   char open_flags[8];
-   char *f = open_flags;
+   TUrl url(pathname);
+   chirp_file_ptr = chirp_reli_open(url.GetHost(), FIXPATH(url.GetFile()), flags, (Int_t) mode, time(0) + chirp_root_timeout);
+   if (chirp_file_ptr) {
+      return 1;
+   } else {
+      return -1;
+   }
+}
 
-   if ((flags & O_WRONLY) || (flags & O_RDWR)) *(f++) = 'w';
-   if ((flags & O_RDONLY) || (flags & O_RDWR) || !flags) *(f++) = 'r';
-   if (flags & O_APPEND) *(f++) = 'a';
-   if (flags & O_CREAT)  *(f++) = 'c';
-   if (flags & O_TRUNC)  *(f++) = 't';
-   if (flags & O_EXCL)   *(f++) = 'x';
+//_____________________________________________________________________________
+Int_t TChirpFile::SysClose(Int_t)
+{
+   return chirp_reli_close(chirp_file_ptr, time(0) + chirp_root_timeout);
+}
 
-   *f = '\0';
+//_____________________________________________________________________________
+Int_t TChirpFile::SysRead(Int_t, void *buf, Int_t len)
+{
+   Int_t rc = chirp_reli_pread(chirp_file_ptr, buf, len, fOffset, time(0) + chirp_root_timeout);
+   if (rc > 0) fOffset += rc;
+   return rc;
+}
 
-   Int_t rc = chirp_client_open(chirp_client, pathname, open_flags, (Int_t) mode);
+//_____________________________________________________________________________
+Int_t TChirpFile::SysWrite(Int_t, const void *buf, Int_t len)
+{
+   Int_t rc = chirp_reli_pwrite(chirp_file_ptr, buf, len, fOffset, time(0) + chirp_root_timeout);
+   if (rc > 0) fOffset += rc;
+   return rc;
+}
 
-   if (rc < 0) {
-      gSystem->SetErrorStr(strerror(errno));
+//_____________________________________________________________________________
+Long64_t TChirpFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
+{
+   if (whence == SEEK_SET) {
+      fOffset = offset;
+   } else if(whence == SEEK_CUR) {
+      fOffset += offset;
+   } else if(whence == SEEK_END) {
+      struct chirp_stat info;
+
+      Int_t rc = chirp_reli_fstat(chirp_file_ptr, &info, time(0) + chirp_root_timeout);
+      if (rc < 0) {
+         SysError("TChirpFile", "Unable to seek from end of file");
+         return -1;
+      }
+
+      fOffset = info.cst_size + offset;
+
+   } else {
+      SysError("TChirpFile", "Unknown whence!");
+      return -1;
    }
 
-   return rc;
+   return fOffset;
 }
 
-//______________________________________________________________________________
-Int_t TChirpFile::SysClose(Int_t fd)
-{
-   Int_t rc = chirp_client_close(chirp_client,fd);
-
-   if (rc < 0) {
-      gSystem->SetErrorStr(strerror(errno));
-   }
-
-   return rc;
-}
-
-//______________________________________________________________________________
-Int_t TChirpFile::SysRead(Int_t fd, void *buf, Int_t len)
-{
-   Int_t rc = chirp_client_read(chirp_client, fd, buf, len);
-
-   if (rc < 0) {
-      gSystem->SetErrorStr(strerror(errno));
-   }
-
-   return rc;
-}
-
-//______________________________________________________________________________
-Int_t TChirpFile::SysWrite(Int_t fd, const void *buf, Int_t len)
-{
-   Int_t rc = chirp_client_write(chirp_client, fd, (char *)buf, len);
-
-   if (rc < 0) {
-      gSystem->SetErrorStr(strerror(errno));
-   }
-
-   return rc;
-}
-
-//______________________________________________________________________________
-Long64_t TChirpFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
-{
-   Long64_t rc = chirp_client_lseek(chirp_client, fd, offset, whence);
-
-   if (rc < 0)
-      gSystem->SetErrorStr(strerror(errno));
-
-   return rc;
-}
-
-//______________________________________________________________________________
+//_____________________________________________________________________________
 Int_t TChirpFile::SysSync(Int_t fd)
 {
-   Int_t rc = chirp_client_fsync(chirp_client, fd);
-
-   if (rc < 0) {
-      gSystem->SetErrorStr(strerror(errno));
-   }
-
-   return rc;
+   return chirp_reli_fsync(chirp_file_ptr, time(0) + chirp_root_timeout);
 }
 
-//______________________________________________________________________________
-Int_t TChirpFile::SysStat(Int_t fd, Long_t *id, Long64_t *size,
-                           Long_t *flags, Long_t *modtime)
+//_____________________________________________________________________________
+Int_t TChirpFile::SysStat(Int_t, Long_t * id, Long64_t * size, Long_t * flags, Long_t * modtime)
 {
-   // FIXME: chirp library doesn't (yet) provide any stat() capabilities.
+   struct chirp_stat cst;
 
-   *id = ::Hash(fRealName);
+   int rc = chirp_reli_fstat(chirp_file_ptr, &cst, time(0) + chirp_root_timeout);
 
-   Long64_t offset = SysSeek(fd, 0, SEEK_CUR);
-   *size = SysSeek(fd, 0, SEEK_END);
-   SysSeek(fd, offset, SEEK_SET);
+   if (rc < 0) return rc;
 
-   *flags = 0;
-   *modtime = 0;
+   *id =::Hash(fRealName);
+   *size = cst.cst_size;
+   *flags = cst.cst_mode;
+   *modtime = cst.cst_mtime;
+
    return 0;
 }
 
-//______________________________________________________________________________
-void TChirpFile::ResetErrno() const
+ClassImp(TChirpSystem)
+
+//_____________________________________________________________________________
+TChirpSystem::TChirpSystem():TSystem("-chirp", "Chirp Helper System")
 {
-   TSystem::ResetErrno();
+   SetName("chirp");
+   chirp_root_global_setup();
+}
+
+//_____________________________________________________________________________
+TChirpSystem::~TChirpSystem()
+{
+}
+
+//_____________________________________________________________________________
+Int_t TChirpSystem::MakeDirectory(const char *path)
+{
+   TUrl url(path);
+   return chirp_reli_mkdir(url.GetHost(), FIXPATH(url.GetFile()), 0777, time(0) + chirp_root_timeout);
+}
+
+//_____________________________________________________________________________
+void *TChirpSystem::OpenDirectory(const char *path)
+{
+   TUrl url(path);
+   return chirp_reli_opendir(url.GetHost(), FIXPATH(url.GetFile()), time(0) + chirp_root_timeout);
+}
+
+//_____________________________________________________________________________
+void TChirpSystem::FreeDirectory(void *dirp)
+{
+   return chirp_reli_closedir((struct chirp_dir *) dirp);
+}
+
+//_____________________________________________________________________________
+const char *TChirpSystem::GetDirEntry(void *dirp)
+{
+   struct chirp_dirent *d = chirp_reli_readdir((struct chirp_dir *) dirp);
+   if (d) {
+      return d->name;
+   } else {
+      return 0;
+   }
+}
+
+//_____________________________________________________________________________
+Int_t TChirpSystem::GetPathInfo(const char *path, FileStat_t & buf)
+{
+   TUrl url(path);
+   struct chirp_stat info;
+   Int_t rc = chirp_reli_stat(url.GetHost(), FIXPATH(url.GetFile()), &info, time(0) + chirp_root_timeout);
+   if (rc >= 0) {
+      buf.fDev = info.cst_dev;
+      buf.fIno = info.cst_ino;
+      buf.fMode = info.cst_mode;
+      buf.fUid = info.cst_uid;
+      buf.fGid = info.cst_gid;
+      buf.fSize = info.cst_size;
+      buf.fMtime = info.cst_mtime;
+      buf.fIsLink = S_ISLNK(info.cst_mode);
+      buf.fUrl = TString(path);
+   }
+   return rc;
+}
+
+//_____________________________________________________________________________
+Bool_t TChirpSystem::AccessPathName(const char *path, EAccessMode mode)
+{
+   TUrl url(path);
+
+   int cmode = F_OK;
+
+   if (mode & kExecutePermission) cmode |= X_OK;
+   if (mode & kWritePermission)   cmode |= W_OK;
+   if (mode & kReadPermission)    cmode |= R_OK;
+
+   if (chirp_reli_access(url.GetHost(), FIXPATH(url.GetFile()), cmode, time(0) + chirp_root_timeout) == 0) {
+      return kFALSE;
+   } else {
+      return kTRUE;
+   }
+}
+
+//_____________________________________________________________________________
+Int_t TChirpSystem::Unlink(const char *path)
+{
+   TUrl url(path);
+   Int_t rc = chirp_reli_unlink(url.GetHost(), FIXPATH(url.GetFile()), time(0) + chirp_root_timeout);
+   if (rc < 0 && errno == EISDIR) {
+      rc = chirp_reli_rmdir(url.GetHost(), FIXPATH(url.GetFile()), time(0) + chirp_root_timeout);
+   }
+   return rc;
+}
+
+//_____________________________________________________________________________
+int TChirpSystem::Rename(const char *from, const char *to)
+{
+   TUrl fromurl(from);
+   TUrl tourl(to);
+
+   if (strcmp(fromurl.GetHost(), tourl.GetHost())) {
+      errno = EXDEV;
+      return -1;
+   }
+
+   return chirp_reli_rename(fromurl.GetHost(), FIXPATH(fromurl.GetFile()), FIXPATH(tourl.GetFile()), time(0) + chirp_root_timeout);
+}
+
+//_____________________________________________________________________________
+int TChirpSystem::Link(const char *from, const char *to)
+{
+   TUrl fromurl(from);
+   TUrl tourl(to);
+
+   if (strcmp(fromurl.GetHost(), tourl.GetHost())) {
+      errno = EXDEV;
+      return -1;
+   }
+
+   return chirp_reli_link(fromurl.GetHost(), FIXPATH(fromurl.GetFile()), FIXPATH(tourl.GetFile()), time(0) + chirp_root_timeout);
+}
+
+//_____________________________________________________________________________
+int TChirpSystem::Symlink(const char *from, const char *to)
+{
+   TUrl fromurl(from);
+   TUrl tourl(to);
+
+   if (strcmp(fromurl.GetHost(), tourl.GetHost())) {
+      errno = EXDEV;
+      return -1;
+   }
+
+   return chirp_reli_symlink(fromurl.GetHost(), FIXPATH(fromurl.GetFile()), FIXPATH(tourl.GetFile()), time(0) + chirp_root_timeout);
+}
+
+//_____________________________________________________________________________
+int TChirpSystem::GetFsInfo(const char *path, Long_t * id, Long_t * bsize, Long_t * blocks, Long_t * bfree)
+{
+   TUrl url(path);
+
+   struct chirp_statfs info;
+
+   int rc = chirp_reli_statfs(url.GetHost(), FIXPATH(url.GetFile()), &info, time(0) + chirp_root_timeout);
+   if (rc >= 0) {
+      *id = info.f_type;
+      *bsize = info.f_bsize;
+      *blocks = info.f_blocks;
+      *bfree = info.f_bfree;
+   }
+   return rc;
+}
+
+//_____________________________________________________________________________
+int TChirpSystem::Chmod(const char *path, UInt_t mode)
+{
+   TUrl url(path);
+   return chirp_reli_chmod(url.GetHost(), FIXPATH(url.GetFile()), mode, time(0) + chirp_root_timeout);
+}
+
+//_____________________________________________________________________________
+int TChirpSystem::Utime(const char *path, Long_t modtime, Long_t actime)
+{
+   TUrl url(path);
+   return chirp_reli_utime(url.GetHost(), FIXPATH(url.GetFile()), modtime, actime, time(0) + chirp_root_timeout);
 }
