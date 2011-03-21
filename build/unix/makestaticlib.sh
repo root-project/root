@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Script to generate an archive library libRoot.a.
+# Script to generate the libRoot.a archive library.
 # Called by main Makefile.
 #
 # Author: Fons Rademakers, 21/01/2001

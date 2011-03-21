@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Script to generate a archive library and statically linked executable.
+# Script to generate statically linked ROOT executables.
 # Called by main Makefile.
 #
 # Author: Fons Rademakers, 21/01/2001
