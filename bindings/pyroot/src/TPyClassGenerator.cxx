@@ -22,9 +22,10 @@
 namespace {
 
    //_________________________________________________________________________
-   int PyCtorCallback( G__value* res, G__CONST char*, struct G__param* /* libp */, int /* hash */ )
+   int PyCtorCallback( G__value* res, G__CONST char* funcname, struct G__param* libp, int hash )
    {
-      PyObject* pyclass = PyROOT::Utility::GetInstalledMethod( G__value_get_tagnum(res) );
+      int tagnum = G__value_get_tagnum( res );
+      PyObject* pyclass = PyROOT::Utility::GetInstalledMethod( tagnum );
       if ( ! pyclass )
          return 0;
 
@@ -36,25 +37,13 @@ namespace {
 
       G__letint( res, 'u', (Long_t)result );
       res->ref = (Long_t)result;
+      G__set_tagnum( res, tagnum );
 
-      G__linked_taginfo pti;
-      pti.tagnum = -1;
-      pti.tagtype = 'c';
-
-      PyObject* str = PyObject_Str( pyclass );
-      std::string clName = PyROOT_PyUnicode_AsString( str );
-      Py_DECREF( str );
-
-      clName = clName.substr( clName.rfind( '.' )+1, std::string::npos );
-      pti.tagname = clName.c_str();
-
-      G__set_tagnum( res, G__get_linked_tagnum( &pti ) );
-
-      return ( 1 );
+      return ( 1 || funcname || hash || res || libp );
    }
 
    //_________________________________________________________________________
-   int PyMemFuncCallback( G__value* res, G__CONST char*, struct G__param* libp, int /* hash */)
+   int PyMemFuncCallback( G__value* res, G__CONST char* funcname, struct G__param* libp, int hash )
    {
       PyObject* pyfunc = PyROOT::Utility::GetInstalledMethod( G__value_get_tagnum(res) );
       if ( ! pyfunc )
@@ -130,8 +119,9 @@ namespace {
       G__letint( res, 'u', (Long_t)retval );
       res->ref = (Long_t)retval;
       G__set_tagnum( res, ((G__ClassInfo*)TPyReturn::Class()->GetClassInfo())->Tagnum() );
+      G__store_tempobject( *res );
 
-      return ( 1 );
+      return ( 1 || funcname || hash || res || libp );
    }
 
 } // unnamed namespace
