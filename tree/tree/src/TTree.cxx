@@ -3101,7 +3101,7 @@ void TTree::Delete(Option_t* option /* = "" */)
       ResetBit(kMustCleanup);
    }
 
-    // Delete object from CINT symbol table so it can not be used anymore.
+   // Delete object from CINT symbol table so it can not be used anymore.
    gCint->DeleteGlobal(this);
 
    // Warning: We have intentional invalidated this object while inside a member function!
@@ -7016,6 +7016,9 @@ void TTree::Streamer(TBuffer& b)
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       gTree = this;
+      if (fDirectory) {
+         fDirectory->Remove(this);
+      }
       fDirectory = 0;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 4) {
