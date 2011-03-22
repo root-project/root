@@ -974,6 +974,7 @@ void TList::Streamer(TBuffer &b)
    UInt_t R__s, R__c;
 
    if (b.IsReading()) {
+      Clear(); // Get rid of old data if any.
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 3) {
          TObject::Streamer(b);
