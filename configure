@@ -4037,7 +4037,8 @@ if test ! "x$enable_xml" = "xno" ; then
     checking_msg "xml2-config"
     xml2_config=`$cwhich xml2-config 2> /dev/null`
     if test ! "x$xml2_config" = "x" && test -x "$xml2_config" && \
-       test ! "x$platform" = "xwin32" && test "x$host" = "x"; then
+       test ! "x$platform" = "xwin32" && test "x$host" = "x" && \
+       test "x$xmlincdir" = "x" && test "x$xmllibdir" = "x"; then
        $cwhich xml2-config
        # we found xml2-config - now check the version number
        message "Checking for libxml2 version >= 2.4.x"
