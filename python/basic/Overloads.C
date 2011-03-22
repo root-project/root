@@ -78,6 +78,8 @@ public:
    std::string call( const CC& ) { return "CC"; }
    std::string call( const DD& ) { return "DD"; }
 
+   std::string callUnknown( const DD& ) { return "DD"; }
+
    std::string call( double ) { return "double"; }
    std::string call( int ) { return "int"; }
    std::string call1( int ) { return "int"; }

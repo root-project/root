@@ -1,7 +1,7 @@
 # File: roottest/python/function/PyROOT_functiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/24/04
-# Last: 09/30/10
+# Last: 02/15/11
 
 """Unit tests for PyROOT python/TF1 function interactions."""
 
@@ -127,12 +127,42 @@ class Func2FitFunctionTestCase( MyTestCase ):
 ### calling a global function ================================================
 class Func3GlobalCppFunctionTestCase( MyTestCase ):
    def test1CallGlobalCppFunction( self ):
-      """Test calling of a C++ global function."""
+      """Test calling of an interpreted C++ global function"""
 
       gROOT.LoadMacro( "GlobalFunction.C" )
 
-      self.assertEqual( round( Divide( 4. ) - 4./2., 8), 0 )
-      self.assertEqual( round( Divide( 7. ) - 7./2., 8), 0 )
+      self.assertEqual( round( InterpDivideByTwo( 4. ) - 4./2., 8), 0 )
+      self.assertEqual( round( InterpDivideByTwo( 7. ) - 7./2., 8), 0 )
+
+   def test2CallNameSpacedGlobalFunction( self ):
+      """Test calling of an interpreted C++ namespaced global function"""
+
+      self.assertEqual( round( InterpMyNameSpace.InterpNSDivideByTwo( 4. ) - 4./2., 8), 0 )
+      self.assertEqual( round( InterpMyNameSpace.InterpNSDivideByTwo( 7. ) - 7./2., 8), 0 )
+
+   def test3CallGlobalCppFunction( self ):
+      """Test calling of a compiled C++ global function"""
+
+      gROOT.LoadMacro( "GlobalFunction2.C+" )
+
+      self.assertEqual( round( DivideByTwo( 4. ) - 4./2., 8), 0 )
+      self.assertEqual( round( DivideByTwo( 7. ) - 7./2., 8), 0 )
+
+   def test4CallNameSpacedGlobalFunction( self ):
+      """Test calling of a compiled C++ namespaced global function"""
+
+    # functions come in from GlobalFunction2.C, loaded in previous test3
+
+      self.assertEqual( round( MyNameSpace.NSDivideByTwo( 4. ) - 4./2., 8), 0 )
+      self.assertEqual( round( MyNameSpace.NSDivideByTwo( 7. ) - 7./2., 8), 0 )
+
+   def test5CallAnotherNameSpacedGlobalFunction( self ):
+      """Test namespace update after adding a global function"""
+
+      gROOT.LoadMacro( "GlobalFunction3.C+" )
+
+      self.assertEqual( round( MyNameSpace.NSDivideByTwo_v2( 4. ) - 4./2., 8), 0 )
+      self.assertEqual( round( MyNameSpace.NSDivideByTwo_v2( 7. ) - 7./2., 8), 0 )
 
 
 ### using a global function as python class member ===========================

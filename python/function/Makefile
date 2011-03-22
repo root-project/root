@@ -18,7 +18,7 @@ ifeq ($(FAIL),)
 endif
 
 
-PyROOT_functiontests.log: InstallableFunction_C.$(DllSuf)
+PyROOT_functiontests.log: InstallableFunction_C.$(DllSuf) GlobalFunction2_C.$(DllSuf) GlobalFunction3_C.$(DllSuf)
 
 PyROOT_functiontests: PyROOT_functiontests.log
 	$(TestDiff)
