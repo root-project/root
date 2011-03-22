@@ -154,7 +154,7 @@ void TGX11TTF::Activate()
 {
    // Static method setting TGX11TTF as the acting gVirtualX.
 
-   if (gVirtualX && !strcmp(gVirtualX->IsA()->GetName(), "TGX11")) {
+   if (gVirtualX && dynamic_cast<TGX11*>(gVirtualX)) {
       TGX11 *oldg = (TGX11 *) gVirtualX;
       gVirtualX = new TGX11TTF(*oldg);
       delete oldg;
