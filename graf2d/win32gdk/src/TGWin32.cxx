@@ -799,7 +799,9 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), f
       TGWin32ProxyBase::fgMainThreadId = ::GetCurrentThreadId(); // gMainThread->fId;
       TGWin32VirtualXProxy::fgRealObject = this;
       gPtr2VirtualX = &TGWin32VirtualXProxy::ProxyObject;
+#ifdef OLD_THREAD_IMPLEMENTATION
       gPtr2Interpreter = &TGWin32InterpreterProxy::ProxyObject;
+#endif
    }
 }
 
@@ -878,8 +880,12 @@ Bool_t TGWin32::IsCmdThread() const
 {
    // returns kTRUE if we are inside cmd/server thread
 
+#ifdef OLD_THREAD_IMPLEMENTATION
    return ((::GetCurrentThreadId() == TGWin32ProxyBase::fgMainThreadId) ||
            (::GetCurrentThreadId() == TGWin32ProxyBase::fgUserThreadId));
+#else
+   return kTRUE;
+#endif
 }
 
 //______________________________________________________________________________

@@ -270,8 +270,10 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
 
    while (IsGloballyLocked()) {
       Ping();
+#ifdef OLD_THREAD_IMPLEMENTATION
       if (GetCurrentThreadId() == fgMainThreadId)
          break;
+#endif
       ::SleepEx(10, 1); // take a rest
       if (!fgMainThreadId) return kFALSE; // server thread terminated 
    }
@@ -296,16 +298,20 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
       if (wait++ > 5) return kFALSE; // failed to post
    }
 
+#ifdef OLD_THREAD_IMPLEMENTATION
    Int_t cnt = 0; //VO attempt counters
+#endif
    // limiting wait time
    DWORD res = WAIT_TIMEOUT;
    while (res ==  WAIT_TIMEOUT) {
       res = ::WaitForSingleObject(fPimpl->fEvent, 100);
+#ifdef OLD_THREAD_IMPLEMENTATION
       if ((GetCurrentThreadId() == fgMainThreadId) || 
          (!gROOT->IsLineProcessing() && IsGloballyLocked())) {
          break;
       }
       if (cnt++ > 20) break; // VO after some efforts go out from loop
+#endif
    }
    ::ResetEvent(fPimpl->fEvent);
 
