@@ -55,7 +55,7 @@ TPyReturn::TPyReturn( PyObject* pyobject )
       Py_INCREF( Py_None );
       fPyObject = Py_None;
    } else
-      fPyObject = pyobject;
+      fPyObject = pyobject;             // steals reference
 }
 
 //____________________________________________________________________________
@@ -91,11 +91,13 @@ TPyReturn::~TPyReturn()
 TPyReturn::operator const char*() const
 {
 // Cast python return value to C-style string (may fail).
-   const char* s = PyBytes_AsString( fPyObject );
+   if ( fPyObject == Py_None )     // for void returns
+      return 0;
 
+   const char* s = PyBytes_AsString( fPyObject );
    if ( PyErr_Occurred() ) {
       PyErr_Print();
-      return "";                   // returning 0 may be better?
+      return 0;
    }
 
    return s;
@@ -157,11 +159,11 @@ TPyReturn::operator void*() const
    if ( fPyObject == Py_None )
       return 0;
 
-   Py_INCREF( fPyObject );
-   if ( PyROOT::ObjectProxy_Check( fPyObject ) )
+   if ( PyROOT::ObjectProxy_Check( fPyObject ) ) {
+      ((PyROOT::ObjectProxy*)fPyObject)->Release();
       return ((PyROOT::ObjectProxy*)fPyObject)->GetObject();
-   else 
-      return fPyObject;
+   } else 
+      return fPyObject;                 // borrows reference
 }
 
 //____________________________________________________________________________

@@ -779,6 +779,13 @@ Long_t PyROOT::Utility::InstallMethod( G__ClassInfo* scope, PyObject* callback,
    std::string tagname;                     // used as a buffer
    if ( rtype ) {
       tagname = rtype;
+      if ( tagname == "TPyReturn" ) {
+      // special case: setup a pseudo-inherited class to allow callbacks to work
+         tagname += mtName;
+         G__linked_taginfo tpy_pti = { "TPyReturn", 'c', -1 };
+         pti.tagname = tagname.c_str();
+         G__inheritance_setup( G__get_linked_tagnum( &pti ), G__get_linked_tagnum( &tpy_pti ), 0, 1, 1 );
+      }
    } else {
       const char* cname = scope ? scope->Fullname() : 0;
       tagname = cname ? std::string( cname ) + "::" + mtName : mtName;
