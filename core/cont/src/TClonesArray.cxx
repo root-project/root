@@ -955,7 +955,7 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
       tc->fCont[i] = 0;
       (*(tc->fKeep))[i] = 0;
    }
-   tc->fLast = tc->GetEntriesFast() - 1 - (idx2 - idx1);
+   tc->fLast = tc->GetEntriesFast() - 2 - (idx2 - idx1);
    fLast = newSize-1;
    if (!wasSorted)
       Changed();
