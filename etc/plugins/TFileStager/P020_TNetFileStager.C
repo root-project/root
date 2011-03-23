@@ -1,4 +1,4 @@
-void P020_TProofFileStager()
+void P020_TNetFileStager()
 {
    gPluginMgr->AddHandler("TFileStager", "^rootd:", "TNetFileStager",
       "Net", "TNetFileStager(const char *)");
