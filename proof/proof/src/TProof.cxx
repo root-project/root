@@ -8715,7 +8715,11 @@ TList *TProof::GetOutputList()
 {
    // Get list with all object created during processing (see Process()).
 
-   return (fPlayer ? fPlayer->GetOutputList() : (TList *)0);
+   if (fPlayer) {
+      fOutputList.AttachList(fPlayer->GetOutputList());
+      return &fOutputList;
+   }
+   return (TList *)0;
 }
 
 //______________________________________________________________________________
