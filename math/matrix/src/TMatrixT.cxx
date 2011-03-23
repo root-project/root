@@ -1078,7 +1078,7 @@ TMatrixTBase<Element> &TMatrixT<Element>::GetSub(Int_t row_lwb,Int_t row_upb,Int
 // Get submatrix [row_lwb..row_upb] x [col_lwb..col_upb]; The indexing range of the
 // returned matrix depends on the argument option:
 //
-// option == "S" : return [0..row_upb-row_lwb+1][0..col_upb-col_lwb+1] (default)
+// option == "S" : return [0..row_upb-row_lwb][0..col_upb-col_lwb] (default)
 // else          : return [row_lwb..row_upb][col_lwb..col_upb]
 
    if (gMatrixCheck) {
