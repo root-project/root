@@ -2,3 +2,23 @@
 <hr/> 
 <a name="math"></a> 
 <h3>Math Libraries</h3>
+
+<tt>TMath</tt>
+<ul>
+<li>Add some new functions based on std::numeric_limits:
+  <ul>
+    <li><tt>double TMath::QuietNaN()</tt> returning a quite NaN </li> 
+    <li><tt>double TMath::SignalingNaN()</tt> returning a signaling NaN </li>  
+    <li><tt>double TMath::Infinity()</tt> returning an infinity double value </li>
+  </ul></li>
+  <li>Added also (based on numeric_limits) templated functions on T (where T can be double, float or int) for computing
+  the limits for a given type:
+  <ul>
+    <li><tt>T TMath::Limits&lt T &gt::Max()</tt> returning the maximum number which can be represented for the type T ( <tt>T TMath::Limits&lt double &gt::Max()=1.79769e+308</tt>)</li>
+    <li><tt>T TMath::Limits&lt T &gt::Min()</tt> returning the minimum number which can be represented for the type T ( <tt>T TMath::Limits&lt double &gt::Max()=2.22507e-308</tt>)</li>
+    <li><tt>T TMath::Limits&lt T &gt::Epsilon()</tt> returning the epsilon (see <a
+    href="http://en.wikipedia.org/wiki/Machine_epsilon">Wikipedia</a> for its definition) for the type T  ( <tt>T
+    TMath::Limits&lt double &gt::Epsilon()=2.22045e-16</tt>)</li>
+  </ul>
+</li>
+</ul>

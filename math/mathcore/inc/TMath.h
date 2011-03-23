@@ -32,6 +32,7 @@
 
 #include "TError.h"
 #include <algorithm>
+#include <limits>
 
 namespace TMath {
 
@@ -165,6 +166,17 @@ namespace TMath {
           Int_t    Nint(Double_t x);
    inline Int_t    Finite(Double_t x);
    inline Int_t    IsNaN(Double_t x);
+
+   inline Double_t QuietNaN(); 
+   inline Double_t SignalingNaN(); 
+   inline Double_t Infinity(); 
+
+   template <typename T> 
+   struct Limits { 
+      inline static T Min(); 
+      inline static T Max(); 
+      inline static T Epsilon(); 
+   };
 
    // Some integer math
    Long_t   Hypot(Long_t x, Long_t y);     // sqrt(px*px + py*py)
@@ -491,6 +503,45 @@ inline Int_t TMath::IsNaN(Double_t x)
 #else
    { return isnan(x); }
 #endif
+
+//--------wrapper to numeric_limits
+//____________________________________________________________________________
+inline Double_t TMath::QuietNaN() { 
+   // returns a quiet NaN as defined by IEEE 754 
+   // see http://en.wikipedia.org/wiki/NaN#Quiet_NaN
+   return std::numeric_limits<Double_t>::quiet_NaN(); 
+}
+
+//____________________________________________________________________________
+inline Double_t TMath::SignalingNaN() { 
+   // returns a signaling NaN as defined by IEEE 754 
+   // see http://en.wikipedia.org/wiki/NaN#Signaling_NaN
+   return std::numeric_limits<Double_t>::signaling_NaN(); 
+}
+
+inline Double_t TMath::Infinity() { 
+   // returns an infinity as defined by the IEEE standard
+   return std::numeric_limits<Double_t>::infinity(); 
+}
+
+template<typename T> 
+inline T TMath::Limits<T>::Min() { 
+   // returns maximum representation for type T
+   return std::numeric_limits<T>::min(); 
+}
+
+template<typename T> 
+inline T TMath::Limits<T>::Max() { 
+   // returns minimum double representation
+   return std::numeric_limits<T>::max(); 
+}
+
+template<typename T> 
+inline T TMath::Limits<T>::Epsilon() { 
+   // returns minimum double representation
+   return std::numeric_limits<T>::epsilon(); 
+}
+
 
 //-------- Advanced -------------
 
