@@ -781,6 +781,8 @@ Long_t PyROOT::Utility::InstallMethod( G__ClassInfo* scope, PyObject* callback,
       tagname = rtype;
       if ( tagname == "TPyReturn" ) {
       // special case: setup a pseudo-inherited class to allow callbacks to work
+         if ( scope )
+            tagname += scope->Fullname();
          tagname += mtName;
          G__linked_taginfo tpy_pti = { "TPyReturn", 'c', -1 };
          pti.tagname = tagname.c_str();
