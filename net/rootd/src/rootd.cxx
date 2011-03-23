@@ -95,6 +95,8 @@
 //                     that should be accepted                          //
 //   -i                says we were started by inetd                    //
 //   -noauth           do not require client authentication             //
+//   -nologin          do not login the client to its $HOME as it may   //
+//                     not exist                                        //
 //   -p port#          specifies a different port to listen on.         //
 //                     Use port1-port2 to find first available port in  //
 //                     range. Use 0-N for range relative to service     //
@@ -2443,6 +2445,9 @@ int main(int argc, char **argv)
                if (!strncmp(argv[0]+1,"noauth",6)) {
                   requireauth = 0;
                   s += 5;
+               } else if (!strncmp(argv[0]+1,"nologin",7)) {
+                  login = 0;
+                  s += 6;
                }
                break;
 
