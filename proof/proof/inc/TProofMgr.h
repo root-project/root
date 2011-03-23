@@ -87,8 +87,9 @@ public:
    virtual TProofDesc *GetProofDesc(Int_t id);
    virtual TProofDesc *GetProofDesc(TProof *p);
    virtual Int_t       GetRemoteProtocol() const { return fRemoteProtocol; }
-   virtual TProofLog  *GetSessionLogs(Int_t = 0, const char * = 0, const char * = "-v \"| SvcMsg\"")
-                                                      { return (TProofLog *)0; }
+   virtual TProofLog  *GetSessionLogs(Int_t = 0, const char * = 0,
+                                      const char * = "-v \"| SvcMsg\"", Bool_t = kFALSE)
+                                      { return (TProofLog *)0; }
    virtual const char *GetUrl() { return fUrl.GetUrl(); }
    virtual Bool_t      MatchUrl(const char *url);
    virtual TList      *QuerySessions(Option_t *opt = "S");

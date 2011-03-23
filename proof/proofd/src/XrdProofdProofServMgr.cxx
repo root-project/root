@@ -1612,6 +1612,117 @@ int XrdProofdProofServMgr::Attach(XrdProofdProtocol *p)
 }
 
 //_________________________________________________________________________________
+XrdProofdProofServ *XrdProofdProofServMgr::PrepareProofServ(XrdProofdProtocol *p,
+                                                            XrdProofdResponse *r,
+                                                            unsigned short &sid)
+{
+   // Allocate and prepare the XrdProofdProofServ object describing this session
+   XPDLOC(SMGR, "ProofServMgr::PrepareProofServ")
+
+   // Allocate next free server ID and fill in the basic stuff
+   XrdProofdProofServ *xps = p->Client()->GetFreeServObj();
+   xps->SetClient(p->Client()->User());
+   xps->SetSrvType(p->ConnType());
+
+   // Prepare the stream identifier
+   memcpy((void *)&sid, (const void *)&(p->Request()->header.streamid[0]), 2);
+   // We associate this instance to the corresponding slot in the
+   // session vector of attached clients
+   XrdClientID *csid = xps->GetClientID(p->CID());
+   csid->SetSid(sid);
+   csid->SetP(p);
+   // Take parentship, if orphalin
+   xps->SetParent(csid);
+
+   // The ROOT version to be used
+   xps->SetROOT(p->Client()->ROOT());
+   XrdOucString msg;
+   XPDFORM(msg, "using ROOT version: %s", xps->ROOT()->Export());
+   TRACEP(p, REQ, msg);
+   if (p->ConnType() == kXPD_ClientMaster) {
+      // Notify the client if using a version different from the default one
+      if (p->Client()->ROOT() != fMgr->ROOTMgr()->DefaultVersion()) {
+         XPDFORM(msg, "++++ Using NON-default ROOT version: %s ++++\n", xps->ROOT()->Export());
+         r->Send(kXR_attn, kXPD_srvmsg, (char *) msg.c_str(), msg.length());
+      }
+   }
+
+   // Done
+   return xps;
+}
+
+//_________________________________________________________________________________
+void XrdProofdProofServMgr::ParseCreateBuffer(XrdProofdProtocol *p,
+                                              XrdProofdProofServ *xps,
+                                              XrdOucString &tag, XrdOucString &ord,
+                                              XrdOucString &cffile,
+                                              XrdOucString &uenvs, int &intwait)
+{
+   // Extract relevant quantities from the buffer received during a create request
+   XPDLOC(SMGR, "ProofServMgr::ParseCreateBuffer")
+
+   // Parse buffer
+   char *buf = p->Argp()->buff;
+   int   len = p->Request()->proof.dlen;
+
+   // Extract session tag
+   tag.assign(buf,0,len-1);
+
+   TRACEP(p, DBG, "received buf: "<<tag);
+
+   tag.erase(tag.find('|'));
+   xps->SetTag(tag.c_str());
+   TRACEP(p, DBG, "tag: "<<tag);
+
+   // Extract ordinal number
+   ord = "0";
+   if ((p->ConnType() == kXPD_MasterWorker) || (p->ConnType() == kXPD_MasterMaster)) {
+      ord.assign(buf,0,len-1);
+      int iord = ord.find("|ord:");
+      if (iord != STR_NPOS) {
+         ord.erase(0,iord+5);
+         ord.erase(ord.find("|"));
+      } else
+         ord = "0";
+   }
+   xps->SetOrdinal(ord.c_str());
+
+   // Extract config file, if any (for backward compatibility)
+   cffile.assign(buf,0,len-1);
+   int icf = cffile.find("|cf:");
+   if (icf != STR_NPOS) {
+      cffile.erase(0,icf+4);
+      cffile.erase(cffile.find("|"));
+   } else
+      cffile = "";
+
+   // Extract user envs, if any
+   uenvs.assign(buf,0,len-1);
+   int ienv = uenvs.find("|envs:");
+   if (ienv != STR_NPOS) {
+      uenvs.erase(0,ienv+6);
+      uenvs.erase(uenvs.find("|"));
+      xps->SetUserEnvs(uenvs.c_str());
+   } else
+      uenvs = "";
+
+   // Check if the user wants to wait more for the session startup
+   intwait = fInternalWait;
+   if (uenvs.length() > 0) {
+      TRACEP(p, DBG, "user envs: "<<uenvs);
+      int iiw = STR_NPOS;
+      if ((iiw = uenvs.find("PROOF_INTWAIT=")) !=  STR_NPOS) {
+         XrdOucString s(uenvs, iiw + strlen("PROOF_INTWAIT="));
+         s.erase(s.find(','));
+         if (s.isdigit()) {
+            intwait = s.atoi();
+            TRACEP(p, ALL, "startup internal wait set by user to "<<intwait);
+         }
+      }
+   }
+}
+
+//_________________________________________________________________________________
 int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
 {
    // Handle a request to create a new session
@@ -1648,99 +1759,18 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       TRACEP(p, DBG, nc << " threads are creating a new session");
    }
 
-   // Allocate next free server ID and fill in the basic stuff
-   XrdProofdProofServ *xps = p->Client()->GetFreeServObj();
-   xps->SetClient(p->Client()->User());
-   xps->SetSrvType(p->ConnType());
-   psid = xps->ID();
-
-   // Prepare the stream identifier
+   // Allocate and prepare the XrdProofdProofServ object describing this session
    unsigned short sid;
-   memcpy((void *)&sid, (const void *)&(p->Request()->header.streamid[0]), 2);
-   // We associate this instance to the corresponding slot in the
-   // session vector of attached clients
-   XrdClientID *csid = xps->GetClientID(p->CID());
-   csid->SetSid(sid);
-   csid->SetP(p);
-   // Take parentship, if orphalin
-   xps->SetParent(csid);
+   XrdProofdProofServ *xps = PrepareProofServ(p, response, sid);
+   psid = xps->ID();
 
    // Unmarshall log level
    int loglevel = ntohl(p->Request()->proof.int1);
 
    // Parse buffer
-   char *buf = p->Argp()->buff;
-   int   len = p->Request()->proof.dlen;
-
-   // Extract session tag
-   XrdOucString tag(buf,len);
-
-   TRACEP(p, DBG, "received buf: "<<tag);
-
-   tag.erase(tag.find('|'));
-   xps->SetTag(tag.c_str());
-   TRACEP(p, DBG, "tag: "<<tag);
-
-   // Extract ordinal number
-   XrdOucString ord = "0";
-   if ((p->ConnType() == kXPD_MasterWorker) || (p->ConnType() == kXPD_MasterMaster)) {
-      ord.assign(buf,0,len-1);
-      int iord = ord.find("|ord:");
-      if (iord != STR_NPOS) {
-         ord.erase(0,iord+5);
-         ord.erase(ord.find("|"));
-      } else
-         ord = "0";
-   }
-   xps->SetOrdinal(ord.c_str());
-
-   // Extract config file, if any (for backward compatibility)
-   XrdOucString cffile;
-   cffile.assign(buf,0,len-1);
-   int icf = cffile.find("|cf:");
-   if (icf != STR_NPOS) {
-      cffile.erase(0,icf+4);
-      cffile.erase(cffile.find("|"));
-   } else
-      cffile = "";
-
-   // Extract user envs, if any
-   XrdOucString uenvs;
-   uenvs.assign(buf,0,len-1);
-   int ienv = uenvs.find("|envs:");
-   if (ienv != STR_NPOS) {
-      uenvs.erase(0,ienv+6);
-      uenvs.erase(uenvs.find("|"));
-      xps->SetUserEnvs(uenvs.c_str());
-   } else
-      uenvs = "";
-
-   // Check if the user wants to wait more for the session startup
-   int intwait = fInternalWait;
-   if (uenvs.length() > 0) {
-      TRACEP(p, DBG, "user envs: "<<uenvs);
-      int iiw = STR_NPOS;
-      if ((iiw = uenvs.find("PROOF_INTWAIT=")) !=  STR_NPOS) {
-         XrdOucString s(uenvs, iiw + strlen("PROOF_INTWAIT="));
-         s.erase(s.find(','));
-         if (s.isdigit()) {
-            intwait = s.atoi();
-            TRACEP(p, ALL, "startup internal wait set by user to "<<intwait);
-         }
-      }
-   }
-
-   // The ROOT version to be used
-   xps->SetROOT(p->Client()->ROOT());
-   XPDFORM(msg, "using ROOT version: %s", xps->ROOT()->Export());
-   TRACEP(p, REQ, msg);
-   if (p->ConnType() == kXPD_ClientMaster) {
-      // Notify the client if using a version different from the default one
-      if (p->Client()->ROOT() != fMgr->ROOTMgr()->DefaultVersion()) {
-         XPDFORM(msg, "++++ Using NON-default ROOT version: %s ++++\n", xps->ROOT()->Export());
-         response->Send(kXR_attn, kXPD_srvmsg, (char *) msg.c_str(), msg.length());
-      }
-   }
+   int intwait;
+   XrdOucString tag, ord, cffile, uenvs;
+   ParseCreateBuffer(p, xps, tag, ord, cffile, uenvs, intwait); 
 
    // Notify
    TRACEP(p, DBG, "{ord,cfg,psid,cid,log}: {"<<ord<<","<<cffile<<","<<psid
@@ -1766,16 +1796,31 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       return 0;
    }
 
+   // Start setting up the unique tag and relevant dirs for this session
+   ProofServEnv_t in = {xps, loglevel, cffile.c_str(), "", "", "", "", ""};
+   GetTagDirs(0, p, xps, in.fSessionTag, in.fTopSessionTag, in.fSessionDir, in.fWrkDir);
+
    // Fork an agent process to handle this session
    int pid = -1;
    TRACEP(p, FORK,"Forking external proofsrv");
    if (!(pid = fMgr->Sched()->Fork("proofsrv"))) {
 
-      // Get unique tag and relevant dirs for this session
-      ProofServEnv_t in = {xps, loglevel, cffile.c_str(), "", "", "", "", ""};
-      GetTagDirs(p, xps, in.fSessionTag, in.fTopSessionTag, in.fSessionDir, in.fWrkDir);
+      // Finalize unique tag and relevant dirs for this session and create log file path
+      GetTagDirs((int)getpid(),
+                 p, xps, in.fSessionTag, in.fTopSessionTag, in.fSessionDir, in.fWrkDir);
       XPDFORM(in.fLogFile, "%s.log", in.fWrkDir.c_str());
+
+      // Log to the session log file from now on
+      if (fLogger) fLogger->Bind(in.fLogFile.c_str());
       TRACE(FORK, "log file: "<<in.fLogFile);
+
+      XrdOucString pmsg = "child process ";
+      pmsg += (int) getpid();
+      TRACE(FORK, pmsg);
+
+      // These files belongs to the client
+      if (chown(in.fLogFile.c_str(), p->Client()->UI().fUid, p->Client()->UI().fGid) != 0)
+         TRACE(XERR, "chown on '"<<in.fLogFile.c_str()<<"'; errno: "<<errno);
 
       XpdMsg xmsg;
       XrdOucString path, sockpath, emsg;
@@ -1796,7 +1841,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       // Set the path w/o asserting the related files
       path = xmsg.Buf();
       xps->SetAdminPath(path.c_str(), 0);
-      TRACE(FORK, "child: admin path: "<<path);
+      TRACE(FORK, "admin path: "<<path);
 
       xmsg.Reset();
       // Receive the sock path from the parent
@@ -1815,18 +1860,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       // Set the UNIX sock path
       sockpath = xmsg.Buf();
       xps->SetUNIXSockPath(sockpath.c_str());
-      TRACE(FORK, "child: UNIX sock path: "<<sockpath);
-
-      // Log to the session log file from now on
-      if (fLogger) fLogger->Bind(in.fLogFile.c_str());
-
-      // These files belongs to the client
-      if (chown(in.fLogFile.c_str(), p->Client()->UI().fUid, p->Client()->UI().fGid) != 0)
-         TRACE(XERR, "chown on '"<<in.fLogFile.c_str()<<"'; errno: "<<errno);
-
-      XrdOucString pmsg = "child process ";
-      pmsg += (int) getpid();
-      TRACE(FORK, pmsg);
+      TRACE(FORK, "UNIX sock path: "<<sockpath);
 
       // We set to the user ownerships and create relevant dirs
       bool asserdatadir = 1;
@@ -1935,6 +1969,15 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    TRACEP(p, FORK,"Parent process: child is "<<pid);
    XrdOucString emsg;
 
+   // Finalize unique tag and relevant dirs for this session and create log file path
+   GetTagDirs((int)pid, p, xps, in.fSessionTag, in.fTopSessionTag, in.fSessionDir, in.fWrkDir);
+   XPDFORM(in.fLogFile, "%s.log", in.fWrkDir.c_str());
+   TRACEP(p, FORK, "log file: "<<in.fLogFile);
+
+   // Log prefix
+   XrdOucString npfx;
+   XPDFORM(npfx, "%s-%s:", (p->ConnType() == kXPD_MasterWorker) ? "wrk" : "mst", xps->Ordinal());
+   
    // Cleanup current socket, if any
    if (xps->UNIXSock()) {
       TRACEP(p, FORK,"current UNIX sock: "<<xps->UNIXSock() <<", path: "<<xps->UNIXSockPath());
@@ -1948,56 +1991,79 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
                                 p->Client()->User(), p->Client()->Group(), pid);
    // Sock path under dedicated directory to avoid problems related to its length
    XPDFORM(sockpath, "%s/xpd.%d.%d", fMgr->SockPathDir(), fMgr->Port(), pid);
-   if (sockpath.length() > 100) {
-      emsg += ": socket path very long (";
+   struct sockaddr_un unserver;
+   if (sockpath.length() > (int)(sizeof(unserver.sun_path) - 1)) {
+      emsg = "socket path very long (";
       emsg += sockpath.length();
       emsg += "): this may lead to stack corruption!";
       emsg += " Use xpd.sockpathdir to change it";
+      TRACEP(p, XERR, emsg.c_str());
    }
    int pathrc = 0;
    if (!pathrc && !(pathrc = xps->SetAdminPath(path.c_str(), 1))) {
       // Communicate the path to child
-      if ((pathrc = fpc.Post(0, path.c_str())) != 0)
-         emsg += ": failed to communicating path to child";
+      if ((pathrc = fpc.Post(0, path.c_str())) != 0) {
+         emsg = "failed to communicating path to child";
+         XrdProofdAux::LogEmsgToFile(in.fLogFile.c_str(), emsg.c_str(), npfx.c_str());
+         TRACEP(p, XERR, emsg.c_str());
+      }
    } else {
-      emsg += ": failed to setup child admin path";
+      emsg = "failed to setup child admin path";
       // Communicate failure to child
-      if ((pathrc = fpc.Post(-1, path.c_str())) != 0)
+      if ((pathrc = fpc.Post(-1, path.c_str())) != 0) {
          emsg += ": failed communicating failure to child";
+         XrdProofdAux::LogEmsgToFile(in.fLogFile.c_str(), emsg.c_str(), npfx.c_str());
+         TRACEP(p, XERR, emsg.c_str());
+      }
    }
    // Now create the UNIX sock path
    if (!pathrc) {
       xps->SetUNIXSockPath(sockpath.c_str());
       if ((pathrc = xps->CreateUNIXSock(fEDest)) != 0) {
          // Failure
-         emsg += ": failure creating UNIX socket on " ;
+         emsg = "failure creating UNIX socket on " ;
          emsg += sockpath;
+         XrdProofdAux::LogEmsgToFile(in.fLogFile.c_str(), emsg.c_str(), npfx.c_str());
+         TRACEP(p, XERR, emsg.c_str());
       }
    }
    if (!pathrc) {
       TRACEP(p, FORK,"UNIX sock: "<<xps->UNIXSockPath());
       if ((pathrc = chown(sockpath.c_str(), p->Client()->UI().fUid, p->Client()->UI().fGid)) != 0) {
-         emsg += ": failure changing ownership of the UNIX socket on " ;
+         emsg = "failure changing ownership of the UNIX socket on " ;
          emsg += sockpath;
          emsg += "; errno: " ;
          emsg += errno;
+         XrdProofdAux::LogEmsgToFile(in.fLogFile.c_str(), emsg.c_str(), npfx.c_str());
+         TRACEP(p, XERR, emsg.c_str());
       }
    }
    // Communicate sockpath or failure, if any 
    if (!pathrc) {
       // Communicate the path to child
-      if ((pathrc = fpc.Post(0, sockpath.c_str())) != 0)
-         emsg += ": failed to communicating path to child";
+      if ((pathrc = fpc.Post(0, sockpath.c_str())) != 0) {
+         emsg = "failed to communicating path to child";
+         XrdProofdAux::LogEmsgToFile(in.fLogFile.c_str(), emsg.c_str(), npfx.c_str());
+         TRACEP(p, XERR, emsg.c_str());
+      }
    } else {
-      emsg += ": failed to setup child admin path";
+      emsg = "failed to setup child admin path";
       // Communicate failure to child
-      if ((pathrc = fpc.Post(-1, sockpath.c_str())) != 0)
+      if ((pathrc = fpc.Post(-1, sockpath.c_str())) != 0) {
          emsg += ": failed communicating failure to child";
+         XrdProofdAux::LogEmsgToFile(in.fLogFile.c_str(), emsg.c_str(), npfx.c_str());
+         TRACEP(p, XERR, emsg.c_str());
+      }
    }
+   
    if (pathrc != 0) {
       // Failure
       xps->Reset();
       XrdProofdAux::KillProcess(pid, 1, p->Client()->UI(), fMgr->ChangeOwn());
+      // Make sure that the log file path reaches the caller
+      emsg += "|log:";
+      emsg += in.fLogFile;
+      emsg.insert(npfx, 0);
       response->Send(kXP_ServerError, emsg.c_str());
       return 0;
    }
@@ -2015,7 +2081,9 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
          // Got something: read the message out
          XpdMsg xmsg;
          if (fcp.Recv(xmsg) != 0) {
-            emsg += ": error receiving message from pipe";
+            emsg = "error receiving message from pipe";
+            XrdProofdAux::LogEmsgToFile(in.fLogFile.c_str(), emsg.c_str(), npfx.c_str());
+            TRACEP(p, XERR, emsg.c_str());
             prc = -1;
             break;
          }
@@ -2025,6 +2093,8 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
          XrdOucString xbuf = xmsg.Buf();
          if (xbuf.length() <= 0) {
             emsg = "error reading buffer {logfile, error message} from message received on the pipe";
+            XrdProofdAux::LogEmsgToFile(in.fLogFile.c_str(), emsg.c_str(), npfx.c_str());
+            TRACEP(p, XERR, emsg.c_str());
             prc = -1;
             break;
          }
@@ -2040,13 +2110,17 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
          } else {
             // Setup failed: save the error
             prc = -1;
-            emsg += ": failed: ";
+            emsg = "failed: ";
             emsg += xbuf;
+            XrdProofdAux::LogEmsgToFile(in.fLogFile.c_str(), emsg.c_str(), npfx.c_str());
+            TRACEP(p, XERR, emsg.c_str());
             break;
          }
 
       } else if (prc < 0) {
-         emsg += ": error receive status-of-setup from pipe";
+         emsg = "error receive status-of-setup from pipe";
+         XrdProofdAux::LogEmsgToFile(in.fLogFile.c_str(), emsg.c_str(), npfx.c_str());
+         TRACEP(p, XERR, emsg.c_str());
          break;
       } else {
          TRACEP(p, FORK, "receiving status-of-setup from pipe: waiting 2 s ..."<<pid);
@@ -2060,25 +2134,36 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    // Notify the user
    if (prc <= 0) {
       // Timed-out or failed: we are done; if timed-out finalize the notification message
+      emsg = "failure setting up proofserv" ;
       if (prc == 0) emsg += ": timed-out receiving status-of-setup from pipe";
-      emsg += ": failure setting up proofserv" ;
+      // Dump to the log file
+      XrdProofdAux::LogEmsgToFile(in.fLogFile.c_str(), emsg.c_str(), npfx.c_str());
+      // Recycle the session object
       xps->Reset();
       XrdProofdAux::KillProcess(pid, 1, p->Client()->UI(), fMgr->ChangeOwn());
+      // Make sure that the log file path reaches the caller
+      emsg += "|log:";
+      emsg += in.fLogFile;
+      TRACEP(p, XERR, emsg.c_str());
+      emsg.insert(npfx, 0);
       response->Send(kXP_ServerError, emsg.c_str());
       return 0;
 
    } else {
       // Setup was successful
+      XrdOucString info;
       if (p->ConnType() == kXPD_ClientMaster) {
          // Send also back the data pool url
-         XrdOucString dpu = fMgr->PoolURL();
-         if (!dpu.endswith('/'))
-            dpu += '/';
-         dpu += fMgr->NameSpace();
-         response->SendI(psid, xps->ROOT()->SrvProtVers(), (kXR_int16)XPROOFD_VERSBIN,
-                              (void *) dpu.c_str(), dpu.length());
-      } else
-         response->SendI(psid, xps->ROOT()->SrvProtVers(), (kXR_int16)XPROOFD_VERSBIN);
+         info = fMgr->PoolURL();
+         if (!info.endswith('/')) info += '/';
+         info += fMgr->NameSpace();
+      }
+      // The log file path (so we do it independently of a successful session startup)
+      info += "|log:";
+      info += xps->Fileout();
+      // Send it back
+      response->SendI(psid, xps->ROOT()->SrvProtVers(), (kXR_int16)XPROOFD_VERSBIN,
+                            (void *) info.c_str(), info.length());
    }
 
    // now we wait for the callback to be (successfully) established
@@ -2088,16 +2173,21 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    xps->SetSrvPID(pid);
 
    // Wait for the call back
-   if (Accept(xps, intwait, emsg) != 0) {
+   if (AcceptPeer(xps, intwait, emsg) != 0) {
+      emsg = "problems accepting callback: ";
       // Failure: kill the child process
       if (XrdProofdAux::KillProcess(pid, 0, p->Client()->UI(), fMgr->ChangeOwn()) != 0)
-         emsg += ": process could not be killed";
+         emsg += "process could not be killed - pid: ";
       else
-         emsg += ": process killed";
+         emsg += "process killed - pid: ";
+      emsg += (int)pid;
+      // Dump to the log file
+      XrdProofdAux::LogEmsgToFile(in.fLogFile.c_str(), emsg.c_str(), npfx.c_str());
       // Reset the instance
       xps->Reset();
       // Notify
-      TRACEP(p, XERR, "problems accepting callback: " <<emsg);
+      TRACEP(p, XERR, emsg.c_str());
+      emsg.insert(npfx, 0);
       response->Send(kXR_attn, kXPD_errmsg, (char *) emsg.c_str(), emsg.length());
       return 0;
    }
@@ -2242,7 +2332,7 @@ int XrdProofdProofServMgr::Recover(XpdClientSessions *cl)
         cl->fProofServs.remove(xps); cl->fProofServs.push_back(xps); }
 
       // Short steps of 1 sec
-      if (Accept(xps, 1, emsg) != 0) {
+      if (AcceptPeer(xps, 1, emsg) != 0) {
          if (emsg == "timeout") {
             TRACE(DBG, "timeout while accepting callback");
          } else {
@@ -2274,18 +2364,16 @@ int XrdProofdProofServMgr::Recover(XpdClientSessions *cl)
 }
 
 //______________________________________________________________________________
-int XrdProofdProofServMgr::Accept(XrdProofdProofServ *xps,
-                                  int to, XrdOucString &msg)
+int XrdProofdProofServMgr::AcceptPeer(XrdProofdProofServ *xps,
+                                      int to, XrdOucString &msg)
 {
-   // Accept a callback from a starting-up server; return a pointer to the
-   // attached session or 0.
-   XPDLOC(SMGR, "ProofServMgr::Accept")
+   // Accept a callback from a starting-up server and setup the related protocol
+   // object. Used for old servers.
+   // Return 0 if successful or -1 in case of failure.
+   XPDLOC(SMGR, "ProofServMgr::AcceptPeer")
 
    // We will get back a peer to initialize a link
    XrdNetPeer peerpsrv;
-   XrdLink   *linkpsrv = 0;
-   XrdProtocol *xp = 0;
-   int lnkopts = 0;
    bool go = 1;
 
    // Check inputs
@@ -2300,17 +2388,39 @@ int XrdProofdProofServMgr::Accept(XrdProofdProofServ *xps,
       msg = "timeout";
       go = 0;
    }
-   if (go) {
-      // Make sure we have the full host name
-      if (peerpsrv.InetName) {
-         char *ptmp = peerpsrv.InetName;
-         peerpsrv.InetName = XrdNetDNS::getHostName("localhost");
-         free(ptmp);
-      }
+
+   // Setup the protocol serving this peer
+   if (go && SetupProtocol(peerpsrv, xps, msg) != 0) {
+      msg = "could not assert connected peer: ";
+      return -1;
+   }
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+int XrdProofdProofServMgr::SetupProtocol(XrdNetPeer &peerpsrv,
+                                         XrdProofdProofServ *xps, XrdOucString &msg)
+{
+   // Setup the protocol object serving the peer described by 'peerpsrv'
+   XPDLOC(SMGR, "ProofServMgr::SetupProtocol")
+
+   // We will get back a peer to initialize a link
+   XrdLink   *linkpsrv = 0;
+   XrdProtocol *xp = 0;
+   int lnkopts = 0;
+   bool go = 1;
+
+   // Make sure we have the full host name
+   if (peerpsrv.InetName) {
+      char *ptmp = peerpsrv.InetName;
+      peerpsrv.InetName = XrdNetDNS::getHostName("localhost");
+      free(ptmp);
    }
 
    // Allocate a new network object
-   if (go && !(linkpsrv = XrdLink::Alloc(peerpsrv, lnkopts))) {
+   if (!(linkpsrv = XrdLink::Alloc(peerpsrv, lnkopts))) {
       msg = "could not allocate network object: ";
       go = 0;
    }
@@ -2786,47 +2896,67 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdManager *mgr, XrdROOT *r)
 }
 
 //______________________________________________________________________________
-void XrdProofdProofServMgr::GetTagDirs(XrdProofdProtocol *p, XrdProofdProofServ *xps,
+void XrdProofdProofServMgr::GetTagDirs(int pid,
+                                       XrdProofdProtocol *p, XrdProofdProofServ *xps,
                                        XrdOucString &sesstag, XrdOucString &topsesstag,
                                        XrdOucString &sessiondir, XrdOucString &sesswrkdir)
 {
    // Determine the unique tag and relevant dirs for this session
+   XPDLOC(SMGR, "GetTagDirs")
 
    // Client sandbox
    XrdOucString udir = p->Client()->Sandbox()->Dir();
 
-   // Create the unique tag identify this session
-   XrdOucString host = fMgr->Host();
-   if (host.find(".") != STR_NPOS)
-      host.erase(host.find("."));
-   XPDFORM(sesstag, "%s-%d-%d", host.c_str(), (int)time(0), (int)getpid());
+   if (pid == 0) {
 
-   // Session dir
-   topsesstag = sesstag;
-   sessiondir = udir;
-   if (p->ConnType() == kXPD_ClientMaster) {
-      sessiondir += "/session-";
-      sessiondir += sesstag;
-      xps->SetTag(sesstag.c_str());
+      // Create the unique tag identify this session
+      XrdOucString host = fMgr->Host();
+      if (host.find(".") != STR_NPOS)
+         host.erase(host.find("."));
+      XPDFORM(sesstag, "%s-%d-", host.c_str(), (int)time(0));
+
+      // Session dir
+      topsesstag = sesstag;
+      sessiondir = udir;
+      if (p->ConnType() == kXPD_ClientMaster) {
+         sessiondir += "/session-";
+         sessiondir += sesstag;
+      } else {
+         sessiondir += "/";
+         sessiondir += xps->Tag();
+         topsesstag = xps->Tag();
+         topsesstag.replace("session-","");
+      }
+
+   } else if (pid > 0) {
+
+      // Finalize unique tag identifying this session
+      sesstag += pid;
+
+      // Session dir
+      topsesstag = sesstag;
+      if (p->ConnType() == kXPD_ClientMaster) {
+         sessiondir += pid;
+         xps->SetTag(sesstag.c_str());
+      }
+
+      // If the child, make sure the directory exists ...
+      if (pid == (int) getpid()) {
+         if (XrdProofdAux::AssertDir(sessiondir.c_str(), p->Client()->UI(),
+                                    fMgr->ChangeOwn()) == -1) {
+            return;
+         }
+      }
+
+      // The session working dir depends on the role
+      sesswrkdir = sessiondir;
+      if (p->ConnType() == kXPD_MasterWorker) {
+         XPDFORM(sesswrkdir, "%s/worker-%s-%s", sessiondir.c_str(), xps->Ordinal(), sesstag.c_str());
+      } else {
+         XPDFORM(sesswrkdir, "%s/master-%s-%s", sessiondir.c_str(), xps->Ordinal(), sesstag.c_str());
+      }
    } else {
-      sessiondir += "/";
-      sessiondir += xps->Tag();
-      topsesstag = xps->Tag();
-      topsesstag.replace("session-","");
-   }
-
-   // Make sure the directory exists ...
-   if (XrdProofdAux::AssertDir(sessiondir.c_str(), p->Client()->UI(),
-                               fMgr->ChangeOwn()) == -1) {
-      return;
-   }
-
-   // The session working dir depends on the role
-   sesswrkdir = sessiondir;
-   if (p->ConnType() == kXPD_MasterWorker) {
-      XPDFORM(sesswrkdir, "%s/worker-%s-%s", sessiondir.c_str(), xps->Ordinal(), sesstag.c_str());
-   } else {
-      XPDFORM(sesswrkdir, "%s/master-%s-%s", sessiondir.c_str(), xps->Ordinal(), sesstag.c_str());
+      TRACE(XERR, "negative pid ("<<pid<<"): should not have got here!");  
    }
 
    // Done

@@ -1137,15 +1137,22 @@ Bool_t TXSocket::Create(Bool_t attach)
          // Notify
          return kTRUE;
       } else {
+         // Extract log file path, if any
+         fBuffer = (fConn->GetLastErr()) ? fConn->GetLastErr() : "";
+         Ssiz_t ilog = fBuffer.Index("|log:");
+         if (ilog != kNPOS) fBuffer.Remove(0, ilog);
          // If not free resources now, just give up
          if (fConn->GetOpenError() == kXP_TooManySess) {
             // Avoid to contact the server any more
             fSessionID = -1;
             return kFALSE;
          } else {
-            // Print error mag, if any
-            if ((retriesleft <= 0 || gDebug > 0) && fConn->GetLastErr())
-               Printf("%s: %s", fHost.Data(), fConn->GetLastErr());
+            // Print error msg, if any
+            if ((retriesleft <= 0 || gDebug > 0) && fConn->GetLastErr()) {
+               TString emsg(fConn->GetLastErr());
+               if (ilog != kNPOS) emsg.Remove(ilog);
+               Printf("%s: %s", fHost.Data(), emsg.Data());
+            }
          }
       }
 
@@ -1807,6 +1814,7 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg, Int_t int2,
          break;
       case kQueryLogPaths:
          vout = (char **)&bout;
+         reqhdr.proof.int3 = int3;
       case kReleaseWorker:
       case kSendMsgToUser:
       case kGroupProperties:

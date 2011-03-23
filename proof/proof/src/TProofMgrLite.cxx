@@ -108,8 +108,8 @@ TProof *TProofMgrLite::CreateSession(const char *cfg,
 }
 
 //_____________________________________________________________________________
-TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess,
-                                         const char *stag, const char *pattern)
+TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess, const char *stag,
+                                         const char *pattern, Bool_t)
 {
    // Get logs or log tails from last session associated with this manager
    // instance.
@@ -270,8 +270,9 @@ TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess,
 
    // Retrieve the default part
    if (pl && retrieve) {
-      if (pattern && strlen(pattern) > 0)
-         pl->Retrieve("*", TProofLog::kGrep, 0, pattern);
+      const char *pat = pattern ? pattern : "-v \"| SvcMsg\"";
+      if (pat && strlen(pat) > 0)
+         pl->Retrieve("*", TProofLog::kGrep, 0, pat);
       else
          pl->Retrieve();
    }

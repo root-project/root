@@ -129,9 +129,10 @@ class TMacro;
 // 28 -> 29: Support for config parameters in EnablePackage, idle-timeout
 // 29 -> 30: Add information about data dir in TSlaveInfo
 // 30 -> 31: Development cycle 5.29
+// 31 -> 32: New log path trasmission
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 31;            // protocol version number
+const Int_t       kPROOF_Protocol        = 32;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir

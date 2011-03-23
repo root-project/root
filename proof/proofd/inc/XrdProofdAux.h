@@ -305,6 +305,7 @@ public:
    static int GetUserInfo(int uid, XrdProofUI &ui);
    static bool HasToken(const char *s, const char *tokens);
    static int KillProcess(int pid, bool forcekill, XrdProofUI ui, bool changeown);
+   static void LogEmsgToFile(const char *flog, const char *emsg, const char *pfx = 0);
    static int MvDir(const char *oldpath, const char *newpath);
    static int ParsePidPath(const char *path, XrdOucString &before, XrdOucString &after);
    static int ParseUsrGrp(const char *path, XrdOucString &usr, XrdOucString &grp);

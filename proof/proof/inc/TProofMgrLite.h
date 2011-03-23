@@ -36,7 +36,7 @@ public:
 
    TProof     *CreateSession(const char * = 0, const char * = 0, Int_t = -1);
    TProofLog  *GetSessionLogs(Int_t ridx = 0, const char *stag = 0,
-                              const char *pattern = "-v | SvcMsg");
+                              const char *pattern = "-v | SvcMsg", Bool_t rescan = kFALSE);
    TObjString *ReadBuffer(const char *file, Long64_t ofs, Int_t len);
    TObjString *ReadBuffer(const char *file, const char *pattern);
 

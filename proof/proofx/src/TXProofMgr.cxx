@@ -518,8 +518,8 @@ Int_t TXProofMgr::Reset(Bool_t hard, const char *usr)
 }
 
 //_____________________________________________________________________________
-TProofLog *TXProofMgr::GetSessionLogs(Int_t isess,
-                                      const char *stag, const char *pattern)
+TProofLog *TXProofMgr::GetSessionLogs(Int_t isess, const char *stag,
+                                      const char *pattern, Bool_t rescan)
 {
    // Get logs or log tails from last session associated with this manager
    // instance.
@@ -535,6 +535,9 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess,
    // If 'pattern' is specified only the lines containing it are retrieved
    // (remote grep functionality); to filter out a pattern 'pat' use
    // pattern = "-v pat".
+   // If 'rescan' is TRUE, masters will rescan the worker sandboxes for the exact
+   // paths, instead of using the save information; may be useful when the 
+   // ssave information looks wrong or incomplete. 
    // Returns a TProofLog object (to be deleted by the caller) on success,
    // 0 if something wrong happened.
 
@@ -558,7 +561,8 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess,
    }
 
    // Get the list of paths
-   TObjString *os = fSocket->SendCoordinator(kQueryLogPaths, sesstag.Data(), isess);
+   Int_t rs = (rescan) ? 1 : 0;
+   TObjString *os = fSocket->SendCoordinator(kQueryLogPaths, sesstag.Data(), isess, -1, rs);
 
    // Analyse it now
    Int_t ii = 0;
@@ -606,8 +610,9 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess,
       SafeDelete(os);
       // Retrieve the default part if required
       if (pl && retrieve) {
-         if (pattern && strlen(pattern) > 0)
-            pl->Retrieve("*", TProofLog::kGrep, 0, pattern);
+         const char *pat = pattern ? pattern : "-v \"| SvcMsg\"";
+         if (pat && strlen(pat) > 0)
+            pl->Retrieve("*", TProofLog::kGrep, 0, pat);
          else
             pl->Retrieve();
       }

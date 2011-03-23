@@ -54,6 +54,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
+#include <sys/un.h>
 #include <pwd.h>
 #include <sys/resource.h>
 #include <sys/file.h>
