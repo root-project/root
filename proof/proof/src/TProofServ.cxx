@@ -685,7 +685,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fLogFileMaxSize = -1;
    TString logmx = gEnv->GetValue("ProofServ.LogFileMaxSize", "");
    if (!logmx.IsNull()) {
-      Long64_t xf = 1.;
+      Long64_t xf = 1;
       if (!logmx.IsDigit()) {
          if (logmx.EndsWith("K")) {
             xf = 1024;
@@ -6086,7 +6086,13 @@ void TProofServ::TruncateLogFile()
       struct stat st;
       if (fstat(fLogFileDes, &st) == 0) {
          if (st.st_size >= fLogFileMaxSize) {
-            off_t truncsz = 0.80 * fLogFileMaxSize;
+            off_t truncsz = (off_t) (( fLogFileMaxSize * 80 ) / 100 );
+            if (truncsz < 100) {
+               emsg.Form("+++ WARNING +++: %s: requested truncate size too small"
+                         " (%lld,%lld) - ignore ", fPrefix.Data(), truncsz, fLogFileMaxSize);
+               SendAsynMessage(emsg.Data());
+               return;
+            }
             TSystem::ResetErrno();
             while (ftruncate(fileno(stdout), truncsz) != 0 &&
                    (TSystem::GetErrno() == EINTR)) {
