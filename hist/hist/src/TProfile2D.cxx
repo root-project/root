@@ -626,7 +626,7 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z)
    Int_t bin,binx,biny;
 
    if (fZmin != fZmax) {
-      if (z <fZmin || z> fZmax) return -1;
+      if (z <fZmin || z> fZmax || TMath::IsNaN(z) ) return -1;
    }
 
    fEntries++;
@@ -664,7 +664,7 @@ Int_t TProfile2D::Fill(Double_t x, const char *namey, Double_t z)
    Int_t bin,binx,biny;
 
    if (fZmin != fZmax) {
-      if (z <fZmin || z> fZmax) return -1;
+      if (z <fZmin || z> fZmax || TMath::IsNaN(z)) return -1;
    }
 
    fEntries++;
@@ -701,7 +701,7 @@ Int_t TProfile2D::Fill(const char *namex, const char *namey, Double_t z)
    Int_t bin,binx,biny;
 
    if (fZmin != fZmax) {
-      if (z <fZmin || z> fZmax) return -1;
+      if (z <fZmin || z> fZmax || TMath::IsNaN(z) ) return -1;
    }
 
    fEntries++;
@@ -737,7 +737,7 @@ Int_t TProfile2D::Fill(const char *namex, Double_t y, Double_t z)
    Int_t bin,binx,biny;
 
    if (fZmin != fZmax) {
-      if (z <fZmin || z> fZmax) return -1;
+      if (z <fZmin || z> fZmax || TMath::IsNaN(z)) return -1;
    }
 
    fEntries++;
@@ -777,7 +777,7 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
    Int_t bin,binx,biny;
 
    if (fZmin != fZmax) {
-      if (z <fZmin || z> fZmax) return -1;
+      if (z <fZmin || z> fZmax || TMath::IsNaN(z)) return -1;
    }
 
    Double_t u= (w > 0 ? w : -w);

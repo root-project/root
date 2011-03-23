@@ -240,7 +240,7 @@ void TProfile::BuildOptions(Double_t ymin, Double_t ymax, Option_t *option)
    fTsumwy = fTsumwy2 = 0;
 
 }
-
+ 
 //______________________________________________________________________________
 TProfile::TProfile(const TProfile &profile) : TH1D()
 {
@@ -645,7 +645,7 @@ Int_t TProfile::Fill(Double_t x, Double_t y)
 
    Int_t bin;
    if (fYmin != fYmax) {
-      if (y <fYmin || y> fYmax) return -1;
+      if (y <fYmin || y> fYmax || TMath::IsNaN(y) ) return -1;
    }
 
    fEntries++;
@@ -673,7 +673,7 @@ Int_t TProfile::Fill(const char *namex, Double_t y)
 //
    Int_t bin;
    if (fYmin != fYmax) {
-      if (y <fYmin || y> fYmax) return -1;
+      if (y <fYmin || y> fYmax || TMath::IsNaN(y) ) return -1;
    }
 
    fEntries++;
@@ -705,7 +705,7 @@ Int_t TProfile::Fill(Double_t x, Double_t y, Double_t w)
 
    Int_t bin;
    if (fYmin != fYmax) {
-      if (y <fYmin || y> fYmax) return -1;
+      if (y <fYmin || y> fYmax || TMath::IsNaN(y) ) return -1;
    }
 
    Double_t u= (w > 0 ? w : -w);
@@ -735,7 +735,7 @@ Int_t TProfile::Fill(const char *namex, Double_t y, Double_t w)
    Int_t bin;
 
    if (fYmin != fYmax) {
-      if (y <fYmin || y> fYmax) return -1;
+      if (y <fYmin || y> fYmax || TMath::IsNaN(y) ) return -1;
    }
 
    Double_t u= (w > 0 ? w : -w);
@@ -768,7 +768,7 @@ void TProfile::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const D
    ntimes *= stride;
    for (i=0;i<ntimes;i+=stride) {
       if (fYmin != fYmax) {
-         if (y[i] <fYmin || y[i]> fYmax) continue;
+         if (y[i] <fYmin || y[i]> fYmax || TMath::IsNaN(y[i])) continue;
       }
 
       Double_t u= (w[i] > 0 ? w[i] : -w[i]);
