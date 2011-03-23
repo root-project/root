@@ -527,13 +527,13 @@ inline Double_t TMath::Infinity() {
 template<typename T> 
 inline T TMath::Limits<T>::Min() { 
    // returns maximum representation for type T
-   return std::numeric_limits<T>::min(); 
+   return (std::numeric_limits<T>::min)();    //N.B. use this signature to avoid class with macro min() on Windows 
 }
 
 template<typename T> 
 inline T TMath::Limits<T>::Max() { 
    // returns minimum double representation
-   return std::numeric_limits<T>::max(); 
+   return (std::numeric_limits<T>::max)();  //N.B. use this signature to avoid class with macro max() on Windows 
 }
 
 template<typename T> 
