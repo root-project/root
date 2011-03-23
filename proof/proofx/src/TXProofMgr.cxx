@@ -561,8 +561,8 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess, const char *stag,
    }
 
    // Get the list of paths
-   Int_t rs = (rescan) ? 1 : 0;
-   TObjString *os = fSocket->SendCoordinator(kQueryLogPaths, sesstag.Data(), isess, -1, rs);
+   Int_t xrs = (rescan) ? 1 : 0;
+   TObjString *os = fSocket->SendCoordinator(kQueryLogPaths, sesstag.Data(), isess, -1, xrs);
 
    // Analyse it now
    Int_t ii = 0;

@@ -6089,7 +6089,7 @@ void TProofServ::TruncateLogFile()
             off_t truncsz = (off_t) (( fLogFileMaxSize * 80 ) / 100 );
             if (truncsz < 100) {
                emsg.Form("+++ WARNING +++: %s: requested truncate size too small"
-                         " (%lld,%lld) - ignore ", fPrefix.Data(), truncsz, fLogFileMaxSize);
+                         " (%lld,%lld) - ignore ", fPrefix.Data(), (Long64_t) truncsz, fLogFileMaxSize);
                SendAsynMessage(emsg.Data());
                return;
             }
