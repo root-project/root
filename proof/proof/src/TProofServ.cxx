@@ -6079,7 +6079,7 @@ void TProofServ::TruncateLogFile()
 {
    // Truncate the log file to the 80% of the required max size if this
    // is set.
-
+#ifndef WIN32
    TString emsg;
    if (fLogFileMaxSize > 0 && fLogFileDes > 0) {
       fflush(stdout);
@@ -6112,6 +6112,7 @@ void TProofServ::TruncateLogFile()
          SendAsynMessage(emsg.Data());
       }
    }
+#endif
 }
 
 //______________________________________________________________________________
