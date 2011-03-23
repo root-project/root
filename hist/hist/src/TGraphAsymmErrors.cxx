@@ -524,10 +524,11 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    }
 
    // weights works only in case of Normal approximation or Bayesian 
-   if (!bIsBayesian && pBound != &TEfficiency::Normal ) 
-      Warning("Divide","Histogram have weights - only normal error calculation is supported and it will be used");
+   if (bEffective && !bIsBayesian && pBound != &TEfficiency::Normal ) {
+      Warning("Divide","Histograms have weights: only Normal or Bayesian error calculation is supported");
+      Info("Divide","Using now the Normal approximation for weighted histograms");
+   }
 
-   
    //Set the graph to have a number of points equal to the number of histogram
    //bins
    Int_t nbins = pass->GetNbinsX();
