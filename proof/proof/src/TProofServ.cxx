@@ -681,6 +681,33 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    if (gProofDebugLevel > 0)
       Info("TProofServ", "DebugLevel %d Mask 0x%x", gProofDebugLevel, gProofDebugMask);
 
+   // Max log file size
+   fLogFileMaxSize = -1;
+   TString logmx = gEnv->GetValue("ProofServ.LogFileMaxSize", "");
+   if (!logmx.IsNull()) {
+      Long64_t xf = 1.;
+      if (!logmx.IsDigit()) {
+         if (logmx.EndsWith("K")) {
+            xf = 1024;
+            logmx.Remove(TString::kTrailing, 'K');
+         } else if (logmx.EndsWith("M")) {
+            xf = 1024*1024;
+            logmx.Remove(TString::kTrailing, 'M');
+         } if (logmx.EndsWith("G")) {
+            xf = 1024*1024*1024;
+            logmx.Remove(TString::kTrailing, 'G');
+         }
+      }
+      if (logmx.IsDigit()) {
+         fLogFileMaxSize = logmx.Atoi() * xf;
+         if (fLogFileMaxSize > 0)
+            Info("TProofServ", "keeping the log file size within %lld bytes", fLogFileMaxSize);
+      } else {
+         logmx = gEnv->GetValue("ProofServ.LogFileMaxSize", "");
+         Warning("TProofServ", "bad formatted log file size limit ignored: '%s'", logmx.Data());
+      }
+   }
+   
    // Parse options
    GetOptions(argc, argv);
 
@@ -1263,6 +1290,10 @@ void TProofServ::HandleSocketInput()
    TMessage *mess;
    Int_t rc = 0;
    TString exmsg;
+
+   // Check log file lenght (before the action, so we have the chance to keep the
+   // latest logs)
+   TruncateLogFile();
 
    try {
    
@@ -5620,10 +5651,10 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
          buf.Form("%s: %s:<%.*s>: %s", fgSysLogEntity.Data(), type, ipos, location, msg);
    }
    fflush(fgErrorHandlerFile);
-
+   
    if (tosyslog)
       gSystem->Syslog(loglevel, buf);
-
+   
    if (abort) {
 
       static Bool_t recursive = kFALSE;
@@ -6041,6 +6072,46 @@ void TProofServ::FlushLogFile()
 
    off_t lend = lseek(fileno(stdout), (off_t)0, SEEK_END);
    if (lend >= 0) lseek(fLogFileDes, lend, SEEK_SET);
+}
+
+//______________________________________________________________________________
+void TProofServ::TruncateLogFile()
+{
+   // Truncate the log file to the 80% of the required max size if this
+   // is set.
+
+   TString emsg;
+   if (fLogFileMaxSize > 0 && fLogFileDes > 0) {
+      fflush(stdout);
+      struct stat st;
+      if (fstat(fLogFileDes, &st) == 0) {
+         if (st.st_size >= fLogFileMaxSize) {
+            off_t truncsz = 0.80 * fLogFileMaxSize;
+            TSystem::ResetErrno();
+            while (ftruncate(fileno(stdout), truncsz) != 0 &&
+                   (TSystem::GetErrno() == EINTR)) {
+               TSystem::ResetErrno();
+            }
+            if (TSystem::GetErrno() > 0) {
+               Error("TruncateLogFile", "truncating to %lld bytes; file size is %lld bytes (errno: %d)",
+                                        (Long64_t)truncsz, (Long64_t)st.st_size, TSystem::GetErrno());
+               emsg.Form("+++ WARNING +++: %s: problems truncating log file to %lld bytes; file size is %lld bytes"
+                         " (errno: %d)", fPrefix.Data(), (Long64_t)truncsz, (Long64_t)st.st_size, TSystem::GetErrno());
+               SendAsynMessage(emsg.Data());
+            } else {
+               Info("TruncateLogFile", "file truncated to %lld bytes (80%% of %lld); file size was %lld bytes ",
+                                       (Long64_t)truncsz, fLogFileMaxSize, (Long64_t)st.st_size);
+               emsg.Form("+++ WARNING +++: %s: log file truncated to %lld bytes (80%% of %lld)",
+                                       fPrefix.Data(), (Long64_t)truncsz, fLogFileMaxSize);
+               SendAsynMessage(emsg.Data());
+            }
+         }
+      } else {
+         emsg.Form("+++ WARNING +++: %s: could not stat log file descriptor"
+                   " for truncation (errno: %d)", fPrefix.Data(), TSystem::GetErrno());
+         SendAsynMessage(emsg.Data());
+      }
+   }
 }
 
 //______________________________________________________________________________

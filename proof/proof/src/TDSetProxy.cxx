@@ -64,6 +64,10 @@ TDSetElement *TDSetProxy::Next(Long64_t totalEntries)
    // Get the next packet
 
    fCurrent = fServ->GetNextPacket(totalEntries);
+   
+   // Check log file lenght (before processing the next packet, so we have the
+   // chance to keep the latest logs)
+   fServ->TruncateLogFile();
 
    return fCurrent;
 }
