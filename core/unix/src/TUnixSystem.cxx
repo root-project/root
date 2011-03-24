@@ -265,8 +265,12 @@ extern "C" {
 #include <fenv.h>
 #endif
 
-#if defined(R__MACOSX) && !defined(__xlC__) && !defined(__i386__) && \
-   !defined(__x86_64__) && !defined(__arm__)
+#if defined(R__MACOSX) && defined(__SSE2__)
+#include <xmmintrin.h>
+#endif
+
+#if defined(R__MACOSX) && !defined(__SSE2__) && !defined(__xlC__) && \
+   !defined(__i386__) && !defined(__x86_64__) && !defined(__arm__)
 #include <fenv.h>
 #include <signal.h>
 #include <ucontext.h>
@@ -287,7 +291,8 @@ enum {
 };
 #endif
 
-#if defined(R__MACOSX) && (defined(__i386__) || defined(__x86_64__) || defined(__arm__))
+#if defined(R__MACOSX) && !defined(__SSE2__) && \
+    (defined(__i386__) || defined(__x86_64__) || defined(__arm__))
 #include <fenv.h>
 #endif
 // End FPE handling includes
@@ -783,9 +788,7 @@ Int_t TUnixSystem::GetFPEMask()
 
 #if __GLIBC_MINOR__>=3
 
-   // clear pending exceptions so feenableexcept does not trigger them
-   feclearexcept(FE_ALL_EXCEPT);
-   Int_t oldmask = feenableexcept(0);
+   Int_t oldmask = fegetexcept();
 
 #else
    fenv_t oldenv;
@@ -810,7 +813,19 @@ Int_t TUnixSystem::GetFPEMask()
 #endif
 #endif
 
-#if defined(R__MACOSX) && (defined(__i386__) || defined(__x86_64__) || defined(__arm__))
+#if defined(R__MACOSX) && defined(__SSE2__)
+   // OS X uses the SSE unit for all FP math by default, not the x87 FP unit
+   Int_t oldmask = ~_MM_GET_EXCEPTION_MASK();
+   
+   if (oldmask & _MM_MASK_INVALID  )   mask |= kInvalid;
+   if (oldmask & _MM_MASK_DIV_ZERO )   mask |= kDivByZero;
+   if (oldmask & _MM_MASK_OVERFLOW )   mask |= kOverflow;
+   if (oldmask & _MM_MASK_UNDERFLOW)   mask |= kUnderflow;
+   if (oldmask & _MM_MASK_INEXACT  )   mask |= kInexact;
+#endif
+
+#if defined(R__MACOSX) && !defined(__SSE2__) && \
+    (defined(__i386__) || defined(__x86_64__) || defined(__arm__))
    fenv_t oldenv;
    fegetenv(&oldenv);
    fesetenv(&oldenv);
@@ -824,13 +839,11 @@ Int_t TUnixSystem::GetFPEMask()
    if (oldmask & FE_DIVBYZERO)   mask |= kDivByZero;
    if (oldmask & FE_OVERFLOW )   mask |= kOverflow;
    if (oldmask & FE_UNDERFLOW)   mask |= kUnderflow;
-# ifdef FE_INEXACT
    if (oldmask & FE_INEXACT  )   mask |= kInexact;
-# endif
 #endif
 
-#if defined(R__MACOSX) && !defined(__xlC__) && !defined(__i386__) && \
-   !defined(__x86_64__) && !defined(__arm__)
+#if defined(R__MACOSX) && !defined(__SSE2__) && !defined(__xlC__) && \
+    !defined(__i386__) && !defined(__x86_64__) && !defined(__arm__)
    Long64_t oldmask;
    fegetenvd(oldmask);
 
@@ -887,7 +900,20 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 #endif
 #endif
 
-#if defined(R__MACOSX) && (defined(__i386__) || defined(__x86_64__) || defined(__arm__))
+#if defined(R__MACOSX) && defined(__SSE2__)
+   // OS X uses the SSE unit for all FP math by default, not the x87 FP unit
+   Int_t newm = 0;
+   if (mask & kInvalid  )   newm |= _MM_MASK_INVALID;
+   if (mask & kDivByZero)   newm |= _MM_MASK_DIV_ZERO;
+   if (mask & kOverflow )   newm |= _MM_MASK_OVERFLOW;
+   if (mask & kUnderflow)   newm |= _MM_MASK_UNDERFLOW;
+   if (mask & kInexact  )   newm |= _MM_MASK_INEXACT;
+   
+   _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~newm);
+#endif
+
+#if defined(R__MACOSX) && !defined(__SSE2__) && \
+    (defined(__i386__) || defined(__x86_64__) || defined(__arm__))
    Int_t newm = 0;
    if (mask & kInvalid  )   newm |= FE_INVALID;
    if (mask & kDivByZero)   newm |= FE_DIVBYZERO;
@@ -905,8 +931,8 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
    fesetenv(&cur);
 #endif
 
-#if defined(R__MACOSX) && !defined(__xlC__) && !defined(__i386__) && \
-   !defined(__x86_64__) && !defined(__arm__)
+#if defined(R__MACOSX) && !defined(__SSE2__) && !defined(__xlC__) && \
+    !defined(__i386__) && !defined(__x86_64__) && !defined(__arm__)
    Int_t newm = 0;
    if (mask & kInvalid  )   newm |= FE_ENABLE_INVALID;
    if (mask & kDivByZero)   newm |= FE_ENABLE_DIVBYZERO;
