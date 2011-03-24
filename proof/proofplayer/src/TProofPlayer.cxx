@@ -2453,24 +2453,32 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
       if (!IsClient()) {
          if (pf->IsMerge()) {
             // Fill the output file name, if not done by the client
-            if (strlen(pf->GetOutputFileName()) <= 0) {
-               TString of(Form("root://%s", gSystem->HostName()));
-               if (gSystem->Getenv("XRDPORT")) {
-                  TString sp(gSystem->Getenv("XRDPORT"));
-                  if (sp.IsDigit())
-                     of += Form(":%s", sp.Data());
+            if (strlen(pf->GetOutputFileName()) <= 0 ||
+                !pf->TestBit(TProofOutputFile::kOutputFileNameSet)) {
+               TString of;
+               if (gSystem->Getenv("LOCALDATASERVER")) {
+                  of = gSystem->Getenv("LOCALDATASERVER");
+               } else {
+                  // Assume an xroot server running on the machine
+                  of.Form("root://%s", gSystem->HostName());
+                  if (gSystem->Getenv("XRDPORT")) {
+                     TString sp(gSystem->Getenv("XRDPORT"));
+                     if (sp.IsDigit())
+                        of += Form(":%s", sp.Data());
+                  }
                }
                TString sessionPath(gProofServ->GetSessionDir());
-               // Take into account a prefix, if any
+               // Take into account a prefix, if included and if xrootd
+               TString sproto = TUrl(sessionPath).GetProtocol();
                TString pfx  = gEnv->GetValue("Path.Localroot","");
-               if (!pfx.IsNull())
+               if (!pfx.IsNull() && sessionPath.BeginsWith(pfx) &&
+                  (sproto == "root" || sproto == "xrd"))
                   sessionPath.Remove(0, pfx.Length());
-               of += Form("/%s/%s", sessionPath.Data(), pf->GetFileName());
+               of += TString::Format("/%s/%s", sessionPath.Data(), pf->GetFileName());
                pf->SetOutputFileName(of);
             }
-            // Notify, if required
-            if (gDebug > 0)
-               pf->Print();
+            // Notify
+            pf->Print();
          }
       } else {
          // On clients notify the output path

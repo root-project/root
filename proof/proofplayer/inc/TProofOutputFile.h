@@ -79,6 +79,7 @@ private:
 protected:
 
 public:
+   enum EStatusBits { kOutputFileNameSet = BIT(16)};
    TProofOutputFile() : fDir(), fRawDir(), fFileName(), fOptionsAnchor(), fOutputFileName(),
                         fWorkerOrdinal(), fLocalHost(), fIsLocal(kFALSE), fMerged(kFALSE),
                         fRunType(kMerge), fTypeOpt(kRemote), fDataSet(0), fMerger(0) { }
