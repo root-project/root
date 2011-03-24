@@ -1545,12 +1545,6 @@ int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
       } else if (!strcmp(nxt, "allow") || !strcmp(nxt, "enable") || !strcmp(nxt, "on")) {
          denied = 0;
          fRootdExe = "<>";
-      } else if (!strncmp(nxt, "rootsys:", 8)) {
-         XPDFORM(fRootdExe, "<%s>", nxt + 8);
-      } else if (!strncmp(nxt, "path:", 5)) {
-         fRootdExe = nxt + 5;
-         if (!fRootdExe.endswith("/")) fRootdExe += "/";
-         fRootdExe += "rootd";
       } else if (!strncmp(nxt, "mode:", 5)) {
          mode = nxt + 5;
       } else if (!strncmp(nxt, "auth:", 5)) {
@@ -1566,6 +1560,7 @@ int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
       if (fRootdExe.length() <= 0) fRootdExe = "<>";
       // Add mandatory arguments
       fRootdArgs.push_back(XrdOucString("-i"));
+      fRootdArgs.push_back(XrdOucString("-nologin"));
       if (mode == "ro") fRootdArgs.push_back(XrdOucString("-r"));
       if (auth == "none") fRootdArgs.push_back(XrdOucString("-noauth"));
    } else {
