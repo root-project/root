@@ -381,6 +381,10 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    Int_t validateMode = 0;
    Int_t gprc = TProof::GetParameter(input, "PROOF_ValidateByFile", validateMode);
    Bool_t byfile = (gprc == 0 && validateMode > 0 && num > -1) ? kTRUE : kFALSE;
+   if (num > -1)
+      PDB(kPacketizer,2)
+         Info("TPacketizerAdaptive",
+              "processing subset of entries: validating by file? %s", byfile ? "yes": "no");
    ValidateFiles(dset, slaves, num, byfile);
 
    if (!fValid) return;
@@ -442,7 +446,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
 
          // If this element contains the start of the global range
          // adjust its start and number of entries
-         if (cur < first) {
+         if (cur <= first) {
             e->SetFirst(eFirst + (first - cur));
             e->SetNum(e->GetNum() - (first - cur));
             PDB(kPacketizer,2)
