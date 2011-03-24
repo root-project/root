@@ -217,6 +217,7 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
    Info("Init", "dir: %s (raw: %s)", fDir.Data(), fRawDir.Data());
 
    // Default output file name
+   ResetBit(TProofOutputFile::kOutputFileNameSet);
    fOutputFileName = gEnv->GetValue("Proof.OutputFile", "<file>");
    // Add default file name
    TString fileName = path;
@@ -264,6 +265,7 @@ void TProofOutputFile::SetOutputFileName(const char *name)
    } else {
       fOutputFileName = "";
    }
+   SetBit(TProofOutputFile::kOutputFileNameSet);
 }
 
 //______________________________________________________________________________
