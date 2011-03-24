@@ -18,10 +18,16 @@
 .SH NAME
 hist2workspace \- utility to create RooFit/RooStats workspace from histograms
 .SH SYNOPSIS
-.B hist2workspace input.xml
+.B hist2workspace [option] input.xml
 .SH DESCRIPTION
 .B hist2workspace 
 is a utility to create RooFit/RooStats workspace from histograms
+.SH OPTIONS
+.B -standard_form
+default model, which creates an extended PDF that interpolates between RooHistFuncs.  This is much faster for models with many bins and uses significantly less memory.
+.br
+.B -number_counting_form
+this was the original model in 5.28 (without patches). It uses a Poisson for each bin of the histogram.  This can become slow and memory intensive when there are many bins.
 .br
 .br
 .SH Prepare working area
