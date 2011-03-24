@@ -2,7 +2,11 @@
 Processing runsubdir.C...
 TChain::AddFile
 Trying subdir.root/data1.root with a tree name
-subdir.root/data1.root tree:tree entries=1234567890
+OBJ: TChain	tree	 : 0
+ subdir.root/data1.roottree:tree entries=1234567890
+******************************************************************************
+*Chain   :tree      : subdir.root/data1.root                                 *
+******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
 *Entries :        3 : Total =             868 bytes  File  Size =        395 *
@@ -13,7 +17,11 @@ subdir.root/data1.root tree:tree entries=1234567890
 *Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
 *............................................................................*
 Trying subdir.root/data2.root
-subdir.root/data2.root tree:tree entries=1234567890
+OBJ: TChain	tree	 : 0
+ subdir.root/data2.roottree:tree entries=1234567890
+******************************************************************************
+*Chain   :tree      : subdir.root/data2.root                                 *
+******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
 *Entries :        3 : Total =             868 bytes  File  Size =        395 *
@@ -25,8 +33,12 @@ subdir.root/data2.root tree:tree entries=1234567890
 *............................................................................*
 TChain::Add
 Trying subdir.root/data*.root
-subdir.root/data1.root tree:tree entries=1234567890
-subdir.root/data2.root tree:tree entries=1234567890
+OBJ: TChain	tree	 : 0
+ subdir.root/data1.roottree:tree entries=1234567890
+ subdir.root/data2.roottree:tree entries=1234567890
+******************************************************************************
+*Chain   :tree      : subdir.root/data1.root                                 *
+******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
 *Entries :        3 : Total =             868 bytes  File  Size =        395 *
@@ -36,6 +48,9 @@ subdir.root/data2.root tree:tree entries=1234567890
 *Entries :        3 : Total  Size=        548 bytes  File Size  =         82 *
 *Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
 *............................................................................*
+******************************************************************************
+*Chain   :tree      : subdir.root/data2.root                                 *
+******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
 *Entries :        3 : Total =             868 bytes  File  Size =        395 *
@@ -46,8 +61,12 @@ subdir.root/data2.root tree:tree entries=1234567890
 *Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
 *............................................................................*
 Trying subdir.root/data*.root/tree
-subdir.root/data1.root tree:tree entries=1234567890
-subdir.root/data2.root tree:tree entries=1234567890
+OBJ: TChain	tree	 : 0
+ subdir.root/data1.roottree:tree entries=1234567890
+ subdir.root/data2.roottree:tree entries=1234567890
+******************************************************************************
+*Chain   :tree      : subdir.root/data1.root                                 *
+******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
 *Entries :        3 : Total =             868 bytes  File  Size =        395 *
@@ -57,6 +76,9 @@ subdir.root/data2.root tree:tree entries=1234567890
 *Entries :        3 : Total  Size=        548 bytes  File Size  =         82 *
 *Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
 *............................................................................*
+******************************************************************************
+*Chain   :tree      : subdir.root/data2.root                                 *
+******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
 *Entries :        3 : Total =             868 bytes  File  Size =        395 *
@@ -67,7 +89,11 @@ subdir.root/data2.root tree:tree entries=1234567890
 *Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
 *............................................................................*
 Trying subdir.root/data1.root/tree
-subdir.root/data1.root tree:tree entries=1234567890
+OBJ: TChain	tree	 : 0
+ subdir.root/data1.roottree:tree entries=1234567890
+******************************************************************************
+*Chain   :tree      : subdir.root/data1.root                                 *
+******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
 *Entries :        3 : Total =             868 bytes  File  Size =        395 *
@@ -78,7 +104,11 @@ subdir.root/data1.root tree:tree entries=1234567890
 *Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
 *............................................................................*
 Trying subdir.root/data2.root
-subdir.root/data2.root tree:tree entries=1234567890
+OBJ: TChain	tree	 : 0
+ subdir.root/data2.roottree:tree entries=1234567890
+******************************************************************************
+*Chain   :tree      : subdir.root/data2.root                                 *
+******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
 *Entries :        3 : Total =             868 bytes  File  Size =        395 *

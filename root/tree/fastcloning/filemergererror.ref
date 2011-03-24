@@ -2,8 +2,9 @@
 Processing runfilemergererror.C...
 Written file: TestFile1.root
 Written file: TestFile2.root
-TestFile1.root tree:TestTree entries=1234567890
-TestFile2.root tree:TestTree entries=1234567890
+OBJ: TChain	TestTree	 : 0
+ TestFile1.roottree:TestTree entries=1234567890
+ TestFile2.roottree:TestTree entries=1234567890
 Opened file: TestMerged.root
 Accessed TestTree
 Opened file: TestMerged.root in update mode

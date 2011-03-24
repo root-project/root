@@ -2,5 +2,6 @@ Target file: result.root
 Source file 1: hsimple14.root
 Source file 2: hsimple20.root
 Target path: result.root:/
-hsimple14.root tree:ntuple entries=1234567890
-hsimple20.root tree:ntuple entries=1234567890
+OBJ: TChain	ntuple	 : 0
+ hsimple14.roottree:ntuple entries=1234567890
+ hsimple20.roottree:ntuple entries=1234567890
