@@ -420,7 +420,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
          } else if(obj->IsA()->InheritsFrom( TTree::Class() )) {
             if (!fNoTrees) {
                if (globChain) {
-                  globChain->ls();
+                  globChain->ls("noaddr");
                   if (fFastMethod) globChain->Merge(target->GetFile(),0,"keep fast");
                   else             globChain->Merge(target->GetFile(),0,"keep");
                   delete globChain;

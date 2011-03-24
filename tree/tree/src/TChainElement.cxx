@@ -17,6 +17,8 @@
 
 #include "TTree.h"
 #include "TChainElement.h"
+#include "Riostream.h"
+#include "TROOT.h"
 
 ClassImp(TChainElement)
 
@@ -75,7 +77,8 @@ void TChainElement::ls(Option_t *) const
 {
    // List files in the chain.
 
-   printf("%s tree:%s entries=%lld\n",GetTitle(),GetName(),fEntries);
+   TROOT::IndentLevel();
+   cout << GetTitle() << "tree:" << GetName() << " entries=" << fEntries << '\n';
 }
 
 //_______________________________________________________________________

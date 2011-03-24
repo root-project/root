@@ -1662,11 +1662,14 @@ void TChain::Loop(Option_t* option, Long64_t nentries, Long64_t firstentry)
 void TChain::ls(Option_t* option) const
 {
    // -- List the chain.
+   TObject::ls(option);
    TIter next(fFiles);
    TChainElement* file = 0;
+   TROOT::IncreaseDirLevel();
    while ((file = (TChainElement*)next())) {
       file->ls(option);
    }
+   TROOT::DecreaseDirLevel();
 }
 
 //______________________________________________________________________________
@@ -1912,6 +1915,9 @@ void TChain::Print(Option_t *option) const
    TIter next(fFiles);
    TChainElement *element;
    while ((element = (TChainElement*)next())) {
+      Printf("******************************************************************************");
+      Printf("*Chain   :%-10s: %-54s *", GetName(), element->GetTitle());
+      Printf("******************************************************************************");
       TFile *file = TFile::Open(element->GetTitle());
       if (file && !file->IsZombie()) {
          TTree *tree = (TTree*)file->Get(element->GetName());

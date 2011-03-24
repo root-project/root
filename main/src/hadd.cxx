@@ -404,7 +404,7 @@ int MergeRootfile( TDirectory *target, TList *sourcelist)
             //printf("cas d'une directory\n");
          } else if(obj->IsA()->InheritsFrom( TTree::Class() )) {
             if (!noTrees) {
-               globChain->ls();
+               globChain->ls("noaddr");
                if (fastMethod && !reoptimize) globChain->Merge(target->GetFile(),0,"keep fast");
                else                           globChain->Merge(target->GetFile(),0,"keep");
                delete globChain;

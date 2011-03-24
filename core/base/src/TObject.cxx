@@ -533,14 +533,18 @@ Bool_t TObject::IsEqual(const TObject *obj) const
 }
 
 //______________________________________________________________________________
-void TObject::ls(Option_t *) const
+void TObject::ls(Option_t *option) const
 {
    // The ls function lists the contents of a class on stdout. Ls output
    // is typically much less verbose then Dump().
 
    TROOT::IndentLevel();
-   cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
-        << Int_t(TestBit(kCanDelete))  <<" at: "<<this<< endl;
+   cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : ";
+   cout << Int_t(TestBit(kCanDelete));  
+   if (strstr(option,"noaddr")==0) {
+      cout <<" at: "<< this ;
+   }
+   cout << endl;
 }
 
 //______________________________________________________________________________
