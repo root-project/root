@@ -1060,12 +1060,12 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
          useForTraining = requestedTraining; 
          useForTesting  = requestedTesting; 
       }
-      else if ((requestedTesting == 0)){ // case B)
+      else if (requestedTesting == 0){ // case B)
          useForTraining = TMath::Max(requestedTraining,alreadyAvailableTraining);
          useForTesting= availableUndefined+alreadyAvailableTraining+alreadyAvailableTesting - useForTraining; // the rest
          requestedTesting = useForTesting;
       }
-      else if ((requestedTraining == 0)){ // case B)
+      else if (requestedTraining == 0){ // case B)
          useForTesting = TMath::Max(requestedTesting,alreadyAvailableTesting);
          useForTraining= availableUndefined+alreadyAvailableTraining+alreadyAvailableTesting - useForTesting; // the rest
          requestedTraining = useForTraining;
