@@ -25,6 +25,14 @@ HF_MAKEWORKSPACEEXEDEP := $(HF_MAKEWORKSPACEEXEO:.o=.d)
 
 HF_MAKEWORKSPACEEXE    := bin/hist2workspace$(EXEEXT)
 
+#for fast (not working)
+#HF_MAKEWORKSPACEEXE2S   := $(MODDIRS)/MakeModelAndMeasurementsFast.cxx
+#HF_MAKEWORKSPACEEXE2O   := $(call stripsrc,$(HF_MAKEWORKSPACEEXE2S:.cxx=.o))
+#HF_MAKEWORKSPACEEXE2O   := roofit/histfactory/src/ConfigParser.o roofit/histfactory/src/EstimateSummary.o roofit/histfactory/src/Helper.o roofit/histfactory/src/HistoToWorkspaceFactoryFast.o roofit/histfactory/src/LinInterpVar.o  roofit/histfactory/src/MakeModelAndMeasurementsFast.o roofit/histfactory/src/PiecewiseInterpolation.o
+#HF_MAKEWORKSPACEEXE2DEP := $(HF_MAKEWORKSPACEEXE2O:.o=.d)
+
+#HF_MAKEWORKSPACEEXE2    := bin/hist2workspaceFast$(EXEEXT)
+
 
 
 ifeq ($(PLATFORM),win32)
@@ -57,6 +65,7 @@ HISTFACTORYDH   := $(HISTFACTORYDS:.cxx=.h)
 HISTFACTORYH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 HISTFACTORYS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HISTFACTORYO    := $(call stripsrc,$(HISTFACTORYS:.cxx=.o))
+
 
 HISTFACTORYDEP  := $(HISTFACTORYO:.o=.d) $(HISTFACTORYDO:.o=.d)
 
@@ -105,25 +114,29 @@ $(HF_MAKEWORKSPACEEXE): $(HF_MAKEWORKSPACEEXEO) $(ROOTLIBSDEP) $(RINTLIB) $(HIST
 		$(LD) $(LDFLAGS) -o $@ $(HF_MAKEWORKSPACEEXEO)  $(ROOTICON) $(BOOTULIBS)  \
 		   $(ROOTULIBS) $(RPATH) $(ROOTLIBS)  $(RINTLIBS) $(HF_LIBS)  $(SYSLIBS)  
 
+#$(HF_MAKEWORKSPACEEXE2): $(HF_MAKEWORKSPACEEXEO) $(ROOTLIBSDEP) $(RINTLIB) $(HISTFACTORYLIBDEPM) \
+#		$(HF_PREPAREHISTFACTORY) $(HISTFACTORYLIB)
+#		$(LD) $(LDFLAGS) -o $@ $(HF_MAKEWORKSPACEEXEO)  $(ROOTICON) $(BOOTULIBS)  \
+#		   $(ROOTULIBS) $(RPATH) $(ROOTLIBS)  $(RINTLIBS) $(HF_LIBS)  $(SYSLIBS)  
+
 $(HF_PREPAREHISTFACTORY) : $(MODDIRC)/prepareHistFactory
 		cp $(MODDIRC)/prepareHistFactory $@
 		chmod +x $@
 
 
-ALLEXECS     += $(HF_MAKEWORKSPACEEXE) 
+ALLEXECS     += $(HF_MAKEWORKSPACEEXE) # $(HF_MAKEWORKSPACEEXE2) 
 
 
 
-all-$(MODNAME): $(HISTFACTORYLIB) $(HISTFACTORYMAP) $(HF_MAKEWORKSPACEEXE)
+all-$(MODNAME): $(HISTFACTORYLIB) $(HISTFACTORYMAP) $(HF_MAKEWORKSPACEEXE) #$(HF_MAKEWORKSPACEEXE2)
 
 clean-$(MODNAME):
-		@rm -f $(HISTFACTORYO) $(HISTFACTORYDO) $(HF_MAKEWORKSPACEEXEO)
+		@rm -f $(HISTFACTORYO) $(HISTFACTORYDO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -rf $(HISTFACTORYDEP) $(HISTFACTORYLIB) $(HISTFACTORYMAP) \
-		   $(HISTFACTORYDS) $(HISTFACTORYDH) $(HF_MAKEWORKSPACEEXE) \
-		   $(HF_PREPAREHISTFACTORY)
+		   $(HISTFACTORYDS) $(HISTFACTORYDH)
 
 distclean::     distclean-$(MODNAME)

@@ -85,49 +85,16 @@ END_HTML
 #include "Helper.h"
 #include "ConfigParser.h"
 #include "RooStats/HistFactory/EstimateSummary.h"
-#include "RooStats/HistFactory/HistoToWorkspaceFactory.h"
+#include "RooStats/HistFactory/HistoToWorkspaceFactoryFast.h"
 
 
 using namespace RooFit;
 using namespace RooStats;
 using namespace HistFactory;
 
-void topDriver(string input);
-void fastDriver(string input); // in MakeModelAndMeasurementsFast
 
-//_____________________________batch only_____________________
-#ifndef __CINT__
-
-int main(int argc, char** argv) {
-
-  if(! (argc>1)) {
-    cerr << "need input file" << endl;
-    exit(1);
-  }
-
-  if(argc==2){
-    string input(argv[1]);
-    fastDriver(input);
-  }
-
-  if(argc==3){
-    string flag(argv[1]);
-    string input(argv[2]);
-    if(flag=="-standard_form")
-      fastDriver(input);
-    else if(flag=="-number_counting_form")
-      topDriver(input);
-    else
-      cerr <<"unrecognized flag.  Options are -standard_form or -number_counting_form"<<endl;
-
-  }
-  return 0;
-}
-
-#endif
-
-void topDriver(string input ){
-
+// main is int MakeModelAndMeasurements
+void fastDriver(string input ){
   // TO DO:
   // would like to fully factorize the XML parsing.  
   // No clear need to have some here and some in ConfigParser
@@ -278,7 +245,7 @@ void topDriver(string input ){
         vector<RooWorkspace*> chs;
         vector<string> ch_names;
         TFile* outFile = new TFile(outputFileName.c_str(), "recreate");
-        HistoToWorkspaceFactory factory(outputFileNamePrefix, rowTitle, systToFix, nominalLumi, lumiError, lowBin, highBin , outFile);
+        HistoToWorkspaceFactoryFast factory(outputFileNamePrefix, rowTitle, systToFix, nominalLumi, lumiError, lowBin, highBin , outFile);
 
 
         // for results tables
@@ -313,13 +280,19 @@ void topDriver(string input ){
           }
 
 	  // fill out ModelConfig and export
-          RooAbsData* expData = ws->data("expData");
+          RooAbsData* expData = ws->data("asimovData");
 	  proto_config->GuessObsAndNuisance(*expData);
 	  ws->writeToFile((outputFileNamePrefix+"_"+ch_name+"_"+rowTitle+"_model.root").c_str());
 
 	  // do fit unless exportOnly requested
-	  if(!exportOnly)
-	    factory.FitModel(ws, ch_name, "newSimPdf", "expData", false);
+	  if(!exportOnly){
+	    if(ws->data("obsData")){
+	      factory.FitModel(ws, ch_name, "newSimPdf", "obsData", false);
+	    } else {
+	      factory.FitModel(ws, ch_name, "newSimPdf", "asimovData", false);
+	    }
+
+	  }
           fprintf(factory.pFile, " & " );
         }
 
@@ -355,15 +328,20 @@ void topDriver(string input ){
           if(gammaSyst.size()>0 || uniformSyst.size()>0 || logNormSyst.size()>0) 
 	    combined_config->SetPdf(*ws->pdf("newSimPdf"));
 
-          RooAbsData* simData = ws->data("simData");
+          RooAbsData* simData = ws->data("asimovData");
 	  combined_config->GuessObsAndNuisance(*simData);
 	  //	  ws->writeToFile(("results/model_combined_edited.root").c_str());
 	  ws->writeToFile((outputFileNamePrefix+"_combined_"+rowTitle+"_model.root").c_str());
 
 	  // TO DO:
           // Totally factorize the statistical test in "fit Model" to a different area
-	  if(!exportOnly)
-	    factory.FitModel(ws, "combined", "simPdf", "simData", false);
+	  if(!exportOnly){
+	    if(ws->data("obsData")){
+	      factory.FitModel(ws, "combined", "simPdf", "obsData", false);
+	    } else {
+	      factory.FitModel(ws, "combined", "simPdf", "asimovData", false);
+	    }
+	  }
         }
 
 

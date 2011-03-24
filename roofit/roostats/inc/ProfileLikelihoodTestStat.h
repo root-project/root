@@ -60,6 +60,7 @@ namespace RooStats {
         fNll = 0;
         fCachedBestFitParams = 0;
         fLastData = 0;
+	fOneSided = false;
      }
      ProfileLikelihoodTestStat(RooAbsPdf& pdf) {
        fPdf = &pdf;
@@ -67,6 +68,7 @@ namespace RooStats {
        fNll = 0;
        fCachedBestFitParams = 0;
        fLastData = 0;
+       fOneSided = false;
      }
      virtual ~ProfileLikelihoodTestStat() {
        //       delete fRand;
@@ -75,6 +77,7 @@ namespace RooStats {
        if(fNll) delete fNll;
        if(fCachedBestFitParams) delete fCachedBestFitParams;
      }
+     void SetOneSided(Bool_t flag=true) {fOneSided = flag;}
     
      // Main interface to evaluate the test statistic on a dataset
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) {
@@ -83,6 +86,10 @@ namespace RooStats {
 	 return 0 ;
        }
        
+       RooRealVar* firstPOI = (RooRealVar*) paramsOfInterest.first();
+       double initial_mu_value  = firstPOI->getVal();
+       //paramsOfInterest.getRealValue(firstPOI->GetName());
+
        RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
        RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
@@ -93,21 +100,46 @@ namespace RooStats {
        // make sure we set the variables attached to this nll
        RooArgSet* attachedSet = nll->getVariables();
        *attachedSet = paramsOfInterest;
+       //       fPdf->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
+       //       profile->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
+       //       ((RooProfileLL*)profile)->nll().setEvalErrorLoggingMode(RooAbsReal::CountErrors);
+       //       nll->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
        double ret = profile->getVal();
+       //       cout <<"eval errors pdf = "<<fPdf->numEvalErrors() << endl;
+       //       cout <<"eval errors profile = "<<profile->numEvalErrors() << endl;
+       //       cout <<"eval errors profile->nll = "<<((RooProfileLL*)profile)->nll().numEvalErrors() << endl;
+       //       cout <<"eval errors nll = "<<nll->numEvalErrors() << endl;
+       //       if(profile->numEvalErrors()>0)
+       //       	 cout <<"eval errors = "<<profile->numEvalErrors() << endl;
        //       paramsOfInterest.Print("v");
+       //       cout << "ret = " << ret << endl;
+
+       if(fOneSided){
+	 double fit_favored_mu = ((RooProfileLL*) profile)->bestFitObs().getRealValue(firstPOI->GetName()) ;
+       
+	 if( fit_favored_mu > initial_mu_value)
+	   // cout <<"fit-favored_mu, initial value" << fit_favored_mu << " " << initial_mu_value<<endl;
+	   ret = 0 ;
+       }
        delete attachedSet;
        delete nll;
        nll = 0; 
        delete profile;
        RooMsgService::instance().setGlobalKillBelow(msglevel);
-       //       cout << "ret = " << ret << endl;
-
-
+       
+       //////////////////////////////////////////////////////
        // return here and forget about the following code
        return ret;
 
+
+
+
+
+
+       //////////////////////////////////////////////////////////
        // OLD version with some handling for local minima
        // (not used right now)
+       /////////////////////////////////////////////////////////
 
          bool needToRebuild = true; // try to avoid rebuilding if possible
 
@@ -268,9 +300,10 @@ namespace RooStats {
       const RooArgSet* fCachedBestFitParams;
       RooAbsData* fLastData;
       //      Double_t fLastMLE;
+      Bool_t fOneSided;
 
    protected:
-      ClassDef(ProfileLikelihoodTestStat,1)   // implements the profile likelihood ratio as a test statistic to be used with several tools
+      ClassDef(ProfileLikelihoodTestStat,2)   // implements the profile likelihood ratio as a test statistic to be used with several tools
    };
 }
 

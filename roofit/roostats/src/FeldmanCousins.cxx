@@ -91,6 +91,7 @@ FeldmanCousins::FeldmanCousins(RooAbsData& data, ModelConfig& model) :
   fData(data),
   fTestStatSampler(0),
   fPointsToTest(0),
+  fPOIToTest(0),
   fConfBelt(0),
   fAdaptiveSampling(false), 
   fAdditionalNToysFactor(1.),
@@ -108,6 +109,7 @@ FeldmanCousins::~FeldmanCousins() {
    // destructor
    //if(fOwnsWorkspace && fWS) delete fWS;
   if(fPointsToTest) delete fPointsToTest;
+  if(fPOIToTest) delete fPOIToTest;
   if(fTestStatSampler) delete fTestStatSampler;
 }
 
@@ -140,7 +142,7 @@ void FeldmanCousins::CreateTestStatSampler() const{
   fTestStatSampler->SetPdf(*fModel.GetPdf());
   
   if(!fAdaptiveSampling){
-     ooccoutP(&fModel,Generation) << "FeldmanCousins: ntoys per point = " << int (fAdditionalNToysFactor*50./fSize )<< endl;
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: ntoys per point = " << (int) (fAdditionalNToysFactor*50./fSize) << endl;
   } else{
     ooccoutP(&fModel,Generation) << "FeldmanCousins: ntoys per point: adaptive" << endl;
   }
@@ -151,6 +153,7 @@ void FeldmanCousins::CreateTestStatSampler() const{
     fTestStatSampler->SetNEventsPerToy(fData.numEntries());
   }
 }
+
 
 //_______________________________________________________
 void FeldmanCousins::CreateParameterPoints() const{
@@ -182,7 +185,14 @@ void FeldmanCousins::CreateParameterPoints() const{
     }
     
     // get dataset for POI scan
-    RooDataHist* parameterScan = new RooDataHist("parameterScan", "", *fModel.GetParametersOfInterest());
+    //     RooDataHist* parameterScan = NULL;
+    RooAbsData* parameterScan = NULL;
+    if(fPOIToTest)
+      parameterScan = fPOIToTest;
+    else
+      parameterScan = new RooDataHist("parameterScan", "", *fModel.GetParametersOfInterest());
+
+
     ooccoutP(&fModel,Generation) << "FeldmanCousins: # points to test = " << parameterScan->numEntries() << endl;
     // make profile construction
     RooFit::MsgLevel previous  = RooMsgService::instance().globalKillBelow();
@@ -204,7 +214,7 @@ void FeldmanCousins::CreateParameterPoints() const{
     RooMsgService::instance().setGlobalKillBelow(previous) ;
     delete profile; 
     delete nll;
-    delete parameterScan;
+    if(!fPOIToTest) delete parameterScan;
 
     // done
     fPointsToTest = profileConstructionPoints;

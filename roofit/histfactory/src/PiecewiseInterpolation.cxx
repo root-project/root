@@ -35,6 +35,7 @@ PiecewiseInterpolation::PiecewiseInterpolation()
   _lowIter = _lowSet.createIterator() ;
   _highIter = _highSet.createIterator() ;
   _paramIter = _paramSet.createIterator() ;
+  _positiveDefinite=false;
 }
 
 
@@ -49,7 +50,8 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
   _nominal("!nominal","nominal value", this, (RooAbsReal&)nominal),
   _lowSet("!lowSet","low-side variation",this),
   _highSet("!highSet","high-side variation",this),
-  _paramSet("!paramSet","high-side variation",this)
+  _paramSet("!paramSet","high-side variation",this),
+  _positiveDefinite(false)
 {
   // Constructor with two set of RooAbsReals. The value of the function will be
   //
@@ -121,7 +123,8 @@ PiecewiseInterpolation::PiecewiseInterpolation(const PiecewiseInterpolation& oth
   _nominal("!nominal",this,other._nominal),
   _lowSet("!lowSet",this,other._lowSet),
   _highSet("!highSet",this,other._highSet),
-  _paramSet("!paramSet",this,other._paramSet)
+  _paramSet("!paramSet",this,other._paramSet),
+  _positiveDefinite(other._positiveDefinite)
 {
   // Copy constructor
 
@@ -179,9 +182,135 @@ Double_t PiecewiseInterpolation::evaluate() const
     ++i;
   }
 
+  if(_positiveDefinite && (sum<0)){
+     sum = 1e-6;
+  }
   return sum;
 
 }
+
+
+//_____________________________________________________________________________
+Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
+						      const RooArgSet* normSet, const char* /*rangeName*/) const 
+{
+  // Advertise that all integrals can be handled internally.
+
+  /*
+  cout << "---------------------------\nin PiecewiseInterpolation get analytic integral " <<endl;
+  cout << "all vars = "<<endl;
+  allVars.Print("v");
+  cout << "anal vars = "<<endl;
+  analVars.Print("v");
+  cout << "normset vars = "<<endl;
+  if(normSet2)
+    normSet2->Print("v");
+  */
+
+
+  // Handle trivial no-integration scenario
+  if (allVars.getSize()==0) return 0 ;
+  if (_forceNumInt) return 0 ;
+
+
+  // Select subset of allVars that are actual dependents
+  analVars.add(allVars) ;
+  //  RooArgSet* normSet = normSet2 ? getObservables(normSet2) : 0 ;
+  //  RooArgSet* normSet = getObservables();
+  //  RooArgSet* normSet = 0;
+
+
+  // Check if this configuration was created before
+  Int_t sterileIdx(-1) ;
+  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx,0) ;
+  if (cache) {
+    return _normIntMgr.lastIndex()+1 ;
+  }
+  
+  // Create new cache element
+  cache = new CacheElem ;
+
+  // Make list of function projection and normalization integrals 
+  RooAbsReal* param ;
+  RooAbsReal *func ;
+  //  const RooArgSet* nset = _paramList.nset() ;
+
+  // do nominal
+  func = (RooAbsReal*)(&_nominal.arg()) ;
+  RooAbsReal* funcInt = func->createIntegral(analVars) ;
+  cache->_funcIntList.addOwned(*funcInt) ;
+
+  // do variations
+  _lowIter->Reset() ;
+  _highIter->Reset() ;
+  _paramIter->Reset() ;
+  int i=0;
+  while((param=(RooAbsReal*)_paramIter->Next())) {
+    func = (RooAbsReal*)_lowIter->Next() ;
+    funcInt = func->createIntegral(analVars) ;
+    cache->_lowIntList.addOwned(*funcInt) ;
+
+    func = (RooAbsReal*)_highIter->Next() ;
+    funcInt = func->createIntegral(analVars) ;
+    cache->_highIntList.addOwned(*funcInt) ;
+
+    ++i;
+  }
+
+  // Store cache element
+  Int_t code = _normIntMgr.setObj(normSet,&analVars,(RooAbsCacheElement*)cache,0) ;
+
+  return code+1 ; 
+}
+
+
+
+
+//_____________________________________________________________________________
+Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet2*/,const char* /*rangeName*/) const 
+{
+  // Implement analytical integrations by doing appropriate weighting from  component integrals
+  // functions to integrators of components
+
+  CacheElem* cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
+
+  TIterator* funcIntIter = cache->_funcIntList.createIterator() ;
+  TIterator* lowIntIter = cache->_lowIntList.createIterator() ;
+  TIterator* highIntIter = cache->_highIntList.createIterator() ;
+  RooAbsReal *funcInt(0), *low(0), *high(0), *param(0) ;
+  Double_t value(0) ;
+  Double_t nominal(0);
+
+  // get nominal 
+  int i=0;
+  while(( funcInt = (RooAbsReal*)funcIntIter->Next())) {
+    value += funcInt->getVal() ;
+    nominal = value;
+    i++;
+  }
+  if(i==0 || i>1)
+    cout << "problem, wrong number of nominal functions"<<endl;
+
+  // now get low/high variations
+  i = 0;
+  _paramIter->Reset() ;
+  while((param=(RooAbsReal*)_paramIter->Next())) {
+    low = (RooAbsReal*)lowIntIter->Next() ;
+    high = (RooAbsReal*)highIntIter->Next() ;
+
+    
+    if(param->getVal()>0)
+      value += param->getVal()*(high->getVal() - nominal );
+    else
+      value += param->getVal()*(nominal - low->getVal());
+
+    ++i;
+  }
+
+  return value;
+
+}
+
 
 /*
 //_____________________________________________________________________________

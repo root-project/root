@@ -417,119 +417,19 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
 }
 
 
-
 //_____________________________________________________________________________
-Double_t RooRealSumPdf::expectedEvents(const RooArgSet* nset) const 
-{  
-  // try something simple
-  RooAbsReal* integral = createIntegral(*nset);
-  double ret = integral->getVal();
-  delete integral;
-    
-  return ret;
-  
+Double_t RooRealSumPdf::expectedEvents(const RooArgSet* nset) const
+{
+ // try something simple
+ RooArgSet* nset2 = nset? getObservables(*nset) : 0 ;
+ RooAbsReal* integral = createIntegral(nset2?*nset2:RooArgSet());
+ delete nset2 ;
 
-  
-  /*
-    //KC: should return \sum coef_i * \int f_i(x) dx
-    Double_t coefSum(0) ;
-  RooAbsReal* coef ;
-  while((coef=(RooAbsReal*)_coefIter->Next())) {
-    coefSum += coef->getVal(nset) ;
-  }
-  
-  return coefSum ;
-  */
+ double ret = integral->getVal();
+ delete integral;
 
-
-  /*
-    // this one was working sort of
-  //  _coefIter->Reset() ;
-
-  RooArgSet* normSet2 =new RooArgSet(*nset);//only to keep track of connection to code above
-  RooArgSet* normSet = normSet2;
-  RooArgSet analVars("empty");
-
-  
-  // doesn't work b/c of constness
-  //  Int_t code = getAnalyticalIntegral(*normSet2, empty);
-  //  analyticalIntegral(code, nset);
-  //  RooAbsReal* temp = hack->createCdf(*nset);
-  
-
-  // KC: b/c this is const, I don't know how to cache the integrals 
-  // unless I copy the getAnalyticalIntegralWN code
-
-  // Check if this configuration was created before
-  Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx,0) ;
-  if (cache) {
-    return _normIntMgr.lastIndex()+1 ;
-  }
-  
-  // Create new cache element
-  cache = new CacheElem ;
-
-  // Make list of function projection and normalization integrals 
-  _funcIter->Reset() ;
-  RooAbsReal *func ;
-  while((func=(RooAbsReal*)_funcIter->Next())) {
-    RooAbsReal* funcInt = func->createIntegral(analVars) ;
-    cache->_funcIntList.addOwned(*funcInt) ;
-    if (normSet && normSet->getSize()>0) {
-      RooAbsReal* funcNorm = func->createIntegral(*normSet) ;
-      cache->_funcNormList.addOwned(*funcNorm) ;
-    }
-  }
-
-  // Store cache element
-  Int_t code = _normIntMgr.setObj(normSet,&analVars,(RooAbsCacheElement*)cache,0) ;
-
-  if (normSet) {
-    delete normSet ;
-  }
-
-  code = code+1 ; 
-  ///////////////////////////////////////////
-  ///////////////////////////////////////////
-  
-  // WVE needs adaptation for rangeName feature
-  //  CacheElem* cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
-  
-  RooAbsReal *coef(0);//, *funcInt(0);
-  Double_t normVal(1) ;
-  Double_t lastCoef(1) ;
-
-  if (normSet2) {
-    normVal = 0 ;
-
-    // N funcs, N-1 coefficients 
-    RooAbsReal* funcNorm ;
-    TIterator* funcNormIter = cache->_funcNormList.createIterator() ;
-    _coefIter->Reset() ;
-    while((coef=(RooAbsReal*)_coefIter->Next())) {
-      funcNorm = (RooAbsReal*)funcNormIter->Next() ;
-      Double_t coefVal = coef->getVal(normSet2) ;
-      if (coefVal) {
-	normVal += funcNorm->getVal()*coefVal ;
-      }
-    }
-    
-    // Add last func with correct coefficient
-    if (!_haveLastCoef) {
-      funcNorm = (RooAbsReal*) funcNormIter->Next() ;
-      normVal += funcNorm->getVal()*lastCoef ;
-    }
-      
-    delete funcNormIter ;      
-  }
-
-  return normVal;
-*/
-
+ return ret;
 }
-
-
 
 
 //_____________________________________________________________________________
