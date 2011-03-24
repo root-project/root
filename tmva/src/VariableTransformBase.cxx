@@ -379,14 +379,12 @@ void TMVA::VariableTransformBase::SetOutput( Event* event, std::vector<Float_t>&
       for( ; itEntry != itEntryEnd; ++itEntry ) {
 
 	 if( (*itMask) ){ // if the value is masked
-//	    ++itOutput; // no value available
-	    ++itMask;
 	    continue;
 	 }
 
 	 Char_t type = (*itEntry).first;
 	 Int_t  idx  = (*itEntry).second;
-	 
+	 if (itOutput == output.end()) Log() << kFATAL << "Read beyond array boundaries in VariableTransformBase::SetOutput"<<Endl;
 	 Float_t value = (*itOutput);
 
 	 switch( type ) {
@@ -402,7 +400,9 @@ void TMVA::VariableTransformBase::SetOutput( Event* event, std::vector<Float_t>&
 	 default:
 	    Log() << kFATAL << "VariableTransformBase/GetInput : unknown type '" << type << "'." << Endl;
 	 }
-	 ++itOutput;
+	 if( !(*itMask) ) ++itOutput;
+    ++itMask;
+
       }
    }catch( std::exception& except ){
       Log() << kFATAL << "VariableTransformBase/SetOutput : exception/" << except.what() << Endl;

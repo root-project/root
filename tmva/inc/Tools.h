@@ -12,6 +12,7 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
+ *      Peter Speckmayer <peter.speckmayer@cern.ch> - CERN, Switzerland           *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -63,6 +64,10 @@
 
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
+#endif
+
+#ifndef ROOT_TMVA_VariableTransformBase
+#include "TMVA/VariableTransformBase.h"
 #endif
 
 class TList;
@@ -125,7 +130,7 @@ namespace TMVA {
 
       // returns the covariance matrix of of the different classes (and the sum) 
       // given the event sample
-      std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls, Int_t maxNumberVar = -1 );
+      std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls, VariableTransformBase* transformBase=0 );
 
 
       // turns covariance into correlation matrix

@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Peter Speckmayer, Matt Jachowski
+// Author: Andreas Hoecker, Peter Speckmayer, Matt Jachowski, Jan Therhaag, Jiahang Zhong
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -19,10 +19,12 @@
  *      Maciej Kruk           <mkruk@cern.ch>          - IFJ & AGH, Poland        *
  *      Peter Speckmayer      <peter.speckmayer@cern.ch> - CERN, Switzerland      *
  *      Joerg Stelzer         <stelzer@cern.ch>        - DESY, Germany            *
+ *      Jan Therhaag       <Jan.Therhaag@cern.ch>     - U of Bonn, Germany        *
  *      Jiahang Zhong         <Jiahang.Zhong@cern.ch>  - Academia Sinica, Taipei  *
  *                                                                                *
  * Copyright (c) 2005-2011:                                                       *
  *      CERN, Switzerland                                                         *
+ *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *

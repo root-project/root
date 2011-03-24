@@ -17,9 +17,10 @@
  *      Eckhard v. Toerne     <evt@uni-bonn.de>  - Uni Bonn, Germany              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
+ * Copyright (c) 2005-2011:                                                       *
  *      CERN, Switzerland                                                         *
  *      MPI-K Heidelberg, Germany                                                 *
+ *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -188,53 +189,59 @@ const TMVA::Event* TMVA::VariableGaussTransform::Transform(const Event* const ev
 //_______________________________________________________________________
 const TMVA::Event* TMVA::VariableGaussTransform::InverseTransform( const Event* const ev, Int_t cls ) const
 {
-   // apply the Gauss transformation
-   // TODO: implementation of inverse transformation
-   Log() << kFATAL << "Inverse transformation for Gauss transformation not yet implemented. Hence, this transformation cannot be applied together with regression if targets should be transformed. Please contact the authors if necessary." << Endl;
+   // apply the inverse Gauss or inverse uniform transformation
 
-   if (!IsCreated())
-      Log() << kFATAL << "Transformation not yet created" 
-              << Endl;
+   if (!IsCreated()) Log() << kFATAL << "Transformation not yet created" << Endl;
+   //EVT this is a workaround to address the reader problem with transforma and EvaluateMVA(std::vector<float/double> ,...) 
+   //EVT if (cls <0 || cls > GetNClasses() ) {
+   //EVT   cls = GetNClasses();
+   //EVT   if (GetNClasses() == 1 ) cls = (fCumulativePDF[0].size()==1?0:2);
+   //EVT}
+   if (cls <0 || cls >=  (int) fCumulativePDF[0].size()) cls = fCumulativePDF[0].size()-1;
+   //EVT workaround end
 
-   if (cls <0 || cls >= GetNClasses() ) cls = GetNClasses();
-   if (GetNClasses() == 1 ) cls = 0;
+  // get the variable vector of the current event
+   UInt_t inputSize = fGet.size();
 
-   // get the variable vector of the current event
-   const UInt_t nvar = GetNVariables();
-   TVectorD vec( nvar );
-   for (UInt_t ivar=0; ivar<nvar; ivar++) vec(ivar) = ev->GetValue(ivar);
-   for (UInt_t ivar=0; ivar<nvar; ivar++) {
-      if (0 != fCumulativeDist[ivar][cls]) { 
-         // first make it flat
-         Int_t    thebin   = (fCumulativeDist[ivar][cls])->FindBin(vec(ivar));
-         Double_t cumulant = (fCumulativeDist[ivar][cls])->GetBinContent(thebin);
-         // now transfor to a gaussian
-         // actually, the "sqrt(2) is not really necessary, who cares if it is totally normalised
-         //            vec(ivar) =  TMath::Sqrt(2.)*TMath::ErfInverse(2*sum - 1);
-         if (fFlatNotGauss) vec(ivar) = cumulant; 
-         else {
-            // sanity correction for out-of-range values
-            Double_t maxErfInvArgRange = 0.99999999;
-            Double_t arg = 2.0*cumulant - 1.0;
-            arg = TMath::Min(+maxErfInvArgRange,arg);
-            arg = TMath::Max(-maxErfInvArgRange,arg);
-            
-            vec(ivar) = 1.414213562*TMath::ErfInverse(arg);
-         }
+   std::vector<Float_t> input(0);
+   std::vector<Float_t> output(0);
+
+   std::vector<Char_t> mask; // entries with kTRUE must not be transformed
+   GetInput( ev, input, mask, kTRUE );
+
+   std::vector<Char_t>::iterator itMask = mask.begin();
+   
+//   TVectorD vec( inputSize );
+//   for (UInt_t ivar=0; ivar<inputSize; ivar++) vec(ivar) = input.at(ivar);
+   Double_t invCumulant;
+   //transformation   
+   for (UInt_t ivar=0; ivar<inputSize; ivar++) {
+
+      if ( (*itMask) ){
+	 ++itMask;
+	 continue;
+      }
+
+      if (0 != fCumulativePDF[ivar][cls]) { 
+	 invCumulant = input.at(ivar);
+
+         // first de-gauss ist if gaussianized
+         if (!fFlatNotGauss)
+            invCumulant = (TMath::Erf(invCumulant/1.414213562)+1)/2.f;
+
+	 // then de-uniform the values
+	 if(fTMVAVersion>TMVA_VERSION(4,0,0))
+	    invCumulant = (fCumulativePDF[ivar][cls])->GetValInverse(invCumulant,kTRUE); 
+	 else
+	    Log() << kFATAL << "Inverse Uniform/Gauss transformation not implemented for TMVA versions before 4.1.0" << Endl;
+
+	 output.push_back(invCumulant);
       }
    }
    
-   if (fBackTransformedEvent==0 || fBackTransformedEvent->GetNVariables()!=ev->GetNVariables()) {
-      if (fBackTransformedEvent!=0) { delete fBackTransformedEvent; fBackTransformedEvent = 0; }
-      fBackTransformedEvent = new Event( *ev );
-   }
+   if (fBackTransformedEvent==0) fBackTransformedEvent = new Event( *ev );
 
-   for (UInt_t itgt = 0; itgt < ev->GetNTargets(); itgt++) fBackTransformedEvent->SetTarget( itgt, ev->GetTarget(itgt) );
-   for (UInt_t ivar=0; ivar<nvar; ivar++)                  fBackTransformedEvent->SetVal   ( ivar, vec(ivar) );
-
-   fBackTransformedEvent->SetWeight     ( ev->GetWeight() );
-   fBackTransformedEvent->SetBoostWeight( ev->GetBoostWeight() );
-   fBackTransformedEvent->SetClass      ( ev->GetClass() );
+   SetOutput( fBackTransformedEvent, output, mask, ev, kTRUE );
 
    return fBackTransformedEvent;
 }
@@ -466,7 +473,8 @@ void TMVA::VariableGaussTransform::AttachXMLTo(void* parent) {
 //      gTools().AddAttr( varxml, "Name",     Variables()[ivar].GetLabel() );
       gTools().AddAttr( varxml, "VarIndex", ivar );
          
-      if ( fCumulativePDF[ivar][0]==0 || fCumulativePDF[ivar][1]==0 )
+      if ( fCumulativePDF[ivar][0]==0 || 
+           (fCumulativePDF[ivar].size()>1 && fCumulativePDF[ivar][1]==0 ))
          Log() << kFATAL << "Cumulative histograms for variable " << ivar << " don't exist, can't write it to weight file" << Endl;
       
       for (UInt_t icls=0; icls<fCumulativePDF[ivar].size(); icls++){

@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Asen Christov, Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// Author: Asen Christov, Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss , Jan Therhaag
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -16,12 +16,14 @@
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
+ *      Jan Therhaag       <Jan.Therhaag@cern.ch>     - U of Bonn, Germany        *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
+ * Copyright (c) 2005-2011:                                                       *
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
  *      Freiburg U., Germany                                                      * 
+ *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -85,7 +87,8 @@ namespace TMVA {
       void BuildPDF (const TH1* theHist);
 
       // returns probability density at given abscissa
-      Double_t GetVal( Double_t x ) const;
+      Double_t GetVal       ( Double_t x ) const;
+      Double_t GetValInverse( Double_t y, Bool_t isMonotonouslyIncreasingFunction=kFALSE ) const;
 
       void AddXMLTo( void* parent );
       void ReadXML( void* pdfnode );
@@ -143,6 +146,9 @@ namespace TMVA {
 
       // do we use the original histogram as reference ?
       Bool_t   UseHistogram() const { return fUseHistogram; }
+
+      void FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& higherBin, Double_t& lowerBinValue, Double_t& higherBinValue, 
+			   Double_t y, Bool_t isMonotonouslyIncreasingFunction=kFALSE ) const;
 
 
       void     BuildSplinePDF();

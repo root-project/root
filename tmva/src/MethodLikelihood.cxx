@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss, Eckhard von Toerne, Jan Therhaag
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
@@ -14,11 +14,14 @@
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
+ *      Jan Therhaag       <Jan.Therhaag@cern.ch>     - U of Bonn, Germany        *
+ *      Eckhard v. Toerne  <evt@uni-bonn.de>     - U. of Bonn, Germany            *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
+ * Copyright (c) 2005-2011:                                                       *
  *      CERN, Switzerland                                                         *
  *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
+ *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -745,6 +748,7 @@ void TMVA::MethodLikelihood::MakeClassSpecificHeader( std::ostream& fout, const 
 {
    // write specific header of the classifier (mostly include files)
    fout << "#include <math.h>" << endl;
+   fout << "#include <cstdlib>" << endl;
 }
 
 //_______________________________________________________________________
@@ -845,7 +849,7 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    fout << "         if (ref < 0) {" << endl;
    fout << "            std::cout << \"Fatal error in " << className
         << ": bin entry < 0 ==> abort\" << std::endl;" << endl;
-   fout << "            exit(1);" << endl;
+   fout << "            std::exit(1);" << endl;
    fout << "         }" << endl;
    fout << endl;
    fout << "         double p = ref;" << endl;

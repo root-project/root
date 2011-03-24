@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Jan Therhaag
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -13,13 +13,15 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Peter Speckmayer <Peter.Speckmayer@cern.ch> - CERN, Switzerland           *
+ *      Jan Therhaag       <Jan.Therhaag@cern.ch>     - U of Bonn, Germany        *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
+ * Copyright (c) 2005-2011:                                                       *
  *      CERN, Switzerland                                                         *
  *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
+ *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -1149,7 +1151,7 @@ TString TMVA::Tools::StringFromDouble( Double_t d )
 {
    // string tools
    std::stringstream s;
-   s << Form( "%5.10e", d );
+   s << Form( "%5.8e", d );
    return TString(s.str().c_str());
 }
 
@@ -1398,14 +1400,22 @@ Bool_t TMVA::Tools::HistoHasEquidistantBins(const TH1& h)
 
 //_______________________________________________________________________
 std::vector<TMatrixDSym*>*
-TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls, Int_t maxNumberVar )
+TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls, VariableTransformBase* transformBase )
 {
    // compute covariance matrices
 
    if (events.size() == 0) return 0;
 
 
-   UInt_t nvar = (maxNumberVar == -1 ? events.at(0)->GetNVariables():maxNumberVar), ivar = 0, jvar = 0;
+   UInt_t nvars=0, ntgts=0, nspcts=0;
+   if (transformBase) 
+      transformBase->CountVariableTypes( nvars, ntgts, nspcts );
+   else {
+      nvars =events.at(0)->GetNVariables ();
+      ntgts =events.at(0)->GetNTargets   ();
+      nspcts=events.at(0)->GetNSpectators();
+   }
+
 
    // init matrices
    Int_t matNum = maxCls;
@@ -1419,15 +1429,16 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t ma
    Int_t cls = 0;
    TVectorD* v;
    TMatrixD* m;
+   UInt_t ivar=0, jvar=0;
    for (cls = 0; cls < matNum ; cls++) {
-      vec->at(cls) = new TVectorD(nvar);
-      mat2->at(cls) = new TMatrixD(nvar,nvar);
+      vec->at(cls) = new TVectorD(nvars);
+      mat2->at(cls) = new TMatrixD(nvars,nvars);
       v = vec->at(cls);
       m = mat2->at(cls);
 
-      for (ivar=0; ivar<nvar; ivar++) {
+      for (ivar=0; ivar<nvars; ivar++) {
          (*v)(ivar) = 0;
-         for (jvar=0; jvar<nvar; jvar++) {
+         for (jvar=0; jvar<nvars; jvar++) {
             (*m)(ivar, jvar) = 0;
          }
       }
@@ -1440,20 +1451,31 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t ma
       Event * ev = events[i];
       cls = ev->GetClass();
       Double_t weight = ev->GetWeight();
+
+      std::vector<Float_t> input;
+      std::vector<Char_t> mask; // entries with kTRUE must not be transformed
+      Bool_t hasMaskedEntries = kFALSE;
+      if (transformBase)
+	 hasMaskedEntries = transformBase->GetInput (ev, input, mask);
+      else {
+	 for (ivar=0; ivar<nvars; ++ivar) {
+	    input.push_back (ev->GetValue(ivar));
+	 }
+      }
        
       if (maxCls > 1) {
          v = vec->at(matNum-1);
          m = mat2->at(matNum-1);
 
          count.at(matNum-1)+=weight; // count used events
-         for (ivar=0; ivar<nvar; ivar++) {
+         for (ivar=0; ivar<nvars; ivar++) {
 
-            Double_t xi = ev->GetValue(ivar);
+            Double_t xi = input.at (ivar);
             (*v)(ivar) += xi*weight;
             (*m)(ivar, ivar) += (xi*xi*weight);
 
-            for (jvar=ivar+1; jvar<nvar; jvar++) {
-               Double_t xj = ev->GetValue(jvar);
+            for (jvar=ivar+1; jvar<nvars; jvar++) {
+               Double_t xj = input.at (jvar);
                (*m)(ivar, jvar) += (xi*xj*weight);
                (*m)(jvar, ivar) = (*m)(ivar, jvar); // symmetric matrix
             }
@@ -1463,13 +1485,13 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t ma
       count.at(cls)+=weight; // count used events
       v = vec->at(cls);
       m = mat2->at(cls);
-      for (ivar=0; ivar<nvar; ivar++) {
-         Double_t xi = ev->GetValue(ivar);
+      for (ivar=0; ivar<nvars; ivar++) {
+         Double_t xi = input.at (ivar);
          (*v)(ivar) += xi*weight;
          (*m)(ivar, ivar) += (xi*xi*weight);
 
-         for (jvar=ivar+1; jvar<nvar; jvar++) {
-            Double_t xj = ev->GetValue(jvar);
+         for (jvar=ivar+1; jvar<nvars; jvar++) {
+            Double_t xj = input.at (jvar);
             (*m)(ivar, jvar) += (xi*xj*weight);
             (*m)(jvar, ivar) = (*m)(ivar, jvar); // symmetric matrix
          }
@@ -1482,11 +1504,11 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t ma
       v = vec->at(cls);
       m = mat2->at(cls);
 
-      mat->at(cls) = new TMatrixDSym(nvar);
+      mat->at(cls) = new TMatrixDSym(nvars);
 
       Double_t n = count.at(cls);
-      for (ivar=0; ivar<nvar; ivar++) {
-         for (jvar=0; jvar<nvar; jvar++) {
+      for (ivar=0; ivar<nvars; ivar++) {
+         for (jvar=0; jvar<nvars; jvar++) {
             (*(mat->at(cls)))(ivar, jvar) = (*m)(ivar, jvar)/n - (*v)(ivar)*(*v)(jvar)/(n*n);
          }
       }

@@ -1286,6 +1286,11 @@ void TMVA::MethodPDEFoam::ReadFoamsFromFile()
       }
    }
 
+   // Close the root file.  Note, that the foams are still present in
+   // memory!
+   rootFile->Close();
+   delete rootFile;
+
    for (UInt_t i=0; i<fFoam.size(); ++i) {
       if (!fFoam.at(0))
 	 Log() << kFATAL << "Could not load foam!" << Endl;

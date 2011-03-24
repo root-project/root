@@ -16,9 +16,10 @@
  *      Maciej Kruk             <mkruk@cern.ch>         - IFJ PAN & AGH, Poland   *
  *      Jan Therhaag            <therhaag@physik.uni-bonn.de> - Uni Bonn, Germany *
  *                                                                                *
- * Copyright (c) 2008:                                                            *
+ * Copyright (c) 2005-2011:                                                       *
  *      CERN, Switzerland                                                         *
  *      PAN, Poland                                                               *
+ *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *

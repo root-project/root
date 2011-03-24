@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Kai Voss
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Kai Voss, Eckhard von Toerne, Jan Therhaag
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -16,12 +16,14 @@
  *      Peter Speckmayer  <Peter.Speckmayer@cern.ch>  - CERN, Switzerland         *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
+ *      Jan Therhaag       <Jan.Therhaag@cern.ch>     - U of Bonn, Germany        *
+ *      Eckhard v. Toerne  <evt@uni-bonn.de>          - U of Bonn, Germany        *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
+ * Copyright (c) 2005-2011:                                                       *
  *      CERN, Switzerland                                                         *
  *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
- *      LAPP, Annecy, France                                                      *
+ *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -431,9 +433,9 @@ void TMVA::MethodBase::ProcessBaseOptions()
    }
 
    TMVA::MethodBase::CreateVariableTransforms( fVarTransformString, 
-					       DataInfo(),
-					       GetTransformationHandler(),
-					       Log() );
+                                               DataInfo(),
+                                               GetTransformationHandler(),
+                                               Log() );
 
    if (!HasMVAPdfs()) {
       if (fDefaultPDF!= 0) { delete fDefaultPDF; fDefaultPDF = 0; }
@@ -458,28 +460,27 @@ void TMVA::MethodBase::ProcessBaseOptions()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBase::CreateVariableTransforms(const TString& trafoDefinitionIn, 
-						TMVA::DataSetInfo& dataInfo, 
-						TMVA::TransformationHandler& transformationHandler,
-						TMVA::MsgLogger& log)
+void TMVA::MethodBase::CreateVariableTransforms( const TString& trafoDefinitionIn, 
+                                                 TMVA::DataSetInfo& dataInfo, 
+                                                 TMVA::TransformationHandler& transformationHandler,
+                                                 TMVA::MsgLogger& log )
 {
    // create variable transformations
 
    TString trafoDefinition(trafoDefinitionIn);
-   if (trafoDefinition == "None") // no transformations
-      return;
+   if (trafoDefinition == "None") return; // no transformations
 
    // workaround for transformations to complicated to be handled by makeclass
    // count number of transformations with incomplete set of variables
    TString trafoDefinitionCheck(trafoDefinitionIn);
    int npartial = 0, ntrafo=0;
-   for( Int_t pos = 0, siz = trafoDefinition.Sizeof(); pos < siz; ++pos ){
+   for (Int_t pos = 0, siz = trafoDefinition.Sizeof(); pos < siz; ++pos) {
       TString ch = trafoDefinition(pos,1);
       if( ch == "(" ) npartial++;
       if( ch == "+" || ch == ",") ntrafo++;
    }
-   if (npartial>1){
-      log << kFATAL << "The booking of multiple partial variable transformations is not yet implemented in makeclass, the creation of a standalone class file is suppressed. The transformation in question is: "<<trafoDefinitionIn<< Endl; // ToDo make info and do not write the standalone class
+   if (npartial>1) {
+      log << kWARNING << "The use of multiple partial variable transformations during the application phase can be properly invoked via the \"Reader\", but it is not yet implemented in \"MakeClass\", the creation mechanism for standalone C++ application classes. The standalone C++ class produced by this training job is thus INCOMPLETE AND MUST NOT BE USED! The transformation in question is: " << trafoDefinitionIn << Endl; // ToDo make info and do not write the standalone class
       //
       // this does not work since this function is static
       // fDisableWriting=true; // disable creation of stand-alone class
@@ -488,106 +489,90 @@ void TMVA::MethodBase::CreateVariableTransforms(const TString& trafoDefinitionIn
    // workaround end
 
    Int_t parenthesisCount = 0;
-   for( Int_t position = 0, size = trafoDefinition.Sizeof(); position < size; ++position ){
+   for (Int_t position = 0, size = trafoDefinition.Sizeof(); position < size; ++position) {
       TString ch = trafoDefinition(position,1);
-//      std::cout << "position " << position << " ch " << ch << std::endl;
-      if( ch == "(" )
-	 ++parenthesisCount;
-      if( ch == ")" )
-	 --parenthesisCount;
-      if( ch == "," && parenthesisCount == 0 ){
-	 trafoDefinition.Replace(position,1,'+');
-      }
+      if      (ch == "(")                          ++parenthesisCount;
+      else if (ch == ")")                          --parenthesisCount;
+      else if (ch == "," && parenthesisCount == 0) trafoDefinition.Replace(position,1,'+');
    }
-//   std::cout << "replaced: " << trafoDefinition.Data() << std::endl;
 
-//    if( trafoDefinition.Contains("+") || trafoDefinition.Contains("(") ) { // new format
+   TList* trList = gTools().ParseFormatLine( trafoDefinition, "+" );
+   TListIter trIt(trList);
+   while (TObjString* os = (TObjString*)trIt()) {
+      TString tdef = os->GetString();
+      Int_t idxCls = -1;
 
-      TList* trList = gTools().ParseFormatLine( trafoDefinition, "+" );
-      TListIter trIt(trList);
-      while (TObjString* os = (TObjString*)trIt()) {
-	 TString tdef = os->GetString();
-         Int_t idxCls = -1;
+      TString variables = "";
+      if (tdef.Contains("(")) { // contains selection of variables
+         Ssiz_t parStart = tdef.Index( "(" );
+         Ssiz_t parLen   = tdef.Index( ")", parStart )-parStart+1;
 
-	 TString variables = "";
-	 if( tdef.Contains("(") ) { // contains selection of variables
-	    Ssiz_t parStart = tdef.Index( "(" );
-	    Ssiz_t parLen   = tdef.Index( ")", parStart )-parStart+1;
+         variables = tdef(parStart,parLen);
+         tdef.Remove(parStart,parLen);
+         variables.Remove(parLen-1,1);
+         variables.Remove(0,1);
+      }
 
-	    variables = tdef(parStart,parLen);
-	    tdef.Remove(parStart,parLen);
-	    variables.Remove(parLen-1,1);
-	    variables.Remove(0,1);
-	 }
+      TList* trClsList = gTools().ParseFormatLine( tdef, "_" ); // split entry to get trf-name and class-name
+      TListIter trClsIt(trClsList);
+      if (trClsList->GetSize() < 1) log << kFATAL << "Incorrect transformation string provided." << Endl;
+      const TString& trName = ((TObjString*)trClsList->At(0))->GetString();
 
-         TList* trClsList = gTools().ParseFormatLine( tdef, "_" ); // split entry to get trf-name and class-name
-         TListIter trClsIt(trClsList);
-	 if( trClsList->GetSize() < 1 )
-	    log << kFATAL << "Incorrect transformation string provided." << Endl;
-         const TString& trName = ((TObjString*)trClsList->At(0))->GetString();
-
-         if (trClsList->GetEntries() > 1) {
-            TString trCls = "AllClasses";
-            ClassInfo *ci = NULL;
-            trCls  = ((TObjString*)trClsList->At(1))->GetString();
-            if (trCls != "AllClasses") {
-               ci = dataInfo.GetClassInfo( trCls );
-               if (ci == NULL)
-                  log << kFATAL << "Class " << trCls << " not known for variable transformation "
-                        << trName << ", please check." << Endl;
-               else
-                  idxCls = ci->GetNumber();
-            }
+      if (trClsList->GetEntries() > 1) {
+         TString trCls = "AllClasses";
+         ClassInfo *ci = NULL;
+         trCls  = ((TObjString*)trClsList->At(1))->GetString();
+         if (trCls != "AllClasses") {
+            ci = dataInfo.GetClassInfo( trCls );
+            if (ci == NULL)
+               log << kFATAL << "Class " << trCls << " not known for variable transformation "
+                   << trName << ", please check." << Endl;
+            else
+               idxCls = ci->GetNumber();
          }
+      }
 
-	 VariableTransformBase* transformation = NULL;
-         if      (trName == "I" || trName == "Ident" || trName == "Identity"){
-	    if( variables.Length() == 0 )
-	       variables = "_V_";
-	    transformation = new VariableIdentityTransform( dataInfo);
-	 }
-     else if (trName == "D" || trName == "Deco" || trName == "Decorrelate"){
-	    if( variables.Length() == 0 )
-	       variables = "_V_";
-	    transformation = new VariableDecorrTransform( dataInfo);
-	 }
-     else if (trName == "P" || trName == "PCA"){
-	    if( variables.Length() == 0 )
-	       variables = "_V_";
-	    transformation = new VariablePCATransform   ( dataInfo);
-	 }
-     else if (trName == "U" || trName == "Uniform"){
-	    if( variables.Length() == 0 )
-	       variables = "_V_,_T_";
-	    transformation = new VariableGaussTransform ( dataInfo, "Uniform" );
-	 }
-     else if (trName == "G" || trName == "Gauss"){
-	    if( variables.Length() == 0 )
-	       variables = "_V_";
-	    transformation = new VariableGaussTransform ( dataInfo);
-	 }
-     else if (trName == "N" || trName == "Norm" || trName == "Normalise" || trName == "Normalize")
-	 {
-	    if( variables.Length() == 0 )
-	       variables = "_V_,_T_";
-	    transformation = new VariableNormalizeTransform( dataInfo);
-	 }
-     else
-            log << kFATAL << "<ProcessOptions> Variable transform '"
-                  << trName << "' unknown." << Endl;
+      VariableTransformBase* transformation = NULL;
+      if      (trName == "I" || trName == "Ident" || trName == "Identity") {
+         if (variables.Length() == 0) variables = "_V_";
+         transformation = new VariableIdentityTransform( dataInfo);
+      }
+      else if (trName == "D" || trName == "Deco" || trName == "Decorrelate") {
+         if (variables.Length() == 0) variables = "_V_";
+         transformation = new VariableDecorrTransform( dataInfo);
+      }
+      else if (trName == "P" || trName == "PCA") {
+         if (variables.Length() == 0) variables = "_V_";
+         transformation = new VariablePCATransform   ( dataInfo);
+      }
+      else if (trName == "U" || trName == "Uniform") {
+         if (variables.Length() == 0) variables = "_V_,_T_";
+         transformation = new VariableGaussTransform ( dataInfo, "Uniform" );
+      }
+      else if (trName == "G" || trName == "Gauss") {
+         if (variables.Length() == 0) variables = "_V_";
+         transformation = new VariableGaussTransform ( dataInfo);
+      }
+      else if (trName == "N" || trName == "Norm" || trName == "Normalise" || trName == "Normalize") {
+         if (variables.Length() == 0) variables = "_V_,_T_";
+         transformation = new VariableNormalizeTransform( dataInfo);
+      }
+      else log << kFATAL << "<ProcessOptions> Variable transform '"
+               << trName << "' unknown." << Endl;
 
-	 if( transformation ){
-	    ClassInfo* clsInfo = dataInfo.GetClassInfo(idxCls);
-         if( clsInfo )
-	       log << kINFO << "Create Transformation \"" << trName << "\" with reference class " << clsInfo->GetName() << "=("<< idxCls <<")"<<Endl;
+      if (transformation) {
+         ClassInfo* clsInfo = dataInfo.GetClassInfo(idxCls);
+         if (clsInfo )
+            log << kINFO << "Create Transformation \"" << trName << "\" with reference class " 
+                << clsInfo->GetName() << "=("<< idxCls <<")"<<Endl;
          else
-	       log << kINFO << "Create Transformation \"" << trName << "\" with events from all classes." << Endl;
+            log << kINFO << "Create Transformation \"" << trName << "\" with events from all classes." << Endl;
 
-	    transformation->SelectInput( variables );
-	    transformationHandler.AddTransformation(transformation, idxCls);
+         transformation->SelectInput( variables );
+         transformationHandler.AddTransformation(transformation, idxCls);
       }
    }
-      return;
+   return;
 }
 
 //_______________________________________________________________________
@@ -667,7 +652,7 @@ void TMVA::MethodBase::TrainMethod()
    Log() << kINFO << "Create MVA output for ";
 
    // create PDFs for the signal and background MVA distributions (if required)
-   if (DoMulticlass()){
+   if (DoMulticlass()) {
       Log() << "Multiclass classification on training sample" << Endl;
       AddMulticlassOutput(Types::kTraining);
    }
@@ -693,7 +678,7 @@ void TMVA::MethodBase::TrainMethod()
 
    // write the current MVA state into stream
    // produced are one text file and one ROOT file
-   if( !fDisableWriting ) WriteStateToFile();
+   if (!fDisableWriting ) WriteStateToFile();
 
    // produce standalone make class (presently only supported for classification)
    if ((!DoRegression()) && (!fDisableWriting)) MakeClass();
@@ -850,7 +835,7 @@ void TMVA::MethodBase::AddClassifierOutput( Types::ETreeType type )
 
       // print progress
       Int_t modulo = Int_t(nEvents/100);
-      if( modulo <= 0 ) modulo = 1;
+      if (modulo <= 0 ) modulo = 1;
       if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
    }
 
@@ -891,7 +876,7 @@ void TMVA::MethodBase::AddClassifierOutputProb( Types::ETreeType type )
 
       // print progress
       Int_t modulo = Int_t(nEvents/100);
-      if( modulo <= 0 ) modulo = 1;
+      if (modulo <= 0 ) modulo = 1;
       if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
    }
 
@@ -1013,7 +998,7 @@ void TMVA::MethodBase::TestMulticlass()
    ResultsMulticlass* resMulticlass = dynamic_cast<ResultsMulticlass*>(Data()->GetResults(GetMethodName(), Types::kTesting, Types::kMulticlass));
    if (!resMulticlass) Log() << kFATAL<< "unable to create pointer in TestMulticlass, exiting."<<Endl;
    Log() << kINFO << "Determine optimal multiclass cuts for test data..." << Endl;
-   for(UInt_t icls = 0; icls<DataInfo().GetNClasses(); ++icls){
+   for(UInt_t icls = 0; icls<DataInfo().GetNClasses(); ++icls) {
       resMulticlass->GetBestMultiClassCuts(icls);
    }
 }
@@ -1192,7 +1177,7 @@ void TMVA::MethodBase::AddInfoItem( void* gi, const TString& name, const TString
 void TMVA::MethodBase::AddOutput( Types::ETreeType type, Types::EAnalysisType analysisType ) {
    if (analysisType == Types::kRegression) {
       AddRegressionOutput( type );
-   } else if (analysisType == Types::kMulticlass ){
+   } else if (analysisType == Types::kMulticlass) {
       AddMulticlassOutput( type );
    } else {
       AddClassifierOutput( type );
@@ -1238,8 +1223,8 @@ void TMVA::MethodBase::WriteStateToXML( void* parent ) const
       AddSpectatorsXMLTo( parent );
 
    // write class info if in multiclass mode
-//   if(DoMulticlass())
-      AddClassesXMLTo(parent);
+   //   if(DoMulticlass())
+   AddClassesXMLTo(parent);
    
    // write target info if in regression mode
    if(DoRegression())
@@ -1311,7 +1296,7 @@ void TMVA::MethodBase::ReadStateFromFile()
          << gTools().Color("lightblue") << tfname << gTools().Color("reset") << Endl;
 
    if (tfname.EndsWith(".xml") ) {
-      void* doc = gTools().xmlengine().ParseFile(tfname);
+      void* doc = gTools().xmlengine().ParseFile(tfname); // the default buffer size in TXMLEngine::ParseFile is 100k. Starting with ROOT 5.29 one can set the buffer size, see: http://savannah.cern.ch/bugs/?78864. This might be necessary for large XML files
       void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
       ReadStateFromXML(rootnode);
       gTools().xmlengine().FreeDoc(doc);
@@ -1393,14 +1378,14 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
                else Log() << kFATAL << "Analysis type " << val << " is not known." << Endl;
             }
 
-            if (name == "TMVA Release" || name == "TMVA" ){
+            if (name == "TMVA Release" || name == "TMVA") {
                TString s;
                gTools().ReadAttr( antypeNode, "value", s);
                fTMVATrainingVersion = TString(s(s.Index("[")+1,s.Index("]")-s.Index("[")-1)).Atoi();
                Log() << kINFO << "MVA method was trained with TMVA Version: " << GetTrainingTMVAVersionString() << Endl;
             }
 
-            if (name == "ROOT Release" || name == "ROOT" ){
+            if (name == "ROOT Release" || name == "ROOT") {
                TString s;
                gTools().ReadAttr( antypeNode, "value", s);
                fROOTTrainingVersion = TString(s(s.Index("[")+1,s.Index("]")-s.Index("[")-1)).Atoi();
@@ -1421,7 +1406,7 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
          ReadSpectatorsFromXML(ch);
       }
       else if (nodeName=="Classes") {
-//         if(DataInfo().GetNClasses()==0 && DoMulticlass())
+         //         if(DataInfo().GetNClasses()==0 && DoMulticlass())
          if(DataInfo().GetNClasses()==0)
             ReadClassesFromXML(ch);
       }
@@ -1658,8 +1643,7 @@ void TMVA::MethodBase::AddSpectatorsXMLTo( void* parent ) const
 
       // we do not want to write spectators that are category-cuts,
       // except if the method is the category method and the spectators belong to it
-      if( vi.GetVarType()=='C' )
-         continue;
+      if (vi.GetVarType()=='C') continue;
 
       void* spec = gTools().AddChild( specs, "Spectator" );
       gTools().AddAttr( spec, "SpecIndex", writeIdx++ );
@@ -1677,7 +1661,7 @@ void TMVA::MethodBase::AddClassesXMLTo( void* parent ) const
    void* classes = gTools().AddChild(parent, "Classes");
    gTools().AddAttr( classes, "NClass", nClasses );
    
-   for (UInt_t iCls=0; iCls<nClasses; ++iCls){
+   for (UInt_t iCls=0; iCls<nClasses; ++iCls) {
       ClassInfo *classInfo=DataInfo().GetClassInfo (iCls);
       TString  className  =classInfo->GetName();
       UInt_t   classNumber=classInfo->GetNumber();
@@ -1792,19 +1776,19 @@ void TMVA::MethodBase::ReadClassesFromXML( void* clsnode )
    UInt_t  classIndex=0;
    void* ch = gTools().GetChild(clsnode);
    if (!ch) {
-      for(UInt_t icls = 0; icls<readNCls;++icls){
-	 TString classname = Form("class%i",icls);
-	 DataInfo().AddClass(classname);
+      for(UInt_t icls = 0; icls<readNCls;++icls) {
+         TString classname = Form("class%i",icls);
+         DataInfo().AddClass(classname);
 
       }
    }
    else{
       while (ch) {
-	 gTools().ReadAttr( ch, "Index", classIndex);
-	 gTools().ReadAttr( ch, "Name",  className );
-	 DataInfo().AddClass(className);
+         gTools().ReadAttr( ch, "Index", classIndex);
+         gTools().ReadAttr( ch, "Name",  className );
+         DataInfo().AddClass(className);
 
-	 ch = gTools().GetNextChild(ch);
+         ch = gTools().GetNextChild(ch);
       }
    }
 
@@ -1891,7 +1875,7 @@ TDirectory* TMVA::MethodBase::MethodBaseDir() const
    const TString dirName(Form("Method_%s",GetMethodTypeName().Data()));
 
    TDirectory * dir = Factory::RootBaseDir()->GetDirectory(dirName);
-   if (dir != 0){
+   if (dir != 0) {
       Log()<<kDEBUG<<" Base Directory for " << GetMethodTypeName() << " existed, return it.." <<Endl;
       return dir;
    }
@@ -1930,7 +1914,7 @@ TString TMVA::MethodBase::GetWeightFileName() const
    TString suffix = "";
    TString wFileDir(GetWeightFileDir());
    return ( wFileDir + (wFileDir[wFileDir.Length()-1]=='/' ? "" : "/") 
-	    + GetJobName() + "_" + GetMethodName() +
+            + GetJobName() + "_" + GetMethodName() +
             suffix + "." + gConfig().GetIONames().fWeightFileExtension + ".xml" );
 }
 
@@ -2531,7 +2515,7 @@ std::vector<Float_t> TMVA::MethodBase::GetMulticlassTrainingEfficiency(std::vect
    if (!resMulticlass) Log() << kFATAL<< "unable to create pointer in GetMulticlassTrainingEfficiency, exiting."<<Endl;
    
    Log() << kINFO << "Determine optimal multiclass cuts for training data..." << Endl;
-   for(UInt_t icls = 0; icls<DataInfo().GetNClasses(); ++icls){
+   for(UInt_t icls = 0; icls<DataInfo().GetNClasses(); ++icls) {
       resMulticlass->GetBestMultiClassCuts(icls);
    }
     
@@ -2571,7 +2555,7 @@ Double_t TMVA::MethodBase::GetSeparation( PDF* pdfS, PDF* pdfB ) const
    if (!pdfS) pdfS = fSplS;
    if (!pdfB) pdfB = fSplB;
 
-   if (!fSplS || !fSplB){
+   if (!fSplS || !fSplB) {
       Log()<<kWARNING<< "could not calculate the separation, distributions"
            << " fSplS or fSplB are not yet filled" << Endl;
       return 0;
@@ -2580,7 +2564,7 @@ Double_t TMVA::MethodBase::GetSeparation( PDF* pdfS, PDF* pdfB ) const
    }
 }
 
- //_______________________________________________________________________
+//_______________________________________________________________________
 Double_t TMVA::MethodBase::GetROCIntegral(TH1F *histS, TH1F *histB) const
 {
    // calculate the area (integral) under the ROC curve as a
@@ -2604,7 +2588,7 @@ Double_t TMVA::MethodBase::GetROCIntegral(TH1F *histS, TH1F *histB) const
    UInt_t   nsteps = 1000;
    Double_t step = (xmax-xmin)/Double_t(nsteps);
    Double_t cut = xmin;
-   for (UInt_t i=0; i<nsteps; i++){
+   for (UInt_t i=0; i<nsteps; i++) {
       integral += (1-pdfB->GetIntegral(cut,xmax)) * pdfS->GetVal(cut);
       cut+=step;
    } 
@@ -2634,7 +2618,7 @@ Double_t TMVA::MethodBase::GetROCIntegral(PDF *pdfS, PDF *pdfB) const
    UInt_t   nsteps = 1000;
    Double_t step = (xmax-xmin)/Double_t(nsteps);
    Double_t cut = xmin;
-   for (UInt_t i=0; i<nsteps; i++){
+   for (UInt_t i=0; i<nsteps; i++) {
       integral += (1-pdfB->GetIntegral(cut,xmax)) * pdfS->GetVal(cut);
       cut+=step;
    } 

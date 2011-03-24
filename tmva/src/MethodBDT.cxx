@@ -1,5 +1,5 @@
 
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss, Eckhard v. Toerne, Jan Therhaag
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -16,11 +16,13 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *      Doug Schouten   <dschoute@sfu.ca>        - Simon Fraser U., Canada        *
  *      Jan Therhaag    <jan.therhaag@cern.ch>   - U. of Bonn, Germany            *
+ *      Eckhard v. Toerne     <evt@uni-bonn.de>        - U of Bonn, Germany       *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
+ * Copyright (c) 2005-2011:                                                       *
  *      CERN, Switzerland                                                         *
  *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
+ *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -788,8 +790,7 @@ void TMVA::MethodBDT::Train()
          }
       }
       else{
-         
-         fForest.push_back( new DecisionTree( fSepType, fNodeMinEvents, fNCuts, 0,
+         fForest.push_back( new DecisionTree( fSepType, fNodeMinEvents, fNCuts, fSignalClass,
                                               fRandomisedTrees, fUseNvars, fUsePoissonNvars, fNNodesMax, fMaxDepth,
                                               itree, fNodePurityLimit, itree));
          if (fUseFisherCuts) {
@@ -1197,12 +1198,16 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
 
    vector<Double_t> sumw; //for individually re-scaling  each class
 
+   UInt_t maxCls = sumw.size();
    Double_t maxDev=0;
    for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       Double_t w = (*e)->GetWeight();
       sumGlobalw += w;
       UInt_t iclass=(*e)->GetClass();
-      if (iclass+1 > sumw.size()) sumw.resize(iclass+1,0);
+      if (iclass+1 > maxCls) {
+	 sumw.resize(iclass+1,0);
+	 maxCls = sumw.size();
+      }
       sumw[iclass] += w;
 
       if ( DoRegression() ) {
@@ -1860,8 +1865,11 @@ void TMVA::MethodBDT::MakeClassSpecific( std::ostream& fout, const TString& clas
 {
    // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
 
+   TString nodeName = className;
+   nodeName.ReplaceAll("Read","");
+   nodeName.Append("Node");
    // write BDT-specific classifier response
-   fout << "   std::vector<BDT_DecisionTreeNode*> fForest;       // i.e. root nodes of decision trees" << endl;
+   fout << "   std::vector<"<<nodeName<<"*> fForest;       // i.e. root nodes of decision trees" << endl;
    fout << "   std::vector<double>                fBoostWeights; // the weights applied in the individual boosts" << endl;
    fout << "};" << endl << endl;
    fout << "double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << endl;
@@ -1871,10 +1879,10 @@ void TMVA::MethodBDT::MakeClassSpecific( std::ostream& fout, const TString& clas
       fout << "   double norm  = 0;" << endl;
    }
    fout << "   for (unsigned int itree=0; itree<fForest.size(); itree++){" << endl;
-   fout << "      BDT_DecisionTreeNode *current = fForest[itree];" << endl;
+   fout << "      "<<nodeName<<" *current = fForest[itree];" << endl;
    fout << "      while (current->GetNodeType() == 0) { //intermediate node" << endl;
-   fout << "         if (current->GoesRight(inputValues)) current=(BDT_DecisionTreeNode*)current->GetRight();" << endl;
-   fout << "         else current=(BDT_DecisionTreeNode*)current->GetLeft();" << endl;
+   fout << "         if (current->GoesRight(inputValues)) current=("<<nodeName<<"*)current->GetRight();" << endl;
+   fout << "         else current=("<<nodeName<<"*)current->GetLeft();" << endl;
    fout << "      }" << endl;
    if (fBoostType=="Grad"){
       fout << "      myMVA += current->GetResponse();" << endl;
@@ -1918,28 +1926,30 @@ void TMVA::MethodBDT::MakeClassSpecific( std::ostream& fout, const TString& clas
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TString& ) const
+void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TString& className) const
 {
    // specific class header
-   fout << "#ifndef NN" << endl;
-   fout << "#define NN new BDT_DecisionTreeNode" << endl;
-   fout << "#endif" << endl;
+   TString nodeName = className;
+   nodeName.ReplaceAll("Read","");
+   nodeName.Append("Node");
+   //fout << "#ifndef NN" << endl; commented out on purpose see next line
+   fout << "#define NN new "<<nodeName << endl; // NN definition depends on individual methods. Important to have NO #ifndef if several BDT methods compile together
+   //fout << "#endif" << endl; commented out on purpose see previous line
    fout << "   " << endl;
-   fout << "#ifndef BDT_DecisionTreeNode__def" << endl;
-   fout << "#define BDT_DecisionTreeNode__def" << endl;
+   fout << "#ifndef "<<nodeName<<"__def" << endl;
+   fout << "#define "<<nodeName<<"__def" << endl;
    fout << "   " << endl;
-   fout << "class BDT_DecisionTreeNode {" << endl;
+   fout << "class "<<nodeName<<" {" << endl;
    fout << "   " << endl;
    fout << "public:" << endl;
    fout << "   " << endl;
    fout << "   // constructor of an essentially \"empty\" node floating in space" << endl;
-   fout << "   BDT_DecisionTreeNode ( BDT_DecisionTreeNode* left," << endl;
-   fout << "                          BDT_DecisionTreeNode* right," << endl;
+   fout << "   "<<nodeName<<" ( "<<nodeName<<"* left,"<<nodeName<<"* right," << endl;
    if (fUseFisherCuts){
-     fout << "                          int nFisherCoeff," << endl;
-     for (UInt_t i=0;i<GetNVariables()+1;i++){
-       fout << "                          double fisherCoeff"<<i<<"," << endl;
-     }
+      fout << "                          int nFisherCoeff," << endl;
+      for (UInt_t i=0;i<GetNVariables()+1;i++){
+         fout << "                          double fisherCoeff"<<i<<"," << endl;
+      }
    }
    fout << "                          int selector, double cutValue, bool cutType, " << endl;
    fout << "                          int nodeType, double purity, double response ) :" << endl;
@@ -1953,29 +1963,29 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
    fout << "   fPurity       ( purity       )," << endl;
    fout << "   fResponse     ( response     ){" << endl;
    if (fUseFisherCuts){
-     for (UInt_t i=0;i<GetNVariables()+1;i++){
-       fout << "     fFisherCoeff.push_back(fisherCoeff"<<i<<");" << endl;
-     }
+      for (UInt_t i=0;i<GetNVariables()+1;i++){
+         fout << "     fFisherCoeff.push_back(fisherCoeff"<<i<<");" << endl;
+      }
    }
    fout << "   }" << endl << endl;
-   fout << "   virtual ~BDT_DecisionTreeNode();" << endl << endl;
+   fout << "   virtual ~"<<nodeName<<"();" << endl << endl;
    fout << "   // test event if it decends the tree at this node to the right" << endl;
    fout << "   virtual bool GoesRight( const std::vector<double>& inputValues ) const;" << endl;
-   fout << "   BDT_DecisionTreeNode* GetRight( void )  {return fRight; };" << endl << endl;
+   fout << "   "<<nodeName<<"* GetRight( void )  {return fRight; };" << endl << endl;
    fout << "   // test event if it decends the tree at this node to the left " << endl;
    fout << "   virtual bool GoesLeft ( const std::vector<double>& inputValues ) const;" << endl;
-   fout << "   BDT_DecisionTreeNode* GetLeft( void ) { return fLeft; };   " << endl << endl;
+   fout << "   "<<nodeName<<"* GetLeft( void ) { return fLeft; };   " << endl << endl;
    fout << "   // return  S/(S+B) (purity) at this node (from  training)" << endl << endl;
    fout << "   double GetPurity( void ) const { return fPurity; } " << endl;
    fout << "   // return the node type" << endl;
    fout << "   int    GetNodeType( void ) const { return fNodeType; }" << endl;
    fout << "   double GetResponse(void) const {return fResponse;}" << endl << endl;
    fout << "private:" << endl << endl;
-   fout << "   BDT_DecisionTreeNode*   fLeft;     // pointer to the left daughter node" << endl;
-   fout << "   BDT_DecisionTreeNode*   fRight;    // pointer to the right daughter node" << endl;
+   fout << "   "<<nodeName<<"*   fLeft;     // pointer to the left daughter node" << endl;
+   fout << "   "<<nodeName<<"*   fRight;    // pointer to the right daughter node" << endl;
    if (fUseFisherCuts){
-     fout << "   int                     fNFisherCoeff; // =0 if this node doesn use fisher, else =nvar+1 " << endl;
-     fout << "   std::vector<double>     fFisherCoeff;  // the fisher coeff (offset at the last element)" << endl;
+      fout << "   int                     fNFisherCoeff; // =0 if this node doesn use fisher, else =nvar+1 " << endl;
+      fout << "   std::vector<double>     fFisherCoeff;  // the fisher coeff (offset at the last element)" << endl;
    }
    fout << "   int                     fSelector; // index of variable used in node selection (decision tree)   " << endl;
    fout << "   double                  fCutValue; // cut value appplied on this node to discriminate bkg against sig" << endl;
@@ -1986,14 +1996,14 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
    fout << "}; " << endl;
    fout << "   " << endl;
    fout << "//_______________________________________________________________________" << endl;
-   fout << "BDT_DecisionTreeNode::~BDT_DecisionTreeNode()" << endl;
+   fout << "   "<<nodeName<<"::~"<<nodeName<<"()" << endl;
    fout << "{" << endl;
    fout << "   if (fLeft  != NULL) delete fLeft;" << endl;
    fout << "   if (fRight != NULL) delete fRight;" << endl;
    fout << "}; " << endl;
    fout << "   " << endl;
    fout << "//_______________________________________________________________________" << endl;
-   fout << "bool BDT_DecisionTreeNode::GoesRight( const std::vector<double>& inputValues ) const" << endl;
+   fout << "bool "<<nodeName<<"::GoesRight( const std::vector<double>& inputValues ) const" << endl;
    fout << "{" << endl;
    fout << "   // test event if it decends the tree at this node to the right" << endl;
    fout << "   bool result;" << endl;
@@ -2014,7 +2024,7 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
    fout << "}" << endl;
    fout << "   " << endl;
    fout << "//_______________________________________________________________________" << endl;
-   fout << "bool BDT_DecisionTreeNode::GoesLeft( const std::vector<double>& inputValues ) const" << endl;
+   fout << "bool "<<nodeName<<"::GoesLeft( const std::vector<double>& inputValues ) const" << endl;
    fout << "{" << endl;
    fout << "   // test event if it decends the tree at this node to the left" << endl;
    fout << "   if (!this->GoesRight(inputValues)) return true;" << endl;

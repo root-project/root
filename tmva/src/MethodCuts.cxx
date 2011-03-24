@@ -932,7 +932,7 @@ Double_t TMVA::MethodCuts::ComputeEstimator( std::vector<Double_t>& pars )
          diff=(fCutRange[ivar]->GetMin()-fTmpCutMin[ivar])/(fCutRange[ivar]->GetMax()-fCutRange[ivar]->GetMin());
          penalty+=4.*diff*diff;
       }
-      //Log() << kINFO<<"special treatment of "<<ibinS<<" bin penalty="<< penalty<<" effS="<<effS<<Endl;
+
       if (effS<1.e-4) return 10.0+penalty;
       else return 10.*(1.-10.*effS);
    }

@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Peter Speckmayer, Matt Jachowski
+// Author: Krzysztof Danielowski, Andreas Hoecker, Matt Jachowski, Kamil Kraszewski, Maciej Kruk, Peter Speckmayer, Joerg Stelzer, Eckhard von Toerne, Jan Therhaag, Jiahang Zhong
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -15,13 +15,20 @@
  * Authors (alphabetical):                                                        *
  *      Krzysztof Danielowski <danielow@cern.ch>       - IFJ & AGH, Poland        *
  *      Andreas Hoecker       <Andreas.Hocker@cern.ch> - CERN, Switzerland        *
- *      Peter Speckmayer      <peter.speckmayer@cern.ch> - CERN, Switzerland      *
  *      Matt Jachowski        <jachowski@stanford.edu> - Stanford University, USA *
  *      Kamil Kraszewski      <kalq@cern.ch>           - IFJ & UJ, Poland         *
  *      Maciej Kruk           <mkruk@cern.ch>          - IFJ & AGH, Poland        *
+ *      Peter Speckmayer      <peter.speckmayer@cern.ch> - CERN, Switzerland      *
+ *      Joerg Stelzer         <stelzer@cern.ch>        - DESY, Germany            *
+ *      Jan Therhaag          <Jan.Therhaag@cern.ch>   - U of Bonn, Germany       *
+ *      Eckhard v. Toerne     <evt@uni-bonn.de>        - U of Bonn, Germany       *
+ *      Jiahang Zhong         <Jiahang.Zhong@cern.ch>  - Academia Sinica, Taipei  *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
+ * Copyright (c) 2005-2011:                                                       *
  *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
+ *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *

@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Attila Krasznahorkay
+// Author: Attila Krasznahorkay, Andreas Hoecker, Joerg Stelzer, Eckhard von Toerne
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -12,10 +12,15 @@
  *                                                                                *
  * Author:                                                                        *
  *      Attila Krasznahorkay <Attila.Krasznahorkay@cern.ch> - CERN, Switzerland   *
+ *      Andreas Hoecker       <Andreas.Hocker@cern.ch> - CERN, Switzerland        *
+ *      Joerg Stelzer         <stelzer@cern.ch>        - DESY, Germany            *
+ *      Eckhard v. Toerne     <evt@uni-bonn.de>        - U of Bonn, Germany       *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ * Copyright (c) 2005-2011:                                                       *
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
+ *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
