@@ -198,14 +198,16 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
          if (gSystem->mkdir(existsPath, kTRUE) != 0)
             Error("Init", "problems creating path '%s'", existsPath.Data());
       }
-      // Remove prefix, if any and if included
-      TString pfx  = gEnv->GetValue("Path.Localroot","");
-      if (!pfx.IsNull() && dirPath.BeginsWith(pfx)) dirPath.Remove(0, pfx.Length());
       // Check if a local data server has been specified
       if (gSystem->Getenv("LOCALDATASERVER")) {
          fDir = gSystem->Getenv("LOCALDATASERVER");
          if (!fDir.EndsWith("/")) fDir += "/";
       }
+      TString dirProto = TUrl(fDir).GetProtocol();
+      // Remove prefix, if any, if included and if Xrootd
+      TString pfx  = gEnv->GetValue("Path.Localroot","");
+      if (!pfx.IsNull() && dirPath.BeginsWith(pfx) &&
+          (dirProto == "root" || dirProto == "xrd")) dirPath.Remove(0, pfx.Length());
       fDir += dirPath;
    } else {
       // Allow for place holders in fFileName (e.g. root://a.ser.ver//data/dir/<group>/<user>/file)

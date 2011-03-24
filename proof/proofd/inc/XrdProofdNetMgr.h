@@ -116,6 +116,7 @@ public:
    char              *ReadBufferRemote(const char *url, const char *file,
                                        kXR_int64 ofs, int &len, int grep);
    char              *ReadLogPaths(const char *url, const char *stag, int isess);
+   char              *ReadLogPaths(const char *stag, int isess);
 
    // List of available and unique workers (on master only)
    std::list<XrdProofWorker *> *GetActiveWorkers();

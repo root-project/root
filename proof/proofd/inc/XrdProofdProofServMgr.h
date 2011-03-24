@@ -171,6 +171,14 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
                                   const char *usrs = 0, const char *grps = 0,
                                   int smi = -1, int smx = -1, int vmi = -1, int vmx = -1, bool hex = 0);
 
+   int                SetupProtocol(XrdNetPeer &peerpsrv,
+                                    XrdProofdProofServ *xps, XrdOucString &e);
+   void               ParseCreateBuffer(XrdProofdProtocol *p,  XrdProofdProofServ *xps,
+                                        XrdOucString &tag, XrdOucString &ord,
+                                        XrdOucString &cffile, XrdOucString &uenvs,
+                                        int &intwait);
+   XrdProofdProofServ *PrepareProofServ(XrdProofdProtocol *p,
+                                        XrdProofdResponse *r, unsigned short &sid);
    int                PrepareSessionRecovering();
    int                ResolveSession(const char *fpid);
 
@@ -214,7 +222,7 @@ public:
    int               Process(XrdProofdProtocol *p);
    XrdSysSemWait    *ProcessSem() { return &fProcessSem; }
 
-   int               Accept(XrdProofdProofServ *xps, int to, XrdOucString &e);
+   int               AcceptPeer(XrdProofdProofServ *xps, int to, XrdOucString &e);
    int               Attach(XrdProofdProtocol *p);
    int               Create(XrdProofdProtocol *p);
    int               Destroy(XrdProofdProtocol *p);
@@ -238,7 +246,7 @@ public:
 
    int               CleanupProofServ(bool all = 0, const char *usr = 0);
 
-   void              GetTagDirs(XrdProofdProtocol *p, XrdProofdProofServ *xps,
+   void              GetTagDirs(int opt, XrdProofdProtocol *p, XrdProofdProofServ *xps,
                                 XrdOucString &sesstag, XrdOucString &topsesstag,
                                 XrdOucString &sessiondir, XrdOucString &sesswrkdir);
 

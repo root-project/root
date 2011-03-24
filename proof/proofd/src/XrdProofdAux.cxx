@@ -22,6 +22,13 @@
 
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPriv.hh"
+#ifdef OLDXRDOUC
+#  include "XrdOuc/XrdOucError.hh"
+#  include "XrdOuc/XrdOucLogger.hh"
+#else
+#  include "XrdSys/XrdSysError.hh"
+#  include "XrdSys/XrdSysLogger.hh"
+#endif
 
 #include "XrdProofdAux.h"
 #include "XrdProofdConfig.h"
@@ -382,6 +389,38 @@ int XrdProofdAux::Write(int fd, const void *buf, size_t nb)
 
    // Done
    return written;
+}
+
+//_________________________________________________________________________________
+void XrdProofdAux::LogEmsgToFile(const char *flog, const char *emsg, const char *pfx)
+{
+   // Logs error message 'emsg' to file 'flog' using standard technology
+   XPDLOC(AUX, "Aux::LogEmsgToFile")
+
+   if (flog && strlen(flog)) {
+      // Open the file in write-only, append mode
+      int logfd = open(flog, O_WRONLY|O_APPEND, 0644);
+      if (logfd > 0) {
+         fcntl(logfd, F_SETFD, FD_CLOEXEC);
+         // Attach a logger to the file
+         XrdSysLogger logger(logfd, 0);
+         XrdSysError error(&logger, "xpd");
+         // Log the message
+         if (emsg && strlen(emsg) > 0) error.Emsg("-E", pfx, emsg);
+         // Make sure that it is written to file
+         if (fsync(logfd) != 0)
+            TRACE(XERR, "problem syncing file "<<flog<<" - errno: "<<errno);
+         // Free the descriptor
+         if (close(logfd) != 0)
+            TRACE(XERR, "problem closing file "<<flog<<" - errno: "<<errno);
+      } else {
+         TRACE(XERR, "file "<<flog<<" could not be opened - errno: "<<errno);
+      }
+   } else {
+      TRACE(XERR, "file path undefined!");
+   }
+   // Done
+   return;
 }
 
 //_____________________________________________________________________________

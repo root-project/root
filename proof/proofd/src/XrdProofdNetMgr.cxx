@@ -1574,6 +1574,58 @@ char *XrdProofdNetMgr::ReadLogPaths(const char *url, const char *msg, int isess)
    return buf;
 }
 
+//______________________________________________________________________________
+char *XrdProofdNetMgr::ReadLogPaths(const char *msg, int isess)
+{
+   // Get log paths from next tier; used in multi-master setups
+   // Returns 0 in case of error.
+   XPDLOC(NMGR, "NetMgr::ReadLogPaths")
+
+   TRACE(REQ, "msg: " << (msg ? msg : "undef") << ", isess: " << isess);
+
+   char *buf = 0, *pbuf = buf;
+   int len = 0;
+   // Loop over unique nodes
+   std::list<XrdProofWorker *>::iterator iw = fNodes.begin();
+   XrdProofWorker *w = 0;
+   while (iw != fNodes.end()) {
+      if ((w = *iw)) {
+         // Do not send it to ourselves
+         bool us = (((w->fHost.find("localhost") != STR_NPOS ||
+                      XrdOucString(fMgr->Host()).find(w->fHost.c_str()) != STR_NPOS)) &&
+                    (w->fPort == -1 || w->fPort == fMgr->Port())) ? 1 : 0;
+         if (!us) {
+            // Create 'url'
+            XrdOucString u = fMgr->EffectiveUser();
+            u += '@';
+            u += w->fHost;
+            if (w->fPort != -1) {
+               u += ':';
+               u += w->fPort;
+            }
+            // Ask the node
+            char *bmst = fMgr->NetMgr()->ReadLogPaths(u.c_str(), msg, isess);
+            if (bmst) {
+               len += strlen(bmst) + 1;
+               buf = (char *) realloc((void *)buf, len);
+               pbuf = buf + len - strlen(bmst) - 1;
+               memcpy(pbuf, bmst, strlen(bmst) + 1);
+               buf[len - 1] = 0;
+               pbuf = buf + len;
+               free(bmst);
+            }            
+         } else {
+            TRACE(DBG, "request for ourselves: ignore");
+         }
+      }
+      // Next worker
+      iw++;
+   }
+
+   // Done
+   return buf;
+}
+
 //__________________________________________________________________________
 void XrdProofdNetMgr::CreateDefaultPROOFcfg()
 {

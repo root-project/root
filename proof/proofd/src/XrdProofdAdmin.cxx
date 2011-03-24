@@ -676,14 +676,16 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
    XPD_SETRESP(p, "QueryLogPaths");
 
    int ridx = ntohl(p->Request()->proof.int2);
+   bool broadcast = (ntohl(p->Request()->proof.int3) == 1) ? 1 : 0;
 
    // Find out for which session is this request
-   XrdOucString stag, master, user, buf;
+   XrdOucString stag, master, user, ord, buf;
    int len = p->Request()->header.dlen;
    if (len > 0) {
       buf.assign(p->Argp()->buff,0,len-1);
       int im = buf.find("|master:");
       int iu = buf.find("|user:");
+      int io = buf.find("|ord:");
       stag = buf;
       stag.erase(stag.find("|"));
       if (im != STR_NPOS) {
@@ -693,12 +695,15 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
       if (iu != STR_NPOS) {
          user.assign(buf, iu + strlen("|user:"));
          user.erase(user.find("|"));
-         TRACEP(p, DBG, "user: "<<user);
+      }
+      if (io != STR_NPOS) {
+         ord.assign(buf, iu + strlen("|ord:"));
+         ord.erase(user.find("|"));
       }
       if (stag.beginswith('*'))
          stag = "";
    }
-   TRACEP(p, DBG, "master: "<<master<<", user: "<<user<<", stag: "<<stag);
+   TRACEP(p, DBG, "master: "<<master<<", user: "<<user<<", ord: "<<ord<<", stag: "<<stag);
 
    XrdProofdClient *client = (user.length() > 0) ? 0 : p->Client();
    if (!client)
@@ -742,78 +747,99 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
       return 0;
    }
    // Scan the directory to add the top master (only if top master)
-   if (master.length() <= 0) {
-      bool found = 0;
-      struct dirent *ent = 0;
-      while ((ent = (struct dirent *)readdir(dir))) {
-         if (!strncmp(ent->d_name, "master-", 7) &&
-            strstr(ent->d_name, ".log")) {
-            rmsg += "|0 proof://"; rmsg += fMgr->Host(); rmsg += ':';
+   XrdOucString xo;
+   int ilog, idas;
+   bool ismaster = 0;
+   struct dirent *ent = 0;
+   while ((ent = (struct dirent *)readdir(dir))) {         
+      xo = ent->d_name;
+      if ((ilog = xo.find(".log")) != STR_NPOS) {
+         xo.replace(".log", "");
+         if ((idas = xo.find('-')) != STR_NPOS) xo.erase(0, idas + 1);
+         if ((idas = xo.find('-')) != STR_NPOS) xo.erase(idas);
+         if (ord.length() <= 0 || (ord == xo)) {
+            rmsg += "|"; rmsg += xo;
+            rmsg += " proof://"; rmsg += fMgr->Host(); rmsg += ':';
             rmsg += fMgr->Port(); rmsg += '/';
             rmsg += sdir; rmsg += '/'; rmsg += ent->d_name;
-            found = 1;
+            if (!strncmp(ent->d_name, "master-", 7)) ismaster = 1;
          }
       }
    }
    // Close dir
    closedir(dir);
 
-   // Now open the workers file
-   XrdOucString wfile(sdir);
-   wfile += "/.workers";
-   FILE *f = fopen(wfile.c_str(), "r");
-   if (f) {
-      char ln[2048];
-      while (fgets(ln, sizeof(ln), f)) {
-         if (ln[strlen(ln)-1] == '\n')
-            ln[strlen(ln)-1] = 0;
-         // Locate status and url
-         char *ps = strchr(ln, ' ');
-         if (ps) {
-            *ps = 0;
-            ps++;
-            // Locate ordinal
-            char *po = strchr(ps, ' ');
-            if (po) {
-               po++;
-               // Locate path
-               char *pp = strchr(po, ' ');
-               if (pp) {
-                  *pp = 0;
-                  pp++;
-                  // Record now
-                  rmsg += "|"; rmsg += po; rmsg += " ";
-                  if (master.length() > 0) {
-                     rmsg += master;
-                     rmsg += ",";
-                  }
-                  rmsg += ln; rmsg += '/';
-                  rmsg += pp;
-                  // Reposition on the file name
-                  char *ppl = strrchr(pp, '/');
-                  pp = (ppl) ? ppl : pp;
-                  // If the line is for a submaster, we have to get the info
-                  // about its workers
-                  bool ismst = (strstr(pp, "master-")) ? 1 : 0;
-                  if (ismst) {
-                     XrdClientUrlInfo u((const char *)&ln[0]);
-                     XrdOucString msg(stag);
-                     msg += "|master:";
-                     msg += ln;
-                     msg += "|user:";
-                     msg += u.User;
-                     u.User = p->Client()->User() ? p->Client()->User() : fMgr->EffectiveUser();
-                     char *bmst = fMgr->NetMgr()->ReadLogPaths(u.GetUrl().c_str(), msg.c_str(), ridx);
-                     if (bmst) {
-                        rmsg += bmst;
-                        free(bmst);
+   // If required and it makes sense, ask the underlying nodes
+   if (broadcast && ismaster) {
+      XrdOucString msg(tag);
+      msg += "|master:";
+      msg += fMgr->Host();
+      msg += "|user:";
+      msg += client->User();
+      char *bmst = fMgr->NetMgr()->ReadLogPaths(msg.c_str(), ridx);
+      if (bmst) {
+         rmsg += bmst;
+         free(bmst);
+      }
+   } else if (ismaster) {
+      // Get info from the .workers file
+      // Now open the workers file
+      XrdOucString wfile(sdir);
+      wfile += "/.workers";
+      FILE *f = fopen(wfile.c_str(), "r");
+      if (f) {
+         char ln[2048];
+         while (fgets(ln, sizeof(ln), f)) {
+            if (ln[strlen(ln)-1] == '\n')
+               ln[strlen(ln)-1] = 0;
+            // Locate status and url
+            char *ps = strchr(ln, ' ');
+            if (ps) {
+               *ps = 0;
+               ps++;
+               // Locate ordinal
+               char *po = strchr(ps, ' ');
+               if (po) {
+                  po++;
+                  // Locate path
+                  char *pp = strchr(po, ' ');
+                  if (pp) {
+                     *pp = 0;
+                     pp++;
+                     // Record now
+                     rmsg += "|"; rmsg += po; rmsg += " ";
+                     if (master.length() > 0) {
+                        rmsg += master;
+                        rmsg += ",";
+                     }
+                     rmsg += ln; rmsg += '/';
+                     rmsg += pp;
+                     // Reposition on the file name
+                     char *ppl = strrchr(pp, '/');
+                     pp = (ppl) ? ppl : pp;
+                     // If the line is for a submaster, we have to get the info
+                     // about its workers
+                     bool ismst = (strstr(pp, "master-")) ? 1 : 0;
+                     if (ismst) {
+                        XrdClientUrlInfo u((const char *)&ln[0]);
+                        XrdOucString msg(stag);
+                        msg += "|master:";
+                        msg += ln;
+                        msg += "|user:";
+                        msg += u.User;
+                        u.User = p->Client()->User() ? p->Client()->User() : fMgr->EffectiveUser();
+                        char *bmst = fMgr->NetMgr()->ReadLogPaths(u.GetUrl().c_str(), msg.c_str(), ridx);
+                        if (bmst) {
+                           rmsg += bmst;
+                           free(bmst);
+                        }
                      }
                   }
                }
             }
          }
+         fclose(f);
       }
-      fclose(f);
    }
 
    // Send back to user

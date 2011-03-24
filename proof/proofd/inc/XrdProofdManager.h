@@ -93,6 +93,10 @@ class XrdProofdManager : public XrdProofdConfig {
    const char       *DataDir() const { return fDataDir.c_str(); }
    const char       *DataDirOpts() const { return fDataDirOpts.c_str(); }
 
+   const char       *RootdExe() const { return fRootdExe.c_str(); }
+   const char      **RootdArgs() const { return fRootdArgsPtrs; }
+   bool              IsRootdAllowed(const char *host);
+
    std::list<XrdProofdDSInfo *> *DataSetSrcs() { return &fDataSetSrcs; }
 
    // Services
@@ -134,6 +138,11 @@ class XrdProofdManager : public XrdProofdConfig {
    XrdOucString      fDataDir;        // Directory under which to create the sub-dirs for users data
    XrdOucString      fDataDirOpts;    // String specifying options for fDataDir handling
 
+   XrdOucString      fRootdExe;       // Path to 'rootd' to be use for protocol 'rootd://'
+   std::list<XrdOucString> fRootdArgs;// Rootd arguments
+   const char      **fRootdArgsPtrs;  // Null terminated array of arguments to execv 'rootd'
+   std::list<XrdOucString> fRootdAllow;// Host allowed to open files via 'rootd'
+
    // Services
    XrdProofdClientMgr    *fClientMgr;  // Client manager
    XrdProofGroupMgr      *fGroupsMgr;  // Groups manager
@@ -162,13 +171,15 @@ class XrdProofdManager : public XrdProofdConfig {
    int               DoDirectiveAllow(char *, XrdOucStream *, bool);
    int               DoDirectiveAllowedGroups(char *, XrdOucStream *, bool);
    int               DoDirectiveAllowedUsers(char *, XrdOucStream *, bool);
-   int               DoDirectiveDataDir(char *val, XrdOucStream *cfg, bool);
+   int               DoDirectiveDataDir(char *, XrdOucStream *, bool);
    int               DoDirectiveDataSetSrc(char *, XrdOucStream *, bool);
    int               DoDirectiveGroupfile(char *, XrdOucStream *, bool);
    int               DoDirectiveMaxOldLogs(char *, XrdOucStream *, bool);
    int               DoDirectiveMultiUser(char *, XrdOucStream *, bool);
    int               DoDirectivePort(char *, XrdOucStream *, bool);
    int               DoDirectiveRole(char *, XrdOucStream *, bool);
+   int               DoDirectiveRootd(char *, XrdOucStream *, bool);
+   int               DoDirectiveRootdAllow(char *, XrdOucStream *, bool);
    int               DoDirectiveTrace(char *, XrdOucStream *, bool);
 
    bool              ValidateLocalDataSetSrc(XrdOucString &url, bool &local);

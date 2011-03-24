@@ -106,6 +106,7 @@ private:
    TVirtualProofPlayer *fPlayer;    //actual player
    FILE         *fLogFile;          //log file
    Int_t         fLogFileDes;       //log file descriptor
+   Long64_t      fLogFileMaxSize;   //max size for log files (enabled if > 0)
    TList        *fEnabledPackages;  //list of enabled packages
    Int_t         fProtocol;         //protocol version number
    TString       fOrdinal;          //slave ordinal number
@@ -281,6 +282,7 @@ public:
    const char    *GetPrefix()     const { return fPrefix; }
 
    void           FlushLogFile();
+   void           TruncateLogFile();  // Called also by TDSetProxy::Next()
 
    TProofLockPath *GetCacheLock() { return fCacheLock; }      //cache dir locker; used by TProofPlayer
    Int_t          CopyFromCache(const char *name, Bool_t cpbin);

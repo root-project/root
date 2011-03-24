@@ -51,6 +51,9 @@
 #ifndef ROOT_TUrl
 #include "TUrl.h"
 #endif
+#ifndef ROOT_TProofOutputList
+#include "TProofOutputList.h"
+#endif
 
 #include <map>
 
@@ -126,9 +129,10 @@ class TMacro;
 // 28 -> 29: Support for config parameters in EnablePackage, idle-timeout
 // 29 -> 30: Add information about data dir in TSlaveInfo
 // 30 -> 31: Development cycle 5.29
+// 31 -> 32: New log path trasmission
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 31;            // protocol version number
+const Int_t       kPROOF_Protocol        = 32;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
@@ -145,6 +149,7 @@ const char* const kPROOF_QueryLockFile   = "proof-query-lock-";   // query lock 
 const char* const kPROOF_TerminateWorker = "+++ terminating +++"; // signal worker termination in MarkBad
 const char* const kPROOF_WorkerIdleTO    = "+++ idle-timeout +++"; // signal worker idle timeout in MarkBad
 const char* const kPROOF_InputDataFile   = "inputdata.root";      // Default input data file name
+const char* const kPROOF_MissingFiles    = "MissingFiles";  // Missingfile list name
 
 #ifndef R__WIN32
 const char* const kCP     = "/bin/cp -fp";
@@ -534,6 +539,8 @@ private:
 
    TList          *fInputData;       //Input data objects sent over via file
    TString         fInputDataFile;   //File with input data objects
+
+   TProofOutputList fOutputList;     // TList implementation filtering ls(...) and Print(...)
 
    PrintProgress_t fPrintProgress;   //Function function to display progress info in batch mode
 

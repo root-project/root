@@ -43,7 +43,8 @@ private:
    TSignalHandler *fIntHandler;     //interrupt signal handler (ctrl-c)
 
    void  Init(const char *host, Int_t stype);
-
+   void  ParseBuffer();
+   
    // Static methods
    static Int_t GetProofdProtocol(TSocket *s);
 

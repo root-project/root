@@ -593,8 +593,8 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
    }
    url += TString(Form("://%s@%s:%d",
                        fUrl.GetUser(), fUrl.GetHost(), fUrl.GetPort()));
-   fSocket = TSocket::CreateAuthSocket(url, sSize, tcpwindowsize, fSocket);
-   if (!fSocket || !fSocket->IsAuthenticated()) {
+   fSocket = TSocket::CreateAuthSocket(url, sSize, tcpwindowsize, fSocket, stat);
+   if (!fSocket || (fSocket && !fSocket->IsAuthenticated())) {
       if (sSize > 1)
          Error("TNetFile", "can't open %d-stream connection to rootd on "
                "host %s at port %d", sSize, fUrl.GetHost(), fUrl.GetPort());
@@ -602,7 +602,6 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
          Error("TNetFile", "can't open connection to rootd on "
                "host %s at port %d", fUrl.GetHost(), fUrl.GetPort());
       *kind = kROOTD_ERR;
-      *stat = (Int_t)kErrAuthNotOK;
       goto zombie;
    }
 
@@ -929,7 +928,7 @@ void TNetSystem::Create(const char *url, TSocket *sock)
       fFTP  = new TFTP(eurl, 1, TFTP::kDfltWindowSize, sock);
       if (fFTP && fFTP->IsOpen()) {
          if (fFTP->GetSocket()->GetRemoteProtocol() < 12) {
-            Error("TNetSystem",
+            Error("Create",
                   "remote daemon does not support 'system' functionality");
             fFTP->Close();
             delete fFTP;
@@ -1137,7 +1136,7 @@ Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
       // Get user name
       TUrl url(path);
       TString user = url.GetUser();
-      if (!user.Length()) {
+      if (user.IsNull() && !fUser.IsNull()) {
          UserGroup_t *u = gSystem->GetUserInfo();
          if (u)
             user = u->fUser;
@@ -1149,7 +1148,11 @@ Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
 
       // Get port
       Int_t port = url.GetPort();
-
+      if (gDebug > 1)
+         Info("ConsistentWith", "fUser:'%s' (%s), fHost:'%s' (%s), fPort:%d (%d)",
+                                fUser.Data(), user.Data(), fHost.Data(), host.Data(),
+                                fPort, port);
+      
       if (user == fUser && host == fHost && port == fPort)
          checknet = kTRUE;
    }

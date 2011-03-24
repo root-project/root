@@ -52,6 +52,7 @@
 #pragma link C++ class TProofProgressStatus;
 #pragma link C++ class TMergerInfo;
 #pragma link C++ class TProofProgressInfo;
+#pragma link C++ class TProofOutputList+;
 
 #pragma link C++ class TDataSetManager;
 #pragma link C++ class TDataSetManagerFile;
