@@ -3788,12 +3788,22 @@ Int_t TTree::Fill()
             if (gDebug > 0) Info("TTree::Fill","OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
             fFlushedBytes = fZipBytes;
             fAutoFlush    = fEntries;  // Use test on entries rather than bytes
+
             // subsequently in run
             if (fAutoSave < 0) {
                // Set fAutoSave to the largest integer multiple of
                // fAutoFlush events such that fAutoSave*fFlushedBytes
                // < (minus the input value of fAutoSave)
-               fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/fZipBytes)/fEntries));
+               if (fZipBytes != 0) {
+                  fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/fZipBytes)/fEntries));                  
+               } else if (fTotBytes != 0) {
+                  fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/fTotBytes)/fEntries));                  
+               } else {
+                  TBufferFile b(TBuffer::kWrite, 10000);
+                  TTree::Class()->WriteBuffer(b, (TTree*) this);
+                  Long64_t total = b.Length();
+                  fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/total)/fEntries));                                    
+               }
             } else if(fAutoSave > 0) {
                fAutoSave = fEntries*(fAutoSave/fEntries);
             }
