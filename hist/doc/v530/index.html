@@ -27,7 +27,15 @@ lego or a surface or as a contour plot for any other plotting options.
 
 <h4>TGraph</h4>
 <ul>
-<li> The default browsing option for grapgs is now <tt>"alp"</tt>.<li>
+<li> The default browsing option for graphs is now <tt>"alp"</tt>.<li>
+<li> Like <tt>SetPoint</tt> the method <tt>Apply</tt> modifies the graph
+     content. So, a logic similar to the one implemented in <tt>SetPoint</tt>
+     is now done, ie:
+     <ol>
+     <li> if fHistogram exists it is reset.</li>
+     <li> if gPad exist a gPad->Modified() is issued.</li>
+     <ol>
+</li>
 </ul>
 
 <h4>TGraphErrors</h4>
