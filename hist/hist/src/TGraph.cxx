@@ -438,9 +438,14 @@ void TGraph::Apply(TF1 *f)
    // The Y values of the graph are replaced by the new values computed
    // using the function
 
+   if (fHistogram) {
+      delete fHistogram;
+      fHistogram = 0;
+   }
    for (Int_t i=0;i<fNpoints;i++) {
       fY[i] = f->Eval(fX[i],fY[i]);
    }
+   if (gPad) gPad->Modified();
 }
 
 

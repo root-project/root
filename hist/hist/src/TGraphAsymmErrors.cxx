@@ -253,7 +253,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass, const TH1* total, Option_t
    // Creates a TGraphAsymmErrors by dividing two input TH1 histograms:
    // pass/total. (see TGraphAsymmErrors::Divide)
 
-   if (!pass || !total) { 
+   if (!pass || !total) {
       Error("TGraphAsymmErrors","Invalid histogram pointers");
       return;
    }
@@ -263,12 +263,12 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass, const TH1* total, Option_t
       std::string(total->GetName());
    SetName(sname.c_str());
    SetTitle(pass->GetTitle());
-   
+
    //copy style from pass
    pass->TAttLine::Copy(*this);
    pass->TAttFill::Copy(*this);
    pass->TAttMarker::Copy(*this);
-   
+
    Divide(pass, total, option);
 }
 
@@ -300,6 +300,10 @@ void TGraphAsymmErrors::Apply(TF1 *f)
 
    Double_t x,y,exl,exh,eyl,eyh,eyl_new,eyh_new,fxy;
 
+   if (fHistogram) {
+      delete fHistogram;
+      fHistogram = 0;
+   }
    for (Int_t i=0;i<GetN();i++) {
       GetPoint(i,x,y);
       exl=GetErrorXlow(i);
@@ -324,6 +328,7 @@ void TGraphAsymmErrors::Apply(TF1 *f)
       //error on x doesn't change
       SetPointError(i,exl,exh,eyl_new,eyh_new);
    }
+   if (gPad) gPad->Modified();
 }
 
 //______________________________________________________________________________
@@ -351,7 +356,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    // Begin_Latex effective entries = #frac{(#sum w_{i})^{2}}{#sum w_{i}^{2}}End_Latex
    //
    // The points are assigned a x value at the center of each histogram bin.
-   // The y values are Begin_Latex eff = #frac{pass}{total} End_Latex for all options except for the 
+   // The y values are Begin_Latex eff = #frac{pass}{total} End_Latex for all options except for the
    // bayesian one where the estimated efficiency is given by
    // Begin_Latex eff = #frac{pass + a}{total + a + b} End_Latex.
    //
@@ -361,7 +366,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    // The x errors span each histogram bin (lowedge ... lowedge+width)
    // The y errors depend on the chosen statistic methode which can be determined
    // by the options given below. For a detailed description of the used statistic
-   // calculations please have a look at the corresponding functions! 
+   // calculations please have a look at the corresponding functions!
    //
    // Options:
    // - v     : verbose mode: prints information about the number of used bins
@@ -375,9 +380,9 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    // - b(a,b): bayesian interval using a prior probability ~Beta(a,b); a,b > 0
    //           (see TEfficiency::Bayesian)
    // - mode  : use mode of posterior for Bayesian interval (default is mean)
-   // - shortest: use shortest interval (done by default if mode is set) 
+   // - shortest: use shortest interval (done by default if mode is set)
    // - central: use central interval (done by default if mode is NOT set)
-   // - e0    : plot (in Bayesian case) efficiency and interval for bins where total=0 
+   // - e0    : plot (in Bayesian case) efficiency and interval for bins where total=0
    //           (default is to skip them)
    //
    // Note:
@@ -396,13 +401,13 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       Error("Divide","one of the passed pointers is zero");
       return;
    }
-   
+
    //check dimension of histograms; only 1-dimensional ones are accepted
    if((pass->GetDimension() > 1) || (total->GetDimension() > 1)) {
       Error("Divide","passed histograms are not one-dimensional");
       return;
    }
-   
+
    //check consistency of histograms, allowing weights
    if(!TEfficiency::CheckConsistency(*pass,*total,"w")) {
       Error("Divide","passed histograms are not consistent");
@@ -453,9 +458,9 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       // coverity [secure_coding : FALSE]
       sscanf(strstr(option.Data(),"cl="),"cl=%lf",&level);
       if((level > 0) && (level < 1))
-	 conf = level;
+         conf = level;
       else
-	 Warning("Divide","given confidence level %.3lf is invalid",level);
+         Warning("Divide","given confidence level %.3lf is invalid",level);
       option.ReplaceAll("cl=","");
    }
 
@@ -494,36 +499,36 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       Double_t b = 0;
       sscanf(strstr(option.Data(),"b("),"b(%lf,%lf)",&a,&b);
       if(a > 0)
-	 alpha = a;
+         alpha = a;
       else
-	 Warning("Divide","given shape parameter for alpha %.2lf is invalid",a);
+         Warning("Divide","given shape parameter for alpha %.2lf is invalid",a);
       if(b > 0)
-	 beta = b;
+         beta = b;
       else
-	 Warning("Divide","given shape parameter for beta %.2lf is invalid",b);
+         Warning("Divide","given shape parameter for beta %.2lf is invalid",b);
       option.ReplaceAll("b(","");
       bIsBayesian = true;
    }
 
    // use posterior mode
-   Bool_t usePosteriorMode = false; 
-   if(bIsBayesian && option.Contains("mode") ) { 
-      usePosteriorMode = true; 
+   Bool_t usePosteriorMode = false;
+   if(bIsBayesian && option.Contains("mode") ) {
+      usePosteriorMode = true;
       option.ReplaceAll("mode","");
    }
 
-   Bool_t plot0Bins = false; 
-   if(option.Contains("e0") ) { 
-      plot0Bins = true; 
+   Bool_t plot0Bins = false;
+   if(option.Contains("e0") ) {
+      plot0Bins = true;
       option.ReplaceAll("e0","");
    }
 
-   Bool_t useShortestInterval = false; 
+   Bool_t useShortestInterval = false;
    if (bIsBayesian && ( option.Contains("sh") || (usePosteriorMode && !option.Contains("cen") ) ) ) {
-      useShortestInterval = true; 
+      useShortestInterval = true;
    }
 
-   // weights works only in case of Normal approximation or Bayesian 
+   // weights works only in case of Normal approximation or Bayesian
    if (bEffective && !bIsBayesian && pBound != &TEfficiency::Normal ) {
       Warning("Divide","Histograms have weights: only Normal or Bayesian error calculation is supported");
       Info("Divide","Using now the Normal approximation for weighted histograms");
@@ -550,8 +555,8 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
 
       // default value when total =0;
       eff = 0;
-      low = 0; 
-      upper = 0; 
+      low = 0;
+      upper = 0;
 
       // special case in case of weights we have to consider the sum of weights and the sum of weight squares
        if(bEffective) {
@@ -562,16 +567,16 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
 
           if (tw <= 0 && !plot0Bins) continue; // skip bins with total <= 0
 
-          // in the case of weights have the formula only for 
+          // in the case of weights have the formula only for
           // the normal and  bayesian statistics (see below)
 
        }
-       
+
        //use bin contents
        else {
           t = int( total->GetBinContent(b) + 0.5);
           p = int(pass->GetBinContent(b) + 0.5);
-          
+
           if (!t && !plot0Bins) continue; // skip bins with total = 0
        }
 
@@ -579,57 +584,57 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       //using bayesian statistics
       if(bIsBayesian) {
          double aa,bb;
-         if (bEffective) { 
+         if (bEffective) {
             // tw/tw2 renormalize the weights
-            double norm = (tw2 > 0) ? tw/tw2 : 0.; 
-            aa =  pw * norm + alpha; 
-            bb =  (tw - pw) * norm + beta; 
+            double norm = (tw2 > 0) ? tw/tw2 : 0.;
+            aa =  pw * norm + alpha;
+            bb =  (tw - pw) * norm + beta;
          }
-         else { 
-            aa = double(p) + alpha; 
-            bb = double(t-p) + beta; 
+         else {
+            aa = double(p) + alpha;
+            bb = double(t-p) + beta;
          }
-         if (usePosteriorMode) 
+         if (usePosteriorMode)
             eff = TEfficiency::BetaMode(aa,bb);
-         else 
+         else
             eff = TEfficiency::BetaMean(aa,bb);
-         
-         if (useShortestInterval) { 
+
+         if (useShortestInterval) {
             TEfficiency::BetaShortestInterval(conf,aa,bb,low,upper);
          }
-         else { 
+         else {
             low = TEfficiency::BetaCentralInterval(conf,aa,bb,false);
             upper = TEfficiency::BetaCentralInterval(conf,aa,bb,true);
          }
       }
       // case of non-bayesian statistics
       else {
-         if (bEffective) { 
-                     
-            if (tw > 0) { 
+         if (bEffective) {
+
+            if (tw > 0) {
 
                eff = pw/tw;
 
-               // use normal error calculation using variance of MLE with weights (F.James 8.5.2) 
+               // use normal error calculation using variance of MLE with weights (F.James 8.5.2)
                // this is the same formula used in ROOT for TH1::Divide("B")
-               
+
                double variance = ( pw2 * (1. - 2 * eff) + tw2 * eff *eff ) / ( tw * tw) ;
-               double sigma = sqrt(variance); 
+               double sigma = sqrt(variance);
 
                double prob = 0.5 * (1.-conf);
-               double delta = ROOT::Math::normal_quantile_c(prob, sigma);   
-               low = eff - delta; 
-               upper = eff + delta; 
-               if (low < 0) low = 0; 
+               double delta = ROOT::Math::normal_quantile_c(prob, sigma);
+               low = eff - delta;
+               upper = eff + delta;
+               if (low < 0) low = 0;
                if (upper > 1) upper = 1.;
             }
          }
 
-         else { 
+         else {
             // when not using weights
             if(t)
                eff = ((Double_t)p)/t;
-	 
+
             low = pBound(t,p,conf,false);
             upper = pBound(t,p,conf,true);
          }
@@ -649,7 +654,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       Info("Divide","made a graph with %d points from %d bins",npoint,nbins);
       Info("Divide","used confidence level: %.2lf\n",conf);
       if(bIsBayesian)
-	 Info("Divide","used prior probability ~ beta(%.2lf,%.2lf)",alpha,beta);
+         Info("Divide","used prior probability ~ beta(%.2lf,%.2lf)",alpha,beta);
       Print();
    }
 }
