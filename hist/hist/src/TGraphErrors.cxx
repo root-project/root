@@ -295,6 +295,10 @@ void TGraphErrors::Apply(TF1 *f)
 
    Double_t x,y,ex,ey;
 
+   if (fHistogram) {
+      delete fHistogram;
+      fHistogram = 0;
+   }
    for (Int_t i=0;i<GetN();i++) {
       GetPoint(i,x,y);
       ex=GetErrorX(i);
@@ -303,6 +307,7 @@ void TGraphErrors::Apply(TF1 *f)
       SetPoint(i,x,f->Eval(x,y));
       SetPointError(i,ex,TMath::Abs(f->Eval(x,y+ey) - f->Eval(x,y-ey))/2.);
    }
+   if (gPad) gPad->Modified();
 }
 
 
