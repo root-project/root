@@ -103,8 +103,11 @@ $(PBDPAR):   $(PBDPARH) $(PBDPARS)
 		builddir=$(PWD); \
 		cd $(call stripsrc,$(PROOFBENCHDIRS)); \
 		par=`basename $(PBDPAR)`; \
+		partmp=`basename $(PBDPAR).tmp`; \
 		pardir=`basename $(PBDPARDIR)`; \
-		tar czf $$par $$pardir; \
+		tar cf $$partmp $$pardir; \
+		gzip $$partmp; \
+		mv $$partmp.gz $$par; \
 		cd $$builddir; \
 		rm -fr $(PBDPARDIR))
 
@@ -132,8 +135,11 @@ $(PBCPAR):   $(PBCPARH) $(PBCPARS)
 		builddir=$(PWD); \
 		cd $(call stripsrc,$(PROOFBENCHDIRS)); \
 		par=`basename $(PBCPAR)`; \
+		partmp=`basename $(PBCPAR).tmp`; \
 		pardir=`basename $(PBCPARDIR)`; \
-		tar czf $$par $$pardir; \
+		tar cf $$partmp $$pardir; \
+		gzip $$partmp; \
+		mv $$partmp.gz $$par; \
 		cd $$builddir; \
 		rm -fr $(PBCPARDIR))
 
