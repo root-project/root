@@ -8,10 +8,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
- 
-const char *XrdOssPathCVSID = "$Id$";
-
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -44,7 +40,7 @@ const char XrdOssPath::xChar;
 // The initialization must be in 1-to-1 order with theSfx enum!
 //
 const char *XrdOssPath::Sfx[XrdOssPath::sfxNum] =
-                      {".anew", ".fail",  ".lock", ".pin", ".stage",
+                      {".anew", ".fail",  ".lock", ".pin",
                        ".mmap", ".mkeep", ".mlock",".pfn", 0};
 
 /******************************************************************************/

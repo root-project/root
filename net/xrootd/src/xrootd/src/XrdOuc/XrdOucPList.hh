@@ -10,8 +10,6 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
 #include <strings.h>
 #include <stdlib.h>
   
@@ -19,6 +17,7 @@ class XrdOucPList
 {
 public:
 
+inline int                 Attr() {return attrs;}
 inline unsigned long long  Flag() {return flags;}
 inline XrdOucPList        *Next() {return next;}
 inline char               *Path() {return path;}
@@ -27,11 +26,12 @@ inline int                 Plen() {return pathlen;}
 inline int          PathOK(const char *pd, const int pl)
                           {return pl >= pathlen && !strncmp(pd, path, pathlen);}
 
+inline void         Set(int                aval) {attrs = aval;}
 inline void         Set(unsigned long long fval) {flags = fval;}
 
              XrdOucPList(const char *pd="", unsigned long long fv=0)
                         : flags(fv), next(0),  path(strdup(pd)),
-                          pathlen(strlen(pd)), reserved(0) {}
+                          pathlen(strlen(pd)), attrs(0) {}
             ~XrdOucPList()
                   {if (path) free(path);}
 
@@ -43,12 +43,21 @@ unsigned long long flags;
 XrdOucPList       *next;
 char              *path;
 int                pathlen;
-int                reserved;
+int                attrs;
 };
 
 class XrdOucPListAnchor : public XrdOucPList
 {
 public:
+
+inline XrdOucPList *About(const char *pathname)
+                   {int plen = strlen(pathname); 
+                    XrdOucPList *p = next;
+                    while(p) {if (p->PathOK(pathname, plen)) break;
+                              p=p->next;
+                             }
+                    return p;
+                   }
 
 inline void        Default(unsigned long long x) {dflts = x;}
 

@@ -10,8 +10,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
 #include <string.h>
   
 #include "Xrd/XrdJob.hh"
@@ -56,12 +54,12 @@ void        Bounce(SMask_t smask, int SNum);
 
 void        Drop(SMask_t mask, int SNum, int xHi);
 
-int         Init(int fxHold, int fxDelay);
+int         Init(int fxHold, int fxDelay, int fxQuery, int seFS);
 
 void       *TickTock();
 
             XrdCmsCache() : okVec(0), Tick(8*60*60), Tock(0), BClock(0), 
-                            DLTime(5), Bhits(0), Bmiss(0), vecHi(-1)
+                            DLTime(5), Bhits(0), Bmiss(0), vecHi(-1), isDFS(0)
                           {memset(Bounced,  0, sizeof(Bounced));
                            memset(Bhistory, 0, sizeof(Bhistory));
                           }
@@ -70,7 +68,8 @@ void       *TickTock();
 private:
 
 void          Add2Q(XrdCmsRRQInfo *Info, XrdCmsKeyItem *cp, int isrw);
-void          Dispatch(XrdCmsKeyItem *cinfo, short roQ, short rwQ);
+void          Dispatch(XrdCmsSelect &Sel, XrdCmsKeyItem *cinfo,
+                       short roQ, short rwQ);
 SMask_t       getBVec(unsigned int todA, unsigned int &todB);
 void          Recycle(XrdCmsKeyItem *theList);
 
@@ -87,9 +86,11 @@ unsigned int  Tick;
 unsigned int  Tock;
 unsigned int  BClock;
          int  DLTime;
+         int  QDelay;
          int  Bhits;
          int  Bmiss;
          int  vecHi;
+         int  isDFS;
 };
 
 namespace XrdCms

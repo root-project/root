@@ -1482,6 +1482,10 @@ int XrdOfs::mkdir(const char             *path,    // In
        evsObject->Notify(XrdOfsEvs::Mkdir, evInfo);
       }
 
+// If we have a redirector, tell it that we now have this path
+//
+   if (Balancer) Balancer->Added(path);
+
     return SFS_OK;
 }
 
@@ -1571,10 +1575,8 @@ int XrdOfs::remove(const char              type,    // In
 //
     retc = (type=='d' ? XrdOfsOss->Remdir(path) : XrdOfsOss->Unlink(path,Opt));
     if (retc) return XrdOfsFS.Emsg(epname, einfo, retc, "remove", path);
-    if (type == 'f')
-       {XrdOfsHandle::Hide(path);
-        if (Balancer) Balancer->Removed(path);
-       }
+    if (type == 'f') XrdOfsHandle::Hide(path);
+    if (Balancer) Balancer->Removed(path);
     return SFS_OK;
 }
 

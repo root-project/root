@@ -80,6 +80,10 @@ public:
 
    virtual ~XrdClientConnectionMgr();
 
+  bool BootUp();
+  bool ShutDown();
+
+
    int           Connect(XrdClientUrlInfo RemoteAddress);
    void          Disconnect(int LogConnectionID, bool ForcePhysicalDisc);
 

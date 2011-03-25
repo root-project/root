@@ -7,15 +7,12 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
-
-//        $Id$
-
-const char *XrdXrootdAioCVSID = "$Id$";
   
 #include <unistd.h>
 
 #include "Xrd/XrdBuffer.hh"
 #include "Xrd/XrdLink.hh"
+#include "XProtocol/XProtocol.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdSfs/XrdSfsInterface.hh"
@@ -639,7 +636,7 @@ void XrdXrootdAioReq::sendError(char *tident)
 
 // Remap the error from the filesystem
 //
-   rc = XrdXrootdProtocol::mapError(aioError);
+   rc = XProtocol::mapError(aioError);
 
 // Send the erro back to the client (ignore any errors)
 //

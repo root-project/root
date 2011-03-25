@@ -124,7 +124,7 @@ void XrdFfsDent_dentcache_fill(struct XrdFfsDentcache *cache, char *dname, char 
     cache->dirname = strdup(dname);
     cache->nents = nents;
     cache->t0 = time(NULL);
-    cache->life = nents / 20 ;
+    cache->life = nents / 10 ;
     cache->dnarray = (char**) malloc(sizeof(char*) * nents);
     
     for (i = 0; i < nents; i++)

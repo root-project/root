@@ -21,6 +21,8 @@ kernel module fuse.ko.
 Installation:
 ============
 
+(2011-01 obsolete, XrootdFS is now a package of Xrootd)
+
 Install FUSE, including FUSE kernel module if the platform doesn't have the 
 FUSE kernel module included. The FUSE software and the installation guide is 
 available at http://fuse.sourceforge.net.
@@ -51,6 +53,10 @@ XROOTDFS_OFSFWD: if the xrootd cluster uses ofs.forward (or ofs.forward 3way)
 Please refer to the "Introduction to the XrootdFS" document in the above web
 page for more general idea of XrootdFS.
 
+Many of the configurable parameters defined via environment vairable can also be
+specified at command line. Command line options will overwrite those defined in 
+environment variables.
+
 Release 3.0rc3 and up should work nicely in most usage scenario (e.g. no HPSS
 backend) without XROOTDFS_CNSURL and XROOTDFS_OFSFWD defined.
 
@@ -71,7 +77,7 @@ following way:
 xrdsssadmin -k my_key_name -u anybody -g usrgroup add keyfile
 
 (change only "my_key_name" and "keyfile"). Please refer to environment variable 
-"XrdSecSSSKT" in Xrootd "Authentication & Access Control Configuration Reference"
+"XrdSecsssKT" in Xrootd "Authentication & Access Control Configuration Reference"
 on where Xrootd data server and Xrootd Client (e.g. XrootdFS) search for keyfile,
 as long as requirement on Unix permission bits.
 

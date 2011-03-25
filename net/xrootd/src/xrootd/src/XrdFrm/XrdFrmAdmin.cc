@@ -8,8 +8,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
   
-//          $Id$
-
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
@@ -33,8 +31,6 @@
 #include "XrdOuc/XrdOucTList.hh"
 #include "XrdOuc/XrdOucTokenizer.hh"
 #include "XrdSys/XrdSysTimer.hh"
-
-const char *XrdFrmAdminCVSID = "$Id$";
 
 using namespace XrdFrm;
 
@@ -84,7 +80,7 @@ int XrdFrmAdmin::Audit()
 
 const char *XrdFrmAdmin::FindHelp = "find [-r[ecursive]] what ldir [ldir [...]]\n\n"
 
-"what: fail[files] | nolk[files] | unmig[rated]";
+"what: fail[files] | mmap[ped] | nolk[files] | pin[ned] | unmig[rated]";
 
 int XrdFrmAdmin::Find()
 {
@@ -100,7 +96,9 @@ int XrdFrmAdmin::Find()
 // Process the correct find
 //
         if (!strncmp(Opt.Args[0], "failfiles", 4)) return FindFail(Spec);
+   else if (!strncmp(Opt.Args[0], "mmapped",   4)) return FindMmap(Spec);
    else if (!strncmp(Opt.Args[0], "nolkfiles", 4)) return FindNolk(Spec);
+   else if (!strncmp(Opt.Args[0], "pinned",    3)) return FindPins(Spec);
    else if (!strncmp(Opt.Args[0], "unmigrated",4)) return FindUnmi(Spec);
 
 // Nothing we understand
@@ -114,7 +112,8 @@ int XrdFrmAdmin::Find()
 /******************************************************************************/
 
 const char *XrdFrmAdmin::HelpHelp =
-"[help] {audit | exit | f[ind] | makelf | pin | q[uery] | quit | reloc | rm} ...";
+"[help] {audit | exit | f[ind] | makelf | mark | mmap | pin | q[uery] | "
+         "quit | reloc | rm} ...";
   
 int XrdFrmAdmin::Help()
 {
@@ -126,6 +125,8 @@ int XrdFrmAdmin::Help()
                  CmdTab[] = {{"audit",  5, 5, AuditHelp },
                              {"find",   1, 4, FindHelp  },
                              {"makelf", 6, 6, MakeLFHelp},
+                             {"mark",   4, 4, MarkHelp  },
+                             {"mmap",   4, 4, MmapHelp  },
                              {"pin",    3, 3, PinHelp   },
                              {"query",  1, 5, QueryHelp },
                              {"reloc",  5, 5, RelocHelp },
@@ -203,41 +204,78 @@ int XrdFrmAdmin::MakeLF()
 }
 
 /******************************************************************************/
-/*                                   P i n                                    */
+/*                                  M a r k                                   */
 /******************************************************************************/
 
-const char *XrdFrmAdmin::PinHelp = "pin [opts] lspec [lspec [...]]\n\n"
+const char *XrdFrmAdmin::MarkHelp = "mark [opts] lspec [lspec [...]]\n\n"
 
-"opts: -k[eep] <time> -o[wner] [usr][:[grp]] -r[ecursive]\n\n"
+"opts: -f[orce] -m[igratable] -p[urgeable] -r[ecursive]\n\n"
 
-"time: [+]<n>[d|h|m|s] | mm/dd/[yy]yy | forever\n\n"
+"lspec: lfn | ldir[/*]";
 
-"lspec: lfn | ldir[*]";
-
-int XrdFrmAdmin::Pin()
+int XrdFrmAdmin::Mark()
 {
    static XrdOucArgs Spec(&Say, "frm_admin: ",    "",
-                                "keep",        1, "k:",
-                                "owner",       1, "o:",
+                                "force",       1, "F",
+                                "migratable",  1, "m",
+                                "purgeable",   1, "p",
                                 "recursive",   1, "r",
                                 (const char *)0);
 
    static const char *Reqs[] = {"lfn", 0};
 
-   const char *Act;
-   char *lfn, itbuff[80], *itP = itbuff, Resp;
-   int itL = 0, ok = 1;
+   char *lfn, buff[80], Resp;
+   int ok = 1;
+
+// Parse the request
+//
+   if (!Parse("mark ", Spec, Reqs)) return 1;
+
+// Process all of the files
+//
+   numFiles = 0;
+   lfn = Opt.Args[0];
+   if (!Opt.MPType) Opt.MPType = 'm';
+   do {Opt.All = VerifyAll(lfn);
+       if ((Resp = VerifyMP("mark", lfn)) == 'y') ok = mkMark(lfn);
+      } while(Resp != 'a' && ok && (lfn = Spec.getarg()));
+
+// All done
+//
+   if (Resp == 'a' || !ok) Msg("mark aborted!");
+   sprintf(buff, "%d file%s marked %s.", numFiles, (numFiles == 1 ? "" : "s"),
+                 (Opt.MPType == 'm' ? "migratable" : "purgeable"));
+   Msg(buff);
+   return 0;
+}
+
+/******************************************************************************/
+/*                                  M m a p                                   */
+/******************************************************************************/
+
+const char *XrdFrmAdmin::MmapHelp = "mmap [opts] lspec [lspec [...]]\n\n"
+
+"opts: -k[eep] -l[ock] -o[ff] -r[ecursive]\n\n"
+
+"lspec: lfn | ldir[/*]";
+
+int XrdFrmAdmin::Mmap()
+{
+   static XrdOucArgs Spec(&Say, "frm_admin: ",    "",
+                                "keep",        1, "K",
+                                "lock",        1, "f",
+                                "off",         1, "l",
+                                "recursive",   1, "r",
+                                (const char *)0);
+
+   static const char *Reqs[] = {"lfn", 0};
+
+   char *lfn, itbuff[80], Resp;
+   int ok = 1;
 
 // Parse the request
 //
    if (!Parse("pin ", Spec, Reqs)) return 1;
-
-// Handle keep time (or lack thereoff)
-//
-   if (!Opt.Keep) Opt.KeepTime = time(0) + 24*3600;
-      else if (Opt.ktIdle && Opt.KeepTime)
-              itL = sprintf(itbuff, "&inact_time=%d\n",
-                            static_cast<int>(Opt.KeepTime));
 
 // Process all of the files
 //
@@ -245,12 +283,58 @@ int XrdFrmAdmin::Pin()
    lfn = Opt.Args[0];
    Opt.MPType = 'p';
    do {Opt.All = VerifyAll(lfn);
-       if ((Resp = VerifyMP("pin", lfn)) == 'y') ok = mkPin(lfn, itP, itL);
+       if ((Resp = VerifyMP("mmap", lfn)) == 'y') ok = mkMmap(lfn);
       } while(Resp != 'a' && ok && (lfn = Spec.getarg()));
 
 // All done
 //
-   Act = (Opt.KeepTime || itL ? "" : "un");
+   if (Resp == 'a' || !ok) Msg("mmap aborted!");
+   sprintf(itbuff,"%d mmap%s processed.",numFiles,(numFiles==1?"":"s"));
+   Msg(itbuff);
+   return 0;
+}
+
+/******************************************************************************/
+/*                                   P i n                                    */
+/******************************************************************************/
+
+const char *XrdFrmAdmin::PinHelp = "pin [opts] lspec [lspec [...]]\n\n"
+
+"opts: -k[eep] <time> -r[ecursive]\n\n"
+
+"time: [+]<n>[d|h|m|s] | mm/dd/[yy]yy | forever\n\n"
+
+"lspec: lfn | ldir[/*]";
+
+int XrdFrmAdmin::Pin()
+{
+   static XrdOucArgs Spec(&Say, "frm_admin: ",    "",
+                                "keep",        1, "k:",
+                                "recursive",   1, "r",
+                                (const char *)0);
+
+   static const char *Reqs[] = {"lfn", 0};
+
+   const char *Act;
+   char *lfn, itbuff[80], Resp;
+   int ok = 1;
+
+// Parse the request
+//
+   if (!Parse("pin ", Spec, Reqs)) return 1;
+
+// Process all of the files
+//
+   numFiles = 0;
+   lfn = Opt.Args[0];
+   Opt.MPType = 'p';
+   do {Opt.All = VerifyAll(lfn);
+       if ((Resp = VerifyMP("pin", lfn)) == 'y') ok = mkPin(lfn);
+      } while(Resp != 'a' && ok && (lfn = Spec.getarg()));
+
+// All done
+//
+   Act = (Opt.KeepTime || Opt.ktAlways ? "" : "un");
    if (Resp == 'a' || !ok) Msg("pin aborted!");
    sprintf(itbuff,"%d %spin%s processed.",numFiles,Act,(numFiles==1?"":"s"));
    Msg(itbuff);
@@ -412,10 +496,13 @@ int XrdFrmAdmin::xeqArgs(char *Cmd)
                           int        (XrdFrmAdmin::*Method)();
                          }
                  CmdTab[] = {{"audit",  5, 5, &XrdFrmAdmin::Audit},
+                             {"convert",7, 7, &XrdFrmAdmin::Convert},
                              {"exit",   4, 4, &XrdFrmAdmin::Quit},
                              {"find",   1, 4, &XrdFrmAdmin::Find},
                              {"help",   1, 4, &XrdFrmAdmin::Help},
                              {"makelf", 6, 6, &XrdFrmAdmin::MakeLF},
+                             {"mark",   1, 4, &XrdFrmAdmin::Mark},
+                             {"mmap",   1, 4, &XrdFrmAdmin::Mmap},
                              {"pin",    3, 3, &XrdFrmAdmin::Pin},
                              {"query",  1, 5, &XrdFrmAdmin::Query},
                              {"quit",   4, 4, &XrdFrmAdmin::Quit},
@@ -559,6 +646,7 @@ int XrdFrmAdmin::Parse(const char *What, XrdOucArgs &Spec, const char **Reqs)
                 case 'k': Opt.Keep    = 1;
                           if (!ParseKeep(What, Spec.argval)) return 0;
                           break;
+                case 'K': Opt.Keep    = 1; break;  // No argument
                 case 'l': Opt.Local   = 1; break;
                 case 'm': Opt.MPType  ='m';break;
                 case 'o': if (!ParseOwner(What, Spec.argval)) return 0;
@@ -591,7 +679,6 @@ int XrdFrmAdmin::ParseKeep(const char *What, const char *kTime)
    struct tm myTM;
    char *eP;
    int  theSec;
-   long long theVal;
 
 // Initialize the values
 //
@@ -608,11 +695,8 @@ int XrdFrmAdmin::ParseKeep(const char *What, const char *kTime)
    if (!index(kTime, '/'))
       {if (*kTime == '+') {Opt.ktIdle = 1; kTime++;}
        if (XrdOuca2x::a2tm(Say,"keep time", kTime, &theSec)) return 0;
-       if (Opt.ktIdle || !theSec) Opt.KeepTime = theSec;
-          else {theVal = static_cast<long long>(theSec);
-                theVal = XrdSysTimer::Midnight() + 86400LL + theSec;
-                Opt.KeepTime = static_cast<time_t>(theVal);
-               }
+       if (Opt.ktIdle || !theSec) {Opt.KeepTime = theSec; Opt.ktIdle = 1;}
+          else Opt.KeepTime = static_cast<time_t>(theSec)+time(0);
        return 1;
       }
 

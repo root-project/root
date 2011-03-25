@@ -1,7 +1,7 @@
 activate_apps=default_yes
 activate_krb5=default_yes
-acx_krb5_incdir=/usr/kerberos/include
-acx_krb5_libdir=/usr/kerberos/lib
+acx_krb5_incdir=/usr/include
+acx_krb5_libdir=/usr/lib
 
 ############################################
 # DEFAULT DEFINITIONS

@@ -9,10 +9,6 @@
 /*                DE-AC03-76-SFO0515 with the Deprtment of Energy             */
 /******************************************************************************/
 
-//         $Id$
-
-const char *XrdOssStageCVSID = "$Id$";
-
 /* The XrdOssStage() routine is responsible for getting data from a remote
    location to the local filesystem. The current implementation invokes a
    shell script to perform the "staging".
@@ -37,7 +33,6 @@ const char *XrdOssStageCVSID = "$Id$";
 #include "XrdSys/XrdSysPlatform.hh"
 #include "XrdOss/XrdOssApi.hh"
 #include "XrdOss/XrdOssError.hh"
-#include "XrdOss/XrdOssLock.hh"
 #include "XrdOss/XrdOssOpaque.hh"
 #include "XrdOss/XrdOssStage.hh"
 #include "XrdOuc/XrdOuca2x.hh"

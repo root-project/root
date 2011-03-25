@@ -225,7 +225,7 @@ void XrdXrootdCallBack::sendError(int            rc,
 //
    if (rc == SFS_ERROR)
       {SI->errorCnt++;
-       rc = XrdXrootdProtocol::mapError(ecode);
+       rc = XProtocol::mapError(ecode);
        sendResp(eInfo, kXR_error, &rc, eMsg, 1);
        return;
       }

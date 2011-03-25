@@ -9,8 +9,6 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
-
-//         $Id$
   
 #include "Xrd/XrdJob.hh"
 #include "Xrd/XrdScheduler.hh"
@@ -46,8 +44,6 @@ int        isOK() {return prepOK;}
 int        Pending() {return NumFiles;}
 
 void       Prepare(XrdCmsPrepArgs *pargs);
-
-void       Queue(XrdCmsPrepArgs *parg);
 
 void       Reset(const char *iName, const char *aPath, int aMode);
 

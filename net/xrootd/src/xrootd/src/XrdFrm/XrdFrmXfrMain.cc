@@ -17,10 +17,10 @@ const char *XrdFrmXfrMainCVSID = "$Id$";
 
 /* This is the "main" part of the frm_migrd command. Syntax is:
 */
-static const char *XrdFrmOpts  = ":bc:dfhk:l:n:Tv";
+static const char *XrdFrmOpts  = ":bc:dfhk:l:n:s:Tv";
 static const char *XrdFrmUsage =
 
-  " [-b] [-c <cfgfn>] [-d] [-f] [-k {num | sz{k|m|g}] [-l <lfile>] [-n name] [-T] [-v]\n";
+  " [-b] [-c <cfgfn>] [-d] [-f] [-k {num | sz{k|m|g}] [-l <lfile>] [-n name] [-s pidfile] [-T] [-v]\n";
 /*
 Where:
 

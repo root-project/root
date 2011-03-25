@@ -8,10 +8,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//          $Id$
-
-const char *XrdFrmTransferCVSID = "$Id$";
-
 #include <string.h>
 #include <strings.h>
 #include <stdio.h>
@@ -32,13 +28,14 @@ const char *XrdFrmTransferCVSID = "$Id$";
 #include "XrdFrm/XrdFrmTransfer.hh"
 #include "XrdFrm/XrdFrmXfrJob.hh"
 #include "XrdFrm/XrdFrmXfrQueue.hh"
+#include "XrdFrm/XrdFrmXAttr.hh"
 #include "XrdNet/XrdNetCmsNotify.hh"
 #include "XrdOss/XrdOss.hh"
-#include "XrdOss/XrdOssLock.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucMsubs.hh"
 #include "XrdOuc/XrdOucProg.hh"
 #include "XrdOuc/XrdOucSxeq.hh"
+#include "XrdOuc/XrdOucXAttr.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 
@@ -65,11 +62,12 @@ char         theMDP[8];
 };
 
 struct XrdFrmTranChk
-{      XrdOucSxeq            *lkfP;
-       struct stat           *Stat;
+{      struct stat           *Stat;
+       int                    lkfd;
+       int                    lkfx;
 
-       XrdFrmTranChk(struct stat *sP) : lkfP(0), Stat(sP) {}
-      ~XrdFrmTranChk() {if (lkfP) delete lkfP;}
+       XrdFrmTranChk(struct stat *sP) : Stat(sP), lkfd(-1), lkfx(0) {}
+      ~XrdFrmTranChk() {if (lkfd >= 0) close(lkfd);}
 };
   
 /******************************************************************************/
@@ -211,7 +209,7 @@ const char *XrdFrmTransfer::Fetch()
           Say.Emsg("Fetch", lfnpath, "fetched but not found!");
           else {fSize  = pfnStat.st_size;
                 if (Config.xfrCmd[iXfr].Opts & Config.cmdAlloc)
-                   Fetch(lfnpath, rc, pfnStat.st_mtime+3);
+                   FetchDone(lfnpath, rc, pfnStat.st_mtime);
                }
       }
 
@@ -256,18 +254,32 @@ const char *XrdFrmTransfer::Fetch()
 
 /******************************************************************************/
   
-const char *XrdFrmTransfer::Fetch(char *lfnpath, int &rc, time_t lktime)
+const char *XrdFrmTransfer::FetchDone(char *lfnpath, int &rc, time_t lktime)
 {
-   struct stat lkfStat;
 
-// Check for a lock file and if we have one, reset it's time
+// If we are running in new mode, update file attributes
 //
-   strcpy(&xfrP->PFN[xfrP->pfnEnd+5], ".lock");
-   if (!stat(xfrP->PFN, &lkfStat))
-      {struct utimbuf tbuff;
-       tbuff.actime = tbuff.modtime = lktime;
-       if ((rc = utime(xfrP->PFN, &tbuff)))
-          Say.Emsg("Fetch", rc, "set utime on", xfrP->PFN);
+   rc = 0;
+   if (Config.runNew)
+      {XrdOucXAttr<XrdFrmXAttrCpy> cpyInfo;
+       cpyInfo.Attr.cpyTime = static_cast<long long>(lktime);
+       if ((rc = cpyInfo.Set(xfrP->PFN)))
+          Say.Emsg("Fetch", rc, "set copy time xattr on", xfrP->PFN);
+      }
+
+// Check for a lock file and if we have one, reset it's time or delete it
+//
+   if (Config.runOld)
+      {struct stat lkfStat;
+       strcpy(&xfrP->PFN[xfrP->pfnEnd+5], ".lock");
+       if (!stat(xfrP->PFN, &lkfStat))
+          {if (Config.runNew && !rc) unlink(xfrP->PFN);
+              else {struct utimbuf tbuff;
+                    tbuff.actime = tbuff.modtime = lktime;
+                    if ((rc = utime(xfrP->PFN, &tbuff)))
+                       Say.Emsg("Fetch", rc, "set utime on", xfrP->PFN);
+                   }
+          }
       }
 
 // Now rename the lfn to be what it needs to be in the end
@@ -601,20 +613,11 @@ const char *XrdFrmTransfer::Throw()
       }
 
 // Purge the file if so wanted. Otherwise, if this is a migration request,
-// make sure that if a lock file exists its date/time is greater than the file
+// make sure that if a lock file exists its date/time is equal to the file
 // we just copied to prevent the file from being copied again (we have a lock).
 //
    if (xfrP->reqData.Options & XrdFrmRequest::Purge) Throwaway();
-      else if (isMigr)
-              {strcpy(&xfrP->PFN[xfrP->pfnEnd], ".lock");
-               if (!stat(xfrP->PFN, &begStat))
-                  {struct utimbuf tbuff;
-                   tbuff.actime = tbuff.modtime = endStat.st_mtime+1;
-                   if (utime(xfrP->PFN, &tbuff))
-                      Say.Emsg("Throw", errno, "set utime for", xfrP->PFN);
-                   }
-               xfrP->PFN[xfrP->pfnEnd] = '\0';
-              }
+      else if (isMigr) ThrowDone(&Chk, endStat.st_mtime);
 
 // Do statistics if so wanted
 //
@@ -653,47 +656,91 @@ void XrdFrmTransfer::Throwaway()
 }
   
 /******************************************************************************/
+/* Private:                    T h r o w D o n e                              */
+/******************************************************************************/
+  
+void XrdFrmTransfer::ThrowDone(XrdFrmTranChk *cP, time_t endTime)
+{
+
+// Update file attributes if we are running in new mode, otherwise do
+//
+   if (Config.runNew)
+      {XrdOucXAttr<XrdFrmXAttrCpy> cpyInfo;
+       cpyInfo.Attr.cpyTime = static_cast<long long>(endTime);
+       if (cpyInfo.Set(xfrP->PFN, cP->lkfd))
+          Say.Emsg("Throw", "Unable to set copy time xattr for", xfrP->PFN);
+          else if (cP->lkfx)
+                  {strcpy(&xfrP->PFN[xfrP->pfnEnd], ".lock");
+                   unlink(xfrP->PFN);
+                   xfrP->PFN[xfrP->pfnEnd] = '\0';
+                  }
+      } else {
+       struct stat Stat;
+       strcpy(&xfrP->PFN[xfrP->pfnEnd], ".lock");
+       if (!stat(xfrP->PFN, &Stat))
+          {struct utimbuf tbuff;
+           tbuff.actime = tbuff.modtime = endTime;
+           if (utime(xfrP->PFN, &tbuff))
+              Say.Emsg("Throw", errno, "set utime for", xfrP->PFN);
+          }
+       xfrP->PFN[xfrP->pfnEnd] = '\0';
+      }
+}
+  
+/******************************************************************************/
 /* Private:                      T h r o w O K                                */
 /******************************************************************************/
   
 const char *XrdFrmTransfer::ThrowOK(XrdFrmTranChk *cP)
 {
-   XrdOssLock ufs_file;
-   struct stat lokStat;
-   int fnFD, statRC;
+   class fdClose
+        {public:
+         int Num;
+             fdClose() : Num(-1) {}
+            ~fdClose() {if (Num >= 0) close(Num);}
+        } fnFD;
 
-// Get an exclusive lock on the directory
-//
-   if (ufs_file.Serialize(xfrP->PFN, XrdOssDIR|XrdOssEXC) < 0)
-      return "unable to lock directory";
+   XrdOucXAttr<XrdFrmXAttrCpy> cpyInfo;
+   struct stat lokStat;
+   int statRC;
 
 // Check if the file is in use by checking if we got an exclusive lock
 //
-   if ((fnFD = open(xfrP->PFN, O_RDWR)) < 0) return "unable to open file";
-   fcntl(fnFD, F_SETFD, FD_CLOEXEC);
-   if (ufs_file.Serialize(fnFD, XrdOssEXC|XrdOssNOWAIT))
-      {close(fnFD); return "file in use";}
-   close(fnFD);
+   if ((fnFD.Num = open(xfrP->PFN, O_RDWR)) < 0) return "unable to open file";
+   fcntl(fnFD.Num, F_SETFD, FD_CLOEXEC);
+   if (XrdOucSxeq::Serialize(fnFD.Num,XrdOucSxeq::noWait)) return "file in use";
 
-// Get the info on the lock file
+// Get the info on the lock file (enabled if old mode is in effect
 //
-   strcpy(&xfrP->PFN[xfrP->pfnEnd], ".lock");
-   statRC = stat(xfrP->PFN, &lokStat);
-   xfrP->PFN[xfrP->pfnEnd] = '\0';
+   if (Config.runOld)
+      {strcpy(&xfrP->PFN[xfrP->pfnEnd], ".lock");
+       statRC = stat(xfrP->PFN, &lokStat);
+       xfrP->PFN[xfrP->pfnEnd] = '\0';
+      } else statRC = 1;
+   if (statRC && !Config.runNew) return "missing lock file";
 
-// Verify he information
+// If running in new mode then we must get the extened attribute for this file
+// unless we got the lock file time which takes precendence.
 //
-   if (statRC) return "missing lock file";
-   if (lokStat.st_mtime >= cP->Stat->st_mtime)
+   if (Config.runNew)
+      {if (!statRC)
+          cpyInfo.Attr.cpyTime = static_cast<long long>(lokStat.st_mtime);
+          else if (cpyInfo.Get(xfrP->PFN, fnFD.Num) <= 0)
+                  return "unable to get copy time xattr";
+      }
+
+// Verify the information
+//
+   if (cpyInfo.Attr.cpyTime >= static_cast<long long>(cP->Stat->st_mtime))
       {if (xfrP->reqData.Options & XrdFrmRequest::Purge) return "";
        return "already migrated";
       }
 
-
-// Obtain a lock on the file
+// Keep the lock on the base file until we are through. No one is allowed to
+// modify this file until we have migrate it.
 //
-   strcpy(&xfrP->PFN[xfrP->pfnEnd], ".lock");
-   cP->lkfP = new XrdOucSxeq(XrdOucSxeq::Lock, xfrP->PFN);
-   xfrP->PFN[xfrP->pfnEnd] = '\0';
+   cP->lkfd = fnFD.Num;
+   cP->lkfx = statRC == 0;
+   fnFD.Num = -1;
    return 0;
 }

@@ -10,8 +10,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//          $Id$
-
 #include "XrdOuc/XrdOucTList.hh"
 #include "XrdOuc/XrdOuca2x.hh"
   
@@ -36,6 +34,7 @@ int           RepWaitMS;    // RepWait*1000 for poll()
 int           RepDelay;     // Seconds to delay before retrying manager
 int           RepNone;      // Max number of consecutive non-responses
 int           PrepWait;     // Millisecond wait between prepare requests
+int           FwdWait;      // Millisecond wait between foward  requests
 int           haveMeta;     // Have a meta manager (only if we are a manager)
 
 char         *CMSPath;      // Path to the local cmsd for target nodes
@@ -49,12 +48,12 @@ unsigned char SModeP;       // Manager selection mode (proxy)
 
 enum {FailOver = 'f', RoundRob = 'r'};
 
-      XrdCmsClientConfig()
-                  {ConWait = 10; RepWait = 3; RepWaitMS = 3000; RepDelay = 5;
-                   PrepWait = 33; ManList = PanList = 0;
-                   SMode = SModeP = FailOver;
-                   CMSPath = 0; RepNone = 8; isMeta = 0; haveMeta = 0;
-                  }
+      XrdCmsClientConfig() : ConWait(10), RepWait(3),  RepWaitMS(3000),
+                             RepDelay(5), RepNone(8),  PrepWait(33),
+                             FwdWait(0),  haveMeta(0), CMSPath(0),
+                             myHost(0),   myName(0),
+                             ManList(0),  PanList(0),
+                             SMode(FailOver), SModeP(FailOver), isMeta(0) {}
      ~XrdCmsClientConfig();
 
 private:

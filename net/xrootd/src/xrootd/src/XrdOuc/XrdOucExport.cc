@@ -8,10 +8,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//          $Id$
-
-const char *XrdOucExportCVSID = "$Id$";
-
 #include "XrdOuc/XrdOucExport.hh"
 #include "XrdSys/XrdSysPlatform.hh"
   
@@ -33,7 +29,7 @@ const char *XrdOucExportCVSID = "$Id$";
 
                              [[no]ssdec] [[no]stage]  [[no]rcreate] 
 
-                             [[not]writable]
+                             [[not]writable] [[no]xattrs]
 
    Notes: See the oss configuration manual for the meaning of each option.
 
@@ -87,7 +83,9 @@ unsigned long long XrdOucExport::ParseDefs(XrdOucStream      &Config,
         {"global",        XRDEXP_LOCAL,   0,              XRDEXP_LOCAL_X},
         {"globalro",      XRDEXP_LOCAL,   XRDEXP_GLBLRO,  XRDEXP_GLBLRO_X},
         {"lock",          XRDEXP_NOLK,    0,              XRDEXP_NOLK_X},
-        {"nolock",        0,              XRDEXP_NOLK,    XRDEXP_NOLK_X}
+        {"nolock",        0,              XRDEXP_NOLK,    XRDEXP_NOLK_X},
+        {"xattrs",        XRDEXP_NOXATTR, 0,              XRDEXP_NOXATTR_X},
+        {"noxattrs",      0,              XRDEXP_NOXATTR, XRDEXP_NOXATTR_X}
        };
     int i, numopts = sizeof(rpopts)/sizeof(struct rpathopts);
     char *val;

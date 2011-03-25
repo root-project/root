@@ -19,7 +19,10 @@ xrootdclientincdir = $(includedir)/xrootd/XrdClient
 
 #############################################################################
 ## deliverables (to be built / installed)
-bin_PROGRAMS = xrdcp TestXrdClient TestXrdClient_read xrd xprep xrdstagetool
+bin_PROGRAMS = xrdcp xrd xprep xrdstagetool
+noinst_PROGRAMS = TestXrdClient TestXrdClient_read
+
+man1_MANS = xprep.1 xrd.1 xrdcp.1 xrdstagetool.1
 
 ## old automake versions do not know += operator for adding to a variable, so we have to do this
 ## very awkwardly using the EXTRA_ definition
@@ -83,7 +86,7 @@ libXrdClient_la_LIBADD = $(LIBSUNMATH) \
               ../XrdNet/libXrdNet.la \
               ../XrdOuc/libXrdOuc.la \
               ../XrdSys/libXrdSys.la \
-              ../XrdNet/libXrdNetUtil.la
+              ../XrdNet/libXrdNetUtil.la -lpthread
 
 clientlibs =  libXrdClient.la \
               -ldl $(LIBZ)
@@ -91,7 +94,7 @@ clientlibs =  libXrdClient.la \
 xrdcp_SOURCES = Xrdcp.cc
 # Note: static is required for Darwin. Linux and Solaris nicely manage to integrate
 #       all needed symbols with shared lib linking
-xrdcp_LDFLAGS = -static -export-dynamic
+#xrdcp_LDFLAGS = -static -export-dynamic
 xrdcp_LDADD = $(clientlibs)
 
 

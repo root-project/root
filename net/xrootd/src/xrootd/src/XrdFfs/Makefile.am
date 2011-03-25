@@ -42,15 +42,13 @@ libXrdFfs_la_SOURCES = \
         XrdFfsQueue.cc \
         XrdFfsWcache.cc
 
-libXrdFfs_la_LIBADD = ../XrdPosix/libXrdPosix.la \
-                      ../XrdClient/libXrdClient.la \
-                      ../XrdSec/libXrdSec.la \
-                      ../XrdSecsss/libXrdSecsss.la \
-                      ../XrdNet/libXrdNet.la \
-                      ../XrdNet/libXrdNetUtil.la \
-                      ../XrdOuc/libXrdOuc.la \
-                      ../XrdSys/libXrdSys.la \
-                      $(FUSELIB)
-
 xrootdfs_SOURCES = XrdFfsXrootdfs.cc
-xrootdfs_LDADD = libXrdFfs.la
+xrootdfs_LDADD = libXrdFfs.la $(FUSELIB) \
+                 ../XrdPosix/libXrdPosix.la \
+                 ../XrdClient/libXrdClient.la \
+                 ../XrdSec/libXrdSec.la \
+                 ../XrdSecsss/libXrdSecsss.la \
+                 ../XrdNet/libXrdNet.la \
+                 ../XrdNet/libXrdNetUtil.la \
+                 ../XrdOuc/libXrdOuc.la \
+                 ../XrdSys/libXrdSys.la

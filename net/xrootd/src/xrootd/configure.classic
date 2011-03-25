@@ -588,8 +588,7 @@ guess_architecture () {
       darwin:power*:*)    arch=macosx          ; platform=macosx; ccflv=macos;;
       darwin:*86*:*)      arch=x86_macosx      ; platform=macosx; ccflv=macos;;
       irix*:sgi*:*)       arch=sgi             ; platform=sgi;    ccflv=sgiCC;;
-      sunos:i86pc:5.10)   arch=sunx86_510      ; platform=solaris; ccflv=sunCCamd510;;
-      sunos:i86pc:5.11)   arch=sunx86_511      ; platform=solaris; ccflv=sunCCamd;;
+      sunos:i86pc:5.11)   arch=sunx86_511      ; platform=solaris; ccflv=sunCC;;
       sunos:i86pc:*)      arch=sunx86_510      ; platform=solaris; ccflv=sunCC;;
       sunos:*:6*)         arch=sun4x_6         ; platform=solaris; ccflv=sunCC;;
       sunos:*:5.6)        arch=sun4x_56        ; platform=solaris; ccflv=sunCC;;
@@ -620,13 +619,11 @@ guess_architecture () {
     fi
     if [ "$platform" = "solaris" -a "$chip" = "i86pc" ]; then
        if `isainfo -b | grep "64" > /dev/null  2>&1` ; then
-          if [ "$rele" = "5.10" ]; then
-             ccflv=sunCCamd510
-          else
-             ccflv=sunCCamd64
-          fi
+          ccflv=sunCCi8664pc
        else
-          ccflv=sunCC
+          if [ "$arch" != "sunx86_510" ]; then
+             ccflv=sunCCi86pc
+          fi
        fi
     fi
     echo "$osys | $chip | $rele | $arch | $ccflv"
@@ -1546,14 +1543,33 @@ fi
 
 ######################################################################
 #
+### echo %%% Check for builtin atomics
+#
+if test "x$hasatomics" = "x"; then
+   message "Checking for builtin atomics"
+   testout="__sync_.out"
+   check_prototype "__sync_" $ccbin "-o $testout"
+   if test "x$found_prototype" = "xyes" ; then
+      echo "yes"
+      hasatomics=" -DHAVE_ATOMICS"
+   else
+      echo "no"
+   fi
+   if test -f $testout ; then
+      rm -fr $testout
+   fi
+else
+   hasatomics=" -DHAVE_ATOMICS"
+fi
+
+######################################################################
+#
 ### echo %%% Flags steering echoing of command lines
 #
 xrdecho="@"
 if test "x$enable_echo" = "xyes" ; then
    xrdecho=""
 fi
-
-
 
 ######################################################################
 #
@@ -3136,6 +3152,7 @@ sed -e "s|@arch@|$arch|"                 \
     -e "s|@hasstrlcpy@|$hasstrlcpy|" \
     -e "s|@hasprotor@|$hasprotor|" \
     -e "s|@hasfstatat@|$hasfstatat|" \
+    -e "s|@hasatomics@|$hasatomics|" \
     -e "s|@hasfuse@|$hasfuse|" \
     -e "s|@libfuse@|$libfuse|" \
     -e "s|@hasreadline@|$hasreadline|" \
@@ -3184,7 +3201,7 @@ echo "done"
 #---------------------------------------------------------------------
 # Solaris GNUmake.rules.xxx
 #
-sunccrules="sunCC sunCCamd sunCCamd510 sunCCamd64 sunCCi86pc"
+sunccrules="sunCC sunCCamd sunCCamd510 sunCCamd64 sunCCi86pc sunCCi8664pc"
 for f in $sunccrules; do
    message "Writing config/$f "
    cp -rp config/GNUmake.rules.$f.in GNUmake.rules.$f.tmp

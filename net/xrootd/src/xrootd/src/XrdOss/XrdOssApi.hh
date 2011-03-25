@@ -10,8 +10,6 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
 #include <sys/types.h>
 #include <errno.h>
 #include "XrdSys/XrdSysHeaders.hh"
@@ -19,11 +17,11 @@
 #include "XrdOss/XrdOss.hh"
 #include "XrdOss/XrdOssConfig.hh"
 #include "XrdOss/XrdOssError.hh"
-#include "XrdSys/XrdSysError.hh"
 #include "XrdOuc/XrdOucExport.hh"
 #include "XrdOuc/XrdOucPList.hh"
-#include "XrdSys/XrdSysPthread.hh"
 #include "XrdOuc/XrdOucStream.hh"
+#include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysPthread.hh"
 
 /******************************************************************************/
 /*                              o o s s _ D i r                               */
@@ -112,6 +110,7 @@ char            cxid[4];
 class XrdFrmProxy;
 class XrdOssCache_Group;
 class XrdOssCache_Space;
+class XrdOssCreateInfo;
 class XrdOucMsubs;
 class XrdOucName2Name;
 class XrdOucProg;
@@ -162,6 +161,8 @@ int       Stats(char *bp, int bl);
 
 static int   AioInit();
 static int   AioAllOk;
+
+static int   runOld;            // Run in backward compatability mode
 
 static char  tryMmap;           // Memory mapped files enabled
 static char  chkMmap;           // Memory mapped files are selective
@@ -251,11 +252,12 @@ XrdOucProg     *RSSProg;      //    Command for Remote Storage Services
 char           *UDir;         // -> Usage logdir
 char           *QFile;        // -> Quota file
 
-int                Alloc_Cache(const char *, mode_t, XrdOucEnv &);
-int                Alloc_Local(const char *, mode_t, XrdOucEnv &);
+int                Alloc_Cache(XrdOssCreateInfo &, XrdOucEnv &);
+int                Alloc_Local(XrdOssCreateInfo &, XrdOucEnv &);
 int                BreakLink(const char *local_path, struct stat &statbuff);
 int                CalcTime();
 int                CalcTime(XrdOssStage_Req *req);
+int                SetFattr(XrdOssCreateInfo &crInfo, int datfd, time_t mtime);
 void               doScrub();
 int                Find(XrdOssStage_Req *req, void *carg);
 int                getCname(const char *path, struct stat *sbuff, char *cgbuff);
@@ -309,6 +311,7 @@ int    MSS_Xeq(XrdOucStream **xfd, int okerr,
 int    RenameLink(char *old_path, char *new_path);
 int    RenameLink2(int Llen, char *oLnk, char *old_path,
                              char *nLnk, char *new_path);
+int    RenameLink3(char *cPath, char *old_path, char *new_path);
 };
 
 /******************************************************************************/

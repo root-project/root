@@ -65,7 +65,15 @@ protected:
     virtual int    SendRaw_sock(const void* buffer, int length, Sockdescr sock);
 public:
 
-    XrdClientSock(XrdClientUrlInfo host, int windowsize = 0);
+    //--------------------------------------------------------------------------
+    //! Construct a socket helper
+    //!
+    //! @param host       Remote location to connect to
+    //! @param windowSize TCP window size: 0 for OS defaults or the ENV setting
+    //! @param fd         A descriptor pointing to an already connected socket,
+    //!                   -1 if not available
+    //--------------------------------------------------------------------------
+    XrdClientSock(XrdClientUrlInfo host, int windowsize = 0, int fd = -1 );
     virtual ~XrdClientSock();
 
     virtual void BanSockDescr(Sockdescr, Sockid) {}

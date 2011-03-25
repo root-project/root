@@ -10,8 +10,6 @@
 /*                DE-AC02-76-SFO0515 with the Deprtment of Energy             */
 /******************************************************************************/
 
-//          $Id$
-
 #include <string.h>
 #include <unistd.h>
 
@@ -82,6 +80,10 @@ int                 Fix;
 int                 Test;
 int                 TrackDC;
 int                 Verbose;
+int                 runOld;    // Backward compatability
+int                 runNew;    // Forward  compatability
+int                 nonXA;     // Backward compatability for noXA spaces
+int                 hasCache;  // Backward compatability for noXA spaces
 char              **vectArg;
 int                 nextArg;
 int                 numcArg;

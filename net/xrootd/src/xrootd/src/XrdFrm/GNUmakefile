@@ -1,5 +1,3 @@
-#              $Id$
-
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
 #------------------------------------------------------------------------------#
@@ -16,6 +14,7 @@ BINLIBS = -L$(LIBDIR) -lXrdFrm -lXrdNet -lXrdOuc -lXrdNetUtil -lXrdSys \
 SOURCES = \
         XrdFrmAdmin.cc     \
         XrdFrmAdminAudit.cc\
+        XrdFrmAdminConvert.cc\
         XrdFrmAdminFiles.cc \
         XrdFrmAdminFind.cc \
         XrdFrmAdminMain.cc \
@@ -57,6 +56,7 @@ OBJADMIN= \
         $(OBJDIR)/XrdFrmAdminMain.o \
         $(OBJDIR)/XrdFrmAdmin.o     \
         $(OBJDIR)/XrdFrmAdminAudit.o\
+        $(OBJDIR)/XrdFrmAdminConvert.o\
         $(OBJDIR)/XrdFrmAdminFiles.o\
         $(OBJDIR)/XrdFrmAdminFind.o \
         $(OBJDIR)/XrdFrmAdminQuery.o\
@@ -83,6 +83,7 @@ OBJADDS = \
         $(LIBDIR)/libXrdOss.a
 
 OBJDEPS = \
+          $(LIBDIR)/libXrdFrm.a \
           $(LIBDIR)/libXrdNet.a \
           $(LIBDIR)/libXrdNetUtil.a \
           $(LIBDIR)/libXrdOss.a \
@@ -166,9 +167,22 @@ $(OBJDIR)/XrdFrmAdminAudit.o:  XrdFrmAdmin.hh    XrdFrmAdminAudit.cc \
 	@echo Compiling XrdFrmAdminAudit.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdFrmAdminAudit.o XrdFrmAdminAudit.cc
 
+$(OBJDIR)/XrdFrmAdminConvert.o: XrdFrmAdmin.hh    XrdFrmAdminConvert.cc \
+                                XrdFrmConfig.hh   XrdFrmFiles.hh  \
+                                XrdFrmTrace.hh    XrdFrmUtils.hh \
+                                XrdFrmXAttr.hh    XrdOss.hh \
+                                XrdOssPath.hh     XrdOucArgs.hh \
+                                XrdOucNSWalk.hh   XrdOucPList.hh \
+                                XrdOucTList.hh    XrdOucXAttr.hh  \
+                                XrdSysError.hh
+	@echo Compiling XrdFrmAdminConvert.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdFrmAdminConvert.o XrdFrmAdminConvert.cc
+
 $(OBJDIR)/XrdFrmAdminFiles.o: XrdFrmAdmin.hh    XrdFrmAdminFiles.cc \
                               XrdFrmConfig.hh   XrdFrmFiles.hh  \
-                              XrdFrmTrace.hh    XrdSysError.hh
+                              XrdFrmTrace.hh    XrdFrmXAttr.hh \
+                              XrdOucXAttr.hh  \
+                              XrdSysError.hh
 	@echo Compiling XrdFrmAdminFiles.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdFrmAdminFiles.o XrdFrmAdminFiles.cc
 
@@ -227,8 +241,9 @@ $(OBJDIR)/XrdFrmConfig.o: XrdFrmConfig.hh  XrdFrmConfig.cc    XrdFrmTrace.hh \
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdFrmConfig.o XrdFrmConfig.cc
 
 $(OBJDIR)/XrdFrmFiles.o:  XrdFrmFiles.hh    XrdFrmFiles.cc  XrdFrmTrace.hh \
-                          XrdFrmConfig.hh   XrdFrmUtils.hh  XrdOssPath.hh \
-                          XrdOucHash.hh     XrdOucNSWalk.hh \
+                          XrdFrmConfig.hh   XrdFrmUtils.hh  XrdFrmXAttr.hh \
+                          XrdOssPath.hh \
+                          XrdOucHash.hh     XrdOucNSWalk.hh XrdOucXAttr.hh \
                           XrdSysError.hh    XrdSysPlatform.hh
 	@echo Compiling XrdFrmFiles.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdFrmFiles.o XrdFrmFiles.cc
@@ -236,9 +251,10 @@ $(OBJDIR)/XrdFrmFiles.o:  XrdFrmFiles.hh    XrdFrmFiles.cc  XrdFrmTrace.hh \
 $(OBJDIR)/XrdFrmMigrate.o: XrdFrmMigrate.cc     XrdFrmMigrate.hh \
                            XrdFrmConfig.hh      XrdFrmFiles.hh \
                            XrdFrmRequest.hh     XrdFrmTrace.hh \
-                           XrdFrmTransfer.hh    XrdFrmXfrQueue.hh \
+                           XrdFrmTransfer.hh    XrdFrmXAttr.hh \
+                           XrdFrmXfrQueue.hh \
                            XrdOss.hh            XrdOssPath.hh \
-                           XrdOucHash.hh        XrdOucTList.hh \
+                           XrdOucTList.hh \
                            XrdOucNSWalk.hh      XrdOucUtils.hh \
                            XrdSysError.hh       XrdSysHeaders.hh \
                            XrdSysLogger.hh      XrdSysPlatform.hh \
@@ -267,9 +283,10 @@ $(OBJDIR)/XrdFrmProxy.o: XrdFrmProxy.hh       XrdFrmProxy.cc \
 
 $(OBJDIR)/XrdFrmPurge.o:  XrdFrmPurge.hh   XrdFrmPurge.cc    XrdFrmTrace.hh \
                           XrdFrmConfig.hh  XrdFrmFiles.hh    XrdFrmTSort.hh \
+                          XrdFrmXAttr.hh \
                           XrdNetCmsNotify.hh \
                           XrdOss.hh        XrdOssPath.hh     XrdOssSpace.hh \
-                          XrdOucHash.hh    XrdOucNSWalk.hh   XrdOucUtils.hh \
+                          XrdOucNSWalk.hh  XrdOucUtils.hh \
                           XrdOucProg.hh    XrdOucStream.hh   XrdSysError.hh \
                           XrdSysPlatform.hh
 	@echo Compiling XrdFrmPurge.cc
@@ -323,10 +340,11 @@ $(OBJDIR)/XrdFrmTransfer.o: XrdFrmTransfer.cc     XrdFrmTransfer.hh \
                             XrdFrmRequest.hh      XrdFrmTrace.hh \
                             XrdFrmXfrJob.hh       XrdFrmXfrQueue.hh \
                             XrdFrmMonitor.hh      XrdFrmCID.hh \
-                            XrdOss.hh             XrdOssLock.hh \
+                            XrdFrmXAttr.hh \
+                            XrdOss.hh \
                             XrdOucEnv.hh          XrdOucHash.hh \
                             XrdOucMsubs.hh        XrdOucProg.hh \
-                            XrdOucSxeq.hh  \
+                            XrdOucSxeq.hh         XrdOucXAttr.hh \
                             XrdNetCmsNotify.hh \
                             XrdSysError.hh        XrdSysPlatform.hh \
                             XrdSysPthread.hh
@@ -339,8 +357,9 @@ $(OBJDIR)/XrdFrmTSort.o:  XrdFrmTSort.hh    XrdFrmTSort.cc  XrdFrmFiles.hh
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdFrmTSort.o XrdFrmTSort.cc
 
 $(OBJDIR)/XrdFrmUtils.o:  XrdFrmUtils.hh    XrdFrmUtils.cc \
-                          XrdFrmRequest.hh  XrdFrmTrace.hh \
-                          XrdOucUtils.hh \
+                          XrdFrmRequest.hh  XrdFrmTrace.hh   XrdFrmXLock.hh \
+                          XrdFrmXAttr.hh \
+                          XrdOucSxeq.hh     XrdOucUtils.hh   XrdOucXAttr.hh \
                           XrdSysError.hh    XrdSysHeaders.hh XrdSysPlatform.hh
 	@echo Compiling XrdFrmUtils.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdFrmUtils.o XrdFrmUtils.cc

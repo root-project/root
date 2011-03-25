@@ -7,10 +7,6 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
-  
-//         $Id$
-
-const char *XrdOssRelocCVSID = "$Id$";
 
 /******************************************************************************/
 /*                             i n c l u d e s                                */
@@ -59,6 +55,8 @@ extern XrdOssSys  *XrdOssSS;
             cgName      - Target space name[:path]
             anchor      - The base path where a symlink to the copied file is
                           to be created. If present, the original file is kept.
+                          If anchor is "." then path is taken as pfn (not lfn)
+                          and a pure relocation is performed.
 
   Output:   Returns XrdOssOK upon success; (-errno) otherwise.
 */
@@ -88,12 +86,13 @@ int XrdOssSys::Reloc(const char *tident, const char *path,
    char local_path[MAXPATHLEN+8];
    pendFiles PF(pbuff, tbuff);
    XrdOssCache::allocInfo aInfo(path, pbuff, sizeof(pbuff));
-   int rc, lblen, datfd;
+   int rc, lblen, datfd, Pure = (anchor && !strcmp(anchor, "."));
    struct stat buf;
 
 // Generate the actual local path for this file.
 //
-   if ((rc = GenLocalPath(path, local_path))) return rc;
+   if (Pure) {strcpy(local_path, path); anchor = 0;}
+      else if ((rc = GenLocalPath(path, local_path))) return rc;
 
 // Determine the state of the file.
 //
@@ -110,7 +109,7 @@ int XrdOssSys::Reloc(const char *tident, const char *path,
 //
    lblen = XrdOssPath::getCname(local_path, cgNow, lbuff, sizeof(lbuff)-7);
    lbuff[lblen] = '\0';
-   if (!strcmp(cgbuff, cgNow)
+   if (!Pure && !strcmp(cgbuff, cgNow)
    && (!aInfo.cgPath || !strncmp(aInfo.cgPath, lbuff, aInfo.cgPlen)))
       return -EEXIST;
 
@@ -122,10 +121,10 @@ int XrdOssSys::Reloc(const char *tident, const char *path,
    if ((PF.datfd = datfd = XrdOssCache::Alloc(aInfo)) < 0) return datfd;
    if (!aInfo.cgPsfx) return -ENOTSUP;
 
-// Copy the original file to the new location
+// Copy the original file to the new location. Copy() always closes the fd.
 //
-   if (XrdOssCopy::Copy(path, pbuff, datfd) < 0) return -EIO;
-   close(datfd); PF.datfd = -1;
+   PF.datfd = -1;
+   if ((rc = XrdOssCopy::Copy(path, pbuff, datfd)) < 0) return rc;
 
 // If the file is to be merely copied, substitute the desired destination
 //
@@ -150,13 +149,15 @@ int XrdOssSys::Reloc(const char *tident, const char *path,
 // Rename the link atomically over the existing name
 //
    if (!anchor && rename(tbuff, local_path) < 0) return -errno;
-   PF.tbuff = 0; PF.pbuff = 0;
+   PF.tbuff = 0; PF.pbuff = 0; rc = 0;
 
-// Now create a symlink from the cache pfn to the actual path (xa only)
+// Now create a symlink from the cache pfn to the actual path (xa runOld only)
 //
-   strcpy(aInfo.cgPsfx, ".pfn"); rc = 0;
-   if ((symlink(local_path, pbuff) && errno != EEXIST)
-   || unlink(pbuff) || symlink(local_path, pbuff)) rc = errno;
+   if (runOld)
+      {strcpy(aInfo.cgPsfx, ".pfn");
+       if ((symlink(local_path, pbuff) && errno != EEXIST)
+       || unlink(pbuff) || symlink(local_path, pbuff)) rc = errno;
+      }
 
 // Issue warning if the pfn file could not be created (very very rare).
 // At this point we can't do much about it.
@@ -174,7 +175,7 @@ int XrdOssSys::Reloc(const char *tident, const char *path,
 //
    if (*lbuff)
       {if (unlink(lbuff))     OssEroute.Emsg("Reloc",errno,"removing",lbuff);
-       if (XrdOssPath::isXA(lbuff))
+       if (runOld && XrdOssPath::isXA(lbuff))
           {strcat(lbuff, ".pfn");
            if (unlink(lbuff)) OssEroute.Emsg("Reloc",errno,"removing",lbuff);
           }

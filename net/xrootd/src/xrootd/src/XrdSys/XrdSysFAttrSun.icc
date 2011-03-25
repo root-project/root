@@ -1,0 +1,178 @@
+/******************************************************************************/
+/*                                                                            */
+/*                    X r d S y s F A t t r S u n . i c c                     */
+/*                                                                            */
+/* (c) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/*                            All Rights Reserved                             */
+/*   Produced by Andrew Hanushevsky for Stanford University under contract    */
+/*              DE-AC02-76-SFO0515 with the Department of Energy              */
+/******************************************************************************/
+  
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include "XrdSys/XrdSysFAttr.hh"
+
+/******************************************************************************/
+/*                      X r d S y s F A t t r : : D e l                       */
+/******************************************************************************/
+
+int XrdSysFAttr::Del(const char *Aname, const char *Path, int fd)
+{
+   int ec = 0;
+
+// Open the directory associated with the path or file descriptor
+//
+   fd =  (fd < 0 ? attropen(Path, ".", O_RDONLY)
+                 : openat(    fd, ".", O_RDONLY|O_XATTR));
+
+// If the preceeding open failed, diagnose the problem. We ignore ENOENT.
+//
+   if (fd < 0)
+      {if (errno == ENOENT) return 0;
+       return Diagnose("open to remove", Aname, Path, errno);
+      }
+
+// Now unlink the attribute file
+//
+   if (unlinkat(fd, Aname, 0) < 0 && errno != ENOENT)
+      ec = Diagnose("remove", Aname, Path, errno);
+
+// All done
+//
+  close(fd);
+  return ec;
+}
+  
+/******************************************************************************/
+/*                      X r d S y s F A t t r : : G e t                       */
+/******************************************************************************/
+
+int XrdSysFAttr::Get(const char *Aname, void *Aval, int Avsz,
+                     const char *Path, int fd)
+{
+   int ec = 0;
+
+// Open the directory associated with the path or file descriptor
+//
+   fd =  (fd < 0 ? attropen(Path, Aname, O_RDONLY)
+                 : openat(    fd, Aname, O_RDONLY|O_XATTR));
+
+// If the preceeding open failed, diagnose the problem. We ignore ENOENT.
+//
+   if (fd < 0)
+      {if (errno == ENOENT) return 0;
+       return Diagnose("open to get", Aname, Path, errno);
+      }
+
+// If a size was passed, then read the variable data. Otherwise, the caller
+// wants to know the size of the attribute data. So, return that.
+//
+   if (Avsz) {if ((ec = read(fd, Aval, Avsz)) < 0) ec = -errno;}
+      else {struct stat Stat;
+            ec = (fstat(fd, &Stat) ? -errno : Stat.st_size);
+           }
+
+// Close the underlying directory and diagnose any errors and return result.
+//
+   close(fd);
+   if (ec < 0) ec = (ec == -ENOENT ? 0 : Diagnose("get", Aname, Path, -ec));
+   return ec;
+}
+
+
+/******************************************************************************/
+/*                     X r d S y s F A t t r : : L i s t                      */
+/******************************************************************************/
+
+#if !defined(__XOPEN_OR_POSIX)
+#define DIRFD(x) x->dd_fd
+#else
+#define DIRFD(x) x->d_fd
+#endif
+  
+int XrdSysFAttr::List(AList **aPL, const char *Path, int fd, int getSz)
+{
+   AList *aNew;
+   DIR   *dP;
+   struct dirent *dEnt;
+   struct stat Stat;
+   int    rc, maxSz = 0;
+
+// Open the directory associated with the path or file descriptor
+//
+   *aPL = 0;
+   fd =  (fd < 0 ? attropen(Path, ".", O_RDONLY)
+                 : openat(    fd, ".", O_RDONLY|O_XATTR));
+
+// If the preceeding open failed, diagnose the problem. We ignore ENOENT.
+//
+   if (fd < 0)
+      {if (errno == ENOENT) return 0;
+       return Diagnose("open to list", "*", Path, errno);
+      }
+
+// Now open the attribute directory
+//
+   if (!(dP = fdopendir(fd)))
+      {rc = errno; close(fd);
+       if (rc == ENOENT) return 0;
+       return Diagnose("open to list", "*", Path, rc);
+      }
+
+// Now list the directory entries (less dot and dot-dot) as attributes.
+// If the size is wanted, we do this here to avoid multiple opens.
+//
+   while((dEnt = readdir(dP)))
+        {if ((*(dEnt->d_name) != '.' || strcmp(".", (dEnt->d_name)+1))
+         &&  (aNew = getEnt(Path, fd, dEnt->d_name, *aPL, 0)))
+            {if (getSz)
+                {if (fstatat(DIRFD(dP), dEnt->d_name, &Stat, 0))
+                    {Diagnose("stat", dEnt->d_name, Path, errno); continue;}
+                 aNew->Vlen = Stat.st_size;
+                 if (maxSz < aNew->Vlen) maxSz = aNew->Vlen;
+                }
+             *aPL = aNew;
+            }
+        }
+
+// All done
+//
+   closedir(dP); close(fd);
+   return maxSz;
+}
+
+/******************************************************************************/
+/*                      X r d S y s F A t t r : : S e t                       */
+/******************************************************************************/
+
+int XrdSysFAttr::Set(const char *Aname, const void *Aval, int Avsz,
+                     const char *Path,  int fd, int isNew)
+{
+   static const mode_t aMode = S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH;
+   int oFlag = O_CREAT|O_RDWR|O_TRUNC|O_XATTR | (isNew ? O_EXCL : 0);
+   int ec = 0;
+
+// Open the directory associated with the path or file descriptor
+//
+   fd =  (fd < 0 ? attropen(Path, Aname, oFlag, aMode)
+                 : openat(    fd, Aname, oFlag, aMode));
+
+// If the preceeding open failed, diagnose the problem. We ignore ENOENT.
+//
+   if (fd < 0) return Diagnose("open to set", Aname, Path, errno);
+
+// Write the data, the caller should have made sure the file was truncated.
+//
+  if (write(fd, Aval, Avsz) < 0) ec = Diagnose("set", Aname, Path, errno);
+
+// All done, close the file and return result
+//
+   close(fd);
+   return ec;
+}

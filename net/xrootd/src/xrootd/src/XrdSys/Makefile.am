@@ -24,10 +24,12 @@ lib_LTLIBRARIES = libXrdSys.la
 noinst_LTLIBRARIES = libXrdSysErrLog.la
 
 xrootdsysinc_HEADERS = \
-     XrdSysDir.hh    XrdSysLogger.hh    XrdSysPlugin.hh \
-     XrdSysPthread.hh  XrdSysTimer.hh   XrdWin32.hh \
-     XrdSysError.hh  XrdSysPlatform.hh  XrdSysPriv.hh \
-     XrdSysSemWait.hh  XrdSysXSLock.hh  XrdSysHeaders.hh
+     XrdSysDir.hh       XrdSysFAttr.hh     XrdSysFAttrBsd.icc \
+     XrdSysFAttrLnx.icc XrdSysFAttrMac.icc XrdSysFAttrSun.icc \
+     XrdSysLogger.hh    XrdSysPlugin.hh \
+     XrdSysPthread.hh   XrdSysTimer.hh     XrdWin32.hh \
+     XrdSysError.hh     XrdSysPlatform.hh  XrdSysPriv.hh \
+     XrdSysSemWait.hh   XrdSysXSLock.hh    XrdSysHeaders.hh
 
 
 #############################################################################
@@ -39,6 +41,7 @@ libXrdSysErrLog_la_SOURCES = \
 
 libXrdSys_la_SOURCES = \
         XrdSysDir.cc XrdSysDir.hh \
+        XrdSysFAttr.cc XrdSysFAttr.hh \
         XrdSysPlugin.cc XrdSysPlugin.hh \
         XrdSysPriv.cc XrdSysPriv.hh \
         XrdSysPlatform.cc \

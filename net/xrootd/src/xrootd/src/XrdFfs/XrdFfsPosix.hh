@@ -46,6 +46,12 @@ int            XrdFfsPosix_ftruncate(int fildes, off_t offset);
 int            XrdFfsPosix_truncate(const char *path, off_t size);
 long long      XrdFfsPosix_getxattr(const char *path, const char *name, void *value, unsigned long long size);
 
+/* 
+   XrdFfsPosix_clear_from_rdr_cache() can be used to clear a non-existing file/directory from redirector cache
+   Note that this function is doesn't do the work in a atomical step.
+*/ 
+void           XrdFfsPosix_clear_from_rdr_cache(const char *rdrurl);
+
 int            XrdFfsPosix_unlinkall(const char *rdrurl, const char *path, uid_t user_uid);
 int            XrdFfsPosix_rmdirall(const char *rdrurl, const char *path, uid_t user_uid);
 int            XrdFfsPosix_renameall(const char *rdrurl, const char *from, const char *to, uid_t user_uid);

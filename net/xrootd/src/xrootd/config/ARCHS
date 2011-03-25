@@ -72,8 +72,8 @@ sun4x_510       sungcc    all    for Solaris 5.9 with gcc and glibc
 sun4x_5         sungcc    all    for Solaris 5.x with gcc and glibc
 sun4x_4         sungcc    all    for Solaris 4.x with gcc and glibc
 sunx86_510      sunCCi86pc  all  for Solaris 5.x on i86 platform
-sunx86_510      sunCCamd510 all  for Solaris 5.10 on x86-64 platform
+sunx86_510      sunCCi8664pc all  for Solaris 5.10 on x86-64 platform
 sunx86_510      sunCCamd    all  for Solaris 5.10 on x86-64 platform CC >= 5.10
 sunx86_510      sunCCamd64  all  for Solaris 5.10 on x86-64 platform CC <  5.10
-sunx86_511      sunCCi86pc  all  for Solaris 5.x > 5.10 on x86 platform
-sunx86_511      sunCCamd64  all  for Solaris 5.x > 5.10 on x86-64 platform
+sunx86_511      sunCCi86pc  all  for Solaris 5.x > 5.10 on x86 platforms
+sunx86_511      sunCCi8664pc all for Solaris 5.x > 5.10 on x86-64 platforms

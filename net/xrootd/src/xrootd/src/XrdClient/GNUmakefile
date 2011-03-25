@@ -5,7 +5,7 @@
 #-----------------------------------------------------------------------------#
 include ../GNUmake.env
 
-LIBLIBS = -L$(LIBDIR) -lXrdNet -lXrdOuc -lXrdNetUtil -lXrdSys
+LIBLIBS = -L$(LIBDIR) -lXrdNet -lXrdOuc -lXrdNetUtil -lXrdSys -lpthread
 
 ifneq ($(CFHASXRDCRYPTO),)
 BINLIBS = $(LIBDIR)/libXrdClient.a \

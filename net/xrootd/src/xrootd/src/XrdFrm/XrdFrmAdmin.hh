@@ -10,8 +10,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
   
-//          $Id$
-
 #include <stdlib.h>
 #include <sys/types.h>
 
@@ -37,6 +35,10 @@ int  Find();
 int  Help();
 
 int  MakeLF();
+
+int  Mark();
+
+int  Mmap();
 
 int  Pin();
 
@@ -65,7 +67,8 @@ int  AuditNameNF(XrdFrmFileset *sP);
 int  AuditNameNL(XrdFrmFileset *sP);
 int  AuditNames();
 int  AuditNameXA(XrdFrmFileset *sP);
-int  AuditNameXL(XrdFrmFileset *sP, int dorm);
+int  AuditNameXB(XrdFrmFileset *sP);                // runOld
+int  AuditNameXL(XrdFrmFileset *sP, int dorm);      // runOld
 int  AuditRemove(XrdFrmFileset *sP);
 int  AuditSpace();
 int  AuditSpaceAX(const char *Path);
@@ -73,7 +76,9 @@ int  AuditSpaceAXDB(const char *Path);
 int  AuditSpaceAXDC(const char *Path, XrdOucNSWalk::NSEnt *nP);
 int  AuditSpaceAXDL(int dorm, const char *Path, const char *Dest);
 int  AuditSpaceXA(const char *Space, const char *Path);
-int  AuditSpaceXANB(XrdFrmFileset *sP);
+int  AuditSpaceXA(XrdFrmFileset *sP);
+int  AuditSpaceXB(const char *Space, const char *Path); // runOld
+int  AuditSpaceXANB(XrdFrmFileset *sP);                 // runOld
 int  AuditUsage();
 int  AuditUsage(char *Space);
 int  AuditUsageAX(const char *Path);
@@ -81,7 +86,10 @@ int  AuditUsageXA(const char *Path, const char *Space);
 int  isXA(XrdOucNSWalk::NSEnt *nP);
 
 int  FindFail(XrdOucArgs &Spec);
+int  FindMmap(XrdOucArgs &Spec);
 int  FindNolk(XrdOucArgs &Spec);
+int  FindPins(XrdOucArgs &Spec);
+int  FindPins(XrdFrmFileset *sP);
 int  FindUnmi(XrdOucArgs &Spec);
 
 void ConfigProxy();
@@ -98,16 +106,20 @@ int          ParseKeep(const char *What, const char *kTime);
 int          ParseOwner(const char *What, char *Uname);
 XrdOucTList *ParseSpace(char *Space, char **Path);
 
+char ckAttr(int What, const char *Lfn, char *Pfn, int Pfnsz);
 int  mkLock(const char *Lfn);
 int  mkFile(int What, const char *Path, const char *Data=0, int Dlen=0);
-int  mkPin(const char *Lfn, const char *Pdata, int Pdlen);
+int  mkMark(const char *Lfn);
+int  mkMmap(const char *Lfn);
+int  mkPin(const char *Lfn);
 char mkStat(int What, const char *Lfn, char *Pfn, int Pfnsz);
 
 // For mkFile and mkStat the following options may be passed via What
 //
 static const int isPFN= 0x0001; // Filename is actual physical name
-static const int mkLF = 0x0002; // Make lock file
-static const int mkPF = 0x0004; // Make pin  file
+static const int mkLF = 0x0002; // Make lock file or copy attribute
+static const int mkMF = 0x0004; // Make mmap file or mmap attribute
+static const int mkPF = 0x0008; // Make pin  file or pin  attribute
 
 int  QueryPfn(XrdOucArgs &Spec);
 int  QueryRfn(XrdOucArgs &Spec);
@@ -128,10 +140,24 @@ int  UnlinkFile(const char *lclPath);
 int  VerifyAll(char *path);
 char VerifyMP(const char *func, const char *path);
 
+// The following are for runOld conversion purposes and will be removed
+//
+int          Convert();
+int          ConvTest(int doNames, int doSpaces);
+int          New2Old(int doNames, int doSpaces);
+int          Old2New(int doNames, int doSpaces);
+int          o2nFiles(XrdFrmFileset *sP, int &numOld);
+int          o2nSpace(XrdFrmFileset *sP, const char *Space);
+XrdOucTList *x2xPaths();
+int          x2xRemove(const char *Type, const char *Path, int cvt=0);
+XrdOucTList *x2xSpaces();
+
 static const char *AuditHelp;
 static const char *FindHelp;
 static const char *HelpHelp;
 static const char *MakeLFHelp;
+static const char *MarkHelp;
+static const char *MmapHelp;
 static const char *PinHelp;
 static const char *QueryHelp;
 static const char *RelocHelp;
@@ -151,6 +177,7 @@ int       ArgC;
 // The following are common variables for audit functions
 //
 long long numBytes;
+long long numBLost;
 int       numDirs;
 int       numFiles;
 int       numProb;

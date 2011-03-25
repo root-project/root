@@ -38,7 +38,7 @@ XrdMonBufferedOutput::XrdMonBufferedOutput(const char* outFileName,
         sprintf(_fNameLock, "%s.lock", outFileName);
     } else {
         _fNameLock = new char [strlen(lockFileName)+1];
-        sprintf(_fNameLock, lockFileName);
+        strcpy (_fNameLock, lockFileName);
     }
     
     _buf = new char [_bufSize];
@@ -86,7 +86,7 @@ XrdMonBufferedOutput::flush(bool lockIt)
         }
         // open rt log, write to it, and close it
         int f = open(_fName, O_WRONLY|O_CREAT|O_APPEND,m);
-        write(f, _buf, strlen(_buf));
+        if (write(f, _buf, strlen(_buf))) {}
         close(f);
         // clear buffer
         strcpy(_buf, "");

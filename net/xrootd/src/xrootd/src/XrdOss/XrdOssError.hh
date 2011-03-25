@@ -10,8 +10,6 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
 #define XRDOSS_EBASE 8001
   
 #define XRDOSS_E8001 8001
@@ -29,7 +27,7 @@
 #define XRDOSS_E8013 8013
 #define XRDOSS_E8014 8014
 #define XRDOSS_E8015 8015
-#define XRDOSS_E8016 8016
+//      XRDOSS_E8016 8016
 #define XRDOSS_E8017 8017
 #define XRDOSS_E8018 8018
 #define XRDOSS_E8019 8019
@@ -58,7 +56,7 @@
 #define XRDOSS_T8013 "mss command too long (internal error)"
 #define XRDOSS_T8014 "lock object in use (internal error)"
 #define XRDOSS_T8015 "unable to lock file"
-#define XRDOSS_T8016 "unlocking a non-lockable object (internal error)"
+#define XRDOSS_T8016 "8016"
 #define XRDOSS_T8017 "unlocking an unlocked object (internal error)"
 #define XRDOSS_T8018 "invalid suggested allocation size"
 #define XRDOSS_T8019 "requested space does not exist"

@@ -1,0 +1,43 @@
+#!/bin/sh
+#
+# /etc/init.d/frm_xfrd - Start/stop the frm_xfrd service
+#
+# The following two lines allow this script to be managed by Fedora's
+# chkconfig program.
+#
+# chkconfig: - 80 30
+# description: frm_xfrd is a caching daemon for the xrootd system.
+
+# Source function library.
+. /etc/rc.d/init.d/xrootd.functions
+
+if [ -e /etc/sysconfig/xrootd ]; then
+  . /etc/sysconfig/xrootd
+fi
+
+COMMAND=$1
+shift
+
+case "$COMMAND" in
+  'start')
+    handleDaemons start frm_xfrd $@
+    ;;
+  'stop')
+    handleDaemons stop frm_xfrd $@
+    ;;
+  'status')
+    handleDaemons status frm_xfrd $@
+    ;;
+  'reload' | 'restart')
+    handleDaemons stop frm_xfrd $@
+    handleDaemons start frm_xfrd $@
+    ;;
+  'condrestart')
+    handleDaemons condrestart frm_xfrd $@
+    ;;
+  *)
+    echo "usage: $0 {start|stop|status|restart|condrestart}"
+    ;;
+esac
+
+exit $?

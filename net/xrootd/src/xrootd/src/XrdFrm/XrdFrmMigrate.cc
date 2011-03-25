@@ -7,10 +7,6 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
-  
-//         $Id$
-
-const char *XrdFrmMigrateCVSID = "$Id$";
 
 #include <stdio.h>
 #include <string.h>
@@ -39,9 +35,6 @@ using namespace XrdFrm;
 /******************************************************************************/
 /*                        S t a t i c   M e m b e r s                         */
 /******************************************************************************/
-
-
-XrdOucHash<char>  XrdFrmMigrate::BadFiles;
 
 XrdFrmFileset    *XrdFrmMigrate::fsDefer = 0;
 
@@ -146,14 +139,13 @@ void XrdFrmMigrate::Display()
 const char *XrdFrmMigrate::Eligible(XrdFrmFileset *sP, time_t &xTime)
 {
    XrdOucNSWalk::NSEnt *baseFile = sP->baseFile();
-   XrdOucNSWalk::NSEnt *lockFile = sP->lockFile();
    XrdOucNSWalk::NSEnt *failFile = sP->failFile();
    time_t mTimeBF, mTimeLK, nowTime = time(0);
    const char *eTxt;
 
 // File is inelegible if lockfile mtime is zero (i.e., an mstore placeholder)
 //
-   mTimeLK = lockFile->Stat.st_mtime;
+   mTimeLK = static_cast<time_t>(sP->cpyInfo.Attr.cpyTime);
    if (!mTimeLK) return "migration defered";
 
 // File is ineligible if it has not changed since last migration
@@ -244,18 +236,6 @@ void XrdFrmMigrate::Queue(XrdFrmFileset *sP)
 }
   
 /******************************************************************************/
-/* Private:                       R e m f i x                                 */
-/******************************************************************************/
-
-void XrdFrmMigrate::Remfix(const char *Ftype, const char *Fname)
-{
-// Remove the offending file
-//
-   if (!Config.ossFS->Unlink(Fname,XRDOSS_isPFN))
-      Say.Emsg("Remfix", Ftype, "file orphan fixed; removed", Fname);
-}
-  
-/******************************************************************************/
 /* Private:                         S c a n                                   */
 /******************************************************************************/
   
@@ -273,7 +253,7 @@ void XrdFrmMigrate::Scan()
 
 // Purge that bad file table evey 24 hours to keep complaints down
 //
-   if (nowT - lastHP >= 86400) {BadFiles.Purge(); lastHP = nowT;}
+   if (nowT - lastHP >= 86400) {XrdFrmFileset::Purge(); lastHP = nowT;}
 
 // Indicate scan started
 //
@@ -284,7 +264,7 @@ void XrdFrmMigrate::Scan()
    do {fP = new XrdFrmFiles(vP->Name, Opts, vP->Dir);
        while((sP = fP->Get(ec,1)))
             {aFiles++;
-             if (Screen(sP)) Add(sP);
+             if (sP->Screen()) Add(sP);
                 else {delete sP; bFiles++;}
             }
        if (ec) Bad = 1;
@@ -301,40 +281,4 @@ void XrdFrmMigrate::Scan()
 //
    if (Bad) Say.Emsg("Scan", "Errors encountered while scanning for "
                              "migratable files.");
-}
-
-/******************************************************************************/
-/* Private:                       S c r e e n                                 */
-/******************************************************************************/
-
-int XrdFrmMigrate::Screen(XrdFrmFileset *sP)
-{
-   const char *What = 0, *badFN = 0;
-   char dPath[MAXPATHLEN+1];
-
-// Verify that we have all the relevant files
-//
-   if (!(sP->baseFile()))
-      {if (Config.Fix)
-          {if (sP->lockFile()) Remfix("Lock", sP->lockPath());
-           if (sP-> pinFile()) Remfix("Pin",  sP-> pinPath());
-           if (sP->failFile()) Remfix("Fail", sP->failPath());
-           return 0;
-          }
-       What = "No base file for";
-            if (sP->lockFile()) badFN = sP->lockPath();
-       else if (sP-> pinFile()) badFN = sP-> pinPath();
-       else if (sP->failFile()) badFN = sP->failPath();
-       else {What = "Orhpaned files in"; badFN = dPath;
-             sP->dirPath(dPath, sizeof(dPath));
-            }
-      } else if (!(sP->lockFile()))
-                {What = "No lock file for"; badFN = sP->basePath();}
-                else return 1;
-
-// Issue message if we haven't issued one before
-//
-   if (!BadFiles.Add(badFN, 0, 0, Hash_data_is_key))
-      Say.Emsg("Screen", What, badFN);
-   return 0;
 }

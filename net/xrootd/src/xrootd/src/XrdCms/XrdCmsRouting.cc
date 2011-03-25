@@ -8,10 +8,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//       $Id$
-
-const char *XrdCmsRoutingCVSID = "$Id$";
-
 #include "XrdCms/XrdCmsNode.hh"
 #include "XrdCms/XrdCmsRouting.hh"
 
@@ -62,6 +58,31 @@ XrdCmsRouter::theRoute initRouter[] =
 //
    XrdCmsRouter    XrdCms::Router(initRouter);
 
+/******************************************************************************/
+/*                 M a n a g e r   R o u t i n g   T a b l e                  */
+/******************************************************************************/
+  
+namespace XrdCms
+{
+XrdCmsRouting::theRouting initMANrouting[] =
+     {{kYR_disc,    XrdCmsRouting::isSync  | XrdCmsRouting::noArgs},
+      {kYR_ping,    XrdCmsRouting::isSync  | XrdCmsRouting::noArgs},
+      {kYR_prepadd, XrdCmsRouting::isSync},
+      {kYR_prepdel, XrdCmsRouting::isSync  | XrdCmsRouting::Forward},
+      {kYR_space,   XrdCmsRouting::isSync  | XrdCmsRouting::noArgs},
+      {kYR_state,   XrdCmsRouting::isSync},
+      {kYR_stats,   XrdCmsRouting::AsyncQ0 | XrdCmsRouting::noArgs},
+      {kYR_try,     XrdCmsRouting::isSync},
+      {kYR_usage,   XrdCmsRouting::isSync  | XrdCmsRouting::noArgs},
+      {0,           0}};
+}
+  
+// Manager routing by valid request. Note that this routing applies to
+// meta-manager requests only. We prohibit a meta-manager from requesting
+// potentially destructive actions.
+//
+   XrdCmsRouting    XrdCms::manVOps(initMANrouting);
+  
 /******************************************************************************/
 /*              R e d i r e c t o r   R o u t i n g   T a b l e               */
 /******************************************************************************/

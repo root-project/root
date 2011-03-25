@@ -8,8 +8,6 @@
 /*              DE-AC02-76SF00515 with the Department of Energy              */
 /*****************************************************************************/
 
-// $Id$
-
 #ifndef XRDMONCTRPACKET_HH
 #define XRDMONCTRPACKET_HH
 
@@ -21,7 +19,7 @@
 // struct carries contents of one packet and its sender
 struct XrdMonCtrPacket {
     XrdMonCtrPacket(int size) : buf( (char*)malloc(size) ) {
-        memset((char*)buf, size, 0);
+        memset((char*)buf, 0, size);
     }
     ~XrdMonCtrPacket() {
         free(buf);

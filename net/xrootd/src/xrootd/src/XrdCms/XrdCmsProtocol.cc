@@ -7,13 +7,6 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
-
-//       $Id$
-
-// Original Version: 1.7 2007/07/31 02:25:15 abh
-
-const char *XrdCmsProtocolCVSID = "$Id$";
- 
   
 #include <unistd.h>
 #include <ctype.h>
@@ -277,7 +270,8 @@ void XrdCmsProtocol::Pander(const char *manager, int mport)
 
 // Establish request routing based on who we are
 //
-   Routing = (Config.asManager() || Config.asPeer() ? &supVOps : &srvVOps);
+   if (Config.asManager()) Routing = (Config.asServer() ? &supVOps : &manVOps);
+      else                 Routing = (Config.asPeer()   ? &supVOps : &srvVOps);
 
 // Compute the Manager's status (this never changes for managers/supervisors)
 //

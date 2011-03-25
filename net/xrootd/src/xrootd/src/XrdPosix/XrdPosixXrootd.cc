@@ -1622,7 +1622,7 @@ XrdPosixDir *XrdPosixXrootd::findDIR(DIR *dirp, int glk)
 
 void XrdPosixXrootd::initStat(struct stat *buf)
 {
-   static int initStatDone = 0;
+   static int initStat = 0;
    static dev_t st_rdev;
    static dev_t st_dev;
    static uid_t myUID = getuid();
@@ -1631,7 +1631,7 @@ void XrdPosixXrootd::initStat(struct stat *buf)
 // Initialize the xdev fields. This cannot be done in the constructor because
 // we may not yet have resolved the C-library symbols.
 //
-   if (!initStatDone) {initStatDone = 1; initXdev(st_dev, st_rdev);}
+   if (!initStat) {initStat = 1; initXdev(st_dev, st_rdev);}
    memset(buf, 0, sizeof(struct stat));
 
 // Preset common fields

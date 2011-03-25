@@ -1,0 +1,162 @@
+#!/bin/sh
+#-------------------------------------------------------------------------------
+# Library for handling xrootd daemons on RHEL
+# Author: Lukasz Janyst <ljanyst@cern.ch> (09.03.2011)
+#-------------------------------------------------------------------------------
+
+. /etc/rc.d/init.d/functions
+
+#-------------------------------------------------------------------------------
+# Start a daemon
+#-------------------------------------------------------------------------------
+function startDaemon()
+{
+  ulimit -n 65536
+  echo -n "Starting xrootd ($1, $4): "
+  DAEMON=$1
+  EXEC=$2
+  XROOTD_USER=$3
+  INSTANCE=$4
+  PIDFILE="/var/run/xrootd/$DAEMON-$4.pid"
+  shift 4
+
+  # useful for storing coredumps
+  mkdir -p /var/spool/xrootd/$INSTANCE
+  cd /var/spool/xrootd/$INSTANCE
+  daemon --user $XROOTD_USER --pidfile $PIDFILE $EXEC $@ -b -s $PIDFILE -n $INSTANCE
+  RETVAL=$?
+  echo
+  return $RETVAL
+}
+
+#-------------------------------------------------------------------------------
+# Stop a daemon
+#-------------------------------------------------------------------------------
+function stopDaemon()
+{
+  echo -n "Shutting down xrootd ($1, $4): "
+  PIDFILE="/var/run/xrootd/$DAEMON-$4.pid"
+  killproc -p $PIDFILE $1
+  RETVAL=$?
+  echo
+  return $RETVAL
+}
+
+#-------------------------------------------------------------------------------
+# Get the status of a daemon
+#-------------------------------------------------------------------------------
+function statusOfTheDaemon()
+{
+  PIDFILE="/var/run/xrootd/$DAEMON-$4.pid"
+  echo -n "[$4] "
+  status -p $PIDFILE $1
+  return $RETVAL
+}
+
+#-------------------------------------------------------------------------------
+# Conditionally restart a daemon
+#-------------------------------------------------------------------------------
+function condrestartDaemon()
+{
+  PIDFILE="/var/run/xrootd/$DAEMON-$4.pid"
+  status -p $PIDFILE $1 > /dev/null
+  if test $? -ne 0; then
+     return 0
+  fi
+
+  stopDaemon $@
+  if test $? -ne 0; then
+     return 1
+  fi
+
+  startDaemon $@
+  if test $? -ne 0; then
+     return 2
+  fi
+
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+# Do things to daemons
+#-------------------------------------------------------------------------------
+function handleDaemons()
+{
+  #-----------------------------------------------------------------------------
+  # Check if the user account is specified
+  #-----------------------------------------------------------------------------
+  if test x"$XROOTD_USER" = x; then
+     XROOTD_USER="daemon"
+  fi
+
+  #-----------------------------------------------------------------------------
+  # Determine the command to be run
+  #-----------------------------------------------------------------------------
+  COMMAND=$1;
+  shift
+  case "$COMMAND" in
+    'start')
+      CMD_HANDLER=startDaemon
+      ;;
+    'stop')
+      CMD_HANDLER=stopDaemon
+      ;;
+    'status')
+      CMD_HANDLER=statusOfTheDaemon
+      ;;
+    'condrestart')
+      CMD_HANDLER=condrestartDaemon
+      ;;
+    *)
+      echo "Unrecognized command: $COMMAND"
+      return 1
+      ;;
+  esac
+
+  #-----------------------------------------------------------------------------
+  # Select the daemon to be started
+  #-----------------------------------------------------------------------------
+  DAEMON=$1;
+  shift
+
+  case "$DAEMON" in
+    'xrootd' | 'cmsd')
+      EXEC=/usr/bin/$DAEMON
+      CONFIG_NAME=`echo $DAEMON |  tr '[[:lower:]]' '[[:upper:]]'`
+      ;;
+    'frm_purged' | 'frm_xfrd')
+      EXEC=/usr/bin/$DAEMON
+      CONFIG_NAME=FRMD
+      ;;
+    *)
+      echo "Unrecognized daemon: $DAEMON"
+      return 1
+      ;;
+  esac
+
+  #-----------------------------------------------------------------------------
+  # Select the instances to run
+  #-----------------------------------------------------------------------------
+  if test $# -eq 0; then
+    eval INSTANCES=\$${CONFIG_NAME}_INSTANCES
+  else
+    INSTANCES=$@
+  fi
+  INSTANCES=`echo $INSTANCES | tr '[[:lower:]]' '[[:upper:]]'`
+
+  #-----------------------------------------------------------------------------
+  # Exec the command on the instances
+  #-----------------------------------------------------------------------------
+  STATUS=0
+  for INSTANCE in $INSTANCES; do
+    eval OPTS=\$${CONFIG_NAME}_${INSTANCE}_OPTIONS
+    if test x"$OPTS" = x; then
+      continue
+    fi
+    $CMD_HANDLER $DAEMON $EXEC "$XROOTD_USER" $INSTANCE "$OPTS"
+    if test $? -ne 0; then
+      STATUS=1
+    fi
+  done
+  return $STATUS
+}

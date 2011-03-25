@@ -10,8 +10,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//          $Id$
-
 #include "XrdSys/XrdSysError.hh"
 #include "XrdOuc/XrdOucPList.hh"
 #include "XrdOuc/XrdOucStream.hh"
@@ -43,7 +41,8 @@
 #define XRDEXP_MKEEP_X    0x0000200000000000LL
 #define XRDEXP_PURGE      0x0000000000004000LL
 #define XRDEXP_PURGE_X    0x0000400000000000LL
-//                        0x0000800000008000LL
+#define XRDEXP_NOXATTR    0x0000000000008000LL
+#define XRDEXP_NOXATTR_X  0x0000800000000000LL
 #define XRDEXP_INPLACE    0x0000000000010000LL
 #define XRDEXP_INPLACE_X  0x0001000000000000LL
 #define XRDEXP_COMPCHK    0x0000000000020000LL

@@ -8,12 +8,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
-// Original Version: 1.38 2007/07/26 15:18:24 ganis
-
-const char *XrdCmsClusterCVSID = "$Id$";
-
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -28,6 +22,7 @@ const char *XrdCmsClusterCVSID = "$Id$";
 #include "Xrd/XrdLink.hh"
 #include "Xrd/XrdScheduler.hh"
 
+#include "XrdCms/XrdCmsBaseFS.hh"
 #include "XrdCms/XrdCmsCache.hh"
 #include "XrdCms/XrdCmsConfig.hh"
 #include "XrdCms/XrdCmsCluster.hh"
@@ -299,6 +294,52 @@ SMask_t XrdCmsCluster::Broadcast(SMask_t smask, XrdCms::CmsRRHdr &Hdr,
    return Broadcast(smask, ioV, 2, Dlen+sizeof(Hdr));
 }
 
+/******************************************************************************/
+/*                             B r o a d s e n d                              */
+/******************************************************************************/
+
+int XrdCmsCluster::Broadsend(SMask_t Who, XrdCms::CmsRRHdr &Hdr, 
+                             void *Data, int Dlen)
+{
+   EPNAME("Broadsend");
+   static int Start = 0;
+   XrdCmsNode *nP;
+   struct iovec ioV[2] = {{(char *)&Hdr, sizeof(Hdr)}, {(char *)Data, Dlen}};
+   int i, Beg, Fin, ioTot = Dlen+sizeof(Hdr);
+
+// Send of the data as eveything was constructed properly
+//
+   Hdr.datalen = htons(static_cast<unsigned short>(Dlen));
+
+// Obtain a lock on the table and get the starting and ending position. Note
+// that the mechnism we use will necessarily skip newly added nodes.
+//
+   STMutex.Lock();
+   Beg = Start = (Start <= STHi ? Start+1 : 0);
+   Fin = STHi;
+
+// Run through the table looking for a node to send the message to
+//
+do{for (i = Beg; i <= STHi; i++)
+       {if ((nP = NodeTab[i]) && nP->isNode(Who))
+           {nP->Lock();
+            STMutex.UnLock();
+            if (nP->Send(ioV, 2, ioTot) >= 0) {nP->UnLock(); return 1;}
+            DEBUG(nP->Ident <<" is unreachable");
+            nP->UnLock();
+            STMutex.Lock();
+           }
+       }
+    if (!Beg) break;
+    Fin = Beg-1; Beg = 0;
+   } while(1);
+
+// Did not send to anyone
+//
+   STMutex.UnLock();
+   return 0;
+}
+  
 /******************************************************************************/
 /*                               g e t M a s k                                */
 /******************************************************************************/
@@ -716,6 +757,27 @@ int XrdCmsCluster::Select(XrdCmsSelect &Sel)
        return -1;
       }
 
+// If we are running a shared file system preform an optional restricted
+// pre-selection and then do a standard selection.
+//
+   if (baseFS.isDFS())
+      {pmask = amask;
+       smask = (Sel.Opts & XrdCmsSelect::Online ? 0 : pinfo.ssvec & amask);
+       if (baseFS.Trim())
+          {Sel.Resp.DLen = 0;
+           if (!(retc = SelDFS(Sel, amask, pmask, smask, isRW)))
+              return (fRD ? Cache.WT4File(Sel,Sel.Vec.hf) : Config.LUPDelay);
+           if (retc < 0) return -1;
+          } else if (noSel) return 0;
+       if ((pmask || smask) && (retc = SelNode(Sel, pmask, smask)) >= 0)
+          return retc;
+       Sel.Resp.DLen = snprintf(Sel.Resp.Data, sizeof(Sel.Resp.Data)-1,
+                       "No servers are available to %s%s the file.",
+                       Sel.Opts & XrdCmsSelect::Online ? "immediately " : "",
+                       (smask ? "stage" : Amode))+1;
+       return -1;
+      }
+
 // If either a refresh is wanted or we didn't find the file, re-prime the cache
 // which will force the client to wait. Otherwise, compute the primary and
 // secondary selections. If there are none, the client may have to wait if we
@@ -808,11 +870,32 @@ int XrdCmsCluster::Select(int isrw, SMask_t pmask,
    static const SMask_t smLow(255);
    XrdCmsNode *nP = 0;
    SMask_t tmask;
-   int Snum = 0;
+   const char *reason;
+   int delay, nump, Snum = 0;
 
-// Compute the a single node number that is contained in the mask
+// If there is nothing to select from, return failure
 //
    if (!pmask) return 0;
+
+// If we are exporting a shared-everything system then the incomming mask
+// may have more than one server indicated. So, we need to do a full select.
+//
+   if (baseFS.isDFS())
+      {STMutex.Lock();
+       nP = (Config.sched_RR
+          ? SelbyRef( pmask, nump, delay, &reason, isrw)
+          : SelbyLoad(pmask, nump, delay, &reason, isrw));
+       STMutex.UnLock();
+       if (!nP) return 0;
+       strcpy(hbuff, nP->Name(hlen, port));
+       nP->RefR++;
+       nP->UnLock();
+       return 1;
+      }
+
+// In shared-nothing systems the incomming mask will only have a single node.
+// Compute the a single node number that is contained in the mask.
+//
    do {if (!(tmask = pmask & smLow)) Snum += 8;
          else {while((tmask = tmask>>1)) Snum++; break;}
       } while((pmask = pmask >> 8));
@@ -850,13 +933,21 @@ int XrdCmsCluster::Select(int isrw, SMask_t pmask,
   
 int XrdCmsCluster::SelFail(XrdCmsSelect &Sel, int rc)
 {
-    const char *etext = (rc == eExists
-                      ? "Unable to create new file; file already exists."
-                      : (rc == eROfs)
-                      ? "Unable to write file; r/o file already exists."
-                      : (rc == eDups)
-                      ? "Unable to write file; multiple files exist."
-                      : "Unable to replicate file; no new sites available.");
+//
+    const char *etext;
+
+    switch(rc)
+   {case eExists: etext = "Unable to create new file; file already exists.";
+                  break;
+    case eROfs:   etext = "Unable to write file; r/o file already exists.";
+                  break;
+    case eDups:   etext = "Unable to write file; multiple files exist.";
+                  break;
+    case eNoRep:  etext = "Unable to replicate file; no new sites available.";
+                  break;
+    default:      etext = "Unable to access file; file does not exist.";
+                  break;
+   };
 
     Sel.Resp.DLen = strlcpy(Sel.Resp.Data, etext, sizeof(Sel.Resp.Data))+1;
     return -1;
@@ -1379,6 +1470,62 @@ XrdCmsNode *XrdCmsCluster::SelbyRef(SMask_t mask, int &nump, int &delay,
    return sp;
 }
  
+/******************************************************************************/
+/*                                S e l D F S                                 */
+/******************************************************************************/
+  
+int XrdCmsCluster::SelDFS(XrdCmsSelect &Sel, SMask_t amask,
+                          SMask_t &pmask, SMask_t &smask, int isRW)
+{
+   EPNAME("SelDFS");
+   static const SMask_t allNodes(~0);
+   int oldOpts, rc;
+
+// The first task is to find out if the file exists somewhere. If we are doing
+// local queries, then the answer will be immediate. Otherwise, forward it.
+//
+   if ((Sel.Opts & XrdCmsSelect::Refresh) || !(rc = Cache.GetFile(Sel, amask)))
+      {if (!baseFS.Local())
+          {CmsStateRequest QReq = {{Sel.Path.Hash, kYR_state, kYR_raw, 0}};
+           TRACE(Files, "seeking " <<Sel.Path.Val);
+           Cluster.Broadsend(amask, QReq.Hdr, Sel.Path.Val, Sel.Path.Len+1);
+           return 0;
+          }
+       if ((rc = baseFS.Exists(Sel.Path.Val, -Sel.Path.Len)) < 0)
+          {Cache.AddFile(Sel, 0);
+           Sel.Vec.bf = Sel.Vec.pf = Sel.Vec.wf = Sel.Vec.hf = 0;
+          } else {
+           Sel.Vec.hf = amask; Sel.Vec.wf = (isRW ? amask : 0);
+           oldOpts = Sel.Opts;
+           if (rc != CmsHaveRequest::Pending) Sel.Vec.pf = 0;
+              else {Sel.Vec.pf = amask; Sel.Opts |= XrdCmsSelect::Pending;}
+           Cache.AddFile(Sel, allNodes);
+           Sel.Opts = oldOpts;
+          }
+      }
+
+// Screen out online requests where the file is pending
+//
+   if (Sel.Opts & XrdCmsSelect::Online && Sel.Vec.pf)
+      {pmask = smask = 0;
+       return 1;
+      }
+
+// If the file is to be written and the files exists then it can't be a new file
+//
+   if (isRW && Sel.Vec.hf)
+      {if (Sel.Opts & XrdCmsSelect::NewFile) return SelFail(Sel,eExists);
+       if (Sel.Opts & XrdCmsSelect::Trunc) smask = 0;
+       return 1;
+      }
+
+// Final verification that we have something to select
+//
+   if (!Sel.Vec.hf && (!isRW || !(Sel.Opts & XrdCmsSelect::NewFile)))
+      return SelFail(Sel, eNoEnt);
+   return 1;
+}
+  
 /******************************************************************************/
 /*                             s e n d A L i s t                              */
 /******************************************************************************/

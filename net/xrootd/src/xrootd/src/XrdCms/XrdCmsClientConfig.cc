@@ -470,6 +470,7 @@ int XrdCmsClientConfig::xreqs(XrdOucStream &Config)
            rqopts[] =
        {
         {"delay",    1, &RepDelay},
+        {"fwd",      1, &FwdWait},
         {"noresp",   0, &RepNone},
         {"prep",     1, &PrepWait},
         {"repwait",  1, &RepWait}

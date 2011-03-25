@@ -369,7 +369,11 @@ void XrdOucAvahiBonjour::ResolveReply(AvahiServiceResolver *r,
 	 if (avahi_nss_support()) {
             // Copy the information of resolution results to the node since the
 	    // name can be resolved.
-            toResolve->node->SetHostName(host_name);
+            // NOTE: The signature of this method is compliant with Avahi developer docs, but, actually, the
+            //       proper hostname is caming in the name parameter, instead of on the hostname one, that holds
+            //       the service name.
+            XrdLog.Say("------ XrdOucBonjour: resolved FQDN of new node: ", name);
+            toResolve->node->SetHostName(name);
          } else {
 	    // Save the address directly to improve name resolving on nodes that
             // do not have an Avahi-enabled DNS resolver.

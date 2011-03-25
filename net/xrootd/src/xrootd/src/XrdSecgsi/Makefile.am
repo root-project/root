@@ -11,6 +11,7 @@
 lib_LTLIBRARIES = libXrdSecgsi.la libXrdSecgsiGMAPLADP.la
 
 bin_PROGRAMS = xrdgsiproxy
+man1_MANS = xrdgsiproxy.1
 
 # TODO: xrdsecgsitest no longer builds
 #check_PROGRAMS = xrdsecgsitest

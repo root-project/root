@@ -10,8 +10,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
 #include <string.h>
 #include <unistd.h>
 #include <sys/uio.h>
@@ -21,6 +19,8 @@
 #include "XrdCms/XrdCmsRRQ.hh"
 #include "XrdSys/XrdSysPthread.hh"
 
+class XrdCmsBaseFR;
+class XrdCmsBaseFS;
 class XrdCmsDrop;
 class XrdCmsPrepArgs;
 class XrdCmsRRData;
@@ -78,6 +78,7 @@ const  char  *do_Select(XrdCmsRRData &Arg);
 static int    do_SelPrep(XrdCmsPrepArgs &Arg);
 const  char  *do_Space(XrdCmsRRData &Arg);
 const  char  *do_State(XrdCmsRRData &Arg);
+static void   do_StateDFS(XrdCmsBaseFR *rP, int rc);
        int    do_StateFWD(XrdCmsRRData &Arg);
 const  char  *do_StatFS(XrdCmsRRData &Arg);
 const  char  *do_Stats(XrdCmsRRData &Arg);
@@ -136,7 +137,6 @@ static const int fsL2PFail2 = 999992;
 const  char *fsFail(const char *Who, const char *What, const char *Path, int rc);
        int   getMode(const char *theMode, mode_t &Mode);
        int   getSize(const char *theSize, long long &Size);
-static int   isOnline(char *path, int upt=1);
 
 XrdSysMutex        myMutex;
 XrdLink           *Link;

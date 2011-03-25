@@ -7,11 +7,6 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*                DE-AC03-76-SFO0515 with the Deprtment of Energy             */
 /******************************************************************************/
- 
-/* These routines are thread-safe if compiled with:
-   AIX: -D_THREAD_SAFE
-   SUN: -D_REENTRANT
-*/
 
 /******************************************************************************/
 /*                             i n c l u d e s                                */
@@ -33,14 +28,15 @@
 
 #include "XrdVersion.hh"
 
+#include "XrdFrm/XrdFrmXAttr.hh"
 #include "XrdOss/XrdOssApi.hh"
 #include "XrdOss/XrdOssCache.hh"
 #include "XrdOss/XrdOssConfig.hh"
 #include "XrdOss/XrdOssError.hh"
-#include "XrdOss/XrdOssLock.hh"
 #include "XrdOss/XrdOssMio.hh"
 #include "XrdOss/XrdOssTrace.hh"
 #include "XrdOuc/XrdOucName2Name.hh"
+#include "XrdOuc/XrdOucXAttr.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlatform.hh"
@@ -64,6 +60,7 @@ XrdOucTrace OssTrace(&OssEroute);
 /*           S t o r a g e   S y s t e m   I n s t a n t i a t o r            */
 /******************************************************************************/
 
+int       XrdOssSys::runOld  = 0;
 char      XrdOssSys::tryMmap = 0;
 char      XrdOssSys::chkMmap = 0;
 
@@ -366,8 +363,13 @@ int XrdOssSys::Truncate(const char *path, unsigned long long size)
 {
     struct stat statbuff;
     char actual_path[MAXPATHLEN+1], *local_path;
+    unsigned long long Popts, Hopts;
     long long oldsz;
     int retc;
+
+// Make sure we can modify this path
+//
+   Popts = Check_RO(Truncate, Hopts, path, "truncating ");
 
 // Generate local path
 //
@@ -380,6 +382,7 @@ int XrdOssSys::Truncate(const char *path, unsigned long long size)
 // Get file info to do the correct adjustment
 //
    if (lstat(local_path, &statbuff)) return -errno;
+       else if ((statbuff.st_mode & S_IFMT) == S_IFDIR) return -EISDIR;
        else if ((statbuff.st_mode & S_IFMT) == S_IFLNK)
                {struct stat buff;
                 if (stat(local_path, &buff)) return -errno;
@@ -630,14 +633,21 @@ int XrdOssFile::Open(const char *path, int Oflag, mode_t Mode, XrdOucEnv &Env)
                  if (!retc && (buf.st_mode & S_IFDIR)) fd = -EISDIR;
                 }
 
-// See if should memory map this file
+// See if should memory map this file. For now, extended attributes are only
+// needed when memory mapping is enabled and can apply only to specific files.
+// So, we read them here should we need them.
 //
    if (fd >= 0 && XrdOssSS->tryMmap)
-      {mopts = 0;
-       if (popts & XRDEXP_MKEEP) mopts |= OSSMIO_MPRM;
-       if (popts & XRDEXP_MLOK)  mopts |= OSSMIO_MLOK;
-       if (popts & XRDEXP_MMAP)  mopts |= OSSMIO_MMAP;
-       if (XrdOssSS->chkMmap) mopts = XrdOssMio::getOpts(local_path, mopts);
+      {XrdOucXAttr<XrdFrmXAttrMem> Info;
+       mopts = 0;
+       if (!(popts & XRDEXP_NOXATTR) && XrdOssSS->chkMmap)
+          Info.Get(local_path, fd);
+       if (popts & XRDEXP_MKEEP || Info.Attr.Flags & XrdFrmXAttrMem::memKeep)
+          mopts |= OSSMIO_MPRM;
+       if (popts & XRDEXP_MLOK  || Info.Attr.Flags & XrdFrmXAttrMem::memLock)
+          mopts |= OSSMIO_MLOK;
+       if (popts & XRDEXP_MMAP  || Info.Attr.Flags & XrdFrmXAttrMem::memMap)
+          mopts |= OSSMIO_MMAP;
        if (mopts) mmFile = XrdOssMio::Map(local_path, fd, mopts);
       } else mmFile = 0;
 
@@ -934,19 +944,13 @@ int XrdOssFile::Open_ufs(const char *path, int Oflag, int Mode,
 {
     EPNAME("Open_ufs")
     static const int isWritable = O_WRONLY|O_RDWR;
-    int myfd, newfd, retc;
+    int myfd, newfd;
 #ifndef NODEBUG
     char *ftype = (char *)" path=";
 #endif
-    XrdOssLock ufs_file;
 #ifdef XRDOSSCX
     int attcx = 0;
 #endif
-
-// Obtain exclusive control over the directory.
-//
-    if ((popts & XRDEXP_REMOTE)
-    && (retc = ufs_file.Serialize(path, XrdOssDIR|XrdOssEXC)) < 0) return retc;
 
 // Now open the actual data file in the appropriate mode.
 //
@@ -955,10 +959,14 @@ int XrdOssFile::Open_ufs(const char *path, int Oflag, int Mode,
 
 // If the file is marked purgeable or migratable and we may modify this file,
 // then get a shared lock on the file to keep it from being migrated or purged
-// while it is open.
+// while it is open. This is advisory so we can ignore any errors.
 //
    if (popts & XRDEXP_PURGE || (popts & XRDEXP_MIG && Oflag & isWritable))
-      ufs_file.Serialize(myfd, XrdOssSHR);
+      {FLOCK_t lock_args;
+       bzero(&lock_args, sizeof(lock_args));
+       lock_args.l_type = F_RDLCK;
+       fcntl(myfd, F_SETLKW, &lock_args);
+      }
 
 // Chck if file is compressed
 //
@@ -995,8 +1003,7 @@ int XrdOssFile::Open_ufs(const char *path, int Oflag, int Mode,
     TRACE(Open, "fd=" <<myfd <<" flags=" <<std::hex <<Oflag <<" mode="
                 <<std::oct <<Mode <<std::dec <<ftype <<path);
 
-// Deserialize the directory and return the result.
+// All done
 //
-    if (popts & XRDEXP_REMOTE) ufs_file.UnSerialize(0);
     return myfd;
 }

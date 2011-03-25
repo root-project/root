@@ -8,10 +8,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
-const char *XrdOssMioCVSID = "$Id$";
-  
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/param.h>
@@ -40,9 +36,6 @@ XrdOssMioFile *XrdOssMio::MM_Idle     = 0;
 XrdOssMioFile *XrdOssMio::MM_IdleLast = 0;
 
 char           XrdOssMio::MM_on       = 1;
-char           XrdOssMio::MM_chkmap   = 0;
-char           XrdOssMio::MM_chklok   = 0;
-char           XrdOssMio::MM_chkkeep  = 0;
 char           XrdOssMio::MM_chk      = 0;
 char           XrdOssMio::MM_okmlock  = 1;
 char           XrdOssMio::MM_preld    = 0;
@@ -66,40 +59,11 @@ extern XrdOucTrace OssTrace;
 void XrdOssMio::Display(XrdSysError &Eroute)
 {
      char buff[1080];
-     snprintf(buff, sizeof(buff), "       oss.memfile %s%s%s%s%s max %lld",
+     snprintf(buff, sizeof(buff), "       oss.memfile %s%s%s max %lld",
              (MM_on      ? ""            : "off "),
              (MM_preld   ? "preload"     : ""),
-             (MM_chklok  ? "check lock " : ""),
-             (MM_chkmap  ? "check map "  : ""),
-             (MM_chkkeep ? "check keep"  : ""), MM_max);
+             (MM_chk     ? "check xattr" : ""), MM_max);
      Eroute.Say(buff);
-}
-
-/******************************************************************************/
-/*                               g e t O p t s                                */
-/******************************************************************************/
-  
-int XrdOssMio::getOpts(char *path, int popts)
-{
-    struct stat statb;
-    char buff[MAXPATHLEN+16], *bsfx = buff+strlen(path);
-
-// Generate new options, as needed
-//
-   if (MM_chklok && !(popts & OSSMIO_MLOK))
-      {strcpy(bsfx, ".mlock");
-       if (!stat(buff, &statb)) popts |= OSSMIO_MLOK;
-      }
-      else if (MM_chkmap && !(popts & OSSMIO_MMAP))
-              {strcpy(bsfx, ".mmap");
-               if (!stat(buff, &statb)) popts |= OSSMIO_MMAP;
-              }
-      if (MM_chkkeep && !(popts & OSSMIO_MPRM))
-              {strcpy(bsfx, ".mkeep");
-               if (!stat(buff, &statb)) popts |= OSSMIO_MPRM;
-              }
-
-   return popts;
 }
 
 /******************************************************************************/
@@ -329,15 +293,11 @@ void XrdOssMio::Recycle(XrdOssMioFile *mp)
 /*                                   S e t                                    */
 /******************************************************************************/
   
-void XrdOssMio::Set(int V_on, int V_preld,  int V_chklok,
-                              int V_chkmap, int V_chkkeep)
+void XrdOssMio::Set(int V_on, int V_preld,  int V_check)
 {
    if (V_on      >= 0) MM_on      = (char)V_on;
    if (V_preld   >= 0) MM_preld   = (char)V_preld;
-   if (V_chklok  >= 0) MM_chklok  = (char)V_chklok;
-   if (V_chkmap  >= 0) MM_chkmap  = (char)V_chkmap;
-   if (V_chkkeep >= 0) MM_chkkeep = (char)V_chkkeep;
-   MM_chk = MM_chklok | MM_chkmap | MM_chkkeep;
+   if (V_check   >= 0) MM_chk     = (char)V_check;
 }
 
 void XrdOssMio::Set(long long V_max)

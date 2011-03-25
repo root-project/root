@@ -69,8 +69,8 @@ XrdMonSenderInfo::registerSender(struct sockaddr_in sAddr)
 {
     char hostName[256];
     char servInfo[256];
-    memset((char*)hostName, 256, 0);
-    memset((char*)servInfo, 256, 0);
+    memset((char*)hostName, 0, sizeof(hostName));
+    memset((char*)servInfo, 0, sizeof(servInfo));
             
     if ( 0 != getnameinfo((sockaddr*) &sAddr,
                           sizeof(sockaddr),

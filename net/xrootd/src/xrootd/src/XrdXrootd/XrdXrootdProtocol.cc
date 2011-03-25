@@ -209,7 +209,7 @@ static  struct hs_response
                 kXR_int32 rlen;
                 kXR_int32 pval;
                 kXR_int32 styp;
-               } hsresp={(isRedir == 'M' ? 0xffff : 0), 0, htonl(8),
+               } hsresp={0, 0, htonl(8), // isRedir == 'M' -> MetaManager
                          htonl(XROOTD_VERSBIN),
                          (isRedir ? htonl(kXR_LBalServer)
                                   : htonl(kXR_DataServer))};

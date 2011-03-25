@@ -187,6 +187,19 @@ long long XrdFfsPosix_getxattr(const char *path, const char *name, void *value, 
     return -1;
 }
 
+/* clean redirector cache */
+
+void XrdFfsPosix_clear_from_rdr_cache(const char *rdrurl)
+{
+    int fd;
+    fd = XrdFfsPosix_open(rdrurl, O_CREAT | O_WRONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    if ( fd != -1 )
+    {
+        XrdFfsPosix_close(fd);
+        XrdFfsPosix_unlink(rdrurl);
+    }
+}
+
 /* Posix IO functions to operation on all data servers */
 
 struct XrdFfsPosixX_deleteall_args {
@@ -320,7 +333,8 @@ int XrdFfsPosix_renameall(const char *rdrurl, const char *from, const char *to, 
                 syslog(LOG_WARNING, "WARNING: rename(%s, %s) failed (errno = %d)", fromurl, tourl, errno);
                 break;
             }
-/* well, it will be messy if a successful rename is followed by a failed one */
+/* if a successful rename is followed by a failed one, will return failure (and leave both old and new files) for
+   user to investigate. */
         } 
     }
 

@@ -1,5 +1,3 @@
-#              $Id$
-
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
 #------------------------------------------------------------------------------#
@@ -33,6 +31,7 @@ SRCBOTH = \
 
 SRCSRVR = \
         XrdCmsAdmin.cc       \
+        XrdCmsBaseFS.cc      \
         XrdCmsCache.cc       \
         XrdCmsCluster.cc     \
         XrdCmsConfig.cc      \
@@ -74,6 +73,7 @@ OBJBOTH = \
 
 OBJSRVR = \
         $(OBJDIR)/XrdCmsAdmin.o       \
+        $(OBJDIR)/XrdCmsBaseFS.o      \
         $(OBJDIR)/XrdCmsCache.o       \
         $(OBJDIR)/XrdCmsCluster.o     \
         $(OBJDIR)/XrdCmsConfig.o      \
@@ -157,6 +157,17 @@ $(OBJDIR)/XrdCmsAdmin.o:     XrdCmsAdmin.cc      XrdCmsAdmin.hh \
 	@echo Compiling XrdCmsAdmin.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCmsAdmin.o XrdCmsAdmin.cc
 
+$(OBJDIR)/XrdCmsBaseFS.o:    XrdCmsBaseFS.cc     XrdCmsBaseFS.hh \
+                             XrdCmsConfig.hh     XrdCmsPList.hh \
+                             XrdCmsPrepare.hh    XrdCmsRRData.hh \
+                             XrdCmsTrace.hh      XrdCmsTypes.hh \
+                             XrdOss.hh \
+                             XrdSysError.hh      XrdSysPthread.hh \
+                             XrdSysTimer.hh \
+                             XPtypes.hh          YProtocol.hh
+	@echo Compiling XrdCmsBaseFS.cc 
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCmsBaseFS.o XrdCmsBaseFS.cc
+
 $(OBJDIR)/XrdCmsCache.o:     XrdCmsCache.cc      XrdCmsCache.hh \
                              XrdCmsKey.hh        XrdCmsNash.hh \
                              XrdCmsPList.hh      XrdCmsRRQ.hh \
@@ -198,6 +209,7 @@ $(OBJDIR)/XrdCmsClientMan.o: XrdCmsClientMan.cc   XrdCmsClientMan.hh \
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCmsClientMan.o XrdCmsClientMan.cc
 
 $(OBJDIR)/XrdCmsCluster.o:   XrdCmsCluster.cc    XrdCmsCluster.hh \
+                             XrdCmsBaseFS.hh \
                              XrdCmsCache.hh      XrdCmsConfig.hh \
                              XrdCmsKey.hh        XrdCmsNode.hh \
                              XrdCmsSelect.hh     XrdCmsState.hh \
@@ -323,6 +335,7 @@ $(OBJDIR)/XrdCmsNash.o:      XrdCmsNash.cc       XrdCmsNash.hh \
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCmsNash.o XrdCmsNash.cc
 
 $(OBJDIR)/XrdCmsNode.o:      XrdCmsNode.cc       XrdCmsNode.hh \
+                             XrdCmsBaseFS.hh \
                              XrdCmsCache.hh      XrdCmsCluster.hh \
                              XrdCmsConfig.hh     XrdCmsKey.hh \
                              XrdCmsManager.hh \

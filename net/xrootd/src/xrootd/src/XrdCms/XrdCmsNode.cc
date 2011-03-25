@@ -7,12 +7,6 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
-
-//         $Id$
-
-// Original Version: 1.52 2007/08/28 01:32:15 abh
-
-const char *XrdCmsNodeCVSID = "$Id$";
   
 #include <errno.h>
 #include <limits.h>
@@ -27,6 +21,7 @@ const char *XrdCmsNodeCVSID = "$Id$";
 
 #include "XProtocol/YProtocol.hh"
 
+#include "XrdCms/XrdCmsBaseFS.hh"
 #include "XrdCms/XrdCmsCache.hh"
 #include "XrdCms/XrdCmsCluster.hh"
 #include "XrdCms/XrdCmsConfig.hh"
@@ -310,6 +305,7 @@ const char *XrdCmsNode::do_Disc(XrdCmsRRData &Arg)
 const char *XrdCmsNode::do_Gone(XrdCmsRRData &Arg)
 {
    EPNAME("do_Gone")
+   static const SMask_t allNodes(~0);
    int newgone;
 
 // Do some debugging
@@ -322,7 +318,7 @@ const char *XrdCmsNode::do_Gone(XrdCmsRRData &Arg)
 //
    if (Config.asManager())
       {XrdCmsSelect Sel(XrdCmsSelect::Advisory, Arg.Path, Arg.PathLen-1);
-       newgone = Cache.DelFile(Sel, NodeMask);
+       newgone = Cache.DelFile(Sel, baseFS.isDFS() ? allNodes : NodeMask);
       } else {
        newgone = 1;
        if (Config.DiskSS) PrepQ.Gone(Arg.Path);
@@ -351,6 +347,7 @@ const char *XrdCmsNode::do_Gone(XrdCmsRRData &Arg)
 const char *XrdCmsNode::do_Have(XrdCmsRRData &Arg)
 {
    EPNAME("do_Have")
+   static const SMask_t allNodes(~0);
    XrdCmsPInfo  pinfo;
    int isnew, Opts;
 
@@ -366,12 +363,17 @@ const char *XrdCmsNode::do_Have(XrdCmsRRData &Arg)
    if (Arg.Request.modifier & CmsHaveRequest::Pending)
       Opts |= XrdCmsSelect::Pending;
 
-// Update path information
+// Update path information. If we are exporting a shared-everything file system
+// then we need to also provide the cache the current list of nodes and how
+// they export the path in question for fast redispatch processing.
 //
    if (!Config.asManager()) isnew = 1;
       else {XrdCmsSelect Sel(XrdCmsSelect::Advisory|Opts,Arg.Path,Arg.PathLen-1);
             Sel.Path.Hash = Arg.Request.streamid;
-            isnew = Cache.AddFile(Sel, NodeMask);
+            if (baseFS.isDFS())
+               {Sel.Vec.hf = pinfo.rovec; Sel.Vec.wf = pinfo.rwvec;
+                isnew       = Cache.AddFile(Sel, allNodes);
+               } else isnew = Cache.AddFile(Sel, NodeMask);
            }
 
 // Return if we have no managers or we already informed the managers
@@ -1108,7 +1110,7 @@ const char *XrdCmsNode::do_State(XrdCmsRRData &Arg)
 {
    EPNAME("do_State")
    struct iovec xmsg[2];
-   int noResp = Arg.Request.modifier & CmsStateRequest::kYR_noresp;
+   int rc, noResp = Arg.Request.modifier & CmsStateRequest::kYR_noresp;
 
 // Do some debugging
 //
@@ -1120,12 +1122,19 @@ const char *XrdCmsNode::do_State(XrdCmsRRData &Arg)
    isKnown = 1;
 
 // If we are a manager then check for the file in the local cache. Otherwise,
-// if we have actual data, do a stat() on the file.
+// ask the underlying filesystem whether it has the file.
 //
-   if (isMan) Arg.Request.modifier = do_StateFWD(Arg);
-      else if (Config.DiskOK)
-              Arg.Request.modifier = isOnline(Arg.Path, 0);
-              else return 0;
+        if (isMan) Arg.Request.modifier = do_StateFWD(Arg);
+   else if (!Config.DiskOK) return 0;
+   else if (baseFS.Limit() && Arg.Request.modifier&CmsStateRequest::kYR_metaman)
+           {XrdCmsPInfo pinfo;
+            pinfo.rovec = NodeMask;
+            if ((rc = baseFS.Exists(Arg,pinfo)) > 0) Arg.Request.modifier = rc;
+               else return 0;
+           }
+   else     if ((rc = baseFS.Exists(Arg.Path, -(Arg.PathLen-1))) > 0)
+                Arg.Request.modifier = rc;
+   else     return 0;
 
 // Respond appropriately
 //
@@ -1142,12 +1151,66 @@ const char *XrdCmsNode::do_State(XrdCmsRRData &Arg)
 }
   
 /******************************************************************************/
+/*                           d o _ S t a t e D F S                            */
+/******************************************************************************/
+  
+void XrdCmsNode::do_StateDFS(XrdCmsBaseFR *rP, int rc)
+{
+   EPNAME("StateDFs");
+   static const SMask_t allNodes(~0);
+   CmsRRHdr Request = {rP->Sid, 0, rP->Mod | kYR_raw};
+   XrdCmsSelect Sel(0, rP->Path, rP->PathLen);
+   int isNew;
+
+// Do some debugging and record the hash code.
+//
+   DEBUG((rP->Mod & CmsStateRequest::kYR_metaman ? "met " : "man ") <<std::hex
+         <<int(rP->Mod) <<std::dec <<" rc=" <<rc <<" path=" <<rP->Path);
+   Sel.Path.Hash = rP->Sid;
+
+// If the return code is negative then the file does not exist. If it is zero
+// then we should forward the request to another node. Either way we must be
+// a manager to do so as servers only worry about existing files.
+//
+   if (rc <= 0)
+      {if (Config.asManager())
+          {Cache.AddFile(Sel, 0);
+           if (!rc)
+              {Request.rrCode = kYR_state;
+               Cluster.Broadsend(rP->Route, Request, rP->Path, rP->PathLen+1);
+              }
+          }
+       return;
+      }
+
+// The file exists but it could be pending
+//
+   if (rc == CmsHaveRequest::Pending)
+      {Sel.Opts = XrdCmsSelect::Pending;
+       Request.modifier |= CmsHaveRequest::Pending;
+      }
+   Sel.Vec.hf = rP->Route; Sel.Vec.wf = rP->RouteW;
+   isNew = (Config.asManager() ? Cache.AddFile(Sel, allNodes) : 1);
+
+// Now inform our managers only if we haven't informed them before. At some
+// point we will only inform the manager that actually wants to know. This
+// is encoded to the route passed to us.
+//
+   if (Manager.Present() && isNew
+   && !(rP->Mod & CmsStateRequest::kYR_noresp))
+      {Request.rrCode   = kYR_have;
+       Manager.Inform(Request, rP->Path, rP->PathLen+1);
+      }
+}
+  
+/******************************************************************************/
 /*                           d o _ S t a t e F W D                            */
 /******************************************************************************/
   
 int XrdCmsNode::do_StateFWD(XrdCmsRRData &Arg)
 {
    EPNAME("do_StateFWD");
+   static const SMask_t allNodes(~0);
    XrdCmsSelect Sel(0, Arg.Path, Arg.PathLen-1);
    XrdCmsPInfo  pinfo;
    int retc;
@@ -1165,7 +1228,43 @@ int XrdCmsNode::do_StateFWD(XrdCmsRRData &Arg)
    if (Arg.Request.modifier & CmsStateRequest::kYR_refresh) retc = 0;
       else retc = Cache.GetFile(Sel, pinfo.rovec);
 
-// If need be, ask the relevant nodes if they have the file.
+// If we will possibly be forwarding this request we indicate here whether this
+// is a request from a meta-manager. Making the decision in the manager node
+// prevents the requestor from lying about its status.
+//
+   if (!retc && !Config.asServer())
+      Arg.Request.modifier |= CmsStateRequest::kYR_metaman;
+
+// Here we process the case where we need to discover whether the file exists.
+// For distributed file systems, we either ask the underlying file system here
+// or forward the request to some arbitrary node in a callback via the baseFS.
+// If cached information exists, pending status takes precedence (more below).
+// Additionally, if a query is alrady in progress, deep-six this attempt.
+//
+   if (baseFS.isDFS())
+      {if (retc < 0) return 0;
+       if (!retc)
+          {if (baseFS.Traverse())
+              {Cache.AddFile(Sel, 0);
+               Cluster.Broadsend(pinfo.rovec, Arg.Request, Arg.Buff, Arg.Dlen);
+               return 0;
+              }
+           if ((retc = baseFS.Exists(Arg, pinfo)) <= 0)
+              {if (retc < 0) Cache.AddFile(Sel, 0);
+               return 0;
+              }
+           Sel.Opts=(retc == CmsHaveRequest::Pending ? XrdCmsSelect::Pending:0);
+           Sel.Vec.hf = pinfo.rovec; Sel.Vec.wf = pinfo.rwvec;
+           Cache.AddFile(Sel, allNodes);
+           return retc;
+          }
+       if (Sel.Vec.pf != 0) return CmsHaveRequest::Pending;
+       if (Sel.Vec.hf != 0) return CmsHaveRequest::Online;
+       return 0;
+      }
+
+// For shared-nothing setups, first check if we need to ask any unasked nodes
+// whether they have the file.
 //
    if (!retc || Sel.Vec.bf != 0)
       {if (!retc) Cache.AddFile(Sel, 0);
@@ -1173,13 +1272,15 @@ int XrdCmsNode::do_StateFWD(XrdCmsRRData &Arg)
                          (void *)Arg.Buff, Arg.Dlen);
       }
 
-// Return true if anyone has the file at this point
+// Return true if anyone has the file at this point. In shared-nothing systems
+// we are interested in some node has the file in non-pending status. This
+// differs from shared-everything because pending status applies to all nodes.
 //
    if (Sel.Vec.hf != 0) return CmsHaveRequest::Online;
    if (Sel.Vec.pf != 0) return CmsHaveRequest::Pending;
                         return 0;
 }
-  
+
 /******************************************************************************/
 /*                             d o _ S t a t F S                              */
 /******************************************************************************/
@@ -1596,31 +1697,4 @@ int XrdCmsNode::getSize(const char *theSize, long long &Size)
 //
    if (!(Size = strtoll(theSize, &eP, 10)) || *eP) return 0;
    return 1;
-}
-  
-/******************************************************************************/
-/*                              i s O n l i n e                               */
-/******************************************************************************/
-  
-int XrdCmsNode::isOnline(char *path, int upt) // Static!!!
-{
-   static const int Sopts = XRDOSS_resonly | XRDOSS_updtatm;
-   struct stat buf;
-
-// Issue stat() via oss plugin. If it fails. the file may still exist in the
-// prepare queue (i.e., logically present).
-//
-   if (Config.ossFS->Stat(path, &buf, Sopts))
-      {if (Config.DiskSS && PrepQ.Exists(path)) return CmsHaveRequest::Pending;
-          else return 0;
-      }
-
-// Determine what to return
-// the update if an oss plugin exists as we don't have a way of doing this then.
-//
-   if ((buf.st_mode & S_IFMT) == S_IFREG)
-       return (buf.st_mode & S_ISUID ? CmsHaveRequest::Pending
-                                     : CmsHaveRequest::Online);
-
-   return (buf.st_mode & S_IFMT) == S_IFDIR ? CmsHaveRequest::Online : 0;
 }

@@ -875,7 +875,7 @@ int XrdOucStream::isSet(char *var)
 // Verify that variable is only an alphanum
 //
    tp = Vname;
-   while (*tp && isalnum(*tp)) tp++;
+   while (*tp && (*tp == '_' || isalnum(*tp))) tp++;
    if (*tp) return xMsg(Mtxt2[Set], Vname, "is non-alphanumeric");
 
 // Now look for the value

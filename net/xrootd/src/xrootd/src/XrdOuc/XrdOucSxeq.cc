@@ -8,10 +8,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
   
-//         $Id$
-
-const char *XrdOucSxeqCVSID = "$Id$";
-
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -116,6 +112,31 @@ int XrdOucSxeq::Release()
    lokRC = 0;
    return 1;
 }
+/******************************************************************************/
+  
+int XrdOucSxeq::Release(int fileD)
+{
+   FLOCK_t lock_args;
+   int rc;
+
+// If the file is not open, return failure
+//
+   if (fileD < 0) return EBADF;
+
+// Establish locking options
+//
+   bzero(&lock_args, sizeof(lock_args));
+   lock_args.l_type = F_UNLCK;
+
+// Now perform the action
+//
+   do {rc = fcntl(fileD, F_SETLKW, &lock_args);}
+      while(rc < 0 && errno == EINTR);
+
+// Return result
+//
+   return (rc ? errno : 0);
+}
   
 /******************************************************************************/
 /*                             S e r i a l i z e                              */
@@ -152,4 +173,27 @@ int XrdOucSxeq::Serialize(int Opts)
    if (Opts & Unlink && !(Opts & Share)) lokUL = 1;
    lokRC = 0;
    return 1;
+}
+
+/******************************************************************************/
+
+int XrdOucSxeq::Serialize(int fileD, int opts)
+{
+    FLOCK_t lock_args;
+
+// Make sure we have a lock outstanding
+//
+    if (fileD < 0) return EBADF;
+
+// Establish locking options
+//
+    bzero(&lock_args, sizeof(lock_args));
+    if (opts & Share) lock_args.l_type = F_RDLCK;
+       else           lock_args.l_type = F_WRLCK;
+
+// Perform action.
+//
+    if (fcntl(fileD, (opts & noWait ? F_SETLK : F_SETLKW), &lock_args))
+       return errno;
+    return 0;
 }

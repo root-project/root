@@ -45,21 +45,16 @@ void *SocketReaderThread(void * arg, XrdClientThread *thr)
 
    XrdClientPhyConnection *thisObj;
 
+
    Info(XrdClientDebug::kHIDEBUG,
 	"SocketReaderThread",
 	"Reader Thread starting.");
 
-   thr->SetCancelDeferred();
-   thr->SetCancelOn();
-
    thisObj = (XrdClientPhyConnection *)arg;
-
    thisObj->StartedReader();
 
    while (1) {
-     thr->SetCancelOff();
      thisObj->BuildMessage(TRUE, TRUE);
-     thr->SetCancelOn();
 
      if (thisObj->CheckAutoTerm())
 	break;
@@ -110,6 +105,15 @@ XrdClientPhyConnection::~XrdClientPhyConnection()
        "Destroying. [" << fServer.Host << ":" << fServer.Port << "]");
 
    Disconnect();
+  if (fReaderthreadrunning)
+    for (int i = 0; i < READERCOUNT; i++)
+      if(fReaderthreadhandler[i])
+      {
+        fReaderthreadhandler[i]->Join();
+        delete fReaderthreadhandler[i];
+      }
+
+
 
      if (fSocket) {
         delete fSocket;
@@ -118,13 +122,6 @@ XrdClientPhyConnection::~XrdClientPhyConnection()
 
    UnlockChannel();
 
-   if (fReaderthreadrunning) 
-      for (int i = 0; i < READERCOUNT; i++)
-	if (fReaderthreadhandler[i]) {
-	  fReaderthreadhandler[i]->Cancel();
-	  fReaderthreadhandler[i]->Join();
-	  delete fReaderthreadhandler[i];
-	}
 
    if (fSecProtocol) {
       // This insures that the right destructor is called
@@ -136,6 +133,11 @@ XrdClientPhyConnection::~XrdClientPhyConnection()
 
 //____________________________________________________________________________
 bool XrdClientPhyConnection::Connect(XrdClientUrlInfo RemoteHost, bool isUnix)
+{
+   return Connect( RemoteHost, isUnix, -1 );
+}
+
+bool XrdClientPhyConnection::Connect(XrdClientUrlInfo RemoteHost, bool isUnix, int fd)
 {
    // Connect to remote server
    XrdSysMutexHelper l(fMutex);
@@ -151,7 +153,7 @@ bool XrdClientPhyConnection::Connect(XrdClientUrlInfo RemoteHost, bool isUnix)
    if (EnvGetLong(NAME_MULTISTREAMCNT))
        fSocket = new XrdClientPSock(RemoteHost);
    else
-       fSocket = new XrdClientSock(RemoteHost);
+       fSocket = new XrdClientSock(RemoteHost, 0, fd );
 
    if(!fSocket) {
       Error("Connect","Unable to create a client socket. Aborting.");
@@ -230,12 +232,6 @@ void XrdClientPhyConnection::StartReader() {
                "Can't run reader thread: out of system resources. Critical error.");
 // HELP: what do we do here
          exit(-1);
-      }
-
-      if (fReaderthreadhandler[i]->Detach())
-      {
-	 Error("PhyConnection", "Thread detach failed");
-	 //return;
       }
 
       }

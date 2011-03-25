@@ -7,10 +7,6 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
-  
-//         $Id$
-
-const char *XrdFrmPurgeCVSID = "$Id$";
 
 #include <stdio.h>
 #include <string.h>
@@ -136,8 +132,6 @@ int               XrdFrmPurge::Left2Do   = 0;
 
 time_t            XrdFrmPurge::lastReset = 0;
 time_t            XrdFrmPurge::nextReset = 0;
-
-XrdOucHash<char>  XrdFrmPurge::BadFiles;
 
 /******************************************************************************/
 /*                           C o n s t r u c t o r                            */
@@ -324,11 +318,7 @@ void XrdFrmPurge::Display()
 const char *XrdFrmPurge::Eligible(XrdFrmFileset *sP, time_t &xTime, int hTime)
 {
    XrdOucNSWalk::NSEnt *baseFile = sP->baseFile();
-   XrdOucNSWalk::NSEnt *lockFile = sP->lockFile();
-   XrdOucNSWalk::NSEnt * pinFile;
    time_t aTime, mTime, nowTime = time(0);
-   char pBuff[256];
-   int pFD, rLen, idleMin;
 
 // Get the acess time and modification time
 //
@@ -345,44 +335,32 @@ const char *XrdFrmPurge::Eligible(XrdFrmFileset *sP, time_t &xTime, int hTime)
    if (sP->failFile()) return "has fail file";
 
 // If there is a lock file and the file has not migrated, then ineligible
-// Note that entries were pre-screened for lock file requirements.
+// Note that entries were pre-screened for copy file requirements.
 //
-   if (lockFile && lockFile->Stat.st_mtime < mTime) return "not migrated";
+   if (sP->cpyInfo.Attr.cpyTime
+   &&  sP->cpyInfo.Attr.cpyTime < static_cast<long long>(mTime))
+      return "not migrated";
 
-// If there is no pin file, then it is eligible subject to external policy
+// If there is no pin info, then it is eligible subject to external policy
 //
-   if (!(pinFile = sP->pinFile())) return 0;
+   if (!(sP->pinInfo.Attr.Flags)) return 0;
 
-// If the pin file sticky bit is on then the pin is permanent (ineligible)
+// See if pin is permanent
 //
-   if (pinFile->Stat.st_mode & S_ISUID) return "is perm pinned";
+   if (sP->pinInfo.Attr.Flags & XrdFrmXAttrPin::pinPerm)
+       return "is perm pinned";
 
-// If the mtime of the pin file is in the future this is when it gets unpinned
+// See if the file is pinned until a certain time
 //
-   if (pinFile->Stat.st_mtime > nowTime) return "is time pinned";
+   if (sP->pinInfo.Attr.Flags & XrdFrmXAttrPin::pinKeep
+   &&  sP->pinInfo.Attr.pinTime > static_cast<long long>(nowTime))
+      return "is time pinned";
 
-// Check if there are more conditions
+// Check if the file can only be unpinned after going idle
 //
-   if (!(pinFile->Stat.st_size)) return 0;
-   if (  pinFile->Stat.st_size >= static_cast<off_t>(sizeof(pBuff)))
-      return "is pinned incorrectly";
-
-// The contents of the file indicate how long the inactive period is, get it
-//
-   if ((pFD  = open(pinFile->Path, O_RDONLY)) < 0
-   ||  (rLen = read(pFD, pBuff, sizeof(pBuff)-1)) < 0)
-      {const char *Why = "open";
-       if (pFD >= 0) {close(pFD); Why = "read";}
-       Say.Emsg("Eligible", errno, Why, pinFile->Path);
-       return "is pinned";
-      }
-
-// Get the inactivity period
-//
-   close(pFD);
-   pBuff[rLen] = '\0';
-   if (sscanf(pBuff,"&inact_time=%d",&idleMin) != 1) return "pinfile error";
-   if (idleMin > xTime) return "is pin defered";
+   if (sP->pinInfo.Attr.Flags & XrdFrmXAttrPin::pinIdle
+   &&  sP->pinInfo.Attr.pinTime > static_cast<long long>(xTime))
+      return "is pin defered";
    return 0;
 }
 
@@ -652,23 +630,10 @@ do{if (!(fP = FSTab.Oldest()) && !(fP = Advance()))
 //
    return freeSpace >= maxFSpace || Stop;
 }
-
-/******************************************************************************/
-/* Private:                       R e m f i x                                 */
-/******************************************************************************/
-
-void XrdFrmPurge::Remfix(const char *Ftype, const char *Fname)
-{
-// Remove the offending file
-//
-   if (!Config.ossFS->Unlink(Fname,XRDOSS_isPFN))
-      Say.Emsg("Remfix", Ftype, "file orphan fixed; removed", Fname);
-}
   
 /******************************************************************************/
 /* Private:                         S c a n                                   */
 /******************************************************************************/
-  
   
 void XrdFrmPurge::Scan()
 {
@@ -687,7 +652,7 @@ void XrdFrmPurge::Scan()
 
 // Purge that bad file table evey 24 hours to keep complaints down
 //
-   if (nowT - lastHP >= 86400) {BadFiles.Purge(); lastHP = nowT;}
+   if (nowT - lastHP >= 86400) {XrdFrmFileset::Purge(); lastHP = nowT;}
 
 // Determine if we need to do an empty directory trim
 //
@@ -708,7 +673,7 @@ void XrdFrmPurge::Scan()
        needLF = vP->Val;
        while((sP = fP->Get(ec,1)))
             {aFiles++;
-             if (Screen(sP, needLF)) Add(sP);
+             if (sP->Screen(needLF)) Add(sP);
                 else {delete sP; bFiles++;}
             }
        if (ec) Bad = 1;
@@ -736,42 +701,6 @@ void XrdFrmPurge::Scan()
 //
    if (Bad) Say.Emsg("Scan", "Errors encountered while scanning for "
                              "purgeable files.");
-}
-
-/******************************************************************************/
-/* Private:                       S c r e e n                                 */
-/******************************************************************************/
-
-int XrdFrmPurge::Screen(XrdFrmFileset *sP, int needLF)
-{
-   const char *What = 0, *badFN = 0;
-   char dPath[MAXPATHLEN+1];
-
-// Verify that we have all the relevant files
-//
-   if (!(sP->baseFile()))
-      {if (Config.Fix)
-          {if (sP->lockFile()) Remfix("Lock", sP->lockPath());
-           if (sP-> pinFile()) Remfix("Pin",  sP-> pinPath());
-           if (sP->failFile()) Remfix("Fail", sP->failPath());
-           return 0;
-          }
-       What = "No base file for";
-            if (sP->lockFile()) badFN = sP->lockPath();
-       else if (sP-> pinFile()) badFN = sP-> pinPath();
-       else if (sP->failFile()) badFN = sP->failPath();
-       else {What = "Orhpaned files in"; badFN = dPath;
-             sP->dirPath(dPath, sizeof(dPath));
-            }
-      } else if (needLF && !(sP->lockFile()))
-                {What = "No lock file for"; badFN = sP->basePath();}
-                else return 1;
-
-// Issue message if we haven't issued one before
-//
-   if (!BadFiles.Add(badFN, 0, 0, Hash_data_is_key))
-      Say.Emsg("Screen", What, badFN);
-   return 0;
 }
   
 /******************************************************************************/

@@ -58,6 +58,7 @@ OBJFS   = \
 
 OBJDEPS = \
           $(LIBDIR)/libXrd.a \
+          $(LIBDIR)/libXrdSys.a \
           $(LIBDIR)/libXrdNet.a \
           $(LIBDIR)/libXrdNetUtil.a \
           $(LIBDIR)/libXrdOuc.a \
@@ -107,7 +108,8 @@ $(OBJDIR)/XrdXrootdAdmin.o: XrdXrootdAdmin.hh      XrdXrootdAdmin.cc \
 	@echo Compiling XrdXrootdAdmin.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdXrootdAdmin.o XrdXrootdAdmin.cc
 
-$(OBJDIR)/XrdXrootdAio.o: XrdXrootdAio.hh      XPtypes.hh           \
+$(OBJDIR)/XrdXrootdAio.o: XrdXrootdAio.hh \
+                          XPtypes.hh           XProtocol.hh \
                           XrdBuffer.hh         XrdLink.hh           \
                           XrdScheduler.hh \
                           XrdSysError.hh       XrdSysPthread.hh     \

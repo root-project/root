@@ -8,8 +8,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//          $Id$
-
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
@@ -30,8 +28,6 @@
 #include "XrdOuc/XrdOucArgs.hh"
 #include "XrdOuc/XrdOucNSWalk.hh"
 #include "XrdOuc/XrdOucTList.hh"
-
-const char *XrdFrmAdminQueryCVSID = "$Id$";
 
 using namespace XrdFrm;
 
@@ -129,12 +125,13 @@ int XrdFrmAdmin::QuerySpace(XrdOucArgs &Spec)
                {if (Opt.All) Emsg(ENOTDIR, "query ", lfn);
                    else QuerySpace(pfn);
                }
-       else{fP = new XrdFrmFiles(pfn, opts);
+       else{fP = new XrdFrmFiles(pfn, opts | XrdFrmFiles::NoAutoDel);
             while((sP = fP->Get(ec,1)))
                  {if (sP->baseFile())
                      QuerySpace(sP->basePath(),
                                 sP->baseFile()->Link,
                                 sP->baseFile()->Lksz);
+                  delete sP;
                  }
             if (ec) finalRC = 4;
             delete fP;

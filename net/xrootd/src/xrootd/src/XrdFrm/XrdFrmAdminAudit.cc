@@ -8,8 +8,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//          $Id$
-
 #include <stdio.h>
 #include <string.h>
 #include <sys/param.h>
@@ -24,8 +22,6 @@
 #include "XrdOuc/XrdOucNSWalk.hh"
 #include "XrdOuc/XrdOucTList.hh"
 
-const char *XrdFrmAdminAuditCVSID = "$Id$";
-
 using namespace XrdFrm;
 
 /******************************************************************************/
@@ -39,8 +35,6 @@ int XrdFrmAdmin::AuditNameNB(XrdFrmFileset *sP)
 
 // Report what is orphaned
 //
-   if (sP->failFile())
-      {num++; Msg("Orphaned fail file: ", sP->failPath());}
    if (sP->lockFile())
       {num++; Msg("Orphaned lock file: ", sP->lockPath());}
    if (sP->pfnFile() )
@@ -111,26 +105,38 @@ int XrdFrmAdmin::AuditNameNF(XrdFrmFileset *sP)
 
 int XrdFrmAdmin::AuditNameNL(XrdFrmFileset *sP)
 {
+   static const char *noCPT = (Config.runNew ? "No copy time for: "
+                                             : "Missing lock file: ");
+   static const char *mkCPT = (Config.runNew ? "Set copy time?"
+                                             : "Create lock file?");
    char Resp;
 
 // Indicate what is wrong
 //
-   Msg("Missing lock file: ", sP->basePath());
+   Msg(noCPT, sP->basePath());
    numProb++;
 
 // Return if no fix is needed, otherwise check if we should ask before removal
 //
    if (!Opt.Fix) return -1;
    if (!Opt.Force)
-      {Resp = XrdFrmUtils::Ask('y', "Create lock file?");
+      {Resp = XrdFrmUtils::Ask('y', mkCPT);
        if (Resp != 'y') return Resp != 'a';
       }
 
-// Create the lock file
+// Set copy time or create a lock file
 //
-   if (!mkFile(mkLF|isPFN, sP->basePath())) return 1;
-   Msg("Lock file created.");
-   numFix++;
+   if (Config.runNew)
+      {if (XrdFrmUtils::updtCpy(sP->basePath(),(Opt.MPType == 'p' ? 0 : -113)))
+          {numFix++;
+           Msg("Copy time set.");
+          }
+      } else {
+       if (mkFile(mkLF|isPFN, sP->basePath()))
+          {numFix++;
+           Msg("Lock file created.");
+          }
+      }
    return 1;
 }
 
@@ -140,10 +146,11 @@ int XrdFrmAdmin::AuditNameNL(XrdFrmFileset *sP)
   
 int XrdFrmAdmin::AuditNames()
 {
+   static const int fsetOpts = XrdFrmFiles::GetCpyTim | XrdFrmFiles::NoAutoDel;
    XrdFrmFileset *sP;
    XrdFrmFiles   *fP;
    char pDir[MAXPATHLEN], *lDir = Opt.Args[1];
-   int opts = (Opt.Recurse ? XrdFrmFiles::Recursive : 0);
+   int opts = (Opt.Recurse ? XrdFrmFiles::Recursive : 0) | fsetOpts;
    int ec = 0, Act = 1;
 
 // Initialization
@@ -159,11 +166,12 @@ int XrdFrmAdmin::AuditNames()
         {if (!(sP->baseFile())) Act = AuditNameNB(sP);
              else {if (sP->baseFile()->Type == XrdOucNSWalk::NSEnt::isLink)
                       Act = AuditNameNF(sP);
-                   if (Act && Opt.MPType && !(sP->lockFile()))
+                   if (Act && Opt.MPType && !(sP->cpyInfo.Attr.cpyTime))
                       Act = AuditNameNL(sP);
                    if (Act && sP->baseFile()->Link && isXA(sP->baseFile()))
-                      Act = AuditNameXA(sP);
+                      Act = Config.runNew ? AuditNameXA(sP) : AuditNameXB(sP);
                   }
+         delete sP;
          }
     if (ec) finalRC = 4;
     delete fP;
@@ -182,6 +190,51 @@ int XrdFrmAdmin::AuditNames()
 /******************************************************************************/
   
 int XrdFrmAdmin::AuditNameXA(XrdFrmFileset *sP)
+{
+   XrdOucXAttr<XrdFrmXAttrPfn> pfnInfo;
+   const char *doWhat = "Recreate pfn xref?";
+   char  Resp, dfltAns = 'n';
+   int rc;
+
+// Make sure there is a PFN attribute is here and references the file
+//
+   if ((rc = pfnInfo.Get(sP->baseFile()->Link)) > 0)
+      {if (!strcmp(pfnInfo.Attr.Pfn,sP->basePath())) return 1;
+       Msg("Incorrect pfn xref to ", sP->basePath());
+       Msg("Data file refers to   ", pfnInfo.Attr.Pfn);
+      } else {
+       if (rc)  Emsg(-rc, "get pfn xattr for ",sP->basePath());
+          else {Msg("Missing pfn xref to ",    sP->basePath());
+                doWhat = "Create pfn xref?"; dfltAns = 'y';
+               }
+      }
+
+// Check if we can fix this problem
+//
+   if (!Opt.Fix || rc < 0) return 1;
+   if (!Opt.Force)
+      {Resp = XrdFrmUtils::Ask(dfltAns, doWhat);
+       if (Resp != 'y') return Resp != 'a';
+      }
+
+// Reset the pfn xattr
+//
+   strcpy(pfnInfo.Attr.Pfn, sP->basePath());
+   if (!(rc = pfnInfo.Set(sP->baseFile()->Link)))
+      {Msg("pfn xref set."); numFix++;}
+      else Emsg(-rc, "set pfn xref to ", sP->basePath());
+
+
+// All done.
+//
+   return 1;
+}
+
+/******************************************************************************/
+/*                           A u d i t N a m e X B                            */
+/******************************************************************************/
+  
+int XrdFrmAdmin::AuditNameXB(XrdFrmFileset *sP)
 {
    struct stat buf;
    char Path[1032], lkbuff[1032];
@@ -260,10 +313,6 @@ int XrdFrmAdmin::AuditRemove(XrdFrmFileset *sP)
 
 // Remove the orphaned files
 //
-   if (sP->failFile())
-      {if (unlink(sP->failPath())) Emsg(errno,"remove fail file.");
-          else rem++;
-      }
    if (sP->lockFile())
       {if (unlink(sP->lockPath())) Emsg(errno,"remove lock file.");
           else rem++;
@@ -273,7 +322,7 @@ int XrdFrmAdmin::AuditRemove(XrdFrmFileset *sP)
           else rem++;
       }
    if (sP-> pfnFile())
-      {if (unlink(sP-> pinPath())) Emsg(errno,"remove pfn  file.");
+      {if (unlink(sP-> pfnPath())) Emsg(errno,"remove pfn  file.");
           else rem++;
       }
 
@@ -311,10 +360,12 @@ int XrdFrmAdmin::AuditSpace()
    Msg(buff);
    if (!Act) Msg("Audit space aborted!");
       else {if (Path) *(--Path) = ':';
-            sprintf(buff, "Space %s has %d file%s with %lld byte%s in use.",
+            sprintf(buff, "Space %s has %d file%s with %lld byte%s in use "
+                          "(%lld unreachable).",
                     Space,
                     numFiles, (numFiles == 1 ? "" : "s"),
-                    numBytes, (numBytes == 1 ? "" : "s"));
+                    numBytes, (numBytes == 1 ? "" : "s"),
+                    numBLost);
             Msg(buff);
            }
    return (Act ? 0 : 4);
@@ -326,9 +377,9 @@ int XrdFrmAdmin::AuditSpace()
   
 int XrdFrmAdmin::AuditSpaceAX(const char *Path)
 {
-   XrdOucNSWalk nsWalk(&Say, Path, Config.lockFN, XrdOucNSWalk::retFile
-                                                | XrdOucNSWalk::retStat
-                                                | XrdOucNSWalk::skpErrs);
+   XrdOucNSWalk nsWalk(&Say, Path, 0, XrdOucNSWalk::retFile
+                                    | XrdOucNSWalk::retStat
+                                    | XrdOucNSWalk::skpErrs);
    XrdOucNSWalk::NSEnt *nP, *pP;
    char buff[1032];
    int ec, Act = 1;
@@ -395,7 +446,7 @@ int XrdFrmAdmin::AuditSpaceAXDC(const char *Path, XrdOucNSWalk::NSEnt *nP)
 // Verify that the link to the file exists
 //
    if (lstat(Path,&buf))
-      {if (errno != ENOENT) {Emsg(errno, "stat ", Path); return 1;}
+      {if (errno != ENOENT) {Emsg(errno, "stat ", Path); return -1;}
        Msg("Missing pfn data link ", Path);
        return AuditSpaceAXDL(0, Path, Dest);
       }
@@ -410,9 +461,9 @@ int XrdFrmAdmin::AuditSpaceAXDC(const char *Path, XrdOucNSWalk::NSEnt *nP)
 // Make sure tyhe link points to the right file
 //
    if ((n = readlink(Path, lkbuff, sizeof(lkbuff)-1)) < 0)
-      {Emsg(errno, "read link from ", Path); return 1;}
+      {Emsg(errno, "read link from ", Path); return -1;}
    lkbuff[n] = '\0';
-   if (strcmp(Path, lkbuff))
+   if (strcmp(Dest, lkbuff))
       {Msg("Incorrect pfn data link ", Path);
        return AuditSpaceAXDL(1, Path, Dest);
       }
@@ -446,7 +497,7 @@ int XrdFrmAdmin::AuditSpaceAXDL(int dorm, const char *Path, const char *Dest)
 //
    if (dorm) unlink(Path);
    if (symlink(Dest, Path))
-      {Emsg(errno, "create symlink ", Path); return 1;}
+      {Emsg(errno, "create symlink ", Path); return -1;}
    Msg("pfn symlink created.");
    numFix++;
    return 1;
@@ -466,14 +517,154 @@ int XrdFrmAdmin::AuditSpaceXA(const char *Space, const char *Path)
 // Construct the right space path and get a files object
 //
    buff = XrdOssPath::genPath(Path, Space, tmpv);
-   fP = new XrdFrmFiles(buff, XrdFrmFiles::Recursive);
+   fP = new XrdFrmFiles(buff, XrdFrmFiles::Recursive | XrdFrmFiles::NoAutoDel);
+
+// Go and check out the files
+//
+   while(Act && (sP = fP->Get(ec,1)))
+        {if (sP->baseFile()) Act = AuditNameNB(sP);
+            else {numFiles++;
+                  if ((Act = AuditSpaceXA(sP)))
+                     {if (Act < 0) numFiles--;
+                         else numBytes += sP->baseFile()->Stat.st_size;
+                     }
+                 }
+         delete sP;
+        }
+
+// All done
+//
+   if (ec) finalRC = 4;
+   free(buff);
+   delete fP;
+   return Act;
+}
+
+/******************************************************************************/
+  
+int XrdFrmAdmin::AuditSpaceXA(XrdFrmFileset *sP)
+{
+   XrdOucXAttr<XrdFrmXAttrPfn> pfnInfo;
+   struct stat buf;
+   const char *Plug;
+   char Resp = 0, tempPath[1032], lkbuff[1032], *Pfn = pfnInfo.Attr.Pfn;
+   int n;
+
+// First step is to get the pfn extended attribute (Get will issue a msg)
+//
+   if ((n = pfnInfo.Get(sP->basePath()) <= 0))
+      {if (!n) Msg("Missing pfn xref for data file ", sP->basePath());
+       numProb++;
+       return 1;
+      }
+
+// If there is no PFN file then recreate symlink if possible
+//
+   if (lstat(Pfn,&buf))
+      {numProb++;
+       if (errno != ENOENT) {Emsg(errno, "stat ", Pfn); return 1;}
+       Msg("Data file xrefs missing pfn ", Pfn);
+       if (Opt.Fix)
+          {if (Opt.Force) Resp = 'y';
+              else Resp = XrdFrmUtils::Ask('y',"Create pfn symlink?");
+           if (Resp == 'y')
+              {if (!symlink(sP->basePath(), Pfn))
+                  {Msg("pfn symlink created."); numFix++; return 1;}
+               Emsg(errno, "create symlink ", Pfn);
+              }
+          }
+       numBLost += sP->baseFile()->Stat.st_size;
+       return Resp != 'a';
+      }
+
+// If the PFN file is not a link, the see if we should remove the data file
+//
+   if ((buf.st_mode & S_IFMT) != S_IFLNK)
+      {numProb++;
+       Msg("Data file xrefs non-symlink pfn ", Pfn);
+       if (Opt.Fix)
+          {if (Opt.Force) Resp = 'n';
+              else Resp = XrdFrmUtils::Ask('n',"Remove data file?");
+           if (Resp == 'y')
+              {if (unlink(sP->basePath())) Emsg(errno,"remove ",sP->basePath());
+                  else {Msg("Data file removed."); numFix++; return -1;}
+              }
+          }
+       numBLost += sP->baseFile()->Stat.st_size;
+       return Resp != 'a';
+      }
+
+// Check if xrefs are consistent.
+//
+   if ((n = readlink(Pfn, lkbuff, sizeof(lkbuff)-1)) < 0)
+      {Emsg(errno, "read link from ", Pfn); numProb++; return 1;}
+   lkbuff[n] = '\0';
+   if (!strcmp(sP->basePath(), lkbuff)) return 1;
+
+// Issue first message (there is value in seeing the data file path)
+//
+   Msg("Inconsistent data file: ", sP->basePath());
+   numProb++;
+
+// Diagnose the problem and check if fix is possible
+//
+   if (!stat(lkbuff, &buf))     Plug = "exists.";
+      else if (errno == ENOENT) Plug = "is missing.";
+              else {Emsg(errno, "stat ", lkbuff); return 1;}
+   Msg("Data file xrefs pfn ", Pfn);
+   Msg("Pfn points to a different data file that ", Plug);
+   if (!Opt.Fix) return 1;
+
+// If the data file is orphaned then check if we can remove it otherwise
+// see if we can simply change the symlink to point to this file
+//
+   if (*Plug == 'e')
+      {if (Opt.Force) Resp = 'n';
+           else Resp = XrdFrmUtils::Ask('n',"Remove unreferenced data file?");
+       if (Resp == 'y')
+          {if (unlink(sP->basePath())) Emsg(errno,"remove ",sP->basePath());
+              else {Msg("Data file removed."); numFix++; return -1;}
+          }
+      } else {
+       if (Opt.Force) Resp = 'n';
+          else Resp = XrdFrmUtils::Ask('n',"Change pfn symlink?");
+       if (Resp == 'y')
+          {*tempPath = ' '; strcpy(tempPath+1, Pfn); unlink(tempPath);
+           if (symlink(sP->basePath(), tempPath) || rename(tempPath, Pfn))
+              {Emsg(errno, "create symlink ", Pfn); unlink(tempPath);}
+              else {Msg("pfn symlink changed."); numFix++; return 1;}
+          }
+      }
+
+// Space for this file is definitely lost
+//
+   numBLost += sP->baseFile()->Stat.st_size;
+   return Resp != 'a';
+}
+
+/******************************************************************************/
+/*                          A u d i t S p a c e X B                           */
+/******************************************************************************/
+  
+int XrdFrmAdmin::AuditSpaceXB(const char *Space, const char *Path)
+{
+   XrdFrmFileset *sP;
+   XrdFrmFiles   *fP;
+   char tmpv[8], *buff;
+   int ec = 0, Act = 1;
+
+// Construct the right space path and get a files object
+//
+   buff = XrdOssPath::genPath(Path, Space, tmpv);
+   fP = new XrdFrmFiles(buff, XrdFrmFiles::Recursive | XrdFrmFiles::NoAutoDel);
 
 // Go and check out the files
 //
    while(Act && (sP = fP->Get(ec,1)))
         {     if (!(sP->baseFile())) Act = AuditNameNB(sP);
          else if (!(sP-> pfnFile())) Act = AuditSpaceXANB(sP);
-         else {numFiles++; numBytes += sP->baseFile()->Stat.st_size; continue;}
+         else {numFiles++; numBytes += sP->baseFile()->Stat.st_size;}
+         delete sP;
         }
 
 // All done
@@ -630,9 +821,9 @@ int XrdFrmAdmin::AuditUsage(char *Space)
   
 int XrdFrmAdmin::AuditUsageAX(const char *Path)
 {
-   XrdOucNSWalk nsWalk(&Say, Path, Config.lockFN, XrdOucNSWalk::retFile
-                                                | XrdOucNSWalk::retStat
-                                                | XrdOucNSWalk::skpErrs);
+   XrdOucNSWalk nsWalk(&Say, Path, 0, XrdOucNSWalk::retFile
+                                    | XrdOucNSWalk::retStat
+                                    | XrdOucNSWalk::skpErrs);
    XrdOucNSWalk::NSEnt *nP, *pP;
    int ec;
 
@@ -669,13 +860,14 @@ int XrdFrmAdmin::AuditUsageXA(const char *Path, const char *Space)
 // Construct the right space path and get a files object
 //
    buff = XrdOssPath::genPath(Path, Space, tmpv);
-   fP = new XrdFrmFiles(buff, XrdFrmFiles::Recursive);
+   fP = new XrdFrmFiles(buff, XrdFrmFiles::Recursive | XrdFrmFiles::NoAutoDel);
 
 // Go and check out the files
 //
    while((sP = fP->Get(ec)))
         {if ((sP->baseFile()))
             {numFiles++; numBytes += sP->baseFile()->Stat.st_size;}
+         delete sP;
         }
 
 // All done

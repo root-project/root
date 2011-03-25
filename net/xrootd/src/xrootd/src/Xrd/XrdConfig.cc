@@ -159,7 +159,6 @@ XrdConfig::XrdConfig(void)
    Net_Opts = 0;
    Wan_Blen = 1024*1024; // Default window size 1M
    Wan_Opts = 0;
-   setSched = 1;
    repDest[0] = 0;
    repDest[1] = 0;
    repInt     = 600;
@@ -215,6 +214,8 @@ int XrdConfig::Configure(int argc, char **argv)
    gid_t myGid = 0;
    extern char *optarg;
    extern int optind, opterr;
+   int pipeFD[2] = {-1, -1};
+   const char *pidFN = 0;
 
 // Obtain the protocol name we will be using
 //
@@ -226,7 +227,7 @@ int XrdConfig::Configure(int argc, char **argv)
 //
    opterr = 0;
    if (argc > 1 && '-' == *argv[1]) 
-      while ((c = getopt(argc,argv,"bc:dhHk:l:n:p:P:R:"))
+      while ((c = getopt(argc,argv,"bc:dhHk:l:n:p:P:R:s:"))
              && ((unsigned char)c != 0xff))
      { switch(c)
        {
@@ -261,6 +262,9 @@ int XrdConfig::Configure(int argc, char **argv)
                  break;
        case 'R': if (!(getUG(optarg, myUid, myGid))) Usage(1);
                  break;
+       case 's': pidFN = optarg;
+                 break;
+
        default:  if (index("clpP", (int)(*(argv[optind-1]+1))))
                     {XrdLog.Emsg("Config", argv[optind-1],
                                  "parameter not specified.");
@@ -290,7 +294,16 @@ int XrdConfig::Configure(int argc, char **argv)
 
 // Resolve background/foreground issues
 //
-   if (optbg) XrdOucUtils::Undercover(XrdLog, !logfn);
+   if (optbg)
+   {
+#ifdef WIN32
+      XrdOucUtils::Undercover(XrdLog, !logfn);
+#else
+      if (pipe( pipeFD ) == -1)
+         {XrdLog.Emsg("Config", errno, "create a pipe"); exit(17);}
+      XrdOucUtils::Undercover(XrdLog, !logfn, pipeFD);
+#endif
+   }
 
 // Bind the log file if we have one
 //
@@ -382,12 +395,27 @@ int XrdConfig::Configure(int argc, char **argv)
 //
    if (myInsName) XrdOucUtils::makeHome(XrdLog, myInsName);
 
+   // if we call this it means that the daemon has forked and we are
+   // in the child process
+#ifndef WIN32
+   if (optbg)
+   {
+      if (pidFN && !XrdOucUtils::PidFile( XrdLog, pidFN ) )
+         NoGo = 1;
+
+      int status = NoGo ? 1 : 0;
+      if(write( pipeFD[1], &status, sizeof( status ) )) {};
+      close( pipeFD[1]);
+   }
+#endif
+
 // All done, close the stream and return the return code.
 //
    temp = (NoGo ? " initialization failed." : " initialization completed.");
    sprintf(buff, "%s:%d", myInstance, PortTCP);
    XrdLog.Say("------ ", buff, temp);
    if (logfn) new XrdLogWorker(buff);
+
    return NoGo;
 }
 
@@ -749,7 +777,7 @@ void XrdConfig::Usage(int rc)
   if (rc < 0) cerr <<XrdLicense;
      else
      cerr <<"\nUsage: " <<myProg <<" [-b] [-c <cfn>] [-d] [-k {n|sz}] [-l <fn>] "
-            "[-L] [-n name] [-p <port>] [-P <prot>] [<prot_options>]" <<endl;
+            "[-L] [-n name] [-p <port>] [-P <prot>] [-s pidfile] [<prot_options>]" <<endl;
      _exit(rc > 0 ? rc : 0);
 }
 
@@ -1278,7 +1306,6 @@ int XrdConfig::xsched(XrdSysError *eDest, XrdOucStream &Config)
 
 // Establish scheduler options
 //
-   if (V_mint > 0 || V_maxt > 0 || V_avlt > 0) setSched = 0;
    XrdSched.setParms(V_mint, V_maxt, V_avlt, V_idle);
    return 0;
 }

@@ -1,4 +1,4 @@
-#!/bin/perl
+#!/usr/bin/env perl
 use Cwd qw(realpath);
 use IO::Socket;
 use IPC::Open2;

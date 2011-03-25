@@ -57,7 +57,7 @@ extern "C" void* receivePackets(void*)
     int socket_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);    
     assert( -1 != socket_ );
 
-    memset((char *) &sAddress, sizeof(sAddress), 0);
+    memset((char *) &sAddress, 0, sizeof(sAddress));
     sAddress.sin_family = AF_INET;
     sAddress.sin_port = htons(XrdMonCtrCollector::port);
     sAddress.sin_addr.s_addr = htonl(INADDR_ANY);

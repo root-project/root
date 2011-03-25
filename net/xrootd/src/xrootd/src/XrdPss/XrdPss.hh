@@ -14,7 +14,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include "XrdSys/XrdSysHeaders.hh"
-
+#include "XrdOuc/XrdOucName2Name.hh"
 #include "XrdOss/XrdOss.hh"
 
 /******************************************************************************/
@@ -135,13 +135,19 @@ virtual ~XrdPssSys() {}
 
 private:
 
+char            *N2NLib;   // -> Name2Name Library Path
+char            *N2NParms; // -> Name2Name Object Parameters
+XrdOucName2Name *theN2N;   // -> File mapper object
+
 int    buildHdr();
 int    Configure(const char *);
 int    ConfigProc(const char *ConfigFN);
 int    ConfigXeq(char*, XrdOucStream&);
+int    ConfigN2N();
 int    xconf(XrdSysError *Eroute, XrdOucStream &Config);
 int    xorig(XrdSysError *errp,   XrdOucStream &Config);
 int    xsopt(XrdSysError *Eroute, XrdOucStream &Config);
 int    xtrac(XrdSysError *Eroute, XrdOucStream &Config);
+int    xnml (XrdSysError *Eroute, XrdOucStream &Config);
 };
 #endif

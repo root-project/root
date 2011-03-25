@@ -10,8 +10,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//          $Id$
-
 #include "XrdOuc/XrdOucHash.hh"
 #include "XrdSys/XrdSysPthread.hh"
 
@@ -38,7 +36,7 @@ static int   Init();
 
 private:
 const char *Fetch();
-const char *Fetch(char *lfnpath, int &rc, time_t lktime);
+const char *FetchDone(char *lfnpath, int &rc, time_t lktime);
 const char *ffCheck();
       void  ffMake(int nofile=0);
       int   SetupCmd(XrdFrmTranArg *aP);
@@ -46,6 +44,7 @@ const char *ffCheck();
       int   TrackDC(char *Rfn);
 const char *Throw();
       void  Throwaway();
+      void  ThrowDone(XrdFrmTranChk *cP, time_t endTime);
 const char *ThrowOK(XrdFrmTranChk *cP);
 
 static XrdSysMutex               pMutex;

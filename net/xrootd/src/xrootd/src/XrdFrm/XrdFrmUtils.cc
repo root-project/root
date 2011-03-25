@@ -8,8 +8,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
   
-//          $Id$
-
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -19,12 +17,16 @@
 
 #include "XrdFrm/XrdFrmTrace.hh"
 #include "XrdFrm/XrdFrmUtils.hh"
+#include "XrdFrm/XrdFrmXLock.hh"
+#include "XrdFrm/XrdFrmXAttr.hh"
+
+#include "XrdOuc/XrdOucSxeq.hh"
 #include "XrdOuc/XrdOucUtils.hh"
+#include "XrdOuc/XrdOucXAttr.hh"
+
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlatform.hh"
-
-const char *XrdFrmUtilsCVSID = "$Id$";
 
 using namespace XrdFrm;
   
@@ -247,6 +249,25 @@ int XrdFrmUtils::Unique(const char *lkfn, const char *myProg)
    return 1;
 }
   
+/******************************************************************************/
+/*                               u p d t C p y                                */
+/******************************************************************************/
+  
+int XrdFrmUtils::updtCpy(const char *Pfn, int Adj)
+{
+   XrdOucXAttr<XrdFrmXAttrCpy> cpyInfo;
+   struct stat Stat;
+
+// Make sure the base file exists
+//
+   if (stat(Pfn, &Stat)) {Say.Emsg("updCpy", errno,"stat pfn ",Pfn); return 0;}
+
+// Set correct copy time based on need
+//
+   cpyInfo.Attr.cpyTime = static_cast<long long>(Stat.st_mtime + Adj);
+   return cpyInfo.Set(Pfn) == 0;
+}
+
 /******************************************************************************/
 /*                                 U t i m e                                  */
 /******************************************************************************/

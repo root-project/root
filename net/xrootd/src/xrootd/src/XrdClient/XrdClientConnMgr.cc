@@ -137,11 +137,12 @@ int DestroyPhyConn(const char *key,
 			  XrdClientPhyConnection *p, void *voidcmgr)
 {
   // Function applied to the hash table to destroy all the phyconns
-
   XrdClientConnectionMgr *cmgr = (XrdClientConnectionMgr *)voidcmgr;
   assert(cmgr != 0);
 
   if (p) {
+    p->Touch();
+    p->Disconnect();
     p->UnsolicitedMsgHandler = 0;
     delete(p);
   }
@@ -158,24 +159,7 @@ XrdClientConnectionMgr::XrdClientConnectionMgr() : fSidManager(0),
    // XrdClientConnectionMgr constructor.
    // Creates a Connection Manager object.
    // Starts the garbage collector thread.
-
-   fLastLogIdUsed = 0;
-
-   fGarbageColl = new XrdClientThread(GarbageCollectorThread);
-   
-   if (!fGarbageColl)
-      Error("ConnectionMgr",
-            "Can't create garbage collector thread: out of system resources");
-   
-   fGarbageColl->Run(this);
-
-
-   fSidManager = new XrdClientSid();
-   if (!fSidManager) {
-     Error("ConnectionMgr",
-	   "Can't create sid manager: out of system resources");
-     abort();
-   }
+   BootUp();
 
 }
 
@@ -183,29 +167,72 @@ XrdClientConnectionMgr::XrdClientConnectionMgr() : fSidManager(0),
 XrdClientConnectionMgr::~XrdClientConnectionMgr()
 {
    // Deletes mutex locks, stops garbage collector thread.
-
-   int i=0;
-
-   {
-      XrdSysMutexHelper mtx(fMutex);
-
-      for (i = 0; i < fLogVec.GetSize(); i++)
-	 if (fLogVec[i]) Disconnect(i, FALSE);
-
-   }
-
-   if (fGarbageColl) {
-     void *ret;
-      fGarbageColl->Cancel();
-      fGarbageColl->Join(&ret);
-      delete fGarbageColl;
-   }
-
-   GarbageCollect();
-
-   fPhyHash.Apply(DestroyPhyConn, this);
-   delete fSidManager;
+  ShutDown();
 }
+
+//------------------------------------------------------------------------------
+// Initializer
+//------------------------------------------------------------------------------
+bool XrdClientConnectionMgr::BootUp()
+{
+  fLastLogIdUsed = 0;
+
+  fGarbageColl = new XrdClientThread(GarbageCollectorThread);
+
+  if (!fGarbageColl)
+     Error("ConnectionMgr",
+           "Can't create garbage collector thread: out of system resources");
+
+  fGarbageColl->Run(this);
+
+  fSidManager = new XrdClientSid();
+  if (!fSidManager) {
+    Error("ConnectionMgr",
+   "Can't create sid manager: out of system resources");
+    abort();
+  }
+
+  return true;
+}
+
+bool XrdClientConnectionMgr::ShutDown()
+{
+  fPhyHash.Apply(DumpPhyConn, this);
+
+  {
+    XrdSysMutexHelper mtx(fMutex);
+
+    for( int i = 0; i < fLogVec.GetSize(); i++)
+      if (fLogVec[i]) Disconnect(i, TRUE);
+  }
+
+  if (fGarbageColl)
+  {
+    void *ret;
+    fGarbageColl->Cancel();
+    fGarbageColl->Join(&ret);
+    delete fGarbageColl;
+  }
+
+  GarbageCollect();
+
+  fPhyHash.Apply(DestroyPhyConn, this);
+
+  for(int i = fPhyTrash.GetSize()-1; i >= 0; i--)
+    DestroyPhyConn( "Trashed connection", fPhyTrash[i], this);
+
+  fPhyTrash.Clear();
+  fPhyHash.Purge();
+  fLogVec.Clear();
+
+  delete fSidManager;
+
+  fSidManager  = 0;
+  fGarbageColl = 0;
+
+  return true;
+}
+
 
 //_____________________________________________________________________________
 void XrdClientConnectionMgr::GarbageCollect()
@@ -521,7 +548,7 @@ void XrdClientConnectionMgr::Disconnect(int LogConnectionID,
 	 return;
       }
 
-
+      fLogVec[LogConnectionID]->GetPhyConnection()->WipeStreamid(fLogVec[LogConnectionID]->Streamid());
       if (ForcePhysicalDisc) {
 	 // We disconnect the phyconn
 	 // But it will be removed by the garbagecollector as soon as possible
@@ -532,8 +559,7 @@ void XrdClientConnectionMgr::Disconnect(int LogConnectionID,
 	 fLogVec[LogConnectionID]->GetPhyConnection()->Disconnect();
 	 GarbageCollect();
       }
-      else
-         fLogVec[LogConnectionID]->GetPhyConnection()->WipeStreamid(fLogVec[LogConnectionID]->Streamid());
+
     
       fLogVec[LogConnectionID]->GetPhyConnection()->Touch();
       delete fLogVec[LogConnectionID];

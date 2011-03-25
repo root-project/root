@@ -29,6 +29,7 @@
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdSec/XrdSecEntity.hh"
 #include "XrdSecsss/XrdSecsssID.hh"
+#include "XrdNet/XrdNetDNS.hh"
 #include "XrdFfs/XrdFfsDent.hh"
 #include "XrdFfs/XrdFfsFsinfo.hh"
 #include "XrdFfs/XrdFfsMisc.hh"
@@ -206,6 +207,7 @@ int XrdFfsMisc_get_list_of_data_servers(char* list)
 {
     int i;
     char *url, *rc, *hostname, *hostip, *port, *p;
+    char *haddr[1], *hname[1];
   
     rc = (char*)malloc(sizeof(char) * XrdFfs_MAX_NUM_NODES * 1024);
     rc[0] = '\0';
@@ -220,12 +222,18 @@ int XrdFfsMisc_get_list_of_data_servers(char* list)
         p = strchr(port, '/');
         p[0] = '\0';
 
-        hostname = XrdFfsMisc_getNameByAddr(hostip);
+//        hostname = XrdFfsMisc_getNameByAddr(hostip);
+        if (XrdNetDNS::getAddrName(hostip, 1, haddr, hname))
+            hostname = hname[0];
+        else
+            hostname = hostip;
         strcat(rc, hostname); 
         strcat(rc, ":");
         strcat(rc, port);
         strcat(rc, "\n");
-        free(hostname);
+//        free(hostname);
+        free(haddr[0]);
+        free(hname[0]);
         free(url);
     }
     pthread_mutex_unlock(&XrdFfsMiscUrlcache_mutex);
@@ -258,6 +266,29 @@ void XrdFfsMisc_refresh_url_cache(const char* url)
     free(turls);
 }
 
+void XrdFfsMisc_logging_url_cache(const char* url)
+{
+    int i;
+    char *hostlist, *p1, *p2;
+
+    if (url != NULL) XrdFfsMisc_refresh_url_cache(url);
+
+    hostlist = (char*) malloc(sizeof(char) * XrdFfs_MAX_NUM_NODES * 256);
+    i = XrdFfsMisc_get_list_of_data_servers(hostlist);
+
+    syslog(LOG_INFO, "INFO: use the following %d data servers :", i);
+    p1 = hostlist;
+    p2 = strchr(p1, '\n');
+    while (p2 != NULL)
+    {
+        p2[0] = '\0';
+        syslog(LOG_INFO, "   %s", p1);
+        p1 = p2 +1;
+        p2 = strchr(p1, '\n');
+    }
+    free(hostlist);
+}
+
 void XrdFfsMisc_xrd_init(const char *rdrurl, int startQueue)
 {
     static int OneTimeInitDone = 0;
@@ -282,28 +313,9 @@ void XrdFfsMisc_xrd_init(const char *rdrurl, int startQueue)
     if (getenv("XROOTDFS_SECMOD") != NULL && !strcmp(getenv("XROOTDFS_SECMOD"), "sss"))
         XrdFfsMisc_xrd_secsss_init();
 
-    int i;
-    char *hostlist, *p1, *p2;
-
-    XrdFfsMisc_refresh_url_cache(rdrurl);
-
-    hostlist = (char*) malloc(sizeof(char) * XrdFfs_MAX_NUM_NODES * 1024);
-    i = XrdFfsMisc_get_list_of_data_servers(hostlist);
-
     openlog("XrootdFS", LOG_ODELAY | LOG_PID, LOG_DAEMON);
-    syslog(LOG_INFO, "INFO: Starting with %d data servers :", i);
-    p1 = hostlist;
-    p2 = strchr(p1, '\n');
-    while (p2 != NULL)
-    {
-        p2[0] = '\0';
-        syslog(LOG_INFO, "   %s", p1);
-        p1 = p2 +1;
-        p2 = strchr(p1, '\n');
-    }
-//    closelog();
-
-    free(hostlist);
+    XrdFfsMisc_refresh_url_cache(rdrurl);
+    XrdFfsMisc_logging_url_cache(NULL);
 
 #ifndef NOUSE_QUEUE
    if (startQueue)
@@ -344,11 +356,10 @@ void XrdFfsMisc_xrd_secsss_register(uid_t user_uid, gid_t user_gid)
     if (XrdFfsMiscSecsss)
     {
         sprintf(user_num, "%d", user_uid);
-        pw = getpwuid(user_uid);
-        gr = getgrgid(user_gid);
-
         pthread_mutex_lock(&XrdFfsMiscSecsss_mutex);
     
+        pw = getpwuid(user_uid);
+        gr = getgrgid(user_gid);
         XrdFfsMiscUent->name = pw->pw_name;
         XrdFfsMiscUent->grps = gr->gr_name;
         XrdFfsMiscSssid->Register(user_num, XrdFfsMiscUent, 1);

@@ -9,15 +9,12 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
-  
-//         $Id$
 
 #include <time.h>
 #include <sys/types.h>
 
 #include "XrdFrm/XrdFrmTSort.hh"
 #include "XrdOss/XrdOssSpace.hh"
-#include "XrdOuc/XrdOucHash.hh"
 
 class XrdFrmFileset;
 class XrdOucPolProg;
@@ -53,9 +50,7 @@ const  char         *Eligible(XrdFrmFileset *sP, time_t &xTime, int hTime=0);
 static XrdFrmPurge  *Find(const char *snp);
 static int           LowOnSpace();
        int           PurgeFile();
-static void          Remfix(const char *Ftype, const char *Fname);
 static void          Scan();
-static int           Screen(XrdFrmFileset *sP, int needLF);
 static void          Stats(int Final);
        void          Track(XrdFrmFileset *sP);
 const  char         *XPolOK(XrdFrmFileset *sP);
@@ -64,7 +59,6 @@ static XrdOucStream *PolStream;
 
 // Static Variables
 
-static XrdOucHash<char> BadFiles;
 static time_t        lastReset;
 static time_t        nextReset;
 

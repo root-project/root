@@ -10,8 +10,6 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
 #include <dirent.h>
 #include <errno.h>
 #include <strings.h>
@@ -78,11 +76,12 @@ int     fd;      // The associated file descriptor.
 
 // Options that can be passed to Create()
 //
-#define XRDOSS_mkpath 0x01
-#define XRDOSS_new    0x02
-#define XRDOSS_Online 0x04
-#define XRDOSS_isPFN  0x08
-#define XRDOSS_isMIG  0x10
+#define XRDOSS_mkpath  0x01
+#define XRDOSS_new     0x02
+#define XRDOSS_Online  0x04
+#define XRDOSS_isPFN   0x10
+#define XRDOSS_isMIG   0x20
+#define XRDOSS_setnoxa 0x40
 
 // Options that can be passed to Stat()
 //

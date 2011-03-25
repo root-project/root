@@ -282,6 +282,7 @@ void XrdOucAppleBonjour::ResolveReply(DNSServiceRef ref, DNSServiceFlags flags,
    nodeAndCallback = static_cast<XrdOucBonjourResolutionEntry *>(context);
 
    // Copy the information of resolution results to the node.
+   XrdLog.Say("------ XrdOucBonjour: resolved FQDN of new node: ", hostname);
    nodeAndCallback->node->SetHostName(hostname);
    nodeAndCallback->node->SetPort(ntohs(port));
 

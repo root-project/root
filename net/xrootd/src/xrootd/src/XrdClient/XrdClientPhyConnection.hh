@@ -91,6 +91,18 @@ public:
     bool                  CheckAutoTerm();
 
     bool           Connect(XrdClientUrlInfo RemoteHost, bool isUnix = 0);
+
+    //--------------------------------------------------------------------------
+    //! Connect to a remote location
+    //!
+    //! @param RemoteHost address descriptor
+    //! @param isUnix     true if the address points to a Unix socket
+    //! @param fd         a descriptor pointing to a connected socket
+    //!                   if the subroutine is supposed to reuse an existing
+    //!                   connection, -1 otherwise
+    //--------------------------------------------------------------------------
+    bool Connect( XrdClientUrlInfo RemoteHost, bool isUnix , int fd );
+
     void           CountLogConn(int d = 1);
     void           Disconnect();
 

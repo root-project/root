@@ -20,11 +20,11 @@ libXrdPss_la_SOURCES = \
         XrdPssAio.cc \
         XrdPssConfig.cc
 
-libXrdPss_la_LIBADD =   ../XrdFfs/libXrdFfs.la  \
-                        ../XrdClient/libXrdClient.la \
-                        ../XrdSecsss//libXrdSecsss.la \
-                        ../XrdSec//libXrdSec.la \
+libXrdPss_la_LIBADD =    ../XrdClient/libXrdClient.la \
+                        ../XrdFfs/libXrdFfs.la  \
                         ../XrdNet/libXrdNet.la \
                         ../XrdNet/libXrdNetUtil.la \
                         ../XrdOuc/libXrdOuc.la \
+                        ../XrdSec//libXrdSec.la \
+                        ../XrdSecsss//libXrdSecsss.la \
                         ../XrdSys/libXrdSys.la

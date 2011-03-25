@@ -224,7 +224,7 @@ void XrdOucBonjourNode::Print() const
    char port[36];
    snprintf(port, 36, "%d (%p)", GetPort(), this);
    const char *host = GetHostName() ? GetHostName() : "<empty>";
-   XrdLog.Say("INFO: Bonjour NODE = ", host, ":", port);
+   XrdLog.Say("INFO: Bonjour HOSTNAME = ", host, ":", port);
    GetBonjourRecord().Print();
 }
 

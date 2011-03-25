@@ -8,10 +8,6 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
-const char *XrdOssCacheCVSID = "$Id$";
-
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -413,15 +409,13 @@ int XrdOssCache::Alloc(XrdOssCache::allocInfo &aInfo)
    cgp = XrdOssCache_Group::fsgroups;
    while(cgp && strcmp(aInfo.cgName, cgp->group)) cgp = cgp->next;
    if (!cgp) return -ENOENT;
-   fsp = cgp->curr;
 
-// Find a cache that will fit this allocation request
+// Find a cache that will fit this allocation request. We start with the next
+// entry past the last one we selected and go full round looking for a
+// compatable entry (enough space and in the right space group).
 //
-   maxfree = fsp->fsdata->frsz;
-   if (size > maxfree || (aInfo.cgPath && (aInfo.cgPlen > fsp->plen
-           ||  strncmp(aInfo.cgPath,fsp->path,aInfo.cgPlen)))) fsp_sel = 0;
-      else fsp_sel = fsp;
-   fspend = fsp; fsp = fsp->next;
+   fsp_sel = 0; maxfree = 0;
+   fsp = cgp->curr->next; fspend = fsp; // End when we hit the start again
    do {
        if (strcmp(aInfo.cgName, fsp->group)
        || (aInfo.cgPath && (aInfo.cgPlen > fsp->plen
@@ -430,8 +424,8 @@ int XrdOssCache::Alloc(XrdOssCache::allocInfo &aInfo)
        if (size > curfree) continue;
 
              if (fuzAlloc >= 100) {fsp_sel = fsp; break;}
-       else  if (!fuzAlloc) {if (curfree > maxfree)
-                                {fsp_sel = fsp; maxfree = curfree;}}
+       else  if (!fuzAlloc || !fsp_sel)
+                {if (curfree > maxfree) {fsp_sel = fsp; maxfree = curfree;}}
        else {diffree = (!(curfree + maxfree) ? 0.0
                      : static_cast<double>(XRDABS(maxfree - curfree)) /
                        static_cast<double>(       maxfree + curfree));
@@ -557,17 +551,17 @@ int XrdOssCache::Init(long long aMin, int ovhd, int aFuzz)
 void XrdOssCache::List(const char *lname, XrdSysError &Eroute)
 {
      XrdOssCache_FS *fsp;
-     const char *theOpt;
+     const char *theCmd;
      char *pP, buff[4096];
 
      if ((fsp = fsfirst)) do
         {if (fsp->opts & XrdOssCache_FS::isXA)
             {pP = (char *)fsp->path + fsp->plen - 1;
              do {pP--;} while(*pP != '/');
-             *pP = '\0';   theOpt = " xa";
-            } else {pP=0;  theOpt = "";}
-         snprintf(buff, sizeof(buff), "%s %s %s%s", lname, 
-                        fsp->group, fsp->path, theOpt);
+             *pP = '\0';   theCmd = "space";
+            } else {pP=0;  theCmd = "cache";}
+         snprintf(buff, sizeof(buff), "%s%s %s %s", lname, theCmd,
+                        fsp->group, fsp->path);
          if (pP) *pP = '/';
          Eroute.Say(buff);
          fsp = fsp->next;

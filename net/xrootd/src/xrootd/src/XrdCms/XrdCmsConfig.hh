@@ -4,13 +4,11 @@
 /*                                                                            */
 /*                       X r d C m s C o n f i g . h h                        */
 /*                                                                            */
-/* (c) 2007 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/* (c) 2011 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*                            All Rights Reserved                             */
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
-
-//         $Id$
 
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -53,6 +51,7 @@ int         LUPHold;      // Maximum hold  at look-up (in millisconds)
 int         DRPDelay;     // Maximum delay for dropping an offline server
 int         PSDelay;      // Maximum delay time before peer is selected
 int         RWDelay;      // R/W lookup delay handling (0 | 1 | 2)
+int         QryDelay;     // Query Response Deadline
 int         SRVDelay;     // Minimum delay at startup
 int         SUPCount;     // Minimum server count
 int         SUPLevel;     // Minimum server count as floating percentage
@@ -150,6 +149,7 @@ int  xallow(XrdSysError *edest, XrdOucStream &CFile);
 int  Fsysadd(XrdSysError *edest, int chk, char *fn);
 int  xdelay(XrdSysError *edest, XrdOucStream &CFile);
 int  xdefs(XrdSysError *edest, XrdOucStream &CFile);
+int  xdfs(XrdSysError *edest, XrdOucStream &CFile);
 int  xexpo(XrdSysError *edest, XrdOucStream &CFile);
 int  xfsxq(XrdSysError *edest, XrdOucStream &CFile);
 int  xfxhld(XrdSysError *edest, XrdOucStream &CFile);
@@ -191,6 +191,7 @@ char             *perfpgm;
 int               perfint;
 int               cachelife;
 int               pendplife;
+int               FSlim;
 };
 namespace XrdCms
 {

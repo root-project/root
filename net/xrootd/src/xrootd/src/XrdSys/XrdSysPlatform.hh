@@ -142,7 +142,7 @@ typedef off_t off64_t;
      (defined(__BYTE_ORDER) && __BYTE_ORDER == __LITTLE_ENDIAN)
 #if !defined(__GNUC__) || defined(__macos__)
 
-#if !defined(__sun) || (defined(__sun) && (!defined(htonll) || !defined(ntohll)))
+#if !defined(__sun) || (defined(__sun) && (!defined(_LP64) || defined(__SunOS_5_10)))
 extern "C" unsigned long long Swap_n2hll(unsigned long long x);
 #ifndef htonll
 #define htonll(_x_) Swap_n2hll(_x_)

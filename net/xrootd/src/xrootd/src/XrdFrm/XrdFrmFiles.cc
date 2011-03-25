@@ -7,8 +7,6 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
-  
-//          $Id$
 
 #include <errno.h>
 #include <string.h>
@@ -25,19 +23,23 @@
 #include "XrdOuc/XrdOucTList.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 
-const char *XrdFrmFilesCVSID = "$Id$";
-
 using namespace XrdFrm;
 
 /******************************************************************************/
 /*                   C l a s s   X r d F r m F i l e s e t                    */
 /******************************************************************************/
 /******************************************************************************/
+/*                        S t a t i c   O b j e c t s                         */
+/******************************************************************************/
+
+XrdOucHash<char>  XrdFrmFileset::BadFiles;
+  
+/******************************************************************************/
 /*                           C o n s t r u c t o r                            */
 /******************************************************************************/
   
 XrdFrmFileset::XrdFrmFileset(XrdFrmFileset *sP, XrdOucTList *diP)
-              : Next(sP), dInfo(diP), dlkFD(-1), flkFD(-1)
+              : Next(sP), dInfo(diP)
 {  memset(File, 0, sizeof(File));
    if (diP) diP->ival[dRef]++;
 }
@@ -49,10 +51,6 @@ XrdFrmFileset::XrdFrmFileset(XrdFrmFileset *sP, XrdOucTList *diP)
 XrdFrmFileset::~XrdFrmFileset()
 {
    int i;
-
-// Unlock any locked files
-//
-   UnLock();
 
 // Delete all the table entries
 //
@@ -98,9 +96,15 @@ int XrdFrmFileset::dirPath(char *dBuff, int dBlen)
   
 int XrdFrmFileset::Refresh(int isMig, int doLock)
 {
-   XrdOucNSWalk::NSEnt *bP = baseFile(), *lP = lockFile();
+   class fdClose
+        {public:
+         int Num;
+             fdClose() : Num(-1) {}
+            ~fdClose() {if (Num >= 0) close(Num);}
+        } fnFD;
+   XrdOucNSWalk::NSEnt *lP, *bP = baseFile();
    char pBuff[MAXPATHLEN+1], *fnP, *pnP = pBuff;
-   int n;
+   int n, lkFD = -1;
 
 // Get the directory path for this entry
 //
@@ -111,14 +115,8 @@ int XrdFrmFileset::Refresh(int isMig, int doLock)
 //
    if (doLock && bP)
       {strcpy(fnP, baseFile()->File);
-       if (chkLock(pBuff)) return 0;
-       if (lP && dlkFD < 0)
-          {strcpy(fnP, Config.lockFN);
-           if ((dlkFD = getLock(pBuff)) < 0) return 0;
-           strcpy(fnP, lockFile()->File);
-           if ((flkFD = getLock(pBuff,0,1)) < 0)
-              {close(dlkFD); dlkFD = -1; return 0;}
-          }
+       if (!(lkFD = chkLock(pBuff))) return 0;
+       fnFD.Num = lkFD;
       }
 
 // Do a new stat call on each relevant file (pin file excluded for isMig)
@@ -127,20 +125,17 @@ int XrdFrmFileset::Refresh(int isMig, int doLock)
       {if (bP->Link) pnP = bP->Link;
          else strcpy(fnP, bP->File);
        if (stat(pnP, &(bP->Stat)))
-          {Say.Emsg("Refresh", errno, "stat", pnP); UnLock(); return 0;}
+          {Say.Emsg("Refresh", errno, "stat", pnP); return 0;}
       }
 
-   if (lP)
+   if (!isMig) pinInfo.Get(pnP, lkFD);
+
+   if ((lP = lockFile()))
       {strcpy(fnP, lP->File);
        if (stat(pBuff, &(lP->Stat)))
-          {Say.Emsg("Refresh", errno, "stat", pBuff); UnLock(); return 0;}
-      }
-
-   if (!isMig && (bP = pinFile()))
-      {strcpy(fnP, bP->File);
-       if (stat(pBuff, &(bP->Stat)) && errno == ENOENT)
-          {delete bP; File[XrdOssPath::isPin] = 0;}
-      }
+          {Say.Emsg("Refresh", errno, "stat", pBuff); return 0;}
+       cpyInfo.Attr.cpyTime = static_cast<long long>(lP->Stat.st_mtime);
+      } else if (cpyInfo.Get(pnP, lkFD) <= 0) cpyInfo.Attr.cpyTime = 0;
 
 // All done
 //
@@ -148,13 +143,66 @@ int XrdFrmFileset::Refresh(int isMig, int doLock)
 }
 
 /******************************************************************************/
-/*                                U n L o c k                                 */
+/*                                S c r e e n                                 */
+/******************************************************************************/
+
+int XrdFrmFileset::Screen(int needLF)
+{
+   const char *What = 0, *badFN = 0;
+
+// Verify that we have all the relevant files (old mode only)
+//
+   if (!Config.runNew)
+      {if (!(baseFile()))
+          {if (Config.Fix)
+              {if (lockFile()) Remfix("Lock", lockPath());
+               if ( pinFile()) Remfix("Pin",  pinPath());
+              }
+           return 0;
+          }
+       What = "No base file for";
+            if (lockFile()) badFN = lockPath();
+       else if ( pinFile()) badFN = pinPath();
+       else return 0;
+      }
+
+// If no errors from above, try to get the copy time for this file
+//
+   if (!What)
+      {if (!needLF || setCpyTime()) return 1;
+       What = Config.runNew ? "no copy time xattr for" : "no lock file for";
+       badFN = basePath();
+      }
+
+// Issue message if we haven't issued one before
+//
+   if (!BadFiles.Add(badFN, 0, 0, Hash_data_is_key))
+      Say.Emsg("Screen", What, badFN);
+   return 0;
+}
+
+/******************************************************************************/
+/*                            s e t C p y T i m e                             */
 /******************************************************************************/
   
-void XrdFrmFileset::UnLock()
+int XrdFrmFileset::setCpyTime(int Refresh)
 {
-   if (flkFD >= 0) {close(flkFD); flkFD = -1;}
-   if (dlkFD >= 0) {close(dlkFD); dlkFD = -1;}
+   XrdOucNSWalk::NSEnt *lP;
+
+// In new run mode the copy time comes from the extended attributes
+//
+   if (Config.runNew) return cpyInfo.Get(basePath()) > 0;
+
+// If there is no lock file, indicate so
+//
+   if (!(lP = lockFile())) return 0;
+
+// Use the lock file as the source of information
+//
+   if (Refresh && stat(lockPath(), &(lP->Stat)))
+      {Say.Emsg("setCpyTime", errno, "stat", lockPath()); return 0;}
+   cpyInfo.Attr.cpyTime = static_cast<long long>(lP->Stat.st_mtime);
+   return 1;
 }
 
 /******************************************************************************/
@@ -164,7 +212,7 @@ void XrdFrmFileset::UnLock()
 /*                               c h k L o c k                                */
 /******************************************************************************/
 
-// Returns 0 if no lock exists o/w returns 1 or -1;
+// Returns 0 if lock exists or an error occurred, o/w returns fd for the file.
   
 int XrdFrmFileset::chkLock(const char *Path)
 {
@@ -174,7 +222,7 @@ int XrdFrmFileset::chkLock(const char *Path)
 // Open the file appropriately
 //
    if ((lokFD = open(Path, O_RDONLY)) < 0)
-      {Say.Emsg("chkLock", errno, "open", Path); return -1;}
+      {Say.Emsg("chkLock", errno, "open", Path); return 0;}
 
 // Initialize the lock arguments
 //
@@ -187,51 +235,10 @@ int XrdFrmFileset::chkLock(const char *Path)
 
 // Determine the result
 //
-   if (rc) Say.Emsg("chkLock", errno, "lock", Path);
-      else rc = (lock_args.l_type == F_UNLCK ? 0 : 1);
-
-// All done
-//
+   if (!rc) return lokFD;
+   Say.Emsg("chkLock", errno, "lock", Path);
    close(lokFD);
-   return rc;
-}
-
-/******************************************************************************/
-/*                               g e t L o c k                                */
-/******************************************************************************/
-  
-int XrdFrmFileset::getLock(char *Path, int Shared, int noWait)
-{
-   static const int AMode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-   FLOCK_t lock_args;
-   int oFlags = (Shared ? O_RDONLY : O_RDWR|O_CREAT);
-   int rc, lokFD, Act;
-
-// Open the file appropriately
-//
-   if ((lokFD = open(Path, oFlags, AMode)) < 0)
-      {Say.Emsg("getLock", errno, "open", Path); return -1;}
-
-// Initialize the lock arguments
-//
-   bzero(&lock_args, sizeof(lock_args));
-   lock_args.l_type = (Shared ? F_RDLCK : F_WRLCK);
-   Act = (noWait ? F_SETLK : F_SETLKW);
-
-// Now obtain the lock
-//
-   do {rc = fcntl(lokFD, Act, &lock_args);} while(rc < 0 && errno == EINTR);
-
-// Determine the result
-//
-   if (rc)
-      {if (errno != EAGAIN) Say.Emsg("getLock", errno, "lock", Path);
-       close(lokFD); return -1;
-      }
-
-// All done
-//
-   return lokFD;
+   return 0;
 }
 
 /******************************************************************************/
@@ -256,6 +263,19 @@ const char *XrdFrmFileset::Mkfn(XrdOucNSWalk::NSEnt *fP)
 }
   
 /******************************************************************************/
+/*                                R e m f i x                                 */
+/******************************************************************************/
+
+void XrdFrmFileset::Remfix(const char *fType, const char *fPath)
+{
+
+// Remove the offending file
+//
+   if (unlink(fPath)) Say.Emsg("Remfix", errno, "remove orphan", fPath);
+      Say.Emsg("Remfix", fType, "file orphan fixed; removed", fPath);
+}
+  
+/******************************************************************************/
 /*                     C l a s s   X r d F r m F i l e s                      */
 /******************************************************************************/
 /******************************************************************************/
@@ -264,19 +284,34 @@ const char *XrdFrmFileset::Mkfn(XrdOucNSWalk::NSEnt *fP)
   
 XrdFrmFiles::XrdFrmFiles(const char *dname, int opts,
                         XrdOucTList *XList, XrdOucNSWalk::CallBack *cbP)
-            : nsObj(&Say, dname, Config.lockFN,
+            : nsObj(&Say, dname, 0,
                     XrdOucNSWalk::retFile | XrdOucNSWalk::retLink
                    |XrdOucNSWalk::retStat | XrdOucNSWalk::skpErrs
                    |XrdOucNSWalk::retIILO
                    | (opts & CompressD  ?   XrdOucNSWalk::noPath  : 0)
                    | (opts & Recursive  ?   XrdOucNSWalk::Recurse : 0), XList),
               fsList(0), manMem(opts & NoAutoDel ? Hash_keep : Hash_default),
-              shareD(opts & CompressD)
+              shareD(opts & CompressD), getCPT(opts & GetCpyTim)
 {
 
 // Set Call Back method
 //
    nsObj.setCallBack(cbP);
+}
+
+/******************************************************************************/
+/*                            D e s t r u c t o r                             */
+/******************************************************************************/
+  
+XrdFrmFiles::~XrdFrmFiles()
+{
+   XrdFrmFileset *fsetP;
+
+// If manual memory is wante then we must delete any unreturned objects
+//
+   if (manMem)
+       while((fsetP = fsList))
+            {fsList = fsetP->Next; fsetP->Next = 0; delete fsetP;}
 }
 
 /******************************************************************************/
@@ -293,8 +328,12 @@ XrdFrmFileset *XrdFrmFiles::Get(int &rc, int noBase)
 //
 do{while ((fsetP = fsList))
          {fsList = fsetP->Next; fsetP->Next = 0;
-          if (fsetP->File[XrdOssPath::isBase] || noBase) {rc = 0; return fsetP;}
-             else if (manMem) delete fsetP;
+               if (fsetP->File[XrdOssPath::isBase])
+                  {if (getCPT) fsetP->setCpyTime();
+                   rc = 0; return fsetP;
+                  }
+          else if (noBase) {rc = 0; return fsetP;}
+          else if (manMem) delete fsetP;
          }
 
 // Start with next directory (we return when no directories left).
@@ -314,6 +353,55 @@ do{while ((fsetP = fsList))
 /*                       P r i v a t e   M e t h o d s                        */
 /******************************************************************************/
 /******************************************************************************/
+/*                              C o m p l a i n                               */
+/******************************************************************************/
+  
+void XrdFrmFiles::Complain(const char *dPath)
+{
+   static const int OneDay = 24*60*60;
+   static XrdOucHash<char> dTab;
+
+// We want to complain about old=style directories only once every 24 hours
+//
+   if (dTab.Add(dPath, 0, OneDay, Hash_data_is_key)) return;
+
+// Complain about this directory
+//
+   Say.Emsg("Complain","Found old-style files in directory", dPath);
+   Say.Emsg("Complain","In new run mode, migrate & purge will skip them.");
+}
+
+/******************************************************************************/
+/*                               o l d F i l e                                */
+/******************************************************************************/
+
+int XrdFrmFiles::oldFile(XrdOucNSWalk::NSEnt *fP, XrdOucTList *dP, int fType)
+{
+   char pBuff[MAXPATHLEN+8], *pnP = pBuff, *fnP;
+
+// Ignore (for now): '.anew', '.fail', or '.pfn'
+//
+   if (fType == XrdOssPath::isAnew
+   ||  fType == XrdOssPath::isFail
+   ||  fType == XrdOssPath::isPfn) return 0;
+
+// If this is not a directory lock file, indicate we should complain
+//
+   if (fType >= 0) return 1;
+  
+// This is a directory lock file, quietly remove it (we no longer use them)
+//
+   if (!dP) pnP = fP->Path;
+      else {strcpy(pBuff, dP->text);
+            fnP = pBuff + dP->ival[XrdFrmFileset::dLen];
+            *fnP++ = '/';
+            strcpy(fnP, fP->File);
+           }
+   unlink(pnP);
+   return 0;
+}
+
+/******************************************************************************/
 /*                               P r o c e s s                                */
 /******************************************************************************/
   
@@ -323,7 +411,7 @@ int XrdFrmFiles::Process(XrdOucNSWalk::NSEnt *nP, const char *dPath)
    XrdFrmFileset       *sP;
    XrdOucTList         *dP = 0;
    char *dotP;
-   int fType;
+   int fType, noDLKF = 1, runOldFault = 0;
 
 // If compressed directories wanted, then setup a shared directory buffer
 // Warning! We use a hard-coded value for maximum filename length instead of
@@ -343,10 +431,16 @@ int XrdFrmFiles::Process(XrdOucNSWalk::NSEnt *nP, const char *dPath)
 //
    while((fP = nP))
         {nP = fP->Next; fP->Next = 0;
-         if (!strcmp(fP->File, Config.lockFN)) {delete fP; continue;}
-         if ((fType = (int)XrdOssPath::pathType(fP->File))
-         && (dotP = rindex(fP->File, '.'))) *dotP = '\0';
-            else dotP = 0;
+         if (noDLKF && !strcmp(fP->File, Config.lockFN))
+            {oldFile(fP, dP, -1); delete fP; noDLKF = 0; continue;}
+         if (!(fType = (int)XrdOssPath::pathType(fP->File))
+         ||  !(dotP = rindex(fP->File, '.'))) dotP = 0;
+            else {if (Config.runNew)
+                     {runOldFault |= oldFile(fP, dP, fType);
+                      delete fP; continue;
+                     }
+                  *dotP = '\0';
+                 }
          if (!(sP = fsTab.Find(fP->File)))
             {sP = fsList = new XrdFrmFileset(fsList, dP);
              fsTab.Add(fP->File, sP, 0, manMem);
@@ -354,6 +448,10 @@ int XrdFrmFiles::Process(XrdOucNSWalk::NSEnt *nP, const char *dPath)
          if (dotP) *dotP = '.';
          sP->File[fType] = fP;
         }
+
+// If we found on old-style file while in runNew, complain
+//
+   if (runOldFault) Complain(dPath);
 
 // Indicate whether we have anything here
 //

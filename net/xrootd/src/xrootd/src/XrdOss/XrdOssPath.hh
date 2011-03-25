@@ -10,8 +10,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
 #include <string.h>
 
 class XrdOssPath
@@ -47,9 +45,9 @@ static
 inline int   isXA(const char *path) {return path[strlen(path)-1] == xChar;}
 
 enum theSfx {isBase =0, isAnew =1,
-             sfxMigF=1, isFail=2,  isLock =3, isPin =4, isStage=5, sfxMigL=5,
-             sfxMemF=5, isMkeep=6, isMlock=7, isMmap=8,            sfxMemL=8,
-             isPfn=9,   sfxLast=9, sfxNum =10
+             sfxMigF=1, isFail=2,  isLock =3, isPin =4, sfxMigL=4,
+             sfxMemF=4, isMkeep=5, isMlock=6, isMmap=7, sfxMemL=7,
+             isPfn=8,   sfxLast=8, sfxNum =9
             };
 
 static

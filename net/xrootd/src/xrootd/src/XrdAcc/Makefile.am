@@ -20,7 +20,7 @@ xrootdaccincdir = $(includedir)/xrootd/XrdAcc
 
 lib_LTLIBRARIES = libXrdAcc.la
 
-bin_PROGRAMS = XrdAccTest
+noinst_PROGRAMS = XrdAccTest
 
 
 xrootdaccinc_HEADERS = \

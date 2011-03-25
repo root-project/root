@@ -274,8 +274,8 @@ short XrdClientConn::Connect(XrdClientUrlInfo Host2Conn,
 void XrdClientConn::Disconnect(bool ForcePhysicalDisc)
 {
     // Disconnect... is it so difficult? Yes!
-
-    ConnectionManager->SidManager()->GetAllOutstandingWriteRequests(fPrimaryStreamid, fWriteReqsToRetry);
+    if( ConnectionManager->SidManager() )
+      ConnectionManager->SidManager()->GetAllOutstandingWriteRequests(fPrimaryStreamid, fWriteReqsToRetry);
 
     if (fMainReadCache && (DebugLevel() >= XrdClientDebug::kDUMPDEBUG) ) fMainReadCache->PrintCache();
 

@@ -43,7 +43,7 @@ XrdMonSndTransmitter::initialize(const char* receiverHost, kXR_int16 receiverPor
         return 1;
     }
 
-    memset((char *) &_sAddress, sizeof(_sAddress), 0);
+    memset((char *) &_sAddress, 0, sizeof(_sAddress));
     _sAddress.sin_family = AF_INET;
     _sAddress.sin_port = htons(receiverPort);
 

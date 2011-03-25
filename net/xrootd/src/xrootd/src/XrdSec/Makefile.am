@@ -20,7 +20,7 @@ xrootdsecinc_HEADERS = XrdSecInterface.hh XrdSecEntity.hh XrdSecTLayer.hh
 
 lib_LTLIBRARIES = libXrdSec.la
 
-bin_PROGRAMS = testclient testserver
+noinst_PROGRAMS = testclient testserver
 
 #############################################################################
 # Build rules

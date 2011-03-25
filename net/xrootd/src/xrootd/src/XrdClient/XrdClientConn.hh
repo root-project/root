@@ -27,6 +27,7 @@
 #include "XrdOuc/XrdOucHash.hh"
 
 #define ConnectionManager XrdClientConn::GetConnectionMgr()
+#define SessionIDRepo     XrdClientConn::GetSessionIDRepo()
 
 class XrdClientAbs;
 class XrdSecProtocol;
@@ -288,6 +289,9 @@ public:
 
     static XrdClientConnectionMgr *GetConnectionMgr()
     { return fgConnectionMgr;} //Instance of the conn manager
+
+    static XrdOucHash<SessionIDInfo> &GetSessionIDRepo()
+    { return fSessionIDRepo; }
 
     void GetSessionID(SessionIDInfo &sess) {
       XrdOucString sessname;

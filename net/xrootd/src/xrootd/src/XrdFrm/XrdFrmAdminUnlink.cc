@@ -8,10 +8,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
-const char *XrdFrmAdminUnlinkCVSID = "$Id$";
-
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/param.h>
@@ -90,7 +86,7 @@ int XrdFrmAdmin::Unlink(const char *Path)
 
 // Create the name space object to return the contents of each directory
 //
-   NSE.nsP = new XrdOucNSWalk(&Say,lclPath,Config.lockFN,XrdOucNSWalk::Recurse
+   NSE.nsP = new XrdOucNSWalk(&Say, lclPath, 0, XrdOucNSWalk::Recurse
                              |XrdOucNSWalk::retAll | XrdOucNSWalk::retStat);
 
 // Process each directory
@@ -143,8 +139,8 @@ int XrdFrmAdmin::UnlinkDir(const char *Path, const char *lclPath)
 
 // Create the name space object to return the contents of each directory
 //
-   NSE.nsP = new XrdOucNSWalk(&Say, lclPath, Config.lockFN,
-                              XrdOucNSWalk::retAll | XrdOucNSWalk::retStat);
+   NSE.nsP = new XrdOucNSWalk(&Say, lclPath, 0, XrdOucNSWalk::retAll 
+                                              | XrdOucNSWalk::retStat);
 
 // Get the entries in this directory
 //

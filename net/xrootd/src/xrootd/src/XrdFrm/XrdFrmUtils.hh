@@ -9,13 +9,13 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
-  
-//          $Id$
 
 #include <stdlib.h>
 #include <time.h>
 
 #include "XrdFrm/XrdFrmRequest.hh"
+
+class  XrdFrmXAttrPin;
 
 class XrdFrmUtils
 {
@@ -37,6 +37,8 @@ static       int   MapR2Q(char Opc, int *Flags=0);
 static       int   MapV2I(const char *Opc, XrdFrmRequest::Item &ICode);
 
 static       int   Unique(const char *lkfn, const char *myProg);
+
+static       int   updtCpy(const char *Pfn, int Adj);
 
 static       int   Utime(const char *Path, time_t tVal);
 

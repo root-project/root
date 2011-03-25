@@ -10,8 +10,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -75,6 +73,7 @@ int       sUtil;    // Average utilization
   
 // This a single-instance global class
 //
+class XrdCmsBaseFR;
 class XrdCmsSelected;
 
 class XrdCmsCluster
@@ -97,6 +96,11 @@ SMask_t         Broadcast(SMask_t smask, XrdCms::CmsRRHdr &Hdr,
                           char *Data,    int Dlen=0);
 
 SMask_t         Broadcast(SMask_t smask, XrdCms::CmsRRHdr &Hdr,
+                          void *Data,    int Dlen);
+
+// Sends a message to a single node in a round-robbin fashion.
+//
+int             Broadsend(SMask_t smask, XrdCms::CmsRRHdr &Hdr,
                           void *Data,    int Dlen);
 
 // Returns the node mask matching the given IP address
@@ -159,12 +163,14 @@ XrdCmsNode *calcDelay(int nump, int numd, int numf, int numo,
 int         Drop(int sent, int sinst, XrdCmsDrop *djp=0);
 void        Record(char *path, const char *reason);
 int         Multiple(SMask_t mVec);
-enum        {eExists, eDups, eROfs, eNoRep}; // Passed to SelFail
+enum        {eExists, eDups, eROfs, eNoRep, eNoEnt}; // Passed to SelFail
 int         SelFail(XrdCmsSelect &Sel, int rc);
-int         SelNode(XrdCmsSelect &Sel, SMask_t pmask, SMask_t amask);
+int         SelNode(XrdCmsSelect &Sel, SMask_t  pmask, SMask_t  amask);
 XrdCmsNode *SelbyCost(SMask_t, int &, int &, const char **, int);
 XrdCmsNode *SelbyLoad(SMask_t, int &, int &, const char **, int);
 XrdCmsNode *SelbyRef (SMask_t, int &, int &, const char **, int);
+int         SelDFS(XrdCmsSelect &Sel, SMask_t amask,
+                   SMask_t &pmask, SMask_t &smask, int isRW);
 void        sendAList(XrdLink *lp);
 void        setAltMan(int snum, unsigned int ipaddr, int port);
 

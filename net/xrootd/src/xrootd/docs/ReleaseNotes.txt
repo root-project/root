@@ -6,6 +6,103 @@ Release Notes
 =============
 
 -------------
+Version 3.0.3
+-------------
+
++ **New features**
+   * Change configure.classic to handle various versions of processors in a
+     more sane way (this fixes several Solaris issues and atomics for i686).
+   * Add fwdwait option to cms.request directive to allow pacing of forwarded
+     requests (off by default).
+   * Use native memory synchronization primitives when available when doing
+     network I/O. This will eventually be extended to cover all other cases.
+   * Add the qdl option to the cms.delay directive to allow changing the
+     query window independently of the time a client is asked to wait for the
+     query to actually complete.
+   * Add 'pss.namelib' directive to allow proxies to pre-translate the lfn
+     for servers that cannot do so (e.g., dCache xrootd door).
+   * Optimize handling of shared-everything ile systems (e.g., dCache, GPFS,
+     DFS, Lustre, etc.) in the cmsd.
+   * Implement optional throttling for meta-manager requests in the cmsd.
+   * New cmsd directive, cms.dfs, declares that the underlying file system
+     is a shared-everything system (i.e., distributed file system) and allow
+     for optimal configuration and meta-manager throttling.
+   * Change the oss and fm components to use file extended attributes instead
+     of meta-files. This affects copy, create, reloc, rename, and unlink in the
+     oss layer. Migrate, purge, transfer, and most admin commands in the frm
+     component. The 'all.export' directive now accepts the noxattr/xattr option.
+     WARNING: If the migrator or purge options have been specified for any path
+     in the 'all.export; directive then this change requires either the the
+     'oss.runmodeold' directive be added to the configuration file to provide
+     backward compatibility or that the name and data spaces be migrated using
+     the frm_admin command. See "Migrating tp Extended Attributes" manual for
+     detailed information and the new 'frm_admin convert' subcommand.
+   * Avoid physical copy if the operation can be handled using hard links. This
+     greatly speeds up static space token reassignment.
+   * Add platform independent interface to extended file attributes.
+   * RPM packaging and Red Hat Enterprise Linux compatible init scripts
+     capable of handling multiple instances of the xrootd daemons. The instances
+     can be defined in the /etc/sysconfig/xrootd file and then handled using standard::
+
+       service xrootd start|stop|...
+       service cmsd start|stop|...
+       ...
+
+     or handled by name::
+
+       service xrootd start instance1 instance5
+
+   * New '-s' commandline option for xrootd, cmsd, frm_purged and frm_xfrd
+     creating a pidfile.
+   * xrootd, cmsd, frm_purged and frm_xfrd now return failure to the shell
+     when called with '-b' option (daemonization) and the daemon fails to
+     initialize.
+   * New 'EnableTCPKeepAlive' client environment option added enabling the TCP
+     stack keep-alive functionality for the sockets.
+     On Linux three addtional fine-tunning options are available:
+
+     - TCPKeepAliveTime - interval (in seconds) between the last data packet and the first keep-alive
+       probe
+     - TCPKeepAliveInterval - interval (in seconds) between the probes
+     - TCPKeepAliveProbes - number of probes lost to consider the connection broken
+
+   * New functionality handling process forking. When enabled (via the 'EnableForkHandlers'
+     env option) prior to a call to fork it shuts down all the xrootd connection management
+     facilities (including the connections themselves) and reinitializes them after the fork
+     both in the parent and the child process. This ensures relative fork safety provided
+     that all the XrdClient and XrdAdmin instances are closed when the fork function is invoked.
+
++ **Major bug fixes**
+   * Add missing braces that caused config failure in frm_admin command.
+   * Account for correct path when -M value is zero in hpsscp command.
+   * In XrdCryptossl, fix for thread-safeness; solves random crashes observed on the
+     server side under high authentication frequency
+   * In XrdOucBonjour, fix important issue with host domain name registration, preventing
+     the correct domain to be posted.
+
++ **Minor bug fixes**
+   * Correct oss partition selection algorithm to further spread out file
+     allocation.
+   * Allow underscores in set/setenv variables.
+   * Add null byte after checksum value response.
+   * Move mapping of errno to xrootd error code to the protocol package where it
+     belongs. This also removes a cross dependency.
+   * Correct RetToken() behaviour in the presence of multiple spaces between tokens and
+     the previous call returned the remainder of the line (very obscure circumstances).
+   * [bug #77535] xrdcp now returns an error to the shell when it fails to copy the file
+   * [bug #79710] xrdcp now gracefully aborts when it encounters a corrupted local file
+   * Reset the transaction timeout for the Query method.
+     This fixes transaction timeout issues for clients doing only queries.
+   * Rename variable to remove conflict between it and global of the same name.
+   * Fix frm_admin command line option parsing so it does not trip over
+     subcommand options. This also fixes a SEGV in MacOS when this actually
+     happens.
+   * Enable the '-md5' option when OpenSSL is present and xrootd is built with autotools.
+
++ **Documentation**
+   * Added man pages for: xprep, xrd, xrdcp, xrdstagetool, xrdgsiproxy
+
+-------------
 Version 3.0.2
 -------------
 

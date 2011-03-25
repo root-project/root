@@ -30,6 +30,7 @@ const char *XrdClientSockCVSID = "$Id$";
 
 #ifndef WIN32
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <unistd.h>
 #include <sys/poll.h>
 #else
@@ -42,16 +43,21 @@ const char *XrdClientSockCVSID = "$Id$";
 #endif
 
 //_____________________________________________________________________________
-XrdClientSock::XrdClientSock(XrdClientUrlInfo Host, int windowsize)
+XrdClientSock::XrdClientSock(XrdClientUrlInfo Host, int windowsize, int fd)
 {
     // Constructor
 
     fHost.TcpHost = Host;
     fHost.TcpWindowSize = windowsize;
-    fConnected = FALSE;
     fRDInterrupt = 0;
     fWRInterrupt = 0;
-    fSocket = -1;
+    fSocket = fd;
+
+    if( fSocket >= 0 )
+      fConnected = TRUE;
+    else
+      fConnected = FALSE;
+
     fRequestTimeout = EnvGetLong(NAME_REQUESTTIMEOUT);
 }
 
@@ -419,6 +425,32 @@ int XrdClientSock::TryConnect_low(bool isUnix, int altport, int windowsz)
 	    Error("ClientSock::TryConnect_low",
 		  "Socket detach returned " << detachedFD << " but expected " << sock);
 	}
+    }
+
+    //--------------------------------------------------------------------------
+    // Set the keepalive options
+    //--------------------------------------------------------------------------
+    if( !isUnix && EnvGetLong( NAME_ENABLE_TCP_KEEPALIVE ) )
+    {
+      if( XrdNetSocket::setOpts( sock, XRDNET_KEEPALIVE, 0 ) != 0 )
+        Error( "ClientSock::TryConnect_low", "Unable to set the TCP Keep Alive option" );
+
+#if defined(__linux__) && defined( TCP_KEEPIDLE ) && defined( TCP_KEEPINTVL ) && defined( TCP_KEEPCNT )
+
+      int val = EnvGetLong( NAME_TCP_KEEPALIVE_TIME );
+      if( setsockopt( sock, SOL_TCP, TCP_KEEPIDLE, (char *)&val, sizeof( val ) ) < 0 )
+        Error( "ClientSock::TryConnect_low", "Unable to set the TCP Keep Alive Time" );
+
+      val = EnvGetLong( NAME_TCP_KEEPALIVE_INTERVAL );
+      if( setsockopt( sock, SOL_TCP, TCP_KEEPINTVL, (char *)&val, sizeof( val ) ) < 0 )
+        Error( "ClientSock::TryConnect_low", "Unable to set the TCP Keep Alive Interval" );
+
+      val = EnvGetLong( NAME_TCP_KEEPALIVE_PROBES );
+      if( setsockopt( sock, SOL_TCP, TCP_KEEPCNT, (char *)&val, sizeof( val ) ) < 0 )
+        Error( "ClientSock::TryConnect_low", "Unable to set the TCP Keep Alive Probes" );
+
+#endif
+
     }
 
     return sock;

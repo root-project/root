@@ -14,11 +14,11 @@ const char *XrdFrmPurgMainCVSID = "$Id$";
 
 /* This is the "main" part of the frm_purge command. Syntax is:
 */
-static const char *XrdFrmOpts  = ":bc:dfhk:l:n:O:Tv";
+static const char *XrdFrmOpts  = ":bc:dfhk:l:n:O:s:Tv";
 static const char *XrdFrmUsage =
 
   " [-b] [-c <cfgfile>] [-d] [-f] [-k {num | sz{k|m|g}] [-l <lfile>] [-n name]"
-  " [-O free[,hold]] [-T] [-v] [<spaces>] [<paths>]\n";
+  " [-O free[,hold]] [-s pidfile] [-T] [-v] [<spaces>] [<paths>]\n";
 /*
 Where:
 

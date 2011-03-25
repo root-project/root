@@ -74,6 +74,7 @@ int              ConWait;
 int              RepDelay;
 int              RepNone;
 int              RepWait;
+int              FwdWait;
 int              PrepWait;
 int              isMeta;
 int              isTarget;

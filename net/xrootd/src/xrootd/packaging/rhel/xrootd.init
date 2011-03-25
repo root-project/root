@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# /etc/init.d/xrootd - Start/stop the xrootd services
+#
+# The following two lines allow this script to be managed by Fedora's
+# chkconfig program.
+#
+# chkconfig: - 80 30
+# description: xrootd is a cluster file system.
+
+# Source function library.
+. /etc/rc.d/init.d/xrootd.functions
+
+if [ -e /etc/sysconfig/xrootd ]; then
+  . /etc/sysconfig/xrootd
+fi
+
+COMMAND=$1
+shift
+
+case "$COMMAND" in
+  'start')
+    handleDaemons start xrootd $@
+    ;;
+  'stop')
+    handleDaemons stop xrootd $@
+    ;;
+  'status')
+    handleDaemons status xrootd $@
+    ;;
+  'reload' | 'restart')
+    handleDaemons stop xrootd $@
+    handleDaemons start xrootd $@
+    ;;
+  'condrestart')
+    handleDaemons condrestart xrootd $@
+    ;;
+  *)
+    echo "usage: $0 {start|stop|status|restart|condrestart}"
+    ;;
+esac
+
+exit $?
+

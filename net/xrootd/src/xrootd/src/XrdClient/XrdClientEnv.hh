@@ -91,8 +91,7 @@ class XrdClientEnv {
       fOucEnv->PutInt(varname, value);
    }
 
-   static XrdClientEnv    *Instance();
-
+  static XrdClientEnv *Instance();
 };
 
 #endif

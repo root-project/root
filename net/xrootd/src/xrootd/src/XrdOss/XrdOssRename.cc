@@ -8,10 +8,6 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
-const char *XrdOssRenameCVSID = "$Id$";
-
 #include <unistd.h>
 #include <errno.h>
 #include <strings.h>
@@ -23,14 +19,15 @@ const char *XrdOssRenameCVSID = "$Id$";
 #include <sys/stat.h>
 
 #include "XrdSys/XrdSysHeaders.hh"
+#include "XrdSys/XrdSysFAttr.hh"
 #include "XrdOss/XrdOssApi.hh"
 #include "XrdOss/XrdOssCache.hh"
 #include "XrdOss/XrdOssError.hh"
-#include "XrdOss/XrdOssLock.hh"
 #include "XrdOss/XrdOssPath.hh"
 #include "XrdOss/XrdOssTrace.hh"
 #include "XrdOuc/XrdOucExport.hh"
 #include "XrdOuc/XrdOucUtils.hh"
+#include "XrdFrm/XrdFrmXAttr.hh"
 
 /******************************************************************************/
 /*           G l o b a l   E r r o r   R o u t i n g   O b j e c t            */
@@ -59,7 +56,6 @@ int XrdOssSys::Rename(const char *oldname, const char *newname)
     unsigned long long remotefs_Old, remotefs_New, remotefs, haslf;
     unsigned long long old_popts, new_popts;
     int i, retc2, retc = XrdOssOK;
-    XrdOssLock old_file, new_file;
     struct stat statbuff;
     char  *slashPlus, sPChar;
     char  local_path_Old[MAXPATHLEN+8], *lpo;
@@ -91,16 +87,9 @@ int XrdOssSys::Rename(const char *oldname, const char *newname)
      && (((retc = GenRemotePath(oldname, remote_path_Old))
      ||   (retc = GenRemotePath(newname, remote_path_New)))) ) return retc;
 
-// Lock the target directory if this is a remote backed filesystem
-//
-   if (remotefs &&
-       (retc2 = new_file.Serialize(local_path_New, XrdOssDIR|XrdOssEXC)) < 0)
-      return retc2;
-
 // Make sure that the target file does not exist
 //
    retc2 = lstat(local_path_New, &statbuff);
-   if (remotefs) new_file.UnSerialize(0);
    if (!retc2) return -EEXIST;
 
 // We need to create the directory path if it does not exist.
@@ -110,12 +99,6 @@ int XrdOssSys::Rename(const char *oldname, const char *newname)
    retc2 = XrdOucUtils::makePath(local_path_New, pMode);
    *slashPlus = sPChar;
    if (retc2) return retc2;
-
-// Serialize access to the source directory.
-//
-     if (remotefs &&
-         (retc = old_file.Serialize(local_path_Old, XrdOssDIR|XrdOssEXC)) < 0)
-       return retc;
 
 // Check if this path is really a symbolic link elsewhere
 //
@@ -127,7 +110,7 @@ int XrdOssSys::Rename(const char *oldname, const char *newname)
 
 // For migratable space, rename all suffix variations of the base file
 //
-   if (haslf)
+   if (haslf && runOld)
       {if ((!retc || retc == -ENOENT))
           {i = strlen(local_path_Old); lpo = &local_path_Old[i];
            i = strlen(local_path_New); lpn = &local_path_New[i];
@@ -140,7 +123,7 @@ int XrdOssSys::Rename(const char *oldname, const char *newname)
       }
 
 // Now rename the data file in the remote system if the local rename "worked".
-// Do not do this if we really should not use the MSS (but unserialize!).
+// Do not do this if we really should not use the MSS.
 //
    if (remotefs)
       {if (remotefs && (!retc || retc == -ENOENT) && RSSCmd)
@@ -148,10 +131,6 @@ int XrdOssSys::Rename(const char *oldname, const char *newname)
               != -ENOENT) retc = retc2;
            DEBUG("rmt rc=" <<retc2 <<" op=" <<remote_path_Old <<" np=" <<remote_path_New);
           }
-
-      // All done.
-      //
-         old_file.UnSerialize(0);
       }
 
 // All done.
@@ -181,7 +160,9 @@ int XrdOssSys::RenameLink(char *old_path, char *new_path)
 // and if so, add the space to the usage to account for stage-ins
 //
    if (oldlnk[lnklen-1] == XrdOssPath::xChar)
-      {if ((rc=RenameLink2(lnklen,oldlnk,old_path,newlnk,new_path))) return rc;
+      {rc = (runOld ? RenameLink2(lnklen,oldlnk,old_path,newlnk,new_path)
+                    : RenameLink3(oldlnk, old_path, new_path));
+       if (rc) return rc;
        if (Solitary && UDir)
           {n = strlen(old_path);
            if (n < 6 || strcmp(old_path+n-5, ".anew")
@@ -273,4 +254,29 @@ int XrdOssSys::RenameLink2(int Llen, char *oLnk, char *old_path,
 // All done (well, as well as it needs to be at this point)
 //
    return 0;
+}
+
+/******************************************************************************/
+/*                           R e n a m e L i n k 3                            */
+/******************************************************************************/
+  
+int XrdOssSys::RenameLink3(char *cPath, char *old_path, char *new_path)
+{
+   int rc;
+  
+// First set the new extended attribute on this file
+//
+   if ((rc = XrdSysFAttr::Set(XrdFrmXAttrPfn::Name(), new_path,
+                              strlen(new_path)+1, cPath))) return rc;
+
+// Now merely rename the old to the new
+//
+   if (!rename(old_path, new_path)) return 0;
+
+// Rename failed, restore old attribute
+//
+   rc = -errno;
+   XrdSysFAttr::Set(XrdFrmXAttrPfn::Name(),old_path,strlen(old_path)+1,cPath);
+   OssEroute.Emsg("RenameLink", rc, "rename", old_path);
+   return rc;
 }

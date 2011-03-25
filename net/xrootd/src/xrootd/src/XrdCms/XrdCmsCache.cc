@@ -7,12 +7,6 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
-
-//         $Id$
-
-// Original Version: 1.13 2007/07/12 21:57:38 abh
-
-const char *XrdCmsCacheCVSID = "$Id$";
   
 #include <stdio.h>
 #include <sys/types.h>
@@ -79,7 +73,7 @@ void *XrdCmsStartTickTock(void *carg)
 // Key was found:  Location information is updated depending on mask
 // mask == 0       Indicates that the information is being refreshed.
 //                 Location information is nullified. The update deadline is set
-//                 DLTime seconds in the future. The entry window is set to the
+//                 QDelay seconds in the future. The entry window is set to the
 //                 current window to be held for a full fxhold period.
 // mask != 0       Indicates that some location information is now known.
 //                 Location information is updated according to the mask.
@@ -120,7 +114,7 @@ int XrdCmsCache::AddFile(XrdCmsSelect &Sel, SMask_t mask)
 //
    if (iP)
       {if (!mask)
-          {iP->Loc.deadline = DLTime + time(0);
+          {iP->Loc.deadline = QDelay + time(0);
            iP->Loc.hfvec = 0; iP->Loc.pfvec = 0; iP->Loc.qfvec = 0;
            iP->Loc.TOD_B = BClock;
            iP->Key.TOD = Tock;
@@ -133,10 +127,10 @@ int XrdCmsCache::AddFile(XrdCmsSelect &Sel, SMask_t mask)
            iP->Loc.qfvec &= ~mask;
            if (isrw) {iP->Loc.deadline = 0;
                       if (iP->Loc.roPend || iP->Loc.rwPend)
-                         Dispatch(iP, iP->Loc.roPend, iP->Loc.rwPend);
+                         Dispatch(Sel, iP, iP->Loc.roPend, iP->Loc.rwPend);
                      }
               else   {if (!iP->Loc.rwPend) iP->Loc.deadline = 0;
-                      if (iP->Loc.roPend) Dispatch(iP, iP->Loc.roPend, 0);
+                      if (iP->Loc.roPend) Dispatch(Sel, iP, iP->Loc.roPend, 0);
                      }
           }
       } else if (!(Sel.Opts & XrdCmsSelect::Advisory))
@@ -146,7 +140,7 @@ int XrdCmsCache::AddFile(XrdCmsSelect &Sel, SMask_t mask)
                      iP->Loc.hfvec    = mask;
                      iP->Loc.TOD_B    = BClock;
                      iP->Loc.qfvec    = 0;
-                     iP->Loc.deadline = DLTime + time(0);
+                     iP->Loc.deadline = QDelay + time(0);
                      Sel.Path.Ref     = iP->Key.Ref;
                      Sel.Path.TODRef  = iP; isnew = 1;
                     }
@@ -229,7 +223,7 @@ int  XrdCmsCache::GetFile(XrdCmsSelect &Sel, SMask_t mask)
           {iP->Loc.hfvec &= ~bVec; 
            iP->Loc.pfvec &= ~bVec;
            iP->Loc.qfvec &= ~mask;
-           iP->Loc.deadline = DLTime + time(0); 
+           iP->Loc.deadline = QDelay + time(0);
            retc = -1;
           } else if (iP->Loc.deadline)
                     if (iP->Loc.deadline > time(0)) retc = -1;
@@ -354,14 +348,19 @@ void XrdCmsCache::Drop(SMask_t smask, int SNum, int xHi)
 /* public                           I n i t                                   */
 /******************************************************************************/
   
-int XrdCmsCache::Init(int fxHold, int fxDelay)
+int XrdCmsCache::Init(int fxHold, int fxDelay, int fxQuery, int seFS)
 {
    XrdCmsKeyItem *iP;
    pthread_t tid;
 
+// Indicate whether we are a shared-everything setup as this changes how we
+// dispatch clients to newly discovered files (see Dispatch()).
+//
+   isDFS = seFS;
+
 // Initialize the delay time and the bounce clock tick window
 //
-   DLTime = fxDelay;
+   DLTime = fxDelay; QDelay = fxQuery;
    if (!(Tick = fxHold/XrdCmsKeyItem::TickRate)) Tick = 1;
 
 // Start the clock thread
@@ -431,10 +430,27 @@ void XrdCmsCache::Add2Q(XrdCmsRRQInfo *Info, XrdCmsKeyItem *iP, int isrw)
 /*                              D i s p a t c h                               */
 /******************************************************************************/
   
-void XrdCmsCache::Dispatch(XrdCmsKeyItem *iP, short roQ, short rwQ)
+void XrdCmsCache::Dispatch(XrdCmsSelect &Sel, XrdCmsKeyItem *iP,
+                           short roQ, short rwQ)
 {
 
-// Dispach the waiting elements
+// Dispatching shared-everything nodes is very different from shared-nothing
+// since one ready node means all are ready and we can use any one of them.
+// The current list of nodes must is provided by the caller adding the entry.
+//
+   if (isDFS)
+      {if (roQ) {RRQ.Ready(roQ, iP, Sel.Vec.hf, Sel.Vec.pf & Sel.Vec.hf);
+                 iP->Loc.roPend = 0;
+                }
+       if (rwQ && Sel.Vec.wf)
+                {RRQ.Ready(rwQ, iP, Sel.Vec.wf, Sel.Vec.pf & Sel.Vec.wf);
+                 iP->Loc.rwPend = 0;
+                }
+       return;
+      }
+
+// Disptaching shared-nothing nodes is a one-shot affair. Only one node becomes
+// ready at a time and we can only disptach that node.
 //
    if (roQ) {RRQ.Ready(roQ, iP, iP->Loc.hfvec, iP->Loc.pfvec);
              iP->Loc.roPend = 0;

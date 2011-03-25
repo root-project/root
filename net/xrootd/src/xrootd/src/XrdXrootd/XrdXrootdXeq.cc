@@ -2241,7 +2241,7 @@ int XrdXrootdProtocol::fsError(int rc, XrdOucErrInfo &myError)
 //
    if (rc == SFS_ERROR)
       {SI->errorCnt++;
-       rc = mapError(ecode);
+       rc = XProtocol::mapError(ecode);
        return Response.Send((XErrorCode)rc, eMsg);
       }
 
@@ -2322,31 +2322,6 @@ int XrdXrootdProtocol::getBuff(const int isRead, int Quantum)
 // Success
 //
    return 1;
-}
-
-/******************************************************************************/
-/*                              m a p E r r o r                               */
-/******************************************************************************/
-  
-int XrdXrootdProtocol::mapError(int rc)
-{
-    if (rc < 0) rc = -rc;
-    switch(rc)
-       {case ENOENT:       return kXR_NotFound;
-        case EPERM:        return kXR_NotAuthorized;
-        case EACCES:       return kXR_NotAuthorized;
-        case EIO:          return kXR_IOError;
-        case ENOMEM:       return kXR_NoMemory;
-        case ENOBUFS:      return kXR_NoMemory;
-        case ENOSPC:       return kXR_NoSpace;
-        case ENAMETOOLONG: return kXR_ArgTooLong;
-        case ENETUNREACH:  return kXR_noserver;
-        case ENOTBLK:      return kXR_NotFile;
-        case EISDIR:       return kXR_isDirectory;
-        case EEXIST:       return kXR_InvalidRequest;
-        case ETXTBSY:      return kXR_inProgress;
-        default:           return kXR_FSError;
-       }
 }
 
 /******************************************************************************/

@@ -33,6 +33,7 @@
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlatform.hh"
+#include "XrdSys/XrdSysPlugin.hh"
 
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdOuc/XrdOucTList.hh"
@@ -108,6 +109,9 @@ int XrdPssSys::Configure(const char *cfn)
    char *eP, theRdr[maxHLen+1024];
    int i, NoGo = 0;
 
+   N2NLib = NULL;
+   theN2N = NULL;
+
 // Preset tracing options
 //
    if (getenv("XRDDEBUG")) XrdPosixXrootd::setDebug(1);
@@ -118,7 +122,7 @@ int XrdPssSys::Configure(const char *cfn)
 //
    XrdPosixXrootd::setEnv("ReadAheadSize",           1024*1024);
    XrdPosixXrootd::setEnv("ReadCacheSize",       512*1024*1024);
-   XrdPosixXrootd::setEnv("ParStreamsPerPhyConn",            2);
+   XrdPosixXrootd::setEnv("ParStreamsPerPhyConn",      long(0)); // Temp!
    XrdPosixXrootd::setEnv("PurgeWrittenBlocks",              1);
    XrdPosixXrootd::setEnv("DataServerConn_ttl",          20*60);
    XrdPosixXrootd::setEnv("LBServerConn_ttl",            60*60);
@@ -146,6 +150,9 @@ int XrdPssSys::Configure(const char *cfn)
 //
    urlPlen = sprintf(theRdr, hdrData, "", "", "", "", "", "", "", "");
    urlPlain= strdup(theRdr);
+
+// Configure the N2N library:
+   if (N2NLib && (NoGo = ConfigN2N())) return NoGo;
 
 // We would really like that the Ffs interface use the generic method of
 // keeping track of data servers. It does not and it even can't handle more
@@ -254,6 +261,32 @@ int XrdPssSys::ConfigProc(const char *Cfn)
 }
 
 /******************************************************************************/
+/*                             C o n f i g N 2 N                              */
+/******************************************************************************/
+
+int XrdPssSys::ConfigN2N()
+{  
+   XrdSysPlugin    *myLib;
+   XrdOucName2Name *(*ep)(XrdOucgetName2NameArgs);
+
+// Create a plugin object (we will throw this away without deletion because
+// the library must stay open but we never want to reference it again).
+// 
+   if (!(myLib = new XrdSysPlugin(&eDest, N2NLib))) return 1;
+
+// Now get the entry point of the object creator
+// 
+   ep = (XrdOucName2Name *(*)(XrdOucgetName2NameArgs))(myLib->getPlugin("XrdOucgetName2Name"));
+   if (!ep) return 1;
+
+
+// Get the Object now
+// 
+   theN2N = ep(&eDest, ConfigFN, (N2NParms ? N2NParms : ""), NULL, NULL);
+   return theN2N == 0;
+}
+
+/******************************************************************************/
 /*                             C o n f i g X e q                              */
 /******************************************************************************/
 
@@ -266,6 +299,7 @@ int XrdPssSys::ConfigXeq(char *var, XrdOucStream &Config)
    TS_Xeq("origin",        xorig);
    TS_Xeq("setopt",        xsopt);
    TS_Xeq("trace",         xtrac);
+   TS_Xeq("namelib",       xnml);
 
    // No match found, complain.
    //
@@ -321,7 +355,44 @@ do{for (i = 0; i < numopts; i++) if (!strcmp(Xopts[i].Key, val)) break;
 
    return 0;
 }
-  
+
+/******************************************************************************/
+/*                                  x n m l                                   */
+/******************************************************************************/
+
+/* Function: xnml
+
+   Purpose:  To parse the directive: namelib <path> [<parms>]
+
+             <path>    the path of the filesystem library to be used.
+             <parms>   optional parms to be passed
+
+  Output: 0 upon success or !0 upon failure.
+*/
+
+int XrdPssSys::xnml(XrdSysError *Eroute, XrdOucStream &Config)
+{
+    char *val, parms[1024];
+
+// Get the path
+//
+   if (!(val = Config.GetWord()) || !val[0])
+      {Eroute->Emsg("Config", "namelib not specified"); return 1;}
+
+// Record the path
+//
+   if (N2NLib) free(N2NLib);
+   N2NLib = strdup(val);
+
+// Record any parms
+//
+   if (!Config.GetRest(parms, sizeof(parms)))
+      {Eroute->Emsg("Config", "namelib parameters too long"); return 1;}
+   if (N2NParms) free(N2NParms);
+   N2NParms = (*parms ? strdup(parms) : 0);
+   return 0;
+}
+
 /******************************************************************************/
 /*                                 x o r i g                                  */
 /******************************************************************************/

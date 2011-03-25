@@ -419,10 +419,22 @@ void *ReaderThread_loc(void *) {
 	 abort();
       }
 
-      if ( (nr = read(cpnfo.localfile, buf, XRDCP_BLOCKSIZE)) ) {
-         cpnfo.queue.PutBuffer(buf, offs, nr);
-	 bread += nr;
-	 offs += nr;
+      //------------------------------------------------------------------------
+      // If this read fails it means that either the program logic is
+      // flawed, or there was a low level hardware failure. In either case
+      // continuing may cause more harm than good.
+      //------------------------------------------------------------------------
+      nr = read( cpnfo.localfile, buf, XRDCP_BLOCKSIZE );
+      if( nr < 0 )
+      {
+        cerr << "Local read failed: " << strerror( errno ) << endl;
+        abort();
+      }
+      if( nr > 0)
+      {
+        cpnfo.queue.PutBuffer(buf, offs, nr);
+        bread += nr;
+        offs += nr;
       }
    }
 
@@ -1179,7 +1191,7 @@ void PrintUsage() {
    cerr << " -d lvl :         debug level: 1 (low), 2 (medium), 3 (high)" << endl;
    cerr << " -D proxyaddr:proxyport" << endl <<
            "        :         use proxyaddr:proxyport as a SOCKS4 proxy."
-     " Only numerical addresses are supported." << endl <<
+     " Only numerical addresses are supported." << endl;
    cerr << " -DSparmname stringvalue" << endl <<
 	   "        :         set the internal parm <parmname> with the string value <stringvalue>" << endl <<
 	   "                   See XrdClientConst.hh for a list of parameters." << endl;
@@ -1588,8 +1600,11 @@ int main(int argc, char**argv) {
 	       retval = doCp_xrd2loc(src.c_str(), d.c_str());
 	    }
 	    else
+            {
 	       cerr << "Error " << strerror(errno) <<
 		     " accessing path for " << d << endl;
+               retval = -1;
+            }
 	 }
       }
       else {

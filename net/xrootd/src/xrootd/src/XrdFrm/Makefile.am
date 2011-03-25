@@ -43,10 +43,12 @@ xrootdfrminc_HEADERS = XrdFrmAdmin.hh   \
                        XrdFrmTSort.hh   \
                        XrdFrmTransfer.hh\
                        XrdFrmUtils.hh   \
+                       XrdFrmXAttr.hh \
                        XrdFrmXfrAgent.hh\
                        XrdFrmXfrDaemon.hh\
                        XrdFrmXfrJob.hh  \
-                       XrdFrmXfrQueue.hh
+                       XrdFrmXfrQueue.hh \
+                       XrdFrmXLock.hh
 
 
 lib_LTLIBRARIES = libXrdFrm.la
@@ -96,6 +98,7 @@ frm_admin_SOURCES = \
                   XrdFrmAdminMain.cc \
                   XrdFrmAdmin.cc \
                   XrdFrmAdminAudit.cc \
+                  XrdFrmAdminConvert.cc \
                   XrdFrmAdminFiles.cc \
                   XrdFrmAdminFind.cc \
                   XrdFrmAdminQuery.cc \

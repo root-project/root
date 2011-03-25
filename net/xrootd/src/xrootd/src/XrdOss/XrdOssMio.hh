@@ -10,8 +10,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//           $Id$
-
 #include "XrdSys/XrdSysError.hh"
 #include "XrdOuc/XrdOucHash.hh"
 #include "XrdSys/XrdSysPthread.hh"
@@ -28,8 +26,6 @@ class XrdOssMio
 public:
 static void           Display(XrdSysError &Eroute);
 
-static int            getOpts(char *path, int popts);
-
 static char           isAuto() {return MM_chk;}
 
 static char           isOn()   {return MM_on;}
@@ -40,8 +36,7 @@ static void          *preLoad(void *arg);
 
 static void           Recycle(XrdOssMioFile *mp);
 
-static void           Set(int V_off, int V_preld,  int V_chklok,
-                                     int V_chkmap, int V_chkkeep);
+static void           Set(int V_off, int V_preld, int V_check);
 
 static void           Set(long long V_max);
 
@@ -58,9 +53,6 @@ static XrdOssMioFile *MM_IdleLast;
 
 static char       MM_on;
 static char       MM_chk;
-static char       MM_chklok;
-static char       MM_chkmap;
-static char       MM_chkkeep;
 static char       MM_okmlock;
 static char       MM_preld;
 static long long  MM_max;

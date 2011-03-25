@@ -10,7 +10,7 @@
 
 SUBDIRS = libsslGridSite
 
-bin_PROGRAMS = xrdsecssltest
+noinst_PROGRAMS = xrdsecssltest
 
 lib_LTLIBRARIES = libXrdSecssl.la
 

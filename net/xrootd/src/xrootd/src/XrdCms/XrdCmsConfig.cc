@@ -2,26 +2,14 @@
 /*                                                                            */
 /*                       X r d C m s C o n f i g . c c                        */
 /*                                                                            */
-/* (c) 2007 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/* (c) 2011 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*                            All Rights Reserved                             */
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id$
-
-// Original Version: 1.54 2007/08/30 00:42:37 abh
-
-const char *XrdCmsConfigCVSID = "$Id$";
-
 /*
-   The routines in this file handle cmsd() initialization. They get the
-   configuration values either from configuration file or XrdCmsconfig.h (in that
-   order of precedence).
-
-   These routines are thread-safe if compiled with:
-   AIX: -D_THREAD_SAFE
-   SUN: -D_REENTRANT
+   The methods in this file handle cmsd() initialization.
 */
   
 #include <unistd.h>
@@ -40,6 +28,7 @@ const char *XrdCmsConfigCVSID = "$Id$";
 #include "Xrd/XrdScheduler.hh"
 
 #include "XrdCms/XrdCmsAdmin.hh"
+#include "XrdCms/XrdCmsBaseFS.hh"
 #include "XrdCms/XrdCmsCache.hh"
 #include "XrdCms/XrdCmsCluster.hh"
 #include "XrdCms/XrdCmsConfig.hh"
@@ -83,28 +72,12 @@ const char *XrdCmsConfigCVSID = "$Id$";
 using namespace XrdCms;
 
 /******************************************************************************/
-/*                  C o m m a n d   L i n e   O p t i o n s                   */
-/******************************************************************************/
-/*
-   cmsd [options] [configfn]
-
-   options: [xopt] [-i] [-m] [-s] [-w]
-
-Where:
-    xopt  Are Xrd processed options (some of which we use).
-
-   -i     Immediate start-up (do not wait for a server connection).
-
-   -m     function in manager mode.
-
-   -s     Executes in server  mode.
-*/
-
-/******************************************************************************/
 /*                        G l o b a l   O b j e c t s                         */
 /******************************************************************************/
 
        XrdCmsAdmin      XrdCms::Admin;
+
+       XrdCmsBaseFS     XrdCms::baseFS(&XrdCmsNode::do_StateDFS);
 
        XrdCmsConfig     XrdCms::Config;
 
@@ -260,6 +233,10 @@ int XrdCmsConfig::Configure1(int argc, char **argv, char *cfn)
 //
    if (!NoGo) NoGo |= ConfigProc();
 
+// Override the trace option
+//
+   if (getenv("XRDDEBUG")) Trace.What = TRACE_ALL;
+
 // Override the wait/nowait from the command line
 //
    if (immed) doWait = (immed > 0 ? 0 : 1);
@@ -294,6 +271,10 @@ int XrdCmsConfig::Configure1(int argc, char **argv, char *cfn)
           else PortTCP = 0;
       }
 
+// If we are configured in proxy mode then we are running a shared filesystem
+//
+   if (isProxy) baseFS.Init(XrdCmsBaseFS::DFSys|XrdCmsBaseFS::Immed, 0, 0);
+
 // Determine how we ended and return status
 //
    sprintf(buff, " phase 1 %s initialization %s.", myRole,
@@ -327,7 +308,9 @@ int XrdCmsConfig::Configure2()
 // Determine who we are. If we are a manager or supervisor start the file
 // location cache scrubber.
 //
-   if (isManager) NoGo = !Cache.Init(cachelife, LUPDelay);
+   if (QryDelay < 0) QryDelay = LUPDelay;
+   if (isManager) 
+      NoGo = !Cache.Init(cachelife, LUPDelay, QryDelay, baseFS.isDFS());
 
 // Issue warning if the adminpath resides in /tmp
 //
@@ -357,9 +340,10 @@ int XrdCmsConfig::Configure2()
 //
    if ((LocalRoot || RemotRoot) && ConfigN2N()) NoGo = 1;
 
-// Configure the OSS
+// Configure the OSS and the base filesystem
 //
    if (!NoGo) NoGo = ConfigOSS();
+   if (!NoGo) baseFS.Start();
 
 // Setup manager or server, as needed
 //
@@ -390,10 +374,6 @@ int XrdCmsConfig::Configure2()
 // Load the XMI plugin
 //
    if (!NoGo && XmiPath) NoGo = setupXmi();
-
-// Set the default scheduling options if they have not already been set
-//
-   Sched->setParms(8, 200, 40, -1, 1);
 
 // All done, check for success or failure
 //
@@ -437,6 +417,7 @@ int XrdCmsConfig::ConfigXeq(char *var, XrdOucStream &CFile, XrdSysError *eDest)
    TS_Xeq("adminpath",     xapath);  // Any,     non-dynamic
    TS_Xeq("allow",         xallow);  // Manager, non-dynamic
    TS_Xeq("defaults",      xdefs);   // Server,  non-dynamic
+   TS_Xeq("dfs",           xdfs);    // Any,     non-dynamic
    TS_Xeq("export",        xexpo);   // Any,     non-dynamic
    TS_Xeq("fsxeq",         xfsxq);   // Server,  non-dynamic
    TS_Xeq("localroot",     xlclrt);  // Any,     non-dynamic
@@ -594,6 +575,7 @@ void XrdCmsConfig::ConfigDefaults(void)
    myName   = (char *)"localhost"; // Correctly set in Configure()
    myDomain = 0;
    LUPDelay = 5;
+   QryDelay =-1;
    LUPHold  = 178;
    DRPDelay = 10*60;
    PSDelay  = 0;
@@ -723,6 +705,11 @@ int XrdCmsConfig::ConfigOSS()
    XrdOucEnv::Export("XRDREDIRECT", "Q");
    XrdOucEnv::Export("XRDOSSTYPE",  "cms");
    XrdOucEnv::Export("XRDOSSCSCAN", "off");
+
+// If no osslib was specified but we are a proxy, then we must load the
+// the proxy osslib.
+//
+   if (!ossLib && isProxy) ossLib = strdup("libXrdPss.so");
 
 // Load and return result
 //
@@ -986,7 +973,7 @@ int XrdCmsConfig::setupManager()
 //
    return 0;
 }
-
+  
 /******************************************************************************/
 /*                           s e t u p S e r v e r                            */
 /******************************************************************************/
@@ -1025,8 +1012,10 @@ int XrdCmsConfig::setupServer()
 // We have data only if we are a pure data server (the default is noData)
 // If we have no data, then we are done (the rest is for pure servers)
 //
-   if (isManager || isPeer || isProxy) return 0;
-   DiskOK = 1; SUPCount = 0; SUPLevel = 0;
+   if (isManager || isPeer) return 0;
+   SUPCount = 0; SUPLevel = 0;
+   if (isProxy) return 0;
+   DiskOK = 1; 
 
 // If this is a staging server then set up the Prepq object
 //
@@ -1262,7 +1251,7 @@ int XrdCmsConfig::xapath(XrdSysError *eDest, XrdOucStream &CFile)
                                            [full <sec>] [discard <cnt>]
                                            [suspend <sec>] [drop <sec>]
                                            [service <sec>] [hold <msec>]
-                                           [peer <sec>] [rw <lvl>]
+                                           [peer <sec>] [rw <lvl>] [qdl <sec>]
 
    discard   <cnt>     maximum number a message may be forwarded.
    drop      <sec>     seconds to delay a drop of an offline server.
@@ -1272,6 +1261,7 @@ int XrdCmsConfig::xapath(XrdSysError *eDest, XrdOucStream &CFile)
    overload  <sec>     seconds to delay client when all servers overloaded.
    peer      <sec>     maximum seconds client may be delayed before peer
                        selection is triggered.
+   qdl       <sec>     the query response deadline.
    rw        <lvl>     how to delay r/w lookups (one of three levels):
                        0 - always use fast redirect when possible
                        1 - delay update requests only
@@ -1299,6 +1289,7 @@ int XrdCmsConfig::xdelay(XrdSysError *eDest, XrdOucStream &CFile)
         {"lookup",   &LUPDelay, 1},
         {"overload", &MaxDelay,-1},
         {"peer",     &PSDelay,  1},
+        {"qdl",      &QryDelay, 1},
         {"rw",       &RWDelay,  0},
         {"servers",  &SUPCount, 0},
         {"service",  &SUPDelay, 1},
@@ -1366,6 +1357,131 @@ int XrdCmsConfig::xdefs(XrdSysError *eDest, XrdOucStream &CFile)
 {
    if (!isServer) return CFile.noEcho();
    DirFlags = XrdOucExport::ParseDefs(CFile, *eDest, DirFlags);
+   return 0;
+}
+  
+/******************************************************************************/
+/*                                  x d f s                                   */
+/******************************************************************************/
+  
+/* Function: xdfs
+
+   Purpose:  To parse the directive: dfs <opts>
+
+   <opts>:   limit [central] [=]<n>
+                       central - apply limit on manager node. Otherwise, limit
+                                 is applied where lookups occur.
+                       [=]<n>  - the limit value as transactions per second. If
+                                 an equals is given before the limit, then
+                                 requests are paced at the specified rate.
+                                 Otherwise, a predictive algorithm is used.
+                                 Zero (default) turns limit off.
+
+             lookup   {central | distrib}
+                       central - perform file lookups on the manager.
+                       distrib - distribute file lookups to servers (default).
+
+             mdhold <n>        - remember missing directories for n seconds
+                                 Zero (default) turns this off.
+
+             qmax <n>          - maximum number of requests that may be queued.
+                                 One is the minimum. The default qmax is 2.5
+                                 the limit value.
+
+             redirect {immed | verify}
+                       immed   - do not verify file existence prior to
+                                 redirecting a client. This is the
+                                 default for proxy configurations.
+                       verify  - verify file existence prior to
+                                 redirecting a client. This is the
+                                 default for non-proxy configurations.
+
+   Type: Any, non-dynamic.
+
+   Output: 0 upon success or !0 upon failure.
+*/
+
+int XrdCmsConfig::xdfs(XrdSysError *eDest, XrdOucStream &CFile)
+{
+    int Opts = XrdCmsBaseFS::DFSys | (isProxy ? XrdCmsBaseFS::Immed : 0)
+             | (!isManager && isServer ? XrdCmsBaseFS::Servr: 0);
+    int Hold = 0, limCent = 0, limFix = 0, limV = 0, qMax = 0;
+    char *val;
+
+// If we are a meta-manager or a peer, ignore this option
+//
+   if (isMeta || isPeer) return CFile.noEcho();
+
+// Get first option. We need one but they can come in any order
+//
+   if (!(val = CFile.GetWord()))
+      {eDest->Emsg("Config", "dfs option not specified"); return 1;}
+
+// Now parse each option
+//
+do{     if (!strcmp("mdhold",  val))
+           {if (!(val = CFile.GetWord()))
+               {eDest->Emsg("Config","mdhold value not specified.");  return 1;}
+            if (XrdOuca2x::a2tm(*eDest, "hold value", val, &Hold, 1)) return 1;
+           }
+   else if (!strcmp("limit",   val))
+           {if (!(val = CFile.GetWord()))
+               {eDest->Emsg("Config","limit value not specified.");   return 1;}
+            if ((limCent = !strcmp("central",val)) && !(val = CFile.GetWord()))
+               {eDest->Emsg("Config","limit value not specified.");   return 1;}
+            if ((limFix = (*val == '=')) && *(val+1)) val++;
+            if (XrdOuca2x::a2i(*eDest, "limit value", val, &limV, 0)) return 1;
+           }
+   else if (!strcmp("lookup",  val))
+           {if (!(val = CFile.GetWord()))
+               {eDest->Emsg("Config","lookup value not specified.");  return 1;}
+                 if (!strcmp("central",  val)) Opts |=  XrdCmsBaseFS::Cntrl;
+            else if (!strcmp("distrib", val))  Opts &= ~XrdCmsBaseFS::Cntrl;
+            else {eDest->Emsg("Config","invalid lookup value '", val, "'.");
+                  return 1;
+                 }
+           }
+   else if (!strcmp("qmax",    val))
+           {if (!(val = CFile.GetWord()))
+               {eDest->Emsg("Config","qmax value not specified.");    return 1;}
+            if (XrdOuca2x::a2i(*eDest, "qmax value", val, &qMax, 1))  return 1;
+           }
+   else if (!strcmp("redirect",val))
+           {if (!(val = CFile.GetWord()))
+               {eDest->Emsg("Config","redirect value not specified.");return 1;}
+                 if (!strcmp("immed",  val)) Opts |=  XrdCmsBaseFS::Immed;
+            else if (!strcmp("verify", val)) Opts &= ~XrdCmsBaseFS::Immed;
+            else {eDest->Emsg("Config","invalid redirect value -", val);
+                  return 1;
+                 }
+           }
+   else {eDest->Emsg("Config", "invalid dfs option '",val,"'."); return 1;}
+  } while((val = CFile.GetWord()));
+
+// Supervisors are special beasts so we need to make transparent. One of these
+// days we'll allow lookups to go down to the supervisor level.
+//
+   if (isManager && isServer)
+      {limV = 0;
+       Opts &= ~XrdCmsBaseFS::Cntrl;
+      }
+
+// Adjust the limit value and option as needed
+//
+   if (limV)
+      {if (limFix) limV  = -limV;
+       if (limCent || Opts & XrdCmsBaseFS::Cntrl) {if (isServer) limV = 0;}
+          else if (isManager) limV = 0;
+      }
+
+// If we are a manager but not doing local lookups, then hold does not apply
+//
+   if (isManager && !(Opts & XrdCmsBaseFS::Cntrl)) Hold = 0;
+
+// All done, simply set the values
+//
+   baseFS.Limit(limV, qMax);
+   baseFS.Init(Opts, Hold, Hold*10);
    return 0;
 }
   
@@ -1558,7 +1674,7 @@ int XrdCmsConfig::xlclrt(XrdSysError *eDest, XrdOucStream &CFile)
       }
    return 0;
 }
-
+  
 /******************************************************************************/
 /*                                 x m a n g                                  */
 /******************************************************************************/
@@ -1614,8 +1730,9 @@ int XrdCmsConfig::xmang(XrdSysError *eDest, XrdOucStream &CFile)
        {if ((xMeta  = !strcmp("meta", val))
         ||  (xPeer  = !strcmp("peer", val))
         ||  (xProxy = !strcmp("proxy", val)))
-           {if (xMeta && (isServer || isPeer || isProxy)) return CFile.noEcho();
-            if (xProxy || (xPeer && !isPeer)) return CFile.noEcho();
+            {if ((xMeta  && (isServer || isPeer))
+             ||  (xPeer  && !isPeer)
+             ||  (xProxy && !isProxy)) return CFile.noEcho();
             val = CFile.GetWord();
            } else if (isPeer) return CFile.noEcho();
        }

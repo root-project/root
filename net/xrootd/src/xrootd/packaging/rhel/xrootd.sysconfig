@@ -1,0 +1,34 @@
+#-------------------------------------------------------------------------------
+# Define the instances of xrootd, cmsd and frmd here and specify the option you
+# need. For example, use the -d flag to send debug output to the logfile,
+# the options responsible for daemonizing, pidfiles and instance naming will
+# be appended automatically.
+#-------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
+# Define the user account name which will be used to start the daemons
+#-------------------------------------------------------------------------------
+XROOTD_USER=daemon
+
+#-------------------------------------------------------------------------------
+# Define the commandline options for the instances of the daemons.
+# The format is:
+# DAEMON_NAME_OPTIONS, where:
+#   DAEMON - the daemon name, the valid values are: XROOTD, CMSD or FRMD
+#   NAME   - the name of the instance, any uppercase alphanumeric string
+#            without whitespaces is valid
+#-------------------------------------------------------------------------------
+#XROOTD_MAIN_OPTIONS="-l /var/log/xrootd/xrootd-main.log -c /etc/xrootd/xrootd-main.cf"
+#XROOTD_SECOND_OPTIONS="-l /var/log/xrootd/xrootd-second.log -c /etc/xrootd/xrootd-second.cf"
+#CMSD_MAIN_OPTIONS="-l /var/log/xrootd/cmsd-main.log -c /etc/xrootd/cmsd-main.cf"
+#FRMD_MAIN_OPTIONS="-l /var/log/xrootd/frmd-main.log -c /etc/xrootd/frmd-main.cf"
+
+#-------------------------------------------------------------------------------
+# Names of the instances to be started by default, the case doesn't matter,
+# the names will be converted to uppercase automatically, use space as a
+# separator
+#-------------------------------------------------------------------------------
+#XROOTD_INSTANCES="main"
+#XROOTD_INSTANCES="main second"
+#CMSD_INSTANCES="main"
+#FRMD_INSTANCES="main"

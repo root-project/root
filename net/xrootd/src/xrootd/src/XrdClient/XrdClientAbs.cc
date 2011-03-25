@@ -131,6 +131,9 @@ bool XrdClientAbs::Query(kXR_int16 ReqCode, const kXR_char *Args, kXR_char *Resp
    if (!fConnModule->IsConnected()) return false;
    if (!Resp) return false;
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    ClientRequest qryRequest;
 
    memset( &qryRequest, 0, sizeof(qryRequest) );

@@ -49,7 +49,7 @@ export INCPATH = @inst_incdir@
 #                                  R u l e s                                   #
 #------------------------------------------------------------------------------#
 
-all: version
+all:
 	@$(MAKE) $(TARGETS) MAKEXEQ=all XMSG=Making XDBG=@dbgmsg@ --no-print-directory
 	@if [ "x$(ARCHDIR)" != "x" ]; then \
 	    $(RM) -fr bin/arch@dbgsfx@ lib/arch@dbgsfx@ obj/arch@dbgsfx@;\
@@ -95,12 +95,12 @@ distclean: FORCE
 	$(ECHO)$(RM) -f config.log
 	$(ECHO)$(RM) -f test-comp.*
 	$(ECHO)$(RM) -f src/XrdOuc/XrdOucFactoryBonjour.*
-	$(ECHO)$(RM) -f src/XrdVersion.hh src/XrdVersion.hh.new
 	$(ECHO)$(RM) -f config/GNUmake.rules.sunCC
 	$(ECHO)$(RM) -f config/GNUmake.rules.sunCCamd
 	$(ECHO)$(RM) -f config/GNUmake.rules.sunCCamd510
 	$(ECHO)$(RM) -f config/GNUmake.rules.sunCCamd64
 	$(ECHO)$(RM) -f config/GNUmake.rules.sunCCi86pc
+	$(ECHO)$(RM) -f config/GNUmake.rules.sunCCi8664pc
 
 install: FORCE
 	@echo Installing...
@@ -260,10 +260,5 @@ XrdXrootd: FORCE
 	@echo $(XMSG) xrootd $(XDBG) component...
 	$(ECHO)cd src/XrdXrootd;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
-
-version: FORCE
-	@echo Creating version header...
-	@./genversion.sh
-
 
 FORCE: ;

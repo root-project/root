@@ -10,8 +10,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
   
-//         $Id$
-
 class XrdOucSxeq
 {
 public:
@@ -21,9 +19,17 @@ static const int Share  = 0x0002;
 static const int Unlink = 0x0004;
 static const int Lock   = 0x0008; // lock in constructor
 
+int    Detach() {int lFD = lokFD; lokFD = -1; return lFD;}
+
 int    Release();
 
+static
+int    Release(int fileD);
+
 int    Serialize(int Opts=0);
+
+static
+int    Serialize(int fileD, int Opts);
 
 int    lastError() {return lokRC;}
 

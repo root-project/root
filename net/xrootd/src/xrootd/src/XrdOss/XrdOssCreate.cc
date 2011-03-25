@@ -8,10 +8,6 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
   
-//         $Id$
-
-const char *XrdOssCreateCVSID = "$Id$";
-
 /******************************************************************************/
 /*                             i n c l u d e s                                */
 /******************************************************************************/
@@ -21,6 +17,7 @@ const char *XrdOssCreateCVSID = "$Id$";
 #include <fcntl.h>
 #include <strings.h>
 #include <stdio.h>
+#include <utime.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -29,12 +26,12 @@ const char *XrdOssCreateCVSID = "$Id$";
 #include <sys/vnode.h>
 #endif
 
+#include "XrdFrm/XrdFrmXAttr.hh"
 #include "XrdOss/XrdOssApi.hh"
 #include "XrdOss/XrdOssCache.hh"
 #include "XrdOss/XrdOssConfig.hh"
 #include "XrdOss/XrdOssCopy.hh"
 #include "XrdOss/XrdOssError.hh"
-#include "XrdOss/XrdOssLock.hh"
 #include "XrdOss/XrdOssOpaque.hh"
 #include "XrdOss/XrdOssPath.hh"
 #include "XrdOss/XrdOssSpace.hh"
@@ -43,6 +40,7 @@ const char *XrdOssCreateCVSID = "$Id$";
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucExport.hh"
 #include "XrdOuc/XrdOucUtils.hh"
+#include "XrdOuc/XrdOucXAttr.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlatform.hh"
@@ -56,6 +54,21 @@ extern XrdSysError OssEroute;
 extern XrdOucTrace OssTrace;
 
 extern XrdOssSys  *XrdOssSS;
+
+/******************************************************************************/
+/*                         L o c a l   C l a s s e s                          */
+/******************************************************************************/
+  
+class XrdOssCreateInfo
+     {public:
+      unsigned long long pOpts;
+      const char        *Path;
+      mode_t             Amode;
+      int                cOpts;
+      XrdOssCreateInfo(const char *path, mode_t amode, int opts)
+                      : Path(path), Amode(amode), cOpts(opts) {}
+     ~XrdOssCreateInfo() {}
+     };
 
 /******************************************************************************/
 /*                                c r e a t e                                 */
@@ -80,17 +93,16 @@ int XrdOssSys::Create(const char *tident, const char *path, mode_t access_mode,
                       XrdOucEnv &env, int Opts)
 {
     EPNAME("Create")
-    const int LKFlags = XrdOssFILE|XrdOssSHR|XrdOssNOWAIT|XrdOssRETIME;
     const int AMode = S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH; // 775
     char  local_path[MAXPATHLEN+1], *p, pc;
-    unsigned long long popts, remotefs;
+    unsigned long long remotefs;
     int isLink = 0, Missing = 1, retc = 0, datfd;
-    XrdOssLock path_dir, new_file;
+    XrdOssCreateInfo crInfo(local_path, access_mode, Opts);
     struct stat buf;
 
 // Get options associated with this path and check if it's r/w
 //
-   remotefs = Check_RO(Create, popts, path, "create");
+   remotefs = Check_RO(Create, crInfo.pOpts, path, "create");
 
 // Generate the actual local path for this file.
 //
@@ -114,17 +126,19 @@ int XrdOssSys::Create(const char *tident, const char *path, mode_t access_mode,
 // This is done if the file/link do not exist. Otherwise, we drop through.
 //
    if (StageCreate && Missing)
-      return XrdOssSS->Stage(tident, path, env, Opts>>8, access_mode, popts);
+      return XrdOssSS->Stage(tident, path, env, Opts>>8, 
+                             access_mode, crInfo.pOpts);
 
 // The file must not exist if it's declared "new". Otherwise, reuse the space.
+// SetFattr() alaways closes the provided file descriptor!
 //
    if (!Missing)
       {if (Opts & XRDOSS_new)                 return -EEXIST;
        if ((buf.st_mode & S_IFMT) == S_IFDIR) return -EISDIR;
        do {datfd = open(local_path, Opts>>8, access_mode);}
                    while(datfd < 0 && errno == EINTR);
-           if (datfd < 0) return -errno;
-       close(datfd);
+       if (datfd < 0) return -errno;
+       if ((retc = SetFattr(crInfo, datfd, buf.st_mtime))) return retc;
        if (Opts>>8 & O_TRUNC && buf.st_size)
           {off_t theSize = buf.st_size;
            if (isLink) {buf.st_mode = (buf.st_mode & ~S_IFMT) | S_IFLNK;
@@ -151,42 +165,35 @@ int XrdOssSys::Create(const char *tident, const char *path, mode_t access_mode,
       //
          if ((retc = GenRemotePath(path,remote_path))) return retc;
 
-      // Gain exclusive control over the directory.
-      //
-         if ( (retc = path_dir.Serialize(local_path, XrdOssDIR|XrdOssEXC)) < 0)
-            return retc;
-
      // Create the file in remote system unless not wanted so
      //
-        if (popts & XRDEXP_RCREATE)
+        if (crInfo.pOpts & XRDEXP_RCREATE)
            {if ((retc = MSS_Create(remote_path, access_mode, env)) < 0)
-               {path_dir.UnSerialize(0);
-                DEBUG("rc" <<retc <<" mode=" <<std::oct <<access_mode
+               {DEBUG("rc" <<retc <<" mode=" <<std::oct <<access_mode
                            <<std::dec <<" remote path=" <<remote_path);
                 return retc;
                }
-           } else if (!(popts & XRDEXP_NOCHECK))
-                     {if (!(retc = MSS_Stat(remote_path)))
-                         {path_dir.UnSerialize(0); return -EEXIST;}
-                         else if (retc != -ENOENT)
-                                 {path_dir.UnSerialize(0); return retc;}
+           } else if (!(crInfo.pOpts & XRDEXP_NOCHECK))
+                     {if (!(retc = MSS_Stat(remote_path))) return -EEXIST;
+                         else if (retc != -ENOENT)         return retc;
                      }
       }
 
 // Created file in the extended cache or the local name space
 //
-   if (XrdOssCache::fsfirst && !(popts & XRDEXP_INPLACE))
-           retc = Alloc_Cache(local_path, access_mode, env);
-      else retc = Alloc_Local(local_path, access_mode, env);
+   if (XrdOssCache::fsfirst && !(crInfo.pOpts & XRDEXP_INPLACE))
+           retc = Alloc_Cache(crInfo, env);
+      else retc = Alloc_Local(crInfo, env);
 
-// If successful, appropriately manage the locks.
+// If successful then check if xattrs were actually set
 //
-   if (retc == XrdOssOK && (popts & XRDEXP_MAKELF))
-      if (new_file.Serialize(local_path,LKFlags) >= 0) new_file.UnSerialize(0);
+   if (retc == XrdOssOK && crInfo.cOpts & XRDOSS_setnoxa)
+      {XrdOucPList *plP = RPList.About(path);
+       if (plP) plP->Set(plP->Flag() | XRDEXP_NOXATTR);
+      }
 
 // All done.
 //
-   if (remotefs) path_dir.UnSerialize(0);
    return retc;
 }
   
@@ -197,12 +204,12 @@ int XrdOssSys::Create(const char *tident, const char *path, mode_t access_mode,
 /*                           A l l o c _ C a c h e                            */
 /******************************************************************************/
 
-int XrdOssSys::Alloc_Cache(const char *path, mode_t amode, XrdOucEnv &env)
+int XrdOssSys::Alloc_Cache(XrdOssCreateInfo &crInfo, XrdOucEnv &env)
 {
    EPNAME("Alloc_Cache")
-   int datfd;
+   int datfd, rc;
    char pbuff[MAXPATHLEN+1], cgbuff[XrdOssSpace::minSNbsz], *tmp;
-   XrdOssCache::allocInfo aInfo(path, pbuff, sizeof(pbuff));
+   XrdOssCache::allocInfo aInfo(crInfo.Path, pbuff, sizeof(pbuff));
 
 // Grab the suggested size from the environment
 //
@@ -218,44 +225,123 @@ int XrdOssSys::Alloc_Cache(const char *path, mode_t amode, XrdOucEnv &env)
 // Allocate space in the cache.
 //
    aInfo.cgName = cgbuff;
-   aInfo.aMode  = amode;
+   aInfo.aMode  = crInfo.Amode;
    if ((datfd = XrdOssCache::Alloc(aInfo)) < 0) return datfd;
-   close(datfd);
+
+// Set the pfn as the extended attribute if we are in new mode
+//
+   if (!runOld && !(crInfo.pOpts & XRDEXP_NOXATTR)
+   &&  (rc = XrdSysFAttr::Set(XrdFrmXAttrPfn::Name(), crInfo.Path,
+                              strlen(crInfo.Path)+1, pbuff, datfd))) return rc;
+
+// Set extended attributes for this newly created file if allowed to do so.
+// SetFattr() alaways closes the provided file descriptor!
+//
+   if ((rc = SetFattr(crInfo, datfd, 1))) return rc;
 
 // Now create a symbolic link to the target
 //
-   if ((symlink(pbuff, path) && errno != EEXIST)
-   ||  unlink(path) || symlink(pbuff, path)) {datfd = -errno; unlink(pbuff);}
+   if ((symlink(pbuff, crInfo.Path) && errno != EEXIST)
+   ||  unlink(crInfo.Path) || symlink(pbuff, crInfo.Path))
+      {rc = -errno; unlink(pbuff);}
 
-// Now create a symlink from the cache pfn to the actual path (xa only)
+// Now create a symlink from the cache pfn to the actual path (xa runOld only)
 //
-   if (aInfo.cgPsfx)
+   if (runOld && aInfo.cgPsfx)
       {strcpy(aInfo.cgPsfx, ".pfn");
-       if ((symlink(path, pbuff) && errno != EEXIST)
-       ||  unlink(pbuff) || symlink(path, pbuff)) datfd = -errno;
+       if ((symlink(crInfo.Path, pbuff) && errno != EEXIST)
+       ||  unlink(pbuff) || symlink(crInfo.Path, pbuff)) rc = -errno;
        *(aInfo.cgPsfx) = '\0';
-       if (datfd < 0) {unlink(pbuff); unlink(path);}
+       if (rc) {unlink(pbuff); unlink(crInfo.Path);}
       }
 
 // All done
 //
    DEBUG(aInfo.cgName <<" cache for " <<pbuff);
-   return (datfd >= 0 ? XrdOssOK : datfd);
+   return rc;
 }
 
 /******************************************************************************/
 /*                           A l l o c _ L o c a l                            */
 /******************************************************************************/
 
-int XrdOssSys::Alloc_Local(const char *path, mode_t amode, XrdOucEnv &env)
+int XrdOssSys::Alloc_Local(XrdOssCreateInfo &crInfo, XrdOucEnv &env)
 {
-   int datfd;
+   int datfd, rc;
 
 // Simply open the file in the local filesystem, creating it if need be.
 //
-   do {datfd = open(path, O_CREAT|O_TRUNC, amode);}
+   do {datfd = open(crInfo.Path, O_CREAT|O_TRUNC, crInfo.Amode);}
                while(datfd < 0 && errno == EINTR);
    if (datfd < 0) return -errno;
-   close(datfd);
+
+// Set extended attributes for this newly created file if allowed to do so.
+// SetFattr() alaways closes the provided file descriptor!
+//
+   if ((rc = SetFattr(crInfo, datfd, 1))) return rc;
+
+// All done
+//
    return XrdOssOK;
+}
+  
+/******************************************************************************/
+/*                              S e t F a t t r                               */
+/******************************************************************************/
+  
+int XrdOssSys::SetFattr(XrdOssCreateInfo &crInfo, int fd, time_t mtime)
+{
+   static const char *lkSuffix = ".lock";
+   static const int   lkSuffsz = 5;
+
+   class  fdCloser
+         {public:
+          const char *Path;
+          int         theFD;
+          int         Done(int rc) {if (rc) unlink(Path); return rc;}
+                      fdCloser(const char *pn, int fd) : Path(pn), theFD(fd) {}
+                      fdCloser() {close(theFD);}
+         } Act(crInfo.Path, fd);
+
+   XrdOucXAttr<XrdFrmXAttrCpy> crX;
+   int rc;
+
+// Skip all of this if we do not need to create a lock file
+//
+   if (!(XRDEXP_MAKELF & crInfo.pOpts)) return Act.Done(0);
+
+// If we are running in backward compatability mode, then we need to create
+// an old-style lock file.
+//
+   if (runOld)
+      {struct utimbuf times;
+       char lkBuff[MAXPATHLEN+lkSuffsz+1];
+       int  lkfd, n = strlen(crInfo.Path);
+       if (n+lkSuffsz >= (int)sizeof(lkBuff))
+          return Act.Done(OssEroute.Emsg("Create", -ENAMETOOLONG,
+                                         "generate lkfname for", crInfo.Path));
+       strcpy(lkBuff, crInfo.Path); strcpy(lkBuff+n, lkSuffix);
+       do {lkfd = open(lkBuff, O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);}
+          while( lkfd < 0 && errno == EINTR);
+       if ( lkfd < 0)
+          return Act.Done(OssEroute.Emsg("Create", -errno, "create", lkBuff));
+       close(lkfd); times.actime = time(0); times.modtime = mtime;
+       if (utime(lkBuff, (const struct utimbuf *)&times))
+          return Act.Done(OssEroute.Emsg("Create",-errno,"set mtime for",lkBuff));
+       return Act.Done(0);
+      }
+
+// Check if we should really create any extended attribute
+//
+   if ((crInfo.pOpts & XRDEXP_NOXATTR)) return Act.Done(0);
+
+// Set copy time
+//
+   crX.Attr.cpyTime = static_cast<long long>(mtime);
+   rc = crX.Set(crInfo.Path, fd);
+
+// Check if extended attribute were set and indicate whether it is supported
+//
+   if (rc == -ENOTSUP) {rc = 0; crInfo.cOpts |= XRDOSS_setnoxa;}
+   return Act.Done(rc);
 }

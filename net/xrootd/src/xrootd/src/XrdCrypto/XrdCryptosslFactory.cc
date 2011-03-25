@@ -40,11 +40,42 @@ static XrdSysLogger Logger;
 static XrdSysError eDest(0,"cryptossl_");
 XrdOucTrace *sslTrace = 0;
 
+// Mutexes for OpenSSL
+XrdSysMutex *XrdCryptosslFactory::CryptoMutexPool[SSLFACTORY_MAX_CRYPTO_MUTEX];
+
+/******************************************************************************/
+/*             T h r e a d - S a f e n e s s   F u n c t i o n s              */
+/******************************************************************************/
+#ifdef __solaris__
+extern "C" {
+#endif
+static unsigned long sslfactory_id_callback(void) {
+  return (unsigned long)XrdSysThread::ID();
+}
+
+void sslfactory_lock(int mode, int n, const char *file, int line)
+{
+  if (mode & CRYPTO_LOCK) {
+    if (XrdCryptosslFactory::CryptoMutexPool[n]) {
+      XrdCryptosslFactory::CryptoMutexPool[n]->Lock();
+    }
+  } else {
+    if (XrdCryptosslFactory::CryptoMutexPool[n]) {
+      XrdCryptosslFactory::CryptoMutexPool[n]->UnLock();
+    }
+  }
+}
+#ifdef __solaris__
+}
+#endif
+
+
 //______________________________________________________________________________
 XrdCryptosslFactory::XrdCryptosslFactory() :
                      XrdCryptoFactory("ssl",XrdCryptosslFactoryID)
 {
    // Constructor: init the needed components of the OpenSSL library
+   EPNAME("sslFactory::XrdCryptosslFactory");
 
    // Init SSL ...
    SSL_library_init();
@@ -54,6 +85,27 @@ XrdCryptosslFactory::XrdCryptosslFactory() :
    OpenSSL_add_all_ciphers();
    // Load Msg Digests
    OpenSSL_add_all_digests();
+
+   if (SSLFACTORY_MAX_CRYPTO_MUTEX < CRYPTO_num_locks() ) {
+      SetTrace(0);
+      TRACE(ALL, "WARNING: do not have enough crypto mutexes as required by crypto_ssl");
+      TRACE(ALL, "        (suggestion: recompile increasing SSLFACTORY_MAX_CRYPTO_MUTEX to "<< CRYPTO_num_locks()<<")");
+   } else {
+      // This code taken from XrdSecProtocolssl thread-safety
+      for (int i = 0; i < SSLFACTORY_MAX_CRYPTO_MUTEX; i++) {
+         XrdCryptosslFactory::CryptoMutexPool[i] = new XrdSysMutex();
+      }
+   }
+
+#if defined(OPENSSL_THREADS)
+   // Thread support enabled: set callback functions
+   CRYPTO_set_locking_callback(sslfactory_lock);
+   CRYPTO_set_id_callback(sslfactory_id_callback);
+#else
+   SetTrace(0);
+   TRACE(ALL, "WARNING: OpenSSL lacks thread support: possible thread-safeness problems!");
+   TRACE(ALL, "         (suggestion: recompile enabling thread support)");
+#endif
 
    // Init Random machinery
    int klen = 32;

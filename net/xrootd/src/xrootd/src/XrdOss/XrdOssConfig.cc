@@ -9,10 +9,6 @@
 /*                DE-AC03-76-SFO0515 with the Deprtment of Energy             */
 /******************************************************************************/
 
-//         $Id$
-
-const char *XrdOssConfigCVSID = "$Id$";
-
 /*
    The routines in this file handle initialization. They get the
    configuration values either from configuration file or XrdOssconfig.h (in that
@@ -52,6 +48,7 @@ const char *XrdOssConfigCVSID = "$Id$";
 #include "XrdOuc/XrdOucProg.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdOuc/XrdOucUtils.hh"
+#include "XrdSys/XrdSysFAttr.hh"
 #include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlugin.hh"
 #include "XrdSys/XrdSysPthread.hh"
@@ -66,6 +63,8 @@ extern XrdOssSys   *XrdOssSS;
 extern XrdOucTrace  OssTrace;
 
 XrdOucPListAnchor  *XrdOssRPList;
+
+int                *XrdOssRunMode = 0;
 
 /******************************************************************************/
 /*                            E r r o r   T e x t                             */
@@ -192,6 +191,8 @@ XrdOssSys::XrdOssSys()
    Solitary      = 0;
    DPList        = 0;
    lenDP         = 0;
+   runOld        = 0;
+   XrdOssRunMode = &runOld;
    numCG = numDP = 0;
 }
   
@@ -271,6 +272,10 @@ int XrdOssSys::Configure(const char *configfn, XrdSysError &Eroute)
 //
    ConfigSpace();
 
+// Configure extended attributes (really not much to do here)
+//
+   XrdSysFAttr::Msg(&Eroute);
+
 // Configure statiscal reporting
 //
    if (!NoGo) ConfigStats(Eroute);
@@ -344,8 +349,9 @@ void XrdOssSys::Config_Display(XrdSysError &Eroute)
                                   "%s%s%s%s%s"
                                   "%s%s%s"
                                   "%s%s%s"
+                                  "%s"
                                   "       oss.trace        %x\n"
-                                  "       oss.xfr          %d %d %d %d",
+                                  "       oss.xfr          %d deny %d keep %d",
              cloc,
              minalloc, ovhalloc, fuzalloc,
              cscanint,
@@ -358,14 +364,15 @@ void XrdOssSys::Config_Display(XrdSysError &Eroute)
                                                     StageCreate, "creates ", ""),
              XrdOssConfig_Val(StageMsg,   stagemsg),
              XrdOssConfig_Val(RSSCmd,     rsscmd),
+             (runOld           ? "       oss.runmodeold\n" : ""),
              OssTrace.What,
-             xfrthreads, xfrspeed, xfrovhd, xfrhold);
+             xfrthreads, xfrhold, xfrkeep);
 
      Eroute.Say(buff);
 
      XrdOssMio::Display(Eroute);
 
-     XrdOssCache::List("       oss.space", Eroute);
+     XrdOssCache::List("       oss.", Eroute);
            List_Path("       oss.defaults ", "", DirFlags, Eroute);
      fp = RPList.First();
      while(fp)
@@ -437,7 +444,7 @@ void XrdOssSys::ConfigMio(XrdSysError &Eroute)
 // If no memory flags are set, turn off memory mapped files
 //
    if (!(flags & XRDEXP_MEMAP) || setoff)
-     {XrdOssMio::Set(0, 0, 0, 0, 0);
+     {XrdOssMio::Set(0, 0, 0);
       tryMmap = 0; chkMmap = 0;
      }
 }
@@ -904,6 +911,8 @@ int XrdOssSys::ConfigXeq(char *var, XrdOucStream &Config, XrdSysError &Eroute)
    TS_Xeq("usage",         xusage);
    TS_Xeq("xfr",           xxfr);
 
+   TS_Set("runmodeold",    runOld, 1);
+
    // Check if var substitutions are prohibited (e.g., stagemsg). Note that
    // TS_String() returns upon success so be careful when adding new opts.
    //
@@ -1176,11 +1185,11 @@ int XrdOssSys::xmaxsz(XrdOucStream &Config, XrdSysError &Eroute)
 /* Function: xmemf
 
    Purpose:  Parse the directive: memfile [off] [max <msz>]
-                                          [check {keep | lock | map}] [preload]
+                                          [check xattr] [preload]
 
-             check keep Maps files that have ".mkeep" shadow file, premanently.
-             check lock Maps and locks files that have ".mlock" shadow file.
-             check map  Maps files that have ".mmap" shadow file.
+             check      Applies memory mapping options based on file's xattrs.
+                        For backward compatibility, we also accept:
+                        "[check {keep | lock | map}]" which implies check xattr.
              all        Preloads the complete file into memory.
              off        Disables memory mapping regardless of other options.
              on         Enables memory mapping
@@ -1193,7 +1202,7 @@ int XrdOssSys::xmaxsz(XrdOucStream &Config, XrdSysError &Eroute)
 int XrdOssSys::xmemf(XrdOucStream &Config, XrdSysError &Eroute)
 {
     char *val;
-    int i, j, V_autolok=-1, V_automap=-1, V_autokeep=-1, V_preld = -1, V_on=-1;
+    int i, j, V_check=-1, V_preld = -1, V_on=-1;
     long long V_max = 0;
 
     static struct mmapopts {const char *opname; int otyp;
@@ -1221,11 +1230,12 @@ int XrdOssSys::xmemf(XrdOucStream &Config, XrdSysError &Eroute)
                    switch(mmopts[i].otyp)
                          {case 1: V_preld = 1;
                                   break;
-                          case 2:     if (!strcmp("lock", val)) V_autolok=1;
-                                 else if (!strcmp("map",  val)) V_automap=1;
-                                 else if (!strcmp("keep", val)) V_autokeep=1;
+                          case 2: if (!strcmp("xattr",val)
+                                  ||  !strcmp("lock", val)
+                                  ||  !strcmp("map",  val)
+                                  ||  !strcmp("keep", val)) V_check=1;
                                  else {Eroute.Emsg("Config",
-                                       "mmap auto neither keep, lock, nor map");
+                                       "mmap check argument not xattr");
                                        return 1;
                                       }
                                   break;
@@ -1247,7 +1257,7 @@ int XrdOssSys::xmemf(XrdOucStream &Config, XrdSysError &Eroute)
 
 // Set the values
 //
-   XrdOssMio::Set(V_on, V_preld, V_autolok, V_automap, V_autokeep);
+   XrdOssMio::Set(V_on, V_preld, V_check);
    XrdOssMio::Set(V_max);
    return 0;
 }
@@ -1692,10 +1702,10 @@ void XrdOssSys::List_Path(const char *pfx, const char *pname,
      if (flags & XRDEXP_FORCERO) rwmode = (char *)" forcero";
         else if (flags & XRDEXP_READONLY) rwmode = (char *)" r/o ";
                 else rwmode = (char *)" r/w ";
-                                 // 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
-     snprintf(buff, sizeof(buff), "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+                                 //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+     snprintf(buff, sizeof(buff), "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
               pfx, pname,                                           // 0
-              (flags & XRDEXP_COMPCHK  ?  " compchk" : ""),         // 1
+              (flags & XRDEXP_COMPCHK  ? " compchk" : ""),          // 1
               rwmode,                                               // 2
               (flags & XRDEXP_INPLACE  ? " inplace" : ""),          // 3
               (flags & XRDEXP_LOCAL    ? " local"   : ""),          // 4
@@ -1710,7 +1720,8 @@ void XrdOssSys::List_Path(const char *pfx, const char *pname,
               (flags & XRDEXP_MMAP     ? " mmap"    : ""),          // 11
               (flags & XRDEXP_RCREATE  ? " rcreate" : " norcreate"),// 12
               (flags & XRDEXP_PURGE    ? " purge"   : " nopurge"),  // 13
-              (flags & XRDEXP_STAGE    ? " stage"   : " nostage")   // 14
+              (flags & XRDEXP_STAGE    ? " stage"   : " nostage"),  // 14
+              (flags & XRDEXP_NOXATTR  ? " noxattr" : " xattr")     // 15
               );
      Eroute.Say(buff); 
 }

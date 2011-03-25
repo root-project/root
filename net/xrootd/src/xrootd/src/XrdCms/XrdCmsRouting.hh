@@ -10,8 +10,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//       $Id$
-
 #include "XProtocol/YProtocol.hh"
 
 class XrdCmsRouting
@@ -88,6 +86,7 @@ const  char         *nameVec [XrdCms::kYR_MaxReq];
 namespace XrdCms
 {
 extern XrdCmsRouter  Router;
+extern XrdCmsRouting manVOps;
 extern XrdCmsRouting rdrVOps;
 extern XrdCmsRouting rspVOps;
 extern XrdCmsRouting srvVOps;

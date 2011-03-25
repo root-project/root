@@ -2,15 +2,11 @@
 /*                                                                            */
 /*                            X r d L i n k . c c                             */
 /*                                                                            */
-/* (c) 2004 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/* (c) 2011 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*       All Rights Reserved. See XrdInfo.cc for complete License Terms       */
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
-  
-//           $Id$
-
-const char *XrdLinkCVSID = "$Id$";
 
 #include <poll.h>
 #include <signal.h>
@@ -37,6 +33,7 @@ const char *XrdLinkCVSID = "$Id$";
 
 #include "XrdNet/XrdNetDNS.hh"
 #include "XrdNet/XrdNetPeer.hh"
+#include "XrdSys/XrdSysAtomics.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 
@@ -242,12 +239,12 @@ XrdLink *XrdLink::Alloc(XrdNetPeer &Peer, int opts)
    lp->LockReads = (0 != (opts & XRDLINK_RDLOCK));
    lp->KeepFD    = (0 != (opts & XRDLINK_NOCLOSE));
 
-// Return the link
+// Update statistics and return the link
 //
-   statsMutex.Lock();
-   LinkCountTot++;
-   if (LinkCountMax == LinkCount++) LinkCountMax = LinkCount;
-   statsMutex.UnLock();
+   AtomicBeg(statsMutex);
+   AtomicInc(LinkCountTot);            // LinkCountTot++
+   AtomicISM(LinkCount, LinkCountMax); // Increment and set maximum
+   AtomicEnd(statsMutex);
    return lp;
 }
   
@@ -571,6 +568,7 @@ int XrdLink::Recv(char *Buff, int Blen)
    if (LockReads) rdMutex.Lock();
    isIdle = 0;
    do {rlen = read(FD, Buff, Blen);} while(rlen < 0 && errno == EINTR);
+   if (rlen > 0) AtomicAdd(BytesIn, rlen);
    if (LockReads) rdMutex.UnLock();
 
    if (rlen >= 0) return int(rlen);
@@ -599,8 +597,10 @@ int XrdLink::Recv(char *Buff, int Blen, int timeout)
          if (retc != 1)
             {if (retc == 0)
                 {tardyCnt++;
-                 if (totlen  && (++stallCnt & 0xff) == 1)
-                    TRACEI(DEBUG, "read timed out");
+                 if (totlen)
+                    {if ((++stallCnt & 0xff) == 1) TRACEI(DEBUG,"read timed out");
+                     AtomicAdd(BytesIn, totlen);
+                    }
                  return int(totlen);
                 }
              return (FD >= 0 ? XrdLog.Emsg("Link", -errno, "poll", ID) : -1);
@@ -622,9 +622,10 @@ int XrdLink::Recv(char *Buff, int Blen, int timeout)
             {if (!rlen) return -ENOMSG;
              return (FD<0 ? -1 : XrdLog.Emsg("Link",-errno,"receive from",ID));
             }
-         BytesIn += rlen; totlen += rlen; Blen -= rlen; Buff += rlen;
+         totlen += rlen; Blen -= rlen; Buff += rlen;
         }
 
+   AtomicAdd(BytesIn, totlen);
    return int(totlen);
 }
 
@@ -660,6 +661,7 @@ int XrdLink::RecvAll(char *Buff, int Blen, int timeout)
    if (LockReads) rdMutex.Lock();
    isIdle = 0;
    do {rlen = recv(FD,Buff,Blen,MSG_WAITALL);} while(rlen < 0 && errno == EINTR);
+   if (rlen > 0) AtomicAdd(BytesIn, rlen);
    if (LockReads) rdMutex.UnLock();
 
    if (int(rlen) == Blen) return Blen;
@@ -675,7 +677,7 @@ int XrdLink::RecvAll(char *Buff, int Blen, int timeout)
   
 int XrdLink::Send(const char *Buff, int Blen)
 {
-   ssize_t retc = 0, bytesleft = Blen;
+   ssize_t retc = 0, bytesleft = Blen, myBytes = 0;
 
 // Get a lock
 //
@@ -689,11 +691,12 @@ int XrdLink::Send(const char *Buff, int Blen)
             {if (errno == EINTR) continue;
                 else break;
             }
-         BytesOut += retc; bytesleft -= retc; Buff += retc;
+         myBytes += retc; bytesleft -= retc; Buff += retc;
         }
 
 // All done
 //
+   AtomicAdd(BytesOut, myBytes);
    wrMutex.UnLock();
    if (retc >= 0) return Blen;
    XrdLog.Emsg("Link", errno, "send to", ID);
@@ -717,7 +720,7 @@ int XrdLink::Send(const struct iovec *iov, int iocnt, int bytes)
 //
    wrMutex.Lock();
    isIdle = 0;
-   BytesOut += bytes;
+   AtomicAdd(BytesOut, bytes);
 
 // Write the data out. On some version of Unix (e.g., Linux) a writev() may
 // end at any time without writing all the bytes when directed to a socket.
@@ -796,7 +799,7 @@ do{retc = sendfilev(FD, vecSFP, sfN, &xframt);
 // Check if all went well and return if so (usual case)
 //
    if (xframt == bytes)
-      {BytesOut += bytes;
+      {AtomicAdd(BytesOut, bytes);
        wrMutex.UnLock();
        return totamt;
       }
@@ -808,7 +811,7 @@ do{retc = sendfilev(FD, vecSFP, sfN, &xframt);
 // Try to resume the transfer
 //
    if (xframt > 0)
-      {BytesOut += xframt; bytes -= xframt; SfIntr++;
+      {AtomicAdd(BytesOut, xframt); bytes -= xframt; SfIntr++;
        while(xframt > 0 && sfN)
             {if ((ssize_t)xframt < (ssize_t)vecSFP->sfv_len)
                 {vecSFP->sfv_off += xframt; vecSFP->sfv_len -= xframt; break;}
@@ -875,7 +878,7 @@ do{retc = sendfilev(FD, vecSFP, sfN, &xframt);
 // All done
 //
    if (xIntr > sfN) SfIntr += (xIntr - sfN);
-   BytesOut += xfrbytes;
+   AtomicAdd(BytesOut, xfrbytes);
    wrMutex.UnLock();
    return xfrbytes;
 #endif
@@ -1083,11 +1086,17 @@ int XrdLink::Stats(char *buff, int blen, int do_sync)
 
 // Obtain lock on the stats area and format it
 //
-   statsMutex.Lock();
-   i = snprintf(buff, blen, statfmt, LinkCount,   LinkCountMax, LinkCountTot,
-                                     LinkBytesIn, LinkBytesOut, LinkConTime,
-                                     LinkTimeOuts,LinkStalls,   LinkSfIntr);
-   statsMutex.UnLock();
+   AtomicBeg(statsMutex);
+   i = snprintf(buff, blen, statfmt, AtomicGet(LinkCount),
+                                     AtomicGet(LinkCountMax),
+                                     AtomicGet(LinkCountTot),
+                                     AtomicGet(LinkBytesIn),
+                                     AtomicGet(LinkBytesOut),
+                                     AtomicGet(LinkConTime),
+                                     AtomicGet(LinkTimeOuts),
+                                     AtomicGet(LinkStalls),
+                                     AtomicGet(LinkSfIntr));
+   AtomicEnd(statsMutex);
    return i;
 }
   
@@ -1097,30 +1106,40 @@ int XrdLink::Stats(char *buff, int blen, int do_sync)
   
 void XrdLink::syncStats(int *ctime)
 {
+   long long tmpLL;
+   int       tmpI4;
 
 // If this is dynamic, get the opMutex lock
 //
    if (!ctime) opMutex.Lock();
 
 // Either the caller has the opMutex or this is called out of close. In either
-// case, we need to get the read
+// case, we need to get the read and write mutexes; each followed by the stats
+// mutex. This order is important because we should not hold the stats mutex
+// for very long and the r/w mutexes may take a long time to acquire.
 //
-   statsMutex.Lock();
-   rdMutex.Lock();
-   LinkBytesIn  += BytesIn; BytesInTot   += BytesIn;   BytesIn = 0;
-   LinkTimeOuts += tardyCnt; tardyCntTot += tardyCnt; tardyCnt = 0;
-   LinkStalls   += stallCnt; stallCntTot += stallCnt; stallCnt = 0;
-   rdMutex.UnLock();
-   wrMutex.Lock();
-   LinkBytesOut += BytesOut; BytesOutTot += BytesOut;BytesOut = 0;
-   LinkSfIntr   += SfIntr;   SfIntr = 0;
-   wrMutex.UnLock();
+   AtomicBeg(rdMutex);    AtomicBeg(statsMutex);
+
    if (ctime)
       {*ctime = time(0) - conTime;
-       LinkConTime += *ctime;
-       if (!(LinkCount--)) LinkCount = 0;
+       AtomicAdd(LinkConTime, *ctime);
+       AtomicDTZ(LinkCount);
       }
-   statsMutex.UnLock();
+
+   tmpLL = AtomicFAZ(BytesIn);
+   AtomicAdd(LinkBytesIn, tmpLL);  AtomicAdd(BytesInTot, tmpLL);
+   tmpI4 = AtomicFAZ(tardyCnt);
+   AtomicAdd(LinkTimeOuts, tmpI4); AtomicAdd(tardyCntTot, tmpI4);
+   tmpI4 = AtomicFAZ(stallCnt);
+   AtomicAdd(LinkStalls, tmpI4);   AtomicAdd(stallCntTot, tmpI4);
+   AtomicEnd(statsMutex); AtomicEnd(rdMutex);
+
+   AtomicBeg(wrMutex);    AtomicBeg(statsMutex);
+   tmpLL = AtomicFAZ(BytesOut);
+   AtomicAdd(LinkBytesOut, tmpLL); AtomicAdd(BytesOutTot, tmpLL);
+   tmpI4 = AtomicFAZ(SfIntr);
+   AtomicAdd(LinkSfIntr, tmpI4);
+   AtomicEnd(statsMutex); AtomicEnd(wrMutex);
 
 // Make sure the protocol updates it's statistics as well
 //

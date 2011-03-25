@@ -1,0 +1,213 @@
+Name:      xrootd
+Epoch:     1
+Version:   __VERSION__
+Release:   1%{?dist}
+Summary:   An eXtended Root Daemon (xrootd)
+Group:     System Environment/Daemons
+License:   Stanford (modified BSD with advert clause)
+URL:       http://xrootd.org/
+
+# git clone http://xrootd.org/repo/xrootd.git xrootd
+# cd xrootd
+# git-archive master | gzip -9 > ~/rpmbuild/SOURCES/xrootd.tgz
+Source0:   xrootd.tar.gz
+BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires: autoconf automake libtool readline-devel openssl-devel fuse-devel
+BuildRequires: libxml2-devel krb5-devel zlib-devel
+
+# For configure.ac perl ldopts
+%if 0%{?rhel} >= 6
+BuildRequires: perl-ExtUtils-Embed
+%endif
+
+%description
+%{summary}
+
+%package devel
+Summary: Headers for compiling and linking against xrootd
+Group:   System Environment/Libraries
+Requires: %{name}-libs = %{epoch}:%{version}-%{release}
+Requires: %{name}-client = %{epoch}:%{version}-%{release}
+Requires: %{name}-server = %{epoch}:%{version}-%{release}
+Requires: %{name}-fuse = %{epoch}:%{version}-%{release}
+%description devel
+Headers for compiling and linking against xrootd
+
+%package client
+Summary: XRootD client
+Group:   System Environment/Applications
+Requires: %{name}-libs = %{epoch}:%{version}-%{release}
+%description client
+The XRootD client software.
+
+%package fuse
+Summary: XRootD filesystem
+Group:   System Environment/Filesystems
+Requires: %{name}-client = %{epoch}:%{version}-%{release}
+Requires: %{name}-libs   = %{epoch}:%{version}-%{release}
+%description fuse
+Fuse driver for xrootd
+
+%package server
+Summary: XRootD server
+Group:   System Environment/Daemons
+Requires: %{name}-libs = %{epoch}:%{version}-%{release}, %{name}-client = %{epoch}:%{version}-%{release}
+%description server
+XRootD server
+
+%package libs
+Summary: XRootD core libraries
+Group:   System Environment/Libraries
+%description libs
+XRootD core libraries
+
+%prep
+%setup -c -n %{name}
+cd %{name}
+./bootstrap.sh
+
+%build
+cd %{name}
+%configure --enable-gsi --enable-fuse --enable-dbg-build --with-utils-dir=%{_datadir}/%{name}/utils
+make %{?_smp_mflags}
+
+%install
+cd %{name}
+rm -rf $RPM_BUILD_ROOT
+make install DESTDIR=$RPM_BUILD_ROOT
+
+rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
+rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
+
+# configuration stuff
+mkdir -p $RPM_BUILD_ROOT%{_datadir}/%{name}/scripts
+mv $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/* $RPM_BUILD_ROOT%{_datadir}/%{name}/scripts
+
+# var paths
+mkdir -p $RPM_BUILD_ROOT%{_var}/log/%{name}
+mkdir -p $RPM_BUILD_ROOT%{_var}/run/%{name}
+mkdir -p $RPM_BUILD_ROOT%{_var}/spool/%{name}
+
+# init stuff
+mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig
+mkdir -p $RPM_BUILD_ROOT%{_initrddir}
+install -m 644 packaging/rhel/xrootd.sysconfig $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/%{name}
+install -m 755 packaging/rhel/cmsd.init $RPM_BUILD_ROOT%{_initrddir}/cmsd
+install -m 755 packaging/rhel/frm_purged.init $RPM_BUILD_ROOT%{_initrddir}/frm_purged
+install -m 755 packaging/rhel/frm_xfrd.init $RPM_BUILD_ROOT%{_initrddir}/frm_xfrd
+install -m 755 packaging/rhel/xrootd.init $RPM_BUILD_ROOT%{_initrddir}/xrootd
+
+%if 0%{?rhel} < 5
+install -m 755 packaging/rhel/xrootd.functions-slc4 $RPM_BUILD_ROOT%{_initrddir}/xrootd.functions
+%else
+install -m 755 packaging/rhel/xrootd.functions $RPM_BUILD_ROOT%{_initrddir}/xrootd.functions
+%endif
+
+install -m 644 packaging/common/xrootd-main.cf $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/xrootd-main.cf
+install -m 644 packaging/common/cmsd-main.cf $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/cmsd-main.cf
+install -m 644 packaging/common/frmd-main.cf $RPM_BUILD_ROOT%{_sysconfdir}/%{name}/frmd-main.cf
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%post
+/sbin/ldconfig
+/sbin/chkconfig --add xrootd
+/sbin/chkconfig --add cmsd
+/sbin/chkconfig --add frm_purged
+/sbin/chkconfig --add frm_xfrd
+
+%preun
+if [ "$1" = "0" ]; then
+    /sbin/chkconfig --del xrootd
+    /sbin/chkconfig --del cmsd
+    /sbin/chkconfig --del frm_purged
+    /sbin/chkconfig --del frm_xfrd
+fi
+
+%postun
+/sbin/ldconfig
+if [ "$1" -ge "1" ] ; then
+    /sbin/service xrootd condrestart >/dev/null 2>&1 || :
+    /sbin/service cmsd condrestart >/dev/null 2>&1 || :
+    /sbin/service frm_purged condrestart >/dev/null 2>&1 || :
+    /sbin/service frm_xfrd condrestart >/dev/null 2>&1 || :
+fi
+
+%files libs
+%defattr(-,root,root,-)
+%{_libdir}/libXrdSec*.so*
+%{_libdir}/libXrdCrypto*.so*
+%{_libdir}/libXrdSut.so*
+%{_libdir}/libXrdNet*.so*
+%{_libdir}/libXrdOuc.so*
+%{_libdir}/libXrdSys.so*
+%{_libdir}/libXrdFfs.so*
+
+%files devel
+%defattr(-,root,root,-)
+%{_includedir}/%{name}
+
+%files client
+%defattr(-,root,root,-)
+%{_libdir}/libXrdClient*.so*
+%{_libdir}/libXrdPosix.so*
+%{_libdir}/XrdClientAdmin.pm
+%{_bindir}/xprep
+%{_bindir}/xrd
+%{_bindir}/xrdcp
+%{_bindir}/xrdgsiproxy
+%{_bindir}/xrdstagetool
+%doc %{_mandir}/man1
+
+%files fuse
+%defattr(-,root,root,-)
+%{_bindir}/xrootdfs
+
+%files server
+%defattr(-,root,root,-)
+%{_libdir}/libXrdPss*.so*
+%{_bindir}/cconfig
+%{_bindir}/cmsd
+%{_bindir}/cns_ssi
+%{_bindir}/frm_admin
+%{_bindir}/frm_purged
+%{_bindir}/frm_xfragent
+%{_bindir}/frm_xfrd
+%{_bindir}/mpxstats
+%{_bindir}/wait41
+%{_bindir}/xrdadler32
+%{_bindir}/XrdCnsd
+%{_bindir}/xrdpwdadmin
+%{_bindir}/xrdsssadmin
+%{_bindir}/xrootd
+%{_libdir}/libXrdAcc.so*
+%{_libdir}/libXrdBwm.so*
+%{_libdir}/libXrdCms.so*
+%{_libdir}/libXrdOfs.so*
+%{_libdir}/libXrdOss.so*
+%{_libdir}/libXrdRootd.so*
+%{_libdir}/libXrd.so*
+%config(noreplace) %{_sysconfdir}/%{name}/xrootd-main.cf
+%config(noreplace) %{_sysconfdir}/%{name}/cmsd-main.cf
+%config(noreplace) %{_sysconfdir}/%{name}/frmd-main.cf
+%attr(-,daemon,daemon) %dir %{_var}/log/%{name}
+%attr(-,daemon,daemon) %dir %{_var}/run/%{name}
+%attr(-,daemon,daemon) %dir %{_var}/spool/%{name}
+%{_datadir}/%{name}/scripts
+%{_datadir}/%{name}/utils
+%{_initrddir}/%{name}
+%{_initrddir}/cmsd
+%{_initrddir}/frm_xfrd
+%{_initrddir}/frm_purged
+%{_initrddir}/xrootd
+%{_initrddir}/xrootd.functions
+%config(noreplace) %{_sysconfdir}/sysconfig/%{name}
+
+
+%changelog
+* Tue Mar 22 2011 Lukasz Janyst <ljanyst@cern.ch> 3.0.3-1
+- the first RPM release - version 3.0.3
+- the detailed release notes are available at:
+  http://xrootd.org/download/ReleaseNotes.html

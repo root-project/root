@@ -1228,9 +1228,10 @@ bool XrdClient::Close() {
     fConnModule->SendGenCommand(&closeFileRequest,
 				0,
 				0, 0 , FALSE, (char *)"Close");
-  
+
     // No file is opened for now
     fOpenPars.opened = FALSE;
+    fConnModule->Disconnect( false );
 
     return TRUE;
 }

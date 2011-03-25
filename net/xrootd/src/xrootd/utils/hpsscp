@@ -174,10 +174,11 @@ $XfrTrgFN= '';     # The target file
 $XfrResp = '';     # The transfer response
 $XfrSess = '';     # The transfer session
 $XfrRC   = 0;      # The final return code
-$XfrMoff = 0;
+$XfrMoff = -1;
 
 # Get the options
 #
+  $CmdLine = join(' ',@ARGV);
   while (substr($ARGV[0], 0, 1) eq '-') {
      $op = shift(@ARGV);
         if ($op eq '-A') {if (&IsNum($ARGV[0])) {$UDPort= &GetVal('port', 'N');}
@@ -222,6 +223,7 @@ $XfrMoff = 0;
                          }
      else {&Emsg("Invalid option '$op'.",-1);}
      }
+  &SayDebug("cmd = $CmdLine");
 
 # Get the source and target filenames
 #
@@ -266,7 +268,7 @@ $XfrMoff = 0;
      {if (index($XfrTrgFN, ' ') >= 0)
          {($XfrBase, $XfrApnd) = split(/ /, $XfrTrgFN, 2);
           $XfrTrgFN = $XfrBase.'/'.$XfrApnd;
-         } elsif ($XfrMoff)
+         } elsif ($XfrMoff >= 0)
                  {&Emsg("-M offset does not refer to a slash.")
                        if substr($XfrTrgFN, $XfrMoff, 1) ne '/';
                   $XfrBase = substr($XfrTrgFN, 0, $XfrMoff);

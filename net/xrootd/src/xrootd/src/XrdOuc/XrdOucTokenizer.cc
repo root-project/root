@@ -8,15 +8,12 @@
 /*              DE-AC03-76-SFO0515 with the Deprtment of Energy               */
 /******************************************************************************/
 
-//       $Id$
-
-const char *XrdOucTokenizerCVSID = "$Id$";
-
 #ifndef WIN32
 #include <unistd.h>
 #endif
 #include <ctype.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "XrdOuc/XrdOucTokenizer.hh"
 
@@ -111,7 +108,7 @@ void XrdOucTokenizer::RetToken()
      // Backup one token, we can only back up once
      //
      if (token)
-        {if (*tnext) *(tnext-1) = ' ';
+        {if (*tnext) token[strlen(token)] = ' ';
          tnext = token;
          token = 0;
         }

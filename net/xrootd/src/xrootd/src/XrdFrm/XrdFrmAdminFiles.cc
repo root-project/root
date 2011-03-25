@@ -2,16 +2,13 @@
 /*                                                                            */
 /*                   X r d F r m A d m i n F i l e s . c c                    */
 /*                                                                            */
-/* (c) 2009 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/* (c) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*                            All Rights Reserved                             */
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
   
-//          $Id$
-
-const char *XrdFrmAdminFilesCVSID = "$Id$";
-
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -26,38 +23,83 @@ const char *XrdFrmAdminFilesCVSID = "$Id$";
 #include "XrdFrm/XrdFrmConfig.hh"
 #include "XrdFrm/XrdFrmFiles.hh"
 #include "XrdFrm/XrdFrmUtils.hh"
+#include "XrdFrm/XrdFrmXAttr.hh"
+
+#include "XrdOuc/XrdOucXAttr.hh"
 
 using namespace XrdFrm;
-
+  
 /******************************************************************************/
-/*                                m k L o c k                                 */
+/*                                c k A t t r                                 */
 /******************************************************************************/
   
-int XrdFrmAdmin::mkLock(const char *Lfn)
+char XrdFrmAdmin::ckAttr(int What, const char *Lfn, char *Pfn, int Pfnsz)
+{
+   struct stat Stat;
+   const char *Msg = (What & mkLF ? "mark " : (What & mkMF ? "mmap " : "pin "));
+   char Buff[80], Resp;
+
+// Get the actual pfn for the base file
+//
+   if (!Config.LocalPath(Lfn, Pfn, Pfnsz)) {finalRC = 4; return 0;}
+
+// Get file state
+//
+   if (stat(Pfn, &Stat))
+      {Emsg(errno, "ckAttr ", Msg, Lfn); return 0;}
+
+// If this is not a directory, then all is well
+//
+   if ((Stat.st_mode & S_IFMT) != S_IFDIR)
+      {if (!Opt.All) return 'f';
+       Emsg(ENOTDIR, "ckAttr ", Msg, "files in ", Lfn);
+       return 0;
+      }
+
+// Make sure the whole directory is being considered
+//
+   if (Opt.All || Opt.Recurse) return 'd';
+
+// Ask what we should do
+//
+   sprintf(Buff, "%s ALL files in directory ", Msg);
+   Buff[0] = toupper(*Buff);
+   if ((Resp = XrdFrmUtils::Ask('n', Buff, Lfn)) == 'y') return 'd';
+   return (Resp == 'a' ? 'a' : 0);
+}
+
+/******************************************************************************/
+/*                                m k M a r k                                 */
+/******************************************************************************/
+  
+int XrdFrmAdmin::mkMark(const char *Lfn)
 {
    XrdFrmFileset *sP;
    XrdFrmFiles   *fP;
    char Pfn[MAXPATHLEN+8], Resp;
    int opts = (Opt.Recurse ? XrdFrmFiles::Recursive : 0);
-   int ec = 0;
+   int ec = 0, Adj = (Opt.MPType == 'p' ? 0 : -113);
 
 // Check what we are dealing with
 //
-   if (!(Resp = mkStat(mkLF, Lfn, Pfn, sizeof(Pfn)-8))) return 1;
+   if (!(Resp = ckAttr(mkLF, Lfn, Pfn, sizeof(Pfn)-8))) return 1;
    if (Resp == 'a') return 0;
 
-// If this is a file then do one lock file
+// If this is a file then do one file
 //
    if (Resp == 'f')
-      {if (mkFile(mkLF|isPFN, Pfn)) numFiles++;
+      {if (XrdFrmUtils::updtCpy(Pfn, Adj)) numFiles++;
        return 1;
       }
 
 // Process the directory
 //
-   fP = new XrdFrmFiles(Pfn, opts);
+   fP = new XrdFrmFiles(Pfn, opts | XrdFrmFiles::NoAutoDel);
    while((sP = fP->Get(ec,1)))
-        {if (sP->baseFile() && mkFile(mkLF|isPFN, sP->basePath())) numFiles++;}
+        {if (sP->baseFile()
+         &&  XrdFrmUtils::updtCpy(sP->basePath(), Adj)) numFiles++;
+         delete sP;
+        }
 
 // All done
 //
@@ -65,37 +107,101 @@ int XrdFrmAdmin::mkLock(const char *Lfn)
    delete fP;
    return 1;
 }
-
+  
 /******************************************************************************/
-/*                                 m k P i n                                  */
+/*                                m k M m a p                                 */
 /******************************************************************************/
   
-int XrdFrmAdmin::mkPin(const char *Lfn, const char *Pdata, int Pdlen)
+int XrdFrmAdmin::mkMmap(const char *Lfn)
 {
+   XrdOucXAttr<XrdFrmXAttrMem> memInfo;
    XrdFrmFileset *sP;
    XrdFrmFiles   *fP;
+   const char *bFn;
    char Pfn[MAXPATHLEN+8], Resp;
    int opts = (Opt.Recurse ? XrdFrmFiles::Recursive : 0);
-   int ec;
+   int ec, doSet = 0;
 
 // Check what we are dealing with
 //
-   if (!(Resp = mkStat(mkPF, Lfn, Pfn, sizeof(Pfn)-8))) return 1;
+   if (!(Resp = ckAttr(mkMF, Lfn, Pfn, sizeof(Pfn)-8))) return 1;
    if (Resp == 'a') return 0;
 
-// If this is a file then do one lock file
+// Construct the proper mmap attribute
+//
+   if (!Opt.Local)
+      {      doSet = memInfo.Attr.Flags  = XrdFrmXAttrMem::memMap;
+       if (Opt.Fix)  memInfo.Attr.Flags |= XrdFrmXAttrMem::memLock;
+       if (Opt.Keep) memInfo.Attr.Flags |= XrdFrmXAttrMem::memKeep;
+      }
+
+// If this is a file then do one file
 //
    if (Resp == 'f')
-      {if (mkFile(mkPF|isPFN, Pfn, Pdata, Pdlen)) numFiles++;
+      {if ((doSet ? !memInfo.Set(Pfn) : !memInfo.Del(Pfn))) numFiles++;
        return 1;
       }
 
 // Process the directory
 //
-   fP = new XrdFrmFiles(Pfn, opts);
+   fP = new XrdFrmFiles(Pfn, opts | XrdFrmFiles::NoAutoDel);
    while((sP = fP->Get(ec,1)))
-        {if (sP->baseFile() && mkFile(mkPF|isPFN,sP->basePath(),Pdata,Pdlen))
-             numFiles++;
+        {if (sP->baseFile() && (bFn = sP->basePath())
+         &&  (doSet ? !memInfo.Set(bFn) : !memInfo.Del(bFn))) numFiles++;
+         delete sP;
+        }
+
+
+// All done
+//
+   if (ec) finalRC = 4;
+   delete fP;
+   return 1;
+}
+  
+/******************************************************************************/
+/*                                 m k P i n                                  */
+/******************************************************************************/
+  
+int XrdFrmAdmin::mkPin(const char *Lfn)
+{
+   XrdOucXAttr<XrdFrmXAttrPin> pinInfo;
+   XrdFrmFileset *sP;
+   XrdFrmFiles   *fP;
+   const char *bFn;
+   char Pfn[MAXPATHLEN+8], Resp;
+   int opts = (Opt.Recurse ? XrdFrmFiles::Recursive : 0);
+   int ec, doSet;
+
+// Check what we are dealing with
+//
+   if (!(Resp = ckAttr(mkPF, Lfn, Pfn, sizeof(Pfn)-8))) return 1;
+   if (Resp == 'a') return 0;
+
+// Construct the proper pin attribute
+//
+        if (Opt.ktAlways)   pinInfo.Attr.Flags = XrdFrmXAttrPin::pinPerm;
+   else if (Opt.KeepTime)
+           {pinInfo.Attr.pinTime = static_cast<long long>(Opt.KeepTime);
+            if (Opt.ktIdle) pinInfo.Attr.Flags = XrdFrmXAttrPin::pinIdle;
+               else         pinInfo.Attr.Flags = XrdFrmXAttrPin::pinKeep;
+           }
+   doSet = (Opt.ktAlways || Opt.KeepTime ? 1 : 0);
+
+// If this is a file then do one file
+//
+   if (Resp == 'f')
+      {if ((doSet ? !pinInfo.Set(Pfn) : !pinInfo.Del(Pfn))) numFiles++;
+       return 1;
+      }
+
+// Process the directory
+//
+   fP = new XrdFrmFiles(Pfn, opts | XrdFrmFiles::NoAutoDel);
+   while((sP = fP->Get(ec,1)))
+        {if (sP->baseFile() && (bFn = sP->basePath())
+         &&  (doSet ? !pinInfo.Set(bFn) : !pinInfo.Del(bFn))) numFiles++;
+         delete sP;
         }
 
 // All done
@@ -105,6 +211,9 @@ int XrdFrmAdmin::mkPin(const char *Lfn, const char *Pdata, int Pdlen)
    return 1;
 }
 
+/******************************************************************************/
+/*                      O b s o l e t e   M e t h o d s                       */
+/******************************************************************************/
 /******************************************************************************/
 /*                                m k F i l e                                 */
 /******************************************************************************/
@@ -195,6 +304,45 @@ int XrdFrmAdmin::mkFile(int What, const char *Path, const char *Data, int DLen)
        unlink(tempFN);
        return 0;
       }
+   return 1;
+}
+
+/******************************************************************************/
+/*                                m k L o c k                                 */
+/******************************************************************************/
+  
+int XrdFrmAdmin::mkLock(const char *Lfn)
+{
+   XrdFrmFileset *sP;
+   XrdFrmFiles   *fP;
+   char Pfn[MAXPATHLEN+8], Resp;
+   int opts = (Opt.Recurse ? XrdFrmFiles::Recursive : 0);
+   int ec = 0;
+
+// Check what we are dealing with
+//
+   if (!(Resp = mkStat(mkLF, Lfn, Pfn, sizeof(Pfn)-8))) return 1;
+   if (Resp == 'a') return 0;
+
+// If this is a file then do one file
+//
+   if (Resp == 'f')
+      {if (mkFile(mkLF|isPFN, Pfn)) numFiles++;
+       return 1;
+      }
+
+// Process the directory
+//
+   fP = new XrdFrmFiles(Pfn, opts | XrdFrmFiles::NoAutoDel);
+   while((sP = fP->Get(ec,1)))
+        {if (sP->baseFile() && mkFile(mkLF|isPFN, sP->basePath())) numFiles++;
+         delete sP;
+        }
+
+// All done
+//
+   if (ec) finalRC = 4;
+   delete fP;
    return 1;
 }
 

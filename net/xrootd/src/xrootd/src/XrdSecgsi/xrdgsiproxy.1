@@ -1,0 +1,50 @@
+.TH xrdgsiproxy 1 "2009 Oct 26" xrootd "xrootd proxy init"
+.SH NAME
+xrdgsiproxy \- xroot X509 proxy creation,query and destroy command
+.SH SYNOPSIS
+.br
+.B xrdgsiproxy [-h] [<mode>] [-debug] [-f [-out] <file>]
+
+.SH DESCRIPTION
+Used to create, display or destroy an X509 proxy certificate file.
+.TP
+.B <mode>
+.IR init
+: create proxy certificate and related proxy file
+.br
+.IR info
+: display content of existing proxy file
+.br
+.IR destroy
+: delete existing proxy file
+.br
+
+.SH OPTIONS
+.I -h
+display help
+.I -f (-out) <file>
+ Non-standard location of proxy file
+
+.BI init \0 mode \0 only:
+.TP
+.I -certdir <dir>
+Non-standard location of directory with information about known CAs
+.TP
+.I -cert    <file>
+Non-standard location of certificate for which proxies are wanted
+.TP
+.I -key     <file>
+Non-standard location of private key to be used to sign the proxy
+.TP
+.I -bits    <n>
+Strength in bits of the key [default 512]
+.TP
+.I -valid   <hh:mm>
+Time validity of the proxy certificate [default 12:00]
+.TP
+.I -path-length <len>
+Max number of descendent levels below this proxy [default 0]
+.TP
+.SH AUTHOR
+\fBCERN IT-DM\fP based on 'xrdgsiproxy -h' <gerado.ganis@cern.ch>
+

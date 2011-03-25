@@ -19,6 +19,7 @@
 #include <strings.h>
 #include <stdio.h>
 #include <sys/file.h>
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #ifdef __solaris__
@@ -246,7 +247,8 @@ int XrdPssSys::Rename(const char *oldname, const char *newname)
 // Convert path to URL
 //
    if (!(oldSubP = P2URL(oldName, PBsz, oldname))
-   ||  !(newSubP = P2URL(newName, PBsz, newname))) return -ENAMETOOLONG;
+   ||  !(newSubP = P2URL(newName, PBsz, newname)))
+       return -ENAMETOOLONG;
 
 // Execute the rename and return result
 //
@@ -709,9 +711,20 @@ int XrdPssFile::isCompressed(char *cxidp)  // Not supported for proxies
 char *XrdPssSys::P2URL(char *pbuff, int pblen, const char *path, int Split,
                  const char *Cgi,   int CgiLn, const char *Ident)
 {
-   int   pfxLen, pathln = strlen(path);
+   int   pfxLen, pathln;
    const char *theID = 0, *subPath;
+   const char *fname = path;
    char  idBuff[8], *idP, *retPath;
+   char  Apath[MAXPATHLEN*2+1];
+
+// First, apply the N2N mapping if necessary. If N2N fails then the whole
+// mapping fails and ENAMETOOLONG will be returned.
+//
+   if (XrdProxySS.theN2N)
+      {if (XrdProxySS.theN2N->lfn2pfn(path, Apath, sizeof(Apath))) return 0;
+       fname = Apath;
+      }
+   pathln = strlen(path);
 
 // If we have an Ident then usethe fd number as the userid. This allows us to
 // have one stream per open connection.
@@ -738,16 +751,16 @@ char *XrdPssSys::P2URL(char *pbuff, int pblen, const char *path, int Split,
 // not add any cgi information if the split fails.
 //
    if (Split)
-      {if ((subPath = rindex(path+1, '/')) && *(subPath+1))
-          {int n = subPath-path;
-           strncpy(pbuff, path, n); retPath = pbuff+n; *retPath++ = 0;
+      {if ((subPath = rindex(fname+1, '/')) && *(subPath+1))
+          {int n = subPath-fname;
+           strncpy(pbuff, fname, n); retPath = pbuff+n; *retPath++ = 0;
            strcpy(retPath, subPath);
            pathln++;
           } else {
-           strcpy(pbuff, path);
+           strcpy(pbuff, fname);
            return pbuff+pathln;
           }
-       } else strcpy(pbuff, path);
+       } else strcpy(pbuff, fname);
 
 // Add any cgi information
 //

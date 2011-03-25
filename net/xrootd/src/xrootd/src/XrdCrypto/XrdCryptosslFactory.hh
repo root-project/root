@@ -21,10 +21,14 @@
 #include "XrdCrypto/XrdCryptoFactory.hh"
 #endif
 
+#include "XrdSys/XrdSysPthread.hh"
+
 int DebugON = 1;
 
 // The ID must be a unique number
 #define XrdCryptosslFactoryID  1
+
+#define SSLFACTORY_MAX_CRYPTO_MUTEX 256
 
 class XrdCryptosslFactory : public XrdCryptoFactory 
 {
@@ -75,6 +79,10 @@ public:
    XrdCryptoX509ParseBucket_t X509ParseBucket();
    XrdCryptoX509ExportChain_t X509ExportChain();
    XrdCryptoX509ChainToFile_t X509ChainToFile();
+
+   // Required SSL mutexes.
+  static  XrdSysMutex*              CryptoMutexPool[SSLFACTORY_MAX_CRYPTO_MUTEX];
+
 };
 
 #endif

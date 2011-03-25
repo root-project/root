@@ -613,4 +613,50 @@ struct ALIGN_CHECK {char chkszreq[25-sizeof(ClientRequest)];
    char chkszrsp[ 9-sizeof(ServerResponseHeader)];
 };
 
+/******************************************************************************/
+/*                   X P r o t o c o l   U t i l i t i e s                    */
+/******************************************************************************/
+
+#include <errno.h>
+#if defined(WIN32)
+#if !defined(ENOTBLK)
+#  define ENOTBLK 15
+#endif
+#if !defined(ETXTBSY)
+#define ETXTBSY 26
+#endif
+#if !defined(ENOBUFS)
+#define ENOBUFS 105
+#endif
+#if !defined(ENETUNREACH)
+#define ENETUNREACH 114
+#endif
+#endif
+  
+class XProtocol
+{
+public:
+
+// mapError() is the occicial mapping from errno to xrootd protocol error.
+//
+static int mapError(int rc)
+      {if (rc < 0) rc = -rc;
+       switch(rc)
+          {case ENOENT:       return kXR_NotFound;
+           case EPERM:        return kXR_NotAuthorized;
+           case EACCES:       return kXR_NotAuthorized;
+           case EIO:          return kXR_IOError;
+           case ENOMEM:       return kXR_NoMemory;
+           case ENOBUFS:      return kXR_NoMemory;
+           case ENOSPC:       return kXR_NoSpace;
+           case ENAMETOOLONG: return kXR_ArgTooLong;
+           case ENETUNREACH:  return kXR_noserver;
+           case ENOTBLK:      return kXR_NotFile;
+           case EISDIR:       return kXR_isDirectory;
+           case EEXIST:       return kXR_InvalidRequest;
+           case ETXTBSY:      return kXR_inProgress;
+           default:           return kXR_FSError;
+          }
+      }
+};
 #endif
