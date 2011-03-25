@@ -1124,12 +1124,9 @@ Int_t TH1::BufferEmpty(Int_t action)
 //             The buffer is automatically deleted when the number of entries
 //             in the buffer is greater than the number of entries in the histogram
 
-
-
    // do we need to compute the bin size?
    if (!fBuffer) return 0;
    Int_t nbentries = (Int_t)fBuffer[0];
-   Info("BufferEmpty","value of action %d size of buffer is %d nbentries = %d",action,fBufferSize,nbentries);
 
    // nbentries correspond to the number of entries of histogram 
    
