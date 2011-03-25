@@ -1886,17 +1886,15 @@ TH1D *TH3::DoProject1D(const char* name, const char* title, TAxis* projX,
          return 0; 
       }
       h1 = (TH1D*)h1obj;
-      // check histogram compatibility (not perfect for variable bins histograms)
-      if ( h1->GetNbinsX() ==  projX->GetNbins() && 
-           h1->GetXaxis()->GetXmin() == projX->GetXmin() &&
-           h1->GetXaxis()->GetXmax() == projX->GetXmax() ) { 
+      // check histogram compatibility 
+      bool useAllBins = (nx == projX->GetNbins() );
+      if (useAllBins && CheckEqualAxes( projX, h1->GetXaxis() ) ) { 
          // enable originalRange option in case a range is set in the outer axis
          originalRange = kTRUE; 
          h1->Reset();
       }
-      else if ( h1->GetNbinsX() ==  nx && 
-                h1->GetXaxis()->GetXmin() == projX->GetBinLowEdge(ixmin) &&
-                h1->GetXaxis()->GetXmax() == projX->GetBinUpEdge(ixmax) ) { 
+      else if ( !useAllBins &&  
+                CheckConsistentSubAxes(projX, ixmin, ixmax, h1->GetXaxis() ) ) { 
          // reset also in case an histogram exists with compatible axis with the zoomed original axis
          h1->Reset();   
       }      
@@ -2086,24 +2084,18 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, TAxis* projX, TAxis
          return 0; 
       }
       h2 = (TH2D*)h2obj;
-      // check histogram compatibility (not perfect for variable bins histograms)
+      // check histogram axis compatibility 
       // note that the x axis of the projected histogram is  labeld  Y of the original
-      if ( ( h2->GetNbinsX()           == projY->GetNbins()  && 
-             h2->GetXaxis()->GetXmin() == projY->GetXmin()   &&
-             h2->GetXaxis()->GetXmax() == projY->GetXmax() ) && 
-           ( h2->GetNbinsY()          ==  projX->GetNbins()  && 
-             h2->GetYaxis()->GetXmin() == projX->GetXmin()   &&
-             h2->GetYaxis()->GetXmax() == projX->GetXmax() )  ) {  
+      bool useAllBins = ((nx == projX->GetNbins() ) && (ny == projY->GetNbins() ) );
+      if (useAllBins && CheckEqualAxes(projY, h2->GetXaxis() ) && 
+           CheckEqualAxes(projX, h2->GetYaxis() )  ) { 
          // enable originalRange option in case a range is set in the outer axis
          originalRange = kTRUE; 
          h2->Reset();
       }
-      else if ( ( h2->GetNbinsX()           ==  ny                          && 
-                  h2->GetXaxis()->GetXmin() == projY->GetBinLowEdge(iymin)  &&
-                  h2->GetXaxis()->GetXmax() == projY->GetBinUpEdge(iymax) ) &&
-                ( h2->GetNbinsY()           ==  nx                          && 
-                  h2->GetYaxis()->GetXmin() == projX->GetBinLowEdge(ixmin)  &&
-                  h2->GetYaxis()->GetXmax() == projX->GetBinUpEdge(ixmax) )  ) { 
+      else if ( !useAllBins && 
+                CheckConsistentSubAxes(projY, iymin, iymax, h2->GetXaxis() ) && 
+                CheckConsistentSubAxes(projX, ixmin, ixmax, h2->GetYaxis() )  ) { 
          // reset also in case an histogram exists with compatible axis with the zoomed original axis
          h2->Reset();   
       }      
@@ -2556,22 +2548,16 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, TAxis*
       p2 = (TProfile2D*)p2obj;
       // check histogram compatibility (not perfect for variable bins histograms)
       // note that the x axis of the projected histogram is  labeld  Y of the original
-      if ( ( p2->GetNbinsX()           == projY->GetNbins()  && 
-             p2->GetXaxis()->GetXmin() == projY->GetXmin()   &&
-             p2->GetXaxis()->GetXmax() == projY->GetXmax() ) && 
-           ( p2->GetNbinsY()          ==  projX->GetNbins()  && 
-             p2->GetYaxis()->GetXmin() == projX->GetXmin()   &&
-             p2->GetYaxis()->GetXmax() == projX->GetXmax() )  ) {  
+      bool useAllBins = ((nx == projX->GetNbins() ) && (ny == projY->GetNbins() ) );
+      if (useAllBins && CheckEqualAxes( projY, p2->GetXaxis() ) && 
+           CheckEqualAxes( projX, p2->GetYaxis() ) ) { 
          // enable originalRange option in case a range is set in the outer axis
          originalRange = kTRUE; 
          p2->Reset();
       }
-      else if ( ( p2->GetNbinsX()           ==  ny                          && 
-                  p2->GetXaxis()->GetXmin() == projY->GetBinLowEdge(iymin)  &&
-                  p2->GetXaxis()->GetXmax() == projY->GetBinUpEdge(iymax) ) &&
-                ( p2->GetNbinsY()           ==  nx                          && 
-                  p2->GetYaxis()->GetXmin() == projX->GetBinLowEdge(ixmin)  &&
-                  p2->GetYaxis()->GetXmax() == projX->GetBinUpEdge(ixmax) )  ) { 
+      else if ( !useAllBins && 
+                CheckConsistentSubAxes(projY, iymin, iymax, p2->GetXaxis() ) &&
+                CheckConsistentSubAxes(projX, ixmin, ixmax, p2->GetYaxis() ) ) { 
          // reset also in case an histogram exists with compatible axis with the zoomed original axis
          p2->Reset();   
       }      

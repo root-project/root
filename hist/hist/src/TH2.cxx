@@ -1905,21 +1905,18 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
       }
       h1 = (TProfile*)h1obj;
       // check profile compatibility
-      if ( h1->GetNbinsX() ==  outAxis.GetNbins() &&
-           h1->GetXaxis()->GetXmin() == outAxis.GetXmin() &&
-           h1->GetXaxis()->GetXmax() == outAxis.GetXmax() ) {
+      bool useAllBins = ((lastOutBin - firstOutBin +1 ) == outAxis.GetNbins() );
+      if (useAllBins && CheckEqualAxes(&outAxis, h1->GetXaxis() ) ) { 
          // enable originalRange option in case a range is set in the outer axis
          originalRange = kTRUE;
          h1->Reset();
       }
-      else if ( h1->GetNbinsX() ==  lastOutBin-firstOutBin+1 &&
-                h1->GetXaxis()->GetXmin() == outAxis.GetBinLowEdge(firstOutBin) &&
-                h1->GetXaxis()->GetXmax() == outAxis.GetBinUpEdge(lastOutBin) ) {
+      else if (!useAllBins && CheckConsistentSubAxes(&outAxis, firstOutBin, lastOutBin, h1->GetXaxis() ) ) { 
          // reset also in case a profile exists with compatible axis with the zoomed original axis
          h1->Reset();
       }
       else {
-         Error("DoProfile","Profile with name %s alread exists and it is not compatible",pname);
+         Error("DoProfile","Profile with name %s already exists and it is not compatible",pname);
          return 0;
       }
    }
@@ -2189,22 +2186,19 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
          return 0;
       }
       h1 = (TH1D*)h1obj;
-      // check histogram compatibility (not perfect for variable bins histograms)
-      if ( h1->GetNbinsX() ==  outAxis->GetNbins() &&
-           h1->GetXaxis()->GetXmin() == outAxis->GetXmin() &&
-           h1->GetXaxis()->GetXmax() == outAxis->GetXmax() ) {
-         // enable originalRange option in case a range is set in the outer axis
-         originalRange = kTRUE;
-         h1->Reset();
+      // check axis compatibility - distinguish case when using all bins or a part of the axis 
+      bool useAllBins = ((lastOutBin - firstOutBin +1 ) == outAxis->GetNbins() );
+      if (useAllBins  && CheckEqualAxes(outAxis, h1->GetXaxis()) ) { 
+            // enable originalRange option in case a range is set in the outer axis
+            originalRange = kTRUE;
+            h1->Reset();
       }
-      else if ( h1->GetNbinsX() ==  lastOutBin-firstOutBin+1 &&
-                h1->GetXaxis()->GetXmin() == outAxis->GetBinLowEdge(firstOutBin) &&
-                h1->GetXaxis()->GetXmax() == outAxis->GetBinUpEdge(lastOutBin) ) {
+      else if (!useAllBins && CheckConsistentSubAxes(outAxis, firstOutBin, lastOutBin, h1->GetXaxis() ) ) { 
          // reset also in case an histogram exists with compatible axis with the zoomed original axis
          h1->Reset();
       }
       else {
-         Error("DoProjection","Histogram with name %s alread exists and it is not compatible",pname);
+         Error("DoProjection","Histogram with name %s already exists and it is not compatible",pname);
          return 0;
       }
    }

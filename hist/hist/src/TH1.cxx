@@ -1124,9 +1124,15 @@ Int_t TH1::BufferEmpty(Int_t action)
 //             The buffer is automatically deleted when the number of entries
 //             in the buffer is greater than the number of entries in the histogram
 
+
+
    // do we need to compute the bin size?
    if (!fBuffer) return 0;
    Int_t nbentries = (Int_t)fBuffer[0];
+   Info("BufferEmpty","value of action %d size of buffer is %d nbentries = %d",action,fBufferSize,nbentries);
+
+   // nbentries correspond to the number of entries of histogram 
+   
    if (!nbentries) return 0;
    Double_t *buffer = fBuffer;
    if (nbentries < 0) {
@@ -1196,8 +1202,11 @@ Int_t TH1::BufferFill(Double_t x, Double_t w)
    return -2;
 }
 
-bool CheckBinLimits(const TArrayD* h1Array, const TArrayD* h2Array)
+bool TH1::CheckBinLimits(const TAxis* a1, const TAxis * a2)
 {
+
+   const TArrayD * h1Array = a1->GetXbins(); 
+   const TArrayD * h2Array = a2->GetXbins(); 
    Int_t fN = h1Array->fN;
    if ( fN != 0 ) {
       if ( h2Array->fN != fN ) {
@@ -1206,12 +1215,84 @@ bool CheckBinLimits(const TArrayD* h1Array, const TArrayD* h2Array)
       }
       else {
          for ( int i = 0; i < fN; ++i ) {
-            if ( ! TMath::AreEqualAbs( h1Array->GetAt(i), h2Array->GetAt(i), 1E-10 ) ) {
+            if ( ! TMath::AreEqualRel( h1Array->GetAt(i), h2Array->GetAt(i), 1E-10 ) ) {
                throw DifferentBinLimits();
                return false;
             }
          }
       }
+   }
+
+   return true;
+}
+
+bool TH1::CheckAxisLimits(const TAxis *a1, const TAxis *a2 )
+{
+   // Check that the axis limits of the histograms are the same
+   // if a first and last bin is passed the axis is compared between the given range
+
+   if ( ! TMath::AreEqualRel(a1->GetXmin(), a2->GetXmin(),1.E-12) ||
+        ! TMath::AreEqualRel(a1->GetXmax(), a2->GetXmax(),1.E-12) ) {
+      throw DifferentAxisLimits();
+      return false;
+   }
+   return true;
+}
+
+bool TH1::CheckEqualAxes(const TAxis *a1, const TAxis *a2 )
+{
+   // Check that the axis are the same 
+   if (a1->GetNbins() != a2->GetNbins() ) { 
+      //throw DifferentNumberOfBins();
+      ::Info("CheckEqualAxes","Axes have different number of bins : nbin1 = %d nbin2 = %d",a1->GetNbins(),a2->GetNbins() );
+      return false;
+   }
+   try { 
+      CheckAxisLimits(a1,a2);
+   } catch (DifferentAxisLimits&) { 
+      ::Info("CheckEqualAxes","Axes have different limits");
+      return false; 
+   }
+   try { 
+      CheckBinLimits(a1,a2);
+   } catch (DifferentBinLimits&) { 
+      ::Info("CheckEqualAxes","Axes have different bin limits");
+      return false; 
+   }
+   return true;
+}
+
+bool TH1::CheckConsistentSubAxes(const TAxis *a1, Int_t firstBin1, Int_t lastBin1, const TAxis * a2, Int_t firstBin2, Int_t lastBin2 )
+{
+   // Check that two sub axis are the same 
+   // the limits are defined by first bin and last bin
+   // N.B. no check is done in this case for variable bins
+
+   // By default is assumed that no bins are given for the second axis
+   Int_t nbins1   = lastBin1-firstBin1 + 1;
+   Double_t xmin1 = a1->GetBinLowEdge(firstBin1);
+   Double_t xmax1 = a1->GetBinUpEdge(lastBin1);
+
+   Int_t nbins2 = a2->GetNbins();  
+   Double_t xmin2 = a2->GetXmin(); 
+   Double_t xmax2 = a2->GetXmax();
+
+   if (firstBin2 <  lastBin2) { 
+      // in this case assume no bins are given for the second axis
+      nbins2   = lastBin1-firstBin1 + 1;
+      xmin2 = a1->GetBinLowEdge(firstBin1);
+      xmax2 = a1->GetBinUpEdge(lastBin1);
+   }
+
+   if (nbins1 != nbins2 ) { 
+      ::Info("CheckConsistentSubAxes","Axes have different number of bins");
+      return false;
+   }
+
+   if ( ! TMath::AreEqualRel(xmin1,xmin2,1.E-12) ||
+        ! TMath::AreEqualRel(xmax1,xmax2,1.E-12) ) {
+      ::Info("CheckConsistentSubAxes","Axes have different limits");
+      return false;
    }
 
    return true;
@@ -1231,22 +1312,18 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
       throw DifferentNumberOfBins();
       return false;
    }
-   // Check that the axis limits of the histograms are the same
-   if (h1->fXaxis.GetXmin() != h2->fXaxis.GetXmin() ||
-       h1->fXaxis.GetXmax() != h2->fXaxis.GetXmax() ||
-       h1->fYaxis.GetXmin() != h2->fYaxis.GetXmin() ||
-       h1->fYaxis.GetXmax() != h2->fYaxis.GetXmax() ||
-       h1->fZaxis.GetXmin() != h2->fZaxis.GetXmin() ||
-       h1->fZaxis.GetXmax() != h2->fZaxis.GetXmax()) {
-      throw DifferentAxisLimits();
-      return false;
-   }
 
-   bool ret = true;
+   bool ret = true; 
 
-   ret &= CheckBinLimits(h1->GetXaxis()->GetXbins(), h2->GetXaxis()->GetXbins());
-   ret &= CheckBinLimits(h1->GetYaxis()->GetXbins(), h2->GetYaxis()->GetXbins());
-   ret &= CheckBinLimits(h1->GetZaxis()->GetXbins(), h2->GetZaxis()->GetXbins());
+   // check axis limits
+   ret &= CheckAxisLimits(h1->GetXaxis(), h2->GetXaxis());
+   ret &= CheckAxisLimits(h1->GetYaxis(), h2->GetYaxis());
+   ret &= CheckAxisLimits(h1->GetZaxis(), h2->GetZaxis());
+
+   // check bin limits
+   ret &= CheckBinLimits(h1->GetXaxis(), h2->GetXaxis());
+   ret &= CheckBinLimits(h1->GetYaxis(), h2->GetYaxis());
+   ret &= CheckBinLimits(h1->GetZaxis(), h2->GetZaxis());
 
    return ret;
 }
