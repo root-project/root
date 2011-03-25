@@ -746,23 +746,37 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
       response->Send(kXR_InvalidRequest, msg.c_str());
       return 0;
    }
+   
+   // Masters have the .workers file
+   XrdOucString wfile(sdir);
+   wfile += "/.workers";
+   bool ismaster = (access(wfile.c_str(), F_OK) == 0) ? 1 : 0;
+   
    // Scan the directory to add the top master (only if top master)
    XrdOucString xo;
    int ilog, idas;
-   bool ismaster = 0;
    struct dirent *ent = 0;
    while ((ent = (struct dirent *)readdir(dir))) {         
       xo = ent->d_name;
+      bool recordinfo = 0;
       if ((ilog = xo.find(".log")) != STR_NPOS) {
          xo.replace(".log", "");
          if ((idas = xo.find('-')) != STR_NPOS) xo.erase(0, idas + 1);
          if ((idas = xo.find('-')) != STR_NPOS) xo.erase(idas);
-         if (ord.length() <= 0 || (ord == xo)) {
+         if (ord.length() > 0 && (ord == xo)) {
+            recordinfo = 1;
+         } else {
+            if (ismaster && !broadcast) {
+               if (!strncmp(ent->d_name, "master-", 7)) recordinfo = 1;
+            } else {
+               recordinfo = 1;
+            }
+         }
+         if (recordinfo) {
             rmsg += "|"; rmsg += xo;
             rmsg += " proof://"; rmsg += fMgr->Host(); rmsg += ':';
             rmsg += fMgr->Port(); rmsg += '/';
             rmsg += sdir; rmsg += '/'; rmsg += ent->d_name;
-            if (!strncmp(ent->d_name, "master-", 7)) ismaster = 1;
          }
       }
    }
@@ -784,8 +798,6 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
    } else if (ismaster) {
       // Get info from the .workers file
       // Now open the workers file
-      XrdOucString wfile(sdir);
-      wfile += "/.workers";
       FILE *f = fopen(wfile.c_str(), "r");
       if (f) {
          char ln[2048];
