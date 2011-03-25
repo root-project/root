@@ -130,7 +130,13 @@ endif
 		macosx64:*)      xopt="--ccflavour=macos64";; \
 		macosxicc:*)     xopt="--ccflavour=icc";; \
 		macosx*:*)       xopt="--ccflavour=macos";; \
-		solaris*:*)      xopt="--use-xrd-strlcpy --use-sun-stl4port";; \
+		solaris64*:*:i86pc:*) xopt="--ccflavour=sunCCi8664pc --use-xrd-strlcpy --use-sun-stl4port";; \
+                solaris*:5.11:i86pc:*) xopt="--ccflavour=sunCCi86pc --use-xrd-strlcpy --use-sun-stl4port";; \
+                solaris*:5.1*:i86pc:*) xopt="--use-xrd-strlcpy --use-sun-stl4port";; \
+                solaris*:*:i86pc:*) xopt="--ccflavour=sunCCi86pc --use-xrd-strlcpy --use-sun-stl4port";; \
+		solaris*:5.8)    xopt="--ccflavour=sunCC --use-sun-stl4port";; \
+		solaris*:5.9)    xopt="--ccflavour=sunCC --use-sun-stl4port";; \
+		solaris*:*)      xopt="--ccflavour=sunCC --use-xrd-strlcpy --use-sun-stl4port";; \
 		win32gcc:*)      xopt="win32gcc";; \
 		*)               xopt="";; \
 		esac; \
