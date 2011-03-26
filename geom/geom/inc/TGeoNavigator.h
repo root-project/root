@@ -149,6 +149,7 @@ public :
    void                   DoBackupState();
    void                   DoRestoreState();
    Int_t                  GetNodeId() const           {return fCache->GetNodeId();}
+   Int_t                  GetNextDaughterIndex() const {return fNextDaughterIndex;}
    TGeoNode              *GetNextNode() const         {return fNextNode;}
    TGeoNode              *GetMother(Int_t up=1) const {return fCache->GetMother(up);}
    TGeoHMatrix           *GetMotherMatrix(Int_t up=1) const {return fCache->GetMotherMatrix(up);}
