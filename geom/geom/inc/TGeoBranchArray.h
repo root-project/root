@@ -57,6 +57,7 @@ public:
    UShort_t          GetLevel() const   {return fLevel;}
    TGeoHMatrix      *GetMatrix() const  {return fMatrix;}
    TGeoNode         *GetNode(UShort_t level) const;
+   void              GetPath(TString &path) const;
    void              InitFromNavigator(TGeoNavigator *nav);
    virtual Bool_t    IsSortable() const {return kTRUE;}
    virtual Bool_t    Notify() {return (fClient)?fClient->Notify():kFALSE;}

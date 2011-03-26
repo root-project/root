@@ -230,10 +230,10 @@ void TGeoBranchArray::InitFromNavigator(TGeoNavigator *nav)
 }
 
 //______________________________________________________________________________
-void TGeoBranchArray::Print(Option_t *) const
+void TGeoBranchArray::GetPath(TString &path) const
 {
-// Print branch information
-   TString path = "/";
+// Fill path pointed by the array.
+   path = "/";
    TGeoNode *node = GetNode(0);
    path += node->GetName();
    for (Int_t i=0; i<fLevel; i++) {
@@ -241,6 +241,14 @@ void TGeoBranchArray::Print(Option_t *) const
       node = node->GetVolume()->GetNode(fArray[i]);
       path += node->GetName();
    }
+}   
+
+//______________________________________________________________________________
+void TGeoBranchArray::Print(Option_t *) const
+{
+// Print branch information
+   TString path;
+   GetPath(path);
    printf("branch:    %s\n", path.Data());
 }      
 
