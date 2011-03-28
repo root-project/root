@@ -74,7 +74,7 @@ void TProfileHelper::Add(T* p, const TH1 *h1,  const TH1 *h2, Double_t c1, Doubl
    if ( nx != p1->GetNbinsX() ||  nx != p2->GetNbinsX() ||
         ny != p1->GetNbinsY() ||  ny != p2->GetNbinsY() ||
         nz != p1->GetNbinsZ() ||  nz != p2->GetNbinsZ() ) {
-      Error("Add","Attempt to add profiles with different number of bins");
+      Error("TProfileHelper::Add","Attempt to add profiles with different number of bins");
       return;
    }
 
@@ -175,7 +175,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
    while (TObject *o = next()) {
       T* h = dynamic_cast<T*> (o);
       if (!h) {
-         Error("Add","Attempt to add object of class: %s to a %s",
+         Error("TProfileHelper::Merge","Attempt to merge object of class: %s to a %s",
                o->ClassName(),p->ClassName());
          return -1;
       }
@@ -197,22 +197,22 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
          }
          else {
             if (!p->RecomputeAxisLimits(newXAxis, *(h->GetXaxis()))) {
-               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+               Error("TProfileHelper::Merge", "Cannot merge profiles %d dim - limits are inconsistent:\n "
+                     "first: (%d, %f, %f), second: (%d, %f, %f)",p->GetDimension(),
                      newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
                      h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
                      h->GetXaxis()->GetXmax());
             }
             if (p->GetDimension() >= 2 && !p->RecomputeAxisLimits(newYAxis, *(h->GetYaxis()))) {
-               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+               Error("TProfileHelper::Merge", "Cannot merge profiles %d dim - limits are inconsistent:\n "
+                     "first: (%d, %f, %f), second: (%d, %f, %f)",p->GetDimension(),
                      newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
                      h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
                      h->GetYaxis()->GetXmax());
             }
             if (p->GetDimension() >= 3 && !p->RecomputeAxisLimits(newZAxis, *(h->GetZaxis()))) {
-               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+               Error("TProfileHelper::Merge", "Cannot merge profiles %d dim - limits are inconsistent:\n "
+                     "first: (%d, %f, %f), second: (%d, %f, %f)",p->GetDimension(),
                      newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax(),
                      h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),
                      h->GetZaxis()->GetXmax());
@@ -282,6 +282,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
 
    while ( T* h=static_cast<T*>(next()) ) {
       // process only if the histogram has limits; otherwise it was processed before
+
       if (h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax()) {
          // import statistics
          h->GetStats(stats);
@@ -292,23 +293,21 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
          for ( Int_t hbin = 0; hbin < h->fN; ++hbin ) {
             if ((!same) && (h->IsBinUnderflow(hbin) || h->IsBinOverflow(hbin)) ) {
                if (h->GetW()[hbin] != 0) {
-                  Error("Merge", "Cannot merge histograms - the histograms have"
+                  Error("TProfileHelper::Merge", "Cannot merge profiles - they have"
                         " different limits and undeflows/overflows are present."
-                        " The initial histogram is now broken!");
+                        " The initial profile is now broken!");
                   return -1;
                }
             }
             Int_t hbinx, hbiny, hbinz;
             h->GetBinXYZ(hbin, hbinx, hbiny, hbinz);
-            Int_t pbin = p->GetBin( h->fXaxis.FindBin( h->GetXaxis()->GetBinCenter(hbinx) ),
-                                    h->fYaxis.FindBin( h->GetYaxis()->GetBinCenter(hbiny) ),
-                                    h->fZaxis.FindBin( h->GetZaxis()->GetBinCenter(hbinz) ) );
-            if ( p->GetDimension() == 1 )
-               // This is because the method p->GetBin is not giving
-               // the proper bin number when the profiles are
-               // different! This hack is made to make the behaviour
-               // consistent with the previous implementation.
-               pbin = p->fXaxis.FindBin(h->GetBinCenter(hbin));
+            // find global bin number in p given the x,y,z axis bin numbers in h
+            // we can use FindBin on p axes because kCanRebin bit of p has been rreset before 
+            Int_t pbin = p->GetBin( p->fXaxis.FindBin( h->GetXaxis()->GetBinCenter(hbinx) ),
+                                    p->fYaxis.FindBin( h->GetYaxis()->GetBinCenter(hbiny) ),
+                                    p->fZaxis.FindBin( h->GetZaxis()->GetBinCenter(hbinz) ) );
+
+
             p->fArray[pbin]             += h->GetW()[hbin];
             p->fSumw2.fArray[pbin]      += h->GetW2()[hbin];
             p->fBinEntries.fArray[pbin] += h->GetB()[hbin];
@@ -340,6 +339,7 @@ T* TProfileHelper::RebinAxis(T* p, Double_t x, TAxis *axis)
 // Takes into account errors (Sumw2) if any.
 // The bit kCanRebin must be set before invoking this function.
 //  Ex:  h->SetBit(TH1::kCanRebin);
+
 
    if (!p->TestBit(TH1::kCanRebin)) return 0;
    if (axis->GetXmin() >= axis->GetXmax()) return 0;
@@ -432,46 +432,61 @@ void TProfileHelper::Sumw2(T* p)
 template <typename T>
 void TProfileHelper::LabelsDeflate(T* p, Option_t *ax)
 {
-// Reduce the number of bins for this axis to the number of bins having a label.
+   // Reduce the number of bins for this axis to the number of bins having a label.
+   // Works only for the given axis passed in the option
+   // The method will remove only the extra bins existing after the last "labeled" bin.
+   // Note that if there are "un-labeled" bins present between "labeled" bins they will not be removed 
+
 
    TAxis *axis = p->GetXaxis();
    if (ax[0] == 'y' || ax[0] == 'Y') axis = p->GetYaxis();
+   if (ax[0] == 'z' || ax[0] == 'Z') axis = p->GetZaxis();
+   if (!axis) {
+      Error("TProfileHelper::LabelsDeflate","Invalid axis option %s",ax);
+      return;
+   }
    if (!axis->GetLabels()) return;
+
+   // find bin with last labels 
+   // bin number is object ID in list of labels 
+   // therefore max bin number is number of bins of the deflated histograms
    TIter next(axis->GetLabels());
    TObject *obj;
    Int_t nbins = 0;
    while ((obj = next())) {
-      if (obj->GetUniqueID()) nbins++;
+      Int_t ibin = obj->GetUniqueID();
+      if (ibin > nbins) nbins = ibin; 
    }
-   if (nbins < 2) nbins = 2;
+   if (nbins < 1) nbins = 1;
    T *hold = (T*)p->Clone();
    hold->SetDirectory(0);
 
-   Int_t  nbxold = p->fXaxis.GetNbins();
+
    Double_t xmin = axis->GetXmin();
    Double_t xmax = axis->GetBinUpEdge(nbins);
    axis->SetRange(0,0);
+   // set the new bins and range
    axis->Set(nbins,xmin,xmax);
-   Int_t  nbinsx = p->fXaxis.GetNbins();
-   Int_t  nbinsy = p->fYaxis.GetNbins();
-   Int_t ncells = (nbinsx+2)*(nbinsy+2);
-   p->SetBinsLength(ncells);
-   p->fBinEntries.Set(ncells);
-   p->fSumw2.Set(ncells);
-   if (p->fBinSumw2.fN)  p->fBinSumw2.Set(ncells);
+   p->SetBinsLength(-1); // reset the number of cells
+   p->fBinEntries.Set(p->fN);
+   p->fSumw2.Set(p->fN);
+   if (p->fBinSumw2.fN)  p->fBinSumw2.Set(p->fN);
+
+   // reset the content
+   p->Reset("ICE");
 
    //now loop on all bins and refill
-   Int_t bin,ibin,binx,biny;
-   for (biny=1;biny<=nbinsy;biny++) {
-      for (binx=1;binx<=nbinsx;binx++) {
-         bin   = biny*(nbxold+2) + binx;
-         ibin  = biny*(nbinsx+2) + binx;
-         p->fArray[ibin] = hold->fArray[bin];
-         p->fBinEntries.fArray[ibin] = hold->fBinEntries.fArray[bin];
-         p->fSumw2.fArray[ibin] = hold->fSumw2.fArray[bin];
-         if (p->fBinSumw2.fN) p->fBinSumw2.fArray[bin] = hold->fBinSumw2.fArray[bin];
-      }
+   Int_t bin,binx,biny,binz;
+   for (bin =0; bin < hold->fN; ++bin)
+   {
+      hold->GetBinXYZ(bin, binx, biny, binz);
+      Int_t ibin = p->GetBin(binx, biny, binz);
+      p->fArray[ibin] += hold->fArray[bin];
+      p->fBinEntries.fArray[ibin] += hold->fBinEntries.fArray[bin];
+      p->fSumw2.fArray[ibin] += hold->fSumw2.fArray[bin];
+      if (p->fBinSumw2.fN) p->fBinSumw2.fArray[ibin] += hold->fBinSumw2.fArray[bin];
    }
+
    delete hold;
 }
 
@@ -481,6 +496,8 @@ void TProfileHelper::LabelsInflate(T* p, Option_t *ax)
 // Double the number of bins for axis.
 // Refill histogram
 // This function is called by TAxis::FindBin(const char *label)
+// Works only for the given axis
+
 
    TAxis *axis = p->GetXaxis();
    if (ax[0] == 'y' || ax[0] == 'Y') axis = p->GetYaxis();
@@ -494,12 +511,12 @@ void TProfileHelper::LabelsInflate(T* p, Option_t *ax)
    Double_t xmax = axis->GetXmax();
    xmax = xmin + 2*(xmax-xmin);
    axis->SetRange(0,0);
-   axis->Set(2*nbins,xmin,xmax);
+   // double the number of bins
    nbins *= 2;
-   Int_t  nbinsx = p->fXaxis.GetNbins();
-   Int_t  nbinsy = p->fYaxis.GetNbins();
-   Int_t ncells = (p->GetDimension() == 2)?(nbinsx+2)*(nbinsy+2):nbins+2;
-   p->SetBinsLength(ncells);
+   axis->Set(nbins,xmin,xmax);
+   // reset the array of content according to the axis
+   p->SetBinsLength(-1);  
+   Int_t ncells = p->fN;
    p->fBinEntries.Set(ncells);
    p->fSumw2.Set(ncells);
    if (p->fBinSumw2.fN)  p->fBinSumw2.Set(ncells);
@@ -514,7 +531,7 @@ void TProfileHelper::LabelsInflate(T* p, Option_t *ax)
          p->fArray[ibin] = hold->fArray[bin];
          p->fBinEntries.fArray[ibin] = hold->fBinEntries.fArray[bin];
          p->fSumw2.fArray[ibin] = hold->fSumw2.fArray[bin];
-         if (p->fBinSumw2.fN) p->fBinSumw2.fArray[bin] = hold->fBinSumw2.fArray[bin];
+         if (p->fBinSumw2.fN) p->fBinSumw2.fArray[ibin] = hold->fBinSumw2.fArray[bin];
       } else {
          p->fArray[ibin] = 0;
          p->fBinEntries.fArray[ibin] = 0;
