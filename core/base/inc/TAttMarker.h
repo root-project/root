@@ -60,7 +60,8 @@ public:
                       kFullCircle=20, kFullSquare=21, kFullTriangleUp=22,
                       kFullTriangleDown=23, kOpenCircle=24, kOpenSquare=25,
                       kOpenTriangleUp=26, kOpenDiamond=27, kOpenCross=28,
-                      kFullStar=29, kOpenStar=30};
+                      kFullStar=29, kOpenStar=30, kOpenTriangleDown=32,
+                      kFullDiamond=33, kFullCross=34,};
 
 #endif
 
