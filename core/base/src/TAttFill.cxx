@@ -95,7 +95,6 @@ method <tt>GetFillStyle</tt>.
 <ul>
 <li>  0    : hollow                   </li>
 <li>  1001 : Solid                    </li>
-<li>  2001 : hatch style              </li>
 <li>  3000+pattern_number (see below) </li>
 <li>  For TPad only:                  </li>
 <ul>
