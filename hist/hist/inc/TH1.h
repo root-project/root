@@ -115,7 +115,6 @@ private:
 
    TH1& operator=(const TH1&); // Not implemented
 
-   static bool CheckConsistency(const TH1* h1, const TH1* h2);
 
 protected:
    TH1();
@@ -131,6 +130,13 @@ protected:
 
    virtual Double_t DoIntegral(Int_t ix1, Int_t ix2, Int_t iy1, Int_t iy2, Int_t iz1, Int_t iz2, Double_t & err, 
                                Option_t * opt, Bool_t doerr = kFALSE) const;
+
+
+   static bool CheckAxisLimits(const TAxis* a1, const TAxis* a2);
+   static bool CheckBinLimits(const TAxis* a1, const TAxis* a2);
+   static bool CheckEqualAxes(const TAxis* a1, const TAxis* a2);
+   static bool CheckConsistentSubAxes(const TAxis *a1, Int_t firstBin1, Int_t lastBin1, const TAxis *a2, Int_t firstBin2=0, Int_t lastBin2=0);
+   static bool CheckConsistency(const TH1* h1, const TH1* h2);
 
 public:
    // TH1 status bits
