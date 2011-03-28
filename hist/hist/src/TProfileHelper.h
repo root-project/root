@@ -74,7 +74,7 @@ void TProfileHelper::Add(T* p, const TH1 *h1,  const TH1 *h2, Double_t c1, Doubl
    if ( nx != p1->GetNbinsX() ||  nx != p2->GetNbinsX() ||
         ny != p1->GetNbinsY() ||  ny != p2->GetNbinsY() ||
         nz != p1->GetNbinsZ() ||  nz != p2->GetNbinsZ() ) {
-      Error("Add","Attempt to add profiles with different number of bins");
+      Error("TProfileHelper::Add","Attempt to add profiles with different number of bins");
       return;
    }
 
@@ -175,7 +175,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
    while (TObject *o = next()) {
       T* h = dynamic_cast<T*> (o);
       if (!h) {
-         Error("Add","Attempt to add object of class: %s to a %s",
+         Error("TProfileHelper::Merge","Attempt to merge object of class: %s to a %s",
                o->ClassName(),p->ClassName());
          return -1;
       }
@@ -197,22 +197,22 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
          }
          else {
             if (!p->RecomputeAxisLimits(newXAxis, *(h->GetXaxis()))) {
-               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+               Error("TProfileHelper::Merge", "Cannot merge profiles %d dim - limits are inconsistent:\n "
+                     "first: (%d, %f, %f), second: (%d, %f, %f)",p->GetDimension(),
                      newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
                      h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
                      h->GetXaxis()->GetXmax());
             }
             if (p->GetDimension() >= 2 && !p->RecomputeAxisLimits(newYAxis, *(h->GetYaxis()))) {
-               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+               Error("TProfileHelper::Merge", "Cannot merge profiles %d dim - limits are inconsistent:\n "
+                     "first: (%d, %f, %f), second: (%d, %f, %f)",p->GetDimension(),
                      newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
                      h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
                      h->GetYaxis()->GetXmax());
             }
             if (p->GetDimension() >= 3 && !p->RecomputeAxisLimits(newZAxis, *(h->GetZaxis()))) {
-               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+               Error("TProfileHelper::Merge", "Cannot merge profiles %d dim - limits are inconsistent:\n "
+                     "first: (%d, %f, %f), second: (%d, %f, %f)",p->GetDimension(),
                      newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax(),
                      h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),
                      h->GetZaxis()->GetXmax());
@@ -282,6 +282,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
 
    while ( T* h=static_cast<T*>(next()) ) {
       // process only if the histogram has limits; otherwise it was processed before
+
       if (h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax()) {
          // import statistics
          h->GetStats(stats);
@@ -292,23 +293,21 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
          for ( Int_t hbin = 0; hbin < h->fN; ++hbin ) {
             if ((!same) && (h->IsBinUnderflow(hbin) || h->IsBinOverflow(hbin)) ) {
                if (h->GetW()[hbin] != 0) {
-                  Error("Merge", "Cannot merge histograms - the histograms have"
+                  Error("TProfileHelper::Merge", "Cannot merge profiles - they have"
                         " different limits and undeflows/overflows are present."
-                        " The initial histogram is now broken!");
+                        " The initial profile is now broken!");
                   return -1;
                }
             }
             Int_t hbinx, hbiny, hbinz;
             h->GetBinXYZ(hbin, hbinx, hbiny, hbinz);
-            Int_t pbin = p->GetBin( h->fXaxis.FindBin( h->GetXaxis()->GetBinCenter(hbinx) ),
-                                    h->fYaxis.FindBin( h->GetYaxis()->GetBinCenter(hbiny) ),
-                                    h->fZaxis.FindBin( h->GetZaxis()->GetBinCenter(hbinz) ) );
-            if ( p->GetDimension() == 1 )
-               // This is because the method p->GetBin is not giving
-               // the proper bin number when the profiles are
-               // different! This hack is made to make the behaviour
-               // consistent with the previous implementation.
-               pbin = p->fXaxis.FindBin(h->GetBinCenter(hbin));
+            // find global bin number in p given the x,y,z axis bin numbers in h
+            // we can use FindBin on p axes because kCanRebin bit of p has been rreset before 
+            Int_t pbin = p->GetBin( p->fXaxis.FindBin( h->GetXaxis()->GetBinCenter(hbinx) ),
+                                    p->fYaxis.FindBin( h->GetYaxis()->GetBinCenter(hbiny) ),
+                                    p->fZaxis.FindBin( h->GetZaxis()->GetBinCenter(hbinz) ) );
+
+
             p->fArray[pbin]             += h->GetW()[hbin];
             p->fSumw2.fArray[pbin]      += h->GetW2()[hbin];
             p->fBinEntries.fArray[pbin] += h->GetB()[hbin];
@@ -340,6 +339,7 @@ T* TProfileHelper::RebinAxis(T* p, Double_t x, TAxis *axis)
 // Takes into account errors (Sumw2) if any.
 // The bit kCanRebin must be set before invoking this function.
 //  Ex:  h->SetBit(TH1::kCanRebin);
+
 
    if (!p->TestBit(TH1::kCanRebin)) return 0;
    if (axis->GetXmin() >= axis->GetXmax()) return 0;
@@ -442,7 +442,7 @@ void TProfileHelper::LabelsDeflate(T* p, Option_t *ax)
    if (ax[0] == 'y' || ax[0] == 'Y') axis = p->GetYaxis();
    if (ax[0] == 'z' || ax[0] == 'Z') axis = p->GetZaxis();
    if (!axis) {
-      Error("LabelsDeflate","Invalid axis option %s",ax);
+      Error("TProfileHelper::LabelsDeflate","Invalid axis option %s",ax);
       return;
    }
    if (!axis->GetLabels()) return;
@@ -497,6 +497,7 @@ void TProfileHelper::LabelsInflate(T* p, Option_t *ax)
 // Refill histogram
 // This function is called by TAxis::FindBin(const char *label)
 // Works only for the given axis
+
 
    TAxis *axis = p->GetXaxis();
    if (ax[0] == 'y' || ax[0] == 'Y') axis = p->GetYaxis();
