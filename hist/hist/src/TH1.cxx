@@ -1119,10 +1119,16 @@ Int_t TH1::BufferEmpty(Int_t action)
 {
 // Fill histogram with all entries in the buffer.
 // action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
-// action =  0 histogram is filled from the buffer
+// action =  0 histogram is reset and filled from the buffer. When the histogram is filled from the 
+//             buffer the value fBuffer[0] is set to a negative number (= - number of entries)
+//             When calling with action == 0 the histogram is NOT refilled when fBuffer[0] is < 0 
+//             While when calling with action = -1 the histogram is reset and ALWAYS refilled independently if
+//             the histogram was filled before. This is needed when drawing the histogram  
+// 
 // action =  1 histogram is filled and buffer is deleted
-//             The buffer is automatically deleted when the number of entries
-//             in the buffer is greater than the number of entries in the histogram
+//             The buffer is automatically deleted when filling the histogram and the entries is 
+//             larger than the buffer size 
+//
 
    // do we need to compute the bin size?
    if (!fBuffer) return 0;
@@ -1130,13 +1136,17 @@ Int_t TH1::BufferEmpty(Int_t action)
 
    // nbentries correspond to the number of entries of histogram 
    
-   if (!nbentries) return 0;
+   if (nbentries == 0) return 0;
+   if (nbentries < 0 && action == 0) return 0;    // case histogram has been already filled from the buffer 
+
    Double_t *buffer = fBuffer;
    if (nbentries < 0) {
-      if (action == 0) return 0;
       nbentries  = -nbentries;
+      //  a reset might call BufferEmpty() giving an infinite loop
+      // Protect it by setting fBuffer = 0
       fBuffer=0;
-      Reset("ICE"); //do not reset the list of functions
+       //do not reset the list of functions 
+      Reset("ICES"); 
       fBuffer = buffer;
    }
    if (TestBit(kCanRebin) || (fXaxis.GetXmax() <= fXaxis.GetXmin())) {
@@ -1162,10 +1172,20 @@ Int_t TH1::BufferEmpty(Int_t action)
 
    FillN(nbentries,&fBuffer[2],&fBuffer[1],2);
 
-   if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
+   // if action == 1 - delete the buffer
+   if (action > 0) { 
+      delete [] fBuffer; 
+      fBuffer = 0; 
+      fBufferSize = 0;}
    else {
-      if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
-      else                              fBuffer[0] = 0;
+      // if number of entries is consistent with buffer - set it negative to avoid 
+      // refilling the histogram every time BufferEmpty(0) is called 
+      // In case it is not consistent, by setting fBuffer[0]=0 is like resetting the buffer 
+      // (it will not be used anymore the next time BufferEmpty is called)
+      if (nbentries == (Int_t)fEntries) 
+         fBuffer[0] = -nbentries;
+      else
+         fBuffer[0] = 0;
    }
    return nbentries;
 }
@@ -1180,12 +1200,17 @@ Int_t TH1::BufferFill(Double_t x, Double_t w)
 
    if (!fBuffer) return -2;
    Int_t nbentries = (Int_t)fBuffer[0];
+
+
    if (nbentries < 0) {
+      // reset nbentries to a positive value so next time BufferEmpty()  is called
+      // the histogram will be refilled 
       nbentries  = -nbentries;
       fBuffer[0] =  nbentries;
       if (fEntries > 0) {
+         // set fBuffer to zero to avoid calling BufferEmpty in Reset
          Double_t *buffer = fBuffer; fBuffer=0;
-         Reset();
+         Reset("ICES");  // do not reset list of functions 
          fBuffer = buffer;
       }
    }
@@ -2214,20 +2239,23 @@ void TH1::Copy(TObject &obj) const
    ((TH1&)obj).fOption    = fOption;
    ((TH1&)obj).fBuffer    = 0;
    ((TH1&)obj).fBufferSize= fBufferSize;
-   Int_t i;
-   if (fBuffer) {
-      Double_t *buf = new Double_t[fBufferSize];
-      for (i=0;i<fBufferSize;i++) buf[i] = fBuffer[i];
-      ((TH1&)obj).fBuffer    = buf;
-   }
 
    TArray* a = dynamic_cast<TArray*>(&obj);
    if (a) a->Set(fNcells);
    Int_t canRebin = ((TH1&)obj).TestBit(kCanRebin);
    ((TH1&)obj).ResetBit(kCanRebin);  //we want to avoid the call to LabelsInflate
-   for (i=0;i<fNcells;i++) ((TH1&)obj).SetBinContent(i,this->GetBinContent(i));
+   for (Int_t i=0;i<fNcells;i++) ((TH1&)obj).SetBinContent(i,this->GetBinContent(i));
    if (canRebin) ((TH1&)obj).SetBit(kCanRebin);
    ((TH1&)obj).fEntries   = fEntries;
+
+   // copy the Buffer (needs to do after calling Get/SetBinContent 
+   // which will call BufferEmpty. Maybe one should call 
+   // assigment operator on the TArrayD
+   if (fBuffer) {
+      Double_t *buf = new Double_t[fBufferSize];
+      for (Int_t i=0;i<fBufferSize;i++) buf[i] = fBuffer[i];
+      ((TH1&)obj).fBuffer    = buf;
+   }
 
    ((TH1&)obj).fTsumw     = fTsumw;
    ((TH1&)obj).fTsumw2    = fTsumw2;
@@ -2252,6 +2280,7 @@ void TH1::Copy(TObject &obj) const
       gDirectory->Append(&obj);
       ((TH1&)obj).fDirectory = gDirectory;
    }
+
 }
 
 //______________________________________________________________________________
@@ -5015,6 +5044,7 @@ Long64_t TH1::Merge(TCollection *li)
          if (h->GetXaxis()->GetXmin() >= h->GetXaxis()->GetXmax() && h->fBuffer) {
             // no limits
             Int_t nbentries = (Int_t)h->fBuffer[0];
+            if (nbentries < 0) nbentries = - nbentries; // in case they are set artificially to a neg value
             for (Int_t i = 0; i < nbentries; i++)
                Fill(h->fBuffer[2*i + 2], h->fBuffer[2*i + 1]);
             // Entries from buffers have to be filled one by one
@@ -6173,6 +6203,7 @@ void TH1::Reset(Option_t *option)
    //               ===========================================
    //
    // if option "ICE" is specified, resets only Integral, Contents and Errors.
+   // if option "ICES" is specified, resets only Integral, Contents , Errors and Statistics 
    // if option "M"   is specified, resets also Minimum and Maximum
 
    TString opt = option;
@@ -6180,17 +6211,26 @@ void TH1::Reset(Option_t *option)
    fSumw2.Reset();
    if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
 
-   if (opt.Contains("M")) {
+   if (opt == "M") {
       SetMinimum();
       SetMaximum();
    }
-   if (opt.Contains("ICE")) return;
-   if (fBuffer) {BufferEmpty(); fBuffer[0] = 0;}
+
+   if (opt == "ICE") return;
+
+   // need to reset also the statistics 
    fTsumw       = 0;
    fTsumw2      = 0;
    fTsumwx      = 0;
    fTsumwx2     = 0;
    fEntries     = 0;
+
+   if (opt == "ICES") return;
+
+   // Setting fBuffer[0] = 0 is like resetting the buffer but not deleting it 
+   // But what is the sense of calling BufferEmpty() if later the content will be 
+   // reset in calling TH1D::Reset?? 
+   if (fBuffer) {BufferEmpty(); fBuffer[0] = 0;}
 
    TObject *stats = fFunctions->FindObject("stats");
    fFunctions->Remove(stats);
