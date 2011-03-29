@@ -993,6 +993,18 @@ void TH2::GetStats(Double_t *stats) const
    // stats[4] = sumwy
    // stats[5] = sumwy2
    // stats[6] = sumwxy
+   //
+   // If no axis-subranges are specified (via TAxis::SetRange), the array stats
+   // is simply a copy of the statistics quantities computed at filling time.
+   // If sub-ranges are specified, the function recomputes these quantities
+   // from the bin contents in the current axis ranges.
+   //
+   //  Note that the mean value/RMS is computed using the bins in the currently
+   //  defined ranges (see TAxis::SetRange). By default the ranges include
+   //  all bins from 1 to nbins included, excluding underflows and overflows.
+   //  To force the underflows and overflows in the computation, one must
+   //  call the static function TH1::StatOverflows(kTRUE) before filling
+   //  the histogram.
 
    if (fBuffer) ((TH2*)this)->BufferEmpty();
 
