@@ -144,6 +144,7 @@ public:
    virtual TObject  *FindObject(const char *name) const;
    virtual TObject  *FindObject(const TObject *obj) const;
    virtual TObject  *FindObjectAny(const char *name) const;
+   virtual TObject  *FindObjectAnyFile(const char *name) const;
    TObject          *FindSpecialObject(const char *name, void *&where);
    const char       *FindObjectClassName(const char *name) const;
    const char       *FindObjectPathName(const TObject *obj) const;

@@ -765,6 +765,22 @@ TObject *TROOT::FindObjectAny(const char *name) const
 }
 
 //______________________________________________________________________________
+TObject *TROOT::FindObjectAnyFile(const char *name) const
+{
+   // Scan the memory lists of all files for an object with name
+
+   TDirectory *d;
+   TIter next(GetListOfFiles());
+   while ((d = (TDirectory*)next())) {
+      // Call explicitly TDirectory::FindObject to restrict the search to the 
+      // arlready in memory object.
+      TObject *obj = d->TDirectory::FindObject(name); 
+      if (obj) return obj;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 const char *TROOT::FindObjectClassName(const char *name) const
 {
    // Returns class name of a ROOT object including CINT globals.
