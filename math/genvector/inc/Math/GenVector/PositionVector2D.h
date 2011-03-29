@@ -32,7 +32,6 @@
 #include "Math/GenVector/CoordinateSystemTags.h"
 #endif
 
-#include <cassert>
 
 namespace ROOT {
 

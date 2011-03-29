@@ -39,9 +39,6 @@
 
 //#include "Math/GenVector/Expression2D.h"
 
-#include <cassert>
-
-
 
 
 
