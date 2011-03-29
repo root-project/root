@@ -91,7 +91,11 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    answ.erase(0,999);
    int narg = fElements.size();
    int tailLoc = 0;
-   
+
+   if (narg == 0) {
+      answ = fName;
+      return ;
+   }
    //      fprintf(stderr,"calling ShortType %d for %s with narg %d\n",mode,typeDesc,narg);
    //      {for (int i=0;i<narg;i++) fprintf(stderr,"calling ShortType %d for %s with %d %s \n",
    //                                        mode,typeDesc,i,arglist[i].c_str());
@@ -506,6 +510,9 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
             nestedLoc = output.size();
             output.push_back((cursor+1));
          }
+      } else if (level >= 0) {
+         // Unterminated template
+         output.push_back(std::string(c+1,cursor));
       }
    } else {
       //empty
