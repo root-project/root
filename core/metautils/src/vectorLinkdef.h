@@ -17,6 +17,8 @@ using namespace std;
 #pragma create TClass vector<char*>;
 #pragma create TClass vector<const char*>;
 #pragma create TClass vector<string>;
+#pragma create TClass vector<Long64_t>;
+#pragma create TClass vector<ULong64_t>;
 
 #if (!(G__GNUC==3 && G__GNUC_MINOR==1)) && !defined(G__KCC) && (!defined(G__VISUAL) || G__MSC_VER<1300)
 // gcc3.1,3.2 has a problem with iterator<void*,...,void&>
