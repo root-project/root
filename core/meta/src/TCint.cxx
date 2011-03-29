@@ -1855,7 +1855,7 @@ Int_t TCint::AutoLoad(const char *cls)
 
    Int_t status = 0;
 
-   if (!gROOT || !gInterpreter) return status;
+   if (!gROOT || !gInterpreter || gROOT->TestBit(TObject::kInvalidObject)) return status;
 
    // Prevent the recursion when the library dictionary are loaded.
    Int_t oldvalue = G__set_class_autoloading(0);
