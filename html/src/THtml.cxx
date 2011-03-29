@@ -724,6 +724,7 @@ void THtml::TFileSysDB::Fill()
    TString dir;
    Ssiz_t posPath = 0;
    while (fName.Tokenize(dir, posPath, THtml::GetDirDelimiter())) {
+      gSystem->ExpandPathName(dir);
       if (gSystem->AccessPathName(dir, kReadPermission)) {
          Warning("Fill", "Cannot read InputPath \"%s\"!", dir.Data());
          continue;
