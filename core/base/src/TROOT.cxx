@@ -454,6 +454,10 @@ TROOT::~TROOT()
 
    if (gROOT == this) {
 
+      // Mark the object are invalid, so that we can vero some actions
+      // (like autoloading) while we are in the destructor.
+      SetBit(TObject::kInvalidObject);
+      
       // Turn-off the global mutex to avoid recreating mutexes that have
       // already been deleted during the destruction phase
       gGlobalMutex = 0;
