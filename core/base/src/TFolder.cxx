@@ -226,13 +226,13 @@ void TFolder::Clear(Option_t *option)
 const char *TFolder::FindFullPathName(const char *name) const
 {
    // Return the full pathname corresponding to subpath name.
-   // The returned path will be re-used by the next call to GetPath().
+   // The returned path will be re-used by the next call to FindFullPathName().
 
    TObject *obj = FindObject(name);
    if (obj || !fFolders) {
       gFolderLevel++;
       gFolderD[gFolderLevel] = GetName();
-      strncpy(gFolderPath,"//root/", strlen("//root/"));
+      strncpy(gFolderPath,"//root", strlen("//root"));
       for (Int_t l=0;l<=gFolderLevel;l++) {
          strlcat(gFolderPath, "/", sizeof(gFolderPath));
          strlcat(gFolderPath, gFolderD[l], sizeof(gFolderPath));
@@ -264,7 +264,7 @@ const char *TFolder::FindFullPathName(const char *name) const
 const char *TFolder::FindFullPathName(const TObject *) const
 {
    // Return the full pathname corresponding to subpath name.
-   // The returned path will be re-used by the next call to GetPath().
+   // The returned path will be re-used by the next call to FindFullPathName().
 
    Error("FindFullPathname","Not yet implemented");
    return 0;
