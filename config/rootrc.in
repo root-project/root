@@ -152,18 +152,22 @@ Hist.Stats.Entries    Entries
 Hist.Stats.Mean       Mean
 Hist.Stats.MeanX      Mean x
 Hist.Stats.MeanY      Mean y
+Hist.Stats.MeanZ      Mean z
 Hist.Stats.RMS        RMS
 Hist.Stats.RMSX       RMS x
 Hist.Stats.RMSY       RMS y
+Hist.Stats.RMSZ       RMS z
 Hist.Stats.Underflow  Underflow
 Hist.Stats.Overflow   Overflow
 Hist.Stats.Integral   Integral
 Hist.Stats.Skewness   Skewness
 Hist.Stats.SkewnessX  Skewness x
 Hist.Stats.SkewnessY  Skewness y
+Hist.Stats.SkewnessZ  Skewness z
 Hist.Stats.Kurtosis   Kurtosis
 Hist.Stats.KurtosisX  Kurtosis x
 Hist.Stats.KurtosisY  Kurtosis y
+Hist.Stats.KurtosisZ  Kurtosis z
 
 # THtml specific settings (for more see doc of THtml class).
 Root.Html.SourceDir:    .
