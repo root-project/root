@@ -1743,7 +1743,7 @@ public:
       return _tmp._read;
    }
 };
-#elif !__CINT__
+#elif !defined(__CINT__)
 typedef union {
    void *_read;
    void (*_write)();
