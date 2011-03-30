@@ -537,6 +537,7 @@ bool THtml::TPathDefinition::GetDocDir(const TString& module, TString& doc_dir) 
    if (GetOwner()->GetProductName() == "ROOT") {
       doc_dir = "$ROOTSYS";
       gSystem->ExpandPathName(doc_dir);
+      doc_dir += "/";
    }
 
    if (module.Length())
