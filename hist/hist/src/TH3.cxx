@@ -164,7 +164,7 @@ Int_t TH3::BufferEmpty(Int_t action)
       if (action == 0) return 0;
       nbentries  = -nbentries;
       fBuffer=0;
-      Reset();
+      Reset("ICES");  
       fBuffer = buffer;
    }
    if (TestBit(kCanRebin) || fXaxis.GetXmax() <= fXaxis.GetXmin() ||
@@ -235,7 +235,7 @@ Int_t TH3::BufferFill(Double_t x, Double_t y, Double_t z, Double_t w)
       fBuffer[0] =  nbentries;
       if (fEntries > 0) {
          Double_t *buffer = fBuffer; fBuffer=0;
-         Reset();
+         Reset("ICES");  
          fBuffer = buffer;
       }
    }
@@ -3378,7 +3378,7 @@ void TH3::Reset(Option_t *option)
    TH1::Reset(option);
    TString opt = option;
    opt.ToUpper();
-   if (opt.Contains("ICE")) return;
+   if (opt == "ICE") return;
    fTsumwy  = 0;
    fTsumwy2 = 0;
    fTsumwxy = 0;

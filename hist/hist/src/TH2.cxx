@@ -147,18 +147,27 @@ Int_t TH2::BufferEmpty(Int_t action)
 //             The buffer is automatically deleted when the number of entries
 //             in the buffer is greater than the number of entries in the histogram
 
+
    // do we need to compute the bin size?
    if (!fBuffer) return 0;
    Int_t nbentries = (Int_t)fBuffer[0];
-   if (!nbentries) return 0;
+
+   // nbentries correspond to the number of entries of histogram 
+   
+   if (nbentries == 0) return 0;
+   if (nbentries < 0 && action == 0) return 0;    // case histogram has been already filled from the buffer 
+
    Double_t *buffer = fBuffer;
    if (nbentries < 0) {
-      if (action == 0) return 0;
       nbentries  = -nbentries;
+      //  a reset might call BufferEmpty() giving an infinite loop
+      // Protect it by setting fBuffer = 0
       fBuffer=0;
-      Reset();
+       //do not reset the list of functions 
+      Reset("ICES"); 
       fBuffer = buffer;
    }
+
    if (TestBit(kCanRebin) || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
       //find min, max of entries in buffer
       Double_t xmin = fBuffer[2];
@@ -217,7 +226,7 @@ Int_t TH2::BufferFill(Double_t x, Double_t y, Double_t w)
       fBuffer[0] =  nbentries;
       if (fEntries > 0) {
          Double_t *buffer = fBuffer; fBuffer=0;
-         Reset();
+         Reset("ICES");
          fBuffer = buffer;
       }
    }
@@ -2459,7 +2468,8 @@ void TH2::Reset(Option_t *option)
    TH1::Reset(option);
    TString opt = option;
    opt.ToUpper();
-   if (opt.Contains("ICE")) return;
+
+   if (opt == "ICE") return;
    fTsumwy  = 0;
    fTsumwy2 = 0;
    fTsumwxy = 0;

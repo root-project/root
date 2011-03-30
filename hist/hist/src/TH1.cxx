@@ -5044,7 +5044,6 @@ Long64_t TH1::Merge(TCollection *li)
          if (h->GetXaxis()->GetXmin() >= h->GetXaxis()->GetXmax() && h->fBuffer) {
             // no limits
             Int_t nbentries = (Int_t)h->fBuffer[0];
-            if (nbentries < 0) nbentries = - nbentries; // in case they are set artificially to a neg value
             for (Int_t i = 0; i < nbentries; i++)
                Fill(h->fBuffer[2*i + 2], h->fBuffer[2*i + 1]);
             // Entries from buffers have to be filled one by one
@@ -6218,7 +6217,15 @@ void TH1::Reset(Option_t *option)
 
    if (opt == "ICE") return;
 
-   // need to reset also the statistics 
+   // Setting fBuffer[0] = 0 is like resetting the buffer but not deleting it 
+   // But what is the sense of calling BufferEmpty() ? For making the axes ? 
+   // BufferEmpty will update contents that later will be 
+   // reset in calling TH1D::Reset. For this we need to reset the stats afterwards
+   // It may be needed for computing the axis limits.... 
+   if (fBuffer) {BufferEmpty(); fBuffer[0] = 0;}
+
+   // need to reset also the statistics
+   // (needs to be done after calling BufferEmpty() )
    fTsumw       = 0;
    fTsumw2      = 0;
    fTsumwx      = 0;
@@ -6227,10 +6234,6 @@ void TH1::Reset(Option_t *option)
 
    if (opt == "ICES") return;
 
-   // Setting fBuffer[0] = 0 is like resetting the buffer but not deleting it 
-   // But what is the sense of calling BufferEmpty() if later the content will be 
-   // reset in calling TH1D::Reset?? 
-   if (fBuffer) {BufferEmpty(); fBuffer[0] = 0;}
 
    TObject *stats = fFunctions->FindObject("stats");
    fFunctions->Remove(stats);
