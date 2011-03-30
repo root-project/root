@@ -232,8 +232,7 @@ const char *TFolder::FindFullPathName(const char *name) const
    if (obj || !fFolders) {
       gFolderLevel++;
       gFolderD[gFolderLevel] = GetName();
-      gFolderPath[0] = '/';
-      gFolderPath[1] = 0;
+      strncpy(gFolderPath,"//root/", strlen("//root/"));
       for (Int_t l=0;l<=gFolderLevel;l++) {
          strlcat(gFolderPath, "/", sizeof(gFolderPath));
          strlcat(gFolderPath, gFolderD[l], sizeof(gFolderPath));
