@@ -214,7 +214,7 @@ TClonesArray& TClonesArray::operator=(const TClonesArray& tc)
       fCont[i] = fKeep->fCont[i];
    }
 
-   fLast = tc.fSize - 1;
+   fLast = tc.fLast;
    Changed();
    return *this;
 }
