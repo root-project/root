@@ -50,11 +50,11 @@ Root.ShowPath:           false
 # 5 million calls is a reasonable number.
 # if your code has been compiled with -fno-omit-frame-pointer you can specify
 # gnubuiltin for Root.TMemStat.system. In this case the backtrace is much faster.
-Root.TMemStat:           0
-Root.TMemStat.buffersize 100000
-Root.TMemStat.maxcalls   5000000
-#Root.TMemStat.system     gnubuiltin
-Root.TMemStat.system    
+Root.TMemStat:            0
+Root.TMemStat.buffersize: 100000
+Root.TMemStat.maxcalls:   5000000
+#Root.TMemStat.system:    gnubuiltin
+Root.TMemStat.system:      
 
 # Activate memory statistics (size and cnt is used to trap allocation of
 # blocks of a certain size after cnt times).
@@ -123,9 +123,11 @@ Canvas.ShowToolTips:        false
 Canvas.ShowToolBar:         false
 Canvas.ShowEditor:          false
 Canvas.AutoExec:            true
-Canvas.PrintDirectory       .
+Canvas.PrintDirectory:      .
 #set the default precision when writing floating point numbers in TCanvas::SaveSource
-Canvas.SavePrecision        7
+Canvas.SavePrecision:       7
+#set the default TStyle
+Canvas.Style:               Default
 
 # Printer settings.
 #WinNT.*.Print.Command:      AcroRd32.exe
@@ -148,26 +150,26 @@ Hist.Binning.3D.Profx:      100
 Hist.Binning.3D.Profy:      100
 
 # Default statistics parameters names.
-Hist.Stats.Entries    Entries
-Hist.Stats.Mean       Mean
-Hist.Stats.MeanX      Mean x
-Hist.Stats.MeanY      Mean y
-Hist.Stats.MeanZ      Mean z
-Hist.Stats.RMS        RMS
-Hist.Stats.RMSX       RMS x
-Hist.Stats.RMSY       RMS y
-Hist.Stats.RMSZ       RMS z
-Hist.Stats.Underflow  Underflow
-Hist.Stats.Overflow   Overflow
-Hist.Stats.Integral   Integral
-Hist.Stats.Skewness   Skewness
-Hist.Stats.SkewnessX  Skewness x
-Hist.Stats.SkewnessY  Skewness y
-Hist.Stats.SkewnessZ  Skewness z
-Hist.Stats.Kurtosis   Kurtosis
-Hist.Stats.KurtosisX  Kurtosis x
-Hist.Stats.KurtosisY  Kurtosis y
-Hist.Stats.KurtosisZ  Kurtosis z
+Hist.Stats.Entries:   Entries
+Hist.Stats.Mean:      Mean
+Hist.Stats.MeanX:     Mean x
+Hist.Stats.MeanY:     Mean y
+Hist.Stats.MeanZ:     Mean z
+Hist.Stats.RMS:       RMS
+Hist.Stats.RMSX:      RMS x
+Hist.Stats.RMSY:      RMS y
+Hist.Stats.RMSZ:      RMS z
+Hist.Stats.Underflow: Underflow
+Hist.Stats.Overflow:  Overflow
+Hist.Stats.Integral:  Integral
+Hist.Stats.Skewness:  Skewness
+Hist.Stats.SkewnessX: Skewness x
+Hist.Stats.SkewnessY: Skewness y
+Hist.Stats.SkewnessZ: Skewness z
+Hist.Stats.Kurtosis:  Kurtosis
+Hist.Stats.KurtosisX: Kurtosis x
+Hist.Stats.KurtosisY: Kurtosis y
+Hist.Stats.KurtosisZ: Kurtosis z
 
 # THtml specific settings (for more see doc of THtml class).
 Root.Html.SourceDir:    .
@@ -208,7 +210,7 @@ Gui.MimeTypeFile:            $(HOME)/.root.mimes
 # Type of Browser: TRootBrowser or TRootBrowserLite
 Browser.Name:                TRootBrowser
 # Browser Options (plugins)
-# F: File browser E: Text Editor H: HTML browser 
+# F: File browser E: Text Editor H: HTML browser
 # C: Canvas I: I/O redirection P: Proof G: GL viewer
 Browser.Options:             FCEI
 # Can be either small, big, list, details
@@ -283,8 +285,8 @@ ACLiC.Linkdef:          _linkdef
 # PROOF related variables
 #
 # PROOF debug options.
-# Proof.DebugLevel:	0
-# Proof.DebugMask:	-1
+# Proof.DebugLevel:     0
+# Proof.DebugMask:      -1
 #
 # PROOF GDB hooks
 # allows a debugger to be attached early in the startup phase of proofserv
@@ -548,7 +550,7 @@ XNet.ReadCacheSize: 10000000
 # XNet.FirstConnectMaxCnt
 #                       - Number of connect retries to the first host
 
-# XNet.PrintTAG         - Print a particular string the developers 
+# XNet.PrintTAG         - Print a particular string the developers
 #                         can choose to quickly recognize the
 #                         version at run time [0]
 
