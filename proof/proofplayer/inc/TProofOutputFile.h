@@ -109,6 +109,8 @@ public:
    void SetOutputFileName(const char *name);
    void ResetFileCollection() { fDataSet = 0; }
 
+   static Int_t AssertDir(const char *dirpath);
+
    ClassDef(TProofOutputFile,4) // Wrapper class to steer the merging of files produced on workers
 };
 
