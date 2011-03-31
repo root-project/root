@@ -1445,15 +1445,15 @@ int hash;
     result7->typenum = G__defined_typename("div_t");
     if (result7->typenum >= 0) {
        result7->tagnum = G__newtype.tagnum[result7->typenum];
+       result7->type = 'u';
+       G__alloc_tempobject(result7->tagnum,result7->typenum);
+       *(div_t*)G__p_tempbuf->obj.obj.i = div((int)G__int(libp->para[0])
+                                              ,(int)G__int(libp->para[1]));
+       result7->obj.i = G__p_tempbuf->obj.obj.i;
+       result7->ref = G__p_tempbuf->obj.obj.i;
     } else {
-       result7->tagnum = -1;
+       *result7 = G__null;
     }
-    result7->type = 'u';
-    G__alloc_tempobject(result7->tagnum,result7->typenum);
-    *(div_t*)G__p_tempbuf->obj.obj.i = div((int)G__int(libp->para[0])
-					   ,(int)G__int(libp->para[1]));
-    result7->obj.i = G__p_tempbuf->obj.obj.i;
-    result7->ref = G__p_tempbuf->obj.obj.i;
     return(1);
   }
 #endif
@@ -1995,15 +1995,15 @@ int hash;
     result7->typenum = G__defined_typename("ldiv_t");
     if (result7->typenum >= 0) {
        result7->tagnum = G__newtype.tagnum[result7->typenum];
+       result7->type = 'u';
+       G__alloc_tempobject(result7->tagnum,result7->typenum);
+       *(ldiv_t*)G__p_tempbuf->obj.obj.i = ldiv((long)G__int(libp->para[0])
+                                                ,(long)G__int(libp->para[1]));
+       result7->obj.i = G__p_tempbuf->obj.obj.i;
+       result7->ref = G__p_tempbuf->obj.obj.i;
     } else {
-       result7->tagnum = -1;
+       *result7->tagnum = G__null;
     }
-    result7->type = 'u';
-    G__alloc_tempobject(result7->tagnum,result7->typenum);
-    *(ldiv_t*)G__p_tempbuf->obj.obj.i = ldiv((long)G__int(libp->para[0])
-					   ,(long)G__int(libp->para[1]));
-    result7->obj.i = G__p_tempbuf->obj.obj.i;
-    result7->ref = G__p_tempbuf->obj.obj.i;
     return(1);
   }
 #endif
