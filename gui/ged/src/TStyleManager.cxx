@@ -927,8 +927,6 @@ void TStyleManager::DoExport()
    } while (tmpBaseName && (strstr(tmpBaseName, "Style_") != tmpBaseName)
                         && (strstr(tmpBaseName, " ") != 0));
 
-   delete [] newName;
-
    if (tmpBaseName != 0) {
       // Export the style.
       fCurSelStyle->SaveSource(gSystem->UnixPathName(tmpFileName));

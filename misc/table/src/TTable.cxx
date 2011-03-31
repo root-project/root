@@ -1783,9 +1783,6 @@ void TTable::Project(const char *hname, const char *varexp, const char *selectio
    opt += "goff";
 
    Draw(var,selection,opt,nentries,firstentry);
-
-   delete [] var;
-   delete [] opt;
 }
 
 //______________________________________________________________________________
