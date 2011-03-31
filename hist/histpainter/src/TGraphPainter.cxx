@@ -392,7 +392,7 @@ different along X and the bottom and up errors are different along Y.
 End_Html
 Begin_Macro(source)
 {
-   TCanvas *c2 = new TCanvas("c2","c2",200,10,600,400);
+   TCanvas *c44 = new TCanvas("c44","c44",200,10,600,400);
    double ax[] = {0, 1, 2, 3, 4};
    double ay[] = {0, 2, 4, 1, 3};
    double aexl[] = {0.1, 0.2, 0.3, 0.4, 0.5};
@@ -404,7 +404,7 @@ Begin_Macro(source)
    gae->SetFillStyle(3001);
    gae->Draw("a2");
    gae->Draw("p");
-   return c2;
+   return c44;
 }
 End_Macro
 Begin_Html
@@ -418,7 +418,7 @@ when several graphs are drawn on the same plot.
 End_Html
 Begin_Macro(source)
 {
-   TCanvas *c3 = new TCanvas("c3","c3",200,10,600,400);
+   TCanvas *c45 = new TCanvas("c45","c45",200,10,600,400);
    const Int_t n = 10;
    Double_t x[n]  = {-0.22, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
    Double_t y[n]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
@@ -435,7 +435,7 @@ Begin_Macro(source)
    gr->SetMarkerColor(4);
    gr->SetMarkerStyle(21);
    gr->Draw("ALP");
-   return c3;
+   return c45;
 }
 End_Macro
 Begin_Html
@@ -476,7 +476,7 @@ Disable the display of the polar labels.
 End_Html
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",500,500);
+   TCanvas *c46 = new TCanvas("c46","c46",500,500);
    TGraphPolar * grP1 = new TGraphPolar();
    grP1->SetTitle("TGraphPolar example");
 
@@ -496,10 +496,10 @@ Begin_Macro(source)
    grP1->Draw("ALP");
 
    // Update, otherwise GetPolargram returns 0
-   c1->Update();
+   c46->Update();
    grP1->GetPolargram()->SetToRadian();
 
-   return c1;
+   return c46;
 }
 End_Macro
 Begin_Html
