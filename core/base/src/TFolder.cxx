@@ -253,8 +253,12 @@ const char *TFolder::FindFullPathName(const char *name) const
    gFolderLevel++;
    gFolderD[gFolderLevel] = GetName();
    while ((obj=next())) {
+      // For a TClass object, InheritsFrom does not check the inheritance of
+      // the object but the inheritance of the class described by the object,
+      // so we need to explicitly call IsA
+      if (obj->IsA()->InheritsFrom(TClass::Class())) continue;
+      // For any other object IsA is called by InheritsFrom
       if (!obj->InheritsFrom(TFolder::Class())) continue;
-      if (obj->InheritsFrom(TClass::Class())) continue;
       folder = (TFolder*)obj;
       found = folder->FindFullPathName(name);
       if (found) return found;
