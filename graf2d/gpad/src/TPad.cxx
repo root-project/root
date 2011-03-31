@@ -2461,6 +2461,7 @@ TObject *TPad::GetSelected() const
 {
    // Get selected.
 
+   if (fCanvas == this) return 0;
    return  fCanvas ? fCanvas->GetSelected() : 0;
 }
 
@@ -2470,6 +2471,7 @@ TVirtualPad *TPad::GetSelectedPad() const
 {
    // Get selected pad.
 
+   if (fCanvas == this) return 0;
    return  fCanvas ? fCanvas->GetSelectedPad() : 0;
 }
 
@@ -2479,6 +2481,7 @@ TVirtualPad *TPad::GetPadSave() const
 {
    // Get save pad.
 
+   if (fCanvas == this) return 0;
    return  fCanvas ? fCanvas->GetPadSave() : 0;
 }
 
