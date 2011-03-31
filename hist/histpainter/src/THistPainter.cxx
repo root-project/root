@@ -2436,7 +2436,10 @@ Begin_Html
 <a name="HP27"></a><h3>Drawing of 3D implicit functions</h3>
 
 
-3D implicit functions (<tt>TF3</tt>) can be drawn the following way:
+3D implicit functions (<tt>TF3</tt>) can be drawn as iso-surfaces.
+The implicit function f(x,y,z) = 0 is drawn in cartesian coordinates.
+In the following example the options "FB" and "BB" suppress the 
+"Front Box" and "Back Box" around the plot.
 
 End_Html
 Begin_Macro(source)
