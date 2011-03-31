@@ -225,7 +225,8 @@ void TFolder::Clear(Option_t *option)
 //______________________________________________________________________________
 const char *TFolder::FindFullPathName(const char *name) const
 {
-   // Return the full pathname corresponding to subpath name.
+   // Return the full pathname corresponding to subpath name if the node is 
+   // gROOT->GetRootFolder() and return a relative path otherwise.
    // The returned path will be re-used by the next call to FindFullPathName().
 
    TObject *obj = FindObject(name);
@@ -233,15 +234,14 @@ const char *TFolder::FindFullPathName(const char *name) const
       gFolderLevel++;
       gFolderD[gFolderLevel] = GetName();
       if (strcmp(gFolderD[0],"root")==0) {
-         strncpy(gFolderPath,"/", 1);
+         strlcpy(gFolderPath,"//root/", sizeof(gFolderPath));
       } else {
          gFolderPath[0] = '\0';
       }
-      for (Int_t l=0;l<=gFolderLevel;l++) {
-         strlcat(gFolderPath, "/", sizeof(gFolderPath));
+      for (Int_t l = 1; l<=gFolderLevel;l++) {
          strlcat(gFolderPath, gFolderD[l], sizeof(gFolderPath));
+         strlcat(gFolderPath, "/", sizeof(gFolderPath));
       }
-      strlcat(gFolderPath, "/", sizeof(gFolderPath));
       strlcat(gFolderPath,name, sizeof(gFolderPath));
       gFolderLevel = -1;
       return gFolderPath;
