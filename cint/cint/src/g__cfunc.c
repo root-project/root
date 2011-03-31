@@ -2002,7 +2002,7 @@ int hash;
        result7->obj.i = G__p_tempbuf->obj.obj.i;
        result7->ref = G__p_tempbuf->obj.obj.i;
     } else {
-       *result7->tagnum = G__null;
+       *result7 = G__null;
     }
     return(1);
   }
