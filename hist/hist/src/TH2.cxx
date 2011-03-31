@@ -2469,7 +2469,7 @@ void TH2::Reset(Option_t *option)
    TString opt = option;
    opt.ToUpper();
 
-   if (opt == "ICE") return;
+   if (opt.Contains("ICE") && !opt.Contains("S")) return;
    fTsumwy  = 0;
    fTsumwy2 = 0;
    fTsumwxy = 0;

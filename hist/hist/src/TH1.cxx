@@ -6203,19 +6203,23 @@ void TH1::Reset(Option_t *option)
    //
    // if option "ICE" is specified, resets only Integral, Contents and Errors.
    // if option "ICES" is specified, resets only Integral, Contents , Errors and Statistics 
+   //                  This option is used 
    // if option "M"   is specified, resets also Minimum and Maximum
+
+   // The option "ICE" is used when rebinning the histogram (in RebinAxis, LabelInflate, etc..) 
+   // The option "ICES is used in combination with the buffer (see BufferEmpty and BufferFill)
 
    TString opt = option;
    opt.ToUpper();
    fSumw2.Reset();
    if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
 
-   if (opt == "M") {
+   if (opt.Contains("M")) {
       SetMinimum();
       SetMaximum();
    }
 
-   if (opt == "ICE") return;
+   if (opt.Contains("ICE") && !opt.Contains("S")) return;
 
    // Setting fBuffer[0] = 0 is like resetting the buffer but not deleting it 
    // But what is the sense of calling BufferEmpty() ? For making the axes ? 

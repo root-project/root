@@ -339,7 +339,7 @@ Int_t TProfile::BufferEmpty(Int_t action)
       if (action == 0) return 0;
       nbentries  = -nbentries;
       fBuffer=0;
-      Reset();
+      Reset("ICES"); // reset without deleting the functions
       fBuffer = buffer;
    }
    if (TestBit(kCanRebin) || fXaxis.GetXmax() <= fXaxis.GetXmin()) {
@@ -394,7 +394,7 @@ Int_t TProfile::BufferFill(Double_t x, Double_t y, Double_t w)
       fBuffer[0] =  nbentries;
       if (fEntries > 0) {
          Double_t *buffer = fBuffer; fBuffer=0;
-         Reset();
+         Reset("ICES");  // reset without deleting the functions
          fBuffer = buffer;
       }
    }
@@ -1527,7 +1527,7 @@ void TProfile::Reset(Option_t *option)
    fBinSumw2.Reset();
    TString opt = option;
    opt.ToUpper();
-   if (opt.Contains("ICE")) return;
+   if (opt.Contains("ICE") && !opt.Contains("S")) return;
    fTsumwy  = 0;
    fTsumwy2 = 0;
 }
