@@ -235,9 +235,9 @@ void mp3player()
   b58->SetLineColor(37);
   top->AddNodeOverlap(b58,58,new TGeoCombiTrans(25,-200,600,new TGeoRotation("r1",90,90,0)));
 
-  TGeoVolume *b59=geom->MakePgon("b59",Iron,100,100,100,100);
-  b59->SetLineColor(37);
-  top->AddNodeOverlap(b59,59,new TGeoCombiTrans(200,200,100,new TGeoRotation("r1",90,90,0)));
+  //TGeoVolume *b59=geom->MakePgon("b59",Iron,100,100,100,100);
+  //b59->SetLineColor(37);
+  //top->AddNodeOverlap(b59,59,new TGeoCombiTrans(200,200,100,new TGeoRotation("r1",90,90,0)));
 
 
 
