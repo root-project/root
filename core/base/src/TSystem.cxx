@@ -419,8 +419,9 @@ Bool_t TSystem::ProcessEvents()
    // interrupt flag.
 
    gROOT->SetInterrupt(kFALSE);
-
-   DispatchOneEvent(kTRUE);
+   
+   if (!gROOT->TestBit(TObject::kInvalidObject))
+      DispatchOneEvent(kTRUE);
 
    return gROOT->IsInterrupted();
 }
