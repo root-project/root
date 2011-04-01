@@ -454,7 +454,7 @@ TROOT::~TROOT()
 
    if (gROOT == this) {
 
-      // Mark the object are invalid, so that we can vero some actions
+      // Mark the object are invalid, so that we can veto some actions
       // (like autoloading) while we are in the destructor.
       SetBit(TObject::kInvalidObject);
       
@@ -916,6 +916,7 @@ TColor *TROOT::GetColor(Int_t color) const
 
    TColor::InitializeColors();
    TObjArray *lcolors = (TObjArray*) GetListOfColors();
+   if (!lcolors) return 0;
    if (color < 0 || color >= lcolors->GetSize()) return 0;
    TColor *col = (TColor*)lcolors->At(color);
    if (col && col->GetNumber() == color) return col;
