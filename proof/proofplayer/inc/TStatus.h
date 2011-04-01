@@ -44,6 +44,9 @@ private:
    MsgSet_t    fMsgs;   // list of error messages
    MsgIter_t   fIter;   //!iterator in messages
 
+   Long_t      fVirtMemMax;  // Max virtual memory used by the worker
+   Long_t      fResMemMax;   // Max resident memory used by the worker
+
 public:
    TStatus();
    virtual ~TStatus() { }
@@ -55,7 +58,11 @@ public:
    void           Reset();
    const char    *NextMesg();
 
-   ClassDef(TStatus,1);  // Status class
+   Long_t         GetResMemMax() const { return fResMemMax; }
+   Long_t         GetVirtMemMax() const { return fVirtMemMax; }
+   void           SetMemValues(Long_t vmem = -1, Long_t rmem = -1);
+
+   ClassDef(TStatus,2);  // Status class
 };
 
 #endif

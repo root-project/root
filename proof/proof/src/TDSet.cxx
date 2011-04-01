@@ -754,7 +754,7 @@ TDSet::TDSet(const char *name,
 
    // Default name is the object name
    if (fName.Length() <= 0)
-      fName = fObjName;
+      fName = TString::Format("TDSet:%s", fObjName.Data());
    // We set the default title to the 'type'
    fTitle = fType;
 
@@ -787,6 +787,7 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
    fType = "TTree";
    fIsTree = kTRUE;
    fObjName = chain.GetName();
+   fName = TString::Format("TChain:%s", chain.GetName());
 
    // First fill elements without friends()
    TIter next(chain.GetListOfFiles());

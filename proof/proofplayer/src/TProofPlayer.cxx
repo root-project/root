@@ -860,9 +860,24 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
       // Get the frequency for checking memory consumption and logging information
       TParameter<Long64_t> *par = (TParameter<Long64_t>*)fInput->FindObject("PROOF_MemLogFreq");
-      Long64_t memlogfreq = (par) ? par->GetVal() : 100;
+      Long64_t singleshot = 1, memlogfreq = (par) ? par->GetVal() : 100;
       Bool_t warnHWMres = kTRUE, warnHWMvir = kTRUE;
-      TString lastMsg;
+      TString lastMsg, wmsg;
+
+      // Initial memory footprint
+      if (!CheckMemUsage(singleshot, warnHWMres, warnHWMvir, wmsg)) {
+         Error("Process", "%s", wmsg.Data());
+         wmsg.Insert(0, TString::Format("ERROR:%s, after SlaveBegin(), ", gProofServ->GetOrdinal()));
+         fSelStatus->Add(wmsg.Data());
+         if (gProofServ) {
+            gProofServ->SendAsynMessage(wmsg.Data());
+            gProofServ->SetBit(TProofServ::kHighMemory);
+         }
+         fExitStatus = kStopped;
+         SetProcessing(kFALSE);
+      } else if (!wmsg.IsNull()) {
+         Warning("Process", "%s", wmsg.Data());
+      }
 
       TPair *currentElem = 0;
       // The event loop on the worker
@@ -925,7 +940,6 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                        TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
          }
          // Check the memory footprint, if required
-         TString wmsg;
          if (!CheckMemUsage(memlogfreq, warnHWMres, warnHWMvir, wmsg)) {
             Error("Process", "%s", wmsg.Data());
             if (gProofServ) {
@@ -979,11 +993,19 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       delete currentElem;
    }
 
+   // Final memory footprint
+   Long64_t singleshot = 1;
+   Bool_t warnHWMres = kTRUE, warnHWMvir = kTRUE;
+   TString wmsg;
+   Bool_t shrc = CheckMemUsage(singleshot, warnHWMres, warnHWMvir, wmsg);
+   if (!wmsg.IsNull()) Warning("Process", "%s (%s)", wmsg.Data(), shrc ? "warn" : "hwm");
+
    PDB(kGlobal,2)
       Info("Process","%lld events processed", fProgressStatus->GetEntries());
 
    if (gMonitoringWriter) {
-      gMonitoringWriter->SendProcessingProgress(fProgressStatus->GetEntries(), TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
+      gMonitoringWriter->SendProcessingProgress(fProgressStatus->GetEntries(),
+                                                TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
       gMonitoringWriter->SendProcessingStatus("DONE");
    }
 
@@ -1053,9 +1075,11 @@ Bool_t TProofPlayer::CheckMemUsage(Long64_t &mfreq, Bool_t &w80r,
       // Record the memory information
       ProcInfo_t pi;
       if (!gSystem->GetProcInfo(&pi)){
+         wmsg = "";
          Info("CheckMemUsage|Svc", "Memory %ld virtual %ld resident event %lld",
                                    pi.fMemVirtual, pi.fMemResident, GetEventsProcessed());
-         wmsg = "";
+         // Save info in TStatus
+         fSelStatus->SetMemValues(pi.fMemVirtual, pi.fMemResident);
          // Apply limit on virtual memory, if any: warn if above 80%, stop if above 95% of max
          if (TProofServ::GetVirtMemMax() > 0) {
             if (pi.fMemVirtual > TProofServ::GetMemStop() * TProofServ::GetVirtMemMax()) {
@@ -2615,6 +2639,8 @@ void TProofPlayerRemote::NotifyMemory(TObject *obj)
                                   pi.fMemVirtual, pi.fMemResident, obj->GetName());
          RedirectOutput(0);
       }
+      // Record also values for monitoring
+      TPerfStats::SetMemValues();
    }
 }
 

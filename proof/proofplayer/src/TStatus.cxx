@@ -29,7 +29,7 @@
 ClassImp(TStatus)
 
 //______________________________________________________________________________
-TStatus::TStatus()
+TStatus::TStatus() : fVirtMemMax(-1), fResMemMax(-1)
 {
    // Deafult constructor.
 
@@ -52,6 +52,8 @@ Int_t TStatus::Merge(TCollection *li)
    // PROOF Merge() function.
 
    TIter stats(li);
+   Info("Merge", "Start: Max virtual memory: %.2f MB \tMax resident memory: %.2f MB ",
+          GetVirtMemMax()/1024., GetResMemMax()/1024.);
    while (TObject *obj = stats()) {
       TStatus *s = dynamic_cast<TStatus*>(obj);
       if (s == 0) continue;
@@ -60,7 +62,13 @@ Int_t TStatus::Merge(TCollection *li)
       MsgIter_t end = s->fMsgs.end();
       for (; i != end; i++)
          Add(i->c_str());
+      
+      SetMemValues(s->GetVirtMemMax(), s->GetResMemMax());
+   Info("Merge", "During: Max virtual memory: %.2f MB \tMax resident memory: %.2f MB ",
+          GetVirtMemMax()/1024., GetResMemMax()/1024.);
    }
+   Info("Merge", "End: Max virtual memory: %.2f MB \tMax resident memory: %.2f MB ",
+          GetVirtMemMax()/1024., GetResMemMax()/1024.);
 
    return fMsgs.size();
 }
@@ -70,12 +78,14 @@ void TStatus::Print(Option_t * /*option*/) const
 {
    // Standard print function.
 
-   cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName()
-        << "\t" << (IsOk() ? "OK" : "ERROR") << endl;
+   Printf("OBJ: %s\t%s\t%s", IsA()->GetName(), GetName(), (IsOk() ? "OK" : "ERROR"));
 
    MsgIter_t i = fMsgs.begin();
    for (; i != fMsgs.end(); i++)
-      cout << "\t" << *i << endl;
+      Printf("\t%s", (*i).c_str());
+
+   Printf(" Max virtual memory: %.2f MB \tMax resident memory: %.2f MB ",
+          GetVirtMemMax()/1024., GetResMemMax()/1024.);
 }
 
 //______________________________________________________________________________
@@ -98,4 +108,12 @@ const char *TStatus::NextMesg()
    }
 }
 
+//______________________________________________________________________________
+void TStatus::SetMemValues(Long_t vmem, Long_t rmem)
+{
+   // Set max memory values
+
+   if (vmem > 0. && (fVirtMemMax < 0. || vmem > fVirtMemMax)) fVirtMemMax = vmem;
+   if (rmem > 0. && (fResMemMax < 0. || rmem > fResMemMax)) fResMemMax = rmem;
+}
 

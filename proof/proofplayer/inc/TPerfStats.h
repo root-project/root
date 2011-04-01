@@ -25,6 +25,9 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
+#ifndef ROOT_TObjArray
+#include "TObjArray.h"
+#endif
 #ifndef ROOT_TTimeStamp
 #include "TTimeStamp.h"
 #endif
@@ -40,8 +43,6 @@ class TTree;
 class TH1D;
 class TH2D;
 class TList;
-class TVirtualMonitoringWriter;
-
 
 class TPerfEvent : public TObject {
 
@@ -100,8 +101,17 @@ private:
    Bool_t         fDoQuota;      //!Save stats on SQL server for quota management
    
    Bool_t         fMonitorPerPacket; //!Whether to send the full entry per each packet 
+   Int_t          fMonitorInfo;  //!Controls what information to monitor 
 
-   TVirtualMonitoringWriter *fMonitoringWriter; //!Monitoring engine
+   TObjArray      fMonitoringWriters; //!Monitoring engines
+
+   TString        fDataSet;      //!Dataset string
+   Int_t          fDataSetLen;   //!Maximum size of the dataset string fDataSet 
+   Int_t          fDataSetSize;  //!# of files in the dataset 
+   TList         *fOutput;       //!Saved pointer to the output list 
+
+   static Long_t  fgVirtMemMax;   //! Max virtual memory used by this process
+   static Long_t  fgResMemMax;    //! Max resident memory used by this process
 
    TPerfStats(TList *input, TList *output);
    void WriteQueryLog();
@@ -129,6 +139,7 @@ public:
    static void Start(TList *input, TList *output);
    static void Stop();
    static void Setup(TList *input);
+   static void SetMemValues();
 
    ClassDef(TPerfStats,0)  // Class for collecting PROOF statistics
 };
