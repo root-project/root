@@ -1480,9 +1480,9 @@ void THtml::Convert(const char *filename, const char *title,
 //        includeOutput - if != kNoOutput, run the script passed as filename and
 //                   store all created canvases in PNG files that are
 //                   shown next to the converted source. Bitwise-ORing with
-//                   re-runs the script even if output PNGs exist that are newer
-//                   than the script. If kCompiledOutput is passed, the script is
-//                   run through ACLiC (.x filename+)
+//                   kForceOutput re-runs the script even if output PNGs exist
+//                   that are newer than the script. If kCompiledOutput is
+//                   passed, the script is run through ACLiC (.x filename+)
 //        context  - line shown verbatim at the top of the page; e.g. for links.
 //                   If context is non-empty it is expected to also print the
 //                   title.
