@@ -70,6 +70,7 @@ TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, 
    fMaxRatio = 0;
    fColors = colors;
    
+   if (!gGeoManager) new TGeoManager("tmp","tmp");
    if (!fgMedium) {
       fgMedium = new TGeoMedium("MED",1,new TGeoMaterial("Mat", 26.98,13,2.7));
    }
