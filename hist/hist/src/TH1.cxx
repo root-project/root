@@ -5025,7 +5025,6 @@ Long64_t TH1::Merge(TCollection *li)
          if (h->GetXaxis()->GetXmin() >= h->GetXaxis()->GetXmax() && h->fBuffer) {
             // no limits
             Int_t nbentries = (Int_t)h->fBuffer[0];
-            if (nbentries < 0) nbentries = - nbentries; // in case they are set artificially to a neg value
             for (Int_t i = 0; i < nbentries; i++)
                Fill(h->fBuffer[2*i + 2], h->fBuffer[2*i + 1]);
             // Entries from buffers have to be filled one by one
@@ -6149,21 +6148,33 @@ void TH1::Reset(Option_t *option)
    //
    // if option "ICE" is specified, resets only Integral, Contents and Errors.
    // if option "ICES" is specified, resets only Integral, Contents , Errors and Statistics 
+   //                  This option is used 
    // if option "M"   is specified, resets also Minimum and Maximum
+
+   // The option "ICE" is used when rebinning the histogram (in RebinAxis, LabelInflate, etc..) 
+   // The option "ICES is used in combination with the buffer (see BufferEmpty and BufferFill)
 
    TString opt = option;
    opt.ToUpper();
    fSumw2.Reset();
    if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
 
-   if (opt == "M") {
+   if (opt.Contains("M")) {
       SetMinimum();
       SetMaximum();
    }
 
-   if (opt == "ICE") return;
+   if (opt.Contains("ICE") && !opt.Contains("S")) return;
 
-   // need to reset also the statistics 
+   // Setting fBuffer[0] = 0 is like resetting the buffer but not deleting it 
+   // But what is the sense of calling BufferEmpty() ? For making the axes ? 
+   // BufferEmpty will update contents that later will be 
+   // reset in calling TH1D::Reset. For this we need to reset the stats afterwards
+   // It may be needed for computing the axis limits.... 
+   if (fBuffer) {BufferEmpty(); fBuffer[0] = 0;}
+
+   // need to reset also the statistics
+   // (needs to be done after calling BufferEmpty() )
    fTsumw       = 0;
    fTsumw2      = 0;
    fTsumwx      = 0;
@@ -6172,10 +6183,6 @@ void TH1::Reset(Option_t *option)
 
    if (opt == "ICES") return;
 
-   // Setting fBuffer[0] = 0 is like resetting the buffer but not deleting it 
-   // But what is the sense of calling BufferEmpty() if later the content will be 
-   // reset in calling TH1D::Reset?? 
-   if (fBuffer) {BufferEmpty(); fBuffer[0] = 0;}
 
    TObject *stats = fFunctions->FindObject("stats");
    fFunctions->Remove(stats);
