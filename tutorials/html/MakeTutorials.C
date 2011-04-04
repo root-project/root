@@ -279,8 +279,8 @@ void GetMacroTitle(const char *fullpath, TString &comment, Bool_t &compile) {
 
 Bool_t IsNew(const char *filename) {
    // Check if filename in SVN is newer than 6 months
-   gSystem->Exec(Form("svn info %s >x.log",filename));
-   FILE *fpdate = fopen("x.log","r");
+   gSystem->Exec(Form("svn info %s > MakeTutorials-tmp.log",filename));
+   FILE *fpdate = fopen("MakeTutorials-tmp.log","r");
    char line[250];
    Bool_t isnew = kFALSE;
    TDatime today;
@@ -296,6 +296,7 @@ Bool_t IsNew(const char *filename) {
       } 
    }
    fclose(fpdate);
+   gSystem->Unlink("MakeTutorials-tmp.log");
    return isnew;
 }
 
@@ -373,10 +374,15 @@ void scandir(THtml& html, const char *dir, const char *title, TObjLink* toplnk) 
 
    TString outpath("htmldoc/tutorials/");
    outpath += dir;
-   TString inpath("tutorials/");
+   TString inpath("$ROOTSYS/tutorials/");
    inpath += dir;
    inpath += "/";
+   gSystem->ExpandPathName(inpath);
    void *thedir = gSystem->OpenDirectory(inpath);
+   if (!thedir) {
+      printf("MakeTutorials.C: error opening directory %s", inpath.Data());
+      return;
+   }
    const char *direntry;
    THashList h;
    while ((direntry = gSystem->GetDirEntry(thedir))) {
