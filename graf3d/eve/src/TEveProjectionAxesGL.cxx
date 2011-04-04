@@ -448,7 +448,7 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    }
    catch (TEveException& exc)
    {
-      Warning("TEveProjectionAxesGL::DirectDraw", Form( "failed: '%s'.", exc.Data()));
+      Warning("TEveProjectionAxesGL::DirectDraw", "caught exception: '%s'.", exc.Data());
    }
 
    glDepthRange(old_depth_range[0], old_depth_range[1]);
