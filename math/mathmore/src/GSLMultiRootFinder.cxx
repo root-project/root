@@ -49,7 +49,7 @@ namespace Math {
 
    // default values 
 
-   double gDefaultMaxIter = 100;
+   int gDefaultMaxIter = 100;
    double gDefaultAbsTolerance = 1.E-6;
    double gDefaultRelTolerance = 1.E-10;
 
@@ -327,7 +327,8 @@ bool GSLMultiRootFinder::Solve (const double * x, int maxIter, double absTol, do
 void GSLMultiRootFinder::PrintState(std::ostream & os) {    
    // print current state 
    if (!fSolver) return;
-   int wi = int(std::log10(Dim() ) )+1;
+   double ndigits = std::log10( double( Dim() ) );
+   int wi = int(ndigits)+1;
    const double * xtmp = fSolver->X(); 
    const double * ftmp = fSolver->FVal(); 
    os << "Root values     = "; 
