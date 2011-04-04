@@ -110,7 +110,7 @@ ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		$(MAKEDIR)
 		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.a' $(XROOTDDIRS)/xrootd  $(call stripsrc,$(XROOTDDIRS))
 		@rm -rf $(XROOTDDIRL) $(XROOTDDIRD)/bin
-		@rm -f $(XROOTDMAKE)
+		@rm -f $(XROOTDMAKE) $(XROOTDBUILD)
 endif
 		@(cd $(XROOTDDIRD); \
 		RELE=`uname -r`; \
@@ -221,10 +221,9 @@ endif
 		rc=$$? ; \
 		if [ $$rc != "0" ] ; then \
 		   echo "*** Error condition reported by Xrootd-configure (rc = $$rc):"; \
-		   rm -f $(XROOTDMAKE); \
+		   rm -f `basename $(XROOTDMAKE)`; \
 	 	   exit 1; \
-		fi; \
-		$(MAKE))
+		fi)
 else
 $(XROOTDMAKE):
 		$(MAKEDIR)
@@ -233,7 +232,7 @@ ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@(find $(XROOTDDIRD) -name "*.o" -exec rm -f {} \; >/dev/null 2>&1;true)
 		@(find $(XROOTDDIRD) -name .svn -exec rm -rf {} \; >/dev/null 2>&1;true)
 		@rm -rf $(XROOTDDIRL) $(XROOTDDIRD)/bin
-		@rm -f $(XROOTDMAKE)
+		@rm -f $(XROOTDMAKE) $(XROOTDBUILD)
 endif
 		@(if [ -d $(XROOTDDIRD)/pthreads-win32 ]; then \
     		   cp $(XROOTDDIRD)/pthreads-win32/lib/*.dll "bin" ; \
@@ -253,14 +252,14 @@ $(XROOTDBUILD): $(XROOTDMAKE) $(XROOTDDEPS)
 ifneq ($(PLATFORM),win32)
 		@(topdir=$(PWD); \
 		cd $(XROOTDDIRD); \
-	   	echo "*** Building xrootd ... topdir= $$topdir" ; \
+	   	echo "*** Building xrootd ..." ; \
 		$(MAKE); \
 		rc=$$? ; \
 		if [ $$rc != "0" ] ; then \
 		   echo "*** Error condition reported by make (rc = $$rc):"; \
-		   rm -f $(XROOTDMAKE); \
+		   rm -f `basename $(XROOTDMAKE)`; \
 	 	   exit 1; \
-      fi; \
+		fi; \
 		cd $$topdir ; \
 		if [ -d $(XROOTDDIRL) ]; then \
 		   lsplug=`find $(XROOTDDIRL) -name "libXrd*.$(XRDSOEXT)"` ;\
@@ -297,7 +296,8 @@ else
 		@(cd $(XROOTDDIRD); \
 		echo "*** Building xrootd ..."; \
 		unset MAKEFLAGS; \
-		nmake -f Makefile.msc CFG=$(XRDDBG))
+		nmake -f Makefile.msc CFG=$(XRDDBG); \
+		touch `basename $(XROOTDBUILD)`)
 endif
 
 ifeq ($(PLATFORM),win32)
@@ -328,8 +328,8 @@ all-$(MODNAME): $(TARGETS)
 
 clean-$(MODNAME):
 ifneq ($(PLATFORM),win32)
-	 @(if [ -f $(XROOTDMAKE) ]; then \
-                   $(MAKE) clean-netx;  \
+		@(if [ -f $(XROOTDMAKE) ]; then \
+		   $(MAKE) clean-netx;  \
 		   $(MAKE) clean-proofx;  \
 		   cd $(XROOTDDIRD); \
 		   $(MAKE) clean; \
@@ -357,6 +357,7 @@ else
 		   cd $(XROOTDDIRD); \
 		   $(MAKE) distclean; \
 		fi)
+		@rm -f $(XROOTDMAKE)
 endif
 else
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
@@ -366,10 +367,9 @@ else
 		   cd $(XROOTDDIRD); \
 		   unset MAKEFLAGS; \
 		   nmake -f Makefile.msc distclean; \
-		   rm -f GNUmakefile; \
 		fi)
-endif
-endif
 		@rm -f $(XROOTDMAKE)
+endif
+endif
 
 distclean::     distclean-$(MODNAME)
