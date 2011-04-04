@@ -48,7 +48,7 @@
 // shape of the matrix has to be specified in some form . Data can be   //
 // entered through the following methods :                              //
 // 1. constructor                                                       //
-//    TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,         //
+//    TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t dol_lwb,         //
 //                   Int_t col_upb,Int_t nr_nonzeros,                   //
 //                   Int_t *row, Int_t *col,Element *data);            //
 //    It uses SetMatrixArray(..), see below                             //
@@ -56,7 +56,8 @@
 // 3. SetMatrixArray(Int_t nr,Int_t *irow,Int_t *icol,Element *data)   //
 //    where it is expected that the irow,icol and data array contain    //
 //    nr entries . Only the entries with non-zero data[i] value are     //
-//    inserted !                                                        //
+//    inserted. Be aware that the input data array will be modified     //
+//    inside the routine for doing the necessary sorting of indices !   //
 // 4. TMatrixTSparse a(n,m); for(....) { a(i,j) = ....                  //
 //    This is a very flexible method but expensive :                    //
 //    - if no entry for slot (i,j) is found in the sparse index table   //
@@ -1159,6 +1160,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
 {
   // Copy nr elements from row/col index and data array to matrix . It is assumed
   // that arrays are of size >= nr
+  // Note that the input arrays are not passed as const since they will be modified ! 
 
    R__ASSERT(this->IsValid());
    if (nr <= 0) {
