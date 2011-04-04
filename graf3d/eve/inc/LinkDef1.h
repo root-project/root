@@ -90,15 +90,22 @@
 #pragma link C++ class TEveManager::TExceptionHandler+;
 
 // TEveVSD
-#pragma link C++ class TEveVSD+;
 #pragma link C++ class TEveMCTrack+;
 #pragma link C++ class TEveHit+;
 #pragma link C++ class TEveCluster+;
-#pragma link C++ class TEveRecTrack+;
+
+#pragma link C++ class   TEveRecTrackT<Float_t>+;
+#pragma link C++ class   TEveRecTrackT<Double_t>+;
+#pragma link C++ typedef TEveRecTrack;
+#pragma link C++ typedef TEveRecTrackF;
+#pragma link C++ typedef TEveRecTrackD;
+
 #pragma link C++ class TEveRecKink+;
 #pragma link C++ class TEveRecV0+;
 #pragma link C++ class TEveRecCascade+;
 #pragma link C++ class TEveMCRecCrossRef+;
+
+#pragma link C++ class TEveVSD+;
 
 // TEveChunkManager
 #pragma link C++ class TEveChunkManager+;

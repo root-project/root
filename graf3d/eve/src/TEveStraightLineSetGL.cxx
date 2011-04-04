@@ -88,7 +88,8 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
    TEveStraightLineSet& mL = * fM;
 
-   if (mL.GetDepthTest() == kFALSE)
+   // set depth range when selection is disabled, else can't pick camera center
+   if (mL.GetDepthTest() == kFALSE && rnrCtx.Selection() == kFALSE)
    {
       glPushAttrib(GL_VIEWPORT_BIT);
       glDepthRange(0, 0.1); 
@@ -187,7 +188,7 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       delete [] pnts;
    }
 
-   if (mL.GetDepthTest() == kFALSE)
+   if (mL.GetDepthTest() == kFALSE && rnrCtx.Selection() == kFALSE)
       glPopAttrib();
 }
 

@@ -91,11 +91,11 @@ void TEveTrackGL::RenderPathMarksAndFirstVertex(TGLRnrCtx& rnrCtx) const
       Int_t    n    = 0;
       for (Int_t i = 0; i < fTrack->fLastPMIdx; ++i)
       {
-         const TEvePathMark &pm = pms[i];
-         if ((pm.fType == TEvePathMark::kDaughter  && rTP.GetRnrDaughters())  ||
-             (pm.fType == TEvePathMark::kReference && rTP.GetRnrReferences()) ||
-             (pm.fType == TEvePathMark::kDecay     && rTP.GetRnrDecay())      ||
-             (pm.fType == TEvePathMark::kCluster2D && rTP.GetRnrCluster2Ds()))
+         const TEvePathMarkD &pm = pms[i];
+         if ((pm.fType == TEvePathMarkD::kDaughter  && rTP.GetRnrDaughters())  ||
+             (pm.fType == TEvePathMarkD::kReference && rTP.GetRnrReferences()) ||
+             (pm.fType == TEvePathMarkD::kDecay     && rTP.GetRnrDecay())      ||
+             (pm.fType == TEvePathMarkD::kCluster2D && rTP.GetRnrCluster2Ds()))
          {
             pnts[n  ] = pm.fV.fX;
             pnts[n+1] = pm.fV.fY;

@@ -125,28 +125,31 @@ public:
 /******************************************************************************/
 // TEveRecTrack
 /******************************************************************************/
-
-class TEveRecTrack : public TObject
+template <typename TT>
+class TEveRecTrackT : public TObject
 {
 public:
-   Int_t       fLabel;       // Label of the track.
-   Int_t       fIndex;       // Index of the track (in some source array).
-   Int_t       fStatus;      // Status as exported from reconstruction.
-   Int_t       fSign;        // Charge of the track.
-   TEveVector  fV;           // Start vertex from reconstruction.
-   TEveVector  fP;           // Reconstructed momentum at start vertex.
-   Float_t     fBeta;        // Relativistic beta factor.
+   Int_t           fLabel;       // Label of the track.
+   Int_t           fIndex;       // Index of the track (in some source array).
+   Int_t           fStatus;      // Status as exported from reconstruction.
+   Int_t           fSign;        // Charge of the track.
+   TEveVectorT<TT> fV;           // Start vertex from reconstruction.
+   TEveVectorT<TT> fP;           // Reconstructed momentum at start vertex.
+   TT              fBeta;        // Relativistic beta factor.
 
    // PID data missing
 
-   TEveRecTrack() : fLabel(-1), fIndex(-1), fStatus(0), fSign(0), fV(), fP(), fBeta(0) {}
-   virtual ~TEveRecTrack() {}
+   TEveRecTrackT() : fLabel(-1), fIndex(-1), fStatus(0), fSign(0), fV(), fP(), fBeta(0) {}
+   virtual ~TEveRecTrackT() {}
 
    Float_t Pt() { return fP.Perp(); }
 
-   ClassDef(TEveRecTrack, 1); // Reconstructed track (also used in VSD).
+   ClassDef(TEveRecTrackT, 1); // Template for reconstructed track (also used in VSD).
 };
 
+typedef TEveRecTrackT<Float_t>  TEveRecTrack;
+typedef TEveRecTrackT<Float_t>  TEveRecTrackF;
+typedef TEveRecTrackT<Double_t> TEveRecTrackD;
 
 /******************************************************************************/
 // TEveRecKink

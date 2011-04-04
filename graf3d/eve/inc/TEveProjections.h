@@ -54,8 +54,9 @@ protected:
    EGeoMode_e          fGeoMode;       // strategy of polygon projection (what to try first)
    TString             fName;          // name
 
-   TEveVector          fCenter;        // center of distortion
-   TEveVector          fZeroPosVal;    // projected origin (0, 0, 0)
+   TEveVector          fCenter;        // center of distortionprivate:
+
+   bool                fDisplaceOrigin; // displace point before projection
 
    Bool_t              fUsePreScale;   // use pre-scaling
    vPreScale_t         fPreScales[3];  // scaling before the distortion
@@ -70,9 +71,6 @@ protected:
    Float_t             fPastFixRScale; // relative scaling beyond fFixR
    Float_t             fPastFixZScale; // relative scaling beyond fFixZ
    Float_t             fMaxTrackStep;  // maximum distance between two points on a track
-
-   TEveVector          fLowLimit;      // convergence of point +infinity
-   TEveVector          fUpLimit;       // convergence of point -infinity
 
    void PreScaleVariable(Int_t dim, Float_t& v);
 
@@ -96,16 +94,17 @@ public:
    const   Char_t*     GetName() const            { return fName.Data(); }
    void                SetName(const Char_t* txt) { fName = txt; }
 
-   virtual void        SetCenter(TEveVector& v)   { fCenter = v; UpdateLimit(); }
-   virtual Float_t*    GetProjectedCenter()       { return fCenter.Arr(); }
+   virtual void        SetCenter(TEveVector& v) { fCenter = v; }
+   virtual Float_t*    GetProjectedCenter();
+  
+   void                SetDisplaceOrigin(bool);
+   Bool_t              GetDisplaceOrigin() const { return fDisplaceOrigin; }
 
    void                SetType(EPType_e t)        { fType = t; }
    EPType_e            GetType() const            { return fType; }
 
    void                SetGeoMode(EGeoMode_e m)   { fGeoMode = m; }
    EGeoMode_e          GetGeoMode() const         { return fGeoMode; }
-
-   virtual void        UpdateLimit();
 
    Bool_t   GetUsePreScale() const   { return fUsePreScale; }
    void     SetUsePreScale(Bool_t x) { fUsePreScale = x; }
@@ -137,9 +136,12 @@ public:
    virtual void        SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
 
    // utils to draw axis
+   TEveVector          GetOrthogonalCenter(int idx, TEveVector& out);
    virtual Float_t     GetValForScreenPos(Int_t ax, Float_t value);
    virtual Float_t     GetScreenVal(Int_t ax, Float_t value);
-   Float_t             GetLimit(Int_t i, Bool_t pos) { return pos ? fUpLimit[i] : fLowLimit[i]; }
+   Float_t             GetScreenVal(Int_t i, Float_t x, TEveVector& dirVec, TEveVector& oCenter);
+   Float_t             GetLimit(Int_t i, Bool_t pos);
+
 
    static   Float_t    fgEps;    // resolution of projected points
    static   Float_t    fgEpsSqr; // square of resolution of projected points
@@ -166,10 +168,8 @@ public:
 
    virtual void        ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
 
-   virtual void        SetCenter(TEveVector& center);
+   virtual void        SetCenter(TEveVector& v); 
    virtual Float_t*    GetProjectedCenter() { return fProjectedCenter.Arr(); }
-
-   virtual void        UpdateLimit();
 
    virtual Bool_t      HasSeveralSubSpaces() const { return kTRUE; }
    virtual Bool_t      AcceptSegment(TEveVector& v1, TEveVector& v2, Float_t tolerance) const;
@@ -218,4 +218,7 @@ public:
    ClassDef(TEve3DProjection, 0); // 3D scaling "projection"
 };
 
+// AMT: temporary workaround till root pactches are integrated in CMSSW 	 
+#define TEVEPROJECTIONS_DISPLACE_ORIGIN_MODE	 
+	 
 #endif

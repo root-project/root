@@ -243,7 +243,7 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
    // Project path-marks
    for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
    {
-      projection->ProjectVector(trans, pm->fV, fDepth);
+      projection->ProjectPointdv(trans, pm->fV.Arr(), pm->fV.Arr(), fDepth);
    }
 }
 

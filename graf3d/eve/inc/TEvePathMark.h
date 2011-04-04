@@ -42,6 +42,10 @@ public:
    TEvePathMarkT(EType_e type, const TEveVectorT<TT>& v, const TEveVectorT<TT>& p, const TEveVectorT<TT>& e, TT time=0) :
       fType(type), fV(v), fP(p), fE(e), fTime(time) {}
 
+   template <typename OO>
+   TEvePathMarkT(const TEvePathMarkT<OO>& pm) :
+      fType((EType_e)pm.fType), fV(pm.fV), fP(pm.fP), fE(pm.fE), fTime(pm.fTime) {}
+
    const char* TypeName();
 
    ClassDefNV(TEvePathMarkT, 1); // Template for a special point on a track: position/momentum reference, daughter creation or decay.

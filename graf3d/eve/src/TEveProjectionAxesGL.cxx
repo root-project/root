@@ -65,7 +65,7 @@ void TEveProjectionAxesGL::FilterOverlappingLabels(Int_t idx, Float_t ref) const
    TGLAxisPainter::LabVec_t &orig = fAxisPainter.RefLabVec();
    if (orig.size() == 0) return;
 
-   Float_t center = fM->GetManager()->GetCenter()[idx];
+   Float_t center = fM->GetManager()->GetProjection()->GetProjectedCenter()[idx];
 
    // Get index of label closest to the distortion center.
    // Needed to keep simetry around center.
@@ -157,12 +157,6 @@ void TEveProjectionAxesGL::SplitInterval(Float_t p1, Float_t p2, Int_t ax) const
    {
       SplitIntervalByPos(p1, p2, ax);
    }
-
-
-   FilterOverlappingLabels(0, p2 -p1);
-
-   // Minimum/maximum are defined at the front/back element of list.
-   fAxisPainter.RefTMVec().push_back(TGLAxisPainter::TM_t(p2, -1));
 }
 
 //______________________________________________________________________________
@@ -218,8 +212,6 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) 
 {
    // Add tick-marks on fixed value step.
 
-   Float_t v1 = fProjection->GetValForScreenPos(ax, p1);
-   Float_t v2 = fProjection->GetValForScreenPos(ax, p2);
 
    TGLAxisPainter::LabVec_t &labVec =  fAxisPainter.RefLabVec();
    TGLAxisPainter::TMVec_t  &tmVec  =  fAxisPainter.RefTMVec();
@@ -230,11 +222,20 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) 
    Int_t bn1, bn2;
    Double_t bw1, bw2;           // bin width first / second order
    Double_t bl1, bh1, bl2, bh2; // bin low, high first / second order
+   Float_t v1 = fProjection->GetValForScreenPos(ax, p1);
+   Float_t v2 = fProjection->GetValForScreenPos(ax, p2);
    THLimitsFinder::Optimize(v1, v2, n1a, bl1, bh1, bn1, bw1);
    THLimitsFinder::Optimize(bl1, bl1+bw1, n2a, bl2, bh2, bn2, bw2);
 
    Float_t pFirst, pSecond; // position of first, second order of tickmarks
    Float_t v = bl1;
+
+   // cache values here
+   TEveVector dirVec;
+   fProjection->SetDirectionalVector(ax, dirVec);
+   TEveVector oCenter;
+   fProjection->GetOrthogonalCenter(ax, oCenter);
+
    // step
    for (Int_t l=0; l<=bn1; l++)
    {
@@ -246,7 +247,7 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) 
       // Tickmarks.
       for (Int_t k=1; k<bn2; k++)
       {
-         pSecond = fProjection->GetScreenVal(ax, v+k*bw2);
+         pSecond = fProjection->GetScreenVal(ax, v+k*bw2, dirVec, oCenter);
          if (pSecond > p2)  break;
          tmVec.push_back(TGLAxisPainter::TM_t(pSecond, 1));
       }
@@ -257,7 +258,7 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) 
    v = bl1 -bw2;
    while ( v > v1)
    {
-      pSecond = fProjection->GetScreenVal(ax, v);
+      pSecond = fProjection->GetScreenVal(ax, v, dirVec, oCenter);
       if (pSecond < p1)  break;
       tmVec.push_back(TGLAxisPainter::TM_t(pSecond, 1));
       v -= bw2;
@@ -267,22 +268,34 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) 
 //______________________________________________________________________________
 void TEveProjectionAxesGL::GetRange(Int_t ax, Float_t frustMin, Float_t frustMax, Float_t& min, Float_t& max) const
 {
-   // Get range from bounding box of projection manager
+   // Get range from bounding box of projection manager and furstum size.
+
+   Float_t* bb = fM->fManager->GetBBox();
+   // enlarge bbox times 2
+   Float_t bbMin = bb[ax*2];
+   Float_t bbMax = bb[ax*2 + 1];
+   Float_t off = ( bb[ax*2 + 1] - bb[ax*2]) * 0.5;
+   bbMin -= off;
+   bbMax += off;
 
 
-   // Compare frustum range with bbox and take larger.
+   // minimum
+   if (frustMin > bbMin)   {
+      min = frustMin;
+      min += (frustMax - frustMin) * 0.1;
+   }
+   else {
+      min = bbMin;
+   }
 
-   Float_t frng = (frustMax -frustMin)*0.4;
-   Float_t c = 0.5*(frustMax +frustMin);
-   min = c - frng;
-   max = c + frng;
-
-   // Check projection  limits.
-   // Set limit factor in case of divergence.
-   Float_t dLim = fProjection->GetLimit(ax, 0);
-   Float_t uLim = fProjection->GetLimit(ax, 1);
-   if (min < dLim) min = dLim*0.98;
-   if (max > uLim) max   = uLim*0.98;
+   // maximum
+   if (frustMax < bbMax) {
+      max = frustMax;
+      max -= (frustMax - frustMin) * 0.1;
+   }
+   else {
+      max = bbMax;
+   }
 }
 
 //______________________________________________________________________________
@@ -302,7 +315,7 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    // Actual rendering code.
    // Virtual from TGLLogicalShape.
 
-   if (rnrCtx.Selection() || rnrCtx.Highlight()) return;
+   if (rnrCtx.Selection() || rnrCtx.Highlight() || fM->fManager->GetBBox() == 0) return;
 
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
 
@@ -326,8 +339,8 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
    if (fM->fUseColorSet)
    {
-       TGLUtil::Color(rnrCtx.ColorSet().Markup());
-       fAxisPainter.SetUseAxisColors(kFALSE);
+      TGLUtil::Color(rnrCtx.ColorSet().Markup());
+      fAxisPainter.SetUseAxisColors(kFALSE);
    }
 
    fProjection = fM->GetManager()->GetProjection();
@@ -361,14 +374,14 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
    //
    // Axes.
-   {
+   try {
       using namespace TMath;
       GLint   vp[4];
       glGetIntegerv(GL_VIEWPORT, vp);
       Float_t refLength =  TMath::Sqrt((TMath::Power(vp[2]-vp[0], 2) + TMath::Power(vp[3]-vp[1], 2)));
       Float_t tickLength = TMath::Sqrt((TMath::Power(r-l, 2) + TMath::Power(t-b, 2)));
       fAxisPainter.SetFontMode(TGLFont::kPixmap);
-      fAxisPainter.SetLabelFont(rnrCtx, TGLFontManager::GetFontNameFromId(fM->GetLabelFont()),  TMath::CeilNint(refLength*0.02), tickLength*fM->GetLabelSize());
+      fAxisPainter.SetLabelFont(rnrCtx, TGLFontManager::GetFontNameFromId(fM->GetLabelFont()),  TMath::CeilNint(refLength*fM->GetLabelSize()), tickLength*fM->GetLabelSize());
 
       Float_t min, max;
       // X-axis.
@@ -377,6 +390,9 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       {
          GetRange(0, l, r, min, max);
          SplitInterval(min, max, 0);
+
+         FilterOverlappingLabels(0, r-l);
+         fAxisPainter.RefTMVec().push_back(TGLAxisPainter::TM_t(max, -1));
 
          fAxisPainter.RefDir().Set(1, 0, 0);
          fAxisPainter.RefTMOff(0).Set(0, tickLength, 0);
@@ -388,7 +404,7 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
          fAxisPainter.RnrLabels();
          fAxisPainter.RnrLines();
          glPopMatrix();
-
+         
          // Top.
          glPushMatrix();
          glTranslatef( 0, t, 0);
@@ -405,6 +421,9 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       {
          GetRange(1, b, t, min, max);
          SplitInterval(min, max, 1);
+
+         FilterOverlappingLabels(1, t-b);
+         fAxisPainter.RefTMVec().push_back(TGLAxisPainter::TM_t(max, -1));
 
          fAxisPainter.RefDir().Set(0, 1, 0);
          fAxisPainter.RefTMOff(0).Set(tickLength, 0 , 0);
@@ -427,6 +446,11 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
          glPopMatrix();
       }
    }
+   catch (TEveException& exc)
+   {
+      Warning("TEveProjectionAxesGL::DirectDraw", Form( "failed: '%s'.", exc.Data()));
+   }
+
    glDepthRange(old_depth_range[0], old_depth_range[1]);
 
    glPopAttrib();

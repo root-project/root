@@ -38,14 +38,21 @@ public:
 
    virtual Bool_t IsConst() const {return fFieldConstant;};
 
-   virtual void  PrintField(Float_t x, Float_t y, Float_t z) const
+   virtual void  PrintField(Double_t x, Double_t y, Double_t z) const
    {
       TEveVector b = GetField(x, y, z);
       printf("v(%f, %f, %f) B(%f, %f, %f) \n", x, y, z, b.fX, b.fY, b.fZ);
    }
 
-   virtual TEveVector GetField(const TEveVector &v) const { return GetField(v.fX, v.fY, v.fZ);}
-   virtual TEveVector GetField(Float_t x, Float_t y, Float_t z) const = 0;
+   TEveVectorD GetFieldD(const TEveVectorD &v) const { return GetFieldD(v.fX, v.fY, v.fZ); }
+
+   // Track propgator uses only GetFieldD() and GetMaxFieldMagD(). Have to keep/reuse
+   // GetField() and GetMaxFieldMag() because of backward compatibility.
+
+   virtual TEveVectorD GetFieldD(Double_t x, Double_t y, Double_t z) const { return GetField(x, y, z); }
+   virtual Double_t GetMaxFieldMagD() const { return GetMaxFieldMag(); } // not abstract because of backward compatibility
+
+   virtual TEveVector GetField(Float_t, Float_t, Float_t) const { return TEveVector(); }
    virtual Float_t GetMaxFieldMag() const { return 4; } // not abstract because of backward compatibility
 
    ClassDef(TEveMagField, 0); // Abstract interface to magnetic field
@@ -59,16 +66,16 @@ public:
 class TEveMagFieldConst : public TEveMagField
 {
 protected:
-   TEveVector fB;
+   TEveVectorD fB;
 
 public:
-   TEveMagFieldConst(Float_t x, Float_t y, Float_t z) : TEveMagField(), fB(x, y, z)
+   TEveMagFieldConst(Double_t x, Double_t y, Double_t z) : TEveMagField(), fB(x, y, z)
    { fFieldConstant = kTRUE; }
    virtual ~TEveMagFieldConst() {}
 
    using   TEveMagField::GetField;
-   virtual TEveVector GetField(Float_t /*x*/, Float_t /*y*/, Float_t /*z*/) const { return fB; }
-   virtual Float_t GetMaxFieldMag() const { return fB.Mag(); };
+   virtual TEveVectorD GetFieldD(Double_t /*x*/, Double_t /*y*/, Double_t /*z*/) const { return fB; }
+   virtual Double_t GetMaxFieldMagD() const { return fB.Mag(); };
 
    ClassDef(TEveMagFieldConst, 0); // Interface to constant magnetic field.
 };
@@ -81,12 +88,12 @@ public:
 class TEveMagFieldDuo : public TEveMagField
 {
 protected:
-   TEveVector fBIn;
-   TEveVector fBOut;
-   Float_t    fR2;
+   TEveVectorD fBIn;
+   TEveVectorD fBOut;
+   Double_t    fR2;
 
 public:
-   TEveMagFieldDuo(Float_t r, Float_t bIn, Float_t bOut) : TEveMagField(),
+   TEveMagFieldDuo(Double_t r, Double_t bIn, Double_t bOut) : TEveMagField(),
      fBIn(0,0,bIn), fBOut(0,0,bOut), fR2(r*r)
    {
       fFieldConstant = kFALSE;
@@ -94,10 +101,11 @@ public:
    virtual ~TEveMagFieldDuo() {}
 
    using   TEveMagField::GetField;
-   virtual TEveVector GetField(Float_t x, Float_t y, Float_t /*z*/) const
+   virtual TEveVectorD GetFieldD(Double_t x, Double_t y, Double_t /*z*/) const
    { return  ((x*x+y*y)<fR2) ? fBIn : fBOut; }
-   virtual Float_t GetMaxFieldMag() const
-   { Float_t b1 = fBIn.Mag(), b2 = fBOut.Mag(); return b1 > b2 ? b1 : b2; }
+
+   virtual Double_t GetMaxFieldMagD() const
+   { Double_t b1 = fBIn.Mag(), b2 = fBOut.Mag(); return b1 > b2 ? b1 : b2; }
 
    ClassDef(TEveMagFieldDuo, 0); // Interface to magnetic field with two different values depending of radius.
 };
@@ -113,52 +121,54 @@ class TEveTrackPropagator : public TEveElementList,
    friend class TEveTrackPropagatorSubEditor;
 
 public:
+   enum EStepper_e    { kHelix, kRungeKutta };
+
+   enum EProjTrackBreaking_e { kPTB_Break, kPTB_UseFirstPointPos, kPTB_UseLastPointPos };
+
+protected:
    struct Helix_t
    {
-      Int_t   fCharge;   // Charge of tracked particle.
-      Float_t fMaxAng;   // Maximum step angle.
-      Float_t fMaxStep;  // Maximum allowed step size.
-      Float_t fDelta;    // Maximum error in the middle of the step.
+      Int_t    fCharge;   // Charge of tracked particle.
+      Double_t fMaxAng;   // Maximum step angle.
+      Double_t fMaxStep;  // Maximum allowed step size.
+      Double_t fDelta;    // Maximum error in the middle of the step.
 
-      Float_t fPhi;      // Accumulated angle to check fMaxOrbs by propagator.
-      Bool_t  fValid;    // Corner case pT~0 or B~0, possible in variable mag field.
+      Double_t fPhi;      // Accumulated angle to check fMaxOrbs by propagator.
+      Bool_t   fValid;    // Corner case pT~0 or B~0, possible in variable mag field.
 
       // ----------------------------------------------------------------
 
       // helix parameters
-      Float_t fLam;         // Momentum ratio pT/pZ.
-      Float_t fR;           // Helix radius in cm.
-      Float_t fPhiStep;     // Caluclated from fMinAng and fDelta.
-      Float_t fSin, fCos;   // Current sin/cos(phistep).
+      Double_t fLam;         // Momentum ratio pT/pZ.
+      Double_t fR;           // Helix radius in cm.
+      Double_t fPhiStep;     // Caluclated from fMinAng and fDelta.
+      Double_t fSin, fCos;   // Current sin/cos(phistep).
 
       // Runge-Kutta parameters
-      Float_t fRKStep;      // Step for Runge-Kutta.
+      Double_t fRKStep;      // Step for Runge-Kutta.
 
       // cached
-      TEveVector fB;        // Current magnetic field, cached.
-      TEveVector fE1, fE2, fE3; // Base vectors: E1 -> B dir, E2->pT dir, E3 = E1xE2.
-      TEveVector fPt, fPl;  // Transverse and longitudinal momentum.
-      Float_t fPtMag;       // Magnitude of pT.
-      Float_t fPlMag;       // Momentum parallel to mag field.
-      Float_t fLStep;       // Transverse step arc-length in cm.
+      TEveVectorD fB;        // Current magnetic field, cached.
+      TEveVectorD fE1, fE2, fE3; // Base vectors: E1 -> B dir, E2->pT dir, E3 = E1xE2.
+      TEveVectorD fPt, fPl;  // Transverse and longitudinal momentum.
+      Double_t fPtMag;       // Magnitude of pT.
+      Double_t fPlMag;       // Momentum parallel to mag field.
+      Double_t fLStep;       // Transverse step arc-length in cm.
 
       // ----------------------------------------------------------------
 
       Helix_t();
 
-      void UpdateCommon(const TEveVector & p, const TEveVector& b);
-      void UpdateHelix(const TEveVector & p, const TEveVector& b, Bool_t full_update, Bool_t enforce_max_step);
-      void UpdateRK   (const TEveVector & p, const TEveVector& b);
+      void UpdateCommon(const TEveVectorD & p, const TEveVectorD& b);
+      void UpdateHelix (const TEveVectorD & p, const TEveVectorD& b, Bool_t full_update, Bool_t enforce_max_step);
+      void UpdateRK    (const TEveVectorD & p, const TEveVectorD& b);
 
-      void Step(const TEveVector4& v, const TEveVector& p, TEveVector4& vOut, TEveVector& pOut);
+      void Step(const TEveVector4D& v, const TEveVectorD& p, TEveVector4D& vOut, TEveVectorD& pOut);
 
-      Float_t GetStep()  { return fLStep * TMath::Sqrt(1 + fLam*fLam); }
-      Float_t GetStep2() { return fLStep * fLStep * (1 + fLam*fLam);   }
+      Double_t GetStep()  { return fLStep * TMath::Sqrt(1 + fLam*fLam); }
+      Double_t GetStep2() { return fLStep * fLStep * (1 + fLam*fLam);   }
    };
 
-   enum EStepper_e    { kHelix, kRungeKutta };
-
-   enum EProjTrackBreaking_e { kPTB_Break, kPTB_UseFirstPointPos, kPTB_UseLastPointPos };
 
 private:
    TEveTrackPropagator(const TEveTrackPropagator&);            // Not implemented
@@ -171,11 +181,11 @@ protected:
    Bool_t                   fOwnMagFiledObj;
 
    // Track extrapolation limits
-   Float_t                  fMaxR;          // Max radius for track extrapolation
-   Float_t                  fMaxZ;          // Max z-coordinate for track extrapolation.
-   Int_t                    fNMax;          // Max steps
+   Double_t                  fMaxR;          // Max radius for track extrapolation
+   Double_t                  fMaxZ;          // Max z-coordinate for track extrapolation.
+   Int_t                     fNMax;          // Max steps
    // Helix limits
-   Float_t                  fMaxOrbs;       // Maximal angular path of tracks' orbits (1 ~ 2Pi).
+   Double_t                  fMaxOrbs;       // Maximal angular path of tracks' orbits (1 ~ 2Pi).
 
    // Path-mark / first-vertex control
    Bool_t                   fEditPathMarks; // Show widgets for path-mark control in GUI editor.
@@ -199,28 +209,28 @@ protected:
    // ----------------------------------------------------------------
 
    // Propagation, state of current track
-   std::vector<TEveVector4> fPoints;        // Calculated point.
-   TEveVector               fV;             // Start vertex.
-   Helix_t                  fH;             // Helix.
+   std::vector<TEveVector4D> fPoints;        // Calculated point.
+   TEveVectorD               fV;             // Start vertex.
+   Helix_t                   fH;             // Helix.
 
    void    RebuildTracks();
-   void    Update(const TEveVector4& v, const TEveVector& p, Bool_t full_update=kFALSE, Bool_t enforce_max_step=kFALSE);
-   void    Step(const TEveVector4 &v, const TEveVector &p, TEveVector4 &vOut, TEveVector &pOut);
+   void    Update(const TEveVector4D& v, const TEveVectorD& p, Bool_t full_update=kFALSE, Bool_t enforce_max_step=kFALSE);
+   void    Step(const TEveVector4D &v, const TEveVectorD &p, TEveVector4D &vOut, TEveVectorD &pOut);
 
-   Bool_t  LoopToVertex(TEveVector& v, TEveVector& p);
-   void    LoopToBounds(TEveVector& p);
+   Bool_t  LoopToVertex(TEveVectorD& v, TEveVectorD& p);
+   void    LoopToBounds(TEveVectorD& p);
 
-   Bool_t  LineToVertex (TEveVector& v);
-   void    LineToBounds (TEveVector& p);
+   Bool_t  LineToVertex (TEveVectorD& v);
+   void    LineToBounds (TEveVectorD& p);
 
    void    StepRungeKutta(Double_t step, Double_t* vect, Double_t* vout);
 
-   Bool_t  HelixIntersectPlane(const TEveVector& p, const TEveVector& point, const TEveVector& normal,
-                               TEveVector& itsect);
-   Bool_t  LineIntersectPlane(const TEveVector& p, const TEveVector& point, const TEveVector& normal,
-                              TEveVector& itsect);
+   Bool_t  HelixIntersectPlane(const TEveVectorD& p, const TEveVectorD& point, const TEveVectorD& normal,
+                               TEveVectorD&itsect);
+   Bool_t  LineIntersectPlane(const TEveVectorD& p, const TEveVectorD& point, const TEveVectorD& normal,
+                              TEveVectorD& itsect);
 
-   Bool_t PointOverVertex(const TEveVector4& v0, const TEveVector4& v, Float_t* p=0);
+   Bool_t PointOverVertex(const TEveVector4D& v0, const TEveVector4D& v, Double_t* p=0);
 
 public:
    TEveTrackPropagator(const char* n="TEveTrackPropagator", const char* t="",
@@ -234,29 +244,29 @@ public:
    virtual void ElementChanged(Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE);
 
    // propagation
-   void   InitTrack(TEveVector& v, Int_t charge);
+   void   InitTrack(TEveVectorD& v, Int_t charge);
    void   ResetTrack();
-   void   GoToBounds(TEveVector& p);
-   Bool_t GoToVertex(TEveVector& v, TEveVector& p);
+   void   GoToBounds(TEveVectorD& p);
+   Bool_t GoToVertex(TEveVectorD& v, TEveVectorD&p);
 
-   Bool_t IntersectPlane(const TEveVector& p, const TEveVector& point, const TEveVector& normal,
-                         TEveVector& itsect);
+   Bool_t IntersectPlane(const TEveVectorD& p, const TEveVectorD& point, const TEveVectorD& normal,
+                         TEveVectorD& itsect);
 
    void   FillPointSet(TEvePointSet* ps) const;
 
    void   SetStepper(EStepper_e s) { fStepper = s; }
 
-   void   SetMagField(Float_t bX, Float_t bY, Float_t bZ);
-   void   SetMagField(Float_t b) { SetMagField(0.f, 0.f, b); }
+   void   SetMagField(Double_t bX, Double_t bY, Double_t bZ);
+   void   SetMagField(Double_t b) { SetMagField(0, 0, b); }
    void   SetMagFieldObj(TEveMagField* field, Bool_t own_field=kTRUE);
 
-   void   SetMaxR(Float_t x);
-   void   SetMaxZ(Float_t x);
-   void   SetMaxOrbs(Float_t x);
-   void   SetMinAng(Float_t x);
-   void   SetMaxAng(Float_t x);
-   void   SetMaxStep(Float_t x);
-   void   SetDelta(Float_t x);
+   void   SetMaxR(Double_t x);
+   void   SetMaxZ(Double_t x);
+   void   SetMaxOrbs(Double_t x);
+   void   SetMinAng(Double_t x);
+   void   SetMaxAng(Double_t x);
+   void   SetMaxStep(Double_t x);
+   void   SetDelta(Double_t x);
 
    void   SetEditPathMarks(Bool_t x) { fEditPathMarks = x; }
    void   SetRnrDaughters(Bool_t x);
@@ -271,18 +281,18 @@ public:
    void   SetProjTrackBreaking(UChar_t x);
    void   SetRnrPTBMarkers(Bool_t x);
 
-   TEveVector GetMagField(Float_t x, Float_t y, Float_t z) { return fMagFieldObj->GetField(x, y, z); }
-   void PrintMagField(Float_t x, Float_t y, Float_t z) const;
+   TEveVectorD GetMagField(Double_t x, Double_t y, Double_t z) { return fMagFieldObj->GetField(x, y, z); }
+   void PrintMagField(Double_t x, Double_t y, Double_t z) const;
 
    EStepper_e   GetStepper()  const { return fStepper;}
 
-   Float_t GetMaxR()     const { return fMaxR;     }
-   Float_t GetMaxZ()     const { return fMaxZ;     }
-   Float_t GetMaxOrbs()  const { return fMaxOrbs;  }
-   Float_t GetMinAng()   const;
-   Float_t GetMaxAng()   const { return fH.fMaxAng;   }
-   Float_t GetMaxStep()  const { return fH.fMaxStep;  }
-   Float_t GetDelta()    const { return fH.fDelta;    }
+   Double_t GetMaxR()     const { return fMaxR;     }
+   Double_t GetMaxZ()     const { return fMaxZ;     }
+   Double_t GetMaxOrbs()  const { return fMaxOrbs;  }
+   Double_t GetMinAng()   const;
+   Double_t GetMaxAng()   const { return fH.fMaxAng;   }
+   Double_t GetMaxStep()  const { return fH.fMaxStep;  }
+   Double_t GetDelta()    const { return fH.fDelta;    }
 
    Bool_t  GetEditPathMarks() const { return fEditPathMarks; }
    Bool_t  GetRnrDaughters()  const { return fRnrDaughters;  }
@@ -302,22 +312,22 @@ public:
    TMarker& RefPTBAtt() { return fPTBAtt; }
    
 
-   static Bool_t IsOutsideBounds(const TEveVector& point, Float_t maxRsqr, Float_t maxZ);
+   static Bool_t IsOutsideBounds(const TEveVectorD& point, Double_t maxRsqr, Double_t maxZ);
 
-   static Float_t             fgDefMagField; // Default value for constant solenoid magnetic field.
-   static const Float_t       fgkB2C;        // Constant for conversion of momentum to curvature.
-   static TEveTrackPropagator fgDefault;     // Default track propagator.
+   static Double_t             fgDefMagField; // Default value for constant solenoid magnetic field.
+   static const Double_t       fgkB2C;        // Constant for conversion of momentum to curvature.
+   static TEveTrackPropagator  fgDefault;     // Default track propagator.
 
-   static Float_t             fgEditorMaxR;  // Max R that can be set in GUI editor.
-   static Float_t             fgEditorMaxZ;  // Max Z that can be set in GUI editor.
+   static Double_t             fgEditorMaxR;  // Max R that can be set in GUI editor.
+   static Double_t             fgEditorMaxZ;  // Max Z that can be set in GUI editor.
 
    ClassDef(TEveTrackPropagator, 0); // Calculates path of a particle taking into account special path-marks and imposed boundaries.
 };
 
 //______________________________________________________________________________
-inline Bool_t TEveTrackPropagator::IsOutsideBounds(const TEveVector& point,
-                                                   Float_t           maxRsqr,
-                                                   Float_t           maxZ)
+inline Bool_t TEveTrackPropagator::IsOutsideBounds(const TEveVectorD& point,
+                                                   Double_t           maxRsqr,
+                                                   Double_t           maxZ)
 {
    // Return true if point% is outside of cylindrical bounds detrmined by
    // square radius and z.
@@ -327,15 +337,15 @@ inline Bool_t TEveTrackPropagator::IsOutsideBounds(const TEveVector& point,
 }
 
 //______________________________________________________________________________
-inline Bool_t TEveTrackPropagator::PointOverVertex(const TEveVector4 &v0,
-                                                   const TEveVector4 &v,
-                                                   Float_t           *p)
+inline Bool_t TEveTrackPropagator::PointOverVertex(const TEveVector4D &v0,
+                                                   const TEveVector4D &v,
+                                                   Double_t           *p)
 {
-   static const Float_t kMinPl = 1e-5;
+   static const Double_t kMinPl = 1e-5;
 
-   TEveVector dv; dv.Sub(v0, v);
+   TEveVectorD dv; dv.Sub(v0, v);
 
-   Float_t dotV;
+   Double_t dotV;
 
    if (TMath::Abs(fH.fPlMag) > kMinPl)
    {

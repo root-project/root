@@ -20,10 +20,10 @@
 
 namespace
 {
-   const Float_t kBMin     = 1e-6;
-   const Float_t kPtMinSqr = 1e-20;
-   const Float_t kAMin     = 1e-10;
-   const Float_t kStepEps  = 1e-3;
+   const Double_t kBMin     = 1e-6;
+   const Double_t kPtMinSqr = 1e-20;
+   const Double_t kAMin     = 1e-10;
+   const Double_t kStepEps  = 1e-3;
 }
 
 //______________________________________________________________________________
@@ -32,14 +32,14 @@ TEveTrackPropagator::Helix_t::Helix_t() :
    fMaxAng(45), fMaxStep(20.f), fDelta(0.1),
    fPhi(0), fValid(kFALSE),
    fLam(-1), fR(-1), fPhiStep(-1), fSin(-1), fCos(-1),
-   fRKStep(20.0f),
+   fRKStep(20.0),
    fPtMag(-1), fPlMag(-1), fLStep(-1)
 {
    // Default constructor.
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::Helix_t::UpdateCommon(const TEveVector& p, const TEveVector& b)
+void TEveTrackPropagator::Helix_t::UpdateCommon(const TEveVectorD& p, const TEveVectorD& b)
 {
    // Common update code for helix and RK propagation.
 
@@ -58,7 +58,7 @@ void TEveTrackPropagator::Helix_t::UpdateCommon(const TEveVector& p, const TEveV
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::Helix_t::UpdateHelix(const TEveVector& p, const TEveVector& b,
+void TEveTrackPropagator::Helix_t::UpdateHelix(const TEveVectorD& p, const TEveVectorD& b,
                                                Bool_t full_update, Bool_t enforce_max_step)
 {
    // Update helix parameters.
@@ -72,7 +72,7 @@ void TEveTrackPropagator::Helix_t::UpdateHelix(const TEveVector& p, const TEveVe
    if (full_update)
    {
       using namespace TMath;
-      Float_t a = fgkB2C * b.Mag() * Abs(fCharge);
+      Double_t a = fgkB2C * b.Mag() * Abs(fCharge);
       if (a > kAMin && fPtMag*fPtMag > kPtMinSqr)
       {
          fValid = kTRUE;
@@ -84,13 +84,13 @@ void TEveTrackPropagator::Helix_t::UpdateHelix(const TEveVector& p, const TEveVe
          fPhiStep = fMaxAng * DegToRad();
          if (fR > fDelta)
          {
-            Float_t ang  = 2.0 * ACos(1.0f - fDelta/fR);
+            Double_t ang  = 2.0 * ACos(1.0f - fDelta/fR);
             if (ang < fPhiStep)
                fPhiStep = ang;
          }
 
          // check max step size
-         Float_t curr_step = fR * fPhiStep * Sqrt(1.0f + fLam*fLam);
+         Double_t curr_step = fR * fPhiStep * Sqrt(1.0f + fLam*fLam);
          if (curr_step > fMaxStep || enforce_max_step)
             fPhiStep *= fMaxStep / curr_step;
 
@@ -106,7 +106,7 @@ void TEveTrackPropagator::Helix_t::UpdateHelix(const TEveVector& p, const TEveVe
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::Helix_t::UpdateRK(const TEveVector& p, const TEveVector& b)
+void TEveTrackPropagator::Helix_t::UpdateRK(const TEveVectorD& p, const TEveVectorD& b)
 {
    // Update helix for stepper RungeKutta.
 
@@ -127,8 +127,8 @@ void TEveTrackPropagator::Helix_t::UpdateRK(const TEveVector& p, const TEveVecto
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::Helix_t::Step(const TEveVector4& v, const TEveVector& p,
-                                        TEveVector4& vOut, TEveVector& pOut)
+void TEveTrackPropagator::Helix_t::Step(const TEveVector4D& v, const TEveVectorD& p,
+                                        TEveVector4D& vOut, TEveVectorD& pOut)
 {
    // Step helix for given momentum p from vertex v.
 
@@ -136,7 +136,7 @@ void TEveTrackPropagator::Helix_t::Step(const TEveVector4& v, const TEveVector& 
 
    if (fValid)
    {
-      TEveVector d = fE2*(fR*fSin) + fE3*(fR*(1-fCos)) + fE1*fLStep;
+      TEveVectorD d = fE2*(fR*fSin) + fE3*(fR*(1-fCos)) + fE1*fLStep;
       vOut    += d;
       vOut.fT += TMath::Abs(fLStep);
 
@@ -177,12 +177,12 @@ void TEveTrackPropagator::Helix_t::Step(const TEveVector4& v, const TEveVector& 
 
 ClassImp(TEveTrackPropagator);
 
-Float_t             TEveTrackPropagator::fgDefMagField = 0.5;
-const Float_t       TEveTrackPropagator::fgkB2C        = 0.299792458e-2;
-TEveTrackPropagator TEveTrackPropagator::fgDefault;
+Double_t             TEveTrackPropagator::fgDefMagField = 0.5;
+const Double_t       TEveTrackPropagator::fgkB2C        = 0.299792458e-2;
+TEveTrackPropagator  TEveTrackPropagator::fgDefault;
 
-Float_t             TEveTrackPropagator::fgEditorMaxR  = 2000;
-Float_t             TEveTrackPropagator::fgEditorMaxZ  = 4000;
+Double_t             TEveTrackPropagator::fgEditorMaxR  = 2000;
+Double_t             TEveTrackPropagator::fgEditorMaxZ  = 4000;
 
 //______________________________________________________________________________
 TEveTrackPropagator::TEveTrackPropagator(const char* n, const char* t,
@@ -281,14 +281,11 @@ void TEveTrackPropagator::ElementChanged(Bool_t update_scenes, Bool_t redraw)
 //==============================================================================
 
 //______________________________________________________________________________
-void TEveTrackPropagator::InitTrack(TEveVector &v,  Int_t charge)
+void TEveTrackPropagator::InitTrack(TEveVectorD &v,  Int_t charge)
 {
    // Initialize internal data-members for given particle parameters.
 
-   fV.fX = v.fX;
-   fV.fY = v.fY;
-   fV.fZ = v.fZ;
-
+   fV = v;
    fPoints.push_back(fV);
 
    // init helix
@@ -308,7 +305,7 @@ void TEveTrackPropagator::ResetTrack()
 }
 
 //______________________________________________________________________________
-Bool_t TEveTrackPropagator::GoToVertex(TEveVector& v, TEveVector& p)
+Bool_t TEveTrackPropagator::GoToVertex(TEveVectorD& v, TEveVectorD& p)
 {
    // Propagate particle with momentum p to vertex v.
 
@@ -324,7 +321,7 @@ Bool_t TEveTrackPropagator::GoToVertex(TEveVector& v, TEveVector& p)
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::GoToBounds(TEveVector& p)
+void TEveTrackPropagator::GoToBounds(TEveVectorD& p)
 {
    // Propagate particle to bounds.
    // Return TRUE if hit bounds.
@@ -335,24 +332,24 @@ void TEveTrackPropagator::GoToBounds(TEveVector& p)
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::Update(const TEveVector4& v, const TEveVector& p,
+void TEveTrackPropagator::Update(const TEveVector4D& v, const TEveVectorD& p,
                                  Bool_t full_update, Bool_t enforce_max_step)
 {
    // Update helix / B-field projection state.
 
    if (fStepper == kHelix)
    {
-      fH.UpdateHelix(p, fMagFieldObj->GetField(v), !fMagFieldObj->IsConst() || full_update, enforce_max_step);
+      fH.UpdateHelix(p, fMagFieldObj->GetFieldD(v), !fMagFieldObj->IsConst() || full_update, enforce_max_step);
    }
    else
    {
-      fH.UpdateRK(p, fMagFieldObj->GetField(v));
+      fH.UpdateRK(p, fMagFieldObj->GetFieldD(v));
 
       if (full_update)
       {
          using namespace TMath;
 
-         Float_t a = fgkB2C * fMagFieldObj->GetMaxFieldMag() * Abs(fH.fCharge);
+         Float_t a = fgkB2C * fMagFieldObj->GetMaxFieldMagD() * Abs(fH.fCharge);
 	 if (a > kAMin)
 	 {
             fH.fR = p.Mag() / a;
@@ -361,7 +358,7 @@ void TEveTrackPropagator::Update(const TEveVector4& v, const TEveVector& p,
             fH.fPhiStep = fH.fMaxAng * DegToRad();
             if (fH.fR > fH.fDelta )
             {
-               Float_t ang  = 2.0 * ACos(1.0f - fH.fDelta/fH.fR);
+               Double_t ang  = 2.0 * ACos(1.0f - fH.fDelta/fH.fR);
                if (ang < fH.fPhiStep)
                   fH.fPhiStep = ang;
             }
@@ -383,7 +380,7 @@ void TEveTrackPropagator::Update(const TEveVector4& v, const TEveVector& p,
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::Step(const TEveVector4 &v, const TEveVector &p, TEveVector4 &vOut, TEveVector &pOut)
+void TEveTrackPropagator::Step(const TEveVector4D &v, const TEveVectorD &p, TEveVector4D &vOut, TEveVectorD &pOut)
 {
    // Wrapper to step helix.
 
@@ -419,19 +416,19 @@ void TEveTrackPropagator::Step(const TEveVector4 &v, const TEveVector &p, TEveVe
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::LoopToBounds(TEveVector& p)
+void TEveTrackPropagator::LoopToBounds(TEveVectorD& p)
 {
    // Propagate charged particle with momentum p to bounds.
    // It is expected that Update() with full-update was called before.
 
-   const Float_t maxRsq = fMaxR*fMaxR;
+   const Double_t maxRsq = fMaxR*fMaxR;
 
-   TEveVector4 currV(fV);
-   TEveVector4 forwV(fV);
-   TEveVector  forwP (p);
+   TEveVector4D currV(fV);
+   TEveVector4D forwV(fV);
+   TEveVectorD  forwP (p);
 
    Int_t np = fPoints.size();
-   Float_t maxPhi = fMaxOrbs*TMath::TwoPi();
+   Double_t maxPhi = fMaxOrbs*TMath::TwoPi();
 
    while (fH.fPhi < maxPhi && np<fNMax)
    {
@@ -447,7 +444,7 @@ void TEveTrackPropagator::LoopToBounds(TEveVector& p)
                     t, currV.R(), forwV.R(), fMaxR);
             return;
          }
-         TEveVector d(forwV);
+         TEveVectorD d(forwV);
          d -= currV;
          d *= t;
          d += currV;
@@ -458,14 +455,14 @@ void TEveTrackPropagator::LoopToBounds(TEveVector& p)
       // cross Z
       else if (TMath::Abs(forwV.fZ) > fMaxZ)
       {
-         Float_t t = (fMaxZ - TMath::Abs(currV.fZ)) / TMath::Abs((forwV.fZ - currV.fZ));
+         Double_t t = (fMaxZ - TMath::Abs(currV.fZ)) / TMath::Abs((forwV.fZ - currV.fZ));
          if (t < 0 || t > 1)
          {
             Warning("HelixToBounds", "In MaxZ crossing expected t>=0 && t<=1: t=%f, z1=%f, z2=%f, MaxZ=%f.",
                     t, currV.fZ, forwV.fZ, fMaxZ);
             return;
          }
-         TEveVector d(forwV -currV);
+         TEveVectorD d(forwV -currV);
          d *= t;
          d += currV;
          fPoints.push_back(d);
@@ -482,21 +479,21 @@ void TEveTrackPropagator::LoopToBounds(TEveVector& p)
 }
 
 //______________________________________________________________________________
-Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
+Bool_t TEveTrackPropagator::LoopToVertex(TEveVectorD& v, TEveVectorD& p)
 {
    // Propagate charged particle with momentum p to vertex v.
    // It is expected that Update() with full-update was called before.
 
-   const Float_t maxRsq = fMaxR * fMaxR;
+   const Double_t maxRsq = fMaxR * fMaxR;
 
-   TEveVector4 currV(fV);
-   TEveVector4 forwV(fV);
-   TEveVector  forwP(p);
+   TEveVector4D currV(fV);
+   TEveVector4D forwV(fV);
+   TEveVectorD  forwP(p);
 
    Int_t first_point = fPoints.size();
    Int_t np          = first_point;
 
-   Float_t prod0=0, prod1;
+   Double_t prod0=0, prod1;
 
    do
    {
@@ -526,7 +523,7 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
    {
       if ((v - currV).Mag() > kStepEps)
       {
-         Float_t step_frac = prod0 / (prod0 - prod1);
+         Double_t step_frac = prod0 / (prod0 - prod1);
          if (step_frac > 0)
          {
             // Step for fraction of previous step size.
@@ -544,12 +541,12 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
 
          // Distribute offset to desired crossing point over all segment.
 
-         TEveVector off(v - currV);
+         TEveVectorD off(v - currV);
          off *= 1.0f / currV.fT;
 
          // Calculate the required momentum rotation.
          // lpd - last-points-delta
-         TEveVector lpd0(fPoints[np-1]);
+         TEveVectorD lpd0(fPoints[np-1]);
          lpd0 -= fPoints[np-2];
          lpd0.Normalize();
 
@@ -558,14 +555,14 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
             fPoints[i] += off * fPoints[i].fT;
          }
 
-         TEveVector lpd1(fPoints[np-1]);
+         TEveVectorD lpd1(fPoints[np-1]);
          lpd1 -= fPoints[np-2];
          lpd1.Normalize();
 
          TEveTrans tt;
          tt.SetupFromToVec(lpd0, lpd1);
 
-         // TEveVector pb4(p);
+         // TEveVectorD pb4(p);
          // printf("Rotating momentum: p0 = "); p.Dump();
          tt.RotateIP(p);
          // printf("                   p1 = "); p.Dump();
@@ -583,11 +580,11 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
 }
 
 //______________________________________________________________________________
-Bool_t TEveTrackPropagator::LineToVertex(TEveVector& v)
+Bool_t TEveTrackPropagator::LineToVertex(TEveVectorD& v)
 {
    // Propagate neutral particle to vertex v.
 
-   TEveVector4 currV = v;
+   TEveVector4D currV = v;
 
    currV.fX = v.fX;
    currV.fY = v.fY;
@@ -599,11 +596,11 @@ Bool_t TEveTrackPropagator::LineToVertex(TEveVector& v)
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::LineToBounds(TEveVector& p)
+void TEveTrackPropagator::LineToBounds(TEveVectorD& p)
 {
    // Propagatate neutral particle with momentum p to bounds.
 
-   Float_t tZ = 0, tR = 0, tB = 0;
+   Double_t tZ = 0, tR = 0, tB = 0;
 
    // time where particle intersect +/- fMaxZ
    if (p.fZ > 0)
@@ -626,40 +623,40 @@ void TEveTrackPropagator::LineToBounds(TEveVector& p)
    } else {
       tB = tZ;
    }
-   TEveVector nv(fV.fX + p.fX*tB, fV.fY + p.fY*tB, fV.fZ + p.fZ*tB);
+   TEveVectorD nv(fV.fX + p.fX*tB, fV.fY + p.fY*tB, fV.fZ + p.fZ*tB);
    LineToVertex(nv);
 }
 
 //______________________________________________________________________________
-Bool_t TEveTrackPropagator::HelixIntersectPlane(const TEveVector& p,
-                                                const TEveVector& point,
-                                                const TEveVector& normal,
-                                                TEveVector& itsect)
+Bool_t TEveTrackPropagator::HelixIntersectPlane(const TEveVectorD& p,
+                                                const TEveVectorD& point,
+                                                const TEveVectorD& normal,
+                                                TEveVectorD& itsect)
 {
    // Intersect helix with a plane. Current position and argument p define
    // the helix.
 
-   TEveVector pos(fV);
-   TEveVector mom(p);
+   TEveVectorD pos(fV);
+   TEveVectorD mom(p);
    if (fMagFieldObj->IsConst())
-      fH.UpdateHelix(mom, fMagFieldObj->GetField(pos), kFALSE, kFALSE);
+      fH.UpdateHelix(mom, fMagFieldObj->GetFieldD(pos), kFALSE, kFALSE);
 
-   TEveVector n(normal);
-   TEveVector delta = pos - point;
-   Float_t d = delta.Dot(n);
+   TEveVectorD n(normal);
+   TEveVectorD delta = pos - point;
+   Double_t d = delta.Dot(n);
    if (d > 0) {
       n.NegateXYZ(); // Turn normal around so that we approach from negative side of the plane
       d = -d;
    }
 
-   TEveVector4 forwV;
-   TEveVector  forwP;
-   TEveVector4 pos4(pos);
+   TEveVector4D forwV;
+   TEveVectorD  forwP;
+   TEveVector4D pos4(pos);
    while (kTRUE)
    {
       Update(pos4, mom);
       Step(pos4, mom, forwV , forwP);
-      Float_t new_d = (forwV - point).Dot(n);
+      Double_t new_d = (forwV - point).Dot(n);
       if (new_d < d)
       {
          // We are going further away ... fail intersect.
@@ -678,24 +675,24 @@ Bool_t TEveTrackPropagator::HelixIntersectPlane(const TEveVector& p,
 }
 
 //______________________________________________________________________________
-Bool_t TEveTrackPropagator::LineIntersectPlane(const TEveVector& p,
-                                               const TEveVector& point,
-                                               const TEveVector& normal,
-                                                     TEveVector& itsect)
+Bool_t TEveTrackPropagator::LineIntersectPlane(const TEveVectorD& p,
+                                               const TEveVectorD& point,
+                                               const TEveVectorD& normal,
+                                                     TEveVectorD& itsect)
 {
    // Intersect line with a plane. Current position and argument p define
    // the line.
 
-   TEveVector pos(fV.fX, fV.fY, fV.fZ);
-   TEveVector delta = pos - point;
+   TEveVectorD pos(fV.fX, fV.fY, fV.fZ);
+   TEveVectorD delta = pos - point;
 
-   Float_t d = delta.Dot(normal);
+   Double_t d = delta.Dot(normal);
    if (d == 0) {
       itsect = pos;
       return kTRUE;
    }
 
-   Float_t t = (p.Dot(normal)) / d;
+   Double_t t = (p.Dot(normal)) / d;
    if (t < 0) {
       return kFALSE;
    } else {
@@ -705,10 +702,10 @@ Bool_t TEveTrackPropagator::LineIntersectPlane(const TEveVector& p,
 }
 
 //______________________________________________________________________________
-Bool_t TEveTrackPropagator::IntersectPlane(const TEveVector& p,
-                                           const TEveVector& point,
-                                           const TEveVector& normal,
-                                                 TEveVector& itsect)
+Bool_t TEveTrackPropagator::IntersectPlane(const TEveVectorD& p,
+                                           const TEveVectorD& point,
+                                           const TEveVectorD& normal,
+                                                 TEveVectorD& itsect)
 {
    // Find intersection of currently propagated track with a plane.
    // Current track position is used as starting point.
@@ -736,7 +733,7 @@ void TEveTrackPropagator::FillPointSet(TEvePointSet* ps) const
    ps->Reset(size);
    for (Int_t i = 0; i < size; ++i)
    {
-      const TEveVector4& v = fPoints[i];
+      const TEveVector4D& v = fPoints[i];
       ps->SetNextPoint(v.fX, v.fY, v.fZ);
    }
 }
@@ -760,7 +757,7 @@ void TEveTrackPropagator::RebuildTracks()
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::SetMagField(Float_t bX, Float_t bY, Float_t bZ)
+void TEveTrackPropagator::SetMagField(Double_t bX, Double_t bY, Double_t bZ)
 {
    // Set constant magnetic field and rebuild tracks.
 
@@ -781,13 +778,13 @@ void TEveTrackPropagator::SetMagFieldObj(TEveMagField* field, Bool_t own_field)
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::PrintMagField(Float_t x, Float_t y, Float_t z) const
+void TEveTrackPropagator::PrintMagField(Double_t x, Double_t y, Double_t z) const
 {
    if (fMagFieldObj) fMagFieldObj->PrintField(x, y, z);
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::SetMaxR(Float_t x)
+void TEveTrackPropagator::SetMaxR(Double_t x)
 {
    // Set maximum radius and rebuild tracks.
 
@@ -796,7 +793,7 @@ void TEveTrackPropagator::SetMaxR(Float_t x)
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::SetMaxZ(Float_t x)
+void TEveTrackPropagator::SetMaxZ(Double_t x)
 {
    // Set maximum z and rebuild tracks.
 
@@ -805,7 +802,7 @@ void TEveTrackPropagator::SetMaxZ(Float_t x)
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::SetMaxOrbs(Float_t x)
+void TEveTrackPropagator::SetMaxOrbs(Double_t x)
 {
    // Set maximum number of orbits and rebuild tracks.
 
@@ -814,7 +811,7 @@ void TEveTrackPropagator::SetMaxOrbs(Float_t x)
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::SetMinAng(Float_t x)
+void TEveTrackPropagator::SetMinAng(Double_t x)
 {
    // Set maximum step angle and rebuild tracks.
    // WARNING -- this method / variable was mis-named.
@@ -823,7 +820,7 @@ void TEveTrackPropagator::SetMinAng(Float_t x)
    SetMaxAng(x);
 }
 //______________________________________________________________________________
-Float_t TEveTrackPropagator::GetMinAng() const
+Double_t TEveTrackPropagator::GetMinAng() const
 {
    // Get maximum step angle.
    // WARNING -- this method / variable was mis-named.
@@ -833,7 +830,7 @@ Float_t TEveTrackPropagator::GetMinAng() const
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::SetMaxAng(Float_t x)
+void TEveTrackPropagator::SetMaxAng(Double_t x)
 {
    // Set maximum step angle and rebuild tracks.
 
@@ -842,7 +839,7 @@ void TEveTrackPropagator::SetMaxAng(Float_t x)
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::SetMaxStep(Float_t x)
+void TEveTrackPropagator::SetMaxStep(Double_t x)
 {
    // Set maximum step-size and rebuild tracks.
 
@@ -851,7 +848,7 @@ void TEveTrackPropagator::SetMaxStep(Float_t x)
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::SetDelta(Float_t x)
+void TEveTrackPropagator::SetDelta(Double_t x)
 {
    // Set maximum error and rebuild tracks.
 
@@ -1081,7 +1078,7 @@ void TEveTrackPropagator::StepRungeKutta(Double_t step,
     xyzt[1] = yt;
     xyzt[2] = zt;
 
-    fH.fB = fMagFieldObj->GetField(xt, yt, zt);
+    fH.fB = fMagFieldObj->GetFieldD(xt, yt, zt);
     f[0] = -fH.fB.fX;
     f[1] = -fH.fB.fY;
     f[2] = -fH.fB.fZ;
@@ -1120,7 +1117,7 @@ void TEveTrackPropagator::StepRungeKutta(Double_t step,
     xyzt[1] = yt;
     xyzt[2] = zt;
 
-    fH.fB = fMagFieldObj->GetField(xt, yt, zt);
+    fH.fB = fMagFieldObj->GetFieldD(xt, yt, zt);
     f[0] = -fH.fB.fX;
     f[1] = -fH.fB.fY;
     f[2] = -fH.fB.fZ;

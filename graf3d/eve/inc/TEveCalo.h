@@ -192,6 +192,7 @@ class TEveCalo2D : public TEveCaloViz,
 {
    friend class TEveCalo2DGL;
 
+public:
    typedef std::vector<TEveCaloData::vCellId_t*>           vBinCells_t;
    typedef std::vector<TEveCaloData::vCellId_t*>::iterator vBinCells_i;
 
@@ -228,6 +229,8 @@ public:
    virtual void    SetScaleAbs(Bool_t);
 
    virtual Float_t GetValToHeight() const;
+
+   const TEveCalo2D::vBinCells_t& GetBinLists() const { return fCellLists; }
 
    ClassDef(TEveCalo2D, 0); // Class for visualization of projected calorimeter event data.
 };

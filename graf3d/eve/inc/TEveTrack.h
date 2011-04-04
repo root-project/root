@@ -16,6 +16,7 @@
 
 #include "TEveVector.h"
 #include "TEvePathMark.h"
+#include "TEveVSDStructs.h"
 #include "TEveElement.h"
 #include "TEveLine.h"
 
@@ -25,7 +26,6 @@
 class TEveTrackPropagator;
 class TEveTrackList;
 
-class TEveRecTrack;
 class TEveMCTrack;
 class TParticle;
 
@@ -39,7 +39,7 @@ private:
    TEveTrack& operator=(const TEveTrack&); // Not implemented
 
 public:
-   typedef std::vector<TEvePathMark>    vPathMark_t;
+   typedef std::vector<TEvePathMarkD>   vPathMark_t;
    typedef vPathMark_t::iterator        vPathMark_i;
    typedef vPathMark_t::const_iterator  vPathMark_ci;
 
@@ -47,9 +47,9 @@ public:
    enum EBreakProjectedTracks_e { kBPTDefault, kBPTAlways, kBPTNever };
 
 protected:
-   TEveVector         fV;          // Starting vertex
-   TEveVector         fP;          // Starting momentum
-   TEveVector         fPEnd;       // Momentum at the last point of extrapolation
+   TEveVectorD        fV;          // Starting vertex
+   TEveVectorD        fP;          // Starting momentum
+   TEveVectorD        fPEnd;       // Momentum at the last point of extrapolation
    Double_t           fBeta;       // Relativistic beta factor
    Int_t              fPdg;        // PDG code
    Int_t              fCharge;     // Charge in units of e0
@@ -67,6 +67,7 @@ public:
    TEveTrack(TParticle* t, Int_t label, TEveTrackPropagator* prop=0);
    TEveTrack(TEveMCTrack*  t, TEveTrackPropagator* prop=0);
    TEveTrack(TEveRecTrack* t, TEveTrackPropagator* prop=0);
+   TEveTrack(TEveRecTrackD* t, TEveTrackPropagator* prop=0);
    TEveTrack(const TEveTrack& t);
    virtual ~TEveTrack();
 
@@ -84,9 +85,9 @@ public:
    void  SetPropagator(TEveTrackPropagator* prop);
    void  SetAttLineAttMarker(TEveTrackList* tl);
 
-   const TEveVector& GetVertex()      const { return fV;    }
-   const TEveVector& GetMomentum()    const { return fP;    }
-   const TEveVector& GetEndMomentum() const { return fPEnd; }
+   const TEveVectorD& GetVertex()      const { return fV;    }
+   const TEveVectorD& GetMomentum()    const { return fP;    }
+   const TEveVectorD& GetEndMomentum() const { return fPEnd; }
 
    Int_t GetPdg()    const    { return fPdg;    }
    void  SetPdg(Int_t pdg)    { fPdg = pdg;     }
@@ -99,7 +100,9 @@ public:
    Int_t GetStatus()  const   { return fStatus; }
    void  SetStatus(Int_t idx) { fStatus = idx;  }
 
-   void  AddPathMark(const TEvePathMark& pm) { fPathMarks.push_back(pm); }
+   void  AddPathMark(const TEvePathMarkD& pm) { fPathMarks.push_back(pm); }
+   void  AddPathMark(const TEvePathMark& pm)  { fPathMarks.push_back(pm); }
+
    void  SortPathMarksByTime();
          vPathMark_t& RefPathMarks()       { return fPathMarks; }
    const vPathMark_t& RefPathMarks() const { return fPathMarks; }
@@ -128,7 +131,7 @@ public:
    static Bool_t GetDefaultBreakProjectedTracks();
    static void   SetDefaultBreakProjectedTracks(Bool_t bt);
 
-   ClassDef(TEveTrack, 1); // Track with given vertex, momentum and optional referece-points (path-marks) along its path.
+   ClassDef(TEveTrack, 0); // Track with given vertex, momentum and optional referece-points (path-marks) along its path.
 };
 
 /******************************************************************************/
@@ -153,16 +156,16 @@ protected:
    Bool_t               fRnrLine;    // Render track as line.
    Bool_t               fRnrPoints;  // Render track as points.
 
-   Float_t              fMinPt;      // Minimum track pT for display selection.
-   Float_t              fMaxPt;      // Maximum track pT for display selection.
-   Float_t              fLimPt;      // Highest track pT in the container.
-   Float_t              fMinP;       // Minimum track p for display selection.
-   Float_t              fMaxP;       // Maximum track p for display selection.
-   Float_t              fLimP;       // Highest track p in the container.
+   Double_t             fMinPt;      // Minimum track pTfor display selection.
+   Double_t             fMaxPt;      // Maximum track pTfor display selection.
+   Double_t             fLimPt;      // Highest track pT in the container.
+   Double_t             fMinP;       // Minimum track pfor display selection.
+   Double_t             fMaxP;       // Maximum track pfor display selection.
+   Double_t             fLimP;       // Highest track p in the container.
 
-   void    FindMomentumLimits(TEveElement* el, Bool_t recurse=kTRUE);
-   Float_t RoundMomentumLimit(Float_t x);
-   void    SanitizeMinMaxCuts();
+   void     FindMomentumLimits(TEveElement* el, Bool_t recurse=kTRUE);
+   Double_t RoundMomentumLimit(Double_t x);
+   void     SanitizeMinMaxCuts();
 
 public:
    TEveTrackList(TEveTrackPropagator* prop=0);
@@ -203,17 +206,17 @@ public:
    void   SetRnrPoints(Bool_t r, TEveElement* el);
    Bool_t GetRnrPoints() const { return fRnrPoints; }
 
-   void SelectByPt(Float_t min_pt, Float_t max_pt);
-   void SelectByPt(Float_t min_pt, Float_t max_pt, TEveElement* el);
-   void SelectByP (Float_t min_p,  Float_t max_p);
-   void SelectByP (Float_t min_p,  Float_t max_p,  TEveElement* el);
+   void SelectByPt(Double_t min_pt, Double_t max_pt);
+   void SelectByPt(Double_t min_pt, Double_t max_pt, TEveElement* el);
+   void SelectByP (Double_t min_p,  Double_t max_p);
+   void SelectByP (Double_t min_p,  Double_t max_p,  TEveElement* el);
 
-   Float_t GetMinPt() const { return fMinPt; }
-   Float_t GetMaxPt() const { return fMaxPt; }
-   Float_t GetLimPt() const { return fLimPt; }
-   Float_t GetMinP()  const { return fMinP;  }
-   Float_t GetMaxP()  const { return fMaxP;  }
-   Float_t GetLimP()  const { return fLimP;  }
+   Double_t GetMinPt() const { return fMinPt; }
+   Double_t GetMaxPt() const { return fMaxPt; }
+   Double_t GetLimPt() const { return fLimPt; }
+   Double_t GetMinP()  const { return fMinP;  }
+   Double_t GetMaxP()  const { return fMaxP;  }
+   Double_t GetLimP()  const { return fLimP;  }
 
    //-------------------------------------------------------------------
 
