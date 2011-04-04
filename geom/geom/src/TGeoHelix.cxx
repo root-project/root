@@ -250,6 +250,7 @@ void TGeoHelix::Step(Double_t step)
    vect[0] = f*TMath::Sin(fPhi);
    vect[1] = fQ*f*TMath::Cos(fPhi);
    vect[2] = ddb;
+   TMath::Normalize(vect);
    fMatrix->LocalToMasterVect(vect, fDir);   
 }
 
