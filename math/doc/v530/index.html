@@ -3,6 +3,8 @@
 <a name="math"></a> 
 <h3>Math Libraries</h3>
 
+<h4>MathCore</h4>
+
 <tt>TMath</tt>
 <ul>
 <li>Add some new functions based on std::numeric_limits:
@@ -22,3 +24,51 @@
   </ul>
 </li>
 </ul>
+
+<p>
+
+<h4>MathMore</h4>
+
+<ul>
+  <li><b>New class <tt>ROOT::Math::GSLMultiRootFinder</tt></b> for finding the root of system of functions.
+  The class is based on the GSL multi-root algorithm
+  (see the GSL <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Multidimensional-Root_002dFinding.html"> online
+  manual</A>) and it is used to solve a non-linear system of equations:
+  <pre>
+     f1(x1,....xn) = 0
+     f2(x1,....xn) = 0
+     ..................
+     fn(x1,....xn) = 0
+</pre>
+     The available GSL algorithms require the derivatives of the supplied functions or not (they are
+     computed internally by GSL). In the first case the user needs to provide a list of multidimensional functions implementing the 
+     gradient interface (ROOT::Math::IMultiGradFunction) while in the second case it is enough to supply a list of
+     functions implementing the ROOT::Math::IMultiGenFunction interface.  
+     The available algorithms requiring derivatives (see also the GSL  
+     <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Algorithms-using-Derivatives.html">documentation</A> )
+     are the followings: 
+     <ul>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridSJ</tt>  with name <it>"HybridSJ"</it>: modified Powell's hybrid
+     method as implemented in HYBRJ in MINPACK  
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridJ</tt>  with name <it>"HybridJ"</it>: unscaled version of the
+     previous algorithm</li>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kNewton</tt>  with name <it>"Newton"</it>: Newton method </li>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kGNewton</tt>  with name <it>"GNewton"</it>: modified Newton method </li>
+     </ul>
+     The algorithms without derivatives (see also the GSL  
+     <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Algorithms-without-Derivatives.html">documentation</A> )
+     are the followings: 
+     <ul>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridS</tt>  with name <it>"HybridS"</it>: same as HybridSJ but using
+     finate difference approximation for the derivatives</li> 
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybrid</tt>  with name <it>"Hybrid"</it>: unscaled version of the
+     previous algorithm</li>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kDNewton</tt>  with name <it>"DNewton"</it>: discrete Newton algorithm </li>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kBroyden</tt>  with name <it>"Broyden"</it>: Broyden algorithm </li>
+     </ul>
+
+   </li>
+   
+ </ul>
+
+  

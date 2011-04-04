@@ -54,14 +54,16 @@ public:
 
    /** 
       Default constructor
-      No need to specify the type sofar since only one solver exists so far
+      No need to specify the type so far since only one solver exists so far
    */ 
-   GSLMultiFit () : 
+   GSLMultiFit (const gsl_multifit_fdfsolver_type * type = 0) : 
       fSolver(0), 
       fVec(0),
       fCov(0),
-      fType(gsl_multifit_fdfsolver_lmsder)
-   {}  
+      fType(type)
+   {
+      if (fType == 0) fType = gsl_multifit_fdfsolver_lmsder; // default value 
+   }  
 
    /** 
       Destructor (no operations)

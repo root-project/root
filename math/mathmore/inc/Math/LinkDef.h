@@ -103,6 +103,7 @@
 #pragma link C++ class ROOT::Math::VegasParameters+;
 #pragma link C++ class ROOT::Math::MiserParameters+;
 
-
+#pragma link C++ class ROOT::Math::GSLMultiRootFinder+;
+#pragma link C++ typedef ROOT::Math::MultiRootFinder;
 
 #endif //__CINT__

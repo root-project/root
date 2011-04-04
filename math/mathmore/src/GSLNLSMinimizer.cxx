@@ -116,7 +116,7 @@ private:
 
 // GSLNLSMinimizer implementation
 
-GSLNLSMinimizer::GSLNLSMinimizer( int /* ROOT::Math::EGSLNLSMinimizerType type */ ) : 
+GSLNLSMinimizer::GSLNLSMinimizer( int type ) : 
    fDim(0), 
    fNFree(0),
    fSize(0),
@@ -124,21 +124,31 @@ GSLNLSMinimizer::GSLNLSMinimizer( int /* ROOT::Math::EGSLNLSMinimizerType type *
    fMinVal(0)
 {
    // Constructor implementation : create GSLMultiFit wrapper object
-   fGSLMultiFit = new GSLMultiFit( /*type */ ); 
+   const gsl_multifit_fdfsolver_type * gsl_type = 0; // use default type defined in GSLMultiFit
+   if (type == 1) gsl_type =   gsl_multifit_fdfsolver_lmsder; // scaled lmder version
+   if (type == 2) gsl_type =   gsl_multifit_fdfsolver_lmder; // unscaled version      
+
+   fGSLMultiFit = new GSLMultiFit( gsl_type ); 
    fValues.reserve(10); 
    fNames.reserve(10); 
    fSteps.reserve(10); 
 
    fEdm = -1; 
-   fLSTolerance = 0.0001; 
-   SetMaxIterations(100);
-   SetPrintLevel(1);
+
+   // defult tolerance and max iterations
+   int niter = ROOT::Math::MinimizerOptions::DefaultMaxIterations();
+   if (niter <= 0) niter = 100; 
+   SetMaxIterations(niter); 
+
+   fLSTolerance = ROOT::Math::MinimizerOptions::DefaultTolerance();
+   if (fLSTolerance <=0) fLSTolerance = 0.0001; // default internal value
+
+   SetPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel());
 }
 
 GSLNLSMinimizer::~GSLNLSMinimizer () { 
    assert(fGSLMultiFit != 0); 
    delete fGSLMultiFit; 
-//   if (fObjFunc) delete fObjFunc; 
 }
 
 bool GSLNLSMinimizer::SetVariable(unsigned int ivar, const std::string & name, double val, double step) { 
@@ -287,7 +297,7 @@ bool GSLNLSMinimizer::Minimize() {
       startValues.resize( fNFree );
    }
 
-   if (debugLevel >=1 ) std::cout <<"Minimize using GSLNLSMinimizer " << fGSLMultiFit->Name() << std::endl; 
+   if (debugLevel >=1 ) std::cout <<"Minimize using GSLNLSMinimizer "  << std::endl; 
 
 //    // use a global step size = min (step vectors) 
 //    double stepSize = 1; 
@@ -301,7 +311,7 @@ bool GSLNLSMinimizer::Minimize() {
       return false; 
    }
 
-   if (debugLevel >=1 ) std::cout <<"GSLNLSMinimizer: Start iterating......... "  << std::endl; 
+   if (debugLevel >=1 ) std::cout <<"GSLNLSMinimizer: " << fGSLMultiFit->Name() << " - start iterating......... "  << std::endl; 
 
    // start iteration 
    unsigned  int iter = 0; 

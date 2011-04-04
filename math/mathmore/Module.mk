@@ -46,6 +46,7 @@ MATHMOREDH1  := $(MODDIRI)/Math/DistFuncMathMore.h \
                 $(MODDIRI)/Math/GSLMinimizer.h \
                 $(MODDIRI)/Math/GSLNLSMinimizer.h \
                 $(MODDIRI)/Math/GSLSimAnMinimizer.h \
+                $(MODDIRI)/Math/GSLMultiRootFinder.h \
                 $(MODDIRI)/Math/Vavilov.h \
                 $(MODDIRI)/Math/VavilovAccurate.h \
                 $(MODDIRI)/Math/VavilovAccuratePdf.h \
