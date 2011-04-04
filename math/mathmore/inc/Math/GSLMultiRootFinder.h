@@ -147,11 +147,18 @@ namespace Math {
      
  public: 
 
-    /// set the type of algorithm 
-    void SetType(EType type); 
+    /// set the type for an algorithm without derivatives 
+    void SetType(EType type) { 
+       fType = type; fUseDerivAlgo = false; 
+    }
 
     /// set the type of algorithm using derivatives 
-    void SetType(EDerivType type); 
+    void SetType(EDerivType type) { 
+       fType = type; fUseDerivAlgo = true; 
+    }
+
+    /// set the type using a string
+    void SetType(const char * name);
 
     /* 
        add the list of functions f1(x1,..xn),...fn(x1,...xn). The list must contain pointers of  

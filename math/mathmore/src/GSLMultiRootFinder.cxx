@@ -89,9 +89,7 @@ GSLMultiRootFinder::GSLMultiRootFinder(const char * name) :
 {
    // constructor for a string
    fFunctions.reserve(2);
-   std::pair<bool,int> type = GetType(name);
-   fUseDerivAlgo = type.first; 
-   fType = type.second;
+   SetType(name);
 }
 
 GSLMultiRootFinder::~GSLMultiRootFinder() 
@@ -112,6 +110,14 @@ GSLMultiRootFinder & GSLMultiRootFinder::operator = (const GSLMultiRootFinder &r
    
    return *this;
 }
+
+void GSLMultiRootFinder::SetType(const char * name) {
+   // set type using a string
+   std::pair<bool,int> type = GetType(name);
+   fUseDerivAlgo = type.first; 
+   fType = type.second;
+}
+
 
 int GSLMultiRootFinder::AddFunction(const ROOT::Math::IMultiGenFunction & func) { 
    // add a new function in the vector
