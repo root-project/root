@@ -36,7 +36,7 @@ TGLFormat::TGLFormat() :
 #ifdef WIN32
    fDepthSize(32),
 #else
-   fDepthSize(16),//FIXFIX
+   fDepthSize(24),
 #endif
    fAccumSize(0),
    fStencilSize(8),
@@ -208,10 +208,17 @@ Int_t TGLFormat::GetDefaultSamples()
 {
    // Return default number of samples for multi-sampling.
 
+   Int_t req = gEnv->GetValue("OpenGL.Framebuffer.Multisample", 0);
+
+   // Avoid query of available multi-sample modes when not required.
+   // Over ssh, SLC5 lies about supporting the GLX_SAMPLES_ARB
+   // extension and then dies horribly when the query is made.
+   if (req == 0) {
+      return 0;
+   }
+
    if (fgAvailableSamples.empty())
       InitAvailableSamples();
-
-   Int_t req = gEnv->GetValue("OpenGL.Framebuffer.Multisample", 0);
 
    std::vector<Int_t>::iterator i = fgAvailableSamples.begin();
    while (i != fgAvailableSamples.end() - 1 && *i < req)

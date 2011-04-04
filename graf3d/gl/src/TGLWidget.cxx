@@ -388,11 +388,11 @@ namespace
    {
       format.push_back(GLX_RGBA);
       format.push_back(GLX_RED_SIZE);
-      format.push_back(1);
+      format.push_back(8);
       format.push_back(GLX_GREEN_SIZE);
-      format.push_back(1);
+      format.push_back(8);
       format.push_back(GLX_BLUE_SIZE);
-      format.push_back(1);
+      format.push_back(8);
 
       if (request.IsDoubleBuffered())
          format.push_back(GLX_DOUBLEBUFFER);
@@ -409,11 +409,11 @@ namespace
 
       if (request.HasAccumBuffer()) {
          format.push_back(GLX_ACCUM_RED_SIZE);
-         format.push_back(1);
+         format.push_back(8);
          format.push_back(GLX_ACCUM_GREEN_SIZE);
-         format.push_back(1);
+         format.push_back(8);
          format.push_back(GLX_ACCUM_BLUE_SIZE);
-         format.push_back(1);
+         format.push_back(8);
       }
 
       if (request.IsStereo()) {
