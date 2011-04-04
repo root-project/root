@@ -50,7 +50,7 @@
 ClassImp(TMVA::BinarySearchTreeNode)
 
 //_______________________________________________________________________
-TMVA::BinarySearchTreeNode::BinarySearchTreeNode( const Event* e ) 
+TMVA::BinarySearchTreeNode::BinarySearchTreeNode( const Event* e, UInt_t /* signalClass */ ) 
    : TMVA::Node(),
      fEventV  ( std::vector<Float_t>() ),
      fTargets ( std::vector<Float_t>() ),
@@ -143,7 +143,7 @@ void TMVA::BinarySearchTreeNode::Print( ostream& os ) const
    os << fEventV.size() << " vars: ";
    for (;it!=fEventV.end(); it++) os << " " << std::setw(10) << *it;
    os << "  EvtWeight " << std::setw(10) << fWeight;
-   os << std::setw(10) << (IsSignal()?" Signal":" Background") << std::endl;
+   os << std::setw(10) << "Class: " << GetClass() << std::endl;
 
    os << "Selector: " <<  this->GetSelector() <<std::endl;
    os << "My address is " << long(this) << ", ";
@@ -164,7 +164,7 @@ void TMVA::BinarySearchTreeNode::PrintRec( ostream& os ) const
    os << fEventV.size() << " vars: ";
    for (;it!=fEventV.end(); it++) os << " " << std::setw(10) << *it;
    os << "  EvtWeight " << std::setw(10) << fWeight;
-   os << std::setw(10) << (IsSignal()?" Signal":" Background") << std::endl;
+   os << std::setw(10) << "Class: " << GetClass() << std::endl;
 
    if (this->GetLeft() != NULL)this->GetLeft()->PrintRec(os) ;
    if (this->GetRight() != NULL)this->GetRight()->PrintRec(os);
@@ -213,7 +213,11 @@ void TMVA::BinarySearchTreeNode::ReadAttributes(void* node, UInt_t /* tmva_Versi
    gTools().ReadAttr(node, "weight",   fWeight );
    std::string sb;
    gTools().ReadAttr(node, "type",     sb);
-   fClass = (sb=="Signal")?0:1;
+   if (sb=="Signal" || sb=="0")
+      fClass=0;
+   if (sb=="1")
+      fClass=1;
+//   fClass = (sb=="Signal")?0:1;
    Int_t nvars;
    gTools().ReadAttr(node, "NVars",nvars);
    fEventV.resize(nvars);
@@ -225,7 +229,8 @@ void TMVA::BinarySearchTreeNode::AddAttributesToNode(void* node) const {
    // adding attributes to tree node
    gTools().AddAttr(node, "selector", fSelector );
    gTools().AddAttr(node, "weight", fWeight );
-   gTools().AddAttr(node, "type", (IsSignal()?"Signal":"Background"));
+//   gTools().AddAttr(node, "type", (IsSignal()?"Signal":"Background"));
+   gTools().AddAttr(node, "type", GetClass());
    gTools().AddAttr(node, "NVars", fEventV.size());
 }
 

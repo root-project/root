@@ -53,7 +53,6 @@ TMVA::DataInputHandler::~DataInputHandler()
    delete fLogger;
 }
 
-
 //_______________________________________________________________________
 void TMVA::DataInputHandler::AddTree( const TString& fn, 
                                       const TString& className, 
@@ -67,7 +66,6 @@ void TMVA::DataInputHandler::AddTree( const TString& fn,
    AddTree( tr, className, weight, cut, tt );
 }
 
-
 //_______________________________________________________________________
 void TMVA::DataInputHandler::AddTree( TTree* tree, 
                                       const TString& className, 
@@ -79,7 +77,7 @@ void TMVA::DataInputHandler::AddTree( TTree* tree,
    if (tree->GetEntries()==0) Log() << kFATAL << "Encountered empty TTree or TChain of class " << className.Data() << Endl;
    if (fInputTrees[className.Data()].size() == 0) {
       // on the first tree (of the class) check if explicit treetype is given
-      fExplicitTrainTest[className.Data()] = ( tt != Types::kMaxTreeType);
+      fExplicitTrainTest[className.Data()] = (tt != Types::kMaxTreeType);
    } 
    else {
       // if the first tree has a specific type, all later tree's must also have one
@@ -93,10 +91,10 @@ void TMVA::DataInputHandler::AddTree( TTree* tree,
       }
    }
    if (cut.GetTitle()[0] != 0) {
-      fInputTrees[className.Data()].push_back(TreeInfo(tree->CopyTree(cut.GetTitle()), className, weight, tt ));
+      fInputTrees[className.Data()].push_back(TreeInfo( tree->CopyTree(cut.GetTitle()), className, weight, tt ));
    } 
    else {
-      fInputTrees[className.Data()].push_back(TreeInfo(tree, className, weight, tt ));
+      fInputTrees[className.Data()].push_back(TreeInfo( tree, className, weight, tt ));
    }
 }
 
@@ -137,8 +135,7 @@ TTree* TMVA::DataInputHandler::ReadInputTree( const TString& dataFile )
    TTree* tr = new TTree( "tmp", dataFile );
   
    ifstream in(dataFile);
-   if (!in.good())
-      Log() << kFATAL << "Could not open file: " << dataFile << Endl;
+   if (!in.good()) Log() << kFATAL << "Could not open file: " << dataFile << Endl;
    in.close();
 
    tr->ReadFile( dataFile );
@@ -160,8 +157,9 @@ void TMVA::DataInputHandler::AddInputTrees(TTree* inputTree, const TCut& SigCut,
 
 
 //_______________________________________________________________________
-void TMVA::DataInputHandler::ClearTreeList( const TString& className ) { 
-   try{
+void TMVA::DataInputHandler::ClearTreeList( const TString& className ) 
+{ 
+   try {
       fInputTrees.find(className)->second.clear();
    }
    catch(int) {
@@ -169,16 +167,15 @@ void TMVA::DataInputHandler::ClearTreeList( const TString& className ) {
    }
 }
 
-
 //_______________________________________________________________________
-std::vector< TString >* TMVA::DataInputHandler::GetClassList() const { 
+std::vector< TString >* TMVA::DataInputHandler::GetClassList() const 
+{ 
    std::vector< TString >* ret = new std::vector< TString >();
-   for( std::map< TString, std::vector<TreeInfo> >::iterator it = fInputTrees.begin(); it != fInputTrees.end(); it++ ){
+   for ( std::map< TString, std::vector<TreeInfo> >::iterator it = fInputTrees.begin(); it != fInputTrees.end(); it++ ){
       ret->push_back( it->first );
    }
    return ret;
 }
-
 
 //_______________________________________________________________________
 UInt_t TMVA::DataInputHandler::GetEntries(const std::vector<TreeInfo>& tiV) const 
@@ -186,8 +183,7 @@ UInt_t TMVA::DataInputHandler::GetEntries(const std::vector<TreeInfo>& tiV) cons
    // return number of entries in tree
    UInt_t entries = 0;
    std::vector<TreeInfo>::const_iterator tiIt = tiV.begin();
-   for(;tiIt != tiV.end(); tiIt++)
-      entries += tiIt->GetEntries();
+   for (;tiIt != tiV.end(); tiIt++) entries += tiIt->GetEntries();
    return entries;
 }
 
@@ -196,7 +192,7 @@ UInt_t TMVA::DataInputHandler::GetEntries() const
 {
    // return number of entries in tree
    UInt_t number = 0;
-   for( std::map< TString, std::vector<TreeInfo> >::iterator it = fInputTrees.begin(); it != fInputTrees.end(); it++ ){
+   for (std::map< TString, std::vector<TreeInfo> >::iterator it = fInputTrees.begin(); it != fInputTrees.end(); it++) {
       number += GetEntries( it->second );
    }
    return number; 

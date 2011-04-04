@@ -511,7 +511,8 @@ namespace TMVA {
       std::vector<TString>* fInputVars;            // vector of input variables used in MVA
 
       // histogram binning
-      Int_t                 fNbins;                // number of bins in representative histograms
+      Int_t                 fNbins;                // number of bins in input variable histograms
+      Int_t                 fNbinsMVAoutput;       // number of bins in MVA output histograms
       Int_t                 fNbinsH;               // number of bins in evaluation histograms
 
       Types::EAnalysisType  fAnalysisType;         // method-mode : true --> regression, false --> classification

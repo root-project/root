@@ -283,7 +283,7 @@ Double_t TMVA::BinarySearchTree::Fill( const std::vector<Event*>& events, Int_t 
          fSumOfWeights += events[ievt]->GetWeight();
       }
    } // end of event loop
-   CalcStatistics();
+   CalcStatistics(0,theType);
 
    return fSumOfWeights;
 }
@@ -428,7 +428,7 @@ Bool_t TMVA::BinarySearchTree::InVolume(const std::vector<Float_t>& event, Volum
 }
 
 //_______________________________________________________________________
-void TMVA::BinarySearchTree::CalcStatistics( Node* n )
+void TMVA::BinarySearchTree::CalcStatistics( Node* n, Int_t signalClass )
 {
    // calculate basic statistics (mean, rms for each variable)
    if (fStatisticsIsValid) return;
@@ -459,7 +459,8 @@ void TMVA::BinarySearchTree::CalcStatistics( Node* n )
    const std::vector<Float_t> & evtVec = currentNode->GetEventV();
    Double_t                     weight = currentNode->GetWeight();
 //    Int_t                        type   = currentNode->IsSignal(); 
-   Int_t                        type   = currentNode->IsSignal() ? 0 : 1; 
+//   Int_t                        type   = currentNode->IsSignal() ? 0 : 1; 
+   Int_t                        type   = Int_t(currentNode->GetClass())==signalClass ? 0 : 1; 
    fNEventsW[type] += weight;
    fSumOfWeights   += weight;
 
@@ -470,9 +471,9 @@ void TMVA::BinarySearchTree::CalcStatistics( Node* n )
       if (val < fMin[type][j]) fMin[type][j] = val; 
       if (val > fMax[type][j]) fMax[type][j] = val; 
    }
-
-   if ( (currentNode->GetLeft()  != NULL) ) CalcStatistics( currentNode->GetLeft()  ); 
-   if ( (currentNode->GetRight() != NULL) ) CalcStatistics( currentNode->GetRight() ); 
+   
+   if ( (currentNode->GetLeft()  != NULL) ) CalcStatistics( currentNode->GetLeft(), signalClass  ); 
+   if ( (currentNode->GetRight() != NULL) ) CalcStatistics( currentNode->GetRight(), signalClass ); 
 
    if (n == NULL) { // i.e. the root node
       for (Int_t sb=0; sb<2; sb++) {

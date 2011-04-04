@@ -57,7 +57,8 @@ TMVA::SVWorkingSet::SVWorkingSet()
 }  
 
 //_______________________________________________________________________
-TMVA::SVWorkingSet::SVWorkingSet(std::vector<TMVA::SVEvent*>*inputVectors, SVKernelFunction* kernelFunction,Float_t tol, Bool_t doreg)
+TMVA::SVWorkingSet::SVWorkingSet(std::vector<TMVA::SVEvent*>*inputVectors, SVKernelFunction* kernelFunction,
+                                 Float_t tol, Bool_t doreg)
    : fdoRegression(doreg),
      fInputData(inputVectors),
      fSupVec(0),
@@ -123,12 +124,12 @@ Bool_t TMVA::SVWorkingSet::ExamineExample( TMVA::SVEvent* jevt )
    else{
       Float_t *fKVals = jevt->GetLine();
       fErrorC_J = 0.;
-      std::vector<TMVA::SVEvent*>::iterator fIDIter;
+      std::vector<TMVA::SVEvent*>::iterator idIter;
       
       UInt_t k=0;
-      for(fIDIter = fInputData->begin(); fIDIter != fInputData->end(); fIDIter++){
-         if((*fIDIter)->GetAlpha()>0)
-            fErrorC_J += (*fIDIter)->GetAlpha()*(*fIDIter)->GetTypeFlag()*fKVals[k];
+      for(idIter = fInputData->begin(); idIter != fInputData->end(); idIter++){
+         if((*idIter)->GetAlpha()>0)
+            fErrorC_J += (*idIter)->GetAlpha()*(*idIter)->GetTypeFlag()*fKVals[k];
          k++;
       }
       
@@ -173,7 +174,7 @@ Bool_t TMVA::SVWorkingSet::ExamineExample( TMVA::SVEvent* jevt )
 Bool_t TMVA::SVWorkingSet::TakeStep(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt ) 
 {
    if (ievt == jevt) return kFALSE;
-   std::vector<TMVA::SVEvent*>::iterator fIDIter;
+   std::vector<TMVA::SVEvent*>::iterator idIter;
    const Float_t epsilon = 1e-8; //make it 1-e6 or 1-e5 to make it faster
    
    Float_t type_I,  type_J;
@@ -297,13 +298,13 @@ Bool_t TMVA::SVWorkingSet::TakeStep(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
    Float_t dL_J = type_J * ( newAlpha_J - alpha_J );  
 
    Int_t k = 0; 
-   for(fIDIter = fInputData->begin(); fIDIter != fInputData->end(); fIDIter++){
+   for(idIter = fInputData->begin(); idIter != fInputData->end(); idIter++){
       k++;
-      if((*fIDIter)->GetIdx()==0){
-         Float_t ii = fKMatrix->GetElement(ievt->GetNs(), (*fIDIter)->GetNs());
-         Float_t jj = fKMatrix->GetElement(jevt->GetNs(), (*fIDIter)->GetNs());
+      if((*idIter)->GetIdx()==0){
+         Float_t ii = fKMatrix->GetElement(ievt->GetNs(), (*idIter)->GetNs());
+         Float_t jj = fKMatrix->GetElement(jevt->GetNs(), (*idIter)->GetNs());
          
-         (*fIDIter)->UpdateErrorCache(dL_I * ii + dL_J * jj);       
+         (*idIter)->UpdateErrorCache(dL_I * ii + dL_J * jj);       
       }
    }
    ievt->SetAlpha(newAlpha_I);
@@ -321,15 +322,15 @@ Bool_t TMVA::SVWorkingSet::TakeStep(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
    fB_low = -1*1e30;
    fB_up = 1e30;
    
-   for(fIDIter = fInputData->begin(); fIDIter != fInputData->end(); fIDIter++){
-      if((*fIDIter)->GetIdx()==0){
-         if((*fIDIter)->GetErrorCache()> fB_low){
-            fB_low = (*fIDIter)->GetErrorCache();
-            fTEventLow = (*fIDIter);
+   for(idIter = fInputData->begin(); idIter != fInputData->end(); idIter++){
+      if((*idIter)->GetIdx()==0){
+         if((*idIter)->GetErrorCache()> fB_low){
+            fB_low = (*idIter)->GetErrorCache();
+            fTEventLow = (*idIter);
          }
-         if( (*fIDIter)->GetErrorCache()< fB_up){
-            fB_up =(*fIDIter)->GetErrorCache();
-            fTEventUp = (*fIDIter);
+         if( (*idIter)->GetErrorCache()< fB_up){
+            fB_up =(*idIter)->GetErrorCache();
+            fTEventUp = (*idIter);
          }
       }
    }                             
@@ -379,21 +380,21 @@ void TMVA::SVWorkingSet::Train(UInt_t nMaxIter)
    Int_t deltaChanges = 0;
    UInt_t numit    = 0;
    
-   std::vector<TMVA::SVEvent*>::iterator fIDIter;
+   std::vector<TMVA::SVEvent*>::iterator idIter;
 
    while ((numChanged > 0) || (examineAll > 0)) {
       numChanged = 0;
       if (examineAll) {
-         for (fIDIter = fInputData->begin(); fIDIter!=fInputData->end(); fIDIter++){
-            if(!fdoRegression) numChanged += (UInt_t)ExamineExample(*fIDIter);
-            else numChanged += (UInt_t)ExamineExampleReg(*fIDIter);
+         for (idIter = fInputData->begin(); idIter!=fInputData->end(); idIter++){
+            if(!fdoRegression) numChanged += (UInt_t)ExamineExample(*idIter);
+            else numChanged += (UInt_t)ExamineExampleReg(*idIter);
          }    
       }
       else {
-         for (fIDIter = fInputData->begin(); fIDIter!=fInputData->end(); fIDIter++) {
-            if ((*fIDIter)->IsInI0()) {
-               if(!fdoRegression) numChanged += (UInt_t)ExamineExample(*fIDIter);
-               else numChanged += (UInt_t)ExamineExampleReg(*fIDIter);
+         for (idIter = fInputData->begin(); idIter!=fInputData->end(); idIter++) {
+            if ((*idIter)->IsInI0()) {
+               if(!fdoRegression) numChanged += (UInt_t)ExamineExample(*idIter);
+               else numChanged += (UInt_t)ExamineExampleReg(*idIter);
                if (Terminated()) {
                   numChanged = 0;
                   break;
@@ -442,22 +443,22 @@ void TMVA::SVWorkingSet::SetIndex( TMVA::SVEvent* event )
 //_______________________________________________________________________
 void TMVA::SVWorkingSet::PrintStat() 
 {
-   std::vector<TMVA::SVEvent*>::iterator fIDIter;
+   std::vector<TMVA::SVEvent*>::iterator idIter;
    UInt_t counter = 0;
-   for( fIDIter = fInputData->begin(); fIDIter != fInputData->end(); fIDIter++)
-      if((*fIDIter)->GetAlpha() !=0) counter++;
+   for( idIter = fInputData->begin(); idIter != fInputData->end(); idIter++)
+      if((*idIter)->GetAlpha() !=0) counter++;
 }
 
 //_______________________________________________________________________
 std::vector<TMVA::SVEvent*>* TMVA::SVWorkingSet::GetSupportVectors() 
 {
-   std::vector<TMVA::SVEvent*>::iterator fIDIter;
+   std::vector<TMVA::SVEvent*>::iterator idIter;
    if( fSupVec != 0) {delete fSupVec; fSupVec = 0; }
    fSupVec = new std::vector<TMVA::SVEvent*>(0);
    
-   for( fIDIter = fInputData->begin(); fIDIter != fInputData->end(); fIDIter++){
-      if((*fIDIter)->GetDeltaAlpha() !=0){
-         fSupVec->push_back((*fIDIter));
+   for( idIter = fInputData->begin(); idIter != fInputData->end(); idIter++){
+      if((*idIter)->GetDeltaAlpha() !=0){
+         fSupVec->push_back((*idIter));
       }
    }
    return fSupVec;
@@ -468,7 +469,7 @@ std::vector<TMVA::SVEvent*>* TMVA::SVWorkingSet::GetSupportVectors()
 Bool_t TMVA::SVWorkingSet::TakeStepReg(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
 {
    if (ievt == jevt) return kFALSE;
-   std::vector<TMVA::SVEvent*>::iterator fIDIter;
+   std::vector<TMVA::SVEvent*>::iterator idIter;
    const Float_t epsilon = 0.001*fTolerance;//TODO
 
    const Float_t kernel_II = fKMatrix->GetElement(ievt->GetNs(),ievt->GetNs());
@@ -617,14 +618,14 @@ Bool_t TMVA::SVWorkingSet::TakeStepReg(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
 
       //update error cache
       Int_t k = 0; 
-      for(fIDIter = fInputData->begin(); fIDIter != fInputData->end(); fIDIter++){
+      for(idIter = fInputData->begin(); idIter != fInputData->end(); idIter++){
          k++;
          //there will be some changes in Idx notation
-         if((*fIDIter)->GetIdx()==0){
-            Float_t k_ii = fKMatrix->GetElement(ievt->GetNs(), (*fIDIter)->GetNs());
-            Float_t k_jj = fKMatrix->GetElement(jevt->GetNs(), (*fIDIter)->GetNs());
+         if((*idIter)->GetIdx()==0){
+            Float_t k_ii = fKMatrix->GetElement(ievt->GetNs(), (*idIter)->GetNs());
+            Float_t k_jj = fKMatrix->GetElement(jevt->GetNs(), (*idIter)->GetNs());
          
-            (*fIDIter)->UpdateErrorCache(diff_alpha_i * k_ii + diff_alpha_j * k_jj);
+            (*idIter)->UpdateErrorCache(diff_alpha_i * k_ii + diff_alpha_j * k_jj);
          }
       }
          
@@ -641,15 +642,15 @@ Bool_t TMVA::SVWorkingSet::TakeStepReg(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
       fB_low = -1*1e30;
       fB_up =1e30;
    
-      for(fIDIter = fInputData->begin(); fIDIter != fInputData->end(); fIDIter++){
-         if((!(*fIDIter)->IsInI3()) && ((*fIDIter)->GetErrorCache()> fB_low)){
-            fB_low = (*fIDIter)->GetErrorCache();
-            fTEventLow = (*fIDIter);
+      for(idIter = fInputData->begin(); idIter != fInputData->end(); idIter++){
+         if((!(*idIter)->IsInI3()) && ((*idIter)->GetErrorCache()> fB_low)){
+            fB_low = (*idIter)->GetErrorCache();
+            fTEventLow = (*idIter);
                   
          }
-         if((!(*fIDIter)->IsInI2()) && ((*fIDIter)->GetErrorCache()< fB_up)){
-            fB_up =(*fIDIter)->GetErrorCache();
-            fTEventUp = (*fIDIter);
+         if((!(*idIter)->IsInI2()) && ((*idIter)->GetErrorCache()< fB_up)){
+            fB_up =(*idIter)->GetErrorCache();
+            fTEventUp = (*idIter);
          }
       }
       return kTRUE;
@@ -669,11 +670,11 @@ Bool_t TMVA::SVWorkingSet::ExamineExampleReg(TMVA::SVEvent* jevt)
    else{
       Float_t *fKVals = jevt->GetLine();
       fErrorC_J = 0.;
-      std::vector<TMVA::SVEvent*>::iterator fIDIter;
+      std::vector<TMVA::SVEvent*>::iterator idIter;
       
       UInt_t k=0;
-      for(fIDIter = fInputData->begin(); fIDIter != fInputData->end(); fIDIter++){
-         fErrorC_J -= (*fIDIter)->GetDeltaAlpha()*fKVals[k];
+      for(idIter = fInputData->begin(); idIter != fInputData->end(); idIter++){
+         fErrorC_J -= (*idIter)->GetDeltaAlpha()*fKVals[k];
          k++;
       }
       

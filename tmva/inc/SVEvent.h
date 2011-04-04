@@ -44,7 +44,7 @@ namespace TMVA
    public:
 
       SVEvent();
-      SVEvent( const Event*, Float_t );
+      SVEvent( const Event*, Float_t, Bool_t isSignal = kFALSE );
       SVEvent( const std::vector<Float_t>*, Float_t alpha, Int_t typeFlag, UInt_t ns );
       SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Float_t alpha_p, Int_t typeFlag);
 

@@ -591,7 +591,7 @@ void create_lin_Nvar_categories(Int_t N = 10000, Int_t type = 2)
 
 
 // create the data
-void create_lin_Nvar_weighted(Int_t N = 10000, int WeightedSignal=0, int WeightedBkg=1)
+void create_lin_Nvar_weighted(Int_t N = 10000, int WeightedSignal=0, int WeightedBkg=1, Float_t BackgroundContamination=0, Int_t seed=100)
 {
    const Int_t nvar = 4;
    Float_t xvar[nvar];
@@ -605,7 +605,11 @@ void create_lin_Nvar_weighted(Int_t N = 10000, int WeightedSignal=0, int Weighte
 
 
    // output flie
-   TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
+   TString fileName;
+   if (BackgroundContamination) fileName = Form("linCorGauss%d_weighted+background.root",seed);
+   else                         fileName = Form("linCorGauss%d_weighted.root",seed);
+   
+   TFile* dataFile = TFile::Open( fileName.Data(), "RECREATE" );
 
    // create signal and background trees
    TTree* treeS = new TTree( "TreeS", "TreeS", 1 );   
@@ -614,10 +618,10 @@ void create_lin_Nvar_weighted(Int_t N = 10000, int WeightedSignal=0, int Weighte
       treeS->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
       treeB->Branch( TString(Form( "var%i", ivar+1 )).Data(), &xvar[ivar], TString(Form( "var%i/F", ivar+1 )).Data() );
    }
-   if (WeightedSignal) treeS->Branch( "weight", &weight,"weight/F" );
+   if (WeightedSignal||BackgroundContamination>0||1) treeS->Branch( "weight", &weight,"weight/F" );
    if (WeightedBkg)    treeB->Branch( "weight", &weight,"weight/F" );
       
-   TRandom R( 100 );
+   TRandom R( seed );
    Float_t xS[nvar] = {  0.2,  0.3,  0.4,  0.8 };
    Float_t xB[nvar] = { -0.2, -0.3, -0.4, -0.5 };
    Float_t dx[nvar] = {  1.0,  1.0, 1.0, 1.0 };
@@ -693,6 +697,27 @@ void create_lin_Nvar_weighted(Int_t N = 10000, int WeightedSignal=0, int Weighte
          }
       } while (i<N);
    }
+
+
+   if (BackgroundContamination > 0){  // add "background contamination" in the Signal (which later is again "subtracted" with 
+            // using (statistically indepentent) background events with negative weight)
+      Float_t*  x=xB;
+      TMatrixD* m = sqrtMatB;
+      TTree* tree = treeS;
+      for (Int_t i=0; i<N*BackgroundContamination*2; i++) {
+         if (i%1000 == 0) cout << "... event: " << i << " (" << N << ")" << endl;
+         getGaussRnd( *v, *m, R );
+         for (Int_t ivar=0; ivar<nvar; ivar++) xvar[ivar] = (*v)[ivar] + x[ivar];
+
+         // add weights
+         if (i%2) weight = 1;
+         else weight = -1;
+         
+         tree->Fill();
+      }
+   }
+
+
 
    // write trees
    treeS->Write();

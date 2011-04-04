@@ -59,7 +59,7 @@ namespace TMVA {
    public:
 
       // constructor of a node for the search tree
-      BinarySearchTreeNode( const Event* e = NULL );
+      BinarySearchTreeNode( const Event* e = NULL, UInt_t signalClass=0 );
 
       // constructor of a daughter node as a daughter of 'p'
       BinarySearchTreeNode( BinarySearchTreeNode* parent, char pos );
@@ -90,7 +90,7 @@ namespace TMVA {
       const std::vector<Float_t> & GetEventV() const { return fEventV; }
       Float_t                      GetWeight() const { return fWeight; }
       UInt_t                       GetClass()  const { return fClass; }
-      Bool_t                       IsSignal()  const { return (fClass == 0); }
+//      Bool_t                       IsSignal()  const { return (fClass == fSignalClass); }
 
       const std::vector<Float_t> & GetTargets() const { return fTargets; }
 
@@ -113,8 +113,7 @@ namespace TMVA {
       std::vector<Float_t> fTargets;
 
       Float_t     fWeight;
-      // Float_t     fIsSignal;
-      UInt_t       fClass;
+      UInt_t      fClass;
 
       Short_t     fSelector;       // index of variable used in node selection (decision tree) 
 

@@ -831,7 +831,7 @@ Double_t TMVA::MethodPDERS::CKernelEstimate( const Event & event,
    // note that rejection ratio goes to 1 as nvar goes to infinity
    if (normalized_distance > 1 && fKernelEstimator != kBox) continue;
 
-   if ( (*iev)->IsSignal() )
+   if ( (*iev)->GetClass()==fSignalClass )
       pdfSumS += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight();
    else
       pdfSumB += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight();

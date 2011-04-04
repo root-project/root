@@ -311,7 +311,8 @@ void TMVA::DataSet::DeleteResults( const TString & resultsName,
             << " of type " << type << Endl;
       delete it->second;
       resultsForType.erase(it->first);
-   }else{
+   }
+   else {
       Log() << kINFO << "could not fine Result class of " << resultsName 
             << " of type " << type << " which I should have deleted" << Endl;
    }
@@ -503,7 +504,8 @@ void TMVA::DataSet::CreateSampling() const
 
          rndsIt++;
          if (rndsIt == rnds.end() ) break;
-      }else{
+      }
+      else {
          evtListIt++;
       }
    }
@@ -537,7 +539,8 @@ void TMVA::DataSet::EventResult( Bool_t successful, Long64_t evtNumber )
          //      weight /= (fSamplingWeight.at(fCurrentTreeIdx)/fSamplingEventList.at(fCurrentTreeIdx).size());
          weight /= fSamplingWeight.at(fCurrentTreeIdx);
          if (weight > 1.0 ) weight = 1.0;
-      }else{
+      }
+      else {
          //      weight *= (fSamplingWeight.at(fCurrentTreeIdx)/fSamplingEventList.at(fCurrentTreeIdx).size());
          weight *= fSamplingWeight.at(fCurrentTreeIdx);
       }
@@ -590,7 +593,6 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
    tree->Branch( "classID", &cls, "classID/I" ); 
    tree->Branch( "className",(void*)className, "className/C" ); 
 
-
    // create all branches for the variables
    Int_t n = 0;
    for (std::vector<VariableInfo>::const_iterator itVars = fdsi.GetVariableInfos().begin(); 
@@ -631,7 +633,8 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
       if (itMethod->second->GetAnalysisType() == Types::kClassification) {
          // classification
          tree->Branch( itMethod->first, &(metVals[n][0]), itMethod->first + "/F" );
-      } else if (itMethod->second->GetAnalysisType() == Types::kMulticlass) {
+      } 
+      else if (itMethod->second->GetAnalysisType() == Types::kMulticlass) {
          // multiclass classification
          TString leafList("");
          for (UInt_t iCls = 0; iCls < fdsi.GetNClasses(); iCls++) {
@@ -642,7 +645,8 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
          Log() << kDEBUG << "itMethod->first " << itMethod->first <<  "    LEAFLIST: " 
                << leafList << "    itMethod->second " << itMethod->second <<  Endl;
          tree->Branch( itMethod->first, (metVals[n]), leafList );
-      } else if (itMethod->second->GetAnalysisType() == Types::kRegression) {
+      } 
+      else if (itMethod->second->GetAnalysisType() == Types::kRegression) {
          // regression
          TString leafList("");
          for (UInt_t iTgt = 0; iTgt < fdsi.GetNTargets(); iTgt++) {
@@ -654,7 +658,8 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
          Log() << kDEBUG << "itMethod->first " << itMethod->first <<  "    LEAFLIST: " 
                << leafList << "    itMethod->second " << itMethod->second <<  Endl;
          tree->Branch( itMethod->first, (metVals[n]), leafList );
-      } else {
+      } 
+      else {
          Log() << kWARNING << "Unknown analysis type for result found when writing TestTree." << Endl;
       }
       n++;

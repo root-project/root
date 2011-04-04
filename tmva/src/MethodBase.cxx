@@ -316,6 +316,7 @@ void TMVA::MethodBase::InitBase()
    SetConfigDescription( "Configuration options for classifier architecture and tuning" );
 
    fNbins              = gConfig().fVariablePlotting.fNbinsXOfROCCurve;
+   fNbinsMVAoutput     = gConfig().fVariablePlotting.fNbinsMVAoutput;
    fNbinsH             = NBIN_HIST_HIGH;
 
    fSplTrainS          = 0;
@@ -783,7 +784,7 @@ void TMVA::MethodBase::AddMulticlassOutput(Types::ETreeType type)
 
    TString histNamePrefix(GetTestvarName());
    histNamePrefix += (type==Types::kTraining?"_Train":"_Test");
-   resMulticlass->CreateMulticlassHistos( histNamePrefix, fNbins, fNbinsH );
+   resMulticlass->CreateMulticlassHistos( histNamePrefix, fNbinsMVAoutput, fNbinsH );
 }
 
 
@@ -1040,8 +1041,8 @@ void TMVA::MethodBase::TestClassification()
    
    // classifier response distributions for training sample
    // MVA plots used for graphics representation (signal)
-   TH1* mva_s = new TH1F( GetTestvarName() + "_S",GetTestvarName() + "_S", fNbins, fXmin, sxmax );
-   TH1* mva_b = new TH1F( GetTestvarName() + "_B",GetTestvarName() + "_B", fNbins, fXmin, sxmax );
+   TH1* mva_s = new TH1F( GetTestvarName() + "_S",GetTestvarName() + "_S", fNbinsMVAoutput, fXmin, sxmax );
+   TH1* mva_b = new TH1F( GetTestvarName() + "_B",GetTestvarName() + "_B", fNbinsMVAoutput, fXmin, sxmax );
    mvaRes->Store(mva_s, "MVA_S");
    mvaRes->Store(mva_b, "MVA_B");
    mva_s->Sumw2();
@@ -1053,16 +1054,16 @@ void TMVA::MethodBase::TestClassification()
    TH1* rarity_b = 0;
    if (HasMVAPdfs()) {
       // P(MVA) plots used for graphics representation
-      proba_s = new TH1F( GetTestvarName() + "_Proba_S", GetTestvarName() + "_Proba_S", fNbins, 0.0, 1.0 );
-      proba_b = new TH1F( GetTestvarName() + "_Proba_B", GetTestvarName() + "_Proba_B", fNbins, 0.0, 1.0 );
+      proba_s = new TH1F( GetTestvarName() + "_Proba_S", GetTestvarName() + "_Proba_S", fNbinsMVAoutput, 0.0, 1.0 );
+      proba_b = new TH1F( GetTestvarName() + "_Proba_B", GetTestvarName() + "_Proba_B", fNbinsMVAoutput, 0.0, 1.0 );
       mvaRes->Store(proba_s, "Prob_S");
       mvaRes->Store(proba_b, "Prob_B");
       proba_s->Sumw2();
       proba_b->Sumw2();
 
       // R(MVA) plots used for graphics representation
-      rarity_s = new TH1F( GetTestvarName() + "_Rarity_S", GetTestvarName() + "_Rarity_S", fNbins, 0.0, 1.0 );
-      rarity_b = new TH1F( GetTestvarName() + "_Rarity_B", GetTestvarName() + "_Rarity_B", fNbins, 0.0, 1.0 );
+      rarity_s = new TH1F( GetTestvarName() + "_Rarity_S", GetTestvarName() + "_Rarity_S", fNbinsMVAoutput, 0.0, 1.0 );
+      rarity_b = new TH1F( GetTestvarName() + "_Rarity_B", GetTestvarName() + "_Rarity_B", fNbinsMVAoutput, 0.0, 1.0 );
       mvaRes->Store(rarity_s, "Rar_S");
       mvaRes->Store(rarity_b, "Rar_B");
       rarity_s->Sumw2();
@@ -1962,25 +1963,25 @@ Bool_t TMVA::MethodBase::GetLine(std::istream& fin, char* buf )
    fin.getline(buf,512);
    TString line(buf);
    if (line.BeginsWith("TMVA Release")) {
-      Ssiz_t start = line.First('[')+1;
+      Ssiz_t start  = line.First('[')+1;
       Ssiz_t length = line.Index("]",start)-start;
-      TString code = line(start,length);
+      TString code  = line(start,length);
       std::stringstream s(code.Data());
       s >> fTMVATrainingVersion;
       Log() << kINFO << "MVA method was trained with TMVA Version: " << GetTrainingTMVAVersionString() << Endl;
    }
    if (line.BeginsWith("ROOT Release")) {
-      Ssiz_t start = line.First('[')+1;
+      Ssiz_t start  = line.First('[')+1;
       Ssiz_t length = line.Index("]",start)-start;
-      TString code = line(start,length);
+      TString code  = line(start,length);
       std::stringstream s(code.Data());
       s >> fROOTTrainingVersion;
       Log() << kINFO << "MVA method was trained with ROOT Version: " << GetTrainingROOTVersionString() << Endl;
    }
    if (line.BeginsWith("Analysis type")) {
-      Ssiz_t start = line.First('[')+1;
+      Ssiz_t start  = line.First('[')+1;
       Ssiz_t length = line.Index("]",start)-start;
-      TString code = line(start,length);
+      TString code  = line(start,length);
       std::stringstream s(code.Data());
       std::string analysisType;
       s >> analysisType;
@@ -2368,8 +2369,8 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
       Double_t sxmax = fXmax+0.00001;
 
       // MVA plots on the training sample (check for overtraining)
-      TH1* mva_s_tr = new TH1F( GetTestvarName() + "_Train_S",GetTestvarName() + "_Train_S", fNbins, fXmin, sxmax );
-      TH1* mva_b_tr = new TH1F( GetTestvarName() + "_Train_B",GetTestvarName() + "_Train_B", fNbins, fXmin, sxmax );
+      TH1* mva_s_tr = new TH1F( GetTestvarName() + "_Train_S",GetTestvarName() + "_Train_S", fNbinsMVAoutput, fXmin, sxmax );
+      TH1* mva_b_tr = new TH1F( GetTestvarName() + "_Train_B",GetTestvarName() + "_Train_B", fNbinsMVAoutput, fXmin, sxmax );
       results->Store(mva_s_tr, "MVA_TRAIN_S");
       results->Store(mva_b_tr, "MVA_TRAIN_B");
       mva_s_tr->Sumw2();

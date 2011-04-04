@@ -481,7 +481,7 @@ void TMVA::MethodPDEFoam::TrainUnifiedClassification()
    // Create only one unified foam which contains discriminator
    // (N_sig)/(N_sig + N_bg)
 
-   fFoam.push_back( InitFoam("DiscrFoam", kDiscr, 0) ); // class 0 = signal
+   fFoam.push_back( InitFoam("DiscrFoam", kDiscr, fSignalClass) );
 
    Log() << kVERBOSE << "Filling binary search tree of discriminator foam with events" << Endl;
    // insert event to BinarySearchTree

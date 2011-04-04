@@ -200,7 +200,7 @@ void TMVA::MethodSVM::Train()
 
    for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++){
       Log() << kDEBUG << "Create event vector"<< Endl;
-      fInputData->at(ievt) = new SVEvent(GetEvent(ievt), fCost);
+      fInputData->at(ievt) = new SVEvent(GetEvent(ievt), fCost, DataInfo().IsSignal(GetEvent(ievt))); 
    }
 
    fSVKernelFunction = new SVKernelFunction(fGamma);
@@ -285,8 +285,7 @@ void TMVA::MethodSVM::ReadWeightsFromXML( void* wghtnode )
       typeFlag=(int)temp[1];
       alpha=temp[2];
       alpha_p=temp[3];
-      for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
-         (*svector)[ivar]=temp[ivar+4];
+      for (UInt_t ivar = 0; ivar < GetNvar(); ivar++) (*svector)[ivar]=temp[ivar+4];
 
       fSupportVectors->push_back(new SVEvent(svector,alpha,alpha_p,typeFlag));
       supportvectornode = gTools().GetNextChild(supportvectornode);
@@ -338,22 +337,20 @@ void  TMVA::MethodSVM::ReadWeightsFromStream( istream& istr )
       istr>>typeTalpha;
       typeFlag = typeTalpha<0?-1:1;
       alpha = typeTalpha<0?-typeTalpha:typeTalpha;
-      for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
-         istr>>svector->at(ivar);
+      for (UInt_t ivar = 0; ivar < GetNvar(); ivar++) istr >> svector->at(ivar);
 
       fSupportVectors->push_back(new SVEvent(svector,alpha,typeFlag,ns));
    }
 
-   for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
-      istr >> (*fMaxVars)[ivar];
+   for (UInt_t ivar = 0; ivar < GetNvar(); ivar++) istr >> (*fMaxVars)[ivar];
 
-   for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
-      istr >> (*fMinVars)[ivar];
+   for (UInt_t ivar = 0; ivar < GetNvar(); ivar++) istr >> (*fMinVars)[ivar];
 
    delete fSVKernelFunction;
    if (fTheKernel == "Gauss" ) {
       fSVKernelFunction = new SVKernelFunction(1/fDoubleSigmaSquared);
-   } else {
+   } 
+   else {
       SVKernelFunction::EKernelType k = SVKernelFunction::kLinear;
       if(fTheKernel == "Linear")           k = SVKernelFunction::kLinear;
       else if (fTheKernel == "Polynomial") k = SVKernelFunction::kPolynomial;
@@ -380,7 +377,7 @@ Double_t TMVA::MethodSVM::GetMvaValue( Double_t* err, Double_t* errUpper )
    Double_t myMVA = 0;
 
    // TODO: avoid creation of a new SVEvent every time (Joerg)
-   SVEvent* ev = new SVEvent( GetEvent(),0. ); //check for specificators
+   SVEvent* ev = new SVEvent( GetEvent(), 0. ); // check for specificators
 
    for (UInt_t ievt = 0; ievt < fSupportVectors->size() ; ievt++) {
       myMVA += ( fSupportVectors->at(ievt)->GetAlpha()

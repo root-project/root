@@ -185,7 +185,6 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildDynamicDataSet( TMVA::DataSetInfo& dsi
    return ds;
 }
 
-
 //_______________________________________________________________________
 TMVA::DataSet* TMVA::DataSetFactory::BuildInitialDataSet( DataSetInfo& dsi, DataInputHandler& dataInput ) 
 {
@@ -730,11 +729,6 @@ void  TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
          // count number of events in tree before cut
          nInitialEvents.at(cl) += currentInfo.GetTree()->GetEntries();
          
-//          std::vector< std::pair< Long64_t, Types::ETreeType > >& userEvType = userDefinedEventTypes.at(cl);
-//          if (userEvType.size() == 0 || userEvType.back().second != currentInfo.GetTreeType()) {
-//             userEvType.push_back( std::make_pair< Long64_t, Types::ETreeType >(tmpEventVector.at(cl).size(), currentInfo.GetTreeType()) );
-//          }
-
          // loop over events in ntuple
          for (Long64_t evtIdx = 0; evtIdx < currentInfo.GetTree()->GetEntries(); evtIdx++) {
             currentInfo.GetTree()->LoadTree(evtIdx);
@@ -891,9 +885,6 @@ void  TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
          
          currentInfo.GetTree()->ResetBranchAddresses();
       }
-
-//       // compute renormalisation factors
-//       renormFactor.at(cl) = nTempEvents.at(cl)/sumOfWeights.at(cl); --> will be done in dedicated member function
    }
 
    // for output, check maximum class name length
@@ -1287,14 +1278,8 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
    if (mixMode == "RANDOM") {
       Log() << kDEBUG << "shuffling events"<<Endl;
 
-      //       std::cout << "before" << std::endl;
-      //       std::for_each( trainingEventVector->begin(), trainingEventVector->begin()+10, std::bind2nd(std::mem_fun(&TMVA::Event::Print),std::cout) );
-      
       std::random_shuffle( trainingEventVector->begin(), trainingEventVector->end(), rndm );
       std::random_shuffle( testingEventVector->begin(),  testingEventVector->end(),  rndm  );
-
-      //       std::cout << "after" << std::endl;
-      //       std::for_each( trainingEventVector->begin(), trainingEventVector->begin()+10, std::bind2nd(std::mem_fun(&TMVA::Event::Print),std::cout) );
    }
 
    Log() << kDEBUG << "trainingEventVector " << trainingEventVector->size() << Endl;
@@ -1312,8 +1297,6 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
    return ds;
    
 }
-
-
 
 //_______________________________________________________________________
 void  TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi, 

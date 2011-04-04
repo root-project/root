@@ -112,26 +112,26 @@ namespace TMVA
       void DeclareCompatibilityOptions();
       void ProcessOptions();
       
-      Float_t                 fCost; // cost value
-      Float_t                 fTolerance;       // tolerance parameter
-      UInt_t                  fMaxIter; // max number of iteration
-      UShort_t                fNSubSets; // nr of subsets, default 1
-      Float_t                 fBparm;           // free plane coefficient 
-      Float_t                 fGamma;           // RBF Kernel parameter
-      SVWorkingSet*           fWgSet;           // svm working set 
-      std::vector<TMVA::SVEvent*>*  fInputData;       // vector of training data in SVM format
-      std::vector<TMVA::SVEvent*>*  fSupportVectors; // contains support vectors
-      SVKernelFunction*       fSVKernelFunction;  // kernel function
+      Float_t                       fCost;                // cost value
+      Float_t                       fTolerance;           // tolerance parameter
+      UInt_t                        fMaxIter;             // max number of iteration
+      UShort_t                      fNSubSets;            // nr of subsets, default 1
+      Float_t                       fBparm;               // free plane coefficient 
+      Float_t                       fGamma;               // RBF Kernel parameter
+      SVWorkingSet*                 fWgSet;               // svm working set 
+      std::vector<TMVA::SVEvent*>*  fInputData;           // vector of training data in SVM format
+      std::vector<TMVA::SVEvent*>*  fSupportVectors;      // contains support vectors
+      SVKernelFunction*             fSVKernelFunction;    // kernel function
 
-      TVectorD*               fMinVars;         // for normalization //is it still needed?? 
-      TVectorD*               fMaxVars;         // for normalization //is it still needed?? 
+      TVectorD*                     fMinVars;             // for normalization //is it still needed?? 
+      TVectorD*                     fMaxVars;             // for normalization //is it still needed?? 
 
       // for backward compatibility
-      TString     fTheKernel;           // kernel name
-      Float_t     fDoubleSigmaSquared;  // for RBF Kernel
-      Int_t       fOrder;               // for Polynomial Kernel ( polynomial order )
-      Float_t     fTheta;               // for Sigmoidal Kernel
-      Float_t     fKappa;               // for Sigmoidal Kernel
+      TString                       fTheKernel;           // kernel name
+      Float_t                       fDoubleSigmaSquared;  // for RBF Kernel
+      Int_t                         fOrder;               // for Polynomial Kernel ( polynomial order )
+      Float_t                       fTheta;               // for Sigmoidal Kernel
+      Float_t                       fKappa;               // for Sigmoidal Kernel
       
       ClassDef(MethodSVM,0)  // Support Vector Machine
    };

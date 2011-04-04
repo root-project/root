@@ -47,10 +47,11 @@ TMVA::Config::Config() :
    
    // plotting
    fVariablePlotting.fTimesRMS = 8.0;
-   fVariablePlotting.fNbins1D  = 60;
+   fVariablePlotting.fNbins1D  = 40;
    fVariablePlotting.fNbins2D  = 300;
    fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots = 20;
    
+   fVariablePlotting.fNbinsMVAoutput   = 40;
    fVariablePlotting.fNbinsXOfROCCurve = 100;
 
    // IO names

@@ -166,17 +166,17 @@ namespace TMVA {
       // ---------- Cell value access functions
 
       // low level functions to access a certain cell value
-      Double_t GetCellElement(PDEFoamCell *cell, UInt_t i);  // get Element 'i' in cell 'cell'
+      Double_t GetCellElement(const PDEFoamCell *cell, UInt_t i) const;  // get Element 'i' in cell 'cell'
       void SetCellElement(PDEFoamCell *cell, UInt_t i, Double_t value); // set Element 'i' in cell 'cell' to value 'value'
 
       // specific function used during evaluation; determines, whether a cell value is undefined
-      virtual Bool_t   CellValueIsUndefined( PDEFoamCell* );
+      virtual Bool_t  CellValueIsUndefined( PDEFoamCell* );
 
       // finds cell according to given event variables
-      PDEFoamCell* FindCell(std::vector<Float_t>&);
-      std::vector<TMVA::PDEFoamCell*> FindCells(std::vector<Float_t>&);
-      std::vector<TMVA::PDEFoamCell*> FindCells(std::map<Int_t,Float_t>&);
-      void FindCells(std::map<Int_t, Float_t>&, PDEFoamCell*, std::vector<PDEFoamCell*> &);
+      PDEFoamCell* FindCell(const std::vector<Float_t>&) const ;
+      std::vector<TMVA::PDEFoamCell*> FindCells(const std::vector<Float_t>&) const;
+      std::vector<TMVA::PDEFoamCell*> FindCells(const std::map<Int_t,Float_t>&) const;
+      void FindCells(const std::map<Int_t, Float_t>&, PDEFoamCell*, std::vector<PDEFoamCell*> &) const;
 
       // get internal density
       PDEFoamDensityBase* GetDistr() const { assert(fDistr); return fDistr; }
@@ -250,9 +250,9 @@ namespace TMVA {
       // reason: foam allways has boundaries [0, 1]
 
       Float_t VarTransform(Int_t idim, Float_t x) const; // transform [xmin, xmax] --> [0, 1]
-      std::vector<Float_t> VarTransform(std::vector<Float_t> &invec) const;
+      std::vector<Float_t> VarTransform(const std::vector<Float_t> &invec) const;
       Float_t VarTransformInvers(Int_t idim, Float_t x) const; // transform [0, 1] --> [xmin, xmax]
-      std::vector<Float_t> VarTransformInvers(std::vector<Float_t> &invec) const;
+      std::vector<Float_t> VarTransformInvers(const std::vector<Float_t> &invec) const;
 
       // ---------- Debug functions
 
@@ -279,13 +279,13 @@ namespace TMVA {
       // ---------- Foam evaluation functions
 
       // get cell value for a given event
-      virtual Float_t GetCellValue( std::vector<Float_t>& xvec, ECellValue cv, PDEFoamKernelBase*  );
+      virtual Float_t GetCellValue( const std::vector<Float_t>& xvec, ECellValue cv, PDEFoamKernelBase*  );
 
       // get cell values for a given (incomplete) event vector
-      virtual std::vector<Float_t> GetCellValue( std::map<Int_t,Float_t>& xvec, ECellValue cv );
+      virtual std::vector<Float_t> GetCellValue( const std::map<Int_t,Float_t>& xvec, ECellValue cv );
 
       // get cell value stored in a foam cell
-      virtual Float_t GetCellValue( PDEFoamCell* cell, ECellValue cv );
+      virtual Float_t GetCellValue( const PDEFoamCell* cell, ECellValue cv );
 
       // ---------- friend classes
       friend class PDEFoamKernelBase;
@@ -309,7 +309,7 @@ inline Float_t TMVA::PDEFoam::VarTransform(Int_t idim, Float_t x) const
 }
 
 //_____________________________________________________________________
-inline std::vector<Float_t> TMVA::PDEFoam::VarTransform(std::vector<Float_t> &invec) const
+inline std::vector<Float_t> TMVA::PDEFoam::VarTransform(const std::vector<Float_t> &invec) const
 {
    // transform vector invec from [xmin, xmax] --> [0, 1]
    std::vector<Float_t> outvec;
@@ -326,7 +326,7 @@ inline Float_t TMVA::PDEFoam::VarTransformInvers(Int_t idim, Float_t x) const
 }
 
 //_____________________________________________________________________
-inline std::vector<Float_t> TMVA::PDEFoam::VarTransformInvers(std::vector<Float_t> &invec) const
+inline std::vector<Float_t> TMVA::PDEFoam::VarTransformInvers(const std::vector<Float_t> &invec) const
 {
    // transform vector invec from [0, 1] --> [xmin, xmax]
    std::vector<Float_t> outvec;

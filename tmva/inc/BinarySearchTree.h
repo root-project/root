@@ -119,7 +119,7 @@ namespace TMVA {
 
       void NormalizeTree ();      
       
-      void CalcStatistics( TMVA::Node* n = 0 );      
+      void CalcStatistics( TMVA::Node* n = 0, Int_t signalClass=0 );      
       void Clear         ( TMVA::Node* n = 0 );
 
       // access to mean for signal and background for each variable
