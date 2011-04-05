@@ -174,7 +174,7 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    fLH0 = new TGLayoutHints(kLHintsNormal);
    fLH1 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0);
-   fLH2 = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 1, 1, 1, 3);
+   fLH2 = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 1, 1);
    fLH3 = new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX);
    fLH4 = new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX | kLHintsExpandY,2,2,2,2);
    fLH5 = new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX | kLHintsExpandY);
