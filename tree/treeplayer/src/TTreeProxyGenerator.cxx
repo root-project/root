@@ -1255,7 +1255,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                } else {
                   type = Form("TStlSimpleProxy<%s >", cl->GetName());
                   AddHeader(cl);
-                  if (!cl->IsLoaded()) AddPragma(Form("#pragma link6 C++ class %s;\n", cl->GetName()));
+                  if (!cl->IsLoaded()) AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
                   AddDescriptor( new TBranchProxyDescriptor( branchname, type, branchname ) );
                   continue;
                }
