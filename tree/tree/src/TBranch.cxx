@@ -2189,7 +2189,7 @@ void TBranch::Streamer(TBuffer& b)
             leaf->SetBranch(this);
          }
          fNBaskets = fBaskets.GetEntries();
-         for (j=fWriteBasket,n=0;j>0 && n<fNBaskets;--j) {
+         for (j=fWriteBasket,n=0;j>=0 && n<fNBaskets;--j) {
             TBasket *bk = (TBasket*)fBaskets.UncheckedAt(j);
             if (bk) {
                bk->SetBranch(this);
