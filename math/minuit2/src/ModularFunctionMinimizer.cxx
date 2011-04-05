@@ -26,6 +26,8 @@
 #include "Minuit2/MnLineSearch.h"
 #include "Minuit2/MnParabolaPoint.h"
 
+#include <iostream>
+
 namespace ROOT {
 
    namespace Minuit2 {
@@ -141,7 +143,7 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const MnFcn& mfcn, const Grad
    
    const MinimumBuilder & mb = Builder();
    //std::cout << typeid(&mb).Name() << std::endl;
-   double effective_toler = toler * mfcn.Up(); 
+   double effective_toler = toler * mfcn.Up();   // scale tolerance with Up()
    // avoid tolerance too smalls (than limits)
    double eps = MnMachinePrecision().Eps2(); 
    if (effective_toler < eps) effective_toler = eps; 

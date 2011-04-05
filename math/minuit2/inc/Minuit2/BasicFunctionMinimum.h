@@ -68,10 +68,18 @@ public:
    ~BasicFunctionMinimum() {}
 
    /// add latest minimization state (for example add Hesse result after Migrad)
-   void Add(const MinimumState& state) {
+   void Add(const MinimumState& state ) {
       fStates.push_back(state);
       // LM : update also the user state 
       fUserState = MnUserParameterState(State(), Up(), Seed().Trafo());
+      // reset maxedm flag. If new state has edm over max other method must be used 
+      fAboveMaxEdm = false;
+   }
+
+   ///Add a new state and flag that edm is above maximum  
+   void Add(const MinimumState& state, MnAboveMaxEdm) {
+      Add(state); 
+      fAboveMaxEdm = true;
    }
 
    const MinimumSeed& Seed() const {return fSeed;}

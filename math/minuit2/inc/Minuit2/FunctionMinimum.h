@@ -59,8 +59,11 @@ public:
   
    ~FunctionMinimum() {}
   
-   // why not
+   // add new state
    void Add(const MinimumState& state) {fData->Add(state);}
+
+   // add new state
+   void Add(const MinimumState& state, MnAboveMaxEdm) {fData->Add(state,BasicFunctionMinimum::MnAboveMaxEdm());}
 
    const MinimumSeed& Seed() const {return fData->Seed();}
    const std::vector<ROOT::Minuit2::MinimumState>& States() const {return fData->States();}

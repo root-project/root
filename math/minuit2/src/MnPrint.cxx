@@ -219,8 +219,16 @@ std::ostream& operator<<(std::ostream& os, const FunctionMinimum& min) {
    //os << min.UserCovariance() << std::endl;
    //os << min.UserState().GlobalCC() << std::endl;
    
-   if(!min.IsValid())
-      os <<"WARNING: FunctionMinimum is invalid."<<std::endl;
+   if(!min.IsValid()) {
+      os <<"WARNING: FunctionMinimum is invalid: " << std::endl;
+      if ( !min.State().IsValid() ) 
+         os << "\t State is invalid" << std::endl;
+      if ( min.IsAboveMaxEdm() ) 
+         os << "\t Edm is above max" << std::endl;
+      if ( min.HasReachedCallLimit() ) 
+         os << "\t Reached call limit" << std::endl;
+   }
+
    
    os << std::endl;
    os.precision(pr);

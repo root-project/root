@@ -46,7 +46,8 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    // to be consistent with F77 Minuit
    // in Minuit2 edm is correct and is ~ a factor of 2 smaller than F77Minuit
    // There are also a check for convergence if (edm < 0.1 edmval for exiting the loop) 
-   edmval *= 0.0002; 
+   // LM: change factor to 2E-3 to be consistent with F77Minuit
+   edmval *= 0.002;    
    
    
 #ifdef DEBUG
@@ -95,11 +96,20 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
 #endif
       
       min = Minimum(fcn, gc, seed, result, maxfcn_eff, edmval);
+
+      // if max function call reached exits
+      if ( min.HasReachedCallLimit() ) { 
+#ifdef WARNINGMSG
+         MN_INFO_MSG("VariableMetricBuilder: FunctionMinimum is invalid, reached the function call limit");
+#endif
+         return min; 
+      }
+      
       // second time check for validity of function Minimum 
       if (ipass > 0) { 
          if(!min.IsValid()) {
 #ifdef WARNINGMSG
-            MN_INFO_MSG("FunctionMinimum is invalid.");
+            MN_INFO_MSG("VariableMetricBuilder: FunctionMinimum is invalid after second try");
 #endif
             return min;
          }
@@ -107,6 +117,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       
       // resulting edm of minimization
       edm = result.back().Edm();
+      // need to re-coorect for Dcovar ? 
       
       if( (strategy.Strategy() == 2) || 
           (strategy.Strategy() == 1 && min.Error().Dcovar() > 0.05) ) {
@@ -119,20 +130,30 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo(),maxfcn);
          result.push_back( st );
          
-         // check edm 
+         // check new edm 
          edm = st.Edm();
 #ifdef DEBUG
          std::cout << "edm after Hesse calculation " << edm << " requested " << edmval << std::endl;
 #endif
          if (edm > edmval) { 
-#ifdef WARNINGMSG
-            MN_INFO_MSG("VariableMetricBuilder: Tolerance is not sufficient, continue the minimization");
-            MN_INFO_VAL(edm);
-            MN_INFO_VAL2("required",edmval);
-#endif
             // be careful with machine precision and avoid too small edm
-            if (edm >= fabs(seed.Precision().Eps2()*result.back().Fval())) 
+            double machineLimit = fabs(seed.Precision().Eps2()*result.back().Fval()); 
+            if (edm >= machineLimit)   { 
                iterate = true; 
+#ifdef WARNINGMSG
+               MN_INFO_MSG("VariableMetricBuilder: Tolerance is not sufficient, continue the minimization");
+               MN_INFO_VAL2("Current  Edm is",edm);
+               MN_INFO_VAL2("Required Edm is",edmval);
+#endif
+            }
+            else { 
+#ifdef WARNINGMSG
+               MN_INFO_MSG("VariableMetricBuilder: Stop the minimization - reached machine accuracy limit");
+               MN_INFO_VAL2("Edm is smaller than machine accuracy",machineLimit);
+               MN_INFO_VAL2("Current  Edm is",edm);
+               MN_INFO_VAL2("Required Edm is",edmval);
+#endif
+            }
 
          }
       }
@@ -149,9 +170,29 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    }  while ( iterate );
    
    
-   
    // Add latest state (Hessian calculation)
-   min.Add( result.back() );
+   // and check edm (add a factor of 10 in tolerance )
+   if (edm > 10*edmval) {
+      min.Add( result.back(), FunctionMinimum::MnAboveMaxEdm() );
+#ifdef WARNINGMSG
+      MN_INFO_MSG("VariableMetricBuilder: Invalid function minimum - edm is above tolerance");
+#endif
+      std::cout << "EDM is above max tolerance " << edm << "  " << edmval << std::endl;
+   }
+   else {
+      // check if minimum has edm above max before
+#ifdef WARNINGMSG
+      if ( min.IsAboveMaxEdm() ) {
+         MN_INFO_MSG("VariableMetricBuilder: Edm has been re-computed after Hesse");
+         MN_INFO_VAL2("new value is now smaller than the required tolerance,",edm);
+      }
+#endif
+      min.Add( result.back()  );
+   }
+
+#ifdef DEBUG
+   std::cout << "Obtained function minimum " << min << std::endl;
+#endif
    
    return min;
 }
@@ -307,12 +348,13 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       edm *= (1. + 3.*e.Dcovar());
       
 #ifdef DEBUG
-      std::cout << "edm corrected = " << edm << std::endl;
+      std::cout << "Dcovar = " << e.Dcovar() << "\tCorrected edm = " << edm << std::endl;
 #endif
       
       
       
    } while(edm > edmval && fcn.NumOfCalls() < maxfcn);  // end of iteration loop
+
    
    if(fcn.NumOfCalls() >= maxfcn) {
 #ifdef WARNINGMSG
@@ -327,7 +369,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          MN_INFO_MSG("VariableMetricBuilder: machine accuracy limits further improvement.");
 #endif
          return FunctionMinimum(seed, result, fcn.Up());
-      } else if(edm < 10.*edmval) {
+      } else if(edm < 10*edmval) {  
          return FunctionMinimum(seed, result, fcn.Up());
       } else {
 #ifdef WARNINGMSG
