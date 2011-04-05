@@ -57,7 +57,7 @@ TStyle::TStyle() :TNamed()
 
 
 //______________________________________________________________________________
-TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
+TStyle::TStyle(const char *name, const char *title)
 {
    // Create a new TStyle.
    // The following names are reserved to create special styles
@@ -99,8 +99,13 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
    //    "Plain" style
    //  See also TROOT::ForceStyle and TROOT::UseCurrentStyle
 
+   TString style_name = name;
+   style_name.ToLower();
+
+   SetNameTitle(style_name.Data(), title);
+
    // If another style was already created with the same name, it is overwrite.
-   delete gROOT->GetStyle(name);
+   delete gROOT->GetStyle(style_name.Data());
 
    Reset();
 
@@ -109,7 +114,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       gROOT->GetListOfStyles()->Add(this);
    }
 
-   if (strcmp(name,"Clean") == 0) {
+   if (strcmp(style_name.Data(),"clean") == 0) {
       // Clean style
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
@@ -148,8 +153,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       SetFuncWidth(2);
       SetFuncColor(2);
    }
-
-   if (strcmp(name,"Plain") == 0) {
+   if (strcmp(style_name.Data(),"plain") == 0) {
       // May be a standard style to be initialized
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
@@ -164,7 +168,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       SetLegendBorderSize(1);
       return;
    }
-   if (strcmp(name,"Bold") == 0) {
+   if (strcmp(style_name.Data(),"bold") == 0) {
       // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
       SetPalette(1,0);
       SetCanvasColor(10);
@@ -191,7 +195,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       SetStatColor(10);
       return;
    }
-   if (strcmp(name,"Video") == 0) {
+   if (strcmp(style_name.Data(),"video") == 0) {
       // Author: Art Poskanzer, LBNL, Oct. 1999
       SetPalette(1,0);
       SetCanvasColor(10);
@@ -216,7 +220,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       SetLineWidth(3);
       return;
    }
-   if (strcmp(name,"Pub") == 0) {
+   if (strcmp(style_name.Data(),"pub") == 0) {
       // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
       SetOptTitle(0);
       SetOptStat(0);
@@ -556,7 +560,10 @@ void TStyle::Reset(Option_t *opt)
 
    fTimeOffset = 788918400; // UTC time at 01/01/95
 
-   if (strcmp(opt,"Clean") == 0) {
+   TString style_name = opt;
+   style_name.ToLower();
+
+   if (strcmp(style_name.Data(),"clean") == 0) {
       // Clean style
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
@@ -595,8 +602,7 @@ void TStyle::Reset(Option_t *opt)
       SetFuncWidth(2);
       SetFuncColor(2);
    }
-
-   if (strcmp(opt,"Plain") == 0) {
+   if (strcmp(style_name.Data(),"plain") == 0) {
       SetFrameBorderMode(0);
       SetCanvasBorderMode(0);
       SetPadBorderMode(0);
@@ -609,7 +615,7 @@ void TStyle::Reset(Option_t *opt)
       SetLegendBorderSize(1);
       return;
    }
-   if (strcmp(opt,"Bold") == 0) {
+   if (strcmp(style_name.Data(),"bold") == 0) {
       SetPalette(1,0);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
@@ -635,7 +641,7 @@ void TStyle::Reset(Option_t *opt)
       SetStatColor(10);
       return;
    }
-   if (strcmp(opt,"Video") == 0) {
+   if (strcmp(style_name.Data(),"video") == 0) {
       SetPalette(1,0);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
@@ -659,7 +665,7 @@ void TStyle::Reset(Option_t *opt)
       SetLineWidth(3);
       return;
    }
-   if (strcmp(opt,"Pub") == 0) {
+   if (strcmp(style_name.Data(),"pub") == 0) {
       SetOptTitle(0);
       SetOptStat(0);
       SetPalette(8,0);
