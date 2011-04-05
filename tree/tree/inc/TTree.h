@@ -363,15 +363,25 @@ public:
    virtual Int_t           GetTreeNumber() const { return 0; }
    virtual Int_t           GetUpdate() const { return fUpdate; }
    virtual TList          *GetUserInfo();
+   // See TSelectorDraw::GetVar
    TTreeFormula           *GetVar(Int_t i)  { return GetPlayer()->GetVar(i); }
+   // See TSelectorDraw::GetVar
    TTreeFormula           *GetVar1() { return GetPlayer()->GetVar1(); }
+   // See TSelectorDraw::GetVar
    TTreeFormula           *GetVar2() { return GetPlayer()->GetVar2(); }
+   // See TSelectorDraw::GetVar
    TTreeFormula           *GetVar3() { return GetPlayer()->GetVar3(); }
+   // See TSelectorDraw::GetVar
    TTreeFormula           *GetVar4() { return GetPlayer()->GetVar4(); }
+   // See TSelectorDraw::GetVal
    virtual Double_t       *GetVal(Int_t i)   { return GetPlayer()->GetVal(i); }
+   // See TSelectorDraw::GetVal
    virtual Double_t       *GetV1()   { return GetPlayer()->GetV1(); }
+   // See TSelectorDraw::GetVal
    virtual Double_t       *GetV2()   { return GetPlayer()->GetV2(); }
+   // See TSelectorDraw::GetVal
    virtual Double_t       *GetV3()   { return GetPlayer()->GetV3(); }
+   // See TSelectorDraw::GetVal
    virtual Double_t       *GetV4()   { return GetPlayer()->GetV4(); }
    virtual Double_t       *GetW()    { return GetPlayer()->GetW(); }
    virtual Double_t        GetWeight() const   { return fWeight; }

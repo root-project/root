@@ -3594,16 +3594,18 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //
    //  Once TTree::Draw has been called, it is possible to access useful
    //  information still stored in the TTree object via the following functions:
-   //    -GetSelectedRows()    // return the number of entries accepted by the
+   //    -GetSelectedRows()    //return the number of values accepted by the
    //                          //selection expression. In case where no selection
-   //                          //was specified, returns the number of entries processed.
+   //                          //was specified, returns the number of values processed.
    //    -GetV1()              //returns a pointer to the double array of V1
    //    -GetV2()              //returns a pointer to the double array of V2
    //    -GetV3()              //returns a pointer to the double array of V3
+   //    -GetV4()              //returns a pointer to the double array of V4
    //    -GetW()               //returns a pointer to the double array of Weights
    //                          //where weight equal the result of the selection expression.
    //   where V1,V2,V3 correspond to the expressions in
-   //   TTree::Draw("V1:V2:V3",selection);
+   //   TTree::Draw("V1:V2:V3:V4",selection);
+   //   If the expression has more than 4 component use GetVal(index)
    //
    //   Example:
    //    Root > ntuple->Draw("py:px","pz>4");
@@ -3614,13 +3616,16 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //    number of entries selected by the expression "pz>4", the x points of the graph
    //    being the px values of the Tree and the y points the py values.
    //
-   //   Important note: By default TTree::Draw creates the arrays obtained
-   //    with GetV1, GetV2, GetV3, GetW with a length corresponding to the
-   //    parameter fEstimate. By default fEstimate=1000000 and can be modified
+   //    Important note: By default TTree::Draw creates the arrays obtained
+   //    with GetW, GetV1, GetV2, GetV3, GetV4, GetVal with a length corresponding 
+   //    to the parameter fEstimate.  The content will be the last
+   //            GetSelectedRows() % GetEstimate()
+   //    values calculated.
+   //    By default fEstimate=10000 and can be modified
    //    via TTree::SetEstimate. A possible recipee is to do
    //       tree->SetEstimate(tree->GetEntries());
    //    You must call SetEstimate if the expected number of selected rows
-   //    is greater than 1000000.
+   //    is greater than 10000.
    //
    //    You can use the option "goff" to turn off the graphics output
    //    of TTree::Draw in the above example.

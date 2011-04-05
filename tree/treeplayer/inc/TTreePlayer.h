@@ -89,15 +89,25 @@ public:
    virtual Long64_t  GetSelectedRows() const {return fSelectedRows;}
    TSelector        *GetSelector() const {return fSelector;}
    TSelector        *GetSelectorFromFile() const {return fSelectorFromFile;}
+   // See TSelectorDraw::GetVar
    TTreeFormula     *GetVar(Int_t i) const {return fSelector->GetVar(i);};
+   // See TSelectorDraw::GetVar
    TTreeFormula     *GetVar1() const {return fSelector->GetVar1();}
+   // See TSelectorDraw::GetVar
    TTreeFormula     *GetVar2() const {return fSelector->GetVar2();}
+   // See TSelectorDraw::GetVar
    TTreeFormula     *GetVar3() const {return fSelector->GetVar3();}
+   // See TSelectorDraw::GetVar
    TTreeFormula     *GetVar4() const {return fSelector->GetVar4();}
+   // See TSelectorDraw::GetVal
    virtual Double_t *GetVal(Int_t i) const {return fSelector->GetVal(i);};
+   // See TSelectorDraw::GetVal
    virtual Double_t *GetV1() const   {return fSelector->GetV1();}
+   // See TSelectorDraw::GetVal
    virtual Double_t *GetV2() const   {return fSelector->GetV2();}
+   // See TSelectorDraw::GetVal
    virtual Double_t *GetV3() const   {return fSelector->GetV3();}
+   // See TSelectorDraw::GetVal
    virtual Double_t *GetV4() const   {return fSelector->GetV4();}
    virtual Double_t *GetW() const    {return fSelector->GetW();}
    virtual Int_t     MakeClass(const char *classname, Option_t *option);

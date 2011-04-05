@@ -983,7 +983,21 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
 //______________________________________________________________________________
 Double_t* TSelectorDraw::GetVal(Int_t i) const
 {
-   //Get variable buffer.
+   // Return the last values corresponding to the i-th component 
+   // of the formula being processed (where the component are ':' separated).
+   // The actual number of entries is:
+   //     GetSelectedRows() % tree->GetEstimate()
+   // Note GetSelectedRows currently returns the actual number of values plotted
+   // and thus if the formula contains arrays, this number might be greater than
+   // the number of entries in the trees.
+   // By default TTree::Draw creates the arrays obtained
+   //    with all GetVal and GetW with a length corresponding to the
+   //    parameter fEstimate. By default fEstimate=10000 and can be modified
+   //    via TTree::SetEstimate. A possible recipee is to do
+   //       tree->SetEstimate(tree->GetEntries());
+   //    You must call SetEstimate if the expected number of selected rows
+   //    is greater than 10000.
+   // See TTree::Draw for additional details.
 
    if(i<0 || i >= fDimension)
       return 0;
@@ -994,7 +1008,8 @@ Double_t* TSelectorDraw::GetVal(Int_t i) const
 //______________________________________________________________________________
 TTreeFormula* TSelectorDraw::GetVar(Int_t i) const
 {
-   //Get variable formula.
+   // Return the TTreeFormula corresponding to the i-th component 
+   // of the request formula (where the component are ':' separated).
 
    if(i<0 || i>=fDimension)
       return 0;
