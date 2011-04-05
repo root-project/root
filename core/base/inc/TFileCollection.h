@@ -104,7 +104,7 @@ public:
    TFileCollection *GetStagedSubset();
 
    TFileCollection *GetFilesOnServer(const char *server);
-   TMap            *GetFilesPerServer(const char *exclude = 0);
+   TMap            *GetFilesPerServer(const char *exclude = 0, Bool_t curronly =  kFALSE);
 
    ClassDef(TFileCollection, 3)  // Collection of TFileInfo objects
 };

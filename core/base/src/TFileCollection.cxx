@@ -666,7 +666,8 @@ TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
    if (uri.GetPort() != "") port.Form(":%s", uri.GetPort().Data());
    srv.Form("%s://%s%s", scheme.Data(), TUrl(server).GetHostFQDN(), port.Data());
    if (gDebug > 0)
-      Info("GetFilesOnServer", "searching for files on server: '%s' (input: '%s')", srv.Data(), server);
+      Info("GetFilesOnServer", "searching for files on server: '%s' (input: '%s')",
+                               srv.Data(), server);
 
    // Prepare the output
    fc = new TFileCollection(GetName());
@@ -731,10 +732,12 @@ TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
 }
 
 //______________________________________________________________________________
-TMap *TFileCollection::GetFilesPerServer(const char *exclude)
+TMap *TFileCollection::GetFilesPerServer(const char *exclude, Bool_t curronly)
 {
    // Return a map of TFileCollections with the files on each data server,
-   // excluding servers in the comma-separated list 'exclude'
+   // excluding servers in the comma-separated list 'exclude'.
+   // If curronly is kTRUE, only the URL flagged as current in the TFileInfo
+   // are considered.
 
    TMap *dsmap = 0;
 
@@ -777,9 +780,9 @@ TMap *TFileCollection::GetFilesPerServer(const char *exclude)
       // Save current URL
       TUrl *curl = fi->GetCurrentUrl();
       // Loop over URLs
-      fi->ResetUrl();
+      if (!curronly) fi->ResetUrl();
       TUrl *xurl = 0;
-      while ((xurl = fi->NextUrl())) {
+      while ((xurl = (curronly) ? curl : fi->NextUrl())) {
          // Find the key for this server
          key.Form("%s://%s", xurl->GetProtocol(), xurl->GetHostFQDN());
          // Check if this has to be ignored
@@ -826,6 +829,8 @@ TMap *TFileCollection::GetFilesPerServer(const char *exclude)
          if (fi->TestBit(TFileInfo::kStaged)) nfi->SetBit(TFileInfo::kStaged);
          if (fi->TestBit(TFileInfo::kCorrupted)) nfi->SetBit(TFileInfo::kCorrupted);
          fc->Add(nfi);
+         // In current_only mode we are done
+         if (curronly) break;
       }
       // Restore current URL
       fi->SetCurrentUrl(curl);
