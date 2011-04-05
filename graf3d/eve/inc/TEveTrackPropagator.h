@@ -244,10 +244,15 @@ public:
    virtual void ElementChanged(Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE);
 
    // propagation
-   void   InitTrack(TEveVectorD& v, Int_t charge);
+   void   InitTrack(const TEveVectorD& v, Int_t charge);
    void   ResetTrack();
    void   GoToBounds(TEveVectorD& p);
-   Bool_t GoToVertex(TEveVectorD& v, TEveVectorD&p);
+   Bool_t GoToVertex(TEveVectorD& v, TEveVectorD& p);
+
+   // TEveVectorF wrappers
+   void   InitTrack(const TEveVectorF& v, Int_t charge);
+   void   GoToBounds(TEveVectorF& p);
+   Bool_t GoToVertex(TEveVectorF& v, TEveVectorF&p);
 
    Bool_t IntersectPlane(const TEveVectorD& p, const TEveVectorD& point, const TEveVectorD& normal,
                          TEveVectorD& itsect);

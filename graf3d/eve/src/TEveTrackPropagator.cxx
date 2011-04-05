@@ -281,7 +281,7 @@ void TEveTrackPropagator::ElementChanged(Bool_t update_scenes, Bool_t redraw)
 //==============================================================================
 
 //______________________________________________________________________________
-void TEveTrackPropagator::InitTrack(TEveVectorD &v,  Int_t charge)
+void TEveTrackPropagator::InitTrack(const TEveVectorD &v, Int_t charge)
 {
    // Initialize internal data-members for given particle parameters.
 
@@ -291,6 +291,15 @@ void TEveTrackPropagator::InitTrack(TEveVectorD &v,  Int_t charge)
    // init helix
    fH.fPhi    = 0;
    fH.fCharge = charge;
+}
+
+//______________________________________________________________________________
+void TEveTrackPropagator::InitTrack(const TEveVectorF& v, Int_t charge)
+{
+   // TEveVectorF wrapper.
+
+   TEveVectorD vd(v);
+   InitTrack(vd, charge);
 }
 
 //______________________________________________________________________________
@@ -321,6 +330,17 @@ Bool_t TEveTrackPropagator::GoToVertex(TEveVectorD& v, TEveVectorD& p)
 }
 
 //______________________________________________________________________________
+Bool_t TEveTrackPropagator::GoToVertex(TEveVectorF& v, TEveVectorF& p)
+{
+   // TEveVectorF wrapper.
+
+   TEveVectorD vd(v), pd(p);
+   Bool_t result = GoToVertex(vd, pd);
+   v = vd; p = pd;
+   return result;
+}
+
+//______________________________________________________________________________
 void TEveTrackPropagator::GoToBounds(TEveVectorD& p)
 {
    // Propagate particle to bounds.
@@ -329,6 +349,16 @@ void TEveTrackPropagator::GoToBounds(TEveVectorD& p)
    Update(fV, p, kTRUE);
 
    fH.fValid ? LoopToBounds(p): LineToBounds(p);
+}
+
+//______________________________________________________________________________
+void TEveTrackPropagator::GoToBounds(TEveVectorF& p)
+{
+   // TEveVectorF wrapper.
+
+   TEveVectorD pd(p);
+   GoToBounds(pd);
+   p = pd;
 }
 
 //______________________________________________________________________________
