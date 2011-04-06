@@ -71,6 +71,7 @@
 #include "TGButton.h"
 #include "TQConnection.h"
 #include "TParameter.h"
+#include "TEnv.h"
 
 const TGGC   *TGPopupMenu::fgDefaultGC = 0;
 const TGGC   *TGPopupMenu::fgDefaultSelectedGC = 0;
@@ -943,6 +944,11 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    fMenuBar     = 0;
    fSplitButton = 0;
    fEntrySep    = 3;
+   fStyle       = 0;
+
+   TString style = gEnv->GetValue("Gui.Style", "modern");
+   if (style.Contains("modern", TString::kIgnoreCase))
+      fStyle = 1;
 
    SetWindowAttributes_t wattr;
    wattr.fMask             = kWAOverrideRedirect | kWASaveUnder;
@@ -1563,15 +1569,25 @@ void TGPopupMenu::DrawBorder()
 {
    // Draw border round popup menu.
 
-   gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, fMenuWidth-2, 0);
-   gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, 0, fMenuHeight-2);
-   gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, fMenuWidth-fEntrySep, 1);
-   gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, 1, fMenuHeight-fEntrySep);
+   if (fStyle > 0) {
+      // new modern (flat) version
+      gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, 0, fMenuHeight-1);
+      gVirtualX->DrawLine(fId, GetShadowGC()(), 0, fMenuHeight-1, fMenuWidth-1, fMenuHeight-1);
+      gVirtualX->DrawLine(fId, GetShadowGC()(), fMenuWidth-1, fMenuHeight-1, fMenuWidth-1, 0);
+      gVirtualX->DrawLine(fId, GetShadowGC()(), fMenuWidth-1, 0, 0, 0);
+   } 
+   else {
+      // old (raised frame) version
+      gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, fMenuWidth-2, 0);
+      gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, 0, fMenuHeight-2);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, fMenuWidth-fEntrySep, 1);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, 1, fMenuHeight-fEntrySep);
 
-   gVirtualX->DrawLine(fId, GetShadowGC()(),  1, fMenuHeight-2, fMenuWidth-2, fMenuHeight-2);
-   gVirtualX->DrawLine(fId, GetShadowGC()(),  fMenuWidth-2, fMenuHeight-2, fMenuWidth-2, 1);
-   gVirtualX->DrawLine(fId, GetBlackGC()(), 0, fMenuHeight-1, fMenuWidth-1, fMenuHeight-1);
-   gVirtualX->DrawLine(fId, GetBlackGC()(), fMenuWidth-1, fMenuHeight-1, fMenuWidth-1, 0);
+      gVirtualX->DrawLine(fId, GetShadowGC()(),  1, fMenuHeight-2, fMenuWidth-2, fMenuHeight-2);
+      gVirtualX->DrawLine(fId, GetShadowGC()(),  fMenuWidth-2, fMenuHeight-2, fMenuWidth-2, 1);
+      gVirtualX->DrawLine(fId, GetBlackGC()(), 0, fMenuHeight-1, fMenuWidth-1, fMenuHeight-1);
+      gVirtualX->DrawLine(fId, GetBlackGC()(), fMenuWidth-1, fMenuHeight-1, fMenuWidth-1, 0);
+   }
 }
 
 //______________________________________________________________________________

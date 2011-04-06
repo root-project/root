@@ -154,6 +154,7 @@ protected:
    TGMenuBar         *fMenuBar;       // menu bar (if any)
    TGSplitButton     *fSplitButton;   // split button (if any)
    UInt_t             fEntrySep;      // separation distance between ebtris
+   UInt_t             fStyle;         // menu style (flat ot raised frame)
 
    static const TGFont *fgDefaultFont;
    static const TGFont *fgHilightFont;
