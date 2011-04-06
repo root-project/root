@@ -102,10 +102,10 @@ TStyle::TStyle(const char *name, const char *title)
    TString style_name = name;
    style_name.ToLower();
 
-   SetNameTitle(style_name.Data(), title);
+   SetNameTitle(style_name, title);
 
    // If another style was already created with the same name, it is overwrite.
-   delete gROOT->GetStyle(style_name.Data());
+   delete gROOT->GetStyle(style_name);
 
    Reset();
 
@@ -114,7 +114,7 @@ TStyle::TStyle(const char *name, const char *title)
       gROOT->GetListOfStyles()->Add(this);
    }
 
-   if (strcmp(style_name.Data(),"clean") == 0) {
+   if (strcmp(style_name,"clean") == 0) {
       // Clean style
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
@@ -153,7 +153,7 @@ TStyle::TStyle(const char *name, const char *title)
       SetFuncWidth(2);
       SetFuncColor(2);
    }
-   if (strcmp(style_name.Data(),"plain") == 0) {
+   if (strcmp(style_name,"plain") == 0) {
       // May be a standard style to be initialized
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
@@ -168,7 +168,7 @@ TStyle::TStyle(const char *name, const char *title)
       SetLegendBorderSize(1);
       return;
    }
-   if (strcmp(style_name.Data(),"bold") == 0) {
+   if (strcmp(style_name,"bold") == 0) {
       // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
       SetPalette(1,0);
       SetCanvasColor(10);
@@ -195,7 +195,7 @@ TStyle::TStyle(const char *name, const char *title)
       SetStatColor(10);
       return;
    }
-   if (strcmp(style_name.Data(),"video") == 0) {
+   if (strcmp(style_name,"video") == 0) {
       // Author: Art Poskanzer, LBNL, Oct. 1999
       SetPalette(1,0);
       SetCanvasColor(10);
@@ -220,7 +220,7 @@ TStyle::TStyle(const char *name, const char *title)
       SetLineWidth(3);
       return;
    }
-   if (strcmp(style_name.Data(),"pub") == 0) {
+   if (strcmp(style_name,"pub") == 0) {
       // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
       SetOptTitle(0);
       SetOptStat(0);
@@ -563,7 +563,7 @@ void TStyle::Reset(Option_t *opt)
    TString style_name = opt;
    style_name.ToLower();
 
-   if (strcmp(style_name.Data(),"clean") == 0) {
+   if (strcmp(style_name,"clean") == 0) {
       // Clean style
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
@@ -602,7 +602,7 @@ void TStyle::Reset(Option_t *opt)
       SetFuncWidth(2);
       SetFuncColor(2);
    }
-   if (strcmp(style_name.Data(),"plain") == 0) {
+   if (strcmp(style_name,"plain") == 0) {
       SetFrameBorderMode(0);
       SetCanvasBorderMode(0);
       SetPadBorderMode(0);
@@ -615,7 +615,7 @@ void TStyle::Reset(Option_t *opt)
       SetLegendBorderSize(1);
       return;
    }
-   if (strcmp(style_name.Data(),"bold") == 0) {
+   if (strcmp(style_name,"bold") == 0) {
       SetPalette(1,0);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
@@ -641,7 +641,7 @@ void TStyle::Reset(Option_t *opt)
       SetStatColor(10);
       return;
    }
-   if (strcmp(style_name.Data(),"video") == 0) {
+   if (strcmp(style_name,"video") == 0) {
       SetPalette(1,0);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
@@ -665,7 +665,7 @@ void TStyle::Reset(Option_t *opt)
       SetLineWidth(3);
       return;
    }
-   if (strcmp(style_name.Data(),"pub") == 0) {
+   if (strcmp(style_name,"pub") == 0) {
       SetOptTitle(0);
       SetOptStat(0);
       SetPalette(8,0);
@@ -1522,7 +1522,7 @@ void TStyle::SaveSource(const char *filename, Option_t *option)
    TString ff = strlen(filename) ? filename : "Rootstyl.C";
 
    // Computes the main method name.
-   const char *fname = gSystem->BaseName(ff.Data());
+   const char *fname = gSystem->BaseName(ff);
    Int_t lenfname = strlen(fname);
    char *sname = new char[lenfname + 1];
    Int_t i = 0;
@@ -1568,7 +1568,7 @@ void TStyle::SaveSource(const char *filename, Option_t *option)
    out << "}" << endl;
    out.close();
 
-   printf(" C++ macro file %s has been generated\n", gSystem->BaseName(ff.Data()));
+   printf(" C++ macro file %s has been generated\n", gSystem->BaseName(ff));
 }
 
 

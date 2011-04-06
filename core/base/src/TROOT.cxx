@@ -1810,7 +1810,7 @@ void TROOT::SetStyle(const char *stylename)
    TString style_name = stylename;
    style_name.ToLower();
 
-   TStyle *style = GetStyle(style_name.Data());
+   TStyle *style = GetStyle(style_name);
    if (style) style->cd();
    else       Error("SetStyle","Unknown style:%s",style_name.Data());
 }
