@@ -352,7 +352,7 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
       else {
          fCheckMark->Draw(id, fNormGC, x + ix, y + iy);
          gVirtualX->SetForeground(fNormGC, fgWhitePixel);
-         gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, fTWidth, fTHeight + 1);
+         gVirtualX->FillRectangle(id, fNormGC, x + lx, y, fWidth-lx, fHeight);
          gVirtualX->SetForeground(fNormGC, fgBlackPixel);
       }
    }
@@ -375,18 +375,18 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
       if (fActive) {
          if (fSelPic) fSelPic->Draw(id, fNormGC, x + ix, y + iy);
          gVirtualX->SetForeground(fNormGC, fgDefaultSelectedBackground);
-         gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, ftmpWidth, fTHeight + 1);
+         gVirtualX->FillRectangle(id, fNormGC, x + lx, y, fWidth-(lx+4), fHeight);
          gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
       } else {
          fCurrent->Draw(id, fNormGC, x + ix, y + iy);
          gVirtualX->SetForeground(fNormGC, fgWhitePixel);
-         gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, ftmpWidth, fTHeight + 1);
+         gVirtualX->FillRectangle(id, fNormGC, x + lx, y, fWidth-(lx+4), fHeight);
          gVirtualX->SetForeground(fNormGC, fgBlackPixel);
       }
 
       TGString tmpTGString(tmpString);
       tmpTGString.Draw(id, fNormGC, x+lx, y+ly + max_ascent);
-   } else {
+   } else if (fViewMode == kLVLargeIcons) {
       if (fActive) {
          if (fSelPic) fSelPic->Draw(id, fNormGC, x + ix, y + iy);
          gVirtualX->SetForeground(fNormGC, fgDefaultSelectedBackground);
@@ -399,13 +399,30 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
          gVirtualX->SetForeground(fNormGC, fgBlackPixel);
       }
       fItemName->Draw(id, fNormGC, x+lx, y+ly + max_ascent);
+   } else {
+      if (fActive) {
+         gVirtualX->SetForeground(fNormGC, fgDefaultSelectedBackground);
+         gVirtualX->FillRectangle(id, fNormGC, x + lx, y, fWidth-lx, fHeight);
+         gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
+         if (fSelPic) fSelPic->Draw(id, fNormGC, x + ix, y + iy);
+      } else {
+         gVirtualX->SetForeground(fNormGC, fgWhitePixel);
+         gVirtualX->FillRectangle(id, fNormGC, x + lx, y, fWidth-lx, fHeight);
+         gVirtualX->SetForeground(fNormGC, fgBlackPixel);
+         fCurrent->Draw(id, fNormGC, x + ix, y + iy);
+      }
+      fItemName->Draw(id, fNormGC, x+lx, y+ly + max_ascent);
    }
-   gVirtualX->SetForeground(fNormGC, fgBlackPixel);
 
    if (fViewMode == kLVDetails) {
       if (fSubnames && fCpos && fJmode && fCtw) {
          int i;
 
+         if (fActive) {
+            gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
+         } else {
+            gVirtualX->SetForeground(fNormGC, fgBlackPixel);
+         }
          // Again fixes the size of the strings
          for (i = 0; fSubnames[i] != 0; ++i) {
             TString tmpString = *fSubnames[i];
@@ -437,6 +454,7 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
          }
       }
    }
+   gVirtualX->SetForeground(fNormGC, fgBlackPixel);
 }
 
 //______________________________________________________________________________
@@ -599,7 +617,7 @@ void TGLVContainer::SetViewMode(EListViewMode viewMode)
       if (viewMode == kLVLargeIcons)
          fItemLayout = new TGLayoutHints(kLHintsExpandY | kLHintsCenterX);
       else
-         fItemLayout = new TGLayoutHints(kLHintsLeft | kLHintsCenterY);
+         fItemLayout = new TGLayoutHints(kLHintsExpandX | kLHintsCenterY);
 
       TGFrameElement *el;
       TIter next(fList);
