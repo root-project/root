@@ -801,6 +801,8 @@ void TGTileLayout::Layout()
       fModified = fModified || (ptr->fFrame->GetX() != xw) || 
                  (ptr->fFrame->GetY() != yw);
       ptr->fFrame->Move(xw, yw);
+      if (hints & kLHintsExpandX)
+         ptr->fFrame->Resize(max_osize.fWidth, ptr->fFrame->GetDefaultHeight());
       x += (Int_t)max_osize.fWidth + fSep;
 
       if (x + max_osize.fWidth > max_width) {
@@ -892,6 +894,8 @@ void TGListLayout::Layout()
       fModified = fModified || (ptr->fFrame->GetX() != xw) || 
                  (ptr->fFrame->GetY() != yw);
       ptr->fFrame->Move(xw, yw);
+      if (hints & kLHintsExpandX)
+         ptr->fFrame->Resize(max_osize.fWidth, ptr->fFrame->GetDefaultHeight());
       y += (Int_t)max_osize.fHeight + fSep + (fSep >> 1);
 
       if (y + max_osize.fHeight > max_height) {
