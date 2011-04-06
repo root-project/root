@@ -60,6 +60,7 @@
 
 Pixel_t          TGListTree::fgGrayPixel = 0;
 const TGFont    *TGListTree::fgDefaultFont = 0;
+TGGC            *TGListTree::fgActiveGC = 0;
 TGGC            *TGListTree::fgDrawGC = 0;
 TGGC            *TGListTree::fgLineGC = 0;
 TGGC            *TGListTree::fgHighlightGC = 0;
@@ -351,6 +352,7 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    fGrayPixel   = GetGrayPixel();
    fFont        = GetDefaultFontStruct();
 
+   fActiveGC    = GetActiveGC()();
    fDrawGC      = GetDrawGC()();
    fLineGC      = GetLineGC()();
    fHighlightGC = GetHighlightGC()();
@@ -410,6 +412,7 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    fGrayPixel   = GetGrayPixel();
    fFont        = GetDefaultFontStruct();
 
+   fActiveGC    = GetActiveGC()();
    fDrawGC      = GetDrawGC()();
    fLineGC      = GetLineGC()();
    fHighlightGC = GetHighlightGC()();
@@ -706,6 +709,7 @@ Bool_t TGListTree::HandleCrossing(Event_t *event)
          MouseOver(0, event->fState);
       }
    }
+   ClearViewPort();
    return kTRUE;
 }
 
@@ -1513,6 +1517,7 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
 
    if ((yp >= fExposeTop) && (yp <= (Int_t)dim.fHeight))
    {
+      DrawItemName(id, item);
       if (*xroot >= 0) {
          xc = *xroot;
 
@@ -1541,7 +1546,6 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
          pic1->Draw(id, fDrawGC, xpic1, ypicp);
       if (pic2)
          pic2->Draw(id, fDrawGC, xpic2, ypicp);
-      DrawItemName(id, item);
    }
 
    *xroot = xbranch;
@@ -1555,22 +1559,17 @@ void TGListTree::DrawOutline(Handle_t id, TGListTreeItem *item, Pixel_t col,
 {
    // Draw a outline of color 'col' around an item.
 
-   Int_t posx;
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
 
-   posx = item->fXtext - item->GetPicWidth();
-   posx -= 5;
-   if (item->HasCheckBox())
-      posx -= item->GetCheckBoxPicture()->GetWidth();
    if (clear) {
       gVirtualX->SetForeground(fDrawGC, fCanvas->GetContainer()->GetBackground());
       //ClearViewPort();  // time consuming!!!
    }
    else
       gVirtualX->SetForeground(fDrawGC, col);
-   gVirtualX->DrawRectangle(id, fDrawGC, posx, item->fYtext-pos.fY-2, 
-                            dim.fWidth-posx-2, FontHeight()+4);
+   gVirtualX->DrawRectangle(id, fDrawGC, 1, item->fYtext-pos.fY-2, 
+                            dim.fWidth-3, FontHeight()+4);
    gVirtualX->SetForeground(fDrawGC, fgBlackPixel);
 }
 
@@ -1583,12 +1582,12 @@ void TGListTree::DrawActive(Handle_t id, TGListTreeItem *item)
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
 
-   width = TextWidth(item->GetText());
+   width = dim.fWidth-2;
    gVirtualX->SetForeground(fDrawGC, item->GetActiveColor());
-   gVirtualX->FillRectangle(id, fDrawGC, item->fXtext-1, 
-                    item->fYtext-pos.fY, width+2, FontHeight()+1);
+   gVirtualX->FillRectangle(id, fDrawGC, 1, item->fYtext-pos.fY-1, width, 
+                            FontHeight()+3);
    gVirtualX->SetForeground(fDrawGC, fgBlackPixel);
-   gVirtualX->DrawString(id, fHighlightGC, item->fXtext, 
+   gVirtualX->DrawString(id, fActiveGC, item->fXtext, 
                          item->fYtext - pos.fY + FontAscent(),
                          item->GetText(), item->GetTextLength());
 }
@@ -1621,7 +1620,8 @@ void TGListTree::DrawItemName(Handle_t id, TGListTreeItem *item)
       gVirtualX->SetForeground(fColorGC, TColor::Number2Pixel(item->GetColor()));
       if (fColorMode & kColorUnderline) {
          Int_t y = item->fYtext-pos.fY + FontAscent() + 2;
-         gVirtualX->DrawLine(id, fColorGC, item->fXtext, y, item->fXtext + width, y);
+         gVirtualX->DrawLine(id, fColorGC, item->fXtext, y, 
+                             item->fXtext + width, y);
       }
       if (fColorMode & kColorBox) {
          Int_t x = item->fXtext + width + 4;
@@ -2390,6 +2390,31 @@ FontStruct_t TGListTree::GetDefaultFontStruct()
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
    return fgDefaultFont->GetFontStruct();
+}
+
+//______________________________________________________________________________
+const TGGC &TGListTree::GetActiveGC()
+{
+   // Return default graphics context in use.
+
+   if (!fgActiveGC) {
+      GCValues_t gcv;
+
+      gcv.fMask = kGCLineStyle  | kGCLineWidth  | kGCFillStyle |
+                  kGCForeground | kGCBackground | kGCFont;
+      gcv.fLineStyle  = kLineSolid;
+      gcv.fLineWidth  = 0;
+      gcv.fFillStyle  = kFillSolid;
+      gcv.fFont       = fgDefaultFont->GetFontHandle();
+      gcv.fBackground = fgDefaultSelectedBackground;
+      const TGGC *selgc = gClient->GetResourcePool()->GetSelectedGC();
+      if (selgc)
+         gcv.fForeground = selgc->GetForeground();
+      else 
+         gcv.fForeground = fgWhitePixel;
+      fgActiveGC = gClient->GetGC(&gcv, kTRUE);
+   }
+   return *fgActiveGC;
 }
 
 //______________________________________________________________________________

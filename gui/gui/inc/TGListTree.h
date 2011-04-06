@@ -238,6 +238,7 @@ protected:
    Int_t            fIndent;         // number of pixels indentation
    Int_t            fMargin;         // number of pixels margin from left side
    Pixel_t          fGrayPixel;      // gray draw color
+   GContext_t       fActiveGC;       // activated (selected) drawing context
    GContext_t       fDrawGC;         // icon drawing context
    GContext_t       fLineGC;         // dashed line drawing context
    GContext_t       fHighlightGC;    // highlighted icon drawing context
@@ -265,6 +266,7 @@ protected:
 
    static Pixel_t          fgGrayPixel;
    static const TGFont    *fgDefaultFont;
+   static TGGC            *fgActiveGC;
    static TGGC            *fgDrawGC;
    static TGGC            *fgLineGC;
    static TGGC            *fgHighlightGC;
@@ -276,6 +278,7 @@ protected:
 
    static Pixel_t       GetGrayPixel();
    static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetActiveGC();
    static const TGGC   &GetDrawGC();
    static const TGGC   &GetLineGC();
    static const TGGC   &GetHighlightGC();
