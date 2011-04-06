@@ -613,10 +613,17 @@ G__value G__letvariable(G__FastAllocString &item, G__value expression, G__var_ar
                case 0:
                   break;
                case 1:
-                  G__reftype = G__PARANORMAL;
+                  if (G__reftype != G__PARAREFERENCE) {
+                     G__reftype = G__PARANORMAL;
+                  }
                   break;
                default:
-                  G__reftype = G__PARAP2P + pointlevel - 2;
+                  if (G__reftype != G__PARAREFERENCE) {
+                     G__reftype = G__PARAP2P + pointlevel - 2;
+                  }
+                  else {
+                     G__reftype = G__PARAREFP2P + pointlevel - 2;
+                  }
                   break;
             }
             ttt = item + i - 1;
