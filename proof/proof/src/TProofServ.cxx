@@ -3224,6 +3224,8 @@ Bool_t TProofServ::UnlinkDataDir(const char *path)
             dorm = kFALSE;
          }
       }
+      // Close the directory
+      gSystem->FreeDirectory(dirp);
    } else {
       // Cannot open the directory
       dorm = kFALSE;

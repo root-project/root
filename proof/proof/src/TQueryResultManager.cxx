@@ -120,24 +120,30 @@ Int_t TQueryResultManager::CleanupQueriesDir()
    queriesdir = queriesdir.Remove(queriesdir.Index(kPROOF_QueryDir) +
                                   strlen(kPROOF_QueryDir));
    void *dirs = gSystem->OpenDirectory(queriesdir);
-   char *sess = 0;
-   while ((sess = (char *) gSystem->GetDirEntry(dirs))) {
+   if (dirs) {
+      char *sess = 0;
+      while ((sess = (char *) gSystem->GetDirEntry(dirs))) {
 
-      // We are interested only in "session-..." subdirs
-      if (strlen(sess) < 7 || strncmp(sess,"session",7))
-         continue;
+         // We are interested only in "session-..." subdirs
+         if (strlen(sess) < 7 || strncmp(sess,"session",7))
+            continue;
 
-      // We do not want this session at this level
-      if (strstr(sess, fSessionTag))
-         continue;
+         // We do not want this session at this level
+         if (strstr(sess, fSessionTag))
+            continue;
 
-      // Remove the directory
-      TString qdir;
-      qdir.Form("%s/%s", queriesdir.Data(), sess);
-      PDB(kGlobal, 1)
-         Info("RemoveQuery", "removing directory: %s", qdir.Data());
-      gSystem->Exec(Form("%s %s", kRM, qdir.Data()));
-      nd++;
+         // Remove the directory
+         TString qdir;
+         qdir.Form("%s/%s", queriesdir.Data(), sess);
+         PDB(kGlobal, 1)
+            Info("RemoveQuery", "removing directory: %s", qdir.Data());
+         gSystem->Exec(Form("%s %s", kRM, qdir.Data()));
+         nd++;
+      }
+      // Close directory
+      gSystem->FreeDirectory(dirs);
+   } else {
+      Warning("RemoveQuery", "cannot open queries directory: %s", queriesdir.Data());
    }
 
    // Done

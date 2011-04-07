@@ -9739,19 +9739,25 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
    TList fileList;
    fileList.SetOwner();
    void *dataSetDir = gSystem->OpenDirectory(gSystem->DirName(files));
-   const char* ent;
-   TString filesExp(gSystem->BaseName(files));
-   filesExp.ReplaceAll("*",".*");
-   TRegexp rg(filesExp);
-   while ((ent = gSystem->GetDirEntry(dataSetDir))) {
-      TString entryString(ent);
-      if (entryString.Index(rg) != kNPOS) {
-         // Matching dir entry: add to the list
-         TString u = TString::Format("file://%s/%s", gSystem->DirName(files), ent);
-         if (gSystem->AccessPathName(u, kReadPermission) == kFALSE)
-            fileList.Add(new TFileInfo(u));
-      } //if matching dir entry
-   } //while
+   if (dataSetDir) {
+      const char* ent;
+      TString filesExp(gSystem->BaseName(files));
+      filesExp.ReplaceAll("*",".*");
+      TRegexp rg(filesExp);
+      while ((ent = gSystem->GetDirEntry(dataSetDir))) {
+         TString entryString(ent);
+         if (entryString.Index(rg) != kNPOS) {
+            // Matching dir entry: add to the list
+            TString u = TString::Format("file://%s/%s", gSystem->DirName(files), ent);
+            if (gSystem->AccessPathName(u, kReadPermission) == kFALSE)
+               fileList.Add(new TFileInfo(u));
+         } //if matching dir entry
+      } //while
+      // Close the directory
+      gSystem->FreeDirectory(dataSetDir);
+   } else {
+      Warning("UploadDataSet", "cannot open: directory '%s'", gSystem->DirName(files));
+   }
    Int_t fileCount;
    if ((fileCount = fileList.GetSize()) == 0)
       Printf("No files match your selection. The dataset will not be saved");
