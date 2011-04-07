@@ -546,6 +546,8 @@ int XrdProofdAux::ChangeOwn(const char *path, XrdProofUI ui)
             TRACE(XERR, "unable to stat dir: "<<fn<<" (errno: "<<errno<<")");
          }
       }
+      // Close the directory
+      closedir(dir);
 
    } else if (((int) st.st_uid != ui.fUid) || ((int) st.st_gid != ui.fGid)) {
       // Get the privileges, if needed
@@ -642,6 +644,8 @@ int XrdProofdAux::ChangeMod(const char *path, unsigned int mode)
             TRACE(XERR, "unable to stat dir: "<<fn<<" (errno: "<<errno<<")");
          }
       }
+      // Close the directory
+      closedir(dir);
    }
 
    // We are done
