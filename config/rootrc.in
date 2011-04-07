@@ -283,6 +283,7 @@ ACLiC.Linkdef:          _linkdef
 #  2 - Generate and use rootmap file for each library
 #  3 - Generate rootmap file for each library _and_ explicitly link to the
 #      needed libraries.
+# On Windows, the default is 3
 #ACLiC.LinkLibs:      1
 
 # PROOF related variables
