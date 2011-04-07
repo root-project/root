@@ -602,6 +602,10 @@ void TROOT::CloseFiles()
    // Close any files and sockets that gROOT knows about.
    // This can be used to insures that the files and sockets are closed before any library is unloaded!
 
+   if (fFiles) fFiles->Delete("slow");
+   if (fSockets) fSockets->Delete();
+   if (fMappedFiles) fMappedFiles->Delete("slow");
+#if 0
    if (fFiles && fFiles->First()) {
       TIter next(fFiles);
       TDirectory *file;
@@ -628,6 +632,7 @@ void TROOT::CloseFiles()
          file->Close();
       }
    }
+#endif
 }
 
 //______________________________________________________________________________
