@@ -31,6 +31,7 @@
 #include "TKey.h"
 #include "TObjString.h"
 #include "TProof.h"
+#include "TROOT.h"
 #include "TUrl.h"
 
 #include "TCanvas.h"
@@ -105,6 +106,7 @@ Int_t TProofBench::OpenOutFile(Bool_t wrt, Bool_t verbose)
                                    " again or with another file", fOutFileName.Data());
          rc = -1;
       }
+      if (fOutFile) gROOT->GetListOfFiles()->Remove(fOutFile);
    }
    return rc;
 }
