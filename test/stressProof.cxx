@@ -101,6 +101,7 @@
 #include <stdlib.h>
 
 #include "Getline.h"
+#include "TApplication.h"
 #include "TChain.h"
 #include "TFile.h"
 #include "TFileCollection.h"
@@ -171,7 +172,7 @@ int main(int argc,const char *argv[])
       printf(" \n");
       printf(" Usage:\n");
       printf(" \n");
-      printf(" $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile] [-dyn] [-ds] [-t testnum] [-h1 h1src] [master]\n");
+      printf(" $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile] [-dyn] [-ds] [-t testnum] [-h1 h1src] [-g] [master]\n");
       printf(" \n");
       printf(" Optional arguments:\n");
       printf("   -h            prints this menu\n");
@@ -190,6 +191,7 @@ int main(int argc,const char *argv[])
       printf("                 to a temporary location; by default the files are read directly from the\n");
       printf("                 ROOT http server; however this may give failures if the connection is slow\n");
       printf("   -punzip       use parallel unzipping for data-driven processing.\n");
+      printf("   -g            enable graphics; default is to run in text mode.\n");
       printf(" \n");
       gSystem->Exit(0);
    }
@@ -199,6 +201,7 @@ int main(int argc,const char *argv[])
    Int_t nWrks = -1;
    Int_t verbose = 1;
    Int_t test = -1;
+   Bool_t enablegraphics = kFALSE;
    const char *logfile = 0;
    const char *h1src = 0;
    Int_t i = 1;
@@ -260,6 +263,9 @@ int main(int argc,const char *argv[])
             h1src = argv[i+1];
             i += 2;
          }
+      } else if (!strncmp(argv[i],"-g",2)) {
+         enablegraphics = kTRUE;
+         i++;
       } else {
          url = argv[i];
          i++;
@@ -267,6 +273,10 @@ int main(int argc,const char *argv[])
    }
    // Use defaults where required
    if (!url) url = urldef;
+
+   // Enable graphics if required
+   if (enablegraphics)
+      new TApplication("stressProof", 0, 0);
 
    stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest, test, h1src);
 
