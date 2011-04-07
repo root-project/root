@@ -51,14 +51,16 @@ if [ "$HAVEMT" == "1" ]; then
    HAVEMTEXE=' && if EXIST \"$ExeName.exe.manifest\" ( mt -nologo -manifest \"$ExeName.exe.manifest\" \"-outputresource:$ExeName.exe;1\" && del \"$ExeName.exe.manifest\" )'
 fi
 
-# Determine the compiler version
-COMPILERVERS="`cl.exe 2>&1 | grep Version`"
 
 if [ "$CXX" == "./build/win/cl.sh" ] ; then
    # We are using the wrapper dealing with cygwin path, 
-   # here we want to record cl.exe:
+   # which is hard coded to use cl.exe, so let's record 
+   # information about cl.exe
    CXX=cl.exe
 fi
+
+# Determine the compiler version
+COMPILERVERS="`$CXX 2>&1 | grep Version | dos2unix`"
 
 rm -f __compiledata
 
@@ -75,7 +77,7 @@ else
 fi
 
 if [ "$CUSTOMEXE" = "" ]; then 
-   echo "#define MAKEEXE \"cl -nologo -TP -Iinclude -I../include -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles; link -opt:ref $LDFLAGS \$ObjectFiles \$LinkedLibs $SYSLIBS -out:\$ExeName $HAVEMTEXE \""  >> __compiledata
+   echo "#define MAKEEXE \"cl -nologo -TP -Iinclude -I../include -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles && link -opt:ref $LDFLAGS \$ObjectFiles \$LinkedLibs $SYSLIBS -out:\$ExeName $HAVEMTEXE \""  >> __compiledata
 else 
    echo "#define MAKEEXE \"$CUSTOMEXE\"" >> __compiledata
 fi
