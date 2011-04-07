@@ -1823,10 +1823,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"   if (!fChain) return -5;\n");
       fprintf(fp,"   Long64_t centry = fChain->LoadTree(entry);\n");
       fprintf(fp,"   if (centry < 0) return centry;\n");
-      fprintf(fp,"   if (!fChain->InheritsFrom(TChain::Class()))  return centry;\n");
-      fprintf(fp,"   TChain *chain = (TChain*)fChain;\n");
-      fprintf(fp,"   if (chain->GetTreeNumber() != fCurrent) {\n");
-      fprintf(fp,"      fCurrent = chain->GetTreeNumber();\n");
+      fprintf(fp,"   if (fChain->GetTreeNumber() != fCurrent) {\n");
+      fprintf(fp,"      fCurrent = fChain->GetTreeNumber();\n");
       fprintf(fp,"      Notify();\n");
       fprintf(fp,"   }\n");
       fprintf(fp,"   return centry;\n");
