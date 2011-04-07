@@ -3775,10 +3775,14 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
 {
    // Exit the application.
 
-   // Insures that the files and sockets are closed before any library is unloaded!
+   // Insures that the files and sockets are closed before any library is unloaded
+   // and before emptying CINT.
    if (gROOT) {
       gROOT->CloseFiles();
       if (gROOT->GetListOfBrowsers()) gROOT->GetListOfBrowsers()->Delete();
+   }
+   if (gInterpreter) {
+      gInterpreter->ResetGlobals();
    }
    gVirtualX->CloseDisplay();
 

@@ -2069,7 +2069,10 @@ void TUnixSystem::Exit(int code, Bool_t mode)
    if (gROOT) {
       gROOT->CloseFiles();
    }
-
+   if (gInterpreter) {
+      gInterpreter->ResetGlobals();
+   }
+   
    if (mode)
       ::exit(code);
    else

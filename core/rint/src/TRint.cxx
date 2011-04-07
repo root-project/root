@@ -629,9 +629,6 @@ void TRint::Terminate(Int_t status)
          delete [] mac;
       }
 
-      gROOT->CloseFiles(); // Close any files or sockets before emptying CINT.
-      gInterpreter->ResetGlobals();
-
       TApplication::Terminate(status);
    }
 }

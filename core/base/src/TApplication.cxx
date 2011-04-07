@@ -1101,21 +1101,19 @@ void TApplication::Terminate(Int_t status)
    // Terminate the application by call TSystem::Exit() unless application has
    // been told to return from Run(), by a call to SetReturnFromRun().
 
-   gROOT->CloseFiles(); // Close any files or sockets before emptying CINT.
-   gInterpreter->ResetGlobals();
-
-   //close TMemStat
-   if (fUseMemstat) {
-      ProcessLine("TMemStat::Close()");
-      fUseMemstat = kFALSE;
-   }
-
    Emit("Terminate(Int_t)", status);
 
    if (fReturnFromRun)
       gSystem->ExitLoop();
-   else
+   else {
+      //close TMemStat
+      if (fUseMemstat) {
+         ProcessLine("TMemStat::Close()");
+         fUseMemstat = kFALSE;
+      }
+   
       gSystem->Exit(status);
+   }
 }
 
 //______________________________________________________________________________

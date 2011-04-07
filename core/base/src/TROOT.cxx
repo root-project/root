@@ -600,12 +600,34 @@ Bool_t TROOT::ClassSaved(TClass *cl)
 void TROOT::CloseFiles()
 {
    // Close any files and sockets that gROOT knows about.
-   // Delete the corresponding TFile and TSockets objects.
    // This can be used to insures that the files and sockets are closed before any library is unloaded!
 
-   if (fFiles) fFiles->Delete("slow");
-   if (fSockets) fSockets->Delete();
-   if (fMappedFiles) fMappedFiles->Delete("slow");
+   if (fFiles && fFiles->First()) {
+      TIter next(fFiles);
+      TDirectory *file;
+      while ((file = (TDirectory*)next())) {
+         file->Close();
+      }
+   }
+   if (fSockets && fSockets->First()) {
+      TObject *socket;
+      CallFunc_t *socketCloser = gInterpreter->CallFunc_Factory();
+      Long_t offset = 0;
+      gInterpreter->CallFunc_SetFuncProto(socketCloser, TClass::GetClass("TSocket")->GetClassInfo(), "Close", "", &offset);
+      if (gInterpreter->CallFunc_IsValid(socketCloser)) {
+         TIter next(fSockets);
+         while ((socket = next())) {
+            gInterpreter->CallFunc_Exec(socketCloser, socket);
+         }
+      }
+   }
+   if (fMappedFiles && fMappedFiles->First()) {
+      TIter next(fMappedFiles);
+      TDirectory *file;
+      while ((file = (TDirectory*)next())) {
+         file->Close();
+      }
+   }
 }
 
 //______________________________________________________________________________
