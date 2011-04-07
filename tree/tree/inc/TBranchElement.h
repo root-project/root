@@ -91,6 +91,7 @@ protected:
    TClassRef                fCurrentClass;  //! Reference to current (transient) class definition
    TClassRef                fParentClass;   //! Reference to class definition in fParentName
    TClassRef                fBranchClass;   //! Reference to class definition in fClassName
+   TClassRef                fClonesClass;   //! Reference to class definition in fClonesName
    Int_t                   *fBranchOffset;  //! Sub-Branch offsets with respect to current transient class
    Int_t                    fBranchID;      //! ID number assigned by a TRefTable.
    std::vector<Int_t>       fIDs;           //! List of the serial number of all the StreamerInfo to be used.

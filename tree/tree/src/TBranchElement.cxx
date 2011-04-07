@@ -145,6 +145,7 @@ TBranchElement::TBranchElement()
 , fCurrentClass()
 , fParentClass()
 , fBranchClass()
+, fClonesClass()
 , fBranchOffset(0)
 , fBranchID(-1)
 , fReadActionSequence(0)
@@ -182,6 +183,7 @@ TBranchElement::TBranchElement(TTree *tree, const char* bname, TStreamerInfo* si
 , fCurrentClass()
 , fParentClass()
 , fBranchClass(sinfo->GetClass())
+, fClonesClass()
 , fBranchOffset(0)
 , fBranchID(-1)
 , fReadActionSequence(0)
@@ -221,6 +223,7 @@ TBranchElement::TBranchElement(TBranch *parent, const char* bname, TStreamerInfo
 , fCurrentClass()
 , fParentClass()
 , fBranchClass(sinfo->GetClass())
+, fClonesClass()
 , fBranchOffset(0)
 , fBranchID(-1)
 , fReadActionSequence(0)
@@ -498,6 +501,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             //This name is mandatory when reading the Tree later on and
             //the parent class with the pointer to the TClonesArray is not available.
             fClonesName = clOfClones->GetName();
+            fClonesClass = clOfClones;
             TString aname;
             aname.Form(" (%s)", clOfClones->GetName());
             TString atitle = element->GetTitle();
@@ -547,6 +551,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
                // This name is mandatory when reading the tree later on and
                // the parent class with the pointer to the STL container is not available.
                fClonesName = valueClass->GetName();
+               fClonesClass = valueClass;
                TString aname;
                aname.Form(" (%s)", valueClass->GetName());
                TString atitle = element->GetTitle();
@@ -721,6 +726,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
       fTree->GetListOfLeaves()->Add(leaf);
       // ===> create sub branches for each data member of a TClonesArray
       fClonesName = clonesClass->GetName();
+      fClonesClass = clonesClass;
       std::string branchname = name + std::string("_");
       SetTitle(branchname.c_str());
       leaf->SetName(branchname.c_str());
@@ -866,6 +872,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TVirt
          return;
       }
       fClonesName = valueClass->GetName();
+      fClonesClass = valueClass;
       TString branchname( name );
       branchname += "_";
       SetTitle(branchname);
@@ -956,7 +963,7 @@ void TBranchElement::Browse(TBrowser* b)
             if (strlen(GetClonesName()))
                // this works both for top level branches and for sub-branches,
                // as GetClonesName() is properly updated for sub-branches
-               cl=TClass::GetClass(GetClonesName());
+               cl=fClonesClass;
             else {
                cl=TClass::GetClass(GetClassName());
 
@@ -1278,13 +1285,10 @@ void TBranchElement::FillLeaves(TBuffer& b)
    } else if (fType == 3) {
       // -- TClonesArray top-level branch.  Write out number of entries, sub-branch writes the entries themselves.
       if (fTree->GetMakeClass()) {
-         // Note: What if GetClonesName() is the zero pointer or an empty string?
-         // Note: What if cl is a zero pointer here?
-         // Answer: then fType would not have been set to 3, see TBranchElement::Init
-         TClass* cl = TClass::GetClass(GetClonesName());
-         TVirtualStreamerInfo* si = cl->GetStreamerInfo();
+         // fClonesClass can not be zero since we are of type 3, see TBranchElement::Init
+         TVirtualStreamerInfo* si = fClonesClass->GetStreamerInfo();
          if (!si) {
-            Error("FillLeaves", "Cannot get streamer info for branch '%s' class '%s'", GetName(), cl->GetName());
+            Error("FillLeaves", "Cannot get streamer info for branch '%s' class '%s'", GetName(), fClonesClass->GetName());
             return;
          }
          b.ForceWriteInfo(si,kFALSE);
@@ -2642,7 +2646,7 @@ void TBranchElement::InitializeOffsets()
                // FIXME: This is probably wrong!
                // Assume parent class is our parent branch's clones class or value class.
                if (GetClonesName() && strlen(GetClonesName())) {
-                  pClass = TClass::GetClass(GetClonesName());
+                  pClass = fClonesClass;
                   if (!pClass) {
                      Warning("InitializeOffsets", "subBranch: '%s' has no parent class, and cannot get class for clones class: '%s'!", subBranch->GetName(), GetClonesName());
                      fInitOffsets = kTRUE;
@@ -3939,7 +3943,7 @@ void TBranchElement::SetAddress(void* addr)
 
    if (fType == 3) {
       // split TClonesArray, counter/master branch.
-      TClass* clm = TClass::GetClass(GetClonesName());
+      TClass* clm = fClonesClass;
       if (clm) {
          // In case clm derives from an abstract class.
          clm->BuildRealData();
@@ -4040,10 +4044,11 @@ void TBranchElement::SetAddress(void* addr)
                   fStreamerType = TVirtualStreamerInfo::kObjectP;
                   break;
             }
-            fClonesName = oldProxy->GetValueClass()->GetName();
+            fClonesClass = oldProxy->GetValueClass();
+            fClonesName = fClonesClass->GetName();
             delete fCollProxy;
             fCollProxy = 0;
-            TClass* clm = TClass::GetClass(GetClonesName());
+            TClass* clm = fClonesClass;
             if (clm) {
                clm->BuildRealData(); //just in case clm derives from an abstract class
                clm->GetStreamerInfo();
@@ -4097,7 +4102,7 @@ void TBranchElement::SetAddress(void* addr)
             // Check if it has already been properly built.
             TClonesArray* clones = (TClonesArray*) fObject;
             if (!clones->GetClass()) {
-               new(fObject) TClonesArray(GetClonesName());
+               new(fObject) TClonesArray(fClonesClass);
             }
          } else {
             // -- We are either a top-level branch or we are a subbranch which is a pointer to a TClonesArray.
@@ -4111,7 +4116,7 @@ void TBranchElement::SetAddress(void* addr)
                TClonesArray** pp = (TClonesArray**) fAddress;
                if (!*pp) {
                   // -- Caller wants us to allocate the clones array, but he will own it.
-                  *pp = new TClonesArray(GetClonesName());
+                  *pp = new TClonesArray(fClonesClass);
                }
                fObject = (char*) *pp;
             } else {
@@ -4121,7 +4126,7 @@ void TBranchElement::SetAddress(void* addr)
                TClonesArray** pp = (TClonesArray**) fAddress;
                if (!*pp) {
                   // -- Caller wants us to allocate the clones array, but he will own it.
-                  *pp = new TClonesArray(GetClonesName());
+                  *pp = new TClonesArray(fClonesClass);
                }
                fObject = (char*) *pp;
             }
@@ -4143,7 +4148,7 @@ void TBranchElement::SetAddress(void* addr)
                // -- We are a top-level branch.
                // Idea: Consider making a zero address not allocate.
                SetBit(kDeleteObject);
-               fObject = (char*) new TClonesArray(GetClonesName());
+               fObject = (char*) new TClonesArray(fClonesClass);
                fAddress = (char*) &fObject;
             } else {
                // -- We are a sub-branch which is a pointer to a TClonesArray.
@@ -4599,7 +4604,8 @@ void TBranchElement::Streamer(TBuffer& R__b)
       R__b.ReadClassBuffer(TBranchElement::Class(), this);
       fParentClass.SetName(fParentName);
       fBranchClass.SetName(fClassName);
-      fTargetClass.SetName( fClassName );
+      fTargetClass.SetName(fClassName);
+      fClonesClass.SetName(fClonesName);
       // The fAddress and fObject data members are not persistent,
       // therefore we do not own anything.
       // Also clear the bit possibly set by the schema evolution.
@@ -4651,12 +4657,9 @@ void TBranchElement::Streamer(TBuffer& R__b)
          //  We must mark the streamer info for the
          //  value class to be written to the file.
          //
-         const char* nm = GetClonesName();
-         if (nm && strlen(nm)) {
-            TClass* cl = TClass::GetClass(nm);
-            if (cl) {
-               R__b.ForceWriteInfo(cl->GetStreamerInfo(), kTRUE);
-            }
+         TClass* cl = fClonesClass;
+         if (cl) {
+            R__b.ForceWriteInfo(cl->GetStreamerInfo(), kTRUE);
          }
       }
       else if (fType == 4) {
