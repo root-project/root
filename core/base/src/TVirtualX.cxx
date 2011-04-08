@@ -780,6 +780,15 @@ void TVirtualX::SetTextSize(Float_t /*textsize*/)
 }
 
 //______________________________________________________________________________
+void TVirtualX::Sync(Int_t /*mode*/)
+{
+   // Set synchronisation on or off.
+   // mode : synchronisation on/off
+   //    mode=1  on
+   //    mode<>0 off
+}
+
+//______________________________________________________________________________
 void TVirtualX::UpdateWindow(Int_t /*mode*/)
 {
    // Updates or synchronises client and server once (not permanent).

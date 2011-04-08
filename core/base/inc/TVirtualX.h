@@ -152,6 +152,7 @@ public:
    virtual void      SetTextFont(Font_t fontnumber);
    virtual void      SetTextMagnitude(Float_t mgn);
    virtual void      SetTextSize(Float_t textsize);
+   virtual void      Sync(Int_t mode);
    virtual void      UpdateWindow(Int_t mode);
    virtual void      Warp(Int_t ix, Int_t iy, Window_t id = 0);
    virtual Int_t     WriteGIF(char *name);
