@@ -957,6 +957,7 @@ distclean:: clean
 ifeq ($(PLATFORM),macosx)
 	@rm -f lib/*.dylib
 	@rm -f lib/*.so
+	@(find . -name "*.dSYM" -exec rm -rf {} \; >/dev/null 2>&1;true)
 endif
 	-@(mv -f tutorials/gallery.root tutorials/gallery.root- >/dev/null 2>&1;true)
 	-@(mv -f tutorials/mlp/mlpHiggs.root tutorials/mlp/mlpHiggs.root- >/dev/null 2>&1;true)
