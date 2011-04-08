@@ -477,14 +477,17 @@ TROOT::~TROOT()
       SafeDelete(fRootFolder);
       fSpecials->Delete();   SafeDelete(fSpecials);    // delete special objects : PostScript, Minuit, Html
 #endif
-      fClosedFiles->Delete("slow"); SafeDelete(fClosedFiles); // and closed files
-      fFiles->Delete("slow"); SafeDelete(fFiles);       // and files
+      fClosedFiles->Delete("slow"); // and closed files
+      fFiles->Delete("slow");       // and files
+      SafeDelete(fFiles);    
       fSecContexts->Delete("slow"); SafeDelete(fSecContexts); // and security contexts
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets
       fMappedFiles->Delete("slow");                     // and mapped files
       delete fUUIDs;
       TProcessID::Cleanup();                            // and list of ProcessIDs
       TSeqCollection *tl = fMappedFiles; fMappedFiles = 0; delete tl;
+      
+      SafeDelete(fClosedFiles); 
 
       fFunctions->Delete();  SafeDelete(fFunctions);   // etc..
       fColors->Delete();     SafeDelete(fColors);
