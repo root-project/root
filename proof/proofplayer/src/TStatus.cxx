@@ -24,6 +24,7 @@
 #include "Riostream.h"
 #include "TClass.h"
 #include "TList.h"
+#include "TProofDebug.h"
 
 
 ClassImp(TStatus)
@@ -52,8 +53,9 @@ Int_t TStatus::Merge(TCollection *li)
    // PROOF Merge() function.
 
    TIter stats(li);
-   Info("Merge", "Start: Max virtual memory: %.2f MB \tMax resident memory: %.2f MB ",
-          GetVirtMemMax()/1024., GetResMemMax()/1024.);
+   PDB(kOutput,1)
+      Info("Merge", "start: max virtual memory: %.2f MB \tmax resident memory: %.2f MB ",
+                    GetVirtMemMax()/1024., GetResMemMax()/1024.);
    while (TObject *obj = stats()) {
       TStatus *s = dynamic_cast<TStatus*>(obj);
       if (s == 0) continue;
@@ -64,11 +66,11 @@ Int_t TStatus::Merge(TCollection *li)
          Add(i->c_str());
       
       SetMemValues(s->GetVirtMemMax(), s->GetResMemMax());
-   Info("Merge", "During: Max virtual memory: %.2f MB \tMax resident memory: %.2f MB ",
-          GetVirtMemMax()/1024., GetResMemMax()/1024.);
+      PDB(kOutput,1)
+         Info("Merge", "during: max virtual memory: %.2f MB \t"
+                       "max resident memory: %.2f MB ",
+                       GetVirtMemMax()/1024., GetResMemMax()/1024.);
    }
-   Info("Merge", "End: Max virtual memory: %.2f MB \tMax resident memory: %.2f MB ",
-          GetVirtMemMax()/1024., GetResMemMax()/1024.);
 
    return fMsgs.size();
 }
