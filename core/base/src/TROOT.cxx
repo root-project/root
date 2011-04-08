@@ -642,12 +642,25 @@ void TROOT::CloseFiles()
       TObject *socket;
       CallFunc_t *socketCloser = gInterpreter->CallFunc_Factory();
       Long_t offset = 0;
-      gInterpreter->CallFunc_SetFuncProto(socketCloser, TClass::GetClass("TSocket")->GetClassInfo(), "Close", "", &offset);
+      TClass *socketClass = TClass::GetClass("TSocket");
+      gInterpreter->CallFunc_SetFuncProto(socketCloser, socketClass->GetClassInfo(), "Close", "", &offset);
       if (gInterpreter->CallFunc_IsValid(socketCloser)) {
          TIter next(fSockets);
          while ((socket = next())) {
-            gInterpreter->CallFunc_Exec(socketCloser, socket);
+            if (socket->IsA()->InheritsFrom(socketClass)) {
+               gInterpreter->CallFunc_Exec(socketCloser, ((char*)socket)+offset);
+            } else {
+               // Crap ... this is not a socket, likely Proof or something, let's try to find a Close
+               Long_t other_offset;
+               CallFunc_t *otherCloser = gInterpreter->CallFunc_Factory();
+               gInterpreter->CallFunc_SetFuncProto(otherCloser, socket->IsA(), "Close", "", &other_offset);
+               if (gInterpreter->CallFunc_IsValid(otherCloser)) {
+                  gInterpreter->CallFunc_Exec(otherCloser, ((char*)socket)+other_offset);
+               }
+               gInterpreter->CallFunc_Delete(otherCloser);            
+            }
          }
+         gInterpreter->CallFunc_Delete(socketCloser);
       }
    }
    if (fMappedFiles && fMappedFiles->First()) {
