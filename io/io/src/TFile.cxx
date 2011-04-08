@@ -463,6 +463,10 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
 zombie:
    // error in file opening occured, make this object a zombie
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfClosedFiles()->Add(this);
+   }
    MakeZombie();
    gDirectory = gROOT;
 }
@@ -492,7 +496,7 @@ TFile::~TFile()
    SafeDelete(fCacheWrite);
 
    R__LOCKGUARD2(gROOTMutex);
-   gROOT->GetListOfFiles()->Remove(this);
+   gROOT->GetListOfClosedFiles()->Remove(this);
    gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
 
    if (IsOnHeap()) {
@@ -773,10 +777,14 @@ void TFile::Init(Bool_t create)
          if (!strcmp(key->GetClassName(),"TProcessID")) fNProcessIDs++;
       }
       fProcessIDs = new TObjArray(fNProcessIDs+1);
-      return;
    }
+   return;
 
 zombie:
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfClosedFiles()->Add(this);
+   }
    // error in file opening occured, make this object a zombie
    MakeZombie();
    gDirectory = gROOT;
@@ -862,7 +870,9 @@ void TFile::Close(Option_t *option)
    pidDeleted.Delete();
 
    R__LOCKGUARD2(gROOTMutex);
+   gROOT->GetListOfFiles()->Remove(this);
    gROOT->GetListOfBrowsers()->RecursiveRemove(this);
+   gROOT->GetListOfClosedFiles()->Add(this);
 }
 
 //____________________________________________________________________________________

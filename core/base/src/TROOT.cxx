@@ -179,6 +179,8 @@ static void CleanUpROOTAtExit()
          gROOT->GetListOfSockets()->Delete();
       if (gROOT->GetListOfMappedFiles())
          gROOT->GetListOfMappedFiles()->Delete("slow");
+      if (gROOT->GetListOfClosedFiles())
+         gROOT->GetListOfClosedFiles()->Delete("slow");
    }
 }
 
@@ -219,7 +221,7 @@ TROOT::TROOT() : TDirectory(),
      fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
-     fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
+     fClosedFiles(0),fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
      fTasks(0),fColors(0),fGeometries(0),fBrowsers(0),fSpecials(0),fCleanups(0),
      fMessageHandlers(0),fStreamerInfo(0),fClassGenerators(0),fSecContexts(0),
      fProofs(0),fClipboard(0),fDataSets(0),fUUIDs(0),fRootFolder(0),fBrowsables(0),
@@ -236,7 +238,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
      fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
-     fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
+     fClosedFiles(0),fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
      fTasks(0),fColors(0),fGeometries(0),fBrowsers(0),fSpecials(0),fCleanups(0),
      fMessageHandlers(0),fStreamerInfo(0),fClassGenerators(0),fSecContexts(0),
      fProofs(0),fClipboard(0),fDataSets(0),fUUIDs(0),fRootFolder(0),fBrowsables(0),
@@ -326,6 +328,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    // fList was created in TDirectory::Build but with different sizing.
    delete fList;
    fList        = new THashList(1000,3);
+   fClosedFiles = new TList; fClosedFiles->SetName("ClosedFiles");
    fFiles       = new TList; fFiles->SetName("Files");
    fMappedFiles = new TList; fMappedFiles->SetName("MappedFiles");
    fSockets     = new TList; fSockets->SetName("Sockets");
@@ -374,6 +377,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fCleanups->Add(fBrowsers); fBrowsers->SetBit(kMustCleanup);
    fCleanups->Add(fTasks);    fTasks->SetBit(kMustCleanup);
    fCleanups->Add(fFiles);    fFiles->SetBit(kMustCleanup);
+   fCleanups->Add(fClosedFiles); fClosedFiles->SetBit(kMustCleanup);
    fCleanups->Add(fInterpreter);
 
    fExecutingMacro= kFALSE;
@@ -473,6 +477,7 @@ TROOT::~TROOT()
       SafeDelete(fRootFolder);
       fSpecials->Delete();   SafeDelete(fSpecials);    // delete special objects : PostScript, Minuit, Html
 #endif
+      fClosedFiles->Delete("slow"); SafeDelete(fClosedFiles); // and closed files
       fFiles->Delete("slow"); SafeDelete(fFiles);       // and files
       fSecContexts->Delete("slow"); SafeDelete(fSecContexts); // and security contexts
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets
@@ -599,14 +604,28 @@ Bool_t TROOT::ClassSaved(TClass *cl)
 namespace {
    static void R__ListSlowClose(TList *files)
    {
+      static TObject harmless;
       TObjLink *cursor = files->FirstLink();
       while (cursor) {
          TDirectory *dir = static_cast<TDirectory*>( cursor->GetObject() );
          if (dir) {
+            // In order for the iterator to stay valid, we must
+            // prevent the removal of the object (dir) from the list
+            // (which is done in TFile::Close).   We can also can not
+            // just move to the next iterator since the Close might
+            // also (indirectly) remove that file.
+            // So we SetObject to a harmless value, so that 'dir' 
+            // is not seen as part of the list.
+            // We will later, remove all the object (see files->Clear()
+            cursor->SetObject(&harmless); // this must not be zero otherwise things go wrong.
             dir->Close();
+            // Put it back
+            cursor->SetObject(dir);
          }
          cursor = cursor->Next();
       };
+      // Now were done, clear the list
+      files->Clear();
    }
 }
 
