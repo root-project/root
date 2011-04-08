@@ -862,7 +862,6 @@ void TFile::Close(Option_t *option)
    pidDeleted.Delete();
 
    R__LOCKGUARD2(gROOTMutex);
-   gROOT->GetListOfFiles()->Remove(this);
    gROOT->GetListOfBrowsers()->RecursiveRemove(this);
 }
 

@@ -596,22 +596,28 @@ Bool_t TROOT::ClassSaved(TClass *cl)
    return kFALSE;
 }
 
+namespace {
+   static void R__ListSlowClose(TList *files)
+   {
+      TObjLink *cursor = files->FirstLink();
+      while (cursor) {
+         TDirectory *dir = static_cast<TDirectory*>( cursor->GetObject() );
+         if (dir) {
+            dir->Close();
+         }
+         cursor = cursor->Next();
+      };
+   }
+}
+
 //______________________________________________________________________________
 void TROOT::CloseFiles()
 {
    // Close any files and sockets that gROOT knows about.
    // This can be used to insures that the files and sockets are closed before any library is unloaded!
 
-   if (fFiles) fFiles->Delete("slow");
-   if (fSockets) fSockets->Delete();
-   if (fMappedFiles) fMappedFiles->Delete("slow");
-#if 0
    if (fFiles && fFiles->First()) {
-      TIter next(fFiles);
-      TDirectory *file;
-      while ((file = (TDirectory*)next())) {
-         file->Close();
-      }
+      R__ListSlowClose(static_cast<TList*>(fFiles));
    }
    if (fSockets && fSockets->First()) {
       TObject *socket;
@@ -626,13 +632,8 @@ void TROOT::CloseFiles()
       }
    }
    if (fMappedFiles && fMappedFiles->First()) {
-      TIter next(fMappedFiles);
-      TDirectory *file;
-      while ((file = (TDirectory*)next())) {
-         file->Close();
-      }
+      R__ListSlowClose(static_cast<TList*>(fMappedFiles));
    }
-#endif
 }
 
 //______________________________________________________________________________
