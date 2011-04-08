@@ -12,7 +12,8 @@
 #include "TEnv.h"
 #include "TVirtualX.h"
 
-int saveScriptOutput(const char* script, const char* outdir, Bool_t compiled) {
+int saveScriptOutput(const char* script, const char* outdir, Bool_t compiled)
+{
    // Run script and save all windows to
    // outdir/script_0.png, outdir/script_1.png, ...
 
@@ -34,6 +35,12 @@ int saveScriptOutput(const char* script, const char* outdir, Bool_t compiled) {
       cmd += "+";
    if (!gROOT->IsBatch())
       gVirtualX->Sync(1);
+
+   // save current interpreter context to avoid gROOT->Reset()
+   // in the script to cause havoc by wiping everything away
+   gInterpreter->SaveContext();
+   gInterpreter->SaveGlobalsContext();
+
    gROOT->ProcessLine(cmd, &err);
    if (err != TInterpreter::kNoError)
       return kCannotRunScript;
