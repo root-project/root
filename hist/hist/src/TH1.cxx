@@ -785,6 +785,9 @@ void TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
    if (fDimension < 2) nbinsy = -1;
    if (fDimension < 3) nbinsz = -1;
 
+   // delete buffer if it is there since it will become invalid
+   if (fBuffer) BufferEmpty(1);
+
 //   - Add statistics
    Double_t s1[10];
    Int_t i;
@@ -792,6 +795,7 @@ void TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
    PutStats(s1);
    SetMinimum();
    SetMaximum();
+
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -854,6 +858,9 @@ void TH1::Add(const TH1 *h1, Double_t c1)
       Error("Add","Attempt to add a non-existing histogram");
       return;
    }
+
+   // delete buffer if it is there since it will become invalid
+   if (fBuffer) BufferEmpty(1);
 
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
@@ -969,6 +976,9 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       Error("Add","Attempt to add a non-existing histogram");
       return;
    }
+
+   // delete buffer if it is there since it will become invalid
+   if (fBuffer) BufferEmpty(1);
 
    Bool_t normWidth = kFALSE;
    if (h1 == h2 && c2 < 0) {c2 = 0; normWidth = kTRUE;}
@@ -2337,6 +2347,9 @@ void TH1::Divide(TF1 *f1, Double_t c1)
       return;
    }
 
+   // delete buffer if it is there since it will become invalid
+   if (fBuffer) BufferEmpty(1);
+
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
    Int_t nbinsz = GetNbinsZ();
@@ -2405,6 +2418,9 @@ void TH1::Divide(const TH1 *h1)
       Error("Divide","Attempt to divide by a non-existing histogram");
       return;
    }
+
+   // delete buffer if it is there since it will become invalid
+   if (fBuffer) BufferEmpty(1);
 
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
@@ -2492,6 +2508,9 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
       Error("Divide","Attempt to divide by a non-existing histogram");
       return;
    }
+
+   // delete buffer if it is there since it will become invalid
+   if (fBuffer) BufferEmpty(1);
 
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
@@ -2723,6 +2742,10 @@ void TH1::Eval(TF1 *f1, Option_t *option)
    else                   stat  = 0;
    if (opt.Contains("r")) range = 1;
    else                   range = 0;
+
+   // delete buffer if it is there since it will become invalid
+   if (fBuffer) BufferEmpty(1);
+
    nbinsx  = fXaxis.GetNbins();
    nbinsy  = fYaxis.GetNbins();
    nbinsz  = fZaxis.GetNbins();
@@ -5167,6 +5190,9 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
       return;
    }
 
+   // delete buffer if it is there since it will become invalid
+   if (fBuffer) BufferEmpty(1);
+
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
    Int_t nbinsz = GetNbinsZ();
@@ -5234,6 +5260,9 @@ void TH1::Multiply(const TH1 *h1)
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
    Int_t nbinsz = GetNbinsZ();
+
+   // delete buffer if it is there since it will become invalid
+   if (fBuffer) BufferEmpty(1);
 
    try {
       CheckConsistency(this,h1);
@@ -5307,6 +5336,9 @@ void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
       Error("Multiply","Attempt to multiply by a non-existing histogram");
       return;
    }
+
+   // delete buffer if it is there since it will become invalid
+   if (fBuffer) BufferEmpty(1);
 
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
@@ -5992,6 +6024,9 @@ void  TH1::Smooth(Int_t ntimes, Option_t *option)
       Error("Smooth","Smooth only supported for 1-d histograms");
       return;
    }
+   // delete buffer if it is there since it will become invalid
+   if (fBuffer) BufferEmpty(1);
+
    Int_t nbins = fXaxis.GetNbins();
    Int_t firstbin = 1, lastbin = nbins;
    TString opt = option;
@@ -8023,7 +8058,9 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
    opt.ToUpper();
    Int_t *n = fft->GetN();
    TH1 *hout=0;
-   if (h_output) hout = h_output;
+   if (h_output) { 
+      hout = h_output;
+   }
    else {
       TString name = TString::Format("out_%s", opt.Data());
       if (fft->GetNdim()==1)

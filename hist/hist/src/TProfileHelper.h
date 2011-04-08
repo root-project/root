@@ -66,6 +66,9 @@ void TProfileHelper::Add(T* p, const TH1 *h1,  const TH1 *h2, Double_t c1, Doubl
    T *p1 = (T*)h1;
    T *p2 = (T*)h2;
 
+   // delete buffer if it is there since it will become invalid
+   if (p->fBuffer) p->BufferEmpty(1);
+
 // Check profile compatibility
    Int_t nx = p->GetNbinsX();
    Int_t ny = p->GetNbinsY();

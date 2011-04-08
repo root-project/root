@@ -461,6 +461,10 @@ void TProfile::Divide(const TH1 *h1)
    }
    TProfile *p1 = (TProfile*)h1;
 
+   // delete buffer if it is there since it will become invalid
+   if (fBuffer) BufferEmpty(1);
+
+
    Int_t nbinsx = GetNbinsX();
 //*-*- Check profile compatibility
    if (nbinsx != p1->GetNbinsX()) {
@@ -544,6 +548,9 @@ void TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Op
       return;
    }
    TProfile *p2 = (TProfile*)h2;
+
+   // delete buffer if it is there since it will become invalid
+   if (fBuffer) BufferEmpty(1);
 
    Int_t nbinsx = GetNbinsX();
 //*-*- Check histogram compatibility
