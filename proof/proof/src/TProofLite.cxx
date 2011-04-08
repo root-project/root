@@ -729,6 +729,8 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
    fprintf(fenv, "export ROOTVERSIONTAG=%s\n", gROOT->GetVersion());
    // This flag can be used to identify the type of worker; for example, in BUILD.sh or SETUP.C ...
    fprintf(fenv, "export ROOTPROOFLITE=%d\n", fNWorkers);
+   // Local files are on the local file system
+   fprintf(fenv, "export LOCALDATASERVER=\"file://\"\n");
    // Set the user envs
    if (fgProofEnvList) {
       TString namelist;
