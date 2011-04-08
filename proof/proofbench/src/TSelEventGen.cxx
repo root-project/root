@@ -29,6 +29,7 @@
 #include "TProof.h"
 #include "TMap.h" 
 #include "TDSet.h"
+#include "TEnv.h"
 #include "TFileInfo.h"
 #include "TFile.h"
 #include "TSortedList.h"
@@ -247,7 +248,7 @@ Long64_t TSelEventGen::GenerateFiles(TString filename, Long64_t sizenevents)
    TDirectory* savedir = gDirectory;
    //printf("current dir=%s\n", gDirectory->GetPath());
 
-   TFile* f=new TFile(filename, "RECREATE");
+   TFile *f = TFile::Open(filename, "RECREATE");
 
    savedir->cd();
 
@@ -344,7 +345,15 @@ Bool_t TSelEventGen::Process(Long64_t entry)
    } else {
       dsrv.Form("root://%s/", TUrl(gSystem->HostName()).GetHostFQDN());
    }
-   TFileInfo *fi = new TFileInfo(TString::Format("%s%s", dsrv.Data(), filename.Data()));
+   TString srvProto = TUrl(dsrv).GetProtocol();
+      
+   // Remove prefix, if any, if included and if Xrootd
+   TString fndset(filename);
+   TString pfx  = gEnv->GetValue("Path.Localroot","");
+   if (!pfx.IsNull() && fndset.BeginsWith(pfx) &&
+      (srvProto == "root" || srvProto == "xrd")) fndset.Remove(0, pfx.Length());
+   
+   TFileInfo *fi = new TFileInfo(TString::Format("%s%s", dsrv.Data(), fndset.Data()));
 
    //generate files
    Long64_t neventstogenerate = fNEvents;
@@ -352,9 +361,9 @@ Bool_t TSelEventGen::Process(Long64_t entry)
    Bool_t filefound=kFALSE;
    FileStat_t filestat;
    if (!fRegenerate && !gSystem->GetPathInfo(filename, filestat)){//stat'ed
-      TFile f(filename);
-      if (!f.IsZombie()){
-         TTree* t=(TTree*)f.Get("EventTree");
+      TFile *f = TFile::Open(filename);
+      if (f && !f->IsZombie()){
+         TTree* t=(TTree*)f->Get("EventTree");
          if (t){
             Long64_t entries_file=t->GetEntries();
             if (entries_file == neventstogenerate){
@@ -367,8 +376,9 @@ Bool_t TSelEventGen::Process(Long64_t entry)
                filefound=kTRUE;
             }
          }
+         f->Close();
       }
-      f.Close();
+      SafeDelete(f);
    }
 
    if (!filefound){
