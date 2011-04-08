@@ -1,6 +1,6 @@
 // @(#)root/hist:$Id$
-// Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
-// with additions by Bran Wijngaarden <dwijngaa@hef.kun.nl>
+// Author: Frank Filthaut F.Filthaut@science.ru.nl  20/05/2002
+// with additions by Bram Wijngaarden <dwijngaa@hef.kun.nl>
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -93,6 +93,11 @@
 // and for 3D histograms also
 //     fit->SetRangeZ(first bin #, last bin #);
 //     fit->ReleaseRangeZ();
+// It is also possible to exclude individual bins from the fit through
+//     fit->ExcludeBin(bin #);
+// where the given bin number is assumed to follow the TH1::GetBin() numbering.
+// Any bins excluded in this way can be included again using the corresponding
+//     fit->IncludeBin(bin #);
 //
 // Weights histograms
 // ==================
@@ -164,7 +169,7 @@ TFractionFitter::TFractionFitter() :
 }
 
 //______________________________________________________________________________
-TFractionFitter::TFractionFitter(TH1* data, TObjArray  *MCs) :
+TFractionFitter::TFractionFitter(TH1* data, TObjArray  *MCs, Option_t *option) :
   fFitDone(kFALSE), fChisquare(0), fPlot(0)  {
    // TFractionFitter constructor. Does a complete initialisation (including
    // consistency checks, default fit range as the whole histogram but without
@@ -173,6 +178,10 @@ TFractionFitter::TFractionFitter(TH1* data, TObjArray  *MCs) :
    // Arguments:
    //     data: histogram to be fitted
    //     MCs:  array of TH1* corresponding template distributions
+   //    Option:  can be used to control the print level of the minimization algorithm
+   //             option = "Q"  : quite - no message is printed
+   //             option = "V"  : verbose - max print out 
+   //             option = ""   : default: print initial fraction values and result 
 
    fData = data;
    // Default: include all of the histogram (but without under- and overflows)
@@ -206,6 +215,20 @@ TFractionFitter::TFractionFitter(TH1* data, TObjArray  *MCs) :
    fractionFitter->Clear();
    fractionFitter->SetObjectFit(this);
    fractionFitter->SetFCN(TFractionFitFCN);
+
+   // set print level 
+   TString opt(option);
+   opt.ToUpper();
+   double plist[1];
+   if (opt.Contains("Q") ) { 
+      plist[0] = -1;
+      fractionFitter->ExecuteCommand("SET PRINT",plist,1);
+      fractionFitter->ExecuteCommand("SET NOW",plist,0);
+   }
+   else if (opt.Contains("V") ) { 
+      plist[0] =  1;
+      fractionFitter->ExecuteCommand("SET PRINT",plist,1);
+   }
 
    Double_t defaultFraction = 1.0/((Double_t)fNpar);
    Double_t defaultStep = 0.01;
@@ -377,6 +400,50 @@ void TFractionFitter::ReleaseRangeZ() {
 }
 
 //______________________________________________________________________________
+void TFractionFitter::ExcludeBin(Int_t bin) {
+   // Exclude the given bin from the fit. The bin numbering to be used is that
+   // of TH1::GetBin().
+
+   int excluded = fExcludedBins.size();
+   for (int b = 0; b < excluded; ++b) {
+      if (fExcludedBins[b] == bin) {
+	 Error("ExcludeBin", "bin %d already excluded", bin);
+	 return;
+      }
+   }
+   fExcludedBins.push_back(bin);
+   // This call serves to properly (re)determine the number of degrees of freeom
+   CheckConsistency();
+}
+
+//______________________________________________________________________________
+void TFractionFitter::IncludeBin(Int_t bin) {
+   // Include the given bin in the fit, if it was excluded before using ExcludeBin().
+   // The bin numbering to be used is that of TH1::GetBin().
+
+   for (std::vector<Int_t>::iterator it = fExcludedBins.begin();
+	it != fExcludedBins.end(); ++it) {
+      if (*it == bin) {
+  	 fExcludedBins.erase(it);
+	 // This call serves to properly (re)determine the number of degrees of freeom
+	 CheckConsistency();
+	 return;
+      }
+   }
+   Error("IncludeBin", "bin %d was not excluded", bin);
+}
+
+//______________________________________________________________________________
+bool TFractionFitter::IsExcluded(Int_t bin) const {
+   // Function for internal use, checking whether the given bin is
+   // excluded from the fit or not.
+
+   for (unsigned int b = 0; b < fExcludedBins.size(); ++b) 
+      if (fExcludedBins[b] == bin) return true;
+   return false;
+}
+
+//______________________________________________________________________________
 void TFractionFitter::Constrain(Int_t parm, Double_t low, Double_t high) {
    // Constrain the values of parameter number <parm> (the parameter numbering
    // follows that of the input template vector).
@@ -422,6 +489,7 @@ void TFractionFitter::CheckConsistency() {
    for (z = minZ; z <= maxZ; ++z) {
       for (y = minY; y <= maxY; ++y) {
          for (x = minX; x <= maxX; ++x) {
+	    if (IsExcluded(fData->GetBin(x, y, z))) continue;
             fNpfits++;
             fIntegralData += fData->GetBinContent(x, y, z);
          }
@@ -456,6 +524,7 @@ void TFractionFitter::CheckConsistency() {
       for (z = minZ; z <= maxZ; ++z) {
          for (y = minY; y <= maxY; ++y) {
             for (x = minX; x <= maxX; ++x) {
+	       if (IsExcluded(fData->GetBin(x, y, z))) continue;
                fIntegralMCs[par] += h->GetBinContent(x, y, z);
             }
          }
@@ -475,6 +544,7 @@ Int_t TFractionFitter::Fit() {
    plist[0] = 0.5;
    // set the UP value to 0.5
    fractionFitter->ExecuteCommand("SET ERRDEF",plist,1);
+
    // remove any existing output histogram
    if (fPlot) {
       delete fPlot; fPlot = 0;
@@ -596,6 +666,7 @@ void TFractionFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /*gin*/,
          for (z = minZ; z <= maxZ; ++z) {
             for (y = minY; y <= maxY; ++y) {
                for (x = minX; x <= maxX; ++x) {
+		  if (IsExcluded(fData->GetBin(x, y, z))) continue;
                   Double_t weight = hw->GetBinContent(x, y, z);
                   if (weight <= 0) {
                      Error("ComputeFCN","Invalid weight encountered for MC source %d",mc);
@@ -620,6 +691,7 @@ void TFractionFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /*gin*/,
       for (y = minY; y <= maxY; ++y) {
          for (x = minX; x <= maxX; ++x) {
             bin = fData->GetBin(x, y, z);
+	    if (IsExcluded(bin)) continue;
 
             // Solve for the "predictions"
             int k0;
@@ -849,6 +921,7 @@ void TFractionFitter::ComputeChisquareLambda()
    for(Int_t x = minX; x <= maxX; x++) {
       for(Int_t y = minY; y <= maxY; y++) {
          for(Int_t z = minZ; z <= maxZ; z++) {
+	    if (IsExcluded(fData->GetBin(x, y, z))) continue;
             Double_t di = fData->GetBinContent(x, y, z);
             Double_t fi = fPlot->GetBinContent(x, y, z);
             if(fi != 0) logLyn += di * TMath::Log(fi) - fi;

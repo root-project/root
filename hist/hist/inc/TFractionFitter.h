@@ -1,5 +1,5 @@
 // @(#)root/hist:$Id$
-// Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
+// Author: Frank Filthaut F.Filthaut@science.ru.nl  20/05/2002
    
 #ifndef ROOT_TFractionFitter
 #define ROOT_TFractionFitter
@@ -10,6 +10,7 @@
 #ifndef ROOT_TObjArray
 # include "TObjArray.h"
 #endif
+#include <vector>
 
 class TH1;
 
@@ -24,7 +25,7 @@ class TH1;
 class TFractionFitter: public TObject {
 public:
    TFractionFitter();
-   TFractionFitter(TH1* data, TObjArray *MCs);
+   TFractionFitter(TH1* data, TObjArray *MCs, Option_t *option="");
    virtual ~TFractionFitter();
 
    TVirtualFitter* GetFitter() const;
@@ -35,6 +36,8 @@ public:
    void ReleaseRangeY();
    void SetRangeZ(Int_t low, Int_t high);
    void ReleaseRangeZ();
+   void ExcludeBin(Int_t bin);
+   void IncludeBin(Int_t bin);
    void Constrain(Int_t parm, Double_t low, Double_t high);
    void UnConstrain(Int_t parm);
    void SetData(TH1 *data);
@@ -64,6 +67,7 @@ private:
    void GetRanges(Int_t& minX, Int_t& maxX, Int_t& minY, Int_t& maxY,
                   Int_t& minZ, Int_t& maxZ) const;
    void ComputeChisquareLambda();
+   bool IsExcluded(Int_t bin) const;
 
 protected:
    Bool_t   fFitDone;             // flags whether a valid fit has been performed
@@ -73,6 +77,7 @@ protected:
    Int_t    fHighLimitY;          // last  bin in Y dimension
    Int_t    fLowLimitZ;           // first bin in Z dimension
    Int_t    fHighLimitZ;          // last  bin in Z dimension
+   std::vector<Int_t> fExcludedBins; // bins excluded from the fit
 
    Int_t    fNpfits;              // Number of points used in the fit
    Int_t    fNDF;                 // Number of degrees of freedom in the fit
