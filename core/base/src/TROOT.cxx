@@ -642,29 +642,58 @@ void TROOT::CloseFiles()
       R__ListSlowClose(static_cast<TList*>(fFiles));
    }
    if (fSockets && fSockets->First()) {
-      TObject *socket;
       CallFunc_t *socketCloser = gInterpreter->CallFunc_Factory();
       Long_t offset = 0;
       TClass *socketClass = TClass::GetClass("TSocket");
       gInterpreter->CallFunc_SetFuncProto(socketCloser, socketClass->GetClassInfo(), "Close", "", &offset);
       if (gInterpreter->CallFunc_IsValid(socketCloser)) {
-         TIter next(fSockets);
-         while ((socket = next())) {
+         static TObject harmless;
+         TObjLink *cursor = static_cast<TList*>(fSockets)->FirstLink();
+         TList notclosed;
+         while (cursor) {
+            TObject *socket = cursor->GetObject();
+            // In order for the iterator to stay valid, we must
+            // prevent the removal of the object (dir) from the list
+            // (which is done in TFile::Close).   We can also can not
+            // just move to the next iterator since the Close might
+            // also (indirectly) remove that file.
+            // So we SetObject to a harmless value, so that 'dir' 
+            // is not seen as part of the list.
+            // We will later, remove all the object (see files->Clear()
+            cursor->SetObject(&harmless); // this must not be zero otherwise things go wrong.
+
             if (socket->IsA()->InheritsFrom(socketClass)) {
                gInterpreter->CallFunc_Exec(socketCloser, ((char*)socket)+offset);
+               // Put the object in the closed list for later deletion.
+               fClosedFiles->AddLast(socket);
             } else {
                // Crap ... this is not a socket, likely Proof or something, let's try to find a Close
                Long_t other_offset;
                CallFunc_t *otherCloser = gInterpreter->CallFunc_Factory();
-               gInterpreter->CallFunc_SetFuncProto(otherCloser, socket->IsA(), "Close", "", &other_offset);
+               gInterpreter->CallFunc_SetFuncProto(otherCloser, socket->IsA()->GetClassInfo(), "Close", "", &other_offset);
                if (gInterpreter->CallFunc_IsValid(otherCloser)) {
                   gInterpreter->CallFunc_Exec(otherCloser, ((char*)socket)+other_offset);
+                  // Put the object in the closed list for later deletion.
+                  fClosedFiles->AddLast(socket);
+               } else {
+                  notclosed.AddLast(socket);
                }
                gInterpreter->CallFunc_Delete(otherCloser);            
+               // Put it back
+               cursor->SetObject(socket);
             }
+            cursor = cursor->Next();
          }
-         gInterpreter->CallFunc_Delete(socketCloser);
+         // Now were done, clear the list
+         fSockets->Clear();
+         // Readd the one we did not close
+         cursor = notclosed.FirstLink();
+         while (cursor) {
+            static_cast<TList*>(fSockets)->AddLast(cursor->GetObject());
+            cursor = cursor->Next();
+         }
       }
+      gInterpreter->CallFunc_Delete(socketCloser);
    }
    if (fMappedFiles && fMappedFiles->First()) {
       R__ListSlowClose(static_cast<TList*>(fMappedFiles));

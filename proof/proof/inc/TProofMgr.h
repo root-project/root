@@ -77,6 +77,7 @@ public:
    virtual Bool_t      IsProofd() const { return (fServType == kProofd); }
    virtual Bool_t      IsValid() const { return kTRUE; }
    virtual void        SetInvalid() { }
+           void        Close() { SetInvalid(); }
 
    virtual TProof     *AttachSession(Int_t, Bool_t = kFALSE);
    virtual TProof     *AttachSession(TProofDesc *, Bool_t = kFALSE);
