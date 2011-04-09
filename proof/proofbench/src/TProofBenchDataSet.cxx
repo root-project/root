@@ -128,7 +128,7 @@ Int_t TProofBenchDataSet::Handle(const char *dset, TObject *type)
    }
 
    // Get information per server
-   TMap *fcmap = fc->GetFilesPerServer();
+   TMap *fcmap = fc->GetFilesPerServer(fProof->GetMaster(), kTRUE);
    if (!fcmap) {
       Error("Handle", "could not create map with per-server info for dataset '%s'", dset);
       return -1;

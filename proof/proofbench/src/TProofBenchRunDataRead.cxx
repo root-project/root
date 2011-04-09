@@ -58,7 +58,7 @@ TProofBenchRunDataRead::TProofBenchRunDataRead(TProofBenchDataSet *pbds, TPBRead
                        : TProofBenchRun(proof, kPROOF_BenchSelDataDef), fProof(proof),
                          fReadType(readtype), fDS(pbds),
                          fNEvents(nevents), fNTries(ntries), fStart(start), fStop(stop), fStep(step),
-                         fDebug(debug), fDirProofBench(dirproofbench), fNodes(nodes),
+                         fDebug(debug), fFilesPerWrk(2), fDirProofBench(dirproofbench), fNodes(nodes),
                          fListPerfPlots(0), fProfile_perfstat_event(0), fHist_perfstat_event(0),
                          fProfile_queryresult_event(0), fNorm_queryresult_event(0),
                          fProfile_perfstat_IO(0), fHist_perfstat_IO(0), fProfile_queryresult_IO(0),
@@ -233,9 +233,9 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
       // the total one
       TFileCollection *fc = GetDataSet(dsname, nactive, nx);
       fc->Print("F");
-      TString dsn = TString::Format("%s_%d_%d", dsname.Data(), nactive, (Int_t)nx);
+      TString dsn = TString::Format("%s_%d_%d", dsbasename.Data(), nactive, (Int_t)nx);
       fProof->RegisterDataSet(dsn, fc, "OT");
-      fProof->ShowDataSets();
+      fProof->ShowDataSet(dsn, "F");
       
       for (Int_t j=0; j<ntries; j++) {
 
@@ -452,7 +452,7 @@ TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
    }
    
    // Separate info per server
-   TMap *mpref = fcref->GetFilesPerServer(fProof->GetMaster());
+   TMap *mpref = fcref->GetFilesPerServer(fProof->GetMaster(), kTRUE);
    if (!mpref) {
       SafeDelete(fcref);
       Error("GetDataSet", "problems classifying info on per-server base");
@@ -470,54 +470,55 @@ TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
    }
    mpnodes->Print();
    
+   // Number of files: fFilesPerWrk per active worker
+   Int_t nf = fNodes->GetNActives() * fFilesPerWrk;
+   Printf(" number of files needed (ideally): %d (%d per worker)", nf, fFilesPerWrk);
+   
+   // The output dataset
+   fcsub = new TFileCollection(TString::Format("%s_%d_%d", fcref->GetName(), nact, nx),
+                                                           fcref->GetTitle());
+     
    // Order reference sub-collections
-   TList *listref = new TList;
-   listref->SetOwner(kFALSE);
    TIter nxnd(mpnodes);
    TObject *key = 0;
-   TPair *pr = 0;
+   TFileInfo *fi = 0;
    TFileCollection *xfc = 0;
+   TList *lswrks = 0;
    while ((key = nxnd())) {
       TIter nxsrv(mpref);
       TObject *ksrv = 0;
       while ((ksrv = nxsrv())) {
-         if (!strcmp(TUrl(ksrv->GetName()).GetHostFQDN(), TUrl(key->GetName()).GetHostFQDN()))
-            if ((pr = dynamic_cast<TPair *>(mpref->FindObject(ksrv->GetName()))))
-               if ((xfc = dynamic_cast<TFileCollection *>(pr->Value()))) listref->Add(xfc);
-      }
-   }
-   TIter nxfc(mpref);
-   while ((key = nxfc())) {
-      if ((xfc = dynamic_cast<TFileCollection *>(mpref->GetValue(key)))) {
-         if (!listref->FindObject(xfc)) listref->Add(xfc);
-      }
-   }
-   listref->Print();
-
-   // Number of files: 12 per active worker
-   Int_t nf = fNodes->GetNActives() * 2;
-   Printf(" number of files needed (ideally): %d", nf);
-
-   fcsub = new TFileCollection(TString::Format("%s_%d_%d", fcref->GetName(), nact, nx), fcref->GetTitle());
-   TIter nxordfc(listref);
-   TFileInfo *fi = 0;
-   while (nf > 0) {
-      nxordfc.Reset();
-      while ((xfc = (TFileCollection *) nxordfc()) && nf > 0) {
-         if ((fi = (TFileInfo *) xfc->GetList()->First())) {
-            xfc->GetList()->Remove(fi);
-            fcsub->Add(fi);
-            nf--;
+         TUrl urlsrv(ksrv->GetName());
+         if (TString(urlsrv.GetHostFQDN()).IsNull())
+            urlsrv.SetHost(TUrl(gProof->GetMaster()).GetHostFQDN());
+         if (!strcmp(urlsrv.GetHostFQDN(), TUrl(key->GetName()).GetHostFQDN())) {
+            if ((xfc = dynamic_cast<TFileCollection *>(mpref->GetValue(ksrv)))) {
+               if ((lswrks = dynamic_cast<TList *>(mpnodes->GetValue(key)))) {
+                  Int_t nfnd = fFilesPerWrk * lswrks->GetSize();
+                  while (nfnd-- && xfc->GetList()->GetSize() > 0) {
+                     if ((fi = (TFileInfo *) xfc->GetList()->First())) {
+                        xfc->GetList()->Remove(fi);
+                        fcsub->Add(fi);
+                     }
+                  }
+               } else {
+                  Warning("GetDataSet", "could not attach to worker list for node '%s'",
+                                        key->GetName());
+               }
+            } else {
+               Warning("GetDataSet", "could not attach to file collection for server '%s'",
+                                     ksrv->GetName());
+            }
          }
       }
    }
+
    // Update counters
    fcsub->Update();
    fcsub->Print();
 
    // Cleanup
    SafeDelete(fcref);
-   SafeDelete(listref);
    SafeDelete(mpref);
    // Done
    return fcsub;

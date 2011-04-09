@@ -58,6 +58,7 @@ private:
    Int_t fStop;                  //stop number of workers
    Int_t fStep;                  //test to be performed every fStep workers
    Int_t fDebug;                 //debug switch
+   Int_t fFilesPerWrk;           //# of files to be processed per worker
 
    TDirectory  *fDirProofBench;   //directory for proof outputs
 
@@ -113,6 +114,7 @@ public:
    void SetStep(Int_t step) { fStep = step; }
    void SetDebug(Int_t debug) { fDebug = debug; }
    void SetDirProofBench(TDirectory* dir) { fDirProofBench = dir; }
+   void SetFilesPerWrk(Int_t fpw) { fFilesPerWrk = fpw; }
 
    TPBReadType *GetReadType() const { return fReadType; }
    Long64_t GetNEvents() const { return fNEvents; }
