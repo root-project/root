@@ -177,7 +177,8 @@ public :
                                     fDirection[0]=nx; fDirection[1]=ny; fDirection[2]=nz;}
 //   void                   SetNormalChecked(Double_t norm) {fNormalChecked=norm;}
    void                   SetCldirChecked(Double_t *dir) {memcpy(fCldirChecked, dir, 3*sizeof(Double_t));}
-
+   void                   SetLastSafetyForPoint(Double_t safe, const Double_t *point) {fLastSafety=safe; memcpy(fLastPoint,point,3*sizeof(Double_t));}
+   
    //--- point/vector reference frame conversion
    void                   LocalToMaster(const Double_t *local, Double_t *master) const {fCache->LocalToMaster(local, master);}
    void                   LocalToMasterVect(const Double_t *local, Double_t *master) const {fCache->LocalToMasterVect(local, master);}
