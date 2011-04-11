@@ -3291,7 +3291,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    rcint += "rootcint \"--lib-list-prefix=";
    rcint += mapfile;
    rcint += "\" -f \"";
-   rcint.Append(dict).Append("\" -c -p ").Append(GetIncludePath()).Append(" -D__ACLIC__");
+   rcint.Append(dict).Append("\" -c -p ").Append(GetIncludePath()).Append(" -D__ACLIC__ ");
    if (produceRootmap) {
       rcint.Append("-DR__ACLIC_ROOTMAP ");
    }
