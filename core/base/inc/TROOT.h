@@ -101,7 +101,7 @@ protected:
    TCollection     *fTypes;               //List of data types definition
    TCollection     *fGlobals;             //List of global variables
    TCollection     *fGlobalFunctions;     //List of global functions
-   TSeqCollection  *fClosedFiles;         //List of closed files (so we can delete them if needed). 
+   TSeqCollection  *fClosedObjects;       //List of closed objects from the list of files and sockets, so we can delete them if neededCl. 
    TSeqCollection  *fFiles;               //List of files
    TSeqCollection  *fMappedFiles;         //List of memory mapped files
    TSeqCollection  *fSockets;             //List of network sockets
@@ -180,7 +180,7 @@ public:
    TCollection      *GetListOfTypes(Bool_t load = kFALSE);
    TCollection      *GetListOfGlobals(Bool_t load = kFALSE);
    TCollection      *GetListOfGlobalFunctions(Bool_t load = kFALSE);
-   TSeqCollection   *GetListOfClosedFiles() const { return fClosedFiles; }
+   TSeqCollection   *GetListOfClosedObjects() const { return fClosedObjects; }
    TSeqCollection   *GetListOfFiles() const       { return fFiles; }
    TSeqCollection   *GetListOfMappedFiles() const { return fMappedFiles; }
    TSeqCollection   *GetListOfSockets() const     { return fSockets; }

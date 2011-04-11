@@ -179,8 +179,8 @@ static void CleanUpROOTAtExit()
          gROOT->GetListOfSockets()->Delete();
       if (gROOT->GetListOfMappedFiles())
          gROOT->GetListOfMappedFiles()->Delete("slow");
-      if (gROOT->GetListOfClosedFiles())
-         gROOT->GetListOfClosedFiles()->Delete("slow");
+      if (gROOT->GetListOfClosedObjects())
+         gROOT->GetListOfClosedObjects()->Delete("slow");
    }
 }
 
@@ -221,7 +221,7 @@ TROOT::TROOT() : TDirectory(),
      fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
-     fClosedFiles(0),fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
+     fClosedObjects(0),fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
      fTasks(0),fColors(0),fGeometries(0),fBrowsers(0),fSpecials(0),fCleanups(0),
      fMessageHandlers(0),fStreamerInfo(0),fClassGenerators(0),fSecContexts(0),
      fProofs(0),fClipboard(0),fDataSets(0),fUUIDs(0),fRootFolder(0),fBrowsables(0),
@@ -238,7 +238,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
      fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
-     fClosedFiles(0),fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
+     fClosedObjects(0),fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
      fTasks(0),fColors(0),fGeometries(0),fBrowsers(0),fSpecials(0),fCleanups(0),
      fMessageHandlers(0),fStreamerInfo(0),fClassGenerators(0),fSecContexts(0),
      fProofs(0),fClipboard(0),fDataSets(0),fUUIDs(0),fRootFolder(0),fBrowsables(0),
@@ -328,7 +328,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    // fList was created in TDirectory::Build but with different sizing.
    delete fList;
    fList        = new THashList(1000,3);
-   fClosedFiles = new TList; fClosedFiles->SetName("ClosedFiles");
+   fClosedObjects = new TList; fClosedObjects->SetName("ClosedFiles");
    fFiles       = new TList; fFiles->SetName("Files");
    fMappedFiles = new TList; fMappedFiles->SetName("MappedFiles");
    fSockets     = new TList; fSockets->SetName("Sockets");
@@ -377,7 +377,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fCleanups->Add(fBrowsers); fBrowsers->SetBit(kMustCleanup);
    fCleanups->Add(fTasks);    fTasks->SetBit(kMustCleanup);
    fCleanups->Add(fFiles);    fFiles->SetBit(kMustCleanup);
-   fCleanups->Add(fClosedFiles); fClosedFiles->SetBit(kMustCleanup);
+   fCleanups->Add(fClosedObjects); fClosedObjects->SetBit(kMustCleanup);
    fCleanups->Add(fInterpreter);
 
    fExecutingMacro= kFALSE;
@@ -477,7 +477,7 @@ TROOT::~TROOT()
       SafeDelete(fRootFolder);
       fSpecials->Delete();   SafeDelete(fSpecials);    // delete special objects : PostScript, Minuit, Html
 #endif
-      fClosedFiles->Delete("slow"); // and closed files
+      fClosedObjects->Delete("slow"); // and closed files
       fFiles->Delete("slow");       // and files
       SafeDelete(fFiles);    
       fSecContexts->Delete("slow"); SafeDelete(fSecContexts); // and security contexts
@@ -487,7 +487,7 @@ TROOT::~TROOT()
       TProcessID::Cleanup();                            // and list of ProcessIDs
       TSeqCollection *tl = fMappedFiles; fMappedFiles = 0; delete tl;
       
-      SafeDelete(fClosedFiles); 
+      SafeDelete(fClosedObjects); 
 
       fFunctions->Delete();  SafeDelete(fFunctions);   // etc..
       fColors->Delete();     SafeDelete(fColors);
@@ -642,6 +642,9 @@ void TROOT::CloseFiles()
       R__ListSlowClose(static_cast<TList*>(fFiles));
    }
    if (fSockets && fSockets->First()) {
+      if (0==fCleanups->FindObject(fSockets) ) {
+         fCleanups->Add(fSockets);
+      }
       CallFunc_t *socketCloser = gInterpreter->CallFunc_Factory();
       Long_t offset = 0;
       TClass *socketClass = TClass::GetClass("TSocket");
@@ -665,7 +668,8 @@ void TROOT::CloseFiles()
             if (socket->IsA()->InheritsFrom(socketClass)) {
                gInterpreter->CallFunc_Exec(socketCloser, ((char*)socket)+offset);
                // Put the object in the closed list for later deletion.
-               fClosedFiles->AddLast(socket);
+               socket->SetBit(kMustCleanup);
+               fClosedObjects->AddLast(socket);
             } else {
                // Crap ... this is not a socket, likely Proof or something, let's try to find a Close
                Long_t other_offset;
@@ -674,7 +678,8 @@ void TROOT::CloseFiles()
                if (gInterpreter->CallFunc_IsValid(otherCloser)) {
                   gInterpreter->CallFunc_Exec(otherCloser, ((char*)socket)+other_offset);
                   // Put the object in the closed list for later deletion.
-                  fClosedFiles->AddLast(socket);
+                  socket->SetBit(kMustCleanup);
+                  fClosedObjects->AddLast(socket);
                } else {
                   notclosed.AddLast(socket);
                }
