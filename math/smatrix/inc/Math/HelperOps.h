@@ -546,7 +546,7 @@ namespace Math {
 
    /**
       Specialized structure for assignment to a symmetrix matrix from iterator. 
-      Optionally a check isdone that iterator size 
+      Optionally a check is done that iterator size 
       is the same as the matrix size  
     */
    template <class T, unsigned int D1, unsigned int D2>  
@@ -555,9 +555,8 @@ namespace Math {
       static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >& lhs, Iterator begin, Iterator end, bool , bool lower, bool check = true) { 
 
          if (lower) { 
-            if (check) { 
-               const int size =  MatRepSym<T,D1>::kSize; 
-               assert( begin + size == end);
+            if (check) {
+               assert(begin+ static_cast<const int>( MatRepSym<T,D1>::kSize) == end);
             }
             std::copy(begin, end, lhs.fRep.Array() );
          }
