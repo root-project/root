@@ -629,7 +629,9 @@ void TBasket::Streamer(TBuffer &b)
       b >> fLast;
       b >> flag;
       if (fLast > fBufferSize) fBufferSize = fLast;
-      if (!flag) return;
+      if (!flag) {
+         return;
+      }
       if (flag%10 != 2) {
          delete [] fEntryOffset;
          fEntryOffset = new Int_t[fNevBufSize];
@@ -699,11 +701,14 @@ void TBasket::Streamer(TBuffer &b)
       b << fNevBufSize;
       b << fNevBuf;
       b << fLast;
-      flag = 1;
-      if (!fEntryOffset)  flag  = 2;
-      if (fBufferRef)     flag += 10;
-      if (fDisplacement)  flag += 40;
-      if (fHeaderOnly)    flag  = 0;
+      if (fHeaderOnly) {
+         flag = 0;
+      } else {
+         flag = 1;
+         if (!fEntryOffset)  flag  = 2;
+         if (fBufferRef)     flag += 10;
+         if (fDisplacement)  flag += 40;
+      }
       b << flag;
       if (fHeaderOnly) return;
       if (fEntryOffset && fNevBuf) {

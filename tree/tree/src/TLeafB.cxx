@@ -131,7 +131,7 @@ void TLeafB::ReadBasket(TBuffer &b)
    // -- Read leaf elements from Basket input buffer.
 
    if (!fLeafCount && (fNdata == 1)) {
-      b >> fValue[0];
+      b.ReadChar(fValue[0]);
    } else {
       if (fLeafCount) {
          Long64_t entry = fBranch->GetReadEntry();
