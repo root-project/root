@@ -465,7 +465,7 @@ zombie:
    // error in file opening occured, make this object a zombie
    {
       R__LOCKGUARD2(gROOTMutex);
-      gROOT->GetListOfClosedFiles()->Add(this);
+      gROOT->GetListOfClosedObjects()->Add(this);
    }
    MakeZombie();
    gDirectory = gROOT;
@@ -496,7 +496,7 @@ TFile::~TFile()
    SafeDelete(fCacheWrite);
 
    R__LOCKGUARD2(gROOTMutex);
-   gROOT->GetListOfClosedFiles()->Remove(this);
+   gROOT->GetListOfClosedObjects()->Remove(this);
    gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
 
    if (IsOnHeap()) {
@@ -783,7 +783,7 @@ void TFile::Init(Bool_t create)
 zombie:
    {
       R__LOCKGUARD2(gROOTMutex);
-      gROOT->GetListOfClosedFiles()->Add(this);
+      gROOT->GetListOfClosedObjects()->Add(this);
    }
    // error in file opening occured, make this object a zombie
    MakeZombie();
@@ -872,7 +872,7 @@ void TFile::Close(Option_t *option)
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfFiles()->Remove(this);
    gROOT->GetListOfBrowsers()->RecursiveRemove(this);
-   gROOT->GetListOfClosedFiles()->Add(this);
+   gROOT->GetListOfClosedObjects()->Add(this);
 }
 
 //____________________________________________________________________________________
