@@ -4961,26 +4961,13 @@ Long64_t TH1::Merge(TCollection *li)
    inlist.Add(hclone);
    inlist.AddAll(li);
 
-   THashList allLabels;
-   THashList* labels=GetXaxis()->GetLabels();   
-   //LM is this needed ???? - yoush be enough to do  do: 
-   Bool_t haveOneLabel = (labels != 0);
-   // Bool_t haveOneLabel=kFALSE;
-   // if (labels) {
-   //    TIter iL(labels);
-   //    TObjString* lb;
-   //    while ((lb=(TObjString*)iL())) {
-   //       haveOneLabel |= (lb && lb->String().Length());
-   //       if (!allLabels.FindObject(lb))
-   //          allLabels.Add(lb);
-   //    }
-   // }
 
    TAxis newXAxis;
    Bool_t initialLimitsFound = kFALSE;
-   Bool_t allHaveLabels = haveOneLabel;
+   Bool_t allHaveLabels = kTRUE;  // assume all histo have labels and check later
    Bool_t same = kTRUE;
    Bool_t allHaveLimits = kTRUE;
+   Bool_t foundLabelHist = kFALSE;
 
    TIter next(&inlist);
    while (TObject *o = next()) {
@@ -4990,6 +4977,10 @@ Long64_t TH1::Merge(TCollection *li)
             o->ClassName(),this->ClassName());
          return -1;
       }
+      // skip empty histograms
+      // (call GetEntries() to flush eventually the buffer) 
+      if (h->fTsumw == 0 && h->GetEntries() == 0) continue;
+
       Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
       allHaveLimits = allHaveLimits && hasLimits;
 
@@ -5012,27 +5003,16 @@ Long64_t TH1::Merge(TCollection *li)
       }
       if (allHaveLabels) {
          THashList* hlabels=h->GetXaxis()->GetLabels();
-         // LM: as before we can skipp all this
-         // In case of labels we don't care of the same
-         // Bool_t hasOneLabel=kFALSE;
-         // if (hlabels) {
-         //    TIter iL(hlabels);
-         //    TObjString* lb;
-         //    while ((lb=(TObjString*)iL())) {
-         //       hasOneLabel |= (lb && lb->String().Length());
-         //       if (!allLabels.FindObject(lb)) {
-         //          allLabels.Add(lb);
-         //          same = kFALSE;
-         //       }
-         //    }
-         // }
-         //allHaveLabels&=(labels && hasOneLabel);
+         Bool_t haveOneLabel = (hlabels != 0);
          // do here to print message only one time 
-         if (allHaveLabels && hlabels == 0) {
+         if (foundLabelHist && allHaveLabels && !haveOneLabel) {
             Warning("Merge","Not all histograms have labels. I will ignore labels,"
             " falling back to bin numbering mode.");
          } 
-         allHaveLabels &= (labels && hlabels);
+
+         allHaveLabels &= (haveOneLabel);
+         // for the error message
+         if (haveOneLabel) foundLabelHist = kTRUE;
          // I could add a check if histogram contains bins without a label 
          // and with non-zero bin content
          // Do we want to support this ???
