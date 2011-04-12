@@ -803,7 +803,7 @@ static void G__set_breakcontinue_breakdestination(int break_destidx, G__breakcon
          // -- This entry in the list is for a break statement.
 #ifdef G__ASM_DBG
          if (G__asm_dbg) {
-            G__fprinterr(G__serr, "  %x: assigned JMP %x (for break)  %s:%d\n", p->idx, break_destidx, __FILE__, __LINE__);
+            G__fprinterr(G__serr, "  %x: assigned JMP %x (for break)  %s:%d\n", p->idx - 1, break_destidx, __FILE__, __LINE__);
          }
 #endif // G__ASM_DBG
          G__asm_inst[p->idx] = break_destidx;
@@ -919,15 +919,21 @@ static G__value G__exec_switch()
       //   G__fgetstream_peek(buf, 30);
       //   fprintf(stderr, "G__exec_switch: compile whole switch block, peek ahead: '%s'\n", buf);
       //}
+      //fprintf(stderr, "G__exec_switch: Begin skipping rest of switch block, but generate bytecode.\n");
       // Flag that we need to generate code for case clauses.
       int store_G__switch = G__switch;
       G__switch = 1;
+      // Flag that we should not exit parser at a case label.
+      int store_G__switch_searching = G__switch_searching;
+      G__switch_searching = 0;
       // Tell the parser to finish the switch block.
       int brace_level = 1;
       // Call the parser.
       G__exec_statement(&brace_level);
       // Restore state.
+      G__switch_searching = store_G__switch_searching;
       G__switch = store_G__switch;
+      //fprintf(stderr, "G__exec_switch: Skipping of switch block completed, bytecode was generated.\n");
    }
    else {
       // -- We are going to execute the switch.
