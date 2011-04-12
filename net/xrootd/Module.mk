@@ -250,8 +250,7 @@ endif
 
 $(XROOTDBUILD): $(XROOTDMAKE) $(XROOTDDEPS)
 ifneq ($(PLATFORM),win32)
-		@(topdir=$(PWD); \
-		cd $(XROOTDDIRD); \
+		@(cd $(XROOTDDIRD); \
 	   	echo "*** Building xrootd ..." ; \
 		$(MAKE); \
 		rc=$$? ; \
@@ -259,9 +258,8 @@ ifneq ($(PLATFORM),win32)
 		   echo "*** Error condition reported by make (rc = $$rc):"; \
 		   rm -f `basename $(XROOTDMAKE)`; \
 	 	   exit 1; \
-		fi; \
-		cd $$topdir ; \
-		if [ -d $(XROOTDDIRL) ]; then \
+		fi)
+		@(if [ -d $(XROOTDDIRL) ]; then \
 		   lsplug=`find $(XROOTDDIRL) -name "libXrd*.$(XRDSOEXT)"` ;\
 		   lsplug="$$lsplug `find $(XROOTDDIRL) -name "libXrd*.dylib"`" ;\
 		   for i in $$lsplug ; do \
