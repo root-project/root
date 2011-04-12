@@ -807,7 +807,11 @@ Int_t TBasket::WriteBuffer()
    if (fEntryOffset) {
       // Note: We might want to investigate the compression gain if we 
       // transform the Offsets to fBuffer in entry length to optimize 
-      // compression algorithm.
+      // compression algorithm.  The aggregate gain on a (random) CMS files
+      // is around 5.5%. So the code could something like:
+      //      for(Int_t z = fNevBuf; z > 0; --z) {
+      //         if (fEntryOffset[z]) fEntryOffset[z] = fEntryOffset[z] - fEntryOffset[z-1];
+      //      }
       fBufferRef->WriteArray(fEntryOffset,fNevBuf+1);
       if (fDisplacement) {
          fBufferRef->WriteArray(fDisplacement,fNevBuf+1);
