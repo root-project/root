@@ -418,6 +418,9 @@ void TProfile3D::Divide(const TH1 *h1)
    }
    TProfile3D *p1 = (TProfile3D*)h1;
 
+   // delete buffer if it is there since it will become invalid
+   if (fBuffer) BufferEmpty(1);
+
 //*-*- Check profile compatibility
    Int_t nx = GetNbinsX();
    if (nx != p1->GetNbinsX()) {
