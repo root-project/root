@@ -11152,19 +11152,27 @@ void TProof::ShowMissingFiles(TQueryResult *qr)
       return;
    }
 
-   Int_t nmf = 0;
+   Int_t nmf = 0, ncf = 0;
    Long64_t msz = 0, mszzip = 0, mev = 0;
    // Scan the list
    TFileInfo *fi = 0;
    TIter nxf(missing);
    while ((fi = (TFileInfo *) nxf())) {
-      fi->Print();
-      nmf++;
+      char status = 'M';
+      if (fi->TestBit(TFileInfo::kCorrupted)) {
+         ncf++;
+         status = 'C';
+      } else {
+         nmf++;
+      }
       TFileInfoMeta *im = fi->GetMetaData();
       if (im) {
          if (im->GetTotBytes() > 0) msz += im->GetTotBytes(); 
          if (im->GetZipBytes() > 0) mszzip += im->GetZipBytes(); 
          mev += im->GetEntries();
+         Printf(" %d. (%c) %s %s %lld", ncf+nmf, status, fi->GetCurrentUrl()->GetUrl(), im->GetName(), im->GetEntries()); 
+      } else {
+         Printf(" %d. (%c) %s '' -1", ncf+nmf, status, fi->GetCurrentUrl()->GetUrl());
       }
    }
 
@@ -11172,8 +11180,14 @@ void TProof::ShowMissingFiles(TQueryResult *qr)
    if (msz <= 0) msz = -1;
    if (mszzip <= 0) mszzip = -1;
    Double_t xf = (Double_t)mev / (mev + xqr->GetEntries()) ; 
-   Printf(" +++ %d files missing, i.e. %lld events (%lld bytes, %lld zipped) --> about %.2f%%  of the total events",
-          nmf, mev, msz, mszzip, xf * 100.);
+   if (msz > 0. || mszzip > 0.) {
+      Printf(" +++ %d file(s) missing, %d corrupted, i.e. %lld unprocessed events -->"
+             " about %.2f%% of the total (%lld bytes, %lld zipped)",
+             nmf, ncf, mev, xf * 100., msz, mszzip);
+   } else {
+      Printf(" +++ %d file(s) missing, %d corrupted, i.e. %lld unprocessed events -->"
+             " about %.2f%% of the total", nmf, ncf, mev, xf * 100.);
+   }
 }
 
 //______________________________________________________________________________

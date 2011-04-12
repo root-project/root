@@ -881,7 +881,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
       TPair *currentElem = 0;
       // The event loop on the worker
-      while ((entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk()) {
+      while ((entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk() &&
+              fSelector->GetAbort() == TSelector::kContinue) {
 
          // This is needed by the inflate infrastructure to calculate
          // sleeping times
@@ -928,6 +929,11 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             if (fSelector->GetAbort() == TSelector::kAbortProcess) {
                SetProcessing(kFALSE);
                break;
+            } else if (fSelector->GetAbort() == TSelector::kAbortFile) {
+               Info("Process", "packet processing aborted following the selector settings:\n%s",
+                               lastMsg.Data());
+               fEvIter->InvalidatePacket();
+               fProgressStatus->SetBit(TProofProgressStatus::kFileCorrupted);
             }
          }
 
@@ -966,6 +972,10 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          }
          SetProcessing(kFALSE);
          if (!fSelStatus->IsOk() || gROOT->IsInterrupted()) break;
+
+         // Make sure that the selector abort status is reset
+         if (fSelector->GetAbort() == TSelector::kAbortFile)
+            fSelector->Abort("status reset", TSelector::kContinue);
       }
 
    } CATCH(excode) {
@@ -1836,7 +1846,13 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          fProof->fRedirLog = kFALSE;
 
       if (!IsClient()) {
-         HandleTimer(0); // force an update of final result
+         // Force an update of final result
+         HandleTimer(0);
+         // This forces a last call to TPacketizer::HandleTimer via the second argument
+         // (the first is ignored). This is needed when some events were skipped so that
+         // the total number of entries is not the one requested. The packetizer has no
+         // way in such a case to understand that processing is finished: it must be told.
+         if (fPacketizer) fPacketizer->StopProcess(kFALSE, kTRUE);
          // Store process info
          if (fPacketizer && fQuery)
             fQuery->SetProcessInfo(0, 0., fPacketizer->GetBytesRead(),
@@ -2383,7 +2399,7 @@ void TProofPlayerRemote::StopProcess(Bool_t abort, Int_t)
    // Stop process after this event.
 
    if (fPacketizer != 0)
-      fPacketizer->StopProcess(abort);
+      fPacketizer->StopProcess(abort, kTRUE);
    if (abort == kTRUE)
       fExitStatus = kAborted;
    else

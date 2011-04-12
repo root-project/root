@@ -25,6 +25,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 class TProofProgressStatus : public TObject {
+public:
+   enum EStatusBits { kFileNotOpen     = BIT(15),
+                      kFileCorrupted   = BIT(16)
+   };
 private:
    Long64_t fLastEntries; // Last chunck
    Long64_t fEntries;

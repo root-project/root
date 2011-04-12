@@ -1156,6 +1156,9 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
          status->IncProcTime(realtime);
          status->IncCPUTime(cputime);
       }
+      // Flag cases with problems in opening files
+      if (totalEntries < 0) status->SetBit(TProofProgressStatus::kFileNotOpen);
+      // Add to the message
       req << status;
       // Send tree cache information
       Long64_t cacheSize = (fPlayer) ? fPlayer->GetCacheSize() : -1;
@@ -1171,6 +1174,9 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
          PDB(kLoop, 2) status->Print();
          Info("GetNextPacket","cacheSize: %lld, learnent: %d", cacheSize, learnent);
       }
+      // Reset the status bits
+      status->ResetBit(TProofProgressStatus::kFileNotOpen);
+      status->ResetBit(TProofProgressStatus::kFileCorrupted);
       status = 0; // status is owned by the player.
    } else {
       req << fLatency.RealTime() << realtime << cputime

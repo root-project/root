@@ -105,6 +105,14 @@ TEventIter::~TEventIter()
 }
 
 //______________________________________________________________________________
+void TEventIter::InvalidatePacket()
+{
+   // Invalidated the current packet (if any) by setting the TDSetElement::kCorrupted bit
+
+   if (fElem) fElem->SetBit(TDSetElement::kCorrupted);
+}
+
+//______________________________________________________________________________
 void TEventIter::StopProcess(Bool_t /*abort*/)
 {
    // Set flag to stop the process
@@ -735,9 +743,13 @@ Long64_t TEventIterTree::GetNextEvent()
 
    Bool_t attach = kFALSE;
 
+   // When files are aborted during processing (via TSelector::kAbortFile) the player
+   // invalidates the element by settign this bit. We need to ask for a new packet
+   Bool_t corrupted = (fElem && fElem->TestBit(TDSetElement::kCorrupted)) ? kTRUE : kFALSE;
+      
    if (fElem) fElem->ResetBit(TDSetElement::kNewPacket);
 
-   while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 ) {
+   while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 || corrupted) {
 
       if (gPerfStats && fTree) {
          Long64_t totBytesRead = fTree->GetCurrentFile()->GetBytesRead();
@@ -746,9 +758,19 @@ Long64_t TEventIterTree::GetNextEvent()
          fOldBytesRead = totBytesRead;
       }
 
+      Long64_t rest = -1;
+      if (fElem) {
+         rest = fElem->GetNum();
+         if (fElemCur >= 0) rest -= (fElemCur + 1 - fElemFirst);
+      }
+      
       SafeDelete(fElem);
       while (!fElem) {
-         if (fTree) {
+         // For a corrupted/invalid file the request for a new packet is with totalEntries = -1
+         // (the default) so that the packetizer invalidates the element
+         if (corrupted) {
+            fElem = fDSet->Next(rest);
+         } else if (fTree) {
             fElem = fDSet->Next(fTree->GetEntries());
          } else {
             fElem = fDSet->Next();
@@ -759,8 +781,10 @@ Long64_t TEventIterTree::GetNextEvent()
             fNum = 0;
             return -1;
          }
+         corrupted = kFALSE;
          fElem->SetBit(TDSetElement::kNewPacket);
-
+         fElem->ResetBit(TDSetElement::kCorrupted);
+         
          TTree *newTree = GetTrees(fElem);
          if (newTree) {
             if (newTree != fTree) {
