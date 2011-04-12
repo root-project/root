@@ -306,7 +306,7 @@ namespace {
    // retrieve object address
       void* address = 0;
       if ( ObjectProxy_Check( pyobject ) ) address = ((ObjectProxy*)pyobject)->GetObject();
-      else if ( PyInt_Check( pyobject ) ) address = (void*)PyInt_AS_LONG( pyobject );
+      else if ( PyInt_Check( pyobject ) || PyLong_Check( pyobject ) ) address = (void*)PyLong_AsLong( pyobject );
       else Utility::GetBuffer( pyobject, '*', 1, address, kFALSE );
 
       if ( ! address ) {
@@ -345,17 +345,20 @@ namespace {
 
    // perform actual cast
       PyObject* meth = PyObject_GetAttr( (PyObject*)self, PyStrings::gTClassDynCast );
-      PyObject* ptr = meth ? PyObject_Call(
-         meth, PyTuple_GetSlice( args, 1, PyTuple_GET_SIZE( args ) ), 0 ) : 0;
+      PyObject* ptr = meth ? PyObject_Call( meth, args, 0 ) : 0;
       Py_XDECREF( meth );
 
    // simply forward in case of call failure
       if ( ! ptr )
          return ptr;
 
-   // supposed to be an int or long ...
-      long address = PyLong_AsLong( ptr );
-      if ( address == -1 && PyErr_Occurred() ) {
+   // retrieve object address
+      void* address = 0;
+      if ( ObjectProxy_Check( pyobject ) ) address = ((ObjectProxy*)pyobject)->GetObject();
+      else if ( PyInt_Check( pyobject ) || PyLong_Check( pyobject ) ) address = (void*)PyLong_AsLong( pyobject );
+      else Utility::GetBuffer( pyobject, '*', 1, address, kFALSE );
+
+      if ( PyErr_Occurred() ) {
          PyErr_Clear();
          return ptr;
       }
@@ -370,6 +373,7 @@ namespace {
 
       PyObject* result = BindRootObjectNoCast( (void*)address, klass );
       Py_DECREF( ptr );
+
       return result;
    }
 
