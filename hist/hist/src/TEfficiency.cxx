@@ -1220,7 +1220,7 @@ Double_t TEfficiency::BetaCentralInterval(Double_t level,Double_t a,Double_t b,B
    //
    //Input: - level : confidence level
    //       -    a  : parameter > 0 for the beta distribution (for a posterior is passed + prior_alpha
-   //       -    b  : paramet`er > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta 
+   //       -    b  : parameter > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta 
    //       - bUpper: true  - upper boundary is returned
    //                 false - lower boundary is returned
    //
