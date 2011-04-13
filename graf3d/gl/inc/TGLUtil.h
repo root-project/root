@@ -1005,14 +1005,24 @@ public:
                                  Int_t pick_radius=0, Bool_t selection=kFALSE,
                                  Bool_t sec_selection=kFALSE);
 
+   static void RenderPolyMarkers(const TAttMarker &marker, const std::vector<Double_t> &points,
+                                 Double_t dX, Double_t dY, Double_t dZ);
+
    static void RenderPoints(const TAttMarker& marker,
                             Float_t* p, Int_t n,
                             Int_t pick_radius=0, Bool_t selection=kFALSE,
                             Bool_t sec_selection=kFALSE);
 
+   static void RenderPoints(const TAttMarker& marker,
+                            const std::vector<Double_t> &points);
+
    static void RenderCrosses(const TAttMarker& marker,
                              Float_t* p, Int_t n,
                              Bool_t sec_selection=kFALSE);
+
+   static void RenderCrosses(const TAttMarker& marker,
+                             const std::vector<Double_t> &points,
+                             Double_t dX, Double_t dY, Double_t dZ);
 
    static void RenderPolyLine(const TAttLine& aline, Char_t transp,
                               Float_t* p, Int_t n,

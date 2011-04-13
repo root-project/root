@@ -8,8 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
-#include <ctype.h>
+#include <cctype>
 
 #include "KeySymbols.h"
 #include "TVirtualX.h"
@@ -21,6 +20,7 @@
 #include "TStyle.h"
 #include "TH3.h"
 
+#include "TPolyMarker3D.h"
 #include "TGLPlotCamera.h"
 #include "TGLBoxPainter.h"
 #include "TGLIncludes.h"
@@ -38,11 +38,25 @@ TGLBoxPainter::TGLBoxPainter(TH1 *hist, TGLPlotCamera *cam, TGLPlotCoordinates *
                     fXOZSlice("XOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOZ),
                     fYOZSlice("YOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kYOZ),
                     fXOYSlice("XOY", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOY),
-                    fType(kBox)
+                    fType(kBox),
+                    fPolymarker(0)
 {
    // Normal constructor.
 }
 
+
+//______________________________________________________________________________
+TGLBoxPainter::TGLBoxPainter(TH1 *hist, TPolyMarker3D * pm,
+                             TGLPlotCamera *cam, TGLPlotCoordinates *coord)
+                  : TGLPlotPainter(hist, cam, coord, kFALSE, kFALSE, kFALSE),
+                    fXOZSlice("XOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOZ),
+                    fYOZSlice("YOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kYOZ),
+                    fXOYSlice("XOY", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOY),
+                    fType(kBox),
+                    fPolymarker(pm)
+{
+   // Normal constructor.
+}
 
 //______________________________________________________________________________
 char *TGLBoxPainter::GetPlotInfo(Int_t, Int_t)
@@ -103,6 +117,19 @@ Bool_t TGLBoxPainter::InitGeometry()
    fXOYSlice.SetMinMax(fMinMaxVal);
    fXOZSlice.SetMinMax(fMinMaxVal);
    fYOZSlice.SetMinMax(fMinMaxVal);
+
+   if (fPolymarker) {
+      const Double_t xScale = fCoord->GetXScale();
+      const Double_t yScale = fCoord->GetYScale();
+      const Double_t zScale = fCoord->GetZScale();
+
+      fPMPoints.assign(fPolymarker->GetP(), fPolymarker->GetP() + fPolymarker->GetN() * 3);
+      for (unsigned i = 0; i < fPMPoints.size(); i += 3) {
+         fPMPoints[i] *= xScale;
+         fPMPoints[i + 1] *= yScale;
+         fPMPoints[i + 2] *= zScale;
+      }
+   }
 
    if (fCoord->Modified()) {
       fUpdateSelection = kTRUE;
@@ -176,6 +203,7 @@ void TGLBoxPainter::Pan(Int_t px, Int_t py)
 void TGLBoxPainter::AddOption(const TString &option)
 {
    // Box1 == spheres.
+   using namespace std;//isdigit must be in std. But ...
 
    const Ssiz_t boxPos = option.Index("box");//"box" _already_ _exists_ in a string.
    if (boxPos + 3 < option.Length() && isdigit(option[boxPos + 3]))
@@ -325,6 +353,9 @@ namespace {
 //______________________________________________________________________________
 void TGLBoxPainter::DrawPlot()const
 {
+   if (fPolymarker)
+      return DrawCloud();
+
    // Draw set of boxes (spheres)
 
    //Shift plot to point of origin.
@@ -458,15 +489,47 @@ void TGLBoxPainter::DrawPlot()const
 }
 
 //______________________________________________________________________________
+void TGLBoxPainter::DrawCloud()const
+{
+   //Draw a frame and a polymarker inside.
+
+   //Shift plot to the point of origin.
+   const Rgl::PlotTranslation trGuard(this);
+
+   //Frame.
+   fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
+
+   if (fPhysicalShapeColor)
+      glColor3fv(fPhysicalShapeColor);
+
+   glDisable(GL_LIGHTING);
+
+   const TGLVertex3 *bb = fBackBox.Get3DBox();
+   const Double_t dX = (bb[1].X() - bb[0].X()) / 40.;
+   const Double_t dY = (bb[3].Y() - bb[0].Y()) / 40.;
+   const Double_t dZ = (bb[4].Z() - bb[0].Z()) / 40.;
+   //Now, draw the cloud of points (polymarker) inside the frame.
+   TGLUtil::RenderPolyMarkers(*fPolymarker, fPMPoints, dX, dY, dZ);
+
+   glEnable(GL_LIGHTING);
+}
+
+//______________________________________________________________________________
 void TGLBoxPainter::SetPlotColor()const
 {
    // Set boxes color.
 
    Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.05f};
 
-   if (fHist->GetFillColor() != kWhite)
-      if (const TColor *c = gROOT->GetColor(fHist->GetFillColor()))
-         c->GetRGB(diffColor[0], diffColor[1], diffColor[2]);
+   if (fPhysicalShapeColor) {
+      diffColor[0] = fPhysicalShapeColor[0];
+      diffColor[1] = fPhysicalShapeColor[1];
+      diffColor[2] = fPhysicalShapeColor[2];
+   } else {
+      if (fHist->GetFillColor() != kWhite)
+         if (const TColor *c = gROOT->GetColor(fHist->GetFillColor()))
+            c->GetRGB(diffColor[0], diffColor[1], diffColor[2]);
+   }
 
    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffColor);
    const Float_t specColor[] = {1.f, 1.f, 1.f, 1.f};

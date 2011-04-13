@@ -25,6 +25,7 @@
 
 class TGLViewer;
 class TGLFaceSet;
+class TList;
 
 
 class TGLScenePad : public TVirtualViewer3D,  public TGLScene {
@@ -47,6 +48,7 @@ protected:
    TGLPhysicalShape*  CreateNewPhysical(UInt_t physicalID, const TBuffer3D& buffer,
                                         const TGLLogicalShape& logical) const;
 
+   void               ComposePolymarker(const TList *padPrimitives);
    // Composite shape specific
    typedef std::pair<UInt_t, RootCsg::TBaseMesh*> CSPart_t;
    mutable TGLFaceSet     *fComposite; //! Paritally created composite
@@ -66,7 +68,7 @@ public:
    // void SetPad(TVirtualPad* p) { fPad = p; /* also need to drop contents */ }
 
    // Histo import and Sub-pad traversal
-   void AddHistoPhysical(TGLLogicalShape* log);
+   void AddHistoPhysical(TGLLogicalShape* log, const Float_t *histColor = 0);
    void SubPadPaint(TVirtualPad* pad);
 
    // PadPaint wrapper for calls from TGLViewer:

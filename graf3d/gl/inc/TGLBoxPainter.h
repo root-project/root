@@ -8,9 +8,10 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 #ifndef ROOT_TGLBoxPainter
 #define ROOT_TGLBoxPainter
+
+#include <vector>
 
 #ifndef ROOT_TGLPlotPainter
 #include "TGLPlotPainter.h"
@@ -24,6 +25,13 @@
 #ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
 #endif
+
+//TGLScenePad creates box painter
+//for the case TPad has poly marker and
+//empty TH3 inside.
+//Now it's up to box painter to do everything
+//correctly.
+class TPolyMarker3D;
 
 class TGLPlotCamera;
 class TAxis;
@@ -47,11 +55,17 @@ private:
 
    mutable TGLQuadric      fQuadric;
 
+   const TPolyMarker3D    *fPolymarker; //Polymarker from TTree.
+   std::vector<Double_t>   fPMPoints;   //Cache for polymarker's points.
+
    TGLBoxPainter(const TGLBoxPainter &);
    TGLBoxPainter &operator = (const TGLBoxPainter &);
 
 public:
    TGLBoxPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord);
+
+   TGLBoxPainter(TH1 *hist, TPolyMarker3D * pm,
+                 TGLPlotCamera *camera, TGLPlotCoordinates *coord);
 
    char   *GetPlotInfo(Int_t px, Int_t py);
    Bool_t  InitGeometry();
@@ -66,6 +80,8 @@ private:
    void    DeInitGL()const;
    
    void    DrawPlot()const;
+   //Special type of TH3:
+   void    DrawCloud()const;
 
    void    SetPlotColor()const;
 

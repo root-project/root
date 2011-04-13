@@ -194,6 +194,8 @@ private:
    const TColor         *fPadColor;
 
 protected:
+   const Float_t        *fPhysicalShapeColor;
+
    Double_t              fPadPhi;
    Double_t              fPadTheta;
    TH1                  *fHist;
@@ -236,6 +238,10 @@ public:
    TGLPlotPainter(TGLPlotCamera *camera);
 
    const TGLPlotBox& RefBackBox() const { return fBackBox; }
+   void              SetPhysicalShapeColor(const Float_t *rgba)
+   {
+      fPhysicalShapeColor = rgba;
+   }
 
    virtual void     InitGL()const = 0;
    virtual void     DeInitGL()const = 0;

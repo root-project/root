@@ -46,6 +46,7 @@ ClassImp(TGLPlotPainter)
 TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord,
                                Bool_t xoy, Bool_t xoz, Bool_t yoz)
                   : fPadColor(0),
+                    fPhysicalShapeColor(0),
                     fPadPhi(45.),
                     fPadTheta(0.),
                     fHist(hist),
@@ -76,6 +77,7 @@ TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordina
 //______________________________________________________________________________
 TGLPlotPainter::TGLPlotPainter(TGL5DDataSet *data, TGLPlotCamera *camera, TGLPlotCoordinates *coord)
                   : fPadColor(0),
+                    fPhysicalShapeColor(0),
                     fPadPhi(45.),
                     fPadTheta(0.),
                     fHist(0),
@@ -106,6 +108,7 @@ TGLPlotPainter::TGLPlotPainter(TGL5DDataSet *data, TGLPlotCamera *camera, TGLPlo
 //______________________________________________________________________________
 TGLPlotPainter::TGLPlotPainter(TGLPlotCamera *camera)
                   : fPadColor(0),
+                    fPhysicalShapeColor(0),
                     fPadPhi(45.),
                     fPadTheta(0.),
                     fHist(0),

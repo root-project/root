@@ -16,6 +16,7 @@
 #include <TGLUtil.h>
 #include <TGLAxisPainter.h>
 
+class TPolyMarker3D;
 class TGLRnrCtx;
 class TH3;
 class TAxis;
@@ -29,10 +30,11 @@ private:
    TH3GL& operator=(const TH3GL&); // Not implemented
 
 protected:
-   TH3                *fM;  // Model object dynamic-casted to TH2.
+   TH3                *fM;  // Model object dynamic-casted to TH3.
 
 public:
    TH3GL();
+   TH3GL(TH3 *h, TPolyMarker3D *pm);
    virtual ~TH3GL();
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);

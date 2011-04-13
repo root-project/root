@@ -16,6 +16,8 @@
 #include "TGLPlotPainter.h"
 
 class TVirtualPad;
+class TPolyMarker3D;
+class TH3;
 
 class TGLPlot3D : public TGLObject
 {
@@ -37,6 +39,7 @@ public:
 
    virtual Bool_t KeepDuringSmartRefresh() const { return kFALSE; }
 
+   static TGLPlot3D* CreatePlot(TH3 *h, TPolyMarker3D *pm);
    static TGLPlot3D* CreatePlot(TObject* obj, const Option_t* opt, TVirtualPad* pad);
    static TGLPlot3D* CreatePlot(TObject* obj, const Option_t* opt, Bool_t logx, Bool_t logy, Bool_t logz);
 

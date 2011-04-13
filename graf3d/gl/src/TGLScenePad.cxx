@@ -18,6 +18,10 @@
 #include "TGLStopwatch.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TPolyMarker3D.h"
+#include "TColor.h"
+#include "TROOT.h"
+#include "TH3.h"
 
 #include "TGLFaceSet.h"
 #include "TGLPolyLine.h"
@@ -67,7 +71,7 @@ TGLScenePad::TGLScenePad(TVirtualPad* pad) :
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TGLScenePad::AddHistoPhysical(TGLLogicalShape* log)
+void TGLScenePad::AddHistoPhysical(TGLLogicalShape* log, const Float_t *histoColor)
 {
    // Scale and rotate a histo object to mimic placement in canvas.
 
@@ -107,14 +111,50 @@ void TGLScenePad::AddHistoPhysical(TGLLogicalShape* log)
    mat.RotateLF(3, 2, TMath::PiOver2());
    mat.RotateLF(1, 3, TMath::DegToRad()*gPad->GetTheta());
    mat.RotateLF(1, 2, TMath::DegToRad()*(gPad->GetPhi() - 90));
-   Float_t rgba[4] = { 1, 1, 1, 1};
-   TGLPhysicalShape* phys = new TGLPhysicalShape
-      (fNextInternalPID++, *log, mat, false, rgba);
+   Float_t rgba[4] = {1.f, 1.f, 1.f, 1.f};
+   if (histoColor) {
+      rgba[0] = histoColor[0];
+      rgba[1] = histoColor[1];
+      rgba[2] = histoColor[2];
+      rgba[3] = histoColor[3];
+   }
+   TGLPhysicalShape* phys = new TGLPhysicalShape(fNextInternalPID++, *log, mat, false, rgba);
    AdoptPhysical(*phys);
 
    // Part of XXXX above.
    // phys->BoundingBox().Dump();
 }
+
+namespace {
+
+//______________________________________________________________________________
+Bool_t HasPolymarkerAndFrame(const TList *lst)
+{
+   //TTree::Draw can create polymarker + empty TH3 (to draw as a frame around marker).
+   //Unfortunately, this is not good for GL - this will be two unrelated
+   //objects in two unrelated coordinate systems.
+   //So, this function checks list contents, and if it founds empty TH3 and polymarker,
+   //the must be combined as one object.
+   //Later we'll reconsider the design.
+   Bool_t gotEmptyTH3 = kFALSE;
+   Bool_t gotMarker = kFALSE;
+
+   TObjOptLink *lnk = lst ? (TObjOptLink*)lst->FirstLink() : 0;
+   for (; lnk; lnk = (TObjOptLink*)lnk->Next()) {
+      const TObject *obj = lnk->GetObject();
+      if (const TH3 *th3 = dynamic_cast<const TH3*>(obj)) {
+         if(!th3->GetEntries())
+            gotEmptyTH3 = kTRUE;
+      } else if (dynamic_cast<const TPolyMarker3D *>(obj))
+         gotMarker = kTRUE;
+   }
+
+   return gotMarker && gotEmptyTH3;
+}
+
+}
+
+
 
 //______________________________________________________________________________
 void TGLScenePad::SubPadPaint(TVirtualPad* pad)
@@ -127,11 +167,13 @@ void TGLScenePad::SubPadPaint(TVirtualPad* pad)
    pad->SetViewer3D(this);
 
    TList       *prims = pad->GetListOfPrimitives();
-   TObjOptLink *lnk   = (prims) ? (TObjOptLink*)prims->FirstLink() : 0;
-   while (lnk)
-   {
-      ObjectPaint(lnk->GetObject(), lnk->GetOption());
-      lnk = (TObjOptLink*)lnk->Next();
+
+   if (HasPolymarkerAndFrame(prims)) {
+      ComposePolymarker(prims);
+   } else {
+      TObjOptLink *lnk   = (prims) ? (TObjOptLink*)prims->FirstLink() : 0;
+      for (; lnk; lnk = (TObjOptLink*)lnk->Next())
+         ObjectPaint(lnk->GetObject(), lnk->GetOption());
    }
 
    pad->SetViewer3D(vv3dsav);
@@ -653,6 +695,45 @@ TGLScenePad::CreateNewPhysical(UInt_t ID, const TBuffer3D& buffer,
    TGLScene::RGBAFromColorIdx(rgba, colorIndex, buffer.fTransparency);
    return new TGLPhysicalShape(ID, logical, buffer.fLocalMaster,
                                buffer.fReflection, rgba);
+}
+
+
+//______________________________________________________________________________
+void TGLScenePad::ComposePolymarker(const TList *lst)
+{
+   TPolyMarker3D *pm = 0;
+   TH3 *th3 = 0;
+   TObjOptLink *lnk = (TObjOptLink*)lst->FirstLink();
+   for (; lnk; lnk = (TObjOptLink*)lnk->Next()) {
+      TObject *obj = lnk->GetObject();
+      if (TPolyMarker3D *dPm = dynamic_cast<TPolyMarker3D*>(obj)) {
+         if(!pm)
+            pm = dPm;
+      } else if (TH3 *dTH3 = dynamic_cast<TH3*>(obj)) {
+         if(!th3 && !dTH3->GetEntries())
+            th3 = dTH3;
+      } else
+         ObjectPaint(obj, lnk->GetOption());
+
+      if (pm && th3) {
+         //Create a new TH3 plot, containing polymarker.
+         TGLPlot3D* log = TGLPlot3D::CreatePlot(th3, pm);
+         AdoptLogical(*log);
+         //Try to extract polymarker's color and
+         //create a physical shape with correct color.
+         const Color_t cInd = pm->GetMarkerColor();
+         if (TColor *c = gROOT->GetColor(cInd)) {
+            Float_t rgba[4] = {0.f, 0.f, 0.f, 1.};
+            c->GetRGB(rgba[0], rgba[1], rgba[2]);
+            AddHistoPhysical(log, rgba);
+         } else
+            AddHistoPhysical(log);
+
+         //Composition was added into gl-viewer.
+         pm = 0;
+         th3 = 0;
+      }
+   }
 }
 
 //______________________________________________________________________________

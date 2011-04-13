@@ -1804,6 +1804,21 @@ void TGLUtil::RenderPolyMarkers(const TAttMarker& marker, Char_t transp,
 }
 
 //______________________________________________________________________________
+void TGLUtil::RenderPolyMarkers(const TAttMarker &marker, const std::vector<Double_t> &points,
+                                Double_t dX, Double_t dY, Double_t dZ)
+{
+   // Render polymarkers at points specified by p-array.
+   // Supports point and cross-like styles.
+   // Color is set externally. Lighting is disabled externally.
+
+   const Int_t s = marker.GetMarkerStyle();
+   if (s == 2 || s == 3 || s == 5 || s == 28)
+      RenderCrosses(marker, points, dX, dY, dZ);
+   else
+      RenderPoints(marker, points);
+}
+
+//______________________________________________________________________________
 void TGLUtil::RenderPoints(const TAttMarker& marker,
                            Float_t* op, Int_t n,
                            Int_t pick_radius, Bool_t selection,
@@ -1872,6 +1887,54 @@ void TGLUtil::RenderPoints(const TAttMarker& marker,
 
    if (changePM)
       EndExtendPickRegion();
+}
+
+//______________________________________________________________________________
+void TGLUtil::RenderPoints(const TAttMarker& marker, const std::vector<Double_t> &points)
+{
+   // Render markers as circular or square points.
+   // Color is never changed.
+   const Int_t style = marker.GetMarkerStyle();
+   Float_t size = 5 * marker.GetMarkerSize();
+
+   if (style == 4 || style == 20 || style == 24)
+   {
+      glEnable(GL_POINT_SMOOTH);
+      if (style == 4 || style == 24) {
+         glEnable(GL_BLEND);
+         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+         glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+      }
+   }
+   else
+   {
+      glDisable(GL_POINT_SMOOTH);
+      if      (style == 1) size = 1;
+      else if (style == 6) size = 2;
+      else if (style == 7) size = 3;
+   }
+
+   glPointSize(size);
+
+   glVertexPointer(3, GL_DOUBLE, 0, &points[0]);
+   glEnableClientState(GL_VERTEX_ARRAY);
+
+   // Circumvent bug in ATI's linux drivers.
+   Int_t nleft = points.size() / 3;
+   Int_t ndone = 0;
+   const Int_t maxChunk = 8192;
+   while (nleft > maxChunk)
+   {
+      glDrawArrays(GL_POINTS, ndone, maxChunk);
+      nleft -= maxChunk;
+      ndone += maxChunk;
+   }
+
+   if (nleft > 0)
+      glDrawArrays(GL_POINTS, ndone, nleft);
+
+   glDisableClientState(GL_VERTEX_ARRAY);
+   glPointSize(1.f);
 }
 
 //______________________________________________________________________________
@@ -1945,6 +2008,44 @@ void TGLUtil::RenderCrosses(const TAttMarker& marker,
          glDrawArrays(GL_POINTS, ndone, nleft);
       }
       glPopClientAttrib();
+   }
+}
+
+//______________________________________________________________________________
+void TGLUtil::RenderCrosses(const TAttMarker& marker, const std::vector<Double_t> &points,
+                            Double_t dX, Double_t dY, Double_t dZ)
+{
+   // Render markers as crosses.
+   // Color is never changed.
+   if (marker.GetMarkerStyle() == 28)
+   {
+      glEnable(GL_BLEND);
+      glEnable(GL_LINE_SMOOTH);
+      glLineWidth(2.f);
+   }
+   else
+   {
+      glDisable(GL_LINE_SMOOTH);
+      glLineWidth(1.f);
+   }
+
+   typedef std::vector<Double_t>::size_type size_type;
+
+   glBegin(GL_LINES);
+
+   for (size_type i = 0; i < points.size(); i += 3) {
+      const Double_t *p = &points[i];
+      glVertex3f(p[0] - dX, p[1], p[2]); glVertex3f(p[0] + dX, p[1], p[2]);
+      glVertex3f(p[0], p[1] - dY, p[2]); glVertex3f(p[0], p[1] + dY, p[2]);
+      glVertex3f(p[0], p[1], p[2] - dZ); glVertex3f(p[0], p[1], p[2] + dZ);
+   }
+
+   glEnd();
+
+   if (marker.GetMarkerStyle() == 28) {
+      glDisable(GL_LINE_SMOOTH);
+      glDisable(GL_BLEND);
+      glLineWidth(1.f);
    }
 }
 

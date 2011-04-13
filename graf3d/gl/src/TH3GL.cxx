@@ -8,7 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 #include "TH3GL.h"
 #include "TH3.h"
 #include "TVirtualPad.h"
@@ -21,7 +20,9 @@
 #include "TGLBoxPainter.h"
 #include "TGLTF3Painter.h"
 #include "TGLAxisPainter.h"
+#include "TGLPhysicalShape.h"
 #include "TGLCamera.h"
+#include "TPolyMarker3D.h"
 
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
@@ -37,6 +38,15 @@ TH3GL::TH3GL() :
    TGLPlot3D(), fM(0)
 {
    // Constructor.
+}
+
+//______________________________________________________________________________
+TH3GL::TH3GL(TH3 *th3, TPolyMarker3D *pm) :
+   TGLPlot3D(), fM(th3)
+{
+   // Constructor.
+   SetPainter(new TGLBoxPainter(th3, pm, 0, &fCoord));
+   fPlotPainter->InitGeometry();
 }
 
 //______________________________________________________________________________
@@ -86,6 +96,8 @@ void TH3GL::SetBBox()
 void TH3GL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Render with OpenGL.
+   if (fFirstPhysical)
+      fPlotPainter->SetPhysicalShapeColor(fFirstPhysical->Color());
 
    fPlotPainter->RefBackBox().FindFrontPoint();
 
@@ -101,6 +113,8 @@ void TH3GL::DirectDraw(TGLRnrCtx & rnrCtx) const
    glPopAttrib();
 
    // Axes
+   const Rgl::PlotTranslation trGuard(fPlotPainter);
+
    TGLAxisPainterBox axe_painter;
    axe_painter.SetUseAxisColors(kFALSE);
    axe_painter.SetFontMode(TGLFont::kPixmap);

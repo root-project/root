@@ -18,6 +18,7 @@
 #include "TF2.h"
 #include "TF2GL.h"
 #include "TGLParametric.h"
+#include "TPolyMarker3D.h"
 #include "TGLParametricEquationGL.h"
 
 #include "TVirtualPad.h"
@@ -79,6 +80,17 @@ TGLPlot3D* TGLPlot3D::InstantiatePlot(TObject* obj)
    }
 
    return 0;
+}
+
+//______________________________________________________________________________
+TGLPlot3D* TGLPlot3D::CreatePlot(TH3 *th3, TPolyMarker3D *pm)
+{
+   // Create GL plot for specified TH3 and polymarker.
+
+   TGLPlot3D* log = new TH3GL(th3, pm);
+   log->SetBBox();
+
+   return log;
 }
 
 //______________________________________________________________________________
