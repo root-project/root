@@ -1416,6 +1416,17 @@ TBranch* TTree::Branch(const char* name, void* address, const char* leaflist, In
    //             Y/I       : variable Y, type Int_t
    //             Y/I2      ; variable Y, type Int_t converted to a 16 bits integer
    //
+   //         Arrays of values are supported with the following syntax:
+   //         If leaf name has the form var[nelem], where nelem is alphanumeric, then
+   //         If nelem is a leaf name, it is used as the variable size of the array.
+   //              The leaf refered to by nelem **MUST** be an int (/I).
+   //         If leaf name has the form var[nelem], where nelem is a digit, then
+   //            it is used as the fixed size of the array.
+   //         If leaf name has the form of a multi dimenantion array (eg var[nelem][nelem2])
+   //            where nelem and nelem2 are digits) then
+   //            it is used as a 2 dimensional array of fixed size.
+   //         Any of other form is not supported.
+   //
    //    Note that the TTree will assume that all the item are contiguous in memory.
    //    On some platform, this is not always true of the member of a struct or a class,
    //    due to padding and alignment.  Sorting your data member in order of decreasing
