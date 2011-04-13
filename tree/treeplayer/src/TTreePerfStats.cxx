@@ -277,16 +277,18 @@ void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
    // start is the TimeStamp before reading
    // len is the number of bytes read
 
-   Long64_t offset = file->GetRelOffset();
-   Int_t np = fGraphIO->GetN();
-   Int_t entry = fTree->GetReadEntry();
-   fGraphIO->SetPoint(np,entry,1e-6*offset);
-   fGraphIO->SetPointError(np,0.001,1e-9*len);
-   Double_t tnow = TTimeStamp();
-   Double_t dtime = tnow-start;
-   fDiskTime += dtime;
-   fGraphTime->SetPoint(np,entry,tnow);
-   fGraphTime->SetPointError(np,0.001,dtime);
+   if (file == this->fFile){
+      Long64_t offset = file->GetRelOffset();
+      Int_t np = fGraphIO->GetN();
+      Int_t entry = fTree->GetReadEntry();
+      fGraphIO->SetPoint(np,entry,1e-6*offset);
+      fGraphIO->SetPointError(np,0.001,1e-9*len);
+      Double_t tnow = TTimeStamp();
+      Double_t dtime = tnow-start;
+      fDiskTime += dtime;
+      fGraphTime->SetPoint(np,entry,tnow);
+      fGraphTime->SetPointError(np,0.001,dtime);
+   }
 }
 
 
