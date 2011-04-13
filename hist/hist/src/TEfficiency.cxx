@@ -8,8 +8,7 @@
 #include <stdlib.h>
 
 //ROOT headers
-#include "Math/ProbFunc.h"
-#include "Math/QuantFunc.h"
+#include "Math/DistFuncMathCore.h"
 #include "TBinomialEfficiencyFitter.h"
 #include "TDirectory.h"
 #include "TF1.h"
