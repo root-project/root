@@ -1220,7 +1220,7 @@ Double_t TEfficiency::BetaCentralInterval(Double_t level,Double_t a,Double_t b,B
    //
    //Input: - level : confidence level
    //       -    a  : parameter > 0 for the beta distribution (for a posterior is passed + prior_alpha
-   //       -    b  : parameter > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta 
+   //       -    b  : paramet`er > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta 
    //       - bUpper: true  - upper boundary is returned
    //                 false - lower boundary is returned
    //
@@ -1423,15 +1423,21 @@ Bool_t TEfficiency::CheckBinning(const TH1& pass,const TH1& total)
 	 break;
       }
       
-      if(ax1->GetNbins() != ax2->GetNbins())
+      if(ax1->GetNbins() != ax2->GetNbins()) {
+         gROOT->Info("TEfficiency::CheckBinning","Histograms are not consistent: they have different number of bins");
 	 return false;
+      }
 
       for(Int_t i = 1; i <= ax1->GetNbins() + 1; ++i)
-         if(!TMath::AreEqualRel(ax1->GetBinLowEdge(i), ax2->GetBinLowEdge(i), 1.E-15))
+         if(!TMath::AreEqualRel(ax1->GetBinLowEdge(i), ax2->GetBinLowEdge(i), 1.E-15)) {
+            gROOT->Info("TEfficiency::CheckBinning","Histograms are not consistent: they have different bin edges");
 	    return false;
+         }
 
-      if(!TMath::AreEqualRel(ax1->GetXmax(), ax2->GetXmax(), 1.E-15))
+      if(!TMath::AreEqualRel(ax1->GetXmax(), ax2->GetXmax(), 1.E-15)) {
+         gROOT->Info("TEfficiency::CheckBinning","Histograms are not consistent: they have different axis max value");
          return false;
+      }
 
 
    }
@@ -1499,8 +1505,10 @@ Bool_t TEfficiency::CheckEntries(const TH1& pass,const TH1& total,Option_t* opt)
 
       //require: sum of weights == sum of weights^2
       if((TMath::Abs(statpass[0]-statpass[1]) > 1e-5) ||
-	 (TMath::Abs(stattotal[0]-stattotal[1]) > 1e-5))
+	 (TMath::Abs(stattotal[0]-stattotal[1]) > 1e-5)) {
+         gROOT->Info("TEfficiency::CheckEntries","Histograms are not consistent because they filled with weights");
 	 return false;
+      }
    }
    
    //check: pass <= total
@@ -1518,8 +1526,10 @@ Bool_t TEfficiency::CheckEntries(const TH1& pass,const TH1& total,Option_t* opt)
    }
    
    for(Int_t i = 0; i < nbins; ++i) {
-      if(pass.GetBinContent(i) > total.GetBinContent(i))
+      if(pass.GetBinContent(i) > total.GetBinContent(i)) {
+         gROOT->Info("TEfficiency::CheckEntries","Histograms are not consistent: passed bin content > total bin content");
 	 return false;
+      }
    }
 
    return true;

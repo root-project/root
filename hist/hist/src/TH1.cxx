@@ -1915,31 +1915,32 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                bin1 = this->GetBinContent(i,j,k);
                bin2 = h2->GetBinContent(i,j,k);
 
-               if ( (bin1 == 0)  && (bin2 == 0) ) {
+
+               if (scaledHistogram) {
+                  // scale bin value to effective bin entries
+                  err1 = this->GetBinError(i,j,k);
+                  if (err1 > 0 ) {
+                     bin1 *= bin1/(err1*err1);
+                     //avoid rounding errors
+                     bin1 = TMath::Floor(bin1+0.5);
+                  }
+                  else
+                     bin1 = 0;
+                  
+                  err2 = h2->GetBinError(i,j,k);
+                  if (err2 > 0) {
+                     bin2 *= bin2/(err2*err2);
+                     //avoid rounding errors
+                     bin2 = TMath::Floor(bin2+0.5);
+                  }
+                  else
+                     bin2 = 0;
+                  
+               }
+
+               if ( (bin1 < 0.1)  && (bin2 < 0.1) ) {
                   --ndf;  //no data means one degree of freedom less
                } else {
-                  if (scaledHistogram) {
-                     // scale bin value to effective bin entries
-                     err1 = this->GetBinError(i,j,k);
-                     if (err1 > 0 ) {
-                        bin1 *= bin1/(err1*err1);
-                        //avoid rounding errors
-                        bin1 = TMath::Floor(bin1+0.5);
-                     }
-                     else
-                        bin1 = 0;
-
-                     err2 = h2->GetBinError(i,j,k);
-                     if (err2 > 0) {
-                        bin2 *= bin2/(err2*err2);
-                        //avoid rounding errors
-                        bin2 = TMath::Floor(bin2+0.5);
-                     }
-                     else
-                        bin2 = 0;
-
-                  }
-
 
 
                   Double_t binsum = bin1 + bin2;
@@ -2001,14 +2002,16 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
                err2 *= err2;
 
+               double neff2 = (err2 > 0) ? bin2*bin2/err2 : 0;
+
                // case both histogram have zero biin contents
-               if ( (bin1 == 0) && (bin2 == 0) ) {
+               if ( (bin1 < 0.1) && (neff2 <  1.E-16) ) {
                   --ndf;  //no data means one degree of freedom less
                   continue;
                }
 
                // case weighted histogram has zero bin content and error
-               if (bin2 == 0 && err2 == 0) {
+               if (neff2 <  1.E-16) {
                   if (sumw2 > 0) {
                      // use as approximated  error as 1 scaled by a scaling ratio
                      // estimated from the total sum weight and sum weight squared
@@ -2025,12 +2028,13 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                // by excluding second chi2 sum
 
                if (bin1 < 1)  m++;
-               if (err2 > 0 && bin2*bin2/err2 < 10) n++;
+               if (err2 > 0 && neff2 < 10) n++;
 
                Double_t var1 = sum2*bin2 - sum1*err2;
                Double_t var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
                // if bin1 is zero and bin2=1 and sum1=sum2 var1=0 && var2 ==0
                // approximate by adding +1 to bin1
+               // LM (this need to be fixed for numerical errors)
                while (var1*var1+bin1 == 0 || var1+var2 == 0) {
                   sum1++;
                   bin1++;
@@ -2115,16 +2119,19 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                err2 = h2->GetBinError(i,j,k);
                err1 *= err1;
                err2 *= err2;
+               double neff1 = (err1 > 0) ? bin1*bin1/err1 : 0;
+               double neff2 = (err2 > 0) ? bin2*bin2/err2 : 0;
 
-               // case both histogram have zero biin contents
-               if ( (bin1 == 0) && (bin2 == 0) ) {
-                  --ndf;  //no data means one degree of freedom less
-                  continue;
-               }
-               if ( (err1 == 0) && (err2 == 0) ) {
+               if ( (err1 == 0 && bin1*bin1>0) && (err2 == 0 && bin2*bin2 > 0) ) {
                   // case of zero errors but non zero bin content
                   Error("Chi2TestX","h1 and h2 both have bin %d,%d,%d with all zero errors\n", i,j,k);
                   chi2 = 0; return 0;
+               }
+
+               // case both histogram have zero number of effective entries
+               if ( (neff1 < 1.E-16) && (neff2 < 1.E-16) ) {
+                  --ndf;  //no data means one degree of freedom less
+                  continue;
                }
 
                Double_t sigma  = sum1*sum1*err2 + sum2*sum2*err1;
@@ -2151,8 +2158,8 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   res[i-i_start] = z;
                }
 
-               if (err1 > 0 && bin1*bin1/err1 < 10) m++;
-               if (err2 > 0 && bin2*bin2/err2 < 10) n++;
+               if (err1 > 0 && neff1 < 10) m++;
+               if (err2 > 0 && neff2 < 10) n++;
             }
          }
       }
