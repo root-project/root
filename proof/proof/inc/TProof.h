@@ -732,6 +732,7 @@ protected:
    TPluginHandler *GetProgressDialog() const { return fProgressDialog; }
 
    Int_t AssertPath(const char *path, Bool_t writable);
+   Int_t GetSandbox(TString &sb, Bool_t assert = kFALSE, const char *rc = 0);
 
    void PrepareInputDataFile(TString &dataFile);
    virtual void  SendInputDataFile();

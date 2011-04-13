@@ -801,11 +801,9 @@ Int_t TProof::Init(const char *, const char *conffile,
       fPackageDir = gProofServ->GetPackageDir();
    } else {
 
-      TString sandbox = gEnv->GetValue("Proof.Sandbox", "");
-      if (sandbox.IsNull()) sandbox.Form("~/%s", kPROOF_WorkDir);
-      gSystem->ExpandPathName(sandbox);
-      if (AssertPath(sandbox, kTRUE) != 0) {
-         Error("Init", "failure asserting directory %s", sandbox.Data());
+      TString sandbox;
+      if (GetSandbox(sandbox, kTRUE) != 0) {
+         Error("Init", "failure asserting sandbox directory %s", sandbox.Data());
          return 0;
       }
 
@@ -905,6 +903,34 @@ Int_t TProof::Init(const char *, const char *conffile,
       gROOT->GetListOfSockets()->Add(this);
    }
    return fActiveSlaves->GetSize();
+}
+
+//______________________________________________________________________________
+Int_t TProof::GetSandbox(TString &sb, Bool_t assert, const char *rc)
+{
+   // Set the sandbox path from ' Proof.Sandbox' or the alternative var 'rc'.
+   // Use the existing setting or the default if nothing is found.
+   // If 'assert' is kTRUE, make also sure that the path exists.
+   // Return 0 on success, -1 on failure
+
+   // Get it from 'rc', if defined
+   if (rc && strlen(rc)) sb = gEnv->GetValue(rc, sb);
+   // Or use the default 'rc'
+   if (sb.IsNull()) sb = gEnv->GetValue("Proof.Sandbox", "");
+   // If nothing found , use the default
+   if (sb.IsNull()) sb.Form("~/%s", kPROOF_WorkDir);
+   // Expand special settings
+   if (sb == ".") {
+      sb = gSystem->pwd();
+   } else if (sb == "..") {
+      sb = gSystem->DirName(gSystem->pwd());
+   }
+   gSystem->ExpandPathName(sb);
+   
+   // Assert the path, if required
+   if (assert && AssertPath(sb, kTRUE) != 0) return -1;
+   // Done
+   return 0;
 }
 
 //______________________________________________________________________________
