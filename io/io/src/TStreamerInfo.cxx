@@ -1461,7 +1461,13 @@ void TStreamerInfo::BuildOld()
             Bool_t isPointer = dm->IsaPointer();
             Bool_t isArray = element->GetArrayLength() >= 1;
             Bool_t hasCount = element->HasCounter();
-            newType = dm->GetDataType()->GetType();
+            // data member is a basic type
+            if ((fClass == TObject::Class()) && !strcmp(dm->GetName(), "fBits")) {
+               //printf("found fBits, changing dtype from %d to 15\n", dtype);
+               newType = kBits;
+            } else {            
+               newType = dm->GetDataType()->GetType();
+            }
             if ((newType == ::kChar_t) && isPointer && !isArray && !hasCount) {
                newType = ::kCharStar;
             } else if (isPointer) {
