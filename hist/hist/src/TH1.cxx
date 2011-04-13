@@ -1938,7 +1938,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   
                }
 
-               if ( (bin1 < 0.1)  && (bin2 < 0.1) ) {
+               if ( (int(bin1) == 0)  && (int(bin2) == 0) ) {
                   --ndf;  //no data means one degree of freedom less
                } else {
 
@@ -1991,6 +1991,9 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
 
    //unweighted - weighted  comparison
+   // case of err2 = 0 and bin2 not zero is treated without problems
+   // by excluding second chi2 sum
+   // and can be considered as a comparison data-theory
    if ( comparisonUW ) {
       for (i=i_start; i<=i_end; i++) {
          for (j=j_start; j<=j_end; j++) {
@@ -2002,16 +2005,14 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
                err2 *= err2;
 
-               double neff2 = (err2 > 0) ? bin2*bin2/err2 : 0;
-
-               // case both histogram have zero biin contents
-               if ( (bin1 < 0.1) && (neff2 <  1.E-16) ) {
+               // case both histogram have zero bin contents
+               if ( (int(bin1) == 0) && (bin2*bin2 == 0) ) {
                   --ndf;  //no data means one degree of freedom less
                   continue;
                }
 
                // case weighted histogram has zero bin content and error
-               if (neff2 <  1.E-16) {
+               if (bin2*bin2 == 0 && err2 == 0) {
                   if (sumw2 > 0) {
                      // use as approximated  error as 1 scaled by a scaling ratio
                      // estimated from the total sum weight and sum weight squared
@@ -2024,11 +2025,9 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                      chi2 = 0; return 0;
                   }
                }
-               // case of err2 = 0 and bin2 not zero is treated without problems
-               // by excluding second chi2 sum
 
                if (bin1 < 1)  m++;
-               if (err2 > 0 && neff2 < 10) n++;
+               if (err2 > 0 && bin2*bin2/err2 < 10) n++;
 
                Double_t var1 = sum2*bin2 - sum1*err2;
                Double_t var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
@@ -2119,19 +2118,18 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                err2 = h2->GetBinError(i,j,k);
                err1 *= err1;
                err2 *= err2;
-               double neff1 = (err1 > 0) ? bin1*bin1/err1 : 0;
-               double neff2 = (err2 > 0) ? bin2*bin2/err2 : 0;
 
-               if ( (err1 == 0 && bin1*bin1>0) && (err2 == 0 && bin2*bin2 > 0) ) {
-                  // case of zero errors but non zero bin content
+               // case both histogram have zero bin contents
+               // (use square of bin1 to avoid numerical errors)
+                if ( (bin1*bin1 == 0) && (bin2*bin2 == 0) ) {	 
+                   --ndf;  //no data means one degree of freedom less	 
+                   continue;	 
+                }
+
+                if ( (err1 == 0) && (err2 == 0) ) {
+                   // cannot treat case of booth histogram have zero zero errors 
                   Error("Chi2TestX","h1 and h2 both have bin %d,%d,%d with all zero errors\n", i,j,k);
                   chi2 = 0; return 0;
-               }
-
-               // case both histogram have zero number of effective entries
-               if ( (neff1 < 1.E-16) && (neff2 < 1.E-16) ) {
-                  --ndf;  //no data means one degree of freedom less
-                  continue;
                }
 
                Double_t sigma  = sum1*sum1*err2 + sum2*sum2*err1;
@@ -2158,8 +2156,8 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   res[i-i_start] = z;
                }
 
-               if (err1 > 0 && neff1 < 10) m++;
-               if (err2 > 0 && neff2 < 10) n++;
+               if (err1 > 0 && bin1*bin1/err1 < 10) m++;
+               if (err2 > 0 && bin2*bin2/err2 < 10) n++;
             }
          }
       }
