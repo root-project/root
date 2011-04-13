@@ -2351,6 +2351,10 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       if (info->IsA() != TStreamerInfo::Class()) {
          continue;
       }
+      if (strstr(info->GetName(),"@@")) {
+         // Skip schema evolution support streamerInfo
+         continue;
+      }
       TClass *cl = TClass::GetClass(info->GetName());
       if (cl) {
          if (cl->GetClassInfo()) continue; // skip known classes
