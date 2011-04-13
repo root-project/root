@@ -90,6 +90,7 @@ __attribute__((format(printf, 2, 3)))
 
 extern void AbstractMethod(const char *method);
 extern void MayNotUse(const char *method);
+extern void Obsolete(const char *function, const char *asOfVers, const char *removedFromVers);
 
 R__EXTERN const char *kAssertMsg;
 R__EXTERN const char *kCheckMsg;

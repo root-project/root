@@ -949,6 +949,20 @@ void TObject::MayNotUse(const char *method) const
    Warning(method, "may not use this method");
 }
 
+//______________________________________________________________________________
+void TObject::Obsolete(const char *method, const char *asOfVers, const char *removedFromVers) const
+{
+   // Use this method to declare a method obsolete. Specify as of which version
+   // the method is obsolete and as from which version it will be removed.
+   
+   const char *classname = "UnknownClass";
+   if (TROOT::Initialized())
+      classname = ClassName();
+   
+   ::Obsolete(Form("%s::%s", classname, method), asOfVers, removedFromVers);
+}
+
+
 
 //----------------- Static data members access ---------------------------------
 

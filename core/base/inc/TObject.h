@@ -201,6 +201,7 @@ public:
 
    void     AbstractMethod(const char *method) const;
    void     MayNotUse(const char *method) const;
+   void     Obsolete(const char *method, const char *asOfVers, const char *removedFromVers) const;
 
    //---- static functions
    static Long_t    GetDtorOnly();

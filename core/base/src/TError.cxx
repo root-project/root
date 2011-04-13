@@ -265,6 +265,17 @@ void MayNotUse(const char *method)
 }
 
 //______________________________________________________________________________
+void Obsolete(const char *function, const char *asOfVers, const char *removedFromVers)
+{
+   // Use this function to declare a function obsolete. Specify as of which version
+   // the method is obsolete and as from which version it will be removed.
+   
+   TString mess;
+   mess.Form("obsolete as of %s and will be removed from %s", asOfVers, removedFromVers);
+   Warning(function, "%s", mess.Data());
+}
+
+//______________________________________________________________________________
 void Error(const char *location, const char *va_(fmt), ...)
 {
    // Use this function in case an error occured.

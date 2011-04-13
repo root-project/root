@@ -67,6 +67,7 @@
 #pragma link C++ function Error;
 #pragma link C++ function SysError;
 #pragma link C++ function Fatal;
+#pragma link C++ function Obsolete;
 #pragma link C++ function Form;
 #pragma link C++ function Printf;
 #pragma link C++ function Strip;
