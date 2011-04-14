@@ -243,14 +243,13 @@ ifneq ($(F77),)
 MODULES      += misc/minicern hist/hbook
 endif
 ifeq ($(BUILDXRD),yes)
-ifneq ($(XRDLIBDIR),)
+MODULES      += net/xrootd
+endif
+ifeq ($(HASXRD),yes)
 MODULES      += net/netx
-else
-MODULES      += net/xrootd net/netx
-endif
-endif
 ifeq ($(BUILDALIEN),yes)
 MODULES      += net/alien
+endif
 endif
 ifeq ($(BUILDCLARENS),yes)
 MODULES      += proof/clarens
@@ -267,7 +266,7 @@ endif
 ifeq ($(BUILDTMVA),yes)
 MODULES      += tmva math/genetic
 endif
-ifeq ($(BUILDXRD),yes)
+ifeq ($(HASXRD),yes)
 ifeq ($(ARCH),win32)
 MODULES      += proof/proofd
 endif
@@ -295,7 +294,7 @@ MODULES      += core/unix core/winnt core/editline graf2d/x11 graf2d/x11ttf \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz \
-                proof/proofbench
+                proof/proofbench proof/afdsmgrd
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 

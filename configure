@@ -4129,6 +4129,12 @@ externalxrd="no"
 if test ! "x$xrdlibdir" = "x" && test ! "x$xrdincdir" = "x"; then
    externalxrd="yes"
    xrdcomm="no, using xrootd at $xrdlibdir, $xrdincdir"
+   if test ! -f "$xrdincdir/XrdVersion.hh" ; then
+      enable_xrootd="no"
+      xrdcomm="no, asked to use installation at $xrdincdir, but version file missing: disabling"
+      xrdincdir=""
+      xrdlibdir=""
+   fi
 elif test ! "x$xrootddir" = "x"; then
    externalxrd="yes"
    if test ! "x$xrdlibdir" = "x" && test ! "x$xrdincdir" = "x"; then
@@ -4136,6 +4142,8 @@ elif test ! "x$xrootddir" = "x"; then
       if test ! -f "$xrdincdir/XrdVersion.hh" ; then
          enable_xrootd="no"
          xrdcomm="no, asked to use installation at $xrdincdir, but version file missing: disabling"
+         xrdincdir=""
+         xrdlibdir=""
       fi
    elif test ! "x$xrootddir" = "x"; then
       xrdlibdir="$xrootddir/lib"
@@ -4147,9 +4155,12 @@ elif test ! "x$xrootddir" = "x"; then
       else
          enable_xrootd="no"
          xrdcomm="no, asked to use installation at $xrootddir, but version file missing: disabling"
+         xrdincdir=""
+         xrdlibdir=""
       fi
    fi
 fi
+
 # Decode version
 xrdver=
 decver=0
@@ -4258,6 +4269,8 @@ if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
 else
    if test "x$enable_xrootd" = "x" && test "x$DEFAULTENABLE" = "xno"; then
        enable_xrootd="no"
+       xrdincdir=""
+       xrdlibdir=""
    else
        # Xrootd and its client need thread support
        if test "x$enable_thread" = "xyes"; then
@@ -4291,6 +4304,8 @@ else
                else
                    enable_xrootd="no"
                fi
+               xrdincdir=""
+               xrdlibdir=""
                ;;
            esac
        else
@@ -4300,6 +4315,8 @@ else
            else
                enable_xrootd="no"
            fi
+           xrdincdir=""
+           xrdlibdir=""
        fi
    fi
 
@@ -4310,6 +4327,9 @@ xrdcomm="$xrdcomm"
 result $xrdcomm
 if test "x$enable_xrootd" = "xyes"; then
     buildxrd="yes"
+    if test "x$externalxrd" = "xyes"; then
+       buildxrd="no"
+    fi
     hasxrd=""
     hasnotxrd="#"
     message "Checking for xrootd version"
@@ -6253,6 +6273,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@builtinfreetype@|$enable_builtin_freetype|"      \
     -e "s|@builtinpcre@|$enable_builtin_pcre|"  \
     -e "s|@buildxrd@|$buildxrd|"                \
+    -e "s|@hasxrd@|$enable_xrootd|"             \
     -e "s|@castorincdir@|$castorincdir|"        \
     -e "s|@castorlib@|$castorlib|"              \
     -e "s|@castorlibdir@|$castorlibdir|"        \
