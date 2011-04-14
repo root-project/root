@@ -240,6 +240,7 @@ XMLLIBDIR      := @xmllibdir@
 XMLCLILIB      := @xmllib@
 XMLINCDIR      := $(filter-out /usr/include, @xmlincdir@)
 
+HASXRD         := @hasxrd@
 BUILDXRD       := @buildxrd@
 XRDINCDIR      := @xrdincdir@
 XRDLIBDIR      := @xrdlibdir@

@@ -243,14 +243,13 @@ ifneq ($(F77),)
 MODULES      += misc/minicern hist/hbook
 endif
 ifeq ($(BUILDXRD),yes)
-ifneq ($(XRDLIBDIR),)
+MODULES      += net/xrootd
+endif
+ifeq ($(HASXRD),yes)
 MODULES      += net/netx
-else
-MODULES      += net/xrootd net/netx
-endif
-endif
 ifeq ($(BUILDALIEN),yes)
 MODULES      += net/alien
+endif
 endif
 ifeq ($(BUILDCLARENS),yes)
 MODULES      += proof/clarens
@@ -267,7 +266,7 @@ endif
 ifeq ($(BUILDTMVA),yes)
 MODULES      += tmva math/genetic
 endif
-ifeq ($(BUILDXRD),yes)
+ifeq ($(HASXRD),yes)
 ifeq ($(ARCH),win32)
 MODULES      += proof/proofd
 endif
