@@ -1242,7 +1242,7 @@ void TGListView::SetHeaders(Int_t ncolumns)
    fColHeader[fNColumns-1]->Associate(this);
    fColHeader[fNColumns-1]->SetTextJustify(kTextCenterX | kTextCenterY);
    fColHeader[fNColumns-1]->SetState(kButtonDisabled);
-   fColHeader[fNColumns-1]->SetState(kButtonDisabled);
+   fColHeader[fNColumns-1]->SetStyle(gClient->GetStyle());
    fJmode[fNColumns-1]   = kTextCenterX;
    fColumns[fNColumns-1] = 0;
    fSplitHeader[fNColumns-1]->SetFrame(fColHeader[fNColumns-1], kTRUE);
