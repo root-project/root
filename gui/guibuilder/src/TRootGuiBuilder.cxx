@@ -622,6 +622,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
       const TGPicture *pic = fClient->GetPicture(gToolBarData[i].fPixmap);
       TGuiBldToolButton *pb = new TGuiBldToolButton(fToolBar, pic,
                                                     gToolBarData[i].fId);
+      pb->SetStyle(gClient->GetStyle());
 
       pb->SetToolTipText(gToolBarData[i].fTipText);
 
@@ -2168,6 +2169,8 @@ ULong_t TRootGuiBuilder::GetBgnd()
 {
    // Return default background color.
 
+   return GetDefaultFrameBackground();
+
    static ULong_t gPixel = 0;
 
    if (gPixel) return gPixel;
@@ -2224,6 +2227,8 @@ ULong_t TRootGuiBuilder::GetPopupBgnd()
 {
    // Return background color for popup menus.
 
+   return GetDefaultFrameBackground();
+
    static ULong_t gPixel = 0;
 
    if (gPixel) return gPixel;
@@ -2259,6 +2264,8 @@ TGGC *TRootGuiBuilder::GetPopupBgndGC()
 ULong_t TRootGuiBuilder::GetPopupHlght()
 {
    // Return highlighted color for popup menu entry.
+
+   return GetDefaultSelectedBackground();
 
    static ULong_t gPixel = 0;
 

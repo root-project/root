@@ -154,6 +154,11 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    fList    = new TGPictureButton(fHtop, fPlist, kIDF_LIST);
    fDetails = new TGPictureButton(fHtop, fPdetails, kIDF_DETAILS);
 
+   fCdup->SetStyle(gClient->GetStyle());
+   fNewf->SetStyle(gClient->GetStyle());
+   fList->SetStyle(gClient->GetStyle());
+   fDetails->SetStyle(gClient->GetStyle());
+
    fCdup->SetToolTipText("Up One Level");
    fNewf->SetToolTipText("Create New Folder");
    fList->SetToolTipText("List");

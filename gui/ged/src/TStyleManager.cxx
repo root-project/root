@@ -1045,31 +1045,37 @@ void TStyleManager::AddToolbar(TGCompositeFrame *p)
    fToolBar = new TGToolBar(p);
    fToolBarNewPic = gClient->GetPicture("sm_new.xpm");
    fToolBarNew = new TGPictureButton(fToolBar, fToolBarNewPic, kToolbarNew);
+   fToolBarNew->SetStyle(gClient->GetStyle());
    fToolBarNew->Associate(this);
    fToolBar->AddFrame(fToolBarNew);
 
    fToolBarImportCanvasPic = gClient->GetPicture("sm_import_canvas.xpm");
    fToolBarImportCanvas = new TGPictureButton(fToolBar, fToolBarImportCanvasPic, kToolbarImportCanvas);
+   fToolBarImportCanvas->SetStyle(gClient->GetStyle());
    fToolBarImportCanvas->Associate(this);
    fToolBar->AddFrame(fToolBarImportCanvas, layout2);
 
    fToolBarImportMacroPic = gClient->GetPicture("sm_import_macro.xpm");
    fToolBarImportMacro = new TGPictureButton(fToolBar, fToolBarImportMacroPic, kToolbarImportMacro);
+   fToolBarImportMacro->SetStyle(gClient->GetStyle());
    fToolBarImportMacro->Associate(this);
    fToolBar->AddFrame(fToolBarImportMacro);
 
    fToolBarExportPic = gClient->GetPicture("sm_export.xpm");
    fToolBarExport = new TGPictureButton(fToolBar, fToolBarExportPic, kToolbarExport);
+   fToolBarExport->SetStyle(gClient->GetStyle());
    fToolBarExport->Associate(this);
    fToolBar->AddFrame(fToolBarExport, layout1);
 
    fToolBarDeletePic = gClient->GetPicture("sm_delete.xpm");
    fToolBarDelete = new TGPictureButton(fToolBar, fToolBarDeletePic, kToolbarDelete);
+   fToolBarDelete->SetStyle(gClient->GetStyle());
    fToolBarDelete->Associate(this);
    fToolBar->AddFrame(fToolBarDelete, layout2);
 
    fToolBarHelpPic = gClient->GetPicture("sm_help.xpm");
    fToolBarHelp = new TGPictureButton(fToolBar, fToolBarHelpPic, kToolbarHelp);
+   fToolBarHelp->SetStyle(gClient->GetStyle());
    fToolBarHelp->Associate(this);
    fToolBar->AddFrame(fToolBarHelp, layout2);
 
@@ -1136,6 +1142,7 @@ void TStyleManager::AddTopLevelInterface(TGCompositeFrame *cf)
    fTrashListFrame->AddFirst(v12);
    fMakeDefaultPic = gClient->GetPicture("arrow_right2.xpm");
    fMakeDefault = new TGPictureButton(v12, fMakeDefaultPic, kTopMakeDefault);
+   fMakeDefault->SetStyle(gClient->GetStyle());
    fMakeDefault->Associate(this);
    fMakeDefault->Resize(40, 22);
    v12->AddFrame(fMakeDefault, layout3);

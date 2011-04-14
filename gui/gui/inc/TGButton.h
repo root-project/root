@@ -15,8 +15,8 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGButton, TGTextButton, TGPictureButton, TGCheckButton and           //
-// TGRadioButton                                                        //
+// TGButton, TGTextButton, TGPictureButton, TGCheckButton TGRadioButton //
+// and TGSplitButton                                                    //
 //                                                                      //
 // This header defines all GUI button widgets.                          //
 //                                                                      //
@@ -82,6 +82,9 @@ protected:
    void          *fUserData;    // pointer to user data structure
    TGToolTip     *fTip;         // tool tip associated with button
    TGButtonGroup *fGroup;       // button group this button belongs to
+   Pixel_t        fBgndColor;   // actual background color
+   Pixel_t        fHighColor;   // highlight color
+   UInt_t         fStyle;       // button style (modern or classic)
 
    virtual void   SetToggleButton(Bool_t) { }
    virtual void   EmitSignals(Bool_t wasUp);
@@ -115,7 +118,7 @@ public:
    virtual void         SetGroup(TGButtonGroup *gr);
    TGButtonGroup       *GetGroup() const { return fGroup; }
 
-   virtual Bool_t       IsDown() const { return !(fOptions & kRaisedFrame); }
+   virtual Bool_t       IsDown() const;// { return !(fOptions & kRaisedFrame); }
    virtual void         SetDown(Bool_t on = kTRUE, Bool_t emit = kFALSE);
    virtual Bool_t       IsOn() const { return IsDown(); }
    virtual void         SetOn(Bool_t on = kTRUE,  Bool_t emit = kFALSE) { SetDown(on, emit); }
@@ -123,6 +126,9 @@ public:
    virtual Bool_t       IsExclusiveToggle() const { return kFALSE; }
    virtual void         Toggle(Bool_t emit = kFALSE) { SetDown(IsDown() ? kFALSE : kTRUE, emit); }
    virtual void         SetEnabled(Bool_t e = kTRUE); //*TOGGLE* *GETTER=IsEnabled
+   virtual UInt_t       GetStyle() const { return fStyle; }
+   virtual void         SetStyle(UInt_t newstyle);
+   virtual void         SetStyle(const char *style);
 
    virtual void         SavePrimitive(ostream &out, Option_t *option = "");
 

@@ -134,16 +134,25 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
    fUserData    = 0;
    fTip         = 0;
    fGroup       = 0;
+   fStyle       = 0;
 
    fNormGC   = norm;
    fState    = kButtonUp;
    fStayDown = kFALSE;
    fWidgetFlags = kWidgetIsEnabled;
 
+//   fStyle = gClient->GetStyle();
+//   if (fStyle > 0) {
+//      fOptions &= ~(kRaisedFrame | kDoubleBorder);
+//   }
+
    if (p && p->IsA()->InheritsFrom(TGButtonGroup::Class())) {
       TGButtonGroup *bg = (TGButtonGroup*) p;
       bg->Insert(this, id);
    }
+
+   fBgndColor = GetDefaultFrameBackground();
+   fHighColor = gClient->GetResourcePool()->GetHighLightColor();
 
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask,
@@ -187,14 +196,57 @@ void TGButton::SetState(EButtonState state, Bool_t emit)
             break;
          case kButtonDisabled:
          case kButtonUp:
-            fOptions &= ~kSunkenFrame;
-            fOptions |= kRaisedFrame;
+            if (fStyle > 0) {
+               fOptions &= ~kRaisedFrame;
+               fOptions &= ~kSunkenFrame;
+            }
+            else {
+               fOptions &= ~kSunkenFrame;
+               fOptions |= kRaisedFrame;
+            }
             break;
       }
       fState = state;
       DoRedraw();
       if (emit || fGroup) EmitSignals(was);
    }
+}
+
+//______________________________________________________________________________
+void TGButton::SetStyle(UInt_t newstyle)
+{
+   // Set the button style (modern or classic).
+
+   fStyle = newstyle;
+   if (fStyle > 0) {
+      ChangeOptions(GetOptions() & ~kRaisedFrame);
+   }
+   else {
+      ChangeOptions(GetOptions() | kRaisedFrame);
+   }
+}
+
+//______________________________________________________________________________
+void TGButton::SetStyle(const char *style)
+{
+   // Set the button style (modern or classic).
+
+   if (style && strstr(style, "modern")) {
+      fStyle = 1;
+      ChangeOptions(GetOptions() & ~kRaisedFrame);
+   }
+   else {
+      fStyle = 0;
+      ChangeOptions(GetOptions() | kRaisedFrame);
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TGButton::IsDown() const
+{ 
+   if (fStyle > 0) 
+      return (fOptions & kSunkenFrame);
+   return !(fOptions & kRaisedFrame);
 }
 
 //______________________________________________________________________________
@@ -264,7 +316,10 @@ Bool_t TGButton::HandleButton(Event_t *event)
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
                            (Long_t) fUserData);
    }
-
+   if ((fStyle > 0) && (event->fType == kButtonRelease)) {
+      fBgndColor = GetDefaultFrameBackground();
+   }
+   DoRedraw();
    return kTRUE;
 }
 
@@ -298,6 +353,18 @@ Bool_t TGButton::HandleCrossing(Event_t *event)
       else
          fTip->Hide();
    }
+   
+   if (fStyle > 0) {
+      if ((event->fType == kEnterNotify) && (fState != kButtonDisabled)) {
+         fBgndColor = fHighColor;
+      } else {
+         fBgndColor = GetDefaultFrameBackground();
+      }
+      if (event->fType == kLeaveNotify) {
+         fBgndColor = GetDefaultFrameBackground();
+      }
+      DoRedraw();
+   }
 
    if ((fgDbw != event->fWindow) || (fgReleaseBtn == event->fWindow)) return kTRUE;
 
@@ -310,6 +377,7 @@ Bool_t TGButton::HandleCrossing(Event_t *event)
       fgReleaseBtn = fId;
       SetState(kButtonUp, kFALSE);
    }
+   DoRedraw();
    return kTRUE;
 }
 
@@ -617,7 +685,10 @@ void TGTextButton::DoRedraw()
    // Draw the text button.
 
    int x, y;
+   UInt_t w = GetWidth() - 1;
+   UInt_t h = GetHeight()- 1;
 
+   TGFrame::SetBackgroundColor(fBgndColor);
    TGFrame::DoRedraw();
 
    if (fTMode & kTextLeft) {
@@ -636,14 +707,22 @@ void TGTextButton::DoRedraw()
       y = (fHeight - fTHeight + fMTop - fMBottom) >> 1;
    }
 
-   if (fState == kButtonDown || fState == kButtonEngaged) { ++x; ++y; }
-   if (fState == kButtonEngaged) {
-      gVirtualX->FillRectangle(fId, GetHibckgndGC()(), 2, 2, fWidth-4, fHeight-4);
-      gVirtualX->DrawLine(fId, GetHilightGC()(), 2, 2, fWidth-3, 2);
+   if (fState == kButtonDown || fState == kButtonEngaged) {
+      ++x; ++y;
+      w--; h--;
+   }
+   if (fStyle == 0) {
+      if (fState == kButtonEngaged) {
+         gVirtualX->FillRectangle(fId, GetHibckgndGC()(), 2, 2, fWidth-4, fHeight-4);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), 2, 2, fWidth-3, 2);
+      }
    }
 
    Int_t hotpos = fLabel->GetHotPos();
 
+   if (fStyle > 0) {
+      gVirtualX->DrawRectangle(fId, TGFrame::GetShadowGC()(), 0, 0, w, h);
+   }
    if (fState == kButtonDisabled) {
       TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
       TGGC *gc = pool->FindGC(fNormGC);
@@ -925,18 +1004,32 @@ void TGPictureButton::DoRedraw()
 
    int x = (fWidth - fTWidth) >> 1;
    int y = (fHeight - fTHeight) >> 1;
+   UInt_t w = GetWidth() - 1;
+   UInt_t h = GetHeight()- 1;
+
+   TGFrame::SetBackgroundColor(fBgndColor);
 
    TGFrame::DoRedraw();
-   if (fState == kButtonDown || fState == kButtonEngaged) { ++x; ++y; }
-   if (fState == kButtonEngaged) {
-      gVirtualX->FillRectangle(fId, GetHibckgndGC()(), 2, 2, fWidth-4, fHeight-4);
-      gVirtualX->DrawLine(fId, GetHilightGC()(), 2, 2, fWidth-3, 2);
+   if (fState == kButtonDown || fState == kButtonEngaged) {
+      ++x; ++y;
+      w--; h--;
+   }
+   if (fStyle == 0) {
+      if (fState == kButtonEngaged) {
+         gVirtualX->FillRectangle(fId, GetHibckgndGC()(), 2, 2, fWidth-4, fHeight-4);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), 2, 2, fWidth-3, 2);
+      }
    }
 
    const TGPicture *pic = fPic;
    if (fState == kButtonDisabled) {
       if (!fPicD) CreateDisabledPicture();
       pic = fPicD ? fPicD : fPic;
+   }
+   if (fStyle > 0) {
+      if (fBgndColor == fHighColor) {
+         gVirtualX->DrawRectangle(fId, TGFrame::GetShadowGC()(), 0, 0, w, h);
+      }
    }
 
    pic->Draw(fId, fNormGC, x, y);

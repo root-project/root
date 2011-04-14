@@ -100,6 +100,7 @@ TGButton *TGToolBar::AddButton(const TGWindow *w, ToolBarData_t *button, Int_t s
    TGLayoutHints   *layout;
 
    pbut = new TGPictureButton(this, pic, button->fId);
+   pbut->SetStyle(gClient->GetStyle());
    pbut->SetToolTipText(button->fTipText);
 
    layout = new TGLayoutHints(kLHintsTop | kLHintsLeft, spacing, 0, 2, 2);
@@ -131,6 +132,7 @@ TGButton *TGToolBar::AddButton(const TGWindow *w, TGPictureButton *pbut, Int_t s
 
    TGLayoutHints   *layout;
    layout = new TGLayoutHints(kLHintsTop | kLHintsLeft, spacing, 0, 2, 2);
+   pbut->SetStyle(gClient->GetStyle());
    AddFrame(pbut, layout);
    pbut->Associate(w);
 

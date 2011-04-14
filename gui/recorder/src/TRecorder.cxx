@@ -1819,6 +1819,7 @@ TGRecorder::TGRecorder(const TGWindow *p, UInt_t w, UInt_t h) :
 
    // START-STOP button
    fStartStop = new TGPictureButton(hframe,gClient->GetPicture("record.png"));
+   fStartStop->SetStyle(gClient->GetStyle());
    fStartStop->Connect("Clicked()","TGRecorder",this,"StartStop()");
    hframe->AddFrame(fStartStop, new TGLayoutHints(kLHintsLeft | kLHintsTop,
                                                   2, 2, 2, 2));
@@ -1827,6 +1828,7 @@ TGRecorder::TGRecorder(const TGWindow *p, UInt_t w, UInt_t h) :
 
    // REPLAY button
    fReplay = new TGPictureButton(hframe,gClient->GetPicture("replay.png"));
+   fReplay->SetStyle(gClient->GetStyle());
    fReplay->Connect("Clicked()","TGRecorder",this,"Replay()");
    hframe->AddFrame(fReplay, new TGLayoutHints(kLHintsLeft | kLHintsTop,
                                                2, 2, 2, 2));

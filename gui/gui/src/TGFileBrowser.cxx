@@ -147,12 +147,14 @@ void TGFileBrowser::CreateBrowser()
                        2, 2, 2, 2));
 
    fSortButton = new TGPictureButton(fTopFrame, "bld_sortup.png");
+   fSortButton->SetStyle(gClient->GetStyle());
    fSortButton->SetToolTipText("Sort Alphabetically\n(Current folder only)");
    fTopFrame->AddFrame(fSortButton, new TGLayoutHints(kLHintsCenterY |
                        kLHintsLeft, 2, 2, 2, 2));
    fSortButton->Connect("Clicked()", "TGFileBrowser", this, "ToggleSort()");
 
    fRefreshButton = new TGPictureButton(fTopFrame, "tb_refresh.xpm");
+   fRefreshButton->SetStyle(gClient->GetStyle());
    fRefreshButton->SetToolTipText("Refresh Current Folder");
    fTopFrame->AddFrame(fRefreshButton, new TGLayoutHints(kLHintsCenterY |
                        kLHintsLeft, 2, 2, 2, 2));
