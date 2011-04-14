@@ -91,6 +91,13 @@ TGScrollBarElement::TGScrollBarElement(const TGWindow *p, const TGPicture *pic,
    fPic = fPicN = pic;
    fState = kButtonUp;
    fPicD = 0;
+   fStyle = 0;
+   if (p && p->InheritsFrom("TGScrollBar"))
+      fStyle = gClient->GetStyle();
+   
+   fBgndColor = GetDefaultFrameBackground();
+   fHighColor = gClient->GetResourcePool()->GetHighLightColor();
+   AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
 
 //______________________________________________________________________________
@@ -190,16 +197,46 @@ void TGScrollBarElement::DrawBorder()
 
       case kRaisedFrame: // normal
       case kButtonDisabled:
-         gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, fWidth-2, 0);
-         gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, 0, fHeight-2);
-         gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, fWidth-3, 1);
-         gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, 1, fHeight-3);
+         if (fStyle > 0) {
+            // new modern (flat) version
+            if (fBackground == fHighColor) {
+               gVirtualX->DrawRectangle(fId, GetShadowGC()(), 0, 0, fWidth-1, fHeight-1);
+            }
+            else {
+               if (fPic == 0)
+                  gVirtualX->DrawRectangle(fId, GetShadowGC()(), 0, 0, fWidth-1, fHeight-1);
+               else
+                  gVirtualX->DrawRectangle(fId, GetBckgndGC()(), 0, 0, fWidth-1, fHeight-1);
+            }
+            if (fParent && fParent->InheritsFrom("TGHScrollBar")) {
+               if (fWidth > 20) {
+                  gVirtualX->DrawLine(fId, GetShadowGC()(), (fWidth/2)-3, 4, (fWidth/2)-3, fHeight-5);
+                  gVirtualX->DrawLine(fId, GetShadowGC()(), (fWidth/2),   4, (fWidth/2),   fHeight-5);
+                  gVirtualX->DrawLine(fId, GetShadowGC()(), (fWidth/2)+3, 4, (fWidth/2)+3, fHeight-5);
+               }
+            }
+            else if (fParent && fParent->InheritsFrom("TGVScrollBar")) {
+               if (fHeight > 20) {
+                  gVirtualX->DrawLine(fId, GetShadowGC()(), 4, (fHeight/2)-3, fWidth-5, (fHeight/2)-3);
+                  gVirtualX->DrawLine(fId, GetShadowGC()(), 4, (fHeight/2)  , fWidth-5, (fHeight/2));
+                  gVirtualX->DrawLine(fId, GetShadowGC()(), 4, (fHeight/2)+3, fWidth-5, (fHeight/2)+3);
+               }
+            }
+            else { // not used in a scroll bar (e.g. in a combo box)
+               gVirtualX->DrawRectangle(fId, GetShadowGC()(), 0, 0, fWidth-1, fHeight-1);
+            }
+         } 
+         else {
+            gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, fWidth-2, 0);
+            gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, 0, fHeight-2);
+            gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, fWidth-3, 1);
+            gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, 1, fHeight-3);
 
-         gVirtualX->DrawLine(fId, GetShadowGC()(),  1, fHeight-2, fWidth-2, fHeight-2);
-         gVirtualX->DrawLine(fId, GetShadowGC()(),  fWidth-2, fHeight-2, fWidth-2, 1);
-         gVirtualX->DrawLine(fId, GetBlackGC()(), 0, fHeight-1, fWidth-1, fHeight-1);
-         gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth-1, fHeight-1, fWidth-1, 0);
-
+            gVirtualX->DrawLine(fId, GetShadowGC()(),  1, fHeight-2, fWidth-2, fHeight-2);
+            gVirtualX->DrawLine(fId, GetShadowGC()(),  fWidth-2, fHeight-2, fWidth-2, 1);
+            gVirtualX->DrawLine(fId, GetBlackGC()(), 0, fHeight-1, fWidth-1, fHeight-1);
+            gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth-1, fHeight-1, fWidth-1, 0);
+         }
          if (fPic) {
             int x = (fWidth - fPic->GetWidth()) >> 1;
             int y = (fHeight - fPic->GetHeight()) >> 1;
@@ -210,6 +247,44 @@ void TGScrollBarElement::DrawBorder()
       default:
          break;
    }
+}
+
+//______________________________________________________________________________
+Bool_t TGScrollBarElement::HandleCrossing(Event_t *event)
+{
+   // Handle mouse crossing event.
+
+   if (fStyle > 0) {
+      TGScrollBarElement *el = 0;
+      TGScrollBar *bar = 0;
+      if ((event->fType == kEnterNotify) && (fState != kButtonDisabled)) {
+         fBgndColor = fHighColor;
+      } else {
+         fBgndColor = GetDefaultFrameBackground();
+      }
+      if (event->fType == kLeaveNotify) {
+         fBgndColor = GetDefaultFrameBackground();
+      }
+      TGFrame::SetBackgroundColor(fBgndColor);
+      TGFrame::DoRedraw();
+      DrawBorder();
+      if (fParent && fParent->InheritsFrom("TGScrollBar")) {
+         bar = (TGScrollBar *)fParent;
+         if ((el = bar->GetHead()) != this) {
+            el->ChangeBackground(fBgndColor);
+            el->DrawBorder();
+         }
+         if ((el = bar->GetTail()) != this) {
+            el->ChangeBackground(fBgndColor);
+            el->DrawBorder();
+         }
+         if ((el = bar->GetSlider()) != this) {
+            el->ChangeBackground(fBgndColor);
+            el->DrawBorder();
+         }
+      }
+   }
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -225,9 +300,14 @@ TGScrollBar::TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
 
    fAccelerated = kFALSE;
 
+   fBgndColor = GetDefaultFrameBackground();
+   fHighColor = gClient->GetResourcePool()->GetHighLightColor();
+
    fMsgWindow = p;
-   SetBackgroundPixmap(GetBckgndPixmap());
+   if (gClient->GetStyle() == 0)
+      SetBackgroundPixmap(GetBckgndPixmap());
    SetWindowName();
+   AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
 
 //______________________________________________________________________________
@@ -241,6 +321,30 @@ TGScrollBar::~TGScrollBar()
    if (fHeadPic) fClient->FreePicture(fHeadPic);
    if (fTailPic) fClient->FreePicture(fTailPic);
    if (fRepeat) { delete fRepeat; fRepeat = 0; }
+}
+
+//______________________________________________________________________________
+Bool_t TGScrollBar::HandleCrossing(Event_t *event)
+{
+   // Handle mouse crossing event.
+
+   if (gClient->GetStyle() > 0) {
+      if (event->fType == kEnterNotify) {
+         fBgndColor = fHighColor;
+      } else {
+         fBgndColor = GetDefaultFrameBackground();
+      }
+      if (event->fType == kLeaveNotify) {
+         fBgndColor = GetDefaultFrameBackground();
+      }
+      fHead->ChangeBackground(fBgndColor);
+      fTail->ChangeBackground(fBgndColor);
+      fSlider->ChangeBackground(fBgndColor);
+      fHead->DrawBorder();
+      fTail->DrawBorder();
+      fSlider->DrawBorder();
+   }
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -358,6 +462,7 @@ void TGHScrollBar::Layout()
    if (fSlider->GetX() != fX0) {
       fSlider->Move(fX0, 0);
       fSlider->Resize(50, fgScrollBarWidth);
+      fClient->NeedRedraw(fSlider);
    }
 }
 
@@ -529,6 +634,7 @@ void TGHScrollBar::SetRange(Int_t range, Int_t page_size)
 
    fSlider->Move(fX0, 0);
    fSlider->Resize(fSliderSize, fgScrollBarWidth);
+   fClient->NeedRedraw(fSlider);
 
    //  fPos = (fX0 - fgScrollBarWidth) * (fRange-fPsize) / fSliderRange;
 
@@ -552,6 +658,7 @@ void TGHScrollBar::SetPosition(Int_t pos)
 
    fSlider->Move(fX0, 0);
    fSlider->Resize(fSliderSize, fgScrollBarWidth);
+   fClient->NeedRedraw(fSlider);
 
    SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERPOS), fPos, 0);
    PositionChanged(fPos);
@@ -612,6 +719,7 @@ void TGVScrollBar::Layout()
    if (fSlider->GetY() != fY0) {
       fSlider->Move(0, fY0);
       fSlider->Resize(fgScrollBarWidth, 50);
+      fClient->NeedRedraw(fSlider);
    }
 }
 
@@ -787,6 +895,7 @@ void TGVScrollBar::SetRange(Int_t range, Int_t page_size)
 
    fSlider->Move(0, fY0);
    fSlider->Resize(fgScrollBarWidth, fSliderSize);
+   fClient->NeedRedraw(fSlider);
 
    //  fPos = (fY0 - fgScrollBarWidth) * (fRange-fPsize) / fSliderRange;
 
@@ -812,6 +921,7 @@ void TGVScrollBar::SetPosition(Int_t pos)
 
    fSlider->Move(0, fY0);
    fSlider->Resize(fgScrollBarWidth, fSliderSize);
+   fClient->NeedRedraw(fSlider);
 
    SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERPOS), fPos, 0);
    PositionChanged(fPos);

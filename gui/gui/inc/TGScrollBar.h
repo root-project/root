@@ -54,10 +54,13 @@ private:
    TGScrollBarElement& operator=(const TGScrollBarElement&); // Not implemented
 
 protected:
-   Int_t            fState;  // state of scrollbar element (button up or down)
-   const TGPicture *fPic;    // picture in scrollbar element
-   const TGPicture *fPicN;   // picture for normal state of scrollbar element
-   const TGPicture *fPicD;   // picture for disabled state of scrollbar element
+   Int_t            fState;      // state of scrollbar element (button up or down)
+   const TGPicture *fPic;        // picture in scrollbar element
+   const TGPicture *fPicN;       // picture for normal state of scrollbar element
+   const TGPicture *fPicD;       // picture for disabled state of scrollbar element
+   Pixel_t          fBgndColor;  // background color
+   Pixel_t          fHighColor;  // highlight color
+   Int_t            fStyle;      // modern or classic style
 
 public:
    TGScrollBarElement(const TGWindow *p = 0, const TGPicture *pic = 0,
@@ -70,6 +73,7 @@ public:
    virtual void DrawBorder();
    virtual void SetEnabled(Bool_t on = kTRUE);
    virtual Bool_t IsEnabled() const { return !(fState & kButtonDisabled); }
+   virtual Bool_t HandleCrossing(Event_t *event);
 
    ClassDef(TGScrollBarElement,0)  // Scrollbar element (head, tail, slider)
 };
@@ -100,6 +104,8 @@ protected:
    TTimer              *fRepeat;       // repeat rate timer (when mouse stays pressed)
    Window_t             fSubw;         // sub window in which mouse is pressed
    Bool_t               fAccelerated;  // kFALSE - normal, kTRUE - accelerated
+   Pixel_t              fBgndColor;    // background color
+   Pixel_t              fHighColor;    // highlight color
 
    static Pixmap_t    fgBckgndPixmap;
    static Int_t       fgScrollBarWidth;
@@ -117,6 +123,7 @@ public:
 
    virtual void   DrawBorder() { }
    virtual Bool_t HandleButton(Event_t *event) = 0;
+   virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event) = 0;
    virtual Bool_t HandleTimer(TTimer *t);
    virtual void   Layout() = 0;

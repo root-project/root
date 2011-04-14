@@ -1276,6 +1276,8 @@ void TGListView::SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
    fColHeader[idx]->SetTextJustify(hmode | kTextCenterY);
    fSplitHeader[idx]->SetFrame(fColHeader[idx], kTRUE);
 
+   fColHeader[idx]->SetStyle(gClient->GetStyle());
+
    // fJmode and fColumns contain values for columns idx > 0. idx==0 is
    // the small icon with the object name
    if (idx > 0)
