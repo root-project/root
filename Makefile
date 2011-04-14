@@ -248,9 +248,9 @@ MODULES      += net/netx
 else
 MODULES      += net/xrootd net/netx
 endif
+endif
 ifeq ($(BUILDALIEN),yes)
 MODULES      += net/alien
-endif
 endif
 ifeq ($(BUILDCLARENS),yes)
 MODULES      += proof/clarens
