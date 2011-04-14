@@ -198,8 +198,9 @@ Gui.DocFixedFont:           -*-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
 Gui.DocPropFont:            -*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
 Gui.IconFont:               -*-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
 Gui.StatusFont:             -*-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
-Gui.BackgroundColor:         #ebeced
+Gui.BackgroundColor:         #e0e0e0
 Gui.ForegroundColor:         black
+Gui.HighLightColor:          #d0d0d0
 Gui.SelectBackgroundColor:   #86abd9
 Gui.SelectForegroundColor:   white
 Gui.DocumentBackgroundColor: white
