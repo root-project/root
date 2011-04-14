@@ -73,6 +73,7 @@ TGResourcePool::TGResourcePool(TGClient *client)
    TString status_font;
    TString backcolor;
    TString forecolor;
+   TString highlightcolor;
    TString selbackcolor;
    TString selforecolor;
    TString docbackcolor;
@@ -92,9 +93,10 @@ TGResourcePool::TGResourcePool(TGClient *client)
    doc_prop_font  = gEnv->GetValue("Gui.DocPropFont",  "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1");
    icon_font      = gEnv->GetValue("Gui.IconFont",     "-*-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1");
    status_font    = gEnv->GetValue("Gui.StatusFont",   "-*-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1");
-   backcolor      = gEnv->GetValue("Gui.BackgroundColor",         "#c0c0c0");
+   backcolor      = gEnv->GetValue("Gui.BackgroundColor",         "#e0e0e0");
    forecolor      = gEnv->GetValue("Gui.ForegroundColor",         "black");
-   selbackcolor   = gEnv->GetValue("Gui.SelectBackgroundColor",   "#000080");
+   highlightcolor = gEnv->GetValue("Gui.HighLightColor",          "#d0d0d0");
+   selbackcolor   = gEnv->GetValue("Gui.SelectBackgroundColor",   "#86abd9");
    selforecolor   = gEnv->GetValue("Gui.SelectForegroundColor",   "white");
    docbackcolor   = gEnv->GetValue("Gui.DocumentBackgroundColor", "white");
    docforecolor   = gEnv->GetValue("Gui.DocumentForegroundColor", "black");
@@ -157,6 +159,8 @@ TGResourcePool::TGResourcePool(TGClient *client)
       fBackColor = fWhite;
    if (!fClient->GetColorByName(forecolor.Data(), fForeColor))
       fForeColor = fBlack;
+   if (!fClient->GetColorByName(highlightcolor.Data(), fHighLightColor))
+      fHighLightColor = fWhite;
    fHilite = fClient->GetHilite(fBackColor);
    fShadow = fClient->GetShadow(fBackColor);
    if (!fClient->GetColorByName(selbackcolor.Data(), fSelBackColor))

@@ -42,6 +42,7 @@ private:
    Pixel_t          fForeColor;        // default foreground color
    Pixel_t          fHilite;           // default hilite color
    Pixel_t          fShadow;           // default shadow color
+   Pixel_t          fHighLightColor;   // highlight color
    Pixel_t          fSelBackColor;     // default selection background color
    Pixel_t          fSelForeColor;     // default selection foreground color
    Pixel_t          fDocBackColor;     // default document background color
@@ -114,6 +115,8 @@ public:
    Pixel_t GetFrameBgndColor()    const { return fBackColor; }
    Pixel_t GetFrameHiliteColor()  const { return fHilite; }
    Pixel_t GetFrameShadowColor()  const { return fShadow; }
+
+   Pixel_t GetHighLightColor()    const { return fHighLightColor; }
 
    Pixel_t GetDocumentFgndColor() const { return fDocForeColor; }
    Pixel_t GetDocumentBgndColor() const { return fDocBackColor; }

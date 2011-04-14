@@ -79,6 +79,7 @@ protected:
    TList          *fIdleHandlers;     // list of idle handlers
    EGEventType     fWaitForEvent;     // event to wait for
    Window_t        fWaitForWindow;    // window in which to wait for event
+   UInt_t          fStyle;            // GUI style (modern or classic)
 
    TGClient(const TGClient&);             // not implemented
    TGClient& operator=(const TGClient&);  // not implemented
@@ -149,6 +150,10 @@ public:
    TGFont          *GetFont(const char *font, Bool_t fixedDefault = kTRUE);
    TGFont          *GetFont(const TGFont *font);
    void             FreeFont(const TGFont *font);
+
+   UInt_t           GetStyle() const { return fStyle; }
+   void             SetStyle(UInt_t newstyle) { fStyle = newstyle; }
+   void             SetStyle(const char *style);
 
    Colormap_t       GetDefaultColormap() const { return fDefaultColormap; }
    TGMimeTypes     *GetMimeTypeList() const { return fMimeTypeList; }

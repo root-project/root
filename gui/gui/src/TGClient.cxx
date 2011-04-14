@@ -178,6 +178,11 @@ TGClient::TGClient(const char *dpyName)
    fSelForeColor = fResourcePool->GetSelectedFgndColor();
    fSelBackColor = fResourcePool->GetSelectedBgndColor();
 
+   fStyle        = 0;
+   TString style = gEnv->GetValue("Gui.Style", "modern");
+   if (style.Contains("modern", TString::kIgnoreCase))
+      fStyle = 1;
+
    gClient = this;
 }
 
@@ -209,6 +214,16 @@ void TGClient::SetRoot(TGWindow *root)
    // frame (TGMainFrame) can be embedded in another window.
 
    fRoot = root ? root : fDefaultRoot;
+}
+
+//______________________________________________________________________________
+void TGClient::SetStyle(const char *style)
+{
+   // Set the button style (modern or classic).
+
+   fStyle = 0;
+   if (style && strstr(style, "modern"))
+      fStyle = 1;
 }
 
 //______________________________________________________________________________

@@ -944,11 +944,6 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    fMenuBar     = 0;
    fSplitButton = 0;
    fEntrySep    = 3;
-   fStyle       = 0;
-
-   TString style = gEnv->GetValue("Gui.Style", "modern");
-   if (style.Contains("modern", TString::kIgnoreCase))
-      fStyle = 1;
 
    SetWindowAttributes_t wattr;
    wattr.fMask             = kWAOverrideRedirect | kWASaveUnder;
@@ -1569,7 +1564,7 @@ void TGPopupMenu::DrawBorder()
 {
    // Draw border round popup menu.
 
-   if (fStyle > 0) {
+   if (gClient->GetStyle() > 0) {
       // new modern (flat) version
       gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, 0, fMenuHeight-1);
       gVirtualX->DrawLine(fId, GetShadowGC()(), 0, fMenuHeight-1, fMenuWidth-1, fMenuHeight-1);
