@@ -34,6 +34,7 @@ deprecated_options="         \
 "
 
 options="                    \
+   enable_afdsmgrd           \
    enable_afs                \
    enable_alien              \
    enable_alloc              \
@@ -155,6 +156,7 @@ enable_builtin_ftgl=no
 enable_builtin_glew=no
 enable_builtin_pcre=no
 enable_builtin_zlib=no
+enable_afdsmgrd=
 
 # Remove old log file
 rm -f $logfile
@@ -1305,6 +1307,7 @@ the ROOTSYS environment variable.
 
 enable/disable options, prefix with either --enable- or --disable-
 
+  afdsmgrd           Dataset manager for PROOF-based analysis facilities
   afs                AFS support, requires AFS libs and objects
   alien              AliEn support, requires libgapiUI from ALICE
   asimage            Image processing support, requires libAfterImage
@@ -5749,6 +5752,53 @@ check_explicit "$enable_peac" "$enable_peac_explicit" \
 
 ######################################################################
 #
+### echo %%% Check for afdsmgrd support
+#
+## afdsmgrd -- Dataset manager for PROOF-based analysis facilities
+#
+## by Dario Berzano <dario.berzano@cern.ch>
+#
+## See http://code.google.com/p/afdsmgrd/
+#
+
+message "Checking whether to build afdsmgrd"
+
+if test "x$enable_afdsmgrd" = "xyes" ; then
+
+  afdsmgrd_cmake=`$cwhich cmake`
+  if test "x$afdsmgrd_cmake" = "x" ; then
+    result "`basename $0`: cmake MUST be in \$PATH in order to build afdsmgrd"
+    exit 1
+  fi
+  if test "x$arch" = "xwin32" ; then
+    result "`basename $0`: afdsmgrd can't be enabled on Windows"
+    exit 1
+  fi
+
+  if test ! "x$monalisalibdir" = "x" ; then
+    afdsmgrdapmondir=`dirname -- "${monalisalibdir#-L}"`
+  elif test ! "x$alienlibdir" = "x" ; then
+    afdsmgrdapmondir=`dirname -- "${alienlibdir#-L}"`
+  else
+    afdsmgrdapmondir=""
+  fi
+
+  if test ! "x$afdsmgrdapmondir" = "x" ; then
+    afdsmgrdapmon="--with-apmon=$afdsmgrdapmondir"
+    afdsmgrdapmonmsg=", using ApMon at $afdsmgrdapmondir"
+  else
+    afdsmgrdapmon="--disable-apmon"
+    afdsmgrdapmonmsg=", ApMon support disabled"
+  fi
+
+else
+  enable_afdsmgrd="no"
+fi
+
+result "$enable_afdsmgrd$afdsmgrdapmonmsg"
+
+######################################################################
+#
 ### echo %%% What dictionaries to build
 #
 # Can be either CINT (default), reflex, or gccxml.
@@ -6427,6 +6477,8 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildxrdgsi@|$buildxrdgsi|"          \
     -e "s|@buildclarens@|$enable_clarens|"      \
     -e "s|@buildpeac@|$buildpeac|"              \
+    -e "s|@buildafdsmgrd@|$enable_afdsmgrd|"    \
+    -e "s|@afdsmgrdapmon@|$afdsmgrdapmon|"      \
     -e "s|@buildglite@|$enable_glite|"          \
     -e "s|@buildeditline@|$enable_editline|"    \
     < Makefile.tmp > $MAKEOUT

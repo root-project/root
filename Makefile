@@ -273,6 +273,9 @@ MODULES      += proof/proofd
 endif
 MODULES      += proof/proofx
 endif
+ifeq ($(BUILDAFDSMGRD),yes)
+MODULES      += proof/afdsmgrd
+endif
 
 -include MyModules.mk   # allow local modules
 
