@@ -1900,7 +1900,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
    TBranchRef* bref = fTree->GetBranchRef();
    if (bref) {
       fBranchID = bref->SetParent(this, fBranchID);
-      bref->SetReadEntry(entry);
+      bref->SetRequestedEntry(entry);
    }
 
    Int_t nbytes = 0;
