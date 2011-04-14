@@ -2455,9 +2455,9 @@ Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h)
 
    // set selected text colors
    Pixel_t pxl;
-   gClient->GetColorByName("#ccccff", pxl);
+   gClient->GetColorByName("#3399ff", pxl);
    fEdit->SetSelectBack(pxl);
-   fEdit->SetSelectFore(TGFrame::GetBlackPixel());
+   fEdit->SetSelectFore(TGFrame::GetWhitePixel());
 
    fOK = new TGTextButton(fMain, "  &OK  ");
    fOK->Connect("Clicked()", "Editor", this, "DoOK()");
