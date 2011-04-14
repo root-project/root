@@ -423,9 +423,9 @@ void TGTextEditor::Build()
 
    fTextEdit = new TGTextEdit(this, 10, 10, 1);
    Pixel_t pxl;
-   gClient->GetColorByName("#ccccff", pxl);
+   gClient->GetColorByName("#3399ff", pxl);
    fTextEdit->SetSelectBack(pxl);
-   fTextEdit->SetSelectFore(TGFrame::GetBlackPixel());
+   fTextEdit->SetSelectFore(TGFrame::GetWhitePixel());
    fTextEdit->Associate(this);
    AddFrame(fTextEdit, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
