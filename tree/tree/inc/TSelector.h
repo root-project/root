@@ -77,6 +77,7 @@ public:
    virtual void        Terminate() { }
    virtual void        Abort(const char *why, EAbort what = kAbortProcess);
    virtual EAbort      GetAbort() const { return fAbort; }
+   virtual void        ResetAbort() { fAbort = kContinue; }
 
    static  TSelector  *GetSelector(const char *filename);
    static  Bool_t      IsStandardDraw(const char *selec);

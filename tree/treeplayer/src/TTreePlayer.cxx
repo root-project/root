@@ -2812,6 +2812,12 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
          if (gMonitoringWriter)
             gMonitoringWriter->SendProcessingProgress((entry-firstentry),TFile::GetFileBytesRead()-readbytesatstart,kTRUE);
          if (selector->GetAbort() == TSelector::kAbortProcess) break;
+         if (selector->GetAbort() == TSelector::kAbortFile) {
+            // Skip to the next file.
+            entry += fTree->GetTree()->GetEntries() - localEntry;
+            // Reset the abort status.
+            selector->ResetAbort();
+         }
       }
       delete timer;
       //we must reset the cache

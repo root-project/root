@@ -51,7 +51,9 @@ protected:
    CallFunc_t   *fFuncObj;      //!
    CallFunc_t   *fFuncInp;      //!
    CallFunc_t   *fFuncOut;      //!
+   CallFunc_t   *fFuncAbort;    //!
    CallFunc_t   *fFuncGetAbort; //!
+   CallFunc_t  *fFuncResetAbort;//!
    CallFunc_t   *fFuncGetStat;  //!
    TSelector    *fIntSelector;  //Pointer to interpreted selector (if interpreted)
    Bool_t        fIsOwner;      //True if fIntSelector shoudl be deleted when the this object is deleted.
@@ -74,7 +76,9 @@ public:
    virtual TList      *GetOutputList() const;
    virtual void        SlaveTerminate();
    virtual void        Terminate();
+   virtual void        Abort(const char *why, EAbort what = kAbortProcess);
    virtual EAbort      GetAbort() const;
+   virtual void        ResetAbort();
    virtual Long64_t    GetStatus() const;
    virtual TClass     *GetInterpretedClass() const;
    virtual TSelector  *GetInterpretedSelector() const { return fIntSelector; }
