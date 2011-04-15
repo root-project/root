@@ -4259,13 +4259,6 @@ if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
       fi
    fi
 
-   if test "x$enable_bonjour" = "xyes"; then
-      if test ! -f $xrdincdir/XrdOuc/XrdOucBonjour.hh ; then
-         bjrcomm="External xrootd has no bonjour support: disabling bonjour in XrdProofd"
-         bonjourcppflags=
-      fi
-   fi
-
 else
    if test "x$enable_xrootd" = "x" && test "x$DEFAULTENABLE" = "xno"; then
        enable_xrootd="no"
@@ -4326,14 +4319,22 @@ fi
 xrdcomm="$xrdcomm"
 result $xrdcomm
 if test "x$enable_xrootd" = "xyes"; then
-    buildxrd="yes"
-    if test "x$externalxrd" = "xyes"; then
-       buildxrd="no"
-    fi
     hasxrd=""
     hasnotxrd="#"
     message "Checking for xrootd version"
     result "$xrdver $vercomm"
+    buildxrd="yes"
+    if test "x$externalxrd" = "xyes"; then
+       buildxrd="no"
+       # Check if bonjour is available for code potentially using it ...
+       if test "x$enable_bonjour" = "xyes"; then
+          check_symbol XrdOucBonjour "libXrdOuc.a" "$xrdlibdir"
+          if test  $found_symbol -eq 0 ; then
+             bjrcomm="External xrootd has no bonjour support: disabling bonjour in XrdProofd"
+             bonjourcppflags=
+          fi
+       fi
+    fi
 else
     buildxrd="no"
     hasxrd="#"
