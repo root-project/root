@@ -36,27 +36,27 @@ private:
                      const char* argtype, Bool_t required = kTRUE);
 
 protected:
-   ClassInfo_t  *fClass;        //!
-   CallFunc_t   *fFuncVersion;  //!
-   CallFunc_t   *fFuncInit;     //!
-   CallFunc_t   *fFuncBegin;    //!
-   CallFunc_t   *fFuncSlBegin;  //!
-   CallFunc_t   *fFuncNotif;    //!
-   CallFunc_t   *fFuncSlTerm;   //!
-   CallFunc_t   *fFuncTerm;     //!
-   CallFunc_t   *fFuncCut;      //!
-   CallFunc_t   *fFuncFill;     //!
-   CallFunc_t   *fFuncProc;     //!
-   CallFunc_t   *fFuncOption;   //!
-   CallFunc_t   *fFuncObj;      //!
-   CallFunc_t   *fFuncInp;      //!
-   CallFunc_t   *fFuncOut;      //!
-   CallFunc_t   *fFuncAbort;    //!
-   CallFunc_t   *fFuncGetAbort; //!
-   CallFunc_t  *fFuncResetAbort;//!
-   CallFunc_t   *fFuncGetStat;  //!
-   TSelector    *fIntSelector;  //Pointer to interpreted selector (if interpreted)
-   Bool_t        fIsOwner;      //True if fIntSelector shoudl be deleted when the this object is deleted.
+   ClassInfo_t  *fClass;          //!
+   CallFunc_t   *fFuncVersion;    //!
+   CallFunc_t   *fFuncInit;       //!
+   CallFunc_t   *fFuncBegin;      //!
+   CallFunc_t   *fFuncSlBegin;    //!
+   CallFunc_t   *fFuncNotif;      //!
+   CallFunc_t   *fFuncSlTerm;     //!
+   CallFunc_t   *fFuncTerm;       //!
+   CallFunc_t   *fFuncCut;        //!
+   CallFunc_t   *fFuncFill;       //!
+   CallFunc_t   *fFuncProc;       //!
+   CallFunc_t   *fFuncOption;     //!
+   CallFunc_t   *fFuncObj;        //!
+   CallFunc_t   *fFuncInp;        //!
+   CallFunc_t   *fFuncOut;        //!
+   CallFunc_t   *fFuncAbort;      //!
+   CallFunc_t   *fFuncGetAbort;   //!
+   CallFunc_t   *fFuncResetAbort; //!
+   CallFunc_t   *fFuncGetStat;    //!
+   TSelector    *fIntSelector;    //Pointer to interpreted selector (if interpreted)
+   Bool_t        fIsOwner;        //True if fIntSelector shoudl be deleted when the this object is deleted.
 
 public:
    TSelectorCint();

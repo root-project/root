@@ -27,24 +27,24 @@ ClassImp(TSelectorCint)
 //______________________________________________________________________________
 TSelectorCint::TSelectorCint() : TSelector(),
    fClass(0),
-   fFuncVersion  (0),
-   fFuncInit     (0),
-   fFuncBegin    (0),
-   fFuncSlBegin  (0),
-   fFuncNotif    (0),
-   fFuncSlTerm   (0),
-   fFuncTerm     (0),
-   fFuncCut      (0),
-   fFuncFill     (0),
-   fFuncProc     (0),
-   fFuncOption   (0),
-   fFuncObj      (0),
-   fFuncInp      (0),
-   fFuncOut      (0),
-   fFuncAbort    (0),
-   fFuncGetAbort (0),
+   fFuncVersion    (0),
+   fFuncInit       (0),
+   fFuncBegin      (0),
+   fFuncSlBegin    (0),
+   fFuncNotif      (0),
+   fFuncSlTerm     (0),
+   fFuncTerm       (0),
+   fFuncCut        (0),
+   fFuncFill       (0),
+   fFuncProc       (0),
+   fFuncOption     (0),
+   fFuncObj        (0),
+   fFuncInp        (0),
+   fFuncOut        (0),
+   fFuncAbort      (0),
+   fFuncGetAbort   (0),
    fFuncResetAbort (0),
-   fFuncGetStat  (0),
+   fFuncGetStat    (0),
    fIntSelector(0),fIsOwner(kFALSE)
 
 
@@ -132,26 +132,26 @@ void TSelectorCint::Build(TSelector *iselector, ClassInfo_t *cl, Bool_t isowner)
    // of cl, so we need to keep it around.
    fClass        = gCint->ClassInfo_Factory(cl);
 
-   fIntSelector  = iselector;
-   fIsOwner      = isowner;
-   fFuncVersion  = gCint->CallFunc_Factory();
-   fFuncInit     = gCint->CallFunc_Factory();
-   fFuncBegin    = gCint->CallFunc_Factory();
-   fFuncSlBegin  = gCint->CallFunc_Factory();
-   fFuncNotif    = gCint->CallFunc_Factory();
-   fFuncSlTerm   = gCint->CallFunc_Factory();
-   fFuncTerm     = gCint->CallFunc_Factory();
-   fFuncCut      = gCint->CallFunc_Factory();
-   fFuncFill     = gCint->CallFunc_Factory();
-   fFuncProc     = gCint->CallFunc_Factory();
-   fFuncOption   = gCint->CallFunc_Factory();
-   fFuncObj      = gCint->CallFunc_Factory();
-   fFuncInp      = gCint->CallFunc_Factory();
-   fFuncOut      = gCint->CallFunc_Factory();
-   fFuncAbort    = gCint->CallFunc_Factory();
-   fFuncGetAbort = gCint->CallFunc_Factory();
+   fIntSelector    = iselector;
+   fIsOwner        = isowner;
+   fFuncVersion    = gCint->CallFunc_Factory();
+   fFuncInit       = gCint->CallFunc_Factory();
+   fFuncBegin      = gCint->CallFunc_Factory();
+   fFuncSlBegin    = gCint->CallFunc_Factory();
+   fFuncNotif      = gCint->CallFunc_Factory();
+   fFuncSlTerm     = gCint->CallFunc_Factory();
+   fFuncTerm       = gCint->CallFunc_Factory();
+   fFuncCut        = gCint->CallFunc_Factory();
+   fFuncFill       = gCint->CallFunc_Factory();
+   fFuncProc       = gCint->CallFunc_Factory();
+   fFuncOption     = gCint->CallFunc_Factory();
+   fFuncObj        = gCint->CallFunc_Factory();
+   fFuncInp        = gCint->CallFunc_Factory();
+   fFuncOut        = gCint->CallFunc_Factory();
+   fFuncAbort      = gCint->CallFunc_Factory();
+   fFuncGetAbort   = gCint->CallFunc_Factory();
    fFuncResetAbort = gCint->CallFunc_Factory();
-   fFuncGetStat  = gCint->CallFunc_Factory();
+   fFuncGetStat    = gCint->CallFunc_Factory();
 
    SetFuncProto(fFuncVersion,fClass,"Version","",kFALSE);
    SetFuncProto(fFuncInit,fClass,"Init","TTree*");
