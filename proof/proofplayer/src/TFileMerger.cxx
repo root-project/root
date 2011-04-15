@@ -258,6 +258,12 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
                   TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(key->GetName());
                   if (key2) {
                      TObject *hobj = key2->ReadObj();
+                     if (!hobj) {
+                        Info("MergeRecursive", "could not read object for key {%s, %s}; skipping file %s",
+                                               key->GetName(), key->GetTitle(), nextsource->GetName());
+                        nextsource = (TFile*)sourcelist->After(nextsource);
+                        continue;
+                     }
                      hobj->ResetBit(kMustCleanup);
                      listH.Add(hobj);
                      // Run the merging now, if required
@@ -339,6 +345,12 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
                   TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(key->GetName());
                   if (key2) {
                      TObject *hobj = key2->ReadObj();
+                     if (!hobj) {
+                        Info("MergeRecursive", "could not read object for key {%s, %s}; skipping file %s",
+                                               key->GetName(), key->GetTitle(), nextsource->GetName());
+                        nextsource = (TFile*)sourcelist->After(nextsource);
+                        continue;
+                     }
                      // Set ownership for collections
                      if (hobj->InheritsFrom(TCollection::Class())) {
                         ((TCollection*)hobj)->SetOwner();
@@ -371,6 +383,12 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
                   TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(hstack1->GetName());
                   if (key2) {
                      THStack *hstack2 = (THStack*) key2->ReadObj();
+                     if (!hstack2) {
+                        Info("MergeRecursive", "could not read THStack for key {%s, %s}; skipping file %s",
+                                               key->GetName(), key->GetTitle(), nextsource->GetName());
+                        nextsource = (TFile*)sourcelist->After(nextsource);
+                        continue;
+                     }
                      l->Add(hstack2->GetHists()->Clone());
                      delete hstack2;
                   }
@@ -396,6 +414,12 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
                   TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(key->GetName());
                   if (key2) {
                      TObject *nobj = key2->ReadObj();
+                     if (!nobj) {
+                        Info("MergeRecursive", "could not read object for key {%s, %s}; skipping file %s",
+                                               key->GetName(), key->GetTitle(), nextsource->GetName());
+                        nextsource = (TFile*)sourcelist->After(nextsource);
+                        continue;
+                     }
                      nobj->ResetBit(kMustCleanup);
                      if (target->WriteTObject(nobj, key2->GetName(), "SingleKey") <= 0) {
                         Warning("MergeRecursive", "problems copying object (n:'%s', t:'%s') to output file ",
