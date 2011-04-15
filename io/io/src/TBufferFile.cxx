@@ -2636,7 +2636,7 @@ void TBufferFile::SkipVersion(const TClass *cl)
                   Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.",
                         checksum, cl->GetName(), ((TFile*)fParent)->GetName());
                } else {
-                  Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\"( buffer with no parent)",
+                  Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" (buffer with no parent)",
                         checksum, cl->GetName());
                }
                return;
@@ -2739,7 +2739,7 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
                         Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.",
                               checksum, cl->GetName(), ((TFile*)fParent)->GetName());
                      } else {
-                        Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\"( buffer with no parent)",
+                        Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" (buffer with no parent)",
                               checksum, cl->GetName());
                      }
                      return 0;
