@@ -44,7 +44,10 @@ TSecContext *TRootAuth::Authenticate(TSocket *s, const char *host,
          // Middle aged versions expect client protocol now
          s->Send(Form("%d", TSocket::GetClientProtocol()), kROOTD_PROTOCOL2);
          Int_t kind = 0;
-         s->Recv(rproto, kind);
+         if (s->Recv(rproto, kind) < 0) {
+            Error("Authenticate", "receiving remote protocol");
+            return ctx;
+         }
          s->SetRemoteProtocol(rproto);
       }
    }
