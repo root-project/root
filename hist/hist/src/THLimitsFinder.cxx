@@ -353,7 +353,7 @@ void THLimitsFinder::OptimizeLimits(Int_t nbins, Int_t &newbins, Double_t &xmin,
 // When isInter=kTRUE, the function makes an integer binwidth
 // and recompute the number of bins accordingly.
    
-   Double_t binlow,binhigh,binwidth=0;
+   Double_t binlow = 0,binhigh = 0,binwidth=0;
    Int_t n=0;
    Double_t dx = 0.1*(xmax-xmin);
    if (isInteger) dx = 5*(xmax-xmin)/nbins;

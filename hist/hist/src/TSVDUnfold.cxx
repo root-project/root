@@ -90,6 +90,8 @@ TSVDUnfold::TSVDUnfold( const TH1D *bdat, const TH1D *bini, const TH1D *xini, co
     fKReg       (-1),
     fDHist      (NULL),
     fSVHist     (NULL),
+    fXtau       (NULL),
+    fXinv       (NULL),
     fBdat       (bdat),
     fBini       (bini),
     fXini       (xini),
