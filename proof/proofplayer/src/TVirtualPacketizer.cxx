@@ -235,11 +235,12 @@ TDSetElement *TVirtualPacketizer::GetNextPacket(TSlave *, TMessage *)
 }
 
 //______________________________________________________________________________
-void TVirtualPacketizer::StopProcess(Bool_t /*abort*/)
+void TVirtualPacketizer::StopProcess(Bool_t /*abort*/, Bool_t stoptimer)
 {
    // Stop process.
 
    fStop = kTRUE;
+   if (stoptimer) HandleTimer(0);
 }
 
 //______________________________________________________________________________

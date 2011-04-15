@@ -82,6 +82,7 @@ private:
                                        // is (#events processed by 1 slave) / fPacketSizeAsAFraction.
                                        // It can be set with PROOF_PacketAsAFraction in input list.
    Int_t          fStrategy;           // 0 means the classic and 1 (default) - the adaptive strategy
+   Int_t          fTryReassign;        // Controls attempts to reassign packets (0 == no reassignment)
 
    TPacketizerAdaptive();
    TPacketizerAdaptive(const TPacketizerAdaptive&);    // no implementation, will generate

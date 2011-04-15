@@ -561,6 +561,15 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
          Info("TPacketizerAdaptive", "packetAsAFraction parameter must be higher than 0");
    }
 
+   // Packet re-assignement
+   fTryReassign = 0;
+   Int_t tryReassign = 0;
+   if (TProof::GetParameter(input, "PROOF_TryReassign", tryReassign) != 0)
+      tryReassign = gEnv->GetValue("Packetizer.TryReassign", 0);
+   fTryReassign = tryReassign;
+   if (fTryReassign != 0)
+      Info("TPacketizerAdaptive", "failed packets will be re-assigned");
+
    // Save the config parameters in the dedicated list so that they will be saved
    // in the outputlist and therefore in the relevant TQueryResult
    fConfigParams->Add(new TParameter<Int_t>("PROOF_PacketizerCachePacketSync", (Int_t)fCachePacketSync));
@@ -1521,7 +1530,8 @@ Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
    // find slave
    TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue( sl );
    if (!slstat) {
-      Error("AddProcessed", "TSlaveStat instance for worker %s not found!",
+      Error("AddProcessed", "%s: TSlaveStat instance for worker %s not found!",
+                            (sl ? sl->GetOrdinal() : "x.x"),
                             (sl ? sl->GetName() : "**undef**"));
       return -1;
    }
@@ -1552,7 +1562,7 @@ Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
       }
       if (progress) {
          PDB(kPacketizer,2)
-            Info("GetNextPacket","worker-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
+            Info("AddProcessed", "%s: %s: %lld %7.3lf %7.3lf %7.3lf %lld",
                sl->GetOrdinal(), sl->GetName(), progress->GetEntries(), latency,
                progress->GetProcTime(), progress->GetCPUTime(), progress->GetBytesRead());
 
@@ -1575,12 +1585,11 @@ Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
          if (newPacket && numev < expectedNumEv) {
             Long64_t first = newPacket->GetFirst();
             newPacket->SetFirst(first + numev);
-            if (listOfMissingFiles && *listOfMissingFiles)
-               ReassignPacket(newPacket, listOfMissingFiles);
-            else
-               Error("AddProcessed", "No list for missing files!");
+            if (ReassignPacket(newPacket, listOfMissingFiles) == -1)
+               SafeDelete(newPacket);
          } else
-            Error("AddProcessed", "Processed too much? (%lld, %lld)", numev, expectedNumEv);
+            Error("AddProcessed", "%s: processed too much? (%lld, %lld)",
+                                  sl->GetOrdinal(), numev, expectedNumEv);
 
          // TODO: a signal handler which will send info from the worker
          // after a packet fails.
@@ -1633,11 +1642,12 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
    Bool_t firstPacket = kFALSE;
    Long64_t cachesz = -1;
    Int_t learnent = -1;
-   Long64_t totalEntries = 0;
    if ( slstat->fCurElem != 0 ) {
 
+      Long64_t restEntries = 0;
       Double_t latency, proctime, proccpu;
       TProofProgressStatus *status = 0;
+      Bool_t fileNotOpen = kFALSE, fileCorrupted = kFALSE;
 
       if (sl->GetProtocol() > 18) {
 
@@ -1646,8 +1656,10 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
 
          if (sl->GetProtocol() > 25) {
             (*r) >> cachesz >> learnent;
-            if (r->BufferSize() > r->Length()) (*r) >> totalEntries;
+            if (r->BufferSize() > r->Length()) (*r) >> restEntries;
          }
+         fileNotOpen = status->TestBit(TProofProgressStatus::kFileNotOpen) ? kTRUE : kFALSE;
+         fileCorrupted = status->TestBit(TProofProgressStatus::kFileCorrupted) ? kTRUE : kFALSE;
 
       } else {
 
@@ -1656,31 +1668,69 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
          (*r) >> latency >> proctime >> proccpu;
          // only read new info if available
          if (r->BufferSize() > r->Length()) (*r) >> bytesRead;
-         if (r->BufferSize() > r->Length()) (*r) >> totalEntries;
+         if (r->BufferSize() > r->Length()) (*r) >> restEntries;
          Long64_t totev = 0;
          if (r->BufferSize() > r->Length()) (*r) >> totev;
 
          status = new TProofProgressStatus(totev, bytesRead, -1, proctime, proccpu);
+         fileNotOpen = (restEntries < 0) ? kTRUE : kFALSE;
       }
 
-      if (totalEntries >= 0) {
-         if (AddProcessed(sl, status, latency))
-            Error("GetNextPacket", "the worker processed a different # of entries");
+      if (!fileNotOpen && !fileCorrupted) {
+         if (AddProcessed(sl, status, latency) != 0)
+            Error("GetNextPacket", "%s: the worker processed a different # of entries", sl->GetOrdinal());
          if (fProgressStatus->GetEntries() >= fTotalEntries) {
             if (fProgressStatus->GetEntries() > fTotalEntries)
-               Error("GetNextPacket", "Processed too many entries! (%lld, %lld)", fProgressStatus->GetEntries(), fTotalEntries);
+               Error("GetNextPacket", "%s: processed too many entries! (%lld, %lld)",
+                                      sl->GetOrdinal(), fProgressStatus->GetEntries(), fTotalEntries);
             // Send last timer message and stop the timer
             HandleTimer(0);
             SafeDelete(fProgress);
          }
-      } else if (file && file->GetElement()) {
-         Info("GetNextPacket", "file '%s' could not be open: invalidating related element",
-                               file->GetElement()->GetName()); 
-         file->GetElement()->Invalidate();
-         file->SetDone();
-         // Add it to the failed packets list.
-         if (!fFailedPackets) fFailedPackets = new TList();
-         fFailedPackets->Add(file->GetElement());
+      } else {
+         if (file) {
+            if (file->GetElement()) {
+               if (fileCorrupted) {
+                  Info("GetNextPacket", "%s: file '%s' turned corrupted: invalidating file (%lld)",
+                                       sl->GetOrdinal(), file->GetElement()->GetName(), restEntries); 
+                  Int_t nunproc = AddProcessed(sl, status, latency);
+                  PDB(kPacketizer,1)
+                     Info("GetNextPacket", "%s: %d entries un-processed", sl->GetOrdinal(), nunproc);
+                  // Remaining to be processed
+                  Long64_t num = 0;
+                  if (file->GetElement()->TestBit(TDSetElement::kCorrupted)) {
+                     // Add the remainign entries in the packet to the ones already registered
+                     num = file->GetElement()->GetEntries() + restEntries;
+                  } else {
+                     // First call: add the remaining entries in the packet and those of the file
+                     // not yet assigned
+                     Long64_t rest = file->GetElement()->GetEntries() - file->GetNextEntry();
+                     num = restEntries + rest;
+                  }
+                  file->GetElement()->SetEntries(num);
+                  PDB(kPacketizer,1)
+                     Info("GetNextPacket", "%s: removed file: %s, entries left: %lld", sl->GetOrdinal(),
+                                           file->GetElement()->GetName(), file->GetElement()->GetEntries());
+                  // Flag as corrupted
+                  file->GetElement()->SetBit(TDSetElement::kCorrupted);
+               } else {
+                  Info("GetNextPacket", "%s: file '%s' could not be open: invalidating related element",
+                                        sl->GetOrdinal(), file->GetElement()->GetName()); 
+               }
+               // Invalidate the element
+               file->GetElement()->Invalidate();
+               // Add it to the failed packets list
+               if (!fFailedPackets) fFailedPackets = new TList();
+               if (!fFailedPackets->FindObject(file->GetElement()))
+                  fFailedPackets->Add(file->GetElement());
+            }
+            // Deactivate this TFileStat
+            file->SetDone();
+            RemoveActive(file);
+         } else {
+            Info("GetNextPacket", "%s: error raised by worker, but TFileStat object invalid:"
+                                  " protocol error?", sl->GetOrdinal()); 
+         }
       }
    } else {
       firstPacket = kTRUE;
@@ -1696,9 +1746,10 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
    TString nodeHostName(slstat->GetName());
 
    PDB(kPacketizer,3)
-      Info("GetNextPacket", "%s: looking for a packet from node '%s'", sl->GetOrdinal(), nodeName.Data());
+      Info("GetNextPacket", "%s: entries processed: %lld - looking for a packet from node '%s'",
+                            sl->GetOrdinal(), fProgressStatus->GetEntries(), nodeName.Data());
 
-   // if current file is just finished
+   // If current file is just finished
    if ( file != 0 && file->IsDone() ) {
       file->GetNode()->DecExtSlaveCnt(slstat->GetName());
       file->GetNode()->DecRunSlaveCnt();
@@ -1714,15 +1765,15 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
       (fTotalEntries - fProgressStatus->GetEntries()) / fSlaveStats->GetSize();
    if (fTotalEntries == fProgressStatus->GetEntries())
       return 0;
-   // get a file if needed
+   // Get a file if needed
    if ( file == 0) {
-      // needs a new file
+      // Needs a new file
       Bool_t openLocal;
-      // aiming for localPreference == 1 when #local == #remote events left
+      // Aiming for localPreference == 1 when #local == #remote events left
       Float_t localPreference = fBaseLocalPreference - (fNEventsOnRemLoc /
                                 (0.4 *(fTotalEntries - fProgressStatus->GetEntries())));
       if ( slstat->GetFileNode() != 0 ) {
-         // local file node exists and has more events to process.
+         // Local file node exists and has more events to process.
          fUnAllocated->Sort();
          TFileNode* firstNonLocalNode = (TFileNode*)fUnAllocated->First();
          Bool_t nonLocalNodePossible;
@@ -1735,10 +1786,10 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
          openLocal = !nonLocalNodePossible;
          Float_t slaveRate = slstat->GetAvgRate();
          if ( nonLocalNodePossible && fStrategy == 1) {
-            // openLocal is set to kFALSE
+            // OpenLocal is set to kFALSE
             if ( slstat->GetFileNode()->GetRunSlaveCnt() >
                  slstat->GetFileNode()->GetMySlaveCnt() - 1 )
-                // external slaves help slstat -> don't open nonlocal files
+                // External slaves help slstat -> don't open nonlocal files
                 // -1 because, at this point slstat is not running
                   openLocal = kTRUE;
             else if ( slaveRate == 0 ) { // first file for this slave
@@ -1755,9 +1806,9 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
                else if ( firstNonLocalNode->GetRunSlaveCnt() == 0 )
                   openLocal = kTRUE;
             } else {
-               // at this point slstat has a non zero avg rate > 0
+               // At this point slstat has a non zero avg rate > 0
                Float_t slaveTime = slstat->GetLocalEventsLeft()/slaveRate;
-               // and thus fCumProcTime, fProcessed > 0
+               // And thus fCumProcTime, fProcessed > 0
                Float_t avgTime = avgEventsLeftPerSlave
                                  /(fProgressStatus->GetEntries()/GetCumProcTime());
                if (slaveTime * localPreference > avgTime)
@@ -1773,23 +1824,21 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
             if (!file)
                file = slstat->GetFileNode()->GetNextActive();
             if ( file == 0 ) {
-               //no more files on this slave.
+               // No more files on this worker
                slstat->SetFileNode(0);
             }
          }
       }
 
       // Try to find an unused filenode first
-      if(file == 0 && !fForceLocal) {
+      if(file == 0 && !fForceLocal)
          file = GetNextUnAlloc(0, nodeHostName);
-      }
 
       // Then look at the active filenodes
-      if(file == 0 && !fForceLocal) {
+      if(file == 0 && !fForceLocal)
          file = GetNextActive();
-      }
 
-      if ( file == 0 ) return 0;
+      if (file == 0) return 0;
 
       PDB(kPacketizer,3) if (fFilesToProcess) fFilesToProcess->Print();
 
@@ -1815,22 +1864,20 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
 
    Long64_t num = CalculatePacketSize(slstat, cachesz, learnent);
 
-   // get a packet
+   // Get a packet
 
    TDSetElement *base = file->GetElement();
    Long64_t first = file->GetNextEntry();
    Long64_t last = base->GetFirst() + base->GetNum();
 
-   // if the remaining part is smaller than the (packetsize * 1.5)
+   // If the remaining part is smaller than the (packetsize * 1.5)
    // then increase the packetsize
 
    if ( first + num * 1.5 >= last ) {
       num = last - first;
       file->SetDone(); // done
-
-      // delete file from active list (unalloc list is single pass, no delete needed)
+      // Delete file from active list (unalloc list is single pass, no delete needed)
       RemoveActive(file);
-
    }
 
    // Update NextEntry in the file object
@@ -2040,10 +2087,10 @@ Int_t TPacketizerAdaptive::ReassignPacket(TDSetElement *e,
    // in order to fix that, a TDSetElement::Merge method is needed.
 
    if (!e) {
-      Error("ReassignPacket", "Empty packet!");
+      Error("ReassignPacket", "empty packet!");
       return -1;
    }
-   // check the old filenode
+   // Check the old filenode
    TUrl url = e->GetFileName();
    // Check the host from which 'e' was previously read.
    // Map non URL filenames to dummy host
@@ -2056,20 +2103,21 @@ Int_t TPacketizerAdaptive::ReassignPacket(TDSetElement *e,
       host = url.GetHost();
    }
 
-   // if accessible add it back to the old node
+   // If accessible add it back to the old node
    // and do DecProcessed
    TFileNode *node = (TFileNode*) fFileNodes->FindObject( host );
-   if (node) {
-      // the packet 'e' was processing data from this node.
+   if (node && fTryReassign) {
+      // The packet 'e' was processing data from this node.
       node->DecreaseProcessed(e->GetNum());
-      node->Add(e, kFALSE); // The file should be already in fFilesToProcess ...
+      // The file should be already in fFilesToProcess ...
+      node->Add(e, kFALSE);
       if (!fUnAllocated->FindObject(node))
          fUnAllocated->Add(node);
       return 0;
    } else {
-      // add to the list of missing files
+      // Add to the list of missing files
       TFileInfo *fi = e->GetFileInfo();
-      if (listOfMissingFiles)
+      if (listOfMissingFiles && *listOfMissingFiles)
          (*listOfMissingFiles)->Add((TObject *)fi);
       return -1;
    }
@@ -2095,7 +2143,7 @@ void TPacketizerAdaptive::SplitPerHost(TList *elements,
    TDSetElement *e;
    while ((e = (TDSetElement*) subSetIter.Next())) {
       if (ReassignPacket(e, listOfMissingFiles) == -1) {
-         // remove from the list in order to delete it.
+         // Remove from the list in order to delete it.
          if (elements->Remove(e))
             Error("SplitPerHost", "Error removing a missing file");
          delete e;

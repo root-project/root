@@ -65,8 +65,9 @@ public:
                       return 1; }
    Float_t  GetCurrentRate(Bool_t &all) { all = kTRUE;
                                           return (fCurrent? fCurrent->GetCurrentRate(all) : 0.); }
-   void     StopProcess(Bool_t abort) { if (fCurrent) fCurrent->StopProcess(abort);
-                                        TVirtualPacketizer::StopProcess(abort); }
+   void     StopProcess(Bool_t abort, Bool_t stoptimer = kFALSE) {
+                                        if (fCurrent) fCurrent->StopProcess(abort, stoptimer);
+                                        TVirtualPacketizer::StopProcess(abort, stoptimer); }
    void     MarkBad(TSlave *wrk, TProofProgressStatus *st, TList **missing)
                     { if (fCurrent) fCurrent->MarkBad(wrk, st, missing); return; }
    Int_t    AddProcessed(TSlave *wrk, TProofProgressStatus *st, Double_t lat, TList **missing)

@@ -228,14 +228,18 @@ TFileInfo *TDSetElement::GetFileInfo(const char *type)
 
    // Create the TFileInfoMeta object
    TFileInfoMeta *meta = 0;
+   Long64_t entries = (fEntries < 0 && fNum > 0) ? fNum : fEntries;
+   Printf("entries: %lld (%lld)", entries, fNum);
    if (!strcmp(type, "TTree")) {
-      meta = new TFileInfoMeta(GetTitle(), "TTree", fEntries, fFirst,
-                                fFirst + fEntries - 1);
+      meta = new TFileInfoMeta(GetTitle(), "TTree", entries, fFirst,
+                                fFirst + entries - 1);
    } else {
-      meta = new TFileInfoMeta(GetTitle(), fDirectory, type, fEntries, fFirst,
-                                fFirst + fEntries - 1);
+      meta = new TFileInfoMeta(GetTitle(), fDirectory, type, entries, fFirst,
+                                fFirst + entries - 1);
    }
-   return new TFileInfo(GetName(), 0, 0, 0, meta);
+   TFileInfo *fi = new TFileInfo(GetName(), 0, 0, 0, meta);
+   if (TestBit(TDSetElement::kCorrupted)) fi->SetBit(TFileInfo::kCorrupted);
+   return fi;
 }
 
 //______________________________________________________________________________
@@ -723,8 +727,10 @@ TDSet::TDSet(const char *name,
    if (name && strlen(name) > 0) {
       // In the old constructor signature it was the 'type'
       if (!type) {
-         if (TClass::GetClass(name))
-            fType = name;
+         TString cn(name);
+         if (cn.Contains(':')) cn.Remove(0, cn.Index(":")+1);
+         if (TClass::GetClass(cn))
+            fType = cn;
          else
             // Default type is 'TTree'
             fName = name;
