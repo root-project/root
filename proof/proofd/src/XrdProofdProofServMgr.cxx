@@ -2374,23 +2374,22 @@ int XrdProofdProofServMgr::AcceptPeer(XrdProofdProofServ *xps,
 
    // We will get back a peer to initialize a link
    XrdNetPeer peerpsrv;
-   bool go = 1;
 
    // Check inputs
    if (!xps || !xps->UNIXSock()) {
-      TRACE(XERR, "session pointer undefined or socket invalid: "<<xps);
+      XPDFORM(msg, "session pointer undefined or socket invalid: %p", xps);
       return -1;
    }
    TRACE(REQ, "waiting for server callback for "<<to<<" secs ... on "<<xps->UNIXSockPath());
 
    // Perform regular accept
-   if (go && !(xps->UNIXSock()->Accept(peerpsrv, XRDNET_NODNTRIM, to))) {
+   if (!(xps->UNIXSock()->Accept(peerpsrv, XRDNET_NODNTRIM, to))) {
       msg = "timeout";
-      go = 0;
+      return -1;
    }
 
    // Setup the protocol serving this peer
-   if (go && SetupProtocol(peerpsrv, xps, msg) != 0) {
+   if (SetupProtocol(peerpsrv, xps, msg) != 0) {
       msg = "could not assert connected peer: ";
       return -1;
    }

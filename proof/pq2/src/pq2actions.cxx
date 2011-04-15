@@ -644,11 +644,13 @@ void do_anadist(const char *ds, const char *servers, const char *ignsrvs,
          while ((ent = (TParameter<Double_t> *) nxs())) {
             x += 1.;
             h1d->Fill(x, ent->GetVal());
-            TString nn(TUrl(ent->GetName()).GetHost());
-            if (nn.Contains(".")) nn.Remove(nn.First('.'));
+            TString nn(TUrl(ent->GetName()).GetHost()), nnn(nn);
+            nnn.ReplaceAll(".", "");
+            if (!nnn.IsDigit() && nn.Contains(".")) nn.Remove(nn.First('.'));
             Int_t i = h1d->FindBin(x);
             h1d->GetXaxis()->SetBinLabel(i, nn.Data());
          }
+         h1d->GetXaxis()->SetLabelSize(0.03);
       } else {
          Printf("%s: plot requested but no server found (info list is empty)!", action);
       }
