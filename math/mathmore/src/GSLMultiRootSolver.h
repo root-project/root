@@ -255,7 +255,6 @@ private:
    gsl_multiroot_fsolver * fSolver;
    // cached vector to avoid re-allocating every time a new one
    mutable gsl_vector * fVec; 
-   const gsl_multiroot_fsolver_type * fType; 
 
 }; 
 
