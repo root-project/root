@@ -10,7 +10,10 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 selector.log: run.C $(ROOTCORELIBS)
 	$(CMDECHO) $(CALLROOTEXE) -l -q -b run.C 2>&1 | grep -v reloading > selector.log
 
-SelectorTest: selector.log
+execWithAbort.log: execWithAbort.C $(ROOTCORELIBS)
+	$(CMDECHO) $(CALLROOTEXE) -l -q -b execWithAbort.C 2>&1 | grep -v reloading > execWithAbort.log
+
+electorTest: selector.log
 	$(CMDECHO) diff -b selector.ref selector.log
 
 SelectorCintTest.log: sel01_C.$(DllSuf) $(ROOTCORELIBS)
