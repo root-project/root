@@ -112,7 +112,7 @@ XPCONNO      := $(call stripsrc,$(MODDIRS)/XrdProofConn.o \
 XPROOFDEXELIBS :=
 XPROOFDEXESYSLIBS := $(DNSSDLIB)
 XPROOFDEXE     :=
-ifeq ($(BUILDXRD),yes)
+ifeq ($(HASXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
 XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdSys \
@@ -144,13 +144,13 @@ endif
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFDEXEH))
 ALLEXECS     += $(PROOFDEXE)
-ifeq ($(BUILDXRD),yes)
+ifeq ($(HASXRD),yes)
 ALLLIBS      += $(XPDLIB)
 ALLEXECS     += $(XPROOFDEXE)
 endif
 
 # include all dependency files
-ifeq ($(BUILDXRD),yes)
+ifeq ($(HASXRD),yes)
 INCLUDEFILES += $(PROOFDDEP) $(XPDDEP)
 else
 INCLUDEFILES += $(PROOFDDEP)
@@ -190,21 +190,21 @@ distclean::     distclean-$(MODNAME)
 $(PROOFDEXEO): CXXFLAGS += $(AUTHFLAGS)
 
 $(XPDO): $(XROOTDMAKE) $(XRDHDRS)
-$(XPDO): CXXFLAGS += $(BONJOURCPPFLAGS)
+$(XPDO): CXXFLAGS += $(XPDINCEXTRA) $(EXTRA_XRDFLAGS) $(BONJOURCPPFLAGS)
 
 ifneq ($(ICC_GE_9),)
 # remove when xrootd has moved from strstream.h -> sstream.
-$(XPDO): CXXFLAGS += -Wno-deprecated $(XPDINCEXTRA) $(EXTRA_XRDFLAGS)
+$(XPDO): CXXFLAGS += -Wno-deprecated
+
 else
+
 ifneq ($(GCC_MAJOR),)
 ifneq ($(GCC_MAJOR),2)
 # remove when xrootd has moved from strstream.h -> sstream.
-$(XPDO): CXXFLAGS += -Wno-deprecated $(XPDINCEXTRA) $(EXTRA_XRDFLAGS)
-else
-$(XPDO): CXXFLAGS += $(XPDINCEXTRA) $(EXTRA_XRDFLAGS)
-endif
-else
-$(XPDO): CXXFLAGS += $(XPDINCEXTRA) $(EXTRA_XRDFLAGS)
+$(XPDO): CXXFLAGS += -Wno-deprecated
 endif
 endif
+
+endif
+
 endif
