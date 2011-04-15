@@ -167,8 +167,14 @@ MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, cons
          
 L26:  
 #ifdef WARNINGMSG
-         MN_INFO_VAL2("MnHesse: 2nd derivative zero for Parameter ",i);
-         MN_INFO_MSG("MnHesse fails and will return diagonal matrix ");
+
+         // get parameter name for i
+         // (need separate scope for avoiding compl error when declaring name)
+         {  
+            const char * name = trafo.Name( trafo.ExtOfInt(i));
+            MN_INFO_VAL2("MnHesse: 2nd derivative zero for Parameter ", name);
+            MN_INFO_MSG("MnHesse fails and will return diagonal matrix ");
+         }
 #endif
          
          for(unsigned int j = 0; j < n; j++) {
