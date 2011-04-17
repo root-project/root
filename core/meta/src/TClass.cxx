@@ -341,7 +341,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
       isbits = kTRUE;
    }
    TClass * dataClass = TClass::GetClass(memberFullTypeName);
-//   Bool_t isTString = (dataClass == TString::Class());
+   Bool_t isTString = (dataClass == TString::Class());
    static TClassRef stdClass("std::string");
    Bool_t isStdString = (dataClass == stdClass);
    
@@ -415,9 +415,9 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
       if (isStdString) {
          std::string *str = (std::string*)pointer;
          snprintf(&line[kvalue],kline-kvalue,"%s",str->c_str());
-//      } else if (isTString) {
-//         TString *str = (TString*)pointer;
-//         snprintf(&line[kvalue],kline-kvalue,"%s",str->Data());
+      } else if (isTString) {
+         TString *str = (TString*)pointer;
+         snprintf(&line[kvalue],kline-kvalue,"%s",str->Data());
       } else {
          snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)pointer);
       }

@@ -1217,6 +1217,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
          }
       }
       Int_t offset=0;
+      if (cl == TString::Class() && strcmp(right,"fData")==0) {
+         // For backward compatibility replace TString::fData which no longer exist
+         // by a call to TString::Data()
+         right = "Data()";
+      }
       Int_t nchname = strlen(right);
       TFormLeafInfo *leafinfo = 0;
       TStreamerElement* element = 0;
@@ -1938,8 +1943,15 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             if (mustderef) leafinfo = 0;
             current = &(work[0]);
             *current = 0;
-
             R__ASSERT(right[i] != '[');  // We are supposed to have removed all dimensions already!
+
+            if (cl == TString::Class() && strcmp(right+i+1,"fData") == 0) {
+               // For backward compatibility replace TString::fData which no longer exist
+               // by a call to TString::Data()
+               right = ".Data()";
+               i = 0;
+               nchname = strlen(right);
+            }
 
          } else
             *current++ = right[i];

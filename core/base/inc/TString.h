@@ -204,7 +204,9 @@ private:
    void           FormImp(const char *fmt, va_list ap);
 
 protected:
+#ifndef __CINT__
    char          *fData;          // ref. counted data (TStringRef is in front)
+#endif
 
    // Special concatenation constructor
    TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2);
@@ -389,7 +391,7 @@ public:
 #endif
    ;
 
-   ClassDef(TString,1)  //Basic string class
+   ClassDef(TString,2)  //Basic string class
 };
 
 // Related global functions
