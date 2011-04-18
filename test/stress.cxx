@@ -486,7 +486,7 @@ void stress5()
    ntotin  += f.GetBytesRead();
    ntotout += f.GetBytesWritten();
    Bool_t OK = kTRUE;
-   if (nlines < nlinesGood-40 || nlines > nlinesGood+40) OK = kFALSE;
+   if (nlines < nlinesGood-110 || nlines > nlinesGood+110) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");
