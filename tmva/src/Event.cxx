@@ -45,7 +45,8 @@ TMVA::Event::Event()
      fClass(0),
      fWeight(1.0),
      fBoostWeight(1.0),
-     fDynamic(kFALSE)
+     fDynamic(kFALSE),
+     fDoNotBoost(kFALSE)
 {
    // copy constructor
 }
@@ -63,7 +64,8 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
      fClass(cls),
      fWeight(weight),
      fBoostWeight(boostweight),
-     fDynamic(kFALSE)
+     fDynamic(kFALSE),
+     fDoNotBoost(kFALSE)
 {
    // constructor
 }
@@ -82,7 +84,8 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
      fClass(cls),
      fWeight(weight),
      fBoostWeight(boostweight),
-     fDynamic(kFALSE)
+     fDynamic(kFALSE),
+     fDoNotBoost(kFALSE)
 {
    // constructor
 }
@@ -99,7 +102,8 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
      fClass(cls),
      fWeight(weight),
      fBoostWeight(boostweight),
-     fDynamic(kFALSE)
+     fDynamic(kFALSE),
+     fDoNotBoost(kFALSE)
 {
    // constructor
 }
@@ -113,7 +117,8 @@ TMVA::Event::Event( const std::vector<Float_t*>*& evdyn, UInt_t nvar )
      fClass(0),
      fWeight(0),
      fBoostWeight(0),
-     fDynamic(true)
+     fDynamic(true),
+     fDoNotBoost(kFALSE)
 {
    // constructor for single events
    fValuesDynamic = (std::vector<Float_t*>*) evdyn;
@@ -128,7 +133,8 @@ TMVA::Event::Event( const Event& event )
      fClass(event.fClass),
      fWeight(event.fWeight),
      fBoostWeight(event.fBoostWeight),
-     fDynamic(event.fDynamic)
+     fDynamic(event.fDynamic),
+     fDoNotBoost(kFALSE)
 {
    // copy constructor
    if (event.fDynamic){

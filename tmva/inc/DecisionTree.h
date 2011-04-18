@@ -193,6 +193,7 @@ namespace TMVA {
       inline void SetUseFisherCuts(Bool_t t=kTRUE)  { fUseFisherCuts = t;}
       inline void SetMinLinCorrForFisher(Double_t min){fMinLinCorrForFisher = min;}
       inline void SetUseExclusiveVars(Bool_t t=kTRUE){fUseExclusiveVars = t;}
+      inline void SetPairNegWeightsInNode(){fPairNegWeightsInNode=kTRUE;}
 
    private:
       // utility functions
@@ -232,8 +233,8 @@ namespace TMVA {
 
       UInt_t     fNNodesMax;     // max # of nodes
       UInt_t     fMaxDepth;      // max depth
-      UInt_t     fClass;         // class which is treated as signal when building the tree
-
+      UInt_t     fSigClass;      // class which is treated as signal when building the tree
+      Bool_t     fPairNegWeightsInNode;  // randomly pair miscl. ev. with neg. and pos. weights in node and don't boost them
       static const Int_t  fgDebugLevel = 0;     // debug level determining some printout/control plots etc.
       Int_t     fTreeID;        // just an ID number given to the tree.. makes debugging easier as tree knows who he is.
 

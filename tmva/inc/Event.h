@@ -94,13 +94,14 @@ namespace TMVA {
 
       void     ScaleWeight           ( Double_t s ) { fWeight*=s; }
       void     SetWeight             ( Double_t w ) { fWeight=w; }
-      void     SetBoostWeight        ( Double_t w ) { fBoostWeight=w; }
-      void     ScaleBoostWeight      ( Double_t s ) { fBoostWeight *= s; }
+      void     SetBoostWeight        ( Double_t w ) { fDoNotBoost ? fDoNotBoost = kFALSE : fBoostWeight=w; }
+      void     ScaleBoostWeight      ( Double_t s ) { fDoNotBoost ? fDoNotBoost = kFALSE : fBoostWeight *= s; }
       void     SetClass              ( UInt_t t )  { fClass=t; }
       void     SetVal                ( UInt_t ivar, Float_t val );
       void     SetTarget             ( UInt_t itgt, Float_t value );
       void     SetSpectator          ( UInt_t ivar, Float_t value );
 
+      void     SetDoNotBoost         () { fDoNotBoost = kTRUE; }
       static void ClearDynamicVariables() {}
 
       void     CopyVarValues( const Event& other );
@@ -108,15 +109,16 @@ namespace TMVA {
 
    private:
 
-      mutable std::vector<Float_t>   fValues;               // the event values
-      mutable std::vector<Float_t*>* fValuesDynamic;       // the event values
-      mutable std::vector<Float_t>   fTargets;              // target values for regression
-      mutable std::vector<Float_t>   fSpectators;           // "visisting" variables which are never used for any calculation
+      mutable std::vector<Float_t>   fValues;          // the event values
+      mutable std::vector<Float_t*>* fValuesDynamic;   // the event values
+      mutable std::vector<Float_t>   fTargets;         // target values for regression
+      mutable std::vector<Float_t>   fSpectators;      // "visisting" variables not used in MVAs
 
       UInt_t                         fClass;           // class number
       Double_t                       fWeight;          // event weight (product of global and individual weights)
       Double_t                       fBoostWeight;     // internal weight to be set by boosting algorithm
       Bool_t                         fDynamic;         // is set when the dynamic values are taken
+      Bool_t                         fDoNotBoost;       // mark event as not to be boosted (used to compensate for events with negative event weights
    };
 }
 

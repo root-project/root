@@ -2408,10 +2408,8 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
          if (sign > 0 && maxbin < 1      ) maxbin = 1;
          if (sign < 0 && maxbin > fNbinsH) maxbin = fNbinsH;
 
-         if (sign > 0)
-            for (Int_t ibin=1; ibin<=maxbin; ibin++) theEffHist->AddBinContent( ibin , theWeight );
-         else 
-            for (Int_t ibin=maxbin+1; ibin<=fNbinsH; ibin++) theEffHist->AddBinContent( ibin , theWeight );
+         if (sign > 0) for (Int_t ibin=1;        ibin<=maxbin;  ibin++) theEffHist->AddBinContent( ibin , theWeight );
+         else          for (Int_t ibin=maxbin+1; ibin<=fNbinsH; ibin++) theEffHist->AddBinContent( ibin , theWeight );
       }
 
       // normalise output distributions

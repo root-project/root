@@ -1219,7 +1219,8 @@ void TMVA::Factory::EvaluateAllMethods( void )
          Log() << kINFO << "Write evaluation histograms to file" << Endl;
          theMethod->WriteEvaluationHistosToFile(Types::kTesting);
          theMethod->WriteEvaluationHistosToFile(Types::kTraining);
-      } else if (theMethod->DoMulticlass()) {
+      } 
+      else if (theMethod->DoMulticlass()) {
          doMulticlass = kTRUE;
          Log() << kINFO << "Evaluate multiclass classification method: " << theMethod->GetMethodName() << Endl;
          Log() << kINFO << "Write evaluation histograms to file" << Endl;
@@ -1228,10 +1229,11 @@ void TMVA::Factory::EvaluateAllMethods( void )
          
          theMethod->TestMulticlass();
          multiclass_testEff.push_back(theMethod->GetMulticlassEfficiency(multiclass_testPur));
-         //theMethod->GetMulticlassTrainingEfficiency();
+
          nmeth_used[0]++;
          mname[0].push_back( theMethod->GetMethodName() );
-      } else {
+      } 
+      else {
          
          Log() << kINFO << "Evaluate classifier: " << theMethod->GetMethodName() << Endl;
          isel = (theMethod->GetMethodTypeName().Contains("Variable")) ? 1 : 0;
@@ -1307,10 +1309,12 @@ void TMVA::Factory::EvaluateAllMethods( void )
       rmstrainT[0]  = vtmp[15];
       minftestT[0]  = vtmp[16];
       minftrainT[0] = vtmp[17];
-   } else if( doMulticlass ) {
+   } 
+   else if (doMulticlass) {
       // TODO: fill in something meaningfull
       
-   }  else {
+   }  
+   else {
       // now sort the variables according to the best 'eff at Beff=0.10'
       for (Int_t k=0; k<2; k++) {
          std::vector< std::vector<Double_t> > vtemp;
