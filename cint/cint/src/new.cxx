@@ -652,6 +652,9 @@ G__value G__new_operator(const char* expression)
    else {
       G__letint(&result, toupper(var_type), pointer);
       result.obj.reftype.reftype = reftype;
+      if (reftype == G__PARANORMAL) {
+         result.ref = 0;
+      }
    }
    result.tagnum = G__tagnum;
    result.typenum = G__typenum;
