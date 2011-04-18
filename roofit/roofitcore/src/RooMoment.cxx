@@ -52,7 +52,7 @@ ClassImp(RooMoment)
 
 
 //_____________________________________________________________________________
-RooMoment::RooMoment() 
+RooMoment::RooMoment() : _order(1), _takeRoot(kFALSE)
 {
   // Default constructor
 }

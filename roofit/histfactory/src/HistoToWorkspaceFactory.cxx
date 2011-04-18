@@ -89,7 +89,16 @@ ClassImp(RooStats::HistFactory::HistoToWorkspaceFactory)
 namespace RooStats{
 namespace HistFactory{
 
-  HistoToWorkspaceFactory::HistoToWorkspaceFactory(){}
+  HistoToWorkspaceFactory::HistoToWorkspaceFactory() :
+    fNomLumi(0),
+    fLumiError(0),
+    fLowBin(0),
+    fHighBin(0),   
+    fOut_f(0),
+    pFile(0)
+  {
+  }
+
   HistoToWorkspaceFactory::~HistoToWorkspaceFactory(){
     fclose(pFile);
   }

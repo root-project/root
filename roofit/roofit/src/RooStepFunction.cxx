@@ -49,6 +49,7 @@ RooStepFunction::RooStepFunction()
 {
   // Constructor
   _coefIter = _coefList.createIterator() ;
+  _interpolate = kFALSE ;
 }
 				 
 

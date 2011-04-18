@@ -47,9 +47,9 @@ ClassImp(RooChangeTracker)
 ;
 
 //_____________________________________________________________________________
-RooChangeTracker::RooChangeTracker()
+RooChangeTracker::RooChangeTracker() : _checkVal(kFALSE)
 {
-  // Deault constructor
+  // Default constructor
 
   _realSetIter = _realSet.createIterator() ;
   _catSetIter = _catSet.createIterator() ;

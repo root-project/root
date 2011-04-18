@@ -65,6 +65,16 @@ RooAbsTestStatistic::RooAbsTestStatistic()
   _gofArray = 0 ;
   _mpfeArray = 0 ;
   _projDeps = 0 ;
+  _gofOpMode = Slave ;
+  _mpinterl = kFALSE ;
+  _nCPU = 1 ;
+  _nEvents = 0 ; 
+  _nGof = 0 ;
+  _numSets = 0 ;
+  _setNum = 0 ;
+  _simCount = 0 ;
+  _splitRange = 0 ;
+  _verbose = kFALSE ;
 }
 
 
@@ -438,7 +448,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   if (!dsetList) {
     coutE(Fitting) << "RooAbsTestStatistic::initSimMode(" << GetName() << ") ERROR: index category of simultaneous pdf is missing in dataset, aborting" << endl ;
     throw std::string("RooAbsTestStatistic::initSimMode() ERROR, index category of simultaneous pdf is missing in dataset, aborting") ;
-    RooErrorHandler::softAbort() ;
+    //RooErrorHandler::softAbort() ;
   }
 
   // Count number of used states

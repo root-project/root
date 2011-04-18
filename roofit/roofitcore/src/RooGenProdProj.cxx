@@ -48,7 +48,10 @@ ClassImp(RooGenProdProj)
 
 
 //_____________________________________________________________________________
-RooGenProdProj::RooGenProdProj()
+RooGenProdProj::RooGenProdProj() :
+  _compSetOwnedN(0), 
+  _compSetOwnedD(0),
+  _haveD(kFALSE)
 {
   // Default constructor
 }

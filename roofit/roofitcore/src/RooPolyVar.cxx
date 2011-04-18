@@ -46,7 +46,7 @@ ClassImp(RooPolyVar)
 
 
 //_____________________________________________________________________________
-RooPolyVar::RooPolyVar()
+RooPolyVar::RooPolyVar() : _lowestOrder(0)
 {
   // Default constructor
   _coefIter = _coefList.createIterator() ;

@@ -42,6 +42,7 @@ LinInterpVar::LinInterpVar()
 {
   // Default constructor
   _paramIter = _paramList.createIterator() ;
+  _nominal = 0 ;
 }
 
 

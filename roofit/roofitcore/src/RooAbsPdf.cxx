@@ -165,6 +165,11 @@ TString RooAbsPdf::_normRangeOverride ;
 RooAbsPdf::RooAbsPdf() : _norm(0), _normSet(0), _minDimNormValueCache(999), _valueCacheIntOrder(2), _specGeneratorConfig(0)
 {
   // Default constructor
+  _errorCount = 0 ;
+  _negCount = 0 ;
+  _rawValue = 0 ;
+  _selectComp = kFALSE ;
+  _traceCount = 0 ;
 }
 
 

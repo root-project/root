@@ -112,6 +112,7 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
 
   TFile* f=0;
   if(fSaveBeltToFile){
+    //coverity[FORWARD_NULL]
     oocoutI(f,Contents) << "NeymanConstruction saving ConfidenceBelt to file SamplingDistributions.root" << endl;
     f = new TFile("SamplingDistributions.root","recreate");
   }

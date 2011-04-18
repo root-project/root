@@ -69,7 +69,10 @@ RooDataHist::RooDataHist() : _pbinvCacheMgr(0,10)
   _curIndex = -1 ;
   _realIter = _realVars.createIterator() ;
   _binValid = 0 ;
-
+  _curSumW2 = 0 ;
+  _curVolume = 1 ;
+  _curWgtErrHi = 0 ;
+  _curWgtErrLo = 0 ;
 }
 
 

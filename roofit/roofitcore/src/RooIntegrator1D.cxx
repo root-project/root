@@ -73,6 +73,7 @@ void RooIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 RooIntegrator1D::RooIntegrator1D() :
   _h(0), _s(0), _c(0), _d(0), _x(0)
 {
+  // coverity[UNINIT_CTOR]
   // Default constructor
 }
 

@@ -92,6 +92,7 @@ void RooGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 //_____________________________________________________________________________
 RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D() : _x(0)
 {
+  // coverity[UNINIT_CTOR]
   // Default constructor
 }
 

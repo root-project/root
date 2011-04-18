@@ -84,6 +84,13 @@ RooNumConvolution::RooNumConvolution() :
   _init(kFALSE),
   _integrand(0),
   _integrator(0),
+  _cloneVar(0),
+  _clonePdf(0),
+  _cloneModel(0),
+  _useWindow(kFALSE),
+  _windowScale(1),
+  _verboseThresh(2000),
+  _doProf(kFALSE),
   _callHist(0)
 {
 }

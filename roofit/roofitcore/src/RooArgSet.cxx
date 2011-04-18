@@ -773,6 +773,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
   Bool_t retVal(kFALSE) ;
   
   // Conditional stack and related state variables
+  // coverity[UNINIT]
   Bool_t anyCondTrue[100] ;
   Bool_t condStack[100] ;
   Bool_t lastLineWasElse=kFALSE ;

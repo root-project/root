@@ -107,14 +107,24 @@ int main(int argc, char** argv) {
 
   if(argc==2){
     string input(argv[1]);
-    fastDriver(input);
+    try {
+      fastDriver(input);
+    }
+    catch (std::string str) {
+      cerr << "caught exception: " << str << endl ;
+    }
   }
 
   if(argc==3){
     string flag(argv[1]);
     string input(argv[2]);
     if(flag=="-standard_form")
-      fastDriver(input);
+      try {
+	fastDriver(input);
+      }
+      catch (std::string str) {
+	cerr << "caught exception: " << str << endl ;
+      }
     else if(flag=="-number_counting_form")
       topDriver(input);
     else

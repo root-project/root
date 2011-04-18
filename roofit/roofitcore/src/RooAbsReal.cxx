@@ -110,6 +110,7 @@ map<const RooAbsArg*,pair<string,list<RooAbsReal::EvalError> > > RooAbsReal::_ev
 //_____________________________________________________________________________
 RooAbsReal::RooAbsReal() : _specIntegratorConfig(0), _treeVar(kFALSE), _selectComp(kTRUE), _lastNSet(0)
 {
+  // coverity[UNINIT_CTOR]
   // Default constructor
 }
 
@@ -148,6 +149,7 @@ RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) :
   _plotBins(other._plotBins), _value(other._value), _unit(other._unit), _forceNumInt(other._forceNumInt), 
   _treeVar(other._treeVar), _selectComp(other._selectComp), _lastNSet(0)
 {
+  // coverity[UNINIT_CTOR]
   // Copy constructor
 
   if (other._specIntegratorConfig) {

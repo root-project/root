@@ -64,7 +64,10 @@ namespace {
 }
 
 //_____________________________________________________________________________
-RooSpHarmonic::RooSpHarmonic()
+RooSpHarmonic::RooSpHarmonic() :
+  _n(0),
+  _sgn1(0),
+  _sgn2(0)
 {
 }
 

@@ -71,6 +71,7 @@ RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
   _funcClone = 0 ;
   _projDeps = 0 ;
   _ownData = kTRUE ;
+  _sealed = kFALSE ;
 }
 
 
@@ -104,6 +105,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   if (operMode()!=Slave) {
 //     cout << "RooAbsOptTestStatistic::ctor not slave mode, do nothing" << endl ;
     _normSet = 0 ;
+    _ownData = kFALSE ;
     return ;
   }
 
@@ -363,6 +365,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
 //     cout << "RooAbsOptTestStatistic::cctor not slave mode, do nothing" << endl ;
     _projDeps = 0 ;
     _normSet = other._normSet ? ((RooArgSet*) other._normSet->snapshot()) : 0 ;   
+    _ownData = kFALSE ;
     return ;
   }
 

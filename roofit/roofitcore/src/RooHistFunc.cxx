@@ -40,7 +40,12 @@ ClassImp(RooHistFunc)
 
 
 //_____________________________________________________________________________
-RooHistFunc::RooHistFunc() : _dataHist(0), _totVolume(0)
+RooHistFunc::RooHistFunc() :
+  _dataHist(0),
+  _intOrder(0),
+  _cdfBoundaries(kFALSE),
+  _totVolume(0),
+  _unitNorm(kFALSE)
 {
   // Default constructor
 }

@@ -48,7 +48,7 @@ ClassImp(RooDerivative)
 
 
 //_____________________________________________________________________________
-RooDerivative::RooDerivative() : _ftor(0), _rd(0)
+RooDerivative::RooDerivative() : _order(1), _eps(1e-7), _ftor(0), _rd(0)
 {
   // Default constructor
 }
