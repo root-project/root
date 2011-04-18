@@ -275,7 +275,7 @@ namespace HistFactory{
         else {
           varname=itr->name;
         }
-        var = (RooRealVar*) proto->factory((varname+range.str()).c_str());
+	proto->factory((varname+range.str()).c_str());
         prodNames+=varname;
       }
       overallNorm_times_sigmaEpsilon = es.name+"_"+channel+"_overallNorm_x_sigma_epsilon";
