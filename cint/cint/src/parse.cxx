@@ -3887,6 +3887,7 @@ static void G__unsignedintegral()
    fpos_t pos;
    fgetpos(G__ifile.fp, &pos);
    G__unsigned = -1;
+   G__reftype = G__PARANORMAL;
    // Scan the next identifier token in.
    G__FastAllocString name(G__MAXNAME);
    // G__fgetstream() stops at space, hand-over to G__define_var() thus depends
@@ -3924,8 +3925,6 @@ static void G__unsignedintegral()
             }
             *last = 0;
          }
-      } else {
-         G__reftype = G__PARANORMAL;
       }
 
       if (!isTypeError) {
