@@ -36,8 +36,8 @@ void selabort::Begin(TTree *tree)
 
    TString option = GetOption();
    MyNameIs = fChain->GetName();
-   cout << "My option are " << option.Data() << endl;
-   cout << "My name is " << MyNameIs.Data() << endl;
+   cerr << "My option are " << option.Data() << endl;
+   cerr << "My name is " << MyNameIs.Data() << endl;
 
 }
 
