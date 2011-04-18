@@ -994,10 +994,12 @@ bool CheckClassDef(G__ClassInfo &cl)
    int autoloadEnable = G__set_class_autoloading(0);
    bool inheritsFromTObject = cl.IsBase("TObject");
    bool inheritsFromTSelector = cl.IsBase("TSelector");
+   bool isAbstract = cl.Property() & G__BIT_ISABSTRACT;
    G__set_class_autoloading(autoloadEnable);
 
    bool result = true;
-   if (!inheritsFromTSelector && inheritsFromTObject && !hasClassDef) {
+   if (!inheritsFromTSelector && inheritsFromTObject && !isAbstract
+       && !hasClassDef) {
       Error(cl.Name(),"%s inherits from TObject but does not have its own ClassDef\n",cl.Name());
       // We do want to always output the message (hence the Error level)
       // but still want rootcint to succeed.
