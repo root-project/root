@@ -234,7 +234,10 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
   // done in integration calls, there is no performance hit.
 
   if (!nset) {
+    RooArgSet* tmp = _normSet ;
+    _normSet = 0 ;
     Double_t val = evaluate() ;
+    _normSet = tmp ;
     Bool_t error = traceEvalPdf(val) ;
     cxcoutD(Tracing) << IsA()->GetName() << "::getVal(" << GetName() 
 		     << "): value = " << val << " (unnormalized)" << endl ;
@@ -834,7 +837,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   if (allConstraints.getSize()>0 && cPars) {   
 
     coutI(Minimization) << " Including the following contraint terms in minimization: " << allConstraints << endl ;
-
+    
     nllCons = new RooConstraintSum(Form("%s_constr",baseName.c_str()),"nllCons",allConstraints,*cPars) ;
     RooAbsReal* orignll = nll ;
 

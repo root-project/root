@@ -139,7 +139,8 @@ static char *strtok_r(char *s1, const char *s2, char **lasts)
 
 
 //_____________________________________________________________________________
-RooFactoryWSTool::RooFactoryWSTool(RooWorkspace& inws) : _ws(&inws), _errorCount(0)
+RooFactoryWSTool::RooFactoryWSTool(RooWorkspace& inws) : _ws(&inws), _errorCount(0), _autoClassPostFix("")
+
 {
   // Default constructor  
 }

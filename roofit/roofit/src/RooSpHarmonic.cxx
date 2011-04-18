@@ -72,7 +72,7 @@ RooSpHarmonic::RooSpHarmonic()
 RooSpHarmonic::RooSpHarmonic(const char* name, const char* title, RooAbsReal& ctheta, RooAbsReal& phi, int l, int m) 
  : RooLegendre(name, title,ctheta,l,m<0?-m:m)
  , _phi("phi", "phi", this, phi)
- , _n( double(4)/(2*sqrt(TMath::Pi())) )
+ , _n( 2*sqrt(TMath::Pi())) 
  , _sgn1( m==0 ? 0 : m<0 ? -1 : +1 )
  , _sgn2( 0 )
 {

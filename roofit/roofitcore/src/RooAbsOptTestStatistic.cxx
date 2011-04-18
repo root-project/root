@@ -460,7 +460,7 @@ Double_t RooAbsOptTestStatistic::combinedValue(RooAbsReal** array, Int_t n) cons
   Int_t i ;
   for (i=0 ; i<n ; i++) {
     Double_t tmp = array[i]->getVal() ;
-    if (tmp==0) return 0 ;
+    // if (tmp==0) return 0 ; WVE no longer needed
     sum += tmp ;
   }
   return sum ;
@@ -651,6 +651,7 @@ Bool_t RooAbsOptTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
 
   RooAbsData* origData = _dataClone ;
   Bool_t deleteOrigData = _ownData ;
+
 
   if (!cloneData && _rangeName.size()>0) {
     coutW(InputArguments) << "RooAbsOptTestStatistic::setData(" << GetName() << ") WARNING: test statistic was constructed with range selection on data, "

@@ -778,7 +778,7 @@ std::string RooClassFactory::ClassFacIFace::create(RooFactoryWSTool& ft, const c
 
     string className ;
     while(true) {
-      className = Form("RooCFAuto%03d%s",classCounter,(tn=="CEXPR")?"Pdf":"Func") ;
+      className = Form("RooCFAuto%03d%s%s",classCounter,(tn=="CEXPR")?"Pdf":"Func",ft.autoClassNamePostFix()) ;
       TClass* tc =  TClass::GetClass(className.c_str(),kTRUE,kTRUE) ;
       classCounter++ ;
       if (!tc) {

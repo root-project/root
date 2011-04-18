@@ -153,6 +153,9 @@ public:
 
   void logError() { _errorCount++ ; }
 
+  const char* autoClassNamePostFix() const { return _autoClassPostFix.c_str() ; }
+  void setAutoClassNamePostFix(const char* pfix) { _autoClassPostFix = pfix ; }
+
 protected:
 
   Bool_t checkSyntax(const char* arg) ;
@@ -190,6 +193,8 @@ protected:
   Int_t errorCount() { return _errorCount ; }
 
   Int_t _errorCount ; // Error counter for a given expression processing
+
+  std::string _autoClassPostFix ;
 
   RooFactoryWSTool(const RooFactoryWSTool&) ;
 

@@ -187,7 +187,7 @@ Double_t RooHistPdf::evaluate() const
   // Return the current value: The value of the bin enclosing the current coordinates
   // of the observables, normalized by the histograms contents. Interpolation
   // is applied if the RooHistPdf is configured to do that
-  
+
   // Transfer values from   
   if (_pdfObsList.getSize()>0) {
     _histObsIter->Reset() ;
@@ -207,7 +207,7 @@ Double_t RooHistPdf::evaluate() const
     ret=0 ;
   }
   
-//   cout << "RooHistPdf::evaluate(" << GetName() << ") ret = " << ret << " at " << ((RooAbsReal*)_histObsList.first())->getVal() << endl ;
+  //cout << "RooHistPdf::evaluate(" << GetName() << ") ret = " << ret << " at " << ((RooAbsReal*)_histObsList.first())->getVal() << endl ;
   return ret ;
 }
 
@@ -476,3 +476,4 @@ Bool_t RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
   _dataHist = (RooDataHist*) ws.data(_dataHist->GetName()) ;
   return kFALSE ;
 }
+

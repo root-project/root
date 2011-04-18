@@ -161,7 +161,7 @@ Double_t RooAddition::evaluate() const
   _setIter->Reset() ;
   RooAbsReal* comp ;
   while((comp=(RooAbsReal*)_setIter->Next())) {
-      sum += comp->getVal(nset) ;
+    sum += comp->getVal(nset) ;
   }
   return sum ;
 }
@@ -182,8 +182,9 @@ Double_t RooAddition::defaultErrorLevel() const
 
   RooAbsArg* arg ;
 
-  _setIter->Reset() ;
-  while((arg=(RooAbsArg*)_setIter->Next())) {
+  RooArgSet* comps = getComponents() ;
+  TIterator* iter = comps->createIterator() ;
+  while((arg=(RooAbsArg*)iter->Next())) {
     if (dynamic_cast<RooNLLVar*>(arg)) {
       nllArg = (RooAbsReal*)arg ;
     }
@@ -191,6 +192,8 @@ Double_t RooAddition::defaultErrorLevel() const
       chi2Arg = (RooAbsReal*)arg ;
     }
   }
+  delete iter ;
+  delete comps ;
 
   if (nllArg && !chi2Arg) {
     coutI(Fitting) << "RooAddition::defaultErrorLevel(" << GetName() 

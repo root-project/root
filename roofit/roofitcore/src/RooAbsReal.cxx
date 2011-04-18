@@ -1137,7 +1137,7 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
   //RooArgSet* cloneSet = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
   //RooAbsReal* theClone = (RooAbsReal*) cloneSet->find(GetName()) ;
   const_cast<RooAbsReal*>(this)->recursiveRedirectServers(*hist->get()) ;
-  
+
   // Iterator over all bins of RooDataHist and fill weights
   Int_t onePct = hist->numEntries()/100 ;
   if (onePct==0) {
