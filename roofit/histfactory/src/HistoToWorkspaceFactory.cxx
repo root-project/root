@@ -265,7 +265,7 @@ namespace HistFactory{
         // remove "doRatio" and name can be changed when ws gets imported to the combined model.
         std::stringstream range;
         range<<"["<<itr->val<<","<<itr->low<<","<<itr->high<<"]";
-        RooRealVar* var = 0;
+        //RooRealVar* var = 0;
 
         string varname;
         if(!prodNames.empty()) prodNames+=",";
