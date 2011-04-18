@@ -476,7 +476,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
             while (sumOfNegWeights < 0 && 
                    ( ( TMath::Abs(sumOfNegWeights) < node->GetNBkgEvents() && iClassID != fSigClass) || 
                      ( TMath::Abs(sumOfNegWeights) < node->GetNSigEvents() && iClassID == fSigClass) ) ){
-               UInt_t iev=fMyTrandom->Uniform(eventSample.size());
+               UInt_t iev=fMyTrandom->Integer(eventSample.size());
                // std::cout << "  so far...  I have still " << sumOfNegWeights 
                //           << " now event " << iev << "("<<eventSample.size()<<") has " << eventSample[iev]->GetWeight()
                //           << " class " << eventSample[iev]->GetClass() << "("<<iClassID<<")"
