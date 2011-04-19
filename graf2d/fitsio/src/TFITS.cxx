@@ -188,6 +188,12 @@ void TFITSHDU::_release_resources()
                   for (Int_t row = 0; row < fNRows; row++) {
                      delete [] fCells[offset+row].fString;
                   }
+               } else if (fColumnsInfo[i].fType == kRealVector) {
+                  //Deallocate character arrays allocated for kString columns
+                  Int_t offset = i * fNRows;
+                  for (Int_t row = 0; row < fNRows; row++) {
+                     delete [] fCells[offset+row].fRealVector;
+                  }
                }
             }
             
@@ -425,13 +431,17 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
                
                
             } else {
-               //Numeric column
+               //Numeric or vector column
                double nulval = 0;
                int anynul=0;
-               double *array = new double [table_rows];
+               
+               fColumnsInfo[colnum].fDim = (Int_t) repeat;
+               
+               double *array;
                
                if (repeat > 0) {
-                  fits_read_col(fp, TDOUBLE, colnum+1, 1, 1, table_rows, &nulval, array, &anynul, &status);
+                  array = new double [table_rows * repeat]; //Hope you got a big machine! Ask China otherwise :-)
+                  fits_read_col(fp, TDOUBLE, colnum+1, 1, 1, table_rows * repeat, &nulval, array, &anynul, &status);
                   
                   if (status) {
                      delete [] array;
@@ -439,14 +449,28 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
                   }
                } else {
                   //No elements: set dummy
+                  array = new double [table_rows];
                   for (long row = 0; row < table_rows; row++) {
                      array[row] = 0.0;
                   }
                }
                
                //Save values
-               for (long row = 0; row < table_rows; row++) {
-                  fCells[cellindex++].fRealNumber = array[row];
+               if (repeat == 1) {
+                  //Scalar
+                  for (long row = 0; row < table_rows; row++) {
+                     fCells[cellindex++].fRealNumber = array[row];
+                  }
+               } else if (repeat > 1) {
+                  //Vector
+                  for (long row = 0; row < table_rows; row++) {
+                     double *vec = new double [repeat];
+                     long offset = row * repeat;
+                     for (long component = 0; component < repeat; component++) {
+                        vec[component] = array[offset++];
+                     }
+                     fCells[cellindex++].fRealVector = vec;
+                  }
                }
                
                delete [] array;
@@ -1172,6 +1196,9 @@ TVectorD* TFITSHDU::GetTabRealVectorColumn(Int_t colnum)
    if (fColumnsInfo[colnum].fType != kRealNumber) {
       Warning("GetTabRealVectorColumn", "attempting to read a column that is not of type 'kRealNumber'.");
       return 0;
+   } else if (fColumnsInfo[colnum].fDim > 1) {
+      Warning("GetTabRealVectorColumn", "attempting to read a column whose cells have embedded vectors, not real scalars. Use GetTabRealVectorCells() instead.");
+      return 0;
    }
    
    Int_t offset = colnum * fNRows;
@@ -1207,6 +1234,9 @@ TVectorD* TFITSHDU::GetTabRealVectorColumn(const char *colname)
    
    if (fColumnsInfo[colnum].fType != kRealNumber) {
       Warning("GetTabRealVectorColumn", "attempting to read a column that is not of type 'kRealNumber'.");
+      return 0;
+   } else if (fColumnsInfo[colnum].fDim > 1) {
+      Warning("GetTabRealVectorColumn", "attempting to read a column whose cells have embedded vectors, not real scalars. Use GetTabRealVectorCells() instead.");
       return 0;
    }
    
@@ -1269,6 +1299,110 @@ Bool_t TFITSHDU::Change(Int_t extension_number)
    return Change(tmppath.Data());
 }
 
+//______________________________________________________________________________
+TObjArray *TFITSHDU::GetTabRealVectorCells(Int_t colnum)
+{
+   // Get a collection of real vectors embedded in cells along a given column from a table HDU. colnum >= 0. 
+   if (fType != kTableHDU) {
+      Warning("GetTabRealVectorCells", "this is not a table HDU.");
+      return 0;
+   }
+   
+   if ((colnum < 0) || (colnum >= fNColumns)) {
+      Warning("GetTabRealVectorCells", "column index out of bounds.");
+      return 0;
+   }
+   
+   if (fColumnsInfo[colnum].fType != kRealNumber) {
+      Warning("GetTabRealVectorCells", "attempting to read a column that is not of type 'kRealNumber'.");
+      return 0;
+   }
+   
+   Int_t offset = colnum * fNRows;
+   
+   TObjArray *res = new TObjArray();
+   Int_t dim = fColumnsInfo[colnum].fDim;
+     
+   for (Int_t row = 0; row < fNRows; row++) {
+      TVectorD *v = new TVectorD();
+      v->Use(dim, fCells[offset + row].fRealVector);
+      res->Add(v);
+   }
+   
+   //Make the collection to own the allocated TVectorD objects, so when
+   //destroying the collection, the vectors will be destroyed too. 
+   res->SetOwner(kTRUE);
+   
+   return res;
+}
+
+//______________________________________________________________________________
+TObjArray *TFITSHDU::GetTabRealVectorCells(const char *colname)
+{
+   // Get a collection of real vectors embedded in cells along a given column from a table HDU by name 
+   if (fType != kTableHDU) {
+      Warning("GetTabRealVectorCells", "this is not a table HDU.");
+      return 0;
+   }
+   
+   Int_t colnum = GetColumnNumber(colname);
+   
+   if (colnum == -1) {
+      Warning("GetTabRealVectorCells", "column not found.");
+      return 0;
+   }
+   
+   return GetTabRealVectorCells(colnum);
+}
+
+//______________________________________________________________________________
+TVectorD *TFITSHDU::GetTabRealVectorCell(Int_t rownum, Int_t colnum)
+{
+   // Get a real vector embedded in a cell given by (row>=0, column>=0) 
+   if (fType != kTableHDU) {
+      Warning("GetTabRealVectorCell", "this is not a table HDU.");
+      return 0;
+   }
+   
+   if ((colnum < 0) || (colnum >= fNColumns)) {
+      Warning("GetTabRealVectorCell", "column index out of bounds.");
+      return 0;
+   }
+   
+   if ((rownum < 0) || (rownum >= fNRows)) {
+      Warning("GetTabRealVectorCell", "row index out of bounds.");
+      return 0;
+   }
+
+   if (fColumnsInfo[colnum].fType != kRealNumber) {
+      Warning("GetTabRealVectorCell", "attempting to read a column that is not of type 'kRealNumber'.");
+      return 0;
+   }
+   
+   TVectorD *v = new TVectorD();
+   v->Use(fColumnsInfo[colnum].fDim, fCells[(colnum * fNRows) + rownum].fRealVector);
+   
+   return v;
+}
+
+//______________________________________________________________________________
+TVectorD *TFITSHDU::GetTabRealVectorCell(Int_t rownum, const char *colname)
+{
+   // Get a real vector embedded in a cell given by (row>=0, column name)  
+   if (fType != kTableHDU) {
+      Warning("GetTabRealVectorCell", "this is not a table HDU.");
+      return 0;
+   }
+   
+   Int_t colnum = GetColumnNumber(colname);
+   
+   if (colnum == -1) {
+      Warning("GetTabRealVectorCell", "column not found.");
+      return 0;
+   }
+   
+   return GetTabRealVectorCell(rownum, colnum);
+}
 
 
 

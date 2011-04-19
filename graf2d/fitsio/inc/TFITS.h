@@ -51,7 +51,8 @@ public:
    
    enum EColumnTypes {     // Column data types
       kRealNumber,
-      kString
+      kString,
+      kRealVector
    };
    
    struct HDURecord {       // FITS HDU record
@@ -63,11 +64,14 @@ public:
    struct Column {               //Information of a table column
       TString            fName;      // Column's name
       enum EColumnTypes  fType;      // Column's data type
+      Int_t              fDim;       // When cells contain real number vectors, this field indicates 
+                                     // the dimension of this vector (number of components), being 1 for scalars.
    };
    
    union Cell {                 //Table cell contents
       Char_t       *fString;
-      Double_t      fRealNumber; 
+      Double_t      fRealNumber;
+      Double_t     *fRealVector;
    };
 
 protected:
@@ -126,7 +130,11 @@ public:
    TObjArray         *GetTabStringColumn(const char *colname);
    TVectorD          *GetTabRealVectorColumn(Int_t colnum);
    TVectorD          *GetTabRealVectorColumn(const char *colname);
-      
+   TVectorD          *GetTabRealVectorCell(Int_t rownum, Int_t colnum);
+   TVectorD          *GetTabRealVectorCell(Int_t rownum, const char *colname);
+   TObjArray         *GetTabRealVectorCells(Int_t colnum);
+   TObjArray         *GetTabRealVectorCells(const char *colname);
+   
    //Misc
    void               Draw(Option_t *opt="");
    Bool_t             Change(const char *filter);
