@@ -13,11 +13,25 @@ RPDUTILDIRS  := $(RPDUTILDIR)/src
 RPDUTILDIRI  := $(RPDUTILDIR)/inc
 
 ##### $(RPDUTILO) #####
-RPDUTILH     := $(wildcard $(MODDIRI)/*.h)
-RPDUTILS     := $(wildcard $(MODDIRS)/*.cxx)
+RPDUTILH     := $(filter-out $(MODDIRI)/rpdpriv.h, $(filter-out $(MODDIRI)/rpdconn.h, $(wildcard $(MODDIRI)/*.h)))
+RPDUTILS     := $(filter-out $(MODDIRS)/rpdpriv.cxx, $(filter-out $(MODDIRS)/rpdconn.cxx, $(wildcard $(MODDIRS)/*.cxx)))
 RPDUTILO     := $(call stripsrc,$(RPDUTILS:.cxx=.o))
 
 RPDUTILDEP   := $(RPDUTILO:.o=.d)
+
+##### $(RPDCONNO) #####
+RPDCONNH     := $(MODDIRI)/rpdconn.h
+RPDCONNS     := $(MODDIRS)/rpdconn.cxx
+RPDCONNO     := $(call stripsrc,$(RPDCONNS:.cxx=.o))
+
+RPDCONNDEP   := $(RPDCONNO:.o=.d)
+
+##### $(RPDPRIVO) #####
+RPDPRIVH     := $(MODDIRI)/rpdpriv.h
+RPDPRIVS     := $(MODDIRS)/rpdpriv.cxx
+RPDPRIVO     := $(call stripsrc,$(RPDPRIVS:.cxx=.o))
+
+RPDPRIVDEP   := $(RPDPRIVO:.o=.d)
 
 ##### for libSrvAuth #####
 SRVAUTHS     := $(MODDIRS)/rpdutils.cxx $(MODDIRS)/ssh.cxx
@@ -71,10 +85,12 @@ AUTHLIBS      := $(SHADOWLIBS) $(AFSLIBS) \
 
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RPDUTILH))
+ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RPDCONNH))
+ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RPDPRIVH))
 ALLLIBS       += $(SRVAUTHLIB)
 
 # include all dependency files
-INCLUDEFILES  += $(RPDUTILDEP)
+INCLUDEFILES  += $(RPDUTILDEP) $(RPDCONNDEP) $(RPDPRIVDEP)
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
@@ -87,15 +103,15 @@ $(SRVAUTHLIB):  $(SRVAUTHO) $(RSAO) $(DAEMONUTILSO) $(STRLCPYO) $(ORDER_) $(MAIN
 		   "$(SOFLAGS)" libSrvAuth.$(SOEXT) $@ "$(SRVAUTHO) $(RSAO)" \
 		   "$(SRVAUTHLIBEXTRA) $(DAEMONUTILSO) $(STRLCPYO) $(CRYPTLIBS) $(AUTHLIBS)"
 
-all-$(MODNAME): $(RPDUTILO) $(SRVAUTHLIB)
+all-$(MODNAME): $(RPDUTILO) $(RPDCONNO) $(RPDPRIVO) $(SRVAUTHLIB)
 
 clean-$(MODNAME):
-		@rm -f $(RPDUTILO)
+		@rm -f $(RPDUTILO) $(RPDCONNO) $(RPDPRIVO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(RPDUTILDEP) $(SRVAUTHLIB)
+		@rm -f $(RPDUTILDEP) $(RPDCONNDEP) $(RPDPRIVDEP) $(SRVAUTHLIB)
 
 distclean::     distclean-$(MODNAME)
 
