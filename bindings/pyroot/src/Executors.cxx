@@ -311,8 +311,8 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
       return (h->second)();
 
 // accept ref as by value
-   if ( cpd == "&" ) {
-      h = gExecFactories.find( realType );
+   if ( ! cpd.empty() && cpd[ cpd.size() - 1 ] == '&' ) {
+      h = gExecFactories.find( realType + cpd.substr( 0, cpd.size() - 1 ) );
       if ( h != gExecFactories.end() )
          return (h->second)();
    }
