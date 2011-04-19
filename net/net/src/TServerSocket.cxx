@@ -41,16 +41,17 @@ TVirtualMutex *gSrvAuthenticateMutex = 0;
 ClassImp(TServerSocket)
 
 //______________________________________________________________________________
-static void setaccopt(UChar_t &Opt, UChar_t Mod)
+static void SetAuthOpt(UChar_t &opt, UChar_t mod)
 {
    // Kind of macro to parse input options
-   // Modify Opt according to modifier Mod
+   // Modify opt according to modifier mod.
+
    R__LOCKGUARD2(gSrvAuthenticateMutex);
 
-   if (!Mod) return;
+   if (!mod) return;
 
-   if ((Mod & kSrvAuth))      Opt |= kSrvAuth;
-   if ((Mod & kSrvNoAuth))    Opt &= ~kSrvAuth;
+   if ((mod & kSrvAuth))   opt |= kSrvAuth;
+   if ((mod & kSrvNoAuth)) opt &= ~kSrvAuth;
 }
 
 //______________________________________________________________________________
@@ -176,7 +177,7 @@ TServerSocket::~TServerSocket()
 }
 
 //______________________________________________________________________________
-TSocket *TServerSocket::Accept(UChar_t Opt)
+TSocket *TServerSocket::Accept(UChar_t opt)
 {
    // Accept a connection on a server socket. Returns a full-duplex
    // communication TSocket object. If no pending connections are
@@ -188,7 +189,7 @@ TSocket *TServerSocket::Accept(UChar_t Opt)
    // In case of error 0 is returned and in case non-blocking I/O is
    // enabled and no connections are available -1 is returned.
    //
-   // Opt can be used to require client authentication; valid options are
+   // The opt can be used to require client authentication; valid options are
    //
    //    kSrvAuth   =   require client authentication
    //    kSrvNoAuth =   force no client authentication
@@ -212,7 +213,7 @@ TSocket *TServerSocket::Accept(UChar_t Opt)
 
    // Parse Opt
    UChar_t acceptOpt = fgAcceptOpt;
-   setaccopt(acceptOpt,Opt);
+   SetAuthOpt(acceptOpt, opt);
    Bool_t auth = (Bool_t)(acceptOpt & kSrvAuth);
 
    socket->fSocket  = soc;
@@ -281,15 +282,15 @@ void TServerSocket::SetAcceptOptions(UChar_t mod)
    //   kSrvAuth                 require client authentication
    //   kSrvNoAuth               do not require client authentication
 
-   setaccopt(fgAcceptOpt,mod);
+   SetAuthOpt(fgAcceptOpt, mod);
 }
 
 //______________________________________________________________________________
 void TServerSocket::ShowAcceptOptions()
 {
-   // Print default options for Accept
+   // Print default options for Accept.
 
-   ::Info("ShowAcceptOptions","    Auth: %d",(Bool_t)(fgAcceptOpt & kSrvAuth));
+   ::Info("ShowAcceptOptions", "Use authentication: %s", (fgAcceptOpt & kSrvAuth) ? "yes" : "no");
 }
 
 //______________________________________________________________________________
