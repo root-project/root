@@ -25,9 +25,9 @@ The class supports merging.
 
 #include "RooStats/SamplingDistribution.h"
 #include "RooNumber.h"
-#include "math.h"
 #include <algorithm>
 #include <iostream>
+#include <cmath>
 using namespace std ;
 
 /// ClassImp for building the THtml documentation of the class 
@@ -158,34 +158,61 @@ void SamplingDistribution::Add(const SamplingDistribution* other)
 }
 
 
-
 //_______________________________________________________
-Double_t SamplingDistribution::Integral(Double_t low, Double_t high, Bool_t normalize, Bool_t lowClosed, Bool_t highClosed) const
+Double_t SamplingDistribution::Integral(Double_t low, Double_t high, Bool_t normalize, Bool_t lowClosed, Bool_t
+                                        highClosed) const
 {
    // Returns the integral in the open/closed/mixed interval. Default is [low,high) interval.
    // Normalization can be turned off.
+   double error = 0;
+   return IntegralAndError(error, low,high, normalize, lowClosed, highClosed);
+}
 
-   Double_t sum = 0;
+//_______________________________________________________
+Double_t SamplingDistribution::IntegralAndError(Double_t & error, Double_t low, Double_t high, Bool_t normalize, Bool_t lowClosed, Bool_t
+                                                highClosed) const
+{
+   // Returns the integral in the open/closed/mixed interval. Default is [low,high) interval.
+   // Normalization can be turned off.
+   // compute also the error on the integral 
+
+   Double_t sum  = 0;
+   Double_t sum2 = 0; 
    for(unsigned int i=0; i<fSamplingDist.size(); i++) {
       double value = fSamplingDist[i];
 
       if((lowClosed  ? value >= low  : value > low)  &&
          (highClosed ? value <= high : value < high))
       {
-         sum += fSampleWeights[i];
+         sum  += fSampleWeights[i];
+         sum2 += fSampleWeights[i] * fSampleWeights[i];
       }
    }
 
+
+
    if(normalize) {
-      Double_t norm = 0;
+      Double_t norm  = 0;
+      Double_t norm2 = 0;
       for(unsigned int i=0; i<fSamplingDist.size(); i++) {
          norm += fSampleWeights[i];
+         norm2+= fSampleWeights[i]*fSampleWeights[i];
       }
       sum /= norm;
+
+      // use formula for binomial error in case of weighted events 
+      // expression can be derived using a MLE for a weighted binomial likelihood 
+      error = std::sqrt( sum2 * (1. - 2. * sum) + norm2 * sum * sum ) / norm;  
    }
+   else { 
+      error = std::sqrt(sum2); 
+   }
+
 
    return sum;
 }
+
+
 
 //_______________________________________________________
 Double_t SamplingDistribution::CDF(Double_t x) const {

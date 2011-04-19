@@ -116,13 +116,15 @@ namespace RooStats {
       }
 
    private:
-      void UpdatePValue(const SamplingDistribution* distr, Double_t *pvalue, Bool_t pIsRightTail);
+      void UpdatePValue(const SamplingDistribution* distr, Double_t &pvalue, Double_t &perror,  Bool_t pIsRightTail);
 
 
    protected:
 
       mutable Double_t fNullPValue; // p-value for the null hypothesis (small number means disfavored)
       mutable Double_t fAlternatePValue; // p-value for the alternate hypothesis (small number means disfavored)
+      mutable Double_t fNullPValueError; // error of p-value for the null hypothesis (small number means disfavored)
+      mutable Double_t fAlternatePValueError; // error of p-value for the alternate hypothesis (small number means disfavored)
       Double_t fTestStatisticData; // result of the test statistic evaluated on data
       SamplingDistribution *fNullDistr;
       SamplingDistribution *fAltDistr;

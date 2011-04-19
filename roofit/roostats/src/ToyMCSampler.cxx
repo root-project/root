@@ -223,6 +223,13 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistributionSingleWorker(RooArgSe
    // modify it from event to event
    RooArgSet *paramPoint = (RooArgSet*) paramPointIn.snapshot();
    RooArgSet *allVars = fPdf->getVariables();
+   RooArgSet *allVars2 = 0;   //importance density variables 
+   if (fImportanceDensity) { 
+      // in case of importance sampling include in allVars 
+      // also any extra variables defined for the importance sampling
+      allVars2 = fImportanceDensity->getVariables(); 
+      allVars->add(*allVars2);
+   }
    RooArgSet *saveAll = (RooArgSet*) allVars->snapshot();
 
    // create nuisance parameter points
@@ -233,7 +240,6 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistributionSingleWorker(RooArgSe
    // counts the number of toys in the limits set for adaptive sampling
    // (taking weights into account)
    Double_t toysInTails = 0.0;
-
 
    for (Int_t i = 0; i < fMaxToys; ++i) {
 
@@ -248,6 +254,7 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistributionSingleWorker(RooArgSe
       Double_t value, weight;
       if (np) { // use nuisance parameters?
 
+
          // set variables to requested parameter point
          *allVars = *paramPoint;
 
@@ -259,15 +266,26 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistributionSingleWorker(RooArgSe
          // evaluate test statistic, that only depends on null POI
          value = fTestStat->Evaluate(*toydata, *fNullPOI);
 
+
+
          if(fImportanceDensity) {
             // Importance Sampling: adjust weight
             // Source: presentation by Michael Woodroofe
 
+            // NOTE that importance density is used only when sampling also the  
+            // nuisance parameters
+            // One has to be careful not to have nuisance parameter in the snapshot 
+            // otherwise they will be not smeared in GenerateToyData
+
+
             // get the NLLs of the importance density and the pdf to sample
-            *allVars = *fImportanceSnapshot;
+            if (fImportanceSnapshot)   *allVars = *fImportanceSnapshot;
+
             RooAbsReal *impNLL = fImportanceDensity->createNLL(*toydata, RooFit::Extended(kFALSE), RooFit::CloneData(kFALSE));
             double impNLLVal = impNLL->getVal();
             delete impNLL;
+
+
             *allVars = *paramPoint;
             RooAbsReal *pdfNLL = fPdf->createNLL(*toydata, RooFit::Extended(kFALSE), RooFit::CloneData(kFALSE));
             double pdfNLLVal = pdfNLL->getVal();
@@ -275,6 +293,8 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistributionSingleWorker(RooArgSe
 
             // L(pdf) / L(imp)  =  exp( NLL(imp) - NLL(pdf) )
             weight *= exp(impNLLVal - pdfNLLVal);
+
+
          }
 
          delete toydata;
@@ -309,10 +329,12 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistributionSingleWorker(RooArgSe
       if (toysInTails >= fToysInTails  &&  i+1 >= fNToys) break;
    }
 
+
    // clean up
    *allVars = *saveAll;
    delete saveAll;
    delete allVars;
+   if (allVars2) delete allVars2;
    if(np) delete np;
 
    // return
@@ -324,6 +346,7 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistributionSingleWorker(RooArgSe
          testStatWeights,
          fTestStat->GetVarName()
       );
+
    }
    return new SamplingDistribution(
       fSamplingDistName.c_str(),
