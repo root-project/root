@@ -108,7 +108,10 @@ TSocket *TPServerSocket::Accept(UChar_t Opt)
 
    // receive the port number and number of parallel sockets from the
    // client and establish 'n' connections
-   setupSocket->Recv(port, size);
+   if (setupSocket->Recv(port, size) < 0) {
+      Error("Accept", "error receiving port number and number of sockets");
+      return 0;
+   }
 
    // Check if client is running in single mode
    if (size == 0) {
