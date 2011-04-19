@@ -40,7 +40,6 @@
 
 // Tracing utils
 #include "XrdProofdTrace.h"
-// #include "rpdconn.h"
 
 #define URLTAG "["<<fUrl.Host<<":"<<fUrl.Port<<"]"
 
