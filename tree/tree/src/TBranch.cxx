@@ -194,8 +194,9 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
    //
    //         Arrays of values are supported with the following syntax:
    //         If leaf name has the form var[nelem], where nelem is alphanumeric, then
-   //         If nelem is a leaf name, it is used as the variable size of the array.
-   //              The leaf refered to by neleme **MUST** be an int (/I).
+   //            if nelem is a leaf name, it is used as the variable size of the array, 
+   //            otherwise return 0.
+   //            The leaf refered to by neleme **MUST** be an int (/I), 
    //         If leaf name has the form var[nelem], where nelem is a digit, then
    //            it is used as the fixed size of the array.
    //         If leaf name has the form of a multi dimenantion array (eg var[nelem][nelem2])

@@ -152,8 +152,8 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    // -- Return a pointer to the counter of this leaf.
    //
    //  If leaf name has the form var[nelem], where nelem is alphanumeric, then
-   //     If nelem is a leaf name, return countval = 1 and the pointer to 
-   //          the leaf named nelem.
+   //     if nelem is a leaf name, return countval = 1 and the pointer to 
+   //          the leaf named nelem, otherwise return 0.
    //  If leaf name has the form var[nelem], where nelem is a digit, then
    //     return countval = nelem and a null pointer.
    //  If leaf name has the form of a multi dimenantion array (eg var[nelem][nelem2] 

@@ -36,6 +36,9 @@
 //     Creates a Tree with name and title.
 //
 //     Various kinds of branches can be added to a tree:
+//       A - simple structures or list of variables. (may be for C or Fortran structures)
+//       B - any object (inheriting from TObject). (we expect this option be the most frequent)
+//       C - a ClonesArray. (a specialized object for collections of same class objects)
 //
 //  ==> Case A
 //      ======
@@ -1418,8 +1421,9 @@ TBranch* TTree::Branch(const char* name, void* address, const char* leaflist, In
    //
    //         Arrays of values are supported with the following syntax:
    //         If leaf name has the form var[nelem], where nelem is alphanumeric, then
-   //         If nelem is a leaf name, it is used as the variable size of the array.
-   //              The leaf refered to by nelem **MUST** be an int (/I).
+   //         If leaf name has the form var[nelem], where nelem is alphanumeric, then
+   //            if nelem is a leaf name, it is used as the variable size of the array, 
+   //            otherwise return 0.
    //         If leaf name has the form var[nelem], where nelem is a digit, then
    //            it is used as the fixed size of the array.
    //         If leaf name has the form of a multi dimenantion array (eg var[nelem][nelem2])
@@ -3252,6 +3256,8 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    // last (right most) dimension of specifying then with the two characters '[]'
    // is equivalent.  For variable size arrays (and TClonesArray) the range
    // of the first dimension is recalculated for each entry of the tree.
+   // You can also specify the index as an expression of any other variables from the
+   // tree.
    //
    // TTree::Draw also now properly handling operations involving 2 or more arrays.
    //
@@ -3270,6 +3276,11 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  "fMatrix[][2]  - fResults[3][]"    two     on 1st dim of fMatrix and 2nd of
    //                                             fResults (at the same time)
    //  "fMatrix[][]   - fResults[][]"     six     on 1st dim then on  2nd dim
+   //
+   //  "fMatrix[][fResult[][]]"           30      on 1st dim of fMatrix then on both
+   //                                             dimensions of fResults.  The value
+   //                                             if fResults[j][k] is used as the second
+   //                                             index of fMatrix.
    //
    //
    // In summary, TTree::Draw loops through all un-specified dimensions.  To
@@ -3299,6 +3310,16 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //    for (Int_t i0; i < min(3,5); i++) {
    //       for (Int_t i1; i1 < min(3,2); i1++) {
    //          use the value of (fMatrix[i0][i1] - fMatrix[i0][i1])
+   //       }
+   //    }
+   //
+   // So the loop equivalent to "fMatrix[][fResults[][]]" is:
+   //
+   //    for (Int_t i0; i0 < 3; i0++) {
+   //       for (Int_t j2; j2 < 5; j2++) {
+   //          for (Int_t j3; j3 < 2; j3++) {
+   //             i1 = fResults[j2][j3];
+   //             use the value of fMatrix[i0][i1]
    //       }
    //    }
    //
@@ -3517,6 +3538,13 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  The option=prof is automatically selected in case of y:x>>pf
    //  where pf is an existing TProfile histogram.
    //
+   //     Making a 2D Profile histogram
+   //     ==========================
+   //  In case of a 3-Dim expression, one can generate a TProfile2D histogram
+   //  instead of a TH3F histogram by specifying option=prof or option=profs.
+   //  The option=prof is automatically selected in case of z:y:x>>pf
+   //  where pf is an existing TProfile2D histogram.
+   //
    //     Making a 5D plot using GL
    //     =========================
    //  If option GL5D is specified together with 5 variables, a 5D plot is drawn
@@ -3535,6 +3563,10 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  a candle sticks chart. With that option, the number of dimensions is
    //  arbitrary. Giving more than 4 variables without the option=para or
    //  option=candle or option=goff will produce an error.
+   //
+   //     Normalizing the ouput histogram to 1
+   //     ====================================
+   //  When option contains "norm" the output histogram is normalized to 1.
    //
    //     Saving the result of Draw to a TEventList or a TEntryList
    //     =========================================================
