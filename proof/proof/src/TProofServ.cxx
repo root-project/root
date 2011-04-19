@@ -2934,14 +2934,14 @@ Int_t TProofServ::SetupCommon()
       if (gSystem->AccessPathName(fSessionDir))
          gSystem->mkdir(fSessionDir, kTRUE);
       if (!gSystem->ChangeDirectory(fSessionDir)) {
-         Error("SetupCommon", "can not change to working directory %s",
+         Error("SetupCommon", "can not change to working directory '%s'",
                               fSessionDir.Data());
          return -1;
       }
    }
    gSystem->Setenv("PROOF_SANDBOX", fSessionDir);
    if (gProofDebugLevel > 0)
-      Info("SetupCommon", "session dir is %s", fSessionDir.Data());
+      Info("SetupCommon", "session dir is '%s'", fSessionDir.Data());
 
    // On masters, check and make sure that "queries" and "datasets"
    // directories exist
