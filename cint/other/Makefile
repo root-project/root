@@ -5,7 +5,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.clog *.log runStaticDataMemberDict.* *.times
 
 #Set the list of target to make while testing
 TEST_TARGETS += fileClose sprintfselect staticConstTest StaticDataMemberDict StaticDataMember \
-    savannah54662
+    savannah54662 assertBaseMembers
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -55,3 +55,5 @@ savannah54662.log: testCompile_C.$(DllSuf)
 savannah54662: savannah54662.log
 	$(TestDiff)
 
+assertBaseMembers:
+	$(WarnFailTest)
