@@ -7681,7 +7681,7 @@ struct G__var_array* G__searchvariable(char* varname, int varhash, G__var_array*
                }
                else {
                   if (baseclass->herit[basen]->baseaccess & G__PUBLIC) {
-                     accesslimit = G__PUBLIC;
+                     accesslimit = G__PUBLIC_PROTECTED;
                      G__incsetup_memvar(baseclass->herit[basen]->basetagnum);
                      var = G__struct.memvar[baseclass->herit[basen]->basetagnum];
 #ifdef G__VIRTUALBASE
