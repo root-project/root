@@ -367,6 +367,7 @@ TSocket::TSocket(const TSocket &s) : TNamed(s)
    fSecContext     = s.fSecContext;
    fRemoteProtocol = s.fRemoteProtocol;
    fServType       = s.fServType;
+   fTcpWindowSize  = s.fTcpWindowSize;
    fUUIDs          = 0;
    fLastUsageMtx   = 0;
    ResetBit(TSocket::kBrokenConn);
