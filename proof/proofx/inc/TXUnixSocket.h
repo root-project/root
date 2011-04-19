@@ -36,8 +36,8 @@ private:
    std::list<Int_t>  fClientIDs;
 
 public:
-   TXUnixSocket(const char *u,
-                Int_t psid = -1, Char_t ver = -1, TXHandler *handler = 0);
+   TXUnixSocket(const char *u, Int_t psid = -1, Char_t ver = -1,
+                TXHandler *handler = 0, int fd = -1);
    virtual ~TXUnixSocket() { fSessionID = -1; }
 
    Int_t GetClientID() const { return (fClientIDs.size() > 0) ? fClientIDs.front() : -1; }

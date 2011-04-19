@@ -31,7 +31,7 @@ ClassImp(TXUnixSocket)
 
 //_____________________________________________________________________________
 TXUnixSocket::TXUnixSocket(const char *url,
-                           Int_t psid, Char_t capver, TXHandler *handler)
+                           Int_t psid, Char_t capver, TXHandler *handler, int fd)
              : TXSocket(0,'i',psid,capver,0,-1,handler)
 {
    // Constructor
@@ -40,7 +40,7 @@ TXUnixSocket::TXUnixSocket(const char *url,
    if (url) {
 
       // Create connection
-      fConn = new XrdProofPhyConn(url, psid, capver, this);
+      fConn = new XrdProofPhyConn(url, psid, capver, this, 0, fd);
       if (!(fConn->IsValid())) {
          Error("TXUnixSocket", "severe error occurred while opening a connection"
                                " to server [%s]", fUrl.Data());

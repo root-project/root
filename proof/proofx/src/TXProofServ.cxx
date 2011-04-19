@@ -201,7 +201,7 @@ Int_t TXProofServ::CreateServer()
       // test session, just send the protocol version on the open pipe
       // and exit
       if (!(fSockPath = gSystem->Getenv("ROOTOPENSOCK"))) {
-         Error("CreateServer", "Socket setup by xpd undefined");
+         Error("CreateServer", "test: socket setup by xpd undefined");
          return -1;
       }
       Int_t fpw = (Int_t) strtol(fSockPath.Data(), 0, 10);
@@ -215,12 +215,26 @@ Int_t TXProofServ::CreateServer()
    } else {
       fSockPath = gEnv->GetValue("ProofServ.OpenSock", "");
       if (fSockPath.Length() <= 0) {
-         Error("CreateServer", "Socket setup by xpd undefined");
+         Error("CreateServer", "socket setup by xpd undefined");
          return -1;
       }
       TString entity = gEnv->GetValue("ProofServ.Entity", "");
       if (entity.Length() > 0)
          fSockPath.Insert(0,Form("%s/", entity.Data()));
+   }
+
+   // Get open socket descriptor, if any
+   Int_t sockfd = -1;
+   const char *opensock = gSystem->Getenv("ROOTOPENSOCK");
+   if (opensock && strlen(opensock) > 0) {
+      TSystem::ResetErrno();
+      sockfd = (Int_t) strtol(opensock, 0, 10);
+      if (TSystem::GetErrno() == ERANGE) {
+         sockfd = -1;
+         Warning("CreateServer", "socket descriptor: wrong conversion from '%s'", opensock);
+      }
+      if (sockfd > 0 && gProofDebugLevel > 0)
+         Info("CreateServer", "using open connection (descriptor %d)", sockfd);
    }
 
    // Get the sessions ID
@@ -231,7 +245,7 @@ Int_t TXProofServ::CreateServer()
    }
 
    // Call back the server
-   fSocket = new TXUnixSocket(fSockPath, psid, -1, this);
+   fSocket = new TXUnixSocket(fSockPath, psid, -1, this, sockfd);
    if (!fSocket || !(fSocket->IsValid())) {
       Error("CreateServer", "Failed to open connection to XrdProofd coordinator");
       return -1;

@@ -114,13 +114,13 @@ private:
    bool                CheckErrorStatus(XrdClientMessage *, int &, const char *, bool);
    bool                CheckResp(struct ServerResponseHeader *resp,
                                  const char *met, bool);
-   virtual void        Connect();
+   virtual void        Connect(int = -1);
    void                ReConnect();
-   virtual int         TryConnect();
+   virtual int         TryConnect(int = -1);
 
-   ESrvType            DoHandShake();
-   virtual bool        GetAccessToSrv();
-   virtual bool        Init(const char *url = 0);
+   ESrvType            DoHandShake(XrdClientPhyConnection *p = 0);
+   virtual bool        GetAccessToSrv(XrdClientPhyConnection *p = 0);
+   virtual bool        Init(const char *url = 0, int = -1);
    bool                Login();
    bool                MatchStreamID(struct ServerResponseHeader *resp);
    XrdClientMessage   *SendRecv(XPClientRequest *req,
@@ -151,14 +151,14 @@ public:
    XReqErrorType       LowWrite(XPClientRequest *, const void *, int);
 
    // Send, Recv interfaces
-   virtual int         ReadRaw(void *buf, int len);
+   virtual int         ReadRaw(void *buf, int len, XrdClientPhyConnection *p = 0);
    virtual XrdClientMessage *ReadMsg();
    XrdClientMessage   *SendReq(XPClientRequest *req, const void *reqData,
                                char **answData, const char *CmdName,
                                bool notifyerr = 1);
    virtual void        SetAsync(XrdClientAbsUnsolMsgHandler *uh, XrdProofConnSender_t = 0, void * = 0);
    void                SetSID(kXR_char *sid);
-   virtual int         WriteRaw(const void *buf, int len);
+   virtual int         WriteRaw(const void *buf, int len, XrdClientPhyConnection *p = 0);
 
    static void         GetRetryParam(int &maxtry, int &timewait);
    static void         SetRetryParam(int maxtry = 5, int timewait = 2);

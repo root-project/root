@@ -151,7 +151,7 @@ void XrdProofConn::SetRetryParam(int maxtry, int timewait)
 }
 
 //_____________________________________________________________________________
-bool XrdProofConn::Init(const char *url)
+bool XrdProofConn::Init(const char *url, int)
 {
    // Initialization
    XPDLOC(ALL, "Conn::Init")
@@ -192,7 +192,7 @@ bool XrdProofConn::Init(const char *url)
 }
 
 //_____________________________________________________________________________
-void XrdProofConn::Connect()
+void XrdProofConn::Connect(int)
 {
    // Run the connection attempts: the result is stored in fConnected
    XPDLOC(ALL, "Conn::Connect")
@@ -322,7 +322,7 @@ void XrdProofConn::ReConnect()
 }
 
 //_____________________________________________________________________________
-int XrdProofConn::TryConnect()
+int XrdProofConn::TryConnect(int)
 {
    // Connect to remote server
    XPDLOC(ALL, "Conn::TryConnect")
@@ -830,15 +830,16 @@ bool XrdProofConn::CheckErrorStatus(XrdClientMessage *mex, int &Retry,
 }
 
 //_____________________________________________________________________________
-bool XrdProofConn::GetAccessToSrv()
+bool XrdProofConn::GetAccessToSrv(XrdClientPhyConnection *p)
 {
    // Gets access to the connected server.
    // The login and authorization steps are performed here.
    XPDLOC(ALL, "Conn::GetAccessToSrv")
 
+   XrdClientPhyConnection *phyconn = (p) ? p : fPhyConn;
    // Now we are connected and we ask for the kind of the server
-   {  XrdClientPhyConnLocker pcl(fPhyConn);
-      fServerType = DoHandShake();
+   {  XrdClientPhyConnLocker pcl(phyconn);
+      fServerType = DoHandShake(p);
    }
 
    switch (fServerType) {
@@ -848,7 +849,7 @@ bool XrdProofConn::GetAccessToSrv()
       TRACE(DBG,"found server at "<<URLTAG);
 
       // Now we can start the reader thread in the physical connection, if needed
-      fPhyConn->StartReader();
+      if (phyconn == fPhyConn) fPhyConn->StartReader();
       fPhyConn->fServerType = kSTBaseXrootd;
       break;
 
@@ -858,12 +859,12 @@ bool XrdProofConn::GetAccessToSrv()
       kXR_int32 dum[2];
       dum[0] = (kXR_int32)htonl(0);
       dum[1] = (kXR_int32)htonl(2034);
-      WriteRaw(&dum[0], sizeof(dum));
+      WriteRaw(&dum[0], sizeof(dum), p);
       Close("P");
       return 0;
 
    case kSTError:
-      TRACE(XERR,"handShake failed with server "<<URLTAG);
+      TRACE(XERR,"handshake failed with server "<<URLTAG);
       Close("P");
       return 0;
 
@@ -873,7 +874,7 @@ bool XrdProofConn::GetAccessToSrv()
       return 0;
    }
 
-   bool ok = (fPhyConn->IsLogged() == kNo) ? Login() : 1;
+   bool ok = (phyconn == fPhyConn && fPhyConn->IsLogged() == kNo) ? Login() : 1;
    if (!ok) {
       TRACE(XERR,"client could not login at "<<URLTAG);
       return ok;
@@ -884,38 +885,46 @@ bool XrdProofConn::GetAccessToSrv()
 }
 
 //_____________________________________________________________________________
-int XrdProofConn::WriteRaw(const void *buf, int len)
+int XrdProofConn::WriteRaw(const void *buf, int len, XrdClientPhyConnection *phyconn)
 {
    // Low level write call
 
-   if (fgConnMgr)
+   if (phyconn && phyconn->IsValid()) {
+      phyconn->WriteRaw(buf, len, 0);
+   } else if (fgConnMgr) {
       return fgConnMgr->WriteRaw(fLogConnID, buf, len, 0);
-
+   }
+   
    // No connection open
    return -1;
 }
 
 //_____________________________________________________________________________
-int XrdProofConn::ReadRaw(void *buf, int len)
+int XrdProofConn::ReadRaw(void *buf, int len, XrdClientPhyConnection *phyconn)
 {
    // Low level receive call
 
-   if (fgConnMgr)
+   if (phyconn && phyconn->IsValid()) {
+      phyconn->ReadRaw(buf, len);
+   } else if (fgConnMgr) {
       return fgConnMgr->ReadRaw(fLogConnID, buf, len);
+   }
 
    // No connection open
    return -1;
 }
 
 //_____________________________________________________________________________
-XrdProofConn::ESrvType XrdProofConn::DoHandShake()
+XrdProofConn::ESrvType XrdProofConn::DoHandShake(XrdClientPhyConnection *p)
 {
    // Performs initial hand-shake with the server in order to understand which
    // kind of server is there at the other side
    XPDLOC(ALL, "Conn::DoHandShake")
 
+   XrdClientPhyConnection *phyconn = (p) ? p : fPhyConn;
+   
    // Nothing to do if already connected
-   if (fPhyConn->fServerType == kSTBaseXrootd) {
+   if (phyconn->fServerType == kSTBaseXrootd) {
 
       TRACE(DBG,"already connected to a PROOF server "<<URLTAG);
       return kSTXProofd;
@@ -931,7 +940,7 @@ XrdProofConn::ESrvType XrdProofConn::DoHandShake()
    int len = sizeof(initHS);
    TRACE(HDBG, "step 1: sending "<<len<<" bytes to server "<<URLTAG);
 
-   int writeCount = WriteRaw(&initHS, len);
+   int writeCount = WriteRaw(&initHS, len, p);
    if (writeCount != len) {
       TRACE(XERR, "sending "<<len<<" bytes to server "<<URLTAG);
       return kSTError;
@@ -941,7 +950,7 @@ XrdProofConn::ESrvType XrdProofConn::DoHandShake()
    kXR_int32 dum[2];
    dum[0] = (kXR_int32)htonl(4);
    dum[1] = (kXR_int32)htonl(2012);
-   writeCount = WriteRaw(&dum[0], sizeof(dum));
+   writeCount = WriteRaw(&dum[0], sizeof(dum), p);
    if (writeCount != sizeof(dum)) {
       TRACE(XERR, "sending "<<sizeof(dum)<<" bytes to server "<<URLTAG);
       return kSTError;
@@ -954,7 +963,7 @@ XrdProofConn::ESrvType XrdProofConn::DoHandShake()
 
    // Read returns the return value of TSocket->RecvRaw... that returns the
    // return value of recv (unix low level syscall)
-   int readCount = ReadRaw(&type, len); // 4(2+2) bytes
+   int readCount = ReadRaw(&type, len, p); // 4(2+2) bytes
    if (readCount != len) {
       if (readCount == (int)TXSOCK_ERR_TIMEOUT) {
          TRACE(ALL,"-----------------------");
@@ -983,7 +992,7 @@ XrdProofConn::ESrvType XrdProofConn::DoHandShake()
       len = sizeof(xbody);
       TRACE(HDBG, "step 3: reading "<<len<<" bytes from server "<<URLTAG);
 
-      readCount = ReadRaw(&xbody, len); // 12(4+4+4) bytes
+      readCount = ReadRaw(&xbody, len, p); // 12(4+4+4) bytes
       if (readCount != len) {
          TRACE(XERR, "reading "<<len<<" bytes from server "<<URLTAG);
          return kSTError;

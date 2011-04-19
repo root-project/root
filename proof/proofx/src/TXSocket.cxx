@@ -1068,7 +1068,7 @@ Bool_t TXSocket::Create(Bool_t attach)
                                               &answData, "TXSocket::Create", 0);
       struct ServerResponseBody_Protocol *srvresp = (struct ServerResponseBody_Protocol *)answData;
 
-      // In any, the URL the data pool entry point will be stored here
+      // If any, the URL the data pool entry point will be stored here
       fBuffer = "";
       if (xrsp) {
 
@@ -2081,9 +2081,13 @@ Int_t TXSocket::Reconnect()
                         fUrl.Data(), fConn->GetLogConnID());
    }
 
-   if (fXrdProofdVersion < 1005) {
-      Info("Reconnect","%p: server does not support reconnections (protocol: %d < 1005)",
-                       this, fXrdProofdVersion);
+   Int_t tryreconnect = gEnv->GetValue("TXSocket.Reconnect", 1);
+   if (tryreconnect == 0 || fXrdProofdVersion < 1005) {
+      if (tryreconnect == 0)
+         Info("Reconnect","%p: reconnection attempts explicitely disabled!", this);
+      else
+         Info("Reconnect","%p: server does not support reconnections (protocol: %d < 1005)",
+                          this, fXrdProofdVersion);
       return -1;
    }
 

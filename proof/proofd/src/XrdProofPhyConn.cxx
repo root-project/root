@@ -40,12 +40,13 @@
 
 // Tracing utils
 #include "XrdProofdTrace.h"
+#include "rpdconn.h"
 
 #define URLTAG "["<<fUrl.Host<<":"<<fUrl.Port<<"]"
 
 //_____________________________________________________________________________
 XrdProofPhyConn::XrdProofPhyConn(const char *url, int psid, char capver,
-                                 XrdClientAbsUnsolMsgHandler *uh, bool tcp)
+                                 XrdClientAbsUnsolMsgHandler *uh, bool tcp, int fd)
    : XrdProofConn(0, 'i', psid, capver, uh)
 {
    // Constructor. Open a direct connection (Unix or Tcp) to a remote
@@ -58,7 +59,7 @@ XrdProofPhyConn::XrdProofPhyConn(const char *url, int psid, char capver,
    fMutex = new XrdSysRecMutex();
 
    // Initialization
-   if (url && !Init(url)) {
+   if (url && !Init(url, fd)) {
       TRACE(XERR, "severe error occurred while"
                   " opening a connection" << " to server "<<URLTAG);
       return;
@@ -66,7 +67,7 @@ XrdProofPhyConn::XrdProofPhyConn(const char *url, int psid, char capver,
 }
 
 //_____________________________________________________________________________
-bool XrdProofPhyConn::Init(const char *url)
+bool XrdProofPhyConn::Init(const char *url, int fd)
 {
    // Initialization
    XPDLOC(ALL, "PhyConn::Init")
@@ -118,14 +119,14 @@ bool XrdProofPhyConn::Init(const char *url)
    }
 
    // Run the connection attempts: the result is stored in fConnected
-   Connect();
+   Connect(fd);
 
    // We are done
    return fConnected;
 }
 
 //_____________________________________________________________________________
-void XrdProofPhyConn::Connect()
+void XrdProofPhyConn::Connect(int fd)
 {
    // Run the connection attempts: the result is stored in fConnected
    XPDLOC(ALL, "PhyConn::Connect")
@@ -141,7 +142,7 @@ void XrdProofPhyConn::Connect()
    for (; (i < maxTry) && (!fConnected); i++) {
 
       // Try connection
-      logid = TryConnect();
+      logid = TryConnect(fd);
 
       // We are connected to a host. Let's handshake with it.
       if (fConnected) {
@@ -187,7 +188,7 @@ void XrdProofPhyConn::Connect()
 }
 
 //_____________________________________________________________________________
-int XrdProofPhyConn::TryConnect()
+int XrdProofPhyConn::TryConnect(int fd)
 {
    // Connect to remote server
    XPDLOC(ALL, "PhyConn::TryConnect")
@@ -203,7 +204,18 @@ int XrdProofPhyConn::TryConnect()
 
    // Connect
    bool isUnix = (fTcp) ? 0 : 1;
+#ifdef XRCPHYCNOREUSE
+   if (fd > 0) {
+      TRACE(XERR, "Reusing an existing connection (descriptor "<<fd<<
+                  ") not supported by the xroot client version (requires xrootd >= 3.0.3)");
+      fLogConnID = -1;
+      fConnected = 0;
+      return -1;
+   }
    if (!(fPhyConn->Connect(fUrl, isUnix))) {
+#else
+   if (!(fPhyConn->Connect(fUrl, isUnix, fd))) {
+#endif
       TRACE(XERR, "creating "<<ctype[fTcp]<<" connection to "<<URLTAG);
       fLogConnID = -1;
       fConnected = 0;
@@ -262,7 +274,7 @@ XrdClientMessage *XrdProofPhyConn::ReadMsg()
 }
 
 //_____________________________________________________________________________
-bool XrdProofPhyConn::GetAccessToSrv()
+bool XrdProofPhyConn::GetAccessToSrv(XrdClientPhyConnection *)
 {
    // Gets access to the connected server.
    // The login and authorization steps are performed here.
@@ -270,7 +282,7 @@ bool XrdProofPhyConn::GetAccessToSrv()
 
    // Now we are connected and we ask for the kind of the server
    { XrdClientPhyConnLocker pcl(fPhyConn);
-   fServerType = DoHandShake();
+      fServerType = DoHandShake();
    }
 
    switch (fServerType) {
@@ -284,7 +296,7 @@ bool XrdProofPhyConn::GetAccessToSrv()
       break;
 
    case kSTError:
-      TRACE(XERR, "handShake failed with server "<<URLTAG);
+      TRACE(XERR, "handshake failed with server "<<URLTAG);
       Close();
       return 0;
 
@@ -308,7 +320,7 @@ bool XrdProofPhyConn::GetAccessToSrv()
 
 
 //_____________________________________________________________________________
-int XrdProofPhyConn::WriteRaw(const void *buf, int len)
+int XrdProofPhyConn::WriteRaw(const void *buf, int len, XrdClientPhyConnection *)
 {
    // Low level write call
 
@@ -320,7 +332,7 @@ int XrdProofPhyConn::WriteRaw(const void *buf, int len)
 }
 
 //_____________________________________________________________________________
-int XrdProofPhyConn::ReadRaw(void *buf, int len)
+int XrdProofPhyConn::ReadRaw(void *buf, int len, XrdClientPhyConnection *)
 {
    // Low level write call
 
