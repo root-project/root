@@ -2121,9 +2121,9 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
                // case both histogram have zero bin contents
                // (use square of bin1 to avoid numerical errors)
-                if ( (bin1*bin1 == 0) && (bin2*bin2 == 0) ) {	 
-                   --ndf;  //no data means one degree of freedom less	 
-                   continue;	 
+                if ( (bin1*bin1 == 0) && (bin2*bin2 == 0) ) {
+                   --ndf;  //no data means one degree of freedom less
+                   continue;
                 }
 
                 if ( (err1 == 0) && (err2 == 0) ) {
@@ -6339,11 +6339,11 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out <<"   "<<endl;
    out <<"   "<< ClassName() <<" *";
 
-   //histogram pointer has by default teh histogram name.
+   //histogram pointer has by default the histogram name.
    //however, in case histogram has no directory, it is safer to add a incremental suffix
    static Int_t hcounter = 0;
    TString histName = GetName();
-   if (!fDirectory && !histName.Contains("Graph")) {
+   if (!fDirectory && !histName.Contains("Graph") && !histName.Contains("_stack_")) {
       hcounter++;
       histName += "__";
       histName += hcounter;

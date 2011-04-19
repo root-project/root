@@ -842,6 +842,7 @@ void THStack::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    if (fHistogram) {
       frameNumber++;
       TString hname = fHistogram->GetName();
+      hname += "_stack_";
       hname += frameNumber;
       fHistogram->SetName(hname.Data());
       fHistogram->SavePrimitive(out,"nodraw");
