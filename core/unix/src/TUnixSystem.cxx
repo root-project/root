@@ -2386,8 +2386,8 @@ void TUnixSystem::StackTrace()
       }
 
       delete [] addr2line;
-      delete [] filter;
    }
+   delete [] filter;
 #elif defined(PROG_PSTACK)                            // solaris
 # ifdef PROG_CXXFILT
 #  define CXXFILTER " | " PROG_CXXFILT
