@@ -82,19 +82,22 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
    def test06StaticFunctionCall( self ):
       """Test call to static function."""
 
-      c1 = TString.Class()
+      c1 = TROOT.Class()
       self.assert_( not not c1 )
 
-      s = TString()
-      c2 = s.Class()
+      c2 = gROOT.Class()
 
       self.assertEqual( c1, c2 )
 
-      old = s.InitialCapacity( 20 )
-      self.assertEqual( 20, TString.InitialCapacity( old ) )
+      old = gROOT.GetDirLevel()
+      TROOT.SetDirLevel( 2 )
+      self.assertEqual( 2, gROOT.GetDirLevel() )
+      gROOT.SetDirLevel( old )
 
-      old = TString.InitialCapacity( 20 )
-      self.assertEqual( 20, s.InitialCapacity( old ) )
+      old = TROOT.GetDirLevel()
+      gROOT.SetDirLevel( 3 )
+      self.assertEqual( 3, TROOT.GetDirLevel() )
+      TROOT.SetDirLevel( old )
 
    def test07Namespaces( self ):
       """Test access to namespaces and inner classes"""
