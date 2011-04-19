@@ -188,7 +188,7 @@ public:
          TString* s = (TString*)ptr();
          if ( vsn3 )  {
             if ( !s ) s = new TString();
-            s->Replace(0, s->Length(), 0, 0);
+            else s->Clear();
             s->Streamer(b);
             set(s);
             return;
