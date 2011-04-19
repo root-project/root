@@ -419,8 +419,8 @@ class vector {
 #endif
 
 #if (!defined(G__GNUC)) || (G__GNUC>=3) 
-  T& at(size_type n);
-  const T& at(size_type n) const;
+  reference at(size_type n);
+  const_reference at(size_type n) const;
 #endif
   iterator begin(void) ;
   iterator end(void) ;
@@ -438,8 +438,8 @@ class vector {
   void resize(size_type sz, T c) ;
   size_type capacity(void) const ;
   bool empty(void) const ;
-  T& operator[](size_type n) ;
-  const T& operator[](size_type n) const;
+  reference operator[](size_type n) ;
+  const_reference operator[](size_type n) const;
   vector(void) ;
   vector(size_type n,const T& value=T()) ;
   vector(const vector& x) ;
