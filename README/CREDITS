@@ -81,6 +81,10 @@ N: Denis Bertini
 E: dbertini@lxg0402.gsi.de
 D: changes needed so TCanvas can be embedded in Qt GUI, memory leak checker
 
+N: Dario Berzano
+E: dario.berzano@cern.ch
+D: Dataset stager daemon and other PROOF related contributions
+
 N: Adrian Bevan
 E: bevan@slac.stanford.edu
 D: class TFeldmanCousins
