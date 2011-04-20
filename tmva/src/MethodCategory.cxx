@@ -646,8 +646,12 @@ const std::vector<Float_t> &TMVA::MethodCategory::GetRegressionValues()
       Log() << kFATAL << "The defined categories are not disjoint." << Endl;
       return MethodBase::GetRegressionValues();
    }
-
+   MethodBase* meth = dynamic_cast<MethodBase*>(fMethods[methodToUse]);
+   if (!meth){
+      Log() << kFATAL << "method not found in Category Regression method" << Endl;
+      return MethodBase::GetRegressionValues();
+   }
    // get mva value from the suitable sub-classifier
-   return dynamic_cast<MethodBase*>(fMethods[methodToUse])->GetRegressionValues();
+   return meth->GetRegressionValues();
 }
 

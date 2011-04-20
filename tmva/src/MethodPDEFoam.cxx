@@ -915,7 +915,9 @@ TMVA::PDEFoam* TMVA::MethodPDEFoam::InitFoam(TString foamcaption, EFoamType ft, 
 	 break;
       }
    }
-   pdefoam->SetDensity(density);
+
+   if (pdefoam) pdefoam->SetDensity(density);
+   else Log() << kFATAL << "PDEFoam pointer not set, exiting.." << Endl;
 
    // create pdefoam kernel
    fKernelEstimator = CreatePDEFoamKernel();

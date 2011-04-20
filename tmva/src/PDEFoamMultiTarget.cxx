@@ -80,7 +80,7 @@ TMVA::PDEFoamMultiTarget::PDEFoamMultiTarget(const PDEFoamMultiTarget &From)
 }
 
 //_____________________________________________________________________
-std::vector<Float_t> TMVA::PDEFoamMultiTarget::GetCellValue(std::map<Int_t, Float_t>& xvec, ECellValue /*cv*/)
+std::vector<Float_t> TMVA::PDEFoamMultiTarget::GetCellValue(const std::map<Int_t, Float_t>& xvec, ECellValue /*cv*/)
 {
    // This function is overridden from PDFEFoam.  It returns all
    // regression targets (in order), given an untransformed event

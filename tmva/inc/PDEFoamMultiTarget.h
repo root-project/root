@@ -57,7 +57,7 @@ namespace TMVA
       virtual ~PDEFoamMultiTarget() {};      // Default destructor
 
       // overridden from PDEFoam: extract the targets from the foam
-      virtual std::vector<Float_t> GetCellValue(std::map<Int_t, Float_t>&, ECellValue);
+      virtual std::vector<Float_t> GetCellValue(const std::map<Int_t, Float_t>&, ECellValue);
       using PDEFoam::GetCellValue;
 
       // ---------- ROOT class definition

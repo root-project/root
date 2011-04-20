@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Asen Christov, Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss, Jan Therhaag
+// Author: Asen Christov, Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss, Jan Therhaag, Eckhard von Toerne
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -14,10 +14,11 @@
  *      Asen Christov   <christov@physik.uni-freiburg.de> - Freiburg U., Germany  *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Jan Therhaag       <Jan.Therhaag@cern.ch>     - U of Bonn, Germany        *
+ *      Eckhard von Toerne <evt@physik.uni-bonn.de>   - U of Bonn, Germany        *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
+ * Copyright (c) 2005-2011:                                                       *
  *      CERN, Switzerland                                                         *
  *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
@@ -1050,8 +1051,8 @@ istream& TMVA::operator>> ( istream& istr, PDF& pdf )
    // read the tree from an istream
    TString devnullS;
    Int_t   valI;
-   Int_t   nbins;
-   Float_t xmin, xmax;
+   Int_t   nbins=-1; // default binning will cause an exit
+   Float_t xmin=-1., xmax=-1.;
    TString hname="_original";
    Bool_t doneReading = kFALSE;
    while (!doneReading) {
@@ -1081,6 +1082,10 @@ istream& TMVA::operator>> ( istream& istr, PDF& pdf )
    hnameSmooth.ReplaceAll( "_original", "_smoothed" );
 
    // recreate the original hist
+   if (nbins==-1) {
+      std::cout << "PDF, trying to create a histogram without defined binning"<< std::endl;
+      std::exit(1);
+   }
    TH1* newhist = new TH1F( hname,hname, nbins, xmin, xmax );
    newhist->SetDirectory(0);
    Float_t val;
