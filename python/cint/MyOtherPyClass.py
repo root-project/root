@@ -17,3 +17,9 @@ class MyOtherPyClass:
    def duck( self ):
       print 'quack'
 
+
+# include a class that may interfere with the previous one due to
+# same-named method in it
+class MyYetAnotherPyClass:
+   def hop( self ):
+      print 'another hop'
