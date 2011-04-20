@@ -367,8 +367,8 @@ readline(const char* prompt, bool newline) {
 
    history(gHistory, &ev, H_GETSIZE);
    history_length = ev.fNum;
-
-   if (ret && !strchr(ret, '\a') && ret[strlen(ret) - 1] == '\n') {
+   if (ret && (!*ret ||
+               (!strchr(ret, '\a') && ret[strlen(ret) - 1] == '\n'))) {
       tty_cookedmode(gEditLine);
    }
    /* LINTED const cast */
