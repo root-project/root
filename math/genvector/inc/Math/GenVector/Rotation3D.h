@@ -272,6 +272,7 @@ public:
       and another to the end of the desired data (9 past start).
    */
    template<class IT>
+
    void GetComponents(IT begin, IT end) const {
       for (int i = 0; i <9; ++i) { 
          *begin = fM[i];
