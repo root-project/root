@@ -452,6 +452,11 @@ check_library() {
             i64=`echo $i | sed -e 's|lib$|lib64|' -e 's|lib/|lib64/|'`
             i="$i64 $i"
         fi
+        # look first in the DEB_HOST_MULTIARCH directories
+        if test "x$debmultiarch" != "x" ; then
+            i64=`echo $i | sed "s|\(lib\)$|\1/$debmultiarch|"`
+            i="$i64 $i"
+        fi
         # look only in the lib64 directories
         if test "x$checkonlylib64" = "xyes" ; then
             i64=`echo $i | sed -e 's|lib$|lib64|' -e 's|lib/|lib64/|'`
@@ -1630,6 +1635,12 @@ if test "x$platform" = "xmacosx" ; then
    if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 6 ]; then
       macosx106=yes
    fi
+fi
+
+if `$cwhich dpkg-architecture > /dev/null 2>&1` ; then
+    logmsg "Checking dpkg-architecture"
+    debmultiarch=`dpkg-architecture -qDEB_HOST_MULTIARCH`
+    logmsg "$debmultiarch"
 fi
 
 ######################################################################
