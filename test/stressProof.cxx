@@ -580,7 +580,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
       printf("******************************************************************\n");
    }
    if (test > 0 && gverbose > 0) {
-      if (test < 16) {
+      if (test < 18) {
          printf("*  Running only test %2d (and related tests)                     **\n", test);
          printf("******************************************************************\n");
       } else {
@@ -2202,6 +2202,10 @@ Int_t PT_AdminFunc(void *)
    testLsLine.Remove(0, testLsLine.Index(".proof-tutorial")); // the first part of <tmp> maybe sligthly different
    if (!macroLs.GetLineWith(testLsLine)) {
       printf("\n >>> Test failure: Ls: output not consistent (line: '%s')\n", testLsLine.Data());
+      printf(" >>> Log file: '%s'\n", testLs.Data());
+      printf("+++ BOF +++\n");
+      macroLs.Print();
+      printf("+++ EOF +++\n");
       return -1;
    }
    PutPoint();
