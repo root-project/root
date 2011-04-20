@@ -294,6 +294,7 @@ void TStyle::BuildStyles()
    new TStyle("Video",  "Style for video presentation histograms");
    new TStyle("Pub",    "Style for Publications");
    new TStyle("Classic","Classic Style");
+   new TStyle("Default","Equivalent to Classic");
    new TStyle("Clean",  "Clean Style");
    delete col;
 }
