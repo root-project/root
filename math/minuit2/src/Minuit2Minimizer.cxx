@@ -571,31 +571,33 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
    // debug result of Minos 
    // print error message in Minos
 
+   const char * par_name = fState.Name(i);
+
    if (debugLevel >= 1) {
       if (runLower) { 
          if (!me.LowerValid() )  
-            std::cout << "Minos:  Invalid lower error for parameter " << i << std::endl; 
+            std::cout << "Minos:  Invalid lower error for parameter " << par_name << std::endl; 
          if(me.AtLowerLimit()) 
-            std::cout << "Minos:  Parameter  is at Lower limit."<<std::endl;
+            std::cout << "Minos:  Parameter : " << par_name << "  is at Lower limit."<<std::endl;
          if(me.AtLowerMaxFcn())
             std::cout << "Minos:  Maximum number of function calls exceeded when running for lower error" <<std::endl;   
          if(me.LowerNewMin() )
             std::cout << "Minos:  New Minimum found while running Minos for lower error" <<std::endl;     
 
-         if (debugLevel > 1)  std::cout << "Minos: Lower error for parameter " << i << "  :  " << me.Lower() << std::endl; 
+         if (debugLevel > 1)  std::cout << "Minos: Lower error for parameter " << par_name << "  :  " << me.Lower() << std::endl; 
 
       }
       if (runUpper) {          
          if (!me.UpperValid() )  
-            std::cout << "Minos:  Invalid upper error for parameter " << i << std::endl; 
+            std::cout << "Minos:  Invalid upper error for parameter " << par_name << std::endl; 
          if(me.AtUpperLimit()) 
-            std::cout << "Minos:  Parameter  is at Upper limit."<<std::endl;
+            std::cout << "Minos:  Parameter " << par_name << " is at Upper limit."<<std::endl;
          if(me.AtUpperMaxFcn())
             std::cout << "Minos:  Maximum number of function calls exceeded when running for upper error" <<std::endl;   
          if(me.UpperNewMin() )
             std::cout << "Minos:  New Minimum found while running Minos for upper error" <<std::endl;              
 
-         if (debugLevel > 1)  std::cout << "Minos: Upper error for parameter " << i << "  :  " << me.Upper() << std::endl;
+         if (debugLevel > 1)  std::cout << "Minos: Upper error for parameter " << par_name << "  :  " << me.Upper() << std::endl;
       }
       
    }

@@ -78,6 +78,12 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    result.reserve(8);
    
    result.push_back( seed.State() );
+
+   int printLevel = MnPrint::Level();
+   if (printLevel >1) {
+      std::cout << "Fumili: start iterating until Edm is < " << edmval << std::endl;
+      MnPrint::PrintState(std::cout, seed.State(), "Fumili: Initial state  "); 
+   }
    
    // do actual iterations
    
@@ -126,6 +132,10 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
          
       MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo(),maxfcn);
       result.push_back( st );
+
+      if (printLevel > 1) {            
+         MnPrint::PrintState(std::cout, st, "Fumili: After Hessian  "); 
+      }
          
 
       // check edm 
@@ -240,7 +250,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    // initial lambda Value
    double lambda = 0.001; 
    
-   
+   int printLevel = MnPrint::Level();
    do {   
       
       //     const MinimumState& s0 = result.back();
@@ -364,6 +374,10 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
 #endif
             
       result.push_back(MinimumState(p, e, g, edm, fcn.NumOfCalls())); 
+
+      if (printLevel > 1) {
+         MnPrint::PrintState(std::cout, result.back(), "Fumili: Iteration # ",result.size()); 
+      }
       
       
       edm *= (1. + 3.*e.Dcovar());

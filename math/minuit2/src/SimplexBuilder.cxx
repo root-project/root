@@ -193,6 +193,11 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
    
    
    MinimumState st(MinimumParameters(pbar, dirin, ybar), simplex.Edm(), mfcn.NumOfCalls());
+
+#ifdef WARNINGMSG
+   if (MnPrint::Level()>1)
+      MnPrint::PrintState(std::cout,st,"Simplex: Final iteration");
+#endif
    
    if(mfcn.NumOfCalls() > maxfcn) {
 #ifdef WARNINGMSG

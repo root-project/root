@@ -174,27 +174,29 @@ MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int ma
    MnFunctionCross cross(fFCN, upar, fMinimum.Fval(), fStrategy);
    
    MnCross aopt = cross(para, xmid, xdir, toler, maxcalls);
+
    
 #ifdef DEBUG
    std::cout<<"----- MnMinos: aopt found from MnFunctionCross = "<<aopt.Value()<<std::endl << std::endl;
 #endif
    
 #ifdef WARNINGMSG
+   const char * par_name = upar.Name(par);
    if(aopt.AtMaxFcn())
-      MN_INFO_VAL2("MnMinos maximum number of function calls exceeded for Parameter ",par);
+      MN_INFO_VAL2("MnMinos maximum number of function calls exceeded for Parameter ",par_name);
    if(aopt.NewMinimum())
-      MN_INFO_VAL2("MnMinos new Minimum found while looking for Parameter ",par);
+      MN_INFO_VAL2("MnMinos new Minimum found while looking for Parameter ",par_name);
    if (direction ==1) {
       if(aopt.AtLimit())  
-         MN_INFO_VAL2("MnMinos Parameter is at Upper limit.",par);
+         MN_INFO_VAL2("MnMinos Parameter is at Upper limit.",par_name);
       if(!aopt.IsValid()) 
-         MN_INFO_VAL2("MnMinos could not find Upper Value for Parameter ",par);
+         MN_INFO_VAL2("MnMinos could not find Upper Value for Parameter ",par_name);
    }
    else {  
       if(aopt.AtLimit())  
-         MN_INFO_VAL2("MnMinos Parameter is at Lower limit.",par);
+         MN_INFO_VAL2("MnMinos Parameter is at Lower limit.",par_name);
       if(!aopt.IsValid()) 
-         MN_INFO_VAL2("MnMinos could not find Lower Value for Parameter ",par);
+         MN_INFO_VAL2("MnMinos could not find Lower Value for Parameter ",par_name);
    }
 #endif
    

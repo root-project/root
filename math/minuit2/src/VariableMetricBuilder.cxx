@@ -82,7 +82,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    // do actual iterations
    if (printLevel >1) {
       std::cout << "VariableMetric: start iterating until Edm is < " << edmval << std::endl;
-      MnPrint::PrintState(std::cout, seed.State(), "VariableMetric: Initial state"); 
+      MnPrint::PrintState(std::cout, seed.State(), "VariableMetric: Initial state  "); 
    }
    
    
@@ -136,7 +136,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          result.push_back( st );
 
          if (printLevel > 1) {            
-            MnPrint::PrintState(std::cout, st, "VariableMetric: After Hessian"); 
+            MnPrint::PrintState(std::cout, st, "VariableMetric: After Hessian  "); 
          }
 
          

@@ -128,6 +128,8 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradie
 #ifdef WARNINGMSG
             MN_INFO_MSG("MnSeedGenerator:gradient discrepancy of external Parameter too large");
             int externalParameterIndex = st.Trafo().ExtOfInt(i); 
+            const char * parameter_name = st.Trafo().Name(externalParameterIndex);
+            MN_INFO_VAL(parameter_name);
             MN_INFO_VAL(externalParameterIndex);
             MN_INFO_VAL2("internal",i);
 #endif
