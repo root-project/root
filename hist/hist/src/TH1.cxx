@@ -7293,13 +7293,12 @@ void TH1::SetBuffer(Int_t buffersize, Option_t * /*option*/)
 //______________________________________________________________________________
 void TH1::SetContour(Int_t  nlevels, const Double_t *levels)
 {
-   //   -*-*-*-*-*-*Set the number and values of contour levels*-*-*-*-*-*-*-*-*
-   //               ===========================================
+   //  Set the number and values of contour levels.
    //
-   //  By default the number of contour levels is set to 20.
+   //  By default the number of contour levels is set to 20. The contours values
+   //  in the array "levels" should be specify un increasing order.
    //
    //  if argument levels = 0 or missing, equidistant contours are computed
-   //
 
    Int_t level;
    ResetBit(kUserContour);
@@ -7338,8 +7337,8 @@ void TH1::SetContour(Int_t  nlevels, const Double_t *levels)
 //______________________________________________________________________________
 void TH1::SetContourLevel(Int_t level, Double_t value)
 {
-   //   -*-*-*-*-*-*-*-*-*Set value for one contour level*-*-*-*-*-*-*-*-*-*-*-*
-   //                     ===============================
+   // Set value for one contour level.
+
    if (level <0 || level >= fContour.fN) return;
    SetBit(kUserContour);
    fContour.fArray[level] = value;
