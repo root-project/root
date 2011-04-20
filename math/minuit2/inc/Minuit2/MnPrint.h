@@ -68,6 +68,24 @@ std::ostream& operator<<(std::ostream&, const MinosError&);
 class ContoursError;
 std::ostream& operator<<(std::ostream&, const ContoursError&);
 
+      
+// class define static print level values 
+
+class MnPrint { 
+
+public:
+   // set print level and return the previous one
+   static int SetLevel(int level);
+   
+   // return current level
+   static int Level(); 
+   
+   // print current minimization state 
+   static void PrintState(std::ostream & os, const MinimumState &, const char * msg, int iter = -1);
+};
+
+
+
   }  // namespace Minuit2
 
 }  // namespace ROOT

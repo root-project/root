@@ -25,10 +25,10 @@
 #include "Minuit2/MnHesse.h"
 
 //#define DEBUG 
-
-#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h" 
-#endif
+
+// #if defined(DEBUG) || defined(WARNINGMSG)
+// #endif
 
 
 
@@ -49,6 +49,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    // LM: change factor to 2E-3 to be consistent with F77Minuit
    edmval *= 0.002;    
    
+   int printLevel = MnPrint::Level();
    
 #ifdef DEBUG
    std::cout<<"VariableMetricBuilder convergence when edm < "<<edmval<<std::endl;
@@ -79,6 +80,10 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    result.push_back( seed.State() );
    
    // do actual iterations
+   if (printLevel >1) {
+      std::cout << "VariableMetric: start iterating until Edm is < " << edmval << std::endl;
+      MnPrint::PrintState(std::cout, seed.State(), "VariableMetric: Initial state"); 
+   }
    
    
    // try first with a maxfxn = 80% of maxfcn 
@@ -129,6 +134,11 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          
          MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo(),maxfcn);
          result.push_back( st );
+
+         if (printLevel > 1) {            
+            MnPrint::PrintState(std::cout, st, "VariableMetric: After Hessian"); 
+         }
+
          
          // check new edm 
          edm = st.Edm();
@@ -213,6 +223,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    //   result.push_back(MinimumState(seed.Parameters(), seed.Error(), seed.Gradient(), edm, fcn.NumOfCalls()));
    const MinimumState & initialState = result.back();
    
+   int printLevel = MnPrint::Level();
    
    double edm = initialState.Edm();
    
@@ -343,6 +354,10 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       
       
       result.push_back(MinimumState(p, e, g, edm, fcn.NumOfCalls())); 
+
+      if (printLevel > 1) {
+         MnPrint::PrintState(std::cout, result.back(), "VariableMetric: Iteration # ",result.size()); 
+      }
       
       // correct edm 
       edm *= (1. + 3.*e.Dcovar());

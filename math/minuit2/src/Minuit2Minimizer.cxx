@@ -50,7 +50,7 @@ namespace Minuit2 {
    // functions needed to control siwthc off of Minuit2 printing level 
 #ifdef USE_ROOT_ERROR
    int TurnOffPrintInfoLevel() { 
-   // switch off Minuit2 printing of INfo message (cut off is 1001) 
+   // switch off Minuit2 printing of INFO message (cut off is 1001) 
    int prevErrorIgnoreLevel = gErrorIgnoreLevel; 
    if (prevErrorIgnoreLevel < 1001) { 
       gErrorIgnoreLevel = 1001; 
@@ -322,6 +322,9 @@ bool Minuit2Minimizer::Minimize() {
       std::cout << "Minuit2Minimizer: Minimize with max iterations " << maxfcn << " edmval " << tol << " strategy " 
                 << strategy << std::endl; 
 
+   // internal minuit messages
+   MnPrint::SetLevel(PrintLevel() );
+
    // switch off Minuit2 printing
    int prev_level = (PrintLevel() == 0 ) ?   TurnOffPrintInfoLevel() : -1; 
 
@@ -523,6 +526,8 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
    }
 
    int debugLevel = PrintLevel(); 
+   // internal minuit messages
+   MnPrint::SetLevel( debugLevel );
 
    // to run minos I need function minimum class 
    // redo minimization from current state
@@ -634,6 +639,9 @@ bool Minuit2Minimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x,
    // switch off Minuit2 printing
    int prev_level = (PrintLevel() == 0 ) ?   TurnOffPrintInfoLevel() : -1; 
 
+   MnPrint::SetLevel( PrintLevel() );
+
+
    // set the precision if needed
    if (Precision() > 0) fState.SetPrecision(Precision());
 
@@ -692,6 +700,8 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
    // switch off Minuit2 printing (for level of  0,1)
    int prev_level = (PrintLevel() <= 1 ) ?   TurnOffPrintInfoLevel() : -1; 
 
+   MnPrint::SetLevel( PrintLevel() );
+
    // set the precision if needed
    if (Precision() > 0) fState.SetPrecision(Precision());
 
@@ -732,6 +742,8 @@ bool Minuit2Minimizer::Hesse( ) {
 
    // switch off Minuit2 printing
    int prev_level = (PrintLevel() == 0 ) ?   TurnOffPrintInfoLevel() : -1; 
+
+   MnPrint::SetLevel( PrintLevel() );
 
    // set the precision if needed
    if (Precision() > 0) fState.SetPrecision(Precision());

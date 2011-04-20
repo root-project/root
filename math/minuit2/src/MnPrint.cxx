@@ -26,9 +26,39 @@
 #define PRECISION 13
 #define WIDTH     20
 
+
 namespace ROOT {
 
    namespace Minuit2 {
+
+#ifdef DEBUG
+int gPrintLevel = 3; 
+#else
+int gPrintLevel = 0; 
+#endif
+
+
+int MnPrint::SetLevel(int level) { 
+   int prevLevel  = gPrintLevel;
+   gPrintLevel = level;
+   return prevLevel;
+}
+
+int MnPrint::Level( ) { 
+   return gPrintLevel;
+}
+
+      void MnPrint::PrintState(std::ostream & os, const MinimumState & state, const char * msg, int iter) { 
+   // helper function to print state and message in one single line
+   os << msg; 
+   if (iter>=0) os << iter; 
+   int pr = os.precision(PRECISION);
+   const int width = PRECISION+3;
+   os << " - FCN = " <<  std::setw(width) << state.Fval() << " Edm = " <<  std::setw(width) << state.Edm()
+                      << " NCalls = " << state.NFcn();         
+   os << std::endl;
+   os.precision(pr);
+}
 
 
 std::ostream& operator<<(std::ostream& os, const LAVector& vec) {
