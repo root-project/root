@@ -66,7 +66,7 @@ TStyle::TStyle(const char *name, const char *title)
    //   -Bold:
    //   -Video;
    //   -Pub:
-   //   -Clean:
+   //   -Modern:
    //     (see the definition of these styles below).
    //
    // Note a side-effect of calling gStyle->SetFillColor(0). This is nearly
@@ -115,8 +115,8 @@ TStyle::TStyle(const char *name, const char *title)
       gROOT->GetListOfStyles()->Add(this);
    }
 
-   if (strcmp(style_name,"clean") == 0) {
-      // Clean style
+   if (strcmp(style_name,"modern") == 0) {
+      // Modern style
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
       SetCanvasBorderMode(0);
@@ -295,7 +295,7 @@ void TStyle::BuildStyles()
    new TStyle("Pub",    "Style for Publications");
    new TStyle("Classic","Classic Style");
    new TStyle("Default","Equivalent to Classic");
-   new TStyle("Clean",  "Clean Style");
+   new TStyle("Modern", "Modern Style");
    delete col;
 }
 
@@ -566,8 +566,8 @@ void TStyle::Reset(Option_t *opt)
    TString style_name = opt;
    style_name.ToLower();
 
-   if (strcmp(style_name,"clean") == 0) {
-      // Clean style
+   if (strcmp(style_name,"modern") == 0) {
+      // Modern style
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
       SetCanvasBorderMode(0);

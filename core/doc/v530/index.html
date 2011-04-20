@@ -8,23 +8,25 @@
 <li> Add the fill color attribute (<tt>SetLegendFillColor()</tt> and the font
      attribute (<tt>SetLegendFont()</tt>.
 </li>
-<li> A new TStyle called "Clean" has been implemented. It can be set with:
+<li> A new TStyle called "Modern" has been implemented. It can be set with:
      <pre>
-     gROOT->SetStyle("Clean");
+     gROOT->SetStyle("Modern");
      </pre>
      It has very little decoration. It was made looking at the default styles
      usually used by the experiments.
      <br>
      A new parameter <tt>Canvas.Style</tt> in <tt>config/rootrc.in</tt> allows
-     to define the default style. If it is not specified, the <tt>Clean</tt>
+     to define the default style. If it is not specified, the <tt>Modern</tt>
      style is used. To use the old default style on can set it to <tt>Classic</tt>.
 </li>
 </ul>
+
 <h4>ACLiC</h4>
 <ul>
 <li> ACLiC now passes the macro __ACLIC__ to both the rootcint and compiler phases.
 </li>
 </ul>
+
 <h4>TWinNTSystem</h4>
 <ul>
 <li> Fix 64bit compatibility issues (__asm keyword is not allowed)</li>
