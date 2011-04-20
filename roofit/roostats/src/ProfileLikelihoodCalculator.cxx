@@ -131,7 +131,7 @@ void  ProfileLikelihoodCalculator::DoGlobalFit() const {
 
    // calculate MLE 
    const char * minimType = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-   const char * minimAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+   const char * minimAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
    int strategy = ROOT::Math::MinimizerOptions::DefaultStrategy();
    int level = ROOT::Math::MinimizerOptions::DefaultPrintLevel();
 
