@@ -293,6 +293,7 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
 
    XrdProofdProtocol *xp;
    int dlen;
+   TRACE(ALL, "enter");
 
    // Peek at the first 20 bytes of data
    if ((dlen = lp->Peek(hsbuff,sizeof(hsdata),fgReadWait)) != sizeof(hsdata)) {
@@ -331,7 +332,7 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
 
                   // Do the exec
                   execv((const char *)prog, (char * const *)progArg);
-                  cerr <<"Xrdrootd: Oops! Exec(" <<prog <<") failed; errno=" <<errno <<endl;
+                  TRACE(ALL, "rootd: Oops! Exec(" <<prog <<") failed; errno: " <<errno);
                   _exit(17);
                } else {
                   TRACE(ALL, "rootd-file serving not authorized for host '"<<lp->Host()<<"'");
@@ -341,6 +342,7 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
             }
          }
       }
+      TRACE(XERR, "peeked incomplete or empty information! (dlen: "<<dlen<<" bytes)");
       return (XrdProtocol *)0;
    }
 
@@ -352,6 +354,7 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
    // Respond to this request with the handshake response
    if (!lp->Send((char *)&hsresp, sizeof(hsresp))) {
       lp->setEtext("Match: handshake failed");
+      TRACE(XERR, "handshake failed");
       return (XrdProtocol *)0;
    }
 
@@ -359,6 +362,7 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
    int len = sizeof(hsdata);
    if (lp->Recv(hsbuff, len) != len) {
       lp->setEtext("Match: reread failed");
+      TRACE(XERR, "reread failed");
       return (XrdProtocol *)0;
    }
 
