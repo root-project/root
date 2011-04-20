@@ -110,6 +110,7 @@ namespace PyROOT {
       EDataType EffectiveType( const std::string& name );
       const std::string Compound( const std::string& name );
       const std::string ClassName( PyObject* pyobj );
+      const std::string ResolveTypedef( const std::string& name );
 
    // CINT integration
       void ErrMsgCallback( char* msg );

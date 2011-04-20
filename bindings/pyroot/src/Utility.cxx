@@ -330,7 +330,7 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const char* op, co
 {
 // install binary operator op in pyclass, working on two instances of pyclass
    PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
-   std::string cname = TClassEdit::ResolveTypedef( PyROOT_PyUnicode_AsString( pyname ) );
+   std::string cname = ResolveTypedef( PyROOT_PyUnicode_AsString( pyname ) );
    Py_DECREF( pyname ); pyname = 0;
 
    return AddBinaryOperator( pyclass, cname, cname, op, label );
@@ -351,10 +351,10 @@ static inline TFunction* FindAndAddOperator( const std::string& lcname, const st
          continue;
 
       if ( func->GetName() == opname ) {
-         if ( ( lcname == TClassEdit::ResolveTypedef( TClassEdit::CleanType(
-                  ((TMethodArg*)func->GetListOfMethodArgs()->At(0))->GetTypeName(), 1 ).c_str(), true ) ) &&
-              ( rcname == TClassEdit::ResolveTypedef( TClassEdit::CleanType(
-                  ((TMethodArg*)func->GetListOfMethodArgs()->At(1))->GetTypeName(), 1 ).c_str(), true ) ) ) {
+         if ( ( lcname == ResolveTypedef( TClassEdit::CleanType(
+                  ((TMethodArg*)func->GetListOfMethodArgs()->At(0))->GetTypeName(), 1 ).c_str() ) ) &&
+              ( rcname == ResolveTypedef( TClassEdit::CleanType(
+                  ((TMethodArg*)func->GetListOfMethodArgs()->At(1))->GetTypeName(), 1 ).c_str() ) ) ) {
 
          // done; break out loop
             return func;
@@ -664,6 +664,17 @@ const std::string PyROOT::Utility::ClassName( PyObject* pyobj )
 
    return clname;
 }
+
+//____________________________________________________________________________
+const std::string PyROOT::Utility::ResolveTypedef( const std::string& typeName )
+{
+   G__TypeInfo ti( typeName.c_str() );
+   if ( ! ti.IsValid() )
+      return typeName;
+
+   return ti.TrueName();
+}
+
 
 //____________________________________________________________________________
 void PyROOT::Utility::ErrMsgCallback( char* msg )

@@ -236,7 +236,7 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
    // operator[]/() returning a reference type will be used for __setitem__
       if ( mtName == "__call__" || mtName == "__getitem__" ) {
          std::string cpd = Utility::Compound(
-            method.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S ) );
+            method.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S | ROOT::Reflex::F ) );
          if ( ! cpd.empty() && cpd[ cpd.size() - 1 ] == '&' )
             setupSetItem = kTRUE;
       }
