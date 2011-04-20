@@ -1880,6 +1880,9 @@ G__value G__string2type_body(const char* typenamin, int noerror)
          if (result.tagnum != -1 && G__struct.type[result.tagnum] == 'e') {
             result.type = 'i';
          }
+         if (G__newtype.reftype[result.typenum] == G__PARAREFERENCE) {
+            ++rlevel;
+         }
       }
       else {
          result.tagnum = G__defined_tagname(typenam, noerror);
