@@ -58,3 +58,21 @@
     bug report #78382. An histogram redrawing in a cloned
     pad produced a segmentation fault.</li>
 </ul>
+
+<h4>GX11Gui</h4>
+<ul>
+<li> Only call XFreeColors if we are on a <= 8 plane machine (to match calls
+to XAllocColor). This solves the <a
+href="https://savannah.cern.ch/bugs/?77329">bug #77329: X11 error clicking
+on '?' in context menus</a>
+</li>
+</ul>
+
+<h4>TGWin32</h4>
+<ul>
+<li> Unmap the window before to destroy it, in order to properly receive
+kUnmapNotify needed by gClient->WaitForUnmap(). This fixes the problem
+reported <a href="http://root.cern.ch/phpBB3/viewtopic.php?f=3&t=12042">on
+the forum</a>
+</li>
+</ul>
