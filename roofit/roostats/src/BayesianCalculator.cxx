@@ -774,37 +774,55 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
           << poi->getVal() << " min NLL = " << fNLLMin << std::endl;
 
    delete nllFunc;
+
    delete constrainedParams;
+
 
    if ( fNuisanceParameters.getSize() == 0 ||  fIntegrationType.Contains("ROOFIT") ) { 
 
       ccoutD(Eval) << "BayesianCalculator::GetPosteriorFunction : use ROOFIT integration  " 
                    << std::endl;
 
-      // need to make in this case the product with the prior
-      // re-create the log-likelihood function
+#ifdef DOLATER // (not clear why this does not work)
+      // need to make in this case a likelihood from the nll and make the product with the prior
+      TString likeName = TString("likelihood_times_prior_") + TString(fPriorPOI->GetName());   
+      TString formula; 
+      formula.Form("exp(-@0+%f+log(@1))",fNLLMin);
+      fLikelihood = new RooFormulaVar(likeName,formula,RooArgList(*fLogLike,*fPriorPOI));
+#else
+      // here use RooProdPdf (not very nice) but working
+
       if (fLogLike) delete fLogLike; 
-      // create a unique name for the product pdf 
+      // // create a unique name for the product pdf 
       TString prodName = TString("product_") + TString(fPdf->GetName()) + TString("_") + TString(fPriorPOI->GetName() );   
       fProductPdf = new RooProdPdf(prodName,"",RooArgList(*fPdf,*fPriorPOI));
 
-      // use RooFit::Constrain() to be sure constraints terms are taken into account
-      fLogLike = fPdf->createNLL(*fData, RooFit::Constrain(*constrainedParams) );
+      RooArgSet* constrParams = fPdf->getParameters(*fData);
+      // remove the constant parameters
+      RemoveConstantParameters(constrParams);
+      fLogLike = fProductPdf->createNLL(*fData, RooFit::Constrain(*constrParams) );
+      delete constrParams;
 
-      // case of no nuisance parameters 
-      TString likeName = TString("likelihood_") + TString(fProductPdf->GetName());   
+      TString likeName = TString("likelihood_times_prior_") + TString(fProductPdf->GetName());   
       TString formula; 
       formula.Form("exp(-@0+%f)",fNLLMin);
       fLikelihood = new RooFormulaVar(likeName,formula,RooArgList(*fLogLike));
+#endif
+
       
       // if no nuisance parameter we can just return the likelihood funtion
-      if (fNuisanceParameters.getSize() == 0) return fLikelihood; 
+      if (fNuisanceParameters.getSize() == 0) { 
+         fIntegratedLikelihood = fLikelihood; 
+         fLikelihood = 0; 
+      }
+      else 
+         // case of using RooFit for the integration
+         fIntegratedLikelihood = fLikelihood->createIntegral(fNuisanceParameters);
 
-      // case of using RooFit for the integration
-      fIntegratedLikelihood = fLikelihood->createIntegral(fNuisanceParameters);
+      return fIntegratedLikelihood;
    }
 
-   if ( fIntegrationType.Contains("TOYMC") ) { 
+   else if ( fIntegrationType.Contains("TOYMC") ) { 
       // compute the posterior as expectation values of the likelihood function 
       // sampling on the nuisance parameters 
 
@@ -824,7 +842,6 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
       
       // need to scan likelihood in this case
       if (fNScanBins <= 0) fNScanBins = 100;
-
       
    }
 
@@ -846,8 +863,9 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    // ccoutD(Eval) << "BayesianCalculator::GetPosteriorFunction : use ROOT numerical integration algorithm. "; 
    // ccoutD(Eval) << " Integrated log-likelihood = " << fIntegratedLikelihood->getVal() << std::endl;
 
+   
+   return fIntegratedLikelihood;  
 
-   return fIntegratedLikelihood; 
 }
 
 RooAbsPdf* BayesianCalculator::GetPosteriorPdf() const
@@ -872,20 +890,18 @@ RooPlot* BayesianCalculator::GetPosteriorPlot(bool norm, double precision ) cons
 {
   /// return a RooPlot with the posterior  and the credibility region
 
-   if (!fLikelihood) GetPosteriorFunction(); 
+   GetPosteriorFunction(); 
 
    // if a scan is requested approximate the posterior
-   if (fNScanBins > 0) ApproximatePosterior();
+   if (fNScanBins > 0) 
+      ApproximatePosterior();
 
    RooAbsReal * posterior = fIntegratedLikelihood; 
-   if (norm) posterior = fPosteriorPdf; 
-   if (!posterior) { 
-      posterior = GetPosteriorFunction();
-      if (norm) { 
-         if (fPosteriorPdf) delete fPosteriorPdf;
-         fPosteriorPdf = GetPosteriorPdf();
-         posterior = fPosteriorPdf;
-      }
+   if (norm) { 
+      // delete and re-do always posterior pdf (could be invalid after approximating it)
+      if (fPosteriorPdf) delete fPosteriorPdf; 
+      fPosteriorPdf = GetPosteriorPdf();
+      posterior = fPosteriorPdf;
    }
    if (!posterior) return 0;
 
@@ -959,17 +975,17 @@ SimpleInterval* BayesianCalculator::GetInterval() const
          // use integration method if there are nuisance parameters 
          if (fNuisanceParameters.getSize() > 0) { 
             ComputeIntervalFromCdf(lowerCutOff, upperCutOff);      
-            // case cdf failed (scan then the posterior)
-            if (!fValidInterval) { 
-               fNScanBins = 100;
-               coutW(Eval) << "BayesianCalculator::GetInterval - computing integral from cdf failed - do a scan in "
-                           << fNScanBins << " nbins " << std::endl;
-               ComputeIntervalFromApproxPosterior(lowerCutOff, upperCutOff);
-            }
          }
          else { 
             // case of no nuisance - just use createCdf from roofit
             ComputeIntervalUsingRooFit(lowerCutOff, upperCutOff);      
+         }
+         // case cdf failed (scan then the posterior)
+         if (!fValidInterval) { 
+            fNScanBins = 100;
+            coutW(Eval) << "BayesianCalculator::GetInterval - computing integral from cdf failed - do a scan in "
+                        << fNScanBins << " nbins " << std::endl;
+            ComputeIntervalFromApproxPosterior(lowerCutOff, upperCutOff);
          }
       }
    }
@@ -1012,6 +1028,7 @@ void BayesianCalculator::ComputeIntervalUsingRooFit(double lowerCutOff, double u
    RooRealVar* poi = dynamic_cast<RooRealVar*>( fPOI.first() ); 
    assert(poi);
 
+   fValidInterval = false;
    if (!fPosteriorPdf) fPosteriorPdf = (RooAbsPdf*) GetPosteriorPdf();
    if (!fPosteriorPdf) return;
          
@@ -1037,15 +1054,17 @@ void BayesianCalculator::ComputeIntervalUsingRooFit(double lowerCutOff, double u
    }
    else 
       fUpper = poi->getMax();
-   if (!ret) coutE(Eval) << "BayesianCalculator::GetInterval "
-                         << "Error returned from Root finder, estimated interval is not fully correct" 
-                         << std::endl;
+   if (!ret)  coutE(Eval) << "BayesianCalculator::GetInterval "
+                           << "Error returned from Root finder, estimated interval is not fully correct" 
+                           << std::endl;
+   else 
+      fValidInterval = true; 
+   
 
    poi->setVal(tmpVal); // patch: restore the original value of poi
    
    delete cdf_bind;
    delete cdf;
-   fValidInterval = true; 
 }
 
 void BayesianCalculator::ComputeIntervalFromCdf(double lowerCutOff, double upperCutOff ) const { 
