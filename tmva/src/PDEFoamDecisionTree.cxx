@@ -89,7 +89,8 @@ TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree(const PDEFoamDecisionTree &From)
 
 //_____________________________________________________________________
 TMVA::PDEFoamDecisionTree::~PDEFoamDecisionTree()
-{}
+{} //ToDo it seems that PDEFoamDecisionTree owns the fSepType object. 
+// this destructor proably needs to delete fSepType as well --> check this
 
 //_____________________________________________________________________
 void TMVA::PDEFoamDecisionTree::Explore(PDEFoamCell *cell)

@@ -397,8 +397,9 @@ void TMVA::VariableNormalizeTransform::ReadFromXML( void* trfnode )
    
    // ------------- old format --------------------
    UInt_t classindex, varindex, tgtindex, nvars, ntgts;
-
+   // coverity[tainted_data_argument]
    gTools().ReadAttr(trfnode, "NVariables", nvars);
+   // coverity[tainted_data_argument]
    gTools().ReadAttr(trfnode, "NTargets",   ntgts);
 
    for( UInt_t ivar = 0; ivar < nvars; ++ivar ){
