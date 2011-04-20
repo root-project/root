@@ -2550,6 +2550,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // This method compiles and loads a shared library containing
    // the code from the file "filename".
    //
+   // The return value is true (1) in case of success and false (0)
+   // in case of error.
+   //
    // The possible options are:
    //     k : keep the shared library after the session end.
    //     f : force recompilation.
