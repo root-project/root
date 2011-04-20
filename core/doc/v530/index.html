@@ -6,7 +6,7 @@
 <h4>TStyle</h4>
 <ul>
 <li> Add the fill color attribute (<tt>SetLegendFillColor()</tt> and the font
-     attribute (<tt>SetLegendFont()<tt>.
+     attribute (<tt>SetLegendFont()</tt>.
 </li>
 <li> A new TStyle called "Clean" has been implemented. It can be set with:
      <pre>
@@ -19,10 +19,19 @@
      to define the default style. If it is not specified, the <tt>Clean</tt>
      style is used. To use the old default style on can set it to <tt>Classic</tt>.
 </li>
+</ul>
 <h4>ACLiC</h4>
 <ul>
 <li> ACLiC now passes the macro __ACLIC__ to both the rootcint and compiler phases.
 </li>
 </ul>
+<h4>TWinNTSystem</h4>
+<ul>
+<li> Fix 64bit compatibility issues (__asm keyword is not allowed)</li>
+<li> Try (as much as possible) to avoid the disturbing "There is no disk in the drive. Please insert a disk into drive \Device\..." popup message box when calling AccessPathName() on removable disk drives with no media installed. This should fix the problem reported <a href="http://root.cern.ch/phpBB3/viewtopic.php?t=11704">on the forum</a></li>
+<li> Prevent short timers (e.g. 10ms) to keep looping in the DispatchOneEvent() infinite loop</li>
+<li> Better stdout/stderr redirection (it was impossible to restore stdout using freopen on Windows 7, leaving the console as a zombie...)</li>
+<li> Make sure the stdout/stderr redirection works also in the case there is no console (i.e. in stand-alone applications)</li>
+<li> Make sure the file descriptors are valid before using them
 </ul>
 
