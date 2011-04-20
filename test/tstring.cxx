@@ -160,11 +160,13 @@ int main()
    TString s21 = "abcd";
    TString s22 = "bcde";
    TString s23 = "Bcde";
+   TString s24 = "";
 
    Ok(28, s20 < s21);
    Ok(29, s21 < s22);
    Ok(30, s23 < s22);
    Ok(31, s22.CompareTo(s23, TString::kIgnoreCase) == 0);
+   Ok(32, (s23 < s24) != (s24 < s23));
 
    return 0;
 }
