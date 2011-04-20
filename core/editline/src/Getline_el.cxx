@@ -363,7 +363,11 @@ Getlinem(int mode, const char* prompt) {
       char* ch = input_buffer;
 
       if (input_buffer) {
-         while (*ch != '\a') {
+         if (!*input_buffer) {
+            // signal EOF
+            return input_buffer;
+         }
+         while (*ch && *ch != '\a') {
             if (*ch == '\n') {
                // line complete!
                return input_buffer;

@@ -436,8 +436,7 @@ el_gets(EditLine_t* el, int* nread) {
 
       if (!numRead) {
          // singal EOF by count > 0 but line==""
-         *cp = 0;
-         cp++;
+         cp[-1] = 0; // replace eof
          strcpy(cp, "EOF");
          cp += 3;
       }
