@@ -211,7 +211,7 @@ void stressGraphics(Int_t verbose = 0)
 
    gErrorIgnoreLevel = 9999;
    gROOT->SetBatch();
-   gROOT->SetStyle("Default");
+   gROOT->SetStyle("Classic");
 
    // Check if $ROOTSYS/tutorials/hsimple.root exists
    gLocalFile = new TFile("$(ROOTSYS)/tutorials/hsimple.root");

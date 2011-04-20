@@ -61,11 +61,12 @@ TStyle::TStyle(const char *name, const char *title)
 {
    // Create a new TStyle.
    // The following names are reserved to create special styles
-   //   -Default: the default style set in TStyle::Reset
+   //   -Classic: the default style set in TStyle::Reset
    //   -Plain: a black&white oriented style
    //   -Bold:
    //   -Video;
    //   -Pub:
+   //   -Clean:
    //     (see the definition of these styles below).
    //
    // Note a side-effect of calling gStyle->SetFillColor(0). This is nearly
@@ -292,7 +293,7 @@ void TStyle::BuildStyles()
    new TStyle("Bold",   "Bold Style");;
    new TStyle("Video",  "Style for video presentation histograms");
    new TStyle("Pub",    "Style for Publications");
-   new TStyle("Default","Default Style");
+   new TStyle("Classic","Classic Style");
    new TStyle("Clean",  "Clean Style");
    delete col;
 }

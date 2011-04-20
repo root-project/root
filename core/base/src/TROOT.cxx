@@ -407,7 +407,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    // Create some styles
    gStyle = 0;
    TStyle::BuildStyles();
-   SetStyle(gEnv->GetValue("Canvas.Style", "Default"));
+   SetStyle(gEnv->GetValue("Canvas.Style", "Clean"));
 
    // Setup default (batch) graphics and GUI environment
    gBatchGuiFactory = new TGuiFactory;

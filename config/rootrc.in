@@ -127,7 +127,7 @@ Canvas.PrintDirectory:      .
 #set the default precision when writing floating point numbers in TCanvas::SaveSource
 Canvas.SavePrecision:       7
 # Set the default TStyle
-# Predefined styles are: Plain, Bold, Video, Pub, Default, Clean.
+# Predefined styles are: Plain, Bold, Video, Pub, Classic, Clean.
 Canvas.Style:               Default
 
 # Printer settings.
