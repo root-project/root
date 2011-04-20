@@ -2,3 +2,33 @@
 <hr/> 
 <a name="io"></a> 
 <h3>I/O</h3>
+<ul>
+<li>Add support for the Chirp filesystem.  To configure and build, chirp 3.2.2 must be installed.</li>
+<li>When a TFile object is deleted, make sure that CINT also 'removes' any global variables that might point to it.</li>
+<li>Fix support for the automatic addition to the current directory (for TTree and TH1 for example) in TKey::Read(TObject*).</li>
+<li>In TKey, properly handle error in the I/O routines.</li>
+<li>Explicitly check the validity of the zipped buffer before calling R__unzip, this allow for better error recovery.</li>
+<li>When double checking whether a checksum difference is sustantial, ignore the std namespace.   Use CompareContent also in the case of where 
+the class is versioned but the 'current' streamerInfo has not yet been built.</li>
+<li>Prevent the I/O engine from mistakenly applying schema evolution to the TObject::fBits.</li>
+<li>Make sure that when a streamer info of a base class is used to stream memberwise that is always not-optimized. If the StreamerInfo on file 
+has the same version as the StreamerInfo in memory but the one on file need to be 'not optimized' while the one in memory is not yet built, make 
+sure it will not be optimized.</li>
+<li>Fix the reading of empty collection of object when reading without the library.</li>
+<li>If the sequence of actions for streaming member-wise is not created correctly (i.e. where fReadMemberWise was null previously),
+we know explicitly issue a Fatal error:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+Fatal in &lt;ReadSequence&gt;: The sequence of actions to read AliESDVertex:7 member-wise was not initialized.
+aborting
+</pre></li>
+<li>Add new optional parameter maxbuf to TXMLEngine::ParseFile() allowing the specification of the XML file size to be parsed. This fixes issue #78864.</li>
+<li><h4>MakeProject</h4>
+  <ul>
+  <li>Add support for the case when the requested project/files in path that in not under the current directory</li>
+  <li>Generate the code/dictonary only for pair type that do not already have a dictionary</li>
+  </ul>
+</li>
+</ul>
+
+
+
