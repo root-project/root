@@ -31,6 +31,7 @@
 #endif
 
 #include "RooStats/TestStatistic.h"
+#include "RooWorkspace.h"
 
 namespace RooStats {
 
@@ -155,6 +156,7 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
          *attachedSet = *fNullParameters;
          *attachedSet = nullPOI;
          double nullNLL = nll->getVal();
+
          delete nll;
          delete attachedSet;
 
@@ -163,6 +165,7 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
          attachedSet = nll->getVariables();
          *attachedSet = *fAltParameters;
          double altNLL = nll->getVal();
+
          delete nll;
          delete attachedSet;
 
@@ -175,6 +178,7 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
       }
 
    private:
+
       RooWorkspace w;
 
       RooAbsPdf* fNullPdf;

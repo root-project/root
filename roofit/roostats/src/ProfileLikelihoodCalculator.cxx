@@ -62,6 +62,8 @@ END_HTML
 #include "RooProfileLL.h"
 #include "RooNLLVar.h"
 #include "RooGlobalFunc.h"
+
+#include "Math/MinimizerOptions.h"
 //#include "RooProdPdf.h"
 
 ClassImp(RooStats::ProfileLikelihoodCalculator) ;
@@ -128,7 +130,14 @@ void  ProfileLikelihoodCalculator::DoGlobalFit() const {
    RemoveConstantParameters(constrainedParams);
 
    // calculate MLE 
-   RooFitResult* fit = pdf->fitTo(*data, Constrain(*constrainedParams),Strategy(1),Hesse(kTRUE),Save(kTRUE),PrintLevel(-1));
+   const char * minimType = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+   const char * minimAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+   int strategy = ROOT::Math::MinimizerOptions::DefaultStrategy();
+   int level = ROOT::Math::MinimizerOptions::DefaultPrintLevel();
+
+   ooccoutI((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::DoGlobalFit - using " << minimType << " / " << minimAlgo << " with strategy " << strategy << std::endl;
+   RooFitResult* fit = pdf->fitTo(*data, Constrain(*constrainedParams),Strategy(strategy),PrintLevel(level),
+                                  Hesse(kFALSE),Save(kTRUE),Minimizer(minimType,minimAlgo));
   
    // for debug 
    fit->Print();
@@ -137,7 +146,7 @@ void  ProfileLikelihoodCalculator::DoGlobalFit() const {
    // store fit result for further use 
    fFitResult =  fit; 
    if (fFitResult == 0) 
-      oocoutI((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::DoGlobalFit -  Global fit failed " << std::endl;      
+      oocoutW((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::DoGlobalFit -  Global fit failed " << std::endl;      
 
 }
 
@@ -187,7 +196,8 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
   
    // do this so profile will cache inside the absolute minimum and 
    // minimum values of nuisance parameters
-   profile->getVal(); 
+   // (no need to this here)
+   // profile->getVal(); 
    //RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
    //  profile->Print();
 
@@ -282,7 +292,11 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    Double_t NLLatCondMLE = NLLatMLE; 
    if (existVarParams) {
 
-      RooFitResult* fit2 = pdf->fitTo(*data,Constrain(*constrainedParams),Hesse(kFALSE),Strategy(0), Minos(kFALSE), Save(kTRUE),PrintLevel(-1));
+      const char * minimType = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+      const char * minimAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+      int level = ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1; // decrease here print level
+      RooFitResult* fit2 = pdf->fitTo(*data,Constrain(*constrainedParams),Hesse(kFALSE),Strategy(0), Minos(kFALSE),
+                                      Minimizer(minimType,minimAlgo), Save(kTRUE),PrintLevel(level));
      
       NLLatCondMLE = fit2->minNll();
       fit2->Print();
