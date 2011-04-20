@@ -87,10 +87,12 @@ TStringLong::~TStringLong()
 //______________________________________________________________________________
 void TStringLong::FillBuffer(char *&buffer)
 {
-   //fill buffer
+   // Fill buffer.
+
    Int_t nchars = Length();
    tobuf(buffer, nchars);
-   for (Int_t i = 0; i < nchars; i++) buffer[i] = fData[i];
+   const char *data = GetPointer();
+   for (Int_t i = 0; i < nchars; i++) buffer[i] = data[i];
    buffer += nchars;
 }
 
@@ -98,20 +100,23 @@ void TStringLong::FillBuffer(char *&buffer)
 void TStringLong::ReadBuffer(char *&buffer)
 {
    // Read this string from the buffer.
-   Pref()->UnLink();
+   
+   UnLink();
+   Zero();
 
    Int_t nchars;
    frombuf(buffer, &nchars);
 
-   fData = TStringRef::GetRep(nchars, nchars)->Data();
+   char *data = Init(nchars, nchars);
 
-   for (Int_t i = 0; i < nchars; i++) frombuf(buffer, &fData[i]);
+   for (Int_t i = 0; i < nchars; i++) frombuf(buffer, &data[i]);
 }
 
 //______________________________________________________________________________
 Int_t TStringLong::Sizeof() const
 {
    // Return the sizeof the string.
+
    return Length()+sizeof(Int_t);
 }
 
@@ -123,11 +128,15 @@ void TStringLong::Streamer(TBuffer &b)
    Int_t nwh;
    if (b.IsReading()) {
       b >> nwh;
-      fData = TStringRef::GetRep(nwh, nwh)->Data();
-      for (int i = 0; i < nwh; i++) b >> fData[i];
+      Clobber(nwh);
+      char *data = GetPointer();
+      data[nwh] = 0;
+      SetSize(nwh);
+      for (int i = 0; i < nwh; i++) b >> data[i];
    } else {
       nwh = Length();
       b << nwh;
-      for (int i = 0; i < nwh; i++) b << fData[i];
+      const char *data = GetPointer();
+      for (int i = 0; i < nwh; i++) b << data[i];
    }
 }

@@ -155,6 +155,16 @@ int main()
    cout << s9.Strip(TString::kBoth) << "<<ends here" << endl;
 
    Printf("Using Print: %s (%d)\n", (const char*) s9, s9.Length());
+   
+   TString s20 = "abc";
+   TString s21 = "abcd";
+   TString s22 = "bcde";
+   TString s23 = "Bcde";
+
+   Ok(28, s20 < s21);
+   Ok(29, s21 < s22);
+   Ok(30, s23 < s22);
+   Ok(31, s22.CompareTo(s23, TString::kIgnoreCase) == 0);
 
    return 0;
 }

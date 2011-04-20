@@ -122,7 +122,8 @@
 #pragma link C++ class TStopwatch+;
 #pragma link C++ class TStorage;
 #pragma link C++ class TString-!;
-#pragma link C++ class TStringRef-!;
+//#pragma link C++ class TString::Rep_t-!;
+#pragma link off class TString::Rep_t;
 #pragma link C++ class TStringLong-;
 #pragma link C++ class TStringToken;
 #pragma link C++ class TSubString;

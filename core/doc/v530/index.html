@@ -3,6 +3,17 @@
 <a name="core"></a> 
 <h3>Core</h3>
 
+<h4>TString</h4>
+<ul>
+<li>
+Reimplementation of the internals of TString to not use reference counting and
+copy on write, but to use a more modern and thread safe Short String
+Optimization (SSO) technique. Using SSO short strings (&lt;15 on 64-bit and
+&lt;11 on 32-bit) are contained in the  TString internal data structure
+without the need for mallocing the required space.
+</li>
+</ul>
+
 <h4>TStyle</h4>
 <ul>
 <li> Add the fill color attribute (<tt>SetLegendFillColor()</tt> and the font
@@ -29,8 +40,8 @@
 
 <h4>TWinNTSystem</h4>
 <ul>
-<li> Fix 64bit compatibility issues (__asm keyword is not allowed)</li>
-<li> Try (as much as possible) to avoid the disturbing "There is no disk in the drive. Please insert a disk into drive \Device\..." popup message box when calling AccessPathName() on removable disk drives with no media installed. This should fix the problem reported <a href="http://root.cern.ch/phpBB3/viewtopic.php?t=11704">on the forum</a></li>
+<li>Fix 64-bit compatibility issues (__asm keyword is not allowed)</li>
+<li>Try (as much as possible) to avoid the disturbing "There is no disk in the drive. Please insert a disk into drive \Device\..." popup message box when calling AccessPathName() on removable disk drives with no media installed. This should fix the problem reported <a href="http://root.cern.ch/phpBB3/viewtopic.php?t=11704">on the forum</a></li>
 <li> Prevent short timers (e.g. 10ms) to keep looping in the DispatchOneEvent() infinite loop</li>
 <li> Better stdout/stderr redirection (it was impossible to restore stdout using freopen on Windows 7, leaving the console as a zombie...)</li>
 <li> Make sure the stdout/stderr redirection works also in the case there is no console (i.e. in stand-alone applications)</li>

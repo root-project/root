@@ -19,21 +19,10 @@
 //                                                                      //
 // The underlying string is stored as a char* that can be accessed via  //
 // TString::Data().                                                     //
-// TString provides copy-on-write semantics with reference counting     //
-// so that multiple TString objects can refer to the same data.         //
-// For example:                                                         //
-//   root [0] TString orig("foo")                                       //
-//   root [1] TString copy(orig)  // 'orig' and 'copy' point to the     //
-//                                // same data...                       //
-//   root [2] orig.Data()                                               //
-//   (const char* 0x98936f8)"foo"                                       //
-//   root [3] copy.Data()                                               //
-//   (const char* 0x98936f8)"foo"                                       //
-//   root [4] copy="bar"          // Editing 'copy' makes it point      //
-//                                // elsewhere
-//   (class TString)"bar"                                               //
-//   root [5] copy.Data()                                               //
-//   (const char* 0x98939b8)"bar"                                       //
+// TString provides Short String Optimization (SSO) so that short       //
+// strings (<15 on 64-bit and <11 on 32-bit) are contained in the       //
+// TString internal data structure without the need for mallocing the   //
+// required space.                                                      //
 //                                                                      //
 // Substring operations are provided by the TSubString class, which     //
 // holds a reference to the original string and its data, along with    //
@@ -43,6 +32,7 @@
 //   root [1] TString s2( s(0,5) )                                      //
 //   root [2] s2                                                        //
 //   (class TString)"hello"                                             //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfig.h"
@@ -66,31 +56,16 @@ namespace std { using ::list; }
 #endif
 
 // Mutex for string format protection
-
 TVirtualMutex *gStringMutex = 0;
 
 // Amount to shift hash values to avoid clustering
-
 const UInt_t kHashShift = 5;
-
-// This is the global null string representation, shared among all
-// empty strings.  The space for it is in "gNullRef" which the
-// loader will set to zero
-
-static long gNullRef[(sizeof(TStringRef)+1)/sizeof(long) + 1];
-static void *gNullRefTmp = gNullRef;
-
-// Use macro in stead of the following to side-step compilers (e.g. DEC)
-// that generate pre-main code for the initialization of address constants.
-// static TStringRef* const gNullStringRef = (TStringRef*)gNullRef;
-
-#define gNullStringRef ((TStringRef*)gNullRefTmp)
 
 // ------------------------------------------------------------------------
 //
-// In what follows, fCapacity is the length of the underlying representation
+// In what follows, fCap is the length of the underlying representation
 // vector. Hence, the capacity for a null terminated string held in this
-// vector is fCapacity-1.  The variable fNchars is the length of the held
+// vector is fCap-1.  The variable fSize is the length of the held
 // string, excluding the terminating null.
 //
 // The algorithms make no assumptions about whether internal strings
@@ -101,57 +76,365 @@ static void *gNullRefTmp = gNullRef;
 // The internal string is always null terminated.
 //
 // ------------------------------------------------------------------------
-//
-//  This class uses a number of protected and private member functions
-//  to do memory management. Here are their semantics:
-//
-//  TString::Cow();
-//    Insure that self is a distinct copy. Preserve previous contents.
-//
-//  TString::Cow(Ssiz_t nc);
-//    Insure that self is a distinct copy with capacity of at
-//    least nc. Preserve previous contents.
-//
-//  TString::Clobber(Ssiz_t nc);
-//    Insure that the TStringRef is unshared and has a
-//    capacity of at least nc. No need to preserve contents.
-//
-//  TString::Clone();
-//    Make self a distinct copy. Preserve previous contents.
-//
-//  TString::Clone(Ssiz_t);
-//    Make self a distinct copy with capacity of at least nc.
-//    Preserve previous contents.
-//
-// ------------------------------------------------------------------------
 
+ClassImp(TString)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//  TStringRef                                                          //
+//  TString                                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-TStringRef *TStringRef::GetRep(Ssiz_t capacity, Ssiz_t nchar)
+TString::TString()
 {
-   // Static member function returning an empty string representation of
-   // size capacity and containing nchar characters.
+   // TString default ctor.
 
-   if ((capacity | nchar) == 0) {
-      gNullStringRef->AddReference();
-      return gNullStringRef;
-   }
-   TStringRef *ret = (TStringRef*)new char[capacity + sizeof(TStringRef) + 1];
-   ret->fCapacity = capacity;
-   ret->SetRefCount(1);
-   ret->Data()[ret->fNchars = nchar] = 0; // Terminating null
-
-   return ret;
+   Zero();
 }
 
 //______________________________________________________________________________
-Ssiz_t TStringRef::First(char c) const
+TString::TString(Ssiz_t ic)
+{
+   // Create TString able to contain ic characters.
+
+   Init(ic, 0);
+}
+
+//______________________________________________________________________________
+TString::TString(const char *cs)
+{
+   // Create TString and initialize it with string cs.
+
+   if (cs) {
+      Ssiz_t n = strlen(cs);
+      char *data = Init(n, n);
+      memcpy(data, cs, n);
+   } else
+      Init(0, 0);
+}
+
+//______________________________________________________________________________
+TString::TString(const std::string &s)
+{
+   // Create TString and initialize it with string cs.
+
+   Ssiz_t n = s.length();
+   char *data = Init(n, n);
+   memcpy(data, s.c_str(), n);
+}
+
+//______________________________________________________________________________
+TString::TString(const char *cs, Ssiz_t n)
+{
+   // Create TString and initialize it with the first n characters of cs.
+
+   char *data = Init(n, n);
+   memcpy(data, cs, n);
+}
+
+//______________________________________________________________________________
+void TString::InitChar(char c)
+{
+   // Initialize a string with a single character.
+
+   char *data = Init(1, 1);
+   data[0] = c;
+}
+
+//______________________________________________________________________________
+TString::TString(char c, Ssiz_t n)
+{
+   // Initialize the first n locations of a TString with character c.
+
+   char *data = Init(n, n);
+   while (n--) data[n] = c;
+}
+
+//______________________________________________________________________________
+TString::TString(const TString &s)
+{
+   // Copy constructor.
+
+   if (!s.IsLong())
+      fRep.fRaw = s.fRep.fRaw;
+   else {
+      Ssiz_t n = s.GetLongSize();
+      char *data = Init(n, n);
+      memcpy(data, s.GetLongPointer(), n);
+   }
+}
+
+//______________________________________________________________________________
+TString::TString(const TSubString& substr)
+{
+   // Copy a TSubString in a TString.
+
+   Ssiz_t len = substr.IsNull() ? 0 : substr.Length();
+   char *data = Init(len, len);
+   memcpy(data, substr.Data(), len);
+}
+
+//______________________________________________________________________________
+TString::TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2)
+{
+   // Special constructor to initialize with the concatenation of a1 and a2.
+
+   if (!a1) n1=0;
+   if (!a2) n2=0;
+   Ssiz_t tot = n1+n2;
+   char *data = Init(tot, tot);
+   memcpy(data,    a1, n1);
+   memcpy(data+n1, a2, n2);
+}
+
+//______________________________________________________________________________
+TString::~TString()
+{
+   // Delete a TString.
+
+   UnLink();
+}
+
+//______________________________________________________________________________
+char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
+{
+   // Private member function returning an empty string representation of
+   // size capacity and containing nchar characters.
+
+   if (capacity > MaxSize()) {
+      Error("Init", "capacity too large (%d, max = %d)", capacity, MaxSize());
+      capacity = MaxSize();
+      if (nchar > capacity)
+         nchar = capacity;
+   }
+
+   char *data;
+   if (capacity < kMinCap) {
+      SetShortSize(nchar);
+      data = GetShortPointer();
+   } else {
+      Ssiz_t cap = Recommend(capacity);
+      data = new char[cap+1];
+      SetLongCap(cap+1);
+      SetLongSize(nchar);
+      SetLongPointer(data);
+   }
+   data[nchar] = 0;  // terminating null
+
+   return data;
+}
+
+//______________________________________________________________________________
+TString& TString::operator=(char c)
+{
+   // Assign character c to TString.
+
+   if (!c) {
+      UnLink();
+      Zero();
+      return *this;
+   }
+   return Replace(0, Length(), &c, 1);
+}
+
+//______________________________________________________________________________
+TString& TString::operator=(const char *cs)
+{
+   // Assign string cs to TString.
+
+   if (!cs || !*cs) {
+      UnLink();
+      Zero();
+      return *this;
+   }
+   return Replace(0, Length(), cs, strlen(cs));
+}
+
+//______________________________________________________________________________
+TString& TString::operator=(const std::string &s)
+{
+   // Assign std::string s to TString.
+
+   if (s.length()==0) {
+      UnLink();
+      Zero();
+      return *this;
+   }
+   return Replace(0, Length(), s.c_str(), s.length());
+}
+
+//______________________________________________________________________________
+TString& TString::operator=(const TString &rhs)
+{
+   // Assignment operator.
+
+   if (this != &rhs) {
+      UnLink();
+      if (!rhs.IsLong())
+         fRep.fRaw = rhs.fRep.fRaw;
+      else {
+         Ssiz_t n = rhs.GetLongSize();
+         char *data = Init(n, n);
+         memcpy(data, rhs.GetLongPointer(), n);
+      }
+   }
+   return *this;
+}
+
+//______________________________________________________________________________
+TString& TString::operator=(const TSubString &substr)
+{
+   // Assign a TSubString substr to TString.
+
+   Ssiz_t len = substr.IsNull() ? 0 : substr.Length();
+   if (!len) {
+      UnLink();
+      Zero();
+      return *this;
+   }
+   return Replace(0, Length(), substr.Data(), len);
+}
+
+//______________________________________________________________________________
+TString& TString::Append(char c, Ssiz_t rep)
+{
+   // Append character c rep times to string.
+
+   if (!rep) return *this;
+
+   Ssiz_t len = Length();
+   Ssiz_t tot = len + rep;  // Final string length
+
+   if (tot > MaxSize()) {
+      Error("Append", "rep too large (%d, max = %d)", rep, MaxSize()-len);
+      tot = MaxSize();
+      rep = tot - len;
+   }
+
+   Ssiz_t capac = Capacity();
+   char *data, *p = GetPointer();
+
+   if (capac - tot >= 0) {
+      SetSize(tot);
+      data = p;
+   } else {
+      Ssiz_t cap = Recommend(tot);
+      data = new char[cap+1];
+      memcpy(data, p, len);
+      UnLink();
+      SetLongCap(cap+1);
+      SetLongSize(tot);
+      SetLongPointer(data);
+   }
+   data[tot] = 0;
+
+   data += len;
+   while (rep--)
+      *data++ = c;
+
+   return *this;
+}
+
+//______________________________________________________________________________
+Ssiz_t TString::Capacity(Ssiz_t nc)
+{
+   // Return string capacity. If nc != current capacity Clone() the string
+   // in a string with the desired capacity.
+
+   if (nc > Length())
+      Clone(nc);
+
+   return Capacity();
+}
+
+//______________________________________________________________________________
+int TString::CompareTo(const char *cs2, ECaseCompare cmp) const
+{
+   // Compare a string to char *cs2. Returns returns zero if the two
+   // strings are identical, otherwise returns the difference between
+   // the first two differing bytes (treated as unsigned char values,
+   // so that `\200' is greater than `\0', for example). Zero-length
+   // strings are always identical.
+
+   if (!cs2) return 1;
+
+   const char *cs1 = Data();
+   Ssiz_t len = Length();
+   Ssiz_t i = 0;
+   if (cmp == kExact) {
+      for (; cs2[i]; ++i) {
+         if (i == len) return -1;
+         if (cs1[i] != cs2[i]) return ((cs1[i] > cs2[i]) ? 1 : -1);
+      }
+   } else {                  // ignore case
+      for (; cs2[i]; ++i) {
+         if (i == len) return -1;
+         char c1 = tolower((unsigned char)cs1[i]);
+         char c2 = tolower((unsigned char)cs2[i]);
+         if (c1 != c2) return ((c1 > c2) ? 1 : -1);
+      }
+   }
+   return (i < len) ? 1 : 0;
+}
+
+//______________________________________________________________________________
+int TString::CompareTo(const TString &str, ECaseCompare cmp) const
+{
+   // Compare a string to another string. Returns returns zero if the two
+   // strings are identical, otherwise returns the difference between
+   // the first two differing bytes (treated as unsigned char values,
+   // so that `\200' is greater than `\0', for example). Zero-length
+   // strings are always identical.
+
+   const char *s1 = Data();
+   const char *s2 = str.Data();
+   Ssiz_t len = Length();
+   Ssiz_t slen, sleno = str.Length();
+   slen = sleno;
+   if (len < slen) slen = len;
+   if (cmp == kExact) {
+      int result = memcmp(s1, s2, slen);
+      if (result != 0) return result;
+   } else {
+      Ssiz_t i = 0;
+      for (; i < slen; ++i) {
+         char c1 = tolower((unsigned char)s1[i]);
+         char c2 = tolower((unsigned char)s2[i]);
+         if (c1 != c2) return ((c1 > c2) ? 1 : -1);
+      }
+   }
+   // strings are equal up to the length of the shorter one.
+   slen = sleno;
+   if (len == slen) return 0;
+   return (len > slen) ? 1 : -1;
+}
+
+//______________________________________________________________________________
+Int_t TString::CountChar(Int_t c) const
+{
+   // Return number of times character c occurs in the string.
+
+   Int_t count = 0;
+   Int_t len   = Length();
+   const char *data  = Data();
+   for (Int_t n = 0; n < len; n++)
+      if (data[n] == c) count++;
+
+   return count;
+}
+
+//______________________________________________________________________________
+TString TString::Copy() const
+{
+   // Copy a string.
+
+   TString temp(*this);
+   return temp;
+}
+
+//______________________________________________________________________________
+Ssiz_t TString::First(char c) const
 {
    // Find first occurrence of a character c.
 
@@ -160,7 +443,7 @@ Ssiz_t TStringRef::First(char c) const
 }
 
 //______________________________________________________________________________
-Ssiz_t TStringRef::First(const char *cs) const
+Ssiz_t TString::First(const char *cs) const
 {
    // Find first occurrence of a character in cs.
 
@@ -183,8 +466,8 @@ inline static void Mash(UInt_t& hash, UInt_t chars)
    // Utility used by Hash().
 
    hash = (chars ^
-         ((hash << kHashShift) |
-          (hash >> (kBitsPerByte*sizeof(UInt_t) - kHashShift))));
+           ((hash << kHashShift) |
+            (hash >> (kBitsPerByte*sizeof(UInt_t) - kHashShift))));
 }
 
 //______________________________________________________________________________
@@ -245,7 +528,7 @@ UInt_t Hash(const char *str)
 }
 
 //______________________________________________________________________________
-UInt_t TStringRef::Hash() const
+UInt_t TString::HashCase() const
 {
    // Return a case-sensitive hash value (endian independent).
 
@@ -274,7 +557,7 @@ UInt_t TStringRef::Hash() const
 }
 
 //______________________________________________________________________________
-UInt_t TStringRef::HashFoldCase() const
+UInt_t TString::HashFoldCase() const
 {
    // Return a case-insensitive hash value (endian independent).
 
@@ -289,289 +572,11 @@ UInt_t TStringRef::HashFoldCase() const
 }
 
 //______________________________________________________________________________
-Ssiz_t TStringRef::Last(char c) const
-{
-   // Find last occurrence of a character c.
-
-   const char *f = strrchr(Data(), (unsigned char) c);
-   return f ? f - Data() : kNPOS;
-}
-
-
-ClassImp(TString)
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TString                                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-// ------------------- The static data members access --------------------------
-Ssiz_t  TString::GetInitialCapacity()    { return fgInitialCapac; }
-Ssiz_t  TString::GetResizeIncrement()    { return fgResizeInc; }
-Ssiz_t  TString::GetMaxWaste()           { return fgFreeboard; }
-
-//______________________________________________________________________________
-TString::TString()
-{
-   // TString default ctor.
-
-   fData = gNullStringRef->Data();
-   gNullStringRef->AddReference();
-}
-
-//______________________________________________________________________________
-TString::TString(Ssiz_t ic)
-{
-   // Create TString able to contain ic characters.
-
-   fData = TStringRef::GetRep(ic, 0)->Data();
-}
-
-//______________________________________________________________________________
-TString::TString(const char *cs)
-{
-   // Create TString and initialize it with string cs.
-
-   if (cs) {
-      Ssiz_t n = strlen(cs);
-      fData = TStringRef::GetRep(n, n)->Data();
-      memcpy(fData, cs, n);
-   } else
-      fData = TStringRef::GetRep(0, 0)->Data();
-}
-
-//______________________________________________________________________________
-TString::TString(const std::string &s)
-{
-   // Create TString and initialize it with string cs.
-
-   Ssiz_t n = s.length();
-   fData = TStringRef::GetRep(n, n)->Data();
-   memcpy(fData, s.c_str(), n);
-}
-
-//______________________________________________________________________________
-TString::TString(const char *cs, Ssiz_t n)
-{
-   // Create TString and initialize it with the first n characters of cs.
-
-   fData = TStringRef::GetRep(n, n)->Data();
-   memcpy(fData, cs, n);
-}
-
-//______________________________________________________________________________
-void TString::InitChar(char c)
-{
-   // Initialize a string with a single character.
-
-   fData = TStringRef::GetRep(GetInitialCapacity(), 1)->Data();
-   fData[0] = c;
-}
-
-//______________________________________________________________________________
-TString::TString(char c, Ssiz_t n)
-{
-   // Initialize the first n locations of a TString with character c.
-
-   fData = TStringRef::GetRep(n, n)->Data();
-   while (n--) fData[n] = c;
-}
-
-//______________________________________________________________________________
-TString::TString(const TSubString& substr)
-{
-   // Copy a TSubString in a TString.
-
-   Ssiz_t len = substr.IsNull() ? 0 : substr.Length();
-   fData = TStringRef::GetRep(AdjustCapacity(len), len)->Data();
-   memcpy(fData, substr.Data(), len);
-}
-
-//______________________________________________________________________________
-TString::~TString()
-{
-   // Delete a TString. I.e. decrease its reference count. When 0 free space.
-
-   Pref()->UnLink();
-}
-
-//______________________________________________________________________________
-TString& TString::operator=(char c)
-{
-   // Assign character c to TString.
-
-   if (!c) {
-      Pref()->UnLink();
-      gNullStringRef->AddReference();
-      fData = gNullStringRef->Data();
-      return *this;
-   }
-   return Replace(0, Length(), &c, 1);
-}
-
-//______________________________________________________________________________
-TString& TString::operator=(const char *cs)
-{
-   // Assign string cs to TString.
-
-   if (!cs || !*cs) {
-      Pref()->UnLink();
-      gNullStringRef->AddReference();
-      fData = gNullStringRef->Data();
-      return *this;
-   }
-   return Replace(0, Length(), cs, strlen(cs));
-}
-
-//______________________________________________________________________________
-TString& TString::operator=(const std::string &s)
-{
-   // Assign std::string s to TString.
-
-   if (s.length()==0) {
-      Pref()->UnLink();
-      gNullStringRef->AddReference();
-      fData = gNullStringRef->Data();
-      return *this;
-   }
-   return Replace(0, Length(), s.c_str(), s.length());
-}
-
-//______________________________________________________________________________
-TString& TString::operator=(const TString &str)
-{
-   // Assignment operator.
-
-   str.Pref()->AddReference();
-   Pref()->UnLink();
-   fData = str.fData;
-   return *this;
-}
-
-//______________________________________________________________________________
-TString& TString::operator=(const TSubString &substr)
-{
-   // Assign a TSubString substr to TString.
-
-   Ssiz_t len = substr.IsNull() ? 0 : substr.Length();
-   if (!len) {
-      Pref()->UnLink();
-      gNullStringRef->AddReference();
-      fData = gNullStringRef->Data();
-      return *this;
-   }
-   return Replace(0, Length(), substr.Data(), len);
-}
-
-//______________________________________________________________________________
-TString& TString::Append(char c, Ssiz_t rep)
-{
-   // Append character c rep times to string.
-
-   Ssiz_t tot;
-   Cow(tot = Length() + rep);
-   char* p = fData + Length();
-   while (rep--)
-      *p++ = c;
-
-   fData[Pref()->fNchars = tot] = '\0';
-
-   return *this;
-}
-
-//______________________________________________________________________________
-Ssiz_t TString::Capacity(Ssiz_t nc)
-{
-   // Return string capacity. If nc != current capacity Clone() the string
-   // in a string with the desired capacity.
-
-   if (nc > Length() && nc != Capacity())
-      Clone(nc);
-
-   return Capacity();
-}
-
-//______________________________________________________________________________
-int TString::CompareTo(const char *cs2, ECaseCompare cmp) const
-{
-   // Compare a string to char *cs2.
-
-   if (!cs2) return 1;
-
-   const char *cs1 = Data();
-   Ssiz_t len = Length();
-   Ssiz_t i = 0;
-   if (cmp == kExact) {
-      for (; cs2[i]; ++i) {
-         if (i == len) return -1;
-         if (cs1[i] != cs2[i]) return ((cs1[i] > cs2[i]) ? 1 : -1);
-      }
-   } else {                  // ignore case
-      for (; cs2[i]; ++i) {
-         if (i == len) return -1;
-         char c1 = tolower((unsigned char)cs1[i]);
-         char c2 = tolower((unsigned char)cs2[i]);
-         if (c1 != c2) return ((c1 > c2) ? 1 : -1);
-      }
-   }
-   return (i < len) ? 1 : 0;
-}
-
-//______________________________________________________________________________
-int TString::CompareTo(const TString &str, ECaseCompare cmp) const
-{
-   // Compare a string to another string.
-
-   const char *s1 = Data();
-   const char *s2 = str.Data();
-   Ssiz_t len = str.Length();
-   if (Length() < len) len = Length();
-   if (cmp == kExact) {
-      int result = memcmp(s1, s2, len);
-      if (result != 0) return result;
-   } else {
-      Ssiz_t i = 0;
-      for (; i < len; ++i) {
-         char c1 = tolower((unsigned char)s1[i]);
-         char c2 = tolower((unsigned char)s2[i]);
-         if (c1 != c2) return ((c1 > c2) ? 1 : -1);
-      }
-   }
-   // strings are equal up to the length of the shorter one.
-   if (Length() == str.Length()) return 0;
-   return (Length() > str.Length()) ? 1 : -1;
-}
-
-//______________________________________________________________________________
-Int_t TString::CountChar(Int_t c) const
-{
-   // Return number of times character c occurs in the string.
-
-   Int_t count = 0;
-   Int_t len   = Length();
-   for (Int_t n = 0; n < len; n++)
-      if (fData[n] == c) count++;
-
-   return count;
-}
-
-//______________________________________________________________________________
-TString TString::Copy() const
-{
-   // Copy a string.
-
-   TString temp(*this);          // Has increased reference count
-   temp.Clone();                 // Distinct copy
-   return temp;
-}
-
-//______________________________________________________________________________
 UInt_t TString::Hash(ECaseCompare cmp) const
 {
    // Return hash value.
 
-   return (cmp == kExact) ? Pref()->Hash() : Pref()->HashFoldCase();
+   return (cmp == kExact) ? HashCase() : HashFoldCase();
 }
 
 //______________________________________________________________________________
@@ -699,6 +704,15 @@ Ssiz_t TString::Index(const char *pattern, Ssiz_t plen, Ssiz_t startIndex,
 }
 
 //______________________________________________________________________________
+Ssiz_t TString::Last(char c) const
+{
+   // Find last occurrence of a character c.
+
+   const char *f = strrchr(Data(), (unsigned char) c);
+   return f ? f - Data() : kNPOS;
+}
+
+//______________________________________________________________________________
 Bool_t TString::MaybeRegexp() const
 {
    // Returns true if string contains one of the regexp characters "^$.[]*+?".
@@ -725,24 +739,39 @@ Bool_t TString::MaybeWildcard() const
 //______________________________________________________________________________
 TString& TString::Prepend(char c, Ssiz_t rep)
 {
-   // Prepend characters to self.
+   // Prepend character c rep times to string.
 
-   Ssiz_t tot = Length() + rep;  // Final string length
+   if (!rep) return *this;
 
-   // Check for shared representation or insufficient capacity
-   if ( Pref()->References() > 1 || Capacity() < tot ) {
-      TStringRef *temp = TStringRef::GetRep(AdjustCapacity(tot), tot);
-      memcpy(temp->Data()+rep, Data(), Length());
-      Pref()->UnLink();
-      fData = temp->Data();
-   } else {
-      memmove(fData + rep, Data(), Length());
-      fData[Pref()->fNchars = tot] = '\0';
+   Ssiz_t len = Length();
+   Ssiz_t tot = len + rep;  // Final string length
+
+   if (tot > MaxSize()) {
+      Error("Prepend", "rep too large (%d, max = %d)", rep, MaxSize()-len);
+      tot = MaxSize();
+      rep = tot - len;
    }
 
-   char *p = fData;
+   Ssiz_t capac = Capacity();
+   char *data, *p = GetPointer();
+
+   if (capac - tot >= 0) {
+      memmove(p + rep, p, len);
+      SetSize(tot);
+      data = p;
+   } else {
+      Ssiz_t cap = Recommend(tot);
+      data = new char[cap+1];
+      memcpy(data+rep, p, len);
+      UnLink();
+      SetLongCap(cap+1);
+      SetLongSize(tot);
+      SetLongPointer(data);
+   }
+   data[tot] = 0;
+
    while (rep--)
-      *p++ = c;
+      *data++ = c;
 
    return *this;
 }
@@ -753,35 +782,59 @@ TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
    // Remove at most n1 characters from self beginning at pos,
    // and replace them with the first n2 characters of cs.
 
-   if (pos <= kNPOS || pos > Length()) {
+   Ssiz_t len = Length();
+   if (pos <= kNPOS || pos > len) {
       Error("TString::Replace",
-            "first argument out of bounds: pos = %d, Length = %d", pos, Length());
+            "first argument out of bounds: pos = %d, Length = %d", pos, len);
       return *this;
    }
 
-   n1 = TMath::Min(n1, Length()-pos);
+   n1 = TMath::Min(n1, len - pos);
    if (!cs) n2 = 0;
 
-   Ssiz_t tot = Length()-n1+n2;  // Final string length
-   Ssiz_t rem = Length()-n1-pos; // Length of remnant at end of string
+   Ssiz_t tot = len - n1 + n2;  // Final string length
+   Ssiz_t rem = len - n1 - pos; // Length of remnant at end of string
 
-   // Check for shared representation, insufficient capacity,
-   // excess waste, or overlapping copy
-   if (Pref()->References() > 1 ||
-       Capacity() < tot ||
-       Capacity() - tot > GetMaxWaste() ||
-       (cs && (cs >= Data() && cs < Data()+Length())))
-   {
-      TStringRef *temp = TStringRef::GetRep(AdjustCapacity(tot), tot);
-      if (pos) memcpy(temp->Data(), Data(), pos);
-      if (n2 ) memcpy(temp->Data()+pos, cs, n2);
-      if (rem) memcpy(temp->Data()+pos+n2, Data()+pos+n1, rem);
-      Pref()->UnLink();
-      fData = temp->Data();
+   Ssiz_t capac = Capacity();
+   char *p = GetPointer();
+
+   if (capac - len + n1 >= n2) {
+      if (n1 != n2) {
+         if (rem) {
+            if (n1 > n2) {
+               memmove(p + pos, cs, n2);
+               memmove(p + pos + n2, p + pos + n1, rem);
+               goto finish;
+            }
+            if (p + pos < cs && cs < p + len) {
+               if (p + pos + n1 <= cs)
+                  cs += n2 - n1;
+               else {    // p + pos < cs < p + pos + n1
+                  memmove(p + pos, cs, n1);
+                  pos += n1;
+                  cs += n2;
+                  n2 -= n1;
+                  n1 = 0;
+               }
+            }
+            memmove(p + pos + n2, p + pos + n1, rem);
+         }
+      }
+      memmove(p + pos, cs, n2);
+finish:
+      SetSize(tot);
+      p[tot] = 0;
    } else {
-      if (rem) memmove(fData+pos+n2, Data()+pos+n1, rem);
-      if (n2 ) memmove(fData+pos   , cs, n2);
-      fData[Pref()->fNchars = tot] = 0;   // Add terminating null
+      Ssiz_t cap = Recommend(tot);
+      char *data = new char[cap+1];
+      if (pos) memcpy(data, p, pos);
+      if (n2 ) memcpy(data + pos, cs, n2);
+      if (rem) memcpy(data + pos + n2, p + pos + n1, rem);
+      UnLink();
+      SetLongCap(cap+1);
+      SetLongSize(tot);
+      SetLongPointer(data);
+      data[tot] = 0;
    }
 
    return *this;
@@ -806,7 +859,7 @@ TString& TString::ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2,
 //______________________________________________________________________________
 TString &TString::Remove(EStripType st, char c)
 {
-   // Remove char c at begin and/or end of string (like Strip() but
+   // Remove char c at begin and/or end of string (like Strip()) but
    // modifies directly the string.
 
    Ssiz_t start = 0;             // Index of first character
@@ -821,9 +874,8 @@ TString &TString::Remove(EStripType st, char c)
       while (start < end && direct[end-1] == c)
          --end;
    if (end == start) {
-      Pref()->UnLink();
-      gNullStringRef->AddReference();
-      fData = gNullStringRef->Data();
+      UnLink();
+      Zero();
       return *this;
    }
    if (start)
@@ -868,9 +920,8 @@ void TString::ToLower()
 {
    // Change string to lower-case.
 
-   Cow();
    register Ssiz_t n = Length();
-   register char *p = fData;
+   register char *p = GetPointer();
    while (n--) {
       *p = tolower((unsigned char)*p);
       p++;
@@ -882,23 +933,12 @@ void TString::ToUpper()
 {
    // Change string to upper case.
 
-   Cow();
    register Ssiz_t n = Length();
-   register char *p = fData;
+   register char *p = GetPointer();
    while (n--) {
       *p = toupper((unsigned char)*p);
       p++;
    }
-}
-
-//______________________________________________________________________________
-char& TString::operator[](Ssiz_t i)
-{
-   // Return charcater at location i.
-
-   AssertElement(i);
-   Cow();
-   return fData[i];
 }
 
 //______________________________________________________________________________
@@ -912,27 +952,11 @@ void TString::AssertElement(Ssiz_t i) const
 }
 
 //______________________________________________________________________________
-TString::TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2)
-{
-   // Special constructor to initialize with the concatenation of a1 and a2.
-
-   if (!a1) n1=0;
-   if (!a2) n2=0;
-   Ssiz_t tot = n1+n2;
-   fData = TStringRef::GetRep(AdjustCapacity(tot), tot)->Data();
-   memcpy(fData,    a1, n1);
-   memcpy(fData+n1, a2, n2);
-}
-
-//______________________________________________________________________________
 Ssiz_t TString::AdjustCapacity(Ssiz_t nc)
 {
    // Calculate a nice capacity greater than or equal to nc.
 
-   Ssiz_t ic = GetInitialCapacity();
-   if (nc <= ic) return ic;
-   Ssiz_t rs = GetResizeIncrement();
-   return (nc - ic + rs - 1) / rs * rs + ic;
+   return Recommend(nc);
 }
 
 //______________________________________________________________________________
@@ -948,36 +972,58 @@ void TString::Clobber(Ssiz_t nc)
 {
    // Clear string and make sure it has a capacity of nc.
 
-   if (Pref()->References() > 1 || Capacity() < nc) {
-      Pref()->UnLink();
-      fData = TStringRef::GetRep(nc, 0)->Data();
-   } else
-      fData[Pref()->fNchars = 0] = 0;
+   if (nc > MaxSize()) {
+      Error("Clobber", "capacity too large (%d, max = %d)", nc, MaxSize());
+      nc = MaxSize();
+   }
+
+   if (nc < kMinCap) {
+      UnLink();
+      Zero();
+   } else {
+      char *data = GetLongPointer();
+      Ssiz_t cap = Recommend(nc);
+      if (cap != Capacity()) {
+         data = new char[cap+1];
+         UnLink();
+         SetLongCap(cap+1);
+         SetLongPointer(data);
+      }
+      SetLongSize(0);
+      data[0] = 0;
+   }
 }
 
 //______________________________________________________________________________
-void TString::Clone()
+void TString::Clone(Ssiz_t tot)
 {
-   // Make string a distinct copy; preserve previous contents.
-
-   TStringRef *temp = TStringRef::GetRep(Length(), Length());
-   memcpy(temp->Data(), Data(), Length());
-   Pref()->UnLink();
-   fData = temp->Data();
-}
-
-//______________________________________________________________________________
-void TString::Clone(Ssiz_t nc)
-{
-   // Make self a distinct copy with capacity of at least nc.
-   // Preserve previous contents.
+   // Make self a distinct copy with capacity of at least tot, where tot cannot
+   // be smaller than the current length. Preserve previous contents.
 
    Ssiz_t len = Length();
-   if (len > nc) len = nc;
-   TStringRef *temp = TStringRef::GetRep(nc, len);
-   memcpy(temp->Data(), Data(), len);
-   Pref()->UnLink();
-   fData = temp->Data();
+   if (len >= tot) return;
+
+   if (tot > MaxSize()) {
+      Error("Clone", "tot too large (%d, max = %d)", tot, MaxSize());
+      tot = MaxSize();
+   }
+
+   Ssiz_t capac = Capacity();
+   char *data, *p = GetPointer();
+
+   if (capac - tot >= 0) {
+      SetSize(tot);
+      data = p;
+   } else {
+      Ssiz_t cap = Recommend(tot);
+      data = new char[cap+1];
+      memcpy(data, p, len);
+      UnLink();
+      SetLongCap(cap+1);
+      SetLongSize(tot);
+      SetLongPointer(data);
+   }
+   data[tot] = 0;
 }
 
 // ------------------- ROOT I/O ------------------------------------
@@ -998,7 +1044,8 @@ void TString::FillBuffer(char *&buffer)
       nwh = UChar_t(nchars);
       tobuf(buffer, nwh);
    }
-   for (int i = 0; i < nchars; i++) buffer[i] = fData[i];
+   const char *data = GetPointer();
+   for (int i = 0; i < nchars; i++) buffer[i] = data[i];
    buffer += nchars;
 }
 
@@ -1007,7 +1054,8 @@ void TString::ReadBuffer(char *&buffer)
 {
    // Read string from I/O buffer.
 
-   Pref()->UnLink();
+   UnLink();
+   Zero();
 
    UChar_t nwh;
    Int_t   nchars;
@@ -1022,9 +1070,10 @@ void TString::ReadBuffer(char *&buffer)
       Error("ReadBuffer", "found case with nwh=%d and nchars=%d", nwh, nchars);
       return;
    }
-   fData = TStringRef::GetRep(nchars, nchars)->Data();
 
-   for (int i = 0; i < nchars; i++) frombuf(buffer, &fData[i]);
+   char *data = Init(nchars, nchars);
+
+   for (int i = 0; i < nchars; i++) frombuf(buffer, &data[i]);
 }
 
 //______________________________________________________________________________
@@ -1091,35 +1140,19 @@ void TString::Streamer(TBuffer &b)
    if (b.IsReading()) {
       b >> nwh;
       if (nwh == 0) {
-         if (Pref()->References() > 1) {
-            Pref()->UnLink();
-            gNullStringRef->AddReference();
-            fData = gNullStringRef->Data();
-         } else {
-            // Clear string without changing its capacity.
-            fData[Pref()->fNchars = 0] = 0;
-         }
+         UnLink();
+         Zero();
       } else {
          if (nwh == 255)
             b >> nbig;
          else
             nbig = nwh;
 
-         if (Pref()->References() > 1 ||
-             Capacity() < nbig ||
-             Capacity() - nbig > GetMaxWaste()) {
-
-            Pref()->UnLink();
-            // We trying to optimize the I/O of TNamed in particular, so we duplicate
-            // some of the code in TStringRef::GetRep to save on the 'if statement'
-            // at the start of the function.
-            TStringRef *ret = (TStringRef*)new char[nbig + sizeof(TStringRef) + 1];
-            ret->fCapacity = nbig;
-            ret->SetRefCount(1);
-            fData = ret->Data();
-         }
-         fData[Pref()->fNchars = nbig] = 0; // Terminating null
-         b.ReadFastArray(fData,nbig);
+         Clobber(nbig);
+         char *data = GetPointer();
+         data[nbig] = 0;
+         SetSize(nbig);
+         b.ReadFastArray(data, nbig);
       }
    } else {
       nbig = Length();
@@ -1131,8 +1164,8 @@ void TString::Streamer(TBuffer &b)
          nwh = UChar_t(nbig);
          b << nwh;
       }
-      b.WriteFastArray(fData,nbig);
-      //for (int i = 0; i < nbig; i++) b << fData[i];
+      const char *data = GetPointer();
+      b.WriteFastArray(data, nbig);
    }
 }
 
@@ -1207,16 +1240,6 @@ Bool_t operator==(const TString& s1, const char *s2)
       if (data[i] != s2[i] || i == len) return kFALSE;
    return (i == len);
 }
-
-#if defined(R__ALPHA)
-//______________________________________________________________________________
-Bool_t operator==(const TString &s1, const TString &s2)
-{
-   // Compare two TStrings.
-
-   return ((s1.Length() == s2.Length()) && !memcmp(s1.Data(), s2.Data(), s1.Length()));
-}
-#endif
 
 //______________________________________________________________________________
 TString ToLower(const TString &str)
@@ -1368,40 +1391,55 @@ TString operator+(ULong64_t i, const TString &s)
 
 // -------------------- Static Member Functions ----------------------
 
-// Static member variable initialization:
-Ssiz_t TString::fgInitialCapac = 15;
-Ssiz_t TString::fgResizeInc    = 16;
-Ssiz_t TString::fgFreeboard    = 15;
+// ------------------- The static data members access --------------------------
 
 //______________________________________________________________________________
-Ssiz_t TString::InitialCapacity(Ssiz_t ic)
+Ssiz_t  TString::GetInitialCapacity()
+{
+   ::Obsolete("TString::GetInitialCapacity", "v5-30-00", "v5-32-00");
+   return 15;
+}
+
+//______________________________________________________________________________
+Ssiz_t  TString::GetResizeIncrement()
+{
+   ::Obsolete("TString::GetResizeIncrement", "v5-30-00", "v5-32-00");
+   return 16;
+}
+
+//______________________________________________________________________________
+Ssiz_t  TString::GetMaxWaste()
+{
+   ::Obsolete("TString::GetMaxWaste", "v5-30-00", "v5-32-00");
+   return 15;
+}
+
+//______________________________________________________________________________
+Ssiz_t TString::InitialCapacity(Ssiz_t)
 {
    // Set default initial capacity for all TStrings. Default is 15.
 
-   Ssiz_t ret = fgInitialCapac;
-   fgInitialCapac = ic;
-   return ret;
+   ::Obsolete("TString::InitialCapacity", "v5-30-00", "v5-32-00");
+   return 15;
 }
 
 //______________________________________________________________________________
-Ssiz_t TString::ResizeIncrement(Ssiz_t ri)
+Ssiz_t TString::ResizeIncrement(Ssiz_t)
 {
    // Set default resize increment for all TStrings. Default is 16.
 
-   Ssiz_t ret = fgResizeInc;
-   fgResizeInc = ri;
-   return ret;
+   ::Obsolete("TString::ResizeIncrement", "v5-30-00", "v5-32-00");
+   return 16;
 }
 
 //______________________________________________________________________________
-Ssiz_t TString::MaxWaste(Ssiz_t mw)
+Ssiz_t TString::MaxWaste(Ssiz_t)
 {
    // Set maximum space that may be wasted in a string before doing a resize.
    // Default is 15.
 
-   Ssiz_t ret = fgFreeboard;
-   fgFreeboard = mw;
-   return ret;
+   ::Obsolete("TString::MaxWaste", "v5-30-00", "v5-32-00");
+   return 15;
 }
 
 
@@ -1463,8 +1501,7 @@ char& TSubString::operator[](Ssiz_t i)
    // Return character at pos i from sub-string. Check validity of i.
 
    AssertElement(i);
-   fStr.Cow();
-   return fStr.fData[fBegin+i];
+   return fStr(fBegin+i);
 }
 
 //______________________________________________________________________________
@@ -1472,8 +1509,7 @@ char& TSubString::operator()(Ssiz_t i)
 {
    // Return character at pos i from sub-string. No check on i.
 
-   fStr.Cow();
-   return fStr.fData[fBegin+i];
+   return fStr(fBegin+i);
 }
 
 //______________________________________________________________________________
@@ -1539,8 +1575,7 @@ void TSubString::ToLower()
    // Convert sub-string to lower-case.
 
    if (!IsNull()) {                             // Ignore null substrings
-      fStr.Cow();
-      register char *p = (char*)(fStr.Data() + fBegin); // Cast away constness
+      register char *p = fStr.GetPointer() + fBegin;
       Ssiz_t n = fExtent;
       while (n--) { *p = tolower((unsigned char)*p); p++;}
    }
@@ -1551,8 +1586,7 @@ void TSubString::ToUpper()
 {
    // Convert sub-string to upper-case.
    if (!IsNull()) {                             // Ignore null substrings
-      fStr.Cow();
-      register char *p = (char*)(fStr.Data() + fBegin); // Cast away constness
+      register char *p = fStr.GetPointer() + fBegin;
       Ssiz_t n = fExtent;
       while (n--) { *p = toupper((unsigned char)*p); p++;}
    }
@@ -1688,7 +1722,6 @@ Bool_t TString::IsHex() const
 {
    // Returns true if all characters in string are hexidecimal digits
    // (0-9,a-f,A-F). Returns false in case string length is 0.
-
 
    const char *cp = Data();
    Ssiz_t len = Length();
@@ -1874,7 +1907,7 @@ void TString::FormImp(const char *fmt, va_list ap)
 
    int n, vc = 0;
 again:
-   n = vsnprintf(fData, buflen, fmt, ap);
+   n = vsnprintf(GetPointer(), buflen, fmt, ap);
    // old vsnprintf's return -1 if string is truncated new ones return
    // total number of characters that would have been written
    if (n == -1 || n >= buflen) {
@@ -1892,7 +1925,7 @@ again:
    if (vc)
       va_end(ap);
 
-   Pref()->fNchars = strlen(fData);
+   SetSize(strlen(Data()));
 }
 
 //______________________________________________________________________________

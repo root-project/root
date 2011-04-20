@@ -28,10 +28,6 @@
 #include <stdio.h>
 #endif
 
-#ifndef ROOT_TRefCnt
-#include "TRefCnt.h"
-#endif
-
 #ifndef ROOT_Riosfwd
 #include "Riosfwd.h"
 #endif
@@ -74,44 +70,6 @@ Bool_t  operator==(const TString &s1, const char *s2);
 Bool_t  operator==(const TSubString &s1, const TSubString &s2);
 Bool_t  operator==(const TSubString &s1, const TString &s2);
 Bool_t  operator==(const TSubString &s1, const char *s2);
-
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TStringRef                                                          //
-//                                                                      //
-//  This is the dynamically allocated part of a TString.                //
-//  It maintains a reference count. It contains no public member        //
-//  functions.                                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-class TStringRef : public TRefCnt {
-
-friend class TString;
-friend class TStringLong;
-friend class TSubString;
-
-private:
-   Ssiz_t       fCapacity;      // Max string length (excluding null)
-   Ssiz_t       fNchars;        // String length (excluding null)
-
-   void         UnLink(); // disconnect from a TStringRef, maybe delete it
-
-   Ssiz_t       Length() const   { return fNchars; }
-   Ssiz_t       Capacity() const { return fCapacity; }
-   char        *Data() const     { return (char*)(this+1); }
-
-   char        &operator[](Ssiz_t i)       { return ((char*)(this+1))[i]; }
-   char         operator[](Ssiz_t i) const { return ((char*)(this+1))[i]; }
-
-   Ssiz_t       First(char c) const;
-   Ssiz_t       First(const char *s) const;
-   UInt_t       Hash() const;
-   UInt_t       HashFoldCase() const;
-   Ssiz_t       Last(char) const;
-
-   static TStringRef *GetRep(Ssiz_t capac, Ssiz_t nchar);
-};
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -175,8 +133,8 @@ public:
 //////////////////////////////////////////////////////////////////////////
 class TString {
 
+friend class TStringLong;
 friend class TSubString;
-friend class TStringRef;
 
 friend TString operator+(const TString &s1, const TString &s2);
 friend TString operator+(const TString &s,  const char *cs);
@@ -195,42 +153,112 @@ friend Bool_t  operator==(const TString &s1, const TString &s2);
 friend Bool_t  operator==(const TString &s1, const char *s2);
 
 private:
-   static Ssiz_t  fgInitialCapac;   // Initial allocation Capacity
-   static Ssiz_t  fgResizeInc;      // Resizing increment
-   static Ssiz_t  fgFreeboard;      // Max empty space before reclaim
+#ifdef R__BYTESWAP
+   enum { kShortMask = 0x01, kLongMask  = 0x1 };
+#else
+   enum { kShortMask = 0x80, kLongMask  = ~(Ssiz_t(~0) >> 1) };
+#endif
 
-   void           Clone();          // Make self a distinct copy
-   void           Clone(Ssiz_t nc); // Make self a distinct copy w. capacity nc
-   void           FormImp(const char *fmt, va_list ap);
+   struct LongStr_t
+   {
+      Ssiz_t    fCap;    // Max string length (including null)
+      Ssiz_t    fSize;   // String length (excluding null)
+      char     *fData;   // Long string data
+   };
 
-protected:
+   enum { kMinCap = (sizeof(LongStr_t) - 1)/sizeof(char) > 2 ?
+                    (sizeof(LongStr_t) - 1)/sizeof(char) : 2 };
+   
+   struct ShortStr_t
+   {
+      unsigned char fSize;           // String length (excluding null)
+      char          fData[kMinCap];  // Short string data
+   };
+   
+   union UStr_t { LongStr_t fL; ShortStr_t fS; };
+   
+   enum { kNwords = sizeof(UStr_t) / sizeof(Ssiz_t)};
+   
+   struct RawStr_t
+   {
+      Ssiz_t fWords[kNwords];
+   };
+   
+   struct Rep_t
+   {
+      union
+      {
+         LongStr_t  fLong;
+         ShortStr_t fShort;
+         RawStr_t   fRaw;
+      };
+   };
+
+protected:   
 #ifndef __CINT__
-   char          *fData;          // ref. counted data (TStringRef is in front)
+   Rep_t          fRep;           // String data
 #endif
 
    // Special concatenation constructor
    TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2);
-   TStringRef    *Pref() const { return (((TStringRef*) fData) - 1); }
    void           AssertElement(Ssiz_t nc) const; // Index in range
    void           Clobber(Ssiz_t nc);             // Remove old contents
-   void           Cow();                          // Do copy on write as needed
-   void           Cow(Ssiz_t nc);                 // Do copy on write as needed
-   static Ssiz_t  AdjustCapacity(Ssiz_t nc);
    void           InitChar(char c);               // Initialize from char
+
+   enum { kAlignment = 16 };
+   static Ssiz_t  Align(Ssiz_t s) { return (s + (kAlignment-1)) & ~(kAlignment-1); }
+   static Ssiz_t  Recommend(Ssiz_t s) { return (s < kMinCap ? kMinCap : Align(s+1)) - 1; }
+   static Ssiz_t  AdjustCapacity(Ssiz_t nc);
+   
+private:
+   Bool_t         IsLong() const { return Bool_t(fRep.fShort.fSize & kShortMask); }
+#ifdef R__BYTESWAP
+   void           SetShortSize(Ssiz_t s) { fRep.fShort.fSize = (unsigned char)(s << 1); }
+   Ssiz_t         GetShortSize() const { return fRep.fShort.fSize >> 1; }
+#else
+   void           SetShortSize(Ssiz_t s) { fRep.fShort.fSize = (unsigned char)s; }
+   Ssiz_t         GetShortSize() const { return fRep.fShort.fSize; }
+#endif
+   void           SetLongSize(Ssiz_t s) { fRep.fLong.fSize = s; }
+   Ssiz_t         GetLongSize() const { return fRep.fLong.fSize; }
+   void           SetSize(Ssiz_t s) { IsLong() ? SetLongSize(s) : SetShortSize(s); }
+   void           SetLongCap(Ssiz_t s) { fRep.fLong.fCap = kLongMask | s; }
+   Ssiz_t         GetLongCap() const { return fRep.fLong.fCap & ~kLongMask; }
+   void           SetLongPointer(char *p) { fRep.fLong.fData = p; }
+   char          *GetLongPointer() { return fRep.fLong.fData; }
+   const char    *GetLongPointer() const { return fRep.fLong.fData; }
+   char          *GetShortPointer() { return fRep.fShort.fData; }
+   const char    *GetShortPointer() const { return fRep.fShort.fData; }
+   char          *GetPointer() { return IsLong() ? GetLongPointer() : GetShortPointer(); }
+   const char    *GetPointer() const { return IsLong() ? GetLongPointer() : GetShortPointer(); }
+#ifdef R__BYTESWAP
+   Ssiz_t         MaxSize() const { return kMaxInt - 1; }
+#else
+   Ssiz_t         MaxSize() const { return ~kLongMask - 1; }
+#endif
+   void           UnLink() const { if (IsLong()) delete [] fRep.fLong.fData; }
+   void           Zero() {
+      Ssiz_t (&a)[kNwords] = fRep.fRaw.fWords;
+      for (UInt_t i = 0; i < kNwords; ++i)
+         a[i] = 0;
+   }
+   char          *Init(Ssiz_t capacity, Ssiz_t nchar);
+   void           Clone(Ssiz_t nc); // Make self a distinct copy w. capacity nc
+   void           FormImp(const char *fmt, va_list ap);
+   UInt_t         HashCase() const;
+   UInt_t         HashFoldCase() const;
 
 public:
    enum EStripType   { kLeading = 0x1, kTrailing = 0x2, kBoth = 0x3 };
    enum ECaseCompare { kExact, kIgnoreCase };
 
-   TString();                       // Null string
-   explicit TString(Ssiz_t ic);     // Suggested capacity
-   TString(const TString &s) :      // Copy constructor
-      fData(s.fData) { Pref()->AddReference(); }
-
+   TString();                           // Null string
+   explicit TString(Ssiz_t ic);         // Suggested capacity
+   TString(const TString &s);           // Copy constructor
    TString(const char *s);              // Copy to embedded null
    TString(const char *s, Ssiz_t n);    // Copy past any embedded nulls
    TString(const std::string &s);
-   TString(char c) : fData(0) { InitChar(c); }
+   TString(char c) { InitChar(c); }
    TString(char c, Ssiz_t s);
    TString(const TSubString &sub);
 
@@ -251,7 +279,7 @@ public:
    void     Puts(FILE *fp);
 
    // Type conversion
-   operator const char*() const { return fData; }
+   operator const char*() const { return GetPointer(); }
 
    // Assignment
    TString    &operator=(char s);                // Replace string
@@ -297,7 +325,7 @@ public:
    Double_t     Atof() const;
    Bool_t       BeginsWith(const char *s,      ECaseCompare cmp = kExact) const;
    Bool_t       BeginsWith(const TString &pat, ECaseCompare cmp = kExact) const;
-   Ssiz_t       Capacity() const         { return Pref()->Capacity(); }
+   Ssiz_t       Capacity() const { return (IsLong() ? GetLongCap() : kMinCap) - 1; }
    Ssiz_t       Capacity(Ssiz_t n);
    TString     &Chop();
    void         Clear();
@@ -309,10 +337,10 @@ public:
    Bool_t       Contains(TPRegexp &pat) const;
    Int_t        CountChar(Int_t c) const;
    TString      Copy() const;
-   const char  *Data() const                 { return fData; }
-   Bool_t       EndsWith(const char *pat,    ECaseCompare cmp = kExact) const;
-   Ssiz_t       First(char c) const          { return Pref()->First(c); }
-   Ssiz_t       First(const char *cs) const  { return Pref()->First(cs); }
+   const char  *Data() const { return GetPointer(); }
+   Bool_t       EndsWith(const char *pat, ECaseCompare cmp = kExact) const;
+   Ssiz_t       First(char c) const;
+   Ssiz_t       First(const char *cs) const;
    void         Form(const char *fmt, ...)
 #if defined(__GNUC__) && !defined(__CINT__)
    __attribute__((format(printf, 2, 3)))   /* 1 is the this pointer */
@@ -341,10 +369,10 @@ public:
    Bool_t       IsDigit() const;
    Bool_t       IsFloat() const;
    Bool_t       IsHex() const;
-   Bool_t       IsNull() const         { return Pref()->fNchars == 0; }
+   Bool_t       IsNull() const         { return Length() == 0; }
    Bool_t       IsWhitespace() const   { return (Length() == CountChar(' ')); }
-   Ssiz_t       Last(char c) const     { return Pref()->Last(c); }
-   Ssiz_t       Length() const         { return Pref()->fNchars; }
+   Ssiz_t       Last(char c) const;
+   Ssiz_t       Length() const         { return IsLong() ? GetLongSize() : GetShortSize(); }
    Bool_t       MaybeRegexp() const;
    Bool_t       MaybeWildcard() const;
    TString     &Prepend(const char *cs);     // Prepend a character string
@@ -432,21 +460,11 @@ extern int strcasecmp(const char *str1, const char *str2);
 extern int strncasecmp(const char *str1, const char *str2, Ssiz_t n);
 #endif
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 //  Inlines                                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
-inline void TStringRef::UnLink()
-{ if (RemoveReference() == 0) delete [] (char*)this; }
-
-inline void TString::Cow()
-{ if (Pref()->References() > 1) Clone(); }
-
-inline void TString::Cow(Ssiz_t nc)
-{ if (Pref()->References() > 1  || Capacity() < nc) Clone(nc); }
 
 inline TString &TString::Append(const char *cs)
 { return Replace(Length(), 0, cs, cs ? strlen(cs) : 0); }
@@ -499,7 +517,12 @@ inline TString &TString::operator+=(Float_t f)
 { return operator+=((Double_t) f); }
 
 inline TString &TString::operator+=(Long64_t l)
-{ char s[32]; sprintf(s, "%lld", l); return operator+=(s); }
+{
+   char s[32];
+   // coverity[secure_coding] Buffer is large enough (2^64 = 20 digits).
+   sprintf(s, "%lld", l);
+   return operator+=(s);
+}
 
 inline TString &TString::operator+=(ULong64_t ul)
 {
@@ -593,13 +616,16 @@ inline TString &TString::ReplaceAll(const char *s1,const char *s2)
 { return ReplaceAll(s1, s1 ? strlen(s1) : 0, s2, s2 ? strlen(s2) : 0); }
 
 inline char &TString::operator()(Ssiz_t i)
-{ Cow(); return fData[i]; }
-
-inline char TString::operator[](Ssiz_t i) const
-{ AssertElement(i); return fData[i]; }
+{ return GetPointer()[i]; }
 
 inline char TString::operator()(Ssiz_t i) const
-{ return fData[i]; }
+{ return GetPointer()[i]; }
+
+inline char &TString::operator[](Ssiz_t i)
+{ AssertElement(i); return GetPointer()[i]; }
+
+inline char TString::operator[](Ssiz_t i) const
+{ AssertElement(i); return GetPointer()[i]; }
 
 inline const char *TSubString::Data() const
 {
@@ -622,23 +648,21 @@ inline const char *TSubString::Data() const
 
 // Access to elements of sub-string with bounds checking
 inline char TSubString::operator[](Ssiz_t i) const
-{ AssertElement(i); return fStr.fData[fBegin+i]; }
+{ AssertElement(i); return fStr.GetPointer()[fBegin+i]; }
 
 inline char TSubString::operator()(Ssiz_t i) const
-{ return fStr.fData[fBegin+i]; }
+{ return fStr.GetPointer()[fBegin+i]; }
 
 inline TSubString &TSubString::operator=(const TSubString &s)
 { fStr = s.fStr; fBegin = s.fBegin; fExtent = s.fExtent; return *this; }
 
 
 // String Logical operators
-#if !defined(R__ALPHA)
 inline Bool_t operator==(const TString &s1, const TString &s2)
 {
    return ((s1.Length() == s2.Length()) &&
             !memcmp(s1.Data(), s2.Data(), s1.Length()));
 }
-#endif
 
 inline Bool_t operator!=(const TString &s1, const TString &s2)
 { return !(s1 == s2); }
