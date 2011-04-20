@@ -148,6 +148,7 @@ TStyle::TStyle(const char *name, const char *title)
       SetOptFit(111);
       SetStatY(0.935);
       SetHistFillColor(38);
+      SetHistFillStyle(3001);
       SetHistLineColor(kBlue+2);
       SetLegendBorderSize(1);
       SetLegendFillColor(0);
@@ -599,6 +600,7 @@ void TStyle::Reset(Option_t *opt)
       SetOptFit(111);
       SetStatY(0.935);
       SetHistFillColor(38);
+      SetHistFillStyle(3001);
       SetHistLineColor(kBlue+2);
       SetLegendBorderSize(1);
       SetLegendFillColor(0);
