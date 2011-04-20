@@ -664,6 +664,7 @@ bool TClassEdit::IsStdClass(const char *classname)
    if ( strcmp(classname,"allocator")==0) return true;
    if ( strncmp(classname,"allocator<",strlen("allocator<"))==0) return true;
    if ( strncmp(classname,"greater<",strlen("greater<"))==0) return true;
+   if ( strncmp(classname,"less<",strlen("less<"))==0) return true;
    if ( strncmp(classname,"auto_ptr<",strlen("auto_ptr<"))==0) return true;
 
    return IsSTLCont(classname) != 0;
