@@ -72,9 +72,9 @@ if test "$platform" = "ios"; then
 else
    newlib="-lNew"
    rootglibs="-lGui"
-   rootevelibs="-lEG -lTreePlayer -lGeom -lGed -lRGL -lEve"
-   rootlibs="-lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree \
--lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread"
+   rootevelibs="-lEve -lEG -lTreePlayer -lGeom -lGed -lRGL"
+   rootlibs="-lGpad -lHist -lGraf -lGraf3d -lTree -lRint -lPostscript \
+-lMatrix -lPhysics -lMathCore -lRIO -lNet -lThread -lCore -lCint"
    if test "$dicttype" = "reflex" || test "$dicttype" = "gccxml"; then
        rootlibs="$rootlibs -lReflex"
    fi
@@ -694,9 +694,9 @@ while test $# -gt 0; do
          ### Set the flag
          libsout="yes"
          if test "x$new_set" = "xyes" ; then
-            glibs="${newlib} ${rootlibs} ${rootglibs}"
+            glibs="${newlib} ${rootglibs} ${rootlibs}"
          else
-            glibs="${rootlibs} ${rootglibs}"
+            glibs="${rootglibs} ${rootlibs}"
          fi
       else
          glibs="${rootglibs}"
@@ -743,14 +743,14 @@ while test $# -gt 0; do
          ### Set the flag
          libsout="yes"
          if test "x$new_set" = "xyes" ; then
-            evelibs="${newlib} ${rootlibs} ${rootglibs} ${rootevelibs}"
+            evelibs="${newlib} ${rootevelibs} ${rootglibs} ${rootlibs}"
          else
-            evelibs="${rootlibs} ${rootglibs} ${rootevelibs}"
+            evelibs="${rootevelibs} ${rootglibs} ${rootlibs}"
          fi
       elif test "x$glibsout" = "xno" ; then
          ### Set the flag
          glibsout="yes"
-         evelibs="${rootglibs} ${rootevelibs}"
+         evelibs="${rootevelibs} ${rootglibs}"
          eveandglibsonly="yes"
       else
          evelibs="${rootevelibs}"
