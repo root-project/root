@@ -67,9 +67,14 @@ Avoid infinite loop if one of the dependent library is missing.</li>
      It has very little decoration. It was made looking at the default styles
      usually used by the experiments.
      <p>
-     A new parameter <tt>Canvas.Style</tt> in <tt>config/rootrc.in</tt> allows
+     A new parameter <tt>Canvas.Style</tt> in <tt>etc/system.rootrc</tt> allows
      to define the default style. If it is not specified, the <tt>Modern</tt>
-     style is used. To use the old default style on can set it to <tt>Classic</tt>.
+     style is used. To use the old default style one can set it to <tt>Classic</tt> or add
+     <pre>
+     gROOT->SetStyle("Classic");
+     </pre>
+     to your scripts. We seek feedback on improving the Modern style.
+     Please leave comments in the forum.
      <p>
      The following table shows the two plots <tt>hpx->Draw()</tt> and <tt>hpxpy->Draw("colz")</tt>
      in the "Classic" and "Modern" styles.
