@@ -97,7 +97,7 @@ public:
   RooDataHist *generateBinned(const RooArgSet &whatVars, Double_t nEvents, Bool_t expectedData=kFALSE, Bool_t extended=kFALSE) const;
 
 
-  virtual RooDataSet* generateSimGlobal(const RooArgSet& whatVars, Double_t nEvents) ;
+  virtual RooDataSet* generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) ;
 
   virtual RooPlot* plotOn(RooPlot* frame, 
 			  const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),

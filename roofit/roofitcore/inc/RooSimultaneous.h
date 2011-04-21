@@ -78,7 +78,7 @@ public:
   RooAbsPdf* getPdf(const char* catName) const ;
   const RooAbsCategoryLValue& indexCat() const { return (RooAbsCategoryLValue&) _indexCat.arg() ; }
 
-  virtual RooDataSet* generateSimGlobal(const RooArgSet& whatVars, Double_t nEvents) ;
+  virtual RooDataSet* generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) ;
   
 protected:
 

@@ -1050,7 +1050,7 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDa
 
 
 //_____________________________________________________________________________
-RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Double_t nEvents) 
+RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) 
 {
   // Special generator interface for generation of 'global observables' -- for RooStats tools
 

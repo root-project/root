@@ -2129,7 +2129,7 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEven
 
 
 //_____________________________________________________________________________
-RooDataSet* RooAbsPdf::generateSimGlobal(const RooArgSet& whatVars, Double_t nEvents) 
+RooDataSet* RooAbsPdf::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) 
 {
   // Special generator interface for generation of 'global observables' -- for RooStats tools
 
