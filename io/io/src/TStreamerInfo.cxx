@@ -1621,6 +1621,116 @@ void TStreamerInfo::BuildOld()
          } else {
             element->SetNewType(-2);
          }
+         // Humm we still need to make sure we have the same 'type' (pointer, embedded object, array, etc..)
+         Bool_t cannotConvert = kFALSE;
+         if (element->GetNewType() != -2) {
+            if (dm) {
+               if (dm->IsaPointer()) {
+                  if (strncmp(dm->GetTitle(),"->",2)==0) {
+                     // We are fine, nothing to do.
+                     if (newClass->InheritsFrom(TObject::Class())) {
+                        newType = kObjectp;
+                     } else if (newClass->GetCollectionProxy()) {
+                        newType = kSTLp;
+                     } else {
+                        newType = kAnyp;
+                     }
+                  } else {
+                     if (TClass::GetClass(dm->GetTypeName())->InheritsFrom(TObject::Class())) {
+                        newType = kObjectP;
+                     } else if (newClass->GetCollectionProxy()) {
+                        newType = kSTLp;
+                     } else {
+                        newType = kAnyP;
+                     }
+                  }
+               } else {
+                  if (newClass->GetCollectionProxy()) {
+                     newType = kSTL;
+                  } else if (newClass == TString::Class()) {
+                     newType = kTString;
+                  } else if (newClass == TObject::Class()) {
+                     newType = kTObject;
+                  } else if (newClass == TNamed::Class()) {
+                     newType = kTNamed;
+                  } else if (newClass->InheritsFrom(TObject::Class())) {
+                     newType = kObject;
+                  } else {
+                     newType = kAny;                           
+                  }
+               }
+               if (dm->GetArrayDim() > 0) {
+                  newType += kOffsetL;
+               }               
+            } else if (!fClass->IsLoaded()) {
+               TStreamerInfo* newInfo = (TStreamerInfo*) fClass->GetStreamerInfos()->At(fClass->GetClassVersion());
+               if (newInfo && (newInfo != this)) {
+                  TStreamerElement* newElems = (TStreamerElement*) newInfo->GetElements()->FindObject(element->GetName());
+                  if (newElems) {
+                     newType = newElems->GetType();
+                  }
+               } else {
+                  newType = element->GetType();
+               }
+            }
+            if (element->GetType() == kSTL 
+                || ((element->GetType() == kObject || element->GetType() == kAny || element->GetType() == kObjectp || element->GetType() == kAnyp) 
+                    && oldClass == TClonesArray::Class())) 
+            {
+               cannotConvert = (newType != kSTL && newType != kObject && newType != kAny && newType != kSTLp && newType != kObjectp && newType != kAnyp);
+               
+            } else if (element->GetType() == kSTLp  || ((element->GetType() == kObjectP || element->GetType() == kAnyP) && oldClass == TClonesArray::Class()) ) 
+            {
+               cannotConvert = (newType != kSTL && newType != kObject && newType != kAny && newType != kSTLp && newType != kObjectP && newType != kAnyP);               
+
+            } else if (element->GetType() == kSTL + kOffsetL
+                || ((element->GetType() == kObject + kOffsetL|| element->GetType() == kAny + kOffsetL|| element->GetType() == kObjectp+ kOffsetL || element->GetType() == kAnyp+ kOffsetL) 
+                    && oldClass == TClonesArray::Class())) 
+            {
+               cannotConvert = (newType != kSTL + kOffsetL && newType != kObject+ kOffsetL && newType != kAny+ kOffsetL && newType != kSTLp+ kOffsetL && newType != kObjectp+ kOffsetL && newType != kAnyp+ kOffsetL);
+               
+            } else if (element->GetType() == kSTLp + kOffsetL || ((element->GetType() == kObjectP+ kOffsetL || element->GetType() == kAnyP+ kOffsetL) && oldClass == TClonesArray::Class()) ) 
+            {
+               cannotConvert = (newType != kSTL+ kOffsetL && newType != kObject+ kOffsetL && newType != kAny+ kOffsetL && newType != kSTLp + kOffsetL&& newType != kObjectP+ kOffsetL && newType != kAnyP+ kOffsetL);               
+
+            } else if ((element->GetType() == kObjectp || element->GetType() == kAnyp 
+                 || element->GetType() == kObject || element->GetType() == kAny 
+                 || element->GetType() == kTObject || element->GetType() == kTNamed || element->GetType() == kTString )) {
+               // We had Type* ... ; //-> or Type ...;
+               // this is completely compatible with the same and with a embedded object.
+               if (newType != kNoType_t) {
+                  if (newType == kObjectp || newType == kAnyp
+                      || newType == kObject || newType == kAny
+                      || newType == kTObject || newType == kTNamed || newType == kTString) {
+                     // We are fine, no transformation to make
+                     element->SetNewType(newType);
+                  } else {
+                     // We do not support this yet.
+                     cannotConvert = kTRUE;
+                  }
+               } else {
+                  // We have no clue 
+                  cannotConvert = kTRUE;
+               }
+            } else if (element->GetType() == kObjectP || element->GetType() == kAnyP) {
+               if (newType != kNoType_t) {
+                  if (newType == kObjectP || newType == kAnyP ) {
+                     // nothing to do}
+                  } else {
+                     cannotConvert = kTRUE;
+                  }
+               } else {
+                  // We have no clue 
+                  cannotConvert = kTRUE;
+               }
+            }
+         }
+         if (cannotConvert) {
+            element->SetNewType(-2);
+            if (gDebug > 0) {
+               Info("BuildOld", "element: %s %s::%s has new type: %s/%d", element->GetTypeName(), GetName(), element->GetName(), dm ? dm->GetFullTypeName() : TDataType::GetTypeName((EDataType)newType), newType);
+            }
+         }
       } else {
          element->SetNewType(-1);
          offset = kMissing;

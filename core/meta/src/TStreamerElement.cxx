@@ -1749,6 +1749,9 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
       }
       if (IsaPointer()) fType = TVirtualStreamerInfo::kSTLp;
       else fType = TVirtualStreamerInfo::kSTL;
+      if (GetArrayLength() > 0) {
+         fType += TVirtualStreamerInfo::kOffsetL;
+      }
       if (R__b.GetParent()) { // Avoid resetting during a cloning.
          if (fCtype==TVirtualStreamerInfo::kObjectp || fCtype==TVirtualStreamerInfo::kAnyp || fCtype==TVirtualStreamerInfo::kObjectP || fCtype==TVirtualStreamerInfo::kAnyP) {
             SetBit(kDoNotDelete); // For backward compatibility

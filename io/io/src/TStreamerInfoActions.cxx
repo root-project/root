@@ -1152,7 +1152,15 @@ void TStreamerInfo::Compile()
       } else {
          if (fNewType[fNdata] != fType[fNdata]) {
             if (fNewType[fNdata] > 0) {
-               if (fType[fNdata] != kCounter) {
+               if ( (fNewType[fNdata] == kObjectp || fNewType[fNdata] == kAnyp
+                     || fNewType[fNdata] == kObject || fNewType[fNdata] == kAny
+                     || fNewType[fNdata] == kTObject || fNewType[fNdata] == kTNamed || fNewType[fNdata] == kTString)
+                   && (fType[fNdata] == kObjectp || fType[fNdata] == kAnyp
+                       || fType[fNdata] == kObject || fType[fNdata] == kAny
+                       || fType[fNdata] == kTObject || fType[fNdata] == kTNamed || fType[fNdata] == kTString )
+                   ) {
+                  fType[fNdata] = fNewType[fNdata];
+               } else if (fType[fNdata] != kCounter) {
                   fType[fNdata] += kConv;
                }
             } else {
