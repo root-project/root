@@ -2,3 +2,51 @@
 <hr/> 
 <a name="tmva"></a> 
 <h3>TMVA</h3>
+
+TMVA version 4.1.1 is included in this root release. The changes with respect
+to ROOT 5.28 / TMVA 4.1.0 are are in detail:
+
+<h4>Variable transformations</h4>
+<ul>
+      <li>Variable transformations can now be applied to a user-defined subset
+        of variables (and regression targets).</li>
+
+      <li>Enable variable transformations for general boosting</li>
+
+      <li>Extended PDEFoam functionality:<br>
+        <ul>
+          <li>Multiclass classification by training of one discriminator foam for each
+            variable.</li>
+          
+          <li>The cell tree can now be plotted from the macro test/PlotFoams. This makes
+            it easyer to compare the PDEFoam structure to a decision tree.</li>
+          <li>Variable importance ranking by counting the number of cuts made in each
+            dimension.  The variable, for which the most cuts were done is ranked highest.</li>
+         </ul>
+   </li>
+      <li>Fixed the size of the sampling box in PDEFoam:
+        In TMVA 4.1.0 the size of the PDEFoam sampling box in each dimension was
+        2*VolFrac times the foam size.  This was contrary to the intention and the
+        documentation in the UserGuide and is now corrected: In TMVA 4.1.1 the size
+        of the PDEFoam sampling box in each dimension is now VolFrac times the foam
+        size. This implies that in TMVA 4.1.1 the VolFrac value for training a PDEFoam
+        must be doubled in order to give the same results as in TMVA 4.1.0.  The default
+        VolFrac value was also changed from 0.0333 to 0.0666.</li>
+
+      <li>New configuration variable "NbinsMVAoutput" defining the bins of the MVA output
+    variables in the TMVA training plots produced via the GUI. As always, Config
+    settings can be modified in the training script via, eg, the command
+
+        (TMVA::gConfig().GetVariablePlotting()).fNbinsMVAoutput = 50;
+
+    to be called AFTER initialising the TMVA Factory object.</li>
+</ul>
+
+<h4>Bug fixes</h4>
+<ul>
+    <li>Fix for MethodBoost which ensures that the method options for the boosted
+       classifier are handled correctly during boosting.</li>
+    <li>Fixed problems in classification of some methods when booking background
+       training tree before signal one.</li>
+    <li>Fixed preprocessing transformation bug in HMatrix</li>
+</ul>
