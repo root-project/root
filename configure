@@ -1637,10 +1637,13 @@ if test "x$platform" = "xmacosx" ; then
    fi
 fi
 
+debmultiarch=
 if `$cwhich dpkg-architecture > /dev/null 2>&1` ; then
-    logmsg "Checking dpkg-architecture"
-    debmultiarch=`dpkg-architecture -qDEB_HOST_MULTIARCH`
-    logmsg "$debmultiarch"
+    if `dpkg-architecture -qDEB_HOST_MULTIARCH > /dev/null 2>&1` ; then
+        logmsg "Checking dpkg-architecture"
+        debmultiarch=`dpkg-architecture -qDEB_HOST_MULTIARCH 2> /dev/null`
+        logmsg "$debmultiarch"
+    fi
 fi
 
 ######################################################################
