@@ -4252,7 +4252,7 @@ if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
       decrefone=20070628
       decreftwo=20070723
       decrefthree=20071004
-      decreffour=20110311
+      decreffour=300000002
       if [ $decver -gt $decrefone ] ; then
          if [ $decver -gt $decreffour ] ; then
             xrdcomm="$xrdcomm"
