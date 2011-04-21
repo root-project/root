@@ -126,6 +126,13 @@ std::vector<Float_t> TMVA::PDEFoamMultiTarget::GetCellValue(const std::map<Int_t
       return std::vector<Float_t>(GetTotDim() - xvec.size(), 0);
    }
 
+   // initialize the target map
+   for (Int_t idim = 0; idim < GetTotDim(); ++idim) {
+      // is idim a target dimension, i.e. is idim missing in txvec?
+      if (txvec.find(idim) == txvec.end())
+         target[idim] = 0;
+   }
+
    // loop over all cells that were found
    for (std::vector<PDEFoamCell*>::const_iterator cell_it = cells.begin();
         cell_it != cells.end(); cell_it++) {

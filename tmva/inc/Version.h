@@ -43,7 +43,7 @@
 
 #define TMVA_RELEASE      "4.1.1"
 #define TMVA_RELEASE_DATE "Apr 21, 2011"
-#define TMVA_RELEASE_TIME "10:00:00"
+#define TMVA_RELEASE_TIME "12:00:00"
 #define TMVA_VERSION_CODE 262401
 #define TMVA_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 

@@ -93,7 +93,7 @@ namespace TMVA {
       virtual void           SetOutput( Event* event, std::vector<Float_t>& output, std::vector<Char_t>& mask, const Event* oldEvent = 0, Bool_t backTransform = kFALSE ) const;
       virtual void           CountVariableTypes( UInt_t& nvars, UInt_t& ntgts, UInt_t& nspcts ) const;
 
-      void ToggleInputSortOrder( const Bool_t sortOrder ) { fSortGet = sortOrder; }
+      void ToggleInputSortOrder( Bool_t sortOrder ) { fSortGet = sortOrder; }
       void SetOutputDataSetInfo( DataSetInfo* outputDsi ) { fDsiOutput = outputDsi; }
 
 
