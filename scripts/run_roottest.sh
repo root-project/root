@@ -114,7 +114,7 @@ error_handling() {
     echo "See full log file at http://www-root.fnal.gov/roottest/summary.shtml"
 
     if [ "x$mail" = "xx" ] ; then
-	mail -s "root $OSNAME test" $mailto <<EOF
+	mail -s "root $OSNAME test on `date +"%F"` " $mailto <<EOF
 Failure while building root and roottest on $host$configname ("`uname`") in $ROOTLOC
 Error: $2
 See full log file at http://www-root.fnal.gov/roottest/summary.shtml
