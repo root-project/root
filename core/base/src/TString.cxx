@@ -1011,19 +1011,16 @@ void TString::Clone(Ssiz_t tot)
    Ssiz_t capac = Capacity();
    char *data, *p = GetPointer();
 
-   if (capac - tot >= 0) {
-      SetSize(tot);
-      data = p;
-   } else {
+   if (capac - tot < 0) {
       Ssiz_t cap = Recommend(tot);
       data = new char[cap+1];
       memcpy(data, p, len);
       UnLink();
       SetLongCap(cap+1);
-      SetLongSize(tot);
+      SetLongSize(len);
       SetLongPointer(data);
+      data[len] = 0;
    }
-   data[tot] = 0;
 }
 
 // ------------------- ROOT I/O ------------------------------------
