@@ -14,12 +14,53 @@ without the need for mallocing the required space.
 </li>
 </ul>
 
+<h4>TObject</h4>
+<ul>
+<li>
+In <tt>TObject::ls</tt>, add support for the option 'noaddr' which 
+prevents the printing of the address of the object.   This
+is useful in particular in roottest.   Use this in <tt>hadd</tt>
+and <tt>TFileMerger</tt>
+</li>
+</ul>
+
+<h4>TROOT</h4>
+<ul>
+<li>New routine <tt>CloseFiles</tt> used automatically shortly before termination to 
+insure closing of files and sockets before the unload of any library.</li>
+<li>New collection '<tt>ClosedObjects</tt>' holding pointers to <tt>TFile</tt> or <tt>TSocket</tt> that
+have been closed but not deleted it.  In the case of <tt>TSocket</tt>, they are added only
+if they are closed by the <tt>CloseFiles</tt>.</li>
+<li>Add a Close member function to <tt>TProofMgr</tt> since it is added to the list of socket.</li>
+<li>Migrate the closing of files from various to a single place (<tt>T*System::Exit</tt>).</li>
+<li>Fill in the implementation of <tt>TROOT::FindObjectAnyFile</tt>.</li>
+<li>Mark TROOT as <tt>TObject::kInvalidObject</tt> as soon as its destructor starts,
+in order to be able to veto some action later on (like autoloading).</li>
+</ul>
+
+<h4>TSystem</h4>
+<ul>
+<li>Better handle the cases where the information in the rootmap file is (almost) empty.   
+Avoid infinite loop if one of the dependent library is missing.</li>
+</ul>
+
+<h4>Meta</h4>
+<ul>
+<li>Improve error message in case a schema evolution rule can not be loaded when the library is loaded
+(from the generic 'it conflicts with one of the other rules' to 'the target member ... is unknown'.</li>
+</ul>
+
+<h4>TFolder</h4>
+<ul>
+<li>Several enhancement and clarification to <tt>TFolder::FindFullPathName</tt>.</li>
+</ul>
+
 <h4>TStyle</h4>
 <ul>
 <li> Add the fill color attribute (<tt>SetLegendFillColor()</tt> and the font
      attribute (<tt>SetLegendFont()</tt>.
 </li>
-<li> A new TStyle called "Modern" has been implemented. It can be set with:
+<li> A new <tt>TStyle</tt> called "Modern" has been implemented. It can be set with:
      <pre>
      gROOT->SetStyle("Modern");
      </pre>
@@ -34,7 +75,7 @@ without the need for mallocing the required space.
 
 <h4>ACLiC</h4>
 <ul>
-<li> ACLiC now passes the macro __ACLIC__ to both the rootcint and compiler phases.
+<li> ACLiC now passes the macro <tt>__ACLIC__</tt> to both the rootcint and compiler phases.
 </li>
 </ul>
 
@@ -47,4 +88,6 @@ without the need for mallocing the required space.
 <li> Make sure the stdout/stderr redirection works also in the case there is no console (i.e. in stand-alone applications)</li>
 <li> Make sure the file descriptors are valid before using them
 </ul>
+
+
 
