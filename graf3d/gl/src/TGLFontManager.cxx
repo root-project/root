@@ -457,7 +457,7 @@ void TGLFontManager::RegisterFont(Int_t size, const char* name, TGLFont::EMode m
    Int_t cnt = 0;
    while ((os = (TObjString*) next()) != 0)
    {
-      if (os->GetString() == name)
+      if (os->String() == name)
          break;
       cnt++;
    }
@@ -537,7 +537,7 @@ const char* TGLFontManager::GetFontNameFromId(Int_t id)
    if (fgStaticInitDone == kFALSE) InitStatics();
 
    TObjString* os = (TObjString*)fgFontFileArray[id / 10];
-   return os->GetString().Data();
+   return os->String().Data();
 }
 
 //______________________________________________________________________________
