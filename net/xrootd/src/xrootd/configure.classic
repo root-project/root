@@ -235,6 +235,11 @@ check_library() {
             i64=`echo $i | sed 's|lib*|lib64|'`
             i="$i64 $i"
         fi
+        # look first in the DEB_HOST_MULTIARCH directories
+        if test "x$debmultiarch" != "x" ; then
+            i64=`echo $i | sed "s|\(lib\)$|\1/$debmultiarch|"`
+            i="$i64 $i"
+        fi
         for l in $i ; do
             for j in ${libs} ; do
 	        # if we found the file (it's readable by user), we set the
@@ -1033,6 +1038,13 @@ if test "x$platform" = "xmacosx" ; then
    if test "x$nccflv" = "xicc" ; then
       nccflv="macosicc"
    fi
+fi
+
+debmultiarch=
+if `which dpkg-architecture > /dev/null 2>&1` ; then
+    if `dpkg-architecture -qDEB_HOST_MULTIARCH > /dev/null 2>&1` ; then
+        debmultiarch=`dpkg-architecture -qDEB_HOST_MULTIARCH 2> /dev/null`
+    fi
 fi
 
 #
