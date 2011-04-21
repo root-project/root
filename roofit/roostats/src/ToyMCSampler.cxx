@@ -29,6 +29,7 @@
 
 #include "RooStudyManager.h"
 #include "RooStats/ToyMCStudy.h"
+#include "RooSimultaneous.h"
 
 #include "TMath.h"
 
@@ -366,15 +367,40 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& /*nullPOI*/) const {
       observables.remove(*fGlobalObservables);
 
       // generate one set of global observables and assign it
-      RooDataSet *one = fPdf->generate(*fGlobalObservables, 1);
-      const RooArgSet *values = one->get();
-      RooArgSet *allVars = fPdf->getVariables();
-      *allVars = *values;
-      delete allVars;
-      delete values;
-      delete one;
-   }
+      // has problem for sim pdfs
+      RooSimultaneous* simPdf = dynamic_cast<RooSimultaneous*>(fPdf);
+      if(!simPdf){
+	RooDataSet *one = fPdf->generate(*fGlobalObservables, 1);
+	const RooArgSet *values = one->get();
+	RooArgSet *allVars = fPdf->getVariables();
+	*allVars = *values;
+	delete allVars;
+	delete values;
+	delete one;
+      } else {
 
+         //try fix for sim pdf
+         TIterator* iter = simPdf->indexCat().typeIterator() ;
+         RooCatType* tt = NULL;
+         while((tt=(RooCatType*) iter->Next())) {
+            
+            // Get pdf associated with state from simpdf
+            RooAbsPdf* pdftmp = simPdf->getPdf(tt->GetName()) ;
+            
+            // Generate only global variables defined by the pdf associated with this state
+            RooArgSet* globtmp = pdftmp->getObservables(*fGlobalObservables) ;
+            RooDataSet* tmp = pdftmp->generate(*globtmp,1) ;
+	  
+            // Transfer values to output placeholder
+            *globtmp = *tmp->get(0) ;
+            
+            // Cleanup
+            delete globtmp ;
+            delete tmp ;
+         }
+      }
+   } 
+   
 
    RooAbsData* data = NULL;
 
