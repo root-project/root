@@ -3,8 +3,61 @@
 <a name="tree"></a> 
 <h3>Tree</h3>
 
-<h4>TSelectorDraw</h4>
+<h4>Performance</h4>
+<ul>
+<li>Significant improvement of the performance of SetBranchAddress/SetAddress (by a factor 3 to 10 depending on the length/complexity of the classname ).</li>
+<li>Prevent the unlimited growth of the TBasket's buffer even if the basket is reused.
+When the Basket is 'Reset' (this happens when it is written and will be reused),
+if the TBuffer size is greater than
+<ul>
+<li>     - twice the data in the current basket</li>
+<li>and  - twice the average data in each basket (of this branch)</li>
+<li>and  - twice the requeste basket size (TBranch::GetBasketSize).</li>
+</ul>the size of the buffer is reduced to the max of
+'the data in the current basket' and 'the average' and the requested
+buffer size and aligned to next highest multiple of 512.</li>
+<li>In TBranchRef distinguish between the entry we need (now called RequestedEntry) and the
+entry we have read (fReadEntry) so that we can avoid re-reading the same entry too many
+times when executing TRef::GetObject.</li>
+<li>Reduce by 40% the time taken GetEntry for a branch created using a leaflist (exclusive of the decompression time).</li>
+<li>Introduce TVirtualPerfStats::FileUnzipEvent to be able to keep track of the cost of unzipping and use this in TTreePerfStats and TBasket ... This give a good picture of where the time in unzip or in unstreaming</li> 
+<li>Add more clusters to the TTreeCache buffer until fBufferMinSize is hit to avoid severely underfilled buffer when
+a low number of branches is selected/used.</li>
+<li>When reading backwards, make sure to load a full (new) cluster and several other fixes to TTreeCache.</li>
+</ul>
+
+<h4>TTree::Process</h4>
+<ul>
+<li>Add support for the flag TSelector::kAbortFile.</li>
+</ul>
+
+<h4>TTree::Draw</h4>
 <ul>
 <li>The line width setting was missing in a few places.</li>
+<li>Namely support the option 'a' for TGraphs in TTree::Draw (delegate the axis management to the TGraph object).</li>
+</ul>
+
+<h4>TTreeSQL</h4>
+<ul>
+<li>Allow TTreeSQL to see temporary tables.</li>
+<li>Avoid creating the unnecessary array fEntryOffset ... which when its content is always set to zero actually prevent reading text field with TTreeSQL.</li>
+<li>Properly find the column even if they were not created by TTreeSQL itself.   Fix the loading of data for the last column.</li>
+</ul>
+<h4>Other</h4>
+<ul>
+<li>In TChain::ls, print the name of the chain and indent the list of files (this fixes <a href=https://savannah.cern.ch/bugs/?79909>#79909</a>).</li>
+<li>When setting fBranch in the loaded basket, make sure to set it also for the first/only basket ; this prevents a crash when calling SetBasketSize for a split top level branch in a file produced by v4.00/08.</li>
+<li>In TTree::Streamer, if the object we are reading in was already attached to a directory, let's make sure to unregister the object before setting fDirectory to zero.</li>
+<li>Prevent TChainIndex and TTreeIndex from finding the branches from the friend tree when looking up the value in the master/parent TTree.  This fixes <a href=https://savannah.cern.ch/bugs/?79166>#79166</a>.</li>
+<li>Update GetEntryNumberFriend and related functions to retun a Long64_t as needed.</li>
+<li>Fix the case of a split collection which contains a class with one
+data member which is an instance of a class with more than one base 
+class some of which are not split (for example if one the base class
+is std::vector&lt;int&gt;).</li>
+<li>Fix the problem reported at <a href=http://root.cern.ch/phpBB3/viewtopic.php?t=11890>#11890</a>
+by making sure that TChain::ResetBranchAddress(TBranch*) also record the reset in the 
+chain's meta information about branches.</li>
+<li>Allow the output name passed to MakeProxy to be either a classname (to which will be added .h to make the filename) or a filename (which already has an extension).</li>
+<li>Allow (via the option kIgnoreMissingTopLevel) for the TTreeCloner to handle the case where the output TTree has more top level branches than the input TTree (this is usefull in case of 'horizontal' merging of TTrees and/or the case of copy and add.)</li>
 </ul>
 
