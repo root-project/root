@@ -156,7 +156,7 @@ private:
 #ifdef R__BYTESWAP
    enum { kShortMask = 0x01, kLongMask  = 0x1 };
 #else
-   enum { kShortMask = 0x80, kLongMask  = ~(Ssiz_t(~0) >> 1) };
+   enum { kShortMask = 0x80, kLongMask  = 0x80000000 };
 #endif
 
    struct LongStr_t
@@ -234,7 +234,7 @@ private:
 #ifdef R__BYTESWAP
    Ssiz_t         MaxSize() const { return kMaxInt - 1; }
 #else
-   Ssiz_t         MaxSize() const { return ~kLongMask - 1; }
+   Ssiz_t         MaxSize() const { return (kMaxInt >> 1) - 1; }
 #endif
    void           UnLink() const { if (IsLong()) delete [] fRep.fLong.fData; }
    void           Zero() {
