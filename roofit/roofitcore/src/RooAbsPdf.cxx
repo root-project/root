@@ -2129,6 +2129,16 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEven
 
 
 //_____________________________________________________________________________
+RooDataSet* RooAbsPdf::generateSimGlobal(const RooArgSet& whatVars, Double_t nEvents) 
+{
+  // Special generator interface for generation of 'global observables' -- for RooStats tools
+
+  return generate(whatVars,nEvents) ;
+}
+
+
+
+//_____________________________________________________________________________
 RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 {
   // Plot (project) PDF on specified frame. If a PDF is plotted in an empty frame, it

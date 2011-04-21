@@ -1046,3 +1046,44 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDa
   return ((RooAbsPdf*)proxy->absArg())->genContext(vars,prototype,auxProto,verbose) ;
 }
 
+
+
+
+//_____________________________________________________________________________
+RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Double_t nEvents) 
+{
+  // Special generator interface for generation of 'global observables' -- for RooStats tools
+
+  // Make set with clone of variables (placeholder for output)
+  RooArgSet* globClone = (RooArgSet*) whatVars.snapshot() ;
+
+  RooDataSet* data = new RooDataSet("gensimglobal","gensimglobal",whatVars) ;
+  
+  // Construct iterator over index types
+  TIterator* iter = indexCat().typeIterator() ;
+
+  for (Int_t i=0 ; i<nEvents ; i++) {
+    iter->Reset() ;
+    RooCatType* tt ; 
+    while((tt=(RooCatType*) iter->Next())) {
+      
+      // Get pdf associated with state from simpdf
+      RooAbsPdf* pdftmp = getPdf(tt->GetName()) ;
+      
+      // Generate only global variables defined by the pdf associated with this state
+      RooArgSet* globtmp = pdftmp->getObservables(whatVars) ;
+      RooDataSet* tmp = pdftmp->generate(*globtmp,1) ;
+      
+      // Transfer values to output placeholder
+      *globClone = *tmp->get(0) ;
+      
+      // Cleanup 
+      delete globtmp ;
+      delete tmp ;
+    }
+    data->add(*globClone) ;
+  }
+
+  delete globClone ;
+  return data ;
+}
