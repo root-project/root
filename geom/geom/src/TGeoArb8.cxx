@@ -398,7 +398,7 @@ void TGeoArb8::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    Double_t ax, ay, az, bx, by, bz;
    Double_t fn;
    safc = fDz-TMath::Abs(point[2]);
-   if (safc<1E-4) {
+   if (safc<TGeoShape::Tolerance()) {
       memset(norm,0,3*sizeof(Double_t));
       norm[2] = (dir[2]>0)?1:(-1);
       return;
@@ -520,7 +520,7 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
       // Surface is planar          
       if (TMath::Abs(b)<eps) return TGeoShape::Big(); // Track parallel to surface
       s=-c/b;
-      if (TMath::Abs(s)<eps) {
+      if (TMath::Abs(s)<1.E-6 && TMath::Abs(TMath::Abs(point[2])-fDz)>eps) {
          memcpy(dirp,dir,3*sizeof(Double_t));
          dirp[0] = -3;
          // Compute normal pointing outside
@@ -538,7 +538,7 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
       Double_t smin=0.5*(-b-signa*TMath::Sqrt(d))/a;
       Double_t smax=0.5*(-b+signa*TMath::Sqrt(d))/a;
       s = smin;
-      if (TMath::Abs(s)<eps) {
+      if (TMath::Abs(s)<1.E-6 && TMath::Abs(TMath::Abs(point[2])-fDz)>eps) {
          memcpy(dirp,dir,3*sizeof(Double_t));
          dirp[0] = -3;
          // Compute normal pointing outside
@@ -546,6 +546,7 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
          ndotd = dir[0]*norm[0]+dir[1]*norm[1]+dir[2]*norm[2];
          if (!in) ndotd*=-1.;
          if (ndotd>0) return TMath::Max(0.,s);
+         s = 0.; // ignore
       }
       if (s>eps) {
          // Check smin
@@ -563,7 +564,7 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
       }   
       // Smin failed, try smax
       s=smax;
-      if (TMath::Abs(s)<eps) {
+      if (TMath::Abs(s)<1.E-6 && TMath::Abs(TMath::Abs(point[2])-fDz)>eps) {
          memcpy(dirp,dir,3*sizeof(Double_t));
          dirp[0] = -3;
          // Compute normal pointing outside

@@ -1626,8 +1626,11 @@ void TGeoChecker::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Opt
 void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t */*option*/)
 {
 //  Test TGeoShape::DistFromInside/Outside. Sample points inside the shape. Generate 
-//    directions randomly in cos(theta). Compute DistFromInside and move the 
-//    point with bigger distance. Compute DistFromOutside back from new point.
+// directions randomly in cos(theta). Compute d1 = DistFromInside and move the 
+// point on the boundary. Compute DistFromOutside and propagate with d2 making sure that
+// the shape is not re-entered. Swap direction and call DistFromOutside that
+// should fall back on the same point on the boundary (at d2). Propagate back on boundary
+// then compute DistFromInside that should be bigger than d1. 
 //    Plot d-(d1+d2)
    Double_t dx = ((TGeoBBox*)shape)->GetDX();
    Double_t dy = ((TGeoBBox*)shape)->GetDY();
@@ -1733,6 +1736,32 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t */*o
             pmfromoutside->Draw();
             return;
          }
+         // Compute distance from inside which should be bigger than d1
+         for (j=0; j<3; j++) pnew[j] += d2*dnew[j];
+         dnext = shape->DistFromInside(pnew,dnew,3);
+         if (dnext<d1-TGeoShape::Tolerance()) {
+            printf("Error DistFromInside(%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) d1=%f d1p=%f\n",
+                   pnew[0],pnew[1],pnew[2],dnew[0],dnew[1],dnew[2],d1,dnext);
+            pmfrominside = new TPolyMarker3D(2);
+            pmfrominside->SetMarkerStyle(24);
+            pmfrominside->SetMarkerSize(0.4);
+            pmfrominside->SetMarkerColor(kRed);
+            pmfrominside->SetNextPoint(point[0],point[1],point[2]);
+            for (j=0; j<3; j++) point[j] += d1*dir[j];
+            pmfrominside->SetNextPoint(point[0],point[1],point[2]);
+            pmfrominside->Draw();
+            pmfromoutside = new TPolyMarker3D(2);
+            pmfromoutside->SetMarkerStyle(20);
+            pmfromoutside->SetMarkerStyle(7);
+            pmfromoutside->SetMarkerSize(0.3);
+            pmfromoutside->SetMarkerColor(kBlue);
+            pmfromoutside->SetNextPoint(pnew[0],pnew[1],pnew[2]);
+            for (j=0; j<3; j++) pnew[j] += dnext*dnew[j];
+            if (d2<1E10) pmfromoutside->SetNextPoint(pnew[0],pnew[1],pnew[2]);
+            pmfromoutside->Draw();
+            return;                   
+         }
+         
          hist->Fill(TMath::Max(TMath::Log(TMath::Abs(delta)),-20.));
       }
    }
