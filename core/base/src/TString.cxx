@@ -1682,33 +1682,30 @@ Bool_t TString::IsFloat() const
    //    6 4 3 2 0
    //    6.4320     6,4320
    //    6.43e20   6.43E20    6,43e20
-   //    6.43e-20  6.43E-20   6,43e-20
+   //    6.43e-20  6.43E-20   6,43e-20, -6.43e+20
 
    //we first check if we have an integer, in this case, IsDigit() will be true straight away
    if (IsDigit()) return kTRUE;
 
    TString tmp = *this;
    //now we look for occurrences of '.', ',', e', 'E', '+', '-' and replace each
-   //with ' '. if it is a floating point, IsDigit() will then return kTRUE
-   Int_t i_dot, i_e, i_plus, i_minus, i_comma;
-   i_dot = i_e = i_plus = i_minus = i_comma = -1;
-
-   i_dot = tmp.First('.');
-   if (i_dot > -1) tmp.Replace(i_dot, 1, " ", 1);
-   i_comma = tmp.First(',');
-   if (i_comma > -1) tmp.Replace(i_comma, 1, " ", 1);
-   i_e = tmp.First('e');
-   if (i_e > -1)
-      tmp.Replace(i_e, 1, " ", 1);
-   else {
-      //try for a capital "E"
-      i_e = tmp.First('E');
-      if (i_e > -1) tmp.Replace(i_e, 1, " ", 1);
-   }
-   i_plus = tmp.First('+');
-   if (i_plus > -1) tmp.ReplaceAll("+", " ");
-   i_minus = tmp.First('-');
-   if (i_minus > -1) tmp.ReplaceAll("-", " ");
+   //with ' ', if it is a floating point, IsDigit() will then return kTRUE
+   
+   tmp.ToLower();
+   Ssiz_t pos = tmp.First('.');
+   if (pos != kNPOS) tmp.Replace(pos, 1, " ", 1);
+   pos = tmp.First(',');
+   if (pos != kNPOS) tmp.Replace(pos, 1, " ", 1);
+   pos = tmp.Index("e-");
+   if (pos >= 1) tmp.Replace(pos, 2, " ", 1);
+   pos = tmp.Index("e+");
+   if (pos >= 1) tmp.Replace(pos, 2, " ", 1);
+   pos = tmp.Index("e");
+   if (pos >= 1) tmp.Replace(pos, 1, " ", 1);
+   pos = tmp.First('-');
+   if (pos == 0) tmp.Replace(pos, 1, " ", 1);
+   pos = tmp.First('+');
+   if (pos == 0) tmp.Replace(pos, 1, " ", 1);
 
    //test if it is now uniquely composed of numbers
    return tmp.IsDigit();
