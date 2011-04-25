@@ -142,7 +142,7 @@ const Int_t versions[NG] =  {4, //aleph
                              3, //alice2
                              3, //babar2
                              3, //belle
-                             3}; //atlas
+                             4}; //atlas
 // The timings below are on my machine PIV 3GHz
 const Double_t cp_brun[NG] = {1.9,  //aleph
                               0.1,  //barres
