@@ -27,10 +27,16 @@ istream& TString::ReadFile(istream& strm)
 {
    // Replace string with the contents of strm, stopping at an EOF.
 
+   // get file size
+   Ssiz_t end, cur = strm.tellg();
+   strm.seekg(0, ios::end);
+   end = strm.tellg();
+   strm.seekg(cur);
+
    // any positive number of reasonable size for a file
    const Ssiz_t incr = 256;
    
-   Clobber(incr);
+   Clobber(end-cur);
 
    while(1) {
       Ssiz_t len = Length();
