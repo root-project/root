@@ -223,6 +223,18 @@ void TGeoPainter::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *optio
    fChecker->CheckPoint(x,y,z,option);
 }   
 
+//_____________________________________________________________________________
+void TGeoPainter::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option)
+{
+// Test for shape navigation methods. Summary for test numbers:
+//  1: DistFromInside/Outside. Sample points inside the shape. Generate 
+//    directions randomly in cos(theta). Compute DistFromInside and move the 
+//    point with bigger distance. Compute DistFromOutside back from new point.
+//    Plot d-(d1+d2)
+//
+   fChecker->CheckShape(shape, testNo, nsamples, option);
+}
+
 //______________________________________________________________________________
 void TGeoPainter::ClearVisibleVolumes()
 {

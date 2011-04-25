@@ -563,6 +563,13 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
 }
 
 //_____________________________________________________________________________
+void TGeoVolume::CheckShape(Int_t testNo, Int_t nsamples, Option_t *option)
+{
+// Tests for checking the shape navigation algorithms. See TGeoShape::CheckShape()
+   fShape->CheckShape(testNo,nsamples,option);
+}   
+
+//_____________________________________________________________________________
 void TGeoVolume::CleanAll()
 {
 // Clean data of the volume.
@@ -2532,6 +2539,40 @@ TGeoVolume *TGeoVolumeAssembly::Divide(const char *, Int_t, Int_t, Double_t, Dou
 // Division makes no sense for assemblies.
    Error("Divide","Assemblies cannot be divided");
    return 0;
+}
+
+//_____________________________________________________________________________
+TGeoVolume *TGeoVolumeAssembly::Divide(TGeoVolume *cell, TGeoPatternFinder *pattern, Option_t *option)
+{
+// Assign to the assembly a collection of identical volumes positioned according
+// a predefined pattern. The option can be spacedout or touching depending on the empty
+// space between volumes.
+   if (fNodes && fNodes->GetEntriesFast()) {
+      Error("Divide", "Cannot divide assembly %s since it has nodes", GetName());
+      return NULL;
+   }
+   if (fFinder) {
+      Error("Divide", "Assembly %s already divided", GetName());
+      return NULL; 
+   }
+   Int_t ncells = pattern->GetNdiv();
+   if (!ncells || pattern->GetStep()<=0) {
+      Error("Divide", "Pattern finder for dividing assembly %s not initialized. Use SetRange() method.", GetName());
+      return NULL;
+   }
+   fFinder = pattern;
+   TString opt(option);
+   opt.ToLower();
+   if (opt.Contains("spacedout")) fFinder->SetSpacedOut(kTRUE);
+   else fFinder->SetSpacedOut(kFALSE);
+   // Position volumes
+   for (Int_t i=0; i<ncells; i++) {
+      fFinder->cd(i);
+      TGeoNodeOffset *node = new TGeoNodeOffset(cell, i, 0.);
+      node->SetFinder(fFinder);
+      fNodes->Add(node);
+   }
+   return cell;   
 }
 
 //_____________________________________________________________________________

@@ -34,7 +34,8 @@ class TGeoPatternFinder : public TObject
 {
 protected :
    enum EGeoPatternFlags {
-      kPatternReflected = BIT(14)
+      kPatternReflected = BIT(14),
+      kPatternSpacedOut = BIT(15)
    };   
    Double_t            fStep;           // division step length
    Double_t            fStart;          // starting point on divided axis
@@ -73,11 +74,14 @@ public:
    TGeoVolume         *GetVolume() const {return fVolume;}
    virtual Bool_t      IsOnBoundary(const Double_t * /*point*/) const {return kFALSE;}
    Bool_t              IsReflected() const {return TObject::TestBit(kPatternReflected);}
+   Bool_t              IsSpacedOut() const {return TObject::TestBit(kPatternSpacedOut);}
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
    void                Reflect(Bool_t flag=kTRUE) {TObject::SetBit(kPatternReflected,flag);}
    void                SetDivIndex(Int_t index) {fDivIndex = index;}
    void                SetNext(Int_t index)     {fNextIndex = index;}
+   void                SetRange(Double_t start, Double_t step, Int_t ndivisions);
+   void                SetSpacedOut(Bool_t flag) {TObject::SetBit(kPatternSpacedOut,flag);}
    void                SetVolume(TGeoVolume *vol) {fVolume = vol;}
 
    ClassDef(TGeoPatternFinder, 3)              // patterns to divide volumes

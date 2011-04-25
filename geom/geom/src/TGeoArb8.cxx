@@ -446,7 +446,7 @@ void TGeoArb8::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
       norm[2] /= fn;
    }  
    // Make sure the dot product of the normal and the direction is positive. 
-   if (dir[0]*norm[0]+dir[1]*norm[1]+dir[2]*norm[2] < 0) {
+   if (dir[0]>-2. && dir[0]*norm[0]+dir[1]*norm[1]+dir[2]*norm[2] < 0) {
       norm[0] = -norm[0];
       norm[1] = -norm[1];
       norm[2] = -norm[2];
@@ -482,7 +482,10 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
 // ipl=3 : points 3,7,0,4
    Double_t xa,xb,xc,xd;
    Double_t ya,yb,yc,yd;
-   Double_t eps = 100.*TGeoShape::Tolerance();
+   Double_t eps = 10.*TGeoShape::Tolerance();
+   Double_t norm[3];
+   Double_t dirp[3];
+   Double_t ndotd = 0;
    Int_t j = (ipl+1)%4;
    xa=fXY[ipl][0];
    ya=fXY[ipl][1];
@@ -505,18 +508,47 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
    Double_t dxs =xs2-xs1;
    Double_t dys =ys2-ys1;
    Double_t dtx =tx2-tx1;
-   Double_t dty =ty2-ty1;
+   Double_t dty =ty2-ty1;   
    Double_t a=(dtx*dir[1]-dty*dir[0]+(tx1*ty2-tx2*ty1)*dir[2])*dir[2];
+   Double_t signa = TMath::Sign(1.,a);
    Double_t b=dxs*dir[1]-dys*dir[0]+(dtx*point[1]-dty*point[0]+ty2*xs1-ty1*xs2
               +tx1*ys2-tx2*ys1)*dir[2];
    Double_t c=dxs*point[1]-dys*point[0]+xs1*ys2-xs2*ys1;
    Double_t s=TGeoShape::Big();
    Double_t x1,x2,y1,y2,xp,yp,zi;
-   if (TMath::Abs(a)<eps) {           
-      if (TMath::Abs(b)<eps) return TGeoShape::Big();
+   if (TMath::Abs(a)<eps) { 
+      // Surface is planar          
+      if (TMath::Abs(b)<eps) return TGeoShape::Big(); // Track parallel to surface
       s=-c/b;
+      if (TMath::Abs(s)<eps) {
+         memcpy(dirp,dir,3*sizeof(Double_t));
+         dirp[0] = -3;
+         // Compute normal pointing outside
+         ((TGeoArb8*)this)->ComputeNormal(point,dirp,norm);
+         ndotd = dir[0]*norm[0]+dir[1]*norm[1]+dir[2]*norm[2];
+         if (!in) ndotd*=-1.;
+         if (ndotd>0) s = TMath::Max(0.,s);
+         else         s = TGeoShape::Big();
+         return s;
+      }
+      if (s<0) return TGeoShape::Big();
+   } else {      
+      Double_t d=b*b-4*a*c;
+      if (d<0) return TGeoShape::Big();
+      Double_t smin=0.5*(-b-signa*TMath::Sqrt(d))/a;
+      Double_t smax=0.5*(-b+signa*TMath::Sqrt(d))/a;
+      s = smin;
+      if (TMath::Abs(s)<eps) {
+         memcpy(dirp,dir,3*sizeof(Double_t));
+         dirp[0] = -3;
+         // Compute normal pointing outside
+         ((TGeoArb8*)this)->ComputeNormal(point,dirp,norm);
+         ndotd = dir[0]*norm[0]+dir[1]*norm[1]+dir[2]*norm[2];
+         if (!in) ndotd*=-1.;
+         if (ndotd>0) return TMath::Max(0.,s);
+      }
       if (s>eps) {
-         if (in) return s;
+         // Check smin
          zi=point[2]+s*dir[2];
          if (TMath::Abs(zi)<fDz) {
             x1=xs1+tx1*dir[2]*s;
@@ -527,45 +559,36 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
             yp=point[1]+s*dir[1];
             zi = (xp-x1)*(xp-x2)+(yp-y1)*(yp-y2);
             if (zi<=0) return s;
-         }      
+         }
+      }   
+      // Smin failed, try smax
+      s=smax;
+      if (TMath::Abs(s)<eps) {
+         memcpy(dirp,dir,3*sizeof(Double_t));
+         dirp[0] = -3;
+         // Compute normal pointing outside
+         ((TGeoArb8*)this)->ComputeNormal(point,dirp,norm);
+         ndotd = dir[0]*norm[0]+dir[1]*norm[1]+dir[2]*norm[2];
+         if (!in) ndotd*=-1.;
+         if (ndotd>0) s = TMath::Max(0.,s);
+         else         s = TGeoShape::Big();
+         return s;
       }
-      return TGeoShape::Big();
-   }      
-   Double_t d=b*b-4*a*c;
-   if (d>=0) {
-      if (a>0) s=0.5*(-b-TMath::Sqrt(d))/a;
-      else     s=0.5*(-b+TMath::Sqrt(d))/a;
-      if (s>eps) {
-         if (in) return s;
-         zi=point[2]+s*dir[2];
-         if (TMath::Abs(zi)<fDz) {
-            x1=xs1+tx1*dir[2]*s;
-            x2=xs2+tx2*dir[2]*s;
-            xp=point[0]+s*dir[0];
-            y1=ys1+ty1*dir[2]*s;
-            y2=ys2+ty2*dir[2]*s;
-            yp=point[1]+s*dir[1];
-            zi = (xp-x1)*(xp-x2)+(yp-y1)*(yp-y2);
-            if (zi<=0) return s;
-         }      
+   }   
+   if (s>eps) {
+      // Check smin
+      zi=point[2]+s*dir[2];
+      if (TMath::Abs(zi)<fDz) {
+         x1=xs1+tx1*dir[2]*s;
+         x2=xs2+tx2*dir[2]*s;
+         xp=point[0]+s*dir[0];
+         y1=ys1+ty1*dir[2]*s;
+         y2=ys2+ty2*dir[2]*s;
+         yp=point[1]+s*dir[1];
+         zi = (xp-x1)*(xp-x2)+(yp-y1)*(yp-y2);
+         if (zi<=0) return s;
       }
-      if (a>0) s=0.5*(-b+TMath::Sqrt(d))/a;
-      else     s=0.5*(-b-TMath::Sqrt(d))/a;
-      if (s>eps) {
-         if (in) return s;
-         zi=point[2]+s*dir[2];
-         if (TMath::Abs(zi)<fDz) {
-            x1=xs1+tx1*dir[2]*s;
-            x2=xs2+tx2*dir[2]*s;
-            xp=point[0]+s*dir[0];
-            y1=ys1+ty1*dir[2]*s;
-            y2=ys2+ty2*dir[2]*s;
-            yp=point[1]+s*dir[1];
-            zi = (xp-x1)*(xp-x2)+(yp-y1)*(yp-y2);
-            if (zi<=0) return s;
-         }      
-      }
-   }
+   }   
    return TGeoShape::Big();
 }      
       
@@ -579,7 +602,7 @@ Double_t TGeoArb8::DistFromOutside(Double_t *point, Double_t *dir, Int_t /*iact*
    // check lateral faces
    Int_t i;
    for (i=0; i<4; i++) {
-      dist[i]=DistToPlane(point, dir, i, kFALSE);  
+      dist[i]=DistToPlane(point, dir, i, kFALSE);
    }   
    // check Z planes
    dist[4]=TGeoShape::Big();
@@ -610,7 +633,6 @@ Double_t TGeoArb8::DistFromOutside(Double_t *point, Double_t *dir, Int_t /*iact*
 Double_t TGeoArb8::DistFromInside(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
 // Compute distance from inside point to surface of the shape.
-#ifdef OLDALGORITHM
    Int_t i;
    Double_t dist[6];
    dist[0]=dist[1]=TGeoShape::Big();
@@ -618,15 +640,21 @@ Double_t TGeoArb8::DistFromInside(Double_t *point, Double_t *dir, Int_t /*iact*/
       dist[0]=(-fDz-point[2])/dir[2];
    } else {
       if (dir[2]>0) dist[1]=(fDz-point[2])/dir[2];
-   }      
+   }
    for (i=0; i<4; i++) {
-      dist[i+2]=DistToPlane(point, dir, i, kTRUE);   
+      dist[i+2]=DistToPlane(point, dir, i, kTRUE);
    }   
       
    Double_t distmin = dist[0];
    for (i=1;i<6;i++) if (dist[i] < distmin) distmin = dist[i];
+   if (distmin<0) return 0.;
+   if (distmin>1E10) {
+      Error("DistFromInside", "Big value from point=(%19.16f, %19.16f, %19.16f) dir=(%19.16f, %19.16f, %19.16f)\n", 
+            point[0],point[1],point[2],dir[0],dir[1],dir[2]);
+   }         
    return distmin;
-#else
+#ifdef OLDALGORITHM
+//#else
 // compute distance to plane ipl :
 // ipl=0 : points 0,4,1,5
 // ipl=1 : points 1,5,2,6

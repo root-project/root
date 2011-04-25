@@ -138,6 +138,16 @@ TGeoPatternFinder *TGeoPatternFinder::MakeCopy(Bool_t)
 }
 
 //______________________________________________________________________________
+void TGeoPatternFinder::SetRange(Double_t start, Double_t step, Int_t ndivisions)
+{
+// Set division range. Use this method only when dividing an assembly.
+   fStart = start;
+   fEnd = fStart + ndivisions*step;
+   fStep = step;
+   fNdivisions = ndivisions;
+}
+   
+//______________________________________________________________________________
 // TGeoPatternX - a X axis divison pattern
 //______________________________________________________________________________
 
