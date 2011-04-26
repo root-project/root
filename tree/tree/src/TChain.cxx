@@ -47,7 +47,6 @@
 #include "TSelector.h"
 #include "TSystem.h"
 #include "TTree.h"
-#include "TTreeCloner.h"
 #include "TTreeCache.h"
 #include "TUrl.h"
 #include "TVirtualIndex.h"
