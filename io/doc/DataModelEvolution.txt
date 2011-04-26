@@ -69,7 +69,7 @@ fXbins.Set( xbins ); \
         embed="true"
         include="iostream,cstdlib">
 <![CDATA[
-   m x = onfile.m a * onfile .m b * onfile .m c;
+   m_x = onfile.m_a * onfile.m_b * onfile.m_c;
 ]] >
 </ioread>
 
@@ -86,7 +86,7 @@ fXbins.Set( xbins ); \
 ]] >
 </ioreadraw>
 
-   The vairables in the rules have the following meaning:
+   The variables in the rules have the following meaning:
 
   * sourceClass - The field defines the on-disk class that is the input for the rule.
   * source      - A semicolon-separated list of values defining the source class data members
