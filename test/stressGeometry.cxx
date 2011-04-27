@@ -242,7 +242,8 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
       }
       if (opt.Contains(exps[i])) iexp[i] = 1;
       else                       iexp[i] = 0;
-   }       
+   }
+   iexp[NG-1]=0;
    TFile::SetCacheFileDir(".");
    TString fname;
    for (i=0; i<NG; i++) {
