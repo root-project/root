@@ -2520,24 +2520,29 @@ void TChain::Streamer(TBuffer& b)
    // -- Stream a class object.
 
    if (b.IsReading()) {
+      // Remove using the 'old' name.
+      gROOT->GetListOfCleanups()->Remove(this);
+
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          b.ReadClassBuffer(TChain::Class(), this, R__v, R__s, R__c);
-         return;
+      } else {
+         //====process old versions before automatic schema evolution
+         TTree::Streamer(b);
+         b >> fTreeOffsetLen;
+         b >> fNtrees;
+         fFiles->Streamer(b);
+         if (R__v > 1) {
+            fStatus->Streamer(b);
+            fTreeOffset = new Long64_t[fTreeOffsetLen];
+            b.ReadFastArray(fTreeOffset,fTreeOffsetLen);
+         }
+         b.CheckByteCount(R__s, R__c, TChain::IsA());
+         //====end of old versions
       }
-      //====process old versions before automatic schema evolution
-      TTree::Streamer(b);
-      b >> fTreeOffsetLen;
-      b >> fNtrees;
-      fFiles->Streamer(b);
-      if (R__v > 1) {
-         fStatus->Streamer(b);
-         fTreeOffset = new Long64_t[fTreeOffsetLen];
-         b.ReadFastArray(fTreeOffset,fTreeOffsetLen);
-      }
-      b.CheckByteCount(R__s, R__c, TChain::IsA());
-      //====end of old versions
+      // Re-add using the new name.
+      gROOT->GetListOfCleanups()->Add(this);
 
    } else {
       b.WriteClassBuffer(TChain::Class(),this);
