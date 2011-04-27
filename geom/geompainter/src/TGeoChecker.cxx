@@ -1623,7 +1623,7 @@ void TGeoChecker::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Opt
 }
 
 //_____________________________________________________________________________
-void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t */*option*/)
+void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
 {
 //  Test TGeoShape::DistFromInside/Outside. Sample points inside the shape. Generate 
 // directions randomly in cos(theta). Compute d1 = DistFromInside and move the 
