@@ -338,8 +338,6 @@ Int_t TGeoHype::DistToHype(Double_t *point, Double_t *dir, Double_t *s, Bool_t i
          Double_t r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
          Double_t t = (inner)?fTinsq:fToutsq;
          t *= -point[2]/r;
-         Double_t ct = TMath::Sqrt(1./(1.+t*t));
-         Double_t st = t * ct;
          Double_t phi = TMath::ATan2(point[1], point[0]);
          Double_t ndotd = TMath::Cos(phi)*dir[0]+TMath::Sin(phi)*dir[1]+t*dir[2];
          if (inner) ndotd *= -1;
