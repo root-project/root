@@ -230,9 +230,9 @@ Double_t TGeoHype::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    // inner and outer surfaces
    Double_t s[2];
    Int_t npos;
-   npos = DistToHype(point, dir, s, kTRUE);
+   npos = DistToHype(point, dir, s, kTRUE, kTRUE);
    if (npos) srin = s[0];
-   npos = DistToHype(point, dir, s, kFALSE);
+   npos = DistToHype(point, dir, s, kFALSE, kTRUE);
    if (npos) srout = s[0];
    sr = TMath::Min(srin, srout);
    return TMath::Min(sz,sr);
@@ -276,7 +276,7 @@ Double_t TGeoHype::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    Double_t sout = TGeoShape::Big();
    Double_t s[2];
    Int_t npos;
-   npos = DistToHype(point, dir, s, kTRUE);
+   npos = DistToHype(point, dir, s, kTRUE, kFALSE);
    if (npos) {
       zi = point[2] + s[0]*dir[2];
       if (TMath::Abs(zi) <= fDz) sin = s[0];
@@ -285,7 +285,7 @@ Double_t TGeoHype::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
          if (TMath::Abs(zi) <= fDz) sin = s[1];
       }
    }      
-   npos = DistToHype(point, dir, s, kFALSE);
+   npos = DistToHype(point, dir, s, kFALSE, kFALSE);
    if (npos) {
       zi = point[2] + s[0]*dir[2]; 
       if (TMath::Abs(zi) <= fDz) sout = s[0];
@@ -298,7 +298,7 @@ Double_t TGeoHype::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
 }
 
 //_____________________________________________________________________________
-Int_t TGeoHype::DistToHype(Double_t *point, Double_t *dir, Double_t *s, Bool_t inner) const
+Int_t TGeoHype::DistToHype(Double_t *point, Double_t *dir, Double_t *s, Bool_t inner, Bool_t in) const
 {
 // Compute distance from an arbitrary point to inner/outer surface of hyperboloid.
 // Returns number of positive solutions. S[2] contains the solutions.
@@ -329,10 +329,24 @@ Int_t TGeoHype::DistToHype(Double_t *point, Double_t *dir, Double_t *s, Bool_t i
    if (delta < 0.) return 0;
    delta = TMath::Sqrt(delta); 
    Double_t sone = TMath::Sign(1.,ainv);
-   snext = (b - sone*delta)*ainv;
-   if (snext >= 0.) s[npos++] = snext;
-   snext = (b + sone*delta)*ainv;
-   if (snext >= 0.) s[npos++] = snext;
+   Int_t i = -1;
+   while (i<2) {
+      snext = (b + i*sone*delta)*ainv;
+      i += 2;
+      if (snext<0) continue;
+      if (snext<1.E-8) {
+         Double_t r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+         Double_t t = (inner)?fTinsq:fToutsq;
+         t *= -point[2]/r;
+         Double_t ct = TMath::Sqrt(1./(1.+t*t));
+         Double_t st = t * ct;
+         Double_t phi = TMath::ATan2(point[1], point[0]);
+         Double_t ndotd = TMath::Cos(phi)*dir[0]+TMath::Sin(phi)*dir[1]+t*dir[2];
+         if (inner) ndotd *= -1;
+         if (in) ndotd *= -1;
+         if (ndotd<0) s[npos++] = snext;
+      } else          s[npos++] = snext;
+   }   
    return npos;
 }
    
