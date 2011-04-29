@@ -160,6 +160,7 @@
 
 
 #include "TROOT.h"
+#include "TApplication.h"
 #include "TSystem.h"
 #include "TMacro.h"
 #include "TInterpreter.h"
@@ -455,6 +456,7 @@ void TGTextEditor::Build()
    Resize(GetDefaultWidth() + 50, GetDefaultHeight() > 500 ? GetDefaultHeight() : 500);
    Layout();
 
+   gApplication->Connect("Terminate(Int_t)", "TGTextEditor", this, "ClearText()");
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_F3), 0, kTRUE);
 
    AddInput(kKeyPressMask | kEnterWindowMask | kLeaveWindowMask |
