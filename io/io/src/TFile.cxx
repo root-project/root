@@ -786,6 +786,7 @@ zombie:
       gROOT->GetListOfClosedObjects()->Add(this);
    }
    // error in file opening occured, make this object a zombie
+   fWritable = kFALSE;
    MakeZombie();
    gDirectory = gROOT;
 }
