@@ -631,7 +631,6 @@ void TGTextEditor::CloseWindow()
    if (fExiting) {
       return;
    }
-   gApplication->Disconnect("Terminate(Int_t)");
    fExiting = kTRUE;
    switch (IsSaved()) {
       case kMBYes:
@@ -645,6 +644,7 @@ void TGTextEditor::CloseWindow()
          if (fParent == gClient->GetDefaultRoot())
             break;
       case kMBNo:
+         gApplication->Disconnect("Terminate(Int_t)");
          TGMainFrame::CloseWindow();
    }
    fExiting = kFALSE;
