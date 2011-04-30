@@ -15,7 +15,7 @@
 //
 // This class is a specialized TProcessID managing the list of UUIDs.
 // In addition to TProcessID, this object has the following members:
-//   - fUUIDs  : a TList of TUUIDs in string format (using a TObjString)
+//   - fUUIDs  : a THashList of TUUIDs in string format (using a TObjString)
 //   - fActive : a TBits table with one bit per TUUID in the table
 // When a new TUUID is entered into the list fUUIDs, it is assigned
 // the first free slot in the list of bits and the TUUID UUIDNumber
@@ -26,7 +26,7 @@
 // via fObjects->At(I).
 // One can use two mechanisms to find the object corresponding to a TUUID:
 //  1- the input is the TUUID.AsString. One can find the corresponding 
-//     TObjString object objs in fUUIDs via TList::FindObject(name).
+//     TObjString object objs in fUUIDs via THashList::FindObject(name).
 //     The slot number is then objs->GetUniqueID().
 //  2- The input is the UUIDNumber. The slot number is UIUIDNumber
 //
@@ -51,7 +51,7 @@ TProcessUUID::TProcessUUID() : TProcessID()
 {
    // Default constructor.
 
-   fUUIDs   = new TList();
+   fUUIDs   = new THashList(100,3);
    fActive  = new TBits(100);
    IncrementCount();
 }
@@ -72,7 +72,6 @@ UInt_t TProcessUUID::AddUUID(TUUID &uuid, TObject *obj)
    // The TObject *obj has its uniqueID set to the UUID number
    // return entry number in the table
 
-   
    UInt_t number;
    const char *uuids = uuid.AsString();
    TObjString *objs = (TObjString*)fUUIDs->FindObject(uuids);
@@ -86,7 +85,7 @@ UInt_t TProcessUUID::AddUUID(TUUID &uuid, TObject *obj)
       if (fObjects->UncheckedAt(number) == 0) fObjects->AddAt(obj,number);
       return number;
    }   
-   
+
    objs = new TObjString(uuids);
    fUUIDs->Add(objs);
    number = fActive->FirstNullBit();
