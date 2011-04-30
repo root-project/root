@@ -786,11 +786,16 @@ TMap *TFileCollection::GetFilesPerServer(const char *exclude, Bool_t curronly)
          // Find the key for this server
          key.Form("%s://%s", xurl->GetProtocol(), xurl->GetHostFQDN());
          // Check if this has to be ignored
-         if (excl && excl->FindObject(key.Data())) continue;
-         // Complete the key, if needed, and recheck
-         if (xurl->GetPort() > 0) {
+         if (excl && excl->FindObject(key.Data())) {
+            if (curronly) break;
+            continue;
+         } else if (excl && xurl->GetPort() > 0) {
+            // Complete the key, if needed, and recheck
             key += TString::Format(":%d", xurl->GetPort());
-            if (excl && excl->FindObject(key.Data())) continue;
+            if (excl->FindObject(key.Data())) {
+               if (curronly) break;
+               continue;
+            }
          }
          // Get the map entry for this key
          TPair *ent = 0;
