@@ -1659,7 +1659,7 @@ void TStreamerInfo::BuildOld()
                      newType = kAny;                           
                   }
                }
-               if (!dm->IsaPointer() && dm->GetArrayDim() > 0) {
+               if ((!dm->IsaPointer() || newType==kSTLp) && dm->GetArrayDim() > 0) {
                   newType += kOffsetL;
                }               
             } else if (!fClass->IsLoaded()) {
