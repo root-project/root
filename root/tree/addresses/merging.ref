@@ -2,7 +2,7 @@
 Processing runmerging.C...
 ******************************************************************************
 *Tree    :zzz       : Argument                                               *
-*Entries :        0 : Total =            1218 bytes  File  Size =          0 *
+*Entries :        0 : Total =            1224 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :x         : x/D                                                    *
@@ -16,7 +16,7 @@ Processing runmerging.C...
 Error in <TTree::Show()>: Cannot read entry 19 (entry does not exist)
 ******************************************************************************
 *Tree    :yyy       : Argument                                               *
-*Entries :      100 : Total =            3110 bytes  File  Size =          0 *
+*Entries :      100 : Total =            3116 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :x         : x/D                                                    *
@@ -38,7 +38,7 @@ result entries = 100
 (int)0
 ******************************************************************************
 *Tree    :zzz       : Argument                                               *
-*Entries :        0 : Total =            1218 bytes  File  Size =          0 *
+*Entries :        0 : Total =            1224 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :x         : x/D                                                    *
@@ -52,7 +52,7 @@ result entries = 100
 Error in <TTree::Show()>: Cannot read entry 19 (entry does not exist)
 ******************************************************************************
 *Tree    :yyy       : Argument                                               *
-*Entries :      100 : Total =            3110 bytes  File  Size =          0 *
+*Entries :      100 : Total =            3116 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :x         : x/D                                                    *
