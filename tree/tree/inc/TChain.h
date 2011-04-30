@@ -88,6 +88,7 @@ public:
    virtual TBranch  *GetBranch(const char* name);
    virtual Bool_t    GetBranchStatus(const char* branchname) const;
    virtual Long64_t  GetChainEntryNumber(Long64_t entry) const;
+   virtual TClusterIterator GetClusterIterator(Long64_t firstentry);
            Int_t     GetNtrees() const { return fNtrees; }
    virtual Long64_t  GetEntries() const;
    virtual Long64_t  GetEntries(const char *sel) { return TTree::GetEntries(sel); }

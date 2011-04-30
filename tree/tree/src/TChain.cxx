@@ -875,6 +875,18 @@ Bool_t TChain::GetBranchStatus(const char* branchname) const
 }
 
 //______________________________________________________________________________
+TTree::TClusterIterator TChain::GetClusterIterator(Long64_t /* firstentry */)
+{
+   // Return an iterator over the cluster of baskets starting at firstentry.
+   // 
+   // This iterator is not yet supported for TChain object.
+   //
+   
+   Fatal("GetClusterIterator","Not support for TChain object");
+   return TTree::GetClusterIterator(-1);
+}
+
+//______________________________________________________________________________
 Long64_t TChain::GetChainEntryNumber(Long64_t entry) const
 {
    // -- Return absolute entry number in the chain.

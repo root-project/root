@@ -84,6 +84,8 @@ class TTreeCloner {
 
    friend class CompareSeek;
    friend class CompareEntry;
+   
+   void ImportClusterRanges();
 
 public:
    enum EClonerOptions {

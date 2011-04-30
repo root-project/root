@@ -85,5 +85,6 @@
 #pragma link C++ function operator*(const TEventList&, const TEventList&);
 
 #pragma read sourceClass="TTree" targetClass="TTree" version="[-16]" source="" target="fDefaultEntryOffsetLen" code="{ fDefaultEntryOffsetLen = 1000; }"
+#pragma read sourceClass="TTree" targetClass="TTree" version="[-18]" source="" target="fNClusterRange" code="{ fNClusterRange = 0; }"
 
 #endif

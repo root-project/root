@@ -86,6 +86,7 @@ class TVirtualIndex;
 class TBranchRef;
 class TBasket;
 class TStreamerInfo;
+class TTreeCloner;
 
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
@@ -101,12 +102,16 @@ protected:
    Int_t          fScanField;         //  Number of runs before prompting in Scan
    Int_t          fUpdate;            //  Update frequency for EntryLoop
    Int_t          fDefaultEntryOffsetLen;  //  Initial Length of fEntryOffset table in the basket buffers
+   Int_t          fNClusterRange;     //  Number of Cluster range in addition to the one defined by 'AutoFlush'
+   Int_t          fMaxClusterRange;   //! Memory allocated for the cluster range.
    Long64_t       fMaxEntries;        //  Maximum number of entries in case of circular buffers
    Long64_t       fMaxEntryLoop;      //  Maximum number of entries to process
    Long64_t       fMaxVirtualSize;    //  Maximum total size of buffers kept in memory
    Long64_t       fAutoSave;          //  Autosave tree when fAutoSave bytes produced
    Long64_t       fAutoFlush;         //  Autoflush tree when fAutoFlush entries written
    Long64_t       fEstimate;          //  Number of entries to estimate histogram limits
+   Long64_t      *fClusterRangeEnd;   //[fNClusterRange] Last entry of a cluster range.
+   Long64_t      *fClusterSize;       //[fNClusterRange] Number of entries in each cluster for a given range.
    Long64_t       fCacheSize;         //! Maximum size of file buffers
    Long64_t       fChainOffset;       //! Offset of 1st entry of this Tree in a TChain
    Long64_t       fReadEntry;         //! Number of the entry being processed
@@ -154,6 +159,8 @@ protected:
    friend  TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);
    Int_t    SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr);
 
+   void             ImportClusterRanges(TTree *fromtree);
+
    class TFriendLock {
       // Helper class to prevent infinite recursion in the
       // usage of TTree Friends. Implemented in TTree.cxx.
@@ -173,6 +180,8 @@ protected:
    // So that the index class can use TFriendLock:
    friend class TTreeIndex;
    friend class TChainIndex;
+   // So that the TTreeCloner can access the protected interfaces
+   friend class TTreeCloner;
 
    // use to update fFriendLockStatus
    enum ELockStatusBits {
@@ -217,6 +226,46 @@ public:
       kSplitCollectionOfPointers = 100
    };
    
+   class TClusterIterator 
+   {
+   private:
+      TTree    *fTree;        // TTree upon which we are iterating.
+      Int_t    fClusterRange; // Which cluster range are we looking at.
+      Long64_t fStartEntry;   // Where does the cluster start.
+      Long64_t fNextEntry;    // Where does the cluster end (exclusive).
+
+      Long64_t GetEstimatedClusterSize();
+      
+   protected:
+      friend class TTree;
+      TClusterIterator(TTree *tree, Long64_t firstEntry);
+
+   public:
+      // Intentionally used the default copy constructor and default destructor
+      // as the TClusterIterator does not own the TTree.
+      //  TClusterIterator(const TClusterIterator&);
+      // ~TClusterIterator();
+      
+      // No public constructors, the iterator must be
+      // created via TTree::GetClusterIterator
+
+      // Move on to the next cluster and return the starting entry
+      // of this next cluster
+      Long64_t Next();
+      
+      // Return the start entry of the current cluster.
+      Long64_t GetStartEntry() {
+         return fStartEntry;
+      }
+
+      // Return the first entry of the next cluster.
+      Long64_t GetNextEntry() {
+         return fNextEntry;
+      }
+
+      Long64_t operator()() { return Next(); }
+   };
+
    TTree();
    TTree(const char* name, const char* title, Int_t splitlevel = 99);
    virtual ~TTree();
@@ -304,6 +353,7 @@ public:
    virtual Bool_t          GetBranchStatus(const char* branchname) const;
    static  Int_t           GetBranchStyle();
    virtual Long64_t        GetCacheSize() const { return fCacheSize; }
+   virtual TClusterIterator GetClusterIterator(Long64_t firstentry);
    virtual Long64_t        GetChainEntryNumber(Long64_t entry) const { return entry; }
    virtual Long64_t        GetChainOffset() const { return fChainOffset; }
    TFile                  *GetCurrentFile() const;
@@ -483,7 +533,7 @@ public:
    virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
    virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
 
-   ClassDef(TTree,18)  //Tree descriptor (the main ROOT I/O class)
+   ClassDef(TTree,19)  //Tree descriptor (the main ROOT I/O class)
 };
 
 //////////////////////////////////////////////////////////////////////////

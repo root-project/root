@@ -135,6 +135,7 @@ Bool_t TTreeCloner::Exec()
 {
    // Execute the cloning.
 
+   ImportClusterRanges();
    CopyStreamerInfos();
    CopyProcessIds();
    CloseOutWriteBaskets();
@@ -502,6 +503,21 @@ void TTreeCloner::CopyProcessIds()
          }
       }
    }
+}
+
+//______________________________________________________________________________
+void TTreeCloner::ImportClusterRanges()
+{
+   // Set the entries and import the cluster range of the 
+   
+   // First undo, the external call to SetEntries
+   // We could improve the interface to optional tell the TTreeCloner that the
+   // SetEntries was not done.
+   fToTree->SetEntries(fToTree->GetEntries() - fFromTree->GetTree()->GetEntries());
+   
+   fToTree->ImportClusterRanges( fFromTree->GetTree() );
+   
+   fToTree->SetEntries(fToTree->GetEntries() + fFromTree->GetTree()->GetEntries());
 }
 
 //______________________________________________________________________________

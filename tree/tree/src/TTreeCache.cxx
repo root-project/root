@@ -238,6 +238,7 @@
 #include "TLeaf.h"
 #include "TFriendElement.h"
 #include "TFile.h"
+#include <limits.h>
 
 Int_t TTreeCache::fgLearnEntries = 100;
 
@@ -441,36 +442,13 @@ Bool_t TTreeCache::FillBuffer()
    // Triggered by the user, not the learning phase
    if (entry == -1)  entry = 0;
 
-   // Estimate number of entries that can fit in the cache compare it
-   // to the original value of fBufferSize not to the real one
-   Long64_t autoFlush = tree->GetAutoFlush();
-   if (autoFlush > 0) {
-      //case when the tree autoflush has been set
-      Int_t averageEntrySize = tree->GetZipBytes()/tree->GetEntries();
-      if (averageEntrySize < 1) averageEntrySize = 1;
-      Int_t nauto = fBufferSizeMin/(averageEntrySize*autoFlush);
-      if (nauto < 1) nauto = 1;
-      fEntryCurrent = entry - entry%autoFlush;
-      fEntryNext = entry - entry%autoFlush + nauto*autoFlush;
-   } else {
-      // Below we increment by "autoFlush" events each iteration.
-      // Thus, autoFlush cannot be negative.
-      autoFlush = 0;
+   TTree::TClusterIterator clusterIter = tree->GetClusterIterator(entry);
+   fEntryCurrent = clusterIter();
+   fEntryNext = clusterIter.GetNextEntry();
 
-      //case of old files before November 9 2009
-      fEntryCurrent = entry;
-      if (fZipBytes==0) {
-         fEntryNext = entry + tree->GetEntries();
-      } else {
-         Long64_t clusterEstimate = tree->GetEntries()*fBufferSizeMin/fZipBytes;
-         if (clusterEstimate == 0)
-            clusterEstimate = 1;
-         fEntryNext = entry + clusterEstimate;         
-      }
-   }
    if (fEntryCurrent < fEntryMin) fEntryCurrent = fEntryMin;
    if (fEntryMax <= 0) fEntryMax = tree->GetEntries();
-   if (fEntryNext > fEntryMax) fEntryNext = fEntryMax+1;
+   if (fEntryNext > fEntryMax) fEntryNext = fEntryMax;
 
    
    // Check if owner has a TEventList set. If yes we optimize for this
@@ -492,8 +470,10 @@ Bool_t TTreeCache::FillBuffer()
    Int_t flushIntervals = 0;
    Long64_t minEntry = fEntryCurrent;
    Long64_t prevNtot;
+   Int_t minBasket = 0;  // We will use this to avoid re-checking the first baskets in the 2nd (or more) run in the while loop.
    do {
       prevNtot = fNtot;
+      Int_t nextMinBasket = INT_MAX;
       for (Int_t i=0;i<fNbranches;i++) {
          TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
          if (b->GetDirectory()==0) continue;
@@ -505,7 +485,8 @@ Bool_t TTreeCache::FillBuffer()
          //we have found the branch. We now register all its baskets
          //from the requested offset to the basket below fEntrymax
          Int_t blistsize = b->GetListOfBaskets()->GetSize();
-         for (Int_t j=0;j<nb;j++) {
+         Int_t j=minBasket;  // We need this out of the loop so we can find out how far we went.
+         for (;j<nb;j++) {
             // This basket has already been read, skip it
             if (j<blistsize && b->GetListOfBaskets()->UncheckedAt(j)) continue;
 
@@ -513,7 +494,7 @@ Bool_t TTreeCache::FillBuffer()
             Int_t len = lbaskets[j];
             if (pos <= 0 || len <= 0) continue;
             //important: do not try to read fEntryNext, otherwise you jump to the next autoflush
-            if (entries[j] >= fEntryNext) continue;
+            if (entries[j] >= fEntryNext) break; // break out of the for each branch loop.
             if (entries[j] < minEntry && (j<nb-1 && entries[j+1] <= minEntry)) continue;
             if (elist) {
                Long64_t emax = fEntryMax;
@@ -524,16 +505,18 @@ Bool_t TTreeCache::FillBuffer()
 
             TFileCacheRead::Prefetch(pos,len);
          }
+         if (j < nextMinBasket) nextMinBasket = j;
          if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",minEntry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtot);
       }
       flushIntervals++;
-      minEntry += autoFlush;
+      minEntry = clusterIter.Next();
 
-      if (!((autoFlush > 0) && (fBufferSizeMin > (fNtot*(flushIntervals+1))/flushIntervals) && (prevNtot < fNtot) && (minEntry < fEntryMax)))
+      if (!((fBufferSizeMin > (fNtot*(flushIntervals+1))/flushIntervals) && (prevNtot < fNtot) && (minEntry < fEntryMax)))
          break;
 
-      fEntryNext += autoFlush;
-      if (fEntryNext > fEntryMax) fEntryNext = fEntryMax+1;
+      minBasket = nextMinBasket;
+      fEntryNext = clusterIter.GetNextEntry();
+      if (fEntryNext > fEntryMax) fEntryNext = fEntryMax;
    } while (kTRUE);
    fIsLearning = kFALSE;
    return kTRUE;
