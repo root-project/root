@@ -1438,7 +1438,7 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
       ErrorInfo("RpdCheckOffSet: found line: %s", line);
 
    if (nw > 5 && act > 0) {
-      if ((lsec == Sec)) {
+      if (lsec == Sec) {
          if (lsec == 3) {
             sscanf(line, "%d %d %d %d %4095s %4095s %d %4095s %19s %4095s",
                          &lsec, &act, &gRSAKey, &remid, host, usr, &shmid, subj, tkn, dumm);
