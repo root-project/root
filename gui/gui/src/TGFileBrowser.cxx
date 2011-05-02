@@ -1250,7 +1250,8 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                      if (sbuf.fIsLink) {
                         // change the pictures if it is a symlink 
                         // (shortcut on Windows)
-                        const TGPicture *opened, *l_opened, *closed, *l_closed;
+                        const TGPicture *opened = 0, *l_opened = 0;
+                        const TGPicture *closed = 0, *l_closed = 0;
                         opened = fClient->GetPicture("ofolder_t.xpm");
                         if (opened) l_opened = MakeLinkPic(opened);
                         closed = fClient->GetPicture("folder_t.xpm");
