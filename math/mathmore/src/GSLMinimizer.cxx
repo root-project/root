@@ -36,6 +36,7 @@
 #include <cassert>
 
 #include <iostream>
+#include <iomanip>
 #include <cmath>
 #include <algorithm>
 #include <functional>
@@ -292,23 +293,25 @@ bool GSLMinimizer::Minimize() {
          minFound = true; 
       }
 
-      if (debugLevel >=3) { 
-         std::cout << "----------> Iteration " << iter << std::endl; 
+      if (debugLevel >=2) { 
+         std::cout << "----------> Iteration " << std::setw(4) << iter; 
          int pr = std::cout.precision(18);
          std::cout << "            FVAL = " << fGSLMultiMin->Minimum() << std::endl; 
          std::cout.precision(pr);
-         std::cout << "            X Values : "; 
-         const double * xtmp = fGSLMultiMin->X();
-         std::cout << std::endl; 
-         if (trFunc != 0 ) { 
-            xtmp  = trFunc->Transformation(xtmp);  
-         }
-         for (unsigned int i = 0; i < NDim(); ++i) {
-            std::cout << " " << fNames[i] << " = " << xtmp[i];
-         // avoid nan
-         // if (std::isnan(xtmp[i])) status = -11;
-         }
-         std::cout << std::endl; 
+         if (debugLevel >=3) { 
+            std::cout << "            Parameter Values : "; 
+            const double * xtmp = fGSLMultiMin->X();
+            std::cout << std::endl; 
+            if (trFunc != 0 ) { 
+               xtmp  = trFunc->Transformation(xtmp);  
+            }
+            for (unsigned int i = 0; i < NDim(); ++i) {
+               std::cout << " " << fNames[i] << " = " << xtmp[i];
+               // avoid nan
+               // if (std::isnan(xtmp[i])) status = -11;
+            }
+            std::cout << std::endl;
+         } 
       }
 
 
