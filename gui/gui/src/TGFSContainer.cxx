@@ -592,8 +592,12 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
    }
 
    if (R_ISREG(file_type)) {
-      *pic = fClient->GetMimeTypeList()->GetIcon(name, kTRUE);
-      *lpic = fClient->GetMimeTypeList()->GetIcon(name, kFALSE);
+      TString fname(name);
+      if (is_link && fname.EndsWith(".lnk")) {
+         fname.Remove(fname.Length()-4);
+      }
+      *pic = fClient->GetMimeTypeList()->GetIcon(fname.Data(), kTRUE);
+      *lpic = fClient->GetMimeTypeList()->GetIcon(fname.Data(), kFALSE);
 
       if (*pic) {
          if (!*lpic) *lpic = *pic;
@@ -665,7 +669,7 @@ void TGFileContainer::ChangeDirectory(const char *path)
 
    TString savdir = gSystem->WorkingDirectory();
    gSystem->ChangeDirectory(fDirectory.Data());   // so path of ".." will work
-   if (gSystem->ChangeDirectory(path)) {
+   if (gSystem->ChangeDirectory(gSystem->ExpandPathName(path))) {
       fDirectory = gSystem->WorkingDirectory();
       gSystem->ChangeDirectory(savdir.Data());
       DisplayDirectory();

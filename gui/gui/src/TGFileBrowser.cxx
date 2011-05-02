@@ -1020,7 +1020,14 @@ TString TGFileBrowser::FullPathName(TGListTreeItem* item)
       dirname = gSystem->ConcatFileName(parent->GetText(),dirname);
       itm = parent;
    }
-
+   dirname = gSystem->ExpandPathName(dirname.Data());
+   while (dirname.Contains(".lnk")) {
+      Ssiz_t idx = dirname.Index(".lnk") + 4;
+      TString resolved = dirname;
+      resolved.Remove(idx);
+      resolved = gSystem->ExpandPathName(resolved.Data());
+      dirname = resolved.Append(dirname.Remove(0, idx));
+   }
    return dirname;
 }
 
@@ -1087,6 +1094,30 @@ static Bool_t IsTextFile(const char *candidate)
 }
 
 //______________________________________________________________________________
+static const TGPicture *MakeLinkPic(const TGPicture *pic)
+{
+   // Create a symlink (shortcut on Windows) icon by merging the picture 
+   // passed as argument and the slink_t.xpm icon (small arrow)
+
+   const TGPicture *merged;
+   TImage *img1, *img2;
+   if (pic) {
+      img1 = TImage::Create();
+      img1->SetImage(((const TGPicture *)pic)->GetPicture(),
+                     ((const TGPicture *)pic)->GetMask());
+      img2 = TImage::Open("slink_t.xpm");
+      if (img2) img1->Merge(img2);
+      TString lnk_name = ((const TGPicture *)pic)->GetName();
+      lnk_name.Prepend("lnk_");
+      merged = gClient->GetPicturePool()->GetPicture(lnk_name.Data(),
+                                          img1->GetPixmap(), img1->GetMask());
+      if (img2) delete img2; delete img1;
+      return merged;
+   }
+   return pic;
+}
+
+//______________________________________________________________________________
 void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
 {
    // Process double clicks in TGListTree.
@@ -1100,6 +1131,12 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
    Long_t id, flags, modtime;
    char action[512];
    TString act;
+   Bool_t is_link = kFALSE;
+   gSystem->GetPathInfo(item->GetText(), sbuf);
+   if (sbuf.fIsLink) {
+      is_link = kTRUE;
+      fullpath = gSystem->ExpandPathName(item->GetText());
+   }
 
    if (fNewBrowser)
       fNewBrowser->SetActBrowser(this);
@@ -1198,7 +1235,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
          files->Sort();
          TIter next(files);
          TSystemFile *file;
-         TString fname;
+         TString fname, pname;
          // directories first
          //fListTree->DeleteChildren(item);
          while ((file=(TSystemFile*)next())) {
@@ -1209,6 +1246,22 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                if ((fname!="..") && (fname!=".")) { // skip it
                   if (!fListTree->FindChildByName(item, fname)) {
                      itm = fListTree->AddItem(item, fname);
+                     gSystem->GetPathInfo(fname, sbuf);
+                     if (sbuf.fIsLink) {
+                        // change the pictures if it is a symlink 
+                        // (shortcut on Windows)
+                        const TGPicture *opened, *l_opened, *closed, *l_closed;
+                        opened = fClient->GetPicture("ofolder_t.xpm");
+                        if (opened) l_opened = MakeLinkPic(opened);
+                        closed = fClient->GetPicture("folder_t.xpm");
+                        if (closed) l_closed = MakeLinkPic(closed);
+                        if (l_opened && l_closed)
+                           itm->SetPictures(l_opened, l_closed);
+                        if (opened) fClient->FreePicture(opened);
+                        if (closed) fClient->FreePicture(closed);
+                        if (l_opened) fClient->FreePicture(l_opened);
+                        if (l_closed) fClient->FreePicture(l_closed);
+                     }
                      // uncomment line below to set directories as
                      // DND targets
                      //itm->SetDNDTarget(kTRUE);
@@ -1220,7 +1273,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
          // then files...
          TIter nextf(files);
          while ((file=(TSystemFile*)nextf())) {
-            fname = file->GetName();
+            fname = pname = file->GetName();
             if (!file->IsDirectory() && (fFilter == 0 ||
                (fFilter && fname.Index(*fFilter) != kNPOS))) {
                if (!fShowHidden && fname.BeginsWith("."))
@@ -1230,16 +1283,24 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                   size    = sbuf.fSize;
                   modtime = sbuf.fMtime;
                }
-               pic = gClient->GetMimeTypeList()->GetIcon(fname, kTRUE);
+               if (sbuf.fIsLink && pname.EndsWith(".lnk"))
+                  pname.Remove(pname.Length()-4);
+               pic = gClient->GetMimeTypeList()->GetIcon(pname, kTRUE);
                if (!pic)
                   pic = fFileIcon;
+               if (sbuf.fIsLink)
+                  pic = MakeLinkPic(pic);
                if (!fListTree->FindChildByName(item, fname)) {
-                  itm = fListTree->AddItem(item,fname,pic,pic);
+                  itm = fListTree->AddItem(item, fname, pic, pic);
                   if (pic != fFileIcon)
                      fClient->FreePicture(pic);
-                  itm->SetUserData(new TObjString(TString::Format("file://%s/%s\r\n",
-                                   gSystem->UnixPathName(file->GetTitle()),
-                                   file->GetName())), kTRUE);
+                  if (sbuf.fIsLink)
+                     itm->SetUserData(new TObjString(TString::Format("file://%s\r\n",
+                                      gSystem->ExpandPathName(file->GetName()))), kTRUE);
+                  else
+                     itm->SetUserData(new TObjString(TString::Format("file://%s/%s\r\n",
+                                      gSystem->UnixPathName(file->GetTitle()),
+                                      file->GetName())), kTRUE);
                   itm->SetDNDSource(kTRUE);
                   if (size && modtime) {
                      char *tiptext = FormatFileInfo(fname.Data(), size, modtime);
@@ -1254,8 +1315,11 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
       }
    }
    else {
+      TString lnkname = item->GetText();
+      if (is_link && lnkname.EndsWith(".lnk"))
+         lnkname.Remove(lnkname.Length()-4);
       fCurrentDir = item->GetParent();
-      TSystemFile f(item->GetText(), fullpath.Data());
+      TSystemFile f(lnkname.Data(), fullpath.Data());
       TString fname = f.GetName();
       if (fname.EndsWith(".root")) {
          TDirectory *rfile = 0;
