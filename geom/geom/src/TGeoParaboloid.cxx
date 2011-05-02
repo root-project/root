@@ -117,24 +117,26 @@ void TGeoParaboloid::ComputeBBox()
 void TGeoParaboloid::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
-   if ((TMath::Abs(point[2])-fDz) > -1E-5) {
-      norm[0] = norm[1] = 0.0;
+   norm[0] = norm[1] = 0.0;
+   if (TMath::Abs(point[2]) > fDz) {
+      norm[2] = TMath::Sign(1., dir[2]);
+      return;
+   }
+   Double_t safz = fDz-TMath::Abs(point[2]);
+   Double_t r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+   Double_t safr = TMath::Abs(r-TMath::Sqrt((point[2]-fB)/fA));
+   if (safz<safr) {
       norm[2] = TMath::Sign(1., dir[2]);
       return;
    }   
-   Double_t talf = 2.*TMath::Sqrt(fA*(point[2]-fB))*TMath::Sign(1.0, fA);
+   Double_t talf = -2.*fA*r;
    Double_t calf = 1./TMath::Sqrt(1.+talf*talf);
    Double_t salf = talf * calf;
    Double_t phi = TMath::ATan2(point[1], point[0]);
-   if (phi<0) phi+=2.*TMath::Pi();
-   Double_t cphi = TMath::Cos(phi);
-   Double_t sphi = TMath::Sin(phi);
-   Double_t ct   = - calf*TMath::Sign(1.,fA);
-   Double_t st   = salf*TMath::Sign(1.,fA); 
 
-   norm[0] = st*cphi;
-   norm[1] = st*sphi;
-   norm[2] = ct;
+   norm[0] = salf*TMath::Cos(phi);
+   norm[1] = salf*TMath::Sin(phi);
+   norm[2] = calf;
    Double_t ndotd = norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2];
    if (ndotd < 0) {
       norm[0] = -norm[0];
@@ -165,13 +167,14 @@ Int_t TGeoParaboloid::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoParaboloid::DistToParaboloid(Double_t *point, Double_t *dir) const
+Double_t TGeoParaboloid::DistToParaboloid(Double_t *point, Double_t *dir, Bool_t in) const
 {
 // Compute distance from a point to the parabola given by:
 //  z = a*rsq + b;   rsq = x*x+y*y
+   Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t a = fA * (dir[0]*dir[0] + dir[1]*dir[1]);
    Double_t b = 2.*fA*(point[0]*dir[0]+point[1]*dir[1])-dir[2];
-   Double_t c = fA*(point[0]*point[0]+point[1]*point[1]) + fB - point[2];
+   Double_t c = fA*rsq + fB - point[2];
    Double_t dist = TGeoShape::Big();
    if (TMath::Abs(a)<TGeoShape::Tolerance()) {
       if (TMath::Abs(b)<TGeoShape::Tolerance()) return dist; // big
@@ -184,14 +187,22 @@ Double_t TGeoParaboloid::DistToParaboloid(Double_t *point, Double_t *dir) const
    Double_t prod = c*ainv;
    Double_t delta = sum*sum - 4.*prod;
    if (delta<0) return dist; // big
-   if (TMath::Abs(prod)<TGeoShape::Tolerance()) return 0.;
-   if (prod < 0) {
-      dist = 0.5*(sum + TMath::Sqrt(delta));
-      return dist; // OK
+   delta = TMath::Sqrt(delta); 
+   Double_t sone = TMath::Sign(1.,ainv);
+   Int_t i = -1;
+   while (i<2) {
+      dist = 0.5*(sum+i*sone*delta);
+      i += 2;
+      if (dist<0) continue;
+      if (dist<1.E-8) {
+         Double_t talf = -2.*fA*TMath::Sqrt(rsq);
+         Double_t phi = TMath::ATan2(point[1], point[0]);
+         Double_t ndotd = talf*(TMath::Cos(phi)*dir[0]+TMath::Sin(phi)*dir[1])+dir[2];
+         if (!in) ndotd *= -1;
+         if (ndotd<0) return dist;         
+      } else return dist;   
    }
-   if (sum < 0) return dist; // big
-   dist = 0.5 * (sum - TMath::Sqrt(delta));
-   return dist; // OK
+   return TGeoShape::Big();
 }      
 
 //_____________________________________________________________________________
@@ -211,7 +222,7 @@ Double_t TGeoParaboloid::DistFromInside(Double_t *point, Double_t *dir, Int_t ia
    } else if (dir[2]>0) {
       dz = (fDz-point[2])/dir[2];
    }      
-   Double_t dpara = DistToParaboloid(point, dir);
+   Double_t dpara = DistToParaboloid(point, dir, kTRUE);
    return TMath::Min(dz, dpara);
 }
 
@@ -242,7 +253,7 @@ Double_t TGeoParaboloid::DistFromOutside(Double_t *point, Double_t *dir, Int_t i
       ynew = point[1]+snxt*dir[1];
       if ((xnew*xnew+ynew*ynew) <= fRhi*fRhi) return snxt;
    }
-   snxt = DistToParaboloid(point, dir);
+   snxt = DistToParaboloid(point, dir, kFALSE);
    if (snxt > 1E20) return snxt;
    znew = point[2]+snxt*dir[2];
    if (TMath::Abs(znew) <= fDz) return snxt;

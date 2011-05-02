@@ -1940,7 +1940,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
    TGeoNode *startnode, *endnode;
    Bool_t vis1,vis2;
    Int_t i=0;
-   Int_t ipoint;
+   Int_t ipoint, inull;
    Int_t itot=0;
    Int_t n10=nrays/10;
    Double_t theta,phi, step, normlen;
@@ -1950,9 +1950,10 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
    Double_t dz = ((TGeoBBox*)vol->GetShape())->GetDZ();
    normlen = TMath::Max(dx,dy);
    normlen = TMath::Max(normlen,dz);
-   normlen *= 0.1;
+   normlen *= 0.05;
    while (itot<nrays) {
       itot++;
+      inull = 0;
       ipoint = 0;
       if (n10) {
          if ((itot%n10) == 0) printf("%i percent\n", Int_t(100*itot/nrays));
@@ -1976,13 +1977,13 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
          i++;
          pm->Add(line);
       }
-      // find where we end-up
-      fGeoManager->FindNextBoundaryAndStep();
-      step = fGeoManager->GetStep();
-      endnode = fGeoManager->GetCurrentNode();
-      normal = fGeoManager->FindNormalFast();
-      vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
-      while (endnode) {
+      while ((endnode=fGeoManager->FindNextBoundaryAndStep())) {
+         step = fGeoManager->GetStep();
+         if (step<TGeoShape::Tolerance()) inull++;
+         else inull = 0;
+         if (inull>5) break;
+         normal = fGeoManager->FindNormalFast();
+         if (!normal) break;
          istep = 0;
          vis2 = endnode->IsOnScreen();
          if (ipoint>0) {
@@ -1991,7 +1992,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
             if (!vis2) {
                normline = new TPolyLine3D(2);
                normline->SetLineColor(kBlue);
-               normline->SetLineWidth(2);
+               normline->SetLineWidth(1);
                normline->SetPoint(0, point[0], point[1], point[2]);
                normline->SetPoint(1, point[0]+normal[0]*normlen, 
                                      point[1]+normal[1]*normlen, 
@@ -2017,11 +2018,6 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
             pm->Add(line);
             pm->Add(normline);
          } 
-         // generate an extra step to cross boundary
-         startnode = endnode;    
-         fGeoManager->FindNextBoundary();
-         step = fGeoManager->GetStep();
-         endnode = fGeoManager->Step();
       }      
    }   
    // draw all segments
