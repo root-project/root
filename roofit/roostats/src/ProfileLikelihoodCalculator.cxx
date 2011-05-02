@@ -133,8 +133,7 @@ void  ProfileLikelihoodCalculator::DoGlobalFit() const {
    const char * minimType = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
    const char * minimAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
    int strategy = ROOT::Math::MinimizerOptions::DefaultStrategy();
-   int level = ROOT::Math::MinimizerOptions::DefaultPrintLevel();
-
+   int level = ROOT::Math::MinimizerOptions::DefaultPrintLevel() -1;// RooFit level starts from  -1
    ooccoutI((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::DoGlobalFit - using " << minimType << " / " << minimAlgo << " with strategy " << strategy << std::endl;
    RooFitResult* fit = pdf->fitTo(*data, Constrain(*constrainedParams),Strategy(strategy),PrintLevel(level),
                                   Hesse(kFALSE),Save(kTRUE),Minimizer(minimType,minimAlgo));
@@ -294,7 +293,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
 
       const char * minimType = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
       const char * minimAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-      int level = ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1; // decrease here print level
+      int level = ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1; // RooFit levels starts from -1
       RooFitResult* fit2 = pdf->fitTo(*data,Constrain(*constrainedParams),Hesse(kFALSE),Strategy(0), Minos(kFALSE),
                                       Minimizer(minimType,minimAlgo), Save(kTRUE),PrintLevel(level));
      
