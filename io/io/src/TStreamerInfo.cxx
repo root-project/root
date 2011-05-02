@@ -1877,7 +1877,8 @@ void TStreamerInfo::Compile()
                   fType[fNdata] += kConv;
                }
             } else {
-               if (fType[fNdata] == kCounter) {
+               if (fType[fNdata] == kCounter && strcmp(GetName(),"TTree")!= 0) {
+                  // We warn unless the issue is with TTree (to avoid spurious warning when reading new files).
                   Warning("Compile", "Counter %s should not be skipped from class %s", element->GetName(), GetName());
                }
                fType[fNdata] += kSkip;
