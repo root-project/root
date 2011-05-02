@@ -610,7 +610,7 @@ const char *TTreePlayer::GetNameByIndex(TString &varexp, Int_t *index,Int_t coli
 }
 
 //______________________________________________________________________________
-static TString R__GetBranchPointerName(TLeaf *leaf)
+static TString R__GetBranchPointerName(TLeaf *leaf, Bool_t replace = kTRUE)
 {
    // Return the name of the branch pointer needed by MakeClass/MakeSelector
 
@@ -639,16 +639,18 @@ static TString R__GetBranchPointerName(TLeaf *leaf)
          }
       }
    }
-   char *bname = (char*)branchname.Data();
-   char *twodim = (char*)strstr(bname,"[");
-   if (twodim) *twodim = 0;
-   while (*bname) {
-      if (*bname == '.') *bname='_';
-      if (*bname == ',') *bname='_';
-      if (*bname == ':') *bname='_';
-      if (*bname == '<') *bname='_';
-      if (*bname == '>') *bname='_';
-      bname++;
+   if (replace) {
+      char *bname = (char*)branchname.Data();
+      char *twodim = (char*)strstr(bname,"[");
+      if (twodim) *twodim = 0;
+      while (*bname) {
+         if (*bname == '.') *bname='_';
+         if (*bname == ',') *bname='_';
+         if (*bname == ':') *bname='_';
+         if (*bname == '<') *bname='_';
+         if (*bname == '>') *bname='_';
+         bname++;
+      }
    }
    return branchname;
 }
@@ -1241,9 +1243,14 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          if (*bname == '>') *bname='_';
          bname++;
       }
+      const char *maybedisable = "";
+      if (branch != fTree->GetBranch(branch->GetName())) {
+         Error("MakeClass","The branch named %s (full path name: %s) is hidden by another branch of the same name and its data will not be loaded.",branch->GetName(),R__GetBranchPointerName(leaf,kFALSE).Data());
+         maybedisable = "// ";
+      }
       if (branch->IsA() == TBranchObject::Class()) {
          if (branch->GetListOfBranches()->GetEntriesFast()) {
-            fprintf(fp,"   fChain->SetBranchAddress(\"%s\",(void*)-1,&b_%s);\n",branch->GetName(),R__GetBranchPointerName(leaf).Data());
+            fprintf(fp,"%s   fChain->SetBranchAddress(\"%s\",(void*)-1,&b_%s);\n",maybedisable,branch->GetName(),R__GetBranchPointerName(leaf).Data());
             continue;
          }
          strlcpy(branchname,branch->GetName(),sizeof(branchname)); 
@@ -1253,10 +1260,10 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          if (((TBranchElement*)branch)->GetType() == 4) len =1;
       }
       if (leafcount) len = leafcount->GetMaximum()+1;
-      if (len > 1) fprintf(fp,"   fChain->SetBranchAddress(\"%s\", %s, &b_%s);\n",
-                           branch->GetName(), branchname, R__GetBranchPointerName(leaf).Data());
-      else         fprintf(fp,"   fChain->SetBranchAddress(\"%s\", &%s, &b_%s);\n",
-                           branch->GetName(), branchname, R__GetBranchPointerName(leaf).Data());
+      if (len > 1) fprintf(fp,"%s   fChain->SetBranchAddress(\"%s\", %s, &b_%s);\n",
+                           maybedisable,branch->GetName(), branchname, R__GetBranchPointerName(leaf).Data());
+      else         fprintf(fp,"%s   fChain->SetBranchAddress(\"%s\", &%s, &b_%s);\n",
+                           maybedisable,branch->GetName(), branchname, R__GetBranchPointerName(leaf).Data());
    }
    //must call Notify in case of MakeClass
    if (!opt.Contains("selector")) {
