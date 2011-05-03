@@ -1761,7 +1761,7 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
             pmfromoutside->Draw();
             return;                   
          }
-         
+         if (TMath::Abs(delta) < 1E-20) delta = 1E-30;
          hist->Fill(TMath::Max(TMath::Log(TMath::Abs(delta)),-20.));
       }
    }
