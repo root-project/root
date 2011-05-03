@@ -10234,7 +10234,7 @@ void TProof::InterruptCurrentMonitor()
 }
 
 //_____________________________________________________________________________
-void TProof::ActivateWorker(const char *ord)
+Int_t TProof::ActivateWorker(const char *ord)
 {
    // Make sure that the worker identified by the ordinal number 'ord' is
    // in the active list. The request will be forwarded to the master
@@ -10242,12 +10242,16 @@ void TProof::ActivateWorker(const char *ord)
    // the worker from the inactive to the active list and rebuild the list
    // of unique workers.
    // Use ord = "*" to activate all inactive workers.
+   // The string 'ord' can also be a comma-separated list of ordinal numbers the
+   // status of which will be modified at once.
+   // Return <0 if something went wrong (-2 if at least one worker was not found)
+   // or the number of workers with status change (on master; 0 on client).
 
-   ModifyWorkerLists(ord, kTRUE);
+   return ModifyWorkerLists(ord, kTRUE);
 }
 
 //_____________________________________________________________________________
-void TProof::DeactivateWorker(const char *ord)
+Int_t TProof::DeactivateWorker(const char *ord)
 {
    // Remove the worker identified by the ordinal number 'ord' from the
    // the active list. The request will be forwarded to the master
@@ -10255,25 +10259,44 @@ void TProof::DeactivateWorker(const char *ord)
    // the worker from the active to the inactive list and rebuild the list
    // of unique workers.
    // Use ord = "*" to deactivate all active workers.
+   // The string 'ord' can also be a comma-separated list of ordinal numbers the
+   // status of which will be modified at once.
+   // Return <0 if something went wrong (-2 if at least one worker was not found)
+   // or the number of workers with status change (on master; 0 on client).
 
-   ModifyWorkerLists(ord, kFALSE);
+   return ModifyWorkerLists(ord, kFALSE);
 }
 
 //_____________________________________________________________________________
-void TProof::ModifyWorkerLists(const char *ord, Bool_t add)
+Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add)
 {
    // Modify the worker active/inactive list by making the worker identified by
    // the ordinal number 'ord' active (add == TRUE) or inactive (add == FALSE).
+   // The string 'ord' can also be a comma-separated list of ordinal numbers the
+   // status of which will be modified at once.
    // If needed, the request will be forwarded to the master in direct contact
    // with the worker. The end-master will move the worker from one list to the
    // other active and rebuild the list of unique active workers.
    // Use ord = "*" to deactivate all active workers.
+   // Return <0 if something went wrong (-2 if at least one worker was not found)
+   // or the number of workers with status change (on master; 0 on client).
 
    // Make sure the input make sense
    if (!ord || strlen(ord) <= 0) {
       Info("ModifyWorkerLists",
-           "An ordinal number - e.g. \"0.4\" or \"*\" for all - is required as input");
-      return;
+           "an ordinal number - e.g. \"0.4\" or \"*\" for all - is required as input");
+      return -1;
+   }
+   Bool_t allord = strcmp(ord, "*") ? kFALSE : kTRUE;
+
+   // Create the hash list of ordinal numbers
+   THashList *ords = 0;
+   if (!allord) {
+      ords = new THashList();
+      TString oo(ord), o;
+      Int_t from = 0;
+      while(oo.Tokenize(o, from, ","))
+         ords->Add(new TObjString(o));
    }
 
    Bool_t fw = kTRUE;    // Whether to forward one step down
@@ -10283,37 +10306,67 @@ void TProof::ModifyWorkerLists(const char *ord, Bool_t add)
    TList *in = (add) ? fInactiveSlaves : fActiveSlaves;
    TList *out = (add) ? fActiveSlaves : fInactiveSlaves;
 
+   Int_t nwc = 0;
    if (TestBit(TProof::kIsMaster)) {
       fw = IsEndMaster() ? kFALSE : kTRUE;
-      // Look for the worker in the inactive list
+      // Look for the worker in the initial list
+      TObject *os = 0;
+      TSlave *wrk = 0;
       if (in->GetSize() > 0) {
          TIter nxw(in);
-         TSlave *wrk = 0;
          while ((wrk = (TSlave *) nxw())) {
-            if (ord[0] == '*' || !strncmp(wrk->GetOrdinal(), ord, strlen(ord))) {
-               // Add it to the inactive list
+            os = 0;
+            if (allord || (ords && (os = ords->FindObject(wrk->GetOrdinal())))) {
+               // Add it to the final list
                if (!out->FindObject(wrk)) {
                   out->Add(wrk);
                   if (add)
                      fActiveMonitor->Add(wrk->GetSocket());
                }
-               // Remove it from the active list
+               // Remove it from the initial list
                in->Remove(wrk);
                if (!add) {
                   fActiveMonitor->Remove(wrk->GetSocket());
                   wrk->SetStatus(TSlave::kInactive);
                } else
                   wrk->SetStatus(TSlave::kActive);
-
+               // Count
+               nwc++;
                // Nothing to forward (ord is unique)
                fw = kFALSE;
                // Rescan for unique workers (active list modified)
                rs = kTRUE;
-               // We are done, if not option 'all'
-               if (ord[0] != '*')
-                  break;
+               // We may be done, if not option 'all'
+               if (!allord && ords) {
+                  if (os) ords->Remove(os);
+                  if (ords->GetSize() == 0) break;
+                  SafeDelete(os);
+               }
             }
          }
+      }
+      // If some worker not found, notify it
+      if (ords && ords->GetSize() > 0) {
+         TString oo;
+         TIter nxo(ords);
+         while ((os = nxo())) {
+            TIter nxw(out);
+            while ((wrk = (TSlave *) nxw()))
+               if (!strcmp(os->GetName(), wrk->GetOrdinal())) break;
+            if (!wrk) {
+               if (!oo.IsNull()) oo += ",";
+               oo += os->GetName();
+            }
+         }
+         if (!oo.IsNull()) {
+            Warning("ModifyWorkerLists", "worker(s) '%s' not found!", oo.Data());
+            nwc = -2;
+         }
+      }
+      // Cleanup hash list
+      if (ords) {
+         ords->Delete();
+         SafeDelete(ords);
       }
    }
 
@@ -10324,11 +10377,34 @@ void TProof::ModifyWorkerLists(const char *ord, Bool_t add)
    // Forward the request one step down, if needed
    Int_t action = (add) ? (Int_t) kActivateWorker : (Int_t) kDeactivateWorker;
    if (fw) {
-      TMessage mess(kPROOF_WORKERLISTS);
-      mess << action << TString(ord);
-      Broadcast(mess);
-      Collect(kActive, fCollectTimeout);
+      if (fProtocol > 32) {
+         TMessage mess(kPROOF_WORKERLISTS);
+         mess << action << TString(ord);
+         Broadcast(mess);
+         Collect(kActive, fCollectTimeout);
+         if (fStatus != 0) {
+            nwc = (fStatus < nwc) ? fStatus : nwc;
+            if (fStatus == -2) {
+               if (gDebug > 0) Warning("ModifyWorkerLists", "request not completely full filled");
+            } else {
+               Error("ModifyWorkerLists", "request failed");
+            }
+         }
+      } else {
+         TString oo(ord), o;
+         if (oo.Contains(","))
+            Warning("ModifyWorkerLists", "block request not supported by server: splitting into pieces ...");
+         Int_t from = 0;
+         while(oo.Tokenize(o, from, ",")) {
+            TMessage mess(kPROOF_WORKERLISTS);
+            mess << action << o;
+            Broadcast(mess);
+            Collect(kActive, fCollectTimeout);
+         }
+      }
    }
+   // Done
+   return nwc;
 }
 
 //_____________________________________________________________________________

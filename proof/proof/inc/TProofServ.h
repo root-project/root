@@ -220,7 +220,7 @@ protected:
    virtual void  HandleQueryList(TMessage *mess);
    virtual void  HandleRemove(TMessage *mess, TString *slb = 0);
    virtual void  HandleRetrieve(TMessage *mess, TString *slb = 0);
-   virtual void  HandleWorkerLists(TMessage *mess);
+   virtual Int_t HandleWorkerLists(TMessage *mess);
 
    virtual void  ProcessNext(TString *slb = 0);
    virtual Int_t Setup();

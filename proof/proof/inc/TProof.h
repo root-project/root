@@ -130,9 +130,10 @@ class TMacro;
 // 29 -> 30: Add information about data dir in TSlaveInfo
 // 30 -> 31: Development cycle 5.29
 // 31 -> 32: New log path trasmission
+// 32 -> 33: Development cycle 5.29/04 (fixed worker activation, ...)
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 32;            // protocol version number
+const Int_t       kPROOF_Protocol        = 33;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
@@ -660,7 +661,7 @@ private:
    Int_t    GetNumberOfBadSlaves() const;
 
    Bool_t   IsEndMaster() const { return fEndMaster; }
-   void     ModifyWorkerLists(const char *ord, Bool_t add);
+   Int_t    ModifyWorkerLists(const char *ord, Bool_t add);
 
    Bool_t   IsSync() const { return fSync; }
    void     InterruptCurrentMonitor();
@@ -1003,8 +1004,8 @@ public:
    TProofMgr  *GetManager() { return fManager; }
    void        SetManager(TProofMgr *mgr);
 
-   void        ActivateWorker(const char *ord);
-   void        DeactivateWorker(const char *ord);
+   Int_t       ActivateWorker(const char *ord);
+   Int_t       DeactivateWorker(const char *ord);
 
    const char *GetDataPoolUrl() const { return fDataPoolUrl; }
    void        SetDataPoolUrl(const char *url) { fDataPoolUrl = url; }
