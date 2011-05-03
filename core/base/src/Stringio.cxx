@@ -40,7 +40,8 @@ istream& TString::ReadFile(istream& strm)
 
    while(1) {
       Ssiz_t len = Length();
-      strm.read(GetPointer()+len, Capacity()-len);
+      Ssiz_t cap = Capacity();
+      strm.read(GetPointer()+len, cap-len);
       SetSize(len + strm.gcount());
 
       if (!strm.good())
@@ -49,7 +50,8 @@ istream& TString::ReadFile(istream& strm)
       // If we got here, the read must have stopped because
       // the buffer was going to overflow. Resize and keep
       // going.
-      Capacity(Length() + incr);
+      cap = AdjustCapacity(cap, cap+incr);
+      Capacity(cap);
    }
 
    GetPointer()[Length()] = '\0';         // Add null terminator
@@ -90,14 +92,16 @@ istream& TString::ReadToDelim(istream& strm, char delim)
    const Ssiz_t incr = 32;
    
    Clobber(incr);
+
    int p = strm.peek();             // Check if we are already at delim
    if (p == delim) {
       strm.get();                    // eat the delimiter, and return \0.
    } else {
       while (1) {
          Ssiz_t len = Length();
+         Ssiz_t cap = Capacity();
          strm.get(GetPointer()+len,          // Address of next byte
-                  Capacity()-len+1,          // Space available (+1 for terminator)
+                  cap-len+1,                 // Space available (+1 for terminator)
                   delim);                    // Delimiter
          SetSize(len + strm.gcount());
          if (!strm.good()) break;            // Check for EOF or stream failure
@@ -107,7 +111,8 @@ istream& TString::ReadToDelim(istream& strm, char delim)
             break;
          }
          // Delimiter not seen.  Resize and keep going:
-         Capacity(Length() + incr);
+         cap = AdjustCapacity(cap, cap+incr);
+         Capacity(cap);
       }
    }
 
@@ -135,9 +140,11 @@ istream& TString::ReadToken(istream& strm)
           strm.get(c).good() && (hitSpace = isspace((Int_t)c)) == 0) {
       // Check for overflow:
       Ssiz_t len = Length();
-      if (len == Capacity())
-         Capacity(len + incr);
-
+      Ssiz_t cap = Capacity();
+      if (len == cap) {
+         cap = AdjustCapacity(cap, cap+incr);
+         Capacity(cap);
+      }
       GetPointer()[len] = c;
       len++;
       SetSize(len);

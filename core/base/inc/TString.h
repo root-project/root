@@ -208,7 +208,7 @@ protected:
    enum { kAlignment = 16 };
    static Ssiz_t  Align(Ssiz_t s) { return (s + (kAlignment-1)) & ~(kAlignment-1); }
    static Ssiz_t  Recommend(Ssiz_t s) { return (s < kMinCap ? kMinCap : Align(s+1)) - 1; }
-   static Ssiz_t  AdjustCapacity(Ssiz_t nc);
+   static Ssiz_t  AdjustCapacity(Ssiz_t oldCap, Ssiz_t newCap);
    
 private:
    Bool_t         IsLong() const { return Bool_t(fRep.fShort.fSize & kShortMask); }
@@ -232,9 +232,9 @@ private:
    char          *GetPointer() { return IsLong() ? GetLongPointer() : GetShortPointer(); }
    const char    *GetPointer() const { return IsLong() ? GetLongPointer() : GetShortPointer(); }
 #ifdef R__BYTESWAP
-   Ssiz_t         MaxSize() const { return kMaxInt - 1; }
+   static Ssiz_t  MaxSize() { return kMaxInt - 1; }
 #else
-   Ssiz_t         MaxSize() const { return (kMaxInt >> 1) - 1; }
+   static Ssiz_t  MaxSize() { return (kMaxInt >> 1) - 1; }
 #endif
    void           UnLink() const { if (IsLong()) delete [] fRep.fLong.fData; }
    void           Zero() {

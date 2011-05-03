@@ -319,7 +319,7 @@ TString& TString::Append(char c, Ssiz_t rep)
       SetSize(tot);
       data = p;
    } else {
-      Ssiz_t cap = Recommend(tot);
+      Ssiz_t cap = AdjustCapacity(capac, tot);
       data = new char[cap+1];
       memcpy(data, p, len);
       UnLink();
@@ -760,7 +760,7 @@ TString& TString::Prepend(char c, Ssiz_t rep)
       SetSize(tot);
       data = p;
    } else {
-      Ssiz_t cap = Recommend(tot);
+      Ssiz_t cap = AdjustCapacity(capac, tot);
       data = new char[cap+1];
       memcpy(data+rep, p, len);
       UnLink();
@@ -825,7 +825,7 @@ finish:
       SetSize(tot);
       p[tot] = 0;
    } else {
-      Ssiz_t cap = Recommend(tot);
+      Ssiz_t cap = AdjustCapacity(capac, tot);
       char *data = new char[cap+1];
       if (pos) memcpy(data, p, pos);
       if (n2 ) memcpy(data + pos, cs, n2);
@@ -848,8 +848,8 @@ TString& TString::ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2,
 
    if (s1 && ls1 > 0) {
       Ssiz_t index = 0;
-      while ((index = Index(s1,ls1,index, kExact)) != kNPOS) {
-         Replace(index,ls1,s2,ls2);
+      while ((index = Index(s1, ls1, index, kExact)) != kNPOS) {
+         Replace(index, ls1, s2, ls2);
          index += ls2;
       }
    }
@@ -952,11 +952,18 @@ void TString::AssertElement(Ssiz_t i) const
 }
 
 //______________________________________________________________________________
-Ssiz_t TString::AdjustCapacity(Ssiz_t nc)
+Ssiz_t TString::AdjustCapacity(Ssiz_t oldCap, Ssiz_t newCap)
 {
-   // Calculate a nice capacity greater than or equal to nc.
+   // Calculate a nice capacity greater than or equal to newCap.
 
-   return Recommend(nc);
+   Ssiz_t ms = MaxSize();
+   if (newCap > ms - 1) {
+      Error("AdjustCapacity", "capacity too large (%d, max = %d)",
+            newCap, ms);
+   }
+   Ssiz_t cap = oldCap < ms / 2 - kAlignment ?
+                Recommend(TMath::Max(newCap, 2 * oldCap)) : ms - 1;
+   return cap;
 }
 
 //______________________________________________________________________________

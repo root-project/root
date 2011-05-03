@@ -7,6 +7,7 @@
 #include "TString.h"
 #include "TRegexp.h"
 #include "TPRegexp.h"
+#include "TSystem.h"
 
 
 void Ok(int i, int b)
@@ -156,6 +157,7 @@ int main()
 
    Printf("Using Print: %s (%d)\n", (const char*) s9, s9.Length());
    
+   // test comparisons
    TString s20 = "abc";
    TString s21 = "abcd";
    TString s22 = "bcde";
@@ -168,5 +170,23 @@ int main()
    Ok(31, s22.CompareTo(s23, TString::kIgnoreCase) == 0);
    Ok(32, (s23 < s24) != (s24 < s23));
 
+   // test file access
+   ifstream f("tstring.cxx");
+   f.seekg(0, ios::end);
+   Ssiz_t size = f.tellg();
+   f.seekg(0, ios::beg);
+   
+   TString fs;
+   fs.ReadFile(f);
+   Ok(33, size == fs.Length());
+
+   ifstream f2("tstring.cxx");
+   fs.ReadLine(f2);  // read '// @(#)root/test:$Id: tstring.cxx 38977..."
+   Ok(34, fs.Contains("root/test"));
+
+   fs.ReadToken(f2);   // read '//'
+   fs.ReadToken(f2);   // read 'Author:'
+   Ok(35, fs == "Author:");
+   
    return 0;
 }
