@@ -78,7 +78,7 @@ ifneq ($(filter -O%,$(OPT)),)
 endif
 endif
 ifeq ($(ICC_MAJOR),10)
-$(call stripsrc,$(TREEPLAYERDIRS)/TTreeFormula.o): OPT = $(NOOPT)
+   $(call stripsrc,$(TREEPLAYERDIRS)/TTreeFormula.o): OPT = $(NOOPT)
 endif
 endif
 
