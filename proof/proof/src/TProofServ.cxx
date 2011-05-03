@@ -1787,17 +1787,19 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          break;
 
       case kPROOF_WORKERLISTS:
-         if (all) {
-            if (IsMaster())
-               HandleWorkerLists(mess);
-            else
-               Warning("HandleSocketInput:kPROOF_WORKERLISTS",
-                       "Action meaning-less on worker nodes: protocol error?");
-         } else {
-            rc = -1;
+         {  Int_t xrc = -1;
+            if (all) {
+               if (IsMaster())
+                  xrc = HandleWorkerLists(mess);
+               else
+                  Warning("HandleSocketInput:kPROOF_WORKERLISTS",
+                        "Action meaning-less on worker nodes: protocol error?");
+            } else {
+               rc = -1;
+            }
+            // Notify
+            SendLogFile(xrc);
          }
-         // Notify
-         SendLogFile();
          break;
 
       case kPROOF_GETSLAVEINFO:
@@ -5418,14 +5420,14 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
 }
 
 //______________________________________________________________________________
-void TProofServ::HandleWorkerLists(TMessage *mess)
+Int_t TProofServ::HandleWorkerLists(TMessage *mess)
 {
    // Handle here all requests to modify worker lists
 
    PDB(kGlobal, 1)
       Info("HandleWorkerLists", "Enter");
 
-   Int_t type = 0;
+   Int_t type = 0, rc = 0;
    TString ord;
 
    (*mess) >> type;
@@ -5438,20 +5440,24 @@ void TProofServ::HandleWorkerLists(TMessage *mess)
             Int_t nactmax = fProof->GetListOfSlaves()->GetSize() -
                             fProof->GetListOfBadSlaves()->GetSize();
             if (nact < nactmax) {
-               fProof->ActivateWorker(ord);
+               Int_t nwc = fProof->ActivateWorker(ord);
                Int_t nactnew = fProof->GetListOfActiveSlaves()->GetSize();
                if (ord == "*") {
                   if (nactnew == nactmax) {
-                     Info("HandleWorkerList","all workers (re-)activated");
+                     Info("HandleWorkerList", "all workers (re-)activated");
                   } else {
-                     Info("HandleWorkerList","%d workers could not be (re-)activated", nactmax - nactnew);
+                     Info("HandleWorkerList", "%d workers could not be (re-)activated", nactmax - nactnew);
                   }
                } else {
-                  if (nactnew == (nact + 1)) {
-                     Info("HandleWorkerList","worker %s (re-)activated", ord.Data());
+                  if (nactnew == (nact + nwc)) {
+                     Info("HandleWorkerList","worker(s) %s (re-)activated", ord.Data());
                   } else {
-                     Info("HandleWorkerList","worker %s could not be (re-)activated;"
-                                             " # of actives: %d --> %d", ord.Data(), nact, nactnew);
+                     if (nwc != -2) {
+                        Error("HandleWorkerList", "some worker(s) could not be (re-)activated;"
+                                                  " # of actives: %d --> %d (nwc: %d)",
+                                                  nact, nactnew, nwc);
+                     }
+                     rc = (nwc < 0) ? nwc : -1;
                   }
                }
             } else {
@@ -5466,7 +5472,7 @@ void TProofServ::HandleWorkerLists(TMessage *mess)
          if (fProof) {
             Int_t nact = fProof->GetListOfActiveSlaves()->GetSize();
             if (nact > 0) {
-               fProof->DeactivateWorker(ord);
+               Int_t nwc = fProof->DeactivateWorker(ord);
                Int_t nactnew = fProof->GetListOfActiveSlaves()->GetSize();
                if (ord == "*") {
                   if (nactnew == 0) {
@@ -5475,11 +5481,15 @@ void TProofServ::HandleWorkerLists(TMessage *mess)
                      Info("HandleWorkerList","%d workers could not be deactivated", nactnew);
                   }
                } else {
-                  if (nactnew == (nact - 1)) {
-                     Info("HandleWorkerList","worker %s deactivated", ord.Data());
+                  if (nactnew == (nact - nwc)) {
+                     Info("HandleWorkerList","worker(s) %s deactivated", ord.Data());
                   } else {
-                     Info("HandleWorkerList","worker %s could not be deactivated:"
-                                             " # of actives: %d --> %d", ord.Data(), nact, nactnew);
+                     if (nwc != -2) {
+                        Error("HandleWorkerList", "some worker(s) could not be deactivated:"
+                                                  " # of actives: %d --> %d (nwc: %d)",
+                                                  nact, nactnew, nwc);
+                     }
+                     rc = (nwc < 0) ? nwc : -1;
                   }
                }
             } else {
@@ -5491,7 +5501,10 @@ void TProofServ::HandleWorkerLists(TMessage *mess)
          break;
       default:
          Warning("HandleWorkerList","unknown action type (%d)", type);
+         rc = -1;
    }
+   // Done
+   return rc;
 }
 
 //______________________________________________________________________________
