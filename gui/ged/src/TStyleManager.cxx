@@ -4511,6 +4511,7 @@ void TStyleManager::DoMoreLess()
    if (fMoreAndNotLess) {
       // Redraw the tabs.
       SetWMSizeHints(fSMWidth, fSMHeight, fSMWidth, fSMHeight, 0, 0);
+      ShowFrame(fEditionFrame);
       fEditionFrame->ShowFrame(fEditionTab);
       fEditionFrame->ShowFrame(fEditionButtonFrame);
       fMoreLess->SetText("&Close <<");
@@ -4523,11 +4524,12 @@ void TStyleManager::DoMoreLess()
       fMoreLess->SetToolTipText("Close the editor");
    } else {
       // Hide the tabs.
-      SetWMSizeHints(fSMWidth, 319, fSMWidth, 319, 0, 0);
+      HideFrame(fEditionFrame);
       fEditionFrame->HideFrame(fEditionTab);
       fEditionFrame->HideFrame(fEditionButtonFrame);
       fMoreLess->SetText("&Edit >>");
-      Resize(fSMWidth, 317);
+      Resize(GetDefaultSize());
+      SetWMSizeHints(fSMWidth, GetHeight(), fSMWidth, GetHeight(), 0, 0);
       fMoreLess->SetToolTipText("Open the editor");
    }
 }
