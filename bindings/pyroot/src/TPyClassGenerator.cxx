@@ -22,7 +22,7 @@
 namespace {
 
    //_________________________________________________________________________
-   int PyCtorCallback( G__value* res, G__CONST char* funcname, struct G__param* libp, int hash )
+   int PyCtorCallback( G__value* res, G__CONST char*, struct G__param*, int )
    {
       int tagnum = G__value_get_tagnum( res );
       PyObject* pyclass = PyROOT::Utility::GetInstalledMethod( tagnum );
@@ -39,11 +39,11 @@ namespace {
       res->ref = (Long_t)result;
       G__set_tagnum( res, tagnum );
 
-      return ( 1 || funcname || hash || res || libp );
+      return 1;
    }
 
    //_________________________________________________________________________
-   int PyMemFuncCallback( G__value* res, G__CONST char* funcname, struct G__param* libp, int hash )
+   int PyMemFuncCallback( G__value* res, G__CONST char*, struct G__param* libp, int )
    {
       PyObject* pyfunc = PyROOT::Utility::GetInstalledMethod( G__value_get_tagnum(res) );
       if ( ! pyfunc )
@@ -121,7 +121,7 @@ namespace {
       G__set_tagnum( res, ((G__ClassInfo*)TPyReturn::Class()->GetClassInfo())->Tagnum() );
       G__store_tempobject( *res );
 
-      return ( 1 || funcname || hash || res || libp );
+      return 1;
    }
 
 } // unnamed namespace

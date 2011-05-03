@@ -202,7 +202,7 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
 #if PY_VERSION_HEX < 0x03000000
       para.fl = (Long_t)&((PyIntObject*)pyobject)->ob_ival;
       if ( func ) {
-         G__value v;
+         G__value v = G__null;
          v.ref = (long)&((PyIntObject*)pyobject)->ob_ival;
          G__letint( &v, 'i', para.fl );
          func->SetArg( v );
@@ -219,7 +219,7 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
 // alternate, pass pointer from buffer
    int buflen = Utility::GetBuffer( pyobject, 'i', sizeof(int), para.fv );
    if ( para.fv && buflen && func ) {
-      G__value v;
+      G__value v = G__null;
       v.ref = (long)para.fv;
       G__letint( &v, 'i', para.fl );
       func->SetArg( v );
