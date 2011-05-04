@@ -43,12 +43,12 @@
 // Different types of transforms are specified by parameter kind of the SineCosine() static
 // function. 4 different kinds of sine and cosine transforms are available
 //  DCT-I  (REDFT00 in FFTW3 notation)- kind=0
-//  DCT-II (REDFT10 in FFTW3 notation)- kind=1
-//  DCT-III(REDFT01 in FFTW3 notation)- kind=2
+//  DCT-II (REDFT01 in FFTW3 notation)- kind=1
+//  DCT-III(REDFT10 in FFTW3 notation)- kind=2
 //  DCT-IV (REDFT11 in FFTW3 notation)- kind=3
 //  DST-I  (RODFT00 in FFTW3 notation)- kind=4
-//  DST-II (RODFT10 in FFTW3 notation)- kind=5
-//  DST-III(RODFT01 in FFTW3 notation)- kind=6
+//  DST-II (RODFT01 in FFTW3 notation)- kind=5
+//  DST-III(RODFT10 in FFTW3 notation)- kind=6
 //  DST-IV (RODFT11 in FFTW3 notation)- kind=7
 // Formulas and detailed descriptions can be found in the chapter
 // "What FFTW really computes" of the FFTW manual
