@@ -1505,7 +1505,7 @@ Bool_t TEfficiency::CheckEntries(const TH1& pass,const TH1& total,Option_t* opt)
       //require: sum of weights == sum of weights^2
       if((TMath::Abs(statpass[0]-statpass[1]) > 1e-5) ||
 	 (TMath::Abs(stattotal[0]-stattotal[1]) > 1e-5)) {
-         gROOT->Info("TEfficiency::CheckEntries","Histograms are not consistent because they filled with weights");
+         gROOT->Info("TEfficiency::CheckEntries","Histograms are not consistent: they have been filled with weights");
 	 return false;
       }
    }
