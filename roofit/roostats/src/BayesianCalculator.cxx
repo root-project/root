@@ -106,6 +106,7 @@ struct  LikelihoodFunction {
    // for the 1D case
    double operator() (double x) const { 
       // just call the previous method
+      assert(fFunc.nObs() == 1); // check nobs = 1
       double tmp = x; 
       return (*this)(&tmp); 
    }
@@ -372,7 +373,7 @@ private:
          error = fIntegratorMultiDim->Error();
       } else { 
          // no integration to be done
-         f = fLikelihood(&x);
+         f = fLikelihood(x);
       }
 
       // debug 
