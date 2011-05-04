@@ -156,7 +156,7 @@ enable_builtin_ftgl=no
 enable_builtin_glew=no
 enable_builtin_pcre=no
 enable_builtin_zlib=no
-enable_afdsmgrd=
+enable_afdsmgrd=no
 
 # Remove old log file
 rm -f $logfile
@@ -5719,7 +5719,6 @@ result $enable_memstat
 #
 # (See http://clarens.sourceforge.net/)
 #
-
 checking_msg "Clarens support"
 
 if test ! "x$enable_clarens" = "xno" ; then
@@ -5765,7 +5764,6 @@ check_explicit "$enable_clarens" "$enable_clarens_explicit" \
 #
 # (See http://www.clarens.org)
 #
-
 checking_msg "PEAC support"
 
 if test ! "x$enable_peac" = "xno" ; then
@@ -5789,47 +5787,40 @@ check_explicit "$enable_peac" "$enable_peac_explicit" \
 #
 ### echo %%% Check for afdsmgrd support
 #
-## afdsmgrd -- Dataset manager for PROOF-based analysis facilities
+# afdsmgrd -- Dataset manager for PROOF-based analysis facilities
+# by Dario Berzano <dario.berzano@cern.ch>
+# See http://code.google.com/p/afdsmgrd/
 #
-## by Dario Berzano <dario.berzano@cern.ch>
-#
-## See http://code.google.com/p/afdsmgrd/
-#
-
 message "Checking whether to build afdsmgrd"
-
 if test "x$enable_afdsmgrd" = "xyes" ; then
+    afdsmgrd_cmake=`$cwhich cmake`
+    if test "x$afdsmgrd_cmake" = "x" ; then
+        result "`basename $0`: cmake MUST be in \$PATH in order to build afdsmgrd"
+        exit 1
+    fi
+    if test "x$arch" = "xwin32" ; then
+        result "`basename $0`: afdsmgrd can't be enabled on Windows"
+        exit 1
+    fi
 
-  afdsmgrd_cmake=`$cwhich cmake`
-  if test "x$afdsmgrd_cmake" = "x" ; then
-    result "`basename $0`: cmake MUST be in \$PATH in order to build afdsmgrd"
-    exit 1
-  fi
-  if test "x$arch" = "xwin32" ; then
-    result "`basename $0`: afdsmgrd can't be enabled on Windows"
-    exit 1
-  fi
+    if test ! "x$monalisalibdir" = "x" ; then
+        afdsmgrdapmondir=`dirname -- "${monalisalibdir#-L}"`
+    elif test ! "x$alienlibdir" = "x" ; then
+        afdsmgrdapmondir=`dirname -- "${alienlibdir#-L}"`
+    else
+        afdsmgrdapmondir=""
+    fi
 
-  if test ! "x$monalisalibdir" = "x" ; then
-    afdsmgrdapmondir=`dirname -- "${monalisalibdir#-L}"`
-  elif test ! "x$alienlibdir" = "x" ; then
-    afdsmgrdapmondir=`dirname -- "${alienlibdir#-L}"`
-  else
-    afdsmgrdapmondir=""
-  fi
-
-  if test ! "x$afdsmgrdapmondir" = "x" ; then
-    afdsmgrdapmon="--with-apmon=$afdsmgrdapmondir"
-    afdsmgrdapmonmsg=", using ApMon at $afdsmgrdapmondir"
-  else
-    afdsmgrdapmon="--disable-apmon"
-    afdsmgrdapmonmsg=", ApMon support disabled"
-  fi
-
+    if test ! "x$afdsmgrdapmondir" = "x" ; then
+        afdsmgrdapmon="--with-apmon=$afdsmgrdapmondir"
+        afdsmgrdapmonmsg=", using ApMon at $afdsmgrdapmondir"
+    else
+        afdsmgrdapmon="--disable-apmon"
+        afdsmgrdapmonmsg=", ApMon support disabled"
+    fi
 else
-  enable_afdsmgrd="no"
+    enable_afdsmgrd="no"
 fi
-
 result "$enable_afdsmgrd$afdsmgrdapmonmsg"
 
 ######################################################################
