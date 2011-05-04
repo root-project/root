@@ -129,12 +129,12 @@ void TGTreeLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
    if (fActive) {
       if (fSelPic) fSelPic->Draw(id, fNormGC, ix, iy);
       gVirtualX->SetForeground(fNormGC, fgDefaultSelectedBackground);
-      gVirtualX->FillRectangle(id, fNormGC, lx, ly, fTWidth, fTHeight+1);
+      gVirtualX->FillRectangle(id, fNormGC, lx-2, ly, fWidth-(lx-x), fTHeight+1);
       gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
    } else {
       fPic->Draw(id, fNormGC, ix, iy);
       gVirtualX->SetForeground(fNormGC, fgWhitePixel);
-      gVirtualX->FillRectangle(id, fNormGC, lx, ly, fTWidth, fTHeight+1);
+      gVirtualX->FillRectangle(id, fNormGC, lx-2, ly, fWidth-(lx-x), fTHeight+1);
       gVirtualX->SetForeground(fNormGC, fgBlackPixel);
    }
 
@@ -213,8 +213,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
 
    SetTopEntry(new TGTreeLBEntry(this, new TGString("Current dir"),
                fClient->GetPicture("folder_t.xpm"), 0),
-               new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
-                                 kLHintsExpandY, 4, 0, 0, 0));
+               new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 4, 0, 0, 0));
 
    fListBox->GetContainer()->AddInput(kButtonPressMask | kButtonReleaseMask |
                                       kPointerMotionMask);
@@ -398,7 +397,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
          AddEntry(new TGTreeLBEntry(fListBox->GetContainer(),
                   new TGString(gLbc[i].fName), pic, gLbc[i].fId,
                   new TGString(gLbc[i].fPath)),
-                  new TGLayoutHints(kLHintsLeft | kLHintsTop, indent, 0, 0, 0));
+                  new TGLayoutHints(kLHintsExpandX | kLHintsTop, indent, 0, 0, 0));
       }
    }
    SetWindowName();
@@ -456,7 +455,7 @@ void TGFSComboBox::Update(const char *path)
             InsertEntry(new TGTreeLBEntry(fListBox->GetContainer(),
                         new TGString(dirname), pic, afterID+1,
                         new TGString(mpath)),
-                        new TGLayoutHints(kLHintsLeft | kLHintsTop,
+                        new TGLayoutHints(kLHintsExpandX | kLHintsTop,
                                           indent, 0, 0, 0),
                         afterID);
             sel = ++afterID;
