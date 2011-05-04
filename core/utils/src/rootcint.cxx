@@ -5067,12 +5067,17 @@ int main(int argc, char **argv)
       char consline[256];
       while (fgets(consline, 256, fpld)) {
          bool constype = false;
-         if ((strcmp(strtok(consline, " "), "#pragma") == 0) &&
+         char* pconsline = consline;
+         if (*pconsline == '#') {
+            ++pconsline;
+            while (isspace(*pconsline)) ++pconsline;
+            if ((strcmp(strtok(pconsline, " "), "pragma") == 0) &&
              (strcmp(strtok(0, " "), "link") == 0) &&
              (strcmp(strtok(0, " "), "C++") == 0) &&
              (strcmp(strtok(0, " " ), "ioctortype") == 0)) {
 
-            constype = true;
+               constype = true;
+            }
          }
 
          if (constype) {
@@ -5161,34 +5166,39 @@ int main(int argc, char **argv)
 
          bool skip = true;
          bool forceLink = false;
-         strlcpy(cline,line,256);
-         strlcpy(nline,line,256);
          int len = strlen(line);
 
          // Check if the line contains a "#pragma link C++ class" specification,
          // if so, process the class (STK)
-         if ((strcmp(strtok(line, " "), "#pragma") == 0) &&
-             (strcmp(strtok(0, " "), "link") == 0) &&
-             (strcmp(strtok(0, " "), "C++") == 0) &&
-             (strcmp(strtok(0, " " ), "class") == 0)) {
+         char* pline = line;
+         if (*pline == '#') {
+            ++pline;
+            while (isspace(*pline)) ++pline;
+            strlcpy(cline,pline,256);
+            strlcpy(nline,pline,256);
+            if ((strcmp(strtok(pline, " "), "pragma") == 0) &&
+                (strcmp(strtok(0, " "), "link") == 0) &&
+                (strcmp(strtok(0, " "), "C++") == 0) &&
+                (strcmp(strtok(0, " " ), "class") == 0)) {
 
-            skip = false;
-            forceLink = false;
+               skip = false;
+               forceLink = false;
 
-         } else if ((strcmp(strtok(cline, " "), "#pragma") == 0) &&
-                    (strcmp(strtok(0, " "), "create") == 0) &&
-                    (strcmp(strtok(0, " "), "TClass") == 0)) {
+            } else if ((strcmp(strtok(cline, " "), "pragma") == 0) &&
+                       (strcmp(strtok(0, " "), "create") == 0) &&
+                       (strcmp(strtok(0, " "), "TClass") == 0)) {
 
-            skip = false;
-            forceLink = true;
+               skip = false;
+               forceLink = true;
 
-         } else if ((strcmp(strtok(nline, " "), "#pragma") == 0) &&
-                    (strcmp(strtok(0, " "), "link") == 0) &&
-                    (strcmp(strtok(0, " "), "C++") == 0) &&
-                    (strcmp(strtok(0, " " ), "namespace") == 0)) {
+            } else if ((strcmp(strtok(nline, " "), "pragma") == 0) &&
+                       (strcmp(strtok(0, " "), "link") == 0) &&
+                       (strcmp(strtok(0, " "), "C++") == 0) &&
+                       (strcmp(strtok(0, " " ), "namespace") == 0)) {
 
-            skip = false;
-            forceLink = false;
+               skip = false;
+               forceLink = false;
+            }
 
          }
 
