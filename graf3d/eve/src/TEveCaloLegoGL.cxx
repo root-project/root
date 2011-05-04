@@ -449,8 +449,8 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
    //
    if (fM->fData->Empty() == kFALSE)
    {
-      Int_t ondiv;
-      Double_t omin, omax, bw1;
+      Int_t    ondiv;
+      Double_t omin=0, omax=0, bw1;
       THLimitsFinder::Optimize(0, fMaxVal, fM->fNZSteps, omin, omax, ondiv, bw1);
       worldRef.Set(fZAxisTitlePos.fX, fZAxisTitlePos.fY, fZAxisTitlePos.fZ);
       TGLVector3 zto = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, 0, fAxisPainter.GetLabelPixelFontSize(),  &mm);                  

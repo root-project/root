@@ -262,14 +262,13 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx, Bool_t grid)
          glLineStipple(1, stipple);
 
          glBegin(GL_LINES);
-         Int_t ondiv;
-         Double_t omin, omax, bw1;
-         Double_t val =0;
+         Int_t    ondiv = 0;
+         Double_t omin = 0, omax = 0, bw1 = 0;
          THLimitsFinder::Optimize(labs[0].second, labs[1].second, secSteps, omin, omax, ondiv, bw1);
-         val =  labs[0].second;
-         while(val < fFrustum[2])
+         Double_t val = labs[0].second;
+         while (val < fFrustum[2])
          {
-            for(Int_t k=0; k<ondiv; k++)
+            for (Int_t k=0; k<ondiv; k++)
             {
                val += bw1;
                tmp = vy1 + xdir * val;

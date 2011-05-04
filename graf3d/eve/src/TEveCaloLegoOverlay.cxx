@@ -530,9 +530,9 @@ void TEveCaloLegoOverlay::RenderPaletteScales(TGLRnrCtx& rnrCtx)
 
    TGLRect& vp = rnrCtx.RefCamera().RefViewport();
    Double_t maxVal = fCalo->GetMaxVal();
-   Int_t    bn;
-   Double_t bw; // bin with first second order
-   Double_t bl, bh; // bin low, high first
+   Int_t    bn = 0;
+   Double_t bw = 0;         // bin with first second order
+   Double_t bl = 0, bh = 0; // bin low, high first
    THLimitsFinder::Optimize(0, maxVal, 10, bl, bh, bn, bw);
    bn = TMath::CeilNint(maxVal/bw) + 1;
 

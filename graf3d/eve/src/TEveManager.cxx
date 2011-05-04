@@ -667,18 +667,20 @@ Bool_t TEveManager::InsertVizDBEntry(const TString& tag, TEveElement* model,
          model->SetRnrChildren(kFALSE);
 
          TEveElement* old_model = dynamic_cast<TEveElement*>(pair->Value());
-         while (old_model->HasChildren())
+         if (old_model)
          {
-            TEveElement *el = old_model->FirstChild();
-            el->SetVizModel(model);
-            if (update)
+            while (old_model->HasChildren())
             {
-               el->CopyVizParams(model);
-               el->PropagateVizParamsToProjecteds();
+               TEveElement *el = old_model->FirstChild();
+               el->SetVizModel(model);
+               if (update)
+               {
+                  el->CopyVizParams(model);
+                  el->PropagateVizParamsToProjecteds();
+               }
             }
+            old_model->DecDenyDestroy();
          }
-         old_model->DecDenyDestroy();
-
          pair->SetValue(dynamic_cast<TObject*>(model));
          return kTRUE;
       }

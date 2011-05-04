@@ -371,7 +371,7 @@ void TGLAxis::TicksPositionsOpt()
    // Compute ticks positions. Linear and optimized.
 
    Int_t i, j, k, nDivOpt;
-   Double_t step1=0, step2=0, wmin2, wmax2;
+   Double_t step1=0, step2=0, wmin2=0, wmax2=0;
    Double_t wmin = fWmin;
    Double_t wmax = fWmax;
 

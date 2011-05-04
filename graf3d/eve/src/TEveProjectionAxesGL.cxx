@@ -168,8 +168,8 @@ void TEveProjectionAxesGL::SplitIntervalByPos(Float_t p1, Float_t p2, Int_t ax) 
    Int_t n1a = TMath::FloorNint(fM->GetNdivisions() / 100);
    Int_t n2a = fM->GetNdivisions() - n1a * 100;
    Int_t bn1, bn2;
-   Double_t bw1, bw2; // bin with first second order
-   Double_t bl1, bh1, bl2, bh2; // bin low, high first second order
+   Double_t bw1, bw2;                   // bin with first second order
+   Double_t bl1=0, bh1=0, bl2=0, bh2=0; // bin low, high first second order
    THLimitsFinder::Optimize(p1, p2, n1a, bl1, bh1, bn1, bw1);
    THLimitsFinder::Optimize(bl1, bl1+bw1, n2a, bl2, bh2, bn2, bw2);
 
@@ -220,11 +220,11 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) 
    Int_t n1a = TMath::FloorNint(fM->GetNdivisions() / 100);
    Int_t n2a = fM->GetNdivisions() - n1a * 100;
    Int_t bn1, bn2;
-   Double_t bw1, bw2;           // bin width first / second order
-   Double_t bl1, bh1, bl2, bh2; // bin low, high first / second order
+   Double_t bw1, bw2;                   // bin width first / second order
+   Double_t bl1=0, bh1=0, bl2=0, bh2=0; // bin low, high first / second order
    Float_t v1 = fProjection->GetValForScreenPos(ax, p1);
    Float_t v2 = fProjection->GetValForScreenPos(ax, p2);
-   THLimitsFinder::Optimize(v1, v2, n1a, bl1, bh1, bn1, bw1);
+   THLimitsFinder::Optimize(v1,  v2,      n1a, bl1, bh1, bn1, bw1);
    THLimitsFinder::Optimize(bl1, bl1+bw1, n2a, bl2, bh2, bn2, bw2);
 
    Float_t pFirst, pSecond; // position of first, second order of tickmarks

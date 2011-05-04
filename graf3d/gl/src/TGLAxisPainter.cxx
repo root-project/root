@@ -350,11 +350,11 @@ void TGLAxisPainter::PaintAxis(TGLRnrCtx &rnrCtx, TAxis* ax)
    Int_t n1a = TMath::FloorNint(fAttAxis->GetNdivisions() / 100);
    Int_t n2a = fAttAxis->GetNdivisions() - n1a * 100;
    Int_t bn1, bn2;
-   Double_t bw1, bw2; // primary , secondary bin width
-   Double_t bl1, bh1, bl2, bh2; // bin low, high values
+   Double_t bw1, bw2;                   // primary , secondary bin width
+   Double_t bl1=0, bh1=0, bl2=0, bh2=0; // bin low, high values
 
    // Read limits from users range
-   THLimitsFinder::Optimize(min, max, n1a, bl1, bh1, bn1, bw1);
+   THLimitsFinder::Optimize(min, max,       n1a, bl1, bh1, bn1, bw1);
    THLimitsFinder::Optimize(bl1, bl1 + bw1, n2a, bl2, bh2, bn2, bw2);
 
    //______________________________________________________________________________
