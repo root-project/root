@@ -43,7 +43,7 @@ public:
    Double_t              Daxis(Double_t *pt, Double_t *dir, Double_t t) const;
    Double_t              DDaxis(Double_t *pt, Double_t *dir, Double_t t) const;
    Double_t              DDDaxis(Double_t *pt, Double_t *dir, Double_t t) const;
-   Double_t              ToBoundary(Double_t *pt, Double_t *dir, Double_t r) const;
+   Double_t              ToBoundary(Double_t *pt, Double_t *dir, Double_t r, Bool_t in) const;
    Int_t                 SolveCubic(Double_t a, Double_t b, Double_t c, Double_t *x) const;
    Int_t                 SolveQuartic(Double_t a, Double_t b, Double_t c, Double_t d, Double_t *x) const;
 public:
