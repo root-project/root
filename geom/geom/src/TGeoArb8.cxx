@@ -1028,7 +1028,8 @@ Double_t TGeoArb8::Safety(Double_t *point, Bool_t in) const
       dy = dy1 + umin*(dy2-dy1);
       safe *= 1.- 4.*fDz*fDz/(dx*dx+dy*dy+4.*fDz*fDz);
       safe = TMath::Sqrt(safe);      
-      return safe;   
+      if (in) return TMath::Min(safz,safe);
+      return TMath::Max(safz,safe);
    }  
       
    Double_t saf[5];

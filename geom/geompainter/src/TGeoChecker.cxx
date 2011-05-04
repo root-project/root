@@ -1612,10 +1612,16 @@ void TGeoChecker::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Opt
 //    directions randomly in cos(theta). Compute DistFromInside and move the 
 //    point with bigger distance. Compute DistFromOutside back from new point.
 //    Plot d-(d1+d2)
+// 2: Safety test. Sample points inside the bounding and compute safety. Generate 
+//    directions randomly in cos(theta) and compute distance to boundary. Check if
+// Distance to boundary is bigger than safety 
 //
    switch (testNo) {
       case 1:
          ShapeDistances(shape, nsamples, option);
+         break;
+      case 2:
+         ShapeSafety(shape, nsamples, option);
          break;
       default:
          Error("CheckShape", "Test number %d not existent", testNo);
@@ -1648,9 +1654,6 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
    TPolyMarker3D *pmfrominside = 0;
    TPolyMarker3D *pmfromoutside = 0;
    new TCanvas("shape01", Form("Shape %s (%s)",shape->GetName(),shape->ClassName()), 1000, 800);
-   TAttLine line;
-   line.SetLineColor(kYellow);
-   line.Modify();   
    shape->Draw();
    TH1D *hist = new TH1D("hTest1", "Residual distance from inside/outside",200,-20, 0);
    hist->GetXaxis()->SetTitle("delta[cm] - first bin=overflow");
@@ -1770,6 +1773,73 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
    new TCanvas("Test01", "Residuals DistFromInside/Outside", 800, 600);
    hist->Draw();
 }   
+
+//_____________________________________________________________________________
+void TGeoChecker::ShapeSafety(TGeoShape *shape, Int_t nsamples, Option_t *)
+{
+// Check of validity of safe distance for a given shape.
+// Sample points inside the 2x bounding box and compute safety. Generate 
+// directions randomly in cos(theta) and compute distance to boundary. Check if
+// distance to boundary is bigger than safety.
+   Double_t dx = ((TGeoBBox*)shape)->GetDX();
+   Double_t dy = ((TGeoBBox*)shape)->GetDY();
+   Double_t dz = ((TGeoBBox*)shape)->GetDZ();
+   // Number of tracks shot for every point inside the shape
+   const Int_t kNtracks = 1000;
+   Int_t n10 = nsamples/10;
+   Int_t i;
+   Double_t dist;
+   Double_t point[3];
+   Double_t dir[3];
+   Double_t theta, phi;
+   TPolyMarker3D *pm1 = 0;
+   TPolyMarker3D *pm2 = 0;
+   if (!fTimer) fTimer = new TStopwatch();
+   fTimer->Reset();
+   fTimer->Start();
+   Int_t itot = 0;
+   while (itot<nsamples) {
+      Bool_t inside = kFALSE;
+      point[0] = gRandom->Uniform(-2*dx,2*dx);
+      point[1] = gRandom->Uniform(-2*dy,2*dy);
+      point[2] = gRandom->Uniform(-2*dz,2*dz);
+      inside = shape->Contains(point);
+      Double_t safe = shape->Safety(point, inside);
+      itot++;
+      if (n10) {
+         if ((itot%n10) == 0) printf("%i percent\n", Int_t(100*itot/nsamples));
+      }
+      for (i=0; i<kNtracks; i++) {
+         phi = 2*TMath::Pi()*gRandom->Rndm();
+         theta= TMath::ACos(1.-2.*gRandom->Rndm());
+         dir[0]=TMath::Sin(theta)*TMath::Cos(phi);
+         dir[1]=TMath::Sin(theta)*TMath::Sin(phi);
+         dir[2]=TMath::Cos(theta);
+         if (inside) dist = shape->DistFromInside(point,dir,3);
+         else        dist = shape->DistFromOutside(point,dir,3);
+         if (dist<safe) {
+            printf("Error safety (%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) safe=%f  dist=%f\n",
+                    point[0],point[1],point[2], dir[0], dir[1], dir[2], safe, dist);
+            new TCanvas("shape02", Form("Shape %s (%s)",shape->GetName(),shape->ClassName()), 1000, 800);
+            shape->Draw();                            
+            pm1 = new TPolyMarker3D(2);
+            pm1->SetMarkerStyle(24);
+            pm1->SetMarkerSize(0.4);
+            pm1->SetMarkerColor(kRed);
+            pm1->SetNextPoint(point[0],point[1],point[2]);
+            pm1->SetNextPoint(point[0]+safe*dir[0],point[1]+safe*dir[1],point[2]+safe*dir[2]);
+            pm1->Draw();
+            pm2 = new TPolyMarker3D(1);
+            pm2->SetMarkerStyle(7);
+            pm2->SetMarkerSize(0.3);
+            pm2->SetMarkerColor(kBlue);
+            pm2->SetNextPoint(point[0]+dist*dir[0],point[1]+dist*dir[1],point[2]+dist*dir[2]);
+            pm2->Draw();
+            return;
+         }
+      }
+   }      
+}     
 
 //______________________________________________________________________________
 TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
