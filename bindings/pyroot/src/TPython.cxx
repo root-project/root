@@ -98,7 +98,7 @@ Bool_t TPython::Initialize()
       PyEval_InitThreads();
       Py_Initialize();
 
-   // try again to initialize the interpreter
+   // try again to see if the interpreter is initialized
       if ( ! Py_IsInitialized() ) {
       // give up ...
          std::cerr << "Error: python has not been intialized; returning." << std::endl;           
