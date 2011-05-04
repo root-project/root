@@ -130,6 +130,9 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
    ntries = (ntries == -1) ? fNTries : ntries;
    debug = (debug == -1) ? fDebug : debug;
 
+   Int_t fDebug_sav = fDebug;
+   fDebug = debug;
+
    Bool_t nx = kFALSE;
    if (step == -2){
       nx = kTRUE;
@@ -276,12 +279,20 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
             tnew->SetDirectory(fDirProofBench);
 
             //change the name
-            TString newname = TString::Format("%s_%s", t->GetName(), GetName());
+            TString newname = TString::Format("%s_%s_%dwrks%dthtry", t->GetName(), GetName(), nactive, j);
             tnew->SetName(newname);
 
             if (debug && fDirProofBench->IsWritable()){
-               fDirProofBench->cd();
-               tnew->Write();
+               TDirectory *curdir = gDirectory;
+               TString dirn = nx ? "RunDataReadx" : "RunDataRead";
+               if (!fDirProofBench->GetDirectory(dirn))
+                  fDirProofBench->mkdir(dirn, "RunDataRead results");
+               if (fDirProofBench->cd(dirn)) {
+                  tnew->Write();
+               } else {
+                  Warning("Run", "cannot cd to subdirectory '%s' to store the results!", dirn.Data());
+               }
+               curdir->cd();
             }
          } else {
             Warning("Run", "%s: tree not found", perfstats_name.Data());
@@ -362,19 +373,27 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
             gPad->Update();
 
             // Save output histos 
-            if (debug){
+            if (debug && fSelName == kPROOF_BenchSelDataDef) {
                TString ptdist_name = "pt_dist";
                TH1 *h = dynamic_cast<TH1 *>(l->FindObject(ptdist_name.Data()));
                if (h) {
                   TH1 *hnew = (TH1*)h->Clone("hnew");
                   hnew->SetDirectory(fDirProofBench);
-                  TString hname = TString::Format("%s_%s", h->GetName(), GetName());
+                  TString hname = TString::Format("%s_%s_%dwrks%dthtry", h->GetName(), GetName(), nactive, j);
                   hnew->SetName(hname);
-                  if (fDirProofBench->IsWritable()){
-                     fDirProofBench->cd();
-                     hnew->Write();
-                     delete hnew;
+                  if (fDirProofBench->IsWritable()) {
+                     TDirectory *curdir = gDirectory;
+                     TString dirn = nx ? "RunDataReadx" : "RunDataRead";
+                     if (!fDirProofBench->GetDirectory(dirn))
+                        fDirProofBench->mkdir(dirn, "RunDataRead results");
+                     if (fDirProofBench->cd(dirn)) {
+                        hnew->Write();
+                     } else {
+                        Warning("Run", "cannot cd to subdirectory '%s' to store the results!", dirn.Data());
+                     }
+                     curdir->cd();
                   }
+
                } else {
                   Error("Run", "histogram %s not found", ptdist_name.Data());
                }
@@ -384,12 +403,19 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
                if (h2) {
                   TH1 *hnew = (TH1*)h2->Clone("hnew");
                   hnew->SetDirectory(fDirProofBench);
-                  TString hname = TString::Format("%s_%s", h2->GetName(), GetName());
+                  TString hname = TString::Format("%s_%s_%dwrks%dthtry", h2->GetName(), GetName(), nactive, j);
                   hnew->SetName(hname);
-                  if (fDirProofBench->IsWritable()){
-                     fDirProofBench->cd();
-                     hnew->Write();
-                     delete hnew;
+                  if (fDirProofBench->IsWritable()) {
+                     TDirectory *curdir = gDirectory;
+                     TString dirn = nx ? "RunDataReadx" : "RunDataRead";
+                     if (!fDirProofBench->GetDirectory(dirn))
+                        fDirProofBench->mkdir(dirn, "RunDataRead results");
+                     if (fDirProofBench->cd(dirn)) {
+                        hnew->Write();
+                     } else {
+                        Warning("Run", "cannot cd to subdirectory '%s' to store the results!", dirn.Data());
+                     }
+                     curdir->cd();
                   }
                } else {
                   Error("Run", "histogram %s not found", tracksdist_name.Data());
@@ -428,6 +454,8 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
       }
       curdir->cd();
    }
+   // Restore member data
+   fDebug = fDebug_sav;
 }
 
 //______________________________________________________________________________

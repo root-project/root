@@ -48,7 +48,7 @@ TProofBench::TProofBench(const char *url, const char *outfile, const char *proof
             : fUnlinkOutfile(kFALSE), fProofDS(0), fOutFile(0),
               fNtries(4), fHistType(0), fNHist(16), fReadType(0),
               fDataSet("BenchDataSet"), fDataGenSel(kPROOF_BenchSelDataGenDef),
-              fRunCPU(0), fRunDS(0), fDS(0)
+              fRunCPU(0), fRunDS(0), fDS(0), fDebug(kFALSE)
 {
    // Constructor: check PROOF and load selectors PAR
    
@@ -162,7 +162,7 @@ Int_t TProofBench::RunCPU(Long64_t nevents, Int_t start, Int_t stop, Int_t step)
    fRunCPU = new TProofBenchRunCPU(&htype, fNHist, fOutFile);
    if (!fCPUSel.IsNull()) fRunCPU->SetSelName(fCPUSel);
    if (!fCPUPar.IsNull()) fRunCPU->SetParList(fCPUPar);
-   fRunCPU->Run(nevents, start, stop, step, fNtries, -1, -1);
+   fRunCPU->Run(nevents, start, stop, step, fNtries, fDebug, -1);
 
    // Close the file
    if (SetOutFile(0) != 0)
@@ -190,7 +190,7 @@ Int_t TProofBench::RunCPUx(Long64_t nevents, Int_t start, Int_t stop)
    fRunCPU = new TProofBenchRunCPU(&htype, fNHist, fOutFile);
    if (!fCPUSel.IsNull()) fRunCPU->SetSelName(fCPUSel);
    if (!fCPUPar.IsNull()) fRunCPU->SetParList(fCPUPar);
-   fRunCPU->Run(nevents, start, stop, -2, fNtries, -1, -1);
+   fRunCPU->Run(nevents, start, stop, -2, fNtries, fDebug, -1);
 
    // Close the file
    if (SetOutFile(0) != 0)
@@ -329,7 +329,7 @@ Int_t TProofBench::RunDataSet(const char *dset,
    fRunDS = new TProofBenchRunDataRead(fDS, readType, fOutFile); 
    if (!fDataSel.IsNull()) fRunDS->SetSelName(fDataSel);
    if (!fDataPar.IsNull()) fRunDS->SetParList(fDataPar);
-   fRunDS->Run(dset, start, stop, step, fNtries, -1, -1);
+   fRunDS->Run(dset, start, stop, step, fNtries, fDebug, -1);
    if (!fReadType) SafeDelete(readType);
    
    // Close the file
@@ -361,7 +361,7 @@ Int_t TProofBench::RunDataSetx(const char *dset, Int_t start, Int_t stop)
    fRunDS = new TProofBenchRunDataRead(fDS, readType, fOutFile); 
    if (!fDataSel.IsNull()) fRunDS->SetSelName(fDataSel);
    if (!fDataPar.IsNull()) fRunDS->SetParList(fDataPar);
-   fRunDS->Run(dset, start, stop, -2, fNtries, -1, -1);
+   fRunDS->Run(dset, start, stop, -2, fNtries, fDebug, -1);
    if (!fReadType) SafeDelete(readType);
 
    // Close the file
@@ -508,7 +508,8 @@ Int_t TProofBench::RemoveDataSet(const char *dset)
 }
 
 //______________________________________________________________________________
-Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnroot)
+Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnroot,
+                               Bool_t regenerate)
 {
    // Create the largest dataset for the run.
    // Defaults for
@@ -608,8 +609,10 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
    // Process
    Long64_t ne = (nevt > 0) ? nevt : 30000;
    fProof->SetParameter("PROOF_BenchmarkNEvents", ne);
+   fProof->SetParameter("PROOF_BenchmarkRegenerate", Int_t(regenerate));
    fProof->Process(fDataGenSel, (Long64_t) 1);
    fProof->DeleteParameters("PROOF_BenchmarkNEvents");
+   fProof->DeleteParameters("PROOF_BenchmarkRegenerate");
 
    // Restore parameters
    if (!oldpack.IsNull())
@@ -641,12 +644,19 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
          fli->SetOwner(kFALSE);
       }
    }
+   // Register the new dataset, overwriting any existing dataset wth the same name
+   // trusting the existing information
+   if (!(fProof->RegisterDataSet(fDataSet, fc, "OT")))
+      Warning("MakeDataSet", "problems registering '%s'", dset);
+
+   SafeDelete(fc);
+
+   // Get updated information
+   fc=fProof->GetDataSet(fDataSet);
    fc->Print("F");
-   // Register the dataset, overwriting any existing dataset wth the same name and verifying it
-   if (!(fProof->RegisterDataSet(fDataSet, fc, "OV")))
-      Warning("MakeDataSet", "problems registering and verifying '%s'", dset);
-   delete fc;
    
+   SafeDelete(fc);
+
    // Done
    return 0;
 }
@@ -710,9 +720,10 @@ Int_t TProofBench::CopyDataSet(const char *dset, const char *dsetdst, const char
       return -1;
    }
 
-   // Register the new dataset, overwriting any existing dataset wth the same name and verifying it
+   // Register the new dataset, overwriting any existing dataset wth the same name
+   // trusting the existing information
    Int_t rc = 0;
-   if (!(fProof->RegisterDataSet(dsetdst, fcn, "OV"))) {
+   if (!(fProof->RegisterDataSet(dsetdst, fcn, "OT"))) {
       Error("CopyDataSet", "problems registering and verifying '%s'", dsetdst);
       rc = -1;
    }

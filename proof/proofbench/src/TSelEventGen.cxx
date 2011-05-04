@@ -360,20 +360,25 @@ Bool_t TSelEventGen::Process(Long64_t entry)
 
    Bool_t filefound=kFALSE;
    FileStat_t filestat;
-   if (!fRegenerate && !gSystem->GetPathInfo(filename, filestat)){//stat'ed
+   if (!fRegenerate && !gSystem->GetPathInfo(filename, filestat)) { //stat'ed
       TFile *f = TFile::Open(filename);
       if (f && !f->IsZombie()){
-         TTree* t=(TTree*)f->Get("EventTree");
-         if (t){
+         TTree* t = (TTree *) f->Get("EventTree");
+         if (t) {
             Long64_t entries_file=t->GetEntries();
             if (entries_file == neventstogenerate){
                //file size seems to be correct, skip generation
-               Info("Process", "Bench file (%s, entries=%lld) exists."
-                     " Skipping generation", fi->GetFirstUrl()->GetFile(),
-                                             entries_file);
-               neventstogenerate-=entries_file;
-               if (fFilesGenerated) fFilesGenerated->Add(fi);
-               filefound=kTRUE;
+               Info("Process", "Bench file (%s, entries=%lld) exists:"
+                               " skipping generation.", fi->GetFirstUrl()->GetFile(),
+                               entries_file);
+               neventstogenerate -= entries_file;
+               if (fFilesGenerated){
+                  fFilesGenerated->Add(fi);
+                  fi->SetSize(f->GetSize());
+                  TFileInfoMeta fimeta = TFileInfoMeta("/EventTree", "TTree", entries_file);
+                  fi->AddMetaData(fimeta);
+                  filefound = kTRUE;
+               }
             }
          }
          f->Close();

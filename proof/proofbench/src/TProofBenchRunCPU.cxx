@@ -333,12 +333,20 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
             t->SetDirectory(gDirectory);
 
             // Build up new name
-            TString newname = TString::Format("%s_%s", t->GetName(), GetName());
+            TString newname = TString::Format("%s_%s_%dwrks%dthtry", t->GetName(), GetName(), nactive, j);
             t->SetName(newname);
 
             if (debug && fDirProofBench->IsWritable()){
-               fDirProofBench->cd();
-               t->Write();
+               TDirectory *curdir = gDirectory;
+               TString dirn = nx ? "RunCPUx" : "RunCPU";
+               if (!fDirProofBench->GetDirectory(dirn))
+                  fDirProofBench->mkdir(dirn, "RunCPU results");
+               if (fDirProofBench->cd(dirn)) {
+                  t->Write();
+               } else {
+                  Warning("Run", "cannot cd to subdirectory '%s' to store the results!", dirn.Data());
+               }
+               curdir->cd();
             }
          } else {
             Error("RunBenchmark", "tree %s not found", perfstats_name.Data());

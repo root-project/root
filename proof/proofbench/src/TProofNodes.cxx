@@ -165,6 +165,18 @@ Int_t TProofNodes::ActivateWorkers(const char *workers)
    //         successful.
    //         <0 otherwise.
 
+   TString toactivate;
+   TString todeactivate;
+   
+   // The TProof::ActivateWorker/TProof::DeactivateWorker functions were fixed /
+   // improved starting with protocol version 33
+   Bool_t protocol33 = kTRUE;
+   if (fProof->GetRemoteProtocol() < 33 || fProof->GetClientProtocol() < 33) {
+      protocol33 = kFALSE;
+      // This resets the lists to avoid the problem fixed in protocol 33
+      fProof->SetParallel(0);
+   }
+
    //Make sure worker list is up-to-date
    Build();
 
@@ -180,26 +192,48 @@ Int_t TProofNodes::ActivateWorkers(const char *workers)
    TList *node = 0;
    TIter *nxk = new TIter(fNodes);
    TObject *key = 0;
+
    while ((key = nxk->Next()) != 0) {
       if ((node = dynamic_cast<TList *>(fNodes->GetValue(key)))) {
          TIter nxtworker(node);
          Int_t nactiveworkers = 0;
          while ((si = (TSlaveInfo *)(nxtworker()))) {
-            const char *ordinal = si->GetOrdinal();
             if (nactiveworkers < nworkersnode) {
                if (si->fStatus == TSlaveInfo::kNotActive) {
-                  fProof->ActivateWorker(ordinal);
+                  if (protocol33) {
+                      toactivate += TString::Format("%s,", si->GetOrdinal());
+                  } else {
+                     fProof->ActivateWorker(si->GetOrdinal());
+                  }
                }
                nactiveworkers++;
             } else {
                if (si->fStatus == TSlaveInfo::kActive) {
-                  fProof->DeactivateWorker(ordinal);
+                  if (protocol33) {
+                      todeactivate += TString::Format("%s,", si->GetOrdinal());
+                  } else {
+                     fProof->DeactivateWorker(si->GetOrdinal());
+                  }
                }
             }
          }
       } else {
          Warning("ActivateWorkers", "could not get list for node '%s'", key->GetName()); 
       }
+   }
+
+   if (!todeactivate.IsNull()) {
+      todeactivate.Remove(TString::kTrailing, ',');
+      if (fProof->DeactivateWorker(todeactivate) < 0) ret = -1;
+   }
+   if (!toactivate.IsNull()) {
+      toactivate.Remove(TString::kTrailing, ',');
+      if (fProof->ActivateWorker(toactivate) < 0) ret = -1;
+   }
+   if (ret < 0) {
+      Warning("ActivateWorkers", "could not get the requested number of workers per node (%d)",
+                                  nworkersnode); 
+      return ret;
    }
 
    // Rebuild

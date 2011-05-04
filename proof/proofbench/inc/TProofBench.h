@@ -65,6 +65,8 @@ protected:
    TProofBenchRunDataRead *fRunDS;  // Instance to run data-read scans
    TProofBenchDataSet     *fDS;     // Instance to handle datasets operations
 
+   Bool_t fDebug;                // Debug switch
+
 public:
 
    TProofBench(const char *url, const char *outfile = "<default>", const char *proofopt = 0);
@@ -78,7 +80,8 @@ public:
    Int_t RunDataSetx(const char *dset = "BenchDataSet", Int_t start = 1, Int_t stop = -1);
 
    Int_t CopyDataSet(const char *dset, const char *dsetdst, const char *destdir);
-   Int_t MakeDataSet(const char *dset = 0, Long64_t nevt = -1, const char *fnroot = "event");
+   Int_t MakeDataSet(const char *dset = 0, Long64_t nevt = -1, const char *fnroot = "event",
+                     Bool_t regenerate = kFALSE);
    Int_t ReleaseCache(const char *dset);
    Int_t RemoveDataSet(const char *dset);
                     
@@ -99,6 +102,10 @@ public:
    void  SetDataGetPar(const char *par) { fDataGenPar = par; }
 
    void  SetProofDS(TProof *p);
+
+   void  SetDebug(Bool_t debug = kTRUE) { fDebug = debug; }
+
+   Bool_t GetDebug() { return fDebug; }
 
    static void DrawCPU(const char *outfile, const char *opt = "std:");
    static void DrawDataSet(const char *outfile, const char *opt = "std:", const char *type = "mbs");
