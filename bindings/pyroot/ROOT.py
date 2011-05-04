@@ -192,13 +192,20 @@ _root.Template = Template
 
 
 ### scope place holder for STL classes ------------------------------------------
-class std:
-   stlclasses = ( 'complex', 'exception', 'pair', \
+class _stdmeta( type ):
+   def __getattr__( cls, attr ):   # for non-templated classes in std
+      klass = _root.MakeRootClass( attr, cls )
+      setattr( cls, attr, klass )
+      return klass
+
+class std( object ):
+   __metaclass__ = _stdmeta
+
+   stlclasses = ( 'complex', 'pair', \
       'deque', 'list', 'queue', 'stack', 'vector', 'map', 'multimap', 'set', 'multiset' )
 
    for name in stlclasses:
       locals()[ name ] = Template( "std::%s" % name )
-#      exec '%(name)s = Template( "std::%(name)s" )' % { 'name' : name }
 
    string = _root.MakeRootClass( 'string' )
 

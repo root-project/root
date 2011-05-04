@@ -125,19 +125,27 @@ namespace {
          PyROOT::BindRootObject( obj, klass ) );
    }
 
-   std::set< std::string > gSTLTypes, gLoadedSTLTypes;
+   std::set< std::string > gSTLTypes, gSTLExceptions;
    struct InitSTLTypes_t {
       InitSTLTypes_t()
       {
+         std::string nss = "std::";
+
          const char* stlTypes[] = { "complex", "exception",
             "deque", "list", "queue", "stack", "vector",
             "map", "multimap", "set", "multiset" };
-         std::string nss = "std::";
          for ( int i = 0; i < int(sizeof(stlTypes)/sizeof(stlTypes[0])); ++i ) {
             gSTLTypes.insert( stlTypes[ i ] );
             gSTLTypes.insert( nss + stlTypes[ i ] );
          }
-         gLoadedSTLTypes.insert( "vector" );
+
+         const char* stlExceptions[] = { "logic_error", "domain_error",
+            "invalid_argument", "length_error", "out_of_range", "runtime_error",
+            "range_error", "overflow_error", "underflow_error" };
+         for ( int i = 0; i < int(sizeof(stlExceptions)/sizeof(stlExceptions[0])); ++i ) {
+            gSTLExceptions.insert( stlExceptions[ i ] );
+            gSTLExceptions.insert( nss + stlExceptions[ i ] );
+         }
       }
    } initSTLTypes_;
 
@@ -151,21 +159,35 @@ namespace {
          if ( klass != 0 )
             TClass::RemoveClass( (TClass*)klass );
 
-      // make sure to only load once
-         if ( gLoadedSTLTypes.find( sub ) == gLoadedSTLTypes.end() ) {
+      // strip std:: part as needed to form proper file name
+         if ( sub.substr( 0, 5 ) == "std::" )
+            sub = sub.substr( 5, std::string::npos );
 
-         // strip std:: part as needed to form proper file name
-            if ( sub.substr( 0, 5 ) == "std::" )
-               sub = sub.substr( 5, std::string::npos );
+      // tell CINT to go for it
+         gROOT->ProcessLine( (std::string( "#include <" ) + sub + ">").c_str() );
 
-         // tell CINT to go for it
-            gROOT->ProcessLine( (std::string( "#include <" ) + sub + ">").c_str() );
+      // prevent second attempt to load by erasing name
+         gSTLTypes.erase( gSTLTypes.find( sub ) );
+         gSTLTypes.erase( gSTLTypes.find( "std::" + sub ) );
 
-         // prevent second attempt to load by erasing name
-            gLoadedSTLTypes.insert( sub );
-            gLoadedSTLTypes.insert( "std::" + sub );
+         return kTRUE;
 
+      } else if ( gSTLExceptions.find( sub ) != gSTLExceptions.end() ) {
+      // removal is required or the dictionary can't be updated properly
+         if ( klass != 0 )
+            TClass::RemoveClass( (TClass*)klass );
+
+      // load base class std::exception if not yet done so, and refresh
+         if ( gSTLTypes.find( "exception" ) != gSTLTypes.end() ) {
+            gROOT->ProcessLine( "#include <exception>" );
+            TClass::RemoveClass( TClass::GetClass( "std::exception" ) );
+            gSTLTypes.erase( gSTLTypes.find( "exception" ) );
+            gSTLTypes.erase( gSTLTypes.find( "std::exception" ) );
          }
+
+      // load stdexcept, which contains all std exceptions
+         gROOT->ProcessLine( "#include <stdexcept>" );
+         gSTLExceptions.clear();   // completely done with std exceptions
 
          return kTRUE;
       }
