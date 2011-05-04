@@ -1,5 +1,6 @@
 // @(#)root/proofplayer:$Id$
 // Author: Long Tran-Thanh    22/07/07
+// Revised: G. Ganis, May 2011
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -17,7 +18,8 @@
 // number of times an operation cycle has to be repeated by the worker  //
 // node, e.g. the number of Monte carlo events to be generated.         //
 // Packets sizes are generated taking into account the performance of   //
-// worker nodes, based on the time needed to process previous packets.  //
+// worker nodes, based on the time needed to process previous packets,  //
+// with the goal of having all workers ending at the same time.         // 
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -65,9 +67,9 @@ class TPacketizerUnit::TSlaveStat : public TVirtualPacketizer::TVirtualSlaveStat
 friend class TPacketizerUnit;
 
 private:
-   Long64_t  fLastProcessed; // number of processed entries of the last packet
-   Double_t  fSpeed;         // estimated current average speed of the processing slave
-   Double_t  fTimeInstant;   // stores the time instant when the current packet started
+   Long64_t  fLastProcessed; // Number of processed entries of the last packet
+   Double_t  fRate;         // Estimated processing rate averaged over circularity
+   Double_t  fTimeInstant;   // Starting time of the current packet
    TNtupleD *fCircNtp;       // Keeps circular info for speed calculations
    Long_t    fCircLvl;       // Circularity level
 
@@ -75,16 +77,18 @@ public:
    TSlaveStat(TSlave *sl, TList *input);
    ~TSlaveStat();
 
-   void        GetCurrentTime();
+//   void        GetCurrentTime();
 
    void        UpdatePerformance(Double_t time);
    TProofProgressStatus *AddProcessed(TProofProgressStatus *st);
+
+//   ClassDef(TPacketizerUnit::TSlaveStat, 0);
 };
 
 //______________________________________________________________________________
 TPacketizerUnit::TSlaveStat::TSlaveStat(TSlave *slave, TList *input)
                             : fLastProcessed(0),
-                              fSpeed(0), fTimeInstant(0), fCircLvl(5)
+                              fRate(0), fTimeInstant(0), fCircLvl(5)
 {
    // Main constructor
 
@@ -116,7 +120,7 @@ void TPacketizerUnit::TSlaveStat::UpdatePerformance(Double_t time)
    if (ne <= 0) {
       // First call: just fill one ref entry and return
       fCircNtp->Fill(0., 0);
-      fSpeed = 0.;
+      fRate = 0.;
       return;
    }
    // Fill the entry
@@ -128,10 +132,10 @@ void TPacketizerUnit::TSlaveStat::UpdatePerformance(Double_t time)
    fCircNtp->GetEntry(0);
    Double_t dtime = (ttot > ar[0]) ? ttot - ar[0] : ne+1 ;
    Long64_t nevts = GetEntriesProcessed() - (Long64_t)ar[1];
-   fSpeed = nevts / dtime;
+   fRate = nevts / dtime;
    PDB(kPacketizer,2)
       Info("UpdatePerformance", "time:%f, dtime:%f, nevts:%lld, speed: %f",
-                                time, dtime, nevts, fSpeed);
+                                time, dtime, nevts, fRate);
 
 }
 
@@ -172,7 +176,7 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
    PDB(kPacketizer,1) Info("TPacketizerUnit", "enter (num %lld)", num);
 
    // Init pointer members
-   fSlaveStats = 0;
+   fWrkStats = 0;
    fPackets = 0;
 
    Int_t fixednum = -1;
@@ -181,12 +185,13 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
    if (fixednum == 1)
       Info("TPacketizerUnit", "forcing the same cycles on each worker");
 
-   if (TProof::GetParameter(input, "PROOF_PacketizerCalibNum", fCalibNum) != 0 || fCalibNum <= 0)
-      fCalibNum = 5;
+   fCalibFrac = 0.01; 
+   if (TProof::GetParameter(input, "PROOF_PacketizerCalibFrac", fCalibFrac) != 0 || fCalibFrac <= 0)
+      fCalibFrac = 0.01;
    PDB(kPacketizer,1)
-      Info("TPacketizerUnit", "size of the calibration packets: %lld", fCalibNum);
+      Info("TPacketizerUnit", "size of the calibration packets: %.2f %% of average number per worker", fCalibFrac);
 
-   fMaxPacketTime = 1.;
+   fMaxPacketTime = 3.;
    Double_t timeLimit = -1;
    if (TProof::GetParameter(input, "PROOF_PacketizerTimeLimit", timeLimit) == 0) {
       fMaxPacketTime = timeLimit;
@@ -194,6 +199,18 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
    }
    PDB(kPacketizer,1)
       Info("TPacketizerUnit", "time limit is %lf", fMaxPacketTime);
+      
+   // Different default for min packet time
+   fMinPacketTime = 1;
+   Double_t minPacketTime = 0;
+   if (TProof::GetParameter(input, "PROOF_MinPacketTime", minPacketTime) == 0) fMinPacketTime = minPacketTime;
+   TParameter<Double_t> *mpt = (TParameter<Double_t> *) fConfigParams->FindObject("PROOF_MinPacketTime");
+   if (mpt) {
+      mpt->SetVal(fMinPacketTime);
+   } else {
+      fConfigParams->Add(new TParameter<Double_t>("PROOF_MinPacketTime", fMinPacketTime));
+   }
+   
    fProcessing = 0;
    fAssigned = 0;
 
@@ -202,27 +219,26 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
    fPackets = new TList;
    fPackets->SetOwner();
 
-   fSlaveStats = new TMap;
-   fSlaveStats->SetOwner(kFALSE);
+   fWrkStats = new TMap;
+   fWrkStats->SetOwner(kFALSE);
 
    TSlave *slave;
    TIter si(slaves);
    while ((slave = (TSlave*) si.Next()))
-      fSlaveStats->Add(slave, new TSlaveStat(slave, input));
+      fWrkStats->Add(slave, new TSlaveStat(slave, input));
 
    fTotalEntries = num;
    fNumPerWorker = -1;
-   if (fixednum == 1 && fSlaveStats->GetSize() > 0) {
+   if (fixednum == 1 && fWrkStats->GetSize() > 0) {
       // Approximate number: the exact number is determined in GetNextPacket
-      fNumPerWorker = fTotalEntries / fSlaveStats->GetSize();
+      fNumPerWorker = fTotalEntries / fWrkStats->GetSize();
       if (fNumPerWorker == 0) fNumPerWorker = 1;
-      if (fCalibNum >= fNumPerWorker) fCalibNum = 1;
    }
 
    // Save the config parameters in the dedicated list so that they will be saved
    // in the outputlist and therefore in the relevant TQueryResult
    fConfigParams->Add(new TParameter<Long64_t>("PROOF_PacketizerFixedNum", fNumPerWorker));
-   fConfigParams->Add(new TParameter<Long64_t>("PROOF_PacketizerCalibNum", fCalibNum));
+   fConfigParams->Add(new TParameter<Float_t>("PROOF_PacketizerCalibFrac", fCalibFrac));
 
    fStopwatch->Start();
    PDB(kPacketizer,1) Info("TPacketizerUnit", "return");
@@ -233,9 +249,9 @@ TPacketizerUnit::~TPacketizerUnit()
 {
    // Destructor.
 
-   if (fSlaveStats)
-      fSlaveStats->DeleteValues();
-   SafeDelete(fSlaveStats);
+   if (fWrkStats)
+      fWrkStats->DeleteValues();
+   SafeDelete(fWrkStats);
    SafeDelete(fPackets);
    SafeDelete(fStopwatch);
 }
@@ -259,11 +275,11 @@ Float_t TPacketizerUnit::GetCurrentRate(Bool_t &all)
    all = kTRUE;
    // Loop over the workers
    Float_t currate = 0.;
-   if (fSlaveStats && fSlaveStats->GetSize() > 0) {
-      TIter nxw(fSlaveStats);
+   if (fWrkStats && fWrkStats->GetSize() > 0) {
+      TIter nxw(fWrkStats);
       TObject *key;
       while ((key = nxw()) != 0) {
-         TSlaveStat *slstat = (TSlaveStat *) fSlaveStats->GetValue(key);
+         TSlaveStat *slstat = (TSlaveStat *) fWrkStats->GetValue(key);
          if (slstat && slstat->GetProgressStatus() && slstat->GetEntriesProcessed() > 0) {
             // Sum-up the current rates
             currate += slstat->GetProgressStatus()->GetCurrentRate();
@@ -285,7 +301,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
       return 0;
 
    // Find slave
-   TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue(sl);
+   TSlaveStat *slstat = (TSlaveStat*) fWrkStats->GetValue(sl);
    R__ASSERT(slstat != 0);
 
    PDB(kPacketizer,2)
@@ -374,92 +390,96 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
 
    if (slstat->fCircNtp->GetEntries() <= 0) {
       // The calibration phase
+      Long64_t avg = fTotalEntries / fWrkStats->GetSize();
+      num = (Long64_t) (fCalibFrac * avg);
+      if (num < 1) num = (avg >= 1) ? avg : 1;
       PDB(kPacketizer,2)
-         Info("GetNextPacket", "calibration: total entries %lld, workers %d",
-                               fTotalEntries, fSlaveStats->GetSize());
-      Long64_t avg = fTotalEntries / fSlaveStats->GetSize();
-      num = (avg > fCalibNum) ? fCalibNum : avg;
-
+         Info("GetNextPacket", "calibration: total entries %lld, workers %d, frac: %.1f %%, raw num: %lld",
+                               fTotalEntries, fWrkStats->GetSize(), fCalibFrac * 100., num);
+      
       // Create a reference entry
       slstat->UpdatePerformance(0.);
 
    } else {
+      
       if (fNumPerWorker < 0) {
+         
          // Schedule tasks for workers based on the currently estimated processing speeds
 
          // Update performances
          // slstat->fStatus was updated before;
          slstat->UpdatePerformance(proctime);
+         
+         // We need to estimate the total instantaneous rate: for the workers not having yet
+         // one we assume the average of those having a measurement
+         // The optimal number for worker j is 
+         //
+         //                      n_j =  r_j / Sum r_i * N_left
+         //
 
-         TMapIter *iter = (TMapIter *)fSlaveStats->MakeIterator();
-         TSlave * tmpSlave;
-         TSlaveStat * tmpStat;
-
-         Double_t sumSpeed = 0;
-         Double_t sumBusy = 0;
-
-         // The basic idea is to estimate the optimal finishing time for the process, assuming
-         // that the currently measured processing speeds of the slaves remain the same in the future.
-         // The optTime can be calculated as follows.
-         // Let s_i be the speed of worker i. We assume that worker i will be busy in the
-         // next b_i time instant. Therefore we have the following equation:
-         //                 SUM((optTime-b_i)*s_i) = (remaining_entries),
-         // Hence optTime can be calculated easily:
-         //                 optTime = ((remaining_entries) + SUM(b_i*s_i))/SUM(s_i)
-
-         while ((tmpSlave = (TSlave *)iter->Next())) {
-            tmpStat = (TSlaveStat *)fSlaveStats->GetValue(tmpSlave);
-            // If the slave doesn't response for a long time, its service rate will be considered as 0
-            if ((cTime - tmpStat->fTimeInstant) > 4*fMaxPacketTime)
-               tmpStat->fSpeed = 0;
-            PDB(kPacketizer,2)
-               Info("GetNextPacket",
-                  "worker-%s: speed %lf", tmpSlave->GetOrdinal(), tmpStat->fSpeed);
-            if (tmpStat->fSpeed > 0) {
-               // Calculating the SUM(s_i)
-               sumSpeed += tmpStat->fSpeed;
-               // There is nothing to do if slave_i is not calibrated or slave i is the current slave
-               if ((tmpStat->fTimeInstant) && (cTime - tmpStat->fTimeInstant > 0)) {
-                  // Calculating the SUM(b_i*s_i)
-                  //      s_i = tmpStat->fSpeed
-                  //      b_i = tmpStat->fTimeInstant + tmpStat->fLastProcessed/s_i - cTime)
-                  //  b_i*s_i = (tmpStat->fTimeInstant - cTime)*s_i + tmpStat->fLastProcessed
-                  Double_t busyspeed =
-                     ((tmpStat->fTimeInstant - cTime)*tmpStat->fSpeed + tmpStat->fLastProcessed);
-                  if (busyspeed > 0)
-                     sumBusy += busyspeed;
+         Int_t nrm = 0;
+         Double_t sumRate = 0.;
+         TIter nxwrk(fWrkStats);
+         TSlaveStat *wrkStat = 0;
+         TSlave *tmpWrk = 0;
+         while ((tmpWrk = (TSlave *)nxwrk())) {
+            if ((wrkStat = dynamic_cast<TSlaveStat *>(fWrkStats->GetValue(tmpWrk)))) {
+               if (wrkStat->fRate > 0) {
+                  nrm++;
+                  sumRate += wrkStat->fRate;
+                  PDB(kPacketizer,3)
+                     Info("GetNextPacket", "%d: worker-%s: rate %lf /s (sum: %lf /s)",
+                                           nrm, tmpWrk->GetOrdinal(), wrkStat->fRate, sumRate);
                }
-            }
-         }
-         SafeDelete(iter);
-         PDB(kPacketizer,2)
-            Info("GetNextPacket", "worker-%s: sum speed: %lf, sum busy: %f",
-                                 sl->GetOrdinal(), sumSpeed, sumBusy);
-         // firstly the slave will try to get all of the remaining entries
-         if (slstat->fSpeed > 0 &&
-            (fTotalEntries - fAssigned)/(slstat->fSpeed) < fMaxPacketTime) {
-            num = (fTotalEntries - fAssigned);
-         } else {
-            if (slstat->fSpeed > 0) {
-               // calculating the optTime
-               Double_t optTime = (fTotalEntries - fAssigned + sumBusy)/sumSpeed;
-               // if optTime is greater than the official time limit, then the slave gets a number
-               // of entries that still fit into the time limit, otherwise it uses the optTime as
-               // a time limit
-               num = (optTime > fMaxPacketTime) ? Nint(fMaxPacketTime*(slstat->fSpeed))
-                                          : Nint(optTime*(slstat->fSpeed));
-            PDB(kPacketizer,2)
-               Info("GetNextPacket", "opTime %lf num %lld speed %lf", optTime, num, slstat->fSpeed);
             } else {
-               Long64_t avg = fTotalEntries/(fSlaveStats->GetSize());
-               num = (avg > 5) ? 5 : avg;
+               Warning("GetNextPacket", "dynamic_cast<TSlaveStat *> failing on value for '%s (%s)'! Skipping",
+                                        tmpWrk->GetName(), tmpWrk->GetOrdinal());
             }
          }
+         
+         // Check consistency
+         if (nrm <= 0) {
+            Error("GetNextPacket", "no worker has consistent information: stop processing!");
+            return (TDSetElement *)0;
+         }
+         
+         Double_t avgRate = sumRate / nrm;
+         // Check if all workers had meaningful rate information
+         if (nrm < fWrkStats->GetSize()) {
+            // For some workers the measurement is missing: use the average
+            sumRate += (fWrkStats->GetSize() - nrm) * avgRate;
+         }
+         PDB(kPacketizer,2)
+            Info("GetNextPacket", "rate: avg: %lf /s/wrk - sum: %lf /s (measurements %d out of %d)",
+                                   avgRate, sumRate, nrm, fWrkStats->GetSize());
+         
+         // Packet size for this worker
+         Double_t wrkRate = (slstat->fRate > 0.) ? slstat->fRate : avgRate ;
+         num = (Long64_t) ((fTotalEntries - fAssigned) * wrkRate / sumRate);
+         PDB(kPacketizer,2)
+            Info("GetNextPacket", "worker-%s (%s): raw packet size: %lld", sl->GetOrdinal(), sl->GetName(), num);
+
+         // Apply time-per-packet limits
+         Double_t packTime = num / wrkRate;
+         if (fMaxPacketTime > 0. && packTime > fMaxPacketTime) {
+            num = (Long64_t) (fMaxPacketTime * wrkRate) ;
+            packTime = fMaxPacketTime;
+            PDB(kPacketizer,2)
+               Info("GetNextPacket", "worker-%s (%s): time-limited packet size: %lld (upper limit: %.2f secs)",
+                                     sl->GetOrdinal(), sl->GetName(), num, fMaxPacketTime);
+         }
+         if (fMinPacketTime > 0. && packTime < fMinPacketTime) {
+            num = (Long64_t) (fMinPacketTime * wrkRate);
+            PDB(kPacketizer,2)
+               Info("GetNextPacket", "worker-%s (%s): time-limited packet size: %lld (lower limit: %.2f secs)",
+                                     sl->GetOrdinal(), sl->GetName(), num, fMinPacketTime);
+         }
+            
       } else {
          // Fixed number of cycles per worker
          num = fNumPerWorker - slstat->fLastProcessed;
-         if (num > 1 && slstat->fSpeed > 0 && num / slstat->fSpeed > fMaxPacketTime) {
-            num = (Long64_t) (slstat->fSpeed * fMaxPacketTime);
+         if (num > 1 && slstat->fRate > 0 && num / slstat->fRate > fMaxPacketTime) {
+            num = (Long64_t) (slstat->fRate * fMaxPacketTime);
          }
       }
    }

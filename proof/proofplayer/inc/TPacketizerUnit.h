@@ -1,5 +1,6 @@
 // @(#)root/proofplayer:$Id$
 // Author: Long Tran-Thanh    22/07/07
+// Revised: G. Ganis, May 2011
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -20,7 +21,8 @@
 // number of times an operation cycle has to be repeated by the worker  //
 // node, e.g. the number of Monte carlo events to be generated.         //
 // Packets sizes are generated taking into account the performance of   //
-// worker nodes, based on the time needed to process previous packets.  //
+// worker nodes, based on the time needed to process previous packets,  //
+// with the goal of having all workers ending at the same time.         // 
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -46,11 +48,11 @@ public:              // public because of Sun CC bug
 
 private:
    TList      *fPackets;         // All processed packets
-   TMap       *fSlaveStats;      // Slave status, keyed by correspondig TSlave
+   TMap       *fWrkStats;        // Worker status, keyed by correspondig TSlave
    TStopwatch *fStopwatch;       // For measuring the start time of each packet
    Long64_t    fProcessing;      // Event being processed
    Long64_t    fAssigned;        // Entries processed or being processed.
-   Long64_t    fCalibNum;        // Size of the calibrating packet
+   Double_t    fCalibFrac;       // Size of the calibrating packet as fraction of Ntot/Nwrk
    Long64_t    fNumPerWorker;    // Number of cycles per worker, if this option
                                  // is chosen
 
@@ -67,7 +69,7 @@ public:
    Double_t      GetCurrentTime();
 
    Float_t       GetCurrentRate(Bool_t &all);
-   Int_t         GetActiveWorkers() { return fSlaveStats->GetSize(); }
+   Int_t         GetActiveWorkers() { return fWrkStats->GetSize(); }
 
    ClassDef(TPacketizerUnit,0)  //Generate work packets for parallel processing
 };
