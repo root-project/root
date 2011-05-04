@@ -56,7 +56,7 @@ protected:
 
 public:
 
-   TVectorT() : fNrows(0), fRowLwb(0), fElements(0), fIsOwner(kTRUE) { }
+   TVectorT() : fNrows(0), fRowLwb(0), fElements(0), fDataStack (), fIsOwner(kTRUE) { }
    explicit TVectorT(Int_t n);
    TVectorT(Int_t lwb,Int_t upb);
    TVectorT(Int_t n,const Element *elements);

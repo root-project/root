@@ -56,7 +56,7 @@ public:
    enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
    enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult,kMultTranspose,kPlus,kMinus };
 
-   TMatrixT(): fElements(0) { }
+   TMatrixT(): fDataStack(), fElements(0) { }
    TMatrixT(Int_t nrows,Int_t ncols);
    TMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
    TMatrixT(Int_t nrows,Int_t ncols,const Element *data,Option_t *option="");
