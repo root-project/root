@@ -2156,6 +2156,10 @@ void TBranch::SetFile(TFile* file)
    if (file == fTree->GetCurrentFile()) fFileName = "";
    else                                 fFileName = file->GetName();
 
+   if (file && fCompress == -1) {
+      fCompress = file->GetCompressionLevel();      
+   }
+
    // Apply to all existing baskets.
    TIter nextb(GetListOfBaskets());
    TBasket *basket;
