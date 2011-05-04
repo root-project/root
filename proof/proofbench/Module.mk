@@ -1,4 +1,4 @@
-# Module.mk for the bench module
+# Module.mk for the proofbench module
 # Copyright (c) 2005 Rene Brun and Fons Rademakers
 #
 # Author: Fons Rademakers, 17/2/2011
@@ -22,7 +22,7 @@ PROOFBENCHH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PROOFBENCHH  := $(filter-out $(MODDIRI)/TSel%,$(PROOFBENCHH))
 PROOFBENCHS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 PROOFBENCHS  := $(filter-out $(MODDIRS)/TSel%,$(PROOFBENCHS))
-PROOFBENCHO  := $(PROOFBENCHS:.cxx=.o)
+PROOFBENCHO  := $(call stripsrc,$(PROOFBENCHS:.cxx=.o))
 
 PROOFBENCHDEP := $(PROOFBENCHO:.o=.d) $(PROOFBENCHDO:.o=.d)
 
