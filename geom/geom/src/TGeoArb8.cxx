@@ -1876,6 +1876,13 @@ TGeoShape *TGeoGtra::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 }
 
 //_____________________________________________________________________________
+Double_t TGeoGtra::Safety(Double_t *point, Bool_t in) const
+{
+// Computes the closest distance from given point to this shape.
+   return TGeoArb8::Safety(point,in);
+}   
+
+//_____________________________________________________________________________
 void TGeoGtra::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".

@@ -211,6 +211,7 @@ public:
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    Double_t              GetTwistAngle() const {return fTwistAngle;}
+   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SetDimensions(Double_t *param);
    virtual void          SavePrimitive(ostream &out, Option_t *option = "");
  
