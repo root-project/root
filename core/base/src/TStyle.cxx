@@ -101,7 +101,6 @@ TStyle::TStyle(const char *name, const char *title)
    //  See also TROOT::ForceStyle and TROOT::UseCurrentStyle
 
    TString style_name = name;
-   style_name.ToLower();
 
    SetNameTitle(style_name, title);
 
@@ -115,7 +114,7 @@ TStyle::TStyle(const char *name, const char *title)
       gROOT->GetListOfStyles()->Add(this);
    }
 
-   if (strcmp(style_name,"modern") == 0) {
+   if (strcmp(style_name,"Modern") == 0) {
       // Modern style
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
@@ -153,7 +152,7 @@ TStyle::TStyle(const char *name, const char *title)
       SetFuncWidth(2);
       SetFuncColor(2);
    }
-   if (strcmp(style_name,"plain") == 0) {
+   if (strcmp(style_name,"Plain") == 0) {
       // May be a standard style to be initialized
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
@@ -168,7 +167,7 @@ TStyle::TStyle(const char *name, const char *title)
       SetLegendBorderSize(1);
       return;
    }
-   if (strcmp(style_name,"bold") == 0) {
+   if (strcmp(style_name,"Bold") == 0) {
       // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
       SetPalette(1,0);
       SetCanvasColor(10);
@@ -195,7 +194,7 @@ TStyle::TStyle(const char *name, const char *title)
       SetStatColor(10);
       return;
    }
-   if (strcmp(style_name,"video") == 0) {
+   if (strcmp(style_name,"Video") == 0) {
       // Author: Art Poskanzer, LBNL, Oct. 1999
       SetPalette(1,0);
       SetCanvasColor(10);
@@ -220,7 +219,7 @@ TStyle::TStyle(const char *name, const char *title)
       SetLineWidth(3);
       return;
    }
-   if (strcmp(style_name,"pub") == 0) {
+   if (strcmp(style_name,"Pub") == 0) {
       // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
       SetOptTitle(0);
       SetOptStat(0);
@@ -562,9 +561,8 @@ void TStyle::Reset(Option_t *opt)
    fTimeOffset = 788918400; // UTC time at 01/01/95
 
    TString style_name = opt;
-   style_name.ToLower();
 
-   if (strcmp(style_name,"modern") == 0) {
+   if (strcmp(style_name,"Modern") == 0) {
       // Modern style
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
@@ -602,7 +600,7 @@ void TStyle::Reset(Option_t *opt)
       SetFuncWidth(2);
       SetFuncColor(2);
    }
-   if (strcmp(style_name,"plain") == 0) {
+   if (strcmp(style_name,"Plain") == 0) {
       SetFrameBorderMode(0);
       SetCanvasBorderMode(0);
       SetPadBorderMode(0);
@@ -615,7 +613,7 @@ void TStyle::Reset(Option_t *opt)
       SetLegendBorderSize(1);
       return;
    }
-   if (strcmp(style_name,"bold") == 0) {
+   if (strcmp(style_name,"Bold") == 0) {
       SetPalette(1,0);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
@@ -641,7 +639,7 @@ void TStyle::Reset(Option_t *opt)
       SetStatColor(10);
       return;
    }
-   if (strcmp(style_name,"video") == 0) {
+   if (strcmp(style_name,"Video") == 0) {
       SetPalette(1,0);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
@@ -665,7 +663,7 @@ void TStyle::Reset(Option_t *opt)
       SetLineWidth(3);
       return;
    }
-   if (strcmp(style_name,"pub") == 0) {
+   if (strcmp(style_name,"Pub") == 0) {
       SetOptTitle(0);
       SetOptStat(0);
       SetPalette(8,0);

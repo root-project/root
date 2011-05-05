@@ -1905,7 +1905,6 @@ void TROOT::SetStyle(const char *stylename)
    // Change current style to style with name stylename
 
    TString style_name = stylename;
-   style_name.ToLower();
 
    TStyle *style = GetStyle(style_name);
    if (style) style->cd();
