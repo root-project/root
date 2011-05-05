@@ -202,6 +202,11 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
          return;
       }
 
+      // Fill some info
+      fUser = fConn->fUser.c_str();
+      fHost = fConn->fHost.c_str();
+      fPort = fConn->fPort;
+
       // Create new proofserv if not client manager or administrator or internal mode
       if (fMode == 'm' || fMode == 's' || fMode == 'M' || fMode == 'A') {
          // We attach or create
@@ -214,10 +219,7 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
          }
       }
 
-      // Fill some info
-      fUser = fConn->fUser.c_str();
-      fHost = fConn->fHost.c_str();
-      fPort = fConn->fPort;
+      // Fill some other info available if Create is successful
       if (fMode == 'C') {
          fXrdProofdVersion = fConn->fRemoteProtocol;
          fRemoteProtocol = fConn->fRemoteProtocol;
@@ -1086,6 +1088,8 @@ Bool_t TXSocket::Create(Bool_t attach)
             len -= sizeof(kXR_int32);
          } else {
             Error("Create","session ID is undefined!");
+            fSessionID = -1;
+            return kFALSE;
          }
 
          if (len >= (Int_t)sizeof(kXR_int16)) {
@@ -1138,9 +1142,11 @@ Bool_t TXSocket::Create(Bool_t attach)
          return kTRUE;
       } else {
          // Extract log file path, if any
-         fBuffer = (fConn->GetLastErr()) ? fConn->GetLastErr() : "";
-         Ssiz_t ilog = fBuffer.Index("|log:");
-         if (ilog != kNPOS) fBuffer.Remove(0, ilog);
+         Ssiz_t ilog = kNPOS;
+         if (retriesleft <= 0 && fConn->GetLastErr()) {
+            fBuffer = fConn->GetLastErr();
+            if ((ilog = fBuffer.Index("|log:")) != kNPOS) fBuffer.Remove(0, ilog);
+         }
          // If not free resources now, just give up
          if (fConn->GetOpenError() == kXP_TooManySess) {
             // Avoid to contact the server any more
@@ -1150,7 +1156,7 @@ Bool_t TXSocket::Create(Bool_t attach)
             // Print error msg, if any
             if ((retriesleft <= 0 || gDebug > 0) && fConn->GetLastErr()) {
                TString emsg(fConn->GetLastErr());
-               if (ilog != kNPOS) emsg.Remove(ilog);
+               if ((ilog = emsg.Index("|log:")) != kNPOS) emsg.Remove(ilog);
                Printf("%s: %s", fHost.Data(), emsg.Data());
             }
          }
@@ -1163,6 +1169,10 @@ Bool_t TXSocket::Create(Bool_t attach)
                          gEnv->GetValue("XProof.CreationRetries", 4));
 
    } // Creation retries
+   
+   // The session is invalid: reset the sessionID to invalid state (it was our protocol
+   // number during creation
+   fSessionID = -1;
 
    // Notify failure
    Error("Create:",

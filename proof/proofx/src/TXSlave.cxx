@@ -239,6 +239,10 @@ void TXSlave::Init(const char *host, Int_t stype)
          Error("Init", "some severe error occurred while opening "
                        "the connection at %s - exit", url.GetUrl(kTRUE));
       ParseBuffer(); // For the log path
+      // Fill some useful info
+      R__LOCKGUARD2(gProofMutex);
+      fUser = ((TXSocket *)fSocket)->fUser;
+      PDB(kGlobal,3) Info("Init","%s: fUser is .... %s", iam.Data(), fUser.Data());
       SafeDelete(fSocket);
       return;
    }
@@ -267,25 +271,6 @@ void TXSlave::Init(const char *host, Int_t stype)
 
    // Extract the log file path and, if any, set URL entry point for the default data pool 
    ParseBuffer();
-#if 0
-   TString buffer(((TXSocket *)fSocket)->fBuffer);
-   if (!buffer.IsNull()) {
-      Ssiz_t ilog = buffer.Index("|log:");
-      if (ilog != 0) {
-         // Extract the pool URL (on master)
-         TString dpu = (ilog != kNPOS) ? buffer(0, ilog) : buffer;
-         if (dpu.Length() > 0) fProof->SetDataPoolUrl(dpu);
-      }
-      if (ilog != kNPOS) {
-         // The rest, if any, if the log file path from which we extract the working dir
-         buffer.Remove(0, ilog + sizeof("|log:") - 1);
-         fWorkDir = buffer;
-         if ((ilog = fWorkDir.Last('.')) !=  kNPOS) fWorkDir.Remove(ilog);
-      } else if (fProtocol > 31) {
-         Warning("Init", "log path not found in received startup buffer!");
-      }
-   }
-#endif
 
    // Remove socket from global TROOT socket list. Only the TProof object,
    // representing all slave sockets, will be added to this list. This will

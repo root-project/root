@@ -1185,10 +1185,11 @@ Int_t TProof::AddWorkers(TList *workerList)
       } else {
          slaveOk = kFALSE;
          fBadSlaves->Add(slave);
+         Warning("AddWorkers", "worker '%s' is invalid", slave->GetOrdinal());
       }
 
       PDB(kGlobal,3)
-         Info("StartSlaves", "worker on host %s created"
+         Info("AddWorkers", "worker on host %s created"
               " and added to list", worker->GetNodeName().Data());
 
       // Notify opening of connection
@@ -10687,6 +10688,19 @@ void TProof::SaveWorkerInfo()
          fprintf(fwrk,"%s@%s:%d %d %s %s.%s\n",
                      wrk->GetUser(), wrk->GetName(), wrk->GetPort(), status,
                      wrk->GetOrdinal(), wrk->GetWorkDir(), addlogext.Data());
+      }
+   }
+   
+   // Loop also over the list of bad workers (if they dfailed to startup they are not in
+   // the overall list)
+   TIter nxb(fBadSlaves);
+   while ((wrk = (TSlave *) nxb())) {
+      if (!fSlaves->FindObject(wrk)) {
+         wrk->Print();
+         // Write out record for this worker
+         fprintf(fwrk,"%s@%s:%d 0 %s %s.log\n",
+                     wrk->GetUser(), wrk->GetName(), wrk->GetPort(),
+                     wrk->GetOrdinal(), wrk->GetWorkDir());
       }
    }
 

@@ -405,7 +405,11 @@ Int_t TXProofServ::CreateServer()
                                                           fConfDir.Data(),
                                                           fLogLevel,
                                                           fTopSessionTag.Data()));
-      if (!fProof || !fProof->IsValid()) {
+
+      // Save worker info
+      if (fProof) fProof->SaveWorkerInfo();
+
+      if (!fProof || (fProof && !fProof->IsValid())) {
          Error("CreateServer", "plugin for TProof could not be executed");
          FlushLogFile();
          delete fProof;
@@ -416,9 +420,6 @@ Int_t TXProofServ::CreateServer()
       }
       // Find out if we are a master in direct contact only with workers
       fEndMaster = fProof->IsEndMaster();
-
-      // Save worker info
-      fProof->SaveWorkerInfo();
 
       SendLogFile();
    }

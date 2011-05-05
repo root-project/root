@@ -372,6 +372,22 @@ void TSlave::Print(Option_t *) const
       Printf("    MB's received:           %.2f", float(fSocket->GetBytesSent())/(1024*1024));
       Printf("    Real time used (s):      %.3f", GetRealTime());
       Printf("    CPU time used (s):       %.3f", GetCpuTime());
+   } else {
+      if (strlen(GetGroup()) > 0) {
+         Printf("    User/Group:              %s/%s", GetUser(), GetGroup());
+      } else {
+         Printf("    User:                    %s", GetUser());
+      }
+      Printf("    Security context:");
+      Printf("    Proofd protocol version:");
+      Printf("    Image name:              %s", GetImage());
+      Printf("    Working directory:       %s", GetWorkDir());
+      Printf("    Performance index:       %d", GetPerfIdx());
+      Printf("    MB's processed:          %.2f", float(GetBytesRead())/(1024*1024));
+      Printf("    MB's sent:");
+      Printf("    MB's received:");
+      Printf("    Real time used (s):      %.3f", GetRealTime());
+      Printf("    CPU time used (s):       %.3f", GetCpuTime());
    }
 }
 
