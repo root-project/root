@@ -1713,11 +1713,11 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
          if (TMath::Abs(delta)>1E-6) {
             // Error->debug this
             printf("Error: (%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) d1=%f d2=%f dmove=%f\n",
-                point[0],point[1],point[2],dir[0],dir[1],dir[2], d1,d2,dmove);
-            if (dmove<dmax) {
+                point[0],point[1],point[2],dir[0],dir[1],dir[2], d1,d2,dmove);                
+//            if (dmove<dmax) {
                printf("   DistFromOutside(%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f)  dnext = %f\n",
                       point[0]+d1*dir[0],point[1]+d1*dir[1], point[2]+d1*dir[2], dir[0],dir[1],dir[2],dnext);
-            }
+//            }
             printf("   DistFromOutside(%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f)  = %f\n",   
                       pnew[0],pnew[1],pnew[2],dnew[0],dnew[1],dnew[2], d2);
             pmfrominside = new TPolyMarker3D(2);
