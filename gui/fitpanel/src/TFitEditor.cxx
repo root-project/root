@@ -675,20 +675,8 @@ void TFitEditor::CreateGeneralTab()
    fLinearFit = new TGCheckButton(v1, "Linear fit", kFP_MLINF);
    fLinearFit->Associate(this);
    fLinearFit->SetToolTipText("Perform Linear fitter if selected");
-   v1->AddFrame(fLinearFit, new TGLayoutHints(kLHintsNormal, 0, 0, 2, 2));
+   v1->AddFrame(fLinearFit, new TGLayoutHints(kLHintsNormal, 0, 0, 8, 2));
 
-   TGHorizontalFrame *v1h = new TGHorizontalFrame(v1);
-   TGLabel *label41 = new TGLabel(v1h, "Robust:");
-   v1h->AddFrame(label41, new TGLayoutHints(kLHintsNormal |
-                                            kLHintsCenterY, 25, 5, 5, 2));
-   fRobustValue = new TGNumberEntry(v1h, 1., 5, kFP_RBUST,
-                                    TGNumberFormat::kNESRealTwo,
-                                    TGNumberFormat::kNEAPositive,
-                                    TGNumberFormat::kNELLimitMinMax,0.,1.);
-   v1h->AddFrame(fRobustValue, new TGLayoutHints(kLHintsLeft));
-   v1->AddFrame(v1h, new TGLayoutHints(kLHintsNormal));
-   fRobustValue->SetState(kFALSE);
-   fRobustValue->GetNumberEntry()->SetToolTipText("Available only for graphs");
 
    h2->AddFrame(v1, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
@@ -703,10 +691,25 @@ void TFitEditor::CreateGeneralTab()
    fUserButton->SetState(kButtonDisabled);
    v2->AddFrame(v21, new TGLayoutHints(kLHintsRight | kLHintsTop));
 
-   fNoChi2 = new TGCheckButton(v2, "No Chi-square", kFP_NOCHI);
-   fNoChi2->Associate(this);
-   fNoChi2->SetToolTipText("'C'- do not calculate Chi-square (for Linear fitter)");
-   v2->AddFrame(fNoChi2, new TGLayoutHints(kLHintsNormal, 0, 0, 34, 2));
+   TGHorizontalFrame *v1h = new TGHorizontalFrame(v2);
+   fEnableRobust = new TGCheckButton(v1h, "Robust:", -1); 
+   fEnableRobust->Associate(this); // needed ???
+   fEnableRobust->SetToolTipText("Perform Linear Robust fitter if selected");
+   v1h->AddFrame(fEnableRobust, new TGLayoutHints(kLHintsNormal, 0, 0, 2, 2));
+   fRobustValue = new TGNumberEntry(v1h, 0.95, 5, kFP_RBUST,
+                                    TGNumberFormat::kNESRealTwo,
+                                    TGNumberFormat::kNEAPositive,
+                                    TGNumberFormat::kNELLimitMinMax,0.,0.99);
+   v1h->AddFrame(fRobustValue, new TGLayoutHints(kLHintsLeft));
+   v2->AddFrame(v1h, new TGLayoutHints(kLHintsNormal, 0, 0, 12, 2));
+   fRobustValue->SetState(kFALSE);
+   fRobustValue->GetNumberEntry()->SetToolTipText("Available only for graphs");
+
+   fNoChi2 = 0;
+   // fNoChi2 = new TGCheckButton(v2, "No Chi-square", kFP_NOCHI);
+   // fNoChi2->Associate(this);
+   // fNoChi2->SetToolTipText("'C'- do not calculate Chi-square (for Linear fitter)");
+   // v2->AddFrame(fNoChi2, new TGLayoutHints(kLHintsNormal, 0, 0, 34, 2));
 
    h2->AddFrame(v2, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 20, 0, 0, 0));
    gf->AddFrame(h2, new TGLayoutHints(kLHintsExpandX, 20, 0, 0, 0));
@@ -1050,7 +1053,8 @@ void TFitEditor::ConnectSlots()
 
    // linear fit
    fLinearFit->Connect("Toggled(Bool_t)","TFitEditor",this,"DoLinearFit()");
-   fNoChi2->Connect("Toggled(Bool_t)","TFitEditor",this,"DoNoChi2()");
+   fEnableRobust->Connect("Toggled(Bool_t)","TFitEditor",this,"DoRobustFit()");
+   //fNoChi2->Connect("Toggled(Bool_t)","TFitEditor",this,"DoNoChi2()");
 
    // draw options
    fNoStoreDrawing->Connect("Toggled(Bool_t)","TFitEditor",this,"DoNoStoreDrawing()");
@@ -1121,7 +1125,8 @@ void TFitEditor::DisconnectSlots()
 
    // linear fit
    fLinearFit->Disconnect("Toggled(Bool_t)");
-   fNoChi2->Disconnect("Toggled(Bool_t)");
+   fEnableRobust->Disconnect("Toggled(Bool_t)");
+   //fNoChi2->Disconnect("Toggled(Bool_t)");
 
    // draw options
    fNoStoreDrawing->Disconnect("Toggled(Bool_t)");
@@ -2407,12 +2412,15 @@ void TFitEditor::DoLinearFit()
       //fSetParam->SetState(kButtonDisabled);
       fBestErrors->SetState(kButtonDisabled);
       fImproveResults->SetState(kButtonDisabled);
-      fRobustValue->SetState(kTRUE);
+      fEnableRobust->SetState(kButtonUp);
+      //fNoChi2->SetState(kButtonUp);
    } else {
       //fSetParam->SetState(kButtonUp);
       fBestErrors->SetState(kButtonUp);
       fImproveResults->SetState(kButtonUp);
+      fEnableRobust->SetState(kButtonDisabled);
       fRobustValue->SetState(kFALSE);
+      //fNoChi2->SetState(kButtonDisabled);
    }
 }
 
@@ -2421,8 +2429,19 @@ void TFitEditor::DoNoChi2()
 {
    // Slot connected to 'no chi2' option settings.
 
-   if (fLinearFit->GetState() == kButtonUp)
-      fLinearFit->SetState(kButtonDown, kTRUE);
+   //LM: no need to do  operations here
+   // if (fLinearFit->GetState() == kButtonUp)
+   //    fLinearFit->SetState(kButtonDown, kTRUE);
+}
+//______________________________________________________________________________
+void TFitEditor::DoRobustFit()
+{
+   // Slot connected to 'robust fitting' option settings.
+
+   if (fEnableRobust->GetState() == kButtonDown)
+      fRobustValue->SetState(kTRUE);
+   else 
+      fRobustValue->SetState(kFALSE);
 }
 
 //______________________________________________________________________________
@@ -2501,8 +2520,10 @@ void TFitEditor::DoReset()
       fAdd2FuncList->SetState(kButtonUp, kFALSE);
    if (fUseGradient->GetState() == kButtonDown)
       fUseGradient->SetState(kButtonUp, kFALSE);
-   if (fNoChi2->GetState() == kButtonDown)
-      fNoChi2->SetState(kButtonUp, kFALSE);
+   if (fEnableRobust->GetState() == kButtonDown)
+      fEnableRobust->SetState(kButtonUp, kFALSE);
+   // if (fNoChi2->GetState() == kButtonDown)
+   //    fNoChi2->SetState(kButtonUp, kFALSE);
    if (fDrawSame->GetState() == kButtonDown)
       fDrawSame->SetState(kButtonUp, kFALSE);
    if (fNoDrawing->GetState() == kButtonDown)
@@ -3156,7 +3177,7 @@ void TFitEditor::RetrieveOptions(Foption_t& fitOpts, TString& drawOpts, ROOT::Ma
             break;
          }
    
-   fitOpts.Nochisq  = (fNoChi2->GetState() == kButtonDown);
+   //fitOpts.Nochisq  = (fNoChi2->GetState() == kButtonDown);
    fitOpts.Nostore  = (fNoStoreDrawing->GetState() == kButtonDown);
    fitOpts.Nograph  = (fNoDrawing->GetState() == kButtonDown);
    fitOpts.Plus     = (fAdd2FuncList->GetState() == kButtonDown);
@@ -3164,7 +3185,7 @@ void TFitEditor::RetrieveOptions(Foption_t& fitOpts, TString& drawOpts, ROOT::Ma
    fitOpts.Quiet    = ( fOptQuiet->GetState() == kButtonDown );
    fitOpts.Verbose  = ( fOptVerbose->GetState() == kButtonDown );
 
-   if ( !(fType != kObjectGraph) && (fLinearFit->GetState() == kButtonDown) )
+   if ( !(fType != kObjectGraph) && (fEnableRobust->GetState() == kButtonDown) )
    {
       fitOpts.Robust = 1;
       fitOpts.hRobust = fRobustValue->GetNumber();
