@@ -132,7 +132,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    Int_t special = f1->GetNumber();
    Bool_t linear = f1->IsLinear();
    Int_t npar = f1->GetNpar();
-   if (special==299+npar)  linear = kTRUE;
+   if (special==299+npar)  linear = kTRUE; // for polynomial functions 
    // do not use linear fitter in these case
    if (fitOption.Bound || fitOption.Like || fitOption.Errors || fitOption.Gradient || fitOption.More || fitOption.User|| fitOption.Integral || fitOption.Minuit)
       linear = kFALSE;
@@ -147,7 +147,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    opt.fIntegral = fitOption.Integral; 
    opt.fUseRange = fitOption.Range; 
    if (fitOption.Like) opt.fUseEmpty = true;  // use empty bins in log-likelihood fits 
-   if (linear) opt.fCoordErrors = false; // cannot use coordinate errors in a linear fit
+   if (special==300) opt.fCoordErrors = false; // no need to use coordinate errors in a pol0 fit
    if (fitOption.NoErrX) opt.fCoordErrors = false;  // do not use coordinate errors when requested
    if (fitOption.W1) opt.fErrors1 = true;
    if (fitOption.W1 > 1) opt.fUseEmpty = true; // use empty bins with weight=1
@@ -188,6 +188,9 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
       if (fitdata->NDim() == 1) printf(" x[%d] = %f - value = %f \n", i,*(fitdata->Coords(i)),fitdata->Value(i) ); 
    }
 #endif   
+
+   // switch off linear fitting in case data has  coordinate errors 
+   if (fitdata->GetErrorType() == ROOT::Fit::BinData::kCoordError ) linear = false;
 
    // this functions use the TVirtualFitter
    if (special != 0 && !fitOption.Bound && !linear) { 
