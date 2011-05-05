@@ -1285,10 +1285,30 @@ void TROOT::Idle(UInt_t idleTimeInSec, const char *command)
 }
 
 //______________________________________________________________________________
+static TClass* R__GetClassIfKnown(const char* className) {
+   // Check whether className is a known class, and only autoload
+   // if we can. Helper function for TROOT::IgnoreInclude().
+
+   // Check whether the class is available for auto-loading first:
+   const char* libsToLoad = gInterpreter->GetClassSharedLibs(className);
+   TClass* cla = 0;
+   if (libsToLoad) {
+      // trigger autoload, and only cvreate TClass in this case.
+      return TClass::GetClass(className);
+   } else if (gROOT->GetListOfClasses()
+              && (cla = (TClass*)gROOT->GetListOfClasses()->FindObject(className))) {
+      // cla assigned in if statement
+   } else if (gClassTable->FindObject(className)) {
+      return TClass::GetClass(className);
+   }
+   return cla;
+}
+
+//______________________________________________________________________________
 Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
 {
-   // Return 1 if the given include file correspond to a class that has
-   // been loaded through a compiled dictionnary.
+   // Return 1 if the name of the given include file corresponds to a class that
+   //  is known to ROOT, e.g. "TLorentzVector.h" versus TLorentzVector.
 
    if (fname == 0) return 0;
 
@@ -1304,9 +1324,9 @@ Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
    }
 
    TString className = gSystem->BaseName(stem);
-   TClass *cla = TClass::GetClass(className);
-
+   TClass* cla = R__GetClassIfKnown(className);
    if (!cla) {
+      // Try again with modifications to the file name:
       className = stem;
       className.ReplaceAll("/", "::");
       className.ReplaceAll("\\", "::");
@@ -1319,16 +1339,20 @@ Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
          // detected already before).
          return 0;
       }
-      cla = TClass::GetClass(className);
+      cla = R__GetClassIfKnown(className);
    }
-   if ( cla ) {
-      if (cla->GetDeclFileLine() <= 0) return 0; // to a void an error with VisualC++
-      TString decfile = gSystem->BaseName(cla->GetDeclFileName());
-      if (decfile == gSystem->BaseName(fname)) {
-         return 1;
-      }
+
+   if (!cla) {
+      return 0;
    }
-   return 0;
+
+   // cla is valid, check wether it's actually in the header of the same name:
+   if (cla->GetDeclFileLine() <= 0) return 0; // to a void an error with VisualC++
+   TString decfile = gSystem->BaseName(cla->GetDeclFileName());
+   if (decfile != gSystem->BaseName(fname)) {
+      return 0;
+   }
+   return 1;
 }
 
 //______________________________________________________________________________
