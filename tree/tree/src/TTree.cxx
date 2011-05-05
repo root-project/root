@@ -5179,6 +5179,18 @@ void TTree::KeepCircular()
       TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
       branch->KeepCircular(maxEntries);
    }
+   if (fNClusterRange) {
+      Long64_t entriesOffset = fEntries - maxEntries;
+      Int_t oldsize = fNClusterRange;
+      for(Int_t i = 0, j = 0; j < oldsize; ++j) {
+         if (fClusterRangeEnd[j] > entriesOffset) {
+            fClusterRangeEnd[i] =  fClusterRangeEnd[j] - entriesOffset;
+            ++i;
+         } else {
+            --fNClusterRange;
+         }
+      }
+   }
    fEntries = maxEntries;
    fReadEntry = -1;
 }
@@ -6227,6 +6239,11 @@ void TTree::Refresh()
       return;
    }
    //copy info from tree header into this Tree
+   fEntries = 0;
+   fNClusterRange = 0;
+   ImportClusterRanges(tree);
+
+   fAutoSave = tree->fAutoSave;
    fEntries = tree->fEntries;
    fTotBytes = tree->fTotBytes;
    fZipBytes = tree->fZipBytes;
@@ -6279,6 +6296,7 @@ void TTree::Reset(Option_t* option)
 
    fNotify = 0;
    fEntries = 0;
+   fNClusterRange = 0;
    fTotBytes = 0;
    fZipBytes = 0;
    fSavedBytes = 0;
@@ -7400,6 +7418,7 @@ void TTree::Streamer(TBuffer& b)
          OldInfoList.Streamer(b);
          OldInfoList.Delete();
       }
+      fNClusterRange = 0;
       fDefaultEntryOffsetLen = 1000;
       ResetBit(kMustCleanup);
       b.CheckByteCount(R__s, R__c, TTree::IsA());
