@@ -447,6 +447,7 @@ TEventIterTree::TEventIterTree()
    fCacheSize = -1;
    fTreeCacheIsLearning = kTRUE;
    fUseParallelUnzip = 0;
+   fDontCacheFiles = kFALSE;
 }
 
 //______________________________________________________________________________
