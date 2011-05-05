@@ -55,7 +55,7 @@ protected:
    void                  GetPlaneVertices(Int_t iz, Int_t ivert, Double_t *vert) const;
    void                  GetPlaneNormal(const Double_t *vert, Double_t *norm) const;
    Bool_t                IsPointInsidePlane(Double_t *point, Double_t *vert, Double_t *norm) const;
-   Double_t              SafetyToSector(Double_t *point, Int_t iz, Double_t safmin);
+   Double_t              SafetyToSector(Double_t *point, Int_t iz, Double_t safmin, Bool_t in);
    void                  SetIz(Int_t iz) {fIz = iz;}
    void                  SetSeg(Int_t iseg) {fSeg = iseg;}
 

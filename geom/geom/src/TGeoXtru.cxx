@@ -865,7 +865,7 @@ void TGeoXtru::SetSegsAndPols(TBuffer3D &buff) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoXtru::SafetyToSector(Double_t *point, Int_t iz, Double_t safmin)
+Double_t TGeoXtru::SafetyToSector(Double_t *point, Int_t iz, Double_t safmin, Bool_t in)
 {
 // Compute safety to sector iz, returning also the closest segment index.
    Double_t safz = TGeoShape::Big();
@@ -880,7 +880,7 @@ Double_t TGeoXtru::SafetyToSector(Double_t *point, Int_t iz, Double_t safmin)
       SetCurrentVertices(fX0[iz], fY0[iz], fScale[iz]);
       saf1 = fPoly->Safety(point, iseg);
       in1 = fPoly->Contains(point);
-      if (!in1 && saf1>safmin) return TGeoShape::Big(); 
+//      if (!in1 && saf1>safmin) return TGeoShape::Big(); 
       SetCurrentVertices(fX0[iz+1], fY0[iz+1], fScale[iz+1]);
       saf2 = fPoly->Safety(point, iseg);
       in2 = fPoly->Contains(point);
@@ -904,19 +904,28 @@ Double_t TGeoXtru::SafetyToSector(Double_t *point, Int_t iz, Double_t safmin)
       } else {
          safz = saf1;
       }
-   }         
-   SetCurrentZ(point[2],iz);
-   saf1 = fPoly->Safety(point, iseg);
-   Double_t vert[12];
-   Double_t norm[3];
-   GetPlaneVertices(iz,iseg,vert);
-   GetPlaneNormal(vert, norm);
-   saf1 = saf1*TMath::Sqrt(1.-norm[2]*norm[2]);
-   if (fPoly->Contains(point)) saf1 = -saf1;
-   safe = TMath::Max(safz, saf1);
-   safe = TMath::Abs(safe);
-   if (safe>safmin) return TGeoShape::Big();
-   return safe;
+   }
+   
+   // loop segments
+   Bool_t found = kFALSE;
+   Double_t vert[12]; 
+   Double_t norm[3]; 
+//   printf("plane %d: safz=%f in=%d\n", iz, safz, in);
+   for (iseg=0; iseg<fNvert; iseg++) {
+      GetPlaneVertices(iz,iseg,vert);
+      GetPlaneNormal(vert, norm);
+      saf1 = (point[0]-vert[0])*norm[0]+(point[1]-vert[1])*norm[1]+(point[2]-vert[2])*norm[2];
+      if (in) saf1 = -saf1;
+//      printf("segment %d: (%f,%f)-(%f,%f) norm=(%f,%f,%f): saf1=%f\n", iseg, vert[0],vert[1],vert[3],vert[4],norm[0],norm[1],norm[2],saf1);
+      if (saf1<0) continue;
+      safe = TMath::Max(safz, saf1);
+      safe = TMath::Abs(safe);
+      if (safe>safmin) continue;
+      safmin = safe;
+      found = kTRUE;
+   }   
+   if (found) return safmin;
+   return TGeoShape::Big();
 }
 
 //_____________________________________________________________________________
@@ -933,11 +942,13 @@ Double_t TGeoXtru::Safety(Double_t *point, Bool_t in) const
    if (in) {
       safmin = TMath::Min(point[2]-fZ[0], fZ[fNz-1]-point[2]);
       for (iz=0; iz<fNz-1; iz++) {
-         safe = xtru->SafetyToSector(point, iz, safmin);
+         safe = xtru->SafetyToSector(point, iz, safmin, in);
          if (safe<safmin) safmin = safe;
       }
       return safmin;
    }
+   // Accurate safety is expensive, use the bounding box
+   if (!TGeoBBox::Contains(point)) return TGeoBBox::Safety(point,in);
    iz = TMath::BinarySearch(fNz, fZ, point[2]);
    if (iz<0) {
       iz = 0;
@@ -951,12 +962,12 @@ Double_t TGeoXtru::Safety(Double_t *point, Bool_t in) const
    // loop segments from iz up
    Int_t i;
    for (i=iz; i<fNz-1; i++) {
-      safe = xtru->SafetyToSector(point,i,safmin);
+      safe = xtru->SafetyToSector(point,i,safmin, in);
       if (safe<safmin) safmin=safe;
    }
    // loop segments from iz-1 down
-   for (i=iz-1; i>0; i--) {            
-      safe = xtru->SafetyToSector(point,i,safmin);
+   for (i=iz-1; i>=0; i--) {            
+      safe = xtru->SafetyToSector(point,i,safmin, in);
       if (safe<safmin) safmin=safe;
    }
    safe = TMath::Min(safmin, safz);
