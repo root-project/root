@@ -397,11 +397,32 @@ void TGeoParaboloid::SetSegsAndPols(TBuffer3D &buff) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoParaboloid::Safety(Double_t * /*point*/, Bool_t /*in*/) const
+Double_t TGeoParaboloid::Safety(Double_t *point, Bool_t in) const
 {
-// computes the closest distance from given point to this shape, according
-// to option. The matching point on the shape is stored in spoint.
-   return TGeoShape::Big();
+// Computes the closest distance from given point to this shape.
+   Double_t safz = fDz-TMath::Abs(point[2]);
+   if (!in) safz = -safz;
+   Double_t safr = TGeoShape::Big();
+   Double_t rsq = point[0]*point[0]+point[1]*point[1];
+   Double_t z0 = fA*rsq+fB;
+   Double_t r0sq = (point[2]-fB)/fA;
+   if (r0sq<0) {
+      if (in) return 0.;
+      return safz;
+   }   
+   Double_t dr = TMath::Sqrt(rsq)-TMath::Sqrt(r0sq);
+   if (in) {
+      if (dr>0) return 0.;
+      Double_t dz = TMath::Abs(point[2]-z0);
+      safr = -dr*dz/TMath::Sqrt(dr*dr+dz*dz);
+   } else {
+      if (dr<0) return safz;   
+      Double_t talf = -2.*fA*TMath::Sqrt(r0sq);
+      Double_t salf = talf/TMath::Sqrt(1.+talf*talf);
+      safr = TMath::Abs(dr*salf);
+   }
+   if (in) return TMath::Min(safr,safz);
+   return TMath::Max(safr,safz);
 }
 
 //_____________________________________________________________________________
