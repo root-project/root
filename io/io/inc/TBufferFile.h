@@ -109,6 +109,7 @@ public:
    virtual void       SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);
 
    virtual Version_t  ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, const TClass *cl = 0);
+   virtual Version_t  ReadVersionForMemberWise(const TClass *cl = 0);
    virtual UInt_t     WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
    virtual UInt_t     WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt = kFALSE);
 
