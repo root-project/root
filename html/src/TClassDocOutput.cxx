@@ -1504,9 +1504,19 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
       if (headerFileName.Length()) {
          TString link(viewCVSLink);
          TString sHeader(headerFileName);
-         if (GetHtml()->GetProductName() && !strcmp(GetHtml()->GetProductName(), "ROOT")
-             && sHeader.BeginsWith("include")) {
-            sHeader.Remove(0,7);
+         if (GetHtml()->GetProductName() && !strcmp(GetHtml()->GetProductName(), "ROOT")) {
+            Ssiz_t posInclude = sHeader.Index("/include/");
+            if (posInclude != kNPOS) {
+               // Cut off ".../include", i.e. keep leading '/'
+               sHeader.Remove(0, posInclude + 8);
+            } else {
+               // no /include/; maybe /inc?
+               posInclude = sHeader.Index("/inc/");
+               if (posInclude != kNPOS) {
+                  sHeader = "/";
+                  sHeader += sInclude;
+               }
+            }
             if (sourceFileName && strstr(sourceFileName, "src")) {
                TString src(sourceFileName);
                src.Remove(src.Index("src"), src.Length());
