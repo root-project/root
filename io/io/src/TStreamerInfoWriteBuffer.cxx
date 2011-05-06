@@ -658,7 +658,12 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                }
             } else {
                TClass *cl                 = fComp[i].fClass;
-               ((TStreamerInfo*)cl->GetStreamerInfo())->WriteBufferAux(b,arr,-1,narr,ioffset,arrayMode);
+               TStreamerInfo *binfo = ((TStreamerInfo*)cl->GetStreamerInfo());
+               if (!binfo->TestBit(kCannotOptimize) && binfo->IsCompiled()) { 
+                  binfo->SetBit(kCannotOptimize);
+                  binfo->Compile();
+               }
+               binfo->WriteBufferAux(b,arr,-1,narr,ioffset,arrayMode);
             }
             continue;
 
