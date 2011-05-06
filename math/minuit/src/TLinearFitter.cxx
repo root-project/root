@@ -346,6 +346,7 @@ TLinearFitter::TLinearFitter(const TLinearFitter& tlf) :
    fX(tlf.fX),
    fE(tlf.fE),
    fInputFunction(tlf.fInputFunction), 
+   fVal(),
    fNpoints(tlf.fNpoints),
    fNfunctions(tlf.fNfunctions),
    fFormulaSize(tlf.fFormulaSize),
@@ -2042,11 +2043,11 @@ Int_t TLinearFitter::EvalRobust(Double_t h)
 
    Int_t hdef=Int_t((fNpoints+fNfunctions+1)/2);
 
-   if (h<0.000001) fH = hdef;
-   else if (h>0 && h<1 && fNpoints*h > hdef)
+   if (h>0.000001 && h<1 && fNpoints*h > hdef)
       fH = Int_t(fNpoints*h);
    else {
-      Warning("Fitting:", "illegal value of H, default is taken");
+      // print message only when h is not zero
+      if (h>0) Warning("Fitting:", "illegal value of H, default is taken, h = %3.2f",double(hdef)/fNpoints);
       fH=hdef;
    }
 
