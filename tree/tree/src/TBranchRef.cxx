@@ -41,18 +41,17 @@
 ClassImp(TBranchRef)
 
 //______________________________________________________________________________
-TBranchRef::TBranchRef(): TBranch()
+TBranchRef::TBranchRef(): TBranch(), fRequestedEntry(-1), fRefTable(0)
 {
    // Default constructor.
 
-   fRefTable   = 0;
    fReadLeaves = (ReadLeaves_t)&TBranchRef::ReadLeavesImpl;
 }
 
 
 //______________________________________________________________________________
 TBranchRef::TBranchRef(TTree *tree)
-    :TBranch()
+    : TBranch(), fRequestedEntry(-1), fRefTable(0)
 {
    // Main constructor called by TTree::BranchRef.
 
@@ -127,12 +126,15 @@ Bool_t TBranchRef::Notify()
    if (!fRefTable) fRefTable = new TRefTable(this,100);
    UInt_t uid = fRefTable->GetUID();
    TProcessID* context = fRefTable->GetUIDContext();
-   GetEntry(fReadEntry);
+   if (fReadEntry != fRequestedEntry) {
+      // Load the RefTable if we need to.
+      GetEntry(fRequestedEntry);
+   }
    TBranch *branch = (TBranch*)fRefTable->GetParent(uid, context);
    if (branch) {
       // don't re-read, the user might have changed some object
-      if (branch->GetReadEntry() != fReadEntry)
-         branch->GetEntry(fReadEntry);
+      if (branch->GetReadEntry() != fRequestedEntry)
+         branch->GetEntry(fRequestedEntry);
    } else {
       //scan the TRefTable of possible friend Trees
       TList *friends = fTree->GetListOfFriends();
@@ -143,12 +145,14 @@ Bool_t TBranchRef::Notify()
          TTree *tree = elem->GetTree();
          TBranchRef *bref = tree->GetBranchRef();
          if (bref) {
-            bref->GetEntry(fReadEntry);
+            if (bref->GetReadEntry() != fRequestedEntry) {
+               bref->GetEntry(fRequestedEntry);
+            }
             branch = (TBranch*)bref->GetRefTable()->GetParent(uid, context);
             if (branch) {
                // don't re-read, the user might have changed some object
-               if (branch->GetReadEntry() != fReadEntry)
-                  branch->GetEntry(fReadEntry);
+               if (branch->GetReadEntry() != fRequestedEntry)
+                  branch->GetEntry(fRequestedEntry);
                return kTRUE;
             }
          }
