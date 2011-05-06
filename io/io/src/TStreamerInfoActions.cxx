@@ -345,8 +345,7 @@ namespace TStreamerInfoActions
          TClass *oldClass = config->fOldClass;   
 
          TClass *valueClass = oldClass->GetCollectionProxy()->GetValueClass();
-         UInt_t startDummy, countDummy;
-         Version_t vClVersion = buf.ReadVersion( &startDummy, &countDummy, valueClass );
+         Version_t vClVersion = buf.ReadVersionForMemberWise( valueClass );
 
          TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
          TVirtualCollectionProxy::TPushPop helper( oldProxy, (char*)addr );
@@ -408,8 +407,7 @@ namespace TStreamerInfoActions
          TClass *oldClass = config->fOldClass;   
 
          TClass *valueClass = oldClass->GetCollectionProxy()->GetValueClass();
-         UInt_t startDummy, countDummy;
-         Version_t vClVersion = buf.ReadVersion( &startDummy, &countDummy, valueClass );
+         Version_t vClVersion = buf.ReadVersionForMemberWise( valueClass );
 
          TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
          TActionSequence *actions = oldProxy->GetReadMemberWiseActions( vClVersion );
@@ -487,9 +485,7 @@ namespace TStreamerInfoActions
                vers, buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket", oldClass->GetName(), newClass->GetName() );
       } else {
 
-         UInt_t startDummy, countDummy;
-
-         Version_t vClVersion = buf.ReadVersion( &startDummy, &countDummy, oldClass->GetCollectionProxy()->GetValueClass() );
+         Version_t vClVersion = buf.ReadVersionForMemberWise( oldClass->GetCollectionProxy()->GetValueClass() );
 
          TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
          TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
@@ -533,9 +529,7 @@ namespace TStreamerInfoActions
                vers, buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket", oldClass->GetName(), newClass->GetName() );
       } else {
 
-         UInt_t startDummy, countDummy;
-
-         Version_t vClVersion = buf.ReadVersion( &startDummy, &countDummy, oldClass->GetCollectionProxy()->GetValueClass() );
+         Version_t vClVersion = buf.ReadVersionForMemberWise( oldClass->GetCollectionProxy()->GetValueClass() );
 
          TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
          TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();

@@ -2782,6 +2782,78 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
 }
 
 //______________________________________________________________________________
+Version_t TBufferFile::ReadVersionForMemberWise(const TClass *cl)
+{
+   // Read class version from I/O buffer ; to be used when streaming out
+   // memberwise streamed collection where we do not care (not save) about
+   // the byte count and can safely ignore missing streamerInfo (since they
+   // usually indicate empty collections).
+
+   Version_t version;
+
+   // not interested in byte count
+   frombuf(this->fBufCur,&version);
+
+   if (version<=1) {
+      if (version <= 0)  {
+         if (cl) {
+            if (cl->GetClassVersion() != 0) {
+               UInt_t checksum = 0;
+               frombuf(this->fBufCur,&checksum);
+               TStreamerInfo *vinfo = (TStreamerInfo*)cl->FindStreamerInfo(checksum);
+               if (vinfo) {
+                  return vinfo->TStreamerInfo::GetClassVersion(); // Try to get inlining.
+               } else {
+                  // There are some cases (for example when the buffer was stored outside of
+                  // a ROOT file) where we do not have a TStreamerInfo.  If the checksum is
+                  // the one from the current class, we can still assume that we can read
+                  // the data so let use it.
+                  if (checksum==cl->GetCheckSum() || checksum==cl->GetCheckSum(1)) {
+                     version = cl->GetClassVersion();
+                  } else {
+                     // If we can not find the streamerInfo this means that 
+                     // we do not actully need it (the collection is always empty
+                     // in this file), so no need to issue a warning.
+                     return 0;
+                  }
+               }
+            }
+         } else { // of if (cl) {
+            UInt_t checksum = 0;
+            frombuf(this->fBufCur,&checksum);            
+         }
+      }  else if (version == 1 && fParent && ((TFile*)fParent)->GetVersion()<40000 && cl && cl->GetClassVersion() != 0) {
+         // We could have a file created using a Foreign class before
+         // the introduction of the CheckSum.  We need to check
+         if ((!cl->IsLoaded() || cl->IsForeign()) &&
+            cl->GetStreamerInfos()->GetLast()>1 ) {
+
+            const TList *list = ((TFile*)fParent)->GetStreamerInfoCache();
+            const TStreamerInfo *local = (TStreamerInfo*)list->FindObject(cl->GetName());
+            if ( local )  {
+               UInt_t checksum = local->GetCheckSum();
+               TStreamerInfo *vinfo = (TStreamerInfo*)cl->FindStreamerInfo(checksum);
+               if (vinfo) {
+                  version = vinfo->GetClassVersion();
+               } else {
+                  // If we can not find the streamerInfo this means that 
+                  // we do not actully need it (the collection is always empty
+                  // in this file), so no need to issue a warning.
+                  return 0;
+               }
+            }
+            else  {
+               Error("ReadVersion", "Class %s not known to file %s.",
+                 cl->GetName(), ((TFile*)fParent)->GetName());
+               version = 0;
+            }
+         }
+      }
+   }
+   return version;
+}
+
+//______________________________________________________________________________
 UInt_t TBufferFile::WriteVersion(const TClass *cl, Bool_t useBcnt)
 {
    // Write class version to I/O buffer.
