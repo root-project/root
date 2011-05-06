@@ -36,7 +36,8 @@ PROOFPLAYERLIBDEPM     = $(PROOFLIB) $(HISTLIB) $(IOLIB) $(TREELIB) $(NETLIB) \
 PROOFDRAWLIBDEPM       = $(TREEPLAYERLIB) $(G3DLIB) $(GRAFLIB) $(GPADLIB) \
                          $(PROOFPLAYERLIB) $(HISTLIB) $(TREELIB) $(PROOFLIB)
 PROOFXLIBDEPM          = $(NETLIB) $(PROOFLIB) $(THREADLIB)
-PROOFBENCHLIBDEPM      = $(PROOFLIB) $(PROOFDRAWLIB) $(HISTLIB)
+PROOFBENCHLIBDEPM      = $(PROOFLIB) $(PROOFDRAWLIB) $(PROOFPLAYERLIB) \
+                         $(TREELIB) $(HISTLIB) $(GPADLIB) $(IOLIB)
 SESSIONVIEWERLIBDEPM   = $(PROOFLIB) $(GUILIB) $(HISTLIB) $(GPADLIB) $(GRAFLIB) \
                          $(TREELIB) $(MATHCORELIB)
 X3DLIBDEPM             = $(G3DLIB) $(GUILIB)
@@ -88,7 +89,7 @@ ROOSTATSLIBDEPM        = $(ROOFITLIB) $(ROOFITCORELIB) $(TREELIB) $(IOLIB) \
 HISTFACTORYLIBDEPM     = $(ROOFITLIB) $(ROOFITCORELIB) $(TREELIB) $(IOLIB) \
                          $(HISTLIB) $(MATRIXLIB) $(MATHCORELIB) $(MINUITLIB) \
                          $(FOAMLIB) $(GRAFLIB) $(GPADLIB) $(ROOSTATSLIB) \
-                         $(XMLPARSERLIB) 
+                         $(XMLPARSERLIB)
 ifeq ($(BUILDMATHMORE),yes)
 ROOFITLIBDEPM         += $(MATHMORELIB)
 ROOSTATSLIBDEPM       += $(MATHMORELIB)
@@ -277,7 +278,9 @@ PROOFDRAWLIBEXTRA       = lib/libTreePlayer.lib lib/libGraf3d.lib \
                           lib/libProofPlayer.lib lib/libHist.lib \
                           lib/libTree.lib lib/libProof.lib
 PROOFXLIBEXTRA          = lib/libNet.lib lib/libProof.lib lib/libThread.lib
-PROOFBENCHLIBEXTRA      = lib/libProof.lib lib/libProofDraw.lib lib/libHist.lib
+PROOFBENCHLIBEXTRA      = lib/libProof.lib lib/libProofDraw.lib \
+                          lib/libProofPlayer.lib lib/libTree.lib \
+                          lib/libHist.lib lib/libGpad.lib lib/libRIO.lib
 SESSIONVIEWERLIBEXTRA   = lib/libProof.lib lib/libGui.lib lib/libHist.lib \
                           lib/libGpad.lib lib/libGraf.lib lib/libTree.lib \
                           lib/libMathCore.lib
@@ -306,8 +309,8 @@ TMVALIBEXTRA            = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
 GENETICLIBEXTRA         = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libGraf.lib lib/libGpad.lib \
                           lib/libTreePlayer.lib lib/libMLP.lib \
-                          lib/libMinuit.lib lib/libMathCore.lib lib/libXMLIO.lib \
-                          lib/libTMVA.lib 
+                          lib/libMinuit.lib lib/libMathCore.lib \
+                          lib/libXMLIO.lib lib/libTMVA.lib
 SPLOTLIBEXTRA           = lib/libMatrix.lib lib/libHist.lib lib/libTree.lib \
                           lib/libTreePlayer.lib lib/libGraf3d.lib \
                           lib/libGraf.lib lib/libMathCore.lib
@@ -426,7 +429,8 @@ PROOFPLAYERLIBEXTRA     = -Llib -lProof -lHist -lTree -lRIO -lNet -lThread \
 PROOFDRAWLIBEXTRA       = -Llib -lTreePlayer -lGraf3d -lGraf -lGpad \
                           -lProofPlayer -lHist -lTree -lProof
 PROOFXLIBEXTRA          = -Llib -lNet -lProof -lThread
-PROOFBENCHLIBEXTRA      = -Llib -lProof -lProofDraw -lHist
+PROOFBENCHLIBEXTRA      = -Llib -lProof -lProofDraw -lProofPlayer -lTree \
+                          -lHist -lGpad -lRIO
 SESSIONVIEWERLIBEXTRA   = -Llib -lProof -lGui -lHist -lGpad -lGraf -lTree \
                           -lMathCore
 CLARENSLIBEXTRA         = -Llib -lMathCore
