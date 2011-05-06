@@ -316,6 +316,12 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    // initialize plugin manager early
    fPluginManager->LoadHandlersFromEnv(gEnv);
+#if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+   if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR) {
+      TEnv plugins(".plugins-ios");
+      fPluginManager->LoadHandlersFromEnv(&plugins);
+   }
+#endif
 
    TSystemDirectory *workdir = new TSystemDirectory("workdir", gSystem->WorkingDirectory());
 
@@ -461,7 +467,7 @@ TROOT::~TROOT()
       // Mark the object as invalid, so that we can veto some actions
       // (like autoloading) while we are in the destructor.
       SetBit(TObject::kInvalidObject);
-      
+
       // Turn-off the global mutex to avoid recreating mutexes that have
       // already been deleted during the destruction phase
       gGlobalMutex = 0;
@@ -479,29 +485,29 @@ TROOT::~TROOT()
 #endif
       fClosedObjects->Delete("slow"); // and closed files
       fFiles->Delete("slow");       // and files
-      SafeDelete(fFiles);    
+      SafeDelete(fFiles);
       fSecContexts->Delete("slow"); SafeDelete(fSecContexts); // and security contexts
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets
       fMappedFiles->Delete("slow");                     // and mapped files
       delete fUUIDs;
       TProcessID::Cleanup();                            // and list of ProcessIDs
       TSeqCollection *tl = fMappedFiles; fMappedFiles = 0; delete tl;
-      
-      SafeDelete(fClosedObjects); 
+
+      SafeDelete(fClosedObjects);
 
       fFunctions->Delete();  SafeDelete(fFunctions);   // etc..
       fColors->Delete();     SafeDelete(fColors);
       fStyles->Delete();     SafeDelete(fStyles);
       fGeometries->Delete(); SafeDelete(fGeometries);
       fBrowsers->Delete();   SafeDelete(fBrowsers);
-      
+
 #ifdef R__COMPLETE_MEM_TERMINATION
       if (gGuiFactory != gBatchGuiFactory) SafeDelete(gGuiFactory);
       SafeDelete(gBatchGuiFactory);
       if (gGXBatch != gVirtualX) SafeDelete(gGXBatch);
       SafeDelete(gVirtualX);
 #endif
-      
+
       // Stop emitting signals
       TQObject::BlockAllSignals(kTRUE);
 
@@ -617,7 +623,7 @@ namespace {
             // (which is done in TFile::Close).   We can also can not
             // just move to the next iterator since the Close might
             // also (indirectly) remove that file.
-            // So we SetObject to a harmless value, so that 'dir' 
+            // So we SetObject to a harmless value, so that 'dir'
             // is not seen as part of the list.
             // We will later, remove all the object (see files->Clear()
             cursor->SetObject(&harmless); // this must not be zero otherwise things go wrong.
@@ -660,7 +666,7 @@ void TROOT::CloseFiles()
             // (which is done in TFile::Close).   We can also can not
             // just move to the next iterator since the Close might
             // also (indirectly) remove that file.
-            // So we SetObject to a harmless value, so that 'dir' 
+            // So we SetObject to a harmless value, so that 'dir'
             // is not seen as part of the list.
             // We will later, remove all the object (see files->Clear()
             cursor->SetObject(&harmless); // this must not be zero otherwise things go wrong.
@@ -683,7 +689,7 @@ void TROOT::CloseFiles()
                } else {
                   notclosed.AddLast(socket);
                }
-               gInterpreter->CallFunc_Delete(otherCloser);            
+               gInterpreter->CallFunc_Delete(otherCloser);
                // Put it back
                cursor->SetObject(socket);
             }
@@ -869,9 +875,9 @@ TObject *TROOT::FindObjectAnyFile(const char *name) const
    TDirectory *d;
    TIter next(GetListOfFiles());
    while ((d = (TDirectory*)next())) {
-      // Call explicitly TDirectory::FindObject to restrict the search to the 
+      // Call explicitly TDirectory::FindObject to restrict the search to the
       // arlready in memory object.
-      TObject *obj = d->TDirectory::FindObject(name); 
+      TObject *obj = d->TDirectory::FindObject(name);
       if (obj) return obj;
    }
    return 0;
