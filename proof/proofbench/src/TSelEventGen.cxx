@@ -366,17 +366,21 @@ Bool_t TSelEventGen::Process(Long64_t entry)
          TTree* t = (TTree *) f->Get("EventTree");
          if (t) {
             Long64_t entries_file=t->GetEntries();
-            if (entries_file == neventstogenerate){
+            if (entries_file == neventstogenerate) {
                //file size seems to be correct, skip generation
                Info("Process", "Bench file (%s, entries=%lld) exists:"
                                " skipping generation.", fi->GetFirstUrl()->GetFile(),
                                entries_file);
                neventstogenerate -= entries_file;
-               if (fFilesGenerated){
-                  fFilesGenerated->Add(fi);
+               if (fFilesGenerated) {
+                  // Set file size and mark it staged 
                   fi->SetSize(f->GetSize());
-                  TFileInfoMeta fimeta = TFileInfoMeta("/EventTree", "TTree", entries_file);
+                  fi->SetBit(TFileInfo::kStaged);
+                  // Add meta data to the file
+                  TFileInfoMeta* fimeta = new TFileInfoMeta("/EventTree", "TTree", entries_file);
                   fi->AddMetaData(fimeta);
+                  // Add the fileinfo to the list
+                  fFilesGenerated->Add(fi);
                   filefound = kTRUE;
                }
             }
@@ -386,10 +390,23 @@ Bool_t TSelEventGen::Process(Long64_t entry)
       SafeDelete(f);
    }
 
-   if (!filefound){
+   if (!filefound) {
       gRandom->SetSeed(static_cast<UInt_t>(TMath::Hash(seed)));
-      neventstogenerate -= GenerateFiles(filename, neventstogenerate);
-      if (fFilesGenerated) fFilesGenerated->Add(fi);
+      Long64_t entries_file = GenerateFiles(filename, neventstogenerate);
+      neventstogenerate -= entries_file;
+
+      TFile *f = TFile::Open(filename);
+      if (f && !f->IsZombie()) {
+         // Set file size and mark it staged 
+         fi->SetSize(f->GetSize());
+         fi->SetBit(TFileInfo::kStaged);
+         f->Close();
+         // Add meta data to the file
+         TFileInfoMeta* fimeta = new TFileInfoMeta("/EventTree", "TTree", entries_file);
+         fi->AddMetaData(fimeta);
+         if (fFilesGenerated) fFilesGenerated->Add(fi);
+      }
+      SafeDelete(f);
    }
 
    return kTRUE;

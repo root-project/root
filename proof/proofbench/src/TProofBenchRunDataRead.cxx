@@ -371,56 +371,6 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
             fCPerfProfiles->cd(npad + 3);
             fNorm_queryresult_IO->Draw();
             gPad->Update();
-
-            // Save output histos 
-            if (debug && fSelName == kPROOF_BenchSelDataDef) {
-               TString ptdist_name = "pt_dist";
-               TH1 *h = dynamic_cast<TH1 *>(l->FindObject(ptdist_name.Data()));
-               if (h) {
-                  TH1 *hnew = (TH1*)h->Clone("hnew");
-                  hnew->SetDirectory(fDirProofBench);
-                  TString hname = TString::Format("%s_%s_%dwrks%dthtry", h->GetName(), GetName(), nactive, j);
-                  hnew->SetName(hname);
-                  if (fDirProofBench->IsWritable()) {
-                     TDirectory *curdir = gDirectory;
-                     TString dirn = nx ? "RunDataReadx" : "RunDataRead";
-                     if (!fDirProofBench->GetDirectory(dirn))
-                        fDirProofBench->mkdir(dirn, "RunDataRead results");
-                     if (fDirProofBench->cd(dirn)) {
-                        hnew->Write();
-                     } else {
-                        Warning("Run", "cannot cd to subdirectory '%s' to store the results!", dirn.Data());
-                     }
-                     curdir->cd();
-                  }
-
-               } else {
-                  Error("Run", "histogram %s not found", ptdist_name.Data());
-               }
-
-               TString tracksdist_name = "ntracks_dist";
-               TH1* h2 = dynamic_cast<TH1*>(l->FindObject(tracksdist_name.Data()));
-               if (h2) {
-                  TH1 *hnew = (TH1*)h2->Clone("hnew");
-                  hnew->SetDirectory(fDirProofBench);
-                  TString hname = TString::Format("%s_%s_%dwrks%dthtry", h2->GetName(), GetName(), nactive, j);
-                  hnew->SetName(hname);
-                  if (fDirProofBench->IsWritable()) {
-                     TDirectory *curdir = gDirectory;
-                     TString dirn = nx ? "RunDataReadx" : "RunDataRead";
-                     if (!fDirProofBench->GetDirectory(dirn))
-                        fDirProofBench->mkdir(dirn, "RunDataRead results");
-                     if (fDirProofBench->cd(dirn)) {
-                        hnew->Write();
-                     } else {
-                        Warning("Run", "cannot cd to subdirectory '%s' to store the results!", dirn.Data());
-                     }
-                     curdir->cd();
-                  }
-               } else {
-                  Error("Run", "histogram %s not found", tracksdist_name.Data());
-               }
-            }
          }
          fCPerfProfiles->cd(0); 
       }

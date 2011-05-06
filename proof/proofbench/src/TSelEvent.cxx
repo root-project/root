@@ -172,24 +172,18 @@ void TSelEvent::SlaveBegin(TTree *tree)
                             fDebug);
    }
 
-   if (fDebug){
-      fPtHist = new TH1F("pt_dist","p_{T} Distribution", 100, 0, 5);
-      fPtHist->SetDirectory(0);
-      fPtHist->GetXaxis()->SetTitle("p_{T}");
-      fPtHist->GetYaxis()->SetTitle("dN/p_{T}dp_{T}");
+   fPtHist = new TH1F("pt_dist","p_{T} Distribution", 100, 0, 5);
+   fPtHist->SetDirectory(0);
+   fPtHist->GetXaxis()->SetTitle("p_{T}");
+   fPtHist->GetYaxis()->SetTitle("dN/p_{T}dp_{T}");
    
-      fOutput->Add(fPtHist);
-   
-      fNTracksHist = new TH1F("ntracks_dist","N_{Tracks} per Event"
-                              " Distribution", 100, 50, 150);
-      //enable rebinning
-      fNTracksHist->SetBit(TH1::kCanRebin);
-      fNTracksHist->SetDirectory(0);
-      fNTracksHist->GetXaxis()->SetTitle("N_{Tracks}");
-      fNTracksHist->GetYaxis()->SetTitle("N_{Events}");
-   
-      fOutput->Add(fNTracksHist);
-   }
+   fNTracksHist = new TH1F("ntracks_dist","N_{Tracks} per Event"
+                           " Distribution", 100, 50, 150);
+   //enable rebinning
+   fNTracksHist->SetBit(TH1::kCanRebin);
+   fNTracksHist->SetDirectory(0);
+   fNTracksHist->GetXaxis()->SetTitle("N_{Tracks}");
+   fNTracksHist->GetYaxis()->SetTitle("N_{Events}");
 }
 
 //______________________________________________________________________________
@@ -218,14 +212,11 @@ Bool_t TSelEvent::Process(Long64_t entry)
          case TPBReadType::kReadFull:
             // Full read
             fChain->GetTree()->GetEntry(entry);
-            if (fDebug){
-               //printf("fNtrack=%d\n", fNtrack);
-               fNTracksHist->Fill(fNtrack);
+            fNTracksHist->Fill(fNtrack);
       
-               for(Int_t j=0;j<fTracks->GetEntries();j++){
-                  Track* curtrack = dynamic_cast<Track*>(fTracks->At(j));
-                  fPtHist->Fill(curtrack->GetPt(),1./curtrack->GetPt());
-               }
+            for(Int_t j=0;j<fTracks->GetEntries();j++){
+               Track* curtrack = dynamic_cast<Track*>(fTracks->At(j));
+               fPtHist->Fill(curtrack->GetPt(),1./curtrack->GetPt());
             }
             fTracks->Clear("C");
             break;
@@ -233,18 +224,13 @@ Bool_t TSelEvent::Process(Long64_t entry)
             // Partial read
             b_event_fNtrack->GetEntry(entry);
       
-            if (fDebug){
-               //printf("fNtrack=%d\n", fNtrack);
-               fNTracksHist->Fill(fNtrack);
-            }
+            fNTracksHist->Fill(fNtrack);
          
             if (fNtrack>0) {
                b_fTracks->GetEntry(entry);
-               if (fDebug){
-                  for(Int_t j=0;j<fTracks->GetEntries();j++){
+               for(Int_t j=0;j<fTracks->GetEntries();j++){
                   Track* curtrack = dynamic_cast<Track*>(fTracks->At(j));
                   fPtHist->Fill(curtrack->GetPt(),1./curtrack->GetPt());
-                  }
                }
                fTracks->Clear("C");
             }
