@@ -177,17 +177,16 @@ namespace {
          if ( klass != 0 )
             TClass::RemoveClass( (TClass*)klass );
 
-      // load base class std::exception if not yet done so, and refresh
-         if ( gSTLTypes.find( "exception" ) != gSTLTypes.end() ) {
-            gROOT->ProcessLine( "#include <exception>" );
-            TClass::RemoveClass( TClass::GetClass( "std::exception" ) );
-            gSTLTypes.erase( gSTLTypes.find( "exception" ) );
-            gSTLTypes.erase( gSTLTypes.find( "std::exception" ) );
-         }
-
       // load stdexcept, which contains all std exceptions
          gROOT->ProcessLine( "#include <stdexcept>" );
          gSTLExceptions.clear();   // completely done with std exceptions
+
+      // <stdexcept> will load <exception> for the std::exception base class
+         std::set< std::string >::iterator excpos = gSTLTypes.find( "exception" );
+         if ( excpos != gSTLTypes.end() ) {
+            gSTLTypes.erase( excpos );
+            gSTLTypes.erase( gSTLTypes.find( "std::exception" ) );
+         }
 
          return kTRUE;
       }
@@ -490,7 +489,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
 // retrieve ROOT class (this verifies name)
    const std::string& lookup = scope ? (scName+"::"+name) : name;
    T klass = T::ByName( lookup );
-   if ( ! (bool)klass || ( (bool)klass && klass.FunctionMemberSize() == 0 ) ) {
+   if ( ! (bool)klass || klass.FunctionMemberSize() == 0 ) {
    // special action for STL classes to enforce loading dict lib
       LoadDictionaryForSTLType( name, klass.Id() );
 

@@ -110,7 +110,7 @@ public:
    operator bool() const;
 
 public:
-   static TScopeAdapter ByName( const std::string & name );
+   static TScopeAdapter ByName( const std::string& name, bool quiet = true );
 
 public:
    std::string Name( unsigned int mod = 0 ) const;

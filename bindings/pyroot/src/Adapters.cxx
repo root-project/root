@@ -236,10 +236,16 @@ PyROOT::TScopeAdapter::TScopeAdapter( const TMemberAdapter& mb ) :
 }
 
 //____________________________________________________________________________
-PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string & name )
+PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string & name, bool quiet )
 {
 // lookup a scope (class) by name
-   return TClass::GetClass( name.c_str() );
+   Int_t oldEIL = gErrorIgnoreLevel;
+   if ( quiet )
+      gErrorIgnoreLevel = 3000;
+   TClass* klass = TClass::GetClass( name.c_str() );
+   gErrorIgnoreLevel = oldEIL;
+
+   return klass;
 }
 
 //____________________________________________________________________________
