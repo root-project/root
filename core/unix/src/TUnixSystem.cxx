@@ -440,7 +440,6 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
             ::SysError("TUnixSystem::DylibAdded", "error getting realpath of %s", gSystem->BaseName(lib));
       } else {
          TString rs = gSystem->DirName(respath);
-         rs.ReplaceAll(" ", "\\ ");
          gSystem->Setenv("ROOTSYS", rs);
       }
    }
