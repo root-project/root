@@ -474,6 +474,7 @@ MAKECINTDLL   := $(ROOT_SRCDIR)/build/unix/makecintdll.sh
 MAKECHANGELOG := $(ROOT_SRCDIR)/build/unix/makechangelog.sh
 MAKEHTML      := $(ROOT_SRCDIR)/build/unix/makehtml.sh
 MAKELOGHTML   := $(ROOT_SRCDIR)/build/unix/makeloghtml.sh
+MAKEPLUGINS   := $(ROOT_SRCDIR)/build/unix/makeplugins-ios.sh
 MAKERELNOTES  := $(ROOT_SRCDIR)/build/unix/makereleasenotes.sh
 STATICOBJLIST := $(ROOT_SRCDIR)/build/unix/staticobjectlist.sh
 MAKESTATICLIB := $(ROOT_SRCDIR)/build/unix/makestaticlib.sh
@@ -649,7 +650,7 @@ endif
                 clean distclean maintainer-clean compiledata \
                 version html changelog install uninstall showbuild \
                 releasenotes staticlib static map debian redhat skip postbin \
-                showit help runtimedirs
+                showit help runtimedirs plugins-ios
 
 ifneq ($(findstring map, $(MAKECMDGOALS)),)
 .NOTPARALLEL:
@@ -1013,6 +1014,9 @@ $(ROOTA) $(PROOFSERVA): $(ROOTALIB) $(MAKESTATIC) $(STATICOBJLIST)
 
 $(ROOTALIB): $(ALLLIBS) $(MAKESTATICLIB) $(STATICOBJLIST)
 	@$(MAKESTATICLIB) $(STATICOBJLIST)
+
+plugins-ios: $(ROOTEXE)
+	@$(MAKEPLUGINS)
 
 changelog:
 	@$(MAKECHANGELOG)
