@@ -170,12 +170,13 @@ public:
 // Class describing a UNIX connection
 //
 class rpdunix : public rpdtcp {
-private:
+protected:
    std::string     sockpath;  // Socket path
 public:
    rpdunix(int d = -1) : rpdtcp(d) { }
    rpdunix(const char *path);
    virtual ~rpdunix() { rpdtcp::close(); }
+   const char *path() const { return sockpath.c_str(); }
 };
 
 //

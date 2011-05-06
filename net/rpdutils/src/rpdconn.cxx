@@ -339,7 +339,6 @@ int rpdconn::senddesc(int desc)
          msg.msg_iov     = iov;
          msg.msg_iovlen  = 1;
          // Send it over
-         printf("Sending descriptor %d\n", desc);
          if (sendmsg(wrfd, &msg, 0) < 0)
             return -errno;
          // We can close the descriptor in this process
@@ -416,8 +415,6 @@ int rpdconn::recvdesc(int &desc)
          else
             desc = -1;          // descriptor was not passed
 #endif
-         // We got the descriptor
-         printf("Received descriptor %d\n", desc);
          // Done
          return 0;
       }
@@ -697,6 +694,9 @@ rpdunixsrv::rpdunixsrv(const char *path, int backlog) : rpdunix()
    // Set descriptors
    setdescriptors(fd, fd);
 
+   // Save the path
+   sockpath = path;
+   
    // Done
    return;
 }
@@ -777,17 +777,6 @@ void rpdmsg::w_double(double d)
    if (cur < 0) cur = 0;
 }
 
-#if 0
-//______________________________________________________________________________
-void rpdmsg::w_string(const std::string &s)
-{
-   // Add string 's' to the internal buffer
-
-   if (!buf.empty()) buf += " ";
-   buf += s;
-   if (cur < 0) cur = 0;
-}
-#else
 //______________________________________________________________________________
 void rpdmsg::w_string(const std::string &s)
 {
@@ -799,7 +788,6 @@ void rpdmsg::w_string(const std::string &s)
    buf += "'";
    if (cur < 0) cur = 0;
 }
-#endif
 
 //______________________________________________________________________________
 void rpdmsg::r_int(int &i)
@@ -843,31 +831,6 @@ void rpdmsg::r_double(double &d)
    }
 }
 
-#if 0
-//______________________________________________________________________________
-void rpdmsg::r_string(std::string &s)
-{
-   // Retrieve a string from the internal buffer
-
-   if (cur < 0 || cur > (int) buf.length()) return;
-
-   char *np = 0;
-   char *p = ((char *)buf.c_str()) + cur;
-   while ((*p == ' ')) p++;
-   sscanf(p, "%as", &np);
-   s = np;
-   free(np);
-   p += s.length();
-   if (*p) while ((*p == ' ')) p++;
-   
-   // Update pointer
-   if (*p) {
-      cur = (int) (p - (char *)buf.c_str());
-   } else {
-      cur = (int) buf.length();
-   }
-}
-#else
 //______________________________________________________________________________
 void rpdmsg::r_string(std::string &s)
 {
@@ -897,5 +860,4 @@ void rpdmsg::r_string(std::string &s)
       cur = (int) buf.length();
    }
 }
-#endif
 
