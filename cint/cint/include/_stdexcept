@@ -9,7 +9,7 @@
 
 #ifndef G__STDEXCEPT_DLL
 #pragma include_noerr <stdexcept.dll>
-//#include <exception>
+#include <exception>
 //#include <string>
 #endif
 
