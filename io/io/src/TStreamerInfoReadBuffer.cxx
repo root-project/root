@@ -1161,10 +1161,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                      continue;
                   }
 
-                  UInt_t startDummy, countDummy;
                   Version_t vClVersion = 0; // For vers less than 9, we have to use the current version.
                   if( vers >= 9 ) {
-                     vClVersion = b.ReadVersion( &startDummy, &countDummy, cle->GetCollectionProxy()->GetValueClass() );
+                     vClVersion = b.ReadVersionForMemberWise( cle->GetCollectionProxy()->GetValueClass() );
                   }
 
                   TVirtualCollectionProxy *newProxy = (newClass ? newClass->GetCollectionProxy() : 0);
@@ -1251,10 +1250,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   }
                   TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
                   TClass *valueClass = oldProxy ? oldProxy->GetValueClass() : 0;
-                  UInt_t startDummy, countDummy;
                   Version_t vClVersion = 0; // For vers less than 8, we have to use the current version.
                   if( vers >= 8 ) {
-                     vClVersion = b.ReadVersion( &startDummy, &countDummy, valueClass );
+                     vClVersion = b.ReadVersionForMemberWise( valueClass );
                   }
 
                   if (valueClass == 0) {
