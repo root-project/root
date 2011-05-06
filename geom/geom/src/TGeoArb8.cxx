@@ -527,9 +527,12 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
          ((TGeoArb8*)this)->ComputeNormal(point,dirp,norm);
          ndotd = dir[0]*norm[0]+dir[1]*norm[1]+dir[2]*norm[2];
          if (!in) ndotd*=-1.;
-         if (ndotd>0) s = TMath::Max(0.,s);
-         else         s = TGeoShape::Big();
-         return s;
+         if (ndotd>0) {
+            s = TMath::Max(0.,s);
+            zi = (point[0]-xs1)*(point[0]-xs2)+(point[1]-ys1)*(point[1]-ys2);
+            if (zi<=0) return s;
+         }   
+         return TGeoShape::Big();
       }
       if (s<0) return TGeoShape::Big();
    } else {      
