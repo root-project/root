@@ -23,6 +23,7 @@
 #include "TSelHandleDataSet.h"
 
 #include "TDSet.h"
+#include "TEnv.h"
 #include "TFile.h"
 #include "TMap.h"
 #include "TParameter.h"
@@ -77,7 +78,7 @@ void TSelHandleDataSet::ReleaseCache(const char *fn)
    TString filename(fn);
    Int_t fd;
    fd = open(filename.Data(), O_RDONLY);
-   if (fd) {
+   if (fd > -1) {
       fdatasync(fd);
       posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED);
       close(fd);
@@ -181,18 +182,36 @@ Bool_t TSelHandleDataSet::Process(Long64_t entry)
       }
    }
 
+   // Resolve the file type; this also adjusts names for Xrd based systems
+   TString fname(fCurrent->GetName());
+   TString lfname = gEnv->GetValue("Path.Localroot", "");
+   TFile::EFileType type = TFile::GetType(fname, "", &lfname);
+   TString fproto = TUrl(fname).GetProtocol();
+   if (type == TFile::kLocal && fproto != "root" && fproto != "xrd")
+      lfname = TUrl(fname).GetFileAndOptions();
+
    if (fType->GetType() == TPBHandleDSType::kReleaseCache) {
       // Release the file cache
-      ReleaseCache(TUrl(fCurrent->GetName()).GetFile());
+      if (type == TFile::kLocal) {
+         ReleaseCache(lfname);
+      } else {
+         Error("Process",
+               "attempt to call ReleaseCache for a non-local file: '%s'", fname.Data());
+      }
    } else if (fType->GetType() == TPBHandleDSType::kCheckCache) {
       // Check the file cache
-      CheckCache(TUrl(fCurrent->GetName()).GetFile());
+      if (type == TFile::kLocal) {
+         CheckCache(lfname);
+      } else {
+         Error("Process",
+               "attempt to call CheckCache for a non-local file: '%s'", fname.Data());
+      }
    } else if (fType->GetType() == TPBHandleDSType::kRemoveFiles) {
       // Remove the file
-      RemoveFile(fCurrent->GetName());     
+      RemoveFile(fname);     
    } else if (fType->GetType() == TPBHandleDSType::kCopyFiles) {
       // Copy file
-      CopyFile(fCurrent->GetName());     
+      CopyFile(fname);     
    } else {
       // Type unknown
       Warning("Process", "type: %d is unknown", fType->GetType());     
