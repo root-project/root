@@ -88,33 +88,37 @@ static void ReadPutEnvs(const char *envfile)
 }
 
 //______________________________________________________________________________
-static FILE *RedirectOutput(const char *logfile, const char *loc)
+static FILE *RedirectOutput(const char *logfile, const char *loc, Int_t donotredir)
 {
    // Redirect stdout to 'logfile'. This log file will be flushed to the
    // client or master after each command.
+   // If donotredir != 0 just reopen the file for usage in TProofServ (already redirected).
    // On success return a pointer to the open log file. Return 0 on failure.
 
    if (loc)
-      fprintf(stderr,"%s: RedirectOutput: enter: %s\n", loc, logfile);
+      fprintf(stderr, "%s: RedirectOutput: enter: %s (do-not-redir: %d)\n",
+                      loc, logfile, donotredir);
 
-   if (!logfile || strlen(logfile) <= 0) {
-      fprintf(stderr,"%s: RedirectOutput: logfile path undefined\n", loc);
-      return 0;
-   }
+   if (donotredir == 0) {
+      if (!logfile || strlen(logfile) <= 0) {
+         fprintf(stderr,"%s: RedirectOutput: logfile path undefined\n", loc);
+         return 0;
+      }
 
-   if (loc)
-      fprintf(stderr,"%s: RedirectOutput: reopen %s\n", loc, logfile);
-   FILE *flog = freopen(logfile, "a", stdout);
-   if (!flog) {
-      fprintf(stderr,"%s: RedirectOutput: could not freopen stdout\n", loc);
-      return 0;
-   }
+      if (loc)
+         fprintf(stderr,"%s: RedirectOutput: reopen %s\n", loc, logfile);
+      FILE *flog = freopen(logfile, "a", stdout);
+      if (!flog) {
+         fprintf(stderr,"%s: RedirectOutput: could not freopen stdout\n", loc);
+         return 0;
+      }
 
-   if (loc)
-      fprintf(stderr,"%s: RedirectOutput: dup2 ...\n", loc);
-   if ((dup2(fileno(stdout), fileno(stderr))) < 0) {
-      fprintf(stderr,"%s: RedirectOutput: could not redirect stderr\n", loc);
-      return 0;
+      if (loc)
+         fprintf(stderr,"%s: RedirectOutput: dup2 ...\n", loc);
+      if ((dup2(fileno(stdout), fileno(stderr))) < 0) {
+         fprintf(stderr,"%s: RedirectOutput: could not redirect stderr\n", loc);
+         return 0;
+      }
    }
 
    if (loc)
@@ -241,11 +245,17 @@ int main(int argc, char **argv)
    FILE *fLog = 0;
    const char *loc = 0;
    const char *logfile = gSystem->Getenv("ROOTPROOFLOGFILE");
-   if (logfile && !gSystem->Getenv("ROOTPROOFDONOTREDIR")) {
+   Int_t donotredir = 0;
+   if (gSystem->Getenv("ROOTPROOFDONOTREDIR")) {
+      donotredir++;
+      TString anr(gSystem->Getenv("ROOTPROOFDONOTREDIR"));
+      if (anr.IsDigit()) donotredir = anr.Atoi();
+   }
+   if (logfile && donotredir != 1) {
       loc = (gLogLevel > 0) ? argv[1] : 0;
       if (gLogLevel > 0)
          fprintf(stderr,"%s: redirecting output to %s\n", argv[1], logfile);
-      if (!(fLog = RedirectOutput(logfile, loc))) {
+      if (!(fLog = RedirectOutput(logfile, loc, donotredir))) {
          fprintf(stderr,"%s: problems redirecting output to file %s\n", argv[1], logfile);
          exit(1);
       }
