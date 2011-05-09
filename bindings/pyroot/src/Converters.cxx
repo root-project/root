@@ -203,7 +203,7 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
       para.fl = (Long_t)&((PyIntObject*)pyobject)->ob_ival;
       if ( func ) {
          G__value v;
-         G__setnull(&v);
+         G__setnull( &v );
          v.ref = (long)&((PyIntObject*)pyobject)->ob_ival;
          G__letint( &v, 'i', para.fl );
          func->SetArg( v );
@@ -221,7 +221,7 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
    int buflen = Utility::GetBuffer( pyobject, 'i', sizeof(int), para.fv );
    if ( para.fv && buflen && func ) {
       G__value v;
-      G__setnull(&v);
+      G__setnull( &v );
       v.ref = (long)para.fv;
       G__letint( &v, 'i', para.fl );
       func->SetArg( v );
@@ -742,14 +742,19 @@ Bool_t PyROOT::T##name##Converter::SetArg(                                    \
    if ( PyROOT_PyUnicode_Check( pyobject ) ) {                                \
       fBuffer = PyROOT_PyUnicode_AsString( pyobject );                        \
       para.fv = &fBuffer;                                                     \
-      if ( func )                                                             \
-         func->SetArg( para.fl );                                             \
+      if ( func ) {                                                           \
+         G__value v;                                                          \
+         G__setnull( &v );                                                    \
+         v.ref = para.fl;                                                     \
+         G__letint( &v, 'u', para.fl );                                       \
+         G__set_tagnum( &v, ((G__ClassInfo*)fClass->GetClassInfo())->Tagnum() ); \
+         func->SetArg( v );                                                   \
+      }                                                                       \
       return kTRUE;                                                           \
    }                                                                          \
                                                                               \
    if ( ! ( PyInt_Check( pyobject ) || PyLong_Check( pyobject ) ) )           \
       return TRootObjectConverter::SetArg( pyobject, para, func, user );      \
-                                                                              \
    return kFALSE;                                                             \
 }                                                                             \
                                                                               \

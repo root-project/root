@@ -884,55 +884,76 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
    return ! PyObject_RichCompareBool( one, other, Py_EQ );
 }
 #endif
-#define PYROOT_IMPLEMENT_STRING_PYTHONIZATION( name, func )                   \
+#define PYROOT_IMPLEMENT_STRING_PYTHONIZATION( type, name, func )             \
+   inline PyObject* name##GetData( PyObject* self ) {                         \
+      if ( PyROOT::ObjectProxy_Check( self ) ) {                              \
+         type* obj = ((type*)((ObjectProxy*)self)->GetObject());              \
+         if ( obj ) {                                                         \
+            return PyROOT_PyUnicode_FromString( obj->func() );                \
+         } else {                                                             \
+            return ObjectProxy_Type.tp_str( self );                           \
+         }                                                                    \
+      }                                                                       \
+      PyErr_Format( PyExc_TypeError, "object mismatch (%s expected)", #type );\
+      return 0;                                                               \
+   }                                                                          \
+                                                                              \
    PyObject* name##StringRepr( PyObject* self )                               \
    {                                                                          \
-      PyObject* data = CallPyObjMethod( self, #func );                        \
-      PyObject* repr = PyROOT_PyUnicode_FromFormat( "\'%s\'", PyROOT_PyUnicode_AsString( data ) ); \
-      Py_DECREF( data );                                                      \
-      return repr;                                                            \
+      PyObject* data = name##GetData( self );                                 \
+      if ( data ) {                                                           \
+         PyObject* repr = PyROOT_PyUnicode_FromFormat( "\'%s\'", PyROOT_PyUnicode_AsString( data ) ); \
+         Py_DECREF( data );                                                   \
+         return repr;                                                         \
+      }                                                                       \
+      return 0;                                                               \
    }                                                                          \
                                                                               \
    PyObject* name##StringIsEqual( PyObject* self, PyObject* obj )             \
    {                                                                          \
-      PyObject* data = CallPyObjMethod( self, #func );                        \
-      PyObject* result = PyObject_RichCompare( data, obj, Py_EQ );            \
-      Py_DECREF( data );                                                      \
-      if ( ! result )                                                         \
-         return 0;                                                            \
-      return result;                                                          \
+      PyObject* data = name##GetData( self );                                 \
+      if ( data ) {                                                           \
+         PyObject* result = PyObject_RichCompare( data, obj, Py_EQ );         \
+         Py_DECREF( data );                                                   \
+         return result;                                                       \
+      }                                                                       \
+      return 0;                                                               \
    }                                                                          \
                                                                               \
    PyObject* name##StringIsNotEqual( PyObject* self, PyObject* obj )          \
    {                                                                          \
-      PyObject* data = CallPyObjMethod( self, #func );                        \
-      PyObject* result = PyObject_RichCompare( data, obj, Py_NE );            \
-      Py_DECREF( data );                                                      \
-      if ( ! result )                                                         \
-         return 0;                                                            \
-      return result;                                                          \
+      PyObject* data = name##GetData( self );                                 \
+      if ( data ) {                                                           \
+         PyObject* result = PyObject_RichCompare( data, obj, Py_NE );         \
+         Py_DECREF( data );                                                   \
+         return result;                                                       \
+      }                                                                       \
+      return 0;                                                               \
    }
 
    // Only define StlStringCompare:
    // TStringCompare is unused and generates a warning;
-#define PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( name, func )               \
+#define PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( type, name, func )         \
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( type, name, func )                  \
    PyObject* name##StringCompare( PyObject* self, PyObject* obj )             \
    {                                                                          \
-      PyObject* data = CallPyObjMethod( self, #func );                        \
-      int result = PyObject_Compare( data, obj );                             \
-      Py_DECREF( data );                                                      \
+      PyObject* data = name##GetData( self );                                 \
+      int result = 0;                                                         \
+      if ( data ) {                                                           \
+         result = PyObject_Compare( data, obj );                              \
+         Py_DECREF( data );                                                   \
+      }                                                                       \
       if ( PyErr_Occurred() )                                                 \
          return 0;                                                            \
       return PyInt_FromLong( result );                                        \
-   }                                                                          \
-                                                                              \
-   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( name, func )
-   PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( Stl, c_str )
-   PYROOT_IMPLEMENT_STRING_PYTHONIZATION(   T, Data )
+   }
+
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( std::string, Stl, c_str )
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( TString,  T, Data )
 
 
 //- TObjString behavior --------------------------------------------------------
-   PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( TObj, GetName )
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( TObjString, TObj, GetName )
 
 //____________________________________________________________________________
    PyObject* TObjStringLength( PyObject* self )

@@ -632,7 +632,10 @@ namespace {
 //____________________________________________________________________________
    int mp_clear( MethodProxy* pymeth )
    {
-      Py_XDECREF( (PyObject*)pymeth->fSelf );
+      if ( ! IsPseudoFunc( pymeth ) ) {
+         Py_XDECREF( (PyObject*)pymeth->fSelf );
+      }
+
       pymeth->fSelf = NULL;
 
       return 0;
