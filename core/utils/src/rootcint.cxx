@@ -581,16 +581,19 @@ void SetRootSys()
 bool ParsePragmaLine(const std::string& line, const char* expectedTokens[],
                      size_t* end = 0) {
    // Check whether the #pragma line contains expectedTokens (0-terminated array).
+   if (end) *end = 0;
    if (line[0] != '#') return false;
    size_t pos = 1;
    for (const char** iToken = expectedTokens; *iToken; ++iToken) {
       while (isspace(line[pos])) ++pos;
       size_t lenToken = strlen(*iToken);
-      if (line.compare(pos, lenToken, *iToken))
+      if (line.compare(pos, lenToken, *iToken)) {
+         if (end) *end = pos;
          return false;
+      }
       pos += lenToken;
    }
-   if (end) * end = pos;
+   if (end) *end = pos;
    return true;
 }
 
@@ -5083,7 +5086,7 @@ int main(int argc, char **argv)
       char consline[256];
       while (fgets(consline, 256, fpld)) {
          static const char* ioctorTokens[] = {"pragma", "link", "C++", "ioctortype", 0};
-         size_t tokpos = -1;
+         size_t tokpos = 0;
          bool constype = ParsePragmaLine(consline, ioctorTokens, &tokpos);
 
          if (constype) {
@@ -5176,7 +5179,7 @@ int main(int argc, char **argv)
          static const char* linkClassTokens[] = {"pragma", "link", "C++", "class", 0};
          static const char* createTClassTokens[] = {"pragma", "create", "TClass", 0};
          static const char* linkNamespaceTokens[] = {"pragma", "link", "C++", "namespace", 0};
-         size_t tokpos = -1;
+         size_t tokpos = 0;
          if (ParsePragmaLine(line, linkClassTokens, &tokpos)) {
             skip = false;
             forceLink = false;
