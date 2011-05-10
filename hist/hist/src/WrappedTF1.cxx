@@ -102,6 +102,9 @@ double WrappedTF1::DoDerivative( double  x  ) const {
    
 double WrappedTF1::DoParameterDerivative(double x, const double * p, unsigned int ipar ) const { 
    // evaluate the derivative of the function with respect to the parameters
+   //IMPORTANT NOTE: TF1::GradientPar returns 0 for fixed parameters to avoid computing useless derivatives 
+   //  BUT the TLinearFitter wants to have the derivatives also for fixed parameters. 
+   //  so in case of fLinear (or fPolynomial) a non-zero value will be returned for fixed parameters
 
    if (! fLinear ) {  
       fFunc->SetParameters( p );
@@ -152,6 +155,11 @@ WrappedMultiTF1::WrappedMultiTF1 (TF1 & f, unsigned int dim  )  :
          ip++;
       }
    }      
+   // distinguish case of polynomial functions and linear functions
+   if (fDim == 1 && fFunc->GetNumber() >= 300 && fFunc->GetNumber() < 310) { 
+      fLinear = true; 
+      fPolynomial = true; 
+   }
 }
 
 
@@ -159,6 +167,7 @@ WrappedMultiTF1::WrappedMultiTF1(const WrappedMultiTF1 & rhs) :
    BaseFunc(),
    BaseParamFunc(),
    fLinear(rhs.fLinear), 
+   fPolynomial(rhs.fPolynomial), 
    fFunc(rhs.fFunc),
    fDim(rhs.fDim),
    fParams(rhs.fParams) 
@@ -171,6 +180,7 @@ WrappedMultiTF1 & WrappedMultiTF1::operator= (const WrappedMultiTF1 & rhs) {
    // Assignment operator
    if (this == &rhs) return *this;  // time saving self-test
    fLinear = rhs.fLinear;  
+   fPolynomial = rhs.fPolynomial;  
    fFunc = rhs.fFunc; 
    fDim = rhs.fDim;
    fParams = rhs.fParams;
@@ -180,6 +190,10 @@ WrappedMultiTF1 & WrappedMultiTF1::operator= (const WrappedMultiTF1 & rhs) {
 
 void  WrappedMultiTF1::ParameterGradient(const double * x, const double * par, double * grad ) const {
    // evaluate the gradient of the function with respect to the parameters 
+   //IMPORTANT NOTE: TF1::GradientPar returns 0 for fixed parameters to avoid computing useless derivatives 
+   //  BUT the TLinearFitter wants to have the derivatives also for fixed parameters. 
+   //  so in case of fLinear (or fPolynomial) a non-zero value will be returned for fixed parameters
+
    if (!fLinear) { 
       // need to set parameter values
       fFunc->SetParameters( par );
@@ -195,16 +209,23 @@ void  WrappedMultiTF1::ParameterGradient(const double * x, const double * par, d
 
 double WrappedMultiTF1::DoParameterDerivative(const double * x, const double * p, unsigned int ipar ) const { 
    // evaluate the derivative of the function with respect to parameter ipar
+   // see note above concerning the fixed parameters
    if (! fLinear ) {  
       fFunc->SetParameters( p );
       return fFunc->GradientPar(ipar, x,fgEps);
+   }
+   if (fPolynomial) { 
+      // case of polynomial function (no parameter dependency)  (case for dim = 1)
+      assert (fDim == 1);
+      return std::pow(x[0], static_cast<int>(ipar) );  
    }
    else { 
       // case of general linear function (built in TFormula with ++ )
       const TFormula * df = dynamic_cast<const TFormula*>( fFunc->GetLinearPart(ipar) );
       assert(df != 0); 
       // hack since TFormula::EvalPar is not const
-      return (const_cast<TFormula*> ( df) )->EvalPar( x ) ; // derivatives should not depend on parameters since func is linear 
+      return (const_cast<TFormula*> ( df) )->EvalPar( x ) ; // derivatives should not depend on parameters since
+                                                            // function  is linear
    }
 }
 
