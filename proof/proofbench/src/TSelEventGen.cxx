@@ -359,20 +359,20 @@ Bool_t TSelEventGen::Process(Long64_t entry)
    Long64_t filesize=0;
    Bool_t filefound=kFALSE;
    FileStat_t filestat;
-
+   TUUID uuid;
    if (!fRegenerate && !gSystem->GetPathInfo(filename, filestat)) { //stat'ed
       TFile *f = TFile::Open(filename);
       if (f && !f->IsZombie()){
          TTree* t = (TTree *) f->Get("EventTree");
          if (t) {
-            entries_file=t->GetEntries();
+            entries_file = t->GetEntries();
             if (entries_file == neventstogenerate) {
-
-               //file size seems to be correct, skip generation
-               Info("Process", "Bench file (%s, entries=%lld) exists:"
+               // File size seems to be correct, skip generation
+               Info("Process", "bench file (%s, entries=%lld) exists:"
                                " skipping generation.", filename.Data(), entries_file);
-               filesize=f->GetSize();
-               filefound=kTRUE;
+               filesize = f->GetSize();
+               uuid = f->GetUUID();
+               filefound = kTRUE;
             }
          }
          f->Close();
@@ -386,10 +386,11 @@ Bool_t TSelEventGen::Process(Long64_t entry)
 
       TFile *f = TFile::Open(filename);
       if (f && !f->IsZombie()) {
-         filesize=f->GetSize();
+         filesize = f->GetSize();
+         uuid = f->GetUUID();
          f->Close();
       } else {
-         Error("Process", "Can not open generated file: %s", filename.Data());
+         Error("Process", "can not open generated file: %s", filename.Data());
          return kFALSE;
       }
       
@@ -398,9 +399,12 @@ Bool_t TSelEventGen::Process(Long64_t entry)
 
    // Add meta data to the file info
    TFileInfoMeta* fimeta = new TFileInfoMeta("/EventTree", "TTree", entries_file);
-   TMD5* md5=TMD5::FileChecksum(filename);
+   TMD5* md5 = TMD5::FileChecksum(filename);
+   TString md5s = (md5) ? md5->AsString() : "";
    TFileInfo *fi = new TFileInfo(TString::Format("%s%s", dsrv.Data(), fndset.Data()),
-                                 filesize, 0, TString(md5->AsString()).Data(), fimeta);
+                                 filesize, uuid.AsString(), md5s.Data(), fimeta);
+   SafeDelete(md5);
+
    // Mark it as staged
    fi->SetBit(TFileInfo::kStaged);
 
