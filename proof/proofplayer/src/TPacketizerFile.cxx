@@ -342,7 +342,8 @@ TDSetElement *TPacketizerFile::GetNextPacket(TSlave *wrk, TMessage *r)
    TObject *nextfile = 0;
 
    // Find iterator associated to the worker
-   TIterObj *io = dynamic_cast<TIterObj *>(fIters->FindObject(wrk->GetName()));
+   TString wrkname = TUrl(wrk->GetName()).GetHostFQDN();
+   TIterObj *io = dynamic_cast<TIterObj *>(fIters->FindObject(wrkname));
    if (io) {
       // Get next file to process in the list of the worker
       if (io->GetIter())
