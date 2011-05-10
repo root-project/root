@@ -280,8 +280,14 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
       Info("HandleTimer", "fProgress: %p, isDone: %d",
                           fProgress, TestBit(TVirtualPacketizer::kIsDone));
 
-   if (fProgress == 0 || TestBit(TVirtualPacketizer::kIsDone))
-      return kFALSE; // timer stopped already or reports completed
+   if (fProgress == 0 || TestBit(TVirtualPacketizer::kIsDone)) {
+      // Make sure that the timer is stopped
+      if (fProgress) {
+         fProgress->Stop();
+         SafeDelete(fProgress);
+      }
+      return kFALSE;
+   }
 
    // Prepare progress info
    TTime tnow = gSystem->Now();
