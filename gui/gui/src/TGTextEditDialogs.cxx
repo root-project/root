@@ -504,8 +504,8 @@ TGGotoDialog::TGGotoDialog(const TGWindow *p, const TGWindow *main,
    fGotoButton->Associate(this);
    fCancelButton->Associate(this);
 
-   fL1 = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 3, 0);
-   fL21 = new TGLayoutHints(kLHintsTop | kLHintsRight, 2, 5, 10, 0);
+   fL1 = new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 2, 2, 3, 0);
+   fL21 = new TGLayoutHints(kLHintsCenterY | kLHintsRight, 2, 5, 10, 0);
 
    fF1->AddFrame(fGotoButton, fL1);
    fF1->AddFrame(fCancelButton, fL1);
