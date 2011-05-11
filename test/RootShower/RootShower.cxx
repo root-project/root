@@ -158,128 +158,6 @@ enum EGeometrySettingsDialogMessageTypes {
 };
 
 
-////////////////////////////////////////////////////////////////////////////////
-class TGToolButton : public TGPictureButton {
-
-private:
-   Pixel_t fBgndColor;
-
-protected:
-   void  DoRedraw();
-
-public:
-   virtual ~TGToolButton() { }
-   TGToolButton(const TGWindow *p, const TGPicture *pic, Int_t id = -1) :
-         TGPictureButton(p, pic, id) {
-      fBgndColor = GetDefaultFrameBackground();
-      ChangeOptions(GetOptions() & ~kRaisedFrame);
-   }
-
-   Bool_t   IsDown() const { return (fOptions & kSunkenFrame); }
-   void     SetState(EButtonState state, Bool_t emit = kTRUE);
-   Bool_t   HandleButton(Event_t *event);
-   Bool_t   HandleCrossing(Event_t *event);
-   void     SetBackgroundColor(Pixel_t bgnd) { fBgndColor = bgnd; TGFrame::SetBackgroundColor(bgnd); }
-};
-
-//______________________________________________________________________________
-void TGToolButton::DoRedraw()
-{
-   // Redraw tool button.
-
-   int x = (fWidth - fTWidth) >> 1;
-   int y = (fHeight - fTHeight) >> 1;
-   UInt_t w = GetWidth() - 1;
-   UInt_t h = GetHeight()- 1;
-
-   TGFrame::SetBackgroundColor(fBgndColor);
-
-   TGFrame::DoRedraw();
-   if (fState == kButtonDown || fState == kButtonEngaged) {
-      ++x; ++y;
-      w--; h--;
-   }
-
-   const TGPicture *pic = fPic;
-   if (fState == kButtonDisabled) {
-      if (!fPicD) CreateDisabledPicture();
-      pic = fPicD ? fPicD : fPic;
-   }
-   if (fBgndColor == 0xaaaaff) {
-      //x--; y--;
-      gVirtualX->DrawRectangle(fId, TGFrame::GetShadowGC()(), 0, 0, w, h);
-   }
-   pic->Draw(fId, fNormGC, x, y);
-}
-
-//______________________________________________________________________________
-Bool_t TGToolButton::HandleButton(Event_t *event)
-{
-   // Handle mouse button event.
-   
-   Bool_t ret = TGButton::HandleButton(event);
-   if (event->fType == kButtonRelease) {
-      fBgndColor = GetDefaultFrameBackground();
-   }
-   DoRedraw();
-   return ret;
-}
-
-//______________________________________________________________________________
-Bool_t TGToolButton::HandleCrossing(Event_t *event)
-{
-   // Handle crossing events.
-
-   if (fTip) {
-      if (event->fType == kEnterNotify) {
-         fTip->Reset();
-      } else {
-         fTip->Hide();
-      }
-   }
-
-   if ((event->fType == kEnterNotify) && (fState != kButtonDisabled)) {
-      fBgndColor = 0xaaaaff;
-   } else {
-      fBgndColor = GetDefaultFrameBackground();
-   }
-   if (event->fType == kLeaveNotify) {
-      fBgndColor = GetDefaultFrameBackground();
-      if (fState != kButtonDisabled && fState != kButtonEngaged)
-         SetState(kButtonUp, kFALSE);
-   }
-   DoRedraw();
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-void TGToolButton::SetState(EButtonState state, Bool_t emit)
-{
-   // Set state of tool bar button and emit a signal according 
-   // to passed arguments.
-
-   Bool_t was = !IsDown();
-
-   if (state != fState) {
-      switch (state) {
-         case kButtonEngaged:
-         case kButtonDown:
-            fOptions &= ~kRaisedFrame;
-            fOptions |= kSunkenFrame;
-            break;
-         case kButtonDisabled:
-         case kButtonUp:
-            fOptions &= ~kRaisedFrame;
-            fOptions &= ~kSunkenFrame;
-            break;
-      }
-      fState = state;
-      DoRedraw();
-      if (emit) EmitSignals(was);
-   }
-}
-
 //_________________________________________________
 // RootShower
 //
@@ -346,7 +224,7 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
          continue;
       }
       const TGPicture *pic = fClient->GetPicture(tb_data[i].fPixmap);
-      TGToolButton *pb = new TGToolButton(fToolBar, pic, tb_data[i].fId);
+      TGPictureButton *pb = new TGPictureButton(fToolBar, pic, tb_data[i].fId);
       pb->SetToolTipText(tb_data[i].fTipText);
       tb_data[i].fButton = pb;
 
@@ -1573,10 +1451,6 @@ int main(int argc, char **argv)
       }
    }
 
-   gEnv->SetValue("Gui.BackgroundColor", "#e1e2ed");
-   gEnv->SetValue("Gui.SelectBackgroundColor", "#aaaaff");
-   gEnv->SetValue("Gui.SelectForegroundColor", "black");
-   
    TApplication *theApp;
    if (rint)
       theApp = new TRint("App", &argc, argv);
