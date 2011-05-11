@@ -360,7 +360,7 @@ class genreflex:
                                                  self.selector.io_read_rules, self.selector.io_readraw_rules )
         else :
           cnames, warnings, errors = dg.generate(dicfile, classes, functions, enums, variables, gccxmlinfo)
-          if errors or (warnings and self.opts.get('fail_on_warnings', False)): os.remove(dicfile)
+        if errors or (warnings and self.opts.get('fail_on_warnings', False)): os.remove(dicfile)
       except:
         # remove output file even if evil things happened
         os.remove(dicfile)
@@ -403,7 +403,8 @@ class genreflex:
     if total_errors:
       sys.exit(1)
     #------------Exit with status if warnings --------------
-    if total_warnings and self.opts.get('fail_on_warnings',False) : 
+    if total_warnings and self.opts.get('fail_on_warnings',False) :
+      os.remove(dicfile)
       print '--->> genreflex: ERROR: Exiting with error due to %d warnings ( --fail_on_warnings enabled )' % total_warnings
       sys.exit(1)
 #---------------------------------------------------------------------
