@@ -253,9 +253,6 @@ Long64_t TProofPlayerLite::Finalize(Bool_t force, Bool_t sync)
    // do it now
    MergeOutput();
 
-   // Merge the output files created on workers, if any
-   MergeOutputFiles();
-
    if (fExitStatus != kAborted) {
 
       if (!sync) {
