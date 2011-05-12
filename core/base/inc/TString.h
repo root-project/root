@@ -339,6 +339,8 @@ public:
    TString      Copy() const;
    const char  *Data() const { return GetPointer(); }
    Bool_t       EndsWith(const char *pat, ECaseCompare cmp = kExact) const;
+   Bool_t       EqualTo(const char *cs,    ECaseCompare cmp = kExact) const;
+   Bool_t       EqualTo(const TString &st, ECaseCompare cmp = kExact) const;
    Ssiz_t       First(char c) const;
    Ssiz_t       First(const char *cs) const;
    void         Form(const char *fmt, ...)
@@ -549,6 +551,12 @@ inline Bool_t TString::Contains(const TRegexp &pat) const
 
 inline Bool_t TString::Contains(TPRegexp &pat) const
 { return Index(pat, (Ssiz_t)0) != kNPOS; }
+
+inline Bool_t TString::EqualTo(const char *cs, ECaseCompare cmp) const
+{ return (CompareTo(cs, cmp) == 0) ? kTRUE : kFALSE; }
+
+inline Bool_t TString::EqualTo(const TString &st, ECaseCompare cmp) const
+{ return (CompareTo(st, cmp) == 0) ? kTRUE : kFALSE; }
 
 inline Ssiz_t TString::Index(const char *s, Ssiz_t i, ECaseCompare cmp) const
 { return Index(s, s ? strlen(s) : 0, i, cmp); }
