@@ -3298,6 +3298,7 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
    if (!fgDrawInputPars) {
       fgDrawInputPars = new THashList;
       fgDrawInputPars->Add(new TObjString("FeedbackList"));
+      fgDrawInputPars->Add(new TObjString("PROOF_ChainWeight"));
       fgDrawInputPars->Add(new TObjString("PROOF_LineColor"));
       fgDrawInputPars->Add(new TObjString("PROOF_LineStyle"));
       fgDrawInputPars->Add(new TObjString("PROOF_LineWidth"));

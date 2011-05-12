@@ -218,6 +218,9 @@ void TProofChain::FillDrawAttributes(TProof *p)
       Error("FillDrawAttributes", "invalid PROOF or mother chain pointers!");
       return;
    }
+   
+   // Weight
+   p->SetParameter("PROOF_ChainWeight", fChain->GetWeight());
 
    // Line Attributes
    p->SetParameter("PROOF_LineColor", (Int_t) fChain->GetLineColor());
