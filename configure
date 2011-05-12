@@ -566,6 +566,11 @@ check_library() {
                test "x$found_dir" = "x-L/usr/lib64" ; then
                 found_dir=""
             fi
+            if test "x$debmultiarch" != "x" ; then
+                if test "x$found_dir" = "x-L/usr/lib/$debmultiarch" ; then
+                    found_dir=""
+                fi
+            fi
         fi
 
         # Correct path for win32
@@ -806,6 +811,10 @@ check_symbol() {
     # look first in the lib64 directories
     if test "x$checklib64" = "xyes" ; then
         usrlib="/usr/lib64 $usrlib"
+    fi
+    # look first in the DEB_HOST_MULTIARCH directories
+    if test "x$debmultiarch" != "x" ; then
+        usrlib="/usr/lib/$debmultiarch $usrlib"
     fi
     # look only in the lib64 directories
     if test "x$checkonlylib64" = "xyes" ; then
