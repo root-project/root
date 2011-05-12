@@ -70,7 +70,9 @@ protected:
    Int_t                fMultiplicity;   //  Indicator of the variability of the size of entries
    Bool_t               fObjEval;        //  true if fVar1 returns an object (or pointer to).
    Int_t                fDimension;      //  Dimension of the current expression
+   Double_t             fWeight;         //  Global weight for fill actions
 
+   void     FillWeight();
    void     SetCanvas(const char *objname);
    void     SetDrawAtt(TObject *o);
    void     SetError(const char *sub, const char *mesg);

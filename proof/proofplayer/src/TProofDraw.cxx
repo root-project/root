@@ -122,6 +122,7 @@ TProofDraw::TProofDraw()
    fSelect         = 0;
    fObjEval        = kFALSE;
    fDimension      = 0;
+   fWeight         = 1.;
 }
 
 
@@ -184,6 +185,20 @@ void TProofDraw::Begin(TTree *tree)
 void TProofDraw::SlaveBegin(TTree* /*tree*/)
 {
    // Executed by each slave before processing.
+
+   // Get the weight
+   TProofDraw::FillWeight();
+}
+
+//______________________________________________________________________________
+void TProofDraw::FillWeight()
+{
+   // Get weight from input list, if any
+
+   Double_t ww;
+   if (TProof::GetParameter(fInput, "PROOF_ChainWeight", ww) == 0)
+      fWeight = ww;
+   PDB(kDraw,1) Info("FillWeight","fWeight= %f", fWeight);
 }
 
 
@@ -196,10 +211,10 @@ Bool_t TProofDraw::ProcessSingle(Long64_t entry, Int_t i)
    Double_t v[4]; //[TTreeDrawArgsParser::fgMaxDimension];
 
    if (fSelect)
-      w = fSelect->EvalInstance(i);
+      w = fWeight * fSelect->EvalInstance(i);
    else
-      w = 1.0;
-
+      w = fWeight;
+   
    PDB(kDraw,3) Info("ProcessSingle","w[%d] = %f", i, w);
 
    if (w != 0.0) {
@@ -714,6 +729,9 @@ void TProofDrawHist::SlaveBegin(TTree *tree)
 
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
 
+   // Get the weight
+   TProofDraw::FillWeight();
+
    fSelection = fInput->FindObject("selection")->GetTitle();
    fInitialExp = fInput->FindObject("varexp")->GetTitle();
 
@@ -878,6 +896,9 @@ void TProofDrawEventList::SlaveBegin(TTree *tree)
 
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
 
+   // Get the weight
+   TProofDraw::FillWeight();
+
    fSelection = fInput->FindObject("selection")->GetTitle();
    fInitialExp = fInput->FindObject("varexp")->GetTitle();
 
@@ -971,6 +992,9 @@ void TProofDrawEntryList::SlaveBegin(TTree *tree)
    // See TProofDraw::SlaveBegin().
 
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
+
+   // Get the weight
+   TProofDraw::FillWeight();
 
    fSelection = fInput->FindObject("selection")->GetTitle();
    fInitialExp = fInput->FindObject("varexp")->GetTitle();
@@ -1144,6 +1168,9 @@ void TProofDrawProfile::SlaveBegin(TTree *tree)
    // See TProofDraw::SlaveBegin().
 
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
+
+   // Get the weight
+   TProofDraw::FillWeight();
 
    fSelection = fInput->FindObject("selection")->GetTitle();
    fInitialExp = fInput->FindObject("varexp")->GetTitle();
@@ -1366,6 +1393,9 @@ void TProofDrawProfile2D::SlaveBegin(TTree *tree)
 
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
 
+   // Get the weight
+   TProofDraw::FillWeight();
+
    fSelection = fInput->FindObject("selection")->GetTitle();
    fInitialExp = fInput->FindObject("varexp")->GetTitle();
 
@@ -1503,6 +1533,9 @@ void TProofDrawGraph::SlaveBegin(TTree *tree)
 
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
 
+   // Get the weight
+   TProofDraw::FillWeight();
+
    fSelection = fInput->FindObject("selection")->GetTitle();
    fInitialExp = fInput->FindObject("varexp")->GetTitle();
    fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
@@ -1638,6 +1671,9 @@ void TProofDrawPolyMarker3D::SlaveBegin(TTree *tree)
    // See TProofDraw::SlaveBegin().
 
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
+
+   // Get the weight
+   TProofDraw::FillWeight();
 
    fSelection = fInput->FindObject("selection")->GetTitle();
    fInitialExp = fInput->FindObject("varexp")->GetTitle();
@@ -1809,6 +1845,9 @@ void TProofDrawListOfGraphs::SlaveBegin(TTree *tree)
 
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
 
+   // Get the weight
+   TProofDraw::FillWeight();
+
    fSelection = fInput->FindObject("selection")->GetTitle();
    fInitialExp = fInput->FindObject("varexp")->GetTitle();
    fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
@@ -1956,6 +1995,9 @@ void TProofDrawListOfPolyMarkers3D::SlaveBegin(TTree *tree)
    // See TProofDraw::SlaveBegin().
 
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
+
+   // Get the weight
+   TProofDraw::FillWeight();
 
    fSelection = fInput->FindObject("selection")->GetTitle();
    fInitialExp = fInput->FindObject("varexp")->GetTitle();
