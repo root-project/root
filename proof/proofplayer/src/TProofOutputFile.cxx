@@ -28,6 +28,7 @@
 #include <TObjArray.h>
 #include <TObject.h>
 #include <TObjString.h>
+#include <TProofDebug.h>
 #include <TProofServ.h>
 #include <TSystem.h>
 #include <TUUID.h>
@@ -228,14 +229,6 @@ TProofOutputFile::~TProofOutputFile()
 }
 
 //______________________________________________________________________________
-void TProofOutputFile::SetFileName(const char* name)
-{
-   // Set the file name
-
-   fFileName = name;
-}
-
-//______________________________________________________________________________
 void TProofOutputFile::SetOutputFileName(const char *name)
 {
    // Set the name of the output file; in the form of an Url.
@@ -243,7 +236,7 @@ void TProofOutputFile::SetOutputFileName(const char *name)
    if (name && strlen(name) > 0) {
       fOutputFileName = name;
       TProofServ::ResolveKeywords(fOutputFileName);
-      Info("SetOutputFileName", "output file url: %s", fOutputFileName.Data());
+      PDB(kOutput,1) Info("SetOutputFileName", "output file url: %s", fOutputFileName.Data());
    } else {
       fOutputFileName = "";
    }
@@ -309,7 +302,7 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
 
    // Needs somethign to merge
    if(!list || list->IsEmpty()) return 0;
-
+   
    if (IsMerge()) {
       // Build-up the merger
       TString fileLoc;
@@ -334,7 +327,7 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
       while((o = next())) {
          TProofOutputFile *pFile = dynamic_cast<TProofOutputFile *>(o);
          if (pFile) {
-            fileLoc = Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
+            fileLoc.Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
             AddFile(merger, fileLoc);
          }
       }

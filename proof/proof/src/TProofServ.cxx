@@ -107,6 +107,7 @@
 #include "TFunction.h"
 #include "TMethodArg.h"
 #include "TMethodCall.h"
+#include "TProofOutputFile.h"
 
 // global proofserv handle
 TProofServ *gProofServ = 0;
@@ -6513,6 +6514,9 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                PDB(kSubmerger, 2) Info("HandleSubmerger",
                                        "kBeMerger: mergerPlayer created (%p) ", mergerPlayer);
 
+               // This may be used internally
+               mergerPlayer->SetBit(TVirtualProofPlayer::kIsSubmerger);
+
                // Accept results from assigned workers
                if (AcceptResults(connections, mergerPlayer)) {
                   PDB(kSubmerger, 2)
@@ -6541,6 +6545,8 @@ void TProofServ::HandleSubmerger(TMessage *mess)
 
                   // Delayed merging if neccessary
                   mergerPlayer->MergeOutput();
+                 
+                  PDB(kSubmerger, 2) mergerPlayer->GetOutputList()->Print();
 
                   PDB(kSubmerger, 2) Info("HandleSubmerger", "delayed merging on %s finished ", fOrdinal.Data());
                   PDB(kSubmerger, 2) Info("HandleSubmerger", "%s sending results to master ", fOrdinal.Data());
@@ -6563,6 +6569,8 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                   fSocket->Send(answ);
                   deleteplayer = kFALSE;
                }
+               // Reset
+               mergerPlayer->ResetBit(TVirtualProofPlayer::kIsSubmerger);
             } else {
                Error("HandleSubmerger","kSendOutput: received not on worker");
             }

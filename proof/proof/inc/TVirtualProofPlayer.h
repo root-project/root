@@ -47,10 +47,11 @@ class TProofProgressInfo;
 class TVirtualProofPlayer : public TObject, public TQObject {
 
 public:
+   enum EStatusBits { kIsSubmerger = BIT(16) };
    // TDSet status bits
    enum EExitStatus { kFinished, kStopped, kAborted };
 
-   TVirtualProofPlayer() { }
+   TVirtualProofPlayer() { ResetBit(TVirtualProofPlayer::kIsSubmerger); }
    virtual ~TVirtualProofPlayer() { }
 
    virtual Long64_t  Process(TDSet *set,
