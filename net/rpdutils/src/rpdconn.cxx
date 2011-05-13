@@ -1067,24 +1067,21 @@ void rpdmsg::r_string(std::string &s)
 
    if (cur < 0 || cur > (int) buf.length()) return;
 
-   char *np = 0;
+   s = "";
+   int from = cur;
    char *p = ((char *)buf.c_str()) + cur;
-   while (*p == ' ') p++;
-   sscanf(p, "%as", &np);
-   if (np) {
-      s = np;
-      free(np);
-      p += (s.length() + 1);
-      if (*p) while (*p == ' ') p++;
-      if (s[0] == '\'') s.erase(0,1);
-      if (s.length() > 0 && s[s.length() - 1] == '\'') s.erase(s.length() - 1, std::string::npos);
-   } else {
-      p += 2;
-   }
+   while (*p == ' ') { from++; p++; }
+   char *e = strchr(p, ' ');
+   int len = buf.length() - from;
+   len = (e) ? (int) (e - p) : buf.length() - from;
+   if (len > 0) s.assign(buf, from, len);
+   // Remove single quotes, if any
+   if (s[0] == '\'') s.erase(0,1);
+   if (s.length() > 0 && s[s.length() - 1] == '\'') s.erase(s.length() - 1, std::string::npos);
    
    // Update pointer
-   if (*p) {
-      cur = (int) (p - (char *)buf.c_str());
+   if (e) {
+      cur = (int) (e - (char *)buf.c_str()) + 1;
    } else {
       cur = (int) buf.length();
    }
