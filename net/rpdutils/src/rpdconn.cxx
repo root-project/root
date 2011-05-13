@@ -169,6 +169,48 @@ int rpdconn::send(const rpdmsg &msg)
 }
 
 //__________________________________________________________________________
+int rpdconn::send(const void *buf, int len)
+{
+   // Send 'len' bytes at 'buf'
+   // Return:
+   //          0    if OK
+   //         -1    if invalid descriptor
+   //         -2    if failed to acquire mutex lock
+   //         -3    if the operation would block
+   //         -4    if connection broken
+   //         -errno  if any another failure
+
+   rpdmtxhelper mh(&wrmtx);
+   if (isvalid(0)) {
+      if (mh.isok()) {
+         // Send the buffer
+         int n, nsnt = 0;
+         const char *b = (const char *)buf;
+         for (n = 0; n < len; n += nsnt) {
+            errno = 0;
+            if ((nsnt = ::send(wrfd, b+n, len-n, 0)) <= 0) {
+               if (nsnt == 0) break;
+               if (errno != EINTR) {
+                  if (errno == EPIPE || errno == ECONNRESET)
+                     return -4;
+                  else if (errno == EWOULDBLOCK)
+                     return -3;
+                  else
+                     return -errno;
+               }
+            }
+         }
+         // Done
+         return 0;
+      }
+      // Could acquire the mutex lock
+      return -2;
+   }
+   // Invalid descriptor
+   return -1;
+}
+
+//__________________________________________________________________________
 int rpdconn::recv(int &i)
 {
    // Receive an integer
@@ -260,6 +302,47 @@ int rpdconn::recv(rpdmsg &msg)
    //         -2    if failed to acquire mutex lock
 
    return recv(msg.type, msg.buf);
+}
+
+//__________________________________________________________________________
+int rpdconn::recv(void *buf, int len)
+{
+   // Receive 'len' bytes at 'buf'
+   // Return:
+   //          0    if OK
+   //         -1    if invalid descriptor
+   //         -2    if failed to acquire mutex lock
+   //         -3    if the operation would block
+   //         -4    if connection broken
+   //         -errno  if any another failure
+
+   rpdmtxhelper mh(&rdmtx);
+   if (isvalid(1)) {
+      if (mh.isok()) {
+         int n, nrcv = 0;
+         char *b = (char *)buf;
+         for (n = 0; n < len; n += nrcv) {
+            errno = 0;
+            if ((nrcv = ::recv(rdfd, b+n, len-n, 0)) <= 0) {
+               if (nrcv == 0) break;        // EOF
+               if (errno != EINTR) {
+                  if (errno == EPIPE || errno == ECONNRESET)
+                     return -4;
+                  else if (errno == EWOULDBLOCK)
+                     return -3;
+                  else
+                     return -errno;
+               }
+            }
+         }
+         // Done
+         return 0;
+      }
+      // Could acquire the mutex lock
+      return -2;
+   }
+   // Invalid descriptor
+   return -1;
 }
 
 //__________________________________________________________________________
@@ -406,7 +489,7 @@ int rpdconn::recvdesc(int &desc)
                return -errno;
             if (cmptr->cmsg_type != SCM_RIGHTS)
                return -errno;
-            desc = *((int *) CMSG_DATA(cmptr));
+            memcpy((void *)&desc, CMSG_DATA(cmptr), sizeof(int));
          } else
             desc = -1;           // descriptor was not passed
 #else
@@ -570,13 +653,13 @@ rpdtcp *rpdtcpsrv::accept(int to, int *err)
 //
 
 //__________________________________________________________________________
-rpdunix::rpdunix(const char *path) : rpdtcp(0), sockpath(path)
+rpdunix::rpdunix(const char *p) : rpdtcp(0), sockpath(p)
 {
    // Constructor
 
    // Need a valid path
    unsigned int plen = 0;
-   if (!path || (path && (plen = strlen(path)) <= 0)) {
+   if (!p || (p && (plen = strlen(p)) <= 0)) {
       fprintf(stderr, "rpdunix::rpdunix: ERROR: path is undefined\n");
       return;
    }
@@ -587,10 +670,10 @@ rpdunix::rpdunix(const char *path) : rpdtcp(0), sockpath(path)
 
    if (plen > sizeof(unserver.sun_path)-1) {
       fprintf(stderr, "rpdunix::rpdunix: ERROR: socket path %s, longer than max allowed length (%u)\n",
-                      path, (unsigned int)sizeof(unserver.sun_path)-1);
+                      p, (unsigned int)sizeof(unserver.sun_path)-1);
       return;
    }
-   strcpy(unserver.sun_path, path);
+   strcpy(unserver.sun_path, p);
 
    // Open socket
    if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
@@ -605,7 +688,7 @@ rpdunix::rpdunix(const char *path) : rpdtcp(0), sockpath(path)
          errno = 0;
       } else {
          fprintf(stderr, "rpdunix::rpdunix: ERROR: failure while connecting over '%s' (errno: %d)\n",
-                         path, errno);
+                         p, errno);
          ::close(fd);
          fd = -1;
          return;
@@ -624,28 +707,28 @@ rpdunix::rpdunix(const char *path) : rpdtcp(0), sockpath(path)
 //
 
 //__________________________________________________________________________
-rpdunixsrv::rpdunixsrv(const char *path, int backlog) : rpdunix()
+rpdunixsrv::rpdunixsrv(const char *p, int backlog) : rpdunix()
 {
    // Constructor
 
    // Need a valid path
    unsigned int plen = 0;
-   if (!path || (path && (plen = strlen(path)) <= 0)) {
+   if (!p || (p && (plen = strlen(p)) <= 0)) {
       fprintf(stderr, "rpdunixsrv::rpdunixsrv: ERROR: path is undefined\n");
       return;
    }
 
    // Clean the path, if already existing
    struct stat st;
-   if (stat(path, &st) != 0) {
+   if (stat(p, &st) != 0) {
       if (errno != ENOENT) {
-         fprintf(stderr, "rpdunixsrv::rpdunixsrv: ERROR: cannot operate on (parts of) path '%s' (errno: %d)\n", path, errno);
+         fprintf(stderr, "rpdunixsrv::rpdunixsrv: ERROR: cannot operate on (parts of) path '%s' (errno: %d)\n", p, errno);
          return;
       }
    } else {
       // Remove it
-      if (unlink(path)) {
-         fprintf(stderr, "rpdunixsrv::rpdunixsrv: ERROR: cannot unlink path '%s'\n", path);
+      if (unlink(p)) {
+         fprintf(stderr, "rpdunixsrv::rpdunixsrv: ERROR: cannot unlink path '%s'\n", p);
          return;
       }
    }
@@ -657,10 +740,10 @@ rpdunixsrv::rpdunixsrv(const char *path, int backlog) : rpdunix()
 
    if (plen > sizeof(unserver.sun_path)-1) {
       fprintf(stderr, "rpdunixsrv::rpdunixsrv: ERROR: socket path %s, longer than max allowed length (%u)\n",
-                      path, (unsigned int)sizeof(unserver.sun_path)-1);
+                      p, (unsigned int)sizeof(unserver.sun_path)-1);
       return;
    }
-   strcpy(unserver.sun_path, path);
+   strcpy(unserver.sun_path, p);
 
    // Open socket
    if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
@@ -695,7 +778,7 @@ rpdunixsrv::rpdunixsrv(const char *path, int backlog) : rpdunix()
    setdescriptors(fd, fd);
 
    // Save the path
-   sockpath = path;
+   sockpath = p;
    
    // Done
    return;
@@ -750,6 +833,152 @@ rpdunix *rpdunixsrv::accept(int to, int *err)
 }
 
 //
+// Class describing a UDP connection
+//
+
+//__________________________________________________________________________
+rpdudp::rpdudp(const char *h, int p) : rpdtcp(h,p)
+{
+   // Constructor
+ 
+   struct hostent *hent = 0;
+   if (!(hent = gethostbyname(h))) {
+      fprintf(stderr, "rpdtcp::rpdtcp: ERROR: failure resolving host address (errno: %d)\n", errno);
+      return;
+   }
+   
+   // The structure   
+   struct sockaddr_in server;
+   memset(&server, 0, sizeof(server));
+   server.sin_family = hent->h_addrtype;
+   memcpy((char *) &server.sin_addr.s_addr, hent->h_addr_list[0], hent->h_length);
+   server.sin_port   = htons(port);
+    
+   // Open socket
+   if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+      fprintf(stderr, "rpdudp::rpdudp: ERROR: failure getting socket descriptor (errno: %d)\n", errno);
+      return;
+   }
+
+   // Connect
+   errno = 0;
+   while (connect(fd, (struct sockaddr*) &server, sizeof(server)) == -1) {
+      if (errno == EINTR) {
+         errno = 0;
+      } else {
+         fprintf(stderr, "rpdudp::rpdudp: ERROR: failure while connecting to '%s:%d' (errno: %d)\n",
+                         h, p, errno);
+         ::close(fd);
+         return;
+      }
+   }
+
+   // Set descriptors
+   setdescriptors(fd, fd);
+   
+   // Done
+   return;
+}
+
+//__________________________________________________________________________
+rpdudpsrv::rpdudpsrv(int p) : rpdudp(p)
+{
+   // Constructor
+
+   // The structure
+   struct sockaddr_in inserver;
+   memset(&inserver, 0, sizeof(inserver));
+   inserver.sin_family = AF_INET;
+   inserver.sin_addr.s_addr = htonl(INADDR_ANY);
+   inserver.sin_port = htons(p);
+
+   // Open socket
+   if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+      fprintf(stderr, "rpdudpsrv::rpdudpsrv: ERROR: failure getting socket descriptor (errno: %d)\n", errno);
+      return;
+   }
+
+   if (bind(fd, (struct sockaddr*) &inserver, sizeof(inserver))) {
+      fprintf(stderr, "rpdudpsrv::rpdudpsrv: ERROR: failure binding socket (errno: %d)\n", errno);
+      ::close(fd);
+      fd = -1;
+      return;
+   }
+
+   // Set descriptors
+   setdescriptors(fd, fd);
+
+   // Done
+   return;
+}
+
+//__________________________________________________________________________
+int rpdudp::send(const void *buf, int len)
+{
+   // Send 'len' bytes at 'buf'
+   // Return:
+   //          0    if OK
+   //         -1    if invalid descriptor
+   //         -2    if failed to acquire mutex lock
+   //         -errno  if any another failure
+
+   rpdmtxhelper mh(&wrmtx);
+   if (isvalid(0)) {
+      if (mh.isok()) {
+         // Send the buffer
+         int n, nsnt = 0;
+         const char *b = (const char *)buf;
+         for (n = 0; n < len; n += nsnt) {
+            errno = 0;
+            if ((nsnt = ::sendto(wrfd, b+n, len-n, 0, 0, 0)) <= 0) {
+               if (nsnt == 0) break;
+               return -errno;
+            }
+         }
+         // Done
+         return 0;
+      }
+      // Could acquire the mutex lock
+      return -2;
+   }
+   // Invalid descriptor
+   return -1;
+}
+
+//__________________________________________________________________________
+int rpdudp::recv(void *buf, int len)
+{
+   // Receive 'len' bytes at 'buf'
+   // Return:
+   //          0    if OK
+   //         -1    if invalid descriptor
+   //         -2    if failed to acquire mutex lock
+   //         -errno  if any another failure
+
+   rpdmtxhelper mh(&rdmtx);
+   if (isvalid(1)) {
+      if (mh.isok()) {
+         int n, nrcv = 0;
+         char *b = (char *)buf;
+         for (n = 0; n < len; n += nrcv) {
+            errno = 0;
+            SOCKLEN_t addrlen = sizeof(addr);
+            if ((nrcv = recvfrom(rdfd, b+n, len-n, 0, &addr, &addrlen)) <= 0) {
+               if (nrcv == 0) break;        // EOF
+               return -errno;
+            }
+         }
+         // Done
+         return 0;
+      }
+      // Could acquire the mutex lock
+      return -2;
+   }
+   // Invalid descriptor
+   return -1;
+}
+
+//
 // Class describing a basic message
 //
 
@@ -797,9 +1026,9 @@ void rpdmsg::r_int(int &i)
    if (cur < 0 || cur > (int) buf.length()) return;
 
    char *p= ((char *)buf.c_str()) + cur;
-   while ((*p == ' ')) p++;
+   while (*p == ' ') p++;
    sscanf(p, "%d", &i);
-   if ((p = (char *) strchr(p+1, ' '))) while ((*p == ' ')) p++;
+   if ((p = (char *) strchr(p+1, ' '))) while (*p == ' ') p++;
 
    // Update pointer
    if (p) {
@@ -817,11 +1046,11 @@ void rpdmsg::r_double(double &d)
    if (cur < 0 || cur > (int) buf.length()) return;
 
    char *p= ((char *)buf.c_str()) + cur;
-   while ((*p == ' ')) p++;
+   while (*p == ' ') p++;
    float f;
    sscanf(p, "%f", &f); 
    d = (double) f;
-   if ((p = (char *) strchr(p+1, ' '))) while ((*p == ' ')) p++;
+   if ((p = (char *) strchr(p+1, ' '))) while (*p == ' ') p++;
 
    // Update pointer
    if (p) {
@@ -840,13 +1069,13 @@ void rpdmsg::r_string(std::string &s)
 
    char *np = 0;
    char *p = ((char *)buf.c_str()) + cur;
-   while ((*p == ' ')) p++;
+   while (*p == ' ') p++;
    sscanf(p, "%as", &np);
    if (np) {
       s = np;
       free(np);
       p += (s.length() + 1);
-      if (*p) while ((*p == ' ')) p++;
+      if (*p) while (*p == ' ') p++;
       if (s[0] == '\'') s.erase(0,1);
       if (s.length() > 0 && s[s.length() - 1] == '\'') s.erase(s.length() - 1, std::string::npos);
    } else {

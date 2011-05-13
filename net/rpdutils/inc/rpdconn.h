@@ -127,9 +127,11 @@ public:
    int send(int i);
    int send(int type, const char *msg);
    int send(const rpdmsg &msg);
+   virtual int send(const void *buf, int len);
    int recv(int &i);
    int recv(int &type, std::string &msg);
    int recv(rpdmsg &msg);
+   virtual int recv(void *buffer, int len);
    
    int senddesc(int desc);
    int recvdesc(int &desc);
@@ -139,10 +141,9 @@ public:
 // Class describing a TCP connection
 //
 class rpdtcp : public rpdconn {
-private:
+protected:
    std::string     host;    // Host name
    int             port;    // Port
-protected:
    int             fd;      // Socket descriptor
    struct sockaddr addr;    // Structure describing the peer address
 public:
@@ -167,29 +168,51 @@ public:
 };
 
 //
-// Class describing a UNIX connection
+// Class describing a UNIX TCP connection
 //
 class rpdunix : public rpdtcp {
 protected:
    std::string     sockpath;  // Socket path
 public:
    rpdunix(int d = -1) : rpdtcp(d) { }
-   rpdunix(const char *path);
+   rpdunix(const char *p);
    virtual ~rpdunix() { rpdtcp::close(); }
    const char *path() const { return sockpath.c_str(); }
 };
 
 //
-// Class describing a server UNIX connection
+// Class describing a server UNIX TCP connection
 //
 class rpdunixsrv : public rpdunix {
 protected:
    int             fd;    // Socket descriptor
 public:
-   rpdunixsrv(const char *path, int backlog = 10);
+   rpdunixsrv(const char *p, int backlog = 10);
    virtual ~rpdunixsrv() { rpdtcp::close(); }
 
    rpdunix *accept(int to = -1, int *err = 0);
+};
+
+//
+// Class describing a UDP connection
+//
+class rpdudp : public rpdtcp {
+public:
+   rpdudp(int d = -1) : rpdtcp(d) { } // Used by rpdudpsrv
+   rpdudp(const char *h, int p);
+   virtual ~rpdudp() { }
+
+   int send(const void *buf, int len);
+   int recv(void *buffer, int len);
+};
+
+//
+// Class describing a server UDP connection
+//
+class rpdudpsrv : public rpdudp {
+public:
+   rpdudpsrv(int p);
+   virtual ~rpdudpsrv() { rpdudp::close(); }
 };
 
 #endif
