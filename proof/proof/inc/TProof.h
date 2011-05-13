@@ -130,7 +130,7 @@ class TMacro;
 // 29 -> 30: Add information about data dir in TSlaveInfo
 // 30 -> 31: Development cycle 5.29
 // 31 -> 32: New log path trasmission
-// 32 -> 33: Development cycle 5.29/04 (fixed worker activation, ...)
+// 32 -> 33: Development cycle 5.29/04 (fixed worker activation, new startup technology, ...)
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol        = 33;            // protocol version number

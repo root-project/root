@@ -247,6 +247,7 @@ public:
    XrdProofdAux() { }
 
    static const char *AdminMsgType(int type);
+   static int AssertBaseDir(const char *path, XrdProofUI ui);
    static int AssertDir(const char *path, XrdProofUI ui, bool changeown);
    static int ChangeMod(const char *path, unsigned int mode);
    static int ChangeOwn(const char *path, XrdProofUI ui);
@@ -255,24 +256,32 @@ public:
    static char *Expand(char *p);
    static void Expand(XrdOucString &path);
    // String form functions
-   static void Form(XrdOucString &s, const char *fmt, int ns, const char *ss[5], int ni, int ii[5],
-                                     int np, void *pp[5]);
+   static void Form(XrdOucString &s, const char *fmt, int ns, const char *ss[5], int ni, int ii[6],
+                                     int np, void *pp[5], int nu = 0, unsigned int ui = 0);
    static void Form(XrdOucString &s, const char *fmt, const char *s0, const char *s1 = 0,
                                      const char *s2 = 0, const char *s3 = 0, const char *s4 = 0);
    static void Form(XrdOucString &s, const char *fmt, int i0, int i1 = 0, int i2 = 0,
-                                                      int i3 = 0, int i4 = 0);
+                                                      int i3 = 0, int i4 = 0, int i5 = 0);
    static void Form(XrdOucString &s, const char *fmt, void *p0, void *p1 = 0, void *p2 = 0,
                                                       void *p3 = 0, void *p4 = 0);
    static void Form(XrdOucString &s, const char *fmt, int i0, const char *s0,
                                      const char *s1 = 0, const char *s2 = 0, const char *s3 = 0);
    static void Form(XrdOucString &s, const char *fmt, const char *s0,
                                      int i0, int i1 = 0, int i2 = 0, int i3 = 0);
+   static void Form(XrdOucString &s, const char *fmt, const char *s0,
+                                     int i0, int i1, unsigned int u1);
    static void Form(XrdOucString &s, const char *fmt, const char *s0, const char *s1,
                                      int i0, int i1, int i2);
    static void Form(XrdOucString &s, const char *fmt, int i0, int i1,
                                      const char *s0, const char *s1, const char *s2);
    static void Form(XrdOucString &s, const char *fmt, const char *s0, const char *s1,
-                                                      const char *s2, int i0, int i1 = 0);
+                                                      const char *s2, int i0, int i1 = 0,
+                                                      const char *s3 = 0, const char *s4 = 0);
+   static void Form(XrdOucString &s, const char *fmt, const char *s0, int i0, int i1,
+                                                      const char *s1, const char *s2,
+                                                      const char *s3);
+   static void Form(XrdOucString &s, const char *fmt, const char *s0, const char *s1,
+                                                      const char *s2, int i0, unsigned int u1);
    static void Form(XrdOucString &s, const char *fmt, int i0, int i1, int i2,
                                                       const char *s0, const char *s1);
 

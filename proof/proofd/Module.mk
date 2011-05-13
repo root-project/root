@@ -103,6 +103,18 @@ XPDDEP       := $(XPDO:.o=.d)
 
 XPDLIB       := $(LPATH)/libXrdProofd.$(SOEXT)
 
+##### proofexecv #####
+PROOFEXECVS   := $(MODDIRS)/proofexecv.cxx
+PROOFEXECVO   := $(call stripsrc,$(PROOFEXECVS:.cxx=.o))
+PROOFEXECVDEP := $(PROOFEXECVO:.o=.d)
+PROOFEXECVEXE := bin/proofexecv
+ifeq ($(PLATFORM),win32)
+PROOFEXECVEXE :=
+endif
+ifeq ($(PROOFLIB),)
+PROOFEXECVEXE :=
+endif
+
 ##### Object files used by libProofx #####
 XPCONNO      := $(call stripsrc,$(MODDIRS)/XrdProofConn.o \
                 $(MODDIRS)/XrdProofPhyConn.o \
@@ -146,12 +158,12 @@ ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFDEXEH))
 ALLEXECS     += $(PROOFDEXE)
 ifeq ($(HASXRD),yes)
 ALLLIBS      += $(XPDLIB)
-ALLEXECS     += $(XPROOFDEXE)
+ALLEXECS     += $(XPROOFDEXE) $(PROOFEXECVEXE)
 endif
 
 # include all dependency files
 ifeq ($(HASXRD),yes)
-INCLUDEFILES += $(PROOFDDEP) $(XPDDEP)
+INCLUDEFILES += $(PROOFDDEP) $(XPDDEP) $(PROOFEXECVDEP)
 else
 INCLUDEFILES += $(PROOFDDEP)
 endif
@@ -166,23 +178,28 @@ $(PROOFDEXE):   $(PROOFDEXEO) $(RSAO) $(SNPRINTFO) $(GLBPATCHO) $(RPDUTILO) $(ST
 		$(LD) $(LDFLAGS) -o $@ $(PROOFDEXEO) $(RPDUTILO) $(GLBPATCHO) \
 		   $(RSAO) $(SNPRINTFO) $(CRYPTLIBS) $(AUTHLIBS) $(STRLCPYO) $(SYSLIBS)
 
-$(XPROOFDEXE):  $(XPDO) $(XPROOFDEXELIBS) $(XRDPROOFXD)
-		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(XPROOFDEXELIBS) $(SYSLIBS) $(XPROOFDEXESYSLIBS)
+$(XPROOFDEXE):  $(XPDO) $(XPROOFDEXELIBS) $(XRDPROOFXD) $(RPDCONNO)
+		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(RPDCONNO) $(XPROOFDEXELIBS) $(SYSLIBS) $(XPROOFDEXESYSLIBS)
 
-$(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(MAINLIBS) $(XRDPROOFXD)
+$(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(MAINLIBS) $(XRDPROOFXD) $(RPDCONNO)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libXrdProofd.$(SOEXT) $@ "$(XPDO)" \
+		   "$(SOFLAGS)" libXrdProofd.$(SOEXT) $@ "$(XPDO) $(RPDCONNO)" \
 		   "$(XPDLIBEXTRA)"
 
-all-$(MODNAME): $(PROOFDEXE) $(XPROOFDEXE) $(XPDLIB)
+$(PROOFEXECVEXE): $(PROOFEXECVO) $(RPDCONNO) $(RPDPRIVO)
+		  $(LD) $(LDFLAGS) -o $@ $(PROOFEXECVO) $(RPDCONNO) $(RPDPRIVO) \
+		  $(SYSLIBS)
+
+all-$(MODNAME): $(PROOFDEXE) $(XPROOFDEXE) $(PROOFEXECVEXE) $(XPDLIB)
 
 clean-$(MODNAME):
-		@rm -f $(PROOFDEXEO) $(XPDO)
+		@rm -f $(PROOFDEXEO) $(PROOFEXECVO) $(XPDO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(PROOFDDEP) $(PROOFDEXE) $(XPROOFDEXE) $(XPDDEP) $(XPDLIB)
+		@rm -f $(PROOFDDEP) $(PROOFDEXE) $(XPROOFDEXE) $(XPDDEP) \
+		  $(PROOFEXECVEXE) $(PROOFEXECVDEP) $(XPDLIB)
 
 distclean::     distclean-$(MODNAME)
 
@@ -206,5 +223,7 @@ endif
 endif
 
 endif
+
+$(PROOFEXECVO): $(RPDCONNO) $(RPDPRIVO)
 
 endif

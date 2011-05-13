@@ -25,6 +25,7 @@
 #include "XrdSys/XrdSysPriv.hh"
 
 #include "XrdProofdClient.h"
+#include "XrdProofdLauncher.h"
 #include "XrdProofdProtocol.h"
 #include "XrdProofdProofServ.h"
 #include "XrdProofdProofServMgr.h"
@@ -61,6 +62,9 @@ XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
 
    // We must have a valid sandbox
    if (fSandbox.IsValid()) fIsValid = 1;
+   
+   // The session launcher (we may have a plugin here, on day ...)
+   fLauncher = new XrdProofdLauncher(this);
 }
 
 //__________________________________________________________________________

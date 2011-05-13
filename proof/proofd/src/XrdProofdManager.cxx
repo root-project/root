@@ -50,6 +50,7 @@
 #include "XrdProofdProofServ.h"
 #include "XrdProofWorker.h"
 #include "XrdROOT.h"
+#include "rpdconn.h"
 
 // Tracing utilities
 #include "XrdProofdTrace.h"
@@ -134,12 +135,26 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fDataDirOpts = "gW";  // Default: user and group can write in it; create directories
                          //          only for workers (or any type)
 
-   // Rootd file serving disabled by default
-   fRootdExe = "";
-   fRootdArgs.clear();
-   fRootdArgsPtrs = 0;
-   fRootdAllow.clear();
-
+   // Rootd file serving enabled by default in readonly mode
+   fRootdExe = "<>";
+   // Add mandatory arguments
+   fRootdArgs.push_back(XrdOucString("-i"));
+   fRootdArgs.push_back(XrdOucString("-nologin"));
+   fRootdArgs.push_back(XrdOucString("-r"));            // Readonly
+   fRootdArgs.push_back(XrdOucString("-noauth"));       // No auth
+   // Build the argument list
+   fRootdArgsPtrs = new const char *[fRootdArgs.size() + 2];
+   fRootdArgsPtrs[0] = fRootdExe.c_str();
+   int i = 1;
+   std::list<XrdOucString>::iterator ia = fRootdArgs.begin();
+   while (ia != fRootdArgs.end()) {
+      fRootdArgsPtrs[i] = (*ia).c_str();
+      i++; ia++;
+   }
+   fRootdArgsPtrs[fRootdArgs.size() + 1] = 0;
+   // Started with 'system' (not 'fork')
+   fRootdFork = 0;
+      
    // Proof admin path
    fAdminPath = pi->AdmPath;
    fAdminPath += "/.xproofd.";
@@ -558,7 +573,7 @@ int XrdProofdManager::Config(bool rcf)
    TRACE(ALL, msg);
 
    XrdProofUI ui;
-   uid_t effuid = geteuid();
+   uid_t effuid = XrdProofdProtocol::EUidAtStartup();
    if (!rcf) {
       // Save Effective user
       if (XrdProofdAux::GetUserInfo(effuid, ui) == 0) {
@@ -598,6 +613,10 @@ int XrdProofdManager::Config(bool rcf)
          XPDERR("unable to assert the admin path: " << fSockPathDir);
          return -1;
       }
+      if (XrdProofdAux::ChangeMod(fSockPathDir.c_str(), 0777) != 0) {
+         XPDERR("unable to set mode 0777 on: " << fSockPathDir);
+         return -1;
+      }
       TRACE(ALL, "unix sockets under: " << fSockPathDir);
 
       // Create / Update the process ID file under the admin path
@@ -620,6 +639,11 @@ int XrdProofdManager::Config(bool rcf)
 
    // Work directory, if specified
    if (fWorkDir.length() > 0) {
+      // Make sure permissions are ok upstream
+      if (XrdProofdAux::AssertBaseDir(fWorkDir.c_str(), ui) != 0) {
+         XPDERR("permissions of working dir base '" << fWorkDir<< "' don't look rigth" );
+         return -1;
+      }
       // Make sure it exists
       if (XrdProofdAux::AssertDir(fWorkDir.c_str(), ui, fChangeOwn) != 0) {
          XPDERR("unable to assert working dir: " << fWorkDir);
@@ -683,6 +707,7 @@ int XrdProofdManager::Config(bool rcf)
    }
 
    // Validate dataset sources (if not worker)
+   fDataSetExp = "";
    if (fSrvType != kXPD_Worker && fDataSetSrcs.size() > 0) {
       // If first local, add it in front
       std::list<XrdProofdDSInfo *>::iterator ii = fDataSetSrcs.begin();
@@ -700,6 +725,10 @@ int XrdProofdManager::Config(bool rcf)
          TRACE(ALL, fDataSetSrcs.size() << " dataset sources defined");
          for (ii = fDataSetSrcs.begin(); ii != fDataSetSrcs.end(); ii++) {
             TRACE(ALL, " url:" << (*ii)->fUrl << ", local:" << (*ii)->fLocal << ", rw:" << (*ii)->fRW);
+            if ((*ii)->fLocal && (*ii)->fRW) {
+               if (fDataSetExp.length() > 0) fDataSetExp += ",";
+               fDataSetExp += ((*ii)->fUrl).c_str();
+            }
          }
       } else {
          TRACE(ALL, "no dataset sources defined");
@@ -855,6 +884,17 @@ int XrdProofdManager::Config(bool rcf)
             }
          }
       }
+      // Create unix socket where to accepts callbacks from rootd launchers
+      XrdOucString sockpath;
+      XPDFORM(sockpath, "%s/xpd.%d.%d.rootd", fSockPathDir.c_str(), fPort, getpid());
+      fRootdUnixSrv = new rpdunixsrv(sockpath.c_str());
+      if (!fRootdUnixSrv || (fRootdUnixSrv && !fRootdUnixSrv->isvalid(0))) {
+         XPDERR("could not start unix server connection on path "<<
+                sockpath<<" - errno: "<<(int)errno);
+         fRootdExe = "";
+         return -1;
+      }
+      TRACE(ALL, "unix socket path for rootd call backs: "<<sockpath);
       // Check if access is controlled
       if (fRootdAllow.size() > 0) {
          XrdOucString hhs;
@@ -1535,7 +1575,7 @@ int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
    TRACE(ALL, "val: "<< val);
 
    // Parse directive
-   XrdOucString mode("ro"), auth("none");
+   XrdOucString mode("ro"), auth("none"), fork("0");
    bool denied = 0;
    char *nxt = val;
    do {
@@ -1549,6 +1589,8 @@ int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
          mode = nxt + 5;
       } else if (!strncmp(nxt, "auth:", 5)) {
          auth = nxt + 5;
+      } else if (!strncmp(nxt, "fork:", 5)) {
+         fork = nxt + 5;
       } else {
          // Assume rootd argument
          fRootdArgs.push_back(XrdOucString(nxt));
@@ -1563,6 +1605,7 @@ int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
       fRootdArgs.push_back(XrdOucString("-nologin"));
       if (mode == "ro") fRootdArgs.push_back(XrdOucString("-r"));
       if (auth == "none") fRootdArgs.push_back(XrdOucString("-noauth"));
+      fRootdFork = (fork == "1" || fork == "yes") ? 1 : 0;
    } else {
       // Nothing else to do, if denied
       return 0;

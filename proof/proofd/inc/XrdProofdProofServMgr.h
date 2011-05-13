@@ -56,6 +56,7 @@ typedef struct {
    XrdOucString fTopSessionTag;
    XrdOucString fSessionDir;
    XrdOucString fWrkDir;
+   bool         fOld;
 } ProofServEnv_t;
 
 class XpdClientSessions {
@@ -145,10 +146,13 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
    int                fRecoverTimeOut;
    int                fRecoverDeadline;
    bool               fCheckLost;
+   bool               fUseFork;       // If true, use fork to start proofserv
    XrdOucString       fParentExecs;   // List of possible 'proofserv' parent names
 
    int                fCounters[PSMMAXCNTS];  // Internal counters (see enum PSMCounters)
    int                fCurrentSessions;       // Number of sessions (top masters)
+
+   unsigned int       fSeqSessionN;   // Sequential number for sessions created by this instance
 
    int                fNextSessionsCheck; // Time of next sessions check
 
@@ -170,7 +174,17 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
    void               FillEnvList(std::list<XpdEnv> *el, const char *nam, const char *val,
                                   const char *usrs = 0, const char *grps = 0,
                                   int smi = -1, int smx = -1, int vmi = -1, int vmx = -1, bool hex = 0);
-
+   unsigned int       GetSeqSessionN() { XrdSysMutexHelper mhp(fMutex); return ++fSeqSessionN; }
+   
+   int                CreateAdminPath(XrdProofdProofServ *xps,
+                                      XrdProofdProtocol *p, int pid, XrdOucString &emsg);
+   int                CreateSockPath(XrdProofdProofServ *xps, XrdProofdProtocol *p,
+                                     unsigned int seq, XrdOucString &emsg);
+   int                CreateFork(XrdProofdProtocol *p);
+   int                CreateProofServEnvFile(XrdProofdProtocol *p,
+                                            void *input, const char *envfn, const char *rcfn);
+   int                CreateProofServRootRc(XrdProofdProtocol *p,
+                                            void *input, const char *rcfn);
    int                SetupProtocol(XrdNetPeer &peerpsrv,
                                     XrdProofdProofServ *xps, XrdOucString &e);
    void               ParseCreateBuffer(XrdProofdProtocol *p,  XrdProofdProofServ *xps,
@@ -181,6 +195,8 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
                                         XrdProofdResponse *r, unsigned short &sid);
    int                PrepareSessionRecovering();
    int                ResolveSession(const char *fpid);
+
+   void               SendErrLog(const char *errlog, XrdProofdResponse *r);
 
    // Session Admin path management
    int                AddSession(XrdProofdProtocol *p, XrdProofdProofServ *s);

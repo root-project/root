@@ -44,8 +44,9 @@ enum XProofRequestTypes {
    kXP_readbuf      = 3117,    // read a buffer from a file
    kXP_touch        = 3118,    // touch the client admin path
    kXP_ctrlc        = 3119,    // propagate a Ctrl-C issued by the client 
+   kXP_direct       = 3120,    // direct data connection
 //
-   kXP_Undef        = 3120     // This should always be last: do not touch it
+   kXP_Undef        = 3121     // This should always be last: just increment
 };
 
 // XPROOFD VERSION  (0xMMmmpp : MM major, mm minor, pp patch)
