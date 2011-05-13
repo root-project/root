@@ -203,6 +203,25 @@ Bool_t TGVSlider::HandleButton(Event_t *event)
    // Handle mouse button event in vertical slider.
 
    if (!IsEnabled()) return kTRUE;
+   if (event->fCode == kButton4 || event->fCode == kButton5) {
+      Int_t oldPos = fPos;
+      int m = (fVmax - fVmin) / (fWidth-16);
+      if (event->fCode == kButton4)
+         fPos -= ((m) ? m : 1);
+      else if (event->fCode == kButton5)
+         fPos += ((m) ? m : 1);
+      if (fPos > fVmax) fPos = fVmax;
+      if (fPos < fVmin) fPos = fVmin;
+      SendMessage(fMsgWindow, MK_MSG(kC_HSLIDER, kSL_POS),
+                  fWidgetId, fPos);
+      fClient->ProcessLine(fCommand, MK_MSG(kC_HSLIDER, kSL_POS),
+                           fWidgetId, fPos);
+      if (fPos != oldPos) {
+         PositionChanged(fPos);
+         fClient->NeedRedraw(this);
+      }
+      return kTRUE;
+   }
    if (event->fType == kButtonPress) {
       // constrain to the slider width
       if (event->fX < (Int_t)fWidth/2-7 || event->fX > (Int_t)fWidth/2+7) {
@@ -378,6 +397,25 @@ Bool_t TGHSlider::HandleButton(Event_t *event)
    // Handle mouse button event in horizontal slider widget.
 
    if (!IsEnabled()) return kTRUE;
+   if (event->fCode == kButton4 || event->fCode == kButton5) {
+      Int_t oldPos = fPos;
+      int m = (fVmax - fVmin) / (fWidth-16);
+      if (event->fCode == kButton4)
+         fPos += ((m) ? m : 1);
+      else if (event->fCode == kButton5)
+         fPos -= ((m) ? m : 1);
+      if (fPos > fVmax) fPos = fVmax;
+      if (fPos < fVmin) fPos = fVmin;
+      SendMessage(fMsgWindow, MK_MSG(kC_HSLIDER, kSL_POS),
+                  fWidgetId, fPos);
+      fClient->ProcessLine(fCommand, MK_MSG(kC_HSLIDER, kSL_POS),
+                           fWidgetId, fPos);
+      if (fPos != oldPos) {
+         PositionChanged(fPos);
+         fClient->NeedRedraw(this);
+      }
+      return kTRUE;
+   }
    if (event->fType == kButtonPress) {
       // constrain to the slider height
       if (event->fY < (Int_t)fHeight/2-7 || event->fY > (Int_t)fHeight/2+7) {
