@@ -1684,7 +1684,7 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
          dmove = dmax;
          // We have track direction, compute distance from inside
          d1 = shape->DistFromInside(point,dir,3);
-         if (d1>dmove) {
+         if (d1>dmove || d1<TGeoShape::Tolerance()) {
             // Bad distance or bbox size, to debug
             printf("DistFromInside: (%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) %f/%f(max)\n",
                 point[0],point[1],point[2],dir[0],dir[1],dir[2], d1,dmove);
@@ -1698,8 +1698,10 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
             pmfrominside->Draw();
             return;
          }
+         // Propagate BEFORE the boundary and make sure that DistFromOutside
+         // does not return 0 (!!!)
          // Check if there is a second crossing
-         for (j=0; j<3; j++) pnew[j] = point[j] + d1*dir[j];
+         for (j=0; j<3; j++) pnew[j] = point[j] + (d1-TGeoShape::Tolerance())*dir[j];
          dnext = shape->DistFromOutside(pnew,dir,3);
          if (d1+dnext<dmax) dmove = d1+0.5*dnext;
          // Move point and swap direction
@@ -1710,14 +1712,19 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
          // Compute now distance from outside
          d2 = shape->DistFromOutside(pnew,dnew,3);
          delta = dmove-d1-d2;
-         if (TMath::Abs(delta)>1E-6) {
+         if (TMath::Abs(delta)>1E-6 || dnext<2.*TGeoShape::Tolerance()) {
             // Error->debug this
             printf("Error: (%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) d1=%f d2=%f dmove=%f\n",
                 point[0],point[1],point[2],dir[0],dir[1],dir[2], d1,d2,dmove);                
-//            if (dmove<dmax) {
+            if (dnext<2.*TGeoShape::Tolerance()) {
+               printf(" (*)DistFromOutside(%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f)  dnext = %f\n",
+                      point[0]+(d1-TGeoShape::Tolerance())*dir[0],
+                      point[1]+(d1-TGeoShape::Tolerance())*dir[1], 
+                      point[2]+(d1-TGeoShape::Tolerance())*dir[2], dir[0],dir[1],dir[2],dnext);
+            } else {          
                printf("   DistFromOutside(%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f)  dnext = %f\n",
                       point[0]+d1*dir[0],point[1]+d1*dir[1], point[2]+d1*dir[2], dir[0],dir[1],dir[2],dnext);
-//            }
+            }
             printf("   DistFromOutside(%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f)  = %f\n",   
                       pnew[0],pnew[1],pnew[2],dnew[0],dnew[1],dnew[2], d2);
             pmfrominside = new TPolyMarker3D(2);
@@ -1740,9 +1747,9 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
             return;
          }
          // Compute distance from inside which should be bigger than d1
-         for (j=0; j<3; j++) pnew[j] += d2*dnew[j];
+         for (j=0; j<3; j++) pnew[j] += (d2-TGeoShape::Tolerance())*dnew[j];
          dnext = shape->DistFromInside(pnew,dnew,3);
-         if (dnext<d1-TGeoShape::Tolerance()) {
+         if (dnext<d1-TGeoShape::Tolerance() || dnext>dmax) {
             printf("Error DistFromInside(%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) d1=%f d1p=%f\n",
                    pnew[0],pnew[1],pnew[2],dnew[0],dnew[1],dnew[2],d1,dnext);
             pmfrominside = new TPolyMarker3D(2);

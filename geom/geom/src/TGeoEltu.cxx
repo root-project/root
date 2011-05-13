@@ -259,7 +259,7 @@ Double_t TGeoEltu::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
          if (tau[j]>=0) {
             zi=point[2]+tau[j]*dir[2];
             if ((TMath::Abs(zi)-fDz)<0) {
-               if (tau[j]<TGeoShape::Tolerance()) {
+               if (tau[j]<1.E-8) {
                   xi=point[0]+tau[j]*dir[0];
                   yi=point[1]+tau[j]*dir[1];
                   // Dot product of un-normalized normal with direction
