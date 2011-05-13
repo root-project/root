@@ -602,35 +602,25 @@ Double_t TGeoArb8::DistFromOutside(Double_t *point, Double_t *dir, Int_t /*iact*
 // Computes distance from outside point to surface of the shape.
    Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
    if (sdist>=step) return TGeoShape::Big();
-   Double_t dist[5];
-   // check lateral faces
-   Int_t i;
-   for (i=0; i<4; i++) {
-      dist[i]=DistToPlane(point, dir, i, kFALSE);
-   }   
+   Double_t snext;
    // check Z planes
-   dist[4]=TGeoShape::Big();
-   if (TMath::Abs(point[2])>fDz) {
-      if (!TGeoShape::IsSameWithinTolerance(dir[2],0)) {
-         Double_t pt[3];
-         if (point[2]>0) {
-            dist[4] = (fDz-point[2])/dir[2];
-            pt[2]=fDz;
-         } else {   
-            dist[4] = (-fDz-point[2])/dir[2];
-            pt[2]=-fDz;
-         }   
-         if (dist[4]<0) {
-            dist[4]=TGeoShape::Big();
-         } else {   
-            for (Int_t j=0; j<2; j++) pt[j]=point[j]+dist[4]*dir[j];
-            if (!Contains(&pt[0])) dist[4]=TGeoShape::Big();
-         }   
+   if (TMath::Abs(point[2])>fDz-1.E-8) {
+      Double_t pt[3];
+      if (point[2]*dir[2]<0) {
+         pt[2]=fDz*TMath::Sign(1.,point[2]);
+         snext = TMath::Max((pt[2]-point[2])/dir[2],0.);
+         for (Int_t j=0; j<2; j++) pt[j]=point[j]+snext*dir[j];
+         if (Contains(&pt[0])) return snext;
       }
-   }   
-   Double_t distmin = dist[0];
-   for (i=1;i<5;i++) if (dist[i] < distmin) distmin = dist[i];
-   return distmin;
+   }
+   // check lateral faces
+   Double_t dist;
+   snext = TGeoShape::Big();
+   for (Int_t i=0; i<4; i++) {
+      dist = DistToPlane(point, dir, i, kFALSE);
+      if (dist<snext) snext = dist;
+   }
+   return snext;
 }   
 
 //_____________________________________________________________________________
