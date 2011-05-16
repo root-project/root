@@ -139,7 +139,7 @@ void TArrayI::Set(Int_t n, const Int_t *array)
    if (fN == 0) return;
    if (array == 0) return;
    if (!fArray) fArray = new Int_t[fN];
-   memcpy(fArray,array, n*sizeof(Int_t));
+   memmove(fArray, array, n*sizeof(Int_t));
 }
 
 //_______________________________________________________________________

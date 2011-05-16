@@ -139,7 +139,7 @@ void TArrayC::Set(Int_t n, const Char_t *array)
    if (fN == 0) return;
    if (array == 0) return;
    if (!fArray) fArray = new Char_t[fN];
-   memcpy(fArray,array, n*sizeof(Char_t));
+   memmove(fArray, array, n*sizeof(Char_t));
 }
 
 //_______________________________________________________________________

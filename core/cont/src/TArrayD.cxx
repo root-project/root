@@ -139,7 +139,7 @@ void TArrayD::Set(Int_t n, const Double_t *array)
    if (fN == 0) return;
    if (array == 0) return;
    if (!fArray) fArray = new Double_t[fN];
-   memcpy(fArray,array, n*sizeof(Double_t));
+   memmove(fArray, array, n*sizeof(Double_t));
 }
 
 //_______________________________________________________________________

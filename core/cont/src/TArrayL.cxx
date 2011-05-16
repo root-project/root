@@ -139,7 +139,7 @@ void TArrayL::Set(Int_t n, const Long_t *array)
    if (fN == 0) return;
    if (array == 0) return;
    if (!fArray) fArray = new Long_t[fN];
-   memcpy(fArray,array, n*sizeof(Long_t));
+   memmove(fArray, array, n*sizeof(Long_t));
 }
 
 //_______________________________________________________________________

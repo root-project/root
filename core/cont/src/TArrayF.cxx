@@ -139,7 +139,7 @@ void TArrayF::Set(Int_t n, const Float_t *array)
    if (fN == 0) return;
    if (array == 0) return;
    if (!fArray) fArray = new Float_t[fN];
-   memcpy(fArray,array, n*sizeof(Float_t));
+   memmove(fArray, array, n*sizeof(Float_t));
 }
 
 //_______________________________________________________________________

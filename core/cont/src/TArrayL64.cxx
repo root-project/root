@@ -139,7 +139,7 @@ void TArrayL64::Set(Int_t n, const Long64_t *array)
    if (fN == 0) return;
    if (array == 0) return;
    if (!fArray) fArray = new Long64_t[fN];
-   memcpy(fArray,array, n*sizeof(Long64_t));
+   memmove(fArray, array, n*sizeof(Long64_t));
 }
 
 //_______________________________________________________________________
