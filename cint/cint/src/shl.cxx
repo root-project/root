@@ -183,6 +183,7 @@ int G__loadsystemfile(const char *filename)
                strcmp(filename+len-3,".so")==0)) ||
      (len>4&& (strcmp(filename+len-4,".dll")==0 ||
                strcmp(filename+len-4,".DLL")==0)) ||
+     (len>6&& (strcmp(filename+len-6,".dylib")==0)) ||
 #if defined(R__FBSD) || defined(R__OBSD)
      (len>strlen(soext) && strcmp(filename+len-strlen(soext), soext)==0) ||
 #endif

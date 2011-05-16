@@ -1218,6 +1218,10 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
             filename[len - 4] = 0;
             filename += G__getmakeinfo1("DLLPOST");
          }
+         else if((len>6&& (strcmp(filename+len-6,".dylib")==0))) {
+            filename[len - 6] = 0;
+            filename += G__getmakeinfo1("DLLPOST");
+         }
          else if((len>2&& (strcmp(filename+len-2,".a")==0 ||
                            strcmp(filename+len-2,".A")==0))) {
             filename[len - 2] = 0;
@@ -1408,7 +1412,7 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
 /******************************************************************
 * G__loadfile(filename)
 *
-*  0) If .sl .dl .so .dll .DLL call G__shl_load()
+*  0) If .sl .dl .so .dylib .dll .DLL call G__shl_load()
 *  1) check G__MAXFILE                       return -2 if fail(fatal)
 *  2) check if file is already loaded        return 1 if already loaded
 *  3) Open filename
@@ -1693,6 +1697,10 @@ int G__loadfile(const char *filenamein)
         else if((len>4&& (strcmp(filename+len-4,".dll")==0 ||
                           strcmp(filename+len-4,".DLL")==0))) {
            filename[len - 4] = 0;
+           filename += G__getmakeinfo1("DLLPOST");
+        }
+        else if((len>6&& (strcmp(filename+len-6,".dylib")==0))) {
+           filename[len - 6] = 0;
            filename += G__getmakeinfo1("DLLPOST");
         }
         else if((len>2&& (strcmp(filename+len-2,".a")==0 ||
@@ -2198,6 +2206,7 @@ int G__loadfile(const char *filenamein)
                strcmp(filename+len-3,".so")==0)) ||
      (len>4&& (strcmp(filename+len-4,".dll")==0 ||
                strcmp(filename+len-4,".DLL")==0)) ||
+     (len>6&& (strcmp(filename+len-6,".dylib")==0)) ||
 #if defined(R__FBSD) || defined(R__OBSD)
      (len>strlen(soext) && strcmp(filename+len-strlen(soext), soext)==0) ||
 #endif

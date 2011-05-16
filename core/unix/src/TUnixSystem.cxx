@@ -4440,11 +4440,12 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
    char *name;
 
    int ext = 0, len = strlen(lib);
-   if (len > 3 && (!strcmp(lib+len-3, ".sl") ||
-                   !strcmp(lib+len-3, ".dl") ||
-                   !strcmp(lib+len-4, ".dll")||
-                   !strcmp(lib+len-4, ".DLL")||
-                   !strcmp(lib+len-3, ".so") ||
+   if (len > 3 && (!strcmp(lib+len-3, ".so")    ||
+                   !strcmp(lib+len-3, ".dl")    ||
+                   !strcmp(lib+len-4, ".dll")   ||
+                   !strcmp(lib+len-4, ".DLL")   ||
+                   !strcmp(lib+len-6, ".dylib") ||
+                   !strcmp(lib+len-3, ".sl")    ||
                    !strcmp(lib+len-2, ".a"))) {
       name = gSystem->Which(GetDynamicPath(), lib, kReadPermission);
       ext  = 1;
@@ -4456,14 +4457,18 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
          fname.Form("%s.dll", lib);
          name = gSystem->Which(GetDynamicPath(), fname, kReadPermission);
          if (!name) {
-            fname.Form("%s.sl", lib);
+            fname.Form("%s.dylib", lib);
             name = gSystem->Which(GetDynamicPath(), fname, kReadPermission);
             if (!name) {
-               fname.Form("%s.dl", lib);
+               fname.Form("%s.sl", lib);
                name = gSystem->Which(GetDynamicPath(), fname, kReadPermission);
                if (!name) {
-                  fname.Form("%s.a", lib);
+                  fname.Form("%s.dl", lib);
                   name = gSystem->Which(GetDynamicPath(), fname, kReadPermission);
+                  if (!name) {
+                     fname.Form("%s.a", lib);
+                     name = gSystem->Which(GetDynamicPath(), fname, kReadPermission);
+                  }
                }
             }
          }
@@ -4476,7 +4481,7 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
                "%s does not exist in %s", lib, GetDynamicPath());
       else
          Error("DynamicPathName",
-               "%s[.so | .sl | .dl | .a | .dll] does not exist in %s", lib, GetDynamicPath());
+               "%s[.so | .dll | .dylib | .sl | .dl | .a] does not exist in %s", lib, GetDynamicPath());
    }
 
    return name;
