@@ -3169,9 +3169,9 @@ XMLNodePointer_t TGDMLParse::Para(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 
 
    TGeoPara* para = new TGeoPara(NameShort(name),
-                  Evaluate(xline),
-                  Evaluate(yline),
-                  Evaluate(zline),
+                  Evaluate(xline)/2,
+                  Evaluate(yline)/2,
+                  Evaluate(zline)/2,
                   Evaluate(alphaline),
                   Evaluate(thetaline),
                   Evaluate(philine));
