@@ -1305,7 +1305,7 @@ void TGListTree::Search(Bool_t /*close*/)
    static TString buf;
 
    TGSearchType *srch = new TGSearchType;
-   srch->fBuffer = (char*)buf.Data();
+   srch->fBuffer = (char *)StrDup(buf.Data());
 
    TGListTreeItem *item;
    new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, srch, &ret);
