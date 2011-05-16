@@ -1104,7 +1104,7 @@ Double_t TGeoTorus::ToBoundary(Double_t *pt, Double_t *dir, Double_t r, Bool_t i
       Double_t delta = s*s*s*s + a*s*s*s + b*s*s + c*s + d;
       Double_t eps0 = -delta/(4.*s*s*s + 3.*a*s*s + 2.*b*s + c);
       while (TMath::Abs(eps)>TGeoShape::Tolerance()) {
-         if (TMath::Abs(eps0)>10) break;
+         if (TMath::Abs(eps0)>100) break;
          s += eps0;
          if (TMath::Abs(s+eps0)<TGeoShape::Tolerance()) break;
          delta = s*s*s*s + a*s*s*s + b*s*s + c*s + d;
