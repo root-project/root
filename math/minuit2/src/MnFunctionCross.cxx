@@ -18,10 +18,7 @@
 #include "Minuit2/MnMachinePrecision.h"
 
 //#define DEBUG
-
-#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h" 
-#endif
 
 
 namespace ROOT {
@@ -42,13 +39,15 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
    unsigned int npar = par.size();
    unsigned int nfcn = 0;
    const MnMachinePrecision& prec = fState.Precision();
-   //   double tlr = 0.01;
-   // convergence when F is within tlf of aim and next prediction 
-   // of aopt is within tla of previous value of aopt
-   double up = fFCN.Up();
-   double tlf = tlr*up;
    // tolerance used when calling Migrad
-   double mgr_tlr = 0.05 * up;   // to be consistent with F77 version 
+   double mgr_tlr = 0.5 * tlr;   // to be consistent with F77 version (for default values of tlr which is 0.1)
+   // other olerance values are fixed at 0.01
+   tlr = 0.01;
+   // convergence when F is within tlf of aim and next prediction 
+   // of aopt is within tla of previous value of aopt  
+   double up = fFCN.Up();
+   // for finding the point : 
+   double tlf = tlr*up;  
    double tla = tlr;
    unsigned int maxitr = 15;
    unsigned int ipt = 0;
@@ -58,6 +57,9 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
    double aopt = 0.;
    bool limset = false;
    std::vector<double> alsb(3, 0.), flsb(3, 0.);
+
+   int printLevel = MnPrint::Level();
+
 
 #ifdef DEBUG
    std::cout<<"MnFunctionCross for parameter  "<<par.front()<< "fmin = " << aminsv 
@@ -100,6 +102,10 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
       std::cout << "MnFunctionCross: Set value for " << par[i] <<  " to " << pmid[i] << std::endl; 
 #endif
       migrad.SetValue(par[i], pmid[i]);
+
+      if (printLevel > 1) { 
+         std::cout << "MnFunctionCross: parameter " << i << " set to " << pmid[i] << std::endl; 
+      }
    }
    // find minimum with respect all the other parameters (n- npar) (npar are the fixed ones)
    
@@ -139,6 +145,11 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
       std::cout << "MnFunctionCross: Set new value for " << par[i] <<  " from " << pmid[i] << " to " << pmid[i] + (aopt)*pdir[i] << " aopt = " << aopt << std::endl; 
 #endif
       migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
+
+      if (printLevel > 1) { 
+         std::cout << "MnFunctionCross: parameter " << i << " set to " << pmid[i] + (aopt)*pdir[i] << std::endl; 
+      }
+
    }
    
    FunctionMinimum min1 = migrad(maxcalls, mgr_tlr);
@@ -188,6 +199,10 @@ L300:
       std::cout << "MnFunctionCross: Set new value for " << par[i] <<  " to " << pmid[i] + (aopt)*pdir[i] << " aopt = " << aopt << std::endl; 
 #endif
                migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
+               if (printLevel > 1) { 
+                  std::cout << "MnFunctionCross: parameter " << i << " set to " << pmid[i] + (aopt)*pdir[i] << std::endl; 
+               }
+
             }
             min1 = migrad(maxcalls, mgr_tlr);
             nfcn += min1.NFcn();
@@ -249,6 +264,10 @@ L460:
       std::cout << "MnFunctionCross: Set new value for " << par[i] <<  " from " << pmid[i] << " to " << pmid[i] + (aopt)*pdir[i] << " aopt = " << aopt << std::endl; 
 #endif
       migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
+      if (printLevel > 1) { 
+         std::cout << "MnFunctionCross: parameter " << i << " set to " << pmid[i] + (aopt)*pdir[i] << std::endl; 
+      }
+
    }
    FunctionMinimum min2 = migrad(maxcalls, mgr_tlr);
    nfcn += min2.NFcn();
@@ -450,6 +469,9 @@ L500:
       std::cout << "MnFunctionCross: Set new value for " << par[i] <<  " from " << pmid[i] << " to " << pmid[i] + (aopt)*pdir[i] << " aopt = " << aopt << std::endl; 
 #endif   
             migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
+            if (printLevel > 1) { 
+               std::cout << "MnFunctionCross: parameter " << i << " set to " << pmid[i] + (aopt)*pdir[i] << std::endl; 
+            }
          }
          min2 = migrad(maxcalls, mgr_tlr);
          nfcn += min2.NFcn();

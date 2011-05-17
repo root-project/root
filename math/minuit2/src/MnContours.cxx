@@ -55,7 +55,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    //   double edmmax = 0.5*0.05*fFCN.Up()*1.e-3;    
 
    //double toler = 0.05;    
-   double toler = 0.01; // use same value as in Minos    
+   double toler = 0.1; // use same defaut value as in Minos    
    
    //get first four points
    //   std::cout<<"MnContours: get first 4 params."<<std::endl;

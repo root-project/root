@@ -55,27 +55,27 @@ MnMinos::MnMinos(const FCNBase& fcn, const FunctionMinimum& min,  const MnStrate
 } 
 
 
-std::pair<double,double> MnMinos::operator()(unsigned int par, unsigned int maxcalls) const {
+std::pair<double,double> MnMinos::operator()(unsigned int par, unsigned int maxcalls, double toler) const {
    // do Minos analysis given the parameter index returning a pair for (lower,upper) errors
-   MinosError mnerr = Minos(par, maxcalls);
+   MinosError mnerr = Minos(par, maxcalls,toler);
    return mnerr();
 }
 
-double MnMinos::Lower(unsigned int par, unsigned int maxcalls) const {
+double MnMinos::Lower(unsigned int par, unsigned int maxcalls, double toler) const {
    // get lower error for parameter par
    MnUserParameterState upar = fMinimum.UserState();
    double err = fMinimum.UserState().Error(par);
    
-   MnCross aopt = Loval(par, maxcalls);
+   MnCross aopt = Loval(par, maxcalls,toler);
    
    double lower = aopt.IsValid() ? -1.*err*(1.+ aopt.Value()) : (aopt.AtLimit() ? upar.Parameter(par).LowerLimit() : upar.Value(par));
    
    return lower;
 }
 
-double MnMinos::Upper(unsigned int par, unsigned int maxcalls) const {
+double MnMinos::Upper(unsigned int par, unsigned int maxcalls, double toler) const {
    // upper error for parameter par
-   MnCross aopt = Upval(par, maxcalls);
+   MnCross aopt = Upval(par, maxcalls,toler);
    
    MnUserParameterState upar = fMinimum.UserState();
    double err = fMinimum.UserState().Error(par);
@@ -85,18 +85,18 @@ double MnMinos::Upper(unsigned int par, unsigned int maxcalls) const {
    return upper;
 }
 
-MinosError MnMinos::Minos(unsigned int par, unsigned int maxcalls) const {
+MinosError MnMinos::Minos(unsigned int par, unsigned int maxcalls, double toler) const {
    // do full minos error anlysis (lower + upper) for parameter par 
    assert(fMinimum.IsValid());  
    assert(!fMinimum.UserState().Parameter(par).IsFixed());
    assert(!fMinimum.UserState().Parameter(par).IsConst());
    
-   MnCross up = Upval(par, maxcalls);
+   MnCross up = Upval(par, maxcalls,toler);
 #ifdef DEBUG
    std::cout << "Function calls to find upper error " << up.NFcn() << std::endl; 
 #endif
 
-   MnCross lo = Loval(par, maxcalls);
+   MnCross lo = Loval(par, maxcalls,toler);
 
 #ifdef DEBUG
    std::cout << "Function calls to find lower error " << lo.NFcn() << std::endl; 
@@ -106,10 +106,11 @@ MinosError MnMinos::Minos(unsigned int par, unsigned int maxcalls) const {
 }
 
 
-MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int maxcalls) const {
+MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int maxcalls, double toler) const {
    // get crossing value in the parameter direction : 
    // direction = + 1 upper value
    // direction = -1 lower value
+   // pass now tolerance used for Migrad minimizations
 
    assert(direction == 1 || direction == -1); 
 #ifdef DEBUG
@@ -169,10 +170,8 @@ MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int ma
    std::cout << "Parameter " << par << " is fixed and set from " << fMinimum.UserState().Value(par) << " to " << val << std::endl;
 #endif   
    
-   //   double edmmax = 0.5*0.1*fFCN.Up()*1.e-3;
-   double toler = 0.01; // value used in F77
-   MnFunctionCross cross(fFCN, upar, fMinimum.Fval(), fStrategy);
-   
+
+   MnFunctionCross cross(fFCN, upar, fMinimum.Fval(), fStrategy);   
    MnCross aopt = cross(para, xmid, xdir, toler, maxcalls);
 
    
@@ -203,14 +202,14 @@ MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int ma
    return aopt;
 }
 
-MnCross MnMinos::Upval(unsigned int par, unsigned int maxcalls) const {
+MnCross MnMinos::Upval(unsigned int par, unsigned int maxcalls, double toler) const {
    // return crossing in the lower parameter direction
-   return FindCrossValue(1,par,maxcalls);
+   return FindCrossValue(1,par,maxcalls,toler);
 }
 
-MnCross MnMinos::Loval(unsigned int par, unsigned int maxcalls) const {
+MnCross MnMinos::Loval(unsigned int par, unsigned int maxcalls, double toler) const {
    // return crossing in the lower parameter direction
-   return FindCrossValue(-1,par,maxcalls);
+   return FindCrossValue(-1,par,maxcalls,toler);
 }
 
 // #ifdef DEBUG

@@ -319,7 +319,8 @@ bool Minuit2Minimizer::Minimize() {
    fMinuitFCN->SetErrorDef(ErrorDef() );
 
    if (PrintLevel() >=1)
-      std::cout << "Minuit2Minimizer: Minimize with max iterations " << maxfcn << " edmval " << tol << " strategy " 
+      std::cout << "Minuit2Minimizer: Minimize with max-calls " << maxfcn 
+                << " convergence for edm < " << tol << " strategy " 
                 << strategy << std::endl; 
 
    // internal minuit messages
@@ -561,8 +562,23 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
    // run MnCross 
    MnCross low;
    MnCross up;
-   if (runLower) low = minos.Loval(i);
-   if (runUpper) up  = minos.Upval(i);
+   int maxfcn = MaxFunctionCalls(); 
+   double tol = Tolerance();
+
+   const char * par_name = fState.Name(i);
+
+   // now input tolerance for migrad calls inside Minos (MnFunctionCross)
+   // before it was fixed to 0.05 
+   // cut off too small tolerance (they are not needed)
+   tol = std::max(tol, 0.01);
+   
+   if (PrintLevel() >=1)
+      std::cout << "Minuit2Minimizer::GetMinosError for parameter " << i << "  " << par_name
+                << " max-calls " << maxfcn << ", tolerance " << tol << std::endl; 
+
+
+   if (runLower) low = minos.Loval(i,maxfcn,tol);
+   if (runUpper) up  = minos.Upval(i,maxfcn,tol);
  
    ROOT::Minuit2::MinosError me(i, fMinimum->UserState().Value(i),low, up);
 
@@ -571,7 +587,6 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
    // debug result of Minos 
    // print error message in Minos
 
-   const char * par_name = fState.Name(i);
 
    if (debugLevel >= 1) {
       if (runLower) { 
