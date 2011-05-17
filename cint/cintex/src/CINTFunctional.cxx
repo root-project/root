@@ -370,12 +370,12 @@ namespace ROOT { namespace Cintex {
                obj = ::operator new( nary * size);
                long p = (long)obj; 
                for( long i = 0; i < nary; ++i, p += size )
-                  (*context->fStub)(0, (void*)p, context->fParam, 0);
+                  (*context->fStub)(0, (void*)p, context->fParam, context->fStubctx);
             }
          }
          else {
             obj = ::operator new( size );
-            (*context->fStub)(0, obj, context->fParam, 0);
+            (*context->fStub)(0, obj, context->fParam, context->fStubctx);
          }
       }
       catch ( std::exception& e ) {
@@ -418,14 +418,14 @@ namespace ROOT { namespace Cintex {
          else {
             size_t size = context->fClass.SizeOf();
             for(int i = G__getaryconstruct()-1; i>=0 ; i--)
-               (*context->fStub)(0, (char*)obj + size*i, context->fParam, 0);
+               (*context->fStub)(0, (char*)obj + size*i, context->fParam, context->fStubctx);
             ::operator delete (obj);
          }
       }
       else {
          long g__Xtmp = G__getgvp();
          G__setgvp(G__PVOID);
-         (*context->fStub)(0, obj, context->fParam, 0);
+         (*context->fStub)(0, obj, context->fParam, context->fStubctx);
          G__setgvp(g__Xtmp);
          if( !(long(obj) == G__getgvp() && G__PVOID != G__getgvp()) )  {
             ::operator delete (obj); //G__operator_delete(obj);
