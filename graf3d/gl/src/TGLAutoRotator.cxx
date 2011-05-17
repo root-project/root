@@ -101,6 +101,8 @@ void TGLAutoRotator::SetADolly(Double_t a)
 //______________________________________________________________________________
 void TGLAutoRotator::Start()
 {
+   // Start the auto-rotator.
+
    if (fTimerRunning)
    {
       Stop();
@@ -121,6 +123,8 @@ void TGLAutoRotator::Start()
 //______________________________________________________________________________
 void TGLAutoRotator::Stop()
 {
+   // Stop the auto-rotator.
+
    if (fTimerRunning)
    {
       fWatch->Stop();
@@ -132,6 +136,9 @@ void TGLAutoRotator::Stop()
 //______________________________________________________________________________
 void TGLAutoRotator::Timeout()
 {
+   // Called on every timer timeout. Moves / rotates the camera and optionally
+   // produces a screenshot.
+
    if (!fTimerRunning || gTQSender != fTimer)
    {
       Error("Timeout", "Not running or not called via timer.");
@@ -156,4 +163,68 @@ void TGLAutoRotator::Timeout()
    fCamera->RefCamTrans().MoveLF(1, -delta_d);
 
    fViewer->RequestDraw(TGLRnrCtx::kLODHigh);
+
+   if (fImageAutoSave)
+   {
+      TString filename;
+      if (fImageName.Contains("%"))
+      {
+         filename.Form(fImageName, fImageCount);
+      }
+      else
+      {
+         filename = fImageName;
+      }
+      fViewer->SavePicture(filename);
+      ++fImageCount;
+   }
+}
+
+//==============================================================================
+
+//______________________________________________________________________________
+void TGLAutoRotator::StartImageAutoSaveAnimatedGif(const TString& filename)
+{
+   // Start saving into animated gif. The provided name will be used as it is,
+   // so make sure to end it with '.gif+'.
+   // Use convert tool from ImageMagic if you want to set a different delay or
+   // enable looping.
+
+   if ( ! filename.Contains(".gif+"))
+   {
+      Error("StartImageAutoSaveAnimatedGif", "Name should end with '.gif+'. Not starting.");
+      return;
+   }
+
+   fImageName     = filename;
+   fImageCount    = 0;
+   fImageAutoSave = kTRUE;
+}
+
+//______________________________________________________________________________
+void TGLAutoRotator::StartImageAutoSave(const TString& filename)
+{
+   // Start saving into a set of images. The provided name will be used as a
+   // format to insert additional image sequence number so it should include
+   // an '%' character. A good name would be something like:
+   //   "image-%04d.png"
+   // On GNU/Linux use mencoder and/or ffmpeg to bundle images into a movie.
+
+   if ( ! filename.Contains("%"))
+   {
+      Error("StartImageAutoSave", "Name should include a '%%' character, like 'image-%%04d.png'. Not starting.");
+      return;
+   }
+
+   fImageName     = filename;
+   fImageCount    = 0;
+   fImageAutoSave = kTRUE;
+}
+
+//______________________________________________________________________________
+void TGLAutoRotator::StopImageAutoSave()
+{
+   // Stops automatic saving of images.
+
+   fImageAutoSave = kFALSE;
 }

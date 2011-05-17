@@ -13,6 +13,7 @@
 #define ROOT_TGLAutoRotator
 
 #include "TObject.h"
+#include "TString.h"
 
 class TGLCamera;
 class TGLViewer;
@@ -39,10 +40,15 @@ protected:
    Double_t   fThetaA0, fDollyA0;
    Bool_t     fTimerRunning;
 
+   TString    fImageName;
+   Int_t      fImageCount;
+   Bool_t     fImageAutoSave;
+
 public:
    TGLAutoRotator(TGLViewer* v);
    virtual ~TGLAutoRotator();
 
+   TGLViewer* GetViewer() const { return fViewer; }
    TGLCamera* GetCamera() const { return fCamera; }
 
    // --------------------------------
@@ -72,7 +78,18 @@ public:
    Double_t GetADolly() const     { return fADolly; }
    void     SetADolly(Double_t a);
 
-   ClassDef(TGLAutoRotator, 0); // Short description.
+   TString  GetImageName() const              { return fImageName;  }
+   void     SetImageName(const TString& name) { fImageName = name;  }
+   Int_t    GetImageCount() const             { return fImageCount; }
+   void     SetImageCount(Int_t ic)           { fImageCount = ic;   }
+   Bool_t   GetImageAutoSave() const          { return fImageAutoSave; }
+   void     SetImageAutoSave(Bool_t s)        { fImageAutoSave = s; }
+
+   void     StartImageAutoSaveAnimatedGif(const TString& filename);
+   void     StartImageAutoSave(const TString& filename);
+   void     StopImageAutoSave();
+
+   ClassDef(TGLAutoRotator, 0); // Automatic, timer-based, rotation of GL-viewer's camera.
 };
 
 #endif
