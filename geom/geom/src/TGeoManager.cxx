@@ -3373,7 +3373,7 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    if (strstr(filename,".gdml")) {
       // import from a gdml file
       new TGeoManager("GDMLImport", "Geometry imported from GDML");
-      const char* cmd = TString::Format("TGDMLParse::StartGDML(\"%s\")", filename);
+      TString cmd = TString::Format("TGDMLParse::StartGDML(\"%s\")", filename);
       TGeoVolume* world = (TGeoVolume*)gROOT->ProcessLineFast(cmd);
 
       if(world == 0) {
