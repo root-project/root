@@ -1,8 +1,0 @@
-# @prefix@/bin/xrd.bin
-# @prefix@/bin/xrdcp.bin
-# @prefix@/bin/xrdpwdadmin.bin
-# @prefix@/bin/xrdgsiproxy.bin
-@prefix@/bin/xrootd
-@prefix@/bin/olbd
-@prefix@/share/man/man1/xrootd.1*
-@prefix@/share/man/man1/olbd.1*

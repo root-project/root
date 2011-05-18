@@ -1,7 +1,0 @@
-Package: root-plugin-gui-qt
-Architecture: any
-Depends: ${shlibs:Depends}
-Description: Qt plugin for ROOT
- This package contains the Qt plug-in for ROOT.  This plugin
- provides an abstraction over a display.  Windows are created via Qt.
-

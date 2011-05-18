@@ -1,8 +1,0 @@
-Package: root-plugin-hist-spectrumpainter
-Architecture: any
-Depends: ${shlibs:Depends}
-Replaces: libroot-dev
-Conflicts: libroot-dev (<< 5.19.01-1)
-Description: Spectrum painter plugin for ROOT
- This package a painter of spectra for ROOT.
-

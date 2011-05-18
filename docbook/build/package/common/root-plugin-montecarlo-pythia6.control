@@ -1,9 +1,0 @@
-Package: root-plugin-montecarlo-pythia6
-Architecture: any
-Depends: ${shlibs:Depends}
-Description: Pythia version 6 plugin for ROOT
- This package contains the Pythia version 6 plug-in for ROOT. This
- package provide the ROOT user with transparent interface to the
- Pythia (version 6) event generators for hadronic interactions. If the
- term "hadronic" does not ring any bells, this package is not for you.
-

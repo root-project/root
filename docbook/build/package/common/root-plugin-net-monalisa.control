@@ -1,7 +1,0 @@
-Package: root-plugin-net-monalisa
-Architecture: any
-Homepage: http://monalisa.cacr.caltech.edu
-Description: Monalisa plugin for ROOT
- This package contains the Monalisa plug-in for ROOT, which provides an
- interface MonaLisa Monitoring Services.
-

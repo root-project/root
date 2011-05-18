@@ -1,9 +1,0 @@
-Package: root-plugin-math-fumili
-Architecture: any
-Depends: ${shlibs:Depends}
-Provides: root-fitter
-Description: Fumili plugin for ROOT
- This package contains the fumili plug-in for ROOT.  This provides an
- alternative fitting algorithm for ROOT.
-
-

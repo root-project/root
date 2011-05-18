@@ -1,8 +1,0 @@
-Package: root-plugin-net-glite
-Architecture: any
-Homepage: http://root.cern.ch
-Description: Glite plugin for ROOT
- This package contains the Glite plug-in for ROOT, which provides an
- interface to the Glite GRID facility.
-
-

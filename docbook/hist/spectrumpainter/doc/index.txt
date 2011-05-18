@@ -1,5 +1,0 @@
-BEGIN_HTML
-<ul>
-<li><a href="http://root.cern.ch/root/html/TSpectrum2Painter.html#TSpectrum2Painter:PaintSpectrum">TSpectrum2Painter options/attributes.</a></li>
-</ul>
-END_HTML

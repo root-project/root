@@ -1,9 +1,0 @@
-cd $CINTSYSDIR/cint/lib/posix;sh setup
-cd $CINTSYSDIR/cint/lib/socket;sh setup
-cd $CINTSYSDIR/cint/lib/ipc;sh setup
-cd $CINTSYSDIR/cint/lib/pthread;sh setup
-cd $CINTSYSDIR/cint/lib/stdstrct;sh setup
-cd $CINTSYSDIR/cint/lib/xlib;sh setup
-cd $CINTSYSDIR/cint/lib/gl;sh setup
-cd $CINTSYSDIR/cint/lib/dll_stl;sh setup
-cd $CINTSYSDIR/cint/lib

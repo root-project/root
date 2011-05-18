@@ -1,8 +1,0 @@
-Package: root-plugin-net-globus
-Architecture: any
-Depends: ${shlibs:Depends}
-Homepage: http://www.globus.org
-Description: Globus plugin for ROOT
- This package contains the Globus plug-in for ROOT, that allows
- authentification and authorization against globus.
-

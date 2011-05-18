@@ -1,3 +1,0 @@
-Usage:
-  genreflex headerfile1.h [headerfile2.h] [options] [preprocesor options]
-Try "genreflex --help" for more information.

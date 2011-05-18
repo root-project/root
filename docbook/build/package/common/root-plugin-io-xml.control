@@ -1,7 +1,0 @@
-Package: root-plugin-io-xml
-Architecture: any
-Depends: ${shlibs:Depends}
-Description: XML reader plugin for ROOT
- This package contains the XML reader plug-in for ROOT.   This package
- provide a plug-in to parse XML files with ROOT.
-

@@ -1,9 +1,0 @@
-Package: root-plugin-io-sql
-Architecture: any
-Depends: ${shlibs:Depends}
-Recommends: root-db-client | root-plugin-io-mysql
-Description: SQL plugin for ROOT
- This package contains the SQL plug-in for ROOT, that allows
- transparent access to files data via an SQL database, using ROOT's
- TFile interface.
-

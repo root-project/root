@@ -1,9 +1,0 @@
-Package: root-plugin-geom-gdml
-Architecture: any
-Conflicts: libroot-dev (<< 5.19.01-1)
-Replaces: libroot-dev
-Depends: ${shlibs:Depends}, ${python:Depends}, libroot-geom-dev
-Homepage: http://root.cern.ch
-Description: GDML import/export module for ROOT geometries
- This package contains an import/export module for the ROOT geometry.
-

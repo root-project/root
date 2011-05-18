@@ -1,6 +1,0 @@
-BEGIN_HTML
-<ul>
-<li><a href="http://root.cern.ch/drupal/content/how-use-postscript-interface">How to use the PostScript interface.</a></li>
-<li><a href="http://root.cern.ch/root/html/tutorials/graphics/psview.C.html">An example how to display PS, EPS, PDF files in canvas.</a></li>
-</ul>
-END_HTML

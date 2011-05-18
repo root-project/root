@@ -1,9 +1,0 @@
-Package: root-plugin-io-castor
-Architecture: any
-Depends: ${shlibs:Depends}
-Homepage: http://savannah.cern.ch/projects/castor/
-Description: CASTOR plugin for ROOT
- This package contains the rfio plug-in for ROOT.  Using this package,
- it's possible to access file managed by the SHIFT tape archive
- system, as used at CERN.
-

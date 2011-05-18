@@ -1,9 +1,0 @@
-Package: root-plugin-geom-geompainter
-Architecture: any
-Conflicts: libroot-dev (<< 5.19.01-1)
-Replaces: libroot-dev
-Depends: ${shlibs:Depends}
-Homepage: http://root.cern.ch
-Description: Geometry painter plugin for ROOT
- This package contains a geometry painter plugin for ROOT.
-

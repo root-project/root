@@ -1,7 +1,0 @@
-BEGIN_HTML
-This directory contains the I/O interface classes for the <b>Chrip</b> system.
-For more information about <b>Chrip</b>, see:
-<ul>
-<li><a href="http://www.cs.wisc.edu/condor/chirp">the Condor Chirp site</a></li>
-</ul>
-END_HTML

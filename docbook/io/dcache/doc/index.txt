@@ -1,8 +1,0 @@
-BEGIN_HTML
-This directory contains the I/O interface classes for the <b>Dcache</b> system.
-For more information about <b>Dcache</b>, see:
-<ul>
-<li><a href="http://www-dcache.desy.de/">the DESY Dcache site
-    </a></li>
-</ul>
-END_HTML

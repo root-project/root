@@ -1,4 +1,0 @@
-This directory contains the event recorder classes.
-BEGIN_HTML
- A document describing the event recorder will be available soon...
-END_HTML

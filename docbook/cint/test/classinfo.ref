@@ -1,7 +1,0 @@
-Got class info for class A.
-Got method info for A::with_enum(A::ETags).
-Got method info for A::with_enum(ETags).
-Did not get method info for A::with_enum(int).
-Did not get method info for A::with_int(A::ETags).
-Did not get method info for A::with_int(ETags).
-Got method info for A::with_int(int).

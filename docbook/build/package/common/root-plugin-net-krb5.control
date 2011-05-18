@@ -1,8 +1,0 @@
-Package: root-plugin-net-krb5
-Architecture: any
-Depends: ${shlibs:Depends}, krb5-user | heimdal-clients
-Description: Kerberos (version 5) plugin for ROOT
- This package contains the Kerberos (version 5) plug-in for ROOT, that
- allows authentication and authorisation using Kerberos tokens.
-
-

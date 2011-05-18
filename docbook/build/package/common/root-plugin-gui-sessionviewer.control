@@ -1,9 +1,0 @@
-Package: root-plugin-gui-sessionviewer
-Architecture: any
-Conflicts: libroot-dev (<< 5.19.01-1)
-Replaces: libroot-dev
-Depends: ${shlibs:Depends}
-Description: GUI to browse an interactive PROOF session
- This package contains a plug-in browsing an interactive PROOF session
- in ROOT.
-
