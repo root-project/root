@@ -529,7 +529,7 @@ Bool_t TTreeCache::FillBuffer()
       flushIntervals++;
       minEntry += autoFlush;
 
-      if (!((autoFlush > 0) && (fBufferSizeMin > (fNtot*(flushIntervals+1))/flushIntervals) && (prevNtot < fNtot) && (minEntry < fEntryMax)))
+      if (!((autoFlush > 0) && (fBufferSizeMin > ((Long64_t)fNtot*(flushIntervals+1))/flushIntervals) && (prevNtot < fNtot) && (minEntry < fEntryMax)))
          break;
 
       fEntryNext += autoFlush;
