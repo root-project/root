@@ -30,7 +30,7 @@
 #include "TProofBenchTypes.h"
 #include "TSystem.h"
 #include "TUrl.h"
-
+#include "errno.h"
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -84,7 +84,8 @@ void TSelHandleDataSet::ReleaseCache(const char *fn)
       close(fd);
       Info("ReleaseCache", "file cache for file '%s' cleaned ...", filename.Data());
    } else {
-      Error("ReleaseCache", "cannot open file '%s' for cache clean up", filename.Data());
+      Error("ReleaseCache", "cannot open file '%s' for cache clean up; errno=%d",
+                            filename.Data(), errno);
    }
 #else
    Info("ReleaseCache", "dummy function: file '%s' untouched ...", fn);
@@ -183,12 +184,13 @@ Bool_t TSelHandleDataSet::Process(Long64_t entry)
    }
 
    // Resolve the file type; this also adjusts names for Xrd based systems
-   TString fname(fCurrent->GetName());
+   TUrl url(fCurrent->GetName());
+   url.SetAnchor(0);
    TString lfname = gEnv->GetValue("Path.Localroot", "");
-   TFile::EFileType type = TFile::GetType(fname, "", &lfname);
-   TString fproto = TUrl(fname).GetProtocol();
-   if (type == TFile::kLocal && fproto != "root" && fproto != "xrd")
-      lfname = TUrl(fname).GetFileAndOptions();
+   TFile::EFileType type = TFile::GetType(url.GetFileAndOptions(), "", &lfname);
+   if (type == TFile::kLocal &&
+       strcmp(url.GetProtocol(),"root") && strcmp(url.GetProtocol(),"xrd"))
+      lfname = url.GetFileAndOptions();
 
    if (fType->GetType() == TPBHandleDSType::kReleaseCache) {
       // Release the file cache
@@ -208,10 +210,10 @@ Bool_t TSelHandleDataSet::Process(Long64_t entry)
       }
    } else if (fType->GetType() == TPBHandleDSType::kRemoveFiles) {
       // Remove the file
-      RemoveFile(fname);     
+      RemoveFile(url.GetFileAndOptions());     
    } else if (fType->GetType() == TPBHandleDSType::kCopyFiles) {
       // Copy file
-      CopyFile(fname);     
+      CopyFile(url.GetFileAndOptions());     
    } else {
       // Type unknown
       Warning("Process", "type: %d is unknown", fType->GetType());     
