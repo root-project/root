@@ -511,6 +511,15 @@ Bool_t TTreeCache::FillBuffer()
       flushIntervals++;
       minEntry = clusterIter.Next();
 
+      // Continue as long as we still make progress (prevNtot < fNtot), that the next entry range to be looked at, 
+      // which start at 'minEntry', is not past the end of the requested range (minEntry < fEntryMax)
+      // and we guess that we not going to go over the requested amount of memory by asking for another set
+      // of entries (fBufferSizeMin > ((Long64_t)fNtot*(flushIntervals+1))/flushIntervals).
+      // fNtot / flushIntervals is the average size we are accumulated so far at each loop.
+      // and thus (fNtot / flushIntervals) * (flushIntervals+1) is a good guess at what the next total size
+      // would be if we run the loop one more time.   fNtot and flushIntervals are Int_t but can something
+      // be 'large' (i.e. 30Mb * 300 intervals) and can overflow the numercial limit of Int_t (i.e. become
+      // artificially negative).   To avoid this issue we promote fNtot to a long long (64 bits rather than 32 bits) 
       if (!((fBufferSizeMin > ((Long64_t)fNtot*(flushIntervals+1))/flushIntervals) && (prevNtot < fNtot) && (minEntry < fEntryMax)))
          break;
 
