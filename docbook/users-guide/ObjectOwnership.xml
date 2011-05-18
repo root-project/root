@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0">
+<title>Object Ownership</title>
+<para>An object has ownership of another object if it has permission to delete it. Usually a collection or a parent object such as a pad holds ownership. To prevent memory leaks and multiple attempts to delete an object, you need to know which objects ROOT owns and which are owned by you.</para>
+<para>The following rules apply to the ROOT classes.</para>
+<itemizedlist>
+<listitem><para>Histograms, trees, and event lists created by the user are owned by current directory (<emphasis role="italic"><emphasis role="bold"><code>gDirectory</code></emphasis></emphasis>). When the current directory is closed or deleted the objects it owns are deleted.</para></listitem>
+<listitem><para>The <code>TROOT</code>    master object (<emphasis role="italic"><emphasis role="bold"><code>gROOT</code></emphasis></emphasis>) has several collections of objects. Objects that are members of these collections are owned by <emphasis role="italic"><emphasis role="bold"><code>gROOT</code></emphasis></emphasis> see "Ownership by the Master TROOT Object (gROOT)”.</para></listitem>
+<listitem><para>Objects created by another object, for example the function object (e.g.<emphasis role="bold"><code>TF1</code></emphasis>) created by the <emphasis role="bold"><code>TH1</code></emphasis><code>::Fit </code>method is owned by the histogram.</para></listitem>
+<listitem><para>An object created by <code>DrawCopy</code> methods, is owned by the pad it is drawn in.</para></listitem>
+</itemizedlist>
+<para>If an object fits none of these cases, the user has ownership. The next paragraphs describe each rule and user ownership in more detail.</para>
+
+<sect1>
+<title>Ownership by Current Directory (gDirectory)</title>
+<para>When a histogram, tree, or event list (<emphasis role="bold"><code>TEventList</code></emphasis>) is created, it is added to the list of objects in the current directory by default. You can get the list of objects in a directory and retrieve a pointer to a specific object with the <code>GetList</code> method. This example retrieves a histogram.</para>
+
+<programlisting language="c++">
+TH1F *h = (TH1F*)gDirectory-&gt;GetList()-&gt;FindObject("myHist");
+</programlisting>
+
+<para>The method <emphasis role="bold"><code>TDirectory</code></emphasis><code>::GetList()</code>         returns a <emphasis role="bold"><code>TList</code></emphasis> of objects in the directory. It looks in memory, and is implemented in all ROOT collections. You can change the directory of a histogram, tree, or event list with the <code>SetDirectory</code> method. Here we use a histogram for an example, but the same applies to trees and event lists.</para>
+
+<programlisting language="c++">
+<code>h-&gt;SetDirectory(newDir)</code>
+</programlisting>
+
+<para>You can also remove a histogram from a directory by using <code>SetDirectory(0)</code>. Once a histogram is removed from the directory, it will not be deleted when the directory is closed. It is now your responsibility to delete this histogram once you have finished with it. To change the default that automatically adds the histogram to the current directory, you can call the static function:</para>
+
+<programlisting language="c++">
+TH1::AddDirectory(<code>kFALSE</code>);
+</programlisting>
+
+<para>Not all histograms created here after will be added to the current directory. In this case, you own all histogram objects and you will need to delete them and clean up the references. You can still set the directory of a histogram by calling <code>SetDirectory</code> once it has been created as described above. </para>
+<para>Note that, when a file goes out of scope or is closed all objects on its object list are deleted.</para>
+</sect1>
+
+<sect1>
+<title>Ownership by the Master TROOT Object (gROOT)</title>
+<para>The master object <emphasis role="italic"><emphasis role="bold"><code>gROOT</code></emphasis></emphasis><code>,</code> maintains several  collections of objects. For example, a canvas is added to the collection of canvases and it is owned by the canvas collection.</para>
+
+<programlisting language="c++">
+<code>TSeqCollection* fFiles        List of files (TFile)</code>
+<code>TSeqCollection* fMappedFiles  List of memory mapped files (TMappedFile)</code>
+<code>TSeqCollection* fSockets      List of network sockets (TSocket and TServerSocket)</code>
+<code>TSeqCollection* fCanvases     List of canvases (TCanvas)</code>
+<code>TSeqCollection* fStyles       List of styles (TStyle)</code>
+<code>TSeqCollection* fFunctions    List of analytic functions(TF1, TF2, TF3)</code>
+<code>TSeqCollection* fTasks        List of tasks (TTask)</code>
+<code>TSeqCollection* fColors       List of colors (TColor)</code>
+<code>TSeqCollection* fGeometries   List of geometries (?)</code>
+<code>TSeqCollection* fBrowsers     List of browsers (TBrowser)</code>
+<code>TSeqCollection* fSpecials     List of special objects</code>
+<code>TSeqCollection* fCleanups     List of recursiveRemove collections</code>
+</programlisting>
+
+<para>These collections are also displayed in the root folder of the <code>Object Browser</code>. Most of these collections are self explanatory. The special cases are the collections of specials and cleanups.</para>
+
+<sect2>
+<title>The Collection of Specials</title>
+<para>This collection contains objects of the following classes: <emphasis role="bold"><code>TCut</code></emphasis><emphasis role="bold"><code>G</code></emphasis>, <emphasis role="bold"><code>TMultiDimFit</code></emphasis>, <emphasis role="bold"><code>TPrincipal</code></emphasis>,         <emphasis role="bold"><code>TChain</code></emphasis><code>s</code>. In addition it contains the <emphasis role="italic"><emphasis role="bold"><code>gHtml</code></emphasis></emphasis> object, <emphasis role="italic"><emphasis role="bold"><code>gMinuit</code></emphasis></emphasis> objects, and the array of contours graphs (<emphasis role="bold"><code>TGraph</code></emphasis>) created when calling the <code>Draw</code> method of a histogram with the <code>"CONT</code>, <code>LIST"</code> option. </para>
+</sect2>
+
+<sect2>
+<title>Access to the Collection Contents</title>
+<para>The current content for a collection listed above can be accessed with the corresponding <code>gROOT-&gt;GetListOf</code> method (for example <code>gROOT-&gt;GetListOfCanvases</code>). In addition, <code>gROOT-&gt;GetListOfBrowsables</code> returns a collection of all objects visible on the left side panel in the browser. See the image of the Object Browser in the next figure.</para>
+
+<figure><title>The ROOT Object Browser</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/03000094.png" width="227.8pt" depth="201.1pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+</sect2>
+</sect1>
+
+<sect1>
+<title>Ownership by Other Objects</title>
+<para>When an object creates another, the creating object is the owner of the created one. For example:</para>
+
+<programlisting language="c++">
+myHisto-&gt;Fit("gaus")
+</programlisting>
+
+<para>The call to Fit copies the global <emphasis role="bold"><code>TF1</code></emphasis><code> Gaussian function and attaches the copy to the histogram. When the histogram is deleted, the copy is deleted also. </code></para>
+<para><code>When a pad is deleted or cleared, all objects in the pad with the </code><code>kCanDelete</code> bit set are deleted automatically. Currently the objects created by the <code>DrawCopy</code> methods, have the <code>kCanDelete</code> bit set and are therefore owned by the pad.</para>
+</sect1>
+
+<sect1>
+<title>Ownership by the User</title>
+<para>The user owns all objects not described in one of the above cases. <emphasis role="bold"><code>TObject</code></emphasis> has two bits, <code>kCanDelete</code> and <code>kMustCleanup</code>, that influence how an object is managed (in <emphasis role="bold"><code>TObject</code></emphasis><code>::fBits)</code>. These are in an enumeration in <code>TObject.h.</code> To set these bits do:</para>
+
+<programlisting language="c++">
+<code>MyObject-&gt;SetBit(kCanDelete)</code>
+<code>MyObject-&gt;SetBit(kMustCleanup)</code>
+</programlisting>
+
+<para>The bits can be reset and tested with the         <emphasis role="bold"><code>TObject</code></emphasis><code>::ResetBit</code> and <emphasis role="bold"><code>TObject</code></emphasis><code>::TestBit</code>         methods.</para>
+
+<sect2>
+<title>The kCanDelete Bit</title>
+<para>The <emphasis role="italic"><emphasis role="bold"><code>gROOT</code></emphasis></emphasis> collections (see above) own their members and will delete them regardless of the <code>kCanDelete</code> bit. In all other collections, when the collection <code>Clear</code> method is called (i.e. <emphasis role="bold"><code>TList</code></emphasis><code>::Clear()),</code> members with the <code>kCanDelete</code> bit set, are deleted and removed from the collection. If the <code>kCanDelete</code> bit is not set, the object is only removed from the collection but not deleted.</para>
+<para>If a collection <code>Delete</code> (<emphasis role="bold"><code>TList</code></emphasis><code>::Delete()</code>) method is called, all objects in the collection are deleted without considering the <code>kCanDelete</code> bit. It is important to realize that deleting the collection (i.e. delete <code>MyCollection</code>), DOES NOT delete the members of the collection.  </para>
+<para>If the user specified <code>MyCollection-&gt;SetOwner()</code> the collection owns the objects and delete <code>MyCollection</code> will delete all its members. Otherwise, you need to:</para>
+
+<programlisting language="c++">
+<emphasis role="italic"><code>// delete all member objects in the collection</code></emphasis>
+<code>MyCollection</code>-&gt;Delete();
+
+<emphasis role="italic"><code>// and delete the collection object </code></emphasis>
+delete <code>MyCollection</code>;
+</programlisting>
+
+<para>Note that <code>kCanDelete</code> is automatically set by the <code>DrawCopy</code> method and the user can set it for any object. For example, the user must manage all graphics primitives. If you want <emphasis role="bold"><code>TCanvas</code></emphasis>         to delete the primitive you created you have to set the <code>kCanDelete</code> bit.</para>
+<para>The <code>kCanDelete</code> bit setting is displayed with <emphasis role="bold"><code>TObject</code></emphasis><code>::ls()</code>. The last number is either 1 or 0 and is the <code>kCanDelete</code> bit. </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TCanvas MyCanvas("MyCanvas")</code></emphasis>
+root[] <emphasis role="bold"><code>MyCanvas.Divide(2,1)</code></emphasis>
+root[] <emphasis role="bold"><code>MyCanvas-&gt;cd(MyCanvas_1)</code></emphasis>
+root[] <emphasis role="bold"><code>hstat.Draw()</code></emphasis>             <emphasis role="italic"><code>// hstat is an existing TH1F</code></emphasis>
+root[] <emphasis role="bold"><code>MyCanvas-&gt;cd(MyCanvas_2)</code></emphasis>
+root[] <emphasis role="bold"><code>hstat.DrawCopy()</code></emphasis>         <emphasis role="italic"><code>// DrawCopy sets the kCanDelete bit</code></emphasis>
+(class TH1*)0x88e73f8
+root[] <emphasis role="bold"><code>MyCanvas.ls()</code></emphasis>
+<code>Canvas Name=MyCanvas …</code>
+<code> TCanvas … Name= MyCanvas …</code>
+<code>  TPad   … Name= MyCanvas_1 …</code>
+<code>   TFrame  …</code>
+<code>   OBJ: TH1F    hstat   Event Histogram : 0</code>
+<code>   TPaveText   … title</code>
+<code>   TPaveStats  … stats</code>
+<code>  TPad … Name= MyCanvas_2 …</code>
+<code>   TFrame  …</code>
+<code>   OBJ: TH1F    hstat   Event Histogram : 1</code>
+<code>   TPaveText   … title</code>
+TPaveStats  … stats
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>The kMustCleanup Bit</title>
+<para>When the <code>kMustCleanup</code> bit is set,         the object destructor will remove the object and its references from all collections in the clean up collection (<emphasis role="italic"><emphasis role="bold"><code>gROOT</code></emphasis></emphasis><code>::fCleanups</code>). An object can be in several collections, for example if an object is in a browser and on two canvases. If the <code>kMustCleanup</code> bit is set, it will be removed automatically from the browser and both canvases when the destructor of the object is called.</para>
+<para>The <code>kMustCleanup</code> bit is set:</para>
+<itemizedlist>
+<listitem><para>When an object is added to a pad (or canvas) in <emphasis role="bold"><code>TObject</code></emphasis><code>::AppendPad</code>. </para></listitem>
+<listitem><para>When an object is added to a <emphasis role="bold"><code>TBrowser</code></emphasis> with <emphasis role="bold"><code>TBrowser</code></emphasis><code>::Add</code>.</para></listitem>
+<listitem><para>When an object is added to a <emphasis role="bold"><code>TFolder</code></emphasis><code> with </code><emphasis role="bold"><code>TFolder</code></emphasis><code>::Add</code>.</para></listitem>
+<listitem><para>When creating an inspector canvas with <emphasis role="bold"><code>TInspectCanvas</code></emphasis><code>::Inspector</code>.</para></listitem>
+<listitem><para>When creating a <emphasis role="bold"><code>TCanvas</code></emphasis>.</para></listitem>
+<listitem><para>When painting a frame for a pad, the frame's <code>kMustCleanup</code> is set in <emphasis role="bold"><code>TPad</code></emphasis><code>::PaintPadFrame</code></para></listitem>
+</itemizedlist>
+<para>
+<code>The user can add his own collection to the collection of clean ups, to take advantage of the automatic garbage collection. For example:</code></para>
+
+<programlisting language="c++">
+<emphasis role="italic"><code>// create two list</code></emphasis>
+<code>TList *myList1, *myList2; </code>
+
+<emphasis role="italic"><code>// add both to of clean ups</code></emphasis>
+<code>gROOT-&gt;GetListOfCleanUps()-&gt;Add(myList1);</code>
+<code>gROOT-&gt;GetListOfCleanUps()-&gt;Add(myList2);</code>
+
+<emphasis role="italic"><code>// assuming myObject is in myList1 and myList2, when calling:</code></emphasis>
+<code>delete myObject;</code>
+
+<emphasis role="italic"><code>// the object is deleted from both lists</code></emphasis>
+</programlisting>
+
+</sect2>
+</sect1>
+</chapter>
+
+
+

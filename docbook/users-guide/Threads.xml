@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0">
+<title>Threads</title>
+<para>A thread is an independent flow of control that operates within the same address space as other independent flows of controls within a process. In most UNIX systems, thread and process characteristics are grouped into a single entity called a process. Sometimes, threads are called "lightweight processes''. </para>
+<para>Note: This introduction is adapted from the AIX 4.3 Programmer's Manual.</para>
+
+<sect1>
+<title>Threads and Processes</title>
+<para>In traditional single-threaded process systems, a process has a set of properties. In multi-threaded systems, these properties are divided between processes and threads. </para>
+
+<sect2>
+<title>Process Properties</title>
+<para>A process in a multi-threaded system is the changeable entity.  It must be considered as an execution frame.  It has all traditional process attributes, such as: </para>
+<itemizedlist>
+<listitem><para>Process ID, process group ID, user ID, and group ID </para></listitem>
+<listitem><para>Environment</para></listitem>
+<listitem><para>Working directory</para></listitem>
+</itemizedlist>
+<para>A process also provides a common address space and common system resources: </para>
+<itemizedlist>
+<listitem><para>File descriptors</para></listitem>
+<listitem><para>Signal actions</para></listitem>
+<listitem><para>Shared libraries</para></listitem>
+<listitem><para>Inter-process communication tools (such as message queues, pipes, semaphores, or shared memory)</para></listitem>
+</itemizedlist>
+</sect2>
+
+<sect2>
+<title>Thread Properties</title>
+<para>A thread is the schedulable entity. It has only those properties that are required to ensure its independent flow of control. These include the following properties: </para>
+<itemizedlist>
+<listitem><para>Stack</para></listitem>
+<listitem><para>Scheduling properties (such as policy or priority)</para></listitem>
+<listitem><para>Set of pending and blocked signals</para></listitem>
+<listitem><para>Some thread-specific data (TSD)</para></listitem>
+</itemizedlist>
+<para>An example of thread-specific data is the error indicator, <code>errno</code>. In multi-threaded systems, <code>errno</code> is no longer a global variable, but usually a subroutine returning a thread-specific <code>errno</code> value. Some other systems may provide other implementations of <code>errno</code>. With respect to ROOT, a thread specific data is for example the <emphasis role="italic"><emphasis role="bold"><code>gPad</code></emphasis></emphasis> pointer, which is treated in a different way, whether it is accessed from any thread or the main thread. </para>
+<para>Threads within a process must not be considered as a group of processes (even though in Linux each thread receives an own process id, so that it can be scheduled by the kernel scheduler). All threads share the same address space. This means that two pointers having the same value in two threads refer to the same data. Also, if any thread changes one of the shared system resources, all threads within the process are affected. For example, if a thread closes a file, the file is closed for all threads. </para>
+</sect2>
+
+<sect2>
+<title>The Initial Thread</title>
+<para>When a process is created, one thread is automatically created. This thread is called the initial thread or the main thread. The initial thread executes the main routine in multi-threaded programs. </para>
+<para>Note: At the end of this chapter is a glossary of thread specific terms</para>
+</sect2>
+</sect1>
+
+<sect1>
+<title>Implementation of Threads in ROOT</title>
+<para>The <emphasis role="bold"><code>TThread</code></emphasis> class has been developed to provide a platform independent interface to threads for ROOT.  </para>
+
+<sect2>
+<title>Installation</title>
+<para>For the time being, it is still necessary to compile a threaded version of ROOT to enable some very special treatments of the canvas operations.  We hope that this will become the default later.</para>
+<para>To compile ROOT, just do (for example on a debian Linux): </para>
+
+<programlisting language="c++">
+<emphasis role="bold"><code>./configure linuxdeb2 --with-thread=/usr/lib/libpthread.so</code></emphasis>
+<emphasis role="bold"><code>gmake depend</code></emphasis>
+<emphasis role="bold"><code>gmake</code></emphasis>
+</programlisting>
+
+<para>This configures and builds ROOT using <code>/usr/lib/libpthread.so</code> as the <code>Pthread</code> library, and defines <code>R__THREAD</code>.</para>
+<para>This enables the thread specific treatment of <emphasis role="italic"><code>gPad</code></emphasis>, and creates <code>$ROOTSYS/lib/libThread.so.</code></para>
+<para>Note: The parameter linuxdeb2 has to be replaced with the appropriate ROOT keyword for your platform.  </para>
+</sect2>
+
+<sect2>
+<title>Classes</title>
+<para>
+<emphasis role="bold"><code>TThread</code></emphasis>
+
+class implements threads
+
+
+
+. The platform dependent implementation is in the
+<emphasis role="bold"><code>TThreadImp</code></emphasis>
+class and its descendant classes (e.g.
+<emphasis role="bold"><code>TPosixThread</code></emphasis>
+
+
+
+). </para>
+<para><emphasis role="bold"><code>TMutex</code></emphasis>         class implements <code>mutex</code> locks. A mutex is a mutually exclusive lock. The platform dependent implementation is in the <emphasis role="bold"><code>TMutex</code></emphasis><emphasis role="bold"><code>Imp</code></emphasis> class and its descendant classes (e.g. <emphasis role="bold"><code>TPosixMutex</code></emphasis>) </para>
+<para><emphasis role="bold"><code>TCondition</code></emphasis> class implements a condition variable.  Use a condition variable to signal threads.  The platform dependent implementation is in the <emphasis role="bold"><code>TConditionImp</code></emphasis> and <emphasis role="bold"><code>TPosixCondition</code></emphasis> classes . </para>
+<para><emphasis role="bold"><code>TSemaphore</code></emphasis>         class implements a counting semaphore.  Use a semaphore to synchronize threads.  The platform dependent implementation is in the <emphasis role="bold"><code>TMutexImp</code></emphasis> and <emphasis role="bold"><code>TConditionImp</code></emphasis> classes. </para>
+</sect2>
+
+<sect2>
+<title>TThread for Pedestrians</title>
+<para>To run a thread in ROOT, follow these steps: </para>
+<para>1. Initialization</para>
+<para>Add these lines to your <code>rootlogon.C</code>: </para>
+
+<programlisting language="c++">
+{
+…
+<code>   // The next line may be unnecessary on some platforms</code>
+gSystem-&gt;Load("/usr/lib/libpthread.so");
+gSystem-&gt;Load("$ROOTSYS/lib/libThread.so");
+…
+}
+</programlisting>
+
+<para>This loads the library with the <emphasis role="bold"><code>TThread</code></emphasis> class and the <code>pthread</code> specific implementation file for <code>Posix</code> threads. </para>
+<para>2. Coding </para>
+<para>Define a function (e.g. <code>void* UserFun(void* UserArgs))</code> that should run as a thread.  The code for the examples is at the web site of the authors (Jörn Adamczewski, Marc Hemberger).  After downloading the code from this site, you can follow the example below: </para>
+<para>
+<uri xmlns:xlink="http://www-linux.gsi.de/~go4/HOWTOthreads/howtothreadsbody.html">http://www-linux.gsi.de/~go4/HOWTOthreads/howtothreadsbody.html</uri>
+</para>
+<para>3. Loading</para>
+<para>Start an interactive ROOT session. Load the shared library: </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>gSystem-&gt;Load("mhs3.so");</code></emphasis>              <emphasis role="italic"><code>// or</code></emphasis>
+root[] <emphasis role="bold"><code>gSystem-&gt;Load("CalcPiThread.so");</code></emphasis>
+</programlisting>
+
+<para>4. Creating</para>
+<para>Create a thread instance (see also example <code>RunMhs3.C </code>or<code> RunPi.C</code>) with: </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TThread</code></emphasis><emphasis role="bold"><code> *th = new TThread(UserFun,UserArgs);</code></emphasis>
+</programlisting>
+
+<para>When called from the interpreter, this gives the name “<code>UserFun</code>” to the thread.  This name can be used to retrieve the thread later.  However, when called from compiled code, this method does not give any name to the thread.  So give a name to the thread in compiled use:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TThread *th = new TThread("MyThread", UserFun, UserArgs);</code></emphasis>
+</programlisting>
+
+<para>You can pass arguments to the thread function using the <code>UserArgs</code>-pointer.  When you want to start a method of a class as a thread, you have to give the pointer to the class instance as <code>UserArgs</code>.</para>
+<para>5. Running </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>th-&gt;Run(); </code></emphasis>
+root[] <emphasis role="bold"><code>TThread</code></emphasis><emphasis role="bold"><code>::Ps();</code></emphasis> // like UNIX ps c.ommand;
+</programlisting>
+
+<para>With the <code>mhs3</code> example, you should be able to see a canvas with two pads on it.  Both pads keep histograms updated and filled by three different threads. With the <code>CalcPi</code> example, you should be able to see two threads calculating Pi with the given number of intervals as precision. </para>
+</sect2>
+
+<sect2>
+<title>TThread in More Details</title>
+<para>CINT is not thread safe yet, and it will block the execution of the threads until it has finished executing. </para>
+
+<sect3>
+<title>Asynchronous Actions</title>
+<para>Different threads can work simultaneously with the same object.  Some actions can be dangerous.  For example, when two threads create a histogram object, ROOT allocates memory and puts them to the same collection.  If it happens at the same time, the results are undetermined.  To avoid this problem, the user has to synchronize these actions with: </para>
+
+<programlisting language="c++">
+TThread::Lock()    <code>// Locking the following part of code</code>
+...                <code>// Create an object, etc...</code>
+TThread::UnLock()  <code>// Unlocking</code>
+</programlisting>
+
+<para>The code between <code>Lock()</code> and <code>UnLock()</code> will be performed uninterrupted.  No other threads can perform actions or access objects/collections while it is being executed. The methods <emphasis role="bold"><code>TThread</code></emphasis><code>::Lock() </code>and <emphasis role="bold"><code>TThread</code></emphasis><code>::UnLock() </code>internally use a global <emphasis role="bold"><code>TMutex</code></emphasis> instance for locking.  </para>
+<para>The user may also define his own <emphasis role="bold"><code>TMutex</code></emphasis> <code>MyMutex</code> instance and may locally protect his asynchronous actions by calling <code>MyMutex.Lock()</code> and <code>MyMutex.UnLock().</code> </para>
+</sect3>
+
+<sect3>
+<title>Synchronous Actions: TCondition</title>
+<para>To synchronize the actions of different threads you can use the <emphasis role="bold"><code>TCondition</code></emphasis> class, which provides a signaling mechanism. The <emphasis role="bold"><code>TCondition</code></emphasis> instance must be accessible by all threads that need to use it, i.e. it should be a global object (or a member of the class which owns the threaded methods, see below).  To create a <emphasis role="bold"><code>TCondition</code></emphasis> object, a <emphasis role="bold"><code>TMutex</code></emphasis> instance is required for the Wait and <code>TimedWait</code> locking methods.  One can pass the address of an external mutex to the <emphasis role="bold"><code>TCondition</code></emphasis> constructor: </para>
+
+<programlisting language="c++">
+TMutex MyMutex;
+TCondition MyCondition(&amp;MyMutex);
+</programlisting>
+
+<para>If zero is passed, <emphasis role="bold"><code>TCondition</code></emphasis> creates and uses its own internal mutex: </para>
+
+<programlisting language="c++">
+TCondition MyCondition(0);
+</programlisting>
+
+<para>You can now use the following methods of synchronization: </para>
+<itemizedlist>
+<listitem><para><emphasis role="bold"><code>TCondition</code></emphasis><code>::Wait()</code> waits until any thread sends a signal of the same condition instance: <code>MyCondition.Wait()</code> reacts on <code>MyCondition.Signal()</code> or <code>MyCondition.Broadcast()</code>. <code>MyOtherCondition.Signal()</code> has no effect. </para></listitem>
+<listitem><para>If several threads wait for the signal from the same <emphasis role="bold"><code>TCondition</code></emphasis> <code>MyCondition</code>, at <code>MyCondition.Signal()</code> only one thread will react; to activate a further thread another <code>MyCondition.Signal()</code> is required, etc. </para></listitem>
+<listitem><para>If several threads wait for the signal from the same <emphasis role="bold"><code>TCondition</code></emphasis> <code>MyCondition</code>, at <code>MyCondition.Broadcast()</code> all threads waiting for <code>MyCondition</code> are activated at once.  </para></listitem>
+</itemizedlist>
+<para>In some tests of <code>MyCondition</code> using an internal mutex, <code>Broadcast()</code> activated only one thread (probably depending whether <code>MyCondition</code> had been signaled before). </para>
+<itemizedlist>
+<listitem><para><code>MyCondition.TimedWait(secs,nanosecs)</code> waits for <code>MyCondition</code> until the <emphasis role="italic">absolute</emphasis> time in seconds and nanoseconds since beginning of the epoch (January, 1st, 1970) is reached; to use relative timeouts ‘‘delta'', it is required to calculate the absolute time at the beginning of waiting ‘‘now''; for example: </para></listitem>
+</itemizedlist>
+<programlisting language="c++">
+Ulong_t now,then,delta;                   <code>// seconds</code>
+TDatime myTime;                           <code>// root daytime class</code>
+myTime.Set();                             <code>// myTime set to "now"</code>
+now=myTime.Convert();                     <code>// to seconds since 1970</code><emphasis role="bold-italic"> </emphasis>
+then=now+delta;                           <code>// absolute timeout</code><emphasis role="bold-italic"> </emphasis>
+wait=MyCondition.TimedWait(then,0);   <code>// waiting</code>
+</programlisting>
+<itemizedlist>
+<listitem><para>Return value wait of <code>MyCondition.TimedWait</code> should be 0, if <code>MyCondition.Signal()</code> was received, and should be nonzero, if timeout was reached. </para></listitem>
+</itemizedlist>
+<para>The conditions example shows how three threaded functions are synchronized using <emphasis role="bold"><code>TCondition</code></emphasis>: a ROOT script <code>condstart.C</code> starts the threads, which are defined in a shared library (<code>conditions.cxx, conditions.h</code>). </para>
+</sect3>
+
+<sect3>
+<title>Xlib Connections</title>
+<para>Usually <code>Xlib</code> is not thread safe.  This means that calls to the X could fail, when it receives X-messages from different threads.  The actual result depends strongly on which version of <code>Xlib</code> has been installed on your system.  The only thing we can do here within ROOT is calling a special function <code>XInitThreads() </code>(which is part of the <code>Xlib</code>), which should (!) prepare the <code>Xlib</code> for the usage with threads. </para>
+<para>To avoid further problems within ROOT some redefinition of the <emphasis role="italic"><emphasis role="bold"><code>gPad</code></emphasis></emphasis> pointer was done (that's the main reason for the recompilation).  When a thread creates a <emphasis role="bold"><code>TCanvas</code></emphasis>, this object is actually created in the main thread; this should be transparent to the user.  Actions on the canvas are controlled via a function, which returns a pointer to either thread specific data (TSD) or the main thread pointer.  This mechanism works currently only for <emphasis role="italic"><emphasis role="bold"><code>gPad</code></emphasis></emphasis> and will be implemented soon for other global Objects as e.g. <emphasis role="italic"><emphasis role="bold"><code>gVirtualX</code></emphasis></emphasis>, <emphasis role="italic"><emphasis role="bold"><code>gDirectory</code></emphasis></emphasis>, <emphasis role="italic"><emphasis role="bold"><code>gFile</code></emphasis></emphasis>. </para>
+</sect3>
+
+<sect3>
+<title>Canceling a TThread</title>
+<para>Canceling of a thread is a rather dangerous action. In <emphasis role="bold"><code>TThread</code></emphasis> canceling is forbidden by default. The user can change this default by calling <emphasis role="bold"><code>TThread</code></emphasis><code>::SetCancelOn()</code>. There are two cancellation modes: deferred and asynchronous.</para>
+</sect3>
+
+<sect3>
+<title>Deferred</title>
+<para>Set by <emphasis role="bold"><code>TThread</code></emphasis><code>::SetCancelDeferred()</code> (default): When the user knows safe places in his code where a thread can be canceled without risk for the rest of the system, he can define these points by invoking <emphasis role="bold"><code>TThread</code></emphasis><code>::CancelPoint()</code>. Then, if a thread is canceled, the cancellation is deferred up to the call of <emphasis role="bold"><code>TThread</code></emphasis><code>::CancelPoint()</code> and then the thread is canceled safely. There are some default cancel points for <code>pthreads</code> implementation, e.g. any call of the <emphasis role="bold"><code>TCondition</code></emphasis><code>::Wait()</code>, <emphasis role="bold"><code>TCondition</code></emphasis><code>::TimedWait()</code>,         <emphasis role="bold"><code>TThread</code></emphasis><code>::Join()</code>.         </para>
+</sect3>
+
+<sect3>
+<title>Asynchronous</title>
+<para> Set by <emphasis role="bold"><code>TThread</code></emphasis><code>::SetCancelAsynchronous</code><code>()</code>: If the user is sure that his application is cancel safe, he could call: </para>
+
+<programlisting language="c++">
+TThread::SetCancelAsynchronous();
+TThread::SetCancelOn();
+<code>// Now cancelation in any point is allowed.</code>
+<code>...  </code>
+<code>// Return to default  </code>
+TThread::SetCancelOff();
+TThread::SetCancelDeferred();
+</programlisting>
+
+<para>To cancel a thread <emphasis role="bold"><code>TThread</code></emphasis><code>* th</code> call: </para>
+
+<programlisting language="c++">
+th-&gt;Kill();
+</programlisting>
+
+<para>To cancel by thread name:</para>
+
+<programlisting language="c++">
+TThread::Kill(name);
+</programlisting>
+
+<para>To cancel a thread by ID:</para>
+
+<programlisting language="c++">
+TThread::Kill(tid);
+</programlisting>
+
+<para>To cancel a thread and delete <code>th</code> when cancel finished:</para>
+
+<programlisting language="c++">
+th-&gt;Delete();
+</programlisting>
+
+<para>Deleting of the thread instance by the operator delete is dangerous. Use <code>th-&gt;Delete()</code> instead. C++ delete is safe only if thread is not running. Often during the canceling, some clean up actions must be taken. To define clean up functions use: </para>
+
+<programlisting language="c++">
+void UserCleanUp(void *arg){
+<code>// here the user cleanup is done</code>
+...
+}
+TThread::CleanUpPush(&amp;UserCleanUp,arg);
+<code>       // push user function into cleanup stack“last in, first out”</code>
+TThread::CleanUpPop(1); <code>// pop user function out of stack and execute it,</code>
+<code>// thread resumes after this call</code>
+TThread::CleanUpPop(0); <code>// pop user function out of stack</code>
+<code>// _without_ executing it</code>
+</programlisting>
+
+<para>Note: <code>CleanUpPush</code> and <code>CleanUpPop</code> should be used as corresponding pairs like brackets; unlike <code>pthreads</code> cleanup stack (which is <emphasis role="italic">not</emphasis> implemented here), <emphasis role="bold"><code>TThread</code></emphasis> does not force this usage. </para>
+</sect3>
+
+<sect3>
+<title>Finishing thread</title>
+<para>When a thread returns from a user function the thread is finished. It also can be finished by <emphasis role="bold"><code>TThread</code></emphasis><code>::Exit()</code>. Then, in case of <code>thread</code>-detached mode, the thread vanishes completely. By default, on finishing <emphasis role="bold"><code>TThread</code></emphasis> executes the most recent cleanup function (<code>CleanUpPop(1)</code> is called automatically once). </para>
+</sect3>
+</sect2>
+</sect1>
+
+<sect1>
+<title>Advanced TThread: Launching a Method in a Thread</title>
+<para>Consider a class <code>Myclass</code> with a member function that shall be launched as a thread.</para>
+
+<programlisting language="c++">
+void* <code>Myclass::Thread0((void* arg)</code>
+</programlisting>
+
+<para>To start Thread0 as a <emphasis role="bold"><code>TThread</code></emphasis>, class <code>Myclass</code> may provide a method: </para>
+
+<programlisting language="c++">
+Int_t Myclass::Threadstart(){
+if(!mTh){
+mTh= new TThread("memberfunction",(void(*)(void *))&amp;Thread0,(void*) this);
+mTh-&gt;Run();
+return 0;
+}
+return 1;
+}
+</programlisting>
+
+<para>Here <code>mTh</code> is a <emphasis role="bold"><code>TThread</code></emphasis><code>*</code> pointer which is member of <code>Myclass </code>and should be initialized to 0 in the constructor. The <emphasis role="bold"><code>TThread</code></emphasis> constructor is called as when we used a plain C function above, except for the following two differences.</para>
+<para>First, the member function Thread0 requires an explicit cast to <code>(void(*) (void *)</code>). This may cause an annoying but harmless compiler warning:</para>
+
+<programlisting language="c++">
+Myclass.cxx:98: warning: converting from "void (Myclass::*)(void *)"to "void *" )
+</programlisting>
+
+<para>Strictly speaking, <code>Thread0</code> must be a static member function to be called from a thread. Some compilers, for example <code>gcc</code> version 2.95.2, may not allow the <code>(void(*) (void*))s</code> cast and just stop if <code>Thread0</code> is not static. On the other hand, if <code>Thread0</code> is static, no compiler warnings are generated at all. Because the <code>'this'</code> pointer is passed in <code>'arg'</code> in the call to <code>Thread0(void *arg),</code> you have access to the instance of the class even if <code>Thread0</code> is static. Using the <code>'this'</code> pointer, non static members can still be read and written from <code>Thread0</code>, as long as you have provided Getter and Setter methods for these members. For example:</para>
+
+<programlisting language="c++">
+Bool_t state = arg-&gt;GetRunStatus();
+arg-&gt;SetRunStatus(state);
+</programlisting>
+
+<para>Second, the pointer to the current instance of <code>Myclass</code>, i.e. (void*) this, has to be passed as first argument of the threaded function Thread0 (C++ member functions internally expect this pointer as first argument to have access to class members of the same instance).  <code>pthreads</code> are made for simple C functions and do not know about Thread0 being a member function of a class.  Thus, you have to pass this information by hand, if you want to access all members of the <code>Myclass</code> instance from the Thread0 function. </para>
+<para>Note: Method Thread0 cannot be a virtual member function, since the cast of <code>Thread0</code> to <code>void(*)</code> in the <emphasis role="bold"><code>TThread</code></emphasis> constructor may raise problems with C++ virtual function table.  However, Thread0 may call another virtual member function virtual void <code>Myclass::Func0()</code> which then can be overridden in a derived class of <code>Myclass</code>. (See example <code>TMhs3</code>). </para>
+<para>Class <code>Myclass</code> may also provide a method to stop the running thread: </para>
+
+<programlisting language="c++">
+Int_t Myclass::Threadstop(){
+if(mTh){
+TThread::Delete(mTh);
+delete mTh;
+mTh=0;
+return 0;
+}
+return 1;
+}
+</programlisting>
+
+<para>Example <code>TMhs3:</code> Class <emphasis role="bold"><code>TThreadframe</code></emphasis> (<code>TThreadframe.h, TThreadframe.cxx</code>) is a simple example of a framework class managing up to four threaded methods. Class <code>TMhs3</code> (<code>TMhs3.h, TMhs3.cxx)</code> inherits from this base class, showing the <code>mhs3</code> example 8.1 <code>(mhs3.h, mhs3.cxx) </code>within a class. The <code>Makefile</code> of this example builds the shared libraries <code>libTThreadframe.so</code> and <code>libTMhs3.so</code>.  These are either loaded or executed by the ROOT script <code>TMhs3demo.C,</code> or are linked against an executable: <code>TMhs3run.cxx</code>. </para>
+
+<sect2>
+<title>Known Problems</title>
+<para>Parts of the ROOT framework, like the interpreter, are not yet thread-safe.  Therefore, you should use this package with caution.  If you restrict your threads to distinct and `simple' duties, you will able to benefit from their use. The <emphasis role="bold"><code>TThread</code></emphasis> class is available on all platforms, which provide a POSIX compliant thread implementation. On Linux, Xavier Leroy's Linux Threads implementation is widely used, but the <emphasis role="bold"><code>TThread</code></emphasis> implementation should be usable on all platforms that provide <code>pthread</code>. </para>
+<para><emphasis role="bold">Linux Xlib on SMP machines</emphasis> is not yet thread-safe. This may cause crashes during threaded graphics operations; this problem is independent of ROOT. </para>
+<para><emphasis role="bold">Object instantiation:</emphasis> there is no implicit locking mechanism for memory allocation and global ROOT lists.  The user has to explicitly protect his code when using them.  </para>
+</sect2>
+</sect1>
+
+<sect1>
+<title>The Signals of ROOT</title>
+<para>The list of default signals handled by ROOT is:</para>
+
+<programlisting language="c++">
+kSigChildkSigPipe
+kSigBuskSigAlarm
+kSigSegmentationViolationkSigUrgent
+kSigIllegalInstructionkSigFloatingException
+kSigSystemkSigWindowChanged
+</programlisting>
+
+<para>The signals <emphasis role="italic"><emphasis role="bold"><code>kSigFloatingException</code></emphasis></emphasis>, <emphasis role="italic"><emphasis role="bold"><code>kSigSegmentationViolation</code></emphasis></emphasis>, <emphasis role="italic"><emphasis role="bold"><code>kSigIllegalInstruction</code></emphasis></emphasis>, and <emphasis role="italic"><emphasis role="bold"><code>kSigBus</code></emphasis></emphasis> cause the printing of the <emphasis role="italic"><emphasis role="bold"><code>*** Break *** </code></emphasis></emphasis>message and make a long jump back to the ROOT prompt. No other custom <emphasis role="bold"><code>TSignalHandler</code></emphasis> can be added to these signals.</para>
+<para>The <emphasis role="italic"><emphasis role="bold"><code>kSigAlarm</code></emphasis></emphasis> signal handles asynchronous timers. The <emphasis role="italic"><emphasis role="bold"><code>kSigWindowChanged</code></emphasis></emphasis> signal handles the resizing of the terminal window. The other signals have no other behavior then that to call any registered <emphasis role="bold"><code>TSignalHandler</code></emphasis><emphasis role="italic"><emphasis role="bold"><code>::Notify()</code></emphasis></emphasis>. </para>
+<para>When building in interactive application the use of the <emphasis role="bold"><code>TRint</code></emphasis> object handles the <code>kSigInterrupt</code> signal. It causes the printing of the message:  <emphasis role="italic"><emphasis role="bold"><code>*** Break *** keyboard interrupt </code></emphasis></emphasis>and makes a long jump back to the ROOT command prompt. If no <emphasis role="bold"><code>TRint</code></emphasis> object is created, there will be no <code>kSigInterrupt</code> handling. All signals can be reset to their default UNIX behavior via the call of <emphasis role="bold"><code>TSytem</code></emphasis><code>::ResetSignal()</code>. All signals can be ignored via <emphasis role="bold"><code>TSytem</code></emphasis><code>::IgnoreSignal()</code>. The <emphasis role="bold"><code>TSytem</code></emphasis><code>::IgnoreInterrupt()</code> is a method to toggle the handling of the interrupt signal. Typically it is called to prevent a <code>SIGINT</code> to interrupt some important call (like writing to a ROOT file). </para>
+<para>If <emphasis role="bold"><code>TRint</code></emphasis> is used and the default ROOT interrupt handler is not desired, you should use <code>GetSignalHandler()</code> of <emphasis role="bold"><code>TApplication</code></emphasis> to get the interrupt handler and to remove it by <code>RemoveSignalHandler()</code>of
+<emphasis role="bold"><code>TSystem</code></emphasis> .</para>
+</sect1>
+
+<sect1>
+<title>Glossary</title>
+<para>The following glossary is adapted from the description of the Rogue Wave <code>Threads.h</code>++ package.</para>
+<para>A <emphasis role="bold"><code>process</code></emphasis> is a program that is loaded into memory and prepared for execution. Each process has a private address space. Processes begin with a single thread. </para>
+<para>A <emphasis role="bold"><code>thread</code></emphasis> is a sequence of instructions being executed in a program. A thread has a program counter and a private stack to keep track of local variables and return addresses. A multithreaded process is associated with one or more threads. Threads execute independently. All threads in a given process share the private address space of that process. </para>
+<para><emphasis role="bold"><code>Concurrency</code></emphasis> exists when at least two threads are in progress at the same time. A system with only a single processor can support concurrency by switching execution contexts among multiple threads. </para>
+<para><emphasis role="bold"><code>Parallelism</code></emphasis> arises when at least two threads are executing simultaneously. This requires a system with multiple processors. Parallelism implies concurrency, but not vice-versa. </para>
+<para>A function is <emphasis role="bold"><code>reentrant</code></emphasis> if it will behave correctly even if a thread of execution enters the function while one or more threads are already executing within the function. These could be the same thread, in the case of recursion, or different threads, in the case of concurrency. </para>
+<para><emphasis role="bold"><code>Thread-specific data</code></emphasis> (<emphasis role="bold"><code>TSD</code></emphasis>) is also known as thread-local storage (TLS). Normally, any data that has lifetime beyond the local variables on the thread's private stack are shared among all threads within the process. Thread-specific data is a form of static or global data that is maintained on a per-thread basis. That is, each thread gets its own private copy of the data. </para>
+<para>Left to their own devices, threads execute independently. <emphasis role="bold"><code>Synchronization</code></emphasis> is the work that must be done when there are, in fact, interdependencies that require some form of communication among threads. Synchronization tools include mutexes, semaphores, condition variables, and other variations on locking. </para>
+<para>A <emphasis role="bold"><code>critical section</code></emphasis> is a section of code that accesses a non-sharable resource. To ensure correct code, only one thread at a time may execute in a critical section. In other words, the section is not reentrant. </para>
+<para>A <emphasis role="bold"><code>mutex</code></emphasis>, or mutual exclusion lock, is a synchronization object with two states locked and unlocked. A mutex is usually used to ensure that only one thread at a time executes some critical section of code. Before entering a critical section, a thread will attempt to lock the mutex, which guards that section. If the mutex is already locked, the thread will block until the mutex is unlocked, at which time it will lock the mutex, execute the critical section, and unlock the mutex upon leaving the critical section. </para>
+<para>A <emphasis role="bold"><code>semaphore</code></emphasis> is a synchronization mechanism that starts out initialized to some positive value. A thread may ask to wait on a semaphore in which case the thread blocks until the value of the semaphore is positive. At that time the semaphore count is decremented and the thread continues. When a thread releases semaphore, the semaphore count is incremented. Counting semaphores are useful for coordinating access to a limited pool of some resource. </para>
+<para><emphasis role="bold"><code>Readers/Writer Lock</code></emphasis> - a multiple-reader, single-writer lock is one that allows simultaneous read access by many threads while restricting write access to only one thread at a time. When any thread holds the lock for reading, other threads can also acquire the lock reading. If one thread holds the lock for writing, or is waiting to acquire the lock for writing, other threads must wait to acquire the lock for either reading or writing. </para>
+<para>Use a <emphasis role="bold"><code>condition variable</code></emphasis> in conjunction with a mutex lock to automatically block threads until a particular condition is true. </para>
+<para><emphasis role="bold"><code>Multithread Safe Levels</code></emphasis> - a possible classification scheme to describe thread-safety of libraries: </para>
+<itemizedlist>
+<listitem><para>All public and protected functions are reentrant. The library provides protection against multiple threads trying to modify static and global data used within a library. The developer must explicitly lock access to objects shared between threads. No other thread can write to a locked object unless it is unlocked. The developer needs to lock local objects. The spirit, if not the letter of this definition, requires the user of the library only to be familiar with the semantic content of the objects in use. Locking access to objects that are being shared due to extra-semantic details of implementation (for example, copy-on-write) should remain the responsibility of the library. </para></listitem>
+<listitem><para>All public and protected functions are reentrant. The library provides protection against multiple threads trying to modify static and global data used within the library. The preferred way of providing this protection is to use mutex locks. The library also locks an object before writing to it. The developer is not required to explicitly lock or unlock a class object (static, global or local) to perform a single operation on the object. Note that even multithread safe level II hardly relieves the user of the library from the burden of locking. </para></listitem>
+</itemizedlist>
+<para>A thread suffers from <emphasis role="bold"><code>deadlock</code></emphasis> if it is blocked waiting for a condition that will never occur. Typically, this occurs when one thread needs to access a resource that is already locked by another thread, and that other thread is trying to access a resource that has already been locked by the first thread. In this situation, neither thread is able to progress; they are deadlocked. </para>
+<para>A <emphasis role="bold"><code>multiprocessor</code></emphasis> is a hardware system with multiple processors or multiple, simultaneous execution units. </para>
+<itemizedlist>
+<listitem><para>Examples can be found at  <uri xmlns:xlink="http://www-linux.gsi.de/~go4/HOWTOthreads/howtothreadsbody.html">http://www-linux.gsi.de/~go4/HOWTOthreads/howtothreadsbody.html</uri> (the thread authors' web site - Jörn Adamczewski and Marc Hemberger).</para></listitem>
+</itemizedlist>
+</sect1>
+</chapter>
+
+
+

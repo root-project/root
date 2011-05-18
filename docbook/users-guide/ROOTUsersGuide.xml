@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<book xmlns="http://docbook.org/ns/docbook" 
+      xmlns:xi="http://www.w3.org/2001/XInclude" version="5.0">  
+    
+    <info>
+        <title>ROOT User's Guide</title>
+        <productname>ROOT, An Object Oriented Data Analysis Framework</productname>
+        <author><orgname>The ROOT team</orgname></author>
+        <editor><orgname>The ROOT team</orgname></editor>
+        <date>June 2011</date>
+    </info>
+    
+    <xi:include href="Preface.xml"/>
+    <xi:include href="Introduction.xml"/>
+    <xi:include href="GettingStarted.xml"/>
+    <xi:include href="Histograms.xml"/>
+    <xi:include href="Graphs.xml"/>
+    <xi:include href="FittingHistograms.xml"/>
+    <xi:include href="ALittleC++.xml"/>
+    <xi:include href="CINT.xml"/>
+    <xi:include href="ObjectOwnership.xml"/>
+    <xi:include href="Graphics.xml"/>
+    <xi:include href="FoldersTasks.xml"/>
+    <xi:include href="InputOutput.xml"/>
+    <xi:include href="Trees.xml"/>
+    <xi:include href="MathLibraries.xml"/>
+    <xi:include href="LinearAlgebra.xml"/>
+    <xi:include href="AddingaClass.xml"/>
+    <xi:include href="CollectionClasses.xml"/>
+    <xi:include href="PhysicsVectors.xml"/>
+    <xi:include href="Geometry.xml"/>
+    <xi:include href="PythonRuby.xml"/>
+    <xi:include href="TutorialsandTests.xml"/>
+    <xi:include href="ExampleAnalysis.xml"/>
+    <xi:include href="Networking.xml"/>
+    <xi:include href="Threads.xml"/>
+    <xi:include href="PROOF.xml"/>
+    <xi:include href="WritingGUI.xml"/>
+    <xi:include href="ROOTandQt.xml"/>
+    <xi:include href="HTMLDoc.xml"/>
+    <xi:include href="InstallandBuild.xml"/>
+    
+    <index/>
+</book>

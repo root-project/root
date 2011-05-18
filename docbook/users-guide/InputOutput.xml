@@ -1,0 +1,2223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0">
+<title>Input/Output</title>
+<para>This chapter covers the saving and reading of objects to and from ROOT files. It begins with an explanation of the physical layout of a ROOT file. It includes a discussion on compression, and file recovery. Then we explain the logical file, the class <emphasis role="bold"><code>TFile</code></emphasis> and its methods. We show how to navigate in a file, how to save objects and read them back. We also include a discussion on <code>Streamers</code>. <code>Streamers</code> are the methods responsible to capture an objects current state to save it to disk or send it over the network. At the end of the chapter is a discussion on the two specialized ROOT files: <emphasis role="bold"><code>TNetFile</code></emphasis> and <emphasis role="bold"><code>TWebFile</code></emphasis>.</para>
+
+<sect1>
+<title>The Physical Layout of ROOT Files</title>
+<para>A ROOT file is like a UNIX file directory. It can contain directories and objects organized in unlimited number of levels. It also is stored in machine independent format (ASCII, IEEE floating point, Big Endian byte ordering). To look at the physical layout of a ROOT file, we first create one. This example creates a ROOT file and 15 histograms, fills each histogram with 1000 entries from a Gaussian distribution, and writes them to the file. </para>
+
+<programlisting language="c++">
+{
+char name[10], title[20];
+TObjArray Hlist(0);       <emphasis role="italic"><code>// create an array of Histograms</code></emphasis>
+TH1F* h;                 <emphasis role="italic"><code>// create a pointer to a histogram</code></emphasis>
+<emphasis role="italic"><code>   // make and fill 15 histograms and add them to the object array</code></emphasis>
+for (Int_t i = 0; i &lt; 15; i++) {
+sprintf(name,"h%d",i);
+sprintf(title,"histo nr:%d",i);
+h = new TH1F(name,title,100,-4,4);
+Hlist.Add(h);
+h-&gt;FillRandom("gaus",1000);
+}
+<emphasis role="italic"><code>   // open a file and write the array to the file</code></emphasis>
+TFile f("demo.root","recreate");
+Hlist-&gt;Write();
+f.Close();
+}
+</programlisting>
+
+<para>The example begins with a call to the <emphasis role="bold"><code>TFile</code></emphasis> constructor. This class is describing the ROOT file (that has the extension "<code>.root</code>”). In the next section, we will cover <emphasis role="bold"><code>TFile</code></emphasis> in details. The last line of the example closes the file. To view its contents we need to open it again, and to create a <emphasis role="bold"><code>TBrowser</code></emphasis> object by:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TFile f("demo.root")</code></emphasis>
+root[] <emphasis role="bold"><code>TBrowser browser;</code></emphasis>
+</programlisting>
+
+<figure><title>The browser with 15 created histograms</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/030000E6.png" width="207.95pt" depth="145.85pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para>You can check if the file is correctly opened by:</para>
+
+<programlisting language="c++">
+TFile f(“demo.root”);
+if (f.IsZombie()) {
+cout &lt;&lt; “Error opening file” &lt;&lt; endl;
+exit(-1);
+} else {
+…
+}
+</programlisting>
+
+<para>Once we have the <emphasis role="bold"><code>TFile</code></emphasis> object, we can call the <emphasis role="bold"><code>TFile</code></emphasis><code>::Map()</code> method to view the physical layout. The output prints the date/time, the start record address, the number of bytes in the record, the class name of the record and the compression factor.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>f.Map()</code></emphasis>
+20051208/124502  At:100    N=114       TFile
+20051208/124502  At:214    N=413       TH1F           CX =  2.35
+20051208/124502  At:627    N=410       TH1F           CX =  2.36
+20051208/124502  At:1037   N=396       TH1F           CX =  2.45
+20051208/124502  At:1433   N=400       TH1F           CX =  2.42
+20051208/124502  At:1833   N=402       TH1F           CX =  2.41
+20051208/124502  At:2235   N=416       TH1F           CX =  2.33
+20051208/124502  At:2651   N=406       TH1F           CX =  2.39
+20051208/124502  At:3057   N=403       TH1F           CX =  2.40
+20051208/124502  At:3460   N=411       TH1F           CX =  2.36
+20051208/124502  At:3871   N=400       TH1F           CX =  2.42
+20051208/124502  At:4271   N=409       TH1F           CX =  2.38
+20051208/124502  At:4680   N=409       TH1F           CX =  2.38
+20051208/124502  At:5089   N=420       TH1F           CX =  2.32
+20051208/124502  At:5509   N=406       TH1F           CX =  2.40
+20051208/124502  At:5915   N=405       TH1F           CX =  2.40
+20051208/124503  At:6320   N=3052      StreamerInfo   CX =  3.16
+20051208/124503  At:9372   N=732       KeysList
+20051208/124503  At:10104  N=53        FreeSegments
+20051208/124503  At:10157  N=1         END
+</programlisting>
+
+<para>Here we see the fifteen histograms (<emphasis role="bold"><code>TH1F</code></emphasis>'s) with the first one starting at byte 148. We also see an entry <emphasis role="bold"><code>TFile</code></emphasis>. You may notice that the first entry starts at byte 100. The first 100 bytes are taken by the file header. </para>
+
+<sect2>
+<title>The File Header</title>
+<para>This table shows the file header information. When fVersion is greater than 1000000, the file is a large file
+(&gt; 2 GB) and the offsets will be 8 bytes long.  The location in brackets are the location in the case of a large file.</para>
+<informaltable frame="all">
+<tgroup cols="3">
+<colspec colwidth="2069*" colname="column-1"/>
+<colspec colwidth="1991*" colname="column-2"/>
+<colspec colwidth="4495*" colname="column-3"/>
+<tbody>
+<row>
+<entry rowsep="1" colsep="1">
+<para>Byte</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Value Name</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Description</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>1 <code>-&gt;</code> 4</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>"<code>root</code>"</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+Root file identifier
+</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>5 <code>-&gt;</code> 8</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>fVersion</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+File format version
+</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>9 <code>-&gt;</code> 12</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>fBEGIN</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+Pointer to first data record
+</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>13 <code>-&gt;</code> 16    [13-&gt;20]</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>fEND</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+Pointer to first free word at the EOF
+</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>17 <code>-&gt;</code> 20    [21-&gt;28]</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>fSeekFree</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+Pointer to FREE data record
+</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>21 <code>-&gt;</code> 24    [29-&gt;32]</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>fNbytesFree</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+Number of bytes in FREE data record
+</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>25 <code>-&gt;</code> 28    [33-&gt;36]</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>nfree</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+Number of free data records
+</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>29 <code>-&gt;</code> 32    [37-&gt;40]</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>fNbytesName</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Number of bytes in <emphasis role="bold"><code>TNamed</code></emphasis> at creation time</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>33 <code>-&gt;</code> 33    [41-&gt;41]</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>fUnits</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+Number of bytes for file pointers
+</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>34 <code>-&gt;</code> 37    [42-&gt;45]</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>fCompress</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Zip compression level</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>34 <code>-&gt;</code> 37    [46-&gt;53]</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>fSeekInfo</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Pointer to <emphasis role="bold"><code>TStreamerInfo</code></emphasis> record</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>34 <code>-&gt;</code> 37    [54-&gt;57]</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>fNBytesInfo</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Number of bytes in <emphasis role="bold"><code>TStreamerInfo</code></emphasis> record</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>34 <code>-&gt;</code> 37    [58-&gt;75]</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>fCompress</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Universal Unique ID</para>
+</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<para/>
+<para>The first four bytes of the file header contain the string "root" which identifies a file as a ROOT file. Because of this identifier, ROOT is not dependent on the "<code>.root</code>" extension. It is still a good idea to use the extension, just for us to recognize them easier. The <code>nfree</code> and value is the number of free records. This variable along with <code>FNBytesFree</code> keeps track of the free space in terms of records and bytes. This count also includes the deleted records, which are available again.</para>
+</sect2>
+
+<sect2>
+<title>The Top Directory Description</title>
+<para>The 84 bytes after the file header contain the top directory description, including the name, the date and time it was created, and the date and time of the last modification.</para>
+
+<programlisting language="c++">
+20010404/092347  At:64        N=84        TFile
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>The Histogram Records</title>
+<para>What follows are the 15 histograms, in records of variable length.</para>
+
+<programlisting language="c++">
+20010404/092347  At:148       N=380       TH1F           CX =  2.49
+20010404/092347  At:528       N=377       TH1F           CX =  2.51
+</programlisting>
+
+<para>The first 4 bytes of each record is an integer holding the number of bytes in this record. A negative number flags the record as deleted, and makes the space available for recycling in the next writing. The rest of bytes in the header contain all the information to identify uniquely a data block on the file. It is followed by the object data. </para>
+<para>The next table explains the values in each individual record. If the key is located past the 32 bit file limit
+(&gt; 2 GB) then some fields will be 8 bytes instead of 4 bytes (values between the brackets):</para>
+<para/>
+<informaltable frame="all">
+<tgroup cols="3">
+<colspec colwidth="2092*" colname="column-1"/>
+<colspec colwidth="1991*" colname="column-2"/>
+<colspec colwidth="4163*" colname="column-3"/>
+<tbody>
+<row>
+<entry rowsep="1" colsep="1">
+<para>Byte</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Value Name</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Description</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>1 <code>-&gt;</code> 4</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>Nbytes</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Length of compressed object (in bytes)</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>5 <code>-&gt;</code> 6</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>Version</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para><emphasis role="bold"><code>TKey</code></emphasis> version identifier</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>7 <code>-&gt;</code> 10</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>ObjLen</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Length of uncompressed object</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>11 <code>-&gt;</code> 14</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>Datime</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Date and time when object was written to file</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>15 <code>-&gt;</code> 16</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>KeyLen</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Length of the key structure (in bytes)</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>17 <code>-&gt;</code> 18</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>Cycle</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Cycle of key</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>19 <code>-&gt;</code> 22   [19-&gt;26]</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>SeekKey</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Pointer to record itself (consistency check)</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>23 <code>-&gt;</code> 26   [27-&gt;34]</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>SeekPdir</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Pointer to directory header</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>27 <code>-&gt;</code>         27  [35-&gt;35]</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>lname</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Number of bytes in the class name</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>28 <code>-&gt;</code> …    [36-&gt;…]</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>ClassName</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Object Class Name</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>… <code>-&gt;</code> …</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>lname</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Number of bytes in the object name</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>… <code>-&gt;</code> …</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>Name</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para><code>lName</code> bytes with the name of the object</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>… <code>-&gt;</code> …</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>lTitle</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Number of bytes in the object title</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>… <code>-&gt;</code> …</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>Title</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Title of the object</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>… <code>-&gt;</code> …</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>
+<code>DATA</code>
+</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Data bytes associated to the object</para>
+</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<para>You see a reference to <emphasis role="bold"><code>TKey</code></emphasis>. It is explained in detail in the next section. </para>
+</sect2>
+
+<sect2>
+<title>The Class Description List (StreamerInfo List)</title>
+<para>The histogram records are followed by the <code>StreamerInfo</code> list of class descriptions. The list contains the description of each class that has been written to file.</para>
+
+<programlisting language="c++">
+20010404/092347  At:5854   N=2390   StreamerInfo   CX =  3.41
+</programlisting>
+
+<para>The class description is recursive, because to fully describe a class, its ancestors and object data members have to be described also. In <code>demo.root</code>, the class description list contains the description for:</para>
+<itemizedlist>
+<listitem><para><emphasis role="bold"><code>TH1F</code></emphasis> </para></listitem>
+<listitem><para>all classes in the <emphasis role="bold"><code>TH1F</code></emphasis> inheritance tree </para></listitem>
+<listitem><para>all classes of the object data members</para></listitem>
+<listitem><para>all classes in the object data members' inheritance tree.</para></listitem>
+</itemizedlist>
+<para>This description is implemented by the <emphasis role="bold"><code>TStreamerInfo</code></emphasis>         class<code>,</code> and is often referred to as simply <code>StreamerInfo</code>. You can print a file's <code>StreamerInfo</code>list with the <emphasis role="bold"><code>TFile</code></emphasis><code>::ShowStreamerInfo</code> method. Below is an example of the output. Only the first line of each class description is shown. The <code>demo.root</code> example contains only <emphasis role="bold"><code>TH1F</code></emphasis> objects. Here we see the recursive nature of the class description; it contains the <code>StreamerInfo</code>of all the classes needed to describe <emphasis role="bold"><code>TH1F</code></emphasis>.</para>
+
+<programlisting language="c++">
+<code>root[]</code><emphasis role="bold"><code> f.ShowStreamerInfo()</code></emphasis>
+<code>StreamerInfo for class: TH1F, version=1</code>
+<code>  BASE     TH1         offset=0 type= 0 1-Dim histogram base class</code>
+<code>  BASE     TArrayF     offset=0 type= 0 Array of floats </code>
+
+<code>StreamerInfo for class: TH1, version=3</code>
+<code>  BASE     TNamed      offset=0 type=67 The basis for named object(name,title)</code>
+<code>  BASE     TAttLine    offset=0 type=0  Line attributes     </code>
+<code>  BASE     TAttFill    offset=0 type=0  Fill area attributes</code>
+<code>  BASE     TAttMarker  offset=0 type=0  Marker attributes   </code>
+<code>  Int_t    fNcells     offset=0 type=3  number bins(1D),cells(2D)+U/Overflows</code>
+<code>  TAxis    fXaxis      offset=0 type=61 X axis descriptor   </code>
+<code>  TAxis    fYaxis      offset=0 type=61 Y axis descriptor   </code>
+<code>  TAxis    fZaxis      offset=0 type=61 Z axis descriptor   </code>
+<code>  Short_t  fBarOffset  offset=0 type=2  (1000*offset) for barcharts or legos</code>
+<code>  Short_t  fBarWidth   offset=0 type=2  (1000*width) for bar charts or legos</code>
+<code>  Stat_t   fEntries    offset=0 type=8  Number of entries</code><emphasis role="italic"><code>//continued…</code></emphasis>
+<code>  Stat_t   fTsumw      offset=0 type=8  Total Sum of weights</code>
+<code>  Stat_t   fTsumw2     offset=0 type=8  Total Sum of squares of weights</code>
+<code>  Stat_t   fTsumwx     offset=0 type=8  Total Sum of weight*X</code>
+<code>  Stat_t   fTsumwx2    offset=0 type=8  Total Sum of weight*X*X</code>
+<code>  Double_t fMaximum    offset=0 type=8  Maximum value for plotting</code>
+<code>  Double_t fMinimum    offset=0 type=8  Minimum value for plotting</code>
+<code>  Double_t fNormFactor offset=0 type=8  Normalization factor</code>
+<code>  TArrayD  fContour    offset=0 type=62 Array to display contour levels</code>
+<code>  TArrayD  fSumw2      offset=0 type=62 Array of sum of squares of weights</code>
+<code>  TString  fOption     offset=0 type=65 histogram options   </code>
+<code>  TList*   fFunctions  offset=0 type=63 -&gt;Pointer to list of functions(fits,user)</code>
+
+<code>StreamerInfo for class: TNamed, version=1</code>
+<code>…</code>
+<code>StreamerInfo for class: TAttLine, version=1</code>
+<code>…</code>
+<code>StreamerInfo for class: TAttFill, version=1</code>
+<code>…</code>
+<code>StreamerInfo for class: TAttMarker, version=1</code>
+<code>…</code>
+<code>StreamerInfo for class: TArrayF, version=1</code>
+<code>…</code>
+<code>StreamerInfo for class: TArray, version=1</code>
+<code>…</code>
+<code>StreamerInfo for class: TAxis, version=6</code>
+<code>…</code>
+<code>StreamerInfo for class: TAttAxis, version=4</code>
+<code>…</code>
+</programlisting>
+
+<para>ROOT allows a class to have multiple versions, and each version has its own description in form of a <code>StreamerInfo</code>. Above you see the class name and version number. The <code>StreamerInfo</code>list has only one description for each class/version combination it encountered. The file can have multiple versions of the same class, for example objects of old and new versions of a class can be in the same file. The <code>StreamerInfo</code>is described in detail in the section on Streamers.</para>
+</sect2>
+
+<sect2>
+<title>The List of Keys and the List of Free Blocks</title>
+<para>The last three entries on the output of <emphasis role="bold"><code>TFile</code></emphasis><code>::Map()</code> are the list of keys, the list of free segments, and the address where the data ends.. When a file is closed, it writes a linked list of keys at the end of the file. This is what we see in the third to the last entry.  In our example, the list of keys is stored in 732 bytes beginning at byte# 8244.</para>
+
+<programlisting language="c++">
+<code>20010404/092347    At:8244      N=732       KeysList</code>
+<code>20010404/092347    At:8976      N=53        FreeSegments</code>
+<code>20010404/092347    At:9029      N=1         END</code>
+</programlisting>
+
+<para>The second to last entry is a list of free segments. In our case, this starts 8976 and is not very long, only 53 bytes, since we have not deleted any objects. The last entry is the address of the last byte in the file.</para>
+</sect2>
+
+<sect2>
+<title>File Recovery</title>
+<para>A file may become corrupted or it may be impossible to write it to disk and close it properly. For example if the file is too large and exceeds the disk quota, or the job crashes or a batch job reaches its time limit before the file can be closed. In these cases, it is imperative to recover and retain as much information as possible. ROOT provides an intelligent and elegant file recovery mechanism using the redundant directory information in the record header.</para>
+<para>If a file that has been not properly closed is opened again, it is scanned and rebuilt according to the information in the record header. The recovery algorithm reads the file and creates the saved objects in memory according to the header information. It then rebuilds the directory and file structure. If the file is opened in write mode, the recovery makes the correction on disk when the file is closed; however if the file is opened in read mode, the correction can not be written to disk. You can also explicitly invoke the recovery procedure by calling the <emphasis role="bold"><code>TFile</code></emphasis><code>::Recover()</code> method. You can recover the directory structure, but you cannot save what you recovered to the file on disk. In the following example, we interrupted and aborted the previous ROOT session, causing the file not to be closed. When we start a new session and attempt to open the file, it gives us an explanation and status on the recovery attempt.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TFile f("demo.root")</code></emphasis>
+Warning in &lt;TFile::TFile&gt;: file demo.root probably not closed, trying to recover successfully recovered 15 keys
+</programlisting>
+
+</sect2>
+</sect1>
+
+<sect1>
+<title>The Logical ROOT File: TFile and TKey</title>
+<para>We saw that the <emphasis role="bold"><code>TFile</code></emphasis><code>::Map()</code> method reads the file sequentially and prints information about each record while scanning the file. It is not feasible to support only sequential access and hence ROOT provides random or direct access, i.e. reading a specified object at a time. To do so, <emphasis role="bold"><code>TFile</code></emphasis> keeps a list of <emphasis role="bold"><code>TKey</code></emphasis><code>s</code>, which is essentially an index to the objects in the file. The <emphasis role="bold"><code>TKey</code></emphasis> class describes the record headers of objects in the file. For example, we can get the list of keys and print them. To find a specific object on the file we can use the <emphasis role="bold"><code>TFile</code></emphasis><code>::Get()</code> method.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TFile f("demo.root")</code></emphasis>
+root[] <emphasis role="bold"><code>f.GetListOfKeys()-&gt;Print()</code></emphasis>
+TKey Name = h0, Title = histo nr:0, Cycle = 1
+TKey Name = h1, Title = histo nr:1, Cycle = 1
+TKey Name = h2, Title = histo nr:2, Cycle = 1
+TKey Name = h3, Title = histo nr:3, Cycle = 1
+TKey Name = h4, Title = histo nr:4, Cycle = 1
+TKey Name = h5, Title = histo nr:5, Cycle = 1
+TKey Name = h6, Title = histo nr:6, Cycle = 1
+TKey Name = h7, Title = histo nr:7, Cycle = 1
+TKey Name = h8, Title = histo nr:8, Cycle = 1
+TKey Name = h9, Title = histo nr:9, Cycle = 1
+TKey Name = h10, Title = histo nr:10, Cycle = 1
+TKey Name = h11, Title = histo nr:11, Cycle = 1
+TKey Name = h12, Title = histo nr:12, Cycle = 1
+TKey Name = h13, Title = histo nr:13, Cycle = 1
+TKey Name = h14, Title = histo nr:14, Cycle = 1
+root[] <emphasis role="bold"><code>TH1F *h9 = (TH1F*)f.Get("h9");</code></emphasis>
+</programlisting>
+
+<para>The <emphasis role="bold"><code>TFile</code></emphasis><code>::Get()</code> finds the <emphasis role="bold"><code>TKey</code></emphasis> object with name "<code>h9</code>". Using the <emphasis role="bold"><code>TKey</code></emphasis> info it will import in memory the object in the file at the file address #3352 (see the output from the <emphasis role="bold"><code>TFile</code></emphasis><code>::Map</code> above). This is done by the <code>Streamer</code> method that is covered in detail in a later section. Since the keys are available in a <emphasis role="bold"><code>TList</code></emphasis> of <emphasis role="bold"><code>TKey</code></emphasis><code>s</code> we can iterate over the list of keys:</para>
+
+<programlisting language="c++">
+{
+TFile f("demo.root");
+TIter next(f.GetListOfKeys());
+TKey *key;
+while ((key=(TKey*)next())) {
+printf("key: %s points to an object of class: %s at %dn",
+key-&gt;GetName(),
+key-&gt;GetClassName(),key-&gt;GetSeekKey());
+}
+}
+</programlisting>
+
+<para>The output of this script is:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.x iterate.C</code></emphasis>
+key: h0 points to an object of class: TH1F at 150
+key: h1 points to an object of class: TH1F at 503
+key: h2 points to an object of class: TH1F at 854
+key: h3 points to an object of class: TH1F at 1194
+key: h4 points to an object of class: TH1F at 1539
+key: h5 points to an object of class: TH1F at 1882
+key: h6 points to an object of class: TH1F at 2240
+key: h7 points to an object of class: TH1F at 2582
+key: h8 points to an object of class: TH1F at 2937
+key: h9 points to an object of class: TH1F at 3293
+key: h10 points to an object of class: TH1F at 3639
+key: h11 points to an object of class: TH1F at 3986
+key: h12 points to an object of class: TH1F at 4339
+key: h13 points to an object of class: TH1F at 4694
+key: h14 points to an object of class: TH1F at 5038
+</programlisting>
+
+<para>In addition to the list of keys, <emphasis role="bold"><code>TFile</code></emphasis> also keeps two other lists: <emphasis role="bold"><code>TFile</code></emphasis><code>::fFree</code> is a <emphasis role="bold"><code>TList</code></emphasis> of free blocks used to recycle freed up space in the file. ROOT tries to find the best free block. If a free block matches the size of the new object to be stored, the object is written in the free block and this free block is deleted from the list. If not, the first free block bigger than the object is used. <emphasis role="bold"><code>TFile</code></emphasis><code>::fListHead</code> contains a sorted list (<emphasis role="bold"><code>TSortedList</code></emphasis>) of objects in memory. The diagram below illustrates the logical view of the <emphasis role="bold"><code>TFile</code></emphasis> and <emphasis role="bold"><code>TKey</code></emphasis>.</para>
+
+<figure><title>ROOT File/Directory/Key description</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/030000E7.png" width="337.65pt" depth="371.8pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<sect2>
+<title>Viewing the Logical File Contents</title>
+<para><emphasis role="bold"><code>TFile</code></emphasis> is a descendent of <emphasis role="bold"><code>TDirectory</code></emphasis>, which means it behaves like a <emphasis role="bold"><code>TDirectory</code></emphasis>. We can list the contents, print the name, and create subdirectories. In a ROOT session, you are always in a directory and the directory you are in is called the current directory and is stored in the global variable <emphasis role="italic"><emphasis role="bold"><code>gDirectory</code></emphasis></emphasis>.  Let us look at a more detailed example of a ROOT file and its role as the current directory.  First, we create a ROOT file by executing a sample script.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.x $ROOTSYS/tutorials/hsimple.C</code></emphasis>
+</programlisting>
+
+<para>Now you should have <code>hsimple.root</code> in your directory. The file was closed by the script so we have to open it again to work with it. We open the file with the intent to update it, and list its contents.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TFile f ("hsimple.root","UPDATE")</code></emphasis>
+root[] <emphasis role="bold"><code>f.ls()</code></emphasis>
+TFile** hsimple.root
+TFile* hsimple.root
+KEY: TH1F hpx;1 This is the px distribution
+KEY: TH2F hpxpy;1 py vs px
+KEY: TProfile hprof;1 Profile of pz versus px
+KEY: TNtuple ntuple;1 Demo ntuple
+</programlisting>
+
+<para>It shows the two lines starting with <emphasis role="bold"><code>TFile</code></emphasis> followed by four lines starting with the word "<code>KEY</code>". The four keys tell us that there are four objects on disk in this file. The syntax of the listing is:</para>
+
+<programlisting language="c++">
+KEY: &lt;class&gt; &lt;variable&gt;;&lt;cycle number&gt; &lt;title&gt;
+</programlisting>
+
+<para>For example, the first line in the list means there is an object in the file on disk, called <code>hpx</code>. It is of the class <emphasis role="bold"><code>TH1F</code></emphasis> (one-dimensional histogram of floating numbers). The object's title is "This is the <code>px</code> distribution". If the line starts with <code>OBJ</code>, the object is in memory. The &lt;class&gt; is the name of the ROOT class (T-something). The &lt;variable&gt; is the name of the object. The cycle number along with the variable name uniquely identifies the object. The &lt;title&gt; is the string given in the constructor of the object as title.</para>
+
+<figure><title>The structure of TFile</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/030000E8.png" width="271.25pt" depth="140.3pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para>The figure shows a <emphasis role="bold"><code>TFile</code></emphasis> with five objects in the top directory <code>(kObjA;1, kObjA;2, kObjB;1, kObjC;1</code>         and         <code>kObjD;1)</code>. <code>ObjA</code> is on file twice with two different cycle numbers. It also shows four objects in memory (<code>mObjE</code>, <code>mObjeF</code>, <code>mObjM</code>, <code>mObjL</code>).  It also shows several subdirectories. </para>
+</sect2>
+
+<sect2>
+<title>The Current Directory</title>
+<para>When you create a <emphasis role="bold"><code>TFile</code></emphasis> object, it becomes the current directory. Therefore, the last file to be opened is always the current directory. To check your current directory you can type:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>gDirectory-&gt;pwd()</code></emphasis>
+Rint:/
+</programlisting>
+
+<para>This means that the current directory is the ROOT session (<code>Rint</code>). When you create a file, and repeat the command the file becomes the current directory.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TFile f1("AFile1.root");</code></emphasis>
+root[] <emphasis role="bold"><code>gDirectory-&gt;pwd()</code></emphasis>
+AFile1.root:/
+</programlisting>
+
+<para>If you create two files, the last becomes the current directory.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TFile f2("AFile2.root");</code></emphasis>
+root[] <emphasis role="bold"><code>gDirectory-&gt;pwd()</code></emphasis>
+AFile2.root:/
+</programlisting>
+
+<para>To switch back to the first file, or to switch to any file in general, you can use the <emphasis role="bold"><code>TDirectory</code></emphasis><code>::cd</code>         method. The next command changes the current directory back to the first file.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>f1.cd();</code></emphasis>
+root[] <emphasis role="bold"><code>gDirectory-&gt;pwd()</code></emphasis>
+AFile1.root:/
+</programlisting>
+
+<para>Note that even if you open the file in "READ" mode, it still becomes the current directory. CINT also offers a shortcut for <code>gDirectory-&gt;pwd()</code> and <code>gDirectory-&gt;ls()</code>, you can type: </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.pwd</code></emphasis>
+AFile1.root:/
+root[] <emphasis role="bold"><code>.ls</code></emphasis>
+TFile**        AFile1.root
+TFile*         AFile1.root
+</programlisting>
+
+<para>To return to the home directory where we were before:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>gROOT</code></emphasis><emphasis role="bold"><code>-&gt;cd()</code></emphasis>
+(unsigned char)1
+root[] <emphasis role="bold"><code>gROOT-&gt;pwd()</code></emphasis>
+Rint:/
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Objects in Memory and Objects on Disk</title>
+<para>The <emphasis role="bold"><code>TFile</code></emphasis><code>::ls()</code> method has an option to list the objects on disk ("<code>-d</code>") or the objects in memory ("<code>-m</code>"). If no option is given it lists both, first the objects in memory, then the objects on disk.  For example:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TFile *f = new TFile("hsimple.root");</code></emphasis>
+root[] <emphasis role="bold"><code>gDirectory</code></emphasis><emphasis role="bold"><code>-&gt;ls("-m")</code></emphasis>
+TFile**         hsimple.root
+TFile*         hsimple.root
+</programlisting>
+
+<para>Remember that <emphasis role="italic"><emphasis role="bold"><code>gDirectory</code></emphasis></emphasis> is the current directory and at this time is equivalent to "<code>f</code>". This correctly states that no objects are in memory. </para>
+<para>The next command lists the objects on disk in the current directory. </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>gDirectory</code></emphasis><emphasis role="bold"><code>-&gt;ls("-d")</code></emphasis>
+TFile**         hsimple.root
+TFile*         hsimple.root
+KEY: TH1F     hpx;1    This is the px distribution
+KEY: TH2F     hpxpy;1  py vs px
+KEY: TProfile hprof;1  Profile of pz versus px
+KEY: TNtuple  ntuple;1 Demo ntuple
+</programlisting>
+
+<para>To bring an object from disk into memory, we have to use it or "Get" it explicitly. When we use the object, ROOT gets it for us. Any reference to <code>hprof</code> will read it from the file. For example drawing <code>hprof</code> will read it from the file and create an object in memory. Here we draw the profile histogram, and then we list the contents.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>hprof-&gt;Draw()</code></emphasis>
+&lt;TCanvas::MakeDefCanvas&gt;: created default TCanvas with name c1
+root[] <emphasis role="bold"><code>f-&gt;ls()</code></emphasis>
+TFile** hsimple.root
+TFile* hsimple.root
+OBJ: TProfile hprof Profile of pz versus px : 0
+KEY: TH1F hpx;1 This is the px distribution
+KEY: TH2F hpxpy;1 py vs px
+KEY: TProfile hprof;1 Profile of pz versus px
+KEY: TNtuple ntuple;1 Demo ntuple
+</programlisting>
+
+<para>We now see a new line that starts with OBJ. This means that an object of class <emphasis role="bold"><code>TProfile</code></emphasis>, called <code>hprof</code> has been added in memory to this directory. This new <code>hprof</code> in memory is independent from the <code>hprof</code> on disk. If we make changes to the <code>hprof</code> in memory, they are not propagated to the <code>hprof</code> on disk.  A new version of <code>hprof</code> will be saved once we call <code>Write</code>.</para>
+<para>You may wonder why <code>hprof</code> is added to the objects in the current directory. <code>hprof</code> is of the class <emphasis role="bold"><code>TProfile</code></emphasis> that inherits from <emphasis role="bold"><code>TH1D</code></emphasis>, which inherits from <emphasis role="bold"><code>TH1</code></emphasis>. <emphasis role="bold"><code>TH1</code></emphasis> is the basic histogram.  All histograms and trees are created in the current directory (also see "Histograms and the Current Directory"). The reference to "all histograms" includes objects of any class descending directly or indirectly from <emphasis role="bold"><code>TH1</code></emphasis>. Hence, our <emphasis role="bold"><code>TProfile</code></emphasis> <code>hprof</code> is created in the current directory <code>f.</code>There was another side effect when we called the <emphasis role="bold"><code>TH1</code></emphasis><code>::Draw</code> method. CINT printed this statement:</para>
+
+<programlisting language="c++">
+&lt;TCanvas::MakeDefCanvas&gt;: created default TCanvas with name c1
+</programlisting>
+
+<para>It tells us that a <emphasis role="bold"><code>TCanvas</code></emphasis> was created and it named it <code>c1</code>. This is where ROOT is being nice, and it creates a canvas for drawing the histogram if no canvas was named in the draw command, and if no active canvas exists. The newly created canvas, however, is NOT listed in the contents of the current directory. Why is that? The canvas is not added to the current directory, because by default ONLY histograms and trees are added to the object list of the current directory. Actually, <emphasis role="bold"><code>TEventList</code></emphasis> objects are also added to the current directory, but at this time, we don't have to worry about those. If the canvas is not in the current directory then where is it?  Because it is a canvas, it was added to the list of canvases. </para>
+<para>This list can be obtained by the command <code>gROOT-&gt;GetListOfCanvases()-&gt;ls()</code>. The <code>ls()</code> will print the contents of the list. In our list, we have one canvas called <code>c1</code>. It has a <emphasis role="bold"><code>TFrame</code></emphasis>, a <emphasis role="bold"><code>TProfile</code></emphasis>, and a <emphasis role="bold"><code>TPaveStats</code></emphasis>.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>gROOT</code></emphasis><emphasis role="bold"><code>-&gt;GetListOfCanvases()-&gt;ls()</code></emphasis>
+Canvas Name=c1 Title=c1
+Option=TCanvas fXlowNDC=0 fYlowNDC=0 fWNDC=1 fHNDC=1
+Name= c1 Title= c1
+Option=TFrame  X1= -4.000000 Y1=0.000000 X2=4.000000 Y2=19.384882
+OBJ: TProfile hprof   Profile of pz versus px : 0
+TPaveText  X1=-4.900000 Y1=20.475282 X2=-0.950000 Y2=21.686837 title
+TPaveStats X1=2.800000  Y1=17.446395 X2=4.800000  Y2=21.323371 stats
+</programlisting>
+
+<para>Lets proceed with our example and draw one more histogram, and we see one more OBJ entry. </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>hpx-&gt;Draw()</code></emphasis>
+root[] <emphasis role="bold"><code>f-&gt;ls()</code></emphasis>
+TFile**         hsimple.root
+TFile*         hsimple.root
+OBJ: TProfile hprof    Profile of pz versus px : 0
+OBJ: TH1F     hpx      This is the px distribution : 0
+KEY: TH1F     hpx;1    This is the px distribution
+KEY: TH2F     hpxpy;1  py vs px
+KEY: TProfile hprof;1  Profile of pz versus px
+KEY: TNtuple  ntuple;1 Demo ntuple
+</programlisting>
+
+<para><emphasis role="bold"><code>TFile</code></emphasis><code>::ls()</code> loops over the list of objects in memory and the list of objects on disk. In both cases, it calls the <code>ls()</code> method of each object. The implementation of the <code>ls</code>         method is specific to the class of the object, all of these objects are descendants of <emphasis role="bold"><code>TObject</code></emphasis> and inherit the <emphasis role="bold"><code>TObject</code></emphasis><code>::ls()</code> implementation. The histogram classes are descendants of <emphasis role="bold"><code>TNamed</code></emphasis> that in turn is a descent of <emphasis role="bold"><code>TObject</code></emphasis>. In this case, <emphasis role="bold"><code>TNamed</code></emphasis><code>::ls()</code> is executed, and it prints the name of the class, and the name and title of the object. Each directory keeps a list of its objects in the memory. You can get this list by <emphasis role="bold"><code>TDirectory</code></emphasis><code>::GetList()</code>   . To see the lists in memory contents you can do:</para>
+
+<programlisting language="c++">
+<code>root[]</code><emphasis role="bold"><code>f-&gt;GetList()-&gt;ls()</code></emphasis>
+<code>OBJ: TProfile   hprof   Profile of pz versus px : 0</code>
+<code>OBJ: TH1F       hpx     This is the px distribution : 0</code>
+</programlisting>
+
+<para>Since the file <code>f</code> is the current directory (<emphasis role="italic"><emphasis role="bold"><code>gDirectory</code></emphasis></emphasis>), this will yield the same result:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>gDirectory-&gt;GetList()-&gt;ls()</code></emphasis>
+<code>OBJ: TProfile   hprof   Profile of pz versus px : 0</code>
+<code>OBJ: TH1F       hpx     This is the px distribution : 0</code>
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Saving Histograms to Disk</title>
+<para>At this time, the objects in memory (OBJ) are identical to the objects on disk (KEY). Let's change that by adding a fill to the <code>hpx</code> we have in memory.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>hpx-&gt;Fill(0)</code></emphasis>
+</programlisting>
+
+<para>Now the <code>hpx</code> in memory is different from the histogram (<code>hpx</code>) on disk. Only one version of the object can be in memory, however, on disk we can store multiple versions of the object. The <emphasis role="bold"><code>TFile</code></emphasis><code>::Write</code> method will write the list of objects in the current directory to disk. It will add a new version of <code>hpx</code> and <code>hprof</code>.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>f-&gt;Write()</code></emphasis>
+root[] <emphasis role="bold"><code>f-&gt;ls()</code></emphasis>
+TFile**         hsimple.root
+TFile*         hsimple.root
+OBJ: TProfile hprof  Profile of pz versus px : 0
+OBJ: TH1F     hpx    This is the px distribution : 0
+KEY: TH1F     hpx;2  This is the px distribution
+KEY: TH1F     hpx;1  This is the px distribution
+KEY: TH2F     hpxpy;1 py vs px
+KEY: TProfile hprof;2 Profile of pz versus px
+KEY: TProfile hprof;1 Profile of pz versus px
+KEY: TNtuple  ntuple;1        Demo ntuple
+</programlisting>
+
+<figure><title>The file before and after the call to <code>Write</code></title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/030000E9.png" width="253.25pt" depth="163.25pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para>The <emphasis role="bold"><code>TFile</code></emphasis><code>::Write</code> method wrote the entire list of objects in the current directory to the file. You see that it added two new keys: <code>hpx;2</code> and <code>hprof;2</code> to the file. Unlike memory, a file is capable of storing multiple objects with the same name. Their cycle number, the number after the semicolon, differentiates objects on disk with the same name. If you wanted to save only <code>hpx</code> to the file, but not the entire list of objects, you could use the <emphasis role="bold"><code>TH1</code></emphasis><code>::Write </code>method of <code>hpx</code>:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>hpx-&gt;Write()</code></emphasis>
+</programlisting>
+
+<para>A call to <code>obj-&gt;Write</code> without any parameters will call <code>obj-&gt;GetName()</code> to find the name of the object and use it to create a key with the same name. You can specify a new name by giving it as a parameter to the <code>Write</code> method.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>hpx-&gt;Write("newName")</code></emphasis>
+</programlisting>
+
+<para>If you want to re-write the same object, with the same key, use the overwrite option.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>hpx-&gt;Write("",TObject::kOverwrite</code></emphasis><emphasis role="bold"><code>)</code></emphasis>
+</programlisting>
+
+<para>If you give a new name and use the <code>kOverwrite</code>, the object on disk with the matching name is overwritten if such an object exists. If not, a new object with the new name will be created.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>hpx-&gt;Write("newName",TObject::kOverwrite)</code></emphasis>
+</programlisting>
+
+<para>The <code>Write</code> method did not affect the objects in memory at all. However, if the file is closed, the directory is emptied and the objects on the list are deleted.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>f-&gt;Close()</code></emphasis>
+root[] <emphasis role="bold"><code>f-&gt;ls()</code></emphasis>
+TFile**     hsimple.root
+TFile*      hsimple.root
+</programlisting>
+
+<para>In the code snipped above, you can see that the directory is now empty. If you followed along so far, you can see that <code>c1</code> which was displaying <code>hpx</code> is now blank. Furthermore, <code>hpx</code> no longer exists.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>hpx-&gt;Draw()</code></emphasis>
+Error: No symbol hpx in current scope
+</programlisting>
+
+<para>This is important to remember, do not close the file until you are done with the objects or any attempt to reference the objects will fail. </para>
+</sect2>
+
+<sect2>
+<title>Histograms and the Current Directory</title>
+<para>When a histogram is created, it is added by default to the list of objects in the current directory. You can get the list of histograms in a directory and retrieve a pointer to a specific histogram.</para>
+
+<programlisting language="c++">
+TH1F *h = (TH1F*)gDirectory-&gt;Get("myHist"); <code>// or</code>
+TH1F *h = (TH1F*)gDirectory-&gt;GetList()-&gt;FindObject("myHist");
+</programlisting>
+
+<para>The method <emphasis role="bold"><code>TDirectory</code></emphasis><code>::GetList()</code>         returns a <emphasis role="bold"><code>TList</code></emphasis> of objects in the directory. You can change the directory of a histogram with the <code>SetDirectory</code> method.</para>
+
+<programlisting language="c++">
+<code>h-&gt;SetDirectory(newDir);</code>
+</programlisting>
+
+<para>If the parameter is 0, the histogram is no longer associated with a directory. </para>
+
+<programlisting language="c++">
+<code>h-&gt;SetDirectory(0);</code>
+</programlisting>
+
+<para>Once a histogram is removed from the directory, it will no longer be deleted when the directory is closed. It is now your responsibility to delete this histogram object once you are finished with it. To change the default that automatically adds the histogram to the current directory, you can call the static function:</para>
+
+<programlisting language="c++">
+TH1::AddDirectory(<code>kFALSE</code>);
+</programlisting>
+
+<para>In this case, you will need to do all the bookkeeping for all the created histograms.</para>
+</sect2>
+
+<sect2>
+<title>Saving Objects to Disk</title>
+<para>In addition to histograms and trees, you can save any object in a ROOT file. For example to save a canvas to the ROOT file you can use either <emphasis role="bold"><code>TObject</code></emphasis><code>::Write()</code> or <emphasis role="bold"><code>TDirectory</code></emphasis><code>::WriteTObject()</code>. The example:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>c1-&gt;Write()</code></emphasis>
+</programlisting>
+
+<para>This is equivalent to:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>f-&gt;WriteTObject(c1)</code></emphasis>
+</programlisting>
+
+<para>For objects that do not inherit from <emphasis role="bold"><code>TObject</code></emphasis> use:</para>
+
+<programlisting language="c++">
+root[]<emphasis role="bold"><code> f-&gt;WriteObject(ptr,"nameofobject")</code></emphasis>
+</programlisting>
+
+<para>
+<emphasis role="italic"><emphasis role="bold"><code>Another example:</code></emphasis></emphasis></para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TFile</code></emphasis><emphasis role="bold"><code> *f = new TFile("hsimple.root","UPDATE")</code></emphasis>
+root[] <emphasis role="bold"><code>hpx-&gt;Draw()</code></emphasis>
+&lt;TCanvas::MakeDefCanvas&gt;: created default TCanvas with name c1
+root[] <emphasis role="bold"><code>c1-&gt;Write()</code></emphasis>
+root[] <emphasis role="bold"><code>f-&gt;ls()</code></emphasis>
+TFile**        hsimple.root
+TFile*         hsimple.root
+OBJ: TH1F      hpx      This is the px distribution : 0
+KEY: TH1F     hpx;2   This is the px distribution
+KEY: TH1F     hpx;1   This is the px distribution
+KEY: TH2F     hpxpy;1 py vs px
+KEY: TProfile hprof;2 Profile of pz versus px
+KEY: TProfile hprof;1 Profile of pz versus px
+KEY: TNtuple  ntuple;1   Demo ntuple
+KEY: TCanvas  c1;1    c1
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Saving Collections to Disk</title>
+<para>All collection classes inherit from <emphasis role="bold"><code>TCollection</code></emphasis> and hence inherit the <emphasis role="bold"><code>TCollection</code></emphasis><code>::Write()</code>         method. When you call <emphasis role="bold"><code>TCollection</code></emphasis><code>::Write()</code> each object in the container is written individually into its own key in the file. To write all objects into one key you can specify the name of the key and use the option<emphasis role="bold"><code> TObject</code></emphasis><code>::kSingleKey</code>. For example:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TList * list = new TList</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
+root[] <emphasis role="bold"><code>TNamed * n1, * n2;</code></emphasis>
+root[] <emphasis role="bold"><code>n1 = new TNamed("name1","title1");</code></emphasis>
+root[] <emphasis role="bold"><code>n2 = new TNamed("name2","title2");</code></emphasis>
+root[] <emphasis role="bold"><code>list-&gt;Add(n1);</code></emphasis>
+root[] <emphasis role="bold"><code>list-&gt;Add(n2);</code></emphasis>
+root[] <emphasis role="bold"><code>gFile-&gt;WriteObject(list,"list",TObject::kSingleKey);</code></emphasis>
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>A TFile Object Going Out of Scope</title>
+<para>There is another important point to remember about <emphasis role="bold"><code>TFile</code></emphasis><code>::Close</code> and <emphasis role="bold"><code>TFile</code></emphasis><code>::Write</code>. When a variable is declared on the stack in a function such as in the code below, it will be deleted when it goes out of scope. </para>
+
+<programlisting language="c++">
+<code>void foo() { </code>
+<code>   TFile f("AFile.root","RECREATE"); </code>
+<code>}</code>
+</programlisting>
+
+<para>As soon as the function <code>foo </code>has finished executing, the variable <code>f</code> is deleted. When a <emphasis role="bold"><code>TFile</code></emphasis> object is deleted an implicit call to <emphasis role="bold"><code>TFile</code></emphasis><code>::Close</code>         is made. This will save only the file descriptor to disk. It contains the file header, the <code>StreamerInfo </code>list, the key list, the free segment list, and the end address. See "The Physical Layout of ROOT Files". The <emphasis role="bold"><code>TFile</code></emphasis><code>::Close</code> does not make a call to <code>Write()</code>, which means that the objects in memory will not be saved in the file. You need to explicitly call <emphasis role="bold"><code>TFile</code></emphasis><code>::Write()</code> to save the object in memory to file before the exit of the function.</para>
+
+<programlisting language="c++">
+<code>void foo() {</code>
+<code>   TFile f("AFile.root","RECREATE");</code>
+<code>   … stuff …</code>
+<code>   f.Write();</code>
+<code>}</code>
+</programlisting>
+
+<para>To prevent an object in a function from being deleted when it goes out of scope, you can create it on the heap instead of on the stack. This will create a <emphasis role="bold"><code>TFile</code></emphasis> object <code>f</code>, that is available on a global scope, and it will still be available when exiting the function.</para>
+
+<programlisting language="c++">
+<code>void foo() {</code>
+<code>   TFile *f = new TFile("AFile.root","RECREATE");</code>
+<code>}</code>
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Retrieving Objects from Disk</title>
+<para>If you have a ROOT session running, please quit and start fresh.</para>
+<para>We saw that multiple versions of an object with the same name could be in a ROOT file. In our example, we saved a modified histogram <code>hpx</code> to the file, which resulted in two <code>hpx's</code> uniquely identified by the cycle number: <code>hpx;1</code> and <code>hpx;2</code>. The question is how we can retrieve the right version of <code>hpx</code>. When opening the file and using <code>hpx</code>, CINT retrieves the one with the highest cycle number. To read the <code>hpx;1</code> into memory, rather than the <code>hpx:2</code> we would get by default, we have to explicitly get it and assign it to a variable.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TFile *f1 = new TFile("hsimple.root")</code></emphasis>
+root[] <emphasis role="bold"><code>TH1F *hpx1; f1-&gt;GetObject("hpx;1",hpx)</code></emphasis>
+root[] <emphasis role="bold"><code>hpx1-&gt;Draw()</code></emphasis>
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Subdirectories and Navigation</title>
+<para>The <emphasis role="bold"><code>TDirectory</code></emphasis> class lets you organize its contents into subdirectories, and <emphasis role="bold"><code>TFile</code></emphasis> being a descendent of <emphasis role="bold"><code>TDirectory</code></emphasis> inherits this ability. Here is an example of a ROOT file with multiple subdirectories as seen in the ROOT browser. To add a subdirectory to a file use <emphasis role="bold"><code>TDirectory</code></emphasis><code>::mkdir</code>. The example below opens the file for writing and creates a subdirectory called "Wed011003". Listing the contents of the file shows the new directory in the file and the <emphasis role="bold"><code>TDirectory</code></emphasis> object in memory.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TFile</code></emphasis><emphasis role="bold"><code> *f = new TFile("AFile.root","RECREATE")</code></emphasis>
+root[] <emphasis role="bold"><code>f-&gt;mkdir("Wed011003")</code></emphasis>
+(class TDirectory*)0x1072b5c8
+</programlisting>
+
+<para/>
+<para/>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>f-&gt;ls()</code></emphasis>
+TFile**         AFile.root
+TFile*          AFile.root
+TDirectory*           <code>Wed011003</code>       <code>Wed011003</code>
+KEY: TDirectory       <code>Wed011003</code>;1     <code>Wed011003</code>
+</programlisting>
+
+<para>We can change the current directory by navigating into the subdirectory, and after changing directory; we can see that <emphasis role="italic"><emphasis role="bold"><code>gDirectory</code></emphasis></emphasis> is now "<code>Wed011003</code>".</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>f-&gt;cd("Wed011003")</code></emphasis>
+root[] <emphasis role="bold"><code>gDirectory-&gt;pwd()</code></emphasis>
+AFile.root:/<code>Wed011003</code>
+</programlisting>
+
+<para>In addition to <emphasis role="italic"><emphasis role="bold"><code>gDirectory </code></emphasis></emphasis>we have <emphasis role="italic"><emphasis role="bold"><code>gFile</code></emphasis></emphasis>, another global that points to the current file. In our example, <emphasis role="italic"><emphasis role="bold"><code>gDirectory</code></emphasis></emphasis>         points to the subdirectory, and <emphasis role="italic"><emphasis role="bold"><code>gFile</code></emphasis></emphasis> points to the file (i.e. the files' top directory). </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>gFile-&gt;pwd()</code></emphasis>
+AFile.root:/
+</programlisting>
+
+<para>Use <code>cd()</code> without any arguments to return to the file's top directory.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>f-&gt;cd()</code></emphasis>
+AFile.root:/
+</programlisting>
+
+<para>Change to the subdirectory again, and create a histogram. It is added to the current directory, which is the subdirectory "<code>Wed011003</code>". </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>f-&gt;cd("Wed011003")</code></emphasis>
+root[] <emphasis role="bold"><code>TH1F *histo = new TH1F("histo","histo",10,0,10)</code></emphasis>
+root[] <emphasis role="bold"><code>gDirectory-&gt;ls()</code></emphasis>
+TDirectory* Wed011003   Wed011003
+OBJ: TH1F      histo   histo : 0
+</programlisting>
+
+<para>If you are in a subdirectory and you want to have a pointer to the file containing the subdirectory, you can do:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>gDirectory</code></emphasis><emphasis role="bold"><code>-&gt;GetFile()</code></emphasis>
+</programlisting>
+
+<para>If you are in the top directory <emphasis role="italic"><emphasis role="bold"><code>gDirectory</code></emphasis></emphasis> is the same as <emphasis role="italic"><emphasis role="bold"><code>gFile</code></emphasis></emphasis>. We write the file to save the histogram on disk, to show you how to retrieve it later.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>f-&gt;Write()</code></emphasis>
+root[] <emphasis role="bold"><code>gDirectory-&gt;ls()</code></emphasis>
+TDirectory*             Wed011003       Wed011003
+OBJ: TH1F      histo   histo : 0
+KEY: TH1F      histo;1 histo
+</programlisting>
+
+<para>When retrieving an object from a subdirectory, you can navigate to the subdirectory first or give it the path name relative to the file. The read object is created in memory in the current directory. In this first example, we get <code>histo</code> from the top directory and the object will be in the top directory. </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TH1 *h; f-&gt;GetObject("Wed011003/histo;1",h)</code></emphasis>
+</programlisting>
+
+<para>If file is written, a copy of <code>histo</code> will be in the top directory. This is an effective way to copy an object from one directory to another. In contrast, in the code box below, <code>histo</code> will be in memory in the subdirectory because we changed the current directory.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>f-&gt;cd("Wed011003")</code></emphasis>
+root[] <emphasis role="bold"><code>TH1 *h; gDirectory-&gt;GetObject("histo;1",h)</code></emphasis>
+</programlisting>
+
+<para>Note that there is no warning if the retrieving was not successful. You need to explicitly check the value of h, and if it is null, the object could not be found. For example, if you did not give the path name the histogram cannot be found and the pointer to h is null:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TH1 *h; gDirectory-&gt;GetObject("Wed011003/histo;1",h)</code></emphasis>
+root[] <emphasis role="bold"><code>h</code></emphasis>
+(class TH1*)0x10767de0
+root[] <emphasis role="bold"><code>TH1 *h; gDirectory-&gt;GetObject("histo;1",h)</code></emphasis>
+root[] <emphasis role="bold"><code>h</code></emphasis>
+(class TH1*)0x0
+</programlisting>
+
+<para>To remove a subdirectory you need to use <emphasis role="bold"><code>TDirectory</code></emphasis><code>::Delete</code>. There is no <emphasis role="bold"><code>TDirectory</code></emphasis><code>::rmdir</code>. The Delete method takes a string containing the variable name and cycle number as a parameter. </para>
+
+<programlisting language="c++">
+void Delete(const char *namecycle)
+</programlisting>
+
+<para>The <code>namecycle</code> string has the format <code>name;cycle</code>. The next are some rules to remember:</para>
+<itemizedlist>
+<listitem><para><code>name</code>    = * means all, but don't remove the subdirectories</para></listitem>
+<listitem><para><code>cycle</code>  =* means all cycles (memory and file)</para></listitem>
+<listitem><para><code>cycle</code>  ="" means apply to a memory object</para></listitem>
+<listitem><para><code>cycle</code>  = 9999  also means apply to a memory object</para></listitem>
+<listitem><para><code>namecycle</code> = ""   means the same as <code>namecycle</code> ="T*" </para></listitem>
+<listitem><para><code>namecycle</code> = <code>T*</code> delete subdirectories</para></listitem>
+</itemizedlist>
+<para>For example to delete a directory from a file, you must specify the directory cycle:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>f-&gt;Delete("Wed011003;1")</code></emphasis>
+</programlisting>
+
+<para>Some other examples of <code>namecycle</code> format are:</para>
+<itemizedlist>
+<listitem><para><code>foo</code>:delete the object named <code>foo</code> from memory  </para></listitem>
+<listitem><para><code>foo;1</code>: delete the cycle 1 of the object named <code>foo</code> from the file</para></listitem>
+<listitem><para><code>foo;*</code>: delete all cycles of <code>foo</code> from the file and also from memory</para></listitem>
+<listitem><para><code>*;2</code>:    delete all objects with cycle number 2 from the file</para></listitem>
+<listitem><para><code>*;*:  delete</code> all objects from memory and from the file</para></listitem>
+<listitem><para><code>T*;*</code>:  delete all objects from memory and from the file including all subdirectories</para></listitem>
+</itemizedlist>
+</sect2>
+</sect1>
+
+<sect1>
+<title>Streamers</title>
+<para>To follow the discussion on <code>Streamers</code>, you need to know what a <emphasis role="italic">simple</emphasis> data type is. A variable is of a simple data type if it cannot be decomposed into other types. Examples of simple data types are longs, shorts, floats, and chars. In contrast, a variable is of a <emphasis role="italic">composite</emphasis> data type if it can be decomposed. For example, classes, structures, and arrays are composite types. Simple types are also called primitive types, basic types, and CINT sometimes calls them fundamental types.</para>
+<para>When we say, "writing an object to a file", we actually mean writing the current values of the data members. The most common way to do this is to decompose (also called the serialization of) the object into its data members and write them to disk. The decomposition is the job of the <code>Streamer</code>. Every class with ambitions to be stored in a file has a <code>Streamer </code>that decomposes it and "streams" its members into a buffer.</para>
+<para>The methods of the class are not written to the file, it contains only the persistent data members. To decompose the parent classes, the <code>Streamer </code>calls the <code>Streamer </code>of the parent classes. It moves up the inheritance tree until it reaches an ancestor without a parent. To serialize the object data members it calls their <code>Streamer</code>. They in turn move up their own inheritance tree and so forth. The simple data members are written to the buffer directly. Eventually the buffer contains all simple data members of all the classes that make up this particular object. Data members that are references (as <code>MyClass &amp;fObj;</code>) are never saved, it is always the responsibility of the object's constructor to set them properly.</para>
+
+<sect2>
+<title>Automatically Generated Streamers</title>
+<para>A <code>Streamer </code>usually calls other <code>Streamers</code>: the <code>Streamer </code>of its parents and data members. This architecture depends on all classes having <code>Streamers</code>, because eventually they will be called. To ensure that a class has a <code>Streamer</code>, <code>rootcint</code> automatically creates one in the <code>ClassDef</code> macro that is defined in <code>$ROOTSYS/include/Rtypes.h</code>.  <code>ClassDef</code> defines several methods for any class, and one of them is the <code>Streamer</code>. The automatically generated <code>Streamer </code>is complete and can be used as long as no customization is needed. </para>
+<para>The <code>Event</code> class is defined in <code>$ROOTSYS/test/Event.h</code>. Looking at the class definition, we find that it inherits from <emphasis role="bold"><code>TObject</code></emphasis>. It is a simple example of a class with diverse data members.</para>
+
+<programlisting language="c++">
+<emphasis role="bold"><code>class Event : public TObject {</code></emphasis>
+private:
+<code>   TDirectory    *fTransient;        </code>    <emphasis role="italic"><code>//! current directory</code></emphasis>
+<code>   Float_t     fPt;               </code>    <emphasis role="italic"><code>//! transient value</code></emphasis>
+char           fType[20];
+Int_t          fNtrack;
+Int_t          fNseg;
+Int_t          fNvertex;
+UInt_t         fFlag;
+Float_t        fTemperature;
+EventHeader    fEvtHdr;           <emphasis role="italic"><code>//|| don't split</code></emphasis>
+TClonesArray  *fTracks;           <emphasis role="italic"><code>//-&gt;</code></emphasis>
+TH1F          *fH;                <emphasis role="italic"><code>//-&gt;</code></emphasis>
+Int_t          fMeasures[10];
+Float_t        fMatrix[4][4];
+Float_t       *fClosestDistance;  <emphasis role="italic"><code>//[fNvertex] </code></emphasis>
+…
+</programlisting>
+
+<para>The Event class is added to the CINT dictionary by the <code>rootcint</code> utility. This is the <code>rootcint</code> statement in the <code>$ROOTSYS/test/Makefile</code>:</para>
+
+<programlisting language="c++">
+@rootcint -f EventDict.cxx -c Event.h EventLinkDef.h
+</programlisting>
+
+<para>The <code>EventDict.cxx</code> file contains the automatically generated <code>Streamer </code>for Event:</para>
+
+<programlisting language="c++">
+<code>void Event::Streamer(TBuffer &amp;R__b){</code>
+<code>   // Stream an object of class Event.</code>
+<code>   if (R__b.IsReading()) {</code>
+<code>      Event::Class()-&gt;ReadBuffer(R__b, this);</code>
+<code>   } else {</code>
+<code>      Event::Class()-&gt;WriteBuffer(R__b, this);</code>
+<code>   }</code>
+<code>} </code>
+</programlisting>
+
+<para>When writing an <code>Event</code> object, <emphasis role="bold"><code>TClass</code></emphasis><code>::WriteBuffer</code> is called. <code>WriteBuffer</code> writes the current version number of the <code>Event class,</code> and its contents into the buffer <code>R__b</code>. The <code>Streamer </code>calls <emphasis role="bold"><code>TClass</code></emphasis><code>::ReadBuffer</code> when reading an <code>Event</code> object.  The <code>ReadBuffer</code> method reads the information from buffer <code>R__b</code> into the <code>Event</code> object.</para>
+</sect2>
+
+<sect2>
+<title>Transient Data Members (//!)</title>
+<para>To prevent a data member from being written to the file, insert a "<code>!</code>" as the first character after the comment marks. It tells ROOT not to save that data member in a root file when saving the class. For example, in this version of Event, the <code>fPt</code> and <code>fTransient</code> data members are not persistent.</para>
+
+<programlisting language="c++">
+<code>class Event : public TObject {</code>
+<code>private:</code>
+<code>TDirectory    *fTransient;        </code><emphasis role="italic"><code>//! current directory</code></emphasis>
+<code>   Float_t fPt;             </code><emphasis role="italic"><code>//! transient value</code></emphasis>
+…
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>The Pointer to Objects (//-&gt;)</title>
+<para>The string "<code>-&gt;</code>" in the comment field of the members <code>*fH</code> and <code>*fTracks</code> instruct the automatic <code>Streamer</code> to assume these will point to valid objects and the <code>Streamer </code>of the objects can be called rather than the more expensive <code>R__b &lt;&lt; fH</code>. It is important to note that no check is done on the validity of the pointer value. In particular if the pointer points, directly or indirectly, back to the current object, this will result in an infinite recursion and the abrupt end of the process.</para>
+
+<programlisting language="c++">
+TClonesArray  *fTracks;            <emphasis role="italic"><code>//-&gt;</code></emphasis>
+TH1F          *fH;                 <emphasis role="italic"><code>//-&gt;</code></emphasis>
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Variable Length Array</title>
+<para>When the <code>Streamer </code>comes across a pointer to a simple type, it assumes it is an array. Somehow, it has to know how many elements are in the array to reserve enough space in the buffer and write out the appropriate number of elements. This is done in the class definition. For example:</para>
+
+<programlisting language="c++">
+<code>class Event : public TObject {</code>
+private:
+char           fType[20];
+Int_t          fNtrack;
+Int_t          fNseg;
+Int_t          fNvertex;
+…
+Float_t       *fClosestDistance;   <emphasis role="italic"><code>//[fNvertex]</code></emphasis>
+</programlisting>
+
+<para>The array <code>fClosestDistance</code> is defined as a pointer of floating point numbers. A comment mark (//), and the number in square brackets tell the <code>Streamer </code>the length of the array for this object. In general the syntax is:</para>
+
+<programlisting language="c++">
+&lt;simple type&gt; *&lt;name&gt;<emphasis role="italic"><code>//[&lt;length&gt;]</code></emphasis>
+</programlisting>
+
+<para>The length cannot be an expression. If a variable is used, it needs to be an integer data member of the class. It must be defined ahead of its use, or in a base class.</para>
+<para>The same notation also applies to variable length array of object and variable length array of pointer to objects.  </para>
+
+<programlisting language="c++">
+MyObject *obj; <emphasis role="italic"><code>//[fNojbs]</code></emphasis>
+MyObject **objs; <emphasis role="italic"><code>//[fDatas]</code></emphasis>
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Double32_t</title>
+<para>Math operations very often require double precision, but on saving single usually precision is sufficient.  For this purpose we support the typedef Double32_t which is stored in memory as a double and on disk as a float or interger. The actual size of disk (before compression) is determined by the parameter next to the data member declartion.  For example:</para>
+
+<programlisting language="c++">
+<code>Double32_t m_data; </code>    <emphasis role="italic"><code>//[min,max&lt;,nbits&gt;]</code></emphasis>
+</programlisting>
+
+<para>If the comment is absent or does not contain <code>min</code>, <code>max</code>, <code>nbit, the member is</code>         <code>saved as a float.</code>         </para>
+<para><code>If min</code> and <code>max</code> are present, they are saved as a 32 bits precision. <code>min</code> and <code>max</code> can be explicit values or be expressions of values known to CINT (e.g. "<code>pi"). </code></para>
+<para><code>If nbits</code> is present, the member is saved as <code>int</code> with '<code>nbit</code>'. For more details see the io tutorials <code>double32.C</code>.</para>
+
+<figure><title>Compression and precision of Double32_t</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/030000EA.png" width="343.85pt" depth="247.65pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+</sect2>
+
+<sect2>
+<title>Prevent Splitting (//|| )</title>
+<para>If you want to prevent a data member from being split when writing it to a tree, append the characters || right after the comment string. This only makes sense for object data members. For example:</para>
+
+<programlisting language="c++">
+EventHeader    fEvtHdr;       <emphasis role="italic"><code>//|| do not split the header</code></emphasis>
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Streamers with Special Additions</title>
+<para>Most of the time you can let <code>rootcint</code> generate a <code>Streamer</code> for you. However if you want to write your own <code>Streamer </code>you can do so. For some classes, it may be necessary to execute some code before or after the read or write block in the automatic <code>Streamer</code>. For example after the execution of the read block, one can initialize some non persistent members. There are two reasons why you would need to write your own Streamer: 1) if you have a non-persistent data member that you want to initialize to a value depending on the read data members; 2) if you want or need to handle the schema evolution on your own. In addition, the automatic <code>Streamer </code>does not support C-structures. It is best to convert the structure to a class definition.</para>
+<para>First, you need to tell <code>rootcint</code> not to build a <code>Streamer </code>for you. The input to the <code>rootcint</code> command (in the <code>makefile</code>) is a list of classes in a <code>LinkDef.h</code> file. For example, the list of classes for <code>Event</code> is listed in <code>$ROOTSYS/test/EventLinkDef.h</code>. The "<code>-</code>" at the end of the class name tells <code>rootcint</code> not to generate a <code>Streamer</code>. In the example, you can see the <code>Event</code> class is the only one for which <code>rootcint</code> is instructed not to generate a <code>Streamer</code>.</para>
+
+<programlisting language="c++">
+#ifdef __CINT__
+
+#pragma link off all globals;
+#pragma link off all classes;
+#pragma link off all functions;
+#pragma link C++ class EventHeader+;
+#pragma link C++ class Event-;
+#pragma link C++ class HistogramManager+;
+#pragma link C++ class Track+;
+
+#endif
+#pragma link C++ class EventHeader+;
+</programlisting>
+
+<para>The "<code>+</code>" sign tells <code>rootcint</code> to use the new <code>Streamer </code>system introduced in ROOT 3.0. The following is an example of a customized <code>Streamer </code>for <code>Event</code>. The <code>Streamer</code> takes a <emphasis role="bold"><code>TBuffer</code></emphasis> as a parameter, and first checks to see if this is a case of reading or writing the buffer. </para>
+
+<programlisting language="c++">
+<code>void Event::Streamer(TBuffer &amp;R__b) {</code>
+<code>   if (R__b.IsReading()) {   </code>
+<code>      Event::Class()-&gt;ReadBuffer(R__b, this);</code>
+<code>      fTransient = gDirectory;       //save current directory</code>
+<code>      fPt= TMath::Sqrt(fPx*fPx + fPy*fPy + fPz*fPz);</code>
+<code>   } else {</code>
+<code>      Event::Class()-&gt;WriteBuffer(R__b, this);</code>
+<code>   }</code>
+<code>}  </code>
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Writing Objects</title>
+<para>The <code>Streamer</code> decomposes the objects into data members and writes them to a buffer. It does not write the buffer to a file, it simply populates a buffer with bytes representing the object. This allows us to write the buffer to a file or do anything else we could do with the buffer. For example, we can write it to a socket to send it over the network. This is beyond the scope of this chapter, but it is worthwhile to emphasize the need and advantage of separating the creation of the buffer from its use. Let us look how a buffer is written to a file. The dictionary for a class needs to be loaded before any object of that type can be saved.</para>
+<para>The <emphasis role="bold"><code>TObject</code></emphasis><code>::Write</code> method does the following:</para>
+<itemizedlist>
+<listitem><para>Creates a <emphasis role="bold"><code>TKey</code></emphasis> object in the current directory</para></listitem>
+<listitem><para>Creates a <emphasis role="bold"><code>TBuffer</code></emphasis> object which is part of the newly created <emphasis role="bold"><code>TKey</code></emphasis></para></listitem>
+<listitem><para>Fills the <emphasis role="bold"><code>TBuffer</code></emphasis> with a call to the <code>class::Streamer</code> method</para></listitem>
+<listitem><para>Creates a second buffer for compression, if needed</para></listitem>
+<listitem><para>Reserves space by scanning the <emphasis role="bold"><code>TFree</code></emphasis> list.  At this point, the size of the buffer is known.</para></listitem>
+<listitem><para>Writes the buffer to the file</para></listitem>
+<listitem><para>Releases the <emphasis role="bold"><code>TBuffer</code></emphasis> part of the key </para></listitem>
+</itemizedlist>
+<para>In other words, the <emphasis role="bold"><code>TObject</code></emphasis><code>::Write</code> calls the <code>Streamer</code> method of the class to build the buffer. The buffer is in the key and the key is written to disk. Once written to disk the memory consumed by the buffer part is released. The key part of the <emphasis role="bold"><code>TKey</code></emphasis> is kept. </para>
+
+<figure><title>A diagram of a streamed TH1F in the buffer</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/020000EB.jpg" width="422.7pt" depth="94.95pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para>The key consumes about 60 bytes, whereas the buffer, since it contains the object data, can be very large. </para>
+</sect2>
+
+<sect2>
+<title>Ignore Object Streamers</title>
+<para>Your class can ignore the <emphasis role="bold"><code>TObject</code></emphasis> <code>Streamer </code>with the <code>MyClass-&gt;Class::IgnoreObjectStreamer()</code> method. When the class <code>kIgnoreTObjectStreamer </code>bit is set (by calling the <code>IgnoreTObjectStreamer </code>method<code>)</code>, the automatically generated <code>Streamer </code>will not call <emphasis role="bold"><code>TObject</code></emphasis><code>::Streamer</code>, and the <emphasis role="bold"><code>TObject</code></emphasis> part of the class is not streamed to the file. This is useful in case you do not use the <emphasis role="bold"><code>TObject</code></emphasis> <code>fBits</code> and <code>fUniqueID </code>data members. You gain space on the file, and you do not loose functionality if you do not use the <code>fBits</code> and <code>fUniqueID. </code>See “The Role of TObject” on the use of <code>fBits</code> and <code>fUniqueID</code>. </para>
+</sect2>
+
+<sect2>
+<title>Streaming a TClonesArray</title>
+<para>When writing a <emphasis role="bold"><code>TClonesArray</code></emphasis> it bypasses by default the <code>Streamer </code>of the member class and uses a more efficient internal mechanism to write the members to the file. You can override the default and specify that the member class <code>Streamer </code>is used by setting the <emphasis role="bold"><code>TClonesArray</code></emphasis><code>::BypassStreamer</code> bit to false:</para>
+
+<programlisting language="c++">
+TClonesArray *fTracks;
+fTracks-&gt;BypassStreamer(kFALSE);    <emphasis role="italic"><code>// use the member Streamer</code></emphasis>
+</programlisting>
+
+<para>When the <code>kBypassStreamer</code> bit is set, the automatically generated <code>Streamer </code>can call directly the method <emphasis role="bold"><code>TClass</code></emphasis><code>::WriteBuffer</code>. Bypassing the <code>Streamer</code> improves the performance when writing/reading the objects in the <emphasis role="bold"><code>TClonesArray</code></emphasis>. However, the drawback is when a <emphasis role="bold"><code>TClonesArray</code></emphasis> is written with <code>split=0</code> bypassing the <code>Streamer</code>, the <code>StreamerInfo </code>of the class in the array being optimized, one cannot later use the <emphasis role="bold"><code>TClonesArray</code></emphasis> with <code>split &gt; 0</code>. For example, there is a problem with the following scenario: a class <code>Foo</code> has a <emphasis role="bold"><code>TClonesArray</code></emphasis> of <code>Bar</code> objects the <code>Foo</code> object is written with <code>split=0</code> to <code>Tree</code> <code>T1</code>. In this case the <code>StreamerInfo</code> for the class <code>Bar</code> is created in optimized mode in such a way that data members of the same type are written as an array improving the I/O performance. In a new program, <code>T1</code> is read and a new <code>Tree</code> <code>T2</code> is created with the object <code>Foo</code> in <code>split &gt; 1</code>.</para>
+<para>When the <code>T2 </code>branch is created, the <code>StreamerInfo</code> for the class <code>Bar</code> is created with no optimization (mandatory for the split mode). The optimized Bar <code>StreamerInfo</code> is going to be used to read the <emphasis role="bold"><code>TClonesArray</code></emphasis> in <code>T1</code>. The result will be <code>Bar</code> objects with data member values not in the right sequence. The solution to this problem is to call <code>BypassStreamer(kFALSE)</code> for the <emphasis role="bold"><code>TClonesArray</code></emphasis>. In this case, the normal <code>Bar::Streamer</code> function will be called. The <code>Bar::Streamer</code> function works OK independently if the <code>Bar</code> <code>StreamerInfo </code>had been generated in optimized mode or not.</para>
+</sect2>
+</sect1>
+
+<sect1>
+<title>Pointers and References in Persistency</title>
+<para>An object pointer as a data member presents a challenge to the streaming software. If the object pointed to is saved every time, it could create circular dependencies and consume a large amount of disk space. The network of references must be preserved on disk and recreated upon reading the file.</para>
+<para>If you use independent I/O operations for pointers and their referenced objects you can use the <emphasis role="bold"><code>TRef</code></emphasis> class. Later in this section is an example that compares disk space, memory usage, and I/O times of C++ pointers and <emphasis role="bold"><code>TRef</code></emphasis><code>s</code>. In general, a <emphasis role="bold"><code>TRef</code></emphasis> is faster than C++ but the advantage of a C++ pointer is that it is already C++. </para>
+
+<sect2>
+<title>Streaming C++ Pointers</title>
+<para>When ROOT encounters a pointer data member it calls the <code>Streamer</code> of the object and labels it with a unique object identifier. The object identifier is unique for one I/O operation. If there is another pointer to the object in the same I/O operation, the first object is referenced i.e. it is not saved again. When reading the file, the object is rebuilt and the references recalculated. </para>
+
+<figure><title>Streaming object pointers</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/020000EC.jpg" width="244.55pt" depth="86.9pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para>In this way, the network of pointers and their objects is rebuilt and ready to use the same way it was used before it was persistent. If the pointer hold the address of an object which in embedded in another object (as opposed to being pointed to by a pointer), the object will be duplicate at read time. To avoid this, make the pointer a transient data member.</para>
+</sect2>
+
+<sect2>
+<title>Motivation for the TRef Class</title>
+<para>If the object is split into several files or into several branches of one or more <emphasis role="bold"><code>TTree</code></emphasis><code>s</code>, standard C++ pointers cannot be used because each I/O operation will write the referenced objects, and multiple copies will exist. In addition, if the pointer is read before the referenced object, it is null and may cause a run time system error. To address these limitations, ROOT offers the <emphasis role="bold"><code>TRef</code></emphasis> class. </para>
+<para><emphasis role="bold"><code>TRef</code></emphasis> allows referencing an object in a different branch and/or in a different file.         <emphasis role="bold"><code>TRef</code></emphasis> also supports the complex situation where a <emphasis role="bold"><code>TFile</code></emphasis> is updated multiple times on the same machine or a different machine. When a <emphasis role="bold"><code>TRef</code></emphasis> is read before its referenced object, it is null. As soon as the referenced object is read, the <emphasis role="bold"><code>TRef</code></emphasis> points to it. In addition, one can specify an action to be taken by <emphasis role="bold"><code>TRef</code></emphasis> in the case it is read before its reference object (see”Action on Demand” below).</para>
+</sect2>
+
+<sect2>
+<title>Using TRef</title>
+<para>A <emphasis role="bold"><code>TRef</code></emphasis> is a lightweight object pointing to any <emphasis role="bold"><code>TObject</code></emphasis>. This object can be used instead of normal C++ pointers in case:</para>
+<itemizedlist>
+<listitem><para>The referenced object R and the pointer P are not written to the same file</para></listitem>
+<listitem><para>P is read before R</para></listitem>
+<listitem><para>R and P are written to different Tree branches</para></listitem>
+</itemizedlist>
+<para>Below is a line from the example in <code>$ROOTSYS/test/Event.cxx.</code></para>
+
+<programlisting language="c++">
+<code>TRef   fLastTrack;         </code>    <emphasis role="italic"><code>//pointer to last track</code></emphasis>
+<code>…</code>
+<code>Track *track = new(tracks[fNtrack++])Track(random);</code>
+<emphasis role="italic"><code>// Save reference to last Track in the collection of Tracks</code></emphasis>
+<code>fLastTrack = track;</code>
+</programlisting>
+
+<para>The <code>track</code> and its reference <code>fLastTrack</code> can be written with two separate I/O calls in the same or in different files, in the same or in different branches of a <emphasis role="bold"><code>TTree</code></emphasis>. If the <emphasis role="bold"><code>TRef</code></emphasis> is read and the referenced object has not yet been read, <emphasis role="bold"><code>TRef</code></emphasis> will return a null pointer. As soon as the referenced object will be read, <emphasis role="bold"><code>TRef</code></emphasis> will point to it.</para>
+</sect2>
+
+<sect2>
+<title>How Does It Work?</title>
+<para>A <emphasis role="bold"><code>TRef</code></emphasis> is itself a <emphasis role="bold"><code>TObject</code></emphasis> with an additional transient pointer <code>fPID</code>. When a <emphasis role="bold"><code>TRef</code></emphasis> is used to point to a <emphasis role="bold"><code>TObject</code></emphasis><code> *R</code>, for example in a class with</para>
+
+<programlisting language="c++">
+<code>TRef  P;</code>
+</programlisting>
+
+<para>one can do:</para>
+
+<programlisting language="c++">
+<code>P = R;  </code>    <emphasis role="italic"><code>//to set the pointer</code></emphasis>
+</programlisting>
+
+<para> When the statement <code>P = R </code>is executed, the following happens:</para>
+<itemizedlist>
+<listitem><para>The pointer <code>fPID</code> is set to the current <emphasis role="bold"><code>TProcessID</code></emphasis><code> (see below)</code>.</para></listitem>
+<listitem><para>The current <code>ObjectNumber</code> (see below) is incremented by one.</para></listitem>
+<listitem><para><code>R.fUniqueID</code> is set to <code>ObjectNumber</code>.</para></listitem>
+<listitem><para>In the <code>fPID</code> object, the element <code>fObjects[ObjectNumber]</code> is set to <code>R</code></para></listitem>
+<listitem><para><code>P.fUniqueID</code> is also set to <code>ObjectNumber</code>.</para></listitem>
+</itemizedlist>
+<para>After having set <code>P</code>, one can immediately return the value of <code>R</code> using <code>P.GetObject()</code>. This function returns the <code>fObjects[fUniqueID]</code>         from the <code>fPID</code> object.</para>
+<para>When the         <emphasis role="bold"><code>TRef</code></emphasis> is written, the process id number <code>pidf</code> of <code>fPID</code> is written in addition to the <emphasis role="bold"><code>TObject</code></emphasis> part of the <emphasis role="bold"><code>TRef</code></emphasis> (<code>fBits,fUniqueID</code>). When the <emphasis role="bold"><code>TRef</code></emphasis> is read, its pointer <code>fPID</code> is set to the value stored in the <emphasis role="bold"><code>TObjArray</code></emphasis> of <emphasis role="bold"><code>TFile</code></emphasis><code>::fProcessIDs </code>(<code>fProcessIDs[pidf]</code>).</para>
+<para>When a referenced object is written, <emphasis role="bold"><code>TObject</code></emphasis><code>::Streamer</code> writes the <code>pidf</code> in addition to the standard <code>fBits and fUniqueID</code>. When <emphasis role="bold"><code>TObject</code></emphasis><code>::Streamer</code> reads a reference object, the <code>pidf</code> is read. At this point, the referenced object is entered into the table of objects of the <emphasis role="bold"><code>TProcessID</code></emphasis> corresponding to <code>pidf</code>.</para>
+<para>WARNING: If <code>MyClass</code> is the class of the referenced object, The <emphasis role="bold"><code>TObject</code></emphasis> part of <code>MyClass</code> must be streamed. One should not call  <code>MyClass::Class()-&gt;IgnoreTObjectStreamer()</code>.</para>
+
+<sect3>
+<title>TProccessID and TUUID</title>
+<para>A <emphasis role="bold"><code>TProcessID</code></emphasis> uniquely identifies a ROOT job. The <emphasis role="bold"><code>TProcessID</code></emphasis> title consists of a <emphasis role="bold"><code>TUUID</code></emphasis> object, which provides a globally unique identifier. The <emphasis role="bold"><code>TUUID</code></emphasis> class implements the UUID (Universally Unique Identifier), also known as GUID (Globally Unique Identifier). A UUID is 128 bits long, and if generated according to this algorithm, is either guaranteed to be different from all other UUID generated until 3400 A.D. or extremely likely to be different. </para>
+<para>The <emphasis role="bold"><code>TROOT</code></emphasis> constructor automatically creates a <emphasis role="bold"><code>TProcessID</code></emphasis>. When a <emphasis role="bold"><code>TFile</code></emphasis> contains referenced objects, the <emphasis role="bold"><code>TProcessID</code></emphasis> object is written to the file. If a file has been written in multiple sessions (same machine or not), a <emphasis role="bold"><code>TProcessID</code></emphasis> is written for each session. The <emphasis role="bold"><code>TProcessID</code></emphasis> objects are used by <emphasis role="bold"><code>TRef</code></emphasis> to uniquely identify the referenced <emphasis role="bold"><code>TObject</code></emphasis>.</para>
+<para>When a referenced object is read from a file (its bit <code>kIsReferenced</code> is set), this object is entered into the objects table of the corresponding <emphasis role="bold"><code>TProcessID</code></emphasis>. Each <emphasis role="bold"><code>TFile</code></emphasis> has a list of <emphasis role="bold"><code>TProcessID</code></emphasis><code>s</code> (see <emphasis role="bold"><code>TFile</code></emphasis><code>::fProcessIDs</code>) also accessible<code> from </code><emphasis role="bold"><code>TProcessID</code></emphasis><code>::fgPIDs</code> (for all files). When this object is deleted, it is removed from the table via the cleanup mechanism invoked by the <emphasis role="bold"><code>TObject</code></emphasis> destructor. Each <emphasis role="bold"><code>TProcessID</code></emphasis> has a table (<emphasis role="bold"><code>TObjArray</code></emphasis><code> *fObjects</code>) that keeps track of all referenced objects. If a referenced object has a <code>fUniqueID</code>, a pointer to this unique object may be found using <code>fObjects-&gt;At(fUniqueID)</code>. In the same way, when a <emphasis role="bold"><code>TRef</code></emphasis><code>::GetObject</code> is called, <code>GetObject</code> uses its own <code>fUniqueID</code> to find the pointer to the referenced object. See <emphasis role="bold"><code>TProcessID</code></emphasis><code>::GetObjectWithID</code> and <code>PutObjectWithID</code>.</para>
+</sect3>
+
+<sect3>
+<title>Object Number</title>
+<para>When an object is referenced, a unique identifier is computed and stored in both the <code>fUniqueID</code> of the referenced and referencing object. This <code>uniqueID</code> is computed by incrementing by one the static global in <emphasis role="bold"><code>TProcessID</code></emphasis><code>::fgNumber</code>. The <code>fUniqueID</code> is the serial object number in the current session. One can retrieve the current <code>fgNumber</code> value by calling the static function <emphasis role="bold"><code>TProcessID</code></emphasis><code>::GetObjectCount</code> at any time or can set this number by <emphasis role="bold"><code>TProcessID</code></emphasis><code>::SetObjectCount</code>. To avoid a growing table of <code>fObjects</code> in <emphasis role="bold"><code>TProcessID</code></emphasis>, in case, for example, one processes many events in a loop, it might be necessary to reset the object number at the end of processing of one event. See an example in <code>$ROOTSYS/test/Event.cxx</code> (look at function <code>Build</code>). The value of <code>ObjectNumber </code>may be saved at the beginning of one event and reset to this original value at the end of the event. These actions may be nested.</para>
+
+<programlisting language="c++">
+<code>saveNumber = TProcessID::GetObjectCount();</code>
+<code>…</code>
+<code>TProcessID::SetObjectCount(savedNumber);</code>
+</programlisting>
+
+</sect3>
+</sect2>
+
+<sect2>
+<title>Action on Demand</title>
+<para>The normal behavior of a <emphasis role="bold"><code>TRef</code></emphasis> has been described above. In addition, <emphasis role="bold"><code>TRef</code></emphasis> supports "Actions on Demand". It may happen that the referenced object is not yet in the memory, on a separate file or not yet computed. In this case, <emphasis role="bold"><code>TRef</code></emphasis> is able to execute automatically an action:</para>
+<itemizedlist>
+<listitem><para>Call to a compiled function (static function of member function)</para></listitem>
+<listitem><para>Call to an interpreted function</para></listitem>
+<listitem><para>Execution of a CINT script</para></listitem>
+</itemizedlist>
+<sect3>
+<title>How to Select This Option?</title>
+<para>In the definition of the <emphasis role="bold"><code>TRef</code></emphasis> data member in the original class, do:</para>
+
+<programlisting language="c++">
+<code>TRef fRef;   </code><emphasis role="italic"><code>//EXEC:execName points to something</code></emphasis>
+</programlisting>
+
+<para>When the special keyword <code>"EXEC:"</code> is found in the comment field of the member, the next string is assumed to be the name of a <emphasis role="bold"><code>TExec</code></emphasis> object. When a file is connected, the dictionary of the classes on the file is read in memory (see <emphasis role="bold"><code>TFile</code></emphasis><code>::ReadStreamerInfo).</code> When the <emphasis role="bold"><code>TStreamerElement</code></emphasis> object is read, a <emphasis role="bold"><code>TExec</code></emphasis> object is automatically created with the name specified after the keyword <code>"EXEC:"</code> in case a <emphasis role="bold"><code>TExec</code></emphasis> with a same name does not already exist.</para>
+<para>The action to be executed via <code>this</code> <emphasis role="bold"><code>TExec</code></emphasis> can be specified with:</para>
+<itemizedlist>
+<listitem><para>A call to the <emphasis role="bold"><code>TExec</code></emphasis> constructor, if the constructor is called before</para></listitem>
+<listitem><para>Opening the file.</para></listitem>
+<listitem><para>A call to <emphasis role="bold"><code>TExec</code></emphasis><code>::SetAction</code> at any time.</para></listitem>
+</itemizedlist>
+<para>One can compute a pointer to an existing <emphasis role="bold"><code>TExec</code></emphasis> with a name with:</para>
+
+<programlisting language="c++">
+<code>TExec *myExec = gROOT-&gt;GetExec(execName);</code>
+<code>myExec-&gt;SetAction(actionCommand); </code>
+</programlisting>
+
+<para>The parameter <code>actionCommand</code> is a string containing a CINT instruction. Examples:</para>
+
+<programlisting language="c++">
+<code>myExec-&gt;SetAction("LoadHits()");</code>
+<code>myExec-&gt;SetAction(".x script.C");</code>
+</programlisting>
+
+<para>When a <emphasis role="bold"><code>TRef</code></emphasis> is de-referenced via <emphasis role="bold"><code>TRef</code></emphasis><code>::GetObject</code>, its <emphasis role="bold"><code>TExec</code></emphasis> is automatically executed. The <emphasis role="bold"><code>TExec</code></emphasis> function/script can do one or more of the following:</para>
+<itemizedlist>
+<listitem><para>Load a file containing the referenced object. This function typically looks in the file catalog.</para></listitem>
+<listitem><para>Compute a pointer to the referenced object and communicate this pointer back to the calling function <emphasis role="bold"><code>TRef</code></emphasis><code>::SetObject</code> via:</para></listitem>
+</itemizedlist>
+<programlisting language="c++">
+<code>TRef::SetObject(object)</code>
+</programlisting>
+
+<para>As soon as an object is returned to <code>GetObject</code>, the <code>fUniqueID</code> of the <emphasis role="bold"><code>TRef</code></emphasis> is set to the <code>fUniqueID</code> of the referenced object. At the next call to <code>GetObject</code>, the pointer stored in <code>fPid:fObjects[fUniqueID]</code> will be returned directly. An example of action on demand is in <code>$ROOTSYS/test/Event.h</code>:</para>
+
+<programlisting language="c++">
+<code>TRef    fWebHistogram;   </code>    <emphasis role="italic"><code>//EXEC:GetWebHistogram</code></emphasis>
+</programlisting>
+
+<para>When calling <code>fWebHistogram.GetObject()</code>, the function <code>GetObject</code> will automatically invoke the script <code>GetWebHistogram.C</code> via the interpreter. An example of a <code>GetWebHistogram.C</code> script is shown below:</para>
+
+<programlisting language="c++">
+<code>void GetWebHistogram() {</code>
+<code>  TFile *f=TFile::Open("http://root.cern.ch/files/pippa.root");</code>
+<code>  f-&gt;cd("DM/CJ");</code>
+<code>  TH1 *h6 = (TH1*)gDirectory-&gt;Get("h6");</code>
+<code>  h6-&gt;SetDirectory(0);</code>
+<code>  delete f;</code>
+<code>  TRef::SetObject(h6);</code>
+<code>}</code>
+</programlisting>
+
+<para>In the above example, a call to <code>fWebHistogram.GetObject()</code> executes the script with the function <code>GetWebHistogram</code>. This script connects a file with histograms: <code>pippa.root</code> on the ROOT Web site and returns the object <code>h6</code> to <emphasis role="bold"><code>TRef</code></emphasis><code>::GetObject</code>.</para>
+
+<programlisting language="c++">
+<code>TRef    fWebHistogram;       </code>    <emphasis role="italic"><code>//EXEC:GetWebHistogram()</code></emphasis>
+</programlisting>
+
+<para>Note that if the definition of the <emphasis role="bold"><code>TRef</code></emphasis><code> fWebHistogram</code> had been changed the compiled or interpreted function <code>GetWebHistogram()</code> would have been called instead of the CINT script <code>GetWebHistogram.C.</code></para>
+</sect3>
+</sect2>
+
+<sect2>
+<title>Array of TRef</title>
+<para>When storing multiple <emphasis role="bold"><code>TRef</code></emphasis>s, it is more efficient to use a <emphasis role="bold"><code>TRefArray</code></emphasis>. The efficiency is due to having a single pointer <code>fPID</code> for all <emphasis role="bold"><code>TRef</code></emphasis><code>s</code> in the array. It has a dynamic compact table of <code>fUniqueIDs</code>. We recommend that you use a <emphasis role="bold"><code>TRefArray</code></emphasis> rather then a collection of <emphasis role="bold"><code>TRef</code></emphasis><code>s</code>.</para>
+<para>Example:</para>
+<itemizedlist>
+<listitem><para>Suppose a <emphasis role="bold"><code>TObjArray</code></emphasis><code> *mytracks</code> containing a list of <code>Track</code> objects. </para></listitem>
+<listitem><para>Suppose a <emphasis role="bold"><code>TRefArray</code></emphasis><code> *pions</code> containing pointers to the pion tracks in <code>mytracks</code>. This list is created with statements like:  <code>pions-&gt;Add(track);</code></para></listitem>
+<listitem><para>Suppose a <emphasis role="bold"><code>TRefArray</code></emphasis><code> *muons</code> containing pointers to the muon tracks in <code>mytracks</code>.</para></listitem>
+</itemizedlist>
+<para>The 3 arrays <code>mytracks</code>,<code> pions</code> and <code>muons</code> may be written separately.</para>
+</sect2>
+</sect1>
+
+<sect1>
+<title>Schema Evolution</title>
+<para>Schema evolution is a problem faced by long-lived data. When a schema changes, existing persistent data can become inaccessible unless the system provides a mechanism to access data created with previous versions of the schema. In the lifetime of collaboration, the class definitions (i.e. the schema) are likely to change frequently. Not only can the class itself change, but any of its parent classes or data member classes can change also.  This makes the support for schema evolution necessary. </para>
+<para>ROOT fully supports schema evolution. The next figure below illustrates some of the scenarios.</para>
+
+<figure><title>The ROOT schema evolution</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/020000ED.jpg" width="244.55pt" depth="154.55pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para>The top half represents different versions of the shared library with the class definitions. These are the in-memory class versions. The bottom half represents data files that contain different versions of the classes.</para>
+<itemizedlist>
+<listitem><para>An old version of a shared library and a file with new class definitions - this can be the case when someone has not updated the library and is reading a new file. </para></listitem>
+<listitem><para>Reading a file with a shared library that is missing a class definition (i.e. missing class D).</para></listitem>
+<listitem><para>Reading a file without any class definitions. This can be the case where the class definition is lost, or unavailable.</para></listitem>
+<listitem><para>The current version of a shared library and an old file with old class versions (backward compatibility). This is often the case when reading old data.</para></listitem>
+<listitem><para>Reading a file with a shared library built with <code>MakeProject</code>. This is the case when someone has already read the data without a shared library and has used ROOT <code>MakeProject</code> feature to reconstruct the class definitions and shared library (<code>MakeProject</code> is explained in detail later on).</para></listitem>
+</itemizedlist>
+<para>In case of a mismatch between the in-memory version and the persistent version of a class, ROOT maps the persistent one to the one in memory. This allows you to change the class definition at will, for example: </para>
+<itemizedlist>
+<listitem><para>Change the order of data members in the class.</para></listitem>
+<listitem><para>Add new data members. By default, the value of the missing member will be 0 or in case of an object it will be set to null.</para></listitem>
+<listitem><para> Remove data members.</para></listitem>
+<listitem><para>Move a data member to a base class or vice-versa.</para></listitem>
+<listitem><para>Change the type of a member if it is a simple type or a pointer to a simple type. If a loss of precision occurs, a warning is given.</para></listitem>
+<listitem><para>Add or remove a base class</para></listitem>
+</itemizedlist>
+
+<figure><title>The schema evolution for objects written on disk and in memory</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/020000EE.jpg" width="227.15pt" depth="99.3pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para>ROOT supports schema evolution by keeping a class description of each version of the class that was ever written to disk, with the class. When it writes an object to file, it also writes the description of the current class version along with it. This description is implemented in the <code>StreamerInfo </code>class.</para>
+
+<sect2>
+<title>The TStreamerInfo Class</title>
+<para>Each class has a list of <code>StreamerInfo</code> objects, one for each version of the class if that version was written to disk at least once. When reading an object from a file, the system uses the <code>StreamerInfo</code> list to decode an object into the current version. The <code>StreamerInfo</code> is made up of <emphasis role="bold"><code>TStreamerElements</code></emphasis> . Each describes one persistent data member of the class. By default, all data members of a class are persistent. To exclude a data member (i.e. make it not persistent), add a “<code>!</code>" after the comment marks. For example the pointer *<code>fPainter</code> of a <emphasis role="bold"><code>TH1</code></emphasis> is not persistent:</para>
+
+<programlisting language="c++">
+TVirtualHistPainter* fPainter <emphasis role="italic"><code>//!pointer to histogram painter</code></emphasis>
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>The TStreamerElement Class</title>
+<para>A <emphasis role="bold"><code>TStreamerElement</code></emphasis> describes a data member of a simple type, object, array, pointer, or container. The offset in the <emphasis role="bold"><code>TStreamerElement</code></emphasis> is the starting address of the data for that data member.</para>
+
+<programlisting language="c++">
+BASE   TNamed        offset=  0 type=67 The basis for a named object
+BASE   TAttLine      offset= 28 type= 0 Line attributes
+</programlisting>
+
+<para> In this example, the <emphasis role="bold"><code>TNamed</code></emphasis> data starts at byte 0, and <emphasis role="bold"><code>TAttLine</code></emphasis> starts at byte 28. The offset is machine and compiler dependent and is computed when the <code>StreamerInfo</code> is analyzed. The types are defined in the file <code>TStreamerInfo.h</code> and listed here:</para>
+
+<programlisting language="c++">
+enum EReadWrite {
+kBase=0,   kChar=1,kShort=2,kInt=3,kLong=4,
+kFloat=5,         kCounter=6,kCharStar=7, kDouble=8,kUChar=11,
+kUShort=12,         kUInt=13,kULong=14,kBits=15,kOffsetL=20,
+kOffsetP=40,  kObject=61,kAny=62,kObjectp=63,kObjectP=64,
+kTString=65,  kTObject=66,kTNamed=67,kSkip=100,kSkipL=120,
+kSkipP=140,    kConv=200,       kConvL=220,kConvP=240,kStreamer=500,
+kStreamLoop=501,    kMissing=99999
+};
+</programlisting>
+
+<para>The method <emphasis role="bold"><code>TClass</code></emphasis><code>::GetStreamerInfo</code>         analyzes the <code>StreamerInfo</code> the same way it would be analyzed by referring to the class. While analyzing the <code>StreamerInfo</code>, it computes the offsets. The type field is the type of the <emphasis role="bold"><code>TStreamerElement</code></emphasis>. It is specific to the <code>StreamerInfo</code> definition. </para>
+</sect2>
+
+<sect2>
+<title>Example: TH1 StreamerInfo</title>
+<para>In the <code>StreamerInfo</code> of the <emphasis role="bold"><code>TH1</code></emphasis> class we see the four base classes:         <emphasis role="bold"><code>TNamed</code></emphasis>, <emphasis role="bold"><code>TAttLine</code></emphasis>, <emphasis role="bold"><code>TAttFill</code></emphasis>, <code>and </code><emphasis role="bold"><code>TAttMarker</code></emphasis>. These are followed by a list of the data members. Each data member is implemented by a <emphasis role="bold"><code>TStreamerElement</code></emphasis> object.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TH1::Class()-&gt;GetStreamerInfo()-&gt;ls()</code></emphasis>
+StreamerInfo for class: TH1, version=3
+BASE    TNamed  offset=  0 type=67 The basis for a named object
+BASE    TAttLine      offset= 28 type= 0 Line attributes
+BASE    TAttFill      offset= 40 type= 0 Fill area attributes
+BASE    TAttMarker    offset= 48 type= 0 Marker attributes
+Int_t   fNcells       offset= 60 type= 3 number of bins(1D
+TAxis   fXaxis        offset= 64 type=61 X axis descriptor
+TAxis   fYaxis        offset=192 type=61 Y axis descriptor
+TAxis   fZaxis        offset=320 type=61 Z axis descriptor
+Short_t fBarOffset    offset=448 type= 2(1000*offset)for bar charts or legos
+Short_t fBarWidth     offset=450 type= 2 (1000*width)for bar charts or legos
+Stat_t  fEntries      offset=452 type= 8 Number of entries
+Stat_t  fTsumw        offset=460 type= 8 Total Sum of weights
+Stat_t  fTsumw2       offset=468 type= 8 Total Sum of squares of weights
+Stat_t  fTsumwx       offset=476 type= 8 Total Sum of weight*X
+Stat_t  fTsumwx2      offset=484 type= 8 Total Sum of weight*X*X
+Double_t fMaximum     offset=492 type= 8 Maximum value for plotting
+Double_t fMinimum     offset=500 type= 8 Minimum value for plotting
+Double_t fNormFactor  offset=508 type= 8 Normalization factor
+TArrayD  fContour     offset=516 type=62 Array to display contour levels
+TArrayD  fSumw2       offset=528 type=62 Array of sum of squares of weights
+TString  fOption      offset=540 type=65 histogram options
+TList*   fFunctions   offset=548 type=63 -&gt;Pointer to list of functions
+i= 0, TNamed       type= 67, offset=  0, len=1, method=0
+i= 1, TAttLine     type=  0, offset= 28, len=1, method=142484480
+i= 2, TAttFill     type=  0, offset= 40, len=1, method=142496992
+i= 3, TAttMarker   type=  0, offset= 48, len=1, method=142509704
+i= 4, fNcells      type=  3, offset= 60, len=1, method=0
+i= 5, fXaxis       type= 61, offset= 64, len=1, method=1081287424
+i= 6, fYaxis       type= 61, offset=192, len=1, method=1081287548
+i= 7, fZaxis       type= 61, offset=320, len=1, method=1081287676
+i= 8, fBarOffset   type= 22, offset=448, len=2, method=0
+i= 9, fEntries     type= 28, offset=452, len=8, method=0
+i=10, fContour     type= 62, offset=516, len=1, method=1081287804
+i=11, fSumw2       type= 62, offset=528, len=1, method=1081287924
+i=12, fOption      type= 65, offset=540, len=1, method=1081288044
+i=13, fFunctions   type= 63, offset=548, len=1, method=1081288164
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Optimized StreamerInfo</title>
+<para>The entries starting with "<code>i = 0</code>" is the optimized format of the <code>StreamerInfo</code>. Consecutive data members of the same simple type and size are collapsed and read at once into an array for performance optimization. </para>
+
+<programlisting language="c++">
+i= 0, TNamed       type= 67, offset=  0, len=1, method=0
+i= 1, TAttLine     type=  0, offset= 28, len=1, method=142484480
+i= 2, TAttFill     type=  0, offset= 40, len=1, method=142496992
+i= 3, TAttMarker   type=  0, offset= 48, len=1, method=142509704
+</programlisting>
+
+<para>For example, the five data members beginning with <code>fEnties </code>and the three data members beginning with <code>fMaximum</code>, are put into an array called <code>fEntries</code> (<code>i = 9</code>) with the length 8.</para>
+
+<programlisting language="c++">
+i= 9, fEntries     type= 28, offset=452, len=8, method=0
+</programlisting>
+
+<para>Only simple type data members are combined, object data members are not combined. For example the three axis data members remain separate. The "method" is a handle to the method that reads the object.</para>
+</sect2>
+
+<sect2>
+<title>Automatic Schema Evolution</title>
+<para>When a class is defined in ROOT, it must include the <code>ClassDef</code> macro as the last line in the header file inside the class definition. The syntax is:</para>
+
+<programlisting language="c++">
+ClassDef(&lt;ClassName&gt;,&lt;VersionNumber&gt;)
+</programlisting>
+
+<para>The version number identifies this particular version of the class. When a class has version 0 it is not stored in a root file but its base class(es) is(are). The reason can be that this class has no data members worth saving or all real info is in the base classes. The version number is written to the file in the <code>Streamer</code> by the call <emphasis role="bold"><code>TBuffer</code></emphasis><code>::WriteVersion</code>. You, as the designer of the class, do not need to do any manual modification in the <code>Streamer</code>. ROOT schema evolution mechanism is automatic and handled by the <code>StreamerInfo</code>.</para>
+</sect2>
+
+<sect2>
+<title>Manual Schema Evolution</title>
+<para>If you have written your own <code>Streamer</code> as described in the section "Streamers with Special Additions", you will have to manually add code for each version and manage the evolution of your class. When you add or remove data members, you must modify the <code>Streamer</code> by hand. ROOT assumes that you have increased the class version number in the <code>ClassDef</code> statement and introduced the relevant test in the read part of the Streamer. For example, if a new version of the <code>Event</code> class above includes a new member: <code>Int_t fNew</code> the <code>ClassDef</code> statement should be changed to <code>ClassDef(Event,2)</code> and the following lines should be added to the read part of the <code>Streamer</code>: </para>
+
+<programlisting language="c++">
+<code>if (R__v &gt; 1) R__b &gt;&gt; fNew;</code>
+<code>else fNew = 0;        </code><emphasis role="italic"><code>// set to some default value</code></emphasis>
+</programlisting>
+
+<para>If, in the same new version 2 you remove the member <code>fH</code>, you must add the following code to read the histogram object into some temporary object and delete it: </para>
+
+<programlisting language="c++">
+<code>if (R__v) &lt; 2 {</code>
+<code>    TH1F *dummy = 0;</code>
+<code>    R__b &gt;&gt; dummy;</code>
+<code>    delete dummy;</code>
+<code>}</code>
+</programlisting>
+
+<para>Our experience with manual schema evolution shows that it is easy to make and mismatches between <code>Streamer</code> writers and readers are frequent and increase as the number of classes increase. We recommend you use <code>rootcint</code> generated <code>Streamers</code> whenever you can, and profit from the automatic schema evolution.</para>
+</sect2>
+
+<sect2>
+<title>Building Class Definitions with the StreamerInfo</title>
+<para>A ROOT file's <code>StreamerInfo </code>list contains the description of all versions of all classes in the file. When a file is opened the <code>StreamerInfo </code>is read into memory and it provides enough information to make the file browsable. The <code>TStreamerInfo </code>enables us to recreate a header file for the class in case the compiled class is not available. This is done with the <emphasis role="bold"><code>TFile</code></emphasis><code>::MakeProject</code>         method. It creates a directory with the header files for the named classes and a <code>makefile</code> to compile a shared library with the class definitions. </para>
+</sect2>
+
+<sect2>
+<title>Example: MakeProject</title>
+<para>To explain the details, we use the example of the <code>ATLFast</code> project that is a fast simulation for the ATLAS experiment. The complete source for <code>ATLFast</code> can be down loaded at  <uri xmlns:xlink="ftp://root.cern.ch/root/atlfast.tar.gz">ftp://root.cern.ch/root/atlfast.tar.gz</uri>. Once we compile and run <code>ATLFast</code> we get a ROOT file called <code>atlfast.root</code>, containing the <code>ATLFast</code> objects. When we open the file, we get a warning that the file contains classes that are not in the CINT dictionary. This is correct since we did not load the class definitions.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TFile</code></emphasis><emphasis role="bold"><code> f("atlfast.root")</code></emphasis>
+Warning in &lt;TClass::TClass&gt;: no dictionary for class TMCParticle is available
+Warning in &lt;TClass::TClass&gt;: no dictionary for class ATLFMuon available
+</programlisting>
+
+<para>We can see the <code>StreamerInfo </code>for the classes:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>f.ShowStreamerInfo()</code></emphasis>
+…
+StreamerInfo for class: ATLFMuon, version=1
+BASE  TObject      offset=  0 type=66 Basic ROOT object
+BASE  TAtt3D       offset=  0 type= 0 3D attributes
+Int_t m_KFcode     offset=  0 type= 3 Muon KF-code
+Int_t m_MCParticle offset=  0 type= 3 Muon position in MCParticles list
+Int_t m_KFmother   offset=  0 type= 3 Muon mother KF-code
+Int_t m_UseFlag    offset=  0 type= 3 Muon energy usage flag
+Int_t m_Isolated   offset=  0 type= 3 Muon isolation (1 for isolated)
+Float_t m_Eta      offset=  0 type= 5 Eta coordinate
+Float_t m_Phi      offset=  0 type= 5 Phi coordinate
+Float_t m_PT       offset=  0 type= 5 Transverse energy
+Int_t   m_Trigger  offset=  0 type= 3 Result of trigger…
+</programlisting>
+
+<para>However, when we try to use a specific class we get a warning because the class is not in the CINT dictionary. We can create a class using <code>gROOT-&gt;GetClass()</code> which makes a fake class from the <code>StreamerInfo</code>.</para>
+
+<programlisting language="c++">
+<emphasis role="italic"><code>// Build a 'fake' class </code></emphasis>
+root[]<emphasis role="bold"><code> gROOT-&gt;GetClass("ATLFMuon") </code></emphasis>
+(const class TClass*)0x87e5c08
+<emphasis role="italic"><code>// The fake class has a StreamerInfo</code></emphasis>
+root[] <emphasis role="bold"><code>gROOT-&gt;GetClass("ATLFMuon")-&gt;GetStreamerInfo()-&gt;ls() </code></emphasis>
+<code>StreamerInfo for class: ATLFMuon, version=1</code>
+<code>  BASE    TObject       offset=  0 type=66 Basic ROOT object   </code>
+<code>  BASE    TAtt3D        offset=  0 type= 0 3D attributes       </code>
+<code>  Int_t   m_KFcode      offset= 16 type= 3 Muon KF-code        </code>
+<code>  Int_t   m_MCParticle  offset= 20 type= 3 Muon position in MCParticles list</code>
+<code>  Int_t   m_KFmother    offset= 24 type= 3 Muon mother KF-code </code>
+<code>  Int_t   m_UseFlag     offset= 28 type= 3 Muon energy usage flag</code>
+<code>  Int_t   m_Isolated    offset= 32 type= 3 Muon isolation </code>
+<code>  Float_t m_Eta         offset= 36 type= 5 Eta coordinate      </code>
+<code>  Float_t m_Phi         offset= 40 type= 5 Phi coordinate      </code>
+<code>  Float_t m_PT          offset= 44 type= 5 Transverse energy   </code>
+<code>  Int_t   m_Trigger     offset= 48 type= 3 Result of trigger   </code>
+<code>  i= 0, TObject         type= 66, offset=  0, len=1, method=0</code>
+<code>  i= 1, TAtt3D          type=  0, offset=  0, len=1, method=142684688</code>
+<code>  i= 2, m_KFcode        type= 23, offset= 16, len=5, method=0</code>
+<code>  i= 3, m_Eta           type= 25, offset= 36, len=3, method=0</code>
+<code>  i= 4, m_Trigger       type=  3, offset= 48, len=1, method=0</code>
+</programlisting>
+
+<para><code>MakeProject</code> has three parameters:</para>
+
+<programlisting language="c++">
+<code>MakeProject(const char *dirname,const char *classes,Option_t *option)</code>
+</programlisting>
+
+<para>The first is the directory name in which to place the generated header files. The second parameter is the name of the classes to include in the project. By default, all classes are included. It recognizes the wild card character *, for example, "ATLF*" includes all classes beginning with ATLF. The third parameter is an option with the following values:</para>
+<itemizedlist>
+<listitem><para>"<code>new</code>"  If the directory does not exist, it is created.</para></listitem>
+<listitem><para>"<code>recreate</code>" If the directory does not exist, it is creates as in "new", in addition if the directory does exist, all existing files are deleted before creating the new files.</para></listitem>
+<listitem><para>"<code>update</code>"     The new classes are added to the existing directory and the existing classes are replaced with the new definition. If the directory does not exist, it creates it as in "new".</para></listitem>
+<listitem><para>"+": This option can be used in combination with the other three. It will create the necessary files to easily build a shared library containing the class definitions.Specifically it will: </para></listitem>
+<listitem><para>Generate a script called <code>MAKE</code> that builds the shared library containing the definition of all classes in the directory.</para></listitem>
+<listitem><para>Generate a <code>LinkDef.h </code>files to use with <code>rootcint</code> in <code>MAKE</code>.</para></listitem>
+<listitem><para>Run <code>rootcint</code> to generate a <code>&lt;dirname&gt;ProjectDict.cxx</code> file. </para></listitem>
+<listitem><para>Compile the &lt;<code>dirname&gt;ProjectDict.cxx </code>with the current options in <code>compiledata.h</code>.</para></listitem>
+<listitem><para>Build         a shared library<code> &lt;dirname&gt;.so</code>.         </para></listitem>
+<listitem><para>"++":This option can be used instead of the single "+". It does everything the single "+" does, and dynamically loads the shared library <code>&lt;dirname&gt;.so</code>.</para></listitem>
+</itemizedlist>
+<para>This example makes a directory called <code>MyProject</code> that will contain all class definitions from the <code>atlfast.root</code> file. The necessary <code>makefile</code> to build a shared library are also created, and since the '++' is appended, the shared library is also loaded.</para>
+
+<programlisting language="c++">
+<code>root[]</code><emphasis role="bold"><code>f.MakeProject("MyProject","*", "recreate++") </code></emphasis>
+<code>MakeProject has generated 0 classes in MyProject</code>
+<code>MyProject/MAKE file has been generated</code>
+<code>Shared lib MyProject/MyProject.so has been generated</code>
+<code>Shared lib MyProject/MyProject.so has been dynamically linked</code>
+</programlisting>
+
+<para>The contents of <code>MyProject</code>:</para>
+
+<programlisting language="c++">
+<code>root[] </code>    <emphasis role="bold"><code>.! ls MyProject</code></emphasis>
+<code>ATLFCluster.h      ATLFJet.h           ATLFMiscMaker.h     ATLFTrack.h      TMCParticle.h      ATLFClusterMaker.h  ATLFJetMaker.h      ATLFMuon.h    ATLFElectron.h     ATLFMCMaker.h       ATLFMuonMaker.h     ATLFElectronMaker.h             ATLFMaker.h        ATLFPhoton.h        ATLFHistBrowser.h   ATLFMisc.h        ATLFPhotonMaker.h  ATLFTrackMaker.h    ATLFTrigger.h       ATLFTriggerMaker.h      LinkDef.h          MAKE                MyProject.so        MyProjectProjectDict.h MyProjectProjectDict.cxx               MyProjectProjectDict.o</code>
+</programlisting>
+
+<para>Now you can load the shared library in any consecutive root session to use the <code>atlfast</code> classes.</para>
+
+<programlisting language="c++">
+<code>root[]</code><emphasis role="bold"><code>gSystem</code></emphasis><emphasis role="bold"><code>-&gt;Load("MyProject/MyProject")</code></emphasis>
+<code>root[]</code><emphasis role="bold"><code>ATLFMuon muon</code></emphasis>
+</programlisting>
+
+<para>This is an example of a generated header file:</para>
+
+<programlisting language="c++">
+<emphasis role="italic"><code>//////////////////////////////////////////////////////////</code></emphasis>
+<emphasis role="italic"><code>//   This class has been generated by TFile::MakeProject</code></emphasis>
+<emphasis role="italic"><code>//     (Thu Apr  5 10:18:37 2001 by ROOT version 3.00/06)</code></emphasis>
+<emphasis role="italic"><code>//      from the TStreamerInfo in file atlfast.root</code></emphasis>
+<emphasis role="italic"><code>//////////////////////////////////////////////////////////</code></emphasis>
+<code>#ifndef ATLFMuon_h</code>
+<code>#define ATLFMuon_h</code>
+<code>#include "TObject.h"</code>
+<code>#include "TAtt3D.h"</code>
+<code>class ATLFMuon : public TObject , public TAtt3D {</code>
+<code>public:</code>
+<code>   Int_t     m_KFcode;       </code>    <emphasis role="italic"><code>//Muon KF-code</code></emphasis>
+<code>   Int_t     m_MCParticle;   </code>    <emphasis role="italic"><code>//Muon position in MCParticles list</code></emphasis>
+<code>   Int_t     m_KFmother;     </code>    <emphasis role="italic"><code>//Muon mother KF-code</code></emphasis>
+<code>   Int_t     m_UseFlag;      </code>    <emphasis role="italic"><code>//Muon energy usage flag</code></emphasis>
+<code>   Int_t     m_Isolated;     </code>    <emphasis role="italic"><code>//Muon isolation (1 for isolated)</code></emphasis>
+<code>   Float_t   m_Eta;          </code>    <emphasis role="italic"><code>//Eta coordinate</code></emphasis>
+<code>   Float_t   m_Phi;          </code>    <emphasis role="italic"><code>//Phi coordinate</code></emphasis>
+<code>   Float_t   m_PT;           </code>    <emphasis role="italic"><code>//Transverse energy</code></emphasis>
+<code>   Int_t     m_Trigger;      </code>    <emphasis role="italic"><code>//Result of trigger</code></emphasis>
+<code>   ATLFMuon() {;}</code>
+<code>   virtual ~ATLFMuon() {;}</code>
+<code>   ClassDef(ATLFMuon,1) //</code>
+<code>};</code>
+<code>   ClassImp(ATLFMuon)</code>
+<code>#endif</code>
+</programlisting>
+
+</sect2>
+</sect1>
+
+<sect1>
+<title>Migrating to ROOT 3</title>
+<para>We will distinguish the following cases: </para>
+<para><emphasis role="bold">Case A</emphasis>: You have your own <code>Streamer</code> method in your class implementation file. This also means that you have specified <code>MyClass</code> in the <code>LinkDef.h</code> file. </para>
+<itemizedlist>
+<listitem><para>Keep <code>MyClass </code><code>-</code> unchanged. </para></listitem>
+<listitem><para>Increment your class version id in <code>ClassDef</code> by 1, e.g. <code>ClassDef(MyClass, 2)</code> </para></listitem>
+<listitem><para>Change your <code>Streamer</code> function in the following way: The old write block can be replaced by the new standard Write. Change the read block to use the new scheme for the new versions and the old code for the old versions. </para></listitem>
+</itemizedlist>
+<programlisting language="c++">
+<code> void MyClass::Streamer(TBuffer &amp;R__b) {</code>
+<emphasis role="italic"><code>    // Stream an object of class MyClass.</code></emphasis>
+<code>    if (R__b.IsReading()) {</code>
+<code>       UInt_t R__s, R__c;</code>
+<code>       Version_t R__v = R__b.ReadVersion(&amp;R__s, &amp;R__c);</code>
+<code>       if (R__v &gt; 1) {</code>
+<code>         MyClass::Class()-&gt;ReadBuffer(R__b, this, R__v, R__s, R__c);</code>
+<code>         return;</code>
+<code>       }</code>
+<emphasis role="italic"><code>       // process old versions before automatic schema evolution</code></emphasis>
+<code>       R__b &gt;&gt; xxxx;</code>
+<code>       R__b &gt;&gt; .. etc</code>
+<code>       R__b.CheckByteCount(R__s, R__c, MyClass::IsA());</code><emphasis role="italic"><code> // end of old versions</code></emphasis>
+<code>    } else </code>
+<code>         MyClass::Class()-&gt;WriteBuffer(R__b,this);</code>
+<code>}</code>
+</programlisting>
+
+<para><emphasis role="bold">Case B</emphasis>: You use the automatic <code>Streamer</code> in the dictionary file. </para>
+<itemizedlist>
+<listitem><para>Move the old Streamer from the file generated by <code>rootcint</code> to your class implementation file, then modify the Streamer function as in Case A above. </para></listitem>
+<listitem><para>Increment your class version id in <code>ClassDef</code> by 1, i.e.<code> ClassDef(MyClass, 2)</code> </para></listitem>
+<listitem><para>Add option "-" in the pragma line of <code>LinkDef</code>. </para></listitem>
+</itemizedlist>
+<para><emphasis role="bold">Case C</emphasis>: You use the automatic <code>Streamer</code> in the dictionary file and you already use the option "+" in the <code>LinkDef</code> file. If the old automatic <code>Streamer</code> does not contain any statement using the function <code>WriteArray</code>, you have nothing to do, except running <code>rootcint</code> again to regenerate the new form of the <code>Streamer</code> function, otherwise proceed like for case B. </para>
+</sect1>
+
+<sect1>
+<title>Compression and Performance</title>
+<para>ROOT uses a compression algorithm based on the well-known <code>gzip</code> algorithm. It supports nine levels of compression. The default for ROOT is one. The compression level can be set with the method <emphasis role="bold"><code>TFile</code></emphasis><code>::SetCompressionLevel</code>. The experience with this algorithm shows that a compression level of 1.3 for raw data files and around two on most DST files is the optimum. The choice of one for the default is a compromise between the time it takes to read and write the object vs. the disk space savings. </para>
+<para>To specify no compression, set the level to zero. </para>
+<para>We recommend using compression when the time spent in I/O is small compared to the total processing time. If the I/O operation is increased by a factor of 5 it is still a small percentage of the total time and it may compress the data by a factor of 10. On the other hand if the time spend on I/O is large, compression may have a large impact on the program's performance.</para>
+<para>The compression factor, i.e. the savings of disk space, varies with the type of data. A buffer with a same value array is compressed so that the value is only written once. For example, a track has the mass of a pion that it is always the same, and the charge of the pion that is either positive or negative. For 1000 pions, the mass will be written only once, and the charge only twice (positive and negative). When the data is sparse, i.e. when there are many zeros, the compression factor is also high. </para>
+<para/>
+<informaltable frame="all">
+<tgroup cols="4">
+<colspec colwidth="1997*" colname="column-1"/>
+<colspec colwidth="1737*" colname="column-2"/>
+<colspec colwidth="1842*" colname="column-3"/>
+<colspec colwidth="1845*" colname="column-4"/>
+<tbody>
+<row>
+<entry rowsep="1" colsep="1">
+<para>    Compression level</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>                 Bytes</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>    Write Time (sec)</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>    Read Time (sec.)</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>0</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>1,004,998</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>4.77</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>0.07</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>1</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>438,366</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>6.67</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>0.05</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>5</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>429,871</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>7.03</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>0.06</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>9</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>426,899</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>8.47</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>0.05</para>
+</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<para>The time to uncompress an object is small compared to the compression time and is independent of the selected compression level. Note that the compression level may be changed at any time, but the new compression level will only apply to newly written objects. Consequently, a ROOT file may contain objects with different compression levels. This table shows four runs of the demo script that creates 15 histograms with different compression parameters. To make the numbers more significant, the macro was modified to create 1000 histograms. We have included two more examples to show the impact of compression on Trees in the next chapter.</para>
+</sect1>
+
+<sect1>
+<title>Remotely Access to ROOT Files via a rootd</title>
+<para>Reading and writing ROOT files over the net can be done by creating a <emphasis role="bold"><code>TNetFile</code></emphasis> object instead of a <emphasis role="bold"><code>TFile</code></emphasis> object. Since the <emphasis role="bold"><code>TNetFile</code></emphasis>         class inherits from the <emphasis role="bold"><code>TFile</code></emphasis> class, it has exactly the same interface and behavior. The only difference is that it reads and writes to a remote <code>rootd</code> daemon.</para>
+
+<sect2>
+<title>TNetFile URL</title>
+<para><emphasis role="bold"><code>TNetFile</code></emphasis> file names are in standard URL format with protocol "<code>root</code>". The following are valid <emphasis role="bold"><code>TNetFile</code></emphasis> URL's:</para>
+
+<programlisting language="c++">
+<code>root://hpsalo/files/aap.root</code>
+<code>root://hpbrun.cern.ch/root/hsimple.root</code>
+<code>root://pcna49a:5151/~na49/data/run821.root</code>
+<code>root://pcna49d.cern.ch:5050//v1/data/run810.root</code>
+</programlisting>
+
+<para>The only difference with the well-known http URL's is that the root of the remote file tree is the remote user's home directory. Therefore an absolute pathname requires a <code>//</code> after the host or port (as shown in the last example above). Further the expansion of the standard shell characters, like <code>~</code>, <code>$</code>, <code>..</code>, etc. is handled as expected. The default port on which the remote <code>rootd</code> listens is 1094 and <emphasis role="bold"><code>TNetFile</code></emphasis> (actually by <emphasis role="bold"><code>TUrl</code></emphasis> that is used by <emphasis role="bold"><code>TNetFile</code></emphasis>) assumes this default port. The port number has been allocated by the IANA and is reserved for ROOT.</para>
+</sect2>
+
+<sect2>
+<title>Remote Authentication</title>
+<para>Connecting to a <code>rootd</code> daemon requires a remote user id and password. <emphasis role="bold"><code>TNetFile</code></emphasis> supports several ways for you to provide your login information:</para>
+<para>● Setting it globally via the static methods <emphasis role="bold"><code>TNetFile</code></emphasis><code>::SetUser</code> and <emphasis role="bold"><code>TNetFile</code></emphasis><code>::SetPasswd</code> </para>
+<para>● Via the <code>~/.netrc</code> file (same format and file as used by <code>ftp</code>) </para>
+<para>● Via command line prompt </para>
+<para>● Setting the SPR password file via the option <code>–P FILE</code>, i.e. the next line will start the <code>rootd</code> daemon using the files <code>$HOME/.srootdpass2.conf</code> and <code>$HOME/.srootdpass2</code> for SPR authentication:<code> rootd –P $HOME/.srootdpass2</code></para>
+</sect2>
+
+<sect2>
+<title>A Simple Session</title>
+
+<programlisting language="c++">
+<code>root[] </code><emphasis role="bold"><code>TFile *f1 = TFile::Open("local/file.root","update")</code></emphasis>
+<code>root[] </code><emphasis role="bold"><code>TFile *f2 = TFile::Open("root://pcna49a.cern.ch/data/file.root","new")</code></emphasis>
+<code>Name (pcna49a:rdm):</code>
+<code>Password: </code>
+<code>root[] </code><emphasis role="bold"><code>TFile *f3 = TFile::Open("http://root.cern.ch/~rdm/hsimple.root")</code></emphasis>
+<code>root[] </code><emphasis role="bold"><code>f3.ls()</code></emphasis>
+<code>TWebFile** http://root.cern.ch/~rdm/hsimple.root</code>
+<code>TWebFile* http://root.cern.ch/~rdm/hsimple.root</code>
+<code>KEY: TH1F hpx;1 This is the px distribution</code>
+<code>KEY: TH2F hpxpy;1 py vs px </code>
+<code>KEY: TProfile hprof;1 Profile of pz versus px </code>
+<code>KEY: TNtuple ntuple;1 Demo ntuple</code>
+<code>root[] </code><emphasis role="bold"><code>hpx.Draw()</code></emphasis>
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>The rootd Daemon</title>
+<para>The <code>rootd</code> daemon works with the <emphasis role="bold"><code>TNetFile</code></emphasis> class. It allows remote access to ROOT database files in read or read/write mode. The <code>rootd</code> daemon can be found in the directory <code>$ROOTSYS/bin</code>. It can be started either via <code>inetd</code> or by hand from the command line (no need to be super user). Its performance is comparable with NFS but while NFS requires all kind of system permissions to setup, <code>rootd</code> can be started by any user. The simplest way to start <code>rootd</code> is by starting it from the command line while being logged in to the remote machine. Once started <code>rootd</code> goes immediately in the background (does not need <code>&amp;</code>) and you can log out from the remote node. The only required argument is the range of ports (specified using <code>–p port1-port2</code>). <code>rootd</code> will listen on the first available port in this range. You can also specify <code>-p 0-N</code> to search relative to the service port specified in <code>/etc/services.</code> If a single port is specified (<code>rootd -p 1094)</code> then no search is made. Unless started by <code>inetd (rootd -i)</code>, it prints information about the found port, something like: <code>ROOTD_PORT=5151, ROOTD_PID=14433</code> before spawning the daemon. This way the user knows what was used (<code>eval</code> `<code>rootd</code>` will set these as variables in Bourne-like shells). Also, <code>rootd</code> shows an error message (as well as sending the <code>syslog</code> message) if there is any problem binding the port or forking the daemon. </para>
+<para>Using <emphasis role="bold"><code>TNetFile</code></emphasis> you can now read and write files on the remote machine. </para>
+<para>In the example below, <code>rootd</code> runs on the remote node under user id <code>minuser</code> and searches for an available port into the range 1094-1098. It finds and listens to port 1094. When creating a <emphasis role="bold"><code>TNetFile</code></emphasis> object you have to specify the same port number 1094 and use <code>minuser</code> (and corresponding password) as login id. When <code>rootd</code> is started in this way, you can only login with the user id under which <code>rootd</code> was started on the remote machine.</para>
+
+<programlisting language="c++">
+<code>hpsalo[] </code>    <emphasis role="bold"><code>telnet fsgi02.fnal.gov</code></emphasis>
+<code>login: </code>    <emphasis role="bold"><code>minuser</code></emphasis>
+<code>Password:</code>
+<code>&lt;fsgi02&gt; </code>    <emphasis role="bold"><code>rootd -p 1094-1098</code></emphasis>
+<code>ROOTD_PORT=1094</code>
+<code>ROOTD_PID=14433</code>
+<code>&lt;fsgi02&gt; </code>    <emphasis role="bold"><code>exit</code></emphasis>
+<code>hpsalo[] </code>    <emphasis role="bold"><code>root</code></emphasis>
+<code>root[] </code>    <emphasis role="bold"><code>TFile *f = TFile::Open("root://fsgi02.fnal.gov:1094/file.root","new")</code></emphasis>
+<code>Name (fsgi02.fnal.gov:rdm): </code>    <emphasis role="bold"><code>minuser</code></emphasis>
+<code>Password:</code>
+<code>root[] </code>    <emphasis role="bold"><code>f.ls()</code></emphasis>
+</programlisting>
+
+<para>However, you can make many connections since the original <code>rootd</code> will fork (spawn) a new <code>rootd</code> that will service the requests from the <emphasis role="bold"><code>TNetFile</code></emphasis>. The original <code>rootd</code> keeps listening on the specified port for other connections. Each time a <emphasis role="bold"><code>TNetFile</code></emphasis> makes a connection; it gets a new private <code>rootd</code> that will handle its requests. At the end of a ROOT, session when all <emphasis role="bold"><code>TNetFile</code></emphasis>s are closed only the original <code>rootd</code> will stay alive ready to service future <emphasis role="bold"><code>TNetFile</code></emphasis>s.</para>
+</sect2>
+
+<sect2>
+<title>Starting rootd via inetd</title>
+<para>If you expect to often connect via <emphasis role="bold"><code>TNetFile</code></emphasis> to a remote machine, it is more efficient to install <code>rootd</code> as a service of the <code>inetd</code> super daemon. In this way, it is not necessary for each user to run a private <code>rootd</code>. However, this requires a one-time modification of two system files (and super user privileges to do so). Add to <code>/etc/services</code> the line: <code>rootd 1094/tcp</code>. To <code>/etc/inetd.conf</code> the line:</para>
+<para>
+<code>rootd stream tcp nowait root /usr/local/root/bin/rootd rootd -i</code></para>
+<para>After these changes force <code>inetd</code> to reread its configuration file with: "<code>kill -HUP &lt;pid inetd&gt;</code>". It is not necessary to specify a port number in the URL given to <emphasis role="bold"><code>TNetFile</code></emphasis> when the setup done this way. <emphasis role="bold"><code>TNetFile</code></emphasis> assumes the default port to be 1094 as specified above in the <code>/etc/services</code> file. </para>
+</sect2>
+
+<sect2>
+<title>Command Line Arguments for rootd</title>
+<para><code>rootd</code> supports the following arguments:</para>
+<itemizedlist>
+<listitem><para><code>-i       </code>         says that <code>rootd</code> is started by <code>inetd</code></para></listitem>
+<listitem><para>    <code>-p port#-port#  </code>    specifies the range of ports to be searched</para></listitem>
+<listitem><para><code>-p 0-N   </code>         the service ports range in <code>/etc/services</code></para></listitem>
+<listitem><para>    <code>-d level   </code>    level of debug info written to     <code>syslogd</code></para></listitem>
+</itemizedlist>
+<para>
+<code>0 = no debug (default)</code>
+<code>1 = minimum</code></para>
+<para>
+<code>2 = medium3 = maximum </code></para>
+</sect2>
+</sect1>
+
+<sect1>
+<title>Reading ROOT Files via Apache Web Server</title>
+<para>By adding one ROOT specific module to your Apache web server, you can distribute ROOT files to any ROOT user. There is no longer a need to send your files via FTP and risking (out of date) histograms or other objects. Your latest up-to-date results are always accessible to all your colleagues. To access ROOT files via a web server, create a <emphasis role="bold"><code>TWebFile</code></emphasis> object instead of a <emphasis role="bold"><code>TFile</code></emphasis> object with a standard URL as file name. For example:</para>
+
+<programlisting language="c++">
+<code>root[] </code><emphasis role="bold"><code>TWebFile f("http://root.cern.ch/~rdm/hsimple.root")</code></emphasis>
+<code>root[] </code><emphasis role="bold"><code>f.ls()</code></emphasis>
+<code>TWebFile** http://root.cern.ch/~rdm/hsimple.root</code>
+<code>TWebFile* http://root.cern.ch/~rdm/hsimple.root</code>
+<code>KEY: TH1F hpx;1 This is the px distribution          </code>
+<code>KEY: TH2F hpxpy;1 py vs px </code>
+<code>KEY: TProfile hprof;1 Profile of pz versus px </code>
+<code>KEY: TNtuple ntuple;1 Demo ntuple</code>
+<code>root[] </code><emphasis role="bold"><code>hpx.Draw()</code></emphasis>
+</programlisting>
+
+<para>Since <emphasis role="bold"><code>TWebFile</code></emphasis> inherits from <emphasis role="bold"><code>TFile</code></emphasis> all <emphasis role="bold"><code>TFile</code></emphasis> operations work as expected. However, due to the nature of a web server a <emphasis role="bold"><code>TWebFile</code></emphasis> is a read-only file. A <emphasis role="bold"><code>TWebFile</code></emphasis> is ideally suited to read relatively small objects (like histograms or other data analysis results). Although possible, you don't want to analyze large <emphasis role="bold"><code>TTree</code></emphasis><code>'s</code> via a <emphasis role="bold"><code>TWebFile</code></emphasis>.</para>
+<para>Here follows a step-by-step recipe for making your Apache 1.1 or 1.2 web server ROOT aware:</para>
+<itemizedlist>
+<listitem><para>Go to your Apache source directory and add the file  <uri xmlns:xlink="ftp://root.cern.ch/root/mod_root.c">ftp://root.cern.ch/root/mod_root.c</uri>  or  <uri xmlns:xlink="ftp://root.cern.ch/root/mod_root133.c">ftp://root.cern.ch/root/mod_root133.c</uri> when your Apache server is &gt;1.2 (rename the file <code>mod_root.c</code>). </para></listitem>
+<listitem><para>Add to the end of the <code>Configuration</code> file the line: <code>Module root_module mod_root.o</code> </para></listitem>
+<listitem><para>Run the <code>Configure</code> script </para></listitem>
+<listitem><para>Type <code>make</code> </para></listitem>
+<listitem><para>Copy the new <code>httpd</code> to its expected place </para></listitem>
+<listitem><para>Go to the <code>conf</code> directory and add at the end of the <code>srm.conf</code> file the line:<code>AddHandler root-action root</code></para></listitem>
+<listitem><para>Restart the <code>httpd</code> server         </para></listitem>
+</itemizedlist>
+<sect2>
+<title>Using the General Open Function of TFile</title>
+<para>To make life simple we provide a general function to open any type of file (except shared memory files of class <emphasis role="bold"><code>TMapFile</code></emphasis>). This functionality is provided by the static <emphasis role="bold"><code>TFile</code></emphasis><code>::Open()</code> function:</para>
+
+<programlisting language="c++">
+<code>TFile *TFile::Open(const Text_t *name,Option_t *option="",</code>
+<code>const Text_t *title="",Int_t compress,Int_t netopt)</code>
+</programlisting>
+
+<para>Depending on the <code>name</code> argument, the function returns a <emphasis role="bold"><code>TFile</code></emphasis>, a <emphasis role="bold"><code>TNetFile</code></emphasis>         or a <emphasis role="bold"><code>TWebFile</code></emphasis> object. In case a <emphasis role="bold"><code>TNetFile</code></emphasis> URL specifies a local file, a <emphasis role="bold"><code>TFile</code></emphasis> object will be returned (and of course no login information is needed). The arguments of the <code>Open()</code> function are the same as the ones for the <emphasis role="bold"><code>TFile</code></emphasis> constructor.</para>
+<para>Using <code>ReOpen</code><code>()</code> method it is possible to reopen a file with a different access mode, like from READ to UPDATE or from NEW, CREATE, RECREATE, UPDATE to READ. Thus the mode argument can be either "READ" or "UPDATE". The method returns:</para>
+<itemizedlist>
+<listitem><para> 0 in case the mode was successfully modified; </para></listitem>
+<listitem><para> 1 in case the mode did not change (it was already as requested or there were wrong input  arguments); </para></listitem>
+<listitem><para>-1 in case of failure. In the last case the file cannot be used anymore.</para></listitem>
+</itemizedlist>
+</sect2>
+</sect1>
+
+<sect1>
+<title>XML Interface</title>
+<para>A new module <code>xml</code> as implemented by Sergey Linev (GSI). It is an optional package that can be used to save a canvas into <code>file.xml</code> file format instead of <code>file.root</code>. XML files do not have any advantages compared to the normal ROOT files, except that the information in these files can be edited via a normal editor. The main motivation for this new format is to facilitate the communication with other non ROOT applications. Currently writing and reading XML files is limited to ROOT applications. It is our intention to develop a simple reader independent of the ROOT libraries that could be used as an example for real applications. </para>
+<para>The XML format should be used only for small data volumes, typically histogram files, pictures, geometries, calibrations. The XML file is built in memory before being dumped to disk. Like for normal ROOT files, XML files use the same I/O mechanism exploiting the ROOT/CINT dictionary. Any class having a dictionary can be saved in XML format. This first implementation does not support subdirectories or trees.</para>
+<para>The shared library <code>libRXML.so</code> may be loaded dynamically via <code>gSystem-&gt;Load("libRXML")</code>. This library is also automatically loaded by the plug-in manager as soon a XML file is created. To create an XTM file, simply specify a filename with an .xml extension when calling <emphasis role="bold"><code>TFile</code></emphasis><code>::Open. </code><emphasis role="bold"><code>TFile</code></emphasis><code>::Open</code> will recognize that you are trying to open an XML file and return a <emphasis role="bold"><code>TXMLFile</code></emphasis> object. When a XML file is open in write mode, one can use the normal <emphasis role="bold"><code>TObject</code></emphasis><code>::Write</code> to write an object in the file.</para>
+
+<programlisting language="c++">
+<emphasis role="italic"><code>// example of a session saving a histogram to a XML file</code></emphasis>
+<code>TFile *f = TFile::Open("Example.xml","recreate");</code>
+<code>TH1F *h = new TH1F("h","test",1000,-2,2)</code>
+<code>h-&gt;FillRandom("gaus");</code>
+<code>h-&gt;Write();</code>
+<code>delete f;   </code>
+<emphasis role="italic"><code>// example of a session saving a histogram to a XML file</code></emphasis>
+<code>TFile *f = TFile::Open("Example.xml");</code>
+<code>TH1F *h = (TH1F*)f-&gt;Get("h");</code>
+<code>h-&gt;Draw();               </code>
+</programlisting>
+
+<para>The canvas can be saved as a XML file format via File menu / Save or Save As menu entries. One can do also:</para>
+
+<programlisting language="c++">
+<code>canvas-&gt;Print("Example.xml");</code>
+</programlisting>
+
+</sect1>
+</chapter>
+
+
+

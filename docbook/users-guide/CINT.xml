@@ -1,0 +1,986 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0">
+<title>CINT the C++ Interpreter</title>
+<para>The subject of this chapter is CINT, ROOT command line interpreter and script processor. First, we explain what CINT is and why ROOT uses it. Then we discuss CINT as the command line interpreter, the CINT commands, and CINT extensions to C++ are discussed. CINT as the script interpreter is explained and illustrated with several examples. </para>
+
+<sect1>
+<title>What is CINT?</title>
+<para>CINT, which is pronounced <code>['sint]</code>, is a C++ interpreter. An interpreter takes a program, in this case a C++ program, and carries it out by examining each instruction and in turn executing the equivalent sequence of machine language. For example, an interpreter translates and executes each statement in the body of a loop "n" times. It does not generate a machine language program. This may not be a good example, because most interpreters have become 'smart' about loop processing. </para>
+<para>A compiler on the other hand, takes a program and makes a machine language executable. Once compiled the execution is very fast, which makes a compiler best suited for the case of "built once, run many times". For example, the ROOT executable is compiled occasionally and executed many times. It takes anywhere from 1 to 45 minutes to compile ROOT for the first time (depending on the CPU). Once compiled it runs very fast. On the average, a compiled program runs roughly ten times faster than an interpreted one. Because compiling is slow, using a compiler is cumbersome for rapid prototyping when one changes and rebuilds as often as once per minute. An interpreter, on the other hand, is the perfect tool for code that changes often and runs a few times. Most of the time, interpreters are built for scripting languages, such as JavaScript, IDL, or Python. These languages are specifically designed to be interpreted rather than compiled. The advantage of using a normally compiled language is that code can be compiled once the prototype is debugged and refined. CINT is a C++ interpreter, making it a tool for rapid prototyping and scripting in C++. It is a stand-alone product developed by Masaharu Goto. Its executable comes with the standard distribution of ROOT <code>($ROOTSYS/bin/cint)</code>, and it can be installed separately from  <uri xmlns:xlink="http://root.cern.ch/twiki/bin/view/ROOT/CINT">http://root.cern.ch/twiki/bin/view/ROOT/CINT</uri>. This page also has links to all the CINT documentation. The downloadable tar file contains documentation, the CINT executable, and many demo scripts that are not included in the regular ROOT distribution. Here is the list of CINT main features:</para>
+<itemizedlist>
+<listitem><para>Supports K&amp;R-C, ANSI-C, and ANSI-C++</para></listitem>
+<listitem><para>CINT covers 85-95% of the C++, ANSI-C and K&amp;R-C language constructs. It supports multiple inheritance, virtual function, function overloading, operator overloading, default parameters, templates, and much more.  CINT is robust enough to interpret its own source code. CINT is not designed to be a 100% ANSI/ISO compliant C++ language processor. It is a portable scripting language environment, which is close enough to the standard C++.</para></listitem>
+<listitem><para>Interprets Large C/C++ source code</para></listitem>
+<listitem><para>CINT can handle huge C/C++ source code, and loads source files quickly. It can interpret its own, over 70,000 lines source code – more than 150,000 lines. </para></listitem>
+<listitem><para>Enables mixing Interpretation &amp; Native Code </para></listitem>
+<listitem><para>Depending on the need for execution speed or the need for interaction, one can mix native code execution and interpretation. "<code>makecint</code>" encapsulates arbitrary C/C++ objects as precompiled libraries. A precompiled library can be configured as a dynamically linked library. Accessing interpreted code and precompiled code can be done seamlessly in both directions. </para></listitem>
+<listitem><para>Provides a Single-Language solution</para></listitem>
+<listitem><para><code>CINT/makecint</code> is a single-language environment. It works with any ANSI-C/C++ compiler to provide the interpreter environment on top of it.</para></listitem>
+<listitem><para>Simplifies C++</para></listitem>
+<listitem><para>CINT is meant to bring C++ to the non-software professional. C++ is simpler to use in the interpreter environment. It helps the non-software professional (the domain expert) to talk the same language as the software counterpart. </para></listitem>
+<listitem><para>Provides RTTI and a Command Line</para></listitem>
+<listitem><para>CINT can process C++ statements from command line, dynamically define/erase class definition and functions; load/unload source files and libraries. Extended Run Time Type Identification is provided, allowing you to explore imaginative new ways of using C++.</para></listitem>
+<listitem><para>CINT has a built-in debugger for complex C++ code and a text based class browser is part of it.</para></listitem>
+<listitem><para>It is portable.</para></listitem>
+<listitem><para>CINT works on number of operating systems: <code>HP-UX</code>, <code>Linux</code>, <code>SunOS</code>, <code>Solaris</code>, <code>AIX</code>, <code>Alpha-OSF</code>, <code>IRIX</code>, <code>FreeBSD</code>, <code>NetBSD</code>, <code>NEC</code> <code>EWS4800</code>, <code>NewsOS</code>, <code>BeBox</code>, <code>WindowsNT</code>, <code>Windows9x</code>, <code>MS-DOS</code>, <code>MacOS</code>, <code>VMS</code>, <code>NextStep</code>, <code>Convex</code>. </para></listitem>
+</itemizedlist>
+<para/>
+</sect1>
+
+<sect1>
+<title>The ROOT Command Line Interface</title>
+<para>Start up a ROOT session by typing <code>root</code> at the system prompt.</para>
+
+<programlisting language="c++">
+&gt; <emphasis role="bold"><code>root</code></emphasis>
+*******************************************
+*                                         *
+*        W E L C O M E  to  R O O T       *
+*                                         *
+*   Version   5.16/00      27 June 2007   *
+*                                         *
+*  You are welcome to visit our Web site  *
+*          http://root.cern.ch            *
+*                                         *
+*******************************************
+FreeType Engine v2.1.9 used to render TrueType fonts.
+Compiled on 28 June 2007 for linux with thread support.
+
+CINT/ROOT C/C++ Interpreter version 5.16.21, June 22, 2007
+Type ? for help. Commands must be C++ statements.
+Enclose multiple statements between { }.
+root[0]
+</programlisting>
+
+<para>Now we create a <emphasis role="bold"><code>TLine</code></emphasis>         object: </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TLine l</code></emphasis>
+root[] <emphasis role="bold"><code>l.Print()</code></emphasis>
+TLine  X1=0.000000 Y1=0.000000 X2=0.000000 Y2=0.000000
+root[] <emphasis role="bold"><code>l.SetX1(10)</code></emphasis>
+root[] <emphasis role="bold"><code>l.SetY1(11)</code></emphasis>
+root[] <emphasis role="bold"><code>l.Print()</code></emphasis>
+TLine  X1=10.000000 Y1=11.000000 X2=0.000000 Y2=0.000000
+root[] <emphasis role="bold"><code>.g</code></emphasis>
+...
+0x4038f080 class TLine l , size=40
+0x0        protected: Double_t fX1 <emphasis role="italic"><code>//X of 1st point</code></emphasis>
+0x0        protected: Double_t fY1 <emphasis role="italic"><code>//Y of 1st point</code></emphasis>
+0x0        protected: Double_t fX2 <emphasis role="italic"><code>//X of 2nd point</code></emphasis>
+0x0        protected: Double_t fY2 <emphasis role="italic"><code>//Y of 2nd point</code></emphasis>
+0x0        private: static class TClass* fgIsA
+</programlisting>
+
+<para>Here we note:</para>
+<itemizedlist>
+<listitem><para>Terminating with ‘<code>;</code>‘ is not required, see “ROOT/CINT Extensions to C++”.</para></listitem>
+<listitem><para><code>Emacs</code> style command line editing.</para></listitem>
+<listitem><para>Raw interpreter commands start with a dot (<emphasis role="bold">.</emphasis>).</para></listitem>
+</itemizedlist>
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.class TLine</code></emphasis>
+=================================================
+class TLine //A line segment
+size=0x38
+(tagnum=289,voffset=-1,isabstract=0,parent=-1,gcomp=0:-1,d21=~cd=f7)
+List of base class-------------------------------
+0x0        public: TObject //Basic ROOT object
+0xc        public: TAttLine //Line attributes
+List of member variable--------------------------
+Defined in TLine
+(compiled) 0x0        protected: Double_t fX1 //X of 1st point
+(compiled) 0x0        protected: Double_t fY1 //Y of 1st point
+(compiled) 0x0        protected: Double_t fX2 //X of 2nd point
+(compiled) 0x0        protected: Double_t fY2 //Y of 2nd point
+(compiled) 0x8a3a718  static const enum TLine:: kLineNDC
+(compiled) 0x0        private: static TClass* fgIsA
+List of member function--------------------------
+filename       line:size busy function type and name  (in TLine)
+(compiled) 0:0    0 public: virtual void ~TLine(void);
+(compiled) 0:0    0 public: TLine TLine(void);
+(compiled) 0:0    0 public: TLine TLine(Double_t x1,Double_t y1,Double_t x2,
+Double_t y2);
+(compiled) 0:0    0 public: TLine TLine(const TLine&amp; line);
+(compiled) 0:0    0 public: virtual void Copy(TObject&amp; line) const;
+(compiled) 0:0    0 public: virtual Int_t DistancetoPrimitive(Int_t px,Int_t py);
+...
+(compiled) 0:0    0 public: static int ImplFileLine(void);
+(compiled) 0:0    0 public: static const char* ImplFileName(void);
+(compiled) 0:0    0 public: static int DeclFileLine(void);
+(compiled) 0:0    0 public:TLine&amp; operator=(const TLine&amp;);
+root[] <emphasis role="bold"><code>l.Print(); &gt; test.log</code></emphasis>
+root[] <emphasis role="bold"><code>l.Dump(); &gt;&gt; test.log</code></emphasis>
+root[] <emphasis role="bold"><code>?</code></emphasis>
+</programlisting>
+
+<para>Here we see:</para>
+<itemizedlist>
+<listitem><para>Use <code>.class</code> as quick help and reference</para></listitem>
+<listitem><para>Unix like I/O redirection (; is required before &gt;)</para></listitem>
+<listitem><para>Use <code>?</code> to get help on all ‘‘raw'' interpreter commands</para></listitem>
+<listitem><para>Use @ to abort a multi-line command</para></listitem>
+</itemizedlist>
+<para>Now let us execute a multi-line command:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>{</code></emphasis>
+end with '}', '@':abort &gt; <emphasis role="bold"><code>TLine l;</code></emphasis>
+end with '}', '@':abort &gt; <emphasis role="bold"><code>for (int i = 0; i &lt; 5; i++) {</code></emphasis>
+end with '}', '@':abort &gt;    <emphasis role="bold"><code>l.SetX1(i);</code></emphasis>
+end with '}', '@':abort &gt;    <emphasis role="bold"><code>l.SetY1(i+1);</code></emphasis>
+end with '}', '@':abort &gt;    <emphasis role="bold"><code>l.Print();</code></emphasis>
+end with '}', '@':abort &gt; <emphasis role="bold"><code>}</code></emphasis>
+end with '}', '@':abort &gt; <emphasis role="bold"><code>}</code></emphasis>
+TLine  X1=0.000000 Y1=1.000000 X2=0.000000 Y2=0.000000
+TLine  X1=1.000000 Y1=2.000000 X2=0.000000 Y2=0.000000
+TLine  X1=2.000000 Y1=3.000000 X2=0.000000 Y2=0.000000
+TLine  X1=3.000000 Y1=4.000000 X2=0.000000 Y2=0.000000
+TLine  X1=4.000000 Y1=5.000000 X2=0.000000 Y2=0.000000
+root[] <emphasis role="bold"><code>.q</code></emphasis>
+</programlisting>
+
+<para>Here we note:</para>
+<itemizedlist>
+<listitem><para>A multi-line command starts with a { and ends with a }.</para></listitem>
+<listitem><para>Every line has to be correctly terminated with a ; (like in "real'' C++).</para></listitem>
+<listitem><para>All objects are created in <emphasis role="italic">global </emphasis>scope.</para></listitem>
+<listitem><para>There is no way to back up; you are better off writing a script.</para></listitem>
+<listitem><para>Use <emphasis role="bold"><code>.q</code></emphasis> to exit root.</para></listitem>
+</itemizedlist>
+</sect1>
+
+<sect1>
+<title>The ROOT Script Processor</title>
+<para>ROOT script files contain pure C++ code. They can contain a simple sequence of statements like in the multi command line example given above, but also arbitrarily complex class and function definitions.</para>
+
+<sect2>
+<title>Un-named Scripts</title>
+<para>Let us start with a script containing a simple list of statements (like the multi-command line example given in the previous section). This type of script must start with a { and end with a } and is called an un-named script. Assume the file is called <code>script1.C</code></para>
+
+<programlisting language="c++">
+{
+#include &lt;iostream.h&gt;
+cout &lt;&lt; " Hello" &lt;&lt; endl;
+float x = 3.;
+float y = 5.;
+int   i = 101;
+cout &lt;&lt;" x = "&lt;&lt;x&lt;&lt;" y = "&lt;&lt;y&lt;&lt;" i = "&lt;&lt;i&lt;&lt; endl;
+}
+</programlisting>
+
+<para>To execute the stream of statements in <code>script1.C</code> do:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.x script1.C</code></emphasis>
+</programlisting>
+
+<para>This loads the contents of file <code>script1.C</code> and executes all statements in the interpreter's global scope. One can re-execute the statements by re-issuing "<code>.x script1.C</code>" (since there is no function entry point). Scripts are searched for in the <code>Root.MacroPath</code> as defined in your <code>.rootrc</code> file. To check which script is being executed use:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.which script1.C</code></emphasis>
+/home/rdm/root/./script1.C
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Named Scripts</title>
+<para>Let us change the un-named script to a named script. Copy the file <code>script1.C</code> to <code>script2.C</code> and add a function statement:</para>
+
+<programlisting language="c++">
+<code>#include &lt;iostream.h&gt;</code>
+
+<code>int run()</code>
+<code>{</code>
+<code>   cout &lt;&lt; " Hello" &lt;&lt; endl;</code>
+<code>   float x = 3.;</code>
+<code>   float y = 5.;</code>
+<code>   int   i= 101;</code>
+<code>   cout &lt;&lt;" x = "&lt;&lt; x &lt;&lt;" y = "&lt;&lt; y &lt;&lt;" i = "&lt;&lt; i &lt;&lt; endl;</code>
+<code>   return 0;</code>
+<code>}</code>
+</programlisting>
+
+<para>Notice that no surrounding <code>{}</code> are required in this case. To execute function <code>run()</code> in <code>script2.C</code> do:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.L script2.C</code></emphasis>             <emphasis role="italic"><code>// load script in memory</code></emphasis>
+root[] <emphasis role="bold"><code>run()</code></emphasis>                    <emphasis role="italic"><code>// execute entry point run</code></emphasis>
+Hello
+x = 3 y = 5 i = 101
+(int)0
+root[] <emphasis role="bold"><code>run()</code></emphasis>                    <emphasis role="italic"><code>// execute run() again</code></emphasis>
+Hello
+x = 3 y = 5 i = 101
+(int)0
+root[] <emphasis role="bold"><code>.func</code></emphasis>                    <emphasis role="italic"><code>// list all functions known by CINT</code></emphasis>
+filename       line:size busy function type and name
+...
+script2.C          4:9   0 public: int run();
+</programlisting>
+
+<para>The last command shows that <code>run()</code> has been loaded from file <code>script2.C</code>, that the function <code>run()</code> starts on line 4 and is 9 lines long. Notice that once a function has been loaded it becomes part of the system just like a compiled function. Now we copy the file <code>script2.C</code> to the <code>script3.C</code> and change the function name from <code>run()</code> to <code>script3(int j = 10)</code>:</para>
+
+<programlisting language="c++">
+<code>#include &lt;iostream.h&gt;</code>
+<code>int script3(int j = 10) {</code>
+<code>   cout &lt;&lt; " Hello" &lt;&lt; endl;</code>
+<code>   float x = 3.;</code>
+<code>   float y = 5.;</code>
+<code>   int   i = j;</code>
+<code>   cout &lt;&lt;" x = "&lt;&lt; x &lt;&lt;", y = "&lt;&lt; y &lt;&lt;", i = "&lt;&lt; i &lt;&lt; endl;</code>
+<code>   return 0;</code>
+<code>}</code>
+</programlisting>
+
+<para>To execute <code>script3()</code> in <code>script3.C</code> type:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.x script3.C(8)</code></emphasis>
+</programlisting>
+
+<para>This loads the contents of file <code>script3.C</code> and executes entry point <code>script3(8)</code>. Note that the above only works when the filename (minus extension) and function entry point are both the same. </para>
+<para>The function <code>script3()</code>         can still be executed multiple times:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>script3()</code></emphasis>
+Hello
+x = 3, y = 5, i = 10
+(int)0
+root[] <emphasis role="bold"><code>script3(33)</code></emphasis>
+Hello
+x = 3, y = 5, i = 33
+(int)0
+</programlisting>
+
+<para>In a named script, the objects created on the stack are deleted when the function exits. For example, this scenario is very common. You create a histogram in a named script on the stack. You draw the histogram, but when the function exits the canvas is empty and the histogram disappeared. To avoid histogram from disappearing you can create it on the heap (by using new).  This will leave the histogram object intact, but the pointer in the named script scope will be deleted. Since histograms (and trees) are added to the list of objects in the current directory, you can always retrieve them to delete them if needed. </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TH1F</code></emphasis><emphasis role="bold"><code> *h = (TH1F*)gDirectory-&gt;Get("myHist");</code></emphasis>              <emphasis role="italic"><code>// or</code></emphasis>
+root[] <emphasis role="bold"><code>TH1F *h = (TH1F*)gDirectory</code></emphasis><emphasis role="bold"><code>-&gt;GetList()-&gt;FindObject("myHist");</code></emphasis>
+</programlisting>
+
+<para>In addition, histograms and trees are automatically deleted when the current directory is closed. This will automatically take care of the clean up. See “Input/Output”. </para>
+
+</sect2>
+
+<sect2>
+<title>Executing a Script from a Script</title>
+<para>You may want to execute a script conditionally inside another script. To do it you need to call the interpreter and you can do that with <emphasis role="bold"><code>TROOT</code></emphasis><code>::ProcessLine()</code>. The example <code>$ROOTSYS/tutorials/tree/cernstaff.C</code> calls a script to build the root file if it does not exist:</para>
+
+<programlisting language="c++">
+<code>void cernstaff() {</code>
+<code>   if (gSystem-&gt;AccessPathName("cernstaff.root")) {  </code>
+<code>      gROOT-&gt;ProcessLine(".x cernbuild.C");</code>
+<code>   }</code>
+</programlisting>
+
+<para><code>ProcessLine</code> takes a parameter, which is a pointer to an <code>int</code> or to a <emphasis role="bold"><code>TInterpreter</code></emphasis><code>::EErrorCode</code> to let you access the CINT error code after an attempt to interpret. This will contain the CINT error as defined in <code>enum</code> <emphasis role="bold"><code>TInterpreter</code></emphasis><code>::EErrorCode</code>.</para>
+</sect2>
+</sect1>
+
+<sect1>
+<title>Resetting the Interpreter Environment</title>
+<para>Variables created on the command line and in un-named scripts are in the interpreter's global scope, which makes the variables created in un-named scripts available on the command line event after the script is done executing. This is the opposite of a named script where the stack variables are deleted when the function in which they are defined has finished execution. </para>
+<para>When running an un-named script over again and this is frequently the case since un-named scripts are used to prototype, one should reset the global environment to clear the variables. This is done by calling
+<code>gROOT-&gt;Reset()</code>. It is good practice, and you will see this in the examples, to begin an un-named script with
+<code>gROOT-&gt;Reset()</code>. It clears the global scope to the state just before executing the previous script (not including any logon scripts).  The <code>gROOT-&gt;Reset()</code> calls the destructor of the objects if the object was created on the stack. If the object was created on the heap (via new) it is not deleted, but the variable is no longer associated with it. Creating variables on the heap in un-named scripts and calling <code>gROOT-&gt;Reset()</code> without you calling the destructor explicitly will cause a memory leak. This may be surprising, but it follows the scope rules. For example, creating an object on the heap in a function (in a named script) without explicitly deleting it will also cause a memory leak. Since when exiting the function only the stack variables are deleted. The code below shows <code>gROOT-&gt;Reset()</code> calling the destructor for the stack variable, but not for the heap variable. In the end, neither variable is available, but the memory for the heap variable is not released. Here is an example:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>gDebug = 1</code></emphasis>
+<code>(</code>const int)1
+root[] <emphasis role="bold"><code>TFile stackVar("stack.root","RECREATE")</code></emphasis>
+TKey Writing 86 bytes at address 64 for ID= stack.root Title=
+root[] <emphasis role="bold"><code>TFile *heapVar = new TFile("heap.root","RECREATE")</code></emphasis>
+TKey Writing 84 bytes at address 64 for ID= heap.root Title=
+</programlisting>
+
+<para>We turn on <code>Debug</code> to see what the subsequent calls are doing. Then we create two variables, one on the stack and one on the heap.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>gROOT-&gt;Reset()</code></emphasis>
+TKey Writing 48 bytes at address 150 for ID= stack.root Title=
+TKey Writing 54 bytes at address 198 for ID= stack.root Title=
+TFile dtor called for stack.root
+TDirectory dtor called for stack.root
+</programlisting>
+
+<para>When we call <code>gROOT-&gt;Reset()</code>, CINT tells us that the destructor is called for the stack variable, but it does not mention the heap variable.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>stackVar</code></emphasis>
+Error: No symbol stackVar in current scope  FILE:/var/tmp/faaa01jWe_cint LINE:1
+*** Interpreter error recovered ***
+root[] <emphasis role="bold"><code>heapVar</code></emphasis>
+Error: No symbol heapVar in current scope  FILE:/var/tmp/gaaa01jWe_cint LINE:1
+*** Interpreter error recovered ***
+</programlisting>
+
+<para>Neither variable is available in after the call to reset.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>gROOT</code></emphasis><emphasis role="bold"><code>-&gt;</code></emphasis><emphasis role="bold"><code>FindObject("stack.root")</code></emphasis>
+(class TObject*)0x0
+root[] <emphasis role="bold"><code>gROOT-&gt;FindObject("heap.root")</code></emphasis>
+(class TObject*)0x106bfb30
+</programlisting>
+
+<para>The object on the stack is deleted and shows a null pointer when we do a <code>FindObject</code>. However, the heap object is still around and taking up memory. </para>
+<para>Note <code>gROOT-&gt;Reset()</code> should be never called in a named script or a compiled program.</para>
+</sect1>
+
+<sect1>
+<title>A Script Containing a Class Definition</title>
+<para>Lets create a small class <emphasis role="bold"><code>TMyClass</code></emphasis> and a derived class <emphasis role="bold"><code>TChild</code></emphasis>. The virtual method <emphasis role="bold"><code>TMyClass</code></emphasis><code>::Print() </code>is overridden in <code>TChild</code>. Save this in file called <code>script4.C</code>.</para>
+
+<programlisting language="c++">
+#include &lt;iostream.h&gt;
+
+class TMyClass {
+private:
+float   fX;     <emphasis role="italic"><code>//x position in centimeters</code></emphasis>
+float   fY;     <emphasis role="italic"><code>//y position in centimeters</code></emphasis>
+public:
+TMyClass() { fX = fY = -1; }
+virtual void Print() const;
+void SetX(float x) { fX = x; }
+void SetY(float y) { fY = y; }
+};
+void TMyClass::Print() const  <emphasis role="italic"><code>// parent print method</code></emphasis>
+{
+cout &lt;&lt; "fX = " &lt;&lt; fX &lt;&lt; ", fY = " &lt;&lt; fY &lt;&lt; endl;
+}
+class TChild : public TMyClass {
+public:
+void Print() const;
+};
+void TChild::Print() const  <emphasis role="italic"><code>// child print metod</code></emphasis>
+{
+cout &lt;&lt; "This is TChild::Print()" &lt;&lt; endl;
+TMyClass::Print();
+}
+</programlisting>
+
+<para>To execute <code>script4.C</code> do:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.L script4.C</code></emphasis>
+root[] <emphasis role="bold"><code>TMyClass *a = new TChild</code></emphasis>
+root[] <emphasis role="bold"><code>a-&gt;Print()</code></emphasis>
+This is TChild::Print()
+fX = -1, fY = -1
+root[] <emphasis role="bold"><code>a-&gt;SetX(10)</code></emphasis>
+root[] <emphasis role="bold"><code>a-&gt;SetY(12)</code></emphasis>
+root[] <emphasis role="bold"><code>a-&gt;Print()</code></emphasis>
+This is TChild::Print()
+fX = 10, fY = 12
+root[] <emphasis role="bold"><code>.class TMyClass</code></emphasis>
+=====================================================
+class TMyClass
+size=0x8 FILE:script4.C LINE:3
+List of base class-----------------------------------
+List of member variable------------------------------
+Defined in TMyClass
+0x0        private: float fX
+0x4        private: float fY
+List of member function------------------------------
+Defined in TMyClass
+filename       line:size busy function type and name
+script4.C         16:5    0 public: class TMyClass TMyClass(void);
+script4.C         22:4    0 public: void Print(void);
+script4.C         12:1    0 public: void SetX(float x);
+script4.C         13:1    0 public: void SetY(float y);
+root[] <emphasis role="bold"><code>.q</code></emphasis>
+</programlisting>
+
+<para>As you can see, an interpreted class behaves just like a compiled class.</para>
+<para>There are some limitations for a class created in a script: </para>
+<itemizedlist>
+<listitem><para>They cannot inherit from <emphasis role="bold"><code>TObject</code></emphasis>. Currently the interpreter cannot patch the virtual table of compiled objects to reference interpreted objects.</para></listitem>
+<listitem><para>Because the I/O is encapsulated in <emphasis role="bold"><code>TObject</code></emphasis> and a class defined in a script cannot inherit from <emphasis role="bold"><code>TObject</code></emphasis>, it cannot be written to a ROOT file.</para></listitem>
+</itemizedlist>
+<para>See “Adding a Class” for ways how to add a class with a shared library and with ACLiC.</para>
+</sect1>
+
+<sect1>
+<title>Debugging Scripts</title>
+<para>A powerful feature of CINT is the ability to debug interpreted functions by means of setting breakpoints and being able to single step through the code and print variable values on the way. Assume we have <code>script4.C</code> still loaded, we can then do:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.b TChild::Print</code></emphasis>
+Break point set to line 26 script4.C
+root[] <emphasis role="bold"><code>a.Print()</code></emphasis>
+
+26   TChild::Print() const
+27   {
+28      cout &lt;&lt; "This is TChild::Print()" &lt;&lt; endl;
+FILE:script4.C LINE:28 cint&gt; <emphasis role="bold"><code>.s</code></emphasis>
+
+311  operator&lt;&lt;(ostream&amp; ostr,G__CINT_ENDL&amp; i) {return(endl(ostr));
+FILE:iostream.h LINE:311 cint&gt; <emphasis role="bold"><code>.s</code></emphasis>
+}
+This is TChild::Print()
+
+29      MyClass::Print();
+FILE:script4.C LINE:29 cint&gt; <emphasis role="bold"><code>.s</code></emphasis>
+
+16   MyClass::Print() const
+17   {
+18      cout &lt;&lt; "fX = " &lt;&lt; fX &lt;&lt; ", fY = " &lt;&lt; fY &lt;&lt; endl;
+FILE:script4.C LINE:18 cint&gt; <emphasis role="bold"><code>.p fX</code></emphasis>
+<code>(float)1.000000000000e+01</code>
+FILE:script4.C LINE:18 cint&gt; <emphasis role="bold"><code>.s</code></emphasis>
+
+311  operator&lt;&lt;(ostream&amp; ostr,G__CINT_ENDL&amp; i) {return(endl(ostr));
+FILE:iostream.h LINE:311 cint&gt; <emphasis role="bold"><code>.s</code></emphasis>
+}
+fX = 10, fY = 12
+
+19   }
+
+30   }
+
+2    }
+root[] <emphasis role="bold"><code>.q</code></emphasis>
+</programlisting>
+
+</sect1>
+
+<sect1>
+<title>Inspecting Objects</title>
+<para>An object of a class inheriting from <emphasis role="bold"><code>TObject</code></emphasis> can be inspected, with the <code>Inspect()</code> method. The <emphasis role="bold"><code>TObject</code></emphasis><code>::Inspect</code> method creates a window listing the current values of the objects members. For example, the next picture is of <emphasis role="bold"><code>TFile</code></emphasis>. </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TFile f("staff.root")</code></emphasis>
+root[] <emphasis role="bold"><code>f.Inspect()</code></emphasis>
+</programlisting>
+
+<para>You can see the pointers are in red and can be clicked on to follow the pointer to the object. If you clicked on <code>fList</code>, the list of objects in memory and there were none, no new canvas would be shown. On top of the page are the navigation buttons to see the previous and next screen.</para>
+
+<figure><title>ROOT object inspector of TFile</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/03000092.png" width="307.25pt" depth="275.6pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<figure><title>The object inspector of <code>fKeys</code>, the list of keys in the memory</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/03000093.png" width="307.25pt" depth="211.05pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+</sect1>
+
+<sect1>
+<title>ROOT/CINT Extensions to C++</title>
+<para>In the next example, we demonstrate three of the most important extensions ROOT/CINT makes to C++. Start ROOT in the directory <code>$ROOTSYS/tutorials</code> (make sure to have first run <code>".x</code> <code>hsimple.C"):</code></para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>f = new TFile</code></emphasis><emphasis role="bold"><code>("hsimple.root")</code></emphasis>
+(class TFile*)0x4045e690
+root[] <emphasis role="bold"><code>f.ls()</code></emphasis>
+TFile**         hsimple.root
+TFile*         hsimple.root
+KEY: TH1F     hpx;1   This is the px distribution
+KEY: TH2F     hpxpy;1 py ps px
+KEY: THProfile        hprof;1 Profile of pz versus px
+KEY: TNtuple  ntuple;1        Demo ntuple
+root[] <emphasis role="bold"><code>hpx.Draw()</code></emphasis>
+NULL
+Warning in &lt;MakeDefCanvas&gt;: creating a default canvas with name c1
+root[] <emphasis role="bold"><code>.q</code></emphasis>
+</programlisting>
+
+<para>The <emphasis role="italic">first</emphasis> command shows the first extension; the declaration of f may be omitted when <emphasis role="bold">"</emphasis><code>new</code><emphasis role="bold">"</emphasis> is used. CINT will correctly create f as pointer to object of class <emphasis role="bold"><code>TFile</code></emphasis>.</para>
+<para>The <emphasis role="italic">second</emphasis> extension is shown in the second command. Although f is a pointer to <emphasis role="bold"><code>TFile</code></emphasis> we don't have to use the pointer de-referencing syntax "<code>-&gt;</code>" but can use the simple "." notation.</para>
+<para>The <emphasis role="italic">third</emphasis> extension is more important. In case CINT cannot find an object being referenced, it will ask ROOT to search for an object with an identical name in the search path defined by <emphasis role="bold"><code>TROOT</code></emphasis><code>::FindObject()</code>. If ROOT finds the object, it returns CINT a pointer to this object and a pointer to its class definition and CINT will execute the requested member function. This shortcut is quite natural for an interactive system and saves much typing. In this example, ROOT searches for <code>hpx</code> and finds it in <code>simple.root.</code></para>
+<para>The <emphasis role="italic">fourth</emphasis> is shown below. There is no need to put a semicolon at the end of a line. The difference between having it and leaving it off is that when you leave it off the return value of the command will be printed on the next line. For example:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>23+5</code></emphasis>  <emphasis role="italic"><code>// no semicolon prints the return value</code></emphasis>
+(int)28
+root[] <emphasis role="bold"><code>23+5;</code></emphasis> <emphasis role="italic"><code>// semicolon no return value is printed</code></emphasis>
+root[]
+</programlisting>
+
+<para>Be aware that these extensions do not work when a compiler replaces the interpreter. Your code will not compile, hence when writing large scripts, it is best to stay away from these shortcuts. It will save you from having problems compiling your scripts using a real C++ compiler.</para>
+</sect1>
+
+<sect1>
+<title>ACLiC - The Automatic Compiler of Libraries for CINT</title>
+<para>Instead of having CINT interpret your script there is a way to have your scripts compiled, linked and dynamically loaded using the C++ compiler and linker. The advantage of this is that your scripts will run with the speed of compiled C++ and that you can use language constructs that are not fully supported by CINT. On the other hand, you cannot use any CINT shortcuts (see ROOT/CINT Extensions to C++) and for small scripts, the overhead of the compile/link cycle might be larger than just executing the script in the interpreter. </para>
+<para>ACLiC will build a CINT dictionary and a shared library from your C++ script, using the compiler and the compiler options that were used to compile the ROOT executable. You do not have to write a <code>makefile</code> remembering the correct compiler options, and you do not have to exit ROOT.</para>
+
+<sect2>
+<title>Usage</title>
+<para>Before you can compile your interpreted script you need to add include statements for the classes used in the script. Once you did that, you can build and load a shared library containing your script. To load it use the command <emphasis role="bold"><code>.L</code></emphasis> and append the file name with a "+". </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.L MyScript.C+</code></emphasis>
+root[] <emphasis role="bold"><code>.files</code></emphasis>
+…
+*file="/home/./MyScript_C.so"
+</programlisting>
+
+<para>The + option generates the shared library and names it by taking the name of the file "filename" but replacing the dot before the extension by an underscore and by adding the shared library extension for the current platform. For example on most platforms, <code>hsimple.cxx</code> will generate <code>hsimple_cxx.so</code>. If we execute a <code>.files</code> command we can see the newly created shared library is in the list of loaded files.</para>
+<para>The + command rebuild the library only if the script or any of the files it includes are newer than the library.  When checking the timestamp, ACLiC generates a dependency file which name is the same as the library name, just replacing the 'so' extension by the extension ’<code>d</code>’. For example on most platforms, <code>hsimple.cxx</code> will generate <code>hsimple_cxx.d</code>.</para>
+<para>To ensure that the shared library is rebuilt you can use the ++ syntax:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.L MyScript.C++</code></emphasis>
+</programlisting>
+
+<para>To build, load, and execute the function with the same name as the file you can use the <code>.x</code> command. This is the same as executing a named script. You can have parameters and use <code>.x </code>or <code>.X</code>. The only difference is you need to append a + or a ++.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.x MyScript.C+ (4000)</code></emphasis>
+Creating shared library /home/./MyScript_C.so
+</programlisting>
+
+<para>You can select whether the script in compiled with debug symbol or with optimization by appending the letter 'g' or 'O' after the '+' or '++'.   Without the specification, the script is compiled with the same level of debugging symbol and optimization as the currently running ROOT executable. For example:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.L MyScript.C++g</code></emphasis>
+</programlisting>
+
+<para>will compile <code>MyScript.C</code> with debug symbols; usually this means giving the <code>-g</code> option to compiler.</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.L MyScript.C++O</code></emphasis>
+</programlisting>
+
+<para>will compile <code>MyScript.C</code> with optimizations; usually this means giving the <code>-O</code> option to compiler. The syntax:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.L MyScript.C++</code></emphasis>
+</programlisting>
+
+<para>is using the default optimization level. The initial default is to compile with the same level of optimization as the root executable itself. The default can be changed by: </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold">gSystem</emphasis><emphasis role="bold">-&gt;SetAclicMode</emphasis><emphasis role="bold">(TSystem::kDebug);</emphasis>
+root[] <emphasis role="bold"><code>gSystem-&gt;SetAclicMode(TSystem::kOpt);</code></emphasis>
+</programlisting>
+
+<para>Note that the commands:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.L MyScript.C+g</code></emphasis>
+root[] <emphasis role="bold"><code>.L MyScript.C+O</code></emphasis>
+</programlisting>
+
+<para>respectively compile <code>MyScript.C</code> with debug and optimization if the library does not exist yet; they will not change the debug and the optimization level if the library already exist and it is up to date. To use ACLiC from compiled code or from inside another macro, we recommend using the <code>ProcessLine</code><code>()</code>         method of <emphasis role="bold"><code>TROOT</code></emphasis>. For example, in one script you can use ACLiC to compile and load another script.</para>
+
+<programlisting language="c++">
+gROOT-&gt;ProcessLine(".L MyScript.C+")
+gROOT-&gt;ProcessLine(".L MyScript.C++")
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Setting the Include Path</title>
+<para>You can get the include path by typing:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.include</code></emphasis>
+</programlisting>
+
+<para>You can append to the include path by typing:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.include $HOME/mypackage/include</code></emphasis>
+</programlisting>
+
+<para>In a script you can append to the include path:</para>
+
+<programlisting language="c++">
+gSystem-&gt;AddIncludePath(" -I$HOME/mypackage/include ")
+</programlisting>
+
+<para>You can also overwrite the existing include path:</para>
+
+<programlisting language="c++">
+gSystem-&gt;SetIncludePath(" -I$HOME/mypackage/include ")
+</programlisting>
+
+<para>The <code>$ROOTSYS/include</code> directory is automatically appended to the include path, so you do not have to worry about including it. To add library that should be used during linking of the shared library use something like:</para>
+
+<programlisting language="c++">
+gSystem-&gt;AddLinkedLibs("-L/my/path -lanylib");
+</programlisting>
+
+<para>This is especially useful for static libraries.  For shared ones you can also simply load them before trying to compile the script:</para>
+<programlisting language="c++">
+gSystem-&gt;Load("mydir/mylib");
+</programlisting>
+
+<para>ACLiC uses the directive <code>fMakeSharedLibs</code> to create the shared library. If loading the shared library fails, it tries to output a list of missing symbols by creating an executable (on some platforms like OSF, this does not HAVE to be an executable) containing the script. It uses the directive <code>fMakeExe</code> to do so. For both directives, before passing them to <emphasis role="bold"><code>TSystem</code></emphasis><code>::Exec()</code>, it expands the variables <code>$SourceFiles</code>, <code>$SharedLib</code>, <code>$LibName</code>, <code>$IncludePath</code>, <code>$LinkedLibs</code>, <code>$ExeName </code>and<code> $ObjectFiles</code>. See <code>SetMakeSharedLib()</code> for more information on those variables. When the file being passed to ACLiC is on a read only file system, ACLiC warns the user and creates the library in a temporary directory: </para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>.L readonly/t.C++</code></emphasis>
+Warning in &lt;ACLiC&gt;: /scratch/aclic/subs/./readonly is not writeable!
+Warning in &lt;ACLiC&gt;: Output will be written to /tmp
+Info in &lt;TUnixSystem::ACLiC&gt;: creating shared library
+/tmp//scratch/aclic/subs/./readonly/t_C.so
+</programlisting>
+
+<para>To select the temporary directory ACLiC looks at <code>$TEMP</code>, <code>$TEMP_DIR</code>, <code>$TEMPDIR</code>, <code>$TMP</code>, <code>$TMPDIR</code>, <code>$TMP_DIR </code>or uses <code>/tmp (</code>or         <code>C:/)</code>. Also, a new interface <emphasis role="bold"><code>TSystem</code></emphasis><code>::Get/SetBuildDir</code> is introduced to let users select an alternative 'root' for building of the ACLiC libraries. For <code>filename</code><code>/full/path/name/macro.C</code>, the library is created as <code>fBuildDir</code><code>/full/path/name/macro_C.so.</code></para>
+</sect2>
+
+<sect2>
+<title>Dictionary Generation</title>
+<para>You can direct what is added to the dictionary generated by ACLiC in two ways. The simplest way is to add at the end of script (i.e. after the symbols have been defined) something like:</para>
+
+<programlisting language="c++">
+#if defined(__MAKECINT__)
+#pragma link C++ class MyOtherClass;
+#endif
+</programlisting>
+
+<para>You can also write this portion of code in a file name <code>MyScript_linkdef.h</code> where the suffix <code>'_linkdef' </code>is the prefix defined by the key <code>‘ACLiC.Linkdef</code>‘ in the currently used resource file (usually <code>.rootrc </code>or<code> $ROOTSYS/etc/system.rootrc</code>) and the prefix is the name of your script.</para>
+<para>In ROOT 3.05/03 and above, the default behavior of <code>rootcint</code> is to not link in (i.e. generate the dictionary for) any of the symbols. In particular, this means that the following lines are now, in the general case, unnecessary.</para>
+
+<programlisting language="c++">
+#pragma link off all globals;
+#pragma link off all classes;
+#pragma link off all functions;
+</programlisting>
+
+<para>This also means that linking the instantiation of a class template: </para>
+
+<programlisting language="c++">
+#pragma link C++ class mytemplate&lt;int&gt;;
+</programlisting>
+
+<para>ONLY links this specific class.  In previous versions of ROOT, depending on many factors, this might also have included the linking of many other instantiation of class template used directly or indirectly by <code>'mytemplate'</code>. </para>
+<para>A typical case would have been to rely on:</para>
+
+<programlisting language="c++">
+#pragma link C++ class vector&lt;MyClass&gt;;
+</programlisting>
+
+<para>to also induce the generation of the iterators.  You now need to request them explicitly. Another advantage of the change is that now, if you omit the 'pragma link off' line from your <code>linkdef</code> file, you can actually sprinkle the 'pragma link C++ class' across as many of you header as file as you need. </para>
+<para>See the documentation of <code>rootcint</code> for details how <code>pragma</code> can be used. </para>
+<para>NOTE: You should not call ACLiC with a script that has a function called <code>main()</code><code>.</code> When ACLiC calls <code>rootcint</code> with a function called <code>main</code> it tries to add every symbol it finds while parsing the script and the header files to the dictionary. This includes the system header files and the ROOT header files. It will result in duplicate entries at best and crashes at worst, because some classes in ROOT need special attention before they can be added to the dictionary. </para>
+</sect2>
+
+<sect2>
+<title>Intermediate Steps and Files</title>
+<para>ACLiC executes two steps and a third one if needed. These are:</para>
+<itemizedlist>
+<listitem><para>Calling <code>rootcint</code> to create a CINT dictionary. <code>rootcint</code> is a ROOT specific version of <code>makecint</code>, CINT generic dictionary generator.</para></listitem>
+<listitem><para>Calling the compiler to build the shared library from the script</para></listitem>
+<listitem><para>If there are errors, it calls the compiler to build a dummy executable to report clearly unresolved symbols.</para></listitem>
+</itemizedlist>
+<para>ACLiC makes a shared library with a CINT dictionary containing the classes and functions declared in the script. It also adds the classes and functions declared in included files with the same name as the script file and any of the following extensions: <code>.h</code>, <code>.hh</code>, <code>.hpp</code>, <code>.hxx</code>, <code>.hPP</code>, <code>.hXX</code>. This means that, by default, you cannot combine scripts from different files into one library by using <code>#include</code> statements; you will need to compile each script separately. In a future release, we plan to add the global variables declared in the script to the dictionary also. If you are curious about the specific calls, you can raise the ROOT debug level: gDebug=3 and ACLiC will print these steps. If you need to keep the intermediate files around, for example when debugging the script using gdb, use gDebug=7.</para>
+</sect2>
+
+<sect2>
+<title>Moving between Interpreter and Compiler</title>
+<para>The best way to develop portable scripts is to make sure you can always run them with both, the interpreter and with ACLiC.  To do so, do not use the CINT extensions and program around the CINT limitations.  When it is not possible or desirable to program around the CINT limitations, you can use the C preprocessor symbols defined for CINT and <code>rootcint</code>.</para>
+<para>The preprocessor symbol <code>__CINT__</code> is defined for both CINT and <code>rootcint</code>. The symbol <code>__MAKECINT__</code> is only defined in <code>rootcint</code>. </para>
+<para>Use <code>!defined(__CINT__) || defined(__MAKECINT__)</code> to bracket code that needs to be seen by the compiler and <code>rootcint</code>, but will be invisible to the interpreter. </para>
+<para>Use <code>!defined(__CINT__) </code>to bracket code that should be seen only by the compiler and not by CINT or <code>rootcint. </code>For example, the following will hide the declaration and initialization of the array <code>gArray</code> from both CINT and <code>rootcint</code>.</para>
+
+<programlisting language="c++">
+#if !defined(__CINT__)
+int gArray[] = { 2, 3, 4};
+#endif
+</programlisting>
+
+<para>Because ACLiC calls <code>rootcint</code> to build a dictionary, the declaration of <code>gArray</code> will not be included in the dictionary, and consequently, <code>gArray</code> will not be available at the command line even if ACLiC is used. CINT and <code>rootcint</code> will ignore all statements between the <code>"#if !defined</code>         <code>(__CINT__)"</code> and "<code>#endif"</code>. If you want to use <code>gArray</code> in the same script as its declaration, you can do so. However, if you want use the script in the interpreter you have to bracket the usage of <code>gArray</code> between <code>#if's,</code> since the definition is not visible. If you add the following preprocessor statements:</para>
+
+<programlisting language="c++">
+#if !defined(__CINT__)
+int gArray[] = { 2, 3, 4};
+#elif defined(__MAKECINT__)
+int gArray[];
+#endif
+</programlisting>
+
+<para><code>gArray</code> will be visible to <code>rootcint</code>         but still not visible to CINT.  If you use ACLiC, <code>gArray</code> will be available at the command line and be initialized properly by the compiled code.</para>
+<para>We recommend you always write scripts with the needed include statements. In most cases, the script will still run with the interpreter. However, a few header files are not handled very well by CINT.  </para>
+<para>These types of headers can be included in interpreted and compiled mode:</para>
+<itemizedlist>
+<listitem><para>The subset of standard C/C++ headers defined in <code>$ROOTSYS/cint/include.</code></para></listitem>
+<listitem><para>Headers of classes defined in a previously loaded library (including ROOT own). The defined class must have a name known to ROOT (i.e. a class with a <code>ClassDef</code>).</para></listitem>
+</itemizedlist>
+<para>A few headers will cause problems when they are included in interpreter mode, because the interpreter itself already includes them. In general, the interpreter needs to know whether to use the interpreted or compiled version. The mode of the definition needs to match the mode of the reference.</para>
+<para>Here are the cases that need to be excluded in interpreted mode, but included for <code>rootcint</code>. Bracket these with: <code>!defined(__CINT__) || defined(__MAKECINT__)</code></para>
+<itemizedlist>
+<listitem><para>All CINT headers, see <code>$ROOTSYS/cint/inc</code></para></listitem>
+<listitem><para>Headers with classes named other than the file name. For example <code>Rtypes.h</code> and <code>GuiTypes.h</code>.</para></listitem>
+<listitem><para>Headers with a class defined in libraries before the library is loaded. For example: having <code>#include "TLorentzVector.h </code>before <code>gSystem-&gt;Load("libPhysics")</code>. This will also cause problems when compiling the script, but a clear error message will be given. With the interpreter, it may core dump. Bracket these type of include statements with<code> #if !defined (__CINT__), </code>this will print an error in both modes.</para></listitem>
+</itemizedlist>
+<para>Hiding header files from <code>rootcint</code> that are necessary for the compiler but optional for the interpreter can lead to a subtle but fatal error. For example:</para>
+
+<programlisting language="c++">
+<code>#ifndef __CINT__  </code>
+<code>#include "TTree.h"</code>
+<code>#else</code>
+<code>class TTree;</code>
+<code>#endif</code>
+
+<code>class subTree : public TTree {</code>
+<code>};</code>
+</programlisting>
+
+<para>In this case, <code>rootcint</code> does not have enough information about the <emphasis role="bold"><code>TTree</code></emphasis> class to produce the correct dictionary file.  If you try this, <code>rootcint</code> and compiling will be error free, however, instantiating a <code>subTree</code> object from the CINT command line will cause a fatal error. In general, it is recommended to let <code>rootcint</code> see as many header files as possible.</para>
+</sect2>
+</sect1>
+
+<sect1>
+<title>Reflex</title>
+<para>Reflection is the ability of a programming language to introspect its data structures and interact with them at runtime without prior knowledge. Reflex provides reflection capabilities for C++. With the ROOT v5.08, Reflex is an optional package. It will become a mandatory package (loaded by default) with the next ROOT versions. In order to build it you have to  <code>./configure --enable-reflex</code></para>
+
+<sect2>
+<title>Overview</title>
+<para>Inside ROOT Reflex is thought to replace the current reflection system, which is inherent to CINT. This is an ongoing work and not part of this release. Nevertheless, Reflex dictionaries can be used inside ROOT while populating the current CINT data structures via a special gateway called Cintex (see “Cintex”).</para>
+<para>In order to use reflection a dictionary of the data structures involved has to be generated. Before generating the dictionaries, the source code has to be parsed and the information extracted. In the ROOT environment, there are two ways to generate dictionaries for the Reflex library.</para>
+<itemizedlist>
+<listitem><para>Using CINT as a source code parser - the command to issue when using CINT for parsing C++ constructs is:</para></listitem>
+</itemizedlist>
+<programlisting language="c++">
+rootcint -reflex -f module/src/G__Module.cxx -c module/inc/TMod1.h
+module/inc/TMod2.h module/inc/Linkdef.h
+</programlisting>
+<itemizedlist>
+<listitem><para>Using the <code>gcc</code> compiler as a source code parser: With this option a special program called "<code>gccxml</code>" has to be installed. This program is an extension to gcc and produces <code>xml</code> code out of parsed C++ definitions which will be further used to generate the proper dictionary source code via a python script. For parsing C++ constructs using the <code>gcc</code> compiler the command will be:</para></listitem>
+</itemizedlist>
+<programlisting language="c++">
+rootcint -gccxml -f module/src/G__Module.cxx -c module/inc/TMod1.h
+module/inc/TMod2.h module/inc/Linkdef.h
+</programlisting>
+
+<para>Note: an installation of Python and <code>gccxml</code> is required for using this option.</para>
+</sect2>
+
+<sect2>
+<title>Selecting Types And Members</title>
+<para>You can use selection files to tell genreflex what it should generate a dictionary for. If you do not use it, it will generate a dictionary for all types in the files passed at the command line, or when specifying --deep for all types it finds.</para>
+<para>The selection file is passed to genreflex with the -s parameters like this: </para>
+<para>genreflex -s selection.xml header1.h header2.h. </para>
+<para>It is an XML file with the following structure:</para>
+
+<programlisting language="c++">
+&lt;lcgdict&gt;
+[&lt;selection&gt;]
+&lt;class [name="classname"] [pattern="wildname"]
+[file_name="filename"] [file_pattern="wildname"]
+[id="xxxx"] [type="vector"]/&gt;
+&lt;class name="classname" &gt;
+&lt;field name="m_transient" transient="true"/&gt;
+&lt;field name="m_anothertransient" transient="true"/&gt;
+&lt;properties prop1="value1" [prop2="value2"]/&gt;
+&lt;/class&gt;
+&lt;function [name="funcname"] [pattern="wildname"]
+[proto_name="name(int)"] [proto_pattern="name(int,*)"] /&gt;
+&lt;enum [name="enumname"] [patter="wildname"] /&gt;
+&lt;variable [name="varname"] [patter="wildname"] /&gt;
+[&lt;/selection&gt;]
+&lt;exclusion&gt;
+&lt;class [name="classname"] [pattern="wildname"] /&gt;
+&lt;method name="unwanted" /&gt;
+&lt;/class&gt;
+...
+&lt;/lcgdict&gt;
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Genreflex and Templates</title>
+<para>The program parsing the header files and providing genreflex with the information what's in them is called GCCXML. It only sees templates if they are instantiated. See the C++ standard on when template instantiation happens. The rule of thumb is: if you design a templated class then it probably does not happen in that templated class's header.</para>
+<para>So you need to help GCCXML. There are two common approaches: the struct member, and the "proper" C++ way.</para>
+
+<sect3>
+<title>Explicit Template Instantiation</title>
+<para>This is the preferred method, but it is not widely used. Suppose you have a templated template class C and a templated function template T A::f(const T&amp;) const;. You can instantiate them (say with template parameter long long) using:</para>
+
+<programlisting language="c++">
+#ifdef __GCCXML__
+// GCCXML explicit template instantiation block
+template class C&lt;long long&gt;;
+template long long A::f(const long long&amp;);
+#endif
+</programlisting>
+
+<para>You can even put this into your regular header file: it is surrounded by an #ifdef __GCCXML__ and will thus be invisible to any other compiler.</para>
+</sect3>
+
+<sect3>
+<title>Template Instantiation by struct Members</title>
+<para>Suppose you have a templated template class C and a templated function template T f(const T&amp;) const; defined in file C.h. For the templated class you can use:</para>
+
+<programlisting language="c++">
+#include "C.h"
+#ifdef __GCCXML__
+// GCCXML explicit template instantiation block
+namespace {
+struct GCCXML_DUMMY_INSTANTIATION {
+C&lt;long long&gt; dummyMember;
+};
+}
+#endif
+</programlisting>
+
+<para>Often people put these instantiations into a separate header which in turn #includes the actual header, such that the C++ sources do not see the GCCXML_DUMMY_INSTANTIATION.</para>
+</sect3>
+</sect2>
+
+<sect2>
+<title>GCCXML Installation</title>
+<para>Gccxml is a front-end to the gcc compiler suite, which generates xml code out of parsed C++ definitions. Gccxml needs to be installed in order to use this option. Now we are using a patched version of gccxml release 0.6.0 called (0.6.0_patch3). This installation can be downloaded from <uri xmlns:xlink="http://spi.cern.ch/lcgsoft/"> http://spi.cern.ch/lcgsoft/</uri>.</para>
+<para>Once the dictionary sources have been generated, they can be compiled into a library and loaded via the Reflex builder system. The dictionary information can be used via the Reflex API. For this purpose, Reflex provides eight classes, which exploit the whole functionality of the system.</para>
+</sect2>
+
+<sect2>
+<title>Reflex API</title>
+<para>Reflex offers a simple yet powerful API to access Reflex reflection database. The following classes are defined in the namespace <emphasis role="bold"><code>ROOT::Reflex</code></emphasis> and documented at  <uri xmlns:xlink="http://root.cern.ch/root/html/REFLEX_Index.html">http://root.cern.ch/root/html/REFLEX_Index.html</uri>.</para>
+<para>An <emphasis role="bold">object</emphasis> is an abstraction of a user object. It contains the information about its type and it is location in memory.</para>
+<para><emphasis role="bold">Type</emphasis> is an abstraction of a C++ type. Types in Reflex are:</para>
+<itemizedlist>
+<listitem><para>  Array</para></listitem>
+<listitem><para>  Class/struct</para></listitem>
+<listitem><para>  Templated class/struct</para></listitem>
+<listitem><para>  Enum</para></listitem>
+<listitem><para>  Function</para></listitem>
+<listitem><para>  Fundamental</para></listitem>
+<listitem><para>  Pointer</para></listitem>
+<listitem><para>  Pointer to member</para></listitem>
+<listitem><para>  Typedef</para></listitem>
+<listitem><para>  Union</para></listitem>
+</itemizedlist>
+<para>A <emphasis role="bold">scope</emphasis> is an abstraction of a C++ type. It holds information such as its declaring scope, it is underlying scope and it is data<code>/</code>function members. Scopes are:</para>
+<itemizedlist>
+<listitem><para>Namespace</para></listitem>
+<listitem><para>Class/Struct</para></listitem>
+<listitem><para>Templated class/struct</para></listitem>
+<listitem><para>Union</para></listitem>
+<listitem><para>Enum</para></listitem>
+</itemizedlist>
+<para>A <emphasis role="bold">member</emphasis> lives inside a scope and is of a given Type. Members can be distinguished as:</para>
+<itemizedlist>
+<listitem><para>DataMember</para></listitem>
+<listitem><para>FunctionMember</para></listitem>
+<listitem><para>Templated member</para></listitem>
+</itemizedlist>
+<para><emphasis role="bold">Base</emphasis> holds the information about the inheritance structure of classes. It contains information such as the offset to the base class and the type of the base class.</para>
+<para><emphasis role="bold">Properties</emphasis> are key/value pairs where the key is a string and the value an Any object (Boost::Any). Any objects can hold any type of information be it a string, int or any arbitrary object. Properties can be attached to Types, Scopes and Members and hold any kind of information that is not specific to C++. Examples for Properties    would be the class author, a description of a member or the class id. </para>
+<para>A <emphasis role="bold">MemberTemplate</emphasis> is an abstraction of a templated member. It holds the information about its template parameters and a list of its instantiations. </para>
+<para>A <emphasis role="bold">TypeTemplate</emphasis> is an abstraction of a templated type (e.g. class). It holds the same information as the MemberTemplate (e.g. template parameters, list of instantiations)</para>
+<para>The Reflex package lives in the namespace <emphasis role="bold"><code>ROOT::Reflex</code></emphasis>. Below some examples of usage of the package are given. For further information please see the documentation of the different API classes.</para>
+<para>
+The next examples will refer to the example class <code>MyClass</code>:</para>
+
+<programlisting language="c++">
+class MyClass {
+
+public:
+MyClass() : fMem1(47), fMem2("foo") { }
+int GetMem1() { return fMem1; }
+int GetMem1(int i) { return fMem1*i; }
+void SetMem1(int i) { fMem1 = i; }
+std::string GetMem2() { return fMem2; }
+void SetMem2(const std::string &amp; str) { fMem2 = str; }
+
+private:
+int fMem1;
+std::string fMem2;
+};
+</programlisting>
+
+<para>The first thing after loading a dictionary (which is done at the moment at the same time as the implemenation library), will be to look up a certain Type or Scope.</para>
+
+<programlisting language="c++">
+Type t1 = Type::ByName("MyClass");
+</programlisting>
+
+<para>Every API class provides the <code>operator bool</code>, which will return true if the information retrieved for this instance is valid and further actions on this instance can be taken.</para>
+
+<programlisting language="c++">
+if (t1) {
+if (t1.IsClass()) std::cout &lt;&lt; "Class ";
+std::cout &lt;&lt; t1.Name();
+}
+</programlisting>
+
+<para>As a class is also a scope (as enum and union) we can now also iterate over its members. This can be done either with stl like iterators or with an iteration by number:</para>
+
+<programlisting language="c++">
+For (Member_Iterator mi = t1.DataMember_Begin(); mi != DataMember_End(); ++mi) {
+std::cout &lt;&lt; (*mi).Name(SCOPED) &lt;&lt; " " &lt;&lt; (*mi).TypeOf().Name(QUALIFIED);
+}
+
+Member m;
+for (size_t i = 0; i &lt; t1.FunctionMemberSize(); ++i) {
+m = t1.FunctionMemberAt(i);
+std::cout &lt;&lt; m.Name() &lt;&lt; " " &lt;&lt; m.TypeOf().Name();
+for (Type_Iterator ti = m.FunctionParaeter_Begin(); ti !=
+m.FunctionParameter_End(); ++ti) {
+std::cout &lt;&lt; (*ti).Name() &lt;&lt; std::endl;
+}
+}
+</programlisting>
+
+<para>It is not only possible to introspect information through Reflex but also take actions. E.g. instantiate  classes/structs, invoke functions, set data members, etc. The instantiation of a type which represents a class struct can be done with:</para>
+
+<programlisting language="c++">
+Object o1 = t1.Construct();
+</programlisting>
+
+<para>which will call the default constructor for this type and allocate the memory for this type inside the Object. The Object will also contain the type information constructed. </para>
+<para>Now the object of a certain type has been constructed one may interact with it. E.g. getting the value of a data member can be done via which will return an Object of the data member in question.</para>
+
+<programlisting language="c++">
+Object mem_obj = o1.Get("fMem1");
+int real_value = 0;
+if (mem_obj.TypeOf().Name() == "int)
+int real_value = Object_Cast&lt;int&gt;(mem_obj);
+</programlisting>
+
+<para>It is also possible to invoke function members via the Object class. A function member can be looked up by name, if the member is overloaded an additional parameter which is the string representation of the type can be passed. Currently parameters for the function to invoke shall be passed as a vector of memory addresses of the parameters. This may change in the future to pass a vector of Objects.</para>
+
+<programlisting language="c++">
+int par1 = 2;
+std::vector&lt;void*&gt; parVec;
+parVec.push_back(&amp;par1);
+int ret_val = Object_Cast&lt;int&gt;(o1.Invoke("GetMem1","int (int)",parVec));
+</programlisting>
+
+<para>Calling the destructor of an Object can be done via, this will call both the destructor and of the object type and deallocate the memory.</para>
+
+<programlisting language="c++">
+o1.Destruct();
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Cintex</title>
+<para>Cintex is an optional package inside ROOT. In order to build it you have to</para>
+
+<programlisting language="c++">
+<code>./configure --enable-cintex</code> at the ROOT configuration step.
+</programlisting>
+
+<para>The purpose of the Cintex package is to bridge uni-directional information from the Reflex to the CINT dictionary system. This package will be needed as long as the unification of the Reflex and CINT dictionaries has not been completed. This unification is work ongoing. In order to use Cintex functionality it will be needed to load the Cintex library (e.g. libCintex.so on linux systems) and enable the Cintex gateway with </para>
+
+<programlisting language="c++">
+Cintex::Enable();
+</programlisting>
+
+<para>After these two steps have been taken, any Reflex dictionary information should be propagated to the CINT dictionaries and subsequently usable inside the CINT environment (e.g. from the root prompt). If wanted debugging information while loading Reflex dictionaries can be turned on with (any number greater than 0 can be used as argument but will not make any difference in the amount of debugging output for the time being).</para>
+
+<programlisting language="c++">
+Cintex::SetDebug(1);
+</programlisting>
+
+</sect2>
+</sect1>
+</chapter>
+
+
+

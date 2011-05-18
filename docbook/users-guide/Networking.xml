@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0">
+<title>Networking</title>
+<para>In this chapter, you will learn how to send data over the network using the ROOT socket classes.</para>
+
+<sect1>
+<title>Setting-up a Connection</title>
+<para><emphasis role="underline">On the server</emphasis><emphasis role="underline"> side</emphasis>, we create a <emphasis role="bold"><code>TServerSocket</code></emphasis> to wait for a connection request over the network.  If the request is accepted, it returns a full-duplex socket.  Once the connection is accepted, we can communicate to the client that we are ready to go by sending the string "go", and we can close the server socket.</para>
+
+<programlisting language="c++">
+{ <code>// server</code>
+TServerSocket *ss = new TServerSocket(9090,kTRUE);
+TSocket *socket = ss-&gt;Accept();
+socket-&gt;Send("go");
+ss-&gt;Close();
+}
+</programlisting>
+
+<para><emphasis role="underline">On the client</emphasis><emphasis role="underline"> side</emphasis>, we create a socket and ask the socket to receive input.</para>
+
+<programlisting language="c++">
+{ <code>// client</code>
+TSocket *socket = new TSocket("localhost",9090);
+Char str[32];
+socket-&gt;Recv(str,32);
+}
+</programlisting>
+
+</sect1>
+
+<sect1>
+<title>Sending Objects over the Network</title>
+<para>We have just established a connection and you just saw how to send and receive a string with the example "go".  Now let’s send a histogram. </para>
+<para><emphasis role="underline">To send an object (in our case on the client side</emphasis>) it has to derive from <emphasis role="bold"><code>TObject</code></emphasis> class because it uses the <code>Streamers</code> to fill a buffer that is then sent over the connection. On the receiving side, the <code>Streamers</code> are used to read the object from the message sent via the socket.  For network communication, we have a specialized <emphasis role="bold"><code>TBuffer</code></emphasis>, a descendant of <emphasis role="bold"><code>TBuffer</code></emphasis> called <emphasis role="bold"><code>TMessage</code></emphasis>. In the following example, we create a <emphasis role="bold"><code>TMessage</code></emphasis> with the intention to store an object, hence the constant <code>kMESS_OBJECT</code> in the constructor.  We create and fill the histogram and write it into the message. Then we call <emphasis role="bold"><code>TSocket</code></emphasis><code>::Send</code> to send the message with the histogram.</para>
+
+<programlisting language="c++">
+…
+<code>// create an object to be sent</code>
+TH1F *hpx = new TH1F("hpx","px distribution",100,-4,4);
+hpx-&gt;FillRandom("gaus",1000);
+
+<code>// create a TMessage to send the object   </code>
+TMessage message(kMESS_OBJECT);
+
+<code>// write the histogram into the message buffer</code>
+message.WriteObject(hpx);
+
+<code>// send the message  </code>
+socket-&gt;Send(message);
+…
+</programlisting>
+
+<para>On the receiving end (in our case the server side), we write a while loop to wait and receive a message with a histogram.  Once we have a message, we call <emphasis role="bold"><code>TMessage</code></emphasis><code>::ReadObject</code>, which returns a pointer to <emphasis role="bold"><code>TObject</code></emphasis>. We have to cast it to a <emphasis role="bold"><code>TH1</code></emphasis> pointer, and now we have a histogram. At the end of the loop, the message is deleted, and another one is created at the beginning.</para>
+
+<programlisting language="c++">
+while (1) {
+TMessage *message;
+socket-&gt;Recv(message);
+TH1 *h = (TH1*)message-&gt;ReadObject(message-&gt;GetClass());
+delete message;
+}
+</programlisting>
+
+</sect1>
+
+<sect1>
+<title>Closing the Connection</title>
+<para>Once we are done sending objects, we close the connection by closing the sockets at both ends.</para>
+
+<programlisting language="c++">
+Socket-&gt;Close();
+</programlisting>
+
+<para>This diagram summarizes the steps we just covered:</para>
+
+<figure><title>Server - Client setting-up and closing the connection</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/080001FF.png" width="5in" depth="226.55pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+</sect1>
+
+<sect1>
+<title>A Server with Multiple Sockets</title>
+<para>Chances are that your server has to be able to receive data from multiple clients. The class we need for this is <emphasis role="bold"><code>TMonitor</code></emphasis>. It lets you add sockets and the <emphasis role="bold"><code>TMonitor</code></emphasis><code>::Select</code> method returns the socket with data waiting.  Sockets can be added, removed, or enabled and disabled. Here is an example of a server that has a <emphasis role="bold"><code>TMonitor</code></emphasis> to manage multiple sockets:</para>
+
+<programlisting language="c++">
+{
+TServerSocket *ss = new TServerSocket (9090, kTRUE);
+
+<code>   // Accept a connection and return a full-duplex communication socket.</code>
+TSocket *s0 = ss-&gt;Accept();
+TSocket *s1 = ss-&gt;Accept();
+
+<code>   // tell the clients to start</code>
+s0-&gt;Send("go 0");
+s1-&gt;Send("go 1");
+
+<code>   // Close the server socket (unless we will use it</code>
+<code>   // later to wait for another connection).</code>
+ss-&gt;Close();
+
+TMonitor *mon = new TMonitor;
+mon-&gt;Add(s0);
+mon-&gt;Add(s1);
+
+while (1) {
+TMessage *mess;
+TSocket  *s;
+s = mon-&gt;Select();
+s-&gt;Recv(mess);
+…
+}
+</programlisting>
+
+<para>The full code for the example above is in <code>$ROOTSYS/tutorials/net/hserv.C and</code></para>
+<para><code>$ROOTSYS/tutorials/net/hclient.C</code>.</para>
+</sect1>
+</chapter>
+
+
+
