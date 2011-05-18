@@ -1,3 +1,4 @@
+#include "TSystem.h"
 // @(#)root/tree:$Id$
 // Author: Rene Brun   04/06/2006
 
@@ -469,7 +470,7 @@ Bool_t TTreeCache::FillBuffer()
    //store baskets
    Int_t flushIntervals = 0;
    Long64_t minEntry = fEntryCurrent;
-   Long64_t prevNtot;
+   Int_t prevNtot;
    Int_t minBasket = 0;  // We will use this to avoid re-checking the first baskets in the 2nd (or more) run in the while loop.
    do {
       prevNtot = fNtot;
@@ -511,7 +512,7 @@ Bool_t TTreeCache::FillBuffer()
       flushIntervals++;
       minEntry = clusterIter.Next();
 
-      if (!((fBufferSizeMin > (fNtot*(flushIntervals+1))/flushIntervals) && (prevNtot < fNtot) && (minEntry < fEntryMax)))
+      if (!((fBufferSizeMin > ((Long64_t)fNtot*(flushIntervals+1))/flushIntervals) && (prevNtot < fNtot) && (minEntry < fEntryMax)))
          break;
 
       minBasket = nextMinBasket;
