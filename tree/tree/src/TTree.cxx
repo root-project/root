@@ -6048,7 +6048,7 @@ TSQLResult* TTree::Query(const char* varexp, const char* selection, Option_t* op
 }
 
 //______________________________________________________________________________
-Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
+Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor, char delimiter)
 {
    // Create or simply read branches from filename.
    //
@@ -6066,9 +6066,20 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
    //  subsequent characters until a whitespace is found (whitespace
    //  characters are considered to be blank, newline and tab).
    //
+   //  delimiter allows for the use of another delimiter besides whitespace.
+   //    This provides support for direct import of common data file formats
+   //    like csv.  If delimiter != ' ' and branchDescriptor == "", then the
+   //    branch description is taken from the first line in the file, but
+   //    delimiter is used for the branch names tokenization rather than ':'.
+   //    Note however that if the values in the first line do not use the
+   //    /[type] syntax, all variables are assumed to be of type "F".
+   //    If the filename ends with extensions .csv or .CSV and a delimiter is
+   //    not specified (besides ' '), the delimiter is automatically set to ','.
+   //
    // Lines in the input file starting with "#" are ignored.
    // This function will read and ignore any whitespace characters
    // (this includes blank spaces and the newline and tab characters).
+   // Handles newlines specified with '\n', '\r', or "\r\n".
    //
    // A TBranch object is created for each variable in the expression.
    // The total number of rows read from the file is returned.
@@ -6086,17 +6097,49 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
       Error("ReadFile","Cannot open file: %s",filename);
       return 0;
    }
-   return ReadStream(in, branchDescriptor);
+   const char* ext = strrchr(filename, '.');
+   if(ext != NULL && ((strcmp(ext, ".csv") == 0) || (strcmp(ext, ".CSV") == 0)) && delimiter == ' ') {
+     delimiter = ',';
+   }
+   return ReadStream(in, branchDescriptor, delimiter);
 }
 
 //______________________________________________________________________________
-Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor)
+char TTree::GetNewlineValue(istream &inputStream)
+{
+   // Determine which newline this file is using.
+
+   long inPos = inputStream.tellg();
+   char newline = '\n';
+   while(1) {
+     char c = inputStream.get();
+     if(!inputStream.good()) {
+       Error("ReadStream","Error reading stream: no newline found.");
+       return 0;
+     }
+     if(c == newline) break;
+     if(c == '\r') { 
+       if(inputStream.get() == newline) break;
+       else {
+         newline = '\r';
+         break;
+       }
+     }
+   }
+   inputStream.clear();
+   inputStream.seekg(inPos);
+   return newline;
+}
+
+//______________________________________________________________________________
+Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, char delimiter)
 {
    // Create or simply read branches from an input stream.
    //
    // See reference information for TTree::ReadFile
 
    gTree = this;
+   char newline = GetNewlineValue(inputStream);
    std::istream& in = inputStream;
    TBranch *branch;
    Int_t nbranches = fBranches.GetEntries();
@@ -6107,14 +6150,13 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor)
       if (branchDescriptor) nch = strlen(branchDescriptor);
       // branch Descriptor is null, read its definition from the first line in the file
       if (!nch) {
-         in >> bd;
+         in.getline(bd, 100000, newline);
          if (!in.good()) {
             delete [] bdname;
             delete [] bd;
             Error("ReadStream","Error reading stream");
             return 0;
          }
-         in.ignore(8192,'\n');
          nch = strlen(bd);
       } else {
          strlcpy(bd,branchDescriptor,100000);
@@ -6125,8 +6167,10 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor)
       void *address = &bd[90000];
       char *bdcur = bd;
       TString desc="", olddesc="F";
+      char bdelim = ':';
+      if(delimiter != ' ') bdelim = delimiter;
       while (bdcur) {
-         char *colon = strchr(bdcur,':');
+         char *colon = strchr(bdcur,bdelim);
          if (colon) *colon = 0;
          strlcpy(bdname,bdcur,4000);
          char *slash = strchr(bdname,'/');
@@ -6154,7 +6198,6 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor)
       }
       delete [] bdname;
       delete [] bd;
-
    }
 
    //loop on all lines in the file
@@ -6172,13 +6215,28 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor)
             branch = (TBranch*)fBranches.At(i);
             TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
             leaf->ReadValue(in);
-            if (in.eof()) return nlines;
+            if (in.eof()) {
+              if(i == nbranches-1) {
+                // handle no newline char on last line
+                Fill();
+                nlines++;
+              }
+              return nlines;
+            }
             status = in.good();
             if (!status) {
-               Warning("ReadStream","Illegal value after line %lld\n",nlines);
-               in.clear();
-               break;
+               if(in.fail() && ! in.bad()) { // just couldn't interpret formatted data
+                 Warning("ReadStream","Couldn't read formatted data for branch %s on line %lld",branch->GetName(),nlines+1);
+                 in.clear();
+                 status = kTRUE;
+               }
+               else {
+                 Warning("ReadStream","Illegal value after line %lld",nlines);
+                 in.clear();
+                 break;
+               }
             }
+            if(in.peek() == delimiter) in.get();
          }
          //we are now ready to fill the tree
          if (status) {
@@ -6186,7 +6244,7 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor)
             nlines++;
          }
       }
-      in.ignore(8192,'\n');
+      in.ignore(8192,newline);
    }
 
    return nlines;

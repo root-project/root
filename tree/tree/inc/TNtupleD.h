@@ -53,7 +53,7 @@ public:
                           Double_t x14=0);
    virtual Int_t     GetNvar() const { return fNvar; }
            Double_t *GetArgs() const { return fArgs; }
-   virtual Long64_t  ReadFile(const char *filename, const char *branchDescriptor="");
+   virtual Long64_t  ReadStream(istream& inputstream, const char *branchDescriptor="", char delimiter = ' ');
    virtual void      ResetBranchAddress(TBranch *);
            void      ResetBranchAddresses();
 

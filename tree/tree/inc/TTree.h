@@ -159,6 +159,7 @@ protected:
    friend  TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);
    Int_t    SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr);
 
+   char             GetNewlineValue(istream &inputStream);
    void             ImportClusterRanges(TTree *fromtree);
 
    class TFriendLock {
@@ -463,8 +464,8 @@ public:
 #endif
    virtual Long64_t        Project(const char* hname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    virtual TSQLResult     *Query(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
-   virtual Long64_t        ReadFile(const char* filename, const char* branchDescriptor = "");
-   virtual Long64_t        ReadStream(istream& inputStream, const char* branchDescriptor = "");
+   virtual Long64_t        ReadFile(const char* filename, const char* branchDescriptor = "", char delimiter = ' ');
+   virtual Long64_t        ReadStream(istream& inputStream, const char* branchDescriptor = "", char delimiter = ' ');
    virtual void            Refresh();
    virtual void            RecursiveRemove(TObject *obj);
    virtual void            RemoveFriend(TTree*);

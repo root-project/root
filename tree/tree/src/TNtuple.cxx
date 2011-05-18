@@ -192,7 +192,7 @@ Int_t TNtuple::Fill(Float_t x0,Float_t x1,Float_t x2,Float_t x3,Float_t x4
 }
 
 //_______________________________________________________________________
-Long64_t TNtuple::ReadFile(const char *filename, const char * /*branchDescriptor*/)
+Long64_t TNtuple::ReadStream(istream &inputStream, const char * /*branchDescriptor*/, char delimiter)
 {
    // Read from filename as many columns as variables in the ntuple
    // the function returns the number of rows found in the file
@@ -200,18 +200,21 @@ Long64_t TNtuple::ReadFile(const char *filename, const char * /*branchDescriptor
    // Lines in the input file starting with "#" are ignored.
 
    Long64_t nlines = 0;
-   ifstream in;
-   in.open(filename);
+   char newline = GetNewlineValue(inputStream);
    while (1) {
-      if ( in.peek() != '#' ) {
-         for (Int_t i=0;i<fNvar;i++) in >> fArgs[i];
-         if (!in.good()) break;
+      if ( inputStream.peek() != '#' ) {
+         for (Int_t i=0;i<fNvar;i++) {
+            inputStream >> fArgs[i];
+            if (inputStream.peek() == delimiter) {
+               inputStream.get(); // skip delimiter.
+            }
+         }
+         if (!inputStream.good()) break;
          TTree::Fill();
-         nlines++;
+         ++nlines;
       }
-      in.ignore(8192,'\n');
+      inputStream.ignore(8192,newline);
    }
-   in.close();
    return nlines;
 }
 
